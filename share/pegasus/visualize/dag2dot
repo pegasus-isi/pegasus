@@ -30,8 +30,7 @@ COLORS = [
 
 class DAG:
     def __init__(self):
-        self.jobs = {}
-        self.files = {}
+        self.nodes = {}
 
 class Node:
     def __init__(self):
@@ -43,12 +42,13 @@ class Node:
         self.mark = 0
         self.closure = set()
 
+    def __repr__(self):
+        return "(%s, %s)" % (self.id, self.label)
+
 class Job(Node):
     def __init__(self):
         Node.__init__(self)
         self.xform = None
-        self.inputs = []
-        self.outputs = []
 
 class File(Node):
     def __init__(self):
@@ -58,11 +58,11 @@ class DAXHandler(xml.sax.handler.ContentHandler):
     """
     This is a DAX file parser
     """
-    def __init__(self):
+    def __init__(self, files):
+        self.files = files
         self.last_job = None
         self.dag = DAG()
-        self.jobs = self.dag.jobs
-        self.files = self.dag.files
+        self.nodes = self.dag.nodes
 
     def startElement(self, name, attrs):
         if name in ["job","dax","dag"]:
@@ -93,9 +93,12 @@ class DAXHandler(xml.sax.handler.ContentHandler):
                 if job.label is None:
                     job.label = job.xform
 
-            self.jobs[job.id] = job
+            self.nodes[job.id] = job
             self.last_job = job
         elif name == "uses":
+            if not self.files:
+                return
+
             namespace = attrs.get("namespace")
             version = attrs.get("version")
             filename = attrs.get("name") or attrs.get("file")
@@ -109,22 +112,27 @@ class DAXHandler(xml.sax.handler.ContentHandler):
             if version is not None:
                 filename = filename + ":" + version
 
-            if filename in self.files:
-                f = self.files[filename]
+            if filename in self.nodes:
+                f = self.nodes[filename]
             else:
                 f = File()
                 f.id = f.label = filename
-                self.files[filename] = f
+                self.nodes[filename] = f
 
             link = attrs.get("link") or "input"
             link = link.lower()
             if link == "input":
-                self.last_job.inputs.append(f)
+                f.children.append(self.last_job)
+                self.last_job.parents.append(f)
             elif link == "output":
-                self.last_job.outputs.append(f)
+                f.parents.append(self.last_job)
+                self.last_job.children.append(f)
             elif link == "inout":
-                self.last_job.inputs.append(f)
-                self.last_job.outputs.append(f)
+                print "WARNING: inout file %s of %s creates a cycle." % (f.id, self.last_job)
+                f.children.append(self.last_job)
+                f.parents.append(self.last_job)
+                self.last_job.parents.append(f)
+                self.last_job.children.append(f)
             elif link == "none":
                 pass
             else:
@@ -135,8 +143,8 @@ class DAXHandler(xml.sax.handler.ContentHandler):
             if self.lastchild is None:
                 raise Exception("Invalid DAX: <parent> outside <child>")
             pid = attrs.get("ref")
-            child = self.jobs[self.lastchild]
-            parent = self.jobs[pid]
+            child = self.nodes[self.lastchild]
+            parent = self.nodes[pid]
             child.parents.append(parent)
             parent.children.append(child)
 
@@ -144,11 +152,11 @@ class DAXHandler(xml.sax.handler.ContentHandler):
         if name == "child":
             self.lastchild = None
 
-def parse_daxfile(fname):
+def parse_daxfile(fname, files=False):
     """
     Parse DAG from a Pegasus DAX file.
     """
-    handler = DAXHandler()
+    handler = DAXHandler(files)
     parser = xml.sax.make_parser()
     parser.setContentHandler(handler)
     f = open(fname,"r")
@@ -189,7 +197,7 @@ def parse_dagfile(fname):
     """
     dagdir = os.path.dirname(fname)
     dag = DAG()
-    jobs = dag.jobs
+    jobs = dag.nodes
     lastchild = None
     f = open(fname,'r')
     for line in f.readlines():
@@ -222,41 +230,42 @@ def remove_xforms(dag, xforms):
     """
     Remove transformations in the DAG by name
     """
-    jobs = dag.jobs
+    nodes = dag.nodes
     if len(xforms) == 0:
         return
-    for id in jobs.keys():
-        job = jobs[id]
-        if job.xform in xforms:
+    for id in nodes.keys():
+        node = nodes[id]
+        if isinstance(node, Job) and node.xform in xforms:
             print "Removing %s" % job.id
-            for p in job.parents:
-                p.children.remove(job)
-            for c in job.children:
-                c.parents.remove(job)
-            del jobs[id]
+            for p in node.parents:
+                p.children.remove(node)
+            for c in node.children:
+                c.parents.remove(node)
+            del nodes[id]
 
 def transitivereduction(dag):
     # Perform a transitive reduction of the DAG to remove redundant edges.
 
     # First, perform a topological sort of the workflow.
-    roots = [n for n in dag.jobs.values() if len(n.parents) == 0]
+    roots = [n for n in dag.nodes.values() if len(n.parents) == 0]
 
     L = []
 
-    def visit(n, m):
+    def visit(n):
         if n.mark == 1:
-            raise Exception("Not a DAG")
+            raise Exception("Workflow is not a DAG: Node %s is part of a "
+                            "cycle. Try without -f or with -s." % n)
 
         if n.mark == 0:
             n.mark = 1
             for m in n.children:
-                visit(m, n)
+                visit(m)
             n.mark = 2
             L.insert(0,n)
 
     # Visit all the roots to create the topo sort
     for r in roots:
-        visit(r, None)
+        visit(r)
 
     # Number all the levels of the workflow, which are used
     # to sort the children of each node in topological order.
@@ -320,14 +329,13 @@ def transitivereduction(dag):
 
     return dag
 
-def emit_dot(dag, label_type="label", outfile="/dev/stdout", width=None, height=None, files=False):
+def emit_dot(dag, label_type="label", outfile="/dev/stdout", width=None, height=None):
     """
     Write a DOT-formatted diagram.
     label_type: What attribute to use for labels
     outfile: The file name to write the diagam out to.
     width: The width of the diagram
     height: The height of the diagram
-    files: Should files be used as edges? True/False
     """
     next_color = 0  # Keep track of next color
     xforms = {} # Keep track of transformation names to assign colors
@@ -341,41 +349,31 @@ def emit_dot(dag, label_type="label", outfile="/dev/stdout", width=None, height=
     out.write('    node [style=filled,color="#444444",fillcolor="#ffed6f"]\n')
     out.write('    edge [arrowhead=normal,arrowsize=1.0]\n\n')
 
-    for id in dag.jobs:
-        j = dag.jobs[id]
-        if label_type == 'xform':
-            label = j.xform
-        elif label_type == 'id':
-            label = j.id
+    for id in dag.nodes:
+        n = dag.nodes[id]
+        if isinstance(n, Job):
+            if label_type == 'xform':
+                label = n.xform
+            elif label_type == 'id':
+                label = n.id
+            else:
+                label = n.label
+            if n.xform not in xforms:
+                xforms[n.xform] = next_color
+                next_color += 1
+                # Just in case we run out of colors
+                next_color = min(len(COLORS)-1, next_color)
+            color = xforms[n.xform]
+            out.write('    "%s" [shape=ellipse,fillcolor="%s",label="%s"]\n' % (n.id,COLORS[color],label))
+        elif isinstance(n, File):
+            out.write('    "%s" [shape=rect,label="%s"]\n' % (n.id,n.label))
         else:
-            label = j.label
-        if j.xform not in xforms:
-            xforms[j.xform] = next_color
-            next_color += 1
-            # Just in case we run out of colors
-            next_color = min(len(COLORS)-1, next_color)
-        color = xforms[j.xform]
-        out.write('    "%s" [shape=ellipse,fillcolor="%s",label="%s"]\n' % (j.id,COLORS[color],label))
+            raise Exception("Invalid node: %s" % repr(n))
 
-    out.write('\n')
-
-    if files:
-        for id in dag.files:
-            f = dag.files[id]
-            out.write('    "%s" [shape=rect,label="%s"]\n' % (f.id,f.label))
-
-    out.write('\n')
-
-    for id in dag.jobs:
-        j = dag.jobs[id]
-        if files:
-            for i in j.inputs:
-                out.write('    "%s" -> "%s"\n' % (i.id,j.id))
-            for o in j.outputs:
-                out.write('    "%s" -> "%s"\n' % (j.id,o.id))
-        else:
-            for c in j.children:
-                out.write('    "%s" -> "%s"\n' % (j.id,c.id))
+    for id in dag.nodes:
+        n = dag.nodes[id]
+        for c in n.children:
+            out.write('    "%s" -> "%s"\n' % (n.id,c.id))
 
     out.write("}\n")
     out.close()
@@ -425,19 +423,18 @@ DAGMan file, or a Pegasus DAX file."""
 
     dagfile = args[0]
     if dagfile.endswith(".dag"):
-        options.files = False # Cannot use files if DAG
         dag = parse_dagfile(dagfile)
     else:
-        dag = parse_daxfile(dagfile)
+        dag = parse_daxfile(dagfile, options.files)
 
     remove_xforms(dag, options.remove)
 
     # Only simplify if the user did not want to use files
-    if options.simplify and not options.files:
+    if options.simplify:
         dag = transitivereduction(dag)
 
     emit_dot(dag, options.label, options.outfile, options.width, 
-             options.height, options.files)
+             options.height)
 
 if __name__ == '__main__':
     main()
