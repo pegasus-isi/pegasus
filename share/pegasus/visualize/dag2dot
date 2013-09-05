@@ -70,17 +70,34 @@ class File(Node):
     def __init__(self):
         Node.__init__(self)
 
+class Stack:
+    def __init__(self):
+        self.items = []
+
+    def push(self, item):
+        self.items.append(item)
+
+    def pop(self):
+        return self.items.pop()
+
+    def peek(self, index=1):
+        index = 0 - index
+        return self.items[index]
+
 class DAXHandler(xml.sax.handler.ContentHandler):
     """
     This is a DAX file parser
     """
     def __init__(self, files):
         self.files = files
+        self.elements = Stack()
         self.last_job = None
         self.dag = DAG()
         self.nodes = self.dag.nodes
 
     def startElement(self, name, attrs):
+        self.elements.push(name)
+
         if name in ["job","dax","dag"]:
             job = Job()
 
@@ -113,6 +130,10 @@ class DAXHandler(xml.sax.handler.ContentHandler):
             self.last_job = job
         elif name == "uses":
             if not self.files:
+                return
+
+            # Ignore uses inside all elements except job
+            if self.elements.peek(2) != "job":
                 return
 
             namespace = attrs.get("namespace")
@@ -165,6 +186,7 @@ class DAXHandler(xml.sax.handler.ContentHandler):
             parent.children.append(child)
 
     def endElement(self, name):
+        self.elements.pop()
         if name == "child":
             self.lastchild = None
 
