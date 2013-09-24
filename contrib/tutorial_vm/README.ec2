@@ -35,21 +35,23 @@ chmod 0600 /root/.ssh/authorized_keys
 
 console=hvc0
 
-8. Unmount the new image with:
+8. Edit /etc/inittab to change the default runlevel to 3
+
+9. Unmount the new image with:
 
 umount /mnt
 
-9. Create a snapshot of the image using the web console.
+10. Create a snapshot of the image using the web console.
 
-10. Register the snapshot as a new AMI using the pv-grub hd00 kernel 
+11. Register the snapshot as a new AMI using the pv-grub hd00 kernel 
 (aki-f837bac8) and /dev/sda as the root device (not /dev/sda1). Use a name
 that starts with "Pegasus Tutorial VM" and contains the Pegasus version
 (e.g. "Pegasus Tutorial VM 4.1.0").
 
-11. Set the image permissions to "public"
+12. Set the image permissions to "public"
 
-12. Terminate the conversion instance
+13. Terminate the conversion instance
 
-13. Delete the volume you created (you now have a snapshot, so nothing will
+14. Delete the volume you created (you now have a snapshot, so nothing will
 be lost)
 

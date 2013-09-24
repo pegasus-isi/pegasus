@@ -3,7 +3,7 @@
 set -e
 
 # Size of image in GB
-SIZE=2
+SIZE=8
 
 # Password for tutorial user
 PASSWORD="pegasus"
@@ -60,7 +60,7 @@ fi
 
 
 echo "Creating $SIZE GB image..."
-dd if=/dev/zero of=$img1 bs=1M count=1 seek=$(((SIZE*1024)-1))
+dd if=/dev/zero of=$img1 bs=1M count=0 seek=$((SIZE*1024))
 
 
 echo "Creating loop device..."
@@ -68,8 +68,7 @@ loop0=$(losetup -f --show $img1)
 
 
 echo "Formatting image..."
-# For some reason this tries to create a file system that is too big unless you specify the number of blocks
-mkfs.ext4 -L rootdisk -b 4096 $loop0 $(((SIZE*262144)-256))
+mkfs.ext4 -L rootdisk -b 4096 $loop0
 
 
 echo "Mounting image..."
@@ -100,7 +99,7 @@ EOF
 
 
 echo "Installing minimal base packages..."
-yum -c yum.conf --installroot=$mnt1/ -y install yum dhclient rsyslog openssh-server openssh-clients curl passwd kernel grub e2fsprogs rootfiles vim sudo perl nano wget
+yum -c yum.conf --installroot=$mnt1/ -y install yum dhclient rsyslog openssh-server openssh-clients curl passwd kernel grub e2fsprogs rootfiles vim sudo perl nano wget ntp
 yum --installroot=$mnt1/ -y clean all
 
 
@@ -124,6 +123,10 @@ EOF
 
 # This has to be removed or the interface will not come up on Eucalyptus
 rm -f $mnt1/etc/udev/rules.d/70-persistent-net.rules
+
+# This prevents udev from generating the file above
+rm -f $mnt1/etc/udev/rules.d/75-persistent-net-generator.rules
+echo "#" > $mnt1/etc/udev/rules.d/75-persistent-net-generator.rules
 
 
 echo "Installing Condor..."
@@ -166,6 +169,8 @@ cp /home/tutorial/.ssh/id_rsa.pub /home/tutorial/.ssh/authorized_keys
 chmod 0600 /home/tutorial/.ssh/authorized_keys
 
 echo 'tutorial	ALL=(ALL) 	ALL' >> /etc/sudoers
+
+/sbin/chkconfig ntpd on
 END
 
 # Copy tutorial files into tutorial user's home dir
@@ -184,7 +189,7 @@ yum --installroot=$mnt1/ -y clean all
 
 
 echo "Creating $SIZE GB image..."
-dd if=/dev/zero of=$img2 bs=1M count=1 seek=$(((SIZE*1024)-1))
+dd if=/dev/zero of=$img2 bs=1M count=0 seek=$((SIZE*1024))
 
 
 echo "Creating second loop device..."
@@ -193,6 +198,7 @@ loop1=$(losetup -f --show $img2)
 
 echo "Partitioning second image..."
 ! fdisk $loop1 <<END
+u
 n
 p
 1
@@ -209,8 +215,7 @@ loop2=$(losetup -o 32256 -f --show $img2)
 
 
 echo "Formatting second image..."
-# For some reason this tries to create a file system that is too big unless you specify the number of blocks
-mkfs.ext4 -L rootdisk -b 4096 $loop2 $(((SIZE*262144)-256))
+mkfs.ext4 -L rootdisk -b 4096 $loop2
 
 
 echo "Mounting second image..."
@@ -225,6 +230,17 @@ rsync -ax -W $mnt1/ $mnt2
 echo "Mounting second proc..."
 mount -t proc none $mnt2/proc
 
+echo "Installing GUI..."
+yum -c yum.conf --installroot=$mnt2/ -y groupinstall basic-desktop desktop-platform x11 fonts
+yum --installroot=$mnt2/ -y clean all
+
+# Change the default runlevel to 5 (X11)
+sed -i 's/id:3:initdefault/id:5:initdefault/' $mnt2/etc/inittab
+
+chroot $mnt2 /bin/bash <<END
+echo "RUN_FIRSTBOOT=NO" > /etc/sysconfig/firstboot
+/sbin/chkconfig firstboot off
+END
 
 echo "Installing grub..."
 
