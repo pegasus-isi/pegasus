@@ -9,8 +9,8 @@ SIZE=8
 PASSWORD="pegasus"
 
 
-if ! [[ "$(cat /etc/redhat-release 2>/dev/null)" =~ "CentOS release 6" ]]; then
-    echo "This script must be run on a CentOS 6 machine"
+if ! [[ "$(cat /etc/redhat-release 2>/dev/null)" =~ "release 6" ]]; then
+    echo "This script must be run on a Red Hat/CentOS/Scientific Linux 6 machine"
     exit 1
 fi
 
@@ -98,10 +98,11 @@ none               /sys      sysfs   defaults        0 0
 EOF
 
 
-echo "Installing minimal base packages..."
-yum -c yum.conf --installroot=$mnt1/ -y install yum dhclient rsyslog openssh-server openssh-clients curl passwd kernel grub e2fsprogs rootfiles vim sudo perl nano wget ntp
-yum --installroot=$mnt1/ -y clean all
+echo "Installing base packages..."
+yum -c yum.conf --installroot=$mnt1/ -y groupinstall base
 
+echo "Installing other required packages..."
+yum --installroot=$mnt1/ -y install yum dhclient rsyslog openssh-server openssh-clients curl passwd kernel grub e2fsprogs rootfiles vim sudo perl nano wget ntp
 
 echo "Creating /etc files..."
 
@@ -122,6 +123,7 @@ NOZEROCONF=yes
 EOF
 
 # This has to be removed or the interface will not come up on Eucalyptus
+# It also causes problems when a machine is re-created in VirtualBox
 rm -f $mnt1/etc/udev/rules.d/70-persistent-net.rules
 
 # This prevents udev from generating the file above
@@ -169,8 +171,6 @@ cp /home/tutorial/.ssh/id_rsa.pub /home/tutorial/.ssh/authorized_keys
 chmod 0600 /home/tutorial/.ssh/authorized_keys
 
 echo 'tutorial	ALL=(ALL) 	ALL' >> /etc/sudoers
-
-/sbin/chkconfig ntpd on
 END
 
 # Copy tutorial files into tutorial user's home dir
@@ -181,6 +181,13 @@ fi
 
 chroot $mnt1 /bin/bash <<END
 chown -R tutorial:tutorial /home/tutorial
+END
+
+
+# Set up ntp
+chroot $mnt1 /bin/bash <<END
+/sbin/chkconfig ntpd on
+mv /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
 END
 
 
@@ -196,6 +203,11 @@ echo "Creating second loop device..."
 loop1=$(losetup -f --show $img2)
 
 
+# Using the 'u' command is important here because
+# otherwise the partition created will be larger than
+# the disk because of rounding the number of cylinders
+# This will create problems for mkfs.ext4 and the vm
+# won't boot.
 echo "Partitioning second image..."
 ! fdisk $loop1 <<END
 u
@@ -210,6 +222,8 @@ w
 END
 
 
+# The 32256 here is the offset of the first partition,
+# which is (always?) sector 63 (63*512 = 32256)
 echo "Creating third loop device..."
 loop2=$(losetup -o 32256 -f --show $img2)
 
@@ -230,17 +244,25 @@ rsync -ax -W $mnt1/ $mnt2
 echo "Mounting second proc..."
 mount -t proc none $mnt2/proc
 
-echo "Installing GUI..."
-yum -c yum.conf --installroot=$mnt2/ -y groupinstall basic-desktop desktop-platform x11 fonts
-yum --installroot=$mnt2/ -y clean all
 
+echo "Installing GUI..."
+yum --installroot=$mnt2/ -y groupinstall basic-desktop desktop-platform x11 fonts
+# This basically just adds an icon for the terminal in the toolbar
+yum --installroot=$mnt2/ -y install SL_desktop_tweaks
 # Change the default runlevel to 5 (X11)
 sed -i 's/id:3:initdefault/id:5:initdefault/' $mnt2/etc/inittab
 
+
+echo "Cleaning up image..."
+yum --installroot=$mnt2/ -y clean all
+
+
+# Disable firstboot
 chroot $mnt2 /bin/bash <<END
 echo "RUN_FIRSTBOOT=NO" > /etc/sysconfig/firstboot
 /sbin/chkconfig firstboot off
 END
+
 
 echo "Installing grub..."
 
@@ -256,7 +278,7 @@ default 0
 timeout 0
 splashimage=(hd0,0)/boot/grub/splash.xpm.gz
 hiddenmenu
-title CentOS
+title Scientific Linux
     root (hd0,0)
     kernel /boot/$KERNEL ro root=LABEL=rootdisk rd_NO_LUKS rd_NO_LVM rd_NO_MD rd_NO_DM LANG=en_US.UTF-8 KEYBOARDTYPE=pc KEYTABLE=us nomodeset quiet selinux=0
     initrd /boot/$RAMDISK
