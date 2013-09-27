@@ -1,3 +1,5 @@
+#include <unistd.h>
+
 #include "fdcache.h"
 #include "failure.h"
 #include "log.h"
