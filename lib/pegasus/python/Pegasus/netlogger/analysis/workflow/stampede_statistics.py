@@ -848,8 +848,10 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         sq_9 = sq_9.filter(Host.host_id == JobInstanceSub.host_id)
         sq_9 = sq_9.subquery()
 
-        sq_10 = self.session.query(func.sum(Invocation.remote_duration * JobInstance.multiplier_factor))
+        JI = orm.aliased(JobInstance)
+        sq_10 = self.session.query(func.sum(Invocation.remote_duration * JI.multiplier_factor))
         sq_10 = sq_10.filter(Invocation.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq_10 = sq_10.filter(Invocation.job_instance_id == JI.job_instance_id).correlate(JI)
         sq_10 = sq_10.filter(Invocation.wf_id == Job.wf_id).correlate(Job)
         sq_10 = sq_10.filter(Invocation.task_submit_seq >= 0)
         sq_10 = sq_10.group_by().subquery()
