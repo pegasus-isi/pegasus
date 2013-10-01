@@ -1075,8 +1075,32 @@ public class JDBCRC implements ReplicaCatalog
    * @see ReplicaCatalogEntry
    */
   public int delete( Map x , boolean matchAttributes){
-      throw new java.lang.UnsupportedOperationException
-                               ("delete(Map,boolean) not implemented as yet");
+      
+      int result = 0;
+      
+      //do a sequential delete for the time being
+      for(Iterator it = x.entrySet().iterator();it.hasNext();){
+          Map.Entry entry = (Map.Entry)it.next();
+          String lfn = (String)entry.getKey();
+          Collection c   = (Collection)entry.getValue();
+
+          //iterate through all RCE's for this lfn and delete
+          for(Iterator rceIt = c.iterator();rceIt.hasNext();){
+              ReplicaCatalogEntry rce = (ReplicaCatalogEntry)rceIt.next();
+
+                if( matchAttributes ){
+                    //we are deleting a very specific mapping
+                    result += delete(lfn,rce);
+                }
+                else{
+                    //deleting the lfn and pfn mapping, and rely on
+                    //cascaded deletes to delete the associated 
+                    //attributes.
+                    result += this.delete( lfn, rce.getPFN() );
+                }
+          }
+      }
+      return result;
   }
 
 
