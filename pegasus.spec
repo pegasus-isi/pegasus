@@ -35,12 +35,6 @@ ant dist
 # we want to use the tarball as that has been stripped of some git files
 (cd dist && rm -rf pegasus-%{version} && tar xzf pegasus-*.tar.gz)
 
-# RPM does not allow use to replace a directory with a symlink
-# so ship two copies of the Python module for now
-rm -f dist/pegasus-%{version}/lib*/pegasus/python/Pegasus
-cp -a dist/pegasus-%{version}/lib*/python*/site-packages/Pegasus \
-      dist/pegasus-%{version}/lib*/pegasus/python/
-
 # strip executables
 strip dist/pegasus-%{version}/bin/pegasus-invoke
 strip dist/pegasus-%{version}/bin/pegasus-cluster
