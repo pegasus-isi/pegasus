@@ -51,6 +51,10 @@ except ImportError, e:
     sys.stderr.write("ERROR: Unable to load boto library: %s\n" % e)
     exit(1)
 
+# do not use http proxies for S3
+if "http_proxy" in os.environ:
+    del os.environ['http_proxy']
+
 # The multipart upload feature we require was introduced in 2.2.2
 boto_version = tuple(int(x) for x in boto.__version__.split("."))
 if boto_version < (2,2,2):
