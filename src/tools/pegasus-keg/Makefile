@@ -13,7 +13,7 @@ MARCH	= $(shell uname -m | tr '[A-Z]' '[a-z]')
 MAJOR   = $(firstword $(subst ., ,$(VERSION)))
 SOCKIO  = $(shell /bin/ls /usr/include/sys/sockio.h 2>/dev/null)
 EXTRA_OBJ = basic.o
-EXTRA_INC = 
+EXTRA_INC = version.h
 
 
 ifndef ${prefix}
@@ -57,6 +57,9 @@ pegasus-keg.o: pegasus-keg.cc $(EXTRA_INC)
 basic.o: basic.cc basic.hh
 darwin.o: darwin.cc darwin.hh basic.hh
 linux.o: linux.cc linux.hh basic.hh
+
+version.h:
+	$(CURDIR)/genversion.sh > $(CURDIR)/version.h
 
 install: pegasus-keg
 	$(INSTALL) -m 0755 pegasus-keg $(prefix)/bin
