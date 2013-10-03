@@ -525,6 +525,7 @@ class StampedeWorkflowStatistics(SQLAlchemyInit, DoesLogging):
 
         q = self.__filter_all(q)
         q = q.filter(Jobstate.state == 'EXECUTE')
+        q = q.filter(Jobstate.local_durations != None)
 
         if self._get_job_filter() is not None:
             q = q.filter(self._get_job_filter())
