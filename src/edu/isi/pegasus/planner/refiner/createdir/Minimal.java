@@ -169,14 +169,27 @@ public class Minimal extends AbstractStrategy {
         for( Iterator<GraphNode> it = workflow.iterator(); it.hasNext(); ){
             GraphNode node = it.next();
             BitSet set     = new BitSet( bitSetSize );
+            Job job        = (Job)node.getContent();
+            String site    = getAssociatedCreateDirSite( job );
+            
+            //check if for stage out jobs there are any parents specified 
+            //or not.
+            if( job instanceof TransferJob && job.getJobType() == Job.STAGE_OUT_JOB ){
+                if( node.getParents().isEmpty() ){
+                    //means we have a stage out job only. probably the workflow
+                    //was fully reduced in data reuse
+                    mLogger.log( "Not considering job for create dir edges " + job.getID() , LogManager.DEBUG_MESSAGE_LEVEL );
+                    nodeBitMap.put(node, set);
+                    continue;
+                }
+            }
+            
             //the set is a union of all the parents set
             for( GraphNode parent: node.getParents() ){
                 BitSet pSet = nodeBitMap.get( parent );
                 set.or( pSet );
             }
             
-            Job job        = (Job)node.getContent();
-            String site    = getAssociatedCreateDirSite( job );
             if( site == null ){
                 //only ok for stage worker jobs
                 if( job instanceof TransferJob || job.getJobType() == Job.REPLICA_REG_JOB ){
@@ -191,7 +204,7 @@ public class Minimal extends AbstractStrategy {
             }
             
           
-            //System.out.println( "Create dir site for job " + job.getID() + " is " + site );
+            System.out.println( "Create dir site for job " + job.getID() + " is " + site );
 
 
             int index = siteToBitIndexMap.get( site );
