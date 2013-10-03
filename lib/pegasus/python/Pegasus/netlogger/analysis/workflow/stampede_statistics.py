@@ -1362,7 +1362,7 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         q = q.filter(Job.job_id == JobInstance.job_id)
         q = q.filter(Jobstate.job_instance_id == JobInstance.job_instance_id)
         q = q.filter(Jobstate.state == 'EXECUTE')
-        q = q.filter(Jobstate.local_durations != None)
+        q = q.filter(JobInstance.local_duration != None)
 
         if self._get_job_filter() is not None:
             q = q.filter(self._get_job_filter())
