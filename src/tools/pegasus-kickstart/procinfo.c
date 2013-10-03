@@ -19,6 +19,7 @@
  */
 
 #include <sys/wait.h>
+#include <sys/resource.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>

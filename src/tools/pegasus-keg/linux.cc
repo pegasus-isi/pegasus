@@ -114,11 +114,7 @@ pegasus_cpuinfo( char* buffer, size_t capacity )
     while ( fgets( line, sizeof(line), proc ) ) {
       within = true;
       if ( strncasecmp( line, "processor", 9 ) == 0 ) n_cpu++;
-#ifdef MARCH_IA64
-      if ( model_name == 0 && strncasecmp( line, "family", 6 ) == 0 ) {
-#else
       if ( model_name == 0 && strncasecmp( line, "model name", 10 ) == 0 ) {
-#endif
 	line[strlen(line)-1] = '\0';
 	char* s = strchr(line,':');
 	if ( s ) model_name = strdup(s+2);
