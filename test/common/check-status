@@ -31,7 +31,7 @@ if [ ! -e braindump.txt ]; then
     exit 1
 fi
 
-TIMEOUT=180
+TIMEOUT=360
 COUNT=0
 
 sleep 30s
