@@ -4,3 +4,4 @@ dist
 pegasus_service.egg-info
 *.db
 .*.swp
+.virtualenv
