@@ -7,7 +7,8 @@ fi
 
 image=$1
 #location="http://gaul.isi.edu/sl/6x/x86_64/os/"
-location="http://mirrors.usc.edu/pub/linux/distributions/centos/6/os/x86_64/"
+#location="http://mirrors.usc.edu/pub/linux/distributions/centos/6/os/x86_64/"
+location="http://gaul.isi.edu/centos/6/os/x86_64/"
 #ks="http://gaul.isi.edu/sl/pegasus-tutorial.cfg"
 
 set -e
@@ -23,7 +24,7 @@ virt-install \
     --hvm \
     --serial pty \
     --graphics none \
-    --disk path=$image.img,size=8 \
+    --disk path=$image.ec2,size=8 \
     --location $location \
     --initrd-inject=$PWD/pegasus-tutorial.cfg \
     -x "ks=file:/pegasus-tutorial.cfg console=ttyS0" \
@@ -36,9 +37,12 @@ virt-install \
     # This doesn't work because users don't own the default network
     #--network network:default
 
-qemu-img convert -f raw -O vmdk $image.img $image.vmdk
-
+# Create virtualbox image
+qemu-img convert -f raw -O vmdk $image.ec2 $image.vmdk
 zip $image.zip $image.vmdk
+
+# Create futuregrid image
+dd if=$image.ec2 of=$image.fg bs=1M skip=1
 
 virsh undefine $image
 
