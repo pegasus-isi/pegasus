@@ -1039,6 +1039,9 @@ def main():
     elif sl =='wf_stats':
         calc_wf_stats = True
     elif sl == 'jb_stats':
+        if multiple_wf:
+            logger.fatal('Job breakdown statistics cannot be computed over multiple workflows')
+            sys.exit(1)
         calc_jb_stats = True
     elif sl == 'tf_stats':
         calc_tf_stats = True
