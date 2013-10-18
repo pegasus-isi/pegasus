@@ -223,39 +223,64 @@ working dir : /lfs1/work/pegasus/run0004
     <section>
       <title>pegasus-statistics</title>
 
-      <para>Pegasus-statistics generates workflow execution statistics. To
-      generate statistics run the command as shown below.</para>
+      <para>Pegasus statistics can compute statistics over one or more than
+      one workflow run. </para>
 
-      <programlisting>$ <emphasis>pegasus-statistics /scratch/grid-setup/run0001/ -s all </emphasis>
+      <para>Command to generate statistics over a single run is as shown
+      below.</para>
+
+      <programlisting>$ <emphasis><emphasis role="bold">pegasus-statistics /scratch/grid-setup/run0001/ -s all</emphasis> </emphasis>
 
 
-...
+#
+# Pegasus Workflow Management System - http://pegasus.isi.edu
+#
+# Workflow summary:
+#   Summary of the workflow execution. It shows total
+#   tasks/jobs/sub workflows run, how many succeeded/failed etc.
+#   In case of hierarchical workflow the calculation shows the
+#   statistics across all the sub workflows.It shows the following
+#   statistics about tasks, jobs and sub workflows.
+#     * Succeeded - total count of succeeded tasks/jobs/sub workflows.
+#     * Failed - total count of failed tasks/jobs/sub workflows.
+#     * Incomplete - total count of tasks/jobs/sub workflows that are
+#       not in succeeded or failed state. This includes all the jobs
+#       that are not submitted, submitted but not completed etc. This
+#       is calculated as  difference between 'total' count and sum of
+#       'succeeded' and 'failed' count.
+#     * Total - total count of tasks/jobs/sub workflows.
+#     * Retries - total retry count of tasks/jobs/sub workflows.
+#     * Total+Retries - total count of tasks/jobs/sub workflows executed
+#       during workflow run. This is the cumulative of retries,
+#       succeeded and failed count.
+# Workflow wall time:
+#   The walltime from the start of the workflow execution to the end as
+#   reported by the DAGMAN.In case of rescue dag the value is the
+#   cumulative of all retries.
+# Workflow cumulative job wall time:
+#   The sum of the walltime of all jobs as reported by kickstart.
+#   In case of job retries the value is the cumulative of all retries.
+#   For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs),
+#   the walltime value includes jobs from the sub workflows as well.
+# Cumulative job walltime as seen from submit side:
+#   The sum of the walltime of all jobs as reported by DAGMan.
+#   This is similar to the regular cumulative job walltime, but includes
+#   job management overhead and delays. In case of job retries the value
+#   is the cumulative of all retries. For workflows having sub workflow
+#   jobs (i.e SUBDAG and SUBDAX jobs), the walltime value includes jobs
+#   from the sub workflows as well.
+------------------------------------------------------------------------------
+Type           Succeeded Failed  Incomplete  Total     Retries   Total+Retries
+Tasks          4         0       0           4         0         4            
+Jobs           17        0       0           17        0         17           
+Sub-Workflows  0         0       0           0         0         0            
+------------------------------------------------------------------------------
 
-******************************************** SUMMARY ********************************************
-...
+Workflow wall time                               : 5 mins, 18 secs
+Workflow cumulative job wall time                : 4 mins, 2 secs
+Cumulative job walltime as seen from submit side : 4 mins, 10 secs
 
------------------------------------------------------------------------------------------------------
-Type            Succeeded  Failed  Incomplete   Total      Retries  Total Run (Retries Included)
-Tasks           8          0       0            8      ||  0        8                   
-Jobs            27         0       0            27     ||  0        27                  
-Sub Workflows   2          0       0            2      ||  0        2                   
------------------------------------------------------------------------------------------------------
-
-Workflow wall time                               : 21 mins, 9 secs,     (total 1269 seconds)
-
-Workflow cumulative job wall time                : 8 mins, 4 secs,      (total 484 seconds)
-
-Cumulative job walltime as seen from submit side : 8 mins, 0 secs,      (total 480 seconds)
-
-Workflow execution statistics     : /scratch/grid-setup/run0001/statistics/workflow.txt
-
-Job instance statistics           : /scratch/grid-setup/run0001/statistics/jobs.txt
-
-Transformation statistics         : /scratch/grid-setup/run0001/statistics/breakdown.txt
-
-Time statistics                   : /scratch/grid-setup/run0001/statistics/time.txt
-
-**************************************************************************************************</programlisting>
+</programlisting>
 
       <para>By default the output gets generated to a statistics folder inside
       the submit directory. The output that is generated by pegasus-statistics
@@ -271,6 +296,98 @@ Time statistics                   : /scratch/grid-setup/run0001/statistics/time.
         up the workflow by recursively iterating through each sub
         workflow.</para>
       </note>
+
+      <para/>
+
+      <para>Command to generate statistics over all workflow runs populated in
+      a single database is as shown below.</para>
+
+      <para><programlisting>$ <emphasis><emphasis role="bold">pegasus-statistics -Dpegasus.monitord.output='mysql://s_user:s_user123@127.0.0.1:3306/stampede' -o /scratch/workflow_1_2/statistics -s all --multiple-wf</emphasis> </emphasis>
+
+
+#
+# Pegasus Workflow Management System - http://pegasus.isi.edu
+#
+# Workflow summary:
+#   Summary of the workflow execution. It shows total
+#   tasks/jobs/sub workflows run, how many succeeded/failed etc.
+#   In case of hierarchical workflow the calculation shows the
+#   statistics across all the sub workflows.It shows the following
+#   statistics about tasks, jobs and sub workflows.
+#     * Succeeded - total count of succeeded tasks/jobs/sub workflows.
+#     * Failed - total count of failed tasks/jobs/sub workflows.
+#     * Incomplete - total count of tasks/jobs/sub workflows that are
+#       not in succeeded or failed state. This includes all the jobs
+#       that are not submitted, submitted but not completed etc. This
+#       is calculated as  difference between 'total' count and sum of
+#       'succeeded' and 'failed' count.
+#     * Total - total count of tasks/jobs/sub workflows.
+#     * Retries - total retry count of tasks/jobs/sub workflows.
+#     * Total+Retries - total count of tasks/jobs/sub workflows executed
+#       during workflow run. This is the cumulative of retries,
+#       succeeded and failed count.
+# Workflow wall time:
+#   The walltime from the start of the workflow execution to the end as
+#   reported by the DAGMAN.In case of rescue dag the value is the
+#   cumulative of all retries.
+# Workflow cumulative job wall time:
+#   The sum of the walltime of all jobs as reported by kickstart.
+#   In case of job retries the value is the cumulative of all retries.
+#   For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs),
+#   the walltime value includes jobs from the sub workflows as well.
+# Cumulative job walltime as seen from submit side:
+#   The sum of the walltime of all jobs as reported by DAGMan.
+#   This is similar to the regular cumulative job walltime, but includes
+#   job management overhead and delays. In case of job retries the value
+#   is the cumulative of all retries. For workflows having sub workflow
+#   jobs (i.e SUBDAG and SUBDAX jobs), the walltime value includes jobs
+#   from the sub workflows as well.
+------------------------------------------------------------------------------
+Type           Succeeded Failed  Incomplete  Total     Retries   Total+Retries
+Tasks          8         0       0           8         0         8            
+Jobs           34        0       0           34        0         34           
+Sub-Workflows  0         0       0           0         0         0            
+------------------------------------------------------------------------------
+
+Workflow cumulative job wall time                : 8 mins, 5 secs
+Cumulative job walltime as seen from submit side : 8 mins, 35 secs
+
+</programlisting><note>
+          <para>When computing statistics over multiple workflows, please
+          note, </para>
+
+          <orderedlist>
+            <listitem>
+              <para>All workflow run information should be populated in a
+              single STAMPEDE database.</para>
+            </listitem>
+
+            <listitem>
+              <para>The --output argument must be specified. </para>
+            </listitem>
+
+            <listitem>
+              <para>Job statistics information is not computed.</para>
+            </listitem>
+
+            <listitem>
+              <para>Workflow wall time information is not computed.</para>
+            </listitem>
+          </orderedlist>
+        </note></para>
+
+      <para>Pegasus statistics can also compute statistics over a few
+      specified workflow runs, by specifying the either the submit
+      directories, or the workflow UUIDs. </para>
+
+      <programlisting>pegasus-statistics -Dpegasus.monitord.output='&lt;DB_URL&gt;' -o &lt;OUTPUT_DIR&gt; &lt;SUBMIT_DIR_1&gt; &lt;SUBMIT_DIR_2&gt; .. &lt;SUBMIT_DIR_n&gt;
+
+OR
+
+pegasus-statistics -Dpegasus.monitord.output='&lt;DB_URL&gt;' -o &lt;OUTPUT_DIR&gt; <emphasis
+          role="bold">--isuuid</emphasis> &lt;UUID_1&gt; &lt;UUID_2&gt; .. &lt;UUID_n&gt;
+
+</programlisting>
 
       <para>pegasus-statistics summary which is printed on the stdout contains
       the following information.</para>
@@ -438,25 +555,25 @@ Time statistics                   : /scratch/grid-setup/run0001/statistics/time.
             <row>
               <entry>2a6df11b-9972-4ba0-b4ba-4fd39c357af4</entry>
 
-              <entry></entry>
+              <entry/>
 
-              <entry></entry>
+              <entry/>
 
-              <entry></entry>
+              <entry/>
 
-              <entry></entry>
+              <entry/>
 
-              <entry></entry>
+              <entry/>
 
-              <entry></entry>
+              <entry/>
 
-              <entry></entry>
+              <entry/>
 
               <entry>0</entry>
             </row>
 
             <row>
-              <entry></entry>
+              <entry/>
 
               <entry>Tasks</entry>
 
@@ -472,11 +589,11 @@ Time statistics                   : /scratch/grid-setup/run0001/statistics/time.
 
               <entry>4</entry>
 
-              <entry></entry>
+              <entry/>
             </row>
 
             <row>
-              <entry></entry>
+              <entry/>
 
               <entry>Jobs</entry>
 
@@ -492,11 +609,11 @@ Time statistics                   : /scratch/grid-setup/run0001/statistics/time.
 
               <entry>13</entry>
 
-              <entry></entry>
+              <entry/>
             </row>
 
             <row>
-              <entry></entry>
+              <entry/>
 
               <entry>Sub Workflows</entry>
 
@@ -512,7 +629,7 @@ Time statistics                   : /scratch/grid-setup/run0001/statistics/time.
 
               <entry>0</entry>
 
-              <entry></entry>
+              <entry/>
             </row>
           </tbody>
         </tgroup>
@@ -1313,7 +1430,7 @@ Graphs and charts generated by pegasus-plots can be viewed by opening the genera
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/pegasus_plots_index.png" width="100%" />
+            <imagedata fileref="images/pegasus_plots_index.png" width="100%"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -1330,7 +1447,7 @@ Graphs and charts generated by pegasus-plots can be viewed by opening the genera
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/dax_page.png" width="100%" />
+            <imagedata fileref="images/dax_page.png" width="100%"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -1345,7 +1462,7 @@ Graphs and charts generated by pegasus-plots can be viewed by opening the genera
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/dag_page.png" width="100%" />
+            <imagedata fileref="images/dag_page.png" width="100%"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -1361,7 +1478,7 @@ Graphs and charts generated by pegasus-plots can be viewed by opening the genera
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/gantt_chart_page.png" width="100%" />
+            <imagedata fileref="images/gantt_chart_page.png" width="100%"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -1382,7 +1499,7 @@ Graphs and charts generated by pegasus-plots can be viewed by opening the genera
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/host_chart_page.png" width="100%" />
+            <imagedata fileref="images/host_chart_page.png" width="100%"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -1403,7 +1520,7 @@ Graphs and charts generated by pegasus-plots can be viewed by opening the genera
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/time_chart_page.png" width="100%" />
+            <imagedata fileref="images/time_chart_page.png" width="100%"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -1423,7 +1540,7 @@ Graphs and charts generated by pegasus-plots can be viewed by opening the genera
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/breakdown_chart_page.png" width="100%" />
+            <imagedata fileref="images/breakdown_chart_page.png" width="100%"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -1465,7 +1582,7 @@ Graphs and charts generated by pegasus-plots can be viewed by opening the genera
       the current user i.e. the user who executes the pegasus-dashboard
       command.</para>
 
-      <para></para>
+      <para/>
 
       <para>The Dashboard's home page lists all workflows, which have been run
       by the current-user. The home page shows the status of each of the
@@ -1478,7 +1595,7 @@ Graphs and charts generated by pegasus-plots can be viewed by opening the genera
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/dashboard_home.png" width="100%" />
+            <imagedata fileref="images/dashboard_home.png" width="100%"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -1503,7 +1620,7 @@ Graphs and charts generated by pegasus-plots can be viewed by opening the genera
         <mediaobject>
           <imageobject>
             <imagedata fileref="images/dashboard_workflow_details.png"
-                       width="100%" />
+                       width="100%"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -1522,7 +1639,7 @@ Graphs and charts generated by pegasus-plots can be viewed by opening the genera
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/dashboard_job_details.png" width="100%" />
+            <imagedata fileref="images/dashboard_job_details.png" width="100%"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -1537,7 +1654,7 @@ Graphs and charts generated by pegasus-plots can be viewed by opening the genera
         <mediaobject>
           <imageobject>
             <imagedata fileref="images/dashboard_invocation_details.png"
-                       width="100%" />
+                       width="100%"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -1567,7 +1684,7 @@ Graphs and charts generated by pegasus-plots can be viewed by opening the genera
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/dashboard_statistics.png" width="100%" />
+            <imagedata fileref="images/dashboard_statistics.png" width="100%"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -1597,7 +1714,7 @@ Graphs and charts generated by pegasus-plots can be viewed by opening the genera
         <mediaobject>
           <imageobject>
             <imagedata fileref="images/dashboard_plots_job_dist.png"
-                       width="100%" />
+                       width="100%"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -1611,7 +1728,7 @@ Graphs and charts generated by pegasus-plots can be viewed by opening the genera
         <mediaobject>
           <imageobject>
             <imagedata fileref="images/dashboard_plots_time_charts.png"
-                       width="100%" />
+                       width="100%"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -1625,7 +1742,7 @@ Graphs and charts generated by pegasus-plots can be viewed by opening the genera
         <mediaobject>
           <imageobject>
             <imagedata fileref="images/dashboard_plots_wf_gantt.png"
-                       width="100%" />
+                       width="100%"/>
           </imageobject>
         </mediaobject>
       </figure>
