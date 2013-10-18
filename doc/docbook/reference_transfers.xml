@@ -298,6 +298,25 @@
         configuration. The staging site can be specified using the <emphasis
         role="bold">--staging-site</emphasis> option to pegasus-plan.</para>
       </tip>
+
+      <para>In this setup, Pegasus always stages the input files through the
+      staging site i.e the stage-in job stages in data from the input site to
+      the staging site. The PegasusLite jobs that start up on the worker
+      nodes, then pull the input data from the staging site for each job. In
+      some cases, it might be useful to setup the PegasusLite jobs to pull
+      input data directly from the input site without going through the
+      staging server. This is based on the assumption that the worker nodes
+      can access the input site. Starting 4.3 release, users can enable this.
+      However, you should be aware that the access to the input site is no
+      longer throttled ( as in case of stage in jobs). If large number of
+      compute jobs start at the same time in a workflow, the input server will
+      see a connection from each job.</para>
+
+      <tip>
+        <para>Set <emphasis role="bold">pegasus.transfer.bypass.input.staging
+        </emphasis> to <emphasis role="bold">true </emphasis>to enable the
+        bypass of staging of input files via the staging server.</para>
+      </tip>
     </section>
 
     <section>
@@ -393,6 +412,25 @@
         to <emphasis role="bold">condorio</emphasis> to run in this
         configuration. In this mode, the staging site is automatically set to
         site <emphasis role="bold">local</emphasis></para>
+      </tip>
+
+      <para>In this setup, Pegasus always stages the input files through the
+      submit host i.e the stage-in job stages in data from the input site to
+      the submit host (local site). The input data is then transferred to
+      remote worker nodes from the submit host using Condor file transfers. In
+      the case, where the input data is locally accessible at the submit host
+      i.e the input site and the submit host are the same, then it is possible
+      to bypass the creation of separate stage in jobs that copy the data to
+      the workflow specific directory on the submit host. Instead, Condor file
+      transfers can be setup to transfer the input files directly from the
+      locally accessible input locations ( file URL's with site attribute set
+      to local) specified in the replica catalog. Starting 4.3 release, users
+      can enable this. </para>
+
+      <tip>
+        <para>Set <emphasis role="bold">pegasus.transfer.bypass.input.staging
+        </emphasis> to <emphasis role="bold">true </emphasis>to bypass the
+        creation of separate stage in jobs.</para>
       </tip>
     </section>
   </section>
