@@ -67,7 +67,7 @@
       <mediaobject>
         <imageobject>
           <imagedata contentdepth="100%" fileref="images/condor_layout.png"
-                     scalefit="1" width="100%" />
+                     scalefit="1" width="100%"/>
         </imageobject>
       </mediaobject>
     </figure>
@@ -272,7 +272,7 @@ pegasus.data.configuration    condorio</programlisting>
           <imageobject>
             <imagedata align="center" contentdepth="100%"
                        fileref="images/fg-pwms-prefio.3.png" scalefit="1"
-                       valign="middle" width="100%" />
+                       valign="middle" width="100%"/>
           </imageobject>
         </mediaobject>
       </figure></para>
@@ -364,7 +364,7 @@ pegasus.data.configuration    condorio</programlisting>
             <imageobject>
               <imagedata align="center" contentdepth="100%"
                          fileref="images/ec2.png" scalefit="1" valign="middle"
-                         width="100%" />
+                         width="100%"/>
             </imageobject>
           </mediaobject>
         </figure></para>
@@ -404,7 +404,7 @@ pegasus.data.configuration    condorio</programlisting>
           <imageobject>
             <imagedata align="center" contentdepth="100%"
                        fileref="images/concepts-site-layout.jpg" scalefit="1"
-                       valign="middle" width="100%" />
+                       valign="middle" width="100%"/>
           </imageobject>
         </mediaobject>
       </figure></para>
@@ -742,6 +742,77 @@ pegasus.data.configuration    condorio</programlisting>
         directory when the job is launched on the remote node.</para>
       </section>
     </section>
+  </section>
+
+  <section>
+    <title>Remote Cluster using BOSCO and SSH submissions</title>
+
+    <para><ulink url="http://bosco.opensciencegrid.org/about/">BOSCO</ulink>
+    enables users to submit jobs to remote clusters using SSH. This
+    description describes how to specify a site catalog entry for a site to
+    which jobs can be submitted over SSH. To tag a site for SSH submission,
+    the following profiles need to be specified for the site in the site
+    catalog</para>
+
+    <orderedlist>
+      <listitem>
+        <para><emphasis role="bold">pegasus</emphasis> profile <emphasis
+        role="bold">style</emphasis> with value set to <emphasis
+        role="bold">ssh</emphasis></para>
+      </listitem>
+
+      <listitem>
+        <para>Specify the service information as grid gateways. This should
+        match what Bosco provided when the cluster was set up.</para>
+      </listitem>
+    </orderedlist>
+
+    <para>An example site catalog entry for a BOSCO site looks as follows in
+    the site catalog</para>
+
+    <programlisting>
+&lt;sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd"
+             version="4.0"&gt;
+    
+    &lt;site  handle="USC_HPCC_Bosco" arch="x86_64" os="LINUX"&gt;
+
+        &lt;!-- Specify the service information as grid gateways. This should match what Bosco provided when the cluster
+             was set up. --&gt;
+        &lt;grid type="batch" contact="username@hpc-login2.usc.edu" scheduler="PBS" jobtype="compute"/&gt;
+        &lt;grid type="batch" contact="username@hpc-login2.usc.edu" scheduler="PBS" jobtype="auxillary"/&gt;
+
+        &lt;!-- Scratch directory on the cluster --&gt;
+        &lt;directory type="shared-scratch" path="/home/rcf-40/tmp"&gt;
+            &lt;file-server operation="all" url="scp://username@hpc-login2.usc.edu/home/rcf-40/tmp"/&gt;
+        &lt;/directory&gt;
+
+        &lt;!-- SSH is the style to use for Bosco SSH submits --&gt;
+        &lt;profile namespace="pegasus" key="style"&gt;ssh&lt;/profile&gt;
+
+        &lt;!-- Bosco is using the grid universe, which means the globus
+             namespace can be used to control the jobs --&gt;
+        &lt;profile namespace="globus" key="queue"&gt;default&lt;/profile&gt;
+        &lt;profile namespace="globus" key="maxwalltime"&gt;30&lt;/profile&gt;
+
+    &lt;/site&gt;
+
+
+
+&lt;/sitecatalog&gt;
+
+</programlisting>
+
+    <note>
+      <para>It is recommended to have a submit node configured either as a
+      BOSCO submit node or a vanilla Condor node. You cannot have Condor
+      configured both as a BOSCO install and a traditional condor submit
+      node.</para>
+    </note>
+
+    <para>Starting 4.3 there is a bosco-shared-fs example in the examples
+    directory of the distribution.</para>
   </section>
 
   <section id="campus_cluster">
