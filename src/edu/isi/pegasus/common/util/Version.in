@@ -45,12 +45,12 @@ public class Version
   /**
    * This constant defines the minor version number.
    */
-  public static final int MINOR = 3;
+  public static final int MINOR = 4;
 
   /**
    * This constant defines the patch level version.
    */
-  public static final int PLEVEL = 1;
+  public static final int PLEVEL = 0;
 
   /**
    * Instance variable keeping track of the Singleton.
