@@ -75,7 +75,7 @@ Python 2.6.2</programlisting></para>
 
     <programlisting>  Example for bourne shells:
 
-    # <emphasis role="bold">export PATH=/some/install/pegasus-4.2.0/bin:$PATH</emphasis></programlisting>
+    # <emphasis role="bold">export PATH=/some/install/pegasus-4.3.0/bin:$PATH</emphasis></programlisting>
 
     <note>
       <para>Pegasus 4.x is different from previous versions of Pegasus in that
@@ -124,7 +124,7 @@ Running Transaction
 Installing     : pegasus
 
 Installed:
-pegasus   :4.2.0-1                                                                                                                        
+pegasus   :4.3.0-1                                                                                                                        
 
 Complete!</programlisting>
     </section>
@@ -174,7 +174,7 @@ Complete!</programlisting>
       <listitem>
         <para>include the Pegasus bin directory in your PATH</para>
 
-        <para><programlisting># <emphasis role="bold">export PATH=/path/to/pegasus-4.2.0:$PATH</emphasis></programlisting></para>
+        <para><programlisting># <emphasis role="bold">export PATH=/path/to/pegasus-4.3.0:$PATH</emphasis></programlisting></para>
       </listitem>
     </itemizedlist>
   </section>
