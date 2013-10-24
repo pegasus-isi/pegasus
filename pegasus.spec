@@ -1,7 +1,7 @@
 Name:           pegasus
-Version:        4.3.0cvs
+Version:        4.3.0
 Release:        1%{?dist}
-Summary:        Workflow management system for Condor, grids, and clouds
+Summary:        Workflow management system for HTCondor, grids, and clouds
 Group:          Applications/System
 License:        ASL 2.0
 URL:            http://pegasus.isi.edu/
@@ -77,6 +77,9 @@ rm -Rf %{buildroot}
 
 
 %changelog
+* Wed Oct 23 2013 Mats Rynge <rynge@isi.edu> 4.3.0
+- 4.3.0 release
+
 * Wed Mar 13 2013 Mats Rynge <rynge@isi.edu> 4.2.1cvs
 - 4.2.1cvs release
 
