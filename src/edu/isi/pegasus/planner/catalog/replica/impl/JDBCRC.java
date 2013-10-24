@@ -782,7 +782,7 @@ public class JDBCRC implements ReplicaCatalog
     if ( mConnection == null ) throw new RuntimeException( c_error );
 
     // prepare statement
-    boolean flag = false;
+    //boolean flag = false;
     boolean where = false;
     StringBuffer q = new StringBuffer(256);
     q.append("SELECT DISTINCT r.id,r.lfn,r.pfn FROM rc_lfn r, rc_attr a");
@@ -791,14 +791,20 @@ public class JDBCRC implements ReplicaCatalog
       String s, key = (String) i.next();
       if ( key.equals("lfn") ) {
 	s = addItem( constraints.get("lfn"), "r.lfn", where );
+        where = true;
       } else if ( key.equals("pfn") ) {
 	s = addItem( constraints.get("pfn"), "r.pfn", where );
+        where = true;
       } else {
-	if ( ! flag ) {
+	if ( ! where ) {
 	  q.append( where ? " AND " : " WHERE " ).append( "r.id=a.id" );
-	  flag = true;
+	  where = true;
 	}
-	s = addItem( constraints.get(key), "a." + key, where );
+	//s = addItem( constraints.get(key), "a." + key, where );
+        //add the clause to check on attribute name
+        s = addItem( key, "a.name", where );
+        where = true;
+        s = addItem( constraints.get(key), "a.value", where );
       }
       if ( s.length() > 0 ) {
 	where = true;
