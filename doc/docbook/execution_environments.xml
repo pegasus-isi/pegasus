@@ -749,10 +749,10 @@ pegasus.data.configuration    condorio</programlisting>
 
     <para><ulink url="http://bosco.opensciencegrid.org/about/">BOSCO</ulink>
     enables users to submit jobs to remote clusters using SSH. This
-    description describes how to specify a site catalog entry for a site to
+    section describes how to specify a site catalog entry for a site to
     which jobs can be submitted over SSH. To tag a site for SSH submission,
     the following profiles need to be specified for the site in the site
-    catalog</para>
+    catalog:</para>
 
     <orderedlist>
       <listitem>
@@ -806,9 +806,10 @@ pegasus.data.configuration    condorio</programlisting>
 
     <note>
       <para>It is recommended to have a submit node configured either as a
-      BOSCO submit node or a vanilla Condor node. You cannot have Condor
-      configured both as a BOSCO install and a traditional condor submit
-      node.</para>
+      BOSCO submit node or a vanilla HTCondor node. You cannot have HTCondor
+      configured both as a BOSCO install and a traditional HTCondor submit
+      node at the same time as BOSCO will override the traditional HTCondor
+      pool in the user environment.</para>
     </note>
 
     <para>Starting 4.3 there is a bosco-shared-fs example in the examples
