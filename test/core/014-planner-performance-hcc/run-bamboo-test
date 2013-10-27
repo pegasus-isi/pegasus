@@ -62,7 +62,7 @@ START_TS=`/bin/date +'%s'`
     --conf pegasusrc \
     --sites condorpool \
     --dir work \
-    --output local \
+    --output-site local \
     --cluster label \
     --dax isptm.dax \
     | tee plan.out

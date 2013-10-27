@@ -80,7 +80,7 @@ pegasus-plan \
     --conf $testdir/pegasusrc \
     --sites condorpool \
     --dir work \
-    --output local \
+    --output-site local \
     --input-dir $input_dir \
     --output-dir $output_dir \
     --dax blackdiamond.dax \

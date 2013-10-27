@@ -98,7 +98,7 @@ pegasus-plan \
     --conf pegasusrc \
     --sites CCG \
     --dir work \
-    --output local \
+    --output-site local \
     --nocleanup \
     --dax dag.xml \
     --cluster horizontal \

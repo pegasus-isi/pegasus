@@ -36,7 +36,7 @@ pegasus-plan \
     --dir submit \
     --dax dax.xml \
     --sites local \
-    --output local \
+    --output-site local \
     --nocleanup
 
 exit $?

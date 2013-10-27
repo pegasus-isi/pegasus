@@ -53,7 +53,7 @@ pegasus-plan \
     -Dpegasus.code.generator=Shell \
     --conf pegasusrc \
     --sites local \
-    --output local \
+    --output-site local \
     --dir work/ \
     --relative-submit-dir ${RUN_ID} \
     --nocleanup \

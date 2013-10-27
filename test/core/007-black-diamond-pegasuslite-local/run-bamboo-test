@@ -52,7 +52,7 @@ pegasus-plan \
     --conf $testdir/pegasusrc \
     --sites local \
     --dir work \
-    --output local \
+    --output-site local \
     --cluster horizontal \
     --dax blackdiamond.dax \
     --submit | tee $TOPDIR/plan.out
