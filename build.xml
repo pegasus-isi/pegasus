@@ -218,9 +218,15 @@
     <chmod perm="644" file="${dist.jars}/vdl.jar"/>
   </target>
 
-  <target name="doc" depends="docbook,javadoc,pythondoc,perldoc">
-  </target>    
-  
+  <target name="doc" depends="docbook,javadoc,pythondoc,perldoc,man-install">
+    <exec executable="sh" dir="dist">
+      <arg value="-c"/>
+      <arg value="tar -cf pegasus-doc-${pegasus.version}.tar pegasus-${pegasus.version}/share/{man,doc}"/>
+    </exec>
+    <gzip src="dist/pegasus-doc-${pegasus.version}.tar" destfile="dist/pegasus-doc-${pegasus.version}.tar.gz"/>
+    <delete file="dist/pegasus-doc-${pegasus.version}.tar"/>
+  </target>
+
   <target name="docbook" depends="build-setup,validate-make"
           description="Generates documentation from docbook source">
     <mkdir dir="${dist.doc}/html"/>
