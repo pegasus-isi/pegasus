@@ -73,7 +73,7 @@ pegasus-plan \
     --dax dax.xml \
     --sites condor_pool \
     --staging-site local \
-    --output local \
+    --output-site local \
     --submit | tee $TOP_DIR/plan.out
 
 

@@ -125,7 +125,7 @@ pegasus-plan \
     --conf ${CONFIG}/pegasusrc \
     --sites ${execution_site} \
     --staging-site $staging_site \
-    --output $output_site \
+    --output-site $output_site \
     --dir work \
     --nocleanup \
     --dax ${DAX} \
