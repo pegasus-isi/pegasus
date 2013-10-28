@@ -219,9 +219,9 @@
   </target>
 
   <target name="doc" depends="docbook,javadoc,pythondoc,perldoc,man-install">
-    <exec executable="sh" dir="dist">
+    <exec executable="sh" dir="dist" failonerror="true">
       <arg value="-c"/>
-      <arg value="tar -cf pegasus-doc-${pegasus.version}.tar pegasus-${pegasus.version}/share/{man,doc}"/>
+      <arg value="tar -cf pegasus-doc-${pegasus.version}.tar pegasus-${pegasus.version}/share/man pegasus-${pegasus.version}/share/doc"/>
     </exec>
     <gzip src="dist/pegasus-doc-${pegasus.version}.tar" destfile="dist/pegasus-doc-${pegasus.version}.tar.gz"/>
     <delete file="dist/pegasus-doc-${pegasus.version}.tar"/>
@@ -422,7 +422,7 @@
     <delete dir="${dist.man}" verbose="true"/>
 
     <!-- creates the worker tarball -->
-    <exec executable="sh" dir="dist">
+    <exec executable="sh" dir="dist" failonerror="true">
       <arg value="-c"/>
       <arg value="tar --exclude=\.git --exclude=\.gitignore -cf pegasus-worker-${pegasus.version}.tar pegasus-${pegasus.version}"/>
     </exec>
@@ -433,21 +433,21 @@
 
   <target name="cpio">
     <!-- copies trees preserving all flags and links -->
-    <exec executable="sh" dir="${src.dir}">
+    <exec executable="sh" dir="${src.dir}" failonerror="true">
       <arg value="-c"/>
       <arg value="find * -depth | fgrep -v .git | cpio -pdma ${dst.dir}"/>
     </exec>
   </target>
 
  <target name="dist-trunk" depends="dist" description="Creates a dist tarball with the trunk dir name">
-     <exec executable="sh" dir="dist">
+     <exec executable="sh" dir="dist" failonerror="true">
       <arg value="-c"/>
       <arg value="tar --exclude=\.git --exclude=\.gitignore -zcf pegasus-binary-${pegasus.version}.tar.gz pegasus-${pegasus.version}"/>
     </exec>
 </target>
 
  <target name="dist-test" depends="dist" description="Creates a dist tarball with the trunk dir name">
-     <exec executable="sh">
+     <exec executable="sh" failonerror="true">
       <arg value="-c"/>
       <arg value="tar --exclude=\.git --exclude=\.gitignore -zcf dist/pegasus-test-${pegasus.version}.tar.gz test"/>
     </exec>
@@ -576,7 +576,7 @@
     </copy>
 
     <!-- creates the binary tarball -->
-    <exec executable="sh" dir="dist">
+    <exec executable="sh" dir="dist" failonerror="true">
       <arg value="-c"/>
       <arg value="tar --exclude=\.git --exclude=\.gitignore -cf pegasus-binary-${pegasus.version}.tar pegasus-${pegasus.version}"/>
     </exec>
