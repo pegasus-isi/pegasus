@@ -204,7 +204,7 @@ public class Minimal extends AbstractStrategy {
             }
             
           
-            System.out.println( "Create dir site for job " + job.getID() + " is " + site );
+            //System.out.println( "Create dir site for job " + job.getID() + " is " + site );
 
 
             int index = siteToBitIndexMap.get( site );
