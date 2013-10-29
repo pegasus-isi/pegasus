@@ -9,7 +9,7 @@ CREATE TABLE sequences (
 	currval		BIGINT DEFAULT 0,
 
 	CONSTRAINT      pk_sequences PRIMARY KEY(name)
-) type=InnoDB;
+) engine=InnoDB;
 
 CREATE TABLE pegasus_schema (
 	name		VARCHAR(64) NOT NULL,
@@ -19,4 +19,4 @@ CREATE TABLE pegasus_schema (
 	creation	DATETIME,
 
 	CONSTRAINT	pk_pegasus_schema PRIMARY KEY(name)
-) type=InnoDB;
+) engine=InnoDB;

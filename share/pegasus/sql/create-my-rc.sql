@@ -12,7 +12,7 @@ CREATE TABLE rc_lfn (
 
    CONSTRAINT pk_rc_lfn PRIMARY KEY(id),
    CONSTRAINT sk_rc_lfn UNIQUE(lfn,pfn)
-) type=InnoDB;
+) engine=InnoDB;
 
 CREATE INDEX ix_rc_lfn ON rc_lfn(lfn);
 
@@ -23,6 +23,6 @@ CREATE TABLE rc_attr (
 
    CONSTRAINT pk_rc_attr PRIMARY KEY(id,name),
    CONSTRAINT fk_rc_attr FOREIGN KEY(id) REFERENCES rc_lfn(id) ON DELETE CASCADE
-) type=InnoDB;
+) engine=InnoDB;
 
 CREATE INDEX ix_rc_attr ON rc_attr(name);
