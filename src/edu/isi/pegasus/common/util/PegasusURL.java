@@ -57,7 +57,7 @@ public class PegasusURL {
     private String mProtocol;
 
     /**
-     * The hpstname referred to by the PegasusURL.
+     * The hostname referred to by the PegasusURL.
      * Can include the port also
      */
     private String mHost;
@@ -111,7 +111,7 @@ public class PegasusURL {
             mPath     = m.group( 3 );
         }
         else{
-            throw new RuntimeException( "Unable to pass URL " + url );
+            throw new RuntimeException( "Unable to parse URL " + url );
         }
     }
 
