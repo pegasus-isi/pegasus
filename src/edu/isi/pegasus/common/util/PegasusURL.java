@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
  * @author  Mats Rynge
  */
 public class PegasusURL {
-    
+
     /**
      * The scheme name for file url.
      */
@@ -40,12 +40,12 @@ public class PegasusURL {
     public static final String DEFAULT_PROTOCOL = "file";
 
     /**
-     * 
+     *
      * Stores the regular expressions necessary to parse a PegasusURL into 3 components
      * protocol, host and path
      */
     private static final String mRegexExpression = "([\\w]+)://([\\w\\.\\-:@]*)(/[\\S]*)";
-            
+
     /**
      * Stores compiled patterns at first use, quasi-Singleton.
      */
@@ -174,7 +174,7 @@ public class PegasusURL {
 
     /**
      * The contents represented as a string
-     * 
+     *
      * @return
      */
     public String toString(){
@@ -218,5 +218,16 @@ public class PegasusURL {
         System.out.println( url );
         System.out.println( new PegasusURL(url) );
 
+        url =  "http://isis.isi.edu/" ;
+        System.out.println( url );
+        System.out.println( new PegasusURL(url) );
+
+        url =  "http://isis.isi.edu/filename" ;
+        System.out.println( url );
+        System.out.println( new PegasusURL(url) );
+
+        url =  "http://isis.isi.edu/directory/filename" ;
+        System.out.println( url );
+        System.out.println( new PegasusURL(url) );
     }
 }
