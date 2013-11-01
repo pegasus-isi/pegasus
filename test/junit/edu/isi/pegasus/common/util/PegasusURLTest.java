@@ -94,6 +94,11 @@ public class PegasusURLTest {
         mLogger.logEventStart( "test.common.util.PegasusURL", "set", Integer.toString(set++) );
         testURL( "http://isis.isi.edu/" , "http", "isis.isi.edu", "/", "http://isis.isi.edu" );
         mLogger.logEventCompletion();
+        
+        //url =  "http://isis.isi.edu" ;
+        mLogger.logEventStart( "test.common.util.PegasusURL", "set", Integer.toString(set++) );
+        testURL( "http://isis.isi.edu" , "http", "isis.isi.edu", "", "http://isis.isi.edu" );
+        mLogger.logEventCompletion();
     }
     
     @After
