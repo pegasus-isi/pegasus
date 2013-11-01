@@ -157,7 +157,7 @@
     <javac destdir="${test.src}" srcdir="test/junit"
            target="${build.target}" source="${build.source}"
            encoding="UTF-8" debug="true"
-           includes="edu/isi/pegasus/planner/**/*.java"           
+           includes="edu/isi/pegasus/**/*.java"           
            includeantruntime="false">
 
           <classpath>
@@ -205,7 +205,7 @@
           description="Create the PEGASUS Test JAR files to use for unit tests">
     <mkdir dir="${dist.jars}"/>
     <jar destfile="${dist.jars}/pegasus-test.jar" basedir="${test.src}"
-         includes="edu/isi/pegasus/planner/**/*.class"/>
+         includes="edu/isi/pegasus/**/*.class"/>
     <chmod perm="0644" file="${dist.jars}/pegasus-test.jar"/>
   </target>
 
