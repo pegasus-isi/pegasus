@@ -229,5 +229,6 @@ public class PegasusURL {
         url =  "http://isis.isi.edu/directory/filename" ;
         System.out.println( url );
         System.out.println( new PegasusURL(url) );
+
     }
 }
