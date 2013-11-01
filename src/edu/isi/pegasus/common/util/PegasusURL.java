@@ -218,5 +218,17 @@ public class PegasusURL {
         System.out.println( url );
         System.out.println( new PegasusURL(url) );
 
+        url =  "http://isis.isi.edu/" ;
+        System.out.println( url );
+        System.out.println( new PegasusURL(url) );
+
+        url =  "http://isis.isi.edu/filename" ;
+        System.out.println( url );
+        System.out.println( new PegasusURL(url) );
+
+        url =  "http://isis.isi.edu/directory/filename" ;
+        System.out.println( url );
+        System.out.println( new PegasusURL(url) );
+
     }
 }
