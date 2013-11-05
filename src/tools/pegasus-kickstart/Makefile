@@ -1,7 +1,7 @@
 INSTALL = install
 RM = rm -f
 CC = gcc
-CFLAGS = -O
+CFLAGS = -Wno-invalid-source-encoding -O
 LD = $(CC)
 LOADLIBES = -lm
 SYSTEM = $(shell uname -s | tr '[a-z]' '[A-Z]' | tr -d '_ -/')
@@ -118,7 +118,7 @@ machine/darwin.o: machine/darwin.c machine/basic.c machine/darwin.h \
   machine/../tools.h
 
 version.h:
-	$(CURDIR)/genversion.sh > $(CURDIR)/version.h
+	$(CURDIR)/../../../release-tools/getversion --header > $(CURDIR)/version.h
 
 install: pegasus-kickstart
 	$(INSTALL) -m 0755 pegasus-kickstart $(prefix)/bin

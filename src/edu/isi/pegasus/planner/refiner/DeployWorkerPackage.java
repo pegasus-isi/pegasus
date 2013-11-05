@@ -394,9 +394,7 @@ public class DeployWorkerPackage
                   !( mUserSpecifiedSourceLocation == null || mUserSpecifiedSourceLocation.trim().length()== 0 );
     
         Version version = Version.instance();
-        StringBuffer sb = new StringBuffer();
-        sb.append( version.MAJOR ).append( "." ).append( version.MINOR );
-        mPlannerMajorMinorVersion = sb.toString();
+        mPlannerMajorMinorVersion = version.getMajor() + "." + version.getMinor();
     }
 
 

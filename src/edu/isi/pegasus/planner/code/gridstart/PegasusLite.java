@@ -299,13 +299,9 @@ public class PegasusLite implements GridStart {
         mChmodOnExecutionSiteMap = new HashMap<String,String>();
 
         Version version = Version.instance();
-        mMajorVersionLevel = Integer.toString( Version.MAJOR );
-        mMinorVersionLevel = Integer.toString( Version.MINOR );
-        mPatchVersionLevel = Integer.toString( Version.PLEVEL );
-        if( version.toString().endsWith( "cvs" ) ){
-            mPatchVersionLevel += "cvs";
-        }
-
+        mMajorVersionLevel = version.getMajor();
+        mMinorVersionLevel = version.getMinor();
+        mPatchVersionLevel = version.getPatch();
 
         mWorkerNodeExecution = mProps.executeOnWorkerNode();
         if( mWorkerNodeExecution ){

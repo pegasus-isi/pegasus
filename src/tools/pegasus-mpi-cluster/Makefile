@@ -104,7 +104,7 @@ depends:
 	g++ -MM *.cpp > depends.mk
 
 version.h:
-	$(CURDIR)/genversion.sh $(CURDIR) > $(CURDIR)/version.h
+	$(CURDIR)/../../../release-tools/getversion --header > $(CURDIR)/version.h
 
 ifeq ($(shell which ctags || echo n),n)
 tags:
