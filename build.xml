@@ -4,7 +4,7 @@
   <property file="build.properties"/>
   <property name="build.source" value="1.6"/>
   <property name="build.target" value="1.6"/>
-  <property name="make" value="${basedir}/release-tools/make.sh"/>
+  <property name="make" value="make"/>
   <property name="compile.lint" value="-Xlint:none"/>
   <property name="build.src" location="build/main/classes"/>
   <property name="test.src"  location="build/tests/classes"/>
