@@ -24,7 +24,13 @@ EOF
     exit 0
 fi
 
+# Just the major and minor versions
+if [ "$1" == "--majorminor" ]; then
+    echo $VERSION | cut -d. -f1,2
+    exit 0
+fi
+
 # In all other cases, print usage
-echo "Usage: $0 [--header]"
+echo "Usage: $0 [--header | --majorminor]"
 exit 1
 
