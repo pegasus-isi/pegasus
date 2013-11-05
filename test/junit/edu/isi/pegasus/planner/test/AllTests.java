@@ -15,21 +15,19 @@
  */
 package edu.isi.pegasus.planner.test;
 
-
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
-
-// specify an array of test classes
 @Suite.SuiteClasses({
+    edu.isi.pegasus.common.util.VersionTest.class,
+    edu.isi.pegasus.common.util.PegasusURLTest.class,
     edu.isi.pegasus.planner.transfer.mapper.FlatOutputMapperTest.class,
     edu.isi.pegasus.planner.transfer.mapper.HashedOutputMapperTest.class,
-    edu.isi.pegasus.planner.transfer.mapper.ReplicaOutputMapperTest.class,
-    edu.isi.pegasus.common.util.PegasusURLTest.class,
-    
-  })
+    edu.isi.pegasus.planner.transfer.mapper.ReplicaOutputMapperTest.class
+})
+>>>>>>> Update build process
 public class AllTests {
+}
 
-} 

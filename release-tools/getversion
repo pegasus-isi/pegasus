@@ -1,0 +1,6 @@
+#!/bin/bash
+
+DIR=$(cd $(dirname $0) && pwd)
+HOME=$(cd $DIR/.. && pwd)
+
+grep pegasus.version $HOME/build.properties | tr '=:' '  ' | awk '{print $2}'

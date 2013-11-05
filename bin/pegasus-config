@@ -28,7 +28,7 @@ my $bin_dir = Cwd::abs_path(dirname($0));
 
 # basically PEGASUS_HOME - but let's not expose that anymore
 my $base_dir	= dirname($bin_dir);
-my $lib         = "#LIBDIR#"; # lib64 for 64bit RPMS
+my $lib         = "@LIBDIR@"; # lib64 for 64bit RPMS
 my $conf_dir	= File::Spec->catdir( $base_dir, 'etc' );
 my $share_dir	= File::Spec->catdir( $base_dir, 'share', 'pegasus' );
 my $java_dir	= File::Spec->catdir( $share_dir, 'java' );
@@ -199,7 +199,7 @@ my $eoln = 1;
 GetOptions( "help|h" => \&usage
     , 'eoln|crlf!' => \$eoln
     , 'version|V' => sub {
-        print "#PEGASUS_VERSION#";
+        print "@PEGASUS_VERSION@";
         print "\n" if $eoln; 
         exit 0; 
     }
