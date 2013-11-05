@@ -26,8 +26,8 @@ static int rank = 0;
 
 void version() {
     if (rank == 0) {
-#ifdef PMC_VERSION
-        fprintf(stderr, "Version: %s\n", PMC_VERSION);
+#ifdef PEGASUS_VERSION
+        fprintf(stderr, "Version: %s\n", PEGASUS_VERSION);
 #endif
         fprintf(stderr, "Compiled: %s %s\n", __DATE__, __TIME__);
 #ifdef __VERSION__
