@@ -27,7 +27,6 @@ import org.junit.runners.Suite.SuiteClasses;
     edu.isi.pegasus.planner.transfer.mapper.HashedOutputMapperTest.class,
     edu.isi.pegasus.planner.transfer.mapper.ReplicaOutputMapperTest.class
 })
->>>>>>> Update build process
 public class AllTests {
 }
 
