@@ -420,11 +420,7 @@
     <!-- doc pdfs -->
     <mkdir dir="${dist.doc}"/>
     <copy preservelastmodified="true" todir="${dist.doc}">
-      <fileset dir="doc">
-          <include name="advanced-properties.pdf"/>
-          <include name="basic-properties.pdf"/>
-          <include name="pegasus-user-guide.pdf"/>
-      </fileset>
+      <fileset dir="doc/docbook" includes="pegasus-user-guide.pdf"/>
     </copy>
 
     <!-- doc schemas -->
