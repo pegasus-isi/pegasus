@@ -394,7 +394,7 @@ main( int argc, char* argv[] )
       helpMe( &appinfo );
       break; /* unreachable */
     case 'V':
-      puts( KICKSTART_VERSION );
+      puts( PEGASUS_VERSION );
       appinfo.isPrinted=1;
       return 0;
     case 'i':

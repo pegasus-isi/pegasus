@@ -76,8 +76,8 @@ hexdump( void* area, size_t size )
     for ( ; j<16; ++j ) {
       a[6+j*3] = a[7+j*3] = a[8+j*3] = b[j] = ' ';
     }
-    strncat( a, (char*) b, sizeof(a) );
-    strncat( a, "\n", sizeof(a) );
+    strncat( a, (char*) b, sizeof(a)-strlen(a)-1 );
+    strncat( a, "\n", sizeof(a)-strlen(a)-1 );
     result += write( STDERR_FILENO, a, strlen(a) );
   }
 
