@@ -22,8 +22,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-static const char* iso88591lookup[256] =
-{
+static const char* asciilookup[128] = {
   "&#xe000;", "&#xe001;", "&#xe002;", "&#xe003;", "&#xe004;", "&#xe005;", "&#xe006;", "&#xe007;",
   "&#xe008;",       "\t",       "\n", "&#xe00b;", "&#xe00c;",       "\r", "&#xe00e;", "&#xe00f;",
   "&#xe010;", "&#xe011;", "&#xe012;", "&#xe013;", "&#xe014;", "&#xe015;", "&#xe016;", "&#xe017;",
@@ -39,23 +38,7 @@ static const char* iso88591lookup[256] =
          "`",        "a",        "b",        "c",        "d",        "e",        "f",        "g",
          "h",        "i",        "j",        "k",        "l",        "m",        "n",        "o",
          "p",        "q",        "r",        "s",        "t",        "u",        "v",        "w",
-         "x",        "y",        "z",        "{",        "|",        "}",        "~", "&#xe07f;",
-  "&#xe080;", "&#xe081;", "&#xe082;", "&#xe083;", "&#xe084;", "&#xe085;", "&#xe086;", "&#xe087;",
-  "&#xe088;", "&#xe089;", "&#xe08a;", "&#xe08b;", "&#xe08c;", "&#xe08d;", "&#xe08e;", "&#xe08f;",
-  "&#xe090;", "&#xe091;", "&#xe092;", "&#xe093;", "&#xe094;", "&#xe095;", "&#xe096;", "&#xe097;",
-  "&#xe098;", "&#xe099;", "&#xe09a;", "&#xe09b;", "&#xe09c;", "&#xe09d;", "&#xe09e;", "&#xe09f;",
-         " ",        "¡",        "¢",        "£",        "¤",        "¥",        "¦",        "§",
-         "¨",        "©",        "ª",        "«",        "¬",        "­",        "®",        "¯",
-         "°",        "±",        "²",        "³",        "´",        "µ",        "¶",        "·",
-         "¸",        "¹",        "º",        "»",        "¼",        "½",        "¾",        "¿",
-         "À",        "Á",        "Â",        "Ã",        "Ä",        "Å",        "Æ",        "Ç",
-         "È",        "É",        "Ê",        "Ë",        "Ì",        "Í",        "Î",        "Ï",
-         "Ð",        "Ñ",        "Ò",        "Ó",        "Ô",        "Õ",        "Ö",        "×",
-         "Ø",        "Ù",        "Ú",        "Û",        "Ü",        "Ý",        "Þ",        "ß",
-         "à",        "á",        "â",        "ã",        "ä",        "å",        "æ",        "ç",
-         "è",        "é",        "ê",        "ë",        "ì",        "í",        "î",        "ï",
-         "ð",        "ñ",        "ò",        "ó",        "ô",        "õ",        "ö",        "÷",
-         "ø",        "ù",        "ú",        "û",        "ü",        "ý",        "þ", "&#xe0ff;"
+         "x",        "y",        "z",        "{",        "|",        "}",        "~", "&#xe07f;"
 };
 
 void
@@ -70,7 +53,16 @@ xmlquote(FILE *out, const char* msg, size_t msglen)
 {
   size_t i;
   for (i=0; i<msglen; ++i) {
-    fprintf(out, "%s", iso88591lookup[(unsigned char)msg[i]]);
+    /* We assume that all the characters that need to be escaped fall
+     * in the ASCII range. Anything outside that range, we assume to
+     * be UTF-8 encoded.
+     */
+    unsigned char j = (unsigned char) msg[i];
+    if (j < 128) {
+      fputs(asciilookup[j], out);
+    } else {
+      fputc(msg[i], out);
+    }
   }
 }
 
