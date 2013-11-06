@@ -158,6 +158,22 @@ function test_missing_args {
     done
 }
 
+function test_xmlquote {
+    kickstart cat xmlquote.txt
+    if ! [[ $(cat test.out) =~ "Jens Vöckler" ]]; then
+        echo "Expected UTF-8 umlaut in output"
+        return 1
+    fi
+    if ! [[ $(cat test.out) =~ "&quot;Gideon Juve&quot;" ]]; then
+        echo "Expected quotes to be escaped"
+        return 1
+    fi
+    if ! [[ $(cat test.out) =~ "&lt;some xml=&quot;goes&quot;&gt;here&lt;/some&gt;" ]]; then
+        echo "Expected XML to be escaped"
+        return 1
+    fi
+}
+
 # RUN THE TESTS
 run_test lotsofprocs
 run_test lotsofprocs_buffer
@@ -177,4 +193,5 @@ run_test test_toolongarg_file
 run_test test_quiet
 run_test test_quiet_fail
 run_test test_missing_args
+run_test test_xmlquote
 
