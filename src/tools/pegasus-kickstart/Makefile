@@ -1,7 +1,7 @@
 INSTALL = install
 RM = rm -f
 CC = gcc
-CFLAGS = -Wno-invalid-source-encoding -O
+CFLAGS = -O
 LD = $(CC)
 LOADLIBES = -lm
 SYSTEM = $(shell uname -s | tr '[a-z]' '[A-Z]' | tr -d '_ -/')
