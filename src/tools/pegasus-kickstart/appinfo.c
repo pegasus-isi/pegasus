@@ -66,7 +66,7 @@ convert2XML( FILE *out, const AppInfo* run )
 
   /* default is to produce XML preamble */
   if (!run->noHeader) {
-    fprintf(out, "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n" );
+    fprintf(out, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" );
   }
 
   /* generate the XML header and start of root element */
