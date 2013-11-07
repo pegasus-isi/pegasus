@@ -281,7 +281,7 @@ LFN PFN a="b" [..]
 
       <para>For example, consider a replica catalog as shown below.</para>
 
-      <para>Entry 1 refers to an entry which does not use a resular
+      <para>Entry 1 refers to an entry which does not use a regular
       expressions. This entry would only match a file named 'f.a', and nothing
       else.</para>
 
