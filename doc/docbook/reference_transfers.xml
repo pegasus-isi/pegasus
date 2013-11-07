@@ -425,7 +425,7 @@
       transfers can be setup to transfer the input files directly from the
       locally accessible input locations ( file URL's with site attribute set
       to local) specified in the replica catalog. Starting 4.3 release, users
-      can enable this. </para>
+      can enable this.</para>
 
       <tip>
         <para>Set <emphasis role="bold">pegasus.transfer.bypass.input.staging
@@ -689,7 +689,26 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
       <listitem>
         <para><emphasis role="bold">Flat</emphasis> : By default, Pegasus will
         place the output files in the storage directory specified in the site
-        catalog for the output site. </para>
+        catalog for the output site.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Fixed</emphasis> : This mapper allows
+        users to specify an externally accesible url to the storage directory
+        in their properties file. To use this mapper, the following property
+        needs to be set.</para>
+
+        <itemizedlist>
+          <listitem>
+            <para> pegasus.dir.storage.mapper.fixed.url an externally
+            accessible URL to the storage directory on the output site e.g.
+            gsiftp://outputs.isi.edu/shared/outputs </para>
+          </listitem>
+        </itemizedlist>
+
+        <para>Note: For hierarchal workflows, the above property needs to be
+        set separately for each dax job, if you want the sub workflow outputs
+        to goto a different directory. </para>
       </listitem>
 
       <listitem>
@@ -709,16 +728,16 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
         the path for an output file on the output site by querying an output
         replica catalog. The output site is one that is passed on the command
         line. The output replica catalog can be configured by specifying the
-        properties </para>
+        properties</para>
 
         <itemizedlist>
           <listitem>
-            <para>pegasus.dir.storage.mapper.replica Regex|File </para>
+            <para>pegasus.dir.storage.mapper.replica Regex|File</para>
           </listitem>
 
           <listitem>
             <para>pegasus.dir.storage.mapper.replica.file the RC file at the
-            backend to use </para>
+            backend to use</para>
           </listitem>
         </itemizedlist>
       </listitem>
@@ -728,6 +747,10 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
       <para>The mappers can be configured by setting the property <emphasis
       role="bold">pegasus.dir.storage.mapper</emphasis></para>
     </tip>
+
+    <note>
+      <para>The Fixed mapper will be available starting 4.3.1 release.</para>
+    </note>
   </section>
 
   <section>
