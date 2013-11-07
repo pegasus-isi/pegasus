@@ -16,8 +16,6 @@
 package edu.isi.pegasus.planner.transfer.mapper.impl;
 
 import edu.isi.pegasus.common.logging.LogManager;
-import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
-import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
 
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
@@ -31,9 +29,6 @@ import java.io.File;
 
 import java.util.LinkedList;
 import java.util.List;
-
-import java.util.Properties;
-
 
 /**
  * A convenience mapper implementation that stages output files to a fixed
