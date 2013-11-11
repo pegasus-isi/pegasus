@@ -710,27 +710,33 @@ class IRodsHandler(TransferHandlerBase):
         if transfer.dst_proto == "file":
             # irods->file
             prepare_local_dir(os.path.dirname(transfer.dst_path))
-            cmd = "iget -f '" + transfer.src_path + "' '" + transfer.dst_path + "'"
+            # irods does not like leading slashes
+            src_irods = transfer.src_path
+            src_irods = re.sub(r"^\/+", "", transfer.src_path)
+            cmd = "iget -f '" + src_irods + "' '" + transfer.dst_path + "'"
         else:
             # file->irods
+            dst_irods_mkdir = re.sub(r"^\/+", "", os.path.dirname(transfer.dst_path))
             cmd = "imkdir -p '" + os.path.dirname(transfer.dst_path) + "'"
             try:
                 myexec(cmd, 60*60, True)
             except:
                 # ignore errors from the mkdir command
                 pass
-            cmd = "iput -f '" + transfer.src_path + "' '" +  transfer.dst_path + "'"
+            dst_irods = re.sub(r"^\/+", "", transfer.dst_path)
+            cmd = "iput -f '" + transfer.src_path + "' '" +  dst_irods + "'"
 
         try:
             myexec(cmd, default_subshell_timeout, True)
             # stats      
-            if url_pair.dst_proto == "file":
+            if transfer.dst_proto == "file":
                 stats_add(transfer.dst_path)
             else:
                 stats_add(transfer.src_path)
         except Exception, err:
             logger.error(err)
-            failed_q.append(transfer)
+            return False
+        return True
 
 
 

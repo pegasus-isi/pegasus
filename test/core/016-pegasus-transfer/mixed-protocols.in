@@ -1,2 +1,2 @@
-gsiftp://transfer-test.pegasus.isi.edu/tmp/transfer-tests/medium-files/a.txt
+gsiftp://obelix.isi.edu/data/scratch/ptesting/transfer-tests/medium-files/a.txt
 s3://test@amazon/pegasus-isi-transfer-tests/medium-files/a.txt
