@@ -54,7 +54,7 @@
                     }
                 });
 
-        verticalTableInit ('#job_text_info', {% if job.exitcode !=  0 %}"failed"{% else  %}"successful"{% endif %});
+        verticalTableInitStatus ('#job_text_info', {% if job.exitcode !=  0 %}"failed"{% else  %}"successful"{% endif %});
     })
 </script>
 {% endblock %}
