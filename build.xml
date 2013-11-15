@@ -175,7 +175,7 @@
   <target name="docbook" depends="setup" description="Generates documentation from docbook source">
     <mkdir dir="${dist.doc}/html"/>
     <exec executable="${make}" dir="doc/manpages" failonerror="true">
-      <arg line="all"/>
+      <arg line="all install"/>
     </exec>
     <exec executable="${make}" dir="doc/docbook" failonerror="true">
       <env key="prefix" value="${dist.doc}/html"/>
