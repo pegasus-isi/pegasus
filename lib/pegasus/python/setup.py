@@ -1,29 +1,14 @@
 import os
 import sys
+import subprocess
 from setuptools import setup, find_packages
 
 srcdir = os.path.dirname(__file__)
+homedir = os.path.abspath(os.path.join(srcdir, "../../.."))
 
 # Utility function to read the pegasus Version.in file
 def readversion():
-    version = os.path.join(srcdir, "../../../src/edu/isi/pegasus/common/util/Version.in")
-
-    def getnum(l):
-        s = l.index("=") + 1
-        e = l.index(";")
-        return l[s:e].strip()
- 
-    f = open(version, "r")
-    for l in f:
-        if "int MAJOR" in l:
-            MAJOR = getnum(l)
-        elif "int MINOR" in l:
-            MINOR = getnum(l)
-        elif "int PLEVEL" in l:
-            PLEVEL = getnum(l)
-    f.close()
-
-    return "%s.%s.%s" % (MAJOR, MINOR, PLEVEL)
+    return subprocess.check_output("%s/release-tools/getversion" % homedir).strip()
 
 # Utility function to read the README file.
 def read(fname):
