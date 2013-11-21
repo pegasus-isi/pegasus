@@ -105,6 +105,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             'stampede.job_inst.post.end' : self.job_instance,
             'stampede.job_inst.host.info' : self.host,
             'stampede.job_inst.image.info' : self.jobstate,
+            'stampede.job_inst.abort.info' : self.jobstate,
             'stampede.job_inst.grid.submit.start' : self.noop, # good
             'stampede.job_inst.grid.submit.end' : self.jobstate,
             'stampede.job_inst.globus.submit.start' : self.noop, # good
@@ -578,6 +579,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             'stampede.job_inst.held.start' : ['JOB_HELD', 'JOB_HELD'], # s-less
             'stampede.job_inst.held.end' : ['JOB_RELEASED', 'JOB_RELEASED'], # s-less
             'stampede.job_inst.image.info' : ['IMAGE_SIZE', 'IMAGE_SIZE'], # s-less
+            'stampede.job_inst.abort.info' : ['JOB_ABORTED', 'JOB_ABORTED'], # s-less
             'stampede.job_inst.grid.submit.end' : ['GRID_SUBMIT_FAILED', 'GRID_SUBMIT'],
             'stampede.job_inst.globus.submit.end' : ['GLOBUS_SUBMIT_FAILED', 'GLOBUS_SUBMIT'],
             

@@ -2024,6 +2024,7 @@ class Workflow:
             #when no postscript is associated and failure does not get
             #captured.
             my_job._main_job_exitcode = 1
+            self.db_send_job_brief( my_job, "abort.info")
             self.db_send_job_end(my_job, -1 );
         elif job_state == "JOB_HELD":
             self.db_send_job_brief(my_job, "held.start")
