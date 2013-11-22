@@ -163,8 +163,7 @@ sub get_linux_distro () {
                 $distro{"long"} = "$distro_strs[0]$distro_strs[1]$distro_strs[4]";
                 $distro{"version"} = "$distro_strs[6]";
                 $distro{"short"} = "rhel";
-            }
-            else {
+            } else {
                 $distro{"long"} = "$distro_strs[0]$distro_strs[1]";
                 $distro{"version"} = "$distro_strs[4]";
                 $distro{"short"} = "rh";
@@ -201,11 +200,11 @@ sub get_linux_distro () {
             $distro{"version"} = "$distro_strs[3]";
             $distro{"short"} = "fc";
         }
-	elsif($line =~ m!Fedora release!){
+        elsif($line =~ m!Fedora release!){
             $distro{"long"} = "$distro_strs[0] $distro_strs[1]";
             $distro{"version"} = "$distro_strs[2]";
             $distro{"short"} = "fc";
-       }
+        }
         elsif($line =~ m!Tao Linux!) {
             $distro{"long"} = "$distro_strs[0]";
             $distro{"version"} = "$distro_strs[3]";
@@ -213,28 +212,17 @@ sub get_linux_distro () {
         }
         elsif($line =~ m!Scientific Linux!) {
             $distro{"long"} = "Scientific Linux";
-	    $distro{"version"} = 'xxx';
-	    if ($line =~ m/(\d)/) {
+            $distro{"version"} = 'xxx';
+            $distro{"short"} = "rhel";
+            if ($line =~ m/(\d)/) {
               $distro{"version"} = $1;
             }
-	    if ($line =~ m/CERN/i) {
-	      $distro{"short"} = "slc";
-	    } elsif ($line =~ m/Fermi/i) {
-	      $distro{"short"} = "slf";
-	    } else {
-              $distro{"short"} = "sl";
-            
-	      if ($line =~ m/(\d)/) {
-                $distro{"version"} = "$distro_strs[4]";
-              }
-	    }
         }
         elsif ($line =~ m!CentOS!) {  
             $distro{"long"} = "$distro_strs[0]";
             $distro{"version"} = "$distro_strs[2]";
-            $distro{"short"} = "cent";   
+            $distro{"short"} = "rhel";   
         } 
-
         elsif ($line =~ m!Yellow!) {
             $distro{"long"} = "$distro_strs[0] $distro_strs[1]";
             $distro{"version"} = "$distro_strs[4]";
@@ -250,12 +238,12 @@ sub get_linux_distro () {
             $distro{"version"} = "$distro_strs[1]";
             $distro{"short"} = "ubuntu";
         }
-	
-	#hack to handle "/" in version numbers should probably apply to other places as well
-	$distro{"version"} =~ s/\//_/g ;
+        
+        #hack to handle "/" in version numbers should probably apply to other places as well
+        $distro{"version"} =~ s/\//_/g ;
 
-	# we only want major version numbers
-	$distro{"version"} =~ s/\..*//;
+        # we only want major version numbers
+        $distro{"version"} =~ s/\..*//;
 
         return %distro;
     }
@@ -287,9 +275,9 @@ sub get_linux_distro () {
 my @platform=getPlatform();
 for(my $i=0 ; $i<@platform; $i++){
     if ($i==@platform-1){
-	print $platform[$i];
-    }else{
-    print $platform[$i],"_";
+        print $platform[$i];
+    } else {
+        print $platform[$i],"_";
     }
 }
 print "\n";
