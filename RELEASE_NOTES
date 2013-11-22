@@ -1,4 +1,70 @@
 $Id$
+===============================
+Release Notes for PEGASUS 4.3.1
+===============================
+We are happy to announce the release of Pegasus 4.3.1 .  
+
+Pegasus 4.3.1 is a minor release, that has minor enhancements and fixes bugs to Pegasus 4.3.0 release. 
+ 
+Enhancements:
+--------------
+
+1) Support for Fixed Output Mapper
+
+   Using this output mapper, users can specify  an externally
+   accessible URL in the properties file, pointing to a directory
+   where the output files needs to be transferred to. To use this
+   mapper, set the following  properties  
+ 
+	pegasus.dir.storage.mapper Fixed
+	pegasus.dir.storage.mapper.fixed.url  <url to the storage directory e.g. gsiftp://outputs.isi.edu/shared/outputs>
+ 
+
+Bugs Fixed:
+-------------- 
+
+1) pegasus-analyzer does not detect jobs that are condor_rm'ed if no
+postscript is associated with the job 
+
+   By default, each job has a postscript associated that detects an
+   empty job stdout and flags it as a failure. However, if a job is
+   not asscociated with a postscript and a user/system condor_rm's the
+   job, the failure is not detected. This is now fixed, and a
+   JOB_ABORTED event is logged in the stampede database, when a job is
+   aborted. 
+ 
+2) IRODS support in pegasus-transfer
+
+   The IRODS support in pegasus-transfer was broken. This is now fixed.
+ 
+3) pegasus-kickstart compilation warnings for character encodings
+
+   kickstart maintains a table to escape characters correctly for
+   putting them in a XML document. The non-ascii characters in the
+   table were latin1 not UTF-8. This caused a warning on newer
+   versions of gcc, which could not be disabled across all platforms.
+   kickstart now writes out it;s output in UTF-8 encoding and the xml
+   escaping was updated accordingly. 
+ 
+4) Fix to URL handling in the planner
+
+   Changed the regex in PegasusURL so that we can pass urls with just
+   the hostnames specified. e.g http://isis.isi.edu Note: no trailing
+   / . Before the fix, the planner was throwing an exception if a user
+   specified an input URL with path names containing only one
+   directory. 
+ 
+5) planner had a rogue debug statement
+
+   There was a rogue system.out statement in the planner output that
+   led to a statement being logged for each job in the workflow. 
+ 
+6) pegasus-statistics had 2.6 style code
+
+   Pegasus is distributed as part of OSG software stack, and one of
+   the supported platforms there is EL5 systems that come with Python
+   2.4. pegasus-statistics had some code that was compatible with
+   2.5. This is now fixed.
 
 ===============================
 Release Notes for PEGASUS 4.3
