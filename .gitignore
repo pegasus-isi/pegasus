@@ -3,6 +3,7 @@ build
 dist
 *stamp
 .classpath
+pegasus.spec
 .project
 .pydevproject
 .externalToolBuilders

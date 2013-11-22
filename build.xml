@@ -31,6 +31,8 @@
       <format property="ISODATE.full" pattern="yyyy-MM-dd'T'HH:mm:ssZZZZZ"/>
       <format property="ISODATE.short" pattern="yyyyMMdd"/>
       <format property="ISODATE.utc" pattern="yyyyMMddHHmmss'Z'" timezone="UTC"/>
+      <format property="ISODATE.rpm" pattern="EEE MMM dd yyyy"/>
+      <format property="ISODATE.deb" pattern="EEE, d MMM yyyy HH:mm:ss Z"/>
     </tstamp>
     <echo>Build timestamp: ${ISODATE.utc}</echo>
 
@@ -73,6 +75,23 @@
       <entry key="pegasus.build.libdir" value="${dist.lib.subdir}"/>
       <entry key="pegasus.build.pydir" value="${dist.python-modules-loc}"/>
     </propertyfile>
+    
+    <!-- RPM spec file with updated version number -->
+    <copy preservelastmodified="true" file="pegasus.spec.in" tofile="pegasus.spec">
+      <filterset>
+        <filter token="PEGASUS_VERSION" value="${pegasus.version}"/>
+        <filter token="DATE" value="${ISODATE.rpm}"/>
+      </filterset>
+    </copy>
+    
+    <!-- Debian changelog file with updated version number -->
+    <copy preservelastmodified="true" file="debian/changelog.in" tofile="debian/changelog">
+      <filterset>
+        <filter token="PEGASUS_VERSION" value="${pegasus.version}"/>
+        <filter token="DATE" value="${ISODATE.deb}"/>
+      </filterset>
+    </copy>
+
   </target>
 
   <target name="common" depends="setup" description="Compiles the code common to all Pegasus modules">
@@ -457,6 +476,8 @@
   <target name="clean" description="Delete all build artifacts">
     <delete dir="dist"/>
     <delete dir="build"/>
+    <delete file="pegasus.spec"/>
+    <delete file="debian/changelog"/>
     <exec executable="${make}" dir="src/tools" failonerror="true">
       <arg line="distclean"/>
     </exec>
