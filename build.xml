@@ -335,16 +335,13 @@
     <copy preservelastmodified="true" todir="${dist.dir}" file="LICENSE"/>
 
     <!-- creates the worker tarball -->
-    <tar destfile="dist/pegasus-worker-${pegasus.version}-${dist.arch}.tar.gz"
-         longfile="gnu" compression="gzip">
-       <tarfileset dir="dist">
-         <include name="pegasus-${pegasus.version}/**"/>
-         <exclude name="pegasus-${pegasus.version}/bin/**"/>
-       </tarfileset>
-       <tarfileset dir="dist" filemode="755">
-         <include name="pegasus-${pegasus.version}/bin/**"/>
-       </tarfileset>
-    </tar>
+    <exec executable="sh" dir="dist" failonerror="true">
+      <arg value="-c"/>
+      <arg value="tar --exclude=\.git --exclude=\.gitignore -cf pegasus-worker-${pegasus.version}.tar pegasus-${pegasus.version}"/>
+    </exec>
+    <gzip src="dist/pegasus-worker-${pegasus.version}.tar"
+      destfile="dist/pegasus-worker-${pegasus.version}-${dist.arch}.tar.gz"/>
+    <delete file="dist/pegasus-worker-${pegasus.version}.tar"/>
   </target>
 
   <target name="dist" depends="setup,jar,vdl-jar,pegasus-config,ctools,externals"
