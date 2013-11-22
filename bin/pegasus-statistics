@@ -342,7 +342,11 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf=False
     @param output_dir    : directory to write output files
     """
     try:
-        expanded_workflow_stats = StampedeWorkflowStatistics(output_db_url) if multiple_wf else StampedeStatistics(output_db_url)
+        if multiple_wf:
+            expanded_workflow_stats = StampedeWorkflowStatistics(output_db_url)
+        else:
+             expanded_workflow_stats = StampedeStatistics(output_db_url)
+
         expanded_workflow_stats.initialize(wf_uuid)
     except SchemaVersionError:
         logger.error("------------------------------------------------------")
@@ -722,8 +726,15 @@ def print_individual_workflow_stats(workflow_stats, workflow_id, dax_label, outp
     total_sub_wfs = workflow_stats.get_total_jobs_status()
 
     tmp = workflow_stats.get_total_succeeded_failed_jobs_status()
-    total_succeeded_sub_wfs = tmp.succeeded if tmp.succeeded else 0
-    total_failed_sub_wfs = tmp.failed if tmp.failed else 0
+
+    total_succeeded_sub_wfs = 0
+    if tmp.succeeded:
+        total_succeeded_sub_wfs = tmp.succeeded
+
+    total_failed_sub_wfs = 0
+    if tmp.failed:
+        total_failed_sub_wfs = tmp.failed
+
     total_unsubmitted_sub_wfs = total_sub_wfs - (total_succeeded_sub_wfs + total_failed_sub_wfs)
     total_sub_wfs_retries = workflow_stats.get_total_jobs_retries()
     total_sub_wfs_invocations = total_succeeded_sub_wfs + total_failed_sub_wfs + total_sub_wfs_retries
@@ -959,7 +970,9 @@ def main():
 
     if len(args) < 1:
         # * means all workflows in the database, and . means current directory
-        submit_dir = '*' if multiple_wf else '.'
+        submit_dir = '.'
+        if multiple_wf:
+            submit_dir = '*'
     elif len(args) > 1:
         options.multiple_wf = True
         multiple_wf = True
