@@ -1,0 +1,6 @@
+pegasus (@PEGASUS_VERSION@-1) unstable; urgency=low
+
+  * Pegasus @PEGASUS_VERSION@ automatic build
+
+ -- Pegasus Development Team <pegasus-support@isi.edu>  @DATE@
+
