@@ -90,7 +90,8 @@ class StampedeWorkflowStatistics(SQLAlchemyInit, DoesLogging):
 
     def __filter_all(self, q, w=None):
 
-        w = w if w else Workflow
+        if w is None:
+            w = Workflow
 
         if not self.all_workflows:
             q = q.filter(w.root_wf_id.in_(self._root_wf_id))
@@ -99,7 +100,8 @@ class StampedeWorkflowStatistics(SQLAlchemyInit, DoesLogging):
 
     def __filter_roots_only(self, q, w=None):
 
-        w = w if w else Workflow
+        if w is None:
+            w = Workflow
 
         if self.all_workflows:
             q = q.filter(w.root_wf_id == w.wf_id)
