@@ -407,9 +407,6 @@ def irods(url):
     """
     irods - use the icommands to interact with irods
     """
-    if len(transfers) == 0:
-        return
-
     if tool_info['imkdir']['full_path'] == None:
         raise RuntimeError("Unable to do irods create dir because imkdir could not be found in the current path")
 
@@ -420,7 +417,8 @@ def irods(url):
         logger.error(loginErr)
         raise RuntimError("Unable to log into irods")
 
-    cmd = "imkdir -p " + os.path.dirname(url.path)
+    path = re.sub(r"^\/+", "", url.path)
+    cmd = "imkdir -p " + path
     myexec(cmd, 60, True)
 
             

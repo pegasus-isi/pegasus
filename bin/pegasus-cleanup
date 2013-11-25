@@ -435,7 +435,8 @@ def irods(urls):
         raise RuntimeError("Unable to log into irods")
 
     for i, url in enumerate(urls):
-        cmd = "irm -f " + url.path
+        path = re.sub(r"^\/+", "", os.path.dirname(url.path))
+        cmd = "irm -f " + path
 
         try:
             myexec(cmd, 5*60, True)
