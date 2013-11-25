@@ -2,12 +2,12 @@
 .\"     Title: pegasus-analyzer
 .\"    Author: [see the "Authors" section]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 04/30/2013
+.\"      Date: 11/25/2013
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "PEGASUS\-ANALYZER" "1" "04/30/2013" "\ \&" "\ \&"
+.TH "PEGASUS\-ANALYZER" "1" "11/25/2013" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -36,8 +36,9 @@ pegasus-analyzer \- debugs a workflow\&.
                  [\fB\-\-monitord\fR|\fB\-m\fR|\fB\-t\fR] [\fB\-\-verbose\fR|\fB\-v\fR]
                  [\fB\-\-output\-dir\fR|\fB\-o\fR \fIoutput_dir\fR]
                  [\fB\-\-dag\fR \fIdag_filename\fR] [\fB\-\-dir\fR|\fB\-d\fR|\fB\-i\fR \fIinput_dir\fR]
-                 [\fB\-\-print\fR|\fB\-p\fR \fIprint_options\fR] [\fB\-\-debug\-job\fR \fIjob\fR]
-                 [\fB\-\-debug\-dir\fR \fIdebug_dir\fR] [\fB\-\-type\fR \fIworkflow_type\fR]
+                 [\fB\-\-print\fR|\fB\-p\fR \fIprint_options\fR] [\fB\-\-type\fR \fIworkflow_type\fR]
+                 [\fB\-\-debug\-job\fR \fIjob\fR][\fB\-\-debug\-dir\fR \fIdebug_dir\fR]
+                 [\fB\-\-local\-executable\fR \fIlocal user executable\fR]
                  [\fB\-\-conf\fR|\fB\-c\fR \fIproperty_file\fR] [\fB\-\-files\fR]
                  [\fB\-\-top\-dir\fR \fIdir_name\fR] [\fIworkflow_directory\fR]
 .fi
@@ -187,7 +188,7 @@ command, so users can manually run the failed job\&.
 When given this option,
 \fBpegasus\-analyzer\fR
 turns on its
-\fIdebug_mode\fR, when it can be used to debug a particular job\&. In this mode,
+\fIdebug_mode\fR, when it can be used to debug a particular Pegasus Lite job\&. In this mode,
 \fBpegasus\-analyzer\fR
 will create a shell script in the
 \fIdebug_dir\fR
@@ -202,6 +203,11 @@ When in
 will create a temporary debug directory\&. Users can give this option in order to specify a particular
 \fIdebug_dir\fR
 directory to be used instead\&.
+.RE
+.PP
+\fB\-\-local\-executable\fR \fIlocal user executable\fR
+.RS 4
+When in debug job mode for Pegasus Lite jobs, pegasus\-analyzer creates a shell script to execute the Pegasus Lite job locally in a debug directory\&. The Pegasus Lite script refers to remote user executable path\&. This option can be used to pass the local path to the user executable on the submit host\&. If the path to the user executable in the Pegasus Lite job is same as the local installation\&.
 .RE
 .PP
 \fB\-\-type\fR \fIworkflow_type\fR
