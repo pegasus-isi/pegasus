@@ -10,8 +10,8 @@ Packager:       Pegasus Development Team <pegasus-support@isi.edu>
 Source:         pegasus-source-%{version}.tar.gz
 
 BuildRoot:      %{_tmppath}/%{name}-root
-BuildRequires:  ant, ant-apache-regexp, java, gcc, groff, python-devel, gcc-c++, make 
-Requires:       java >= 1.6, python >= 2.4, condor >= 7.6, graphviz
+BuildRequires:  ant, ant-nodeps, ant-apache-regexp, java-1.7.0-openjdk-devel, /usr/lib/java-1.7.0, gcc, groff, python-devel, gcc-c++, make 
+Requires:       java >= 1.6, /usr/lib/java-1.7.0, python >= 2.4, condor >= 7.8, graphviz
 
 %define sourcedir %{name}-source-%{version}
 
