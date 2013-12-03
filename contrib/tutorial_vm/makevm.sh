@@ -14,28 +14,32 @@ location="http://gaul.isi.edu/centos/6/os/x86_64/"
 set -e
 set -x
 
+name=$(mktemp -u tutorial_vm.XXXXXXXXXXXX)
+
 virt-install \
-    -n $image \
-    -r 1024 \
+    --name $name \
+    --ram 1024 \
     --vcpus=1 \
     --os-type=linux \
     --os-variant=rhel6 \
-    --accelerate \
-    --hvm \
-    --serial pty \
     --graphics none \
     --disk path=$image.ec2,size=8 \
     --location $location \
     --initrd-inject=$PWD/pegasus-tutorial.cfg \
-    -x "ks=file:/pegasus-tutorial.cfg console=ttyS0" \
+    --extra-args "ks=file:/pegasus-tutorial.cfg console=ttyS0" \
     --force \
-    --noreboot 
+    --noreboot > $image.log
+    #--accelerate \
+    #--hvm
+    #--serial pty \
     #--wait 20 \
     # --prompt
     # This doesn't work on RHEL6
     #--filesystem source=$PWD/../../,target=/mnt,mode=mapped \
     # This doesn't work because users don't own the default network
     #--network network:default
+
+virsh undefine $name
 
 # Create virtualbox image
 qemu-img convert -f raw -O vmdk $image.ec2 $image.vmdk
@@ -45,8 +49,8 @@ dd if=$image.ec2 of=$image.fg bs=1M skip=1
 
 # Zip all the images
 zip $image.vmdk.zip $image.vmdk
+rm $image.vmdk
 gzip $image.ec2
 gzip $image.fg
 
-virsh undefine $image
 
