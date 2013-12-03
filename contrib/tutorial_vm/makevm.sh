@@ -16,6 +16,11 @@ set -x
 
 name=$(mktemp -u tutorial_vm.XXXXXXXXXXXX)
 
+dir=$(cd $(dirname $0) && pwd)
+VERSION=$($dir/../../release-tools/getversion)
+GITHASH=$(cd $dir && git rev-parse HEAD)
+sed -e "s/@@VERSION@@/$VERSION/" -e "s/@@GITHASH@@/$GITHASH/" $dir/pegasus-tutorial.cfg.in > pegasus-tutorial.cfg
+
 virt-install \
     --name $name \
     --ram 1024 \
@@ -25,19 +30,10 @@ virt-install \
     --graphics none \
     --disk path=$image.ec2,size=8 \
     --location $location \
-    --initrd-inject=$PWD/pegasus-tutorial.cfg \
+    --initrd-inject=pegasus-tutorial.cfg \
     --extra-args "ks=file:/pegasus-tutorial.cfg console=ttyS0" \
     --force \
     --noreboot > $image.log
-    #--accelerate \
-    #--hvm
-    #--serial pty \
-    #--wait 20 \
-    # --prompt
-    # This doesn't work on RHEL6
-    #--filesystem source=$PWD/../../,target=/mnt,mode=mapped \
-    # This doesn't work because users don't own the default network
-    #--network network:default
 
 virsh undefine $name
 
