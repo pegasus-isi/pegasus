@@ -48,12 +48,16 @@ import java.util.TreeMap;
  *
  * In the DAX, a job tagged with groups will look as follows
  * <pre>
- * <job id="ID000001" namespace="pegasus" name="preprocess" version="1.0" level="3" dv-namespace="vahi" dv-name="top" dv-version="1.0">
+ * 
+ * {@code
+ * <job id="ID000001" namespace="pegasus" name="preprocess" version="1.0" level="3">
  *    <profile namespace="pegasus" key="group">group-1</profile>
  *    <argument>-a top -T 6  -i <filename file="f.a"/>  -o <filename file="f.b"/> </argument>
  *    <uses file="f.a" link="input" register="false" transfer="true" type="data"/>
  *    <uses file="f.b" link="output" register="true" transfer="true" type="data"/>
  * </job>
+ * }
+ * 
  * </pre>
  *
  * @author Karan Vahi
