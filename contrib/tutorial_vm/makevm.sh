@@ -31,9 +31,10 @@ virt-install \
     --disk path=$image.ec2,size=8 \
     --location $location \
     --initrd-inject=pegasus-tutorial.cfg \
-    --extra-args "ks=file:/pegasus-tutorial.cfg console=ttyS0" \
+    --extra-args "ks=file:/pegasus-tutorial.cfg" \
     --force \
-    --noreboot > $image.log
+    --noautoconsole --wait 45 \
+    --noreboot
 
 virsh undefine $name
 
