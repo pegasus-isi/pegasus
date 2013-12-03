@@ -229,7 +229,7 @@ public class DeployWorkerPackage
     /**
      * The base directory URL for the builds.
      */
-    public static final String BASE_BUILD_DIRECTORY_URL = "http://download.pegasus.isi.edu/wms/download/";
+    public static final String BASE_BUILD_DIRECTORY_URL = "http://download.pegasus.isi.edu/pegasus/";
     
     
     /**
@@ -324,12 +324,6 @@ public class DeployWorkerPackage
     protected boolean mTransferWorkerPackage;
 
     /**
-     * The major minor version that is used to construct the URL for the
-     * pegasus website.
-     */
-    protected String mPlannerMajorMinorVersion;
-
-    /**
      * Boolean indicating worker node execution.
      */
     protected boolean mWorkerNodeExecution;
@@ -394,7 +388,6 @@ public class DeployWorkerPackage
                   !( mUserSpecifiedSourceLocation == null || mUserSpecifiedSourceLocation.trim().length()== 0 );
     
         Version version = Version.instance();
-        mPlannerMajorMinorVersion = version.getMajor() + "." + version.getMinor();
     }
 
 
@@ -1452,12 +1445,8 @@ public class DeployWorkerPackage
             url.append( mUserSpecifiedSourceLocation ).append( File.separator);   
         }
         else{
-
             url.append( DeployWorkerPackage.BASE_BUILD_DIRECTORY_URL ).
-                append( this.mPlannerMajorMinorVersion ).append( "/" );
-            url.append( PEGASUS_VERSION.endsWith( "cvs" ) ?
-                    "nightly/" :
-                    "" );
+                append( PEGASUS_VERSION ).append( "/" );
         }
         
         url.append( "pegasus-" ).append( name ).append( "-" ).
