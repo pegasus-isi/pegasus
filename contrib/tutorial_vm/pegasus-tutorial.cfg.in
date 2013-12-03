@@ -40,6 +40,11 @@ git
 %post
 (
 set -x
+# This is the version of Pegasus we need to install
+VERSION=@@VERSION@@
+
+# This is the git hash we are using
+GITHASH=@@GITHASH@@
 
 # Fix up the grub conf
 sed -i -e 's/console=ttyS0[^ ]*//' -e 's/^serial.*$//' -e 's/^terminal.*$//' /boot/grub/grub.conf
@@ -73,15 +78,10 @@ chkconfig condor on
 # Update condor config
 echo "TRUST_UID_DOMAIN = True" >> /etc/condor/condor_config.local
 
-# Anaconda will also not install pegasus
-cat > /etc/yum.repos.d/pegasus.repo <<END
-[pegasus]
-name=Pegasus
-baseurl=http://download.pegasus.isi.edu/wms/download/rhel/6/x86_64/
-gpgcheck=0
-enabled=1
-END
-yum install -y pegasus
+# Install the Pegasus RPM
+curl http://download.pegasus.isi.edu/pegasus/$VERSION/pegasus-$VERSION-1.el6.x86_64.rpm > /tmp/pegasus.rpm
+yum install -y /tmp/pegasus.rpm
+rm -f /tmp/pegasus.rpm
 
 # Add tutorial user to sudoers file
 echo 'tutorial	ALL=(ALL) 	ALL' >> /etc/sudoers
@@ -110,8 +110,11 @@ chmod 775 /home/tutorial/Desktop/Terminal.desktop
 
 # Install tutorial files
 git clone https://github.com/pegasus-isi/pegasus.git /tmp/pegasus
+cd /tmp/pegasus
+git checkout $GITHASH
 cp -R /tmp/pegasus/doc/tutorial/* /home/tutorial/
 chown -R tutorial:tutorial /home/tutorial
+cd
 rm -rf /tmp/pegasus
 
 ) 1>/root/post-install.log 2>&1
