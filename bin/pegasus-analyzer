@@ -837,6 +837,7 @@ def print_top_summary():
     summary = "Summary".center(80, '*')
     print_console( summary )
     print_console()
+    print_console( " Submit Directory   : %s"  %(input_dir or top_dir ) )
     print_console( " Total jobs         : % 6d (%3.2f%%)" % (total, 100 * (1.0 * total/(total or 1))) )
     print_console( " # jobs succeeded   : % 6d (%3.2f%%)" % (success, 100 * (1.0 * success/(total or 1))) )
     print_console( " # jobs failed      : % 6d (%3.2f%%)" % (failed, 100 * (1.0 * failed/(total or 1))) )
@@ -1085,9 +1086,7 @@ def analyze_db(config_properties):
                     my_exitcode = utils.raw_to_regular(my_task[1])
 
                     # Print task summary
-                    summary = ("Task #" + str(my_task[0]) + " - Summary").center(80, '-')
-                    print_console(  summary )
-                    #print ( "Task #" + str(my_task[0]) + " - Summary").center(80, '-')
+                    print_console(  ("Task #" + str(my_task[0]) + " - Summary").center(80, '-') )
                     print_console()
                     print_console( "site        : %s" % ( my_info.site or '-') )
                     print_console( "hostname    : %s" % (my_info.hostname or '-') )
@@ -1150,7 +1149,9 @@ def analyze_db(config_properties):
 
                     # recurse for sub workflow
                     if sub_wf_cmd is not None and recurse_mode:
+                        print_console( ("Failed Sub Workflow").center(80,"="))
                         subprocess.Popen( sub_wf_cmd, shell=True).communicate()[0]
+                        print_console( ("").center(80,"="))
 
             else:
                 log.error("unexpected job instance returned by database!")
@@ -1460,7 +1461,7 @@ for num in range( 0, indent_length ):
     indent += "\t"
 
 
-print_console( "%s: initializing..." % (prog_base) )
+#print_console( "%s: initializing..." % (prog_base) )
 
 if options.dag_filename is not None:
     dag_path = options.dag_filename
