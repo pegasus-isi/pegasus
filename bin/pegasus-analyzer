@@ -688,19 +688,19 @@ def dump_file(file):
             OUT = open(file, 'r')
         except:
             logger.warn("*** Cannot access: %s" % (file))
-            print
+            print_console()
         else:
-            print os.path.split(file)[1].center(80, '-')
-            print
+            print_console(  os.path.split(file)[1].center(80, '-') )
+            print_console()
             # Dump file contents to terminal
             line = OUT.readline()
             while line:
                 line = line.strip()
-                print line
+                print_console(  line )
                 line = OUT.readline()
 
             OUT.close()
-            print
+            print_console()
 
 def print_output_error(job):
     """
@@ -734,39 +734,39 @@ def print_output_error(job):
                 # We must have "error" in entry
                 pass
             # Got a task with a non-zero exitcode
-            print ("Task #" + str(my_task_id) + " - Summary").center(80, '-')
-            print
+            print_console( ("Task #" + str(my_task_id) + " - Summary").center(80, '-') )
+            print_console()
             if "resource" in entry:
-                print "site        : %s" % (entry["resource"])
+                print_console(  "site        : %s" % (entry["resource"]) )
             if "hostname" in entry:
-                print "hostname    : %s" % (entry["hostname"])
+                print_console(  "hostname    : %s" % (entry["hostname"]) )
             if "name" in entry:
-                print "executable  : %s" % (entry["name"])
+                print_console(  "executable  : %s" % (entry["name"]) )
             if "argument-vector" in entry:
-                print "arguments   : %s" % (entry["argument-vector"])
+                print_console(  "arguments   : %s" % (entry["argument-vector"]) )
             if "exitcode" in entry:
-                print "exitcode    : %s" % (entry["exitcode"])
+                print_console(  "exitcode    : %s" % (entry["exitcode"]) )
             else:
                 if "error" in entry:
-                    print "error       : %s" % (entry["error"])
+                    print_console(  "error       : %s" % (entry["error"]) )
             if "cwd" in entry:
-                print "working dir : %s" % (entry["cwd"])
-            print
+                print_console(  "working dir : %s" % (entry["cwd"]) )
+            print_console()
             # Now let's display stdout and stderr
             if "stdout" in entry:
                 if len(entry["stdout"]) > 0:
                     # Something to display
-                    print ("Task #" + str(my_task_id) + " - " + entry["transformation"] + " - " + entry["derivation"] + " - stdout").center(80, '-')
-                    print
-                    print entry["stdout"]
-                    print
+                    print_console(  ("Task #" + str(my_task_id) + " - " + entry["transformation"] + " - " + entry["derivation"] + " - stdout").center(80, '-') )
+                    print_console()
+                    print_console(  entry["stdout"] )
+                    print_console()
             if "stderr" in entry:
                 if len(entry["stderr"]) > 0:
                     # Something to display
-                    print ("Task #" + str(my_task_id) + " - " + entry["transformation"] + " - " + entry["derivation"] + " - stderr").center(80, '-')
-                    print
-                    print entry["stderr"]
-                    print
+                    print_console(  ("Task #" + str(my_task_id) + " - " + entry["transformation"] + " - " + entry["derivation"] + " - stderr").center(80, '-') )
+                    print_console()
+                    print_console(  entry["stderr"] )
+                    print_console()
     else:
         # Not able to parse the kickstart output file, let's just dump the out and err files
 
@@ -780,53 +780,68 @@ def print_job_info(job):
     """
     This function prints the information about a particular job
     """
-    print
-    print job.center(80, '=')
-    print
-    print " last state: %s" % (jobs[job].state)
+    print_console()
+    print_console(  job.center(80, '=') )
+    print_console( )
+    print_console(  " last state: %s"  % (jobs[job].state) )
     parse_submit_file(jobs[job])
 
     # Handle subdag jobs from the dag file
     if jobs[job].is_subdag == True:
-        print " This is a SUBDAG job:"
-        print " For more information, please run the following command:"
+        print_console( " This is a SUBDAG job:" )
+        print_console(  " For more information, please run the following command:" )
         user_cmd = " %s -s " % (prog_base)
         if output_dir is not None:
             user_cmd = user_cmd + " --output-dir %s" % (output_dir)
-        print "%s -f %s" % (user_cmd, jobs[job].dag_path)
-        print
+        print_console(  "%s -f %s" % (user_cmd, jobs[job].dag_path) )
+        print_console()
         return
 
+    sub_wf_cmd = None
     if jobs[job].sub_file_parsed == False:
-        print "       site: submit file not available"
+        print_console(  "       site: submit file not available" )
     else:
-        print "       site: %s" % (jobs[job].site or '-')
-    print "submit file: %s" % (jobs[job].sub_file)
-    print "output file: %s" % (find_latest_log(jobs[job].out_file))
-    print " error file: %s" % (find_latest_log(jobs[job].err_file))
+        print_console(  "       site: %s" % (jobs[job].site or '-') )
+    print_console(  "submit file: %s" % (jobs[job].sub_file) )
+    print_console(  "output file: %s" % (find_latest_log(jobs[job].out_file)) )
+    print_console(  " error file: %s" % (find_latest_log(jobs[job].err_file)) )
     if print_invocation:
-        print
-        print "To re-run this job, use: %s %s" % (jobs[job].executable, jobs[job].arguments)
-        print
+        print_console( )
+        print_console(  "To re-run this job, use: %s %s" % (jobs[job].executable, jobs[job].arguments) )
+        print_console()
     if print_pre_script and len(jobs[job].pre_script) > 0:
-        print
-        print "SCRIPT PRE:"
-        print jobs[job].pre_script
-        print
+        print_console()
+        print_console(  "SCRIPT PRE:" )
+        print_console(  jobs[job].pre_script )
+        print_console()
     if len(jobs[job].dagman_out) > 0:
         # This job has a sub workflow
-        print " This job contains sub workflows!"
-        print " Please run the command below for more information:"
         user_cmd = " %s" % (prog_base)
         if output_dir is not None:
             user_cmd = user_cmd + " --output-dir %s" % (output_dir)
-        print "%s -d %s" % (user_cmd, os.path.split(jobs[job].dagman_out)[0])
-        print
-    print
+
+        #get any options that need to be invoked for the sub workflow
+        extraOptions = addon( options )
+        sub_wf_cmd = "%s %s -d %s" % (user_cmd, extraOptions, os.path.split(jobs[job].dagman_out)[0])
+
+        if not recurse_mode:
+            print_console(  " This job contains sub workflows!" )
+            print_console(  " Please run the command below for more information:" )
+            print_console( sub_wf_cmd )
+
+
+        print_console()
+    print_console()
 
     # Now dump file contents to screen if we are not in quiet mode
     if not quiet_mode:
         print_output_error(jobs[job])
+
+    # recurse for sub workflow
+    if sub_wf_cmd is not None and recurse_mode:
+        print_console( ("Failed Sub Workflow").center(80,"="))
+        subprocess.Popen( sub_wf_cmd, shell=True).communicate()[0]
+        print_console( ("").center(80,"="))
 
 def print_top_summary():
     """
@@ -1181,6 +1196,9 @@ def addon( options ):
 
     if( options.summary_mode ):
         cmd_line_args += "--summary "
+
+    if( options.use_files ):
+        cmd_line_args += "--files "
 
     new_indent = 1
     if( options.indent_length is not None ):
