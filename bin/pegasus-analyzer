@@ -132,6 +132,8 @@ quiet_mode = 0					# Prints out/err filenames instead of dumping their contents
 strict_mode = 0					# Gets out/err filenames from submit file
 summary_mode = 0                                # Print just the summary output
 debug_mode = 0					# Mode that enables debugging a single job
+recurse_mode = False                # Mode that automatically recurses into failed sub workflows.
+indent = "\t"
 print_invocation = 0				# Prints invocation command for failed jobs
 print_pre_script = 0				# Prints the SCRIPT PRE line for failed jobs, if present
 jsdl_filename = "jobstate.log"			# Default name of the log file to use
@@ -1020,7 +1022,7 @@ def analyze_db(config_properties):
             my_info.stderr_text = my_info.stderr_text.strip(" \n\r\t")
 
             if my_job[0] == my_info.job_instance_id:
-
+                sub_wf_cmd = None
                 print
                 print my_info.job_name.center(80, '=')
                 print
@@ -1041,15 +1043,23 @@ def analyze_db(config_properties):
                     print
                 if my_info.subwf_dir is not None:
                     # This job has a sub workflow
-                    print " This job contains sub workflows!"
-                    print " Please run the command below for more information:"
                     user_cmd = " %s" % (prog_base)
                     my_wfdir = os.path.normpath(my_info.subwf_dir)
                     if my_wfdir.find(my_info.submit_dir) >= 0:
                         # Path to dagman_out file includes original submit_dir, let's try to change it...
                         my_wfdir = os.path.normpath(my_wfdir.replace((my_info.submit_dir + os.sep), '', 1))
                         my_wfdir = os.path.join(input_dir, my_wfdir)
-                    print "%s -d %s --top-dir %s" % (user_cmd, my_wfdir, (top_dir or input_dir))
+
+                    #get any options that need to be invoked for the sub workflow
+                    extraOptions = addon( options )
+                    sub_wf_cmd = "%s %s -d %s --top-dir %s" % (user_cmd, extraOptions, my_wfdir, (top_dir or input_dir))
+
+                    if not recurse_mode:
+                        #we print only if recurse mode is disabled
+                        print " This job contains sub workflows!"
+                        print " Please run the command below for more information:"
+                        print sub_wf_cmd
+                        #print "%s -d %s --top-dir %s" % (user_cmd, my_wfdir, (top_dir or input_dir))
                     print
                 print
 
@@ -1126,6 +1136,11 @@ def analyze_db(config_properties):
                         print
                         print my_info.stderr_text
                         print
+
+                    # recurse for sub workflow
+                    if sub_wf_cmd is not None and recurse_mode:
+                        subprocess.Popen( sub_wf_cmd, shell=True).communicate()[0]
+
             else:
                 log.error("unexpected job instance returned by database!")
                 log.error("returned: %d - expected: %d" % (my_info[0], my_job[0]))
@@ -1140,6 +1155,25 @@ def analyze_db(config_properties):
 
     # Workflow has no failures, exit with exitcode 0
     sys.exit(0)
+
+def addon( options ):
+    """
+        This function constructs a command line invocation that needs to be passed for invoking for a sub workflow.
+        Only a certain subset of options are propogated to the sub workflow invocations if passed.
+    """
+    cmd_line_args = ""
+
+    if( options.recurse_mode ):
+        cmd_line_args += "--recurse "
+
+    if( options.quiet_mode ):
+        cmd_line_args += "--quiet "
+
+    if( options.summary_mode ):
+        cmd_line_args += "--summary "
+
+    return cmd_line_args
+
 
 def debug_condor(my_job):
     """
@@ -1338,6 +1372,8 @@ parser.add_option("-c","--conf", action = "store", type = "string", dest = "conf
                   help = "Specifies the properties file to use. This overrides all other property files.")
 parser.add_option("-q", "--quiet", action = "store_const", const = 1, dest = "quiet_mode",
                   help = "output out/err filenames instead of their contents")
+parser.add_option("-r", "--recurse", action = "store_true",  dest = "recurse_mode",
+    help = "automatically recurse into sub workflows in case of failure")
 parser.add_option("-p", "--print", action = "store", type = "string" , dest = "print_options",
                   help = "specifies print options from pre,invocation")
 parser.add_option("-s", "--strict", action = "store_const", const = 1, dest = "strict_mode",
@@ -1377,6 +1413,8 @@ if options.summary_mode is not None:
     summary_mode = options.summary_mode
 if options.quiet_mode is not None:
     quiet_mode = options.quiet_mode
+if options.recurse_mode is not None:
+    recurse_mode = options.recurse_mode
 if options.use_files is not None:
     use_files = True
 if options.print_options is not None:
