@@ -133,7 +133,8 @@ strict_mode = 0					# Gets out/err filenames from submit file
 summary_mode = 0                                # Print just the summary output
 debug_mode = 0					# Mode that enables debugging a single job
 recurse_mode = False                # Mode that automatically recurses into failed sub workflows.
-indent = "\t"
+indent_length = 0               # the number of tabs to print before printing to console
+indent = ""                   # the corresponding indent string
 print_invocation = 0				# Prints invocation command for failed jobs
 print_pre_script = 0				# Prints the SCRIPT PRE line for failed jobs, if present
 jsdl_filename = "jobstate.log"			# Default name of the log file to use
@@ -832,15 +833,16 @@ def print_top_summary():
     This function prints the summary for the analyzer report,
     which is the same for the long and short output versions
     """
-    print
-    print "Summary".center(80, '*')
-    print
-    print " Total jobs         : % 6d (%3.2f%%)" % (total, 100 * (1.0 * total/(total or 1)))
-    print " # jobs succeeded   : % 6d (%3.2f%%)" % (success, 100 * (1.0 * success/(total or 1)))
-    print " # jobs failed      : % 6d (%3.2f%%)" % (failed, 100 * (1.0 * failed/(total or 1)))
-    print " # jobs unsubmitted : % 6d (%3.2f%%)" % (unsubmitted, 100 * (1.0 * unsubmitted/(total or 1)))
+    print_console()
+    summary = "Summary".center(80, '*')
+    print_console( summary )
+    print_console()
+    print_console( " Total jobs         : % 6d (%3.2f%%)" % (total, 100 * (1.0 * total/(total or 1))) )
+    print_console( " # jobs succeeded   : % 6d (%3.2f%%)" % (success, 100 * (1.0 * success/(total or 1))) )
+    print_console( " # jobs failed      : % 6d (%3.2f%%)" % (failed, 100 * (1.0 * failed/(total or 1))) )
+    print_console( " # jobs unsubmitted : % 6d (%3.2f%%)" % (unsubmitted, 100 * (1.0 * unsubmitted/(total or 1))) )
     if unknown > 0:
-        print " # jobs unknown     : % 6d (%3.2f%%)" % (unknown, 100 * (1.0 * unknown/(total or 1)))
+        print_console( " # jobs unknown     : % 6d (%3.2f%%)" % (unknown, 100 * (1.0 * unknown/(total or 1)))  )
     print
 
 def print_summary():
@@ -853,15 +855,22 @@ def print_summary():
 
     # Print information about failed jobs
     if len(failed_jobs):
-        print "Failed jobs' details".center(80, '*')
+        print_console("Failed jobs' details".center(80, '*'))
         for job in failed_jobs:
             print_job_info(job)
 
     # Print information about unknown jobs
     if len(unknown_jobs):
-        print "Unknown jobs' details".center(80, '*')
+        print_console( "Unknown jobs' details".center(80, '*') )
         for job in unknown_jobs:
             print_job_info(job)
+
+def print_console(stmt=""):
+    """
+    A utilty function to print to console with the correct indentation
+    """
+    print indent + stmt
+
 
 def analyze_files():
     """
@@ -1008,7 +1017,7 @@ def analyze_db(config_properties):
         my_failed_jobs = workflow_stats.get_failed_job_instances(final=True, all_jobs=True)
 
         # Print header
-        print "Failed jobs' details".center(80, '*')
+        print_console("Failed jobs' details".center(80, '*'))
 
         # Now process one by one...
         for my_job in my_failed_jobs:
@@ -1023,24 +1032,24 @@ def analyze_db(config_properties):
 
             if my_job[0] == my_info.job_instance_id:
                 sub_wf_cmd = None
-                print
-                print my_info.job_name.center(80, '=')
-                print
-                print " last state: %s" % (my_info.state or '-')
+                print_console()
+                print_console( my_info.job_name.center(80, '=') )
+                print_console()
+                print_console(  " last state: %s" % (my_info.state or '-') )
 
-                print "       site: %s" % (my_info.site or '-')
-                print "submit file: %s" % (my_info.submit_file or '-')
-                print "output file: %s" % (my_info.stdout_file or '-')
-                print " error file: %s" % (my_info.stderr_file or '-')
+                print_console( "       site: %s" % (my_info.site or '-') )
+                print_console( "submit file: %s" % (my_info.submit_file or '-') )
+                print_console( "output file: %s" % (my_info.stdout_file or '-')  )
+                print_console( " error file: %s" % (my_info.stderr_file or '-')  )
                 if print_invocation:
-                    print
-                    print "To re-run this job, use: %s %s" % ((my_info.executable or '-'), (my_info.argv or '-'))
-                    print
+                    print_console()
+                    print_console( "To re-run this job, use: %s %s" % ((my_info.executable or '-'), (my_info.argv or '-')) )
+                    print_console()
                 if print_pre_script and len((my_info.pre_executable or "")) > 0:
-                    print
-                    print "SCRIPT PRE:"
-                    print "%s %s" % ((my_info.pre_executable or ""), (my_info.pre_argv or ""))
-                    print
+                    print_console()
+                    print_console( "SCRIPT PRE:" )
+                    print_console( "%s %s" % ((my_info.pre_executable or ""), (my_info.pre_argv or "")) )
+                    print_console()
                 if my_info.subwf_dir is not None:
                     # This job has a sub workflow
                     user_cmd = " %s" % (prog_base)
@@ -1056,9 +1065,9 @@ def analyze_db(config_properties):
 
                     if not recurse_mode:
                         #we print only if recurse mode is disabled
-                        print " This job contains sub workflows!"
-                        print " Please run the command below for more information:"
-                        print sub_wf_cmd
+                        print_console( " This job contains sub workflows!" )
+                        print_console( " Please run the command below for more information:")
+                        print_console( sub_wf_cmd )
                         #print "%s -d %s --top-dir %s" % (user_cmd, my_wfdir, (top_dir or input_dir))
                     print
                 print
@@ -1076,15 +1085,17 @@ def analyze_db(config_properties):
                     my_exitcode = utils.raw_to_regular(my_task[1])
 
                     # Print task summary
-                    print ("Task #" + str(my_task[0]) + " - Summary").center(80, '-')
-                    print
-                    print "site        : %s" % (my_info.site or '-')
-                    print "hostname    : %s" % (my_info.hostname or '-')
-                    print "executable  : %s" % (str(my_task[2] or '-'))
-                    print "arguments   : %s" % (str(my_task[3] or '-'))
-                    print "exitcode    : %s" % (str(my_exitcode))
-                    print "working dir : %s" % (my_info.work_dir or '-')
-                    print
+                    summary = ("Task #" + str(my_task[0]) + " - Summary").center(80, '-')
+                    print_console(  summary )
+                    #print ( "Task #" + str(my_task[0]) + " - Summary").center(80, '-')
+                    print_console()
+                    print_console( "site        : %s" % ( my_info.site or '-') )
+                    print_console( "hostname    : %s" % (my_info.hostname or '-') )
+                    print_console( "executable  : %s" % (str(my_task[2] or '-')) )
+                    print_console( "arguments   : %s" % (str(my_task[3] or '-')) )
+                    print_console( "exitcode    : %s" % (str(my_exitcode)) )
+                    print_console( "working dir : %s" % (my_info.work_dir or '-') )
+                    print_console()
 
                     if quiet_mode:
                         continue
@@ -1106,10 +1117,10 @@ def analyze_db(config_properties):
 
                         if my_stdout_end - my_stdout_start > 0:
                             # Something to display
-                            print ("Task #" + str(my_task[0]) + " - " + str(my_task[4]) + " - " + str(my_task[5]) + " - stdout").center(80, '-')
-                            print
-                            print my_info.stdout_text[my_stdout_start:my_stdout_end]
-                            print
+                            print_console( ("Task #" + str(my_task[0]) + " - " + str(my_task[4]) + " - " + str(my_task[5]) + " - stdout").center(80, '-') )
+                            print_console()
+                            print_console( my_info.stdout_text[my_stdout_start:my_stdout_end] )
+                            print_console()
 
                     # Now print stderr (from the kickstart output file)
                     my_stderr_start = my_info.stdout_text.find(my_stderr_str)
@@ -1124,18 +1135,18 @@ def analyze_db(config_properties):
 
                         if my_stderr_end - my_stderr_start > 0:
                             # Something to display
-                            print ("Task #" + str(my_task[0]) + " - " + str(my_task[4]) + " - " + str(my_task[5]) + " - Kickstart stderr").center(80, '-')
-                            print
-                            print my_info.stdout_text[my_stderr_start:my_stderr_end]
-                            print
+                            print_console( ("Task #" + str(my_task[0]) + " - " + str(my_task[4]) + " - " + str(my_task[5]) + " - Kickstart stderr").center(80, '-') )
+                            print_console()
+                            print_console( my_info.stdout_text[my_stderr_start:my_stderr_end] )
+                            print_console( )
 
                     # Now print the stderr output from the .err file
                     if my_info.stderr_text.strip("\n\t \r") != "":
                         # Something to display
-                        print ("Task #" + str(my_task[0]) + " - " + str(my_task[4]) + " - " + str(my_task[5]) + " - stderr").center(80, '-')
-                        print
-                        print my_info.stderr_text
-                        print
+                        print_console( ("Task #" + str(my_task[0]) + " - " + str(my_task[4]) + " - " + str(my_task[5]) + " - stderr").center(80, '-') )
+                        print_console()
+                        print_console( my_info.stderr_text )
+                        print_console()
 
                     # recurse for sub workflow
                     if sub_wf_cmd is not None and recurse_mode:
@@ -1171,6 +1182,12 @@ def addon( options ):
 
     if( options.summary_mode ):
         cmd_line_args += "--summary "
+
+    new_indent = 1
+    if( options.indent_length is not None ):
+        new_indent = options.indent_length + 1
+
+    cmd_line_args += "--indent " + str(new_indent) + " "
 
     return cmd_line_args
 
@@ -1374,6 +1391,7 @@ parser.add_option("-q", "--quiet", action = "store_const", const = 1, dest = "qu
                   help = "output out/err filenames instead of their contents")
 parser.add_option("-r", "--recurse", action = "store_true",  dest = "recurse_mode",
     help = "automatically recurse into sub workflows in case of failure")
+parser.add_option( "-I", "--indent", action = "store", type ="int", dest ="indent_length" )
 parser.add_option("-p", "--print", action = "store", type = "string" , dest = "print_options",
                   help = "specifies print options from pre,invocation")
 parser.add_option("-s", "--strict", action = "store_const", const = 1, dest = "strict_mode",
@@ -1391,8 +1409,6 @@ parser.add_option("--type", action = "store", type = "string", dest = "workflow_
 
 # Parse command line options
 (options, args) = parser.parse_args()
-
-print "%s: initializing..." % (prog_base)
 
 # Copy options from the command line parser
 
@@ -1415,6 +1431,8 @@ if options.quiet_mode is not None:
     quiet_mode = options.quiet_mode
 if options.recurse_mode is not None:
     recurse_mode = options.recurse_mode
+if options.indent_length is not None:
+    indent_length = indent_length + options.indent_length
 if options.use_files is not None:
     use_files = True
 if options.print_options is not None:
@@ -1437,6 +1455,12 @@ if options.debug_job_local_executable is not None:
     debug_job_local_executable = options.debug_job_local_executable
 if options.workflow_type is not None:
     workflow_type = options.workflow_type
+
+for num in range( 0, indent_length ):
+    indent += "\t"
+
+
+print_console( "%s: initializing..." % (prog_base) )
 
 if options.dag_filename is not None:
     dag_path = options.dag_filename
