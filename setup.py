@@ -46,7 +46,6 @@ setup(
         ]
     },
     install_requires = [
-        "pegasus-wms>=4.3.0",
         "werkzeug==0.9.3",
         "Flask==0.10",
         "Jinja2==2.7",
