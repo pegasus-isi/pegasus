@@ -29,7 +29,7 @@ Python 2.6.2</programlisting></para>
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">HTCondor (formerly Condor) 7.6 or higher</emphasis>. See
+        <para><emphasis role="bold">HTCondor (formerly Condor) 7.8 or higher</emphasis>. See
         <ulink
         url="http://www.cs.wisc.edu/htcondor/">http://www.cs.wisc.edu/htcondor/</ulink>
         for more information. You should be able to run
@@ -142,7 +142,7 @@ Complete!</programlisting>
       <para>Add the Pegasus apt repository to your
       <filename>/etc/apt/sources.list</filename> file:</para>
 
-      <programlisting>deb http://download.pegasus.isi.edu/wms/download/debian squeeze main</programlisting>
+      <programlisting>deb http://download.pegasus.isi.edu/wms/download/debian wheezy main</programlisting>
 
       <para>Install Pegasus with <emphasis role="bold">apt-get
       :</emphasis></para>
