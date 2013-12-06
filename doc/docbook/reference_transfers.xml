@@ -1332,4 +1332,25 @@ irodsPassword 'somesecretpassword'</programlisting>
 &lt;/sitecatalog&gt;
 </programlisting>
   </section>
+
+  <section>
+    <title>iRODS data access</title>
+
+    <para>iRODS can be used as a input data location, a storage site for intermediate
+        data during workflow execution, or a location for final output data. Pegasus uses
+        a URL notation to identify iRODS files. Example:
+    </para>
+    
+    <programlisting>irods://some-host.org/path/to/file.txt</programlisting>
+
+    <para>The path to the file is <emphasis role="bold">relative</emphasis> to the internal
+        iRODS location. In the example above, the path used to refer to the file in iRODS is
+        <emphasis>path/to/file.txt</emphasis> (no leading /).
+    </para>
+
+    <para>See <link linkend="cred_staging">the section on credential staging</link> for 
+        information on how to set up an irodsEnv file to be used by Pegasus.
+    </para>
+
+  </section>
 </section>
