@@ -1,3 +1,11 @@
+ifndef ${prefix}
+prefix = ../..
+endif
+
+ifndef ${datadir}
+datadir = $(prefix)/share
+endif
+
 ASCIIDOC = asciidoc -d manpage -b docbook
 XSLTPROC = xsltproc -xinclude
 FOP = fop
@@ -16,7 +24,7 @@ HTMLMANPAGES = $(TXTFILES:.txt=.html)
 
 .PRECIOUS: %.xml
 
-all : manpages
+all: manpages
 
 manpages: $(MANPAGES)
 pdfmanpages: $(PDFMANPAGES)
@@ -48,11 +56,13 @@ manpages.html : manpages.xml $(XMLMANPAGES)
 clean:
 	rm -f pegasus-*.xml *.fo *.pdf *.1 *.html
 
-install: $(MANPAGES)
-	# copy to the right locations - user still needs to svn commit the results
-	for MPAGE in `ls *.1`; do \
-		cp $$MPAGE ../../share/man/man1/; \
+install: manpages
+	mkdir -p $(datadir)/man/man1
+	for MPAGE in $(MANPAGES); do \
+		cp $$MPAGE $(datadir)/man/man1/; \
 	done
+
+install-docbook: $(XMLMANPAGES)
 	for XML in `ls *.xml`; do \
 		cp $$XML ../docbook/manpage.$$XML; \
 	done
