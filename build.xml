@@ -469,8 +469,6 @@
   <target name="clean" description="Delete all build artifacts">
     <delete dir="dist"/>
     <delete dir="build"/>
-    <delete file="pegasus.spec"/>
-    <delete file="debian/changelog"/>
     <exec executable="${make}" dir="src/tools" failonerror="true">
       <arg line="distclean"/>
     </exec>
