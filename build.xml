@@ -356,7 +356,7 @@
     <delete file="dist/pegasus-worker-${pegasus.version}.tar"/>
   </target>
 
-  <target name="dist-complete" depends="setup,jar,vdl-jar,pegasus-config,ctools,externals">
+  <target name="dist" depends="dist-clean,setup,jar,vdl-jar,pegasus-config,ctools,externals,doc">
     <!-- bin -->
     <copy preservelastmodified="true" todir="${dist.bin}">
       <fileset dir="bin">
@@ -451,11 +451,7 @@
         <include name="RELEASE_NOTES"/>
       </fileset>
     </copy>
-  </target>
 
-  <target name="dist" depends="dist-clean,dist-complete"/>
-
-  <target name="dist-release" depends="dist-clean,doc,dist-complete">
     <!-- creates the binary tarball -->
     <exec executable="sh" dir="dist" failonerror="true">
       <arg value="-c"/>
@@ -473,6 +469,8 @@
   <target name="clean" description="Delete all build artifacts">
     <delete dir="dist"/>
     <delete dir="build"/>
+    <delete file="pegasus.spec"/>
+    <delete file="debian/changelog"/>
     <exec executable="${make}" dir="src/tools" failonerror="true">
       <arg line="distclean"/>
     </exec>
