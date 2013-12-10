@@ -31,10 +31,7 @@ execute the steps in appropriate order.
 %setup -q -n %{sourcedir}
 
 %build
-rm -rf dist
 ant dist
-# we want to use the tarball as that has been stripped of some git files
-(cd dist && rm -rf pegasus-%{version} && tar xzf pegasus-*.tar.gz)
 
 # strip executables
 strip dist/pegasus-%{version}/bin/pegasus-invoke
