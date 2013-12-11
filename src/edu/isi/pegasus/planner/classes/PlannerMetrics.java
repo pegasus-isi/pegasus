@@ -88,17 +88,17 @@ public class PlannerMetrics extends Data{
      * The name of the client
      */
     @Expose @SerializedName( "client" ) private  final String mClient = "pegasus-plan";
-    
+
     /**
      * The planner version
      */
-    @Expose @SerializedName( "version" ) private  final String mVersion = Version.instance().toString();
+    @Expose @SerializedName( "version" ) private  final String mVersion = new Version().getVersion();
 
     /**
      * The name of the client
      */
     @Expose @SerializedName( "type" ) private   String mType ;
-    
+
     /**
      * The start time for the planning.
      */

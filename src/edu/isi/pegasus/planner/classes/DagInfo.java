@@ -585,7 +585,7 @@ public class DagInfo extends Data {
      * @see org.griphyn.common.util.Version
      */
     public void setReleaseVersion() {
-        this.releaseVersion = Version.instance().toString();
+        this.releaseVersion = new Version().getVersion();
     }
 
 
