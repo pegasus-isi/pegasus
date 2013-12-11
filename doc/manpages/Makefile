@@ -6,7 +6,9 @@ ifndef ${datadir}
 datadir = $(prefix)/share
 endif
 
-ASCIIDOC = asciidoc -d manpage -b docbook
+VERSION = $(shell ../../release-tools/getversion)
+
+ASCIIDOC = asciidoc -a manversion=$(VERSION) -a mansource="Pegasus" -a manmanual="Pegasus Manual" -d manpage -b docbook
 XSLTPROC = xsltproc -xinclude
 FOP = fop
 
@@ -19,6 +21,7 @@ MANPAGES = $(TXTFILES:.txt=.1)
 XMLMANPAGES = $(TXTFILES:.txt=.xml)
 PDFMANPAGES = $(TXTFILES:.txt=.pdf)
 HTMLMANPAGES = $(TXTFILES:.txt=.html)
+
 
 .PHONY: manpages pdfmanpages htmlmanpages
 
