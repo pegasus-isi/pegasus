@@ -32,6 +32,8 @@ class Job: pass
 
 class Task: pass
 
+class File: pass
+
 class Invocation: pass
 
 class Braindump:
@@ -83,11 +85,15 @@ def extract_arguments(job):
     if elem.text is not None:
         args.append(elem.text)
 
-    for f in elem.findall("./file"):
+    for f in elem:
         if f.text is not None:
             args.append(f.text)
 
-        args.append(f.attrib["name"])
+        if "name" in f.attrib:
+            args.append(f.attrib["name"])
+
+        if "file" in f.attrib:
+            args.append(f.attrib["file"])
 
         if f.tail is not None:
             args.append(f.tail)
@@ -98,7 +104,22 @@ def extract_arguments(job):
     # Fix the whitespace
     args = shlex.split("".join(args))
 
-    return " ".join(args)
+    return args
+
+def extract_files(job):
+    files = []
+
+    for e in job:
+        if e.tag == "uses":
+            f = File()
+            if "file" in e.attrib:
+                f.name = e.attrib["file"]
+            else:
+                f.name = e.attrib["name"]
+            f.link = e.attrib["link"]
+            files.append(f)
+
+    return files
 
 def parse_dax(daxfile):
     print "Parsing DAX..."
@@ -124,10 +145,14 @@ def parse_dax(daxfile):
                 task.xform = task.xform + ":" + e.attrib["version"]
             if "dv-name" in e.attrib:
                 task.derivation = e.attrib["dv-name"]
+                if "dv-version" in e.attrib:
+                    task.derivation += ":" + e.attrib["dv-version"]
             else:
                 task.derivation = task.id
 
             task.arguments = extract_arguments(e)
+
+            task.files = extract_files(e)
 
             dax.tasks[task.id] = task
         elif e.tag == "child":
@@ -241,7 +266,12 @@ def parse_invocations(filename):
     cpu = None
     cores = None
 
+    # XXX There is only one slot per file, but that's only true for non-PMC jobs
+    # For PMC jobs, when that comes up, we can get it from the cluster-task record
+    slot = None
+
     for l in f:
+        l = l.lstrip()
         if l.startswith("<invocation "):
             l = l[:-2] + "/>"
             e = etree.fromstring(l)
@@ -255,6 +285,8 @@ def parse_invocations(filename):
             inv.cpu = cpu
             inv.cores = cores
             inv.procs = []
+            inv.arguments = []
+            inv.slot = slot
 
             # XXX Skip auxilliary jobs
             if inv.xform.startswith("pegasus"):
@@ -265,18 +297,26 @@ def parse_invocations(filename):
                 continue
 
             invs.append(inv)
-        elif l.strip().startswith("<proc ppid"):
+        elif l.startswith("<proc ppid"):
             e = etree.fromstring(l)
             inv.procs.append(e)
-        elif l.strip().startswith("<status"):
+        elif l.startswith("<status"):
             e = etree.fromstring(l)
             inv.exitcode = e.attrib["raw"]
-        elif l.strip().startswith("<cpu"):
+        elif l.startswith("<cpu"):
             e = etree.fromstring(l)
             cpu = e.text
             cores = e.attrib["count"]
             inv.cpu = cpu
             inv.cores = cores
+        elif l.startswith("<arg nr"):
+            e = etree.fromstring(l)
+            inv.arguments.append(e.text.strip())
+        elif l.startswith("<env "):
+            if "_CONDOR_SLOT" in l:
+                e = etree.fromstring(l)
+                inv.slot = e.text
+                slot = inv.slot
 
     f.close()
 
@@ -356,6 +396,18 @@ def merge_by_transformation(dax, invocations):
             exit(1)
         j.invocation = xform.pop()
 
+def merge_by_arguments(dax, invocations):
+    print "Merging by arguments..."
+    args = {}
+    for i in invocations:
+        args[" ".join(i.arguments)] = i
+    for j in dax.tasks.values():
+        arguments = " ".join(j.arguments)
+        if arguments not in args:
+            print "ERROR: No matching arguments for task %s: %s" % (j.id, arguments)
+            exit(1)
+        j.invocation = args[arguments]
+
 def parse_metadata(metafile):
     metadata = {}
     f = open(metafile, "r")
@@ -372,7 +424,7 @@ def parse_metadata(metafile):
     f.close()
     return metadata
 
-def write_output_dax(dax, metadata, outfile):
+def write_output_dax(dax, metadata, files, outfile):
     out = open(outfile, "w")
     out.write('<workflow name="%s" tasks="%d">\n' % (dax.name, len(dax.tasks)))
     if len(metadata) > 0:
@@ -382,8 +434,18 @@ def write_output_dax(dax, metadata, outfile):
         out.write('    </metadata>\n')
     for t in dax.tasks.values():
         i = t.invocation
-        out.write('    <task id="%s" type="%s" duration="%s" job="%s" site="%s" host="%s" cpu="%s"/>\n' \
+        out.write('    <task id="%s" type="%s" duration="%s" job="%s" site="%s" host="%s" cpu="%s"' \
                 % (t.id, t.xform, i.duration, i.jobname, i.site, i.host, i.cpu))
+        if i.slot is not None:
+            out.write(' slot="%s"' % i.slot)
+        out.write('>\n')
+        out.write('        <arguments>%s</arguments>\n' % " ".join(t.arguments))
+        for f in t.files:
+            out.write('        <file name="%s" link="%s"' % (f.name, f.link))
+            if f.name in files:
+                out.write(' size="%s"' % files[f.name])
+            out.write('/>\n')
+        out.write('    </task>\n')
     for parent, child in dax.edges:
         out.write('    <edge parent="%s" child="%s"/>\n' % (parent.id, child.id))
     out.write("</workflow>\n")
@@ -449,7 +511,7 @@ def write_output_dvdt(daxfile, dax, braindump, outdir, wfname):
             sf.write("summary:\n")
             sf.write("task_id:                  %s\n" % (t.id))
             sf.write("category:                 %s\n" % (t.xform))
-            sf.write("command:                  %s\n" % (t.xform + " " + t.arguments))
+            sf.write("command:                  %s\n" % (t.xform + " " + " ".join(t.arguments)))
             sf.write("start:                    %f s\n" % inv.start)
             sf.write("end:                      %f s\n" % (inv.start + float(inv.duration)))
             sf.write("exit_type:                %s\n" % "normal")
@@ -489,6 +551,18 @@ def get_makespan(dagman_log):
 
     return makespan
 
+def parse_file_sizes(file_sizes):
+    files = {}
+    f = open(file_sizes, "r")
+    try:
+        for l in f:
+            filename, size = l.split()
+            files[filename] = size
+    finally:
+        f.close()
+
+    return files
+
 def main():
     parser = OptionParser(usage="Usage: %prog [options] SUBMIT_DIR")
     parser.add_option("-d", "--dax", dest="dax", action="store", default=None,
@@ -504,6 +578,11 @@ def main():
                       "the DAX exactly. The default is to use derivations, which "
                       "is accurate, but only works for workflows that used dv-name "
                       "or workflows run using Pegasus 4 or later.")
+    parser.add_option("-a", dest="merge_by_arguments", action="store_true", default=False,
+                      help="Merge the DAX and invocation records using their arguments. "
+                      "This method is better than merging by transformation, but not as "
+                      "good as merging by dervation, which is the default, but doesn't work "
+                      "for all workflows.")
     parser.add_option("-m", dest="metadata", action="append",
                       help="Add a metadata file with key=value pairs for this workflow")
     parser.add_option("-f", "--format", dest="format", action="store", default="XML",
@@ -512,6 +591,8 @@ def main():
                       help="Output location. Default: SUBMIT_DIR/package[/WFNAME.xml]")
     parser.add_option("-n", "--name", dest="wfname", action="store", default=None,
                       help="Workflow name. Default: extract from braindump")
+    parser.add_option("-s", "--sizes", dest="file_sizes", action="store", default=None,
+                      help="File sizes")
 
     options, args = parser.parse_args()
 
@@ -561,6 +642,9 @@ def main():
     if options.format not in ["XML","dvdt"]:
         parser.error("Invalid format: %s" % options.format)
 
+    if options.merge_by_transformation and options.merge_by_arguments:
+        parser.error("Specify -t or -a, but not both. -a is better.")
+
     if options.wfname is None:
         wfname = braindump["dax_label"]
         if wfname is None:
@@ -589,7 +673,9 @@ def main():
         print "ERROR: # DAX tasks != # invocations"
         exit(1)
 
-    if options.merge_by_transformation:
+    if options.merge_by_arguments:
+        merge_by_arguments(dax, invocations)
+    elif options.merge_by_transformation:
         merge_by_transformation(dax, invocations)
     else:
         merge_by_derivation(dax, invocations)
@@ -601,9 +687,13 @@ def main():
 
     metadata["makespan"] = makespan
 
+    files = {}
+    if options.file_sizes:
+        files = parse_file_sizes(options.file_sizes)
+
     if options.format == "XML":
         basename = os.path.join(outdir, braindump["pegasus_wf_name"])
-        write_output_dax(dax, metadata, basename + ".wf")
+        write_output_dax(dax, metadata, files, basename + ".wf")
         write_output_dag(dag, metadata, basename + "_dag.wf")
     elif options.format == "dvdt":
         write_output_dvdt(daxfile, dax, braindump, outdir, wfname)
