@@ -50,6 +50,9 @@ import java.io.Writer;
 import java.io.StringWriter;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * The object of this class holds the information to generate a submit file about
@@ -406,7 +409,7 @@ public class Job extends Data implements GraphNodeContent{
      */
     private String mDirectory;
 
-    /**
+    /**fma
      * The relative path to the submit directory for the job, from the workflows
      * base submit directory.
      */
@@ -416,7 +419,7 @@ public class Job extends Data implements GraphNodeContent{
     /**
      * Set of credential types required by a job.
      */
-    private Set<CredentialHandler.TYPE> mCredentialsType;
+    private Map<String, Set<CredentialHandler.TYPE>> mCredentialsType;
 
     /**
      * Intialises the member variables.
@@ -454,7 +457,7 @@ public class Job extends Data implements GraphNodeContent{
         mNotifications   = new Notifications();
         mStagingSite     = null;
         mDirectory       = null;
-        mCredentialsType = new HashSet<CredentialHandler.TYPE>();
+        mCredentialsType = new HashMap<String, Set<CredentialHandler.TYPE> >();
 //        submitDirectory  = null;
     }
 
@@ -496,7 +499,7 @@ public class Job extends Data implements GraphNodeContent{
         mNotifications   = job.mNotifications;
         mStagingSite     = job.mStagingSite;
         mDirectory       = job.mDirectory;
-        mCredentialsType = new HashSet<CredentialHandler.TYPE>();
+        mCredentialsType = new HashMap<String, Set<CredentialHandler.TYPE>>();
 //        submitDirectory  = job.submitDirectory;
     }
 
@@ -556,8 +559,11 @@ public class Job extends Data implements GraphNodeContent{
 
         newSub.mDirectory       = this.mDirectory;
 
-        for( CredentialHandler.TYPE type : this.getCredentialTypes()  ){
-            newSub.addCredentialType( type );
+        for( Map.Entry<String,Set<CredentialHandler.TYPE>> entry : this.getCredentialTypes().entrySet()  ){
+            String site = entry.getKey();
+            for( CredentialHandler.TYPE cred: entry.getValue()){
+                newSub.addCredentialType( site, cred );
+            }
         }
 
         return newSub;
@@ -751,25 +757,26 @@ public class Job extends Data implements GraphNodeContent{
      * Looks at a URL to determine whether a credential should be associated with
      * a job or not.
      *
+     * @param site  the site with which the credential is associated
      * @param url   the url for which a credential needs to be added
      */
-    public void addCredentialType( String url ){
+    public void addCredentialType( String site, String url ){
         //sanity check
         if( url == null ){
             return;
         }
 
         if( url.startsWith( "gsiftp" ) ){
-            this.addCredentialType( CredentialHandler.TYPE.x509 );
+            this.addCredentialType( site, CredentialHandler.TYPE.x509   );
         }
         else if( url.startsWith( "s3" ) ){
-            this.addCredentialType( CredentialHandler.TYPE.s3 );
+            this.addCredentialType( site, CredentialHandler.TYPE.s3 );
         }
         else if( url.startsWith( "irods" ) ){
-            this.addCredentialType( CredentialHandler.TYPE.irods );
+            this.addCredentialType( site, CredentialHandler.TYPE.irods  );
         }
         else if( url.startsWith( "scp" ) ){
-            this.addCredentialType( CredentialHandler.TYPE.ssh );
+            this.addCredentialType( site, CredentialHandler.TYPE.ssh );
         }
     }
 
@@ -778,17 +785,36 @@ public class Job extends Data implements GraphNodeContent{
      *
      * @param type  the credential type.
      */
-    public void addCredentialType( CredentialHandler.TYPE type ){
-       this.mCredentialsType.add( type );
+    public void addCredentialType( String site, CredentialHandler.TYPE type ){
+        Set<CredentialHandler.TYPE> set = null;
+        if ( this.mCredentialsType.containsKey( site ) ){
+            set = this.mCredentialsType.get( site );
+        }
+        else{
+            set = new HashSet();
+            this.mCredentialsType.put(site, set);
+        }
+        set.add(type);
     }
 
 
     /**
-     * Returns the various credential types required by a job
+     * A boolean method indicating whether credentials are associated with the 
+     * job
+     * 
+     * @return boolean 
+     */
+    public boolean requiresCredentials(){
+        return !(this.mCredentialsType == null || this.mCredentialsType.isEmpty());
+    }
+    
+    /**
+     * Returns the various credential types required by a job indexed by a site
+     * from which to pick up the credential
      *
      * @return the set of credentials required.
      */
-    public Set<CredentialHandler.TYPE> getCredentialTypes(  ){
+    public Map<String, Set<CredentialHandler.TYPE>> getCredentialTypes(  ){
        return this.mCredentialsType;
     }
 

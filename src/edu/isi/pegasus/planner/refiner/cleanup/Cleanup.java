@@ -223,7 +223,7 @@ public class Cleanup implements CleanupImplementation{
                 }
 
                 //associate a credential if required
-                cJob.addCredentialType( pfn );
+                cJob.addCredentialType( stagingSite, pfn );
 
                 writer.write( pfn );
                 writer.write( "\n" );

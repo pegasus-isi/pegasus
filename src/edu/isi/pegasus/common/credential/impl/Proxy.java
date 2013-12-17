@@ -115,8 +115,8 @@ public class Proxy  extends Abstract implements CredentialHandler{
      *
      * @return the name of the environment variable.
      */
-    public String getEnvironmentVariable(){
-        return Proxy.X509_USER_PROXY_KEY;
+    public String getEnvironmentVariable(String site ){
+        return Proxy.X509_USER_PROXY_KEY + "_" + site;
     }
 
     /**

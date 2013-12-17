@@ -30,7 +30,7 @@ public interface CredentialHandler {
     /**
      * The version of the API being used.
      */
-    public static final String VERSION = "1.0";
+    public static final String VERSION = "1.1";
 
     //type of credentials associated
     /**
@@ -69,7 +69,7 @@ public interface CredentialHandler {
      *
      * @return the name of the environment variable.
      */
-    public String getEnvironmentVariable();
+    public String getEnvironmentVariable( String site );
 
     /**
      * Returns the description for the implementing handler

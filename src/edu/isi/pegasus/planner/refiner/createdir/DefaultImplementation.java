@@ -170,7 +170,7 @@ public class DefaultImplementation implements Implementation {
 
 
         //associate a credential if required
-        newJob.addCredentialType( directoryURL );
+        newJob.addCredentialType( site, directoryURL );
 
         //figure out on the basis of directory URL
         //where to run the job.

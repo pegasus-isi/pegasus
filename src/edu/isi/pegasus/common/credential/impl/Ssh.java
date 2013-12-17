@@ -94,7 +94,7 @@ public class Ssh extends Abstract implements CredentialHandler {
      *
      * @return the name of the environment variable.
      */
-    public String getEnvironmentVariable(){
+    public String getEnvironmentVariable( String site ){
         return Ssh.SSH_PRIVATE_KEY_VARIABLE;
     }
 

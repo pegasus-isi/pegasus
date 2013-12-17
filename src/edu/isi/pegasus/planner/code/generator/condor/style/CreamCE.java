@@ -85,7 +85,7 @@ public class CreamCE extends Abstract{
         
         //associate the proxy to be used
         //we always say a proxy is required
-        job.addCredentialType( TYPE.x509 );
+        job.addCredentialType( job.getSiteHandle(), TYPE.x509 );
 
         job.condorVariables.construct( "remote_initialdir", workdir );
 

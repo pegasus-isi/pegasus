@@ -340,13 +340,15 @@ public class Stork extends AbstractSingleFTPerXFERJob {
                 job.vdsNS.removeKey(Pegasus.TRANSFER_ARGUMENTS_KEY)
                 );
          }
-         String source = ((NameValue)file.getSourceURL()).getValue();
-         String dest   = ((NameValue)file.getDestURL()).getValue();
-         sb.append( source ).append("\n").
-            append( dest );
+        
+         NameValue source = file.getSourceURL();
+         NameValue dest   = file.getDestURL();
+         sb.append( source.getValue() ).append("\n").
+            append( dest.getValue() );
 
-         job.addCredentialType( source );
-         job.addCredentialType( dest );
+         job.addCredentialType( source.getKey(), source.getValue() );
+         job.addCredentialType( dest.getKey(), dest.getValue() );
+         
 
         return sb.toString();
     }

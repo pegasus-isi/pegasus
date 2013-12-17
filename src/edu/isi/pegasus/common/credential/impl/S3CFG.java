@@ -112,7 +112,7 @@ public class S3CFG  extends Abstract implements CredentialHandler {
      *
      * @return the name of the environment variable.
      */
-    public String getEnvironmentVariable(){
+    public String getEnvironmentVariable( String site ){
         return S3CFG.S3CFG_FILE_VARIABLE;
     }
 
