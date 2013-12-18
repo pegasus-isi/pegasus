@@ -1,2 +1,4 @@
+# src 1 Obelix
 gsiftp://obelix.isi.edu/data/scratch/ptesting/transfer-tests/medium-files/a.txt
+# dst 1 AmazonS3
 s3://test@amazon/pegasus-isi-transfer-tests/medium-files/a.txt

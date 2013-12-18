@@ -43,6 +43,7 @@ __author__ = "Mats Rynge <rynge@isi.edu>"
 
 # --- regular expressions -----------------------------------------------------
 
+re_parse_comment = re.compile(r'^# +[\w]+ +[\w]+ +([\w]+)')
 re_parse_url = re.compile(r'([\w]+)://([\w\.\-:@]*)(/[\S]*)?')
 
 
@@ -53,20 +54,28 @@ class Transfer:
     Represents a single transfer request.
     """
 
-    pair_id        = 0       # the id of the pair in the input (nth pair)
-    src_proto      = ""      # 
-    src_host       = ""      # 
-    src_path       = ""      #
-    dst_proto      = ""      #
-    dst_host       = ""      #
-    dst_path       = ""      #
-    allow_grouping = True    # can this transfer be grouped with others?
+    pair_id        = 0          # the id of the pair in the input (nth pair)
+    src_sitename   = "UNKNOWN"  # name from the Pegasus site catalog
+    src_proto      = ""         # 
+    src_host       = ""         # 
+    src_path       = ""         #
+    dst_sitename   = "UNKNOWN"  # name from the Pegasus site catalog
+    dst_proto      = ""         #
+    dst_host       = ""         #
+    dst_path       = ""         #
+    allow_grouping = True       # can this transfer be grouped with others?
 
     def __init__(self, pair_id):
         """
         Initializes the transfer class
         """
         self.pair_id = pair_id
+        
+    def set_src_sitename(self, sitename):
+        self.src_sitename = sitename
+
+    def set_dst_sitename(self, sitename):
+        self.dst_sitename = sitename
 
     def set_src(self, url):
         self.src_proto, self.src_host, self.src_path = self.parse_url(url)
@@ -122,6 +131,9 @@ class Transfer:
         
         return proto, host, path
 
+    def src_sitename(self):
+        return self.src_sitename
+
     def src_url(self):
         return "%s://%s%s" % (self.src_proto, self.src_host, self.src_path)
 
@@ -132,6 +144,9 @@ class Transfer:
         if self.src_proto != "srm":
             return "%s://%s/%s" % (self.src_proto, self.src_host, self.src_path)
         return self.src_url()
+
+    def dst_sitename(self):
+        return self.dst_sitename
     
     def dst_url(self):
         return "%s://%s%s" % (self.dst_proto, self.dst_host, self.dst_path)
@@ -509,6 +524,15 @@ class GridFtpHandler(TransferHandlerBase):
         tools = Tools()
         cmd = tools.full_path('globus-url-copy')
         cmd += self._guc_options(attempt, create_dest, third_party)
+        
+        # separate credentials for src and dst?
+        key = "X509_USER_PROXY_" + transfers[0].src_sitename
+        if key in os.environ:
+            cmd += " -src-cred " + os.environ[key]
+        key = "X509_USER_PROXY_" + transfers[0].dst_sitename
+        if key in os.environ:
+            cmd += " -dst-cred " + os.environ[key]
+        
         cmd += " -f " + tmp_name
         try:
             myexec(cmd, default_subshell_timeout, True)
@@ -1381,23 +1405,42 @@ def main():
     line_nr = 0
     pair_nr = 0
     inputs = []
-    url_first = True
+    line_state = 3  # 0=SrcComment, 1=SrcUrl, 2=DstComment, 3=DstUrl
     try:
         for line in input_file.readlines():
             line_nr += 1
-            if line[0] != '#' and len(line) > 4:
+            if len(line) > 4:
                 line = line.rstrip('\n')
-                if url_first:
+
+                # src comment
+                if line_state == 3 and line[0] == '#':
+                    line_state = 0
                     pair_nr += 1
                     url_pair = Transfer(pair_nr)
+                    r = re_parse_comment.search(line)
+                    if r:
+                        url_pair.set_src_sitename(r.group(1))
+                
+                # src url
+                elif line_state == 0:
+                    line_state = 1
                     url_pair.set_src(line)
-                    url_first = False
-                else:
+
+                # dst comment
+                elif line_state == 1:
+                    line_state = 2
+                    r = re_parse_comment.search(line)
+                    if r:
+                        url_pair.set_dst_sitename(r.group(1))
+                
+                # dst url
+                elif line_state == 2:
+                    line_state = 3
                     url_pair.set_dst(line)
                     inputs.append(url_pair)
-                    url_first = True
+
     except Exception, err:
-        logger.critical('Error reading url pair list: %s' % (err))
+        logger.critical('Error reading url list: %s' % (err))
         myexit(1)
     
     # we will now sort the list as some tools (gridftp) can optimize when

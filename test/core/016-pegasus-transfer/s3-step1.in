@@ -1,10 +1,20 @@
+# src 0 local
 file:///lfs1/pegasus-transfer-testing/originals/many-small-files/filesave.png
+# dst 0 AWS_S3
 s3://test@amazon/pegasus-isi-transfer-tests/many-small-files/filesave.png
+# src 0 local
 file:///lfs1/pegasus-transfer-testing/originals/many-small-files/gtk-media-play-ltr.png
+# dst 0 AWS_S3
 s3://test@amazon/pegasus-isi-transfer-tests/many-small-files/gtk-media-play-ltr.png
+# src 0 local
 file:///lfs1/pegasus-transfer-testing/originals/many-small-files/multimedia-volume-control.svg
+# dst 0 AWS_S3
 s3://test@amazon/pegasus-isi-transfer-tests/many-small-files/multimedia-volume-control.svg
+# src 0 local
 file:///lfs1/pegasus-transfer-testing/originals/medium-files/a.txt
+# dst 0 AWS_S3
 s3://test@amazon/pegasus-isi-transfer-tests/medium-files/a.txt
+# src 0 local
 file:///lfs1/pegasus-transfer-testing/originals/medium-files/b.txt
+# dst 0 AWS_S3
 s3://test@amazon/pegasus-isi-transfer-tests/medium-files/b.txt

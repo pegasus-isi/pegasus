@@ -1,2 +1,4 @@
+# src 1 ISI_Cartman prio 0
 gsiftp://cartman.isi.edu/lfs1/pegasus-transfer-testing/originals/large-file.dat
+# dst 1 ISI_Obelix
 gsiftp://obelix.isi.edu/data/scratch/ptesting/transfer-tests/large-file.dat
