@@ -216,19 +216,16 @@ FILE *FDCache::open(string filename) {
 int FDCache::write(string filename, const char *data, int size) {
     FILE *file = open(filename);
     if (file == NULL) {
-        log_error("Error opening file %s: %s", filename.c_str(), 
-                strerror(errno));
+        log_error("Error opening file %s: errno %d: %s", filename.c_str(),
+                  errno, strerror(errno));
 
-        if (errno == ENFILE || errno == EMFILE) {
-            // If it failed because the fd limit was exceeded,
-            // then log how many we have open to see if it was
-            // us causing the problem.
-            log_error("Number of open files: %u", get_nr_open_fds());
-        }
+        // Log how many we have open to see if it was us causing the problem.
+        log_error("Number of open files: %u, max: %u",
+                  get_nr_open_fds(), this->maxsize);
 
         return -1;
     }
-    
+
     int rc = fwrite(data, 1, size, file);
     if (rc != size) {
         log_error("Error writing %d bytes to %s: %s", size, filename.c_str(), 
