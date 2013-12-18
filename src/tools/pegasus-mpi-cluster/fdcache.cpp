@@ -7,7 +7,7 @@
 #include "failure.h"
 #include "tools.h"
 
-#define NOFILE_MAX 4096
+#define NOFILE_MAX 256
 #define NOFILE_RESERVE 64
 
 FDEntry::FDEntry(const string &filename, FILE *file) {
