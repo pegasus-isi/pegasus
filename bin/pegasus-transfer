@@ -131,9 +131,6 @@ class Transfer:
         
         return proto, host, path
 
-    def src_sitename(self):
-        return self.src_sitename
-
     def src_url(self):
         return "%s://%s%s" % (self.src_proto, self.src_host, self.src_path)
 
@@ -145,9 +142,6 @@ class Transfer:
             return "%s://%s/%s" % (self.src_proto, self.src_host, self.src_path)
         return self.src_url()
 
-    def dst_sitename(self):
-        return self.dst_sitename
-    
     def dst_url(self):
         return "%s://%s%s" % (self.dst_proto, self.dst_host, self.dst_path)
 
