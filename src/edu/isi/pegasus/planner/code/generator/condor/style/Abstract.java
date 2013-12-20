@@ -17,13 +17,9 @@
 
 package edu.isi.pegasus.planner.code.generator.condor.style;
 
-import java.util.Iterator;
-import java.util.Set;
-
 import edu.isi.pegasus.common.credential.CredentialHandler;
 import edu.isi.pegasus.common.credential.CredentialHandlerFactory;
 import edu.isi.pegasus.common.logging.LogManager;
-import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
@@ -32,13 +28,16 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorStyle;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleFactoryException;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
+
+import java.util.Iterator;
+import java.util.Set;
+
 import java.util.Map;
-
-
 
 /**
  * An abstract implementation of the CondorStyle interface.
- * Impelements the initialization method.
+ * Implements the initialization method.
  *
  * @author Karan Vahi
  * @version $Revision$
@@ -144,6 +143,8 @@ public abstract class Abstract implements CondorStyle {
             return;
         }
         
+        applyCredentialsForJobSubmission( job );
+        
         // jobs can have multiple credential requirements
         //and may need credentials associated with different sites PM-731
         for( Map.Entry<String,Set<CredentialHandler.TYPE>> entry : job.getCredentialTypes().entrySet()  ){
@@ -163,24 +164,18 @@ public abstract class Abstract implements CondorStyle {
                 switch(credType) {
 
                     case x509:
-                        // x509 credentials are transfered automatically by condor if x509userproxy is set
-                        if( siteHandle.equalsIgnoreCase( job.getSiteHandle() )){
-                            //set the proxy for job submission
-                            job.condorVariables.construct("x509userproxy", handler.getPath( siteHandle ));
-                            break;
-                        }
-
                     case irods:
                     case s3:
                     case ssh:
                         // transfer using condor file transfer, and advertise in env
                         // but first make sure it is specified in our environment
-                        if (handler.getPath() == null) {
+                        String path = handler.getPath( siteHandle );
+                        if ( path == null) {
                             throw new CondorStyleException("Unable to find required credential for file transfers. " +
                                                            "Please make sure " + handler.getEnvironmentVariable( siteHandle ) +
                                                            " is set either in the site catalog or your environment.");
                         }
-                        job.condorVariables.addIPFileForTransfer(handler.getPath());
+                        job.condorVariables.addIPFileForTransfer( path );
                         job.envVariables.construct(handler.getEnvironmentVariable( siteHandle ), handler.getBaseName());
                         break;
 
@@ -205,6 +200,9 @@ public abstract class Abstract implements CondorStyle {
         if ( !job.requiresCredentials() ) {
             return;
         }
+       
+        //associate any credentials if reqd for job submission.
+        this.applyCredentialsForJobSubmission(job);
         
         // jobs can have multiple credential requirements
         //and may need credentials associated with different sites PM-731
@@ -238,4 +236,38 @@ public abstract class Abstract implements CondorStyle {
         }
         
     }
+
+    
+    /**
+     * Associates credentials required for job submission.
+     * 
+     * @param job
+     * @throws CondorStyleException 
+     */
+    protected void applyCredentialsForJobSubmission(Job job) throws CondorStyleException {
+        //handle credential for job submission if set
+        if( job.getSubmissionCredential() == null ){
+            return;
+        }
+        //set the proxy for job submission
+        CredentialHandler.TYPE cred = job.getSubmissionCredential();
+        CredentialHandler handler = mCredentialFactory.loadInstance( cred ); 
+        String path = handler.getPath( job.getSiteHandle());
+        if (handler.getPath() == null) {
+            throw new CondorStyleException( "Unable to find required credential for job submission " +
+                                            "Please make sure " + handler.getEnvironmentVariable( job.getSiteHandle() ) +
+                                            " is set either in the site catalog or your environment.");
+        }
+        switch( cred ) {
+            case x509:
+                job.condorVariables.construct("x509userproxy", path );
+                break;
+            default:
+                //only job submission via x509 is explicitly supported
+                throw new CondorStyleException( "Invalid credential type for job submission " + cred + " for job " + job.getName() );
+
+        }
+        return;
+    }
+    
 }

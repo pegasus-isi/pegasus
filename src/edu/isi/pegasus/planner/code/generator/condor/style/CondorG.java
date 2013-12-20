@@ -120,7 +120,7 @@ public class CondorG extends Abstract {
         //associate the proxy to be used
         //we always say a proxy is required for CondorG submission
         //PM-731
-        job.addCredentialType( job.getSiteHandle(), CredentialHandler.TYPE.x509 );
+        job.setSubmissionCredential( CredentialHandler.TYPE.x509 );
         applyCredentialsForRemoteExec(job);
     }
 

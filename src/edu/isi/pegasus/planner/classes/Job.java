@@ -409,7 +409,7 @@ public class Job extends Data implements GraphNodeContent{
      */
     private String mDirectory;
 
-    /**fma
+    /**
      * The relative path to the submit directory for the job, from the workflows
      * base submit directory.
      */
@@ -417,7 +417,12 @@ public class Job extends Data implements GraphNodeContent{
 
 
     /**
-     * Set of credential types required by a job.
+     * The credential to use for job submission if required.
+     */
+    private CredentialHandler.TYPE mSubmissionCredential;
+    
+    /**
+     * Set of credential types required by a job to execute remotely.
      */
     private Map<String, Set<CredentialHandler.TYPE>> mCredentialsType;
 
@@ -458,6 +463,7 @@ public class Job extends Data implements GraphNodeContent{
         mStagingSite     = null;
         mDirectory       = null;
         mCredentialsType = new HashMap<String, Set<CredentialHandler.TYPE> >();
+        mSubmissionCredential = null;
 //        submitDirectory  = null;
     }
 
@@ -499,6 +505,7 @@ public class Job extends Data implements GraphNodeContent{
         mNotifications   = job.mNotifications;
         mStagingSite     = job.mStagingSite;
         mDirectory       = job.mDirectory;
+        mSubmissionCredential = job.mSubmissionCredential;
         mCredentialsType = new HashMap<String, Set<CredentialHandler.TYPE>>();
 //        submitDirectory  = job.submitDirectory;
     }
@@ -558,7 +565,7 @@ public class Job extends Data implements GraphNodeContent{
         newSub.mStagingSite   = this.mStagingSite;
 
         newSub.mDirectory       = this.mDirectory;
-
+        newSub.mSubmissionCredential = this.mSubmissionCredential;
         for( Map.Entry<String,Set<CredentialHandler.TYPE>> entry : this.getCredentialTypes().entrySet()  ){
             String site = entry.getKey();
             for( CredentialHandler.TYPE cred: entry.getValue()){
@@ -752,6 +759,14 @@ public class Job extends Data implements GraphNodeContent{
        return this.mNotifications;
     }
 
+    /**
+     * Sets the credential to use for job submission.
+     * 
+     * @param cred   the job submission credential
+     */
+    public void setSubmissionCredential( CredentialHandler.TYPE cred ){
+        this.mSubmissionCredential = cred;
+    }
 
     /**
      * Looks at a URL to determine whether a credential should be associated with
@@ -805,7 +820,18 @@ public class Job extends Data implements GraphNodeContent{
      * @return boolean 
      */
     public boolean requiresCredentials(){
-        return !(this.mCredentialsType == null || this.mCredentialsType.isEmpty());
+        return this.mSubmissionCredential!= null &&
+                !(this.mCredentialsType == null || this.mCredentialsType.isEmpty());
+    }
+    
+    
+    /**
+     * Sets the credential to use for job submission.
+     * 
+     * @return the credential to use for job submission
+     */
+    public CredentialHandler.TYPE getSubmissionCredential(  ){
+        return this.mSubmissionCredential;
     }
     
     /**
