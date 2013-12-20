@@ -164,8 +164,11 @@ public abstract class Abstract implements CondorStyle {
 
                     case x509:
                         // x509 credentials are transfered automatically by condor if x509userproxy is set
-                        job.condorVariables.construct("x509userproxy", handler.getPath());
-                        break;
+                        if( siteHandle.equalsIgnoreCase( job.getSiteHandle() )){
+                            //set the proxy for job submission
+                            job.condorVariables.construct("x509userproxy", handler.getPath( siteHandle ));
+                            break;
+                        }
 
                     case irods:
                     case s3:
