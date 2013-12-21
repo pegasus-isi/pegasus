@@ -172,11 +172,11 @@ public abstract class Abstract implements CondorStyle {
                         String path = handler.getPath( siteHandle );
                         if ( path == null) {
                             throw new CondorStyleException("Unable to find required credential for file transfers. " +
-                                                           "Please make sure " + handler.getEnvironmentVariable( siteHandle ) +
+                                                           "Please make sure " + handler.getProfileKey() +
                                                            " is set either in the site catalog or your environment.");
                         }
                         job.condorVariables.addIPFileForTransfer( path );
-                        job.envVariables.construct(handler.getEnvironmentVariable( siteHandle ), handler.getBaseName());
+                        job.envVariables.construct(handler.getEnvironmentVariable( siteHandle ), handler.getBaseName( siteHandle ) );
                         break;
 
                     default:
@@ -221,10 +221,10 @@ public abstract class Abstract implements CondorStyle {
                         // for local exec, just set envionment variables to full path
                         if (handler.getPath() == null) {
                             throw new CondorStyleException("Unable to find required credential for file transfers. " +
-                                                           "Please make sure " + handler.getEnvironmentVariable( siteHandle ) +
+                                                           "Please make sure " + handler.getProfileKey() +
                                                            " is set either in the site catalog or your environment.");
                         }
-                        job.envVariables.construct(handler.getEnvironmentVariable( siteHandle ), handler.getPath());
+                        job.envVariables.construct(handler.getEnvironmentVariable( siteHandle ), handler.getPath( siteHandle) );
                         break;
 
                     default:
@@ -255,7 +255,7 @@ public abstract class Abstract implements CondorStyle {
         String path = handler.getPath( job.getSiteHandle());
         if (handler.getPath() == null) {
             throw new CondorStyleException( "Unable to find required credential for job submission " +
-                                            "Please make sure " + handler.getEnvironmentVariable( job.getSiteHandle() ) +
+                                            "Please make sure " + handler.getProfileKey() +
                                             " is set either in the site catalog or your environment.");
         }
         switch( cred ) {

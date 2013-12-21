@@ -102,12 +102,23 @@ public class Proxy  extends Abstract implements CredentialHandler{
     
     /**
      * returns the basename of the path to the local credential
+     * 
+     * @param site  the site handle
      */
-    public String getBaseName() {
-        File path = new File(this.getPath());
+    public String getBaseName( String site ) {
+        File path = new File(this.getPath( site ));
         return path.getName();
     }
 
+    /**
+     * Returns the env or pegasus profile key that needs to be associated
+     * for the credential.
+     * 
+     * @return the name of the environment variable.
+     */
+    public String getProfileKey( ){
+        return Proxy.X509_USER_PROXY_KEY;
+    }
 
     /**
      * Returns the name of the environment variable that needs to be set

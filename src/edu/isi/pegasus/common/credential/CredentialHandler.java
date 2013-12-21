@@ -62,7 +62,14 @@ public interface CredentialHandler {
      */
     public  String getPath( String site );
 
-
+    /**
+     * Returns the env or pegasus profile key that needs to be associated
+     * for the credential.
+     * 
+     * @return the name of the environment variable.
+     */
+    public String getProfileKey( );
+    
     /**
      * Returns the name of the environment variable that needs to be set
      * for the job associated with the credential.
@@ -80,7 +87,10 @@ public interface CredentialHandler {
 
     /**
      * returns the basename of the credential file name
+     * 
+     * @param site  the side to associate with.
+     * 
      * @return
      */
-    public String getBaseName();
+    public String getBaseName( String site );
 }

@@ -34,7 +34,7 @@ public class Irods extends Abstract implements CredentialHandler{
 
     /**
      * The name of the environment variable that specifies the path to the
-     * s3cfg file.
+     * irods configuration file.
      */
     public static final String IRODSENVFILE = "irodsEnvFile";
 
@@ -82,12 +82,23 @@ public class Irods extends Abstract implements CredentialHandler{
     
     /**
      * returns the basename of the path to the local credential
+     * 
+     * @param site  the site handle
      */
-    public String getBaseName() {
-        File path = new File(this.getPath());
+    public String getBaseName( String site ) {
+        File path = new File(this.getPath( site ));
         return path.getName();
     }
     
+    /**
+     * Returns the env or pegasus profile key that needs to be associated
+     * for the credential.
+     * 
+     * @return the name of the environment variable.
+     */
+    public String getProfileKey( ){
+        return Irods.IRODSENVFILE;
+    }
     
     /**
      * Returns the name of the environment variable that needs to be set
@@ -96,8 +107,10 @@ public class Irods extends Abstract implements CredentialHandler{
      * @return the name of the environment variable.
      */
     public String getEnvironmentVariable( String site ){
-        return Irods.IRODSENVFILE;
+        return Irods.IRODSENVFILE + "_"  + site;
     }
+    
+    
 
     /**
      * Returns the description for the implementing handler

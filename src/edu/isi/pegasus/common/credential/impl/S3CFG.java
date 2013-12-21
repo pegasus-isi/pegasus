@@ -99,12 +99,23 @@ public class S3CFG  extends Abstract implements CredentialHandler {
     
     /**
      * returns the basename of the path to the local credential
+     * 
+     * @param site  the site handle
      */
-    public String getBaseName() {
-        File path = new File(this.getPath());
+    public String getBaseName( String site ) {
+        File path = new File(this.getPath( site ) );
         return path.getName();
     }
 
+    /**
+     * Returns the env or pegasus profile key that needs to be associated
+     * for the credential.
+     * 
+     * @return the name of the environment variable.
+     */
+    public String getProfileKey( ){
+        return S3CFG.S3CFG_FILE_VARIABLE;
+    }
 
     /**
      * Returns the name of the environment variable that needs to be set
@@ -113,7 +124,7 @@ public class S3CFG  extends Abstract implements CredentialHandler {
      * @return the name of the environment variable.
      */
     public String getEnvironmentVariable( String site ){
-        return S3CFG.S3CFG_FILE_VARIABLE;
+        return S3CFG.S3CFG_FILE_VARIABLE + "_" + site;
     }
 
     /**
