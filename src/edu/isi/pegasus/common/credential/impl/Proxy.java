@@ -73,7 +73,7 @@ public class Proxy  extends Abstract implements CredentialHandler{
 
         //check if one is specified in site catalog entry
         String proxy = ( siteEntry == null )? null :
-                       (String)siteEntry.getProfiles().get( Profiles.NAMESPACES.pegasus).get(Proxy.X509_USER_PROXY_KEY);
+                       (String)siteEntry.getProfiles().get( Profiles.NAMESPACES.pegasus).get(Proxy.X509_USER_PROXY_KEY.toLowerCase());
 
         return( proxy == null ) ?
                 //PM-731 return the path on the local site
@@ -100,7 +100,7 @@ public class Proxy  extends Abstract implements CredentialHandler{
 
         //check if corresponding Pegasus Profile is specified in site catalog entry
         String proxy = ( siteEntry == null )? null :
-                        (String)siteEntry.getProfiles().get( Profiles.NAMESPACES.pegasus).get(Proxy.X509_USER_PROXY_KEY);
+                        (String)siteEntry.getProfiles().get( Profiles.NAMESPACES.pegasus).get(Proxy.X509_USER_PROXY_KEY.toLowerCase());
 
         if( proxy == null ) {
             //load from property file

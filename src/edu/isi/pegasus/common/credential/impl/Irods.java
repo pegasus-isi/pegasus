@@ -70,7 +70,7 @@ public class Irods extends Abstract implements CredentialHandler{
         
         //check if one is specified in site catalog entry
         String path = ( siteEntry == null )? null :
-                       (String)siteEntry.getProfiles().get( Profiles.NAMESPACES.pegasus).get( Irods.IRODSENVFILE );
+                       (String)siteEntry.getProfiles().get( Profiles.NAMESPACES.pegasus).get( Irods.IRODSENVFILE.toLowerCase() );
 
         return( path == null ) ?
                 //PM-731 return the path on the local site
@@ -97,7 +97,7 @@ public class Irods extends Abstract implements CredentialHandler{
 
         //check if corresponding Pegasus Profile is specified in site catalog entry
         String cred = ( siteEntry == null )? null :
-                        (String)siteEntry.getProfiles().get( Profiles.NAMESPACES.pegasus).get( Irods.IRODSENVFILE );
+                        (String)siteEntry.getProfiles().get( Profiles.NAMESPACES.pegasus).get( Irods.IRODSENVFILE.toLowerCase() );
 
         if( cred == null ) {
             //load from property file

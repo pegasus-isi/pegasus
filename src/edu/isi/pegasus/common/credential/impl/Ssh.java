@@ -72,7 +72,7 @@ public class Ssh extends Abstract implements CredentialHandler {
         SiteCatalogEntry siteEntry = mSiteStore.lookup( site );
         //check if one is specified in site catalog entry
         String path = ( siteEntry == null )? null :
-                       (String)siteEntry.getProfiles().get( Profiles.NAMESPACES.pegasus).get( Ssh.SSH_PRIVATE_KEY_VARIABLE );
+                       (String)siteEntry.getProfiles().get( Profiles.NAMESPACES.pegasus).get( Ssh.SSH_PRIVATE_KEY_VARIABLE.toLowerCase().toLowerCase() );
 
         return( path == null ) ?
                 //PM-731 return the path on the local site
@@ -99,7 +99,7 @@ public class Ssh extends Abstract implements CredentialHandler {
 
         //check if corresponding Pegasus Profile is specified in site catalog entry
         String cred = ( siteEntry == null )? null :
-                        (String)siteEntry.getProfiles().get( Profiles.NAMESPACES.pegasus).get( Ssh.SSH_PRIVATE_KEY_VARIABLE );
+                        (String)siteEntry.getProfiles().get( Profiles.NAMESPACES.pegasus).get( Ssh.SSH_PRIVATE_KEY_VARIABLE.toLowerCase().toLowerCase() );
 
         if( cred == null ) {
             //load from property file
