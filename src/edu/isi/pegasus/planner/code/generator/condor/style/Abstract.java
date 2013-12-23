@@ -20,6 +20,7 @@ package edu.isi.pegasus.planner.code.generator.condor.style;
 import edu.isi.pegasus.common.credential.CredentialHandler;
 import edu.isi.pegasus.common.credential.CredentialHandlerFactory;
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
@@ -153,13 +154,14 @@ public abstract class Abstract implements CondorStyle {
                 CredentialHandler handler = mCredentialFactory.loadInstance( credType );
             
                 // if the credential is listed in the remote sites environment, don't do anything
-                //not sure how to handle this??
-                /*
                 SiteCatalogEntry site = mSiteStore.lookup(job.getSiteHandle());
-                if (site.getEnvironmentVariable(handler.getEnvironmentVariable()) != null) {
+                if (site.getEnvironmentVariable(handler.getProfileKey()) != null) {
+                    //the user has the enviornment variable specified in the site
+                    //catalog pointing to an existing credential on the remote 
+                    //site.
                     continue;
                 }
-                */
+                
                 
                 switch(credType) {
 
@@ -219,12 +221,13 @@ public abstract class Abstract implements CondorStyle {
                     case s3:
                     case ssh:
                         // for local exec, just set envionment variables to full path
-                        if (handler.getPath() == null) {
+                        String path = handler.getPath( siteHandle );
+                        if ( path == null) {
                             throw new CondorStyleException("Unable to find required credential for file transfers. " +
                                                            "Please make sure " + handler.getProfileKey() +
                                                            " is set either in the site catalog or your environment.");
                         }
-                        job.envVariables.construct(handler.getEnvironmentVariable( siteHandle ), handler.getPath( siteHandle) );
+                        job.envVariables.construct(handler.getEnvironmentVariable( siteHandle ), path );
                         break;
 
                     default:
@@ -253,7 +256,7 @@ public abstract class Abstract implements CondorStyle {
         CredentialHandler.TYPE cred = job.getSubmissionCredential();
         CredentialHandler handler = mCredentialFactory.loadInstance( cred ); 
         String path = handler.getPath( job.getSiteHandle());
-        if (handler.getPath() == null) {
+        if ( path == null) {
             throw new CondorStyleException( "Unable to find required credential for job submission " +
                                             "Please make sure " + handler.getProfileKey() +
                                             " is set either in the site catalog or your environment.");
