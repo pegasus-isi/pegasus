@@ -17,11 +17,13 @@
 package edu.isi.pegasus.common.credential.impl;
 
 import edu.isi.pegasus.common.credential.CredentialHandler;
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
 
 import java.io.File;
 import java.util.Map;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.namespace.Namespace;
 
 
 
@@ -54,47 +56,81 @@ public class S3CFG  extends Abstract implements CredentialHandler {
     public S3CFG(){
         super();
     }
-
     
     /**
-     * Returns the path to s3cfg. The order of preference is as follows
+     * Returns the path to S3CFG . The order of preference is as follows
      *
-     * - If a s3cfg is specified in the site catalog entry that is used
-     * - Else the one pointed to by the environment variable S3CFG
-     * - Else the default path of ~/.pegasus/s3cfg
-     * - Else the legacy default path of ~/.s3cfg
+     * - If a S3CFG is specified as a Pegasus Profile in the site catalog
+     * - Else the path on the local site
      *
      * @param site   the  site handle
      *
-     * @return  the path to s3cfg.
+     * @return  the path to S3CFG.S3CFG_FILE_VARIABLE for the site.
      */
-    public String getPath( String site ){
+    public  String getPath( String site ){
+
         SiteCatalogEntry siteEntry = mSiteStore.lookup( site );
-        Map<String,String> envs = System.getenv();
+        //check if one is specified in site catalog entry
+        String path = ( siteEntry == null )? null :
+                       (String)siteEntry.getProfiles().get( Profiles.NAMESPACES.pegasus).get( S3CFG.S3CFG_FILE_VARIABLE );
 
-        // check if one is specified in site catalog entry
-        String path = ( siteEntry == null )? null :siteEntry.getEnvironmentVariable( S3CFG.S3CFG_FILE_VARIABLE );
-
-        if( path == null){
-            //check if S3Cfg is specified in the environment
-            if( envs.containsKey( S3CFG.S3CFG_FILE_VARIABLE ) ){
-                path = envs.get( S3CFG.S3CFG_FILE_VARIABLE );
-            }
-        }
-
-        if (path == null) {
-            // New default
-            path = envs.get("HOME") + "/.pegasus/s3cfg";
-
-            File cfg = new File(path);
-            if (!cfg.isFile()) {
-                // Old default
-                path = envs.get("HOME") + "/.s3cfg";
-            }
-        }
-
-        return path;
+        return( path == null ) ?
+                //PM-731 return the path on the local site
+                this.getLocalPath():
+                path;
+       
     }
+
+    /**
+     * Returns the path to user cred on the local site. 
+     * The order of preference is as follows
+     *
+     * - If a S3CFG.S3CFG_FILE_VARIABLE is specified in the site catalog entry as a Pegasus Profile that is used
+     * - Else the one specified in the properties
+     * - Else the one pointed to by the environment variable S3CFG.S3CFG_FILE_VARIABLE
+     * - Else the default path of ~/.pegasus/s3cfg
+     * - Else the legacy default path of ~/.s3cfg
+     * 
+     * @param site   the  site catalog entry object.
+     *
+     * @return  the path to user cred.
+     */
+    public String getLocalPath(){
+        SiteCatalogEntry siteEntry = mSiteStore.lookup( "local" );
+
+        //check if corresponding Pegasus Profile is specified in site catalog entry
+        String cred = ( siteEntry == null )? null :
+                        (String)siteEntry.getProfiles().get( Profiles.NAMESPACES.pegasus).get( S3CFG.S3CFG_FILE_VARIABLE );
+
+        if( cred == null ) {
+            //load from property file
+            Namespace env = mProps.getProfiles(Profiles.NAMESPACES.env);
+            cred = (String)env.get( S3CFG.S3CFG_FILE_VARIABLE  );
+        }
+        
+        if( cred == null){
+            //check if X509_USER_PROXY is specified in the environment
+            Map<String,String> envs = System.getenv();
+            if( envs.containsKey( S3CFG.S3CFG_FILE_VARIABLE ) ){
+                cred = envs.get( S3CFG.S3CFG_FILE_VARIABLE  );
+            }
+            
+            if (cred == null) {
+                // New default
+                cred = envs.get("HOME") + "/.pegasus/s3cfg";
+
+                File cfg = new File(cred);
+                if (!cfg.isFile()) {
+                    // Old default
+                    cred = envs.get("HOME") + "/.s3cfg";
+                }
+            }
+        }
+        
+        return cred;
+    }
+
+   
 
     
     /**

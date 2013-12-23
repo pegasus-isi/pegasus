@@ -17,11 +17,13 @@
 package edu.isi.pegasus.common.credential.impl;
 
 import edu.isi.pegasus.common.credential.CredentialHandler;
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
 
 import java.io.File;
 import java.util.Map;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.namespace.Namespace;
 
 
 /**
@@ -54,31 +56,65 @@ public class Irods extends Abstract implements CredentialHandler{
     /**
      * Returns the path to irodsEnv. The order of preference is as follows
      *
-     * - If a irods is specified in the local catalog entry
-     * - Else the one pointed to by the environment variable S3CFG
+     * - If a IRODSENVFILE is specified as a Pegasus Profile in the site catalog
+     * - Else the path on the local site
      *
      * @param site   the  site handle
      *
-     * @return  the path to s3cfg.
+     * @return  the path to IRODSENVFILE.
      */
     public  String getPath( String site ){
 
         SiteCatalogEntry siteEntry = mSiteStore.lookup( site );
         Map<String,String> envs = System.getenv();
         
-        // check if one is specified in site catalog entry
-        String path = ( siteEntry == null )? null :siteEntry.getEnvironmentVariable( Irods.IRODSENVFILE );
+        //check if one is specified in site catalog entry
+        String path = ( siteEntry == null )? null :
+                       (String)siteEntry.getProfiles().get( Profiles.NAMESPACES.pegasus).get( Irods.IRODSENVFILE );
 
-        if( path == null){
-            //check if irodsEnvFile is specified in the environment
-            if( envs.containsKey( Irods.IRODSENVFILE ) ){
-                path = envs.get( Irods.IRODSENVFILE );
+        return( path == null ) ?
+                //PM-731 return the path on the local site
+                this.getLocalPath():
+                path;
+       
+    }
+
+    /**
+     * Returns the path to user cred on the local site. 
+     * The order of preference is as follows
+     *
+     * - If a irodsEnvFile is specified in the site catalog entry as a Pegasus Profile that is used
+     * - Else the one specified in the properties
+     * - Else the one pointed to by the environment variable irodsEnvFile
+     * 
+     * 
+     * @param site   the  site catalog entry object.
+     *
+     * @return  the path to user cred.
+     */
+    public String getLocalPath(){
+        SiteCatalogEntry siteEntry = mSiteStore.lookup( "local" );
+
+        //check if corresponding Pegasus Profile is specified in site catalog entry
+        String cred = ( siteEntry == null )? null :
+                        (String)siteEntry.getProfiles().get( Profiles.NAMESPACES.pegasus).get( Irods.IRODSENVFILE );
+
+        if( cred == null ) {
+            //load from property file
+            Namespace env = mProps.getProfiles(Profiles.NAMESPACES.env);
+            cred = (String)env.get( Irods.IRODSENVFILE  );
+        }
+        
+        if( cred == null){
+            //check if X509_USER_PROXY is specified in the environment
+            Map<String,String> envs = System.getenv();
+            if( envs.containsKey( Irods.IRODSENVFILE  ) ){
+                cred = envs.get( Irods.IRODSENVFILE  );
             }
         }
 
-        return path;
+        return cred;
     }
-
     
     /**
      * returns the basename of the path to the local credential
