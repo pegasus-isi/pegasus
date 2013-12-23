@@ -820,8 +820,8 @@ public class Job extends Data implements GraphNodeContent{
      * @return boolean 
      */
     public boolean requiresCredentials(){
-        return this.mSubmissionCredential!= null &&
-                !(this.mCredentialsType == null || this.mCredentialsType.isEmpty());
+        return this.mSubmissionCredential != null ||//job requires a submission credential
+                !(this.mCredentialsType == null || this.mCredentialsType.isEmpty());//additional credentials associated
     }
     
     
