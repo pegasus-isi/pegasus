@@ -395,8 +395,8 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
 
             //associate any credential required , both with destination
             // and the source urls
-            job.addCredentialType( source.getValue() );
-            job.addCredentialType( dest.getValue() );
+            job.addCredentialType( source.getKey(), source.getValue() );
+            job.addCredentialType( dest.getKey(), dest.getValue() );
         }
 
 

@@ -49,6 +49,7 @@ import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.partitioner.graph.Adapter;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import java.util.Set;
 
 /**
  * This code generator generates a shell script in the submit directory.
@@ -213,12 +214,25 @@ public class Shell extends Abstract {
 	CredentialHandlerFactory factory = new CredentialHandlerFactory();
 	factory.initialize( mBag );
 
+        /*
 	for (TYPE type : job.getCredentialTypes()) {
 	    CredentialHandler handler = factory.loadInstance( type );
 	    job.addProfile( new Profile( Profile.ENV, handler
 		    .getEnvironmentVariable(), handler.getPath() ) );
 	}
+	*/
+        
+        for( Map.Entry<String,Set<CredentialHandler.TYPE>> entry : job.getCredentialTypes().entrySet()  ){
+            String site = entry.getKey();
+            for( CredentialHandler.TYPE cred: entry.getValue()){
+                CredentialHandler handler = factory.loadInstance( cred );
+                job.addProfile( new Profile( Profile.ENV,
+                                             handler.getEnvironmentVariable( site ), 
+                                             handler.getPath() ) );
+            }
 	
+        }
+        
 	factory = null;
 	
         //initialize GridStart if required.

@@ -20,7 +20,9 @@ import java.io.File;
 import java.util.Map;
 
 import edu.isi.pegasus.common.credential.CredentialHandler;
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.namespace.Namespace;
 
 
 
@@ -56,37 +58,85 @@ public class Ssh extends Abstract implements CredentialHandler {
 
     
     /**
-     * Returns the path to ssh private key. The key has to be specifically listed in the environment
+     * Returns the path to SSH_PRIVATE_KEY . The order of preference is as follows
+     *
+     * - If a SSH_PRIVATE_KEY is specified as a Pegasus Profile in the site catalog
+     * - Else the path on the local site
+     *
      * @param site   the  site handle
      *
-     * @return  the path to s3cfg.
+     * @return  the path to SSH private key for the site.
      */
-    public String getPath( String site ){
+    public  String getPath( String site ){
+
         SiteCatalogEntry siteEntry = mSiteStore.lookup( site );
-        Map<String,String> envs = System.getenv();
+        //check if one is specified in site catalog entry
+        String path = ( siteEntry == null )? null :
+                       (String)siteEntry.getProfiles().get( Profiles.NAMESPACES.pegasus).get( Ssh.SSH_PRIVATE_KEY_VARIABLE.toLowerCase().toLowerCase() );
 
-        // check if one is specified in site catalog entry
-        String path = ( siteEntry == null )? null :siteEntry.getEnvironmentVariable( Ssh.SSH_PRIVATE_KEY_VARIABLE);
+        return( path == null ) ?
+                //PM-731 return the path on the local site
+                this.getLocalPath():
+                path;
+       
+    }
 
-        if( path == null){
-            //check if specified in the environment
+    /**
+     * Returns the path to user cred on the local site. 
+     * The order of preference is as follows
+     *
+     * - If a SSH_PRIVATE_KEY is specified in the site catalog entry as a Pegasus Profile that is used
+     * - Else the one specified in the properties
+     * - Else the one pointed to by the environment variable SSH_PRIVATE_KEY
+     * 
+     * 
+     * @param site   the  site catalog entry object.
+     *
+     * @return  the path to user cred.
+     */
+    public String getLocalPath(){
+        SiteCatalogEntry siteEntry = mSiteStore.lookup( "local" );
+
+        //check if corresponding Pegasus Profile is specified in site catalog entry
+        String cred = ( siteEntry == null )? null :
+                        (String)siteEntry.getProfiles().get( Profiles.NAMESPACES.pegasus).get( Ssh.SSH_PRIVATE_KEY_VARIABLE.toLowerCase().toLowerCase() );
+
+        if( cred == null ) {
+            //load from property file
+            Namespace env = mProps.getProfiles(Profiles.NAMESPACES.env);
+            cred = (String)env.get( Ssh.SSH_PRIVATE_KEY_VARIABLE  );
+        }
+        
+        if( cred == null){
+            //check if X509_USER_PROXY is specified in the environment
+            Map<String,String> envs = System.getenv();
             if( envs.containsKey( Ssh.SSH_PRIVATE_KEY_VARIABLE ) ){
-                path = envs.get( Ssh.SSH_PRIVATE_KEY_VARIABLE );
+                cred = envs.get( Ssh.SSH_PRIVATE_KEY_VARIABLE  );
             }
         }
 
-        return path;
+        return cred;
     }
-
     
     /**
      * returns the basename of the path to the local credential
+     * 
+     * @param site  the site handle
      */
-    public String getBaseName() {
-        File path = new File(this.getPath());
+    public String getBaseName( String site ) {
+        File path = new File(this.getPath( site ));
         return path.getName();
     }
 
+    /**
+     * Returns the env or pegasus profile key that needs to be associated
+     * for the credential.
+     * 
+     * @return the name of the environment variable.
+     */
+    public String getProfileKey( ){
+        return Ssh.SSH_PRIVATE_KEY_VARIABLE;
+    }
 
     /**
      * Returns the name of the environment variable that needs to be set
@@ -94,8 +144,8 @@ public class Ssh extends Abstract implements CredentialHandler {
      *
      * @return the name of the environment variable.
      */
-    public String getEnvironmentVariable(){
-        return Ssh.SSH_PRIVATE_KEY_VARIABLE;
+    public String getEnvironmentVariable( String site ){
+        return Ssh.SSH_PRIVATE_KEY_VARIABLE + "_" + site ;
     }
 
     /**

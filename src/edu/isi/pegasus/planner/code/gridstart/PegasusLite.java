@@ -1149,8 +1149,10 @@ public class PegasusLite implements GridStart {
      */
     private void associateCredentials(Job job, Collection<FileTransfer> files) {
         for( FileTransfer ft: files ){
-            job.addCredentialType( ft.getSourceURL().getValue() );
-            job.addCredentialType( ft.getDestURL().getValue() );
+            NameValue source = ft.getSourceURL();
+            job.addCredentialType( source.getKey(), source.getValue() );
+            NameValue dest   = ft.getDestURL();
+            job.addCredentialType( dest.getKey(), dest.getValue() );
         }
     }
 

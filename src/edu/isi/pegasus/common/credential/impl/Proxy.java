@@ -61,11 +61,8 @@ public class Proxy  extends Abstract implements CredentialHandler{
     /**
      * Returns the path to user proxy. The order of preference is as follows
      *
-     * - If a proxy is specified in the site catalog entry that is used
-     * - Else the one specified in the properties
-     * - Else the one pointed to by the environment variable X509_USER_PROXY
-     * - Else the default path to the proxy in /tmp is created as determined by
-     *     CoGProperties.getDefault().getProxyFile()
+     * - If a X509_USER_PROXY is specified as a Pegasus Profile in the site catalog
+     * - Else the path on the local site
      *
      * @param site   the  site catalog entry object.
      *
@@ -75,7 +72,35 @@ public class Proxy  extends Abstract implements CredentialHandler{
         SiteCatalogEntry siteEntry = mSiteStore.lookup( site );
 
         //check if one is specified in site catalog entry
-        String proxy = ( siteEntry == null )? null :siteEntry.getEnvironmentVariable( Proxy.X509_USER_PROXY_KEY);
+        String proxy = ( siteEntry == null )? null :
+                       (String)siteEntry.getProfiles().get( Profiles.NAMESPACES.pegasus).get(Proxy.X509_USER_PROXY_KEY.toLowerCase());
+
+        return( proxy == null ) ?
+                //PM-731 return the path on the local site
+                this.getLocalPath():
+                proxy;
+    }
+
+    /**
+     * Returns the path to user proxy on the local site. 
+     * The order of preference is as follows
+     *
+     * - If a proxy is specified in the site catalog entry as a Pegasus Profile that is used
+     * - Else the one specified in the properties
+     * - Else the one pointed to by the environment variable X509_USER_PROXY
+     * - Else the default path to the proxy in /tmp is created as determined by
+     *     CoGProperties.getDefault().getProxyFile()
+     *
+     * @param site   the  site catalog entry object.
+     *
+     * @return  the path to user proxy.
+     */
+    public String getLocalPath(){
+        SiteCatalogEntry siteEntry = mSiteStore.lookup( "local" );
+
+        //check if corresponding Pegasus Profile is specified in site catalog entry
+        String proxy = ( siteEntry == null )? null :
+                        (String)siteEntry.getProfiles().get( Profiles.NAMESPACES.pegasus).get(Proxy.X509_USER_PROXY_KEY.toLowerCase());
 
         if( proxy == null ) {
             //load from property file
@@ -98,16 +123,27 @@ public class Proxy  extends Abstract implements CredentialHandler{
 
         return proxy;
     }
-
+    
     
     /**
      * returns the basename of the path to the local credential
+     * 
+     * @param site  the site handle
      */
-    public String getBaseName() {
-        File path = new File(this.getPath());
+    public String getBaseName( String site ) {
+        File path = new File(this.getPath( site ));
         return path.getName();
     }
 
+    /**
+     * Returns the env or pegasus profile key that needs to be associated
+     * for the credential.
+     * 
+     * @return the name of the environment variable.
+     */
+    public String getProfileKey( ){
+        return Proxy.X509_USER_PROXY_KEY;
+    }
 
     /**
      * Returns the name of the environment variable that needs to be set
@@ -115,8 +151,8 @@ public class Proxy  extends Abstract implements CredentialHandler{
      *
      * @return the name of the environment variable.
      */
-    public String getEnvironmentVariable(){
-        return Proxy.X509_USER_PROXY_KEY;
+    public String getEnvironmentVariable(String site ){
+        return Proxy.X509_USER_PROXY_KEY + "_" + site;
     }
 
     /**
