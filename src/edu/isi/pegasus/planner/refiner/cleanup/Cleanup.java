@@ -204,8 +204,8 @@ public class Cleanup implements CleanupImplementation{
             BufferedWriter writer;
             writer = new BufferedWriter( new FileWriter(
                                            new File( mSubmitDirectory, stdIn ) ));
-
-            for( Iterator it = files.iterator(); it.hasNext(); ){
+            int fileNum = 1;
+            for( Iterator it = files.iterator(); it.hasNext(); fileNum++ ){
                 PegasusFile file = (PegasusFile)it.next();
                 String pfn = mPlannerCache.lookup( file.getLFN(), stagingSite, OPERATION.put );
 
@@ -225,6 +225,8 @@ public class Cleanup implements CleanupImplementation{
                 //associate a credential if required
                 cJob.addCredentialType( stagingSite, pfn );
 
+                writer.write( "# " + fileNum + " " + stagingSite );
+                writer.write( "\n" );
                 writer.write( pfn );
                 writer.write( "\n" );
             }
