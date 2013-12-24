@@ -48,10 +48,14 @@ re_parse_url = re.compile(r'([\w]+)://([\w\.\-:@]*)(/[\S]*)')
 
 class URL:
 
+    site       = None
     proto      = ""
     host       = ""
     path       = ""
 
+    def set_site(self, site):
+        self.site = site
+    
     def set_url(self, url):
         self.proto, self.host, self.path = self.parse_url(url)
     
@@ -339,6 +343,11 @@ def scp(url):
     creates a directory using ssh
     """
     cmd = "/usr/bin/ssh"
+    
+    key = "SSH_PRIVATE_KEY_" + url.site
+    if key in os.environ:
+        os.environ["SSH_PRIVATE_KEY"] = os.environ[key]
+
     if "SSH_PRIVATE_KEY" in os.environ:
         cmd += " -i " + os.environ['SSH_PRIVATE_KEY']
     cmd += " -o PasswordAuthentication=no"
@@ -355,6 +364,10 @@ def gsiftp(url):
  
     if tool_info['pegasus-gridftp']['full_path'] == None:
         raise RuntimeError("Unable to do gsiftp mkdir becuase pegasus-gridftp could not be found")
+        
+    key = "X509_USER_PROXY_" + url.site
+    if key in os.environ:
+        os.environ["X509_USER_PROXY"] = os.environ[key]
    
     # build command line for globus-url-copy
     cmd = tool_info['pegasus-gridftp']['full_path']
@@ -379,6 +392,10 @@ def irods_login():
     f = os.environ['irodsAuthFileName']
     if os.path.exists(f):
         return
+    
+    key = "irodsEnvFile_" + url.site
+    if key in os.environ:
+        os.environ["irodsEnvFile"] = os.environ[key]
     
     # read password from env file
     if not "irodsEnvFile" in os.environ:
@@ -427,6 +444,10 @@ def srm(url):
     We suppoer two tools: lcg-utils and bestman srm. lcg-utils is preferred.
     """
     
+    key = "X509_USER_PROXY_" + url.site
+    if key in os.environ:
+        os.environ["X509_USER_PROXY"] = os.environ[key]
+    
     if tool_info['lcg-cp']['full_path'] != None:
         srm_lcgcp(url)
     elif tool_info['srm-mkdir']['full_path'] != None:
@@ -474,6 +495,10 @@ def s3(url):
 
     if tool_info['pegasus-s3']['full_path'] == None:
         raise RuntimeError("Unable to do S3 mkdir becuase pegasus-s3 could not be found")
+    
+    key = "S3CFG_" + url.site
+    if key in os.environ:
+        os.environ["S3CFG"] = os.environ[key]
 
     # extract the bucket part
     re_bucket = re.compile(r'(s3(s){0,1}://\w+@\w+/+[\w\-]+)')
@@ -549,6 +574,8 @@ prog_usage = "usage: %s [options]" % (prog_base)
 parser = optparse.OptionParser(usage=prog_usage)
 parser.add_option("-l", "--loglevel", action = "store", dest = "log_level",
                   help = "Log level. Valid levels are: debug,info,warning,error, Default is info.")
+parser.add_option("-s", "--site", action = "store", dest = "site",
+                  help = "Site name for the target site")
 parser.add_option("-u", "--url", action = "store", dest = "url",
                   help = "URL for the directory to create")
 
@@ -572,6 +599,7 @@ except Exception, err:
     myexit(1)
 
 url = URL()
+url.set_site(options.site)
 url.set_url(options.url)
 
 try:
