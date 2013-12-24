@@ -95,24 +95,7 @@ public abstract class Abstract implements CondorStyle {
     }
 
 
-    /**
-     * Constructs an error message in case of style mismatch.
-     *
-     * @param job      the job object.
-     * @param style    the name of the style.
-     * @param universe the universe associated with the job.
-     */
-    protected String errorMessage( Job job, String style, String universe){
-        StringBuffer sb = new StringBuffer();
-        sb.append( "( " ).
-             append( style ).append( "," ).
-             append( universe ).append( "," ).
-             append( job.getSiteHandle() ).
-             append( ")" ).
-             append( " mismatch for job " ).append( job.getName() );
-
-         return sb.toString();
-    }
+    
 
     /**
      * Apply a style to an AggregatedJob
@@ -172,10 +155,8 @@ public abstract class Abstract implements CondorStyle {
                         // transfer using condor file transfer, and advertise in env
                         // but first make sure it is specified in our environment
                         String path = handler.getPath( siteHandle );
-                        if ( path == null) {
-                            throw new CondorStyleException("Unable to find required credential for file transfers. " +
-                                                           "Please make sure " + handler.getProfileKey() +
-                                                           " is set either in the site catalog or your environment.");
+                        if ( path == null ){
+                            this.complainForCredential( job, handler.getProfileKey(), siteHandle );
                         }
                         job.condorVariables.addIPFileForTransfer( path );
                         job.envVariables.construct(handler.getEnvironmentVariable( siteHandle ), handler.getBaseName( siteHandle ) );
@@ -223,9 +204,7 @@ public abstract class Abstract implements CondorStyle {
                         // for local exec, just set envionment variables to full path
                         String path = handler.getPath( siteHandle );
                         if ( path == null) {
-                            throw new CondorStyleException("Unable to find required credential for file transfers. " +
-                                                           "Please make sure " + handler.getProfileKey() +
-                                                           " is set either in the site catalog or your environment.");
+                            this.complainForCredential( job, handler.getProfileKey(), siteHandle );
                         }
                         job.envVariables.construct(handler.getEnvironmentVariable( siteHandle ), path );
                         break;
@@ -257,9 +236,7 @@ public abstract class Abstract implements CondorStyle {
         CredentialHandler handler = mCredentialFactory.loadInstance( cred ); 
         String path = handler.getPath( job.getSiteHandle());
         if ( path == null) {
-            throw new CondorStyleException( "Unable to find required credential for job submission " +
-                                            "Please make sure " + handler.getProfileKey() +
-                                            " is set either in the site catalog or your environment.");
+            this.complainForCredential( job, handler.getProfileKey(), job.getSiteHandle() );
         }
         switch( cred ) {
             case x509:
@@ -273,4 +250,40 @@ public abstract class Abstract implements CondorStyle {
         return;
     }
     
+    /**
+     * Complain if a particular credential key is not found for a site 
+     * 
+     * @param job
+     * @param key
+     * @param site
+     * @throws CondorStyleException 
+     */
+    protected void complainForCredential( Job job, String key , String site ) throws CondorStyleException{
+        StringBuilder error = new StringBuilder();
+        
+        error.append( "Unable to find required credential for file transfers for job ").
+              append( job.getName() ).append(  " . Please make sure that the key " ).append( key ).
+              append(  " is set as a Pegasus profile in the site catalog for site ").append( site ).
+              append( " or in your environment.");
+        throw new CondorStyleException( error.toString() );
+    }
+    
+    /**
+     * Constructs an error message in case of style mismatch.
+     *
+     * @param job      the job object.
+     * @param style    the name of the style.
+     * @param universe the universe associated with the job.
+     */
+    protected String errorMessage( Job job, String style, String universe){
+        StringBuilder sb = new StringBuilder();
+        sb.append( "( " ).
+             append( style ).append( "," ).
+             append( universe ).append( "," ).
+             append( job.getSiteHandle() ).
+             append( ")" ).
+             append( " mismatch for job " ).append( job.getName() );
+
+         return sb.toString();
+    }
 }
