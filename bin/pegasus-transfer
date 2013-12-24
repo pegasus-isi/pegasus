@@ -519,13 +519,22 @@ class GridFtpHandler(TransferHandlerBase):
         cmd = tools.full_path('globus-url-copy')
         cmd += self._guc_options(attempt, create_dest, third_party)
         
-        # separate credentials for src and dst?
+        # separate credentials for src and dst? note that if one is
+        # set, so must the other even if a credential is not required
+        src_cred = None
+        dst_cred = None
         key = "X509_USER_PROXY_" + transfers[0].src_sitename
         if key in os.environ:
-            cmd += " -src-cred " + os.environ[key]
+            src_cred = os.environ[key]
         key = "X509_USER_PROXY_" + transfers[0].dst_sitename
         if key in os.environ:
-            cmd += " -dst-cred " + os.environ[key]
+            dst_cred = os.environ[key]
+        if src_cred != None or dst_cred != None:
+            if src_cred == None:
+                src_cred = dst_cred
+            if dst_cred == None:
+                dst_cred = src_cred
+            cmd += " -src-cred " + src_cred + " -dst-cred " + dst_cred
         
         cmd += " -f " + tmp_name
         try:
