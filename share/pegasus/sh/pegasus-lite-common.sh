@@ -183,32 +183,20 @@ function pegasus_lite_init()
     # can tell the job was a PegasusLite job
     echo "PegasusLite: version ${pegasus_lite_full_version}" 1>&2
 
-    # for S3CFG, axpand to include local path if needed
-    if [ "x$S3CFG" != "x" ]; then
-        if ! (echo $S3CFG | grep "^/") >/dev/null 2>&1; then
-            S3CFG=`pwd`"/$S3CFG"
-            pegasus_lite_log "Expanded \$S3CFG to $S3CFG"
-        fi
-        chmod 0600 $S3CFG
-    fi
-    
-    # for irodsEnvFile, axpand to include local path if needed
-    if [ "x$irodsEnvFile" != "x" ]; then
-        if ! (echo $irodsEnvFile | grep "^/") >/dev/null 2>&1; then
-            irodsEnvFile=`pwd`"/$irodsEnvFile"
-            pegasus_lite_log "Expanded \$irodsEnvFile to $irodsEnvFile"
-        fi
-        chmod 0600 $irodsEnvFile
-    fi
-    
-    # for ssh private key, axpand to include local path if needed
-    if [ "x$SSH_PRIVATE_KEY" != "x" ]; then
-        if ! (echo $SSH_PRIVATE_KEY | grep "^/") >/dev/null 2>&1; then
-            SSH_PRIVATE_KEY=`pwd`"/$SSH_PRIVATE_KEY"
-            pegasus_lite_log "Expanded \$SSH_PRIVATE_KEY to $SSH_PRIVATE_KEY"
-        fi
-        chmod 0600 $SSH_PRIVATE_KEY
-    fi
+    # for staged credentials, expand the paths and set strict permissions
+    for base in X509_USER_PROXY S3CFG SSH_PRIVATE_KEY irodsEnvFile; do
+        for key in `(env | grep -i ^$base | sed 's/=.*//') 2>/dev/null`; do
+            eval val="\$$key"
+            # expand the path
+            if ! (echo $val | grep "^/") >/dev/null 2>&1; then
+                eval $key=`pwd`/"$val"
+                eval val="\$$key"
+                echo "Expanded \$$key to $val"
+            fi
+            chmod 0600 $val
+        done
+    done
+
 }
 
 
