@@ -17,7 +17,6 @@ montage_location: /ccg/software/montage/Montage_v3.3_mats
 
 [cluster]
 name:             CCG
-pegasus_home:     /ccg/software/pegasus/dev/trunk
 globus_location:  /ccg/software/globus/5.0.4
 montage_location: /ccg/software/montage/Montage_v3.3_mats
 gridftp_server:   cartman.isi.edu
