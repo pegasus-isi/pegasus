@@ -1290,7 +1290,7 @@ class Workflow:
             # This is not mandatory, according to the schema
             pass
         if my_job._output_file is not None:
-            if my_job._kickstart_parsed:
+            if my_job._kickstart_parsed or my_job._has_rotated_stdout_err_files:
                 # Only use rotated filename for job with kickstart output
                 kwargs["stdout__file"] = my_job._output_file + ".%03d" % (my_job._job_output_counter)
             else:
@@ -1298,7 +1298,7 @@ class Workflow:
         else:
             kwargs["stdout__file"] = ""
         if my_job._error_file is not None:
-            if my_job._kickstart_parsed:
+            if my_job._kickstart_parsed or my_job._has_rotated_stdout_err_files:
                 # Only use rotated filename for job with kickstart output
                 kwargs["stderr__file"] = my_job._error_file + ".%03d" % (my_job._job_output_counter)
             else:
@@ -1677,11 +1677,11 @@ class Workflow:
                     my_output = my_parser.parse_stampede()
                     if my_parser._open_error == False:
                         #we found the rotated file. update the flag
-                        my_job_has_rotated_stdout_err_files = True
+                        my_job._has_rotated_stdout_err_files = True
 
             else:
                 #we were able to find the rotated file
-                my_job_has_rotated_stdout_err_files = True
+                my_job._has_rotated_stdout_err_files = True
 
             # Check if successful
             if my_parser._open_error == True:
@@ -1689,12 +1689,6 @@ class Workflow:
 
         # Initialize task id counter
         my_task_id = 1
-
-        #update job data structure if the stdout/stderr files are rotated
-        #for non kickstart and kickstart launched jobs both
-        if my_job_has_rotated_stdout_err_files:
-            my_job._output_file += ".%03d" % (my_job._job_output_counter)
-            my_job._error_file += ".%03d" % (my_job._job_output_counter)
 
         #PM-733 update the job with PegasusLite exitcode if it is one.
         my_pegasuslite_ec = self.get_pegasuslite_exitcode( my_job );
@@ -1817,7 +1811,14 @@ class Workflow:
         """
 
         ec = None
-        errfile =  os.path.join(self._run_dir, job._error_file )
+
+        # if the stdout/stderr files are rotated
+        # for non kickstart and kickstart launched jobs both
+        error_basename = job._error_file
+        if job._has_rotated_stdout_err_files:
+            error_basename += ".%03d" % ( job._job_output_counter)
+
+        errfile =  os.path.join(self._run_dir, error_basename )
         if errfile is None or not os.path.isfile(errfile):
             return ec
 

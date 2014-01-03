@@ -104,6 +104,8 @@ class Job:
                                        # line for pegasus-plan and subdax_ jobs
         self._kickstart_parsed = False # Flag indicating if the kickstart
                                        # output for this job was parsed or not
+        self._has_rotated_stdout_err_files = False #Flag indicating whether we detected that job stdout|stderr
+                                                  #was rotated or not, as is the default case.
 
     def set_job_state(self, job_state, sched_id, timestamp, status):
         """
