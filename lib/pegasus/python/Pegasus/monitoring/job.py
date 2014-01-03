@@ -403,7 +403,11 @@ class Job:
             # This is the case for SUBDAG jobs
             self._stdout_text = None
         else:
-            my_out_file = os.path.join(run_dir, self._output_file)
+            basename = self._output_file
+            if self._has_rotated_stdout_err_files:
+                basename += ".%03d" % ( self._job_output_counter)
+
+            my_out_file = os.path.join(run_dir, basename)
 
             try:
                 OUT = open(my_out_file, 'r')
@@ -421,7 +425,11 @@ class Job:
             # This is the case for SUBDAG jobs
             self._stderr_text = None
         else:
-            my_err_file = os.path.join(run_dir, self._error_file)
+            basename = self._error_file
+            if self._has_rotated_stdout_err_files:
+                basename += ".%03d" % ( self._job_output_counter)
+
+            my_err_file = os.path.join(run_dir, basename)
 
             try:
                 ERR = open(my_err_file, 'r')
