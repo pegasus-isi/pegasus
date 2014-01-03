@@ -51,6 +51,8 @@ re_parse_pmc_submit_files = re.compile(r"TASK\s+(\S*)\s(\S+)", re.IGNORECASE)
 re_parse_dag_script = re.compile(r"SCRIPT (?:PRE|POST)\s+(\S+)\s(\S+)\s(.*)", re.IGNORECASE)
 re_parse_dag_subdag = re.compile(r"SUBDAG EXTERNAL\s+(\S+)\s(\S+)\s?(?:DIR)?\s?(\S+)?", re.IGNORECASE)
 re_parse_planner_args = re.compile(r"\s*-Dpegasus.log.\*=(\S+)\s.*", re.IGNORECASE )
+# used while parsing the job .err file.
+re_parse_pegasuslite_ec = re.compile(r'^PegasusLite: exitcode (\d+)$', re.MULTILINE)
 
 # Constants
 MONITORD_START_FILE = "monitord.started"   # filename for writing when monitord starts
@@ -1673,6 +1675,9 @@ class Workflow:
                     # Couldn't find it again, one last try, as it might have just been moved
                     my_parser.__init__(my_job_output_fn)
                     my_output = my_parser.parse_stampede()
+                    if my_parser._open_error == False:
+                        #we found the rotated file. update the flag
+                        my_job_has_rotated_stdout_err_files = True
 
             else:
                 #we were able to find the rotated file
@@ -1684,6 +1689,19 @@ class Workflow:
 
         # Initialize task id counter
         my_task_id = 1
+
+        #update job data structure if the stdout/stderr files are rotated
+        #for non kickstart and kickstart launched jobs both
+        if my_job_has_rotated_stdout_err_files:
+            my_job._output_file += ".%03d" % (my_job._job_output_counter)
+            my_job._error_file += ".%03d" % (my_job._job_output_counter)
+
+        #PM-733 update the job with PegasusLite exitcode if it is one.
+        my_pegasuslite_ec = self.get_pegasuslite_exitcode( my_job );
+        if my_pegasuslite_ec is not None:
+            #update the main job exitcode
+            my_job._main_job_exitcode = my_pegasuslite_ec
+            logger.debug ("Pegasus Lite Exitcode for job %s is %s" %( my_job._exec_job_id, my_pegasuslite_ec) )
 
         if len(my_output) > 0:
             # Parsing the output file resulted in some info... let's parse it
@@ -1774,12 +1792,6 @@ class Workflow:
             self.db_send_task_start(my_job, "MAIN_JOB", my_task_id)
             self.db_send_task_end(my_job, "MAIN_JOB", my_task_id)
 
-            #update job data structure if the stdout/stderr files are rotated
-            #for non kickstart launched jobs
-            if my_job_has_rotated_stdout_err_files:
-                my_job._output_file += ".%03d" % (my_job._job_output_counter)
-                my_job._error_file += ".%03d" % (my_job._job_output_counter)
-
             # Read stdout/stderr files, if not disabled by user
             if self._store_stdout_stderr:
                 my_job.read_stdout_stderr_files(self._run_dir)
@@ -1796,6 +1808,32 @@ class Workflow:
                 record["resource"] = my_job._site_name
                 # Send event to the database
                 self.db_send_host_info(my_job, record)
+
+
+    def get_pegasuslite_exitcode( self, job ):
+        """
+        Determine if the stderr contains PegasusLite output, and if so returns the PegasusLite exitcode
+        if found , else None
+        """
+
+        ec = None
+        errfile =  os.path.join(self._run_dir, job._error_file )
+        if errfile is None or not os.path.isfile(errfile):
+            return ec
+
+        # Read the file first
+        f = open(errfile)
+        txt = f.read()
+        f.close()
+
+        #try and determine the exitcode from .err file
+        ec_match = re_parse_pegasuslite_ec.search( txt )
+        if ec_match:
+            #a match yes it is a PegasusLite job . gleam the exitcode
+            ec = ec_match.group(1)
+
+        return ec
+
 
     def add_job(self, jobid, job_state, sched_id=None):
         """
