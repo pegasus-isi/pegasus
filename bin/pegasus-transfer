@@ -799,9 +799,17 @@ class S3Handler(TransferHandlerBase):
         if (transfer.src_proto == "s3" or transfer.src_proto == "s3s") and \
            (transfer.dst_proto == "s3" or transfer.dst_proto == "s3s"):
             # s3 -> s3
+            key = "S3CFG_" + transfer.src_sitename
+            if key in os.environ:
+                os.environ["S3CFG"] = os.environ[key]
+
             cmd = "pegasus-s3 cp -f -c '%s' '%s'" % (transfer.src_url(),
                                                      transfer.dst_url())
         elif transfer.dst_proto == "file":
+            key = "S3CFG_" + transfer.src_sitename
+            if key in os.environ:
+                os.environ["S3CFG"] = os.environ[key]
+
             # this is a 'get'
             local_filename = transfer.dst_path
             prepare_local_dir(os.path.dirname(transfer.dst_path))
@@ -809,6 +817,10 @@ class S3Handler(TransferHandlerBase):
                                                 transfer.dst_path)
         else:
             # this is a 'put'
+            key = "S3CFG_" + transfer.dst_sitename
+            if key in os.environ:
+                os.environ["S3CFG"] = os.environ[key]
+
             local_filename = transfer.src_path
             cmd = "pegasus-s3 put -f -b '%s' '%s'" % (transfer.src_path,
                                                       transfer.dst_url())
@@ -844,7 +856,16 @@ class SRMHandler(TransferHandlerBase):
                       "srm-copy[ \t]+([\.0-9a-zA-Z]+)") == None:
             raise RuntimeError("Unable to do srm transfers because" 
                                + " lcg-cp/srm-copy could not be found")
-    
+        
+        if transfer.dst_proto == "file":
+            key = "X509_USER_PROXY_" + transfer.src_sitename
+            if key in os.environ:
+                os.environ["X509_USER_PROXY"] = os.environ[key]
+        else:
+            key = "X509_USER_PROXY_" + transfer.dst_sitename
+            if key in os.environ:
+                os.environ["X509_USER_PROXY"] = os.environ[key]
+
         if transfer.dst_proto == "file":
             prepare_local_dir(os.path.dirname(transfer.dst_path))
             
@@ -887,20 +908,33 @@ class ScpHandler(TransferHandlerBase):
     def do_transfer(self, transfer, attempt):
         global remote_dirs_created
         cmd = "/usr/bin/scp"
-        if "SSH_PRIVATE_KEY" in os.environ:
-            cmd += " -i " + os.environ['SSH_PRIVATE_KEY']
         cmd += " -q -B -o StrictHostKeyChecking=no"
         try:
             if transfer.dst_proto == "file":
+                # scp -> file
+                key = "SSH_PRIVATE_KEY_" + transfer.src_sitename
+                if key in os.environ:
+                    cmd += " -i " + os.environ[key]
+                elif "SSH_PRIVATE_KEY" in os.environ:
+                    cmd += " -i " + os.environ['SSH_PRIVATE_KEY']
+
                 prepare_local_dir(os.path.dirname(transfer.dst_path))
                 cmd += " " + transfer.src_host + ":" + transfer.src_path
                 cmd += " " + transfer.dst_path
             else:
+                # file -> scp
+                key = "SSH_PRIVATE_KEY_" + transfer.dst_sitename
+                if key in os.environ:
+                    cmd += " -i " + os.environ[key]
+                elif "SSH_PRIVATE_KEY" in os.environ:
+                    cmd += " -i " + os.environ['SSH_PRIVATE_KEY']
+
                 mkdir_key = "scp://" + transfer.dst_host + ":" \
                           + os.path.dirname(transfer.dst_path)
                 if not mkdir_key in remote_dirs_created:
-                    self._prepare_scp_dir(transfer.dst_host,
-                                         os.path.dirname(transfer.dst_path))
+                    self._prepare_scp_dir(transfer.dst_sitename,
+                                          transfer.dst_host,
+                                          os.path.dirname(transfer.dst_path))
                     remote_dirs_created[mkdir_key] = True
                 cmd += " '" + transfer.src_path + "'"
                 cmd += " '" + transfer.dst_host + ":" + transfer.dst_path + "'"
@@ -916,12 +950,15 @@ class ScpHandler(TransferHandlerBase):
         return True
 
 
-    def _prepare_scp_dir(self, rhost, rdir):
+    def _prepare_scp_dir(self, rsite, rhost, rdir):
         """
         makes sure a local path exists before putting files into it
         """
         cmd = "/usr/bin/ssh"
-        if "SSH_PRIVATE_KEY" in os.environ:
+        key = "SSH_PRIVATE_KEY_" + rsite
+        if key in os.environ:
+            cmd += " -i " + os.environ[key]
+        elif "SSH_PRIVATE_KEY" in os.environ:
             cmd += " -i " + os.environ['SSH_PRIVATE_KEY']
         cmd += " -q -o StrictHostKeyChecking=no"
         cmd += " " + rhost + " '/bin/mkdir -p " + rdir + "'"
