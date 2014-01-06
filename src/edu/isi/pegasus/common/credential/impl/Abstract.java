@@ -64,6 +64,16 @@ public abstract class Abstract implements CredentialHandler {
         mLogger = bag.getLogger();
 
     }
+    
+    /**
+     * Returns the site name sanitized for use in an environment variable.
+     * 
+     * @param site   the site name. 
+     */
+    public String getSiteNameForEnvironmentKey( String site ){
+        return site.replaceAll( "-", "_" );
+    }
+    
 
     /**
      * Returns the path to the credential on the submit host.
