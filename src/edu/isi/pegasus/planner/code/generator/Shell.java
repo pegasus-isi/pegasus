@@ -228,7 +228,7 @@ public class Shell extends Abstract {
                 CredentialHandler handler = factory.loadInstance( cred );
                 job.addProfile( new Profile( Profile.ENV,
                                              handler.getEnvironmentVariable( site ), 
-                                             handler.getPath() ) );
+                                             handler.getPath( site ) ) );
             }
 	
         }
