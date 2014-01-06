@@ -72,10 +72,14 @@ class Transfer:
         self.pair_id = pair_id
         
     def set_src_sitename(self, sitename):
-        self.src_sitename = sitename
+        # the site name is used to match against shell variables, so we have
+        # have to replace dashes with underscores (as we do in the planner)
+        self.src_sitename = string.replace(sitename, "-", "_")
 
     def set_dst_sitename(self, sitename):
-        self.dst_sitename = sitename
+        # the site name is used to match against shell variables, so we have
+        # have to replace dashes with underscores (as we do in the planner)
+        self.dst_sitename = string.replace(sitename, "-", "_")
 
     def set_src(self, url):
         self.src_proto, self.src_host, self.src_path = self.parse_url(url)
@@ -224,7 +228,7 @@ class Tools(object):
         full_path = backticks("which " + executable + " 2>/dev/null") 
         full_path = full_path.rstrip('\n')
         if full_path == "":
-            logger._info("Command '%s' not found in the current environment"
+            logger.info("Command '%s' not found in the current environment"
                         %(executable))
             self._info[executable] = None
             return self._info[executable]
@@ -1093,6 +1097,9 @@ class TransferSet:
                     logger.exception("Exception while doing transfer:")
                 else:
                     logger.error(e)
+                # add all the transfers back to the failed queue
+                for i, t in enumerate(self._transfers):
+                    failed_q.append(t)
             return
         
         # standard src->dst single transfer case
@@ -1102,6 +1109,7 @@ class TransferSet:
             # considering both a False being returned or an exception being
             # thrown as a failed transfer
             success = False
+
             if self._secondary_handler == None:
                 # one handler to rule them all!
                 try:
