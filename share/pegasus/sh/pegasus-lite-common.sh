@@ -181,7 +181,7 @@ function pegasus_lite_init()
 
     # announce version - we do this so pegasus-exitcode and other tools
     # can tell the job was a PegasusLite job
-    echo "PegasusLite: version ${pegasus_lite_full_version}" 1>&2
+    pegasus_lite_log "PegasusLite: version ${pegasus_lite_full_version}" 1>&2
 
     # for staged credentials, expand the paths and set strict permissions
     for base in X509_USER_PROXY S3CFG SSH_PRIVATE_KEY irodsEnvFile; do
@@ -191,7 +191,7 @@ function pegasus_lite_init()
             if ! (echo $val | grep "^/") >/dev/null 2>&1; then
                 eval $key=`pwd`/"$val"
                 eval val="\$$key"
-                echo "Expanded \$$key to $val"
+                pegasus_lite_log "Expanded \$$key to $val"
             fi
             chmod 0600 $val
         done
