@@ -408,6 +408,9 @@ public class RemoveDirectory extends Engine {
                 writer.write( "\n" );
                 writer.write( file );
                 writer.write( "\n" );
+                
+                //associate a credential if required
+                newJob.addCredentialType( site, file );
             }
 
             //closing the handle to the writer
