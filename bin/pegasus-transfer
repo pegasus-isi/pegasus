@@ -43,7 +43,7 @@ __author__ = "Mats Rynge <rynge@isi.edu>"
 
 # --- regular expressions -----------------------------------------------------
 
-re_parse_comment = re.compile(r'^# +[\w]+ +[\w]+ +([\w]+)')
+re_parse_comment = re.compile(r'^# +[\w]+ +[\w]+ +([\w-]+)')
 re_parse_url = re.compile(r'([\w]+)://([\w\.\-:@]*)(/[\S]*)?')
 
 
@@ -688,7 +688,7 @@ class IRodsHandler(TransferHandlerBase):
     _name = "IRodsHandler"
     _protocol_map = ["file->irods", "irods->file"]
 
-    def _irods_login(self):
+    def _irods_login(self, sitename):
         """
         log in to irods by using the iinit command - if the file already exists,
         we are already logged in
@@ -696,6 +696,10 @@ class IRodsHandler(TransferHandlerBase):
         f = os.environ['irodsAuthFileName']
         if os.path.exists(f):
             return
+        
+        key = "irodsEnvFile_" + sitename
+        if key in os.environ:
+            os.environ["irodsEnvFile"] = os.environ[key]
     
         # read password from env file
         if not "irodsEnvFile" in os.environ:
@@ -732,8 +736,11 @@ class IRodsHandler(TransferHandlerBase):
                                + " could not be found in the current path")
     
         # log in to irods
+        sitename = transfer.src_sitename
+        if transfer.src_proto == "file":
+            sitename = transfer.dst_sitename
         try:
-            self._irods_login()
+            self._irods_login(sitename)
         except Exception, loginErr:
             logger.error(loginErr)
             raise RuntimeError("Unable to log into irods")
@@ -747,7 +754,8 @@ class IRodsHandler(TransferHandlerBase):
             cmd = "iget -f '" + src_irods + "' '" + transfer.dst_path + "'"
         else:
             # file->irods
-            dst_irods_mkdir = re.sub(r"^\/+", "", os.path.dirname(transfer.dst_path))
+            dst_irods_mkdir = re.sub(r"^\/+", "",
+                                     os.path.dirname(transfer.dst_path))
             cmd = "imkdir -p '" + os.path.dirname(transfer.dst_path) + "'"
             try:
                 myexec(cmd, 60*60, True)
@@ -841,7 +849,7 @@ class S3Handler(TransferHandlerBase):
 
 class SRMHandler(TransferHandlerBase):
     
-    _name = "S3Handler"
+    _name = "SRMHandler"
     _protocol_map = ["srm->file", "file->srm", "gsiftp->srm", "srm->gsiftp"]
 
     def do_transfer(self, transfer, failed_q):
@@ -1468,6 +1476,10 @@ def main():
                     r = re_parse_comment.search(line)
                     if r:
                         url_pair.set_src_sitename(r.group(1))
+                    else:
+                        logger.critical('Unable to parse comment on line %d' 
+                                        %(line_nr))
+                        myexit(1)
                 
                 # src url
                 elif line_state == 0:
@@ -1480,6 +1492,10 @@ def main():
                     r = re_parse_comment.search(line)
                     if r:
                         url_pair.set_dst_sitename(r.group(1))
+                    else:
+                        logger.critical('Unable to parse comment on line %d'
+                                        %(line_nr))
+                        myexit(1)
                 
                 # dst url
                 elif line_state == 2:
@@ -1490,10 +1506,11 @@ def main():
     except Exception, err:
         logger.critical('Error reading url list: %s' % (err))
         myexit(1)
-    
+
     # we will now sort the list as some tools (gridftp) can optimize when
     # given a group of similar transfers
-    logger.info("Sorting the tranfers based on transfer type and source/destination")
+    logger.info("Sorting the tranfers based on transfer type and" +
+                " source/destination")
     inputs.sort()
     
     transfer_q = deque(inputs)
@@ -1558,7 +1575,8 @@ def main():
     stats_summarize()
     
     if failed_q:
-        logger.critical("Some transfers failed! See above, and possibly stderr.")
+        logger.critical("Some transfers failed! See above," +
+                        " and possibly stderr.")
         myexit(1)
     
     logger.info("All transfers completed successfully.")
