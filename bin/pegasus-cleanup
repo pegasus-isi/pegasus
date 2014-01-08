@@ -42,15 +42,22 @@ __author__ = "Mats Rynge <rynge@isi.edu>"
 
 # --- regular expressions -------------------------------------------------------------
 
+re_parse_comment = re.compile(r'^# +[\w]+ +([\w-]+)')
 re_parse_url = re.compile(r'([\w]+)://([\w\.\-:@]*)(/[\S]*)')
 
 # --- classes -------------------------------------------------------------------------
 
 class URL:
 
+    sitename   = ""
     proto      = ""
     host       = ""
     path       = ""
+
+    def set_sitename(self, sitename):
+        # the site name is used to match against shell variables, so we have
+        # have to replace dashes with underscores (as we do in the planner)
+        self.sitename = string.replace(sitename, "-", "_")
 
     def set_url(self, url):
         self.proto, self.host, self.path = self.parse_url(url)
@@ -343,7 +350,10 @@ def scp(urls):
     """
     for i, url in enumerate(urls):
         cmd = "/usr/bin/ssh"
-        if "SSH_PRIVATE_KEY" in os.environ:
+        key = "SSH_PRIVATE_KEY_" + url.sitename
+        if key in os.environ:
+            cmd += " -i " + os.environ[key]
+        elif "SSH_PRIVATE_KEY" in os.environ:
             cmd += " -i " + os.environ['SSH_PRIVATE_KEY']
         cmd += " -o PasswordAuthentication=no"
         cmd += " -o StrictHostKeyChecking=no" + \
@@ -370,6 +380,10 @@ def gsiftp(urls):
 
     tmp_file.close()
     
+    key = "X509_USER_PROXY_" + urls[0].sitename
+    if key in os.environ:
+        os.environ["X509_USER_PROXY"] = os.environ[key]
+    
     # use pegasus-transfer
     cmd = prog_dir + "/pegasus-gridftp rm -f"
 
@@ -387,7 +401,7 @@ def gsiftp(urls):
     os.unlink(tmp_name)
 
 
-def irods_login():
+def irods_login(sitename):
     """
     log in to irods by using the iinit command - if the file already exists,
     we are already logged in
@@ -395,6 +409,10 @@ def irods_login():
     f = os.environ['irodsAuthFileName']
     if os.path.exists(f):
         return
+    
+    key = "irodsEnvFile_" + sitename
+    if key in os.environ:
+        os.environ["irodsEnvFile"] = os.environ[key]
     
     # read password from env file
     if not "irodsEnvFile" in os.environ:
@@ -425,11 +443,12 @@ def irods(urls):
     """
 
     if tool_info['irm']['full_path'] == None:
-        raise RuntimeError("Unable to do irods transfers becuase iget could not be found in the current path")
+        raise RuntimeError("Unable to do irods transfers becuase iget could" +
+                           "not be found in the current path")
 
     # log in to irods
     try:
-        irods_login()
+        irods_login(urls[0].sitename)
     except Exception, loginErr:
         logger.error(loginErr)
         raise RuntimeError("Unable to log into irods")
@@ -448,6 +467,10 @@ def srm(urls):
     """
     srm - use lcg-del or srm-rm
     """
+
+    key = "X509_USER_PROXY_" + urls[0].sitename
+    if key in os.environ:
+        os.environ["X509_USER_PROXY"] = os.environ[key]
 
     base_cmd = ""
     if tool_info['lcg-del']['full_path'] != None:
@@ -475,6 +498,11 @@ def s3(urls):
         raise RuntimeError("Unable to do S3 transfers becuase pegasus-s3 could not be found")
 
     for i, url in enumerate(urls):
+        
+        key = "S3CFG_" + url.sitename
+        if key in os.environ:
+            os.environ["S3CFG"] = os.environ[key]
+        
         cmd = "pegasus-s3 rm " + url.url()
 
         try:
@@ -488,7 +516,7 @@ def urls_groupable(a, b):
     compares two urls, and determins if they are similar enough to be
     grouped together for one tool
     """
-    if a.proto != b.proto:
+    if a.sitename != b.sitename or a.proto != b.proto:
         return False
     return True
 
@@ -580,14 +608,26 @@ url_q = deque()
 
 # fill the url queue with user provided entries
 line_nr = 0
+sitename = ""
 try:
     for line in input_file.readlines():
         line_nr += 1
-        if line[0] != '#' and len(line) > 4:
+        if len(line) > 3:
             line = line.rstrip('\n')
-            url = URL()
-            url.set_url(line)
-            url_q.append(url)
+            if line[0] == '#':
+                r = re_parse_comment.search(line)
+                if r:
+                    sitename =  r.group(1)
+                else:
+                    logger.critical('Unable to parse comment on line %d'
+                                    %(line_nr))
+                    myexit(1)
+            else:
+                url = URL()
+                url.set_sitename(sitename)
+                url.set_url(line)
+                url_q.append(url)
+                sitename = ""
 except Exception, err:
     logger.critical('Error handling url: %s' % (err))
     myexit(1)
