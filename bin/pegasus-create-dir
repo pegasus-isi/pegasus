@@ -54,6 +54,8 @@ class URL:
     path       = ""
 
     def set_site(self, site):
+        if site is None:
+            site = ""
         # the site name is used to match against shell variables, so we have
         # have to replace dashes with underscores (as we do in the planner)
         self.site = string.replace(site, "-", "_")
