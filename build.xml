@@ -346,17 +346,11 @@
 
     <copy preservelastmodified="true" todir="${dist.dir}" file="LICENSE"/>
 
-    <!-- creates the worker tarball -->
-    <exec executable="sh" dir="dist" failonerror="true">
-      <arg value="-c"/>
-      <arg value="tar --exclude=\.git --exclude=\.gitignore -cf pegasus-worker-${pegasus.version}.tar pegasus-${pegasus.version}"/>
-    </exec>
-    <gzip src="dist/pegasus-worker-${pegasus.version}.tar"
-      destfile="dist/pegasus-worker-${pegasus.version}-${dist.arch}.tar.gz"/>
-    <delete file="dist/pegasus-worker-${pegasus.version}.tar"/>
+    <package-binary name="pegasus-worker-${pegasus.version}-${dist.arch}"/>
   </target>
 
-  <target name="dist" depends="dist-clean,setup,jar,vdl-jar,pegasus-config,ctools,externals,doc">
+
+  <target name="dist-common" depends="dist-clean,setup,jar,vdl-jar,pegasus-config,ctools,externals">
     <!-- bin -->
     <copy preservelastmodified="true" todir="${dist.bin}">
       <fileset dir="bin">
@@ -451,15 +445,27 @@
         <include name="RELEASE_NOTES"/>
       </fileset>
     </copy>
+  </target>
 
-    <!-- creates the binary tarball -->
-    <exec executable="sh" dir="dist" failonerror="true">
-      <arg value="-c"/>
-      <arg value="tar --exclude=\.git --exclude=\.gitignore -cf pegasus-binary-${pegasus.version}.tar pegasus-${pegasus.version}"/>
-    </exec>
-    <gzip src="dist/pegasus-binary-${pegasus.version}.tar"
-      destfile="dist/pegasus-binary-${pegasus.version}-${dist.arch}.tar.gz"/>
-    <delete file="dist/pegasus-binary-${pegasus.version}.tar"/>
+  <macrodef name="package-binary">
+    <attribute name="name"/>
+    <sequential>
+      <!-- creates the binary tarball -->
+      <exec executable="sh" dir="dist" failonerror="true">
+        <arg value="-c"/>
+        <arg value="tar --exclude=\.git --exclude=\.gitignore -cf @{name}.tar pegasus-${pegasus.version}"/>
+      </exec>
+      <gzip src="dist/@{name}.tar" destfile="dist/@{name}.tar.gz"/>
+      <delete file="dist/@{name}.tar"/>
+    </sequential>
+  </macrodef>
+
+  <target name="dist" depends="dist-common,doc">
+    <package-binary name="pegasus-binary-${pegasus.version}-${dist.arch}"/>
+  </target>
+
+  <target name="dist-nodoc" depends="dist-common">
+    <package-binary name="pegasus-binary-${pegasus.version}-${dist.arch}"/>
   </target>
 
   <target name="dist-clean">
