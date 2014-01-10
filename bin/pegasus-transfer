@@ -1008,7 +1008,8 @@ class TransferSet:
         if self._secondary_handler != None:
             # we have a two stage transfer to deal with and we need a temp file
             self._tmp_fd, self._tmp_name = \
-                tempfile.mkstemp(prefix="pegasus-transfer-", suffix=".data")
+                tempfile.mkstemp(prefix="pegasus-transfer-two-stage-",
+                                 suffix=".data")
             # need to open the permission up to make sure files downstream
             # get sane permissions to inherit
             os.chmod(self._tmp_name, 0644)
@@ -1072,6 +1073,13 @@ class TransferSet:
 
             if success == False:
                 failed_q.append(transfer)
+        
+        # remove temp file
+        logger.debug("Removing temporary file %s" %(self._tmp_name))
+        try:
+            os.unlink(self._tmp_name)
+        except:
+            pass
 
 
 class Alarm(Exception):
