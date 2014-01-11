@@ -578,7 +578,7 @@ class GridFtpHandler(TransferHandlerBase):
         # concurrency is safe for both pull/push and 3rd party
         if tools.major_version('globus-url-copy') >= 5 \
            and gsiftp_failures == 0:
-            options += " -concurrency 4"
+            options += " -concurrency 6"
     
         # Only do third party transfers for gsiftp->gsiftp. For other
         # combinations, fall back to settings which will for well over for
@@ -586,7 +586,7 @@ class GridFtpHandler(TransferHandlerBase):
         if third_party:
     
             # parallism
-            options += " -parallel 4"
+            options += " -parallel 6"
     
             # -fast only for Globus 4 and above
             if tools.major_version('globus-version') >= 4:
@@ -601,6 +601,8 @@ class GridFtpHandler(TransferHandlerBase):
             #    options += " -pipeline"
         else:
             # gsiftp<->file transfers
+            if gsiftp_failures == 0:
+                options += " -parallel 6"
             options += " -no-third-party-transfers" \
                      + " -no-data-channel-authentication"
     
