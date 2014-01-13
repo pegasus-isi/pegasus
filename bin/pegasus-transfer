@@ -521,7 +521,6 @@ class GridFtpHandler(TransferHandlerBase):
         # build command line for globus-url-copy
         tools = Tools()
         cmd = tools.full_path('globus-url-copy')
-        cmd += self._guc_options(attempt, create_dest, third_party)
         
         # separate credentials for src and dst? note that if one is
         # set, so must the other even if a credential is not required
@@ -539,6 +538,17 @@ class GridFtpHandler(TransferHandlerBase):
             if dst_cred == None:
                 dst_cred = src_cred
             cmd += " -src-cred " + src_cred + " -dst-cred " + dst_cred
+
+        # if the src and dest credentials are different, we might need
+        # a data channel credential
+        data_cred_req = False
+        if third_party and src_cred != dst_cred:
+            data_cred_req = True
+       
+        # options
+        cmd += self._guc_options(attempt, create_dest,
+                                 third_party,
+                                 data_cred_req)
         
         cmd += " -f " + tmp_name
         try:
@@ -557,7 +567,7 @@ class GridFtpHandler(TransferHandlerBase):
     
         return transfer_success
    
-    def _guc_options(self, attempt, create_dest, third_party):
+    def _guc_options(self, attempt, create_dest, third_party, data_cred_req):
         """
         determine a set of globus-url-copy options based on how previous
         transfers went
@@ -591,6 +601,12 @@ class GridFtpHandler(TransferHandlerBase):
             # -fast only for Globus 4 and above
             if tools.major_version('globus-version') >= 4:
                 options += " -fast"
+
+            if data_cred_req:
+                if gsiftp_failures == 0:
+                    options += " -data-cred auto"
+                else:
+                    options += " -no-data-channel-authentication"
         
             # -pipeline only for 3rd party transfers and Globus 4.2 and above
             # this is experimental so only allow this for the first attempt
