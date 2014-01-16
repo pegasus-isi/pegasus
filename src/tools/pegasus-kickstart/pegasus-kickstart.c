@@ -199,6 +199,7 @@ helpMe( const AppInfo* run )
 " -q\tOmit <data> for <statcall> (stdout, stderr) if the job succeeds.\n"
 #ifdef HAS_PTRACE
 " -t\tEnable resource usage tracing\n"
+" -z\tEnable system call interposition to get files and I/O\n"
 #endif
  );
 
@@ -545,6 +546,10 @@ main( int argc, char* argv[] )
       break;
     case 't':
       appinfo.enableTracing++;
+      break;
+    case 'z':
+      appinfo.enableTracing++;
+      appinfo.enableInterposition++;
       break;
     case 'w':
       if (!argv[i][2] && argc <= i+1) {

@@ -74,7 +74,7 @@ endif
 
 all : pegasus-kickstart
 
-pegasus-kickstart: debug.o getif.o rwio.o tools.o useinfo.o mynss.o statinfo.o jobinfo.o limitinfo.o $(EXTRA_OBJ) machine.o appinfo.o parse.o mysystem.o mylist.o invoke.o pegasus-kickstart.o procinfo.o
+pegasus-kickstart: debug.o getif.o rwio.o tools.o useinfo.o mynss.o statinfo.o jobinfo.o limitinfo.o $(EXTRA_OBJ) machine.o appinfo.o parse.o mysystem.o mylist.o invoke.o pegasus-kickstart.o procinfo.o syscall.o
 	$(LD) $(EXTRA_LDFLAGS) $(CFLAGS) $^ -o $@ $(LOADLIBES)
 show-if: show-if.o getif.o debug.o rwio.o
 	$(LD) $(EXTRA_LDFLAGS) $(CFLAGS) $^ -o $@ $(LOADLIBES)

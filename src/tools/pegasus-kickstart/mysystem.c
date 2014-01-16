@@ -96,35 +96,36 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[])
     if (appinfo->enableTracing) {
       if ( procChild() ) _exit(126);
     }
-    
+
     execve( jobinfo->argv[0], (char* const*) jobinfo->argv, envp );
     perror("execve");
     _exit(127); /* executed in child process */
   } else {
     /* parent */
     if (appinfo->enableTracing) {
-      procParentTrace(jobinfo->child, &jobinfo->status, &jobinfo->use, &(jobinfo->children));
+      /* TODO If this returns an error, then we need to untrace all the children and try the wait instead */
+      procParentTrace(jobinfo->child, &jobinfo->status, &jobinfo->use, &(jobinfo->children), appinfo->enableInterposition);
     } else {
       procParentWait(jobinfo->child, &jobinfo->status, &jobinfo->use, &(jobinfo->children));
     }
-    
+
     /* sanity check */
     if ( kill( jobinfo->child, 0 ) == 0 ) {
       debugmsg( "ERROR: job %d is still running!\n", jobinfo->child );
       if ( ! errno ) errno = EINPROGRESS;
     }
   }
-  
+
   /* save any errors before anybody overwrites this */
   jobinfo->saverr = errno;
-  
+
   /* stop wall-clock */
   now( &(jobinfo->finish) );
-  
+
   /* ignore errors on these, too. */
   sigaction( SIGINT, &saveintr, NULL );
   sigaction( SIGQUIT, &savequit, NULL );
-  
+
   /* finalize */
   return jobinfo->status;
 }
