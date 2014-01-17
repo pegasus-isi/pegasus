@@ -774,7 +774,7 @@ class IRodsHandler(TransferHandlerBase):
             # file->irods
             dst_irods_mkdir = re.sub(r"^\/+", "",
                                      os.path.dirname(transfer.dst_path))
-            cmd = "imkdir -p '" + os.path.dirname(transfer.dst_path) + "'"
+            cmd = "imkdir -p '" + dst_irods_mkdir + "'"
             try:
                 myexec(cmd, 60*60, True)
             except:
