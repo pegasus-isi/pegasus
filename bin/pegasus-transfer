@@ -310,6 +310,16 @@ class CpHandler(TransferHandlerBase):
 
     def do_transfer(self, transfer, attempt):
         prepare_local_dir(os.path.dirname(transfer.dst_path))
+        if os.path.exists(transfer.src_path) \
+           and os.path.exists(transfer.dst_path):
+            # make sure src and target are not the same file - have to
+            # compare at the inode level as paths can differ
+            src_inode = os.stat(transfer.src_path)[stat.ST_INO]
+            dst_inode = os.stat(transfer.dst_path)[stat.ST_INO]
+            if src_inode == dst_inode:
+                logger.warning("cp: src (%s) and dst (%s) already exists"
+                               % (transfer.src_path, transfer.dst_path))
+                return True
         cmd = "/bin/cp -f -L '%s' '%s'" \
             % (transfer.src_path, transfer.dst_path)
         try:
