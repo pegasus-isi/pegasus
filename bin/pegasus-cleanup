@@ -406,13 +406,13 @@ def irods_login(sitename):
     log in to irods by using the iinit command - if the file already exists,
     we are already logged in
     """
-    f = os.environ['irodsAuthFileName']
-    if os.path.exists(f):
-        return
-    
     key = "irodsEnvFile_" + sitename
     if key in os.environ:
         os.environ["irodsEnvFile"] = os.environ[key]
+    
+    f = os.environ['irodsAuthFileName']
+    if os.path.exists(f):
+        return
     
     # read password from env file
     if not "irodsEnvFile" in os.environ:
@@ -454,7 +454,7 @@ def irods(urls):
         raise RuntimeError("Unable to log into irods")
 
     for i, url in enumerate(urls):
-        path = re.sub(r"^\/+", "", os.path.dirname(url.path))
+        path = re.sub(r"^\/+", "", url.path)
         cmd = "irm -f " + path
 
         try:
