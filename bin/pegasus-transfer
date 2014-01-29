@@ -43,7 +43,7 @@ __author__ = "Mats Rynge <rynge@isi.edu>"
 
 # --- regular expressions -----------------------------------------------------
 
-re_parse_comment = re.compile(r'^# +[\w]+ +[\w]+ +([\w-]+)')
+re_parse_comment = re.compile(r'^# +[\w]+ +[\w]+ +([\w\-_]+)')
 re_parse_url = re.compile(r'([\w]+)://([\w\.\-:@]*)(/[\S]*)?')
 
 
@@ -762,10 +762,10 @@ class IRodsHandler(TransferHandlerBase):
         if tools.find("iget", "-h", "Version[ \t]+([\.0-9a-zA-Z]+)") == None:
             raise RuntimeError("Unable to do irods transfers becuase iget"
                                + " could not be found in the current path")
-    
+   
         # log in to irods
         sitename = transfer.src_sitename
-        if transfer.src_proto == "file":
+        if transfer.dst_proto == "irods":
             sitename = transfer.dst_sitename
         try:
             self._irods_login(sitename)
@@ -1158,10 +1158,12 @@ class TransferSet:
                 # failed queue in case of failure
                 t_one = Transfer(transfer.pair_id)
                 t_one.set_src(transfer.src_url())
+                t_one.set_src_sitename(transfer.src_sitename)
                 t_one.set_dst("file://" + self._tmp_name)
                 t_two =  Transfer(transfer.pair_id)
                 t_two.set_src("file://" + self._tmp_name)
                 t_two.set_dst(transfer.dst_url())
+                t_two.set_dst_sitename(transfer.dst_sitename)
                 try:
                     success = self._primary_handler.do_transfer(t_one,
                                                                 attempt) \
