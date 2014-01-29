@@ -417,8 +417,7 @@ def irods(url):
         logger.error(loginErr)
         raise RuntimError("Unable to log into irods")
 
-    path = re.sub(r"^\/+", "", url.path)
-    cmd = "imkdir -p " + path
+    cmd = "imkdir -p " + url.path
     myexec(cmd, 60, True)
 
             
