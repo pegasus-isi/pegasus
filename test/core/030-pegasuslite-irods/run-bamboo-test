@@ -60,9 +60,9 @@ cat >sites.xml <<EOF
         <profile namespace="env" key="PATH">/ccg/software/irods/3.3/bin:/usr/bin:/bin</profile>
     </site>
     <site  handle="staging_site" arch="x86" os="LINUX">
-        <directory type="shared-scratch" path="/workflows/scratch">
-            <file-server operation="get" url="irods:///workflows/scratch"/>
-            <file-server operation="put" url="irods:///workflows/scratch"/>
+        <directory type="shared-scratch" path="/nara-renci-irods/home/rynge/workflows/scratch">
+            <file-server operation="get" url="irods:///nara-renci-irods/home/rynge/workflows/scratch"/>
+            <file-server operation="put" url="irods:///nara-renci-irods/home/rynge/workflows/scratch"/>
         </directory>
         <profile namespace="pegasus" key="irodsEnvFile" >/localhome/bamboo/.irods/.irodsEnv</profile>
     </site>
