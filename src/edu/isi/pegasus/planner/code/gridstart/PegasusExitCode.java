@@ -31,6 +31,11 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 public class PegasusExitCode extends VDSPOSTScript {
 
     /**
+     * The arguments for pegasus-exitcode when you only want the log files to be rotated.
+     */
+    public static final String POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE = "-r $RETURN";
+    
+    /**
      * The SHORTNAME for this implementation.
      */
     public static final String SHORT_NAME = "pegasus-exitcode";

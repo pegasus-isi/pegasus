@@ -64,7 +64,7 @@ public class GridStartFactory {
                                            "none",
                                            "seqexec"
                                           };
-
+    
     /**
      * The index in the constant arrays for NoGridStart.
      */
@@ -275,10 +275,18 @@ public class GridStartFactory {
         GridStart gs = null;
 
         if ( job.isMPIJob() && !(job instanceof AggregatedJob )){
-            //we only associate no gridstart for mpi jobs that are not clustered
-            //that takes care of pegasus-mpi-cluster
-            gs = (GridStart)this.gridStart( GRIDSTART_SHORT_NAMES[ NO_GRIDSTART_INDEX ] );
-            return gs;
+            
+            //for only MPI jobs that are not PMC, we associate exitcode postscript
+            //with the rotation of logs option  and explicity associate
+            //NoGridStart with them
+            job.vdsNS.construct(Pegasus.GRIDSTART_KEY, "None" );
+            
+            //no empty postscript but arguments to exitcode to add -r $RETURN
+            job.dagmanVariables.construct( Dagman.POST_SCRIPT_KEY,
+                                                  PegasusExitCode.SHORT_NAME );
+            job.dagmanVariables.construct( Dagman.POST_SCRIPT_ARGUMENTS_KEY,
+                                                  PegasusExitCode.POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE );
+            
         }
 
         //determine the short name of GridStart implementation
