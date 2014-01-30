@@ -587,11 +587,13 @@ public class TransferEngine extends Engine {
             }
         }
 
-        if (!vRCSearchFiles.isEmpty()) {
-            if( job instanceof DAXJob ){
-                getFilesFromRC( (DAXJob)job, vRCSearchFiles);
-            }
-            else if( job instanceof DAGJob ){
+        if( job instanceof DAXJob ){
+            //for the DAX jobs we should always call the method
+            //as DAX may just be referred as the LFN
+            getFilesFromRC( (DAXJob)job, vRCSearchFiles);
+        }
+        else if (!vRCSearchFiles.isEmpty()) {
+            if( job instanceof DAGJob ){
                 getFilesFromRC( (DAGJob)job, vRCSearchFiles);
             }
             else{
@@ -1092,6 +1094,9 @@ public class TransferEngine extends Engine {
         arguments.append(job.getArguments()).
                 append(" --dax ").append( dax );
         job.setArguments(arguments.toString());
+        
+        mLogger.log( "Set arguments for DAX job " + job.getID()+ " to " + arguments.toString(),
+                     LogManager.DEBUG_MESSAGE_LEVEL );
         
         this.getFilesFromRC( (Job)job, searchFiles );
     }
