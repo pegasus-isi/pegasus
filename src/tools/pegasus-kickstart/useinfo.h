@@ -18,18 +18,6 @@
 #include <sys/types.h>
 #include <sys/resource.h>
 
-#ifdef SOLARIS
-#ifndef HAS_USAGE_MEM
-#define HAS_USAGE_MEM 1
-#endif
-#ifndef HAS_USAGE_IO
-#define HAS_USAGE_IO 1
-#endif
-#ifndef HAS_USAGE_MSG
-#define HAS_USAGE_MSG 1
-#endif
-#endif /* SOLARIS */
-
 extern
 int
 printXMLUseInfo(FILE *out, int indent, const char* id, 
