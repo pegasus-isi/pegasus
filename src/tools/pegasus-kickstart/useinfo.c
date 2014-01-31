@@ -33,36 +33,24 @@ printXMLUseInfo(FILE *out, int indent, const char* id,
   fprintf(out, "%*s<%s utime=\"%.3f\" stime=\"%.3f\"",
           indent, "", id, doubletime(use->ru_utime), doubletime(use->ru_stime));
 
-#ifdef HAS_USAGE_MEM
-#ifdef HAS_USAGE_FULLMEM
   fprintf(out, " maxrss=\"%s\" ixrss=\"%s\" idrss=\"%s\" isrss=\"%s\"",
           sizer(b[0], 32, sizeof(use->ru_maxrss), &(use->ru_maxrss)),
           sizer(b[1], 32, sizeof(use->ru_ixrss), &(use->ru_ixrss)),
           sizer(b[2], 32, sizeof(use->ru_idrss), &(use->ru_idrss)),
           sizer(b[3], 32, sizeof(use->ru_isrss), &(use->ru_isrss)));
-#else
-  fprintf(out, " maxrss=\"%s\" idrss=\"%s\"",
-          sizer( b[0], 32, sizeof(use->ru_maxrss), &(use->ru_maxrss)),
-          sizer( b[2], 32, sizeof(use->ru_idrss), &(use->ru_idrss)));
-#endif /* HAS_USAGE_FULLMEM */
-#endif /* HAS_USAGE_MEM */
 
   fprintf(out, " minflt=\"%s\" majflt=\"%s\" nswap=\"%s\"",
           sizer(b[0], 32, sizeof(use->ru_minflt), &(use->ru_minflt)),
           sizer(b[1], 32, sizeof(use->ru_majflt), &(use->ru_majflt)),
           sizer(b[2], 32, sizeof(use->ru_nswap), &(use->ru_nswap)));
 
-#ifdef HAS_USAGE_IO
   fprintf(out, " inblock=\"%s\" outblock=\"%s\"",
           sizer(b[0], 32, sizeof(use->ru_inblock), &(use->ru_inblock)),
           sizer(b[1], 32, sizeof(use->ru_oublock), &(use->ru_oublock)));
-#endif /* HAS_USAGE_IO */
 
-#ifdef HAS_USAGE_MSG
   fprintf(out, " msgsnd=\"%s\" msgrcv=\"%s\"",
           sizer(b[2], 32, sizeof(use->ru_msgsnd), &(use->ru_msgsnd)),
           sizer(b[3], 32, sizeof(use->ru_msgrcv), &(use->ru_msgrcv)));
-#endif /* HAS_USAGE_MSG */
 
   fprintf(out, " nsignals=\"%s\" nvcsw=\"%s\" nivcsw=\"%s\"/>\n",
           sizer(b[0], 32, sizeof(use->ru_nsignals), &(use->ru_nsignals)),
