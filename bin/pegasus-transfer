@@ -567,9 +567,8 @@ class GridFtpHandler(TransferHandlerBase):
             # parallism
             options += " -parallel 4"
     
-            # -fast only for Globus 4 and above
-            if tools.major_version('globus-version') >= 4:
-                options += " -fast"
+            # -fast should be supported by all servers today
+            options += " -fast"
         
             # -pipeline only for 3rd party transfers and Globus 4.2 and above
             # this is experimental so only allow this for the first attempt
