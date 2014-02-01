@@ -36,9 +36,12 @@ ifeq (Linux,$(OS))
   OPSYS = LINUX
   SIGN = 
   LIBNUMA=$(shell /sbin/ldconfig -p | grep libnuma.so)
+  NUMAIF=$(shell ls /usr/include/numaif.h)
   ifneq ($(LIBNUMA),)
-    CXXFLAGS += -DHAS_LIBNUMA
-    LDFLAGS += -lnuma
+    ifneq ($(NUMAIF),)
+      CXXFLAGS += -DHAS_LIBNUMA
+      LDFLAGS += -lnuma
+    endif
   endif
 endif
 ifeq (Darwin,$(OS))
