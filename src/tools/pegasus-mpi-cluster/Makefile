@@ -35,7 +35,7 @@ OS=$(shell uname -s)
 ifeq (Linux,$(OS))
   OPSYS = LINUX
   SIGN = 
-  LIBNUMA=$(shell ldconfig -p | grep libnuma)
+  LIBNUMA=$(shell /sbin/ldconfig -p | grep libnuma.so)
   ifneq ($(LIBNUMA),)
     CXXFLAGS += -DHAS_LIBNUMA
     LDFLAGS += -lnuma
