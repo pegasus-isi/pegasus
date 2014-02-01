@@ -78,7 +78,8 @@ void usage() {
             "   --monitord-hack      Generate a .dagman.out file to trick monitord\n"
             "   --no-resource-log    Do not generate a log of resource usage\n"
             "   --no-sleep-on-recv   Do not sleep on message receive\n"
-            "   --maxfds             Maximum cached file descriptors\n",
+            "   --maxfds             Maximum cached file descriptors\n"
+            "   --keep-affinity      Keep inherited CPU and memory affinity\n",
             program
         );
     }
@@ -119,6 +120,7 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
     bool log_resources = true;
     bool sleep_on_recv = true;
     int maxfds = 0;
+    bool clear_affinity = true;
 
     // Environment variable defaults
     char *env_host_script = getenv("PMC_HOST_SCRIPT");
@@ -295,6 +297,8 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
                 argerror("--maxfds must be at least 1");
                 return 1;
             }
+        } else if (flag == "--keep-affinity") {
+            clear_affinity = false;
         } else if (flag[0] == '-') {
             string message = "Unrecognized argument: ";
             message += flag;
@@ -327,6 +331,26 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
 
     comm.sleep_on_recv = sleep_on_recv;
 
+    version();
+
+    // Unless the user specifies otherwise, we clear the CPU and memory
+    // affinity settings on Linux. This is the default because some systems
+    // are not configured correctly and bind all the processes to one CPU,
+    // and we can't expect users to know that this is happening.
+    if (clear_affinity) {
+        log_debug("Rank %d: Clearing CPU and memory affinity", rank);
+        if (clear_cpu_affinity() < 0) {
+            log_error("Rank %d: Error clearing CPU affinity: %s",
+                      rank, strerror(errno));
+            return 1;
+        }
+        if (clear_memory_affinity() < 0) {
+            log_error("Rank %d: Error clearing memory affinity: %s",
+                      rank, strerror(errno));
+            return 1;
+        }
+    }
+
     // Everything is pretty deterministic up until the processes reach
     // this point. Once we get here the different processes can diverge 
     // in their behavior for many reasons (file systems issues, bad nodes,
@@ -334,7 +358,6 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
     // and make sure MPI_Abort is called when something bad happens.
 
     if (rank == 0) {
-        version();
 
         // If no rescue file specified, use default
         if (rescuefile == "") {
