@@ -608,9 +608,8 @@ class GridFtpHandler(TransferHandlerBase):
             # parallism
             options += " -parallel 6"
     
-            # -fast only for Globus 4 and above
-            if tools.major_version('globus-version') >= 4:
-                options += " -fast"
+            # -fast should be supported by all servers today
+            options += " -fast"
 
             if data_cred_req:
                 if gsiftp_failures == 0:
