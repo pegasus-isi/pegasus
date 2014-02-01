@@ -5,8 +5,8 @@
 #include <string.h>
 #include <unistd.h>
 #ifdef DARWIN
-#include <sys/param.h>
-#include <sys/sysctl.h>
+# include <sys/param.h>
+# include <sys/sysctl.h>
 #endif
 #include <sys/time.h>
 #include <sys/stat.h>
@@ -14,6 +14,12 @@
 #include <sstream>
 #include <stdlib.h>
 #include <libgen.h>
+#ifdef LINUX
+# include <sched.h>
+# ifdef HAS_LIBNUMA
+#  include <numaif.h>
+# endif
+#endif
 
 #include "tools.h"
 #include "failure.h"
@@ -320,3 +326,36 @@ string filename(const string &path) {
     return result;
 }
 
+int clear_cpu_affinity() {
+#ifdef LINUX
+    int cpus = get_host_cpus();
+    cpu_set_t *cpuset = CPU_ALLOC(cpus);
+    if (cpuset == NULL) {
+        return -1;
+    }
+    size_t cpusetsize = CPU_ALLOC_SIZE(cpus);
+    CPU_ZERO_S(cpusetsize, cpuset);
+
+    int i;
+    for (i=0; i<cpus; i++) {
+        CPU_SET_S(i, cpusetsize, cpuset);
+    }
+
+    int rc = sched_setaffinity(0, cpusetsize, cpuset);
+    CPU_FREE(cpuset);
+    if (rc < 0) {
+        return -1;
+    }
+#endif
+    return 0;
+}
+
+int clear_memory_affinity() {
+#ifdef HAS_LIBNUMA
+    int rc = set_mempolicy(MPOL_DEFAULT, NULL, 0);
+    if (rc < 0) {
+        return -1;
+    }
+#endif
+    return 0;
+}

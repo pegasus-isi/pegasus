@@ -616,6 +616,39 @@ function test_maxfds {
     fi
 }
 
+function test_keep_affinity {
+    OUTPUT=$(mpiexec -np 2 numactl --physcpubind=1 $PMC --keep-affinity test/cpuset.dag 2>&1)
+    RC=$?
+
+    if [ $RC -ne 0 ]; then
+        echo "$OUTPUT"
+        echo "ERROR: --keep-affinity test failed"
+        return 1
+    fi
+
+    if ! [[ "$OUTPUT" =~ "physcpubind: 1" ]]; then
+        echo "ERROR: clear_affinity test failed"
+        return 1
+    fi
+}
+
+
+function test_clear_affinity {
+    OUTPUT=$(mpiexec -np 2 numactl --physcpubind=1 $PMC test/cpuset.dag 2>&1)
+    RC=$?
+
+    if [ $RC -ne 0 ]; then
+        echo "$OUTPUT"
+        echo "ERROR: clear_affinity test failed"
+        return 1
+    fi
+
+    if ! [[ "$OUTPUT" =~ "physcpubind: 0 1" ]]; then
+        echo "ERROR: clear_affinity test failed"
+        return 1
+    fi
+}
+
 run_test ./test-strlib
 run_test ./test-tools
 run_test ./test-dag
@@ -657,3 +690,18 @@ run_test test_maxfds
 if [ $(uname -s) != "Darwin" ]; then
     run_test test_strict_limits_failure
 fi
+
+function count_cpus {
+    if [ -f /proc/cpuinfo ]; then
+        grep processor /proc/cpuinfo | wc -l
+    else
+        echo 1
+    fi
+}
+
+# For the CPU affinity tests we need numactl and > 1 CPU
+if ! [ -z "$(which numactl)" ] && [ $(count_cpus) -gt 1 ]; then
+    run_test test_clear_affinity
+    run_test test_keep_affinity
+fi
+

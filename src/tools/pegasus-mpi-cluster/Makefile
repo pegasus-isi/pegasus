@@ -35,6 +35,11 @@ OS=$(shell uname -s)
 ifeq (Linux,$(OS))
   OPSYS = LINUX
   SIGN = 
+  LIBNUMA=$(shell ldconfig -p | grep libnuma)
+  ifneq ($(LIBNUMA),)
+    CXXFLAGS += -DHAS_LIBNUMA
+    LDFLAGS += -lnuma
+  endif
 endif
 ifeq (Darwin,$(OS))
   OPSYS = DARWIN
