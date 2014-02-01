@@ -440,6 +440,14 @@ public class ADag extends Data {
         return this.dagInfo.getLabel();
     }
 
+    /**
+     * Returns the index of the workflow, that was specified in the DAX.
+     *
+     * @return the index of the workflow.
+     */
+    public String getIndex(){
+        return this.dagInfo.getIndex();
+    }
 
     /**
      * Returns the dax version
