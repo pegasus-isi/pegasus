@@ -176,6 +176,8 @@ def parse_dag(dagfile):
     dag = DAG()
     dag.name = os.path.basename(dagfile)
 
+    dag.dir = os.path.dirname(dagfile)
+
     f = open(dagfile, "r")
 
     for l in f:
@@ -188,6 +190,8 @@ def parse_dag(dagfile):
             job = Job()
             job.name = rec[1]
             dag.jobs[job.name] = job
+            submit_file = os.path.join(dag.dir, job.name + ".sub")
+            parse_submit_file(submit_file, job)
         elif l.startswith("PARENT"):
             rec = l.split()
             parent_name = rec[1]
@@ -199,6 +203,18 @@ def parse_dag(dagfile):
     print "%d jobs and %d edges" % (len(dag.jobs), len(dag.edges))
 
     return dag
+
+def parse_submit_file(submit_file, job):
+    if not os.path.isfile(submit_file):
+        raise Exception("Submit file not found: %s" % submit_file)
+
+    f = open(submit_file)
+    try:
+        for l in f:
+            if l.lstrip().startswith("priority"):
+                job.priority = l.split("=")[1].strip()
+    finally:
+        f.close()
 
 def splitrecord(line):
     rec = line.split()
@@ -464,6 +480,8 @@ def write_output_dag(dag, metadata, outfile):
                 % (j.name, j.submit, j.execute, j.terminate))
         if hasattr(j, "post"):
             out.write(' post="%s"' % j.post)
+        if hasattr(j, "priority"):
+            out.write(' priority="%s"' % j.priority)
         out.write('/>\n')
     for parent, child in dag.edges:
         out.write('    <edge parent="%s" child="%s"/>\n' % (parent.name, child.name))
