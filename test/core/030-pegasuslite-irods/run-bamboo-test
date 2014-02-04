@@ -53,7 +53,6 @@ cat >sites.xml <<EOF
             <file-server operation="all" url="file://$TOP_DIR/outputs"/>
         </directory>
         <profile namespace="env" key="PATH">$PEGASUS_BIN_DIR:/ccg/software/irods/3.3/bin:/usr/bin:/bin</profile>
-        <profile namespace="env" key="irodsEnvFile" >/localhome/bamboo/.irods/.irodsEnv</profile>
     </site>
     <site  handle="condor_pool" arch="x86" os="LINUX">
         <profile namespace="pegasus" key="style" >condor</profile>
@@ -65,6 +64,7 @@ cat >sites.xml <<EOF
             <file-server operation="get" url="irods:///nara-renci-irods/home/rynge/workflows/scratch"/>
             <file-server operation="put" url="irods:///nara-renci-irods/home/rynge/workflows/scratch"/>
         </directory>
+        <profile namespace="pegasus" key="irodsEnvFile" >/localhome/bamboo/.irods/.irodsEnv</profile>
     </site>
 </sitecatalog>
 EOF
