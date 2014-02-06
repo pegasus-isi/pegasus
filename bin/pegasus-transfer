@@ -1495,6 +1495,7 @@ def main():
     pair_nr = 0
     inputs = []
     line_state = 3  # 0=SrcComment, 1=SrcUrl, 2=DstComment, 3=DstUrl
+    url_pair = None
     try:
         for line in input_file.readlines():
             line_nr += 1
@@ -1504,8 +1505,9 @@ def main():
                 # src comment
                 if line_state == 3 and line[0] == '#':
                     line_state = 0
-                    pair_nr += 1
-                    url_pair = Transfer(pair_nr)
+                    if url_pair == None:
+                        pair_nr += 1
+                        url_pair = Transfer(pair_nr)
                     r = re_parse_comment.search(line)
                     if r:
                         url_pair.set_src_sitename(r.group(1))
@@ -1515,12 +1517,15 @@ def main():
                         myexit(1)
                 
                 # src url
-                elif line_state == 0:
+                elif line_state == 0 or line_state == 3:
                     line_state = 1
+                    if url_pair == None:
+                        pair_nr += 1
+                        url_pair = Transfer(pair_nr)
                     url_pair.set_src(line)
 
                 # dst comment
-                elif line_state == 1:
+                elif line_state == 1 and line[0] == '#':
                     line_state = 2
                     r = re_parse_comment.search(line)
                     if r:
@@ -1531,10 +1536,11 @@ def main():
                         myexit(1)
                 
                 # dst url
-                elif line_state == 2:
+                elif line_state == 2 or line_state == 1:
                     line_state = 3
                     url_pair.set_dst(line)
                     inputs.append(url_pair)
+                    url_pair = None
 
     except Exception, err:
         logger.critical('Error reading url list: %s' % (err))
