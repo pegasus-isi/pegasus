@@ -149,14 +149,14 @@ public class PegasusExitCode implements POSTScript  {
         try{
             String failure = (String)job.vdsNS.get( Pegasus.EXITCODE_FAILURE_MESSAGE );
             if( failure != null ){
-                String[] failures = failure.split( "@" );
+                String[] failures = failure.split( ERR_SUCCESS_MSG_DELIMITER );
                 for( String value : failures ){
                     defaultOptions.append( " -f " ).append( CondorQuoteParser.quote( value , true ) );
                 }
             }
             String success = (String)job.vdsNS.get( Pegasus.EXITCODE_SUCCESS_MESSAGE );
             if( success != null ){
-                String[] successes = success.split( "@" );
+                String[] successes = success.split( ERR_SUCCESS_MSG_DELIMITER );
                 for( String value : successes ){
                     defaultOptions.append( " -s " ).append( CondorQuoteParser.quote( value , true ) );
                 }
