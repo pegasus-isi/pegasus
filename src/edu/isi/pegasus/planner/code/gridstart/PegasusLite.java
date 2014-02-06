@@ -54,6 +54,7 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.NameValue;
+import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.refiner.DeployWorkerPackage;
 import java.io.BufferedReader;
 import java.io.File;
@@ -158,6 +159,12 @@ public class PegasusLite implements GridStart {
      */
     public static final String XBIT_DERIVATION_VERSION = null;
   
+    /**
+     * The pegasus lite exitcode success message.
+     */
+    public static final String PEGASUS_LITE_EXITCODE_SUCCESS_MESSAGE = "\'PegasusLite: exitcode 0\'";
+
+    
     /**
      * Stores the major version of the planner.
      */
@@ -266,7 +273,6 @@ public class PegasusLite implements GridStart {
      * that site.
      */
     private Map<String,String> mChmodOnExecutionSiteMap;
-
     /**
      * Initializes the GridStart implementation.
      *
@@ -919,6 +925,14 @@ public class PegasusLite implements GridStart {
 
             //JIRA PM-543
             job.setDirectory( null );
+            
+            //PM-737 explicitly set the success string to look for 
+            //in pegasus lite stderr, when pegasus-exitcode is invoked
+            //at runtime. we should merge so as not override any existing
+            //success message patterns
+            Namespace addOnPegasusProfiles = new Pegasus();
+            addOnPegasusProfiles.construct(Pegasus.EXITCODE_SUCCESS_MESSAGE, PEGASUS_LITE_EXITCODE_SUCCESS_MESSAGE );
+            job.vdsNS.merge(addOnPegasusProfiles);
             
             //this.setXBitOnFile( shellWrapper.getAbsolutePath() );
         }
