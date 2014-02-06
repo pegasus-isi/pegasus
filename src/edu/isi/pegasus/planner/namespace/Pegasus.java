@@ -127,7 +127,17 @@ public class Pegasus extends Namespace {
      */
     public static final String GRIDSTART_PATH_KEY = "gridstart.path";
 
-
+    /**
+     * The message to look for while detecting failures condor job's stdout/stderr
+     */
+    public static final String EXITCODE_FAILURE_MESSAGE = "exitcode.failuremsg";
+    
+    /**
+     * the message to look for while detecting success in condor job's stdout/stderr
+     */
+    public static final String EXITCODE_SUCCESS_MESSAGE = "exitcode.successmsg";
+    
+    
     /**
      * The deprecated change dir key.
      * @see #CHANGE_DIR_KEY
@@ -489,6 +499,16 @@ public class Pegasus extends Namespace {
                 }
                 break;
             
+            case 'e':
+                if ((key.compareTo( Pegasus.EXITCODE_FAILURE_MESSAGE ) == 0) ||
+                    (key.compareTo(  Pegasus.EXITCODE_SUCCESS_MESSAGE  ) == 0) ) {
+                    res = VALID_KEY;
+                }
+                else {
+                    res = UNKNOWN_KEY;
+                }
+                break;
+                
             case 'g':
                 if (key.compareTo( GROUP_KEY ) == 0 ||
                     key.compareTo( GRIDSTART_KEY ) == 0 ||

@@ -24,6 +24,7 @@ import edu.isi.pegasus.planner.code.POSTScript;
 import java.io.File;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Dagman;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 
 /**
  * The exitcode wrapper, that can parse kickstart output's and put them in the
@@ -132,19 +133,30 @@ public class PegasusExitCode implements POSTScript  {
         job.dagmanVariables.construct( Dagman.OUTPUT_KEY, (String)job.condorVariables.get("output"));
 
 
-        StringBuffer extraOptions = new StringBuffer();
+        StringBuffer defaultOptions = new StringBuffer();
         
         //put in the postscript properties if any
-        extraOptions.append( this.mPostScriptProperties );
+        defaultOptions.append( this.mPostScriptProperties );
+        
+        //check for existence of Pegasus profile key for exitcode.failuremsg and exitcode.successmsg
+        String failure = (String)job.vdsNS.get( Pegasus.EXITCODE_FAILURE_MESSAGE );
+        if( failure != null ){
+            defaultOptions.append( " -f " ).append( failure );
+        }
+        String success = (String)job.vdsNS.get( Pegasus.EXITCODE_SUCCESS_MESSAGE );
+        if( success != null ){
+            defaultOptions.append( " -s " ).append( success );
+        }
+        
 
         //put the extra options into the exitcode arguments
         //in the correct order.
         Object args = job.dagmanVariables.get( Dagman.POST_SCRIPT_ARGUMENTS_KEY );
         StringBuffer arguments = (args == null ) ?
                                      //only have extra options
-                                     extraOptions :
+                                     defaultOptions :
                                      //have extra options in addition to existing args
-                                     new StringBuffer().append( extraOptions )
+                                     new StringBuffer().append( defaultOptions )
                                                        .append( " " ).append( args );
         job.dagmanVariables.construct( Dagman.POST_SCRIPT_ARGUMENTS_KEY, arguments.toString() );
 
