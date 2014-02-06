@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<invocation xmlns="http://pegasus.isi.edu/schema/invocation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/invocation http://pegasus.isi.edu/schema/iv-2.2.xsd" version="2.2" start="2014-02-04T08:56:44.175-08:00" duration="0.003" interface="en0" hostaddr="128.9.128.125" hostname="gideon.isi.edu" pid="26928" uid="501" user="juve" gid="20" group="staff" umask="0022">
+  <mainjob start="2014-02-04T08:56:44.176-08:00" duration="0.002" pid="26929">
+    <usage utime="0.001" stime="0.001" maxrss="516096" ixrss="0" idrss="0" isrss="0" minflt="218" majflt="0" nswap="0" inblock="0" outblock="0" msgsnd="0" msgrcv="0" nsignals="0" nvcsw="0" nivcsw="1"/>
+    <status raw="256"><regular exitcode="1"/></status>
+    <statcall error="0">
+      <file name="/usr/bin/false">CFFAEDFE070000010300008002000000</file>
+      <statinfo mode="0100755" size="13808" inode="30705611" nlink="1" blksize="4096" blocks="0" mtime="2013-11-21T11:59:37-08:00" atime="2014-02-04T08:56:25-08:00" ctime="2013-11-21T11:59:37-08:00" uid="0" user="root" gid="0" group="wheel"/>
+    </statcall>
+    <argument-vector/>
+  </mainjob>
+  <cwd>/Users/juve/Workspace/pegasus/test/exitcode</cwd>
+  <usage utime="0.002" stime="0.004" maxrss="724992" ixrss="0" idrss="0" isrss="0" minflt="370" majflt="0" nswap="0" inblock="0" outblock="7" msgsnd="0" msgrcv="0" nsignals="0" nvcsw="1" nivcsw="2"/>
+  <machine page-size="4096">
+    <stamp>2014-02-04T08:56:44.175-08:00</stamp>
+    <uname system="darwin" nodename="gideon.isi.edu" release="13.0.0" machine="x86_64">Darwin Kernel Version 13.0.0: Thu Sep 19 22:22:27 PDT 2013; root:xnu-2422.1.72~6/RELEASE_X86_64</uname>
+   <darwin>
+    <ram total="8589934592" avail="2534682624" active="2886852608" inactive="1185009664" wired="1453592576"/>
+    <swap total="1073741824" avail="1073741824" used="0"/>
+    <boot>2014-01-28T07:08:52.000-08:00</boot>
+    <cpu count="8" speed="2000" vendor="GenuineIntel">Intel(R) Core(TM) i7-2635QM CPU @ 2.00GHz</cpu>
+    <load min1="1.28" min5="1.34" min15="1.32"/>
+    <proc total="189" running="1" sleeping="188"/>
+   </darwin>
+  </machine>
+  <statcall error="0" id="stdin">
+    <file name="/dev/null"/>
+    <statinfo mode="020666" size="0" inode="314" nlink="1" blksize="131072" blocks="0" mtime="2014-02-04T08:56:03-08:00" atime="2014-02-04T06:57:41-08:00" ctime="2014-02-04T08:56:03-08:00" uid="0" user="root" gid="0" group="wheel"/>
+  </statcall>
+  <statcall error="0" id="stdout">
+    <temporary name="/var/folders/cj/18d9hwqs0_qbbxzrr0_lp9c00000gn/T//gs.out.koPSEQ" descriptor="3"/>
+    <statinfo mode="0100600" size="14" inode="33122553" nlink="1" blksize="4096" blocks="8" mtime="2014-02-04T11:37:13-08:00" atime="2014-02-04T11:37:13-08:00" ctime="2014-02-04T11:37:13-08:00" uid="501" user="juve" gid="20" group="staff"/>
+    <data>Job succeeded
+</data>
+  </statcall>
+  <statcall error="0" id="stderr">
+    <temporary name="/var/folders/cj/18d9hwqs0_qbbxzrr0_lp9c00000gn/T//gs.err.gNGWXa" descriptor="4"/>
+    <statinfo mode="0100600" size="0" inode="33111785" nlink="1" blksize="4096" blocks="0" mtime="2014-02-04T08:56:44-08:00" atime="2014-02-04T08:56:44-08:00" ctime="2014-02-04T08:56:44-08:00" uid="501" user="juve" gid="20" group="staff"/>
+  </statcall>
+  <statcall error="0" id="gridstart">
+    <file name="/Users/juve/Workspace/pegasus/src/tools/pegasus-kickstart/pegasus-kickstart">CFFAEDFE070000010300008002000000</file>
+    <statinfo mode="0100755" size="69524" inode="33033765" nlink="1" blksize="4096" blocks="136" mtime="2014-01-31T08:31:16-08:00" atime="2014-02-04T08:56:44-08:00" ctime="2014-01-31T08:31:16-08:00" uid="501" user="juve" gid="20" group="staff"/>
+  </statcall>
+  <statcall error="0" id="logfile">
+    <descriptor number="1"/>
+    <statinfo mode="0100644" size="0" inode="33111783" nlink="1" blksize="4096" blocks="0" mtime="2014-02-04T08:56:44-08:00" atime="2014-02-04T08:56:44-08:00" ctime="2014-02-04T08:56:44-08:00" uid="501" user="juve" gid="20" group="staff"/>
+  </statcall>
+  <environment>
+    <env key="Apple_PubSub_Socket_Render">/tmp/launch-N0RJkj/Render</env>
+    <env key="CONDOR_HOME">/usr/local/condor</env>
+    <env key="COPYFILE_DISABLE">true</env>
+    <env key="DISPLAY">/tmp/launch-K7XKQM/org.macosforge.xquartz:0</env>
+    <env key="EDITOR">vim</env>
+    <env key="HOME">/Users/juve</env>
+    <env key="ITERM_PROFILE">Jellybeans</env>
+    <env key="ITERM_SESSION_ID">w0t1p0</env>
+    <env key="JAVA_HOME">/Library/Java/JavaVirtualMachines/1.6.0_51-b11-457.jdk/Contents/Home</env>
+    <env key="LANG">en_US.UTF-8</env>
+    <env key="LOGNAME">juve</env>
+    <env key="OLDPWD">/Users/juve/Workspace/pegasus/test</env>
+    <env key="PATH">/Users/juve/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin:/opt/X11/bin:/usr/local/go/bin:/usr/local/MacGPG2/bin:/usr/texbin:/usr/local/git/bin:/usr/local/hadoop/bin</env>
+    <env key="PROMPT_COMMAND">printf &quot;\033]0;$USER@$HOSTNAME:$PWD\007&quot;</env>
+    <env key="PS1">[\u@\h \D{%T} \W]$ </env>
+    <env key="PWD">/Users/juve/Workspace/pegasus/test/exitcode</env>
+    <env key="SCALA_HOME">/usr/local/scala/bin</env>
+    <env key="SHELL">/bin/bash</env>
+    <env key="SHLVL">1</env>
+    <env key="SSH_AUTH_SOCK">/tmp/launch-vVWMzm/Listeners</env>
+    <env key="TERM">xterm-256color</env>
+    <env key="TERM_PROGRAM">iTerm.app</env>
+    <env key="TMPDIR">/var/folders/cj/18d9hwqs0_qbbxzrr0_lp9c00000gn/T/</env>
+    <env key="USER">juve</env>
+    <env key="_">/Users/juve/Workspace/pegasus/src/tools/pegasus-kickstart/pegasus-kickstart</env>
+    <env key="__CF_USER_TEXT_ENCODING">0x1F5:0:0</env>
+    <env key="__CHECKFIX1436934">1</env>
+  </environment>
+  <resource>
+    <soft id="RLIMIT_CPU">unlimited</soft>
+    <hard id="RLIMIT_CPU">unlimited</hard>
+    <soft id="RLIMIT_FSIZE">unlimited</soft>
+    <hard id="RLIMIT_FSIZE">unlimited</hard>
+    <soft id="RLIMIT_DATA">unlimited</soft>
+    <hard id="RLIMIT_DATA">unlimited</hard>
+    <soft id="RLIMIT_STACK">8388608</soft>
+    <hard id="RLIMIT_STACK">67104768</hard>
+    <soft id="RLIMIT_CORE">0</soft>
+    <hard id="RLIMIT_CORE">unlimited</hard>
+    <soft id="RLIMIT_AS">unlimited</soft>
+    <hard id="RLIMIT_AS">unlimited</hard>
+    <soft id="RLIMIT_MEMLOCK">unlimited</soft>
+    <hard id="RLIMIT_MEMLOCK">unlimited</hard>
+    <soft id="RLIMIT_NPROC">709</soft>
+    <hard id="RLIMIT_NPROC">1064</hard>
+    <soft id="RLIMIT_NOFILE">2560</soft>
+    <hard id="RLIMIT_NOFILE">unlimited</hard>
+  </resource>
+</invocation>
