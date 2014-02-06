@@ -21,6 +21,8 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.code.POSTScript;
+import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParser;
+import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParserException;
 import java.io.File;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Dagman;
@@ -144,19 +146,24 @@ public class PegasusExitCode implements POSTScript  {
         defaultOptions.append( this.mPostScriptProperties );
         
         //check for existence of Pegasus profile key for exitcode.failuremsg and exitcode.successmsg
-        String failure = (String)job.vdsNS.get( Pegasus.EXITCODE_FAILURE_MESSAGE );
-        if( failure != null ){
-            String[] failures = failure.split( "@" );
-            for( String value : failures ){
-                defaultOptions.append( " -f " ).append( value );
+        try{
+            String failure = (String)job.vdsNS.get( Pegasus.EXITCODE_FAILURE_MESSAGE );
+            if( failure != null ){
+                String[] failures = failure.split( "@" );
+                for( String value : failures ){
+                    defaultOptions.append( " -f " ).append( CondorQuoteParser.quote( value , true ) );
+                }
+            }
+            String success = (String)job.vdsNS.get( Pegasus.EXITCODE_SUCCESS_MESSAGE );
+            if( success != null ){
+                String[] successes = success.split( "@" );
+                for( String value : successes ){
+                    defaultOptions.append( " -s " ).append( CondorQuoteParser.quote( value , true ) );
+                }
             }
         }
-        String success = (String)job.vdsNS.get( Pegasus.EXITCODE_SUCCESS_MESSAGE );
-        if( success != null ){
-            String[] successes = success.split( "@" );
-            for( String value : successes ){
-                defaultOptions.append( " -s " ).append( value );
-            }
+        catch ( CondorQuoteParserException ex) {
+                throw new RuntimeException( "Condor Quote Exception for job " + job.getID(), ex);
         }
         
 
