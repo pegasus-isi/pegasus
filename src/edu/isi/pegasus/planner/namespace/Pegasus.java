@@ -26,6 +26,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.aggregator.Aggregator;
+import edu.isi.pegasus.planner.namespace.aggregator.UniqueMerge;
 import edu.isi.pegasus.planner.namespace.aggregator.Sum;
 
 
@@ -373,6 +374,16 @@ public class Pegasus extends Namespace {
      * Static Handle to the sum aggregator.
      */
     private static Aggregator SUM_AGGREGATOR = new Sum();
+    
+    /**
+     * Static Handle to the delimiter aggregator.
+     */
+    private static Aggregator ERROR_MESSAGE_AGGREGATOR = new UniqueMerge();
+    
+    /**
+     * Static Handle to the delimiter aggregator.
+     */
+    private static Aggregator SUCCESS_MESSAGE_AGGREGATOR = new UniqueMerge();
 
     /**
      * The name of the implementing namespace. It should be one of the valid
@@ -670,7 +681,7 @@ public class Pegasus extends Namespace {
      
     
     /**
-     * Merge the profiles in the namespace in a controlled manner.
+     * UniqueMerge the profiles in the namespace in a controlled manner.
      * In case of intersection, the new profile value (except for key runtime where
      * the values are summed ) overrides, the existing
      * profile value.
@@ -691,6 +702,18 @@ public class Pegasus extends Namespace {
             if( key.equals( Pegasus.RUNTIME_KEY ) ){
                 this.construct( key, 
                                 SUM_AGGREGATOR.compute((String)get( key ), (String)profiles.get( key ), "0" )
+                               );
+            }
+            else if( key.equals( Pegasus.EXITCODE_FAILURE_MESSAGE) ){
+                System.out.println( "Old Key " + key + " -> " + (String)get( key ) + " New Value " +  (String)profiles.get( key ));
+                this.construct( key, 
+                                ERROR_MESSAGE_AGGREGATOR.compute((String)get( key ), (String)profiles.get( key ), null )
+                               );
+
+            }
+            else if(  key.equals( Pegasus.EXITCODE_SUCCESS_MESSAGE) ){
+                this.construct( key, 
+                                SUCCESS_MESSAGE_AGGREGATOR.compute((String)get( key ), (String)profiles.get( key ), null )
                                );
             }
             else{

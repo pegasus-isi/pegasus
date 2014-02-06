@@ -25,6 +25,7 @@ import java.io.File;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+import edu.isi.pegasus.planner.namespace.aggregator.UniqueMerge;
 
 /**
  * The exitcode wrapper, that can parse kickstart output's and put them in the
@@ -46,6 +47,10 @@ public class PegasusExitCode implements POSTScript  {
      */
     public static final String SHORT_NAME = "pegasus-exitcode";
 
+    /**
+     * The delimiter used for delimited error and success message internally
+     */
+    public static final String ERR_SUCCESS_MSG_DELIMITER = UniqueMerge.DEFAULT_DELIMITER;
 
      /**
      * The LogManager object which is used to log all the messages.
@@ -141,11 +146,17 @@ public class PegasusExitCode implements POSTScript  {
         //check for existence of Pegasus profile key for exitcode.failuremsg and exitcode.successmsg
         String failure = (String)job.vdsNS.get( Pegasus.EXITCODE_FAILURE_MESSAGE );
         if( failure != null ){
-            defaultOptions.append( " -f " ).append( failure );
+            String[] failures = failure.split( "@" );
+            for( String value : failures ){
+                defaultOptions.append( " -f " ).append( value );
+            }
         }
         String success = (String)job.vdsNS.get( Pegasus.EXITCODE_SUCCESS_MESSAGE );
         if( success != null ){
-            defaultOptions.append( " -s " ).append( success );
+            String[] successes = success.split( "@" );
+            for( String value : successes ){
+                defaultOptions.append( " -s " ).append( value );
+            }
         }
         
 
