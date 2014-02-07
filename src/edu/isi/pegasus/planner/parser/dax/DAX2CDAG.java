@@ -204,6 +204,9 @@ public class DAX2CDAG implements Callback {
         String childID  = (String)mJobMap.get(child);
         String parentID;
 
+        if( childID == null ){
+            throw new RuntimeException( "Unable to find job in DAX with ID " + child );
+        }
         //System.out.println( child + " -> " + parents );
 
         for ( PCRelation pc : parents  ){
@@ -212,7 +215,7 @@ public class DAX2CDAG implements Callback {
             if(parentID == null){
                 //this actually means dax is generated wrong.
                 //probably some one tinkered with it by hand.
-                throw new RuntimeException( "Cannot find parent for job " + childID );
+                throw new RuntimeException( "Unable to find job in DAX with ID " + pc.getParent() + " listed as a parent for job with ID " + child );
             }
             PCRelation relation = new PCRelation( parentID, childID  );
             relation.setAbstractChildID( child );
