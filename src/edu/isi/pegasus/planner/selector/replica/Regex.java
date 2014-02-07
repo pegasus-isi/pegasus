@@ -192,8 +192,8 @@ public class Regex extends Default {
                //in all likelihood all the urls were file urls and
                 //none were associated with the preference pool.
                 //replica not selected
-                throw new RuntimeException( "Unable to select any location from " +
-                                            "the list passed for lfn "  + lfn );
+                throw new RuntimeException( "Unable to select a Physical Filename (PFN) for the file with logical filename (LFN) as " +
+                                             lfn );
             }
             else{
                //select a random location from all the matching locations
