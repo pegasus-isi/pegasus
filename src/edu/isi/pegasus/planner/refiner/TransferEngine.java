@@ -492,7 +492,7 @@ public class TransferEngine extends Engine {
             ReplicaLocation rl = mRCBridge.getFileLocs( lfn );
             //sanity check
             if( rl == null ){
-                throw new RuntimeException( "Unable to find a location in the Replica Catalog for output file "  + lfn );
+                throw new RuntimeException( "Unable to find a physical filename (PFN) in the Replica Catalog for output file with logical filename (LFN) as "  + lfn );
             }
 
             String putDestURL = mOutputMapper.map( lfn, mOutputSite,  FileServer.OPERATION.put );

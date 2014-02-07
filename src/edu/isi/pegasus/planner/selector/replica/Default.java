@@ -148,8 +148,8 @@ public class Default implements ReplicaSelector {
         if ( noOfLocs == 0 ) {
             //in all likelihood all the urls were file urls and none
             //were associated with the preference pool.
-            throw new RuntimeException( "Unable to select any location from " +
-                                        "the list passed for lfn "  + rl.getLFN() );
+            throw new RuntimeException( "Unable to select a Physical Filename (PFN) for file with logical filename (LFN) as " +
+                                         rl.getLFN() );
         }
 
         if ( prefPFNs.isEmpty() ) {
