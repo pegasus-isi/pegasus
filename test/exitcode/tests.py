@@ -3,7 +3,7 @@ import imp
 import unittest
 
 if len(sys.argv) != 2:
-    print "Usage: %s path/to/pegasus-exitcode"
+    print "Usage: %s path/to/pegasus-exitcode" % sys.argv[0]
     exit(1)
 
 exitcode = imp.load_source("exitcode", sys.argv[1])
@@ -65,5 +65,9 @@ class TestRecordParser(unittest.TestCase):
         end = time.time()
         print "Elapsed:", (end-start)
 
-unittest.main(argv=sys.argv[0:1], verbosity=2)
+args = {}
+if sys.version_info >= (2,7):
+    args["verbosity"] = 2
+
+unittest.main(argv=["tests.py"], **args)
 
