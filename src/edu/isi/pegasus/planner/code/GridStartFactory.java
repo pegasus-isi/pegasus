@@ -17,8 +17,6 @@
 package edu.isi.pegasus.planner.code;
 
 import edu.isi.pegasus.planner.code.gridstart.*;
-import edu.isi.pegasus.planner.code.GridStart;
-import edu.isi.pegasus.planner.code.POSTScript;
 
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.Job;
@@ -117,8 +115,6 @@ public class GridStartFactory {
         POSTSCRIPT_IMPLEMENTING_CLASS_TABLE = new HashMap( 8 );
         //not really the best way. should have avoided creating objects
         //but then too many constants everywhere.
-        associate( new ExitPOST() );
-        associate( new ExitCode() );
         associate( new UserPOSTScript() );
         associate( new NoPOSTScript() );
         associate( new NetloggerPostScript() );
