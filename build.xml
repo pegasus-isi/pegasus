@@ -522,5 +522,15 @@
       </batchtest>
     </junit>
   </target>
+
+  <target name="test-java" depends="junit"/>
+
+  <target name="test-python" description="Execute python unit tests">
+    <exec executable="/usr/bin/env" dir="test/python" failonerror="true">
+        <arg line="python -m unittest discover -v"/>
+    </exec>
+  </target>
+
+  <target name="test" depends="test-python,test-java"/>
 </project>
 
