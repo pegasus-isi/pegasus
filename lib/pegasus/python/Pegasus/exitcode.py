@@ -5,9 +5,7 @@ from optparse import OptionParser
 
 from Pegasus.cluster import RecordParser
 
-def fail(message=None):
-    if message: print "fail: %s" % message
-    sys.exit(1)
+class JobFailed(Exception): pass
 
 def rename(outfile, errfile):
     """Rename .out and .err files to .out.XXX and .err.XXX where XXX
@@ -21,7 +19,7 @@ def rename(outfile, errfile):
 
     # Must end in .out
     if not outfile.endswith(".out"):
-        fail("%s does not look like a kickstart .out file" % outfile)
+        raise JobFailed("%s does not look like a kickstart .out file" % outfile)
 
     # Find next file in sequence
     retry = None
@@ -33,7 +31,7 @@ def rename(outfile, errfile):
 
     # unlikely to occur
     if retry is None:
-        fail("%s has been renamed too many times!" % (outfile))
+        raise JobFailed("%s has been renamed too many times!" % (outfile))
 
     basename = outfile[:-4]
 
@@ -70,14 +68,14 @@ def find_cluster_summary(txt):
     if b >= 0:
         e = txt.find("]", b)
         if e < 0:
-            fail("Invalid cluster-summary record")
+            raise JobFailed("Invalid cluster-summary record")
 
         return RecordParser(txt[b:e+1]).parse()
 
     # If we found a cluster-task, but no cluster-summary, then theres a problem
     b = txt.find("[cluster-task")
     if b >= 0:
-        fail("cluster-summary is missing")
+        raise JobFailed("cluster-summary is missing")
 
     return None
 
@@ -87,13 +85,13 @@ def check_cluster_summary(record):
     if "stat" in record:
         stat = record["stat"]
         if stat != "ok":
-            fail("cluster-summary stat=%s" % stat)
+            raise JobFailed("cluster-summary stat=%s" % stat)
 
     # If any of the tasks failed, then job failed
     if "failed" in record:
         failed = int(record["failed"])
         if failed > 0:
-            fail("cluster-summary failed=%d" % failed)
+            raise JobFailed("cluster-summary failed=%d" % failed)
 
     # If no tasks were submitted, then it succeeded
     if "submitted" in record:
@@ -111,7 +109,7 @@ def check_cluster_summary(record):
     if "succeeded" in record:
         succeeded = int(record["succeeded"])
         if succeeded == 0:
-            fail("cluster-summary succeeded=%d" % succeeded)
+            raise JobFailed("cluster-summary succeeded=%d" % succeeded)
 
     return 0
 
@@ -125,18 +123,18 @@ def check_kickstart_records(txt):
         b = txt.find("<status", e)
         if b < 0: break
         e = txt.find("</status>", b)
-        if e < 0: fail("mismatched <status>")
+        if e < 0: raise JobFailed("mismatched <status>")
         e = e + len("</status>")
         m = regex.search(txt[b:e])
         if m: raw = int(m.group(1))
-        else: fail("<status> was missing valid 'raw' attribute")
+        else: raise JobFailed("<status> was missing valid 'raw' attribute")
         if raw != 0:
-            fail("task exited with raw status %d" % raw)
+            raise JobFailed("task exited with raw status %d" % raw)
         succeeded = succeeded + 1
 
     # Fail if there were no invocation records and no cluster-summary
     if succeeded == 0:
-        fail("No successful kickstart records")
+        raise JobFailed("No successful kickstart records")
 
     return 0
 
@@ -212,7 +210,7 @@ def get_errfile(outfile):
     errfile = left + ".err" + right
     return errfile
 
-def main():
+def exitcode(args):
     usage = "Usage: %prog [options] job.out"
     parser = OptionParser(usage)
 
@@ -241,7 +239,7 @@ def main():
              "provided, then they must all exist in the output or "
              "the job is considered a failure.")
 
-    (options, args) = parser.parse_args()
+    (options, args) = parser.parse_args(args)
 
     if len(args) != 1:
         parser.error("Please specify job.out")
@@ -249,7 +247,7 @@ def main():
     outfile = args[0]
 
     if not os.path.isfile(outfile):
-        fail("%s does not exist" % outfile)
+        raise JobFailed("%s does not exist" % outfile)
 
     errfile = get_errfile(outfile)
 
@@ -260,10 +258,10 @@ def main():
     # First, check exitcode supplied by DAGMan, if any
     if options.exitcode is not None:
         if options.exitcode != 0:
-            fail("dagman reported non-zero exitcode: %d" % options.exitcode)
+            raise JobFailed("dagman reported non-zero exitcode: %d" % options.exitcode)
 
         # TODO Should we perform the other checks or not?
-        sys.exit(options.exitcode)
+        return 0
 
     # Next, read the output and error files
     stdout = readfile(outfile)
@@ -271,17 +269,17 @@ def main():
 
     # Next, check the size of the output file
     if len(stdout) == 0:
-        fail("Empty stdout")
+        raise JobFailed("Empty stdout")
 
     # Next, if we have failure messages, then fail if we find one in the
     # output of the job
     if has_any_failure_messages([stdout, stderr], options.failure_messages):
-        fail("Failure message found in output")
+        raise JobFailed("Failure message found in output")
 
     # Next, if we have success messages, then fail if we don't find all
     # in the output of the job
     if not has_all_success_messages([stdout, stderr], options.success_messages):
-        fail("Success message missing from output")
+        raise JobFailed("Success message missing from output")
 
     # Next, check exitcodes of all tasks
     cs = find_cluster_summary(stdout)
@@ -290,6 +288,11 @@ def main():
     else:
         check_kickstart_records(stdout)
 
-    # If we reach this, then the job succeeded
-    sys.exit(0)
+def main(args=None):
+    try:
+        exitcode(args)
+        sys.exit(0)
+    except JobFailed, jf:
+        print jf
+        sys.exit(1)
 
