@@ -162,7 +162,7 @@ public class PegasusLite implements GridStart {
     /**
      * The pegasus lite exitcode success message.
      */
-    public static final String PEGASUS_LITE_EXITCODE_SUCCESS_MESSAGE = "\'PegasusLite: exitcode 0\'";
+    public static final String PEGASUS_LITE_EXITCODE_SUCCESS_MESSAGE = "PegasusLite: exitcode 0";
 
     
     /**
