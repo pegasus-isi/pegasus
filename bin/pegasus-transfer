@@ -127,7 +127,7 @@ class Transfer:
         host = r.group(2)
         path = r.group(3)
         
-        if path == None:
+        if path is None:
             path = ""
         
         # no double slashes in urls
@@ -209,7 +209,7 @@ class Tools(object):
     def find(self, executable, version_arg, version_regex):
         
         if executable in self._info:
-            if self._info[executable] == None:
+            if self._info[executable] is None:
                 return None
             return self._info[executable]
         
@@ -235,7 +235,7 @@ class Tools(object):
         self._info[executable]['full_path'] = full_path
     
         # version
-        if version_regex == None:
+        if version_regex is None:
             version = "N/A"
         else:
             version = backticks(executable + " " + version_arg + " 2>&1")
@@ -253,7 +253,7 @@ class Tools(object):
             self._info[executable]['version_major'] = int(result.group(1))
             self._info[executable]['version_minor'] = int(result.group(2))
             self._info[executable]['version_patch'] = result.group(4)
-        if self._info[executable]['version_patch'] == None or \
+        if self._info[executable]['version_patch'] is None or \
            self._info[executable]['version_patch'] == "":
             self._info[executable]['version_patch'] = None
         else:
@@ -266,13 +266,13 @@ class Tools(object):
 
     def full_path(self, executable):
         """ Returns the full path to a given executable """
-        if executable in self._info and self._info[executable] != None:
+        if executable in self._info and self._info[executable] is not None:
             return self._info[executable]['full_path']
         return None
 
     def major_version(self, executable):
         """ Returns the detected major version given executable """
-        if executable in self._info and self._info[executable] != None:
+        if executable in self._info and self._info[executable] is not None:
             return self._info[executable]['version_major']
         return None
                 
@@ -406,7 +406,7 @@ class GridFtpHandler(TransferHandlerBase):
         
         tools = Tools()
         if tools.find("globus-url-copy", "-version", "([0-9]+\.[0-9]+)") \
-           == None:
+           is None:
             raise RuntimeError("Unable to do gsiftp transfers because" +
                                " globus-url-copy could not be found")
             
@@ -426,7 +426,7 @@ class GridFtpHandler(TransferHandlerBase):
         
         tools = Tools()
         if tools.find("globus-url-copy", "-version", "([0-9]+\.[0-9]+)") \
-           == None:
+           is None:
             raise RuntimeError("Unable to do gsiftp transfers because" +
                                " globus-url-copy could not be found")
         
@@ -542,10 +542,10 @@ class GridFtpHandler(TransferHandlerBase):
         key = "X509_USER_PROXY_" + transfers[0].dst_sitename
         if key in os.environ:
             dst_cred = os.environ[key]
-        if src_cred != None or dst_cred != None:
-            if src_cred == None:
+        if src_cred is not None or dst_cred is not None:
+            if src_cred is None:
                 src_cred = dst_cred
-            if dst_cred == None:
+            if dst_cred is None:
                 dst_cred = src_cred
             cmd += " -src-cred " + src_cred + " -dst-cred " + dst_cred
 
@@ -675,7 +675,7 @@ class HTTPHandler(TransferHandlerBase):
     def do_transfer(self, transfer, attempt):
         
         tools = Tools()
-        if tools.find("wget", "--version", "([0-9]+\.[0-9]+)") == None:
+        if tools.find("wget", "--version", "([0-9]+\.[0-9]+)") is None:
             raise RuntimeError("Unable to do http/https transfers becuase" +
                                " wget could not be found")
                                
@@ -739,7 +739,7 @@ class IRodsHandler(TransferHandlerBase):
             if items[0].lower() == "irodspassword":
                 password = items[1].strip(" \t'\"\r\n")
         h.close()
-        if password == None:
+        if password is None:
             raise RuntimeError("No irodsPassword specified in irods env file")
         
         h = open(".irodsAc", "w")
@@ -758,7 +758,7 @@ class IRodsHandler(TransferHandlerBase):
         """
     
         tools = Tools()
-        if tools.find("iget", "-h", "Version[ \t]+([\.0-9a-zA-Z]+)") == None:
+        if tools.find("iget", "-h", "Version[ \t]+([\.0-9a-zA-Z]+)") is None:
             raise RuntimeError("Unable to do irods transfers becuase iget"
                                + " could not be found in the current path")
    
@@ -822,7 +822,7 @@ class S3Handler(TransferHandlerBase):
     def do_transfer(self, transfer, attempt):
     
         tools = Tools()
-        if tools.find("pegasus-s3", "help", None) == None:
+        if tools.find("pegasus-s3", "help", None) is None:
             raise RuntimeError("Unable to do S3 transfers becuase"
                                + " pegasus-s3 could not be found")
 
@@ -860,7 +860,7 @@ class S3Handler(TransferHandlerBase):
 
         try:
             myexec(cmd, default_subshell_timeout, True)
-            if local_filename != None:
+            if local_filename is not None:
                 stats_add(local_filename)
         except Exception, err:
             logger.error(err)
@@ -882,11 +882,11 @@ class SRMHandler(TransferHandlerBase):
         tools = Tools()
         if tools.find("lcg-cp",
                       "--version", 
-                      "lcg_util-([\.0-9a-zA-Z]+)") == None \
+                      "lcg_util-([\.0-9a-zA-Z]+)") is None \
            and \
            tools.find("srm-copy",
                       "-version",
-                      "srm-copy[ \t]+([\.0-9a-zA-Z]+)") == None:
+                      "srm-copy[ \t]+([\.0-9a-zA-Z]+)") is None:
             raise RuntimeError("Unable to do srm transfers because" 
                                + " lcg-cp/srm-copy could not be found")
         
@@ -908,7 +908,7 @@ class SRMHandler(TransferHandlerBase):
                        or transfer.dst_proto == "srm")
       
         # prefer lcg-cp
-        if tools.full_path('lcg-cp') != None:
+        if tools.full_path('lcg-cp') is not None:
             cmd = "lcg-cp"
             if logger.isEnabledFor(logging.DEBUG):
                 cmd = cmd + " -v"
@@ -1087,7 +1087,7 @@ class TransferSet:
             if h.protocol_map_check("file", dst_proto):
                 self._secondary_handler = h
                 break
-        if self._primary_handler == None or self._secondary_handler == None:
+        if self._primary_handler is None or self._secondary_handler is None:
             raise RuntimeError("Unable to find handlers for '%s' to '%s'"
                                %(src_proto, dst_proto))
 
@@ -1103,7 +1103,7 @@ class TransferSet:
         """
 
         self._tmp_name = None
-        if self._secondary_handler != None:
+        if self._secondary_handler is not None:
             # we have a two stage transfer to deal with and we need a temp file
             self._tmp_fd, self._tmp_name = \
                 tempfile.mkstemp(prefix="pegasus-transfer-two-stage-",
@@ -1115,7 +1115,7 @@ class TransferSet:
                          %(self._tmp_name))
 
         # gsiftp multi transfer case
-        if (self._secondary_handler == None) and \
+        if (self._secondary_handler is None) and \
            (self._transfers[0].src_proto == "gsiftp" \
             or self._transfers[0].dst_proto == "gsiftp"):
             try:
@@ -1141,7 +1141,7 @@ class TransferSet:
             # thrown as a failed transfer
             success = False
 
-            if self._secondary_handler == None:
+            if self._secondary_handler is None:
                 # one handler to rule them all!
                 try:
                     success = self._primary_handler.do_transfer(transfer,
@@ -1468,7 +1468,7 @@ def main():
     attempts_max = options.max_attempts
     
     # stdin or file input?
-    if options.file == None:
+    if options.file is None:
         logger.info("Reading URL pairs from stdin")
         input_file = sys.stdin
     else:
@@ -1505,7 +1505,7 @@ def main():
                 # src comment
                 if line_state == 3 and line[0] == '#':
                     line_state = 0
-                    if url_pair == None:
+                    if url_pair is None:
                         pair_nr += 1
                         url_pair = Transfer(pair_nr)
                     r = re_parse_comment.search(line)
@@ -1519,7 +1519,7 @@ def main():
                 # src url
                 elif line_state == 0 or line_state == 3:
                     line_state = 1
-                    if url_pair == None:
+                    if url_pair is None:
                         pair_nr += 1
                         url_pair = Transfer(pair_nr)
                     url_pair.set_src(line)
