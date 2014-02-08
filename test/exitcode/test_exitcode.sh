@@ -24,14 +24,14 @@ function exitcode {
 }
 
 function run_test {
-    echo "Testing " "$@" "..."
+    echo "Testing" "$@" "..."
     "$@"
     rc=$?
     if [ $rc -ne 0 ]; then
         stderr "ERROR"
         exit 1
     else
-        stderr "OK"
+        echo "OK"
     fi
 }
 
