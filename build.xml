@@ -528,6 +528,7 @@
   <target name="test-python" description="Execute python unit tests">
     <exec executable="/usr/bin/env" dir="test/python" failonerror="true">
         <arg line="python -m unittest discover -v"/>
+        <env key="PYTHONPATH" value="${basedir}/lib/pegasus/python"/>
     </exec>
   </target>
 
