@@ -2,32 +2,28 @@ import sys
 import imp
 import unittest
 
-if len(sys.argv) != 2:
-    print "Usage: %s path/to/pegasus-exitcode" % sys.argv[0]
-    exit(1)
-
-exitcode = imp.load_source("exitcode", sys.argv[1])
+from Pegasus.cluster import RecordParser, RecordParseException
 
 class TestRecordParser(unittest.TestCase):
     def parse(self, string):
-        parser = exitcode.RecordParser(string)
+        parser = RecordParser(string)
         return parser.parse()
 
     def test_bad(self):
-        self.assertRaises(exitcode.RecordParseException, self.parse, "")
-        self.assertRaises(exitcode.RecordParseException, self.parse, "[")
-        self.assertRaises(exitcode.RecordParseException, self.parse, "[]")
-        self.assertRaises(exitcode.RecordParseException, self.parse, "[foo]")
-        self.assertRaises(exitcode.RecordParseException, self.parse, "[cluster-summary]")
-        self.assertRaises(exitcode.RecordParseException, self.parse, "[cluster-summary x]")
-        self.assertRaises(exitcode.RecordParseException, self.parse, "[cluster-summary =]")
-        self.assertRaises(exitcode.RecordParseException, self.parse, "[cluster-summary =,]")
-        self.assertRaises(exitcode.RecordParseException, self.parse, "[cluster-summary x=")
-        self.assertRaises(exitcode.RecordParseException, self.parse, "[cluster-summary x=]")
-        self.assertRaises(exitcode.RecordParseException, self.parse, "[cluster-summary x=,1]")
-        self.assertRaises(exitcode.RecordParseException, self.parse, "[cluster-summary x==1]")
-        self.assertRaises(exitcode.RecordParseException, self.parse, '[cluster-summary x="1]')
-        self.assertRaises(exitcode.RecordParseException, self.parse, '[cluster-summary x="1   ]')
+        self.assertRaises(RecordParseException, self.parse, "")
+        self.assertRaises(RecordParseException, self.parse, "[")
+        self.assertRaises(RecordParseException, self.parse, "[]")
+        self.assertRaises(RecordParseException, self.parse, "[foo]")
+        self.assertRaises(RecordParseException, self.parse, "[cluster-summary]")
+        self.assertRaises(RecordParseException, self.parse, "[cluster-summary x]")
+        self.assertRaises(RecordParseException, self.parse, "[cluster-summary =]")
+        self.assertRaises(RecordParseException, self.parse, "[cluster-summary =,]")
+        self.assertRaises(RecordParseException, self.parse, "[cluster-summary x=")
+        self.assertRaises(RecordParseException, self.parse, "[cluster-summary x=]")
+        self.assertRaises(RecordParseException, self.parse, "[cluster-summary x=,1]")
+        self.assertRaises(RecordParseException, self.parse, "[cluster-summary x==1]")
+        self.assertRaises(RecordParseException, self.parse, '[cluster-summary x="1]')
+        self.assertRaises(RecordParseException, self.parse, '[cluster-summary x="1   ]')
 
     def test_ok(self):
         self.assertTrue("x" in self.parse("[cluster-summary x=1]"))
@@ -65,9 +61,6 @@ class TestRecordParser(unittest.TestCase):
         end = time.time()
         print "Elapsed:", (end-start)
 
-args = {}
-if sys.version_info >= (2,7):
-    args["verbosity"] = 2
-
-unittest.main(argv=["tests.py"], **args)
+if __name__ == '__main__':
+    unittest.main()
 

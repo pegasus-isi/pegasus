@@ -99,16 +99,6 @@ function test_all_success_messages_required {
     fi
 }
 
-function unit_tests {
-    echo "Running unit tests..."
-    /usr/bin/env python tests.py $bin/pegasus-exitcode
-    rc=$?
-    if [ $rc -ne 0 ]; then
-        exit 1
-    fi
-}
-
-unit_tests
 # exitcode expected_result outfile
 exitcode 0 ok.out
 exitcode 1 failed.out
