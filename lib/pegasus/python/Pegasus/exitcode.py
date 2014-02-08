@@ -7,7 +7,7 @@ from Pegasus.cluster import RecordParser
 
 class JobFailed(Exception): pass
 
-def rename(outfile, errfile):
+def rotate_file(outfile, errfile):
     """Rename .out and .err files to .out.XXX and .err.XXX where XXX
     is the next sequence number. Returns the new name, or fails with
     an error message and a non-zero exit code."""
@@ -210,12 +210,57 @@ def get_errfile(outfile):
     errfile = left + ".err" + right
     return errfile
 
-def exitcode(args):
+def exitcode(outfile, status=None, rename=True,
+             failure_messages=[], success_messages=[]):
+
+    if not os.path.isfile(outfile):
+        raise JobFailed("%s does not exist" % outfile)
+
+    errfile = get_errfile(outfile)
+
+    # If we are renaming, then rename
+    if rename:
+        outfile, errfile = rotate_file(outfile, errfile)
+
+    # First, check exitcode supplied by DAGMan, if any
+    if status is not None:
+        if status != 0:
+            raise JobFailed("dagman reported non-zero exitcode: %d" % status)
+
+        # TODO Should we perform the other checks or not?
+        return
+
+    # Next, read the output and error files
+    stdout = readfile(outfile)
+    stderr = readfile(errfile)
+
+    # Next, check the size of the output file
+    if len(stdout) == 0:
+        raise JobFailed("Empty stdout")
+
+    # Next, if we have failure messages, then fail if we find one in the
+    # output of the job
+    if has_any_failure_messages([stdout, stderr], failure_messages):
+        raise JobFailed("Failure message found in output")
+
+    # Next, if we have success messages, then fail if we don't find all
+    # in the output of the job
+    if not has_all_success_messages([stdout, stderr], success_messages):
+        raise JobFailed("Success message missing from output")
+
+    # Next, check exitcodes of all tasks
+    cs = find_cluster_summary(stdout)
+    if cs is not None:
+        check_cluster_summary(cs)
+    else:
+        check_kickstart_records(stdout)
+
+def main(args):
     usage = "Usage: %prog [options] job.out"
     parser = OptionParser(usage)
 
     parser.add_option("-r", "--return", action="store", type="int",
-        dest="exitcode", metavar="R",
+        dest="status", metavar="R",
         help="Return code reported by DAGMan. This can be specified in a "
              "DAG using the $RETURN variable.")
     parser.add_option("-n", "--no-rename", action="store_false",
@@ -246,51 +291,10 @@ def exitcode(args):
 
     outfile = args[0]
 
-    if not os.path.isfile(outfile):
-        raise JobFailed("%s does not exist" % outfile)
-
-    errfile = get_errfile(outfile)
-
-    # If we are renaming, then rename
-    if options.rename:
-        outfile, errfile = rename(outfile, errfile)
-
-    # First, check exitcode supplied by DAGMan, if any
-    if options.exitcode is not None:
-        if options.exitcode != 0:
-            raise JobFailed("dagman reported non-zero exitcode: %d" % options.exitcode)
-
-        # TODO Should we perform the other checks or not?
-        return 0
-
-    # Next, read the output and error files
-    stdout = readfile(outfile)
-    stderr = readfile(errfile)
-
-    # Next, check the size of the output file
-    if len(stdout) == 0:
-        raise JobFailed("Empty stdout")
-
-    # Next, if we have failure messages, then fail if we find one in the
-    # output of the job
-    if has_any_failure_messages([stdout, stderr], options.failure_messages):
-        raise JobFailed("Failure message found in output")
-
-    # Next, if we have success messages, then fail if we don't find all
-    # in the output of the job
-    if not has_all_success_messages([stdout, stderr], options.success_messages):
-        raise JobFailed("Success message missing from output")
-
-    # Next, check exitcodes of all tasks
-    cs = find_cluster_summary(stdout)
-    if cs is not None:
-        check_cluster_summary(cs)
-    else:
-        check_kickstart_records(stdout)
-
-def main(args=None):
     try:
-        exitcode(args)
+        exitcode(outfile, status=options.status, rename=options.rename,
+                 failure_messages=options.failure_messages,
+                 success_messages=options.success_messages)
         sys.exit(0)
     except JobFailed, jf:
         print jf

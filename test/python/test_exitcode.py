@@ -3,6 +3,8 @@ import unittest
 
 from Pegasus import exitcode
 
+dirname = os.path.abspath(os.path.dirname(__file__))
+
 class ExitcodeTestCase(unittest.TestCase):
     def test_unquote_message(self):
         self.assertTrue(exitcode.unquote_message(" "), " ")
@@ -57,9 +59,8 @@ class ExitcodeTestCase(unittest.TestCase):
     def test_exitcode(self):
 
         def ec(filename):
-            dirname = os.path.dirname(__file__)
             path = os.path.join(dirname, "exitcode", filename)
-            exitcode.exitcode(["--no-rename",path])
+            exitcode.exitcode(path, rename=False)
 
         ec("ok.out")
         ec("zeromem.out")
@@ -82,15 +83,17 @@ class ExitcodeTestCase(unittest.TestCase):
         self.assertRaises(exitcode.JobFailed, ec, "cluster_summary_missing.out")
         self.assertRaises(exitcode.JobFailed, ec, "cluster_summary_nosucc.out")
 
-#function test_rename_noerrfile {
-#    result=$($bin/pegasus-exitcode ok.out 2>&1)
-#    rc=$?
-#    mv ok.out.000 ok.out
-#    if [ $rc -ne 0 ]; then
-#        stderr "$result"
-#        return 1
-#    fi
-#}
+    def ec(self, filename, **args):
+        exitcode.exitcode(filename, **args)
+
+    def test_rename_noerrfile(self):
+        inf = os.path.join(dirname, "exitcode", "ok.out")
+        outf = os.path.join(dirname, "exitcode", "ok.out.000")
+        self.ec(inf, rename=True)
+        exists = os.path.isfile(outf)
+        self.assertTrue(exists)
+        if exists:
+            os.rename(outf, inf)
 
 #function test_failure_message_zero_exit {
 #    result=$($bin/pegasus-exitcode --no-rename --failure-message "Job failed" failure_message_zero_exit.out 2>&1)
