@@ -522,5 +522,15 @@
       </batchtest>
     </junit>
   </target>
+
+  <target name="test-java" depends="junit"/>
+
+  <target name="test-python" description="Execute python unit tests">
+    <exec executable="/usr/bin/env" dir="lib/pegasus/python" failonerror="true">
+        <arg line="python Pegasus/test/runtests.py"/>
+    </exec>
+  </target>
+
+  <target name="test" depends="test-python,test-java"/>
 </project>
 
