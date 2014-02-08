@@ -27,9 +27,12 @@ package edu.isi.pegasus.planner.code.gridstart;
  * 
  * here are some examples of this encoding rule
  * <pre>
- * Error Message   is encoded to Error+Message 
- * Error   Message is encoded to Error+++Message
- * Error + Message is encoded to Error+\++Message
+ * Error Message      is encoded to Error+Message 
+ * Error   Message    is encoded to Error+++Message
+ * Error + Message    is encoded to Error+\++Message
+ * Error + \Message   is encoded to Error+\++\Message
+ * Error + Message\   is encoded to Error+\++Message\
+ * Error + \\ Message is encoded to Error+\++\\+Message
  * </pre>
  * 
  *
@@ -49,12 +52,12 @@ public class PegasusExitCodeEncode {
     private String mEscapable;
     
     /**
-     * Defines the set of characters that require encoding.
+     * Defines the character that requires encoding
      */
-    private String mEncodeable;
+    private char mEncodeable;
     
     /**
-     * The value to encode with
+     * The value to encode to 
      */
     private char mEncode;
 
@@ -67,7 +70,7 @@ public class PegasusExitCodeEncode {
     public PegasusExitCodeEncode() {
         mEscapable = "+";
         mEscape = '\\';
-        mEncodeable = " ";
+        mEncodeable = ' ';
         mEncode     =  '+';
     }
 
@@ -112,7 +115,7 @@ public class PegasusExitCodeEncode {
             char ch = s.charAt(i);
 
             if (Character.isWhitespace(ch)) {
-                if ( mEncodeable.indexOf(ch) != -1) {
+                if ( ch == mEncodeable ) {
                     result.append( mEncode );
                 } else {
                     throw new IllegalArgumentException("Invalid whitespace character \'" + ch + "\' passed for encoding " + s);
@@ -158,10 +161,15 @@ public class PegasusExitCodeEncode {
             if (state == 0) {
                 // default state
                 if( ch == mEncode ){
-                    result.append( " ");
+                    result.append( mEncodeable );
                 }
                 else if (ch == mEscape) {
                     state = 1;
+                    
+                    //fix for \ as last character
+                    if( i == s.length() - 1 ){
+                        result.append( ch );
+                    }
                 } else {
                     result.append(ch);
                 }
@@ -223,6 +231,10 @@ public class PegasusExitCodeEncode {
         me.test( "Error Message");
         me.test( "Error   Message");
         me.test( "Error + Message" );
+        me.test( "Error + \\Message" );
+        me.test( "Error + Message\\" );
+        me.test( "Error + \\\\ Message" );
+        me.test( "Error + Message\\\\" );
         
         //should throw errors
         try{
