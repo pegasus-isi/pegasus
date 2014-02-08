@@ -68,7 +68,7 @@ class TestFindExec(unittest.TestCase):
     
     def testWorkingDir(self):
         "Should find executables in the current directory"
-        self.assertTrue(utils.find_exec('test.sh', True) is not None)
+        self.assertTrue(utils.find_exec('simple.sh', True) is not None)
     
     def testNotFound(self):
         "Should not find non-existent executables"
@@ -76,7 +76,7 @@ class TestFindExec(unittest.TestCase):
     
     def testAlternates(self):
         "Should find executables on specific paths"
-        self.assertTrue(utils.find_exec(program="test.sh", otherdirs=["/doesntexist", self.test_dir]) is not None)
+        self.assertTrue(utils.find_exec(program="simple.sh", otherdirs=["/doesntexist", self.test_dir]) is not None)
 
 if __name__ == '__main__':
     unittest.main()
