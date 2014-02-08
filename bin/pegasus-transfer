@@ -549,6 +549,9 @@ class GridFtpHandler(TransferHandlerBase):
                 dst_cred = src_cred
             cmd += " -src-cred " + src_cred + " -dst-cred " + dst_cred
 
+        check_cred_fs_permissions(src_cred)
+        check_cred_fs_permissions(dst_cred)
+
         # if the src and dest credentials are different, we might need
         # a data channel credential
         data_cred_req = False
@@ -732,6 +735,9 @@ class IRodsHandler(TransferHandlerBase):
         if not "irodsEnvFile" in os.environ:
             raise RuntimeError("Missing irodsEnvFile - unable to do irods "
                                + " transfers")
+        
+        check_cred_fs_permissions(os.environ["irodsEnvFile"])
+        
         password = None
         h = open(os.environ['irodsEnvFile'], 'r')
         for line in h:
@@ -835,6 +841,8 @@ class S3Handler(TransferHandlerBase):
             key = "S3CFG_" + transfer.src_sitename
             if key in os.environ:
                 os.environ["S3CFG"] = os.environ[key]
+        
+            check_cred_fs_permissions(os.environ["S3CFG"])
 
             cmd = "pegasus-s3 cp -f -c '%s' '%s'" % (transfer.src_url(),
                                                      transfer.dst_url())
@@ -842,6 +850,8 @@ class S3Handler(TransferHandlerBase):
             key = "S3CFG_" + transfer.src_sitename
             if key in os.environ:
                 os.environ["S3CFG"] = os.environ[key]
+
+            check_cred_fs_permissions(os.environ["S3CFG"])
 
             # this is a 'get'
             local_filename = transfer.dst_path
@@ -853,6 +863,8 @@ class S3Handler(TransferHandlerBase):
             key = "S3CFG_" + transfer.dst_sitename
             if key in os.environ:
                 os.environ["S3CFG"] = os.environ[key]
+
+            check_cred_fs_permissions(os.environ["S3CFG"])
 
             local_filename = transfer.src_path
             cmd = "pegasus-s3 put -f -b '%s' '%s'" % (transfer.src_path,
@@ -947,8 +959,10 @@ class ScpHandler(TransferHandlerBase):
                 # scp -> file
                 key = "SSH_PRIVATE_KEY_" + transfer.src_sitename
                 if key in os.environ:
+                    check_cred_fs_permissions(os.environ[key])
                     cmd += " -i " + os.environ[key]
                 elif "SSH_PRIVATE_KEY" in os.environ:
+                    check_cred_fs_permissions(os.environ['SSH_PRIVATE_KEY'])
                     cmd += " -i " + os.environ['SSH_PRIVATE_KEY']
 
                 prepare_local_dir(os.path.dirname(transfer.dst_path))
@@ -958,8 +972,10 @@ class ScpHandler(TransferHandlerBase):
                 # file -> scp
                 key = "SSH_PRIVATE_KEY_" + transfer.dst_sitename
                 if key in os.environ:
+                    check_cred_fs_permissions(os.environ[key])
                     cmd += " -i " + os.environ[key]
                 elif "SSH_PRIVATE_KEY" in os.environ:
+                    check_cred_fs_permissions(os.environ['SSH_PRIVATE_KEY'])
                     cmd += " -i " + os.environ['SSH_PRIVATE_KEY']
 
                 mkdir_key = "scp://" + transfer.dst_host + ":" \
@@ -990,8 +1006,10 @@ class ScpHandler(TransferHandlerBase):
         cmd = "/usr/bin/ssh"
         key = "SSH_PRIVATE_KEY_" + rsite
         if key in os.environ:
+            check_cred_fs_permissions(os.environ[key])
             cmd += " -i " + os.environ[key]
         elif "SSH_PRIVATE_KEY" in os.environ:
+            check_cred_fs_permissions(os.environ['SSH_PRIVATE_KEY'])
             cmd += " -i " + os.environ['SSH_PRIVATE_KEY']
         cmd += " -q -o StrictHostKeyChecking=no"
         cmd += " " + rhost + " '/bin/mkdir -p " + rdir + "'"
@@ -1354,6 +1372,17 @@ def env_setup():
     # irods requires a password hash file
     os.environ['irodsAuthFileName'] = os.getcwd() + "/.irodsA"
 
+
+def check_cred_fs_permissions(path):
+    """
+    Checks to make sure a given credential is protected by the file system
+    permissions. If left too open (for example after a transfer over GASS,
+    chmod it to be readable only by us.
+    """
+    if oct(os.stat(path).st_mode & 0777) != '0600':
+        logger.warning("%s found to have weak permissions. chmod to 0600."
+                       %(path))
+        os.chmod(path, 0600)
 
 
 def prepare_local_dir(path):
