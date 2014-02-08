@@ -140,10 +140,41 @@ def check_kickstart_records(txt):
 
     return 0
 
+def unquote_message(message):
+    def genchars():
+        for c in message:
+            yield c
+
+    chars = genchars()
+    output = []
+    for c in chars:
+        if c == '+':
+            output.append(' ')
+        elif c == '\\':
+            try:
+                c = chars.next()
+            except StopIteration:
+                output.append(c)
+                break
+            if c == '+':
+                output.append('+')
+            else:
+                output.append('\\')
+                output.append(c)
+        else:
+            output.append(c)
+
+    return "".join(output)
+
+def unquote_messages(messages):
+    return [unquote_message(m) for m in messages]
+
 def has_any_failure_messages(stdio, messages):
     """Return true if any of the messages appear in the files"""
     if len(messages) == 0:
         return False
+
+    messages = unquote_messages(messages)
 
     for txt in stdio:
         for m in messages:
@@ -156,6 +187,8 @@ def has_all_success_messages(stdio, messages):
     """Return true if any of the messages don't appear in the files"""
     if len(messages) == 0:
         return True
+
+    messages = unquote_messages(messages)
 
     found = set()
     for txt in stdio:
