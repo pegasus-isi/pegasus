@@ -26,13 +26,14 @@
 import sys
 import re
 import os
-from subprocess import check_output
+from subprocess import Popen, PIPE
 
 # Use pegasus-config to find our lib path
 try:
     bin_dir = os.path.normpath(os.path.dirname(__file__))
     pegasus_config = os.path.join(bin_dir, "pegasus-config")
-    lib_dir = check_output([pegasus_config, "--noeoln", "--python"])
+    lib_dir = Popen([pegasus_config, "--noeoln", "--python"],
+                    stdout=PIPE).communicate()[0]
     sys.path.insert(0, lib_dir)
 except Exception, e:
     sys.stderr.write(str(e))
@@ -41,5 +42,5 @@ except Exception, e:
 
 from Pegasus import exitcode
 
-exitcode.main()
+exitcode.main(sys.argv[1:])
 
