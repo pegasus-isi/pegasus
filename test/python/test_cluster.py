@@ -9,7 +9,7 @@ class TestRecordParser(unittest.TestCase):
         parser = RecordParser(string)
         return parser.parse()
 
-    def test_bad(self):
+    def testBad(self):
         self.assertRaises(RecordParseException, self.parse, "")
         self.assertRaises(RecordParseException, self.parse, "[")
         self.assertRaises(RecordParseException, self.parse, "[]")
@@ -25,7 +25,7 @@ class TestRecordParser(unittest.TestCase):
         self.assertRaises(RecordParseException, self.parse, '[cluster-summary x="1]')
         self.assertRaises(RecordParseException, self.parse, '[cluster-summary x="1   ]')
 
-    def test_ok(self):
+    def testOK(self):
         self.assertTrue("x" in self.parse("[cluster-summary x=1]"))
         self.assertTrue("y" in self.parse("[cluster-summary x=1 y=2]"))
         self.assertTrue("y" in self.parse("[cluster-summary x=1, y=2]"))
@@ -36,7 +36,7 @@ class TestRecordParser(unittest.TestCase):
         self.assertTrue("alpha-beta" in self.parse("[cluster-summary alpha-beta=zeta]"))
         self.assertTrue("alpha_beta" in self.parse("[cluster-summary alpha_beta=zeta]"))
 
-    def test_values(self):
+    def testValues(self):
         rec = self.parse('[cluster-summary x=1, y="2" z=2, z=3]')
         self.assertTrue("x" in rec)
         self.assertTrue("y" in rec)
@@ -46,14 +46,14 @@ class TestRecordParser(unittest.TestCase):
         self.assertEquals(rec["y"], "2")
         self.assertEquals(rec["z"], "3")
 
-    def test_strings(self):
+    def testStrings(self):
         rec = self.parse('[cluster-summary foo="bar" baz="bar boo", boo="\'=,- "]')
 
         self.assertEquals(rec["foo"], "bar")
         self.assertEquals(rec["baz"], "bar boo")
         self.assertEquals(rec["boo"], "'=,- ")
 
-    def _test_speed(self):
+    def _testSpeed(self):
         import time
         start = time.time()
         for i in range(0, 10000):
