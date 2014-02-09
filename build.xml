@@ -530,6 +530,9 @@
         <arg line="python -m unittest discover -v"/>
         <env key="PYTHONPATH" value="${basedir}/lib/pegasus/python"/>
     </exec>
+    <exec executable="/bin/sh" dir="test/exitcode" failonerror="true">
+        <arg line="-c './test_exitcode.sh'"/>
+    </exec>
   </target>
 
   <target name="test" depends="test-python,test-java"/>
