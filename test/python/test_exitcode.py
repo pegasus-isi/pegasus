@@ -2,6 +2,7 @@ import os
 import unittest
 
 from Pegasus import exitcode
+from Pegasus.exitcode import JobFailed
 
 dirname = os.path.abspath(os.path.dirname(__file__))
 
@@ -58,9 +59,9 @@ class ExitcodeTestCase(unittest.TestCase):
 
     def test_exitcode(self):
 
-        def ec(filename):
+        def ec(filename, **args):
             path = os.path.join(dirname, "exitcode", filename)
-            exitcode.exitcode(path, rename=False)
+            exitcode.exitcode(path, rename=False, **args)
 
         ec("ok.out")
         ec("zeromem.out")
@@ -70,84 +71,34 @@ class ExitcodeTestCase(unittest.TestCase):
         ec("cluster_summary_ok.out")
         ec("cluster_summary_notasks.out")
         ec("cluster_summary_submitted.out")
+        ec("success_message_zero_exit.out", success_messages=["Job succeeded"])
 
-        self.assertRaises(exitcode.JobFailed, ec, "failed.out")
-        self.assertRaises(exitcode.JobFailed, ec, "walltime.out")
-        self.assertRaises(exitcode.JobFailed, ec, "zerolen.out")
-        self.assertRaises(exitcode.JobFailed, ec, "cluster-error.out")
-        self.assertRaises(exitcode.JobFailed, ec, "nonzero.out")
-        self.assertRaises(exitcode.JobFailed, ec, "signalled.out")
-        self.assertRaises(exitcode.JobFailed, ec, "largecode.out")
-        self.assertRaises(exitcode.JobFailed, ec, "cluster_summary_failed.out")
-        self.assertRaises(exitcode.JobFailed, ec, "cluster_summary_stat.out")
-        self.assertRaises(exitcode.JobFailed, ec, "cluster_summary_missing.out")
-        self.assertRaises(exitcode.JobFailed, ec, "cluster_summary_nosucc.out")
-
-    def ec(self, filename, **args):
-        exitcode.exitcode(filename, **args)
+        self.assertRaises(JobFailed, ec, "failed.out")
+        self.assertRaises(JobFailed, ec, "walltime.out")
+        self.assertRaises(JobFailed, ec, "zerolen.out")
+        self.assertRaises(JobFailed, ec, "cluster-error.out")
+        self.assertRaises(JobFailed, ec, "nonzero.out")
+        self.assertRaises(JobFailed, ec, "signalled.out")
+        self.assertRaises(JobFailed, ec, "largecode.out")
+        self.assertRaises(JobFailed, ec, "cluster_summary_failed.out")
+        self.assertRaises(JobFailed, ec, "cluster_summary_stat.out")
+        self.assertRaises(JobFailed, ec, "cluster_summary_missing.out")
+        self.assertRaises(JobFailed, ec, "cluster_summary_nosucc.out")
+        self.assertRaises(JobFailed, ec, "failure_message_zero_exit.out", failure_messages=["Job failed"])
+        self.assertRaises(JobFailed, ec, "success_message_failure_message.out", success_messages=["Job succeeded"], failure_messages=["Job failed"])
+        self.assertRaises(JobFailed, ec, "success_message_missing.out", success_messages=["Job succeeded"])
+        self.assertRaises(JobFailed, ec, "success_message_nonzero_exit.out", success_messages=["Job succeeded"])
+        self.assertRaises(JobFailed, ec, "success_message_zero_exit.out", success_messages=["Job succeeded","Successfully finished"])
 
     def test_rename_noerrfile(self):
         inf = os.path.join(dirname, "exitcode", "ok.out")
         outf = os.path.join(dirname, "exitcode", "ok.out.000")
-        self.ec(inf, rename=True)
+        exitcode.exitcode(inf, rename=True)
         exists = os.path.isfile(outf)
         self.assertTrue(exists)
         if exists:
             os.rename(outf, inf)
 
-#function test_failure_message_zero_exit {
-#    result=$($bin/pegasus-exitcode --no-rename --failure-message "Job failed" failure_message_zero_exit.out 2>&1)
-#    rc=$?
-#    if [ $rc -ne 1 ]; then
-#        stderr "$result"
-#        return 1
-#    fi
-#}
-
-#function test_success_message_failure_message {
-#    result=$($bin/pegasus-exitcode --no-rename -s "Job succeeded" -f "Job failed" success_message_failure_message.out 2>&1)
-#    rc=$?
-#    if [ $rc -ne 1 ]; then
-#        echo "$result" >&2
-#        return 1
-#    fi
-#}
-
-#function test_success_message_missing {
-#    result=$($bin/pegasus-exitcode --no-rename -s "Job succeeded" success_message_missing.out 2>&1)
-#    rc=$?
-#    if [ $rc -ne 1 ]; then
-#        echo "$result" >&2
-#        return 1
-#    fi
-#}
-
-#function test_success_message_present {
-#    result=$($bin/pegasus-exitcode --no-rename -s "Job succeeded" success_message_zero_exit.out 2>&1)
-#    rc=$?
-#    if [ $rc -ne 0 ]; then
-#        echo "$result" >&2
-#        return 1
-#    fi
-#}
-
-#function test_success_message_nonzero_exit {
-#    result=$($bin/pegasus-exitcode --no-rename --success-message "Job succeeded" success_message_nonzero_exit.out 2>&1)
-#    rc=$?
-#    if [ $rc -ne 1 ]; then
-#        echo "$result" >&2
-#        return 1
-#    fi
-#}
-
-#function test_all_success_messages_required {
-#    result=$($bin/pegasus-exitcode --no-rename -s "Job succeeded" -s "Successfully finished" success_message_zero_exit.out 2>&1)
-#    rc=$?
-#    if [ $rc -ne 1 ]; then
-#        echo "$result" >&2
-#        return 1
-#    fi
-#}
 
 if __name__ == '__main__':
     unittest.main()
