@@ -529,6 +529,9 @@
     <exec executable="/usr/bin/env" dir="lib/pegasus/python" failonerror="true">
         <arg line="python Pegasus/test/runtests.py"/>
     </exec>
+    <exec executable="/bin/sh" dir="test/exitcode" failonerror="true">
+        <arg line="-c './test_exitcode.sh'"/>
+    </exec>
   </target>
 
   <target name="test" depends="test-python,test-java"/>
