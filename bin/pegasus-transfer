@@ -862,7 +862,12 @@ class S3Handler(TransferHandlerBase):
             key = "S3CFG_" + transfer.src_sitename
             if key in os.environ:
                 os.environ["S3CFG"] = os.environ[key]
-        
+            if "S3CFG" not in os.environ:
+                logger.error("At least one of the S3CFG_" + 
+                             transfer.src_sitename + " or S3CFG" +
+                             " environment variables has to be set")
+                return False
+
             check_cred_fs_permissions(os.environ["S3CFG"])
 
             cmd = "pegasus-s3 cp -f -c '%s' '%s'" % (transfer.src_url(),
@@ -871,6 +876,11 @@ class S3Handler(TransferHandlerBase):
             key = "S3CFG_" + transfer.src_sitename
             if key in os.environ:
                 os.environ["S3CFG"] = os.environ[key]
+            if "S3CFG" not in os.environ:
+                logger.error("At least one of the S3CFG_" + 
+                             transfer.src_sitename + " or S3CFG" +
+                             " environment variables has to be set")
+                return False
 
             check_cred_fs_permissions(os.environ["S3CFG"])
 
@@ -884,6 +894,11 @@ class S3Handler(TransferHandlerBase):
             key = "S3CFG_" + transfer.dst_sitename
             if key in os.environ:
                 os.environ["S3CFG"] = os.environ[key]
+            if "S3CFG" not in os.environ:
+                logger.error("At least one of the S3CFG_" + 
+                             transfer.src_sitename + " or S3CFG" +
+                             " environment variables has to be set")
+                return False
 
             check_cred_fs_permissions(os.environ["S3CFG"])
 

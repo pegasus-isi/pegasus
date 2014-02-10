@@ -54,6 +54,9 @@ function timed_transfer
 export GLOBUS_LOCATION=/ccg/software/globus/default
 . $GLOBUS_LOCATION/etc/globus-user-env.sh
 
+# S3 creds
+export S3CFG=~/.s3cfg
+
 echo
 echo
 echo "================================================================="
