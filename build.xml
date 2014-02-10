@@ -534,6 +534,18 @@
     </exec>
   </target>
 
-  <target name="test" depends="test-python,test-java"/>
+  <target name="test-kickstart" description="Run kickstart unit tests">
+    <exec executable="/bin/sh" dir="src/tools/pegasus-kickstart" failonerror="true">
+        <arg line="-c 'make test'"/>
+    </exec>
+  </target>
+
+  <target name="test-pmc" description="Run pmc unit tests">
+    <exec executable="/bin/sh" dir="src/tools/pegasus-mpi-cluster" failonerror="true">
+        <arg line="-c 'make test'"/>
+    </exec>
+  </target>
+
+  <target name="test" depends="test-python,test-java,test-kickstart,test-pmc"/>
 </project>
 
