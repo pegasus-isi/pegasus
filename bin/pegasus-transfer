@@ -22,12 +22,12 @@ Usage: pegasus-transfer [options]
 #  limitations under the License.
 ##
 
-from collections import deque
 import errno
 import logging
 import math
 import optparse
 import os
+import Queue
 import re
 import signal
 import stat
@@ -35,6 +35,7 @@ import string
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 
 
@@ -195,6 +196,7 @@ class Singleton(type):
         if cls not in cls._instances:
             cls._instances[cls] = \
                 super(Singleton, cls).__call__(*args, **kwargs)
+            cls.lock = threading.Lock()
         return cls._instances[cls]
 
 
@@ -207,74 +209,88 @@ class Tools(object):
     _info = {}
 
     def find(self, executable, version_arg, version_regex):
-        
-        if executable in self._info:
-            if self._info[executable] is None:
-                return None
-            return self._info[executable]
-        
-        logger.info("Trying to detect availability/location of tool: %s"
-                    %(executable))
-        
-        # initialize the global tool info for this executable
-        self._info[executable] = {}
-        self._info[executable]['full_path'] = None
-        self._info[executable]['version'] = None
-        self._info[executable]['version_major'] = None
-        self._info[executable]['version_minor'] = None
-        self._info[executable]['version_patch'] = None
-    
-        # figure out the full path to the executable
-        full_path = backticks("which " + executable + " 2>/dev/null") 
-        full_path = full_path.rstrip('\n')
-        if full_path == "":
-            logger.info("Command '%s' not found in the current environment"
+
+        self.lock.acquire()
+        try:
+            if executable in self._info:
+                if self._info[executable] is None:
+                    return None
+                return self._info[executable]
+            
+            logger.info("Trying to detect availability/location of tool: %s"
                         %(executable))
-            self._info[executable] = None
-            return self._info[executable]
-        self._info[executable]['full_path'] = full_path
-    
-        # version
-        if version_regex is None:
-            version = "N/A"
-        else:
-            version = backticks(executable + " " + version_arg + " 2>&1")
-            version = version.replace('\n', "")
-            re_version = re.compile(version_regex)
+            
+            # initialize the global tool info for this executable
+            self._info[executable] = {}
+            self._info[executable]['full_path'] = None
+            self._info[executable]['version'] = None
+            self._info[executable]['version_major'] = None
+            self._info[executable]['version_minor'] = None
+            self._info[executable]['version_patch'] = None
+        
+            # figure out the full path to the executable
+            full_path = backticks("which " + executable + " 2>/dev/null") 
+            full_path = full_path.rstrip('\n')
+            if full_path == "":
+                logger.info("Command '%s' not found in the current environment"
+                            %(executable))
+                self._info[executable] = None
+                return self._info[executable]
+            self._info[executable]['full_path'] = full_path
+        
+            # version
+            if version_regex is None:
+                version = "N/A"
+            else:
+                version = backticks(executable + " " + version_arg + " 2>&1")
+                version = version.replace('\n', "")
+                re_version = re.compile(version_regex)
+                result = re_version.search(version)
+                if result:
+                    version = result.group(1)
+                self._info[executable]['version'] = version
+        
+            # if possible, break up version into major, minor, patch
+            re_version = re.compile("([0-9]+)\.([0-9]+)(\.([0-9]+)){0,1}")
             result = re_version.search(version)
             if result:
-                version = result.group(1)
-            self._info[executable]['version'] = version
-    
-        # if possible, break up version into major, minor, patch
-        re_version = re.compile("([0-9]+)\.([0-9]+)(\.([0-9]+)){0,1}")
-        result = re_version.search(version)
-        if result:
-            self._info[executable]['version_major'] = int(result.group(1))
-            self._info[executable]['version_minor'] = int(result.group(2))
-            self._info[executable]['version_patch'] = result.group(4)
-        if self._info[executable]['version_patch'] is None or \
-           self._info[executable]['version_patch'] == "":
-            self._info[executable]['version_patch'] = None
-        else:
-            self._info[executable]['version_patch'] = \
-                int(self._info[executable]['version_patch'])
-    
-        logger.info("Tool found: %s   Version: %s   Path: %s" 
-                    % (executable, version, full_path))
-        return self._info[executable]['full_path']
+                self._info[executable]['version_major'] = int(result.group(1))
+                self._info[executable]['version_minor'] = int(result.group(2))
+                self._info[executable]['version_patch'] = result.group(4)
+            if self._info[executable]['version_patch'] is None or \
+               self._info[executable]['version_patch'] == "":
+                self._info[executable]['version_patch'] = None
+            else:
+                self._info[executable]['version_patch'] = \
+                    int(self._info[executable]['version_patch'])
+        
+            logger.info("Tool found: %s   Version: %s   Path: %s" 
+                        % (executable, version, full_path))
+            return self._info[executable]['full_path']
+        finally:
+            self.lock.release()
+
 
     def full_path(self, executable):
         """ Returns the full path to a given executable """
-        if executable in self._info and self._info[executable] is not None:
-            return self._info[executable]['full_path']
-        return None
+        self.lock.acquire()
+        try:
+            if executable in self._info and self._info[executable] is not None:
+                return self._info[executable]['full_path']
+            return None
+        finally:
+            self.lock.release()
+
 
     def major_version(self, executable):
         """ Returns the detected major version given executable """
-        if executable in self._info and self._info[executable] is not None:
-            return self._info[executable]['version_major']
-        return None
+        self.lock.acquire()
+        try:
+            if executable in self._info and self._info[executable] is not None:
+                return self._info[executable]['version_major']
+            return None
+        finally:
+            self.lock.release()
                 
 
 class TransferHandlerBase(object):
@@ -286,6 +302,8 @@ class TransferHandlerBase(object):
     
     _name = "BaseHandler"
     _protocol_map = []
+    
+    lock = threading.Lock()
     
     def do_transfer(self, transfer, attempt):
         """
@@ -483,12 +501,12 @@ class GridFtpHandler(TransferHandlerBase):
                 for l in chunks:
                     if not self._exec_transfers(l, attempt, False, third_party):
                         for i, t in enumerate(l):
-                            failed_q.append(t)
+                            failed_q.put(t)
             else:
                 # mkdir job failed - all subsequent jobs will fail
-                failed_q.append(first_list[0])
+                failed_q.put(first_list[0])
                 for i, t in enumerate(similar_list):
-                    failed_q.append(t)
+                    failed_q.put(t)
    
     
     def _exec_transfers(self, transfers, attempt, create_dest, third_party):
@@ -548,9 +566,8 @@ class GridFtpHandler(TransferHandlerBase):
             if dst_cred is None:
                 dst_cred = src_cred
             cmd += " -src-cred " + src_cred + " -dst-cred " + dst_cred
-
-        check_cred_fs_permissions(src_cred)
-        check_cred_fs_permissions(dst_cred)
+            check_cred_fs_permissions(src_cred)
+            check_cred_fs_permissions(dst_cred)
 
         # if the src and dest credentials are different, we might need
         # a data channel credential
@@ -723,39 +740,43 @@ class IRodsHandler(TransferHandlerBase):
         log in to irods by using the iinit command - if the file already exists,
         we are already logged in
         """
-        key = "irodsEnvFile_" + sitename
-        if key in os.environ:
-            os.environ["irodsEnvFile"] = os.environ[key]
-    
-        f = os.environ['irodsAuthFileName']
-        if os.path.exists(f):
-            return
+        self.lock.acquire()
+        try:
+            key = "irodsEnvFile_" + sitename
+            if key in os.environ:
+                os.environ["irodsEnvFile"] = os.environ[key]
         
-        # read password from env file
-        if not "irodsEnvFile" in os.environ:
-            raise RuntimeError("Missing irodsEnvFile - unable to do irods "
-                               + " transfers")
-        
-        check_cred_fs_permissions(os.environ["irodsEnvFile"])
-        
-        password = None
-        h = open(os.environ['irodsEnvFile'], 'r')
-        for line in h:
-            items = line.split(" ", 2)
-            if items[0].lower() == "irodspassword":
-                password = items[1].strip(" \t'\"\r\n")
-        h.close()
-        if password is None:
-            raise RuntimeError("No irodsPassword specified in irods env file")
-        
-        h = open(".irodsAc", "w")
-        h.write(password + "\n")
-        h.close()
-        
-        cmd = "cat .irodsAc | iinit"
-        myexec(cmd, 5*60, True)
+            f = os.environ['irodsAuthFileName']
+            if os.path.exists(f):
+                return
             
-        os.unlink(".irodsAc")
+            # read password from env file
+            if not "irodsEnvFile" in os.environ:
+                raise RuntimeError("Missing irodsEnvFile - unable to do irods "
+                                   + " transfers")
+            
+            check_cred_fs_permissions(os.environ["irodsEnvFile"])
+            
+            password = None
+            h = open(os.environ['irodsEnvFile'], 'r')
+            for line in h:
+                items = line.split(" ", 2)
+                if items[0].lower() == "irodspassword":
+                    password = items[1].strip(" \t'\"\r\n")
+            h.close()
+            if password is None:
+                raise RuntimeError("No irodsPassword specified in irods env file")
+            
+            h = open(".irodsAc", "w")
+            h.write(password + "\n")
+            h.close()
+            
+            cmd = "cat .irodsAc | iinit"
+            myexec(cmd, 5*60, True)
+                
+            os.unlink(".irodsAc")
+        finally:
+            self.lock.release()
     
     
     def do_transfer(self, transfer, attempt):
@@ -1033,7 +1054,7 @@ class SymlinkHandler(TransferHandlerBase):
         if not os.path.exists(transfer.src_path):
             logger.warning("Symlink source (%s) does not exist"
                            % (transfer.src_path))
-            failed_q.append(transfer)
+            failed_q.put(transfer)
             return True
 
         if os.path.exists(transfer.src_path) \
@@ -1148,7 +1169,7 @@ class TransferSet:
                     logger.error(e)
                 # add all the transfers back to the failed queue
                 for i, t in enumerate(self._transfers):
-                    failed_q.append(t)
+                    failed_q.put(t)
             return
         
         # standard src->dst single transfer case
@@ -1194,7 +1215,7 @@ class TransferSet:
                         logger.error(e)
 
             if success == False:
-                failed_q.append(transfer)
+                failed_q.put(transfer)
         
         # remove temp file
         if self._tmp_name is not None:
@@ -1203,6 +1224,37 @@ class TransferSet:
                 os.unlink(self._tmp_name)
             except:
                 pass
+
+
+class WorkThread(threading.Thread):
+    """
+    A thread which processes TransferSets
+    """
+    def __init__(self, thread_id, queue, current_attempt, failed_queue):
+        threading.Thread.__init__(self)
+        self.thread_id = thread_id
+        self.queue = queue
+        self.current_attempt = current_attempt
+        self.failed_queue = failed_queue
+        self.exception = None
+        self.daemon = True
+
+    def run(self):
+        # give the threads a slow start
+        time.sleep(self.thread_id * 2)
+        logger.debug("Started new WorkThread with id " + str(self.thread_id))
+        try:
+            # Just keep grabbing TransferSets and executing them until
+            # there are no more to process, then exit
+            while True:
+                ts = self.queue.get(False)
+                logger.debug("Thread " + str(self.thread_id) +
+                             " is executing transfer " + str(ts))
+                ts.do_transfers(self.failed_queue, self.current_attempt)
+        except Queue.Empty:
+            return
+        except Exception, e:
+            self.exception = e
 
 
 class Alarm(Exception):
@@ -1215,6 +1267,9 @@ prog_dir  = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0])))
 prog_base = os.path.split(sys.argv[0])[1]   # Name of this program
 
 logger = logging.getLogger("my_logger")
+
+# threads we have currently running
+threads = []
 
 # timeout for when shelling out
 default_subshell_timeout = 6 * 60 * 60;
@@ -1230,6 +1285,9 @@ gsiftp_failures = 0
 stats_start = 0
 stats_end = 0
 stats_total_bytes = 0
+
+# singleton - but should we make it a global instead?
+tools = Tools()
 
 
 # --- functions ----------------------------------------------------------------
@@ -1274,7 +1332,7 @@ def expand_env_vars(s):
 def get_env_var(match):
     name = match.group(1)
     value = ""
-    logger.debug("Looking up " + name)
+    logger.debug("Looking up " + name + " environment variable")
     if name in os.environ:
         value = os.environ[name]
     return value
@@ -1289,18 +1347,8 @@ def myexec(cmd_line, timeout_secs, should_log):
         logger.info(cmd_line)
     sys.stdout.flush()
 
-    # set up signal handler for timeout
-    signal.signal(signal.SIGALRM, alarm_handler)
-    signal.alarm(timeout_secs)
-
     p = subprocess.Popen(cmd_line, shell=True)
-    try:
-        stdoutdata, stderrdata = p.communicate()
-    except Alarm:
-        if sys.version_info >= (2, 6):
-            p.terminate()
-        raise RuntimeError("Command '%s' timed out after %s seconds"
-                           % (cmd_line, timeout_secs))
+    stdoutdata, stderrdata = p.communicate()
     rc = p.returncode
     if rc != 0:
         raise RuntimeError("Command '%s' failed with error code %s"
@@ -1456,7 +1504,7 @@ def iso_prefix_formatted(n):
 
 def myexit(rc):
     """
-    system exit without a stack trace - silly python
+    system exit without a stack trace
     """
     try:
         sys.exit(rc)
@@ -1467,6 +1515,7 @@ def myexit(rc):
 # --- main ----------------------------------------------------------------------------
 
 def main():
+    global threads
     global stats_start
     global stats_end
     
@@ -1480,10 +1529,17 @@ def main():
     parser.add_option("-f", "--file", action = "store", dest = "file",
                       help = "File containing URL pairs to be transferred." +
                              " If not given, list is read from stdin.")
-    parser.add_option("", "--max-attempts", action = "store", type="int",
+    parser.add_option("-m", "--max-attempts", action = "store", type="int",
                       dest = "max_attempts", default = 3,
                       help = "Number of attempts allowed for each transfer." +
                              " Default is 3.")
+    parser.add_option("-n", "--threads", action = "store", type="int",
+                      dest = "threads", default = 0,
+                      help = "Number of threads to process transfers." +
+                             " Default is 8. This option can also be set" +
+                             " via the PEGASUS_TRANSFER_THREADS environment" +
+                             " variable. The command line option takes" +
+                             " precedence over the environment variable.")
     parser.add_option("-d", "--debug", action = "store_true", dest = "debug",
                       help = "Enables debugging ouput.")
     
@@ -1495,6 +1551,12 @@ def main():
     signal.signal(signal.SIGINT, prog_sigint_handler)
     
     attempts_max = options.max_attempts
+    
+    if options.threads is None or options.threads == 0:
+        if "PEGASUS_TRANSFER_THREADS" in os.environ:
+            options.threads = int(os.environ["PEGASUS_TRANSFER_THREADS"])
+        else:
+            options.threads = 8
     
     # stdin or file input?
     if options.file is None:
@@ -1516,8 +1578,9 @@ def main():
         myexit(1)
     
     # queues to track the work
-    transfer_q = deque()
-    failed_q = deque()
+    transfer_q = Queue.Queue()
+    failed_q = Queue.Queue()
+    work_q = Queue.Queue()
     
     # fill the transfer queue with user provided entries
     line_nr = 0
@@ -1574,6 +1637,7 @@ def main():
     except Exception, err:
         logger.critical('Error reading url list: %s' % (err))
         myexit(1)
+    logger.info("%d transfers loaded" % (len(inputs)))
 
     # we will now sort the list as some tools (gridftp) can optimize when
     # given a group of similar transfers
@@ -1581,12 +1645,17 @@ def main():
                 " source/destination")
     inputs.sort()
     
-    transfer_q = deque(inputs)
+    for t in inputs:
+        transfer_q.put(t)
     
     # start the stats time
     stats_start = time.time()
     
-    # attempt transfers until the queue is empty
+    # Attempt transfers until the queue is empty. We create TransferSets
+    # of the transfers, and then hand then of to our worker threads. But
+    # note that we are only doing the threads for one attempt at a time.
+    # After failures, transfers might be regrouped, and then handed of to the
+    # thread pool again.
     done = False
     attempt_current = 0
     while not done:
@@ -1596,45 +1665,62 @@ def main():
         logger.info("Starting transfers - attempt %d" % (attempt_current))
     
         # do the transfers
-        while transfer_q:
-            
-            t_main = transfer_q.popleft()
+        while not transfer_q.empty():
+            t_main = transfer_q.get()
             
             # create a list of transfers to pass to underlying tool
             t_list = []
             t_list.append(t_main)
     
             try:
-                t_next = transfer_q[0]
-            except IndexError, err:
-                t_next = False
-            while t_next and transfers_groupable(t_main, t_next):
-                t_list.append(t_next)
-                transfer_q.popleft()
-                try:
-                    t_next = transfer_q[0]
-                except IndexError, err:
-                    t_next = False
-    
+                t_next = transfer_q.get(False)
+                while t_next is not None:
+                    if transfers_groupable(t_main, t_next):
+                        t_list.append(t_next)
+                        t_next = transfer_q.get(False)
+                    else:
+                        # done, put the last transfer back
+                        transfer_q.put(t_next)
+                        t_next = None
+            except Queue.Empty:
+                pass
+            
             # magic!
             ts = TransferSet(t_list)
-            ts.do_transfers(failed_q, attempt_current)
+            work_q.put(ts)
     
-            logger.debug("%d items in failed_q" %(len(failed_q)))
+        # pool of worker threads
+        t_id = 0
+        num_threads = min(options.threads, work_q.qsize())
+        for i in range(num_threads):
+            t_id += 1
+            t = WorkThread(t_id, work_q, attempt_current, failed_q)
+            threads.append(t)
+            t.start()
+    
+        # wait for the threads to finish all the transfers
+        for t in threads:
+            t.join()
+            # do we need to do any better error handling here?
+            if t.exception is not None:
+                raise t.exception
+        threads = []
+    
+        logger.debug("%d items in failed_q" %(failed_q.qsize()))
         
         # are we done?
-        if attempt_current == attempts_max or not failed_q:
+        if attempt_current == attempts_max or failed_q.empty():
             done = True
             break
         
         # retry failed transfers with a delay
-        if failed_q and attempt_current < attempts_max:
+        if not failed_q.empty() and attempt_current < attempts_max:
             time.sleep(10) # do not sleep too long - we want to give quick
                             # feedback on failures to the workflow
-        while failed_q:
-            t = failed_q.popleft()
+        while not failed_q.empty():
+            t = failed_q.get()
             t.allow_grouping = False # only allow grouping on the first try
-            transfer_q.append(t)
+            transfer_q.put(t)
     
     logger.info('-' * 80)
     
@@ -1642,7 +1728,7 @@ def main():
     stats_end = time.time()
     stats_summarize()
     
-    if failed_q:
+    if not failed_q.empty():
         logger.critical("Some transfers failed! See above," +
                         " and possibly stderr.")
         myexit(1)
