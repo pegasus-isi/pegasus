@@ -51,12 +51,12 @@
 
     <!-- Determine the system Python module location -->
     <exec executable="${basedir}/release-tools/python/python-modules-dir"
-          outputproperty="dist.python-modules-loc"
+          outputproperty="dist.python-lib.subdir"
           failonerror="true">
       <arg value="${dist.lib.subdir}"/>
     </exec>
-    <echo>Python library subdir: ${dist.python-modules-loc}</echo>
-    <property name="dist.python-lib" location="${dist.dir}/${dist.python-modules-loc}"/>
+    <echo>Python library subdir: ${dist.python-lib.subdir}</echo>
+    <property name="dist.python-lib" location="${dist.dir}/${dist.python-lib.subdir}"/>
 
     <mkdir dir="dist"/>
     <mkdir dir="${build.src}"/>
@@ -73,7 +73,7 @@
       <entry key="pegasus.build.platform" value="${dist.arch}"/>
       <entry key="pegasus.build.timestamp" value="${ISODATE.utc}"/>
       <entry key="pegasus.build.libdir" value="${dist.lib.subdir}"/>
-      <entry key="pegasus.build.pydir" value="${dist.python-modules-loc}"/>
+      <entry key="pegasus.build.pydir" value="${dist.python-lib.subdir}"/>
     </propertyfile>
 
     <!-- RPM spec file with updated version number -->
@@ -299,7 +299,7 @@
     </exec>
   </target>
 
-  <target name="externals" depends="setup" description="Compiles and installs external dependencies">
+  <target name="python-externals" depends="setup" description="Compiles and installs external dependencies">
     <mkdir dir="${dist.lib}/pegasus/externals/python"/>
     <exec executable="${make}" dir="src/externals" failonerror="true">
       <env key="prefix" value="${dist.dir}"/>
@@ -317,6 +317,7 @@
       <filterset>
         <filter token="PEGASUS_VERSION" value="${pegasus.version}"/>
         <filter token="LIBDIR" value="${dist.lib.subdir}"/>
+        <filter token="PYTHON_LIBDIR" value="${dist.python-lib.subdir}"/>
       </filterset>
     </copy>
   </target>
@@ -327,7 +328,25 @@
          includes="pegasus-${pegasus.version}/share/man/**,pegasus-${pegasus.version}/share/doc/**"/>
   </target>
 
-  <target name="dist-worker" depends="dist-clean,setup,pegasus-config,ctools,externals">
+  <target name="python" depends="dist-clean,setup">
+    <mkdir dir="${dist.python-lib}"/>
+    <copy preservelastmodified="true" todir="${dist.python-lib}">
+      <fileset dir="lib/pegasus/python">
+        <exclude name="setup.py"/>
+        <include name="**/*.py"/>
+      </fileset>
+    </copy>
+    <chmod perm="0755" type="file">
+      <fileset dir="${dist.python-lib}">
+        <include name="Pegasus/plots_stats/plots/populate.py"/>
+        <include name="Pegasus/plots_stats/plots/pegasus_breakdown.py"/>
+        <include name="Pegasus/plots_stats/plots/pegasus_time.py"/>
+        <include name="Pegasus/tools/kickstart_parser.py"/>
+      </fileset>
+    </chmod>
+  </target>
+
+  <target name="dist-worker" depends="dist-clean,setup,pegasus-config,ctools,python,python-externals">
     <!-- bin -->
     <copy preservelastmodified="true" todir="${dist.bin}">
       <fileset dir="bin">
@@ -349,8 +368,7 @@
     <package-binary name="pegasus-worker-${pegasus.version}-${dist.arch}"/>
   </target>
 
-
-  <target name="dist-common" depends="dist-clean,setup,jar,vdl-jar,pegasus-config,ctools,externals">
+  <target name="dist-common" depends="dist-clean,setup,jar,vdl-jar,pegasus-config,ctools,python,python-externals">
     <!-- bin -->
     <copy preservelastmodified="true" todir="${dist.bin}">
       <fileset dir="bin">
@@ -383,23 +401,6 @@
     <copy preservelastmodified="true" todir="${dist.lib}/pegasus/php">
       <fileset dir="lib/pegasus/php" includes="**/*.php"/>
     </copy>
-    <mkdir dir="${dist.python-lib}"/>
-    <copy preservelastmodified="true" todir="${dist.python-lib}">
-      <fileset dir="lib/pegasus/python" includes="**/*.py"/>
-    </copy>
-    <!-- Put a copy in the old Python location to be backward compatible -->
-    <mkdir dir="${dist.lib}/pegasus/python"/>
-    <copy preservelastmodified="true" todir="${dist.lib}/pegasus/python">
-      <fileset dir="lib/pegasus/python" includes="**/*.py"/>
-    </copy>
-    <chmod perm="0755" type="file">
-    <fileset dir="${dist.lib}/pegasus/python">
-        <include name="Pegasus/plots_stats/plots/populate.py"/>
-        <include name="Pegasus/plots_stats/plots/pegasus_breakdown.py"/>
-        <include name="Pegasus/plots_stats/plots/pegasus_time.py"/>
-        <include name="Pegasus/tools/kickstart_parser.py"/>
-      </fileset>
-    </chmod>
 
     <!-- share -->
     <mkdir dir="${dist.share}"/>
