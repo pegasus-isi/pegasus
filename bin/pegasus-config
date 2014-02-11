@@ -30,15 +30,18 @@ my $bin_dir = Cwd::abs_path(dirname($0));
 my $base_dir	= dirname($bin_dir);
 my $version     = '@PEGASUS_VERSION@';
 my $lib         = '@LIBDIR@'; # lib64 for 64bit RPMS
-# For development, if the LIBDIR hasn't been replaced, use 'lib'
 if (substr($lib, 0, 1) eq '@') {
     $lib = "lib";
+}
+my $python_lib  = '@PYTHON_LIBDIR@';
+if (substr($python_lib, 0, 1) eq '@') {
+    $python_lib = "lib/pegasus/python";
 }
 my $conf_dir	= File::Spec->catdir( $base_dir, 'etc' );
 my $share_dir	= File::Spec->catdir( $base_dir, 'share', 'pegasus' );
 my $java_dir	= File::Spec->catdir( $share_dir, 'java' );
 my $perl_dir	= File::Spec->catdir( $base_dir, $lib, 'pegasus', 'perl' );
-my $python_dir	= File::Spec->catdir( $base_dir, $lib, 'pegasus', 'python' );
+my $python_dir	= File::Spec->catdir( $base_dir, $python_lib );
 my $python_externals_dir = File::Spec->catdir( $base_dir, $lib, 'pegasus', 'externals', 'python' );
 my $php_dir	= File::Spec->catdir( $base_dir, $lib, 'pegasus', 'php' );
 my $js_dir	= File::Spec->catdir( $base_dir, $lib, 'pegasus', 'javascript' );
@@ -86,7 +89,7 @@ Arguments:
  --conf               Print the directory containing configuration files.
  --java               Print the directory containing the jars.
  --perl               Print the directory to include into your PERL5LIB.
- --python             Print the directory to include into your PYTHONLIB.
+ --python             Print the directory to include into your PYTHONPATH.
  --python-externals   Print the directory to the external Python libraries.
  --schema             Print the directory containing schemas.
  --classpath          Builds a classpath containing the Pegasus jars.
@@ -255,7 +258,6 @@ EOF
         print "pegasus_javascript_dir = \"$js_dir\"\n";
         print "pegasus_share_dir = \"$share_dir\"\n";
         print "pegasus_schema_dir = \"$schema_dir\"\n";
-        print "os.sys.path.insert(0, pegasus_python_dir)\n";
         exit 0; 
     }
     , 'sh-dump' => sub {
