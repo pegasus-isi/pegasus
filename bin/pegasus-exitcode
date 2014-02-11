@@ -22,23 +22,15 @@
 # This program also renames the .out and .err file to .out.XXX and .err.XXX
 # where XXX is a sequence number. This sequence number is incremented each time
 # the program is run with the same filename.out argument.
-
 import sys
-import re
 import os
-from subprocess import Popen, PIPE
+import subprocess
 
 # Use pegasus-config to find our lib path
-try:
-    bin_dir = os.path.normpath(os.path.dirname(__file__))
-    pegasus_config = os.path.join(bin_dir, "pegasus-config")
-    lib_dir = Popen([pegasus_config, "--noeoln", "--python"],
-                    stdout=PIPE).communicate()[0]
-    sys.path.insert(0, lib_dir)
-except Exception, e:
-    sys.stderr.write(str(e))
-    sys.stderr.write('\n')
-    sys.exit(1)
+bin_dir = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0])))
+pegasus_config = os.path.join(bin_dir, "pegasus-config") + " --noeoln --python"
+lib_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
+sys.path.insert(0, lib_dir)
 
 from Pegasus import exitcode
 

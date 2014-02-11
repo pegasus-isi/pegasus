@@ -82,7 +82,6 @@ Arguments:
 
  --perl-dump          Dumps all settings in perl format as separate variables.
  --perl-hash          Dumps all settings in perl format as single perl hash.
- --python-dump        Dumps all settings in python format.
  --sh-dump            Dumps all settings in shell format.
 
  --bin                Print the directory containing Pegasus binaries.
@@ -245,19 +244,6 @@ EOF
         print "my \$pegasus_share_dir = \"$share_dir\";\n";
         print "my \$pegasus_schema_dir = \"$schema_dir\";\n";
         print "unshift(\@INC, \$pegasus_perl_dir);\n";
-        exit 0; 
-    }
-    , 'python-dump' => sub {
-        print "pegasus_bin_dir = \"$bin_dir\"\n";
-        print "pegasus_conf_dir = \"$conf_dir\"\n";
-        print "pegasus_java_dir = \"$java_dir\"\n";
-        print "pegasus_perl_dir = \"$perl_dir\"\n";
-        print "pegasus_python_dir = \"$python_dir\"\n";
-        print "pegasus_python_externals_dir = \"$python_externals_dir\"\n";
-        print "pegasus_php_dir = \"$php_dir\"\n";
-        print "pegasus_javascript_dir = \"$js_dir\"\n";
-        print "pegasus_share_dir = \"$share_dir\"\n";
-        print "pegasus_schema_dir = \"$schema_dir\"\n";
         exit 0; 
     }
     , 'sh-dump' => sub {
