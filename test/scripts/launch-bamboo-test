@@ -96,6 +96,13 @@ if cat monitord.log | grep WARN | grep -v -E '(read_stdout_stderr_files)|(unable
     STATUS=$(($STATUS + 1))
 fi
 
+if [ $STATUS -ne 0 ]; then
+    echo "Test failed, creating tarball..."
+    TARFILE=$(mktemp pegasus-failure-XXXXXX.tar.gz)
+    tar czf $TARFILE $RUN_DIR
+    echo "Created tarball $TARFILE"
+fi
+
 if [ $STATUS != 0 ]; then
    echo "ERROR: Test failed" 1>&2
    exit $STATUS
