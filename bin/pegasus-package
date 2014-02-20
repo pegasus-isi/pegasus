@@ -7,7 +7,10 @@ import re
 import shutil
 import shlex
 from optparse import OptionParser
-import xml.etree.ElementTree as etree
+try:
+    import xml.etree.cElementTree as etree
+except ImportError:
+    import xml.etree.ElementTree as etree
 
 # Use pegasus-config to find our lib path
 home_dir = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0]), ".."))
@@ -333,11 +336,22 @@ def parse_invocations(filename):
                 e = etree.fromstring(l)
                 inv.slot = e.text
                 slot = inv.slot
+        elif l.startswith("<usage"):
+            # There are two usage records, the first is inside <mainjob>
+            # That's the one we want. We skip the other one.
+            if hasattr(inv, "utime") or hasattr(inv, "stime"):
+                continue
+
+            usage = etree.fromstring(l)
+            inv.utime = usage.attrib["utime"]
+            inv.stime = usage.attrib["stime"]
+
 
     f.close()
 
     for inv in invs:
-        inv.cputime = 0.0
+        inv.proc_utime = 0.0
+        inv.proc_stime = 0.0
         inv.rsspeak = 0.0
         inv.vmpeak = 0.0
         inv.rbytes = 0
@@ -345,13 +359,14 @@ def parse_invocations(filename):
 
         # XXX This isn't strictly correct, we need to consider overlapping processes for memory
         for p in inv.procs:
-            inv.cputime += float(p.attrib["utime"]) + float(p.attrib["stime"])
+            inv.proc_utime += float(p.attrib["utime"])
+            inv.proc_stime += float(p.attrib["stime"])
             inv.rsspeak += float(p.attrib["rsspeak"])
             inv.vmpeak += float(p.attrib["vmpeak"])
             inv.rbytes += int(p.attrib["rchar"])
             inv.wbytes += int(p.attrib["wchar"])
 
-        del inv.procs
+        inv.procs = len(inv.procs) > 0
 
     return invs
 
@@ -454,6 +469,13 @@ def write_output_dax(dax, metadata, files, outfile):
                 % (t.id, t.xform, i.duration, i.jobname, i.site, i.host, i.cpu))
         if i.slot is not None:
             out.write(' slot="%s"' % i.slot)
+        if i.procs:
+            out.write(' utime="%f" stime="%f"' % (i.proc_utime, i.proc_stime))
+        else:
+            if hasattr(i, "utime"):
+                out.write(' utime="%s"' % i.utime)
+            if hasattr(i, "stime"):
+                out.write(' stime="%s"' % i.stime)
         out.write('>\n')
         out.write('        <arguments>%s</arguments>\n' % " ".join(t.arguments))
         for f in t.files:
@@ -537,7 +559,7 @@ def write_output_dvdt(daxfile, dax, braindump, outdir, wfname):
             sf.write("wall_time:                %s s\n" % inv.duration)
             sf.write("max_concurrent_processes: %d procs\n" % 1)
             sf.write("total_processes:          %d procs\n" % 1)
-            sf.write("cpu_time:                 %f s\n" % inv.cputime)
+            sf.write("cpu_time:                 %f s\n" % inv.proc_utime + inv.proc_stime)
             sf.write("virtual_memory:           %f MB\n" % (float(inv.vmpeak)/1024.0))
             sf.write("resident_memory:          %f MB\n" % (float(inv.rsspeak)/1024.0))
             sf.write("swap_memory:              %d MB\n" % 0)
