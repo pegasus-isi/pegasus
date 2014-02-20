@@ -28,6 +28,8 @@ class IRods(object):
         log in to irods by using the iinit command - if the file already exists,
         we are already logged in
         """
+        if sitename is None:
+            sitename = ""
         key = "irodsEnvFile_" + sitename
         if key in os.environ:
             os.environ["irodsEnvFile"] = os.environ[key]
