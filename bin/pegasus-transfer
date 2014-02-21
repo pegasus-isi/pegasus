@@ -691,9 +691,6 @@ class HTTPHandler(TransferHandlerBase):
     def do_transfer(self, transfer, attempt):
         
         tools = Tools()
-        if tools.find("wget", "--version", "([0-9]+\.[0-9]+)") is None:
-            raise RuntimeError("Unable to do http/https transfers becuase" +
-                               " wget could not be found")
                                
         # Open Science Grid sites can inform us about local Squid proxies
         if "OSG_SQUID_LOCATION" in os.environ \
@@ -707,13 +704,30 @@ class HTTPHandler(TransferHandlerBase):
             del os.environ['http_proxy']
 
         prepare_local_dir(os.path.dirname(transfer.dst_path))
-        cmd = tools.full_path('wget')
-        if logger.isEnabledFor(logging.DEBUG):
-            cmd += " -v"
+        
+        # try wget first, then curl
+        if tools.find("wget", "--version", "([0-9]+\.[0-9]+)") is not None:
+            cmd = tools.full_path('wget')
+            if logger.isEnabledFor(logging.DEBUG):
+                cmd += " -v"
+            else:
+                cmd += " -q"
+            cmd += " --no-check-certificate" + \
+                   " -O '" + transfer.dst_path + "'" + \
+                   " '" + transfer.src_url() + "'"
+        elif tools.find("curl", "--version", " ([0-9]+\.[0-9]+)") is not None:
+            cmd = tools.full_path('curl')
+            if logger.isEnabledFor(logging.DEBUG):
+                cmd += " -v"
+            else:
+                cmd += " -s -S"
+            cmd += " --insecure" + \
+                   " -o '" + transfer.dst_path + "'" + \
+                   " '" + transfer.src_url() + "'"
         else:
-            cmd += " -q"
-        cmd += " --no-check-certificate -O '" + transfer.dst_path + "' '" + \
-               transfer.src_url() + "'"
+            raise RuntimeError("Unable to do http/https transfers because" +
+                               " neither wget not curl could not be found")
+            
         try:
             myexec(cmd, default_subshell_timeout, True)
             stats_add(transfer.dst_path)
