@@ -138,10 +138,12 @@ public abstract class Abstract implements CondorStyle {
             
                 // if the credential is listed in the remote sites environment, don't do anything
                 SiteCatalogEntry site = mSiteStore.lookup(job.getSiteHandle());
-                if (site.getEnvironmentVariable(handler.getProfileKey()) != null) {
+                if (site.getEnvironmentVariable(handler.getProfileKey()) != null &&
+                        siteHandle.equals( job.getSiteHandle() )) {
                     //the user has the enviornment variable specified in the site
                     //catalog pointing to an existing credential on the remote 
-                    //site.
+                    //site and the job is going to run on the site for which we
+                    //need the credential
                     continue;
                 }
                 
