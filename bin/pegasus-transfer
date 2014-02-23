@@ -615,14 +615,14 @@ class GridFtpHandler(TransferHandlerBase):
         if create_dest:
             options += " -create-dest"
     
+        # pipeline is experimental so only allow this for the first attempt
+        if gsiftp_failures == 0:
+            options += " -pipeline"
+                
         # concurrency is safe for both pull/push and 3rd party
         if tools.major_version('globus-url-copy') >= 5 \
            and gsiftp_failures == 0:
             options += " -concurrency 4"
-    
-        # pipeline is experimental so only allow this for the first attempt
-        if gsiftp_failures == 0:
-            options += " -pipeline"
 
         # Only do third party transfers for gsiftp->gsiftp. For other
         # combinations, fall back to settings which will for well over for
@@ -630,7 +630,7 @@ class GridFtpHandler(TransferHandlerBase):
         if third_party:
     
             # parallism
-            options += " -parallel 6"
+            options += " -parallel 4"
     
             # -fast should be supported by all servers today
             options += " -fast"
@@ -643,7 +643,7 @@ class GridFtpHandler(TransferHandlerBase):
         else:
             # gsiftp<->file transfers
             if gsiftp_failures == 0:
-                options += " -parallel 6"
+                options += " -parallel 4"
             options += " -no-third-party-transfers" \
                      + " -no-data-channel-authentication"
     
@@ -1274,6 +1274,17 @@ class TransferSet:
                 pass
 
 
+    def has_gridftp_transfers(self):
+        """
+        Check if this transfer set has gridftp transfers
+        """
+        if (self._transfers[0].src_proto == "gsiftp" \
+            or self._transfers[0].dst_proto == "gsiftp"):
+            return True
+        return False
+        
+        
+
 class WorkThread(threading.Thread):
     """
     A thread which processes TransferSets
@@ -1711,8 +1722,13 @@ def main():
         attempt_current = attempt_current + 1
         logger.info('-' * 80)
         logger.info("Starting transfers - attempt %d" % (attempt_current))
+
+        # track the transfer sets in the work queue and see if we need to 
+        # limit the parallelism
+        max_threads = options.threads
+        gridftp_count = 0
     
-        # do the transfers
+        # organize the transfers
         while not transfer_q.empty():
             t_main = transfer_q.get()
             
@@ -1735,11 +1751,19 @@ def main():
             
             # magic!
             ts = TransferSet(t_list)
+            if ts.has_gridftp_transfers():
+                gridftp_count += 1
             work_q.put(ts)
+
+        # if the transfers are mostly gridftp, limit the threading            
+        if gridftp_count / (float)(work_q.qsize()) > .9:
+            max_threads = 1
     
         # pool of worker threads
         t_id = 0
-        num_threads = min(options.threads, work_q.qsize())
+        num_threads = min(max_threads, work_q.qsize())
+        logger.debug("Using %d threads for this round of transfers"
+                     %(num_threads))
         for i in range(num_threads):
             t_id += 1
             t = WorkThread(t_id, work_q, attempt_current, failed_q)
