@@ -618,11 +618,6 @@ class GridFtpHandler(TransferHandlerBase):
         # pipeline is experimental so only allow this for the first attempt
         if gsiftp_failures == 0:
             options += " -pipeline"
-                
-        # concurrency is safe for both pull/push and 3rd party
-        if tools.major_version('globus-url-copy') >= 5 \
-           and gsiftp_failures == 0:
-            options += " -concurrency 4"
 
         # Only do third party transfers for gsiftp->gsiftp. For other
         # combinations, fall back to settings which will for well over for
@@ -1595,7 +1590,7 @@ def main():
     parser.add_option("-n", "--threads", action = "store", type="int",
                       dest = "threads", default = 0,
                       help = "Number of threads to process transfers." +
-                             " Default is 8. This option can also be set" +
+                             " Default is 2. This option can also be set" +
                              " via the PEGASUS_TRANSFER_THREADS environment" +
                              " variable. The command line option takes" +
                              " precedence over the environment variable.")
@@ -1615,7 +1610,7 @@ def main():
         if "PEGASUS_TRANSFER_THREADS" in os.environ:
             options.threads = int(os.environ["PEGASUS_TRANSFER_THREADS"])
         else:
-            options.threads = 8
+            options.threads = 2
     
     # stdin or file input?
     if options.file is None:
@@ -1696,7 +1691,8 @@ def main():
     except Exception, err:
         logger.critical('Error reading url list: %s' % (err))
         myexit(1)
-    logger.info("%d transfers loaded" % (len(inputs)))
+    total_transfers = len(inputs)
+    logger.info("%d transfers loaded" % (total_transfers))
 
     # we will now sort the list as some tools (gridftp) can optimize when
     # given a group of similar transfers
@@ -1717,17 +1713,13 @@ def main():
     # thread pool again.
     done = False
     attempt_current = 0
+    approx_transfer_per_thread = total_transfers / (float)(options.threads)
     while not done:
     
         attempt_current = attempt_current + 1
         logger.info('-' * 80)
         logger.info("Starting transfers - attempt %d" % (attempt_current))
 
-        # track the transfer sets in the work queue and see if we need to 
-        # limit the parallelism
-        max_threads = options.threads
-        gridftp_count = 0
-    
         # organize the transfers
         while not transfer_q.empty():
             t_main = transfer_q.get()
@@ -1739,7 +1731,8 @@ def main():
             try:
                 t_next = transfer_q.get(False)
                 while t_next is not None:
-                    if transfers_groupable(t_main, t_next):
+                    if len(t_list) <  approx_transfer_per_thread and \
+                       transfers_groupable(t_main, t_next):
                         t_list.append(t_next)
                         t_next = transfer_q.get(False)
                     else:
@@ -1751,19 +1744,15 @@ def main():
             
             # magic!
             ts = TransferSet(t_list)
-            if ts.has_gridftp_transfers():
-                gridftp_count += 1
             work_q.put(ts)
 
-        # if the transfers are mostly gridftp, limit the threading            
-        if gridftp_count / (float)(work_q.qsize()) > .9:
-            max_threads = 1
-    
         # pool of worker threads
         t_id = 0
-        num_threads = min(max_threads, work_q.qsize())
-        logger.debug("Using %d threads for this round of transfers"
-                     %(num_threads))
+        num_threads = min(options.threads, work_q.qsize())
+        if attempt_current > 1:
+            num_threads = 1
+        logger.info("Using %d threads for this round of transfers"
+                    %(num_threads))
         for i in range(num_threads):
             t_id += 1
             t = WorkThread(t_id, work_q, attempt_current, failed_q)
