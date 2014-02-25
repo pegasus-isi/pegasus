@@ -248,11 +248,6 @@ public class Transfer   implements SLS {
                 invocation.append( slsFile.getName() );
             }
         }
-
-
-
-       
-
         return invocation.toString();
 
     }
