@@ -382,6 +382,12 @@ public class Transfer   implements SLS {
                     //we can symlink . construct the source URL as a file url
                     symlink = true;
                     url.append( PegasusURL.FILE_URL_SCHEME ).append( "//" ).append( stagingSiteDirectory );
+                    if( pf.isExecutable() ){
+                        //PM-734 for executable files we can have the source url as file url 
+                        //but we cannot have the destination URL as symlink://
+                        //as we want to do chmod on the local copy on the worker node
+                        symlink = false;
+                    }
                 }
                 else{
                     url.append( mSiteStore.getExternalWorkDirectoryURL(stagingSiteServer, stagingSite ));
@@ -395,6 +401,7 @@ public class Transfer   implements SLS {
                 ft.addSource( cacheLocation.getResourceHandle(), url.toString() );
                 
                 symlink = ( mUseSymLinks && //specified in configuration
+                            !pf.isExecutable() && //can only do symlinks for data files . not executables
                             ft.getSourceURL().getKey().equals( job.getSiteHandle()) && //source URL logically on the same site where job is to be run
                             url.toString().startsWith( PegasusURL.FILE_URL_SCHEME ) ); //source URL is a file URL
             }
