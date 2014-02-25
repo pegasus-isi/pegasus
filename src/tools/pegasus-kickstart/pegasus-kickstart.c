@@ -25,6 +25,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <stdlib.h>
+#include <limits.h>
 
 #include "rwio.h"
 #include "debug.h"
@@ -335,7 +336,7 @@ noquote( char* s )
 int
 main( int argc, char* argv[] )
 {
-  size_t m, cwd_size = getpagesize();
+  size_t cwd_size = getpagesize();
   int status, result;
   int i, j, keeploop;
   int createDir = 0;
@@ -343,7 +344,7 @@ main( int argc, char* argv[] )
   const char* workdir = NULL;
   mylist_t initial;
   mylist_t final;
- 
+
   /* premature init with defaults */
   if ( mylist_init( &initial ) ) return 43;
   if ( mylist_init( &final ) ) return 43;
@@ -364,20 +365,32 @@ main( int argc, char* argv[] )
 
   /*
    * read commandline arguments
-   * DO NOT use getopt to avoid cluttering flags to the application 
+   * DO NOT use getopt to avoid cluttering flags to the application
    */
   for ( keeploop=i=1; i < argc && argv[i][0] == '-' && keeploop; ++i ) {
     j = i;
     switch ( argv[i][1] ) {
     case 'B':
       if (!argv[i][2] && argc <= i+1) {
-          debugmsg( "ERROR: -B argument missing\n");
+          debugmsg("ERROR: -B argument missing\n");
           return 127;
       }
       temp = argv[i][2] ? &argv[i][2] : argv[++i];
-      m = strtoul( temp, 0, 0 );
-      /* limit max <data> size to 64 MB for each. */
-      if ( m < 67108863ul ) data_section_size = m;
+
+      /* The special value 'all' means that we echo all the output */
+      if (strcmp(temp, "all") == 0) {
+          data_section_size = ULONG_MAX;
+          break;
+      }
+
+      /* Otherwise, we expect a unsigned long value */
+      size_t m = strtoul(temp, 0, 0);
+      if (m == 0 || m == ULONG_MAX) {
+        debugmsg("ERROR: Invalid -B argument: %s\n", temp);
+        return 127;
+      }
+      data_section_size = m;
+
       break;
     case 'e':
       if (!argv[i][2] && argc <= i+1) {
