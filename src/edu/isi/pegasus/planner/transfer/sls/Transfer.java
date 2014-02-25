@@ -45,6 +45,7 @@ import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.namespace.ENV;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 
 import java.io.File;
 
@@ -218,11 +219,18 @@ public class Transfer   implements SLS {
         
         invocation.append( executable );
 
+        //get the value if any that is present in the associated compute job
+        //that should take care of the properties also
+        String threads = job.vdsNS.getStringValue( Pegasus.TRANSFER_SLS_THREADS_KEY );
+        if( threads != null  ){
+            invocation.append( " --threads ").
+               append( threads ).append( " " );
+        }
 
         //append any extra arguments set by user
-        //in properties
-        if( mExtraArguments != null ){
-            invocation.append( " " ).append( mExtraArguments );
+        String args = job.vdsNS.getStringValue( Pegasus.TRANSFER_SLS_ARGUMENTS_KEY );
+        if( args != null ){
+            invocation.append( " " ).append( args );
         }
 
 

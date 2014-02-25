@@ -266,6 +266,27 @@ public class Pegasus extends Namespace {
      * determines the arguments with which the transfer executable is invoked.
      */
     public static final String TRANSFER_ARGUMENTS_KEY = "transfer.arguments";
+    
+    
+    /**
+     * The name of the profile key, that when associated with transfer jobs
+     * determines the number of threads that pegasus-transfer uses to do the transfer
+     */
+    public static final String TRANSFER_THREADS_KEY = "transfer.threads";
+    
+    /**
+     * The name of the profile key, that when associated with transfer jobs
+     * determines the arguments with which the transfer executable is invoked.
+     */
+    public static final String TRANSFER_SLS_ARGUMENTS_KEY = "transfer.sls.arguments";
+    
+    
+    /**
+     * The name of the profile key, that when associated with transfer jobs
+     * determines the number of threads that pegasus-transfer uses to do the transfer
+     */
+    public static final String TRANSFER_SLS_THREADS_KEY = "transfer.sls.threads";
+
 
     /**
      * The name of the profile key when associated with a transformation in the
@@ -586,8 +607,11 @@ public class Pegasus extends Namespace {
                 break;
 
             case 't':
-                if ((key.compareTo(TRANSFER_PROXY_KEY) == 0) ||
-		     (key.compareTo(TRANSFER_ARGUMENTS_KEY) == 0)){
+                if  ( ( key.compareTo( TRANSFER_PROXY_KEY ) == 0) ||
+                      ( key.compareTo( TRANSFER_ARGUMENTS_KEY ) == 0) || 
+                      ( key.compareTo( TRANSFER_THREADS_KEY ) == 0) ||
+		      ( key.compareTo( TRANSFER_SLS_ARGUMENTS_KEY ) == 0) || 
+                      ( key.compareTo( TRANSFER_SLS_THREADS_KEY ) == 0) ){
                     res = VALID_KEY;
                 }
                 else{

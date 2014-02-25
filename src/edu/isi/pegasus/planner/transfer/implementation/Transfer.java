@@ -346,6 +346,13 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
      */
     protected String generateArgumentString(TransferJob job) {
         StringBuffer sb = new StringBuffer();
+        
+        if(job.vdsNS.containsKey(Pegasus.TRANSFER_THREADS_KEY )){
+            sb.append( " --threads ").
+               append( job.vdsNS.getStringValue( Pegasus.TRANSFER_THREADS_KEY ) ).append( " " );
+                    
+        }
+        
         if(job.vdsNS.containsKey(Pegasus.TRANSFER_ARGUMENTS_KEY)){
             sb.append(
                       job.vdsNS.removeKey(Pegasus.TRANSFER_ARGUMENTS_KEY)
