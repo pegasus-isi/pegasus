@@ -82,7 +82,7 @@ convert2XML( FILE *out, const AppInfo* run )
                      run->start.tv_usec));
 
   /* duration */
-  fprintf(out, " duration=\"%.3f\"",
+  fprintf(out, " duration=\"%.6f\"",
           doubletime(run->finish) - doubletime(run->start));
 
   /* optional attributes for root element: transformation fqdn */
