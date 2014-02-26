@@ -800,7 +800,12 @@ public class Pegasus extends Namespace {
    public void unknownKey(String key, String value) {
        //mLogger.log("unknown profile " + mNamespace + "." + key +
        //            ",  using anyway", LogManager.DEBUG_MESSAGE_LEVEL);
-       construct(key, value);
+       
+       //Starting 4.4 unknown keys are not added to jobs. this will help 
+       //in reducing the number of profiles associated with the jobs, as
+       //not all pegasus properties are handled as profiles.
+       //construct(key, value);
+       
    }
 
 
