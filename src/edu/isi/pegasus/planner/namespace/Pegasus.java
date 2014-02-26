@@ -16,19 +16,22 @@
 
 package edu.isi.pegasus.planner.namespace;
 
-import java.util.Iterator;
-import java.util.Map;
-import java.util.TreeMap;
+import edu.isi.pegasus.common.credential.impl.Irods;
+import edu.isi.pegasus.common.credential.impl.Proxy;
+import edu.isi.pegasus.common.credential.impl.S3CFG;
+import edu.isi.pegasus.common.credential.impl.Ssh;
 
 import edu.isi.pegasus.planner.classes.Profile;
 
-import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.aggregator.Aggregator;
 import edu.isi.pegasus.planner.namespace.aggregator.UniqueMerge;
 import edu.isi.pegasus.planner.namespace.aggregator.Sum;
 
+import java.util.Iterator;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * A Planner specific namespace. It defines profiles that are used to fine
@@ -391,6 +394,12 @@ public class Pegasus extends Namespace {
      */
     public static final String PMC_TASK_ARGUMENTS = "pmc_task_arguments";
 
+    //credential related constant keys
+    private static final String S3CFG_FILE_VARIABLE = S3CFG.S3CFG_FILE_VARIABLE.toLowerCase();
+    private static final String SSH_PRIVATE_KEY_VARIABLE = Ssh.SSH_PRIVATE_KEY_VARIABLE.toLowerCase();
+    private static final String IRODSENVFILE = Irods.IRODSENVFILE.toLowerCase();
+    private static final String X509_USER_PROXY_KEY = Proxy.X509_USER_PROXY_KEY.toLowerCase();
+    
     /**
      * Static Handle to the sum aggregator.
      */
@@ -553,6 +562,15 @@ public class Pegasus extends Namespace {
                 }
                 break;
 
+            case 'i':
+                if (key.compareTo( IRODSENVFILE ) == 0) {
+                    res = VALID_KEY;
+                }
+                else {
+                    res = UNKNOWN_KEY;
+                }
+                break;
+                
             case 'j':
                 if (key.compareTo( JOB_RUN_TIME ) == 0) {
                     res = VALID_KEY;
@@ -597,7 +615,9 @@ public class Pegasus extends Namespace {
                 break;
 
             case 's':
-                if(key.compareTo(STYLE_KEY) == 0){
+                if( key.compareTo( STYLE_KEY ) == 0 ||
+                    key.compareTo( S3CFG_FILE_VARIABLE ) == 0 ||
+                    key.compareTo( SSH_PRIVATE_KEY_VARIABLE ) == 0){
                     res = VALID_KEY;
                 }
                 else{
@@ -629,6 +649,15 @@ public class Pegasus extends Namespace {
                 }
                 break;
 
+            case 'x':
+                if ( key.compareTo( X509_USER_PROXY_KEY ) == 0) {
+                    res = VALID_KEY;
+                }
+                else {
+                    res = UNKNOWN_KEY;
+                }
+                break;
+                
 
             default:
                 res = UNKNOWN_KEY;
