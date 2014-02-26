@@ -560,11 +560,22 @@ class GridFtpHandler(TransferHandlerBase):
         key = "X509_USER_PROXY_" + transfers[0].dst_sitename
         if key in os.environ:
             dst_cred = os.environ[key]
+
+        # only set src-cred / dst-cred if at least one is specified
         if src_cred is not None or dst_cred is not None:
+
             if src_cred is None:
-                src_cred = dst_cred
+                if "X509_USER_PROXY" in os.environ:
+                    src_cred = os.environ["X509_USER_PROXY"]
+                else:
+                    src_cred = dst_cred
+
             if dst_cred is None:
-                dst_cred = src_cred
+                if "X509_USER_PROXY" in os.environ:
+                    dst_cred = os.environ["X509_USER_PROXY"]
+                else:
+                    dst_cred = src_cred
+
             cmd += " -src-cred " + src_cred + " -dst-cred " + dst_cred
             check_cred_fs_permissions(src_cred)
             check_cred_fs_permissions(dst_cred)
