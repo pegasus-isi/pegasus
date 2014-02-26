@@ -30,7 +30,7 @@ printXMLUseInfo(FILE *out, int indent, const char* id,
   char b[4][32];
 
   /* <usage> */
-  fprintf(out, "%*s<%s utime=\"%.6f\" stime=\"%.6f\"",
+  fprintf(out, "%*s<%s utime=\"%.3f\" stime=\"%.3f\"",
           indent, "", id, doubletime(use->ru_utime), doubletime(use->ru_stime));
 
   fprintf(out, " maxrss=\"%s\" ixrss=\"%s\" idrss=\"%s\" isrss=\"%s\"",
