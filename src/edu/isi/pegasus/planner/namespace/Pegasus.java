@@ -507,7 +507,7 @@ public class Pegasus extends Namespace {
         switch (key.charAt(0)) {
 
             case 'b':
-                if ( (key.compareTo(BUNDLE_KEY) == 0) ||
+                if ( 
                      (key.compareTo(BUNDLE_STAGE_IN_KEY) == 0) ||
                      (key.compareTo(BUNDLE_STAGE_OUT_KEY) == 0 ) ||
                      (key.compareTo( BUNDLE_REMOTE_STAGE_IN_KEY) == 0 )) {
@@ -522,8 +522,9 @@ public class Pegasus extends Namespace {
                 break;
 
             case 'c':
-                if ((key.compareTo( COLLAPSE_KEY ) == 0) ||
-                    (key.compareTo( COLLAPSER_KEY ) == 0) ||
+                if (
+                    (key.compareTo(BUNDLE_KEY) == 0) ||
+                    (key.compareTo( COLLAPSE_KEY ) == 0) ||
                     (key.compareTo( CHANGE_DIR_KEY ) == 0) ||
                     (key.compareTo( CHAIN_STAGE_IN_KEY ) == 0) ||
                     (key.compareTo( MAX_RUN_TIME ) == 0) ||
@@ -532,7 +533,8 @@ public class Pegasus extends Namespace {
                     (key.compareTo( CORES_KEY ) == 0 ) ) {
                     res = VALID_KEY;
                 }
-                else if(key.compareTo(DEPRECATED_CHANGE_DIR_KEY) == 0){
+                else if(key.compareTo(DEPRECATED_CHANGE_DIR_KEY) == 0 ||
+                    (key.compareTo( COLLAPSER_KEY ) == 0)){
                     res = DEPRECATED_KEY;
                 }
                 else {
@@ -617,7 +619,13 @@ public class Pegasus extends Namespace {
             case 's':
                 if( key.compareTo( STYLE_KEY ) == 0 ||
                     key.compareTo( S3CFG_FILE_VARIABLE ) == 0 ||
-                    key.compareTo( SSH_PRIVATE_KEY_VARIABLE ) == 0){
+                    key.compareTo( SSH_PRIVATE_KEY_VARIABLE ) == 0 ||
+                    key.compareTo( CLUSTER_STAGE_IN_KEY ) == 0 ||  
+                    key.compareTo( CLUSTER_REMOTE_STAGE_IN_KEY ) == 0 ||
+                    key.compareTo( CLUSTER_LOCAL_STAGE_IN_KEY ) == 0 ||
+                    key.compareTo( CLUSTER_STAGE_OUT_KEY ) == 0 ||  
+                    key.compareTo( CLUSTER_REMOTE_STAGE_OUT_KEY ) == 0 ||
+                    key.compareTo( CLUSTER_LOCAL_STAGE_OUT_KEY ) == 0   ){
                     res = VALID_KEY;
                 }
                 else{
@@ -631,7 +639,8 @@ public class Pegasus extends Namespace {
                       ( key.compareTo( TRANSFER_ARGUMENTS_KEY ) == 0) || 
                       ( key.compareTo( TRANSFER_THREADS_KEY ) == 0) ||
 		      ( key.compareTo( TRANSFER_SLS_ARGUMENTS_KEY ) == 0) || 
-                      ( key.compareTo( TRANSFER_SLS_THREADS_KEY ) == 0) ){
+                      ( key.compareTo( TRANSFER_SLS_THREADS_KEY ) == 0) || 
+                      ( key.compareTo( TYPE_KEY ) == 0) ){
                     res = VALID_KEY;
                 }
                 else{
