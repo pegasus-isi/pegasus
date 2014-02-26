@@ -106,18 +106,18 @@ static int proc_read_meminfo(ProcInfo *item) {
         perror("sprintf");
         return -1;
     }
-    
+
     /* If the status file is missing, then just skip it */
     if (access(statf, F_OK) < 0) {
         return 0;
     }
-    
+
     FILE *f = fopen(statf,"r");
     if (f == NULL) {
         perror("fopen");
         return -1;
     }
-    
+
     char line[BUFSIZ];
     while (fgets(line, BUFSIZ, f) != NULL) {
         if (startswith(line, "PPid")) {
@@ -130,12 +130,12 @@ static int proc_read_meminfo(ProcInfo *item) {
             sscanf(line,"VmHWM:%d kB\n",&(item->rsspeak));
         }
     }
-    
+
     if (ferror(f)) {
         fclose(f);
         return -1;
     }
-    
+
     return fclose(f);
 }
 
@@ -146,33 +146,33 @@ static int proc_read_statinfo(ProcInfo *item) {
         perror("sprintf");
         return -1;
     }
-    
+
     /* If the stat file is missing, then just skip it */
     if (access(statf, F_OK) < 0) {
         return 0;
     }
-    
+
     FILE *f = fopen(statf,"r");
     if (f == NULL) {
         perror("fopen");
         return -1;
     }
-    
+
     unsigned long utime, stime;
     fscanf(f, "%*d %*s %*c %*d %*d %*d %*d %*d "
               "%*u %*u %*u %*u %*u %lu %lu %*d %*d",
            &utime, &stime);
-    
+
     /* Adjust by number of clock ticks per second */
     long clocks = sysconf(_SC_CLK_TCK);
     item->utime = ((double)utime) / clocks;
     item->stime = ((double)stime) / clocks;
-    
+
     if (ferror(f)) {
         fclose(f);
         return -1;
     }
-    
+
     return fclose(f);
 }
 
@@ -183,7 +183,7 @@ static int proc_read_io(ProcInfo *item) {
         perror("sprintf");
         return -1;
     }
-    
+
     /* This proc file was added in Linux 2.6.20. It won't be
      * there on older kernels, or on kernels without task IO 
      * accounting. If it is missing, just bail out.
@@ -191,13 +191,13 @@ static int proc_read_io(ProcInfo *item) {
     if (access(iofile, F_OK) < 0) {
         return 0;
     }
-    
+
     FILE *f = fopen(iofile, "r");
     if (f == NULL) {
         perror("fopen");
         return -1;
     }
-    
+
     char line[BUFSIZ];
     while (fgets(line, BUFSIZ, f) != NULL) {
         if (startswith(line, "rchar")) {
@@ -216,12 +216,12 @@ static int proc_read_io(ProcInfo *item) {
             sscanf(line,"cancelled_write_bytes: %"SCNu64"\n",&(item->cancelled_write_bytes));
         }
     }
-    
+
     if (ferror(f)) {
         fclose(f);
         return -1;
     }
-    
+
     return fclose(f);
 }
 #endif
@@ -243,10 +243,10 @@ int procParentTrace(pid_t main, int *main_status, struct rusage *main_usage, Pro
      * if we encounter an error so that we don't leave a lot of processes
      * hanging around in the t state
      */
-    
+
     /* Event loop */
     while (1) {
-        
+
         /* Wait for a child to stop or exit */
         int status = 0;
         struct rusage usage;
@@ -264,10 +264,10 @@ int procParentTrace(pid_t main, int *main_status, struct rusage *main_usage, Pro
                 return -1;
             }
         }
-        
+
         /* find the child */
         ProcInfo *child = proc_lookup(procs, cpid);
-        
+
         /* if not found, then it is new, so add it */
         if (child == NULL) {
             child = proc_add(procs, cpid);
@@ -281,18 +281,18 @@ int procParentTrace(pid_t main, int *main_status, struct rusage *main_usage, Pro
              * Right now shell scripts are reported as the shell, not
              * as the original script
              */
-            if (ptrace(PTRACE_SETOPTIONS, cpid, NULL, 
-                       PTRACE_O_TRACEEXIT|PTRACE_O_TRACEFORK| 
+            if (ptrace(PTRACE_SETOPTIONS, cpid, NULL,
+                       PTRACE_O_TRACEEXIT|PTRACE_O_TRACEFORK|
                        PTRACE_O_TRACEVFORK|PTRACE_O_TRACECLONE)) {
                 perror("ptrace(PTRACE_SETOPTIONS)");
                 return -1;
             }
         }
-        
+
         /* child exited */
         if (WIFEXITED(status)) {
             /* If the exiting child was the main process, then
-             * store its status and usage 
+             * store its status and usage
              */
             if (main == cpid) {
                 memcpy(main_usage, &usage, sizeof(struct rusage));
@@ -301,7 +301,7 @@ int procParentTrace(pid_t main, int *main_status, struct rusage *main_usage, Pro
 
         /* child stopped */
         if (WIFSTOPPED(status)) {
-            
+
             /* because of an event we wanted to see */
             if(WSTOPSIG(status) == SIGTRAP) {
                 int event = status >> 16;
@@ -320,7 +320,7 @@ int procParentTrace(pid_t main, int *main_status, struct rusage *main_usage, Pro
                     if (proc_read_io(child) < 0) {
                         perror("proc_read_io");
                     }
-                     
+
                     /* If this is the main process, then get the exit status.
                      * We have to do this here because the normal exit status
                      * we get from wait4 above does not properly capture the 
@@ -335,18 +335,18 @@ int procParentTrace(pid_t main, int *main_status, struct rusage *main_usage, Pro
                         *main_status = event_status;
                     }
                 }
-                
+
                 /* tell child to continue */
                 if (ptrace(PTRACE_CONT, cpid, NULL, NULL)) {
                     perror("ptrace(PTRACE_CONT)");
                     return -1;
                 }
-            } 
-            
+            }
+
             /* because it got a signal */
             else {
                 int signal = WSTOPSIG(status);
-                
+
                 /* Mask the STOP signal. Since we are running a batch job
                  * we should assume that the children never need to be sent
                  * SIGSTOP. It looks like shells try to send SIGSTOP to all
@@ -363,7 +363,7 @@ int procParentTrace(pid_t main, int *main_status, struct rusage *main_usage, Pro
                 if (signal == SIGSTOP || signal == SIGTSTP) {
                     signal = 0;
                 }
-                
+
                 /* pass the signal on to the child */
                 if (ptrace(PTRACE_CONT, cpid, NULL, signal)) {
                     perror("ptrace(PTRACE_CONT)");
@@ -372,7 +372,7 @@ int procParentTrace(pid_t main, int *main_status, struct rusage *main_usage, Pro
             }
         }
     }
-    
+
     return 0;
 #endif
 }
@@ -396,14 +396,14 @@ int printXMLProcInfo(FILE *out, int indent, ProcInfo* procs) {
         if (i->tgid != i->pid) continue;
 
         fprintf(out, "%*s<proc ppid=\"%d\" pid=\"%d\" exe=\"%s\" "
-                "start=\"%lf\" stop=\"%lf\" utime=\"%lf\" stime=\"%lf\" "
+                "start=\"%lf\" stop=\"%lf\" utime=\"%.2f\" stime=\"%.2f\" "
                 "vmpeak=\"%d\" rsspeak=\"%d\" rchar=\"%"PRIu64"\" wchar=\"%"PRIu64"\" "
                 "rbytes=\"%"PRIu64"\" wbytes=\"%"PRIu64"\" cwbytes=\"%"PRIu64"\" "
-                "syscr=\"%"PRIu64"\" syscw=\"%"PRIu64"\"/>\n", 
-                indent, "", i->ppid, i->pid, i->exe, 
-                i->start, i->stop, i->utime, i->stime, 
-                i->vmpeak, i->rsspeak, i->rchar, i->wchar, 
-                i->read_bytes, i->write_bytes, i->cancelled_write_bytes, 
+                "syscr=\"%"PRIu64"\" syscw=\"%"PRIu64"\"/>\n",
+                indent, "", i->ppid, i->pid, i->exe,
+                i->start, i->stop, i->utime, i->stime,
+                i->vmpeak, i->rsspeak, i->rchar, i->wchar,
+                i->read_bytes, i->write_bytes, i->cancelled_write_bytes,
                 i->syscr, i->syscw);
     }
     return 0;
