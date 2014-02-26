@@ -373,7 +373,7 @@ def gsiftp(url):
     if key in os.environ:
         os.environ["X509_USER_PROXY"] = os.environ[key]
    
-    # build command line for globus-url-copy
+    # build command line for pegasus-gridftp
     cmd = tool_info['pegasus-gridftp']['full_path']
     cmd += " mkdir"
 
@@ -385,7 +385,18 @@ def gsiftp(url):
     cmd += " -p"
     cmd += " " + url.url()
 
-    myexec(cmd, 60, True)
+    try:
+        myexec(cmd, 60, True)
+    except:
+        # pegasus-gridftp has a new stricter hostcert check - if it
+        # fails, try globus-url-copy
+        if tool_info['globus-url-copy']['full_path'] == None:
+            raise RuntimeError("Unable to do gsiftp mkdir because globus-url-copy could not be found")
+        cmd = tool_info['globus-url-copy']['full_path']
+        cmd += " -create-dest"
+        cmd += " file:///dev/null"
+        cmd += " " + url.url() + "/.create-dir"
+        myexec(cmd, 60, True)
 
 
 def irods_login():
@@ -533,6 +544,7 @@ def create_dir(url):
                 scp(url)
             elif tool == "gsiftp":
                 check_tool("pegasus-gridftp", "", None)
+                check_tool("globus-url-copy", "-version", "globus-url-copy: ([\.0-9a-zA-Z]+)")
                 gsiftp(url)
             elif tool == "irods":
                 check_tool("imkdir", "-h", "Version[ \t]+([\.0-9a-zA-Z]+)")
