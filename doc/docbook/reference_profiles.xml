@@ -629,7 +629,7 @@
           </tgroup>
         </table></para>
 
-      <para></para>
+      <para/>
 
       <para>Table 7 shows the keys in the dagman profile domain that are
       understood by Pegasus and can be used to apply to the whole workflow.
@@ -928,8 +928,34 @@
 
               <entry>Allows the user to specify the arguments with which the
               transfer executable is invoked. However certain options are
-              always generated for the transfer executable(base-uri
-              se-mount-point).</entry>
+              always generated for the transfer executable. The profile
+              applies to the separate data transfer nodes added by Pegasus to
+              the executable workflow.</entry>
+            </row>
+
+            <row>
+              <entry>transfer.threads</entry>
+
+              <entry>the number of threads launched by pegasus-transfer when
+              doing the transfers. The profile applies to the separate data
+              transfer nodes added by Pegasus to the executable
+              workflow.</entry>
+            </row>
+
+            <row>
+              <entry>transfer.sls.arguments</entry>
+
+              <entry>Similar to transfer.arguments, but applies to the
+              transfers performed in the PegasusLite jobs in the nonsharedfs
+              data configuration.</entry>
+            </row>
+
+            <row>
+              <entry>transfer.sls.threads </entry>
+
+              <entry>Similar to threads, but applies to the transfers
+              performed in the PegasusLite jobs in the nonsharedfs data
+              configuration.</entry>
             </row>
 
             <row>
