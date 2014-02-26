@@ -5,7 +5,7 @@ pegasus-kickstart(1)
 
 Name
 ----
-pegasus-kickstart - run an executable in a more universal environment.
+pegasus-kickstart - remote job wrapper
 
 
 Synopsis
@@ -19,19 +19,21 @@ Synopsis
 
 Description
 -----------
-The *pegasus-kickstart* executable is a light wrapper program which connects 
-the 'stdin', 'stdout' and 'stderr' file handles for grid jobs on the remote 
-site, and reports back the remote application termination condition. 
+*pegasus-kickstart* is a wrapper program which manages and monitors the
+execution of jobs on remote resources.
 
-Sitting in between the remote scheduler and the executable, it is
+Sitting in between the remote scheduler and the application process, it is
 possible for *pegasus-kickstart* to gather additional information about 
-the executable run-time behavior and resource usage, including the exit 
-status of jobs. This information is important for the Pegasus invocation 
-tracking as well as to Condor DAGMan's awareness of Globus job failures.
+the process' run-time behavior and resource usage, including the exit 
+status of jobs. This information is important for Pegasus invocation 
+tracking as well as detecting Globus GRAM job failures.
 
 *pegasus-kickstart* allows the optional execution of jobs before and after 
 the main application job that run in chained execution with the main application
 job. See section <<SUBJOBS, *SUBJOBS*>> for details about this feature.
+
+It also allows stdin, stdout, and stderr to be redirected from/to specific
+files.
 
 All jobs with relative path specifications to the application are part
 of search relative to the current working directory (yes, this is unsafe),
@@ -150,7 +152,7 @@ In order to provide an un-captured 'stdout' as part of the results, it is
 the default to connect the 'stdout' of the application to a temporary file. 
 The content of this temporary file will be transferred as payload data in 
 the *pegasus-kickstart* results. The content size is subject to payload 
-limits, see the *-B* option. If the content grows large, only an initial 
+limits, see the *-B* option. If the content grows large, only the last 
 portion will become part of the payload. If the temporary file grows too 
 large, it may flood the worker node's temporary space. The temporary file 
 will be deleted after *pegasus-kickstart* finishes.
@@ -176,7 +178,7 @@ behavior.
 In order to provide an un-captured 'stderr' as part of the results, by 
 default the 'stderr' of the application will be connected to a temporary 
 file. Its content is transferred as payload data in the *pegasus-kickstart*
-results. If too large, only the an initial portion will become part of
+results. If too large, only the last portion will become part of
 the payload. If the temporary file grows too large, it may flood the
 worker node's temporary space. The temporary file will be deleted after
 *pegasus-kickstart* finishes.
@@ -232,29 +234,20 @@ feature can be misused by hackers, as it is attempted to call chmod
 on whatever path is specified. 
 
 *-B* 'sz'::
-varies the size of the debug output data section. If the file
-descriptors 'stdout' and 'stderr' remain untracked, *pegasus-kickstart* 
-tracks that output in temporary files. The first few pages from this
-output is copied into a data section in the output. In order to resize
-the length of the output within reasonable boundaries, this option
-permits a changes. Data beyond the size will not be copied, i.e. is
-truncated. 
-+
-Warning: This is not a cheap way to obtain the stdio file handle data.
-Please use tracked files for that. Due to output buffer pre-allocation,
-using arbitrary large arguments may result in failures of *pegasus-kickstart* 
-itself to allocate the necessary memory. 
-+
-The default maximum size of the data section is 262144 byte. 
+Changes the amount of stdout and stderr data to include in the output.
+The last 'sz' bytes of the stdout and stderr of the process will be copied
+into kickstart's output. All other data will be discarded. The special
+value 'all' can be used to capture all the stdout/stderr of the process.
+The default is 256KB.
 
 *-F*::
 This flag will issue an explicit *fsync()* call on kickstart's own 'stdout'
 file. Typically you won't need this flag. Albeit, certain shared file
-system situations may improve when adding a flush after the written 
-invocation record. 
+system situations may improve when adding a flush after the written
+invocation record.
 +
-The default is to just use kickstart's NFS alleviation strategy by 
-locking and unlocking 'stdout'. 
+The default is to just use kickstart's NFS alleviation strategy by
+locking and unlocking 'stdout'.
 
 *-I* 'fn'::
 In this mode, the application name and any arguments to the application
@@ -265,7 +258,7 @@ underlying operating system, e.g. 128k for Linux. Using the *-I* mode stops
 any further command line processing of *pegasus-kickstart* command lines. 
 +
 Default is to use the 'app flags' mode, where the application is specified 
-explicitly on the command-line. 
+explicitly on the command-line.
 
 *-f*::
 This flag causes kickstart to output full information, including the
@@ -301,10 +294,6 @@ exit codes is indistinguishable from *pegasus-kickstart* failures.
 See Also
 --------
 pegasus-plan(1), condor_submit_dag(1), condor_submit(1), getrusage(3c).
-
-<http://pegasus.isi.edu/wms/docs/schemas/iv-2.2/iv-2.2.html>
-
-<http://pegasus.isi.edu/documentation>
 
 
 [[SUBJOBS]]
@@ -577,12 +566,14 @@ expected.
 
 Authors
 -------
-Michael Milligan `<mbmillig at uchicago dot edu>`
+Michael Milligan `<mbmillig@uchicago.edu>`
 
-Mike Wilde `<wilde at mcs dot anl dot gov>`
+Mike Wilde `<wilde@mcs.anl.gov>`
 
-Yong Zhao `<yongzh at cs dot uchicago dot edu>`
+Yong Zhao `<yongzh@cs.uchicago.edu>`
 
-Jens-S. Vöckler `<voeckler at isi dot edu>`
+Jens-S. Vöckler `<voeckler@isi.edu>`
+
+Gideon Juve `<gideon@isi.edu>`
 
 Pegasus Team <http://pegasus.isi.edu/>

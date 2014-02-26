@@ -160,6 +160,7 @@ function test_missing_args {
 
 function test_xmlquote {
     kickstart cat xmlquote.txt
+    rc=$?
     if ! [[ $(cat test.out) =~ "Jens Vöckler" ]]; then
         echo "Expected UTF-8 umlaut in output"
         return 1
@@ -172,6 +173,31 @@ function test_xmlquote {
         echo "Expected XML to be escaped"
         return 1
     fi
+    return $rc
+}
+
+function test_all_stdio {
+    kickstart -B all echo hello world gideon
+    rc=$?
+    if ! [[ $(cat test.out) =~ "hello world gideon" ]]; then
+        echo "Expected all output"
+        return 1
+    fi
+    return $rc
+}
+
+function test_bad_stdio {
+    kickstart -B foo echo hello
+    rc=$?
+    if ! [[ $(cat test.err) =~ "Invalid -B argument" ]]; then
+        echo "Expected invalid -B"
+        return 1
+    fi
+    if [ $rc -eq 0 ]; then
+        echo "Expected non-zero exit"
+        return 1
+    fi
+    return 0
 }
 
 # RUN THE TESTS
@@ -194,4 +220,6 @@ run_test test_quiet
 run_test test_quiet_fail
 run_test test_missing_args
 run_test test_xmlquote
+run_test test_all_stdio
+run_test test_bad_stdio
 
