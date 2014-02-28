@@ -483,6 +483,12 @@ public class TransferEngine extends Engine {
         for( Iterator it = job.getOutputFiles().iterator(); it.hasNext(); ){
             PegasusFile pf = (PegasusFile)it.next();
             String  lfn = pf.getLFN();
+            
+            //PM-739 all output files for deleted jobs should have their
+            //cleanup flag set to false. these output files are not 
+            //generated during the workflow, but are retrieved from a
+            //location specified in the replica catalog.
+            pf.setForCleanup( false );
 
             //we only have to get a deleted file that user wants to be transferred
             if( pf.getTransientTransferFlag() ){
@@ -529,6 +535,7 @@ public class TransferEngine extends Engine {
                 ft.addDestination( pool, putDestURL  );
                 ft.setURLForRegistrationOnDestination( getDestURL );
                 ft.setSize( pf.getSize() );
+                ft.setForCleanup( false );//PM-739
 
                 //System.out.println("Deleted Leaf Job File transfer object " + ft);
 

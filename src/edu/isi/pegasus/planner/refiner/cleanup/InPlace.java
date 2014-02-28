@@ -427,7 +427,7 @@ public class InPlace implements CleanupStrategy{
                 GraphNode curGN = (GraphNode) pQA[ curP ].iterator().next();
                 pQA[ curP ].remove( curGN );
                 Job curGN_SI = (Job) curGN.getContent();
-
+                
                 if( !typeNeedsCleanUp( curGN ) ) { 
                       continue;
                 }
@@ -448,8 +448,19 @@ public class InPlace implements CleanupStrategy{
                     }
                 }
                 
-                fileSet.addAll( curGN_SI.getOutputFiles() );
-
+                
+                for( Object obj: curGN_SI.getOutputFiles()){
+                    PegasusFile pf = (PegasusFile)obj;
+                    if( pf.canBeCleanedup() ){
+                        //PM-739 only add if the cleanup flag is set to true
+                        fileSet.add(pf);
+                    }
+                    else{
+                        mLogger.log( "File " + pf.getLFN() + " will not be cleaned up for job " + curGN_SI.getID() ,
+                                     LogManager.DEBUG_MESSAGE_LEVEL );
+                    }
+                }
+                
                 //remove the files in fileSet that are in this.mDoNotClean
                 Set fileSet2 = new HashSet( fileSet );
                 for( Iterator itfs2 = fileSet2.iterator() ; itfs2.hasNext() ; ){
