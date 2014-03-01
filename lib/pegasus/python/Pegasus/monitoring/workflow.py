@@ -149,8 +149,8 @@ class Workflow:
             logger.warning("unable to read %s!" % (dag_file))
         else:
             for dag_line in DAG:
-                dag_line = dag_line.lower().lstrip();
-                if dag_line.startswith("job"):
+                lc_dag_line = dag_line.lower().lstrip();
+                if lc_dag_line.startswith("job"):
                     # Found Job line, parse it
                     my_match = re_parse_dag_submit_files.search(dag_line)
                     if my_match:
@@ -164,7 +164,7 @@ class Workflow:
                             else:
                                 # No entry for this job, let's create a new one
                                 self._job_info[my_jobid] = [my_sub, None, None, None, None, False, None, None, None]
-                elif dag_line.startswith("task"):
+                elif lc_dag_line.startswith("task"):
                     # This is a PMC DAG entry
                     my_match = re_parse_pmc_submit_files.search(dag_line)
                     if my_match:
@@ -174,7 +174,7 @@ class Workflow:
                             self._job_info[my_jobid][0] = None
                         else:
                             self._job_info[my_jobid] = [None, None, None, None, None, False, None, None, None]
-                elif dag_line.startswith("script post"):
+                elif lc_dag_line.startswith("script post"):
                     # Found SCRIPT POST line, parse it
                     my_match = re_parse_dag_script.search(dag_line)
                     if my_match:
@@ -188,7 +188,7 @@ class Workflow:
                         else:
                             # No entry for this job, let's create a new one
                             self._job_info[my_jobid] = [None, None, None, my_exec, my_args, False, None, None, None]
-                elif dag_line.startswith("script pre"):
+                elif lc_dag_line.startswith("script pre"):
                     # Found SCRIPT PRE line, parse it
                     my_match = re_parse_dag_script.search(dag_line)
                     if my_match:
@@ -212,7 +212,7 @@ class Workflow:
                         else:
                             # No entry for this job, let's create a new one
                             self._job_info[my_jobid] = [None, my_exec, my_args, None, None, False, None, None, my_pegasus_pre_log ]
-                elif dag_line.startswith("subdag external") :
+                elif lc_dag_line.startswith("subdag external") :
                     # Found SUBDAG line, parse it
                     my_match = re_parse_dag_subdag.search(dag_line)
                     if my_match:
@@ -2026,7 +2026,6 @@ class Workflow:
             #record the job output for pegasus plan prescript logs
             #we only do for prescript failures. once job starts running
             #the dagman output gets populated
-            print self._job_info[my_job._exec_job_id]
             if self._job_info[my_job._exec_job_id][8] is not None:
                 my_job._output_file = self._job_info[my_job._exec_job_id][8] + ".%03d" % (my_job._job_output_counter)
                 my_job.read_stdout_stderr_files(self._run_dir)
