@@ -1816,6 +1816,11 @@ class Workflow:
         # if the stdout/stderr files are rotated
         # for non kickstart and kickstart launched jobs both
         error_basename = job._error_file
+
+        #sanity check subdax or subdag jobs can have no error files
+        if error_basename is None:
+            return ec
+
         if job._has_rotated_stdout_err_files:
             error_basename += ".%03d" % ( job._job_output_counter)
 
@@ -2021,6 +2026,7 @@ class Workflow:
             #record the job output for pegasus plan prescript logs
             #we only do for prescript failures. once job starts running
             #the dagman output gets populated
+            print self._job_info[my_job._exec_job_id]
             if self._job_info[my_job._exec_job_id][8] is not None:
                 my_job._output_file = self._job_info[my_job._exec_job_id][8] + ".%03d" % (my_job._job_output_counter)
                 my_job.read_stdout_stderr_files(self._run_dir)
