@@ -29,7 +29,7 @@ wrap_fraction = 1.0
 monitor = "kickstart"
 
 # This is the path to kickstart
-kickstart = "/Users/juve/Workspace/pegasus/dist/pegasus-4.4.0cvs/bin/pegasus-kickstart"
+kickstart = "/usr/bin/pegasus-kickstart"
 
 # This is the path to resource_monitor
 resource_monitor = "/Users/juve/Workspace/cctools/resource_monitor/src/resource_monitorv"
@@ -37,7 +37,7 @@ resource_monitor = "/Users/juve/Workspace/cctools/resource_monitor/src/resource_
 # This is the directory where output data is stored. Under this directory
 # the script will create a directory for each schedd, and under that
 # one directory for every group of 1000 jobs.
-data_dir = "/tmp/testjobs"
+data_dir = "/submit/testjobs"
 
 import os
 import sys
@@ -50,9 +50,9 @@ import errno
 
 class SysLogger(object):
     def __init__(self):
-        syslog.openlog(ident=os.path.basename(sys.argv[0]),
-                       logoption=syslog.LOG_PID,
-                       facility=syslog.LOG_USER)
+        syslog.openlog(os.path.basename(sys.argv[0]),
+                       syslog.LOG_PID,
+                       syslog.LOG_USER)
 
     def debug(self, message):
         syslog.syslog(syslog.LOG_DEBUG, message)
