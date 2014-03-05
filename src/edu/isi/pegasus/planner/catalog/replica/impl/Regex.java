@@ -53,18 +53,18 @@ import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
  * key-value pairs are separated by an equality sign without any whitespaces.
  * The value may be in quoted. The LFN sentiments about quoting apply.
  * <p>
- * 
+ *
  * <pre>
  * LFN PFN
  * LFN PFN a=b [..]
  * LFN PFN a="b" [..]
  * "LFN w/LWS" "PFN w/LWS" [..]
  * </pre>
- * 
+ *
  * The class is strict when producing (storing) results. The LFN and PFN are
  * only quoted and escaped, if necessary. The attribute values are always quoted
  * and escaped.
- * 
+ *
  * @author Rajiv Mayani
  * @version $Revision: 5402 $
  */
@@ -99,7 +99,7 @@ public class Regex implements ReplicaCatalog {
      * Default empty constructor creates an object that is not yet connected to
      * any database. You must use support methods to connect before this
      * instance becomes usable.
-     * 
+     *
      * @see #connect(Properties )
      */
     public Regex() {
@@ -113,7 +113,7 @@ public class Regex implements ReplicaCatalog {
 
     /**
      * Provides the final states and associated messages.
-     * 
+     *
      * <pre>
      * ---+----+--------------------
      * F1 | 17 | final state, no record
@@ -130,7 +130,7 @@ public class Regex implements ReplicaCatalog {
     /**
      * Contains the state transition tables. The notes a through c mark similar
      * states:
-     * 
+     *
      * <pre>
      *      | EOS | lws |  =  | ""  | \\  | else|
      * -----+-----+-----+-----+-----+-----+-----+--------------
@@ -169,7 +169,7 @@ public class Regex implements ReplicaCatalog {
     /**
      * Contains the actions to perform upon each state transition including
      * transition into self state.
-     * 
+     *
      * <pre>
      *    |   |
      * ---+---+-------------------------------------------
@@ -199,7 +199,7 @@ public class Regex implements ReplicaCatalog {
 
     /**
      * Parses a line from the file replica catalog
-     * 
+     *
      * @param line
      *            is the line to parse
      * @param lineno
@@ -292,7 +292,7 @@ public class Regex implements ReplicaCatalog {
 
     /**
      * Reads the on-disk map file into memory.
-     * 
+     *
      * @param filename
      *            is the name of the file to read.
      * @return true, if the in-memory data structures appear sound.
@@ -333,7 +333,7 @@ public class Regex implements ReplicaCatalog {
      * instance. If the property "quote" is set to a true value, LFNs and PFNs
      * are always quoted. By default, and if false, LFNs and PFNs are only
      * quoted as necessary.
-     * 
+     *
      * @param props
      *            is the property table with sufficient settings to establish a
      *            link with the database.
@@ -363,7 +363,7 @@ public class Regex implements ReplicaCatalog {
      * <p>
      * However, if the property "quote" had a <code>true</code> value when
      * connecting to the database, output will always be quoted.
-     * 
+     *
      * @param e
      *            is the Escape instance used to escape strings.
      * @param s
@@ -484,7 +484,7 @@ public class Regex implements ReplicaCatalog {
      * Predicate to check, if the connection with the catalog's implementation
      * is still active. This helps determining, if it makes sense to call
      * <code>close()</code>.
-     * 
+     *
      * @return true, if the implementation is disassociated, false otherwise.
      * @see #close()
      */
@@ -495,7 +495,7 @@ public class Regex implements ReplicaCatalog {
     /**
      * Retrieves the entry for a given filename and site handle from the replica
      * catalog.
-     * 
+     *
      * @param lfn
      *            is the logical filename to obtain information for.
      * @param handle
@@ -505,18 +505,18 @@ public class Regex implements ReplicaCatalog {
      */
     public String lookup(String lfn, String handle) {
 	Collection<ReplicaCatalogEntry> result = lookupWithHandle( lfn, handle );
-        
+
         if( result == null || result.isEmpty() ){
             return null;
         }
         return result.iterator().next().getPFN();
-	
+
     }
 
     public Collection<ReplicaCatalogEntry> lookupWithHandle(String lfn,
 	    String handle) {
 	Collection<ReplicaCatalogEntry> c = new ArrayList<ReplicaCatalogEntry>();
-	
+
 	// Lookup regular LFN's
 	Collection<ReplicaCatalogEntry> tmp = m_lfn.get( lfn );
         if( tmp != null ){
@@ -564,7 +564,7 @@ public class Regex implements ReplicaCatalog {
     /**
      * Retrieves all entries for a given LFN from the replica catalog. Each
      * entry in the result set is a tuple of a PFN and all its attributes.
-     * 
+     *
      * @param lfn
      *            is the logical filename to obtain information for.
      * @return a collection of replica catalog entries
@@ -621,7 +621,7 @@ public class Regex implements ReplicaCatalog {
      * Retrieves all entries for a given LFN from the replica catalog. Each
      * entry in the result set is just a PFN string. Duplicates are reduced
      * through the set paradigm.
-     * 
+     *
      * @param lfn
      *            is the logical filename to obtain information for.
      * @return a set of PFN strings
@@ -642,7 +642,7 @@ public class Regex implements ReplicaCatalog {
      * Retrieves multiple entries for a given logical filename, up to the
      * complete catalog. Retrieving full catalogs should be harmful, but may be
      * helpful in an online display or portal.
-     * 
+     *
      * @param lfns
      *            is a set of logical filename strings to look up.
      * @return a map indexed by the LFN. Each value is a collection of replica
@@ -667,7 +667,7 @@ public class Regex implements ReplicaCatalog {
      * Retrieves multiple entries for a given logical filename, up to the
      * complete catalog. Retrieving full catalogs should be harmful, but may be
      * helpful in an online display or portal.
-     * 
+     *
      * @param lfns
      *            is a set of logical filename strings to look up.
      * @return a map indexed by the LFN. Each value is a set of PFN strings.
@@ -699,7 +699,7 @@ public class Regex implements ReplicaCatalog {
      * complete catalog. Retrieving full catalogs should be harmful, but may be
      * helpful in online display or portal.
      * <p>
-     * 
+     *
      * @param lfns
      *            is a set of logical filename strings to look up.
      * @param handle
@@ -776,7 +776,7 @@ public class Regex implements ReplicaCatalog {
      * complete catalog. Retrieving full catalogs should be harmful, but may be
      * helpful in online display or portal.
      * <p>
-     * 
+     *
      * @param lfns
      *            is a set of logical filename strings to look up.
      * @param handle
@@ -807,7 +807,7 @@ public class Regex implements ReplicaCatalog {
      * Retrieves multiple entries for a given logical filename, up to the
      * complete catalog. Retrieving full catalogs should be harmful, but may be
      * helpful in online display or portal.
-     * 
+     *
      * @param constraints
      *            is mapping of keys 'lfn', 'pfn', or any attribute name, e.g.
      *            the resource handle 'pool', to a string that has some meaning
@@ -866,7 +866,7 @@ public class Regex implements ReplicaCatalog {
 
     /**
      * Lists all logical filenames in the catalog.
-     * 
+     *
      * @return A set of all logical filenames known to the catalog.
      */
     public Set list() {
@@ -877,7 +877,7 @@ public class Regex implements ReplicaCatalog {
 
     /**
      * Lists a subset of all logical filenames in the catalog.
-     * 
+     *
      * @param constraint
      *            is a constraint for the logical filename only. It is a string
      *            that has some meaning to the implementing system. This can be
@@ -899,7 +899,7 @@ public class Regex implements ReplicaCatalog {
 
     /**
      * Checks if the 'regex' attribute is set to true for the given tuple
-     * 
+     *
      * @param tuple
      * @return true if regex attribute is set to true, false otherwise
      */
@@ -912,7 +912,7 @@ public class Regex implements ReplicaCatalog {
      * Inserts a new mapping into the replica catalog. Any existing mapping of
      * the same LFN, PFN, and HANDLE will be replaced, including all of its
      * attributes.
-     * 
+     *
      * @param lfn
      *            is the logical filename under which to book the entry.
      * @param tuple
@@ -934,8 +934,8 @@ public class Regex implements ReplicaCatalog {
 	    for (Iterator<ReplicaCatalogEntry> i = c.iterator(); i.hasNext()
 		    && !seen;) {
 		ReplicaCatalogEntry rce = i.next();
-		if ((seen = pfn.equals( rce.getPFN() ))
-		        && handle.equals( rce.getResourceHandle() )) {
+            if ( (seen = pfn.equals(rce.getPFN())) &&
+                    ( (handle == null && rce.getResourceHandle() == null) || (handle != null && handle.equals(rce.getResourceHandle())) ) ) {
 		    try {
 			i.remove();
 		    } catch (UnsupportedOperationException uoe) {
@@ -951,8 +951,8 @@ public class Regex implements ReplicaCatalog {
 	    for (Iterator<ReplicaCatalogEntry> i = c.iterator(); i.hasNext()
 		    && !seen;) {
 		ReplicaCatalogEntry rce = i.next();
-		if ((seen = pfn.equals( rce.getPFN() ))
-		        && handle.equals( rce.getResourceHandle() )) {
+            if ( (seen = pfn.equals(rce.getPFN())) &&
+                    ( (handle == null && rce.getResourceHandle() == null) || (handle != null && handle.equals(rce.getResourceHandle())) ) ) {
 		    try {
 			i.remove();
 		    } catch (UnsupportedOperationException uoe) {
@@ -977,7 +977,7 @@ public class Regex implements ReplicaCatalog {
      * function exposing the resource handle. Internally, the
      * <code>ReplicaCatalogEntry</code> element will be contructed, and passed
      * to the appropriate insert function.
-     * 
+     *
      * @param lfn
      *            is the logical filename under which to book the entry.
      * @param pfn
@@ -999,7 +999,7 @@ public class Regex implements ReplicaCatalog {
      * Inserts multiple mappings into the replica catalog. The input is a map
      * indexed by the LFN. The value for each LFN key is a collection of replica
      * catalog entries. Note that this operation will replace existing entries.
-     * 
+     *
      * @param x
      *            is a map from logical filename string to list of replica
      *            catalog entries.
@@ -1033,7 +1033,7 @@ public class Regex implements ReplicaCatalog {
      * the resource handle. More than one entry could theoretically be removed.
      * Upon removal of an entry, all attributes associated with the PFN also
      * evaporate (cascading deletion).
-     * 
+     *
      * @param lfn
      *            is the logical filename in the tuple.
      * @param pfn
@@ -1052,7 +1052,7 @@ public class Regex implements ReplicaCatalog {
      * matching lfn pfn mapping to an entry in the Map are deleted. However,
      * upon removal of an entry, all attributes associated with the pfn also
      * evaporate (cascaded deletion).
-     * 
+     *
      * @param x
      *            is a map from logical filename string to list of replica
      *            catalog entries.
@@ -1070,7 +1070,7 @@ public class Regex implements ReplicaCatalog {
     /**
      * Attempts to see, if all keys in the partial replica catalog entry are
      * contained in the full replica catalog entry.
-     * 
+     *
      * @param full
      *            is the full entry to check against.
      * @param part
@@ -1095,7 +1095,7 @@ public class Regex implements ReplicaCatalog {
      * entry. More than one entry could theoretically be removed. Upon removal
      * of an entry, all attributes associated with the PFN also evaporate
      * (cascading deletion).
-     * 
+     *
      * @param lfn
      *            is the logical filename in the tuple.
      * @param tuple
@@ -1109,7 +1109,7 @@ public class Regex implements ReplicaCatalog {
 
     /**
      * Looks for a match of an attribute value in a replica catalog entry.
-     * 
+     *
      * @param rce
      *            is the replica catalog entry
      * @param name
@@ -1129,7 +1129,7 @@ public class Regex implements ReplicaCatalog {
      * the PFN attribute is found, and matches exactly the object value. This
      * method may be useful to remove all replica entries that have a certain
      * MD5 sum associated with them. It may also be harmful overkill.
-     * 
+     *
      * @param lfn
      *            is the logical filename to look for.
      * @param name
@@ -1147,11 +1147,11 @@ public class Regex implements ReplicaCatalog {
      * Deletes all PFN entries for a given LFN from the replica catalog where
      * the resource handle is found. Karan requested this convenience method,
      * which can be coded like
-     * 
+     *
      * <pre>
      * delete( lfn, RESOURCE_HANDLE, handle )
      * </pre>
-     * 
+     *
      * @param lfn
      *            is the logical filename to look for.
      * @param handle
@@ -1165,7 +1165,7 @@ public class Regex implements ReplicaCatalog {
 
     /**
      * Removes all mappings for an LFN from the replica catalog.
-     * 
+     *
      * @param lfn
      *            is the logical filename to remove all mappings for.
      * @return the number of removed entries.
@@ -1177,7 +1177,7 @@ public class Regex implements ReplicaCatalog {
 
     /**
      * Removes all mappings for a set of LFNs.
-     * 
+     *
      * @param lfns
      *            is a set of logical filename to remove all mappings for.
      * @return the number of removed entries.
@@ -1191,7 +1191,7 @@ public class Regex implements ReplicaCatalog {
     /**
      * Removes all entries from the replica catalog where the PFN attribute is
      * found, and matches exactly the object value.
-     * 
+     *
      * @param name
      *            is the PFN attribute key to look for.
      * @param value
@@ -1207,7 +1207,7 @@ public class Regex implements ReplicaCatalog {
      * Removes all entries associated with a particular resource handle. This is
      * useful, if a site goes offline. It is a convenience method, which calls
      * the generic <code>removeByAttribute</code> method.
-     * 
+     *
      * @param handle
      *            is the site handle to remove all entries for.
      * @return the number of removed entries.
@@ -1220,7 +1220,7 @@ public class Regex implements ReplicaCatalog {
 
     /**
      * Removes everything. Use with caution!
-     * 
+     *
      * @return the number of removed entries.
      */
     public int clear() {
