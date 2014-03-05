@@ -38,16 +38,8 @@ import edu.isi.pegasus.planner.provenance.pasoa.PPS;
 import edu.isi.pegasus.planner.provenance.pasoa.pps.PPSFactory;
 
 
-import java.util.Collections;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Comparator;
-import java.util.Set;
-import java.util.StringTokenizer;
+import java.util.*;
+
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
 /**
@@ -405,7 +397,7 @@ public class Horizontal implements Clusterer,
 		        + " having maximum run time  " + cFactor[2],
 		        LogManager.DEBUG_MESSAGE_LEVEL );
 
-		Collections.sort( l, getBinPackingComparator() );
+		Collections.sort(l, getBinPackingComparator());
 
 		mLogger.log(
 		        "Job Type: " + ((Job) l.get( 0 )).getCompleteTCName()
@@ -601,45 +593,68 @@ public class Horizontal implements Clusterer,
     /**
      * Perform best fit bin packing.
      *
-     * @param jobs
-     *            List of jobs sorted in decreasing order of the job runtime.
-     * @param maxBins
-     *            The fixed-number of bins taht should be created
+     * @param jobs    List of jobs sorted in decreasing order of the job runtime.
+     * @param maxBins The fixed-number of bins taht should be created
      * @return List of List of Jobs where each List <Job> is the set of jobs
-     *         which should be clustered together so as to run in under maxTime.
+     * which should be clustered together so as to run in under maxTime.
      */
     private List<List<Job>> bestFitBinPack(List<Job> jobs, int maxBins) {
 
-        List<List<Job>> bins = new LinkedList<List<Job>>();
-        List<Double> binTime = new LinkedList<Double>();
+        class Bin {
+            private List<Job> bin = new LinkedList<Job>();
+            private double time = 0;
 
-        // Initialize the bins, to the specified number of bins.
-        maxBins = Math.min(maxBins, jobs.size());
+            public void addJob(Job j) {
+                bin.add(j);
+                double jobRunTime = Double.parseDouble(getRunTime(j));
+                time += jobRunTime;
+            }
 
-        for (int i = 0; i < maxBins; ++i) {
-            bins.add( new LinkedList<Job>() );
-            binTime.add( 0, 0d );
-        }
+            public List<Job> getJobs() {
+                return bin;
+            }
 
-        for (Job j : jobs) {
-            List<Job> bin;
-            double currentBinTime;
-            boolean isBreak = false;
-            double jobRunTime = Double.parseDouble( getRunTime( j ) );
-
-            mLogger.log( "Job " + j.getID() + " runtime " + jobRunTime,
-                    LogManager.DEBUG_MESSAGE_LEVEL );
-
-            // Loop through each bin.
-            for (int i = 0, k = bins.size(); i < k; ++i) {
-                currentBinTime = binTime.get( i );
-
-                // Add the job to the bin with the shortest combined runtime
-
+            public double getTime() {
+                return time;
             }
         }
 
-        return bins;
+        PriorityQueue<Bin> bins = new PriorityQueue<Bin>(maxBins, new Comparator<Bin>() {
+            @Override
+            public int compare(Bin bin1, Bin bin2) {
+                return (int) (bin2.getTime() - bin1.getTime());
+            }
+        });
+
+        // Initialize the bins, to the specified number of bins.
+        // If the number of jobs n is less than @maxBins then create n bins
+        maxBins = Math.min(maxBins, jobs.size());
+
+        for (int i = 0; i < maxBins; ++i) {
+            bins.add(new Bin());
+        }
+
+        for (Job j : jobs) {
+            Bin bin;
+            mLogger.log("Job " + j.getID() + " runtime " + getRunTime(j),
+                    LogManager.DEBUG_MESSAGE_LEVEL);
+
+            // Loop through each bin.
+            for (int i = 0, k = bins.size(); i < k; ++i) {
+                // Add the job to the bin with the shortest combined runtime
+                bin = bins.poll();
+                bin.addJob(j);
+                bins.offer(bin);
+            }
+        }
+
+        List<List<Job>> returnBins = new LinkedList<List<Job>>();
+
+        for (Bin b : bins) {
+            returnBins.add(b.getJobs());
+        }
+
+        return returnBins;
     }
 
     private String getRunTime(Job job) {
