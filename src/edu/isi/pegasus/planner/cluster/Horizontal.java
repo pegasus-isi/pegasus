@@ -436,7 +436,7 @@ public class Horizontal implements Clusterer,
 		tempMap = null;
 		return;
 	    }
-            	
+
             //we do collapsing in chunks of 3 instead of picking up
             //from the properties file. ceiling is (x + y -1)/y
             //cFactor = (size + 2)/3;
@@ -514,7 +514,7 @@ public class Horizontal implements Clusterer,
 
     /**
      * Perform best fit bin packing.
-     * 
+     *
      * @param jobs
      *            List of jobs sorted in decreasing order of the job runtime.
      * @param maxTime
@@ -598,6 +598,50 @@ public class Horizontal implements Clusterer,
 	return returnBins;
     }
 
+    /**
+     * Perform best fit bin packing.
+     *
+     * @param jobs
+     *            List of jobs sorted in decreasing order of the job runtime.
+     * @param maxBins
+     *            The fixed-number of bins taht should be created
+     * @return List of List of Jobs where each List <Job> is the set of jobs
+     *         which should be clustered together so as to run in under maxTime.
+     */
+    private List<List<Job>> bestFitBinPack(List<Job> jobs, int maxBins) {
+
+        List<List<Job>> bins = new LinkedList<List<Job>>();
+        List<Double> binTime = new LinkedList<Double>();
+
+        // Initialize the bins, to the specified number of bins.
+        maxBins = Math.min(maxBins, jobs.size());
+
+        for (int i = 0; i < maxBins; ++i) {
+            bins.add( new LinkedList<Job>() );
+            binTime.add( 0, 0d );
+        }
+
+        for (Job j : jobs) {
+            List<Job> bin;
+            double currentBinTime;
+            boolean isBreak = false;
+            double jobRunTime = Double.parseDouble( getRunTime( j ) );
+
+            mLogger.log( "Job " + j.getID() + " runtime " + jobRunTime,
+                    LogManager.DEBUG_MESSAGE_LEVEL );
+
+            // Loop through each bin.
+            for (int i = 0, k = bins.size(); i < k; ++i) {
+                currentBinTime = binTime.get( i );
+
+                // Add the job to the bin with the shortest combined runtime
+
+            }
+        }
+
+        return bins;
+    }
+
     private String getRunTime(Job job) {
 
 	String sTmp = (String) job.vdsNS.get( Pegasus.RUNTIME_KEY );
@@ -620,7 +664,7 @@ public class Horizontal implements Clusterer,
     /**
      * The comparator is used to sort a collection of jobs in decreasing order
      * of their run times as specified by the Pegasus.JOB_RUN_TIME property.
-     * 
+     *
      * @return
      */
     private Comparator<Job> getBinPackingComparator() {
@@ -636,7 +680,7 @@ public class Horizontal implements Clusterer,
 
 		return (int) (jobTime2 - jobTime1);
 	    }
-	    
+
 	    private String getRunTime (Job job) {
 
 		String sTmp = (String) job.vdsNS.get( Pegasus.RUNTIME_KEY );
@@ -656,7 +700,7 @@ public class Horizontal implements Clusterer,
 
 	};
     }
-    
+
     /**
      * Returns the clustered workflow.
      *
