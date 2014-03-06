@@ -138,7 +138,7 @@ public abstract class AbstractStrategy implements Strategy {
      * @return  a Set containing a list of siteID's of the sites where the
      *          dag has to be run.
      */
-    protected Set getCreateDirSites( ADag dag ){
+    public static Set getCreateDirSites( ADag dag ){
         Set set = new HashSet();
 
         for( Iterator it = dag.vJobSubInfos.iterator();it.hasNext();){
