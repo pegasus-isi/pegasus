@@ -331,6 +331,17 @@ public class AggregatedJob extends Job implements Graph{
     public Iterator<GraphNode> iterator() {
         return this.mGraphImplementor.iterator();
     }
+    
+    /**
+     * Returns an iterator that traverses the graph bottom up from the leaves.
+     * At any one time, only one iterator can
+     * iterate through the graph.
+     *
+     * @return Iterator through the nodes of the graph.
+     */
+    public Iterator bottomUpIterator(){
+        return this.mGraphImplementor.bottomUpIterator();
+    }
 
     /**
      * Returns an iterator for the graph that traverses in topological sort
