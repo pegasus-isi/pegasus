@@ -24,6 +24,7 @@ import org.junit.runners.Suite.SuiteClasses;
     edu.isi.pegasus.common.util.VersionTest.class,
     edu.isi.pegasus.common.util.PegasusURLTest.class,
     edu.isi.pegasus.planner.namespace.PegasusTest.class,
+    edu.isi.pegasus.planner.cluster.RuntimeClusteringTest.class,
     edu.isi.pegasus.planner.transfer.mapper.FlatOutputMapperTest.class,
     edu.isi.pegasus.planner.transfer.mapper.HashedOutputMapperTest.class,
     edu.isi.pegasus.planner.transfer.mapper.ReplicaOutputMapperTest.class,
