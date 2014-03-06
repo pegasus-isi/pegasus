@@ -674,6 +674,7 @@ public class Horizontal implements Clusterer,
         List<List<Job>> returnBins = new LinkedList<List<Job>>();
 
         for (Bin b : bins) {
+            mLogger.log("Bin Size: " + b.getTime(), LogManager.DEBUG_MESSAGE_LEVEL);
             returnBins.add(b.getJobs());
         }
 
