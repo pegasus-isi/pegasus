@@ -547,6 +547,9 @@ public class RemoveDirectory extends Engine {
         newJob.jobClass = Job.CLEANUP_JOB;
         newJob.jobID = jobName;
 
+        //PM-150 for leaf cleanup nodes we will set a specific recursive flag
+        newJob.setArguments( " --recursive ");
+        
         //the profile information from the pool catalog needs to be
         //assimilated into the job.
         newJob.updateProfiles( mSiteStore.lookup( newJob.getSiteHandle() ).getProfiles() );
