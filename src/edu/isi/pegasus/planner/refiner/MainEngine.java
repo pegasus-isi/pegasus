@@ -25,11 +25,6 @@ import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import edu.isi.pegasus.common.logging.LogManager;
-import java.io.File;
-import java.util.Properties;
-import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
-import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
-import edu.isi.pegasus.planner.catalog.replica.impl.SimpleFile;
 import edu.isi.pegasus.planner.classes.PlannerCache;
 
 
@@ -254,20 +249,7 @@ public class MainEngine
             mCreateEng.addCreateDirectoryNodes( mReducedDag );
             mCreateEng = null;
             mLogger.logEventCompletion();
-            
-// CLEANUP WORKFLOW GENERATION IS DISABLED FOR 3.2
-// JIRA PM-529
-//            //create the cleanup dag
-//            message = "Generating the cleanup workflow";
-//            //mLogger.log(message,LogManager.INFO_MESSAGE_LEVEL);
-//            mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_GENERATE_CLEANUP_WF, LoggingKeys.DAX_ID, mOriginalDag.getAbstractWorkflowName() );
-//            //for the cleanup dag the submit directory is the cleanup
-//            //subdir
-//            File submitDir = new File( this.mPOptions.getSubmitDirectory(), MainEngine.CLEANUP_DIR );
-//            mRemoveEng = new RemoveDirectory( mReducedDag, mBag, submitDir.getAbsolutePath() );
-//            mCleanupDag = mRemoveEng.generateCleanUPDAG( );
-//            mLogger.logEventCompletion();
-// END OF COMMENTED OUT CODE
+
         }
 
         //add the cleanup nodes in place
@@ -277,19 +259,23 @@ public class MainEngine
             CleanupEngine cEngine = new CleanupEngine( mBag );
             mReducedDag = cEngine.addCleanupJobs( mReducedDag );
             mLogger.logEventCompletion();
-            
+
+            //PM-150 leaf cleanup nodes to remove directories should take care of this
+            /*
             //for the non pegasus lite case we add the cleanup nodes
             //for the worker package.
             if( !mProps.executeOnWorkerNode() ){
                  //add the cleanup of setup jobs if required
                 mReducedDag = deploy.addCleanupNodesForWorkerPackage( mReducedDag );
             }
+            */
             
             //PM-150
             mLogger.logEventStart( "Adding Directory Removal Nodes", LoggingKeys.DAX_ID, abstractWFName );
             mRemoveEng = new RemoveDirectory( mReducedDag, mBag, this.mPOptions.getSubmitDirectory() );
             mReducedDag = mRemoveEng.addRemoveDirectoryNodes(mReducedDag);
             mLogger.logEventCompletion();
+            mRemoveEng = null;
         }
         
         /* PM-714. The approach does not scale for the planner performace test case.
