@@ -273,7 +273,6 @@ public class MainEngine
         //add the cleanup nodes in place
         if ( mPOptions.getCleanup() ){ /* should be exposed via command line option */
             message = "Adding cleanup jobs in the workflow";
-           // mLogger.log( message, LogManager.INFO_MESSAGE_LEVEL );
             mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_GENERATE_CLEANUP, LoggingKeys.DAX_ID, abstractWFName );
             CleanupEngine cEngine = new CleanupEngine( mBag );
             mReducedDag = cEngine.addCleanupJobs( mReducedDag );
@@ -285,6 +284,12 @@ public class MainEngine
                  //add the cleanup of setup jobs if required
                 mReducedDag = deploy.addCleanupNodesForWorkerPackage( mReducedDag );
             }
+            
+            //PM-150
+            mLogger.logEventStart( "Adding Directory Removal Nodes", LoggingKeys.DAX_ID, abstractWFName );
+            mRemoveEng = new RemoveDirectory( mReducedDag, mBag, this.mPOptions.getSubmitDirectory() );
+            mReducedDag = mRemoveEng.addRemoveDirectoryNodes(mReducedDag);
+            mLogger.logEventCompletion();
         }
         
         /* PM-714. The approach does not scale for the planner performace test case.
