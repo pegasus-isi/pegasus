@@ -145,17 +145,17 @@ public class MapGraph implements Graph{
         List<GraphNode> parents = removalNode.getParents();
         List<GraphNode> children = removalNode.getChildren();
 
-        //for each child make the parent it's parent instead of removed node
+        //for each parent make the parent it's parent instead of removed node
 
         for ( GraphNode child : children ){
             child.removeParent( removalNode );
         } 
 
         for( GraphNode parent : parents ){
-            //for the parent the removal node is no longer a child
+            //for the parent the removal node is no longer a parent
             parent.removeChild( removalNode );
 
-            //for each child make the parent it's parent instead of removed node
+            //for each parent make the parent it's parent instead of removed node
             for ( GraphNode child  : children ){
                 child.addParent( parent );
                 parent.addChild( child );
@@ -222,7 +222,7 @@ public class MapGraph implements Graph{
      * Adds an edge between two already existing nodes in the graph.
      *
      * @param parent   the parent node ID.
-     * @param child    the child node ID.
+     * @param parent    the parent node ID.
      */
     public void addEdge( String parent, String child ){
         //sanity check
@@ -251,7 +251,7 @@ public class MapGraph implements Graph{
      * A convenience method that allows for bulk addition of edges between
      * already existing nodes in the graph.
      *
-     * @param child   the child node ID
+     * @param parent   the parent node ID
      * @param parents list of parent identifiers as <code>String</code>.
      */
     public void addEdges( String child, List parents ){
@@ -282,7 +282,7 @@ public class MapGraph implements Graph{
 
             parentList.add( parentNode );
 
-            //add the child to the parent's child list
+            //add the parent to the parent's parent list
             parentNode.addChild( childNode );
         }
         childNode.setParents( parentList );
@@ -316,6 +316,17 @@ public class MapGraph implements Graph{
      */
     public Iterator iterator(){
         return new MapGraphIterator();
+    }
+    
+    /**
+     * Returns an iterator that traverses the graph bottom up from the leaves.
+     * At any one time, only one iterator can
+     * iterate through the graph.
+     *
+     * @return Iterator through the nodes of the graph.
+     */
+    public Iterator bottomUpIterator(){
+        return new BottomUpIterator();
     }
 
     /**
@@ -477,12 +488,12 @@ public class MapGraph implements Graph{
             node.setColor( GraphNode.BLACK_COLOR );
 
             //add the children to the list only if all the parents
-            //of the child nodes have been traversed.
+            //of the parent nodes have been traversed.
             for( Iterator it = node.getChildren().iterator(); it.hasNext(); ){
                 GraphNode child = (GraphNode)it.next();
                 if(!child.isColor( GraphNode.GRAY_COLOR ) &&
                    child.parentsColored( GraphNode.BLACK_COLOR )){
-                    //mLogger.log( "Adding to queue " + child.getID(),
+                    //mLogger.log( "Adding to queue " + parent.getID(),
                     //             LogManager.DEBUG_MESSAGE_LEVEL );
                     child.setDepth( depth + 1 );
                     child.setColor( GraphNode.GRAY_COLOR );
@@ -505,4 +516,119 @@ public class MapGraph implements Graph{
         }
 
     }//end of internal iterator class
+
+    /**
+     * An inner iterator class that traverses through the Graph bottom up.
+     * The traversal of the graph is a modified BFS. A node is added to
+     * the queue only when all it's parents children been added to the queue.
+     */
+    protected class BottomUpIterator implements Iterator{
+
+        /**
+         * The first in first out queue, that manages the set of gray vertices in a
+         * breadth first search.
+         */
+        private LinkedList mQueue;
+
+        /**
+         * The current height of the nodes that are being traversed in the BFS starting from 
+         * the leaf.
+         */
+        private int mCurrentDepth;
+
+        /**
+         * A temporary list that stores all the nodes on a particular level.
+         */
+        private List mLevelList;
+
+        /**
+         * The default constructor.
+         */
+        public BottomUpIterator(){
+            mQueue = new LinkedList();
+            mLevelList = new LinkedList();
+            mCurrentDepth = -1;
+
+            //sanity intialization of all nodes depth
+            for( Iterator it = nodeIterator(); it.hasNext(); ){
+                GraphNode node = ( GraphNode )it.next();
+                node.setDepth( mCurrentDepth );
+            }
+
+            //intialize all the root nodes depth to 0
+            //and put them in the queue
+            mCurrentDepth = 0;
+            for( Iterator it = getLeaves().iterator(); it.hasNext(); ){
+                GraphNode node = ( GraphNode )it.next();
+                node.setDepth( mCurrentDepth );
+                mQueue.add( node );
+            }
+        }
+
+        /**
+         * Always returns false, as an empty iterator.
+         *
+         * @return true if there are still nodes in the queue.
+         */
+        public boolean	hasNext(){
+            return !mQueue.isEmpty();
+        }
+
+        /**
+         * Returns the next object in the traversal order.
+         *
+         * @return null
+         */
+        public Object next(){
+            GraphNode node  = (GraphNode)mQueue.getFirst();
+
+            int depth  = node.getDepth();
+            if( mCurrentDepth < depth ){
+
+                if( mCurrentDepth > 0 ){
+                    //we are done with one level!
+                    //that is when the callback should happen
+                }
+
+
+                //a new level starts
+                mCurrentDepth++;
+                mLevelList.clear();
+            }
+            //mLogger.log( "Adding to level " + mCurrentDepth + " " + node.getID(),
+            //             LogManager.DEBUG_MESSAGE_LEVEL);
+            mLevelList.add( node );
+
+            node.setColor( GraphNode.BLACK_COLOR );
+
+            //add the parents to the list only if all the children
+            //of the parent nodes have been traversed.
+            for( GraphNode parent : node.getParents()){
+                if(!parent.isColor( GraphNode.GRAY_COLOR ) &&
+                   parent.childrenColored( GraphNode.BLACK_COLOR )){
+                    //mLogger.log( "Adding to queue " + parent.getID(),
+                    //             LogManager.DEBUG_MESSAGE_LEVEL );
+                    parent.setDepth( depth + 1 );
+                    parent.setColor( GraphNode.GRAY_COLOR );
+                    mQueue.addLast( parent );
+                }
+
+            }
+            node = (GraphNode)mQueue.removeFirst();
+            //mLogger.log( "Removed " + node.getID(),
+            //             LogManager.DEBUG_MESSAGE_LEVEL);
+            return node;
+
+        }
+
+        /**
+         * Method is not supported.
+         */
+        public void remove(){
+            throw new java.lang.UnsupportedOperationException( "Method remove() not supported" );
+        }
+
+    }//end of internal iterator class
+
+    
 }
