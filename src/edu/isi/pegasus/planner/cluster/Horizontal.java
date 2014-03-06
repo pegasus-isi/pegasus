@@ -409,7 +409,7 @@ public class Horizontal implements Clusterer,
                             + " max runtime " + maxRunTime,
                     LogManager.DEBUG_MESSAGE_LEVEL );
 
-            mLogger.log( "Clustering into fixed capacity bins" + maxRunTime,
+            mLogger.log( "Clustering into fixed capacity bins " + maxRunTime,
                     LogManager.DEBUG_MESSAGE_LEVEL );
 
             bins = bestFitBinPack( l, maxRunTime );
@@ -425,7 +425,7 @@ public class Horizontal implements Clusterer,
                         LogManager.WARNING_MESSAGE_LEVEL );
             }
 
-            mLogger.log( "Clustering into fixed number of bins" + clusterNum,
+            mLogger.log( "Clustering into fixed number of bins " + clusterNum,
                     LogManager.DEBUG_MESSAGE_LEVEL );
 
             Collections.sort(l, getBinPackingComparator());
