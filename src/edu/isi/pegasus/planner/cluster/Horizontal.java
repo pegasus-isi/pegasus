@@ -409,10 +409,27 @@ public class Horizontal implements Clusterer,
                             + " max runtime " + maxRunTime,
                     LogManager.DEBUG_MESSAGE_LEVEL );
 
+            mLogger.log( "Clustering into fixed capacity bins" + maxRunTime,
+                    LogManager.DEBUG_MESSAGE_LEVEL );
+
             bins = bestFitBinPack( l, maxRunTime );
         } else {
+            int clusterNum = 1;
+            String bundle = (String) job.vdsNS.get( Pegasus.BUNDLE_KEY );
+
+            if (bundle != null) {
+                clusterNum = Integer.parseInt(bundle);
+            } else {
+                mLogger.log( "Neither " + Pegasus.MAX_RUN_TIME + ", nor " + Pegasus.BUNDLE_KEY +
+                        " specified. Merging all tasks into one job",
+                        LogManager.WARNING_MESSAGE_LEVEL );
+            }
+
+            mLogger.log( "Clustering into fixed number of bins" + clusterNum,
+                    LogManager.DEBUG_MESSAGE_LEVEL );
+
             Collections.sort(l, getBinPackingComparator());
-            bins = bestFitBinPack( l, cFactor[0] );
+            bins = bestFitBinPack( l, clusterNum );
         }
 
 		mLogger.log( "Jobs are merged into " + bins.size()
