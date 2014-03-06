@@ -102,5 +102,6 @@ public class RuntimeClusteringTest {
         mLogger = null;
         mTestSetup = null;
         mCluster = null;
+        mBestFitMethod = null;
     }
 }
