@@ -377,34 +377,43 @@ public class Horizontal implements Clusterer,
                 continue;
             }
 
+        // Does the user prefer runtime based clustering?
 	    if (mProps.getHorizontalClusterPreference() != null
-		    && mProps.getHorizontalClusterPreference()
-		            .equalsIgnoreCase( "runtime" )) {
+		    && mProps.getHorizontalClusterPreference().equalsIgnoreCase("runtime")) {
 
-		double maxRunTime = -1;
-		try {
-		    maxRunTime = Double
-			    .parseDouble( (String) ((Job) l.get( 0 )).vdsNS
-			            .get( Pegasus.MAX_RUN_TIME ) );
-		} catch (RuntimeException e) {
-		    throw new RuntimeException( "Profile key "
-			    + Pegasus.MAX_RUN_TIME
-			    + " is either not set, or is not a valid number.",
-			    e );
-		}
+        List<List<Job>> bins = null;
+        String sMaxRunTime = (String) ((Job) l.get( 0 )).vdsNS.get(Pegasus.MAX_RUN_TIME);
 
-		mLogger.log( "\t Clustering jobs mapped to execution site " + key
-		        + " having maximum run time  " + cFactor[2],
-		        LogManager.DEBUG_MESSAGE_LEVEL );
+        // Does the user prefer to cluster jobs into bins of a fixed capacity?
+        // If not, cluster jobs evenly into a fixed number of bins.
+        // The number of bins should be specified through clusters.num property
+        if (sMaxRunTime != null) {
+            double maxRunTime = -1;
+            try {
+                maxRunTime = Double.parseDouble(sMaxRunTime);
+            } catch (RuntimeException e) {
+                throw new RuntimeException( "Profile key "
+                    + Pegasus.MAX_RUN_TIME
+                    + " is either not set, or is not a valid number.",
+                    e );
+            }
 
-		Collections.sort(l, getBinPackingComparator());
+            mLogger.log( "\t Clustering jobs mapped to execution site " + key
+                    + " having maximum run time  " + cFactor[2],
+                    LogManager.DEBUG_MESSAGE_LEVEL );
 
-		mLogger.log(
-		        "Job Type: " + ((Job) l.get( 0 )).getCompleteTCName()
-		                + " max runtime " + maxRunTime,
-		        LogManager.DEBUG_MESSAGE_LEVEL );
+            Collections.sort(l, getBinPackingComparator());
 
-		List<List<Job>> bins = bestFitBinPack( l, maxRunTime );
+            mLogger.log(
+                    "Job Type: " + ((Job) l.get( 0 )).getCompleteTCName()
+                            + " max runtime " + maxRunTime,
+                    LogManager.DEBUG_MESSAGE_LEVEL );
+
+            bins = bestFitBinPack( l, maxRunTime );
+        } else {
+            Collections.sort(l, getBinPackingComparator());
+            bins = bestFitBinPack( l, cFactor[0] );
+        }
 
 		mLogger.log( "Jobs are merged into " + bins.size()
 		        + " clustered jobs.", LogManager.DEBUG_MESSAGE_LEVEL );
@@ -622,7 +631,7 @@ public class Horizontal implements Clusterer,
         PriorityQueue<Bin> bins = new PriorityQueue<Bin>(maxBins, new Comparator<Bin>() {
             @Override
             public int compare(Bin bin1, Bin bin2) {
-                return (int) (bin2.getTime() - bin1.getTime());
+                return (int) (bin1.getTime() - bin2.getTime());
             }
         });
 
@@ -639,13 +648,10 @@ public class Horizontal implements Clusterer,
             mLogger.log("Job " + j.getID() + " runtime " + getRunTime(j),
                     LogManager.DEBUG_MESSAGE_LEVEL);
 
-            // Loop through each bin.
-            for (int i = 0, k = bins.size(); i < k; ++i) {
-                // Add the job to the bin with the shortest combined runtime
-                bin = bins.poll();
-                bin.addJob(j);
-                bins.offer(bin);
-            }
+            // Add the job to the bin with the shortest combined runtime
+            bin = bins.poll();
+            bin.addJob(j);
+            bins.offer(bin);
         }
 
         List<List<Job>> returnBins = new LinkedList<List<Job>>();
