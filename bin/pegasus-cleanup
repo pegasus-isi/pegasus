@@ -137,7 +137,7 @@ tool_info = {}
 # --- functions -----------------------------------------------------------------------
 
 
-def setup_logger(level_str):
+def setup_logger(debug_flag):
     
     # log to the console
     console = logging.StreamHandler()
@@ -146,17 +146,10 @@ def setup_logger(level_str):
     logger.setLevel(logging.INFO)
     console.setLevel(logging.INFO)
 
-    # level - from the command line
-    level_str = level_str.lower()
-    if level_str == "debug":
+    # debug - from command line
+    if debug_flag:
         logger.setLevel(logging.DEBUG)
         console.setLevel(logging.DEBUG)
-    if level_str == "warning":
-        logger.setLevel(logging.WARNING)
-        console.setLevel(logging.WARNING)
-    if level_str == "error":
-        logger.setLevel(logging.ERROR)
-        console.setLevel(logging.ERROR)
 
     # formatter
     formatter = logging.Formatter("%(asctime)s %(levelname)7s:  %(message)s")
@@ -337,12 +330,17 @@ def rm(urls):
     removes locally using /bin/rm
     """
     for i, url in enumerate(urls):
-        cmd = "/bin/rm -f \"%s\"" % (url.path)
+        cmd = "/bin/rm"
+        if options.ignore_failures:
+            cmd += " -f"
+        if options.recursive:
+            cmd += " -r"
+        cmd += " \"%s\"" % (url.path)
         try:
             myexec(cmd, 5*60, True)
         except RuntimeError, err:
             logger.error(err)
-
+            raise
 
 def scp(urls):
     """
@@ -358,12 +356,17 @@ def scp(urls):
         cmd += " -o PasswordAuthentication=no"
         cmd += " -o StrictHostKeyChecking=no" + \
                " " + url.host + " " + \
-               " \"/bin/rm -f " + url.path + "\""
+               " \"/bin/rm"
+        if options.ignore_failures:
+            cmd += " -f"
+        if options.recursive:
+            cmd += " -r"       
+        cmd += " " + url.path + "\""
         try:
             myexec(cmd, 5*60, True)
         except RuntimeError, err:
             logger.error(err)
-
+            raise
 
 def gsiftp(urls):
     """
@@ -385,8 +388,12 @@ def gsiftp(urls):
         os.environ["X509_USER_PROXY"] = os.environ[key]
     
     # use pegasus-transfer
-    cmd = prog_dir + "/pegasus-gridftp rm -f"
-
+    cmd = prog_dir + "/pegasus-gridftp rm"
+    if options.ignore_failures:
+        cmd += " -f"
+    if options.recursive:
+        cmd += " -r"
+            
     # make output match our current log level
     if logger.isEnabledFor(logging.DEBUG):
         cmd += " -v"
@@ -397,6 +404,8 @@ def gsiftp(urls):
         myexec(cmd, 1*60*60, True)
     except RuntimeError, err:
         logger.error(err)
+        os.unlink(tmp_name)
+        raise
 
     os.unlink(tmp_name)
 
@@ -455,11 +464,13 @@ def irods(urls):
 
     for i, url in enumerate(urls):
         cmd = "irm -f " + url.path
+        if options.recursive:
+            cmd += " -r"
         try:
             myexec(cmd, 5*60, True)
         except Exception, err:
             logger.error(err)
-
+            raise
 
 def srm(urls):
     """
@@ -485,7 +496,7 @@ def srm(urls):
             myexec(cmd, 5*60, True)
         except Exception, err:
             logger.error(err)
-
+            raise
 
 def s3(urls):
     """
@@ -501,12 +512,16 @@ def s3(urls):
         if key in os.environ:
             os.environ["S3CFG"] = os.environ[key]
         
-        cmd = "pegasus-s3 rm " + url.url()
+        cmd = "pegasus-s3 rm"
+        if options.ignore_failures:
+            cmd += " -f"
+        cmd += url.url()
 
         try:
             myexec(cmd, 60, True)
         except Exception, err:
             logger.error(err)
+            raise
 
 
 def urls_groupable(a, b):
@@ -546,8 +561,7 @@ def handle_removes(urls):
             myexit(1)
 
     except RuntimeError, err:
-        logger.critical(err)
-        myexit(1)
+        raise
 
 
 def myexit(rc):
@@ -568,16 +582,18 @@ sys.stderr = sys.stdout
 # Configure command line option parser
 prog_usage = "usage: %s [options]" % (prog_base)
 parser = optparse.OptionParser(usage=prog_usage)
-parser.add_option("-l", "--loglevel", action = "store", dest = "log_level",
-                  help = "Log level. Valid levels are: debug,info,warning,error, Default is info.")
 parser.add_option("-f", "--file", action = "store", dest = "file",
                   help = "File containing URLs to be removed. If not given, list is read from stdin.")
+parser.add_option("-i", "--ignore-failures", action = "store_true", dest = "ignore_failures",
+                  help = "When specified, the tool ignores any failures and always exits with 0.")
+parser.add_option("-r", "--recursive", action = "store_true", dest = "recursive",
+                  help = "Enable recursive removal for tools that support it.")
+parser.add_option("-d", "--debug", action = "store_true", dest = "debug",
+                  help = "Enables debugging ouput.")
 
 # Parse command line options
 (options, args) = parser.parse_args()
-if options.log_level == None:
-    options.log_level = "info"
-setup_logger(options.log_level)
+setup_logger(options.debug)
 
 # Die nicely when asked to (Ctrl+C, system shutdown)
 signal.signal(signal.SIGINT, prog_sigint_handler)
@@ -631,6 +647,7 @@ except Exception, err:
     myexit(1)
 
 # do the removals
+exit_code = 0
 while url_q:
 
     u_main = url_q.popleft()
@@ -652,8 +669,15 @@ while url_q:
             u_next = False
 
     # magic!
-    handle_removes(u_list)
+    try:
+        handle_removes(u_list)
+    except:
+        exit_code = 1
 
-myexit(0)
+# sometimes we just want to ignore the failures
+if options.ignore_failures:
+    exit_code = 0
+
+myexit(exit_code)
 
 
