@@ -98,7 +98,11 @@ fi
 
 if [ $STATUS -ne 0 ]; then
     echo "Test failed, creating tarball..."
-    TARFILE=$(mktemp /tmp/pegasus-failure-XXXXXX.tar.gz)
+    DIR="/nfs/ccg3/scratch/gideon/pegasus-failures"
+    if ! [ -d "$DIR" ]; then
+        DIR="/tmp"
+    fi
+    TARFILE=$(mktemp $DIR/pegasus-failure-XXXXXX.tar.gz)
     tar czf $TARFILE $RUN_DIR
     chmod 0644 $TARFILE
     echo "Created tarball $TARFILE"
