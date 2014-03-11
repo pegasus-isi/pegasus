@@ -76,7 +76,7 @@ TESTS += test-tools
 TESTS += test-fdcache
 TESTS += test-protocol
 
-.PHONY: clean depends test install
+.PHONY: clean depends test install check
 
 ifeq ($(shell which $(CXX) || echo n),n)
 $(warning To build pegasus-mpi-cluster set CXX to the path to your MPI C++ compiler wrapper)
@@ -100,6 +100,11 @@ test-fdcache: test-fdcache.o $(OBJS)
 test-protocol: test-protocol.o $(OBJS)
 
 test: $(TESTS) $(PROGRAMS)
+ifeq ($(shell which cppcheck || echo n),n)
+	echo "Install cppcheck for static analysis"
+else
+	cppcheck --quiet *.cpp
+endif
 	test/test.sh
 
 distclean: clean
