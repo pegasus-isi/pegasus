@@ -515,7 +515,7 @@ def s3(urls):
         cmd = "pegasus-s3 rm"
         if options.ignore_failures:
             cmd += " -f"
-        cmd += url.url()
+        cmd += " " + url.url()
 
         try:
             myexec(cmd, 60, True)
