@@ -3,9 +3,11 @@
 
 #include <string>
 #include <map>
+#include <list>
 
 using std::string;
 using std::map;
+using std::list;
 
 enum MessageType {
     COMMAND      = 1,
@@ -21,7 +23,7 @@ public:
     int source;
     char *msg;
     unsigned msgsize;
-    
+
     Message();
     Message(char *msg, unsigned msgsize, int source);
     virtual ~Message();
@@ -38,15 +40,15 @@ public:
 class CommandMessage: public Message {
 public:
     string name;
-    string command;
+    list<string> args;
     string id;
     unsigned memory;
     unsigned cpus;
     map<string, string> pipe_forwards;
     map<string, string> file_forwards;
-    
+
     CommandMessage(char *msg, unsigned msgsize, int source);
-    CommandMessage(const string &name, const string &command, const string &id, unsigned memory, unsigned cpus, const map<string,string> *pipe_forwards, const map<string,string> *file_forwards);
+    CommandMessage(const string &name, const list<string> &args, const string &id, unsigned memory, unsigned cpus, const map<string,string> *pipe_forwards, const map<string,string> *file_forwards);
     virtual int tag() const { return COMMAND; };
 };
 
@@ -55,7 +57,7 @@ public:
     string name;
     int exitcode;
     double runtime;
-    
+
     ResultMessage(char *msg, unsigned msgsize, int source, int _dummy_);
     ResultMessage(const string &name, int exitcode, double runtime);
     virtual int tag() const { return RESULT; };
@@ -66,7 +68,7 @@ public:
     string hostname;
     unsigned memory;
     unsigned cpus;
-    
+
     RegistrationMessage(char *msg, unsigned msgsize, int source);
     RegistrationMessage(const string &hostname, unsigned memory, unsigned cpus);
     virtual int tag() const { return REGISTRATION; };
@@ -75,7 +77,7 @@ public:
 class HostrankMessage: public Message {
 public:
     int hostrank;
-    
+
     HostrankMessage(char *msg, unsigned msgsize, int source);
     HostrankMessage(int hostrank);
     virtual int tag() const { return HOSTRANK; };
@@ -87,7 +89,7 @@ public:
     string filename;
     const char *data;
     unsigned size;
-    
+
     IODataMessage(char *msg, unsigned msgsize, int source);
     IODataMessage(const string &task, const string &filename, const char *data, unsigned size);
     virtual int tag() const { return IODATA; }

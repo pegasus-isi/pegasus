@@ -102,7 +102,10 @@ int main(int argc, char *argv[]) {
     v.push_back("first one");
     v.push_back("second one");
     test_split_args("\"first one\" \'second one\'", v);
+
+    test_split_args("'first one' 'second one'", v);
     v.clear();
+    
     
     v.push_back("unterminated quoted string");
     test_split_args("\"unterminated quoted string", v);

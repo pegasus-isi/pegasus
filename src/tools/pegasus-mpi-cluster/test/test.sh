@@ -649,6 +649,22 @@ function test_clear_affinity {
     fi
 }
 
+function test_complex_args {
+    OUTPUT=$(mpiexec -np 2 $PMC test/complexargs.dag 2>&1)
+    RC=$?
+
+    if [ $RC -ne 0 ]; then
+        echo "$OUTPUT"
+        echo "ERROR: complex_args test failed"
+        return 1
+    fi
+
+    if ! [[ "$OUTPUT" =~ "I count 3 arguments" ]]; then
+        echo "ERROR: complex_args test failed"
+        return 1
+    fi
+}
+
 run_test ./test-strlib
 run_test ./test-tools
 run_test ./test-dag
@@ -685,6 +701,7 @@ run_test test_monitord_hack_failure
 run_test test_max_wall_time
 run_test test_hang_script
 run_test test_maxfds
+run_test test_complex_args
 
 # setrlimit is broken on Darwin, so the strict limits test won't work
 if [ $(uname -s) != "Darwin" ]; then

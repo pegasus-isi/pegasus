@@ -16,7 +16,9 @@ char *msgcopy(char *msg, int msgsize) {
 
 void test_command() {
     string name = "name";
-    string command = "command";
+    list<string> args;
+    args.push_back("command");
+    args.push_back("arg");
     string id = "id";
     unsigned memory = 1;
     unsigned cpus = 2;
@@ -24,13 +26,16 @@ void test_command() {
     pipe_forwards["FOO"] = "BAR";
     map<string,string> file_forwards;
     file_forwards["BAZ"] = "BOO";
-    CommandMessage input(name, command, id, memory, cpus, &pipe_forwards, &file_forwards);
+    CommandMessage input(name, args, id, memory, cpus, &pipe_forwards, &file_forwards);
     CommandMessage output(msgcopy(input.msg, input.msgsize), input.msgsize, 0);
     if (input.name != output.name) {
         myfailure("names don't match");
     }
-    if (input.command != output.command) {
+    if (input.args.front() != output.args.front()) {
         myfailure("commands don't match");
+    }
+    if (input.args.back() != output.args.back()) {
+        myfailure("arguments don't match");
     }
     if (input.id != output.id) {
         myfailure("ids don't match");
