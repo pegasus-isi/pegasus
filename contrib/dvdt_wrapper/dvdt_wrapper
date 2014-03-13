@@ -259,6 +259,10 @@ class Wrapper(object):
             logger.warning("Owner is in ptrace_owners; using resource_monitor")
             monitor = 'resource_monitor'
 
+        if platform.system() != "Linux":
+            logger.warning("Platform is not Linux; using resource_monitor")
+            monitor = 'resource_monitor'
+
         if monitor == 'kickstart':
             self.wrap_job_kickstart()
         elif monitor == 'resource_monitor':
