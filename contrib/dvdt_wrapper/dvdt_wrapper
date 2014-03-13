@@ -50,6 +50,7 @@ import platform
 import syslog
 import traceback
 import errno
+import time
 
 class SysLogger(object):
     def __init__(self):
@@ -263,13 +264,24 @@ class Wrapper(object):
             logger.warning("Platform is not Linux; using resource_monitor")
             monitor = 'resource_monitor'
 
+        start = time.time()
+
         if monitor == 'kickstart':
-            self.wrap_job_kickstart()
+            rc = self.wrap_job_kickstart()
         elif monitor == 'resource_monitor':
-            self.wrap_job_resource_monitor()
+            rc = self.wrap_job_resource_monitor()
         else:
             logger.warning("Invalid monitor: %s" % monitor)
-            self.run_job()
+            self.run_job() # This should never return
+            exit(1)
+
+        finish = time.time()
+
+        # Retry failed jobs that run for less than 1 second
+        if (finish - start) < 1.0 and rc != 0:
+            restart_job("Wrapped process failed after less than 1 second")
+
+        exit(rc)
 
     def wrap_job_kickstart(self):
         logger.notice("Wrapping job with kickstart")
@@ -307,7 +319,7 @@ class Wrapper(object):
         if len(stdout) > 0 or len(stderr) > 0:
             restart_job("Kickstart produced stdio")
 
-        exit(proc.returncode)
+        return proc.returncode
 
     def wrap_job_resource_monitor(self):
         logger.notice("Wrapping job with resource_monitor")
@@ -325,7 +337,7 @@ class Wrapper(object):
 
         proc.wait()
 
-        exit(proc.returncode)
+        return proc.returncode
 
     def run_job(self):
         logger.notice("Not wrapping job")
