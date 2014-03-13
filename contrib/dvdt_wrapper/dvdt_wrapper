@@ -20,6 +20,9 @@ allow_owners = []
 # This is a list of the users whose jobs cannot be wrapped.
 deny_owners = []
 
+# This is a list of users whose jobs cannot be wrapped with kickstart/ptrace
+ptrace_owners = []
+
 # This is the fraction of matching jobs that will be wrapped.
 # 1.0 = all matching jobs
 wrap_fraction = 1.0
@@ -248,8 +251,13 @@ class Wrapper(object):
 
     def wrap_job(self):
         "Run the job with one of the monitors"
+        global monitor
 
         self.create_log_dir()
+
+        if self.Owner in ptrace_owners:
+            logger.warning("Owner is in ptrace_owners; using resource_monitor")
+            monitor = 'resource_monitor'
 
         if monitor == 'kickstart':
             self.wrap_job_kickstart()
