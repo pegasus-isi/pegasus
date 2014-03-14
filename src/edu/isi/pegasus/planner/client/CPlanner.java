@@ -409,6 +409,8 @@ public class CPlanner extends Executable{
         PegasusConfiguration configurator = new PegasusConfiguration( mLogger );
         configurator.loadConfigurationPropertiesAndOptions( mProps , mPOptions );
 
+        mLogger.log( "Planner invoked with following arguments " + mPOptions.getOriginalArgString(),
+                      LogManager.INFO_MESSAGE_LEVEL );
 
         //do sanity check on dax file
         String dax         = mPOptions.getDAX();
