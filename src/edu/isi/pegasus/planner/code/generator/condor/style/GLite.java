@@ -219,10 +219,9 @@ public class GLite extends Abstract {
         //the jobname in case of pbs can only be 15 characters long
         id = ( id.length() > 15 )? id.substring( 0, 15 ) : id;
 
-        /* Not adding JOBNAME the GAHP keeps on crashing if specified
-         * on pollux. Karan Feb 18, 2010
+        //add the jobname so that it appears when we do qstat
         addSubExpression( value, "JOBNAME" , id   );
-         */
+	value.append( " && ");
 
         /* always have PASSENV to true */
         //value.append( " && ");
