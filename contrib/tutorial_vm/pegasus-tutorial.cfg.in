@@ -128,6 +128,8 @@ cat >> /etc/rc.local <<END
 # Start dashboard
 su tutorial -c pegasus-service-server >/var/log/pegasus-service.log 2>&1 &
 END
+su tutorial -c "mkdir ~/.pegasus"
+su tutorial -c "sqlite3 ~/.pegasus/workflow.db 'SELECT 1'"
 su tutorial -c "pegasus-service-admin create"
 su tutorial -c "pegasus-service-admin useradd tutorial tutorial@localhost -p pegasus"
 
