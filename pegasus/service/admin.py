@@ -83,6 +83,11 @@ class UserAddCommand(AdminCommand):
     usage = "%prog useradd USERNAME EMAIL"
     description = "Add a user"
 
+    def __init__(self):
+        AdminCommand.__init__(self)
+        self.parser.add_option("-p", "--password", action="store", dest="password",
+                default=None, help="Password")
+
     def run(self):
         if len(self.args) < 2:
             self.parser.error("Specify USERNAME and EMAIL")
@@ -91,9 +96,10 @@ class UserAddCommand(AdminCommand):
 
         username = self.args[0]
         email = self.args[1]
+        password = self.options.password
 
         try:
-            users.create(username, None, email)
+            users.create(username, password, email)
             db.session.commit()
         except Exception, e:
             if self.options.debug: raise
