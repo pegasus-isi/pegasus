@@ -35,6 +35,8 @@ wget
 ntp
 #SL_desktop_tweaks
 git
+firefox
+python-setuptools
 %end
 
 %post
@@ -116,6 +118,18 @@ cp -R /tmp/pegasus/doc/tutorial/* /home/tutorial/
 chown -R tutorial:tutorial /home/tutorial
 cd
 rm -rf /tmp/pegasus
+
+# Install dashboard
+git clone https://github.com/pegasus-isi/pegasus-service.git /tmp/pegasus-service
+cd /tmp/pegasus-service
+git checkout tutorial
+python setup.py install
+cat >> /etc/rc.local <<END
+# Start dashboard
+su tutorial -c pegasus-service-server >/var/log/pegasus-service.log 2>&1 &
+END
+su tutorial -c "pegasus-service-admin create"
+su tutorial -c "pegasus-service-admin useradd tutorial tutorial@localhost -p pegasus"
 
 ) 1>/root/post-install.log 2>&1
 %end
