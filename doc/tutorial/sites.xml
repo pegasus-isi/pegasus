@@ -16,9 +16,6 @@
         <directory type="local-storage" path="/home/tutorial/outputs">
             <file-server operation="all" url="file:///home/tutorial/outputs"/>
         </directory>
-
-        <!-- This profile tells Pegasus where to find the user's private key for SCP transfers -->
-        <profile namespace="env" key="SSH_PRIVATE_KEY">/home/tutorial/.ssh/id_rsa</profile>
     </site>
 
 
@@ -40,5 +37,8 @@
 
         <!-- This profile tells Pegasus where the worker package is installed on PegasusVM -->
         <profile namespace="env" key="PEGASUS_HOME">/usr</profile>
+
+        <!-- This profile tells Pegasus where to find the user's private key for SCP transfers -->
+        <profile namespace="pegasus" key="SSH_PRIVATE_KEY">/home/tutorial/.ssh/id_rsa</profile>
     </site>
 </sitecatalog>
