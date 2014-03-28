@@ -52,12 +52,17 @@ public class S3CFG  extends Abstract implements CredentialHandler {
      */
     private static final String DESCRIPTION = "S3 Conf File Credential Handler";
 
+    /**
+     * The local path to the credential
+     */
+    private String mLocalCredentialPath;
 
     /**
      * The default constructor.
      */
     public S3CFG(){
         super();
+        mLocalCredentialPath = this.getLocalPath();
     }
     
     /**
@@ -79,7 +84,7 @@ public class S3CFG  extends Abstract implements CredentialHandler {
 
         return( path == null ) ?
                 //PM-731 return the path on the local site
-                this.getLocalPath():
+                mLocalCredentialPath:
                 path;
        
     }

@@ -53,10 +53,16 @@ public class Ssh extends Abstract implements CredentialHandler {
 
 
     /**
+     * The local path to the credential
+     */
+    private String mLocalCredentialPath;
+    
+    /**
      * The default constructor.
      */
     public Ssh(){
         super();
+        mLocalCredentialPath = this.getLocalPath();
     }
 
     
@@ -79,7 +85,7 @@ public class Ssh extends Abstract implements CredentialHandler {
 
         return( path == null ) ?
                 //PM-731 return the path on the local site
-                this.getLocalPath():
+                this.mLocalCredentialPath:
                 path;
        
     }

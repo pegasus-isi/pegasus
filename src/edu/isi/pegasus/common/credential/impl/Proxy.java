@@ -48,11 +48,18 @@ public class Proxy  extends Abstract implements CredentialHandler{
      */
     private static final String DESCRIPTION = "X509 Proxy Handler";
 
+    
+    /**
+     * The local path to the user proxy
+     */
+    private String mLocalProxyPath;
+    
     /**
      * The default constructor.
      */
     public Proxy(){
         super();
+        mLocalProxyPath = this.getLocalPath();
     }
 
 
@@ -75,7 +82,7 @@ public class Proxy  extends Abstract implements CredentialHandler{
 
         return( proxy == null ) ?
                 //PM-731 return the path on the local site
-                this.getLocalPath():
+                this.mLocalProxyPath:
                 proxy;
     }
 

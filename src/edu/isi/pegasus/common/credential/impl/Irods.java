@@ -48,10 +48,16 @@ public class Irods extends Abstract implements CredentialHandler{
     public static final String DESCRIPTION = "IRODS Credentials Handler";
 
     /**
+     * The local path to the credential
+     */
+    private String mLocalCredentialPath;
+    
+    /**
      * The default constructor.
      */
     public Irods(){
         super();
+        mLocalCredentialPath = this.getLocalPath();
     }
 
     
@@ -76,7 +82,7 @@ public class Irods extends Abstract implements CredentialHandler{
 
         return( path == null ) ?
                 //PM-731 return the path on the local site
-                this.getLocalPath():
+                this.mLocalCredentialPath:
                 path;
        
     }
