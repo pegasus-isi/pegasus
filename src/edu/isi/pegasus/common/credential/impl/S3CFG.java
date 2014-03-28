@@ -43,6 +43,9 @@ public class S3CFG  extends Abstract implements CredentialHandler {
      * s3cfg file.
      */
     public static final String S3CFG_FILE_VARIABLE = "S3CFG";
+    
+    
+    private static final String S3CFG_PEGASUS_PROFILE_KEY = S3CFG.S3CFG_FILE_VARIABLE.toLowerCase() ;//has to be lowercased
 
     /**
      * The description
@@ -85,8 +88,8 @@ public class S3CFG  extends Abstract implements CredentialHandler {
      * Returns the path to user cred on the local site. 
      * The order of preference is as follows
      *
-     * - If a S3CFG.S3CFG_FILE_VARIABLE is specified in the site catalog entry as a Pegasus Profile that is used
-     * - Else the one specified in the properties
+     * - If a S3CFG.S3CFG_FILE_VARIABLE is specified in the site catalog entry as a Pegasus Profile that is used, else the corresponding env profile for backward support
+     * - Else S3CFG.S3CFG_FILE_VARIABLE Pegasus Profile specified in the properties, else the corresponding env profile for backward support
      * - Else the one pointed to by the environment variable S3CFG.S3CFG_FILE_VARIABLE
      * - Else the default path of ~/.pegasus/s3cfg
      * - Else the legacy default path of ~/.s3cfg
@@ -100,16 +103,26 @@ public class S3CFG  extends Abstract implements CredentialHandler {
 
         //check if corresponding Pegasus Profile is specified in site catalog entry
         String cred = ( siteEntry == null )? null :
-                        (String)siteEntry.getProfiles().get( Profiles.NAMESPACES.pegasus).get( S3CFG.S3CFG_FILE_VARIABLE.toLowerCase() );
-
+                        (String)siteEntry.getProfiles().get( Profiles.NAMESPACES.pegasus).get( S3CFG.S3CFG_PEGASUS_PROFILE_KEY );
+        if( cred == null && siteEntry != null ){
+            //try to check for an env profile in the site entry 
+            cred = (String)siteEntry.getProfiles().get( Profiles.NAMESPACES.env).get( S3CFG.S3CFG_FILE_VARIABLE );
+        }
+        
+        //try from properites file
+        if( cred == null ){
+            //load the pegasus profile from property file 
+            Namespace profiles = mProps.getProfiles( Profiles.NAMESPACES.pegasus );
+            cred = (String)profiles.get( S3CFG.S3CFG_PEGASUS_PROFILE_KEY  );
+        }
         if( cred == null ) {
-            //load from property file
+            //load the env profile from the  property file
             Namespace env = mProps.getProfiles(Profiles.NAMESPACES.env);
             cred = (String)env.get( S3CFG.S3CFG_FILE_VARIABLE  );
         }
         
         if( cred == null){
-            //check if X509_USER_PROXY is specified in the environment
+            //check if S3CFG is specified in the environment
             Map<String,String> envs = System.getenv();
             if( envs.containsKey( S3CFG.S3CFG_FILE_VARIABLE ) ){
                 cred = envs.get( S3CFG.S3CFG_FILE_VARIABLE  );
