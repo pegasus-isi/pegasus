@@ -23,6 +23,7 @@ import java.io.File;
 import java.util.Map;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.namespace.Namespace;
 
 
@@ -62,6 +63,16 @@ public class S3CFG  extends Abstract implements CredentialHandler {
      */
     public S3CFG(){
         super();
+    }
+    
+    /**
+     * Initializes the credential implementation. Implementations require
+     * access to the logger, properties and the SiteCatalog Store.
+     *
+     * @param bag  the bag of Pegasus objects.
+     */
+    public void initialize( PegasusBag bag ){
+        super.initialize( bag );
         mLocalCredentialPath = this.getLocalPath();
     }
     

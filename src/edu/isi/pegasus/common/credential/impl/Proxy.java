@@ -19,6 +19,7 @@ package edu.isi.pegasus.common.credential.impl;
 import edu.isi.pegasus.common.credential.CredentialHandler;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.namespace.Namespace;
 
 import org.globus.common.CoGProperties;
@@ -59,9 +60,18 @@ public class Proxy  extends Abstract implements CredentialHandler{
      */
     public Proxy(){
         super();
+    }
+    
+    /**
+     * Initializes the credential implementation. Implementations require
+     * access to the logger, properties and the SiteCatalog Store.
+     *
+     * @param bag  the bag of Pegasus objects.
+     */
+    public void initialize( PegasusBag bag ){
+        super.initialize( bag );
         mLocalProxyPath = this.getLocalPath();
     }
-
 
     /**
      * Returns the path to user proxy. The order of preference is as follows
