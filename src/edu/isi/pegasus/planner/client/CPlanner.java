@@ -873,8 +873,8 @@ public class CPlanner extends Executable{
         PlannerOptions options = new PlannerOptions();
         options.setSanitizePath( sanitizePath );
         options.setOriginalArgString( args );
-        //we default to leaf cleanup unless overriden on command line
-        options.setCleanup(PlannerOptions.CLEANUP_OPTIONS.leaf );
+        //we default to inplace cleanup unless overriden on command line
+        options.setCleanup(PlannerOptions.CLEANUP_OPTIONS.inplace );
         
         Getopt g = new Getopt("pegasus-plan",args,
                               "vqhfSnzpVr::aD:d:s:o:O:y:P:c:C:b:g:2:j:3:F:X:4:5:6:78:9:B:1:",
