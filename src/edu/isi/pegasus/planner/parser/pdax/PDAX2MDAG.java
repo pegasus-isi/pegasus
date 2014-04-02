@@ -1184,9 +1184,6 @@ public class PDAX2MDAG implements Callback {
             options.setCleanup( PlannerOptions.CLEANUP_OPTIONS.none );
         }
 
-        //we want monitoring to happen
-        options.setMonitoring( true );
-
         //construct the argument string.
         //add the jvm options and the pegasus options if any
         StringBuffer arguments = new StringBuffer();

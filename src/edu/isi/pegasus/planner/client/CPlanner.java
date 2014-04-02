@@ -891,10 +891,6 @@ public class CPlanner extends Executable{
             //System.out.println("Option tag " + (char)option);
             switch (option) {
 
-                case 1://monitor
-                    options.setMonitoring( true );
-                    break;
-
                 case 'z'://deferred
                     options.setPartOfDeferredRun( true );
                     break;

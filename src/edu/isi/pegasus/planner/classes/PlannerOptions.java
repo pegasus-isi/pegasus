@@ -203,12 +203,6 @@ public class PlannerOptions extends Data implements Cloneable{
     private boolean mDeferredRun;
 
     /**
-     * Boolean indicating whether to spawn off a monitoring process or not
-     * for the workflow.
-     */
-    private boolean mMonitor;
-
-    /**
      * The VOGroup to which the user belongs to.
      */
     private String mVOGroup;
@@ -315,7 +309,6 @@ public class PlannerOptions extends Data implements Cloneable{
         mVDSProps         = null;
         mClusterer        = null;
         mBasenamePrefix   = null;
-        mMonitor          = false;
         mCleanup          = CLEANUP_OPTIONS.none;
         mVOGroup          = "pegasus";
         mDeferredRun      = false;
@@ -795,24 +788,6 @@ public class PlannerOptions extends Data implements Cloneable{
         return this.mOptArg;
     }
 
-
-    /**
-     * Sets the flag to denote whether we want to monitor the workflow or not.
-     *
-     * @param value boolean.
-     */
-    public void setMonitoring(boolean value){
-        this.mMonitor = value;
-    }
-
-    /**
-     * Returns boolean indicating whether we want to monitor or not.
-     *
-     * @return boolean indicating whether monitoring was set or not.
-     */
-    public boolean monitorWorkflow(){
-        return this.mMonitor;
-    }
 
     /**
      * Sets the partitioning type in case of partition and plan.
@@ -1414,7 +1389,7 @@ public class PlannerOptions extends Data implements Cloneable{
                     "\n Random Direct Name   " + mRandomDirName +
                     "\n Authenticate         " + mAuthenticate +
                     "\n Clustering Technique " + mClusterer +
-                    "\n Monitor Workflow     " + mMonitor +
+                    "\n Cleanup    "           + mCleanup +
                     "\n VO Group             " + mVOGroup +
                     "\n Rescue Tries         " + mNumOfRescueTries +
                     "\n VDS Properties       " + mVDSProps + 
@@ -1521,8 +1496,6 @@ public class PlannerOptions extends Data implements Cloneable{
             sb.append(" --quiet " );
         }
 
-        //the monitor option
-        if( mMonitor ) { sb.append(" --monitor "); }
 
         //the deferred run option
         if( mDeferredRun ) { sb.append( " --deferred "); }
@@ -1666,7 +1639,6 @@ public class PlannerOptions extends Data implements Cloneable{
         pOpt.mSubmit         = this.mSubmit;
         pOpt.mGenRandomDir   = this.mGenRandomDir;
         pOpt.mOptArg         = this.mOptArg;
-        pOpt.mMonitor        = this.mMonitor;
         pOpt.mRandomDirName  = this.mRandomDirName;
         pOpt.mAuthenticate   = this.mAuthenticate;
         pOpt.mClusterer      = this.mClusterer;
