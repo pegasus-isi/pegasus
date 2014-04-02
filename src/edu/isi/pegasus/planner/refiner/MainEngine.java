@@ -23,6 +23,7 @@ import java.util.Set;
 
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PlannerOptions;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.PlannerCache;
@@ -253,13 +254,18 @@ public class MainEngine
         }
 
         //add the cleanup nodes in place
-        if ( mPOptions.getCleanup() ){ /* should be exposed via command line option */
+        if ( mPOptions.getCleanup() == PlannerOptions.CLEANUP_OPTIONS.inplace ){ 
             message = "Adding cleanup jobs in the workflow";
             mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_GENERATE_CLEANUP, LoggingKeys.DAX_ID, abstractWFName );
             CleanupEngine cEngine = new CleanupEngine( mBag );
             mReducedDag = cEngine.addCleanupJobs( mReducedDag );
             mLogger.logEventCompletion();
-
+        }
+        
+        if ( mPOptions.getCleanup() == PlannerOptions.CLEANUP_OPTIONS.inplace ||
+               mPOptions.getCleanup() == PlannerOptions.CLEANUP_OPTIONS.leaf ){
+            //add leaf cleanup nodes both when inplace or leaf cleanup is specified
+            
             //PM-150 leaf cleanup nodes to remove directories should take care of this
             /*
             //for the non pegasus lite case we add the cleanup nodes
@@ -271,7 +277,7 @@ public class MainEngine
             */
             
             //PM-150
-            mLogger.logEventStart( "Adding Directory Removal Nodes", LoggingKeys.DAX_ID, abstractWFName );
+            mLogger.logEventStart( "Adding Leaf Cleanup Jobs", LoggingKeys.DAX_ID, abstractWFName );
             mRemoveEng = new RemoveDirectory( mReducedDag, mBag, this.mPOptions.getSubmitDirectory() );
             mReducedDag = mRemoveEng.addRemoveDirectoryNodes(mReducedDag);
             mLogger.logEventCompletion();
