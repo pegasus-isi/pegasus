@@ -11,7 +11,7 @@ Source:         pegasus-source-%{version}.tar.gz
 
 BuildRoot:      %{_tmppath}/%{name}-root
 
-BuildRequires:  ant, ant-nodeps, ant-apache-regexp, java7-devel, gcc, groff, python-devel, gcc-c++, make, jpackage-utils, /usr/share/java-1.7.0
+BuildRequires:  ant, ant-nodeps, ant-apache-regexp, java7-devel, gcc, groff, python-devel, gcc-c++, make, jpackage-utils, /usr/share/java-1.7.0, asciidoc, libxslt, fop
 Requires:       java, python >= 2.4, condor >= 7.6, graphviz, jpackage-utils
 
 %define sourcedir %{name}-source-%{version}
@@ -31,7 +31,7 @@ execute the steps in appropriate order.
 %setup -q -n %{sourcedir}
 
 %build
-ant dist
+ant dist-release
 
 # strip executables
 strip dist/pegasus-%{version}/bin/pegasus-invoke
