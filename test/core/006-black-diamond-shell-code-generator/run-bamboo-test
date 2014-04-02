@@ -55,7 +55,7 @@ pegasus-plan \
     --dir work \
     --relative-submit-dir ${RUN_ID} \
     --output-site local \
-    --nocleanup \
+    --cleanup leaf \
     --dax blackdiamond.dax \
     --submit | tee plan.out
 

@@ -69,6 +69,6 @@ pegasus-plan \
     --dir work \
     --output-site local \
     --dax dax.xml \
-    --nocleanup \
+    --cleanup leaf \
     -vvvvv \
     --submit | tee $TOPDIR/plan.out

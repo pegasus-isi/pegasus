@@ -361,7 +361,7 @@ def main():
     print "Planning and submitting the uberdax..."
     os.chdir(work_dir)
     os.environ["JAVA_HEAPMAX"] = "512"
-    cmd = "pegasus-plan --conf pegasusrc --relative-dir " + run_id + " --sites " + cluster_name + " --dir . --output-site local --dax gp.dax --nocleanup --submit 2>&1 | tee pegasus-plan.out"
+    cmd = "pegasus-plan --conf pegasusrc --relative-dir " + run_id + " --sites " + cluster_name + " --dir . --output-site local --dax gp.dax --cleanup leaf --submit 2>&1 | tee pegasus-plan.out"
     myexec(cmd)
 
 

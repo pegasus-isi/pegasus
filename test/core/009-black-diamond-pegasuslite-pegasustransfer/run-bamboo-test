@@ -72,7 +72,7 @@ pegasus-plan \
     --staging-site cartman-data \
     --output-site local \
     --dir work \
-    --nocleanup \
+    --cleanup leaf \
     --dax blackdiamond.dax \
     --submit | tee plan.out
 

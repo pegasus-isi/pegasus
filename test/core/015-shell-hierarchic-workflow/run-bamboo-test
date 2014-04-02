@@ -56,7 +56,7 @@ pegasus-plan \
     --output-site local \
     --dir work/ \
     --relative-submit-dir ${RUN_ID} \
-    --nocleanup \
+    --cleanup leaf \
     --dax ${DAX} \
     --submit 
 

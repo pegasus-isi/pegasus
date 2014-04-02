@@ -110,7 +110,7 @@ pegasus-plan \
     --dir work \
     --sites CCG \
     --output-site CCG \
-    --nocleanup \
+    --cleanup leaf \
     --dax dag.xml \
     --cluster horizontal \
     --submit | tee $TOP_DIR/plan.out

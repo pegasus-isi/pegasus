@@ -117,7 +117,7 @@ properties execution_site execution_site
 properties staging_site staging_site
 properties output_site output_site
 properties planner_args planner_args 
-properties clean_up clean_up '--nocleanup'
+properties clean_up clean_up '--cleanup leaf'
 
 if [ "$clean_up" = 'True' ]; then
 	clean_up=''

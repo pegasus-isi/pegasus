@@ -57,7 +57,7 @@ pegasus-plan \
     --sites condorpool \
     --output-site local \
     --dir work \
-    --nocleanup \
+    --cleanup leaf \
     --dax blackdiamond.dax \
     --submit | tee plan.out
 

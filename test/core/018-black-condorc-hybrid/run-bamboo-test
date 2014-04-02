@@ -69,7 +69,7 @@ pegasus-plan \
     --sites local \
     --output-site local \
     --dir work \
-    --nocleanup \
+    --cleanup leaf \
     --cluster horizontal \
     --dax blackdiamond.dax \
     -vvvv \
