@@ -101,6 +101,7 @@
       <filterset>
         <filter token="PEGASUS_VERSION" value="${pegasus.version}"/>
         <filter token="LIBDIR" value="${dist.lib.subdir}"/>
+        <filter token="PYTHON_LIBDIR" value="${dist.python-lib.subdir}"/>
       </filterset>
     </copy>
   </target>
