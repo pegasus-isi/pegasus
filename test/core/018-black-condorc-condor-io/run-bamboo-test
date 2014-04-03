@@ -71,7 +71,7 @@ pegasus-plan \
     --conf $testdir/pegasusrc \
     --sites isi-condorc \
     --output-site local \
-    --dir work \
+    --dir work/submit \
     --cleanup leaf \
     --cluster horizontal \
     --dax blackdiamond.dax \
