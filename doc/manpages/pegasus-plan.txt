@@ -14,7 +14,7 @@ Synopsis
 *pegasus-plan* [*-v*] [*-q*] [*-V*] [*-h*]
              [*-D*'prop=value'...]] [*-b* prefix] 
              [*--conf* 'propsfile']
-             [*-c* 'cachefile'[,'cachefile'...]]
+             [*-c* 'cachefile'[,'cachefile'...]] [*--cleanup* 'cleanup strategy' ]
              [*-C* 'style'[,'style'...]]
              [*--dir* 'dir']
              [*--force*] [*--force-replan*] 
@@ -41,8 +41,8 @@ The Pegasus Workflow Planner ensures that all the data required for the
 execution of the executable workflow is transferred to the execution site 
 by adding transfer nodes at appropriate points in the DAG. This is done by 
 looking up an appropriate *Replica Catalog* to determine the locations of 
-the input files for the various jobs. At present the default replica 
-mechanism used is RLS. 
+the input files for the various jobs. By default, a file based replica
+catalog is used.
 +
 The Pegasus Workflow Planner also tries to reduce the workflow, unless 
 specified otherwise. This is done by deleting the jobs whose output files 
@@ -197,6 +197,25 @@ It defaults to label, meaning if you have a PEGASUS profile key label
 with jobs, the jobs with the same value for the pegasus profile key label
 will go into the same clustered job. 
 
+*--cleanup* 'cleanup strategy'::
+The cleanup strategy to be used for workflows. Pegasus can add cleanup
+jobs to the executable workflow that can remove files and directories
+during the workflow execution.
++
+The following type of cleanup strategies are currently supported:
++
+- *none* disables cleanup altogether. The planner does not add any
+cleanup jobs in the executable workflow whatsoever.
++
+- *leaf* the planner adds a leaf cleanup node per staging site that
+removes the directory created by the create dir job in the workflow.
++
+- *inplace* the planner adds in addition to leaf cleanup nodes,
+cleanup nodes per level of the workflow that remove files no longer
+required during execution. For example, an added cleanup node will
+remove input files for a particular compute job after the job has
+finished successfully. 
+
 *--conf* 'propfile'::
 The path to properties file that contains the properties planner needs to
 use while planning the workflow.
@@ -260,14 +279,7 @@ job submit files.
 
 *-n*::
 *--nocleanup*::
-This results in the generation of the separate cleanup workflow that
-removes the directories created during the execution of the executable
-workflow. The cleanup workflow is to be submitted after the executable
-workflow has finished.
-+
-If this option is not specified, then Pegasus adds cleanup nodes to
-the executable workflow itself that cleanup files on the remote sites
-when they are no longer required.
+This option is deprecated. Use --cleanup none instead.
 
 *-o* 'site'::
 *--output-site* 'site'::
@@ -482,15 +494,15 @@ Files
 is the suggested location of the latest DAX schema to produce DAX
 output.
 
-*$PEGASUS_HOME/etc/sc-3.0.xsd*::
+*$PEGASUS_HOME/etc/sc-4.0.xsd*::
 is the suggested location of the latest Site Catalog schema that is
-used to create the XML3 version of the site catalog
+used to create the XML version of the site catalog
 
 *$PEGASUS_HOME/etc/tc.data.text*::
 is the suggested location for the file corresponding to the 
 Transformation Catalog.
 
-*$PEGASUS_HOME/etc/sites.xml3* | *$PEGASUS_HOME/etc/sites.xml*::
+*$PEGASUS_HOME/etc/sites.xml4* | *$PEGASUS_HOME/etc/sites.xml3*::
 is the suggested location for the file containing the site information.
 
 *$PEGASUS_HOME/lib/pegasus.jar*::
@@ -499,13 +511,11 @@ contains all compiled Java bytecode to run the Pegasus Workflow Planner.
 
 See Also
 --------
-pegasus-sc-client(1), pegasus-tc-client(1), pegasus-rc-client(1)
+pegasus-run(1), pegasus-status(1), pegasus-remove(1), pegasus-rc-client(1), pegasus-analyzer(1)
 
 
 Authors
 -------
 Karan Vahi `<vahi at isi dot edu>`
-
-Gaurang Mehta `<gmehta at isi dot edu>`
 
 Pegasus Team <http://pegasus.isi.edu>
