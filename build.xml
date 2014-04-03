@@ -304,7 +304,14 @@
     <fixcrlf srcdir="${dist.doc}/schemas" includes="**/*.xml" eol="lf"/>
   </target>
 
-  <target name="doc" depends="setup,doc-schemas,doc-manpages,doc-user-guide,doc-java,doc-python,doc-perl" description="Generate documentation"/>
+  <target name="doc-tutorial" depends="setup" description="Generate tutorial files">
+    <mkdir dir="${dist.doc}/tutorial"/>
+    <copy preservelastmodified="true" todir="${dist.doc}/tutorial">
+      <fileset dir="doc/tutorial" includes="**/*"/>
+    </copy>
+  </target>
+
+  <target name="doc" depends="setup,doc-schemas,doc-manpages,doc-user-guide,doc-java,doc-python,doc-perl,doc-tutorial" description="Generate documentation"/>
 
   <target name="compile-ctools" depends="setup" description="Compile C tools">
     <mkdir dir="${dist.bin}"/>
@@ -467,6 +474,13 @@
 
   <target name="dist-release" depends="dist-common,doc" description="Build binary release tarball">
     <package-binary name="pegasus-binary-${pegasus.version}-${dist.arch}"/>
+  </target>
+
+  <target name="dist-macos" depends="dist-common,doc" description="Build binary release for Mac OS X">
+    <exec executable="release-tools/macos/package.sh" failonerror="true">
+      <arg value="${dist.dir}"/>
+      <arg value="dist/pegasus-binary-${pegasus.version}-${dist.arch}.dmg"/>
+    </exec>
   </target>
 
   <target name="dist" depends="dist-common" description="Build binary release tarball without documentation">

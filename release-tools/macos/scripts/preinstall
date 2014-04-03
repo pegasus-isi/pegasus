@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -e
+
+# Remove any old pth files
+for v in $(echo "2.3 2.5 2.6 2.7"); do
+    rm -f /Library/Python/$v/site-packages/pegasus.pth
+done
+
