@@ -52,7 +52,7 @@ pegasus-plan \
     -Dpegasus.code.generator=Shell \
     --conf pegasusrc \
     --sites local \
-    --dir work \
+    --dir work/submit \
     --relative-submit-dir ${RUN_ID} \
     --output-site local \
     --cleanup leaf \
