@@ -6,6 +6,11 @@
 
 SYSLIB="$1"
 
+if [ "$(uname -s)" == "Darwin" ]; then
+    echo "$SYSLIB/pegasus/python"
+    exit 0
+fi
+
 VERSION=`/usr/bin/python -V 2>&1 | sed -e 's/^.* \([0-9]\.[0-9]\).*$/\1/'`
 
 FINAL_LOCATION="NONE"
