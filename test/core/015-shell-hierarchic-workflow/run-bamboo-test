@@ -8,7 +8,7 @@ DAX=main.dax
 
 # Unique directory for this run
 RUN_ID=`/bin/date +'%Y%m%d_%H%M%S%N'`
-RUN_DIR=`pwd`/work/$RUN_ID
+RUN_DIR=`pwd`/work/submit/$RUN_ID
 
 # create the site catalog
 cat > sites.xml << EOF
