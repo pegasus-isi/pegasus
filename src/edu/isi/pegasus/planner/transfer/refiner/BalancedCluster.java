@@ -431,8 +431,9 @@ public class BalancedCluster extends Basic {
                     stageInMap.put(siteHandle,pt);
                 }
                 //add the FT to the appropriate transfer job.
-                String newJobName = pt.addTransfer( ft, type );
-
+                TransferContainer siTC = pt.addTransfer( ft, level, type );
+                String newJobName = siTC.getTXName();
+                
                 if(ft.isTransferringExecutableFile()){
                     //add both the name of the stagein job and the executable file
                     stageInExecJobs.add( newJobName );
