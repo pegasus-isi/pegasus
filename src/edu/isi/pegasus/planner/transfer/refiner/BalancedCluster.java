@@ -102,13 +102,13 @@ public class BalancedCluster extends Basic {
      * The map containing the list of stage in transfer jobs that are being
      * created for the workflow indexed by the execution poolname.
      */
-    private Map mStageInLocalMap;
+    private Map<String,PoolTransfer> mStageInLocalMapPerLevel;
     
     /**
      * The map containing the list of stage in transfer jobs that are being
      * created for the workflow indexed by the execution poolname.
      */
-    private Map mStageInRemoteMap;
+    private Map<String,PoolTransfer> mStageInRemoteMapPerLevel;
 
     /**
      * The map indexed by compute jobnames that contains the list of stagin job
@@ -208,8 +208,8 @@ public class BalancedCluster extends Basic {
         //for worker node execution/Pegasus Lite
         mAddNodesForSettingXBit = !mProps.executeOnWorkerNode();
 
-        mStageInLocalMap   = new HashMap( mPOptions.getExecutionSites().size());
-        mStageInRemoteMap   = new HashMap( mPOptions.getExecutionSites().size());
+        mStageInLocalMapPerLevel   = new HashMap( mPOptions.getExecutionSites().size());
+        mStageInRemoteMapPerLevel   = new HashMap( mPOptions.getExecutionSites().size());
         
         mRelationsMap = new HashMap();
         mSetupMap     = new HashMap();
@@ -314,7 +314,7 @@ public class BalancedCluster extends Basic {
                              true,
                              files,
                              Job.STAGE_IN_JOB ,
-                             this.mStageInLocalMap,
+                             this.mStageInLocalMapPerLevel,
                              this.mStageinLocalBundleValue,
                              this.mTXStageInImplementation );
         
@@ -322,7 +322,7 @@ public class BalancedCluster extends Basic {
                              false,
                              symlinkFiles, 
                              Job.STAGE_IN_JOB,
-                             this.mStageInRemoteMap,
+                             this.mStageInRemoteMapPerLevel,
                              this.mStageInRemoteBundleValue,
                              this.mTXStageInImplementation  );
         
@@ -626,12 +626,21 @@ public class BalancedCluster extends Basic {
      * containers and the stdin of the transfer jobs written.
      */
     public void done( ){
-        doneStageIn( this.mStageInLocalMap,
+        this.resetStageInMaps();
+        //reset the stageout map too
+        this.resetStageOutMaps();
+    }
+    
+    /**
+     * Resets the local and remote stage out maps.
+     */
+    protected void resetStageInMaps(  ){
+        resetStageInMap( this.mStageInLocalMapPerLevel,
                      this.mTXStageInImplementation , 
                      Job.STAGE_IN_JOB,
                      true );
         
-        doneStageIn( this.mStageInRemoteMap,
+        resetStageInMap( this.mStageInRemoteMapPerLevel,
                      this.mTXStageInImplementation,
                      Job.STAGE_IN_JOB,
                      false );
@@ -649,10 +658,6 @@ public class BalancedCluster extends Basic {
                 addRelation( value, key );
             }
         }
-
-        
-        //reset the stageout map too
-        this.resetStageOutMaps();
     }
     
     /**
@@ -667,7 +672,7 @@ public class BalancedCluster extends Basic {
      * @param localTransfer    indicates whether transfer job needs to run on
      *                         local site or not.
      */
-    public void doneStageIn( Map<String,PoolTransfer> stageInMap,
+    public void resetStageInMap( Map<String,PoolTransfer> stageInMap,
                              Implementation implementation,
                              int stageInJobType,
                              boolean localTransfer ){
