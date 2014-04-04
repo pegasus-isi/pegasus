@@ -1,5 +1,5 @@
 PEGASUS_HOME=$(shell cd ../.. && pwd)
-VERSION=$(shell ../../release-tools/getversion --majorminor)
+VERSION=$(shell ../../release-tools/getversion)
 
 XML  = about.xml
 XML += creating_workflows.xml
