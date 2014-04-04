@@ -193,6 +193,11 @@ public class BalancedCluster extends Basic {
      * xbit in case of executable staging.
      */
     protected boolean mAddNodesForSettingXBit;
+    
+    /**
+     * The current level of the jobs being traversed.
+     */
+    private int mCurrentSILevel;
 
     /**
      * The overloaded constructor.
@@ -214,6 +219,7 @@ public class BalancedCluster extends Basic {
         mRelationsMap = new HashMap();
         mSetupMap     = new HashMap();
         mCurrentSOLevel = -1;
+        mCurrentSILevel = -1;
         mJobPrefix    = mPOptions.getJobnamePrefix();
 
         mSiteStore    = bag.getHandleToSiteStore();
@@ -229,14 +235,14 @@ public class BalancedCluster extends Basic {
         mStageinLocalBundleValue = new BundleValue();
         mStageinLocalBundleValue.initialize( Pegasus.CLUSTER_LOCAL_STAGE_IN_KEY,
                                              Pegasus.CLUSTER_STAGE_IN_KEY,
-                                             getDefaultBundleValueFromProperties( Pegasus.CLUSTER_LOCAL_STAGE_IN_KEY,
+                                             getDefaultClusterValueFromProperties( Pegasus.CLUSTER_LOCAL_STAGE_IN_KEY,
                                                                     Pegasus.CLUSTER_STAGE_IN_KEY,
                                                                     BalancedCluster.DEFAULT_LOCAL_STAGE_IN_CLUSTER_FACTOR ) );
         
         mStageInRemoteBundleValue = new BundleValue();
         mStageInRemoteBundleValue.initialize( Pegasus.CLUSTER_REMOTE_STAGE_IN_KEY,
                                               Pegasus.CLUSTER_STAGE_IN_KEY,
-                                              getDefaultBundleValueFromProperties( Pegasus.CLUSTER_LOCAL_STAGE_IN_KEY,
+                                              getDefaultClusterValueFromProperties( Pegasus.CLUSTER_LOCAL_STAGE_IN_KEY,
                                                                      Pegasus.CLUSTER_STAGE_IN_KEY,
                                                                      BalancedCluster.DEFAULT_REMOTE_STAGE_IN_CLUSTER_FACTOR ) );
 
@@ -244,14 +250,14 @@ public class BalancedCluster extends Basic {
         mStageOutLocalBundleValue = new BundleValue();
         mStageOutLocalBundleValue.initialize( Pegasus.CLUSTER_LOCAL_STAGE_OUT_KEY,
                                               Pegasus.CLUSTER_STAGE_OUT_KEY,
-                                              getDefaultBundleValueFromProperties( Pegasus.CLUSTER_LOCAL_STAGE_OUT_KEY,
+                                              getDefaultClusterValueFromProperties( Pegasus.CLUSTER_LOCAL_STAGE_OUT_KEY,
                                                                      Pegasus.CLUSTER_STAGE_OUT_KEY,
                                                                      BalancedCluster.DEFAULT_LOCAL_STAGE_OUT_CLUSTER_FACTOR ));
 
         mStageOutRemoteBundleValue = new BundleValue();
         mStageOutRemoteBundleValue.initialize( Pegasus.CLUSTER_REMOTE_STAGE_OUT_KEY,
                                                Pegasus.CLUSTER_STAGE_OUT_KEY,
-                                               getDefaultBundleValueFromProperties( Pegasus.CLUSTER_REMOTE_STAGE_OUT_KEY,
+                                               getDefaultClusterValueFromProperties( Pegasus.CLUSTER_REMOTE_STAGE_OUT_KEY,
                                                                       Pegasus.CLUSTER_STAGE_OUT_KEY,
                                                                       BalancedCluster.DEFAULT_REMOTE_STAGE_OUT_CLUSTER_FACTOR ));
 
@@ -274,7 +280,7 @@ public class BalancedCluster extends Basic {
      *
      * @return the value as string.
      */
-    protected String getDefaultBundleValueFromProperties( String key, String defaultKey, String defaultValue ){
+    protected String getDefaultClusterValueFromProperties( String key, String defaultKey, String defaultValue ){
 
         String result = mPegasusProfilesInProperties.getStringValue( key );
 
@@ -353,21 +359,27 @@ public class BalancedCluster extends Basic {
                                       Implementation implementation ){
 
         String jobName    = job.getName();
-
-//      instead of site handle now we refer to the staging site handle
-//        String siteHandle = job.getSiteHandle();
         String siteHandle = job.getStagingSiteHandle();
-        String key = null;
-        String par = null;
         int bundle = -1;
-
         int priority = getJobPriority( job );
 
-
-
+        int level   = job.getLevel();
+        if ( level != mCurrentSILevel ){
+            mCurrentSILevel = level;
+            //we are starting on a new level of the workflow.
+            //reinitialize stuff
+            this.resetStageInMaps();
+            //the stagein map needs to point to the correct reinitialized one
+            if( localTransfer ){
+                stageInMap = this.mStageInLocalMapPerLevel;
+            }
+            else {
+                stageInMap = this.mStageInRemoteMapPerLevel;
+            }
+        }
+        
         //to prevent duplicate dependencies
         Set tempSet = new HashSet();
-
         int staged = 0;
         Collection stagedExecutableFiles = new LinkedList();
         Collection<String> stageInExecJobs = new LinkedList();//store list of jobs that are transferring the stage file
@@ -384,14 +396,12 @@ public class BalancedCluster extends Basic {
             //then remove the entry from
             //the Vector and add a dependency
             //in the graph
-            key = this.constructFileKey(lfn, siteHandle);
-            par = (String) mFileTable.get(key);
+            String key = this.constructFileKey(lfn, siteHandle);
+            String par = (String) mFileTable.get(key);
             //System.out.println("lfn " + lfn + " par " + par);
             if (par != null) {
                 it.remove();
-
                 //check if tempSet does not contain the parent
-                //fix for sonal's bug
                 tempSet.add(par);
 
                 if(ft.isTransferringExecutableFile() && this.mAddNodesForSettingXBit ){
@@ -401,7 +411,7 @@ public class BalancedCluster extends Basic {
                     String xBitJobName = (String)mSetupMap.get(key);
                     if(key == null){
                         throw new RuntimeException("Internal Pegasus Error while " +
-                                                   "constructing bundled stagein jobs");
+                                                   "constructing balanced cluster stagein jobs");
                     }
                     //add relation xbitjob->computejob
                     this.addRelation(xBitJobName,jobName);
@@ -444,10 +454,9 @@ public class BalancedCluster extends Basic {
                 //of transfer is scheduled. This came up during collapsing
                 //June 15th, 2004
                 tempSet.add(newJobName);
-
-
             }
         }
+        
 
         //if there were any staged files
         //add the setXBitJobs for them
@@ -626,6 +635,10 @@ public class BalancedCluster extends Basic {
      * containers and the stdin of the transfer jobs written.
      */
     public void done( ){
+        
+        //increment the level counter
+        this.mCurrentSILevel++;
+        
         this.resetStageInMaps();
         //reset the stageout map too
         this.resetStageOutMaps();
@@ -635,15 +648,15 @@ public class BalancedCluster extends Basic {
      * Resets the local and remote stage out maps.
      */
     protected void resetStageInMaps(  ){
-        resetStageInMap( this.mStageInLocalMapPerLevel,
-                     this.mTXStageInImplementation , 
-                     Job.STAGE_IN_JOB,
-                     true );
+        mStageInLocalMapPerLevel = resetStageInMap( this.mStageInLocalMapPerLevel,
+                                                    this.mTXStageInImplementation , 
+                                                    Job.STAGE_IN_JOB,
+                                                    true );
         
-        resetStageInMap( this.mStageInRemoteMapPerLevel,
-                     this.mTXStageInImplementation,
-                     Job.STAGE_IN_JOB,
-                     false );
+        mStageInLocalMapPerLevel = resetStageInMap( this.mStageInRemoteMapPerLevel,
+                                                    this.mTXStageInImplementation,
+                                                    Job.STAGE_IN_JOB,
+                                                    false );
        
         //adding relations that tie in the stagin
         //jobs to the compute jobs.
@@ -672,56 +685,57 @@ public class BalancedCluster extends Basic {
      * @param localTransfer    indicates whether transfer job needs to run on
      *                         local site or not.
      */
-    public void resetStageInMap( Map<String,PoolTransfer> stageInMap,
-                             Implementation implementation,
-                             int stageInJobType,
-                             boolean localTransfer ){
-        //traverse through the stagein map and
-        //add transfer nodes per pool
-        String key; String value;
-        PoolTransfer pt;
-        TransferContainer tc;
-        Map.Entry entry;
-        Job job = new Job();
+    public Map<String,PoolTransfer> resetStageInMap( Map<String,PoolTransfer> stageInMap,
+                                                     Implementation implementation,
+                                                     int stageInJobType,
+                                                     boolean localTransfer ){
+       
+        if ( stageInMap != null ){
+            //traverse through the stagein map and
+            //add transfer nodes per pool
+            String key; String value;
+            PoolTransfer pt;
+            TransferContainer tc;
+            Map.Entry entry;
+            Job job = new Job();
 
-        for(Iterator it = stageInMap.entrySet().iterator();it.hasNext();){
-            entry = (Map.Entry)it.next();
-            key = (String)entry.getKey();
-            pt   = (PoolTransfer)entry.getValue();
-            mLogger.log("Adding stage in transfer nodes for pool " + key,
-                        LogManager.DEBUG_MESSAGE_LEVEL);
-
-            for(Iterator pIt = pt.getTransferContainerIterator();pIt.hasNext();){
-                tc = (TransferContainer)pIt.next();
-                if(tc == null){
-                    //break out
-                    break;
-                }
-                mLogger.log("Adding stagein transfer node " + tc.getTXName(),
+            for(Iterator it = stageInMap.entrySet().iterator();it.hasNext();){
+                entry = (Map.Entry)it.next();
+                key = (String)entry.getKey();
+                pt   = (PoolTransfer)entry.getValue();
+                mLogger.log("Adding stage in transfer nodes for pool " + key,
                             LogManager.DEBUG_MESSAGE_LEVEL);
-                //added in make transfer node
-                //mDag.addNewJob(tc.getName());
-                //we just need the execution pool in the job object
-                job.executionPool = key;
-                job.setStagingSiteHandle( key );
 
-                String site = localTransfer ? "local" : job.getSiteHandle();
-                
-                Job tJob =  implementation.createTransferJob( job,
-                                                                  site,
-                                                                  tc.getFileTransfers(),
-                                                                  null,
-                                                                  tc.getTXName(),
-                                                                  stageInJobType );
-                //always set the type to stagein after it is created
-                tJob.setJobType( stageInJobType );
-                addJob( tJob );
+                for(Iterator pIt = pt.getTransferContainerIterator();pIt.hasNext();){
+                    tc = (TransferContainer)pIt.next();
+                    if(tc == null){
+                        //break out
+                        break;
+                    }
+                    mLogger.log("Adding stagein transfer node " + tc.getTXName(),
+                                LogManager.DEBUG_MESSAGE_LEVEL);
+                    //added in make transfer node
+                    //mDag.addNewJob(tc.getName());
+                    //we just need the execution pool in the job object
+                    job.executionPool = key;
+                    job.setStagingSiteHandle( key );
 
+                    String site = localTransfer ? "local" : job.getSiteHandle();
+
+                    Job tJob =  implementation.createTransferJob( job,
+                                                                      site,
+                                                                      tc.getFileTransfers(),
+                                                                      null,
+                                                                      tc.getTXName(),
+                                                                      stageInJobType );
+                    //always set the type to stagein after it is created
+                    tJob.setJobType( stageInJobType );
+                    addJob( tJob );
+
+                }
             }
         }
-
-        
-        
+        return new HashMap<String,PoolTransfer>();
     }
 
     /**
