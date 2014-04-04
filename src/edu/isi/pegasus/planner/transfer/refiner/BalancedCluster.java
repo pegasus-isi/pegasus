@@ -638,8 +638,22 @@ public class BalancedCluster extends Basic {
         
         //increment the level counter
         this.mCurrentSILevel++;
-        
         this.resetStageInMaps();
+        
+        //adding relations that tie in the stagin
+        //jobs to the compute jobs.
+        for(Iterator it = mRelationsMap.entrySet().iterator();it.hasNext();){
+            Map.Entry entry = (Map.Entry)it.next();
+            String key   = (String)entry.getKey();
+            mLogger.log("Adding relations for job " + key,
+                        LogManager.DEBUG_MESSAGE_LEVEL);
+            for(Iterator pIt = ((Collection)entry.getValue()).iterator();
+                                                              pIt.hasNext();){
+                String value = (String)pIt.next();
+                addRelation( value, key );
+            }
+        }
+        
         //reset the stageout map too
         this.resetStageOutMaps();
     }
@@ -658,19 +672,7 @@ public class BalancedCluster extends Basic {
                                                     Job.STAGE_IN_JOB,
                                                     false );
        
-        //adding relations that tie in the stagin
-        //jobs to the compute jobs.
-        for(Iterator it = mRelationsMap.entrySet().iterator();it.hasNext();){
-            Map.Entry entry = (Map.Entry)it.next();
-            String key   = (String)entry.getKey();
-            mLogger.log("Adding relations for job " + key,
-                        LogManager.DEBUG_MESSAGE_LEVEL);
-            for(Iterator pIt = ((Collection)entry.getValue()).iterator();
-                                                              pIt.hasNext();){
-                String value = (String)pIt.next();
-                addRelation( value, key );
-            }
-        }
+        
     }
     
     /**
