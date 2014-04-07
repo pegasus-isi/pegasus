@@ -18,7 +18,6 @@ DIST_DIR=$(dirname $ROOT_DIR)
 PKG_DIR=$DIST_DIR/pkg
 DMG_DIR=$DIST_DIR/dmg
 DMG=$2
-PKG=$DMG_DIR/Install.pkg
 DIST_XML=$DIST_DIR/Distribution.dist
 
 VERSION=$($ROOT_DIR/bin/pegasus-version)
@@ -31,7 +30,7 @@ cp -r $ROOT_DIR/bin $ROOT_DIR/share $ROOT_DIR/lib $PKG_DIR
 
 # Add other files to the DMG
 cp $ROOT_DIR/README $ROOT_DIR/LICENSE $ROOT_DIR/RELEASE_NOTES $ROOT_DIR/share/doc/pegasus/pegasus-user-guide.pdf $DMG_DIR/
-cp $MYDIR/Uninstall.tool $DMG_DIR/
+cp $MYDIR/Uninstall.tool "$DMG_DIR/Uninstall Pegasus.tool"
 
 # Build the package
 pkgbuild --root $PKG_DIR \
@@ -73,7 +72,7 @@ productbuild --distribution $DIST_XML \
              --package-path $DIST_DIR \
              --resources $MYDIR/resources \
              --version $VERSION \
-             $PKG
+             "$DMG_DIR/Install Pegasus.pkg"
 
 # Build the dmg
 rm -f $DIST_DIR/pegasus.dmg $DMG
