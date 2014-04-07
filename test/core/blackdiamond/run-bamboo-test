@@ -126,7 +126,7 @@ pegasus-plan \
     --sites $execution_site \
     --staging-site $staging_site \
     --output-site $output_site \
-    --dir work/ \
+    --dir work/submit \
     --cleanup $clean_up \
     --dax ${DAX} \
     --submit ${planner_args}
