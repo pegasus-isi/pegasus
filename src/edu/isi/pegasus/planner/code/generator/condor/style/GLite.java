@@ -63,8 +63,8 @@ import edu.isi.pegasus.planner.classes.TransferJob;
  * 
  * The following globus profiles if associated with the job are picked up
  * <pre>
- * hostcount  -> PROCS
- * count      -> NODES
+ * hostcount  -> NODES
+ * xcount      -> PROCS
  * maxwalltime-> WALLTIME
  * </pre>
  * 
@@ -188,8 +188,8 @@ public class GLite extends Abstract {
      * with the jobs.
      * The following globus profiles if associated with the job are picked up
      * <pre>
-     * hostcount  -> PROCS
-     * count      -> NODES
+     * hostcount  -> NODES
+     * xcount      -> PROCS
      * maxwalltime-> WALLTIME
      * </pre>
      * 
@@ -235,16 +235,16 @@ public class GLite extends Abstract {
         }
         
         
-        /* the globus key hostCount is PROCS */
+        /* the globus key hostCount is NODES */
         if( job.globusRSL.containsKey( "hostcount" ) ){
             value.append( " && " );
-            addSubExpression( value, "PROCS" , Integer.parseInt( (String)job.globusRSL.get( "hostcount" ) ) )  ;
+            addSubExpression( value, "NODES" , Integer.parseInt( (String)job.globusRSL.get( "hostcount" ) ) )  ;
         }
         
-        /* the globus key count is NODES */
-        if( job.globusRSL.containsKey( "count" ) ){
+        /* the globus key xcount is PROCS */
+        if( job.globusRSL.containsKey( "xcount" ) ){
             value.append( " && " );
-            addSubExpression( value, "NODES" , Integer.parseInt( (String)job.globusRSL.get( "count" ) ) );
+            addSubExpression( value, "PROCS" , Integer.parseInt( (String)job.globusRSL.get( "xcount" ) ) );
         }
         
         /* the globus key maxwalltime is WALLTIME */
