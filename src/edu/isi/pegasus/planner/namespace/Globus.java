@@ -313,8 +313,18 @@ public class Globus extends Namespace {
                 }
                 else {
                     res = UNKNOWN_KEY;
-
                 }
+                break;
+                
+            case 'x':
+                if (key.compareTo("xcount") == 0) {
+                    res = VALID_KEY;
+                }
+                else {
+                    res = UNKNOWN_KEY;
+                }
+                break;
+                
             default:
                 res = UNKNOWN_KEY;
         }

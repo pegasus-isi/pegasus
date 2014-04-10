@@ -238,13 +238,13 @@ public class GLite extends Abstract {
         /* the globus key hostCount is NODES */
         if( job.globusRSL.containsKey( "hostcount" ) ){
             value.append( " && " );
-            addSubExpression( value, "NODES" , Integer.parseInt( (String)job.globusRSL.get( "hostcount" ) ) )  ;
+            addSubExpression( value, "NODES" ,  (String)job.globusRSL.get( "hostcount" ) )  ;
         }
         
         /* the globus key xcount is PROCS */
         if( job.globusRSL.containsKey( "xcount" ) ){
             value.append( " && " );
-            addSubExpression( value, "PROCS" , Integer.parseInt( (String)job.globusRSL.get( "xcount" ) ) );
+            addSubExpression( value, "PROCS" ,  (String)job.globusRSL.get( "xcount" )  );
         }
         
         /* the globus key maxwalltime is WALLTIME */
