@@ -40,6 +40,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.cluster.aggregator.MPIExec;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.util.LinkedList;
 
@@ -221,7 +222,10 @@ public abstract class Abstract implements Clusterer {
 
 //        System.out.println( " Job to be clustered is " + firstJob);
 
-        if(size == 1){
+        JobAggregator aggregator = mJobAggregatorFactory.loadInstance( firstJob );
+        if( size == 1 &&
+                //PM-745 we want to launch cluster containgin a single job via PMC too
+                ( aggregator == null ||  !aggregator.getClusterExecutableLFN().equals( MPIExec.COLLAPSE_LOGICAL_NAME ) )){
             //no need to collapse one job. go to the next iteration
             mLogger.log("\t No clustering for partition " + pID,
                         LogManager.DEBUG_MESSAGE_LEVEL);
@@ -230,9 +234,6 @@ public abstract class Abstract implements Clusterer {
         }
 
         //do the ordering of the list
-
-
-        JobAggregator aggregator = mJobAggregatorFactory.loadInstance( firstJob );
         if( aggregator.entryNotInTC( currSite ) ){
             throw new ClustererException ("No installed aggregator executable found for partition " +
                                           pID + " at site " + currSite );
