@@ -515,11 +515,7 @@ public class CPlanner extends Executable{
         mPMetrics.setRootWorkflowUUID( orgDag.getRootWorkflowUUID() );
         mPMetrics.setWorkflowUUID( orgDag.getWorkflowUUID() );
         mPMetrics.setWorkflowMetrics( orgDag.getWorkflowMetrics() );
-        
-        //log id hiearchy message
-        //that connects dax with the jobs
-        logIDHierarchyMessage( orgDag , LoggingKeys.DAX_ID, orgDag.getAbstractWorkflowName() );
-
+       
         //write out a the relevant properties to submit directory
         int state = 0;
         String relativeSubmitDir; //the submit directory relative to the base specified
@@ -674,18 +670,6 @@ public class CPlanner extends Executable{
                                    finalDag.getAbstractWorkflowName() );
 
             result = codeGenerator.generateCode( finalDag );
-
-            //connect the DAX and the DAG via the hieararcy message
-            List l = new ArrayList(1);
-            l.add( finalDag.getExecutableWorkflowName() );
-            mLogger.logEntityHierarchyMessage( LoggingKeys.DAX_ID, 
-                                               finalDag.getAbstractWorkflowName(),
-                                               LoggingKeys.DAG_ID,
-                                               l);
-
-            //connect the jobs and the DAG via the hierarchy message
-            this.logIDHierarchyMessage( finalDag, LoggingKeys.DAG_ID, finalDag.getExecutableWorkflowName() );
-
 
         } catch (Exception e) {
             throw new RuntimeException( "Unable to generate code", e );
@@ -1758,29 +1742,7 @@ public class CPlanner extends Executable{
         return result;
     }
 
-    /**
-     * Logs a message that connects the jobs with DAX/DAG
-     * 
-     * 
-     * @param dag           the DAG object
-     * @param parentType    the parent type
-     * @param parentID      the parent id
-     */
-    private void logIDHierarchyMessage(ADag dag, String parentType, String parentID ) {
-        //log the create id hieararchy message that 
-        //ties the DAX with the jobs in it.
-        //in bunches of 1000
-        Enumeration e = dag.vJobSubInfos.elements();
-        while( e.hasMoreElements() ){
-            List<String> l = new LinkedList<String>();
-            for( int i = 0; e.hasMoreElements() && i++ < 1000; ){
-                Job job = (Job)e.nextElement();
-                l.add( job.getID() );
-            }
-            mLogger.logEntityHierarchyMessage( parentType, parentID, LoggingKeys.JOB_ID, l );
-        }
-    }
-
+    
 
 
     /**
