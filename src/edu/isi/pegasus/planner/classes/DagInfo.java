@@ -16,20 +16,16 @@
 package edu.isi.pegasus.planner.classes;
 
 
-import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.common.util.Currently;
 import edu.isi.pegasus.common.util.Version;
 
 import java.io.File;
 
-import java.util.Enumeration;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.TreeMap;
-import java.util.Vector;
 /**
  * Holds the information needed to make one dag file corresponding to a Abstract
  * Dag. It holds information to generate the .dax file which is submitted to
@@ -52,13 +48,13 @@ public class DagInfo extends Data {
      * Vector of String objects containing the jobname_id of jobs making
      * the abstract dag.
      */
-    public Vector dagJobs;
+//    public Vector dagJobs;
 
     /**
      * Captures the parent child relations making up the DAG. It is a Vector of
      * <code>PCRelation</code> objects.
      */
-    public Vector relations;
+ //   public Vector relations;
 
     /**
      * The name of the Abstract Dag taken from the adag element of the DAX
@@ -141,8 +137,9 @@ public class DagInfo extends Data {
      * The default constructor.
      */
     public DagInfo() {
-        dagJobs        = new Vector();
+/*        dagJobs        = new Vector();
         relations      = new Vector();
+*/
         nameOfADag     = "";
         count          = "";
         index          = "";
@@ -162,12 +159,13 @@ public class DagInfo extends Data {
      *
      * @param job  the job to be added
      */
-    public void addNewJob( Job job ) {
+/*    public void addNewJob( Job job ) {
         dagJobs.add( job.getID() );
         //increment the various metrics
         mWFMetrics.increment( job );
     }
-
+*/
+    
     /**
      * Adds a new PCRelation pair to the Vector of <code>PCRelation</code>
      * pairs. Since we are adding a new relation the isDeleted parameter should
@@ -175,10 +173,10 @@ public class DagInfo extends Data {
      * 
      * @param relation  the relation to be added
      */
-    public void addNewRelation(PCRelation relation) {
+ /*   public void addNewRelation(PCRelation relation) {
         relations.addElement( relation );
     }
-
+*/
     /**
      * Adds a new PCRelation pair to the Vector of <code>PCRelation</code>
      * pairs. Since we are adding a new relation the isDeleted parameter should
@@ -189,11 +187,12 @@ public class DagInfo extends Data {
      *
      * @see #relations
      */
-    public void addNewRelation(String parent, String child) {
+ /*   public void addNewRelation(String parent, String child) {
         PCRelation newRelation = new PCRelation(parent, child);
         relations.addElement(newRelation);
     }
-
+*/
+    
     /**
      * Adds a new PCRelation pair to the Vector of <code>PCRelation</code> pairs.
      *
@@ -204,11 +203,12 @@ public class DagInfo extends Data {
      *
      * @see #relations
      */
-    public void addNewRelation(String parent, String child, boolean isDeleted) {
+/*    public void addNewRelation(String parent, String child, boolean isDeleted) {
         PCRelation newRelation = new PCRelation(parent, child, isDeleted);
         relations.addElement(newRelation);
     }
-
+*/
+    
     /**
      * Removes a job from the dag/graph structure. It however does not
      * delete the relations the edges that refer to the job.
@@ -217,11 +217,11 @@ public class DagInfo extends Data {
      *
      * @return boolean indicating whether removal was successful or not.
      */
-    public boolean remove( Job  job ){
+/*    public boolean remove( Job  job ){
         mWFMetrics.decrement( job );
         return dagJobs.remove( job.getID() );
     }
-
+*/
 
     /**
      * It returns the list of lfns referred to by the DAG. The list is unique
@@ -344,10 +344,10 @@ public class DagInfo extends Data {
      *
      * @return the number of the jobs.
      */
-    public int getNoOfJobs() {
+/*    public int getNoOfJobs() {
         return dagJobs.size();
     }
-
+*/
     /**
      * Gets all the parents of a particular node.
      *
@@ -355,7 +355,7 @@ public class DagInfo extends Data {
      *
      * @return    Vector corresponding to the parents of the node.
      */
-    public Vector getParents(String node) {
+/*    public Vector getParents(String node) {
         //getting the parents of that node
         Enumeration ePcRel = this.relations.elements();
         Vector vParents = new Vector();
@@ -369,7 +369,7 @@ public class DagInfo extends Data {
 
         return vParents;
     }
-
+*/
     /**
      * Get all the children of a particular node.
      *
@@ -377,7 +377,7 @@ public class DagInfo extends Data {
      *
      * @return  Vector containing the children of the node.
      */
-    public Vector getChildren(String node) {
+/*    public Vector getChildren(String node) {
         Enumeration ePcRel = this.relations.elements();
         Vector vChildren = new Vector();
         PCRelation currentRelPair;
@@ -391,7 +391,7 @@ public class DagInfo extends Data {
 
         return vChildren;
     }
-
+*/
     /**
      * This returns all the leaf nodes of the dag. The way the structure of Dag
      * is specified in terms of the parent child relationship pairs, the
@@ -404,7 +404,7 @@ public class DagInfo extends Data {
      * @see org.griphyn.cPlanner.classes.PCRelation
      * @see org.griphyn.cPlanner.classes.DagInfo#relations
      */
-    public Vector getLeafNodes() {
+/*    public Vector getLeafNodes() {
         Vector leafJobs = new Vector();
         Vector vJobs = this.dagJobs;
         Vector vRelations = this.relations;
@@ -440,7 +440,8 @@ public class DagInfo extends Data {
 
         return leafJobs;
     }
-
+*/
+    
     /**
      * It determines the root Nodes for the ADag looking at the relation pairs
      * of the adag. The way the structure of Dag is specified in terms
@@ -455,6 +456,7 @@ public class DagInfo extends Data {
      * @see org.griphyn.cPlanner.classes.DagInfo#relations
      *
      */
+/*
     public Vector getRootNodes() {
         Vector rootJobs = new Vector();
         Vector vJobs = this.dagJobs;
@@ -491,7 +493,7 @@ public class DagInfo extends Data {
 
         return rootJobs;
     }
-
+*/
 
     /**
      * Returns the workflow metrics so far.
@@ -627,8 +629,8 @@ public class DagInfo extends Data {
     public Object clone() {
         DagInfo dag = new DagInfo();
 
-        dag.dagJobs = (Vector)this.dagJobs.clone();
-        dag.relations = (Vector)this.relations.clone();
+  //      dag.dagJobs = (Vector)this.dagJobs.clone();
+  //      dag.relations = (Vector)this.relations.clone();
         dag.nameOfADag =  this.nameOfADag;
         dag.count =  this.count;
         dag.index =  this.index;
@@ -658,7 +660,7 @@ public class DagInfo extends Data {
             "\n FlowName     : " + this.flowIDName +
             "\n FlowTimestamp: " + this.mFlowTimestamp +
             "\n Release Ver  : " + this.releaseVersion +
-            vectorToString(" Relations making the Dag ", this.relations) +
+//            vectorToString(" Relations making the Dag ", this.relations) +
             "\n LFN List is " + this.lfnMap;
 
 
