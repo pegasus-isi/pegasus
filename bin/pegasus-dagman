@@ -54,15 +54,9 @@ from Pegasus.tools import utils
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-SLEEP_TIME = 15
-DIED_TOO_QUICKLY_TIME = 120
-
 dagman = None
 monitord = None
-
-monitord_last_start = 0
-monitord_next_start = 0
-monitord_restarts = 0
+shadowq = None
 
 def find_prog(name):
     PATH = os.getenv("PATH", "/bin:/usr/bin:/usr/local/bin")
@@ -83,14 +77,14 @@ def dagman_launch(dagman_bin):
         arguments = sys.argv[1:]
         arguments.insert(0, "condor_scheduniv_exec."+os.getenv("CONDOR_ID"))
 
-        dagman_proc = subprocess.Popen(arguments,
-                                       stdout=sys.stdout,
-                                       stderr=sys.stderr,
-                                       executable=dagman_bin)
+        proc = subprocess.Popen(arguments,
+                                stdout=sys.stdout,
+                                stderr=sys.stderr,
+                                executable=dagman_bin)
 
-        logger.info("Launched Dagman with pid %d" % dagman_proc.pid)
+        logger.info("Launched Dagman with pid %d" % proc.pid)
 
-        return dagman_proc
+        return proc
     except OSError, err:
         logger.error("Could not launch Dagman",  err)
         sys.exit(1)
@@ -105,18 +99,38 @@ def monitord_launch(monitord_bin):
 
         dagman_log = os.getenv('_CONDOR_DAGMAN_LOG')
 
-        monitord_proc = subprocess.Popen(
-                    [monitord_bin, "-N", dagman_log],
-                    stdout=log,
-                    stderr=subprocess.STDOUT)
+        proc = subprocess.Popen([monitord_bin, "-N", dagman_log],
+                                stdout=log,
+                                stderr=subprocess.STDOUT)
 
-        logger.info("Launched monitord with pid %d" % monitord_proc.pid)
+        logger.info("Launched monitord with pid %d" % proc.pid)
 
         log.close()
 
-        return monitord_proc
+        return proc
     except OSError, err:
         logger.error("Could not launch monitord", err)
+        return None
+
+def shadowq_launch(shadowq_bin):
+    try:
+        logfile = "shadowq.log"
+        utils.rotate_log_file(logfile)
+        log = open(logfile, 'a')
+
+        dagman_log = os.getenv('_CONDOR_DAGMAN_LOG')
+
+        proc = subprocess.Popen([shadowq_bin, dagman_log],
+                                stdout=log,
+                                stderr=subprocess.STDOUT)
+
+        logger.info("Launched shadowq with pid %d" % proc.pid)
+
+        log.close()
+
+        return proc
+    except OSError, err:
+        logger.error("Could not launch shadowq", err)
         return None
 
 def is_dagman_copy_to_spool():
@@ -154,6 +168,7 @@ if __name__ == "__main__":
 
     dagman_bin = find_prog("condor_dagman")
     monitord_bin = find_prog("pegasus-monitord")
+    shadowq_bin = find_prog("pegasus-shadow-queue")
 
     # If copy_to_spool is set, copy dagman binary to dag submit directory
     copy_to_spool = is_dagman_copy_to_spool()
@@ -163,55 +178,36 @@ if __name__ == "__main__":
         shutil.copy2(old_dagman_bin, dagman_bin)
         logger.info("Copied condor_dagman from %s to %s" % (old_dagman_bin, dagman_bin))
 
+    procs = {}
+
     dagman = dagman_launch(dagman_bin)
+    if dagman is None:
+        exit(1)
+    procs[dagman.pid] = dagman
+
     monitord = monitord_launch(monitord_bin)
+    if monitord is not None:
+        procs[monitord.pid] = monitord
 
-    while True:
-        dagman.poll()
-        monitord.poll()
+    shadowq = shadowq_launch(shadowq_bin)
+    if shadowq is not None:
+        procs[shadowq.pid] = shadowq
 
-        # If dagman exits, then just wait for monitord
-        if dagman.returncode is not None:
-            logger.info("DAGMan exited, waiting for monitord")
-            monitord.wait()
-            break
+    while len(procs) > 0:
+        pid, rc = os.wait()
+        if pid in procs:
+            p = procs.pop(pid)
+            p.returncode = rc
 
-        # If dagman is running, and monitord is not, then we may need to restart it
-        if monitord.returncode is not None:
-            logger.warning("monitord exited")
-
-            # XXX Why are we restarting monitord? If it fails, how can restarting help?
-            now = time.time()
-            if monitord_next_start == 0:
-
-                # did the process die too quickly?
-                if now - monitord_last_start < DIED_TOO_QUICKLY_TIME:
-                    monitord_restarts += 1
-                else:
-                    monitord_restarts = 0
-
-                # backoff with upper limit
-                backoff = min(4**monitord_restarts, 3600)
-                logger.info("Next monitord launch scheduled in about %d seconds" % (backoff))
-                monitord_next_start = now + backoff - 1
-
-            # time to restart yet?
-            if monitord_next_start <= now:
-                monitord_next_start = 0
-                monitord_last_start = now
-                monitord = monitord_launch(monitord_bin)
-
-        # sleep in between polls
-        time.sleep(SLEEP_TIME)
-
-    logger.info("Dagman exited with code %d" % dagman.returncode)
-    logger.info("Monitord exited with code %d" % monitord.returncode)
+    logger.info("Dagman exited with code %d", dagman.returncode)
+    if monitord is not None:
+        logger.info("Monitord exited with code %d", monitord.returncode)
+    if shadowq is not None:
+        logger.info("Shadow Queue exited with code %d", shadowq.returncode)
 
     if copy_to_spool:
-        logger.info("Removing copied condor_dagman from submit directory %s" % dagman_bin)
+        logger.info("Removing copied condor_dagman from submit directory %s", dagman_bin)
         os.remove(dagman_bin)
 
-    # Exit pegasus-dagman with a merged returncode
-    # XXX Why are we doing this? Does the monitord return code matter?
-    sys.exit(dagman.returncode & monitord.returncode)
+    sys.exit(dagman.returncode)
 
