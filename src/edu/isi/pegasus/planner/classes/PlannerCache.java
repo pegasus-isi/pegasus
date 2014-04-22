@@ -267,8 +267,8 @@ public class PlannerCache extends Data
         }
         else{
             //generate the prefix from the name of the dag
-            sb.append(adag.dagInfo.nameOfADag).append("-").
-           append(adag.dagInfo.index);
+            sb.append(adag.getLabel()).append("-").
+           append(adag.getIndex());
         }
 
         //PM-677 deliberately a put cache to make sure it is never

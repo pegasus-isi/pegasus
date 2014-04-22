@@ -138,8 +138,6 @@ public class ClassADSGenerator {
     public static void generate( PrintWriter writer, ADag dag ) {
         //get hold of the object holding the metadata
         //information about the workflow
-        DagInfo dinfo = dag.dagInfo;
-
         //pegasus is the generator
         writer.println( generateClassAdAttribute( GENERATOR_AD_KEY, GENERATOR) );
         
@@ -148,20 +146,18 @@ public class ClassADSGenerator {
         writer.println( generateClassAdAttribute( WF_UUID_KEY, dag.getWorkflowUUID()) );
 
         //the vds version
-        if (dinfo.releaseVersion != null) {
-            writer.println(
-                generateClassAdAttribute(VERSION_AD_KEY, dinfo.releaseVersion));
-        }
+        writer.println(
+                generateClassAdAttribute(VERSION_AD_KEY, dag.getReleaseVersion() ));
+        
 
         //the workflow name
-        if (dinfo.flowIDName != null) {
-            writer.println(
-                generateClassAdAttribute(WF_NAME_AD_KEY, dinfo.flowIDName));
-        }
+        writer.println(
+                generateClassAdAttribute(WF_NAME_AD_KEY, dag.getFlowName() ));
+        
         //the workflow time
-        if (dinfo.getMTime() != null) {
+        if ( dag.getMTime() != null) {
             writer.println(
-                generateClassAdAttribute(WF_TIME_AD_KEY, dinfo.getFlowTimestamp()));
+                generateClassAdAttribute(WF_TIME_AD_KEY, dag.getFlowTimestamp()));
         }
     }
 
