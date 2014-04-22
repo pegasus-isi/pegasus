@@ -512,7 +512,7 @@ public class SUBDAXGenerator{
             //point to the outer level workflow DAX replica store file
             inheritedRCFile.append( DAXReplicaStore.getDAXReplicaStoreFile( this.mPegasusPlanOptions,
                                                                             this.mDAG.getLabel(),
-                                                                            this.mDAG.dagInfo.index  )
+                                                                            this.mDAG.getIndex() )
                                                               );
             options.setInheritedRCFiles( inheritedRCFile.toString() );
         }

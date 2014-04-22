@@ -574,8 +574,8 @@ public class NonJavaCallout extends AbstractPerJob {
 
                 // write workflow related metadata
             if ( this.mAbstractDag != null ) {
-                pw.println("wf.name=" + mAbstractDag.dagInfo.nameOfADag);
-                pw.println("wf.index=" + mAbstractDag.dagInfo.index);
+                pw.println("wf.name=" + mAbstractDag.getLabel() );
+                pw.println("wf.index=" + mAbstractDag.getIndex() );
                 // pw.println("workflow.time=" + mAbstractDag.dagInfo.time??);
                 // FIXME: Try File.lastModified() on the DAX file
 

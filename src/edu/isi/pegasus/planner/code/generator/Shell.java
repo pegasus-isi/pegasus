@@ -517,7 +517,7 @@ public class Shell extends Abstract {
     protected String getPathToShellScript(ADag dag) {
         StringBuilder script = new StringBuilder();
         script.append( this.mSubmitFileDir ).append( File.separator ).
-               append( dag.dagInfo.nameOfADag ).append( ".sh" );
+               append( dag.getLabel() ).append( ".sh" );
         return script.toString();
     }
 

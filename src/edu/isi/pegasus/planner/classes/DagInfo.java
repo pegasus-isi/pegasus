@@ -296,6 +296,35 @@ public class DagInfo extends Data {
     }
     
     /**
+     * Set the index of the workflow, that was specified in the DAX.
+     *
+     * @param index  the count
+     */
+    public void setIndex( String index ) {
+        mIndex = index;
+    }
+    
+    /**
+     * Set the count of the workflow, that was specified in the DAX.
+     *
+     * @param count  the count
+     */
+    public void setCount( String count ) {
+        mCount = count;
+    }
+    
+    
+    /**
+     * Returns the count of the workflow, that was specified in the DAX.
+     *
+     * @return the count
+     */
+    public String getCount() {
+        return this.mCount;
+    }
+    
+    
+    /**
      * Returns the dax version
      *
      * @return the dax version.

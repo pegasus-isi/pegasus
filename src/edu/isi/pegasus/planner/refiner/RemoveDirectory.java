@@ -389,8 +389,8 @@ public class RemoveDirectory extends Engine {
         //append the job prefix if specified in options at runtime
         if ( mJobPrefix != null ) { sb.append( mJobPrefix ); }
 
-        sb.append( dag.dagInfo.nameOfADag ).append( "_" ).
-           append( dag.dagInfo.index ).append( "_" );
+        sb.append( dag.getLabel() ).append( "_" ).
+           append( dag.getIndex() ).append( "_" );
 
 
         sb.append( site );

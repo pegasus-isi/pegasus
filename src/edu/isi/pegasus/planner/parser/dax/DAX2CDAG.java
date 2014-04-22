@@ -130,8 +130,8 @@ public class DAX2CDAG implements Callback {
      */
     public void cbDocument(Map attributes) {
         mDagInfo.setDAXVersion( (String)attributes.get( "version" ));
-        mDagInfo.count = (String)attributes.get("count");
-        mDagInfo.index = (String)attributes.get("index");
+        mDagInfo.setCount( (String)attributes.get("count") );
+        mDagInfo.setIndex( (String)attributes.get("index") );
         mDagInfo.setLabel( (String)attributes.get("name") );
     }
     

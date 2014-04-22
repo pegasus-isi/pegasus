@@ -305,8 +305,8 @@ public class CondorGenerator extends Abstract {
      * @throws CodeGeneratorException in case of any error occuring code generation.
      */
     public Collection<File> generateCode( ADag dag ) throws CodeGeneratorException{
-        DagInfo ndi        = dag.dagInfo;
-        Vector vSubInfo    = dag.vJobSubInfos;
+//        DagInfo ndi        = dag.dagInfo;
+//       Vector vSubInfo    = dag.vJobSubInfos;
 
         if ( mInitializeGridStart ){
             mConcreteWorkflow = dag;
@@ -323,7 +323,7 @@ public class CondorGenerator extends Abstract {
 
         File dagFile = null;
         Collection<File> result = new ArrayList(1);
-        if (ndi.dagJobs.isEmpty()) {
+        if ( dag.isEmpty() ) {
             //call the callout before returns
             concreteDagEmpty( dagFileName, dag );
             return result ;
@@ -352,8 +352,8 @@ public class CondorGenerator extends Abstract {
             //and symlink it to the submit directory.
             try{
           
-                File f = File.createTempFile( dag.dagInfo.nameOfADag + "-" +
-                                              dag.dagInfo.index,".log", 
+                File f = File.createTempFile( dag.getLabel()  + "-" +
+                                              dag.getIndex(), ".log", 
                                               directory );
                 mTempLogFile=f.getAbsolutePath();
             } catch (IOException ioe) {
@@ -381,7 +381,7 @@ public class CondorGenerator extends Abstract {
 
         //initialize the file handle to the dag
         //file and print it's header
-        dagFile = initializeDagFileWriter( dagFileName, ndi );
+        dagFile = initializeDagFileWriter( dagFileName, dag );
         result.add( dagFile );
 
         //write out any category based dagman knobs to the dagman file
@@ -483,7 +483,7 @@ public class CondorGenerator extends Abstract {
 
         //writing the tail of .dag file
         //that contains the relation pairs
-        this.writeDagFileTail( ndi );
+        this.writeDagFileTail( dag );
         mLogger.log("Written Dag File : " + dagFileName.toString(),
                     LogManager.DEBUG_MESSAGE_LEVEL);
 
@@ -537,9 +537,9 @@ public class CondorGenerator extends Abstract {
      * @throws CodeGeneratorException in case of any error occuring code generation.
      */
     public void generateCode( ADag dag, Job job ) throws CodeGeneratorException{
-        String dagname  = dag.dagInfo.nameOfADag;
-        String dagindex = dag.dagInfo.index;
-        String dagcount = dag.dagInfo.count;
+        String dagname  = dag.getLabel();
+        String dagindex = dag.getIndex();
+        String dagcount = dag.getCount();
         String subfilename = this.getFileBaseName( job );
         String envStr = null;
 
@@ -1016,13 +1016,13 @@ public class CondorGenerator extends Abstract {
      * Initializes the file handler to the dag file and writes the header to it.
      *
      * @param filename     basename of dag file to be written.
-     * @param dinfo        object containing daginfo of type DagInfo .
+     * @param dag        the workflow
      *
      * @return the File object for the DAG file.
      *
      * @throws CodeGeneratorException in case of any error occuring code generation.
      */
-    protected File initializeDagFileWriter(String filename, DagInfo dinfo)
+    protected File initializeDagFileWriter(String filename, ADag workflow )
                                                        throws CodeGeneratorException{
         // initialize file handler
 
@@ -1038,9 +1038,9 @@ public class CondorGenerator extends Abstract {
 
             printDagString(this.mSeparator);
             printDagString("# PEGASUS WMS GENERATED DAG FILE");
-            printDagString("# DAG " + dinfo.nameOfADag);
-            printDagString("# Index = " + dinfo.index + ", Count = " +
-                           dinfo.count);
+            printDagString("# DAG " + workflow.getLabel() );
+            printDagString("# Index = " + workflow.getIndex() + ", Count = " +
+                           workflow.getCount() );
             printDagString(this.mSeparator);
         } catch (Exception e) {
             throw new CodeGeneratorException( "While writing to DAG FILE " + filename,
@@ -1241,8 +1241,8 @@ public class CondorGenerator extends Abstract {
        }
        else{
            //generate the prefix from the name of the dag
-           sb.append(dag.dagInfo.nameOfADag).append("-").
-               append(dag.dagInfo.index);
+           sb.append(dag.getLabel() ).append("-").
+               append(dag.getIndex() );
        }
        //append the suffix
        sb.append(".log");
@@ -1347,8 +1347,8 @@ public class CondorGenerator extends Abstract {
         }
         else{
             //generate the prefix from the name of the dag
-            sb.append(dag.dagInfo.nameOfADag).append("-").
-                append(dag.dagInfo.index);
+            sb.append( dag.getLabel() ).append("-").
+                append( dag.getIndex() );
         }
         //append the suffix
         sb.append(".dag.dagman.out");

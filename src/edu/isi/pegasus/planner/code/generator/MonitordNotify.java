@@ -158,8 +158,8 @@ public class MonitordNotify implements CodeGenerator {
 	File f = new File( mSubmitFileDir,
                            Abstract.getDAGFilename(
                                            this.mPOptions,
-                                           dag.dagInfo.nameOfADag,
-                                           dag.dagInfo.index,
+                                           dag.getLabel(),
+                                           dag.getIndex(),
                                            MonitordNotify.NOTIFICATIONS_FILE_SUFFIX) );
 
 	try {

@@ -449,7 +449,35 @@ public class ADag extends Data implements Graph{
     public String getIndex(){
         return this.mDAGInfo.getIndex();
     }
+    
+    /**
+     * Set the index of the workflow, that was specified in the DAX.
+     *
+     * @param index  the count
+     */
+    public void setIndex( String index ) {
+        this.mDAGInfo.setIndex( index );
+    }
+    
+    /**
+     * Set the count of the workflow, that was specified in the DAX.
+     *
+     * @param count  the count
+     */
+    public void setCount( String count ) {
+        this.mDAGInfo.setCount( count );
+    }
+    
 
+    /**
+     * Returns the count of the workflow, that was specified in the DAX.
+     *
+     * @return the count
+     */
+    public String getCount() {
+        return this.mDAGInfo.getCount();
+    }
+    
     /**
      * Returns the dax version
      *
@@ -936,6 +964,8 @@ public class ADag extends Data implements Graph{
     public boolean isEmpty() {
         return this.mGraphImplementor.isEmpty();
     }
+
+    
 
     
     

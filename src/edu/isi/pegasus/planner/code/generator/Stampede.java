@@ -248,8 +248,8 @@ public class Stampede implements CodeGenerator {
 
         PrintWriter writer = null;
         File f = new File( mSubmitFileDir , Abstract.getDAGFilename( this.mPOptions,
-                                                                     dag.dagInfo.nameOfADag,
-                                                                     dag.dagInfo.index,
+                                                                     dag.getLabel(),
+                                                                     dag.getIndex(),
                                                                      Stampede.NETLOGGER_BP_FILE_SUFFIX ) );
 
         boolean generateCodeForExecutableWorkflow = dag.hasWorkflowRefinementStarted();

@@ -259,7 +259,7 @@ public class PMC extends Abstract {
     protected String pmcBasename( ADag dag ) {
         StringBuffer name = new StringBuffer();
         name.append(  dag.getLabel() ).append( "-" ).
-             append( dag.dagInfo.index ).append( ".dag" );
+             append( dag.getIndex() ).append( ".dag" );
         return name.toString();
     }
     
