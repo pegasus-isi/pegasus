@@ -18,25 +18,22 @@ package edu.isi.pegasus.planner.parser.dax;
 
 
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.CompoundTransformation;
 import edu.isi.pegasus.planner.classes.DagInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.classes.PCRelation;
 import edu.isi.pegasus.planner.classes.PegasusFile;
-import edu.isi.pegasus.planner.classes.Job;
-
-import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.classes.ReplicaStore;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.dax.Invoke;
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 
 /**
  * This creates a dag corresponding to one particular partition of the whole
@@ -53,22 +50,12 @@ public class DAX2CDAG implements Callback {
      * the XML file.
      */
     private ADag mDag;
-    
-    /**
-     * The DAGInfo object which contains information corresponding to the ADag in
-     * the XML file.
-     */
-//    private DagInfo mDagInfo;
-
-    /**
-     * Contains Job objects. One per submit file.
-     */
-//    private Vector mVSubInfo;
-
+   
     /**
      * The mapping of the idrefs of a job to the job name.
+     * e.g ID0000001 -> preprocess_ID000001
      */
-    private Map mJobMap;
+    private Map<String,String> mJobMap;
 
     /**
      * The handle to the properties object.
@@ -95,7 +82,7 @@ public class DAX2CDAG implements Callback {
     protected TransformationStore mTransformationStore;
 
     /**
-     * Map of Compound Transfomations indexed by complete name of the compound
+     * Map of Compound Transformations indexed by complete name of the compound
      * transformation.
      */
     protected Map<String,CompoundTransformation> mCompoundTransformations;
@@ -114,11 +101,8 @@ public class DAX2CDAG implements Callback {
      * @param dax         the path to the DAX file.
      */
     public DAX2CDAG( PegasusProperties properties, String dax ) {
-//        mDAXPath      = dax;
-//        mDagInfo      = new DagInfo();
-//        mVSubInfo     = new Vector();
         mDag          = new ADag();
-        mJobMap       = new HashMap();
+        mJobMap       = new HashMap<String,String>();
         mProps        = properties;
         mDone         = false;
         this.mReplicaStore = new ReplicaStore();
@@ -218,7 +202,6 @@ public class DAX2CDAG implements Callback {
         //System.out.println( child + " -> " + parents );
 
         for ( PCRelation pc : parents  ){
-            
             parentID = (String)mJobMap.get( pc.getParent() );
             if(parentID == null){
                 //this actually means dax is generated wrong.
@@ -226,11 +209,13 @@ public class DAX2CDAG implements Callback {
                 throw new RuntimeException( "Unable to find job in DAX with ID " + pc.getParent() + " listed as a parent for job with ID " + child );
             }
             
+            /* PM-747 
             PCRelation relation = new PCRelation( parentID, childID  );
             relation.setAbstractChildID( child );
             relation.setAbstractParentID( pc.getParent() );
-                  
             mDagInfo.addNewRelation( relation );
+            */
+            mDag.addEdge( parentID, child );
         }
 
     }
@@ -268,7 +253,7 @@ public class DAX2CDAG implements Callback {
     /**
      * Callback when a compound transformation is encountered in the DAX
      *
-     * @param compoundTransformation   the compound transforamtion
+     * @param compoundTransformation   the compound transformation
      */
     public void cbCompoundTransformation( CompoundTransformation compoundTransformation ){
     	this.mCompoundTransformations.put( compoundTransformation.getCompleteName(), compoundTransformation );
@@ -293,7 +278,7 @@ public class DAX2CDAG implements Callback {
     /**
      * Callback when a transformation catalog entry is encountered in the DAX
      *
-     * @param tce  the transformationc catalog entry object.
+     * @param tce  the transformation catalog entry object.
      */
     public void cbExecutable( TransformationCatalogEntry tce ){
         this.mTransformationStore.addEntry( tce );
