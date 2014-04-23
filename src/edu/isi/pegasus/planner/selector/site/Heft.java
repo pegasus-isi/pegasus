@@ -26,13 +26,11 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.selector.site.heft.HeftBag;
 import edu.isi.pegasus.planner.selector.site.heft.Algorithm;
 
-import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 
 import java.util.List;
 import java.util.Iterator;
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.partitioner.graph.Adapter;
 
 /**
  * The HEFT based site selector. The runtime for the job in seconds is picked

@@ -18,20 +18,17 @@ package edu.isi.pegasus.planner.selector.site;
 
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
-import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
-import edu.isi.pegasus.planner.partitioner.graph.Adapter;
 
 import edu.isi.pegasus.planner.selector.SiteSelector;
 
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 
-import java.util.List;
 
 
 /**

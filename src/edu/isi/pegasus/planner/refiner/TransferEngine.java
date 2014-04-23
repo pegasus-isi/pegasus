@@ -36,7 +36,6 @@ import edu.isi.pegasus.planner.namespace.Pegasus;
 
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
-import edu.isi.pegasus.planner.partitioner.graph.Adapter;
 
 import edu.isi.pegasus.planner.selector.ReplicaSelector;
 import edu.isi.pegasus.planner.selector.replica.ReplicaSelectorFactory;

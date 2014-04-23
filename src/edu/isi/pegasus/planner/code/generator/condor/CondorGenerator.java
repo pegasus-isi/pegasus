@@ -40,8 +40,6 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.CondorVersion;
 
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.DagInfo;
-import edu.isi.pegasus.planner.classes.PCRelation;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.DAGJob;
@@ -59,8 +57,6 @@ import edu.isi.pegasus.planner.namespace.Globus;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.namespace.ENV;
 
-import edu.isi.pegasus.planner.partitioner.graph.Adapter;
-import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import org.griphyn.vdl.euryale.VTorInUseException;
 
@@ -75,11 +71,9 @@ import java.io.InputStreamReader;
 import java.io.InputStream;
 
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.StringTokenizer;
-import java.util.Vector;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
