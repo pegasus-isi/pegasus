@@ -936,6 +936,14 @@ public class ADag extends Data implements Graph{
         return this.mGraphImplementor.remove(identifier);
     }
 
+    /**
+     * Resets all the dependencies in the Graph, while preserving the nodes. 
+     * The resulting Graph is a graph of independent nodes.
+     */
+    public void resetEdges(){
+        this.mGraphImplementor.resetEdges();
+    }
+    
      /**
      * Returns an iterator for the nodes in the Graph. These iterators are
      * fail safe.

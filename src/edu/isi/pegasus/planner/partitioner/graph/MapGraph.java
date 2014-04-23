@@ -18,7 +18,6 @@
 package edu.isi.pegasus.planner.partitioner.graph;
 
 import edu.isi.pegasus.common.logging.LogManagerFactory;
-import edu.isi.pegasus.planner.classes.Data;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
@@ -122,6 +121,17 @@ public class MapGraph implements Graph{
         addNode( root );
 
     }
+    
+    /**
+     * Resets all the dependencies in the Graph, while preserving the nodes. 
+     * The resulting Graph is a graph of independent nodes.
+     */
+    public void resetEdges(){
+        for(Iterator<GraphNode> it = this.nodeIterator(); it.hasNext(); ){
+            GraphNode node = it.next();
+            node.resetEdges();
+        }
+    }
 
     /**
      * Removes a node from the Graph.
@@ -176,7 +186,7 @@ public class MapGraph implements Graph{
      * @return  a list containing <code>GraphNode</code> corressponding to the
      *          root nodes.
      */
-    public List getRoots(){
+    public List<GraphNode> getRoots(){
         List rootNodes = new LinkedList();
 
         for( Iterator it = mStore.entrySet().iterator(); it.hasNext(); ){
@@ -205,7 +215,7 @@ public class MapGraph implements Graph{
      * @return  a list containing <code>GraphNode</code> corressponding to the
      *          leaf nodes.
      */
-    public List getLeaves(){
+    public List<GraphNode> getLeaves(){
         List leaves = new LinkedList();
 
         for( Iterator it = mStore.entrySet().iterator(); it.hasNext(); ){

@@ -86,8 +86,7 @@ public class GraphNode extends Data {
      */
     public GraphNode() {
         mLogicalID = "";
-        mParents = new java.util.LinkedList();
-        mChildren = new java.util.LinkedList();
+        this.resetEdges();
         mDepth = -1;
         mLogicalName = "";
         mColor = this.WHITE_COLOR;
@@ -251,6 +250,13 @@ public class GraphNode extends Data {
         mParents.remove( parent );
     }
 
+    /**
+     * Reset all the edges associated with this node.
+     */
+    public final void resetEdges() {
+        mParents = new java.util.LinkedList();
+        mChildren = new java.util.LinkedList();
+    }
 
     /**
      * Returns the logical id of the graph node.
@@ -404,4 +410,6 @@ public class GraphNode extends Data {
         return new java.lang.CloneNotSupportedException(
             "Clone() not implemented in GraphNode");
     }
+
+    
 }

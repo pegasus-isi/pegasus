@@ -35,7 +35,7 @@ public interface Graph
     /**
      * The version number associated with this Graph API.
      */
-    public static final String VERSION = "1.4";
+    public static final String VERSION = "1.5";
 
 
     /**
@@ -62,6 +62,12 @@ public interface Graph
      * @param parents list of parent identifiers as <code>String</code>.
      */
     public void addEdges( String child, List parents );
+    
+    /**
+     * Resets all the dependencies in the Graph, while preserving the nodes. 
+     * The resulting Graph is a graph of independent nodes.
+     */
+    public void resetEdges();
 
     /**
      * Returns the node matching the id passed.
@@ -123,7 +129,7 @@ public interface Graph
      *
      * @return Iterator through the nodes of the graph.
      */
-    public Iterator bottomUpIterator();
+    public Iterator<GraphNode> bottomUpIterator();
     
     /**
      * Returns the number of nodes in the graph.
