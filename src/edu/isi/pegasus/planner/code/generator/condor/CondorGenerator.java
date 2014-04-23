@@ -373,9 +373,9 @@ public class CondorGenerator extends Abstract {
         //convert the dax to a graph representation and walk it
         //in a top down manner
         //PM-747 no need for conversion as ADag now implements Graph interface
-        Graph workflow = dag;
+        //Graph workflow = dag;
         SUBDAXGenerator subdaxGen = new SUBDAXGenerator();
-        subdaxGen.initialize( mBag, dag, workflow, mDagWriter );
+        subdaxGen.initialize( mBag, dag, mDagWriter );
 
         //we should initialize the .dag file only when we are done
         //with the conversion
@@ -389,7 +389,7 @@ public class CondorGenerator extends Abstract {
         printDagString( this.getCategoryDAGManKnobs( mProps ) );
 
                     
-        for( Iterator it = workflow.iterator(); it.hasNext(); ){
+        for( Iterator it = dag.iterator(); it.hasNext(); ){
             GraphNode node = ( GraphNode )it.next();
             Job job = (Job)node.getContent();
             

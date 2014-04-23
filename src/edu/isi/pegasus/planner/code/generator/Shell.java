@@ -207,7 +207,7 @@ public class Shell extends Abstract {
         }
         if ( job.getJobType () == Job.DAX_JOB ) {
             SUBDAXGenerator subdax = new SUBDAXGenerator ();
-            subdax.initialize ( mBag, dag, Adapter.convert( dag ), mWriteHandle );
+            subdax.initialize ( mBag, dag,  mWriteHandle );
             subdax.generateCode ( job );
         }
         
