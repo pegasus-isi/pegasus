@@ -49,15 +49,21 @@ import java.util.Vector;
 public class DAX2CDAG implements Callback {
 
     /**
+     * The ADag object which contains information corresponding to the ADag in
+     * the XML file.
+     */
+    private ADag mDag;
+    
+    /**
      * The DAGInfo object which contains information corresponding to the ADag in
      * the XML file.
      */
-    private DagInfo mDagInfo;
+//    private DagInfo mDagInfo;
 
     /**
      * Contains Job objects. One per submit file.
      */
-    private Vector mVSubInfo;
+//    private Vector mVSubInfo;
 
     /**
      * The mapping of the idrefs of a job to the job name.
@@ -109,8 +115,9 @@ public class DAX2CDAG implements Callback {
      */
     public DAX2CDAG( PegasusProperties properties, String dax ) {
 //        mDAXPath      = dax;
-        mDagInfo      = new DagInfo();
-        mVSubInfo     = new Vector();
+//        mDagInfo      = new DagInfo();
+//        mVSubInfo     = new Vector();
+        mDag          = new ADag();
         mJobMap       = new HashMap();
         mProps        = properties;
         mDone         = false;
@@ -129,10 +136,10 @@ public class DAX2CDAG implements Callback {
      * @param attributes is a map of attribute key to attribute value
      */
     public void cbDocument(Map attributes) {
-        mDagInfo.setDAXVersion( (String)attributes.get( "version" ));
-        mDagInfo.setCount( (String)attributes.get("count") );
-        mDagInfo.setIndex( (String)attributes.get("index") );
-        mDagInfo.setLabel( (String)attributes.get("name") );
+        mDag.setDAXVersion( (String)attributes.get( "version" ));
+        mDag.setCount( (String)attributes.get("count") );
+        mDag.setIndex( (String)attributes.get("index") );
+        mDag.setLabel( (String)attributes.get("name") );
     }
     
     /**
@@ -155,9 +162,10 @@ public class DAX2CDAG implements Callback {
     public void cbJob(Job job) {
 
         mJobMap.put(job.logicalId,job.jobName);
-        mVSubInfo.add(job);
-        mDagInfo.addNewJob( job );
+        mDag.add(job);
 
+        DagInfo dinfo = mDag.getDAGInfo();
+        
         //check for compound executables
         if( this.mCompoundTransformations.containsKey( job.getCompleteTCName() ) ){
             CompoundTransformation ct = this.mCompoundTransformations.get( job.getCompleteTCName() );
@@ -165,7 +173,7 @@ public class DAX2CDAG implements Callback {
             for( PegasusFile pf : ct.getDependantFiles() ){
                 job.addInputFile( pf );
                 String lfn = pf.getLFN();
-                mDagInfo.updateLFNMap(lfn,"i");
+                dinfo.updateLFNMap(lfn,"i");
             }
             job.addNotifications( ct.getNotifications());
         }
@@ -174,7 +182,7 @@ public class DAX2CDAG implements Callback {
         for ( Iterator it = job.inputFiles.iterator(); it.hasNext(); ){
             PegasusFile pf = (PegasusFile)it.next();
             String lfn = pf.getLFN();
-            mDagInfo.updateLFNMap(lfn,"i");
+            dinfo.updateLFNMap(lfn,"i");
         }
 
         for ( Iterator it = job.outputFiles.iterator(); it.hasNext(); ){
@@ -189,7 +197,7 @@ public class DAX2CDAG implements Callback {
                 //dont add to lfn map in DagInfo
                 continue;
             }
-            mDagInfo.updateLFNMap(lfn,"o");
+            dinfo.updateLFNMap(lfn,"o");
         }
 
     }
@@ -217,6 +225,7 @@ public class DAX2CDAG implements Callback {
                 //probably some one tinkered with it by hand.
                 throw new RuntimeException( "Unable to find job in DAX with ID " + pc.getParent() + " listed as a parent for job with ID " + child );
             }
+            
             PCRelation relation = new PCRelation( parentID, childID  );
             relation.setAbstractChildID( child );
             relation.setAbstractParentID( pc.getParent() );
@@ -249,11 +258,11 @@ public class DAX2CDAG implements Callback {
                                        " for the partition was fully generated");
 
 
-        ADag dag = new ADag(mDagInfo,mVSubInfo);
-        dag.setReplicaStore(mReplicaStore);
-        dag.setTransformationStore(mTransformationStore);
-        dag.addNotifications(mNotifications);
-        return dag;
+        
+        mDag.setReplicaStore(mReplicaStore);
+        mDag.setTransformationStore(mTransformationStore);
+        mDag.addNotifications(mNotifications);
+        return mDag;
     }
 
     /**

@@ -440,6 +440,15 @@ public class ADag extends Data implements Graph{
     public String getLabel(){
         return this.mDAGInfo.getLabel();
     }
+    
+    /**
+     * Sets the label for the workflow.
+     *
+     * @param label the label to be assigned to the workflow
+     */
+    public void setLabel(String label){
+        this.mDAGInfo.setLabel( label );
+    }
 
     /**
      * Returns the index of the workflow, that was specified in the DAX.
@@ -588,6 +597,13 @@ public class ADag extends Data implements Graph{
         return this.mTransformationStore;
     }
     
+    /**
+     * Returns the DAGInfo that stores the metadata about the DAX
+     * @return 
+     */
+    public DagInfo getDAGInfo() {
+        return this.mDAGInfo;
+    }
     
     /**
      * Generates the flow id for this current run. It is made of the name of the
@@ -997,6 +1013,8 @@ public class ADag extends Data implements Graph{
     public boolean isEmpty() {
         return this.mGraphImplementor.isEmpty();
     }
+
+    
 
     
 
