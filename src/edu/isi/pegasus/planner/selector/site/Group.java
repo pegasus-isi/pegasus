@@ -17,16 +17,13 @@
 
 package edu.isi.pegasus.planner.selector.site;
 
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
-
-import edu.isi.pegasus.common.logging.LogManager;
-
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
-import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
-
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -143,7 +140,7 @@ public class Group extends Abstract {
      *                  execution pools that can be used.
      *
      */
-    public void mapWorkflow( Graph workflow, List sites) {
+    public void mapWorkflow( ADag workflow, List sites) {
           Job job;
           List l = null;
 

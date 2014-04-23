@@ -212,8 +212,8 @@ public class Algorithm {
         //metadata about the DAG needs to go to Graph object
         //mLabel     = dag.getLabel();
 
-        //convert the dag into a graph representation
-        schedule( Adapter.convert( dag ), sites, dag.getLabel() );
+        //PM-747 no need for conversion as ADag now implements Graph interface
+        schedule(  dag , sites, dag.getLabel() );
     }
 
 
@@ -229,7 +229,7 @@ public class Algorithm {
      * @param label  the label of the workflow
      *
      */
-    public void schedule( Graph workflow , List sites, String label ){
+    public void schedule( ADag workflow , List sites, String label ){
         mLabel = label;
         mWorkflow = workflow;
         populateSiteMap( sites );

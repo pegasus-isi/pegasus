@@ -316,7 +316,8 @@ public class NonJavaCallout extends AbstractPerJob {
      */
     public void mapWorkflow( ADag workflow, List sites ){
         mAbstractDag = workflow;
-        mapWorkflow( Adapter.convert( workflow ), sites );
+        //PM-747 no need for conversion as ADag now implements Graph interface
+        super.mapWorkflow( workflow , sites );
     }
 
 

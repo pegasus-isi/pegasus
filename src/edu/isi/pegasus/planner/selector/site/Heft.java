@@ -92,22 +92,10 @@ public class Heft extends Abstract {
      *                  execution sites that can be used.
      */
     public void mapWorkflow( ADag workflow, List sites ){
-        this.mapWorkflow(  Adapter.convert( workflow ), sites, workflow.getLabel() );
+        //PM-747 no need for conversion as ADag now implements Graph interface
+        this.mapWorkflow( workflow, sites, workflow.getLabel() );
     }
-    
-    /**
-     * Maps the jobs in the workflow to the various grid sites.
-     * The jobs are mapped by setting the site handle for the jobs.
-     *
-     * @param workflow   the workflow in a Graph form.
-     *
-     * @param sites     the list of <code>String</code> objects representing the
-     *                  execution sites that can be used.
-     * 
-     */
-    public void mapWorkflow( Graph workflow, List sites ){
-        throw new UnsupportedOperationException( "Heft needs the DAX label to work" );
-    }
+
     
     /**
      * Maps the jobs in the workflow to the various grid sites.
@@ -120,7 +108,7 @@ public class Heft extends Abstract {
      * 
      * @param label  the label of the workflow
      */
-    public void mapWorkflow( Graph workflow, List sites, String label ){
+    public void mapWorkflow( ADag workflow, List sites, String label ){
 
         //schedule the workflow, till i fix the interface
         mHeftImpl.schedule( workflow, sites, label );

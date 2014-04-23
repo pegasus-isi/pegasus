@@ -87,18 +87,4 @@ public abstract class Abstract implements SiteSelector {
     }
 
 
-
-    /**
-     * Maps the jobs in the workflow to the various grid sites.
-     * The jobs are mapped by setting the site handle for the jobs.
-     *
-     * @param workflow   the workflow.
-     *
-     * @param sites     the list of <code>String</code> objects representing the
-     *                  execution sites that can be used.
-     */
-    public void mapWorkflow( ADag workflow, List sites ){
-         mapWorkflow( Adapter.convert( workflow ), sites );
-    }
-
 }
