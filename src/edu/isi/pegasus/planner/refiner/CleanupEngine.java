@@ -59,34 +59,12 @@ public class CleanupEngine extends Engine {
      * @return ADag containing the cleanup jobs for the workflow.
      */
     public ADag addCleanupJobs( ADag dag ) {
-        ADag result;
 
         //load the appropriate strategy and implementation that is to be used
         //CleanupStrategy strategy = new InPlace( mBag );
         CleanupStrategy strategy = CleanupFactory.loadCleanupStraegyInstance( mBag );
 
-        //we first need to convert internally into graph format
-        Graph resultGraph =  strategy.addCleanupJobs( Adapter.convert(dag ) );
-
-        //convert back to ADag and return
-        result = dag;
-        //we need to reset the jobs and the relations in it
-        result.clearJobs();
-
-        //traverse through the graph and jobs and edges
-        for( Iterator it = resultGraph.nodeIterator(); it.hasNext(); ){
-            GraphNode node = ( GraphNode )it.next();
-
-            //get the job associated with node
-            result.add( ( Job )node.getContent() );
-
-            //all the children of the node are the edges of the DAG
-            for( Iterator childrenIt = node.getChildren().iterator(); childrenIt.hasNext(); ){
-                GraphNode child = ( GraphNode ) childrenIt.next();
-                result.addNewRelation( node.getID(), child.getID() );
-            }
-        }
-
-        return result;
+        //PM-747 no need for conversion as ADag now implements Graph interface
+        return  (ADag) strategy.addCleanupJobs( dag  );
     }
 }

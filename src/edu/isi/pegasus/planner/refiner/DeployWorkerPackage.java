@@ -760,10 +760,11 @@ public class DeployWorkerPackage
     private Graph addSetupNodesWithUntarNodes( ADag dag, Set<String> deploymentSites ) {
         //convert the dag to a graph representation and walk it
         //in a top down manner
-        Graph workflow = Adapter.convert( dag );
+        //PM-747 no need for conversion as ADag now implements Graph interface
+        Graph workflow =  dag;
         
         //get the root nodes of the workflow
-        List roots = workflow.getRoots();
+        List<GraphNode> roots = workflow.getRoots();
 
         //add a setup job per execution site
         for( Iterator it = deploymentSites.iterator(); it.hasNext(); ){
@@ -858,10 +859,11 @@ public class DeployWorkerPackage
     private Graph addSetupNodesWithoutUntarNodes( ADag dag, Set<String> deploymentSites ) {
         //convert the dag to a graph representation and walk it
         //in a top down manner
-        Graph workflow = Adapter.convert( dag );
+        //PM-747 no need for conversion as ADag now implements Graph interface
+        Graph workflow = dag ;
         
         //get the root nodes of the workflow
-        List roots = workflow.getRoots();
+        List<GraphNode> roots = workflow.getRoots();
 
         
         Set<FileTransfer> fts = new HashSet<FileTransfer>();
@@ -956,7 +958,8 @@ public class DeployWorkerPackage
         
         //convert the dag to a graph representation and walk it
         //in a top down manner
-        Graph workflow = Adapter.convert( dag );
+        //PM-747 no need for conversion as ADag now implements Graph interface
+        Graph workflow = dag ;
 
         RemoveDirectory removeDirectory = new RemoveDirectory( dag, mBag, this.mPOptions.getSubmitDirectory() );
         

@@ -150,33 +150,13 @@ public class DataReuseEngine extends Engine implements Refiner{
     public ADag reduceWorkflow( ADag workflow,  ReplicaCatalogBridge rcb ){
 
         //clone the original workflow. it will be reduced later on
-        ADag reducedWorkflow = (ADag) workflow.clone();
+        //PM-747 ADag reducedWorkflow = (ADag) workflow.clone();
 
-        //we first need to convert internally into graph format
-        Graph reducedGraph =  this.reduceWorkflow( Adapter.convert( reducedWorkflow ), rcb );
+        //PM-747 no need for conversion as ADag now implements Graph interface
+        Graph reducedGraph =  this.reduceWorkflow( (Graph)workflow, rcb );
 
-        //convert back to ADag and return
-
-        //we need to reset the jobs and the relations in it
-        reducedWorkflow.clearJobs();
-
-        //traverse through the graph and jobs and edges
-        for( Iterator it = reducedGraph.nodeIterator(); it.hasNext(); ){
-            GraphNode node = ( GraphNode )it.next();
-
-            //get the job associated with node
-            reducedWorkflow.add( ( Job )node.getContent() );
-
-            //all the children of the node are the edges of the DAG
-            for( Iterator childrenIt = node.getChildren().iterator(); childrenIt.hasNext(); ){
-                GraphNode child = ( GraphNode ) childrenIt.next();
-//                System.out.println(  node.getID() + " -> "  + child.getID() );
-                reducedWorkflow.addNewRelation( node.getID(), child.getID() );
-            }
-        }
-
-        mWorkflow = reducedWorkflow;
-        return reducedWorkflow;
+        mWorkflow = (ADag)reducedGraph;
+        return mWorkflow;
     }
 
 

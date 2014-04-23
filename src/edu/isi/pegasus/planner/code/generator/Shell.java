@@ -155,8 +155,8 @@ public class Shell extends Abstract {
         //write out the script header
         writeString(this.getScriptHeader( mSubmitFileDir ) );
 
-        //we first need to convert internally into graph format
-        Graph workflow =    Adapter.convert( dag );
+        //PM-747 no need for conversion as ADag now implements Graph interface
+        Graph workflow =  dag;
 
         //traverse the workflow in topological sort order
         for( Iterator<GraphNode> it = workflow.topologicalSortIterator(); it.hasNext(); ){

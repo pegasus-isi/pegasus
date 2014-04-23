@@ -115,10 +115,8 @@ public class PMC extends Abstract {
     public Collection<File> generateCode( ADag dag ) throws CodeGeneratorException{
         Collection result = new ArrayList( 1 );
 
-//        this.writeOutStampedeEvents( dag );
-
-        //we first need to convert internally into graph format
-        Graph workflow =    Adapter.convert( dag );
+        //PM-747 no need for conversion as ADag now implements Graph interface
+        Graph workflow = dag;
 
         mGridStartFactory.initialize(mBag, dag);
 
