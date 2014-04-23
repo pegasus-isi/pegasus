@@ -1034,9 +1034,9 @@ public class DeployWorkerPackage
     protected Set getDeploymentSites( ADag dag ){
         Set set = new HashSet();
 
-        for(Iterator it = dag.vJobSubInfos.iterator();it.hasNext();){
-            Job job = (Job)it.next();
-
+        for(Iterator<GraphNode> it = dag.jobIterator();it.hasNext();){
+            GraphNode node = it.next();
+            Job job = (Job)node.getContent();
 
             //PM-497
             //we ignore any clean up jobs that may be running

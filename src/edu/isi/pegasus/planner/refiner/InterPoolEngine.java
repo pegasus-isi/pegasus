@@ -238,10 +238,7 @@ public class InterPoolEngine extends Engine implements Refiner {
      *
      */
     public void determineSites() {
-        Job job;
-
         //at present we schedule the whole workflow at once
-        List jobs = convertToList( mDag.vJobSubInfos );
         List pools = convertToList( mExecPools );
 
         //going through all the jobs making up the Adag, to do the physical mapping
