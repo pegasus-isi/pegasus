@@ -347,7 +347,8 @@ public class TransferEngine extends Engine {
 
         //convert the dax to a graph representation and walk it
         //in a top down manner
-        Graph workflow = Adapter.convert( mDag );
+        //PM-747 no need for conversion as ADag now implements Graph interface
+        Graph workflow =  mDag;
 
         //go through each job in turn
 
