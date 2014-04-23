@@ -226,7 +226,7 @@ public class DAX2CDAG implements Callback {
      * ADag object has been fully generated or not.
      */
     public void cbDone() {
-
+        
         mDone = true;
     }
 

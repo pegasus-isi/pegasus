@@ -263,14 +263,26 @@ public class ADag extends Data implements Graph{
      * @return textual description.
      */
     public String toString(){
-        String st = "\n Submit Directory " + this.mSubmitDirectory +
-                    "\n Root Workflow UUID " + this.getRootWorkflowUUID() +
-                    "\n Workflow UUID " + this.getWorkflowUUID() +
-                    "\n Workflow Refinement Started " + this.hasWorkflowRefinementStarted() ;/*+
-//                    "\n" + this.mDAGInfo.toString() +
-//                    vectorToString("\n Jobs making the DAG ",this.vJobSubInfos);
-        */
-        return st;
+        String newLine = System.getProperty( "line.separator", "\r\n" );
+        StringBuilder sb = new StringBuilder();
+        sb.append( "Submit Directory ").append( this.mSubmitDirectory ).append( newLine ).
+           append( "Root Workflow UUID ").append( this.getRootWorkflowUUID()).append( newLine ).
+           append( "Workflow UUID " ).append( this.getWorkflowUUID()).append( newLine ).
+           append( "Workflow Refinement Started ").append( this.hasWorkflowRefinementStarted()).append( newLine );
+ 
+        sb.append( "DAG Structure ").append( newLine );
+        //lets write out the edges
+        for( Iterator<GraphNode> it = this.nodeIterator(); it.hasNext() ; ){
+            GraphNode gn = (GraphNode) it.next();
+
+            //get a list of parents of the node
+            for( GraphNode child : gn.getChildren() ){
+                sb.append(  "EDGE" ).append( " " ).append( gn.getID() ).
+                     append( " -> " ).append( child.getID() ).append( newLine );
+             }
+        }
+
+        return sb.toString();
     }
 
     /**
