@@ -56,12 +56,6 @@ public class ADag extends Data implements Graph{
     private DagInfo mDAGInfo;
 
     /**
-     * Vector of <code>Job</code> objects. Each Job object contains
-     * information corresponding to the submit file for one job.
-     */
-//    public Vector vJobSubInfos;
-
-    /**
      * The root of the submit directory hierarchy for the DAG. This is the
      * directory where generally the DAG related files like the log files,
      * .dag and dagman output files reside.
@@ -116,8 +110,7 @@ public class ADag extends Data implements Graph{
      * Initialises the class member variables.
      */
     public ADag() {
-//        mDAGInfo          = new DagInfo();
-//        vJobSubInfos     = new Vector();
+         mDAGInfo          = new DagInfo();
         mSubmitDirectory = ".";
         mWorkflowUUID    = generateWorkflowUUID();
         mRootWorkflowUUID = null;
@@ -127,25 +120,9 @@ public class ADag extends Data implements Graph{
         resetStores();
     }
 
-    /**
-     * Overloaded constructor.
-     *
-     * @param dg     the <code>DagInfo</code>
-     * @param vSubs  the jobs in the workflow.
-     *//*
-    public ADag (DagInfo dg, Vector vSubs){
-        this.mDAGInfo      = (DagInfo)dg.clone();
-        this.vJobSubInfos = (Vector)vSubs.clone();
-        mSubmitDirectory  = ".";
-        mWorkflowUUID    = generateWorkflowUUID();
-        mRootWorkflowUUID = null;
-        mWorkflowRefinementStarted = false;
-        mNotifications    = new Notifications();
-        resetStores();
-    }*/
     
     /**
-     * Adds a Invoke object correpsonding to a notification.
+     * Adds a Invoke object corresponding to a notification.
      * 
      * @param invoke  the invoke object containing the notification
      */

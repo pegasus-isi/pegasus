@@ -215,7 +215,7 @@ public class DAX2CDAG implements Callback {
             relation.setAbstractParentID( pc.getParent() );
             mDagInfo.addNewRelation( relation );
             */
-            mDag.addEdge( parentID, child );
+            mDag.addEdge( parentID, childID );
         }
 
     }
