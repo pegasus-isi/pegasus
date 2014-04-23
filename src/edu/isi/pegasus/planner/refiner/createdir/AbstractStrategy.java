@@ -16,20 +16,18 @@
 
 package edu.isi.pegasus.planner.refiner.createdir;
 
+import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
-
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
-
-import edu.isi.pegasus.common.logging.LogManager;
-
 import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.Iterator;
+import java.util.Set;
 
 /**
  * The interface that defines how the cleanup job is invoked and created.
@@ -141,8 +139,9 @@ public abstract class AbstractStrategy implements Strategy {
     public static Set getCreateDirSites( ADag dag ){
         Set set = new HashSet();
 
-        for( Iterator it = dag.vJobSubInfos.iterator();it.hasNext();){
-            Job job = (Job)it.next();
+        for( Iterator<GraphNode> it = dag.jobIterator();it.hasNext();){
+            GraphNode node = it.next();
+            Job job = (Job)node.getContent();
 
             if( job.getJobType() == Job.CHMOD_JOB ){
                 //skip

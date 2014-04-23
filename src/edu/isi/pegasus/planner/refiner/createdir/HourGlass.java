@@ -18,23 +18,20 @@
 package edu.isi.pegasus.planner.refiner.createdir;
 
 
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.Separator;
+import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Job;
-
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.code.GridStartFactory;
-
-import edu.isi.pegasus.common.logging.LogManager;
-
 import edu.isi.pegasus.planner.namespace.Pegasus;
-
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.Vector;
-import edu.isi.pegasus.common.util.Separator;
-import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 
 
 /**
@@ -178,14 +175,11 @@ public class HourGlass extends AbstractStrategy{
      * @param newRoot   the name of the job that is the new root of the graph.
      */
     private void introduceRootDependencies( ADag dag, String newRoot) {
-        Vector vRootNodes = dag.getRootNodes();
-        Iterator it = vRootNodes.iterator();
-        String job = null;
-
-        while (it.hasNext()) {
-            job = (String) it.next();
-            dag.addNewRelation(newRoot, job);
-            mLogger.log( "Adding relation " + newRoot + " -> " + job,LogManager.DEBUG_MESSAGE_LEVEL);
+        List<GraphNode> rootNodes = dag.getRoots();
+        for( GraphNode node: rootNodes ){
+            Job existingRoot = (Job)node.getContent();
+            mLogger.log( "Adding relation " + newRoot + " -> " + existingRoot.getID(),LogManager.DEBUG_MESSAGE_LEVEL);
+            dag.addEdge( newRoot, existingRoot.getID() );
 
         }
     }

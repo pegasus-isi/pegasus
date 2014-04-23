@@ -17,16 +17,15 @@
 package edu.isi.pegasus.planner.refiner.createdir;
 
 
-import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.Job;
-import edu.isi.pegasus.planner.classes.TransferJob;
-import edu.isi.pegasus.planner.classes.PegasusBag;
-
 import edu.isi.pegasus.common.logging.LogManager;
-
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
+import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.DAXJob;
+import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.TransferJob;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -80,11 +79,11 @@ public class Tentacles extends AbstractStrategy {
 
         //remove the entry for the local pool
         //set.remove("local");
-        Job job;
         int type;
         boolean local;
-        for(Iterator it = dag.vJobSubInfos.iterator();it.hasNext();){
-            job  = (Job)it.next();
+        for(Iterator<GraphNode> it = dag.jobIterator();it.hasNext();){
+            GraphNode node = it.next();
+            Job job  = (Job)node.getContent();
             jobName = job.getName();
             pool    = job.getSiteHandle();
 
