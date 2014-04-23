@@ -118,9 +118,13 @@ def shadowq_launch(shadowq_bin):
         utils.rotate_log_file(logfile)
         log = open(logfile, 'a')
 
-        dagman_log = os.getenv('_CONDOR_DAGMAN_LOG')
+        dag_file = None
+        for i in range(0, len(sys.argv)):
+            if sys.argv[i] == "-Dag":
+                dag_file = sys.argv[i+1]
+                break
 
-        proc = subprocess.Popen([shadowq_bin, dagman_log],
+        proc = subprocess.Popen([shadowq_bin, dag_file],
                                 stdout=log,
                                 stderr=subprocess.STDOUT)
 
