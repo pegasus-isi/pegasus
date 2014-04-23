@@ -701,7 +701,7 @@ public class ADag extends Data implements Graph{
     /**
      * Returns an iterator for traversing through the jobs in the workflow.
      *
-     * @return Iterator
+     * @return a bative java failsafe iterator to the underlying collection.
      */
     public Iterator<GraphNode> jobIterator(){
         return this.nodeIterator();
@@ -762,18 +762,51 @@ public class ADag extends Data implements Graph{
         }
 
         stream.write( newLine );
+        
+        for( Iterator<GraphNode> it = this.jobIterator(); it.hasNext() ; ){
+            GraphNode gn = (GraphNode) it.next();
 
-        //traverse through the edges
-        //Karan To Be Fixed Later
-        /*
-        for( Iterator it = mDAGInfo.relations.iterator(); it.hasNext(); ){
-            ( (PCRelation)it.next() ).toDOT( stream, newIndent );
+            //get a list of parents of the node
+            for( GraphNode child : gn.getChildren() ){
+                this.edgeToDOT(stream, newIndent, gn.getID(), child.getID() );
+            }
         }
-        */
-
+        
         //write out the tail
         stream.write( "}" );
         stream.write( newLine );
+    }
+    
+    /**
+     * Returns the DOT description of the object. This is used for visualizing
+     * the workflow.
+     *
+     * @param stream is a stream opened and ready for writing. This can also
+     *               be a StringWriter for efficient output.
+     * @param indent  is a <code>String</code> of spaces used for pretty
+     *                printing. The initial amount of spaces should be an empty
+     *                string. The parameter is used internally for the recursive
+     *                traversal.
+     * @param parent  the parent 
+     * @param child   the child
+     *
+     *
+     * @exception IOException if something fishy happens to the stream.
+     */
+    private void edgeToDOT( Writer stream, String indent, String parent, String child ) throws IOException {
+        String newLine = System.getProperty( "line.separator", "\r\n" );
+
+        //write out the edge
+        stream.write( indent );
+        stream.write( "\"" );
+        stream.write( parent );
+        stream.write( "\"" );
+        stream.write( " -> ");
+        stream.write( "\"" );
+        stream.write( child );
+        stream.write( "\"" );
+        stream.write( newLine );
+        stream.flush();
     }
 
 

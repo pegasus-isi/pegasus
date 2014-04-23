@@ -1149,20 +1149,23 @@ public class CondorGenerator extends Abstract {
      * It writes the relations making up the  DAG in the dag file and and closes
      * the file handle to it.
      *
-     * @param dinfo   object containing daginfo of type DagInfo.
-     *
+     * @param dag the executable workflow
+     * 
      * @throws CodeGeneratorException
      */
-    protected void writeDagFileTail(DagInfo dinfo) throws CodeGeneratorException{
+    protected void writeDagFileTail( ADag dag ) throws CodeGeneratorException{
         try {
+            
+            for( Iterator<GraphNode> it = dag.jobIterator(); it.hasNext() ; ){
+                GraphNode gn = (GraphNode) it.next();
 
-            // read the contents from the Daginfo object and
-            //print out the parent child relations.
-
-            for (Enumeration dagrelationsenum = dinfo.relations.elements();
-                 dagrelationsenum.hasMoreElements(); ) {
-                PCRelation pcrl = (PCRelation) dagrelationsenum.nextElement();
-                printDagString("PARENT " + pcrl.parent + " CHILD " + pcrl.child);
+                //get a list of parents of the node
+                for( GraphNode child : gn.getChildren() ){
+                    StringBuffer edge = new StringBuffer();
+                    edge.append( "PARENT " ).append( " " ).append( gn.getID() ).append( " " ).
+                         append( "CHILD " ).append( child.getID() );
+                    printDagString( edge.toString() );
+                }
             }
 
             printDagString(this.mSeparator);

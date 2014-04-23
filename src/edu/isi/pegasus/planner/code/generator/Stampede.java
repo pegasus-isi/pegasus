@@ -18,28 +18,23 @@ package edu.isi.pegasus.planner.code.generator;
 import edu.isi.pegasus.common.logging.LogFormatter;
 import edu.isi.pegasus.common.logging.LogFormatterFactory;
 import edu.isi.pegasus.common.logging.LogManager;
-import edu.isi.pegasus.planner.code.CodeGeneratorException;
-
-
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
-import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Job;
-
 import edu.isi.pegasus.planner.classes.PCRelation;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.code.CodeGenerator;
+import edu.isi.pegasus.planner.code.CodeGeneratorException;
 import edu.isi.pegasus.planner.common.PegasusProperties;
-
 import edu.isi.pegasus.planner.namespace.Dagman;
-
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.refiner.DeployWorkerPackage;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -264,20 +259,37 @@ public class Stampede implements CodeGenerator {
         
         if( generateCodeForExecutableWorkflow ){
             //events generation for executable workflow
-            for( Iterator<Job> it = dag.jobIterator(); it.hasNext(); ){
-                Job job = it.next();
+            for( Iterator<GraphNode> it = dag.jobIterator(); it.hasNext(); ){
+                GraphNode node = it.next();
+                Job job = (Job)node.getContent();
                 generateEventsForExecutableJob( writer, dag, job );
             }
 
             //monte wants the task map events generated separately
             //en mass. Lets iterate again
-            for( Iterator<Job> it = dag.jobIterator(); it.hasNext(); ){
-                Job job = it.next();
+            for( Iterator<GraphNode> it = dag.jobIterator(); it.hasNext(); ){
+                GraphNode node = it.next();
+                Job job = (Job)node.getContent();
                 generateTaskMapEvents( writer, dag, job );
             }
 
 
             //write out the edge informatiom for the workflow
+            for( Iterator<GraphNode> it = dag.jobIterator(); it.hasNext() ; ){
+                GraphNode gn = (GraphNode) it.next();
+
+                //get a list of parents of the node
+                for( GraphNode child : gn.getChildren() ){
+                    mLogFormatter.addEvent( Stampede.JOB_EDGE_EVENT_NAME, Stampede.WORKFLOW_ID_KEY, uuid );
+
+                    mLogFormatter.add( Stampede.PARENT_JOB_ID_KEY, gn.getID() );
+                    mLogFormatter.add( Stampede.CHILD_JOB_ID_KEY, child.getID() );
+
+                    writer.println( mLogFormatter.createLogMessage() );
+                    mLogFormatter.popEvent();
+                }
+            }
+/* PM-747
             for ( Iterator<PCRelation> it =  dag.dagInfo.relations.iterator(); it.hasNext(); ){
                 PCRelation relation = it.next();
                 mLogFormatter.addEvent( Stampede.JOB_EDGE_EVENT_NAME, Stampede.WORKFLOW_ID_KEY, uuid );
@@ -288,17 +300,36 @@ public class Stampede implements CodeGenerator {
                 writer.println( mLogFormatter.createLogMessage() );
                 mLogFormatter.popEvent();
             }
-
+*/
 
         }
         else{
             //events generation for abstract workflow
-            for( Iterator<Job> it = dag.jobIterator(); it.hasNext(); ){
-                Job job = it.next();
+            for( Iterator<GraphNode> it = dag.jobIterator(); it.hasNext(); ){
+                GraphNode node = it.next();
+                Job job = (Job)node.getContent();
                 generateEventsForDAXTask( writer, dag, job );
             }
             
             //write out the edge informatiom for the workflow
+            for( Iterator<GraphNode> it = dag.jobIterator(); it.hasNext() ; ){
+                GraphNode parent = (GraphNode) it.next();
+
+                //get a list of parents of the node
+                for( GraphNode child : parent.getChildren() ){
+                    mLogFormatter.addEvent( Stampede.TASK_EDGE_EVENT_NAME, Stampede.WORKFLOW_ID_KEY, uuid );
+
+                    mLogFormatter.add( Stampede.PARENT_TASK_ID_KEY, ((Job)parent.getContent()).getLogicalID() );
+                    mLogFormatter.add( Stampede.CHILD_TASK_ID_KEY, ((Job)child.getContent()).getLogicalID() );
+
+                    writer.println( mLogFormatter.createLogMessage() );
+                    mLogFormatter.popEvent();
+            
+                }
+            }
+            
+            //write out the edge informatiom for the workflow
+/* PM-747
             for ( Iterator<PCRelation> it =  dag.dagInfo.relations.iterator(); it.hasNext(); ){
                 PCRelation relation = it.next();
                 mLogFormatter.addEvent( Stampede.TASK_EDGE_EVENT_NAME, Stampede.WORKFLOW_ID_KEY, uuid );
@@ -309,7 +340,7 @@ public class Stampede implements CodeGenerator {
                 writer.println( mLogFormatter.createLogMessage() );
                 mLogFormatter.popEvent();
             }
-
+*/
         }
 
 
