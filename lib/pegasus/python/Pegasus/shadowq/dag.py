@@ -51,6 +51,19 @@ class DAG(object):
     def __init__(self, jobs):
         self.jobs = jobs
 
+    def get_job(self, name):
+        return self.jobs[name]
+
+    def print_stats(self):
+        stats = {}
+        for job_name in self.jobs:
+            job = self.jobs[job_name]
+            if job.state not in stats:
+                stats[job.state] = 0
+            stats[job.state] += 1
+
+        log.info("Workflow State: %s", stats)
+
 class DAGException(Exception): pass
 
 def parse_dag(dag_file):

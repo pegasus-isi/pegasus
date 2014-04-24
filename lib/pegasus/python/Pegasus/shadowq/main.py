@@ -3,6 +3,8 @@ import sys
 import logging
 import time
 
+from Pegasus.shadowq.dag import parse_dag
+from Pegasus.shadowq.jobstate import JSLog
 from Pegasus.shadowq.wfmonitor import WorkflowMonitor
 
 __all__ = ["main"]
@@ -54,6 +56,8 @@ def main():
     # Change working directory
     os.chdir(wf_dir)
 
-    monitor = WorkflowMonitor(dag_file, jslog_file)
+    dag = parse_dag(dag_file)
+    jslog = JSLog(jslog_file)
+    monitor = WorkflowMonitor(dag, jslog)
     monitor.run()
 

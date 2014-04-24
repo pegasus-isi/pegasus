@@ -33,7 +33,7 @@ class JSLogRecord(object):
         else:
             return "%s: %s %s" % (self.ts_string(), self.job, self.event)
 
-class JSLogReader(object):
+class JSLog(object):
     def __init__(self, jslog_file):
         self.jslog = open(jslog_file, "r")
 
