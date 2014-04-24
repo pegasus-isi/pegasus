@@ -1,4 +1,4 @@
-#  Copyright 2007-2012 University Of Southern California
+#  Copyright 2007-2014 University Of Southern California
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -14,9 +14,11 @@
 
 __author__ = 'Rajiv Mayani'
 
+import re
+
 from time import localtime, strftime
 
-from flask import request, render_template, url_for, json 
+from flask import request, render_template, url_for, json
 from sqlalchemy.orm.exc import NoResultFound
 
 from Pegasus.netlogger.analysis.error.Error import StampedeDBNotFoundError
@@ -165,7 +167,8 @@ def stdout(root_wf_id, wf_id, job_id):
     if text.stdout_text == None:
         return 'No stdout for workflow ' + wf_id + ' job-id ' + job_id
     else:
-        return text.stdout_text
+        pattern = re.compile('%0a', re.IGNORECASE)
+        return '<pre>%s</pre>' % pattern.sub('\n', text.stdout_text)
 
 
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/job/<job_id>/stderr', methods=['GET'])
@@ -179,7 +182,8 @@ def stderr(root_wf_id, wf_id, job_id):
     if text.stderr_text == None:
         return 'No Standard error for workflow ' + wf_id + ' job-id ' + job_id;
     else:
-        return text.stderr_text
+        pattern = re.compile('%0a', re.IGNORECASE)
+        return '<pre>%s</pre>' % pattern.sub('\n', text.stderr_text)
 
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/job/<job_id>/invocations/successful', methods=['GET'])
 def successful_invocations(root_wf_id, wf_id, job_id):
