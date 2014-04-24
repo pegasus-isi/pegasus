@@ -32,9 +32,9 @@ cl = logging.StreamHandler()
 
 # Don't add funcName to the formatter for Python versions < 2.5
 if sys.version_info < (2, 5):
-    formatter = logging.Formatter("%(asctime)s:%(filename)s:%(lineno)d: %(levelname)s: %(message)s")
+    formatter = logging.Formatter("%(asctime)s:%(name)s:%(lineno)d:%(levelname)s: %(message)s")
 else:
-    formatter = logging.Formatter("%(asctime)s:%(filename)s:%(funcName)s:%(lineno)d: %(levelname)s: %(message)s")
+    formatter = logging.Formatter("%(asctime)s:%(name)s:%(lineno)d:%(levelname)s: %(message)s")
 cl.setFormatter(formatter)
 logger.addHandler(cl)
 
