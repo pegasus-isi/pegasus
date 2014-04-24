@@ -26,8 +26,7 @@ class WorkflowMonitor(object):
             elif r.event == JSLogEvent.DAGMAN_FINISHED:
                 log.info("DAGMan finished")
             else:
-                job = self.dag.get_job(r.job_name)
-                job.process_jslog_record(r)
+                self.dag.process_jslog_record(r)
                 self.dag.print_stats()
 
         log.info("Workflow finished")
