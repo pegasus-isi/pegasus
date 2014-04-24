@@ -449,6 +449,7 @@ public class MapGraph implements Graph{
             for( Iterator it = nodeIterator(); it.hasNext(); ){
                 GraphNode node = ( GraphNode )it.next();
                 node.setDepth( mCurrentDepth );
+                node.setColor( GraphNode.WHITE_COLOR );
             }
 
             //intialize all the root nodes depth to 0
@@ -571,6 +572,7 @@ public class MapGraph implements Graph{
             for( Iterator it = getLeaves().iterator(); it.hasNext(); ){
                 GraphNode node = ( GraphNode )it.next();
                 node.setDepth( mCurrentDepth );
+                node.setColor( GraphNode.WHITE_COLOR );
                 mQueue.add( node );
             }
         }
