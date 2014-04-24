@@ -113,7 +113,7 @@ public class Bundle extends Basic {
      * used to construct the relations that need to be added to workflow, once
      * the traversal is done.
      */
-    private Map mRelationsMap;
+    private Map mRelationsParentMap;
 
     
     /**
@@ -208,7 +208,7 @@ public class Bundle extends Basic {
         mStageInLocalMap   = new HashMap( mPOptions.getExecutionSites().size());
         mStageInRemoteMap   = new HashMap( mPOptions.getExecutionSites().size());
         
-        mRelationsMap = new HashMap();
+        mRelationsParentMap = new HashMap();
         mSetupMap     = new HashMap();
         mCurrentSOLevel = -1;
         mJobPrefix    = mPOptions.getJobnamePrefix();
@@ -492,12 +492,12 @@ public class Bundle extends Basic {
 
         //add the temp set to the relations
         //relations are added to the workflow in the end.
-        if( mRelationsMap.containsKey( jobName )){
+        if( mRelationsParentMap.containsKey( jobName )){
             //the map already has some relations for the job
             //add those to temp set to 
-            tempSet.addAll( (Set) mRelationsMap.get( jobName ) );
+            tempSet.addAll( (Set) mRelationsParentMap.get( jobName ) );
         }
-        mRelationsMap.put(jobName,tempSet);
+        mRelationsParentMap.put(jobName,tempSet);
 
 
     }
@@ -645,24 +645,29 @@ public class Bundle extends Basic {
                      this.mTXStageInImplementation,
                      Job.STAGE_IN_JOB,
                      false );
+        
+        //reset the stageout map too
+        this.resetStageOutMaps();
        
         //adding relations that tie in the stagin
         //jobs to the compute jobs.
-        for(Iterator it = mRelationsMap.entrySet().iterator();it.hasNext();){
+        for(Iterator it = mRelationsParentMap.entrySet().iterator();it.hasNext();){
             Map.Entry entry = (Map.Entry)it.next();
             String key   = (String)entry.getKey();
-            mLogger.log("Adding relations for job " + key,
+            mLogger.log("Adding stagein relations for job " + key,
                         LogManager.DEBUG_MESSAGE_LEVEL);
             for(Iterator pIt = ((Collection)entry.getValue()).iterator();
                                                               pIt.hasNext();){
                 String value = (String)pIt.next();
-                addRelation( value, key );
+                mLogger.log("Adding Edge " + value + " -> " + key,
+                        LogManager.DEBUG_MESSAGE_LEVEL);
+                this.mDAG.addEdge( value, key );
             }
         }
-
         
-        //reset the stageout map too
-        this.resetStageOutMaps();
+        //PM-747 add the edges in the very end
+        super.done();
+        
     }
     
     /**
