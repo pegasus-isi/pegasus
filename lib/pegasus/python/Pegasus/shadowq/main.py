@@ -6,6 +6,7 @@ import time
 from Pegasus.shadowq.dag import parse_dag
 from Pegasus.shadowq.jobstate import JSLog
 from Pegasus.shadowq.wfmonitor import WorkflowMonitor
+from Pegasus.shadowq.provision import Provisioner
 
 __all__ = ["main"]
 
@@ -58,6 +59,13 @@ def main():
 
     dag = parse_dag(dag_file)
     jslog = JSLog(jslog_file)
+
     monitor = WorkflowMonitor(dag, jslog)
-    monitor.run()
+    monitor.start()
+
+    interval = int(os.getenv("SHADOWQ_PROVISIONER_INTERVAL", 5*60))
+    provisioner = Provisioner(dag, interval)
+    provisioner.start()
+
+    monitor.join()
 

@@ -1,4 +1,5 @@
 import logging
+import threading
 
 from Pegasus.shadowq.jobstate import JSLogEvent
 from Pegasus.shadowq.util import Enum
@@ -19,9 +20,9 @@ JobState = Enum([
 ])
 
 class Job(object):
-    def __init__(self, name, submit_file):
+    def __init__(self, name):
         self.name = name
-        self.submit_file = submit_file
+        self.runtime = 0.0
         self.state = JobState.UNREADY
         self.prescript = False
         self.postscript = False
@@ -83,19 +84,31 @@ class Job(object):
                 if ready:
                     c.state = JobState.READY
 
+    def __str__(self):
+        return "Job(%s, %s, %f)" % (self.name, self.state, self.runtime)
+
+    def clone(self):
+        newjob = Job(self.name)
+        newjob.runtime = self.runtime
+        newjob.state = self.state
+        newjob.prescript = self.prescript
+        newjob.postscript = self.postscript
+        return newjob
+
 class DAG(object):
     def __init__(self, jobs):
         self.jobs = jobs
-
-    def get_job(self, name):
-        return self.jobs[name]
+        self.lock = threading.Lock()
 
     def process_jslog_record(self, record):
+        self.lock.acquire()
         job_name = record.job_name
         job = self.jobs[job_name]
         job.process_jslog_record(record)
+        self.lock.release()
 
     def print_stats(self):
+        self.lock.acquire()
         stats = {}
         for job_name in self.jobs:
             job = self.jobs[job_name]
@@ -104,8 +117,51 @@ class DAG(object):
             stats[job.state] += 1
 
         log.info("Workflow State: %s", stats)
+        self.lock.release()
+
+    def clone(self):
+        self.lock.acquire()
+
+        jobs = {}
+        edges = []
+
+        # Clone the jobs
+        for name in self.jobs:
+            job = self.jobs[name]
+
+            # Clone the job
+            jobs[name] = job.clone()
+
+            # Store the edges
+            for child in job.children:
+                edges.append((name, child.name))
+
+        # Clone the edges
+        for pname, cname in edges:
+            parent = jobs[pname]
+            child = jobs[cname]
+            parent.children.append(child)
+            child.parents.append(parent)
+
+        dag = DAG(jobs)
+
+        self.lock.release()
+
+        return dag
 
 class DAGException(Exception): pass
+
+def parse_submit_file(submit_file):
+    record = {}
+
+    with open(submit_file, "r") as f:
+        for l in f:
+            l = l.strip()
+            if l.startswith("+pegasus_job_runtime"):
+                rec = l.split(" = ")
+                record["pegasus_job_runtime"] = float(rec[1])
+
+    return record
 
 def parse_dag(dag_file):
     log.info("Parsing DAG...")
@@ -118,8 +174,10 @@ def parse_dag(dag_file):
             rec = l.split()
             if l.startswith("JOB"):
                 job_name = rec[1]
-                job_submit_file = rec[2]
-                j = Job(job_name, job_submit_file)
+                submit_file = rec[2]
+                rec = parse_submit_file(submit_file)
+                j = Job(job_name)
+                j.runtime = rec.get("pegasus_job_runtime", 0.0)
                 jobs[job_name] = j
                 log.debug("Parsed job: %s", job_name)
             elif l.startswith("PARENT"):
