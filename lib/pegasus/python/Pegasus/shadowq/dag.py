@@ -19,11 +19,42 @@ JobState = Enum([
     "FAILED"
 ])
 
+JobType = Enum([
+    "UNASSIGNED",
+    "COMPUTE",
+    "STAGE_IN",
+    "STAGE_OUT",
+    "REPLICA_REG",
+    "INTER_POOL",
+    "CREATE_DIR",
+    "STAGE_IN_WORKER_PACKAGE",
+    "CLEANUP",
+    "CHMOD",
+    "DAX",
+    "DAG"
+])
+
+JOB_TYPE_MAP = {
+    "0": JobType.UNASSIGNED,
+    "1": JobType.COMPUTE,
+    "2": JobType.STAGE_IN,
+    "3": JobType.STAGE_OUT,
+    "4": JobType.REPLICA_REG,
+    "5": JobType.INTER_POOL,
+    "6": JobType.CREATE_DIR,
+    "7": JobType.STAGE_IN_WORKER_PACKAGE,
+    "8": JobType.CLEANUP,
+    "9": JobType.CHMOD,
+    "10": JobType.DAX,
+    "11": JobType.DAG
+}
+
 class Job(object):
     def __init__(self, name):
         self.name = name
         self.runtime = 0.0
         self.state = JobState.UNREADY
+        self.jobtype = JobType.UNASSIGNED
         self.prescript = False
         self.postscript = False
         self.parents = []
@@ -67,7 +98,7 @@ class Job(object):
         elif record.event == JSLogEvent.POST_SCRIPT_FAILURE:
             self.state = JobState.FAILED
         else:
-            raise DAGException("Unknown job state log event", record.event)
+            log.warning("Unexpected job state log event: %s", record.event)
 
         # When job succeeds, mark ready children
         if self.state == JobState.SUCCESSFUL:
@@ -85,10 +116,11 @@ class Job(object):
                     c.state = JobState.READY
 
     def __str__(self):
-        return "Job(%s, %s, %f)" % (self.name, self.state, self.runtime)
+        return "Job(%s, %s, %s, %f)" % (self.name, self.jobtype, self.state, self.runtime)
 
     def clone(self):
         newjob = Job(self.name)
+        newjob.jobtype = self.jobtype
         newjob.runtime = self.runtime
         newjob.state = self.state
         newjob.prescript = self.prescript
@@ -157,9 +189,9 @@ def parse_submit_file(submit_file):
     with open(submit_file, "r") as f:
         for l in f:
             l = l.strip()
-            if l.startswith("+pegasus_job_runtime"):
+            if l.startswith("+pegasus"):
                 rec = l.split(" = ")
-                record["pegasus_job_runtime"] = float(rec[1])
+                record[rec[0]] = rec[1]
 
     return record
 
@@ -177,7 +209,8 @@ def parse_dag(dag_file):
                 submit_file = rec[2]
                 rec = parse_submit_file(submit_file)
                 j = Job(job_name)
-                j.runtime = rec.get("pegasus_job_runtime", 0.0)
+                j.runtime = float(rec.get("+pegasus_job_runtime", 0.0))
+                j.jobtype = JOB_TYPE_MAP[rec.get("+pegasus_job_class")]
                 jobs[job_name] = j
                 log.debug("Parsed job: %s", job_name)
             elif l.startswith("PARENT"):

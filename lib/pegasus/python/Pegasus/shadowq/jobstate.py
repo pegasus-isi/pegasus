@@ -12,9 +12,42 @@ JSLogEvent = Enum([
     "MONITORD_FINISHED",
     "DAGMAN_STARTED",
     "DAGMAN_FINISHED",
-    "SUBMIT",
-    "EXECUTE",
-    "JOB_TERMINATED",
+    "SUBMIT",                  # Job submitted
+    "EXECUTE",                 # Job now running
+    "EXECUTABLE_ERROR",        # Error in executable
+    "CHECKPOINTED",            # Job was checkpointed
+    "JOB_EVICTED",             # Job evicted from machine
+    "JOB_TERMINATED",          # Job terminated
+    "IMAGE_SIZE",              # Image size of job updated
+    "SHADOW_EXCEPTION",        # Shadow threw an exception
+    "GENERIC",
+    "JOB_ABORTED",             # Job aborted
+    "JOB_SUSPENDED",           # Job was suspended
+    "JOB_UNSUSPENDED",         # Job was unsuspended
+    "JOB_HELD",                # Job was held
+    "JOB_RELEASED",            # Job was released
+    "NODE_EXECUTE",            # MPI (or parallel) Node executing
+    "NODE_TERMINATED",         # MPI (or parallel) Node terminated
+    "GLOBUS_SUBMIT",           # Job Submitted to Globus
+    "GLOBUS_SUBMIT_FAILED",    # Globus Submit Failed
+    "GLOBUS_RESOURCE_UP",      # Globus Machine UP
+    "GLOBUS_RESOURCE_DOWN",    # Globus Machine Down
+    "REMOTE_ERROR",            # Remote Error
+    "JOB_DISCONNECTED",        # RSC socket lost
+    "JOB_RECONNECTED",         # RSC socket re-established
+    "JOB_RECONNECT_FAILED",    # RSC reconnect failure
+    "GRID_RESOURCE_UP",        # Grid machine UP
+    "GRID_RESOURCE_DOWN",      # Grid machine Down
+    "GRID_SUBMIT",             # Job submitted to grid resource
+    "JOB_AD_INFORMATION",      # Job Ad information update
+    "JOB_STATUS_UNKNOWN",      # Job status unknown
+    "JOB_STATUS_KNOWN",        # Job status known
+    "JOB_STAGE_IN",            # Job staging in input files
+    "JOB_STAGE_OUT",           # Job staging out output files
+    "ATTRIBUTE_UPDATE",        # Job attribute updated
+    "PRESKIP",                 # PRE_SKIP event for DAGMan
+    "SUBMIT_FAILED",
+    "GRID_SUBMIT_FAILED",
     "JOB_SUCCESS",
     "JOB_FAILURE",
     "POST_SCRIPT_STARTED",

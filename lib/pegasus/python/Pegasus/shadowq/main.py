@@ -69,3 +69,5 @@ def main():
 
     monitor.join()
 
+    log.info("Shadow queue exiting")
+
