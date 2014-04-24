@@ -763,7 +763,8 @@ public class ADag extends Data implements Graph{
 
         //traverse through the jobs
         for( Iterator it = jobIterator(); it.hasNext(); ){
-            ( (Job)it.next() ).toDOT( stream, newIndent );
+            GraphNode node = (GraphNode)it.next();
+            ( (Job)node.getContent() ).toDOT( stream, newIndent );
         }
 
         stream.write( newLine );
