@@ -66,6 +66,15 @@ cp $MYDIR/uninstall.tool $PKG_DIR/share/condor/
 cp $MYDIR/uninstall.tool "$DMG_DIR/Uninstall HTCondor.tool"
 
 
+# Create the mail wrapper to get around problems with condor mail on Mac OS X
+cat > $PKG_DIR/libexec/condor/condor_mail <<END
+#!/bin/bash
+cat - | /usr/bin/mail "\$@"
+exit 0
+END
+chmod 755 $PKG_DIR/libexec/condor/condor_mail
+
+
 # Build the package
 pkgbuild --root $PKG_DIR \
          --identifier edu.wisc.cs.htcondor \

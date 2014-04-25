@@ -69,7 +69,7 @@ SBIN = /usr/sbin
 LIB = /usr/lib/condor
 LIBEXEC = /usr/libexec/condor
 INCLUDE = /usr/include/condor
-MAIL = /usr/bin/mail
+MAIL = /usr/libexec/condor/condor_mail
 
 CONDOR_IDS = $CONDOR_UID.$CONDOR_GID
 END
