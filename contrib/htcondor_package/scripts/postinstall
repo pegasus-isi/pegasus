@@ -63,14 +63,29 @@ END
 
     # Change local config values
     cat >> /etc/condor/condor_config.local <<END
+
 BIN = /usr/bin
 SBIN = /usr/sbin
 LIB = /usr/lib/condor
 LIBEXEC = /usr/libexec/condor
 INCLUDE = /usr/include/condor
 MAIL = /usr/bin/mail
+
 CONDOR_IDS = $CONDOR_UID.$CONDOR_GID
 END
+
+    MODEL=$(sysctl -n hw.model)
+    if [[ "$MODEL" =~ .*Book.* ]]; then
+        cat >> /etc/condor/condor_config.local <<END
+
+# On laptops we set everything to run on localhost because it
+# causes fewer problems when the laptop moves around in the network
+CONDOR_HOST = localhost
+NETWORK_INTERFACE = 127.0.0.1
+UID_DOMAIN = localhost
+TRUST_UID_DOMAIN = TRUE
+END
+    fi
 
     chown -R condor:condor /etc/condor
 fi
