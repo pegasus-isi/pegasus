@@ -719,33 +719,11 @@ public class DeployWorkerPackage
         boolean addUntarJobs = !mWorkerNodeExecution;
 
         Set deploymentSites = this.getDeploymentSites( dag );
-        Graph workflow = ( addUntarJobs )?
+        ADag workflow = ( addUntarJobs )?
                          addSetupNodesWithUntarNodes( dag , deploymentSites ): //non pegasus lite case. shared fs
                          addSetupNodesWithoutUntarNodes( dag, deploymentSites );
-        
-        
-        
        
-        //convert back to ADag and return
-        ADag result = dag;
-        //we need to reset the jobs and the relations in it
-        result.clearJobs();
-
-        //traverse through the graph and jobs and edges
-        for( Iterator it = workflow.nodeIterator(); it.hasNext(); ){
-            GraphNode node = ( GraphNode )it.next();
-
-            //get the job associated with node
-            result.add( ( Job )node.getContent() );
-
-            //all the children of the node are the edges of the DAG
-            for( Iterator childrenIt = node.getChildren().iterator(); childrenIt.hasNext(); ){
-                GraphNode child = ( GraphNode ) childrenIt.next();
-                result.addNewRelation( node.getID(), child.getID() );
-            }
-        }
-
-        return result;
+        return workflow;
     }
 
     /**
@@ -756,11 +734,11 @@ public class DeployWorkerPackage
      * 
      * @return  the workflow in the graph representation with the nodes added.
      */
-    private Graph addSetupNodesWithUntarNodes( ADag dag, Set<String> deploymentSites ) {
+    private ADag addSetupNodesWithUntarNodes( ADag dag, Set<String> deploymentSites ) {
         //convert the dag to a graph representation and walk it
         //in a top down manner
         //PM-747 no need for conversion as ADag now implements Graph interface
-        Graph workflow =  dag;
+        ADag workflow =  dag;
         
         //get the root nodes of the workflow
         List<GraphNode> roots = workflow.getRoots();
@@ -855,11 +833,11 @@ public class DeployWorkerPackage
      * 
      * @return  the workflow in the graph representation with the nodes added.
      */
-    private Graph addSetupNodesWithoutUntarNodes( ADag dag, Set<String> deploymentSites ) {
+    private ADag addSetupNodesWithoutUntarNodes( ADag dag, Set<String> deploymentSites ) {
         //convert the dag to a graph representation and walk it
         //in a top down manner
         //PM-747 no need for conversion as ADag now implements Graph interface
-        Graph workflow = dag ;
+        ADag workflow = dag ;
         
         //get the root nodes of the workflow
         List<GraphNode> roots = workflow.getRoots();
@@ -958,7 +936,7 @@ public class DeployWorkerPackage
         //convert the dag to a graph representation and walk it
         //in a top down manner
         //PM-747 no need for conversion as ADag now implements Graph interface
-        Graph workflow = dag ;
+        ADag workflow = dag ;
 
         RemoveDirectory removeDirectory = new RemoveDirectory( dag, mBag, this.mPOptions.getSubmitDirectory() );
         
@@ -1002,26 +980,7 @@ public class DeployWorkerPackage
             }
         }
         
-        //convert back to ADag and return
-        ADag result = dag;
-        //we need to reset the jobs and the relations in it
-        result.clearJobs();
-
-        //traverse through the graph and jobs and edges
-        for( Iterator it = workflow.nodeIterator(); it.hasNext(); ){
-            GraphNode node = ( GraphNode )it.next();
-
-            //get the job associated with node
-            result.add( ( Job )node.getContent() );
-
-            //all the children of the node are the edges of the DAG
-            for( Iterator childrenIt = node.getChildren().iterator(); childrenIt.hasNext(); ){
-                GraphNode child = ( GraphNode ) childrenIt.next();
-                result.addNewRelation( node.getID(), child.getID() );
-            }
-        }
-
-        return result;
+        return workflow;
     }
  
     

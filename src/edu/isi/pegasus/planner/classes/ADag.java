@@ -301,33 +301,6 @@ public class ADag extends Data implements Graph{
  */
     }
 
-
-    /**
-     * Removes all the jobs from the workflow, and all the edges between
-     * the workflows. The only thing that remains is the meta data about the
-     * workflow.
-     *
-     *@deprecated 
-     */
-    public void clearJobs(){
-/*        vJobSubInfos.clear();
-        mDAGInfo.dagJobs.clear();
-        mDAGInfo.relations.clear();
-        mDAGInfo.lfnMap.clear();
-*/
-        //reset the workflow metrics but not the task metrics
-        this.getWorkflowMetrics().reset( false );
-    }
-
-    /**
-     * Returns whether the workflow is empty or not.
-     * @return boolean
-     */
-/*
-    public boolean isEmpty(){
-        return vJobSubInfos.isEmpty();
-    }
-*/
     /**
      * Removes a particular job from the workflow. It however does not
      * delete the relations the edges that refer to the job.
