@@ -153,7 +153,6 @@ public class GridStartFactory {
      */
     private static String implementingPOSTScriptClass( String shortName ){
         Object obj =  POSTSCRIPT_IMPLEMENTING_CLASS_TABLE.get( shortName );
-        System.out.println( POSTSCRIPT_IMPLEMENTING_CLASS_TABLE );
         return ( obj == null ) ? null : ( String )obj;
     }
 
