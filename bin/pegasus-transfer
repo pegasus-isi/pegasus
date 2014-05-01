@@ -655,8 +655,6 @@ class GridFtpHandler(TransferHandlerBase):
                     options += " -no-data-channel-authentication"
         else:
             # gsiftp<->file transfers
-            if gsiftp_failures == 0:
-                options += " -parallel 4"
             options += " -no-third-party-transfers" \
                      + " -no-data-channel-authentication"
     
