@@ -165,7 +165,7 @@ public class TransferEngine extends Engine {
     /**
      * Holds all the jobs deleted by the reduction algorithm.
      */
-    private List mDeletedJobs;
+    private List<Job> mDeletedJobs;
     
     
     /**
