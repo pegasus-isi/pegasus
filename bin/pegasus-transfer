@@ -633,14 +633,14 @@ class GridFtpHandler(TransferHandlerBase):
         if create_dest:
             options += " -create-dest"
     
-        # pipeline is experimental so only allow this for the first attempt
-        if gsiftp_failures == 0:
-            options += " -pipeline"
-
         # Only do third party transfers for gsiftp->gsiftp. For other
         # combinations, fall back to settings which will for well over for
         # example NAT
         if third_party:
+
+            # pipeline is experimental so only allow this for the first attempt
+            if gsiftp_failures == 0:
+                options += " -pipeline"
     
             # parallism
             options += " -parallel 4"
