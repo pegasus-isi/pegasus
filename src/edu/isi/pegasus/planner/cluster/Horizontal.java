@@ -1048,39 +1048,12 @@ public class Horizontal implements Clusterer,
         List nl = null;
         Job sub = new Job();
         String msg;
-
-        for( Iterator it = mReplacementTable.entrySet().iterator(); it.hasNext(); ){
-            Map.Entry entry = (Map.Entry)it.next();
-            String key = (String)entry.getKey();
-            mLogger.log("Replacing job " + key +" with " + entry.getValue(),
-                        LogManager.DEBUG_MESSAGE_LEVEL);
-            //remove the old job
-            //remove by just creating a subinfo object with the same key
-            sub.jobName = key;
-            sub.setJobType( Job.COMPUTE_JOB );
-            val = mScheduledDAG.remove(sub);
-            if(val == false){
-                throw new RuntimeException("Removal of job " + key + " while clustering not successful");
-            }
-        }
-        mLogger.log("All clustered jobs removed from the workflow",
-                    LogManager.DEBUG_MESSAGE_LEVEL);
-
+        
         //Set mergedEdges = new java.util.HashSet();
         //this is temp thing till the hast thing sorted out correctly
         List<PCRelation> mergedEdges = new java.util.ArrayList(mScheduledDAG.size());
 
         //traverse the edges and do appropriate replacements
-        /* PM-747
-        String parent = null; String child = null;
-        String value = null;
-        
-        for( Iterator it = mScheduledDAG.dagInfo.relations.iterator(); it.hasNext(); ){
-            PCRelation rel = (PCRelation)it.next();
-            //replace the parent and child if there is a need
-            parent = rel.parent;
-            child  = rel.child;
-        */
         for( Iterator<GraphNode> it = mScheduledDAG.jobIterator(); it.hasNext(); ){
             GraphNode node = it.next();
             Job childJob = (Job)node.getContent();
@@ -1112,16 +1085,31 @@ public class Horizontal implements Clusterer,
                mLogger.log( msg, LogManager.DEBUG_MESSAGE_LEVEL );
             }
         }
-
+        
         //the final edges need to be updated
-        /* PM-747
-       mScheduledDAG.dagInfo.relations = null;
-       mScheduledDAG.dagInfo.relations = new java.util.Vector(mergedEdges);
-        */
         mScheduledDAG.resetEdges();
         for( PCRelation pc: mergedEdges){
             mScheduledDAG.addEdge( pc.getParent(), pc.getChild());
         }
+        
+        //PM-747 once new edges are added, then remove
+        //the original nodes that are now clustered
+        for( Iterator it = mReplacementTable.entrySet().iterator(); it.hasNext(); ){
+            Map.Entry entry = (Map.Entry)it.next();
+            String key = (String)entry.getKey();
+            mLogger.log("Replacing job " + key +" with " + entry.getValue(),
+                        LogManager.DEBUG_MESSAGE_LEVEL);
+            //remove the old job
+            //remove by just creating a subinfo object with the same key
+            sub.jobName = key;
+            sub.setJobType( Job.COMPUTE_JOB );
+            val = mScheduledDAG.remove(sub);
+            if(val == false){
+                throw new RuntimeException("Removal of job " + key + " while clustering not successful");
+            }
+        }
+        mLogger.log("All clustered jobs removed from the workflow",
+                    LogManager.DEBUG_MESSAGE_LEVEL);
    }
 
    /**
