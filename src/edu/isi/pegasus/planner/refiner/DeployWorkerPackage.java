@@ -807,13 +807,15 @@ public class DeployWorkerPackage
 
             //untar node is child of setup
             setupNode.addChild( untarNode );
+            untarNode.addParent( setupNode );
             
             //add the original roots as children to untar node
-            for( Iterator rIt = roots.iterator(); rIt.hasNext(); ){
+            for( Iterator<GraphNode> rIt = roots.iterator(); rIt.hasNext(); ){
                     GraphNode n = ( GraphNode ) rIt.next();
                     mLogger.log( "Added edge " + untarNode.getID() + " -> " + n.getID(),
                                   LogManager.DEBUG_MESSAGE_LEVEL );
                     untarNode.addChild( n );
+                    n.addParent( untarNode );
             }
                 
             workflow.addNode( untarNode );
