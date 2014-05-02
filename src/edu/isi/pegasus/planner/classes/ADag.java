@@ -277,6 +277,12 @@ public class ADag extends Data implements Graph{
         //lets write out the edges
         for( Iterator<GraphNode> it = this.nodeIterator(); it.hasNext() ; ){
             GraphNode gn = (GraphNode) it.next();
+            sb.append(  "JOB" ).append( " " ).append( gn.getID() ).append( newLine );
+        }
+        
+        //lets write out the edges
+        for( Iterator<GraphNode> it = this.nodeIterator(); it.hasNext() ; ){
+            GraphNode gn = (GraphNode) it.next();
 
             //get a list of parents of the node
             for( GraphNode child : gn.getChildren() ){
@@ -530,7 +536,7 @@ public class ADag extends Data implements Graph{
 
         StringBuilder error = new StringBuilder();
         error.append( desc ).append( " " ).append( linkedNode.getID() ).append( " for node " ).
-              append( node.getID()).append( " is corrupted " );
+              append( node.getID()).append( " is corrupted. " );
         GraphNode fromNodeMap = this.getNode( linkedNode.getID() );
         error.append( "Two instances of node " ).append( linkedNode.getID() ).append( " with identities ").
               append( System.identityHashCode( fromNodeMap ) ).append( " and ").append( System.identityHashCode( linkedNode ) );
