@@ -57,7 +57,7 @@ pegasus-plan \
     --staging-site local \
     --dir work \
     --output-site local \
-    --nocleanup \
+    --cleanup leaf \
     --dax blackdiamond.dax \
     --submit
 

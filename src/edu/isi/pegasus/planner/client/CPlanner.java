@@ -409,6 +409,8 @@ public class CPlanner extends Executable{
         PegasusConfiguration configurator = new PegasusConfiguration( mLogger );
         configurator.loadConfigurationPropertiesAndOptions( mProps , mPOptions );
 
+        mLogger.log( "Planner invoked with following arguments " + mPOptions.getOriginalArgString(),
+                      LogManager.INFO_MESSAGE_LEVEL );
 
         //do sanity check on dax file
         String dax         = mPOptions.getDAX();
@@ -871,9 +873,11 @@ public class CPlanner extends Executable{
         PlannerOptions options = new PlannerOptions();
         options.setSanitizePath( sanitizePath );
         options.setOriginalArgString( args );
+        //we default to inplace cleanup unless overriden on command line
+        options.setCleanup(PlannerOptions.CLEANUP_OPTIONS.inplace );
         
         Getopt g = new Getopt("pegasus-plan",args,
-                              "vqhfSnzpVr::aD:d:s:o:O:y:P:c:C:b:g:2:j:3:F:X:4:5:6:78:9:B:",
+                              "vqhfSnzpVr::aD:d:s:o:O:y:P:c:C:b:g:2:j:3:F:X:4:5:6:78:9:B:1:",
                               longOptions,false);
         g.setOpterr(false);
 
@@ -886,10 +890,6 @@ public class CPlanner extends Executable{
         while( (option = g.getopt()) != -1){
             //System.out.println("Option tag " + (char)option);
             switch (option) {
-
-                case 1://monitor
-                    options.setMonitoring( true );
-                    break;
 
                 case 'z'://deferred
                     options.setPartOfDeferredRun( true );
@@ -915,7 +915,10 @@ public class CPlanner extends Executable{
                     options.setClusteringTechnique( g.getOptarg() );
                     break;
 
-
+                case '1'://cleanup
+                    options.setCleanup( g.getOptarg() );
+                    break;
+                    
                 case '6':// conf
                     //PM-667 we need to track conf file option
                     options.setConfFile( g.getOptarg() );
@@ -997,7 +1000,9 @@ public class CPlanner extends Executable{
                     break;
 
                 case 'n'://nocleanup option
-                    options.setCleanup( false );
+                    mLogger.log( "--nocleanup option is deprecated. Use --cleanup none  " ,
+                                 LogManager.WARNING_MESSAGE_LEVEL );
+                    options.setCleanup( PlannerOptions.CLEANUP_OPTIONS.none );
                     break;
 
                 case 'y'://output option
@@ -1163,7 +1168,7 @@ public class CPlanner extends Executable{
      * options
      */
     public LongOpt[] generateValidOptions(){
-        LongOpt[] longopts = new LongOpt[36];
+        LongOpt[] longopts = new LongOpt[37];
 
         longopts[0]   = new LongOpt( "dir", LongOpt.REQUIRED_ARGUMENT, null, '8' );
         longopts[1]   = new LongOpt( "dax", LongOpt.REQUIRED_ARGUMENT, null, 'd' );
@@ -1204,6 +1209,7 @@ public class CPlanner extends Executable{
         longopts[33]  = new LongOpt( "input-dir" , LongOpt.REQUIRED_ARGUMENT, null, 'I' );
         longopts[34]  = new LongOpt( "output-dir" , LongOpt.REQUIRED_ARGUMENT, null, 'O' );
         longopts[35]  = new LongOpt( "output-site" , LongOpt.REQUIRED_ARGUMENT, null, 'o' );
+        longopts[36]  = new LongOpt( "cleanup", LongOpt.REQUIRED_ARGUMENT, null, '1' );
         return longopts;
     }
 
@@ -1219,7 +1225,7 @@ public class CPlanner extends Executable{
           " [-s site[,site[..]]] [--staging-site s1=ss1[,s2=ss2[..]][-b prefix] [-c f1[,f2[..]]] [--conf <path to property file>] "+
           "\n [-f] [--force-replan]  [-b basename] [-C t1[,t2[..]]  [--dir  <base dir  for o/p files>] [-j <job-prefix>] " +
           "\n [--relative-dir <relative directory to base directory> ] [--relative-submit-dir <relative submit directory to base directory>]" +
-          "\n [--inherited-rc-files f1[,f2[..]]]  " +
+          "\n [--inherited-rc-files f1[,f2[..]]]  [--cleanup <cleanup strategy to use>] " + 
           "\n [-g <vogroup>] [-I <input dir>] [-O <output dir>] [-o <output site>]  [-r[dir name]] [-F option[=value] ] " +
           //"[--rescue <number of rescues before replanning>]"
           "\n [-S] [-n] [-v] [-q] [-V] [-X[non standard jvm option] [-h]";
@@ -1239,7 +1245,8 @@ public class CPlanner extends Executable{
              append( "\n pegasus-plan - The main class which is used to run  Pegasus. "   ).
              append( "\n Usage: pegasus-plan [-Dprop  [..]] --dax|--pdax <file> [--sites <execution sites>] " ).
              append( "\n [--staging-site s1=ss1[,s2=ss2[..]] [--basename prefix] [--cache f1[,f2[..]] [--cluster t1[,t2[..]] [--conf <path to property file>]"  ).
-             append( "\n [--dir <dir for o/p files>] [--force] [--force-replan] [--forward option=[value] ] [--group vogroup] [--nocleanup] "  ).
+             append( "\n [--inherited-rc-files f1[,f2[..]]]  [--cleanup <cleanup strategy to use>] " ).
+             append( "\n [--dir <dir for o/p files>] [--force] [--force-replan] [--forward option=[value] ] [--group vogroup] "  ).
              append( "\n [--input-dir <input dir>] [--output-dir <output dir>] [--output output site] [--randomdir=[dir name]]   [--verbose] [--version][--help] " ).
              append( "\n"  ).
              append( "\n Mandatory Options "  ).
@@ -1250,6 +1257,7 @@ public class CPlanner extends Executable{
              append( "\n -B |--bundle       the shiwa bundle to be used. ( prototypical option )  "  ).
              append( "\n -c |--cache        comma separated list of replica cache files."  ).
              append( "\n --inherited-rc-files  comma separated list of replica files. Locations mentioned in these have a lower priority than the locations in the DAX file"  ).
+             append( "\n --cleanup          the cleanup strategy to use. Can be none|inplace|leaf ").
              append( "\n -C |--cluster      comma separated list of clustering techniques to be applied to the workflow to "  ).
              append( "\n                    to cluster jobs in to larger jobs, to avoid scheduling overheads."  ).
              append( "\n --conf             the path to the properties file to use for planning. "  ).
@@ -1273,7 +1281,7 @@ public class CPlanner extends Executable{
              append( "\n -r |--randomdir    create random directories on remote execution sites in which jobs are executed"  ).
           // "\n --rescue           the number of times rescue dag should be submitted for sub workflows before triggering re-planning" +
              append( "\n                    can optionally specify the basename of the remote directories"  ).
-             append( "\n -n |--nocleanup    generates only the separate cleanup workflow. Does not add cleanup nodes to the executable workflow."  ).
+             append( "\n -n |--nocleanup    deprecated option. use --cleanup none instead"  ).
              append( "\n -S |--submit       submit the executable workflow generated"  ).
              append( "\n --staging-site     comma separated list of key=value pairs, where key is the execution site and value is the staging site"  ).
              append( "\n -v |--verbose      increases the verbosity of messages about what is going on"  ).

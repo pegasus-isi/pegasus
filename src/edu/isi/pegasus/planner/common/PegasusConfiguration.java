@@ -299,7 +299,7 @@ public class PegasusConfiguration {
                              LogManager.WARNING_MESSAGE_LEVEL );
             }
 
-            p.setProperty( "pegasus.transfer.sls.*.impl", "Condor" );
+            p.setProperty( "pegasus.transfer.lite.*.impl", "Condor" );
             p.setProperty( "pegasus.execute.*.filesystem.local", "true" );
             p.setProperty( "pegasus.gridstart", "PegasusLite" );
             

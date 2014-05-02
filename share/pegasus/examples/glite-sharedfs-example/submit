@@ -1,66 +1,94 @@
 #!/bin/bash
 
 set -e
+set -x
 
-TOPDIR=`pwd`
+TOP_DIR=`pwd`
 
-# pegasus bin directory is needed to find keg
-BIN_DIR=`pegasus-config --bin`
+DEGREES=1.0
+MONTAGE_HOME=/ccg/software/montage/Montage_v3.3_patched_4
+MONTAGE_VERSION=3.3
 
-LOCAL_PBS_PEGASUS_HOME=`dirname $BIN_DIR`
+# unique directory for this run
+RUN_ID=`/bin/date +'%F_%H%M%S'`
+RUN_DIR=$TOP_DIR/work/$RUN_ID
+mkdir -p $RUN_DIR
 
-# generate the input file
-echo "This is sample input to KEG" >f.a
+echo
+echo "Work directory: $RUN_DIR"
+echo
 
-# build the dax generator
-CLASSPATH=`pegasus-config --classpath`
-export CLASSPATH=".:$CLASSPATH"
-javac BlackDiamondDAX.java
+cd $RUN_DIR
 
-# generate the dax
-java BlackDiamondDAX $BIN_DIR blackdiamond.dax
+cp $TOP_DIR/pegasusrc .
 
-# create the site catalog
+# create the transformation catalog (tc)
+echo
+echo "Creating the transformation catalog..."
+for BINARY in `(cd $MONTAGE_HOME/bin && ls)`; do
+    name=$BINARY:$MONTAGE_VERSION
+    if [ "${BINARY}" = "mFitplane" ] || [ "$BINARY" = "mDiff" ]; then
+        name=$BINARY
+    fi
+
+    cat >>tc <<EOF
+tr $name {
+    site local {
+        pfn "$MONTAGE_HOME/bin/$BINARY"
+        arch "x86_64"
+        os "linux"
+        type "STAGEABLE"
+        profile pegasus "clusters.size" "20"
+        profile env "MONTAGE_BIN" "."
+    }
+}
+EOF
+    
+done
+    
+echo
+echo "Creating the site catalog..."
 cat >sites.xml <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0">
 
-    <site  handle="local" arch="x86" os="LINUX">
-        <directory type="shared-scratch" path="$TOPDIR/work">
-            <file-server operation="all" url="file://$TOPDIR/work"/>
+    <site  handle="local" arch="x86_64" os="LINUX">
+        <directory type="shared-scratch" path="$RUN_DIR/work">
+            <file-server operation="all" url="file://$RUN_DIR/work"/>
         </directory>
-        <directory type="local-storage" path="$TOPDIR/outputs">
-            <file-server operation="all" url="file://$TOPDIR/outputs"/>
+        <directory type="local-storage" path="$RUN_DIR/outputs">
+            <file-server operation="all" url="file://$RUN_DIR/outputs"/>
         </directory>
     </site>
 
-    <site  handle="local-pbs" arch="x86" os="LINUX">
-        
-        <directory type="shared-scratch" path="$TOPDIR/local-pbs/shared-scratch">
-            <file-server operation="all" url="file://$TOPDIR/local-pbs/shared-scratch"/>
-        </directory>
-
-        <profile namespace="env" key="PEGASUS_HOME">$LOCAL_PBS_PEGASUS_HOME</profile>
-
-        <profile namespace="pegasus" key="style" >glite</profile>
-        <profile namespace="pegasus" key="change.dir">true</profile>
-
-        <profile namespace="condor" key="grid_resource">pbs</profile>
-        <profile namespace="condor" key="batch_queue">batch</profile>
-        <profile namespace="globus" key="maxwalltime">30000</profile>
+    <site  handle="glideinwms" arch="x86_64" os="LINUX">
+        <profile namespace="pegasus" key="style">condor</profile>
+        <profile namespace="condor" key="universe">vanilla</profile>
+        <profile namespace="condor" key="requirements" >(Target.Arch == "X86_64")</profile>
     </site>
 
 </sitecatalog>
 EOF
 
-# plan and submit the  workflow
+echo
+echo "Running mDAG (finding input images, generating DAX, ...)..."
+$MONTAGE_HOME/bin/mDAG 2mass j M17 $DEGREES $DEGREES 0.0002777778 . "file://$RUN_DIR" "gsiftp://$RUN_DIR/inputs"
+
+echo
+echo "Adding input images to the replica catalog..."
+echo "  " `cat cache.list | wc -l` "images found"
+cat cache.list | grep -v ".fits " | sed 's/ipac_cluster/local/' >rc
+cat url.list | sed 's/ http:.*ref=/ http:\/\/obelix.isi.edu\/irsa-cache/' >>rc
+
+echo
+echo "Planning and submitting the workflow..."
 pegasus-plan \
     --conf pegasusrc \
-    --sites local-pbs \
+    --sites glideinwms \
     --output-site local \
     --dir work \
-    --dax blackdiamond.dax \
-    -vv \
     --nocleanup \
+    --dax dag.xml \
+    --cluster horizontal \
     --submit
 

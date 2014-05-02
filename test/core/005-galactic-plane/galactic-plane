@@ -279,7 +279,7 @@ def generate_sc():
     sc.write("        <profile namespace=\"condor\" key=\"should_transfer_files\">True</profile>\n")
     sc.write("        <profile namespace=\"condor\" key=\"when_to_transfer_output\">ON_EXIT</profile>\n")
     sc.write("        <profile namespace=\"condor\" key=\"requirements\">(FileSystemDomain != &quot;&quot;)</profile>\n")
-    sc.write("        <profile namespace=\"env\" key=\"PEGASUS_HOME\" >/usr</profile>\n")
+    sc.write("        <profile namespace=\"env\" key=\"PEGASUS_HOME\" >/ccg/software/pegasus/master</profile>\n")
     sc.write("        <profile namespace=\"env\" key=\"GLOBUS_LOCATION\" >%s</profile>\n" % (cluster_globus_location))
     sc.write("        <profile namespace=\"env\" key=\"MONTAGE_HOME\" >%s</profile>\n" %(cluster_montage_location))
     sc.write("    </site>\n")
@@ -361,7 +361,7 @@ def main():
     print "Planning and submitting the uberdax..."
     os.chdir(work_dir)
     os.environ["JAVA_HEAPMAX"] = "512"
-    cmd = "pegasus-plan --conf pegasusrc --relative-dir " + run_id + " --sites " + cluster_name + " --dir . --output-site local --dax gp.dax --nocleanup --submit 2>&1 | tee pegasus-plan.out"
+    cmd = "pegasus-plan --conf pegasusrc --relative-dir " + run_id + " --sites " + cluster_name + " --dir . --output-site local --dax gp.dax --cleanup leaf --submit 2>&1 | tee pegasus-plan.out"
     myexec(cmd)
 
 

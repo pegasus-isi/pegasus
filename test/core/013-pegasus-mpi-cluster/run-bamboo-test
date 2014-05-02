@@ -64,7 +64,7 @@ pegasus-plan \
     --dir work \
     --dax dax.xml \
     --sites local \
-    --nocleanup \
+    --cleanup leaf \
     --cluster label \
     --submit -v
 

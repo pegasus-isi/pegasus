@@ -53,7 +53,11 @@ public class PlannerOptions extends Data implements Cloneable{
      */
     public static final int DEFAULT_NUMBER_OF_RESCUE_TRIES = 999;
 
-
+    /**
+     * The various cleanup options supported by the planner
+     */
+    public enum CLEANUP_OPTIONS{ none, inplace, leaf};
+    
     /**
      * The base submit directory.
      */
@@ -125,9 +129,9 @@ public class PlannerOptions extends Data implements Cloneable{
     private boolean mForce;
 
     /**
-     * A boolean indicating whether to do cleanup or not.
+     * An enum tracking what type of cleanup needs to be done.
      */
-    private boolean mCleanup;
+    private CLEANUP_OPTIONS mCleanup;
 
     /**
      * To Display help or not.
@@ -197,12 +201,6 @@ public class PlannerOptions extends Data implements Cloneable{
      * deferred planning run.
      */
     private boolean mDeferredRun;
-
-    /**
-     * Boolean indicating whether to spawn off a monitoring process or not
-     * for the workflow.
-     */
-    private boolean mMonitor;
 
     /**
      * The VOGroup to which the user belongs to.
@@ -311,8 +309,7 @@ public class PlannerOptions extends Data implements Cloneable{
         mVDSProps         = null;
         mClusterer        = null;
         mBasenamePrefix   = null;
-        mMonitor          = false;
-        mCleanup          = true;
+        mCleanup          = CLEANUP_OPTIONS.none;
         mVOGroup          = "pegasus";
         mDeferredRun      = false;
         mDate             = new Date();
@@ -438,9 +435,9 @@ public class PlannerOptions extends Data implements Cloneable{
     /**
      * Returns the option indicating whether to do cleanup or not.
      *
-     * @return the boolean value indicating the cleanup option.
+     * @return the cleanup strategy to be used 
      */
-    public boolean getCleanup(){
+    public CLEANUP_OPTIONS getCleanup(){
         return mCleanup;
     }
 
@@ -793,24 +790,6 @@ public class PlannerOptions extends Data implements Cloneable{
 
 
     /**
-     * Sets the flag to denote whether we want to monitor the workflow or not.
-     *
-     * @param value boolean.
-     */
-    public void setMonitoring(boolean value){
-        this.mMonitor = value;
-    }
-
-    /**
-     * Returns boolean indicating whether we want to monitor or not.
-     *
-     * @return boolean indicating whether monitoring was set or not.
-     */
-    public boolean monitorWorkflow(){
-        return this.mMonitor;
-    }
-
-    /**
      * Sets the partitioning type in case of partition and plan.
      *
      * @param type   the type of partitioning technique
@@ -1024,10 +1003,19 @@ public class PlannerOptions extends Data implements Cloneable{
     /**
      * Sets the cleanup option for the planner.
      *
-     * @param cleanup  boolean value.
+     * @param cleanup  the cleanup option
      */
-    public void setCleanup( boolean cleanup ){
-        mCleanup = cleanup;
+    public void setCleanup( String cleanup ){
+        this.setCleanup( CLEANUP_OPTIONS.valueOf(cleanup) );
+    }
+    
+    /**
+     * Sets the cleanup option for the planner.
+     *
+     * @param cleanup  the cleanup option
+     */
+    public void setCleanup( CLEANUP_OPTIONS cleanup ){
+        mCleanup =  cleanup;
     }
 
 
@@ -1401,7 +1389,7 @@ public class PlannerOptions extends Data implements Cloneable{
                     "\n Random Direct Name   " + mRandomDirName +
                     "\n Authenticate         " + mAuthenticate +
                     "\n Clustering Technique " + mClusterer +
-                    "\n Monitor Workflow     " + mMonitor +
+                    "\n Cleanup    "           + mCleanup +
                     "\n VO Group             " + mVOGroup +
                     "\n Rescue Tries         " + mNumOfRescueTries +
                     "\n VDS Properties       " + mVDSProps + 
@@ -1495,7 +1483,8 @@ public class PlannerOptions extends Data implements Cloneable{
         if( mForceReplan ){ sb.append( " --force-replan " ); }
 
         //the cleanup option
-        if( !mCleanup ){ sb.append(" --nocleanup "); }
+        sb.append( " --cleanup " ).append( mCleanup.name() );
+        //if( !mCleanup ){ sb.append(" --nocleanup "); }
 
 
         //the verbose option
@@ -1507,8 +1496,6 @@ public class PlannerOptions extends Data implements Cloneable{
             sb.append(" --quiet " );
         }
 
-        //the monitor option
-        if( mMonitor ) { sb.append(" --monitor "); }
 
         //the deferred run option
         if( mDeferredRun ) { sb.append( " --deferred "); }
@@ -1652,7 +1639,6 @@ public class PlannerOptions extends Data implements Cloneable{
         pOpt.mSubmit         = this.mSubmit;
         pOpt.mGenRandomDir   = this.mGenRandomDir;
         pOpt.mOptArg         = this.mOptArg;
-        pOpt.mMonitor        = this.mMonitor;
         pOpt.mRandomDirName  = this.mRandomDirName;
         pOpt.mAuthenticate   = this.mAuthenticate;
         pOpt.mClusterer      = this.mClusterer;

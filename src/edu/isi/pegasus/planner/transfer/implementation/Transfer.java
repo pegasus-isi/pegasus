@@ -105,6 +105,11 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
      * The derivation version number for the transfer job.
      */
     public static final String DERIVATION_VERSION = "1.0";
+    
+    /**
+     * The default number of threads pegasus-transfer uses
+     */
+    public static final int DEFAULT_NUMBER_OF_THREADS = 2;
 
     /**
      * A short description of the transfer implementation.
@@ -347,11 +352,20 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
     protected String generateArgumentString(TransferJob job) {
         StringBuffer sb = new StringBuffer();
         
+        int threads = Transfer.DEFAULT_NUMBER_OF_THREADS;
+        
         if(job.vdsNS.containsKey(Pegasus.TRANSFER_THREADS_KEY )){
-            sb.append( " --threads ").
-               append( job.vdsNS.getStringValue( Pegasus.TRANSFER_THREADS_KEY ) ).append( " " );
-                    
+            try{
+                threads = Integer.parseInt( job.vdsNS.getStringValue( Pegasus.TRANSFER_THREADS_KEY ) );
+            }
+            catch( Exception e ){
+                mLogger.log( "Invalid value picked up for Pegasus profile " + Pegasus.TRANSFER_THREADS_KEY + " transfer job " + job.getID(),
+                             LogManager.ERROR_MESSAGE_LEVEL );
+            }
         }
+        
+        sb.append( " --threads ").
+           append( threads ).append( " " );
         
         if(job.vdsNS.containsKey(Pegasus.TRANSFER_ARGUMENTS_KEY)){
             sb.append(

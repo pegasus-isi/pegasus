@@ -281,14 +281,14 @@ public class Pegasus extends Namespace {
      * The name of the profile key, that when associated with transfer jobs
      * determines the arguments with which the transfer executable is invoked.
      */
-    public static final String TRANSFER_SLS_ARGUMENTS_KEY = "transfer.sls.arguments";
+    public static final String TRANSFER_SLS_ARGUMENTS_KEY = "transfer.lite.arguments";
     
     
     /**
      * The name of the profile key, that when associated with transfer jobs
      * determines the number of threads that pegasus-transfer uses to do the transfer
      */
-    public static final String TRANSFER_SLS_THREADS_KEY = "transfer.sls.threads";
+    public static final String TRANSFER_SLS_THREADS_KEY = "transfer.lite.threads";
 
 
     /**

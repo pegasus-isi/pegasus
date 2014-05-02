@@ -83,28 +83,28 @@ public class Cluster extends Bundle {
      * that are being created per execution pool for stageing in data for
      * the workflow.
      */
-    public static final String DEFAULT_LOCAL_STAGE_IN_CLUSTER_FACTOR = "4";
+    public static final String DEFAULT_LOCAL_STAGE_IN_CLUSTER_FACTOR = "2";
 
     /**
      * The default clustering factor that identifies the number of transfer jobs
      * that are being created per execution pool for stageing in data for
      * the workflow.
      */
-    public static final String DEFAULT_REMOTE_STAGE_IN_CLUSTER_FACTOR = "4";
+    public static final String DEFAULT_REMOTE_STAGE_IN_CLUSTER_FACTOR = "2";
 
     /**
      * The default bundling factor that identifies the number of transfer jobs
      * that are being created per execution pool for stageing out data for
      * the workflow.
      */
-    public static final String DEFAULT_LOCAL_STAGE_OUT_CLUSTER_FACTOR = "4";
+    public static final String DEFAULT_LOCAL_STAGE_OUT_CLUSTER_FACTOR = "2";
 
     /**
      * The default bundling factor that identifies the number of transfer jobs
      * that are being created per execution pool for stageing out data for
      * the workflow.
      */
-    public static final String DEFAULT_REMOTE_STAGE_OUT_CLUSTER_FACTOR = "4";
+    public static final String DEFAULT_REMOTE_STAGE_OUT_CLUSTER_FACTOR = "2";
 
     /**
      * A map indexed by site name, that contains the pointer to the stage in

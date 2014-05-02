@@ -7,7 +7,7 @@ void trim(string &str, const string &delim) {
     if (str.length() == 0) {
         return;
     }
-    
+
     // Start
     unsigned i = 0;
     while (i < str.length()) {
@@ -16,15 +16,15 @@ void trim(string &str, const string &delim) {
         }
         i++;
     }
-    
+
     if (i > 0) {
         str.erase(0, i);
     }
-    
+
     if (str.length() == 0) {
         return;
     }
-    
+
     // End
     unsigned j = str.length() - 1;
     while (j > 0) {
@@ -33,7 +33,7 @@ void trim(string &str, const string &delim) {
         }
         j--;
     }
-    
+
     if (j < str.length() - 1) {
         str.erase(j+1);
     }
@@ -55,7 +55,7 @@ void split(vector<string> &v, const string &line, const string &delim, unsigned 
             }
         }
     }
-    
+
     // Last one
     if (arg.length() > 0) {
         trim(arg, delim);
@@ -71,43 +71,39 @@ void split_args(list<string> &args, const string &line) {
     bool inquote = false;
     for (unsigned i=0; i<line.length(); i++) {
         char c = line[i];
-        switch (c) {
-            case '\'':
-            case '"':
-                if (inquote) {
+        if (c == '\'' || c == '"') {
+            if (inquote) {
+                args.push_back(arg);
+                arg.clear();
+                inquote = false;
+            } else {
+                inquote = true;
+            }
+        }
+        else if (c == '\\') {
+            if (line.length() > i+1) {
+                char next = line[i+1];
+                i++; // Skip one
+                arg += next;
+            } else {
+                arg += c;
+            }
+        }
+        else if (isspace(c)) {
+            if (inquote) {
+                arg += c;
+            } else {
+                if (arg.length() > 0) {
                     args.push_back(arg);
                     arg.clear();
-                    inquote = false;
-                } else {
-                    inquote = true;
                 }
-                break;
-            case '\\':
-                if (line.length() > i+1) {
-                    char next = line[i+1];
-                    i++; // Skip one
-                    arg += next;
-                } else {
-                    arg += c;
-                }
-                break;
-            case ' ':
-            case '\t':
-                if (inquote) {
-                    arg += c;
-                } else {
-                    if (arg.length() > 0) {
-                        args.push_back(arg);
-                        arg.clear();
-                    }
-                }
-                break;
-            default:
-                arg += c;
-                break;
+            }
+        }
+        else {
+            arg += c;
         }
     }
-    
+
     if (arg.length() > 0) {
         args.push_back(arg);
     }

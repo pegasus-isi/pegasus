@@ -117,11 +117,7 @@ properties execution_site execution_site
 properties staging_site staging_site
 properties output_site output_site
 properties planner_args planner_args 
-properties clean_up clean_up '--nocleanup'
-
-if [ "$clean_up" = 'True' ]; then
-	clean_up=''
-fi 
+properties clean_up clean_up 'leaf'
 
 set -x
 
@@ -130,8 +126,8 @@ pegasus-plan \
     --sites $execution_site \
     --staging-site $staging_site \
     --output-site $output_site \
-    --dir work/ \
-    $clean_up \
+    --dir work/submit \
+    --cleanup $clean_up \
     --dax ${DAX} \
     --submit ${planner_args}
 

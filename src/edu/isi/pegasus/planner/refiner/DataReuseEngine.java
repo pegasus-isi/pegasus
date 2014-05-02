@@ -83,6 +83,10 @@ public class DataReuseEngine extends Engine implements Refiner{
      */
     private List<Job> mAllDeletedJobs;
 
+    /**
+     * List of all deleted jobs during workflow reduction.
+     */
+    private List<GraphNode> mAllDeletedNodes;
 
     /**
      * The XML Producer object that records the actions.
@@ -104,6 +108,7 @@ public class DataReuseEngine extends Engine implements Refiner{
         super( bag) ;
 
         mAllDeletedJobs  = new LinkedList();
+        mAllDeletedNodes  = new LinkedList();
         mXMLStore        = XMLProducerFactory.loadXMLProducer( mProps );
         mWorkflow        = orgDag;
     }
@@ -225,9 +230,9 @@ public class DataReuseEngine extends Engine implements Refiner{
         
         mLogMsg = "Nodes/Jobs Deleted from the Workflow during reduction ";
         mLogger.log( mLogMsg,LogManager.INFO_MESSAGE_LEVEL );
-        for( Job job : this.mAllDeletedJobs){
-            mLogger.log("\t" + job.getID(), LogManager.INFO_MESSAGE_LEVEL );
-            mXMLStore.add( "<removed job = \"" + job.getID() + "\"/>" );
+        for( GraphNode node : this.mAllDeletedNodes){
+            mLogger.log("\t" + node.getID(), LogManager.INFO_MESSAGE_LEVEL );
+            mXMLStore.add( "<removed job = \"" + node.getID() + "\"/>" );
             mXMLStore.add( "\n" );
         }
         mLogger.log( mLogMsg +  " - DONE", LogManager.INFO_MESSAGE_LEVEL );
@@ -472,6 +477,8 @@ public class DataReuseEngine extends Engine implements Refiner{
                 for( Iterator cit = node.getChildren().iterator(); cit.hasNext(); ){
                     GraphNode child = (GraphNode)cit.next();
                     if( !child.isColor( GraphNode.BLACK_COLOR  ) ){
+                        mLogger.log( node.getID() + "  will not be deleted as not as child " + child.getID() + " is not marked for deletion " ,
+                                     LogManager.DEBUG_MESSAGE_LEVEL );
                         delete = false;
                         break;
                     }
@@ -480,24 +487,33 @@ public class DataReuseEngine extends Engine implements Refiner{
                     //all the children are deleted. However delete only if
                     // all the output files have transfer flags set to false
                     if( /*node.isColor( GraphNode.BLACK_COLOR ) ||*/ !transferOutput( node ) ){
-                        mLogger.log( "Node can be deleted "  + node.getID() ,
+                        mLogger.log( "Cascaded Deletion: Node can be deleted "  + node.getID() ,
                                      LogManager.DEBUG_MESSAGE_LEVEL );
                         node.setColor( GraphNode.BLACK_COLOR );
                     }
                 }
             }
 
+            
             //if the node is colored BLACK at this point
             //remove the node from the workflow
             if( node.isColor( GraphNode.BLACK_COLOR ) ){
-                mLogger.log( "Removing node from the workflow "  + node.getID() ,
+                mLogger.log( "Marking node for removal from the workflow "  + node.getID() ,
                                  LogManager.DEBUG_MESSAGE_LEVEL );
                 this.mAllDeletedJobs.add( (Job)node.getContent() );
-                workflow.remove( node.getID() );
+                this.mAllDeletedNodes.add( node );
+                //workflow.remove( node.getID() );
             }
+            
 
         }
-
+        //remove all the nodes marked for deletion separately
+        for( GraphNode node: mAllDeletedNodes ){
+            mLogger.log( "Removing node from the workflow "  + node.getID() ,
+                                 LogManager.DEBUG_MESSAGE_LEVEL );
+            workflow.remove( node.getID() );
+        }
+       
         return workflow;
     }
 

@@ -424,7 +424,7 @@ public class NoGridStart implements GridStart {
                 cvar.construct( "transfer_executable", "false" );
             }
             else if ( mWorkerPackageStagingEnabled && 
-                      job.getJobType() == Job.CREATE_DIR_JOB  ){
+                      ( job.getJobType() == Job.CREATE_DIR_JOB || job.getJobType() == Job.CLEANUP_JOB)  ){
                 //we dont complain. 
                 //JIRA PM-281
             }

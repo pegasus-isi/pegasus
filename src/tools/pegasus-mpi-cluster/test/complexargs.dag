@@ -1,0 +1,1 @@
+TASK A test/countargs.sh 'a < b || c > d' foo 'bar baz'

@@ -69,7 +69,7 @@ public class Bundle extends Basic {
      * that are being created per execution pool for stageing in data for
      * the workflow.
      */
-    public static final String DEFAULT_LOCAL_STAGE_IN_BUNDLE_FACTOR = "4";
+    public static final String DEFAULT_LOCAL_STAGE_IN_BUNDLE_FACTOR = "2";
 
     
     /**
@@ -77,14 +77,14 @@ public class Bundle extends Basic {
      * that are being created per execution pool for stageing in data for
      * the workflow.
      */
-    public static final String DEFAULT_REMOTE_STAGE_IN_BUNDLE_FACTOR = "4";
+    public static final String DEFAULT_REMOTE_STAGE_IN_BUNDLE_FACTOR = "2";
 
     /**
      * The default bundling factor that identifies the number of transfer jobs
      * that are being created per execution pool for stageing out data for
      * the workflow.
      */
-    public static final String DEFAULT_LOCAL_STAGE_OUT_BUNDLE_FACTOR = "4";
+    public static final String DEFAULT_LOCAL_STAGE_OUT_BUNDLE_FACTOR = "2";
 
 
     /**
@@ -92,7 +92,7 @@ public class Bundle extends Basic {
      * that are being created per execution pool for stageing out data for
      * the workflow.
      */
-    public static final String DEFAULT_REMOTE_STAGE_OUT_BUNDLE_FACTOR = "4";
+    public static final String DEFAULT_REMOTE_STAGE_OUT_BUNDLE_FACTOR = "2";
 
 
     /**

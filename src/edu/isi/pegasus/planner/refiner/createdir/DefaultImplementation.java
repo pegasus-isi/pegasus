@@ -171,6 +171,11 @@ public class DefaultImplementation implements Implementation {
 
         //associate a credential if required
         newJob.addCredentialType( site, directoryURL );
+        
+        //PM-741
+        //set the staging site handle for create dir jobs. it is the one
+        //for which the directory is created, not where the create dir job runs
+        newJob.setStagingSiteHandle(site);
 
         //figure out on the basis of directory URL
         //where to run the job.

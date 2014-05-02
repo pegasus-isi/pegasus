@@ -126,8 +126,8 @@ pegasus-plan \
     --sites ${execution_site} \
     --staging-site $staging_site \
     --output-site $output_site \
-    --dir work \
-    --nocleanup \
+    --dir work/submit \
+    --cleanup leaf \
     --dax ${DAX} \
     --cluster horizontal \
     --submit ${planner_args}

@@ -943,7 +943,7 @@
             </row>
 
             <row>
-              <entry>transfer.sls.arguments</entry>
+              <entry>transfer.lite.arguments</entry>
 
               <entry>Similar to transfer.arguments, but applies to the
               transfers performed in the PegasusLite jobs in the nonsharedfs
@@ -951,7 +951,7 @@
             </row>
 
             <row>
-              <entry>transfer.sls.threads </entry>
+              <entry>transfer.lite.threads</entry>
 
               <entry>Similar to threads, but applies to the transfers
               performed in the PegasusLite jobs in the nonsharedfs data

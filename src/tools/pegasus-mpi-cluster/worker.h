@@ -37,7 +37,7 @@ public:
     string varname;
     int readfd;
     int writefd;
-    
+
     PipeForward(string varname, string filename, int readfd, int writefd);
     ~PipeForward();
     int read();
@@ -56,7 +56,7 @@ public:
     string srcfile;
     char *buff;
     size_t buffsize;
-    
+
     FileForward(const string &srcfile, const string &destfile, char *buff, size_t buffsize);
     ~FileForward();
     const char *data();
@@ -67,27 +67,27 @@ public:
 class Worker {
 public:
     Communicator *comm;
-    
+
     string dagfile;
     string workdir;
 
     int out;
     int err;
-    
+
     int rank;
     int host_rank;
-    
+
     string host_script;
     pid_t host_script_pgid;
-    
+
     string host_name;
     unsigned int host_memory;
     unsigned int host_cpus;
-    
+
     bool strict_limits;
-    
+
     bool per_task_stdio;
-    
+
     Worker(Communicator *comm, const string &dagfile, const string &host_script, 
             unsigned host_memory = 0, unsigned host_cpus = 0, 
             bool strict_limits = false, bool per_task_stdio=false);
@@ -105,22 +105,22 @@ public:
     list<string> args;
     unsigned memory;
     unsigned cpus;
-    
+
     vector<Forward *> forwards;
     vector<PipeForward *> pipes;
     map<string, string> pipe_forwards;
     vector<FileForward *> files;
     map<string, string> file_forwards;
-    
+
     double start;
     double finish;
-    
+
     int status;
-    
+
     int task_stdout;
     int task_stderr;
-    
-    TaskHandler(Worker *worker, string &name, string &command, string &id, unsigned memory, unsigned cpus, const map<string,string> &pipe_forwards, const map<string,string> &file_forwards);
+
+    TaskHandler(Worker *worker, string &name, list<string> &args, string &id, unsigned memory, unsigned cpus, const map<string,string> &pipe_forwards, const map<string,string> &file_forwards);
     ~TaskHandler();
     double elapsed();
     void execute();

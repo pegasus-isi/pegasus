@@ -95,6 +95,11 @@ public class Transfer   implements SLS {
      * The derivation version number for the transfer job.
      */
     public static final String DERIVATION_VERSION = "1.0";
+    
+    /**
+     * The default number of threads pegasus-transfer uses
+     */
+    public static final int DEFAULT_NUMBER_OF_THREADS = 1;
 
     /**
      * A short description of the transfer implementation.
@@ -221,11 +226,18 @@ public class Transfer   implements SLS {
 
         //get the value if any that is present in the associated compute job
         //that should take care of the properties also
-        String threads = job.vdsNS.getStringValue( Pegasus.TRANSFER_SLS_THREADS_KEY );
-        if( threads != null  ){
-            invocation.append( " --threads ").
-               append( threads ).append( " " );
+        int threads = Transfer.DEFAULT_NUMBER_OF_THREADS;
+        if(job.vdsNS.containsKey(Pegasus.TRANSFER_THREADS_KEY )){
+            try{
+                threads = Integer.parseInt( job.vdsNS.getStringValue( Pegasus.TRANSFER_THREADS_KEY ) );
+            }
+            catch( Exception e ){
+                mLogger.log( "Invalid value picked up for Pegasus profile " + Pegasus.TRANSFER_THREADS_KEY + " PegasusLite job " + job.getID(),
+                             LogManager.ERROR_MESSAGE_LEVEL );
+            }
         }
+        invocation.append( " --threads ").append( threads ).append( " " );
+        
 
         //append any extra arguments set by user
         String args = job.vdsNS.getStringValue( Pegasus.TRANSFER_SLS_ARGUMENTS_KEY );

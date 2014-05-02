@@ -63,8 +63,8 @@ import edu.isi.pegasus.planner.classes.TransferJob;
  * 
  * The following globus profiles if associated with the job are picked up
  * <pre>
- * hostcount  -> PROCS
- * count      -> NODES
+ * hostcount  -> NODES
+ * xcount      -> PROCS
  * maxwalltime-> WALLTIME
  * </pre>
  * 
@@ -188,8 +188,8 @@ public class GLite extends Abstract {
      * with the jobs.
      * The following globus profiles if associated with the job are picked up
      * <pre>
-     * hostcount  -> PROCS
-     * count      -> NODES
+     * hostcount  -> NODES
+     * xcount      -> PROCS
      * maxwalltime-> WALLTIME
      * </pre>
      * 
@@ -219,10 +219,9 @@ public class GLite extends Abstract {
         //the jobname in case of pbs can only be 15 characters long
         id = ( id.length() > 15 )? id.substring( 0, 15 ) : id;
 
-        /* Not adding JOBNAME the GAHP keeps on crashing if specified
-         * on pollux. Karan Feb 18, 2010
+        //add the jobname so that it appears when we do qstat
         addSubExpression( value, "JOBNAME" , id   );
-         */
+	value.append( " && ");
 
         /* always have PASSENV to true */
         //value.append( " && ");
@@ -236,16 +235,16 @@ public class GLite extends Abstract {
         }
         
         
-        /* the globus key hostCount is PROCS */
+        /* the globus key hostCount is NODES */
         if( job.globusRSL.containsKey( "hostcount" ) ){
             value.append( " && " );
-            addSubExpression( value, "PROCS" , Integer.parseInt( (String)job.globusRSL.get( "hostcount" ) ) )  ;
+            addSubExpression( value, "NODES" ,  (String)job.globusRSL.get( "hostcount" ) )  ;
         }
         
-        /* the globus key count is NODES */
-        if( job.globusRSL.containsKey( "count" ) ){
+        /* the globus key xcount is PROCS */
+        if( job.globusRSL.containsKey( "xcount" ) ){
             value.append( " && " );
-            addSubExpression( value, "NODES" , Integer.parseInt( (String)job.globusRSL.get( "count" ) ) );
+            addSubExpression( value, "PROCS" ,  (String)job.globusRSL.get( "xcount" )  );
         }
         
         /* the globus key maxwalltime is WALLTIME */

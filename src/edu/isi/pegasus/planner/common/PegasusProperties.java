@@ -1073,13 +1073,13 @@ public class PegasusProperties implements Cloneable {
      * Returns the sls transfer implementation that is to be used for constructing
      * the transfer jobs.
      *
-     * Referred to by the "pegasus.transfer.sls.*.impl" property.
+     * Referred to by the "pegasus.transfer.lite.*.impl" property.
      *
      * @return the transfer implementation
      * 
      */
     public String getSLSTransferImplementation(){
-        return getTransferImplementation( "pegasus.transfer.sls.*.impl" );
+        return getTransferImplementation( "pegasus.transfer.lite.*.impl" );
     }
 
 
@@ -1101,13 +1101,13 @@ public class PegasusProperties implements Cloneable {
      * Returns a boolean indicating whether to stage sls files via Pegasus
      * First Level Staging or let Condor do it.
      *
-     * Referred to by the property "pegasus.transfer.stage.sls.file"
+     * Referred to by the property "pegasus.transfer.stage.lite.file"
      *
      * @return boolean value mentioned in the properties or else the default
      *         value which is true.
      */
     public boolean stageSLSFilesViaFirstLevelStaging( ){
-        return Boolean.parse( mProps.getProperty( "pegasus.transfer.stage.sls.file" ),
+        return Boolean.parse( mProps.getProperty( "pegasus.transfer.stage.lite.file" ),
                               false );
     }
 
@@ -1392,16 +1392,16 @@ public class PegasusProperties implements Cloneable {
     }
     
     /**
-     * Returns the extra arguments with which the SLS transfer executables needs
-     * to be invoked.
+     * Returns the extra arguments with which the  transfer executable used in
+     * PegasusLite needs to be invoked.
      *
-     * Referred to by "pegasus.transfer.sls.arguments" property.
+     * Referred to by "pegasus.transfer.lite.arguments" property.
      *
      * @return the arguments specified in the properties file,
      *         else null if property is not specified.
      */
     public String getSLSTransferArguments() {
-	return mProps.getProperty("pegasus.transfer.sls.arguments");
+	return mProps.getProperty("pegasus.transfer.lite.arguments");
     }
     
 

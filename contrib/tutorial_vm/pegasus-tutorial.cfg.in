@@ -35,16 +35,13 @@ wget
 ntp
 #SL_desktop_tweaks
 git
+firefox
+python-setuptools
 %end
 
 %post
 (
 set -x
-# This is the version of Pegasus we need to install
-VERSION=@@VERSION@@
-
-# This is the git hash we are using
-GITHASH=@@GITHASH@@
 
 # Fix up the grub conf
 sed -i -e 's/console=ttyS0[^ ]*//' -e 's/^serial.*$//' -e 's/^terminal.*$//' /boot/grub/grub.conf
@@ -79,7 +76,7 @@ chkconfig condor on
 echo "TRUST_UID_DOMAIN = True" >> /etc/condor/condor_config.local
 
 # Install the Pegasus RPM
-curl http://download.pegasus.isi.edu/pegasus/$VERSION/pegasus-$VERSION-1.el6.x86_64.rpm > /tmp/pegasus.rpm
+curl "@@RPMURL@@" > /tmp/pegasus.rpm
 yum install -y /tmp/pegasus.rpm
 rm -f /tmp/pegasus.rpm
 
@@ -109,13 +106,23 @@ END
 chmod 775 /home/tutorial/Desktop/Terminal.desktop
 
 # Install tutorial files
-git clone https://github.com/pegasus-isi/pegasus.git /tmp/pegasus
-cd /tmp/pegasus
-git checkout $GITHASH
-cp -R /tmp/pegasus/doc/tutorial/* /home/tutorial/
+cp -R /usr/share/doc/pegasus/tutorial/* /home/tutorial/
 chown -R tutorial:tutorial /home/tutorial
-cd
-rm -rf /tmp/pegasus
+chmod 755 /home/tutorial/bin/* /home/tutorial/*.py /home/tutorial/*.sh
+
+# Install dashboard
+git clone https://github.com/pegasus-isi/pegasus-service.git /tmp/pegasus-service
+cd /tmp/pegasus-service
+git checkout tutorial
+python setup.py install
+cat >> /etc/rc.local <<END
+# Start dashboard
+su tutorial -c pegasus-service-server >/var/log/pegasus-service.log 2>&1 &
+END
+su tutorial -c "mkdir ~/.pegasus"
+su tutorial -c "sqlite3 ~/.pegasus/workflow.db 'SELECT 1'"
+su tutorial -c "pegasus-service-admin create"
+su tutorial -c "pegasus-service-admin useradd tutorial tutorial@localhost -p pegasus"
 
 ) 1>/root/post-install.log 2>&1
 %end

@@ -1,0 +1,8 @@
+#!/bin/bash
+
+set -e
+
+for v in $(echo "2.3 2.5 2.6 2.7"); do
+    echo "/usr/lib/pegasus/python" > /Library/Python/$v/site-packages/pegasus.pth
+done
+

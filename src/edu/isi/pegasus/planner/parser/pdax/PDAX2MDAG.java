@@ -1181,11 +1181,8 @@ public class PDAX2MDAG implements Callback {
         //in case of deferred planning cleanup wont work
         //explicitly turn it off if the file cleanup scope if fullahead
         if( mCleanupScope.equals( PegasusProperties.CLEANUP_SCOPE.fullahead ) ){
-            options.setCleanup( false );
+            options.setCleanup( PlannerOptions.CLEANUP_OPTIONS.none );
         }
-
-        //we want monitoring to happen
-        options.setMonitoring( true );
 
         //construct the argument string.
         //add the jvm options and the pegasus options if any

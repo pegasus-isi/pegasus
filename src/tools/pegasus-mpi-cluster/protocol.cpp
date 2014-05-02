@@ -30,21 +30,41 @@ ShutdownMessage::ShutdownMessage() {
 
 CommandMessage::CommandMessage(char *msg, unsigned msgsize, int source) : Message(msg, msgsize, source) {
     unsigned off = 0;
+
+    // Get the task name
     name = msg + off;
     off += name.length() + 1;
-    command = msg + off;
-    off += command.length() + 1;
+
+    // Get the number of arguments
+    unsigned nargs;
+    memcpy(&nargs, msg + off, sizeof(nargs));
+    off += sizeof(nargs);
+
+    // Now retrieve the arguments
+    for (int i = 0; i<nargs; i++) {
+        string arg = msg + off;
+        off += arg.length() + 1;
+        this->args.push_back(arg);
+    }
+
+    // Get the task ID
     id = msg + off;
     off += id.length() + 1;
+
+    // Get the memory requirement
     memcpy(&memory, msg + off, sizeof(memory));
     off += sizeof(memory);
+
+    // Get the cpu requirement
     memcpy(&cpus, msg + off, sizeof(cpus));
     off += sizeof(cpus);
-    
+
+    // Get the number of pipe forwards
     unsigned char npipes;
     memcpy(&npipes, msg + off, sizeof(npipes));
     off += sizeof(npipes);
-    
+
+    // Get the pipe forwards
     for (int i = 0; i<npipes; i++) {
         string varname = msg + off;
         off += varname.length() + 1;
@@ -52,11 +72,13 @@ CommandMessage::CommandMessage(char *msg, unsigned msgsize, int source) : Messag
         off += filename.length() + 1;
         pipe_forwards[varname] = filename;
     }
-    
+
+    // Get the number of file forwards
     unsigned char nfiles;
     memcpy(&nfiles, msg + off, sizeof(nfiles));
     off += sizeof(nfiles);
-    
+
+    // Get the file forwards
     for (int i = 0; i<nfiles; i++) {
         string srcfile = msg + off;
         off += srcfile.length() + 1;
@@ -66,65 +88,96 @@ CommandMessage::CommandMessage(char *msg, unsigned msgsize, int source) : Messag
     }
 }
 
-CommandMessage::CommandMessage(const string &name, const string &command, const string &id, unsigned memory, unsigned cpus, const map<string,string> *pipe_forwards, const map<string,string> *file_forwards) {
+CommandMessage::CommandMessage(const string &name, const list<string> &args, const string &id, unsigned memory, unsigned cpus, const map<string,string> *pipe_forwards, const map<string,string> *file_forwards) {
     this->name = name;
-    this->command = command;
+    this->args = args;
     this->id = id;
     this->memory = memory;
     this->cpus = cpus;
     if (pipe_forwards) this->pipe_forwards = *pipe_forwards;
     if (file_forwards) this->file_forwards = *file_forwards;
-    
+
+    // Compute the size of the variable length sections
+    unsigned nargs = this->args.size();
     unsigned char npipes = this->pipe_forwards.size();
     unsigned char nfiles = this->file_forwards.size();
-    
-    msgsize = name.length() + 1 + command.length() + 1 +
-        id.length() + 1 + sizeof(memory) + sizeof(cpus) + 
-        sizeof(npipes) + sizeof(nfiles);
-    
-    map<string,string>::iterator i;
-    for (i=this->pipe_forwards.begin(); i!=this->pipe_forwards.end(); i++) {
-        msgsize += i->first.length() + 1;
-        msgsize += i->second.length() + 1;
+
+    // The constant part of the message size
+    msgsize = name.length() + 1 +
+              sizeof(nargs) +
+              id.length() + 1 +
+              sizeof(memory) +
+              sizeof(cpus) +
+              sizeof(npipes) +
+              sizeof(nfiles);
+
+    // Add the size of the arguments section
+    list<string>::iterator l;
+    for (l=this->args.begin(); l!=this->args.end(); l++) {
+        msgsize += l->length() + 1;
     }
-    for (i=this->file_forwards.begin(); i!=this->file_forwards.end(); i++) {
-        msgsize += i->first.length() + 1;
-        msgsize += i->second.length() + 1;
+
+    // Add the size of the pipe forwards section
+    map<string,string>::iterator m;
+    for (m=this->pipe_forwards.begin(); m!=this->pipe_forwards.end(); m++) {
+        msgsize += m->first.length() + 1;
+        msgsize += m->second.length() + 1;
     }
-    
+
+    // Add the size of the file forwards section
+    for (m=this->file_forwards.begin(); m!=this->file_forwards.end(); m++) {
+        msgsize += m->first.length() + 1;
+        msgsize += m->second.length() + 1;
+    }
+
+    // Now allocate an appropriate-sized buffer
     msg = new char[msgsize];
-    
+
+    // This keeps track of where we are writing to the message buffer
     int off = 0;
-    
+
+    // Add the name to the message
     strcpy(msg + off, name.c_str());
     off += name.length() + 1;
-    strcpy(msg + off, command.c_str());
-    off += command.length() + 1;
+
+    // Add the arguments section to the message
+    memcpy(msg + off, &nargs, sizeof(nargs));
+    off += sizeof(nargs);
+    for (l=this->args.begin(); l!=this->args.end(); l++) {
+        strcpy(msg + off, l->c_str());
+        off += l->length() + 1;
+    }
+
+    // Add the task ID
     strcpy(msg + off, id.c_str());
     off += id.length() + 1;
+
+    // Add the memory requirement
     memcpy(msg + off, &memory, sizeof(memory));
     off += sizeof(memory);
+
+    // Add the CPU requirement
     memcpy(msg + off, &cpus, sizeof(cpus));
     off += sizeof(cpus);
-    
+
+    // Add the pipe forwards
     memcpy(msg + off, &npipes, sizeof(npipes));
     off += sizeof(npipes);
-    
-    for (i=this->pipe_forwards.begin(); i!=this->pipe_forwards.end(); i++) {
-        const string *varname = &(i->first);
-        const string *filename = &(i->second);
+    for (m=this->pipe_forwards.begin(); m!=this->pipe_forwards.end(); m++) {
+        const string *varname = &(m->first);
+        const string *filename = &(m->second);
         strcpy(msg + off, varname->c_str());
         off += varname->length() + 1;
         strcpy(msg + off, filename->c_str());
         off += filename->length() + 1;
     }
-    
+
+    // Add the file forwards
     memcpy(msg + off, &nfiles, sizeof(nfiles));
     off += sizeof(nfiles);
-    
-    for (i=this->file_forwards.begin(); i!=this->file_forwards.end(); i++) {
-        const string *srcfile = &(i->first);
-        const string *destfile = &(i->second);
+    for (m=this->file_forwards.begin(); m!=this->file_forwards.end(); m++) {
+        const string *srcfile = &(m->first);
+        const string *destfile = &(m->second);
         strcpy(msg + off, srcfile->c_str());
         off += srcfile->length() + 1;
         strcpy(msg + off, destfile->c_str());

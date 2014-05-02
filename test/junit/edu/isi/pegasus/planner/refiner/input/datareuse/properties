@@ -1,0 +1,2 @@
+# required for hte dax parse to pick up the schema correctly from src
+pegasus.home.schemadir = ./share/pegasus/schema

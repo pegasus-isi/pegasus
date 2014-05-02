@@ -318,6 +318,30 @@ public class GraphNode extends Data {
     }
 
     /**
+     * Returns if all the children of the node have the color that is specified.
+     *
+     * @param color the color of the node.
+     *
+     * @return  true if there are no children or all children are of the color.
+     *          false in all other  cases.
+     */
+    public boolean childrenColored( int color ) {
+        boolean colored = true;
+        GraphNode child;
+        if (mChildren == null) {
+            return colored;
+        }
+
+        Iterator<GraphNode> it = mChildren.iterator();
+        while (it.hasNext() && colored) {
+            child = (GraphNode) it.next();
+            colored = child.isColor(color);
+        }
+
+        return colored;
+    }
+
+    /**
      * A convenience methods that generates a comma separated list of parents
      * as String
      *

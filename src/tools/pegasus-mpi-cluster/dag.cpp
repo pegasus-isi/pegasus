@@ -18,9 +18,9 @@ using std::vector;
 using std::map;
 using std::list;
 
-Task::Task(const string &name, const string &command, unsigned memory, unsigned cpus, unsigned tries, int priority, const map<string,string> &pipe_forwards, const map<string,string> &file_forwards) {
+Task::Task(const string &name, const list<string> &args, unsigned memory, unsigned cpus, unsigned tries, int priority, const map<string,string> &pipe_forwards, const map<string,string> &file_forwards) {
     this->name = name;
-    this->command = command;
+    this->args = args;
     this->memory = memory;
     this->cpus = cpus;
     this->tries = tries;
@@ -50,14 +50,14 @@ bool Task::is_ready() {
     if (this->parents.empty()) {
         return true;
     }
-    
+
     for (unsigned j=0; j<this->parents.size(); j++) {
         Task *p = this->parents[j];
         if (!p->success) {
             return false;
         }
     }
-    
+
     return true;
 }
 
@@ -65,22 +65,22 @@ DAG::DAG(const string &dagfile, const string &rescuefile, const bool lock, unsig
     this->lock = lock;
     this->dagfd = -1;
     this->tries = tries;
-    
+
     if (this->lock) {
         log_debug("Locking DAG file...");
-        
+
         dagfd = open(dagfile.c_str(), O_RDWR);
         if (dagfd < 0) {
             myfailures("Unable to open DAG file: %s", dagfile.c_str());
         }
-        
+
         struct flock exclusive;
         exclusive.l_start = 0;
         exclusive.l_len = 0;
         exclusive.l_type = F_WRLCK;
         exclusive.l_whence = SEEK_SET;
         exclusive.l_pid = getpid();
-        
+
         int locked = fcntl(this->dagfd, F_SETLK, &exclusive);
         if (locked < 0) {
             if (errno == EAGAIN || errno == EACCES) {
@@ -90,34 +90,34 @@ DAG::DAG(const string &dagfile, const string &rescuefile, const bool lock, unsig
             }
         }
     }
-    
+
     this->read_dag(dagfile);
-    
+
     if (!rescuefile.empty()) {
         this->read_rescue(rescuefile);
     }
 }
 
 DAG::~DAG() {
-    
+
     if (this->lock) {
         log_debug("Unlocking DAG file...");
-        
+
         struct flock clear;
         clear.l_start = 0;
         clear.l_len = 0;
         clear.l_type = F_UNLCK;
         clear.l_whence = SEEK_SET;
         clear.l_pid = getpid();
-        
+
         int locked = fcntl(this->dagfd, F_SETLK, &clear);
         if (locked < 0) {
             log_error("Error unlocking DAG file: %s", strerror(errno));
         }
-        
+
         close(this->dagfd);
     }
-    
+
     // Delete all tasks
     for (iterator i = this->begin(); i != this->end(); i++) {
         delete (*i).second;
@@ -149,10 +149,10 @@ void DAG::add_edge(const string &parent, const string &child) {
     if (!this->has_task(child)) {
         myfailure("No such task: %s\n", child.c_str());
     }
-    
+
     Task *p = get_task(parent);
     Task *c = get_task(child);
-    
+
     p->children.push_back(c);
     c->parents.push_back(p);
 }
@@ -163,34 +163,34 @@ void DAG::read_dag(const string &filename) {
     if (!infile.good()) {
         myfailures("Error opening DAG file: %s", filename.c_str());
     }
-    
+
     const char *DELIM = " \t\n\r";
     string pegasus_id = "";
     string rec;
     while (getline(infile, rec)) {
         trim(rec);
-        
+
         // Blank lines
         if (rec.length() == 0) {
             continue;
         }
-        
+
         if (rec.find("TASK", 0, 4) == 0) {
             vector<string> v;
-            
+
             split(v, rec, DELIM, 2);
-            
+
             if (v.size() < 3) {
                 myfailure("Invalid TASK record: %s\n", rec.c_str());
             }
-            
+
             string name = v[1];
-            
+
             // Check for duplicate tasks
             if (this->has_task(name)) {
                 myfailure("Duplicate task: %s", name.c_str());
             }
-            
+
             // Default task arguments
             unsigned memory = 0;
             unsigned cpus = 1;
@@ -198,7 +198,7 @@ void DAG::read_dag(const string &filename) {
             int priority = 0;
             map<string, string> pipe_forwards;
             map<string, string> file_forwards;
-            
+
             // Parse task arguments
             list<string> args;
             split_args(args, v[2]);
@@ -323,47 +323,37 @@ void DAG::read_dag(const string &filename) {
                     break;
                 }
             }
-            
-            // Copy all the arguments into a single string
-            string command = "";
-            while (args.size() > 0) {
-                command += args.front();
-                args.pop_front();
-                if (args.size() > 0) {
-                    command += " ";
-                }
-            }
-            
-            Task *t = new Task(name, command, memory, cpus, tries, priority, pipe_forwards, file_forwards);
-            
+
+            Task *t = new Task(name, args, memory, cpus, tries, priority, pipe_forwards, file_forwards);
+
             if (pegasus_id.length() > 0) {
                 // We are only interested in the pegasus ID
                 t->pegasus_id = pegasus_id;
-                
+
                 // reset the value so that the next task doesn't get it
                 pegasus_id = "";
             }
             this->add_task(t);
         } else if (rec.find("EDGE", 0, 4) == 0) {
-            
+
             vector<string> v;
-            
+
             split(v, rec, DELIM, 2);
-            
+
             if (v.size() < 3) {
                 myfailure("Invalid EDGE record: %s\n", rec.c_str());
             }
-            
+
             string parent = v[1];
             string child = v[2];
-            
+
             this->add_edge(parent, child);
         } else if (rec.find("#@", 0, 2) == 0) {
             // Pegasus cluster comment - includes extra task information
             vector<string> v;
-            
+
             split(v, rec, DELIM, 3);
-            
+
             if (v.size() < 4) {
                 myfailure("Invalid #@ record: %s\n", rec.c_str());
             }
@@ -377,16 +367,16 @@ void DAG::read_dag(const string &filename) {
             myfailure("Invalid DAG record: %s", rec.c_str());
         }
     }
-    
+
     if (infile.bad() || !infile.eof()) {
         myfailures("Error reading DAG: %s", filename.c_str());
     }
-    
+
     infile.close();
 }
 
 void DAG::read_rescue(const string &filename) {
-    
+
     // Check if rescue file exists
     if (access(filename.c_str(), R_OK)) {
         if (errno == ENOENT) {
@@ -395,54 +385,54 @@ void DAG::read_rescue(const string &filename) {
         }
         myfailures("Unable to read rescue file: %s", filename.c_str());
     }
-    
+
     std::ifstream infile;
     infile.open(filename.c_str());
     if (!infile.good()) {
         myfailures("Unable to open rescue file: %s", filename.c_str());
     }
-    
+
     const char *DELIM = " \t\n\r";
     string rec;
     while (getline(infile, rec)) {
         trim(rec);
-        
+
         // Blank lines
         if (rec.length() == 0) {
             continue;
         }
-        
+
         // Comments
         if (rec[0] == '#') {
             continue;
         }
-        
+
         if (rec.find("DONE", 0, 4) == 0) {
             vector<string> v;
-            
+
             split(v, rec, DELIM, 1);
-            
+
             if (v.size() < 2) {
                 myfailure("Invalid DONE record: %s\n", rec.c_str());
             }
-            
+
             string name = v[1];
-            
+
             if (!this->has_task(name)) {
                 myfailure("Unknown task %s in rescue file", name.c_str());
             }
-            
+
             Task *task = this->get_task(name);
             task->success = true;
         } else {
             myfailure("Invalid rescue record: %s", rec.c_str());
         }
     }
-    
+
     if (infile.bad() || !infile.eof()) {
         myfailures("Error reading rescue file");
     }
-    
+
     infile.close();
 }
 

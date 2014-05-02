@@ -23,6 +23,7 @@ import java.io.File;
 import java.util.Map;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.namespace.Namespace;
 
 
@@ -40,11 +41,18 @@ public class Irods extends Abstract implements CredentialHandler{
      */
     public static final String IRODSENVFILE = "irodsEnvFile";
 
+    private static final String IRODSENVFILE_PEGASUS_PROFILE_KEY = Irods.IRODSENVFILE.toLowerCase() ;//has to be lowercased
+    
     /**
      * The description.
      */
     public static final String DESCRIPTION = "IRODS Credentials Handler";
 
+    /**
+     * The local path to the credential
+     */
+    private String mLocalCredentialPath;
+    
     /**
      * The default constructor.
      */
@@ -52,6 +60,16 @@ public class Irods extends Abstract implements CredentialHandler{
         super();
     }
 
+    /**
+     * Initializes the credential implementation. Implementations require
+     * access to the logger, properties and the SiteCatalog Store.
+     *
+     * @param bag  the bag of Pegasus objects.
+     */
+    public void initialize( PegasusBag bag ){
+        super.initialize( bag );
+        mLocalCredentialPath = this.getLocalPath();
+    }
     
     /**
      * Returns the path to irodsEnv. The order of preference is as follows
@@ -74,7 +92,7 @@ public class Irods extends Abstract implements CredentialHandler{
 
         return( path == null ) ?
                 //PM-731 return the path on the local site
-                this.getLocalPath():
+                this.mLocalCredentialPath:
                 path;
        
     }
@@ -83,8 +101,8 @@ public class Irods extends Abstract implements CredentialHandler{
      * Returns the path to user cred on the local site. 
      * The order of preference is as follows
      *
-     * - If a irodsEnvFile is specified in the site catalog entry as a Pegasus Profile that is used
-     * - Else the one specified in the properties
+     * - If a irodsEnvFile is specified in the site catalog entry as a Pegasus Profile that is used, else the corresponding env profile for backward support
+     * - Else the Pegasus Profile irodsEnvFile specified in the properties, else the corresponding env profile for backward support
      * - Else the one pointed to by the environment variable irodsEnvFile
      * 
      * 
@@ -94,17 +112,28 @@ public class Irods extends Abstract implements CredentialHandler{
      */
     public String getLocalPath(){
         SiteCatalogEntry siteEntry = mSiteStore.lookup( "local" );
-
+        
         //check if corresponding Pegasus Profile is specified in site catalog entry
         String cred = ( siteEntry == null )? null :
-                        (String)siteEntry.getProfiles().get( Profiles.NAMESPACES.pegasus).get( Irods.IRODSENVFILE.toLowerCase() );
-
+                        (String)siteEntry.getProfiles().get( Profiles.NAMESPACES.pegasus).get( Irods.IRODSENVFILE_PEGASUS_PROFILE_KEY );
+        if( cred == null && siteEntry != null ){
+            //try to check for an env profile in the site entry 
+            cred = (String)siteEntry.getProfiles().get( Profiles.NAMESPACES.env).get( Irods.IRODSENVFILE );
+        }
+        
+        //try from properites file
+        if( cred == null ){
+            //load the pegasus profile from property file 
+            Namespace profiles = mProps.getProfiles(Profiles.NAMESPACES.pegasus);
+            cred = (String)profiles.get( Irods.IRODSENVFILE_PEGASUS_PROFILE_KEY  );
+        }
         if( cred == null ) {
-            //load from property file
+            //load the env profile from property file
             Namespace env = mProps.getProfiles(Profiles.NAMESPACES.env);
             cred = (String)env.get( Irods.IRODSENVFILE  );
         }
         
+        //load from the environment
         if( cred == null){
             //check if X509_USER_PROXY is specified in the environment
             Map<String,String> envs = System.getenv();

@@ -545,7 +545,14 @@ class GridFtpHandler(TransferHandlerBase):
                     " temporary file %s" %(num_pairs, tmp_name))
     
         transfer_success = False
-        
+
+        # for transfer to file://, run a normal mkdir command instead of
+        # having g-u-c use -create-dest
+        if transfers[0].dst_proto == "file":
+            prepare_local_dir(os.path.dirname(transfers[0].dst_path))
+            # override the create_dest flag as the directory now exists
+            create_dest = False
+
         # build command line for globus-url-copy
         tools = Tools()
         cmd = tools.full_path('globus-url-copy')
@@ -626,14 +633,14 @@ class GridFtpHandler(TransferHandlerBase):
         if create_dest:
             options += " -create-dest"
     
-        # pipeline is experimental so only allow this for the first attempt
-        if gsiftp_failures == 0:
-            options += " -pipeline"
-
         # Only do third party transfers for gsiftp->gsiftp. For other
         # combinations, fall back to settings which will for well over for
         # example NAT
         if third_party:
+
+            # pipeline is experimental so only allow this for the first attempt
+            if gsiftp_failures == 0:
+                options += " -pipeline"
     
             # parallism
             options += " -parallel 4"
@@ -648,8 +655,6 @@ class GridFtpHandler(TransferHandlerBase):
                     options += " -no-data-channel-authentication"
         else:
             # gsiftp<->file transfers
-            if gsiftp_failures == 0:
-                options += " -parallel 4"
             options += " -no-third-party-transfers" \
                      + " -no-data-channel-authentication"
     

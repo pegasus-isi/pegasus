@@ -15,16 +15,16 @@ void test_dag() {
     if (alpha == NULL) {
         myfailure("Didn't parse Alpha");
     }
-    if (alpha->command.compare("/bin/echo Alpha") != 0) {
-        myfailure("Command failed for Alpha: %s", alpha->command.c_str());
+    if (alpha->args.front().compare("/bin/echo") != 0) {
+        myfailure("Command failed for Alpha: %s", alpha->args.front().c_str());
     }
     
     Task *beta = dag.get_task("Beta");
     if (beta == NULL) {
         myfailure("Didn't parse Beta");
     }
-    if (beta->command.compare("/bin/echo Beta") != 0) {
-        myfailure("Command failed for Beta: %s", beta->command.c_str());
+    if (beta->args.front().compare("/bin/echo") != 0) {
+        myfailure("Command failed for Beta: %s", beta->args.front().c_str());
     }
     
     if (alpha->children[0] != beta) {

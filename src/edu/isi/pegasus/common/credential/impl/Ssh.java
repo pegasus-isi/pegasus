@@ -22,6 +22,7 @@ import java.util.Map;
 import edu.isi.pegasus.common.credential.CredentialHandler;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.namespace.Namespace;
 
 
@@ -39,9 +40,12 @@ public class Ssh extends Abstract implements CredentialHandler {
 
     /**
      * The name of the environment variable that specifies the path to the
-     * s3cfg file.
+     * SSH key.
      */
     public static final String SSH_PRIVATE_KEY_VARIABLE = "SSH_PRIVATE_KEY";
+    
+    
+    private static final String SSH_PRIVATE_KEY_PEGASUS_PROFILE_KEY = SSH_PRIVATE_KEY_VARIABLE.toLowerCase() ;//has to be lowercased
 
     /**
      * The description
@@ -50,10 +54,26 @@ public class Ssh extends Abstract implements CredentialHandler {
 
 
     /**
+     * The local path to the credential
+     */
+    private String mLocalCredentialPath;
+    
+    /**
      * The default constructor.
      */
     public Ssh(){
         super();
+    }
+    
+    /**
+     * Initializes the credential implementation. Implementations require
+     * access to the logger, properties and the SiteCatalog Store.
+     *
+     * @param bag  the bag of Pegasus objects.
+     */
+    public void initialize( PegasusBag bag ){
+        super.initialize( bag );
+        mLocalCredentialPath = this.getLocalPath();
     }
 
     
@@ -76,7 +96,7 @@ public class Ssh extends Abstract implements CredentialHandler {
 
         return( path == null ) ?
                 //PM-731 return the path on the local site
-                this.getLocalPath():
+                this.mLocalCredentialPath:
                 path;
        
     }
@@ -85,8 +105,8 @@ public class Ssh extends Abstract implements CredentialHandler {
      * Returns the path to user cred on the local site. 
      * The order of preference is as follows
      *
-     * - If a SSH_PRIVATE_KEY is specified in the site catalog entry as a Pegasus Profile that is used
-     * - Else the one specified in the properties
+     * - If a SSH_PRIVATE_KEY is specified in the site catalog entry as a Pegasus Profile that is used, else the corresponding env profile for backward support
+     * - Else the Pegasus Profile SSH_PRIVATE_KEY specified in the properties, else the corresponding env profile for backward support
      * - Else the one pointed to by the environment variable SSH_PRIVATE_KEY
      * 
      * 
@@ -96,17 +116,28 @@ public class Ssh extends Abstract implements CredentialHandler {
      */
     public String getLocalPath(){
         SiteCatalogEntry siteEntry = mSiteStore.lookup( "local" );
-
+        
         //check if corresponding Pegasus Profile is specified in site catalog entry
         String cred = ( siteEntry == null )? null :
-                        (String)siteEntry.getProfiles().get( Profiles.NAMESPACES.pegasus).get( Ssh.SSH_PRIVATE_KEY_VARIABLE.toLowerCase().toLowerCase() );
-
+                        (String)siteEntry.getProfiles().get( Profiles.NAMESPACES.pegasus).get( Ssh.SSH_PRIVATE_KEY_PEGASUS_PROFILE_KEY  );
+        if( cred == null && siteEntry != null ){
+            //try to check for an env profile in the site entry 
+            cred = (String)siteEntry.getProfiles().get( Profiles.NAMESPACES.env).get( Ssh.SSH_PRIVATE_KEY_VARIABLE );
+        }
+        
+        //try from properites file
+        if( cred == null ){
+            //load the pegasus profile from property file 
+            Namespace profiles = mProps.getProfiles(Profiles.NAMESPACES.pegasus);
+            cred = (String)profiles.get( Ssh.SSH_PRIVATE_KEY_PEGASUS_PROFILE_KEY  );
+        }
         if( cred == null ) {
-            //load from property file
+            //load the backup env profile from property file 
             Namespace env = mProps.getProfiles(Profiles.NAMESPACES.env);
             cred = (String)env.get( Ssh.SSH_PRIVATE_KEY_VARIABLE  );
         }
         
+        //try from environment
         if( cred == null){
             //check if X509_USER_PROXY is specified in the environment
             Map<String,String> envs = System.getenv();

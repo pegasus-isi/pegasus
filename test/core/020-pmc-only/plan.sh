@@ -37,6 +37,6 @@ pegasus-plan \
     --dax dax.xml \
     --sites local \
     --output-site local \
-    --nocleanup
+    --cleanup leaf
 
 exit $?
