@@ -26,8 +26,11 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 
@@ -478,48 +481,61 @@ public class ADag extends Data implements Graph{
         return this.mSubmitDirectory;
     }
 
-
     /**
-     * Gets all the parents of a particular node
-     *
-     * @param node the name of the job whose parents are to be found.
-     *
-     * @return    Vector corresponding to the parents of the node
+     * Checks the underlying graph structure for any corruption.
+     * Corruption can be where a parent or a child of a node refers to an object,
+     * that is not in underlying graph node list.
+     * 
+     * @throws RuntimeException in case of corruption.
      */
-/*    public Vector getParents(String node){
-        return this.mDAGInfo.getParents(node);
+    public void checkForCorruption(){
+        Set<GraphNode> s = Collections.newSetFromMap( new IdentityHashMap() );
+        
+        //put all the nodes in the idendity backed set
+        for(Iterator<GraphNode> it = this.nodeIterator(); it.hasNext(); ){
+            s.add( it.next() );
+        }
+        
+        //now again traverse and make sure all the parents and children
+        //of each node exist in the set
+        for(Iterator<GraphNode> it = this.nodeIterator(); it.hasNext(); ){
+            GraphNode node = it.next();
+           
+            for(GraphNode parent: node.getParents() ){
+                //contains operation is on basis of underlying IdentityHashMap
+                if( !s.contains(parent) ){
+                    throw new RuntimeException( complain( "Parent" , node, parent ));
+                }
+            }
+            
+            for(GraphNode child: node.getChildren()){
+                if( !s.contains(child) ){
+                    throw new RuntimeException( complain( "Child" , node, child ));
+                }
+            }
+           
+        }
+        
     }
-*/
+    
     /**
-     * Get all the children of a particular node.
-     *
-     * @param node  the name of the node whose children we want to find.
-     *
-     * @return  Vector containing the
-     *          children of the node
-     *
+     * Convenience method to complain for a linked node from a node that 
+     * does not exist in the DAG
+     * 
+     * @param desc
+     * @param node
+     * @param linkedNode 
      */
-/*    public Vector getChildren(String node){
-       return this.mDAGInfo.getChildren(node);
-    }
-*/
+    private String complain( String desc, GraphNode node, GraphNode linkedNode ){
 
-     /**
-     * Returns all the leaf nodes of the dag. The way the structure of Dag is
-     * specified, in terms of the parent child relationship pairs, the
-     * determination of the leaf nodes can be computationally intensive. The
-     * complexity is of order n^2
-     *
-     * @return Vector of <code>String</code> corresponding to the job names of
-     *         the leaf nodes.
-     *
-     * @see org.griphyn.cPlanner.classes.PCRelation
-     * @see org.griphyn.cPlanner.classes.DagInfo#relations
-     */
-/*    public Vector getLeafNodes(){
-        return this.mDAGInfo.getLeafNodes();
+        StringBuilder error = new StringBuilder();
+        error.append( desc ).append( " " ).append( linkedNode.getID() ).append( " for node " ).
+              append( node.getID()).append( " is corrupted " );
+        GraphNode fromNodeMap = this.getNode( linkedNode.getID() );
+        error.append( "Two instances of node " ).append( linkedNode.getID() ).append( " with identities ").
+              append( System.identityHashCode( fromNodeMap ) ).append( " and ").append( System.identityHashCode( linkedNode ) );
+        return error.toString();
     }
-*/
     
     /**
      * Sets the Replica Store

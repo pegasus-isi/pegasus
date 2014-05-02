@@ -308,7 +308,14 @@ public class CondorGenerator extends Abstract {
             mInitializeGridStart = false;
         }
 
-
+        Job dummy = new Job( );
+        dummy.setName( "create_dir_blackdiamond_0_condorpool");
+        dummy.setJobType( Job.CREATE_DIR_JOB);
+        dag.add( dummy );
+        Job analyze = (Job)((GraphNode)dag.getNode( "analyze_j4" )).getContent();
+        dag.addEdge( dummy.getID(), analyze.getID());
+        dag.checkForCorruption();
+        
         CodeGenerator storkGenerator = CodeGeneratorFactory.loadInstance( mBag, "Stork" );
 
         String className   = this.getClass().getName();
