@@ -41,7 +41,9 @@ mkdir -p $PKG_DIR/lib/condor
 cp -Rp $RELEASE_DIR/lib/* $PKG_DIR/lib/condor
 mv $PKG_DIR/lib/condor/condor/* $PKG_DIR/lib/condor
 rmdir $PKG_DIR/lib/condor/condor
-mv $PKG_DIR/lib/condor/libclassad* $PKG_DIR/lib/condor/libcondor_utils* $PKG_DIR/lib/
+mv $PKG_DIR/lib/condor/libclassad* $PKG_DIR/lib/condor/libpyclassad* $PKG_DIR/lib/condor/libcondor_utils* $PKG_DIR/lib/
+mv $PKG_DIR/lib/condor/python/* $PKG_DIR/lib/condor/
+rmdir $PKG_DIR/lib/condor/python
 
 # libexec dir
 mkdir -p $PKG_DIR/libexec/condor

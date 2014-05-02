@@ -94,6 +94,20 @@ fi
 mkdir -p /var/log/condor /var/lib/condor /var/spool/condor
 chown -R condor:condor /var/log/condor /var/lib/condor /var/spool/condor
 
+# Install python libraries
+PYVER=$(python -V 2>&1 | cut -d" " -f2 | cut -d"." -f1,2)
+PYSITE="/Library/Python/$PYVER/site-packages"
+if [ -d "$PYSITE" ]; then
+    for f in htcondor.so classad.so; do
+        if [ -e "/usr/lib/condor/$f" ]; then
+            if [ -e "$PYSITE/$f" ]; then
+                rm -f $PYSITE/$f
+            fi
+            ln -s /usr/lib/condor/$f $PYSITE/
+        fi
+    done
+fi
+
 # Set up service with launchd
 cat > /Library/LaunchDaemons/edu.wisc.cs.htcondor.plist <<END
 <?xml version="1.0" encoding="UTF-8"?>
