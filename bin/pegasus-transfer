@@ -1263,8 +1263,9 @@ class TransferSet:
                 t_two.set_dst_sitename(transfer.dst_sitename)
                 try:
                     success = self._primary_handler.do_transfer(t_one,
-                                                                attempt) \
-                              and \
+                                                                attempt)
+                    os.chmod(self._tmp_name, 0644)
+                    success = success and \
                               self._secondary_handler.do_transfer(t_two,
                                                                   attempt)
                 except Exception, e:
