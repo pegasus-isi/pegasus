@@ -61,7 +61,7 @@ transformation_stats_col_name_csv = ["Workflow_Id", "Dax_Label", "Transformation
 transformation_stats_col_size = [25, 10, 10, 8, 10, 10, 10, 10]
 
 # Jobs file column names
-job_stats_col_name_text = ['#Job', 'Try', 'Site', 'Kickstart', 'Mult', 'Kickstart-Mult', 'CPU-Time', 'Post', 'CondorQTime', 'Resource', 'Runtime', 'Seqexec', 'Seqexec-Delay', 'Exitcode', 'Hostname']
+job_stats_col_name_text = ['Job', 'Try', 'Site', 'Kickstart', 'Mult', 'Kickstart-Mult', 'CPU-Time', 'Post', 'CondorQTime', 'Resource', 'Runtime', 'Seqexec', 'Seqexec-Delay', 'Exitcode', 'Hostname']
 job_stats_col_name_csv = ['Workflow_Id', 'Dax_Label', 'Job', 'Try', 'Site', 'Kickstart', 'Mult', 'Kickstart-Mult', 'CPU-Time', 'Post', 'CondorQTime', 'Resource', 'Runtime', 'Seqexec', 'Seqexec-Delay', 'Exitcode', 'Hostname']
 job_stats_col_size = [35, 4, 12, 12, 6, 16, 12, 6, 12, 12, 12, 12, 15, 10, 30]
 
@@ -781,13 +781,8 @@ def print_individual_wf_job_stats(workflow_stats, workflow_id, dax_label, output
     else:
         job_status_str = "\n"
 
-    # Print header
     if output_format == "text":
-        job_status_str += print_row(job_stats_col_name_text, job_stats_col_size, output_format)
-    else:
-        job_status_str += print_row(job_stats_col_name_csv, job_stats_col_size, output_format)
-
-    job_status_str += "\n"
+        max_length = [max(0, len (i)) for i in job_stats_col_name_text]
 
     wf_job_stats_list = workflow_stats.get_job_statistics()
 
@@ -814,7 +809,35 @@ def print_individual_wf_job_stats(workflow_stats, workflow_id, dax_label, output
         else:
             job_retry_count_dict[job.job_name] = 1
         job_stats.retry_count = job_retry_count_dict[job.job_name]
+
+        if output_format == "text":
+            max_length[0] = max(max_length[0], len(job_stats.name))
+            max_length[1] = max(max_length[1], len(str(job_stats.retry_count)))
+            max_length[2] = max(max_length[2], len(job_stats.site))
+            max_length[3] = max(max_length[3], len(str(job_stats.kickstart)))
+            max_length[4] = max(max_length[4], len(str(job_stats.multiplier_factor)))
+            max_length[5] = max(max_length[5], len(str(job_stats.kickstart_mult)))
+            max_length[6] = max(max_length[6], len(str(job_stats.remote_cpu_time)))
+            max_length[7] = max(max_length[7], len(str(job_stats.post)))
+            max_length[8] = max(max_length[8], len(str(job_stats.condor_delay)))
+            max_length[9] = max(max_length[9], len(str(job_stats.resource)))
+            max_length[10] = max(max_length[10], len(str(job_stats.runtime)))
+            max_length[11] = max(max_length[11], len(str(job_stats.seqexec)))
+            max_length[12] = max(max_length[12], len(str(job_stats.seqexec_delay)))
+            max_length[13] = max(max_length[13], len(str(job_stats.exitcode)))
+            max_length[14] = max(max_length[14], len(job_stats.hostname if job_stats.hostname else 'None'))
+
         job_stats_list.append(job_stats)
+
+    max_length = [i + 1 for i in max_length]
+
+    # Print header
+    if output_format == "text":
+        job_status_str += print_row(job_stats_col_name_text, max_length, output_format)
+    else:
+        job_status_str += print_row(job_stats_col_name_csv, job_stats_col_size, output_format)
+
+    job_status_str += "\n"
 
     # printing
     content_list = []
@@ -824,7 +847,7 @@ def print_individual_wf_job_stats(workflow_stats, workflow_id, dax_label, output
         if output_format == "text":
             index = 0
             for content in job_det:
-                job_status_str += str(content).ljust(job_stats_col_size[index])
+                job_status_str += str(content).ljust(max_length[index])
                 index = index + 1
         else:
             job_status_str += workflow_id
@@ -832,7 +855,9 @@ def print_individual_wf_job_stats(workflow_stats, workflow_id, dax_label, output
             job_status_str += dax_label
             for content in job_det:
                 job_status_str += "," + str(content)
+
         job_status_str += NEW_LINE_STR
+
     return job_status_str
 
 
