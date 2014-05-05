@@ -910,7 +910,7 @@ public class DeployWorkerPackage
             mLogger.log( "Added edge " + setupNode.getID() + " -> " + n.getID(),
                                   LogManager.DEBUG_MESSAGE_LEVEL );
             setupNode.addChild( n );
-
+            n.addParent( setupNode );
         }
 
         workflow.addNode( setupNode );
