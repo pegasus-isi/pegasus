@@ -906,12 +906,9 @@ def print_wf_transformation_stats(stats, workflow_id, dax_label, fmt):
                    fstr(t.min), fstr(t.max), fstr(t.avg), fstr(t.sum)]
 
         if fmt == "text":
-            col_names[0] = col_names[0].ljust(max_length[0])
-            content[0] = content[0].ljust(max_length[0])
-
-            for i in range(1, 8):
-                col_names[i] = col_names[i].rjust(max_length[i])
-                content[i] = content[i].rjust(max_length[i])
+            for i in range(0, 8):
+                col_names[i] = col_names[i].ljust(max_length[i])
+                content[i] = content[i].ljust(max_length[i])
 
         if fmt == "csv":
             content = [workflow_id, dax_label] + content
@@ -922,7 +919,8 @@ def print_wf_transformation_stats(stats, workflow_id, dax_label, fmt):
 
         report.append(print_row(content, transformation_stats_col_size, fmt))
 
-    return "\n".join(report)
+    return NEW_LINE_STR.join(report) + NEW_LINE_STR
+
 
 def print_statistics_by_time_and_host(stats, fmt, combined=True, per_host=True):
     """
