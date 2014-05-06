@@ -301,13 +301,7 @@ public class ADag extends Data implements Graph{
      * @param job  the new job that is to be added to the ADag.
      */
     public void add(Job job){
-        this.mGraphImplementor.addNode( new GraphNode( job.getID(), job) );
-        this.mDAGInfo.getWorkflowMetrics().increment( job );
-/*
-        //add to the mDAGInfo
-        mDAGInfo.addNewJob(job );
-        vJobSubInfos.addElement(job);
- */
+        this.addNode( new GraphNode( job.getID(), job) );
     }
 
     /**
@@ -864,6 +858,8 @@ public class ADag extends Data implements Graph{
      */
     public void addNode(GraphNode node) {
         this.mGraphImplementor.addNode(node);
+        //increment associated workflow metrics
+        this.mDAGInfo.getWorkflowMetrics().increment( (Job)node.getContent() );
     }
 
     /**
