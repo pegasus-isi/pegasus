@@ -177,10 +177,10 @@ public class HourGlass extends AbstractStrategy{
         List<GraphNode> rootNodes = dag.getRoots();
         //PM-747 add new root before we add any edges
         dag.add(newRoot);
-        for( GraphNode node: rootNodes ){
-            Job existingRoot = (Job)node.getContent();
-            mLogger.log( "Adding relation " + newRoot + " -> " + existingRoot.getID(),LogManager.DEBUG_MESSAGE_LEVEL);
-            dag.addEdge( newRoot.getID(), existingRoot.getID() );
+        GraphNode newRootNode = dag.getNode( newRoot.getID() );
+        for( GraphNode existingRoot: rootNodes ){
+            mLogger.log( "Adding relation " + newRootNode.getID() + " -> " + existingRoot.getID(),LogManager.DEBUG_MESSAGE_LEVEL);
+            dag.addEdge( newRootNode, existingRoot );
 
         }
     }
