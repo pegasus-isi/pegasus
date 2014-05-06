@@ -313,12 +313,7 @@ public class ADag extends Data implements Graph{
      * @return boolean indicating whether the removal was successful or not.
      */
     public boolean remove(Job job){
-        this.mDAGInfo.getWorkflowMetrics().decrement(job);
         return this.remove( job.getID() );
-        /*	boolean a = mDAGInfo.remove( job );
-	boolean b = vJobSubInfos.remove(job);
-	return a && b;
-        */
     }
 
     /**
@@ -924,6 +919,10 @@ public class ADag extends Data implements Graph{
      * @return boolean indicating whether the node was removed or not.
      */
     public boolean remove(String identifier) {
+        GraphNode node = this.getNode(identifier);
+        if( node != null ){
+            this.mDAGInfo.getWorkflowMetrics().decrement((Job)node.getContent());
+        }
         return this.mGraphImplementor.remove(identifier);
     }
 
