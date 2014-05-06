@@ -228,6 +228,8 @@ public class MapGraph implements Graph{
         return leaves;
     }
 
+    
+    
     /**
      * Adds an edge between two already existing nodes in the graph.
      *
@@ -251,12 +253,21 @@ public class MapGraph implements Graph{
             throw new RuntimeException( "The node with identifier doesnt exist " + notExist );
         }
 
-        childNode.addParent( parentNode );
-        parentNode.addChild( childNode);
-
-
+        this.addEdge(parentNode, childNode);
     }
 
+    /**
+     * Adds an edge between two already existing nodes in the graph.
+     *
+     * @param parent   the parent node .
+     * @param child    the child node .
+     */
+    public void addEdge( GraphNode parent, GraphNode child ){
+        child.addParent( parent );
+        parent.addChild( child);
+    }
+    
+    
     /**
      * A convenience method that allows for bulk addition of edges between
      * already existing nodes in the graph.

@@ -266,6 +266,16 @@ public class AggregatedJob extends Job implements Graph{
     public void addEdge(String parent, String child) {
         this.mGraphImplementor.addEdge(parent, child);
     }
+    
+    /**
+     * Adds an edge between two already existing nodes in the graph.
+     *
+     * @param parent   the parent node .
+     * @param child    the child node .
+     */
+    public void addEdge( GraphNode parent, GraphNode child ){
+        this.mGraphImplementor.addEdge(parent, child);
+    }
 
     /**
      * A convenience method that allows for bulk addition of edges between
