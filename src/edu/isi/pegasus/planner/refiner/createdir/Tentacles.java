@@ -100,6 +100,12 @@ public class Tentacles extends AbstractStrategy {
             Job job  = (Job)node.getContent();
             jobName = job.getName();
             pool    = job.getSiteHandle();
+            
+            if( job.getJobType() == Job.CREATE_DIR_JOB ){
+                //PM-747 we have added the create dir jobs beforehand
+                //ignore them so that we don't create self edges
+                continue;
+            }
 
             if( job.getJobType() == Job.CHMOD_JOB ){
                 parent = getCreateDirJobName( dag, job.getSiteHandle() );
