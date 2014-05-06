@@ -682,7 +682,7 @@ public class PegasusProperties implements Cloneable {
         
         return getProperty( "pegasus.dir.create.strategy",
                             "pegasus.dir.create",
-                             "Minimal" );
+                             "Tentacles" );
     }
 
     /**
