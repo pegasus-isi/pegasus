@@ -46,7 +46,7 @@ public class RefinerFactory {
     /**
      * The default refiner implementation that is picked up.
      */
-    public static final String DEFAULT_REFINER_IMPLEMENTATION = "Cluster";
+    public static final String DEFAULT_REFINER_IMPLEMENTATION = "Bundle";
 
     /**
      * Loads the implementing class corresponding to the value specified in the
