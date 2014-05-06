@@ -145,8 +145,7 @@ public class HourGlass extends AbstractStrategy{
         //add the concat job
         if (!set.isEmpty()) {
             concatJob = makeDummyConcatJob( dag );
-            introduceRootDependencies( dag, concatJob.jobName);
-            dag.add(concatJob);
+            introduceRootDependencies( dag, concatJob);
         }
 
         //for each execution pool add
@@ -172,14 +171,16 @@ public class HourGlass extends AbstractStrategy{
      * root node to it.
      *
      * @param dag       the DAG
-     * @param newRoot   the name of the job that is the new root of the graph.
+     * @param newRoot   the concat job that is the new root of the graph.
      */
-    private void introduceRootDependencies( ADag dag, String newRoot) {
+    private void introduceRootDependencies( ADag dag, Job newRoot) {
         List<GraphNode> rootNodes = dag.getRoots();
+        //PM-747 add new root before we add any edges
+        dag.add(newRoot);
         for( GraphNode node: rootNodes ){
             Job existingRoot = (Job)node.getContent();
             mLogger.log( "Adding relation " + newRoot + " -> " + existingRoot.getID(),LogManager.DEBUG_MESSAGE_LEVEL);
-            dag.addEdge( newRoot, existingRoot.getID() );
+            dag.addEdge( newRoot.getID(), existingRoot.getID() );
 
         }
     }
