@@ -66,10 +66,24 @@ public class Tentacles extends AbstractStrategy {
      * @return the added workflow
      */
     public ADag addCreateDirectoryNodes( ADag dag ){
-        Set set        = this.getCreateDirSites( dag );
+        Set createDirSites        = this.getCreateDirSites( dag );
         String pool    = null;
         String jobName = null;
         String parent  = null;
+
+        //for each execution site add
+        //a create directory node.
+        //PM-747 we need to add jobs before we add any edges
+        Job newJob = null;
+        for (Iterator it = createDirSites.iterator();it.hasNext();){
+            pool    = (String)it.next();
+            jobName = getCreateDirJobName( dag, pool);
+            newJob  = mImpl.makeCreateDirJob( pool,
+                                              jobName,
+                                              mSiteStore.getExternalWorkDirectoryURL( pool , FileServer.OPERATION.put )  );
+            dag.add(newJob);
+
+        }
 
 	//traverse through the jobs and
         //looking at their execution pool
@@ -135,19 +149,7 @@ public class Tentacles extends AbstractStrategy {
         }
 
 
-        //for each execution pool add
-        //a create directory node.
-        Job newJob = null;
-        for (Iterator it = set.iterator();it.hasNext();){
-            pool    = (String)it.next();
-            jobName = getCreateDirJobName( dag, pool);
-            newJob  = mImpl.makeCreateDirJob( pool,
-                                              jobName,
-                                              mSiteStore.getExternalWorkDirectoryURL( pool , FileServer.OPERATION.put )  );
-            dag.add(newJob);
-
-        }
-
+        
         return dag;
     }
 
