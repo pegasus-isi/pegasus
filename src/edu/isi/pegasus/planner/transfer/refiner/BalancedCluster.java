@@ -675,7 +675,7 @@ public class BalancedCluster extends Basic {
                                                     Job.STAGE_IN_JOB,
                                                     true );
         
-        mStageInLocalMapPerLevel = resetStageInMap( this.mStageInRemoteMapPerLevel,
+        mStageInRemoteMapPerLevel = resetStageInMap( this.mStageInRemoteMapPerLevel,
                                                     this.mTXStageInImplementation,
                                                     Job.STAGE_IN_JOB,
                                                     false );
@@ -694,6 +694,7 @@ public class BalancedCluster extends Basic {
      * @param stageInJobType   whether a stagein or symlink stagein job
      * @param localTransfer    indicates whether transfer job needs to run on
      *                         local site or not.
+     * @return 
      */
     public Map<String,PoolTransfer> resetStageInMap( Map<String,PoolTransfer> stageInMap,
                                                      Implementation implementation,
@@ -1134,7 +1135,7 @@ public class BalancedCluster extends Basic {
         * appropriate TransferContainer. The collection is added to a single
         * TransferContainer, and the pointer is then updated to the next container.
         *
-        * @param files  the collection <code>FileTransfer</code> to be added.
+        * @param file
         * @param level  the level of the workflow
         * @param type   the type of transfer job
         *
@@ -1169,41 +1170,7 @@ public class BalancedCluster extends Basic {
        }
 
 
-        /**
-         * Adds a file transfer to the appropriate TransferContainer.
-         * The file transfers are added in a round robin manner underneath.
-         *
-         * @param transfer  the <code>FileTransfer</code> containing the
-         *                  information about a single transfer.
-         * @param type      the type of transfer job
-         *
-         * @return  the name of the transfer job to which the transfer is added.
-         */
-        public String addTransfer(FileTransfer transfer, int type ){
-            //we add the transfer to the container pointed
-            //by next
-            Object obj = mTXContainers.get(mNext);
-            TransferContainer tc = null;
-            if(obj == null){
-                //on demand add a new transfer container to the end
-                //is there a scope for gaps??
-                tc = new TransferContainer();
-                tc.setTXName( getTXJobName( mNext, type ) );
-                mTXContainers.set(mNext,tc);
-            }
-            else{
-                tc = (TransferContainer)obj;
-            }
-            tc.addTransfer(transfer);
-
-            //update the next pointer to maintain
-            //round robin status
-            mNext = (mNext < (mCapacity -1))?
-                     mNext + 1 :
-                     0;
-
-            return tc.getTXName();
-        }
+        
 
         /**
          * Returns the iterator to the list of transfer containers.
@@ -1289,47 +1256,7 @@ public class BalancedCluster extends Basic {
            return sb.toString();
         }
         
-        /**
-         * Generates the name of the transfer job, that is unique for the given
-         * workflow.
-         *
-         * @param counter  the index for the transfer job.
-         * @param type     the type of transfer job.
-         *
-         * @return the name of the transfer job.
-         */
-        private String getTXJobName( int counter, int type ){
-            StringBuffer sb = new StringBuffer();
-            switch ( type ){
-                case Job.STAGE_IN_JOB:
-                    sb.append( Refiner.STAGE_IN_PREFIX );
-                    break;
-                    
-               
-                case Job.STAGE_OUT_JOB:
-                    sb.append( Refiner.STAGE_OUT_PREFIX );
-                    break;
-
-                default:
-                    throw new RuntimeException( "Wrong type specified " + type );
-            }
-
-            if( mLocalTransfer ) {
-                sb.append( Refiner.LOCAL_PREFIX );
-            }
-            else{
-                sb.append( Refiner.REMOTE_PREFIX );
-            }
-
-            //append the job prefix if specified in options at runtime
-            if ( mJobPrefix != null ) { sb.append( mJobPrefix ); }
-
-
-            sb.append(mPool).append("_").append(counter);
-
-           return sb.toString();
-        }
-
+        
 
     }
     
