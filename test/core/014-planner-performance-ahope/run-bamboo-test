@@ -30,7 +30,7 @@ START_TS=`/bin/date +'%s'`
 /usr/bin/time pegasus-plan \
     -v \
     --conf pegasusrc \
-    --ddax weekly_ahope.dax \
+    --dax weekly_ahope.dax \
     --sites local \
     -o local \
     --dir ./dags \
