@@ -35,7 +35,7 @@ START_TS=`/bin/date +'%s'`
     -o local \
     --dir ./dags \
     --nocleanup \
-    --force -v \
+    --force \
     | tee plan.out
 
 
