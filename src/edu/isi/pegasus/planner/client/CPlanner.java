@@ -1884,15 +1884,15 @@ public class CPlanner extends Executable{
                 MemoryUsage peak = pool.getPeakUsage();
                 totalUsed += peak.getUsed();
                 totalReserved += peak.getCommitted();
-                memoryUsage += String.format("Peak %s memory used    : %,f MB%n", pool.getName(),peak.getUsed()/divisor );
-                memoryUsage += String.format("Peak %s memory reserved: %,f MB%n", pool.getName(), peak.getCommitted()/divisor);
+                memoryUsage += String.format("Peak %s memory used    : %.3f MB%n", pool.getName(),peak.getUsed()/divisor );
+                memoryUsage += String.format("Peak %s memory reserved: %.3f MB%n", pool.getName(), peak.getCommitted()/divisor);
             }
             
             // we print the result in the console
             mLogger.log( "JVM Memory Usage Breakdown \n" +  memoryUsage.toString(), LogManager.INFO_MESSAGE_LEVEL);
-            mLogger.log( String.format( "Total Peak memory used      : %,f MB", totalUsed/divisor), 
+            mLogger.log( String.format( "Total Peak memory used      : %.3f MB", totalUsed/divisor), 
                          LogManager.INFO_MESSAGE_LEVEL);
-            mLogger.log( String.format( "Total Peak memory reserved  : %,f MB", totalReserved/divisor), 
+            mLogger.log( String.format( "Total Peak memory reserved  : %.3f MB", totalReserved/divisor), 
                          LogManager.INFO_MESSAGE_LEVEL);
         } catch (Throwable t) {
             //not fatal
