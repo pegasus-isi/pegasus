@@ -2098,7 +2098,17 @@ public class PegasusProperties implements Cloneable {
         return file;
     }
 
-    
+    /**
+     * Returns a boolean indicating whether to log JVM memory usage or not.
+     *
+     * Referred to by the "pegasus.log.memory.usage" property.
+     *
+     * @return boolean value specified in properties else false.
+     */
+    public boolean logMemoryUsage(){
+        return Boolean.parse( mProps.getProperty( "pegasus.log.memory.usage" ) ,
+                              false  ); 
+    }
 
     //SOME MISCELLANEOUS PROPERTIES
 
