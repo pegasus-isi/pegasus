@@ -96,10 +96,15 @@ public class Shell extends Abstract {
     protected GridStartFactory mGridStartFactory;
 
     /**
+     * Handle to the Credential Factory
+     */
+    protected CredentialHandlerFactory mFactory;
+
+    /**
      * A boolean indicating whether grid start has been initialized or not.
      */
     protected boolean mInitializeGridStart;
-
+    
     
     /**
      * The default constructor.
@@ -127,7 +132,9 @@ public class Shell extends Abstract {
 
         //get the handle to pool file
         mSiteStore = bag.getHandleToSiteStore();
-
+        
+        mFactory = new CredentialHandlerFactory();
+	mFactory.initialize( mBag );
     }
 
     /**
@@ -209,29 +216,17 @@ public class Shell extends Abstract {
             subdax.generateCode ( job );
         }
         
-	CredentialHandlerFactory factory = new CredentialHandlerFactory();
-	factory.initialize( mBag );
-
-        /*
-	for (TYPE type : job.getCredentialTypes()) {
-	    CredentialHandler handler = factory.loadInstance( type );
-	    job.addProfile( new Profile( Profile.ENV, handler
-		    .getEnvironmentVariable(), handler.getPath() ) );
-	}
-	*/
-        
+	//handle credentials for the job
         for( Map.Entry<String,Set<CredentialHandler.TYPE>> entry : job.getCredentialTypes().entrySet()  ){
             String site = entry.getKey();
             for( CredentialHandler.TYPE cred: entry.getValue()){
-                CredentialHandler handler = factory.loadInstance( cred );
+                CredentialHandler handler = mFactory.loadInstance( cred );
                 job.addProfile( new Profile( Profile.ENV,
                                              handler.getEnvironmentVariable( site ), 
                                              handler.getPath( site ) ) );
             }
 	
         }
-        
-	factory = null;
 	
         //initialize GridStart if required.
         if ( mInitializeGridStart ){
@@ -251,7 +246,6 @@ public class Shell extends Abstract {
 
         //JIRA PM-491 . Path to kickstart should not be passed
         //to the factory.
-//        String gridStartPath = site.getKickstartPath();
         GridStart gridStart = mGridStartFactory.loadGridStart( job , null );
 
         //enable the job
