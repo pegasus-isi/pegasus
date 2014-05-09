@@ -8,5 +8,6 @@ pegasus.condor.logs.symlink = false
 
 pegasus.data.configuration = condorio
 
+#log memory usage at the end of	the planning process
 pegasus.log.memory.usage = true
 
