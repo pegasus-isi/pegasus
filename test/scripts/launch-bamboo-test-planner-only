@@ -19,10 +19,6 @@ PLANFILE=`mktemp plan.XXXXXX`
 ./run-bamboo-test "$@" | tee $PLANFILE
 
 STATUS=$?
-if [ $STATUS != 0 ]; then
-   echo "Test failed!"
-   exit $STATUS
-fi
 
 #Get RUNDIR from the planning output
 RUN_DIR=`grep pegasus-remove $PLANFILE | awk '{print $5}'`
@@ -52,5 +48,9 @@ if [ $METRICS_TOTAL_JOBS -ne $NUM_SUBMIT_FILES ]; then
     STATUS=$(($STATUS + 1))
 fi
 
+if [ $STATUS != 0 ]; then
+   echo "Test failed!"
+   exit $STATUS
+fi
 
 exit
