@@ -199,8 +199,9 @@ public class SUBDAXGenerator{
      * on top down traversal during Code Generation.
      */
     private Map<String,String>mDAXJobIDToSubmitDirectoryCacheFile;
-    
-    private Graph mWorkflow;
+  
+    //PM-747 no need for conversion as ADag now implements Graph interface
+//    private Graph mWorkflow;
     private ADag mDAG;
     
     private SiteStore mSiteStore;
@@ -226,13 +227,11 @@ public class SUBDAXGenerator{
      *
      * @param bag  the bag of objects required for initialization
      * @param dag  the dag for which code is being generated
-     * @param workflow the graph representation of the dag
      * @param daxReplicaStore the dax replica store.
      * @param dagWriter  handle to the dag writer
      */
-    public void initialize( PegasusBag bag, ADag dag,Graph workflow, PrintWriter dagWriter ){
+    public void initialize( PegasusBag bag, ADag dag, PrintWriter dagWriter ){
         mBag = bag;
-        mWorkflow = workflow;
         mDAG = dag;
         mDAGWriter = dagWriter;
         mProps  = bag.getPegasusProperties();
@@ -512,7 +511,7 @@ public class SUBDAXGenerator{
             //point to the outer level workflow DAX replica store file
             inheritedRCFile.append( DAXReplicaStore.getDAXReplicaStoreFile( this.mPegasusPlanOptions,
                                                                             this.mDAG.getLabel(),
-                                                                            this.mDAG.dagInfo.index  )
+                                                                            this.mDAG.getIndex() )
                                                               );
             options.setInheritedRCFiles( inheritedRCFile.toString() );
         }
@@ -1555,7 +1554,7 @@ public class SUBDAXGenerator{
         Set<String> s = new HashSet();
         
         //get the graph node corresponding to the jobs
-        GraphNode node = this.mWorkflow.getNode( job.getID() );
+        GraphNode node = this.mDAG.getNode( job.getID() );
         
         for( GraphNode parent : node.getParents() ){
             Job p = ( Job )parent.getContent();

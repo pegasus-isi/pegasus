@@ -617,6 +617,9 @@ public class Cluster extends Bundle {
         //reset the stageout stagein map too
         this.resetStageInMaps();
         this.resetStageOutMaps();
+        
+        //PM-747 add the edges in the very end
+        super.done();
     }
 
     /**

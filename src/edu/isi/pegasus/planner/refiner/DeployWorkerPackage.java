@@ -30,7 +30,6 @@ import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
-import edu.isi.pegasus.planner.partitioner.graph.Adapter;
 
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
@@ -720,33 +719,11 @@ public class DeployWorkerPackage
         boolean addUntarJobs = !mWorkerNodeExecution;
 
         Set deploymentSites = this.getDeploymentSites( dag );
-        Graph workflow = ( addUntarJobs )?
+        ADag workflow = ( addUntarJobs )?
                          addSetupNodesWithUntarNodes( dag , deploymentSites ): //non pegasus lite case. shared fs
                          addSetupNodesWithoutUntarNodes( dag, deploymentSites );
-        
-        
-        
        
-        //convert back to ADag and return
-        ADag result = dag;
-        //we need to reset the jobs and the relations in it
-        result.clearJobs();
-
-        //traverse through the graph and jobs and edges
-        for( Iterator it = workflow.nodeIterator(); it.hasNext(); ){
-            GraphNode node = ( GraphNode )it.next();
-
-            //get the job associated with node
-            result.add( ( Job )node.getContent() );
-
-            //all the children of the node are the edges of the DAG
-            for( Iterator childrenIt = node.getChildren().iterator(); childrenIt.hasNext(); ){
-                GraphNode child = ( GraphNode ) childrenIt.next();
-                result.addNewRelation( node.getID(), child.getID() );
-            }
-        }
-
-        return result;
+        return workflow;
     }
 
     /**
@@ -757,13 +734,14 @@ public class DeployWorkerPackage
      * 
      * @return  the workflow in the graph representation with the nodes added.
      */
-    private Graph addSetupNodesWithUntarNodes( ADag dag, Set<String> deploymentSites ) {
+    private ADag addSetupNodesWithUntarNodes( ADag dag, Set<String> deploymentSites ) {
         //convert the dag to a graph representation and walk it
         //in a top down manner
-        Graph workflow = Adapter.convert( dag );
+        //PM-747 no need for conversion as ADag now implements Graph interface
+        ADag workflow =  dag;
         
         //get the root nodes of the workflow
-        List roots = workflow.getRoots();
+        List<GraphNode> roots = workflow.getRoots();
 
         //add a setup job per execution site
         for( Iterator it = deploymentSites.iterator(); it.hasNext(); ){
@@ -829,13 +807,15 @@ public class DeployWorkerPackage
 
             //untar node is child of setup
             setupNode.addChild( untarNode );
+            untarNode.addParent( setupNode );
             
             //add the original roots as children to untar node
-            for( Iterator rIt = roots.iterator(); rIt.hasNext(); ){
+            for( Iterator<GraphNode> rIt = roots.iterator(); rIt.hasNext(); ){
                     GraphNode n = ( GraphNode ) rIt.next();
                     mLogger.log( "Added edge " + untarNode.getID() + " -> " + n.getID(),
                                   LogManager.DEBUG_MESSAGE_LEVEL );
                     untarNode.addChild( n );
+                    n.addParent( untarNode );
             }
                 
             workflow.addNode( untarNode );
@@ -855,13 +835,14 @@ public class DeployWorkerPackage
      * 
      * @return  the workflow in the graph representation with the nodes added.
      */
-    private Graph addSetupNodesWithoutUntarNodes( ADag dag, Set<String> deploymentSites ) {
+    private ADag addSetupNodesWithoutUntarNodes( ADag dag, Set<String> deploymentSites ) {
         //convert the dag to a graph representation and walk it
         //in a top down manner
-        Graph workflow = Adapter.convert( dag );
+        //PM-747 no need for conversion as ADag now implements Graph interface
+        ADag workflow = dag ;
         
         //get the root nodes of the workflow
-        List roots = workflow.getRoots();
+        List<GraphNode> roots = workflow.getRoots();
 
         
         Set<FileTransfer> fts = new HashSet<FileTransfer>();
@@ -929,7 +910,7 @@ public class DeployWorkerPackage
             mLogger.log( "Added edge " + setupNode.getID() + " -> " + n.getID(),
                                   LogManager.DEBUG_MESSAGE_LEVEL );
             setupNode.addChild( n );
-
+            n.addParent( setupNode );
         }
 
         workflow.addNode( setupNode );
@@ -956,7 +937,8 @@ public class DeployWorkerPackage
         
         //convert the dag to a graph representation and walk it
         //in a top down manner
-        Graph workflow = Adapter.convert( dag );
+        //PM-747 no need for conversion as ADag now implements Graph interface
+        ADag workflow = dag ;
 
         RemoveDirectory removeDirectory = new RemoveDirectory( dag, mBag, this.mPOptions.getSubmitDirectory() );
         
@@ -1000,26 +982,7 @@ public class DeployWorkerPackage
             }
         }
         
-        //convert back to ADag and return
-        ADag result = dag;
-        //we need to reset the jobs and the relations in it
-        result.clearJobs();
-
-        //traverse through the graph and jobs and edges
-        for( Iterator it = workflow.nodeIterator(); it.hasNext(); ){
-            GraphNode node = ( GraphNode )it.next();
-
-            //get the job associated with node
-            result.add( ( Job )node.getContent() );
-
-            //all the children of the node are the edges of the DAG
-            for( Iterator childrenIt = node.getChildren().iterator(); childrenIt.hasNext(); ){
-                GraphNode child = ( GraphNode ) childrenIt.next();
-                result.addNewRelation( node.getID(), child.getID() );
-            }
-        }
-
-        return result;
+        return workflow;
     }
  
     
@@ -1034,9 +997,9 @@ public class DeployWorkerPackage
     protected Set getDeploymentSites( ADag dag ){
         Set set = new HashSet();
 
-        for(Iterator it = dag.vJobSubInfos.iterator();it.hasNext();){
-            Job job = (Job)it.next();
-
+        for(Iterator<GraphNode> it = dag.jobIterator();it.hasNext();){
+            GraphNode node = it.next();
+            Job job = (Job)node.getContent();
 
             //PM-497
             //we ignore any clean up jobs that may be running
@@ -1088,8 +1051,8 @@ public class DeployWorkerPackage
         //append the job prefix if specified in options at runtime
         if ( mJobPrefix != null ) { sb.append( mJobPrefix ); }
 
-        sb.append( dag.dagInfo.nameOfADag ).append( "_" ).
-           append( dag.dagInfo.index ).append( "_" );
+        sb.append( dag.getLabel() ).append( "_" ).
+           append( dag.getIndex() ).append( "_" );
         sb.append( site );
 
         return sb.toString();
@@ -1115,8 +1078,8 @@ public class DeployWorkerPackage
         //append the job prefix if specified in options at runtime
         if ( mJobPrefix != null ) { sb.append( mJobPrefix ); }
 
-        sb.append( dag.dagInfo.nameOfADag ).append( "_" ).
-           append( dag.dagInfo.index ).append( "_" );
+        sb.append( dag.getLabel() ).append( "_" ).
+           append( dag.getIndex() ).append( "_" );
 
 
         sb.append( site );
@@ -1144,8 +1107,8 @@ public class DeployWorkerPackage
         //append the job prefix if specified in options at runtime
         if ( mJobPrefix != null ) { sb.append( mJobPrefix ); }
 
-        sb.append( dag.dagInfo.nameOfADag ).append( "_" ).
-           append( dag.dagInfo.index ).append( "_" );
+        sb.append( dag.getLabel() ).append( "_" ).
+           append( dag.getIndex() ).append( "_" );
 
 
         sb.append( site );

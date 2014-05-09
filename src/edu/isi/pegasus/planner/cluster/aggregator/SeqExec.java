@@ -259,7 +259,7 @@ public class SeqExec extends Abstract {
         StringBuffer sb = new StringBuffer( 32 );
         if ( mGlobalLog ){
             //the basename of the log file is derived from the dag name
-            sb.append( this.mClusteredADag.dagInfo.getLabel() );
+            sb.append( this.mClusteredADag.getLabel() );
         }
         else{
             //per seqexec job name

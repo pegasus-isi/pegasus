@@ -16,31 +16,26 @@
 
 package edu.isi.pegasus.planner.cluster;
 
+import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PCRelation;
-import edu.isi.pegasus.planner.classes.AggregatedJob;
-
-import edu.isi.pegasus.planner.common.PegasusProperties;
-import edu.isi.pegasus.common.logging.LogManager;
-
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.cluster.aggregator.JobAggregatorInstanceFactory;
-
+import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Pegasus;
-
 import edu.isi.pegasus.planner.partitioner.Partition;
-
-import edu.isi.pegasus.planner.provenance.pasoa.XMLProducer;
-import edu.isi.pegasus.planner.provenance.pasoa.producer.XMLProducerFactory;
-
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.provenance.pasoa.PPS;
+import edu.isi.pegasus.planner.provenance.pasoa.XMLProducer;
 import edu.isi.pegasus.planner.provenance.pasoa.pps.PPSFactory;
+import edu.isi.pegasus.planner.provenance.pasoa.producer.XMLProducerFactory;
 
 
 import java.util.*;
 
-import edu.isi.pegasus.planner.classes.PegasusBag;
 
 /**
  * The horizontal clusterer, that clusters jobs on the same level.
@@ -190,9 +185,10 @@ public class Horizontal implements Clusterer,
         mReplacementTable = new HashMap();
         mSubInfoMap = new HashMap();
 
-        for(Iterator it = mScheduledDAG.vJobSubInfos.iterator();it.hasNext();){
+        for(Iterator<GraphNode> it = mScheduledDAG.jobIterator();it.hasNext();){
             //pass the jobs to the callback
-            Job job = (Job)it.next();
+            GraphNode node = it.next();
+            Job job = (Job)node.getContent();
             mSubInfoMap.put(job.getLogicalID(), job );
         }
 
@@ -991,13 +987,12 @@ public class Horizontal implements Clusterer,
      * by the logical name of the jobs.
      */
     private void assimilateJobs(){
-        Iterator it = mScheduledDAG.vJobSubInfos.iterator();
-        Job job = null;
         List l      = null;
         String key  = null;
 
-        while(it.hasNext()){
-            job = (Job)it.next();
+        for( Iterator<GraphNode> it = mScheduledDAG.jobIterator();it.hasNext(); ){
+            GraphNode node = it.next();
+            Job job = ( Job)node.getContent();
             key = job.logicalName;
             //check if the job logical name is already in the map
             if(mJobMap.containsKey(key)){
@@ -1053,7 +1048,52 @@ public class Horizontal implements Clusterer,
         List nl = null;
         Job sub = new Job();
         String msg;
+        
+        //Set mergedEdges = new java.util.HashSet();
+        //this is temp thing till the hast thing sorted out correctly
+        List<PCRelation> mergedEdges = new java.util.ArrayList(mScheduledDAG.size());
 
+        //traverse the edges and do appropriate replacements
+        for( Iterator<GraphNode> it = mScheduledDAG.jobIterator(); it.hasNext(); ){
+            GraphNode node = it.next();
+            Job childJob = (Job)node.getContent();
+            for( GraphNode parentNode: node.getParents() ){
+                Job parentJob = (Job)parentNode.getContent();
+                PCRelation rel = new PCRelation( parentJob.getID(), childJob.getID());
+                String parent = rel.getParent();
+                String child  = rel.getChild();
+                msg = ("\n Replacing " + rel);
+
+                String value = (String)mReplacementTable.get(parent);
+                if(value != null){
+                    rel.parent = value;
+                }
+                value = (String)mReplacementTable.get(child);
+                if(value != null){
+                    rel.child = value;
+                }
+                msg += (" with " + rel);
+
+                //put in the merged edges set
+                if(!mergedEdges.contains(rel)){
+                    val = mergedEdges.add(rel);
+                    msg += "Add to set : " + val;
+                }
+               else{
+                   msg += "\t Duplicate Entry for " + rel;
+               }
+               mLogger.log( msg, LogManager.DEBUG_MESSAGE_LEVEL );
+            }
+        }
+        
+        //the final edges need to be updated
+        mScheduledDAG.resetEdges();
+        for( PCRelation pc: mergedEdges){
+            mScheduledDAG.addEdge( pc.getParent(), pc.getChild());
+        }
+        
+        //PM-747 once new edges are added, then remove
+        //the original nodes that are now clustered
         for( Iterator it = mReplacementTable.entrySet().iterator(); it.hasNext(); ){
             Map.Entry entry = (Map.Entry)it.next();
             String key = (String)entry.getKey();
@@ -1070,46 +1110,6 @@ public class Horizontal implements Clusterer,
         }
         mLogger.log("All clustered jobs removed from the workflow",
                     LogManager.DEBUG_MESSAGE_LEVEL);
-
-        //Set mergedEdges = new java.util.HashSet();
-        //this is temp thing till the hast thing sorted out correctly
-        List mergedEdges = new java.util.ArrayList(mScheduledDAG.vJobSubInfos.size());
-
-        //traverse the edges and do appropriate replacements
-        String parent = null; String child = null;
-        String value = null;
-        for( Iterator it = mScheduledDAG.dagInfo.relations.iterator(); it.hasNext(); ){
-            PCRelation rel = (PCRelation)it.next();
-            //replace the parent and child if there is a need
-            parent = rel.parent;
-            child  = rel.child;
-
-            msg = ("\n Replacing " + rel);
-
-            value = (String)mReplacementTable.get(parent);
-            if(value != null){
-                rel.parent = value;
-            }
-            value = (String)mReplacementTable.get(child);
-            if(value != null){
-                rel.child = value;
-            }
-            msg += (" with " + rel);
-
-            //put in the merged edges set
-            if(!mergedEdges.contains(rel)){
-                val = mergedEdges.add(rel);
-                msg += "Add to set : " + val;
-            }
-           else{
-               msg += "\t Duplicate Entry for " + rel;
-           }
-           mLogger.log( msg, LogManager.DEBUG_MESSAGE_LEVEL );
-       }
-
-       //the final edges need to be updated
-       mScheduledDAG.dagInfo.relations = null;
-       mScheduledDAG.dagInfo.relations = new java.util.Vector(mergedEdges);
    }
 
    /**

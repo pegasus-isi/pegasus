@@ -17,57 +17,37 @@
 
 package edu.isi.pegasus.planner.refiner;
 
-import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
-import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
-
-import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.FileTransfer;
-import edu.isi.pegasus.planner.classes.PegasusFile;
-import edu.isi.pegasus.planner.classes.Job;
-import edu.isi.pegasus.planner.classes.PegasusBag;
-
-
-
-
 import edu.isi.pegasus.common.logging.LogManager;
-
-import edu.isi.pegasus.planner.selector.SiteSelector;
-
-import edu.isi.pegasus.planner.selector.site.SiteSelectorFactory;
-
-import edu.isi.pegasus.planner.selector.TransformationSelector;
-
-import edu.isi.pegasus.planner.namespace.Hints;
-
-import edu.isi.pegasus.planner.provenance.pasoa.XMLProducer;
-import edu.isi.pegasus.planner.provenance.pasoa.producer.XMLProducerFactory;
-
-import edu.isi.pegasus.planner.provenance.pasoa.PPS;
-import edu.isi.pegasus.planner.provenance.pasoa.pps.PPSFactory;
-
-
-import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
-
-
-import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
-
-import edu.isi.pegasus.planner.catalog.transformation.Mapper;
-
 import edu.isi.pegasus.common.util.Separator;
-
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
+import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.Mapper;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
+import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.FileTransfer;
+import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.common.PegRandom;
+import edu.isi.pegasus.planner.namespace.Hints;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import edu.isi.pegasus.planner.provenance.pasoa.PPS;
+import edu.isi.pegasus.planner.provenance.pasoa.XMLProducer;
+import edu.isi.pegasus.planner.provenance.pasoa.pps.PPSFactory;
+import edu.isi.pegasus.planner.provenance.pasoa.producer.XMLProducerFactory;
+import edu.isi.pegasus.planner.selector.SiteSelector;
+import edu.isi.pegasus.planner.selector.TransformationSelector;
+import edu.isi.pegasus.planner.selector.site.SiteSelectorFactory;
 import edu.isi.pegasus.planner.transfer.SLS;
-
 import edu.isi.pegasus.planner.transfer.sls.SLSFactory;
-
 import java.io.File;
-
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.Set;
 import java.util.Vector;
 /**
@@ -238,10 +218,7 @@ public class InterPoolEngine extends Engine implements Refiner {
      *
      */
     public void determineSites() {
-        Job job;
-
         //at present we schedule the whole workflow at once
-        List jobs = convertToList( mDag.vJobSubInfos );
         List pools = convertToList( mExecPools );
 
         //going through all the jobs making up the Adag, to do the physical mapping
@@ -301,9 +278,9 @@ public class InterPoolEngine extends Engine implements Refiner {
         //Iterate through the jobs and hand them to
         //the site selector if required
         String site ;
-        for( Iterator it = dag.jobIterator(); it.hasNext(); i++ ){
-
-            Job job = ( Job ) it.next();
+        for( Iterator<GraphNode> it = dag.jobIterator(); it.hasNext(); i++ ){
+            GraphNode node = it.next();
+            Job job = ( Job )node.getContent();
             site  = job.getSiteHandle();
             mLogger.log( "Mapping Job "  + job.getName(), 
                          LogManager.DEBUG_MESSAGE_LEVEL );

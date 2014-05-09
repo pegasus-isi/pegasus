@@ -17,33 +17,24 @@
 package edu.isi.pegasus.planner.refiner;
 
 
+import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.classes.PCRelation;
-import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.classes.Job;
-
-import edu.isi.pegasus.planner.partitioner.Partitioner;
-import edu.isi.pegasus.planner.partitioner.ClustererCallback;
-
-import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
-
-import edu.isi.pegasus.planner.cluster.ClustererFactory;
+import edu.isi.pegasus.planner.classes.PCRelation;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.cluster.Clusterer;
 import edu.isi.pegasus.planner.cluster.ClustererException;
-
-
-import edu.isi.pegasus.common.logging.LogManager;
-import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.cluster.ClustererFactory;
 
 import edu.isi.pegasus.planner.parser.dax.DAX2LabelGraph;
-
-
-import java.util.Map;
+import edu.isi.pegasus.planner.partitioner.ClustererCallback;
+import edu.isi.pegasus.planner.partitioner.Partitioner;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.Vector;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
 
 /**
@@ -170,14 +161,15 @@ public class NodeCollapser extends Engine {
         //convert the graph representation to a
         //more manageable and traversal data structure that is sent
         //to the partitioning stuff
-        Map nameIDMap = new HashMap();
+        Map<String,String> nameIDMap = new HashMap();
         Job job;
-        for( Iterator it = dag.vJobSubInfos.iterator(); it.hasNext(); ){
+        for( Iterator<GraphNode> it = dag.jobIterator(); it.hasNext(); ){
             //pass the jobs to the callback
-            job = (Job)it.next();
+            GraphNode node = it.next();
+            job = (Job)node.getContent();
             nameIDMap.put( job.getName(), job.getLogicalID() );
         }
-        mGraph = edgeList2Graph( dag.dagInfo.relations, nameIDMap );
+        mGraph = edgeList2Graph( dag, nameIDMap );
 
         //we need to build up a partitioner graph structure to do
         //the partitioning on the graph. Use the callback mechanism
@@ -191,9 +183,10 @@ public class NodeCollapser extends Engine {
 
         //no need to pass any attributes
         d2g.cbDocument( null );
-        for( Iterator it = dag.vJobSubInfos.iterator(); it.hasNext(); ){
+        for( Iterator<GraphNode> it = dag.jobIterator(); it.hasNext(); ){
             //pass the jobs to the callback
-            d2g.cbJob( (Job)it.next() );
+            GraphNode node = it.next();
+            d2g.cbJob( (Job)node.getContent() );
         }
         //pass the relations
         for( Iterator it = mGraph.entrySet().iterator(); it.hasNext(); ){
@@ -224,6 +217,44 @@ public class NodeCollapser extends Engine {
 
         return c.getClusteredDAG();
     }
+    
+    /**
+     * Returns an adjacency list representation of the graph referred to by
+     * the list of edges. The map contains adjacency list with key as a child
+     * and value as the list of parents.
+     *
+     * @param dag       the workflow
+     * @param nameIDMap  map with the key as the jobname and value as the
+     *                   logical id
+     *
+     * @return Map.
+     */
+    protected Map edgeList2Graph(ADag dag, Map nameIDMap){
+        Map map = new HashMap();
+
+        for( Iterator<GraphNode> it = dag.nodeIterator(); it.hasNext(); ){
+            GraphNode node = it.next();
+            Job child = (Job)node.getContent();
+            List l = null;
+            for( GraphNode parentNode: node.getParents() ){
+                Job parent = (Job)parentNode.getContent();
+                if(map.containsKey(nameIDMap.get( child.getID()))){
+                    l = (List)map.get(nameIDMap.get( child.getID() ));
+                    l.add(nameIDMap.get(parent.getID()));
+                }
+                else{
+                    l = new java.util.LinkedList();
+                    l.add( nameIDMap.get(parent.getID()));
+                    map.put(nameIDMap.get(child.getID()),l);
+                }
+            }
+        }
+                    
+
+        return map;
+    }
+
+
 
 
     /**
@@ -231,14 +262,15 @@ public class NodeCollapser extends Engine {
      * the list of edges. The map contains adjacency list with key as a child
      * and value as the list of parents.
      *
-     * @param relations  vector of <code>PCRelation</code> objects that does
+     * @param relations  collection of <code>PCRelation</code> objects that does
      *                   the conversion.
      * @param nameIDMap        map with the key as the jobname and value as the
      *                   logical id
      *
      * @return Map.
+     * @deprecated as part of PM-747
      */
-    protected Map edgeList2Graph(Vector relations, Map nameIDMap){
+    protected Map edgeList2Graph(Collection<PCRelation> relations, Map nameIDMap){
         Map map = new HashMap();
         List l = null;
 

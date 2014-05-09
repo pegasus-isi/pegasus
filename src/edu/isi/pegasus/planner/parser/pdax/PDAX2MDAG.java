@@ -361,9 +361,9 @@ public class PDAX2MDAG implements Callback {
 
         //the name of the mega dag is set to the name
         //attribute in the pdax
-        mMegaDAG.dagInfo.nameOfADag = (String)attributes.get("name");
-        mMegaDAG.dagInfo.count      = (String)attributes.get("count");
-        mMegaDAG.dagInfo.index      = (String)attributes.get("index");
+        mMegaDAG.setLabel( (String)attributes.get("name") );
+        mMegaDAG.setCount( (String)attributes.get("count") );
+        mMegaDAG.setIndex( (String)attributes.get("index"));
 
         // create files in the directory, unless anything else is known.
         try {
@@ -595,11 +595,11 @@ public class PDAX2MDAG implements Callback {
 
         //generate the classad's options
         //for the Mega DAG
-        mMegaDAG.dagInfo.generateFlowName();
-        mMegaDAG.dagInfo.setFlowTimestamp( mPOptions.getDateTime( mProps.useExtendedTimeStamp() ));
-        mMegaDAG.dagInfo.setDAXMTime( new File( mPOptions.getPDAX() ) );
-        mMegaDAG.dagInfo.generateFlowID();
-        mMegaDAG.dagInfo.setReleaseVersion();
+        mMegaDAG.generateFlowName();
+        mMegaDAG.setFlowTimestamp( mPOptions.getDateTime( mProps.useExtendedTimeStamp() ));
+        mMegaDAG.setDAXMTime( new File( mPOptions.getPDAX() ) );
+        mMegaDAG.generateFlowID();
+        mMegaDAG.setReleaseVersion();
 
         /* Moved to CPlanner Class Karan Apr 1 2008
         CodeGenerator codeGenerator = null;

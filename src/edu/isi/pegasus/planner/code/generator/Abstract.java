@@ -95,8 +95,8 @@ public abstract class Abstract implements CodeGenerator{
      */
     protected  String getDAGFilename( ADag dag, String suffix ){
         return getDAGFilename( mPOptions,
-                               dag.dagInfo.nameOfADag,
-                               dag.dagInfo.index,
+                               dag.getLabel(),
+                               dag.getIndex(),
                                suffix );
     }
 

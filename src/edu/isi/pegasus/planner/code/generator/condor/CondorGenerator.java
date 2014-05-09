@@ -40,8 +40,6 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.CondorVersion;
 
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.DagInfo;
-import edu.isi.pegasus.planner.classes.PCRelation;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.DAGJob;
@@ -59,8 +57,6 @@ import edu.isi.pegasus.planner.namespace.Globus;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.namespace.ENV;
 
-import edu.isi.pegasus.planner.partitioner.graph.Adapter;
-import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import org.griphyn.vdl.euryale.VTorInUseException;
 
@@ -75,11 +71,9 @@ import java.io.InputStreamReader;
 import java.io.InputStream;
 
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.StringTokenizer;
-import java.util.Vector;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
@@ -305,16 +299,15 @@ public class CondorGenerator extends Abstract {
      * @throws CodeGeneratorException in case of any error occuring code generation.
      */
     public Collection<File> generateCode( ADag dag ) throws CodeGeneratorException{
-        DagInfo ndi        = dag.dagInfo;
-        Vector vSubInfo    = dag.vJobSubInfos;
+//        DagInfo ndi        = dag.dagInfo;
+//       Vector vSubInfo    = dag.vJobSubInfos;
 
         if ( mInitializeGridStart ){
             mConcreteWorkflow = dag;
             mGridStartFactory.initialize( mBag, dag );
             mInitializeGridStart = false;
         }
-
-
+        
         CodeGenerator storkGenerator = CodeGeneratorFactory.loadInstance( mBag, "Stork" );
 
         String className   = this.getClass().getName();
@@ -323,7 +316,7 @@ public class CondorGenerator extends Abstract {
 
         File dagFile = null;
         Collection<File> result = new ArrayList(1);
-        if (ndi.dagJobs.isEmpty()) {
+        if ( dag.isEmpty() ) {
             //call the callout before returns
             concreteDagEmpty( dagFileName, dag );
             return result ;
@@ -352,8 +345,8 @@ public class CondorGenerator extends Abstract {
             //and symlink it to the submit directory.
             try{
           
-                File f = File.createTempFile( dag.dagInfo.nameOfADag + "-" +
-                                              dag.dagInfo.index,".log", 
+                File f = File.createTempFile( dag.getLabel()  + "-" +
+                                              dag.getIndex(), ".log", 
                                               directory );
                 mTempLogFile=f.getAbsolutePath();
             } catch (IOException ioe) {
@@ -372,23 +365,24 @@ public class CondorGenerator extends Abstract {
   
         //convert the dax to a graph representation and walk it
         //in a top down manner
-        Graph workflow = Adapter.convert( dag );
+        //PM-747 no need for conversion as ADag now implements Graph interface
+        //Graph workflow = dag;
         SUBDAXGenerator subdaxGen = new SUBDAXGenerator();
-        subdaxGen.initialize( mBag, dag, workflow, mDagWriter );
+        subdaxGen.initialize( mBag, dag, mDagWriter );
 
         //we should initialize the .dag file only when we are done
         //with the conversion
 
         //initialize the file handle to the dag
         //file and print it's header
-        dagFile = initializeDagFileWriter( dagFileName, ndi );
+        dagFile = initializeDagFileWriter( dagFileName, dag );
         result.add( dagFile );
 
         //write out any category based dagman knobs to the dagman file
         printDagString( this.getCategoryDAGManKnobs( mProps ) );
 
                     
-        for( Iterator it = workflow.iterator(); it.hasNext(); ){
+        for( Iterator it = dag.iterator(); it.hasNext(); ){
             GraphNode node = ( GraphNode )it.next();
             Job job = (Job)node.getContent();
             
@@ -483,7 +477,7 @@ public class CondorGenerator extends Abstract {
 
         //writing the tail of .dag file
         //that contains the relation pairs
-        this.writeDagFileTail( ndi );
+        this.writeDagFileTail( dag );
         mLogger.log("Written Dag File : " + dagFileName.toString(),
                     LogManager.DEBUG_MESSAGE_LEVEL);
 
@@ -537,9 +531,9 @@ public class CondorGenerator extends Abstract {
      * @throws CodeGeneratorException in case of any error occuring code generation.
      */
     public void generateCode( ADag dag, Job job ) throws CodeGeneratorException{
-        String dagname  = dag.dagInfo.nameOfADag;
-        String dagindex = dag.dagInfo.index;
-        String dagcount = dag.dagInfo.count;
+        String dagname  = dag.getLabel();
+        String dagindex = dag.getIndex();
+        String dagcount = dag.getCount();
         String subfilename = this.getFileBaseName( job );
         String envStr = null;
 
@@ -1016,13 +1010,13 @@ public class CondorGenerator extends Abstract {
      * Initializes the file handler to the dag file and writes the header to it.
      *
      * @param filename     basename of dag file to be written.
-     * @param dinfo        object containing daginfo of type DagInfo .
+     * @param dag        the workflow
      *
      * @return the File object for the DAG file.
      *
      * @throws CodeGeneratorException in case of any error occuring code generation.
      */
-    protected File initializeDagFileWriter(String filename, DagInfo dinfo)
+    protected File initializeDagFileWriter(String filename, ADag workflow )
                                                        throws CodeGeneratorException{
         // initialize file handler
 
@@ -1038,9 +1032,9 @@ public class CondorGenerator extends Abstract {
 
             printDagString(this.mSeparator);
             printDagString("# PEGASUS WMS GENERATED DAG FILE");
-            printDagString("# DAG " + dinfo.nameOfADag);
-            printDagString("# Index = " + dinfo.index + ", Count = " +
-                           dinfo.count);
+            printDagString("# DAG " + workflow.getLabel() );
+            printDagString("# Index = " + workflow.getIndex() + ", Count = " +
+                           workflow.getCount() );
             printDagString(this.mSeparator);
         } catch (Exception e) {
             throw new CodeGeneratorException( "While writing to DAG FILE " + filename,
@@ -1149,20 +1143,23 @@ public class CondorGenerator extends Abstract {
      * It writes the relations making up the  DAG in the dag file and and closes
      * the file handle to it.
      *
-     * @param dinfo   object containing daginfo of type DagInfo.
-     *
+     * @param dag the executable workflow
+     * 
      * @throws CodeGeneratorException
      */
-    protected void writeDagFileTail(DagInfo dinfo) throws CodeGeneratorException{
+    protected void writeDagFileTail( ADag dag ) throws CodeGeneratorException{
         try {
+            
+            for( Iterator<GraphNode> it = dag.jobIterator(); it.hasNext() ; ){
+                GraphNode gn = (GraphNode) it.next();
 
-            // read the contents from the Daginfo object and
-            //print out the parent child relations.
-
-            for (Enumeration dagrelationsenum = dinfo.relations.elements();
-                 dagrelationsenum.hasMoreElements(); ) {
-                PCRelation pcrl = (PCRelation) dagrelationsenum.nextElement();
-                printDagString("PARENT " + pcrl.parent + " CHILD " + pcrl.child);
+                //get a list of parents of the node
+                for( GraphNode child : gn.getChildren() ){
+                    StringBuffer edge = new StringBuffer();
+                    edge.append( "PARENT " ).append( " " ).append( gn.getID() ).append( " " ).
+                         append( "CHILD " ).append( child.getID() );
+                    printDagString( edge.toString() );
+                }
             }
 
             printDagString(this.mSeparator);
@@ -1241,8 +1238,8 @@ public class CondorGenerator extends Abstract {
        }
        else{
            //generate the prefix from the name of the dag
-           sb.append(dag.dagInfo.nameOfADag).append("-").
-               append(dag.dagInfo.index);
+           sb.append(dag.getLabel() ).append("-").
+               append(dag.getIndex() );
        }
        //append the suffix
        sb.append(".log");
@@ -1347,8 +1344,8 @@ public class CondorGenerator extends Abstract {
         }
         else{
             //generate the prefix from the name of the dag
-            sb.append(dag.dagInfo.nameOfADag).append("-").
-                append(dag.dagInfo.index);
+            sb.append( dag.getLabel() ).append("-").
+                append( dag.getIndex() );
         }
         //append the suffix
         sb.append(".dag.dagman.out");

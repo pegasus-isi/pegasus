@@ -36,7 +36,6 @@ import edu.isi.pegasus.planner.namespace.Pegasus;
 
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
-import edu.isi.pegasus.planner.partitioner.graph.Adapter;
 
 import edu.isi.pegasus.planner.selector.ReplicaSelector;
 import edu.isi.pegasus.planner.selector.replica.ReplicaSelectorFactory;
@@ -166,7 +165,7 @@ public class TransferEngine extends Engine {
     /**
      * Holds all the jobs deleted by the reduction algorithm.
      */
-    private List mDeletedJobs;
+    private List<Job> mDeletedJobs;
     
     
     /**
@@ -347,7 +346,8 @@ public class TransferEngine extends Engine {
 
         //convert the dax to a graph representation and walk it
         //in a top down manner
-        Graph workflow = Adapter.convert( mDag );
+        //PM-747 no need for conversion as ADag now implements Graph interface
+        Graph workflow =  mDag;
 
         //go through each job in turn
 
@@ -1777,8 +1777,8 @@ public class TransferEngine extends Engine {
         }
         else{
             //generate the prefix from the name of the dag
-            sb.append(adag.dagInfo.nameOfADag).append("-").
-           append(adag.dagInfo.index);
+            sb.append(adag.getLabel()).append("-").
+           append(adag.getIndex());
         }
         //append the suffix
         sb.append(".cache");

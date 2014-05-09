@@ -17,16 +17,15 @@
 package edu.isi.pegasus.planner.refiner.createdir;
 
 
-import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.Job;
-import edu.isi.pegasus.planner.classes.TransferJob;
-import edu.isi.pegasus.planner.classes.PegasusBag;
-
 import edu.isi.pegasus.common.logging.LogManager;
-
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
+import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.DAXJob;
+import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.TransferJob;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -67,10 +66,24 @@ public class Tentacles extends AbstractStrategy {
      * @return the added workflow
      */
     public ADag addCreateDirectoryNodes( ADag dag ){
-        Set set        = this.getCreateDirSites( dag );
+        Set createDirSites        = this.getCreateDirSites( dag );
         String pool    = null;
         String jobName = null;
         String parent  = null;
+
+        //for each execution site add
+        //a create directory node.
+        //PM-747 we need to add jobs before we add any edges
+        Job newJob = null;
+        for (Iterator it = createDirSites.iterator();it.hasNext();){
+            pool    = (String)it.next();
+            jobName = getCreateDirJobName( dag, pool);
+            newJob  = mImpl.makeCreateDirJob( pool,
+                                              jobName,
+                                              mSiteStore.getExternalWorkDirectoryURL( pool , FileServer.OPERATION.put )  );
+            dag.add(newJob);
+
+        }
 
 	//traverse through the jobs and
         //looking at their execution pool
@@ -80,13 +93,19 @@ public class Tentacles extends AbstractStrategy {
 
         //remove the entry for the local pool
         //set.remove("local");
-        Job job;
         int type;
         boolean local;
-        for(Iterator it = dag.vJobSubInfos.iterator();it.hasNext();){
-            job  = (Job)it.next();
+        for(Iterator<GraphNode> it = dag.jobIterator();it.hasNext();){
+            GraphNode node = it.next();
+            Job job  = (Job)node.getContent();
             jobName = job.getName();
             pool    = job.getSiteHandle();
+            
+            if( job.getJobType() == Job.CREATE_DIR_JOB ){
+                //PM-747 we have added the create dir jobs beforehand
+                //ignore them so that we don't create self edges
+                continue;
+            }
 
             if( job.getJobType() == Job.CHMOD_JOB ){
                 parent = getCreateDirJobName( dag, job.getSiteHandle() );
@@ -136,19 +155,7 @@ public class Tentacles extends AbstractStrategy {
         }
 
 
-        //for each execution pool add
-        //a create directory node.
-        Job newJob = null;
-        for (Iterator it = set.iterator();it.hasNext();){
-            pool    = (String)it.next();
-            jobName = getCreateDirJobName( dag, pool);
-            newJob  = mImpl.makeCreateDirJob( pool,
-                                              jobName,
-                                              mSiteStore.getExternalWorkDirectoryURL( pool , FileServer.OPERATION.put )  );
-            dag.add(newJob);
-
-        }
-
+        
         return dag;
     }
 

@@ -482,11 +482,11 @@ public class CPlanner extends Executable{
         ADag orgDag = (ADag)cb.getConstructedObject();
 
         //generate the flow ids for the classads information
-        orgDag.dagInfo.generateFlowName();
-        orgDag.dagInfo.setFlowTimestamp( mPOptions.getDateTime( mProps.useExtendedTimeStamp() ));
-        orgDag.dagInfo.setDAXMTime( new File(dax) );
-        orgDag.dagInfo.generateFlowID();
-        orgDag.dagInfo.setReleaseVersion();
+        orgDag.generateFlowName();
+        orgDag.setFlowTimestamp( mPOptions.getDateTime( mProps.useExtendedTimeStamp() ));
+        orgDag.setDAXMTime( new File(dax) );
+        orgDag.generateFlowID();
+        orgDag.setReleaseVersion();
 
         //set out the root workflow id
         orgDag.setRootWorkflowUUID( determineRootWorkflowUUID(
@@ -498,11 +498,7 @@ public class CPlanner extends Executable{
         mPMetrics.setRootWorkflowUUID( orgDag.getRootWorkflowUUID() );
         mPMetrics.setWorkflowUUID( orgDag.getWorkflowUUID() );
         mPMetrics.setWorkflowMetrics( orgDag.getWorkflowMetrics() );
-        
-        //log id hiearchy message
-        //that connects dax with the jobs
-        logIDHierarchyMessage( orgDag , LoggingKeys.DAX_ID, orgDag.getAbstractWorkflowName() );
-
+       
         //write out a the relevant properties to submit directory
         int state = 0;
         String relativeSubmitDir; //the submit directory relative to the base specified
@@ -584,8 +580,8 @@ public class CPlanner extends Executable{
                             new File( mPOptions.getSubmitDirectory() ,
                                       edu.isi.pegasus.planner.code.generator.Abstract.getDAGFilename(
                                                             mPOptions,
-                                                            orgDag.dagInfo.nameOfADag,
-                                                            orgDag.dagInfo.index,
+                                                            orgDag.getLabel(),
+                                                            orgDag.getIndex(),
                                                             edu.isi.pegasus.planner.code.generator.Metrics.METRICS_FILE_SUFFIX )
                                                             ));
 
@@ -629,7 +625,6 @@ public class CPlanner extends Executable{
         MainEngine cwmain = new MainEngine( orgDag, mBag );
 
         ADag finalDag = cwmain.runPlanner();
-        DagInfo ndi = finalDag.dagInfo;
 
         //store the workflow metrics from the final dag into
         //the planner metrics
@@ -658,18 +653,6 @@ public class CPlanner extends Executable{
                                    finalDag.getAbstractWorkflowName() );
 
             result = codeGenerator.generateCode( finalDag );
-
-            //connect the DAX and the DAG via the hieararcy message
-            List l = new ArrayList(1);
-            l.add( finalDag.getExecutableWorkflowName() );
-            mLogger.logEntityHierarchyMessage( LoggingKeys.DAX_ID, 
-                                               finalDag.getAbstractWorkflowName(),
-                                               LoggingKeys.DAG_ID,
-                                               l);
-
-            //connect the jobs and the DAG via the hierarchy message
-            this.logIDHierarchyMessage( finalDag, LoggingKeys.DAG_ID, finalDag.getExecutableWorkflowName() );
-
 
         } catch (Exception e) {
             throw new RuntimeException( "Unable to generate code", e );
@@ -771,7 +754,7 @@ public class CPlanner extends Executable{
     public String getNOOPJobName( ADag dag ){
         StringBuffer sb = new StringBuffer();
         sb.append( CPlanner.NOOP_PREFIX ).append( dag.getLabel() ).
-           append( "_" ).append( dag.dagInfo.index );
+           append( "_" ).append( dag.getIndex() );
         return sb.toString();
     }
 
@@ -1137,11 +1120,11 @@ public class CPlanner extends Executable{
             sb.append(bprefix);
             sb.append("-");
             //append timestamp to generate some uniqueness
-            sb.append(dag.dagInfo.getFlowTimestamp());
+            sb.append(dag.getFlowTimestamp());
         }
         else{
             //use the flow ID that contains the timestamp and the name both.
-            sb.append(dag.dagInfo.flowID);
+            sb.append(dag.getFlowID() );
         }
         return sb.toString();
     }
@@ -1478,8 +1461,8 @@ public class CPlanner extends Executable{
         }
         else{
             //generate the prefix from the name of the dag
-            sb.append(dag.dagInfo.nameOfADag).append("-").
-                append(dag.dagInfo.index);
+            sb.append(dag.getLabel() ).append("-").
+                append( dag.getIndex() );
         }
         //append the suffix
         sb.append( ".dag" );
@@ -1746,29 +1729,7 @@ public class CPlanner extends Executable{
         return result;
     }
 
-    /**
-     * Logs a message that connects the jobs with DAX/DAG
-     * 
-     * 
-     * @param dag           the DAG object
-     * @param parentType    the parent type
-     * @param parentID      the parent id
-     */
-    private void logIDHierarchyMessage(ADag dag, String parentType, String parentID ) {
-        //log the create id hieararchy message that 
-        //ties the DAX with the jobs in it.
-        //in bunches of 1000
-        Enumeration e = dag.vJobSubInfos.elements();
-        while( e.hasMoreElements() ){
-            List<String> l = new LinkedList<String>();
-            for( int i = 0; e.hasMoreElements() && i++ < 1000; ){
-                Job job = (Job)e.nextElement();
-                l.add( job.getID() );
-            }
-            mLogger.logEntityHierarchyMessage( parentType, parentID, LoggingKeys.JOB_ID, l );
-        }
-    }
-
+    
 
 
     /**

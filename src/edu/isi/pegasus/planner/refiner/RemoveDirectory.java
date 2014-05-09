@@ -16,7 +16,6 @@
 
 package edu.isi.pegasus.planner.refiner;
 
-import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 
 import edu.isi.pegasus.planner.classes.ADag;
@@ -41,8 +40,6 @@ import java.util.LinkedList;
 
 import java.io.File;
 import edu.isi.pegasus.planner.namespace.Pegasus;
-import edu.isi.pegasus.planner.partitioner.graph.Adapter;
-import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.refiner.createdir.AbstractStrategy;
 import java.io.BufferedWriter;
@@ -197,32 +194,8 @@ public class RemoveDirectory extends Engine {
      * @return the added workflow
      */
     public ADag addRemoveDirectoryNodes( ADag dag ){
-        ADag result;
-
-       
-        //we first need to convert internally into graph format
-        Graph resultGraph =  this.addRemoveDirectoryNodes( Adapter.convert(dag ) ,dag, this.getCreateDirSites(dag));
-
-        //convert back to ADag and return
-        result = dag;
-        //we need to reset the jobs and the relations in it
-        result.clearJobs();
-
-        //traverse through the graph and jobs and edges
-        for( Iterator it = resultGraph.nodeIterator(); it.hasNext(); ){
-            GraphNode node = ( GraphNode )it.next();
-
-            //get the job associated with node
-            result.add( ( Job )node.getContent() );
-
-            //all the parents of the node are the edges of the DAG
-            for( Iterator childrenIt = node.getChildren().iterator(); childrenIt.hasNext(); ){
-                GraphNode child = ( GraphNode ) childrenIt.next();
-                result.addNewRelation( node.getID(), child.getID() );
-            }
-        }
-
-        return result;
+        //PM-747 no need for conversion as ADag now implements Graph interface
+        return this.addRemoveDirectoryNodes( dag  ,this.getCreateDirSites(dag));
     }
     
     /**
@@ -238,12 +211,11 @@ public class RemoveDirectory extends Engine {
      * parents have been processed.
      * 
      * @param workflow  the workflow 
-     * @param dag       the original dag structure
      * @param sites     the staging sites the workflow refers to.
      * 
      * @return 
      */
-    public Graph addRemoveDirectoryNodes( Graph workflow, ADag dag, Set<String> sites ) {
+    public ADag addRemoveDirectoryNodes( ADag workflow, Set<String> sites ) {
         //the number of sites dictates the size of the BitSet associated with each job.
         Map<String, Integer> siteToBitIndexMap = new HashMap();
         int bitSetSize = sites.size();
@@ -259,7 +231,7 @@ public class RemoveDirectory extends Engine {
         Map<GraphNode,List<GraphNode>> removeDirParentsMap = new HashMap();
         Map<String,GraphNode> removeDirMap = new HashMap();//mas site to the associated remove dir node
         for (String site: sites ){
-            String jobName = getRemoveDirJobName( dag, site );
+            String jobName = getRemoveDirJobName( workflow, site );
             Job newJob  = this.makeRemoveDirJob( site, jobName );
             mLogger.log( "Creating remove directory node " + jobName , LogManager.DEBUG_MESSAGE_LEVEL );
             GraphNode node = new GraphNode( newJob.getID() );
@@ -389,8 +361,8 @@ public class RemoveDirectory extends Engine {
         //append the job prefix if specified in options at runtime
         if ( mJobPrefix != null ) { sb.append( mJobPrefix ); }
 
-        sb.append( dag.dagInfo.nameOfADag ).append( "_" ).
-           append( dag.dagInfo.index ).append( "_" );
+        sb.append( dag.getLabel() ).append( "_" ).
+           append( dag.getIndex() ).append( "_" );
 
 
         sb.append( site );

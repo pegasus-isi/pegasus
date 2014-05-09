@@ -116,7 +116,7 @@ public class BalancedCluster extends Basic {
      * used to construct the relations that need to be added to workflow, once
      * the traversal is done.
      */
-    private Map mRelationsMap;
+    private Map mRelationsParentMap;
 
     
     /**
@@ -216,7 +216,7 @@ public class BalancedCluster extends Basic {
         mStageInLocalMapPerLevel   = new HashMap( mPOptions.getExecutionSites().size());
         mStageInRemoteMapPerLevel   = new HashMap( mPOptions.getExecutionSites().size());
         
-        mRelationsMap = new HashMap();
+        mRelationsParentMap = new HashMap();
         mSetupMap     = new HashMap();
         mCurrentSOLevel = -1;
         mCurrentSILevel = -1;
@@ -505,12 +505,12 @@ public class BalancedCluster extends Basic {
 
         //add the temp set to the relations
         //relations are added to the workflow in the end.
-        if( mRelationsMap.containsKey( jobName )){
+        if( mRelationsParentMap.containsKey( jobName )){
             //the map already has some relations for the job
             //add those to temp set to 
-            tempSet.addAll( (Set) mRelationsMap.get( jobName ) );
+            tempSet.addAll( (Set) mRelationsParentMap.get( jobName ) );
         }
-        mRelationsMap.put(jobName,tempSet);
+        mRelationsParentMap.put(jobName,tempSet);
 
 
     }
@@ -643,7 +643,7 @@ public class BalancedCluster extends Basic {
         
         //adding relations that tie in the stagin
         //jobs to the compute jobs.
-        for(Iterator it = mRelationsMap.entrySet().iterator();it.hasNext();){
+        for(Iterator it = mRelationsParentMap.entrySet().iterator();it.hasNext();){
             Map.Entry entry = (Map.Entry)it.next();
             String key   = (String)entry.getKey();
             mLogger.log("Adding relations for job " + key,
@@ -651,12 +651,19 @@ public class BalancedCluster extends Basic {
             for(Iterator pIt = ((Collection)entry.getValue()).iterator();
                                                               pIt.hasNext();){
                 String value = (String)pIt.next();
-                addRelation( value, key );
+                
+                mLogger.log("Adding Edge " + value + " -> " + key,
+                        LogManager.DEBUG_MESSAGE_LEVEL);
+                this.mDAG.addEdge( value, key );
             }
         }
         
         //reset the stageout map too
         this.resetStageOutMaps();
+        
+        
+        //PM-747 add the edges in the very end
+        super.done();
     }
     
     /**
@@ -668,7 +675,7 @@ public class BalancedCluster extends Basic {
                                                     Job.STAGE_IN_JOB,
                                                     true );
         
-        mStageInLocalMapPerLevel = resetStageInMap( this.mStageInRemoteMapPerLevel,
+        mStageInRemoteMapPerLevel = resetStageInMap( this.mStageInRemoteMapPerLevel,
                                                     this.mTXStageInImplementation,
                                                     Job.STAGE_IN_JOB,
                                                     false );
@@ -687,6 +694,7 @@ public class BalancedCluster extends Basic {
      * @param stageInJobType   whether a stagein or symlink stagein job
      * @param localTransfer    indicates whether transfer job needs to run on
      *                         local site or not.
+     * @return 
      */
     public Map<String,PoolTransfer> resetStageInMap( Map<String,PoolTransfer> stageInMap,
                                                      Implementation implementation,
@@ -1127,7 +1135,7 @@ public class BalancedCluster extends Basic {
         * appropriate TransferContainer. The collection is added to a single
         * TransferContainer, and the pointer is then updated to the next container.
         *
-        * @param files  the collection <code>FileTransfer</code> to be added.
+        * @param file
         * @param level  the level of the workflow
         * @param type   the type of transfer job
         *
@@ -1162,41 +1170,7 @@ public class BalancedCluster extends Basic {
        }
 
 
-        /**
-         * Adds a file transfer to the appropriate TransferContainer.
-         * The file transfers are added in a round robin manner underneath.
-         *
-         * @param transfer  the <code>FileTransfer</code> containing the
-         *                  information about a single transfer.
-         * @param type      the type of transfer job
-         *
-         * @return  the name of the transfer job to which the transfer is added.
-         */
-        public String addTransfer(FileTransfer transfer, int type ){
-            //we add the transfer to the container pointed
-            //by next
-            Object obj = mTXContainers.get(mNext);
-            TransferContainer tc = null;
-            if(obj == null){
-                //on demand add a new transfer container to the end
-                //is there a scope for gaps??
-                tc = new TransferContainer();
-                tc.setTXName( getTXJobName( mNext, type ) );
-                mTXContainers.set(mNext,tc);
-            }
-            else{
-                tc = (TransferContainer)obj;
-            }
-            tc.addTransfer(transfer);
-
-            //update the next pointer to maintain
-            //round robin status
-            mNext = (mNext < (mCapacity -1))?
-                     mNext + 1 :
-                     0;
-
-            return tc.getTXName();
-        }
+        
 
         /**
          * Returns the iterator to the list of transfer containers.
@@ -1282,47 +1256,7 @@ public class BalancedCluster extends Basic {
            return sb.toString();
         }
         
-        /**
-         * Generates the name of the transfer job, that is unique for the given
-         * workflow.
-         *
-         * @param counter  the index for the transfer job.
-         * @param type     the type of transfer job.
-         *
-         * @return the name of the transfer job.
-         */
-        private String getTXJobName( int counter, int type ){
-            StringBuffer sb = new StringBuffer();
-            switch ( type ){
-                case Job.STAGE_IN_JOB:
-                    sb.append( Refiner.STAGE_IN_PREFIX );
-                    break;
-                    
-               
-                case Job.STAGE_OUT_JOB:
-                    sb.append( Refiner.STAGE_OUT_PREFIX );
-                    break;
-
-                default:
-                    throw new RuntimeException( "Wrong type specified " + type );
-            }
-
-            if( mLocalTransfer ) {
-                sb.append( Refiner.LOCAL_PREFIX );
-            }
-            else{
-                sb.append( Refiner.REMOTE_PREFIX );
-            }
-
-            //append the job prefix if specified in options at runtime
-            if ( mJobPrefix != null ) { sb.append( mJobPrefix ); }
-
-
-            sb.append(mPool).append("_").append(counter);
-
-           return sb.toString();
-        }
-
+        
 
     }
     
