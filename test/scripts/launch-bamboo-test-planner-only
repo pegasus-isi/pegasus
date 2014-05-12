@@ -13,10 +13,12 @@ cd test/core/$TEST
 echo "TEST is $TEST"
 pwd
 
-PLANFILE=`mktemp plan.XXXXXX`
+# the run-bamboo-test of the performance tests already 
+# redirect output to plan.out. no double teeing
+PLANFILE=plan.out
 
 #Launch the test
-./run-bamboo-test "$@" | tee $PLANFILE
+./run-bamboo-test "$@" 
 
 STATUS=$?
 
