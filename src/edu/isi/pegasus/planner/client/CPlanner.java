@@ -246,6 +246,7 @@ public class CPlanner extends Executable{
             error.printStackTrace();
             //lets print out some GC stats
             cPlanner.logMemoryUsage();
+            result = 4;
         }
         catch ( RuntimeException rte ) {
             plannerException = rte;
@@ -1266,10 +1267,12 @@ public class CPlanner extends Executable{
              append( "\n -X[non standard java option]  pass to jvm a non standard option . e.g. -Xmx1024m -Xms512m"  ).
              append( "\n -h |--help         generates this help."  ).
              append( "\n The following exitcodes are produced"  ).
-             append( "\n 0 concrete planner planner was able to generate a concretized workflow" ).
+             append( "\n 0 planner was able to generate an executable workflow" ).
              append( "\n 1 an error occured. In most cases, the error message logged should give a"  ).
              append( "\n   clear indication as to where  things went wrong." ).
              append( "\n 2 an error occured while loading a specific module implementation at runtime"  ).
+             append( "\n 3 an unaccounted java exception occured at runtime"  ).
+             append( "\n 4 encountered an out of memory exception. Most probably ran out of heap memory."  ).
              append( "\n " );
 
         System.out.println(text);
