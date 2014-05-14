@@ -25,6 +25,7 @@ import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 
 /**
  * The callback, that ends up building a label graph. With each GraphNode a label
@@ -69,12 +70,12 @@ public class DAX2LabelGraph extends DAX2Graph {
     /**
      * The overloaded constructor.
      *
-     * @param properties  the properties passed to the planner.
-     * @param dax         the path to the DAX file.
+     * @param bag   the bag of initialization objects containing the properties
+     *              and the logger
+     * @param dax   the path to the DAX file.
      */
-    public DAX2LabelGraph( PegasusProperties properties, String dax ){
-        super( properties, dax );
-        mProps = properties;
+    public void initialize( PegasusBag bag, String dax ){
+        super.initialize( bag, dax );
         this.setLabelKey( DEFAULT_LABEL_KEY );
     }
 

@@ -17,6 +17,7 @@
 package edu.isi.pegasus.planner.parser.dax;
 
 
+import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.classes.ADag;
@@ -25,6 +26,7 @@ import edu.isi.pegasus.planner.classes.DagInfo;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.classes.PCRelation;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.classes.ReplicaStore;
@@ -106,15 +108,22 @@ public class DAX2CDAG implements Callback {
     private Map<String,Job> mFileCreationMap;
     
     /**
+     * The handle to the logger
+     */
+    private LogManager mLogger;
+    
+    /**
      * The overloaded constructor.
      *
-     * @param properties  the properties passed to the planner.
-     * @param dax         the path to the DAX file.
+     * @param bag   the bag of initialization objects containing the properties
+     *              and the logger
+     * @param dax   the path to the DAX file.
      */
-    public DAX2CDAG( PegasusProperties properties, String dax ) {
+    public void initialize( PegasusBag bag, String dax ) {
         mDag          = new ADag();
         mJobMap       = new HashMap<String,String>();
-        mProps        = properties;
+        mProps        = bag.getPegasusProperties();
+        mLogger       = bag.getLogger();
         mDone         = false;
         this.mReplicaStore = new ReplicaStore();
         this.mTransformationStore = new TransformationStore();

@@ -28,6 +28,7 @@ import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.dax.Invoke;
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -88,13 +89,14 @@ public class DAX2Graph implements Callback {
     /**
      * The overloaded constructor.
      *
-     * @param properties  the properties passed to the planner.
-     * @param dax         the path to the DAX file.
+     * @param bag   the bag of initialization objects containing the properties
+     *              and the logger
+     * @param dax   the path to the DAX file.
      */
-    public DAX2Graph(PegasusProperties properties, String dax){
-        mProps = properties;
+    public void initialize( PegasusBag bag, String dax ){
+        mProps = bag.getPegasusProperties();
         mAbstractGraph = new java.util.HashMap();
-        mLogger        = LogManagerFactory.loadSingletonInstance( properties );
+        mLogger        = bag.getLogger();
         mDone          = false;
         mLabel         = null;
         mRoot          = null;

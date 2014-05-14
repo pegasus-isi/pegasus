@@ -175,7 +175,8 @@ public class NodeCollapser extends Engine {
         //the partitioning on the graph. Use the callback mechanism
         //developed for the partiotioner stuff and populate it
         //from the exisiting graph structure
-        DAX2LabelGraph d2g = new DAX2LabelGraph( mProps, mPOptions.getDAX() );
+        DAX2LabelGraph d2g = new DAX2LabelGraph( );
+        d2g.initialize(mBag, mPOptions.getDAX() );
 
         //set the appropriate key that is to be used for picking up the labels
         d2g.setLabelKey( mProps.getClustererLabelKey() );

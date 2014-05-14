@@ -103,7 +103,7 @@ public class DAXParserFactory {
         }
 
         //load the callback
-        Callback c = DAXParserFactory.loadDAXParserCallback( properties, daxFile, callbackClass );
+        Callback c = DAXParserFactory.loadDAXParserCallback( bag, daxFile, callbackClass );
         return DAXParserFactory.loadDAXParser( bag, c, daxFile );
 
     }
@@ -257,11 +257,12 @@ public class DAXParserFactory {
      * @see edu.isi.pegasus.planner.common.PegasusProperties#getPartitionerDAXCallback()
      */
     public static Callback loadDAXParserCallback( String type,
-                                         PegasusProperties properties,
+                                         PegasusBag bag,
                                          String dax )
         throws DAXParserFactoryException{
 
         String callbackClass = null;
+        PegasusProperties properties = bag.getPegasusProperties();
         
         //for type label always load DAX2LabelGraph
         if ( type.equalsIgnoreCase("label") ){
@@ -271,7 +272,7 @@ public class DAXParserFactory {
             callbackClass = properties.getPartitionerDAXCallback();
         }
         
-        return loadDAXParserCallback( properties,  dax, callbackClass );
+        return loadDAXParserCallback( bag,  dax, callbackClass );
 
     }
 
@@ -284,7 +285,7 @@ public class DAXParserFactory {
      * @return Map containing the metadata, else an empty map
      */
     public static Map getDAXMetadata( PegasusBag bag, String dax ){
-        Callback cb =  DAXParserFactory.loadDAXParserCallback( bag.getPegasusProperties(), dax, "DAX2Metadata" );
+        Callback cb =  DAXParserFactory.loadDAXParserCallback( bag, dax, "DAX2Metadata" );
         
         LogManager logger = bag.getLogger();
         if( logger != null ){
@@ -323,8 +324,8 @@ public class DAXParserFactory {
      * The properties object passed should not be null. The callback that is
      * loaded, is the one referred to by the className parameter passed.
      *
-     * @param properties the <code>PegasusProperties</code> object containing all
-     *                   the properties required by Pegasus.
+     * @param bag       the bag of initialization objects containing the logger
+     *                  and the properties handler
      * @param dax        the path to the DAX file that has to be parsed.
      * @param className  the name of the implementing class.
      *
@@ -335,7 +336,7 @@ public class DAXParserFactory {
      *
      * @see #DEFAULT_CALLBACK_PACKAGE_NAME
      */
-    public static  Callback loadDAXParserCallback( PegasusProperties properties,
+    public static  Callback loadDAXParserCallback( PegasusBag bag,
                                           String dax,
                                           String className)
         throws DAXParserFactoryException{
@@ -345,6 +346,10 @@ public class DAXParserFactory {
 
         try{
             //sanity check
+            if( bag == null ){
+                throw new RuntimeException("Invalid PegasusBag passed");
+            }
+            PegasusProperties properties= bag.getPegasusProperties();
             if(properties == null){
                 throw new RuntimeException("Invalid properties passed");
             }
@@ -360,10 +365,9 @@ public class DAXParserFactory {
                         className;
 
             DynamicLoader dl  = new DynamicLoader( className);
-            Object argList[]  = new Object[2];
-            argList[0] = properties;
-            argList[1] = dax;
+            Object argList[]  = new Object[0];
             callback = (Callback)dl.instantiate(argList);
+            callback.initialize( bag, dax);
         }
         catch(Exception e){
             throw new DAXParserFactoryException("Instantiating DAXCallback ",
