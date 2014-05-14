@@ -27,6 +27,9 @@ wget -nv -O  conf/output_map.dat http://pegasus.isi.edu/static/bamboo/014-planne
 
 START_TS=`/bin/date +'%s'`
 
+# set the java heap max to get the planner to not fail 
+export JAVA_HEAPMAX=6144
+
 # plan the workflow
 /usr/bin/time pegasus-plan \
     -v \
