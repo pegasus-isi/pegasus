@@ -32,7 +32,6 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationFactory;
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.DagInfo;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.NameValue;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -51,8 +50,10 @@ import edu.isi.pegasus.planner.parser.Parser;
 import edu.isi.pegasus.planner.parser.dax.Callback;
 import edu.isi.pegasus.planner.parser.dax.DAXParser;
 import edu.isi.pegasus.planner.refiner.MainEngine;
+
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -63,17 +64,18 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.lang.management.GarbageCollectorMXBean;
+
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryPoolMXBean;
 import java.lang.management.MemoryUsage;
+
 import java.nio.channels.FileChannel;
+
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.ArrayList;
+
 import java.util.Collection;
 import java.util.Date;
-import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -480,13 +482,8 @@ public class CPlanner extends Executable{
 
         }
 
-        
         //load the parser and parse the dax
-        Parser p = (Parser)DAXParserFactory.loadDAXParser( mBag, "DAX2CDAG", dax );
-        Callback cb = ((DAXParser)p).getDAXCallback();
-        p.startParser( dax );
-
-        ADag orgDag = (ADag)cb.getConstructedObject();
+        ADag orgDag = this.parseDAX( dax );
 
         //generate the flow ids for the classads information
         orgDag.generateFlowName();
@@ -1875,6 +1872,20 @@ public class CPlanner extends Executable{
             mLogger.log( "Error while logging peak memory usage " + t.getMessage(),
                          LogManager.ERROR_MESSAGE_LEVEL );
         }
+    }
+
+    /**
+     * Parses the DAX and returns the associated ADag object 
+     * 
+     * @param dax  path to the DAX file.
+     * 
+     * @return 
+     */
+    private ADag parseDAX(String dax) {
+        Parser p = (Parser)DAXParserFactory.loadDAXParser( mBag, "DAX2CDAG", dax );
+        Callback cb = ((DAXParser)p).getDAXCallback();
+        p.startParser( dax );
+        return (ADag)cb.getConstructedObject();
     }
 
     
