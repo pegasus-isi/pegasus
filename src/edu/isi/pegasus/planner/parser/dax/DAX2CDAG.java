@@ -30,6 +30,8 @@ import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.classes.ReplicaStore;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.dax.Invoke;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNodeContent;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -87,13 +89,22 @@ public class DAX2CDAG implements Callback {
      */
     protected Map<String,CompoundTransformation> mCompoundTransformations;
     
-    
     /**
      * All the notifications associated with the adag
      */
     private Notifications mNotifications;
 
-
+    /**
+     * To track whether we auto detect data dependancies or not.
+     */
+    private boolean mAddDataDependencies;
+    
+    /**
+     * Map to track a LFN with the job that creates the file corresponding to the 
+     * LFN.
+     */
+    private Map<String,Job> mFileCreationMap;
+    
     /**
      * The overloaded constructor.
      *
@@ -109,6 +120,8 @@ public class DAX2CDAG implements Callback {
         this.mTransformationStore = new TransformationStore();
         this.mCompoundTransformations = new HashMap<String,CompoundTransformation>();
         this.mNotifications = new Notifications();
+        this.mAddDataDependencies = true;
+        this.mFileCreationMap = new HashMap<String,Job>();
     }
 
 
@@ -175,13 +188,15 @@ public class DAX2CDAG implements Callback {
 
             //if the output LFN is also an input LFN of the same
             //job then it is a pass through LFN. Should be tagged
-            //as i only, as we want it staged in
-
+            //as i only, as we want it staged in\
             if( job.inputFiles.contains( pf ) ){
                 //dont add to lfn map in DagInfo
                 continue;
             }
             dinfo.updateLFNMap(lfn,"o");
+            if( this.mAddDataDependencies ){
+                mFileCreationMap.put( lfn, job );
+            }
         }
 
     }
@@ -226,8 +241,11 @@ public class DAX2CDAG implements Callback {
      * ADag object has been fully generated or not.
      */
     public void cbDone() {
-        
         mDone = true;
+        
+        if( this.mAddDataDependencies ){
+            this.addDataDependencies();
+        }
     }
 
     /**
@@ -284,6 +302,26 @@ public class DAX2CDAG implements Callback {
         this.mTransformationStore.addEntry( tce );
         if( !tce.getNotifications().isEmpty() ){
         	System.out.println( "[DEBUG] Executable Invoke " + tce.getLogicalTransformation() + " " +  tce.getNotifications() );
+        }
+    }
+
+    /**
+     * Goes through the ADag and computes any data dependencies.
+     *
+     * For example if Job A creates an output file X and job B consumes it, then 
+     * it automatically adds a dependency between A -> B if it does not exist already.
+     */
+    private void addDataDependencies() {
+        for( Iterator<GraphNode> it = this.mDag.nodeIterator(); it.hasNext(); ){
+            GraphNode node = it.next();
+            Job job = (Job)node.getContent();
+            for( PegasusFile pf : job.getInputFiles() ){
+                Job parent = this.mFileCreationMap.get(pf.getLFN() );
+                if( parent != null ){
+                    System.out.println( "Adding edge " + parent.getID() + " -> " + job.getID() );
+                    this.mDag.addEdge( parent.getID(), job.getID() );
+                }
+            }
         }
     }
 }

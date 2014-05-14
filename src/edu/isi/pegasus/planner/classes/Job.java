@@ -689,7 +689,7 @@ public class Job extends Data implements GraphNodeContent{
      *
      * @param ipFiles  Set of <code>PegasusFile</code> objects containing the input files.
      */
-    public void setInputFiles( Set ipFiles ){
+    public void setInputFiles( Set<PegasusFile> ipFiles ){
         this.inputFiles = ipFiles;
     }
 
@@ -698,7 +698,7 @@ public class Job extends Data implements GraphNodeContent{
      *
      * @return Set of <code>PegasusFile</code> objects containing the input files.
      */
-    public Set getInputFiles( ){
+    public Set<PegasusFile> getInputFiles( ){
         return this.inputFiles;
     }
 
@@ -870,7 +870,7 @@ public class Job extends Data implements GraphNodeContent{
      * @param opFiles  Set of <code>PegasusFile</code> objects containing the
      *                 output files.
      */
-    public void setOutputFiles( Set opFiles ){
+    public void setOutputFiles( Set<PegasusFile> opFiles ){
         this.outputFiles = opFiles;
     }
 
@@ -879,7 +879,7 @@ public class Job extends Data implements GraphNodeContent{
      *
      * @return Set of <code>PegasusFile</code> objects containing the output files.
      */
-    public Set getOutputFiles( ){
+    public Set<PegasusFile> getOutputFiles( ){
         return this.outputFiles;
     }
 
