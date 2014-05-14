@@ -241,6 +241,12 @@ public class CPlanner extends Executable{
             cPlanner.log( fe.convertException() , LogManager.FATAL_MESSAGE_LEVEL);
             result = 2;
         }
+        catch( OutOfMemoryError error ){
+            cPlanner.log( "Out of Memory Error " + error.getMessage(), LogManager.FATAL_MESSAGE_LEVEL );
+            error.printStackTrace();
+            //lets print out some GC stats
+            cPlanner.logMemoryUsage();
+        }
         catch ( RuntimeException rte ) {
             plannerException = rte;
             //catch all runtime exceptions including our own that
