@@ -69,7 +69,7 @@ public  class LoggingKeys {
     public static final String EVENT_PEGASUS_PARSE_PDAX           = "event.pegasus.parse.pdax";
     public static final String EVENTS_PEGASUS_STAMPEDE_GENERATION = "event.pegasus.stampede.events";
     public static final String EVENTS_PEGASUS_CODE_GENERATION     = "event.pegasus.code.generation";
-    public static String EVENT_PEGASUS_ADD_DATA_DEPENDENCIES      = "event.pegasus.add.data-dependencies";
+    public static final String EVENT_PEGASUS_ADD_DATA_DEPENDENCIES= "event.pegasus.add.data-dependencies";
     
     public static final String EVENT_WORKFLOW_JOB_STATUS           = "event.workflow.job.status";
 
