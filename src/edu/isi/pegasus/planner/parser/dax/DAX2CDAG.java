@@ -18,6 +18,7 @@ package edu.isi.pegasus.planner.parser.dax;
 
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.classes.ADag;
@@ -285,7 +286,8 @@ public class DAX2CDAG implements Callback {
     public void cbCompoundTransformation( CompoundTransformation compoundTransformation ){
     	this.mCompoundTransformations.put( compoundTransformation.getCompleteName(), compoundTransformation );
     	if(!compoundTransformation.getNotifications().isEmpty()){
-    		System.out.println( "[DEBUG] Compound Transformation Invoke " + compoundTransformation.getCompleteName() + " " +compoundTransformation.getNotifications() );
+    		mLogger.log( "Compound Transformation Invoke " + compoundTransformation.getCompleteName() + " " +compoundTransformation.getNotifications(),
+                             LogManager.DEBUG_MESSAGE_LEVEL );
     	}
     }
 
@@ -310,7 +312,8 @@ public class DAX2CDAG implements Callback {
     public void cbExecutable( TransformationCatalogEntry tce ){
         this.mTransformationStore.addEntry( tce );
         if( !tce.getNotifications().isEmpty() ){
-        	System.out.println( "[DEBUG] Executable Invoke " + tce.getLogicalTransformation() + " " +  tce.getNotifications() );
+        	mLogger.log( "Executable Invoke " + tce.getLogicalTransformation() + " " +  tce.getNotifications(),
+                             LogManager.DEBUG_MESSAGE_LEVEL );
         }
     }
 
@@ -321,16 +324,19 @@ public class DAX2CDAG implements Callback {
      * it automatically adds a dependency between A -> B if it does not exist already.
      */
     private void addDataDependencies() {
+        mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_ADD_DATA_DEPENDENCIES, LoggingKeys.DAX_ID, this.mDag.getAbstractWorkflowName() );
         for( Iterator<GraphNode> it = this.mDag.nodeIterator(); it.hasNext(); ){
             GraphNode node = it.next();
             Job job = (Job)node.getContent();
             for( PegasusFile pf : job.getInputFiles() ){
                 Job parent = this.mFileCreationMap.get(pf.getLFN() );
                 if( parent != null ){
-                    System.out.println( "Adding edge " + parent.getID() + " -> " + job.getID() );
+                    mLogger.log( "Adding Data Dependency edge " + parent.getID() + " -> " + job.getID(),
+                                 LogManager.DEBUG_MESSAGE_LEVEL );
                     this.mDag.addEdge( parent.getID(), job.getID() );
                 }
             }
         }
+        mLogger.logEventCompletion();
     }
 }
