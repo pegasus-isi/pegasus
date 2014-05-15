@@ -833,7 +833,7 @@ class IRodsHandler(TransferHandlerBase):
         if transfer.dst_proto == "file":
             # irods->file
             prepare_local_dir(os.path.dirname(transfer.dst_path))
-            cmd = "iget -v -f -T"
+            cmd = "iget -v -f -T -K"
             if self.ticket is not None:
                 cmd += " -t " + irods.ticket
             if transfer.src_host is not "" and attempt == 1:
