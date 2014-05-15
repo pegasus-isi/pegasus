@@ -18,10 +18,9 @@ package edu.isi.pegasus.planner.partitioner;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.common.PegasusProperties;
-
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
-
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -108,7 +107,7 @@ public class One2One extends Partitioner {
             //the key is the logical id of the node specified in the dax
             key = (String)it.next();
             node = (GraphNode)mGraph.get(key);
-            List parents = node.getParents();
+            Collection<GraphNode> parents = node.getParents();
 
             //we have to ignore the dummy root node.
             //and the node with no parents

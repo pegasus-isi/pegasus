@@ -17,16 +17,15 @@
 
 package edu.isi.pegasus.planner.partitioner.graph;
 
-import edu.isi.pegasus.common.logging.LogManagerFactory;
-
 import edu.isi.pegasus.common.logging.LogManager;
-
+import edu.isi.pegasus.common.logging.LogManagerFactory;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 
 /**
  * An implementation of the Graph that is backed by a Map.
@@ -152,8 +151,8 @@ public class MapGraph implements Graph{
 
         // the parents of the node now become parents of the children
         // the parents of the node now become parents of the children
-        List<GraphNode> parents = removalNode.getParents();
-        List<GraphNode> children = removalNode.getChildren();
+        Collection<GraphNode> parents = removalNode.getParents();
+        Collection<GraphNode> children = removalNode.getChildren();
 
         //for each parent make the parent it's parent instead of removed node
 

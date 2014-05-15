@@ -18,19 +18,17 @@
 package edu.isi.pegasus.planner.partitioner;
 
 import edu.isi.pegasus.planner.classes.Data;
-
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
-
-import java.io.Writer;
-import java.io.StringWriter;
 import java.io.IOException;
-
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.Iterator;
-import java.util.List;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -179,7 +177,7 @@ public class Partition extends Data {
         //traverse through all the nodes in the partition
         for(Iterator it = mNodeList.iterator();it.hasNext();){
             GraphNode node = (GraphNode)it.next();
-            List parents = node.getParents();
+            Collection<GraphNode> parents = node.getParents();
             if(parents == null){
                 continue;
             }
