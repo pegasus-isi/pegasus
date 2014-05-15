@@ -36,9 +36,11 @@ import edu.isi.pegasus.planner.dax.Invoke;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNodeContent;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * This creates a dag corresponding to one particular partition of the whole
@@ -326,15 +328,20 @@ public class DAX2CDAG implements Callback {
     private void addDataDependencies() {
         mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_ADD_DATA_DEPENDENCIES, LoggingKeys.DAX_ID, this.mDag.getAbstractWorkflowName() );
         for( Iterator<GraphNode> it = this.mDag.nodeIterator(); it.hasNext(); ){
-            GraphNode node = it.next();
-            Job job = (Job)node.getContent();
+            GraphNode child = it.next();
+            Set<GraphNode> parents = new HashSet();
+            Job job = (Job)child.getContent();
             for( PegasusFile pf : job.getInputFiles() ){
                 Job parent = this.mFileCreationMap.get(pf.getLFN() );
                 if( parent != null ){
-                    mLogger.log( "Adding Data Dependency edge " + parent.getID() + " -> " + job.getID(),
-                                 LogManager.DEBUG_MESSAGE_LEVEL );
-                    this.mDag.addEdge( parent.getID(), job.getID() );
+                    parents.add( this.mDag.getNode( parent.getID() ));
                 }
+            }
+            //now add depedencies for the job
+            for( GraphNode parent: parents ){
+                mLogger.log( "Adding Data Dependency edge " + parent.getID() + " -> " + job.getID(),
+                                 LogManager.DEBUG_MESSAGE_LEVEL );
+               this.mDag.addEdge( parent, child );
             }
         }
         mLogger.logEventCompletion();
