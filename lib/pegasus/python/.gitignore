@@ -1,4 +1,5 @@
 boto
 pysqlite2
 sqlalchemy
+sleekxmpp
 *.egg-info
