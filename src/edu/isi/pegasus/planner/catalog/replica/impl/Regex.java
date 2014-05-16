@@ -901,37 +901,41 @@ public class Regex implements ReplicaCatalog {
     public int insert( String lfn, ReplicaCatalogEntry tuple ) {
         if (lfn == null || tuple == null)
             throw new NullPointerException();
-        Collection<ReplicaCatalogEntry> c = null;
+
         boolean isRegex = isRegex(tuple);
+        Collection<ReplicaCatalogEntry> c;
 
         if (m_lfn.containsKey(lfn) && !isRegex) {
-            boolean seen = false;
             String pfn = tuple.getPFN();
             String handle = tuple.getResourceHandle();
             c = m_lfn.get(lfn);
-            for (Iterator<ReplicaCatalogEntry> i = c.iterator(); i.hasNext()
-                    && !seen; ) {
+
+            for (Iterator<ReplicaCatalogEntry> i = c.iterator(); i.hasNext(); ) {
                 ReplicaCatalogEntry rce = i.next();
-                if ((seen = pfn.equals(rce.getPFN())) && ((handle == null && rce.getResourceHandle() == null) ||
+
+                if (pfn.equals(rce.getPFN()) && ((handle == null && rce.getResourceHandle() == null) ||
                         (handle != null && handle.equals(rce.getResourceHandle())))) {
                     try {
                         i.remove();
+                        break;
                     } catch (UnsupportedOperationException uoe) {
                         return 0;
                     }
                 }
             }
         } else if (m_lfn_regex.containsKey(lfn)) {
-            boolean seen = false;
             String pfn = tuple.getPFN();
             String handle = tuple.getResourceHandle();
             c = m_lfn_regex.get(lfn);
-            for (Iterator<ReplicaCatalogEntry> i = c.iterator(); i.hasNext() && !seen; ) {
+
+            for (Iterator<ReplicaCatalogEntry> i = c.iterator(); i.hasNext(); ) {
                 ReplicaCatalogEntry rce = i.next();
-                if ((seen = pfn.equals(rce.getPFN())) && ((handle == null && rce.getResourceHandle() == null) ||
+
+                if (pfn.equals(rce.getPFN()) && ((handle == null && rce.getResourceHandle() == null) ||
                         (handle != null && handle.equals(rce.getResourceHandle())))) {
                     try {
                         i.remove();
+                        break;
                     } catch (UnsupportedOperationException uoe) {
                         return 0;
                     }
@@ -945,7 +949,9 @@ public class Regex implements ReplicaCatalog {
             } else
                 m_lfn.put(lfn, c);
         }
+
         c.add(tuple);
+
         return 1;
     }
 
