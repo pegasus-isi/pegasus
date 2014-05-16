@@ -131,7 +131,7 @@ public class DAX2CDAG implements Callback {
         this.mTransformationStore = new TransformationStore();
         this.mCompoundTransformations = new HashMap<String,CompoundTransformation>();
         this.mNotifications = new Notifications();
-        this.mAddDataDependencies = true;
+        this.mAddDataDependencies = mProps.addDataDependencies();
         this.mFileCreationMap = new HashMap<String,Job>();
     }
 
