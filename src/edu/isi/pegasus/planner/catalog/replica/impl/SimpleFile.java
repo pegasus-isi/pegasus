@@ -213,7 +213,7 @@ public class SimpleFile implements ReplicaCatalog {
 
             {5, 5, 0, 0, 0, 1},   // 11 a
             {0, 1, 1, 5, 0, 1},   // 12 b
-            {0, 1, 1, 1, 1, 1}}; // 13 c
+            {0, 1, 1, 1, 1, 1}};  // 13 c
 
     /**
      * Parses a line from the file replica catalog
