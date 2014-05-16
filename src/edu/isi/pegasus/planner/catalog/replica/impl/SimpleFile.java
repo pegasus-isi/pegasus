@@ -759,20 +759,24 @@ public class SimpleFile implements ReplicaCatalog {
      * throw an exception, don't use zero.
      */
     public int insert( String lfn, ReplicaCatalogEntry tuple ) {
-        if (lfn == null || tuple == null) throw new NullPointerException();
+        if (lfn == null || tuple == null)
+            throw new NullPointerException();
 
-        Collection c = null;
+        Collection c;
+
         if (m_lfn.containsKey(lfn)) {
-            boolean seen = false;
             String pfn = tuple.getPFN();
             String handle = tuple.getResourceHandle();
             c = (Collection) m_lfn.get(lfn);
-            for (Iterator i = c.iterator(); i.hasNext() && !seen; ) {
+
+            for (Iterator i = c.iterator(); i.hasNext(); ) {
                 ReplicaCatalogEntry rce = (ReplicaCatalogEntry) i.next();
-                if ((seen = pfn.equals(rce.getPFN())) &&
-                        ((handle == null && rce.getResourceHandle() == null) || (handle != null && handle.equals(rce.getResourceHandle())))) {
+
+                if (pfn.equals(rce.getPFN()) && ((handle == null && rce.getResourceHandle() == null) ||
+                        (handle != null && handle.equals(rce.getResourceHandle())))) {
                     try {
                         i.remove();
+                        break;
                     } catch (UnsupportedOperationException uoe) {
                         return 0;
                     }
@@ -782,6 +786,7 @@ public class SimpleFile implements ReplicaCatalog {
             c = new ArrayList();
             m_lfn.put(lfn, c);
         }
+
         c.add(tuple);
 
         return 1;
