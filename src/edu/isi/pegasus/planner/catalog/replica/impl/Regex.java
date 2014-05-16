@@ -737,7 +737,7 @@ public class Regex implements ReplicaCatalog {
             for (String l : m_lfn_regex.keySet()) {
                 p = m_lfn_pattern.get(l); // Get one pattern
                 m = p.matcher(lfn); // See if f.a matches pattern
-                if (m.matches()) // Patern matches?
+                if (m.matches()) // Pattern matches?
                 {
                     Collection<ReplicaCatalogEntry> entries = m_lfn_regex
                             .get(l);
