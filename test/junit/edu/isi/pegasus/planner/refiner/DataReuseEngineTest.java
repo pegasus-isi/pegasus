@@ -29,6 +29,7 @@ import edu.isi.pegasus.planner.parser.dax.DAXParser;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.io.File;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -87,7 +88,7 @@ public class DataReuseEngineTest  {
         mBag.add( PegasusBag.PEGASUS_PROPERTIES, mProps );
         
         mLogger  = mTestSetup.loadLogger( mProps );
-        mLogger.setLevel( LogManager.INFO_MESSAGE_LEVEL );
+        mLogger.setLevel( LogManager.DEBUG_MESSAGE_LEVEL );
         mLogger.logEventStart( "test.refiner.datareuse", "setup", "0" );
         mBag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
         
@@ -127,9 +128,10 @@ public class DataReuseEngineTest  {
         Job[] actualDeletedJobs = (Job[]) engine.getDeletedJobs().toArray( new Job[0] );
         
         
-        String[] expectedDeletedJobs ={	"unified_genotyper_snp_ID0000009", "unified_genotyper_indel_ID0000011", "reduce_reads_ID0000002", "indel_realign_ID0000003",
-                "realign_target_creator_ID0000004", "add_replace_ID0000005", "dedup_ID0000006", "sort_sam_ID0000007", "alignment_to_reference_ID0000008"};
-        assertArrayEquals( "Deleted Jobs don't match ", expectedDeletedJobs, toStringArray(actualDeletedJobs) );
+        String[] expectedDeletedJobs ={	"add_replace_ID0000005","alignment_to_reference_ID0000008", "dedup_ID0000006",
+                                        "indel_realign_ID0000003", "realign_target_creator_ID0000004", "reduce_reads_ID0000002", 
+                                        "sort_sam_ID0000007", "unified_genotyper_indel_ID0000011", "unified_genotyper_snp_ID0000009",};
+        assertArrayEquals( "Deleted Jobs don't match ", expectedDeletedJobs, toSortedStringArray(actualDeletedJobs) );
         mLogger.logEventCompletion();
         
        
@@ -166,9 +168,11 @@ public class DataReuseEngineTest  {
         Job[] actualDeletedJobs = (Job[]) engine.getDeletedJobs().toArray( new Job[0] );
         
         
-        String[] expectedDeletedJobs ={	"filtering_snp_ID0000010", "filtering_indel_ID0000012", "unified_genotyper_snp_ID0000009", "unified_genotyper_indel_ID0000011", "reduce_reads_ID0000002", "indel_realign_ID0000003",
-                "realign_target_creator_ID0000004", "add_replace_ID0000005", "dedup_ID0000006", "sort_sam_ID0000007", "alignment_to_reference_ID0000008"};
-        assertArrayEquals( "Deleted Jobs don't match ", expectedDeletedJobs, toStringArray(actualDeletedJobs) );
+        String[] expectedDeletedJobs ={	"add_replace_ID0000005", "alignment_to_reference_ID0000008", "dedup_ID0000006", 
+                                        "filtering_indel_ID0000012", "filtering_snp_ID0000010",  "indel_realign_ID0000003",
+                                        "realign_target_creator_ID0000004", "reduce_reads_ID0000002", "sort_sam_ID0000007",
+                                        "unified_genotyper_indel_ID0000011","unified_genotyper_snp_ID0000009",  };
+        assertArrayEquals( "Deleted Jobs don't match ", expectedDeletedJobs, toSortedStringArray(actualDeletedJobs) );
         mLogger.logEventCompletion();
         
         
@@ -189,9 +193,11 @@ public class DataReuseEngineTest  {
         actualDeletedJobs = (Job[]) engine.getDeletedJobs().toArray( new Job[0] );
         
         
-        expectedDeletedJobs = new String[]{	"filtering_snp_ID0000010", "filtering_indel_ID0000012", "unified_genotyper_snp_ID0000009", "unified_genotyper_indel_ID0000011", "reduce_reads_ID0000002", "indel_realign_ID0000003",
-                "realign_target_creator_ID0000004", "add_replace_ID0000005", "dedup_ID0000006", "sort_sam_ID0000007", "alignment_to_reference_ID0000008"};
-        assertArrayEquals( "Deleted Jobs don't match ", expectedDeletedJobs, toStringArray(actualDeletedJobs) );
+        expectedDeletedJobs = new String[]{ "add_replace_ID0000005", "alignment_to_reference_ID0000008","dedup_ID0000006", 
+                                            "filtering_indel_ID0000012", "filtering_snp_ID0000010",  "indel_realign_ID0000003",
+                                            "realign_target_creator_ID0000004", "reduce_reads_ID0000002",  "sort_sam_ID0000007", 
+                                            "unified_genotyper_indel_ID0000011","unified_genotyper_snp_ID0000009", };
+        assertArrayEquals( "Deleted Jobs don't match ", expectedDeletedJobs, toSortedStringArray(actualDeletedJobs) );
         mLogger.logEventCompletion();
         
     }
@@ -219,9 +225,11 @@ public class DataReuseEngineTest  {
         Job[] actualDeletedJobs = (Job[]) engine.getDeletedJobs().toArray( new Job[0] );
         
         
-        String[] expectedDeletedJobs ={	"filtering_snp_ID0000010", "filtering_indel_ID0000012", "unified_genotyper_snp_ID0000009", "unified_genotyper_indel_ID0000011", "reduce_reads_ID0000002", "indel_realign_ID0000003",
-                "realign_target_creator_ID0000004", "add_replace_ID0000005", "dedup_ID0000006", "sort_sam_ID0000007", "alignment_to_reference_ID0000008"};
-        assertArrayEquals( "Deleted Jobs don't match ", expectedDeletedJobs, toStringArray(actualDeletedJobs) );
+        String[] expectedDeletedJobs ={	"add_replace_ID0000005", "alignment_to_reference_ID0000008", "dedup_ID0000006", 
+                                        "filtering_indel_ID0000012", "filtering_snp_ID0000010",  "indel_realign_ID0000003",
+                                        "realign_target_creator_ID0000004", "reduce_reads_ID0000002", "sort_sam_ID0000007",
+                                        "unified_genotyper_indel_ID0000011", "unified_genotyper_snp_ID0000009",  };
+        assertArrayEquals( "Deleted Jobs don't match ", expectedDeletedJobs, toSortedStringArray(actualDeletedJobs) );
         mLogger.logEventCompletion();
         
     }
@@ -243,12 +251,13 @@ public class DataReuseEngineTest  {
      * @param array
      * @return 
      */ 
-    protected String[] toStringArray( Job[] array ){
+    protected String[] toSortedStringArray( Job[] array ){
         String[] result = new String[array.length];
         int i = 0;
         for( Job job: array){
             result[i++] = job.getID();
         }
+        Arrays.sort( result );
         return result;
     }
 
