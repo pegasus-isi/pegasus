@@ -200,19 +200,19 @@ public class Regex implements ReplicaCatalog {
      * </pre>
      */
     private static final short c_action[][] = {
-            {0, 0, 0, 0, 0, 1}, // 0
-            {0, 2, 0, 0, 1, 1}, // 1 a
-            {0, 0, 0, 0, 0, 1}, // 2
-            {0, 1, 1, 2, 0, 1}, // 3 b
-            {0, 1, 1, 1, 1, 1}, // 4 c
-            {3, 3, 0, 0, 0, 1}, // 5 a
-            {0, 1, 1, 3, 0, 1}, // 6 b
-            {0, 1, 1, 1, 1, 1}, // 7 c
-            {0, 0, 0, 0, 0, 1}, // 8
-            {0, 0, 4, 0, 0, 1}, // 9
-            {0, 0, 0, 0, 0, 1}, // 10
-            {5, 5, 0, 0, 0, 1}, // 11 a
-            {0, 1, 1, 5, 0, 1}, // 12 b
+            {0, 0, 0, 0, 0, 1},  // 0
+            {0, 2, 0, 0, 1, 1},  // 1 a
+            {0, 0, 0, 0, 0, 1},  // 2
+            {0, 1, 1, 2, 0, 1},  // 3 b
+            {0, 1, 1, 1, 1, 1},  // 4 c
+            {3, 3, 0, 0, 0, 1},  // 5 a
+            {0, 1, 1, 3, 0, 1},  // 6 b
+            {0, 1, 1, 1, 1, 1},  // 7 c
+            {0, 0, 0, 0, 0, 1},  // 8
+            {0, 0, 4, 0, 0, 1},  // 9
+            {0, 0, 0, 0, 0, 1},  // 10
+            {5, 5, 0, 0, 0, 1},  // 11 a
+            {0, 1, 1, 5, 0, 1},  // 12 b
             {0, 1, 1, 1, 1, 1}}; // 13 c
 
     /**
@@ -458,8 +458,7 @@ public class Regex implements ReplicaCatalog {
         }
     }
 
-    private void write( Writer out,
-                        Map<String, Collection<ReplicaCatalogEntry>> m ) throws IOException {
+    private void write( Writer out, Map<String, Collection<ReplicaCatalogEntry>> m ) throws IOException {
         String newline = System.getProperty("line.separator", "\r\n");
         Escape e = new Escape("\"\\", '\\');
         if (m != null) {
@@ -467,14 +466,12 @@ public class Regex implements ReplicaCatalog {
                 String lfn = i.next();
                 Collection<ReplicaCatalogEntry> c = m.get(lfn);
                 if (c != null) {
-                    for (Iterator<ReplicaCatalogEntry> j = c.iterator(); j
-                            .hasNext(); ) {
+                    for (Iterator<ReplicaCatalogEntry> j = c.iterator(); j.hasNext(); ) {
                         ReplicaCatalogEntry rce = j.next();
                         out.write(quote(e, lfn));
                         out.write(' ');
                         out.write(quote(e, rce.getPFN()));
-                        for (Iterator<String> k = rce.getAttributeIterator(); k
-                                .hasNext(); ) {
+                        for (Iterator<String> k = rce.getAttributeIterator(); k.hasNext(); ) {
                             String key = k.next();
                             String value = (String) rce.getAttribute(key);
                             out.write(' ');
@@ -522,8 +519,7 @@ public class Regex implements ReplicaCatalog {
 
     }
 
-    public Collection<ReplicaCatalogEntry> lookupWithHandle( String lfn,
-                                                             String handle ) {
+    public Collection<ReplicaCatalogEntry> lookupWithHandle( String lfn, String handle ) {
         Collection<ReplicaCatalogEntry> c = new ArrayList<ReplicaCatalogEntry>();
 
         // Lookup regular LFN's
@@ -536,6 +532,7 @@ public class Regex implements ReplicaCatalog {
                     c.add(rce);
             }
         }
+
         // Lookup regex LFN's
         Pattern p = null;
         Matcher m = null;
@@ -548,8 +545,7 @@ public class Regex implements ReplicaCatalog {
                 Collection<ReplicaCatalogEntry> entries = m_lfn_regex.get(l);
                 for (ReplicaCatalogEntry entry : entries) {
                     pool = entry.getResourceHandle();
-                    if (pool == null && handle == null || pool != null
-                            && handle != null && pool.equals(handle)) {
+                    if (pool == null && handle == null || pool != null && handle != null && pool.equals(handle)) {
                         String tmpPFN = entry.getPFN();
                         for (int k = 0, j = m.groupCount(); k <= j; ++k) {
                             // tmpPFN = tmpPFN.replaceAll ("\\$" + k, m.group (k));
@@ -567,6 +563,7 @@ public class Regex implements ReplicaCatalog {
                 }
             }
         }
+
         return c;
     }
 
@@ -903,11 +900,12 @@ public class Regex implements ReplicaCatalog {
             throw new NullPointerException();
 
         boolean isRegex = isRegex(tuple);
-        Collection<ReplicaCatalogEntry> c;
+        Collection<ReplicaCatalogEntry> c = null;
 
-        if (m_lfn.containsKey(lfn) && !isRegex) {
-            String pfn = tuple.getPFN();
-            String handle = tuple.getResourceHandle();
+        String pfn = tuple.getPFN();
+        String handle = tuple.getResourceHandle();
+
+        if (m_lfn.containsKey(lfn)) {
             c = m_lfn.get(lfn);
 
             for (Iterator<ReplicaCatalogEntry> i = c.iterator(); i.hasNext(); ) {
@@ -923,9 +921,9 @@ public class Regex implements ReplicaCatalog {
                     }
                 }
             }
-        } else if (m_lfn_regex.containsKey(lfn)) {
-            String pfn = tuple.getPFN();
-            String handle = tuple.getResourceHandle();
+        }
+
+        if (m_lfn_regex.containsKey(lfn)) {
             c = m_lfn_regex.get(lfn);
 
             for (Iterator<ReplicaCatalogEntry> i = c.iterator(); i.hasNext(); ) {
@@ -941,13 +939,19 @@ public class Regex implements ReplicaCatalog {
                     }
                 }
             }
-        } else {
+        }
+
+        c = isRegex ? m_lfn_regex.get(lfn) : m_lfn.get(lfn);
+
+        if (c == null) {
             c = new ArrayList<ReplicaCatalogEntry>();
+
             if (isRegex) {
                 m_lfn_regex.put(lfn, c);
                 m_lfn_pattern.put(lfn, Pattern.compile(lfn));
-            } else
+            } else {
                 m_lfn.put(lfn, c);
+            }
         }
 
         c.add(tuple);
@@ -958,7 +962,7 @@ public class Regex implements ReplicaCatalog {
     /**
      * Inserts a new mapping into the replica catalog. This is a convenience
      * function exposing the resource handle. Internally, the
-     * <code>ReplicaCatalogEntry</code> element will be contructed, and passed
+     * <code>ReplicaCatalogEntry</code> element will be constructed, and passed
      * to the appropriate insert function.
      *
      * @param lfn    is the logical filename under which to book the entry.
