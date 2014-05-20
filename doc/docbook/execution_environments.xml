@@ -558,12 +558,20 @@ pegasus.data.configuration    condorio</programlisting>
         &lt;grid type="cream" contact="https://ce01-lcg.cr.cnaf.infn.it:8443/ce-cream/services/CREAM2" scheduler="LSF" jobtype="compute" /&gt;
         &lt;grid type="cream" contact="https://ce01-lcg.cr.cnaf.infn.it:8443/ce-cream/services/CREAM2" scheduler="LSF" jobtype="auxillary" /&gt;
 
+         &lt;!-- Scratch directory on the cluster --&gt;
         &lt;directory type="shared-scratch" path="/home/virgo034"&gt;
             &lt;file-server operation="all" url="gsiftp://ce01-lcg.cr.cnaf.infn.it/home/virgo034"/&gt;
-        &lt;/directory&gt;                          
-                                                                                                                                                                                                                                                   
+        &lt;/directory&gt;
+
+        &lt;!-- cream is the style to use for CREAMCE submits --&gt;                                                                                                                                                                                                                               
         &lt;profile namespace="pegasus" key="style"&gt;cream&lt;/profile&gt;
+
+        &lt;!-- the remote queue is picked up from globus profile --&gt; 
         &lt;profile namespace="globus" key="queue"&gt;virgo&lt;/profile&gt;
+
+        &lt;!-- Staring Condor 8.0 additional cream attributes 
+             can be passed by setting cream_attributes --&gt;
+        &lt;profile namespace="condor" key="cream_attributes"&gt;key1=value1;key2=value2&lt;/profile&gt;
     &lt;/site&gt;
 
  &lt;/sitecatalog&gt;</programlisting>
@@ -748,11 +756,10 @@ pegasus.data.configuration    condorio</programlisting>
     <title>Remote Cluster using BOSCO and SSH submissions</title>
 
     <para><ulink url="http://bosco.opensciencegrid.org/about/">BOSCO</ulink>
-    enables users to submit jobs to remote clusters using SSH. This
-    section describes how to specify a site catalog entry for a site to
-    which jobs can be submitted over SSH. To tag a site for SSH submission,
-    the following profiles need to be specified for the site in the site
-    catalog:</para>
+    enables users to submit jobs to remote clusters using SSH. This section
+    describes how to specify a site catalog entry for a site to which jobs can
+    be submitted over SSH. To tag a site for SSH submission, the following
+    profiles need to be specified for the site in the site catalog:</para>
 
     <orderedlist>
       <listitem>
