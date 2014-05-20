@@ -7,12 +7,17 @@
 # dax - if these limit is exeeded, the test fails. This is used
 # to detect big improvements in the planner which would mean it
 # is time to lower the upper (and lower) limits of this test
-MIN_SECONDS=5500
+MIN_SECONDS=500
 
 
 # Max number of seconds allowed for the planner to plan the
 # dax - if these limit is exeeded, the test fails
-MAX_SECONDS=8000
+MAX_SECONDS=2000
+
+# set the java heap max to get the planner to not fail for
+# the 4.3 branch. we keep same for master for comparison
+# purposes.
+export JAVA_HEAPMAX=6144
 
 #######################################################################
 
@@ -26,9 +31,6 @@ wget -nv -O  conf/input_map.dat http://pegasus.isi.edu/static/bamboo/014-planner
 wget -nv -O  conf/output_map.dat http://pegasus.isi.edu/static/bamboo/014-planner-performance-ahope/conf/output_map.dat
 
 START_TS=`/bin/date +'%s'`
-
-# set the java heap max to get the planner to not fail 
-export JAVA_HEAPMAX=6144
 
 # plan the workflow
 /usr/bin/time pegasus-plan \
