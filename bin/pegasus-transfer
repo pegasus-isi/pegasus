@@ -848,7 +848,7 @@ class IRodsHandler(TransferHandlerBase):
             except:
                 # ignore errors from the mkdir command
                 pass
-            cmd = "iput -v -f -T" 
+            cmd = "iput -v -f -T -K" 
             if self.ticket is not None:
                 cmd += " -t " + irods.ticket
             if transfer.dst_host is not "" and attempt == 1:
