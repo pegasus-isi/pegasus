@@ -1,3 +1,4 @@
+# coding=utf-8
 import unittest
 import time
 import os
@@ -6,12 +7,90 @@ from Pegasus.tools import utils
 
 class TestQuoting(unittest.TestCase):
     def testQuote(self):
-        "Quoting should escape non-printing characters"
-        self.assertEquals("hello%0D%0A%09", utils.quote("hello\r\n\t"))
-    
+        "Quoting should replace non-printing characters with XML character entity references"
+        self.assertEquals(utils.quote("hello\r\n\t"), "hello&#13;&#10;&#9;")
+
+        for i in range(0, 0x20):
+            self.assertEquals(utils.quote(unichr(i)), "&#%d;" % i)
+
+        for i in range(0x20, 0x7F):
+            if not unichr(i) in u"'\"&":
+                self.assertEquals(utils.quote(unichr(i)), unichr(i))
+
+        for i in range(0x7F, 0xA1):
+            self.assertEquals(utils.quote(unichr(i)), u"&#%d;" % i)
+
+        for i in range(0xA1, 0xFF):
+            self.assertEquals(utils.quote(unichr(i)), unichr(i))
+
+        self.assertEquals(utils.quote("&"), "&amp;")
+        self.assertEquals(utils.quote("'"), "&apos;")
+        self.assertEquals(utils.quote('"'), "&quot;")
+
+        self.assertEquals(utils.quote(u"\u0170\u0171\u2200"), u"\u0170\u0171\u2200")
+        self.assertEquals(utils.quote("Hello\nWorld!\n"), "Hello&#10;World!&#10;")
+        self.assertEquals(utils.quote("Zoë"), "Zoë")
+        self.assertEquals(utils.quote("warning: unused variable ‘Narr’"), "warning: unused variable ‘Narr’")
+
     def testUnquote(self):
-        "Unquoting should convert escape sequences back"
-        self.assertEquals("hello\r\n\t", utils.unquote("hello%0D%0A%09"))
+        "Unquoting should convert character entity references back to their Unicode equivalents"
+        self.assertEquals(utils.unquote("hello&#13;&#10;&#9;"), "hello\r\n\t")
+
+        for i in range(0, 0x20):
+            self.assertEquals(utils.unquote("&#%d;" % i), unichr(i))
+
+        for i in range(0x20, 0x7F):
+            if not unichr(i) in u"'\"&":
+                self.assertEquals(utils.unquote(unichr(i)), unichr(i))
+
+        for i in range(0x7F, 0xA1):
+            self.assertEquals(utils.unquote(u"&#%d;" % i), unichr(i))
+
+        for i in range(0xA1, 0xFF):
+            self.assertEquals(utils.unquote(unichr(i)), unichr(i))
+
+        self.assertEquals(utils.unquote("&amp;"), "&")
+        self.assertEquals(utils.unquote("&apos;"), "'")
+        self.assertEquals(utils.unquote("&quot;"), '"')
+
+        self.assertEquals(utils.unquote(u"\u0170\u0171\u2200"), u"\u0170\u0171\u2200")
+        self.assertEquals(utils.unquote("Hello&#10;World!&#10;"), "Hello\nWorld!\n")
+        self.assertEquals(utils.unquote("Zoë"), "Zoë")
+        self.assertEquals(utils.unquote("warning: unused variable ‘Narr’"), "warning: unused variable ‘Narr’")
+
+        # Check that hex and decimal references work
+        self.assertEquals(utils.unquote("&#x41;"), "A")
+        self.assertEquals(utils.unquote("&#x0041;"), "A")
+        self.assertEquals(utils.unquote("&#65;"), "A")
+        self.assertEquals(utils.unquote("&#0065;"), "A")
+
+    def testUnquoteFailures(self):
+        "Unquoting bad strings should fail"
+        # unterminated
+        self.assertRaises(utils.CharRefException, utils.unquote, "&")
+        self.assertRaises(utils.CharRefException, utils.unquote, "&foo")
+        # empty
+        self.assertRaises(utils.CharRefException, utils.unquote, "&;")
+        # Unsupported
+        self.assertRaises(utils.CharRefException, utils.unquote, "&foo;")
+        self.assertRaises(utils.CharRefException, utils.unquote, "&nbsp;")
+        # Not string
+        self.assertRaises(TypeError, utils.unquote, 1)
+        self.assertRaises(TypeError, utils.quote, 1)
+
+    def testOldUnquote(self):
+        "Unquoting old strings (those that end with %0A), should work"
+        self.assertEquals(utils.unquote("hello%0D%09%0A"), "hello\r\t\n")
+
+    def testStringTypes(self):
+        "Quote and unquote should return strings of the same type as what was passed"
+        u = u"Hello"
+        self.assertTrue(isinstance(utils.quote(u), unicode))
+        self.assertTrue(isinstance(utils.unquote(u), unicode))
+
+        b = "Hello"
+        self.assertTrue(isinstance(utils.quote(b), str))
+        self.assertTrue(isinstance(utils.unquote(b), str))
 
 class TestISODate(unittest.TestCase):
     def setUp(self):
