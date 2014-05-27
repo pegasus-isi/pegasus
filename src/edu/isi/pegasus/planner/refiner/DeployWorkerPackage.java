@@ -265,7 +265,7 @@ public class DeployWorkerPackage
         if( mOSToNMIOSReleaseAndVersion == null ){
             mOSToNMIOSReleaseAndVersion = new HashMap();
             mOSToNMIOSReleaseAndVersion.put( SysInfo.OS.LINUX, "rhel_5" );
-            mOSToNMIOSReleaseAndVersion.put( SysInfo.OS.MACOSX, "macos_10.5" );
+            mOSToNMIOSReleaseAndVersion.put( SysInfo.OS.MACOSX, "macos_10.7" );
         }
         return mOSToNMIOSReleaseAndVersion;
     }
