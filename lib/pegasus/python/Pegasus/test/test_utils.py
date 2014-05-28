@@ -8,119 +8,100 @@ from Pegasus.tools import utils
 class TestQuoting(unittest.TestCase):
     def testQuote(self):
         "Quoting should replace non-printing characters with XML character entity references"
-        self.assertEquals(utils.quote("hello\r\n\t"), "hello&#13;&#10;&#9;")
+        self.assertEquals(utils.quote("hello\r\n\t"), "hello%0D%0A%09")
 
         for i in range(0, 0x20):
-            self.assertEquals(utils.quote(unichr(i)), "&#%d;" % i)
+            self.assertEquals(utils.quote(chr(i)), "%%%02X" % i)
 
         for i in range(0x20, 0x7F):
-            if not unichr(i) in u"'\"&":
-                self.assertEquals(utils.quote(unichr(i)), unichr(i))
+            if not chr(i) in "'\"%":
+                self.assertEquals(utils.quote(chr(i)), chr(i))
 
-        for i in range(0x7F, 0xA0):
-            self.assertEquals(utils.quote(unichr(i)), u"&#%d;" % i)
+        for i in range(0x7F, 0xFF):
+            self.assertEquals(utils.quote(chr(i)), "%%%02X" % i)
 
-        for i in range(0xA0, 0xFF):
-            self.assertEquals(utils.quote(unichr(i)), unichr(i))
+        self.assertEquals(utils.quote("%"), "%25")
+        self.assertEquals(utils.quote("'"), "%27")
+        self.assertEquals(utils.quote('"'), "%22")
 
-        self.assertEquals(utils.quote("&"), "&amp;")
-        self.assertEquals(utils.quote("'"), "&apos;")
-        self.assertEquals(utils.quote('"'), "&quot;")
-
-        self.assertEquals(utils.quote(u"\u0170\u0171\u2200"), u"\u0170\u0171\u2200")
-        self.assertEquals(utils.quote("Hello\nWorld!\n"), "Hello&#10;World!&#10;")
-        self.assertEquals(utils.quote("Zoë"), "Zoë")
-        self.assertEquals(utils.quote("warning: unused variable ‘Narr’"), "warning: unused variable ‘Narr’")
+        self.assertEquals(utils.quote("Hello\nWorld!\n"), "Hello%0AWorld!%0A")
+        self.assertEquals(utils.quote("Zoë"), "Zo%C3%AB")
+        self.assertEquals(utils.quote(u"Zoë"), "Zo%C3%AB")
+        self.assertEquals(utils.quote(u"Zo\xeb"), "Zo%C3%AB")
+        self.assertEquals(utils.quote("warning: unused variable ‘Narr’"), "warning: unused variable %E2%80%98Narr%E2%80%99")
+        self.assertEquals(utils.quote(u"warning: unused variable ‘Narr’"), "warning: unused variable %E2%80%98Narr%E2%80%99")
+        self.assertEquals(utils.quote(u"warning: unused variable \u2018Narr\u2019"), "warning: unused variable %E2%80%98Narr%E2%80%99")
 
     def testUnquote(self):
         "Unquoting should convert character entity references back to their Unicode equivalents"
-        self.assertEquals(utils.unquote("hello&#13;&#10;&#9;"), "hello\r\n\t")
+        self.assertEquals(utils.unquote("hello%0D%0A%09"), "hello\r\n\t")
 
         for i in range(0, 0x20):
-            self.assertEquals(utils.unquote("&#%d;" % i), unichr(i))
+            self.assertEquals(utils.unquote("%%%02X" % i), chr(i))
 
         for i in range(0x20, 0x7F):
-            if not unichr(i) in u"'\"&":
-                self.assertEquals(utils.unquote(unichr(i)), unichr(i))
+            if not chr(i) in "'\"%":
+                self.assertEquals(utils.unquote(chr(i)), chr(i))
 
-        for i in range(0x7F, 0xA0):
-            self.assertEquals(utils.unquote(u"&#%d;" % i), unichr(i))
+        for i in range(0x7F, 0xFF):
+            self.assertEquals(utils.unquote("%%%02X" % i), chr(i))
 
-        for i in range(0xA0, 0xFF):
-            self.assertEquals(utils.unquote(unichr(i)), unichr(i))
+        self.assertEquals(utils.unquote("%25"), "%")
+        self.assertEquals(utils.unquote("%27"), "'")
+        self.assertEquals(utils.unquote("%22"), '"')
 
-        self.assertEquals(utils.unquote("&amp;"), "&")
-        self.assertEquals(utils.unquote("&apos;"), "'")
-        self.assertEquals(utils.unquote("&quot;"), '"')
-
-        self.assertEquals(utils.unquote(u"\u0170\u0171\u2200"), u"\u0170\u0171\u2200")
-        self.assertEquals(utils.unquote("Hello&#10;World!&#10;"), "Hello\nWorld!\n")
-        self.assertEquals(utils.unquote("Zoë"), "Zoë")
-        self.assertEquals(utils.unquote("warning: unused variable ‘Narr’"), "warning: unused variable ‘Narr’")
-
-        # Check that hex and decimal references work
-        self.assertEquals(utils.unquote("&#x41;"), "A")
-        self.assertEquals(utils.unquote("&#x0041;"), "A")
-        self.assertEquals(utils.unquote("&#65;"), "A")
-        self.assertEquals(utils.unquote("&#0065;"), "A")
-
-    def testUnquoteFailures(self):
-        "Unquoting bad strings should fail"
-        # unterminated
-        self.assertRaises(utils.CharRefException, utils.unquote, "&")
-        self.assertRaises(utils.CharRefException, utils.unquote, "&foo")
-        # empty
-        self.assertRaises(utils.CharRefException, utils.unquote, "&;")
-        # Unsupported
-        self.assertRaises(utils.CharRefException, utils.unquote, "&foo;")
-        self.assertRaises(utils.CharRefException, utils.unquote, "&nbsp;")
-        # Not string
-        self.assertRaises(TypeError, utils.unquote, 1)
-        self.assertRaises(TypeError, utils.quote, 1)
-
-    def testOldUnquote(self):
-        "Unquoting old strings (those that end with %0A), should work"
-        self.assertEquals(utils.unquote("hello%0D%09%0A"), "hello\r\t\n")
-
-    def testStringTypes(self):
-        "Quote and unquote should return strings of the same type as what was passed"
-        u = u"Hello"
-        self.assertTrue(isinstance(utils.quote(u), unicode))
-        self.assertTrue(isinstance(utils.unquote(u), unicode))
-
-        b = "Hello"
-        self.assertTrue(isinstance(utils.quote(b), str))
-        self.assertTrue(isinstance(utils.unquote(b), str))
+        self.assertEquals(utils.unquote("Hello%0AWorld!%0A"), "Hello\nWorld!\n")
+        self.assertEquals(utils.unquote("Zo%C3%AB"), "Zoë")
+        self.assertEquals(utils.unquote("warning: unused variable %E2%80%98Narr%E2%80%99"), "warning: unused variable ‘Narr’")
+        self.assertEquals(utils.unquote("warning: unused variable %E2%80%98Narr%E2%80%99").decode('utf-8'), u"warning: unused variable ‘Narr’")
+        self.assertEquals(utils.unquote("warning: unused variable %E2%80%98Narr%E2%80%99").decode('utf-8'), u"warning: unused variable \u2018Narr\u2019")
 
     def testQuoteInvalidChars(self):
         "Invalid UTF-8 byte strings should not cause quote to fail"
-        utils.quote("\x80")  # Invalid 1 Octet Sequence
-        utils.quote("\xc3\x28")  # Invalid 2 Octet Sequence
-        utils.quote("\xa0\xa1")  # Invalid Sequence Identifier
-        utils.quote("\xe2\x82\xa1")  # Valid 3 Octet Sequence
-        utils.quote("\xe2\x28\xa1")  # Invalid 3 Octet Sequence (in 2nd Octet)
-        utils.quote("\xe2\x82\x28")  # Invalid 3 Octet Sequence (in 3rd Octet)
-        utils.quote("\xf0\x90\x8c\xbc")  # Valid 4 Octet Sequence
-        utils.quote("\xf0\x28\x8c\xbc")  # Invalid 4 Octet Sequence (in 2nd Octet)
-        utils.quote("\xf0\x90\x28\xbc")  # Invalid 4 Octet Sequence (in 3rd Octet)
-        utils.quote("\xf0\x28\x8c\x28")  # Invalid 4 Octet Sequence (in 4th Octet)
-        utils.quote("\xf8\xa1\xa1\xa1\xa1")  # Valid 5 Octet Sequence (but not Unicode!)
-        utils.quote("\xfc\xa1\xa1\xa1\xa1\xa1")  # Valid 6 Octet Sequence (but not Unicode!)
+        self.assertEquals(utils.quote("\x80"), "%80")  # Invalid 1 Octet Sequence
+        self.assertEquals(utils.quote("\xc3\x28"), "%C3(")  # Invalid 2 Octet Sequence
+        self.assertEquals(utils.quote("\xa0\xa1"), "%A0%A1")  # Invalid Sequence Identifier
+        self.assertEquals(utils.quote("\xe2\x82\xa1"), "%E2%82%A1")  # Valid 3 Octet Sequence
+        self.assertEquals(utils.quote("\xe2\x28\xa1"), "%E2(%A1")  # Invalid 3 Octet Sequence (in 2nd Octet)
+        self.assertEquals(utils.quote("\xe2\x82\x28"), "%E2%82(")  # Invalid 3 Octet Sequence (in 3rd Octet)
+        self.assertEquals(utils.quote("\xf0\x90\x8c\xbc"), "%F0%90%8C%BC")  # Valid 4 Octet Sequence
+        self.assertEquals(utils.quote("\xf0\x28\x8c\xbc"), "%F0(%8C%BC")  # Invalid 4 Octet Sequence (in 2nd Octet)
+        self.assertEquals(utils.quote("\xf0\x90\x28\xbc"), "%F0%90(%BC")  # Invalid 4 Octet Sequence (in 3rd Octet)
+        self.assertEquals(utils.quote("\xf0\x28\x8c\x28"), "%F0(%8C(")  # Invalid 4 Octet Sequence (in 4th Octet)
+        self.assertEquals(utils.quote("\xf8\xa1\xa1\xa1\xa1"), "%F8%A1%A1%A1%A1")  # Valid 5 Octet Sequence (but not Unicode!)
+        self.assertEquals(utils.quote("\xfc\xa1\xa1\xa1\xa1\xa1"), "%FC%A1%A1%A1%A1%A1")  # Valid 6 Octet Sequence (but not Unicode!)
 
     def testUnquoteInvalidChars(self):
         "Invalid UTF-8 byte strings should not cause unquote to fail"
-        utils.unquote("&amp;\x80")  # Invalid 1 Octet Sequence
-        utils.unquote("&amp;\xc3\x28")  # Invalid 2 Octet Sequence
-        utils.unquote("&amp;\xa0\xa1")  # Invalid Sequence Identifier
-        utils.unquote("&amp;\xe2\x82\xa1")  # Valid 3 Octet Sequence
-        utils.unquote("&amp;\xe2\x28\xa1")  # Invalid 3 Octet Sequence (in 2nd Octet)
-        utils.unquote("&amp;\xe2\x82\x28")  # Invalid 3 Octet Sequence (in 3rd Octet)
-        utils.unquote("&amp;\xf0\x90\x8c\xbc")  # Valid 4 Octet Sequence
-        utils.unquote("&amp;\xf0\x28\x8c\xbc")  # Invalid 4 Octet Sequence (in 2nd Octet)
-        utils.unquote("&amp;\xf0\x90\x28\xbc")  # Invalid 4 Octet Sequence (in 3rd Octet)
-        utils.unquote("&amp;\xf0\x28\x8c\x28")  # Invalid 4 Octet Sequence (in 4th Octet)
-        utils.unquote("&amp;\xf8\xa1\xa1\xa1\xa1")  # Valid 5 Octet Sequence (but not Unicode!)
-        utils.unquote("&amp;\xfc\xa1\xa1\xa1\xa1\xa1")  # Valid 6 Octet Sequence (but not Unicode!)
+        self.assertEquals(utils.unquote("%80"), "\x80")  # Invalid 1 Octet Sequence
+        self.assertEquals(utils.unquote("%C3("), "\xc3\x28")  # Invalid 2 Octet Sequence
+        self.assertEquals(utils.unquote("%A0%A1"), "\xa0\xa1")  # Invalid Sequence Identifier
+        self.assertEquals(utils.unquote("%E2%82%A1"), "\xe2\x82\xa1")  # Valid 3 Octet Sequence
+        self.assertEquals(utils.unquote("%E2(%A1"), "\xe2\x28\xa1")  # Invalid 3 Octet Sequence (in 2nd Octet)
+        self.assertEquals(utils.unquote("%E2%82("), "\xe2\x82\x28")  # Invalid 3 Octet Sequence (in 3rd Octet)
+        self.assertEquals(utils.unquote("%F0%90%8C%BC"), "\xf0\x90\x8c\xbc")  # Valid 4 Octet Sequence
+        self.assertEquals(utils.unquote("%F0(%8C%BC"), "\xf0\x28\x8c\xbc")  # Invalid 4 Octet Sequence (in 2nd Octet)
+        self.assertEquals(utils.unquote("%F0%90(%BC"), "\xf0\x90\x28\xbc")  # Invalid 4 Octet Sequence (in 3rd Octet)
+        self.assertEquals(utils.unquote("%F0(%8C("), "\xf0\x28\x8c\x28")  # Invalid 4 Octet Sequence (in 4th Octet)
+        self.assertEquals(utils.unquote("%F8%A1%A1%A1%A1"), "\xf8\xa1\xa1\xa1\xa1")  # Valid 5 Octet Sequence (but not Unicode!)
+        self.assertEquals(utils.unquote("%FC%A1%A1%A1%A1%A1"), "\xfc\xa1\xa1\xa1\xa1\xa1")  # Valid 6 Octet Sequence (but not Unicode!)
+
+    def testQuoteUnquoteUnicode(self):
+        "Unicode strings should be utf-8 encoded when passed through quote"
+        self.assertEquals(utils.quote(u"Zo\xeb"), "Zo%C3%AB")
+
+    def testUnquoteUnicode(self):
+        "Unicode strings should not be mangled when passed through unquote"
+        # This is a unicode string with UTF-8 encoding, which is nonsense, but
+        # should still work and return a UTF-8 encoded byte string
+        self.assertEquals(utils.unquote(u"Zo%C3%AB"), "Zo\xc3\xab")
+
+    def testQuoteUnquoteLatin1(self):
+        "A latin-1 encoded string should be unmodified through quote and unquote"
+        self.assertEquals("R\xe9sum\xe9",utils.unquote(utils.quote("R\xe9sum\xe9")))
+        self.assertEquals(utils.quote("R\xe9sum\xe9"), "R%E9sum%E9")
+        self.assertEquals("R\xe9sum\xe9",utils.unquote("R%E9sum%E9"))
+        self.assertEquals("R\xe9sum\xe9",utils.unquote(u"R%E9sum%E9"))
 
 class TestISODate(unittest.TestCase):
     def setUp(self):
