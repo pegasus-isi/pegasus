@@ -55,6 +55,27 @@ public class RegexRCTest {
     }
 
     @Test
+    public void lookupWithSubstitutionsTest() {
+        HashMap attr = new HashMap();
+        attr.put("regex", "true");
+        regex.insert("(\\w+)_f[xyz]_(\\d+)\\.sgt.*", new ReplicaCatalogEntry("file://test.isi.edu/scratch/[2]/[1]/[0]", attr));
+        Collection<ReplicaCatalogEntry> c = regex.lookup("TEST_fy_3810.sgt.md5");
+
+        for (ReplicaCatalogEntry x : c) {
+            assertEquals("file://test.isi.edu/scratch/3810/TEST/TEST_fy_3810.sgt.md5", x.getPFN());
+        }
+
+        c = regex.lookup("TEST_fz_33810.sgt.md5");
+
+        for (ReplicaCatalogEntry x : c) {
+            assertEquals("file://test.isi.edu/scratch/33810/TEST/TEST_fz_33810.sgt.md5", x.getPFN());
+        }
+
+        c = regex.lookup("TEST_fa_33810.sgt.md5");
+        assertEquals(0, c.size());
+    }
+
+    @Test
     public void multipleSimpleInsert() {
         regex.insert("a", new ReplicaCatalogEntry("b"));
         regex.insert("a", new ReplicaCatalogEntry("b", "handle"));
