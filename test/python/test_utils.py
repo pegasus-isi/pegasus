@@ -17,10 +17,10 @@ class TestQuoting(unittest.TestCase):
             if not unichr(i) in u"'\"&":
                 self.assertEquals(utils.quote(unichr(i)), unichr(i))
 
-        for i in range(0x7F, 0xA1):
+        for i in range(0x7F, 0xA0):
             self.assertEquals(utils.quote(unichr(i)), u"&#%d;" % i)
 
-        for i in range(0xA1, 0xFF):
+        for i in range(0xA0, 0xFF):
             self.assertEquals(utils.quote(unichr(i)), unichr(i))
 
         self.assertEquals(utils.quote("&"), "&amp;")
@@ -43,10 +43,10 @@ class TestQuoting(unittest.TestCase):
             if not unichr(i) in u"'\"&":
                 self.assertEquals(utils.unquote(unichr(i)), unichr(i))
 
-        for i in range(0x7F, 0xA1):
+        for i in range(0x7F, 0xA0):
             self.assertEquals(utils.unquote(u"&#%d;" % i), unichr(i))
 
-        for i in range(0xA1, 0xFF):
+        for i in range(0xA0, 0xFF):
             self.assertEquals(utils.unquote(unichr(i)), unichr(i))
 
         self.assertEquals(utils.unquote("&amp;"), "&")
@@ -91,6 +91,36 @@ class TestQuoting(unittest.TestCase):
         b = "Hello"
         self.assertTrue(isinstance(utils.quote(b), str))
         self.assertTrue(isinstance(utils.unquote(b), str))
+
+    def testQuoteInvalidChars(self):
+        "Invalid UTF-8 byte strings should not cause quote to fail"
+        utils.quote("\x80")  # Invalid 1 Octet Sequence
+        utils.quote("\xc3\x28")  # Invalid 2 Octet Sequence
+        utils.quote("\xa0\xa1")  # Invalid Sequence Identifier
+        utils.quote("\xe2\x82\xa1")  # Valid 3 Octet Sequence
+        utils.quote("\xe2\x28\xa1")  # Invalid 3 Octet Sequence (in 2nd Octet)
+        utils.quote("\xe2\x82\x28")  # Invalid 3 Octet Sequence (in 3rd Octet)
+        utils.quote("\xf0\x90\x8c\xbc")  # Valid 4 Octet Sequence
+        utils.quote("\xf0\x28\x8c\xbc")  # Invalid 4 Octet Sequence (in 2nd Octet)
+        utils.quote("\xf0\x90\x28\xbc")  # Invalid 4 Octet Sequence (in 3rd Octet)
+        utils.quote("\xf0\x28\x8c\x28")  # Invalid 4 Octet Sequence (in 4th Octet)
+        utils.quote("\xf8\xa1\xa1\xa1\xa1")  # Valid 5 Octet Sequence (but not Unicode!)
+        utils.quote("\xfc\xa1\xa1\xa1\xa1\xa1")  # Valid 6 Octet Sequence (but not Unicode!)
+
+    def testUnquoteInvalidChars(self):
+        "Invalid UTF-8 byte strings should not cause unquote to fail"
+        utils.unquote("&amp;\x80")  # Invalid 1 Octet Sequence
+        utils.unquote("&amp;\xc3\x28")  # Invalid 2 Octet Sequence
+        utils.unquote("&amp;\xa0\xa1")  # Invalid Sequence Identifier
+        utils.unquote("&amp;\xe2\x82\xa1")  # Valid 3 Octet Sequence
+        utils.unquote("&amp;\xe2\x28\xa1")  # Invalid 3 Octet Sequence (in 2nd Octet)
+        utils.unquote("&amp;\xe2\x82\x28")  # Invalid 3 Octet Sequence (in 3rd Octet)
+        utils.unquote("&amp;\xf0\x90\x8c\xbc")  # Valid 4 Octet Sequence
+        utils.unquote("&amp;\xf0\x28\x8c\xbc")  # Invalid 4 Octet Sequence (in 2nd Octet)
+        utils.unquote("&amp;\xf0\x90\x28\xbc")  # Invalid 4 Octet Sequence (in 3rd Octet)
+        utils.unquote("&amp;\xf0\x28\x8c\x28")  # Invalid 4 Octet Sequence (in 4th Octet)
+        utils.unquote("&amp;\xf8\xa1\xa1\xa1\xa1")  # Valid 5 Octet Sequence (but not Unicode!)
+        utils.unquote("&amp;\xfc\xa1\xa1\xa1\xa1\xa1")  # Valid 6 Octet Sequence (but not Unicode!)
 
 class TestISODate(unittest.TestCase):
     def setUp(self):
