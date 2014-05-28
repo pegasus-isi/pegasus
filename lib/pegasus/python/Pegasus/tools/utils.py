@@ -33,7 +33,6 @@ import datetime
 import traceback
 import subprocess
 import urllib
-import unicodedata
 
 __all__ = ['quote', 'unquote']
 
@@ -55,137 +54,70 @@ logger = logging.getLogger()
 
 def quote(s):
     """
-    Encodes a Unicode string using XML entity references. The
-    encoding replaces the following code points with their XML
-    character entity references:
-    1. Unicode control characters (category Cc, which are C0 and C1 control codes)
-    2. Quote/apostrophe (0x27), double quote (0x22), and ampersand (0x26)
+    Encodes a byte string using URL encoding. This replaces bytes with their
+    URL-encoded equivalent %XX where XX is the hexadecimal value of the byte.
+    In particular, the bytes that are encoded include:
 
-    This function takes a UTF-8 encoded byte string and returns a UTF-8 encoded
-    byte string, or takes a Unicode string and returns a Unicode string.
+    1. Bytes < 0x20 or >= 0x7F (C0 and C1 control codes)
+    2. Quote/apostrophe (0x27), double quote (0x22), and percent (0x25)
+
+    This will always return a byte string. If the argument is a unicode string
+    then it will be utf-8 encoded before being quoted.
     """
     if not isinstance(s, basestring):
         raise TypeError("Not a string: %s" % str(s))
 
-    # Convert to unicode string if necessary
-    bytestring = False
-    if not isinstance(s, unicode):
-        # We assume it is a utf-8 string, but replace characters that are not
-        # valid UTF-8
-        s = s.decode('utf-8', 'replace')
-        bytestring = True
+    if isinstance(s, unicode):
+        # We need to utf-8 encode unicode strings
+        s = s.encode('utf-8')
 
     buf = []
     for c in s:
-        if unicodedata.category(c) == 'Cc':
-            # These are unicode control characters. They should be
-            # replaced with the XML decimal entity ref for the given
-            # unicode code point.
-            buf.append("&#%d;" % ord(c))
-        elif c == '&':
-            buf.append('&amp;')
+        i = ord(c)
+        if i < 0x20 or i >= 0x7F:
+            # Any byte less than 0x20 is a control character
+            # any byte >= 0x7F is either a control character
+            # or a multibyte unicode character
+            buf.append("%%%02X" % i)
+        elif c == '%':
+            buf.append('%25')
         elif c == "'":
-            buf.append('&apos;')
+            buf.append('%27')
         elif c == '"':
-            buf.append('&quot;')
+            buf.append('%22')
         else:
-            # These are regular code points
+            # These are regular bytes
             buf.append(c)
 
-    result = u''.join(buf)
-
-    if bytestring:
-        return result.encode('utf-8')
-    else:
-        return result
-
-class CharRefException(Exception): pass
+    return ''.join(buf)
 
 def unquote(s):
     """
-    Unescape a string that has been escaped using XML entity refs or URL
-    encoding.
+    Unquote a URL-quoted string.
 
-    If the string ends with %0A (URL-escaped carriage return), then it uses
-    URL encoding to decode the string. Otherwise it looks for XML entity refs
-    to decode.
+    This will always return a byte string with an unknown encoding. If the
+    argument is a unicode string then it will be encoded in latin-1 before being
+    unquoted. Latin-1 is used because it doesn't modify bytes <= 0xFF, which
+    is all we expect a quoted string to contain.
 
-    Note that this function does not recognize all of the named entity refs
-    that are supported by XML. It only understands the following refs:
-
-    1. &#DDDD; where DDDD is the decimal unicode code point
-    2. &#xHHHH; where HHHH is the hexadecimal unicode code point
-    3. The named refs: &quot; &apos; and &amp;
-
-    This function takes a UTF-8 encoded byte string and returns a UTF-8 encoded
-    byte string, or takes a Unicode string and returns a Unicode string.
+    Unfortunately, this cannot return a unicode string because we have no
+    way of knowing what encoding was used for the original string that was
+    passed to quote().
     """
     if not isinstance(s, basestring):
         raise TypeError("Not a string: %s" % str(s))
 
-    if s.endswith('%0A'):
-        # We assume that most of the strings we find will end with \n, which
-        # was quoted as %0A in the old URL encoding quoting method. So if we
-        # see %0A at the end of the string, then we assume it is using the old
-        # quoting method. Otherwise we assume it is using the new method.
-        # This isn't going to be correct in every case, but it shouldn't hurt
-        # anything when it fails.
-        return urllib.unquote(s)
+    if isinstance(s, unicode):
+        # Technically, this should not happen because
+        # quote always returns a byte string, but if it was
+        # passed through a database or something then it might happen
+        # Latin-1 is used because it has the nice property that every
+        # unicode code point <= 0xFF has the same value in latin-1
+        # We ignore anything else (i.e. >0xFF) because, tecnically, it
+        # should have been removed by quote()
+        s = s.encode('latin-1', 'ignore')
 
-    # This is a shortcut for unquoted strings
-    if '&' not in s:
-        return s
-
-    bytestring = False
-    if not isinstance(s, unicode):
-        # If it is a byte string, then assume it is UTF-8 and replace any
-        # invalid sequences with valid unicode characters
-        s = s.decode('utf-8', 'replace')
-        bytestring = True
-
-    buf = []
-
-    i = 0
-    while i < len(s):
-        if s[i] == '&':
-            # The reference is all chars until the next ;
-            start = i
-            while i < len(s) and s[i] != ';':
-                i += 1
-            ref = s[start+1:i]
-
-            if i == len(s):
-                raise CharRefException(
-                        "Unterminated character entity reference: %s" % ref)
-
-            if len(ref) == 0:
-                raise CharRefException(
-                        "Empty character entity reference: %s" % s[start:])
-
-            if ref.startswith("#x"):
-                buf.append(unichr(int(ref[2:], 16)))
-            elif ref[0] == "#":
-                buf.append(unichr(int(ref[1:])))
-            elif ref == "apos":
-                buf.append("'")
-            elif ref == "amp":
-                buf.append("&")
-            elif ref == "quot":
-                buf.append('"')
-            else:
-                raise CharRefException(
-                        "Unsupported character entity reference: %s" % ref)
-        else:
-            buf.append(s[i])
-
-        i+=1
-
-    result = u''.join(buf)
-
-    if bytestring:
-        return result.encode('utf-8')
-    else:
-        return result
+    return urllib.unquote(s)
 
 def isodate(now=int(time.time()), utc=False, short=False):
     """
