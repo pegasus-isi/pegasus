@@ -16,61 +16,50 @@
 
 package edu.isi.pegasus.planner.refiner;
 
-import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
-import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
-
-import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.Job;
-import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.classes.FileTransfer;
-import edu.isi.pegasus.planner.classes.Profile;
-import edu.isi.pegasus.planner.classes.NameValue;
-
 import edu.isi.pegasus.common.logging.LogManager;
-
-import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
-import edu.isi.pegasus.planner.partitioner.graph.Graph;
-
-import edu.isi.pegasus.planner.namespace.Pegasus;
-
-import edu.isi.pegasus.planner.transfer.Implementation;
-import edu.isi.pegasus.planner.transfer.implementation.ImplementationFactory;
-import edu.isi.pegasus.planner.transfer.Refiner;
-import edu.isi.pegasus.planner.transfer.refiner.RefinerFactory;
-
-import edu.isi.pegasus.planner.selector.TransformationSelector;
-
 import edu.isi.pegasus.common.util.DynamicLoader;
 import edu.isi.pegasus.common.util.FactoryException;
 import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.common.util.Version;
-
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.classes.SysInfo.OS;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
-
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
-
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
-
+import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.FileTransfer;
+import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.NameValue;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.code.gridstart.PegasusExitCode;
+import edu.isi.pegasus.planner.dax.Executable;
 import edu.isi.pegasus.planner.namespace.Dagman;
+import edu.isi.pegasus.planner.namespace.Pegasus;
+import edu.isi.pegasus.planner.partitioner.graph.Graph;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import edu.isi.pegasus.planner.selector.TransformationSelector;
+import edu.isi.pegasus.planner.transfer.Implementation;
+import edu.isi.pegasus.planner.transfer.Refiner;
 import edu.isi.pegasus.planner.transfer.RemoteTransfer;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.HashMap;
-
+import edu.isi.pegasus.planner.transfer.implementation.ImplementationFactory;
+import edu.isi.pegasus.planner.transfer.refiner.RefinerFactory;
 import java.io.File;
-
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.regex.Pattern;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * The refiner that is responsible for adding 
@@ -253,6 +242,12 @@ public class DeployWorkerPackage
     private static Map<SysInfo.OS,String> mOSToNMIOSReleaseAndVersion = null;
     
     /**
+     * A set of supported OS release and versions that our build process
+     * builds for.
+     */
+    private static Set<String> mSupportedOSReleaseVersions = null;
+    
+    /**
      * Maps each to OS to a specific OS release for purposes of picking up the 
      * correct worker package for a site. The mapping is to be kept consistent
      * with the NMI builds for the releases.
@@ -268,6 +263,25 @@ public class DeployWorkerPackage
             mOSToNMIOSReleaseAndVersion.put( SysInfo.OS.MACOSX, "macos_10.7" );
         }
         return mOSToNMIOSReleaseAndVersion;
+    }
+    
+    /**
+     * A set of OS release and version combinations for which our build
+     * processes build Pegasus binaries.
+     * 
+     * @return 
+     */
+    private static Set<String> supportedOSReleaseAndVersions(){
+        if( mSupportedOSReleaseVersions == null ){
+            mSupportedOSReleaseVersions = new HashSet();
+            mSupportedOSReleaseVersions.add( "rhel_5" );
+            mSupportedOSReleaseVersions.add( "rhel_6" );
+            mSupportedOSReleaseVersions.add( "deb_6" );
+            mSupportedOSReleaseVersions.add( "deb_7" );
+            mSupportedOSReleaseVersions.add( "macos_10.7" );
+            
+        }
+        return mSupportedOSReleaseVersions;
     }
     
     /**
@@ -1393,9 +1407,36 @@ public class DeployWorkerPackage
         //get the matching architecture
         //String arch = ( String )DeployWorkerPackage.archToNMIArch().get( sysinfo.getArch() );
         String arch = sysinfo.getArchitecture().toString();
-        String os   = ( String )DeployWorkerPackage.osToOSReleaseAndVersion().get( sysinfo.getOS() );
         
-        if( arch == null || os == null ){
+        //PM-732 lets figure out if a user has specified an OS release or OS version
+        //or not
+        String osRelease = sysinfo.getOSRelease();
+        String osVersion = sysinfo.getOSVersion();
+        //for mac there is only single OSRelease
+        osRelease = ( sysinfo.getOS() == SysInfo.OS.MACOSX ) ? "macos" : osRelease;
+        
+        String osReleaseAndVersion = null;
+        if ( ( osRelease != null && osRelease.length() != 0 ) &&
+             ( osVersion != null && osVersion.length() != 0 ) ){
+            //if both os release and version are specified by user
+            //then we know user is being specific. check to see if it
+            //is built by our built system
+            osReleaseAndVersion = osRelease + "_" + osVersion;
+            if( !DeployWorkerPackage.supportedOSReleaseAndVersions().contains(osReleaseAndVersion) ){
+                //set back to null  and log a warning
+                mLogger.log( "Worker Package Deployment: Unsupported os release and version " + osReleaseAndVersion + " for OS " + sysinfo.getOS() +
+                             " . Will rely on default package for the OS.",
+                             LogManager.WARNING_MESSAGE_LEVEL );
+                osReleaseAndVersion = null;
+            }
+        }
+        
+        //if osReleaseAndVersion is null, then construct a default one based on OS
+        if( osReleaseAndVersion == null){ 
+            osReleaseAndVersion = ( String )DeployWorkerPackage.osToOSReleaseAndVersion().get( sysinfo.getOS() );
+        }
+        
+        if( arch == null || osReleaseAndVersion == null ){
             mLogger.log( "Unable to construct url for pegasus worker for " + sysinfo , 
                          LogManager.DEBUG_MESSAGE_LEVEL );
             return null;
@@ -1415,7 +1456,7 @@ public class DeployWorkerPackage
         url.append( "pegasus-" ).append( name ).append( "-" ).
             append( PEGASUS_VERSION ).append( "-" ).
             append( arch ).append( "_" ).
-            append( os ).append( ".tar.gz" );
+            append( osReleaseAndVersion ).append( ".tar.gz" );
             
         return url.toString();
     }
