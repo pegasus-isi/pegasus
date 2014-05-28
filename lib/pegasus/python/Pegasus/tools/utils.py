@@ -33,6 +33,7 @@ import datetime
 import traceback
 import subprocess
 import urllib
+import unicodedata
 
 __all__ = ['quote', 'unquote']
 
@@ -54,35 +55,33 @@ logger = logging.getLogger()
 
 def quote(s):
     """
-    Encodes a Unicode string using XML control characters. The
+    Encodes a Unicode string using XML entity references. The
     encoding replaces the following code points with their XML
     character entity references:
-    1. Non-printing and control characters (code points < 0x20 and 0x7F [DEL]
-       to 0xA0 [NBSP]). Note that these ranges actually contain some characters
-       that aren't technically non-printing, like NBSP.
-    2. Quote (0x27), double quote (0x22), and ampersand (0x26)
+    1. Unicode control characters (category Cc, which are C0 and C1 control codes)
+    2. Quote/apostrophe (0x27), double quote (0x22), and ampersand (0x26)
 
-    This function takes a UTF-8 encoded byte string or a Unicode string
-    and returns a UTF-8 encoded byte string.
+    This function takes a UTF-8 encoded byte string and returns a UTF-8 encoded
+    byte string, or takes a Unicode string and returns a Unicode string.
     """
     if not isinstance(s, basestring):
         raise TypeError("Not a string: %s" % str(s))
 
     # Convert to unicode string if necessary
-    u = s
     bytestring = False
     if not isinstance(s, unicode):
-        # We assume it is a utf-8 string, but ignore characters that are not
+        # We assume it is a utf-8 string, but replace characters that are not
         # valid UTF-8
-        u = s.decode('utf-8', 'ignore')
+        s = s.decode('utf-8', 'replace')
         bytestring = True
 
     buf = []
-    for c in u:
-        i = ord(c) # This gives us the code point of the character
-        if i < 0x20 or (0x7F <= i <= 0xA0):
-            # These are unicode control characters
-            buf.append("&#%d;" % i)
+    for c in s:
+        if unicodedata.category(c) == 'Cc':
+            # These are unicode control characters. They should be
+            # replaced with the XML decimal entity ref for the given
+            # unicode code point.
+            buf.append("&#%d;" % ord(c))
         elif c == '&':
             buf.append('&amp;')
         elif c == "'":
@@ -103,6 +102,24 @@ def quote(s):
 class CharRefException(Exception): pass
 
 def unquote(s):
+    """
+    Unescape a string that has been escaped using XML entity refs or URL
+    encoding.
+
+    If the string ends with %0A (URL-escaped carriage return), then it uses
+    URL encoding to decode the string. Otherwise it looks for XML entity refs
+    to decode.
+
+    Note that this function does not recognize all of the named entity refs
+    that are supported by XML. It only understands the following refs:
+
+    1. &#DDDD; where DDDD is the decimal unicode code point
+    2. &#xHHHH; where HHHH is the hexadecimal unicode code point
+    3. The named refs: &quot; &apos; and &amp;
+
+    This function takes a UTF-8 encoded byte string and returns a UTF-8 encoded
+    byte string, or takes a Unicode string and returns a Unicode string.
+    """
     if not isinstance(s, basestring):
         raise TypeError("Not a string: %s" % str(s))
 
@@ -115,27 +132,29 @@ def unquote(s):
         # anything when it fails.
         return urllib.unquote(s)
 
+    # This is a shortcut for unquoted strings
     if '&' not in s:
         return s
 
-    u = s
     bytestring = False
     if not isinstance(s, unicode):
-        u = s.decode('utf-8')
+        # If it is a byte string, then assume it is UTF-8 and replace any
+        # invalid sequences with valid unicode characters
+        s = s.decode('utf-8', 'replace')
         bytestring = True
 
     buf = []
 
     i = 0
-    while i < len(u):
-        if u[i] == '&':
+    while i < len(s):
+        if s[i] == '&':
             # The reference is all chars until the next ;
             start = i
-            while i < len(u) and u[i] != ';':
+            while i < len(s) and s[i] != ';':
                 i += 1
-            ref = u[start+1:i]
+            ref = s[start+1:i]
 
-            if i == len(u):
+            if i == len(s):
                 raise CharRefException(
                         "Unterminated character entity reference: %s" % ref)
 
@@ -157,7 +176,7 @@ def unquote(s):
                 raise CharRefException(
                         "Unsupported character entity reference: %s" % ref)
         else:
-            buf.append(u[i])
+            buf.append(s[i])
 
         i+=1
 
