@@ -63,9 +63,12 @@ import edu.isi.pegasus.planner.classes.TransferJob;
  * 
  * The following globus profiles if associated with the job are picked up
  * <pre>
- * hostcount  -> NODES
- * xcount      -> PROCS
- * maxwalltime-> WALLTIME
+ * 
+ * hostcount    -> NODES
+ * xcount       -> PROCS
+ * maxwalltime  -> WALLTIME
+ * totalmemory  -> TOTAL_MEMORY
+ * maxmemory    -> PER_PROCESS_MEMORY
  * </pre>
  * 
  * The following condor profiles if associated with the job are picked up
@@ -188,9 +191,11 @@ public class GLite extends Abstract {
      * with the jobs.
      * The following globus profiles if associated with the job are picked up
      * <pre>
-     * hostcount  -> NODES
-     * xcount      -> PROCS
-     * maxwalltime-> WALLTIME
+     * hostcount    -> NODES
+     * xcount       -> PROCS
+     * maxwalltime  -> WALLTIME
+     * totalmemory  -> TOTAL_MEMORY
+     * maxmemory    -> PER_PROCESS_MEMORY
      * </pre>
      * 
      * The following condor profiles if associated with the job are picked up
@@ -251,6 +256,18 @@ public class GLite extends Abstract {
         if( job.globusRSL.containsKey( "maxwalltime" ) ){
             value.append( " && " );
             addSubExpression( value,"WALLTIME" , Integer.parseInt( (String)job.globusRSL.get( "maxwalltime" ) ) );            
+        }
+
+        /* the globus key maxmemory is PER_PROCESS_MEMORY */
+        if( job.globusRSL.containsKey( "maxmemory" ) ){
+            value.append( " && " );
+            addSubExpression( value, "PER_PROCESS_MEMORY" ,  (String)job.globusRSL.get( "maxmemory" )  );
+        }
+        
+        /* the globus key totalmemory is TOTAL_MEMORY */
+        if( job.globusRSL.containsKey( "totalmemory" ) ){
+            value.append( " && " );
+            addSubExpression( value, "TOTAL_MEMORY" ,  (String)job.globusRSL.get( "totalmemory" )  );
         }
         
         /* the condor key priority is PRIORITY */
