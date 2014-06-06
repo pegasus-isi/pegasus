@@ -120,7 +120,7 @@ siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX  PEGASUS:
                 <mediaobject>
                   <imageobject>
                     <imagedata contentdepth="8in"
-                               fileref="images/advanced-clustering-1.png" />
+                               fileref="images/advanced-clustering-1.png"/>
                   </imageobject>
                 </mediaobject>
               </figure>
@@ -169,7 +169,7 @@ siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX PEGASUS::
                 <mediaobject>
                   <imageobject>
                     <imagedata contentdepth="8in"
-                               fileref="images/advanced-clustering-2.png" />
+                               fileref="images/advanced-clustering-2.png"/>
                   </imageobject>
                 </mediaobject>
               </figure>
@@ -203,10 +203,17 @@ siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX PEGASUS::
         needs to set the <emphasis role="bold">--cluster</emphasis> option of
         <emphasis role="bold">pegasus-plan to horizontal</emphasis>.</para>
 
-        <para>Basic Algorithm of grouping jobs into clusters is as
-        follows</para>
+        <para>Runtime clustering supports two modes of operation.</para>
 
-        <programlisting>// cluster.maxruntime - Is the maximum runtime for which the clustered job should run.
+        <orderedlist>
+          <listitem>
+            <para>Clusters jobs together such that the clustered job's runtime
+            does not exceed a user specified maxruntime.</para>
+
+            <para>Basic Algorithm of grouping jobs into clusters is as
+            follows</para>
+
+            <para><programlisting>// cluster.maxruntime - Is the maximum runtime for which the clustered job should run.
 // j.runtime - Is the runtime of the job j.
 1. Create a set of jobs of the same type (txnamespace, txname, txversion), and that run on the same site.
 2. Sort the jobs in decreasing order of their runtime.
@@ -218,27 +225,74 @@ siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX PEGASUS::
         Add j to bin
      Else
         Add a new bin
-        Add job j to newly added bin</programlisting>
+        Add job j to newly added bin</programlisting>The runtime of a job, and
+            the maximum runtime for which a clustered jobs should run is
+            determined by the value of two parameters associated with the
+            jobs.</para>
 
-        <para>The runtime of a job, and maximum runtime for which a clustered
-        jobs should run, is determined by the value of two parameters
-        associated with the jobs.</para>
+            <para><itemizedlist>
+                <listitem>
+                  <para><emphasis role="bold">runtime</emphasis></para>
 
-        <itemizedlist>
-          <listitem>
-            <para><emphasis role="bold">runtime</emphasis></para>
+                  <para>expected runtime for a job</para>
+                </listitem>
 
-            <para>expected runtime for a job</para>
+                <listitem>
+                  <para><emphasis
+                  role="bold">clusters.maxruntime</emphasis></para>
+
+                  <para>maxruntime for the clustered job i.e. Group as many
+                  jobs as possible into a cluster, as long as the clustered
+                  jobs' runtime does not exceed clusters.maxruntime.</para>
+                </listitem>
+              </itemizedlist></para>
           </listitem>
 
           <listitem>
-            <para><emphasis role="bold">clusters.maxruntime</emphasis></para>
+            <para>Clusters all the into a fixed number of clusters
+            (clusters.num), such that the runtimes of the clustered jobs are
+            similar.</para>
 
-            <para>maxruntime for the clustered job</para>
+            <para>Basic Algorithm of grouping jobs into clusters is as
+            follows</para>
+
+            <para><programlisting>// cluster.num - Is the number of clustered jobs to create.
+// j.runtime - Is the runtime of the job j.
+1. Create a set of jobs of the same type (txnamespace, txname, txversion), and that run on the same site.
+2. Sort the jobs in decreasing order of their runtime.
+3. Create a heap containing clusters.num number of clustered jobs.
+4. For each job j, repeat
+  a. Get cluster job cj, having the shortest runtime
+  b. Add job j to clustered job cj </programlisting></para>
+
+            <para>The runtime of a job, and the number of clustered jobs to
+            create is determined by the value of two parameters associated
+            with the jobs.</para>
+
+            <itemizedlist>
+              <listitem>
+                <para><emphasis role="bold">runtime</emphasis></para>
+
+                <para>expected runtime for a job</para>
+              </listitem>
+
+              <listitem>
+                <para><emphasis role="bold">clusters.num</emphasis></para>
+
+                <para>clusters.num factor denotes how many clustered jobs does
+                the user want to see per level per site</para>
+              </listitem>
+            </itemizedlist>
           </listitem>
-        </itemizedlist>
+        </orderedlist>
 
-        <para>Both these parameters are specified by the use of a PEGASUS
+        <para><note>
+            <para>Users should either specify clusters.maxruntime or
+            clusters.num. If both of them are specified, then clusters.num
+            profile will be ignored by the clustering engine.</para>
+          </note></para>
+
+        <para>All of these parameters are specified by the use of a PEGASUS
         namespace profile keys. The keys can be specified at any of the
         placeholders for the profiles (abstract transformation in the DAX,
         site in the site catalog, transformation in the transformation
@@ -249,7 +303,10 @@ siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX PEGASUS::
 
         <programlisting><emphasis role="bold">#site  transformation   pfn             type             architecture   profiles
 </emphasis>
-siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX PEGASUS::clusters.maxruntime=250,runtime=100
+#Cluster all jobs of type B at siteX, into 2 clusters such that the 2 clusters have similar runtimes
+siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX PEGASUS::clusters.num=2,runtime=100
+
+#Cluster all jobs of type C at siteX, such that the duration of the clustered job does not exceed 300.
 siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX PEGASUS::clusters.maxruntime=300,runtime=100</programlisting>
 
         <figure>
@@ -258,7 +315,7 @@ siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX PEGASUS::
           <mediaobject>
             <imageobject>
               <imagedata contentdepth="8in"
-                         fileref="images/advanced-clustering-5.png" />
+                         fileref="images/advanced-clustering-5.png"/>
             </imageobject>
           </mediaobject>
         </figure>
@@ -277,7 +334,7 @@ siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX PEGASUS::
 
         <programlisting><emphasis role="bold"> pegasus.clusterer.preference          Runtime</emphasis> </programlisting>
 
-        <para></para>
+        <para/>
       </section>
 
       <section id="label_clustering">
@@ -294,7 +351,7 @@ siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX PEGASUS::
             <mediaobject>
               <imageobject>
                 <imagedata contentdepth="8in"
-                           fileref="images/advanced-clustering-3.png" />
+                           fileref="images/advanced-clustering-3.png"/>
               </imageobject>
             </mediaobject>
           </figure></para>
@@ -382,7 +439,7 @@ siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX PEGASUS::
           <mediaobject>
             <imageobject>
               <imagedata contentdepth="8in"
-                         fileref="images/advanced-clustering-4.png" />
+                         fileref="images/advanced-clustering-4.png"/>
             </imageobject>
           </mediaobject>
         </figure>
