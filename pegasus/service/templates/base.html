@@ -11,18 +11,7 @@
 <!-- My CSS -->
 <link rel="stylesheet" type="text/css" href="{{ url_for ('static', filename='css/style.css') }}" />
 {% block css_includes %}{% endblock %}
-
-<!-- jQuery -->
-<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-<!-- jQuery UI -->
-<script type="text/javascript" src="http://code.jquery.com/ui/1.10.2/jquery-ui.js"></script>
-<!-- Data table -->
-<script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>
-<!-- My JS -->
-<script type="text/javascript" src="{{ url_for ('static', filename='js/script.js') }}"></script>
 {% endblock %}
-{% block javascript_includes %}{% endblock %}
-{% block javascript_init %}{% endblock %}
 </head>
 <body>
     <article>
@@ -87,5 +76,15 @@
                 title="University of Southern California" class="footer_icon" /></a>
         </footer>
     </article>
+    <!-- jQuery -->
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <!-- jQuery UI -->
+    <script type="text/javascript" src="http://code.jquery.com/ui/1.10.2/jquery-ui.js"></script>
+    <!-- Data table -->
+    <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>
+    <!-- My JS -->
+    <script type="text/javascript" src="{{ url_for ('static', filename='js/script.js') }}"></script>
+    {% block javascript_includes %}{% endblock %}
+    {% block javascript_init %}{% endblock %}
 </body>
 </html>
