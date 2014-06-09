@@ -386,11 +386,6 @@ def __get_datatables_args():
 def page_not_found(error):
     return render_template('error/404.html')
 
-# XXX This does not appear to be used!
-@app.errorhandler(WorkflowsDetailsMissingError)
-def workflow_details_missing(error):
-    return render_template('error/workflow/workflow_details_missing.html');
-
 @app.errorhandler(MasterDBNotFoundError)
 def master_database_missing(error):
     return render_template('error/master_database_missing.html')
