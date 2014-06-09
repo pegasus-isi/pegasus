@@ -50,6 +50,7 @@ setup(
         "Flask==0.10",
         "Jinja2==2.7",
         "Flask-SQLAlchemy==0.16",
+        "Flask-Cache==0.13.1",
         "SQLAlchemy==0.8.0",
         "WTForms==1.0.3",
         "requests==1.2.3",
