@@ -37,6 +37,8 @@ SQLALCHEMY_DATABASE_URI = 'sqlite:///%s/.pegasus/workflow.db' % os.getenv('HOME'
 #SQLALCHEMY_POOL_RECYCLE = 2 * 60 * 60
 
 
+# Cache Configuration
+CACHE_TYPE = 'simple'
 
 # SERVICE CONFIGURATION
 

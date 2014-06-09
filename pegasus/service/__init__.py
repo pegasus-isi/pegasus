@@ -1,6 +1,7 @@
 import sys
 import os
 from flask import Flask
+from flask.ext.cache import Cache
 
 app = Flask(__name__)
 
@@ -55,6 +56,7 @@ except ImportError:
 
 from flask.ext.sqlalchemy import SQLAlchemy
 db = SQLAlchemy(app)
+cache = Cache(app)
 
 from pegasus.service import auth, filters, api, dashboard, catalogs, ensembles
 
