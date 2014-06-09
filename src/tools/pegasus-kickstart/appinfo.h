@@ -33,8 +33,9 @@ typedef struct {
   int            noHeader;   /* exclude <?xml ?> premable and <machine> */
   int            fullInfo;   /* include <statcall>, <environment> and <resource> */
   int            enableTracing;/* Enable resource usage tracing */
-  int            enableInterposition;/* Enable system call interposition */
+  int            enableSysTrace;/* Enable system call tracing */
   int            omitData;   /* Omit <data> for stdout and stderr if job succeeds */
+  int            enableLibTrace; /* Enable library tracing */
 
   char* const*   argv;       /* application executable and arguments */
   int            argc;       /* application CLI number of arguments */

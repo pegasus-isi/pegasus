@@ -72,7 +72,7 @@ endif
 %.o : %.c
 	$(CC) $(CFLAGS) $< -c -o $@
 
-all : pegasus-kickstart
+all : pegasus-kickstart libinterpose.so
 
 pegasus-kickstart: debug.o getif.o rwio.o tools.o useinfo.o mynss.o statinfo.o jobinfo.o limitinfo.o $(EXTRA_OBJ) machine.o appinfo.o parse.o mysystem.o mylist.o invoke.o pegasus-kickstart.o procinfo.o syscall.o
 	$(LD) $(EXTRA_LDFLAGS) $(CFLAGS) $^ -o $@ $(LOADLIBES)
@@ -117,6 +117,9 @@ machine/linux.o: machine/linux.c machine/basic.c machine/linux.h \
 machine/darwin.o: machine/darwin.c machine/basic.c machine/darwin.h \
   machine/../tools.h
 
+libinterpose.so: interpose.c
+	$(CC) $(CFLAGS) -fPIC -shared -o libinterpose.so interpose.c -ldl
+
 version.h:
 	$(CURDIR)/../../../release-tools/getversion --header > $(CURDIR)/version.h
 
@@ -124,7 +127,7 @@ install: pegasus-kickstart
 	$(INSTALL) -m 0755 pegasus-kickstart $(prefix)/bin
 
 clean:
-	$(RM) *.o machine/*.o core core.* version.h
+	$(RM) *.o *.so machine/*.o core core.* version.h pegasus-kickstart
 
 distclean: clean
 	$(RM) pegasus-kickstart fail test-post test-pre test-ascii show-if

@@ -198,8 +198,11 @@ helpMe( const AppInfo* run )
 "   \t<statcall>. If the job fails, then -f is implied.\n"
 " -q\tOmit <data> for <statcall> (stdout, stderr) if the job succeeds.\n"
 #ifdef HAS_PTRACE
-" -t\tEnable resource usage tracing\n"
+" -t\tEnable resource usage tracing with ptrace\n"
 " -z\tEnable system call interposition to get files and I/O\n"
+#endif
+#ifdef LINUX
+" -Z\tEnable library call interposition to get files and I/O\n"
 #endif
  );
 
@@ -549,7 +552,10 @@ main( int argc, char* argv[] )
       break;
     case 'z':
       appinfo.enableTracing++;
-      appinfo.enableInterposition++;
+      appinfo.enableSysTrace++;
+      break;
+    case 'Z':
+      appinfo.enableLibTrace++;
       break;
     case 'w':
       if (!argv[i][2] && argc <= i+1) {
