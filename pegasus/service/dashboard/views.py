@@ -27,9 +27,6 @@ from pegasus.service import app, filters
 from pegasus.service.dashboard.dashboard import Dashboard, NoWorkflowsFoundError
 from pegasus.service.dashboard.queries import MasterDBNotFoundError
 
-# XXX This does not appear to be used!
-class WorkflowsDetailsMissingError(Exception):
-    pass
 
 @app.route('/')
 def index():
