@@ -41,6 +41,7 @@ int isExtended = 1;     /* timestamp format concise or extended */
 int isLocal = 1;        /* timestamp time zone, UTC or local */
 extern int make_application_executable;
 extern size_t data_section_size;
+extern char *programname;
 
 /* module local globals */
 static int doFlush = 0; /* apply fsync() on kickstart's stdout if true */ 
@@ -347,6 +348,8 @@ main( int argc, char* argv[] )
   const char* workdir = NULL;
   mylist_t initial;
   mylist_t final;
+
+  programname = argv[0];
  
   /* premature init with defaults */
   if ( mylist_init( &initial ) ) return 43;
