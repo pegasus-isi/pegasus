@@ -15,18 +15,6 @@
 
     function accordianCreate (event, ui)
     {
-        return;
-    }
-
-    $(document).ready (function ()
-    {
-        var charts = $ ("#charts_container");
-        charts.accordion ({ heightStyle: "content", autoHeight: false, activate: activateEventHandler, create : accordianCreate });
-
-        $ ("#job_distribution_options").buttonset ();
-
-        radializeChartColors ();
-
         jobDistributionOpt =
         {
             chart:
@@ -76,22 +64,37 @@
                         data: [
                             {% if job_dist %}
                         {% for i in range(0, job_dist|count) %}
-        {
-            name: {{ job_dist [i].transformation|tojson|safe }},
-            y: {{ job_dist [i].count }},
-            count : { total : {{ job_dist [i].count|tojson|safe }}, success : {{ job_dist [i].success|tojson|safe }}, failure : {{ job_dist [i].failure|tojson|safe }} },
-            time : { total : {{ job_dist [i].sum|dec_to_float|tojson|safe }} , min : {{ job_dist [i].min|dec_to_float|tojson|safe }}, max : {{ job_dist [i].max|dec_to_float|tojson|safe }}, avg : {{ job_dist [i].avg|dec_to_float|tojson|safe }} }
-        }
-        {% if i + 1 != job_dist|count %}
-        ,
-            {% endif %}
-            {% endfor %}
-            {% endif %}
-        ]
-        }]
-    };
+                {
+                    name: {{ job_dist [i].transformation|tojson|safe }},
+                    y: {{ job_dist [i].count }},
+                    count : { total : {{ job_dist [i].count|tojson|safe }}, success : {{ job_dist [i].success|tojson|safe }}, failure : {{ job_dist [i].failure|tojson|safe }} },
+                    time : { total : {{ job_dist [i].sum|dec_to_float|tojson|safe }} , min : {{ job_dist [i].min|dec_to_float|tojson|safe }}, max : {{ job_dist [i].max|dec_to_float|tojson|safe }}, avg : {{ job_dist [i].avg|dec_to_float|tojson|safe }} }
+                }
+                {% if i + 1 != job_dist|count %}
+                ,
+                    {% endif %}
+                    {% endfor %}
+                    {% endif %}
+                ]
+                }]
+            };
 
-    jobDistribution = new Highcharts.Chart (jobDistributionOpt);
+        jobDistribution = new Highcharts.Chart (jobDistributionOpt);
+
+        $ ("#job_distribution_options").buttonset ();
+    }
+
+    function init ()
+    {
+        radializeChartColors ();
+
+        var charts = $ ("#charts_container");
+        charts.accordion ({ heightStyle: "content", autoHeight: false, activate: activateEventHandler, create : accordianCreate });
+    }
+
+    $(document).ready (function ()
+    {
+        init();
     });
 </script>
 {% endblock %}
