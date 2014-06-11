@@ -41,11 +41,17 @@ public class ReplicaCatalogEntry implements CatalogEntry, Cloneable
    * The (reserved) attribute name used for the resource handle.
    */
   public static final String RESOURCE_HANDLE = "pool";
+  public static final String RESOURCE_HANDLE_COL = "site";
 
   /**
    * The physical filename.
    */
   private String m_pfn;
+  
+  /**
+   * The resource handle.
+   */
+  private String m_handle;
 
   /**
    * Any optional attributes associated with the PFN.
@@ -53,7 +59,7 @@ public class ReplicaCatalogEntry implements CatalogEntry, Cloneable
   private Map m_attributeMap;
 
   /**
-   * Default constructor for arrays. The PFN is initialized to
+   * Default constructor for arrays. The PFN and Site is initialized to
    * <code>null</null>, and thus must be explicitly set later. The map
    * of attributes associated with the PFN is initialized to be empty.
    * Thus, no resource handle is available.
@@ -61,18 +67,20 @@ public class ReplicaCatalogEntry implements CatalogEntry, Cloneable
   public ReplicaCatalogEntry()
   {
     m_pfn = null;
+    m_handle = null;
     m_attributeMap = new TreeMap();
   }
 
   /**
    * Convenience constructor initializes the PFN. The map of attributes
-   * is initialized to be empty. Thus, no resource handle is avaiable.
+   * is initialized to be empty. Thus, no resource handle is available.
    *
    * @param pfn is the PFN to remember.
    */
   public ReplicaCatalogEntry( String pfn )
   {
     m_pfn = pfn;
+    m_handle = null;
     m_attributeMap = new TreeMap();
   }
 
@@ -86,8 +94,9 @@ public class ReplicaCatalogEntry implements CatalogEntry, Cloneable
   public ReplicaCatalogEntry( String pfn, String handle )
   {
     m_pfn  = pfn;
+    m_handle = handle;
     m_attributeMap = new TreeMap();
-    m_attributeMap.put( RESOURCE_HANDLE, handle );
+//    m_attributeMap.put( RESOURCE_HANDLE, handle );
   }
 
   /**
@@ -100,6 +109,22 @@ public class ReplicaCatalogEntry implements CatalogEntry, Cloneable
   public ReplicaCatalogEntry( String pfn, Map attributes )
   {
     m_pfn  = pfn;
+    m_handle = null;
+    m_attributeMap = new TreeMap(attributes);
+  }
+  
+  /**
+   * Standard constructor initializes the PFN and arbitrary attributes.
+   *
+   * @param pfn is the PFN to remember.
+   * @param handle is the resource handle.
+   * @param attributes is a map of arbitrary attributes related to the
+   * PFN.
+   */
+  public ReplicaCatalogEntry( String pfn, String handle, Map attributes )
+  {
+    m_pfn  = pfn;
+    m_handle = handle;
     m_attributeMap = new TreeMap(attributes);
   }
 
@@ -193,9 +218,14 @@ public class ReplicaCatalogEntry implements CatalogEntry, Cloneable
 
     String pfn1 = a.getPFN();
     String pfn2 = b.getPFN();
-    if ( pfn1 == null && pfn2 == null ||
-	 pfn1 != null && pfn2 != null && pfn1.equals(pfn2) ) {
-      result = new ReplicaCatalogEntry( pfn1, a.m_attributeMap );
+    String handle1 = a.getResourceHandle();
+    String handle2 = b.getResourceHandle();
+    if ( pfn1 == null && pfn2 == null &&
+         handle1 == null && handle2 == null ||
+	 pfn1 != null && pfn2 != null && 
+         handle1 != null && handle2 != null &&
+         pfn1.equals(pfn2) && handle1.equals(handle2) ) {
+      result = new ReplicaCatalogEntry( pfn1, handle1, a.m_attributeMap );
       result.merge( b, overwrite ); // result cannot be false
     }
 
@@ -299,7 +329,8 @@ public class ReplicaCatalogEntry implements CatalogEntry, Cloneable
    */
   public String getResourceHandle()
   {
-    return (String) this.m_attributeMap.get( RESOURCE_HANDLE );
+//    return (String) this.m_attributeMap.get( RESOURCE_HANDLE );
+      return m_handle;
   }
 
   /**
@@ -312,7 +343,8 @@ public class ReplicaCatalogEntry implements CatalogEntry, Cloneable
    */
   public void setResourceHandle( String handle )
   {
-    this.m_attributeMap.put( RESOURCE_HANDLE, handle );
+//    this.m_attributeMap.put( RESOURCE_HANDLE, handle );
+      this.m_handle = handle;
   }
 
   /**
@@ -342,6 +374,7 @@ public class ReplicaCatalogEntry implements CatalogEntry, Cloneable
    *
    * @return a textual representation of the item content.
    */
+  @Override
   public String toString()
   {
     // return "(" + m_pfn + "," + m_attributeMap.toString() + ")";
@@ -350,14 +383,22 @@ public class ReplicaCatalogEntry implements CatalogEntry, Cloneable
     // save the formatted map content
     String save = m_attributeMap.toString();
 
-    if ( m_pfn == null ) {
-      result = new StringBuffer( 10 + save.length() );
-      result.append( "((null)," );
-    } else {
-      result = new StringBuffer( 4 + m_pfn.length() + save.length() );
-      result.append( '(' ).append( m_pfn ).append( ',' );
-    }
+    int length = 5 + save.length();
+    length +=  m_pfn == null ? 6 : m_pfn.length();
+    length +=  m_handle == null ? 6 : m_handle.length();
 
+    result = new StringBuffer( length );
+    result.append( '(' );
+    result.append( m_pfn == null ? "(null)" : m_pfn );
+    result.append( ',' );
+    result.append( m_handle == null ? "(null)" : m_handle );    
+//    if ( m_pfn == null ) {
+//      result = new StringBuffer( 10 + save.length() );
+//      result.append( "((null)," );
+//    } else {
+//      result = new StringBuffer( 4 + m_pfn.length() + save.length() );
+//      result.append( '(' ).append( m_pfn ).append( ',' );
+//    }
     result.append( save );
     result.append( ')' );
 
@@ -370,6 +411,7 @@ public class ReplicaCatalogEntry implements CatalogEntry, Cloneable
    *
    * @return true if the pfn and all the attributes match, false otherwise.
    */
+  @Override
   public boolean equals(Object obj){
       // null check
       if (obj == null)
@@ -382,10 +424,15 @@ public class ReplicaCatalogEntry implements CatalogEntry, Cloneable
       ReplicaCatalogEntry rce = (ReplicaCatalogEntry)obj;
       String pfn1 = this.m_pfn;
       String pfn2 = rce.getPFN();
+      String handle1 = this.m_handle;
+      String handle2 = rce.getResourceHandle();
 
       //rce with null pfns are assumed to match
-      boolean result = ( pfn1 == null && pfn2 == null ||
-                         pfn1 != null && pfn2 != null && pfn1.equals(pfn2) &&
+      boolean result = ( pfn1 == null && pfn2 == null &&
+                         handle1 == null && handle2 == null ||
+                         pfn1 != null && pfn2 != null && 
+                         handle1 != null && handle2 != null &&
+                         pfn1.equals(pfn2) && handle1.equals(handle2) &&
                          this.getAttributeCount() == rce.getAttributeCount());
 
       if(result){
