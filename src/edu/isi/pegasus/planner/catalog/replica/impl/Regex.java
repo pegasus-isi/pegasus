@@ -226,6 +226,7 @@ public class Regex implements ReplicaCatalog {
         char ch = ' ';
         String lfn = null;
         String pfn = null;
+        String handle = null;
         String key = null;
         Map<String, String> attr = new HashMap<String, String>();
         short input, state = 0;
@@ -274,11 +275,18 @@ public class Regex implements ReplicaCatalog {
                     sb = new StringBuilder();
                     break;
                 case 4: // sb to key
-                    key = sb.toString();
+                    String s = sb.toString();
+                    if (!s.equals(ReplicaCatalogEntry.RESOURCE_HANDLE)) {
+                        key = s;
+                    }
                     sb = new StringBuilder();
                     break;
                 case 5: // sb to value
-                    attr.put(key, sb.toString());
+                    if (key != null) {
+                        attr.put(key, sb.toString());
+                    } else {
+                        handle = sb.toString();
+                    }
                     sb = new StringBuilder();
                     break;
             }
@@ -301,7 +309,7 @@ public class Regex implements ReplicaCatalog {
         } else {
             // valid entry
             if (state == 16)
-                insert(lfn, new ReplicaCatalogEntry(pfn, attr));
+                insert(lfn, new ReplicaCatalogEntry(pfn, handle, attr));
             return true;
         }
     }
