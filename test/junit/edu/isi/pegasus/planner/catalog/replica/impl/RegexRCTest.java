@@ -94,7 +94,7 @@ public class RegexRCTest {
         HashMap attr = new HashMap();
         attr.put("regex", "true");
 
-        regex.insert("a", new ReplicaCatalogEntry("b"));
+        regex.insert("a", new ReplicaCatalogEntry("b", "handle"));
         regex.insert("a", new ReplicaCatalogEntry("b", "handle", attr));
 
         Collection<ReplicaCatalogEntry> c = regex.lookup("a");
@@ -112,7 +112,7 @@ public class RegexRCTest {
         attr.put("regex", "true");
 
         regex.insert("a", new ReplicaCatalogEntry("b", "handle", attr));
-        regex.insert("a", new ReplicaCatalogEntry("b"));
+        regex.insert("a", new ReplicaCatalogEntry("b", "handle"));
 
         Collection<ReplicaCatalogEntry> c = regex.lookup("a");
 
