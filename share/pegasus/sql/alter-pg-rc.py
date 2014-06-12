@@ -1,18 +1,16 @@
 #!/usr/bin/env python
 
-import MySQLdb as mdb
+import psycopg2
 import sys
 
-mysqlHost = 'localhost'
-mysqlUser = 'root' 
-mysqlPassword = ''
-mysqlDB = 'pegasus'
+user = 'root' 
+database = 'pegasus'
 
 try:
-    con = mdb.connect(mysqlHost, mysqlUser, mysqlPassword, mysqlDB);
+    con = psycopg2.connect(database, user);
     cur = con.cursor()
     
-    con.query("ALTER TABLE rc_lfn ADD COLUMN site VARCHAR(245) NOT NULL")
+    con.query("ALTER TABLE rc_lfn ADD COLUMN site VARCHAR(245)")
     cur.execute("ALTER TABLE rc_lfn DROP INDEX sk_rc_lfn")
     cur.execute("ALTER TABLE rc_lfn ADD CONSTRAINT sk_rc_lfn UNIQUE(lfn,pfn,site)")
     
@@ -27,9 +25,9 @@ try:
 
 
 
-except mdb.Error, e:
+except psycopg2.DatabaseError, e:
   
-    print "Error %d: %s" % (e.args[0],e.args[1])
+    print 'Error %s' % e
     sys.exit(1)
     
 finally:    
