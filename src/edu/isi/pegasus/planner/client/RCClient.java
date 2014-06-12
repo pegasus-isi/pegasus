@@ -470,7 +470,7 @@ public class RCClient extends Toolkit {
      *            pairs.
      */
     private void show(String lfn, ReplicaCatalogEntry rce) {
-	System.out.print(lfn + " " + rce.getPFN() + " " + rce.getResourceHandle());
+	System.out.print(lfn + " " + rce.getPFN());
 	for (Iterator i = rce.getAttributeIterator(); i.hasNext();) {
 	    String key = (String) i.next();
 	    Object val = rce.getAttribute(key);
@@ -541,13 +541,8 @@ public class RCClient extends Toolkit {
 				    + "assuming resource handle");
 			    rce.setResourceHandle(attr);
 			} else {
-			    String key = attr.substring(0, pos);
-                            if (key.equals(ReplicaCatalogEntry.RESOURCE_HANDLE)) {
-                                rce.setResourceHandle(unescape(noquote(attr.substring(pos + 1))));
-                            } else {
-                                rce.setAttribute(key,
+			    rce.setAttribute(attr.substring(0, pos),
 				    unescape(noquote(attr.substring(pos + 1))));
-                            }
 			}
 		    }
 
@@ -682,13 +677,8 @@ public class RCClient extends Toolkit {
 				+ "assuming resource handle");
 			rce.setResourceHandle(attr);
 		    } else {
-                        String key = attr.substring(0, pos);
-                        if (key.equals(ReplicaCatalogEntry.RESOURCE_HANDLE)) {
-                            rce.setResourceHandle(unescape(noquote(attr.substring(pos + 1))));
-                        } else {
-                            rce.setAttribute(key,
-                            unescape(noquote(attr.substring(pos + 1))));
-                        }
+			rce.setAttribute(attr.substring(0, pos),
+				unescape(noquote(attr.substring(pos + 1))));
 		    }
 		}
 
@@ -696,7 +686,7 @@ public class RCClient extends Toolkit {
 		    result = m_rc.insert(lfn, rce);
 		    m_log.info("inserted " + result + " entries");
 		} else {
-		    result = rce.getResourceHandle() == null ? m_rc.delete(lfn,
+		    result = rce.getAttributeCount() == 0 ? m_rc.delete(lfn,
 			    rce.getPFN()) : m_rc.delete(lfn, rce);
 		    m_log.info("deleted " + result + " entries");
 		}

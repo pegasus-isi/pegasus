@@ -9,10 +9,9 @@ CREATE TABLE rc_lfn (
    id      BIGINT DEFAULT NULL auto_increment,
    lfn     VARCHAR(245) NOT NULL,
    pfn     VARCHAR(245) NOT NULL,
-   site    VARCHAR(245) NOT NULL,
 
    CONSTRAINT pk_rc_lfn PRIMARY KEY(id),
-   CONSTRAINT sk_rc_lfn UNIQUE(lfn,pfn,site)
+   CONSTRAINT sk_rc_lfn UNIQUE(lfn,pfn)
 ) engine=InnoDB;
 
 CREATE INDEX ix_rc_lfn ON rc_lfn(lfn);

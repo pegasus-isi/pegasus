@@ -12,10 +12,9 @@ CREATE TABLE rc_lfn (
    id      BIGINT DEFAULT nextval('rc_lfn_id'::text),
    lfn     VARCHAR(255) NOT NULL,
    pfn     VARCHAR(255) NOT NULL,
-   site    VARCHAR(255) NOT NULL,
 
    CONSTRAINT pk_rc_lfn PRIMARY KEY(id),
-   CONSTRAINT sk_rc_lfn UNIQUE(lfn,pfn,site)
+   CONSTRAINT sk_rc_lfn UNIQUE(lfn,pfn)
 );
 
 CREATE INDEX ix_rc_lfn ON rc_lfn(lfn);
