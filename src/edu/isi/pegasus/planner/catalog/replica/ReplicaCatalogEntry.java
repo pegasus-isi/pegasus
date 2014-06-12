@@ -424,11 +424,15 @@ public class ReplicaCatalogEntry implements CatalogEntry, Cloneable
       ReplicaCatalogEntry rce = (ReplicaCatalogEntry)obj;
       String pfn1 = this.m_pfn;
       String pfn2 = rce.getPFN();
+      String handle1 = this.m_handle;
+      String handle2 = rce.getResourceHandle();
 
       //rce with null pfns are assumed to match
-      boolean result = ( pfn1 == null && pfn2 == null ||
+      boolean result = ( pfn1 == null && pfn2 == null &&
+                         handle1 == null && handle2 == null ||
                          pfn1 != null && pfn2 != null && 
-                         pfn1.equals(pfn2) &&
+                         handle1 != null && handle2 != null &&
+                         pfn1.equals(pfn2) && handle1.equals(handle2) &&
                          this.getAttributeCount() == rce.getAttributeCount());
 
       if(result){
