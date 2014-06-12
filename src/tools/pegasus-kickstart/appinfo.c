@@ -222,6 +222,12 @@ convert2XML( FILE *out, const AppInfo* run )
 
   } /* run->status || run->fullInfo */
 
+  /* File access information */
+  FileAccess *acc;
+  for (acc = run->accesses; acc != NULL; acc = acc->next) {
+      fprintf(out, "  <access filename=\"%s\" size=\"%lu\"/>\n", acc->filename, acc->size);
+  }
+
   /* finish root element */
   fprintf(out, "</invocation>\n");
 

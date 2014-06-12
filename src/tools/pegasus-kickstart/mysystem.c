@@ -32,6 +32,7 @@
 #include "mysystem.h"
 #include "mysignal.h"
 #include "procinfo.h"
+#include "access.h"
 
 /* The name of the program (argv[0]) set in pegasus-kickstart.c:main */
 char *programname;
@@ -71,7 +72,10 @@ static int findInterposeLibrary(char *path, int pathsize) {
     return -1;
 }
 
-void processTraceFiles(const char *tempdir, const char *trace_file_prefix) {
+void processTraceFiles(const char *tempdir, const char *trace_file_prefix, AppInfo* appinfo) {
+  FileAccess *accesses = NULL;
+  FileAccess *lastacc = NULL;
+
   DIR *tmp = opendir(tempdir);
   if (tmp == NULL) {
     fprintf(stderr, "Unable to open trace file directory: %s", tempdir);
@@ -84,14 +88,40 @@ void processTraceFiles(const char *tempdir, const char *trace_file_prefix) {
         /* Read data from the trace files */
         FILE *trace = fopen(fullpath, "r");
         char buf[BUFSIZ];
+        char filename[BUFSIZ];
+        size_t size = 0;
         while (1) {
             if (fgets(buf, BUFSIZ, trace) == NULL) {
                 break;
             } else {
-                /* TODO Do something with the records besides print them */
-                /* TODO Filter out duplicates */
-                /* TODO initStatInfoFromName */
-                fprintf(stderr, "ACCESSED: %s\n", buf);
+                /* TODO Filter out duplicates? */
+                /* TODO Should we print the start/end sizes? */
+
+                sscanf(buf, "%s %lu", filename, &size);
+
+                /* If the file size is zero, then probably the file was created
+                 * or truncated and we should stat it again to get the final
+                 * size.
+                 * TODO Should this be done only for files opened for write/append?
+                 */
+                if (size == 0) {
+                    struct stat st;
+                    if (stat(filename, &st) == 0) {
+                        size = st.st_size;
+                    }
+                }
+
+                FileAccess *acc = (FileAccess *)calloc(sizeof(FileAccess), 1);
+                acc->filename = strdup(filename);
+                acc->size = size;
+
+                if (accesses == NULL) {
+                  accesses = acc;
+                  lastacc = acc;
+                } else {
+                  lastacc->next = acc;
+                  lastacc = acc;
+                }
             }
         }
         fclose(trace);
@@ -100,6 +130,8 @@ void processTraceFiles(const char *tempdir, const char *trace_file_prefix) {
     }
     closedir(tmp);
   }
+
+  appinfo->accesses = accesses;
 }
 
 int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[])
@@ -240,7 +272,7 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[])
   sigaction( SIGQUIT, &savequit, NULL );
 
   /* Look for trace files and do something with them */
-  processTraceFiles(tempdir, trace_file_prefix);
+  processTraceFiles(tempdir, trace_file_prefix, appinfo);
 
   /* finalize */
   return jobinfo->status;

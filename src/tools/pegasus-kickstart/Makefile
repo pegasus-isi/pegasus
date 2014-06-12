@@ -118,7 +118,7 @@ machine/darwin.o: machine/darwin.c machine/basic.c machine/darwin.h \
   machine/../tools.h
 
 libinterpose.so: interpose.c
-	$(CC) $(CFLAGS) -fPIC -shared -o libinterpose.so interpose.c -ldl
+	$(CC) -Wall -shared -fPIC -o libinterpose.so interpose.c -ldl
 
 version.h:
 	$(CURDIR)/../../../release-tools/getversion --header > $(CURDIR)/version.h

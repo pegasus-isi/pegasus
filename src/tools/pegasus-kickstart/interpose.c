@@ -4,16 +4,22 @@
 #include <dlfcn.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <fcntl.h>
 #include <stdarg.h>
 #include <dirent.h>
 #include <stdlib.h>
+#include <errno.h>
+#include <string.h>
 
+/* TODO Thread safety? */
+/* TODO Add r/w/a mode support */
+/* TODO Trace rename? */
 /* TODO Interpose *64 functions for 32 bit machines (e.g. open64) */
 /* TODO Interpose truncate */
 /* TODO Interpose mkstemp and tmpfile */
 /* TODO Interpose unlink */
-/* TODO Use atexit or on_exit to do some final stats? */
+/* TODO Use atexit or on_exit to do some final stats? Or interpose exit? */
 /* TODO Interpose network functions (connect, accept) */
 
 /* These are all the functions we are interposing */
@@ -22,8 +28,6 @@ static typeof(openat) *orig_openat = NULL;
 static typeof(creat) *orig_creat = NULL;
 static typeof(fopen) *orig_fopen = NULL;
 static typeof(freopen) *orig_freopen = NULL;
-static typeof(close) *orig_close = NULL;
-static typeof(fclose) *orig_fclose = NULL;
 
 /* This is the trace file where we write information about the process */
 static FILE* trace = NULL;
@@ -39,6 +43,11 @@ static int topen() {
 
     char filename[BUFSIZ];
     snprintf(filename, BUFSIZ, "%s.%d", kickstart_prefix, getpid());
+
+    /* We have to do this here because we don't want to trace our own fopen() */
+    if (orig_fopen == NULL) {
+        orig_fopen = dlsym(RTLD_NEXT, "fopen");
+    }
 
     trace = (*orig_fopen)(filename, "w+");
     if (trace == NULL) {
@@ -67,26 +76,19 @@ static int tclose() {
         return 0;
     }
 
-    return (*orig_fclose)(trace);
+    return fclose(trace);
 }
 
 /* Library initialization function */
-static __attribute__((constructor)) void init(void) {
+void __attribute__((constructor)) interpose_init(void) {
     /* Locate the real functions we are interposing */
-    orig_open = dlsym(RTLD_NEXT, "open");
-    orig_openat = dlsym(RTLD_NEXT, "openat");
-    orig_creat = dlsym(RTLD_NEXT, "creat");
-    orig_fopen = dlsym(RTLD_NEXT, "fopen");
-    orig_freopen = dlsym(RTLD_NEXT, "freopen");
-    orig_close = dlsym(RTLD_NEXT, "close");
-    orig_fclose = dlsym(RTLD_NEXT, "fclose");
 
     /* Open the trace file */
     topen();
 }
 
 /* Library finalizer function */
-static __attribute__((destructor)) void fini(void) {
+void __attribute__((destructor)) interpose_fini(void) {
     /* Close trace file */
     tclose();
 }
@@ -94,27 +96,56 @@ static __attribute__((destructor)) void fini(void) {
 
 /** INTERPOSED FUNCTIONS **/
 
+static void trace_file(const char *path) {
+    struct stat st;
+    if (stat(path, &st) < 0) {
+        fprintf(stderr, "libinterpose: Unable to stat file: %s\n", strerror(errno));
+        return;
+    }
+
+    /* We only want to report regular files */
+    if (!S_ISREG(st.st_mode)) {
+        return;
+    }
+
+    tprintf("%s %lu\n", path, st.st_size);
+}
+
 static void trace_open(const char *path) {
     char fullpath[BUFSIZ];
     if (realpath(path, fullpath) == NULL) {
         fprintf(stderr, "libinterpose: Unable to get real path for '%s'", path);
         return;
     }
-    tprintf("%s\n", fullpath);
+
+    trace_file(fullpath);
 }
 
 static void trace_openat(int fd) {
     char linkpath[64];
-    char fullpath[BUFSIZ];
     snprintf(linkpath, 64, "/proc/%d/fd/%d", getpid(), fd);
-    if (readlink(linkpath, fullpath, BUFSIZ) <= 0) {
+
+    char fullpath[BUFSIZ];
+    int len = readlink(linkpath, fullpath, BUFSIZ);
+    if (len <= 0) {
         fprintf(stderr, "libinterpose: Unable to get real path for fd %d", fd);
         return;
     }
-    tprintf("%s\n", fullpath);
+    if (len == BUFSIZ) {
+        fprintf(stderr, "libinterpose: Path too long for fd %d", fd);
+        return;
+    }
+    /* readlink doesn't add a null byte */
+    fullpath[len] = '\0';
+
+    trace_file(fullpath);
 }
 
 int open(const char *path, int oflag, ...) {
+    if (orig_open == NULL) {
+        orig_open = dlsym(RTLD_NEXT, "open");
+    }
+
     mode_t mode = 0700;
     if (oflag & O_CREAT) {
         va_list list;
@@ -133,6 +164,10 @@ int open(const char *path, int oflag, ...) {
 }
 
 int openat(int dirfd, const char *path, int oflag, ...) {
+    if (orig_openat == NULL) {
+        orig_openat = dlsym(RTLD_NEXT, "openat");
+    }
+
     mode_t mode = 0700;
     if (oflag & O_CREAT) {
         va_list list;
@@ -151,6 +186,10 @@ int openat(int dirfd, const char *path, int oflag, ...) {
 }
 
 int creat(const char *path, mode_t mode) {
+    if (orig_creat == NULL) {
+        orig_creat = dlsym(RTLD_NEXT, "creat");
+    }
+
     int rc = (*orig_creat)(path, mode);
 
     if (rc >= 0) {
@@ -161,7 +200,11 @@ int creat(const char *path, mode_t mode) {
 }
 
 FILE *fopen(const char *path, const char *mode) {
-    FILE *f = orig_fopen(path, mode);
+    if (orig_fopen == NULL) {
+        orig_fopen = dlsym(RTLD_NEXT, "fopen");
+    }
+
+    FILE *f = (*orig_fopen)(path, mode);
 
     if (f != NULL) {
         trace_open(path);
@@ -171,6 +214,10 @@ FILE *fopen(const char *path, const char *mode) {
 }
 
 FILE *freopen(const char *path, const char *mode, FILE *stream) {
+    if (orig_freopen == NULL) {
+        orig_freopen = dlsym(RTLD_NEXT, "freopen");
+    }
+
     FILE *f = orig_freopen(path, mode, stream);
 
     if (f != NULL) {
@@ -178,13 +225,5 @@ FILE *freopen(const char *path, const char *mode, FILE *stream) {
     }
 
     return f;
-}
-
-int close(int filedes) {
-    return (*orig_close)(filedes);
-}
-
-int fclose(FILE *fp) {
-    return (*orig_fclose)(fp);
 }
 

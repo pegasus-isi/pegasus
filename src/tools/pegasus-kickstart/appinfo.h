@@ -19,12 +19,13 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <unistd.h>
+
 #include "statinfo.h"
 #include "jobinfo.h"
 #include "limitinfo.h"
-#include <unistd.h>
-
 #include "machine.h"
+#include "access.h"
 
 typedef struct {
   struct timeval start;      /* point of time that app was started */
@@ -75,6 +76,8 @@ typedef struct {
   MachineInfo    machine;    /* more system information */
 
   int            status;     /* The final status of the job */
+
+  FileAccess*    accesses;   /* The list of files accessed */
 } AppInfo;
 
 extern
