@@ -1238,7 +1238,6 @@ public class JDBCRC implements ReplicaCatalog
       Statement st = mConnection.createStatement();
       
       if (!query.isEmpty()) {
-          System.out.println(query);
           m.append("' AND id=?");    
           ResultSet rs = st.executeQuery(query);
 
