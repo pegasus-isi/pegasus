@@ -13,25 +13,31 @@
 #include <string.h>
 
 /* TODO Fix up status and io records */
+/* TODO Filter out system paths like /lib /sys /proc /dev and /etc? */
 /* TODO Thread safety? */
 /* TODO Add r/w/a mode support */
-/* TODO Trace rename? */
-/* TODO Interpose *64 functions for 32 bit machines (e.g. open64) */
-/* TODO Interpose truncate */
-/* TODO Interpose mkstemp and tmpfile */
-/* TODO Interpose unlink */
-/* TODO Use atexit or on_exit to do some final stats? Or interpose exit? */
+/* TODO Interpose rename? */
+/* TODO Interpose truncate? */
+/* TODO Interpose mkstemp and tmpfile? */
+/* TODO Interpose unlink? */
 /* TODO Interpose network functions (connect, accept) */
 
 /* These are all the functions we are interposing */
 static typeof(open) *orig_open = NULL;
+static typeof(open64) *orig_open64 = NULL;
 static typeof(openat) *orig_openat = NULL;
+static typeof(openat64) *orig_openat64 = NULL;
 static typeof(creat) *orig_creat = NULL;
+static typeof(creat64) *orig_creat64 = NULL;
 static typeof(fopen) *orig_fopen = NULL;
+static typeof(fopen64) *orig_fopen64 = NULL;
 static typeof(freopen) *orig_freopen = NULL;
+static typeof(freopen64) *orig_freopen64 = NULL;
 
 /* This is the trace file where we write information about the process */
 static FILE* trace = NULL;
+
+static FILE *fopen_untraced(const char *path, const char *mode);
 
 /* Open the trace file */
 static int topen() {
@@ -45,12 +51,7 @@ static int topen() {
     char filename[BUFSIZ];
     snprintf(filename, BUFSIZ, "%s.%d", kickstart_prefix, getpid());
 
-    /* We have to do this here because we don't want to trace our own fopen() */
-    if (orig_fopen == NULL) {
-        orig_fopen = dlsym(RTLD_NEXT, "fopen");
-    }
-
-    trace = (*orig_fopen)(filename, "w+");
+    trace = fopen_untraced(filename, "w+");
     if (trace == NULL) {
         fprintf(stderr, "libinterpose: Unable to open trace file");
         return -1;
@@ -81,7 +82,7 @@ static int tclose() {
 }
 
 static void read_status() {
-    FILE *statfile = fopen("/proc/self/status", "r");
+    FILE *statfile = fopen_untraced("/proc/self/status", "r");
     if (statfile == NULL) {
         fprintf(stderr, "libinterpose: Unable to read /proc/self/status\n");
         return;
@@ -96,7 +97,7 @@ static void read_status() {
 }
 
 static void read_io() {
-    FILE *iofile = fopen("/proc/self/io", "r");
+    FILE *iofile = fopen_untraced("/proc/self/io", "r");
     if (iofile == NULL) {
         fprintf(stderr, "libinterpose: Unable to read /proc/self/io\n");
         return;
@@ -201,6 +202,28 @@ int open(const char *path, int oflag, ...) {
     return rc;
 }
 
+int open64(const char *path, int oflag, ...) {
+    if (orig_open64 == NULL) {
+        orig_open64 = dlsym(RTLD_NEXT, "open64");
+    }
+
+    mode_t mode = 0700;
+    if (oflag & O_CREAT) {
+        va_list list;
+        va_start(list, oflag);
+        mode = va_arg(list, int);
+        va_end(list);
+    }
+
+    int rc = (*orig_open64)(path, oflag, mode);
+
+    if (rc >= 0) {
+        trace_open(path);
+    }
+
+    return rc;
+}
+
 int openat(int dirfd, const char *path, int oflag, ...) {
     if (orig_openat == NULL) {
         orig_openat = dlsym(RTLD_NEXT, "openat");
@@ -223,6 +246,28 @@ int openat(int dirfd, const char *path, int oflag, ...) {
     return rc;
 }
 
+int openat64(int dirfd, const char *path, int oflag, ...) {
+    if (orig_openat64 == NULL) {
+        orig_openat64 = dlsym(RTLD_NEXT, "openat64");
+    }
+
+    mode_t mode = 0700;
+    if (oflag & O_CREAT) {
+        va_list list;
+        va_start(list, oflag);
+        mode = va_arg(list, int);
+        va_end(list);
+    }
+
+    int rc = (*orig_openat64)(dirfd, path, oflag, mode);
+
+    if (rc >= 0) {
+        trace_openat(rc);
+    }
+
+    return rc;
+}
+
 int creat(const char *path, mode_t mode) {
     if (orig_creat == NULL) {
         orig_creat = dlsym(RTLD_NEXT, "creat");
@@ -237,12 +282,44 @@ int creat(const char *path, mode_t mode) {
     return rc;
 }
 
-FILE *fopen(const char *path, const char *mode) {
+int creat64(const char *path, mode_t mode) {
+    if (orig_creat64 == NULL) {
+        orig_creat64 = dlsym(RTLD_NEXT, "creat64");
+    }
+
+    int rc = (*orig_creat64)(path, mode);
+
+    if (rc >= 0) {
+        trace_open(path);
+    }
+
+    return rc;
+}
+
+static FILE *fopen_untraced(const char *path, const char *mode) {
     if (orig_fopen == NULL) {
         orig_fopen = dlsym(RTLD_NEXT, "fopen");
     }
 
-    FILE *f = (*orig_fopen)(path, mode);
+    return (*orig_fopen)(path, mode);
+}
+
+FILE *fopen(const char *path, const char *mode) {
+    FILE *f = fopen_untraced(path, mode);
+
+    if (f != NULL) {
+        trace_open(path);
+    }
+
+    return f;
+}
+
+FILE *fopen64(const char *path, const char *mode) {
+    if (orig_fopen64 == NULL) {
+        orig_fopen64 = dlsym(RTLD_NEXT, "fopen64");
+    }
+
+    FILE *f = (*orig_fopen64)(path, mode);
 
     if (f != NULL) {
         trace_open(path);
@@ -257,6 +334,20 @@ FILE *freopen(const char *path, const char *mode, FILE *stream) {
     }
 
     FILE *f = orig_freopen(path, mode, stream);
+
+    if (f != NULL) {
+        trace_open(path);
+    }
+
+    return f;
+}
+
+FILE *freopen64(const char *path, const char *mode, FILE *stream) {
+    if (orig_freopen64 == NULL) {
+        orig_freopen64 = dlsym(RTLD_NEXT, "freopen64");
+    }
+
+    FILE *f = orig_freopen64(path, mode, stream);
 
     if (f != NULL) {
         trace_open(path);
