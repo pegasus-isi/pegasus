@@ -16,6 +16,8 @@ __author__ = 'Rajiv Mayani'
 
 import re
 
+from datetime import datetime
+
 from time import localtime, strftime
 
 from flask import request, render_template, url_for, json
@@ -147,11 +149,25 @@ def job(root_wf_id, wf_id, job_id):
     '''
     dashboard = Dashboard(root_wf_id, wf_id)
     job = dashboard.get_job_information(wf_id, job_id)
+    job_states = dashboard.get_job_states(wf_id, job_id)
+
+    previous = None
+
+    for state in job_states:
+        timestamp = state.timestamp
+        state.timestamp = datetime.fromtimestamp(state.timestamp).strftime('%a %b %d, %Y %I:%M:%S %p')
+
+        if previous is None:
+            state.interval = 0.0
+        else:
+            state.interval = timestamp - previous
+
+        previous = timestamp
 
     if not job:
         return 'Bad Request', 400
 
-    return render_template('workflow/job/job_details.html', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job_id, job=job)
+    return render_template('workflow/job/job_details.html', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job_id, job=job, job_states=job_states)
 
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/job/<job_id>/stdout', methods=['GET'])
 def stdout(root_wf_id, wf_id, job_id):
