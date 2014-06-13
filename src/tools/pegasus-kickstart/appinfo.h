@@ -77,7 +77,7 @@ typedef struct {
 
   int            status;     /* The final status of the job */
 
-  FileAccess*    accesses;   /* The list of files accessed */
+  ProcStatus*    procs;      /* The list of processes traced */
 } AppInfo;
 
 extern

@@ -9,4 +9,9 @@ typedef struct _FileAccess {
   struct _FileAccess *next;
 } FileAccess;
 
+typedef struct _ProcStatus {
+    FileAccess *accesses;
+    struct _ProcStatus *next;
+} ProcStatus;
+
 #endif /* _ACCESS_H */

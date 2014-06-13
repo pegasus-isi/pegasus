@@ -12,6 +12,7 @@
 #include <errno.h>
 #include <string.h>
 
+/* TODO Fix up status and io records */
 /* TODO Thread safety? */
 /* TODO Add r/w/a mode support */
 /* TODO Trace rename? */
@@ -79,19 +80,56 @@ static int tclose() {
     return fclose(trace);
 }
 
-/* Library initialization function */
-void __attribute__((constructor)) interpose_init(void) {
-    /* Locate the real functions we are interposing */
+static void read_status() {
+    FILE *statfile = fopen("/proc/self/status", "r");
+    if (statfile == NULL) {
+        fprintf(stderr, "libinterpose: Unable to read /proc/self/status\n");
+        return;
+    }
 
+    char buf[BUFSIZ];
+    while (fgets(buf, BUFSIZ, statfile) != NULL) {
+        tprintf("S %s", buf);
+    }
+
+    fclose(statfile);
+}
+
+static void read_io() {
+    FILE *iofile = fopen("/proc/self/io", "r");
+    if (iofile == NULL) {
+        fprintf(stderr, "libinterpose: Unable to read /proc/self/io\n");
+        return;
+    }
+
+    char buf[BUFSIZ];
+    while (fgets(buf, BUFSIZ, iofile) != NULL) {
+        tprintf("I %s", buf);
+    }
+
+    fclose(iofile);
+}
+
+static void read_proc() {
+    read_status();
+    read_io();
+}
+
+/* Library initialization function */
+static void __attribute__((constructor)) interpose_init(void) {
     /* Open the trace file */
     topen();
 }
 
 /* Library finalizer function */
-void __attribute__((destructor)) interpose_fini(void) {
+static void __attribute__((destructor)) interpose_fini(void) {
+
+    read_proc();
+
     /* Close trace file */
     tclose();
 }
+
 
 
 /** INTERPOSED FUNCTIONS **/
@@ -108,7 +146,7 @@ static void trace_file(const char *path) {
         return;
     }
 
-    tprintf("%s %lu\n", path, st.st_size);
+    tprintf("F %s %lu\n", path, st.st_size);
 }
 
 static void trace_open(const char *path) {

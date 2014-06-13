@@ -39,7 +39,6 @@ char *programname;
 
 /* Find the path to the interposition library */
 static int findInterposeLibrary(char *path, int pathsize) {
-    // TODO Get arg0 from a global var or something
     char kickstart[BUFSIZ];
     char lib[BUFSIZ];
 
@@ -72,66 +71,108 @@ static int findInterposeLibrary(char *path, int pathsize) {
     return -1;
 }
 
-void processTraceFiles(const char *tempdir, const char *trace_file_prefix, AppInfo* appinfo) {
-  FileAccess *accesses = NULL;
-  FileAccess *lastacc = NULL;
+static FileAccess *readTraceFileRecord(const char *buf) {
+    /* TODO Filter out duplicate files? */
+    /* TODO Should we print the start/end sizes? */
 
-  DIR *tmp = opendir(tempdir);
-  if (tmp == NULL) {
-    fprintf(stderr, "Unable to open trace file directory: %s", tempdir);
-  } else {
+    char filename[BUFSIZ];
+    size_t size = 0;
+    if (sscanf(buf, "F %s %lu", filename, &size) != 2) {
+        fprintf(stderr, "Invalid file record: %s", buf);
+        return NULL;
+    }
+
+    /* If the file size is zero, then probably the file was created
+     * or truncated by the task and we should stat it again to get the final
+     * size.
+     * TODO Should this be done only for files opened for write/append?
+     */
+    if (size == 0) {
+        struct stat st;
+        if (stat(filename, &st) == 0) {
+            size = st.st_size;
+        }
+    }
+
+    FileAccess *acc = (FileAccess *)calloc(sizeof(FileAccess), 1);
+    acc->filename = strdup(filename);
+    acc->size = size;
+
+    return acc;
+}
+
+static ProcStatus *processTraceFile(const char *fullpath) {
+    FILE *trace = fopen(fullpath, "r");
+    if (trace == NULL) {
+        fprintf(stderr, "Unable to open trace file: %s\n", fullpath);
+        return NULL;
+    }
+
+    ProcStatus *proc = (ProcStatus *)calloc(sizeof(ProcStatus), 1);
+
+    /* Read data from the trace file */
+    FileAccess *lastacc = NULL;
+    char buf[BUFSIZ];
+    while (fgets(buf, BUFSIZ, trace) != NULL) {
+
+        if (buf[0] == 'F') {
+            FileAccess *acc = readTraceFileRecord(buf);
+            if (acc == NULL) {
+                continue;
+            }
+            if (proc->accesses == NULL) {
+                proc->accesses = acc;
+            } else {
+                lastacc->next = acc;
+            }
+            lastacc = acc;
+        } else {
+            /* FIXME All other record types we just print for now */
+            fprintf(stderr, buf);
+        }
+    }
+
+    fclose(trace);
+
+    /* Remove the file */
+    unlink(fullpath);
+
+    return proc;
+}
+
+/* Go through all the files in tempdir and read all of the traces that begin with trace_file_prefix */
+static ProcStatus *processTraceFiles(const char *tempdir, const char *trace_file_prefix) {
+    DIR *tmp = opendir(tempdir);
+    if (tmp == NULL) {
+        fprintf(stderr, "Unable to open trace file directory: %s", tempdir);
+        return NULL;
+    }
+
+    ProcStatus *procs = NULL;
+    ProcStatus *lastproc = NULL;
+
     struct dirent *d;
     for (d = readdir(tmp); d!=NULL; d = readdir(tmp)) {
-      if (strstr(d->d_name, trace_file_prefix) == d->d_name) {
-        char fullpath[BUFSIZ];
-        snprintf(fullpath, BUFSIZ, "%s/%s", tempdir, d->d_name);
-        /* Read data from the trace files */
-        FILE *trace = fopen(fullpath, "r");
-        char buf[BUFSIZ];
-        char filename[BUFSIZ];
-        size_t size = 0;
-        while (1) {
-            if (fgets(buf, BUFSIZ, trace) == NULL) {
-                break;
-            } else {
-                /* TODO Filter out duplicates? */
-                /* TODO Should we print the start/end sizes? */
-
-                sscanf(buf, "%s %lu", filename, &size);
-
-                /* If the file size is zero, then probably the file was created
-                 * or truncated and we should stat it again to get the final
-                 * size.
-                 * TODO Should this be done only for files opened for write/append?
-                 */
-                if (size == 0) {
-                    struct stat st;
-                    if (stat(filename, &st) == 0) {
-                        size = st.st_size;
-                    }
-                }
-
-                FileAccess *acc = (FileAccess *)calloc(sizeof(FileAccess), 1);
-                acc->filename = strdup(filename);
-                acc->size = size;
-
-                if (accesses == NULL) {
-                  accesses = acc;
-                  lastacc = acc;
-                } else {
-                  lastacc->next = acc;
-                  lastacc = acc;
-                }
+        /* If the file name starts with the prefix */
+        if (strstr(d->d_name, trace_file_prefix) == d->d_name) {
+            char fullpath[BUFSIZ];
+            snprintf(fullpath, BUFSIZ, "%s/%s", tempdir, d->d_name);
+            ProcStatus *p = processTraceFile(fullpath);
+            if (p == NULL) {
+                continue;
             }
+            if (procs == NULL) {
+                procs = p;
+            } else {
+                lastproc->next = p;
+            }
+            lastproc = p;
         }
-        fclose(trace);
-        unlink(fullpath);
-      }
     }
-    closedir(tmp);
-  }
 
-  appinfo->accesses = accesses;
+    closedir(tmp);
+
+    return procs;
 }
 
 int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[])
@@ -272,7 +313,7 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[])
   sigaction( SIGQUIT, &savequit, NULL );
 
   /* Look for trace files and do something with them */
-  processTraceFiles(tempdir, trace_file_prefix, appinfo);
+  appinfo->procs = processTraceFiles(tempdir, trace_file_prefix);
 
   /* finalize */
   return jobinfo->status;
