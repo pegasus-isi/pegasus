@@ -908,16 +908,28 @@ public class JDBCRC implements ReplicaCatalog
    */
   public int insert( String lfn, ReplicaCatalogEntry tuple )
   {
+    // sanity checks
+    if ( lfn == null || tuple == null ) return 0;
+    if ( mConnection == null ) throw new RuntimeException( c_error );
+
+    for (Object obj : lookup(lfn)) {
+        ReplicaCatalogEntry rce = (ReplicaCatalogEntry) obj;
+        String handle = rce.getResourceHandle();
+        if (rce.getPFN().equals(tuple.getPFN()) &&
+                ((handle == null && tuple.getResourceHandle() == null) ||
+                (handle != null && handle.equals(tuple.getResourceHandle())))) {
+            
+            delete(lfn, rce);
+            break;
+        }
+    }
+    
     String query = "[no query]";
     int result = 0;
     boolean autoCommitWasOn = false;
     int state = 0;
 
-    // sanity checks
-    if ( lfn == null || tuple == null ) return result;
-    if ( mConnection == null ) throw new RuntimeException( c_error );
-
-    try {
+      try {
       // delete-before-insert as one transaction
       if ( (autoCommitWasOn = mConnection.getAutoCommit()) )
 	mConnection.setAutoCommit(false);
@@ -929,7 +941,7 @@ public class JDBCRC implements ReplicaCatalog
 
       ResultSet rs = null;
       Statement st = null;
-      StringBuffer m = new StringBuffer(256);
+      StringBuilder m = new StringBuilder(256);
       String id = null;
       String resourceHandle = tuple.getResourceHandle();
       
@@ -1033,7 +1045,7 @@ public class JDBCRC implements ReplicaCatalog
 
     return result;
   }
-
+  
   /**
    * Inserts a new mapping into the replica catalog. This is a
    * convenience function exposing the resource handle. Internally, the
@@ -1196,41 +1208,56 @@ public class JDBCRC implements ReplicaCatalog
     if ( mConnection == null ) throw new RuntimeException( c_error );
 
     try {
-      StringBuffer m = new StringBuffer(256);
+      int index = 1;
+      StringBuilder m = new StringBuilder(256);
       for ( Iterator i=tuple.getAttributeIterator(); i.hasNext(); ) {
 	String name = (String) i.next();
         if (name.equals(ReplicaCatalogEntry.RESOURCE_HANDLE)) {
             continue;
         }
-	Object value = tuple.getAttribute(name);
-	m.append( "SELECT id FROM rc_attr WHERE name='");
-	m.append(quote(name)).append( "' AND value" );
+	if (m.length() == 0) {
+            m.append("SELECT DISTINCT rc_attr.id FROM rc_attr");
+        }
+        Object value = tuple.getAttribute(name);
+	m.append( " INNER JOIN rc_attr a").append(index).append(" ON ");
+        m.append("a").append(index).append(".name='");
+	m.append(quote(name)).append( "' AND a").append(index).append(".value" );
 	if ( value == null ) m.append( " IS NULL" );
 	else m.append("='").append(quote(value.toString())).append('\'');
-	if ( i.hasNext() ) m.append( " INTERSECT " );
+        index++;
       }
       query = m.toString();
 
-      m = new StringBuffer(256);
+      m = new StringBuilder(256);
       m.append( "DELETE FROM rc_lfn WHERE lfn='" ).append(quote(lfn));
       m.append("' AND pfn='" ).append(quote(tuple.getPFN()));
       if (tuple.getResourceHandle() != null) {
-          m.append("' AND site=").append(quote(tuple.getResourceHandle()));
+          m.append("' AND site='").append(quote(tuple.getResourceHandle()));
       }
-      m.append("' AND id=?");
-
+      
       Statement st = mConnection.createStatement();
-      ResultSet rs = st.executeQuery(query);
+      
+      if (!query.isEmpty()) {
+          System.out.println(query);
+          m.append("' AND id=?");    
+          ResultSet rs = st.executeQuery(query);
 
-      query = m.toString();
-      PreparedStatement ps = mConnection.prepareStatement(query);
-      while ( rs.next() ) {
-	ps.setString( 1, rs.getString(1) );
-	result += ps.executeUpdate();
+          query = m.toString();
+          PreparedStatement ps = mConnection.prepareStatement(query);
+          while ( rs.next() ) {
+            ps.setString( 1, rs.getString(1) );
+            result += ps.executeUpdate();
+          }
+          ps.close();
+          rs.close();
+      
+      } else {
+          m.append("'");
+          query = m.toString();
+          result = st.executeUpdate(query);
       }
-      ps.close();
-      rs.close();
       st.close();
+
     } catch ( SQLException e ) {
       throw new RuntimeException( "Unable to tell database " +
 				  query + ": " + e.getMessage() );
