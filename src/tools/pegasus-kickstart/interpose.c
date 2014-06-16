@@ -13,7 +13,7 @@
 #include <errno.h>
 #include <string.h>
 
-/* TODO Filter out system paths like /lib /sys /proc /dev and /etc? */
+/* TODO Filter duplicate files */
 /* TODO Thread safety? */
 /* TODO What happens with multiple threads and LD_PRELOAD? */
 /* TODO Add r/w/a mode support */
@@ -241,6 +241,16 @@ static void __attribute__((destructor)) interpose_fini(void) {
 /** INTERPOSED FUNCTIONS **/
 
 static void trace_file(const char *path) {
+    /* Skip all the common system paths, which we don't care about */
+    if (startswith(path, "/lib") ||
+        startswith(path, "/usr") ||
+        startswith(path, "/dev") ||
+        startswith(path, "/etc") ||
+        startswith(path, "/proc")||
+        startswith(path, "/sys")) {
+        return;
+    }
+
     struct stat st;
     if (stat(path, &st) < 0) {
         fprintf(stderr, "libinterpose: Unable to stat '%s': %s\n",
