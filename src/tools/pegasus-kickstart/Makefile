@@ -6,8 +6,7 @@ LD = $(CC)
 LOADLIBES = -lm
 SYSTEM = $(shell uname -s | tr '[a-z]' '[A-Z]' | tr -d '_ -/')
 VERSION = $(shell uname -r)
-MARCH = $(shell uname -m | tr '[A-Z]' '[a-z]')
-MAJOR = $(firstword $(subst ., ,$(VERSION)))
+MARCH = $(shell uname -m | tr '[A-Z]' '[a-z]') MAJOR = $(firstword $(subst ., ,$(VERSION)))
 MINOR = $(strip $(word 2,$(subst ., ,$(VERSION))))
 EXTRA_OBJ = machine/basic.o
 SOCKIO = $(shell /bin/ls /usr/include/sys/sockio.h 2>/dev/null)
@@ -118,7 +117,7 @@ machine/darwin.o: machine/darwin.c machine/basic.c machine/darwin.h \
   machine/../tools.h
 
 libinterpose.so: interpose.c
-	$(CC) -Wall -shared -fPIC -o libinterpose.so interpose.c -ldl
+	$(CC) -Wall -std=gnu99 -shared -fPIC -o libinterpose.so interpose.c -ldl
 
 version.h:
 	$(CURDIR)/../../../release-tools/getversion --header > $(CURDIR)/version.h

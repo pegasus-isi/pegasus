@@ -73,7 +73,9 @@ static int findInterposeLibrary(char *path, int pathsize) {
 static FileInfo *readTraceFileRecord(const char *buf) {
     char filename[BUFSIZ];
     size_t size = 0;
-    if (sscanf(buf, "file: %s %lu\n", filename, &size) != 2) {
+    size_t bread = 0;
+    size_t bwrite = 0;
+    if (sscanf(buf, "file: %s %lu %lu %lu\n", filename, &size, &bread, &bwrite) != 4) {
         fprintf(stderr, "Invalid file record: %s", buf);
         return NULL;
     }
@@ -93,6 +95,8 @@ static FileInfo *readTraceFileRecord(const char *buf) {
     FileInfo *file = (FileInfo *)calloc(sizeof(FileInfo), 1);
     file->filename = strdup(filename);
     file->size = size;
+    file->bread = bread;
+    file->bwrite = bwrite;
 
     return file;
 }
@@ -117,6 +121,7 @@ static ProcInfo *processTraceFile(const char *fullpath) {
     char line[BUFSIZ];
     while (fgets(line, BUFSIZ, trace) != NULL) {
         if (startswith(line, "file:")) {
+            /* TODO Combine duplicate files. Happens when files are reopened. */
             FileInfo *file = readTraceFileRecord(line);
             if (file == NULL) {
                 continue;
