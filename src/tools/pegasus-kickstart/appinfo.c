@@ -222,22 +222,6 @@ convert2XML( FILE *out, const AppInfo* run )
 
   } /* run->status || run->fullInfo */
 
-  /* Proc status info */
-  ProcStatus *proc;
-  for (proc = run->procs; proc != NULL; proc = proc->next) {
-      fprintf(out, "  <proc");
-      if (proc->accesses == NULL) {
-          fprintf(out, "/>\n");
-      } else {
-          fprintf(out, ">\n");
-          FileAccess *acc;
-          for (acc = proc->accesses; acc != NULL; acc = acc->next) {
-              fprintf(out, "    <access filename=\"%s\" size=\"%lu\"/>\n", acc->filename, acc->size);
-          }
-          fprintf(out, "  </proc>\n");
-      }
-  }
-
   /* finish root element */
   fprintf(out, "</invocation>\n");
 

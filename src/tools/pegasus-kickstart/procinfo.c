@@ -128,6 +128,8 @@ static int proc_read_meminfo(ProcInfo *item) {
             sscanf(line,"PPid:%d\n",&(item->ppid));
         } else if (startswith(line, "Tgid")) {
             sscanf(line,"Tgid:%d\n",&(item->tgid));
+        } else if (startswith(line, "Threads")) {
+            sscanf(line,"Threads:%d\n",&(item->threads));
         } else if (startswith(line,"VmPeak")) {
             sscanf(line,"VmPeak:%d kB\n",&(item->vmpeak));
         } else if (startswith(line,"VmHWM")) {
@@ -477,12 +479,12 @@ int printXMLProcInfo(FILE *out, int indent, ProcInfo* procs) {
         if (i->tgid != i->pid) continue;
 
         fprintf(out, "%*s<proc ppid=\"%d\" pid=\"%d\" exe=\"%s\" "
-                "start=\"%lf\" stop=\"%lf\" utime=\"%lf\" stime=\"%lf\" "
+                "start=\"%lf\" stop=\"%lf\" utime=\"%lf\" stime=\"%lf\" threads=\"%d\" "
                 "vmpeak=\"%d\" rsspeak=\"%d\" rchar=\"%"PRIu64"\" wchar=\"%"PRIu64"\" "
                 "rbytes=\"%"PRIu64"\" wbytes=\"%"PRIu64"\" cwbytes=\"%"PRIu64"\" "
                 "syscr=\"%"PRIu64"\" syscw=\"%"PRIu64"\"/>\n", 
                 indent, "", i->ppid, i->pid, i->exe, 
-                i->start, i->stop, i->utime, i->stime, 
+                i->start, i->stop, i->utime, i->stime, i->threads,
                 i->vmpeak, i->rsspeak, i->rchar, i->wchar, 
                 i->read_bytes, i->write_bytes, i->cancelled_write_bytes, 
                 i->syscr, i->syscw);

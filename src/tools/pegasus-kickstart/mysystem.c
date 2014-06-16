@@ -32,7 +32,6 @@
 #include "mysystem.h"
 #include "mysignal.h"
 #include "procinfo.h"
-#include "access.h"
 
 /* The name of the program (argv[0]) set in pegasus-kickstart.c:main */
 char *programname;
@@ -71,13 +70,13 @@ static int findInterposeLibrary(char *path, int pathsize) {
     return -1;
 }
 
-static FileAccess *readTraceFileRecord(const char *buf) {
+static FileInfo *readTraceFileRecord(const char *buf) {
     /* TODO Filter out duplicate files? */
     /* TODO Should we print the start/end sizes? */
 
     char filename[BUFSIZ];
     size_t size = 0;
-    if (sscanf(buf, "F %s %lu", filename, &size) != 2) {
+    if (sscanf(buf, "file: %s %lu", filename, &size) != 2) {
         fprintf(stderr, "Invalid file record: %s", buf);
         return NULL;
     }
@@ -94,41 +93,86 @@ static FileAccess *readTraceFileRecord(const char *buf) {
         }
     }
 
-    FileAccess *acc = (FileAccess *)calloc(sizeof(FileAccess), 1);
-    acc->filename = strdup(filename);
-    acc->size = size;
+    FileInfo *file = (FileInfo *)calloc(sizeof(FileInfo), 1);
+    file->filename = strdup(filename);
+    file->size = size;
+    /* TODO Get bread and bwrite */
+    file->bread = 0;
+    file->bwrite = 0;
 
-    return acc;
+    return file;
 }
 
-static ProcStatus *processTraceFile(const char *fullpath) {
+/* Return 1 if line begins with tok */
+static int startswith(const char *line, const char *tok) {
+    return strstr(line, tok) == line;
+}
+
+static ProcInfo *processTraceFile(const char *fullpath) {
     FILE *trace = fopen(fullpath, "r");
     if (trace == NULL) {
-        fprintf(stderr, "Unable to open trace file: %s\n", fullpath);
+        fprintf(stderr, "Unable to open trace file '%s': %s\n",
+                fullpath, strerror(errno));
         return NULL;
     }
 
-    ProcStatus *proc = (ProcStatus *)calloc(sizeof(ProcStatus), 1);
+    ProcInfo *proc = (ProcInfo *)calloc(sizeof(ProcInfo), 1);
 
     /* Read data from the trace file */
-    FileAccess *lastacc = NULL;
-    char buf[BUFSIZ];
-    while (fgets(buf, BUFSIZ, trace) != NULL) {
-
-        if (buf[0] == 'F') {
-            FileAccess *acc = readTraceFileRecord(buf);
-            if (acc == NULL) {
+    FileInfo *lastfile = NULL;
+    char line[BUFSIZ];
+    while (fgets(line, BUFSIZ, trace) != NULL) {
+        if (startswith(line, "file:")) {
+            FileInfo *file = readTraceFileRecord(line);
+            if (file == NULL) {
                 continue;
             }
-            if (proc->accesses == NULL) {
-                proc->accesses = acc;
+            if (proc->files == NULL) {
+                proc->files = file;
             } else {
-                lastacc->next = acc;
+                lastfile->next = file;
             }
-            lastacc = acc;
+            lastfile = file;
+        } else if (startswith(line, "exe:")) {
+            char exe[BUFSIZ];
+            sscanf(line, "exe: %s\n", exe);
+            proc->exe = strdup(exe);
+        } else if (startswith(line, "Pid")) {
+            sscanf(line, "Pid:%d\n", &(proc->pid));
+        } else if (startswith(line, "PPid")) {
+            sscanf(line,"PPid:%d\n", &(proc->ppid));
+        } else if (startswith(line, "Tgid")) {
+            sscanf(line,"Tgid:%d\n", &(proc->tgid));
+        } else if (startswith(line,"VmPeak")) {
+            sscanf(line,"VmPeak:%d kB\n", &(proc->vmpeak));
+        } else if (startswith(line,"VmHWM")) {
+            sscanf(line,"VmHWM:%d kB\n", &(proc->rsspeak));
+        } else if (startswith(line, "Threads")) {
+            sscanf(line,"Threads:%d\n", &(proc->threads));
+        } else if (startswith(line, "utime:")) {
+            sscanf(line,"utime:%lf\n", &(proc->utime));
+        } else if (startswith(line, "stime:")) {
+            sscanf(line,"stime:%lf\n", &(proc->stime));
+        } else if (startswith(line, "rchar")) {
+            sscanf(line,"rchar: %"SCNu64"\n", &(proc->rchar));
+        } else if (startswith(line, "wchar")) {
+            sscanf(line,"wchar: %"SCNu64"\n", &(proc->wchar));
+        } else if (startswith(line,"syscr")) {
+            sscanf(line,"syscr: %"SCNu64"\n", &(proc->syscr));
+        } else if (startswith(line,"syscw")) {
+            sscanf(line,"syscw: %"SCNu64"\n", &(proc->syscw));
+        } else if (startswith(line,"read_bytes")) {
+            sscanf(line,"read_bytes: %"SCNu64"\n",&(proc->read_bytes));
+        } else if (startswith(line,"write_bytes")) {
+            sscanf(line,"write_bytes: %"SCNu64"\n",&(proc->write_bytes));
+        } else if (startswith(line,"cancelled_write_bytes")) {
+            sscanf(line,"cancelled_write_bytes: %"SCNu64"\n",&(proc->cancelled_write_bytes));
+        } else if (startswith(line, "start:")) {
+            sscanf(line,"start:%lf\n", &(proc->start));
+        } else if (startswith(line, "stop:")) {
+            sscanf(line,"stop:%lf\n", &(proc->stop));
         } else {
-            /* FIXME All other record types we just print for now */
-            fprintf(stderr, buf);
+            fprintf(stderr, line);
         }
     }
 
@@ -141,15 +185,15 @@ static ProcStatus *processTraceFile(const char *fullpath) {
 }
 
 /* Go through all the files in tempdir and read all of the traces that begin with trace_file_prefix */
-static ProcStatus *processTraceFiles(const char *tempdir, const char *trace_file_prefix) {
+static ProcInfo *processTraceFiles(const char *tempdir, const char *trace_file_prefix) {
     DIR *tmp = opendir(tempdir);
     if (tmp == NULL) {
         fprintf(stderr, "Unable to open trace file directory: %s", tempdir);
         return NULL;
     }
 
-    ProcStatus *procs = NULL;
-    ProcStatus *lastproc = NULL;
+    ProcInfo *procs = NULL;
+    ProcInfo *lastproc = NULL;
 
     struct dirent *d;
     for (d = readdir(tmp); d!=NULL; d = readdir(tmp)) {
@@ -157,10 +201,11 @@ static ProcStatus *processTraceFiles(const char *tempdir, const char *trace_file
         if (strstr(d->d_name, trace_file_prefix) == d->d_name) {
             char fullpath[BUFSIZ];
             snprintf(fullpath, BUFSIZ, "%s/%s", tempdir, d->d_name);
-            ProcStatus *p = processTraceFile(fullpath);
+            ProcInfo *p = processTraceFile(fullpath);
             if (p == NULL) {
                 continue;
             }
+            p->prev = lastproc;
             if (procs == NULL) {
                 procs = p;
             } else {
@@ -313,7 +358,9 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[])
   sigaction( SIGQUIT, &savequit, NULL );
 
   /* Look for trace files and do something with them */
-  appinfo->procs = processTraceFiles(tempdir, trace_file_prefix);
+  if (appinfo->enableLibTrace) {
+    jobinfo->children = processTraceFiles(tempdir, trace_file_prefix);
+  }
 
   /* finalize */
   return jobinfo->status;

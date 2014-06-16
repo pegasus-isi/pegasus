@@ -36,6 +36,7 @@ typedef struct _ProcInfo {
     uint64_t read_bytes;    /* file bytes read */
     uint64_t write_bytes;   /* file bytes written */
     uint64_t cancelled_write_bytes; /* bytes written, then deleted before flush */
+    int threads;            /* Number of threads */
 
     /* Keeping track of system calls in progress */
     int insyscall;          /* in a system call? */

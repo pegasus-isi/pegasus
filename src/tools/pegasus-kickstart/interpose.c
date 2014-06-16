@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <fcntl.h>
 #include <stdarg.h>
 #include <dirent.h>
@@ -12,9 +13,9 @@
 #include <errno.h>
 #include <string.h>
 
-/* TODO Fix up status and io records */
 /* TODO Filter out system paths like /lib /sys /proc /dev and /etc? */
 /* TODO Thread safety? */
+/* TODO What happens with multiple threads and LD_PRELOAD? */
 /* TODO Add r/w/a mode support */
 /* TODO Interpose rename? */
 /* TODO Interpose truncate? */
@@ -81,51 +82,155 @@ static int tclose() {
     return fclose(trace);
 }
 
+/* Get the current time in seconds since the epoch */
+static double get_time() {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return tv.tv_sec + ((double)tv.tv_usec / 1e6);
+}
+
+/* Read /proc/self/exe to get path to executable */
+static void read_exe() {
+    char exe[BUFSIZ];
+    int size = readlink("/proc/self/exe", exe, BUFSIZ);
+    if (size < 0) {
+        perror("libinterpose: Unable to readlink /proc/self/exe");
+        return;
+    }
+    exe[size] = '\0';
+    tprintf("exe: %s\n", exe);
+}
+
+/* Return 1 if line begins with tok */
+static int startswith(const char *line, const char *tok) {
+    return strstr(line, tok) == line;
+}
+
+/* Read useful information from /proc/self/status */
 static void read_status() {
-    FILE *statfile = fopen_untraced("/proc/self/status", "r");
-    if (statfile == NULL) {
-        fprintf(stderr, "libinterpose: Unable to read /proc/self/status\n");
+    char statf[] = "/proc/self/status";
+
+    /* If the status file is missing, then just skip it */
+    if (access(statf, F_OK) < 0) {
         return;
     }
 
-    char buf[BUFSIZ];
-    while (fgets(buf, BUFSIZ, statfile) != NULL) {
-        tprintf("S %s", buf);
+    FILE *f = fopen_untraced(statf, "r");
+    if (f == NULL) {
+        perror("libinterpose: Unable to fopen /proc/self/status");
+        return;
     }
 
-    fclose(statfile);
+    char line[BUFSIZ];
+    while (fgets(line, BUFSIZ, f) != NULL) {
+        if (startswith(line, "Pid")) {
+            tprintf(line);
+        } else if (startswith(line, "PPid")) {
+            tprintf(line);
+        } else if (startswith(line, "Tgid")) {
+            tprintf(line);
+        } else if (startswith(line,"VmPeak")) {
+            tprintf(line);
+        } else if (startswith(line,"VmHWM")) {
+            tprintf(line);
+        } else if (startswith(line,"Threads")) {
+            tprintf(line);
+        }
+    }
+
+    fclose(f);
 }
 
+/* Read /proc/self/stat to get CPU usage */
+static void read_stat() {
+    char statf[] = "/proc/self/stat";
+
+    /* If the stat file is missing, then just skip it */
+    if (access(statf, F_OK) < 0) {
+        return;
+    }
+
+    FILE *f = fopen_untraced(statf,"r");
+    if (f == NULL) {
+        perror("libinterpose: Unable to fopen /proc/self/stat");
+        return;
+    }
+
+    unsigned long utime, stime;
+    fscanf(f, "%*d %*s %*c %*d %*d %*d %*d %*d "
+              "%*u %*u %*u %*u %*u %lu %lu %*d %*d",
+           &utime, &stime);
+
+    fclose(f);
+
+    /* Adjust by number of clock ticks per second */
+    long clocks = sysconf(_SC_CLK_TCK);
+    double real_utime;
+    double real_stime;
+    real_utime = ((double)utime) / clocks;
+    real_stime = ((double)stime) / clocks;
+
+    tprintf("utime: %lf\n", real_utime);
+    tprintf("stime: %lf\n", real_stime);
+}
+
+/* Read /proc/self/io to get I/O usage */
 static void read_io() {
-    FILE *iofile = fopen_untraced("/proc/self/io", "r");
-    if (iofile == NULL) {
-        fprintf(stderr, "libinterpose: Unable to read /proc/self/io\n");
+    char iofile[] = "/proc/self/io";
+
+    /* This proc file was added in Linux 2.6.20. It won't be
+     * there on older kernels, or on kernels without task IO 
+     * accounting. If it is missing, just bail out.
+     */
+    if (access(iofile, F_OK) < 0) {
         return;
     }
 
-    char buf[BUFSIZ];
-    while (fgets(buf, BUFSIZ, iofile) != NULL) {
-        tprintf("I %s", buf);
+    FILE *f = fopen_untraced(iofile, "r");
+    if (f == NULL) {
+        perror("libinterpose: Unable to fopen /proc/self/io");
+        return;
     }
 
-    fclose(iofile);
-}
+    char line[BUFSIZ];
+    while (fgets(line, BUFSIZ, f) != NULL) {
+        if (startswith(line, "rchar")) {
+            tprintf(line);
+        } else if (startswith(line, "wchar")) {
+            tprintf(line);
+        } else if (startswith(line,"syscr")) {
+            tprintf(line);
+        } else if (startswith(line,"syscw")) {
+            tprintf(line);
+        } else if (startswith(line,"read_bytes")) {
+            tprintf(line);
+        } else if (startswith(line,"write_bytes")) {
+            tprintf(line);
+        } else if (startswith(line,"cancelled_write_bytes")) {
+            tprintf(line);
+        }
+    }
 
-static void read_proc() {
-    read_status();
-    read_io();
+    fclose(f);
 }
 
 /* Library initialization function */
 static void __attribute__((constructor)) interpose_init(void) {
     /* Open the trace file */
     topen();
+
+    tprintf("start: %lf\n", get_time());
 }
 
 /* Library finalizer function */
 static void __attribute__((destructor)) interpose_fini(void) {
 
-    read_proc();
+    read_exe();
+    read_status();
+    read_stat();
+    read_io();
+
+    tprintf("stop: %lf\n", get_time());
 
     /* Close trace file */
     tclose();
@@ -138,7 +243,8 @@ static void __attribute__((destructor)) interpose_fini(void) {
 static void trace_file(const char *path) {
     struct stat st;
     if (stat(path, &st) < 0) {
-        fprintf(stderr, "libinterpose: Unable to stat file: %s\n", strerror(errno));
+        fprintf(stderr, "libinterpose: Unable to stat '%s': %s\n",
+                path, strerror(errno));
         return;
     }
 
@@ -147,13 +253,14 @@ static void trace_file(const char *path) {
         return;
     }
 
-    tprintf("F %s %lu\n", path, st.st_size);
+    tprintf("file: %s %lu\n", path, st.st_size);
 }
 
 static void trace_open(const char *path) {
     char fullpath[BUFSIZ];
     if (realpath(path, fullpath) == NULL) {
-        fprintf(stderr, "libinterpose: Unable to get real path for '%s'", path);
+        fprintf(stderr, "libinterpose: Unable to get real path for '%s': %s\n",
+                path, strerror(errno));
         return;
     }
 
@@ -167,11 +274,13 @@ static void trace_openat(int fd) {
     char fullpath[BUFSIZ];
     int len = readlink(linkpath, fullpath, BUFSIZ);
     if (len <= 0) {
-        fprintf(stderr, "libinterpose: Unable to get real path for fd %d", fd);
+        fprintf(stderr, "libinterpose: Unable to get real path for fd %d: %s\n",
+                fd, strerror(errno));
         return;
     }
     if (len == BUFSIZ) {
-        fprintf(stderr, "libinterpose: Path too long for fd %d", fd);
+        fprintf(stderr, "libinterpose: Path too long for fd %d: %s\n",
+                fd, strerror(errno));
         return;
     }
     /* readlink doesn't add a null byte */
