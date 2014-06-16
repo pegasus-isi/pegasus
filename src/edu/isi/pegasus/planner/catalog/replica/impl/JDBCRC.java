@@ -1230,15 +1230,17 @@ public class JDBCRC implements ReplicaCatalog
 
       m = new StringBuilder(256);
       m.append( "DELETE FROM rc_lfn WHERE lfn='" ).append(quote(lfn));
-      m.append("' AND pfn='" ).append(quote(tuple.getPFN()));
+      m.append("' AND pfn='" ).append(quote(tuple.getPFN())).append("'");
       if (tuple.getResourceHandle() != null) {
-          m.append("' AND site='").append(quote(tuple.getResourceHandle()));
+          m.append(" AND site='").append(quote(tuple.getResourceHandle())).append("'");
+      } else {
+          m.append(" AND site IS NULL");
       }
       
       Statement st = mConnection.createStatement();
       
       if (!query.isEmpty()) {
-          m.append("' AND id=?");    
+          m.append(" AND id=?");    
           ResultSet rs = st.executeQuery(query);
 
           query = m.toString();
@@ -1251,7 +1253,6 @@ public class JDBCRC implements ReplicaCatalog
           rs.close();
       
       } else {
-          m.append("'");
           query = m.toString();
           result = st.executeUpdate(query);
       }
