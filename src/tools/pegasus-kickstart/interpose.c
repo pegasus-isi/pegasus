@@ -13,13 +13,15 @@
 #include <errno.h>
 #include <string.h>
 
+/* TODO Track file descriptors and get read/write per file */
 /* TODO Filter duplicate files */
+/* TODO Should we report the start/end sizes? */
 /* TODO Thread safety? */
-/* TODO What happens with multiple threads and LD_PRELOAD? */
 /* TODO Add r/w/a mode support */
 /* TODO Interpose rename? */
 /* TODO Interpose truncate? */
-/* TODO Interpose mkstemp and tmpfile? */
+/* TODO Interpose mkstemp family and tmpfile? */
+/* TODO What happens if one interposed library function calls another? */
 /* TODO Interpose unlink? */
 /* TODO Interpose network functions (connect, accept) */
 

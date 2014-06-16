@@ -71,12 +71,9 @@ static int findInterposeLibrary(char *path, int pathsize) {
 }
 
 static FileInfo *readTraceFileRecord(const char *buf) {
-    /* TODO Filter out duplicate files? */
-    /* TODO Should we print the start/end sizes? */
-
     char filename[BUFSIZ];
     size_t size = 0;
-    if (sscanf(buf, "file: %s %lu", filename, &size) != 2) {
+    if (sscanf(buf, "file: %s %lu\n", filename, &size) != 2) {
         fprintf(stderr, "Invalid file record: %s", buf);
         return NULL;
     }
@@ -96,9 +93,6 @@ static FileInfo *readTraceFileRecord(const char *buf) {
     FileInfo *file = (FileInfo *)calloc(sizeof(FileInfo), 1);
     file->filename = strdup(filename);
     file->size = size;
-    /* TODO Get bread and bwrite */
-    file->bread = 0;
-    file->bwrite = 0;
 
     return file;
 }
@@ -172,7 +166,7 @@ static ProcInfo *processTraceFile(const char *fullpath) {
         } else if (startswith(line, "stop:")) {
             sscanf(line,"stop:%lf\n", &(proc->stop));
         } else {
-            fprintf(stderr, line);
+            fprintf(stderr, "Unrecognized libinterpose record: %s", line);
         }
     }
 
@@ -357,7 +351,7 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[])
   sigaction( SIGINT, &saveintr, NULL );
   sigaction( SIGQUIT, &savequit, NULL );
 
-  /* Look for trace files and do something with them */
+  /* Look for trace files from libinterpose and add trace data to jobinfo */
   if (appinfo->enableLibTrace) {
     jobinfo->children = processTraceFiles(tempdir, trace_file_prefix);
   }
