@@ -279,10 +279,12 @@ class WorkflowInfo(SQLAlchemyInit, DoesLogging):
 
         qmax = self.__get_maxjss_subquery(job_id)
 
-        q = self.session.query(Job.exec_job_id, Job.clustered, JobInstance.exitcode, JobInstance.stdout_file, JobInstance.stderr_file)
+        q = self.session.query(Job.exec_job_id, Job.clustered, JobInstance.exitcode, JobInstance.stdout_file,
+                               JobInstance.stderr_file, Host.site, Host.hostname, Host.ip)
         q = q.filter(Job.wf_id == self._wf_id)
         q = q.filter(Job.job_id == job_id)
         q = q.filter(Job.job_id == JobInstance.job_id)
+        q = q.filter(JobInstance.host_id == Host.host_id)
         q = q.filter(JobInstance.job_instance_id == qmax.c.job_instance_id)
 
         return q.one()

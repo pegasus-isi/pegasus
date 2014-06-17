@@ -100,6 +100,14 @@
                 <th class="job_table_width">Stderr File</th>
                 <td>{{ job.stderr_file }}</td>
             </tr>
+            <tr>
+                <th class="job_table_width">Site</th>
+                <td>{{ job.site }}</td>
+            </tr>
+            <tr>
+                <th class="job_table_width">Host</th>
+                <td>{{ job.ip }} > {{ job.hostname }}</td>
+            </tr>
         </table>
     </div>
     <br />
