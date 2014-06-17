@@ -15,16 +15,23 @@
 #include <errno.h>
 #include <string.h>
 
-/* TODO Interpose wide character I/O functions */
-/* TODO Interpose mkstemp family and tmpfile? */
-/* TODO Interpose rename? */
-/* TODO Interpose truncate? */
-/* TODO Interpose unlink? */
+/* TODO Interpose mkstemp family and tmpfile */
 /* TODO Interpose network functions (connect, accept) */
+/* TODO Interpose rename */
+/* TODO Interpose truncate */
+/* TODO Interpose unlink, unlinkat, remove */
+/* TODO Interpose mknod for S_IFREG */
+/* TODO Interpose wide character I/O functions */
 /* TODO Handle I/O for stdout/stderr? */
+/* TODO asynchronous I/O from librt? */
 /* TODO Thread safety? */
 /* TODO Add r/w/a mode support? */
-/* TODO What happens if one interposed library function calls another (e.g. fopen calls fopen64)? I think internal calls are not traced. */
+/* TODO What happens if one interposed library function calls another (e.g.
+ *      fopen calls fopen64)? I think internal calls are not traced.
+ */
+/* TODO What about mmap? Probably nothing we can do besides interpose
+ *      mmap and assume that the total size being mapped is read/written
+ */
 
 /* These are all the functions we are interposing */
 static typeof(open) *orig_open = NULL;
@@ -257,7 +264,6 @@ static void read_io() {
     fclose_untraced(f);
 }
 
-
 static void trace_file(const char *path, int fd) {
     /* Skip all the common system paths, which we don't care about */
     if (startswith(path, "/lib") ||
@@ -320,6 +326,7 @@ static void trace_close(int fd) {
     Descriptor *f = &(descriptors[fd]);
 
     if (f->path == NULL) {
+        /* If the path is null, then it is a file we aren't tracing */
         return;
     }
 
@@ -362,9 +369,7 @@ static void __attribute__((destructor)) interpose_fini(void) {
 
     /* Look for descriptors not explicitly closed */
     for(int i=0; i<max_descriptors; i++) {
-        if (descriptors[i].path != NULL) {
-            trace_close(i);
-        }
+        trace_close(i);
     }
 
     read_exe();
@@ -563,9 +568,13 @@ int close(int fd) {
         orig_close = dlsym(RTLD_NEXT, "close");
     }
 
-    trace_close(fd);
+    int rc = (*orig_close)(fd);
 
-    return (*orig_close)(fd);
+    if (fd >= 0) {
+        trace_close(fd);
+    }
+
+    return rc;
 }
 
 static int fclose_untraced(FILE *fp) {
@@ -577,11 +586,18 @@ static int fclose_untraced(FILE *fp) {
 }
 
 int fclose(FILE *fp) {
+    int fd = -1;
     if (fp != NULL) {
-        trace_close(fileno(fp));
+        fileno(fp);
     }
 
-    return fclose_untraced(fp);
+    int rc = fclose_untraced(fp);
+
+    if (fd >= 0) {
+        trace_close(fd);
+    }
+
+    return rc;
 }
 
 ssize_t read(int fd, void *buf, size_t count) {

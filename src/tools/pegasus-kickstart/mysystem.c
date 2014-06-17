@@ -70,7 +70,7 @@ static int findInterposeLibrary(char *path, int pathsize) {
     return -1;
 }
 
-static FileInfo *readTraceFileRecord(const char *buf) {
+static FileInfo *readTraceFileRecord(const char *buf, FileInfo *files) {
     char filename[BUFSIZ];
     size_t size = 0;
     size_t bread = 0;
@@ -80,25 +80,42 @@ static FileInfo *readTraceFileRecord(const char *buf) {
         return NULL;
     }
 
-    /* If the file size is zero, then probably the file was created
-     * or truncated by the task and we should stat it again to get the final
-     * size.
-     * TODO Should this be done only for files opened for write/append?
-     */
-    if (size == 0) {
-        struct stat st;
-        if (stat(filename, &st) == 0) {
-            size = st.st_size;
+    /* Look for a duplicate file in the list of files */
+    FileInfo *file = NULL;
+    FileInfo *last = NULL;
+    for (file = files; file != NULL; file = file->next) {
+        if (strcmp(filename, file->filename) == 0) {
+            /* Found a duplicate */
+            break;
         }
+
+        /* Keep track of the last file in the list */
+        last = file;
     }
 
-    FileInfo *file = (FileInfo *)calloc(sizeof(FileInfo), 1);
-    file->filename = strdup(filename);
-    file->size = size;
-    file->bread = bread;
-    file->bwrite = bwrite;
+    if (file == NULL) {
+        /* No duplicate found */
+        file = (FileInfo *)calloc(sizeof(FileInfo), 1);
+        file->filename = strdup(filename);
+        file->size = size;
+        file->bread = bread;
+        file->bwrite = bwrite;
 
-    return file;
+        if (files == NULL) {
+            /* List was empty */
+            files = file;
+        } else {
+            /* Add to end of list */
+            last->next = file;
+        }
+    } else {
+        /* Duplicate found, increment counters */
+        file->size = file->size > size ? file->size : size; /* max */
+        file->bread += bread;
+        file->bwrite += bwrite;
+    }
+
+    return files;
 }
 
 /* Return 1 if line begins with tok */
@@ -117,21 +134,10 @@ static ProcInfo *processTraceFile(const char *fullpath) {
     ProcInfo *proc = (ProcInfo *)calloc(sizeof(ProcInfo), 1);
 
     /* Read data from the trace file */
-    FileInfo *lastfile = NULL;
     char line[BUFSIZ];
     while (fgets(line, BUFSIZ, trace) != NULL) {
         if (startswith(line, "file:")) {
-            /* TODO Combine duplicate files. Happens when files are reopened. */
-            FileInfo *file = readTraceFileRecord(line);
-            if (file == NULL) {
-                continue;
-            }
-            if (proc->files == NULL) {
-                proc->files = file;
-            } else {
-                lastfile->next = file;
-            }
-            lastfile = file;
+            proc->files = readTraceFileRecord(line, proc->files);
         } else if (startswith(line, "exe:")) {
             char exe[BUFSIZ];
             sscanf(line, "exe: %s\n", exe);
