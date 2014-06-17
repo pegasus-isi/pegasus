@@ -15,17 +15,16 @@
 #include <errno.h>
 #include <string.h>
 
-/* TODO vfprintf_untraced fgets_untraced */
 /* TODO Interpose wide character I/O functions */
-/* TODO Handle I/O for stdout/stderr? */
-/* TODO Thread safety? */
-/* TODO Add r/w/a mode support? */
 /* TODO Interpose mkstemp family and tmpfile? */
 /* TODO Interpose rename? */
 /* TODO Interpose truncate? */
 /* TODO Interpose unlink? */
-/* TODO What happens if one interposed library function calls another (e.g. fopen calls fopen64)? I think internal calls are not traced. */
 /* TODO Interpose network functions (connect, accept) */
+/* TODO Handle I/O for stdout/stderr? */
+/* TODO Thread safety? */
+/* TODO Add r/w/a mode support? */
+/* TODO What happens if one interposed library function calls another (e.g. fopen calls fopen64)? I think internal calls are not traced. */
 
 /* These are all the functions we are interposing */
 static typeof(open) *orig_open = NULL;
@@ -58,9 +57,11 @@ static typeof(fgetc) *orig_fgetc = NULL;
 static typeof(fputc) *orig_fputc = NULL;
 static typeof(fgets) *orig_fgets = NULL;
 static typeof(fputs) *orig_fputs = NULL;
-//static typeof(fscanf) *orig_fscanf = NULL;
+/* Implemented using vfscanf */
+/*static typeof(fscanf) *orig_fscanf = NULL;*/
 static typeof(vfscanf) *orig_vfscanf = NULL;
-//static typeof(fprintf) *orig_fprintf = NULL;
+/* Implemented using vfprintf */
+/*static typeof(fprintf) *orig_fprintf = NULL;*/
 static typeof(vfprintf) *orig_vfprintf = NULL;
 
 typedef struct {
@@ -77,6 +78,9 @@ static int max_descriptors = 0;
 static FILE* trace = NULL;
 
 static FILE *fopen_untraced(const char *path, const char *mode);
+static int fprintf_untraced(FILE *stream, const char *format, ...);
+static int vfprintf_untraced(FILE *stream, const char *format, va_list ap);
+static char *fgets_untraced(char *s, int size, FILE *stream);
 static int fclose_untraced(FILE *fp);
 
 /* Open the trace file */
@@ -84,7 +88,7 @@ static int topen() {
 
     char *kickstart_prefix = getenv("KICKSTART_PREFIX");
     if (kickstart_prefix == NULL) {
-        fprintf(stderr, "libinterpose: Unable to open trace file: KICKSTART_PREFIX not set in environment");
+        fprintf_untraced(stderr, "libinterpose: Unable to open trace file: KICKSTART_PREFIX not set in environment");
         return -1;
     }
 
@@ -93,7 +97,7 @@ static int topen() {
 
     trace = fopen_untraced(filename, "w+");
     if (trace == NULL) {
-        fprintf(stderr, "libinterpose: Unable to open trace file");
+        fprintf_untraced(stderr, "libinterpose: Unable to open trace file");
         return -1;
     }
 
@@ -107,7 +111,7 @@ static int tprintf(const char *format, ...) {
     }
     va_list args;
     va_start(args, format);
-    int rc = vfprintf(trace, format, args);
+    int rc = vfprintf_untraced(trace, format, args);
     va_end(args);
     return rc;
 }
@@ -161,7 +165,7 @@ static void read_status() {
     }
 
     char line[BUFSIZ];
-    while (fgets(line, BUFSIZ, f) != NULL) {
+    while (fgets_untraced(line, BUFSIZ, f) != NULL) {
         if (startswith(line, "Pid")) {
             tprintf(line);
         } else if (startswith(line, "PPid")) {
@@ -232,7 +236,7 @@ static void read_io() {
     }
 
     char line[BUFSIZ];
-    while (fgets(line, BUFSIZ, f) != NULL) {
+    while (fgets_untraced(line, BUFSIZ, f) != NULL) {
         if (startswith(line, "rchar")) {
             tprintf(line);
         } else if (startswith(line, "wchar")) {
@@ -274,7 +278,7 @@ static void trace_file(const char *path, int fd) {
 static void trace_open(const char *path, int fd) {
     char fullpath[BUFSIZ];
     if (realpath(path, fullpath) == NULL) {
-        fprintf(stderr, "libinterpose: Unable to get real path for '%s': %s\n",
+        fprintf_untraced(stderr, "libinterpose: Unable to get real path for '%s': %s\n",
                 path, strerror(errno));
         return;
     }
@@ -289,12 +293,12 @@ static void trace_openat(int fd) {
     char fullpath[BUFSIZ];
     int len = readlink(linkpath, fullpath, BUFSIZ);
     if (len <= 0) {
-        fprintf(stderr, "libinterpose: Unable to get real path for fd %d: %s\n",
+        fprintf_untraced(stderr, "libinterpose: Unable to get real path for fd %d: %s\n",
                 fd, strerror(errno));
         return;
     }
     if (len == BUFSIZ) {
-        fprintf(stderr, "libinterpose: Path too long for fd %d: %s\n",
+        fprintf_untraced(stderr, "libinterpose: Path too long for fd %d: %s\n",
                 fd, strerror(errno));
         return;
     }
@@ -321,7 +325,7 @@ static void trace_close(int fd) {
 
     struct stat st;
     if (stat(f->path, &st) < 0) {
-        fprintf(stderr, "libinterpose: Unable to stat '%s': %s\n",
+        fprintf_untraced(stderr, "libinterpose: Unable to stat '%s': %s\n",
                 f->path, strerror(errno));
         return;
     }
@@ -337,6 +341,10 @@ static void trace_close(int fd) {
 
 /* Library initialization function */
 static void __attribute__((constructor)) interpose_init(void) {
+    /* XXX Note that this might be called twice in one program. Java
+     * seems to do this, for example.
+     */
+
     /* Open the trace file */
     topen();
 
@@ -800,12 +808,16 @@ int fputc(int c, FILE *stream) {
     return rc;
 }
 
-char *fgets(char *s, int size, FILE *stream) {
+static char *fgets_untraced(char *s, int size, FILE *stream) {
     if (orig_fgets == NULL) {
         orig_fgets = dlsym(RTLD_NEXT, "fgets");
     }
 
-    char *ret = (*orig_fgets)(s, size, stream);
+    return (*orig_fgets)(s, size, stream);
+}
+
+char *fgets(char *s, int size, FILE *stream) {
+    char *ret = fgets_untraced(s, size, stream);
 
     if (ret != NULL) {
         trace_read(fileno(stream), strlen(ret));
@@ -833,13 +845,16 @@ int vfscanf(FILE *stream, const char *format, va_list ap) {
         orig_vfscanf = dlsym(RTLD_NEXT, "vfscanf");
     }
 
+    /* We need to get the offset because (v)fscanf returns
+     * the number of items matched, not the number of bytes
+     * read
+     */
     long before = ftell(stream);
 
     int rc = (*orig_vfscanf)(stream, format, ap);
 
-    long after = ftell(stream);
-
     if (rc > 0) {
+        long after = ftell(stream);
         trace_read(fileno(stream), (after-before));
     }
 
@@ -847,7 +862,6 @@ int vfscanf(FILE *stream, const char *format, va_list ap) {
 }
 
 int fscanf(FILE *stream, const char *format, ...) {
-    /* We use vfscanf here */
     va_list ap;
     va_start(ap, format);
     int rc = vfscanf(stream, format, ap);
@@ -855,12 +869,16 @@ int fscanf(FILE *stream, const char *format, ...) {
     return rc;
 }
 
-int vfprintf(FILE *stream, const char *format, va_list ap) {
+static int vfprintf_untraced(FILE *stream, const char *format, va_list ap) {
     if (orig_vfprintf == NULL) {
         orig_vfprintf = dlsym(RTLD_NEXT, "vfprintf");
     }
 
-    int rc = (*orig_vfprintf)(stream, format, ap);
+    return (*orig_vfprintf)(stream, format, ap);
+}
+
+int vfprintf(FILE *stream, const char *format, va_list ap) {
+    int rc = vfprintf_untraced(stream, format, ap);
 
     if (rc > 0) {
         trace_write(fileno(stream), rc);
@@ -869,8 +887,15 @@ int vfprintf(FILE *stream, const char *format, va_list ap) {
     return rc;
 }
 
+static int fprintf_untraced(FILE *stream, const char *format, ...) {
+    va_list ap;
+    va_start(ap, format);
+    int rc = vfprintf_untraced(stream, format, ap);
+    va_end(ap);
+    return rc;
+}
+
 int fprintf(FILE *stream, const char *format, ...) {
-    /* We use vfprintf here */
     va_list ap;
     va_start(ap, format);
     int rc = vfprintf(stream, format, ap);
