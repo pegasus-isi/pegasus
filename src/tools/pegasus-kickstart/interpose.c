@@ -18,8 +18,9 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-/* TODO Interpose network I/O (send, recv, sendfile, sendmsg, recvmsg, etc.) */
+/* TODO Interpose other network I/O (sendfile, sendmsg, sendto, recvmsg, recvfrom, etc.) */
 /* TODO Interpose accept (for network servers) */
+/* TODO Is it necessary to interpose shutdown? Would that help the DNS issue? */
 /* TODO Interpose dup and dup2 */
 /* TODO Interpose mkstemp family and tmpfile */
 /* TODO Interpose rename */
@@ -76,6 +77,8 @@ static typeof(vfscanf) *orig_vfscanf = NULL;
 /*static typeof(fprintf) *orig_fprintf = NULL;*/
 static typeof(vfprintf) *orig_vfprintf = NULL;
 static typeof(connect) *orig_connect = NULL;
+static typeof(send) *orig_send = NULL;
+static typeof(recv) *orig_recv = NULL;
 
 typedef struct {
     char type;
@@ -941,6 +944,20 @@ int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
         orig_connect = dlsym(RTLD_NEXT, "connect");
     }
 
+    /* This is here to handle the case where a socket is reused to connect
+     * to another address without being closed. This happens, for example,
+     * with DNS lookups in curl. FIXME Revisit this later when we know more.
+     */
+    trace_close(sockfd);
+
+    int rc = (*orig_connect)(sockfd, addr, addrlen);
+
+    /* FIXME There are potential issues with non-blocking sockets here */
+    if (rc < 0 && errno != EINPROGRESS) {
+        return rc;
+    }
+
+    /* Record the new connection */
     if (addr->sa_family == AF_INET) {
         /* IPv4 */
         struct sockaddr_in *in4addr = (struct sockaddr_in *)addr;
@@ -957,6 +974,34 @@ int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
         /* Ignore others */
     }
 
-    return (*orig_connect)(sockfd, addr, addrlen);
+    return rc;
+}
+
+ssize_t send(int sockfd, const void *buf, size_t len, int flags) {
+    if (orig_send == NULL) {
+        orig_send = dlsym(RTLD_NEXT, "send");
+    }
+
+    ssize_t rc = (*orig_send)(sockfd, buf, len, flags);
+
+    if (rc > 0) {
+        trace_write(sockfd, rc);
+    }
+
+    return rc;
+}
+
+ssize_t recv(int sockfd, void *buf, size_t len, int flags) {
+    if (orig_recv == NULL) {
+        orig_recv = dlsym(RTLD_NEXT, "recv");
+    }
+
+    ssize_t rc = (*orig_recv)(sockfd, buf, len, flags);
+
+    if (rc > 0) {
+        trace_read(sockfd, rc);
+    }
+
+    return rc;
 }
 
