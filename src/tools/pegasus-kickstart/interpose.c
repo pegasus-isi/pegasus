@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <sys/uio.h>
 #include <fcntl.h>
 #include <stdarg.h>
 #include <dirent.h>
@@ -14,9 +15,8 @@
 #include <errno.h>
 #include <string.h>
 
-/* TODO Intercept fread(), fwrite(), fscanf(), fprintf(), vfscanf(), vfprintf(), fgets(), fputs(), fgetc(), fputc(), etc. */
-/* TODO Intercept pread() and pwrite() calls and *64 versions */
-/* TODO Intercept readv() and writev() and related */
+/* TODO vfprintf_untraced fgets_untraced */
+/* TODO Interpose wide character I/O functions */
 /* TODO Handle I/O for stdout/stderr? */
 /* TODO Thread safety? */
 /* TODO Add r/w/a mode support? */
@@ -42,6 +42,26 @@ static typeof(close) *orig_close = NULL;
 static typeof(fclose) *orig_fclose = NULL;
 static typeof(read) *orig_read = NULL;
 static typeof(write) *orig_write = NULL;
+static typeof(fread) *orig_fread = NULL;
+static typeof(fwrite) *orig_fwrite = NULL;
+static typeof(pread) *orig_pread = NULL;
+static typeof(pread64) *orig_pread64 = NULL;
+static typeof(pwrite) *orig_pwrite = NULL;
+static typeof(pwrite64) *orig_pwrite64 = NULL;
+static typeof(readv) *orig_readv = NULL;
+static typeof(preadv) *orig_preadv = NULL;
+static typeof(preadv64) *orig_preadv64 = NULL;
+static typeof(writev) *orig_writev = NULL;
+static typeof(pwritev) *orig_pwritev = NULL;
+static typeof(pwritev64) *orig_pwritev64 = NULL;
+static typeof(fgetc) *orig_fgetc = NULL;
+static typeof(fputc) *orig_fputc = NULL;
+static typeof(fgets) *orig_fgets = NULL;
+static typeof(fputs) *orig_fputs = NULL;
+//static typeof(fscanf) *orig_fscanf = NULL;
+static typeof(vfscanf) *orig_vfscanf = NULL;
+//static typeof(fprintf) *orig_fprintf = NULL;
+static typeof(vfprintf) *orig_vfprintf = NULL;
 
 typedef struct {
     char *path;
@@ -49,7 +69,8 @@ typedef struct {
     size_t bwrite;
 } Descriptor;
 
-static Descriptor **descriptors = NULL;
+/* File descriptor table */
+static Descriptor *descriptors = NULL;
 static int max_descriptors = 0;
 
 /* This is the trace file where we write information about the process */
@@ -244,9 +265,10 @@ static void trace_file(const char *path, int fd) {
         return;
     }
 
-    Descriptor *f = (Descriptor *)calloc(sizeof(Descriptor), 1);
+    Descriptor *f = &(descriptors[fd]);
     f->path = strdup(path);
-    descriptors[fd] = f;
+    f->bread = 0;
+    f->bwrite = 0;
 }
 
 static void trace_open(const char *path, int fd) {
@@ -283,28 +305,19 @@ static void trace_openat(int fd) {
 }
 
 static void trace_read(int fd, ssize_t amount) {
-    if (descriptors[fd] == NULL) {
-        return;
-    }
-
-    descriptors[fd]->bread += amount;
+    descriptors[fd].bread += amount;
 }
 
 static void trace_write(int fd, ssize_t amount) {
-    if (descriptors[fd] == NULL) {
-        return;
-    }
-
-    descriptors[fd]->bwrite += amount;
+    descriptors[fd].bwrite += amount;
 }
 
 static void trace_close(int fd) {
-    /* All descriptors we aren't interested in won't be in the table */
-    if (descriptors[fd] == NULL) {
+    Descriptor *f = &(descriptors[fd]);
+
+    if (f->path == NULL) {
         return;
     }
-
-    Descriptor *f = descriptors[fd];
 
     struct stat st;
     if (stat(f->path, &st) < 0) {
@@ -316,9 +329,10 @@ static void trace_close(int fd) {
     tprintf("file: %s %lu %lu %lu\n", f->path, st.st_size, f->bread, f->bwrite);
 
     /* Free the entry */
-    descriptors[fd] = NULL;
     free(f->path);
-    free(f);
+    f->path = NULL;
+    f->bread = 0;
+    f->bwrite = 0;
 }
 
 /* Library initialization function */
@@ -330,7 +344,7 @@ static void __attribute__((constructor)) interpose_init(void) {
     struct rlimit nofile_limit;
     getrlimit(RLIMIT_NOFILE, &nofile_limit);
     max_descriptors = nofile_limit.rlim_max;
-    descriptors = (Descriptor **)calloc(sizeof(Descriptor *), max_descriptors);
+    descriptors = (Descriptor *)calloc(sizeof(Descriptor), max_descriptors);
 
     tprintf("start: %lf\n", get_time());
 }
@@ -340,7 +354,7 @@ static void __attribute__((destructor)) interpose_fini(void) {
 
     /* Look for descriptors not explicitly closed */
     for(int i=0; i<max_descriptors; i++) {
-        if (descriptors[i] != NULL) {
+        if (descriptors[i].path != NULL) {
             trace_close(i);
         }
     }
@@ -588,6 +602,280 @@ ssize_t write(int fd, const void *buf, size_t count) {
         trace_write(fd, rc);
     }
 
+    return rc;
+}
+
+size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
+    if (orig_fread == NULL) {
+        orig_fread = dlsym(RTLD_NEXT, "fread");
+    }
+
+    size_t rc = (*orig_fread)(ptr, size, nmemb, stream);
+
+    if (rc > 0) {
+        trace_read(fileno(stream), rc);
+    }
+
+    return rc;
+}
+
+size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream) {
+    if (orig_fwrite == NULL) {
+        orig_fwrite = dlsym(RTLD_NEXT, "fwrite");
+    }
+
+    size_t rc = (*orig_fwrite)(ptr, size, nmemb, stream);
+
+    if (rc > 0) {
+        trace_write(fileno(stream), rc);
+    }
+
+    return rc;
+}
+
+ssize_t pread(int fd, void *buf, size_t count, off_t offset) {
+    if (orig_pread == NULL) {
+        orig_pread = dlsym(RTLD_NEXT, "pread");
+    }
+
+    ssize_t rc = (*orig_pread)(fd, buf, count, offset);
+
+    if (rc > 0) {
+        trace_read(fd, rc);
+    }
+
+    return rc;
+}
+
+ssize_t pread64(int fd, void *buf, size_t count, off_t offset) {
+    if (orig_pread64 == NULL) {
+        orig_pread64 = dlsym(RTLD_NEXT, "pread64");
+    }
+
+    ssize_t rc = (*orig_pread64)(fd, buf, count, offset);
+
+    if (rc > 0) {
+        trace_read(fd, rc);
+    }
+
+    return rc;
+}
+
+ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset) {
+    if (orig_pwrite == NULL) {
+        orig_pwrite = dlsym(RTLD_NEXT, "pwrite");
+    }
+
+    ssize_t rc = (*orig_pwrite)(fd, buf, count, offset);
+
+    if (rc > 0) {
+        trace_write(fd, rc);
+    }
+
+    return rc;
+}
+
+ssize_t pwrite64(int fd, const void *buf, size_t count, off_t offset) {
+    if (orig_pwrite64 == NULL) {
+        orig_pwrite64 = dlsym(RTLD_NEXT, "pwrite64");
+    }
+
+    ssize_t rc = (*orig_pwrite64)(fd, buf, count, offset);
+
+    if (rc > 0) {
+        trace_write(fd, rc);
+    }
+
+    return rc;
+}
+
+ssize_t readv(int fd, const struct iovec *iov, int iovcnt) {
+    if (orig_readv == NULL) {
+        orig_readv = dlsym(RTLD_NEXT, "readv");
+    }
+
+    ssize_t rc = (*orig_readv)(fd, iov, iovcnt);
+
+    if (rc > 0) {
+        trace_read(fd, rc);
+    }
+
+    return rc;
+}
+
+ssize_t preadv(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
+    if (orig_preadv == NULL) {
+        orig_preadv = dlsym(RTLD_NEXT, "preadv");
+    }
+
+    ssize_t rc = (*orig_preadv)(fd, iov, iovcnt, offset);
+
+    if (rc > 0) {
+        trace_read(fd, rc);
+    }
+
+    return rc;
+}
+
+ssize_t preadv64(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
+    if (orig_preadv64 == NULL) {
+        orig_preadv64 = dlsym(RTLD_NEXT, "preadv64");
+    }
+
+    ssize_t rc = (*orig_preadv64)(fd, iov, iovcnt, offset);
+
+    if (rc > 0) {
+        trace_read(fd, rc);
+    }
+
+    return rc;
+}
+
+ssize_t writev(int fd, const struct iovec *iov, int iovcnt) {
+    if (orig_writev == NULL) {
+        orig_writev = dlsym(RTLD_NEXT, "writev");
+    }
+
+    ssize_t rc = (*orig_writev)(fd, iov, iovcnt);
+
+    if (rc > 0) {
+        trace_write(fd, rc);
+    }
+
+    return rc;
+}
+
+ssize_t pwritev(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
+    if (orig_pwritev == NULL) {
+        orig_pwritev = dlsym(RTLD_NEXT, "pwritev");
+    }
+
+    ssize_t rc = (*orig_pwritev)(fd, iov, iovcnt, offset);
+
+    if (rc > 0) {
+        trace_write(fd, rc);
+    }
+
+    return rc;
+}
+
+ssize_t pwritev64(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
+    if (orig_pwritev64 == NULL) {
+        orig_pwritev64 = dlsym(RTLD_NEXT, "pwritev64");
+    }
+
+    ssize_t rc = (*orig_pwritev64)(fd, iov, iovcnt, offset);
+
+    if (rc > 0) {
+        trace_write(fd, rc);
+    }
+
+    return rc;
+}
+
+int fgetc(FILE *stream) {
+    if (orig_fgetc == NULL) {
+        orig_fgetc = dlsym(RTLD_NEXT, "fgetc");
+    }
+
+    int rc = (*fgetc)(stream);
+
+    if (rc > 0) {
+        trace_read(fileno(stream), 1);
+    }
+
+    return rc;
+}
+
+int fputc(int c, FILE *stream) {
+    if (orig_fputc == NULL) {
+        orig_fputc = dlsym(RTLD_NEXT, "fputc");
+    }
+
+    int rc = (*orig_fputc)(c, stream);
+
+    if (rc > 0) {
+        trace_write(fileno(stream), 1);
+    }
+
+    return rc;
+}
+
+char *fgets(char *s, int size, FILE *stream) {
+    if (orig_fgets == NULL) {
+        orig_fgets = dlsym(RTLD_NEXT, "fgets");
+    }
+
+    char *ret = (*orig_fgets)(s, size, stream);
+
+    if (ret != NULL) {
+        trace_read(fileno(stream), strlen(ret));
+    }
+
+    return ret;
+}
+
+int fputs(const char *s, FILE *stream) {
+    if (orig_fputs == NULL) {
+        orig_fputs = dlsym(RTLD_NEXT, "fputs");
+    }
+
+    int rc = (*orig_fputs)(s, stream);
+
+    if (rc > 0) {
+        trace_write(fileno(stream), strlen(s));
+    }
+
+    return rc;
+}
+
+int vfscanf(FILE *stream, const char *format, va_list ap) {
+    if (orig_vfscanf == NULL) {
+        orig_vfscanf = dlsym(RTLD_NEXT, "vfscanf");
+    }
+
+    long before = ftell(stream);
+
+    int rc = (*orig_vfscanf)(stream, format, ap);
+
+    long after = ftell(stream);
+
+    if (rc > 0) {
+        trace_read(fileno(stream), (after-before));
+    }
+
+    return rc;
+}
+
+int fscanf(FILE *stream, const char *format, ...) {
+    /* We use vfscanf here */
+    va_list ap;
+    va_start(ap, format);
+    int rc = vfscanf(stream, format, ap);
+    va_end(ap);
+    return rc;
+}
+
+int vfprintf(FILE *stream, const char *format, va_list ap) {
+    if (orig_vfprintf == NULL) {
+        orig_vfprintf = dlsym(RTLD_NEXT, "vfprintf");
+    }
+
+    int rc = (*orig_vfprintf)(stream, format, ap);
+
+    if (rc > 0) {
+        trace_write(fileno(stream), rc);
+    }
+
+    return rc;
+}
+
+int fprintf(FILE *stream, const char *format, ...) {
+    /* We use vfprintf here */
+    va_list ap;
+    va_start(ap, format);
+    int rc = vfprintf(stream, format, ap);
+    va_end(ap);
     return rc;
 }
 
