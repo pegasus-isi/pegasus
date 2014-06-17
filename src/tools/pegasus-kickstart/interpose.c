@@ -8,15 +8,20 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <sys/uio.h>
+#include <sys/socket.h>
 #include <fcntl.h>
 #include <stdarg.h>
 #include <dirent.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
+/* TODO Interpose network I/O (send, recv, sendfile, sendmsg, recvmsg, etc.) */
+/* TODO Interpose accept (for network servers) */
+/* TODO Interpose dup and dup2 */
 /* TODO Interpose mkstemp family and tmpfile */
-/* TODO Interpose network functions (connect, accept) */
 /* TODO Interpose rename */
 /* TODO Interpose truncate */
 /* TODO Interpose unlink, unlinkat, remove */
@@ -70,12 +75,18 @@ static typeof(vfscanf) *orig_vfscanf = NULL;
 /* Implemented using vfprintf */
 /*static typeof(fprintf) *orig_fprintf = NULL;*/
 static typeof(vfprintf) *orig_vfprintf = NULL;
+static typeof(connect) *orig_connect = NULL;
 
 typedef struct {
+    char type;
     char *path;
     size_t bread;
     size_t bwrite;
 } Descriptor;
+
+const char DTYPE_NONE = 0;
+const char DTYPE_FILE = 1;
+const char DTYPE_SOCK = 2;
 
 /* File descriptor table */
 static Descriptor *descriptors = NULL;
@@ -276,6 +287,7 @@ static void trace_file(const char *path, int fd) {
     }
 
     Descriptor *f = &(descriptors[fd]);
+    f->type = DTYPE_FILE;
     f->path = strdup(path);
     f->bread = 0;
     f->bwrite = 0;
@@ -330,17 +342,22 @@ static void trace_close(int fd) {
         return;
     }
 
-    struct stat st;
-    if (stat(f->path, &st) < 0) {
-        fprintf_untraced(stderr, "libinterpose: Unable to stat '%s': %s\n",
-                f->path, strerror(errno));
-        return;
+    if (f->type == DTYPE_FILE) {
+        struct stat st;
+        if (stat(f->path, &st) < 0) {
+            fprintf_untraced(stderr, "libinterpose: Unable to stat '%s': %s\n",
+                    f->path, strerror(errno));
+            return;
+        }
+
+        tprintf("file: %s %lu %lu %lu\n", f->path, st.st_size, f->bread, f->bwrite);
+    } else if (f->type == DTYPE_SOCK) {
+        tprintf("socket: %s %lu %lu\n", f->path, f->bread, f->bwrite);
     }
 
-    tprintf("file: %s %lu %lu %lu\n", f->path, st.st_size, f->bread, f->bwrite);
-
-    /* Free the entry */
+    /* Reset the entry */
     free(f->path);
+    f->type = DTYPE_NONE;
     f->path = NULL;
     f->bread = 0;
     f->bwrite = 0;
@@ -917,5 +934,29 @@ int fprintf(FILE *stream, const char *format, ...) {
     int rc = vfprintf(stream, format, ap);
     va_end(ap);
     return rc;
+}
+
+int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
+    if (orig_connect == NULL) {
+        orig_connect = dlsym(RTLD_NEXT, "connect");
+    }
+
+    if (addr->sa_family == AF_INET) {
+        /* IPv4 */
+        struct sockaddr_in *in4addr = (struct sockaddr_in *)addr;
+        char ipstr[INET_ADDRSTRLEN];
+        if (inet_ntop(AF_INET, &(in4addr->sin_addr.s_addr), ipstr, INET_ADDRSTRLEN) != NULL) {
+            char addrstr[INET_ADDRSTRLEN+6];
+            sprintf(addrstr, "%s %d", ipstr, ntohs(in4addr->sin_port));
+            descriptors[sockfd].type = DTYPE_SOCK;
+            descriptors[sockfd].path = strdup(addrstr);
+        }
+    } else if (addr->sa_family == AF_INET6) {
+        /* TODO IPv6 */
+    } else {
+        /* Ignore others */
+    }
+
+    return (*orig_connect)(sockfd, addr, addrlen);
 }
 

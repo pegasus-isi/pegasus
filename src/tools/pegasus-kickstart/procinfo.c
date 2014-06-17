@@ -470,6 +470,15 @@ static int printXMLFileInfo(FILE *out, int indent, FileInfo *files) {
     return 0;
 }
 
+static int printXMLSockInfo(FILE *out, int indent, SockInfo *sockets) {
+    SockInfo *i;
+    for (i = sockets; i != NULL; i = i->next) {
+        fprintf(out, "%*s<socket address=\"%s\" port=\"%d\" brecv=\"%ld\" bsend=\"%ld\"/>\n",
+                indent, "", i->address, i->port, i->brecv, i->bsend);
+    }
+    return 0;
+}
+
 /* Write <proc> records to buffer */
 int printXMLProcInfo(FILE *out, int indent, ProcInfo* procs) {
     ProcInfo *i;
@@ -488,11 +497,12 @@ int printXMLProcInfo(FILE *out, int indent, ProcInfo* procs) {
                 i->vmpeak, i->rsspeak, i->rchar, i->wchar, 
                 i->read_bytes, i->write_bytes, i->cancelled_write_bytes, 
                 i->syscr, i->syscw);
-        if (i->files == NULL) {
+        if (i->files == NULL && i->sockets == NULL) {
             fprintf(out, "/>\n");
         } else {
             fprintf(out, ">\n");
             printXMLFileInfo(out, indent+2, i->files);
+            printXMLSockInfo(out, indent+2, i->sockets);
             fprintf(out, "%*s</proc>\n", indent, "");
         }
     }
@@ -500,11 +510,23 @@ int printXMLProcInfo(FILE *out, int indent, ProcInfo* procs) {
 }
 
 /* Delete all the ProcInfo objects in a list */
-void deleteProcInfo(ProcInfo *list) {
-    while (list != NULL) {
-        ProcInfo *i = list;
-        list = list->next;
-        free(i);
+void deleteProcInfo(ProcInfo *procs) {
+    while (procs != NULL) {
+        ProcInfo *p = procs;
+        FileInfo *files = p->files;
+        while (files != NULL) {
+            FileInfo *f = files;
+            files = files->next;
+            free(f);
+        }
+        SockInfo *sockets = p->sockets;
+        while (sockets != NULL) {
+            SockInfo *s = sockets;
+            sockets = sockets->next;
+            free(s);
+        }
+        procs = procs->next;
+        free(p);
     }
 }
 

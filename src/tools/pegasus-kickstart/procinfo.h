@@ -18,6 +18,14 @@ typedef struct _FileInfo {
     struct _FileInfo *next;
 } FileInfo;
 
+typedef struct _SockInfo {
+    char *address;          /* Address of peer */
+    int port;               /* Port number on peer */
+    uint64_t bsend;         /* bytes sent on socket */
+    uint64_t brecv;         /* bytes recieved on socket */
+    struct _SockInfo *next;
+} SockInfo;
+
 typedef struct _ProcInfo {
     pid_t pid;              /* Thread ID (main tid==pid) */
     pid_t ppid;             /* Parent pid */
@@ -46,6 +54,8 @@ typedef struct _ProcInfo {
 
     FileInfo *fds[1024];    /* File descriptor table TODO Make this dynamic. */
     FileInfo *files;        /* Linked list of files accessed */
+
+    SockInfo *sockets;      /* Linked list of sockets */
 
     struct _ProcInfo *next;
     struct _ProcInfo *prev;

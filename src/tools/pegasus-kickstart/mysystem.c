@@ -77,7 +77,7 @@ static FileInfo *readTraceFileRecord(const char *buf, FileInfo *files) {
     size_t bwrite = 0;
     if (sscanf(buf, "file: %s %lu %lu %lu\n", filename, &size, &bread, &bwrite) != 4) {
         fprintf(stderr, "Invalid file record: %s", buf);
-        return NULL;
+        return files;
     }
 
     /* Look for a duplicate file in the list of files */
@@ -118,6 +118,53 @@ static FileInfo *readTraceFileRecord(const char *buf, FileInfo *files) {
     return files;
 }
 
+static SockInfo *readTraceSocketRecord(const char *buf, SockInfo *sockets) {
+    char address[BUFSIZ];
+    int port = 0;
+    size_t brecv = 0;
+    size_t bsend = 0;
+    if (sscanf(buf, "socket: %s %d %lu %lu\n", address, &port, &brecv, &bsend) != 4) {
+        fprintf(stderr, "Invalid socket record: %s", buf);
+        return sockets;
+    }
+
+    /* Look for a duplicate socket in list of sockets */
+    SockInfo *sock = NULL;
+    SockInfo *last = NULL;
+    for (sock = sockets; sock != NULL; sock = sock->next) {
+        if (port == sock->port && strcmp(address, sock->address) == 0) {
+            /* Found a duplicate */
+            break;
+        }
+
+        /* Keep track of the last socket in the list */
+        last = sock;
+    }
+
+    if (sock == NULL) {
+        /* No duplicate found */
+        sock = (SockInfo *)calloc(sizeof(SockInfo), 1);
+        sock->address = strdup(address);
+        sock->port = port;
+        sock->brecv = brecv;
+        sock->bsend = bsend;
+
+        if (sockets == NULL) {
+            /* List was empty */
+            sockets = sock;
+        } else {
+            /* Add to end of list */
+            last->next = sock;
+        }
+    } else {
+        /* Duplicate found, increment counters */
+        sock->brecv += brecv;
+        sock->bsend += bsend;
+    }
+
+    return sockets;
+}
+
 /* Return 1 if line begins with tok */
 static int startswith(const char *line, const char *tok) {
     return strstr(line, tok) == line;
@@ -138,6 +185,8 @@ static ProcInfo *processTraceFile(const char *fullpath) {
     while (fgets(line, BUFSIZ, trace) != NULL) {
         if (startswith(line, "file:")) {
             proc->files = readTraceFileRecord(line, proc->files);
+        } else if (startswith(line, "socket:")) {
+            proc->sockets = readTraceSocketRecord(line, proc->sockets);
         } else if (startswith(line, "exe:")) {
             char exe[BUFSIZ];
             sscanf(line, "exe: %s\n", exe);
@@ -302,6 +351,8 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[])
 
         /* If the user has LD_PRELOAD already set, then ours will be ignored
          * because it is at the end. That is the correct behavior.
+         *
+         * TODO If the environment variables are already set, then skip this
          */
 
         /* Copy the environment variables to a new array */
