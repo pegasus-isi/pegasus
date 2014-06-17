@@ -569,7 +569,6 @@ static int fclose_untraced(FILE *fp) {
 }
 
 int fclose(FILE *fp) {
-
     if (fp != NULL) {
         trace_close(fileno(fp));
     }
@@ -778,7 +777,7 @@ int fgetc(FILE *stream) {
         orig_fgetc = dlsym(RTLD_NEXT, "fgetc");
     }
 
-    int rc = (*fgetc)(stream);
+    int rc = (*orig_fgetc)(stream);
 
     if (rc > 0) {
         trace_read(fileno(stream), 1);
