@@ -608,7 +608,7 @@ static int fclose_untraced(FILE *fp) {
 int fclose(FILE *fp) {
     int fd = -1;
     if (fp != NULL) {
-        fileno(fp);
+        fd = fileno(fp);
     }
 
     int rc = fclose_untraced(fp);
