@@ -21,9 +21,10 @@
 
 /* TODO Interpose accept (for network servers) */
 /* TODO Is it necessary to interpose shutdown? Would that help the DNS issue? */
-/* TODO Interpose mkstemp family and tmpfile */
 /* TODO Interpose unlink, unlinkat, remove */
 /* TODO Interpose rename */
+/* TODO Figure out a way to avoid the hack for file names with spaces */
+/* TODO Are the _untraced functions necessary? */
 /* TODO Create extensive test cases */
 /* TODO Interpose fcntl(..., F_DUPFD, ...) */
 /* TODO Interpose mknod for S_IFREG */
@@ -97,6 +98,14 @@ static typeof(recvmsg) *orig_recvmsg = NULL;
 static typeof(truncate) *orig_truncate = NULL;
 /* It is not necessary to interpose ftruncate because we should already
  * have a record for the file descriptor.
+ */
+static typeof(mkstemp) *orig_mkstemp = NULL;
+static typeof(mkostemp) *orig_mkostemp = NULL;
+static typeof(mkstemps) *orig_mkstemps = NULL;
+static typeof(mkostemps) *orig_mkostemps = NULL;
+static typeof(tmpfile) *orig_tmpfile = NULL;
+/* It is not necessary to interpose other tmp functions because
+ * they just generate names that need to be passed to open()
  */
 
 typedef struct {
@@ -444,14 +453,14 @@ static void trace_close(int fd) {
     debug("trace_close %d", fd);
 
     if (f->type == DTYPE_FILE) {
+        /* Try to get the final size of the file */
+        size_t size = 0;
         struct stat st;
-        if (stat(f->path, &st) < 0) {
-            fprintf_untraced(stderr, "libinterpose: Unable to stat '%s': %s\n",
-                    f->path, strerror(errno));
-            return;
+        if (stat(f->path, &st) == 0) {
+            size = st.st_size;
         }
 
-        tprintf("file: %s %lu %lu %lu\n", f->path, st.st_size, f->bread, f->bwrite);
+        tprintf("file: '%s' %lu %lu %lu\n", f->path, size, f->bread, f->bwrite);
     } else if (f->type == DTYPE_SOCK) {
         tprintf("socket: %s %lu %lu\n", f->path, f->bread, f->bwrite);
     }
@@ -526,7 +535,7 @@ static void trace_truncate(const char *path, off_t length) {
         return;
     }
 
-    tprintf("file: %s %lu 0 0\n", fullpath, length);
+    tprintf("file: '%s' %lu 0 0\n", fullpath, length);
 }
 
 /* Library initialization function */
@@ -1379,5 +1388,85 @@ int truncate(const char *path, off_t length) {
     }
 
     return rc;
+}
+
+int mkstemp(char *template) {
+    debug("mkstemp");
+
+    if (orig_mkstemp == NULL) {
+        orig_mkstemp = dlsym(RTLD_NEXT, "mkstemp");
+    }
+
+    int rc = (*orig_mkstemp)(template);
+
+    if (rc >= 0) {
+        trace_openat(rc);
+    }
+
+    return rc;
+}
+
+int mkostemp(char *template, int flags) {
+    debug("mkostemp");
+
+    if (orig_mkostemp == NULL) {
+        orig_mkostemp = dlsym(RTLD_NEXT, "mkostemp");
+    }
+
+    int rc = (*orig_mkostemp)(template, flags);
+
+    if (rc >= 0) {
+        trace_openat(rc);
+    }
+
+    return rc;
+}
+
+int mkstemps(char *template, int suffixlen) {
+    debug("mkstemps");
+
+    if (orig_mkstemps == NULL) {
+        orig_mkstemps = dlsym(RTLD_NEXT, "mkstemps");
+    }
+
+    int rc = (*orig_mkstemps)(template, suffixlen);
+
+    if (rc >= 0) {
+        trace_openat(rc);
+    }
+
+    return rc;
+}
+
+int mkostemps(char *template, int suffixlen, int flags) {
+    debug("mkostemps");
+
+    if (orig_mkostemps == NULL) {
+        orig_mkostemps = dlsym(RTLD_NEXT, "mkostemps");
+    }
+
+    int rc = (*orig_mkostemps)(template, suffixlen, flags);
+
+    if (rc >= 0) {
+        trace_openat(rc);
+    }
+
+    return rc;
+}
+
+FILE *tmpfile(void) {
+    debug("tmpfile");
+
+    if (orig_tmpfile == NULL) {
+        orig_tmpfile = dlsym(RTLD_NEXT, "tmpfile");
+    }
+
+    FILE *f = (*orig_tmpfile)();
+
+    if (f != NULL) {
+        trace_openat(fileno(f));
+    }
+
+    return f;
 }
 

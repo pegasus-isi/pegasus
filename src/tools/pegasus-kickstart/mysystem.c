@@ -75,7 +75,7 @@ static FileInfo *readTraceFileRecord(const char *buf, FileInfo *files) {
     size_t size = 0;
     size_t bread = 0;
     size_t bwrite = 0;
-    if (sscanf(buf, "file: %s %lu %lu %lu\n", filename, &size, &bread, &bwrite) != 4) {
+    if (sscanf(buf, "file: '%[^']' %lu %lu %lu\n", filename, &size, &bread, &bwrite) != 4) {
         fprintf(stderr, "Invalid file record: %s", buf);
         return files;
     }
