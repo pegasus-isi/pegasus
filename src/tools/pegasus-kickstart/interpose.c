@@ -40,6 +40,13 @@
  *      mmap and assume that the total size being mapped is read/written
  */
 
+#ifdef DEBUG
+#define debug(format, args...) \
+    fprintf_untraced(stderr, "libinterpose: " format "\n" , ##args)
+#else
+#define debug(format, args...)
+#endif
+
 /* These are all the functions we are interposing */
 static typeof(dup) *orig_dup = NULL;
 static typeof(dup2) *orig_dup2 = NULL;
@@ -115,6 +122,7 @@ static int fclose_untraced(FILE *fp);
 
 /* Open the trace file */
 static int topen() {
+    debug("Open trace file");
 
     char *kickstart_prefix = getenv("KICKSTART_PREFIX");
     if (kickstart_prefix == NULL) {
@@ -151,6 +159,8 @@ static int tclose() {
     if (trace == NULL) {
         return 0;
     }
+
+    debug("Close trace file");
 
     return fclose_untraced(trace);
 }
@@ -196,6 +206,7 @@ static Descriptor *get_descriptor(int fd) {
 
 /* Read /proc/self/exe to get path to executable */
 static void read_exe() {
+    debug("Reading exe");
     char exe[BUFSIZ];
     int size = readlink("/proc/self/exe", exe, BUFSIZ);
     if (size < 0) {
@@ -213,6 +224,8 @@ static int startswith(const char *line, const char *tok) {
 
 /* Read useful information from /proc/self/status */
 static void read_status() {
+    debug("Reading status file");
+
     char statf[] = "/proc/self/status";
 
     /* If the status file is missing, then just skip it */
@@ -248,6 +261,8 @@ static void read_status() {
 
 /* Read /proc/self/stat to get CPU usage */
 static void read_stat() {
+    debug("Reading stat file");
+
     char statf[] = "/proc/self/stat";
 
     /* If the stat file is missing, then just skip it */
@@ -281,6 +296,8 @@ static void read_stat() {
 
 /* Read /proc/self/io to get I/O usage */
 static void read_io() {
+    debug("Reading io file");
+
     char iofile[] = "/proc/self/io";
 
     /* This proc file was added in Linux 2.6.20. It won't be
@@ -320,6 +337,8 @@ static void read_io() {
 }
 
 static void trace_file(const char *path, int fd) {
+    debug("trace_file %s %d", path, fd);
+
     Descriptor *f = get_descriptor(fd);
     if (f == NULL) {
         return;
@@ -342,6 +361,8 @@ static void trace_file(const char *path, int fd) {
 }
 
 static void trace_open(const char *path, int fd) {
+    debug("trace_open %s %d", path, fd);
+
     char fullpath[BUFSIZ];
     if (realpath(path, fullpath) == NULL) {
         fprintf_untraced(stderr, "libinterpose: Unable to get real path for '%s': %s\n",
@@ -353,6 +374,8 @@ static void trace_open(const char *path, int fd) {
 }
 
 static void trace_openat(int fd) {
+    debug("trace_openat %d", fd);
+
     char linkpath[64];
     snprintf(linkpath, 64, "/proc/%d/fd/%d", getpid(), fd);
 
@@ -375,6 +398,8 @@ static void trace_openat(int fd) {
 }
 
 static void trace_read(int fd, ssize_t amount) {
+    debug("trace_read %d %lu", fd, amount);
+
     Descriptor *f = get_descriptor(fd);
     if (f == NULL) {
         return;
@@ -383,6 +408,8 @@ static void trace_read(int fd, ssize_t amount) {
 }
 
 static void trace_write(int fd, ssize_t amount) {
+    debug("trace_write %d %lu", fd, amount);
+
     Descriptor *f = get_descriptor(fd);
     if (f == NULL) {
         return;
@@ -400,6 +427,8 @@ static void trace_close(int fd) {
         /* If the path is null, then it is a descriptor we aren't tracking */
         return;
     }
+
+    debug("trace_close %d", fd);
 
     if (f->type == DTYPE_FILE) {
         struct stat st;
@@ -423,6 +452,8 @@ static void trace_close(int fd) {
 }
 
 static void trace_sock(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
+    debug("trace_sock %d");
+
     Descriptor *d = get_descriptor(sockfd);
     if (d == NULL) {
         return;
@@ -433,6 +464,8 @@ static void trace_sock(int sockfd, const struct sockaddr *addr, socklen_t addrle
         /* It is not a type of socket we understand */
         return;
     }
+
+    debug("sock addr %s", addrstr);
 
     if (d->path == NULL || strcmp(addrstr, d->path) != 0) {
         /* This is here to handle the case where a socket is reused to connect
@@ -449,6 +482,8 @@ static void trace_sock(int sockfd, const struct sockaddr *addr, socklen_t addrle
 }
 
 static void trace_dup(int oldfd, int newfd) {
+    debug("trace_dup %d %d", oldfd, newfd);
+
     Descriptor *o = get_descriptor(oldfd);
     if (o == NULL) {
         return;
@@ -485,6 +520,8 @@ static void __attribute__((constructor)) interpose_init(void) {
     max_descriptors = nofile_limit.rlim_max;
     descriptors = (Descriptor *)calloc(sizeof(Descriptor), max_descriptors);
 
+    debug("Max descriptors: %d", max_descriptors);
+
     tprintf("start: %lf\n", get_time());
 }
 
@@ -511,6 +548,8 @@ static void __attribute__((destructor)) interpose_fini(void) {
 /** INTERPOSED FUNCTIONS **/
 
 int dup(int oldfd) {
+    debug("dup");
+
     if (orig_dup == NULL) {
         orig_dup = dlsym(RTLD_NEXT, "dup");
     }
@@ -525,6 +564,8 @@ int dup(int oldfd) {
 }
 
 int dup2(int oldfd, int newfd) {
+    debug("dup2");
+
     if (orig_dup2 == NULL) {
         orig_dup2 = dlsym(RTLD_NEXT, "dup2");
     }
@@ -539,6 +580,8 @@ int dup2(int oldfd, int newfd) {
 }
 
 int dup3(int oldfd, int newfd, int flags) {
+    debug("dup3");
+
     if (orig_dup3 == NULL) {
         orig_dup3 = dlsym(RTLD_NEXT, "dup3");
     }
@@ -553,6 +596,8 @@ int dup3(int oldfd, int newfd, int flags) {
 }
 
 int open(const char *path, int oflag, ...) {
+    debug("open");
+
     if (orig_open == NULL) {
         orig_open = dlsym(RTLD_NEXT, "open");
     }
@@ -575,6 +620,8 @@ int open(const char *path, int oflag, ...) {
 }
 
 int open64(const char *path, int oflag, ...) {
+    debug("open64");
+
     if (orig_open64 == NULL) {
         orig_open64 = dlsym(RTLD_NEXT, "open64");
     }
@@ -597,6 +644,8 @@ int open64(const char *path, int oflag, ...) {
 }
 
 int openat(int dirfd, const char *path, int oflag, ...) {
+    debug("openat");
+
     if (orig_openat == NULL) {
         orig_openat = dlsym(RTLD_NEXT, "openat");
     }
@@ -619,6 +668,8 @@ int openat(int dirfd, const char *path, int oflag, ...) {
 }
 
 int openat64(int dirfd, const char *path, int oflag, ...) {
+    debug("openat64");
+
     if (orig_openat64 == NULL) {
         orig_openat64 = dlsym(RTLD_NEXT, "openat64");
     }
@@ -641,6 +692,8 @@ int openat64(int dirfd, const char *path, int oflag, ...) {
 }
 
 int creat(const char *path, mode_t mode) {
+    debug("creat");
+
     if (orig_creat == NULL) {
         orig_creat = dlsym(RTLD_NEXT, "creat");
     }
@@ -655,6 +708,8 @@ int creat(const char *path, mode_t mode) {
 }
 
 int creat64(const char *path, mode_t mode) {
+    debug("creat64");
+
     if (orig_creat64 == NULL) {
         orig_creat64 = dlsym(RTLD_NEXT, "creat64");
     }
@@ -677,6 +732,8 @@ static FILE *fopen_untraced(const char *path, const char *mode) {
 }
 
 FILE *fopen(const char *path, const char *mode) {
+    debug("fopen");
+
     FILE *f = fopen_untraced(path, mode);
 
     if (f != NULL) {
@@ -687,6 +744,8 @@ FILE *fopen(const char *path, const char *mode) {
 }
 
 FILE *fopen64(const char *path, const char *mode) {
+    debug("fopen64");
+
     if (orig_fopen64 == NULL) {
         orig_fopen64 = dlsym(RTLD_NEXT, "fopen64");
     }
@@ -701,6 +760,8 @@ FILE *fopen64(const char *path, const char *mode) {
 }
 
 FILE *freopen(const char *path, const char *mode, FILE *stream) {
+    debug("freopen");
+
     if (orig_freopen == NULL) {
         orig_freopen = dlsym(RTLD_NEXT, "freopen");
     }
@@ -715,6 +776,8 @@ FILE *freopen(const char *path, const char *mode, FILE *stream) {
 }
 
 FILE *freopen64(const char *path, const char *mode, FILE *stream) {
+    debug("freopen64");
+
     if (orig_freopen64 == NULL) {
         orig_freopen64 = dlsym(RTLD_NEXT, "freopen64");
     }
@@ -729,6 +792,8 @@ FILE *freopen64(const char *path, const char *mode, FILE *stream) {
 }
 
 int close(int fd) {
+    debug("close");
+
     if (orig_close == NULL) {
         orig_close = dlsym(RTLD_NEXT, "close");
     }
@@ -751,6 +816,8 @@ static int fclose_untraced(FILE *fp) {
 }
 
 int fclose(FILE *fp) {
+    debug("fclose");
+
     int fd = -1;
     if (fp != NULL) {
         fd = fileno(fp);
@@ -766,6 +833,8 @@ int fclose(FILE *fp) {
 }
 
 ssize_t read(int fd, void *buf, size_t count) {
+    debug("read");
+
     if (orig_read == NULL) {
         orig_read = dlsym(RTLD_NEXT, "read");
     }
@@ -780,6 +849,8 @@ ssize_t read(int fd, void *buf, size_t count) {
 }
 
 ssize_t write(int fd, const void *buf, size_t count) {
+    debug("write");
+
     if (orig_write == NULL) {
         orig_write = dlsym(RTLD_NEXT, "write");
     }
@@ -794,6 +865,8 @@ ssize_t write(int fd, const void *buf, size_t count) {
 }
 
 size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
+    debug("fread");
+
     if (orig_fread == NULL) {
         orig_fread = dlsym(RTLD_NEXT, "fread");
     }
@@ -808,6 +881,8 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
 }
 
 size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream) {
+    debug("fwrite");
+
     if (orig_fwrite == NULL) {
         orig_fwrite = dlsym(RTLD_NEXT, "fwrite");
     }
@@ -822,6 +897,8 @@ size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream) {
 }
 
 ssize_t pread(int fd, void *buf, size_t count, off_t offset) {
+    debug("pread");
+
     if (orig_pread == NULL) {
         orig_pread = dlsym(RTLD_NEXT, "pread");
     }
@@ -836,6 +913,8 @@ ssize_t pread(int fd, void *buf, size_t count, off_t offset) {
 }
 
 ssize_t pread64(int fd, void *buf, size_t count, off_t offset) {
+    debug("pread64");
+
     if (orig_pread64 == NULL) {
         orig_pread64 = dlsym(RTLD_NEXT, "pread64");
     }
@@ -850,6 +929,8 @@ ssize_t pread64(int fd, void *buf, size_t count, off_t offset) {
 }
 
 ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset) {
+    debug("pwrite");
+
     if (orig_pwrite == NULL) {
         orig_pwrite = dlsym(RTLD_NEXT, "pwrite");
     }
@@ -864,6 +945,8 @@ ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset) {
 }
 
 ssize_t pwrite64(int fd, const void *buf, size_t count, off_t offset) {
+    debug("pwrite64");
+
     if (orig_pwrite64 == NULL) {
         orig_pwrite64 = dlsym(RTLD_NEXT, "pwrite64");
     }
@@ -878,6 +961,8 @@ ssize_t pwrite64(int fd, const void *buf, size_t count, off_t offset) {
 }
 
 ssize_t readv(int fd, const struct iovec *iov, int iovcnt) {
+    debug("readv");
+
     if (orig_readv == NULL) {
         orig_readv = dlsym(RTLD_NEXT, "readv");
     }
@@ -892,6 +977,8 @@ ssize_t readv(int fd, const struct iovec *iov, int iovcnt) {
 }
 
 ssize_t preadv(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
+    debug("preadv");
+
     if (orig_preadv == NULL) {
         orig_preadv = dlsym(RTLD_NEXT, "preadv");
     }
@@ -906,6 +993,8 @@ ssize_t preadv(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
 }
 
 ssize_t preadv64(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
+    debug("preadv64");
+
     if (orig_preadv64 == NULL) {
         orig_preadv64 = dlsym(RTLD_NEXT, "preadv64");
     }
@@ -920,6 +1009,8 @@ ssize_t preadv64(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
 }
 
 ssize_t writev(int fd, const struct iovec *iov, int iovcnt) {
+    debug("writev");
+
     if (orig_writev == NULL) {
         orig_writev = dlsym(RTLD_NEXT, "writev");
     }
@@ -934,6 +1025,8 @@ ssize_t writev(int fd, const struct iovec *iov, int iovcnt) {
 }
 
 ssize_t pwritev(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
+    debug("pwritev");
+
     if (orig_pwritev == NULL) {
         orig_pwritev = dlsym(RTLD_NEXT, "pwritev");
     }
@@ -948,6 +1041,8 @@ ssize_t pwritev(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
 }
 
 ssize_t pwritev64(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
+    debug("pwritev64");
+
     if (orig_pwritev64 == NULL) {
         orig_pwritev64 = dlsym(RTLD_NEXT, "pwritev64");
     }
@@ -962,6 +1057,8 @@ ssize_t pwritev64(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
 }
 
 int fgetc(FILE *stream) {
+    debug("fgetc");
+
     if (orig_fgetc == NULL) {
         orig_fgetc = dlsym(RTLD_NEXT, "fgetc");
     }
@@ -976,6 +1073,8 @@ int fgetc(FILE *stream) {
 }
 
 int fputc(int c, FILE *stream) {
+    debug("fputc");
+
     if (orig_fputc == NULL) {
         orig_fputc = dlsym(RTLD_NEXT, "fputc");
     }
@@ -998,6 +1097,8 @@ static char *fgets_untraced(char *s, int size, FILE *stream) {
 }
 
 char *fgets(char *s, int size, FILE *stream) {
+    debug("fgets");
+
     char *ret = fgets_untraced(s, size, stream);
 
     if (ret != NULL) {
@@ -1008,6 +1109,8 @@ char *fgets(char *s, int size, FILE *stream) {
 }
 
 int fputs(const char *s, FILE *stream) {
+    debug("fputs");
+
     if (orig_fputs == NULL) {
         orig_fputs = dlsym(RTLD_NEXT, "fputs");
     }
@@ -1022,6 +1125,8 @@ int fputs(const char *s, FILE *stream) {
 }
 
 int vfscanf(FILE *stream, const char *format, va_list ap) {
+    debug("vfscanf");
+
     if (orig_vfscanf == NULL) {
         orig_vfscanf = dlsym(RTLD_NEXT, "vfscanf");
     }
@@ -1043,6 +1148,8 @@ int vfscanf(FILE *stream, const char *format, va_list ap) {
 }
 
 int fscanf(FILE *stream, const char *format, ...) {
+    debug("fscanf");
+
     va_list ap;
     va_start(ap, format);
     int rc = vfscanf(stream, format, ap);
@@ -1059,6 +1166,8 @@ static int vfprintf_untraced(FILE *stream, const char *format, va_list ap) {
 }
 
 int vfprintf(FILE *stream, const char *format, va_list ap) {
+    debug("vfprintf");
+
     int rc = vfprintf_untraced(stream, format, ap);
 
     if (rc > 0) {
@@ -1077,6 +1186,8 @@ static int fprintf_untraced(FILE *stream, const char *format, ...) {
 }
 
 int fprintf(FILE *stream, const char *format, ...) {
+    debug("fprintf");
+
     va_list ap;
     va_start(ap, format);
     int rc = vfprintf(stream, format, ap);
@@ -1085,6 +1196,8 @@ int fprintf(FILE *stream, const char *format, ...) {
 }
 
 int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
+    debug("connect");
+
     if (orig_connect == NULL) {
         orig_connect = dlsym(RTLD_NEXT, "connect");
     }
@@ -1102,6 +1215,8 @@ int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
 }
 
 ssize_t send(int sockfd, const void *buf, size_t len, int flags) {
+    debug("send");
+
     if (orig_send == NULL) {
         orig_send = dlsym(RTLD_NEXT, "send");
     }
@@ -1116,6 +1231,8 @@ ssize_t send(int sockfd, const void *buf, size_t len, int flags) {
 }
 
 ssize_t sendfile(int out_fd, int in_fd, off_t *offset, size_t count) {
+    debug("sendfile");
+
     if (orig_sendfile == NULL) {
         orig_sendfile = dlsym(RTLD_NEXT, "sendfile");
     }
@@ -1132,6 +1249,8 @@ ssize_t sendfile(int out_fd, int in_fd, off_t *offset, size_t count) {
 
 ssize_t sendto(int sockfd, const void *buf, size_t len, int flags,
                const struct sockaddr *dest_addr, socklen_t addrlen) {
+    debug("sendto");
+
     if (orig_sendto == NULL) {
         orig_sendto = dlsym(RTLD_NEXT, "sendto");
     }
@@ -1148,6 +1267,8 @@ ssize_t sendto(int sockfd, const void *buf, size_t len, int flags,
 }
 
 ssize_t sendmsg(int sockfd, const struct msghdr *msg, int flags) {
+    debug("sendmsg");
+
     if (orig_sendmsg == NULL) {
         orig_sendmsg = dlsym(RTLD_NEXT, "sendmsg");
     }
@@ -1166,6 +1287,8 @@ ssize_t sendmsg(int sockfd, const struct msghdr *msg, int flags) {
 }
 
 ssize_t recv(int sockfd, void *buf, size_t len, int flags) {
+    debug("recv");
+
     if (orig_recv == NULL) {
         orig_recv = dlsym(RTLD_NEXT, "recv");
     }
@@ -1181,6 +1304,8 @@ ssize_t recv(int sockfd, void *buf, size_t len, int flags) {
 
 ssize_t recvfrom(int sockfd, void *buf, size_t len, int flags,
                  struct sockaddr *src_addr, socklen_t *addrlen) {
+    debug("recvfrom");
+
     if (orig_recvfrom == NULL) {
         orig_recvfrom = dlsym(RTLD_NEXT, "recvfrom");
     }
@@ -1197,6 +1322,8 @@ ssize_t recvfrom(int sockfd, void *buf, size_t len, int flags,
 }
 
 ssize_t recvmsg(int sockfd, struct msghdr *msg, int flags) {
+    debug("recvmsg");
+
     if (orig_recvmsg == NULL) {
         orig_recvmsg = dlsym(RTLD_NEXT, "recvmsg");
     }
