@@ -21,11 +21,12 @@
 
 /* TODO Interpose accept (for network servers) */
 /* TODO Is it necessary to interpose shutdown? Would that help the DNS issue? */
-/* TODO Interpose dup and dup2 */
 /* TODO Interpose mkstemp family and tmpfile */
+/* TODO Interpose unlink, unlinkat, remove */
 /* TODO Interpose rename */
 /* TODO Interpose truncate */
-/* TODO Interpose unlink, unlinkat, remove */
+/* TODO Create extensive test cases */
+/* TODO Interpose fcntl(..., F_DUPFD, ...) */
 /* TODO Interpose mknod for S_IFREG */
 /* TODO Interpose wide character I/O functions */
 /* TODO Handle I/O for stdout/stderr? */
@@ -40,6 +41,9 @@
  */
 
 /* These are all the functions we are interposing */
+static typeof(dup) *orig_dup = NULL;
+static typeof(dup2) *orig_dup2 = NULL;
+static typeof(dup3) *orig_dup3 = NULL;
 static typeof(open) *orig_open = NULL;
 static typeof(open64) *orig_open64 = NULL;
 static typeof(openat) *orig_openat = NULL;
@@ -425,6 +429,10 @@ static void trace_sock(int sockfd, const struct sockaddr *addr, socklen_t addrle
     }
 
     char *addrstr = get_addr(addr, addrlen);
+    if (addrstr == NULL) {
+        /* It is not a type of socket we understand */
+        return;
+    }
 
     if (d->path == NULL || strcmp(addrstr, d->path) != 0) {
         /* This is here to handle the case where a socket is reused to connect
@@ -435,9 +443,32 @@ static void trace_sock(int sockfd, const struct sockaddr *addr, socklen_t addrle
 
         d->type = DTYPE_SOCK;
         d->path = strdup(addrstr);
+        d->bread = 0;
+        d->bwrite = 0;
     }
 }
 
+static void trace_dup(int oldfd, int newfd) {
+    Descriptor *o = get_descriptor(oldfd);
+    if (o == NULL) {
+        return;
+    }
+
+    /* Not a descriptor we are tracing */
+    if (o->path == NULL) {
+        return;
+    }
+
+    /* Just in case newfd is already open */
+    trace_close(newfd);
+
+    /* Copy the old descriptor into the new */
+    Descriptor *n = get_descriptor(newfd);
+    n->type = o->type;
+    n->path = strdup(o->path);
+    n->bread = 0;
+    n->bwrite = 0;
+}
 
 /* Library initialization function */
 static void __attribute__((constructor)) interpose_init(void) {
@@ -479,6 +510,47 @@ static void __attribute__((destructor)) interpose_fini(void) {
 
 /** INTERPOSED FUNCTIONS **/
 
+int dup(int oldfd) {
+    if (orig_dup == NULL) {
+        orig_dup = dlsym(RTLD_NEXT, "dup");
+    }
+
+    int rc = (*orig_dup)(oldfd);
+
+    if (rc >= 0) {
+        trace_dup(oldfd, rc);
+    }
+
+    return rc;
+}
+
+int dup2(int oldfd, int newfd) {
+    if (orig_dup2 == NULL) {
+        orig_dup2 = dlsym(RTLD_NEXT, "dup2");
+    }
+
+    int rc = (*orig_dup2)(oldfd, newfd);
+
+    if (rc >= 0) {
+        trace_dup(oldfd, rc);
+    }
+
+    return rc;
+}
+
+int dup3(int oldfd, int newfd, int flags) {
+    if (orig_dup3 == NULL) {
+        orig_dup3 = dlsym(RTLD_NEXT, "dup3");
+    }
+
+    int rc = (*orig_dup3)(oldfd, newfd, flags);
+
+    if (rc >= 0) {
+        trace_dup(oldfd, newfd);
+    }
+
+    return rc;
+}
 
 int open(const char *path, int oflag, ...) {
     if (orig_open == NULL) {
