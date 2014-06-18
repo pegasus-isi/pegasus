@@ -9,6 +9,7 @@
 #include <sys/resource.h>
 #include <sys/uio.h>
 #include <sys/socket.h>
+#include <sys/sendfile.h>
 #include <fcntl.h>
 #include <stdarg.h>
 #include <dirent.h>
@@ -18,7 +19,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-/* TODO Interpose other network I/O (sendfile, sendmsg, sendto, recvmsg, recvfrom, etc.) */
 /* TODO Interpose accept (for network servers) */
 /* TODO Is it necessary to interpose shutdown? Would that help the DNS issue? */
 /* TODO Interpose dup and dup2 */
@@ -78,7 +78,12 @@ static typeof(vfscanf) *orig_vfscanf = NULL;
 static typeof(vfprintf) *orig_vfprintf = NULL;
 static typeof(connect) *orig_connect = NULL;
 static typeof(send) *orig_send = NULL;
+static typeof(sendfile) *orig_sendfile = NULL;
+static typeof(sendto) *orig_sendto = NULL;
+static typeof(sendmsg) *orig_sendmsg = NULL;
 static typeof(recv) *orig_recv = NULL;
+static typeof(recvfrom) *orig_recvfrom = NULL;
+static typeof(recvmsg) *orig_recvmsg = NULL;
 
 typedef struct {
     char type;
@@ -151,6 +156,24 @@ static double get_time() {
     struct timeval tv;
     gettimeofday(&tv, NULL);
     return tv.tv_sec + ((double)tv.tv_usec / 1e6);
+}
+
+/* Get network address as a string */
+static char *get_addr(const struct sockaddr *addr, socklen_t addrlen) {
+    static char addrstr[128];
+    if (addr->sa_family == AF_INET) {
+        /* IPv4 */
+        struct sockaddr_in *in4addr = (struct sockaddr_in *)addr;
+        char ipstr[INET_ADDRSTRLEN];
+        if (inet_ntop(AF_INET, &(in4addr->sin_addr.s_addr), ipstr, INET_ADDRSTRLEN) != NULL) {
+            sprintf(addrstr, "%s %d", ipstr, ntohs(in4addr->sin_port));
+            return addrstr;
+        }
+    } else if (addr->sa_family == AF_INET6) {
+        /* TODO IPv6 */
+    }
+
+    return NULL;
 }
 
 /* Read /proc/self/exe to get path to executable */
@@ -365,6 +388,23 @@ static void trace_close(int fd) {
     f->bread = 0;
     f->bwrite = 0;
 }
+
+static void trace_sock(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
+    char *addrstr = get_addr(addr, addrlen);
+
+    Descriptor *d = &descriptors[sockfd];
+    if (d->path == NULL || strcmp(addrstr, d->path) != 0) {
+        /* This is here to handle the case where a socket is reused to connect
+         * to another address without being closed first. This happens, for example,
+         * with DNS lookups in curl.
+         */
+        trace_close(sockfd);
+
+        d->type = DTYPE_SOCK;
+        d->path = strdup(addrstr);
+    }
+}
+
 
 /* Library initialization function */
 static void __attribute__((constructor)) interpose_init(void) {
@@ -944,12 +984,6 @@ int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
         orig_connect = dlsym(RTLD_NEXT, "connect");
     }
 
-    /* This is here to handle the case where a socket is reused to connect
-     * to another address without being closed. This happens, for example,
-     * with DNS lookups in curl. FIXME Revisit this later when we know more.
-     */
-    trace_close(sockfd);
-
     int rc = (*orig_connect)(sockfd, addr, addrlen);
 
     /* FIXME There are potential issues with non-blocking sockets here */
@@ -957,22 +991,7 @@ int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
         return rc;
     }
 
-    /* Record the new connection */
-    if (addr->sa_family == AF_INET) {
-        /* IPv4 */
-        struct sockaddr_in *in4addr = (struct sockaddr_in *)addr;
-        char ipstr[INET_ADDRSTRLEN];
-        if (inet_ntop(AF_INET, &(in4addr->sin_addr.s_addr), ipstr, INET_ADDRSTRLEN) != NULL) {
-            char addrstr[INET_ADDRSTRLEN+6];
-            sprintf(addrstr, "%s %d", ipstr, ntohs(in4addr->sin_port));
-            descriptors[sockfd].type = DTYPE_SOCK;
-            descriptors[sockfd].path = strdup(addrstr);
-        }
-    } else if (addr->sa_family == AF_INET6) {
-        /* TODO IPv6 */
-    } else {
-        /* Ignore others */
-    }
+    trace_sock(sockfd, addr, addrlen);
 
     return rc;
 }
@@ -991,6 +1010,56 @@ ssize_t send(int sockfd, const void *buf, size_t len, int flags) {
     return rc;
 }
 
+ssize_t sendfile(int out_fd, int in_fd, off_t *offset, size_t count) {
+    if (orig_sendfile == NULL) {
+        orig_sendfile = dlsym(RTLD_NEXT, "sendfile");
+    }
+
+    ssize_t rc = (*orig_sendfile)(out_fd, in_fd, offset, count);
+
+    if (rc > 0) {
+        trace_read(in_fd, rc);
+        trace_write(out_fd, rc);
+    }
+
+    return rc;
+}
+
+ssize_t sendto(int sockfd, const void *buf, size_t len, int flags,
+               const struct sockaddr *dest_addr, socklen_t addrlen) {
+    if (orig_sendto == NULL) {
+        orig_sendto = dlsym(RTLD_NEXT, "sendto");
+    }
+
+    ssize_t rc = (*orig_sendto)(sockfd, buf, len, flags, dest_addr, addrlen);
+
+    if (rc > 0) {
+        /* Make sure socket has the right address */
+        trace_sock(sockfd, dest_addr, addrlen);
+        trace_write(sockfd, rc);
+    }
+
+    return rc;
+}
+
+ssize_t sendmsg(int sockfd, const struct msghdr *msg, int flags) {
+    if (orig_sendmsg == NULL) {
+        orig_sendmsg = dlsym(RTLD_NEXT, "sendmsg");
+    }
+
+    ssize_t rc = (*orig_sendmsg)(sockfd, msg, flags);
+
+    if (rc > 0) {
+        // msg might have an address we need to use
+        if (msg->msg_name != NULL) {
+            trace_sock(sockfd, (const struct sockaddr *)msg->msg_name, msg->msg_namelen);
+        }
+        trace_write(sockfd, rc);
+    }
+
+    return rc;
+}
+
 ssize_t recv(int sockfd, void *buf, size_t len, int flags) {
     if (orig_recv == NULL) {
         orig_recv = dlsym(RTLD_NEXT, "recv");
@@ -999,6 +1068,41 @@ ssize_t recv(int sockfd, void *buf, size_t len, int flags) {
     ssize_t rc = (*orig_recv)(sockfd, buf, len, flags);
 
     if (rc > 0) {
+        trace_read(sockfd, rc);
+    }
+
+    return rc;
+}
+
+ssize_t recvfrom(int sockfd, void *buf, size_t len, int flags,
+                 struct sockaddr *src_addr, socklen_t *addrlen) {
+    if (orig_recvfrom == NULL) {
+        orig_recvfrom = dlsym(RTLD_NEXT, "recvfrom");
+    }
+
+    ssize_t rc = (*orig_recvfrom)(sockfd, buf, len, flags, src_addr, addrlen);
+
+    if (rc > 0) {
+        /* Make sure that the socket has the right address */
+        trace_sock(sockfd, src_addr, *addrlen);
+        trace_read(sockfd, rc);
+    }
+
+    return rc;
+}
+
+ssize_t recvmsg(int sockfd, struct msghdr *msg, int flags) {
+    if (orig_recvmsg == NULL) {
+        orig_recvmsg = dlsym(RTLD_NEXT, "recvmsg");
+    }
+
+    ssize_t rc = (*orig_recvmsg)(sockfd, msg, flags);
+
+    if (rc > 0) {
+        // TODO msg might contain an address we need to get
+        if (msg->msg_name != NULL) {
+            trace_sock(sockfd, (const struct sockaddr *)msg->msg_name, msg->msg_namelen);
+        }
         trace_read(sockfd, rc);
     }
 
