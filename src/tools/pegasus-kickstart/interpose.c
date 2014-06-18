@@ -176,6 +176,20 @@ static char *get_addr(const struct sockaddr *addr, socklen_t addrlen) {
     return NULL;
 }
 
+static Descriptor *get_descriptor(int fd) {
+    /* Sometimes we try to access a descriptor before the 
+     * constructor has been called where the descriptor array
+     * is allocated. That can happen, for example, if another library
+     * constructor calls an interposed function in its constructor and
+     * it is loaded before this library. This check will make sure
+     * that any descriptor we try to access is valid.
+     */
+    if (descriptors == NULL || fd > max_descriptors) {
+        return NULL;
+    }
+    return &(descriptors[fd]);
+}
+
 /* Read /proc/self/exe to get path to executable */
 static void read_exe() {
     char exe[BUFSIZ];
@@ -302,6 +316,11 @@ static void read_io() {
 }
 
 static void trace_file(const char *path, int fd) {
+    Descriptor *f = get_descriptor(fd);
+    if (f == NULL) {
+        return;
+    }
+
     /* Skip all the common system paths, which we don't care about */
     if (startswith(path, "/lib") ||
         startswith(path, "/usr") ||
@@ -312,7 +331,6 @@ static void trace_file(const char *path, int fd) {
         return;
     }
 
-    Descriptor *f = &(descriptors[fd]);
     f->type = DTYPE_FILE;
     f->path = strdup(path);
     f->bread = 0;
@@ -353,18 +371,29 @@ static void trace_openat(int fd) {
 }
 
 static void trace_read(int fd, ssize_t amount) {
-    descriptors[fd].bread += amount;
+    Descriptor *f = get_descriptor(fd);
+    if (f == NULL) {
+        return;
+    }
+    f->bread += amount;
 }
 
 static void trace_write(int fd, ssize_t amount) {
-    descriptors[fd].bwrite += amount;
+    Descriptor *f = get_descriptor(fd);
+    if (f == NULL) {
+        return;
+    }
+    f->bwrite += amount;
 }
 
 static void trace_close(int fd) {
-    Descriptor *f = &(descriptors[fd]);
+    Descriptor *f = get_descriptor(fd);
+    if (f == NULL) {
+        return;
+    }
 
     if (f->path == NULL) {
-        /* If the path is null, then it is a file we aren't tracing */
+        /* If the path is null, then it is a descriptor we aren't tracking */
         return;
     }
 
@@ -390,9 +419,13 @@ static void trace_close(int fd) {
 }
 
 static void trace_sock(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
+    Descriptor *d = get_descriptor(sockfd);
+    if (d == NULL) {
+        return;
+    }
+
     char *addrstr = get_addr(addr, addrlen);
 
-    Descriptor *d = &descriptors[sockfd];
     if (d->path == NULL || strcmp(addrstr, d->path) != 0) {
         /* This is here to handle the case where a socket is reused to connect
          * to another address without being closed first. This happens, for example,
