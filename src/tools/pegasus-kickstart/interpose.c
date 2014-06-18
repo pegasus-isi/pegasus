@@ -24,7 +24,6 @@
 /* TODO Interpose mkstemp family and tmpfile */
 /* TODO Interpose unlink, unlinkat, remove */
 /* TODO Interpose rename */
-/* TODO Interpose truncate */
 /* TODO Create extensive test cases */
 /* TODO Interpose fcntl(..., F_DUPFD, ...) */
 /* TODO Interpose mknod for S_IFREG */
@@ -95,6 +94,10 @@ static typeof(sendmsg) *orig_sendmsg = NULL;
 static typeof(recv) *orig_recv = NULL;
 static typeof(recvfrom) *orig_recvfrom = NULL;
 static typeof(recvmsg) *orig_recvmsg = NULL;
+static typeof(truncate) *orig_truncate = NULL;
+/* It is not necessary to interpose ftruncate because we should already
+ * have a record for the file descriptor.
+ */
 
 typedef struct {
     char type;
@@ -190,6 +193,7 @@ static char *get_addr(const struct sockaddr *addr, socklen_t addrlen) {
     return NULL;
 }
 
+/* Get a reference to the given descriptor if it exists */
 static Descriptor *get_descriptor(int fd) {
     /* Sometimes we try to access a descriptor before the 
      * constructor has been called where the descriptor array
@@ -202,6 +206,17 @@ static Descriptor *get_descriptor(int fd) {
         return NULL;
     }
     return &(descriptors[fd]);
+}
+
+/* Get the full path to a file */
+static char *get_fullpath(const char *path) {
+    static char fullpath[BUFSIZ];
+    if (realpath(path, fullpath) == NULL) {
+        fprintf_untraced(stderr, "libinterpose: Unable to get real path for '%s': %s\n",
+                path, strerror(errno));
+        return NULL;
+    }
+    return fullpath;
 }
 
 /* Read /proc/self/exe to get path to executable */
@@ -363,10 +378,8 @@ static void trace_file(const char *path, int fd) {
 static void trace_open(const char *path, int fd) {
     debug("trace_open %s %d", path, fd);
 
-    char fullpath[BUFSIZ];
-    if (realpath(path, fullpath) == NULL) {
-        fprintf_untraced(stderr, "libinterpose: Unable to get real path for '%s': %s\n",
-                path, strerror(errno));
+    char *fullpath = get_fullpath(path);
+    if (fullpath == NULL) {
         return;
     }
 
@@ -503,6 +516,17 @@ static void trace_dup(int oldfd, int newfd) {
     n->path = strdup(o->path);
     n->bread = 0;
     n->bwrite = 0;
+}
+
+static void trace_truncate(const char *path, off_t length) {
+    debug("trace_truncate %s %lu", path, length);
+
+    char *fullpath = get_fullpath(path);
+    if (fullpath == NULL) {
+        return;
+    }
+
+    tprintf("file: %s %lu 0 0\n", fullpath, length);
 }
 
 /* Library initialization function */
@@ -1276,7 +1300,7 @@ ssize_t sendmsg(int sockfd, const struct msghdr *msg, int flags) {
     ssize_t rc = (*orig_sendmsg)(sockfd, msg, flags);
 
     if (rc > 0) {
-        // msg might have an address we need to use
+        /* msg might have an address we need to use */
         if (msg->msg_name != NULL) {
             trace_sock(sockfd, (const struct sockaddr *)msg->msg_name, msg->msg_namelen);
         }
@@ -1331,11 +1355,27 @@ ssize_t recvmsg(int sockfd, struct msghdr *msg, int flags) {
     ssize_t rc = (*orig_recvmsg)(sockfd, msg, flags);
 
     if (rc > 0) {
-        // TODO msg might contain an address we need to get
+        /* msg might contain an address we need to get */
         if (msg->msg_name != NULL) {
             trace_sock(sockfd, (const struct sockaddr *)msg->msg_name, msg->msg_namelen);
         }
         trace_read(sockfd, rc);
+    }
+
+    return rc;
+}
+
+int truncate(const char *path, off_t length) {
+    debug("truncate");
+
+    if (orig_truncate == NULL) {
+        orig_truncate = dlsym(RTLD_NEXT, "truncate");
+    }
+
+    int rc = (*orig_truncate)(path, length);
+
+    if (rc == 0) {
+        trace_truncate(path, length);
     }
 
     return rc;
