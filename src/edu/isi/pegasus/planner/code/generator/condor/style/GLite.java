@@ -61,7 +61,8 @@ import edu.isi.pegasus.planner.classes.TransferJob;
  * 
  * Note it is upto the user to specify these or a subset of them.
  * 
- * The following globus profiles if associated with the job are picked up
+ * The following globus profiles if associated with the job are picked up and
+ * translated to +remote_cerequirements key in the job submit files.
  * <pre>
  * 
  * hostcount    -> NODES
@@ -70,6 +71,7 @@ import edu.isi.pegasus.planner.classes.TransferJob;
  * totalmemory  -> TOTAL_MEMORY
  * maxmemory    -> PER_PROCESS_MEMORY
  * </pre>
+ * 
  * 
  * The following condor profiles if associated with the job are picked up
  * <pre>
@@ -81,8 +83,21 @@ import edu.isi.pegasus.planner.classes.TransferJob;
  * For e.g. the expression in the submit file may look as 
  * <pre>
  * +remote_cerequirements = "PROCS==18 && NODES==1 && PRIORITY==10 && WALLTIME==3600
- *   && PASSENV==1 && JOBNAME==\"TEST JOB\" && MYENV ==\"GAURANG=MEHTA,KARAN=VAHI\""
+ *   && PASSENV==1 && JOBNAME==\"TEST JOB\" && MYENV ==\"MONTAGE_HOME=/usr/montage,JAVA_HOME=/usr\""
  * </pre>
+ * 
+ * The pbs_local_attributes.sh file in share/pegasus/htcondor/glite picks up
+ * these values and translated to appropriate PBS parameters
+ * 
+ * <pre>
+ * NODES                 -> nodes
+ * PROCS                 -> ppn
+ * WALLTIME              -> walltime
+ * TOTAL_MEMORY          -> mem
+ * PER_PROCESS_MEMORY    -> pmem 
+ * </pre>
+ * 
+ * 
  * 
  * All the jobs that have this style applied dont have a remote directory 
  * specified in the submit directory. They rely on kickstart to change to the
