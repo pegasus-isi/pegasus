@@ -66,17 +66,38 @@
   <section id="data_transfers">
       <title>Optimizing Data Transfers</title>
 
-      <para><emphasis>Issue:</emphasis> </para>
+	<para>
+		<emphasis>Issue:</emphasis>
+		When it comes to data transfers,
+		Pegasus ships with a default configuration which is trying to strike
+		a balance between performance and aggressiveness. We obviously want
+		data transfers to be as quick as possibly, but we also do not want
+		our transfers to overwhelm data services and systems.
+	</para>
 
-      <para><emphasis>Solution:</emphasis> ... </para>
-  </section>
+	<para>
+		<emphasis>Solution:</emphasis>
+		The default configuration consists
+		of a combination of the maximum number of transfer jobs per level in
+		the workflow, and how many threads such a pegasus-transfer job can spawn.
+	</para>
 
-  <section id="data_placement">
-      <title>Data Placement</title>
+	<para>
+		Information on how to control the number of stagein and stageout
+		jobs can be found in the
+		<link linkend="data_movement_nodes">Data Movement Nodes</link>
+		section.
+	</para>
 
-      <para><emphasis>Issue:</emphasis> </para>
-
-      <para><emphasis>Solution:</emphasis> ... </para>
+	<para>
+		How to control the number of threads pegasus-transfer
+		can use depends on if you want to control standard transfer jobs, or
+		PegasusLite. For the former, see the
+		<link linkend="Properties.pegasus.transfer.threads">pegasus.transfer.threads</link>
+		property, and for the latter the
+		<link linkend="Properties.pegasus.transfer.lite.threads">pegasus.transfer.lite.threads</link>
+		property.
+	</para>
   </section>
 
 </chapter>
