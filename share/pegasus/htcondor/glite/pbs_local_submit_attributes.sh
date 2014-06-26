@@ -1,5 +1,6 @@
 #!/bin/sh
 
+# This file is compatible with Pegasus 4.4.0 or later.
 # this file goes to the bin directory in the directory 
 # pointed to by
 # condor_config_val GLITE_LOCATION
@@ -16,24 +17,50 @@
 #
 #
 
+pbs_nodes=""
+
 if [ ! -z $NODES ]; then
-echo "#PBS -l nodes=${NODES}"
+pbs_nodes="#PBS -l nodes=${NODES}"
 fi
 if [ ! -z $PROCS ]; then
-echo "#PBS -l ncpus=${PROCS}"
+pbs_nodes="${pbs_nodes}:ppn=${PROCS}"
 fi
+
+# strip any quotes . e.g 16:IB condor expects it to be quoted
+# however pbs does not like it
+pbs_nodes=`echo $pbs_nodes | sed 's/"//g'`
+echo $pbs_nodes
+
 if [ ! -z $WALLTIME ]; then
 echo "#PBS -l walltime=${WALLTIME}"
 fi
+
+if [ ! -z $PER_PROCESS_MEMORY ]; then
+# strip any quotes . e.g 1gb condor expects it to be quoted
+# however pbs does not like it
+value=`echo $PER_PROCESS_MEMORY | sed 's/"//g'`
+echo "#PBS -l pmem=${value}"
+fi
+
+if [ ! -z $TOTAL_MEMORY ]; then
+# strip any quotes . e.g 1gb condor expects it to be quoted
+# however pbs does not like it
+value=`echo $TOTAL_MEMORY | sed 's/"//g'`
+echo "#PBS -l mem=${value}"
+fi
+
 if [ ! -z $PROJECT ]; then
 echo "#PBS -A ${PROJECT}"
 fi
+
 if [ ! -z $JOBNAME ]; then
 echo "#PBS -N ${JOBNAME}"
 fi
+
 if [ ! -z $PASSENV ]  && [ $PASSENV == 1 ]; then
 echo "#PBS -V"
 fi
+
 if [ ! -z $MYENV ] ; then
 echo "#PBS -v ${MYENV}"
 fi

@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<chapter id="optimization">
+  <title>Optimizing Workflows for Efficiency and Scalability</title>
+
+  <para>By default, Pegasus generates workflows which targets the most common
+      usecases and execution environments. For more specialized environments or
+      workflows, the following sections could provide hints on how to optimize
+      your workflow to scale better, and run more efficient. Below are some
+      common issues and solutions.
+  </para>
+
+  <section id="short_jobs">
+      <title>Optimizing Short Jobs / Scheduling Delays</title>
+
+      <para><emphasis>Issue:</emphasis> Even though HTCondor is a high throughput
+	    system, there are overheads when scheduling short jobs. Common overheads
+	    include scheduling, data transfers, state notifications, and task book
+	    keeping. These overheads can be very noticeable for short jobs, but not
+	    noticeable at all for longer jobs as the ration between the computation
+	    and the overhead is higher.
+      </para>
+
+      <para><emphasis>Solution:</emphasis> If you have many short tasks to run, the
+	      solution to minimize the overheads is to use
+	      <link linkend="job_clustering">task clustering</link>. This instructs
+	      Pegasus to take a set of tasks, selected
+	      <link linkend="horizontal_clustering">horizontally</link>,
+	      by
+	      <link linkend="label_clustering">labels</link>,
+	      or by 
+	      <link linkend="runtime_clustering">runtime</link>,
+	      and create jobs containing that whole set of tasks. The result is 
+	      more efficient jobs, for wich the overheads are less noticeable.
+      </para>
+  </section>
+  
+  <section id="large_workflows">
+      <title>How to Scale Large Workflows</title>
+
+      <para><emphasis>Issue:</emphasis> When planning and running large workflows,
+	      there are some scalability issues to be aware of. During the planning
+	      stage, Pegasus traverses the graphs multiple times, and some of the
+	      graph transforms can be slow depending on if the graph is large in
+	      the number of tasks, the number of files, or the number of 
+	      dependencies. Once planned, large workflows can also see scalability
+	      limits when interacting with the operating system. A common problem
+	      is the number of files in a single directory, such as thousands or
+	      millons input or output files.
+      </para>
+
+      <para><emphasis>Solution:</emphasis> The most common solution to these
+	      problems is to use
+	      <link linkend="hierarchial workflows">hierarchial workflows</link>,
+	      which works really well if your workflow can be logically partitioned
+	      into smaller workflows. A hierarchial workflow still runs like a
+	      single workflow, with the difference being that some jobs in the
+	      workflow are actally sub-workflows. 
+      </para> 
+      <para>For workflows with a large number of files, you can control the
+	      number of files in a single directory by reorganizing the files
+	      into a deep directory structure. </para>
+  </section>
+
+  <section id="data_transfers">
+      <title>Optimizing Data Transfers</title>
+
+	<para>
+		<emphasis>Issue:</emphasis>
+		When it comes to data transfers,
+		Pegasus ships with a default configuration which is trying to strike
+		a balance between performance and aggressiveness. We obviously want
+		data transfers to be as quick as possibly, but we also do not want
+		our transfers to overwhelm data services and systems.
+	</para>
+
+	<para>
+		<emphasis>Solution:</emphasis>
+		The default configuration consists
+		of a combination of the maximum number of transfer jobs per level in
+		the workflow, and how many threads such a pegasus-transfer job can spawn.
+	</para>
+
+	<para>
+		Information on how to control the number of stagein and stageout
+		jobs can be found in the
+		<link linkend="data_movement_nodes">Data Movement Nodes</link>
+		section.
+	</para>
+
+	<para>
+		How to control the number of threads pegasus-transfer
+		can use depends on if you want to control standard transfer jobs, or
+		PegasusLite. For the former, see the
+		<link linkend="Properties.pegasus.transfer.threads">pegasus.transfer.threads</link>
+		property, and for the latter the
+		<link linkend="Properties.pegasus.transfer.lite.threads">pegasus.transfer.lite.threads</link>
+		property.
+	</para>
+  </section>
+
+</chapter>

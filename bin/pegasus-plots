@@ -23,6 +23,10 @@ lib_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).c
 pegasus_config = os.path.join(bin_dir, "pegasus-config") + " --noeoln --python-externals"
 lib_ext_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
 
+# share and javascript dirs are derived from bin dir
+share_dir = os.path.normpath(os.path.join(bin_dir, "../share/pegasus"))
+javascript_dir = os.path.normpath(os.path.join(lib_dir, "../../pegasus/javascript"))
+
 # Insert this directory in our search path
 os.sys.path.insert(0, lib_ext_dir)
 os.sys.path.insert(0, lib_dir)
@@ -53,14 +57,9 @@ calc_breakdown_chart = False
 max_graph_nodes = MAX_GRAPH_NODES
 DEFAULT_OUTPUT_DIR = "plots"
 pegasus_env_path = {
-'pegasus_bin_dir'       : pegasus_bin_dir,
-'pegasus_conf_dir'      : pegasus_conf_dir,
-'pegasus_java_dir'      : pegasus_java_dir,
-'pegasus_perl_dir'      : pegasus_perl_dir,
-'pegasus_python_dir'    : pegasus_python_dir,
-'pegasus_php_dir'       : pegasus_php_dir,
-'pegasus_javascript_dir': pegasus_javascript_dir,
-'pegasus_share_dir'     : pegasus_share_dir
+'pegasus_bin_dir'       : bin_dir,
+'pegasus_javascript_dir': javascript_dir,
+'pegasus_share_dir'     : share_dir
 }
 	
 def setup_logger(level_str):

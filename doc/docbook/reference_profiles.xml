@@ -1006,6 +1006,26 @@
               Hence, allows for overriding of any argument constructed by the
               planner for any particular task in the PMC job.</entry>
             </row>
+
+            <row>
+              <entry>exitcode.failuremsg</entry>
+
+              <entry>The message string that pegasus-exitcode searches for in
+              the stdout and stderr of the job to flag failures.</entry>
+            </row>
+
+            <row>
+              <entry>exitcode.successmsg</entry>
+
+              <entry>The message string that pegasus-exitcode searches for in
+              the stdout and stderr of the job to determine whether a job
+              logged it's success message or not. Note this value is used to
+              check for whether a job failed or not i.e if this profile is
+              specified, and pegasus-exitcode DOES NOT find the string in the
+              job stdout or stderr, the job is flagged as failed. The complete
+              rules for determining failure are described in the man page for
+              pegasus-exitcode.</entry>
+            </row>
           </tbody>
         </tgroup>
       </table>

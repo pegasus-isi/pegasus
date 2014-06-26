@@ -178,14 +178,14 @@ while ( <SP> ) {
         if ( $depth == 2 ) {
             $count[2]++;
             $secmark = join('.',@count[0,1,2]);
-            print "\n\n\n<section id=\"$idbase$title\">\n";
+            print "\n\n\n<section id=\"$idbase.$title\">\n";
             print "    <title>$title</title>\n";
             print "<para>\n";
         } else {
             $count[1]++;
             $count[2] = 0;
             $secmark = join('.',@count[0,1]);
-            print "\n\n\n<section id=\"$idbase$title\">\n";
+            print "\n\n\n<section id=\"$idbase.$title\">\n";
             print "    <title>$title</title>\n";
             print "<para>\n";
         }
@@ -250,7 +250,7 @@ while ( <SP> ) {
                 $count[0]++;
                 $count[1] = $count[2] = 0;
                 my $title = join('',@title);
-                print "\n\n\n<section id=\"$idbase$title\">\n";
+                print "\n\n\n<section id=\"$idbase.$title\">\n";
                 print "    <title>@title</title>\n\n";
 
                 $flag = 1;
@@ -264,7 +264,7 @@ while ( <SP> ) {
                 $count[1]++;
                 $count[2] = 0;
                 my $mark = join('.',@count[0,1]);
-                print "\n\n\n<section id=\"$idbase$title\">\n";
+                print "\n\n\n<section id=\"$idbase.$title\">\n";
                 print "    <title>@title</title>\n\n";
                 $flag = 1;
                 $depth = 2;
