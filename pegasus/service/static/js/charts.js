@@ -2,7 +2,7 @@
 
 // Globals
 
-//var jobDistribution  = { isLoaded : false };
+var jobDistribution  = { };
 var timeChart  = { isLoaded : false };
 var ganttChart = { isLoaded : false };
 
@@ -31,33 +31,43 @@ function radializeChartColors ()
  * Job Distribution Chart
  */
 
+function initJobDistributionData(choice)
+{
+    var data = jobDistribution.data;
+
+    for (var i = 0; i < data.length; ++i )
+    {
+        if (choice == 1)
+        {
+            data[i].y = data[i].count.total;
+        }
+        else
+        {
+            data[i].y = data[i].time.total;
+        }
+    }
+}
+
+
 function jobDistributionGraphToggle (choice)
 {
-    var chart = jobDistribution;
-    var opt = jobDistributionOpt;
+    var opt = jobDistribution.opt;
 
+    // Set Chart Title
     if (choice == 1)
     {
-        chart.setTitle ({ text: 'Invocation Distribution by Count'});
-        var data = jobDistribution.series [0].data;
-
-        for (var i  = 0; i < data.length; ++i)
-        {
-            data [i].update (jobDistributionData [i].count.total, false);
-        }
+        opt.title.text = 'Invocation Distribution by Count';
     }
     else
     {
-        chart.setTitle ({ text: 'Invocation Distribution by Time' });
-        var data = jobDistribution.series [0].data;
-
-        for (var i  = 0; i < data.length; ++i)
-        {
-            data [i].update (jobDistributionData [i].time.total, false);
-        }
+        opt.title.text = 'Invocation Distribution by Time';
     }
 
-    chart.redraw();
+    initJobDistributionData(choice);
+    opt.series[0].data = jobDistribution.data;
+
+    opt.chart.animation = false;
+    jobDistribution.chart = new Highcharts.Chart (opt);
 }
 
 function jobDistributionTooltipFormat ()
@@ -77,6 +87,57 @@ function jobDistributionTooltipFormat ()
     return tip;
 }
 
+function plotJobDistributionChart ()
+{
+    jobDistribution.opt =
+    {
+        chart:
+        {
+            renderTo: 'job_distribution',
+            plotBackgroundColor: null,
+            plotBorderWidth: null,
+            plotShadow: false,
+            height: 600
+        },
+        title:
+        {
+            text: 'Invocation Distribution by Count'
+        },
+        credits :
+        {
+            enabled : false
+        },
+        tooltip:
+        {
+            formatter: jobDistributionTooltipFormat
+        },
+        plotOptions:
+        {
+            pie:
+            {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                showInLegend: true,
+                dataLabels:
+                {
+                    color: '#000000',
+                    formatter: function ()
+                    {
+                        return '<b>'+ this.point.name +':</b> '+ this.point.y;
+                    }
+                }
+            }
+        },
+        series:
+            [{
+                type: 'pie',
+                name: 'Browser share',
+                data: jobDistribution.data
+            }]
+    };
+
+    jobDistribution.chart = new Highcharts.Chart (jobDistribution.opt);
+}
 
 /*
  * Time Chart

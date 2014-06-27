@@ -8,78 +8,13 @@
 {% endblock %}
 {% block javascript_init %}
 <script type="text/javascript" charset="utf-8">
-    var jobDistribution;
-    var jobDistributionOpt;
 
-    var jobDistributionData = {% include 'workflow/charts/job_dist_chart.json' %};
+    jobDistribution.data = {% include 'workflow/charts/job_dist_chart.json' %};
 
     function accordianCreate (event, ui)
     {
-        jobDistributionOpt =
-        {
-            chart:
-            {
-                renderTo: 'job_distribution',
-                plotBackgroundColor: null,
-                plotBorderWidth: null,
-                plotShadow: false
-            },
-            title:
-            {
-                text: 'Invocation Distribution by Count'
-            },
-            credits :
-            {
-                enabled : false
-            },
-            tooltip:
-            {
-                formatter: jobDistributionTooltipFormat
-            },
-            plotOptions:
-            {
-                pie:
-                {
-                    allowPointSelect: true,
-                    cursor: 'pointer',
-                    dataLabels:
-                    {
-                        enabled: false
-                    },
-                    showInLegend: true,
-                    dataLabels:
-                    {
-                        color: '#000000',
-                        formatter: function ()
-                        {
-                            return '<b>'+ this.point.name +':</b> '+ this.point.y;
-                        }
-                    }
-                }
-            },
-            series:
-                    [{
-                        type: 'pie',
-                        name: 'Browser share',
-                        data: [
-                            {% if job_dist %}
-                        {% for i in range(0, job_dist|count) %}
-                {
-                    name: {{ job_dist [i].transformation|tojson|safe }},
-                    y: {{ job_dist [i].count }},
-                    count : { total : {{ job_dist [i].count|tojson|safe }}, success : {{ job_dist [i].success|tojson|safe }}, failure : {{ job_dist [i].failure|tojson|safe }} },
-                    time : { total : {{ job_dist [i].sum|dec_to_float|tojson|safe }} , min : {{ job_dist [i].min|dec_to_float|tojson|safe }}, max : {{ job_dist [i].max|dec_to_float|tojson|safe }}, avg : {{ job_dist [i].avg|dec_to_float|tojson|safe }} }
-                }
-                {% if i + 1 != job_dist|count %}
-                ,
-                    {% endif %}
-                    {% endfor %}
-                    {% endif %}
-                ]
-                }]
-            };
-
-        jobDistribution = new Highcharts.Chart (jobDistributionOpt);
+        initJobDistributionData(1);
+        plotJobDistributionChart();
 
         $ ("#job_distribution_options").buttonset ();
     }
