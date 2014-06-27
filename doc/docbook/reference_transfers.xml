@@ -512,27 +512,25 @@
   <section id="controlling_transfer_parallelism">
     <title>Controlling Transfer Parallelism</title>
 
-	<para>When it comes to data transfers, Pegasus ships with a default
-	configuration which is trying to strike a balance between performance
-	and aggressiveness. We obviously want data transfers to be as quick as
-	possibly, but we also do not want our transfers to overwhelm data
-	services and systems. The default configuration consists of a combination
-	of the maximum number of transfer jobs per level in the workflow, and
-	how many threads such a pegasus-transfer job can spawn.</para>
-	
-	<para>Information on how to control the number of stagein and stageout
-	jobs can be found in the 
-	<link linkend="data_movement_nodes">Data Movement Nodes</link>
-	section.</para>
-	
-	<para>How to control the number of threads pegasus-transfer
-	can use depends on if you want to control standard transfer jobs, or
-	PegasusLite. For the former, see the 
-	<link linkend="Properties.pegasus.transfer.threads">pegasus.transfer.threads</link>
-	property, and for the latter the
-	<link linkend="Properties.pegasus.transfer.lite.threads">pegasus.transfer.lite.threads</link>
-	property.
-	</para>
+    <para>When it comes to data transfers, Pegasus ships with a default
+    configuration which is trying to strike a balance between performance and
+    aggressiveness. We obviously want data transfers to be as quick as
+    possibly, but we also do not want our transfers to overwhelm data services
+    and systems. The default configuration consists of a combination of the
+    maximum number of transfer jobs per level in the workflow, and how many
+    threads such a pegasus-transfer job can spawn.</para>
+
+    <para>Information on how to control the number of stagein and stageout
+    jobs can be found in the <link linkend="data_movement_nodes">Data Movement
+    Nodes</link> section.</para>
+
+    <para>How to control the number of threads pegasus-transfer can use
+    depends on if you want to control standard transfer jobs, or PegasusLite.
+    For the former, see the <link
+    linkend="Properties.pegasus.transfer.threads">pegasus.transfer.threads</link>
+    property, and for the latter the <link
+    linkend="Properties.pegasus.transfer.lite.threads">pegasus.transfer.lite.threads</link>
+    property.</para>
   </section>
 
   <section>
@@ -603,12 +601,14 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
     associated with them that are staging the shared files to the same
     destination workflow execution directory.</para>
 
-    <para>The default Transfer Refiner used in Pegasus is the Bundle Refiner
-    that allows the user to specify how many local|remote stagein|stageout
-    jobs are created per execution site.</para>
+    <para> Pegasus supports three different transfer refiners that dictate how
+    the stagein and stageout jobs are added for the workflow.The default
+    Transfer Refiner used in Pegasus is the BalancedCluster Refiner that
+    allows the user to specify how many local|remote stagein|stageout jobs are
+    created per execution site.</para>
 
-    <para>The behavior of the refiner is controlled by specifying certain
-    pegasus profiles</para>
+    <para>The behavior of the refiners (BalancedCluster and Cluster) are
+    controlled by specifying certain pegasus profiles</para>
 
     <orderedlist>
       <listitem>
@@ -685,18 +685,70 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
       </tgroup>
     </table>
 
-    <figure>
-      <title>Default Transfer Case : Input Data To Workflow Specific Directory
-      on Shared File System</title>
+    <tip>
+      <para>Which transfer refiner to use is controlled by property
+      pegasus.transfer.refiner </para>
+    </tip>
 
-      <mediaobject>
-        <imageobject>
-          <imagedata contentdepth="100%"
-                     fileref="images/cluster-transfer-refiner.png"
-                     scalefit="1" width="100%"/>
-        </imageobject>
-      </mediaobject>
-    </figure>
+    <section>
+      <title>BalancedCluster </title>
+
+      <para>This is a new transfer refiner that was introduced in Pegasus
+      4.4.0 and is the default one used in Pegasus. It does a round robin
+      distribution of the files amongst the stagein and stageout jobs per
+      level of the workflow. The figure below illustrates the behavior of this
+      transfer refiner.</para>
+
+      <figure>
+        <title>BalancedCluster Transfer Refiner : Input Data To Workflow
+        Specific Directory on Shared File System</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata contentdepth="100%"
+                       fileref="images/balanced-cluster-transfer-refiner.png"
+                       id="img-balanced-cluster-transfer-refiner" scalefit="1"
+                       width="100%"/>
+          </imageobject>
+        </mediaobject>
+      </figure>
+    </section>
+
+    <section>
+      <title>Cluster </title>
+
+      <para>This transfer refiner is similar to BalancedCluster but differs in
+      the way how distribution of files happen across stagein and stageout
+      jobs per level of the workflow. In this refiner, all the input files for
+      a job get associated with a single transfer job. As illustrated in the
+      figure below each compute usually gets associated with one stagein
+      transfer job. In contrast, for the BalancedCluster a compute job maybe
+      associated with multiple data stagein jobs.</para>
+
+      <figure>
+        <title>Cluster Transfer Refiner : Input Data To Workflow Specific
+        Directory on Shared File System</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata contentdepth="100%"
+                       fileref="images/cluster-transfer-refiner.png"
+                       id="img-cluster-transfer-refiner" scalefit="1"
+                       width="100%"/>
+          </imageobject>
+        </mediaobject>
+      </figure>
+    </section>
+
+    <section>
+      <title>Basic </title>
+
+      <para>Pegasus also supports a basic Transfer Refiner that adds one
+      stagein and stageout job per compute job of the workflow. This is not
+      recommended to be used for large workflows as the number of data
+      transfer nodes in the worst case are 2n where n is the number of compute
+      jobs in the workflow. </para>
+    </section>
   </section>
 
   <section id="ref_output_mapper">
@@ -1018,14 +1070,14 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
 
     <para>Credentials are usually associated per site in the site catalog.
     Users can associate the credentials either as a Pegasus profile or an
-    environment profile with the site. </para>
+    environment profile with the site.</para>
 
     <orderedlist>
       <listitem>
         <para>A pegasus profile with the value pointing to the path to the
         credential on the local site or the submit host. If a pegasus
         credential profile associated with the site, then Pegasus
-        automatically transfers it along with the remote jobs. </para>
+        automatically transfers it along with the remote jobs.</para>
       </listitem>
 
       <listitem>
