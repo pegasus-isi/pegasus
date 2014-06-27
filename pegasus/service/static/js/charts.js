@@ -43,7 +43,7 @@ function jobDistributionGraphToggle (choice)
 
         for (var i  = 0; i < data.length; ++i)
         {
-            data [i].update (jobDistributionData [i].count.total);
+            data [i].update (jobDistributionData [i].count.total, false);
         }
     }
     else
@@ -53,9 +53,11 @@ function jobDistributionGraphToggle (choice)
 
         for (var i  = 0; i < data.length; ++i)
         {
-            data [i].update (jobDistributionData [i].time.total);
+            data [i].update (jobDistributionData [i].time.total, false);
         }
     }
+
+    chart.redraw();
 }
 
 function jobDistributionTooltipFormat ()
@@ -93,8 +95,8 @@ function timeChartToggle (choice)
 
         for (var i  = 0; i < count.length; ++i)
         {
-            count [i].update (timeChart.data [i].count.job);
-            runtime [i].update (timeChart.data [i].total_runtime.job);
+            count [i].update (timeChart.data [i].count.job, false);
+            runtime [i].update (timeChart.data [i].total_runtime.job, false);
         }
     }
     else
@@ -105,10 +107,12 @@ function timeChartToggle (choice)
 
         for (var i  = 0; i < count.length; ++i)
         {
-            count [i].update (timeChart.data [i].count.invocation);
-            runtime [i].update (timeChart.data [i].total_runtime.invocation);
+            count [i].update (timeChart.data [i].count.invocation, false);
+            runtime [i].update (timeChart.data [i].total_runtime.invocation, false);
         }
     }
+
+    chart.redraw();
 }
 
 function getTimeChartCategories (data)
