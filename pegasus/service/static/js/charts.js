@@ -2,7 +2,7 @@
 
 // Globals
 
-var jobDistribution  = { };
+var jobDistribution  = { choice : -1 };
 var timeChart  = { isLoaded : false };
 var ganttChart = { isLoaded : false };
 
@@ -51,6 +51,13 @@ function initJobDistributionData(choice)
 
 function jobDistributionGraphToggle (choice)
 {
+    if (jobDistribution.choice == choice)
+    {
+        return;
+    }
+
+    jobDistribution.choice = choice;
+
     var opt = jobDistribution.opt;
 
     // Set Chart Title
