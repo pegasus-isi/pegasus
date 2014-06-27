@@ -201,7 +201,10 @@ siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX PEGASUS::
         Selector. Only jobs of same type (txnamespace, txname, txversion) can
         be clustered into a larger job. To use runtime clustering the user
         needs to set the <emphasis role="bold">--cluster</emphasis> option of
-        <emphasis role="bold">pegasus-plan to horizontal</emphasis>.</para>
+        <emphasis role="bold">pegasus-plan to horizontal</emphasis>, and set
+        the Pegasus property <emphasis
+        role="bold">pegasus.clusterer.preference</emphasis> to <emphasis
+        role="bold">Runtime</emphasis>.</para>
 
         <para>Runtime clustering supports two modes of operation.</para>
 
