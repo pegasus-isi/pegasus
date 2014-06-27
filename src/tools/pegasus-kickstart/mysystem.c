@@ -276,6 +276,49 @@ static ProcInfo *processTraceFiles(const char *tempdir, const char *trace_file_p
     return procs;
 }
 
+/* Try to get a new environment for the child process that has the tracing vars */
+static char **tryGetNewEnvironment(char **envp, const char *tempdir, const char *trace_file_prefix) {
+    int vars;
+
+    /* If KICKSTART_PREFIX or LD_PRELOAD are already set then we can't trace */
+    for (vars=0; envp[vars] != NULL; vars++) {
+        if (startswith(envp[vars], "KICKSTART_PREFIX=")) {
+            return envp;
+        }
+        if (startswith(envp[vars], "LD_PRELOAD=")) {
+            return envp;
+        }
+    }
+
+    /* If the interpose library can't be found, then we can't trace */
+    char libpath[BUFSIZ];
+    if (findInterposeLibrary(libpath, BUFSIZ) < 0) {
+        return envp;
+    }
+
+    /* Set LD_PRELOAD to the intpose library */
+    char ld_preload[BUFSIZ];
+    snprintf(ld_preload, BUFSIZ, "LD_PRELOAD=%s", libpath);
+
+    /* Set KICKSTART_PREFIX to be tempdir/prefix */
+    char kickstart_prefix[BUFSIZ];
+    snprintf(kickstart_prefix, BUFSIZ, "KICKSTART_PREFIX=%s/%s",
+             tempdir, trace_file_prefix);
+
+    /* Copy the environment variables to a new array */
+    char **newenvp = (char **)malloc(sizeof(char **)*(vars+3));
+    for (vars=0; envp[vars] != NULL; vars++) {
+        newenvp[vars] = envp[vars];
+    }
+
+    /* Set the new variables */
+    newenvp[vars] = ld_preload;
+    newenvp[vars+1] = kickstart_prefix;
+    newenvp[vars+2] = NULL;
+
+    return newenvp;
+}
+
 int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
     /* purpose: emulate the system() libc call, but save utilization data.
      * paramtr: appinfo (IO): shared record of information
@@ -339,44 +382,10 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
         /* child */
         appinfo->isPrinted=1;
 
-        /* If we are using library tracing, try to set the necessary
-         * environment variables
-         */
+        // If we are using library tracing, try to set the necessary
+        // environment variables
         if (appinfo->enableLibTrace) {
-
-            /* If the interposition library was found, then update the
-             * environment
-             */
-            char libpath[BUFSIZ];
-            if (findInterposeLibrary(libpath, BUFSIZ) == 0) {
-
-                char ld_preload[BUFSIZ];
-                snprintf(ld_preload, BUFSIZ,
-                         "LD_PRELOAD=%s", libpath);
-
-                char kickstart_prefix[BUFSIZ];
-                snprintf(kickstart_prefix, BUFSIZ,
-                         "KICKSTART_PREFIX=%s/%s", tempdir, trace_file_prefix);
-
-                /* If the user has LD_PRELOAD already set, then ours will be ignored
-                 * because it is at the end. That is the correct behavior.
-                 *
-                 * TODO If the environment variables are already set, then skip this
-                 */
-
-                /* Copy the environment variables to a new array */
-                int vars; for (vars=0; envp[vars] != NULL; vars++);
-                char **newenvp = (char **)malloc(sizeof(char **)*(vars+3));
-                for (vars=0; envp[vars] != NULL; vars++) {
-                    newenvp[vars] = envp[vars];
-                }
-
-                newenvp[vars] = ld_preload;
-                newenvp[vars+1] = kickstart_prefix;
-                newenvp[vars+2] = NULL;
-
-                envp = newenvp;
-            }
+            envp = tryGetNewEnvironment(envp, tempdir, trace_file_prefix);
         }
 
         /* connect jobs stdio */
