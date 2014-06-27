@@ -20,7 +20,6 @@ package edu.isi.pegasus.planner.catalog.replica.impl;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import java.util.*;
 import java.sql.*;
-import edu.isi.pegasus.planner.catalog.Catalog;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.common.util.CommonProperties;
@@ -470,7 +469,9 @@ public class JDBCRC implements ReplicaCatalog
     throws SQLException
   {
     Map result = new TreeMap();
-    result.put( ReplicaCatalogEntry.RESOURCE_HANDLE, handle);
+    if (handle != null && !handle.equals("NULL")) {
+        result.put( ReplicaCatalogEntry.RESOURCE_HANDLE, handle);
+    }
     
     // sanity checks
     if ( id == null ) return result;

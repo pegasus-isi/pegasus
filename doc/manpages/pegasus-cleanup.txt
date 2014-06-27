@@ -11,7 +11,7 @@ pegasus-cleanup - Removes files during Pegasus workflows enactment.
 Synopsis
 --------
 [verse]
-*pegasus-cleanup* [*-h*][*-l* 'level'][*-f* 'urls']
+*pegasus-cleanup* [*-h*][*-d*][*-f* 'urls']
 
 
 Description
@@ -19,6 +19,8 @@ Description
 *pegasus-cleanup* removes the files associated with the given URL. Some of 
 the protocols it can handle are GridFTP, SRM, Amazon S3, HTTP, and file://.
 
+Note that pegasus-cleanup is a tool mostly used internally in Pegasus
+workflows, but the tool can be used stand alone as well.
 
 Options
 -------
@@ -27,22 +29,32 @@ Options
 *--help*::
 Prints a usage summary with all the available command-line options.
 
-*-l* 'level'::
-*--loglevel* 'level'::
-The debugging output level. Valid values are 'debug', 'info', 'warning', 
-and 'error'. Default value is 'info'.
-
 *-f* 'urls'::
 *--file* 'urls'::
 Specifies the file with URLs to clean up (one per line). If this option 
 is not given the list of URLs will be read from stdin.
 
+*-d*::
+*--debug*::
+Enables debugging output.
+
 
 Example
 -------
 -------------
+# 1 some_site_name
 echo gsiftp://somehost/some/path | pegasus-cleanup
 -------------
+
+Credential Handling
+-------------------
+
+Credentials used for cleanup can be specified with a combination of
+comments in the input file format and environment variables. For example,
+give the input file above, pegasus-cleanup will expect either one
+environment variable specifying one generic credential (X509_USER_PROXY),
+or a specific one for the site named in the input file comment
+(X509_USER_PROXY_some_site_name).
 
 
 Authors
