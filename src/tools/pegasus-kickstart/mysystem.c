@@ -207,6 +207,8 @@ static ProcInfo *processTraceFile(const char *fullpath) {
             sscanf(line,"utime:%lf\n", &(proc->utime));
         } else if (startswith(line, "stime:")) {
             sscanf(line,"stime:%lf\n", &(proc->stime));
+        } else if (startswith(line, "iowait:")) {
+            sscanf(line,"iowait:%lf\n", &(proc->iowait));
         } else if (startswith(line, "rchar")) {
             sscanf(line,"rchar: %"SCNu64"\n", &(proc->rchar));
         } else if (startswith(line, "wchar")) {

@@ -71,12 +71,6 @@ static FileInfo *openFileInfo(ProcInfo *c, int fd, char *filename) {
         addFileInfo(c, file);
     }
 
-    // Sanity check
-    if (c->fds[fd] != NULL) {
-        fprintf(stderr, "ERROR: FD %d for process %d already open\n", fd, c->pid);
-        exit(1);
-    }
-
     // XXX Fix with dynamic array
     if (fd >= 1024) {
         fprintf(stderr, "ERROR: Too many file descriptors (>1024) for process %d\n", c->pid);

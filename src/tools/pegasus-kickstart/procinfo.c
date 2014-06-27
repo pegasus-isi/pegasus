@@ -164,15 +164,25 @@ static int proc_read_statinfo(ProcInfo *item) {
         return -1;
     }
 
-    unsigned long utime, stime;
-    fscanf(f, "%*d %*s %*c %*d %*d %*d %*d %*d "
-              "%*u %*u %*u %*u %*u %lu %lu %*d %*d",
-           &utime, &stime);
+    unsigned long utime, stime = 0;
+    unsigned long long iowait = 0; //delayacct_blkio_ticks
+
+    //pid comm state ppid pgrp session tty_nr tpgid flags minflt cminflt majflt
+    //cmajflt utime stime cutime cstime priority nice num_threads itrealvalue
+    //starttime vsize rss rsslim startcode endcode startstack kstkesp kstkeip
+    //signal blocked sigignore sigcatch wchan nswap cnswap exit_signal
+    //processor rt_priority policy delayacct_blkio_ticks guest_time cguest_time
+    fscanf(f, "%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu "
+              "%lu %*d %*d %*d %*d %*d %*d %*u %*u %*d %*u %*u "
+              "%*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*d "
+              "%*d %*u %*u %llu %*u %*d",
+           &utime, &stime, &iowait);
 
     /* Adjust by number of clock ticks per second */
     long clocks = sysconf(_SC_CLK_TCK);
     item->utime = ((double)utime) / clocks;
     item->stime = ((double)stime) / clocks;
+    item->iowait = ((double)iowait) / clocks;
 
     if (ferror(f)) {
         fclose(f);
@@ -488,12 +498,13 @@ int printXMLProcInfo(FILE *out, int indent, ProcInfo* procs) {
         if (i->tgid != i->pid) continue;
 
         fprintf(out, "%*s<proc ppid=\"%d\" pid=\"%d\" exe=\"%s\" "
-                "start=\"%lf\" stop=\"%lf\" utime=\"%lf\" stime=\"%lf\" threads=\"%d\" "
+                "start=\"%lf\" stop=\"%lf\" utime=\"%lf\" stime=\"%lf\" "
+                "iowait=\"%lf\" threads=\"%d\" "
                 "vmpeak=\"%d\" rsspeak=\"%d\" rchar=\"%"PRIu64"\" wchar=\"%"PRIu64"\" "
                 "rbytes=\"%"PRIu64"\" wbytes=\"%"PRIu64"\" cwbytes=\"%"PRIu64"\" "
                 "syscr=\"%"PRIu64"\" syscw=\"%"PRIu64"\"", 
                 indent, "", i->ppid, i->pid, i->exe, 
-                i->start, i->stop, i->utime, i->stime, i->threads,
+                i->start, i->stop, i->utime, i->stime, i->iowait, i->threads,
                 i->vmpeak, i->rsspeak, i->rchar, i->wchar, 
                 i->read_bytes, i->write_bytes, i->cancelled_write_bytes, 
                 i->syscr, i->syscw);

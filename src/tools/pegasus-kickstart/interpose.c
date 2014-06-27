@@ -300,10 +300,19 @@ static void read_stat() {
         return;
     }
 
-    unsigned long utime, stime;
-    fscanf(f, "%*d %*s %*c %*d %*d %*d %*d %*d "
-              "%*u %*u %*u %*u %*u %lu %lu %*d %*d",
-           &utime, &stime);
+    unsigned long utime, stime = 0;
+    unsigned long long iowait = 0; //delayacct_blkio_ticks
+
+    //pid comm state ppid pgrp session tty_nr tpgid flags minflt cminflt majflt
+    //cmajflt utime stime cutime cstime priority nice num_threads itrealvalue
+    //starttime vsize rss rsslim startcode endcode startstack kstkesp kstkeip
+    //signal blocked sigignore sigcatch wchan nswap cnswap exit_signal
+    //processor rt_priority policy delayacct_blkio_ticks guest_time cguest_time
+    fscanf(f, "%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu "
+              "%lu %*d %*d %*d %*d %*d %*d %*u %*u %*d %*u %*u "
+              "%*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*d "
+              "%*d %*u %*u %llu %*u %*d",
+           &utime, &stime, &iowait);
 
     fclose_untraced(f);
 
@@ -311,11 +320,14 @@ static void read_stat() {
     long clocks = sysconf(_SC_CLK_TCK);
     double real_utime;
     double real_stime;
+    double real_iowait;
     real_utime = ((double)utime) / clocks;
     real_stime = ((double)stime) / clocks;
+    real_iowait = ((double)iowait) / clocks;
 
     tprintf("utime: %lf\n", real_utime);
     tprintf("stime: %lf\n", real_stime);
+    tprintf("iowait: %lf\n", real_iowait);
 }
 
 /* Read /proc/self/io to get I/O usage */

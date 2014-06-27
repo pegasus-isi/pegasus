@@ -35,6 +35,7 @@ typedef struct _ProcInfo {
     double stop;            /* stop time in seconds from epoch */
     double utime;           /* time spent in user mode */
     double stime;           /* time spent in kernel mode */
+    double iowait;          /* time spent waiting on I/O */
     int vmpeak;             /* peak virtual memory size in KB */
     int rsspeak;            /* peak physical memory usage in KB */
     uint64_t rchar;         /* characters read by the process */
