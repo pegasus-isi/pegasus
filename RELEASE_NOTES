@@ -1,4 +1,285 @@
 $Id$
+===============================
+Release Notes for PEGASUS 4.4.0
+===============================
+
+We are happy to announce the release of Pegasus 4.4.0
+ 
+Pegasus 4.4.0 is a major release of Pegasus which contains all the enhancements and bugfixes in 4.3.2
+ 
+New features and Improvements in 4.4.0 include
+    - substantial performance improvements for the planner for large workflows
+    - leaf cleanup jobs in the workflow
+    - new default transfer refiner
+    - abitlity to automatically add data flow dependencies
+    - new mode for runtime clustering
+    - pegasus-transfer is now multithreaded
+    - updates to replica catalog backends
+ 
+ 
+New Features
+--------------
+
+1) Improved Planner Performance
+ 
+   This release has major performance improvements to the planner that 
+   should help in planning larger DAX'es than earlier. Additionally,
+   the planner can now optionally log JAVA HEAP memory usage on the
+   INFO log at the end of the planning process, if the property
+   pegasus.log.memory.usage is set to true.  
+ 
+2) Leaf Cleanup Jobs
+ 
+   Pegasus now has a new cleanup option called Leaf that adds a leaf 
+   cleanup jobs symmetric to the create dir jobs. The leaf cleanup
+   jobs remove the directory from the staging site that the create dir
+   jobs create at the end of the workflow. The leaf cleanup is turned
+   on by passing --cleanup Leaf to pegasus-plan. 
+
+   Care should be taken while enabling this option for hierarchal
+   workflows. Leaf cleanup jobs will create problems, if there are data 
+   dependencies between sub workflows in a hierarchal workflow. In
+   that  case, the cleanup option needs to be explicitly set to None
+   for the  pegasus-plan invocations for the dax jobs in the hierachal
+   DAX.  
+ 
+3) New Default Transfer Refiner
+ 
+   This release has a new default transfer refiner called
+   BalancedCluster that does round robin distribution at the file
+   level instead of the job level, while creating clustered stagein
+   and  stageout jobs. This refiner by default adds two stagein and two
+   stageout jobs per level of the workflow. 
+ 
+4) Planner can automatically infer and data flow dependencies in the DAG 
+ 
+   The planner can now automatically add dependencies on the basis of 
+   data dependencies implied by input and output files for jobs. For 
+   example if Job A creates an output file X and job B consumes it,
+   then  the planner should automatically add a dependency between A
+   -> B if it does not exist already. 
+
+   This feature is turned on by default and can be turned off by
+   setting  the property pegasus.parser.dax.data.dependencies to
+   false. More  details at https://jira.isi.edu/browse/PM-746  
+ 
+5) Update to Replica Catalog Backends
+ 
+   The replica catalog backends ( File, Regex and JDBCRC) have been 
+   updated to consider lfn, pfn mapping but with different pool/handle  
+    as different entries. 
+
+   For the JDBCRC the database schema has been updated. To migrate
+   your  existing JDBCRC backend, users are recommended to use the 
+   alter-my-rc.py script located into 'share/pegasus/sql' to migrate
+   the database. 
+ 
+   Note that you will need to edit the script to update the database 
+    name, host, user, and password. Details at
+    https://jira.isi.edu/browse/PM-732  
+ 
+6) Improved Credential Handing for data transfers
+
+   In case of data transfer jobs, it is now possible to associate 
+   different credentials for a single file transfer ( one for the 
+   source server and the other for the destination server) . For
+   example, when leveraging GridFTP transfers between two sides that 
+   accept different grid credentials such as  XSEDE Stampede site and 
+   NCSA Bluewaters. In that case, Pegasus picks up  the associated 
+   credentials from the site catalog entries for the source   and the
+   destination sites associated with the transfer. 
+
+   Also starting 4.4, the credentials should be associated as Pegasus 
+   profiles with the site entries in the site catalog, if you want
+   them  transferred with the job to the remote site. 
+
+   Details about credential handling in Pegasus can be found here
+   https://pegasus.isi.edu/wms/docs/4.4.0cvs/reference.php#cred_staging
+ 
+   Associated JIRA item for the improvement
+   https://jira.isi.edu/browse/PM-731
+ 
+   The credential handling support in pegasus-transfer,
+   pegasus-createdir and pegasus-cleanup were also updated 
+ 
+7) New mode for runtime clustering 
+   
+   This release has a new mode added for runtime clustering.
+ 
+   Mode 1: The module groups tasks into clustered job such that no
+   clustered job runs longer than the maxruntime input parameter to
+   the module.  
+
+   Mode 2(New): New mode now allows users to group tasks into a fixed
+   number of clustered jobs. The module distributes tasks evenly
+   (based on job runtime) across jobs, such that each clustered job
+   takes approximately the same time. This mode is helpful when users
+   are aware of the number of resources available to them at the time
+   of execution. 
+ 
+8) pegasus-transfer is now threaded
+
+   pegasus-transfer is now multithreaded.  Pegasus exposes two knobs
+   to control the number of threads pegasus-transfer can use depending
+   on whether  you want to control standard transfer jobs, or you want
+   to control transfers that happen as a part of a PegasusLite job
+   . For the former, see the pegasus.transfer.threads property, and
+   for the latter the pegasus.transfer.lite.threads property. For
+   4.4.0 pegasus.transfer.threads defaults to 2 and
+   pegasus.transfer.lite.threads defaults to 1.  
+ 
+9) pegasus-analyzer recurses into subworkflows
+ 
+   pegasus-analyzer has a --recurse option that sets it to
+   automatically recurse into failed sub workflows.  By default, if a
+   workflow has a sub workflow in it, and that sub workflow fails ,
+   pegasus-analyzer reports that the sub workflow node failed, and
+   lists a command invocation that the user must execute to determine
+   what jobs in the sub workflow failed. If this option is set, then
+   the analyzer automatically issues the command invocation and in
+   addition displays the failed jobs in the sub workflow. 
+
+   Details  at https://jira.isi.edu/browse/PM-730
+ 
+10) Support for Fixed Output Mapper
+ 
+   Using this output mapper, users can specify  an externally
+   accessible URL in the properties file, pointing to a directory
+   where the output files needs to be transferred to. To use this
+   mapper, set the following  properties  
+ 
+   pegasus.dir.storage.mapper Fixed
+   pegasus.dir.storage.mapper.fixed.url  <url to the storage directory
+   e.g. gsiftp://outputs.isi.edu/shared/outputs> 
+ 
+11) Extra ways for user application to flag errors
+
+   CondorG does not propogate exitcodes correctly from GRAM. As a
+   result, a job in a Pegasus workflow that is not launched via
+   pegasus-kickstart maynot have the right exitcode propogated from
+   user application -> GRAM -> CondorG -> Workflow.  For example, in
+   Pegasus MPI jobs are never launched using
+   pegasus-kickstart. Usually ways of handling this error is to have a
+   wrapper script that detects failure and then having the postscript
+   fail on the basis of the message logged.  
+
+   Starting 4.4.0, Pegasus provides a mechanism of logging something
+   on stdout /stderr that can be used to designate failures. This
+   obviates the need for users to have a wrapper script. Users can
+   associate two pegasus profiles with the jobs 
+
+   exitcode.failuremsg -The message string that pegasus-exitcode
+   searches for in the stdout and stderr of the job to flag failures. 
+   exitcode.successmsg - The message string that pegasus-exitcode
+   searches for in the stdout and stderr of the job to determine
+   whether a job logged it's success message or not. Note this value
+   is used to check for whether a job failed or not i.e if this
+   profile is specified, and pegasus-exitcode DOES NOT find the string
+   in the job stdout or stderr, the job is flagged as failed. The
+   complete rules for determining failure are described in the man
+   page for pegasus-exitcode. 
+
+   More details at http://jira.isi.edu/browse/PM-737
+ 
+12) Updated examples for Glite submission directly to local PBS 
+    
+   The 4.4.0 release has improvements for the submission of workflows
+   directly to local PBS using the Condor Glite interfaces. The
+   documentation on how to use this through Pegasus is documented at 
+ 
+   http://pegasus.isi.edu/wms/docs/4.4.0/execution_environments.php#glite 
+
+   It is important to note that to use this, you need to use the
+   pbs_local_attributes.sh file shipped with Pegasus in the
+   share/pegasus/htcondor/glite directory and put in the glite bin
+   directory of your condor installation. 
+ 
+   Additionally, there is a new example in the examples directory that
+   illustrates how to execute an MPI job using this submission
+   mechanism through Pegasus. 
+ 
+13) Finer grained specification of linux versions for worker package
+    staging 
+ 
+   Planner now has added logic for users to specify finer grained
+   linux versions to stage the worker package for .  
+
+   Users can now specify in the site catalog the osrelease and
+   osversion attributes e.g. 
+
+   <site handle="exec-site" arch="x86_64" os="LINUX" osrelease="deb" osversion="7">
+ 
+   If a supported release version combination is not specified, then
+   planner throws a warning and defaults to the default combination
+   for the OS. 
+
+   More details at https://jira.isi.edu/browse/PM-732
+ 
+14) pegasus-kickstart can now copy all of applications stdio if -b all
+is passed 
+ 
+   Added an option to capture all stdio. This is a feature that
+   HUBzero requested. Kickstart will now copy all stdout and stderr of
+   the job to the invocation record if the user specifies '-B all'. 
+ 
+15) Tutorial includes pegasus-dashboard
+
+    The tutorial comes configured with pegasus-dashboard.
+ 
+16) Improved formatting of extra long values for pegasus-statistics
+   More details at  https://jira.isi.edu/browse/PM-744
+ 
+17) Changed timeout parameters for pegasus-gridftp
+ 
+   Increased the timeout parameter for GridFTPClient to 60
+   seconds. The globus jar defaults to 30 seconds. The timeout was
+   increased to ensure that transfers don't fail against heavliy
+   loaded GridFTP servers. 
+
+Bugs Fixed
+--------------
+
+1) IRODS support in pegasus-transfer , pegasus-createdir was broken
+
+   irods mkdir command got the wrong path when invoked by
+   pegasus-transfer. this is now fixed 
+ 
+2) Data reuse algorithm does not cascade the deletion upwards 
+
+   In certain cases, the cascading of deletion in data reuse did not
+   happen completely. This is now fixed.  More details at
+   https://jira.isi.edu/browse/PM-742 
+ 
+3) Improved argument management for PMC
+ 
+   This was done to address the case where a task has quoted arguments
+   with spaces. 
+ 
+4) Clusters of size 1 should be allowed when using PMC
+
+   For label based clustering with PMC single node clusters are
+   allowed. This is important as in some cases, PMC jobs might have
+   been set to work with the relevant globus profiles. 
+ 
+   https://jira.isi.edu/browse/PM-745
+ 
+5) nonascii characters in application stdout broke parsing in monitord 
+ 
+   The URL quoting logic was updated to encode unicode strings  as
+   UTF-8 before the string was passed to the quote fuction. More
+   details at  
+
+    https://jira.isi.edu/browse/PM-757
+ 
+6) Removing a workflow using pegasus-remove does not update the
+stampede database 
+   
+   If you remove a running workflow, using pegasus-remove, the
+   stampede database is not updated to reflect that the workflow
+   failed. Changes were made to pegasus-dagman to ensure that
+   pegasus-monitord gets 100 seconds to complete the population before
+   sending a kill signal. 
+ 
 
 ===============================
 Release Notes for PEGASUS 4.3.2
