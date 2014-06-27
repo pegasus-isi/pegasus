@@ -132,8 +132,10 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
         if(tcEntry == null){
             //should throw a TC specific exception
             StringBuffer error = new StringBuffer();
-            error.append( "Could not find entry in tc for lfn " ).append( getCompleteTCName() ).
+            error.append( "Could not find entry in TC for lfn " ).append( getCompleteTCName() ).
                   append(" at site " ).append( txJob.getSiteHandle());
+            error.append( " . " ).append( "Either add an entry in the TC or make sure that PEGASUS_HOME is set as an env profile in the site catalog for site " ).
+                  append( txJob.getSiteHandle() ).append( " . " );
             mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL);
             throw new RuntimeException( error.toString() );
         }
