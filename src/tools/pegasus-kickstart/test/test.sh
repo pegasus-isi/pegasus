@@ -2,6 +2,11 @@
 
 KICKSTART=../pegasus-kickstart
 
+if [ -z "$(which xmllint)" ]; then
+    echo "ERROR: xmllint not found"
+    exit 1
+fi
+
 function run_test {
     echo "Running" "$@"
     "$@"
