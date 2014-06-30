@@ -29,7 +29,7 @@ Python 2.6.2</programlisting></para>
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">HTCondor (formerly Condor) 7.8 or higher</emphasis>. See
+        <para><emphasis role="bold">HTCondor (formerly Condor) 8.0 or higher</emphasis>. See
         <ulink
         url="http://www.cs.wisc.edu/htcondor/">http://www.cs.wisc.edu/htcondor/</ulink>
         for more information. You should be able to run
@@ -44,7 +44,7 @@ Python 2.6.2</programlisting></para>
 
     <itemizedlist>
       <listitem>
-        <para><emphasis role="bold">Globus 4.0 or higher</emphasis>. Globus is
+        <para><emphasis role="bold">Globus 5.0 or higher</emphasis>. Globus is
         only needed if you want to run against grid sites or use GridFTP for
         data transfers. See <ulink
         url="http://www.globus.org/">http://www.globus.org/</ulink> for more
@@ -124,7 +124,7 @@ Running Transaction
 Installing     : pegasus
 
 Installed:
-pegasus   :4.3.0-1                                                                                                                        
+pegasus
 
 Complete!</programlisting>
     </section>
@@ -174,7 +174,7 @@ Complete!</programlisting>
       <listitem>
         <para>include the Pegasus bin directory in your PATH</para>
 
-        <para><programlisting># <emphasis role="bold">export PATH=/path/to/pegasus-4.3.0:$PATH</emphasis></programlisting></para>
+        <para><programlisting># <emphasis role="bold">export PATH=/path/to/pegasus-install/bin:$PATH</emphasis></programlisting></para>
       </listitem>
     </itemizedlist>
   </section>

@@ -843,7 +843,16 @@ public class Kickstart implements GridStart {
             
             //sanity check 
             if( ksPath == null ){
-                throw new RuntimeException( "Unable to determine path to kickstart for site " + job.getSiteHandle() + " for job " + job.getID() );
+                StringBuilder error = new StringBuilder();
+                error.append( "Unable to determine path to kickstart for site " ).append( job.getSiteHandle()).
+                   append( " for job " ).append( job.getID() );
+                if( path == null ){
+                    //we know there was no path determined from site catalog.
+                    error.append( " . " ).append( "Make sure PEGASUS_HOME is set as an env profile in the site catalog for site " ).
+                          append( job.getSiteHandle() );
+                }
+                
+                throw new RuntimeException( error.toString() );
             }
             
             return ksPath;
