@@ -23,7 +23,16 @@
 
     <itemizedlist>
       <listitem>
-        <para>level based (horizontal clustering )</para>
+        <para>level based horizontal clustering - where you can denote how
+        many jobs get clustered into a single clustered job per level, or how
+        many clustered jobs should be created per level of the workflow
+        </para>
+      </listitem>
+
+      <listitem>
+        <para>level based runtime clustering - similar to horizontal
+        clustering , but while creating the clusters per level take into
+        account the job runtimes.</para>
       </listitem>
 
       <listitem>
@@ -394,9 +403,9 @@ siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX PEGASUS::
   &lt;job id="ID000004" namespace="app" name="analyze" version="1.0" level="1" &gt;
     &lt;argument&gt;-a bottom -T60  -i &lt;filename file="user.f.c1"/&gt;  -o &lt;filename file="user.f.d"/&gt;&lt;/argument&gt;
     &lt;profile namespace="pegasus" key="user_label"&gt;p1&lt;/profile&gt;
-    &lt;uses file="user.f.c1" link="input" dontRegister="false" dontTransfer="false"/&gt;
-    &lt;uses file="user.f.c2" link="input" dontRegister="false" dontTransfer="false"/&gt;
-    &lt;uses file="user.f.d" link="output" dontRegister="false" dontTransfer="false"/&gt;
+    &lt;uses file="user.f.c1" link="input" register="true" transfer="true"/&gt;
+    &lt;uses file="user.f.c2" link="input" register="true" transfer="true"/&gt;
+    &lt;uses file="user.f.d" link="output" register="true" transfer="true"/&gt;
   &lt;/job&gt;
 ...
 &lt;/adag&gt;</programlisting>
