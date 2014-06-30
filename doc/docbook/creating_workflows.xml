@@ -386,6 +386,25 @@ D1/f.3 file://$input/D1/f.3 pool="local"</programlisting>
       role="bold">XX</emphasis> is either <emphasis role="bold">my</emphasis>
       (for MySQL) or <emphasis role="bold">pg</emphasis> (for
       PostgreSQL)</para>
+      
+      <note>
+          <para>
+            A site attribute was added to the SQL schema as a unique key.
+            To update the database schema, use the <emphasis role="bold">
+            alter-XX-rc.py</emphasis> script that can be found at <emphasis 
+            role="bold">$PEGASUS_HOME/sql</emphasis>.
+          </para>
+          
+          <figure>
+          <title>Schema Image of the JDBCRC.</title>
+
+          <mediaobject>
+            <imageobject>
+              <imagedata fileref="images/jdbcrc-schema.png"/>
+            </imageobject>
+          </mediaobject>
+        </figure>
+      </note>
 
       <para>To use JDBCRC, the user additionally needs to set the following
       properties</para>
@@ -423,7 +442,7 @@ D1/f.3 file://$input/D1/f.3 pool="local"</programlisting>
 
       <para>Users can use the command line client
       <emphasis>pegasus-rc-client</emphasis> to interface to query, insert and
-      remove entries from the JDBCRC backend.</para>
+      remove entries from the JDBCRC backend.</para>      
     </section>
 
     <section id="rc-RLS">
