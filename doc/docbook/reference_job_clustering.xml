@@ -127,8 +127,12 @@ siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX  PEGASUS:
                 <title>Clustering by clusters.size</title>
 
                 <mediaobject>
-                  <imageobject>
-                    <imagedata contentdepth="8in"
+                  <imageobject role="html">
+                    <imagedata align="center" contentdepth="750px"
+                               fileref="images/advanced-clustering-1.png"/>
+                  </imageobject>
+                  <imageobject role="fo">
+                    <imagedata align="center" contentdepth="5in"
                                fileref="images/advanced-clustering-1.png"/>
                   </imageobject>
                 </mediaobject>
@@ -176,8 +180,12 @@ siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX PEGASUS::
                 <title>Clustering by clusters.num</title>
 
                 <mediaobject>
-                  <imageobject>
-                    <imagedata contentdepth="8in"
+                  <imageobject role="html">
+                    <imagedata align="center" contentdepth="750px"
+                               fileref="images/advanced-clustering-2.png"/>
+                  </imageobject>
+                  <imageobject role="fo">
+                    <imagedata align="center" contentdepth="5in"
                                fileref="images/advanced-clustering-2.png"/>
                   </imageobject>
                 </mediaobject>
@@ -325,8 +333,12 @@ siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX PEGASUS::
           <title>Clustering by runtime</title>
 
           <mediaobject>
-            <imageobject>
-              <imagedata contentdepth="8in"
+            <imageobject role="html">
+              <imagedata align="center" contentdepth="750px"
+                         fileref="images/advanced-clustering-5.png"/>
+            </imageobject>
+            <imageobject role="fo">
+              <imagedata align="center" contentdepth="5in"
                          fileref="images/advanced-clustering-5.png"/>
             </imageobject>
           </mediaobject>
@@ -361,8 +373,12 @@ siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX PEGASUS::
             <title>Label-based clustering</title>
 
             <mediaobject>
-              <imageobject>
-                <imagedata contentdepth="8in"
+              <imageobject role="html">
+                <imagedata align="center" contentdepth="750px"
+                           fileref="images/advanced-clustering-3.png"/>
+              </imageobject>
+              <imageobject role="fo">
+                <imagedata align="center" contentdepth="5in"
                            fileref="images/advanced-clustering-3.png"/>
               </imageobject>
             </mediaobject>
@@ -449,8 +465,12 @@ siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX PEGASUS::
           <title>Recursive clustering</title>
 
           <mediaobject>
-            <imageobject>
-              <imagedata contentdepth="8in"
+            <imageobject role="html">
+              <imagedata align="center" contentdepth="1000px"
+                         fileref="images/advanced-clustering-4.png"/>
+            </imageobject>
+            <imageobject role="fo">
+              <imagedata align="center" contentdepth="7in"
                          fileref="images/advanced-clustering-4.png"/>
             </imageobject>
           </mediaobject>

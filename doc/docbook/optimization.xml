@@ -52,7 +52,7 @@
 
       <para><emphasis>Solution:</emphasis> The most common solution to these
 	      problems is to use
-	      <link linkend="hierarchial workflows">hierarchial workflows</link>,
+	      <link linkend="hierarchial_workflows">hierarchial workflows</link>,
 	      which works really well if your workflow can be logically partitioned
 	      into smaller workflows. A hierarchial workflow still runs like a
 	      single workflow, with the difference being that some jobs in the
