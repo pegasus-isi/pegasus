@@ -15,7 +15,6 @@
 #include "basic.h"
 #include "linux.h"
 #include "../tools.h"
-#include "../debug.h"
 
 #include <ctype.h>
 #include <errno.h>
