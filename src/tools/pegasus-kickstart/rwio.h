@@ -17,13 +17,9 @@
 
 #include <sys/types.h>
 
-#ifndef DEFAULT_SYNC_IDLE
-#define DEFAULT_SYNC_IDLE 100
-#endif
-
 extern ssize_t writen(int fd, const char* buffer, ssize_t n, unsigned restart);
 extern int lockit(int fd, int cmd, int type);
 extern int mytrylock(int fd);
-extern int nfs_sync(int fd, unsigned idle);
+extern int nfs_sync(int fd);
 
 #endif /* _RWIO_H */

@@ -91,11 +91,9 @@ int mytrylock(int fd) {
     return 1;
 }
 
-int nfs_sync(int fd, unsigned idle) {
+int nfs_sync(int fd) {
     /* purpose: tries to force NFS to update the given file descriptor
      * paramtr: fd (IN): descriptor of an open file
-     *          idle (IN): how many milliseconds between lock and unlock
-     * seelaso: DEFAULT_SYNC_IDLE as suggested argument for idle
      * returns: 0 is ok, -1 for failure
      */
     /* lock file */
@@ -103,10 +101,8 @@ int nfs_sync(int fd, unsigned idle) {
         return -1;
     }
 
-    /* wait $idle ms */
-    if (idle > 0) {
-        poll(NULL, 0, idle);
-    }
+    /* wait 100 ms */
+    poll(NULL, 0, 100);
 
     /* unlock file */
     return lockit(fd, F_SETLK, F_UNLCK);

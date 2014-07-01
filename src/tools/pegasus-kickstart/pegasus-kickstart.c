@@ -219,7 +219,7 @@ static void finish() {
         }
     }
 
-    nfs_sync(STDERR_FILENO, DEFAULT_SYNC_IDLE);
+    nfs_sync(STDERR_FILENO);
 }
 
 static int readFromFile(const char* fn, char*** argv, int* argc, int* i, int j) {
