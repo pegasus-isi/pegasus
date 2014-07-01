@@ -14,7 +14,6 @@
  */
 #include "getif.h"
 #include "rwio.h"
-#include "debug.h"
 #include "tools.h"
 #include "useinfo.h"
 #include "machine.h"

@@ -39,7 +39,6 @@
 #endif /* EXTRA_DEBUG */
 
 #include <string.h>
-#include "debug.h"
 
 void
 initMachineInfo( MachineInfo* machine )

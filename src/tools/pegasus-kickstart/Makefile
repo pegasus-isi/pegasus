@@ -73,35 +73,34 @@ endif
 
 all : pegasus-kickstart libinterpose.so
 
-pegasus-kickstart: debug.o getif.o rwio.o tools.o useinfo.o mynss.o statinfo.o jobinfo.o limitinfo.o $(EXTRA_OBJ) machine.o appinfo.o parse.o mysystem.o mylist.o invoke.o pegasus-kickstart.o procinfo.o syscall.o
+pegasus-kickstart: getif.o rwio.o tools.o useinfo.o mynss.o statinfo.o jobinfo.o limitinfo.o $(EXTRA_OBJ) machine.o appinfo.o parse.o mysystem.o mylist.o invoke.o pegasus-kickstart.o procinfo.o syscall.o
 	$(LD) $(EXTRA_LDFLAGS) $(CFLAGS) $^ -o $@ $(LOADLIBES)
-show-if: show-if.o getif.o debug.o rwio.o
+show-if: show-if.o getif.o rwio.o
 	$(LD) $(EXTRA_LDFLAGS) $(CFLAGS) $^ -o $@ $(LOADLIBES)
-try-parse: try-parse.o parse.o debug.o rwio.o
+try-parse: try-parse.o parse.o rwio.o
 	$(LD) $(EXTRA_LDFLAGS) $(CFLAGS) $^ -o $@ $(LOADLIBES)
 
-appinfo.o: appinfo.c getif.h rwio.h debug.h tools.h useinfo.h machine.h \
+appinfo.o: appinfo.c getif.h rwio.h tools.h useinfo.h machine.h \
   jobinfo.h statinfo.h appinfo.h limitinfo.h mynss.h
-debug.o: debug.c debug.h rwio.h
 fail.o: fail.c
-getif.o: getif.c debug.h getif.h rwio.h
+getif.o: getif.c getif.h rwio.h
 invoke.o: invoke.c invoke.h
-jobinfo.o: jobinfo.c getif.h debug.h tools.h useinfo.h jobinfo.h \
+jobinfo.o: jobinfo.c getif.h tools.h useinfo.h jobinfo.h \
   statinfo.h parse.h procinfo.h
-pegasus-kickstart.o: pegasus-kickstart.c rwio.h debug.h appinfo.h \
+pegasus-kickstart.o: pegasus-kickstart.c rwio.h appinfo.h \
   statinfo.h jobinfo.h limitinfo.h machine.h mysystem.h mylist.h \
   invoke.h tools.h version.h ptrace.h
-limitinfo.o: limitinfo.c debug.h tools.h limitinfo.h
-machine.o: machine.c machine.h machine/basic.h debug.h
+limitinfo.o: limitinfo.c tools.h limitinfo.h
+machine.o: machine.c machine.h machine/basic.h
 mylist.o: mylist.c mylist.h
 mynss.o: mynss.c mynss.h
-mysystem.o: mysystem.c debug.h tools.h appinfo.h statinfo.h jobinfo.h \
+mysystem.o: mysystem.c tools.h appinfo.h statinfo.h jobinfo.h \
   limitinfo.h machine.h mysystem.h mysignal.h procinfo.h
-parse.o: parse.c debug.h parse.h
+parse.o: parse.c parse.h
 procinfo.o: procinfo.c procinfo.h ptrace.h tools.h
 rwio.o: rwio.c rwio.h
 show-if.o: show-if.c getif.h
-statinfo.o: statinfo.c mynss.h debug.h statinfo.h tools.h
+statinfo.o: statinfo.c mynss.h statinfo.h tools.h
 test-ascii.o: test-ascii.c
 test-post.o: test-post.c
 test-pre.o: test-pre.c

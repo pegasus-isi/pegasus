@@ -25,7 +25,6 @@
 #include <libgen.h>
 #include <dirent.h>
 
-#include "debug.h"
 #include "tools.h"
 #include "appinfo.h"
 #include "statinfo.h"

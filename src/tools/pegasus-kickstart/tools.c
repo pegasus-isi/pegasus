@@ -13,6 +13,7 @@
  * Southern California. All rights reserved.
  */
 #include "tools.h"
+#include "rwio.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -21,6 +22,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <errno.h>
 
 static const char* asciilookup[128] = {
   "&#xe000;", "&#xe001;", "&#xe002;", "&#xe003;", "&#xe004;", "&#xe005;", "&#xe006;", "&#xe007;",
@@ -41,6 +43,25 @@ static const char* asciilookup[128] = {
          "x",        "y",        "z",        "{",        "|",        "}",        "~", "&#xe07f;"
 };
 
+ssize_t debugmsg(char* fmt, ...) {
+/* purpose: create a log line on stderr.
+ * paramtr: fmt (IN): printf-style format string
+ *          ... (IN): other arguments according to format
+ * returns: number of bytes written to STDERR via write()
+ */
+  ssize_t result;
+  va_list ap;
+  char buffer[4096];
+  int saverr = errno;
+
+  va_start( ap, fmt );
+  vsnprintf( buffer, sizeof(buffer), fmt, ap );
+  va_end( ap );
+
+  result = writen( STDERR_FILENO, buffer, strlen(buffer), 3 );
+  errno = saverr;
+  return result;
+}
 void
 xmlquote(FILE *out, const char* msg, size_t msglen)
 /* purpose: write a possibly binary message to the stream while XML

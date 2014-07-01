@@ -21,9 +21,14 @@
 #include <time.h>
 
 
-extern
-void
-xmlquote(FILE *out, const char* msg, size_t msglen);
+extern ssize_t debugmsg(char* fmt, ...);
+/* purpose: create a log line on stderr.
+ * paramtr: fmt (IN): printf-style format string
+ *          ... (IN): other arguments according to format
+ * returns: number of bytes written to STDERR via write()
+ */
+
+extern void xmlquote(FILE *out, const char* msg, size_t msglen);
 /* purpose: write a possibly binary message to the stream while XML
  *          quoting
  * paramtr: out (IO): stream to write the quoted xml to
@@ -32,9 +37,7 @@ xmlquote(FILE *out, const char* msg, size_t msglen);
  * returns: nada
  */
 
-extern
-char *
-fmtisodate(int isLocal, int isExtended, time_t seconds, long micros);
+extern char * fmtisodate(int isLocal, int isExtended, time_t seconds, long micros);
 /* purpose: return an ISO-formatted string for a given timestamp
  * paramtr: isLocal (IN): flag, if 0 use UTC, otherwise use local time
  *          isExtd (IN): flag, if 0 use concise format, otherwise extended
@@ -43,31 +46,23 @@ fmtisodate(int isLocal, int isExtended, time_t seconds, long micros);
  * returns: a pointer to the formatted string
  */
 
-extern
-double
-doubletime(const struct timeval t);
+extern double doubletime(const struct timeval t);
 /* purpose: convert a structured timeval into seconds with fractions.
  * paramtr: t (IN): a timeval as retured from gettimeofday().
  * returns: the number of seconds with microsecond fraction.
  */
 
-extern
-void
-now( struct timeval* t );
+extern void now(struct timeval* t);
 /* purpose: capture a point in time with microsecond extension 
  * paramtr: t (OUT): where to store the captured time
  */
 
-extern
-const char*
-getTempDir( void );
+extern const char* getTempDir(void);
 /* purpose: determine a suitable directory for temporary files.
  * returns: a string with a temporary directory, may still be NULL.
  */
 
-extern
-char*
-sizer( char* buffer, size_t capacity, size_t vsize, const void* value );
+extern char* sizer(char* buffer, size_t capacity, size_t vsize, const void* value);
 /* purpose: format an unsigned integer of less-known size. Note that
  *          64bit ints on 32bit systems need %llu, but 64/64 uses %lu
  * paramtr: buffer (IO): area to output into

@@ -26,7 +26,6 @@
 #include <pwd.h>
 
 #include "mynss.h"
-#include "debug.h"
 #include "statinfo.h"
 #include "tools.h"
 
