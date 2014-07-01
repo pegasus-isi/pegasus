@@ -73,7 +73,7 @@ endif
 
 all : pegasus-kickstart libinterpose.so
 
-pegasus-kickstart: getif.o rwio.o tools.o useinfo.o mynss.o statinfo.o jobinfo.o limitinfo.o $(EXTRA_OBJ) machine.o appinfo.o parse.o mysystem.o mylist.o invoke.o pegasus-kickstart.o procinfo.o syscall.o
+pegasus-kickstart: getif.o rwio.o tools.o useinfo.o statinfo.o jobinfo.o limitinfo.o $(EXTRA_OBJ) machine.o appinfo.o parse.o mysystem.o mylist.o invoke.o pegasus-kickstart.o procinfo.o syscall.o
 	$(LD) $(EXTRA_LDFLAGS) $(CFLAGS) $^ -o $@ $(LOADLIBES)
 show-if: show-if.o getif.o rwio.o
 	$(LD) $(EXTRA_LDFLAGS) $(CFLAGS) $^ -o $@ $(LOADLIBES)
@@ -81,7 +81,7 @@ try-parse: try-parse.o parse.o rwio.o
 	$(LD) $(EXTRA_LDFLAGS) $(CFLAGS) $^ -o $@ $(LOADLIBES)
 
 appinfo.o: appinfo.c getif.h rwio.h tools.h useinfo.h machine.h \
-  jobinfo.h statinfo.h appinfo.h limitinfo.h mynss.h
+  jobinfo.h statinfo.h appinfo.h limitinfo.h
 fail.o: fail.c
 getif.o: getif.c getif.h rwio.h
 invoke.o: invoke.c invoke.h
@@ -93,14 +93,13 @@ pegasus-kickstart.o: pegasus-kickstart.c rwio.h appinfo.h \
 limitinfo.o: limitinfo.c tools.h limitinfo.h
 machine.o: machine.c machine.h machine/basic.h
 mylist.o: mylist.c mylist.h
-mynss.o: mynss.c mynss.h
 mysystem.o: mysystem.c tools.h appinfo.h statinfo.h jobinfo.h \
   limitinfo.h machine.h mysystem.h mysignal.h procinfo.h
 parse.o: parse.c parse.h
 procinfo.o: procinfo.c procinfo.h ptrace.h tools.h
 rwio.o: rwio.c rwio.h
 show-if.o: show-if.c getif.h
-statinfo.o: statinfo.c mynss.h statinfo.h tools.h
+statinfo.o: statinfo.c statinfo.h tools.h
 test-ascii.o: test-ascii.c
 test-post.o: test-post.c
 test-pre.o: test-pre.c

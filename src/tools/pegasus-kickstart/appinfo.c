@@ -20,7 +20,6 @@
 #include "jobinfo.h"
 #include "statinfo.h"
 #include "appinfo.h"
-#include "mynss.h"
 #include <ctype.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -56,8 +55,8 @@ size_t
 convert2XML( FILE *out, const AppInfo* run )
 {
   size_t i;
-  struct passwd* user = wrap_getpwuid(getuid());
-  struct group* group = wrap_getgrgid(getgid());
+  struct passwd* user = getpwuid(getuid());
+  struct group* group = getgrgid(getgid());
 
 
 #define XML_SCHEMA_URI "http://pegasus.isi.edu/schema/invocation"
@@ -123,7 +122,7 @@ convert2XML( FILE *out, const AppInfo* run )
     in_addr_t address = inet_addr(run->ipv4);
     fprintf(out, " interface=\"%s\"", run->prif); 
     fprintf(out, " hostaddr=\"%s\"", run->ipv4);
-    if ((h = wrap_gethostbyaddr((const char*) &address, sizeof(in_addr_t), AF_INET)))
+    if ((h = gethostbyaddr((const char*) &address, sizeof(in_addr_t), AF_INET)))
       fprintf(out, " hostname=\"%s\"", h->h_name);
   }
 

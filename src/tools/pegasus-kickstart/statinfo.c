@@ -25,7 +25,6 @@
 #include <grp.h>
 #include <pwd.h>
 
-#include "mynss.h"
 #include "statinfo.h"
 #include "tools.h"
 
@@ -571,8 +570,8 @@ printXMLStatInfo(FILE *out, int indent, const char* tag, const char* id,
   if (info->error == 0 && info->source != IS_INVALID) {
     /* <stat> subrecord */
     char my[32];
-    struct passwd* user = wrap_getpwuid(info->info.st_uid);
-    struct group* group = wrap_getgrgid(info->info.st_gid);
+    struct passwd* user = getpwuid(info->info.st_uid);
+    struct group* group = getgrgid(info->info.st_gid);
 
     fprintf(out, "%*s<statinfo mode=\"0%o\"", indent+2, "",
             info->info.st_mode);
