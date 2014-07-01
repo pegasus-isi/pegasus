@@ -75,14 +75,9 @@ all : pegasus-kickstart libinterpose.so
 
 pegasus-kickstart: getif.o rwio.o tools.o useinfo.o statinfo.o jobinfo.o limitinfo.o $(EXTRA_OBJ) machine.o appinfo.o parse.o mysystem.o mylist.o invoke.o pegasus-kickstart.o procinfo.o syscall.o
 	$(LD) $(EXTRA_LDFLAGS) $(CFLAGS) $^ -o $@ $(LOADLIBES)
-show-if: show-if.o getif.o rwio.o
-	$(LD) $(EXTRA_LDFLAGS) $(CFLAGS) $^ -o $@ $(LOADLIBES)
-try-parse: try-parse.o parse.o rwio.o
-	$(LD) $(EXTRA_LDFLAGS) $(CFLAGS) $^ -o $@ $(LOADLIBES)
 
 appinfo.o: appinfo.c getif.h rwio.h tools.h useinfo.h machine.h \
   jobinfo.h statinfo.h appinfo.h limitinfo.h
-fail.o: fail.c
 getif.o: getif.c getif.h rwio.h
 invoke.o: invoke.c invoke.h
 jobinfo.o: jobinfo.c getif.h tools.h useinfo.h jobinfo.h \
@@ -98,15 +93,9 @@ mysystem.o: mysystem.c tools.h appinfo.h statinfo.h jobinfo.h \
 parse.o: parse.c parse.h
 procinfo.o: procinfo.c procinfo.h ptrace.h tools.h
 rwio.o: rwio.c rwio.h
-show-if.o: show-if.c getif.h
 statinfo.o: statinfo.c statinfo.h tools.h
-test-ascii.o: test-ascii.c
-test-post.o: test-post.c
-test-pre.o: test-pre.c
 tools.o: tools.c tools.h
-try-parse.o: try-parse.c parse.h rwio.h
 useinfo.o: useinfo.c tools.h useinfo.h
-zio.o: zio.c zio.h
 
 machine/basic.o: machine/basic.c machine/basic.h machine/../tools.h
 machine/linux.o: machine/linux.c machine/basic.c machine/linux.h \
@@ -127,7 +116,8 @@ clean:
 	$(RM) *.o *.so machine/*.o core core.* version.h pegasus-kickstart
 
 distclean: clean
-	$(RM) pegasus-kickstart fail test-post test-pre test-ascii show-if
+	$(RM) pegasus-kickstart
 
 test: pegasus-kickstart
 	cd $(CURDIR)/test && ./test.sh
+
