@@ -34,306 +34,224 @@
 #include <sys/sockio.h>
 #endif
 
-int getif_debug = 0; /* enable debugging code paths */
-
 static unsigned long vpn_network[6] = { 0, 0, 0, 0, 0 };
 static unsigned long vpn_netmask[6] = { 0, 0, 0, 0, 0 };
 
-static int hexdump( void* area, size_t size )
-/* purpose: dump a memory area in old-DOS style hex chars and printable ASCII
- * paramtr: area (IN): pointer to area start
- *          size (IN): extent of area to print
- * returns: number of byte written 
- */ 
-{
-  static const char digit[16] = "0123456789ABCDEF";
-  char a[82];
-  unsigned char b[18];
-  size_t i, j;
-  unsigned char c;
-  ssize_t result = 0;
-  unsigned char* buffer = (unsigned char*) area; 
-
-  for ( i=0; i<size; i+=16 ) {
-    memset( a, 0, sizeof(a) );
-    memset( b, 0, sizeof(b) );
-    sprintf( a, "%04zX: ", i );
-    for ( j=0; j<16 && j+i<size; ++j ) {
-      c = (unsigned char) buffer[i+j];
-
-      a[6+j*3] = digit[ c >> 4 ];
-      a[7+j*3] = digit[ c & 15 ];
-      a[8+j*3] = ( j == 7 ? '-' : ' ' );
-      b[j] = (char) (c < 32 || c >= 127 ? '.' : c);
+static void singleton_init(void) {
+    /* singleton init */
+    if (vpn_network[0] == 0ul) {
+        vpn_network[0] = inet_addr("127.0.0.0");   /* loopbacknet */
+        vpn_network[1] = inet_addr("10.0.0.0");    /* class A VPN net */
+        vpn_network[2] = inet_addr("172.16.0.0");  /* class B VPN nets */
+        vpn_network[3] = inet_addr("192.168.0.0"); /* class C VPN nets */
+        vpn_network[4] = inet_addr("169.254.0.0"); /* link-local junk */
+        vpn_network[5] = inet_addr("0.0.0.0");     /* no address */
     }
-    for ( ; j<16; ++j ) {
-      a[6+j*3] = a[7+j*3] = a[8+j*3] = b[j] = ' ';
-    }
-    strncat( a, (char*) b, sizeof(a)-strlen(a)-1 );
-    strncat( a, "\n", sizeof(a)-strlen(a)-1 );
-    result += write( STDERR_FILENO, a, strlen(a) );
-  }
 
-  return result;
+    /* singleton init */
+    if (vpn_netmask[0] == 0ul) {
+        vpn_netmask[0] = inet_addr("255.0.0.0");   /* loopbackmask */
+        vpn_netmask[1] = inet_addr("255.0.0.0");   /* class A mask */
+        vpn_netmask[2] = inet_addr("255.240.0.0"); /* class B VPN mask */
+        vpn_netmask[3] = inet_addr("255.255.0.0"); /* class C VPN mask */
+        vpn_netmask[4] = inet_addr("255.254.0.0"); /* link-local junk */
+        vpn_netmask[5] = inet_addr("255.255.255.255"); /* no mask */
+    }
 }
 
-static
-void
-singleton_init( void )
-{
-  /* singleton init */
-  if ( vpn_network[0] == 0ul ) {
-    vpn_network[0] = inet_addr("127.0.0.0");   /* loopbacknet */
-    vpn_network[1] = inet_addr("10.0.0.0");    /* class A VPN net */
-    vpn_network[2] = inet_addr("172.16.0.0");  /* class B VPN nets */
-    vpn_network[3] = inet_addr("192.168.0.0"); /* class C VPN nets */
-    vpn_network[4] = inet_addr("169.254.0.0"); /* link-local junk */
-    vpn_network[5] = inet_addr("0.0.0.0");     /* no address */
-  }
-
-  /* singleton init */
-  if ( vpn_netmask[0] == 0ul ) {
-    vpn_netmask[0] = inet_addr("255.0.0.0");   /* loopbackmask */
-    vpn_netmask[1] = inet_addr("255.0.0.0");   /* class A mask */
-    vpn_netmask[2] = inet_addr("255.240.0.0"); /* class B VPN mask */
-    vpn_netmask[3] = inet_addr("255.255.0.0"); /* class C VPN mask */
-    vpn_netmask[4] = inet_addr("255.254.0.0"); /* link-local junk */
-    vpn_netmask[5] = inet_addr("255.255.255.255"); /* no mask */
-  }
-}
-
-int
-interface_list( struct ifconf* ifc )
-/* purpose: returns the list of interfaces
- * paramtr: ifc (IO): initializes structure with buffer and length
- * returns: sockfd for further queries, or -1 to indicate an error. 
- * warning: caller must free memory in ifc.ifc_buf
- *          caller must close sockfd (result value)
- */
-{
+int interface_list(struct ifconf* ifc) {
+    /* purpose: returns the list of interfaces
+     * paramtr: ifc (IO): initializes structure with buffer and length
+     * returns: sockfd for further queries, or -1 to indicate an error. 
+     * warning: caller must free memory in ifc.ifc_buf
+     *          caller must close sockfd (result value)
+     */
 #if defined(SIOCGLIFNUM)
-  struct lifnum ifnr;
+    struct lifnum ifnr;
 #endif
-  char *buf = 0;
-  int lastlen, len, sockfd = 0;
+    char *buf = 0;
+    int lastlen, len, sockfd = 0;
 
-  /* create a socket */
-  if ( (sockfd = socket( AF_INET, SOCK_DGRAM, 0 )) == -1 ) { 
-    int saverr = errno; 
-    debugmsg( "ERROR: socket DGRAM: %d: %s\n", errno, strerror(errno) );
-    errno = saverr; 
-    return -1;
-  }
-
-  /*
-   * phase 1: guestimate size of buffer necessary to contain all interface
-   * information records. 
-   */
-#if defined(SIOCGLIFNUM)
-  /* API exists to determine the correct buffer size */
-  if ( getif_debug ) debugmsg( "DEBUG: SIOCGLIFNUM ioctl supported\n" );
-
-  memset( &ifnr, 0, sizeof(ifnr) );
-  ifnr.lifn_family = AF_INET;
-  if ( ioctl( sockfd, SIOCGLIFNUM, &ifnr ) < 0 ) {
-    debugmsg( "ERROR: ioctl SIOCGLIFNUM: %d: %s\n", errno, strerror(errno) );
-
-    if ( errno != EINVAL ) {
-      int saverr = errno;
-      close(sockfd);
-      errno = saverr; 
-      return -1; 
-    }
-  } else {
-    len = lastlen = ifnr.lifn_count * sizeof(struct ifreq);
-  }
-#else /* does not have SIOCGLIFNUM */
-  /* determine by repetitive guessing a buffer size */
-  if ( getif_debug ) debugmsg( "DEBUG: SIOCGLIFNUM ioctl *not* supported\n" );
-
-  lastlen = len = 3.5 * sizeof(struct ifreq); /* 1st guesstimate */
-#endif
-  /* POST CONDITION: some buffer size determined */
-
-  /* FIXME: Missing upper bound */
-  for (;;) {
-    /* guestimate correct buffer length */
-    if ( getif_debug ) debugmsg( "DEBUG: lastlen=%d, len=%d\n", lastlen, len );
-
-    buf = (char*) malloc(len);
-    memset( buf, 0, len );
-    ifc->ifc_len = len;
-    ifc->ifc_buf = buf;
-    if ( ioctl( sockfd, SIOCGIFCONF, ifc ) < 0 ) {
-      debugmsg( "WARN: ioctl SIOCGIFCONF: %d: %s\n", errno, strerror(errno) );
-      if ( errno != EINVAL || lastlen != 0 ) {
+    /* create a socket */
+    if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) { 
         int saverr = errno; 
-        close(sockfd);
+        debugmsg("ERROR: socket DGRAM: %d: %s\n", errno, strerror(errno));
         errno = saverr; 
-        return -1; 
-      }
-    } else {
-      if ( ifc->ifc_len == lastlen ) break; /* success */
-      if ( getif_debug ) debugmsg( "DEBUG: size mismatch, next round\n" );
-      lastlen = ifc->ifc_len;
+        return -1;
     }
-    len <<= 1;
-    free((void*) buf);
-  }
-  /* POST CONDITION: Now the buffer contains list of all interfaces */
-  if ( getif_debug ) {
-    debugmsg( "DEBUG: correct buffer length %d\n", ifc->ifc_len );
-    hexdump( ifc->ifc_buf, ifc->ifc_len );
-  }
 
-  return sockfd; 
+    /*
+     * phase 1: guestimate size of buffer necessary to contain all interface
+     * information records. 
+     */
+#if defined(SIOCGLIFNUM)
+    /* API exists to determine the correct buffer size */
+    memset(&ifnr, 0, sizeof(ifnr));
+    ifnr.lifn_family = AF_INET;
+    if (ioctl(sockfd, SIOCGLIFNUM, &ifnr) < 0) {
+        debugmsg("ERROR: ioctl SIOCGLIFNUM: %d: %s\n", errno, strerror(errno));
+
+        if (errno != EINVAL) {
+            int saverr = errno;
+            close(sockfd);
+            errno = saverr; 
+            return -1; 
+        }
+    } else {
+        len = lastlen = ifnr.lifn_count * sizeof(struct ifreq);
+    }
+#else /* does not have SIOCGLIFNUM */
+    /* determine by repetitive guessing a buffer size */
+    lastlen = len = 3.5 * sizeof(struct ifreq); /* 1st guesstimate */
+#endif
+    /* POST CONDITION: some buffer size determined */
+
+    /* FIXME: Missing upper bound */
+    for (;;) {
+        /* guestimate correct buffer length */
+        buf = (char*) malloc(len);
+        memset(buf, 0, len);
+        ifc->ifc_len = len;
+        ifc->ifc_buf = buf;
+        if (ioctl(sockfd, SIOCGIFCONF, ifc) < 0) {
+            debugmsg("WARN: ioctl SIOCGIFCONF: %d: %s\n", errno, strerror(errno));
+            if (errno != EINVAL || lastlen != 0) {
+                int saverr = errno; 
+                close(sockfd);
+                errno = saverr; 
+                return -1; 
+            }
+        } else {
+            if (ifc->ifc_len == lastlen) break; /* success */
+            lastlen = ifc->ifc_len;
+        }
+        len <<= 1;
+        free((void*) buf);
+    }
+    /* POST CONDITION: Now the buffer contains list of all interfaces */
+
+    return sockfd; 
 }
 
+struct ifreq* primary_interface(void) {
+    /* purpose: obtain the primary interface information
+     * returns: a newly-allocated structure containing the interface info,
+     *          or NULL to indicate an error. 
+     */
+    struct sockaddr_in sa;
+    struct ifconf ifc;
+    struct ifreq result, primary;
+    struct ifreq* ifrcopy = NULL;
+    char *ptr;
+    int sockfd, flag = 0;
 
+    /*
+     * phase 0: init
+     */
+    memset(&result, 0, sizeof(result));
+    memset(&primary, 0, sizeof(primary));
+    singleton_init();
 
-struct ifreq*
-primary_interface( void )
-/* purpose: obtain the primary interface information
- * returns: a newly-allocated structure containing the interface info,
- *          or NULL to indicate an error. 
- */
-{
-  struct sockaddr_in sa;
-  struct ifconf ifc;
-  struct ifreq  result, primary;
-  struct ifreq* ifrcopy = NULL;
-  char   *ptr; 
-  int    sockfd, flag = 0;
+    /* 
+     * phase 1: obtain list of interfaces 
+     */
+    if ((sockfd = interface_list(&ifc)) == -1) {
+        return NULL;
+    }
 
-  /*
-   * phase 0: init
-   */
-  memset( &result, 0, sizeof(result) );
-  memset( &primary, 0, sizeof(primary) );
-  singleton_init();
-
-  /* 
-   * phase 1: obtain list of interfaces 
-   */
-  if ( (sockfd=interface_list( &ifc )) == -1 ) return NULL; 
-
-  /*
-   * phase 2: walk interface list until a good interface is reached
-   */ 
-  /* Notice: recycle meaning of "len" in here */
-  for ( ptr = ifc.ifc_buf; ptr < ifc.ifc_buf + ifc.ifc_len; ) {
-    struct ifreq* ifr = (struct ifreq*) ptr;
+    /*
+     * phase 2: walk interface list until a good interface is reached
+     */ 
+    /* Notice: recycle meaning of "len" in here */
+    for (ptr = ifc.ifc_buf; ptr < ifc.ifc_buf + ifc.ifc_len; ) {
+        struct ifreq* ifr = (struct ifreq*) ptr;
 #ifndef _SIZEOF_ADDR_IFREQ
-    size_t len = sizeof(*ifr); 
+        size_t len = sizeof(*ifr);
 #else
-    size_t len = _SIZEOF_ADDR_IFREQ(*ifr); 
+        size_t len = _SIZEOF_ADDR_IFREQ(*ifr);
 #endif /* _SIZEOF_ADDR_IFREQ */
 
-    if ( getif_debug ) debugmsg( "DEBUG: stepping by %d\n", len );
-    ptr += len;
+        ptr += len;
 
-    /* report current entry's interface name */
-    if ( getif_debug ) debugmsg( "DEBUG: interface %s\n", ifr->ifr_name );
+        /* interested in IPv4 interfaces only */
+        if (ifr->ifr_addr.sa_family != AF_INET) {
+            continue;
+        }
 
-    /* interested in IPv4 interfaces only */
-    if ( ifr->ifr_addr.sa_family != AF_INET ) {
-      if ( getif_debug ) 
-        debugmsg( "DEBUG: interface %s has wrong family, skipping\n", ifr->ifr_name );
-      continue;
+        memcpy(&sa, &(ifr->ifr_addr), sizeof(struct sockaddr_in));
+
+        /* Do not use localhost aka loopback interfaces. While loopback
+         * interfaces traditionally start with "lo", this is not mandatory.
+         * It is safer to check that the address is in the 127.0.0.0 class A
+         * network. */
+        if ((sa.sin_addr.s_addr & vpn_netmask[0]) == vpn_network[0]) {
+            continue;
+        }
+
+        /* prime candidate - check, if interface is UP */
+        result = *ifr;
+        ioctl(sockfd, SIOCGIFFLAGS, &result);
+
+        /* interface is up - our work is done. Or is it? */
+        if ((result.ifr_flags & IFF_UP)) {
+            if (! flag) {
+                /* remember first found primary interface */
+                primary = result;
+                flag = 1;
+            }
+
+            /* check for VPNs */
+            if ((sa.sin_addr.s_addr & vpn_netmask[1]) == vpn_network[1] ||
+                (sa.sin_addr.s_addr & vpn_netmask[2]) == vpn_network[2] ||
+                (sa.sin_addr.s_addr & vpn_netmask[3]) == vpn_network[3] ||
+                (sa.sin_addr.s_addr & vpn_netmask[4]) == vpn_network[4] ||
+                (sa.sin_addr.s_addr & vpn_netmask[5]) == vpn_network[5]) {
+                /* Nothing */
+            } else {
+                flag = 2;
+                break;
+            }
+        }
     }
 
-    memcpy( &sa, &(ifr->ifr_addr), sizeof(struct sockaddr_in) );
-    if ( getif_debug ) debugmsg( "DEBUG: address %s\n", inet_ntoa(sa.sin_addr) );
-
-    /* Do not use localhost aka loopback interfaces. While loopback
-     * interfaces traditionally start with "lo", this is not mandatory.
-     * It is safer to check that the address is in the 127.0.0.0 class A
-     * network. */
-    if ( (sa.sin_addr.s_addr & vpn_netmask[0]) == vpn_network[0] ) {
-      if ( getif_debug ) 
-        debugmsg( "DEBUG: interface is localhost, skipping\n" );
-      continue;
+    /* check for loop exceeded - if yes, fall back on first primary */
+    if (flag == 1 && ptr >= ifc.ifc_buf + ifc.ifc_len) {
+        result = primary;
     }
 
-    /* prime candidate - check, if interface is UP */
-    result = *ifr;
-    if ( ioctl( sockfd, SIOCGIFFLAGS, &result ) < 0 ) {
-      if ( getif_debug ) 
-        debugmsg( "DEBUG: ioctl SIOCGIFFLAGS %s: %s\n", 
-               ifr->ifr_name, strerror(errno) );
-    }
+    /* clean up */
+    free((void*) ifc.ifc_buf);
+    close(sockfd);
 
-    /* interface is up - our work is done. Or is it? */
-    if ( (result.ifr_flags & IFF_UP) ) {
-      if ( ! flag ) {
-        /* remember first found primary interface */
-        if ( getif_debug )
-          debugmsg( "DEBUG: first primary interface %s\n", ifr->ifr_name );
-        primary = result;
-        flag = 1;
-      }
+    /* create a freshly allocated copy */
+    ifrcopy = (struct ifreq*) malloc(sizeof(struct ifreq));
+    memcpy(ifrcopy, &result, sizeof(struct ifreq));
+    return ifrcopy;
+}
 
-      /* check for VPNs */
-      if ( (sa.sin_addr.s_addr & vpn_netmask[1]) == vpn_network[1] ||
-           (sa.sin_addr.s_addr & vpn_netmask[2]) == vpn_network[2] ||
-           (sa.sin_addr.s_addr & vpn_netmask[3]) == vpn_network[3] ||
-           (sa.sin_addr.s_addr & vpn_netmask[4]) == vpn_network[4] ||
-           (sa.sin_addr.s_addr & vpn_netmask[5]) == vpn_network[5] ) {
-        if ( getif_debug )
-          debugmsg( "DEBUG: interface has VPN or bad address, trying next\n" );
-      } else {
-        if ( getif_debug ) 
-          debugmsg( "DEBUG: interface is good\n" );
-        flag = 2;
-        break;
-      }
+void whoami(char* abuffer, size_t asize, char* ibuffer, size_t isize) {
+    /* purpose: copy the primary interface's IPv4 dotted quad into the given buffer
+     * paramtr: abuffer (OUT): start of buffer to put IPv4 dotted quad
+     *          asize (IN): maximum capacity the abuffer is willing to accept
+     *          ibuffer (OUT): start of buffer to put the primary if name
+     *          isize (IN): maximum capacity the ibuffer is willing to accept
+     * returns: the modified buffers. */
+    /* enumerate interfaces, and guess primary one */
+    struct ifreq* ifr = primary_interface();
+    if (ifr != NULL) {
+        struct sockaddr_in sa;
+        if (abuffer) {
+            memcpy(&sa, &(ifr->ifr_addr), sizeof(struct sockaddr));
+            strncpy(abuffer, inet_ntoa(sa.sin_addr), asize);
+        }
+        if (ibuffer) {
+            strncpy(ibuffer, ifr->ifr_name, isize);
+        }
+        free((void*) ifr);
     } else {
-      if ( getif_debug ) debugmsg( "DEBUG: interface is down\n" );
+        /* error while trying to determine address of primary interface */
+        if (abuffer) strncpy(abuffer, "0.0.0.0", asize);
+        if (ibuffer) strncpy(ibuffer, "(none)", isize); 
     }
-  }
-
-  /* check for loop exceeded - if yes, fall back on first primary */
-  if ( flag == 1 && ptr >= ifc.ifc_buf + ifc.ifc_len ) {
-    if ( getif_debug ) 
-      debugmsg( "DEBUG: no better interface found, falling back\n" );
-    result = primary;
-  }
-
-  /* clean up */
-  free((void*) ifc.ifc_buf);
-  close(sockfd);
-
-  /* create a freshly allocated copy */
-  ifrcopy = (struct ifreq*) malloc( sizeof(struct ifreq) );
-  memcpy( ifrcopy, &result, sizeof(struct ifreq) );
-  return ifrcopy;
 }
 
-void
-whoami( char* abuffer, size_t asize, 
-        char* ibuffer, size_t isize )
-/* purpose: copy the primary interface's IPv4 dotted quad into the given buffer
- * paramtr: abuffer (OUT): start of buffer to put IPv4 dotted quad
- *          asize (IN): maximum capacity the abuffer is willing to accept
- *          ibuffer (OUT): start of buffer to put the primary if name
- *          isize (IN): maximum capacity the ibuffer is willing to accept
- * returns: the modified buffers. */
-{
-  /* enumerate interfaces, and guess primary one */
-  struct ifreq* ifr = primary_interface();
-  if ( ifr != NULL ) {
-    struct sockaddr_in sa;
-    if ( abuffer ) {
-      memcpy( &sa, &(ifr->ifr_addr), sizeof(struct sockaddr) );
-      strncpy( abuffer, inet_ntoa(sa.sin_addr), asize );
-    }
-    if ( ibuffer ) {
-      strncpy( ibuffer, ifr->ifr_name, isize ); 
-    }
-    free((void*) ifr);
-  } else {
-    /* error while trying to determine address of primary interface */
-    if ( abuffer ) strncpy( abuffer, "0.0.0.0", asize );
-    if ( ibuffer ) strncpy( ibuffer, "(none)", isize ); 
-  }
-}
