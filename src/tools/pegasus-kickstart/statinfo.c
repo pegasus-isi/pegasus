@@ -495,23 +495,12 @@ printXMLStatInfo(FILE *out, int indent, const char* tag, const char* id,
     if (fstat(info->file.descriptor, (struct stat*) &info->info) != -1 &&
          (((StatInfo*) info)->error = errno) == 0) {
       /* obtain header of file */
-
-#if 0
-      /* implementation alternative 1: use a new filetable kernel structure */
-      int fd = open(info->file.name, O_RDONLY);
-      if (fd != -1) {
-        read(fd, (char*) info->client.header, sizeof(info->client.header));
-        close(fd);
-      }
-#else
-      /* implementation alternative 2: share the kernel filetable structure */
       int fd = dup(info->file.descriptor);
       if (fd != -1) {
         if (lseek(fd, 0, SEEK_SET) != -1)
           read(fd, (char*) info->client.header, sizeof(info->client.header));
         close(fd);
       }
-#endif
     }
 
     fprintf(out, "%*s<temporary name=\"%s\" descriptor=\"%d\"/>\n",
@@ -526,12 +515,6 @@ printXMLStatInfo(FILE *out, int indent, const char* tag, const char* id,
     break;
 
   case IS_FILE: /* <file> element */
-#if 0
-    /* some debug info - for now */
-    fprintf(out, "%*s<!-- deferred flag: %d -->\n",
-            indent+2, "", info->deferred);
-#endif
-
 #ifdef HAS_REALPATH_EXT
     real = realpath(info->file.name, NULL); 
 #endif /* HAS_REALPATH_EXT */

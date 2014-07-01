@@ -225,11 +225,6 @@ primary_interface( void )
     struct ifreq* ifr = (struct ifreq*) ptr;
 #ifndef _SIZEOF_ADDR_IFREQ
     size_t len = sizeof(*ifr); 
-#if 0 /* Linux does not support (struct sockaddr).sa_len */ 
-    size_t len = sizeof(ifr->ifr_name) +
-      ( ifr->ifr_addr.sa_len > sizeof(struct sockaddr) ?
-        ifr->ifr_addr.sa_len : sizeof(struct sockaddr) ); 
-#endif
 #else
     size_t len = _SIZEOF_ADDR_IFREQ(*ifr); 
 #endif /* _SIZEOF_ADDR_IFREQ */
@@ -338,14 +333,7 @@ whoami( char* abuffer, size_t asize,
     free((void*) ifr);
   } else {
     /* error while trying to determine address of primary interface */
-#if 0
-    /* future lab */
-    if ( abuffer ) strncpy( abuffer, "xsi:null", asize );
-    if ( ibuffer ) strncpy( ibuffer, "xsi:null", isize ); 
-#else
-    /* for now */
     if ( abuffer ) strncpy( abuffer, "0.0.0.0", asize );
     if ( ibuffer ) strncpy( ibuffer, "(none)", isize ); 
-#endif
   }
 }
