@@ -142,7 +142,7 @@ void now(struct timeval* t) {
     while (gettimeofday(t, 0) == -1 && timeout < 10) timeout++;
 }
 
-static int isDir(const char* tmp) {
+static int isWriteableDir(const char* tmp) {
     /* purpose: Check that the given dir exists and is writable for us
      * paramtr: tmp (IN): designates a directory location
      * returns: true, if tmp exists, isa dir, and writable
@@ -172,27 +172,27 @@ const char* getTempDir(void) {
      * returns: a string with a temporary directory, may still be NULL.
      */
     char* tempdir = getenv("GRIDSTART_TMP");
-    if (tempdir != NULL && isDir(tempdir)) return tempdir;
+    if (tempdir != NULL && isWriteableDir(tempdir)) return tempdir;
 
     tempdir = getenv("TMP");
-    if (tempdir != NULL && isDir(tempdir)) return tempdir;
+    if (tempdir != NULL && isWriteableDir(tempdir)) return tempdir;
 
     tempdir = getenv("TEMP");
-    if (tempdir != NULL && isDir(tempdir)) return tempdir;
+    if (tempdir != NULL && isWriteableDir(tempdir)) return tempdir;
 
     tempdir = getenv("TMPDIR");
-    if (tempdir != NULL && isDir(tempdir)) return tempdir;
+    if (tempdir != NULL && isWriteableDir(tempdir)) return tempdir;
 
 #ifdef P_tmpdir /* in stdio.h */
     tempdir = P_tmpdir;
-    if (tempdir != NULL && isDir(tempdir)) return tempdir;
+    if (tempdir != NULL && isWriteableDir(tempdir)) return tempdir;
 #endif
 
     tempdir = "/tmp";
-    if (isDir(tempdir)) return tempdir;
+    if (isWriteableDir(tempdir)) return tempdir;
 
     tempdir = "/var/tmp";
-    if (isDir(tempdir)) return tempdir;
+    if (isWriteableDir(tempdir)) return tempdir;
 
     /* whatever we have by now is it - may still be NULL */
     return tempdir;
