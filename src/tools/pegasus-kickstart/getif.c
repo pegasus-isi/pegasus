@@ -30,7 +30,7 @@
 
 #include <sys/ioctl.h>
 
-#ifdef HAS_SYS_SOCKIO
+#ifdef DARWIN
 #include <sys/sockio.h>
 #endif
 

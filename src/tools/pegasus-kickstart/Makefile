@@ -7,8 +7,7 @@ LOADLIBES = -lm
 SYSTEM = $(shell uname -s | tr '[a-z]' '[A-Z]' | tr -d '_ -/')
 MARCH = $(shell uname -m | tr '[A-Z]' '[a-z]')
 EXTRA_OBJ = machine/basic.o
-SOCKIO = $(shell /bin/ls /usr/include/sys/sockio.h 2>/dev/null)
-LFS_CFLAGS = -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE 
+LFS_CFLAGS = -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
 LFS_LDFLAGS =
 
 ifndef ${prefix}
@@ -18,6 +17,8 @@ endif
 ifndef ${datadir}
     datadir = $(prefix)/share
 endif
+
+CFLAGS += -D${SYSTEM}
 
 ifeq (DARWIN,${SYSTEM})
     CFLAGS += -Wall -DMUST_USE_SELECT_NOT_POLL=1 -ggdb
@@ -37,12 +38,6 @@ ifeq (LINUX,${SYSTEM})
     LFS_CFLAGS = $(shell getconf LFS_CFLAGS 2>>/dev/null)
     LFS_LDFLAGS = $(shell getconf LFS_LDFLAGS 2>>/dev/null)
     EXTRA_OBJ += machine/linux.o
-endif
-
-CFLAGS += -D${SYSTEM}
-
-ifneq (,${SOCKIO})
-    CFLAGS += -DHAS_SYS_SOCKIO=1
 endif
 
 # add large file support
