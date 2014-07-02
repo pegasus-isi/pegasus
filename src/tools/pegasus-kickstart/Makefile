@@ -55,7 +55,6 @@ CFLAGS += -D${SYSTEM} -DMAJOR=${MAJOR} -DWITH_NEW_ARGS=1
 ifneq (,${SOCKIO})
 CFLAGS += -DHAS_SYS_SOCKIO=1
 endif
-CFLAGS += -DUSE_PARSE=1
 
 # add large file support
 ifneq (,${LFS_CFLAGS})

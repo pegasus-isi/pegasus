@@ -33,40 +33,6 @@
 extern int isExtended; /* timestamp format concise or extended */
 extern int isLocal;    /* timestamp time zone, UTC or local */
 
-#ifndef USE_PARSE
-static size_t countArguments(const char* cmdline) {
-    /* purpose: count the number of arguments in a commandline
-     * warning: any quoting or variable substitution is ignored
-     * paramtr: cmdline (IN): string containing the concatenated commandline
-     * returns: the number of arguments, 0 for an empty commandline.
-     */
-    size_t result = 0;
-    const char* t, *s = cmdline;
-
-    /* sanity check */
-    if (cmdline == NULL || *cmdline == '\0') return 0;
-
-    /* skip possible initial whitespace */
-    while (*s && isspace(*s)) ++s;
-
-    while (*s) {
-        /* save start position */
-        t = s;
-
-        /* advance non whitespace characters */
-        while (*s && ! isspace(*s)) ++s;
-
-        /* count only full arguments */
-        if (s != t) result++;
-
-        /* move over whitespace */
-        while (*s && isspace(*s)) ++s;
-    }
-
-    return result;
-}
-#endif /* ! USE_PARSE */
-
 void initJobInfoFromString(JobInfo* jobinfo, const char* commandline) {
     /* purpose: initialize the data structure with default
      * paramtr: jobinfo (OUT): initialized memory block
@@ -74,17 +40,12 @@ void initJobInfoFromString(JobInfo* jobinfo, const char* commandline) {
      */
     size_t i;
     char* t;
-#ifdef USE_PARSE
     int state = 0;
     Node* head = parseCommandLine(commandline, &state);
-#else
-    char* s;
-#endif
 
     /* reset everything */
     memset(jobinfo, 0, sizeof(JobInfo));
 
-#ifdef USE_PARSE
     /* only continue in ok state AND if there is anything to do */
     if (state == 32 && head) {
         size_t size, argc = size = 0;
@@ -122,29 +83,6 @@ void initJobInfoFromString(JobInfo* jobinfo, const char* commandline) {
     /* free list of (partial) argv */
     if (head) deleteNodes(head);
 
-#else
-    /* activate copy area */
-    jobinfo->copy = strdup(commandline ? commandline : "");
-
-    /* prepare argv buffer for arguments */
-    jobinfo->argc = countArguments(commandline);
-    jobinfo->argv = (char* const*) calloc(1+jobinfo->argc, sizeof(char*));
-
-    /* copy argument positions into pointer vector */
-    for (i=0, s=jobinfo->copy; *s && i < jobinfo->argc; i++) {
-        while (*s && isspace(*s)) *s++ = '\0';
-        t = s;
-        while (*s && ! isspace(*s)) ++s;
-        jobinfo->argv[i] = t;
-    }
-
-    /* remove possible trailing whitespaces */
-    while (*s && isspace(*s)) *s++ = '\0';
-
-    /* finalize vector */
-    jobinfo->argv[i] = NULL;
-#endif
-
     /* this is a valid (and initialized) entry */
     if (jobinfo->argc > 0) {
         /* check out path to job */
@@ -170,17 +108,14 @@ void initJobInfo(JobInfo* jobinfo, int argc, char* const* argv) {
      *          argc (IN): adjusted argc string (maybe from main())
      *          argv (IN): adjusted argv string to point to executable
      */
-#ifdef USE_PARSE
     size_t i;
     char* t;
     int state = 0;
     Node* head = parseArgVector(argc, argv, &state);
-#endif
 
     /* initialize memory */
     memset(jobinfo, 0, sizeof(JobInfo));
 
-#ifdef USE_PARSE
     /* only continue in ok state AND if there is anything to do */
     if (state == 32 && head) {
         size_t size, argc = size = 0;
@@ -220,13 +155,6 @@ void initJobInfo(JobInfo* jobinfo, int argc, char* const* argv) {
     if (head) {
         deleteNodes(head);
     }
-
-#else
-    /* this may require overwriting after CLI parsing */
-    jobinfo->argc = argc;
-    jobinfo->argv = argv;
-
-#endif
 
     /* this is a valid (and initialized) entry */
     if (jobinfo->argc > 0) {
