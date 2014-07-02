@@ -47,52 +47,6 @@ static const char* asciilookup[128] = {
          "x",        "y",        "z",        "{",        "|",        "}",        "~", "&#xe07f;"
 };
 
-static ssize_t writen(int fd, const char* buffer, ssize_t n, unsigned restart) {
-    /* purpose: write all n bytes in buffer, if possible at all
-     * paramtr: fd (IN): filedescriptor open for writing
-     *          buffer (IN): bytes to write (must be at least n byte long)
-     *          n (IN): number of bytes to write 
-     *          restart (IN): if true, try to restart write at max that often
-     * returns: n, if everything was written, or
-     *          [0..n-1], if some bytes were written, but then failed,
-     *          < 0, if some error occurred.
-     */
-    int start = 0;
-    while (start < n) {
-        int size = write(fd, buffer+start, n-start);
-        if (size < 0) {
-            if (restart && errno == EINTR) {
-                restart--;
-                continue;
-            }
-            return size;
-        } else {
-            start += size;
-        }
-    }
-    return n;
-}
-
-ssize_t debugmsg(char *fmt, ...) {
-    /* purpose: create a log line on stderr.
-     * paramtr: fmt (IN): printf-style format string
-     *          ... (IN): other arguments according to format
-     * returns: number of bytes written to STDERR via write()
-     */
-    ssize_t result;
-    va_list ap;
-    char buffer[4096];
-    int saverr = errno;
-
-    va_start(ap, fmt);
-    vsnprintf(buffer, sizeof(buffer), fmt, ap);
-    va_end(ap);
-
-    result = writen(STDERR_FILENO, buffer, strlen(buffer), 3);
-    errno = saverr;
-    return result;
-}
-
 void xmlquote(FILE *out, const char* msg, size_t msglen) {
     /* purpose: write a possibly binary message to the stream while XML
      *          quoting

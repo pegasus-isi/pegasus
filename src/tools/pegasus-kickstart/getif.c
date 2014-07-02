@@ -75,7 +75,8 @@ int interface_list(struct ifconf* ifc) {
     /* create a socket */
     if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) { 
         int saverr = errno; 
-        debugmsg("ERROR: socket DGRAM: %d: %s\n", errno, strerror(errno));
+        fprintf(stderr, "ERROR: socket DGRAM: %d: %s\n",
+                errno, strerror(errno));
         errno = saverr; 
         return -1;
     }
@@ -89,7 +90,8 @@ int interface_list(struct ifconf* ifc) {
     memset(&ifnr, 0, sizeof(ifnr));
     ifnr.lifn_family = AF_INET;
     if (ioctl(sockfd, SIOCGLIFNUM, &ifnr) < 0) {
-        debugmsg("ERROR: ioctl SIOCGLIFNUM: %d: %s\n", errno, strerror(errno));
+        fprintf(stderr, "ERROR: ioctl SIOCGLIFNUM: %d: %s\n",
+                errno, strerror(errno));
 
         if (errno != EINVAL) {
             int saverr = errno;
@@ -114,7 +116,8 @@ int interface_list(struct ifconf* ifc) {
         ifc->ifc_len = len;
         ifc->ifc_buf = buf;
         if (ioctl(sockfd, SIOCGIFCONF, ifc) < 0) {
-            debugmsg("WARN: ioctl SIOCGIFCONF: %d: %s\n", errno, strerror(errno));
+            fprintf(stderr, "WARN: ioctl SIOCGIFCONF: %d: %s\n",
+                    errno, strerror(errno));
             if (errno != EINVAL || lastlen != 0) {
                 int saverr = errno; 
                 close(sockfd);

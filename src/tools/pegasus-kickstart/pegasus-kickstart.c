@@ -213,8 +213,8 @@ static void finish() {
     if (doFlush) {
         int status = fsync(STDOUT_FILENO);
         if (status != 0) {
-            debugmsg("WARNING: fsync(%d)=%d (errno=%d, strerror=%s)\n",
-                     STDOUT_FILENO, status, errno, strerror(errno));
+            fprintf(stderr, "WARNING: fsync(%d)=%d (errno=%d, strerror=%s)\n",
+                    STDOUT_FILENO, status, errno, strerror(errno));
         }
     }
 
@@ -324,7 +324,7 @@ int main(int argc, char* argv[]) {
         switch (argv[i][1]) {
             case 'B':
                 if (!argv[i][2] && argc <= i+1) {
-                    debugmsg("ERROR: -B argument missing\n");
+                    fprintf(stderr, "ERROR: -B argument missing\n");
                     return 127;
                 }
                 temp = argv[i][2] ? &argv[i][2] : argv[++i];
@@ -334,7 +334,7 @@ int main(int argc, char* argv[]) {
                 break;
             case 'e':
                 if (!argv[i][2] && argc <= i+1) {
-                    debugmsg("ERROR: -e argument missing\n");
+                    fprintf(stderr, "ERROR: -e argument missing\n");
                     return 127;
                 }
                 if (appinfo.error.source != IS_INVALID) {
@@ -353,7 +353,7 @@ int main(int argc, char* argv[]) {
                 return 0;
             case 'i':
                 if (!argv[i][2] && argc <= i+1) {
-                    debugmsg("ERROR: -i argument missing\n");
+                    fprintf(stderr, "ERROR: -i argument missing\n");
                     return 127;
                 }
                 if (appinfo.input.source != IS_INVALID) {
@@ -381,12 +381,12 @@ int main(int argc, char* argv[]) {
                  * to work in a more sensible fashion.
                  */
                 if (argc > i+2) {
-                    debugmsg("ERROR: No arguments allowed after -I fn\n");
+                    fprintf(stderr, "ERROR: No arguments allowed after -I fn\n");
                     return 127;
                 }
 
                 if (!argv[i][2] && argc <= i+1) {
-                    debugmsg("ERROR: -I argument missing\n");
+                    fprintf(stderr, "ERROR: -I argument missing\n");
                     return 127;
                 }
 
@@ -394,8 +394,8 @@ int main(int argc, char* argv[]) {
                 temp = argv[i][2] ? &argv[i][2] : argv[++i];
                 if (readFromFile(temp, &argv, &argc, &i, j) == -1) {
                     int saverr = errno;
-                    debugmsg("ERROR: While parsing -I %s: %d: %s\n",
-                             temp, errno, strerror(saverr));
+                    fprintf(stderr, "ERROR: While parsing -I %s: %d: %s\n",
+                            temp, errno, strerror(saverr));
                     appinfo.application.prefix = strerror(saverr);
                     appinfo.application.status = -1;
                     return 127;
@@ -404,7 +404,7 @@ int main(int argc, char* argv[]) {
                 break;
             case 'l':
                 if (!argv[i][2] && argc <= i+1) {
-                    debugmsg("ERROR: -l argument missing\n");
+                    fprintf(stderr, "ERROR: -l argument missing\n");
                     return 127;
                 }
                 if (appinfo.logfile.source != IS_INVALID) {
@@ -419,28 +419,28 @@ int main(int argc, char* argv[]) {
                 break;
             case 'L':
                 if (!argv[i][2] && argc <= i+1) {
-                    debugmsg("ERROR: -L argument missing\n");
+                    fprintf(stderr, "ERROR: -L argument missing\n");
                     return 127;
                 }
                 appinfo.wf_label = noquote(argv[i][2] ? &argv[i][2] : argv[++i]);
                 break;
             case 'n':
                 if (!argv[i][2] && argc <= i+1) {
-                    debugmsg("ERROR: -n argument missing\n");
+                    fprintf(stderr, "ERROR: -n argument missing\n");
                     return 127;
                 }
                 appinfo.xformation = noquote(argv[i][2] ? &argv[i][2] : argv[++i]);
                 break;
             case 'N':
                 if (!argv[i][2] && argc <= i+1) {
-                    debugmsg("ERROR: -N argument missing\n");
+                    fprintf(stderr, "ERROR: -N argument missing\n");
                     return 127;
                 }
                 appinfo.derivation = noquote(argv[i][2] ? &argv[i][2] : argv[++i]);
                 break;
             case 'o':
                 if (!argv[i][2] && argc <= i+1) {
-                    debugmsg("ERROR: -o argument missing\n");
+                    fprintf(stderr, "ERROR: -o argument missing\n");
                     return 127;
                 }
                 if (appinfo.output.source != IS_INVALID) {
@@ -454,54 +454,54 @@ int main(int argc, char* argv[]) {
                 break;
             case 'R':
                 if (!argv[i][2] && argc <= i+1) {
-                    debugmsg("ERROR: -R argument missing\n");
+                    fprintf(stderr, "ERROR: -R argument missing\n");
                     return 127;
                 }
                 appinfo.sitehandle = noquote(argv[i][2] ? &argv[i][2] : argv[++i]);
                 break;
             case 'S':
                 if (!argv[i][2] && argc <= i+1) {
-                    debugmsg("ERROR: -S argument missing\n");
+                    fprintf(stderr, "ERROR: -S argument missing\n");
                     return 127;
                 }
                 temp = argv[i][2] ? &argv[i][2] : argv[++i];
                 if (temp[0] == '@') {
                     /* list-of-filenames file */
                     if ((result=mylist_fill(&initial, temp+1))) {
-                        debugmsg("ERROR: initial %s: %d: %s\n",
-                                 temp+1, result, strerror(result));
+                        fprintf(stderr, "ERROR: initial %s: %d: %s\n",
+                                temp+1, result, strerror(result));
                     }
                 } else {
                     /* direct filename */
                     if ((result=mylist_add(&initial, temp))) {
-                        debugmsg("ERROR: initial %s: %d: %s\n",
-                                 temp, result, strerror(result));
+                        fprintf(stderr, "ERROR: initial %s: %d: %s\n",
+                                temp, result, strerror(result));
                     }
                 }
                 break;
             case 's':
                 if (!argv[i][2] && argc <= i+1) {
-                    debugmsg("ERROR: -s argument missing\n");
+                    fprintf(stderr, "ERROR: -s argument missing\n");
                     return 127;
                 }
                 temp = argv[i][2] ? &argv[i][2] : argv[++i];
                 if (temp[0] == '@') {
                     /* list-of-filenames file */
                     if ((result=mylist_fill(&final, temp+1))) {
-                        debugmsg("ERROR: final %s: %d: %s\n",
-                                 temp+1, result, strerror(result));
+                        fprintf(stderr, "ERROR: final %s: %d: %s\n",
+                                temp+1, result, strerror(result));
                     }
                 } else {
                     /* direct filename */
                     if ((result=mylist_add(&final, temp))) {
-                        debugmsg("ERROR: final %s: %d: %s\n",
-                                 temp, result, strerror(result));
+                        fprintf(stderr, "ERROR: final %s: %d: %s\n",
+                                temp, result, strerror(result));
                     }
                 }
                 break;
             case 'T':
                 if (!argv[i][2] && argc <= i+1) {
-                    debugmsg("ERROR: -T argument missing\n");
+                    fprintf(stderr, "ERROR: -T argument missing\n");
                     return 127;
                 }
                 appinfo.wf_stamp = noquote(argv[i][2] ? &argv[i][2] : argv[++i]);
@@ -518,7 +518,7 @@ int main(int argc, char* argv[]) {
                 break;
             case 'w':
                 if (!argv[i][2] && argc <= i+1) {
-                    debugmsg("ERROR: -w argument missing\n");
+                    fprintf(stderr, "ERROR: -w argument missing\n");
                     return 127;
                 }
                 workdir = noquote(argv[i][2] ? &argv[i][2] : argv[++i]);
@@ -526,7 +526,7 @@ int main(int argc, char* argv[]) {
                 break;
             case 'W':
                 if (!argv[i][2] && argc <= i+1) {
-                    debugmsg("ERROR: -W argument missing\n");
+                    fprintf(stderr, "ERROR: -W argument missing\n");
                     return 127;
                 }
                 workdir = noquote(argv[i][2] ? &argv[i][2] : argv[++i]);
@@ -582,8 +582,8 @@ REDIR:
             }
 
             appinfo.application.saverr = errno;
-            debugmsg("Unable to mkdir %s: %d: %s\n",
-                     workdir, errno, strerror(errno));
+            fprintf(stderr, "Unable to mkdir %s: %d: %s\n",
+                    workdir, errno, strerror(errno));
             appinfo.application.prefix = "Unable to mkdir: ";
             appinfo.application.status = -1;
             return 127;
@@ -591,8 +591,8 @@ REDIR:
 
         /* unable to use alternate workdir */
         appinfo.application.saverr = errno;
-        debugmsg("Unable to chdir %s: %d: %s\n",
-                 workdir, errno, strerror(errno));
+        fprintf(stderr, "Unable to chdir %s: %d: %s\n",
+                workdir, errno, strerror(errno));
         appinfo.application.prefix = "Unable to chdir: ";
         appinfo.application.status = -1;
         return 127;

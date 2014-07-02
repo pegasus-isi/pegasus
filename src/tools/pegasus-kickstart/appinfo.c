@@ -326,7 +326,7 @@ int printAppInfo(AppInfo* run) {
     }
 
     if (fd < 0) {
-        debugmsg("ERROR: Unable to open output file\n");
+        fprintf(stderr, "ERROR: Unable to open output file\n");
         return -1;
     }
 
@@ -335,7 +335,7 @@ int printAppInfo(AppInfo* run) {
      */
     FILE *out = fdopen(dup(fd), "w");
     if (out == NULL) {
-        debugmsg("ERROR: Unable to output stream\n");
+        fprintf(stderr, "ERROR: Unable to open output stream\n");
         goto exit;
     }
 

@@ -414,7 +414,7 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
 
         /* sanity check */
         if (kill(jobinfo->child, 0) == 0) {
-            debugmsg("ERROR: job %d is still running!\n", jobinfo->child);
+            fprintf(stderr, "ERROR: job %d is still running!\n", jobinfo->child);
             if (!errno) errno = EINPROGRESS;
         }
     }

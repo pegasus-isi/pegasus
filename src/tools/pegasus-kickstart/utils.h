@@ -20,7 +20,6 @@
 #include <sys/time.h>
 #include <time.h>
 
-extern ssize_t debugmsg(char* fmt, ...);
 extern void xmlquote(FILE *out, const char* msg, size_t msglen);
 extern char * fmtisodate(int isLocal, int isExtended, time_t seconds, long micros);
 extern double doubletime(const struct timeval t);

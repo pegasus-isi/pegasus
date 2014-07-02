@@ -243,8 +243,8 @@ RETRY:
         /* mkstemp has failed, au weia! */
         statinfo->source = IS_INVALID;
         statinfo->error = errno;
-        debugmsg("Warning! Invalid FIFO: mkstemp failed: %d: %s\n",
-                 errno, strerror(errno));
+        fprintf(stderr, "Warning! Invalid FIFO: mkstemp failed: %d: %s\n",
+                errno, strerror(errno));
 
     } else {
         /* create a FIFO instead of a regular tmp file. */
@@ -261,8 +261,8 @@ RETRY:
                 /* other errors are treated as more fatal */
                 statinfo->source = IS_INVALID;
                 statinfo->error = errno;
-                debugmsg("Warning! Invalid FIFO: mkfifo failed: %d: %s\n",
-                         errno, strerror(errno));
+                fprintf(stderr, "Warning! Invalid FIFO: mkfifo failed: %d: %s\n",
+                        errno, strerror(errno));
             }
         } else {
             /* open in non-blocking mode for reading.
@@ -272,8 +272,8 @@ RETRY:
             if ((result = open(pattern, O_RDWR | O_NONBLOCK)) == -1) {
                 statinfo->source = IS_INVALID;
                 statinfo->error = errno;
-                debugmsg("Warning! Invalid FIFO: open failed: %d: %s\n",
-                         errno, strerror(errno));
+                fprintf(stderr, "Warning! Invalid FIFO: open failed: %d: %s\n",
+                        errno, strerror(errno));
             } else {
                 /* this file descriptor is NOT to be passed to the jobs? So far,
                  * the answer is true. We close this fd on exec of sub jobs, so
@@ -298,7 +298,7 @@ RETRY:
                     strncat(temp, "=", size);
                     strncat(temp, pattern, size);
                     if (putenv(temp) == -1) {
-                        debugmsg("Warning: Unable to putenv %s: %d: %s\n",
+                        fprintf(stderr, "Warning: Unable to putenv %s: %d: %s\n",
                                 key, errno, strerror(errno));
                     }
                     /* do not free this string here nor now */

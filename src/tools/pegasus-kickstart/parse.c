@@ -86,7 +86,7 @@ static void resolve(char** v, char* varname, char** p, char* buffer, size_t size
         while (pp - buffer < size && *value) *pp++ = *value++;
         *p = pp;
     } else {
-        debugmsg("ERROR: Variable $%s does not exist\n", varname);
+        fprintf(stderr, "ERROR: Variable $%s does not exist\n", varname);
         exit(1);
     }
 
@@ -303,7 +303,7 @@ static void internalParse(const char* line, const char** cursor, int* state,
                     *p = *s;
                     p++;
                 } else {
-                    debugmsg("ERROR: Argument too long\n");
+                    fprintf(stderr, "ERROR: Argument too long\n");
                     exit(1);
                 }
                 break;
@@ -316,7 +316,7 @@ static void internalParse(const char* line, const char** cursor, int* state,
                 if (v-varname < vsize) {
                     *v++ = *s;
                 } else {
-                    debugmsg("ERROR: Variable name too long\n");
+                    fprintf(stderr, "ERROR: Variable name too long\n");
                     exit(1);
                 }
                 break;
@@ -345,8 +345,11 @@ static void internalParse(const char* line, const char** cursor, int* state,
                 if (newstate > 32) {
                     fputs(errormessage[newstate-33], stderr);
                 } else {
-                    debugmsg("# ARG PARSER ERROR: state=%02d, class=%d, action=%d, newstate=%02d, char=%02X (%c)\n",
-                            *state, charclass, 8, newstate, *s, ((*s & 127) >= 32) ? *s : '.');
+                    fprintf(stderr,
+                            "# ARG PARSER ERROR: state=%02d, class=%d, "
+                            "action=%d, newstate=%02d, char=%02X (%c)\n",
+                            *state, charclass, 8, newstate, *s, 
+                            ((*s & 127) >= 32) ? *s : '.');
                 }
                 exit(1);
                 break;
