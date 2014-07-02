@@ -360,7 +360,9 @@ int printAppInfo(AppInfo* run) {
     fflush(out);
     fsync(fileno(out));
 
-    if (locked==1) lockit(fd, F_SETLK, F_UNLCK);
+    if (locked==1) {
+        lockit(fd, F_SETLK, F_UNLCK);
+    }
 
     run->isPrinted = 1;
 

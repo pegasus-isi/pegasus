@@ -45,7 +45,6 @@ extern char *programname;
 extern char** environ;
 
 /* module local globals */
-static int doFlush = 0; /* apply fsync() on kickstart's stdout if true */ 
 static AppInfo appinfo; /* sigh, needs to be global for atexit handler */
 static volatile sig_atomic_t global_no_atexit;
 
@@ -180,7 +179,7 @@ static void helpMe(const AppInfo* run) {
             " \tIf the arg is prefixed with '@', it is a list-of-filenames file.\n"
             " -s l=p\tProvides filename pairs to stat before exit, multi-option.\n"
             " \tIf the arg is prefixed with '@', it is a list-of-filenames file.\n"
-            " -F\tAttempt to fsync kickstart's stdout at exit (should not be necessary).\n"
+            " -F\tThis flag does nothing. Kept for historical reasons.\n"
             " -f\tPrint full information including <resource>, <environment> and \n"
             "   \t<statcall>. If the job fails, then -f is implied.\n"
             " -q\tOmit <data> for <statcall> (stdout, stderr) if the job succeeds.\n"
@@ -209,15 +208,13 @@ static void finish() {
         deleteAppInfo(&appinfo);
     }
 
-    /* PM-466 debugging */
-    if (doFlush) {
-        int status = fsync(STDOUT_FILENO);
-        if (status != 0) {
-            fprintf(stderr, "WARNING: fsync(%d)=%d (errno=%d, strerror=%s)\n",
-                    STDOUT_FILENO, status, errno, strerror(errno));
-        }
-    }
+    /* This probably isn't necessary */
+    fflush(stdout);
+    fsync(STDOUT_FILENO);
+    nfs_sync(STDOUT_FILENO);
 
+    fflush(stderr);
+    fsync(STDERR_FILENO);
     nfs_sync(STDERR_FILENO);
 }
 
@@ -373,7 +370,7 @@ int main(int argc, char* argv[]) {
                 appinfo.fullInfo++;
                 break;
             case 'F':
-                doFlush++;
+                /* This does nothing now */
                 break;
             case 'I':
                 /* XXX We expect exactly 1 argument after -I. If we see more,

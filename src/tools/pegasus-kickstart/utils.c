@@ -280,6 +280,11 @@ int nfs_sync(int fd) {
      * paramtr: fd (IN): descriptor of an open file
      * returns: 0 is ok, -1 for failure
      */
+
+    /* Apparently, NFS guarantees that writes are flushed on acquiring or
+     * releasing POSIX locks. That is the theory behind this kludge.
+     */
+
     /* lock file */
     if (lockit(fd, F_SETLK, F_WRLCK) == -1) {
         return -1;
