@@ -1,7 +1,7 @@
 INSTALL = install
 RM = rm -f
 CC = gcc
-CFLAGS = -O
+CFLAGS =
 LD = $(CC)
 LOADLIBES = -lm
 SYSTEM = $(shell uname -s | tr '[a-z]' '[A-Z]' | tr -d '_ -/')
@@ -18,10 +18,8 @@ ifndef ${datadir}
     datadir = $(prefix)/share
 endif
 
-CFLAGS += -D${SYSTEM}
-
 ifeq (DARWIN,${SYSTEM})
-    CFLAGS += -Wall -DMUST_USE_SELECT_NOT_POLL=1 -ggdb
+    CFLAGS = -Wall -O -DMUST_USE_SELECT_NOT_POLL=1 -ggdb
     EXTRA_OBJ += machine/darwin.o
 endif
 
@@ -48,6 +46,8 @@ endif
 ifneq (,${LFS_LDFLAGS})
     LDFLAGS += $(LFS_LDFLAGS)
 endif
+
+CFLAGS += -D${SYSTEM}
 
 .PHONY: test
 
