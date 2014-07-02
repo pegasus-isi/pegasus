@@ -29,8 +29,6 @@
  */
 #define KS_ARG_MAX 131072
 
-static int debug = 0;
-
 size_t countNodes(const Node* head) {
     /* purpose: count the number of element in list
      * paramtr: head (IN): start of the list.
@@ -85,7 +83,6 @@ static void resolve(char** v, char* varname, char** p, char* buffer, size_t size
     **v = 0;
     if ((value = getenv(varname))) {
         char* pp = *p;
-        if (debug) debugmsg("# %s=%s\n", varname, value);
         while (pp - buffer < size && *value) *pp++ = *value++;
         *p = pp;
     } else {
@@ -300,12 +297,6 @@ static void internalParse(const char* line, const char** cursor, int* state,
         int charclass = xlate(*s);
         int newstate = statemap[*state][charclass];
 
-        if (debug) {
-            debugmsg("# pos=%d, state=%02d, class=%d, action=%d, newstate=%02d, char=%02X (%c)\n",
-                     p-buffer, *state, charclass, actionmap[*state][charclass], newstate, *s,
-                     ((*s & 127) >= 32) ? *s : '.');
-        }
-
         switch (actionmap[*state][charclass]) {
             case 0: /* store into buffer */
                 if (p-buffer < size) {
@@ -344,7 +335,6 @@ static void internalParse(const char* line, const char** cursor, int* state,
                 if (p-buffer < size) {
                     char* x = strchr(translation, *s);
                     *p++ = (x == NULL ? *s : translationmap[x-translation]);
-                    if (debug) debugmsg("# escape %c -> %d\n", *s, *(p-1));
                 }
                 break;
             case 7: /* case 3 followed by case 0 */
