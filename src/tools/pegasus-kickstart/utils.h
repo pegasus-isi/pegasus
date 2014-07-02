@@ -12,8 +12,8 @@
  * Copyright 1999-2004 University of Chicago and The University of
  * Southern California. All rights reserved.
  */
-#ifndef _TOOLS_H
-#define _TOOLS_H
+#ifndef _UTILS_H
+#define _UTILS_H
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -72,4 +72,4 @@ extern char* sizer(char* buffer, size_t capacity, size_t vsize, const void* valu
  * returns: buffer
  */
 
-#endif /* _TOOLS_H */
+#endif /* _UTILS_H */

@@ -14,7 +14,7 @@
  */
 #include <string.h>
 
-#include "tools.h"
+#include "utils.h"
 #include "useinfo.h"
 
 int printXMLUseInfo(FILE *out, int indent, const char* id,

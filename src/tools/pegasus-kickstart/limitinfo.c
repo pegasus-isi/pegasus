@@ -16,7 +16,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "tools.h"
+#include "utils.h"
 #include "limitinfo.h"
 
 #ifndef RLIMIT_NLIMITS

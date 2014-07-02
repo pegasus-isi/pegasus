@@ -14,7 +14,7 @@
  */
 #include "getif.h"
 #include "rwio.h"
-#include "tools.h"
+#include "utils.h"
 #include "useinfo.h"
 #include "machine.h"
 #include "jobinfo.h"

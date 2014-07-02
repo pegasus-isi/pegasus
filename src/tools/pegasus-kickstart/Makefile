@@ -56,35 +56,37 @@ CFLAGS += -D${SYSTEM}
 
 all : pegasus-kickstart libinterpose.so
 
-pegasus-kickstart: getif.o rwio.o tools.o useinfo.o statinfo.o jobinfo.o limitinfo.o $(EXTRA_OBJ) machine.o appinfo.o parse.o mysystem.o mylist.o invoke.o pegasus-kickstart.o procinfo.o syscall.o
+pegasus-kickstart: getif.o rwio.o utils.o useinfo.o statinfo.o jobinfo.o \
+  limitinfo.o $(EXTRA_OBJ) machine.o appinfo.o parse.o mysystem.o mylist.o \
+  invoke.o pegasus-kickstart.o procinfo.o syscall.o
 	$(LD) $(EXTRA_LDFLAGS) $(CFLAGS) $^ -o $@ $(LOADLIBES)
 
-appinfo.o: appinfo.c getif.h rwio.h tools.h useinfo.h machine.h \
+appinfo.o: appinfo.c getif.h rwio.h utils.h useinfo.h machine.h \
   jobinfo.h statinfo.h appinfo.h limitinfo.h
 getif.o: getif.c getif.h rwio.h
 invoke.o: invoke.c invoke.h
-jobinfo.o: jobinfo.c getif.h tools.h useinfo.h jobinfo.h \
+jobinfo.o: jobinfo.c getif.h utils.h useinfo.h jobinfo.h \
   statinfo.h parse.h procinfo.h
 pegasus-kickstart.o: pegasus-kickstart.c rwio.h appinfo.h \
   statinfo.h jobinfo.h limitinfo.h machine.h mysystem.h mylist.h \
-  invoke.h tools.h version.h ptrace.h
-limitinfo.o: limitinfo.c tools.h limitinfo.h
+  invoke.h utils.h version.h ptrace.h
+limitinfo.o: limitinfo.c utils.h limitinfo.h
 machine.o: machine.c machine.h machine/basic.h
 mylist.o: mylist.c mylist.h
-mysystem.o: mysystem.c tools.h appinfo.h statinfo.h jobinfo.h \
+mysystem.o: mysystem.c utils.h appinfo.h statinfo.h jobinfo.h \
   limitinfo.h machine.h mysystem.h procinfo.h
 parse.o: parse.c parse.h
-procinfo.o: procinfo.c procinfo.h ptrace.h tools.h
+procinfo.o: procinfo.c procinfo.h ptrace.h utils.h
 rwio.o: rwio.c rwio.h
-statinfo.o: statinfo.c statinfo.h tools.h
-tools.o: tools.c tools.h
-useinfo.o: useinfo.c tools.h useinfo.h
+statinfo.o: statinfo.c statinfo.h utils.h
+utils.o: utils.c utils.h
+useinfo.o: useinfo.c utils.h useinfo.h
 
-machine/basic.o: machine/basic.c machine/basic.h machine/../tools.h
+machine/basic.o: machine/basic.c machine/basic.h machine/../utils.h
 machine/linux.o: machine/linux.c machine/basic.c machine/linux.h \
-  machine/../tools.h
+  machine/../utils.h
 machine/darwin.o: machine/darwin.c machine/basic.c machine/darwin.h \
-  machine/../tools.h
+  machine/../utils.h
 
 libinterpose.so: interpose.c
 	$(CC) -Wall -std=gnu99 -shared -fPIC -o libinterpose.so interpose.c -ldl

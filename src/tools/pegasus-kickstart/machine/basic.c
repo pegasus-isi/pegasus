@@ -20,7 +20,7 @@
 #include <time.h>
 
 #include "basic.h"
-#include "../tools.h"
+#include "../utils.h"
 
 extern int isExtended; /* timestamp format concise or extended */
 extern int isLocal;    /* timestamp time zone, UTC or local */

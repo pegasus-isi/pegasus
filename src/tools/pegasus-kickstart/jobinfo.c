@@ -25,7 +25,7 @@
 #include <fcntl.h>
 
 #include "getif.h"
-#include "tools.h"
+#include "utils.h"
 #include "useinfo.h"
 #include "jobinfo.h"
 #include "parse.h"

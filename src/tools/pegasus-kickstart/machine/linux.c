@@ -14,7 +14,7 @@
  */
 #include "basic.h"
 #include "linux.h"
-#include "../tools.h"
+#include "../utils.h"
 
 #include <ctype.h>
 #include <errno.h>

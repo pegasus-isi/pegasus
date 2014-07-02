@@ -13,7 +13,7 @@
  * Southern California. All rights reserved.
  */
 #include "getif.h"
-#include "tools.h"
+#include "utils.h"
 
 #include <errno.h>
 #include <string.h>

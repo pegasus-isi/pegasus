@@ -29,7 +29,7 @@
 #include <errno.h>
 
 #include "procinfo.h"
-#include "tools.h"
+#include "utils.h"
 #include "syscall.h"
 
 #ifdef HAS_PTRACE

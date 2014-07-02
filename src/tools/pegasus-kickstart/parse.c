@@ -19,7 +19,7 @@
 #include <unistd.h>
 
 #include "parse.h"
-#include "tools.h"
+#include "utils.h"
 
 /* In Linux, 32 pages is the max for a single argument.
  * In Darwin it is larger, but we will just use the same

@@ -14,7 +14,7 @@
  */
 #include "basic.h"
 #include "darwin.h"
-#include "../tools.h"
+#include "../utils.h"
 
 #include <ctype.h>
 #include <string.h>

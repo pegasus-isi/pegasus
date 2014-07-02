@@ -12,8 +12,6 @@
  * Copyright 1999-2004 University of Chicago and The University of
  * Southern California. All rights reserved.
  */
-#include "tools.h"
-#include "rwio.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -23,6 +21,9 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <errno.h>
+
+#include "utils.h"
+#include "rwio.h"
 
 static const char* asciilookup[128] = {
   "&#xe000;", "&#xe001;", "&#xe002;", "&#xe003;", "&#xe004;", "&#xe005;", "&#xe006;", "&#xe007;",
