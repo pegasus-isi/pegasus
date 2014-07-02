@@ -45,223 +45,208 @@ static const char* asciilookup[128] = {
 };
 
 ssize_t debugmsg(char* fmt, ...) {
-/* purpose: create a log line on stderr.
- * paramtr: fmt (IN): printf-style format string
- *          ... (IN): other arguments according to format
- * returns: number of bytes written to STDERR via write()
- */
-  ssize_t result;
-  va_list ap;
-  char buffer[4096];
-  int saverr = errno;
-
-  va_start( ap, fmt );
-  vsnprintf( buffer, sizeof(buffer), fmt, ap );
-  va_end( ap );
-
-  result = writen( STDERR_FILENO, buffer, strlen(buffer), 3 );
-  errno = saverr;
-  return result;
-}
-void
-xmlquote(FILE *out, const char* msg, size_t msglen)
-/* purpose: write a possibly binary message to the stream while XML
- *          quoting
- * paramtr: out (IO): stream to write the quoted xml to
- *          msg (IN): message to append to buffer
- *          mlen (IN): length of message area to append
- * returns: nada
- */
-{
-  size_t i;
-  for (i=0; i<msglen; ++i) {
-    /* We assume that all the characters that need to be escaped fall
-     * in the ASCII range. Anything outside that range, we assume to
-     * be UTF-8 encoded.
+    /* purpose: create a log line on stderr.
+     * paramtr: fmt (IN): printf-style format string
+     *          ... (IN): other arguments according to format
+     * returns: number of bytes written to STDERR via write()
      */
-    unsigned char j = (unsigned char) msg[i];
-    if (j < 128) {
-      fputs(asciilookup[j], out);
-    } else {
-      fputc(msg[i], out);
+    ssize_t result;
+    va_list ap;
+    char buffer[4096];
+    int saverr = errno;
+
+    va_start(ap, fmt);
+    vsnprintf(buffer, sizeof(buffer), fmt, ap);
+    va_end(ap);
+
+    result = writen(STDERR_FILENO, buffer, strlen(buffer), 3);
+    errno = saverr;
+    return result;
+}
+
+void xmlquote(FILE *out, const char* msg, size_t msglen) {
+    /* purpose: write a possibly binary message to the stream while XML
+     *          quoting
+     * paramtr: out (IO): stream to write the quoted xml to
+     *          msg (IN): message to append to buffer
+     *          mlen (IN): length of message area to append
+     * returns: nada
+     */
+    size_t i;
+    for (i=0; i<msglen; ++i) {
+        /* We assume that all the characters that need to be escaped fall
+         * in the ASCII range. Anything outside that range, we assume to
+         * be UTF-8 encoded.
+         */
+        unsigned char j = (unsigned char) msg[i];
+        if (j < 128) {
+            fputs(asciilookup[j], out);
+        } else {
+            fputc(msg[i], out);
+        }
     }
-  }
 }
 
 static char __isodate[32];
 
-char *
-fmtisodate(int isLocal, int isExtended, time_t seconds, long micros)
-/* purpose: return an ISO-formatted string for a given timestamp
- * paramtr: isLocal (IN): flag, if 0 use UTC, otherwise use local time
- *          isExtd (IN): flag, if 0 use concise format, otherwise extended
- *          seconds (IN): tv_sec part of timeval
- *          micros (IN): if negative, don't show micros.
- * returns: a pointer to the formatted string
- */
-{
-  size_t len;
-  struct tm zulu;
-  memcpy(&zulu, gmtime(&seconds), sizeof(struct tm));
+char * fmtisodate(int isLocal, int isExtended, time_t seconds, long micros) {
+    /* purpose: return an ISO-formatted string for a given timestamp
+     * paramtr: isLocal (IN): flag, if 0 use UTC, otherwise use local time
+     *          isExtd (IN): flag, if 0 use concise format, otherwise extended
+     *          seconds (IN): tv_sec part of timeval
+     *          micros (IN): if negative, don't show micros.
+     * returns: a pointer to the formatted string
+     */
+    size_t len;
+    struct tm zulu;
+    memcpy(&zulu, gmtime(&seconds), sizeof(struct tm));
 
-  if (isLocal) {
-    /* local time requires that we state the offset */
-    int hours, minutes;
-    time_t distance;
+    if (isLocal) {
+        /* local time requires that we state the offset */
+        int hours, minutes;
+        time_t distance;
 
-    struct tm local;
-    memcpy(&local, localtime(&seconds), sizeof(struct tm));
+        struct tm local;
+        memcpy(&local, localtime(&seconds), sizeof(struct tm));
 
-    zulu.tm_isdst = local.tm_isdst;
-    distance = seconds - mktime(&zulu);
-    hours = distance / 3600;
-    minutes = abs(distance) % 60;
+        zulu.tm_isdst = local.tm_isdst;
+        distance = seconds - mktime(&zulu);
+        hours = distance / 3600;
+        minutes = abs(distance) % 60;
 
-    strftime(__isodate, sizeof(__isodate),
-             isExtended ? "%Y-%m-%dT%H:%M:%S" : "%Y%m%dT%H%M%S", &local);
-    len = strlen(__isodate);
+        strftime(__isodate, sizeof(__isodate),
+                 isExtended ? "%Y-%m-%dT%H:%M:%S" : "%Y%m%dT%H%M%S", &local);
+        len = strlen(__isodate);
 
-    if (micros < 0)
-      snprintf(__isodate+len, sizeof(__isodate)-len,
-               "%+03d:%02d", hours, minutes);
-    else
-      snprintf(__isodate+len, sizeof(__isodate)-len,
-               isExtended ? ".%03ld%+03d:%02d" : ".%03ld%+03d%02d",
-               micros / 1000, hours, minutes );
-  } else {
-    /* zulu time aka UTC */
-    strftime(__isodate, sizeof(__isodate),
-             isExtended ? "%Y-%m-%dT%H:%M:%S" : "%Y%m%dT%H%M%S", &zulu);
-    len = strlen(__isodate);
-
-    if ( micros < 0 )
-      snprintf(__isodate+len, sizeof(__isodate)-len, "Z");
-    else
-      snprintf(__isodate+len, sizeof(__isodate)-len, ".%03ldZ", micros/1000);
-  }
-
-  return __isodate;
-}
-
-double
-doubletime(struct timeval t)
-/* purpose: convert a structured timeval into seconds with fractions.
- * paramtr: t (IN): a timeval as retured from gettimeofday().
- * returns: the number of seconds with microsecond fraction. */
-{
-  return ( t.tv_sec + t.tv_usec / 1E6 );
-}
-
-void
-now( struct timeval* t )
-/* purpose: capture a point in time with microsecond extension 
- * paramtr: t (OUT): where to store the captured time
- */
-{
-  int timeout = 0;
-  t->tv_sec = -1;
-  t->tv_usec = 0;
-  while ( gettimeofday( t, 0 ) == -1 && timeout < 10 ) timeout++;
-}
-
-static
-int
-isDir( const char* tmp )
-/* purpose: Check that the given dir exists and is writable for us
- * paramtr: tmp (IN): designates a directory location
- * returns: true, if tmp exists, isa dir, and writable
- */
-{
-  struct stat st;
-  if ( stat( tmp, &st ) == 0 && S_ISDIR(st.st_mode) ) {
-    /* exists and isa directory */
-    if ( (geteuid() != st.st_uid || (st.st_mode & S_IWUSR) == 0) &&
-         (getegid() != st.st_gid || (st.st_mode & S_IWGRP) == 0) &&
-         ((st.st_mode & S_IWOTH) == 0) ) {
-      /* not writable to us */
-      return 0;
+        if (micros < 0) {
+            snprintf(__isodate+len, sizeof(__isodate)-len,
+                     "%+03d:%02d", hours, minutes);
+        } else {
+            snprintf(__isodate+len, sizeof(__isodate)-len,
+                     isExtended ? ".%03ld%+03d:%02d" : ".%03ld%+03d%02d",
+                     micros / 1000, hours, minutes);
+        }
     } else {
-      /* yes, writable dir for us */
-      return 1;
+        /* zulu time aka UTC */
+        strftime(__isodate, sizeof(__isodate),
+                 isExtended ? "%Y-%m-%dT%H:%M:%S" : "%Y%m%dT%H%M%S", &zulu);
+        len = strlen(__isodate);
+
+        if (micros < 0) {
+            snprintf(__isodate+len, sizeof(__isodate)-len, "Z");
+        } else {
+            snprintf(__isodate+len, sizeof(__isodate)-len, ".%03ldZ", micros/1000);
+        }
     }
-  } else {
-    /* location does not exist, or is not a directory */
-    return 0;
-  }
+
+    return __isodate;
 }
 
-const char*
-getTempDir( void )
-/* purpose: determine a suitable directory for temporary files.
- * warning: remote schedulers may chose to set a different TMP..
- * returns: a string with a temporary directory, may still be NULL.
- */
-{
-  char* tempdir = getenv("GRIDSTART_TMP");
-  if ( tempdir != NULL && isDir(tempdir) ) return tempdir;
+double doubletime(struct timeval t) {
+    /* purpose: convert a structured timeval into seconds with fractions.
+     * paramtr: t (IN): a timeval as retured from gettimeofday().
+     * returns: the number of seconds with microsecond fraction. */
+    return (t.tv_sec + t.tv_usec / 1E6);
+}
 
-  tempdir = getenv("TMP");
-  if ( tempdir != NULL && isDir(tempdir) ) return tempdir;
+void now(struct timeval* t) {
+    /* purpose: capture a point in time with microsecond extension 
+     * paramtr: t (OUT): where to store the captured time
+     */
+    int timeout = 0;
+    t->tv_sec = -1;
+    t->tv_usec = 0;
+    while (gettimeofday(t, 0) == -1 && timeout < 10) timeout++;
+}
 
-  tempdir = getenv("TEMP");
-  if ( tempdir != NULL && isDir(tempdir) ) return tempdir;
+static int isDir(const char* tmp) {
+    /* purpose: Check that the given dir exists and is writable for us
+     * paramtr: tmp (IN): designates a directory location
+     * returns: true, if tmp exists, isa dir, and writable
+     */
+    struct stat st;
+    if (stat(tmp, &st) == 0 && S_ISDIR(st.st_mode)) {
+        /* exists and isa directory */
+        if ((geteuid() != st.st_uid || (st.st_mode & S_IWUSR) == 0) &&
+            (getegid() != st.st_gid || (st.st_mode & S_IWGRP) == 0) &&
+            ((st.st_mode & S_IWOTH) == 0)) {
 
-  tempdir = getenv("TMPDIR");
-  if ( tempdir != NULL && isDir(tempdir) ) return tempdir;
+            /* not writable to us */
+            return 0;
+        } else {
+            /* yes, writable dir for us */
+            return 1;
+        }
+    } else {
+        /* location does not exist, or is not a directory */
+        return 0;
+    }
+}
+
+const char* getTempDir(void) {
+    /* purpose: determine a suitable directory for temporary files.
+     * warning: remote schedulers may chose to set a different TMP..
+     * returns: a string with a temporary directory, may still be NULL.
+     */
+    char* tempdir = getenv("GRIDSTART_TMP");
+    if (tempdir != NULL && isDir(tempdir)) return tempdir;
+
+    tempdir = getenv("TMP");
+    if (tempdir != NULL && isDir(tempdir)) return tempdir;
+
+    tempdir = getenv("TEMP");
+    if (tempdir != NULL && isDir(tempdir)) return tempdir;
+
+    tempdir = getenv("TMPDIR");
+    if (tempdir != NULL && isDir(tempdir)) return tempdir;
 
 #ifdef P_tmpdir /* in stdio.h */
-  tempdir = P_tmpdir;
-  if ( tempdir != NULL && isDir(tempdir) ) return tempdir;
+    tempdir = P_tmpdir;
+    if (tempdir != NULL && isDir(tempdir)) return tempdir;
 #endif
 
-  tempdir = "/tmp";
-  if ( isDir(tempdir) ) return tempdir;
+    tempdir = "/tmp";
+    if (isDir(tempdir)) return tempdir;
 
-  tempdir = "/var/tmp";
-  if ( isDir(tempdir) ) return tempdir;
+    tempdir = "/var/tmp";
+    if (isDir(tempdir)) return tempdir;
 
-  /* whatever we have by now is it - may still be NULL */
-  return tempdir;
+    /* whatever we have by now is it - may still be NULL */
+    return tempdir;
 }
 
-char*
-sizer( char* buffer, size_t capacity, size_t vsize, const void* value )
-/* purpose: format an unsigned integer of less-known size. Note that
- *          64bit ints on 32bit systems need %llu, but 64/64 uses %lu
- * paramtr: buffer (IO): area to output into
- *          capacity (IN): extent of the buffer to store things into
- *          vsize (IN): size of the value
- *          value (IN): value to format
- * returns: buffer
- */
-{
-  switch ( vsize ) {
-  case 2:
-    snprintf( buffer, capacity, "%hu",
-              *((const short unsigned*) value) );
-    break;
-  case 4:
-    if ( sizeof(long) == 4 )
-      snprintf( buffer, capacity, "%lu",
-                *((const long unsigned*) value) );
-    else
-      snprintf( buffer, capacity, "%u",
-                *((const unsigned*) value) );
-    break;
-  case 8:
-    if ( sizeof(long) == 4 ) {
-      snprintf( buffer, capacity, "%llu",
-                *((const long long unsigned*) value) );
-    } else {
-      snprintf( buffer, capacity, "%lu",
-                *((const long unsigned*) value) );
+char* sizer(char* buffer, size_t capacity, size_t vsize, const void* value) {
+    /* purpose: format an unsigned integer of less-known size. Note that
+     *          64bit ints on 32bit systems need %llu, but 64/64 uses %lu
+     * paramtr: buffer (IO): area to output into
+     *          capacity (IN): extent of the buffer to store things into
+     *          vsize (IN): size of the value
+     *          value (IN): value to format
+     * returns: buffer
+     */
+    switch (vsize) {
+        case 2:
+            snprintf(buffer, capacity, "%hu", *((const short unsigned*) value));
+            break;
+        case 4:
+            if (sizeof(long) == 4) {
+                snprintf(buffer, capacity, "%lu", *((const long unsigned*) value));
+            } else {
+                snprintf(buffer, capacity, "%u", *((const unsigned*) value));
+            }
+            break;
+        case 8:
+            if (sizeof(long) == 4) {
+                snprintf(buffer, capacity, "%llu", *((const long long unsigned*) value));
+            } else {
+                snprintf(buffer, capacity, "%lu", *((const long unsigned*) value));
+            }
+            break;
+        default:
+            snprintf(buffer, capacity, "unknown");
+            break;
     }
-    break;
-  default:
-    snprintf( buffer, capacity, "unknown" );
-    break;
-  }
 
-  return buffer;
+    return buffer;
 }
 
