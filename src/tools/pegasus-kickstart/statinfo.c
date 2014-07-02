@@ -470,9 +470,8 @@ addLFNToStatInfo( StatInfo* info, const char* lfn )
 
 size_t
 printXMLStatInfo(FILE *out, int indent, const char* tag, const char* id,
-                 const StatInfo* info, int includeData)
-{
-  char* real = NULL;
+                 const StatInfo* info, int includeData) {
+  char *real = NULL;
 
   /* sanity check */
   if (info->source == IS_INVALID) return 0;
@@ -515,14 +514,11 @@ printXMLStatInfo(FILE *out, int indent, const char* tag, const char* id,
     break;
 
   case IS_FILE: /* <file> element */
-#ifdef HAS_REALPATH_EXT
-    real = realpath(info->file.name, NULL); 
-#endif /* HAS_REALPATH_EXT */
-    fprintf(out, "%*s<file name=\"%s\"", indent+2, "",
-            real ? real : info->file.name);
-#ifdef HAS_REALPATH_EXT
-    if (real) free((void*) real);
-#endif /* HAS_REALPATH_EXT */
+    real = realpath(info->file.name, NULL);
+    fprintf(out, "%*s<file name=\"%s\"", indent+2, "", real ? real : info->file.name);
+    if (real) {
+        free((void*) real);
+    }
 
     if (info->error == 0 && S_ISREG(info->info.st_mode) &&
         info->info.st_size > 0) {

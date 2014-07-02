@@ -20,7 +20,7 @@ ifndef ${datadir}
 endif
 
 ifeq (DARWIN,${SYSTEM})
-    CFLAGS += -Wall -DMUST_USE_SELECT_NOT_POLL=1 -DHAS_REALPATH_EXT=1 -ggdb
+    CFLAGS += -Wall -DMUST_USE_SELECT_NOT_POLL=1 -ggdb
     EXTRA_OBJ += machine/darwin.o
 endif
 
@@ -37,7 +37,6 @@ ifeq (LINUX,${SYSTEM})
     LFS_CFLAGS = $(shell getconf LFS_CFLAGS 2>>/dev/null)
     LFS_LDFLAGS = $(shell getconf LFS_LDFLAGS 2>>/dev/null)
     EXTRA_OBJ += machine/linux.o
-    CFLAGS += -DHAS_REALPATH_EXT=1
 endif
 
 CFLAGS += -D${SYSTEM}
