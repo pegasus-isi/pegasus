@@ -298,10 +298,13 @@
       <title>Recursion in Hierarchal Workflows</title>
 
       <mediaobject>
-        <imageobject>
-          <imagedata contentdepth="100%"
-                     fileref="./images/recursion_in_hierarchal_workflows.png"
-                     scalefit="1" width="100%"/>
+        <imageobject role="html">
+          <imagedata align="center" contentdepth="500px"
+                     fileref="./images/recursion_in_hierarchal_workflows.png" />
+        </imageobject>
+        <imageobject role="fo">
+          <imagedata align="center" contentdepth="5in"
+                     fileref="./images/recursion_in_hierarchal_workflows.png" />
         </imageobject>
       </mediaobject>
     </figure>
@@ -313,10 +316,13 @@
       <title>Execution Time-line for Hierarchal Workflows</title>
 
       <mediaobject>
-        <imageobject>
-          <imagedata contentdepth="100%"
-                     fileref="./images/hierarchal_workflows_execution_timeline.png"
-                     scalefit="1" width="100%"/>
+        <imageobject role="html">
+          <imagedata align="center" contentdepth="500px"
+                     fileref="./images/hierarchal_workflows_execution_timeline.png" />
+        </imageobject>
+        <imageobject role="fo">
+          <imagedata align="center" contentdepth="5in"
+                     fileref="./images/hierarchal_workflows_execution_timeline.png" />
         </imageobject>
       </mediaobject>
     </figure>

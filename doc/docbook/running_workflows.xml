@@ -1039,14 +1039,14 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       launching compute jobs</title>
 
         <mediaobject>
-            <imageobject role="fo">
+            <imageobject role="html">
                 <imagedata
                     align="center"
                     fileref="images/data-configuration-pegasuslite.png"
                     scalefit="1" width="100%" contentdepth="100%" />
             </imageobject>
-            <imageobject role="html">
-                <imagedata align="center"
+            <imageobject role="fo">
+                <imagedata align="center" contentdepth="4in"
                     fileref="images/data-configuration-pegasuslite.png" />
             </imageobject>
         </mediaobject>

@@ -216,7 +216,7 @@
       <mediaobject>
         <imageobject>
           <imagedata fileref="images/stampede-schema-small.png"
-                     id="stampede-schema" scale="" />
+                     id="stampede-schema" />
         </imageobject>
       </mediaobject>
     </figure>

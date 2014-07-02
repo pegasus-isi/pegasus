@@ -71,7 +71,9 @@ pegasus-user-guide.fo: $(XML) pegasus-pdf-style.xsl
 	xsltproc --xinclude pegasus-pdf-style.xsl pegasus-book.xml > pegasus-user-guide.fo
 
 pegasus-user-guide.pdf: pegasus-user-guide.fo
-	fop pegasus-user-guide.fo -pdf pegasus-user-guide.pdf
+	fop pegasus-user-guide.fo -pdf pegasus-user-guide.pdf 2>&1 \
+        | grep -v "The following feature isn't implemented by Apache FOP, yet: table-layout=\"auto\"" \
+        | grep -v "function may only be used when fo:table has table-layout=\"fixed\""
 
 install: $(TARGETS)
 	mkdir -p ${prefix}

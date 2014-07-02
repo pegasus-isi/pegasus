@@ -280,6 +280,11 @@ stampede database
    pegasus-monitord gets 100 seconds to complete the population before
    sending a kill signal. 
  
+7) Translation of values from days to years/days was borken in
+pegasus-statistics 
+
+   This is now fixed.
+		 
 
 ===============================
 Release Notes for PEGASUS 4.3.2

@@ -164,10 +164,13 @@
         <title>Shared File System Setup</title>
 
         <mediaobject>
-          <imageobject>
-            <imagedata align="center" contentdepth="100%"
-                       fileref="images/data-configuration-sharedfs.png"
-                       scalefit="1" width="100%"/>
+          <imageobject role="html">
+            <imagedata align="center" contentdepth="450px"
+                       fileref="images/data-configuration-sharedfs.png" />
+          </imageobject>
+          <imageobject role="fo">
+            <imagedata align="center" contentdepth="4in"
+                       fileref="images/data-configuration-sharedfs.png" />
           </imageobject>
         </mediaobject>
       </figure>
@@ -237,11 +240,14 @@
       <figure>
         <title>Non Shared Filesystem Setup</title>
 
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center" contentdepth="100%"
-                       fileref="images/data-configuration-nonsharedfs.png"
-                       id="Figure2" scalefit="1" width="100%"/>
+        <mediaobject id="Figure2">
+          <imageobject role="html">
+            <imagedata align="center" contentdepth="450px"
+                       fileref="images/data-configuration-nonsharedfs.png" />
+          </imageobject>
+          <imageobject role="fo">
+            <imagedata align="center" contentdepth="4in"
+                       fileref="images/data-configuration-nonsharedfs.png" />
           </imageobject>
         </mediaobject>
       </figure>
@@ -351,11 +357,14 @@
       <figure>
         <title>Condor Pool Without a Shared Filesystem</title>
 
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center" contentdepth="100%"
-                       fileref="images/data-configuration-condorio.png"
-                       id="Figure13" scalefit="1" width="100%"/>
+        <mediaobject id="Figure13">
+          <imageobject role="html">
+            <imagedata align="center" contentdepth="450px"
+                       fileref="images/data-configuration-condorio.png" />
+          </imageobject>
+          <imageobject role="fo">
+            <imagedata align="center" contentdepth="4in"
+                       fileref="images/data-configuration-condorio.png" />
           </imageobject>
         </mediaobject>
       </figure>
@@ -703,12 +712,14 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
         <title>BalancedCluster Transfer Refiner : Input Data To Workflow
         Specific Directory on Shared File System</title>
 
-        <mediaobject>
-          <imageobject>
-            <imagedata contentdepth="100%"
-                       fileref="images/balanced-cluster-transfer-refiner.png"
-                       id="img-balanced-cluster-transfer-refiner" scalefit="1"
-                       width="100%"/>
+        <mediaobject id="img-balanced-cluster-transfer-refiner">
+          <imageobject role="html">
+            <imagedata align="center" contentdepth="650px"
+                       fileref="images/balanced-cluster-transfer-refiner.png" />
+          </imageobject>
+          <imageobject role="fo">
+            <imagedata align="center" contentdepth="4in"
+                       fileref="images/balanced-cluster-transfer-refiner.png" />
           </imageobject>
         </mediaobject>
       </figure>
@@ -729,12 +740,14 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
         <title>Cluster Transfer Refiner : Input Data To Workflow Specific
         Directory on Shared File System</title>
 
-        <mediaobject>
-          <imageobject>
-            <imagedata contentdepth="100%"
-                       fileref="images/cluster-transfer-refiner.png"
-                       id="img-cluster-transfer-refiner" scalefit="1"
-                       width="100%"/>
+        <mediaobject id="img-cluster-transfer-refiner">
+          <imageobject role="html">
+            <imagedata align="center" contentdepth="650px"
+                       fileref="images/cluster-transfer-refiner.png" />
+          </imageobject>
+          <imageobject role="fo">
+            <imagedata align="center" contentdepth="4in"
+                       fileref="images/cluster-transfer-refiner.png" />
           </imageobject>
         </mediaobject>
       </figure>
