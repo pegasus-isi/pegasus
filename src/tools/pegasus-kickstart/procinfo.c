@@ -474,7 +474,8 @@ int procParentWait(pid_t main, int *main_status,  struct rusage *main_usage, Pro
 static int printXMLFileInfo(FILE *out, int indent, FileInfo *files) {
     FileInfo *i;
     for (i = files; i != NULL; i = i->next) {
-        fprintf(out, "%*s<file name=\"%s\" bread=\"%ld\" bwrite=\"%ld\" size=\"%ld\"/>\n",
+        fprintf(out, "%*s<file name=\"%s\" bread=\"%"PRIu64"\" "
+                "bwrite=\"%"PRIu64"\" size=\"%"PRIu64"\"/>\n",
                 indent, "", i->filename, i->bread, i->bwrite, i->size);
     }
     return 0;
@@ -483,7 +484,8 @@ static int printXMLFileInfo(FILE *out, int indent, FileInfo *files) {
 static int printXMLSockInfo(FILE *out, int indent, SockInfo *sockets) {
     SockInfo *i;
     for (i = sockets; i != NULL; i = i->next) {
-        fprintf(out, "%*s<socket address=\"%s\" port=\"%d\" brecv=\"%ld\" bsend=\"%ld\"/>\n",
+        fprintf(out, "%*s<socket address=\"%s\" port=\"%d\" "
+                "brecv=\"%"PRIu64"\" bsend=\"%"PRIu64"\"/>\n",
                 indent, "", i->address, i->port, i->brecv, i->bsend);
     }
     return 0;
