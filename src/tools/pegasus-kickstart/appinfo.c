@@ -13,7 +13,6 @@
  * Southern California. All rights reserved.
  */
 #include "getif.h"
-#include "rwio.h"
 #include "utils.h"
 #include "useinfo.h"
 #include "machine.h"

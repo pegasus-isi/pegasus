@@ -26,7 +26,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "rwio.h"
 #include "appinfo.h"
 #include "mysystem.h"
 #include "mylist.h"

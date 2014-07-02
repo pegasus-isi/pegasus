@@ -31,18 +31,18 @@ CFLAGS += -D${SYSTEM}
 
 all: $(TARGET)
 
-pegasus-kickstart: getif.o rwio.o utils.o useinfo.o statinfo.o jobinfo.o \
+pegasus-kickstart: getif.o utils.o useinfo.o statinfo.o jobinfo.o \
   limitinfo.o machine.o machine/basic.o $(SYSTEM_OBJ) appinfo.o parse.o \
   mysystem.o mylist.o invoke.o pegasus-kickstart.o procinfo.o
 	$(LD) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-appinfo.o: appinfo.c getif.h rwio.h utils.h useinfo.h machine.h \
+appinfo.o: appinfo.c getif.h utils.h useinfo.h machine.h \
   jobinfo.h statinfo.h appinfo.h limitinfo.h
-getif.o: getif.c getif.h rwio.h
+getif.o: getif.c getif.h
 invoke.o: invoke.c invoke.h
 jobinfo.o: jobinfo.c getif.h utils.h useinfo.h jobinfo.h \
   statinfo.h parse.h procinfo.h
-pegasus-kickstart.o: pegasus-kickstart.c rwio.h appinfo.h \
+pegasus-kickstart.o: pegasus-kickstart.c appinfo.h \
   statinfo.h jobinfo.h limitinfo.h machine.h mysystem.h mylist.h \
   invoke.h utils.h version.h ptrace.h
 limitinfo.o: limitinfo.c utils.h limitinfo.h
@@ -51,7 +51,6 @@ mylist.o: mylist.c mylist.h
 mysystem.o: mysystem.c utils.h appinfo.h statinfo.h jobinfo.h \
   limitinfo.h machine.h mysystem.h procinfo.h
 parse.o: parse.c parse.h
-rwio.o: rwio.c rwio.h
 statinfo.o: statinfo.c statinfo.h utils.h
 utils.o: utils.c utils.h
 useinfo.o: useinfo.c utils.h useinfo.h
