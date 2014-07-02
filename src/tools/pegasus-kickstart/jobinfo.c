@@ -237,7 +237,6 @@ int printXMLJobInfo(FILE *out, int indent, const char* tag, const JobInfo* job) 
     /* <executable> */
     printXMLStatInfo(out, indent+2, "statcall", NULL, &job->executable, 1);
 
-#ifdef WITH_NEW_ARGS
     /* alternative 1: new-style <argument-vector> */
     fprintf(out, "%*s<argument-vector", indent+2, "");
     if (job->argc == 1) {
@@ -257,28 +256,6 @@ int printXMLJobInfo(FILE *out, int indent, const char* tag, const JobInfo* job) 
         /* end tag */
         fprintf(out, "%*s</argument-vector>\n", indent+2, "");
     }
-#else
-    /* alternative 2: old-stlye <arguments> */
-    fprintf(out, "%*s<arguments", indent+2, "");
-    if (job->argc == 1) {
-        /* empty element */
-        fprintf(out, "/>\n");
-    } else {
-        /* content are the CLI args */
-        int i = 1;
-
-        fprintf(out, ">");
-        while (i < job->argc) {
-            xmlquote(out, job->argv[i], strlen(job->argv[i]));
-            if (++i < job->argc) {
-                fprintf(out, " ");
-            }
-        }
-
-        /* end tag */
-        fprintf(out, "</arguments>\n");
-    }
-#endif /* WITH_NEW_ARGS */
 
     /* <proc>s */
     printXMLProcInfo(out, indent+2, job->children);
