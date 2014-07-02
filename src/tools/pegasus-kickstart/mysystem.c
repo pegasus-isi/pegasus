@@ -423,7 +423,7 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
     jobinfo->saverr = errno;
 
     /* stop wall-clock */
-    now( &(jobinfo->finish) );
+    now(&(jobinfo->finish));
 
     /* ignore errors on these, too. */
     sigaction(SIGINT, &saveintr, NULL);

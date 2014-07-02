@@ -35,7 +35,7 @@
 #include "version.h"
 #include "ptrace.h"
 
-#define show( s ) ( s ? s : "(undefined)" )
+#define show(s) (s ? s : "(undefined)")
 
 /* truly shared globals */
 int isExtended = 1;     /* timestamp format concise or extended */
@@ -113,7 +113,7 @@ StatInfo* initStatFromList(mylist_p list, size_t* size) {
 }
 
 /* purpose: small helper for helpMe() function */
-static const char* xlate( const StatInfo* info ) {
+static const char* xlate(const StatInfo* info) {
     /* paramtr: info (IN): is a record about a file
      * returns: a pointer to the filename, or a local or static buffer w/ info
      * warning: Returns static buffer pointer
@@ -138,7 +138,7 @@ static void helpMe(const AppInfo* run) {
      *          exit with error condition.
      * paramtr: run (IN): constitutes the set of currently set parameters. */
     const char* p = strrchr(run->argv[0], '/');
-    if ( p ) {
+    if (p) {
         ++p;
     } else {
         p=run->argv[0];
@@ -166,7 +166,7 @@ static void helpMe(const AppInfo* run) {
             " -R res\tReflects the resource handle into record, default is \"%s\".\n"
             " -B sz\tResizes the data section size for stdio capture, default is %zu.\n",
             show(run->xformation), show(run->derivation), 
-            show(run->sitehandle), data_section_size );
+            show(run->sitehandle), data_section_size);
     fprintf(stderr,
             " -L lbl\tReflects the workflow label into record, no default.\n"
             " -T iso\tReflects the workflow time stamp into record, no default.\n"
@@ -192,7 +192,7 @@ static void helpMe(const AppInfo* run) {
 #ifdef LINUX
             " -Z\tEnable library call interposition to get files and I/O\n"
 #endif
-            );
+           );
 
     /* avoid printing of results in exit handler */
     ((AppInfo*) run)->isPrinted = 1;
@@ -252,8 +252,8 @@ static void handleOutputStream(StatInfo* stream, const char* temp, int std_filen
         } else {
             initStatInfoFromName(stream, temp+1, O_WRONLY | O_CREAT | O_APPEND, 2);
         }
-    } else if ( temp[0] == '^' ) {
-        if ( temp[1] == '!' ) {
+    } else if (temp[0] == '^') {
+        if (temp[1] == '!') {
             initStatInfoFromName(stream, temp+2, O_WRONLY | O_CREAT | O_APPEND, 6);
         } else {
             initStatInfoFromName(stream, temp+1, O_WRONLY | O_CREAT, 7);
@@ -274,8 +274,8 @@ static char* noquote(char* s) {
 
     size_t len = strlen(s);
 
-    if ((s[0] == '\'' && s[len-1] == '\'' ) ||
-        (s[0] == '"' && s[len-1] == '"' )) {
+    if ((s[0] == '\'' && s[len-1] == '\'') ||
+        (s[0] == '"' && s[len-1] == '"')) {
         char* tmp = calloc(sizeof(char), len);
         memcpy(tmp, s+1, len-2);
         return tmp;
@@ -339,7 +339,7 @@ int main(int argc, char* argv[]) {
                     return 127;
                 }
                 if (appinfo.error.source != IS_INVALID) {
-                    deleteStatInfo( &appinfo.error );
+                    deleteStatInfo(&appinfo.error);
                 }
                 temp = (argv[i][2] ? &argv[i][2] : argv[++i]);
                 handleOutputStream(&appinfo.error, temp, STDERR_FILENO);
@@ -445,7 +445,7 @@ int main(int argc, char* argv[]) {
                     return 127;
                 }
                 if (appinfo.output.source != IS_INVALID) {
-                    deleteStatInfo( &appinfo.output );
+                    deleteStatInfo(&appinfo.output);
                 }
                 temp = (argv[i][2] ? &argv[i][2] : argv[++i]);
                 handleOutputStream(&appinfo.output, temp, STDOUT_FILENO);
@@ -593,7 +593,7 @@ REDIR:
         /* unable to use alternate workdir */
         appinfo.application.saverr = errno;
         debugmsg("Unable to chdir %s: %d: %s\n",
-                 workdir, errno, strerror(errno) );
+                 workdir, errno, strerror(errno));
         appinfo.application.prefix = "Unable to chdir: ";
         appinfo.application.status = -1;
         return 127;

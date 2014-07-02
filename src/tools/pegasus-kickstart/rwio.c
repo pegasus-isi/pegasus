@@ -23,7 +23,7 @@
 
 #include "rwio.h"
 
-ssize_t writen( int fd, const char* buffer, ssize_t n, unsigned restart ) {
+ssize_t writen(int fd, const char* buffer, ssize_t n, unsigned restart) {
     /* purpose: write all n bytes in buffer, if possible at all
      * paramtr: fd (IN): filedescriptor open for writing
      *          buffer (IN): bytes to write (must be at least n byte long)
@@ -54,7 +54,7 @@ int lockit(int fd, int cmd, int type) {
      * paramtr: fd (IN): which file descriptor to lock
      *          cmd (IN): F_SETLK, F_GETLK, F_SETLKW
      *          type (IN): F_WRLCK, F_RDLCK, F_UNLCK
-     * warning: always locks full file ( offset=0, whence=SEEK_SET, len=0 )
+     * warning: always locks full file (offset=0, whence=SEEK_SET, len=0)
      * returns: result from fcntl call
      */
     struct flock lock;
