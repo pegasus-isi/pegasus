@@ -72,7 +72,7 @@ limitinfo.o: limitinfo.c tools.h limitinfo.h
 machine.o: machine.c machine.h machine/basic.h
 mylist.o: mylist.c mylist.h
 mysystem.o: mysystem.c tools.h appinfo.h statinfo.h jobinfo.h \
-  limitinfo.h machine.h mysystem.h mysignal.h procinfo.h
+  limitinfo.h machine.h mysystem.h procinfo.h
 parse.o: parse.c parse.h
 procinfo.o: procinfo.c procinfo.h ptrace.h tools.h
 rwio.o: rwio.c rwio.h

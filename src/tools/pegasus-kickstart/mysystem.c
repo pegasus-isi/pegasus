@@ -29,7 +29,6 @@
 #include "appinfo.h"
 #include "statinfo.h"
 #include "mysystem.h"
-#include "mysignal.h"
 #include "procinfo.h"
 
 /* The name of the program (argv[0]) set in pegasus-kickstart.c:main */
