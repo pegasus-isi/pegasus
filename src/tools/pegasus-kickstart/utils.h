@@ -26,8 +26,5 @@ extern double doubletime(const struct timeval t);
 extern void now(struct timeval* t);
 extern const char* getTempDir(void);
 extern char* sizer(char* buffer, size_t capacity, size_t vsize, const void* value);
-extern int lockit(int fd, int cmd, int type);
-extern int mytrylock(int fd);
-extern int nfs_sync(int fd);
 
 #endif /* _UTILS_H */

@@ -351,18 +351,12 @@ int printAppInfo(AppInfo* run) {
     /* stop the clock */
     now(&run->finish);
 
-    int locked = mytrylock(fd);
-
     /* print the invocation record */
     result = convert2XML(out, run);
 
     /* make sure the data is completely flushed */
     fflush(out);
     fsync(fileno(out));
-
-    if (locked==1) {
-        lockit(fd, F_SETLK, F_UNLCK);
-    }
 
     run->isPrinted = 1;
 

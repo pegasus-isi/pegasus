@@ -207,15 +207,6 @@ static void finish() {
         }
         deleteAppInfo(&appinfo);
     }
-
-    /* This probably isn't necessary */
-    fflush(stdout);
-    fsync(STDOUT_FILENO);
-    nfs_sync(STDOUT_FILENO);
-
-    fflush(stderr);
-    fsync(STDERR_FILENO);
-    nfs_sync(STDERR_FILENO);
 }
 
 static int readFromFile(const char* fn, char*** argv, int* argc, int* i, int j) {
