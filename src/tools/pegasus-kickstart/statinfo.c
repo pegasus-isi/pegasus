@@ -28,8 +28,6 @@
 #include "statinfo.h"
 #include "utils.h"
 
-extern int isExtended; /* timestamp format concise or extended */
-extern int isLocal;    /* timestamp time zone, UTC or local */
 int make_application_executable = 0;
 size_t data_section_size = 262144ul;
 
@@ -618,12 +616,9 @@ size_t printXMLStatInfo(FILE *out, int indent, const char* tag, const char* id,
         sizer(my, sizeof(my), sizeof(info->info.st_blocks), &info->info.st_blocks);
         fprintf(out, " blocks=\"%s\"", my);
 
-        fprintf(out, " mtime=\"%s\"",
-                fmtisodate(isLocal, isExtended, info->info.st_mtime, -1));
-        fprintf(out, " atime=\"%s\"",
-                fmtisodate(isLocal, isExtended, info->info.st_atime, -1));
-        fprintf(out, " ctime=\"%s\"",
-                fmtisodate(isLocal, isExtended, info->info.st_ctime, -1));
+        fprintf(out, " mtime=\"%s\"", fmtisodate(info->info.st_mtime, -1));
+        fprintf(out, " atime=\"%s\"", fmtisodate(info->info.st_atime, -1));
+        fprintf(out, " ctime=\"%s\"", fmtisodate(info->info.st_ctime, -1));
 
         fprintf(out, " uid=\"%d\"", info->info.st_uid);
         if (user) {

@@ -70,9 +70,11 @@ void xmlquote(FILE *out, const char* msg, size_t msglen) {
     }
 }
 
+static int isExtended = 1;     /* timestamp format concise or extended */
+static int isLocal = 1;        /* timestamp time zone, UTC or local */
 static char __isodate[32];
 
-char * fmtisodate(int isLocal, int isExtended, time_t seconds, long micros) {
+char * fmtisodate(time_t seconds, long micros) {
     /* purpose: return an ISO-formatted string for a given timestamp
      * paramtr: isLocal (IN): flag, if 0 use UTC, otherwise use local time
      *          isExtd (IN): flag, if 0 use concise format, otherwise extended

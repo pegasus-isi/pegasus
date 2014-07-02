@@ -41,9 +41,6 @@
 #define XML_SCHEMA_URI "http://pegasus.isi.edu/schema/invocation"
 #define XML_SCHEMA_VERSION "2.2"
 
-extern int isExtended; /* timestamp format concise or extended */
-extern int isLocal;    /* timestamp time zone, UTC or local */
-
 static int mycompare(const void* a, const void* b) {
     return strcmp((a ? *((const char**) a) : ""),
                   (b ? *((const char**) b) : ""));
@@ -67,8 +64,7 @@ static size_t convert2XML(FILE *out, const AppInfo* run) {
             " version=\"" XML_SCHEMA_VERSION "\"");
 
     /* start */
-    fprintf(out, " start=\"%s\"", fmtisodate(isLocal, isExtended,
-                                             run->start.tv_sec,
+    fprintf(out, " start=\"%s\"", fmtisodate(run->start.tv_sec,
                                              run->start.tv_usec));
 
     /* duration */

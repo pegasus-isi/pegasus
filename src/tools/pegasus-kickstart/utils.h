@@ -21,7 +21,7 @@
 #include <time.h>
 
 extern void xmlquote(FILE *out, const char* msg, size_t msglen);
-extern char * fmtisodate(int isLocal, int isExtended, time_t seconds, long micros);
+extern char* fmtisodate(time_t seconds, long micros);
 extern double doubletime(const struct timeval t);
 extern void now(struct timeval* t);
 extern const char* getTempDir(void);

@@ -341,7 +341,6 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
      *           127: execve() call failed
      *          else: status of child
      */
-    struct sigaction ignore, saveintr, savequit;
 
     /* sanity checks first */
     if (!jobinfo->isValid) {
@@ -349,6 +348,8 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
         return -1;
     }
 
+    /* Ignore SIGINT and SIGQUIT */
+    struct sigaction ignore, saveintr, savequit;
     memset(&ignore, 0, sizeof(ignore));
     ignore.sa_handler = SIG_IGN;
     sigemptyset(&ignore.sa_mask);

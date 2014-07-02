@@ -30,9 +30,6 @@
 
 #include <sys/sysinfo.h>
 
-extern int isExtended; /* timestamp format concise or extended */
-extern int isLocal;    /* timestamp time zone, UTC or local */
-
 static uint64_t unscale(unsigned long value, char scale) {
     uint64_t result = value;
 
@@ -428,8 +425,7 @@ int printMachine(FILE *out, int indent, const char* tag, const void* data) {
     /* <boot> element */
     fprintf(out, "%*s<boot idle=\"%.3f\">%s</boot>\n", indent+2, "",
             ptr->idletime,
-            fmtisodate(isLocal, isExtended, ptr->boottime.tv_sec,
-                ptr->boottime.tv_usec));
+            fmtisodate(ptr->boottime.tv_sec, ptr->boottime.tv_usec));
 
     /* <cpu> element */
     fprintf(out, "%*s<cpu count=\"%hu\" speed=\"%lu\" vendor=\"%s\">%s</cpu>\n",

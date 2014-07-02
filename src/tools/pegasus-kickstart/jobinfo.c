@@ -30,9 +30,6 @@
 #include "jobinfo.h"
 #include "parse.h"
 
-extern int isExtended; /* timestamp format concise or extended */
-extern int isLocal;    /* timestamp time zone, UTC or local */
-
 void initJobInfoFromString(JobInfo* jobinfo, const char* commandline) {
     /* purpose: initialize the data structure with default
      * paramtr: jobinfo (OUT): initialized memory block
@@ -192,8 +189,7 @@ int printXMLJobInfo(FILE *out, int indent, const char* tag, const JobInfo* job) 
 
     /* start tag with indentation */
     fprintf(out, "%*s<%s start=\"%s\"", indent, "", tag,
-            fmtisodate(isLocal, isExtended, job->start.tv_sec,
-                       job->start.tv_usec));
+            fmtisodate(job->start.tv_sec, job->start.tv_usec));
     fprintf(out, " duration=\"%.3f\"",
             doubletime(job->finish) - doubletime(job->start));
 

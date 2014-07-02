@@ -22,9 +22,6 @@
 #include "basic.h"
 #include "../utils.h"
 
-extern int isExtended; /* timestamp format concise or extended */
-extern int isLocal;    /* timestamp time zone, UTC or local */
-
 static char* mytolower(char* s, size_t max) {
     /* array version */
     size_t i;
@@ -112,7 +109,7 @@ int startBasicMachine(FILE *out, int indent, const char* tag,
 
     /* <stamp> */
     fprintf(out, "%*s<stamp>%s</stamp>\n", indent, "",
-            fmtisodate(isLocal, isExtended, machine->stamp.tv_sec,
+            fmtisodate(machine->stamp.tv_sec,
                        machine->stamp.tv_usec));
 
     /* <uname> */
