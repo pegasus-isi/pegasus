@@ -11,6 +11,7 @@ try:
     cur = con.cursor()
     
     print "Updating database schema..."
+    cur.execute("UPDATE pegasus_schema SET version='1.3' WHERE name='JDBCRC' AND catalog='rc'")
     print "   Adding new column..."
     cur.execute("ALTER TABLE rc_lfn ADD COLUMN site VARCHAR(245)")
     
