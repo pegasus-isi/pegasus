@@ -38,13 +38,11 @@ extern void initLimitInfo(LimitInfo* limits) {
 }
 
 extern void updateLimitInfo(LimitInfo* limits) {
-    int i;
-
     if (limits == NULL || limits->limits == NULL) {
         return;
     }
 
-    for (i=0; i<limits->size; ++i) {
+    for (int i=0; i<limits->size; ++i) {
         limits->limits[i].resource = i;
         getrlimit(i, &(limits->limits[i].limit));
         limits->limits[i].error = errno;
@@ -203,7 +201,6 @@ int printXMLLimitInfo(FILE *out, int indent, const LimitInfo* limits) {
      *          limits (IN): observed resource limits
      * returns: 0 if no error
      */
-    int i;
 
     /* sanity check */
     if (limits == NULL || limits->limits == NULL) {
@@ -211,10 +208,11 @@ int printXMLLimitInfo(FILE *out, int indent, const LimitInfo* limits) {
     }
 
     fprintf(out, "%*s<resource>\n", indent, "");
-    for (i=0; i<limits->size; ++i) {
+    for (int i=0; i<limits->size; ++i) {
         formatLimit(out, indent+2, &limits->limits[i]);
     }
     fprintf(out, "%*s</resource>\n", indent, "");
 
     return 0;
 }
+
