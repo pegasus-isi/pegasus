@@ -61,7 +61,7 @@ int printXMLMachineInfo(FILE *out, int indent, const char* tag,
 
     /* sanity check */
     if (machine && machine->show && machine->data) {
-        machine->show(out, indent, tag, machine->data);
+        machine->show(out, indent+2, tag, machine->data);
     }
 
     return 0;

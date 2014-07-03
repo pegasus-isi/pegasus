@@ -121,7 +121,7 @@ int startBasicMachine(FILE *out, int indent, const char* tag,
     fprintf(out, ">%s</uname>\n", machine->uname.version);
 
     /* <"provider"> grouping tag */
-    fprintf(out, "%*s<%s>\n", indent-1, "", machine->provider);
+    fprintf(out, "%*s<%s>\n", indent, "", machine->provider);
 
     return 0;
 }
@@ -141,7 +141,7 @@ int finalBasicMachine(FILE *out, int indent, const char* tag,
     }
 
     /* </"provider"> close tag */
-    fprintf(out, "%*s</%s>\n", indent-1, "", machine->provider);
+    fprintf(out, "%*s</%s>\n", indent, "", machine->provider);
 
     /* </machine> close tag */
     fprintf(out, "%*s</%s>\n", indent-2, "", tag);
@@ -156,7 +156,6 @@ int printBasicMachine(FILE *out, int indent, const char* tag,
      *          indent (IN): indentation level
      *          tag (IN): name to use for element tags.
      *          data (IN): MachineBasicInfo info to print.
-     * returns: number of characters put into buffer (buffer length)
      */
     const MachineBasicInfo* ptr = (const MachineBasicInfo*) data;
 

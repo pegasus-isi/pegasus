@@ -387,61 +387,51 @@ void* initMachine(void) {
     return p;
 }
 
-int printMachine(FILE *out, int indent, const char* tag, const void* data) {
-    /* purpose: format the information into the given stream as XML.
-     * paramtr: out (IO): The stream
-     *          indent (IN): indentation level
-     *          tag (IN): name to use for element tags.
-     *          data (IN): MachineLinuxInfo info to print.
-     * returns: number of characters put into buffer (buffer length)
-     */
-    static const char* c_state[MAX_STATE] =
-        { "running", "sleeping", "waiting", "stopped", "zombie", "other" };
+int printLinuxInfo(FILE *out, int indent, const MachineLinuxInfo *ptr) {
+    static const char* state_names[MAX_STATE] = {
+        "running",
+        "sleeping",
+        "waiting",
+        "stopped",
+        "zombie",
+        "other"
+    };
+
     char b[4][32];
-    const MachineLinuxInfo* ptr = (const MachineLinuxInfo*) data;
-    LinuxState s;
-
-    /* sanity check */
-    if (ptr == NULL) {
-        return 0;
-    }
-
-    /* start basic info */
-    startBasicMachine(out, indent+2, tag, ptr->basic);
 
     /* <ram .../> tag */
     fprintf(out, "%*s<ram total=\"%s\" free=\"%s\" shared=\"%s\" buffer=\"%s\"/>\n",
-            indent+2, "",
+            indent, "",
             sizer(b[0], 32, sizeof(ptr->ram_total), &(ptr->ram_total)),
             sizer(b[1], 32, sizeof(ptr->ram_free), &(ptr->ram_free)),
             sizer(b[2], 32, sizeof(ptr->ram_total), &(ptr->ram_shared)),
             sizer(b[3], 32, sizeof(ptr->ram_free), &(ptr->ram_buffer)));
 
     /* <swap .../> tag */
-    fprintf(out, "%*s<swap total=\"%s\" free=\"%s\"/>\n", indent+2, "",
+    fprintf(out, "%*s<swap total=\"%s\" free=\"%s\"/>\n", indent, "",
             sizer(b[0], 32, sizeof(ptr->swap_total), &(ptr->swap_total)),
             sizer(b[1], 32, sizeof(ptr->swap_free), &(ptr->swap_free)));
 
     /* <boot> element */
-    fprintf(out, "%*s<boot idle=\"%.3f\">%s</boot>\n", indent+2, "",
+    fprintf(out, "%*s<boot idle=\"%.3f\">%s</boot>\n", indent, "",
             ptr->idletime,
             fmtisodate(ptr->boottime.tv_sec, ptr->boottime.tv_usec));
 
     /* <cpu> element */
     fprintf(out, "%*s<cpu count=\"%hu\" speed=\"%lu\" vendor=\"%s\">%s</cpu>\n",
-            indent+2, "", ptr->cpu_count, ptr->megahertz, ptr->vendor_id,
+            indent, "", ptr->cpu_count, ptr->megahertz, ptr->vendor_id,
             ptr->model_name);
 
     /* <load> element */
     fprintf(out, "%*s<load min1=\"%.2f\" min5=\"%.2f\" min15=\"%.2f\"/>\n",
-            indent+2, "", ptr->load[0], ptr->load[1], ptr->load[2]);
+            indent, "", ptr->load[0], ptr->load[1], ptr->load[2]);
 
     if (ptr->procs.total && ptr->tasks.total) {
         /* <procs> element */
-        fprintf(out, "%*s<procs total=\"%u\"", indent+2, "", ptr->procs.total);
-        for (s=S_RUNNING; s<=S_OTHER; ++s) {
+        fprintf(out, "%*s<procs total=\"%u\"", indent, "", ptr->procs.total);
+        for (LinuxState s=S_RUNNING; s<=S_OTHER; ++s) {
             if (ptr->procs.state[s]) {
-                fprintf(out, " %s=\"%hu\"", c_state[s], ptr->procs.state[s]);
+                fprintf(out, " %s=\"%hu\"", state_names[s], ptr->procs.state[s]);
             }
         }
         fprintf(out, " vmsize=\"%s\" rss=\"%s\"/>\n",
@@ -450,9 +440,9 @@ int printMachine(FILE *out, int indent, const char* tag, const void* data) {
 
         /* <task> element */
         fprintf(out, "%*s<task total=\"%u\"", indent+2, "", ptr->tasks.total);
-        for (s=S_RUNNING; s<=S_OTHER; ++s) {
+        for (LinuxState s=S_RUNNING; s<=S_OTHER; ++s) {
             if (ptr->tasks.state[s]) {
-                fprintf(out, " %s=\"%hu\"", c_state[s], ptr->tasks.state[s]);
+                fprintf(out, " %s=\"%hu\"", state_names[s], ptr->tasks.state[s]);
             }
         }
 
@@ -461,8 +451,26 @@ int printMachine(FILE *out, int indent, const char* tag, const void* data) {
         fprintf(out, "/>\n");
     }
 
-    /* finish tag */
-    finalBasicMachine(out, indent+2, tag, ptr->basic);
+    return 0;
+}
+
+int printMachine(FILE *out, int indent, const char* tag, const void* data) {
+    /* purpose: format the information into the given stream as XML.
+     * paramtr: out (IO): The stream
+     *          indent (IN): indentation level
+     *          tag (IN): name to use for element tags.
+     *          data (IN): MachineLinuxInfo info to print.
+     */
+
+    /* sanity check */
+    if (data == NULL) {
+        return 0;
+    }
+
+    const MachineLinuxInfo* ptr = (const MachineLinuxInfo*) data;
+    startBasicMachine(out, indent, tag, ptr->basic);
+    printLinuxInfo(out, indent+2, ptr);
+    finalBasicMachine(out, indent, tag, ptr->basic);
 
     return 0;
 }

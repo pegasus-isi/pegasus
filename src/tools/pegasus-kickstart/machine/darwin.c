@@ -199,15 +199,8 @@ void* initMachine(void) {
     return p;
 }
 
-int printMachine(FILE *out, int indent, const char* tag, const void* data) {
-    /* purpose: format the information into the given stream as XML.
-     * paramtr: out (IO): the buffer
-     *          indent (IN): indentation level
-     *          tag (IN): name to use for element tags.
-     *          data (IN): MachineDarwinInfo info to print.
-     * returns: 0 if no error
-     */
-    static const char* c_state[MAX_STATE] = {
+int printDarwinInfo(FILE *out, int indent, const MachineDarwinInfo *ptr) {
+    static const char* state_names[MAX_STATE] = {
         "total",
         "idle",
         "running",
@@ -217,20 +210,11 @@ int printMachine(FILE *out, int indent, const char* tag, const void* data) {
         "zombie",
         "other"
     };
+
     char b[3][32];
-    const MachineDarwinInfo* ptr = (const MachineDarwinInfo*) data;
-    DarwinState s;
-
-    /* sanity check */
-    if (ptr == NULL) {
-        return 0;
-    }
-
-    /* start basic info */
-    startBasicMachine(out, indent+2, tag, ptr->basic);
 
     /* <ram .../> tag */
-    fprintf(out, "%*s<ram total=\"%s\" avail=\"%s\"", indent+2, "",
+    fprintf(out, "%*s<ram total=\"%s\" avail=\"%s\"", indent, "",
             sizer(b[0], 32, sizeof(ptr->ram_total), &(ptr->ram_total)),
             sizer(b[1], 32, sizeof(ptr->ram_avail), &(ptr->ram_avail)));
     fprintf(out, " active=\"%s\" inactive=\"%s\" wired=\"%s\"/>\n",
@@ -240,37 +224,62 @@ int printMachine(FILE *out, int indent, const char* tag, const void* data) {
 
     /* <swap .../> tag */
     fprintf(out, "%*s<swap total=\"%s\" avail=\"%s\" used=\"%s\"/>\n",
-            indent+2, "",
+            indent, "",
             sizer(b[0], 32, sizeof(ptr->swap_total), &(ptr->swap_total)),
             sizer(b[1], 32, sizeof(ptr->swap_avail), &(ptr->swap_avail)),
             sizer(b[2], 32, sizeof(ptr->swap_used), &(ptr->swap_used)));
 
     /* <boot> element */
-    fprintf(out, "%*s<boot>%s</boot>\n", indent+2, "",
+    fprintf(out, "%*s<boot>%s</boot>\n", indent, "",
             fmtisodate(ptr->boottime.tv_sec, ptr->boottime.tv_usec));
 
     /* <cpu> element */
     fprintf(out, "%*s<cpu count=\"%s\" speed=\"%s\" vendor=\"%s\">%s</cpu>\n",
-            indent+2, "",
+            indent, "",
             sizer(b[0], 32, sizeof(ptr->cpu_count), &(ptr->cpu_count)),
             sizer(b[1], 32, sizeof(ptr->megahertz), &(ptr->megahertz)),
             ptr->vendor_id, ptr->model_name);
 
     /* loadavg data */
     fprintf(out, "%*s<load min1=\"%.2f\" min5=\"%.2f\" min15=\"%.2f\"/>\n",
-            indent+2, "", ptr->load[0], ptr->load[1], ptr->load[2]);
+            indent, "", ptr->load[0], ptr->load[1], ptr->load[2]);
 
     /* <proc> element */
-    fprintf(out, "%*s<proc", indent+2, "");
-    for (s=STATE_TOTAL; s < MAX_STATE; ++s) {
+    fprintf(out, "%*s<proc", indent, "");
+    for (DarwinState s = STATE_TOTAL; s < MAX_STATE; ++s) {
         if (ptr->pid_state[s]) {
-            fprintf(out, " %s=\"%u\"", c_state[s], ptr->pid_state[s]);
+            fprintf(out, " %s=\"%u\"", state_names[s], ptr->pid_state[s]);
         }
     }
     fprintf(out, "/>\n");
 
+    return 0;
+}
+
+int printMachine(FILE *out, int indent, const char* tag, const void* data) {
+    /* purpose: format the information into the given stream as XML.
+     * paramtr: out (IO): the buffer
+     *          indent (IN): indentation level
+     *          tag (IN): name to use for element tags.
+     *          data (IN): MachineDarwinInfo info to print.
+     * returns: 0 if no error
+     */
+
+    /* sanity check */
+    if (data == NULL) {
+        return 0;
+    }
+
+    const MachineDarwinInfo* ptr = (const MachineDarwinInfo*) data;
+
+    /* start basic info */
+    startBasicMachine(out, indent, tag, ptr->basic);
+
+    /* Print contents of <darwin> */
+    printDarwinInfo(out, indent+2, ptr);
+
     /* finish tag */
-    finalBasicMachine(out, indent+2, tag, ptr->basic);
+    finalBasicMachine(out, indent, tag, ptr->basic);
 
     return 0;
 }
