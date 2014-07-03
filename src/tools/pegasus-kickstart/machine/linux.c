@@ -439,7 +439,7 @@ int printLinuxInfo(FILE *out, int indent, const MachineLinuxInfo *ptr) {
                 sizer(b[1], 32, sizeof(ptr->procs.rss), &ptr->procs.rss));
 
         /* <task> element */
-        fprintf(out, "%*s<task total=\"%u\"", indent+2, "", ptr->tasks.total);
+        fprintf(out, "%*s<task total=\"%u\"", indent, "", ptr->tasks.total);
         for (LinuxState s=S_RUNNING; s<=S_OTHER; ++s) {
             if (ptr->tasks.state[s]) {
                 fprintf(out, " %s=\"%hu\"", state_names[s], ptr->tasks.state[s]);
