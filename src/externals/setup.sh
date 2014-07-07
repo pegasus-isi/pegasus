@@ -17,10 +17,6 @@ function clean_externals {
     rm -rf pysqlite-2.6.0
     rm -rf boto-2.5.2
     rm -rf SQLAlchemy-0.7.6
-    rm -rf SleekXMPP-1.2.5
-    rm -rf pyasn1-0.1.7
-    rm -rf pyasn1-modules-0.0.5
-    rm -rf dnspython-1.11.1
 }
 
 function install_lib {
@@ -39,10 +35,6 @@ function install_externals {
     fi
     install_lib boto-2.5.2
     install_lib SQLAlchemy-0.7.6
-    install_lib SleekXMPP-1.2.5
-    install_lib pyasn1-0.1.7
-    install_lib pyasn1-modules-0.0.5
-    install_lib dnspython-1.11.1
 }
 
 command=$1
