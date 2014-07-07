@@ -45,9 +45,10 @@ import edu.isi.pegasus.common.logging.LogManager;
  *   id      bigint default nextval('rc_lfn_id'::text),
  *   lfn     varchar(255) not null,
  *   pfn     varchar(255) not null,
+ *   site    varchar(245),
  *
  *   constraint pk_rc_lfn primary key(id),
- *   constraint sk_rc_lfn unique(lfn,pfn)
+ *   constraint sk_rc_lfn unique(lfn,pfn,site)
  * );
  *
  * create index idx_rc_lfn on rc_lfn(lfn);
@@ -73,9 +74,10 @@ import edu.isi.pegasus.common.logging.LogManager;
  *   id      bigint default null auto_increment,
  *   lfn     varchar(255) not null,
  *   pfn     varchar(255) not null,
+ *   site    varchar(245),
  *
  *   constraint pk_rc_lfn primary key(id),
- *   constraint sk_rc_lfn unique(lfn,pfn)
+ *   constraint sk_rc_lfn unique(lfn,pfn,site)
  * );
  *
  * create index idx_rc_lfn on rc_lfn(lfn);
