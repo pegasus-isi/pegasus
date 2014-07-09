@@ -55,6 +55,11 @@ class Job(object):
         self.runtime = 0.0
         self.state = JobState.UNREADY
         self.jobtype = JobType.UNASSIGNED
+        self.universe = None
+        self.priority = 0
+        self.retries = 0
+        self.failures = 0
+        self.last_update = 0
         self.prescript = False
         self.postscript = False
         self.parents = []
@@ -63,6 +68,9 @@ class Job(object):
     def process_jslog_record(self, record):
         if self.state == JobState.SUCCESSFUL:
             raise DAGException("Invalid state: Successful job %s got event %s" % (self.name, record.event))
+
+        # Record the time of the last update for this job
+        self.last_update = record.ts
 
         if record.event == JSLogEvent.PRE_SCRIPT_STARTED:
             self.state = JobState.PRESCRIPT
@@ -73,6 +81,7 @@ class Job(object):
         elif record.event == JSLogEvent.PRE_SCRIPT_FAILURE:
             # If the pre script failed, then the job failed
             self.state = JobState.FAILED
+            self.failures += 1
         elif record.event == JSLogEvent.SUBMIT:
             self.state = JobState.QUEUED
         elif record.event == JSLogEvent.EXECUTE:
@@ -89,6 +98,7 @@ class Job(object):
             # otherwise ignore it because the post script will run
             if not self.postscript:
                 self.state = JobState.FAILED
+                self.failures += 1
         elif record.event == JSLogEvent.POST_SCRIPT_STARTED:
             self.state = JobState.POSTSCRIPT
         elif record.event ==JSLogEvent.POST_SCRIPT_TERMINATED:
@@ -97,6 +107,7 @@ class Job(object):
             self.state = JobState.SUCCESSFUL
         elif record.event == JSLogEvent.POST_SCRIPT_FAILURE:
             self.state = JobState.FAILED
+            self.failures += 1
         else:
             log.warning("Unexpected job state log event: %s", record.event)
 
@@ -121,6 +132,11 @@ class Job(object):
     def clone(self):
         newjob = Job(self.name)
         newjob.jobtype = self.jobtype
+        newjob.universe = self.universe
+        newjob.priority = self.priority
+        newjob.retries = self.retries
+        newjob.failures = self.failures
+        newjob.last_update = self.last_update
         newjob.runtime = self.runtime
         newjob.state = self.state
         newjob.prescript = self.prescript
@@ -189,7 +205,7 @@ def parse_submit_file(submit_file):
     with open(submit_file, "r") as f:
         for l in f:
             l = l.strip()
-            if l.startswith("+pegasus"):
+            if " = " in l:
                 rec = l.split(" = ")
                 record[rec[0]] = rec[1]
 
@@ -210,6 +226,9 @@ def parse_dag(dag_file):
                 rec = parse_submit_file(submit_file)
                 j = Job(job_name)
                 j.runtime = float(rec.get("+pegasus_job_runtime", 0.0))
+                # TODO Estimate runtimes for non-compute jobs
+                j.universe = rec.get("universe", None)
+                j.priority = int(rec.get("priority", 0))
                 j.jobtype = JOB_TYPE_MAP[rec.get("+pegasus_job_class")]
                 jobs[job_name] = j
                 log.debug("Parsed job: %s", job_name)
@@ -238,8 +257,10 @@ def parse_dag(dag_file):
                 else:
                     raise DAGException("Unrecognized script type: %s" % stype)
             elif l.startswith("RETRY"):
-                # Shadow queue doesn't care about RETRIES
-                pass
+                job_name = rec[1]
+                retries = int(rec[2])
+                job = jobs[job_name]
+                job.retries = retries
             elif l.startswith("MAXJOBS"):
                 pass
             elif len(l) == 0 or l[0] == "#":
