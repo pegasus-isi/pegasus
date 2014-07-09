@@ -1,4 +1,5 @@
 import logging
+import time
 import threading
 
 from Pegasus.shadowq.jobstate import JSLogEvent
@@ -70,7 +71,7 @@ class Job(object):
             raise DAGException("Invalid state: Successful job %s got event %s" % (self.name, record.event))
 
         # Record the time of the last update for this job
-        self.last_update = record.ts
+        self.last_update = time.mktime(record.ts)
 
         if record.event == JSLogEvent.PRE_SCRIPT_STARTED:
             self.state = JobState.PRESCRIPT

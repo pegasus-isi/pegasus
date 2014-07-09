@@ -1,3 +1,5 @@
+import logging
+import time
 from heapq import heappush, heappop
 
 from Pegasus.shadowq.dag import JobState
@@ -5,6 +7,8 @@ from Pegasus.shadowq.dag import JobState
 PRE_SCRIPT_DELAY = 5.0
 POST_SCRIPT_DELAY = 5.0
 SCHEDULER_INTERVAL = 20.0
+
+log = logging.getLogger(__name__)
 
 class SimulationException(Exception):
     pass
@@ -23,8 +27,10 @@ class Event(object):
         return "%s -> %s@%s %s: %s" % (self.to, self.fm, self.when, self.tag, self.data)
 
 class Entity(object):
-    def __init__(self, name):
+    def __init__(self, name, simulation):
         self.name = name
+        self.simulation = simulation
+        simulation.add(self)
 
     def process(self, ev):
         raise SimulationException("process() method not implemented")
@@ -39,7 +45,7 @@ class Entity(object):
         return self.simulation.time()
 
     def log(self, message):
-        print "%s@%0.3f %s" % (self.name, self.time(), message)
+        log.debug("%s@%0.3f %s" % (self.name, self.time(), message))
 
 class Simulation(object):
     def __init__(self, start=0.0):
@@ -50,9 +56,6 @@ class Simulation(object):
 
     def add(self, entity):
         self.entities.add(entity)
-        entity.simulation = self
-        ev = Event(entity, self, self.clock, 'sim.start', None)
-        self.event(ev)
 
     def time(self):
         return self.clock
@@ -62,10 +65,13 @@ class Simulation(object):
         self.running = False
 
     def log(self, message):
-        print "%s" % (message)
+        log.info("%s" % (message))
 
     def simulate(self, until=None):
-        self.log("Simulation starting...\n")
+        self.log("Simulation starting...")
+
+        for entity in self.entities:
+            self.event(Event(entity, self, self.clock, 'sim.start', None))
 
         self.running = True
 
@@ -93,7 +99,7 @@ class Simulation(object):
             ev = Event(entity, self, self.clock, 'sim.stop', None)
             entity.process(ev)
 
-        self.log("\nSimulation finished")
+        self.log("Simulation finished")
         self.log("%d events are queued" % len(self.events))
         self.log("%d entities remain" % len(self.entities))
 
@@ -107,8 +113,8 @@ class Simulation(object):
 # TODO Do we care about MAXJOBS?
 
 class WorkflowEngine(Entity):
-    def __init__(self, name, jobs, slots=1):
-        self.name = name
+    def __init__(self, name, simulation, jobs, slots=1):
+        Entity.__init__(self, name, simulation)
         self.jobs = jobs
         self.slots = slots
         self.queue = []
@@ -198,7 +204,7 @@ class WorkflowEngine(Entity):
     def workflow_finished(self):
         # The workflow is finished if all the jobs are blocked or finished
         finished = True
-        for j in self.jobs:
+        for j in self.jobs.values():
             if j.state not in (JobState.UNREADY, JobState.SUCCESSFUL, JobState.FAILED):
                 finished = False
                 break

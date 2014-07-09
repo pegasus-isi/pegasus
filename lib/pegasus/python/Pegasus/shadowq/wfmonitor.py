@@ -21,8 +21,6 @@ class WorkflowMonitor(threading.Thread):
                 log.info("Monitord started")
             elif r.event == JSLogEvent.MONITORD_FINISHED:
                 log.info("Monitord finished")
-                # We are done when we get this event
-                break
             elif r.event == JSLogEvent.DAGMAN_STARTED:
                 log.info("DAGMan started")
             elif r.event == JSLogEvent.DAGMAN_FINISHED:

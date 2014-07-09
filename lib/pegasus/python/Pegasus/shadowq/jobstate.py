@@ -72,21 +72,32 @@ class JSLogRecord(object):
 
 class JSLog(object):
     def __init__(self, jslog_file):
-        self.jslog = open(jslog_file, "r")
+        self.jslog_file = jslog_file
+        self.finished = False
 
     def __iter__(self):
+        self.jslog = open(self.jslog_file, "r")
         return self
 
     def next(self):
-        l = None
-        while not l:
+        if self.finished:
+            self.jslog.close()
+            raise StopIteration()
+
+        while True:
             l = self.jslog.readline()
             if not l:
                 log.debug("No line available")
                 time.sleep(1)
             else:
+                if l[-1] != '\n':
+                    # XXX Not sure if this can happen
+                    raise Exception("JSLog got partial line:\n%s", l)
                 log.debug("Got line: %s", l)
-                return self.parse_record(l)
+                rec = self.parse_record(l)
+                if rec.event == JSLogEvent.MONITORD_FINISHED:
+                    self.finished = True
+                return rec
 
     def parse_record(self, l):
         rec = l.split()

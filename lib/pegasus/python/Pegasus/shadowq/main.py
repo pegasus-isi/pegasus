@@ -63,8 +63,10 @@ def main():
     monitor = WorkflowMonitor(dag, jslog)
     monitor.start()
 
-    interval = int(os.getenv("SHADOWQ_PROVISIONER_INTERVAL", 5*60))
-    provisioner = Provisioner(dag, interval)
+    slots = int(os.getenv("SHADOWQ_SLOTS", 1))
+    estimates = os.getenv("SHADOWQ_ESTIMATES", None)
+    interval = int(os.getenv("SHADOWQ_PROVISIONER_INTERVAL", 60))
+    provisioner = Provisioner(dag, estimates, slots, interval)
     provisioner.start()
 
     monitor.join()
