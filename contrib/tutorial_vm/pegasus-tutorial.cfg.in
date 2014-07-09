@@ -73,7 +73,10 @@ yum install -y condor
 chkconfig condor on
 
 # Update condor config
-echo "TRUST_UID_DOMAIN = True" >> /etc/condor/condor_config.local
+cat >> /etc/condor/condor_config.local <<END
+CONDOR_HOST = \$(IP_ADDRESS)
+TRUST_UID_DOMAIN = True
+END
 
 # Install the Pegasus RPM
 curl "@@RPMURL@@" > /tmp/pegasus.rpm
