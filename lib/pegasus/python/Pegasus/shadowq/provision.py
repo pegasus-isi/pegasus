@@ -61,6 +61,10 @@ class Provisioner(threading.Thread):
             s.simulate()
             runtime = wfe.runtime
 
+            trace = open("shadowq.trace", "a")
+            trace.write("%f %f %f\n" % (time.time(), runtime, time.time() + runtime))
+            trace.close()
+
             log.info("Time remaining: %s", runtime)
             log.info("Workflow should finish at: %s", (time.time() + runtime))
 
