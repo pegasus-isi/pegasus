@@ -6,7 +6,8 @@ from Pegasus.shadowq.dag import JobState
 
 PRE_SCRIPT_DELAY = 5.0
 POST_SCRIPT_DELAY = 5.0
-SCHEDULER_INTERVAL = 20.0
+SCHEDULER_CYCLE_DELAY = 20.0
+SCHEDULER_INTERVAL = 60.0
 
 log = logging.getLogger(__name__)
 
@@ -108,6 +109,13 @@ class Simulation(object):
             raise SimulationException("Event generated in the past")
         heappush(self.events, (ev.when, ev))
 
+    def cancel(self, tag):
+        newevents = []
+        for when, ev in self.events:
+            if ev.tag != tag:
+                newevents.append((when, ev))
+        self.events = newevents
+
 
 # TODO Do we care about MAXPRE and MAXPOST?
 # TODO Do we care about MAXJOBS?
@@ -119,6 +127,7 @@ class WorkflowEngine(Entity):
         self.slots = slots
         self.queue = []
         self.runtime = 0.0
+        self.last_schedule = 0.0
         self.initialize_state()
 
     def initialize_state(self):
@@ -172,6 +181,12 @@ class WorkflowEngine(Entity):
         # The heapq package uses min heaps, so we use negative priority
         heappush(self.queue, (-job.priority, job))
 
+        # If the last scheduler cycle was recent, then schedule now
+        if self.last_schedule + SCHEDULER_CYCLE_DELAY <= self.time():
+            self.simulation.cancel('schedule') # Cancel future schedule events
+            self.last_schedule = self.time() # To prevent some edge cases
+            self.send(self, 'schedule', delay=0)
+
     def run_job(self, job, delay=None):
         # The job uses 1 slot
         self.slots -= 1
@@ -211,6 +226,8 @@ class WorkflowEngine(Entity):
         return finished
 
     def schedule(self):
+        self.last_schedule = self.time()
+
         self.log("Scheduling %d jobs on %d slots..." % (len(self.queue), self.slots))
         while self.slots > 0 and len(self.queue) > 0:
             _, job = heappop(self.queue)
