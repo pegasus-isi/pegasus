@@ -12,14 +12,20 @@ try:
     
     print "Updating database schema..."
     cur.execute("UPDATE pegasus_schema SET version='1.3' WHERE name='JDBCRC' AND catalog='rc'")
-    print "   Adding new column..."
-    cur.execute("ALTER TABLE rc_lfn ADD COLUMN site VARCHAR(245)")
-    
+    print "   Creating new table..."
+    cur.execute("CREATE TABLE rc_lfn_new ( LIKE rc_lfn )")
+    cur.execute("ALTER TABLE rc_lfn_new ADD COLUMN site VARCHAR(245)")
     print "   Removing index..."
-    cur.execute("ALTER TABLE rc_lfn DROP INDEX sk_rc_lfn")
-    
+    cur.execute("ALTER TABLE rc_lfn_new DROP INDEX sk_rc_lfn")
     print "   Adding new constraint..."
-    cur.execute("ALTER TABLE rc_lfn ADD CONSTRAINT sk_rc_lfn UNIQUE(lfn,pfn,site)")
+    cur.execute("ALTER TABLE rc_lfn_new ADD CONSTRAINT sk_rc_lfn UNIQUE(lfn,pfn,site)")
+    print "   Copying data..."
+    cur.execute("INSERT INTO rc_lfn_new(id, lfn, pfn) SELECT * FROM rc_lfn")
+    print "   Renaming table..."
+    cur.execute("RENAME TABLE rc_lfn TO rc_lfn_old, rc_lfn_new TO rc_lfn")
+    print "   Droping old table..."
+    cur.execute("ALTER TABLE rc_attr DROP FOREIGN KEY fk_rc_attr")
+    cur.execute("DROP TABLE rc_lfn_old")
     con.commit()
     print "Data schema successfully updated."
     print ""
@@ -37,6 +43,13 @@ try:
     con.commit()
     print "Database successfully cleaned."
     print ""    
+    
+    print "Adding new foreign constraint"
+    cur = con.cursor()
+    cur.execute("ALTER TABLE rc_attr ADD FOREIGN KEY (id) REFERENCES rc_lfn(id)")
+    con.commit()
+    print "Foreign constraint successfully added."
+    print ""
     
     print "Validating the update process..."
     cur = con.cursor()
