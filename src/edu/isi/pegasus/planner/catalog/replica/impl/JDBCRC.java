@@ -17,13 +17,14 @@
 
 package edu.isi.pegasus.planner.catalog.replica.impl;
 
+import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
-import java.util.*;
-import java.sql.*;
+import edu.isi.pegasus.common.util.CommonProperties;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
-import edu.isi.pegasus.common.util.CommonProperties;
-import edu.isi.pegasus.common.logging.LogManager;
+import java.sql.*;
+import java.util.*;
+import org.sqlite.SQLiteConfig;
 
 /**
  * This class implements a replica catalog on top of a simple table in a
@@ -311,6 +312,11 @@ public class JDBCRC implements ReplicaCatalog
                 }
                 else if( driver.equals( "sqlite") ){
                     driver = "org.sqlite.JDBC";
+                    //foreign key support needs to be enabled 
+                    //per connection PRAGMA foreign_keys ON
+                    SQLiteConfig config = new SQLiteConfig();  
+                    config.enforceForeignKeys(true);    
+                    localProps.putAll( config.toProperties() );
                     mUsingSQLiteBackend = true;
                 }
                 Class.forName(driver);
@@ -322,6 +328,8 @@ public class JDBCRC implements ReplicaCatalog
         }
 
         try {
+            mLogger.log( "Connecting to Database Backend " + url +" with properties " + localProps, 
+                         LogManager.DEBUG_MESSAGE_LEVEL );
             mConnection = DriverManager.getConnection( url, localProps );
             
             //JDBC sqlite driver returns false, but does support autoincrement of keys
