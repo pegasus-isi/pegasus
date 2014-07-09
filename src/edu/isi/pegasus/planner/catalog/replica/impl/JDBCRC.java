@@ -121,11 +121,16 @@ public class JDBCRC implements ReplicaCatalog
    */
   protected PreparedStatement mStatements[] = null;
 
-  /**
+    /**
      * The handle to the logging object.
      */
     protected LogManager mLogger;
 
+    /**
+     * Boolean to flag whether we are operating against a SQLite
+     * backend or not.
+     */
+    protected boolean mUsingSQLiteBackend;
 
   /**
    * The statement to prepare to slurp attributes.
@@ -251,8 +256,13 @@ public class JDBCRC implements ReplicaCatalog
     // establish connection to database generically
     mConnection = DriverManager.getConnection( url, username, password );
 
+    //special handling for sqlite
+    if( url.contains( "sqlite") ){
+        this.mUsingSQLiteBackend = true;
+    }
+    
     // may throws SQLException
-    m_autoinc = mConnection.getMetaData().supportsGetGeneratedKeys();
+    m_autoinc = (mUsingSQLiteBackend)|| mConnection.getMetaData().supportsGetGeneratedKeys();
 
     // prepared statements are Singletons -- prepared on demand
     mStatements = new PreparedStatement[ mCStatements.length ];
@@ -299,6 +309,10 @@ public class JDBCRC implements ReplicaCatalog
                 else if ( driver.equalsIgnoreCase( "Postgres" )){
                     driver = "org.postgresql.Driver";
                 }
+                else if( driver.equals( "sqlite") ){
+                    driver = "org.sqlite.JDBC";
+                    mUsingSQLiteBackend = true;
+                }
                 Class.forName(driver);
             }
         }
@@ -309,7 +323,9 @@ public class JDBCRC implements ReplicaCatalog
 
         try {
             mConnection = DriverManager.getConnection( url, localProps );
-            m_autoinc = mConnection.getMetaData().supportsGetGeneratedKeys();
+            
+            //JDBC sqlite driver returns false, but does support autoincrement of keys
+            m_autoinc = mUsingSQLiteBackend ||  mConnection.getMetaData().supportsGetGeneratedKeys();
 
             // prepared statements are Singletons -- prepared on demand
             mStatements = new PreparedStatement[mCStatements.length];
@@ -995,8 +1011,13 @@ public class JDBCRC implements ReplicaCatalog
         m.append("')");
 	query = m.toString();
 	st = mConnection.createStatement();
-	result = st.executeUpdate(query, Statement.RETURN_GENERATED_KEYS);
-	state++; // state == 3
+        //sqlite driver complains if Statement.RETURN_GENERATED_KEYS is set, even though
+        //the id's are set in the ResultSet
+        result = (this.mUsingSQLiteBackend)?
+                 st.executeUpdate(query): 
+                 st.executeUpdate(query, Statement.RETURN_GENERATED_KEYS);
+        
+        state++; // state == 3
 
 	rs = st.getGeneratedKeys();
         if ( rs.next() ) id = rs.getString(1);
@@ -1033,7 +1054,6 @@ public class JDBCRC implements ReplicaCatalog
       } catch ( SQLException e2 ) {
 	// ignore rollback problems
       }
-
       throw new RuntimeException( "Unable to tell database " +
 				  query + " (state=" + state + "): " +
 				  e.getMessage() );
