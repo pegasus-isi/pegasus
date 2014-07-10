@@ -61,14 +61,21 @@ JSLogEvent = Enum([
 ])
 
 class JSLogRecord(object):
+    def __init__(self):
+        self.ts = None
+        self.event = None
+        self.job_name = None
+        self.job_id = None
+        self.site = None
+
     def ts_string(self):
         return time.strftime("%Y/%m/%d %H:%M:%S", self.ts)
 
     def __str__(self):
-        if self.rtype == "wfstate":
-            return "%s: %s" % (self.ts_string(), self.event)
+        if self.job_name is not None:
+            return "%s %s %s" % (self.ts_string(), self.job_name, self.event)
         else:
-            return "%s: %s %s" % (self.ts_string(), self.job, self.event)
+            return "%s %s" % (self.ts_string(), self.event)
 
 class JSLog(object):
     def __init__(self, jslog_file):
