@@ -1229,6 +1229,7 @@ public class JDBCRC implements ReplicaCatalog
    * @param tuple is a description of the PFN and its attributes.
    * @return the number of removed entries, either 0 or 1.
    */
+  @Override
   public int delete( String lfn, ReplicaCatalogEntry tuple )
   {
     int result = 0;
@@ -1239,63 +1240,48 @@ public class JDBCRC implements ReplicaCatalog
     if ( mConnection == null ) throw new RuntimeException( c_error );
 
     try {
-      int index = 1;
       StringBuilder m = new StringBuilder(256);
-      for ( Iterator i=tuple.getAttributeIterator(); i.hasNext(); ) {
-	String name = (String) i.next();
-        if (name.equals(ReplicaCatalogEntry.RESOURCE_HANDLE)) {
-            continue;
-        }
-	if (m.length() == 0) {
-            m.append("SELECT DISTINCT rc_attr.id FROM rc_attr");
-        }
-        Object value = tuple.getAttribute(name);
-	m.append( " INNER JOIN rc_attr a").append(index).append(" ON ");
-        m.append("a").append(index).append(".name='");
-	m.append(quote(name)).append( "' AND a").append(index).append(".value" );
-	if ( value == null ) m.append( " IS NULL" );
-	else m.append("='").append(quote(value.toString())).append('\'');
-        index++;
-      }
-      query = m.toString();
-
-      m = new StringBuilder(256);
-      m.append( "DELETE FROM rc_lfn WHERE lfn='" ).append(quote(lfn));
-      m.append("' AND pfn='" ).append(quote(tuple.getPFN())).append("'");
+      m.append("SELECT id FROM rc_lfn WHERE lfn='").append(lfn).append("'");
       if (tuple.getResourceHandle() != null) {
           m.append(" AND site='").append(quote(tuple.getResourceHandle())).append("'");
       } else {
           m.append(" AND site IS NULL");
       }
-      
       Statement st = mConnection.createStatement();
-      
-      if (!query.isEmpty()) {
-          m.append(" AND id=?");    
-          ResultSet rs = st.executeQuery(query);
-
-          query = m.toString();
-          PreparedStatement ps = mConnection.prepareStatement(query);
-          while ( rs.next() ) {
-            ps.setString( 1, rs.getString(1) );
-            result += ps.executeUpdate();
-          }
-          ps.close();
+      ResultSet rs = st.executeQuery(m.toString());
+      if (!rs.next()) {
+          st.close();
           rs.close();
-      
-      } else {
-          query = m.toString();
-          result = st.executeUpdate(query);
+          return result;
       }
+      int id = rs.getInt("id");
+      
+      m = new StringBuilder(256);
+      m.append("SELECT name,value FROM rc_attr WHERE id=").append(id);
+      st = mConnection.createStatement();
+      rs = st.executeQuery(m.toString());
+      while (rs.next()) {
+          String name = rs.getString("name");
+          String value = rs.getString("value");
+          if (!tuple.hasAttribute(name) || !tuple.getAttribute(name).equals(value)) {
+              st.close();
+              rs.close();
+              return result;
+          }
+      }
+      
+      m = new StringBuilder(256);
+      m.append("DELETE FROM rc_lfn WHERE id=").append(id);
+      st = mConnection.createStatement();
+      result = st.executeUpdate(m.toString());
       st.close();
+      rs.close();
+      return result;
 
     } catch ( SQLException e ) {
       throw new RuntimeException( "Unable to tell database " +
 				  query + ": " + e.getMessage() );
     }
-
-    // done
-    return result;
   }
 
   /**
