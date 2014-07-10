@@ -20,6 +20,7 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.planner.classes.CompoundTransformation;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PCRelation;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.dax.Invoke;
 
@@ -37,8 +38,16 @@ public interface Callback {
     /**
      * The version of the Callback api
      */
-    public static final String VERSION = "1.3";
+    public static final String VERSION = "1.4";
 
+    /**
+     * The overloaded constructor.
+     *
+     * @param bag   the bag of initialization objects containing the properties
+     *              and the logger
+     * @param dax   the path to the DAX file.
+     */
+    public void initialize( PegasusBag bag, String dax );
 
     /**
      * Return a object that is constructed during the parsing of the object.

@@ -17,9 +17,10 @@
 package edu.isi.pegasus.planner.partitioner.graph;
 
 import edu.isi.pegasus.planner.classes.Data;
-
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
+import java.util.Set;
 
 /**
  * Data class that allows us to construct information about the nodes
@@ -61,13 +62,13 @@ public class GraphNode extends Data {
      * The list of parents of the job/node in the abstract graph. Each element
      * of the list is a <code>GraphNode</code> object.
      */
-    private List<GraphNode> mParents;
+    private Set<GraphNode> mParents;
 
     /**
      * The list of children of the job/node in the abstract graph. Each element
      * of the list is a <code>GraphNode</code> object.
      */
-    private List<GraphNode> mChildren;
+    private Set<GraphNode> mChildren;
 
     /**
      * The content associated with this node.
@@ -86,8 +87,7 @@ public class GraphNode extends Data {
      */
     public GraphNode() {
         mLogicalID = "";
-        mParents = new java.util.LinkedList();
-        mChildren = new java.util.LinkedList();
+        this.resetEdges();
         mDepth = -1;
         mLogicalName = "";
         mColor = this.WHITE_COLOR;
@@ -125,8 +125,8 @@ public class GraphNode extends Data {
      */
     public GraphNode(String id, String name) {
         mLogicalID = id;
-        mParents = new java.util.LinkedList();
-        mChildren = new java.util.LinkedList();
+        mParents = new HashSet();
+        mChildren = new HashSet();
         mDepth = -1;
         mLogicalName = name;
         mColor = this.WHITE_COLOR;
@@ -156,21 +156,24 @@ public class GraphNode extends Data {
     /**
      * It adds the parents to the node. It ends up overwriting all the existing
      * parents if some already exist.
+     * @param parents
      */
-    public void setParents( List<GraphNode> parents ) {
-        mParents = parents;
+    public void setParents( Collection<GraphNode> parents ) {
+        mParents = ( parents instanceof Set)? (Set)parents:new HashSet(parents);
     }
 
     /**
      * It sets the children to the node. It ends up overwriting all the existing
      * parents if some already exist.
+     * @param children
      */
-    public void setChildren( List<GraphNode> children ) {
-        mChildren = children;
+    public void setChildren( Collection<GraphNode> children ) {
+        mChildren = ( children instanceof Set)? (Set)children: new HashSet(children);
     }
 
     /**
      * Sets the depth associated with the node.
+     * @param depth
      */
     public void setDepth( int depth ) {
         mDepth = depth;
@@ -201,7 +204,7 @@ public class GraphNode extends Data {
      *
      * @return list of <code>GraphNode</code> objects.
      */
-    public List<GraphNode> getParents() {
+    public Collection<GraphNode> getParents() {
         return mParents;
     }
 
@@ -211,7 +214,7 @@ public class GraphNode extends Data {
      *
      * @return list of <code>GraphNode</code> objects.
      */
-    public List<GraphNode> getChildren() {
+    public Collection<GraphNode> getChildren() {
         return mChildren;
     }
 
@@ -251,6 +254,13 @@ public class GraphNode extends Data {
         mParents.remove( parent );
     }
 
+    /**
+     * Reset all the edges associated with this node.
+     */
+    public final void resetEdges() {
+        mParents  = new HashSet();
+        mChildren = new HashSet();
+    }
 
     /**
      * Returns the logical id of the graph node.
@@ -395,6 +405,44 @@ public class GraphNode extends Data {
         return sb.toString();
     }
 
+    /**
+     * Matches two GraphNode objects. A GraphNode object is considered
+     * equal to another if there id's match.
+     *
+     * @param obj the reference object with which to compare.
+     * @return true, if the primary keys match, false otherwise.
+     */
+    public boolean equals(Object obj) {
+        
+        // ward against null
+        if ( obj == null ) {
+            return false;
+        }
+        
+        // shortcut
+        if ( obj == this ) {
+            return true;
+        }
+
+        // don't compare apples with oranges
+        if ( ! (obj instanceof GraphNode) ){
+            return false;
+        }
+
+        // now we can safely cast
+        GraphNode d = (GraphNode) obj;
+        return this.getID().equals( d.getID() );
+    }
+    
+    /**
+     * Calculate a hash code value for the object to support hash based Collections.
+     *
+     * @return a hash code value for the object.
+     */
+    public int hashCode() {
+        return this.getID().hashCode();
+    }
+
 
    
     /**
@@ -404,4 +452,6 @@ public class GraphNode extends Data {
         return new java.lang.CloneNotSupportedException(
             "Clone() not implemented in GraphNode");
     }
+
+    
 }

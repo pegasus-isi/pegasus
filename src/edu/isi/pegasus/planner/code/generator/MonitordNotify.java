@@ -17,29 +17,23 @@ package edu.isi.pegasus.planner.code.generator;
 
 
 import edu.isi.pegasus.common.logging.LogManager;
-
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
-
 import edu.isi.pegasus.planner.code.CodeGenerator;
 import edu.isi.pegasus.planner.code.CodeGeneratorException;
-
 import edu.isi.pegasus.planner.common.PegasusProperties;
-
 import edu.isi.pegasus.planner.dax.Invoke;
 import edu.isi.pegasus.planner.dax.Invoke.WHEN;
-
-
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -158,8 +152,8 @@ public class MonitordNotify implements CodeGenerator {
 	File f = new File( mSubmitFileDir,
                            Abstract.getDAGFilename(
                                            this.mPOptions,
-                                           dag.dagInfo.nameOfADag,
-                                           dag.dagInfo.index,
+                                           dag.getLabel(),
+                                           dag.getIndex(),
                                            MonitordNotify.NOTIFICATIONS_FILE_SUFFIX) );
 
 	try {
@@ -187,8 +181,9 @@ public class MonitordNotify implements CodeGenerator {
 
         //walk through the workflow and generate code for
         //job notifications if specified
-        for ( Iterator<Job> it = dag.jobIterator(); it.hasNext();)  {
-	    Job job = it.next();
+        for ( Iterator<GraphNode> it = dag.jobIterator(); it.hasNext();)  {
+            GraphNode node = it.next();
+	    Job job = (Job)node.getContent();
 	    this.generateCode( dag, job );
 	}
 

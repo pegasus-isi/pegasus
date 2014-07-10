@@ -17,26 +17,29 @@
 package edu.isi.pegasus.planner.parser.dax;
 
 
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.CompoundTransformation;
 import edu.isi.pegasus.planner.classes.DagInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.classes.PCRelation;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
-import edu.isi.pegasus.planner.classes.Job;
-
-import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.classes.ReplicaStore;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.dax.Invoke;
-
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Vector;
+import java.util.Set;
 
 /**
  * This creates a dag corresponding to one particular partition of the whole
@@ -49,20 +52,16 @@ import java.util.Vector;
 public class DAX2CDAG implements Callback {
 
     /**
-     * The DAGInfo object which contains information corresponding to the ADag in
+     * The ADag object which contains information corresponding to the ADag in
      * the XML file.
      */
-    private DagInfo mDagInfo;
-
-    /**
-     * Contains Job objects. One per submit file.
-     */
-    private Vector mVSubInfo;
-
+    private ADag mDag;
+   
     /**
      * The mapping of the idrefs of a job to the job name.
+     * e.g ID0000001 -> preprocess_ID000001
      */
-    private Map mJobMap;
+    private Map<String,String> mJobMap;
 
     /**
      * The handle to the properties object.
@@ -89,35 +88,51 @@ public class DAX2CDAG implements Callback {
     protected TransformationStore mTransformationStore;
 
     /**
-     * Map of Compound Transfomations indexed by complete name of the compound
+     * Map of Compound Transformations indexed by complete name of the compound
      * transformation.
      */
     protected Map<String,CompoundTransformation> mCompoundTransformations;
-    
     
     /**
      * All the notifications associated with the adag
      */
     private Notifications mNotifications;
 
-
+    /**
+     * To track whether we auto detect data dependancies or not.
+     */
+    private boolean mAddDataDependencies;
+    
+    /**
+     * Map to track a LFN with the job that creates the file corresponding to the 
+     * LFN.
+     */
+    private Map<String,Job> mFileCreationMap;
+    
+    /**
+     * The handle to the logger
+     */
+    private LogManager mLogger;
+    
     /**
      * The overloaded constructor.
      *
-     * @param properties  the properties passed to the planner.
-     * @param dax         the path to the DAX file.
+     * @param bag   the bag of initialization objects containing the properties
+     *              and the logger
+     * @param dax   the path to the DAX file.
      */
-    public DAX2CDAG( PegasusProperties properties, String dax ) {
-//        mDAXPath      = dax;
-        mDagInfo      = new DagInfo();
-        mVSubInfo     = new Vector();
-        mJobMap       = new HashMap();
-        mProps        = properties;
+    public void initialize( PegasusBag bag, String dax ) {
+        mDag          = new ADag();
+        mJobMap       = new HashMap<String,String>();
+        mProps        = bag.getPegasusProperties();
+        mLogger       = bag.getLogger();
         mDone         = false;
         this.mReplicaStore = new ReplicaStore();
         this.mTransformationStore = new TransformationStore();
         this.mCompoundTransformations = new HashMap<String,CompoundTransformation>();
         this.mNotifications = new Notifications();
+        this.mAddDataDependencies = mProps.addDataDependencies();
+        this.mFileCreationMap = new HashMap<String,Job>();
     }
 
 
@@ -129,10 +144,10 @@ public class DAX2CDAG implements Callback {
      * @param attributes is a map of attribute key to attribute value
      */
     public void cbDocument(Map attributes) {
-        mDagInfo.setDAXVersion( (String)attributes.get( "version" ));
-        mDagInfo.count = (String)attributes.get("count");
-        mDagInfo.index = (String)attributes.get("index");
-        mDagInfo.setLabel( (String)attributes.get("name") );
+        mDag.setDAXVersion( (String)attributes.get( "version" ));
+        mDag.setCount( (String)attributes.get("count") );
+        mDag.setIndex( (String)attributes.get("index") );
+        mDag.setLabel( (String)attributes.get("name") );
     }
     
     /**
@@ -155,9 +170,10 @@ public class DAX2CDAG implements Callback {
     public void cbJob(Job job) {
 
         mJobMap.put(job.logicalId,job.jobName);
-        mVSubInfo.add(job);
-        mDagInfo.addNewJob( job );
+        mDag.add(job);
 
+        DagInfo dinfo = mDag.getDAGInfo();
+        
         //check for compound executables
         if( this.mCompoundTransformations.containsKey( job.getCompleteTCName() ) ){
             CompoundTransformation ct = this.mCompoundTransformations.get( job.getCompleteTCName() );
@@ -165,7 +181,7 @@ public class DAX2CDAG implements Callback {
             for( PegasusFile pf : ct.getDependantFiles() ){
                 job.addInputFile( pf );
                 String lfn = pf.getLFN();
-                mDagInfo.updateLFNMap(lfn,"i");
+                dinfo.updateLFNMap(lfn,"i");
             }
             job.addNotifications( ct.getNotifications());
         }
@@ -174,7 +190,7 @@ public class DAX2CDAG implements Callback {
         for ( Iterator it = job.inputFiles.iterator(); it.hasNext(); ){
             PegasusFile pf = (PegasusFile)it.next();
             String lfn = pf.getLFN();
-            mDagInfo.updateLFNMap(lfn,"i");
+            dinfo.updateLFNMap(lfn,"i");
         }
 
         for ( Iterator it = job.outputFiles.iterator(); it.hasNext(); ){
@@ -183,13 +199,15 @@ public class DAX2CDAG implements Callback {
 
             //if the output LFN is also an input LFN of the same
             //job then it is a pass through LFN. Should be tagged
-            //as i only, as we want it staged in
-
+            //as i only, as we want it staged in\
             if( job.inputFiles.contains( pf ) ){
                 //dont add to lfn map in DagInfo
                 continue;
             }
-            mDagInfo.updateLFNMap(lfn,"o");
+            dinfo.updateLFNMap(lfn,"o");
+            if( this.mAddDataDependencies ){
+                mFileCreationMap.put( lfn, job );
+            }
         }
 
     }
@@ -210,18 +228,20 @@ public class DAX2CDAG implements Callback {
         //System.out.println( child + " -> " + parents );
 
         for ( PCRelation pc : parents  ){
-            
             parentID = (String)mJobMap.get( pc.getParent() );
             if(parentID == null){
                 //this actually means dax is generated wrong.
                 //probably some one tinkered with it by hand.
                 throw new RuntimeException( "Unable to find job in DAX with ID " + pc.getParent() + " listed as a parent for job with ID " + child );
             }
+            
+            /* PM-747 
             PCRelation relation = new PCRelation( parentID, childID  );
             relation.setAbstractChildID( child );
             relation.setAbstractParentID( pc.getParent() );
-                  
             mDagInfo.addNewRelation( relation );
+            */
+            mDag.addEdge( parentID, childID );
         }
 
     }
@@ -232,8 +252,11 @@ public class DAX2CDAG implements Callback {
      * ADag object has been fully generated or not.
      */
     public void cbDone() {
-
         mDone = true;
+        
+        if( this.mAddDataDependencies ){
+            this.addDataDependencies();
+        }
     }
 
     /**
@@ -249,22 +272,23 @@ public class DAX2CDAG implements Callback {
                                        " for the partition was fully generated");
 
 
-        ADag dag = new ADag(mDagInfo,mVSubInfo);
-        dag.setReplicaStore(mReplicaStore);
-        dag.setTransformationStore(mTransformationStore);
-        dag.addNotifications(mNotifications);
-        return dag;
+        
+        mDag.setReplicaStore(mReplicaStore);
+        mDag.setTransformationStore(mTransformationStore);
+        mDag.addNotifications(mNotifications);
+        return mDag;
     }
 
     /**
      * Callback when a compound transformation is encountered in the DAX
      *
-     * @param compoundTransformation   the compound transforamtion
+     * @param compoundTransformation   the compound transformation
      */
     public void cbCompoundTransformation( CompoundTransformation compoundTransformation ){
     	this.mCompoundTransformations.put( compoundTransformation.getCompleteName(), compoundTransformation );
     	if(!compoundTransformation.getNotifications().isEmpty()){
-    		System.out.println( "[DEBUG] Compound Transformation Invoke " + compoundTransformation.getCompleteName() + " " +compoundTransformation.getNotifications() );
+    		mLogger.log( "Compound Transformation Invoke " + compoundTransformation.getCompleteName() + " " +compoundTransformation.getNotifications(),
+                             LogManager.DEBUG_MESSAGE_LEVEL );
     	}
     }
 
@@ -284,12 +308,41 @@ public class DAX2CDAG implements Callback {
     /**
      * Callback when a transformation catalog entry is encountered in the DAX
      *
-     * @param tce  the transformationc catalog entry object.
+     * @param tce  the transformation catalog entry object.
      */
     public void cbExecutable( TransformationCatalogEntry tce ){
         this.mTransformationStore.addEntry( tce );
         if( !tce.getNotifications().isEmpty() ){
-        	System.out.println( "[DEBUG] Executable Invoke " + tce.getLogicalTransformation() + " " +  tce.getNotifications() );
+        	mLogger.log( "Executable Invoke " + tce.getLogicalTransformation() + " " +  tce.getNotifications(),
+                             LogManager.DEBUG_MESSAGE_LEVEL );
         }
+    }
+
+    /**
+     * Goes through the ADag and computes any data dependencies.
+     *
+     * For example if Job A creates an output file X and job B consumes it, then 
+     * it automatically adds a dependency between A -> B if it does not exist already.
+     */
+    private void addDataDependencies() {
+        mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_ADD_DATA_DEPENDENCIES, LoggingKeys.DAX_ID, this.mDag.getAbstractWorkflowName() );
+        for( Iterator<GraphNode> it = this.mDag.nodeIterator(); it.hasNext(); ){
+            GraphNode child = it.next();
+            Set<GraphNode> parents = new HashSet();
+            Job job = (Job)child.getContent();
+            for( PegasusFile pf : job.getInputFiles() ){
+                Job parent = this.mFileCreationMap.get(pf.getLFN() );
+                if( parent != null ){
+                    parents.add( this.mDag.getNode( parent.getID() ));
+                }
+            }
+            //now add depedencies for the job
+            for( GraphNode parent: parents ){
+                mLogger.log( "Adding Data Dependency edge " + parent.getID() + " -> " + job.getID(),
+                                 LogManager.DEBUG_MESSAGE_LEVEL );
+               this.mDag.addEdge( parent, child );
+            }
+        }
+        mLogger.logEventCompletion();
     }
 }

@@ -5,8 +5,6 @@
 package edu.isi.pegasus.planner.refiner;
 
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.Job;
-import edu.isi.pegasus.planner.partitioner.graph.Adapter;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 
@@ -46,32 +44,10 @@ public class ReduceEdges {
      * @return 
      */
     public ADag reduce( ADag dag ){
-        ADag result;
+        //PM-747 no need for conversion as ADag now implements Graph interface
+        Graph resultGraph =  this.reduce((Graph)dag );
 
-       
-        //we first need to convert internally into graph format
-        Graph resultGraph =  this.reduce( Adapter.convert(dag ) );
-
-        //convert back to ADag and return
-        result = dag;
-        //we need to reset the jobs and the relations in it
-        result.clearJobs();
-
-        //traverse through the graph and jobs and edges
-        for( Iterator it = resultGraph.nodeIterator(); it.hasNext(); ){
-            GraphNode node = ( GraphNode )it.next();
-
-            //get the job associated with node
-            result.add( ( Job )node.getContent() );
-
-            //all the children of the node are the edges of the DAG
-            for( Iterator childrenIt = node.getChildren().iterator(); childrenIt.hasNext(); ){
-                GraphNode child = ( GraphNode ) childrenIt.next();
-                result.addNewRelation( node.getID(), child.getID() );
-            }
-        }
-
-        return result;
+        return (ADag)resultGraph;
     }
 
     /**

@@ -110,7 +110,7 @@ public class Rank {
         long runtime;
         for( Iterator it = daxes.iterator(); it.hasNext(); ){
             String dax = ( String ) it.next();
-            Callback cb = DAXParserFactory.loadDAXParserCallback( mBag.getPegasusProperties(),
+            Callback cb = DAXParserFactory.loadDAXParserCallback( mBag,
                                                            dax,
                                                            "DAX2CDAG" );
 

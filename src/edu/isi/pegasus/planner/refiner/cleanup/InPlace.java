@@ -16,30 +16,25 @@
 
 package edu.isi.pegasus.planner.refiner.cleanup;
 
-import edu.isi.pegasus.planner.classes.Job;
-import edu.isi.pegasus.planner.classes.PegasusFile;
-
-import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
-
-import edu.isi.pegasus.planner.namespace.Condor;
-
-import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
-import edu.isi.pegasus.planner.partitioner.graph.Graph;
-
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.TransferJob;
-
+import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Dagman;
+import edu.isi.pegasus.planner.partitioner.graph.Graph;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNodeContent;
-
-import java.util.Map;
-import java.util.Iterator;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
-import java.util.LinkedList;
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 
 
@@ -528,7 +523,15 @@ public class InPlace implements CleanupStrategy{
                 if( typeStageOut( curGN_SI.getJobType() ) ){
                         
                     //find a compute job that is parent of this
-                    GraphNode node = (GraphNode)curGN.getParents().get( 0 );
+                    //GraphNode node = (GraphNode)curGN.getParents().get( 0 );
+                    GraphNode node = null;
+                    for( GraphNode n: curGN.getParents() ){
+                        node = n;
+                        break;
+                    }
+                    if( node == null ){
+                        throw new RuntimeException( "Cleanup job does not have a compute job as it's parent " + cleanupNode.getID() );
+                    }
                     computeJob = (Job)node.getContent();
                     message = new StringBuffer();
                     message.append( "For cleanup job " ).append( cleanupNode.getID() ).
@@ -606,7 +609,7 @@ public class InPlace implements CleanupStrategy{
         //If a path exists, then the edge from Z to cleanup job can
         //be removed.
         
-        List parents = node.getParents();
+        Collection<GraphNode> parents = node.getParents();
         List redundant = new LinkedList();
         HashSet visit = new HashSet();
         for( Iterator itp = node.getParents().iterator() ; itp.hasNext() ;){

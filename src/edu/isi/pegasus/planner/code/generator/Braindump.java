@@ -251,7 +251,6 @@ public class Braindump {
      * @return default entries
      */
     public Map<String, String> defaultBrainDumpEntries( ADag workflow ) throws CodeGeneratorException {
-        DagInfo dinfo = workflow.dagInfo;
         
         //to preserve order while writing out
         Map<String,String> entries = new LinkedHashMap();
@@ -276,18 +275,17 @@ public class Braindump {
         //dax and dax label
         entries.put( "dax", mPOptions.getDAX() );
         entries.put( Braindump.DAX_LABEL_KEY, workflow.getLabel() );
-        entries.put( Braindump.DAX_INDEX_KEY, workflow.dagInfo.index );
+        entries.put( Braindump.DAX_INDEX_KEY, workflow.getIndex() );
         entries.put( Braindump.DAX_VERRSION_KEY, workflow.getDAXVersion() );
 
         
         //the workflow name
-        if (dinfo.flowIDName != null) {
-            entries.put( Braindump.WF_NAME_KEY, dinfo.flowIDName );
-        }
+        entries.put( Braindump.WF_NAME_KEY, workflow.getFlowName() );
+        
         
         //the workflow timestamp
-        if (dinfo.getMTime() != null) {
-            entries.put( Braindump.WF_TIMESTAMP_KEY, dinfo.getFlowTimestamp() );
+        if ( workflow.getMTime() != null) {
+            entries.put( Braindump.WF_TIMESTAMP_KEY, workflow.getFlowTimestamp() );
         }
         
         //basedir and submit directory

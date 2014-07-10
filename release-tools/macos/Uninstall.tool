@@ -19,8 +19,9 @@ echo "Locating files..."
 declare -a pegasus_files
 
 # Python .pth files
-for v in $(echo "2.3 2.5 2.6 2.7"); do
-    test -f /Library/Python/$v/site-packages/pegasus.pth && pegasus_files+=("/Library/Python/$v/site-packages/pegasus.pth")
+for d in /Library/Python/2.*; do
+    test -f $d/site-packages/pegasus.pth && pegasus_files+=("$d/site-packages/pegasus.pth")
+    test -L $d/site-packages/Pegasus && pegasus_files+=("$d/site-packages/Pegasus")
 done
 
 # Executables and manpages

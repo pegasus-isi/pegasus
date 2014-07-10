@@ -61,12 +61,17 @@ import edu.isi.pegasus.planner.classes.TransferJob;
  * 
  * Note it is upto the user to specify these or a subset of them.
  * 
- * The following globus profiles if associated with the job are picked up
+ * The following globus profiles if associated with the job are picked up and
+ * translated to +remote_cerequirements key in the job submit files.
  * <pre>
- * hostcount  -> NODES
- * xcount      -> PROCS
- * maxwalltime-> WALLTIME
+ * 
+ * hostcount    -> NODES
+ * xcount       -> PROCS
+ * maxwalltime  -> WALLTIME
+ * totalmemory  -> TOTAL_MEMORY
+ * maxmemory    -> PER_PROCESS_MEMORY
  * </pre>
+ * 
  * 
  * The following condor profiles if associated with the job are picked up
  * <pre>
@@ -78,8 +83,21 @@ import edu.isi.pegasus.planner.classes.TransferJob;
  * For e.g. the expression in the submit file may look as 
  * <pre>
  * +remote_cerequirements = "PROCS==18 && NODES==1 && PRIORITY==10 && WALLTIME==3600
- *   && PASSENV==1 && JOBNAME==\"TEST JOB\" && MYENV ==\"GAURANG=MEHTA,KARAN=VAHI\""
+ *   && PASSENV==1 && JOBNAME==\"TEST JOB\" && MYENV ==\"MONTAGE_HOME=/usr/montage,JAVA_HOME=/usr\""
  * </pre>
+ * 
+ * The pbs_local_attributes.sh file in share/pegasus/htcondor/glite picks up
+ * these values and translated to appropriate PBS parameters
+ * 
+ * <pre>
+ * NODES                 -> nodes
+ * PROCS                 -> ppn
+ * WALLTIME              -> walltime
+ * TOTAL_MEMORY          -> mem
+ * PER_PROCESS_MEMORY    -> pmem 
+ * </pre>
+ * 
+ * 
  * 
  * All the jobs that have this style applied dont have a remote directory 
  * specified in the submit directory. They rely on kickstart to change to the
@@ -188,9 +206,11 @@ public class GLite extends Abstract {
      * with the jobs.
      * The following globus profiles if associated with the job are picked up
      * <pre>
-     * hostcount  -> NODES
-     * xcount      -> PROCS
-     * maxwalltime-> WALLTIME
+     * hostcount    -> NODES
+     * xcount       -> PROCS
+     * maxwalltime  -> WALLTIME
+     * totalmemory  -> TOTAL_MEMORY
+     * maxmemory    -> PER_PROCESS_MEMORY
      * </pre>
      * 
      * The following condor profiles if associated with the job are picked up
@@ -251,6 +271,18 @@ public class GLite extends Abstract {
         if( job.globusRSL.containsKey( "maxwalltime" ) ){
             value.append( " && " );
             addSubExpression( value,"WALLTIME" , Integer.parseInt( (String)job.globusRSL.get( "maxwalltime" ) ) );            
+        }
+
+        /* the globus key maxmemory is PER_PROCESS_MEMORY */
+        if( job.globusRSL.containsKey( "maxmemory" ) ){
+            value.append( " && " );
+            addSubExpression( value, "PER_PROCESS_MEMORY" ,  (String)job.globusRSL.get( "maxmemory" )  );
+        }
+        
+        /* the globus key totalmemory is TOTAL_MEMORY */
+        if( job.globusRSL.containsKey( "totalmemory" ) ){
+            value.append( " && " );
+            addSubExpression( value, "TOTAL_MEMORY" ,  (String)job.globusRSL.get( "totalmemory" )  );
         }
         
         /* the condor key priority is PRIORITY */

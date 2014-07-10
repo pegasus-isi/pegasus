@@ -16,62 +16,47 @@
 
 package edu.isi.pegasus.planner.refiner;
 
-import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
-import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
-
-import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.Job;
-import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.classes.FileTransfer;
-import edu.isi.pegasus.planner.classes.Profile;
-import edu.isi.pegasus.planner.classes.NameValue;
-
 import edu.isi.pegasus.common.logging.LogManager;
-
-import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
-import edu.isi.pegasus.planner.partitioner.graph.Graph;
-import edu.isi.pegasus.planner.partitioner.graph.Adapter;
-
-import edu.isi.pegasus.planner.namespace.Pegasus;
-
-import edu.isi.pegasus.planner.transfer.Implementation;
-import edu.isi.pegasus.planner.transfer.implementation.ImplementationFactory;
-import edu.isi.pegasus.planner.transfer.Refiner;
-import edu.isi.pegasus.planner.transfer.refiner.RefinerFactory;
-
-import edu.isi.pegasus.planner.selector.TransformationSelector;
-
 import edu.isi.pegasus.common.util.DynamicLoader;
 import edu.isi.pegasus.common.util.FactoryException;
 import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.common.util.Version;
-
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
-
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
-
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
-
+import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.FileTransfer;
+import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.NameValue;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.code.gridstart.PegasusExitCode;
 import edu.isi.pegasus.planner.namespace.Dagman;
+import edu.isi.pegasus.planner.namespace.Pegasus;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import edu.isi.pegasus.planner.selector.TransformationSelector;
+import edu.isi.pegasus.planner.transfer.Implementation;
+import edu.isi.pegasus.planner.transfer.Refiner;
 import edu.isi.pegasus.planner.transfer.RemoteTransfer;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.HashMap;
-
+import edu.isi.pegasus.planner.transfer.implementation.ImplementationFactory;
+import edu.isi.pegasus.planner.transfer.refiner.RefinerFactory;
 import java.io.File;
-
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.regex.Pattern;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * The refiner that is responsible for adding 
@@ -254,6 +239,12 @@ public class DeployWorkerPackage
     private static Map<SysInfo.OS,String> mOSToNMIOSReleaseAndVersion = null;
     
     /**
+     * A set of supported OS release and versions that our build process
+     * builds for.
+     */
+    private static Set<String> mSupportedOSReleaseVersions = null;
+    
+    /**
      * Maps each to OS to a specific OS release for purposes of picking up the 
      * correct worker package for a site. The mapping is to be kept consistent
      * with the NMI builds for the releases.
@@ -266,9 +257,28 @@ public class DeployWorkerPackage
         if( mOSToNMIOSReleaseAndVersion == null ){
             mOSToNMIOSReleaseAndVersion = new HashMap();
             mOSToNMIOSReleaseAndVersion.put( SysInfo.OS.LINUX, "rhel_5" );
-            mOSToNMIOSReleaseAndVersion.put( SysInfo.OS.MACOSX, "macos_10.5" );
+            mOSToNMIOSReleaseAndVersion.put( SysInfo.OS.MACOSX, "macos_10.7" );
         }
         return mOSToNMIOSReleaseAndVersion;
+    }
+    
+    /**
+     * A set of OS release and version combinations for which our build
+     * processes build Pegasus binaries.
+     * 
+     * @return 
+     */
+    private static Set<String> supportedOSReleaseAndVersions(){
+        if( mSupportedOSReleaseVersions == null ){
+            mSupportedOSReleaseVersions = new HashSet();
+            mSupportedOSReleaseVersions.add( "rhel_5" );
+            mSupportedOSReleaseVersions.add( "rhel_6" );
+            mSupportedOSReleaseVersions.add( "deb_6" );
+            mSupportedOSReleaseVersions.add( "deb_7" );
+            mSupportedOSReleaseVersions.add( "macos_10.7" );
+            
+        }
+        return mSupportedOSReleaseVersions;
     }
     
     /**
@@ -720,33 +730,11 @@ public class DeployWorkerPackage
         boolean addUntarJobs = !mWorkerNodeExecution;
 
         Set deploymentSites = this.getDeploymentSites( dag );
-        Graph workflow = ( addUntarJobs )?
+        ADag workflow = ( addUntarJobs )?
                          addSetupNodesWithUntarNodes( dag , deploymentSites ): //non pegasus lite case. shared fs
                          addSetupNodesWithoutUntarNodes( dag, deploymentSites );
-        
-        
-        
        
-        //convert back to ADag and return
-        ADag result = dag;
-        //we need to reset the jobs and the relations in it
-        result.clearJobs();
-
-        //traverse through the graph and jobs and edges
-        for( Iterator it = workflow.nodeIterator(); it.hasNext(); ){
-            GraphNode node = ( GraphNode )it.next();
-
-            //get the job associated with node
-            result.add( ( Job )node.getContent() );
-
-            //all the children of the node are the edges of the DAG
-            for( Iterator childrenIt = node.getChildren().iterator(); childrenIt.hasNext(); ){
-                GraphNode child = ( GraphNode ) childrenIt.next();
-                result.addNewRelation( node.getID(), child.getID() );
-            }
-        }
-
-        return result;
+        return workflow;
     }
 
     /**
@@ -757,13 +745,14 @@ public class DeployWorkerPackage
      * 
      * @return  the workflow in the graph representation with the nodes added.
      */
-    private Graph addSetupNodesWithUntarNodes( ADag dag, Set<String> deploymentSites ) {
+    private ADag addSetupNodesWithUntarNodes( ADag dag, Set<String> deploymentSites ) {
         //convert the dag to a graph representation and walk it
         //in a top down manner
-        Graph workflow = Adapter.convert( dag );
+        //PM-747 no need for conversion as ADag now implements Graph interface
+        ADag workflow =  dag;
         
         //get the root nodes of the workflow
-        List roots = workflow.getRoots();
+        List<GraphNode> roots = workflow.getRoots();
 
         //add a setup job per execution site
         for( Iterator it = deploymentSites.iterator(); it.hasNext(); ){
@@ -829,13 +818,15 @@ public class DeployWorkerPackage
 
             //untar node is child of setup
             setupNode.addChild( untarNode );
+            untarNode.addParent( setupNode );
             
             //add the original roots as children to untar node
-            for( Iterator rIt = roots.iterator(); rIt.hasNext(); ){
+            for( Iterator<GraphNode> rIt = roots.iterator(); rIt.hasNext(); ){
                     GraphNode n = ( GraphNode ) rIt.next();
                     mLogger.log( "Added edge " + untarNode.getID() + " -> " + n.getID(),
                                   LogManager.DEBUG_MESSAGE_LEVEL );
                     untarNode.addChild( n );
+                    n.addParent( untarNode );
             }
                 
             workflow.addNode( untarNode );
@@ -855,13 +846,14 @@ public class DeployWorkerPackage
      * 
      * @return  the workflow in the graph representation with the nodes added.
      */
-    private Graph addSetupNodesWithoutUntarNodes( ADag dag, Set<String> deploymentSites ) {
+    private ADag addSetupNodesWithoutUntarNodes( ADag dag, Set<String> deploymentSites ) {
         //convert the dag to a graph representation and walk it
         //in a top down manner
-        Graph workflow = Adapter.convert( dag );
+        //PM-747 no need for conversion as ADag now implements Graph interface
+        ADag workflow = dag ;
         
         //get the root nodes of the workflow
-        List roots = workflow.getRoots();
+        List<GraphNode> roots = workflow.getRoots();
 
         
         Set<FileTransfer> fts = new HashSet<FileTransfer>();
@@ -929,7 +921,7 @@ public class DeployWorkerPackage
             mLogger.log( "Added edge " + setupNode.getID() + " -> " + n.getID(),
                                   LogManager.DEBUG_MESSAGE_LEVEL );
             setupNode.addChild( n );
-
+            n.addParent( setupNode );
         }
 
         workflow.addNode( setupNode );
@@ -956,7 +948,8 @@ public class DeployWorkerPackage
         
         //convert the dag to a graph representation and walk it
         //in a top down manner
-        Graph workflow = Adapter.convert( dag );
+        //PM-747 no need for conversion as ADag now implements Graph interface
+        ADag workflow = dag ;
 
         RemoveDirectory removeDirectory = new RemoveDirectory( dag, mBag, this.mPOptions.getSubmitDirectory() );
         
@@ -1000,26 +993,7 @@ public class DeployWorkerPackage
             }
         }
         
-        //convert back to ADag and return
-        ADag result = dag;
-        //we need to reset the jobs and the relations in it
-        result.clearJobs();
-
-        //traverse through the graph and jobs and edges
-        for( Iterator it = workflow.nodeIterator(); it.hasNext(); ){
-            GraphNode node = ( GraphNode )it.next();
-
-            //get the job associated with node
-            result.add( ( Job )node.getContent() );
-
-            //all the children of the node are the edges of the DAG
-            for( Iterator childrenIt = node.getChildren().iterator(); childrenIt.hasNext(); ){
-                GraphNode child = ( GraphNode ) childrenIt.next();
-                result.addNewRelation( node.getID(), child.getID() );
-            }
-        }
-
-        return result;
+        return workflow;
     }
  
     
@@ -1034,9 +1008,9 @@ public class DeployWorkerPackage
     protected Set getDeploymentSites( ADag dag ){
         Set set = new HashSet();
 
-        for(Iterator it = dag.vJobSubInfos.iterator();it.hasNext();){
-            Job job = (Job)it.next();
-
+        for(Iterator<GraphNode> it = dag.jobIterator();it.hasNext();){
+            GraphNode node = it.next();
+            Job job = (Job)node.getContent();
 
             //PM-497
             //we ignore any clean up jobs that may be running
@@ -1088,8 +1062,8 @@ public class DeployWorkerPackage
         //append the job prefix if specified in options at runtime
         if ( mJobPrefix != null ) { sb.append( mJobPrefix ); }
 
-        sb.append( dag.dagInfo.nameOfADag ).append( "_" ).
-           append( dag.dagInfo.index ).append( "_" );
+        sb.append( dag.getLabel() ).append( "_" ).
+           append( dag.getIndex() ).append( "_" );
         sb.append( site );
 
         return sb.toString();
@@ -1115,8 +1089,8 @@ public class DeployWorkerPackage
         //append the job prefix if specified in options at runtime
         if ( mJobPrefix != null ) { sb.append( mJobPrefix ); }
 
-        sb.append( dag.dagInfo.nameOfADag ).append( "_" ).
-           append( dag.dagInfo.index ).append( "_" );
+        sb.append( dag.getLabel() ).append( "_" ).
+           append( dag.getIndex() ).append( "_" );
 
 
         sb.append( site );
@@ -1144,8 +1118,8 @@ public class DeployWorkerPackage
         //append the job prefix if specified in options at runtime
         if ( mJobPrefix != null ) { sb.append( mJobPrefix ); }
 
-        sb.append( dag.dagInfo.nameOfADag ).append( "_" ).
-           append( dag.dagInfo.index ).append( "_" );
+        sb.append( dag.getLabel() ).append( "_" ).
+           append( dag.getIndex() ).append( "_" );
 
 
         sb.append( site );
@@ -1430,9 +1404,36 @@ public class DeployWorkerPackage
         //get the matching architecture
         //String arch = ( String )DeployWorkerPackage.archToNMIArch().get( sysinfo.getArch() );
         String arch = sysinfo.getArchitecture().toString();
-        String os   = ( String )DeployWorkerPackage.osToOSReleaseAndVersion().get( sysinfo.getOS() );
         
-        if( arch == null || os == null ){
+        //PM-732 lets figure out if a user has specified an OS release or OS version
+        //or not
+        String osRelease = sysinfo.getOSRelease();
+        String osVersion = sysinfo.getOSVersion();
+        //for mac there is only single OSRelease
+        osRelease = ( sysinfo.getOS() == SysInfo.OS.MACOSX ) ? "macos" : osRelease;
+        
+        String osReleaseAndVersion = null;
+        if ( ( osRelease != null && osRelease.length() != 0 ) &&
+             ( osVersion != null && osVersion.length() != 0 ) ){
+            //if both os release and version are specified by user
+            //then we know user is being specific. check to see if it
+            //is built by our built system
+            osReleaseAndVersion = osRelease + "_" + osVersion;
+            if( !DeployWorkerPackage.supportedOSReleaseAndVersions().contains(osReleaseAndVersion) ){
+                //set back to null  and log a warning
+                mLogger.log( "Worker Package Deployment: Unsupported os release and version " + osReleaseAndVersion + " for OS " + sysinfo.getOS() +
+                             " . Will rely on default package for the OS.",
+                             LogManager.WARNING_MESSAGE_LEVEL );
+                osReleaseAndVersion = null;
+            }
+        }
+        
+        //if osReleaseAndVersion is null, then construct a default one based on OS
+        if( osReleaseAndVersion == null){ 
+            osReleaseAndVersion = ( String )DeployWorkerPackage.osToOSReleaseAndVersion().get( sysinfo.getOS() );
+        }
+        
+        if( arch == null || osReleaseAndVersion == null ){
             mLogger.log( "Unable to construct url for pegasus worker for " + sysinfo , 
                          LogManager.DEBUG_MESSAGE_LEVEL );
             return null;
@@ -1452,7 +1453,7 @@ public class DeployWorkerPackage
         url.append( "pegasus-" ).append( name ).append( "-" ).
             append( PEGASUS_VERSION ).append( "-" ).
             append( arch ).append( "_" ).
-            append( os ).append( ".tar.gz" );
+            append( osReleaseAndVersion ).append( ".tar.gz" );
             
         return url.toString();
     }

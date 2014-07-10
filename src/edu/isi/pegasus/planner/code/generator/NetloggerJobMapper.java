@@ -24,6 +24,7 @@ import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 
 
 import java.io.IOException;
@@ -71,8 +72,9 @@ public class NetloggerJobMapper{
      */
     public void writeOutMappings( Writer writer , ADag dag ) throws IOException{
         
-        for( Iterator<Job> it = dag.jobIterator(); it.hasNext(); ){
-            Job job = it.next();
+        for ( Iterator<GraphNode> it = dag.jobIterator(); it.hasNext();)  {
+            GraphNode node = it.next();
+	    Job job = (Job)node.getContent();
             int type = job.getJobType();
             mLogFormatter.addEvent( "pegasus.job", LoggingKeys.JOB_ID, job.getID() );
             mLogFormatter.add( "job.class" , Integer.toString( type ) );

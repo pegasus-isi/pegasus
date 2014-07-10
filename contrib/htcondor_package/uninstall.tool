@@ -48,8 +48,14 @@ echo "Locating files..."
 declare -a htcondor_files
 
 # Executables, manpages, and libraries
-for f in $(/usr/sbin/pkgutil --files edu.wisc.cs.htcondor | grep -e "^bin/" -e "^sbin/" -e "^share/man/man1/" -e "^lib/libclassad" -e "^lib/libcondor_util"); do
+for f in $(/usr/sbin/pkgutil --files edu.wisc.cs.htcondor | grep -e "^bin/" -e "^sbin/" -e "^share/man/man1/" -e "^lib/libpyclassad" -e "^lib/libclassad" -e "^lib/libcondor_util"); do
     test -f "/usr/$f" && htcondor_files+=("/usr/$f")
+done
+
+# Python libraries
+for v in "2.4" "2.5" "2.6" "2.7"; do
+    test -e "/Library/Python/$v/site-packages/htcondor.so" && htcondor_files+=("/Library/Python/$v/site-packages/htcondor.so")
+    test -e "/Library/Python/$v/site-packages/classad.so" && htcondor_files+=("/Library/Python/$v/site-packages/classad.so")
 done
 
 # Launch Daemon plist

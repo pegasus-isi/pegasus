@@ -558,12 +558,20 @@ pegasus.data.configuration    condorio</programlisting>
         &lt;grid type="cream" contact="https://ce01-lcg.cr.cnaf.infn.it:8443/ce-cream/services/CREAM2" scheduler="LSF" jobtype="compute" /&gt;
         &lt;grid type="cream" contact="https://ce01-lcg.cr.cnaf.infn.it:8443/ce-cream/services/CREAM2" scheduler="LSF" jobtype="auxillary" /&gt;
 
+         &lt;!-- Scratch directory on the cluster --&gt;
         &lt;directory type="shared-scratch" path="/home/virgo034"&gt;
             &lt;file-server operation="all" url="gsiftp://ce01-lcg.cr.cnaf.infn.it/home/virgo034"/&gt;
-        &lt;/directory&gt;                          
-                                                                                                                                                                                                                                                   
+        &lt;/directory&gt;
+
+        &lt;!-- cream is the style to use for CREAMCE submits --&gt;                                                                                                                                                                                                                               
         &lt;profile namespace="pegasus" key="style"&gt;cream&lt;/profile&gt;
+
+        &lt;!-- the remote queue is picked up from globus profile --&gt; 
         &lt;profile namespace="globus" key="queue"&gt;virgo&lt;/profile&gt;
+
+        &lt;!-- Staring Condor 8.0 additional cream attributes 
+             can be passed by setting cream_attributes --&gt;
+        &lt;profile namespace="condor" key="cream_attributes"&gt;key1=value1;key2=value2&lt;/profile&gt;
     &lt;/site&gt;
 
  &lt;/sitecatalog&gt;</programlisting>
@@ -588,10 +596,27 @@ pegasus.data.configuration    condorio</programlisting>
     catalog for Pegasus to generate an executable workflow that uses gLite
     blahp to directly submit to PBS on the local machine. This mode of
     submission should only be used when the condor on the submit host can
-    directly talk to scheduler running on the cluster. It is recommended that
-    the cluster that gLite talks to is designated as a separate compute site
-    in the Pegasus site catalog. To tag a site as a gLite site the following
-    two profiles need to be specified for the site in the site catalog</para>
+    directly talk to scheduler running on the cluster.</para>
+
+    <para>For the job submissions to work from HTCondor to underlying PBS
+    correctly, you need to use the pbs_local_attributes.sh file distributed
+    with the Pegasus distribution in in the share/pegasus/htcondor/glite
+    directory. You need to copy this file into the bin directory of the glite
+    installation as part of the HTCondor installation on the submit node. The
+    HTCondor glite installation can be determined by running the command
+    condor_config_val GLITE_LOCATION. The Pegasus team currently only provides
+    a local attributes file for PBS.</para>
+
+    <programlisting>$ condor_config_val GLITE_LOCATION
+/usr/libexec/condor/glite
+
+$ ls  /usr/libexec/condor/glite/bin/pbs_local_submit_attributes.sh
+-rwxrwxr-x 1 vahi isi-ar 1.8K May 29 17:34 /usr/libexec/condor/glite/bin/pbs_local_submit_attributes.sh</programlisting>
+
+    <para> It is recommended that the cluster that gLite talks to is
+    designated as a separate compute site in the Pegasus site catalog. To tag
+    a site as a gLite site the following two profiles need to be specified for
+    the site in the site catalog.</para>
 
     <orderedlist>
       <listitem>
@@ -696,21 +721,74 @@ pegasus.data.configuration    condorio</programlisting>
         </orderedlist>
 
         <para>The following globus profiles if associated with the job are
-        picked up and translated to corresponding glite key</para>
+        picked up and translated to corresponding key in
+        +remote_cerequirements picked up by pbs_local_attributes.sh file that
+        then is translated to appropriate PBS parameters</para>
 
-        <orderedlist>
-          <listitem>
-            <para>hostcount -&gt; PROCS</para>
-          </listitem>
+        <table>
+          <title>Table mapping translation of profiles to corresponding PBS
+          parameters</title>
 
-          <listitem>
-            <para>count -&gt; NODES</para>
-          </listitem>
+          <tgroup cols="3">
+            <thead>
+              <row>
+                <entry align="center">Globus Profile Key</entry>
 
-          <listitem>
-            <para>maxwalltime -&gt; WALLTIME</para>
-          </listitem>
-        </orderedlist>
+                <entry align="center"> KEY in +remote_cerequirements
+                classad</entry>
+
+                <entry>Corresponding PBS Parameter in qsub file</entry>
+              </row>
+            </thead>
+
+            <tbody>
+              <row>
+                <entry>hostcount</entry>
+
+                <entry>NODES</entry>
+
+                <entry>nodes</entry>
+              </row>
+
+              <row>
+                <entry>xcount</entry>
+
+                <entry>PROCS</entry>
+
+                <entry>ppn</entry>
+              </row>
+
+              <row>
+                <entry>maxwalltime</entry>
+
+                <entry>WALLTIME</entry>
+
+                <entry>walltime</entry>
+              </row>
+
+              <row>
+                <entry>totalmemory</entry>
+
+                <entry>TOTAL_MEMORY</entry>
+
+                <entry>mem</entry>
+              </row>
+
+              <row>
+                <entry>maxmemory</entry>
+
+                <entry>PER_PROCESS_MEMORY</entry>
+
+                <entry>pmem</entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table>
+
+        <tip>
+          <para>The above key mappings are supported in Pegasus 4.4 or
+          later.</para>
+        </tip>
 
         <para>The following condor profiles if associated with the job are
         picked up and translated to corresponding glite key</para>
@@ -730,6 +808,11 @@ pegasus.data.configuration    condorio</programlisting>
 
         <programlisting><emphasis role="bold">+remote_cerequirements = "PROCS==18 &amp;&amp; NODES==1 &amp;&amp; PRIORITY==10 &amp;&amp; WALLTIME==3600 \
    &amp;&amp; PASSENV==1 &amp;&amp; JOBNAME==\"TEST JOB\" &amp;&amp; MYENV ==\"JAVA_HOME=/bin/java,APP_HOME=/bin/app\""</emphasis></programlisting>
+
+        <note>
+          <para>The above translation only works if you use the
+          pbs_local_attributes.sh file from the Pegasus distribution </para>
+        </note>
       </section>
 
       <section>
@@ -748,11 +831,10 @@ pegasus.data.configuration    condorio</programlisting>
     <title>Remote Cluster using BOSCO and SSH submissions</title>
 
     <para><ulink url="http://bosco.opensciencegrid.org/about/">BOSCO</ulink>
-    enables users to submit jobs to remote clusters using SSH. This
-    section describes how to specify a site catalog entry for a site to
-    which jobs can be submitted over SSH. To tag a site for SSH submission,
-    the following profiles need to be specified for the site in the site
-    catalog:</para>
+    enables users to submit jobs to remote clusters using SSH. This section
+    describes how to specify a site catalog entry for a site to which jobs can
+    be submitted over SSH. To tag a site for SSH submission, the following
+    profiles need to be specified for the site in the site catalog:</para>
 
     <orderedlist>
       <listitem>

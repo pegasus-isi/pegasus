@@ -17,17 +17,15 @@
 
 package edu.isi.pegasus.planner.partitioner.graph;
 
-import edu.isi.pegasus.common.logging.LogManagerFactory;
-import edu.isi.pegasus.planner.classes.Data;
-
 import edu.isi.pegasus.common.logging.LogManager;
-
+import edu.isi.pegasus.common.logging.LogManagerFactory;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 
 /**
  * An implementation of the Graph that is backed by a Map.
@@ -122,6 +120,17 @@ public class MapGraph implements Graph{
         addNode( root );
 
     }
+    
+    /**
+     * Resets all the dependencies in the Graph, while preserving the nodes. 
+     * The resulting Graph is a graph of independent nodes.
+     */
+    public void resetEdges(){
+        for(Iterator<GraphNode> it = this.nodeIterator(); it.hasNext(); ){
+            GraphNode node = it.next();
+            node.resetEdges();
+        }
+    }
 
     /**
      * Removes a node from the Graph.
@@ -142,8 +151,8 @@ public class MapGraph implements Graph{
 
         // the parents of the node now become parents of the children
         // the parents of the node now become parents of the children
-        List<GraphNode> parents = removalNode.getParents();
-        List<GraphNode> children = removalNode.getChildren();
+        Collection<GraphNode> parents = removalNode.getParents();
+        Collection<GraphNode> children = removalNode.getChildren();
 
         //for each parent make the parent it's parent instead of removed node
 
@@ -176,7 +185,7 @@ public class MapGraph implements Graph{
      * @return  a list containing <code>GraphNode</code> corressponding to the
      *          root nodes.
      */
-    public List getRoots(){
+    public List<GraphNode> getRoots(){
         List rootNodes = new LinkedList();
 
         for( Iterator it = mStore.entrySet().iterator(); it.hasNext(); ){
@@ -205,7 +214,7 @@ public class MapGraph implements Graph{
      * @return  a list containing <code>GraphNode</code> corressponding to the
      *          leaf nodes.
      */
-    public List getLeaves(){
+    public List<GraphNode> getLeaves(){
         List leaves = new LinkedList();
 
         for( Iterator it = mStore.entrySet().iterator(); it.hasNext(); ){
@@ -218,6 +227,8 @@ public class MapGraph implements Graph{
         return leaves;
     }
 
+    
+    
     /**
      * Adds an edge between two already existing nodes in the graph.
      *
@@ -241,12 +252,21 @@ public class MapGraph implements Graph{
             throw new RuntimeException( "The node with identifier doesnt exist " + notExist );
         }
 
-        childNode.addParent( parentNode );
-        parentNode.addChild( childNode);
-
-
+        this.addEdge(parentNode, childNode);
     }
 
+    /**
+     * Adds an edge between two already existing nodes in the graph.
+     *
+     * @param parent   the parent node .
+     * @param child    the child node .
+     */
+    public void addEdge( GraphNode parent, GraphNode child ){
+        child.addParent( parent );
+        parent.addChild( child);
+    }
+    
+    
     /**
      * A convenience method that allows for bulk addition of edges between
      * already existing nodes in the graph.
@@ -439,6 +459,7 @@ public class MapGraph implements Graph{
             for( Iterator it = nodeIterator(); it.hasNext(); ){
                 GraphNode node = ( GraphNode )it.next();
                 node.setDepth( mCurrentDepth );
+                node.setColor( GraphNode.WHITE_COLOR );
             }
 
             //intialize all the root nodes depth to 0
@@ -553,6 +574,7 @@ public class MapGraph implements Graph{
             for( Iterator it = nodeIterator(); it.hasNext(); ){
                 GraphNode node = ( GraphNode )it.next();
                 node.setDepth( mCurrentDepth );
+                node.setColor( GraphNode.WHITE_COLOR );
             }
 
             //intialize all the root nodes depth to 0

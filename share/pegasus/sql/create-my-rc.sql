@@ -3,15 +3,16 @@
 -- driver: MySQL 4.*
 -- $Revision$
 --
-INSERT INTO pegasus_schema VALUES ('JDBCRC','rc','1.2',current_user(),current_timestamp(0));
+INSERT INTO pegasus_schema VALUES ('JDBCRC','rc','1.3',current_user(),current_timestamp(0));
 
 CREATE TABLE rc_lfn (
    id      BIGINT DEFAULT NULL auto_increment,
    lfn     VARCHAR(245) NOT NULL,
    pfn     VARCHAR(245) NOT NULL,
+   site    VARCHAR(245),
 
    CONSTRAINT pk_rc_lfn PRIMARY KEY(id),
-   CONSTRAINT sk_rc_lfn UNIQUE(lfn,pfn)
+   CONSTRAINT sk_rc_lfn UNIQUE(lfn,pfn,site)
 ) engine=InnoDB;
 
 CREATE INDEX ix_rc_lfn ON rc_lfn(lfn);

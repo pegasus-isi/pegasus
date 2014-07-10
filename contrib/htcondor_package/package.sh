@@ -41,7 +41,9 @@ mkdir -p $PKG_DIR/lib/condor
 cp -Rp $RELEASE_DIR/lib/* $PKG_DIR/lib/condor
 mv $PKG_DIR/lib/condor/condor/* $PKG_DIR/lib/condor
 rmdir $PKG_DIR/lib/condor/condor
-mv $PKG_DIR/lib/condor/libclassad* $PKG_DIR/lib/condor/libcondor_utils* $PKG_DIR/lib/
+mv $PKG_DIR/lib/condor/libclassad* $PKG_DIR/lib/condor/libpyclassad* $PKG_DIR/lib/condor/libcondor_utils* $PKG_DIR/lib/
+mv $PKG_DIR/lib/condor/python/* $PKG_DIR/lib/condor/
+rmdir $PKG_DIR/lib/condor/python
 
 # libexec dir
 mkdir -p $PKG_DIR/libexec/condor
@@ -64,6 +66,15 @@ cp $MYDIR/uninstall.tool $PKG_DIR/share/condor/
 
 # Add other files to the DMG (README, License, etc)
 cp $MYDIR/uninstall.tool "$DMG_DIR/Uninstall HTCondor.tool"
+
+
+# Create the mail wrapper to get around problems with condor mail on Mac OS X
+cat > $PKG_DIR/libexec/condor/condor_mail <<END
+#!/bin/bash
+cat - | /usr/bin/mail "\$@"
+exit 0
+END
+chmod 755 $PKG_DIR/libexec/condor/condor_mail
 
 
 # Build the package

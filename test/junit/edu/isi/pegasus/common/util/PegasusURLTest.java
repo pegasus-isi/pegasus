@@ -35,6 +35,8 @@ import static org.junit.Assert.*;
 public class PegasusURLTest {
     
     
+    private static int mTestNumber =1 ;
+    
     private TestSetup mTestSetup;
     private LogManager mLogger;
     
@@ -63,43 +65,60 @@ public class PegasusURLTest {
     
     
     @Test
-    public void test() {
-        
-        int set = 1;
-        
+    public void testGridFTPURL() {
         //should print
         //protocol -> gsiftp , host -> sukhna.isi.edu , path -> /tmp/test.file , url-prefix -> gsiftp://sukhna.isi.edu
-        mLogger.logEventStart( "test.common.util.PegasusURL", "set", Integer.toString(set++) );
+        mLogger.logEventStart( "test.common.util.PegasusURL", "set", Integer.toString(mTestNumber++) );
         testURL( "gsiftp://sukhna.isi.edu/tmp/test.file" , "gsiftp", "sukhna.isi.edu", "/tmp/test.file", "gsiftp://sukhna.isi.edu" );
         mLogger.logEventCompletion();
         
-        //protocol -> file , host ->  , path -> /tmp/test/k , url-prefix -> file://
-        mLogger.logEventStart( "test.common.util.PegasusURL", "set", Integer.toString(set++) );
-        testURL( "file:///tmp/test/k" , "file", "", "/tmp/test/k", "file://" );
-        mLogger.logEventCompletion();
-        
+    }
+    
+    @Test
+    public void testGridFTPULRWithHome() {
         //protocol -> gsiftp , host -> dataserver.phys.uwm.edu , path -> /~/griphyn_test/ligodemo_output/ , url-prefix -> gsiftp://dataserver.phys.uwm.edu
         // "gsiftp://dataserver.phys.uwm.edu/~/griphyn_test/ligodemo_output/" ;
-        mLogger.logEventStart( "test.common.util.PegasusURL", "set", Integer.toString(set++) );
+        mLogger.logEventStart( "test.common.util.PegasusURL", "set", Integer.toString(mTestNumber++) );
         testURL("gsiftp://dataserver.phys.uwm.edu/~/griphyn_test/ligodemo_output/" , "gsiftp", "dataserver.phys.uwm.edu", "/~/griphyn_test/ligodemo_output/", "gsiftp://dataserver.phys.uwm.edu" );
         mLogger.logEventCompletion();
-        
-        //protocol -> file , host ->  , path -> /tmp/path/to/input/file , url-prefix -> file://
-        //url =  "/tmp/path/to/input/file" 
-        mLogger.logEventStart( "test.common.util.PegasusURL", "set", Integer.toString(set++) );
-        testURL( "/tmp/path/to/input/file" , "file", "", "/tmp/path/to/input/file", "file://" );
-        mLogger.logEventCompletion();
-        
-        //url =  "http://isis.isi.edu/" ;
-        mLogger.logEventStart( "test.common.util.PegasusURL", "set", Integer.toString(set++) );
-        testURL( "http://isis.isi.edu/" , "http", "isis.isi.edu", "/", "http://isis.isi.edu" );
-        mLogger.logEventCompletion();
-        
-        //url =  "http://isis.isi.edu" ;
-        mLogger.logEventStart( "test.common.util.PegasusURL", "set", Integer.toString(set++) );
-        testURL( "http://isis.isi.edu" , "http", "isis.isi.edu", "", "http://isis.isi.edu" );
+    }
+    
+    @Test
+    public void testFileURL() {
+        //protocol -> file , host ->  , path -> /tmp/test/k , url-prefix -> file://
+        mLogger.logEventStart( "test.common.util.PegasusURL", "set", Integer.toString(mTestNumber++) );
+        testURL( "file:///tmp/test/k" , "file", "", "/tmp/test/k", "file://" );
         mLogger.logEventCompletion();
     }
+    
+    
+    @Test
+    public void testAbsolutePath() {
+        //protocol -> file , host ->  , path -> /tmp/path/to/input/file , url-prefix -> file://
+        //url =  "/tmp/path/to/input/file" 
+        mLogger.logEventStart( "test.common.util.PegasusURL", "set", Integer.toString(mTestNumber++) );
+        testURL( "/tmp/path/to/input/file" , "file", "", "/tmp/path/to/input/file", "file://" );
+        mLogger.logEventCompletion();
+    }
+    
+    
+    @Test
+    public void testHttpURLTrailing() {
+        //url =  "http://isis.isi.edu" ;
+        mLogger.logEventStart( "test.common.util.PegasusURL", "set", Integer.toString(mTestNumber++) );
+        testURL( "http://isis.isi.edu" , "http", "isis.isi.edu", "", "http://isis.isi.edu" );
+        mLogger.logEventCompletion();
+        
+    }
+    
+    @Test
+    public void testHttpURLTrailingSlash() {
+        //url =  "http://isis.isi.edu/" ;
+        mLogger.logEventStart( "test.common.util.PegasusURL", "set", Integer.toString(mTestNumber++) );
+        testURL( "http://isis.isi.edu/" , "http", "isis.isi.edu", "/", "http://isis.isi.edu" );
+        mLogger.logEventCompletion();
+    }
+    
     
     @After
     public void tearDown() {

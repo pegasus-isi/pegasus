@@ -24,7 +24,6 @@ import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
-import edu.isi.pegasus.planner.partitioner.graph.Adapter;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
@@ -150,33 +149,13 @@ public class DataReuseEngine extends Engine implements Refiner{
     public ADag reduceWorkflow( ADag workflow,  ReplicaCatalogBridge rcb ){
 
         //clone the original workflow. it will be reduced later on
-        ADag reducedWorkflow = (ADag) workflow.clone();
+        //PM-747 ADag reducedWorkflow = (ADag) workflow.clone();
 
-        //we first need to convert internally into graph format
-        Graph reducedGraph =  this.reduceWorkflow( Adapter.convert( reducedWorkflow ), rcb );
+        //PM-747 no need for conversion as ADag now implements Graph interface
+        Graph reducedGraph =  this.reduceWorkflow( (Graph)workflow, rcb );
 
-        //convert back to ADag and return
-
-        //we need to reset the jobs and the relations in it
-        reducedWorkflow.clearJobs();
-
-        //traverse through the graph and jobs and edges
-        for( Iterator it = reducedGraph.nodeIterator(); it.hasNext(); ){
-            GraphNode node = ( GraphNode )it.next();
-
-            //get the job associated with node
-            reducedWorkflow.add( ( Job )node.getContent() );
-
-            //all the children of the node are the edges of the DAG
-            for( Iterator childrenIt = node.getChildren().iterator(); childrenIt.hasNext(); ){
-                GraphNode child = ( GraphNode ) childrenIt.next();
-//                System.out.println(  node.getID() + " -> "  + child.getID() );
-                reducedWorkflow.addNewRelation( node.getID(), child.getID() );
-            }
-        }
-
-        mWorkflow = reducedWorkflow;
-        return reducedWorkflow;
+        mWorkflow = (ADag)reducedGraph;
+        return mWorkflow;
     }
 
 
@@ -376,9 +355,6 @@ public class DataReuseEngine extends Engine implements Refiner{
             //files in job
             if(noOfOutputFilesInJob == noOfSuccessfulMatches){
                 mLogger.log("\t" + jobName, LogManager.DEBUG_MESSAGE_LEVEL);
-
-                //COLOR the node as while
-                node.setColor( GraphNode.BLACK_COLOR );
                 jobsInReplica.add( node );
             }
             //reinitialise the variables
@@ -416,59 +392,32 @@ public class DataReuseEngine extends Engine implements Refiner{
      * @param originalJobsInRC  list of nodes found to be in the Replica Catalog.
      */
     protected Graph cascadeDeletionUpwards(Graph workflow, List<GraphNode> originalJobsInRC) {
-        LinkedList<GraphNode> queue = new LinkedList();
-        int currentDepth = -1;
-
+        
         //sanity intialization of all nodes depth
         //also associate a boolean bag with the nodes
-        //that tracks whether a node has been traversed or not
+        //that tracks whether a node has been marked for deletion or not
         for( Iterator it = workflow.nodeIterator(); it.hasNext(); ){
             GraphNode node = ( GraphNode )it.next();
-            node.setDepth( currentDepth );
             BooleanBag bag = new BooleanBag();
             node.setBag(bag);
 
         }
-
-        //intialize all the leave nodes depth to 0
-        //and put them in the queue
-        currentDepth = 0;
-        for( Iterator<GraphNode> it = workflow.getLeaves().iterator(); it.hasNext(); ){
-            GraphNode node = it.next();
-            node.setDepth( currentDepth );
-            queue.add( node );
+        
+        //PM-756 the boolean value assoicated with the bag is treated
+        //to mean that the node is marked for deletion.
+        //all jobs whose files were in the RC are marked for deletion initially
+        for( GraphNode job: originalJobsInRC ){
+            ((BooleanBag)job.getBag()).add(true);
         }
 
-        //A node with COLOR set to BLACK means it is marked for deletion
-
+        
         //start the bottom up traversal
-        while( !queue.isEmpty() ){
-            GraphNode node  = (GraphNode)queue.removeFirst();
-
-            int depth  = node.getDepth();
+        for( Iterator it = workflow.bottomUpIterator(); it.hasNext(); ){
+            GraphNode node  = (GraphNode)it.next();
 
             //System.out.println( "Traversing " + node.getID() );
-
-            //traverse through all the parents and add to the queue
-            for( Iterator it = node.getParents().iterator(); it.hasNext(); ){
-                GraphNode parent = (GraphNode)it.next();
-                //if the parent has already made it's way to the queue
-                //dont add again. this is when multiple nodes have same parent
-                //if( parent.isColor( GraphNode.GRAY_COLOR ) ){
-                if( ((BooleanBag)parent.getBag()).getBooleanValue() ){
-                    continue;
-                }
-
-                parent.setDepth( depth + 1 );
-                //parent.setColor( GraphNode.GRAY_COLOR );
-                ((BooleanBag)parent.getBag()).add(true);
-                //System.out.println( "Adding parent " + parent.getID() );
-                queue.addLast( parent );
-                
-            }
-
-
-            if( !node.isColor( GraphNode.BLACK_COLOR ) ){
+            boolean markedForDeletion = ((BooleanBag)node.getBag()).getBooleanValue() ;
+            if( !markedForDeletion ){
                 //If a node is not already marked for deletion , it  can be marked
                 //for deletion if
                 //    a) all it's children have been marked for deletion AND
@@ -476,7 +425,8 @@ public class DataReuseEngine extends Engine implements Refiner{
                 boolean delete = true;
                 for( Iterator cit = node.getChildren().iterator(); cit.hasNext(); ){
                     GraphNode child = (GraphNode)cit.next();
-                    if( !child.isColor( GraphNode.BLACK_COLOR  ) ){
+                    //check whether a child node is marked for deletion or not
+                    if( !((BooleanBag)child.getBag()).getBooleanValue()  ){
                         mLogger.log( node.getID() + "  will not be deleted as not as child " + child.getID() + " is not marked for deletion " ,
                                      LogManager.DEBUG_MESSAGE_LEVEL );
                         delete = false;
@@ -486,28 +436,29 @@ public class DataReuseEngine extends Engine implements Refiner{
                 if( delete ){
                     //all the children are deleted. However delete only if
                     // all the output files have transfer flags set to false
-                    if( /*node.isColor( GraphNode.BLACK_COLOR ) ||*/ !transferOutput( node ) ){
+                    if(  !transferOutput( node ) ){
                         mLogger.log( "Cascaded Deletion: Node can be deleted "  + node.getID() ,
                                      LogManager.DEBUG_MESSAGE_LEVEL );
-                        node.setColor( GraphNode.BLACK_COLOR );
+                        ((BooleanBag)node.getBag()).add(true);
+                        markedForDeletion = true;
                     }
                 }
             }
 
             
-            //if the node is colored BLACK at this point
-            //remove the node from the workflow
-            if( node.isColor( GraphNode.BLACK_COLOR ) ){
+            //if the node is marked for deletion at this point
+            //add the node for deletion
+            if( markedForDeletion ){
                 mLogger.log( "Marking node for removal from the workflow "  + node.getID() ,
                                  LogManager.DEBUG_MESSAGE_LEVEL );
                 this.mAllDeletedJobs.add( (Job)node.getContent() );
                 this.mAllDeletedNodes.add( node );
-                //workflow.remove( node.getID() );
             }
-            
-
+        
         }
+        
         //remove all the nodes marked for deletion separately
+        //after the bottom up iteration is done
         for( GraphNode node: mAllDeletedNodes ){
             mLogger.log( "Removing node from the workflow "  + node.getID() ,
                                  LogManager.DEBUG_MESSAGE_LEVEL );

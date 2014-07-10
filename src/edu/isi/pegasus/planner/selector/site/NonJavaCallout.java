@@ -21,16 +21,11 @@ package edu.isi.pegasus.planner.selector.site;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
-import edu.isi.pegasus.planner.catalog.site.impl.old.classes.GridFTPServer;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.site.classes.Directory;
-import edu.isi.pegasus.planner.catalog.site.classes.Directory.TYPE;
-import edu.isi.pegasus.planner.common.PegasusProperties;
-
-import edu.isi.pegasus.planner.catalog.site.impl.old.PoolInfoProvider;
 
 
 import java.io.BufferedReader;
@@ -46,7 +41,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
-import edu.isi.pegasus.planner.partitioner.graph.Adapter;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
@@ -316,7 +310,8 @@ public class NonJavaCallout extends AbstractPerJob {
      */
     public void mapWorkflow( ADag workflow, List sites ){
         mAbstractDag = workflow;
-        mapWorkflow( Adapter.convert( workflow ), sites );
+        //PM-747 no need for conversion as ADag now implements Graph interface
+        super.mapWorkflow( workflow , sites );
     }
 
 
@@ -574,8 +569,8 @@ public class NonJavaCallout extends AbstractPerJob {
 
                 // write workflow related metadata
             if ( this.mAbstractDag != null ) {
-                pw.println("wf.name=" + mAbstractDag.dagInfo.nameOfADag);
-                pw.println("wf.index=" + mAbstractDag.dagInfo.index);
+                pw.println("wf.name=" + mAbstractDag.getLabel() );
+                pw.println("wf.index=" + mAbstractDag.getIndex() );
                 // pw.println("workflow.time=" + mAbstractDag.dagInfo.time??);
                 // FIXME: Try File.lastModified() on the DAX file
 

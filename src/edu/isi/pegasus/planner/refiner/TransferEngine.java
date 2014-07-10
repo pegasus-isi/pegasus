@@ -36,7 +36,6 @@ import edu.isi.pegasus.planner.namespace.Pegasus;
 
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
-import edu.isi.pegasus.planner.partitioner.graph.Adapter;
 
 import edu.isi.pegasus.planner.selector.ReplicaSelector;
 import edu.isi.pegasus.planner.selector.replica.ReplicaSelectorFactory;
@@ -166,7 +165,7 @@ public class TransferEngine extends Engine {
     /**
      * Holds all the jobs deleted by the reduction algorithm.
      */
-    private List mDeletedJobs;
+    private List<Job> mDeletedJobs;
     
     
     /**
@@ -347,7 +346,8 @@ public class TransferEngine extends Engine {
 
         //convert the dax to a graph representation and walk it
         //in a top down manner
-        Graph workflow = Adapter.convert( mDag );
+        //PM-747 no need for conversion as ADag now implements Graph interface
+        Graph workflow =  mDag;
 
         //go through each job in turn
 
@@ -371,7 +371,7 @@ public class TransferEngine extends Engine {
             mLogger.log(msg, LogManager.DEBUG_MESSAGE_LEVEL);
 
             //getting the parents of that node
-            List<GraphNode> parents = node.getParents();
+            Collection<GraphNode> parents = node.getParents();
             mLogger.log("Parents of job:" + node.parentsToString(),
                         LogManager.DEBUG_MESSAGE_LEVEL);
             processParents(currentJob, parents);
@@ -558,7 +558,7 @@ public class TransferEngine extends Engine {
      * @param parents   list <code>GraphNode</code> ojbects corresponding to the parent jobs
      *                  of the job.
      */
-    private void processParents(Job job, List<GraphNode> parents) {
+    private void processParents(Job job, Collection<GraphNode> parents) {
 
         Set nodeIpFiles = job.getInputFiles();
         Vector vRCSearchFiles = new Vector(); //vector of PegasusFile
@@ -862,12 +862,12 @@ public class TransferEngine extends Engine {
      *
      * @param job     the job with reference to which interpool file transfers
      *                need to be determined.
-     * @param parents   list <code>GraphNode</code> ojbects corresponding to the
+     * @param parents   Collection of <code>GraphNode</code> ojbects corresponding to the
      *                  parent jobs of the job.
      *
      * @return    array of Collection of  <code>FileTransfer</code> objects
      */
-    private Collection<FileTransfer>[] getInterpoolFileTX(Job job, List<GraphNode>parents ) {
+    private Collection<FileTransfer>[] getInterpoolFileTX(Job job, Collection<GraphNode>parents ) {
         String destSiteHandle = job.getStagingSiteHandle();
         //contains the remote_initialdir if specified for the job
         String destRemoteDir = job.vdsNS.getStringValue(
@@ -1546,7 +1546,7 @@ public class TransferEngine extends Engine {
      *
      * @return   Set of PegasusFile objects
      */
-    private Set<PegasusFile> getOutputFiles( List<GraphNode> nodes ) {
+    private Set<PegasusFile> getOutputFiles( Collection<GraphNode> nodes ) {
 
         Set<PegasusFile> files = new HashSet();
 
@@ -1777,8 +1777,8 @@ public class TransferEngine extends Engine {
         }
         else{
             //generate the prefix from the name of the dag
-            sb.append(adag.dagInfo.nameOfADag).append("-").
-           append(adag.dagInfo.index);
+            sb.append(adag.getLabel()).append("-").
+           append(adag.getIndex());
         }
         //append the suffix
         sb.append(".cache");

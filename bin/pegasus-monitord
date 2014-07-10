@@ -113,6 +113,7 @@ re_parse_condor_version = re.compile(r"\*\* \$CondorVersion: ((\d+\.\d+)\.\d+)")
 re_parse_condor_logfile = re.compile(r"Condor log will be written to ([^,]+)")
 re_parse_condor_logfile_insane = re.compile(r"\d{2}\s{3,}(\S+)")
 re_parse_multiline_files = re.compile(r"All DAG node user log files:")
+re_parse_dagman_aborted  = re.compile(r"Aborting DAG...")
 
 # Constants
 logbase = "monitord.log"                  # Basename of daemon logfile
@@ -844,6 +845,11 @@ def process_dagman_out(wf, log_line):
         elif log_line.find("Running in RECOVERY mode...") >= 0:
             # Entering recovery mode, skip lines until we reach the end
             wf._skipping_recovery_lines = True
+            return
+        elif re_parse_dagman_aborted.search(log_line) is not None:
+            #dagman was aborted. just log in monitord log
+            #eventually the dagman exit line will trigger failure in the DB
+            logger.warning("DAGMan was aborted for workflow running in directory %s" %wf._run_dir )
             return
     else:
         # Could not parse timestamp

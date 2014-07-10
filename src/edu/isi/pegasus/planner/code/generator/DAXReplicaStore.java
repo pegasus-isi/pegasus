@@ -162,7 +162,7 @@ public class DAXReplicaStore implements CodeGenerator {
         Properties replicaStoreProps = mProps.getVDSProperties().matchingSubset(
                                                               ReplicaCatalog.c_prefix,
                                                               false );
-        File file = new File ( getDAXReplicaStoreFile( this.mPOptions, dag.dagInfo.getLabel(), dag.dagInfo.index ) );
+        File file = new File ( getDAXReplicaStoreFile( this.mPOptions, dag.getLabel(), dag.getIndex() ) );
 
         //set the appropriate property to designate path to file
         replicaStoreProps.setProperty( DAXReplicaStore.DAX_REPLICA_STORE_CATALOG_KEY, file.getAbsolutePath() );

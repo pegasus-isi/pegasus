@@ -20,6 +20,7 @@ package edu.isi.pegasus.planner.parser.dax;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.classes.CompoundTransformation;
 import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
@@ -67,11 +68,12 @@ public class DAX2NewGraph implements Callback {
     /**
      * The overloaded constructor.
      *
-     * @param properties  the properties passed to the planner.
-     * @param dax         the path to the DAX file.
+     * @param bag   the bag of initialization objects containing the properties
+     *              and the logger
+     * @param dax   the path to the DAX file.
      */
-    public DAX2NewGraph( PegasusProperties properties, String dax ){
-        mProps = properties;
+    public void initialize( PegasusBag bag, String dax ){
+        mProps = bag.getPegasusProperties();
         mWorkflow = new MapGraph();
         mDone          = false;
         mLabel         = null;

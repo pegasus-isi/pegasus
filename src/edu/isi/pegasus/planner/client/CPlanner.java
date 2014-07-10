@@ -18,84 +18,69 @@
 package edu.isi.pegasus.planner.client;
 
 
+import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LoggingKeys;
+import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
+import edu.isi.pegasus.common.util.FactoryException;
+import edu.isi.pegasus.common.util.StreamGobbler;
+import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
-
 import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
 import edu.isi.pegasus.planner.catalog.site.SiteFactory;
-
-import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
-
-import edu.isi.pegasus.planner.code.CodeGenerator;
-import edu.isi.pegasus.planner.code.CodeGeneratorFactory;
-
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationFactory;
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.DagInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.NameValue;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerMetrics;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
-import edu.isi.pegasus.planner.classes.PegasusBag;
-
-import edu.isi.pegasus.planner.common.PegasusProperties;
-import edu.isi.pegasus.common.logging.LogManager;
-import edu.isi.pegasus.common.util.StreamGobbler;
-import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
-import edu.isi.pegasus.planner.common.RunDirectoryFilenameFilter;
-
-import edu.isi.pegasus.planner.refiner.MainEngine;
-
-
-import edu.isi.pegasus.planner.parser.dax.Callback;
-import edu.isi.pegasus.planner.parser.DAXParserFactory;
-
-import edu.isi.pegasus.planner.catalog.transformation.TransformationFactory;
-
-import edu.isi.pegasus.common.util.Version;
-import edu.isi.pegasus.common.util.FactoryException;
-
-import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
+import edu.isi.pegasus.planner.code.CodeGenerator;
+import edu.isi.pegasus.planner.code.CodeGeneratorFactory;
 import edu.isi.pegasus.planner.code.GridStartFactory;
-
-
-import edu.isi.pegasus.planner.classes.Job;
-
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
-
+import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.RunDirectoryFilenameFilter;
 import edu.isi.pegasus.planner.common.Shiwa;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+import edu.isi.pegasus.planner.parser.DAXParserFactory;
 import edu.isi.pegasus.planner.parser.Parser;
+import edu.isi.pegasus.planner.parser.dax.Callback;
 import edu.isi.pegasus.planner.parser.dax.DAXParser;
+import edu.isi.pegasus.planner.refiner.MainEngine;
 
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.FileOutputStream;
-import java.io.FileInputStream;
-import java.nio.channels.FileChannel;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Date;
-import java.util.Iterator;
-
-
-import java.text.NumberFormat;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.LinkedList;
-
-import java.util.Set;
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryPoolMXBean;
+import java.lang.management.MemoryUsage;
+
+import java.nio.channels.FileChannel;
+
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 
@@ -258,6 +243,13 @@ public class CPlanner extends Executable{
             cPlanner.log( fe.convertException() , LogManager.FATAL_MESSAGE_LEVEL);
             result = 2;
         }
+        catch( OutOfMemoryError error ){
+            cPlanner.log( "Out of Memory Error " + error.getMessage(), LogManager.FATAL_MESSAGE_LEVEL );
+            error.printStackTrace();
+            //lets print out some GC stats
+            cPlanner.logMemoryUsage();
+            result = 4;
+        }
         catch ( RuntimeException rte ) {
             plannerException = rte;
             //catch all runtime exceptions including our own that
@@ -331,7 +323,7 @@ public class CPlanner extends Executable{
 	    // also ignore
 	  }
 	}
-
+        
         // warn about non zero exit code
         if ( result != 0 ) {
             cPlanner.log("Non-zero exit-code " + result,
@@ -490,20 +482,15 @@ public class CPlanner extends Executable{
 
         }
 
-        
         //load the parser and parse the dax
-        Parser p = (Parser)DAXParserFactory.loadDAXParser( mBag, "DAX2CDAG", dax );
-        Callback cb = ((DAXParser)p).getDAXCallback();
-        p.startParser( dax );
-
-        ADag orgDag = (ADag)cb.getConstructedObject();
+        ADag orgDag = this.parseDAX( dax );
 
         //generate the flow ids for the classads information
-        orgDag.dagInfo.generateFlowName();
-        orgDag.dagInfo.setFlowTimestamp( mPOptions.getDateTime( mProps.useExtendedTimeStamp() ));
-        orgDag.dagInfo.setDAXMTime( new File(dax) );
-        orgDag.dagInfo.generateFlowID();
-        orgDag.dagInfo.setReleaseVersion();
+        orgDag.generateFlowName();
+        orgDag.setFlowTimestamp( mPOptions.getDateTime( mProps.useExtendedTimeStamp() ));
+        orgDag.setDAXMTime( new File(dax) );
+        orgDag.generateFlowID();
+        orgDag.setReleaseVersion();
 
         //set out the root workflow id
         orgDag.setRootWorkflowUUID( determineRootWorkflowUUID(
@@ -515,11 +502,7 @@ public class CPlanner extends Executable{
         mPMetrics.setRootWorkflowUUID( orgDag.getRootWorkflowUUID() );
         mPMetrics.setWorkflowUUID( orgDag.getWorkflowUUID() );
         mPMetrics.setWorkflowMetrics( orgDag.getWorkflowMetrics() );
-        
-        //log id hiearchy message
-        //that connects dax with the jobs
-        logIDHierarchyMessage( orgDag , LoggingKeys.DAX_ID, orgDag.getAbstractWorkflowName() );
-
+       
         //write out a the relevant properties to submit directory
         int state = 0;
         String relativeSubmitDir; //the submit directory relative to the base specified
@@ -601,8 +584,8 @@ public class CPlanner extends Executable{
                             new File( mPOptions.getSubmitDirectory() ,
                                       edu.isi.pegasus.planner.code.generator.Abstract.getDAGFilename(
                                                             mPOptions,
-                                                            orgDag.dagInfo.nameOfADag,
-                                                            orgDag.dagInfo.index,
+                                                            orgDag.getLabel(),
+                                                            orgDag.getIndex(),
                                                             edu.isi.pegasus.planner.code.generator.Metrics.METRICS_FILE_SUFFIX )
                                                             ));
 
@@ -646,7 +629,6 @@ public class CPlanner extends Executable{
         MainEngine cwmain = new MainEngine( orgDag, mBag );
 
         ADag finalDag = cwmain.runPlanner();
-        DagInfo ndi = finalDag.dagInfo;
 
         //store the workflow metrics from the final dag into
         //the planner metrics
@@ -675,18 +657,6 @@ public class CPlanner extends Executable{
                                    finalDag.getAbstractWorkflowName() );
 
             result = codeGenerator.generateCode( finalDag );
-
-            //connect the DAX and the DAG via the hieararcy message
-            List l = new ArrayList(1);
-            l.add( finalDag.getExecutableWorkflowName() );
-            mLogger.logEntityHierarchyMessage( LoggingKeys.DAX_ID, 
-                                               finalDag.getAbstractWorkflowName(),
-                                               LoggingKeys.DAG_ID,
-                                               l);
-
-            //connect the jobs and the DAG via the hierarchy message
-            this.logIDHierarchyMessage( finalDag, LoggingKeys.DAG_ID, finalDag.getExecutableWorkflowName() );
-
 
         } catch (Exception e) {
             throw new RuntimeException( "Unable to generate code", e );
@@ -770,7 +740,11 @@ public class CPlanner extends Executable{
             this.logSuccessfulCompletion( emptyWorkflow );
         }
 
-            
+        //log some memory usage
+        //PM-747
+        if( mProps.logMemoryUsage() ){
+            this.logMemoryUsage();
+        }
         return result;
     }
 
@@ -784,7 +758,7 @@ public class CPlanner extends Executable{
     public String getNOOPJobName( ADag dag ){
         StringBuffer sb = new StringBuffer();
         sb.append( CPlanner.NOOP_PREFIX ).append( dag.getLabel() ).
-           append( "_" ).append( dag.dagInfo.index );
+           append( "_" ).append( dag.getIndex() );
         return sb.toString();
     }
 
@@ -1150,11 +1124,11 @@ public class CPlanner extends Executable{
             sb.append(bprefix);
             sb.append("-");
             //append timestamp to generate some uniqueness
-            sb.append(dag.dagInfo.getFlowTimestamp());
+            sb.append(dag.getFlowTimestamp());
         }
         else{
             //use the flow ID that contains the timestamp and the name both.
-            sb.append(dag.dagInfo.flowID);
+            sb.append(dag.getFlowID() );
         }
         return sb.toString();
     }
@@ -1290,10 +1264,12 @@ public class CPlanner extends Executable{
              append( "\n -X[non standard java option]  pass to jvm a non standard option . e.g. -Xmx1024m -Xms512m"  ).
              append( "\n -h |--help         generates this help."  ).
              append( "\n The following exitcodes are produced"  ).
-             append( "\n 0 concrete planner planner was able to generate a concretized workflow" ).
+             append( "\n 0 planner was able to generate an executable workflow" ).
              append( "\n 1 an error occured. In most cases, the error message logged should give a"  ).
              append( "\n   clear indication as to where  things went wrong." ).
              append( "\n 2 an error occured while loading a specific module implementation at runtime"  ).
+             append( "\n 3 an unaccounted java exception occured at runtime"  ).
+             append( "\n 4 encountered an out of memory exception. Most probably ran out of heap memory."  ).
              append( "\n " );
 
         System.out.println(text);
@@ -1491,8 +1467,8 @@ public class CPlanner extends Executable{
         }
         else{
             //generate the prefix from the name of the dag
-            sb.append(dag.dagInfo.nameOfADag).append("-").
-                append(dag.dagInfo.index);
+            sb.append(dag.getLabel() ).append("-").
+                append( dag.getIndex() );
         }
         //append the suffix
         sb.append( ".dag" );
@@ -1759,29 +1735,7 @@ public class CPlanner extends Executable{
         return result;
     }
 
-    /**
-     * Logs a message that connects the jobs with DAX/DAG
-     * 
-     * 
-     * @param dag           the DAG object
-     * @param parentType    the parent type
-     * @param parentID      the parent id
-     */
-    private void logIDHierarchyMessage(ADag dag, String parentType, String parentID ) {
-        //log the create id hieararchy message that 
-        //ties the DAX with the jobs in it.
-        //in bunches of 1000
-        Enumeration e = dag.vJobSubInfos.elements();
-        while( e.hasMoreElements() ){
-            List<String> l = new LinkedList<String>();
-            for( int i = 0; e.hasMoreElements() && i++ < 1000; ){
-                Job job = (Job)e.nextElement();
-                l.add( job.getID() );
-            }
-            mLogger.logEntityHierarchyMessage( parentType, parentID, LoggingKeys.JOB_ID, l );
-        }
-    }
-
+    
 
 
     /**
@@ -1887,6 +1841,51 @@ public class CPlanner extends Executable{
 
         return relativeSubmitDirXXX;
 
+    }
+
+    /**
+     * Logs memory usage of the JVM 
+     */
+    private void logMemoryUsage() {
+        try {
+            String memoryUsage = new String();
+            List<MemoryPoolMXBean> pools = ManagementFactory.getMemoryPoolMXBeans();
+            double totalUsed = 0; //in bytes
+            double totalReserved = 0; //in bytes
+            double divisor = 1024*1024;// display stats in MB
+            for (MemoryPoolMXBean pool : pools) {
+                MemoryUsage peak = pool.getPeakUsage();
+                totalUsed += peak.getUsed();
+                totalReserved += peak.getCommitted();
+                memoryUsage += String.format("Peak %s memory used    : %.3f MB%n", pool.getName(),peak.getUsed()/divisor );
+                memoryUsage += String.format("Peak %s memory reserved: %.3f MB%n", pool.getName(), peak.getCommitted()/divisor);
+            }
+            
+            // we print the result in the console
+            mLogger.log( "JVM Memory Usage Breakdown \n" +  memoryUsage.toString(), LogManager.INFO_MESSAGE_LEVEL);
+            mLogger.log( String.format( "Total Peak memory used      : %.3f MB", totalUsed/divisor), 
+                         LogManager.INFO_MESSAGE_LEVEL);
+            mLogger.log( String.format( "Total Peak memory reserved  : %.3f MB", totalReserved/divisor), 
+                         LogManager.INFO_MESSAGE_LEVEL);
+        } catch (Throwable t) {
+            //not fatal
+            mLogger.log( "Error while logging peak memory usage " + t.getMessage(),
+                         LogManager.ERROR_MESSAGE_LEVEL );
+        }
+    }
+
+    /**
+     * Parses the DAX and returns the associated ADag object 
+     * 
+     * @param dax  path to the DAX file.
+     * 
+     * @return 
+     */
+    private ADag parseDAX(String dax) {
+        Parser p = (Parser)DAXParserFactory.loadDAXParser( mBag, "DAX2CDAG", dax );
+        Callback cb = ((DAXParser)p).getDAXCallback();
+        p.startParser( dax );
+        return (ADag)cb.getConstructedObject();
     }
 
     

@@ -14,4 +14,4 @@ DAXFILE=$1
 # --force tells Pegasus not to prune anything from the workflow, and
 # --nocleanup tells Pegasus not to generate cleanup jobs.
 pegasus-plan --conf pegasus.conf -d $DAXFILE --dir submit \
-	--force --sites PegasusVM -o local --nocleanup
+	--force --sites PegasusVM -o local --cleanup none

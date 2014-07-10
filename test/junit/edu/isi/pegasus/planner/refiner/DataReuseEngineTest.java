@@ -29,6 +29,7 @@ import edu.isi.pegasus.planner.parser.dax.DAXParser;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.io.File;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -63,6 +64,7 @@ public class DataReuseEngineTest  {
     
     private TestSetup mTestSetup;
     
+    private static int mTestNumber =1 ;
     
     @BeforeClass
     public static void setUpClass() {
@@ -72,6 +74,9 @@ public class DataReuseEngineTest  {
     public static void tearDownClass() {
     }
     
+    public DataReuseEngineTest(){
+    }
+    
     /**
      * Setup the logger and properties that all test functions require
      */
@@ -79,7 +84,6 @@ public class DataReuseEngineTest  {
     public final void setUp() {
         mTestSetup = new DataReuseEngineTestSetup();
         mBag = new PegasusBag();
-       
         mTestSetup.setInputDirectory( this.getClass() );
         System.out.println( "Input Test Dir is " + mTestSetup.getInputDirectory() );
         
@@ -104,9 +108,7 @@ public class DataReuseEngineTest  {
     @Test
     public void testCascading() {
         
-        int set = 1;
-        //test with no deep storage structure enabled
-        mLogger.logEventStart( "test.refiner.datareuse", "set", Integer.toString(set++) );
+        mLogger.logEventStart( "test.refiner.datareuse", "set", Integer.toString(mTestNumber++) );
         ADag dax = ((DataReuseEngineTestSetup)mTestSetup).loadDAX( mBag, "pipeline.dax" );
         MyReplicaCatalogBridge rcb = new MyReplicaCatalogBridge( dax, mBag );
         
@@ -127,23 +129,24 @@ public class DataReuseEngineTest  {
         Job[] actualDeletedJobs = (Job[]) engine.getDeletedJobs().toArray( new Job[0] );
         
         
-        String[] expectedDeletedJobs ={	"unified_genotyper_snp_ID0000009", "unified_genotyper_indel_ID0000011", "reduce_reads_ID0000002", "indel_realign_ID0000003",
-                "realign_target_creator_ID0000004", "add_replace_ID0000005", "dedup_ID0000006", "sort_sam_ID0000007", "alignment_to_reference_ID0000008"};
-        assertArrayEquals( "Deleted Jobs don't match ", expectedDeletedJobs, toStringArray(actualDeletedJobs) );
+        String[] expectedDeletedJobs ={	"add_replace_ID0000005","alignment_to_reference_ID0000008", "dedup_ID0000006",
+                                        "indel_realign_ID0000003", "realign_target_creator_ID0000004", "reduce_reads_ID0000002", 
+                                        "sort_sam_ID0000007", "unified_genotyper_indel_ID0000011", "unified_genotyper_snp_ID0000009",};
+        assertArrayEquals( "Deleted Jobs don't match ", expectedDeletedJobs, toSortedStringArray(actualDeletedJobs) );
         mLogger.logEventCompletion();
-        
+        System.out.println("\n");
        
     }
     
     /**
-     * Test of the Flat Output Mapper.
+     * Test for reducing the whole workflow.
+     * In this test, some of intermediate jobs, have output files marked with
+     * transfer set to true. Hence, those jobs are only removed, if the intermediate
+     * files also exist in the Replica Catalog
      */
     @Test
     public void testFullReduction() {
-        
-        int set = 1;
-        //test with no deep storage structure enabled
-        mLogger.logEventStart( "test.refiner.datareuse.fullreduction", "set", Integer.toString(set++) );
+        mLogger.logEventStart( "test.refiner.datareuse.fullreduction", "set", Integer.toString(mTestNumber++) );
         ADag dax = ((DataReuseEngineTestSetup)mTestSetup).loadDAX( mBag, "pipeline.dax" );
         MyReplicaCatalogBridge rcb = new MyReplicaCatalogBridge( dax, mBag );
         
@@ -166,45 +169,28 @@ public class DataReuseEngineTest  {
         Job[] actualDeletedJobs = (Job[]) engine.getDeletedJobs().toArray( new Job[0] );
         
         
-        String[] expectedDeletedJobs ={	"filtering_snp_ID0000010", "filtering_indel_ID0000012", "unified_genotyper_snp_ID0000009", "unified_genotyper_indel_ID0000011", "reduce_reads_ID0000002", "indel_realign_ID0000003",
-                "realign_target_creator_ID0000004", "add_replace_ID0000005", "dedup_ID0000006", "sort_sam_ID0000007", "alignment_to_reference_ID0000008"};
-        assertArrayEquals( "Deleted Jobs don't match ", expectedDeletedJobs, toStringArray(actualDeletedJobs) );
+        String[] expectedDeletedJobs ={	"add_replace_ID0000005", "alignment_to_reference_ID0000008", "dedup_ID0000006", 
+                                        "filtering_indel_ID0000012", "filtering_snp_ID0000010",  "indel_realign_ID0000003",
+                                        "realign_target_creator_ID0000004", "reduce_reads_ID0000002", "sort_sam_ID0000007",
+                                        "unified_genotyper_indel_ID0000011","unified_genotyper_snp_ID0000009",  };
+        assertArrayEquals( "Deleted Jobs don't match ", expectedDeletedJobs, toSortedStringArray(actualDeletedJobs) );
         mLogger.logEventCompletion();
-        
-        
-        //test on the leaf dax where only leaf jobs have transfers flags setto true
-        //test with no deep storage structure enabled
-        mLogger.logEventStart( "test.refiner.datareuse.fullreduction", "set", Integer.toString(set++) );
-        //only the leaf jobs have the transfer set to true for output files
-        dax = ((DataReuseEngineTestSetup)mTestSetup).loadDAX( mBag, "pipeline-leaf.dax" );
-        rcb = new MyReplicaCatalogBridge( dax, mBag );
-        
-        filesInRC = new HashSet();
-        filesInRC.add( "filtered_indel.vcf");
-        filesInRC.add( "filtered_snp.vcf");
-        rcb.addFilesInReplica(filesInRC);
-
-        engine = new DataReuseEngine( dax, mBag );
-        reducedDAG = engine.reduceWorkflow(dax, rcb);
-        actualDeletedJobs = (Job[]) engine.getDeletedJobs().toArray( new Job[0] );
-        
-        
-        expectedDeletedJobs = new String[]{	"filtering_snp_ID0000010", "filtering_indel_ID0000012", "unified_genotyper_snp_ID0000009", "unified_genotyper_indel_ID0000011", "reduce_reads_ID0000002", "indel_realign_ID0000003",
-                "realign_target_creator_ID0000004", "add_replace_ID0000005", "dedup_ID0000006", "sort_sam_ID0000007", "alignment_to_reference_ID0000008"};
-        assertArrayEquals( "Deleted Jobs don't match ", expectedDeletedJobs, toStringArray(actualDeletedJobs) );
-        mLogger.logEventCompletion();
-        
+        System.out.println("\n");
     }
     
+   
+    
     /**
-     * Test of the Flat Output Mapper.
+     * Test for reducing the whole workflow.
+     * 
+     * In this test, only the leaf jobs, have output files marked with
+     * transfer set to true. Hence for full reduction, only the outputs of 
+     * the leaf jobs need to be present in the Replica Catalog.
      */
     @Test
     public void testFullReductionLeafDAX() {
         
-        int set = 1;
-        //test with no deep storage structure enabled
-        mLogger.logEventStart( "test.refiner.datareuse", "set", Integer.toString(set++) );
+        mLogger.logEventStart( "test.refiner.datareuse.fullreduction-leaf", "set", Integer.toString(mTestNumber++) );
         //only the leaf jobs have the transfer set to true for output files
         ADag dax = ((DataReuseEngineTestSetup)mTestSetup).loadDAX( mBag, "pipeline-leaf.dax" );
         MyReplicaCatalogBridge rcb = new MyReplicaCatalogBridge( dax, mBag );
@@ -219,11 +205,13 @@ public class DataReuseEngineTest  {
         Job[] actualDeletedJobs = (Job[]) engine.getDeletedJobs().toArray( new Job[0] );
         
         
-        String[] expectedDeletedJobs ={	"filtering_snp_ID0000010", "filtering_indel_ID0000012", "unified_genotyper_snp_ID0000009", "unified_genotyper_indel_ID0000011", "reduce_reads_ID0000002", "indel_realign_ID0000003",
-                "realign_target_creator_ID0000004", "add_replace_ID0000005", "dedup_ID0000006", "sort_sam_ID0000007", "alignment_to_reference_ID0000008"};
-        assertArrayEquals( "Deleted Jobs don't match ", expectedDeletedJobs, toStringArray(actualDeletedJobs) );
+        String[] expectedDeletedJobs ={	"add_replace_ID0000005", "alignment_to_reference_ID0000008", "dedup_ID0000006", 
+                                        "filtering_indel_ID0000012", "filtering_snp_ID0000010",  "indel_realign_ID0000003",
+                                        "realign_target_creator_ID0000004", "reduce_reads_ID0000002", "sort_sam_ID0000007",
+                                        "unified_genotyper_indel_ID0000011", "unified_genotyper_snp_ID0000009",  };
+        assertArrayEquals( "Deleted Jobs don't match ", expectedDeletedJobs, toSortedStringArray(actualDeletedJobs) );
         mLogger.logEventCompletion();
-        
+        System.out.println("\n");
     }
     
     
@@ -243,12 +231,13 @@ public class DataReuseEngineTest  {
      * @param array
      * @return 
      */ 
-    protected String[] toStringArray( Job[] array ){
+    protected String[] toSortedStringArray( Job[] array ){
         String[] result = new String[array.length];
         int i = 0;
         for( Job job: array){
             result[i++] = job.getID();
         }
+        Arrays.sort( result );
         return result;
     }
 

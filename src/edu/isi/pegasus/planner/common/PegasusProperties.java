@@ -2098,7 +2098,17 @@ public class PegasusProperties implements Cloneable {
         return file;
     }
 
-    
+    /**
+     * Returns a boolean indicating whether to log JVM memory usage or not.
+     *
+     * Referred to by the "pegasus.log.memory.usage" property.
+     *
+     * @return boolean value specified in properties else false.
+     */
+    public boolean logMemoryUsage(){
+        return Boolean.parse( mProps.getProperty( "pegasus.log.memory.usage" ) ,
+                              false  ); 
+    }
 
     //SOME MISCELLANEOUS PROPERTIES
 
@@ -2167,6 +2177,20 @@ public class PegasusProperties implements Cloneable {
                               false) ;
     }
 
+    /**
+     * Returns a boolean indicating whether to automatically
+     * add edges as a result of underlying data dependecnies between jobs. 
+     * 
+     * Referred to by the "pegasus.parser.dax.data.dependencies" property.
+     * 
+     * @return boolean value in the properties file, else true if not specified
+     *         or an invalid value specified.
+     */
+    public boolean addDataDependencies(){
+        return Boolean.parse( mProps.getProperty( "pegasus.parser.dax.data.dependencies" ),
+                              true) ;
+    }
+    
     /**
      * Returns the path to the wings properties file.
      * 

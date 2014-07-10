@@ -4,7 +4,7 @@
 -- $Revision$
 --
 
-INSERT INTO pegasus_schema(name,catalog,version) VALUES ('JDBCRC','rc','1.2');
+INSERT INTO pegasus_schema(name,catalog,version) VALUES ('JDBCRC','rc','1.3');
 
 CREATE SEQUENCE rc_lfn_id;
 
@@ -12,9 +12,10 @@ CREATE TABLE rc_lfn (
    id      BIGINT DEFAULT nextval('rc_lfn_id'::text),
    lfn     VARCHAR(255) NOT NULL,
    pfn     VARCHAR(255) NOT NULL,
+   site    VARCHAR(255),
 
    CONSTRAINT pk_rc_lfn PRIMARY KEY(id),
-   CONSTRAINT sk_rc_lfn UNIQUE(lfn,pfn)
+   CONSTRAINT sk_rc_lfn UNIQUE(lfn,pfn,site)
 );
 
 CREATE INDEX ix_rc_lfn ON rc_lfn(lfn);

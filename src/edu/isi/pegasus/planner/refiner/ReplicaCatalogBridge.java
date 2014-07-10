@@ -268,7 +268,7 @@ public class ReplicaCatalogBridge
         //converting the Vector into vector of
         //strings just containing the logical
         //filenames
-        mSearchFiles = dag.dagInfo.getLFNs( options.getForce() );
+        mSearchFiles = dag.getDAGInfo().getLFNs( options.getForce() );
 
         //only for windward for time being
         properties.setProperty( "pegasus.catalog.replica.dax.id", dag.getAbstractWorkflowName() );
@@ -316,7 +316,7 @@ public class ReplicaCatalogBridge
                  options.getInheritedRCFiles().isEmpty() && //no files locations inherited from outer level DAX
                  this.mDAXReplicaStore.isEmpty() &&         //no file locations in current DAX
                  options.getInputDirectory() == null  && //no input directory specified on the command line
-                 dag.dagInfo.getLFNs( true ).size() > 0 //the number of raw input files is more than 1
+                 dag.getDAGInfo().getLFNs( true ).size() > 0 //the number of raw input files is more than 1
                     ){
                 mLogger.log( msg + ex.getMessage(),LogManager.ERROR_MESSAGE_LEVEL );
                 throw new RuntimeException( msg , ex );

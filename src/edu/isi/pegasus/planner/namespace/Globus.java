@@ -154,6 +154,7 @@ public class Globus extends Namespace {
      * maxTime		- OK
      * maxWallTime	- OK
      * minMemory	- OK
+     * totalMemory      - OK
      * project		- OK
      * queue		- OK
      * stdin		- not supported, clashes with Pegasus
@@ -310,6 +311,15 @@ public class Globus extends Namespace {
                     key.compareTo("stdout") == 0 ||
                     key.compareTo("stderr") == 0) {
                     res = NOT_PERMITTED_KEY;
+                }
+                else {
+                    res = UNKNOWN_KEY;
+                }
+                break;
+            
+            case 't':
+                if (key.compareTo("totalmemory") == 0) {
+                    res = VALID_KEY;
                 }
                 else {
                     res = UNKNOWN_KEY;

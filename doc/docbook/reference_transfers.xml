@@ -164,10 +164,13 @@
         <title>Shared File System Setup</title>
 
         <mediaobject>
-          <imageobject>
-            <imagedata align="center" contentdepth="100%"
-                       fileref="images/data-configuration-sharedfs.png"
-                       scalefit="1" width="100%"/>
+          <imageobject role="html">
+            <imagedata align="center" contentdepth="450px"
+                       fileref="images/data-configuration-sharedfs.png" />
+          </imageobject>
+          <imageobject role="fo">
+            <imagedata align="center" contentdepth="4in"
+                       fileref="images/data-configuration-sharedfs.png" />
           </imageobject>
         </mediaobject>
       </figure>
@@ -237,11 +240,14 @@
       <figure>
         <title>Non Shared Filesystem Setup</title>
 
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center" contentdepth="100%"
-                       fileref="images/data-configuration-nonsharedfs.png"
-                       id="Figure2" scalefit="1" width="100%"/>
+        <mediaobject id="Figure2">
+          <imageobject role="html">
+            <imagedata align="center" contentdepth="450px"
+                       fileref="images/data-configuration-nonsharedfs.png" />
+          </imageobject>
+          <imageobject role="fo">
+            <imagedata align="center" contentdepth="4in"
+                       fileref="images/data-configuration-nonsharedfs.png" />
           </imageobject>
         </mediaobject>
       </figure>
@@ -351,11 +357,14 @@
       <figure>
         <title>Condor Pool Without a Shared Filesystem</title>
 
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center" contentdepth="100%"
-                       fileref="images/data-configuration-condorio.png"
-                       id="Figure13" scalefit="1" width="100%"/>
+        <mediaobject id="Figure13">
+          <imageobject role="html">
+            <imagedata align="center" contentdepth="450px"
+                       fileref="images/data-configuration-condorio.png" />
+          </imageobject>
+          <imageobject role="fo">
+            <imagedata align="center" contentdepth="4in"
+                       fileref="images/data-configuration-condorio.png" />
           </imageobject>
         </mediaobject>
       </figure>
@@ -509,6 +518,30 @@
     role="bold">[stage_in|stage_out|inter]_[local|remote]_</emphasis> .</para>
   </section>
 
+  <section id="controlling_transfer_parallelism">
+    <title>Controlling Transfer Parallelism</title>
+
+    <para>When it comes to data transfers, Pegasus ships with a default
+    configuration which is trying to strike a balance between performance and
+    aggressiveness. We obviously want data transfers to be as quick as
+    possibly, but we also do not want our transfers to overwhelm data services
+    and systems. The default configuration consists of a combination of the
+    maximum number of transfer jobs per level in the workflow, and how many
+    threads such a pegasus-transfer job can spawn.</para>
+
+    <para>Information on how to control the number of stagein and stageout
+    jobs can be found in the <link linkend="data_movement_nodes">Data Movement
+    Nodes</link> section.</para>
+
+    <para>How to control the number of threads pegasus-transfer can use
+    depends on if you want to control standard transfer jobs, or PegasusLite.
+    For the former, see the <link
+    linkend="Properties.pegasus.transfer.threads">pegasus.transfer.threads</link>
+    property, and for the latter the <link
+    linkend="Properties.pegasus.transfer.lite.threads">pegasus.transfer.lite.threads</link>
+    property.</para>
+  </section>
+
   <section>
     <title>Symlinking Against Input Data</title>
 
@@ -563,7 +596,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
 </programlisting>
   </section>
 
-  <section>
+  <section id="data_movement_nodes">
     <title>Addition of Separate Data Movement Nodes to Executable
     Workflow</title>
 
@@ -577,12 +610,14 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
     associated with them that are staging the shared files to the same
     destination workflow execution directory.</para>
 
-    <para>The default Transfer Refiner used in Pegasus is the Bundle Refiner
-    that allows the user to specify how many local|remote stagein|stageout
-    jobs are created per execution site.</para>
+    <para> Pegasus supports three different transfer refiners that dictate how
+    the stagein and stageout jobs are added for the workflow.The default
+    Transfer Refiner used in Pegasus is the BalancedCluster Refiner that
+    allows the user to specify how many local|remote stagein|stageout jobs are
+    created per execution site.</para>
 
-    <para>The behavior of the refiner is controlled by specifying certain
-    pegasus profiles</para>
+    <para>The behavior of the refiners (BalancedCluster and Cluster) are
+    controlled by specifying certain pegasus profiles</para>
 
     <orderedlist>
       <listitem>
@@ -659,18 +694,74 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
       </tgroup>
     </table>
 
-    <figure>
-      <title>Default Transfer Case : Input Data To Workflow Specific Directory
-      on Shared File System</title>
+    <tip>
+      <para>Which transfer refiner to use is controlled by property
+      pegasus.transfer.refiner </para>
+    </tip>
 
-      <mediaobject>
-        <imageobject>
-          <imagedata contentdepth="100%"
-                     fileref="images/cluster-transfer-refiner.png"
-                     scalefit="1" width="100%"/>
-        </imageobject>
-      </mediaobject>
-    </figure>
+    <section>
+      <title>BalancedCluster </title>
+
+      <para>This is a new transfer refiner that was introduced in Pegasus
+      4.4.0 and is the default one used in Pegasus. It does a round robin
+      distribution of the files amongst the stagein and stageout jobs per
+      level of the workflow. The figure below illustrates the behavior of this
+      transfer refiner.</para>
+
+      <figure>
+        <title>BalancedCluster Transfer Refiner : Input Data To Workflow
+        Specific Directory on Shared File System</title>
+
+        <mediaobject id="img-balanced-cluster-transfer-refiner">
+          <imageobject role="html">
+            <imagedata align="center" contentdepth="650px"
+                       fileref="images/balanced-cluster-transfer-refiner.png" />
+          </imageobject>
+          <imageobject role="fo">
+            <imagedata align="center" contentdepth="4in"
+                       fileref="images/balanced-cluster-transfer-refiner.png" />
+          </imageobject>
+        </mediaobject>
+      </figure>
+    </section>
+
+    <section>
+      <title>Cluster </title>
+
+      <para>This transfer refiner is similar to BalancedCluster but differs in
+      the way how distribution of files happen across stagein and stageout
+      jobs per level of the workflow. In this refiner, all the input files for
+      a job get associated with a single transfer job. As illustrated in the
+      figure below each compute usually gets associated with one stagein
+      transfer job. In contrast, for the BalancedCluster a compute job maybe
+      associated with multiple data stagein jobs.</para>
+
+      <figure>
+        <title>Cluster Transfer Refiner : Input Data To Workflow Specific
+        Directory on Shared File System</title>
+
+        <mediaobject id="img-cluster-transfer-refiner">
+          <imageobject role="html">
+            <imagedata align="center" contentdepth="650px"
+                       fileref="images/cluster-transfer-refiner.png" />
+          </imageobject>
+          <imageobject role="fo">
+            <imagedata align="center" contentdepth="4in"
+                       fileref="images/cluster-transfer-refiner.png" />
+          </imageobject>
+        </mediaobject>
+      </figure>
+    </section>
+
+    <section>
+      <title>Basic </title>
+
+      <para>Pegasus also supports a basic Transfer Refiner that adds one
+      stagein and stageout job per compute job of the workflow. This is not
+      recommended to be used for large workflows as the number of data
+      transfer nodes in the worst case are 2n where n is the number of compute
+      jobs in the workflow. </para>
+    </section>
   </section>
 
   <section id="ref_output_mapper">
@@ -700,15 +791,15 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
 
         <itemizedlist>
           <listitem>
-            <para> pegasus.dir.storage.mapper.fixed.url an externally
+            <para>pegasus.dir.storage.mapper.fixed.url an externally
             accessible URL to the storage directory on the output site e.g.
-            gsiftp://outputs.isi.edu/shared/outputs </para>
+            gsiftp://outputs.isi.edu/shared/outputs</para>
           </listitem>
         </itemizedlist>
 
         <para>Note: For hierarchal workflows, the above property needs to be
         set separately for each dax job, if you want the sub workflow outputs
-        to goto a different directory. </para>
+        to goto a different directory.</para>
       </listitem>
 
       <listitem>
@@ -985,10 +1076,44 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
     jobs do data staging</link>. An example of such a case is when running in
     <link linkend="ref_data_staging_configuration">nonsharedfs</link> mode.
     Depending on the transfer protocols used, the job may have to carry
-    credentials to enable these datat transfers. To specify where which
+    credentials to enable these data transfers. To specify where which
     credential to use and where Pegasus can find it, use environment variable
     profiles in your site catalog. The supported credential types are X.509
     grid proxies, Amazon AWS S3 keys, iRods password and SSH keys.</para>
+
+    <para>Credentials are usually associated per site in the site catalog.
+    Users can associate the credentials either as a Pegasus profile or an
+    environment profile with the site.</para>
+
+    <orderedlist>
+      <listitem>
+        <para>A pegasus profile with the value pointing to the path to the
+        credential on the local site or the submit host. If a pegasus
+        credential profile associated with the site, then Pegasus
+        automatically transfers it along with the remote jobs.</para>
+      </listitem>
+
+      <listitem>
+        <para>A env profile with the value pointing to the path to the
+        credential on the remote site. If an env profile is specified, then no
+        credential is transferred along with the job. Instead the job's
+        environment is set to ensure that the job picks up the path to the
+        credential on the remote site.</para>
+      </listitem>
+    </orderedlist>
+
+    <tip>
+      <para>Specifying credentials as Pegasus profiles was introduced in 4.4.0
+      release.</para>
+    </tip>
+
+    <para>In case of data transfer jobs, it is possible to associate different
+    credentials for a single file transfer ( one for the source server and the
+    other for the destination server) . For example, when leveraging GridFTP
+    transfers between two sides that accept different grid credentials such as
+    XSEDE Stampede site and NCSA Bluewaters. In that case, Pegasus picks up
+    the associated credentials from the site catalog entries for the source
+    and the destination sites associated with the transfer.</para>
 
     <section id="x509_cred">
       <title>X.509 Grid Proxies</title>
@@ -999,7 +1124,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
       <varname>X509_USER_PROXY</varname> environment variable. Site catalog
       example:</para>
 
-      <programlisting>&lt;profile namespace="env" key="X509_USER_PROXY" &gt;/some/location/x509up&lt;/profile&gt;</programlisting>
+      <programlisting>&lt;profile namespace="pegasus" key="X509_USER_PROXY" &gt;/some/location/x509up&lt;/profile&gt;</programlisting>
     </section>
 
     <section id="s3_cred">
@@ -1012,7 +1137,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
       <varname>S3CFG</varname> environment profile to the location of the
       file. Site catalog example:</para>
 
-      <programlisting>&lt;profile namespace="env" key="S3CFG" &gt;/home/user/.s3cfg&lt;/profile&gt;</programlisting>
+      <programlisting>&lt;profile namespace="pegasus" pegasus="S3CFG" &gt;/home/user/.s3cfg&lt;/profile&gt;</programlisting>
     </section>
 
     <section id="irods_cred">
@@ -1047,7 +1172,7 @@ irodsPassword 'somesecretpassword'</programlisting>
       <varname>irodsEnvFile</varname> environment profile. Site catalog
       example:</para>
 
-      <programlisting>&lt;profile namespace="env" key="irodsEnvFile" &gt;/home/user/.irods/.irodsEnv&lt;/profile&gt;</programlisting>
+      <programlisting>&lt;profile namespace="pegasus" key="irodsEnvFile" &gt;/home/user/.irods/.irodsEnv&lt;/profile&gt;</programlisting>
     </section>
 
     <section id="ssh_cred">
@@ -1070,7 +1195,7 @@ irodsPassword 'somesecretpassword'</programlisting>
       <varname>SSH_PRIVATE_KEY</varname> environment profile. Site catalog
       example:</para>
 
-      <programlisting>&lt;profile namespace="env" key="SSH_PRIVATE_KEY" &gt;/home/user/wf/wfsshkey&lt;/profile&gt;</programlisting>
+      <programlisting>&lt;profile namespace="pegasus" key="SSH_PRIVATE_KEY" &gt;/home/user/wf/wfsshkey&lt;/profile&gt;</programlisting>
     </section>
   </section>
 
@@ -1336,21 +1461,20 @@ irodsPassword 'somesecretpassword'</programlisting>
   <section>
     <title>iRODS data access</title>
 
-    <para>iRODS can be used as a input data location, a storage site for intermediate
-        data during workflow execution, or a location for final output data. Pegasus uses
-        a URL notation to identify iRODS files. Example:
-    </para>
-    
+    <para>iRODS can be used as a input data location, a storage site for
+    intermediate data during workflow execution, or a location for final
+    output data. Pegasus uses a URL notation to identify iRODS files.
+    Example:</para>
+
     <programlisting>irods://some-host.org/path/to/file.txt</programlisting>
 
-    <para>The path to the file is <emphasis role="bold">relative</emphasis> to the internal
-        iRODS location. In the example above, the path used to refer to the file in iRODS is
-        <emphasis>path/to/file.txt</emphasis> (no leading /).
-    </para>
+    <para>The path to the file is <emphasis role="bold">relative</emphasis> to
+    the internal iRODS location. In the example above, the path used to refer
+    to the file in iRODS is <emphasis>path/to/file.txt</emphasis> (no leading
+    /).</para>
 
-    <para>See <link linkend="cred_staging">the section on credential staging</link> for 
-        information on how to set up an irodsEnv file to be used by Pegasus.
-    </para>
-
+    <para>See <link linkend="cred_staging">the section on credential
+    staging</link> for information on how to set up an irodsEnv file to be
+    used by Pegasus.</para>
   </section>
 </section>

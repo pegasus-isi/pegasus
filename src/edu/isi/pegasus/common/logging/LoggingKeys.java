@@ -50,7 +50,7 @@ public  class LoggingKeys {
     public static final String EVENT_PEGASUS_RANKING              = "event.ranking";
     public static final String EVENT_PEGASUS_RANKING_RETRIEVE_DAX = "event.ranking.retrive.dax";
     
-    public static final String EVENT_PEGASUS_REFINEMENT       = "event.pegasus.refinement";
+    public static final String EVENT_PEGASUS_REFINEMENT           = "event.pegasus.refinement";
     public static final String EVENT_PEGASUS_AUTHENTICATION       = "event.pegasus.authenticate";
     public static final String EVENT_PEGASUS_PLAN                 = "event.pegasus.plan";
     public static final String EVENT_PEGASUS_REDUCE               = "event.pegasus.reduce";
@@ -67,8 +67,9 @@ public  class LoggingKeys {
     public static final String EVENT_PEGASUS_PARSE_SITE_CATALOG   = "event.pegasus.parse.site-catalog";
     public static final String EVENT_PEGASUS_PARSE_DAX            = "event.pegasus.parse.dax";
     public static final String EVENT_PEGASUS_PARSE_PDAX           = "event.pegasus.parse.pdax";
-    public static final String EVENTS_PEGASUS_STAMPEDE_GENERATION         = "event.pegasus.stampede.events";
+    public static final String EVENTS_PEGASUS_STAMPEDE_GENERATION = "event.pegasus.stampede.events";
     public static final String EVENTS_PEGASUS_CODE_GENERATION     = "event.pegasus.code.generation";
+    public static final String EVENT_PEGASUS_ADD_DATA_DEPENDENCIES= "event.pegasus.add.data-dependencies";
     
     public static final String EVENT_WORKFLOW_JOB_STATUS           = "event.workflow.job.status";
 
