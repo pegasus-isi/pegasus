@@ -8,6 +8,7 @@ PRE_SCRIPT_DELAY = 5.0
 POST_SCRIPT_DELAY = 5.0
 SCHEDULER_CYCLE_DELAY = 20.0
 SCHEDULER_INTERVAL = 60.0
+SCHEDULER_RESCHEDULE_DELAY = 5.0
 
 log = logging.getLogger(__name__)
 
@@ -127,7 +128,10 @@ class WorkflowEngine(Entity):
         self.slots = slots
         self.queue = []
         self.runtime = 0.0
-        self.last_schedule = 0.0
+        # This is set to -100 so that a reschedule can happen at the beginning
+        # of the simulation. When it was zero, and a job had less than the CYCLE
+        # DELAY remaining, then it wouldn't reschedule at the beginning.
+        self.last_schedule = -100.0
         self.initialize_state()
 
     def initialize_state(self):
@@ -185,7 +189,7 @@ class WorkflowEngine(Entity):
         if self.last_schedule + SCHEDULER_CYCLE_DELAY <= self.time():
             self.simulation.cancel('schedule') # Cancel future schedule events
             self.last_schedule = self.time() # To prevent some edge cases
-            self.send(self, 'schedule', delay=0)
+            self.send(self, 'schedule', delay=SCHEDULER_RESCHEDULE_DELAY)
 
     def run_job(self, job, delay=None):
         # The job uses 1 slot
