@@ -264,6 +264,8 @@ def parse_dag(dag_file):
                 job.retries = retries
             elif l.startswith("MAXJOBS"):
                 pass
+            elif l.startswith("CATEGORY"):
+                pass
             elif len(l) == 0 or l[0] == "#":
                 # Skip blank lines and comments
                 pass
