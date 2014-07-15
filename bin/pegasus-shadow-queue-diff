@@ -1,0 +1,75 @@
+#!/usr/bin/env python
+import os
+import subprocess
+import sys
+
+# Use pegasus-config to find our lib path
+bin_dir = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0])))
+pegasus_config = os.path.join(bin_dir, "pegasus-config") + " --noeoln --python"
+lib_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
+pegasus_config = os.path.join(bin_dir, "pegasus-config") + " --noeoln --python-externals"
+lib_ext_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
+
+# Insert this directory in our search path
+sys.path.insert(0, lib_ext_dir)
+sys.path.insert(0, lib_dir)
+
+import time
+
+from Pegasus.shadowq.joblog import JobLog, JobLogEvent
+from Pegasus.shadowq.jobstate import JSLog, JSLogEvent
+
+class Job(object): pass
+
+def read_jobstate_log(jslog_file):
+    jobs = {}
+
+    for rec in JSLog(jslog_file):
+        if rec.job_name is None:
+            continue
+
+        ts = time.mktime(rec.ts)
+
+        if rec.job_name not in jobs:
+            jobs[rec.job_name] = Job()
+
+        j = jobs[rec.job_name]
+
+        if rec.event == JSLogEvent.EXECUTE:
+            j.start = ts
+        elif rec.event == JSLogEvent.JOB_TERMINATED:
+            j.finish = ts
+
+    return jobs
+
+def read_job_log(joblog_file):
+    jobs = {}
+
+    for r in JobLog(joblog_file):
+        if r.job_name not in jobs:
+            jobs[r.job_name] = Job()
+
+        j = jobs[r.job_name]
+
+        if r.event == JobLogEvent.EXECUTE:
+            j.start = r.ts
+        elif r.event == JobLogEvent.JOB_TERMINATED:
+            j.finish = r.ts
+
+    return jobs
+
+def main():
+    if len(sys.argv) != 3:
+        print "Usage: %s jobstate.log workflow-0.log" % sys.argv[0]
+        exit(1)
+
+    jslog = read_jobstate_log(sys.argv[1])
+    joblog = read_job_log(sys.argv[2])
+
+    for name, jsrec in jslog.items():
+        logrec = joblog[name]
+        print name, jsrec.start, logrec.start, jsrec.finish, logrec.finish
+
+if __name__ == "__main__":
+    main()
+

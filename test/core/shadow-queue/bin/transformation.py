@@ -23,8 +23,8 @@ if len(inputs) == 0 or len(outputs) == 0:
 	print "Usage: %s -i input... -o output..." % sys.argv[0]
 	exit(1)
 
-print "Sleeping for 30 seconds..."
-time.sleep(30)
+print "Sleeping for 90 seconds..."
+time.sleep(90)
 
 print "Generating output files..."
 for output in outputs:

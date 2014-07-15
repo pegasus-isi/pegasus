@@ -8,7 +8,7 @@ PRE_SCRIPT_DELAY = 5.0
 POST_SCRIPT_DELAY = 5.0
 SCHEDULER_CYCLE_DELAY = 20.0
 SCHEDULER_INTERVAL = 60.0
-SCHEDULER_RESCHEDULE_DELAY = 5.0
+SCHEDULER_RESCHEDULE_DELAY = 0.0
 
 log = logging.getLogger(__name__)
 
@@ -117,6 +117,11 @@ class Simulation(object):
                 newevents.append((when, ev))
         self.events = newevents
 
+    def find_next(self, tag):
+        for when, ev in self.events:
+            if ev.tag == tag:
+                return when
+
 
 # TODO Do we care about MAXPRE and MAXPOST?
 # TODO Do we care about MAXJOBS?
@@ -177,21 +182,30 @@ class WorkflowEngine(Entity):
             self.queue_job(job)
 
     def run_prescript(self, job, delay=PRE_SCRIPT_DELAY):
+        log.info("%s %s %s", self.time(), job.name, "PRESCRIPT")
+
         job.state = JobState.PRESCRIPT
         self.send(self, 'prescript.finished', delay=delay, data=job)
 
     def queue_job(self, job):
+        log.info("%s %s %s", self.time(), job.name, "QUEUED")
+
         job.state = JobState.QUEUED
         # The heapq package uses min heaps, so we use negative priority
         heappush(self.queue, (-job.priority, job))
 
         # If the last scheduler cycle was recent, then schedule now
+        log.info("last_schedule: %s", self.last_schedule)
         if self.last_schedule + SCHEDULER_CYCLE_DELAY <= self.time():
             self.simulation.cancel('schedule') # Cancel future schedule events
-            self.last_schedule = self.time() # To prevent some edge cases
-            self.send(self, 'schedule', delay=SCHEDULER_RESCHEDULE_DELAY)
+            self.send(self, 'schedule', delay=0.0)
+        elif self.simulation.find_next('schedule') - self.time() >= SCHEDULER_CYCLE_DELAY:
+            self.simulation.cancel('scheule')
+            self.send(self, 'schedule', delay=SCHEDULER_CYCLE_DELAY)
 
     def run_job(self, job, delay=None):
+        log.info("%s %s %s", self.time(), job.name, "RUNNING")
+
         # The job uses 1 slot
         self.slots -= 1
 
@@ -203,6 +217,8 @@ class WorkflowEngine(Entity):
         self.send(self, 'job.finished', delay=delay, data=job)
 
     def run_postscript(self, job, delay=POST_SCRIPT_DELAY):
+        log.info("%s %s %s", self.time(), job.name, "POSTSCRIPT")
+
         job.state = JobState.POSTSCRIPT
         self.send(self, 'postscript.finished', delay=delay, data=job)
 
@@ -254,10 +270,12 @@ class WorkflowEngine(Entity):
             self.run_postscript(job)
         else:
             # Job has no post script, just mark it successful
+            log.info("%s %s %s", self.time(), job.name, "SUCCESSFUL")
             job.state = JobState.SUCCESSFUL
             self.queue_ready(job.children)
 
     def postscript_finished(self, job):
+        log.info("%s %s %s", self.time(), job.name, "SUCCESSFUL")
         self.log("post script finished for %s" % job.name)
         job.state = JobState.SUCCESSFUL
         self.queue_ready(job.children)

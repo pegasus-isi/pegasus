@@ -2,17 +2,12 @@ import sys
 import time
 
 from Pegasus.shadowq.jobstate import JSLog, JSLogEvent
+from Pegasus.shadowq.joblog import JobLog, JobLogEvent
 
 class Job(object):
     pass
 
-def main():
-    if len(sys.argv) != 2:
-        print "Usage: %s jobstate.log" % sys.argv[0]
-        exit(1)
-
-    jslog_file = sys.argv[1]
-
+def estimate_jobstate(jslog_file):
     jobs = {}
 
     for rec in JSLog(jslog_file):
@@ -34,5 +29,27 @@ def main():
     for name, j in jobs.items():
         print "%s %f" % (name, j.finish - j.start)
 
+def estimate_joblog(joblog_file):
+    jobs = {}
 
+    for r in JobLog(joblog_file):
+        if r.job_name not in jobs:
+            jobs[r.job_name] = Job()
+
+        j = jobs[r.job_name]
+
+        if r.event == JobLogEvent.EXECUTE:
+            j.start = r.ts
+        elif r.event == JobLogEvent.JOB_TERMINATED:
+            j.finish = r.ts
+
+    for name, j in jobs.items():
+        print name, (j.finish - j.start)
+
+def main():
+    if len(sys.argv) != 2:
+        print "Usage: %s JOB_LOG" % sys.argv[0]
+        exit(1)
+
+    estimate_joblog(sys.argv[1])
 
