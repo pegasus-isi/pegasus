@@ -1,0 +1,79 @@
+#!/usr/bin/env python
+import sys
+import os
+import subprocess
+
+# Use pegasus-config to find our lib path
+bin_dir = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0])))
+pegasus_config = os.path.join(bin_dir, "pegasus-config") + " --noeoln --python"
+lib_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
+pegasus_config = os.path.join(bin_dir, "pegasus-config") + " --noeoln --python-externals"
+lib_ext_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
+
+# Insert this directory in our search path
+sys.path.insert(0, lib_ext_dir)
+sys.path.insert(0, lib_dir)
+
+from Pegasus.shadowq.joblog import JobLog, JobLogEvent
+
+if len(sys.argv) != 2:
+    print "Usage: %s SUBMIT_DIR" % __file__
+    exit(1)
+
+submitdir = sys.argv[1]
+
+# Get actual start times of all the jobs from condor job log
+actual_start_times = {}
+joblog_file = os.path.join(submitdir, "montage-0.log")
+for rec in JobLog(joblog_file):
+    if rec.event == JobLogEvent.EXECUTE:
+        # Florida time zone correction problem
+        actual_start_times[rec.job_name] = rec.ts - (3600 * 3)
+
+# Get the simulation times from the shadowq trace
+sqtrace_file = os.path.join(submitdir, "shadowq.trace")
+sim_starts = []
+for l in open(sqtrace_file, "r"):
+    sim_start, sim_duration, estimated_finish_time = [float(f) for f in l.split()]
+    sim_starts.append(sim_start)
+
+# Get the estimated job start times from the shadowq log
+sqlog_file = os.path.join(submitdir, "shadowq.log")
+sqlog = open(sqlog_file, "r").readlines()
+i = 0
+sim = 0
+estimated_start_times = {}
+while i < len(sqlog):
+    if "Simulation starting..." in sqlog[i]:
+        sim_start = sim_starts[sim]
+        while "Simulation stopped" not in sqlog[i]:
+            if "RUNNING" in sqlog[i]:
+                start, job_name, ev = sqlog[i].split(":")[-1].split()
+                start = float(start)
+                estimated_start = sim_start + start
+                if job_name not in estimated_start_times:
+                    estimated_start_times[job_name] = []
+
+                # Only use estimates that were made less than 10 minutes out
+                if (actual_start_times[job_name] - sim_start) <= 600:
+                    estimated_start_times[job_name].append((sim_start, estimated_start))
+            i += 1
+        sim += 1
+    i += 1
+
+# Now merge everything together
+for job_name, actual_start_time in actual_start_times.items():
+    if not job_name.startswith("stage"):
+        continue
+    estimates = [est for sim, est in estimated_start_times[job_name]]
+    est_times = [sim for sim, est in estimated_start_times[job_name]]
+    if len(estimates) == 0:
+        continue
+    errors = [abs(est - actual_start_time) for est in estimates]
+    mae = sum(errors) / len(errors)
+    print job_name, actual_start_time, mae, len(estimates)
+    for sim, est in estimated_start_times[job_name]:
+        err = abs(est - actual_start_time)
+        time = sim - actual_start_time
+        print time, err
+
