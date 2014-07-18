@@ -60,7 +60,9 @@ class Job(object):
         self.priority = 0
         self.retries = 0
         self.failures = 0
-        self.last_update = 0
+        self.running_start = 0
+        self.postscript_start = 0
+        self.prescript_start = 0
         self.prescript = False
         self.postscript = False
         self.parents = []
@@ -70,11 +72,11 @@ class Job(object):
         if self.state == JobState.SUCCESSFUL:
             raise DAGException("Invalid state: Successful job %s got event %s" % (self.name, record.event))
 
-        # Record the time of the last update for this job
-        self.last_update = time.mktime(record.ts)
+        ts = time.mktime(record.ts)
 
         if record.event == JSLogEvent.PRE_SCRIPT_STARTED:
             self.state = JobState.PRESCRIPT
+            self.prescript_start = ts
         elif record.event ==JSLogEvent.PRE_SCRIPT_TERMINATED:
             pass
         elif record.event == JSLogEvent.PRE_SCRIPT_SUCCESS:
@@ -87,6 +89,7 @@ class Job(object):
             self.state = JobState.QUEUED
         elif record.event == JSLogEvent.EXECUTE:
             self.state = JobState.RUNNING
+            self.running_start = ts
         elif record.event == JSLogEvent.JOB_TERMINATED:
             pass
         elif record.event == JSLogEvent.JOB_SUCCESS:
@@ -102,6 +105,7 @@ class Job(object):
                 self.failures += 1
         elif record.event == JSLogEvent.POST_SCRIPT_STARTED:
             self.state = JobState.POSTSCRIPT
+            self.postscript_start = ts
         elif record.event ==JSLogEvent.POST_SCRIPT_TERMINATED:
             pass
         elif record.event == JSLogEvent.POST_SCRIPT_SUCCESS:
@@ -137,7 +141,9 @@ class Job(object):
         newjob.priority = self.priority
         newjob.retries = self.retries
         newjob.failures = self.failures
-        newjob.last_update = self.last_update
+        newjob.running_start = self.running_start
+        newjob.prescript_start = self.prescript_start
+        newjob.postscript_start = self.postscript_start
         newjob.runtime = self.runtime
         newjob.state = self.state
         newjob.prescript = self.prescript

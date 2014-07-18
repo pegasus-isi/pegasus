@@ -150,17 +150,17 @@ class WorkflowEngine(Entity):
             elif j.state == JobState.PRESCRIPT:
                 # Compute time remaining for prescript
                 # FIXME Some prescripts may run for a long time
-                delay = max(0, PRE_SCRIPT_DELAY - (time.time() - j.last_update))
+                delay = max(0, PRE_SCRIPT_DELAY - (time.time() - j.prescript_start))
                 self.run_prescript(j, delay=delay)
             elif j.state == JobState.QUEUED:
                 self.queue_job(j)
             elif j.state == JobState.RUNNING:
                 # Compute time remaining for running job
-                delay = max(0, j.runtime - (time.time() - j.last_update))
+                delay = max(0, j.runtime - (time.time() - j.running_start))
                 self.run_job(j, delay)
             elif j.state == JobState.POSTSCRIPT:
                 # Compute time remaining for post script
-                delay = max(0, POST_SCRIPT_DELAY - (time.time() - j.last_update))
+                delay = max(0, POST_SCRIPT_DELAY - (time.time() - j.postscript_start))
                 self.run_postscript(j, delay)
             elif j.state == JobState.SUCCESSFUL:
                 # Don't need to do anything
