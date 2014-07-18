@@ -139,6 +139,10 @@ tr analyze {
 }
 END
 
+export SHADOWQ_ESTIMATES=$dir/estimates.txt
+export SHADOWQ_PROVISIONER_INTERVAL=30
+export SHADOWQ_SLOTS=4
+
 pegasus-plan --conf pegasus.conf -d diamond.dax --dir submit \
 	--force --sites pegasus -o local --cleanup none --submit
 
