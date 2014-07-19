@@ -192,7 +192,9 @@ class WorkflowEngine(Entity):
 
         job.state = JobState.QUEUED
         # The heapq package uses min heaps, so we use negative priority
-        heappush(self.queue, (-job.priority, job))
+        # We use the job sequence number in the DAG file to break ties because
+        # that is the order in which DAGMan submits the jobs to the queue.
+        heappush(self.queue, ((-job.priority, job.sequence), job))
 
         # If the last scheduler cycle was recent, then schedule now
         log.info("last_schedule: %s", self.last_schedule)

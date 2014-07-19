@@ -58,6 +58,7 @@ class Job(object):
         self.jobtype = JobType.UNASSIGNED
         self.universe = None
         self.priority = 0
+        self.sequence = None
         self.retries = 0
         self.failures = 0
         self.running_start = 0
@@ -139,6 +140,7 @@ class Job(object):
         newjob.jobtype = self.jobtype
         newjob.universe = self.universe
         newjob.priority = self.priority
+        newjob.sequence = self.sequence
         newjob.retries = self.retries
         newjob.failures = self.failures
         newjob.running_start = self.running_start
@@ -221,6 +223,7 @@ def parse_submit_file(submit_file):
 def parse_dag(dag_file):
     log.info("Parsing DAG...")
 
+    job_sequence = 0
     jobs = {}
 
     with open(dag_file, "r") as f:
@@ -236,6 +239,8 @@ def parse_dag(dag_file):
                 # TODO Estimate runtimes for non-compute jobs
                 j.universe = rec.get("universe", None)
                 j.priority = int(rec.get("priority", 0))
+                j.sequence = job_sequence
+                job_sequence += 1
                 j.jobtype = JOB_TYPE_MAP[rec.get("+pegasus_job_class")]
                 jobs[job_name] = j
                 log.debug("Parsed job: %s", job_name)
