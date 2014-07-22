@@ -38,7 +38,7 @@ pegasus-plan \
     --conf pegasusrc \
     --sites condorpool \
     --output-site local \
-    --dir work \
+    --dir submit \
     --dax dax.xml \
     --submit
 
