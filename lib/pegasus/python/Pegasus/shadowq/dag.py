@@ -61,6 +61,7 @@ class Job(object):
         self.sequence = None
         self.retries = 0
         self.failures = 0
+        self.queue_start = 0
         self.running_start = 0
         self.postscript_start = 0
         self.prescript_start = 0
@@ -73,11 +74,9 @@ class Job(object):
         if self.state == JobState.SUCCESSFUL:
             raise DAGException("Invalid state: Successful job %s got event %s" % (self.name, record.event))
 
-        ts = time.mktime(record.ts)
-
         if record.event == JSLogEvent.PRE_SCRIPT_STARTED:
             self.state = JobState.PRESCRIPT
-            self.prescript_start = ts
+            self.prescript_start = record.ts
         elif record.event ==JSLogEvent.PRE_SCRIPT_TERMINATED:
             pass
         elif record.event == JSLogEvent.PRE_SCRIPT_SUCCESS:
@@ -88,9 +87,10 @@ class Job(object):
             self.failures += 1
         elif record.event == JSLogEvent.SUBMIT:
             self.state = JobState.QUEUED
+            self.queue_start = record.ts
         elif record.event == JSLogEvent.EXECUTE:
             self.state = JobState.RUNNING
-            self.running_start = ts
+            self.running_start = record.ts
         elif record.event == JSLogEvent.JOB_TERMINATED:
             pass
         elif record.event == JSLogEvent.JOB_SUCCESS:
@@ -106,7 +106,7 @@ class Job(object):
                 self.failures += 1
         elif record.event == JSLogEvent.POST_SCRIPT_STARTED:
             self.state = JobState.POSTSCRIPT
-            self.postscript_start = ts
+            self.postscript_start = record.ts
         elif record.event ==JSLogEvent.POST_SCRIPT_TERMINATED:
             pass
         elif record.event == JSLogEvent.POST_SCRIPT_SUCCESS:
@@ -143,6 +143,7 @@ class Job(object):
         newjob.sequence = self.sequence
         newjob.retries = self.retries
         newjob.failures = self.failures
+        newjob.queue_start = self.queue_start
         newjob.running_start = self.running_start
         newjob.prescript_start = self.prescript_start
         newjob.postscript_start = self.postscript_start
@@ -155,14 +156,31 @@ class Job(object):
 class DAG(object):
     def __init__(self, jobs):
         self.jobs = jobs
+        self.start = None
+        self.finish = None
         self.lock = threading.Lock()
 
     def process_jslog_record(self, record):
         self.lock.acquire()
-        job_name = record.job_name
-        job = self.jobs[job_name]
-        job.process_jslog_record(record)
+
+        if record.event == JSLogEvent.MONITORD_STARTED:
+            log.info("Monitord started")
+        elif record.event == JSLogEvent.MONITORD_FINISHED:
+            log.info("Monitord finished")
+        elif record.event == JSLogEvent.DAGMAN_STARTED:
+            log.info("DAGMan started")
+            self.start = record.ts
+        elif record.event == JSLogEvent.DAGMAN_FINISHED:
+            log.info("DAGMan finished")
+            self.finish = record.ts
+        else: # Means it is a job event
+            job_name = record.job_name
+            job = self.jobs[job_name]
+            job.process_jslog_record(record)
+
         self.lock.release()
+
+        self.print_stats()
 
     def print_stats(self):
         self.lock.acquire()
@@ -201,6 +219,8 @@ class DAG(object):
             child.parents.append(parent)
 
         dag = DAG(jobs)
+        dag.start = self.start
+        dag.finish = self.finish
 
         self.lock.release()
 

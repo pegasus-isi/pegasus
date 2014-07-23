@@ -9,6 +9,7 @@ POST_SCRIPT_DELAY = 5.0
 SCHEDULER_CYCLE_DELAY = 20.0
 SCHEDULER_INTERVAL = 60.0
 SCHEDULER_RESCHEDULE_DELAY = 0.0
+DAGMAN_INITIAL_DELAY = 12.0
 
 log = logging.getLogger(__name__)
 
@@ -51,6 +52,7 @@ class Entity(object):
 
 class Simulation(object):
     def __init__(self, start=0.0):
+        self.start = start
         self.clock = start
         self.events = []
         self.entities = set()
@@ -97,6 +99,8 @@ class Simulation(object):
         if until is not None:
             self.clock = until
 
+        self.stop = self.clock
+
         for entity in self.entities:
             ev = Event(entity, self, self.clock, 'sim.stop', None)
             entity.process(ev)
@@ -127,16 +131,14 @@ class Simulation(object):
 # TODO Do we care about MAXJOBS?
 
 class WorkflowEngine(Entity):
-    def __init__(self, name, simulation, jobs, slots=1):
+    def __init__(self, name, simulation, dag, slots=1):
         Entity.__init__(self, name, simulation)
-        self.jobs = jobs
+        self.dag = dag
+        self.jobs = dag.jobs
         self.slots = slots
         self.queue = []
         self.runtime = 0.0
-        # This is set to -100 so that a reschedule can happen at the beginning
-        # of the simulation. When it was zero, and a job had less than the CYCLE
-        # DELAY remaining, then it wouldn't reschedule at the beginning.
-        self.last_schedule = -100.0
+        self.last_schedule = 0.0
         self.initialize_state()
 
     def initialize_state(self):
@@ -150,17 +152,17 @@ class WorkflowEngine(Entity):
             elif j.state == JobState.PRESCRIPT:
                 # Compute time remaining for prescript
                 # FIXME Some prescripts may run for a long time
-                delay = max(0, PRE_SCRIPT_DELAY - (time.time() - j.prescript_start))
+                delay = max(0, PRE_SCRIPT_DELAY - (self.simulation.start - j.prescript_start))
                 self.run_prescript(j, delay=delay)
             elif j.state == JobState.QUEUED:
                 self.queue_job(j)
             elif j.state == JobState.RUNNING:
                 # Compute time remaining for running job
-                delay = max(0, j.runtime - (time.time() - j.running_start))
+                delay = max(0, j.runtime - (self.simulation.start - j.running_start))
                 self.run_job(j, delay)
             elif j.state == JobState.POSTSCRIPT:
                 # Compute time remaining for post script
-                delay = max(0, POST_SCRIPT_DELAY - (time.time() - j.postscript_start))
+                delay = max(0, POST_SCRIPT_DELAY - (self.simulation.start - j.postscript_start))
                 self.run_postscript(j, delay)
             elif j.state == JobState.SUCCESSFUL:
                 # Don't need to do anything
@@ -173,6 +175,56 @@ class WorkflowEngine(Entity):
                     self.ready_job(j)
             else:
                 raise SimulationException("Unknown job state: %s", j.state)
+
+        # Cancel any initial schedules generated above
+        self.simulation.cancel('schedule')
+
+        # We know that the last schedule couldn't be older than the dag start
+        self.last_schedule = self.dag.start
+
+        # We set the last schedule based on the last time a job started running.
+        # This is to avoid oscillations in the start/finish estimates. We know
+        # running jobs represent a reschedule because jobs only start after
+        # being scheduled onto a resource. In reality, there is probably a
+        # slight delay (1-5 seconds) between scheduling and the start of a
+        # job. That delay is larger in the case of condorio. Note that
+        # running_start defaults to 0.
+        for j in self.jobs.values():
+            self.last_schedule = max(self.last_schedule, j.running_start)
+
+        # Several scheduling cycles may have elapsed since the last one we
+        # have evidence for
+        while self.last_schedule + SCHEDULER_INTERVAL < self.time():
+            self.last_schedule += SCHEDULER_INTERVAL
+
+        log.info("Last real schedule: %f", self.last_schedule)
+
+        # Figure out the next schedule time
+        if self.dag.start is None or self.time() - self.dag.start < DAGMAN_INITIAL_DELAY:
+            # We are at the beginning of the workflow
+            next_schedule = self.dag.start + DAGMAN_INITIAL_DELAY
+        else:
+            # The next one should be one SCHEDULER_INTERVAL from the last
+            next_schedule = self.last_schedule + SCHEDULER_INTERVAL
+
+            # But if there are any queued jobs, then the first job that was queued
+            # after the last scheduling interval will determine the next schedule
+            for j in self.jobs.values():
+                # If a job was queued after the last_schedule, then the next
+                # schedule will be after a minimum cycle delay. The 5.0 is just
+                # a fudge factor based on DAGMan's polling interval.
+                if j.state == JobState.QUEUED and j.queue_start >= (self.last_schedule - 5.0):
+                    log.info("Setting next_schedule based on queued job: %s", j.name)
+                    next_schedule = min(next_schedule, j.queue_start + SCHEDULER_CYCLE_DELAY)
+
+        log.info("Next simulated schedule: %f", next_schedule)
+
+        assert(next_schedule > self.time())
+
+        # If the next schedule time is in the past, schedule now, otherwise schedule
+        # at the right time
+        delay_until_next_schedule = next_schedule - self.time()
+        self.send(self, 'schedule', delay=delay_until_next_schedule)
 
     def ready_job(self, job):
         # This job is ready, either run prescript or queue it
@@ -198,10 +250,11 @@ class WorkflowEngine(Entity):
 
         # If the last scheduler cycle was recent, then schedule now
         log.info("last_schedule: %s", self.last_schedule)
+        next_schedule = self.simulation.find_next('schedule')
         if self.last_schedule + SCHEDULER_CYCLE_DELAY <= self.time():
             self.simulation.cancel('schedule') # Cancel future schedule events
             self.send(self, 'schedule', delay=0.0)
-        elif self.simulation.find_next('schedule') - self.time() >= SCHEDULER_CYCLE_DELAY:
+        elif next_schedule and (next_schedule - self.time()) >= SCHEDULER_CYCLE_DELAY:
             self.simulation.cancel('scheule')
             self.send(self, 'schedule', delay=SCHEDULER_CYCLE_DELAY)
 
@@ -284,7 +337,7 @@ class WorkflowEngine(Entity):
 
     def process(self, ev):
         if ev.tag == 'sim.start':
-            self.schedule()
+            pass
         elif ev.tag == 'prescript.finished':
             self.prescript_finished(ev.data)
         elif ev.tag == 'job.finished':
@@ -294,5 +347,5 @@ class WorkflowEngine(Entity):
         elif ev.tag == 'schedule':
             self.schedule()
         elif ev.tag == 'sim.stop':
-            self.runtime = self.time()
+            self.runtime = self.time() - self.simulation.start
 

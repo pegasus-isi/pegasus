@@ -68,14 +68,11 @@ class JSLogRecord(object):
         self.job_id = None
         self.site = None
 
-    def ts_string(self):
-        return time.strftime("%Y/%m/%d %H:%M:%S", self.ts)
-
     def __str__(self):
         if self.job_name is not None:
-            return "%s %s %s" % (self.ts_string(), self.job_name, self.event)
+            return "%s %s %s" % (self.ts, self.job_name, self.event)
         else:
-            return "%s %s" % (self.ts_string(), self.event)
+            return "%s %s" % (self.ts, self.event)
 
 class JSLog(object):
     def __init__(self, jslog_file):
@@ -110,7 +107,7 @@ class JSLog(object):
         rec = l.split()
 
         record = JSLogRecord()
-        record.ts = time.localtime(float(rec[0]))
+        record.ts = float(rec[0])
 
         if rec[1] == "INTERNAL":
             record.event = JSLogEvent[rec[3]]

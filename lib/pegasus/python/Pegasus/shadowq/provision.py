@@ -56,9 +56,9 @@ class Provisioner(threading.Thread):
                     j.runtime = self.estimates[j.name]
 
             # Simulate the workflow to determine time remaining
-            s = sim.Simulation()
-            wfe = sim.WorkflowEngine('Engine', s, newdag.jobs, self.slots)
             simstart = time.time()
+            s = sim.Simulation(start=simstart)
+            wfe = sim.WorkflowEngine('Engine', s, newdag, self.slots)
             s.simulate()
             simend = time.time()
             runtime = wfe.runtime
@@ -67,11 +67,11 @@ class Provisioner(threading.Thread):
 
             # Write a record to the trace
             trace = open("shadowq.trace", "a")
-            trace.write("%f %f %f\n" % (time.time(), runtime, time.time() + runtime))
+            trace.write("%f %f %f\n" % (simstart, runtime, simstart + runtime))
             trace.close()
 
             log.info("Time remaining: %s", runtime)
-            log.info("Workflow should finish at: %s", (time.time() + runtime))
+            log.info("Workflow should finish at: %s", (simstart + runtime))
 
             time.sleep(self.interval)
 

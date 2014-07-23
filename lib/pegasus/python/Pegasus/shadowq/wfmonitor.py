@@ -17,17 +17,7 @@ class WorkflowMonitor(threading.Thread):
         log.info("Monitoring workflow...")
 
         for r in self.jslog:
-            if r.event == JSLogEvent.MONITORD_STARTED:
-                log.info("Monitord started")
-            elif r.event == JSLogEvent.MONITORD_FINISHED:
-                log.info("Monitord finished")
-            elif r.event == JSLogEvent.DAGMAN_STARTED:
-                log.info("DAGMan started")
-            elif r.event == JSLogEvent.DAGMAN_FINISHED:
-                log.info("DAGMan finished")
-            else:
-                self.dag.process_jslog_record(r)
-                self.dag.print_stats()
+            self.dag.process_jslog_record(r)
 
         log.info("Workflow finished")
 
