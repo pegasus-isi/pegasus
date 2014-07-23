@@ -25,13 +25,27 @@ if len(sys.argv) != 2:
 
 submitdir = sys.argv[1]
 
+braindump = {}
+braindump_file = os.path.join(submitdir, "braindump.txt")
+for l in open(braindump_file, "r"):
+    l = l.strip()
+    if len(l) == 0 or l.startswith("#"):
+        continue
+    print l
+    key, value = l.split(" ", 1)
+    braindump[key] = value
+
+# Time zone correction (20140720T101853-0400)
+runtz = int(braindump["timestamp"][-5:]) / 100 * 3600
+localtz = time.altzone
+tzcorrection = localtz + runtz
+
 # Get actual start times of all the jobs from condor job log
 actual_start_times = {}
-joblog_file = os.path.join(submitdir, "montage-0.log")
+joblog_file = os.path.join(submitdir, braindump["condor_log"])
 for rec in JobLog(joblog_file):
     if rec.event == JobLogEvent.EXECUTE:
-        # Florida time zone correction problem
-        actual_start_times[rec.job_name] = rec.ts - (3600 * 3)
+        actual_start_times[rec.job_name] = rec.ts - tzcorrection
 
 # Get actual start times of all the jobs from the jobstate log
 #actual_start_times = {}
@@ -63,10 +77,10 @@ while i < len(sqlog):
             if sqlog[i].endswith("RUNNING\n"):
                 rec = sqlog[i].split()
                 job_name = rec[-2]
-                delta_start = float(rec[-3])
+                job_start = float(rec[-3])
                 if job_name not in estimated_start_times:
                     estimated_start_times[job_name] = []
-                estimated_start_times[job_name].append([sim, sim_start, delta_start])
+                estimated_start_times[job_name].append([sim, sim_start, job_start])
             i += 1
         sim += 1
     i += 1
@@ -84,8 +98,8 @@ for job_name, actual_start_time in actual_start_times.items():
         category = "cleanup"
     else:
         category = "compute"
-    for sim, sim_start, delta_start in estimated_start_times[job_name]:
-        estimated_start_time = sim_start + delta_start
+    for sim, sim_start, job_start in estimated_start_times[job_name]:
+        estimated_start_time = job_start
         err = abs(estimated_start_time - actual_start_time)
         time = -(actual_start_time - sim_start)
         print category, job_name, time, err
