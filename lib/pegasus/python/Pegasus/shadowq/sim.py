@@ -200,7 +200,10 @@ class WorkflowEngine(Entity):
         log.info("Last real schedule: %f", self.last_schedule)
 
         # Figure out the next schedule time
-        if self.dag.start is None or self.time() - self.dag.start < DAGMAN_INITIAL_DELAY:
+        if self.dag.start is None:
+            # Workflow hasn't even started yet
+            next_schedule = self.time() + DAGMAN_INITIAL_DELAY
+        elif self.time() - self.dag.start < DAGMAN_INITIAL_DELAY:
             # We are at the beginning of the workflow
             next_schedule = self.dag.start + DAGMAN_INITIAL_DELAY
         else:
