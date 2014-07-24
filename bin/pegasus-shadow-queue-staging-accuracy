@@ -31,7 +31,6 @@ for l in open(braindump_file, "r"):
     l = l.strip()
     if len(l) == 0 or l.startswith("#"):
         continue
-    print l
     key, value = l.split(" ", 1)
     braindump[key] = value
 
