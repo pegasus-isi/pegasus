@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package edu.isi.pegasus.planner.catalog.replica.impl;
 
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
@@ -52,7 +53,7 @@ public class JDBCRCTest {
             prop.load(input);
 
             jdbcrc = new JDBCRC(
-                    prop.getProperty("pegasus.catalog.replica.db.driver", "MySQL"),
+                    prop.getProperty("pegasus.catalog.replica.db.driver", "com.mysql.jdbc.Driver"),
                     prop.getProperty("pegasus.catalog.replica.db.url", "jdbc:mysql://localhost/jdbcrc_test"),
                     prop.getProperty("pegasus.catalog.replica.db.user", "root"),
                     prop.getProperty("pegasus.catalog.replica.db.password", ""));
@@ -69,14 +70,14 @@ public class JDBCRCTest {
             }
         }
     }
-    
+
     @Test
     public void simpleInsert() {
         jdbcrc.insert("a", new ReplicaCatalogEntry("b"));
         Collection<ReplicaCatalogEntry> c = jdbcrc.lookup("a");
         assertTrue(c.contains(new ReplicaCatalogEntry("b")));
     }
-    
+
     @Test
     public void multipleSimpleInsert() {
         jdbcrc.insert("a", new ReplicaCatalogEntry("b"));
@@ -90,81 +91,81 @@ public class JDBCRCTest {
         assertTrue(c.contains(new ReplicaCatalogEntry("c")));
         assertTrue(c.contains(new ReplicaCatalogEntry("c", "handle")));
     }
-    
+
     @Test
     public void insertMultipleResourceHandles() {
         jdbcrc.insert("a", new ReplicaCatalogEntry("b", "x"));
         jdbcrc.insert("a", new ReplicaCatalogEntry("b", "y"));
-        
+
         assertEquals("b", jdbcrc.lookup("a", "x"));
         assertEquals("b", jdbcrc.lookup("a", "y"));
     }
-    
+
     @Test
     public void deleteByLFNandPFN() {
         jdbcrc.insert("a", new ReplicaCatalogEntry("b"));
         jdbcrc.insert("a", new ReplicaCatalogEntry("b", "x"));
         jdbcrc.insert("a", new ReplicaCatalogEntry("b", "y"));
         jdbcrc.delete("a", "b");
-        
+
         Collection<ReplicaCatalogEntry> c = jdbcrc.lookup("a");
         assertFalse(c.contains(new ReplicaCatalogEntry("b")));
         assertFalse(c.contains(new ReplicaCatalogEntry("b", "x")));
         assertFalse(c.contains(new ReplicaCatalogEntry("b", "y")));
     }
-    
+
     @Test
     public void deleteSpecificMapping() {
         HashMap attr = new HashMap();
         attr.put(ReplicaCatalogEntry.RESOURCE_HANDLE, "x");
         attr.put("name", "value");
         jdbcrc.insert("a", new ReplicaCatalogEntry("b", attr));
-        
+
         HashMap attr2 = new HashMap();
         attr2.put(ReplicaCatalogEntry.RESOURCE_HANDLE, "x");
         jdbcrc.delete("a", new ReplicaCatalogEntry("b", attr2));
-        
+
         Collection<ReplicaCatalogEntry> c = jdbcrc.lookup("a");
         assertTrue(c.contains(new ReplicaCatalogEntry("b", attr)));
-        
+
         jdbcrc.delete("a", new ReplicaCatalogEntry("b", attr));
         c = jdbcrc.lookup("a");
         assertFalse(c.contains(new ReplicaCatalogEntry("b", attr)));
     }
-    
+
     @Test
     public void simpleUpdate() {
         jdbcrc.insert("a", new ReplicaCatalogEntry("d"));
-        
+
         HashMap attr = new HashMap();
         attr.put(ReplicaCatalogEntry.RESOURCE_HANDLE, "x");
         jdbcrc.insert("a", new ReplicaCatalogEntry("d", attr));
-        
+
         HashMap attr2 = new HashMap();
         attr2.put("key", "value");
         jdbcrc.insert("a", new ReplicaCatalogEntry("d", attr2));
-        
+
         Collection<ReplicaCatalogEntry> c = jdbcrc.lookup("a");
         assertTrue(c.contains(new ReplicaCatalogEntry("d", attr)));
         assertTrue(c.contains(new ReplicaCatalogEntry("d", attr2)));
     }
-    
+
     @Test
     public void updateToAttributesMap() {
         jdbcrc.insert("a", new ReplicaCatalogEntry("b", "z"));
-        
+
         HashMap attr = new HashMap();
         attr.put(ReplicaCatalogEntry.RESOURCE_HANDLE, "z");
         attr.put("key", "value");
-        
+
         Collection<ReplicaCatalogEntry> c = jdbcrc.lookup("a");
         assertFalse(c.contains(new ReplicaCatalogEntry("b", attr)));
-        
+
         jdbcrc.insert("a", new ReplicaCatalogEntry("b", attr));
         c = jdbcrc.lookup("a");
         assertTrue(c.contains(new ReplicaCatalogEntry("b", attr)));
     }
-    
+
     @After
     public void tearDown() {
         jdbcrc.delete("a", "b");
