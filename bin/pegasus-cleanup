@@ -388,9 +388,7 @@ def gsiftp(urls):
         os.environ["X509_USER_PROXY"] = os.environ[key]
     
     # use pegasus-transfer
-    cmd = prog_dir + "/pegasus-gridftp rm"
-    if options.ignore_failures:
-        cmd += " -f"
+    cmd = prog_dir + "/pegasus-gridftp rm -f"
     if options.recursive:
         cmd += " -r"
             
