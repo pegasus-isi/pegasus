@@ -140,6 +140,7 @@ PilotStartTime = DaemonStartTime
 PilotRunTime = $(PILOT_WALL_TIME_SECONDS)
 PilotStopTime = PilotStartTime+$(PILOT_WALL_TIME_SECONDS)
 PilotTimeLeft = PilotStopTime-CurrentTime
+PilotJobId = $(PILOT_JOBID)
 
 # Note: This next line assumes the user is running Condor as root.
 # If they are not running it as root we need to use:
@@ -149,10 +150,10 @@ PilotTimeLeft = PilotStopTime-CurrentTime
 DedicatedScheduler = "DedicatedScheduler@$(PILOT_CONDOR_HOST)"
 
 STARTD_ATTRS = IsPilot, START, PilotRunTime, PilotStopTime, PilotTimeLeft, \
-               PilotSiteId, PilotGlideinId, PilotSiteName, DedicatedScheduler
+               PilotJobId, DedicatedScheduler
 
-MASTER_NAME = pilot_$(FULL_HOSTNAME)
-STARTD_NAME = pilot_$(FULL_HOSTNAME)
+MASTER_NAME = pilot_$(PILOT_JOBID)
+STARTD_NAME = pilot_$(PILOT_JOBID)
 
 ###############################################################################
 # Network settings

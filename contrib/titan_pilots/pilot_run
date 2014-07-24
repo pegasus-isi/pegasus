@@ -160,6 +160,7 @@ echo "PILOT_LOCK = ${LOCK}" >> ${CONDOR_CONFIG}
 echo "PILOT_HIGHPORT = ${HIGHPORT}" >> ${CONDOR_CONFIG}
 echo "PILOT_LOWPORT = ${LOWPORT}" >> ${CONDOR_CONFIG}
 echo "PILOT_CCB_ADDRESS = ${CONDOR_HOST}" >> ${CONDOR_CONFIG}
+echo "PILOT_JOBID = ${JOBID}" >> ${CONDOR_CONFIG}
 
 # Fork condor_master
 echo "Starting condor_master on host ${HOSTNAME}..."
