@@ -1766,7 +1766,7 @@ def main():
         # pool of worker threads
         t_id = 0
         num_threads = min(options.threads, work_q.qsize())
-        if attempt_current > 1:
+        if attempt_current > 2:
             num_threads = 1
         logger.info("Using %d threads for this round of transfers"
                     %(num_threads))
