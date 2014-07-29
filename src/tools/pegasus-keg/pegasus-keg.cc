@@ -37,6 +37,11 @@ extern char** environ;
 #include "basic.hh"
 #include "linux.hh"
 #endif // LINUX
+
+#ifdef GNUKFREEBSD
+#include "basic.hh"
+#include "linux.hh"
+#endif // GNUKFREEBSD
 #endif // MACHINE_SPECIFIC
 
 #include "version.h"
