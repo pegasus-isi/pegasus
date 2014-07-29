@@ -36,7 +36,13 @@ else
     CFLAGS += $(shell getconf LFS_CFLAGS 2>>/dev/null)
     LDFLAGS += $(shell getconf LFS_LDFLAGS 2>>/dev/null)
   else
-    $(error Unsupported system: $(SYSTEM))
+    ifeq (GNUKFREEBSD,${SYSTEM})
+      CXXFLAGS = -Wall -O2 -ggdb -DMACHINE_SPECIFIC=gnukfreebsd
+      EXTRA_OBJ += gnukfreebsd.o
+      EXTRA_INC += gnukfreebsd.hh
+    else
+      $(error Unsupported system: $(SYSTEM))
+    endif
   endif
 endif
 
