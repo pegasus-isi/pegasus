@@ -3,8 +3,6 @@ use strict;
 use warnings;
 use Config;
 
-# Global Hawkeye data
-
 my %uname_cmd = 
 (
     "arch", "uname -m",
@@ -23,7 +21,8 @@ my %short_os =
     "Microsoft Windows XP Professional", "winnt",
     "NT", "winnt",
     "FreeBSD", "freebsd",
-    "Ubuntu", "ubuntu"
+    "Ubuntu", "ubuntu",
+    "GNU/kFreeBSD", "debkfreebsd"
 );
 
 my %short_arch = 
@@ -42,7 +41,9 @@ my %short_arch =
     "x86_64", "x86_64",
     "X86-based PC", "x86",
     "HP-UX", "hppa",
-    "arm", "arm"
+    "arm", "arm",
+    "s390", "s390",
+    "s390x", "s390x"
 );
 
 # Override the flags based on a system
@@ -95,14 +96,13 @@ sub getPlatform(){
     }
 
     if ($arch =~ m/arm/) {
-    	$arch ="arm"; 
+            $arch ="arm"; 
     }
 
     # differentiate IBM PPC64 from Sony PS3
     if ($arch eq "ppc64" && $os_version =~ /ps3$/) {
-	$arch = "ps3";
+        $arch = "ps3";
     }
-
 
     # Simplify HPUX 11 version string
     if ($Config{'archname'} =~ m!PA!) {
@@ -113,15 +113,18 @@ sub getPlatform(){
 
     if ( lc($os) eq "linux") {
         my %distro = &get_linux_distro();
-
-      return($short_arch{$arch},$distro{'short'},$distro{'version'});
+        my $s_arch = $arch;
+        if (defined $short_arch{$arch}) {
+            $s_arch = $short_arch{$arch};
+        }
+        return($s_arch, $distro{'short'}, $distro{'version'});
     }
     elsif($short_os{$os} eq "macos") { # need something like 'ppc_macos_10.3' 
-     # find if processor is 64 bit.
+        # find if processor is 64 bit.
         my $x64=`/usr/sbin/sysctl -a -n hw.cpu64bit_capable 2>/dev/null`;
         my $vers = `/usr/bin/sw_vers -productVersion`;
-	chomp $vers;
-	$vers =~ s/(^\d+\.\d+).*/$1/;
+        chomp $vers;
+        $vers =~ s/(^\d+\.\d+).*/$1/;
         
         return (  ($x64) ? $short_arch{$arch}."_64" : $short_arch{$arch},$short_os{$os},$vers);
     }
@@ -131,6 +134,11 @@ sub getPlatform(){
     elsif ( lc($os) eq "freebsd" ) {
         $os_version =~ s/\.[\d]-RELEASE//i;
         return ($short_arch{$arch},$short_os{$os}, $os_version);
+    }
+    elsif ( $short_os{$os} eq "debkfreebsd" ) {
+        $os_version = `cat /etc/debian_version | sed 's/\\..*//' | sed 's/\\//_/g'`;
+        chomp $os_version;
+        return ($short_arch{$arch}, $short_os{$os}, $os_version);
     }
     else {
         return ($short_arch{$arch}, $short_os{$os}, $os_version);

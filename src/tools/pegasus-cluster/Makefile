@@ -42,7 +42,7 @@ CC	= xlc
 endif
 
 ifeq (LINUX,${SYSTEM})
-CFLAGS	:= -Wall -O2 -ggdb
+CFLAGS	+= -Wall -O2 -ggdb
 ifeq (ia64,${MARCH})
 #
 # Linux IA64
@@ -57,12 +57,6 @@ CFLAGS	+= -m64
 else
 ifeq (armv7l, ${MARCH})
 # nothing to do
-else
-#
-# Linux IA32
-#
-CFLAGS	+= -march=i686
-# LDFLAGS	+= -static
 endif
 endif
 endif
@@ -83,7 +77,7 @@ CFLAGS	+= -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE
 %.txt : %.1 ;
 	$(NROFF) $(TEXT) $< > $@
 %.o : %.c
-	$(CC) $(CFLAGS) $< -c -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) $< -c -o $@
 
 all: pegasus-cluster
 

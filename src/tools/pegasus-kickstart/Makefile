@@ -1,7 +1,6 @@
 INSTALL = install
 RM = rm -f
 CC = gcc
-CFLAGS = -O
 LD = $(CC)
 LOADLIBES = -lm
 SYSTEM = $(shell uname -s | tr '[a-z]' '[A-Z]' | tr -d '_ -/')
@@ -35,14 +34,14 @@ CFLAGS = -Wall -O2 -ggdb
 else
 ifeq (x86_64,${MARCH})
 # new Intel/AMD 64bit architecture
-CFLAGS = -Wall -O2 -ggdb -m64
+CFLAGS += -Wall -O2 -ggdb -m64
 else
 ifeq (i686,${MARCH})
 # regular 32bit x86 architecture
-CFLAGS = -Wall -O2 -march=i686 -ggdb
+CFLAGS += -Wall -O2 -march=i686 -ggdb
 else
 # UNKNOWN ARCHITECTURE -- MAKE NO ASSUMPTIONS
-CFLAGS = -Wall -O2 -ggdb
+CFLAGS += -Wall -O2 -ggdb
 endif
 endif
 endif
@@ -70,16 +69,16 @@ endif
 .PHONY: test
 
 %.o : %.c
-	$(CC) $(CFLAGS) $< -c -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) $< -c -o $@
 
 all : pegasus-kickstart
 
 pegasus-kickstart: debug.o getif.o rwio.o tools.o useinfo.o mynss.o statinfo.o jobinfo.o limitinfo.o $(EXTRA_OBJ) machine.o appinfo.o parse.o mysystem.o mylist.o invoke.o pegasus-kickstart.o procinfo.o
-	$(LD) $(EXTRA_LDFLAGS) $(CFLAGS) $^ -o $@ $(LOADLIBES)
+	$(LD) $(LDFLAGS) $(CFLAGS) $^ -o $@ $(LOADLIBES)
 show-if: show-if.o getif.o debug.o rwio.o
-	$(LD) $(EXTRA_LDFLAGS) $(CFLAGS) $^ -o $@ $(LOADLIBES)
+	$(LD) $(LDFLAGS) $(CFLAGS) $^ -o $@ $(LOADLIBES)
 try-parse: try-parse.o parse.o debug.o rwio.o
-	$(LD) $(EXTRA_LDFLAGS) $(CFLAGS) $^ -o $@ $(LOADLIBES)
+	$(LD) $(LDFLAGS) $(CFLAGS) $^ -o $@ $(LOADLIBES)
 
 appinfo.o: appinfo.c getif.h rwio.h debug.h tools.h useinfo.h machine.h \
   jobinfo.h statinfo.h appinfo.h limitinfo.h mynss.h
