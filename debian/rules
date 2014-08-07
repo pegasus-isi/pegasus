@@ -13,7 +13,7 @@ build: build-stamp
 
 build-stamp:
 	dh_testdir
-	ant dist
+	ant dist-release
 	rm -f dist/*.tar.gz
 	mv dist/pegasus-* dist/pegasus
 	touch build-stamp

@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<project name="pegasus" default="build">
+<project name="pegasus" default="dist">
   <property environment="env"/>
   <property file="build.properties"/>
   <property name="build.source" value="1.6"/>
@@ -22,7 +22,7 @@
     <fileset dir="share/pegasus/java" includes="*.jar"/>
   </path>
 
-  <target name="setup" description="Setup the build">
+  <target name="setup">
     <echo>Pegasus Version: ${pegasus.version}</echo>
     <echo>JAVA TARGET is ${build.target}</echo>
     <echo>JAVA SOURCE is ${build.source}</echo>
@@ -92,9 +92,20 @@
       </filterset>
     </copy>
 
+    <!-- Create pegasus-config -->
+    <mkdir dir="${dist.bin}"/>
+    <copy preservelastmodified="true" todir="${dist.bin}">
+      <fileset dir="bin">
+          <include name="pegasus-config"/>
+      </fileset>
+      <filterset>
+        <filter token="PEGASUS_VERSION" value="${pegasus.version}"/>
+        <filter token="LIBDIR" value="${dist.lib.subdir}"/>
+      </filterset>
+    </copy>
   </target>
 
-  <target name="common" depends="setup" description="Compiles the code common to all Pegasus modules">
+  <target name="compile-common" depends="setup" description="Compile common java code">
     <javac destdir="${build.src}" srcdir="src"
            encoding="UTF-8" deprecation="true" debug="true"
            target="${build.target}" source="${build.source}"
@@ -106,7 +117,7 @@
     </javac>
   </target>
 
-  <target name="contrib" depends="setup" description="Compiles contributed code .e.g Clemson">
+  <target name="compile-contrib" depends="setup" description="Compile contributed java code">
     <javac destdir="${build.src}" srcdir="src"
            encoding="UTF-8" deprecation="true" debug="true"
            target="${build.target}" source="${build.source}"
@@ -118,7 +129,7 @@
     </javac>
   </target>
 
-  <target name="vdl" depends="setup" description="Compiles the abstract planner Chimera">
+  <target name="compile-vdl" depends="setup" description="Compile java VDL code">
     <javac destdir="${build.src}" srcdir="src"
            target="${build.target}" source="${build.source}"
            encoding="UTF-8" debug="true"
@@ -130,7 +141,7 @@
     </javac>
   </target>
 
-  <target name="planner" depends="setup" description="Compiles the concrete planner module of Pegasus">
+  <target name="compile-planner" depends="setup" description="Compile java planner code">
     <javac destdir="${build.src}" srcdir="src"
            target="${build.target}" source="${build.source}"
            encoding="UTF-8" debug="true"
@@ -142,7 +153,7 @@
     </javac>
   </target>
 
-  <target name="tests" depends="setup,common,planner" description="Compiles the tests for Pegasus Planner">
+  <target name="compile-junit" depends="setup,compile-common,compile-planner" description="Compile java unit tests">
     <javac destdir="${test.src}" srcdir="test/junit"
            target="${build.target}" source="${build.source}"
            encoding="UTF-8" debug="true"
@@ -156,7 +167,7 @@
     </javac>
   </target>
 
-  <target name="examples" depends="setup" description="Compiles all examples">
+  <target name="compile-examples" depends="setup" description="Compile examples">
     <javac destdir="${build.src}" srcdir="src"
            target="${build.target}" source="${build.source}"
            encoding="UTF-8" debug="true"
@@ -168,7 +179,13 @@
     </javac>
   </target>
 
-  <target name="jar" depends="contrib,common,planner,examples" description="Create the PEGASUS JAR files excluding tests">
+  <target name="compile-java" depends="compile-vdl,compile-planner,compile-contrib,compile-common,compile-examples,compile-junit" description="Copile all java code"/>
+
+  <target name="compile" depends="compile-java,compile-ctools,compile-externals" description="Compile all code"/>
+
+  <target name="jar" depends="jar-planner,jar-junit,jar-vdl" description="Generate all jar files"/>
+
+  <target name="jar-planner" depends="compile-contrib,compile-common,compile-planner,compile-examples" description="Generate planner jar">
     <mkdir dir="${dist.jars}"/>
     <jar destfile="${dist.jars}/pegasus.jar" basedir="${build.src}"
          includes="*.properties,edu/isi/pegasus/**/*.class,edu/isi/ikcap/**/*.class,edu/clemson/**/*.class"
@@ -176,14 +193,14 @@
     <chmod perm="0644" file="${dist.jars}/pegasus.jar"/>
   </target>
 
-  <target name="test-jar" depends="tests" description="Create the test jar files to use for unit tests">
+  <target name="jar-junit" depends="compile-junit" description="Generate unit test jar">
     <mkdir dir="${dist.jars}"/>
     <jar destfile="${dist.jars}/pegasus-test.jar" basedir="${test.src}"
          includes="edu/isi/pegasus/**/*.class"/>
     <chmod perm="0644" file="${dist.jars}/pegasus-test.jar"/>
   </target>
 
-  <target name="vdl-jar" depends="vdl" description="Create the VDL JAR files excluding tests">
+  <target name="jar-vdl" depends="compile-vdl" description="Generate VDL jar">
     <mkdir dir="${dist.jars}"/>
     <jar destfile="${dist.jars}/vdl.jar" basedir="${build.src}"
          includes="org/griphyn/vdl/**/*.class,org/griphyn/vdl/*.class"
@@ -191,20 +208,20 @@
     <chmod perm="644" file="${dist.jars}/vdl.jar"/>
   </target>
 
-  <target name="manpages" depends="setup" description="Generates manpages">
+  <target name="doc-manpages" depends="setup" description="Generate manpages">
     <exec executable="${make}" dir="doc/manpages" failonerror="true">
       <arg line="prefix=${dist.dir} install"/>
     </exec>
   </target>
 
-  <target name="user-guide" depends="setup" description="Generates user guide from docbook source">
+  <target name="doc-user-guide" depends="setup" description="Generate user guide from docbook source">
     <mkdir dir="${dist.doc}"/>
     <exec executable="${make}" dir="doc/docbook" failonerror="true">
       <arg line="prefix=${dist.doc} install"/>
     </exec>
   </target>
 
-  <target name="javadoc" depends="setup" description="Generates the javadoc auto-documentation">
+  <target name="doc-java" depends="setup" description="Generate java documentation">
     <delete dir="${dist.doc}/html/javadoc"/>
     <javadoc destdir="${dist.doc}/html/javadoc"
              Author="true"
@@ -224,7 +241,7 @@
     </javadoc>
   </target>
 
-  <target name="pythondoc" depends="setup" description="Generates the python DAX documentation">
+  <target name="doc-python" depends="setup" description="Generate python documentation">
     <!-- TODO Wouldn't it be better to put this in a script? -->
     <delete dir="${dist.doc}/html/python"/>
     <mkdir dir="${dist.doc}/html/python"/>
@@ -268,7 +285,7 @@
     </exec>
   </target>
 
-  <target name="perldoc" depends="setup" description="Generates the perl DAX documentation">
+  <target name="doc-perl" depends="setup" description="Generate perl documentation">
     <delete dir="${dist.doc}/html/perl"/>
     <mkdir dir="${dist.doc}/html/perl"/>
     <exec executable="./libexec/perl-docs" dir="${basedir}" failonerror="true">
@@ -276,7 +293,7 @@
     </exec>
   </target>
 
-  <target name="schemas" depends="setup">
+  <target name="doc-schemas" depends="setup" description="Generate schemas">
     <!-- doc schemas -->
     <mkdir dir="${dist.doc}/schemas"/>
     <copy preservelastmodified="true" todir="${dist.doc}/schemas">
@@ -286,9 +303,16 @@
     <fixcrlf srcdir="${dist.doc}/schemas" includes="**/*.xml" eol="lf"/>
   </target>
 
-  <target name="doc" depends="setup,schemas,manpages,user-guide,javadoc,pythondoc,perldoc"/>
+  <target name="doc-tutorial" depends="setup" description="Generate tutorial files">
+    <mkdir dir="${dist.doc}/tutorial"/>
+    <copy preservelastmodified="true" todir="${dist.doc}/tutorial">
+      <fileset dir="doc/tutorial" includes="**/*"/>
+    </copy>
+  </target>
 
-  <target name="ctools" depends="setup" description="Compiles all C tools and installs them">
+  <target name="doc" depends="setup,doc-schemas,doc-manpages,doc-user-guide,doc-java,doc-python,doc-perl,doc-tutorial" description="Generate documentation"/>
+
+  <target name="compile-ctools" depends="setup" description="Compile C tools">
     <mkdir dir="${dist.bin}"/>
     <exec executable="${make}" dir="src/tools" failonerror="true">
       <env key="prefix" value="${dist.dir}"/>
@@ -299,7 +323,7 @@
     </exec>
   </target>
 
-  <target name="externals" depends="setup" description="Compiles and installs external dependencies">
+  <target name="compile-externals" depends="setup" description="Compile external dependencies">
     <mkdir dir="${dist.lib}/pegasus/externals/python"/>
     <exec executable="${make}" dir="src/externals" failonerror="true">
       <env key="prefix" value="${dist.dir}"/>
@@ -308,26 +332,13 @@
     </exec>
   </target>
 
-  <target name="pegasus-config" depends="setup">
-    <mkdir dir="${dist.bin}"/>
-    <copy preservelastmodified="true" todir="${dist.bin}">
-      <fileset dir="bin">
-          <include name="pegasus-config"/>
-      </fileset>
-      <filterset>
-        <filter token="PEGASUS_VERSION" value="${pegasus.version}"/>
-        <filter token="LIBDIR" value="${dist.lib.subdir}"/>
-      </filterset>
-    </copy>
-  </target>
-
-  <target name="dist-doc" depends="dist-clean,doc">
+  <target name="dist-doc" depends="dist-clean,doc" description="Build documentation tarball">
     <tar destfile="dist/pegasus-doc-${pegasus.version}.tar.gz"
          basedir="dist" longfile="gnu" compression="gzip"
          includes="pegasus-${pegasus.version}/share/man/**,pegasus-${pegasus.version}/share/doc/**"/>
   </target>
 
-  <target name="dist-worker" depends="dist-clean,setup,pegasus-config,ctools,externals">
+  <target name="dist-worker" depends="dist-clean,setup,compile-ctools,compile-externals" description="Build worker tarball">
     <!-- bin -->
     <copy preservelastmodified="true" todir="${dist.bin}">
       <fileset dir="bin">
@@ -350,7 +361,7 @@
   </target>
 
 
-  <target name="dist-common" depends="dist-clean,setup,jar,vdl-jar,pegasus-config,ctools,externals">
+  <target name="dist-common" depends="dist-clean,setup,jar-planner,jar-vdl,compile-ctools,compile-externals">
     <!-- bin -->
     <copy preservelastmodified="true" todir="${dist.bin}">
       <fileset dir="bin">
@@ -460,12 +471,19 @@
     </sequential>
   </macrodef>
 
-  <target name="dist" depends="dist-common,doc">
+  <target name="dist-release" depends="dist-common,doc" description="Build binary release tarball">
     <package-binary name="pegasus-binary-${pegasus.version}-${dist.arch}"/>
   </target>
 
-  <target name="dist-nodoc" depends="dist-common">
-    <package-binary name="pegasus-binary-${pegasus.version}-${dist.arch}"/>
+  <target name="dist-macos" depends="dist-common,doc" description="Build binary release for Mac OS X">
+    <exec executable="release-tools/macos/package.sh" failonerror="true">
+      <arg value="${dist.dir}"/>
+      <arg value="dist/pegasus-binary-${pegasus.version}-${dist.arch}.dmg"/>
+    </exec>
+  </target>
+
+  <target name="dist" depends="dist-common" description="Build binary release tarball without documentation">
+    <package-binary name="pegasus-nodocs-${pegasus.version}-${dist.arch}"/>
   </target>
 
   <target name="dist-clean">
@@ -489,9 +507,7 @@
     </exec>
   </target>
 
-  <target name="build" depends="jar,vdl-jar,ctools"/>
-
-  <target name="junit-xml" depends="jar,vdl-jar,test-jar" description="Execute the Java Unit Tests for the Pegasus Planner">
+  <target name="test-java" depends="jar" description="Run java unit tests">
     <mkdir dir="${junitreport.dir}"/>
     <junit printsummary="yes" haltonfailure="yes">
       <classpath>
@@ -500,27 +516,33 @@
         <path location="${dist.jars}/pegasus-test.jar"/>
         <path location="${dist.jars}/vdl.jar"/>
       </classpath>
-      <formatter type="xml"/>
+      <formatter type="xml" usefile="yes"/>
+      <formatter type="brief" usefile="no"/>
       <test name="edu.isi.pegasus.planner.test.AllTests" todir="${junitreport.dir}"/>
     </junit>
   </target>
 
-  <target name="junit" depends="jar,vdl-jar,test-jar" description="Execute the Java Unit Tests for the Pegasus Planner">
-    <junit printsummary="yes" haltonfailure="yes">
-      <classpath>
-        <path refid="build.classpath"/>
-        <path location="${dist.jars}/pegasus.jar"/>
-        <path location="${dist.jars}/pegasus-test.jar"/>
-        <path location="${dist.jars}/vdl.jar"/>
-      </classpath>
-      <batchtest>
-        <fileset dir="${test.src}">
-          <include name="**/*Test.class"/>
-          <exclude name="**/AllTests.class"/>
-        </fileset>
-        <formatter type="brief" usefile="no"/>
-      </batchtest>
-    </junit>
+  <target name="test-python" description="Run python unit tests">
+    <exec executable="/usr/bin/env" dir="lib/pegasus/python" failonerror="true">
+        <arg line="python Pegasus/test/runtests.py"/>
+    </exec>
+    <exec executable="/bin/sh" dir="test/exitcode" failonerror="true">
+        <arg line="-c './test_exitcode.sh'"/>
+    </exec>
   </target>
+
+  <target name="test-kickstart" description="Run kickstart unit tests">
+    <exec executable="/bin/sh" dir="src/tools/pegasus-kickstart" failonerror="true">
+        <arg line="-c 'make test'"/>
+    </exec>
+  </target>
+
+  <target name="test-pmc" description="Run PMC unit tests">
+    <exec executable="/bin/sh" dir="src/tools/pegasus-mpi-cluster" failonerror="true">
+        <arg line="-c 'make test'"/>
+    </exec>
+  </target>
+
+  <target name="test" depends="test-python,test-java,test-kickstart,test-pmc" description="Run all unit tests"/>
 </project>
 

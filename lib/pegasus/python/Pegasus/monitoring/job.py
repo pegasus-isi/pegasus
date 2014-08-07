@@ -327,17 +327,23 @@ class Job:
             #PM-641 optimization Modified string concatenation to a list join 
             if "stdout" in my_record:
                 if len(my_record["stdout"])<= MAX_OUTPUT_LENGTH - stdout_size:
-                    stdout_text_list.append(utils.quote("#@ %d stdout\n" % (my_task_number)))
-                    stdout_text_list.append(utils.quote(my_record["stdout"]))
-                    stdout_text_list.append(utils.quote("\n"))
-                    stdout_size+=len(my_record["stdout"])+20
+                    try:
+                        stdout_text_list.append(utils.quote("#@ %d stdout\n" % (my_task_number)))
+                        stdout_text_list.append(utils.quote(my_record["stdout"]))
+                        stdout_text_list.append(utils.quote("\n"))
+                        stdout_size+=len(my_record["stdout"])+20
+                    except KeyError:
+                        logger.exception( "Unable to parse stdout section from kickstart record for task %s from file %s " %(my_task_number, self.get_rotated_out_filename() ))
 
             if "stderr" in my_record:
                 if len(my_record["stderr"]) <= MAX_OUTPUT_LENGTH - stdout_size :
-                    stdout_text_list.append(utils.quote("#@ %d stderr\n" % (my_task_number)))
-                    stdout_text_list.append(utils.quote(my_record["stderr"]))
-                    stdout_text_list.append(utils.quote("\n"))
-                    stdout_size+=len(my_record["stderr"])+20
+                    try:
+                        stdout_text_list.append(utils.quote("#@ %d stderr\n" % (my_task_number)))
+                        stdout_text_list.append(utils.quote(my_record["stderr"]))
+                        stdout_text_list.append(utils.quote("\n"))
+                        stdout_size+=len(my_record["stderr"])+20
+                    except KeyError:
+                        logger.exception( "Unable to parse stderr section from kickstart record for task %s from file %s " %(my_task_number, self.get_rotated_out_filename() ))
 
         if len(stdout_text_list) > 0 :
             self._stdout_text = "".join(stdout_text_list)
@@ -392,6 +398,30 @@ class Job:
 
         # Done populating Job class with information from the output file
         return my_invocation_found
+
+    def get_rotated_out_filename(self):
+        """
+        Returns the name of the rotated .out file for the job on the basis
+        of the current counter
+        """
+
+        basename = self._output_file
+        if self._has_rotated_stdout_err_files:
+            basename += ".%03d" % ( self._job_output_counter)
+
+        return basename
+
+    def get_rotated_err_filename(self ):
+        """
+        Returns the name of the rotated .err file for the job on the basis
+        of the current counter
+        """
+
+        basename = self._error_file
+        if self._has_rotated_stdout_err_files:
+            basename += ".%03d" % ( self._job_output_counter)
+
+        return basename
 
     def read_stdout_stderr_files(self, run_dir):
         """

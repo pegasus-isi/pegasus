@@ -752,7 +752,8 @@ public class PegasusLite implements GridStart {
             this.complainForHeadNodeFileServer( job.getID(),  job.getStagingSiteHandle());
         }
         
-        String stagingSiteDirectory      = mSiteStore.getExternalWorkDirectory(stagingSiteServerForRetrieval, job.getStagingSiteHandle() );
+        //String stagingSiteDirectory      = mSiteStore.getExternalWorkDirectory(stagingSiteServerForRetrieval, job.getStagingSiteHandle() );
+        String stagingSiteDirectory      = mSiteStore.getInternalWorkDirectory( job, true );
         String workerNodeDir             = getWorkerNodeDirectory( job );
 
 
@@ -877,8 +878,9 @@ public class PegasusLite implements GridStart {
                     this.complainForHeadNodeFileServer( job.getID(),  job.getStagingSiteHandle());
                  }
 
-                String stagingSiteDirectoryForStore      = mSiteStore.getExternalWorkDirectory(stagingSiteServerForStore, job.getStagingSiteHandle() );
-
+                 //String stagingSiteDirectoryForStore      = mSiteStore.getExternalWorkDirectory(stagingSiteServerForStore, job.getStagingSiteHandle() );
+                 String stagingSiteDirectoryForStore      = mSiteStore.getInternalWorkDirectory( job, true );
+                
                 //construct the postjob that transfers the output files
                 //back to head node exectionSiteDirectory
                 //to fix later. right now post constituentJob only created is pre constituentJob

@@ -364,6 +364,7 @@ public class Transfer   implements SLS {
             StringBuffer url = new StringBuffer();
 
             ReplicaCatalogEntry cacheLocation = null;
+            boolean symlink = false;
             if( mBypassStagingForInputs ){
                 //we retrieve the URL from the Planner Cache as a get URL
                 //bypassed URL's are stored as GET urls in the cache and
@@ -374,21 +375,40 @@ public class Transfer   implements SLS {
                 cacheLocation = mPlannerCache.lookup( lfn, OPERATION.get );
             }
             if( cacheLocation == null ){
+                String stagingSite = job.getStagingSiteHandle();
                 //construct the location with respect to the staging site
-                url.append( mSiteStore.getExternalWorkDirectoryURL(stagingSiteServer, job.getStagingSiteHandle() ));
+                if( mUseSymLinks && //specified in configuration
+                    stagingSite.equals( job.getSiteHandle() ) ){ //source URL logically on the same site where job is to be run
+                    //we can symlink . construct the source URL as a file url
+                    symlink = true;
+                    url.append( PegasusURL.FILE_URL_SCHEME ).append( "//" ).append( stagingSiteDirectory );
+                    if( pf.isExecutable() ){
+                        //PM-734 for executable files we can have the source url as file url 
+                        //but we cannot have the destination URL as symlink://
+                        //as we want to do chmod on the local copy on the worker node
+                        symlink = false;
+                    }
+                }
+                else{
+                    url.append( mSiteStore.getExternalWorkDirectoryURL(stagingSiteServer, stagingSite ));
+                }
                 url.append( File.separator ).append( lfn );
-                ft.addSource( job.getStagingSiteHandle(), url.toString() );
+                ft.addSource( stagingSite, url.toString() );
             }
             else{
                 //construct the URL wrt to the planner cache location
                 url.append( cacheLocation.getPFN() );
                 ft.addSource( cacheLocation.getResourceHandle(), url.toString() );
+                
+                symlink = ( mUseSymLinks && //specified in configuration
+                            !pf.isExecutable() && //can only do symlinks for data files . not executables
+                            ft.getSourceURL().getKey().equals( job.getSiteHandle()) && //source URL logically on the same site where job is to be run
+                            url.toString().startsWith( PegasusURL.FILE_URL_SCHEME ) ); //source URL is a file URL
             }
             
             //if the source URL is already present at the compute site
             //and is a file URL, then the destination URL has to be a symlink
-            String destURLScheme = ( mUseSymLinks && 
-                                     ft.getSourceURL().getKey().equals( job.getSiteHandle() ))?
+            String destURLScheme = ( symlink )?
                                    PegasusURL.SYMLINK_URL_SCHEME:
                                    PegasusURL.FILE_URL_SCHEME;//default is file URL
 

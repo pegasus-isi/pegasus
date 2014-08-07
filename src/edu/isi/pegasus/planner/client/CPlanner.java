@@ -18,84 +18,67 @@
 package edu.isi.pegasus.planner.client;
 
 
+import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LoggingKeys;
+import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
+import edu.isi.pegasus.common.util.FactoryException;
+import edu.isi.pegasus.common.util.StreamGobbler;
+import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
-
 import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
 import edu.isi.pegasus.planner.catalog.site.SiteFactory;
-
-import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
-
-import edu.isi.pegasus.planner.code.CodeGenerator;
-import edu.isi.pegasus.planner.code.CodeGeneratorFactory;
-
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationFactory;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.DagInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.NameValue;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerMetrics;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
-import edu.isi.pegasus.planner.classes.PegasusBag;
-
-import edu.isi.pegasus.planner.common.PegasusProperties;
-import edu.isi.pegasus.common.logging.LogManager;
-import edu.isi.pegasus.common.util.StreamGobbler;
-import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
-import edu.isi.pegasus.planner.common.RunDirectoryFilenameFilter;
-
-import edu.isi.pegasus.planner.refiner.MainEngine;
-
-
-import edu.isi.pegasus.planner.parser.dax.Callback;
-import edu.isi.pegasus.planner.parser.DAXParserFactory;
-
-import edu.isi.pegasus.planner.catalog.transformation.TransformationFactory;
-
-import edu.isi.pegasus.common.util.Version;
-import edu.isi.pegasus.common.util.FactoryException;
-
-import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
+import edu.isi.pegasus.planner.code.CodeGenerator;
+import edu.isi.pegasus.planner.code.CodeGeneratorFactory;
 import edu.isi.pegasus.planner.code.GridStartFactory;
-
-
-import edu.isi.pegasus.planner.classes.Job;
-
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
-
+import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.RunDirectoryFilenameFilter;
 import edu.isi.pegasus.planner.common.Shiwa;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+import edu.isi.pegasus.planner.parser.DAXParserFactory;
 import edu.isi.pegasus.planner.parser.Parser;
+import edu.isi.pegasus.planner.parser.dax.Callback;
 import edu.isi.pegasus.planner.parser.dax.DAXParser;
-
+import edu.isi.pegasus.planner.refiner.MainEngine;
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.FileOutputStream;
-import java.io.FileInputStream;
-import java.nio.channels.FileChannel;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Date;
-import java.util.Iterator;
-
-
-import java.text.NumberFormat;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.LinkedList;
-
-import java.util.Set;
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.management.GarbageCollectorMXBean;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryPoolMXBean;
+import java.lang.management.MemoryUsage;
+import java.nio.channels.FileChannel;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 
@@ -258,6 +241,13 @@ public class CPlanner extends Executable{
             cPlanner.log( fe.convertException() , LogManager.FATAL_MESSAGE_LEVEL);
             result = 2;
         }
+        catch( OutOfMemoryError error ){
+            cPlanner.log( "Out of Memory Error " + error.getMessage(), LogManager.FATAL_MESSAGE_LEVEL );
+            error.printStackTrace();
+            //lets print out some GC stats
+            cPlanner.logMemoryUsage();
+            result = 4;
+        }
         catch ( RuntimeException rte ) {
             plannerException = rte;
             //catch all runtime exceptions including our own that
@@ -331,7 +321,7 @@ public class CPlanner extends Executable{
 	    // also ignore
 	  }
 	}
-
+        
         // warn about non zero exit code
         if ( result != 0 ) {
             cPlanner.log("Non-zero exit-code " + result,
@@ -409,6 +399,8 @@ public class CPlanner extends Executable{
         PegasusConfiguration configurator = new PegasusConfiguration( mLogger );
         configurator.loadConfigurationPropertiesAndOptions( mProps , mPOptions );
 
+        mLogger.log( "Planner invoked with following arguments " + mPOptions.getOriginalArgString(),
+                      LogManager.INFO_MESSAGE_LEVEL );
 
         //do sanity check on dax file
         String dax         = mPOptions.getDAX();
@@ -768,7 +760,11 @@ public class CPlanner extends Executable{
             this.logSuccessfulCompletion( emptyWorkflow );
         }
 
-            
+        //log some memory usage
+        //PM-747
+        if( mProps.logMemoryUsage() ){
+            this.logMemoryUsage();
+        }
         return result;
     }
 
@@ -1282,10 +1278,12 @@ public class CPlanner extends Executable{
              append( "\n -X[non standard java option]  pass to jvm a non standard option . e.g. -Xmx1024m -Xms512m"  ).
              append( "\n -h |--help         generates this help."  ).
              append( "\n The following exitcodes are produced"  ).
-             append( "\n 0 concrete planner planner was able to generate a concretized workflow" ).
+             append( "\n 0 planner was able to generate an executable workflow" ).
              append( "\n 1 an error occured. In most cases, the error message logged should give a"  ).
              append( "\n   clear indication as to where  things went wrong." ).
              append( "\n 2 an error occured while loading a specific module implementation at runtime"  ).
+             append( "\n 3 an unaccounted java exception occured at runtime"  ).
+             append( "\n 4 encountered an out of memory exception. Most probably ran out of heap memory."  ).
              append( "\n " );
 
         System.out.println(text);
@@ -1879,6 +1877,37 @@ public class CPlanner extends Executable{
 
         return relativeSubmitDirXXX;
 
+    }
+
+    /**
+     * Logs memory usage of the JVM 
+     */
+    private void logMemoryUsage() {
+        try {
+            String memoryUsage = new String();
+            List<MemoryPoolMXBean> pools = ManagementFactory.getMemoryPoolMXBeans();
+            double totalUsed = 0; //in bytes
+            double totalReserved = 0; //in bytes
+            double divisor = 1024*1024;// display stats in MB
+            for (MemoryPoolMXBean pool : pools) {
+                MemoryUsage peak = pool.getPeakUsage();
+                totalUsed += peak.getUsed();
+                totalReserved += peak.getCommitted();
+                memoryUsage += String.format("Peak %s memory used    : %.3f MB%n", pool.getName(),peak.getUsed()/divisor );
+                memoryUsage += String.format("Peak %s memory reserved: %.3f MB%n", pool.getName(), peak.getCommitted()/divisor);
+            }
+            
+            // we print the result in the console
+            mLogger.log( "JVM Memory Usage Breakdown \n" +  memoryUsage.toString(), LogManager.INFO_MESSAGE_LEVEL);
+            mLogger.log( String.format( "Total Peak memory used      : %.3f MB", totalUsed/divisor), 
+                         LogManager.INFO_MESSAGE_LEVEL);
+            mLogger.log( String.format( "Total Peak memory reserved  : %.3f MB", totalReserved/divisor), 
+                         LogManager.INFO_MESSAGE_LEVEL);
+        } catch (Throwable t) {
+            //not fatal
+            mLogger.log( "Error while logging peak memory usage " + t.getMessage(),
+                         LogManager.ERROR_MESSAGE_LEVEL );
+        }
     }
 
     

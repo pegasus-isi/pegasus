@@ -207,6 +207,15 @@ Options
     based on the value of getrlimit(RLIMIT_NOFILE). The value must be
     at least 1, and cannot be more than RLIMIT_NOFILE.
 
+*--keep-affinity*::
+    By default PMC attempts to reset the CPU and memory affinity. This
+    is to ensure that all available CPUs and memory can be used by PMC tasks
+    on systems that are not configured properly. This flag tells PMC to keep
+    the affinity settings inherited from its parent. Note that the memory
+    policy can only be cleared if PMC was compiled with libnuma. CPU
+    affinity is cleared using *sched_setaffinity()*, and memory policy is
+    cleared with *set_mempolicy()*.
+
 
 [[DAG_FILES]]
 DAG Files

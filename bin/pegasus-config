@@ -28,7 +28,12 @@ my $bin_dir = Cwd::abs_path(dirname($0));
 
 # basically PEGASUS_HOME - but let's not expose that anymore
 my $base_dir	= dirname($bin_dir);
-my $lib         = "@LIBDIR@"; # lib64 for 64bit RPMS
+my $version     = '@PEGASUS_VERSION@';
+my $lib         = '@LIBDIR@'; # lib64 for 64bit RPMS
+# For development, if the LIBDIR hasn't been replaced, use 'lib'
+if (substr($lib, 0, 1) eq '@') {
+    $lib = "lib";
+}
 my $conf_dir	= File::Spec->catdir( $base_dir, 'etc' );
 my $share_dir	= File::Spec->catdir( $base_dir, 'share', 'pegasus' );
 my $java_dir	= File::Spec->catdir( $share_dir, 'java' );
@@ -40,9 +45,10 @@ my $js_dir	= File::Spec->catdir( $base_dir, $lib, 'pegasus', 'javascript' );
 my $schema_dir	= File::Spec->catdir( $share_dir, 'schema' );
 my $extra_classpath = '';
 
-# for development - running out of a svn checkout
+# for development - running out of a source checkout
 my $test = File::Spec->catdir( $base_dir, 'build', 'classes' );
 $extra_classpath = $test if -e $test;
+
 
 # in native packaging mode, some directories move
 if ($base_dir eq "/usr") {
@@ -199,7 +205,7 @@ my $eoln = 1;
 GetOptions( "help|h" => \&usage
     , 'eoln|crlf!' => \$eoln
     , 'version|V' => sub {
-        print "@PEGASUS_VERSION@";
+        print $version;
         print "\n" if $eoln; 
         exit 0; 
     }

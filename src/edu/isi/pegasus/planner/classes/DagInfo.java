@@ -287,7 +287,15 @@ public class DagInfo extends Data {
                 this.DEFAULT_NAME:
                 nameOfADag;
     }
-
+    
+    /* Returns the index of the workflow, that was specified in the DAX.
+     *
+     * @return the index of the workflow.
+     */
+    public String getIndex(){
+        return index;
+    }
+    
     /**
      * Returns the dax version
      *

@@ -310,6 +310,16 @@ class CpHandler(TransferHandlerBase):
 
     def do_transfer(self, transfer, attempt):
         prepare_local_dir(os.path.dirname(transfer.dst_path))
+        if os.path.exists(transfer.src_path) \
+           and os.path.exists(transfer.dst_path):
+            # make sure src and target are not the same file - have to
+            # compare at the inode level as paths can differ
+            src_inode = os.stat(transfer.src_path)[stat.ST_INO]
+            dst_inode = os.stat(transfer.dst_path)[stat.ST_INO]
+            if src_inode == dst_inode:
+                logger.warning("cp: src (%s) and dst (%s) already exists"
+                               % (transfer.src_path, transfer.dst_path))
+                return True
         cmd = "/bin/cp -f -L '%s' '%s'" \
             % (transfer.src_path, transfer.dst_path)
         try:
@@ -557,9 +567,8 @@ class GridFtpHandler(TransferHandlerBase):
             # parallism
             options += " -parallel 4"
     
-            # -fast only for Globus 4 and above
-            if tools.major_version('globus-version') >= 4:
-                options += " -fast"
+            # -fast should be supported by all servers today
+            options += " -fast"
         
             # -pipeline only for 3rd party transfers and Globus 4.2 and above
             # this is experimental so only allow this for the first attempt
@@ -710,21 +719,16 @@ class IRodsHandler(TransferHandlerBase):
         if transfer.dst_proto == "file":
             # irods->file
             prepare_local_dir(os.path.dirname(transfer.dst_path))
-            # irods does not like leading slashes
-            src_irods = transfer.src_path
-            src_irods = re.sub(r"^\/+", "", transfer.src_path)
-            cmd = "iget -f '" + src_irods + "' '" + transfer.dst_path + "'"
+            cmd = "iget -f '" + transfer.src_path + "' '" + transfer.dst_path + "'"
         else:
             # file->irods
-            dst_irods_mkdir = re.sub(r"^\/+", "", os.path.dirname(transfer.dst_path))
             cmd = "imkdir -p '" + os.path.dirname(transfer.dst_path) + "'"
             try:
                 myexec(cmd, 60*60, True)
             except:
                 # ignore errors from the mkdir command
                 pass
-            dst_irods = re.sub(r"^\/+", "", transfer.dst_path)
-            cmd = "iput -f '" + transfer.src_path + "' '" +  dst_irods + "'"
+            cmd = "iput -f '" + transfer.src_path + "' '" +  transfer.dst_path + "'"
 
         try:
             myexec(cmd, default_subshell_timeout, True)

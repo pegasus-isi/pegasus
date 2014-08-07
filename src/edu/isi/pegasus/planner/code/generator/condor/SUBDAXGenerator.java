@@ -205,6 +205,11 @@ public class SUBDAXGenerator{
     
     private SiteStore mSiteStore;
     
+    /**
+     * Cache file for the current DAG
+     */
+    private String mCurrentDAGCacheFile;
+    
     
     /**
      * The default constructor.
@@ -236,6 +241,10 @@ public class SUBDAXGenerator{
         mSiteStore = bag.getHandleToSiteStore();
         this.mPegasusPlanOptions  = bag.getPlannerOptions();
         mCleanupScope = mProps.getCleanupScope();
+        
+        mCurrentDAGCacheFile = this.getCacheFile( mPegasusPlanOptions, 
+                                                  dag.getLabel(), 
+                                                  dag.getIndex());
         mDAXJobIDToSubmitDirectoryCacheFile = new HashMap();
                 
         mUser = mProps.getProperty( "user.name" ) ;
@@ -386,7 +395,16 @@ public class SUBDAXGenerator{
                          LogManager.DEBUG_MESSAGE_LEVEL  );
             cacheFiles.addAll( parentsTransientRCs  );
         }
-
+        
+        //we also add path to the cache file of the workflow 
+        //currently being planned i.e the one that has the dax job 
+        //for the sub workflow. this is to ensure that if we have a DAXA
+        //that has two jobs JOBA and DAXJobB in it, with JOBA parent of DAXJobB
+        //i.e JOBA -> DAXJobB, then whatever JOBA generates is accessible
+        //when we plan the DAXJob B. To ensure this we need to pass the cache
+        //file generated when planning DAXA to DAXJobB
+        //PM-736
+        cacheFiles.add( mCurrentDAGCacheFile );
 
         //do some sanitization of the path to the dax file.
         //if it is a relative path, then ???
@@ -528,19 +546,11 @@ public class SUBDAXGenerator{
             return null;
         }
         else{
-            StringBuffer basenamePrefix = new StringBuffer();
-            if( options.getBasenamePrefix() == null ){
-                basenamePrefix.append( label );                
-                basenamePrefix.append( "-" ).append( index );
-            }else{
-                //add the prefix from options
-                basenamePrefix.append( options.getBasenamePrefix() );
-            }
-            
+            String basenamePrefix = this.getWorkflowFileBasenamePrefix(options, label, index);
+                    
             mLogger.log( "Basename prefix for the sub workflow is " + basenamePrefix,
                          LogManager.DEBUG_MESSAGE_LEVEL );
-            String subDAXCache = new File( options.getSubmitDirectory(),
-                                           basenamePrefix + CACHE_FILE_SUFFIX ).getAbsolutePath();
+            String subDAXCache = this.getCacheFile(options, label, index);
             mLogger.log( "Cache File for the sub workflow is " + subDAXCache,
                          LogManager.DEBUG_MESSAGE_LEVEL );
             mDAXJobIDToSubmitDirectoryCacheFile.put( job.getID(), subDAXCache);
@@ -927,7 +937,22 @@ public class SUBDAXGenerator{
 
 
    
-
+    /**
+     * Returns the path to the cache file in a workflow's submit directory
+     * 
+     * @param options   the options for the  workflow.
+     * @param label     the label for the workflow.
+     * @param index     the index for the workflow.
+     *
+     * @return the path to the cache file
+     */
+    protected String getCacheFile( PlannerOptions options, String label , String index ){
+        
+        return new File( options.getSubmitDirectory(),
+                         this.getWorkflowFileName(options, label, index, CACHE_FILE_SUFFIX) ).getAbsolutePath();
+        
+    }
+    
     /**
      * Constructs the basename to the cache file that is to be used
      * to log the transient files. The basename is dependant on whether the
@@ -950,11 +975,32 @@ public class SUBDAXGenerator{
      * @param options   the options for the sub workflow.
      * @param label     the label for the workflow.
      * @param index     the index for the workflow.
+     * @param suffix    the suffix for the workfklow file.
      *
      * @return the name of the cache file
      */
     protected String getWorkflowFileName( PlannerOptions options, String label , String index, String suffix ){
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
+        
+        sb.append( this.getWorkflowFileBasenamePrefix(options, label, index) );
+        //append the suffix
+        sb.append( suffix );
+
+        return sb.toString();
+
+    }
+
+    /* Constructs the basename prefix for a workflow file.  This is dependant
+     * on whether the  basename prefix has been specified in options or not.
+     *
+     * @param options   the options for the sub workflow.
+     * @param label     the label for the workflow.
+     * @param index     the index for the workflow.
+     *
+     * @return the name of the cache file
+     */
+    protected String getWorkflowFileBasenamePrefix( PlannerOptions options, String label , String index ){
+        StringBuilder sb = new StringBuilder();
         String bprefix = options.getBasenamePrefix();
 
         if(bprefix != null){
@@ -964,15 +1010,10 @@ public class SUBDAXGenerator{
         else{
             //generate the prefix from the name of the dag
             sb.append( label ).append("-").
-           append( index );
+               append( index );
         }
-        //append the suffix
-        sb.append( suffix );
-
         return sb.toString();
-
     }
-
 
     /**
      * Returns a default TC entry to be used in case entry is not found in the

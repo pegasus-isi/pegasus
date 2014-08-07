@@ -18,8 +18,8 @@ diamond.addFile(a)
 	
 # Add executables to the DAX-level replica catalog
 # In this case the binary is 32 bit version of pegasus-keg
-# that is stored at file:///nfs/ccg4/scratch-6-months-purge/bamboo/inputs/pegasus-keg-x86
-keg = "/nfs/ccg4/scratch-6-months-purge/bamboo/inputs/pegasus-keg-x86"
+# that is stored at file:///nfs/ccg3/software/bamboo/x86/pegasus-keg
+keg = "/nfs/ccg3/software/bamboo/x86/pegasus-keg"
 e_preprocess = Executable(namespace="diamond", name="preprocess", version="4.0", os="linux", arch="x86", installed=False)
 e_preprocess.addPFN(PFN("file://" + sys.argv[1] + "/bin/pegasus-keg", "condorpool"))
 diamond.addExecutable(e_preprocess)

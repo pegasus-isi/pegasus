@@ -1221,7 +1221,8 @@ sub assemble_dag($$$;$$) {
 	my @result = ();
 
 	# show dagman itself
-	push( @result, assemble_job( $jobref->{$dagid}, $indent ) );
+	push( @result, assemble_job( $jobref->{$dagid}, $indent ) )
+		if scalar keys %{$jobref->{$dagid}};
 	delete $main::seen{$dagid};
 
 	# show dependent jobs for dagman

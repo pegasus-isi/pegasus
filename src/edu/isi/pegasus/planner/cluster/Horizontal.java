@@ -252,7 +252,7 @@ public class Horizontal implements Clusterer,
     public void determineClusters( Partition partition ) throws ClustererException {
         Set s = partition.getNodeIDs();
         List l = new ArrayList(s.size());
-        mLogger.log("Collapsing jobs in partition " + partition.getID() +
+        mLogger.log("Clustering jobs in partition " + partition.getID() +
                     " " +  s,
                     LogManager.DEBUG_MESSAGE_LEVEL);
 
@@ -323,7 +323,7 @@ public class Horizontal implements Clusterer,
         int[] cFactor  = new int[] {0, 0, 0, 0}; //the collapse factor for collapsing the jobs
         AggregatedJob fatJob = null;
 
-        mLogger.log("Collapsing jobs of type " + name,
+        mLogger.log("Clustering jobs of type " + name,
                     LogManager.DEBUG_MESSAGE_LEVEL);
 
         //traverse through all the jobs and order them by the
@@ -362,17 +362,17 @@ public class Horizontal implements Clusterer,
             key = (String)entry.getKey();
 
             if( size <= 1 ){
-                //no need to collapse one job. go to the next iteration
-                mLogger.log("\t No collapsing for execution pool " + key,
+                //no need to cluster one job. go to the next iteration
+                mLogger.log("\t No clustering of jobs mapped to execution site " + key,
                             LogManager.DEBUG_MESSAGE_LEVEL);
                 continue;
             }
 
             JobAggregator aggregator = mJobAggregatorFactory.loadInstance( (Job)l.get(0) );
             if(aggregator.entryNotInTC(key)){
-                //no need to collapse one job. go to the next iteration
-                mLogger.log("\t No collapsing for execution pool because job aggregator entry not in tc " + key,
-                            LogManager.DEBUG_MESSAGE_LEVEL);
+                //no need to cluster one job. go to the next iteration
+                mLogger.log("\t No clustering for jobs mapped to execution site "  + key + " as nojob aggregator entry  in tc ",
+                            LogManager.WARNING_MESSAGE_LEVEL);
                 continue;
             }
 
@@ -381,7 +381,7 @@ public class Horizontal implements Clusterer,
             if( cFactor[0] == 1 && cFactor[1] == 0 ){
                 mLogger.log("\t Collapse factor of (" + cFactor[0] + "," + cFactor[1] +
                             ") determined for pool. " + key +
-                            ". Skipping collapsing", LogManager.DEBUG_MESSAGE_LEVEL);
+                            ". Skipping clustering", LogManager.DEBUG_MESSAGE_LEVEL);
                 continue;
             }
 
@@ -401,7 +401,7 @@ public class Horizontal implements Clusterer,
 			    e );
 		}
 
-		mLogger.log( "\t Collapsing jobs at execution pool " + key
+		mLogger.log( "\t Clustering jobs mapped to execution site " + key
 		        + " having maximum run time  " + cFactor[2],
 		        LogManager.DEBUG_MESSAGE_LEVEL );
 
@@ -441,7 +441,7 @@ public class Horizontal implements Clusterer,
             //from the properties file. ceiling is (x + y -1)/y
             //cFactor = (size + 2)/3;
 	    else {
-		mLogger.log( "\t Collapsing jobs at execution pool " + key
+		mLogger.log( "\t Clustering jobs mapped to execution site " + key
 		        + " with collapse factor " + cFactor[0] + ","
 		        + cFactor[1], LogManager.DEBUG_MESSAGE_LEVEL );
 		if (cFactor[0] >= size) {
@@ -760,7 +760,7 @@ public class Horizontal implements Clusterer,
     private void collapseJobs(Partition partition){
         Set s = partition.getNodeIDs();
         List l = new ArrayList(s.size());
-        mLogger.log("Collapsing jobs in partition " + partition.getID() +
+        mLogger.log("Clustering jobs in partition " + partition.getID() +
                     " " +  s,
                     LogManager.DEBUG_MESSAGE_LEVEL);
 
@@ -819,7 +819,7 @@ public class Horizontal implements Clusterer,
      *
      * @return int array of size 4 where int[0] is the the collapse factor
      *         int[1] is the number of jobs for whom collapsing is int[0] + 1.
-     *         int [2] is maximum time for which the clusterd job should run.
+     *         int [2] is maximum time for which the clustered job should run.
      *         int [3] is time for which the single job would run.
      */
     public int[] getCollapseFactor(String pool, Job job, int size) {
