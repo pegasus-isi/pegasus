@@ -12,34 +12,19 @@
  * Copyright 1999-2004 University of Chicago and The University of
  * Southern California. All rights reserved.
  */
-#include <sys/types.h>
-#include <ctype.h>
-#include <errno.h>
+#ifndef _UTILS_H
+#define _UTILS_H
+
 #include <stdio.h>
-#include <time.h>
+#include <sys/types.h>
 #include <sys/time.h>
-#include <sys/resource.h>
-#include <sys/wait.h>
-#include <signal.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <string.h>
-#include <stdlib.h>
-#include "getif.h"
+#include <time.h>
 
-int
-main( int argc, char* argv[] )
-{
-  int result = 0;
-  char abuffer[128], ibuffer[128];
+extern void xmlquote(FILE *out, const char* msg, size_t msglen);
+extern char* fmtisodate(time_t seconds, long micros);
+extern double doubletime(const struct timeval t);
+extern void now(struct timeval* t);
+extern const char* getTempDir(void);
+extern char* sizer(char* buffer, size_t capacity, size_t vsize, const void* value);
 
-  if ( argc > 1 ) {
-    getif_debug = atoi(argv[1]);
-  } else {
-    getif_debug = -1;
-  }
-
-  whoami( abuffer, sizeof(abuffer), ibuffer, sizeof(ibuffer) );
-  printf( "primary interface %s has address %s\n", ibuffer, abuffer );
-  return result;
-}
+#endif /* _UTILS_H */

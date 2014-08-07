@@ -21,36 +21,8 @@
 #include <sys/socket.h>
 #include <net/if.h>
 
-extern int getif_debug; /* enable debugging code paths */
-
-extern
-int
-interface_list( struct ifconf* ifc );
-/* purpose: returns the list of interfaces
- * paramtr: ifc (IO): initializes structure with buffer and length
- * returns: sockfd for further queries, or -1 to indicate an error. 
- * warning: caller must free memory in ifc.ifc_buf
- *          caller must close sockfd (result value)
- */
-
-extern 
-struct ifreq* 
-primary_interface();
-/* purpose: obtain the primary interface information
- * returns: a newly-allocated structure containing the interface info,
- *          or NULL to indicate an error. 
- */
-
-extern 
-void 
-whoami( char* abuffer, size_t asize, 
-        char* ibuffer, size_t isize );
-/* purpose: copy the primary interface's IPv4 dotted quad into the given buffer
- * paramtr: abuffer (OUT): start of buffer to put IPv4 dotted quad
- *          asize (IN): maximum capacity the abuffer is willing to accept
- *          ibuffer (OUT): start of buffer to put the primary if name
- *          isize (IN): maximum capacity the ibuffer is willing to accept
- * returns: the modified buffers. 
- */
+extern int interface_list( struct ifconf* ifc );
+extern struct ifreq* primary_interface();
+extern void whoami( char* abuffer, size_t asize, char* ibuffer, size_t isize );
 
 #endif /* _GETIF_H */

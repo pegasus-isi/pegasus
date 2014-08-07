@@ -18,90 +18,79 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "debug.h"
 #include "parse.h"
+#include "utils.h"
 
 /* In Linux, 32 pages is the max for a single argument.
  * In Darwin it is larger, but we will just use the same
  * value for simplicity. Since we don't limit the number
  * of arguments we could still exceed the max, but then
- * execve will fail with a nice error. 
+ * execve will fail with a nice error.
  */
 #define KS_ARG_MAX 131072
 
-size_t
-countNodes( const Node* head )
-/* purpose: count the number of element in list
- * paramtr: head (IN): start of the list.
- * returns: number of elements in list. */
-{
-  const Node* temp;
-  size_t result = 0;
-  for ( temp = head; temp; temp = temp->next ) result++;
-  return result;
+size_t countNodes(const Node* head) {
+    /* purpose: count the number of element in list
+     * paramtr: head (IN): start of the list.
+     * returns: number of elements in list. */
+    const Node* temp;
+    size_t result = 0;
+    for (temp = head; temp; temp = temp->next) result++;
+    return result;
 }
 
-void
-deleteNodes( Node* head )
-/* purpose: clean up the created list and free its memory.
- * paramtr: head (IO): start of the list. */
-{
-  Node* temp;
-  while ( (temp=head) ) {
-    head = head->next;
-    free((void*) temp->data );
-    free((void*) temp );
-  }
+void deleteNodes(Node* head) {
+    /* purpose: clean up the created list and free its memory.
+     * paramtr: head (IO): start of the list. */
+    Node* temp;
+    while ((temp=head)) {
+        head = head->next;
+        free((void*) temp->data);
+        free((void*) temp);
+    }
 }
 
-static int debug = 0;
 
-static
-void
-add( Node** head, Node** tail, const char* data )
-     /* purpose: add an data item to the end of the list
-      * paramtr: head (OUT): head of the list, NULL for no list
-      *          tail (OUT): tail of the list, will be adjusted
-      *          data (IN): string to save the pointer to (shallow copy)
-      */
-{
-  Node* temp = (Node*) malloc( sizeof(Node) );
-  temp->data = data;
-  temp->next = NULL;
+static void add(Node** head, Node** tail, const char* data) {
+    /* purpose: add an data item to the end of the list
+     * paramtr: head (OUT): head of the list, NULL for no list
+     *          tail (OUT): tail of the list, will be adjusted
+     *          data (IN): string to save the pointer to (shallow copy)
+     */
+    Node* temp = (Node*) malloc(sizeof(Node));
+    temp->data = data;
+    temp->next = NULL;
 
-  if ( *head == NULL ) *head = *tail = temp;
-  else {
-    (*tail)->next = temp;
-    *tail = temp;
-  }
+    if (*head == NULL) {
+        *head = *tail = temp;
+    } else {
+        (*tail)->next = temp;
+        *tail = temp;
+    }
 }
 
-static
-void
-resolve( char** v, char* varname, char** p, char* buffer, size_t size )
-     /* purpose: lookup the variable name in the environment, and
-      *          copy the environment value into the buffer
-      * paramtr: v (IO): final position of the variable name buffer
-      *          varname (IN): start of variable name buffer
-      *          p (IO): cursor position of output buffer
-      *          buffer: (IO): start of output buffer 
-      *          size (IN): size of output buffer
-      */
-{
-  char* value = 0;
+static void resolve(char** v, char* varname, char** p, char* buffer, size_t size) {
+    /* purpose: lookup the variable name in the environment, and
+     *          copy the environment value into the buffer
+     * paramtr: v (IO): final position of the variable name buffer
+     *          varname (IN): start of variable name buffer
+     *          p (IO): cursor position of output buffer
+     *          buffer: (IO): start of output buffer
+     *          size (IN): size of output buffer
+     */
+    char* value = 0;
 
-  **v = 0;
-  if ( (value = getenv(varname)) ) {
-    char* pp = *p;
-    if ( debug ) debugmsg( "# %s=%s\n", varname, value );
-    while ( pp - buffer < size && *value ) *pp++ = *value++; 
-    *p = pp;
-  } else {
-    debugmsg( "ERROR: Variable $%s does not exist\n", varname );
-    exit(1);
-  }
+    **v = 0;
+    if ((value = getenv(varname))) {
+        char* pp = *p;
+        while (pp - buffer < size && *value) *pp++ = *value++;
+        *p = pp;
+    } else {
+        fprintf(stderr, "ERROR: Variable $%s does not exist\n", varname);
+        exit(1);
+    }
 
-  *v = varname;
+    *v = varname;
 }
 
 /* Parsing pre- and postjob argument line splits whitespaces in shell fashion.
@@ -119,7 +108,7 @@ resolve( char** v, char* varname, char** p, char* buffer, size_t size )
  *  *  | 6 | translate abfnrtv to controls, other store verbatim
  *  FS | 7 | Do Fv followed by Sb
  *     | 8 | print error and exit
- * 
+ *
  * special final states:
  *
  * state | meaning
@@ -157,48 +146,47 @@ typedef const char Row[10];
 typedef const Row Map[15];
 
 static Map actionmap1 = {
-  { 5, 5, 5, 0, 0, 5, 5, 0, 5, 0 }, /*  0 */
-  { 1, 5, 5, 0, 0, 5, 5, 0, 1, 0 }, /*  1 */
-  { 8, 0, 5, 0, 0, 0, 5, 0, 0, 0 }, /*  2 */
-  { 8, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /*  3 */
-  { 8, 5, 4, 0, 0, 5, 5, 0, 0, 0 }, /*  4 */
-  { 8, 0, 5, 0, 0, 0, 5, 0, 0, 0 }, /*  5 (unused) */
-  { 8, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /*  6 (unused) */
-  { 8, 0, 0, 0, 0, 0, 0, 6, 0, 0 }, /*  7 */
-  { 8, 8, 8, 5, 8, 8, 8, 2, 8, 8 }, /*  8 */
-  { 8, 8, 8, 8, 3, 8, 2, 2, 2, 2 }, /*  9 */
-  { 8, 3, 3, 3, 3, 3, 3, 2, 3, 2 }, /* 10 */
-  { 8, 8, 8, 5, 8, 8, 8, 2, 8, 8 }, /* 11 */
-  { 8, 8, 8, 8, 3, 8, 2, 2, 2, 2 }, /* 12 */
-  { 4, 3, 3, 3, 3, 8, 2, 2, 3, 7 }, /* 13 */
-  { 8, 0, 0, 0, 0, 0, 0, 0, 0, 0 }  /* 14 */ 
+    { 5, 5, 5, 0, 0, 5, 5, 0, 5, 0 }, /*  0 */
+    { 1, 5, 5, 0, 0, 5, 5, 0, 1, 0 }, /*  1 */
+    { 8, 0, 5, 0, 0, 0, 5, 0, 0, 0 }, /*  2 */
+    { 8, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /*  3 */
+    { 8, 5, 4, 0, 0, 5, 5, 0, 0, 0 }, /*  4 */
+    { 8, 0, 5, 0, 0, 0, 5, 0, 0, 0 }, /*  5 (unused) */
+    { 8, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /*  6 (unused) */
+    { 8, 0, 0, 0, 0, 0, 0, 6, 0, 0 }, /*  7 */
+    { 8, 8, 8, 5, 8, 8, 8, 2, 8, 8 }, /*  8 */
+    { 8, 8, 8, 8, 3, 8, 2, 2, 2, 2 }, /*  9 */
+    { 8, 3, 3, 3, 3, 3, 3, 2, 3, 2 }, /* 10 */
+    { 8, 8, 8, 5, 8, 8, 8, 2, 8, 8 }, /* 11 */
+    { 8, 8, 8, 8, 3, 8, 2, 2, 2, 2 }, /* 12 */
+    { 4, 3, 3, 3, 3, 8, 2, 2, 3, 7 }, /* 13 */
+    { 8, 0, 0, 0, 0, 0, 0, 0, 0, 0 }  /* 14 */
 };
 
 static Map statemap1 = {
-  { 32,  4,  2,  1,  1, 11, 14,  1,  0,  1 }, /*  0 */
-  { 32,  4,  2,  1,  1, 11, 14,  1,  0,  1 }, /*  1 */
-  { 33,  2,  1,  2,  2,  2,  3,  2,  2,  2 }, /*  2 */
-  { 33,  2,  2,  2,  2,  2,  2,  2,  2,  2 }, /*  3 */
-  { 34,  1,  0,  4,  4,  8,  7,  4,  4,  4 }, /*  4 */
-  { 33,  5,  4,  5,  5,  5,  6,  5,  5,  5 }, /*  5 (unused) */
-  { 33,  5,  5,  5,  5,  5,  5,  5,  5,  5 }, /*  6 (unused) */
-  { 34,  4,  4,  4,  4,  4,  4,  4,  4,  5 }, /*  7 */
-  { 34, 34, 34,  9, 34, 34, 34, 10, 34, 34 }, /*  8 */
-  { 36, 36, 36, 36,  4, 36,  9,  9,  9,  9 }, /*  9 */
-  { 34,  1,  4,  4,  4,  8,  4, 10,  4, 10 }, /* 10 */
-  { 35, 35, 35, 12, 35, 35, 35, 13, 35, 35 }, /* 11 */
-  { 36, 36, 36, 36,  1, 35, 12, 12, 12, 12 }, /* 12 */
-  { 32,  4,  2,  1,  1, 35, 13, 13,  1,  1 }, /* 13 */
-  { 37,  1,  1,  1,  1,  1,  1,  1,  1,  1 }  /* 14 */ 
+    { 32,  4,  2,  1,  1, 11, 14,  1,  0,  1 }, /*  0 */
+    { 32,  4,  2,  1,  1, 11, 14,  1,  0,  1 }, /*  1 */
+    { 33,  2,  1,  2,  2,  2,  3,  2,  2,  2 }, /*  2 */
+    { 33,  2,  2,  2,  2,  2,  2,  2,  2,  2 }, /*  3 */
+    { 34,  1,  0,  4,  4,  8,  7,  4,  4,  4 }, /*  4 */
+    { 33,  5,  4,  5,  5,  5,  6,  5,  5,  5 }, /*  5 (unused) */
+    { 33,  5,  5,  5,  5,  5,  5,  5,  5,  5 }, /*  6 (unused) */
+    { 34,  4,  4,  4,  4,  4,  4,  4,  4,  5 }, /*  7 */
+    { 34, 34, 34,  9, 34, 34, 34, 10, 34, 34 }, /*  8 */
+    { 36, 36, 36, 36,  4, 36,  9,  9,  9,  9 }, /*  9 */
+    { 34,  1,  4,  4,  4,  8,  4, 10,  4, 10 }, /* 10 */
+    { 35, 35, 35, 12, 35, 35, 35, 13, 35, 35 }, /* 11 */
+    { 36, 36, 36, 36,  1, 35, 12, 12, 12, 12 }, /* 12 */
+    { 32,  4,  2,  1,  1, 35, 13, 13,  1,  1 }, /* 13 */
+    { 37,  1,  1,  1,  1,  1,  1,  1,  1,  1 }  /* 14 */
 };
 
-static 
-const char* errormessage[5] = {
-  "Error 1: missing closing apostrophe\n",
-  "Error 2: missing closing quote\n",
-  "Error 3: illegal variable name\n",
-  "Error 4: missing closing brace\n",
-  "Error 5: premature end of string\n"
+static const char* errormessage[5] = {
+    "Error 1: missing closing apostrophe\n",
+    "Error 2: missing closing quote\n",
+    "Error 3: illegal variable name\n",
+    "Error 4: missing closing brace\n",
+    "Error 5: premature end of string\n"
 };
 
 static const char* translation = "abnrtv";
@@ -229,241 +217,236 @@ static const char translationmap[] = "\a\b\n\r\t\v";
  *     6 | E1   | 5,Sb | 5,Sb | 5,Sb | 5,Sb | 5,Sb | 5,Sb | 5,Sb | 5,Sb | 5,Sb |
  */
 static Map actionmap2 = {
-  { 1, 0, 0, 0, 0, 5, 5, 0, 0, 0 }, /*  0 FIXED: \\ 0 -> 5 */
-  { 8, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /*  1 */
-  { 8, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /*  2 */
-  { 8, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /*  3 */
-  { 8, 0, 0, 0, 0, 5, 0, 0, 0, 0 }, /*  4 */
-  { 8, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /*  5 (unused) */
-  { 8, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /*  6 (unused) */
-  { 8, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /*  7 */
-  { 8, 8, 8, 5, 8, 8, 8, 2, 8, 8 }, /*  8 */
-  { 8, 8, 8, 8, 3, 8, 2, 2, 2, 2 }, /*  9 */
-  { 8, 7, 7, 7, 7, 3, 7, 2, 7, 2 }, /* 10 */
-  { 8, 8, 8, 5, 8, 8, 8, 2, 8, 8 }, /* 11 */
-  { 8, 8, 8, 8, 3, 8, 2, 2, 2, 2 }, /* 12 */
-  { 4, 7, 7, 7, 7, 8, 2, 2, 7, 7 }, /* 13 */
-  { 8, 8, 8, 8, 8, 8, 8, 8, 8, 8 }  /* unused */
+    { 1, 0, 0, 0, 0, 5, 5, 0, 0, 0 }, /*  0 FIXED: \\ 0 -> 5 */
+    { 8, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /*  1 */
+    { 8, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /*  2 */
+    { 8, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /*  3 */
+    { 8, 0, 0, 0, 0, 5, 0, 0, 0, 0 }, /*  4 */
+    { 8, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /*  5 (unused) */
+    { 8, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /*  6 (unused) */
+    { 8, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /*  7 */
+    { 8, 8, 8, 5, 8, 8, 8, 2, 8, 8 }, /*  8 */
+    { 8, 8, 8, 8, 3, 8, 2, 2, 2, 2 }, /*  9 */
+    { 8, 7, 7, 7, 7, 3, 7, 2, 7, 2 }, /* 10 */
+    { 8, 8, 8, 5, 8, 8, 8, 2, 8, 8 }, /* 11 */
+    { 8, 8, 8, 8, 3, 8, 2, 2, 2, 2 }, /* 12 */
+    { 4, 7, 7, 7, 7, 8, 2, 2, 7, 7 }, /* 13 */
+    { 8, 8, 8, 8, 8, 8, 8, 8, 8, 8 }  /* unused */
 };
 
 static Map statemap2 = {
-  { 32,  4,  2,  0,  0, 11,  1,  0,  0,  0 }, /*  0 */
-  { 37,  0,  0,  0,  0,  0,  0,  0,  0,  0 }, /*  1 */
-  { 33,  2,  0,  2,  2,  2,  3,  2,  2,  2 }, /*  2 */
-  { 33,  2,  2,  2,  2,  2,  2,  2,  2,  2 }, /*  3 */
-  { 34,  0,  4,  4,  4,  8,  7,  4,  4,  4 }, /*  4 */
-  { 33,  5,  4,  5,  5,  5,  6,  5,  5,  5 }, /*  5 (unused) */
-  { 33,  5,  5,  5,  5,  5,  5,  5,  5,  5 }, /*  6 (unused) */
-  { 34,  4,  4,  4,  4,  4,  4,  4,  4,  4 }, /*  7 */
-  { 34, 34, 34,  9, 35, 35, 35, 10, 35, 35 }, /*  8 */
-  { 36, 36, 36, 36,  4, 35,  9,  9,  9,  9 }, /*  9 */
-  { 34,  0,  4,  4,  4,  8,  4, 10,  4, 10 }, /* 10 */
-  { 35, 35, 35, 12, 35, 35, 35, 13, 35, 35 }, /* 11 */
-  { 36, 36, 36, 36,  0, 35, 12, 12, 12, 12 }, /* 12 */
-  { 32,  4,  2,  0,  0, 35, 13, 13,  0,  0 }, /* 13 */
-  { 32, 32, 32, 32, 32, 32, 32, 32, 32, 32 }  /* unused */
+    { 32,  4,  2,  0,  0, 11,  1,  0,  0,  0 }, /*  0 */
+    { 37,  0,  0,  0,  0,  0,  0,  0,  0,  0 }, /*  1 */
+    { 33,  2,  0,  2,  2,  2,  3,  2,  2,  2 }, /*  2 */
+    { 33,  2,  2,  2,  2,  2,  2,  2,  2,  2 }, /*  3 */
+    { 34,  0,  4,  4,  4,  8,  7,  4,  4,  4 }, /*  4 */
+    { 33,  5,  4,  5,  5,  5,  6,  5,  5,  5 }, /*  5 (unused) */
+    { 33,  5,  5,  5,  5,  5,  5,  5,  5,  5 }, /*  6 (unused) */
+    { 34,  4,  4,  4,  4,  4,  4,  4,  4,  4 }, /*  7 */
+    { 34, 34, 34,  9, 35, 35, 35, 10, 35, 35 }, /*  8 */
+    { 36, 36, 36, 36,  4, 35,  9,  9,  9,  9 }, /*  9 */
+    { 34,  0,  4,  4,  4,  8,  4, 10,  4, 10 }, /* 10 */
+    { 35, 35, 35, 12, 35, 35, 35, 13, 35, 35 }, /* 11 */
+    { 36, 36, 36, 36,  0, 35, 12, 12, 12, 12 }, /* 12 */
+    { 32,  4,  2,  0,  0, 35, 13, 13,  0,  0 }, /* 13 */
+    { 32, 32, 32, 32, 32, 32, 32, 32, 32, 32 }  /* unused */
 };
 
-static
-int
-xlate( char input ) 
-     /* purpose: translate an input character into the character class.
-      * paramtr: input (IN): input character
-      * returns: numerical character class for input character.
-      */
-{
-  switch ( input ) {
-  case 0:
-    return 0;
-  case '\"': /* " */
-    return 1;
-  case '\'': /* ' */
-    return 2;
-  case '{':
-    return 3;
-  case '}':
-    return 4;
-  case '$':
-    return 5;
-  case '\\':
-    return 6;
-  default: 
-    return ( (isalnum(input) || input=='_') ? 7 : ( isspace(input) ? 8 : 9 ) );
-  }
+static int xlate(char input) {
+    /* purpose: translate an input character into the character class.
+     * paramtr: input (IN): input character
+     * returns: numerical character class for input character.
+     */
+    switch (input) {
+        case 0:
+            return 0;
+        case '\"': /* " */
+            return 1;
+        case '\'': /* ' */
+            return 2;
+        case '{':
+            return 3;
+        case '}':
+            return 4;
+        case '$':
+            return 5;
+        case '\\':
+            return 6;
+        default:
+            if (isalnum(input) || input=='_') {
+                return 7;
+            } else if (isspace(input)) {
+                return 8;
+            } else {
+                return 9;
+            }
+    }
 }
 
-static
-void
-internalParse( const char* line, const char** cursor, int* state,
-               Map actionmap, Map statemap,
-               Node** headp, Node** tailp,
-               char** pp, char* buffer, size_t size,
-               char** vp, char* varname, size_t vsize )
-{
-  const char* s = *cursor;
-  char* p = *pp;
-  char* v = *vp;
-  Node* head = *headp;
-  Node* tail = *tailp;
+static void internalParse(const char* line, const char** cursor, int* state,
+                          Map actionmap, Map statemap, Node** headp,
+                          Node** tailp, char** pp, char* buffer, size_t size,
+                          char** vp, char* varname, size_t vsize) {
+    const char* s = *cursor;
+    char* p = *pp;
+    char* v = *vp;
+    Node* head = *headp;
+    Node* tail = *tailp;
 
-  while ( *state < 32 ) {
-    int charclass = xlate( *s );
-    int newstate = statemap[*state][charclass];
+    while (*state < 32) {
+        int charclass = xlate(*s);
+        int newstate = statemap[*state][charclass];
 
-    if (debug) {
-      debugmsg("# pos=%d, state=%02d, class=%d, action=%d, newstate=%02d, char=%02X (%c)\n",
-               p-buffer, *state, charclass, actionmap[*state][charclass], newstate, *s,
-               ((*s & 127) >= 32) ? *s : '.');
+        switch (actionmap[*state][charclass]) {
+            case 0: /* store into buffer */
+                if (p-buffer < size) {
+                    *p = *s;
+                    p++;
+                } else {
+                    fprintf(stderr, "ERROR: Argument too long\n");
+                    exit(1);
+                }
+                break;
+            case 1: /* conditionally finalize buffer */
+                *p = '\0';
+                add(&head, &tail, strdup(buffer));
+                p = buffer;
+                break;
+            case 2: /* store variable part */
+                if (v-varname < vsize) {
+                    *v++ = *s;
+                } else {
+                    fprintf(stderr, "ERROR: Variable name too long\n");
+                    exit(1);
+                }
+                break;
+            case 3: /* finalize variable name */
+                resolve(&v, varname, &p, buffer, size);
+                break;
+            case 4: /* case 3 followed by case 1 */
+                resolve(&v, varname, &p, buffer, size);
+                *p = '\0';
+                add(&head, &tail, strdup(buffer));
+                p = buffer;
+                break;
+            case 5: /* skip */
+                break;
+            case 6: /* translate control escapes */
+                if (p-buffer < size) {
+                    char* x = strchr(translation, *s);
+                    *p++ = (x == NULL ? *s : translationmap[x-translation]);
+                }
+                break;
+            case 7: /* case 3 followed by case 0 */
+                resolve(&v, varname, &p, buffer, size);
+                if (p - buffer < size) *p++ = *s;
+                break;
+            case 8: /* print error message */
+                if (newstate > 32) {
+                    fputs(errormessage[newstate-33], stderr);
+                } else {
+                    fprintf(stderr,
+                            "# ARG PARSER ERROR: state=%02d, class=%d, "
+                            "action=%d, newstate=%02d, char=%02X (%c)\n",
+                            *state, charclass, 8, newstate, *s, 
+                            ((*s & 127) >= 32) ? *s : '.');
+                }
+                exit(1);
+                break;
+        }
+        ++s;
+        *state = newstate;
     }
 
-    switch ( actionmap[*state][charclass] ) {
-    case 0: /* store into buffer */
-      if ( p-buffer < size ) {
-          *p = *s;
-          p++;
-      } else {
-          debugmsg("ERROR: Argument too long\n");
-          exit(1);
-      }
-      break;
-    case 1: /* conditionally finalize buffer */
-      *p = '\0';
-      add( &head, &tail, strdup(buffer) );
-      p = buffer;
-      break;
-    case 2: /* store variable part */
-      if ( v-varname < vsize ) {
-          *v++ = *s;
-      } else {
-          debugmsg("ERROR: Variable name too long\n");
-          exit(1);
-      }
-      break;
-    case 3: /* finalize variable name */
-      resolve( &v, varname, &p, buffer, size );
-      break;
-    case 4: /* case 3 followed by case 1 */
-      resolve( &v, varname, &p, buffer, size );
-      *p = '\0';
-      add( &head, &tail, strdup(buffer) );
-      p = buffer;
-      break;
-    case 5: /* skip */
-      break;
-    case 6: /* translate control escapes */
-      if ( p-buffer < size ) {
-        char* x = strchr( translation, *s );
-        *p++ = ( x == NULL ? *s : translationmap[x-translation] );
-        if ( debug ) debugmsg( "# escape %c -> %d\n", *s, *(p-1) );
-      }
-      break;
-    case 7: /* case 3 followed by case 0 */
-      resolve( &v, varname, &p, buffer, size );
-      if ( p - buffer < size ) *p++ = *s;
-      break;
-    case 8: /* print error message */
-      if (newstate > 32) {
-        fputs( errormessage[newstate-33], stderr );
-      } else {
-        debugmsg( "# ARG PARSER ERROR: state=%02d, class=%d, action=%d, newstate=%02d, char=%02X (%c)\n",
-                 *state, charclass, 8, newstate, *s, ((*s & 127) >= 32) ? *s : '.' );
-      }
-      exit(1);
-      break;
+    /* update various cursors */
+    *tailp = tail;
+    *headp = head;
+    *pp = p;
+    *vp = v;
+    *cursor = s;
+}
+
+Node* parseCommandLine(const char* line, int* state) {
+    /* purpose: parse a commandline into a list of arguments while
+     *          obeying single quotes, double quotes and replacing
+     *          environment variable names.
+     * paramtr: line (IN): commandline to parse
+     *          state (IO): start state to begin, final state on exit
+     *          state==32 is ok, state>32 is an error condition which
+     *          lead to a premature exit in parsing.
+     * returns: A (partial on error) list of split arguments. */
+    if (line == NULL) {
+        return NULL;
     }
-    ++s;
-    *state = newstate;
-  }
-  
-  /* update various cursors */
-  *tailp = tail;
-  *headp = head;
-  *pp = p;
-  *vp = v;
-  *cursor = s;
-}
 
-Node*
-parseCommandLine( const char* line, int* state )
-/* purpose: parse a commandline into a list of arguments while
- *          obeying single quotes, double quotes and replacing
- *          environment variable names.
- * paramtr: line (IN): commandline to parse
- *          state (IO): start state to begin, final state on exit
- *          state==32 is ok, state>32 is an error condition which
- *          lead to a premature exit in parsing.
- * returns: A (partial on error) list of split arguments. */
-{
-  if ( line == NULL ) return NULL;
+    Node* head = NULL;
+    Node* tail = NULL;
 
-  Node* head = NULL;
-  Node* tail = NULL;
+    size_t size = KS_ARG_MAX;
+    char* buffer = malloc(size);
+    if (buffer == NULL) {
+        perror("malloc");
+        exit(1);
+    }
+    char* p = buffer;
 
-  size_t size = KS_ARG_MAX;
-  char* buffer = malloc(size);
-  if (buffer == NULL) {
-      perror("malloc");
-      exit(1);
-  }
-  char* p = buffer;
+    char varname[128];
+    size_t vsize = sizeof(varname);
+    char* v = varname;
+    const char* s = line;
 
-  char varname[128];
-  size_t vsize = sizeof(varname);
-  char* v = varname;
-  const char* s = line;
+    internalParse(line, &s, state, actionmap1, statemap1, &head, &tail,
+                  &p, buffer, size, &v, varname, vsize);
 
-  internalParse( line, &s, state, actionmap1, statemap1, &head, &tail, 
-                 &p, buffer, size, &v, varname, vsize );
+    free(buffer);
 
-  free(buffer);
-
-  return head;
+    return head;
 }
 
 
-Node*
-parseArgVector( int argc, char* const* argv, int* state )
-/* purpose: parse an already split commandline into a list of arguments while
- *          ONLY translating environment variable names that are not prohibited
- *          from translation by some form of quoting (not double quotes, though).
- * paramtr: argc (IN): number of arguments in the argument vector
- *          argv (IN): argument vector to parse
- *          state (IO): start state to begin, final state on exit
- *          state==32 is ok, state>32 is an error condition which
- *          lead to a premature exit in parsing.
- * returns: A (partial on error) list of split arguments. The argument number
- *          stays the same, but environment variables were translated.
- */
-{
-  if ( argc == 0 ) return NULL;
+Node* parseArgVector(int argc, char* const* argv, int* state) {
+    /* purpose: parse an already split commandline into a list of arguments while
+     *          ONLY translating environment variable names that are not prohibited
+     *          from translation by some form of quoting (not double quotes, though).
+     * paramtr: argc (IN): number of arguments in the argument vector
+     *          argv (IN): argument vector to parse
+     *          state (IO): start state to begin, final state on exit
+     *          state==32 is ok, state>32 is an error condition which
+     *          lead to a premature exit in parsing.
+     * returns: A (partial on error) list of split arguments. The argument number
+     *          stays the same, but environment variables were translated.
+     */
+    if (argc == 0) {
+        return NULL;
+    }
 
-  int i;
+    int i;
 
-  Node* head = NULL;
-  Node* tail = NULL;
+    Node* head = NULL;
+    Node* tail = NULL;
 
-  size_t size = KS_ARG_MAX;
-  char* buffer = malloc(size);
-  if (buffer == NULL) {
-      perror("malloc");
-      exit(1);
-  }
-  char* p = buffer;
-  
-  char varname[128];
-  size_t vsize = sizeof(varname);
-  char* v = varname;
+    size_t size = KS_ARG_MAX;
+    char* buffer = malloc(size);
+    if (buffer == NULL) {
+        perror("malloc");
+        exit(1);
+    }
+    char* p = buffer;
 
-  /* invoke parsing once for each argument */
-  for (i=0; i<argc && *state <= 32; ++i) {
-    const char* s = argv[i];
-    *state = 0;
-    internalParse( argv[i], &s, state, actionmap2, statemap2, &head, &tail, 
-                   &p, buffer, size, &v, varname, vsize );
-  }
+    char varname[128];
+    size_t vsize = sizeof(varname);
+    char* v = varname;
 
-  free(buffer);
+    /* invoke parsing once for each argument */
+    for (i=0; i<argc && *state <= 32; ++i) {
+        const char* s = argv[i];
+        *state = 0;
+        internalParse(argv[i], &s, state, actionmap2, statemap2, &head, &tail,
+                      &p, buffer, size, &v, varname, vsize);
+    }
 
-  return head;
+    free(buffer);
+
+    return head;
 }
 

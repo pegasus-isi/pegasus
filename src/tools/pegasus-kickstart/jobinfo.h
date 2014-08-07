@@ -22,12 +22,10 @@
 #include "statinfo.h"
 #include "procinfo.h"
 
-typedef struct _JobInfo {
-  /* private */
+typedef struct {
   int            isValid;     /* 0: uninitialized, 1:valid, 2:app not found */
   char*          copy;        /* buffer for argument separation */
 
-  /* public */
   char* const*   argv;        /* application executable and arguments */
   int            argc;        /* application CLI number of arguments */
   StatInfo       executable;  /* stat() info for executable, if available */
@@ -44,40 +42,9 @@ typedef struct _JobInfo {
   ProcInfo *     children;    /* per-process memory, I/O and CPU usage */
 } JobInfo;
 
-extern
-void
-initJobInfo( JobInfo* jobinfo, int argc, char* const* argv );
-/* purpose: initialize the data structure with defaults.
- * paramtr: appinfo (OUT): initialized memory block
- *          argc (IN): adjusted argument count
- *          argv (IN): adjusted argument vector to point to app.
- */
-
-extern
-void
-initJobInfoFromString( JobInfo* jobinfo, const char* commandline );
-/* purpose: initialize the data structure with default
- * paramtr: jobinfo (OUT): initialized memory block
- *          commandline (IN): commandline concatenated string to separate
- */
-
-extern
-int
-printXMLJobInfo( FILE *out, int indent, const char* tag,
-                 const JobInfo* job );
-/* purpose: format the job information into the given stream as XML.
- * paramtr: out (IO): the stream
- *          indent (IN): indentation level
- *          tag (IN): name to use for element tags.
- *          job (IN): job info to print.
- * returns: number of characters put into buffer (buffer length)
- */
-
-extern
-void
-deleteJobInfo( JobInfo* jobinfo );
-/* purpose: destructor
- * paramtr: runinfo (IO): valid JobInfo structure to destroy. 
- */
+extern void initJobInfo(JobInfo* jobinfo, int argc, char* const* argv);
+extern void initJobInfoFromString(JobInfo* jobinfo, const char* commandline);
+extern int printXMLJobInfo(FILE *out, int indent, const char* tag, const JobInfo* job);
+extern void deleteJobInfo(JobInfo* jobinfo);
 
 #endif /* _JOBINFO_H */
