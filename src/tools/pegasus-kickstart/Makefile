@@ -11,6 +11,8 @@ ifndef ${prefix}
     prefix = $(CURDIR)/../../../
 endif
 
+libdir = ${prefix}/$(shell $(CURDIR)/../../../release-tools/system/determine-lib-dir)/pegasus
+
 ifeq (DARWIN,${SYSTEM})
     SYSTEM_OBJ = machine/darwin.o
 endif
@@ -69,7 +71,8 @@ version.h:
 install: $(TARGET)
 	$(INSTALL) -m 0755 pegasus-kickstart $(prefix)/bin
 ifeq (LINUX,${SYSTEM})
-	$(INSTALL) -m 0755 libinterpose.so $(prefix)/lib/pegasus
+	mkdir -p $(libdir)
+	$(INSTALL) -m 0755 libinterpose.so $(libdir)
 endif
 
 clean:
