@@ -643,7 +643,7 @@ size_t printXMLStatInfo(FILE *out, int indent, const char* tag, const char* id,
         fprintf(out, "%*s<data%s", indent+2, "",
                 (fsize > dsize ? " truncated=\"true\"" : ""));
         if (fsize > 0) {
-            char* data = (char*) malloc(dsize+1);
+            char* buf = (char*) malloc(BUFSIZ);
             int fd = dup(info->file.descriptor);
 
             fprintf(out, ">");
@@ -654,14 +654,25 @@ size_t printXMLStatInfo(FILE *out, int indent, const char* tag, const char* id,
                     offset = fsize - dsize;
                 }
                 if (lseek(fd, offset, SEEK_SET) != -1) {
-                    ssize_t rsize = read(fd, data, dsize);
-                    xmlquote(out, data, rsize);
+                    ssize_t total = 0;
+                    while (total < dsize) {
+                        ssize_t rsize = read(fd, buf, BUFSIZ);
+                        if (rsize == 0) {
+                            break;
+                        } else if (rsize < 0) {
+                            fprintf(stderr, "ERROR reading %s: %s",
+                                    info->file.name, strerror(errno));
+                            break;
+                        }
+                        xmlquote(out, buf, rsize);
+                        total += rsize;
+                    }
                 }
                 close(fd);
             }
 
             fprintf(out, "</data>\n");
-            free((void*) data);
+            free(buf);
         } else {
             fprintf(out, "/>\n");
         }
