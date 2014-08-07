@@ -73,7 +73,10 @@ ifeq (LINUX,${SYSTEM})
 endif
 
 clean:
-	$(RM) *.o *.so machine/*.o core core.* version.h $(TARGET)
+	$(RM) *.o *.so machine/*.o core core.* version.h
+
+distclean:
+	$(RM) $(TARGET)
 
 test: $(TARGET)
 	cd $(CURDIR)/test && ./test.sh
