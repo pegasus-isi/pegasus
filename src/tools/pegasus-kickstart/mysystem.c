@@ -55,10 +55,19 @@ static int findInterposeLibrary(char *path, int pathsize) {
         return 0;
     }
 
-    // Not in the kickstart dir, try the ../lib/pegasus/ dir instead
-    dir = dirname(dir);
-    strcpy(lib, dir);
+    char *homedir = dirname(dir);
+
+    // Try the ../lib/pegasus/ dir instead
+    strcpy(lib, homedir);
     strcat(lib, "/lib/pegasus/libinterpose.so");
+    if (access(lib, R_OK) == 0) {
+        strncpy(path, lib, pathsize);
+        return 0;
+    }
+
+    // Try the ../lib64/pegasus/ dir
+    strcpy(lib, homedir);
+    strcat(lib, "/lib64/pegasus/libinterpose.so");
     if (access(lib, R_OK) == 0) {
         strncpy(path, lib, pathsize);
         return 0;
