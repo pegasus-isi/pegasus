@@ -5,6 +5,7 @@ CFLAGS = -Wall -O2 -ggdb -std=gnu99
 LD = $(CC)
 LDLIBS = -lm
 SYSTEM = $(shell uname -s | tr '[a-z]' '[A-Z]' | tr -d '_ -/')
+ARCH = $(shell uname -m)
 TARGET = pegasus-kickstart
 
 ifndef ${prefix}
@@ -18,10 +19,12 @@ ifeq (DARWIN,${SYSTEM})
 endif
 
 ifeq (LINUX,${SYSTEM})
+ifeq (x86_64,${ARCH})
+    TARGET += libinterpose.so
+endif
     CFLAGS += $(shell getconf LFS_CFLAGS 2>>/dev/null)
     LDFLAGS += $(shell getconf LFS_LDFLAGS 2>>/dev/null)
     SYSTEM_OBJ = machine/linux.o syscall.o
-    TARGET += libinterpose.so
 endif
 
 CFLAGS += -D${SYSTEM}
