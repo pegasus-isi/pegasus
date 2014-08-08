@@ -50,7 +50,9 @@
 /* These are all the functions we are interposing */
 static typeof(dup) *orig_dup = NULL;
 static typeof(dup2) *orig_dup2 = NULL;
+#ifdef dup3
 static typeof(dup3) *orig_dup3 = NULL;
+#endif
 static typeof(open) *orig_open = NULL;
 static typeof(open64) *orig_open64 = NULL;
 static typeof(openat) *orig_openat = NULL;
@@ -72,11 +74,19 @@ static typeof(pread64) *orig_pread64 = NULL;
 static typeof(pwrite) *orig_pwrite = NULL;
 static typeof(pwrite64) *orig_pwrite64 = NULL;
 static typeof(readv) *orig_readv = NULL;
+#ifdef preadv
 static typeof(preadv) *orig_preadv = NULL;
+#endif
+#ifdef preadv64
 static typeof(preadv64) *orig_preadv64 = NULL;
+#endif
 static typeof(writev) *orig_writev = NULL;
+#ifdef pwritev
 static typeof(pwritev) *orig_pwritev = NULL;
+#endif
+#ifdef pwritev64
 static typeof(pwritev64) *orig_pwritev64 = NULL;
+#endif
 static typeof(fgetc) *orig_fgetc = NULL;
 static typeof(fputc) *orig_fputc = NULL;
 static typeof(fgets) *orig_fgets = NULL;
@@ -100,9 +110,15 @@ static typeof(truncate) *orig_truncate = NULL;
  * have a record for the file descriptor.
  */
 static typeof(mkstemp) *orig_mkstemp = NULL;
+#ifdef mkostemp
 static typeof(mkostemp) *orig_mkostemp = NULL;
+#endif
+#ifdef mkstemps
 static typeof(mkstemps) *orig_mkstemps = NULL;
+#endif
+#ifdef mkostemps
 static typeof(mkostemps) *orig_mkostemps = NULL;
+#endif
 static typeof(tmpfile) *orig_tmpfile = NULL;
 /* It is not necessary to interpose other tmp functions because
  * they just generate names that need to be passed to open()
@@ -624,6 +640,7 @@ int dup2(int oldfd, int newfd) {
     return rc;
 }
 
+#ifdef dup3
 int dup3(int oldfd, int newfd, int flags) {
     debug("dup3");
 
@@ -639,6 +656,7 @@ int dup3(int oldfd, int newfd, int flags) {
 
     return rc;
 }
+#endif
 
 int open(const char *path, int oflag, ...) {
     debug("open");
@@ -1021,6 +1039,7 @@ ssize_t readv(int fd, const struct iovec *iov, int iovcnt) {
     return rc;
 }
 
+#ifdef preadv
 ssize_t preadv(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
     debug("preadv");
 
@@ -1036,7 +1055,9 @@ ssize_t preadv(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
 
     return rc;
 }
+#endif
 
+#ifdef preadv64
 ssize_t preadv64(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
     debug("preadv64");
 
@@ -1052,6 +1073,7 @@ ssize_t preadv64(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
 
     return rc;
 }
+#endif
 
 ssize_t writev(int fd, const struct iovec *iov, int iovcnt) {
     debug("writev");
@@ -1069,6 +1091,7 @@ ssize_t writev(int fd, const struct iovec *iov, int iovcnt) {
     return rc;
 }
 
+#ifdef pwritev
 ssize_t pwritev(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
     debug("pwritev");
 
@@ -1084,7 +1107,9 @@ ssize_t pwritev(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
 
     return rc;
 }
+#endif
 
+#ifdef pwritev64
 ssize_t pwritev64(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
     debug("pwritev64");
 
@@ -1100,6 +1125,7 @@ ssize_t pwritev64(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
 
     return rc;
 }
+#endif
 
 int fgetc(FILE *stream) {
     debug("fgetc");
@@ -1418,6 +1444,7 @@ int mkstemp(char *template) {
     return rc;
 }
 
+#ifdef mkostemp
 int mkostemp(char *template, int flags) {
     debug("mkostemp");
 
@@ -1433,7 +1460,9 @@ int mkostemp(char *template, int flags) {
 
     return rc;
 }
+#endif
 
+#ifdef mkstemps
 int mkstemps(char *template, int suffixlen) {
     debug("mkstemps");
 
@@ -1449,7 +1478,9 @@ int mkstemps(char *template, int suffixlen) {
 
     return rc;
 }
+#endif
 
+#ifdef mkostemps
 int mkostemps(char *template, int suffixlen, int flags) {
     debug("mkostemps");
 
@@ -1465,6 +1496,7 @@ int mkostemps(char *template, int suffixlen, int flags) {
 
     return rc;
 }
+#endif
 
 FILE *tmpfile(void) {
     debug("tmpfile");
