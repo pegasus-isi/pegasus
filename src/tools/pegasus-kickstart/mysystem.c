@@ -34,10 +34,40 @@
 /* The name of the program (argv[0]) set in pegasus-kickstart.c:main */
 char *programname;
 
+static int isRelativePath(char *path) {
+    // Absolute path
+    if (path[0] == '/') {
+        return 0;
+    }
+
+    // Relative to current directory
+    if (path[0] == '.') {
+        return 1;
+    }
+
+    // Relative to current directory
+    for (char *c = path; *c != '\0'; c++) {
+        if (*c == '/') {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
 /* Find the path to the interposition library */
 static int findInterposeLibrary(char *path, int pathsize) {
     char kickstart[BUFSIZ];
     char lib[BUFSIZ];
+
+    // If the path is not relative, then look it up in the PATH
+    if (!isRelativePath(programname)) {
+        programname = findApp(programname);
+        if (programname == NULL) {
+            // Not found in PATH
+            return -1;
+        }
+    }
 
     // Find the real path of kickstart
     if (realpath(programname, kickstart) < 0) {
@@ -300,6 +330,7 @@ static char **tryGetNewEnvironment(char **envp, const char *tempdir, const char 
     /* If the interpose library can't be found, then we can't trace */
     char libpath[BUFSIZ];
     if (findInterposeLibrary(libpath, BUFSIZ) < 0) {
+        fprintf(stderr, "kickstart: Cannot locate libinterpose.so\n");
         return envp;
     }
 
