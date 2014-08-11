@@ -48,7 +48,7 @@ public class Partition extends Data {
     /**
      * The set of node id's in the partition.
      */
-    private Set mNodeSet;
+    private Set<String> mNodeSet;
 
     /**
      * A map containing a node and it's parents ids in the partition.
@@ -56,13 +56,13 @@ public class Partition extends Data {
      * String id's of it's parents. The map only contain those nodes for
      * which there is a parent.
      */
-    private Map mParentsMap;
+    private Map <String,List<String>>mParentsMap;
 
     /**
      * The list of <code>GraphNode<code> objects corresponding to the nodes
      * making the partiition.
      */
-    private List mNodeList;
+    private List<GraphNode> mNodeList;
 
     /**
      * The partition id of the partition.
