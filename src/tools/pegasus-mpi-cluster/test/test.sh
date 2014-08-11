@@ -215,7 +215,7 @@ function test_insufficient_memory {
     RC=$?
     
     # This test should fail because 99 MB isn't enough to run the tasks in the DAG
-    if [ $RC -ne 1 ]; then
+    if [ $RC -eq 0 ]; then
         echo "$OUTPUT"
         echo "ERROR: Insufficient memory test failed (1)"
         return 1
@@ -272,7 +272,7 @@ function test_insufficient_cpus {
     RC=$?
     
     # This test should fail because 1 CPU isn't enough to run the tasks in the DAG
-    if [ $RC -ne 1 ]; then
+    if [ $RC -eq 0 ]; then
         echo "$OUTPUT"
         echo "ERROR: Insufficient CPUs test failed (1)"
         return 1
