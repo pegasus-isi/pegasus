@@ -113,7 +113,7 @@ function test_rescue_file {
 
 # Make sure we can run host scripts
 function test_host_script {
-    OUTPUT=$(mpiexec -np 2 $PMC -v -s test/sleep.dag -o /dev/null -e /dev/null --host-script test/hostscript.sh 2>&1)
+    OUTPUT=$(mpiexec -np 2 $PMC -v -s test/sleep.dag -o /dev/null -e /dev/null --host-cpus 4 --host-script test/hostscript.sh 2>&1)
     RC=$?
     
     if [ $RC -ne 0 ]; then
@@ -143,7 +143,7 @@ function test_host_script {
 
 # Make sure a failing host script causes the job to fail
 function test_fail_script {
-    OUTPUT=$(mpiexec -np 2 $PMC -s test/sleep.dag -o /dev/null -e /dev/null --host-script /usr/bin/false 2>&1)
+    OUTPUT=$(mpiexec -np 2 $PMC -s test/sleep.dag -o /dev/null -e /dev/null --host-cpus 4 --host-script /usr/bin/false 2>&1)
     RC=$?
     
     if [ $RC -eq 0 ]; then
@@ -161,7 +161,7 @@ function test_fail_script {
 
 # Make sure we can kill the process group of the host script when it forks children
 function test_fork_script {
-    OUTPUT=$(mpiexec -np 2 $PMC -s test/sleep.dag -o /dev/null -e /dev/null --host-script test/forkscript.sh -v 2>&1)
+    OUTPUT=$(mpiexec -np 2 $PMC -s test/sleep.dag -o /dev/null -e /dev/null --host-cpus 4 --host-script test/forkscript.sh -v 2>&1)
     RC=$?
     
     if [ $RC -ne 0 ]; then
@@ -181,7 +181,7 @@ function test_fork_script {
 function test_hang_script {
     echo "This should take 60 seconds..."
     
-    OUTPUT=$(mpiexec -np 2 $PMC -s test/sleep.dag -o /dev/null -e /dev/null --host-script test/hangscript.sh -v 2>&1)
+    OUTPUT=$(mpiexec -np 2 $PMC -s test/sleep.dag -o /dev/null -e /dev/null --host-cpus 4 --host-script test/hangscript.sh -v 2>&1)
     RC=$?
     
     if [ $RC -eq 0 ]; then
