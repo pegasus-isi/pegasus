@@ -190,6 +190,22 @@ public class Label extends Partitioner {
             mLogger.log( "Partition is " + p.getNodeIDs() + " corresponding to label " +
                          entry.getKey(),
                          LogManager.DEBUG_MESSAGE_LEVEL );
+            
+            //PM-745 set whether a single sized partition was associated with a label
+            //or not. any partition of size > 1 has to have a label assoicated.
+            boolean hasAssociatedLabel = true;
+            if( p.getSize() == 1 ){
+                //for single sized partitions look into the last added node
+                //and check whether the label is equal the node id
+                GraphNode n = p.lastAddedNode();
+                if( this.getLabel( n ).equals( n.getID() ) ){
+                    //user did not associated a specific label key
+                    hasAssociatedLabel = false ;
+                }
+            }
+            p.doesHaveAssociatedLabel( hasAssociatedLabel );
+            
+            //call the callback
             c.cbPartition( p );
         }
 
@@ -213,6 +229,7 @@ public class Label extends Partitioner {
                     parentPartitions.add( parent.getBag().get( LabelBag.PARTITION_KEY ) );
                 }
             }
+            
             //write out all the parents of the partition
             if(!parentPartitions.isEmpty()){
                 c.cbParents( p.getID(), new ArrayList( parentPartitions ) );
