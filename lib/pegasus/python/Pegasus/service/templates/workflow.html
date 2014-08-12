@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block title %}Home Page - Title{% endblock %}
+{% block javascript_includes %}
+<script type="text/javascript" src="http://code.highcharts.com/2.3.3/highcharts.js"></script>
+{% endblock %}
+{% block javascript_init %}
+<script type="text/javascript" charset="utf-8">
+var chart;
+var chartOptions;
+$(document).ready (function ()
+{
+    // Radialize the colors
+    Highcharts.getOptions ().colors = $.map (Highcharts.getOptions ().colors, function (color)
+    {
+        return {
+            radialGradient: { cx: 0.5, cy: 0.3, r: 0.7 },
+            stops: [
+                [0, color],
+                [1, Highcharts.Color (color).brighten (-0.3).get ('rgb')] // darken
+            ]
+        };
+    });
+
+    $ ('#workflow_list').dataTable ({
+        "bJQueryUI"      : true,
+        "sPaginationType": "full_numbers",
+        "bProcessing"    : true,
+        "bServerSide"    : true,
+        "sAjaxSource"    : "{{ url_for ('index') }}",
+        "bAutoWidth"     : false,
+        "aaSorting"      : [
+            [ 3, "desc" ]
+        ],
+        "aoColumns": [
+            null,
+            null,
+            null,
+            null,
+            { "sClass": "nowrap" }
+        ],
+        "fnServerParams" : function (aoData)
+        {
+            aoData.push ({ "name": "time_filter", "value": $ ('#time_filter').val () });
+        }
+    });
+
+    $("#time_filter").change ( function()
+    {
+        $("#workflow_list").dataTable().fnDraw();
+    });
+
+    chartOptions =
+    {
+        chart:
+        {
+            renderTo: 'workflow_counts',
+            plotBackgroundColor: null,
+            plotBorderWidth: null,
+            plotShadow: false,
+            height: 250
+        },
+        title:
+        {
+            text: null
+        },
+        credits :
+        {
+            enabled : false
+        },
+        tooltip:
+        {
+            formatter: function()
+            {
+                return '<b>'+ this.point.name +'</b>: '+ this.point.y;
+            }
+        },
+        plotOptions:
+        {
+            pie:
+            {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                dataLabels:
+                {
+                    enabled: false
+                },
+                showInLegend: true,
+                dataLabels:
+                {
+                    color: '#000000',
+                    formatter: function ()
+                    {
+                        return '<b>'+ this.point.name +':</b> '+ this.point.y;
+                    }
+                }
+            }
+        },
+        series:
+        [{
+            type: 'pie',
+            name: 'Workflow Distribution',
+            data: [
+                {
+                    name: 'Running',
+                    y: 0{{ counts.others }},
+                    sliced: true,
+                    selected: true
+                },
+                {
+                    name: 'Failed',
+                    y: 0{{ counts.fail }}
+                },
+                {
+                    name: 'Successful',
+                    y: 0{{ counts.success }}
+                }
+            ]
+        }]
+    };
+
+chart = new Highcharts.Chart (chartOptions);
+});
+</script>
+{% endblock %}
+{% block title_header %}Workflow Listing{% endblock %}
+{% block content %}
+    <div id="workflow_counts"></div>
+    <div id="table_wrapper">
+        Show results for: <select name="time_filter" id="time_filter">
+            <option value="all">all</option>
+            <option value="day">last day</option>
+            <option value="week">last week</option>
+            <option value="month">last month</option>
+            <option value="year">last year</option>
+        </select>
+        <table id="workflow_list">
+            <thead>
+                <tr>
+                    <th>Workflow Label</th>
+                    <th>Submit Host</th>
+                    <th>Submit Directory</th>
+                    <th>State</th>
+                    <th>Submitted On</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

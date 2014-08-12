@@ -1,0 +1,138 @@
+Pegasus Service
+===============
+Pegasus Team <pegasus@isi.edu>
+Version {VERSION}
+:doctype: book
+:toc:
+
+Introduction
+------------
+Introduction.
+
+
+Administrator Guide
+-------------------
+Admin guide.
+
+Installation
+~~~~~~~~~~~~
+To install...
+
+Configuration
+~~~~~~~~~~~~~
+To configure...
+
+Running the Service
+~~~~~~~~~~~~~~~~~~~
+How to run the service...
+
+Creating Users
+~~~~~~~~~~~~~~
+How to create users...
+
+
+User Guide
+----------
+
+Dashboard
+~~~~~~~~~
+Workflow monitoring...
+
+Ensemble Manager
+~~~~~~~~~~~~~~~~
+An ensemble is...
+To create an ensemble...
+To submit a workflow...
+To monitor workflows...
+
+
+
+Developer Guide
+---------------
+
+Development Setup
+~~~~~~~~~~~~~~~~~
+
+We recommend using virtualenv to set up your development environment. To
+install virtualenv type:
+
+    $ sudo pip install virtualenv
+
+To create a new virtualenv for developing the Pegasus Service run:
+
+    $ virtualenv ~/virtualenv/pegasus-service
+
+Then load the environment with:
+
+    $ source ~/virtualenv/pegasus-service/bin/activate
+
+You should see a prompt like this now:
+
+    (pegasus-service)$
+
+[NOTE]
+==============================================================================
+You will need to source the activate script every time you want to work on the
+Pegasus Service.
+==============================================================================
+
+Once you have virtualenv set up, you can clone the project from GitHub:
+
+    (pegasus-service)$ git clone git@github.com:pegasus-isi/pegasus-service.git
+
+Then you can install the project in development mode:
+
+    (pegasus-service)$ cd pegasus-service
+    (pegasus-service)$ python setup.py develop
+
+This will download and install all of the dependencies into your
+pegasus-service virtualenv.
+
+You will also need to set up the Pegasus package to get the dashboard
+components:
+
+    (pegasus-service)$ cd path/to/pegasus/source/lib/pegasus/python
+    (pegasus-service)$ python setup.py develop
+
+Now you can create the schema:
+
+    (pegasus-service)$ pegasus-service-admin create
+    Creating database...
+
+If you ever need to recreate the database you can delete the db file (usually
+`$HOME/.pegasus/workflow.db`) or drop and recreate the schema:
+
+    (pegasus-service)$ pegasus-service-admin drop
+    Are you sure? [y/n] y
+    (pegasus-service)$ pegasus-service-admin create
+    Creating database...
+
+If you need to upgrade your schema run:
+
+    (pegasus-service)$ pegasus-service-admin migrate
+
+Once the schema is created you can run the server with:
+
+    (pegasus-service)$ pegasus-service-server -d
+
+The `-d` turns on debugging. The server will run at http://localhost:5000/.
+
+Unit Tests
+~~~~~~~~~~
+To run the unit tests type:
+
+    (pegasus-service)$ python setup.py test
+
+If you want to run integration and performance tests set the environment
+variables ENABLE_INTEGRATION_TESTS and ENABLE_PERFORMANCE_TESTS before running
+the unit test suite like this:
+
+    (pegasus-service)$ export ENABLE_INTEGRATION_TESTS=1
+    (pegasus-service)$ export ENABLE_PERFORMANCE_TESTS=1
+    (pegasus-service)$ python setup.py test
+
+Unit tests are in the pegasus.service.tests package. To add one just create a
+new module in the pegasus.service.tests package that extends one of the
+\*TestCase classes in pegasus.service.tests. Your new test class will be
+automatically added to the test suite.
+

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Statistics{% endblock %}
+{% block javascript_includes %}
+<script type="text/javascript" src="{{ url_for ('static', filename='js/statistics.js') }}"></script>
+{% endblock %}
+{% block javascript_init %}
+<script type="text/javascript" charset="utf-8">
+    function accordianCreate (event, ui)
+    {
+        var workflowStats = '{{ workflow_stats|tojson|safe }}';
+        workflowStats = JSON.parse (workflowStats);
+        render_workflow_stats (ui.panel, workflowStats);
+    }
+
+    function loadSummaryStats ()
+    {
+        var workflowSummaryStats = '{{ summary_stats|tojson|safe }}';
+        workflowSummaryStats = JSON.parse (workflowSummaryStats);
+        render_workflow_summary_stats ($ ('#workflow_summary_stats'), workflowSummaryStats);
+    }
+
+    function init ()
+    {
+        loadSummaryStats ();
+
+        var statistics = $ ("#statistics_container");
+        statistics.accordion ({ heightStyle: "content", autoHeight: false, activate: activateEventHandler, create : accordianCreate });
+
+        //var newHeader = { newHeader: $ ('h3[title="workflow_stats"]') };
+        //activateEventHandler (null, newHeader);
+    }
+
+    $ (document).ready (function ()
+    {
+        init ();
+    });
+</script>
+{% endblock %}
+{% block navigation_bar %} | <a href="{{ url_for ('workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a> | <a href="{{ url_for ('statistics', root_wf_id = root_wf_id, wf_id = wf_id) }}">Statistics</a>{% endblock %}
+{% block title_header %}Statistics{% endblock %}
+{% block content %}
+<div id="workflow_summary_stats" href="{{ url_for ('workflow_summary_stats', root_wf_id = root_wf_id, wf_id = wf_id) }}">
+</div>
+<br />
+<section id="statistics_container">
+    <h3 href="{{ url_for ('workflow_stats', root_wf_id = root_wf_id, wf_id = wf_id) }}" title="workflow_stats">Workflow Statistics</span></h3>
+    <div id="workflow_stats">
+    </div>
+    <h3 href="{{ url_for ('job_breakdown_stats', root_wf_id = root_wf_id, wf_id = wf_id) }}" title="job_breakdown_stats">Job Breakdown Statistics</span></h3>
+    <div id="job_breakdown_stats">
+    </div>
+    <h3 href="{{ url_for ('job_stats', root_wf_id = root_wf_id, wf_id = wf_id) }}" title="job_stats">Job Statistics</span></h3>
+    <div id="job_stats">
+    </div>
+</section>
+{% endblock %}
