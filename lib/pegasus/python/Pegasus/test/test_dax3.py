@@ -10,7 +10,7 @@ import os
 
 DIR = os.path.dirname(__file__)
 DIAMOND_DAX = os.path.join(DIR, "diamond.xml")
-DAX33TEST_DAX = os.path.join(DIR, "dax33test.xml")
+DAX33TEST_DAX = os.path.join(DIR, "dax33.xml")
 
 class TestElement(unittest.TestCase):
     def testSimple(self):

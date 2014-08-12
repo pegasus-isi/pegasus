@@ -8,7 +8,8 @@ homedir = os.path.abspath(os.path.join(srcdir, "../../.."))
 
 # Utility function to read the pegasus Version.in file
 def readversion():
-    return subprocess.check_output("%s/release-tools/getversion" % homedir).strip()
+    return subprocess.Popen("%s/release-tools/getversion" % homedir,
+                stdout=subprocess.PIPE, shell=True).communicate()[0].strip()
 
 # Utility function to read the README file.
 def read(fname):
@@ -35,8 +36,6 @@ setup(
         "License :: OSI Approved :: Apache Software License",
     ],
     packages = find_packages(exclude=["Pegasus.test"]),
-    install_requires = [
-        "SQLAlchemy"
-    ]
+    test_suite = "Pegasus.test"
 )
 
