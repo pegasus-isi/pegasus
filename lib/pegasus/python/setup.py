@@ -7,6 +7,7 @@ srcdir = os.path.dirname(__file__)
 homedir = os.path.abspath(os.path.join(srcdir, "../../.."))
 extdir = os.path.join(homedir, "src", "externals")
 
+# Use specific versions here
 dependencies = [
     "werkzeug==0.9.3",
     "Flask==0.10",
@@ -21,10 +22,14 @@ dependencies = [
     "itsdangerous==0.21"
 ]
 
+# Point to the vendored src tarball for the dependencies
 def srclink(requirement):
     name, version = requirement.split("==")
     package = "%s-%s" % (name, version)
     return "file://%s/%s.tar.gz" % (extdir, package)
+
+# This only works for python 2.7
+dependency_links = [srclink(d) for d in dependencies]
 
 # Utility function to read the pegasus Version.in file
 def readversion():
@@ -73,7 +78,7 @@ setup(
     include_package_data = True,
     zip_safe = False,
     install_requires = dependencies,
-    dependency_links = [srclink(d) for d in dependencies],
+    dependency_links = dependency_links,
     test_suite = "Pegasus.test"
 )
 
