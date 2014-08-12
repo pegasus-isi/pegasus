@@ -3,9 +3,9 @@ import sys
 from optparse import OptionParser
 import getpass
 
-from pegasus.service import schema, migrations, db, users
+from Pegasus.service import schema, migrations, db, users
 
-from pegasus.service.command import Command, CompoundCommand
+from Pegasus.service.command import Command, CompoundCommand
 
 class AdminCommand(Command):
     def __init__(self):

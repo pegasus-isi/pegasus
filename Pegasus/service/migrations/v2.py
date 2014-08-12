@@ -1,4 +1,4 @@
-from pegasus.service import db, catalogs
+from Pegasus.service import db, catalogs
 
 def upgrade():
     db.metadata.create_all(bind=db.engine,

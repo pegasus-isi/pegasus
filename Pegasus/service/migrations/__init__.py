@@ -1,5 +1,5 @@
-from pegasus.service import db, schema
-from pegasus.service.schema import Schema
+from Pegasus.service import db, schema
+from Pegasus.service.schema import Schema
 
 def current_schema():
     """Return the version of the current database schema"""

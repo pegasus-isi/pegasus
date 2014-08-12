@@ -7,8 +7,8 @@ from StringIO import StringIO
 
 from Pegasus.netlogger.analysis.schema import stampede_dashboard_schema as dash
 
-from pegasus.service import app, db, em, tests, catalogs, ensembles
-from pegasus.service.tests import *
+from Pegasus.service import app, db, em, tests, catalogs, ensembles
+from Pegasus.service.tests import *
 
 class TestWorkflowProcessor:
     def __init__(self, workflow):

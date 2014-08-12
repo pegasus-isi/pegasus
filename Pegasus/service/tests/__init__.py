@@ -9,7 +9,7 @@ from StringIO import StringIO
 
 from flask import json
 
-from pegasus.service import app, db, migrations, users
+from Pegasus.service import app, db, migrations, users
 
 class TestCase(unittest.TestCase):
 

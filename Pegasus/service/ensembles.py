@@ -10,9 +10,9 @@ from flask import g, url_for, make_response, request, send_file, json
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import sql
 
-from pegasus.service import app, db, catalogs
-from pegasus.service.api import *
-from pegasus.service.command import ClientCommand, CompoundCommand
+from Pegasus.service import app, db, catalogs
+from Pegasus.service.api import *
+from Pegasus.service.command import ClientCommand, CompoundCommand
 
 def validate_ensemble_name(name):
     if name is None:

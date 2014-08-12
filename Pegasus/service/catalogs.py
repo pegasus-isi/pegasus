@@ -9,9 +9,9 @@ from flask import g, url_for, make_response, request, send_file, json
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 
-from pegasus.service import app, db
-from pegasus.service.command import ClientCommand, CompoundCommand
-from pegasus.service.api import *
+from Pegasus.service import app, db
+from Pegasus.service.command import ClientCommand, CompoundCommand
+from Pegasus.service.api import *
 
 SC_FORMATS = ["XML","XML2"]
 TC_FORMATS = ["File","Text"]

@@ -25,9 +25,9 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from Pegasus.netlogger.analysis.error.Error import StampedeDBNotFoundError
 
-from pegasus.service import app, filters
-from pegasus.service.dashboard.dashboard import Dashboard, NoWorkflowsFoundError
-from pegasus.service.dashboard.queries import MasterDBNotFoundError
+from Pegasus.service import app, filters
+from Pegasus.service.dashboard.dashboard import Dashboard, NoWorkflowsFoundError
+from Pegasus.service.dashboard.queries import MasterDBNotFoundError
 
 
 @app.route('/')

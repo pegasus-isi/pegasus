@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pegasus.service import db
+from Pegasus.service import db
 
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # IMPORTANT

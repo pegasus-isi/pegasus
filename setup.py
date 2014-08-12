@@ -47,15 +47,15 @@ setup(
         "License :: OSI Approved :: Apache Software License",
     ],
     packages = find_packages(),
-    package_data = {"pegasus.service" : find_package_data("pegasus/service") },
+    package_data = {"Pegasus.service" : find_package_data("Pegasus/service") },
     include_package_data = True,
     zip_safe = False,
     entry_points = {
         'console_scripts': [
-            'pegasus-service-server = pegasus.service.server:main',
-            'pegasus-service-admin = pegasus.service.admin:main',
-            'pegasus-service-catalogs = pegasus.service.catalogs:main',
-            'pegasus-service-ensemble = pegasus.service.ensembles:main'
+            'pegasus-service-server = Pegasus.service.server:main',
+            'pegasus-service-admin = Pegasus.service.admin:main',
+            'pegasus-service-catalogs = Pegasus.service.catalogs:main',
+            'pegasus-service-ensemble = Pegasus.service.ensembles:main'
         ]
     },
     install_requires = [
@@ -70,6 +70,6 @@ setup(
         "passlib==1.6.1",
         "MarkupSafe==0.18"
     ],
-    test_suite = "pegasus.service.tests"
+    test_suite = "Pegasus.service.tests"
 )
 

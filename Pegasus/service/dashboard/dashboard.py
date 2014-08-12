@@ -22,8 +22,8 @@ from Pegasus.tools import utils
 from Pegasus.plots_stats import utils as stats_utils
 from Pegasus.netlogger.analysis.workflow import stampede_statistics
 
-from pegasus.service import app
-from pegasus.service.dashboard import queries
+from Pegasus.service import app
+from Pegasus.service.dashboard import queries
 
 class NoWorkflowsFoundError(Exception):
     def __init__(self, **args):

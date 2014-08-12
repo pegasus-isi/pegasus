@@ -1,4 +1,4 @@
-from pegasus.service import db, tests, migrations, schema
+from Pegasus.service import db, tests, migrations, schema
 
 class TestMigrations(tests.DBTestCase):
     def test_downgrade(self):

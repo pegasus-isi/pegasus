@@ -2,8 +2,8 @@ import os
 import logging
 from optparse import OptionParser
 
-from pegasus.service import app, em
-from pegasus.service.command import Command
+from Pegasus.service import app, em
+from Pegasus.service.command import Command
 
 log = logging.getLogger("server")
 

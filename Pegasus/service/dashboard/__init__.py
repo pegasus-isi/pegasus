@@ -1,1 +1,1 @@
-from pegasus.service.dashboard import views
+from Pegasus.service.dashboard import views

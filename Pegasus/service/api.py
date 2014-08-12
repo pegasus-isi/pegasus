@@ -4,7 +4,7 @@ import traceback
 
 from flask import json, make_response
 
-from pegasus.service import app
+from Pegasus.service import app
 
 JSON_HEADERS = {"Content-Type":"application/json"}
 

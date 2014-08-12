@@ -1,6 +1,6 @@
 from flask import request, Response, g
 
-from pegasus.service import app, users
+from Pegasus.service import app, users
 
 def authenticate(username, password):
     "Check username/password"

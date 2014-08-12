@@ -1,5 +1,5 @@
-from pegasus.service import db, tests, users
-from pegasus.service.users import User
+from Pegasus.service import db, tests, users
+from Pegasus.service.users import User
 
 from sqlalchemy.exc import IntegrityError
 

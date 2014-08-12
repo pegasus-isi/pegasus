@@ -1,4 +1,4 @@
-from pegasus.service import db, ensembles
+from Pegasus.service import db, ensembles
 
 def upgrade():
     db.metadata.create_all(bind=db.engine,

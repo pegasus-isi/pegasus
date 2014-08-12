@@ -1,7 +1,7 @@
 import time
-from pegasus.service import tests, ensembles, api, db
-from pegasus.service.ensembles import *
-from pegasus.service.tests import *
+from Pegasus.service import tests, ensembles, api, db
+from Pegasus.service.ensembles import *
+from Pegasus.service.tests import *
 
 class TestEnsembles(tests.TestCase):
     def test_name(self):

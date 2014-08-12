@@ -58,7 +58,7 @@ from flask.ext.sqlalchemy import SQLAlchemy
 db = SQLAlchemy(app)
 cache = Cache(app)
 
-from pegasus.service import auth, filters, api, dashboard, catalogs, ensembles
+from Pegasus.service import auth, filters, api, dashboard, catalogs, ensembles
 
 from Pegasus.netlogger.analysis.schema import stampede_dashboard_schema as dash
 dash.initializeToDashboardDB(db.engine, db.metadata)

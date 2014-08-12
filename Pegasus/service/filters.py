@@ -1,6 +1,6 @@
 import time
 import decimal
-from pegasus.service import app
+from Pegasus.service import app
 
 @app.template_filter('dec_to_float')
 def dec_to_float(dec):

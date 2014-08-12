@@ -9,8 +9,8 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from Pegasus.netlogger.analysis.schema import stampede_dashboard_schema as dash
 
-from pegasus.service import app, db, ensembles
-from pegasus.service.ensembles import EnsembleStates, EnsembleWorkflowStates
+from Pegasus.service import app, db, ensembles
+from Pegasus.service.ensembles import EnsembleStates, EnsembleWorkflowStates
 
 log = logging.getLogger("EnsembleManager")
 

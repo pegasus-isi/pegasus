@@ -1,7 +1,7 @@
 import os
 from StringIO import StringIO
 
-from pegasus.service import catalogs, api, tests, users
+from Pegasus.service import catalogs, api, tests, users
 
 class TestCatalog(tests.TestCase):
     def test_names(self):

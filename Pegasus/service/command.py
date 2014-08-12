@@ -4,7 +4,7 @@ import urlparse
 import requests
 from optparse import OptionParser
 
-from pegasus.service import app
+from Pegasus.service import app
 
 class Command:
     description = None
