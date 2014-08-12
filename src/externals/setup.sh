@@ -1,7 +1,6 @@
 #!/bin/bash
 
 set -e
-set -x
 
 declare -a packages
 
