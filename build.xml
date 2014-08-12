@@ -344,13 +344,6 @@
     <exec executable="/usr/bin/env" dir="lib/pegasus/python" failonerror="true">
       <arg line="python setup.py install_lib -d ${dist.python-lib}"/>
     </exec>
-    <!--
-    <copy preservelastmodified="true" todir="${dist.python-lib}">
-      <fileset dir="lib/pegasus/python">
-        <exclude name="setup.py"/>
-        <include name="Pegasus/**"/>
-      </fileset>
-    </copy>
     <chmod perm="0755" type="file">
       <fileset dir="${dist.python-lib}">
         <include name="Pegasus/plots_stats/plots/populate.py"/>
@@ -359,7 +352,6 @@
         <include name="Pegasus/tools/kickstart_parser.py"/>
       </fileset>
     </chmod>
-    -->
   </target>
 
   <target name="dist-worker" depends="dist-clean,setup,compile-ctools,compile-python,compile-externals" description="Build worker tarball">
