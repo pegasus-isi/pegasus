@@ -7,8 +7,8 @@ from StringIO import StringIO
 
 from Pegasus.netlogger.analysis.schema import stampede_dashboard_schema as dash
 
-from Pegasus.service import app, db, em, tests, catalogs, ensembles
-from Pegasus.service.tests import *
+from Pegasus.service import app, db, em, catalogs, ensembles
+from Pegasus.test.service import *
 
 class TestWorkflowProcessor:
     def __init__(self, workflow):
@@ -41,14 +41,14 @@ class TestWorkflowProcessor:
     def running_successful(self):
         return True
 
-class EnsembleManagerTest(tests.UserTestCase):
+class EnsembleManagerTest(UserTestCase):
     def setUp(self):
-        tests.UserTestCase.setUp(self)
+        UserTestCase.setUp(self)
         em.EnsembleProcessor.Processor = TestWorkflowProcessor
 
     def tearDown(self):
         em.EnsembleProcessor.Processor = em.WorkflowProcessor
-        tests.UserTestCase.tearDown(self)
+        UserTestCase.tearDown(self)
 
     def test_em(self):
         # Create an ensemble and a workflow
@@ -119,7 +119,7 @@ def RequiresCondor(f):
 
     return wrapper
 
-class ScriptTest(tests.TestCase):
+class ScriptTest(TestCase):
     @IntegrationTest
     @RequiresPegasus
     @RequiresCondor
@@ -168,7 +168,7 @@ class ScriptTest(tests.TestCase):
 
         self.assertRaises(em.EMException, em.runscript, "true", cwd="/some/path/not/existing")
 
-class WorkflowTest(tests.UserTestCase):
+class WorkflowTest(UserTestCase):
     endstates = set([
         ensembles.EnsembleWorkflowStates.SUCCESSFUL,
         ensembles.EnsembleWorkflowStates.PLAN_FAILED,

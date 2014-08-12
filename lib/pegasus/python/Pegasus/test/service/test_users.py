@@ -1,9 +1,10 @@
-from Pegasus.service import db, tests, users
+from Pegasus.service import db, users
 from Pegasus.service.users import User
+from Pegasus.test.service import *
 
 from sqlalchemy.exc import IntegrityError
 
-class TestUsers(tests.TestCase):
+class TestUsers(TestCase):
     def test_validate_password(self):
         self.assertRaises(users.InvalidPassword, users.validate_password, None)
         self.assertRaises(users.InvalidPassword, users.validate_password, "")
@@ -33,7 +34,7 @@ class TestUsers(tests.TestCase):
         self.assertFalse(u.password_matches(""))
         self.assertFalse(u.password_matches(None))
 
-class TestUsersDB(tests.DBTestCase):
+class TestUsersDB(DBTestCase):
     def test_usercreate(self):
         # Make sure we can insert a new user
         u1 = users.create(username="gideon", password="secret", email="gideon@isi.edu")
@@ -91,7 +92,7 @@ class TestUsersDB(tests.DBTestCase):
         self.assertRaises(users.NoSuchUser, users.getuser, "rynge")
 
 
-class TestAuthentication(tests.APITestCase):
+class TestAuthentication(APITestCase):
 
     def test_unauthorized(self):
         r = self.get("/", auth=False)

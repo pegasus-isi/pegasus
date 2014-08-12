@@ -1,9 +1,9 @@
 import time
-from Pegasus.service import tests, ensembles, api, db
+from Pegasus.service import ensembles, api, db
 from Pegasus.service.ensembles import *
-from Pegasus.service.tests import *
+from Pegasus.test.service import *
 
-class TestEnsembles(tests.TestCase):
+class TestEnsembles(TestCase):
     def test_name(self):
         validate_ensemble_name("x"*99)
         validate_ensemble_name("ensemble12")
@@ -97,7 +97,7 @@ class TestEnsembles(tests.TestCase):
         self.assertFalse("--force" in script)
         self.assertFalse("--nocleanup" in script)
 
-class TestEnsembleDB(tests.UserTestCase):
+class TestEnsembleDB(UserTestCase):
     def test_ensemble_db(self):
         self.assertEquals(len(ensembles.list_ensembles(self.user_id)), 0, "Should be no ensembles")
         e = ensembles.create_ensemble(self.user_id, "foo", 1, 1)
@@ -112,7 +112,7 @@ class TestEnsembleDB(tests.UserTestCase):
 
         self.assertEquals(len(ensembles.list_actionable_ensembles()), 1, "Should be 1 actionable ensembles")
 
-class TestEnsembleAPI(tests.APITestCase):
+class TestEnsembleAPI(APITestCase):
     def test_ensemble_api(self):
         r = self.get("/ensembles")
         self.assertEquals(r.status_code, 200)
@@ -253,7 +253,7 @@ class TestEnsembleAPI(tests.APITestCase):
         self.assertEquals(r.status_code, 200, "Should return OK")
         self.assertEquals(r.json["state"], EnsembleWorkflowStates.QUEUED, "Should be in QUEUED state")
 
-class LargeDAXTest(tests.ClientTestCase):
+class LargeDAXTest(ClientTestCase):
 
     @PerformanceTest
     def test_large_dax(self):
@@ -283,7 +283,7 @@ class LargeDAXTest(tests.ClientTestCase):
         elapsed = end-start
         self.assertTrue(elapsed < 10, "Should take less than 10 seconds")
 
-class TestEnsembleClient(tests.ClientTestCase):
+class TestEnsembleClient(ClientTestCase):
 
     def test_ensemble_client(self):
         cmd = ensembles.EnsembleCommand()

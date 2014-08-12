@@ -1,6 +1,7 @@
-from Pegasus.service import db, tests, migrations, schema
+from Pegasus.service import db, migrations, schema
+from Pegasus.test.service import *
 
-class TestMigrations(tests.DBTestCase):
+class TestMigrations(DBTestCase):
     def test_downgrade(self):
         self.assertEquals(schema.version, migrations.current_schema())
         migrations.migrate(0)

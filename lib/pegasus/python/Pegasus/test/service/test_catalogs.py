@@ -1,9 +1,10 @@
 import os
 from StringIO import StringIO
 
-from Pegasus.service import catalogs, api, tests, users
+from Pegasus.service import catalogs, api, users
+from Pegasus.test import service
 
-class TestCatalog(tests.TestCase):
+class TestCatalog(service.TestCase):
     def test_names(self):
         catalogs.validate_catalog_name("x"*99)
         catalogs.validate_catalog_name("site.txt")
@@ -26,13 +27,13 @@ class TestCatalog(tests.TestCase):
         self.assertEquals("XML2", catalogs.validate_catalog_format("site", "XMl2"))
         self.assertEquals("File", catalogs.validate_catalog_format("transformation", "FILE"))
 
-class TestCatalogDB(tests.DBTestCase):
+class TestCatalogDB(service.DBTestCase):
     def test_relationship(self):
         u = users.create(username="scott", password="tiger", email="scott@isi.edu")
         c = catalogs.save_catalog("replica", u.id, "rc.txt", "regex", StringIO("replica"))
         self.assertEquals(c.user.username, "scott")
 
-class TestCatalogAPI(tests.APITestCase):
+class TestCatalogAPI(service.APITestCase):
     def test_manage_catalogs(self):
         r = self.get("/catalogs")
         self.assertEquals(r.status_code, 200)
@@ -115,7 +116,7 @@ class TestCatalogAPI(tests.APITestCase):
             self.assertEquals(r.status_code, 404)
 
 
-class TestCatalogClient(tests.ClientTestCase):
+class TestCatalogClient(service.ClientTestCase):
     def test_catalog_client(self):
         cmd = catalogs.CatalogCommand()
 

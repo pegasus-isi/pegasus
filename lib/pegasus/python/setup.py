@@ -68,7 +68,7 @@ setup(
         "Topic :: Utilities",
         "License :: OSI Approved :: Apache Software License",
     ],
-    packages = find_packages(exclude=["Pegasus.test","Pegasus.service.test"]),
+    packages = find_packages(exclude=["Pegasus.test"]),
     package_data = {"Pegasus.service" : find_package_data("Pegasus/service") },
     include_package_data = True,
     zip_safe = False,
