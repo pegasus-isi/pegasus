@@ -5,6 +5,7 @@
   <property name="build.source" value="1.6"/>
   <property name="build.target" value="1.6"/>
   <property name="make" value="make"/>
+  <property name="bash" value="bash"/>
   <property name="compile.lint" value="-Xlint:none"/>
   <property name="build.src" location="build/main/classes"/>
   <property name="test.src"  location="build/tests/classes"/>
@@ -326,10 +327,9 @@
 
   <target name="compile-externals" depends="setup" description="Compile external dependencies">
     <mkdir dir="${dist.lib}/pegasus/externals/python"/>
-    <exec executable="${make}" dir="src/externals" failonerror="true">
-      <env key="prefix" value="${dist.dir}"/>
-      <env key="libdir" value="${dist.lib}/pegasus"/>
-      <arg line="prefix=${dist.dir} libdir=${dist.lib}/pegasus/externals all"/>
+    <exec executable="${bash}" dir="src/externals" failonerror="true">
+      <env key="libdir" value="${dist.lib}/pegasus/externals/python"/>
+      <arg line="${basedir}/src/externals/setup.sh"/>
     </exec>
   </target>
 
@@ -344,7 +344,7 @@
     <copy preservelastmodified="true" todir="${dist.python-lib}">
       <fileset dir="lib/pegasus/python">
         <exclude name="setup.py"/>
-        <include name="**/*.py"/>
+        <include name="**/*"/>
       </fileset>
     </copy>
     <chmod perm="0755" type="file">
