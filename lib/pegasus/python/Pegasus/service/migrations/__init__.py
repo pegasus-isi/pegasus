@@ -54,6 +54,6 @@ def migrate(to):
     db.session.commit()
 
 def _get_migration(v):
-    return __import__("pegasus.service.migrations.v%d" % v,
-                      fromlist=["pegasus.service.migrations"])
+    return __import__("Pegasus.service.migrations.v%d" % v,
+                      fromlist=["Pegasus.service.migrations"])
 
