@@ -46,6 +46,8 @@ public abstract class AbstractPerJob extends Abstract {
             GraphNode node = (GraphNode) it.next();
             
             Job job = (Job) node.getContent();
+            //System.out.println( "Setting job level for " + job.getID() + " to " + node.getDepth());
+            job.setLevel( node.getDepth() );
             
             //only map a job for which execute site hint
             //is not specified in the DAX

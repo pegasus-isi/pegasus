@@ -18,6 +18,7 @@ package edu.isi.pegasus.planner.selector.site;
 
 
 
+import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.Job;
 
 
@@ -139,9 +140,15 @@ public class RoundRobin
                 it.add( current );
                 break;
             }
+            else{
+                mLogger.log( "Job " + job.getName() + " cannot be mapped to site " + current,
+                             LogManager.DEBUG_MESSAGE_LEVEL );
+            }
         }
 
         //means no pool has been found to which the job could be mapped to.
+        mLogger.log( "[RoundRobin Site Selector] Mapped job " + job.getID() + " to site " + mapping,
+                     LogManager.DEBUG_MESSAGE_LEVEL );
         job.setSiteHandle(  mapping );
     }
 

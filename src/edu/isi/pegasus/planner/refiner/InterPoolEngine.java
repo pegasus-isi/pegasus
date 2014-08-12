@@ -20,7 +20,6 @@ package edu.isi.pegasus.planner.refiner;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
-import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
@@ -282,7 +281,7 @@ public class InterPoolEngine extends Engine implements Refiner {
             GraphNode node = it.next();
             Job job = ( Job )node.getContent();
             site  = job.getSiteHandle();
-            mLogger.log( "Mapping Job "  + job.getName(), 
+            mLogger.log( "Setting up site mapping for job "  + job.getName(), 
                          LogManager.DEBUG_MESSAGE_LEVEL );
 
 
@@ -338,7 +337,7 @@ public class InterPoolEngine extends Engine implements Refiner {
                                           jm );
 */
 
-            mLogger.log("Mapped job " + job.jobName + " to pool " + site,
+            mLogger.log("Job was mapped to " + job.jobName + " to site " + site,
                         LogManager.DEBUG_MESSAGE_LEVEL);
             //incorporate the profiles and
             //do transformation selection
