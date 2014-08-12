@@ -9,7 +9,7 @@ extdir = os.path.join(homedir, "src", "externals")
 
 # Use specific versions here
 dependencies = [
-    "werkzeug==0.9.3",
+    "Werkzeug==0.9.3",
     "Flask==0.10",
     "Jinja2==2.7",
     "Flask-SQLAlchemy==0.16",
