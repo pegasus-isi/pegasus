@@ -223,8 +223,9 @@ public abstract class Abstract implements Clusterer {
 
         JobAggregator aggregator = mJobAggregatorFactory.loadInstance( firstJob );
         if( size == 1 &&
-                //PM-745 we want to launch cluster containgin a single job via PMC too
-                ( aggregator == null ||  !aggregator.getClusterExecutableLFN().equals( MPIExec.COLLAPSE_LOGICAL_NAME ) )){
+                //PM-745 we want to launch a label based cluster via
+                //the clustering executable
+                ( aggregator == null ||  !( partition.hasAssociatedLabel() ) )){
             //no need to collapse one job. go to the next iteration
             mLogger.log("\t No clustering for partition " + pID,
                         LogManager.DEBUG_MESSAGE_LEVEL);
@@ -233,7 +234,7 @@ public abstract class Abstract implements Clusterer {
         }
 
         //do the ordering of the list
-        if( aggregator.entryNotInTC( currSite ) ){
+        if( aggregator == null || aggregator.entryNotInTC( currSite ) ){
             throw new ClustererException ("No installed aggregator executable found for partition " +
                                           pID + " at site " + currSite );
         }
