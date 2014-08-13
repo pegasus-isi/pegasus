@@ -19,7 +19,6 @@ import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.namespace.Hints;
 
-import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.util.Iterator;
 import java.util.List;
@@ -46,6 +45,8 @@ public abstract class AbstractPerJob extends Abstract {
             GraphNode node = (GraphNode) it.next();
             
             Job job = (Job) node.getContent();
+            //System.out.println( "Setting job level for " + job.getID() + " to " + node.getDepth());
+            job.setLevel( node.getDepth() );
             
             //only map a job for which execute site hint
             //is not specified in the DAX

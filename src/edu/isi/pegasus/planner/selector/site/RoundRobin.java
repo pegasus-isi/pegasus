@@ -18,8 +18,8 @@ package edu.isi.pegasus.planner.selector.site;
 
 
 
+import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.Job;
-
 
 import java.util.Iterator;
 import java.util.List;
@@ -80,7 +80,7 @@ public class RoundRobin
      *
      */
     public void mapJob( Job job, List sites ){
-        ListIterator it;
+       
         NameValue current;
         NameValue next;
 
@@ -90,17 +90,20 @@ public class RoundRobin
 
         if ( job.level != mCurrentLevel ) {
             //reinitialize stuff
+            System.out.println( "Job " + job.getID() + " Change in level to " + job.level );
+            System.out.println( "execution sites " + listToString( mExecPools ) );
             mCurrentLevel = job.level;
-            it = mExecPools.listIterator();
-            while ( it.hasNext() ) {
+          
+            for(  ListIterator it= mExecPools.listIterator(); it.hasNext() ;) {
                 ( ( NameValue ) it.next() ).setValue( 0 );
             }
         }
 
         //go around the list and schedule it to the first one where it can
-        it = mExecPools.listIterator();
         String mapping = null;
-        while ( it.hasNext() ) {
+        for( ListIterator it = mExecPools.listIterator();it.hasNext();){
+            //System.out.println( "List is " + listToString( mExecPools ) );
+            
             current = ( NameValue ) it.next();
             //check if job can run on pool
             if ( mTCMapper.isSiteValid( job.namespace, job.logicalName,
@@ -115,14 +118,16 @@ public class RoundRobin
                 if ( it.hasNext() ) {
                     next = ( NameValue ) it.next();
                     if ( current.getValue() <= next.getValue() ) {
-                        break;
+                        it.previous();
+                        continue;
                     } else {
+                        //current's value is now greater than the next
                         current = ( NameValue ) it.previous();
                         current = ( NameValue ) it.previous();
-                        System.out.print( "" );
-                    }
+                     }
                 }
                 it.remove();
+                //System.out.println( "List after removal of " + current + " is "  + listToString( mExecPools ) );
 
                 //now go thru the list and insert in the correct position
                 while ( it.hasNext() ) {
@@ -131,17 +136,22 @@ public class RoundRobin
                     if ( current.getValue() <= next.getValue() ) {
                         //current has to be inserted before next
                         next = ( NameValue ) it.previous();
-                        it.add( current );
                         break;
                     }
                 }
-                //current goes to the end of the list
+                //current goes to the current position or the end of the list
                 it.add( current );
                 break;
+            }
+            else{
+                mLogger.log( "Job " + job.getName() + " cannot be mapped to site " + current,
+                             LogManager.DEBUG_MESSAGE_LEVEL );
             }
         }
 
         //means no pool has been found to which the job could be mapped to.
+        mLogger.log( "[RoundRobin Site Selector] Mapped job " + job.getID() + " to site " + mapping,
+                     LogManager.DEBUG_MESSAGE_LEVEL );
         job.setSiteHandle(  mapping );
     }
 
@@ -163,6 +173,15 @@ public class RoundRobin
                 mExecPools.add( new NameValue( ( String ) it.next(), 0 ) );
             }
         }
+    }
+
+    private String listToString( List elements ) {
+        StringBuilder sb = new StringBuilder();
+        sb.append( "size -> " ).append( elements.size() ).append( " ");
+        for( Object element: elements ){
+            sb.append( element ).append( "," );
+        }
+        return sb.toString();
     }
 
 
