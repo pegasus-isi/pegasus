@@ -520,9 +520,10 @@
     </junit>
   </target>
 
-  <target name="test-python" description="Execute python unit tests">
+  <target name="test-python" depends="compile-externals" description="Execute python unit tests">
     <exec executable="/usr/bin/env" dir="lib/pegasus/python" failonerror="true">
-      <arg line="python setup.py test"/>
+      <env key="PYTHONPATH" value="${dist.lib}/pegasus/externals/python"/>
+      <arg line="python test.py"/>
     </exec>
   </target>
 
