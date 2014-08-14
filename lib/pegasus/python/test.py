@@ -1,6 +1,5 @@
 import os
-from unittest import TestSuite, TextTestRunner
-from unittest.loader import TestLoader
+from unittest import TestLoader, TestSuite, TextTestRunner
 
 def discoverTestModules(dirpath):
     modules = []
