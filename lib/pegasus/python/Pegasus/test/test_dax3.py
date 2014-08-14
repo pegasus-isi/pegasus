@@ -1018,7 +1018,7 @@ class TestADAG(unittest.TestCase):
     def testWriteFile(self):
         diamond = ADAG("diamond")
         diamond.addJob(Job(u"\u03a3cat"))
-        diamond.writeXMLFile("/tmp/dax.xml")
+        diamond.writeXMLFile("/dev/null")
     
     def testDiamond(self):
         """Compare generated DAX to reference DAX"""
