@@ -79,9 +79,7 @@ TRUST_UID_DOMAIN = True
 END
 
 # Install the Pegasus RPM
-curl "@@RPMURL@@" > /tmp/pegasus.rpm
-yum install -y /tmp/pegasus.rpm
-rm -f /tmp/pegasus.rpm
+yum install -y "@@RPMURL@@"
 
 # Add tutorial user to sudoers file
 echo 'tutorial	ALL=(ALL) 	ALL' >> /etc/sudoers
@@ -114,10 +112,6 @@ chown -R tutorial:tutorial /home/tutorial
 chmod 755 /home/tutorial/bin/* /home/tutorial/*.py /home/tutorial/*.sh
 
 # Install dashboard
-git clone https://github.com/pegasus-isi/pegasus-service.git /tmp/pegasus-service
-cd /tmp/pegasus-service
-git checkout tutorial
-python setup.py install
 cat >> /etc/rc.local <<END
 # Start dashboard
 su tutorial -c pegasus-service-server >/var/log/pegasus-service.log 2>&1 &
