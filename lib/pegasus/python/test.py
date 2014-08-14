@@ -1,6 +1,15 @@
 import os
 from unittest import TestLoader, TestSuite, TextTestRunner
 
+try:
+    import Pegasus
+    import Pegasus.service
+except ImportError:
+    print "Unable to import Pegasus modules"
+    print "Make sure dependencies are available"
+    print "Set PYTHONPATH or run: python setup.py develop"
+    exit(1)
+
 def discoverTestModules(dirpath):
     modules = []
     for name in os.listdir(dirpath):
@@ -13,11 +22,10 @@ def discoverTestModules(dirpath):
 
 loader = TestLoader()
 alltests = TestSuite()
-modules = discoverTestModules("Pegasus/test")
 
-for module in modules:
-    tests = loader.loadTestsFromName(module)
-    alltests.addTests(tests)
+for module in discoverTestModules("Pegasus/test"):
+    suite = loader.loadTestsFromName(module)
+    alltests.addTest(suite)
 
 runner = TextTestRunner(verbosity=2)
 result = runner.run(alltests)

@@ -5,31 +5,6 @@ from setuptools import setup, find_packages
 
 srcdir = os.path.dirname(__file__)
 homedir = os.path.abspath(os.path.join(srcdir, "../../.."))
-extdir = os.path.join(homedir, "src", "externals")
-
-# Use specific versions here
-dependencies = [
-    "Werkzeug==0.9.3",
-    "Flask==0.10",
-    "Jinja2==2.7",
-    "Flask-SQLAlchemy==0.16",
-    "Flask-Cache==0.13.1",
-    "SQLAlchemy==0.8.0",
-    "WTForms==1.0.3",
-    "requests==1.2.3",
-    "passlib==1.6.1",
-    "MarkupSafe==0.18",
-    "itsdangerous==0.21"
-]
-
-# Point to the vendored src tarball for the dependencies
-def srclink(requirement):
-    name, version = requirement.split("==")
-    package = "%s-%s" % (name, version)
-    return "file://%s/%s.tar.gz" % (extdir, package)
-
-# This only works for python 2.7
-dependency_links = [srclink(d) for d in dependencies]
 
 # Utility function to read the pegasus Version.in file
 def readversion():
@@ -77,8 +52,18 @@ setup(
     package_data = {"Pegasus.service" : find_package_data("Pegasus/service") },
     include_package_data = True,
     zip_safe = False,
-    install_requires = dependencies,
-    dependency_links = dependency_links,
-    test_suite = "Pegasus.test"
+    install_requires = [
+        "Werkzeug==0.9.3",
+        "Flask==0.10",
+        "Jinja2==2.7",
+        "Flask-SQLAlchemy==0.16",
+        "Flask-Cache==0.13.1",
+        "SQLAlchemy==0.8.0",
+        "WTForms==1.0.3",
+        "requests==1.2.3",
+        "passlib==1.6.1",
+        "MarkupSafe==0.18",
+        "itsdangerous==0.21"
+    ]
 )
 
