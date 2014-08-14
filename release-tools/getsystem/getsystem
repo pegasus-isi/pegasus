@@ -150,6 +150,9 @@ sub get_linux_distro () {
     if (-f "/etc/rocks-release") {
         $issue_file = "/etc/rocks-release";
     }
+    elsif (-f "/etc/redhat-release") {
+        $issue_file = "/etc/redhat-release";
+    }
     else {
         $issue_file = "/etc/issue";
     }
@@ -226,10 +229,13 @@ sub get_linux_distro () {
               $distro{"version"} = $1;
             }
         }
-        elsif ($line =~ m!CentOS!) {  
+        elsif ($line =~ m!CentOS!) {
+            # CentOS 7 has an extra token compared to CentOS 6
+            # Assume the major version is just the first number in the line
+            $line =~ m/([0-9]+)/;
             $distro{"long"} = "$distro_strs[0]";
-            $distro{"version"} = "$distro_strs[2]";
-            $distro{"short"} = "rhel";   
+            $distro{"version"} = $1;
+            $distro{"short"} = "rhel";
         } 
         elsif ($line =~ m!Yellow!) {
             $distro{"long"} = "$distro_strs[0] $distro_strs[1]";
