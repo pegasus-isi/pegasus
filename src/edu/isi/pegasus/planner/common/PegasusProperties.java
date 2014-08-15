@@ -626,6 +626,17 @@ public class PegasusProperties implements Cloneable {
         return mProps.getSysConfDir();
     }
     
+    /**
+     * Removes a property from the soft state.
+     * 
+     * @param key  the key
+     * 
+     * @return the corresponding value if key exits, else null 
+     */
+    public String removeProperty( String key ){
+        return mProps.removeProperty( key );
+    }
+    
     //PROPERTIES RELATED TO SCHEMAS
     /**
      * Returns the location of the schema for the DAX.

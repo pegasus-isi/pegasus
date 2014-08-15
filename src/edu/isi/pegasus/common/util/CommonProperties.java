@@ -633,4 +633,15 @@ public class CommonProperties implements Cloneable
         }
         return props;
     }
+
+    /**
+     * Removes a property from the soft state.
+     * 
+     * @param key  the key
+     * 
+     * @return the corresponding value if key exits, else null 
+     */
+    public String removeProperty(String key) {
+        return (String) this.m_props.remove(key);
+    }
 }
