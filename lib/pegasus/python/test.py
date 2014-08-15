@@ -11,16 +11,20 @@ else:
 # Try to import the dependencies to make sure they exist
 try:
     import Pegasus
-    import boto
     import sqlalchemy
-    import sqlite3
     if test_service:
+        import sqlite3
+        import boto
+        import requests
+        import flask
         import Pegasus.service
+    else:
+        import pysqlite2
 except ImportError:
     print "Unable to import Pegasus modules"
     print "Make sure dependencies are available"
     print "Set PYTHONPATH or run: python setup.py develop"
-    exit(1)
+    sys.exit(1)
 
 def discoverTestModules(dirpath):
     modules = []
@@ -46,7 +50,7 @@ runner = TextTestRunner(verbosity=2)
 result = runner.run(alltests)
 
 if result.wasSuccessful():
-    exit(0)
+    sys.exit(0)
 else:
-    exit(1)
+    sys.exit(1)
 

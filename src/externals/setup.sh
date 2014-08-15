@@ -4,13 +4,10 @@ set -e
 
 declare -a packages
 
-# These are the minimum dependencies
-packages+=("boto-2.5.2")
-packages+=("SQLAlchemy-0.8.0")
-
 if python -V 2>&1 | grep -qE 'ython 2\.[3-4]'; then
-    # Install pysqlite for python 2.3 and 2.4
+    # Install alternative dependencies for python 2.4
     packages+=("pysqlite-2.6.0")
+    packages+=("SQLAlchemy-0.7.6")
 else
     # For other python >= 2.5, install the service dependencies
     packages+=("Flask-0.10")
@@ -23,6 +20,8 @@ else
     packages+=("passlib-1.6.1")
     packages+=("requests-1.2.3")
     packages+=("itsdangerous-0.21")
+    packages+=("boto-2.5.2")
+    packages+=("SQLAlchemy-0.8.0")
 fi
 
 dir=$(cd $(dirname $0) && pwd)
