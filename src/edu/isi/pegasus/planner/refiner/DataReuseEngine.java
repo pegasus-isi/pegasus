@@ -328,8 +328,8 @@ public class DataReuseEngine extends Engine implements Refiner{
                 //PM-774 in case of partial data reuse, we look
                 //for a marker to figure out whether job;s output files
                 //should be looked for
-                if( !(job.vdsNS.containsKey( Pegasus.ENABLE_FOR_DATA_REUSE_KEY )) ||
-                      job.vdsNS.getBooleanValue( Pegasus.ENABLE_FOR_DATA_REUSE_KEY)){
+                if( !(job.vdsNS.containsKey( Pegasus.ENABLE_FOR_DATA_REUSE_KEY ) ||
+                      job.vdsNS.getBooleanValue( Pegasus.ENABLE_FOR_DATA_REUSE_KEY))){
                     
                     mLogger.log( "Partial Data Reuse Enabled. Not looking for output files in RC for job " + job.getID(),
                                  LogManager.DEBUG_MESSAGE_LEVEL );
