@@ -1,9 +1,21 @@
 import os
+import sys
 from unittest import TestLoader, TestSuite, TextTestRunner
 
+# The service only works on python >= 2.5
+if sys.version_info >= (2,5):
+    test_service = True
+else:
+    test_service = False
+
+# Try to import the dependencies to make sure they exist
 try:
     import Pegasus
-    import Pegasus.service
+    import boto
+    import sqlalchemy
+    import sqlite3
+    if test_service:
+        import Pegasus.service
 except ImportError:
     print "Unable to import Pegasus modules"
     print "Make sure dependencies are available"
@@ -24,6 +36,9 @@ loader = TestLoader()
 alltests = TestSuite()
 
 for module in discoverTestModules("Pegasus/test"):
+    # If not testing service, skip service test modules
+    if not test_service and module.startswith("Pegasus.test.service"):
+        continue
     suite = loader.loadTestsFromName(module)
     alltests.addTest(suite)
 
