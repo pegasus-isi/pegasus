@@ -4,22 +4,25 @@ set -e
 
 declare -a packages
 
-packages+=("Flask-0.10")
-packages+=("Flask-Cache-0.13.1")
-packages+=("Flask-SQLAlchemy-0.16")
-packages+=("Jinja2-2.7")
-packages+=("MarkupSafe-0.18")
-packages+=("SQLAlchemy-0.8.0")
-packages+=("WTForms-1.0.3")
-packages+=("Werkzeug-0.9.3")
+# These are the minimum dependencies
 packages+=("boto-2.5.2")
-packages+=("passlib-1.6.1")
-packages+=("requests-1.2.3")
-packages+=("itsdangerous-0.21")
+packages+=("SQLAlchemy-0.8.0")
 
-# Only install pysqlite for python 2.3 and 2.4
 if python -V 2>&1 | grep -qE 'ython 2\.[3-4]'; then
+    # Install pysqlite for python 2.3 and 2.4
     packages+=("pysqlite-2.6.0")
+else
+    # For other python >= 2.5, install the service dependencies
+    packages+=("Flask-0.10")
+    packages+=("Flask-Cache-0.13.1")
+    packages+=("Flask-SQLAlchemy-0.16")
+    packages+=("Jinja2-2.7")
+    packages+=("MarkupSafe-0.18")
+    packages+=("WTForms-1.0.3")
+    packages+=("Werkzeug-0.9.3")
+    packages+=("passlib-1.6.1")
+    packages+=("requests-1.2.3")
+    packages+=("itsdangerous-0.21")
 fi
 
 dir=$(cd $(dirname $0) && pwd)
@@ -40,10 +43,11 @@ function clean_externals {
 
 function install_lib {
     tarname=$1
+    echo "Installing $tarname..."
     tar xzf ${tarname}.tar.gz
-    pushd $tarname
-    python setup.py install_lib -d $libdir
-    popd
+    pushd $tarname > /dev/null
+    python setup.py install_lib -d $libdir > /dev/null
+    popd > /dev/null
     rm -rf $tarname
 }
 
