@@ -394,6 +394,12 @@ public class Pegasus extends Namespace {
      */
     public static final String PMC_TASK_ARGUMENTS = "pmc_task_arguments";
 
+    
+    /**
+     * Key indicating whether to consider job for data reuse in the partial mode.
+     */
+    public static final String ENABLE_FOR_DATA_REUSE_KEY = "enable_for_data_reuse";
+    
     //credential related constant keys
     private static final String S3CFG_FILE_VARIABLE = S3CFG.S3CFG_FILE_VARIABLE.toLowerCase();
     private static final String SSH_PRIVATE_KEY_VARIABLE = Ssh.SSH_PRIVATE_KEY_VARIABLE.toLowerCase();
@@ -414,6 +420,7 @@ public class Pegasus extends Namespace {
      * Static Handle to the delimiter aggregator.
      */
     private static Aggregator SUCCESS_MESSAGE_AGGREGATOR = new UniqueMerge();
+    
 
     /**
      * The name of the implementing namespace. It should be one of the valid
@@ -544,7 +551,8 @@ public class Pegasus extends Namespace {
             
             case 'e':
                 if ((key.compareTo( Pegasus.EXITCODE_FAILURE_MESSAGE ) == 0) ||
-                    (key.compareTo(  Pegasus.EXITCODE_SUCCESS_MESSAGE  ) == 0) ) {
+                    (key.compareTo( Pegasus.EXITCODE_SUCCESS_MESSAGE ) == 0)||
+                    (key.compareTo( Pegasus.ENABLE_FOR_DATA_REUSE_KEY ) == 0 )) {
                     res = VALID_KEY;
                 }
                 else {

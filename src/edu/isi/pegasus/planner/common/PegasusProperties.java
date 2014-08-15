@@ -180,7 +180,6 @@ public class PegasusProperties implements Cloneable {
     public static final String DEFAULT_DAGMAN_MAX_PRE_VALUE = "1";
 
 
-
     /**
      * An enum defining The scope for cleanup algorithm
      */
@@ -2251,6 +2250,17 @@ public class PegasusProperties implements Cloneable {
      */
     public String getPartitionParsingMode() {
         return mProps.getProperty( "pegasus.partition.parser.load", "single" );
+    }
+
+    /**
+     * Returns the scope for the data reusue module.
+     *
+     * Referred to by the "pegasus.data.reuse.scope" property.
+     *
+     * @return the value specified in the properties file, else null
+     */
+    public String getDataReuseScope() {
+        return mProps.getProperty( "pegasus.data.reuse.scope" );
     }
 
     
