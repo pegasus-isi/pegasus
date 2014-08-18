@@ -26,7 +26,7 @@ def find_package_data(dirname):
                 items.append(path)
         return items
     items = find_paths(dirname)
-    return [os.path.relpath(path, dirname) for path in items]
+    return [path.replace(dirname, "") for path in items]
 
 setup(
     name = "pegasus-wms",
@@ -49,7 +49,7 @@ setup(
         "License :: OSI Approved :: Apache Software License",
     ],
     packages = find_packages(exclude=["Pegasus.test"]),
-    package_data = {"Pegasus.service" : find_package_data("Pegasus/service") },
+    package_data = {"Pegasus.service" : find_package_data("Pegasus/service/") },
     include_package_data = True,
     zip_safe = False,
     install_requires = [
