@@ -61,7 +61,7 @@ START_TS=`/bin/date +'%s'`
     -v \
     --conf pegasusrc \
     --sites condorpool \
-    --dir work \
+    --dir submit \
     --output-site local \
     --cluster label \
     --dax isptm.dax \
