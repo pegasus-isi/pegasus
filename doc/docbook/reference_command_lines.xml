@@ -26,6 +26,10 @@
   <xi:include href="manpage.pegasus-s3.xml"/>
   <xi:include href="manpage.pegasus-sc-client.xml"/>
   <xi:include href="manpage.pegasus-sc-converter.xml"/>
+  <xi:include href="manpage.pegasus-service-admin.xml"/>
+  <xi:include href="manpage.pegasus-service-catalogs.xml"/>
+  <xi:include href="manpage.pegasus-service-ensemble.xml"/>
+  <xi:include href="manpage.pegasus-service-server.xml"/>
   <xi:include href="manpage.pegasus-statistics.xml"/>
   <xi:include href="manpage.pegasus-status.xml"/>
   <xi:include href="manpage.pegasus-submit-dag.xml"/>

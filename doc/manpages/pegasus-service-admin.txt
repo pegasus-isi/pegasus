@@ -1,7 +1,5 @@
 pegasus-service-admin(1)
 ========================
-Pegasus Team <pegasus@isi.edu>
-Version {VERSION}
 :doctype: manpage
 
 Name
@@ -11,37 +9,39 @@ pegasus-service-admin - Manage a Pegasus Service installation
 Synopsis
 --------
 [verse]
-pegasus-service-admin COMMAND [options] [ARGUMENTS...]
+*pegasus-service-admin* 'COMMAND' [options] [ARGUMENTS...]
 
 Commands
 --------
-create::
+*create*::
     Create all of the tables in the database.
 
-drop::
+*drop*::
     Drop the tables from the database. WARNING: This deletes all the data.
 
-migrate [version]::
+*migrate* ['version']::
     Convert the database schema to the specified version. If version is not
     specified, then upgrade to the latest version.
 
-userlist::
+*userlist*::
     List all users in the database.
 
-passwd USERNAME::
+*passwd* 'USERNAME'::
     Change a user's password.
 
-useradd USERNAME EMAIL::
+*useradd* 'USERNAME' 'EMAIL'::
     Add a new user.
 
-usermod USERNAME EMAIL::
+*usermod* 'USERNAME' 'EMAIL'::
     Change a user's email address.
 
 Options
 -------
--h | --help::
+*-h*::
+*--help*::
     Print help message
--d | --debug::
+*-d*::
+*--debug*::
     Enable debugging
 
 Authors
