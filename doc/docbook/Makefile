@@ -25,6 +25,7 @@ XML += submit_directory.xml
 XML += tutorial.xml
 XML += tutorial_vm.xml
 XML += useful_tips.xml
+XML += service.xml
 
 # Generated stuff
 XML += title.xml basic_properties.xml reference_properties.xml
