@@ -14,7 +14,7 @@ DEBUG = False
 # The secret key used by Flask to encrypt session keys
 SECRET_KEY = os.urandom(24)
 
-
+AUTHENTICATION = "PAMAuthentication"
 
 # SQLALCHEMY CONFIGURATION
 

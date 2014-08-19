@@ -99,9 +99,9 @@ class TestEnsembles(TestCase):
 
 class TestEnsembleDB(UserTestCase):
     def test_ensemble_db(self):
-        self.assertEquals(len(ensembles.list_ensembles(self.user_id)), 0, "Should be no ensembles")
-        e = ensembles.create_ensemble(self.user_id, "foo", 1, 1)
-        self.assertEquals(len(ensembles.list_ensembles(self.user_id)), 1, "Should be 1 ensemble")
+        self.assertEquals(len(ensembles.list_ensembles(self.username)), 0, "Should be no ensembles")
+        e = ensembles.create_ensemble(self.username, "foo", 1, 1)
+        self.assertEquals(len(ensembles.list_ensembles(self.username)), 1, "Should be 1 ensemble")
 
 
         self.assertEquals(len(ensembles.list_actionable_ensembles()), 0, "Should be 0 actionable ensembles")
@@ -159,9 +159,9 @@ class TestEnsembleAPI(APITestCase):
         self.assertEquals(len(r.json), 0, "Should have no workflows")
 
         # Create some test catalogs
-        catalogs.save_catalog("replica", self.user_id, "rc", "regex", StringIO("replicas"))
-        catalogs.save_catalog("site", self.user_id, "sc", "xml", StringIO("sites"))
-        catalogs.save_catalog("transformation", self.user_id, "tc", "text", StringIO("transformations"))
+        catalogs.save_catalog("replica", self.username, "rc", "regex", StringIO("replicas"))
+        catalogs.save_catalog("site", self.username, "sc", "xml", StringIO("sites"))
+        catalogs.save_catalog("transformation", self.username, "tc", "text", StringIO("transformations"))
         db.session.commit()
 
         # Create a test workflow
@@ -227,7 +227,7 @@ class TestEnsembleAPI(APITestCase):
         self.assertEquals(r.status_code, 200, "Should return OK")
         self.assertEquals(r.json["priority"], 100, "Should have priority 100")
 
-        e = get_ensemble(self.user_id, "myensemble")
+        e = get_ensemble(self.username, "myensemble")
 
         ew = get_ensemble_workflow(e.id, "mywf")
         ew.set_state(EnsembleWorkflowStates.PLAN_FAILED)
@@ -261,9 +261,9 @@ class LargeDAXTest(ClientTestCase):
         self.assertEquals(r.status_code, 201, "Should return created status")
 
         # Create some test catalogs
-        catalogs.save_catalog("replica", self.user_id, "rc", "regex", StringIO("replicas"))
-        catalogs.save_catalog("site", self.user_id, "sc", "xml", StringIO("sites"))
-        catalogs.save_catalog("transformation", self.user_id, "tc", "text", StringIO("transformations"))
+        catalogs.save_catalog("replica", self.username, "rc", "regex", StringIO("replicas"))
+        catalogs.save_catalog("site", self.username, "sc", "xml", StringIO("sites"))
+        catalogs.save_catalog("transformation", self.username, "tc", "text", StringIO("transformations"))
         db.session.commit()
 
         # Create a 256MB file and submit it as the DAX
@@ -318,9 +318,9 @@ class TestEnsembleClient(ClientTestCase):
         self.assertTrue("State: ACTIVE" in stdout, "State should be active")
 
         # Create some test catalogs using the catalog API
-        catalogs.save_catalog("replica", self.user_id, "rc", "regex", StringIO("replicas"))
-        catalogs.save_catalog("site", self.user_id, "sc", "xml", StringIO("sites"))
-        catalogs.save_catalog("transformation", self.user_id, "tc", "text", StringIO("transformations"))
+        catalogs.save_catalog("replica", self.username, "rc", "regex", StringIO("replicas"))
+        catalogs.save_catalog("site", self.username, "sc", "xml", StringIO("sites"))
+        catalogs.save_catalog("transformation", self.username, "tc", "text", StringIO("transformations"))
         db.session.commit()
 
         cmd.main(["submit","-e","foo","-w","bar","-d","setup.py",
@@ -342,7 +342,7 @@ class TestEnsembleClient(ClientTestCase):
         stdout, stderr = self.stdio()
         self.assertTrue("Priority: 100" in stdout)
 
-        e = ensembles.get_ensemble(self.user_id, "foo")
+        e = ensembles.get_ensemble(self.username, "foo")
         ew = ensembles.get_ensemble_workflow(e.id, "bar")
         ew.set_state(ensembles.EnsembleWorkflowStates.PLAN_FAILED)
         db.session.commit()

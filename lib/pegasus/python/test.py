@@ -20,7 +20,8 @@ try:
         import Pegasus.service
     else:
         import pysqlite2
-except ImportError:
+except ImportError, e:
+    print e
     print "Unable to import Pegasus modules"
     print "Make sure dependencies are available"
     print "Set PYTHONPATH or run: python setup.py develop"

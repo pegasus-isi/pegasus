@@ -10,7 +10,7 @@ from flask import g, url_for, make_response, request, send_file, json
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import sql
 
-from Pegasus.service import app, db, catalogs
+from Pegasus.service import app, db, catalogs, get_userdata_dir
 from Pegasus.service.api import *
 from Pegasus.service.command import ClientCommand, CompoundCommand
 
@@ -52,7 +52,7 @@ EnsembleWorkflowStates = States(["READY","PLANNING","PLAN_FAILED","QUEUED","RUN_
 class Ensemble(db.Model, EnsembleMixin):
     __tablename__ = 'ensemble'
     __table_args__ = (
-        db.UniqueConstraint('user_id', 'name'),
+        db.UniqueConstraint('username', 'name'),
         {'mysql_engine': 'InnoDB'}
     )
 
@@ -63,11 +63,10 @@ class Ensemble(db.Model, EnsembleMixin):
     state = db.Column(db.Enum(*EnsembleStates), nullable=False)
     max_running = db.Column(db.Integer, nullable=False)
     max_planning = db.Column(db.Integer, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    user = db.relationship("User")
+    username = db.Column(db.String(100), nullable=False)
 
-    def __init__(self, user_id, name):
-        self.user_id = user_id
+    def __init__(self, username, name):
+        self.username = username
         self.set_name(name)
         self.set_created()
         self.set_updated()
@@ -100,7 +99,7 @@ class Ensemble(db.Model, EnsembleMixin):
             raise APIError("Invalid value for max_planning: %s" % max_planning)
 
     def get_dir(self):
-        return os.path.join(self.user.get_userdata_dir(), "ensembles", self.name)
+        return os.path.join(get_userdata_dir(self.username), "ensembles", self.name)
 
     def get_object(self):
         return {
@@ -211,8 +210,8 @@ class EnsembleWorkflow(db.Model, EnsembleMixin):
         o["plan_script"] = myurl_for("plan.sh")
         return o
 
-def list_ensembles(user_id):
-    ensembles = Ensemble.query.filter_by(user_id=user_id).all()
+def list_ensembles(username):
+    ensembles = Ensemble.query.filter_by(username=username).all()
     return ensembles
 
 def list_actionable_ensembles():
@@ -225,17 +224,17 @@ def list_actionable_ensembles():
     stmt = sql.exists().where(Ensemble.id==EnsembleWorkflow.ensemble_id).where(EnsembleWorkflow.state.in_(states))
     return Ensemble.query.filter(stmt).all()
 
-def get_ensemble(user_id, name):
+def get_ensemble(username, name):
     try:
-        return Ensemble.query.filter_by(user_id=user_id, name=name).one()
+        return Ensemble.query.filter_by(username=username, name=name).one()
     except NoResultFound:
         raise APIError("No such ensemble: %s" % name, 404)
 
-def create_ensemble(user_id, name, max_running, max_planning):
-    if Ensemble.query.filter_by(user_id=user_id, name=name).count() > 0:
+def create_ensemble(username, name, max_running, max_planning):
+    if Ensemble.query.filter_by(username=username, name=name).count() > 0:
         raise APIError("Ensemble %s already exists" % name, 400)
 
-    ensemble = Ensemble(user_id, name)
+    ensemble = Ensemble(username, name)
     ensemble.set_max_running(max_running)
     ensemble.set_max_planning(max_planning)
     db.session.add(ensemble)
@@ -351,7 +350,7 @@ def write_planning_script(f, tcformat, rcformat, scformat, sites, output_site,
 
 @app.route("/ensembles", methods=["GET"])
 def route_list_ensembles():
-    ensembles = list_ensembles(g.user.id)
+    ensembles = list_ensembles(g.username)
     result = [e.get_object() for e in ensembles]
     return json_response(result)
 
@@ -364,7 +363,7 @@ def route_create_ensemble():
     max_running = request.form.get("max_running", 1)
     max_planning = request.form.get("max_planning", 1)
 
-    create_ensemble(g.user.id, name, max_running, max_planning)
+    create_ensemble(g.username, name, max_running, max_planning)
 
     db.session.commit()
 
@@ -372,13 +371,13 @@ def route_create_ensemble():
 
 @app.route("/ensembles/<string:name>", methods=["GET"])
 def route_get_ensemble(name):
-    e = get_ensemble(g.user.id, name)
+    e = get_ensemble(g.username, name)
     result = e.get_object()
     return json_response(result)
 
 @app.route("/ensembles/<string:name>", methods=["PUT","POST"])
 def route_update_ensemble(name):
-    e = get_ensemble(g.user.id, name)
+    e = get_ensemble(g.username, name)
 
     max_running = request.form.get("max_running", None)
     if max_running is not None:
@@ -402,13 +401,13 @@ def route_update_ensemble(name):
 
 @app.route("/ensembles/<string:name>/workflows", methods=["GET"])
 def route_list_ensemble_workflows(name):
-    e = get_ensemble(g.user.id, name)
+    e = get_ensemble(g.username, name)
     result = [w.get_object() for w in e.workflows]
     return json_response(result)
 
 @app.route("/ensembles/<string:ensemble>/workflows", methods=["POST"])
 def route_create_ensemble_workflow(ensemble):
-    e = get_ensemble(g.user.id, ensemble)
+    e = get_ensemble(g.username, ensemble)
 
     name = request.form.get("name", None)
     if name is None:
@@ -470,9 +469,9 @@ def route_create_ensemble_workflow(ensemble):
 
     conf = request.files.get("conf", None)
 
-    sc = catalogs.get_catalog("site", g.user.id, site_catalog)
-    tc = catalogs.get_catalog("transformation", g.user.id, transformation_catalog)
-    rc = catalogs.get_catalog("replica", g.user.id, replica_catalog)
+    sc = catalogs.get_catalog("site", g.username, site_catalog)
+    tc = catalogs.get_catalog("transformation", g.username, transformation_catalog)
+    rc = catalogs.get_catalog("replica", g.username, replica_catalog)
 
     create_ensemble_workflow(e.id, name, priority, rc, tc, sc, dax, conf,
             sites=sites, output_site=output_site, cleanup=cleanup,
@@ -484,14 +483,14 @@ def route_create_ensemble_workflow(ensemble):
 
 @app.route("/ensembles/<string:ensemble>/workflows/<string:workflow>", methods=["GET"])
 def route_get_ensemble_workflow(ensemble, workflow):
-    e = get_ensemble(g.user.id, ensemble)
+    e = get_ensemble(g.username, ensemble)
     w = get_ensemble_workflow(e.id, workflow)
     result = w.get_detail_object()
     return json_response(result)
 
 @app.route("/ensembles/<string:ensemble>/workflows/<string:workflow>", methods=["PUT","POST"])
 def route_update_ensemble_workflow(ensemble, workflow):
-    e = get_ensemble(g.user.id, ensemble)
+    e = get_ensemble(g.username, ensemble)
     w = get_ensemble_workflow(e.id, workflow)
 
     priority = request.form.get("priority", None)
@@ -510,7 +509,7 @@ def route_update_ensemble_workflow(ensemble, workflow):
 
 @app.route("/ensembles/<string:ensemble>/workflows/<string:workflow>/<string:filename>", methods=["GET"])
 def route_get_ensemble_workflow_file(ensemble, workflow, filename):
-    e = get_ensemble(g.user.id, ensemble)
+    e = get_ensemble(g.username, ensemble)
     w = get_ensemble_workflow(e.id, workflow)
     dirname = w.get_dir()
     mimetype = "text/plain"

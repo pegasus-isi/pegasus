@@ -1,25 +1,31 @@
 from flask import request, Response, g
 
-from Pegasus.service import app, users
+import pam
 
-def authenticate(username, password):
-    "Check username/password"
-    try:
-        user = users.getuser(username)
-        if not user.password_matches(password):
-            return False
+from Pegasus.service import app
 
-        # This makes the user object available to the entire app
-        g.user = user
-
+class NoAuthentication(object):
+    def authenticate(self, username, password):
         return True
-    except users.NoSuchUser:
-        return False
+
+class PAMAuthentication(object):
+    def authenticate(self, username, password):
+        if not pam.authenticate(username, password):
+            return False
+        return True
 
 @app.before_request
 def perform_basic_auth():
+    authclass = app.config["AUTHENTICATION"]
+    if authclass in globals():
+        Authentication = globals()[authclass]
+    else:
+        raise Exception("Unknown authentication class: %s" % authclass)
+
     auth = request.authorization
-    if not auth or not authenticate(auth.username, auth.password):
+    if not auth or not Authentication().authenticate(auth.username, auth.password):
         return Response('Basic Auth Required', 401,
                         {'WWW-Authenticate': 'Basic realm="Pegasus Service"'})
+
+    g.username = auth.username
 

@@ -17,11 +17,11 @@ else
     packages+=("MarkupSafe-0.18")
     packages+=("WTForms-1.0.3")
     packages+=("Werkzeug-0.9.3")
-    packages+=("passlib-1.6.1")
     packages+=("requests-1.2.3")
     packages+=("itsdangerous-0.21")
     packages+=("boto-2.5.2")
     packages+=("SQLAlchemy-0.8.0")
+    packages+=("pam-0.1.4")
 fi
 
 dir=$(cd $(dirname $0) && pwd)

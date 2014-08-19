@@ -52,7 +52,7 @@ class EnsembleManagerTest(UserTestCase):
 
     def test_em(self):
         # Create an ensemble and a workflow
-        e = ensembles.Ensemble(self.user_id, "foo")
+        e = ensembles.Ensemble(self.username, "foo")
         e.set_max_planning(1)
         e.set_max_running(1)
         db.session.add(e)
@@ -180,7 +180,7 @@ class WorkflowTest(UserTestCase):
         "Simple tests to make sure the WorkflowProcessor works"
 
         wf_uuid = "d8f8e15c-a55f-4ca0-8474-62bdb3310083"
-        e = ensembles.Ensemble(self.user_id, "foo")
+        e = ensembles.Ensemble(self.username, "foo")
         db.session.add(e)
         db.session.flush()
 
@@ -264,13 +264,13 @@ class WorkflowTest(UserTestCase):
             </sitecatalog>
         """ % {"tmpdir": self.tmpdir})
 
-        rc = catalogs.save_catalog("replica", self.user_id, "replica", "File", rcfile)
-        sc = catalogs.save_catalog("site", self.user_id, "sites", "XML", scfile)
-        tc = catalogs.save_catalog("transformation", self.user_id, "transformations", "text", tcfile)
+        rc = catalogs.save_catalog("replica", self.username, "replica", "File", rcfile)
+        sc = catalogs.save_catalog("site", self.username, "sites", "XML", scfile)
+        tc = catalogs.save_catalog("transformation", self.username, "transformations", "text", tcfile)
 
         conf = StringIO("pegasus.register=false")
 
-        e = ensembles.create_ensemble(self.user_id, "process", 1, 1)
+        e = ensembles.create_ensemble(self.username, "process", 1, 1)
         ew = ensembles.create_ensemble_workflow(e.id, "process", 0, rc, tc, sc, daxfile, conf,
                 sites=["local"], output_site="local", force=True, cleanup=False)
 

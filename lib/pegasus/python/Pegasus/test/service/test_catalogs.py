@@ -1,7 +1,7 @@
 import os
 from StringIO import StringIO
 
-from Pegasus.service import catalogs, api, users
+from Pegasus.service import catalogs, api
 from Pegasus.test import service
 
 class TestCatalog(service.TestCase):
@@ -29,9 +29,8 @@ class TestCatalog(service.TestCase):
 
 class TestCatalogDB(service.DBTestCase):
     def test_relationship(self):
-        u = users.create(username="scott", password="tiger", email="scott@isi.edu")
-        c = catalogs.save_catalog("replica", u.id, "rc.txt", "regex", StringIO("replica"))
-        self.assertEquals(c.user.username, "scott")
+        c = catalogs.save_catalog("replica", "scott", "rc.txt", "regex", StringIO("replica"))
+        self.assertEquals(c.username, "scott")
 
 class TestCatalogAPI(service.APITestCase):
     def test_manage_catalogs(self):

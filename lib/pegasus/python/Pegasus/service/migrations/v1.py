@@ -1,10 +1,8 @@
-from Pegasus.service import db, users
+from Pegasus.service import db
 
 def upgrade():
-    db.metadata.create_all(bind=db.engine,
-            tables=[users.User.__table__])
+    pass
 
 def downgrade():
-    db.metadata.drop_all(bind=db.engine,
-            tables=[users.User.__table__])
+    pass
 

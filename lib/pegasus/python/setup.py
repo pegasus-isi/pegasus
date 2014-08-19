@@ -61,9 +61,10 @@ setup(
         "SQLAlchemy==0.8.0",
         "WTForms==1.0.3",
         "requests==1.2.3",
-        "passlib==1.6.1",
         "MarkupSafe==0.18",
-        "itsdangerous==0.21"
+        "itsdangerous==0.21",
+        "boto==2.5.2",
+        "pam==0.1.4"
     ]
 )
 

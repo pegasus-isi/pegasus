@@ -30,6 +30,10 @@ def get_pegasus_home():
 
     return None
 
+def get_userdata_dir(username):
+    return os.path.join(app.config["STORAGE_DIR"],
+                        "userdata", username)
+
 from flask.ext.sqlalchemy import SQLAlchemy
 db = SQLAlchemy(app)
 cache = Cache(app)

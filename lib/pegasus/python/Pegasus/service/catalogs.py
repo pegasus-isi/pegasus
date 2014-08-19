@@ -9,7 +9,7 @@ from flask import g, url_for, make_response, request, send_file, json
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 
-from Pegasus.service import app, db
+from Pegasus.service import app, db, get_userdata_dir
 from Pegasus.service.command import ClientCommand, CompoundCommand
 from Pegasus.service.api import *
 
@@ -57,7 +57,7 @@ class CatalogMixin:
         self.format = validate_catalog_format(self.__catalog_type__, format)
 
     def get_catalog_file(self):
-        userdata = self.user.get_userdata_dir()
+        userdata = get_userdata_dir(self.username)
         return os.path.join(userdata, "catalogs", self.__catalog_type__, self.name)
 
     def save_catalog_file(self, file):
@@ -79,7 +79,7 @@ class CatalogMixin:
 class ReplicaCatalog(CatalogMixin, db.Model):
     __tablename__ = 'replica_catalog'
     __table_args__ = (
-        db.UniqueConstraint('user_id', 'name'),
+        db.UniqueConstraint('username', 'name'),
         {'mysql_engine':'InnoDB'}
     )
     __catalog_type__ = 'replica'
@@ -89,11 +89,10 @@ class ReplicaCatalog(CatalogMixin, db.Model):
     format = db.Column(db.Enum(*RC_FORMATS), nullable=False)
     created = db.Column(db.DateTime, nullable=False)
     updated = db.Column(db.DateTime, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    user = db.relationship("User")
+    username = db.Column(db.String(100), nullable=False)
 
-    def __init__(self, user_id, name, format):
-        self.user_id = user_id
+    def __init__(self, username, name, format):
+        self.username = username
         self.set_name(name)
         self.set_format(format)
         self.set_created()
@@ -102,7 +101,7 @@ class ReplicaCatalog(CatalogMixin, db.Model):
 class SiteCatalog(db.Model, CatalogMixin):
     __tablename__ = 'site_catalog'
     __table_args__ = (
-        db.UniqueConstraint('user_id', 'name'),
+        db.UniqueConstraint('username', 'name'),
         {'mysql_engine':'InnoDB'}
     )
     __catalog_type__ = 'site'
@@ -112,11 +111,10 @@ class SiteCatalog(db.Model, CatalogMixin):
     format = db.Column(db.Enum(*SC_FORMATS), nullable=False)
     created = db.Column(db.DateTime, nullable=False)
     updated = db.Column(db.DateTime, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    user = db.relationship("User")
+    username = db.Column(db.String(100), nullable=False)
 
-    def __init__(self, user_id, name, format):
-        self.user_id = user_id
+    def __init__(self, username, name, format):
+        self.username = username
         self.set_name(name)
         self.set_format(format)
         self.set_created()
@@ -125,7 +123,7 @@ class SiteCatalog(db.Model, CatalogMixin):
 class TransformationCatalog(db.Model, CatalogMixin):
     __tablename__ = 'transformation_catalog'
     __table_args__ = (
-        db.UniqueConstraint('user_id', 'name'),
+        db.UniqueConstraint('username', 'name'),
         {'mysql_engine':'InnoDB'}
     )
     __catalog_type__ = 'transformation'
@@ -135,11 +133,10 @@ class TransformationCatalog(db.Model, CatalogMixin):
     format = db.Column(db.Enum(*TC_FORMATS), nullable=False)
     created = db.Column(db.DateTime, nullable=False)
     updated = db.Column(db.DateTime, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    user = db.relationship("User")
+    username = db.Column(db.String(100), nullable=False)
 
-    def __init__(self, user_id, name, format):
-        self.user_id = user_id
+    def __init__(self, username, name, format):
+        self.username = username
         self.set_name(name)
         self.set_format(format)
         self.set_created()
@@ -165,22 +162,22 @@ def get_catalog_model(catalog_type):
     else:
         raise APIError("Invalid catalog type: %s" % catalog_type, status_code=400)
 
-def get_catalog(catalog_type, user_id, name):
+def get_catalog(catalog_type, username, name):
     try:
         Catalog = get_catalog_model(catalog_type)
-        return Catalog.query.filter_by(user_id=user_id, name=name).one()
+        return Catalog.query.filter_by(username=username, name=name).one()
     except NoResultFound:
         raise APIError("No such catalog: %s" % name, 404)
 
-def list_catalogs(catalog_type, user_id):
+def list_catalogs(catalog_type, username):
     Catalog = get_catalog_model(catalog_type)
-    return Catalog.query.filter_by(user_id=user_id).order_by("updated").all()
+    return Catalog.query.filter_by(username=username).order_by("updated").all()
 
-def save_catalog(catalog_type, user_id, name, format, file):
+def save_catalog(catalog_type, username, name, format, file):
     Catalog = get_catalog_model(catalog_type)
 
     try:
-        cat = Catalog(user_id, name, format)
+        cat = Catalog(username, name, format)
         db.session.add(cat)
         db.session.flush()
     except IntegrityError, e:
@@ -201,7 +198,7 @@ def route_all_catalogs():
 
 @app.route("/catalogs/<string:catalog_type>", methods=["GET"])
 def route_list_catalogs(catalog_type):
-    clist = list_catalogs(catalog_type, g.user.id)
+    clist = list_catalogs(catalog_type, g.username)
     result = [catalog_object(catalog_type, c) for c in clist]
     return json_response(result)
 
@@ -223,7 +220,7 @@ def route_store_catalog(catalog_type):
     if file is None:
         raise APIError("Specify file")
 
-    save_catalog(catalog_type, g.user.id, name, format, file)
+    save_catalog(catalog_type, g.username, name, format, file)
 
     db.session.commit()
 
@@ -231,7 +228,7 @@ def route_store_catalog(catalog_type):
 
 @app.route("/catalogs/<string:catalog_type>/<string:name>", methods=["GET"])
 def route_get_catalog(catalog_type, name):
-    c = get_catalog(catalog_type, g.user.id, name)
+    c = get_catalog(catalog_type, g.username, name)
     filename = c.get_catalog_file()
 
     if not os.path.exists(filename):
@@ -241,7 +238,7 @@ def route_get_catalog(catalog_type, name):
 
 @app.route("/catalogs/<string:catalog_type>/<string:name>", methods=["DELETE"])
 def route_delete_catalog(catalog_type, name):
-    c = get_catalog(catalog_type, g.user.id, name)
+    c = get_catalog(catalog_type, g.username, name)
 
     db.session.delete(c)
 
@@ -261,7 +258,7 @@ def route_delete_catalog(catalog_type, name):
 @app.route("/catalogs/<string:catalog_type>/<string:name>", methods=["PUT"])
 def route_update_catalog(catalog_type, name):
 
-    c = get_catalog(catalog_type, g.user.id, name)
+    c = get_catalog(catalog_type, g.username, name)
 
     c.set_updated()
 

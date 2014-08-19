@@ -9,7 +9,7 @@ from StringIO import StringIO
 
 from flask import json
 
-from Pegasus.service import app, db, migrations, users
+from Pegasus.service import app, db, migrations
 
 class TestCase(unittest.TestCase):
 
@@ -45,18 +45,13 @@ class DBTestCase(TestCase):
         TestCase.tearDown(self)
 
 class UserTestCase(DBTestCase):
+
     def setUp(self):
         DBTestCase.setUp(self)
-
-        # Create a test user
         self.username = "scott"
         self.password = "tiger"
-        self.email = "scott@isi.edu"
-        self.user = users.create(username=self.username,
-                                 password=self.password,
-                                 email=self.email)
-        self.user_id = self.user.id
-        db.session.commit()
+
+        app.config.update(AUTHENTICATION="NoAuthentication")
 
 class APITestCase(UserTestCase):
     def setUp(self):
