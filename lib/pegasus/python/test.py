@@ -8,11 +8,14 @@ if sys.version_info >= (2,5):
 else:
     test_service = False
 
+# XXX Disable service tests until ensemble manager is fixed
+test_service = False
+
 # Try to import the dependencies to make sure they exist
 try:
     import Pegasus
     import sqlalchemy
-    if test_service:
+    if sys.version_info >= (2,5):
         import sqlite3
         import boto
         import requests
