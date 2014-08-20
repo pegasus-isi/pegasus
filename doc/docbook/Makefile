@@ -74,7 +74,8 @@ pegasus-user-guide.fo: $(XML) pegasus-pdf-style.xsl
 pegasus-user-guide.pdf: pegasus-user-guide.fo
 	fop pegasus-user-guide.fo -pdf pegasus-user-guide.pdf 2>&1 \
         | grep -v "The following feature isn't implemented by Apache FOP, yet: table-layout=\"auto\"" \
-        | grep -v "function may only be used when fo:table has table-layout=\"fixed\""
+        | grep -v "function may only be used when fo:table has table-layout=\"fixed\"" \
+        | grep -v "org.apache.fop.events.LoggingEventListener processEvent"
 
 install: $(TARGETS)
 	mkdir -p ${prefix}

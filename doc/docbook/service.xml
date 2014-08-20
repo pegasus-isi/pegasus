@@ -20,23 +20,6 @@
         </section>
 
         <section>
-            <title>Service Database Administration</title>
-
-            <simpara>The <literal>pegasus-service-admin</literal> script is used to
-            administer the service.</simpara>
-
-            <simpara>You can set the SQLAlchemy database URI in the configuration
-            file. The <literal>pegasus-service-admin</literal> script needs direct
-            access to the database (it does not go through the service).</simpara>
-            <simpara>To add tables to the database run:</simpara>
-            <literallayout class="monospaced">$ pegasus-service-admin create</literallayout>
-            <simpara>To add a new user run:</simpara>
-            <literallayout class="monospaced">$ pegasus-service-admin useradd USERNAME EMAIL</literallayout>
-            <simpara>Where USERNAME is the desired username and EMAIL is the user&#8217;s email address.
-            It will prompt you for the new user&#8217;s password.</simpara>
-        </section>
-
-        <section>
             <title>Running the Service</title>
             <simpara>Once the service is installed (normally or in development mode) and
             configured you can start the server by running:</simpara>
