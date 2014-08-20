@@ -10,7 +10,7 @@ from flask import g, url_for, make_response, request, send_file, json
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import sql
 
-from Pegasus.service import app, db, catalogs, get_userdata_dir
+from Pegasus.service import app, db, catalogs
 from Pegasus.service.api import *
 from Pegasus.service.command import ClientCommand, CompoundCommand
 
@@ -99,7 +99,7 @@ class Ensemble(db.Model, EnsembleMixin):
             raise APIError("Invalid value for max_planning: %s" % max_planning)
 
     def get_dir(self):
-        return os.path.join(get_userdata_dir(self.username), "ensembles", self.name)
+        return os.path.join(g.user.get_userdata_dir(), "ensembles", self.name)
 
     def get_object(self):
         return {

@@ -1,7 +1,6 @@
 import sys
 import os
 from flask import Flask
-from flask.ext.cache import Cache
 
 app = Flask(__name__)
 
@@ -30,16 +29,8 @@ def get_pegasus_home():
 
     return None
 
-def get_userdata_dir(username):
-    return os.path.join(app.config["STORAGE_DIR"],
-                        "userdata", username)
-
-from flask.ext.sqlalchemy import SQLAlchemy
-db = SQLAlchemy(app)
+from flask.ext.cache import Cache
 cache = Cache(app)
 
-from Pegasus.service import auth, filters, api, dashboard, catalogs, ensembles
-
-from Pegasus.netlogger.analysis.schema import stampede_dashboard_schema as dash
-dash.initializeToDashboardDB(db.engine, db.metadata)
+from Pegasus.service import request, filters, api, dashboard #, catalogs #, ensembles
 

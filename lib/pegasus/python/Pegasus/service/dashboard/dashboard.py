@@ -37,13 +37,11 @@ class NoWorkflowsFoundError(Exception):
 
 class Dashboard(object):
 
-    def __init__(self, root_wf_id=None, wf_id=None):
-        self._master_db_url = app.config["SQLALCHEMY_DATABASE_URI"]
+    def __init__(self, master_db_url, root_wf_id=None, wf_id=None):
+        self._master_db_url = master_db_url
 
-        """
-        If the ID is specified, it means that the query is specific to a workflow.
-        So we will now query the master database to get the connection URL for the workflow.
-        """
+        # If the ID is specified, it means that the query is specific to a workflow.
+        # So we will now query the master database to get the connection URL for the workflow.
         if root_wf_id or wf_id:
             self.initialize(root_wf_id, wf_id)
 

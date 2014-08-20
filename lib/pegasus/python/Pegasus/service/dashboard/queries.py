@@ -13,34 +13,35 @@
 #  limitations under the License.
 
 __author__ = 'Rajiv Mayani'
+import logging
 
 from Pegasus.netlogger.analysis.modules._base import SQLAlchemyInit
 from Pegasus.netlogger.analysis.schema.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
-from Pegasus.netlogger.analysis.schema.stampede_dashboard_schema import DashboardWorkflow, DashboardWorkflowstate, initializeToDashboardDB
+from Pegasus.netlogger.analysis.schema.stampede_dashboard_schema import *
 from Pegasus.netlogger.analysis.schema.stampede_schema import *
 from Pegasus.netlogger.analysis.error.Error import StampedeDBNotFoundError
-from Pegasus.netlogger.nllog import DoesLogging
 
+log = logging.getLogger(__name__)
 
 class MasterDBNotFoundError (Exception):
     pass
 
+class MasterDatabase(SQLAlchemyInit):
 
-class MasterDatabase(SQLAlchemyInit, DoesLogging):
+    def __init__(self, connString, debug=False):
+        self._dbg = debug
 
-    def __init__(self, connString=None):
         if connString is None:
             raise ValueError('Connection string is required')
-        DoesLogging.__init__(self)
 
         try:
             SQLAlchemyInit.__init__(self, connString, initializeToDashboardDB)
         except exc.OperationalError, e:
-            self.log.error('init', msg='%s' % ErrorStrings.get_init_error(e))
+            log.error(ErrorStrings.get_init_error(e))
             raise MasterDBNotFoundError
 
     def close(self):
-        self.log.debug('close')
+        log.debug('close')
         self.disconnect()
 
     def get_wf_db_url(self, wf_id):
@@ -190,17 +191,18 @@ class MasterDatabase(SQLAlchemyInit, DoesLogging):
         return q.one()
 
 
-class WorkflowInfo(SQLAlchemyInit, DoesLogging):
+class WorkflowInfo(SQLAlchemyInit):
 
-    def __init__(self, connString=None, wf_id=None, wf_uuid=None):
+    def __init__(self, connString=None, wf_id=None, wf_uuid=None, debug=False):
+        self._dbg = debug
+
         if connString is None:
             raise ValueError('Connection string is required')
-        DoesLogging.__init__(self)
 
         try:
             SQLAlchemyInit.__init__(self, connString, initializeToPegasusDB)
         except exc.OperationalError, e:
-            self.log.error('init', msg='%s' % ErrorStrings.get_init_error(e))
+            log.error(ErrorStrings.get_init_error(e))
             raise StampedeDBNotFoundError
 
         # Check the schema version before proceeding.
@@ -616,6 +618,6 @@ class WorkflowInfo(SQLAlchemyInit, DoesLogging):
         return q.one()
 
     def close(self):
-        self.log.debug('close')
+        log.debug('close')
         self.disconnect()
 

@@ -9,9 +9,10 @@ from flask import g, url_for, make_response, request, send_file, json
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 
-from Pegasus.service import app, db, get_userdata_dir
+from Pegasus.service import app, db
 from Pegasus.service.command import ClientCommand, CompoundCommand
 from Pegasus.service.api import *
+from Pegasus.netlogger.analysis.schema.stampede_dashboard_schema import *
 
 SC_FORMATS = ["XML","XML2"]
 TC_FORMATS = ["File","Text"]
@@ -57,7 +58,7 @@ class CatalogMixin:
         self.format = validate_catalog_format(self.__catalog_type__, format)
 
     def get_catalog_file(self):
-        userdata = get_userdata_dir(self.username)
+        userdata = g.user.get_userdata_dir()
         return os.path.join(userdata, "catalogs", self.__catalog_type__, self.name)
 
     def save_catalog_file(self, file):

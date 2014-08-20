@@ -14,13 +14,14 @@ DEBUG = False
 # The secret key used by Flask to encrypt session keys
 SECRET_KEY = os.urandom(24)
 
+# Authentication method to use (NoAuthentication or PAMAuthentication)
 AUTHENTICATION = "PAMAuthentication"
 
 # SQLALCHEMY CONFIGURATION
 
 # The URI of the database
 #SQLALCHEMY_DATABASE_URI = "mysql://pegasus:secret@127.0.0.1:3306/pegasus_service"
-SQLALCHEMY_DATABASE_URI = 'sqlite:///%s/.pegasus/workflow.db' % os.getenv('HOME')
+#SQLALCHEMY_DATABASE_URI = 'sqlite:///%s/.pegasus/workflow.db' % os.getenv('HOME')
 #SQLALCHEMY_DATABASE_URI = 'sqlite:////tmp/test.db'
 
 # Set to True to log SQL queries
@@ -42,9 +43,8 @@ CACHE_TYPE = 'simple'
 
 # SERVICE CONFIGURATION
 
-# Path to the directory where the service stores all its files
-STORAGE_DIR = os.path.join(os.getenv('HOME'), ".pegasus", "service")
-
+# Max number of processes to fork when handling requests
+MAX_PROCESSES = 10
 
 
 # CLIENT CONFIGURATION
