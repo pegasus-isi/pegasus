@@ -23,6 +23,10 @@ class DashboardWorkflow(SABase):
 class DashboardWorkflowstate(SABase):
     pass
 
+from Pegasus.service.catalogs import ReplicaCatalog, RC_FORMATS
+from Pegasus.service.catalogs import SiteCatalog, SC_FORMATS
+from Pegasus.service.catalogs import TransformationCatalog, TC_FORMATS
+
 def initializeToDashboardDB(db, metadata, kw={}):
     """
     Function to create the Workflow schema that just tracks the root
@@ -101,6 +105,58 @@ def initializeToDashboardDB(db, metadata, kw={}):
           pg_workflowstate.c.timestamp, unique=True)
 
     orm.mapper(DashboardWorkflowstate, pg_workflowstate)
+
+    pg_replica_catalog = Table("replica_catalog", metadata, 
+        Column('id', Integer, primary_key=True),
+        Column('name', String(100), nullable=False),
+        Column('format', Enum(*RC_FORMATS), nullable=False),
+        Column('created', DateTime, nullable=False),
+        Column('updated', DateTime, nullable=False),
+        Column('username', String(100), nullable=False),
+        mysql_engine = 'InnoDB',
+        **kw
+    )
+
+    Index('UNIQUE_REPLICA_CATALOG',
+          pg_replica_catalog.c.username,
+          pg_replica_catalog.c.name)
+
+    orm.mapper(ReplicaCatalog, pg_replica_catalog)
+
+    pg_site_catalog = Table('site_catalog', metadata,
+        Column('id', Integer, primary_key=True),
+        Column('name', String(100), nullable=False),
+        Column('format', Enum(*SC_FORMATS), nullable=False),
+        Column('created', DateTime, nullable=False),
+        Column('updated', DateTime, nullable=False),
+        Column('username', String(100), nullable=False),
+        mysql_engine = 'InnoDB',
+        **kw
+    )
+
+    Index('UNIQUE_SITE_CATALOG',
+          pg_site_catalog.c.username,
+          pg_site_catalog.c.name)
+
+    orm.mapper(SiteCatalog, pg_site_catalog)
+
+    pg_transformation_catalog = Table('transformation_catalog', metadata,
+        Column('id', Integer, primary_key=True),
+        Column('name', String(100), nullable=False),
+        Column('format', Enum(*TC_FORMATS), nullable=False),
+        Column('created', DateTime, nullable=False),
+        Column('updated', DateTime, nullable=False),
+        Column('username', String(100), nullable=False),
+        mysql_engine = 'InnoDB',
+        **kw
+    )
+
+    Index('UNIQUE_TRANSFORMATION_CATALOG',
+          pg_transformation_catalog.c.username,
+          pg_transformation_catalog.c.name)
+
+    orm.mapper(TransformationCatalog, pg_transformation_catalog)
+
 
     metadata.create_all(db)
 

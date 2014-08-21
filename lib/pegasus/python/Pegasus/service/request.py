@@ -17,7 +17,7 @@ class User(object):
         self.homedir = homedir
 
     def get_userdata_dir(self):
-        return os.path.join(self.homedir, ".pegasus")
+        return os.path.join(app.config["STORAGE_DIRECTORY"], self.username)
 
     def get_master_db(self):
         return os.path.join(self.homedir, ".pegasus", "workflow.db")
@@ -82,18 +82,18 @@ def before():
         log.error("Invalid login: %s", cred.username)
         return basic_auth_response()
 
-    user = auth.get_user()
-    g.username = user.username
-    g.master_db_url = user.get_master_db_url()
+    g.user = auth.get_user()
+    g.username = g.user.username
+    g.master_db_url = g.user.get_master_db_url()
 
     # If required, set uid and gid of handler process
-    if os.getuid() != user.uid:
+    if os.getuid() != g.user.uid:
         if os.getuid() != 0:
             log.error("Pegasus service must run as root to enable multi-user access")
             return basic_auth_response()
 
-        os.setgid(user.gid)
-        os.setuid(user.uid)
+        os.setgid(g.user.gid)
+        os.setuid(g.user.uid)
 
     # TODO Add login page and session for storing authentication status
     # TODO Add URL Processor for /u/<username> to enable user aliasing

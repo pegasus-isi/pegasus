@@ -9,10 +9,10 @@ from flask import g, url_for, make_response, request, send_file, json
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 
-from Pegasus.service import app, db
+from Pegasus.service import app
 from Pegasus.service.command import ClientCommand, CompoundCommand
 from Pegasus.service.api import *
-from Pegasus.netlogger.analysis.schema.stampede_dashboard_schema import *
+from Pegasus.netlogger.analysis.modules._base import SQLAlchemyInit
 
 SC_FORMATS = ["XML","XML2"]
 TC_FORMATS = ["File","Text"]
@@ -44,7 +44,7 @@ def validate_catalog_format(catalog_type, format):
         raise APIError("Invalid %s catalog format: %s" % (catalog_type, format))
     return lower_formats[lower_format]
 
-class CatalogMixin:
+class CatalogBase(object):
     def set_name(self, name):
         self.name = validate_catalog_name(name)
 
@@ -77,21 +77,9 @@ class CatalogMixin:
         finally:
             f.close()
 
-class ReplicaCatalog(CatalogMixin, db.Model):
-    __tablename__ = 'replica_catalog'
-    __table_args__ = (
-        db.UniqueConstraint('username', 'name'),
-        {'mysql_engine':'InnoDB'}
-    )
+class ReplicaCatalog(CatalogBase):
     __catalog_type__ = 'replica'
 
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    format = db.Column(db.Enum(*RC_FORMATS), nullable=False)
-    created = db.Column(db.DateTime, nullable=False)
-    updated = db.Column(db.DateTime, nullable=False)
-    username = db.Column(db.String(100), nullable=False)
-
     def __init__(self, username, name, format):
         self.username = username
         self.set_name(name)
@@ -99,21 +87,9 @@ class ReplicaCatalog(CatalogMixin, db.Model):
         self.set_created()
         self.set_updated()
 
-class SiteCatalog(db.Model, CatalogMixin):
-    __tablename__ = 'site_catalog'
-    __table_args__ = (
-        db.UniqueConstraint('username', 'name'),
-        {'mysql_engine':'InnoDB'}
-    )
+class SiteCatalog(CatalogBase):
     __catalog_type__ = 'site'
 
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    format = db.Column(db.Enum(*SC_FORMATS), nullable=False)
-    created = db.Column(db.DateTime, nullable=False)
-    updated = db.Column(db.DateTime, nullable=False)
-    username = db.Column(db.String(100), nullable=False)
-
     def __init__(self, username, name, format):
         self.username = username
         self.set_name(name)
@@ -121,20 +97,8 @@ class SiteCatalog(db.Model, CatalogMixin):
         self.set_created()
         self.set_updated()
 
-class TransformationCatalog(db.Model, CatalogMixin):
-    __tablename__ = 'transformation_catalog'
-    __table_args__ = (
-        db.UniqueConstraint('username', 'name'),
-        {'mysql_engine':'InnoDB'}
-    )
+class TransformationCatalog(CatalogBase):
     __catalog_type__ = 'transformation'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    format = db.Column(db.Enum(*TC_FORMATS), nullable=False)
-    created = db.Column(db.DateTime, nullable=False)
-    updated = db.Column(db.DateTime, nullable=False)
-    username = db.Column(db.String(100), nullable=False)
 
     def __init__(self, username, name, format):
         self.username = username
@@ -163,30 +127,35 @@ def get_catalog_model(catalog_type):
     else:
         raise APIError("Invalid catalog type: %s" % catalog_type, status_code=400)
 
-def get_catalog(catalog_type, username, name):
-    try:
+class Catalogs(SQLAlchemyInit):
+    def __init__(self, dburl):
+        from Pegasus.netlogger.analysis.schema.stampede_dashboard_schema import initializeToDashboardDB
+        SQLAlchemyInit.__init__(self, dburl, initializeToDashboardDB)
+
+    def get_catalog(self, catalog_type, username, name):
+        try:
+            Catalog = get_catalog_model(catalog_type)
+            return self.session.query(Catalog).filter(Catalog.username==username, Catalog.name==name).one()
+        except NoResultFound:
+            raise APIError("No such catalog: %s" % name, 404)
+
+    def list_catalogs(self, catalog_type, username):
         Catalog = get_catalog_model(catalog_type)
-        return Catalog.query.filter_by(username=username, name=name).one()
-    except NoResultFound:
-        raise APIError("No such catalog: %s" % name, 404)
+        return self.session.query(Catalog).filter(Catalog.username==username).order_by("updated").all()
 
-def list_catalogs(catalog_type, username):
-    Catalog = get_catalog_model(catalog_type)
-    return Catalog.query.filter_by(username=username).order_by("updated").all()
+    def save_catalog(self, catalog_type, username, name, format, file):
+        Catalog = get_catalog_model(catalog_type)
 
-def save_catalog(catalog_type, username, name, format, file):
-    Catalog = get_catalog_model(catalog_type)
+        try:
+            cat = Catalog(username, name, format)
+            self.session.add(cat)
+            self.session.flush()
+        except IntegrityError, e:
+            raise APIError("Duplicate catalog name")
 
-    try:
-        cat = Catalog(username, name, format)
-        db.session.add(cat)
-        db.session.flush()
-    except IntegrityError, e:
-        raise APIError("Duplicate catalog name")
+        cat.save_catalog_file(file)
 
-    cat.save_catalog_file(file)
-
-    return cat
+        return cat
 
 @app.route("/catalogs", methods=["GET"])
 def route_all_catalogs():
@@ -199,7 +168,8 @@ def route_all_catalogs():
 
 @app.route("/catalogs/<string:catalog_type>", methods=["GET"])
 def route_list_catalogs(catalog_type):
-    clist = list_catalogs(catalog_type, g.username)
+    db = Catalogs(g.master_db_url)
+    clist = db.list_catalogs(catalog_type, g.user.username)
     result = [catalog_object(catalog_type, c) for c in clist]
     return json_response(result)
 
@@ -221,7 +191,8 @@ def route_store_catalog(catalog_type):
     if file is None:
         raise APIError("Specify file")
 
-    save_catalog(catalog_type, g.username, name, format, file)
+    db = Catalogs(g.master_db_url)
+    db.save_catalog(catalog_type, g.user.username, name, format, file)
 
     db.session.commit()
 
@@ -229,7 +200,8 @@ def route_store_catalog(catalog_type):
 
 @app.route("/catalogs/<string:catalog_type>/<string:name>", methods=["GET"])
 def route_get_catalog(catalog_type, name):
-    c = get_catalog(catalog_type, g.username, name)
+    db = Catalogs(g.master_db_url)
+    c = db.get_catalog(catalog_type, g.user.username, name)
     filename = c.get_catalog_file()
 
     if not os.path.exists(filename):
@@ -239,7 +211,8 @@ def route_get_catalog(catalog_type, name):
 
 @app.route("/catalogs/<string:catalog_type>/<string:name>", methods=["DELETE"])
 def route_delete_catalog(catalog_type, name):
-    c = get_catalog(catalog_type, g.username, name)
+    db = Catalogs(g.master_db_url)
+    c = db.get_catalog(catalog_type, g.user.username, name)
 
     db.session.delete(c)
 
@@ -258,8 +231,8 @@ def route_delete_catalog(catalog_type, name):
 
 @app.route("/catalogs/<string:catalog_type>/<string:name>", methods=["PUT"])
 def route_update_catalog(catalog_type, name):
-
-    c = get_catalog(catalog_type, g.username, name)
+    db = Catalogs(g.master_db_url)
+    c = db.get_catalog(catalog_type, g.user.username, name)
 
     c.set_updated()
 
