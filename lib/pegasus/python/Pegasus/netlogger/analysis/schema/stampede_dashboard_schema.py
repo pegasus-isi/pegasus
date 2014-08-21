@@ -94,7 +94,7 @@ def initializeToDashboardDB(db, metadata, kw={}):
     # All three columns are marked as primary key to produce the desired
     # effect - ie: it is the combo of the three columns that make a row
     # unique.
-                             Column('wf_id', KeyInt, ForeignKey('workflow.wf_id', ondelete='CASCADE'), 
+                             Column('wf_id', KeyInt, ForeignKey('master_workflow.wf_id', ondelete='CASCADE'), 
                                     nullable=False, primary_key=True),
                              Column('state', Enum('WORKFLOW_STARTED', 'WORKFLOW_TERMINATED'), 
                                 nullable=False, primary_key=True),
