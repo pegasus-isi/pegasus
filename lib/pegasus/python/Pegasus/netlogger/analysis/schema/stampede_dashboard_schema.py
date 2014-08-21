@@ -64,7 +64,7 @@ def initializeToDashboardDB(db, metadata, kw={}):
     # submit_dir = run
     #
 
-    pg_workflow = Table('workflow', metadata,
+    pg_workflow = Table('master_workflow', metadata,
                         Column('wf_id', KeyInt, primary_key=True, nullable=False),
                         Column('wf_uuid', VARCHAR(255), nullable=False),
                         Column('dax_label', VARCHAR(255), nullable=True),
@@ -82,15 +82,15 @@ def initializeToDashboardDB(db, metadata, kw={}):
                         **kw
     )
 
-    Index('wf_id_KEY', pg_workflow.c.wf_id, unique=True)
-    Index('wf_uuid_UNIQUE', pg_workflow.c.wf_uuid, unique=True)
+    Index('KEY_MASTER_WF_ID', pg_workflow.c.wf_id, unique=True)
+    Index('UNIQUE_MASTER_WF_UUID', pg_workflow.c.wf_uuid, unique=True)
 
     try:
         orm.mapper(DashboardWorkflow, pg_workflow )
     except exc.ArgumentError, e:
         log.warning(e)
 
-    pg_workflowstate = Table('workflowstate', metadata,
+    pg_workflowstate = Table('master_workflowstate', metadata,
     # All three columns are marked as primary key to produce the desired
     # effect - ie: it is the combo of the three columns that make a row
     # unique.
@@ -105,7 +105,7 @@ def initializeToDashboardDB(db, metadata, kw={}):
                              **kw
     )
 
-    Index('UNIQUE_WORKFLOWSTATE',
+    Index('UNIQUE_MASTER_WORKFLOWSTATE',
           pg_workflowstate.c.wf_id,
           pg_workflowstate.c.state,
           pg_workflowstate.c.timestamp, unique=True)
