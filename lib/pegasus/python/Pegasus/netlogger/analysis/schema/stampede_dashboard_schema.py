@@ -14,7 +14,7 @@ from sqlalchemy import orm, exc
 
 from Pegasus.netlogger.analysis.schema._base import SABase
 
-log = Logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 CURRENT_SCHEMA_VERSION = 4.0
 
