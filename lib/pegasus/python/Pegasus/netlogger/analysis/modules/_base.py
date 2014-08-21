@@ -18,31 +18,11 @@ from Pegasus.netlogger.analysis import schemacfg
 
 class AnalyzerException(Exception): pass
 
-# XXX Used only by mongodb module?
-#class ConnectionException(AnalyzerException):
-#    def __init__(self, value):
-#        self.value = value
-#
-#    def __str__(self):
-#        return repr(self.value)
-
 class PreprocessException(AnalyzerException):
     pass
 
 class ProcessException(AnalyzerException):
     pass
-
-# XXX Does not appear to be used except by Loader, which is not used
-#sqlite = None
-#try:
-#    # Python 2.5
-#    import sqlite3 as sqlite
-#except ImportError:
-#    try:
-#        # Python 2.4
-#        from pysqlite2 import dbapi2 as sqlite
-#    except ImportError:
-#        pass
 
 def dsn_dialect(s):
     """Data source name (dsn) dialect."""
@@ -51,43 +31,6 @@ def dsn_dialect(s):
     if m and (len(m.groups()) == 1):
         dialect = m.group(1)
     return dialect.lower()
-
-# XXX Does not appear to be used except by Loader, which is not used
-#"""
-#Database classes
-#"""
-#
-#class DBConnectError(Exception): pass
-#
-#class Connection:
-#    NAME = None
-#
-#    def __init__(self, dsn=None, database=None, kw=None):
-#        """Connect to the database.
-#
-#        :Parameter:
-#          dsn - DBMS filename (sqlite) or host (others)
-#          database - Database inside DBMS, ignored for sqlite
-#          kw - Additional keywords
-#
-#        On error, raise DBConnectError
-#        """
-#        self.connection = None
-#
-#class SQLiteConnection(Connection):
-#    NAME = 'sqlite'
-#
-#    def __init__(self, dsn=None, database=None, kw=None):
-#        self.connection = sqlite.connect(dsn, isolation_level="DEFERRED")
-#
-#"""
-#User-level name for each connection class, from the
-#NAME constant in each class.
-#"""
-#
-#CONNECTION_CLASSMAP = { }
-#for clazz in (SQLiteConnection,):
-#    CONNECTION_CLASSMAP[clazz.NAME] = clazz
 
 """
 Mixin class to provide SQLAlchemy database initialization/mapping.
@@ -315,48 +258,3 @@ class BufferedAnalyzer(Analyzer, threading.Thread):
         #time.sleep(1)
         self.log.info('finish.end')
 
-# XXX This class doesn't seem to be used
-#class Loader:
-#    """Abstract class for loading into database-like things.
-#    """
-#    def __init__(self, type=None, dsn=None, **kw):
-#        """Initialize state.        
-#
-#        :Parameters:
-#          type - Name for type of database
-#          dsn - DBMS filename (sqlite) or host (others)
-#          kw - Additional connection keywords
-#        """
-#        # get connection class
-#        try:
-#            self.type = type.lower()
-#        except AttributeError:
-#            raise ValueError("Database type not a string")
-#        self.conn_class = CONNECTION_CLASSMAP.get(self.type, None)
-#        if self.conn_class is None:
-#            raise NotImplementedError("Unknown DB type '%s'" % type)
-#        # set server (or file) DSN
-#        if dsn is None:
-#            if self.conn_class is sqlite:
-#                self.dsn = "db.sqlite"
-#            else:
-#                self.dsn = "localhost"
-#        else:
-#            self.dsn = dsn
-#        # save connection keywords
-#        self.conn_kw = kw
-#
-#    def connect(self):
-#        """Connect to the database.
-#
-#        Return new connection (also in self._conn.connection)
-#        """
-#        self._conn = self.conn_class(self.dsn, self.conn_kw)
-#        return self._conn.connection
-#
-#    def disconnect(self):
-#        """Disconnect, if connected.
-#        """
-#        if self._conn:
-#            self._conn.connection.close()
-#            self._conn = None
