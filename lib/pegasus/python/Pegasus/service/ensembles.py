@@ -10,9 +10,10 @@ from flask import g, url_for, make_response, request, send_file, json
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import sql
 
-from Pegasus.service import app, db, catalogs
+from Pegasus.service import app, catalogs
 from Pegasus.service.api import *
 from Pegasus.service.command import ClientCommand, CompoundCommand
+from Pegasus.netlogger.analysis.modules._base import SQLAlchemyInit
 
 def validate_ensemble_name(name):
     if name is None:
@@ -29,7 +30,7 @@ def validate_priority(priority):
     except ValueError:
         raise APIError("Invalid priority: %s" % priority)
 
-class EnsembleMixin:
+class EnsembleBase(object):
     def set_name(self, name):
         self.name = validate_ensemble_name(name)
 
@@ -49,22 +50,7 @@ EnsembleStates = States(["ACTIVE","HELD","PAUSED"])
 EnsembleWorkflowStates = States(["READY","PLANNING","PLAN_FAILED","QUEUED","RUN_FAILED","RUNNING",
                                  "FAILED","SUCCESSFUL","ABORTED"])
 
-class Ensemble(db.Model, EnsembleMixin):
-    __tablename__ = 'ensemble'
-    __table_args__ = (
-        db.UniqueConstraint('username', 'name'),
-        {'mysql_engine': 'InnoDB'}
-    )
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    created = db.Column(db.DateTime, nullable=False)
-    updated = db.Column(db.DateTime, nullable=False)
-    state = db.Column(db.Enum(*EnsembleStates), nullable=False)
-    max_running = db.Column(db.Integer, nullable=False)
-    max_planning = db.Column(db.Integer, nullable=False)
-    username = db.Column(db.String(100), nullable=False)
-
+class Ensemble(EnsembleBase):
     def __init__(self, username, name):
         self.username = username
         self.set_name(name)
@@ -114,24 +100,7 @@ class Ensemble(db.Model, EnsembleMixin):
             "href": url_for("route_get_ensemble", name=self.name, _external=True)
         }
 
-class EnsembleWorkflow(db.Model, EnsembleMixin):
-    __tablename__ = 'ensemble_workflow'
-    __table_args__ = (
-        db.UniqueConstraint('ensemble_id', 'name'),
-        {'mysql_engine': 'InnoDB'}
-    )
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    created = db.Column(db.DateTime, nullable=False)
-    updated = db.Column(db.DateTime, nullable=False)
-    state = db.Column(db.Enum(*EnsembleWorkflowStates), nullable=False)
-    priority = db.Column(db.Integer, nullable=False)
-    wf_uuid = db.Column(db.String(36))
-    submitdir = db.Column(db.String(512))
-    ensemble_id = db.Column(db.Integer, db.ForeignKey('ensemble.id'), nullable=False)
-    ensemble = db.relationship("Ensemble", backref="workflows")
-
+class EnsembleWorkflow(EnsembleBase):
     def __init__(self, ensemble_id, name):
         self.ensemble_id = ensemble_id
         self.set_name(name)
@@ -210,147 +179,153 @@ class EnsembleWorkflow(db.Model, EnsembleMixin):
         o["plan_script"] = myurl_for("plan.sh")
         return o
 
-def list_ensembles(username):
-    ensembles = Ensemble.query.filter_by(username=username).all()
-    return ensembles
+class Ensembles(SQLAlchemyInit):
+    def __init__(self, dburl):
+        from Pegasus.netlogger.analysis.schema.stampede_dashboard_schema import initializeToDashboardDB
+        SQLAlchemyInit.__init__(self, dburl, initializeToDashboardDB)
 
-def list_actionable_ensembles():
-    states = (
-        EnsembleWorkflowStates.READY,
-        EnsembleWorkflowStates.PLANNING,
-        EnsembleWorkflowStates.QUEUED,
-        EnsembleWorkflowStates.RUNNING
-    )
-    stmt = sql.exists().where(Ensemble.id==EnsembleWorkflow.ensemble_id).where(EnsembleWorkflow.state.in_(states))
-    return Ensemble.query.filter(stmt).all()
+    def list_ensembles(self, username):
+        ensembles = self.session.query(Ensemble).filter(Ensemble.username==username).all()
+        return ensembles
 
-def get_ensemble(username, name):
-    try:
-        return Ensemble.query.filter_by(username=username, name=name).one()
-    except NoResultFound:
-        raise APIError("No such ensemble: %s" % name, 404)
+    def list_actionable_ensembles(self):
+        states = (
+            EnsembleWorkflowStates.READY,
+            EnsembleWorkflowStates.PLANNING,
+            EnsembleWorkflowStates.QUEUED,
+            EnsembleWorkflowStates.RUNNING
+        )
+        stmt = sql.exists().where(Ensemble.id==EnsembleWorkflow.ensemble_id).where(EnsembleWorkflow.state.in_(states))
+        return self.session.query(Ensemble).filter(stmt).all()
 
-def create_ensemble(username, name, max_running, max_planning):
-    if Ensemble.query.filter_by(username=username, name=name).count() > 0:
-        raise APIError("Ensemble %s already exists" % name, 400)
+    def get_ensemble(self, username, name):
+        try:
+            return self.session.query(Ensemble).filter(Ensemble.username==username, Ensemble.name==name).one()
+        except NoResultFound:
+            raise APIError("No such ensemble: %s" % name, 404)
 
-    ensemble = Ensemble(username, name)
-    ensemble.set_max_running(max_running)
-    ensemble.set_max_planning(max_planning)
-    db.session.add(ensemble)
-    db.session.flush()
-    return ensemble
+    def create_ensemble(self, username, name, max_running, max_planning):
+        if self.session.query(Ensemble).filter(Ensemble.username==username, Ensemble.name==name).count() > 0:
+            raise APIError("Ensemble %s already exists" % name, 400)
 
-def list_ensemble_workflows(ensemble_id):
-    return EnsembleWorkflow.query.filter_by(ensemble_id=ensemble_id).all()
+        ensemble = Ensemble(username, name)
+        ensemble.set_max_running(max_running)
+        ensemble.set_max_planning(max_planning)
+        self.session.add(ensemble)
+        self.session.flush()
+        return ensemble
 
-def get_ensemble_workflow(ensemble_id, name):
-    try:
-        return EnsembleWorkflow.query.filter_by(ensemble_id=ensemble_id, name=name).one()
-    except NoResultFound:
-        raise APIError("No such ensemble workflow: %s" % name, 404)
+    def list_ensemble_workflows(self, ensemble_id):
+        return self.session.query(EnsembleWorkflow).filter(EnsembleWorkflow.ensemble_id==ensemble_id).all()
 
-def create_ensemble_workflow(ensemble_id, name, priority, rc, tc, sc, dax, conf, sites, output_site,
-        staging_sites=None, clustering=None, force=False, cleanup=True):
+    def get_ensemble_workflow(self, ensemble_id, name):
+        try:
+            return self.session.query(EnsembleWorkflow).filter(EnsembleWorkflow.ensemble_id==ensemble_id, EnsembleWorkflow.name==name).one()
+        except NoResultFound:
+            raise APIError("No such ensemble workflow: %s" % name, 404)
 
-    if EnsembleWorkflow.query.filter_by(ensemble_id=ensemble_id, name=name).count() > 0:
-        raise APIError("Ensemble workflow %s already exists" % name, 400)
+    def create_ensemble_workflow(self, ensemble_id, name, priority, rc, tc, sc, dax, conf, sites, output_site,
+            staging_sites=None, clustering=None, force=False, cleanup=True):
 
-    # Create database record
-    w = EnsembleWorkflow(ensemble_id, name)
-    w.set_priority(priority)
-    db.session.add(w)
-    db.session.flush()
+        if self.session.query(EnsembleWorkflow).filter(EnsembleWorkflow.ensemble_id==ensemble_id, EnsembleWorkflow.name==name).count() > 0:
+            raise APIError("Ensemble workflow %s already exists" % name, 400)
 
-    dirname = w.get_dir()
+        # Create database record
+        w = EnsembleWorkflow(ensemble_id, name)
+        w.set_priority(priority)
+        db.session.add(w)
+        db.session.flush()
 
-    # If the directory already exists, then we need to remove it
-    if os.path.isdir(dirname):
-        shutil.rmtree(dirname)
+        dirname = w.get_dir()
 
-    # Create the workflow directory
-    os.makedirs(dirname)
+        # If the directory already exists, then we need to remove it
+        if os.path.isdir(dirname):
+            shutil.rmtree(dirname)
 
-    # Save catalogs
-    rcfile = os.path.join(dirname, "rc.txt")
-    shutil.copyfile(rc.get_catalog_file(), rcfile)
-    tcfile = os.path.join(dirname, "tc.txt")
-    shutil.copyfile(tc.get_catalog_file(), tcfile)
-    scfile = os.path.join(dirname, "sites.xml")
-    shutil.copyfile(sc.get_catalog_file(), scfile)
+        # Create the workflow directory
+        os.makedirs(dirname)
 
-    # Save dax
-    daxfile = os.path.join(dirname, "dax.xml")
-    f = open(daxfile, "wb")
-    try:
-        shutil.copyfileobj(dax, f)
-    finally:
-        f.close()
+        # Save catalogs
+        rcfile = os.path.join(dirname, "rc.txt")
+        shutil.copyfile(rc.get_catalog_file(), rcfile)
+        tcfile = os.path.join(dirname, "tc.txt")
+        shutil.copyfile(tc.get_catalog_file(), tcfile)
+        scfile = os.path.join(dirname, "sites.xml")
+        shutil.copyfile(sc.get_catalog_file(), scfile)
 
-    # Save properties file
-    propsfile = os.path.join(dirname, "pegasus.properties")
-    f = open(propsfile, "wb")
-    try:
-        # It is possible that there is no properties file
-        # but we still need to create the file
-        if conf is not None:
-            # TODO Filter out properties that are not allowed
-            shutil.copyfileobj(conf, f)
+        # Save dax
+        daxfile = os.path.join(dirname, "dax.xml")
+        f = open(daxfile, "wb")
+        try:
+            shutil.copyfileobj(dax, f)
+        finally:
+            f.close()
 
-        # We need to make sure that the dashboard info is
-        # sent to the same database we are using
-        f.write("\npegasus.dashboard.output=%s\n" % app.config["SQLALCHEMY_DATABASE_URI"])
-    finally:
-        f.close()
+        # Save properties file
+        propsfile = os.path.join(dirname, "pegasus.properties")
+        f = open(propsfile, "wb")
+        try:
+            # It is possible that there is no properties file
+            # but we still need to create the file
+            if conf is not None:
+                # TODO Filter out properties that are not allowed
+                shutil.copyfileobj(conf, f)
 
-    # Create planning script
-    filename = os.path.join(dirname, "plan.sh")
-    f = open(filename, "w")
-    try:
-        write_planning_script(f, tcformat=tc.format, rcformat=rc.format, scformat=sc.format,
-                sites=sites, output_site=output_site, staging_sites=staging_sites,
-                clustering=clustering, force=force, cleanup=cleanup)
-    finally:
-        f.close()
-    os.chmod(filename, stat.S_IRWXU|stat.S_IRGRP|stat.S_IXGRP|stat.S_IROTH|stat.S_IXOTH)
+            # We need to make sure that the dashboard info is
+            # sent to the same database we are using
+            f.write("\npegasus.dashboard.output=%s\n" % app.config["SQLALCHEMY_DATABASE_URI"])
+        finally:
+            f.close()
 
-    return w
+        # Create planning script
+        filename = os.path.join(dirname, "plan.sh")
+        f = open(filename, "w")
+        try:
+            self.write_planning_script(f, tcformat=tc.format, rcformat=rc.format, scformat=sc.format,
+                    sites=sites, output_site=output_site, staging_sites=staging_sites,
+                    clustering=clustering, force=force, cleanup=cleanup)
+        finally:
+            f.close()
+        os.chmod(filename, stat.S_IRWXU|stat.S_IRGRP|stat.S_IXGRP|stat.S_IROTH|stat.S_IXOTH)
 
-def write_planning_script(f, tcformat, rcformat, scformat, sites, output_site,
-        staging_sites=None, clustering=None, force=False, cleanup=True):
+        return w
 
-    f.write("#!/bin/bash\n")
-    f.write("pegasus-plan \\\n")
-    f.write("-Dpegasus.catalog.site=%s \\\n" % scformat)
-    f.write("-Dpegasus.catalog.site.file=sites.xml \\\n")
-    f.write("-Dpegasus.catalog.transformation=%s \\\n" % tcformat)
-    f.write("-Dpegasus.catalog.transformation.file=tc.txt \\\n")
-    f.write("-Dpegasus.catalog.replica=%s \\\n" % rcformat)
-    f.write("-Dpegasus.catalog.replica.file=rc.txt \\\n")
-    f.write("--conf pegasus.properties \\\n")
-    f.write("--site %s \\\n" % ",".join(sites))
-    f.write("--output-site %s \\\n" % output_site)
+    def write_planning_script(self, f, tcformat, rcformat, scformat, sites, output_site,
+            staging_sites=None, clustering=None, force=False, cleanup=True):
 
-    if staging_sites is not None and len(staging_sites) > 0:
-        pairs = ["%s=%s" % (k,v) for k,v in staging_sites.items()]
-        f.write("--staging-site %s \\\n" % ",".join(pairs))
+        f.write("#!/bin/bash\n")
+        f.write("pegasus-plan \\\n")
+        f.write("-Dpegasus.catalog.site=%s \\\n" % scformat)
+        f.write("-Dpegasus.catalog.site.file=sites.xml \\\n")
+        f.write("-Dpegasus.catalog.transformation=%s \\\n" % tcformat)
+        f.write("-Dpegasus.catalog.transformation.file=tc.txt \\\n")
+        f.write("-Dpegasus.catalog.replica=%s \\\n" % rcformat)
+        f.write("-Dpegasus.catalog.replica.file=rc.txt \\\n")
+        f.write("--conf pegasus.properties \\\n")
+        f.write("--site %s \\\n" % ",".join(sites))
+        f.write("--output-site %s \\\n" % output_site)
 
-    if clustering is not None and len(clustering) > 0:
-        f.write("--cluster %s \\\n" % ",".join(clustering))
+        if staging_sites is not None and len(staging_sites) > 0:
+            pairs = ["%s=%s" % (k,v) for k,v in staging_sites.items()]
+            f.write("--staging-site %s \\\n" % ",".join(pairs))
 
-    if force:
-        f.write("--force \\\n")
+        if clustering is not None and len(clustering) > 0:
+            f.write("--cluster %s \\\n" % ",".join(clustering))
 
-    if not cleanup:
-        f.write("--nocleanup \\\n")
+        if force:
+            f.write("--force \\\n")
 
-    f.write("--dir submit \\\n")
-    f.write("--dax dax.xml\n")
-    f.write("exit $?")
+        if not cleanup:
+            f.write("--nocleanup \\\n")
+
+        f.write("--dir submit \\\n")
+        f.write("--dax dax.xml\n")
+        f.write("exit $?")
 
 @app.route("/ensembles", methods=["GET"])
 def route_list_ensembles():
-    ensembles = list_ensembles(g.username)
+    db = Ensembles(g.master_db_url)
+    ensembles = db.list_ensembles(g.user.username)
     result = [e.get_object() for e in ensembles]
     return json_response(result)
 
@@ -363,21 +338,23 @@ def route_create_ensemble():
     max_running = request.form.get("max_running", 1)
     max_planning = request.form.get("max_planning", 1)
 
-    create_ensemble(g.username, name, max_running, max_planning)
-
+    db = Ensembles(g.master_db_url)
+    db.create_ensemble(g.user.username, name, max_running, max_planning)
     db.session.commit()
 
     return json_created(url_for("route_get_ensemble", name=name, _external=True))
 
 @app.route("/ensembles/<string:name>", methods=["GET"])
 def route_get_ensemble(name):
-    e = get_ensemble(g.username, name)
+    db = Ensembles(g.master_db_url)
+    e = db.get_ensemble(g.user.username, name)
     result = e.get_object()
     return json_response(result)
 
 @app.route("/ensembles/<string:name>", methods=["PUT","POST"])
 def route_update_ensemble(name):
-    e = get_ensemble(g.username, name)
+    db = Ensembles(g.master_db_url)
+    e = db.get_ensemble(g.user.username, name)
 
     max_running = request.form.get("max_running", None)
     if max_running is not None:
@@ -401,13 +378,15 @@ def route_update_ensemble(name):
 
 @app.route("/ensembles/<string:name>/workflows", methods=["GET"])
 def route_list_ensemble_workflows(name):
-    e = get_ensemble(g.username, name)
-    result = [w.get_object() for w in e.workflows]
+    db = Ensembles(g.master_db_url)
+    e = db.get_ensemble(g.user.username, name)
+    result = [w.get_object() for w in db.list_ensemble_workflows(e.id)]
     return json_response(result)
 
 @app.route("/ensembles/<string:ensemble>/workflows", methods=["POST"])
 def route_create_ensemble_workflow(ensemble):
-    e = get_ensemble(g.username, ensemble)
+    db = Ensembles(g.master_db_url)
+    e = db.get_ensemble(g.user.username, ensemble)
 
     name = request.form.get("name", None)
     if name is None:
@@ -469,11 +448,13 @@ def route_create_ensemble_workflow(ensemble):
 
     conf = request.files.get("conf", None)
 
-    sc = catalogs.get_catalog("site", g.username, site_catalog)
-    tc = catalogs.get_catalog("transformation", g.username, transformation_catalog)
-    rc = catalogs.get_catalog("replica", g.username, replica_catalog)
+    cats = catalogs.Catalogs(g.master_db_url)
+    sc = cats.get_catalog("site", g.user.username, site_catalog)
+    tc = cats.get_catalog("transformation", g.user.username, transformation_catalog)
+    rc = cats.get_catalog("replica", g.user.username, replica_catalog)
 
-    create_ensemble_workflow(e.id, name, priority, rc, tc, sc, dax, conf,
+    db = Ensembles(g.master_db_url)
+    db.create_ensemble_workflow(e.id, name, priority, rc, tc, sc, dax, conf,
             sites=sites, output_site=output_site, cleanup=cleanup,
             force=force, clustering=clustering, staging_sites=staging_sites)
 
@@ -483,15 +464,17 @@ def route_create_ensemble_workflow(ensemble):
 
 @app.route("/ensembles/<string:ensemble>/workflows/<string:workflow>", methods=["GET"])
 def route_get_ensemble_workflow(ensemble, workflow):
-    e = get_ensemble(g.username, ensemble)
-    w = get_ensemble_workflow(e.id, workflow)
+    db = Ensembles(g.master_db_url)
+    e = db.get_ensemble(g.user.username, ensemble)
+    w = db.get_ensemble_workflow(e.id, workflow)
     result = w.get_detail_object()
     return json_response(result)
 
 @app.route("/ensembles/<string:ensemble>/workflows/<string:workflow>", methods=["PUT","POST"])
 def route_update_ensemble_workflow(ensemble, workflow):
-    e = get_ensemble(g.username, ensemble)
-    w = get_ensemble_workflow(e.id, workflow)
+    db = Ensembles(g.master_db_url)
+    e = db.get_ensemble(g.user.username, ensemble)
+    w = db.get_ensemble_workflow(e.id, workflow)
 
     priority = request.form.get("priority", None)
     if priority is not None:
@@ -509,8 +492,9 @@ def route_update_ensemble_workflow(ensemble, workflow):
 
 @app.route("/ensembles/<string:ensemble>/workflows/<string:workflow>/<string:filename>", methods=["GET"])
 def route_get_ensemble_workflow_file(ensemble, workflow, filename):
-    e = get_ensemble(g.username, ensemble)
-    w = get_ensemble_workflow(e.id, workflow)
+    db = Ensembles(g.master_db_url)
+    e = db.get_ensemble(g.user.username, ensemble)
+    w = db.get_ensemble_workflow(e.id, workflow)
     dirname = w.get_dir()
     mimetype = "text/plain"
     if filename == "sites.xml":
@@ -530,7 +514,6 @@ def route_get_ensemble_workflow_file(ensemble, workflow, filename):
         raise APIError("Invalid file: %s" % filename)
 
     return send_file(path, mimetype=mimetype)
-
 
 def add_ensemble_option(self):
     self.parser.add_option("-e", "--ensemble", action="store", dest="ensemble",

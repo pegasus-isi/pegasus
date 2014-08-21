@@ -29,6 +29,8 @@ class DashboardWorkflowstate(SABase):
 from Pegasus.service.catalogs import ReplicaCatalog, RC_FORMATS
 from Pegasus.service.catalogs import SiteCatalog, SC_FORMATS
 from Pegasus.service.catalogs import TransformationCatalog, TC_FORMATS
+from Pegasus.service.ensembles import Ensemble, EnsembleStates
+from Pegasus.service.ensembles import EnsembleWorkflow, EnsembleWorkflowStates
 
 def initializeToDashboardDB(db, metadata, kw={}):
     """
@@ -175,6 +177,48 @@ def initializeToDashboardDB(db, metadata, kw={}):
     except exc.ArgumentError, e:
         log.warning(e)
 
+    pg_ensemble = Table('ensemble', metadata,
+        Column('id', Integer, primary_key=True),
+        Column('name', String(100), nullable=False),
+        Column('created', DateTime, nullable=False),
+        Column('updated', DateTime, nullable=False),
+        Column('state', Enum(*EnsembleStates), nullable=False),
+        Column('max_running', Integer, nullable=False),
+        Column('max_planning', Integer, nullable=False),
+        Column('username', String(100), nullable=False),
+        mysql_engine = 'InnoDB'
+    )
+
+    Index('UNIQUE_ENSEMBLE',
+          pg_ensemble.c.username,
+          pg_ensemble.c.name)
+
+    try:
+        orm.mapper(Ensemble, pg_ensemble)
+    except exc.ArgumentError, e:
+        log.warning(e)
+
+    pg_ensemble_workflow = Table('ensemble_workflow', metadata,
+        Column('id', Integer, primary_key=True),
+        Column('name', String(100), nullable=False),
+        Column('created', DateTime, nullable=False),
+        Column('updated', DateTime, nullable=False),
+        Column('state', Enum(*EnsembleWorkflowStates), nullable=False),
+        Column('priority', Integer, nullable=False),
+        Column('wf_uuid', String(36)),
+        Column('submitdir', String(512)),
+        Column('ensemble_id', Integer, ForeignKey('ensemble.id'), nullable=False),
+        mysql_engine = 'InnoDB'
+    )
+
+    Index('UNIQUE_ENSEMBLE_WORKFLOW',
+          pg_ensemble_workflow.c.ensemble_id,
+          pg_ensemble_workflow.c.name)
+
+    try:
+        orm.mapper(EnsembleWorkflow, pg_ensemble_workflow)
+    except exc.ArgumentError, e:
+        log.warning(e)
 
     metadata.create_all(db)
 
