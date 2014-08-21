@@ -7,11 +7,14 @@ __author__ = "Karan Vahi"
 
 import time
 import warnings
+import logging
 
 from sqlalchemy import *
 from sqlalchemy import orm
 
 from Pegasus.netlogger.analysis.schema._base import SABase
+
+log = Logging.getLogger(__name__)
 
 CURRENT_SCHEMA_VERSION = 4.0
 
@@ -82,7 +85,10 @@ def initializeToDashboardDB(db, metadata, kw={}):
     Index('wf_id_KEY', pg_workflow.c.wf_id, unique=True)
     Index('wf_uuid_UNIQUE', pg_workflow.c.wf_uuid, unique=True)
 
-    orm.mapper(DashboardWorkflow, pg_workflow )
+    try:
+        orm.mapper(DashboardWorkflow, pg_workflow )
+    except exc.ArgumentError, e:
+        log.warning(e)
 
     pg_workflowstate = Table('workflowstate', metadata,
     # All three columns are marked as primary key to produce the desired
@@ -104,7 +110,10 @@ def initializeToDashboardDB(db, metadata, kw={}):
           pg_workflowstate.c.state,
           pg_workflowstate.c.timestamp, unique=True)
 
-    orm.mapper(DashboardWorkflowstate, pg_workflowstate)
+    try:
+        orm.mapper(DashboardWorkflowstate, pg_workflowstate)
+    except exc.ArgumentError, e:
+        log.warning(e)
 
     pg_replica_catalog = Table("replica_catalog", metadata, 
         Column('id', Integer, primary_key=True),
@@ -121,7 +130,10 @@ def initializeToDashboardDB(db, metadata, kw={}):
           pg_replica_catalog.c.username,
           pg_replica_catalog.c.name)
 
-    orm.mapper(ReplicaCatalog, pg_replica_catalog)
+    try:
+        orm.mapper(ReplicaCatalog, pg_replica_catalog)
+    except exc.ArgumentError, e:
+        log.warning(e)
 
     pg_site_catalog = Table('site_catalog', metadata,
         Column('id', Integer, primary_key=True),
@@ -138,7 +150,10 @@ def initializeToDashboardDB(db, metadata, kw={}):
           pg_site_catalog.c.username,
           pg_site_catalog.c.name)
 
-    orm.mapper(SiteCatalog, pg_site_catalog)
+    try:
+        orm.mapper(SiteCatalog, pg_site_catalog)
+    except exc.ArgumentError, e:
+        log.warning(e)
 
     pg_transformation_catalog = Table('transformation_catalog', metadata,
         Column('id', Integer, primary_key=True),
@@ -155,7 +170,10 @@ def initializeToDashboardDB(db, metadata, kw={}):
           pg_transformation_catalog.c.username,
           pg_transformation_catalog.c.name)
 
-    orm.mapper(TransformationCatalog, pg_transformation_catalog)
+    try:
+        orm.mapper(TransformationCatalog, pg_transformation_catalog)
+    except exc.ArgumentError, e:
+        log.warning(e)
 
 
     metadata.create_all(db)
