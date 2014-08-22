@@ -160,7 +160,7 @@ from Pegasus.netlogger.analysis.modules._base import SQLAlchemyInit
 from Pegasus.netlogger.analysis.schema.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
 from Pegasus.netlogger.analysis.schema.stampede_schema import *
 from Pegasus.netlogger.nllog import DoesLogging, get_logger
-from Pegasus.netlogger.analysis.error.Error import StampedeDBNotFoundError
+from Pegasus.netlogger.analysis.errors import StampedeDBNotFoundError
 
 # Main stats class.
 
