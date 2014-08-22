@@ -1,10 +1,10 @@
 __author__ = "Rajiv Mayani"
 
-from Pegasus.netlogger.analysis.modules import SQLAlchemyInit
-from Pegasus.netlogger.analysis.schema.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
-from Pegasus.netlogger.analysis.schema.stampede_schema import *
+from Pegasus.db.modules import SQLAlchemyInit
+from Pegasus.db.schema.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
+from Pegasus.db.schema.stampede_schema import *
+from Pegasus.db.errors import StampedeDBNotFoundError
 from Pegasus.netlogger.nllog import DoesLogging
-from Pegasus.netlogger.analysis.errors import StampedeDBNotFoundError
 
 
 # Main stats class.

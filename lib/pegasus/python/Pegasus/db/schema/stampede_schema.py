@@ -13,7 +13,7 @@ from sqlalchemy import *
 from sqlalchemy import orm, func, exc
 from sqlalchemy.orm import relation, backref
 
-from Pegasus.netlogger.analysis.schema import SABase
+from Pegasus.db.schema import SABase
 
 log = logging.getLogger(__name__)
 

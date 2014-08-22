@@ -5,7 +5,7 @@ import subprocess
 import logging
 from StringIO import StringIO
 
-from Pegasus.netlogger.analysis.schema import stampede_dashboard_schema as dash
+from Pegasus.db.schema import stampede_dashboard_schema as dash
 
 from Pegasus.service import app, db, em, catalogs, ensembles
 from Pegasus.test.service import *

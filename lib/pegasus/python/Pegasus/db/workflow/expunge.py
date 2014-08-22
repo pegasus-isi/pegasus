@@ -2,9 +2,9 @@ __author__ = "Monte Goode"
 
 import os, time
 
-from Pegasus.netlogger.analysis.schema.stampede_schema import *
-from Pegasus.netlogger.analysis.schema.stampede_dashboard_schema import *
-from Pegasus.netlogger.analysis.modules import SQLAlchemyInit
+from Pegasus.db.schema.stampede_schema import *
+from Pegasus.db.schema.stampede_dashboard_schema import *
+from Pegasus.db.modules import SQLAlchemyInit
 from Pegasus.netlogger import util
 from Pegasus.netlogger.nllog import DoesLogging
 
@@ -23,7 +23,7 @@ class Expunge(SQLAlchemyInit, DoesLogging):
 
     Usage::
 
-     from Pegasus.netlogger.analysis.workflow.expunge import Expunge
+     from Pegasus.db.workflow.expunge import Expunge
 
      connString = 'sqlite:///pegasusMontage.db'
      wf_uuid = '1249335e-7692-4751-8da2-efcbb5024429'
@@ -66,7 +66,7 @@ class StampedeExpunge(Expunge):
 
     Usage::
 
-     from Pegasus.netlogger.analysis.workflow.expunge import Expunge
+     from Pegasus.db.workflow.expunge import Expunge
 
      connString = 'sqlite:///pegasusMontage.db'
      wf_uuid = '1249335e-7692-4751-8da2-efcbb5024429'
@@ -141,7 +141,7 @@ class DashboardExpunge(Expunge):
 
     Usage::
 
-    from Pegasus.netlogger.analysis.workflow.expunge import Expunge
+    from Pegasus.db.workflow.expunge import Expunge
 
     connString = 'sqlite:///pegasusMontage.db'
     wf_uuid = '1249335e-7692-4751-8da2-efcbb5024429'

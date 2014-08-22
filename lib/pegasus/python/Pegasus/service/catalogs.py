@@ -12,7 +12,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from Pegasus.service import app
 from Pegasus.service.command import ClientCommand, CompoundCommand
 from Pegasus.service.api import *
-from Pegasus.netlogger.analysis.modules import SQLAlchemyInit
+from Pegasus.db.modules import SQLAlchemyInit
 
 SC_FORMATS = ["XML","XML2"]
 TC_FORMATS = ["File","Text"]
@@ -129,7 +129,7 @@ def get_catalog_model(catalog_type):
 
 class Catalogs(SQLAlchemyInit):
     def __init__(self, dburl):
-        from Pegasus.netlogger.analysis.schema.stampede_dashboard_schema import initializeToDashboardDB
+        from Pegasus.db.schema.stampede_dashboard_schema import initializeToDashboardDB
         SQLAlchemyInit.__init__(self, dburl, initializeToDashboardDB)
 
     def get_catalog(self, catalog_type, username, name):

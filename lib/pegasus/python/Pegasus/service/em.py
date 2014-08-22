@@ -7,7 +7,7 @@ import time
 
 from sqlalchemy.orm.exc import NoResultFound
 
-from Pegasus.netlogger.analysis.schema import stampede_dashboard_schema as dash
+from Pegasus.db.schema import stampede_dashboard_schema as dash
 
 from Pegasus.service import app, db, ensembles
 from Pegasus.service.ensembles import EnsembleStates, EnsembleWorkflowStates

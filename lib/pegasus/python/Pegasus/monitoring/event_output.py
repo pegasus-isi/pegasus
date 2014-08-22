@@ -46,22 +46,22 @@ try:
 except:
     logger.info("cannot import Pegasus.netlogger.nlapi")
 try:
-    from Pegasus.netlogger.analysis.schema.schema_check import SchemaVersionError
-    from Pegasus.netlogger.analysis.modules import stampede_loader
+    from Pegasus.db.schema.schema_check import SchemaVersionError
+    from Pegasus.db.modules import stampede_loader
 except:
-    logger.info("cannot import NetLogger's stampede_loader")
+    logger.info("cannot import stampede_loader")
 try:
-    from Pegasus.netlogger.analysis.modules import stampede_dashboard_loader
+    from Pegasus.db.modules import stampede_dashboard_loader
 except:
-    logger.info("cannot import NetLogger's stampede_dashboard_loader")
+    logger.info("cannot import stampede_dashboard_loader")
 try:
-    from Pegasus.netlogger.analysis.workflow.expunge import StampedeExpunge
+    from Pegasus.db.workflow.expunge import StampedeExpunge
 except:
-    logger.info("cannot import NetLogger's Stampede Expunge")
+    logger.info("cannot import Stampede Expunge")
 try:
-    from Pegasus.netlogger.analysis.workflow.expunge import DashboardExpunge
+    from Pegasus.db.workflow.expunge import DashboardExpunge
 except:
-    logger.info("cannot import NetLogger's Dashboard Expunge")
+    logger.info("cannot import Dashboard Expunge")
 
 try:
     import bson

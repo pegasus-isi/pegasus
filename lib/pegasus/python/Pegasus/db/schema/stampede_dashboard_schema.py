@@ -12,7 +12,7 @@ import logging
 from sqlalchemy import *
 from sqlalchemy import orm, exc
 
-from Pegasus.netlogger.analysis.schema import SABase
+from Pegasus.db.schema import SABase
 
 log = logging.getLogger(__name__)
 

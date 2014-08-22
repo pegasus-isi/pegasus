@@ -23,7 +23,7 @@ from time import localtime, strftime
 from flask import request, render_template, url_for, json, g
 from sqlalchemy.orm.exc import NoResultFound
 
-from Pegasus.netlogger.analysis.errors import StampedeDBNotFoundError
+from Pegasus.db.errors import StampedeDBNotFoundError
 
 from Pegasus.service import app, filters
 from Pegasus.service.dashboard.dashboard import Dashboard, NoWorkflowsFoundError

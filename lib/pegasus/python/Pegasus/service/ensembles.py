@@ -13,7 +13,7 @@ from sqlalchemy import sql
 from Pegasus.service import app, catalogs
 from Pegasus.service.api import *
 from Pegasus.service.command import ClientCommand, CompoundCommand
-from Pegasus.netlogger.analysis.modules import SQLAlchemyInit
+from Pegasus.db.modules import SQLAlchemyInit
 
 def validate_ensemble_name(name):
     if name is None:
@@ -181,7 +181,7 @@ class EnsembleWorkflow(EnsembleBase):
 
 class Ensembles(SQLAlchemyInit):
     def __init__(self, dburl):
-        from Pegasus.netlogger.analysis.schema.stampede_dashboard_schema import initializeToDashboardDB
+        from Pegasus.db.schema.stampede_dashboard_schema import initializeToDashboardDB
         SQLAlchemyInit.__init__(self, dburl, initializeToDashboardDB)
 
     def list_ensembles(self, username):

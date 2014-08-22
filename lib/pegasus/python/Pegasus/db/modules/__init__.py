@@ -40,13 +40,13 @@ metadata objects (and optional args) as args, initializes to the
 appropriate schema and sets "self.session" as a class member for
 loader classes to interact with the DB with.
 
-See: netlogger.analysis.schema.stampede_schema.initializeToPegasusDB
+See: Pegasus.db.schema.stampede_schema.initializeToPegasusDB
 
 For an example of what the intialization function needs to do to setup
 the schema mappings and the metadata object.  This should be __init__'ed
 in the subclass AFTER the Analyzer superclass gets called.
 
-The module netlogger.analysis.modules.stampede_loader shows the use
+The module Pegasus.db.modules.stampede_loader shows the use
 of this to initialize to a DB.
 """
 class SQLAlchemyInit:

@@ -15,11 +15,11 @@
 __author__ = 'Rajiv Mayani'
 import logging
 
-from Pegasus.netlogger.analysis.modules import SQLAlchemyInit
-from Pegasus.netlogger.analysis.schema.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
-from Pegasus.netlogger.analysis.schema.stampede_dashboard_schema import *
-from Pegasus.netlogger.analysis.schema.stampede_schema import *
-from Pegasus.netlogger.analysis.errors import StampedeDBNotFoundError
+from Pegasus.db.modules import SQLAlchemyInit
+from Pegasus.db.schema.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
+from Pegasus.db.schema.stampede_dashboard_schema import *
+from Pegasus.db.schema.stampede_schema import *
+from Pegasus.db.errors import StampedeDBNotFoundError
 
 log = logging.getLogger(__name__)
 

@@ -24,9 +24,9 @@ os.sys.path.insert(0, lib_dir)
 from Pegasus.tools import utils
 from Pegasus.tools import db_utils
 from Pegasus.plots_stats import utils as stats_utils
-from Pegasus.netlogger.analysis.workflow.stampede_statistics import StampedeStatistics
-from Pegasus.netlogger.analysis.workflow.stampede_wf_statistics import StampedeWorkflowStatistics
-from Pegasus.netlogger.analysis.schema.schema_check import SchemaVersionError
+from Pegasus.db.workflow.stampede_statistics import StampedeStatistics
+from Pegasus.db.workflow.stampede_wf_statistics import StampedeWorkflowStatistics
+from Pegasus.db.schema.schema_check import SchemaVersionError
 
 # Not unused. Logging get initialized
 import Pegasus.common

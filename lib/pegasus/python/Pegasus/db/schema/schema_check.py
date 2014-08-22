@@ -4,8 +4,8 @@ Stampede schema.
 """
 __author__ = "Monte Goode"
 
-from Pegasus.netlogger.analysis.modules import SQLAlchemyInit, dsn_dialect
-from Pegasus.netlogger.analysis.schema.stampede_schema import *
+from Pegasus.db.modules import SQLAlchemyInit, dsn_dialect
+from Pegasus.db.schema.stampede_schema import *
 from Pegasus.netlogger.nllog import DoesLogging
 
 class SchemaVersionError(Exception): 
