@@ -286,7 +286,7 @@ class WorkflowInfo(SQLAlchemyInit):
         q = q.filter(Job.wf_id == self._wf_id)
         q = q.filter(Job.job_id == job_id)
         q = q.filter(Job.job_id == JobInstance.job_id)
-        q = q.filter(JobInstance.host_id == Host.host_id)
+        q = q.outerjoin(Host, JobInstance.host_id == Host.host_id)
         q = q.filter(JobInstance.job_instance_id == qmax.c.job_instance_id)
 
         return q.one()
