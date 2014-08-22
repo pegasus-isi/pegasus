@@ -6,7 +6,7 @@ __rcsid__ = "$Id: util.py 28135 2011-07-05 20:07:28Z mgoode $"
 __author__ = "Monte Goode"
 
 from Pegasus.netlogger.analysis.schema.stampede_schema import *
-from Pegasus.netlogger.analysis.modules._base import SQLAlchemyInit
+from Pegasus.netlogger.analysis.modules import SQLAlchemyInit
 from Pegasus.netlogger import util
 from Pegasus.netlogger.nllog import DoesLogging
 

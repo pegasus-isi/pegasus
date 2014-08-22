@@ -1,7 +1,7 @@
 __rcsid__ = "$Id: stampede_statistics.py 31980 2012-07-02 15:12:17Z mgoode $"
 __author__ = "Rajiv Mayani"
 
-from Pegasus.netlogger.analysis.modules._base import SQLAlchemyInit
+from Pegasus.netlogger.analysis.modules import SQLAlchemyInit
 from Pegasus.netlogger.analysis.schema.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
 from Pegasus.netlogger.analysis.schema.stampede_schema import *
 from Pegasus.netlogger.nllog import DoesLogging

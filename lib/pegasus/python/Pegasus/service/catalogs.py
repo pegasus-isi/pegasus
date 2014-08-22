@@ -12,7 +12,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from Pegasus.service import app
 from Pegasus.service.command import ClientCommand, CompoundCommand
 from Pegasus.service.api import *
-from Pegasus.netlogger.analysis.modules._base import SQLAlchemyInit
+from Pegasus.netlogger.analysis.modules import SQLAlchemyInit
 
 SC_FORMATS = ["XML","XML2"]
 TC_FORMATS = ["File","Text"]

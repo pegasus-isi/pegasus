@@ -34,7 +34,7 @@ Etc.
 __rcsid__ = "$Id: api_test.py 26974 2011-01-11 18:57:35Z mgoode $"
 __author__ = "Monte Goode MMGoode@lbl.gov"
 
-from Pegasus.netlogger.analysis.workflow._base import Job as JobBase, Host as HostBase,\
+from Pegasus.netlogger.analysis.workflow import Job as JobBase, Host as HostBase,\
     Task as TaskBase, Jobstate as JobstateBase, Workflowstate as WorkflowstateBase
 
 import datetime

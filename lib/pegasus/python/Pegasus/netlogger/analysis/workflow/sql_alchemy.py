@@ -14,8 +14,8 @@ import time
 from Pegasus.netlogger.analysis.schema.stampede_schema import initializeToPegasusDB, func, orm, \
     Workflow as WorkflowTable, Workflowstate as WorkflowstateTable, Job as JobTable, \
     Jobstate as JobstateTable, Host as HostTable, Task as TaskTable, Edge as EdgeTable
-from Pegasus.netlogger.analysis.modules._base import SQLAlchemyInit
-from Pegasus.netlogger.analysis.workflow._base import Workflow as BaseWorkflow, \
+from Pegasus.netlogger.analysis.modules import SQLAlchemyInit
+from Pegasus.netlogger.analysis.workflow import Workflow as BaseWorkflow, \
     Job as BaseJob, Host as BaseHost, Task as BaseTask, Jobstate as BaseJobstate, \
     Discovery as BaseDiscovery, Workflowstate as BaseWorkflowstate
     

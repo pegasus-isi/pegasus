@@ -6,7 +6,7 @@ __rcsid__ = "$Id: schema_check.py 30802 2012-03-07 17:01:34Z mgoode $"
 __author__ = "Monte Goode"
 
 
-from Pegasus.netlogger.analysis.modules._base import SQLAlchemyInit, dsn_dialect
+from Pegasus.netlogger.analysis.modules import SQLAlchemyInit, dsn_dialect
 from Pegasus.netlogger.analysis.schema.stampede_schema import *
 from Pegasus.netlogger.nllog import DoesLogging
 

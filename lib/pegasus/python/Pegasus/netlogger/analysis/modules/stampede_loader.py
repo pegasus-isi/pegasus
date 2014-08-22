@@ -21,8 +21,8 @@ __author__ = "Monte Goode"
 
 from Pegasus.netlogger.analysis.schema.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
 from Pegasus.netlogger.analysis.schema.stampede_schema import *
-from Pegasus.netlogger.analysis.modules._base import Analyzer as BaseAnalyzer
-from Pegasus.netlogger.analysis.modules._base import SQLAlchemyInit, dsn_dialect
+from Pegasus.netlogger.analysis.modules import Analyzer as BaseAnalyzer
+from Pegasus.netlogger.analysis.modules import SQLAlchemyInit, dsn_dialect
 from Pegasus.netlogger import util
 import sys
 import time

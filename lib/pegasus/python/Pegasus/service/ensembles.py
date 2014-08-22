@@ -13,7 +13,7 @@ from sqlalchemy import sql
 from Pegasus.service import app, catalogs
 from Pegasus.service.api import *
 from Pegasus.service.command import ClientCommand, CompoundCommand
-from Pegasus.netlogger.analysis.modules._base import SQLAlchemyInit
+from Pegasus.netlogger.analysis.modules import SQLAlchemyInit
 
 def validate_ensemble_name(name):
     if name is None:
