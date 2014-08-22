@@ -55,11 +55,11 @@ try:
 except:
     logger.info("cannot import NetLogger's stampede_dashboard_loader")
 try:
-    from Pegasus.netlogger.analysis.workflow.util import StampedeExpunge
+    from Pegasus.netlogger.analysis.workflow.expunge import StampedeExpunge
 except:
     logger.info("cannot import NetLogger's Stampede Expunge")
 try:
-    from Pegasus.netlogger.analysis.workflow.util import DashboardExpunge
+    from Pegasus.netlogger.analysis.workflow.expunge import DashboardExpunge
 except:
     logger.info("cannot import NetLogger's Dashboard Expunge")
 
