@@ -1,21 +1,3 @@
-# XXX Was imported to stampede_schema.py, but not used
-#class SchemaException(Exception): pass
-#
-#class SchemaIntegrityError(SchemaException):
-#    """
-#    Raise this when an insert/update attempst to violate
-#    the schema - ie: violating a unique index or a column
-#    definition (NOT/NULL, etc).
-#
-#    This is just a "wrapper" to unify handing multiple
-#    exceptions (ie: ones that violate defined schema) but
-#    being able to trap them all the same way in the calling
-#    code.
-#    """
-#    def __init__(self, value):
-#        self.value = 'SchemaIntegrityError: %s' % value
-#    def __str__(self):
-#        return repr(self.value)
 
 class SABase(object):
     """
