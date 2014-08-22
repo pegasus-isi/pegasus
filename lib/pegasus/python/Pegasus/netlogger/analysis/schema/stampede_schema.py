@@ -2,21 +2,20 @@
 Contains the code to create and map objects to the Stampede DB schema
 via a SQLAlchemy interface.
 """
-__rcsid__ = "$Id: stampede_schema.py 30421 2012-02-21 21:20:02Z mgoode $"
 __author__ = "Monte Goode MMGoode@lbl.gov"
-
-from Pegasus.netlogger.analysis.schema import SABase
-try:
-    from sqlalchemy import *
-    from sqlalchemy import orm, func, exc
-    from sqlalchemy.orm import relation, backref
-except ImportError, e:
-    print '** SQLAlchemy library needs to be installed: http://www.sqlalchemy.org/ **\n'
-    raise ImportError, e
 
 import time
 import warnings
 import sys
+import logging
+
+from sqlalchemy import *
+from sqlalchemy import orm, func, exc
+from sqlalchemy.orm import relation, backref
+
+from Pegasus.netlogger.analysis.schema import SABase
+
+log = logging.getLogger(__name__)
 
 CURRENT_SCHEMA_VERSION = 4.0
 
@@ -140,8 +139,8 @@ def initializeToPegasusDB(db, metadata, kw={}):
                     passive_deletes=True),
             }
         orm.mapper(Workflow, st_workflow, properties = wf_props)
-    except exc.ArgumentError:
-        pass
+    except exc.ArgumentError, e:
+        log.warning(e)
 
     st_workflowstate = Table('workflowstate', metadata,
     # All three columns are marked as primary key to produce the desired
@@ -163,8 +162,8 @@ def initializeToPegasusDB(db, metadata, kw={}):
 
     try:
         orm.mapper(Workflowstate, st_workflowstate)
-    except exc.ArgumentError:
-        pass
+    except exc.ArgumentError, e:
+        log.warning(e)
 
     # st_host definition
     # ==> Information from kickstart output file
@@ -191,8 +190,8 @@ def initializeToPegasusDB(db, metadata, kw={}):
 
     try:
         orm.mapper(Host, st_host)
-    except exc.ArgumentError:
-        pass
+    except exc.ArgumentError, e:
+        log.warning(e)
 
 
     # static job table
@@ -234,8 +233,8 @@ def initializeToPegasusDB(db, metadata, kw={}):
                     passive_deletes=True, lazy=True)
             }
         )
-    except exc.ArgumentError:
-        pass
+    except exc.ArgumentError,e:
+        log.warning(e)
 
     # static job edge table
 
@@ -252,8 +251,8 @@ def initializeToPegasusDB(db, metadata, kw={}):
 
     try:
         orm.mapper(JobEdge, st_job_edge)
-    except exc.ArgumentError:
-        pass
+    except exc.ArgumentError, e:
+        log.warning(e)
 
     # job_instance table
 
@@ -297,8 +296,8 @@ def initializeToPegasusDB(db, metadata, kw={}):
                     passive_deletes=True, lazy=True),
             }
         )
-    except exc.ArgumentError:
-        pass
+    except exc.ArgumentError, e:
+        log.warning(e)
 
     # st_jobstate definition
     # ==> Same information that currently goes into jobstate.log file,
@@ -326,8 +325,8 @@ def initializeToPegasusDB(db, metadata, kw={}):
 
     try:
         orm.mapper(Jobstate, st_jobstate)
-    except exc.ArgumentError:
-        pass
+    except exc.ArgumentError, e:
+        log.warning(e)
 
     # Task table
 
@@ -355,8 +354,8 @@ def initializeToPegasusDB(db, metadata, kw={}):
                     passive_deletes=True),
             }
         )
-    except exc.ArgumentError:
-        pass
+    except exc.ArgumentError, e:
+        log.warning(e)
 
     # Task edge table
 
@@ -373,8 +372,8 @@ def initializeToPegasusDB(db, metadata, kw={}):
 
     try:
         orm.mapper(TaskEdge, st_task_edge)
-    except exc.ArgumentError:
-        pass
+    except exc.ArgumentError, e:
+        log.warning(e)
 
     # Invocation table
 
@@ -403,8 +402,8 @@ def initializeToPegasusDB(db, metadata, kw={}):
 
     try:
         orm.mapper(Invocation, st_invocation)
-    except exc.ArgumentError:
-        pass
+    except exc.ArgumentError, e:
+        log.warning(e)
 
     # st_file definition
     # ==> Information will come from kickstart output file
@@ -425,8 +424,8 @@ def initializeToPegasusDB(db, metadata, kw={}):
 
     try:
         orm.mapper(File, st_file)
-    except exc.ArgumentError:
-        pass
+    except exc.ArgumentError, e:
+        log.warning(e)
 
 
     st_schema_info = Table('schema_info', metadata,
@@ -437,8 +436,8 @@ def initializeToPegasusDB(db, metadata, kw={}):
 
     try:
         orm.mapper(SchemaInfo, st_schema_info)
-    except exc.ArgumentError:
-        pass
+    except exc.ArgumentError, e:
+        log.warning(e)
 
     metadata.create_all(db)
 
