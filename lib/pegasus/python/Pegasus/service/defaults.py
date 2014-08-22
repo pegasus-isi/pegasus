@@ -5,6 +5,10 @@ import os
 SERVER_HOST = "127.0.0.1"
 SERVER_PORT = 5000
 
+# SSL config: path to certificate and private key files
+CERTIFICATE = None
+PRIVATE_KEY = None
+
 # Max number of processes to fork when handling requests
 MAX_PROCESSES = 10
 
