@@ -14,7 +14,6 @@ from Pegasus.netlogger import util
 from Pegasus.netlogger.nllog import DoesLogging, TRACE
 from Pegasus.netlogger.nlapi import TS_FIELD, EVENT_FIELD, HASH_FIELD
 from Pegasus.netlogger.util import hash_event
-from Pegasus.netlogger.analysis import schemacfg
 
 class AnalyzerException(Exception): pass
 
@@ -89,8 +88,7 @@ class Analyzer(DoesLogging):
 
     FLUSH_SEC = 5 # time to wait before calling flush()
 
-    def __init__(self, add_hash="no", _validate=False,
-                 schemata=None):
+    def __init__(self, add_hash="no", _validate=False):
         """Will be overridden by subclasses to take
         parameters specific to their function.
         """
@@ -106,18 +104,6 @@ class Analyzer(DoesLogging):
             self.log.error("parameter.error",
                            name="add_hash", value=add_hash, msg=err)
             self._add_hash = False
-        # Parameter: schemata
-        self._schema = None
-        if schemata:
-            schema_files = [s.strip() for s in schemata.split(',')]
-            try:
-                p = schemacfg.SchemaParser(files=schema_files)
-                self._schema = p.get_schema()
-                self._do_preprocess = True
-            except (IOError, ValueError),err:
-                self.log.error("parameter.error",
-                               name="schemata", value=schema_files,
-                               msg=err)
 
     def process(self, data):
         """Override with logic; 'data' is a dictionary with timestamp,
@@ -136,8 +122,6 @@ class Analyzer(DoesLogging):
         Exceptions:
           - ValueError
         """
-        if self._schema:
-            self._schema.event(data)
         if self._add_hash:
             data[HASH_FIELD] = hash_event(data)
         return data
