@@ -58,10 +58,10 @@ class StampedeExpunge(Expunge):
     a stampede schema database in the case of running with the replay
     option or a similar situation.
 
-    The wf_uuid that is passed into the constructor MUST be the 
+    The wf_uuid that is passed into the constructor MUST be the
     "top-level" workflow the user wants to delete.  Which is to
     say if the wf_uuid is a the child of another workflow, then
-    only the data associated with that workflow will be deleted.  
+    only the data associated with that workflow will be deleted.
     Any parent or sibling workflows will be left untouched.
 
     Usage::

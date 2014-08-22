@@ -1,4 +1,3 @@
-__rcsid__ = "$Id: stampede_statistics.py 31980 2012-07-02 15:12:17Z mgoode $"
 __author__ = "Rajiv Mayani"
 
 from Pegasus.netlogger.analysis.modules import SQLAlchemyInit
@@ -662,10 +661,6 @@ class StampedeWorkflowStatistics(SQLAlchemyInit, DoesLogging):
                 return not_(Invocation.transformation.in_(self._xform_filter['exclude']))
             else:
                 return None
-            pass
         else:
             return None
 
-
-if __name__ == '__main__':
-    pass

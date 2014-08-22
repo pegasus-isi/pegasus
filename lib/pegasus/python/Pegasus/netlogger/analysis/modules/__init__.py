@@ -15,7 +15,8 @@ from Pegasus.netlogger.nllog import DoesLogging, TRACE
 from Pegasus.netlogger.nlapi import TS_FIELD, EVENT_FIELD, HASH_FIELD
 from Pegasus.netlogger.util import hash_event
 
-class AnalyzerException(Exception): pass
+class AnalyzerException(Exception):
+    pass
 
 class PreprocessException(AnalyzerException):
     pass
@@ -34,8 +35,8 @@ def dsn_dialect(s):
 """
 Mixin class to provide SQLAlchemy database initialization/mapping.
 Takes a SQLAlchemy connection string and a module function as
-required arguments.  The initialization function takes the db and 
-metadata objects (and optional args) as args, initializes to the 
+required arguments.  The initialization function takes the db and
+metadata objects (and optional args) as args, initializes to the
 appropriate schema and sets "self.session" as a class member for
 loader classes to interact with the DB with.
 
@@ -59,7 +60,7 @@ class SQLAlchemyInit:
         dialect_kw = kwarg.get(dsn_dialect(connString), {})
         initFunction(self.db, self.metadata, kw=dialect_kw)
         self.metadata.bind = self.db
-        sm = orm.sessionmaker(bind=self.db, autoflush=False, autocommit=False, 
+        sm = orm.sessionmaker(bind=self.db, autoflush=False, autocommit=False,
                                 expire_on_commit=False)
         self.session = orm.scoped_session(sm)
 
@@ -95,7 +96,7 @@ class Analyzer(DoesLogging):
         DoesLogging.__init__(self)
         self._do_preprocess = False # may get set to True, below
         self.last_flush = time.time()
-        self._validate = _validate  
+        self._validate = _validate
         # Parameter: add_hash
         try:
             self._add_hash = util.as_bool(add_hash)

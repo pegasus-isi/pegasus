@@ -1327,7 +1327,6 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
                 return not_(Invocation.transformation.in_(self._xform_filter['exclude']))
             else:
                 return None
-            pass
         else:
             return None
 
@@ -1417,6 +1416,3 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
 
         return q.all()
 
-
-if __name__ == '__main__':
-    pass

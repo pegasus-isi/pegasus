@@ -1,1 +1,1 @@
-__all__ = ['datamining', 'modules', 'schema', 'workflow' ]
+__all__ = ['modules', 'schema', 'workflow']

@@ -26,7 +26,7 @@ Sample output including errors:
 
 ** Checking w.jobs for instance type:
    Passed
-   
+
 Etc.
 
 """
@@ -132,24 +132,24 @@ def test_workflow_types(w):
     Tests an instance of a workflow object and it's children to ensure
     that the correct return types are being returned.  Used for testing
     differing backend implementations.
-    
+
     This version just dumps output to the console for a quick visual check.
     """
     # workflow
     passed = True
-    
+
     print '** Checking workflow object:'
     for k,v in workflow_types.items():
         testval = eval('w.%s' % k)
         if not isinstance(testval, v):
             print '  ', k, testval, type(testval)
             passed = False
-            
+
     if passed:
         print '   Passed'
     else:
         passed = True
-    
+
     print '\n** Checking w.jobtypes_executed:'
     for k,v in w.jobtypes_executed.items():
         if not isinstance(k, string):
@@ -158,12 +158,12 @@ def test_workflow_types(w):
         if not isinstance(v, integer):
             print '   jobtype value problem', v, type(v)
             passed = False
-            
+
     if passed:
         print '   Passed'
     else:
         passed = True
-        
+
     print '\n** Checking workflow state:'
     ws = w.start_events[0]
     for k,v in workflowstate_types.items():
@@ -171,24 +171,24 @@ def test_workflow_types(w):
         if not isinstance(testval, v):
             print '  ', k, testval, type(testval)
             passed = False
-            
+
     if passed:
         print '   Passed'
     else:
         passed = True
-    
+
     print '\n** Checking w.jobs for instance type:'
     if w.jobs:
         job = w.jobs[0]
         if not isinstance(job, JobBase):
             print '   Job instance type failed:', job
             passed = False
-            
+
         if passed:
             print '   Passed'
         else:
             passed = True
-    
+
         # job
         print '\n** Checking Job properties:'
         for k,v in job_types.items():
@@ -196,36 +196,36 @@ def test_workflow_types(w):
             if not isinstance(testval, v):
                 print '  ', k, testval, type(testval)
                 passed = False
-                
+
         if passed:
             print '   Passed'
         else:
             passed = True
-            
+
         print '\n** Checking Host properties:'
         for k,v in host_types.items():
             testval = eval('job.host.%s' % k)
             if not isinstance(testval, v):
                 print '  ', k, testval, type(testval)
                 passed = False
-                
+
         if passed:
             print '   Passed'
         else:
             passed = True
-            
+
         print '\n** Checking Jobstate properties:'
         for k,v in jobstate_types.items():
             testval = eval('job.current_state.%s' % k)
             if not isinstance(testval, v):
                 print '  ', k, testval, type(testval)
                 passed = False
-                
+
         if passed:
             print '   Passed'
         else:
             passed = True
-                
+
         if job.tasks:
             print '\n** Checking Task properties:'
             task = job.tasks[0]
@@ -238,7 +238,7 @@ def test_workflow_types(w):
                 print '   Passed'
         else:
             print 'WARNING: no valid Task object to test!'
-            
+
         if job.edge_children:
             print '\n** Checking child edges'
             job = job.edge_children[0]
@@ -250,7 +250,7 @@ def test_workflow_types(w):
                 print '   Passed'
             else:
                 passed = True
-                
+
         if job.edge_parents:
             print '\n** Checking parent edges'
             job = job.edge_parents[0]
@@ -264,9 +264,8 @@ def test_workflow_types(w):
                 passed = True
     else:
         print 'WARNING: no valid Job object to test!'
-    pass
-    
-    
+
+
 def test_workflow_types_list(w):
     """
     Like test_workflow_types, but returns a list of problems.  More
@@ -286,28 +285,28 @@ def test_workflow_types_list(w):
             messages.append('Workflow.jobtypes_executed jobtype key problem: %s (%s)' % (type(k), k))
         if not isinstance(v, integer):
             messages.append('Workflow.jobtypes_executed jobtype value problem: %s (%s)' % (type(v), v))
-            
+
     ws = w.start_events[0]
     for k,v in workflowstate_types.items():
         testval = eval('ws.%s' % k)
         if not isinstance(testval, v):
             messages.append('Workflowstate property %s returned %s (%s)' % (k, type(testval), testval))
-    
+
     if w.jobs:
         job = w.jobs[0]
         if not isinstance(job, JobBase):
             messages.append('Workflow.job instance type failed: %s' % job.__class__)
-        
+
         for k,v in job_types.items():
             testval = eval('job.%s' % k)
             if not isinstance(testval, v):
                 messages.append('Job property %s returned %s (%s)' % (k, type(testval), testval))
-        
+
         for k,v in host_types.items():
             testval = eval('job.host.%s' % k)
             if not isinstance(testval, v):
                 messages.append('Host property %s returned %s (%s)' % (k, type(testval), testval))
-        
+
         for k,v in jobstate_types.items():
             testval = eval('job.current_state.%s' % k)
             if not isinstance(testval, v):
@@ -321,27 +320,27 @@ def test_workflow_types_list(w):
                     messages.append('Task property %s returned %s (%s)' % (k, type(testval), testval))
         else:
             messages.append('WARNING: no valid Task object to test!')
-        
+
         if job.edge_parents:
             job = job.edge_parents[0]
             if not isinstance(job, JobBase):
                 messages.append('Workflow.job.edge_parents instance type failed: %s' % job.__class__)
-                
+
         if job.edge_children:
             job = job.edge_children[0]
             if not isinstance(job, JobBase):
                 messages.append('Workflow.job.edge_children instance type failed: %s' % job.__class__)
     else:
         messages.append('WARNING: no valid Job object to test!')
-        
+
     return messages
-    
+
 def create_reference_dump(w):
     """
     Create a reference dump of a workflow object.  Can be used for comparing
     output in tests or across implementations.
-    
-    Could just print the top level object, but this explicitly iterates 
+
+    Could just print the top level object, but this explicitly iterates
     through all of the nested lists.
     """
     print 'Workflow:\n'
@@ -351,7 +350,7 @@ def create_reference_dump(w):
         if k in ['jobs']:
             continue
         print k, eval('w.%s\n' % k)
-        
+
     print '\nJobs:\n'
     jt = job_types.keys()
     jt.sort()
@@ -360,7 +359,7 @@ def create_reference_dump(w):
             if k in ['tasks', 'all_jobstates']:
                 continue
             print k, eval('j.%s' % k)
-        
+
         print '\n  Tasks:'
         for t in j.tasks:
             print '  ', t
@@ -368,9 +367,4 @@ def create_reference_dump(w):
         for js in j.all_jobstates:
             print '  ', js
         print '\n============\n'
-    
-def main():
-    pass
-    
-if __name__ == '__main__':
-    main()
+
