@@ -24,14 +24,6 @@ class PreprocessException(AnalyzerException):
 class ProcessException(AnalyzerException):
     pass
 
-def dsn_dialect(s):
-    """Data source name (dsn) dialect."""
-    dialect = ""
-    m = re.match(r'(.*?)[:+]', s)
-    if m and (len(m.groups()) == 1):
-        dialect = m.group(1)
-    return dialect.lower()
-
 """
 Mixin class to provide SQLAlchemy database initialization/mapping.
 Takes a SQLAlchemy connection string and a module function as
@@ -56,23 +48,15 @@ class SQLAlchemyInit:
             # already but if not, bulletproof this attr.
             self._dbg = False
         self.db = create_engine(connString, echo=self._dbg, pool_recycle=True)
-        self.metadata = MetaData()
-        dialect_kw = kwarg.get(dsn_dialect(connString), {})
-        initFunction(self.db, self.metadata, kw=dialect_kw)
-        self.metadata.bind = self.db
+        initFunction(self.db)
         sm = orm.sessionmaker(bind=self.db, autoflush=False, autocommit=False,
-                                expire_on_commit=False)
+                              expire_on_commit=False)
         self.session = orm.scoped_session(sm)
 
     def disconnect(self):
-        self.session.connection().close()
-        self.session.close_all()
-        self.session.bind.dispose()
+        self.session.remove()
         self.db.dispose()
 
-"""
-Base classes
-"""
 
 class Analyzer(DoesLogging):
     """Base analysis class. Doesn't do much.

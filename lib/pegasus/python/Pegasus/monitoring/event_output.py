@@ -196,11 +196,11 @@ class DBEventSink(EventSink):
         if namespace == STAMPEDE_NS:
             assert stampede_loader is not None, "Database destination selected, "+\
                "but cannot import stampede loader"
-            self._db = stampede_loader.Analyzer(dest, perf=db_stats, batch="yes", mysql_engine='InnoDB')
+            self._db = stampede_loader.Analyzer(dest, perf=db_stats, batch="yes")
         elif namespace == DASHBOARD_NS:
             assert stampede_dashboard_loader is not None, "Database destination selected, "+\
                                                 "but cannot import stampede_dashboard_loader"
-            self._db = stampede_dashboard_loader.Analyzer(dest, perf=db_stats, batch="yes", mysql_engine='InnoDB')
+            self._db = stampede_dashboard_loader.Analyzer(dest, perf=db_stats, batch="yes")
         else:
             raise ValueError("Unknown namespace specified '%s'" % (namespace))
 

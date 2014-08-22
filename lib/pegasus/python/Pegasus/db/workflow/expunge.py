@@ -49,7 +49,6 @@ class Expunge(SQLAlchemyInit, DoesLogging):
         """
         Invoke this to remove workflow/information from DB.
         """
-
         raise NotImplementedError( "Please Load the appropriate Expunge Implementation")
 
 class StampedeExpunge(Expunge):

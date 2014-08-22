@@ -23,7 +23,7 @@ __author__ = "Karan Vahi"
 from Pegasus.db.schema.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
 from Pegasus.db.schema.stampede_dashboard_schema import *
 from Pegasus.db.modules import Analyzer as BaseAnalyzer
-from Pegasus.db.modules import SQLAlchemyInit, dsn_dialect
+from Pegasus.db.modules import SQLAlchemyInit
 from Pegasus.netlogger import util
 import time
 
@@ -40,41 +40,22 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         When using MySQL, the general form will work, but the library
         expects the database to exist (ie: will not issue CREATE DB)
         but will populate an empty DB with tables/indexes/etc.
-     - mysql_engine {string,None*}: For MySQL, the storage engine. Accepted
-       values include 'InnoDB' and 'MyISAM'. See SQLAlchemy/MySQL documentation
-       for more details. Ignored if connString does not start with 'mysql'.
     """
-    def __init__(self, connString=None, perf='no', batch='no', mysql_engine=None, **kw):
+    def __init__(self, connString=None, perf='no', batch='no', **kw):
         """Init object
 
         @type   connString: string
         @param  connString: SQLAlchemy connection string - REQUIRED
         """
         BaseAnalyzer.__init__(self, **kw)
-        _kw = { }
+
         if connString is None:
             raise ValueError("connString is required")
-        dialect = dsn_dialect(connString)
-        _kw[dialect] = { }
-        if dialect == 'mysql':
-            # mySQL-specific options
-            if mysql_engine is not None:
-                _kw[dialect]['mysql_engine'] = mysql_engine
-        # This mixin adds a class member "self.session" after initialization.
-        # This is the session handler that the code logic uses for queries
-        # and other DB interaction.  The arg "initializeToDashboardDB" is
-        # a function from the stampede_schema module.
         try:
-            SQLAlchemyInit.__init__(self, connString, initializeToDashboardDB, **_kw)
+            SQLAlchemyInit.__init__(self, connString, initializeToDashboardDB)
         except exc.OperationalError, e:
             self.log.error('init', msg='%s' % ErrorStrings.get_init_error(e))
             raise RuntimeError
-
-        # Check the schema version before proceeding.
-        # don't check any schema
-#        s_check = SchemaCheck(self.session)
-#        if not s_check.check_schema():
-#            raise SchemaVersionError
 
         self.log.info('init.start')
 

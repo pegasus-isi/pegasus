@@ -1,3 +1,10 @@
+from sqlalchemy import BigInteger
+from sqlalchemy.dialects import postgresql, mysql, sqlite
+
+KeyInteger = BigInteger()
+KeyInteger = KeyInteger.with_variant(postgresql.BIGINT(), 'postgresql')
+KeyInteger = KeyInteger.with_variant(mysql.BIGINT(), 'mysql')
+KeyInteger = KeyInteger.with_variant(sqlite.INTEGER(), 'sqlite')
 
 class SABase(object):
     """

@@ -4,7 +4,7 @@ Stampede schema.
 """
 __author__ = "Monte Goode"
 
-from Pegasus.db.modules import SQLAlchemyInit, dsn_dialect
+from Pegasus.db.modules import SQLAlchemyInit
 from Pegasus.db.schema.stampede_schema import *
 from Pegasus.netlogger.nllog import DoesLogging
 
@@ -14,29 +14,6 @@ class SchemaVersionError(Exception):
     is out of date so the calling program can catch and handle it.
     """
     pass
-
-class ConnHandle(SQLAlchemyInit, DoesLogging):
-    """
-    Stand-alone connection class that returns a SQLAlchemy session.
-    """
-    def __init__(self, connString=None, mysql_engine=None, **kw):
-        DoesLogging.__init__(self)
-        if connString is None:
-            raise ValueError("connString is required")
-        _kw = { }
-        dialect = dsn_dialect(connString)
-        _kw[dialect] = { }
-        if dialect == 'mysql':
-            if mysql_engine is not None:
-                _kw[dialect]['mysql_engine'] = mysql_engine
-        try:
-            SQLAlchemyInit.__init__(self, connString, initializeToPegasusDB, **_kw)
-        except exc.OperationalError, e:
-            self.log.error('init', msg='%s' % ErrorStrings.get_init_error(e))
-            raise RuntimeError
-
-    def get_session(self):
-        return self.session
 
 
 class ErrorStrings:
