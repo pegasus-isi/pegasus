@@ -4,9 +4,10 @@ Stampede schema.
 """
 __author__ = "Monte Goode"
 
+import logging
+
 from Pegasus.db.modules import SQLAlchemyInit
 from Pegasus.db.schema.stampede_schema import *
-from Pegasus.netlogger.nllog import DoesLogging
 
 class SchemaVersionError(Exception): 
     """
@@ -54,7 +55,7 @@ class ErrorStrings:
 
         return er
 
-class SchemaCheck(DoesLogging):
+class SchemaCheck(object):
     """
     This handles checking the schema, setting the proper version_number
     if not already set, returning the current version for things like the
@@ -66,10 +67,8 @@ class SchemaCheck(DoesLogging):
     schema and set the correct version number.
     """
     def __init__(self, session):
-        DoesLogging.__init__(self)
+        self.log = logging.getLogger("%s.%s" % (self.__module__, self.__class__.__name__))
         self.session = session
-        self.log.info('init')
-
         self._table_map = {}
 
     def _get_current_version(self):
@@ -80,14 +79,13 @@ class SchemaCheck(DoesLogging):
             return round(q.one()[0],1)
 
     def _version_check(self, version_number):
-        self.log.info('check_schema', msg='Current version set to: %s' % version_number)
         if float(version_number) == CURRENT_SCHEMA_VERSION:
-            self.log.info('check_schema', msg='Schema up to date')
+            self.log.debug('Schema up to date')
             return True
         elif float(version_number) < CURRENT_SCHEMA_VERSION:
-            self.log.error('check_schema', \
-                msg='Schema version %s found - expecting %s - database admin will need to run upgrade tool' % \
-                    (float(version_number), CURRENT_SCHEMA_VERSION))
+            self.log.error('Schema version %s found - expecting %s: '
+                    'database admin will need to run upgrade tool',
+                    float(version_number), CURRENT_SCHEMA_VERSION)
             return False
 
     def _table_scan(self, sql, table, idx):
@@ -103,30 +101,32 @@ class SchemaCheck(DoesLogging):
         schema is out of date.  Returns True or False so calling apps
         (like the loader) can handle appropriately with execptions, etc.
         """
-        self.log.info('check_schema.start')
+        self.log.debug('Checking schema')
 
         version_number = self._get_current_version()
+        self.log.debug('Schema version: %s', version_number)
+
         if not version_number:
-            self.log.info('check_schema', msg='No version_number set in schema_info')
+            self.log.warning('No version_number set in schema_info')
         elif version_number == 3.2:
-            self.log.info('check_schema', msg='Schema set to 3.2 deveopment version - resetting to release version')
+            self.log.warning('Schema set to 3.2 development version - resetting to release version')
         else:
             return self._version_check(version_number)
 
-        self.log.info('check_schema', msg='Determining schema version')
+        self.log.info("Scanning tables to determine schema version")
 
         table_scan = ['job_instance', 'invocation']
 
         # Due to how the SQLAlchemy mapper works, I need to look at these with
         # raw SQL calls to the DBM and not use the mapper objects.
+        dialect = self.session.connection().dialect.name
         for t in table_scan:
-            if self.session.connection().dialect.name == 'sqlite':
+            if dialect == 'sqlite':
                 self._table_scan('PRAGMA table_info(%s)' % t, t, 1)
-            elif self.session.connection().dialect.name == 'mysql':
+            elif dialect == 'mysql':
                 self._table_scan('desc %s' % t, t, 0)
             else:
-                self.log.error('check_schema', msg='Dialect %s not available for scanning' \
-                    % self.session.connection().dialect.name )
+                self.log.error('Dialect %s not available for scanning', dialect)
 
         #
         # Checks for version 4.0
@@ -147,13 +147,13 @@ class SchemaCheck(DoesLogging):
         s_info = SchemaInfo()
 
         if not m_factor_check and not exitcode_check and not remote_cpu_check:
-            self.log.info('check_schema', msg='Setting schema to version 3.1')
+            self.log.info('Setting schema to version 3.1')
             s_info.version_number = 3.1
         elif m_factor_check and exitcode_check and remote_cpu_check:
             s_info.version_number = 4.0
-            self.log.info('check_schema', msg='Setting schema to version 4.0')
+            self.log.info('Setting schema to version 4.0')
         else:
-            self.log.error('check_schema', msg='Error in determining database schema')
+            self.log.error('Error in determining database schema version')
             raise RuntimeError
 
         s_info.commit_to_db(self.session)
@@ -182,10 +182,11 @@ class SchemaCheck(DoesLogging):
         Called by the "upgrade tool" - upgrades a populated 3.1 DB to
         4.0.
         """
-        self.log.info('upgrade_to_4_0', msg='Upgrading to schema version 4.0')
         if self._get_current_version() >= 4.0:
-            self.log.warn('upgrade_to_4_0', msg='Schema version already 4.0 - skipping upgrade')
+            self.log.warn('Schema version already 4.0 - skipping upgrade')
             return
+
+        self.log.info('Upgrading to schema version 4.0')
 
         # Alter tables
         r_c_t = 'ALTER TABLE invocation ADD COLUMN remote_cpu_time NUMERIC(10,3) NULL'

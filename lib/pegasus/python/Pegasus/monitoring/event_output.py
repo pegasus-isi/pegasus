@@ -26,77 +26,55 @@ import logging
 import urlparse
 
 from Pegasus.tools import utils
+from Pegasus.netlogger import nlapi
+from Pegasus.db.schema.schema_check import SchemaVersionError
+from Pegasus.db.modules import stampede_loader
+from Pegasus.db.modules import stampede_dashboard_loader
+from Pegasus.db.workflow.expunge import StampedeExpunge
+from Pegasus.db.workflow.expunge import DashboardExpunge
+
+# Get logger object (initialized elsewhere)
+log = logging.getLogger()
+
+# Optional imports, only generate 'warnings' if they fail
+bson = None
+try:
+    import bson
+except:
+    log.info("cannot import BSON library, 'bson'")
+
+amqp = None
+try:
+    from amqplib import client_0_8 as amqp
+except:
+    log.info("cannot import AMQP library")
 
 # Event name-spaces
 STAMPEDE_NS = "stampede."
 DASHBOARD_NS = "dashboard."
 
-# Get logger object (initialized elsewhere)
-logger = logging.getLogger()
-
-# Optional imports, only generate 'warnings' if they fail
-nlapi = None
-stampede_loader = None
-stampede_dashboard_loader = None
-bson = None
-amqp = None
-
-try:
-    from Pegasus.netlogger import nlapi
-except:
-    logger.info("cannot import Pegasus.netlogger.nlapi")
-try:
-    from Pegasus.db.schema.schema_check import SchemaVersionError
-    from Pegasus.db.modules import stampede_loader
-except:
-    logger.info("cannot import stampede_loader")
-try:
-    from Pegasus.db.modules import stampede_dashboard_loader
-except:
-    logger.info("cannot import stampede_dashboard_loader")
-try:
-    from Pegasus.db.workflow.expunge import StampedeExpunge
-except:
-    logger.info("cannot import Stampede Expunge")
-try:
-    from Pegasus.db.workflow.expunge import DashboardExpunge
-except:
-    logger.info("cannot import Dashboard Expunge")
-
-try:
-    import bson
-except:
-    logger.info("cannot import BSON library, 'bson'")
-try:
-    from amqplib import client_0_8 as amqp
-except:
-    logger.info("cannot import AMQP library")
 
 def purge_wf_uuid_from_database(rundir, output_db):
     """
     This function purges a workflow id from the output database.
     """
-    if output_db.lower().find('sqlite:///') == 0:
-        # Ok, we have a SQLite database, let's get the filename and check if it exists
-        filename = output_db[10:]
-
-        # Check if SQLite database exists
-        if not os.path.isfile(filename):
-            # No, nothing to do
-            return
+    # PM-652 do nothing for sqlite
+    # DB is already rotated in pegasus-monitord
+    if output_db.lower().startswith('sqlite'):
+        return
 
     # Parse the braindump file
     wfparams = utils.slurp_braindb(rundir)
-    
-    if "wf_uuid" in wfparams:
-        if wfparams["wf_uuid"] is not None:
-            # Get wf_uuid
-            wf_uuid = wfparams["wf_uuid"]
-            e = StampedeExpunge(output_db, wf_uuid)
-            e.expunge()
 
-            # Done, make this connection go away
-            e = None
+    wf_uuid = wfparams.get("wf_uuid", None)
+    if "wf_uuid" is None:
+        return
+
+    e = StampedeExpunge(output_db, wf_uuid)
+    e.expunge()
+
+    # Done, make this connection go away
+    e = None
 
 def purge_wf_uuid_from_dashboard_database(rundir, output_db):
     """
@@ -106,15 +84,15 @@ def purge_wf_uuid_from_dashboard_database(rundir, output_db):
     # Parse the braindump file
     wfparams = utils.slurp_braindb(rundir)
 
-    if "wf_uuid" in wfparams:
-        if wfparams["wf_uuid"] is not None:
-            # Get wf_uuid
-            wf_uuid = wfparams["wf_uuid"]
-            e = DashboardExpunge(output_db, wf_uuid)
-            e.expunge()
+    wf_uuid = wfparams.get("wf_uuid", None)
+    if "wf_uuid" is None:
+        return
 
-            # Done, make this connection go away
-            e = None
+    e = DashboardExpunge(output_db, wf_uuid)
+    e.expunge()
+
+    # Done, make this connection go away
+    e = None
 
 class OutputURL:
     """
@@ -194,12 +172,8 @@ class DBEventSink(EventSink):
         self._namespace=namespace
         #pick the right database loader based on prefix
         if namespace == STAMPEDE_NS:
-            assert stampede_loader is not None, "Database destination selected, "+\
-               "but cannot import stampede loader"
             self._db = stampede_loader.Analyzer(dest, perf=db_stats, batch="yes")
         elif namespace == DASHBOARD_NS:
-            assert stampede_dashboard_loader is not None, "Database destination selected, "+\
-                                                "but cannot import stampede_dashboard_loader"
             self._db = stampede_dashboard_loader.Analyzer(dest, perf=db_stats, batch="yes")
         else:
             raise ValueError("Unknown namespace specified '%s'" % (namespace))
@@ -226,8 +200,6 @@ class FileEventSink(EventSink):
     Write wflow event logs to a file.
     """
     def __init__(self, path, restart=False, encoder=None, **kw):
-        assert nlapi is not None, "File/socket destination selected, "+\
-               "but cannot import NetLogger API"
         super(FileEventSink, self).__init__()
         if restart:
             self._output = open(path, 'w')
@@ -325,14 +297,12 @@ def create_wf_event_sink(dest, enc=None,prefix=STAMPEDE_NS, **kw):
     def pick_encfn(enc_name, namespace ):
         ##enc_name = url.query.get('enc', 'bp').lower()
         if enc_name is None or enc_name == 'bp':
-            assert nlapi is not None, "NetLogger encoding selected, "+\
-                "but cannot import nlapi library"
             # NetLogger name=value encoding
             encfn = nlapi.Log(level=nlapi.Level.ALL, prefix=namespace)
         elif enc_name == 'bson':
             # BSON
-            assert bson is not None, "BSON encoding selected, "+\
-                "but cannot import bson library"
+            if bson is None:
+                raise Exception("BSON encoding selected, but cannot import bson library")
             encfn = bson_encode
         else:
             raise ValueError("Unknown encoding '%s'" % (enc_name))
@@ -351,8 +321,8 @@ def create_wf_event_sink(dest, enc=None,prefix=STAMPEDE_NS, **kw):
         sink = TCPEventSink(url.host, url.port, encoder=pick_encfn(enc, prefix), **kw)
         _type, _name = "network", "%s:%s" % (url.host, url.port)
     elif url.scheme == 'amqp':
-        assert amqp is not None, "AMQP destination selected, "+\
-            "but cannot import AMQP library"
+        if amqp is None:
+            raise Exception("AMQP destination selected, but cannot import AMQP library")
         if url.port is None:
             url.port = 5672 # RabbitMQ default
         while url.path.startswith('/'):
@@ -364,6 +334,7 @@ def create_wf_event_sink(dest, enc=None,prefix=STAMPEDE_NS, **kw):
         # load the appropriate DBEvent on basis of prefix passed
         sink = DBEventSink(dest, namespace=prefix, **kw)
         _type, _name = "DB", dest
-    logger.info("output type=%s namespace=%s name=%s" % (_type, prefix, _name))
+    log.info("output type=%s namespace=%s name=%s" % (_type, prefix, _name))
 
     return sink
+

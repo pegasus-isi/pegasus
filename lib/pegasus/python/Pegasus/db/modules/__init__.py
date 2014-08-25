@@ -1,17 +1,16 @@
 """
 Base for analysis modules.
 """
-from logging import DEBUG
 import Queue
 import re
 import sys
 import threading
 import time
+import logging
 
-from sqlalchemy import create_engine, MetaData, orm
+from sqlalchemy import create_engine, orm
 
 from Pegasus.netlogger import util
-from Pegasus.netlogger.nllog import DoesLogging, TRACE
 from Pegasus.netlogger.nlapi import TS_FIELD, EVENT_FIELD, HASH_FIELD
 from Pegasus.netlogger.util import hash_event
 
@@ -58,17 +57,13 @@ class SQLAlchemyInit:
         self.db.dispose()
 
 
-class Analyzer(DoesLogging):
+class Analyzer(object):
     """Base analysis class. Doesn't do much.
 
     Parameters:
       - add_hash {yes,no,no*}: To each input event, add a new field,
            'nlhash', which is a probabilistically unique (MD5) hash of all
            the other fields in the event.
-      - schemata {<file,file..>,None*}: If given, read a simple form of
-           schema from file(s). The schema uses INI format with a [section]
-           for each event name and <field> = <type-name> describing the type
-           of each field for that event.
     """
 
     FLUSH_SEC = 5 # time to wait before calling flush()
@@ -77,7 +72,7 @@ class Analyzer(DoesLogging):
         """Will be overridden by subclasses to take
         parameters specific to their function.
         """
-        DoesLogging.__init__(self)
+        self.log = logging.getLogger("%s.%s" % (self.__module__, self.__class__.__name__))
         self._do_preprocess = False # may get set to True, below
         self.last_flush = time.time()
         self._validate = _validate
@@ -86,8 +81,8 @@ class Analyzer(DoesLogging):
             self._add_hash = util.as_bool(add_hash)
             self._do_preprocess = True
         except ValueError, err:
-            self.log.error("parameter.error",
-                           name="add_hash", value=add_hash, msg=err)
+            self.log.exception(err)
+            self.log.error("Paramenter error: add_hash = %s", add_hash)
             self._add_hash = False
 
     def process(self, data):
@@ -157,8 +152,7 @@ class Analyzer(DoesLogging):
             raise ProcessException(str(err))
         t = time.time()
         if t  - self.last_flush >= self.FLUSH_SEC:
-            if self._dbg:
-                self.log.debug("flush")
+            self.log.debug("flush")
             self.flush()
             self.last_flush = t
         return result
@@ -192,7 +186,6 @@ class BufferedAnalyzer(Analyzer, threading.Thread):
         """Thread method - pull data FIFO style from the queue
         and pass off to the worker method.
         """
-        self.log.info('run.start')
         while self.running:
             if not self.queue.empty():
                 row = self.queue.get()
@@ -201,7 +194,6 @@ class BufferedAnalyzer(Analyzer, threading.Thread):
                     self.queue.task_done()
             else:
                 time.sleep(0.1)
-        self.log.info('run.end')
 
     def process_buffer(self, row):
         """Override with logic - this is the worker method
@@ -215,15 +207,12 @@ class BufferedAnalyzer(Analyzer, threading.Thread):
         the processing thread.  See nl_load for an example on
         the appropriate time/place to call.
         """
-        self.log.info('finish.begin')
         if not self.finishing:
-            self.log.info('finish.finishing queue')
             self.finishing = True
+        # XXX This can be replaced with queue.join() in Python 2.5
         while not self.queue.empty():
             time.sleep(0.1)
         self.running = False
         if self.isAlive():
             self.join()
-        #time.sleep(1)
-        self.log.info('finish.end')
 

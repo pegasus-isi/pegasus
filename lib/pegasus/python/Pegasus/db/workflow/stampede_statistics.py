@@ -153,26 +153,26 @@ Methods listed in order of query list on wiki.
 
 https://confluence.pegasus.isi.edu/display/pegasus/Pegasus+Statistics+Python+Version+Modified
 """
-__rcsid__ = "$Id: stampede_statistics.py 31980 2012-07-02 15:12:17Z mgoode $"
 __author__ = "Monte Goode"
+
+import logging
 
 from Pegasus.db.modules import SQLAlchemyInit
 from Pegasus.db.schema.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
 from Pegasus.db.schema.stampede_schema import *
 from Pegasus.db.errors import StampedeDBNotFoundError
-from Pegasus.netlogger.nllog import DoesLogging, get_logger
 
 # Main stats class.
 
-class StampedeStatistics(SQLAlchemyInit, DoesLogging):
+class StampedeStatistics(SQLAlchemyInit):
     def __init__(self, connString=None, expand_workflow=True):
         if connString is None:
             raise ValueError("connString is required")
-        DoesLogging.__init__(self)
+        self.log = logging.getLogger("%s.%s" % (self.__module__, self.__class__.__name__))
         try:
             SQLAlchemyInit.__init__(self, connString, initializeToPegasusDB)
         except exc.OperationalError, e:
-            self.log.error('init', msg='%s' % ErrorStrings.get_init_error(e))
+            self.log.exception(e)
             raise StampedeDBNotFoundError
 
         # Check the schema version before proceeding.
@@ -192,10 +192,8 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         self._wfs = []
 
     def initialize(self, root_wf_uuid = None, root_wf_id = None):
-        self.log.debug('initialize')
         if root_wf_uuid == None and root_wf_id == None:
-            self.log.error('initialize',
-                msg='Either root_wf_uuid or root_wf_id is required')
+            self.log.error('Either root_wf_uuid or root_wf_id is required')
             return False
 
         q = self.session.query(Workflow.root_wf_id, Workflow.wf_id, Workflow.wf_uuid)
@@ -211,12 +209,10 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
             self._root_wf_uuid = result.wf_uuid
             self._is_root_wf = result.root_wf_id == result.wf_id
         except orm.exc.MultipleResultsFound, e:
-            self.log.error('initialize',
-                msg='Multiple results found for wf_uuid: %s' % root_wf_uuid)
+            self.log.error('Multiple results found for wf_uuid: %s', root_wf_uuid)
             return False
         except orm.exc.NoResultFound, e:
-            self.log.error('initialize',
-                msg='No results found for wf_uuid: %s' % root_wf_uuid)
+            self.log.error('No results found for wf_uuid: %s', root_wf_uuid)
             return False
 
         self._wfs.insert(0, self._root_wf_id)
@@ -242,11 +238,10 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
 
             self._get_descendants (tree, self._root_wf_id)
 
-        self.log.debug('Descendant workflow ids %s' % self._wfs)
+        self.log.debug('Descendant workflow ids %s', self._wfs)
 
         if not len(self._wfs):
-            self.log.error('initialize',
-                msg='No results found for wf_uuid: %s' % root_wf_uuid)
+            self.log.error('No results found for wf_uuid: %s', root_wf_uuid)
             return False
 
         # Initialize filters with default value
@@ -265,7 +260,6 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         '''
 
         if tree == None or wf_node == None:
-            self.log.error('initialize', msg='Tree, or node cannot be None')
             raise ValueError('Tree, or node cannot be None')
 
         if wf_node in tree:
@@ -286,10 +280,10 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         try:
             modes.index(filter)
             self._job_filter_mode = filter
-            self.log.debug('set_job_filter', msg='Setting filter to: %s' % filter)
+            self.log.debug('Setting filter to: %s', filter)
         except:
             self._job_filter_mode = 'all'
-            self.log.error('set_job_filter', msg='Unknown job filter %s - setting to all' % filter)
+            self.log.error('Unknown job filter %s - setting to all', filter)
 
 
     def set_time_filter(self, filter='month'):
@@ -297,10 +291,10 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         try:
             modes.index(filter)
             self._time_filter_mode = filter
-            self.log.debug('set_time_filter', msg='Setting filter to: %s' % filter)
+            self.log.debug('Setting filter to: %s', filter)
         except:
             self._job_filter_mode = 'month'
-            self.log.error('set_time_filter', msg='Unknown time filter %s - setting to month' % filter)
+            self.log.error('Unknown time filter %s - setting to month', filter)
 
     def set_host_filter(self, host=None):
         """
@@ -1307,8 +1301,7 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
     def _get_xform_filter(self):
         if self._xform_filter['include'] != None and \
             self._xform_filter['exclude'] != None:
-            self.log.error('_get_xform_filter',
-                msg='Can\'t set both transform include and exclude - reset s.set_transformation_filter()')
+            self.log.error('Can\'t set both transform include and exclude - reset s.set_transformation_filter()')
             return None
         elif self._xform_filter['include'] == None and \
             self._xform_filter['exclude'] == None:

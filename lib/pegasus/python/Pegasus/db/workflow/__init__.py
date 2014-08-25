@@ -21,22 +21,14 @@ also allows the inherited __repr__() method to ignore it.
 __author__ = "Monte Goode MMGoode@lbl.gov"
 
 import logging
-from Pegasus.netlogger.nllog import DoesLogging, get_root_logger
 
-class NullHandler(logging.Handler):
-    def emit(self, record):
-        pass
-
-# silence the logger since lib may be used by non-netloger apps.
-get_root_logger().addHandler(NullHandler())
-
-class WorkflowBase(DoesLogging):
+class WorkflowBase(object):
     # indent level for pretty printing = override in subclasses
     # if you want different indent levels for your various
     # objects.
     _indent = 1
     def __init__(self):
-        DoesLogging.__init__(self)
+        self.log = logging.getLogger("%s.%s" % (self.__module__, self.__class__.__name__))
 
     def __repr__(self):
         spacer = '  '
