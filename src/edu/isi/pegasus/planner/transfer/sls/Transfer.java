@@ -373,6 +373,9 @@ public class Transfer   implements SLS {
             }
 
             FileTransfer ft = new FileTransfer();
+            //ensure that right type gets associated, especially
+            //whether a file is a checkpoint file or not
+            ft.setType( pf.getType() );
 
             //create the default path from the directory
             //on the head node
@@ -403,6 +406,10 @@ public class Transfer   implements SLS {
                         //as we want to do chmod on the local copy on the worker node
                         symlink = false;
                     }
+                    if( pf.isCheckpointFile() ){
+                        //we never symlink checkpoint files
+                        symlink = false;
+                    }
                 }
                 else{
                     url.append( mSiteStore.getExternalWorkDirectoryURL(stagingSiteServer, stagingSite ));
@@ -416,6 +423,7 @@ public class Transfer   implements SLS {
                 ft.addSource( cacheLocation.getResourceHandle(), url.toString() );
                 
                 symlink = ( mUseSymLinks && //specified in configuration
+                            !pf.isCheckpointFile() && //can only do symlinks for data files . not checkpoint files
                             !pf.isExecutable() && //can only do symlinks for data files . not executables
                             ft.getSourceURL().getKey().equals( job.getSiteHandle()) && //source URL logically on the same site where job is to be run
                             url.toString().startsWith( PegasusURL.FILE_URL_SCHEME ) ); //source URL is a file URL
@@ -482,6 +490,10 @@ public class Transfer   implements SLS {
             pf = ( PegasusFile ) it.next();
 
             FileTransfer ft = new FileTransfer();
+            //ensure that right type gets associated, especially
+            //whether a file is a checkpoint file or not
+            ft.setType( pf.getType() );
+            
             //source
             StringBuffer url = new StringBuffer();
             url.append( "file://" ).append( sourceDir ).append( File.separator ).

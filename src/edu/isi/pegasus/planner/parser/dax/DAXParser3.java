@@ -96,9 +96,14 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
     public static final long DAX_VERSION_3_2_0 = CondorVersion.numericValue( "3.2.0" );
     
     /*
-     * Predefined Constant  for dax version 3.2.0
+     * Predefined Constant  for dax version 3.3.0
      */
     public static final long DAX_VERSION_3_3_0 = CondorVersion.numericValue( "3.3.0" );
+    
+    /*
+     * Predefined Constant  for dax version 3.4.0
+     */
+    public static final long DAX_VERSION_3_4_0 = CondorVersion.numericValue( "3.4.0" );
     
     /**
      * Constant denoting default metadata type
@@ -787,6 +792,12 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                             if( bValue ){
                                pf.setType( PegasusFile.EXECUTABLE_FILE );
                             }
+                 	    this.log( element, name, value );
+                        }
+                        else if ( name.equals( "type") ){
+                            //introduced in dax 3.4.0
+                            pf.setType( value );
+                            pf.setLinkage(LINKAGE.INOUT);
                  	    this.log( element, name, value );
                         }
                         else if ( name.equals( "size" ) ) {

@@ -970,7 +970,8 @@ public class PegasusLite implements GridStart {
         int num = 1;
         for( FileTransfer ft :  files ){
             NameValue nv = ft.getSourceURL();
-            sb.append( "# "  ).append( "src " ).append( num ).append( " " ).append( nv.getKey() ).append( '\n' );
+            sb.append( "# "  ).append( "src " ).append( num ).append( " " ).append( nv.getKey() ).
+               append( " " ).append( "checkpoint=\"").append(ft.isCheckpointFile()).append("\"").append( '\n' );
             sb.append( nv.getValue() );
             sb.append( '\n' );
 
