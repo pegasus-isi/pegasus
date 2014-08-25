@@ -11,10 +11,8 @@ import shutil
 from datetime import timedelta
 import traceback
 
-# Initialize logging object
-logger = logging.getLogger()
-# Set default level to INFO
-logger.setLevel(logging.INFO)
+root_logger = logging.getLogger()
+logger = logging.getLogger("pegasus-plots")
 
 # Use pegasus-config to find our lib path
 bin_dir = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0])))
@@ -31,7 +29,6 @@ javascript_dir = os.path.normpath(os.path.join(lib_dir, "../../pegasus/javascrip
 os.sys.path.insert(0, lib_ext_dir)
 os.sys.path.insert(0, lib_dir)
 
-import Pegasus.common
 from Pegasus.plots_stats import utils as plot_utils
 from Pegasus.plots_stats.plots import populate
 from Pegasus.plots_stats.plots import pegasus_gantt
@@ -40,6 +37,7 @@ from Pegasus.plots_stats.plots import pegasus_breakdown
 from Pegasus.plots_stats.plots import pegasus_time
 from Pegasus.tools import utils
 
+utils.configureLogging(level=logging.WARNING)
 
 # Regular expressions
 re_parse_property = re.compile(r'([^:= \t]+)\s*[:=]?\s*(.*)')
@@ -69,14 +67,13 @@ def setup_logger(level_str):
 	"""
 	level_str = level_str.lower()
 	if level_str == "debug":
-		logger.setLevel(logging.DEBUG)
+		root_logger.setLevel(logging.DEBUG)
 	if level_str == "warning":
-		logger.setLevel(logging.WARNING)
+		root_logger.setLevel(logging.WARNING)
 	if level_str == "error":
-		logger.setLevel(logging.ERROR)
+		root_logger.setLevel(logging.ERROR)
 	if level_str == "info":
-		logger.setLevel(logging.INFO)
-	populate.setup_logger(level_str)
+		root_logger.setLevel(logging.INFO)
 	return
 
 def setup(output_dir):
@@ -291,14 +288,13 @@ clear:both;
 
 
 
-def createOuterhtml(wf_stats, wf_info, submit_dir, output_dir, log_level):
+def createOuterhtml(wf_stats, wf_info, submit_dir, output_dir):
 	"""
 	Generates the outer html file which links to all the charts and graph
 	@param wf_info WorkflowInfo object reference
 	@param wf_stats StampedeStatistics reference
 	@param submit_dir submit directory
 	@param output_dir the output directory path
-	@param log_level logging level
 	"""
 	wf_uuid = wf_info.wf_uuid
 	title =  str(wf_info.wf_uuid) + " (" + str(wf_info.dax_label) + ")"
@@ -313,10 +309,10 @@ def createOuterhtml(wf_stats, wf_info, submit_dir, output_dir, log_level):
 	breakdown_summary_output_dir = None
 	if calc_time_chart:
 		time_summary_output_dir = output_dir
-		pegasus_time.setup(submit_dir, time_summary_output_dir, pegasus_env_path, log_level)
+		pegasus_time.setup(submit_dir, time_summary_output_dir, pegasus_env_path)
 	if  calc_breakdown_chart:
 		breakdown_summary_output_dir = output_dir
-		pegasus_breakdown.setup(submit_dir, breakdown_summary_output_dir, pegasus_env_path, log_level)
+		pegasus_breakdown.setup(submit_dir, breakdown_summary_output_dir, pegasus_env_path)
 	try:
 		fh = open(data_file, "w")
 		content = """
@@ -415,13 +411,12 @@ padding-top:25px;
 	
 
 
-def create_charts(submit_dir, output_dir, config_properties, log_level, create_dax_files=False):
+def create_charts(submit_dir, output_dir, config_properties, create_dax_files=False):
 	"""
 	Generates all the graphs and charts 
 	@submit_dir submit directory pathd
 	@output_dir the output directory path
 	@config_properties path to the pegasus property file
-	@log_level logging level
 	@create_dax_files  whether to include files when visualizing dax 
 	"""
 	wf_uuid_dax_image = []
@@ -435,13 +430,13 @@ def create_charts(submit_dir, output_dir, config_properties, log_level, create_d
 		logger.error("Unable to populate workflow information.")
 	if calc_gantt_chart:
 		gantt_chart_output_dir = os.path.join(output_dir, "gantt_chart")
-		pegasus_gantt.setup(submit_dir, gantt_chart_output_dir, pegasus_env_path, log_level)
+		pegasus_gantt.setup(submit_dir, gantt_chart_output_dir, pegasus_env_path)
 	if calc_host_chart:
 		host_chart_output_dir = os.path.join(output_dir, "host_chart")
-		pegasus_host_over_time.setup(submit_dir, host_chart_output_dir, pegasus_env_path, log_level)
+		pegasus_host_over_time.setup(submit_dir, host_chart_output_dir, pegasus_env_path)
 	if calc_breakdown_chart:
 		breakdown_chart_output_dir = os.path.join(output_dir, "breakdown_chart")
-		pegasus_breakdown.setup(submit_dir, breakdown_chart_output_dir, pegasus_env_path, log_level)
+		pegasus_breakdown.setup(submit_dir, breakdown_chart_output_dir, pegasus_env_path)
 		
 	if calc_dag_graph:
 		dag_graph_output_dir = os.path.join(output_dir, "dag_graph")
@@ -503,7 +498,7 @@ def create_charts(submit_dir, output_dir, config_properties, log_level, create_d
 		data_file =  os.path.join(dag_graph_output_dir, wf_uuid_list[0] + ".html")
 		create_image_gallery(data_file, wf_uuid_list, wf_uuid_parent, wf_uuid_dag_image, wf_uuid_dag_label, False )
 	
-	createOuterhtml(root_wf_stats, root_wf_info, submit_dir, output_dir, log_level)
+	createOuterhtml(root_wf_stats, root_wf_info, submit_dir, output_dir)
 	root_wf_stats.close()
 	return
 	
@@ -587,7 +582,7 @@ def main():
 	else:
 		submit_dir = os.path.abspath(args[0])
 	
-        # Copy options from the command line parser
+    # Copy options from the command line parser
 	log_level = 1
 	log_level_str = "info" 
 	log_level += (options.verbose - options.quiet)
@@ -628,7 +623,7 @@ def main():
 		max_graph_nodes = options.max_graph_nodes
 	
 	try:
-		create_charts(submit_dir, output_dir, options.config_properties, log_level_str, options.files)
+		create_charts(submit_dir, output_dir, options.config_properties, options.files)
 	except SystemExit:
 		sys.exit(1)
 	except:

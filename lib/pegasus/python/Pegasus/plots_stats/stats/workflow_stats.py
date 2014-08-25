@@ -7,8 +7,7 @@ import optparse
 import math
 import tempfile
 
-# Initialize logging object
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 from Pegasus.plots_stats import utils as stats_utils
 

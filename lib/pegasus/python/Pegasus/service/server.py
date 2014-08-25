@@ -5,7 +5,7 @@ from optparse import OptionParser
 from Pegasus.service import app
 from Pegasus.service.command import Command
 
-log = logging.getLogger("server")
+log = logging.getLogger(__name__)
 
 class ServerCommand(Command):
     usage = "%prog [options]"

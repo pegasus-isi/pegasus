@@ -14,7 +14,10 @@ lib_ext_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=Tru
 os.sys.path.insert(0, lib_ext_dir)
 os.sys.path.insert(0, lib_dir)
 
+from Pegasus.tools import utils
 from Pegasus.service.server import main
+
+utils.configureLogging()
 
 main()
 

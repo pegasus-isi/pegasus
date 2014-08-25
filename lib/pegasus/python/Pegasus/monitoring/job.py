@@ -26,8 +26,7 @@ import logging
 
 from Pegasus.tools import utils
 
-# Get logger object (initialized elsewhere)
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 # Global variables
 good_rsl = {"maxcputime": 1, "maxtime":1, "maxwalltime": 1}

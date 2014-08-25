@@ -51,6 +51,8 @@ def find_prog(prog,dir=[]):
                 return exe_file
     return None
 
+logger = logging.getLogger("pegasus-dagman")
+
 # Use pegasus-config to find our lib path
 bin_dir = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0])))
 pegasus_config = find_prog("pegasus-config",[bin_dir])
@@ -61,19 +63,12 @@ print "Pegasus LIB %s" % lib_ext_dir
 print "Pegasus BIN_DIR %s" % bin_dir
 print "Pegasus DAGMAN is  %s" % sys.argv[0]
 
-
-
-
 # Insert this directory in our search path
 os.sys.path.insert(0, lib_ext_dir)
 os.sys.path.insert(0, lib_dir)
 
-import Pegasus.common
 from Pegasus.tools import utils
-
-# logger is setup in common
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+utils.configureLogging()
 
 SLEEP_TIME = 15
 DIED_TOO_QUICKLY_TIME  = 120

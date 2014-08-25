@@ -12,7 +12,7 @@ from Pegasus.db.schema import stampede_dashboard_schema as dash
 from Pegasus.service import app, db, ensembles
 from Pegasus.service.ensembles import EnsembleStates, EnsembleWorkflowStates
 
-log = logging.getLogger("EnsembleManager")
+log = logging.getLogger(__name__)
 
 class EMException(Exception): pass
 

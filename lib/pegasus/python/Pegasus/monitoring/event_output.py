@@ -33,8 +33,7 @@ from Pegasus.db.modules import stampede_dashboard_loader
 from Pegasus.db.workflow.expunge import StampedeExpunge
 from Pegasus.db.workflow.expunge import DashboardExpunge
 
-# Get logger object (initialized elsewhere)
-log = logging.getLogger()
+log = logging.getLogger(__name__)
 
 # Optional imports, only generate 'warnings' if they fail
 bson = None
@@ -134,10 +133,9 @@ class EventSink(object):
     Base class for an Event Sink.
     """
     def __init__(self):
-        name = self.__class__.__name__.split('.')[-1]
-        self._log = logging.getLogger("pegasus.monitord." + name)
+        self._log = logging.getLogger("%s.%s" % (self.__module__, self.__class__.__name__))
         self._isdbg = self._log.isEnabledFor(logging.DEBUG)
-        
+
     def send(self, event, kw):
         """
         Clients call this function to send an event to the sink.

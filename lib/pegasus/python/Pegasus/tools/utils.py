@@ -49,8 +49,15 @@ MAXLOGFILE = 1000                # For log rotation, check files from .000 to .9
 jobbase = "jobstate.log"        # Default name for jobstate.log file
 brainbase = "braindump.txt"        # Default name for workflow information file
 
-# Get logger object (initialized elsewhere)
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
+
+def configureLogging(level=logging.INFO):
+    root = logging.getLogger()
+    root.setLevel(level)
+    cl = logging.StreamHandler()
+    formatter = logging.Formatter("%(asctime)s:%(name)s:%(lineno)d: %(levelname)s: %(message)s")
+    cl.setFormatter(formatter)
+    root.addHandler(cl)
 
 def quote(s):
     """
