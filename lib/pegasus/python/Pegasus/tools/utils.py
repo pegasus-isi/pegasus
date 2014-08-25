@@ -399,8 +399,7 @@ def raw_to_regular(exitcode):
     For signals, it returns the negative signal number (-1 through -127)
     For failures (when exitcode < 0), it returns the special value -128
     """
-    if not type(exitcode) is int and not type(exitcode) is long :
-        logger.warning("exitcode not an integer!")
+    if type(exitcode) is not int and type(exitcode) is not long:
         return exitcode
     if exitcode < 0:
         return -128
