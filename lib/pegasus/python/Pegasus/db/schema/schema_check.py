@@ -107,9 +107,9 @@ class SchemaCheck(object):
         self.log.debug('Schema version: %s', version_number)
 
         if not version_number:
-            self.log.warning('No version_number set in schema_info')
+            self.log.info('No version_number set in schema_info')
         elif version_number == 3.2:
-            self.log.warning('Schema set to 3.2 development version - resetting to release version')
+            self.log.info('Schema set to 3.2 development version - resetting to release version')
         else:
             return self._version_check(version_number)
 
