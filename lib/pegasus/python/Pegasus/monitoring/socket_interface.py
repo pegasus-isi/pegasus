@@ -32,8 +32,7 @@ from Pegasus.tools import utils
 from Pegasus.monitoring.job import Job
 from Pegasus.tools import kickstart_parser
 
-# Get logger object (initialized elsewhere)
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 # Compile our regular expressions
 

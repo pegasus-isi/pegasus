@@ -15,11 +15,11 @@
 __author__ = 'Rajiv Mayani'
 import logging
 
-from Pegasus.netlogger.analysis.modules._base import SQLAlchemyInit
-from Pegasus.netlogger.analysis.schema.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
-from Pegasus.netlogger.analysis.schema.stampede_dashboard_schema import *
-from Pegasus.netlogger.analysis.schema.stampede_schema import *
-from Pegasus.netlogger.analysis.error.Error import StampedeDBNotFoundError
+from Pegasus.db.modules import SQLAlchemyInit
+from Pegasus.db.schema.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
+from Pegasus.db.schema.stampede_dashboard_schema import *
+from Pegasus.db.schema.stampede_schema import *
+from Pegasus.db.errors import StampedeDBNotFoundError
 
 log = logging.getLogger(__name__)
 
@@ -286,7 +286,7 @@ class WorkflowInfo(SQLAlchemyInit):
         q = q.filter(Job.wf_id == self._wf_id)
         q = q.filter(Job.job_id == job_id)
         q = q.filter(Job.job_id == JobInstance.job_id)
-        q = q.filter(JobInstance.host_id == Host.host_id)
+        q = q.outerjoin(Host, JobInstance.host_id == Host.host_id)
         q = q.filter(JobInstance.job_instance_id == qmax.c.job_instance_id)
 
         return q.one()

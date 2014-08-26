@@ -45,8 +45,7 @@ re_inline_comments = re.compile("#(.*)$") # not using it right now...
 system = {} # System properties
 initial = {} # Command-line properties
 
-# Get logger object (initialized elsewhere)
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 # Assemble system properties
 system["file.separator"] = ','

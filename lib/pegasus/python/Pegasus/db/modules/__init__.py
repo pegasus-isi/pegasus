@@ -1,30 +1,21 @@
 """
 Base for analysis modules.
 """
-from logging import DEBUG
 import Queue
 import re
 import sys
 import threading
 import time
+import logging
 
-from sqlalchemy import create_engine, MetaData, orm
+from sqlalchemy import create_engine, orm
 
 from Pegasus.netlogger import util
-from Pegasus.netlogger.nllog import DoesLogging, TRACE
 from Pegasus.netlogger.nlapi import TS_FIELD, EVENT_FIELD, HASH_FIELD
 from Pegasus.netlogger.util import hash_event
-from Pegasus.netlogger.analysis import schemacfg
 
-class AnalyzerException(Exception): pass
-
-# XXX Used only by mongodb module?
-#class ConnectionException(AnalyzerException):
-#    def __init__(self, value):
-#        self.value = value
-#
-#    def __str__(self):
-#        return repr(self.value)
+class AnalyzerException(Exception):
+    pass
 
 class PreprocessException(AnalyzerException):
     pass
@@ -32,78 +23,21 @@ class PreprocessException(AnalyzerException):
 class ProcessException(AnalyzerException):
     pass
 
-# XXX Does not appear to be used except by Loader, which is not used
-#sqlite = None
-#try:
-#    # Python 2.5
-#    import sqlite3 as sqlite
-#except ImportError:
-#    try:
-#        # Python 2.4
-#        from pysqlite2 import dbapi2 as sqlite
-#    except ImportError:
-#        pass
-
-def dsn_dialect(s):
-    """Data source name (dsn) dialect."""
-    dialect = ""
-    m = re.match(r'(.*?)[:+]', s)
-    if m and (len(m.groups()) == 1):
-        dialect = m.group(1)
-    return dialect.lower()
-
-# XXX Does not appear to be used except by Loader, which is not used
-#"""
-#Database classes
-#"""
-#
-#class DBConnectError(Exception): pass
-#
-#class Connection:
-#    NAME = None
-#
-#    def __init__(self, dsn=None, database=None, kw=None):
-#        """Connect to the database.
-#
-#        :Parameter:
-#          dsn - DBMS filename (sqlite) or host (others)
-#          database - Database inside DBMS, ignored for sqlite
-#          kw - Additional keywords
-#
-#        On error, raise DBConnectError
-#        """
-#        self.connection = None
-#
-#class SQLiteConnection(Connection):
-#    NAME = 'sqlite'
-#
-#    def __init__(self, dsn=None, database=None, kw=None):
-#        self.connection = sqlite.connect(dsn, isolation_level="DEFERRED")
-#
-#"""
-#User-level name for each connection class, from the
-#NAME constant in each class.
-#"""
-#
-#CONNECTION_CLASSMAP = { }
-#for clazz in (SQLiteConnection,):
-#    CONNECTION_CLASSMAP[clazz.NAME] = clazz
-
 """
 Mixin class to provide SQLAlchemy database initialization/mapping.
 Takes a SQLAlchemy connection string and a module function as
-required arguments.  The initialization function takes the db and 
-metadata objects (and optional args) as args, initializes to the 
+required arguments.  The initialization function takes the db and
+metadata objects (and optional args) as args, initializes to the
 appropriate schema and sets "self.session" as a class member for
 loader classes to interact with the DB with.
 
-See: netlogger.analysis.schema.stampede_schema.initializeToPegasusDB
+See: Pegasus.db.schema.stampede_schema.initializeToPegasusDB
 
 For an example of what the intialization function needs to do to setup
 the schema mappings and the metadata object.  This should be __init__'ed
 in the subclass AFTER the Analyzer superclass gets called.
 
-The module netlogger.analysis.modules.stampede_loader shows the use
+The module Pegasus.db.modules.stampede_loader shows the use
 of this to initialize to a DB.
 """
 class SQLAlchemyInit:
@@ -113,68 +47,43 @@ class SQLAlchemyInit:
             # already but if not, bulletproof this attr.
             self._dbg = False
         self.db = create_engine(connString, echo=self._dbg, pool_recycle=True)
-        self.metadata = MetaData()
-        dialect_kw = kwarg.get(dsn_dialect(connString), {})
-        initFunction(self.db, self.metadata, kw=dialect_kw)
-        self.metadata.bind = self.db
-        sm = orm.sessionmaker(bind=self.db, autoflush=False, autocommit=False, 
-                                expire_on_commit=False)
+        initFunction(self.db)
+        sm = orm.sessionmaker(bind=self.db, autoflush=False, autocommit=False,
+                              expire_on_commit=False)
         self.session = orm.scoped_session(sm)
 
     def disconnect(self):
-        self.session.connection().close()
-        self.session.close_all()
-        self.session.bind.dispose()
+        self.session.remove()
         self.db.dispose()
 
-"""
-Base classes
-"""
 
-class Analyzer(DoesLogging):
+class Analyzer(object):
     """Base analysis class. Doesn't do much.
 
     Parameters:
       - add_hash {yes,no,no*}: To each input event, add a new field,
            'nlhash', which is a probabilistically unique (MD5) hash of all
            the other fields in the event.
-      - schemata {<file,file..>,None*}: If given, read a simple form of
-           schema from file(s). The schema uses INI format with a [section]
-           for each event name and <field> = <type-name> describing the type
-           of each field for that event.
     """
 
     FLUSH_SEC = 5 # time to wait before calling flush()
 
-    def __init__(self, add_hash="no", _validate=False,
-                 schemata=None):
+    def __init__(self, add_hash="no", _validate=False):
         """Will be overridden by subclasses to take
         parameters specific to their function.
         """
-        DoesLogging.__init__(self)
+        self.log = logging.getLogger("%s.%s" % (self.__module__, self.__class__.__name__))
         self._do_preprocess = False # may get set to True, below
         self.last_flush = time.time()
-        self._validate = _validate  
+        self._validate = _validate
         # Parameter: add_hash
         try:
             self._add_hash = util.as_bool(add_hash)
             self._do_preprocess = True
         except ValueError, err:
-            self.log.error("parameter.error",
-                           name="add_hash", value=add_hash, msg=err)
+            self.log.exception(err)
+            self.log.error("Paramenter error: add_hash = %s", add_hash)
             self._add_hash = False
-        # Parameter: schemata
-        self._schema = None
-        if schemata:
-            schema_files = [s.strip() for s in schemata.split(',')]
-            try:
-                p = schemacfg.SchemaParser(files=schema_files)
-                self._schema = p.get_schema()
-                self._do_preprocess = True
-            except (IOError, ValueError),err:
-                self.log.error("parameter.error",
-                               name="schemata", value=schema_files,
-                               msg=err)
 
     def process(self, data):
         """Override with logic; 'data' is a dictionary with timestamp,
@@ -193,8 +102,6 @@ class Analyzer(DoesLogging):
         Exceptions:
           - ValueError
         """
-        if self._schema:
-            self._schema.event(data)
         if self._add_hash:
             data[HASH_FIELD] = hash_event(data)
         return data
@@ -245,8 +152,7 @@ class Analyzer(DoesLogging):
             raise ProcessException(str(err))
         t = time.time()
         if t  - self.last_flush >= self.FLUSH_SEC:
-            if self._dbg:
-                self.log.debug("flush")
+            self.log.debug("flush")
             self.flush()
             self.last_flush = t
         return result
@@ -280,7 +186,6 @@ class BufferedAnalyzer(Analyzer, threading.Thread):
         """Thread method - pull data FIFO style from the queue
         and pass off to the worker method.
         """
-        self.log.info('run.start')
         while self.running:
             if not self.queue.empty():
                 row = self.queue.get()
@@ -289,7 +194,6 @@ class BufferedAnalyzer(Analyzer, threading.Thread):
                     self.queue.task_done()
             else:
                 time.sleep(0.1)
-        self.log.info('run.end')
 
     def process_buffer(self, row):
         """Override with logic - this is the worker method
@@ -303,60 +207,12 @@ class BufferedAnalyzer(Analyzer, threading.Thread):
         the processing thread.  See nl_load for an example on
         the appropriate time/place to call.
         """
-        self.log.info('finish.begin')
         if not self.finishing:
-            self.log.info('finish.finishing queue')
             self.finishing = True
+        # XXX This can be replaced with queue.join() in Python 2.5
         while not self.queue.empty():
             time.sleep(0.1)
         self.running = False
         if self.isAlive():
             self.join()
-        #time.sleep(1)
-        self.log.info('finish.end')
 
-# XXX This class doesn't seem to be used
-#class Loader:
-#    """Abstract class for loading into database-like things.
-#    """
-#    def __init__(self, type=None, dsn=None, **kw):
-#        """Initialize state.        
-#
-#        :Parameters:
-#          type - Name for type of database
-#          dsn - DBMS filename (sqlite) or host (others)
-#          kw - Additional connection keywords
-#        """
-#        # get connection class
-#        try:
-#            self.type = type.lower()
-#        except AttributeError:
-#            raise ValueError("Database type not a string")
-#        self.conn_class = CONNECTION_CLASSMAP.get(self.type, None)
-#        if self.conn_class is None:
-#            raise NotImplementedError("Unknown DB type '%s'" % type)
-#        # set server (or file) DSN
-#        if dsn is None:
-#            if self.conn_class is sqlite:
-#                self.dsn = "db.sqlite"
-#            else:
-#                self.dsn = "localhost"
-#        else:
-#            self.dsn = dsn
-#        # save connection keywords
-#        self.conn_kw = kw
-#
-#    def connect(self):
-#        """Connect to the database.
-#
-#        Return new connection (also in self._conn.connection)
-#        """
-#        self._conn = self.conn_class(self.dsn, self.conn_kw)
-#        return self._conn.connection
-#
-#    def disconnect(self):
-#        """Disconnect, if connected.
-#        """
-#        if self._conn:
-#            self._conn.connection.close()
-#            self._conn = None

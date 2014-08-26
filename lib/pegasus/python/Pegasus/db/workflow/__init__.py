@@ -1,52 +1,86 @@
 """
-Example file - this can be copied, renamed and then filled in for a new implementation.
+Base classes that define the interface that the back-end specific
+retrieval classes must expose.  Each read-only property includes
+inline epydoc describing what is to be returned and what type
+(string, int, an object) each property must return when called.
 
-Has all the appropriate @property methods filled in, base class initializations, etc.
+How a subclass caches attributes or performs lazy evaluation is
+implementation-specific and not defined here.  The only conformity
+necessary is that the proper property returns the correct data as
+the correct type.
+
+Any class attributes or methods that are specific to the subclass
+implementations MUST start with an underscore:
+
+ie: self._wf_uuid = None or def _calculateValue(self, job):
+
+This signals that the attr or method is subclass-specific and
+also allows the inherited __repr__() method to ignore it.
 """
 
-from Pegasus.netlogger.analysis.workflow._base import Workflow as BaseWorkflow, \
-    Job as BaseJob, Host as BaseHost, Task as BaseTask, Jobstate as BaseJobstate
-
-__rcsid__ = "$Id: example.py 26972 2011-01-11 16:19:33Z mgoode $"
 __author__ = "Monte Goode MMGoode@lbl.gov"
 
-class Workflow(BaseWorkflow):
+import logging
+
+class WorkflowBase(object):
+    # indent level for pretty printing = override in subclasses
+    # if you want different indent levels for your various
+    # objects.
+    _indent = 1
+    def __init__(self):
+        self.log = logging.getLogger("%s.%s" % (self.__module__, self.__class__.__name__))
+
+    def __repr__(self):
+        spacer = '  '
+        retval = '%s:' % self.__class__
+        if self._indent > 1:
+            retval = '\n%s+++ %s:' % (spacer * self._indent, self.__class__)
+        for i in dir(self):
+            if i.startswith('_') or i == 'initialize' or i == 'db' \
+                or i == 'metadata' or i == 'session' or i == 'log':
+                continue
+            try:
+                retval += '\n%s* %s : %s' % (spacer * self._indent, i, eval('self.%s' % i))
+            except NotImplementedError, e:
+                retval += '\n%s* %s : WARNING: %s' % (spacer * self._indent, i,e)
+        return retval
+
+class Workflow(WorkflowBase):
     """
     Top level workflow class that exposes information about
     a specific workflow and the associated jobs/etc.
-    
+
     Usage::
-    
+
      w = Workflow()
      w.initialize('unique_wf_uuid')
      print w.timestamp, w.dax_label
-    
+
     etc
     """
     def __init__(self):
-        BaseWorkflow.__init__(self)
-    
+        WorkflowBase.__init__(self)
+
     def initialize(self, wf_id):
         """
         This method is the initialization method that accepts
         the unique wf_uuid and triggers the subclass specific
-        queries and calculations that pulls the workflow 
+        queries and calculations that pulls the workflow
         information from the back end.
-        
+
         The wf_id is represented in the .bp logs as "wf.id".
-        
+
         @type   wf_id: string
         @param  wf_id: the unique wf_uuid as defined by Pegasus
         """
         raise NotImplementedError, \
             'initialize not yet implemented'
-        pass
 
     @property
     def wf_uuid(self):
         """
         Return the wf_uuid for this workflow.
-        
+
         @rtype:     string
         @return:    The wf_uuid of the current workflow
         """
@@ -57,7 +91,7 @@ class Workflow(BaseWorkflow):
     def dax_label(self):
         """
         Return dax_label from storage backend.
-        
+
         @rtype:     string
         @return:    The dax_label of the current workflow.
         """
@@ -68,7 +102,7 @@ class Workflow(BaseWorkflow):
     def timestamp(self):
         """
         Return timestamp from storage backend.
-        
+
         @rtype:     python datetime obj (utc)
         @return:    The workflow timestamp
         """
@@ -79,7 +113,7 @@ class Workflow(BaseWorkflow):
     def submit_hostname(self):
         """
         Return submit_hostname from storage backend.
-        
+
         @rtype:     string
         @return:    The workflow submit host
         """
@@ -90,7 +124,7 @@ class Workflow(BaseWorkflow):
     def submit_dir(self):
         """
         Return submid_dir from storage backend.
-        
+
         @rtype:     string
         @return:    The workflow submit directory
         """
@@ -101,7 +135,7 @@ class Workflow(BaseWorkflow):
     def planner_arguments(self):
         """
         Return planner_arguments from storage backend.
-        
+
         @rtype:     string
         @return:    The workflow planner arguments
         """
@@ -112,7 +146,7 @@ class Workflow(BaseWorkflow):
     def user(self):
         """
         Return user from storage backend.
-        
+
         @rtype:     string
         @return:    The workflow user
         """
@@ -123,7 +157,7 @@ class Workflow(BaseWorkflow):
     def grid_dn(self):
         """
         Return grid_dn from storage backend.
-        
+
         @rtype:     string
         @return:    The grid DN of the workflow
         """
@@ -134,7 +168,7 @@ class Workflow(BaseWorkflow):
     def planner_version(self):
         """
         Return planner_version from storage backend.
-        
+
         @rtype:     string
         @return:    The planner version of the workflow
         """
@@ -145,18 +179,18 @@ class Workflow(BaseWorkflow):
     def parent_wf_uuid(self):
         """
         Return parent_wf_uuid from storage backend.
-        
+
         @rtype:     string
         @return:    The parent wf_uuid if it exists
         """
         raise NotImplementedError, \
             'parent_wf_uuid not yet implemented'
-            
+
     @property
     def sub_wf_uuids(self):
         """
         Returns a list of the wf_uuids of any sub-workflows associated
-        with the current workflow object.  Returned in the order in 
+        with the current workflow object.  Returned in the order in
         which they are entered in the workflow table.  If no sub-workflows
         are found, return an empty list.
 
@@ -165,7 +199,7 @@ class Workflow(BaseWorkflow):
         """
         raise NotImplementedError, \
             'sub_wf_uuids not yet implemented'
-            
+
     @property
     def start_events(self):
         """
@@ -174,7 +208,7 @@ class Workflow(BaseWorkflow):
 
         In the event that there are no logged workflow states an empty
         list should be returned.
-        
+
         In the case that there is a dropped event (ie: no matching end
         event to a start event or vice versa), the missing event will
         be padded as a None.  This is an error situation.
@@ -193,7 +227,7 @@ class Workflow(BaseWorkflow):
 
         In the event that there are no logged workflow states an empty
         list should be returned.
-        
+
         In the case that there is a dropped event (ie: no matching end
         event to a start event or vice versa), the missing event will
         be padded as a None.  This is an error situation.
@@ -210,12 +244,12 @@ class Workflow(BaseWorkflow):
         Derived boolean flag indicating if the workflow
         is currently running.  Derived in a backend-appropriate
         way.
-        
+
         @rtype:     boolean
         @return:    Indicates if the workflow is running.
         """
         raise NotImplementedError, \
-            'running not yet implemented'
+            'is_running not yet implemented'
 
     @property
     def is_restarted(self):
@@ -233,7 +267,7 @@ class Workflow(BaseWorkflow):
     @property
     def restart_count(self):
         """
-        Returns an integer reflecting restart count.  Derived in 
+        Returns an integer reflecting restart count.  Derived in
         a backend-appropriate way.
 
         @rtype:     integer
@@ -264,7 +298,7 @@ class Workflow(BaseWorkflow):
         as there is no need to query the backend for this information
         if the user is only looking at superficial information about
         the workflow - ie: if it is running, how long it took, etc.
-        
+
         @rtype:     list of Job objects
         @return:    List of job objects associated with current wf
         """
@@ -276,7 +310,7 @@ class Workflow(BaseWorkflow):
         """
         Return the number of jobs that were executed as an
         integer value.
-        
+
         @rtype:     integer
         @return:    Number of jobs executed
         """
@@ -288,7 +322,7 @@ class Workflow(BaseWorkflow):
         """
         Return the number of jobs that executed successfully
         as an integer value.
-        
+
         @rtype:     integer
         @return:    Number of sucessfully executed jobs
         """
@@ -300,7 +334,7 @@ class Workflow(BaseWorkflow):
         """
         Return the number of jobs that failed as an integer
         value.
-        
+
         @rtype:     integer
         @return:    Number of failed jobs
         """
@@ -311,18 +345,18 @@ class Workflow(BaseWorkflow):
     def restarted_jobs(self):
         """
         Return the number of jobs that were restarted.
-        
+
         @rtype:     integer
         @return:    Number of restarted jobs
         """
         raise NotImplementedError, \
             'restarted_jobs not yet implemented'
-            
+
     @property
     def submitted_jobs(self):
         """
         Return the number of jobs that were submitted.
-        
+
         @rtype:     integer
         @return:    Number of submitted jobs
         """
@@ -335,9 +369,9 @@ class Workflow(BaseWorkflow):
         Returns a dictionary of the various jobtypes that
         are executed in the current workflow and a count of
         how many of each type.
-        
+
         Example: {'create dir': 1, 'compute': 105}
-        
+
         @rtype:     dict - string keys, integer values
         @return:    A dictionary of a count of the jobtypes
                     that were executed in the current workflow.
@@ -345,40 +379,96 @@ class Workflow(BaseWorkflow):
         raise NotImplementedError, \
             'jobtypes_executed not yet implemented'
 
-
-class Job(BaseJob):
+class Workflowstate(WorkflowBase):
     """
-    Class to retrieve and expose information about a 
-    specific job.  This class is intended to be instantiated
-    inside a Workflow() object and not as a stand-alone
-    instance.
-    
+    Class to expose information about a specific
+    workflow event.  This is a simple class to expose state
+    and timestamp information as class attributes.
+
     Usage::
-    
-     j = Job()
-     j.initialize('unique_wf_uuid', 3)
-     print j.name
-    
+
+     ws = Workflowstate()
+     ws.initialize(state, timestamp)
+     print ws.state
+
     etc
     """
     _indent = 2
     def __init__(self):
-        BaseJob.__init__(self)
-    
+        WorkflowBase.__init__(self)
+
+    def initialize(self, state, timestamp):
+        """
+        This method is the initialization method that accepts
+        the state and timestamp of a given workflow state
+        event.
+
+        @type   state: string
+        @param  state: the jobstate entry as defined by Pegasus.
+        @type   timestamp: float
+        @param  timestamp: the epoch timestamp as reported by Pegasus.
+        """
+        raise NotImplementedError, \
+            'initialize not yet implemented'
+
+    @property
+    def state(self):
+        """
+        Return the current workflowstate state.  Might be
+        none if there is no state information logged yet.
+
+        @rtype:     string or None
+        @return:    Return current job state
+        """
+        raise NotImplementedError, \
+            'state not implemented yet'
+
+    @property
+    def timestamp(self):
+        """
+        Return the timestamp of the current workflow state.  Might be
+        none if there is no state information logged yet.
+
+        @rtype:     python datetime obj (utc) or None
+        @return:    Return timestamp of current job state
+        """
+        raise NotImplementedError, \
+            'timestamp not implemented yet'
+
+
+class Job(WorkflowBase):
+    """
+    Class to retrieve and expose information about a
+    specific job.  This class is intended to be instantiated
+    inside a Workflow() object and not as a stand-alone
+    instance.
+
+    Usage::
+
+     j = Job()
+     j.initialize('unique_wf_uuid', 3)
+     print j.name
+
+    etc
+    """
+    _indent = 2
+    def __init__(self):
+        WorkflowBase.__init__(self)
+
     def initialize(self, wf_id, job_id):
         """
         This method is the initialization method that accepts
-        the unique wf_uuid and and job_submit_seq that triggers 
-        the subclass specific queries and calculations that 
+        the unique wf_uuid and and job_submit_seq that triggers
+        the subclass specific queries and calculations that
         pulls job information from the back end.
-        
+
         The wf_id is represented in the .bp logs as "wf.id".
         The job_id is represented as "job.id".
-        
+
         @type   wf_id: string
         @param  wf_id: the unique wf_uuid as defined by Pegasus
         @type   job_id: integer
-        @param  job_id: the sequence number as defined 
+        @param  job_id: the sequence number as defined
                 by tailstatd
         """
         raise NotImplementedError, \
@@ -388,7 +478,7 @@ class Job(BaseJob):
     def job_submit_seq(self):
         """
         Return job_submit_seq of current job (an input arg).
-        
+
         @rtype:     integer
         @return:    Return job_submit_seq of current job
         """
@@ -399,7 +489,7 @@ class Job(BaseJob):
     def name(self):
         """
         Return the job name from the storage backend.
-        
+
         @rtype:     string
         @return:    Return job name
         """
@@ -410,7 +500,7 @@ class Job(BaseJob):
     def host(self):
         """
         Return job host information from storage backend.
-        
+
         @rtype:     Host object instance
         @return:    Return a host object with host info for
                     current job.
@@ -422,7 +512,7 @@ class Job(BaseJob):
     def condor_id(self):
         """
         Return the condor_id from the storage backend.
-        
+
         @rtype:     string (looks like a float however)
         @return:    Return job condor_id
         """
@@ -433,7 +523,7 @@ class Job(BaseJob):
     def jobtype(self):
         """
         Return jobtype from the storage backend.
-        
+
         @rtype:     string
         @return:    Return jobtype
         """
@@ -444,10 +534,10 @@ class Job(BaseJob):
     def clustered(self):
         """
         Return the clustered boolean flag from the storage
-        backend.  This may need to be derived depending on 
-        how the backend implementation does/not store this 
+        backend.  This may need to be derived depending on
+        how the backend implementation does/not store this
         value.
-        
+
         @rtype:     boolean
         @return:    Return True or False depending on if the
                     job is clustered or not.
@@ -459,7 +549,7 @@ class Job(BaseJob):
     def site_name(self):
         """
         Return the site name from the storage backend.
-        
+
         @rtype:     string
         @return:    Return site_name for current job
         """
@@ -471,7 +561,7 @@ class Job(BaseJob):
         """
         Return the remote use of the current job from
         the storage backend.
-        
+
         @rtype:     string
         @return:    Return remote_user for current job.
         """
@@ -483,7 +573,7 @@ class Job(BaseJob):
         """
         Return the remote working directory of the current
         job from the storage backend.
-        
+
         @rtype:     string
         @return:
         """
@@ -497,7 +587,7 @@ class Job(BaseJob):
         datetime object (utc) if it exists or None
         if it does not.  Not all jobs will have this
         value.
-        
+
         @rtype:     python datetime obj (utc) or None
         @return:    Return job cluster start time.
         """
@@ -507,11 +597,11 @@ class Job(BaseJob):
     @property
     def cluster_duration(self):
         """
-        Return the job cluster duration from the 
+        Return the job cluster duration from the
         storage backend as a float or None if this value
         is not assocaited with the current job.  Not all j
         will have this value.
-        
+
         @rtype:     float (from db)
         @return:
         """
@@ -526,7 +616,7 @@ class Job(BaseJob):
         as there is no need to query the backend for this information
         if the user is only looking at superficial information about
         the job - ie: its current state, name, etc.
-        
+
         @rtype:     list of Task objects
         @return:    List of task objects associated with current job
         """
@@ -539,34 +629,34 @@ class Job(BaseJob):
         Return a boolean flag indicating whether or not this
         curent job is a "restart".  This value will be derived
         from backend information as appropriate.
-        
+
         @rtype:     boolean
         @return:    Return True or False if the job is a restart
                     or not.
         """
         raise NotImplementedError, \
             'is_restart not yet implemented'
-            
+
     @property
     def is_success(self):
         """
         Return a boolean flag indicating whether or not this
         curent job was successful.  This value will be derived
         from backend information as appropriate.
-        
+
         @rtype:     boolean
         @return:    Return True or False if the job is a restart
         """
         raise NotImplementedError, \
             'is_success not yet implemented'
-            
+
     @property
     def is_failure(self):
         """
         Return a boolean flag indicating whether or not this
         curent job has failed.  This value will be derived
         from backend information as appropriate.
-        
+
         @rtype:     boolean
         @return:    Return True or False if the job is a restart
         """
@@ -576,22 +666,22 @@ class Job(BaseJob):
     @property
     def current_state(self):
         """
-        Return the current state of this job.  This property 
+        Return the current state of this job.  This property
         pretty much requires lazy evaluation every access rather
         than attribute caching.  A single job moves through
         multiple jobstates and this property should return
         the current state of the running job when accessed.
-        
+
         In the event that there is not yet a jobstate logged for
         this job, the Jobstate instance will have its properties
         "state" and "timestamp" set to None.
-        
+
         @rtype:     Jobstate object instance
-        @return:    Returns the current state and timestamp
+        @return:    Return the current/last jobstate event.
         """
         raise NotImplementedError, \
             'current_state not yet implemented'
-            
+
     @property
     def all_jobstates(self):
         """
@@ -603,16 +693,16 @@ class Job(BaseJob):
         list should be returned.
 
         This property may do light weight attribute caching, but
-        the current jobstate should still be lazily evaluated 
+        the current jobstate should still be lazily evaluated
         and the list updated if need be.
 
         @rtype:     List of Jobstate object instances
-        @return:    Returns a list with all the jobstates this job 
+        @return:    Returns a list with all the jobstates this job
                     has moved through.
         """
         raise NotImplementedError, \
             'all_jobstates not yet implemented'
-            
+
     @property
     def submit_time(self):
         """
@@ -623,7 +713,7 @@ class Job(BaseJob):
         """
         raise NotImplementedError, \
             'submit_time not yet implemented'
-            
+
     @property
     def elapsed_time(self):
         """
@@ -631,12 +721,12 @@ class Job(BaseJob):
         the delta between the submit time and the current/last
         jobstate timestamp.
 
-        @rtype:     python datetime obj (utc) or None
+        @rtype:     python datetime.timedelta or None
         @return:    Return the elapsed time of this job
         """
         raise NotImplementedError, \
             'elapsed_time not yet implemented'
-            
+
     @property
     def edge_parents(self):
         """
@@ -666,29 +756,29 @@ class Job(BaseJob):
             'edge_children not yet implemented'
 
 
-class Jobstate(BaseJobstate):
+class Jobstate(WorkflowBase):
     """
     A small class that returns jobstate information.  Intended
     to be instantiated by a call to job.current_state.  Is
     not cached so multiple calls will return the latest information.
 
     Usage::
-    
+
      js = Jobstate()
      js.initialize('unique_wf_id', 3)
      print js.state, js.timestamp
-    
-    etc.
+
+    etc
     """
     _indent = 3
     def __init__(self):
-        BaseJobstate.__init__(self)
+        WorkflowBase.__init__(self)
 
     def initialize(self, wf_id, job_id):
         """
         This method is the initialization method that accepts
-        the unique wf_uuid and and job_submit_seq that triggers 
-        the subclass specific queries and calculations that 
+        the unique wf_uuid and and job_submit_seq that triggers
+        the subclass specific queries and calculations that
         pulls host information from the back end.
 
         The wf_id is represented in the .bp logs as "wf.id".
@@ -697,7 +787,7 @@ class Jobstate(BaseJobstate):
         @type   wf_id: string
         @param  wf_id: the unique wf_uuid as defined by Pegasus
         @type   job_id: integer
-        @param  job_id: the sequence number as defined 
+        @param  job_id: the sequence number as defined
                 by tailstatd
         """
         raise NotImplementedError, \
@@ -728,39 +818,38 @@ class Jobstate(BaseJobstate):
             'timestamp not implemented yet'
 
 
-
-class Host(BaseHost):
+class Host(WorkflowBase):
     """
     A straightforward class that contains host information
-    about a job.  This is intended to be instantiated inside 
+    about a job.  This is intended to be instantiated inside
     a Job() object and not as a standalone instance.
-    
+
     Usage::
-    
+
      h = Host()
      h.initialize('unique_wf_uuid', 3)
      print h.site_name, h.hostname
-    
+
     etc.
     """
     _indent = 3
     def __init__(self):
-        BaseHost.__init__(self)
-    
+        WorkflowBase.__init__(self)
+
     def initialize(self, wf_id, job_id):
         """
         This method is the initialization method that accepts
-        the unique wf_uuid and and job_submit_seq that triggers 
-        the subclass specific queries and calculations that 
+        the unique wf_uuid and and job_submit_seq that triggers
+        the subclass specific queries and calculations that
         pulls host information from the back end.
-        
+
         The wf_id is represented in the .bp logs as "wf.id".
         The job_id is represented as "job.id".
-        
+
         @type   wf_id: string
         @param  wf_id: the unique wf_uuid as defined by Pegasus
         @type   job_id: integer
-        @param  job_id: the sequence number as defined 
+        @param  job_id: the sequence number as defined
                 by tailstatd
         """
         raise NotImplementedError, \
@@ -772,7 +861,7 @@ class Host(BaseHost):
         Return the site name associated with this host.
         Might be None if a host has not been associated
         with a particular job at time of calling.
-        
+
         @rtype:     string or None
         @return:    Return host site name or None
         """
@@ -785,7 +874,7 @@ class Host(BaseHost):
         Return the host name associated with this host.
         Might be None if a host has not been associated
         with a particular job at time of calling.
-        
+
         @rtype:     string or None
         @return:    Return hostname or None
         """
@@ -798,7 +887,7 @@ class Host(BaseHost):
         Return the ip address associated with this host.
         Might be None if a host has not been associated
         with a particular job at time of calling.
-        
+
         @rtype:     string or None
         @return:    Return host ip address or None
         """
@@ -811,7 +900,7 @@ class Host(BaseHost):
         Return the uname information of this host machine.
         Might be None if a host has not been associated
         with a particular job at time of calling.
-        
+
         @rtype:     string or None
         @return:    Return host uname or None.
         """
@@ -824,7 +913,7 @@ class Host(BaseHost):
         Return the total ram of this host machine.
         Might be None if a host has not been associated
         with a particular job at time of calling.
-        
+
         @rtype:     integer or None
         @return:    Return host RAM or None
         """
@@ -832,40 +921,40 @@ class Host(BaseHost):
             'total_ram not yet implemented'
 
 
-class Task(BaseTask):
+class Task(WorkflowBase):
     """
     Class to expose information about a task associated
     with a particular job.  This is intended to be
-    instantiated inside of a Job() object and not as a 
+    instantiated inside of a Job() object and not as a
     stand alone instance.
-    
+
     Usage::
-    
+
      t = Task()
      t.initialize('unique_wf_uuid', 3, 1)
      print t.start_time, t.duration
-    
+
     etc
     """
     _indent = 3
     def __init__(self):
-        BaseTask.__init__(self)
-    
+        WorkflowBase.__init__(self)
+
     def initialize(self, wf_id, job_id, task_id):
         """
         This method is the initialization method that accepts
-        the unique wf_uuid, job_submit_seq and task_submit_seq 
-        that triggers the subclass specific queries and 
+        the unique wf_uuid, job_submit_seq and task_submit_seq
+        that triggers the subclass specific queries and
         calculations that pulls task information from the back end.
-        
+
         The wf_id is represented in the .bp logs as "wf.id".
         The job_id is represented as "job.id".
         The task_id is represented as "task.id".
-        
+
         @type   wf_id: string
         @param  wf_id: the unique wf_uuid as defined by Pegasus
         @type   job_id: integer
-        @param  job_id: the sequence number as defined 
+        @param  job_id: the sequence number as defined
                 by tailstatd
         @type   task_id: integer
         @param  task_id: the sequence number as defined
@@ -873,7 +962,7 @@ class Task(BaseTask):
         """
         raise NotImplementedError, \
             'initialize not yet implemented'
-            
+
     @property
     def task_submit_seq(self):
         """
@@ -884,14 +973,14 @@ class Task(BaseTask):
         @return:    submit sequence number
         """
         raise NotImplementedError, \
-                    'task_submit_seq not yet implemented'
+            'task_submit_seq not yet implemented'
 
     @property
     def start_time(self):
         """
         Return start time of this task from the storage
         backend as a python datetime object (utc).
-        
+
         @rtype:     python datetime obj (utc)
         @return:    Return task start time
         """
@@ -903,7 +992,7 @@ class Task(BaseTask):
         """
         Return duration of this task from the storage
         backend as a float.
-        
+
         @rtype:     float (from db)
         @return:    Return the duration of this task
         """
@@ -915,7 +1004,7 @@ class Task(BaseTask):
         """
         Return the exitcode of this task from the storage
         backend as an integer.
-        
+
         @rtype:     integer
         @return:    Return the task exitcode
         """
@@ -927,7 +1016,7 @@ class Task(BaseTask):
         """
         Return the transformation type of this task from
         the storage backend.
-        
+
         @rtype:     string
         @return:    Return task transformation
         """
@@ -939,7 +1028,7 @@ class Task(BaseTask):
         """
         Return the executable invoked by this task from
         the storage backend.
-        
+
         @rtype:     string
         @return:    Return the task executable
         """
@@ -950,13 +1039,54 @@ class Task(BaseTask):
     def arguments(self):
         """
         Return the task args from the storage backend.
-        
+
         @rtype:     string
         @return:    Return the task arguments
         """
         raise NotImplementedError, \
             'arguments not yet implemented'
 
-if __name__ == '__main__':
-    w = Workflow()
-    print w
+# Base class for discovery/wf_uuid querying.
+
+class Discovery(object):
+    def __init__(self, connectionInfo=None):
+        """
+        Initialization method.  The manditory argument connectionInfo
+        will be defined as appropriate in a subclass (string, dict, etc),
+        and connect to the appropriate back end.
+        """
+        pass
+
+    def fetch_all(self):
+        """
+        Void method that will return a list of workflow uuids
+        from the back end.
+
+        @rtype:     list
+        @return:    Returns a list of wf_uuid strings.
+        """
+        raise NotImplementedError, \
+            'fetch_all not yet implemented'
+
+    def time_threshold(self, startTime=None, endTime=None):
+        """
+        Method to return a list of wf_uuid strings that
+        were submitted within a certain timeframe.  The startTime
+        arg should represent the time floor and endTime the time
+        ceiling.  If both args are supplied return workflows
+        that were exectued between the two.  If only one
+        arg is supplied, use that one as the appropriate
+        floor or ceiling.
+
+        This is based on the workflowstate start event occurring
+        after the startTime and/or before the endTime.
+
+        @type       startTime: python datetime obj (utc)
+        @param      startTime: The time "floor" to bound query.
+        @type       endTime: python datetime obj (utc)
+        @param      endTime: The time "ceiling" to bound query.
+        @rtype:     list
+        @return:    Returns a list of wf_uuid strings.
+        """
+        raise NotImplementedError, \
+            'time_threshold not yet implemented'

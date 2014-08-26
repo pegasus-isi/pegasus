@@ -9,10 +9,7 @@ import math
 import tempfile
 import commands
 
-# Initialize logging object
-logger = logging.getLogger()
-# Set default level to INFO
-logger.setLevel(logging.INFO)
+logger = logging.getLogger(__name__)
 
 from Pegasus.tools import utils
 from Pegasus.tools import db_utils
@@ -22,8 +19,8 @@ import pegasus_gantt
 import pegasus_host_over_time
 import traceback
 
-from Pegasus.netlogger.analysis.workflow.stampede_statistics import StampedeStatistics
-from Pegasus.netlogger.analysis.schema.schema_check import SchemaVersionError
+from Pegasus.db.workflow.stampede_statistics import StampedeStatistics
+from Pegasus.db.schema.schema_check import SchemaVersionError
 from datetime import timedelta
 from datetime import datetime
 
@@ -342,23 +339,6 @@ def populate_transformation_details(workflow_stats , workflow_info):
 	workflow_info.transformation_statistics_dict = transformation_stats_dict
 	workflow_info.transformation_color_map = wf_transformation_color_map
 	
-def setup_logger(level_str):
-	"""
-	Set up the logger for the module.
-	@param level_str logging level
-	"""
-	level_str = level_str.lower()
-	if level_str == "debug":
-		logger.setLevel(logging.DEBUG)
-	if level_str == "warning":
-		logger.setLevel(logging.WARNING)
-	if level_str == "error":
-		logger.setLevel(logging.ERROR)
-	if level_str == "info":
-		logger.setLevel(logging.INFO)
-	return
-
-
 def get_wf_stats(wf_uuid,expand = False):
 	workflow_stampede_stats = None
 	try:

@@ -35,8 +35,7 @@ import traceback
 re_parse_props = re.compile(r'(\S+)\s*=\s*([^",]+)')
 re_parse_quoted_props = re.compile(r'(\S+)\s*=\s*"([^"]+)"')
 
-# Get logger object (initialized elsewhere)
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 class Parser:
     """

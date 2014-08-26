@@ -41,13 +41,9 @@ import optparse
 import traceback
 import subprocess
 
-# Initialize logging object
-logger = logging.getLogger()
-# Set default level to WARNING
-logger.setLevel(logging.WARNING)
-#logger.setLevel(logging.DEBUG)
-# Don't send events further up
-logger.propagate = 0
+root_logger = logging.getLogger()
+logger = logging.getLogger("pegasus-monitord")
+
 # Cached debugging state
 g_isdbg = 0
 
@@ -56,8 +52,6 @@ _LEVELS = [logging.ERROR, logging.WARN, logging.INFO, logging.DEBUG]
 
 # Save our own basename
 prog_base = os.path.split(sys.argv[0])[1]
-
-# Import our modules
 
 # Use pegasus-config to find our lib path
 bin_dir = os.path.abspath(os.path.dirname(__file__))
@@ -68,13 +62,14 @@ exec subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).commun
 os.sys.path.insert(0, pegasus_python_externals_dir)
 os.sys.path.insert(0, pegasus_python_dir)
 
-import Pegasus.common
 from Pegasus.tools import utils
 from Pegasus.tools import properties
 from Pegasus.monitoring.workflow import Workflow, MONITORD_RECOVER_FILE
 from Pegasus.monitoring import notifications
 from Pegasus.monitoring import event_output as eo
 from Pegasus.monitoring import socket_interface
+
+utils.configureLogging()
 
 # Add SEEK_CUR to os if Python version < 2.5
 if sys.version_info < (2, 5):
@@ -213,10 +208,10 @@ def finish_stampede_loader():
         if sink is not None:
             print (utils.isodate(time.time()) + " - pegasus-monitord - DB flushing beginning ").ljust(80, "-")
             try:
-                if db_stats == 'yes' and logger.getEffectiveLevel() > logging.INFO:
+                if db_stats == 'yes' and root_logger.getEffectiveLevel() > logging.INFO:
                     # Make sure log level is enough to display database
                     # benchmarking information
-                    logger.setLevel(logging.INFO)
+                    root_logger.setLevel(logging.INFO)
                 sink.close()
             except:
                 logger.warning("could not call the finish method "+\
@@ -387,9 +382,9 @@ else:
     lvl = logging.DEBUG
 
 # Set logging level
-logger.setLevel(lvl)
+root_logger.setLevel(lvl)
 # Cache whether debugging
-g_isdbg = logger.isEnabledFor(logging.DEBUG)
+g_isdbg = root_logger.isEnabledFor(logging.DEBUG)
 
 if options.adjustment is not None:
     adjustment = options.adjustment
@@ -905,17 +900,17 @@ def prog_sigusr1_handler(signum, frame):
     global g_isdbg
     global start_server
 
-    cur_level = logger.getEffectiveLevel()
+    cur_level = root_logger.getEffectiveLevel()
 
     try:
         idx = _LEVELS.index(cur_level)
         if idx + 1 < len(_LEVELS):
-            logger.setLevel(_LEVELS[idx + 1])
+            root_logger.setLevel(_LEVELS[idx + 1])
     except ValueError:
-        logger.setLevel(logging.INFO)
+        root_logger.setLevel(logging.INFO)
         logger.error("Unknown current level = %s, setting to INFO" % (cur_level))
 
-    g_isdbg = logger.isEnabledFor(logging.DEBUG)
+    g_isdbg = root_logger.isEnabledFor(logging.DEBUG)
 
     # Check debugging socket
     if not socket_enabled:
@@ -927,17 +922,17 @@ def prog_sigusr2_handler(signum, frame):
     """
     global g_isdbg
 
-    cur_level = logger.getEffectiveLevel()
+    cur_level = root_logger.getEffectiveLevel()
 
     try:
         idx = _LEVELS.index(cur_level)
         if idx > 0:
-            logger.setLevel(_LEVELS[idx - 1])
+            root_logger.setLevel(_LEVELS[idx - 1])
     except ValueError:
-        logger.setLevel(logging.WARN)
+        root_logger.setLevel(logging.WARN)
         logger.error("Unknown current level = %s, setting to WARN" % (cur_level))
 
-    g_isdbg = logger.isEnabledFor(logging.DEBUG)
+    g_isdbg = root_logger.isEnabledFor(logging.DEBUG)
 
 #
 # --- main ------------------------------------------------------------------------------

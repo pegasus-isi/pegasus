@@ -30,10 +30,7 @@ import math
 import tempfile
 import shutil
 
-# Initialize logging object
-logger = logging.getLogger()
-# Set default level to INFO
-logger.setLevel(logging.INFO)
+logger = logging.getLogger(__name__)
 
 from Pegasus.plots_stats import utils as plot_utils
 from datetime import timedelta

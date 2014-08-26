@@ -5,7 +5,7 @@ from optparse import OptionParser
 from Pegasus.service import app
 from Pegasus.service.command import Command
 
-log = logging.getLogger("server")
+log = logging.getLogger(__name__)
 
 class ServerCommand(Command):
     usage = "%prog [options]"
@@ -39,10 +39,21 @@ class ServerCommand(Command):
 #                mgr = em.EnsembleManager()
 #                mgr.start()
 
+        cert = app.config.get("CERTIFICATE", None)
+        pkey = app.config.get("PRIVATE_KEY", None)
+        if cert is not None and pkey is not None:
+            ssl_context = (cert, pkey)
+        else:
+            log.warning("SSL is not configured: passwords will not be encrypted")
+            ssl_context = None
+
+        if os.getuid() != 0:
+            log.warning("Service not running as root: Will not be able to switch users")
+
         app.run(port=app.config["SERVER_PORT"],
                 host=app.config["SERVER_HOST"],
                 processes=app.config["MAX_PROCESSES"],
-                passthrough_errors=True)
+                ssl_context=ssl_context)
 
 def main():
     ServerCommand().main()

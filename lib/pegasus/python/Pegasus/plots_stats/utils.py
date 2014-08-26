@@ -33,8 +33,7 @@ from datetime import datetime
 from Pegasus.tools import properties
 from Pegasus.tools import utils
 
-# Initialize logging object
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 def isSubWfJob(job_name):
 	"""
