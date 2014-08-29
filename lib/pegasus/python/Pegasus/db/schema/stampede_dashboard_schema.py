@@ -127,7 +127,7 @@ Index('UNIQUE_ENSEMBLE_WORKFLOW',
       unique=True)
 
 orm.mapper(EnsembleWorkflow, pg_ensemble_workflow, properties = {
-    'ensemble':orm.relation(Ensemble, backref='ensemble')
+    'ensemble':orm.relation(Ensemble, backref='workflows')
 })
 
 
