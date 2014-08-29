@@ -8,9 +8,6 @@ if sys.version_info >= (2,5):
 else:
     test_service = False
 
-# XXX Disable service tests until ensemble manager is fixed
-test_service = False
-
 # Try to import the dependencies to make sure they exist
 try:
     import Pegasus
@@ -47,6 +44,11 @@ for module in discoverTestModules("Pegasus/test"):
     # If not testing service, skip service test modules
     if not test_service and module.startswith("Pegasus.test.service"):
         continue
+
+    # First, try importing the module to make sure it works
+    __import__(module)
+
+    # Now load the tests from the module
     suite = loader.loadTestsFromName(module)
     alltests.addTest(suite)
 

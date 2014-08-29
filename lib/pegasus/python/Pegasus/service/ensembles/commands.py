@@ -1,3 +1,4 @@
+import zipfile
 from Pegasus.service.command import ClientCommand, CompoundCommand
 from Pegasus.service.ensembles.models import EnsembleStates, EnsembleWorkflowStates
 
@@ -58,33 +59,24 @@ class CreateCommand(ClientCommand):
 
 class SubmitCommand(ClientCommand):
     description = "Submit workflow"
-    usage = "Usage: %prog submit [options] -e ENSEMBLE -w WORKFLOW -d DAX -T TC -S SC -R RC -s SITE -o SITE"
+    usage = "Usage: %prog submit [options] -e ENSEMBLE -w WORKFLOW -b BUNDLE -s SITE -o SITE"
 
     def __init__(self):
         ClientCommand.__init__(self)
         add_ensemble_option(self)
         add_workflow_option(self)
-        self.parser.add_option("-d", "--dax", action="store", dest="dax",
-            default=None, help="DAX file", metavar="PATH")
-        self.parser.add_option("-T", "--transformation-catalog", action="store", dest="transformation_catalog",
-            default=None, help="Name of transformation catalog", metavar="NAME")
-        self.parser.add_option("-S", "--site-catalog", action="store", dest="site_catalog",
-            default=None, help="Name of site catalog", metavar="NAME")
-        self.parser.add_option("-R", "--replica-catalog", action="store", dest="replica_catalog",
-            default=None, help="Name of replica catalog", metavar="NAME")
+        self.parser.add_option("-b", "--bundle", action="store", dest="bundle",
+            default=None, help="Workflow bundle (zip file)", metavar="PATH")
         self.parser.add_option("-s", "--site", action="store", dest="sites",
             default=None, help="Execution sites (see pegasus-plan man page)", metavar="SITE[,SITE...]")
         self.parser.add_option("-o", "--output-site", action="store", dest="output_site",
             default=None, help="Output storage site (see pegasus-plan man page)", metavar="SITE")
-
         self.parser.add_option("-p", "--priority", action="store", dest="priority",
             default=0, help="Workflow priority", metavar="NUMBER")
-        self.parser.add_option("-c", "--conf", action="store", dest="conf",
-            default=None, help="Configuration file (pegasus properties file)", metavar="PATH")
         self.parser.add_option("--staging-site", action="store", dest="staging_sites",
             default=None, help="Staging sites (see pegasus-plan man page)", metavar="s=ss[,s=ss...]")
-        self.parser.add_option("--nocleanup", action="store_false", dest="cleanup",
-            default=None, help="Add cleanup jobs (see pegasus-plan man page)")
+        self.parser.add_option("--cleanup", action="store", dest="cleanup",
+            default=None, help="Cleanup strategy [none, inplace, leaf] (see pegasus-plan man page)")
         self.parser.add_option("-f", "--force", action="store_true", dest="force",
             default=None, help="Skip workflow reduction (see pegasus-plan man page)")
         self.parser.add_option("-C", "--cluster", action="store", dest="clustering",
@@ -98,14 +90,8 @@ class SubmitCommand(ClientCommand):
             p.error("Specify -e/--ensemble")
         if o.workflow is None:
             p.error("Specify -w/--workflow")
-        if o.dax is None:
-            p.error("Specify -d/--dax")
-        if o.transformation_catalog is None:
-            p.error("Specify -T/--transformation-catalog")
-        if o.site_catalog is None:
-            p.error("Specify -S/--site-catalog")
-        if o.replica_catalog is None:
-            p.error("Specify -R/--replica-catalog")
+        if o.bundle is None:
+            p.error("Specify -b/--bundle")
         if o.sites is None:
             p.error("Specify -s/--site")
         if o.output_site is None:
@@ -113,9 +99,6 @@ class SubmitCommand(ClientCommand):
 
         data = {
             "name": o.workflow,
-            "transformation_catalog": o.transformation_catalog,
-            "site_catalog": o.site_catalog,
-            "replica_catalog": o.replica_catalog,
             "priority": o.priority,
             "sites": o.sites,
             "output_site": o.output_site
@@ -133,12 +116,11 @@ class SubmitCommand(ClientCommand):
         if o.clustering is not None:
             data["clustering"] = [s.strip() for s in o.clustering.split(",")]
 
-        files = {
-            "dax": open(o.dax, "rb")
-        }
+        # TODO Verify bundle format
 
-        if o.conf is not None:
-            files["conf"] = open(o.conf, "rb")
+        files = {
+            "bundle": open(o.bundle, "rb")
+        }
 
         response = self.post("/ensembles/%s/workflows" % o.ensemble, data=data, files=files)
 

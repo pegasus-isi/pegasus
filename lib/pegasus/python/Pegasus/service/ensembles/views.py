@@ -4,6 +4,7 @@ from flask import g, url_for, make_response, request, send_file, json
 
 from Pegasus.service import app, api
 from Pegasus.service.ensembles import models
+from Pegasus.service.ensembles.bundle import BundleException
 
 @app.route("/ensembles", methods=["GET"])
 def route_list_ensembles():
@@ -77,18 +78,6 @@ def route_create_ensemble_workflow(ensemble):
 
     priority = request.form.get("priority", 0)
 
-    site_catalog = request.form.get("site_catalog", None)
-    if site_catalog is None:
-        raise api.APIError("Specify site_catalog")
-
-    transformation_catalog = request.form.get("transformation_catalog", None)
-    if transformation_catalog is None:
-        raise api.APIError("Specify transformation_catalog")
-
-    replica_catalog = request.form.get("replica_catalog", None)
-    if replica_catalog is None:
-        raise api.APIError("Specify replica_catalog")
-
     sites = request.form.get("sites", None)
     if sites is None:
         raise api.APIError("Specify sites")
@@ -104,9 +93,9 @@ def route_create_ensemble_workflow(ensemble):
 
     cleanup = request.form.get("cleanup", None)
     if cleanup is not None:
-        if cleanup.lower() not in ["true","false"]:
+        cleanup = cleanup.lower()
+        if cleanup not in ["none","leaf","inplace"]:
             raise api.APIError("Invalid value for cleanup: %s" % cleanup)
-        cleanup = cleanup.lower() == "true"
 
     force = request.form.get("force", None)
     if force is not None:
@@ -125,20 +114,18 @@ def route_create_ensemble_workflow(ensemble):
         kvs = [s for s in kvs if len(s) > 0]
         staging_sites = dict([s.split("=") for s in kvs])
 
-    dax = request.files.get("dax", None)
-    if dax is None:
-        raise api.APIError("Specify dax")
-
-    conf = request.files.get("conf", None)
-
-    sc = site_catalog
-    tc = transformation_catalog
-    rc = replica_catalog
+    bundle = request.files.get("bundle", None)
+    if bundle is None:
+        raise api.APIError("Specify bundle")
 
     db = models.Ensembles(g.master_db_url)
-    db.create_ensemble_workflow(e.id, name, priority, rc, tc, sc, dax, conf,
-            sites=sites, output_site=output_site, cleanup=cleanup,
-            force=force, clustering=clustering, staging_sites=staging_sites)
+
+    try:
+        db.create_ensemble_workflow(e.id, name, priority, bundle, sites=sites,
+                output_site=output_site, cleanup=cleanup, force=force,
+                clustering=clustering, staging_sites=staging_sites)
+    except BundleException, e:
+        raise api.APIError(e.message)
 
     db.session.commit()
 

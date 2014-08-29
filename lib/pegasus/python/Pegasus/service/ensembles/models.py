@@ -4,11 +4,14 @@ import stat
 import shutil
 from datetime import datetime
 
+from flask import url_for, g
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import sql
+import werkzeug
 
 from Pegasus.db.modules import SQLAlchemyInit
 from Pegasus.service.api import *
+from Pegasus.service.ensembles.bundle import Bundle
 
 def validate_ensemble_name(name):
     if name is None:
@@ -219,17 +222,22 @@ class Ensembles(SQLAlchemyInit):
         except NoResultFound:
             raise APIError("No such ensemble workflow: %s" % name, 404)
 
-    def create_ensemble_workflow(self, ensemble_id, name, priority, rc, tc, sc, dax, conf, sites, output_site,
-            staging_sites=None, clustering=None, force=False, cleanup=True):
+    def create_ensemble_workflow(self, ensemble_id, name, priority, bundlefile,
+            sites, output_site, staging_sites=None, clustering=None,
+            force=None, cleanup=None):
 
-        if self.session.query(EnsembleWorkflow).filter(EnsembleWorkflow.ensemble_id==ensemble_id, EnsembleWorkflow.name==name).count() > 0:
+        # Verify that the workflow doesn't already exist
+        q = self.session.query(EnsembleWorkflow)
+        q = q.filter(EnsembleWorkflow.ensemble_id==ensemble_id,
+                     EnsembleWorkflow.name==name)
+        if q.count() > 0:
             raise APIError("Ensemble workflow %s already exists" % name, 400)
 
         # Create database record
         w = EnsembleWorkflow(ensemble_id, name)
         w.set_priority(priority)
-        db.session.add(w)
-        db.session.flush()
+        self.session.add(w)
+        self.session.flush()
 
         dirname = w.get_dir()
 
@@ -240,62 +248,50 @@ class Ensembles(SQLAlchemyInit):
         # Create the workflow directory
         os.makedirs(dirname)
 
-        # Save catalogs
-        rcfile = os.path.join(dirname, "rc.txt")
-        shutil.copyfile(rc.get_catalog_file(), rcfile)
-        tcfile = os.path.join(dirname, "tc.txt")
-        shutil.copyfile(tc.get_catalog_file(), tcfile)
-        scfile = os.path.join(dirname, "sites.xml")
-        shutil.copyfile(sc.get_catalog_file(), scfile)
-
-        # Save dax
-        daxfile = os.path.join(dirname, "dax.xml")
-        f = open(daxfile, "wb")
+        # Save bundle
+        bundlefilename = werkzeug.secure_filename(bundlefile.filename)
+        bundlepath = os.path.join(dirname, bundlefilename)
+        f = open(bundlepath, "wb")
         try:
-            shutil.copyfileobj(dax, f)
+            shutil.copyfileobj(bundlefile, f)
         finally:
             f.close()
 
-        # Save properties file
-        propsfile = os.path.join(dirname, "pegasus.properties")
-        f = open(propsfile, "wb")
-        try:
-            # It is possible that there is no properties file
-            # but we still need to create the file
-            if conf is not None:
-                # TODO Filter out properties that are not allowed
-                shutil.copyfileobj(conf, f)
+        # Verify and unpack the bundle
+        bundle = Bundle(bundlepath)
+        bundle.verify()
+        bundle.unpack(dirname)
 
-            # We need to make sure that the dashboard info is
-            # sent to the same database we are using
-            f.write("\npegasus.dashboard.output=%s\n" % app.config["SQLALCHEMY_DATABASE_URI"])
-        finally:
-            f.close()
+        properties = bundle.get_properties()
+
+        # TODO Filter out properties that are not allowed and rewrite properties
+
+        # Get path to dax file
+        dax = properties["pegasus.dax.file"]
 
         # Create planning script
-        filename = os.path.join(dirname, "plan.sh")
-        f = open(filename, "w")
+        planfile = os.path.join(dirname, "plan.sh")
+        f = open(planfile, "w")
         try:
-            self.write_planning_script(f, tcformat=tc.format, rcformat=rc.format, scformat=sc.format,
-                    sites=sites, output_site=output_site, staging_sites=staging_sites,
+            self.write_planning_script(f, dirname, dax, sites=sites,
+                    output_site=output_site, staging_sites=staging_sites,
                     clustering=clustering, force=force, cleanup=cleanup)
         finally:
             f.close()
-        os.chmod(filename, stat.S_IRWXU|stat.S_IRGRP|stat.S_IXGRP|stat.S_IROTH|stat.S_IXOTH)
+        os.chmod(planfile, stat.S_IRWXU|stat.S_IRGRP|stat.S_IXGRP|stat.S_IROTH|stat.S_IXOTH)
 
         return w
 
-    def write_planning_script(self, f, tcformat, rcformat, scformat, sites, output_site,
-            staging_sites=None, clustering=None, force=False, cleanup=True):
+    def write_planning_script(self, f, dirname, dax, sites, output_site,
+            staging_sites=None, clustering=None, force=False, cleanup=None):
 
         f.write("#!/bin/bash\n")
         f.write("pegasus-plan \\\n")
-        f.write("-Dpegasus.catalog.site=%s \\\n" % scformat)
-        f.write("-Dpegasus.catalog.site.file=sites.xml \\\n")
-        f.write("-Dpegasus.catalog.transformation=%s \\\n" % tcformat)
-        f.write("-Dpegasus.catalog.transformation.file=tc.txt \\\n")
-        f.write("-Dpegasus.catalog.replica=%s \\\n" % rcformat)
-        f.write("-Dpegasus.catalog.replica.file=rc.txt \\\n")
+
+        # We need to make sure that the dashboard info is
+        # sent to the same database we are using
+        f.write("-Dpegasus.dashboard.output=%s \\\n" % self.dburi)
+
         f.write("--conf pegasus.properties \\\n")
         f.write("--site %s \\\n" % ",".join(sites))
         f.write("--output-site %s \\\n" % output_site)
@@ -310,9 +306,12 @@ class Ensembles(SQLAlchemyInit):
         if force:
             f.write("--force \\\n")
 
-        if not cleanup:
-            f.write("--nocleanup \\\n")
+        if cleanup is not None:
+            f.write("--cleanup %s\\\n" % cleanup)
 
         f.write("--dir submit \\\n")
-        f.write("--dax dax.xml\n")
+        f.write("--dax %s\n" % dax)
+        f.write("--input-dir %s\n" % dirname)
+
         f.write("exit $?")
+
