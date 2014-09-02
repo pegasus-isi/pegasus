@@ -1,0 +1,64 @@
+#!/bin/bash
+
+set -e
+set -v
+
+
+if [ X${testdir} = "X" ]; then
+    testdir=`dirname  $0`
+    export testdir
+fi
+
+TOPDIR=`pwd`
+
+# generate the input file
+echo "This is sample input to KEG" >f.a
+
+# output directory
+mkdir -p outputs
+
+# build the dax generator
+export CLASSPATH=$testdir:`pegasus-config --classpath`
+javac $testdir/BlackDiamondDAX.java
+
+# generate the dax
+java BlackDiamondDAX /usr blackdiamond.dax
+
+# create the site catalog
+cat >sites.xml <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+    <site  handle="local" arch="x86" os="LINUX">
+        <directory type="shared-scratch" path="$TOP_DIR/scratch">
+            <file-server operation="all" url="file://$TOP_DIR/scratch"/>
+        </directory>
+        <directory type="local-storage" path="$TOP_DIR/outputs">
+            <file-server operation="all" url="file://$TOP_DIR/outputs"/>
+        </directory>
+        <profile namespace="env" key="PATH">$PEGASUS_BIN_DIR:/ccg/software/irods/3.3/bin:/usr/bin:/bin</profile>
+    </site>
+    <site  handle="condorpool" arch="x86" os="LINUX">
+        <profile namespace="pegasus" key="style" >condor</profile>
+        <profile namespace="condor" key="universe" >vanilla</profile>
+        <profile namespace="env" key="PATH">/ccg/software/irods/3.3/bin:/usr/bin:/bin</profile>
+    </site>
+
+</sitecatalog>
+EOF
+
+# plan and submit the  workflow
+pegasus-plan \
+    --conf $testdir/pegasusrc \
+    --sites condorpool \
+    --dir work \
+    --output-site local \
+    --dax blackdiamond.dax  | tee $TOPDIR/plan.out
+
+WORK_DIR=`cat plan.out | grep pegasus-run | sed -E 's/^pegasus-run[ ]+//'`
+cd $WORK_DIR
+
+echo
+echo
+echo "Starting the workflow..."
+pegasus-run $WORK_DIR
+
+
