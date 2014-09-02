@@ -43,6 +43,13 @@ cat >sites.xml <<EOF
         <profile namespace="env" key="PATH">/ccg/software/irods/3.3/bin:/usr/bin:/bin</profile>
     </site>
 
+    <site handle="cartman-data" arch="x86" os="LINUX">
+         <directory type="shared-scratch" path="${TOPDIR}/staging-site/scratch">
+            <file-server operation="all" url="gsiftp://cartman.isi.edu/${TOPDIR}/staging-site/scratch"/>
+        </directory>
+
+    </site>
+
 </sitecatalog>
 EOF
 
@@ -50,6 +57,7 @@ EOF
 pegasus-plan \
     --conf $testdir/pegasusrc \
     --sites condorpool \
+    --staging-site cartman-data \
     --dir work \
     --output-site local \
     --dax blackdiamond.dax  | tee $TOPDIR/plan.out
