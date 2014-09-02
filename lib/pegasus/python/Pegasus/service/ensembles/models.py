@@ -257,10 +257,12 @@ class Ensembles(SQLAlchemyInit):
         finally:
             f.close()
 
+        bundledir = os.path.join(dirname, "bundle")
+
         # Verify and unpack the bundle
         bundle = Bundle(bundlepath)
         bundle.verify()
-        bundle.unpack(dirname)
+        bundle.unpack(bundledir)
 
         properties = bundle.get_properties()
 
@@ -273,7 +275,7 @@ class Ensembles(SQLAlchemyInit):
         planfile = os.path.join(dirname, "plan.sh")
         f = open(planfile, "w")
         try:
-            self.write_planning_script(f, dirname, dax, sites=sites,
+            self.write_planning_script(f, bundledir, dax, sites=sites,
                     output_site=output_site, staging_sites=staging_sites,
                     clustering=clustering, force=force, cleanup=cleanup)
         finally:
@@ -282,7 +284,7 @@ class Ensembles(SQLAlchemyInit):
 
         return w
 
-    def write_planning_script(self, f, dirname, dax, sites, output_site,
+    def write_planning_script(self, f, bundledir, dax, sites, output_site,
             staging_sites=None, clustering=None, force=False, cleanup=None):
 
         f.write("#!/bin/bash\n")
@@ -292,7 +294,7 @@ class Ensembles(SQLAlchemyInit):
         # sent to the same database we are using
         f.write("-Dpegasus.dashboard.output=%s \\\n" % self.dburi)
 
-        f.write("--conf pegasus.properties \\\n")
+        f.write("--conf %s \\\n" % os.path.join(bundledir, "pegasus.properties"))
         f.write("--site %s \\\n" % ",".join(sites))
         f.write("--output-site %s \\\n" % output_site)
 
@@ -310,8 +312,8 @@ class Ensembles(SQLAlchemyInit):
             f.write("--cleanup %s\\\n" % cleanup)
 
         f.write("--dir submit \\\n")
-        f.write("--dax %s\n" % dax)
-        f.write("--input-dir %s\n" % dirname)
+        f.write("--dax %s\n" % os.path.join(bundledir, dax))
+        f.write("--input-dir %s\n" % bundledir)
 
         f.write("exit $?")
 
