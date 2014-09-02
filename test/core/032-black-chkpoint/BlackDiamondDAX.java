@@ -60,9 +60,9 @@ public class BlackDiamondDAX {
         fe2.setRegister(true);
 
 	Executable checkpoint = new Executable("pegasus", "checkpoint", "4.0");
-        preprocess.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
-        preprocess.setInstalled( false );
-        preprocess.addPhysicalFile("file://" + cwd + "/checkpoint_test.py", "condorpool");
+        checkpoint.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
+        checkpoint.setInstalled( false );
+        checkpoint.addPhysicalFile("file://" + cwd + "/checkpoint_test.py", "condorpool");
 
         Executable findrange = new Executable("pegasus", "findrange", "4.0");
         findrange.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
@@ -80,12 +80,11 @@ public class BlackDiamondDAX {
         postanalyze.addPhysicalFile("file://" + pegasus_location + "/bin/pegasus-keg", "condorpool");
 
 
-        dax.addExecutable(preprocess).addExecutable(findrange).addExecutable(analyze);
+        dax.addExecutable(checkpoint).addExecutable(findrange).addExecutable(analyze);
 	dax.addExecutable(postanalyze);
 
-        // Add a preprocess job
-        Job j1 = new Job("j1", "pegasus", "preprocess", "4.0");
-        j1.addArgument("-a preprocess -T 10 -i ").addArgument(fa);
+        // Add a checkpoint job
+        Job j1 = new Job("j1", "pegasus", "checkpoint", "4.0");        
         j1.addArgument("-o ").addArgument(fb1);
         j1.addArgument(" ").addArgument(fb2);
         j1.uses(fa, File.LINK.INPUT);
