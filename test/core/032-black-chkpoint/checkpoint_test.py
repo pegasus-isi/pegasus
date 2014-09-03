@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import shutil
 import sys
 import optparse
 
@@ -19,7 +20,7 @@ def main():
 
     parser = optparse.OptionParser (usage=usage, description=description)
 
-    parser.add_option ("-o", "--output", action="store", type="str", dest="output_file",  help="output file")
+    parser.add_option ("-o", "--output", action="append", type="str", dest="output_file",  help="output file")
 
     #Parsing command-line options
     (options, args) = parser.parse_args ()
@@ -47,7 +48,13 @@ def main():
     
     if( last_value == max_value ):
         #rename the test.checkpoint file to the output file
-        os.rename( checkpoint_file, options.output_file)
+        for file in options.output_file:
+            print "Copying checkpoint file %s to output file %s " % (  checkpoint_file, file)
+            shutil.copy2( checkpoint_file, file)
+
+        #delete the checkpoint file
+        print "Deleting checkpoint file %s " % checkpoint_file
+        os.remove( checkpoint_file )
         sys.exit( 0 )
     else:
         sys.exit( 1 )
