@@ -124,7 +124,7 @@ sub getPlatform(){
         my $x64=`/usr/sbin/sysctl -a -n hw.cpu64bit_capable 2>/dev/null`;
         my $vers = `/usr/bin/sw_vers -productVersion`;
         chomp $vers;
-        $vers =~ s/(^\d+\.\d+).*/$1/;
+        $vers =~ s/(^\d+)\.\d+.*/$1/;
         
         return (  ($x64) ? $short_arch{$arch}."_64" : $short_arch{$arch},$short_os{$os},$vers);
     }
