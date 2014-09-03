@@ -507,10 +507,14 @@ class EnsembleManager(object):
                 os.setegid(u.gid)
                 os.seteuid(u.uid)
 
-            log.info("Processing ensembles for %s", u.username)
-
             db = Ensembles(u.get_master_db_url())
-            for e in db.list_actionable_ensembles():
+
+            actionable = db.list_actionable_ensembles()
+            if len(actionable) == 0:
+                continue
+
+            log.info("Processing ensembles for %s", u.username)
+            for e in actionable:
                 log.info("Processing ensemble %s", e.name)
                 p = self.Processor(db, e)
                 p.run()
