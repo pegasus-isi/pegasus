@@ -20,12 +20,12 @@ def main():
 
     parser = optparse.OptionParser (usage=usage, description=description)
 
-    parser.add_option ("-o", "--output", action="append", type="str", dest="output_file",  help="output file")
+    parser.add_option ("-o", "--output", action="append", type="str", dest="output_files",  help="output file")
 
     #Parsing command-line options
     (options, args) = parser.parse_args ()
 
-    if options.output_file is None:
+    if options.output_files is None:
         parser.error( "Specify the -o option to specify the output file ")
 
     last_value=0
@@ -48,7 +48,7 @@ def main():
     
     if( last_value == max_value ):
         #rename the test.checkpoint file to the output file
-        for file in options.output_file:
+        for file in options.output_files:
             print "Copying checkpoint file %s to output file %s " % (  checkpoint_file, file)
             shutil.copy2( checkpoint_file, file)
 
