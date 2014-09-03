@@ -82,9 +82,6 @@ class Ensemble(EnsembleBase):
         except ValueError:
             raise APIError("Invalid value for max_planning: %s" % max_planning)
 
-    def get_dir(self):
-        return os.path.join(g.user.get_userdata_dir(), "ensembles", self.name)
-
     def get_object(self):
         return {
             "id": self.id,
@@ -99,9 +96,10 @@ class Ensemble(EnsembleBase):
         }
 
 class EnsembleWorkflow(EnsembleBase):
-    def __init__(self, ensemble_id, name):
+    def __init__(self, ensemble_id, name, basedir):
         self.ensemble_id = ensemble_id
         self.set_name(name)
+        self.set_basedir(basedir)
         self.set_created()
         self.set_updated()
         self.state = EnsembleWorkflowStates.READY
@@ -144,12 +142,11 @@ class EnsembleWorkflow(EnsembleBase):
             raise APIError("Invalid wf_uuid")
         self.wf_uuid = wf_uuid
 
+    def set_basedir(self, basedir):
+        self.basedir = basedir
+
     def set_submitdir(self, submitdir):
         self.submitdir = submitdir
-
-    def get_dir(self):
-        ensembledir = self.ensemble.get_dir()
-        return os.path.join(ensembledir, "workflows", self.name)
 
     def get_object(self):
         return {
@@ -222,7 +219,7 @@ class Ensembles(SQLAlchemyInit):
         except NoResultFound:
             raise APIError("No such ensemble workflow: %s" % name, 404)
 
-    def create_ensemble_workflow(self, ensemble_id, name, priority, bundlefile,
+    def create_ensemble_workflow(self, ensemble_id, name, basedir, priority, bundlefile,
             sites, output_site, staging_sites=None, clustering=None,
             force=None, cleanup=None):
 
@@ -234,30 +231,28 @@ class Ensembles(SQLAlchemyInit):
             raise APIError("Ensemble workflow %s already exists" % name, 400)
 
         # Create database record
-        w = EnsembleWorkflow(ensemble_id, name)
+        w = EnsembleWorkflow(ensemble_id, name, basedir)
         w.set_priority(priority)
         self.session.add(w)
         self.session.flush()
 
-        dirname = w.get_dir()
-
         # If the directory already exists, then we need to remove it
-        if os.path.isdir(dirname):
-            shutil.rmtree(dirname)
+        if os.path.isdir(basedir):
+            shutil.rmtree(basedir)
 
         # Create the workflow directory
-        os.makedirs(dirname)
+        os.makedirs(basedir)
 
         # Save bundle
         bundlefilename = werkzeug.secure_filename(bundlefile.filename)
-        bundlepath = os.path.join(dirname, bundlefilename)
+        bundlepath = os.path.join(basedir, bundlefilename)
         f = open(bundlepath, "wb")
         try:
             shutil.copyfileobj(bundlefile, f)
         finally:
             f.close()
 
-        bundledir = os.path.join(dirname, "bundle")
+        bundledir = os.path.join(basedir, "bundle")
 
         # Verify and unpack the bundle
         bundle = Bundle(bundlepath)
@@ -272,10 +267,10 @@ class Ensembles(SQLAlchemyInit):
         dax = properties["pegasus.dax.file"]
 
         # Create planning script
-        planfile = os.path.join(dirname, "plan.sh")
+        planfile = os.path.join(basedir, "plan.sh")
         f = open(planfile, "w")
         try:
-            self.write_planning_script(f, bundledir, dax, sites=sites,
+            self.write_planning_script(f, basedir, bundledir, dax, sites=sites,
                     output_site=output_site, staging_sites=staging_sites,
                     clustering=clustering, force=force, cleanup=cleanup)
         finally:
@@ -284,7 +279,7 @@ class Ensembles(SQLAlchemyInit):
 
         return w
 
-    def write_planning_script(self, f, bundledir, dax, sites, output_site,
+    def write_planning_script(self, f, basedir, bundledir, dax, sites, output_site,
             staging_sites=None, clustering=None, force=False, cleanup=None):
 
         f.write("#!/bin/bash\n")
@@ -294,7 +289,7 @@ class Ensembles(SQLAlchemyInit):
         # sent to the same database we are using
         f.write("-Dpegasus.dashboard.output=%s \\\n" % self.dburi)
 
-        f.write("--conf %s \\\n" % os.path.join(bundledir, "pegasus.properties"))
+        f.write("--conf pegasus.properties \\\n")
         f.write("--site %s \\\n" % ",".join(sites))
         f.write("--output-site %s \\\n" % output_site)
 
@@ -309,11 +304,11 @@ class Ensembles(SQLAlchemyInit):
             f.write("--force \\\n")
 
         if cleanup is not None:
-            f.write("--cleanup %s\\\n" % cleanup)
+            f.write("--cleanup %s \\\n" % cleanup)
 
-        f.write("--dir submit \\\n")
-        f.write("--dax %s\n" % os.path.join(bundledir, dax))
-        f.write("--input-dir %s\n" % bundledir)
+        f.write("--dir %s \\\n" % os.path.join(basedir, "submit"))
+        f.write("--dax %s \\\n" % os.path.join(bundledir, dax))
+        f.write("--input-dir %s \n" % bundledir)
 
         f.write("exit $?")
 

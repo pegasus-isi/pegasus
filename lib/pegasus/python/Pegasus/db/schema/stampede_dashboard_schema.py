@@ -111,6 +111,7 @@ orm.mapper(Ensemble, pg_ensemble)
 pg_ensemble_workflow = Table('ensemble_workflow', metadata,
     Column('id', KeyInteger, primary_key=True),
     Column('name', String(100), nullable=False),
+    Column('basedir', String(512), nullable=False),
     Column('created', DateTime, nullable=False),
     Column('updated', DateTime, nullable=False),
     Column('state', Enum(*EnsembleWorkflowStates), nullable=False),

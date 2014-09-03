@@ -120,10 +120,12 @@ def route_create_ensemble_workflow(ensemble):
 
     db = models.Ensembles(g.master_db_url)
 
+    basedir = os.path.join(g.user.get_userdata_dir(), "ensembles", e.name, "workflows", name)
+
     try:
-        db.create_ensemble_workflow(e.id, name, priority, bundle, sites=sites,
-                output_site=output_site, cleanup=cleanup, force=force,
-                clustering=clustering, staging_sites=staging_sites)
+        db.create_ensemble_workflow(e.id, name, basedir, priority, bundle,
+                sites=sites, output_site=output_site, cleanup=cleanup,
+                force=force, clustering=clustering, staging_sites=staging_sites)
     except BundleException, e:
         raise api.APIError(e.message)
 
@@ -164,22 +166,9 @@ def route_get_ensemble_workflow_file(ensemble, workflow, filename):
     db = models.Ensembles(g.master_db_url)
     e = db.get_ensemble(g.user.username, ensemble)
     w = db.get_ensemble_workflow(e.id, workflow)
-    dirname = w.get_dir()
     mimetype = "text/plain"
-    if filename == "sites.xml":
-        path = os.path.join(dirname, "sites.xml")
-    elif filename == "tc.txt":
-        path = os.path.join(dirname, "tc.txt")
-    elif filename == "rc.txt":
-        path = os.path.join(dirname, "rc.txt")
-    elif filename == "dax.xml":
-        path = os.path.join(dirname, "dax.xml")
-        mimetype = "application/xml"
-    elif filename == "pegasus.properties":
-        path = os.path.join(dirname, "pegasus.properties")
-    elif filename == "plan.sh":
-        path = os.path.join(dirname, "plan.sh")
-    else:
+    path = os.path.join(w.basedir, filename)
+    if not os.path.isfile(path):
         raise api.APIError("Invalid file: %s" % filename)
 
     return send_file(path, mimetype=mimetype)
