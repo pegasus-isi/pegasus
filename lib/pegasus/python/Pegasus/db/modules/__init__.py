@@ -41,12 +41,13 @@ The module Pegasus.db.modules.stampede_loader shows the use
 of this to initialize to a DB.
 """
 class SQLAlchemyInit:
-    def __init__(self, connString, initFunction, **kwarg):
+    def __init__(self, dburi, initFunction, **kwarg):
         if not hasattr(self, '_dbg'):
             # The Analyzer superclass SHOULD have been _init__'ed
             # already but if not, bulletproof this attr.
             self._dbg = False
-        self.db = create_engine(connString, echo=self._dbg, pool_recycle=True)
+        self.dburi = dburi
+        self.db = create_engine(dburi, echo=self._dbg, pool_recycle=True)
         initFunction(self.db)
         sm = orm.sessionmaker(bind=self.db, autoflush=False, autocommit=False,
                               expire_on_commit=False)

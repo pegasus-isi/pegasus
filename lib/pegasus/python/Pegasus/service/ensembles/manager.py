@@ -2,15 +2,13 @@ import os
 import sys
 import subprocess
 import logging
-import threading
 import time
 
 from sqlalchemy.orm.exc import NoResultFound
 
-from Pegasus.db.schema import stampede_dashboard_schema as dash
-
-from Pegasus.service import app, db, ensembles
-from Pegasus.service.ensembles import EnsembleStates, EnsembleWorkflowStates
+from Pegasus.service import app, request
+from Pegasus.service.ensembles.models import Ensembles, EnsembleStates, EnsembleWorkflowStates
+from Pegasus.db.schema.stampede_dashboard_schema import DashboardWorkflow, DashboardWorkflowstate
 
 log = logging.getLogger(__name__)
 
@@ -129,12 +127,15 @@ def forkscript(script, pidfile=None, cwd=None, env=None):
         raise EMException("Non-zero exitcode launching script: %d" % exitcode)
 
 class WorkflowProcessor:
-    def __init__(self, workflow):
+    def __init__(self, db, workflow):
+        self.db = db
         self.workflow = workflow
 
     def get_file(self, filename):
-        dirname = self.workflow.get_dir()
-        return os.path.join(dirname, filename)
+        return os.path.join(self.workflow.basedir, filename)
+
+    def get_bundledir(self):
+        return os.path.join(self.workflow.basedir, "bundle")
 
     def get_pidfile(self):
         return self.get_file("planner.pid")
@@ -143,14 +144,14 @@ class WorkflowProcessor:
         return self.get_file("planner.result")
 
     def get_logfile(self):
-        return self.get_file("workflow.log")
+        return self.get_file("planner.log")
 
     def get_planfile(self):
         return self.get_file("plan.sh")
 
     def plan(self):
         "Launch the pegasus planner"
-        workdir = self.workflow.get_dir()
+        workdir = self.get_bundledir()
         pidfile = self.get_pidfile()
         logfile = self.get_logfile()
         planfile = self.get_planfile()
@@ -272,7 +273,7 @@ class WorkflowProcessor:
             raise EMException("wf_uuid is none")
 
         try:
-            w = db.session.query(dash.DashboardWorkflow)\
+            w = self.db.session.query(DashboardWorkflow)\
                     .filter_by(wf_uuid=str(wf_uuid))\
                     .one()
             return w
@@ -286,7 +287,7 @@ class WorkflowProcessor:
             raise EMException("Dashboard workflow not found")
 
         try:
-            ws = db.session.query(dash.DashboardWorkflowstate)\
+            ws = self.db.session.query(DashboardWorkflowstate)\
                     .filter_by(wf_id=w.wf_id)\
                     .order_by("timestamp desc")\
                     .first()
@@ -315,7 +316,8 @@ class WorkflowProcessor:
 class EnsembleProcessor:
     Processor = WorkflowProcessor
 
-    def __init__(self, ensemble):
+    def __init__(self, db, ensemble):
+        self.db = db
         self.ensemble = ensemble
         self.active = ensemble.state == EnsembleStates.ACTIVE
         self.max_running = ensemble.max_running
@@ -358,10 +360,10 @@ class EnsembleProcessor:
         workflow.set_state(EnsembleWorkflowStates.PLANNING)
         workflow.set_updated()
 
-        db.session.flush()
+        self.db.session.flush()
 
         # Fork planning task
-        p = self.Processor(workflow)
+        p = self.Processor(self.db, workflow)
         try:
             p.plan()
         except Exception, e:
@@ -369,14 +371,14 @@ class EnsembleProcessor:
             workflow.set_state(EnsembleWorkflowStates.PLAN_FAILED)
             workflow.set_updated()
 
-        db.session.commit()
+        self.db.session.commit()
 
     def handle_ready(self, workflow):
         if self.can_plan():
             self.plan_workflow(workflow)
 
     def handle_planning(self, workflow):
-        p = self.Processor(workflow)
+        p = self.Processor(self.db, workflow)
 
         if p.planning():
             return
@@ -387,7 +389,7 @@ class EnsembleProcessor:
         if not p.planning_successful():
             workflow.set_state(EnsembleWorkflowStates.PLAN_FAILED)
             workflow.set_updated()
-            db.session.commit()
+            self.db.session.commit()
             return
 
         log.info("Queueing workflow %s" % workflow.name)
@@ -397,7 +399,7 @@ class EnsembleProcessor:
         workflow.set_submitdir(p.get_submitdir())
         workflow.set_state(EnsembleWorkflowStates.QUEUED)
         workflow.set_updated()
-        db.session.commit()
+        self.db.session.commit()
 
         # Go ahead and handle the queued state now
         self.handle_queued(workflow)
@@ -411,9 +413,9 @@ class EnsembleProcessor:
         self.running += 1
         workflow.set_state(EnsembleWorkflowStates.RUNNING)
         workflow.set_updated()
-        db.session.flush()
+        self.db.session.flush()
 
-        p = self.Processor(workflow)
+        p = self.Processor(self.db, workflow)
         try:
             p.run()
         except Exception, e:
@@ -421,14 +423,14 @@ class EnsembleProcessor:
             workflow.set_state(EnsembleWorkflowStates.RUN_FAILED)
             workflow.set_updated()
 
-        db.session.commit()
+        self.db.session.commit()
 
     def handle_queued(self, workflow):
         if self.can_run():
             self.run_workflow(workflow)
 
     def handle_running(self, workflow):
-        p = self.Processor(workflow)
+        p = self.Processor(self.db, workflow)
 
         if p.pending() or p.running():
             return
@@ -442,7 +444,7 @@ class EnsembleProcessor:
 
         workflow.set_updated()
 
-        db.session.commit()
+        self.db.session.commit()
 
     def handle_workflow(self, w):
         if w.state == EnsembleWorkflowStates.READY:
@@ -462,19 +464,23 @@ class EnsembleProcessor:
             except Exception, e:
                 log.error("Processing workflow %s of ensemble %s" % (w.name, self.ensemble.name))
                 log.exception(e)
-                db.session.rollback()
+                self.db.session.rollback()
 
 
-class EnsembleManager(threading.Thread):
+class EnsembleManager(object):
     Processor = EnsembleProcessor
 
     def __init__(self, interval=None):
-        threading.Thread.__init__(self)
-        self.daemon = True
-
         if interval is None:
             interval = float(app.config["EM_INTERVAL"])
         self.interval = interval
+
+    def start(self):
+        pid = os.fork()
+        if pid == 0:
+            self.run()
+        else:
+            return pid
 
     def run(self):
         log.info("Ensemble Manager starting")
@@ -485,9 +491,31 @@ class EnsembleManager(threading.Thread):
             self.loop_once()
             time.sleep(self.interval)
 
+    def get_active_users(self):
+        # TODO Identify the active users
+        return [request.get_user_by_uid(os.getuid())]
+
     def loop_once(self):
-        for e in ensembles.list_actionable_ensembles():
-            log.info("Processing ensemble %s" % e.name)
-            p = self.Processor(e)
-            p.run()
+        for u in self.get_active_users():
+
+            # Switch to user
+            if os.getuid() != u.uid:
+                if os.getuid() != 0:
+                    log.error("Pegasus service must run as root to process ensembles for %s", u.username)
+                    continue
+
+                os.setegid(u.gid)
+                os.seteuid(u.uid)
+
+            db = Ensembles(u.get_master_db_url())
+
+            actionable = db.list_actionable_ensembles()
+            if len(actionable) == 0:
+                continue
+
+            log.info("Processing ensembles for %s", u.username)
+            for e in actionable:
+                log.info("Processing ensemble %s", e.name)
+                p = self.Processor(db, e)
+                p.run()
 

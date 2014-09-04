@@ -40,9 +40,6 @@ class DashboardWorkflow(SABase):
 class DashboardWorkflowstate(SABase):
     pass
 
-from Pegasus.service.catalogs import ReplicaCatalog, RC_FORMATS
-from Pegasus.service.catalogs import SiteCatalog, SC_FORMATS
-from Pegasus.service.catalogs import TransformationCatalog, TC_FORMATS
 from Pegasus.service.ensembles import Ensemble, EnsembleStates
 from Pegasus.service.ensembles import EnsembleWorkflow, EnsembleWorkflowStates
 
@@ -92,60 +89,6 @@ Index('UNIQUE_MASTER_WORKFLOWSTATE',
 orm.mapper(DashboardWorkflowstate, pg_workflowstate)
 
 
-pg_replica_catalog = Table("replica_catalog", metadata, 
-    Column('id', KeyInteger, primary_key=True),
-    Column('name', String(100), nullable=False),
-    Column('format', Enum(*RC_FORMATS), nullable=False),
-    Column('created', DateTime, nullable=False),
-    Column('updated', DateTime, nullable=False),
-    Column('username', String(100), nullable=False),
-    **table_keywords
-)
-
-Index('UNIQUE_REPLICA_CATALOG',
-      pg_replica_catalog.c.username,
-      pg_replica_catalog.c.name,
-      unique=True)
-
-orm.mapper(ReplicaCatalog, pg_replica_catalog)
-
-
-pg_site_catalog = Table('site_catalog', metadata,
-    Column('id', KeyInteger, primary_key=True),
-    Column('name', String(100), nullable=False),
-    Column('format', Enum(*SC_FORMATS), nullable=False),
-    Column('created', DateTime, nullable=False),
-    Column('updated', DateTime, nullable=False),
-    Column('username', String(100), nullable=False),
-    **table_keywords
-)
-
-Index('UNIQUE_SITE_CATALOG',
-      pg_site_catalog.c.username,
-      pg_site_catalog.c.name,
-      unique=True)
-
-orm.mapper(SiteCatalog, pg_site_catalog)
-
-
-pg_transformation_catalog = Table('transformation_catalog', metadata,
-    Column('id', KeyInteger, primary_key=True),
-    Column('name', String(100), nullable=False),
-    Column('format', Enum(*TC_FORMATS), nullable=False),
-    Column('created', DateTime, nullable=False),
-    Column('updated', DateTime, nullable=False),
-    Column('username', String(100), nullable=False),
-    **table_keywords
-)
-
-Index('UNIQUE_TRANSFORMATION_CATALOG',
-      pg_transformation_catalog.c.username,
-      pg_transformation_catalog.c.name,
-      unique=True)
-
-orm.mapper(TransformationCatalog, pg_transformation_catalog)
-
-
 pg_ensemble = Table('ensemble', metadata,
     Column('id', KeyInteger, primary_key=True),
     Column('name', String(100), nullable=False),
@@ -168,6 +111,7 @@ orm.mapper(Ensemble, pg_ensemble)
 pg_ensemble_workflow = Table('ensemble_workflow', metadata,
     Column('id', KeyInteger, primary_key=True),
     Column('name', String(100), nullable=False),
+    Column('basedir', String(512), nullable=False),
     Column('created', DateTime, nullable=False),
     Column('updated', DateTime, nullable=False),
     Column('state', Enum(*EnsembleWorkflowStates), nullable=False),
@@ -183,6 +127,8 @@ Index('UNIQUE_ENSEMBLE_WORKFLOW',
       pg_ensemble_workflow.c.name,
       unique=True)
 
-orm.mapper(EnsembleWorkflow, pg_ensemble_workflow)
+orm.mapper(EnsembleWorkflow, pg_ensemble_workflow, properties = {
+    'ensemble':orm.relation(Ensemble, backref='workflows')
+})
 
 

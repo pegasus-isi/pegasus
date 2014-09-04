@@ -4,6 +4,7 @@ from optparse import OptionParser
 
 from Pegasus.service import app
 from Pegasus.service.command import Command
+from Pegasus.service.ensembles import manager
 
 log = logging.getLogger(__name__)
 
@@ -27,17 +28,17 @@ class ServerCommand(Command):
         # or if we are debugging and Werkzeug is restarting. This
         # prevents us from having two ensemble managers running in
         # the debug case.
-#        WERKZEUG_RUN_MAIN = os.environ.get('WERKZEUG_RUN_MAIN') == 'true'
-#        DEBUG = app.config.get("DEBUG", False)
-#        if (not DEBUG) or WERKZEUG_RUN_MAIN:
-#            # Make sure the environment is OK for the ensemble manager
-#            try:
-#                em.check_environment()
-#            except em.EMException, e:
-#                log.warning("%s: Ensemble manager disabled" % e.message)
-#            else:
-#                mgr = em.EnsembleManager()
-#                mgr.start()
+        WERKZEUG_RUN_MAIN = os.environ.get('WERKZEUG_RUN_MAIN') == 'true'
+        DEBUG = app.config.get("DEBUG", False)
+        if (not DEBUG) or WERKZEUG_RUN_MAIN:
+            # Make sure the environment is OK for the ensemble manager
+            try:
+                manager.check_environment()
+            except manager.EMException, e:
+                log.warning("%s: Ensemble manager disabled" % e.message)
+            else:
+                mgr = manager.EnsembleManager()
+                mgrpid = mgr.start()
 
         cert = app.config.get("CERTIFICATE", None)
         pkey = app.config.get("PRIVATE_KEY", None)
@@ -54,6 +55,10 @@ class ServerCommand(Command):
                 host=app.config["SERVER_HOST"],
                 processes=app.config["MAX_PROCESSES"],
                 ssl_context=ssl_context)
+
+        os.waitpid(mgrpid, 0)
+
+        log.info("Exiting")
 
 def main():
     ServerCommand().main()

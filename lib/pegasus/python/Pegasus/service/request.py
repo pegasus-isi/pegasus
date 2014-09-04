@@ -25,6 +25,14 @@ class User(object):
     def get_master_db_url(self):
         return "sqlite:///%s" % self.get_master_db()
 
+def get_user_by_uid(uid):
+    pw = pwd.getpwuid(uid)
+    return User(pw.pw_uid, pw.pw_gid, pw.pw_name, pw.pw_dir)
+
+def get_user_by_username(username):
+    pw = pwd.getpwnam(username)
+    return User(pw.pw_uid, pw.pw_gid, pw.pw_name, pw.pw_dir)
+
 class BaseAuthentication(object):
     def __init__(self, username, password):
         self.username = username
@@ -43,8 +51,7 @@ class NoAuthentication(BaseAuthentication):
 
     def get_user(self):
         # Just return info for the user running the service
-        pw = pwd.getpwuid(os.getuid())
-        return User(pw.pw_uid, pw.pw_gid, pw.pw_name, pw.pw_dir)
+        return get_user_by_uid(os.getuid())
 
 class PAMAuthentication(BaseAuthentication):
     def authenticate(self):
@@ -56,8 +63,7 @@ class PAMAuthentication(BaseAuthentication):
 
     def get_user(self):
         try:
-            pw = pwd.getpwnam(self.username)
-            return User(pw.pw_uid, pw.pw_gid, pw.pw_name, pw.pw_dir)
+            return get_user_by_username(self.username)
         except KeyError:
             raise Exception("Invalid user: %s" % self.username)
 
