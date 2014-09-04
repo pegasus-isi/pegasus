@@ -58,7 +58,7 @@ class Parser:
         self._parsing_data = False
         self._parsing_cwd = False
         self._record_number = 0
-        self._arguments = ""
+        self._arguments = []
         self._stdout = ""
         self._stderr = ""
         self._cwd = ""
@@ -328,7 +328,7 @@ class Parser:
             self._cwd += data
 
         if self._parsing_arguments == True:
-            self._arguments += data
+            self._arguments.append(data.strip())
 
         if self._parsing_stdout == True and self._parsing_data == True:
             self._stdout += data
@@ -348,7 +348,7 @@ class Parser:
         self._parsing_stderr = False
         self._parsing_data = False
         self._parsing_cwd = False
-        self._arguments = ""
+        self._arguments = []
         self._stdout = ""
         self._stderr = ""
         self._cwd = ""
@@ -372,13 +372,13 @@ class Parser:
 
         # Parse everything!
         output = self._my_parser.Parse(buffer)
-                    
+
         # Add cwd, arguments, stdout, and stderr to keys
         if "cwd" in self._ks_elements:
             self._keys["cwd"] = self._cwd
 
         if "argument-vector" in self._ks_elements:
-            self._keys["argument-vector"] = self._arguments
+            self._keys["argument-vector"] = " ".join(self._arguments)
 
         if "stdout" in self._ks_elements:
             self._keys["stdout"] = self._stdout
