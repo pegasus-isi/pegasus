@@ -315,12 +315,18 @@
   <target name="doc" depends="setup,doc-schemas,doc-manpages,doc-user-guide,doc-java,doc-python,doc-perl,doc-tutorial" description="Generate documentation"/>
 
   <target name="compile-ctools" depends="setup" description="Compile C tools">
-    <mkdir dir="${dist.bin}"/>
     <exec executable="${make}" dir="src/tools" failonerror="true">
       <env key="prefix" value="${dist.dir}"/>
       <env key="datadir" value="${dist.data}"/>
       <arg line="prefix=${dist.dir}"/>
       <arg line="datadir=${dist.data}"/>
+      <arg line="install"/>
+    </exec>
+  </target>
+
+  <target name="compile-pmc" depends="setup" description="Compile Pegasus MPI cluster">
+    <exec executable="${make}" dir="src/tools/pegasus-mpi-cluster" failonerror="true">
+      <arg line="prefix=${dist.dir}"/>
       <arg line="install"/>
     </exec>
   </target>
@@ -492,6 +498,9 @@
     <delete dir="dist"/>
     <delete dir="build"/>
     <exec executable="${make}" dir="src/tools" failonerror="true">
+      <arg line="distclean"/>
+    </exec>
+    <exec executable="${make}" dir="src/tools/pegasus-mpi-cluster" failonerror="true">
       <arg line="distclean"/>
     </exec>
     <exec executable="${bash}" dir="src/externals" failonerror="true">
