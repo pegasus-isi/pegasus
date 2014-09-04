@@ -8,24 +8,38 @@
         <section>
             <title>Service Configuration</title>
 
-            <simpara>The configuration file is $HOME/.pegasus/service.py. Look in
-            lib/pegasus/python/pegasus/service/defaults.py for the variable names and
-            default values.</simpara>
+            <para>
+                The configuration file is $HOME/.pegasus/service.py. Look in
+                lib/pegasus/python/pegasus/service/defaults.py for the variable
+                names and default values.
+            </para>
 
-            <simpara>You can change the host and port of the service by setting the SERVER\_HOST
-            and SERVER\_PORT variables.</simpara>
+            <para>
+                You can change the host and port of the service by setting the
+                SERVER\_HOST and SERVER\_PORT variables.
+            </para>
 
-            <simpara>All clients that connect to the web API will require the USERNAME and
-            PASSWORD settings in the configuration file.</simpara>
+            <para>
+                All clients that connect to the web API will require the
+                USERNAME and PASSWORD settings in the configuration file.
+            </para>
         </section>
 
         <section>
             <title>Running the Service</title>
-            <simpara>Once the service is installed (normally or in development mode) and
-            configured you can start the server by running:</simpara>
-            <literallayout class="monospaced">$ pegasus-service-server</literallayout>
-            <simpara>By default, the server will start on <ulink url="http://localhost:5000">http://localhost:5000</ulink>. You can set
-            the host and port in the configuration file.</simpara>
+
+            <para>
+                Once the service is installed (normally or in development mode)
+                and configured you can start the server by running:
+            </para>
+
+            <literallayout class="monospaced">$ pegasus-service</literallayout>
+
+            <para>
+                By default, the server will start on 
+                <ulink url="http://localhost:5000">http://localhost:5000</ulink>.
+                You can set the host and port in the configuration file.
+            </para>
         </section>
     </section>
 
@@ -39,52 +53,61 @@
     <section>
         <title>Ensemble Manager</title>
 
-        <simpara>The ensemble manager is a service that manages collections of workflows
-        called ensembles. The ensemble manager is useful when you have a set of
-        workflows you need to run over a long period of time. It can throttle
-        the number of concurrent planning and running workflows, and plan and
-        run workflows in priority order. A typical use-case is a user with 100
-        workflows to run, who needs no more than one to be planned at a time,
-        and needs no more than two to be running concurrently.</simpara>
+        <para>
+            The ensemble manager is a service that manages collections of workflows
+            called ensembles. The ensemble manager is useful when you have a set of
+            workflows you need to run over a long period of time. It can throttle
+            the number of concurrent planning and running workflows, and plan and
+            run workflows in priority order. A typical use-case is a user with 100
+            workflows to run, who needs no more than one to be planned at a time,
+            and needs no more than two to be running concurrently.
+        </para>
 
-        <simpara>The ensemble manager also allows workflows to be submitted and monitored
-        programmatically through its RESTful interface, which makes it an ideal
-        platform for integrating workflows into larger applications such as
-        science gateways and portals.</simpara>
+        <para>
+            The ensemble manager also allows workflows to be submitted and monitored
+            programmatically through its RESTful interface, which makes it an ideal
+            platform for integrating workflows into larger applications such as
+            science gateways and portals.
+        </para>
 
-        <simpara>The ensemble manager requires Pegasus and Condor. It will start
-        automatically when pegasus-service-server is started if Pegasus and Condor
-        are found in the server&#8217;s PATH, or if the PEGASUS\_HOME and CONDOR\_HOME
-        settings are specified correctly in the configuration file.</simpara>
+        <para>
+            The ensemble manager requires Pegasus and Condor. It will start
+            automatically when pegasus-service is started if Pegasus and Condor
+            are found in the server&apos;s PATH, or if the PEGASUS\_HOME and
+            CONDOR\_HOME settings are specified correctly in the configuration
+            file.
+        </para>
 
-        <simpara>Once the ensemble manager is running, you can create an ensemble with:</simpara>
+        <para>
+            Once the ensemble manager is running, you can create an ensemble with:
+        </para>
 
-        <literallayout class="monospaced">$ pegasus-service-ensemble create -e "myruns"</literallayout>
+        <literallayout class="monospaced">$ pegasus-em create -e "myruns"</literallayout>
 
-        <simpara>where "myruns" is the name of the ensemble.</simpara>
+        <para>where "myruns" is the name of the ensemble.</para>
 
-        <simpara>Before submitting workflows to the ensemble you must upload replica,
-        site, and transformation catalogs:</simpara>
+        <para>
+            Then you can submit a workflow to the ensemble using the previously
+            uploaded catalogs:
+        </para>
 
-        <literallayout class="monospaced">$ pegasus-service-catalog upload -t replica -n "replicas" -F regex -f rc.txt
-        $ pegasus-service-catalog upload -t site -n "sites" -F xml -f sites.xml
-        $ pegasus-service-catalog upload -t transformation -n "xforms" -F text -f tc.txt</literallayout>
+        <literallayout class="monospaced">$ pegasus-em submit -e "myruns" -w "run1" -b run1.zip \
+        -s local -o local --cleanup leaf</literallayout>
 
-        <simpara>Then you can submit a workflow to the ensemble using the previously uploaded
-        catalogs:</simpara>
+        <para>
+            Where the name of the workflow is run1, and run1.zip is a
+            workflow bundle containing a pegasus.properties file with a
+            property pegasus.dax.file that contains the path of the dax file.
+        </para>
 
-        <literallayout class="monospaced">$ pegasus-service-ensemble submit -e "myruns" -w "run1" -d run1.dax -R replicas \
-        -S sites -T xforms -s local -o local -c pegasus.properties</literallayout>
+        <para>To check the status of your ensembles run:</para>
 
-        <simpara>To check the status of your ensembles run:</simpara>
+        <literallayout class="monospaced">$ pegasus-em ensembles</literallayout>
 
-        <literallayout class="monospaced">$ pegasus-service-ensemble ensembles</literallayout>
+        <para>To check the status of your workflows run:</para>
 
-        <simpara>To check the status of your workflows run:</simpara>
+        <literallayout class="monospaced">$ pegasus-em workflows -e "myruns"</literallayout>
 
-        <literallayout class="monospaced">$ pegasus-service-ensemble workflows -e "myruns"</literallayout>
-
-        <simpara>For more information about the ensemble manager see the user guide.</simpara>
     </section>
 
 </chapter>

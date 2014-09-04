@@ -1,15 +1,15 @@
-pegasus-service-ensemble(1)
-===========================
+pegasus-em(1)
+=============
 :doctype: manpage
 
 Name
 ----
-pegasus-service-ensemble - Submit and monitor ensembles of workflows
+pegasus-em - Submit and monitor ensembles of workflows
 
 Synopsis
 --------
 [verse]
-*pegasus-service-ensemble* 'COMMAND'[options] [ARGUMENTS...]
+*pegasus-em* 'COMMAND'[options] [ARGUMENTS...]
 
 Commands
 --------

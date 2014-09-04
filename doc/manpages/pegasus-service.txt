@@ -1,15 +1,15 @@
-pegasus-service-server(1)
-=========================
+pegasus-service(1)
+==================
 :doctype: manpage
 
 Name
 ----
-pegasus-service-server - Runs the Pegasus Service server
+pegasus-service - Runs the Pegasus Service server
 
 Synopsis
 --------
 [verse]
-*pegasus-service-server* [options]
+*pegasus-service* [options]
 
 Options
 -------
