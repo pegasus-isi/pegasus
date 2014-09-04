@@ -265,10 +265,29 @@ This flag causes kickstart to output full information, including the
 environment and resource limits under which the job ran, and any useful
 auxilliary statcalls. If the job fails, then *-f* is implied.
 
+*-k* 'S'::
+This flag causes kickstart to send the job a SIGTERM if it is still running
+after S seconds.  The default value is 0, which disables the timeout.
+
+*-K* 'S'::
+This flag causes kickstart to send the job a SIGKILL if it is still running S
+seconds after recieving a SIGTERM sent as a result of the *-k* flag. The default
+value is 5. If *-k* is not set, or is set to 0, then this flag is ignored.
+
 *-t*::
-This flag causes kickstart to skip tracing the child process and omit the
-<proc> element. This flag only exists when kickstart is compiled for
-Linux.
+This flag causes kickstart to use ptrace() to collect resource usage info
+for the process by intercepting the process start and stop events. This flag
+only exists when kickstart is compiled for Linux.
+
+*-z*::
+This flag causes kickstart to use ptrace() to intercept system calls and report
+a list of files accessed and I/O performed. This flag only exists when
+kickstart is compiled for Linux.
+
+*-Z*::
+This flag causes kickstart to use LD_PRELOAD to intercept library calls and
+report a list of files accessed and I/O performed. This flag only exists when
+kickstart is compiled for Linux.
 
 *-q*::
 This flag causes kickstart to omit the <data> part of the <statcall> records
@@ -462,6 +481,22 @@ NFS) are atomically written.
 
 The current format of the performance data is as follows:
 
+Timeouts
+--------
+Kickstart sets timeouts for the job based on the *-k* and *-K* flags. The *-k*
+flag sets the time kickstart will wait before it sends the job a SIGTERM, and
+the *-K* flag sets the time kickstart will wait after delivering a SIGTERM until
+it delivers a SIGKILL. The *-K* timeout is designed to give the job some time
+to write a checkpoint, which it can trigger by handling the SIGTERM. If the job
+runs for longer than the timeout specified using *-k*, then then the job exits
+with a non-zero exit status.
+
+If the job has GRIDSTART_SETUP, GRIDSTART_PREJOB, or GRIDSTART_POSTJOB, then
+their runtimes are included in the timeout and they will be sent SIGTERM/SIGKILL
+in the same manner as the main job. If GRIDSTART_CLEANUP is set, then it will run
+regardless of whether processes from the other stages were signalled. If
+GRIDSTART_SETUP is specified, and it runs longer than the timeout, then it
+will be signalled, and the other stages will be skipped.
 
 Output Format
 -------------

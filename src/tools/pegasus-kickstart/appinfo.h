@@ -27,15 +27,19 @@
 #include "machine.h"
 
 typedef struct {
-    struct timeval start;      /* point of time that app was started */
-    struct timeval finish;     /* point of time that app was reaped */
-    int            isPrinted;  /* flag to set after successful print op */
-    int            noHeader;   /* exclude <?xml ?> premable and <machine> */
-    int            fullInfo;   /* include <statcall>, <environment> and <resource> */
-    int            enableTracing;/* Enable resource usage tracing */
-    int            enableSysTrace;/* Enable system call tracing */
-    int            omitData;   /* Omit <data> for stdout and stderr if job succeeds */
+    struct timeval start;          /* point of time that app was started */
+    struct timeval finish;         /* point of time that app was reaped */
+    int            isPrinted;      /* flag to set after successful print op */
+    int            noHeader;       /* exclude <?xml ?> premable and <machine> */
+    int            fullInfo;       /* include <statcall>, <environment> and <resource> */
+    int            enableTracing;  /* Enable resource usage tracing */
+    int            enableSysTrace; /* Enable system call tracing */
+    int            omitData;       /* Omit <data> for stdout and stderr if job succeeds */
     int            enableLibTrace; /* Enable library tracing */
+    int            termTimeout;    /* Time to allow job to run before sending sigterm */
+    int            killTimeout;    /* Time to allow job to handle sigterm before sending sigkill */
+    pid_t          currentChild;   /* The current child process (setup, pre, main, post, cleanup) */
+    int            nextSignal;     /* The next signal to deliver */
 
     char* const*   argv;       /* application executable and arguments */
     int            argc;       /* application CLI number of arguments */

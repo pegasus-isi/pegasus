@@ -44,8 +44,34 @@ extern char *programname;
 extern char** environ;
 
 /* module local globals */
-static AppInfo appinfo; /* sigh, needs to be global for atexit handler */
+static AppInfo appinfo; /* sigh, needs to be global for signal handlers */
 static volatile sig_atomic_t global_no_atexit;
+
+static void on_alarm(int signal) {
+    /* If this signal handler is invoked, then the job is a failure */
+    appinfo.status = 1;
+
+    /* If there is no current child, then we may be between jobs or at the
+     * end of the job. In that case, set a short alarm to either catch the
+     * next job or give kickstart enough time to finish
+     */
+    if (appinfo.currentChild == 0) {
+        alarm(1);
+        return;
+    }
+
+    if (appinfo.nextSignal == SIGKILL) {
+        fprintf(stderr, "Job still running, sending SIGKILL\n");
+    } else {
+        fprintf(stderr, "Job timed out, sending SIGTERM\n");
+    }
+
+    kill(appinfo.currentChild, appinfo.nextSignal);
+
+    /* Next time it will be killed */
+    appinfo.nextSignal = SIGKILL;
+    alarm(appinfo.killTimeout);
+}
 
 /* convert the raw result from wait() into a status code */
 static int obtainStatusCode(int raw) {
@@ -181,7 +207,12 @@ static void helpMe(const AppInfo* run) {
             " -F\tThis flag does nothing. Kept for historical reasons.\n"
             " -f\tPrint full information including <resource>, <environment> and \n"
             "   \t<statcall>. If the job fails, then -f is implied.\n"
-            " -q\tOmit <data> for <statcall> (stdout, stderr) if the job succeeds.\n"
+            " -q\tOmit <data> for <statcall> (stdout, stderr) if the job succeeds.\n");
+    fprintf(stderr,
+            " -k S\tSend TERM signal to job after S seconds. Default is 0, which means never.\n"
+            " -K S\tSend KILL signal to job S seconds after a TERM signal. Default is %d.\n",
+            run->killTimeout);
+    fprintf(stderr, ""
 #ifdef HAS_PTRACE
             " -t\tEnable resource usage tracing with ptrace\n"
             " -z\tEnable system call interposition to get files and I/O\n"
@@ -275,8 +306,9 @@ int main(int argc, char* argv[]) {
     int status, result;
     int i, j, keeploop;
     int createDir = 0;
-    const char* temp;
-    const char* workdir = NULL;
+    char* temp;
+    char* end;
+    char* workdir = NULL;
     mylist_t initial;
     mylist_t final;
 
@@ -315,6 +347,7 @@ int main(int argc, char* argv[]) {
                     return 127;
                 }
                 temp = argv[i][2] ? &argv[i][2] : argv[++i];
+                end = temp;
 
                 /* The special value 'all' means that we echo all the output */
                 if (strcmp(temp, "all") == 0) {
@@ -323,8 +356,8 @@ int main(int argc, char* argv[]) {
                 }
 
                 /* Otherwise, we expect a unsigned long value */
-                size_t m = strtoul(temp, 0, 0);
-                if (m == 0 || m == ULONG_MAX) {
+                size_t m = strtoul(temp, &end, 0);
+                if (m == 0 || *end != '\0') {
                     fprintf(stderr, "ERROR: Invalid -B argument: %s\n", temp);
                     return 127;
                 }
@@ -534,6 +567,40 @@ int main(int argc, char* argv[]) {
             case 'X':
                 make_application_executable++;
                 break;
+            case 'k':
+                if (!argv[i][2] && argc <= i+1) {
+                    fprintf(stderr, "ERROR: -k argument missing\n");
+                    return 127;
+                }
+
+                temp = argv[i][2] ? &argv[i][2] : argv[++i];
+                end = temp;
+                int k = strtoul(temp, &end, 0);
+                if (k < 0 || *end != '\0') {
+                    fprintf(stderr, "ERROR: Invalid -k argument: %s\n", temp);
+                    return 127;
+                }
+
+                appinfo.termTimeout = k;
+
+                break;
+            case 'K':
+                if (!argv[i][2] && argc <= i+1) {
+                    fprintf(stderr, "ERROR: -K argument missing\n");
+                    return 127;
+                }
+
+                temp = argv[i][2] ? &argv[i][2] : argv[++i];
+                end = temp;
+                int K = strtoul(temp, &end, 0);
+                if (K < 1 || *end != '\0') {
+                    fprintf(stderr, "ERROR: Invalid -K argument: %s\n", temp);
+                    return 127;
+                }
+
+                appinfo.killTimeout = K;
+
+                break;
             case '-':
                 keeploop = 0;
                 break;
@@ -620,17 +687,37 @@ REDIR:
         envIntoAppInfo(&appinfo, environ);
     }
 
+    /* If there is a timeout, then set the alarm and a handler to kill the job */
+    if (appinfo.termTimeout > 0) {
+        struct sigaction handler;
+        handler.sa_handler = on_alarm;
+        handler.sa_flags = 0;
+        sigemptyset(&handler.sa_mask);
+        if (sigaction(SIGALRM, &handler, NULL) < 0) {
+            fprintf(stderr, "Unable to set handler for SIGALRM: %s", strerror(errno));
+            return 127;
+        }
+
+        alarm(appinfo.termTimeout);
+    }
+
     /* Our own initially: an independent setup job */
     if (prepareSideJob(&appinfo.setup, getenv("GRIDSTART_SETUP"))) {
         mysystem(&appinfo, &appinfo.setup, environ);
     }
 
+    /* The result is set to appinfo.status here so that, if the setup job
+     * causes a timeout, then the rest of the stages will not run
+     */
+    result = appinfo.status;
+
     /* possible pre job */
-    result = 0;
-    if (prepareSideJob(&appinfo.prejob, getenv("GRIDSTART_PREJOB"))) {
-        /* there is a prejob to be executed */
-        status = mysystem(&appinfo, &appinfo.prejob, environ);
-        result = obtainStatusCode(status);
+    if (result == 0) {
+        if (prepareSideJob(&appinfo.prejob, getenv("GRIDSTART_PREJOB"))) {
+            /* there is a prejob to be executed */
+            status = mysystem(&appinfo, &appinfo.prejob, environ);
+            result = obtainStatusCode(status);
+        }
     }
 
     /* start main application */
@@ -650,6 +737,9 @@ REDIR:
         }
     }
 
+    /* Reset alarm here so that the cleanup job does not get killed */
+    alarm(0);
+
     /* An independent clean-up job that runs regardless of main application result */
     if (prepareSideJob(&appinfo.cleanup, getenv("GRIDSTART_CLEANUP"))) {
         mysystem(&appinfo, &appinfo.cleanup, environ);
@@ -659,8 +749,13 @@ REDIR:
     appinfo.final = initStatFromList(&final, &appinfo.fcount);
     mylist_done(&final);
 
-    /* Record final result */
-    appinfo.status = result;
+    /* Record final result. This is incremented so that if appinfo.status is
+     * set in the on_alarm handler we exit with a non-zero exit code in one
+     * particular edge case where the main job catches the SIGTERM and exits
+     * with a non-zero status.
+     */
+    appinfo.status += result;
+    result = appinfo.status;
 
     /* append results to log file */
     printAppInfo(&appinfo);

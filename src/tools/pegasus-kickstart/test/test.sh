@@ -205,6 +205,155 @@ function test_bad_stdio {
     return 0
 }
 
+function test_timeout_ok {
+    kickstart -k 5 /bin/sleep 1
+    return $?
+}
+
+function test_timeout_fail {
+    kickstart -k 2 /bin/sleep 3
+    rc=$?
+    if [ $rc -eq 0 ]; then
+        echo "Expected non-zero exit"
+        return 1
+    fi
+    if ! [[ $(cat test.err) =~ "sending SIGTERM" ]]; then
+        echo "Expected SIGTERM"
+        return 1
+    fi
+    return 0
+}
+
+function test_timeout_kill {
+    kickstart -k 1 -K 1 python ignoreterm.py
+    rc=$?
+    if [ $rc -eq 0 ]; then
+        echo "Expected non-zero exit"
+        return 1
+    fi
+    if ! [[ $(cat test.err) =~ "sending SIGTERM" ]]; then
+        echo "Expected SIGTERM"
+        return 1
+    fi
+    if ! [[ $(cat test.err) =~ "sending SIGKILL" ]]; then
+        echo "Expected SIGKILL"
+        return 1
+    fi
+    return 0
+}
+
+function test_timeout_nokill {
+    kickstart -k 2 -K 5 python ignoreterm.py
+    rc=$?
+    if [ $rc -eq 0 ]; then
+        echo "Expected non-zero exit"
+        return 1
+    fi
+    if ! [[ $(cat test.err) =~ "sending SIGTERM" ]]; then
+        echo "Expected SIGTERM"
+        return 1
+    fi
+    if [[ $(cat test.err) =~ "sending SIGKILL" ]]; then
+        echo "Did not expect SIGKILL"
+        return 1
+    fi
+    return 0
+}
+
+function test_timeout_mainjob_cleanup {
+    GRIDSTART_CLEANUP="/bin/echo Cleanup job" kickstart -k 1 /bin/sleep 5
+    rc=$?
+    if [ $rc -eq 0 ]; then
+        echo "Expected non-zero exit"
+        return 1
+    fi
+    if ! [[ $(cat test.err) =~ "sending SIGTERM" ]]; then
+        echo "Expected SIGTERM"
+        return 1
+    fi
+    if ! [[ $(cat test.out) =~ ">Cleanup job" ]]; then
+        echo "Expected cleanup job to run"
+        return 1
+    fi
+    return 0
+}
+
+function test_timeout_pre {
+    GRIDSTART_PREJOB="/bin/sleep 5" kickstart -k 1 /bin/echo Main job
+    rc=$?
+    if [ $rc -eq 0 ]; then
+        echo "Expected non-zero exit"
+        return 1
+    fi
+    if ! [[ $(cat test.err) =~ "sending SIGTERM" ]]; then
+        echo "Expected SIGTERM"
+        return 1
+    fi
+    if [[ $(cat test.out) =~ ">Main job" ]]; then
+        echo "Did not expect main job to run"
+        return 1
+    fi
+    return 0
+}
+
+function test_timeout_post {
+    GRIDSTART_POSTJOB="/bin/sleep 5" kickstart -k 1 /bin/echo Main job
+    rc=$?
+    if [ $rc -eq 0 ]; then
+        echo "Expected non-zero exit"
+        return 1
+    fi
+    if ! [[ $(cat test.err) =~ "sending SIGTERM" ]]; then
+        echo "Expected SIGTERM"
+        return 1
+    fi
+    if ! [[ $(cat test.out) =~ ">Main job" ]]; then
+        echo "Expected main job to run"
+        return 1
+    fi
+    return 0
+}
+
+function test_timeout_cleanup {
+    GRIDSTART_CLEANUP="/bin/sleep 5" kickstart -k 1 /bin/echo Main job
+    rc=$?
+    if [ $rc -ne 0 ]; then
+        echo "Expected zero exit"
+        return 1
+    fi
+    if [[ $(cat test.err) =~ "sending SIGTERM" ]]; then
+        echo "Did not expect SIGTERM"
+        return 1
+    fi
+    if ! [[ $(cat test.out) =~ ">Main job" ]]; then
+        echo "Expected main job to run"
+        return 1
+    fi
+    return 0
+}
+
+function test_timeout_setup {
+    GRIDSTART_SETUP="/bin/sleep 5" GRIDSTART_PREJOB="/bin/echo Pre job" kickstart -k 1 /bin/echo Main job
+    rc=$?
+    if [ $rc -eq 0 ]; then
+        echo "Expected non-zero exit"
+        return 1
+    fi
+    if ! [[ $(cat test.err) =~ "sending SIGTERM" ]]; then
+        echo "Expected SIGTERM"
+        return 1
+    fi
+    if [[ $(cat test.out) =~ ">Pre job" ]]; then
+        echo "Did not expect pre job to run"
+        return 1
+    fi
+    if [[ $(cat test.out) =~ ">Main job" ]]; then
+        echo "Did not expect main job to run"
+        return 1
+    fi
+    return 0
+}
+
 # RUN THE TESTS
 run_test lotsofprocs
 run_test lotsofprocs_buffer
@@ -227,4 +376,13 @@ run_test test_missing_args
 run_test test_xmlquote
 run_test test_all_stdio
 run_test test_bad_stdio
+run_test test_timeout_ok
+run_test test_timeout_fail
+run_test test_timeout_kill
+run_test test_timeout_nokill
+run_test test_timeout_mainjob_cleanup
+run_test test_timeout_pre
+run_test test_timeout_post
+run_test test_timeout_cleanup
+run_test test_timeout_setup
 

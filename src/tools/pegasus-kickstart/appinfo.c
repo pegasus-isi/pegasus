@@ -295,6 +295,12 @@ void initAppInfo(AppInfo* appinfo, int argc, char* const* argv) {
 
     /* which process is me */
     appinfo->child = getpid();
+
+    /* Set defaults for job timeouts */
+    appinfo->termTimeout = 0;
+    appinfo->killTimeout = 5;
+    appinfo->currentChild = 0;
+    appinfo->nextSignal = SIGTERM;
 }
 
 int countProcs(JobInfo *job) {

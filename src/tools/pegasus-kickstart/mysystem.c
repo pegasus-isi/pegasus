@@ -445,6 +445,9 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
         perror("execve");
         _exit(127); /* executed in child process */
     } else {
+        /* Track the current child process */
+        appinfo->currentChild = jobinfo->child;
+
         /* parent */
         if (appinfo->enableTracing) {
             /* TODO If this returns an error, then we need to untrace all the children and try the wait instead */
@@ -458,6 +461,9 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
             fprintf(stderr, "ERROR: job %d is still running!\n", jobinfo->child);
             if (!errno) errno = EINPROGRESS;
         }
+
+        /* Child is no longer running */
+        appinfo->currentChild = 0;
     }
 
     /* save any errors before anybody overwrites this */
