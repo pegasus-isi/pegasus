@@ -928,7 +928,7 @@ public class PegasusLite implements GridStart {
                     sb.append( postJob );
 
                     sb.append( " 1>&2" ).append( " << EOF" ).append( '\n' );
-                    sb.append( convertToTransferInputFormat( files ) );
+                    sb.append( convertToTransferInputFormat( outputFiles ) );
                     sb.append( "EOF" ).append( '\n' );
                     sb.append( '\n' );
                 }
