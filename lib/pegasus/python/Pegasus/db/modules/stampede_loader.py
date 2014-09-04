@@ -223,7 +223,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
                     v = v.replace("'", "\\'")
 
             try:
-                exec("o.%s = '%s'" % (attr,v))
+                setattr(o, attr, v)
             except:
                 self.log.error('Unable to process attribute %s with values: %s', k, v)
 
