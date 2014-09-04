@@ -24,7 +24,7 @@ from flask import request, render_template, url_for, json, g
 from sqlalchemy.orm.exc import NoResultFound
 
 from Pegasus.db.errors import StampedeDBNotFoundError
-
+from Pegasus.tools import utils
 from Pegasus.service import app, filters
 from Pegasus.service.dashboard.dashboard import Dashboard, NoWorkflowsFoundError
 from Pegasus.service.dashboard.queries import MasterDBNotFoundError
@@ -180,8 +180,7 @@ def stdout(root_wf_id, wf_id, job_id):
     if text.stdout_text == None:
         return 'No stdout for workflow ' + wf_id + ' job-id ' + job_id
     else:
-        pattern = re.compile('%0a', re.IGNORECASE)
-        return '<pre>%s</pre>' % pattern.sub('\n', text.stdout_text)
+        return '<pre>%s</pre>' % utils.unquote(text.stdout_text)
 
 
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/job/<job_id>/stderr', methods=['GET'])
@@ -195,8 +194,7 @@ def stderr(root_wf_id, wf_id, job_id):
     if text.stderr_text == None:
         return 'No Standard error for workflow ' + wf_id + ' job-id ' + job_id;
     else:
-        pattern = re.compile('%0a', re.IGNORECASE)
-        return '<pre>%s</pre>' % pattern.sub('\n', text.stderr_text)
+        return '<pre>%s</pre>' % utils.unquote(text.stderr_text)
 
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/job/<job_id>/invocations/successful', methods=['GET'])
 def successful_invocations(root_wf_id, wf_id, job_id):

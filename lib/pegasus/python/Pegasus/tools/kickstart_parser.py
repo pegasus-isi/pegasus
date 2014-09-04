@@ -57,7 +57,6 @@ class Parser:
         self._parsing_stderr = False
         self._parsing_data = False
         self._parsing_cwd = False
-        self._line_number = 0
         self._record_number = 0
         self._arguments = ""
         self._stdout = ""
@@ -295,7 +294,7 @@ class Parser:
                 for my_element in self._ks_elements[name]:
                     if my_element in attrs:
                         self._keys[my_element] = attrs[my_element]
-                        
+
     def end_element(self, name):
         """
         Function called by the parser whenever we reach the end of an element
@@ -325,53 +324,17 @@ class Parser:
         """
         Function called by the parser whenever there's character data in an element
         """
-        # Return if nothing of interest
-        data = data.strip()
-        if data == "":
-            return
-
-        # Capture cwd
         if self._parsing_cwd == True:
-            self._cwd = data
+            self._cwd += data
 
-        # Concatenate arguments
         if self._parsing_arguments == True:
-            if self._arguments == "":
-                self._arguments = data
-            else:
-                self._arguments = self._arguments + " " + data
+            self._arguments += data
 
-        # Capture stdout
         if self._parsing_stdout == True and self._parsing_data == True:
-            # If empty, just copy
-            if self._stdout == "":
-                self._stdout = data
-            else:
-                # If we already have something, let's check if we need to add a newline
-                if self._my_parser.CurrentLineNumber > self._line_number:
-                    # Yes, we are in a new line, add newline to our _stdout
-                    self._stdout = self._stdout + "\n" + data
-                else:
-                    # No, still on the same line, this is probably an XML substitution
-                    self._stdout = self._stdout + data
-            # Track line number
-            self._line_number = self._my_parser.CurrentLineNumber
+            self._stdout += data
 
-        # Capture stderr
         if self._parsing_stderr == True and self._parsing_data == True:
-            # If empty, just copy
-            if self._stderr == "":
-                self._stderr = data
-            else:
-                # If we already have something, let's check if we need to add a newline
-                if self._my_parser.CurrentLineNumber > self._line_number:
-                    # Yes, we are in a new line, add newline to our _stdout
-                    self._stderr = self._stderr + "\n" + data
-                else:
-                    # No, still on the same line, this is probably an XML substitution
-                    self._stderr = self._stderr + data
-            # Track line number
-            self._line_number = self._my_parser.CurrentLineNumber
+            self._stderr += data
 
     def parse_invocation_record(self, buffer=''):
         """
@@ -385,7 +348,6 @@ class Parser:
         self._parsing_stderr = False
         self._parsing_data = False
         self._parsing_cwd = False
-        self._line_number = 0
         self._arguments = ""
         self._stdout = ""
         self._stderr = ""
