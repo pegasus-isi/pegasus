@@ -86,7 +86,7 @@ public class BlackDiamondDAX {
         // Add a checkpoint job
         Job j1 = new Job("j1", "pegasus", "checkpoint", "4.0");        
         j1.addArgument("-o ").addArgument(fb1);
-        j1.addArgument(" ").addArgument(fb2);
+        j1.addArgument(" -o ").addArgument(fb2);
         j1.uses(fa, File.LINK.INPUT);
         j1.uses(fb1, File.LINK.OUTPUT);
         j1.uses(fb2, File.LINK.OUTPUT);
