@@ -211,11 +211,17 @@ class Ensembles(SQLAlchemyInit):
         return ensemble
 
     def list_ensemble_workflows(self, ensemble_id):
-        return self.session.query(EnsembleWorkflow).filter(EnsembleWorkflow.ensemble_id==ensemble_id).all()
+        q = self.session.query(EnsembleWorkflow)
+        q = q.filter(EnsembleWorkflow.ensemble_id==ensemble_id)
+        q = q.order_by(EnsembleWorkflow.created)
+        return q.all()
 
     def get_ensemble_workflow(self, ensemble_id, name):
         try:
-            return self.session.query(EnsembleWorkflow).filter(EnsembleWorkflow.ensemble_id==ensemble_id, EnsembleWorkflow.name==name).one()
+            q = self.session.query(EnsembleWorkflow)
+            q = q.filter(EnsembleWorkflow.ensemble_id==ensemble_id,
+                         EnsembleWorkflow.name==name)
+            return q.one()
         except NoResultFound:
             raise APIError("No such ensemble workflow: %s" % name, 404)
 
