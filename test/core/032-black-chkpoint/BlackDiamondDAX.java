@@ -55,6 +55,7 @@ public class BlackDiamondDAX {
         File fd = new File("f.d");
 	File fe1 = new File("f.e1");
 	File fe2 = new File("f.e2");
+	File fcheckpoint = new File("test.checkpoint");
         fd.setRegister(true);
 	fe1.setRegister(true);
         fe2.setRegister(true);
@@ -90,6 +91,7 @@ public class BlackDiamondDAX {
         j1.uses(fa, File.LINK.INPUT);
         j1.uses(fb1, File.LINK.OUTPUT);
         j1.uses(fb2, File.LINK.OUTPUT);
+	j1.uses(fcheckpoint, File.LINK.CHECKPOINT);
         dax.addJob(j1);
 
         // Add left Findrange job
