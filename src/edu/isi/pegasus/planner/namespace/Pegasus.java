@@ -393,12 +393,22 @@ public class Pegasus extends Namespace {
      * Arguments that need to be passed to the PMC clustering executable.
      */
     public static final String PMC_TASK_ARGUMENTS = "pmc_task_arguments";
-
     
     /**
      * Key indicating whether to consider job for data reuse in the partial mode.
      */
     public static final String ENABLE_FOR_DATA_REUSE_KEY = "enable_for_data_reuse";
+    
+    /**
+     * Key indicating expected runtime for a job.
+     */
+    public static final String  EXPECTED_WALLTIME = "expected_walltime";
+    
+    /**
+     * Key indicating max walltime for a job.
+     */
+    public static final String  MAX_WALLTIME = "maxwalltime";
+    
     
     //credential related constant keys
     private static final String S3CFG_FILE_VARIABLE = S3CFG.S3CFG_FILE_VARIABLE.toLowerCase();
@@ -420,6 +430,7 @@ public class Pegasus extends Namespace {
      * Static Handle to the delimiter aggregator.
      */
     private static Aggregator SUCCESS_MESSAGE_AGGREGATOR = new UniqueMerge();
+   
     
 
     /**
@@ -552,7 +563,8 @@ public class Pegasus extends Namespace {
             case 'e':
                 if ((key.compareTo( Pegasus.EXITCODE_FAILURE_MESSAGE ) == 0) ||
                     (key.compareTo( Pegasus.EXITCODE_SUCCESS_MESSAGE ) == 0)||
-                    (key.compareTo( Pegasus.ENABLE_FOR_DATA_REUSE_KEY ) == 0 )) {
+                    (key.compareTo( Pegasus.ENABLE_FOR_DATA_REUSE_KEY ) == 0 ) ||
+                    (key.compareTo( Pegasus.EXPECTED_WALLTIME) == 0 )    ) {
                     res = VALID_KEY;
                 }
                 else {
@@ -595,6 +607,15 @@ public class Pegasus extends Namespace {
 
             case 'l':
                 if( key.compareTo( LABEL_KEY ) == 0 ){
+                    res = VALID_KEY;
+                }
+                else{
+                    res = UNKNOWN_KEY;
+                }
+                break;
+                
+            case 'm':
+                if( key.compareTo( MAX_WALLTIME ) == 0 ){
                     res = VALID_KEY;
                 }
                 else{
@@ -889,9 +910,9 @@ public class Pegasus extends Namespace {
     }
 
     /**
-     * Returns a boolean value, that a particular key is mapped to in this
-     * namespace. If the key is mapped to a non boolean
-     * value or the key is not populated in the namespace false is returned.
+     * Returns a int value, that a particular key is mapped to in this
+     * namespace. If the key is mapped to a non integer, then the 
+     * default value is returned
      *
      * @param key  The key whose boolean value you desire.
      *
@@ -904,7 +925,6 @@ public class Pegasus extends Namespace {
         }
         return value;
     }
-
 
     /**
      * Returns a String value, that a particular key is mapped to in this
