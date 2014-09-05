@@ -762,7 +762,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         }
                         else if ( name.equals( "link" ) ) {
                             if( value != null && value.equals( PegasusFile.CHECKPOINT_TYPE) ){
-                                //introduced in dax 3.4.0
+                                //introduced in dax 3.5
                                 //cleaner for DAX API to have checkpoint files marked
                                 //via linkage. Planner still treats it as a type
                                 pf.setType( value );
