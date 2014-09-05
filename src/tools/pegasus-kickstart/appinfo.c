@@ -39,7 +39,7 @@
 #include <netdb.h>
 
 #define XML_SCHEMA_URI "http://pegasus.isi.edu/schema/invocation"
-#define XML_SCHEMA_VERSION "2.2"
+#define XML_SCHEMA_VERSION "2.3"
 
 static int mycompare(const void* a, const void* b) {
     return strcmp((a ? *((const char**) a) : ""),
