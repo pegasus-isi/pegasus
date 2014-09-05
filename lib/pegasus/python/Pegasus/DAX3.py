@@ -17,7 +17,7 @@
 The classes in this module can be used to generate DAXes that can be
 read by Pegasus.
 
-The official DAX schema is here: http://pegasus.isi.edu/schema/dax-3.2.xsd
+The official DAX schema is here: http://pegasus.isi.edu/schema/
 
 Here is an example showing how to create the diamond DAX using this API:
 
@@ -93,8 +93,8 @@ diamond.writeXML(f)
 f.close()
 """
 
-__author__ = "Gideon Juve <juve@usc.edu>"
-__version__ = "3.3"
+__author__ = "Gideon Juve <gideon@isi.edu>"
+__version__ = "3.5"
 
 import datetime, os, sys
 from StringIO import StringIO
@@ -103,8 +103,8 @@ import shlex
 import codecs
 
 SCHEMA_NAMESPACE = "http://pegasus.isi.edu/schema/DAX"
-SCHEMA_LOCATION = "http://pegasus.isi.edu/schema/dax-3.4.xsd"
-SCHEMA_VERSION = "3.4"
+SCHEMA_LOCATION = "http://pegasus.isi.edu/schema/dax-3.5.xsd"
+SCHEMA_VERSION = "3.5"
 
 class DAX3Error(Exception): pass
 class DuplicateError(DAX3Error): pass
@@ -231,6 +231,7 @@ class Link:
     INPUT = 'input'
     OUTPUT = 'output'
     INOUT = 'inout'
+    CHECKPOINT = 'checkpoint'
 
 class Transfer:
     """
