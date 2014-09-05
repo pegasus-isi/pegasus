@@ -761,8 +761,19 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                  	    this.log( element, name, value );
                         }
                         else if ( name.equals( "link" ) ) {
-                            pf.setLinkage( PegasusFile.LINKAGE.valueOf( value.toUpperCase() ) );
-                            this.log( element, name, value );
+                            if( value != null && value.equals( PegasusFile.CHECKPOINT_TYPE) ){
+                                //introduced in dax 3.4.0
+                                //cleaner for DAX API to have checkpoint files marked
+                                //via linkage. Planner still treats it as a type
+                                pf.setType( value );
+                                pf.setLinkage(LINKAGE.INOUT);
+                                this.log( element, name, value );
+                            }
+                            else{
+                                pf.setLinkage( PegasusFile.LINKAGE.valueOf( value.toUpperCase() ) );
+                                this.log( element, name, value );
+                            }
+                       
                         }
                         else if ( name.equals( "optional" ) ) {
                             Boolean bValue = Boolean.parseBoolean( value );
@@ -792,12 +803,6 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                             if( bValue ){
                                pf.setType( PegasusFile.EXECUTABLE_FILE );
                             }
-                 	    this.log( element, name, value );
-                        }
-                        else if ( name.equals( "type") ){
-                            //introduced in dax 3.4.0
-                            pf.setType( value );
-                            pf.setLinkage(LINKAGE.INOUT);
                  	    this.log( element, name, value );
                         }
                         else if ( name.equals( "size" ) ) {
