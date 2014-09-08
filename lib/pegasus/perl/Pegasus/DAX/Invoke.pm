@@ -18,7 +18,7 @@ use constant INVOKE_ON_ERROR => 'on_error';
 use constant INVOKE_AT_END => 'at_end'; 
 use constant INVOKE_ALL => 'all'; 
 
-our $VERSION = '3.3'; 
+our $VERSION = '3.5'; 
 our @EXPORT = (); 
 our @EXPORT_OK = qw(INVOKE_NEVER INVOKE_START INVOKE_ON_SUCCESS
 		INVOKE_ON_ERROR INVOKE_AT_END INVOKE_ALL); 

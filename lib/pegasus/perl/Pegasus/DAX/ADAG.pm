@@ -13,10 +13,10 @@ use Exporter;
 our @ISA = qw(Pegasus::DAX::AbstractJob Exporter); 
 
 use constant SCHEMA_NAMESPACE => 'http://pegasus.isi.edu/schema/DAX'; 
-use constant SCHEMA_LOCATION => 'http://pegasus.isi.edu/schema/dax-3.3.xsd';
-use constant SCHEMA_VERSION => 3.3;
+use constant SCHEMA_LOCATION => 'http://pegasus.isi.edu/schema/dax-3.5.xsd';
+use constant SCHEMA_VERSION => 3.5;
 
-our $VERSION = '3.3'; 
+our $VERSION = '3.5'; 
 our @EXPORT = (); 
 our @EXPORT_OK = qw(SCHEMA_NAMESPACE SCHEMA_LOCATION SCHEMA_VERSION); 
 our %EXPORT_TAGS = ( 

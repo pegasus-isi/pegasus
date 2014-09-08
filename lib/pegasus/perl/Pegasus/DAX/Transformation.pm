@@ -14,7 +14,7 @@ use Pegasus::DAX::TUType;
 use Exporter;
 our @ISA = qw(Pegasus::DAX::Base Pegasus::DAX::InvokeMixin Exporter); 
 
-our $VERSION = '3.3'; 
+our $VERSION = '3.5'; 
 our @EXPORT = (); 
 our @EXPORT_OK = (); 
 our %EXPORT_TAGS = (); 
