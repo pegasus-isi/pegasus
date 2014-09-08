@@ -76,7 +76,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
      * The "not-so-official" location URL of the Site Catalog Schema.
      */
     public static final String SCHEMA_LOCATION =
-                                        "http://pegasus.isi.edu/schema/dax-3.3.xsd";
+                                        "http://pegasus.isi.edu/schema/dax-3.5.xsd";
 
     /**
      * uri namespace
@@ -104,6 +104,11 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
      * Predefined Constant  for dax version 3.4.0
      */
     public static final long DAX_VERSION_3_4_0 = CondorVersion.numericValue( "3.4.0" );
+    
+    /*
+     * Predefined Constant  for dax version 3.5.0
+     */
+    public static final long DAX_VERSION_3_5_0 = CondorVersion.numericValue( "3.5.0" );
     
     /**
      * Constant denoting default metadata type
