@@ -137,7 +137,7 @@ class MasterDatabase(SQLAlchemyInit):
         if filtered == 0:
             return (count, 0, [])
 
-        display_columns = [w.dax_label, w.submit_dir, state, w.timestamp]
+        display_columns = [w.dax_label, w.submit_hostname, w.submit_dir, state, w.timestamp]
 
         if 'sort-col-count' in table_args:
             for i in range(table_args['sort-col-count']):
