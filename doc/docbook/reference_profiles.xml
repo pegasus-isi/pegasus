@@ -1026,6 +1026,20 @@
               rules for determining failure are described in the man page for
               pegasus-exitcode.</entry>
             </row>
+
+            <row>
+              <entry>expected_walltime</entry>
+
+              <entry>the expected time for a job after which it should be sent
+              a TERM signal to generate a job checkpoint file</entry>
+            </row>
+
+            <row>
+              <entry>maxwalltime</entry>
+
+              <entry>the maximum walltime for a single execution of a
+              job.</entry>
+            </row>
           </tbody>
         </tgroup>
       </table>
