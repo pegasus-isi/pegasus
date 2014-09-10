@@ -166,11 +166,12 @@
         <mediaobject>
           <imageobject role="html">
             <imagedata align="center" contentdepth="450px"
-                       fileref="images/data-configuration-sharedfs.png" />
+                       fileref="images/data-configuration-sharedfs.png"/>
           </imageobject>
+
           <imageobject role="fo">
             <imagedata align="center" contentdepth="4in"
-                       fileref="images/data-configuration-sharedfs.png" />
+                       fileref="images/data-configuration-sharedfs.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -243,11 +244,12 @@
         <mediaobject id="Figure2">
           <imageobject role="html">
             <imagedata align="center" contentdepth="450px"
-                       fileref="images/data-configuration-nonsharedfs.png" />
+                       fileref="images/data-configuration-nonsharedfs.png"/>
           </imageobject>
+
           <imageobject role="fo">
             <imagedata align="center" contentdepth="4in"
-                       fileref="images/data-configuration-nonsharedfs.png" />
+                       fileref="images/data-configuration-nonsharedfs.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -360,11 +362,12 @@
         <mediaobject id="Figure13">
           <imageobject role="html">
             <imagedata align="center" contentdepth="450px"
-                       fileref="images/data-configuration-condorio.png" />
+                       fileref="images/data-configuration-condorio.png"/>
           </imageobject>
+
           <imageobject role="fo">
             <imagedata align="center" contentdepth="4in"
-                       fileref="images/data-configuration-condorio.png" />
+                       fileref="images/data-configuration-condorio.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -610,7 +613,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
     associated with them that are staging the shared files to the same
     destination workflow execution directory.</para>
 
-    <para> Pegasus supports three different transfer refiners that dictate how
+    <para>Pegasus supports three different transfer refiners that dictate how
     the stagein and stageout jobs are added for the workflow.The default
     Transfer Refiner used in Pegasus is the BalancedCluster Refiner that
     allows the user to specify how many local|remote stagein|stageout jobs are
@@ -696,11 +699,11 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
 
     <tip>
       <para>Which transfer refiner to use is controlled by property
-      pegasus.transfer.refiner </para>
+      pegasus.transfer.refiner</para>
     </tip>
 
     <section>
-      <title>BalancedCluster </title>
+      <title>BalancedCluster</title>
 
       <para>This is a new transfer refiner that was introduced in Pegasus
       4.4.0 and is the default one used in Pegasus. It does a round robin
@@ -715,18 +718,19 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
         <mediaobject id="img-balanced-cluster-transfer-refiner">
           <imageobject role="html">
             <imagedata align="center" contentdepth="650px"
-                       fileref="images/balanced-cluster-transfer-refiner.png" />
+                       fileref="images/balanced-cluster-transfer-refiner.png"/>
           </imageobject>
+
           <imageobject role="fo">
             <imagedata align="center" contentdepth="4in"
-                       fileref="images/balanced-cluster-transfer-refiner.png" />
+                       fileref="images/balanced-cluster-transfer-refiner.png"/>
           </imageobject>
         </mediaobject>
       </figure>
     </section>
 
     <section>
-      <title>Cluster </title>
+      <title>Cluster</title>
 
       <para>This transfer refiner is similar to BalancedCluster but differs in
       the way how distribution of files happen across stagein and stageout
@@ -743,24 +747,25 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
         <mediaobject id="img-cluster-transfer-refiner">
           <imageobject role="html">
             <imagedata align="center" contentdepth="650px"
-                       fileref="images/cluster-transfer-refiner.png" />
+                       fileref="images/cluster-transfer-refiner.png"/>
           </imageobject>
+
           <imageobject role="fo">
             <imagedata align="center" contentdepth="4in"
-                       fileref="images/cluster-transfer-refiner.png" />
+                       fileref="images/cluster-transfer-refiner.png"/>
           </imageobject>
         </mediaobject>
       </figure>
     </section>
 
     <section>
-      <title>Basic </title>
+      <title>Basic</title>
 
       <para>Pegasus also supports a basic Transfer Refiner that adds one
       stagein and stageout job per compute job of the workflow. This is not
       recommended to be used for large workflows as the number of data
       transfer nodes in the worst case are 2n where n is the number of compute
-      jobs in the workflow. </para>
+      jobs in the workflow.</para>
     </section>
   </section>
 
@@ -1387,6 +1392,43 @@ irodsPassword 'somesecretpassword'</programlisting>
 
       <programlisting><emphasis role="bold">pegasus.transfer.worker.package          false</emphasis> </programlisting>
     </section>
+  </section>
+
+  <section id="staging_job_checkpoint_files">
+    <title>Staging of Job Checkpoint Files</title>
+
+    <para>Pegasus has support for transferring job checkpoint files back to
+    the staging site, when a job exceeds it's advertised running time. In
+    order to use this feature, you need to</para>
+
+    <orderedlist>
+      <listitem>
+        <para>Associate a job checkpoint file ( that the job creates ) with
+        the job in the DAX. A checkpoint file is specified by setting the link
+        attribute to checkpoint for the uses tag.</para>
+      </listitem>
+
+      <listitem>
+        <para>Associate a Pegasus profile key named <emphasis
+        role="bold">expected_walltime</emphasis> with the job that specifies
+        the expected runtime for the job in seconds.</para>
+      </listitem>
+
+      <listitem>
+        <para>Associate a Pegasus profile key named <emphasis
+        role="bold">maxwalltime</emphasis> with the job that specifies the max
+        runtime before the job will be killed by the local resource manager (
+        such as PBS) deployed on the site. Usually, this value should be
+        associated with the execution site in the site catalog.</para>
+      </listitem>
+    </orderedlist>
+
+    <para>Pegasus planner uses the above mentioned profile keys to setup
+    pegasus-kickstart such that the job is sent a TERM signal when expected
+    runtime of job is reached. A KILL signal is sent at (expected_walltime +
+    (maxwalltime-expected_walltime)/2) seconds. This ensures that there is
+    enough time for pegasus-lite to transfer the checkpoint file before the
+    job is killed by the underlying scheduler.</para>
   </section>
 
   <section>
