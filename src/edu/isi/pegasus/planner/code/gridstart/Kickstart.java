@@ -1297,9 +1297,9 @@ public class Kickstart implements GridStart {
     private String getKickstartTimeoutOptions(Job job) {
         StringBuilder sb = new StringBuilder();
         
-        if( job.vdsNS.containsKey( Pegasus.EXPECTED_WALLTIME ) ){
+        if( job.vdsNS.containsKey( Pegasus.CHECKPOINT_TIME ) ){
             //means there is expectation of timeout functionality
-            int expected = job.vdsNS.getIntValue( Pegasus.EXPECTED_WALLTIME, Integer.MAX_VALUE );
+            int expected = job.vdsNS.getIntValue( Pegasus.CHECKPOINT_TIME, Integer.MAX_VALUE );
             
             if( expected == Integer.MAX_VALUE ){
                 //malformed value

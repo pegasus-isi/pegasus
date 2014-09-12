@@ -400,9 +400,10 @@ public class Pegasus extends Namespace {
     public static final String ENABLE_FOR_DATA_REUSE_KEY = "enable_for_data_reuse";
     
     /**
-     * Key indicating expected runtime for a job.
+     * Key indicating indicating time in seconds after which kickstart sends out a
+     * TERM signal to a job indicating that is should create a checkpoint file.
      */
-    public static final String  EXPECTED_WALLTIME = "expected_walltime";
+    public static final String  CHECKPOINT_TIME = "checkpoint_time";
     
     /**
      * Key indicating max walltime for a job.
@@ -548,7 +549,8 @@ public class Pegasus extends Namespace {
                     (key.compareTo( MAX_RUN_TIME ) == 0) ||
                     (key.compareTo(CREATE_AND_CHANGE_DIR_KEY ) == 0 ) ||
                     (key.compareTo( CLUSTER_ARGUMENTS) == 0 ) ||
-                    (key.compareTo( CORES_KEY ) == 0 ) ) {
+                    (key.compareTo( CORES_KEY ) == 0 ) ||
+                    (key.compareTo( Pegasus.CHECKPOINT_TIME) == 0 )   ) {
                     res = VALID_KEY;
                 }
                 else if(key.compareTo(DEPRECATED_CHANGE_DIR_KEY) == 0 ||
@@ -563,8 +565,7 @@ public class Pegasus extends Namespace {
             case 'e':
                 if ((key.compareTo( Pegasus.EXITCODE_FAILURE_MESSAGE ) == 0) ||
                     (key.compareTo( Pegasus.EXITCODE_SUCCESS_MESSAGE ) == 0)||
-                    (key.compareTo( Pegasus.ENABLE_FOR_DATA_REUSE_KEY ) == 0 ) ||
-                    (key.compareTo( Pegasus.EXPECTED_WALLTIME) == 0 )    ) {
+                    (key.compareTo( Pegasus.ENABLE_FOR_DATA_REUSE_KEY ) == 0 )  ) {
                     res = VALID_KEY;
                 }
                 else {

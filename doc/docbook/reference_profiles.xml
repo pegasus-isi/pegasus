@@ -1028,10 +1028,11 @@
             </row>
 
             <row>
-              <entry>expected_walltime</entry>
+              <entry>checkpoint_time</entry>
 
-              <entry>the expected time for a job after which it should be sent
-              a TERM signal to generate a job checkpoint file</entry>
+              <entry>the expected time in seconds for a job after which it
+              should be sent a TERM signal to generate a job checkpoint
+              file</entry>
             </row>
 
             <row>

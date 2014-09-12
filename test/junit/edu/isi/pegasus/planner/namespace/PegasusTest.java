@@ -156,7 +156,7 @@ public class PegasusTest {
         mLogger.logEventCompletion();
         
         mLogger.logEventStart( "test.namespace.Pegasus", "set", Integer.toString(set++) );
-        testKey( Pegasus.EXPECTED_WALLTIME, "dummy", Namespace.VALID_KEY );
+        testKey( Pegasus.CHECKPOINT_TIME, "dummy", Namespace.VALID_KEY );
         mLogger.logEventCompletion();
         
         mLogger.logEventStart( "test.namespace.Pegasus", "set", Integer.toString(set++) );
