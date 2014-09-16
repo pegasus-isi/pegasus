@@ -127,6 +127,7 @@ tool_map['gsiftp'  ] = 'gsiftp'
 tool_map['irods'   ] = 'irods'
 tool_map['s3'      ] = 's3'
 tool_map['s3s'     ] = 's3'
+tool_map['gs'      ] = 'gs'
 tool_map['scp'     ] = 'scp'
 tool_map['srm'     ] = 'srm'
 tool_map['symlink' ] = 'rm'
@@ -323,6 +324,7 @@ def check_env_and_tools():
     check_tool("irm", "-h", "Version[ \t]+([\.0-9a-zA-Z]+)")
     check_tool("pegasus-gridftp", "", None)
     check_tool("pegasus-s3", "help", None)
+    check_tool("gsutil", "version", "gsutil version: ([\.0-9a-zA-Z]+)")
 
 
 def rm(urls):
@@ -522,6 +524,34 @@ def s3(urls):
             raise
 
 
+def gs(urls):
+    """
+    gs - uses gsutil to interact with Google Storage 
+    """
+
+    if tool_info['gsutil']['full_path'] == None:
+        raise RuntimeError("Unable to do S3 transfers becuase pegasus-s3 could not be found")
+
+    for i, url in enumerate(urls):
+        
+        key = "BOTO_CONFIG_" + url.sitename
+        if key in os.environ:
+            os.environ["BOTO_CONFIG"] = os.environ[key]
+        
+        cmd = "gsutil rm -a"
+        if options.ignore_failures or options.recursive:
+            cmd += " -f"
+        if options.recursive:
+            cmd += " -r"  
+        cmd += " " + url.url()
+
+        try:
+            myexec(cmd, 60, True)
+        except Exception, err:
+            logger.error(err)
+            raise
+        
+        
 def urls_groupable(a, b):
     """
     compares two urls, and determins if they are similar enough to be
@@ -551,6 +581,8 @@ def handle_removes(urls):
                 srm(urls)
             elif tool == "s3":
                 s3(urls)
+            elif tool == "gs":
+                gs(urls)
             else:
                 logger.critical("Error: No mapping for the tool '%s'" %(tool))
                 myexit(1)

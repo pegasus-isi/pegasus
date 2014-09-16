@@ -131,6 +131,7 @@ tool_map['gsiftp'] = 'gsiftp'
 tool_map['irods' ] = 'irods'
 tool_map['s3'    ] = 's3'
 tool_map['s3s'   ] = 's3'
+tool_map['gs'    ] = 'gs'
 tool_map['scp'   ] = 'scp'
 tool_map['srm'   ] = 'srm'
 
@@ -531,6 +532,35 @@ def s3(url):
         logger.warn("mkdir failed - possibly due to the bucket already existing, so continuing...")
 
 
+def gs(url):
+    """
+    gs - uses gsutil to interact with Google Storage 
+    """
+
+    if tool_info['gsutil']['full_path'] == None:
+        raise RuntimeError("Unable to do Google Storage mkdir because gsutil could not be found")
+    
+    key = "BOTO_CONFIG_" + url.site
+    if key in os.environ:
+        os.environ["BOTO_CONFIG"] = os.environ[key]
+
+    # extract the bucket part
+    re_bucket = re.compile(r'(gs://[\w-]+/)[/\w-]*')
+    bucket = url.url()
+    r = re_bucket.search(bucket)
+    if r:
+        bucket = r.group(1)
+    else:
+        raise RuntimeError("Unable to parse bucket: %s" % (bucket))
+
+    # first ensure that the bucket exists
+    cmd = "gsutil mb %s" %(bucket)
+    try:
+        myexec(cmd, 60, True)
+    except Exception, err:
+        logger.warn("mkdir failed - possibly due to the bucket already existing, so continuing...")
+
+
 def create_dir(url):
     """
     handles the creation of a directory
@@ -556,6 +586,9 @@ def create_dir(url):
             elif tool == "s3":
                 check_tool("pegasus-s3", "help", None)
                 s3(url)
+            elif tool == "gs":
+                check_tool("gsutil", "version", "gsutil version: ([\.0-9a-zA-Z]+)")
+                gs(url)
             else:
                 logger.critical("Error: No mapping for the tool '%s'" %(tool))
                 myexit(1)

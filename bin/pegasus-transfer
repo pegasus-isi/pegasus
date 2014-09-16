@@ -888,13 +888,11 @@ class S3Handler(TransferHandlerBase):
                     "s3s->s3s"
                     ]
 
-    buckets_created = {}
-
     def do_transfer(self, transfer, attempt):
     
         tools = Tools()
         if tools.find("pegasus-s3", "help", None) is None:
-            raise RuntimeError("Unable to do S3 transfers becuase"
+            raise RuntimeError("Unable to do S3 transfers because"
                                + " pegasus-s3 could not be found")
 
         local_filename = None
@@ -940,7 +938,7 @@ class S3Handler(TransferHandlerBase):
                 os.environ["S3CFG"] = os.environ[key]
             if "S3CFG" not in os.environ:
                 logger.error("At least one of the S3CFG_" + 
-                             transfer.src_sitename + " or S3CFG" +
+                             transfer.dst_sitename + " or S3CFG" +
                              " environment variables has to be set")
                 return False
 
@@ -949,6 +947,87 @@ class S3Handler(TransferHandlerBase):
             local_filename = transfer.src_path
             cmd = "pegasus-s3 put -f -b '%s' '%s'" % (transfer.src_path,
                                                       transfer.dst_url())
+
+        try:
+            myexec(cmd, default_subshell_timeout, True)
+            if local_filename is not None:
+                stats_add(local_filename)
+        except Exception, err:
+            logger.error(err)
+            return False
+        return True
+
+
+class GSHandler(TransferHandlerBase):
+    """
+    Handler for Google Storage services
+    """
+    
+    _name = "GSHandler"
+    _protocol_map = [
+                    "file->gs",
+                    "gs->file",
+                    "gs->gs",
+                    ]
+
+    def do_transfer(self, transfer, attempt):
+    
+        tools = Tools()
+        if tools.find("gsutil", "version", "gsutil version: ([\.0-9a-zA-Z]+)") is None:
+            raise RuntimeError("Unable to do Google Storage transfers because"
+                               + " the gsutil tool could not be found")
+
+        local_filename = None
+        
+        # use cp for s3->s3 transfers, and get/put when one end is a file://
+        if (transfer.src_proto == "gs" and transfer.dst_proto == "gs"):
+            # gs -> gs
+            key = "BOTO_CONFIG_" + transfer.src_sitename
+            if key in os.environ:
+                os.environ["BOTO_CONFIG"] = os.environ[key]
+            if "BOTO_CONFIG" not in os.environ:
+                logger.error("At least one of the BOTO_CONFIG_" + 
+                             transfer.src_sitename + " or BOTO_CONFIG" +
+                             " environment variables has to be set")
+                return False
+
+            check_cred_fs_permissions(os.environ["BOTO_CONFIG"])
+
+            cmd = "gsutil -q cp '%s' '%s'" % (transfer.src_url(),
+                                              transfer.dst_url())
+        elif transfer.dst_proto == "file":
+            # this is a 'get'
+            key = "BOTO_CONFIG_" + transfer.src_sitename
+            if key in os.environ:
+                os.environ["BOTO_CONFIG"] = os.environ[key]
+            if "BOTO_CONFIG" not in os.environ:
+                logger.error("At least one of the BOTO_CONFIG_" + 
+                             transfer.src_sitename + " or BOTO_CONFIG" +
+                             " environment variables has to be set")
+                return False
+
+            check_cred_fs_permissions(os.environ["BOTO_CONFIG"])
+
+            local_filename = transfer.dst_path
+            prepare_local_dir(os.path.dirname(transfer.dst_path))
+            cmd = "gsutil -q cp '%s' '%s'" % (transfer.src_url(),
+                                              transfer.dst_path)
+        else:
+            # this is a 'put'
+            key = "BOTO_CONFIG_" + transfer.dst_sitename
+            if key in os.environ:
+                os.environ["BOTO_CONFIG"] = os.environ[key]
+            if "BOTO_CONFIG" not in os.environ:
+                logger.error("At least one of the BOTO_CONFIG_" + 
+                             transfer.dst_sitename + " or BOTO_CONFIG" +
+                             " environment variables has to be set")
+                return False
+
+            check_cred_fs_permissions(os.environ["BOTO_CONFIG"])
+
+            local_filename = transfer.src_path
+            cmd = "gsutil -q cp '%s' '%s'" % (transfer.src_path,
+                                              transfer.dst_url())
 
         try:
             myexec(cmd, default_subshell_timeout, True)
@@ -1159,6 +1238,7 @@ class TransferSet:
         self._available_handlers.append( HTTPHandler() )
         self._available_handlers.append( IRodsHandler() )
         self._available_handlers.append( S3Handler() )
+        self._available_handlers.append( GSHandler() )
         self._available_handlers.append( SRMHandler() )
         self._available_handlers.append( ScpHandler() )
         self._available_handlers.append( SymlinkHandler() )

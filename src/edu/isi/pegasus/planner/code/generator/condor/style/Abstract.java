@@ -153,6 +153,7 @@ public abstract class Abstract implements CondorStyle {
                     case x509:
                     case irods:
                     case s3:
+                    case gs:
                     case ssh:
                         // transfer using condor file transfer, and advertise in env
                         // but first make sure it is specified in our environment
@@ -202,6 +203,7 @@ public abstract class Abstract implements CondorStyle {
                     case x509:
                     case irods:
                     case s3:
+                    case gs:
                     case ssh:
                         // for local exec, just set envionment variables to full path
                         String path = handler.getPath( siteHandle );
