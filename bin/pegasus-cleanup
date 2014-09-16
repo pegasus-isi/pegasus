@@ -548,8 +548,12 @@ def gs(urls):
         try:
             myexec(cmd, 60, True)
         except Exception, err:
-            logger.error(err)
-            raise
+            # gsutil returns non-zero even when the -f flag is used
+            if options.ignore_failures or options.recursive:
+                logger.warn(err)
+            else:
+                logger.error(err)
+                raise
         
         
 def urls_groupable(a, b):
