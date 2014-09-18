@@ -1419,7 +1419,8 @@ irodsPassword 'somesecretpassword'</programlisting>
         role="bold">maxwalltime</emphasis> with the job that specifies the max
         runtime before the job will be killed by the local resource manager (
         such as PBS) deployed on the site. Usually, this value should be
-        associated with the execution site in the site catalog.</para>
+        associated with the execution site in the site catalog. Note that this
+        value is in minutes.</para>
       </listitem>
     </orderedlist>
 

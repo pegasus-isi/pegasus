@@ -406,7 +406,7 @@ public class Pegasus extends Namespace {
     public static final String  CHECKPOINT_TIME = "checkpoint_time";
     
     /**
-     * Key indicating max walltime for a job.
+     * Key indicating max walltime for a job in minutes
      */
     public static final String  MAX_WALLTIME = "maxwalltime";
     

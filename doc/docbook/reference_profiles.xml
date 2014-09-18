@@ -176,7 +176,8 @@
             <row>
               <entry>maxcputime</entry>
 
-              <entry>the max cpu time for a single execution of a job.</entry>
+              <entry>the max CPU time in minutes for a single execution of a
+              job.</entry>
             </row>
 
             <row>
@@ -188,15 +189,15 @@
             <row>
               <entry>maxtime</entry>
 
-              <entry>the maximum time or walltime for a single execution of a
-              job.</entry>
+              <entry>the maximum time or walltime in minutes for a single
+              execution of a job.</entry>
             </row>
 
             <row>
               <entry>maxwalltime</entry>
 
-              <entry>the maximum walltime for a single execution of a
-              job.</entry>
+              <entry>the maximum walltime in minutes for a single execution of
+              a job.</entry>
             </row>
 
             <row>
@@ -1038,8 +1039,8 @@
             <row>
               <entry>maxwalltime</entry>
 
-              <entry>the maximum walltime for a single execution of a
-              job.</entry>
+              <entry>the maximum walltime in minutes for a single execution of
+              a job.</entry>
             </row>
           </tbody>
         </tgroup>

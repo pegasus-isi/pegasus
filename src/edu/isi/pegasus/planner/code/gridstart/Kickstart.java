@@ -1299,16 +1299,16 @@ public class Kickstart implements GridStart {
         
         if( job.vdsNS.containsKey( Pegasus.CHECKPOINT_TIME ) ){
             //means there is expectation of timeout functionality
-            int expected = job.vdsNS.getIntValue( Pegasus.CHECKPOINT_TIME, Integer.MAX_VALUE );
+            int checkpointTime = job.vdsNS.getIntValue( Pegasus.CHECKPOINT_TIME, Integer.MAX_VALUE );
             
-            if( expected == Integer.MAX_VALUE ){
+            if( checkpointTime == Integer.MAX_VALUE ){
                 //malformed value
                 return sb.toString();
             }
             
             //expected time is the time after which kickstart sends
             //the TERM signal to job 
-            sb.append( " -k " ).append( expected );
+            sb.append( " -k " ).append( checkpointTime );
             
             int max = Integer.MAX_VALUE;
             if( job.vdsNS.containsKey( Pegasus.MAX_WALLTIME) ){
@@ -1325,13 +1325,17 @@ public class Kickstart implements GridStart {
                 return sb.toString();
             }
             
+            //maxwalltime is specified in minutes.
+            //convert to seconds for kickstart
+            max = max * 60;
+            
             //we set the -K parameter to half the difference between
-            //maxwalltime - walltime
-            int diff = max - expected;
+            //maxwalltime - checkpointTime
+            int diff = max - checkpointTime;
             if( diff < 10 ){
                 //throw error
                 throw new RuntimeException( "Insufficient difference between maxwalltime " + 
-                                            max + " and expected walltime " + expected );
+                                            max + " and expected walltime " + checkpointTime );
             }
             
             //we divide the difference equaully.
