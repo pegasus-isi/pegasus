@@ -24,9 +24,10 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Stack;
-
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 
@@ -56,7 +57,11 @@ public abstract class StackBasedXMLParser extends Parser {
      */
     protected boolean mParsingDone;
 
-
+    /**
+     * A set of containing the unsupported element attributes
+     */
+    protected Set<String> mUnsupportedElementAttributes;
+    
     /**
      * The default Constructor.
      * 
@@ -76,7 +81,7 @@ public abstract class StackBasedXMLParser extends Parser {
         super( bag );
         mStack = new Stack();
         mDepth = 0;
-        
+        mUnsupportedElementAttributes = new HashSet();
        
         //setting the schema Locations
         String schemaLoc = getSchemaLocation();
@@ -251,8 +256,17 @@ public abstract class StackBasedXMLParser extends Parser {
      * @param value      the attribute value
      */
     public void attributeNotSupported(String element, String attribute, String value) {
-        mLogger.log( "For element " + element + " attribute currently not supported " + attribute + " -> " + value,
+        StringBuffer sb = new StringBuffer();
+        sb.append( "element" ).append( ":" ).append( "attribute" ).append( "->" ).append( value );
+        String key = sb.toString();
+        
+        if( !this.mUnsupportedElementAttributes.contains(key) ){
+            mLogger.log( "For element " + element + " attribute currently not supported " + attribute + " -> " + value,
                      LogManager.WARNING_MESSAGE_LEVEL );
+            this.mUnsupportedElementAttributes.add( key ); 
+        }
+                
+        
     }
 
     /**
