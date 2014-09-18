@@ -322,7 +322,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                             file = value;
                         }
                         else if( name.equals( "node-label"  ) ){
-                            this.attributeNotSupported( element, name, value );
+                            j.setNodeLabel( value );
                         }
                         else {
                 	    this.complain( element, name, value );
