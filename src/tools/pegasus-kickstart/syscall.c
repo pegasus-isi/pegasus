@@ -67,6 +67,10 @@ static FileInfo *openFileInfo(ProcInfo *c, int fd, char *filename) {
     // Otherwise, create a new FileInfo entry
     if (file == NULL) {
         file = (FileInfo *)calloc(1, sizeof(FileInfo));
+        if (file == NULL) {
+            fprintf(stderr, "calloc: %s\n", strerror(errno));
+            exit(1);
+        }
         file->filename = strdup(filename);
         addFileInfo(c, file);
     }

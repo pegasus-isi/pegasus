@@ -580,6 +580,9 @@ static void __attribute__((constructor)) interpose_init(void) {
     getrlimit(RLIMIT_NOFILE, &nofile_limit);
     max_descriptors = nofile_limit.rlim_max;
     descriptors = (Descriptor *)calloc(sizeof(Descriptor), max_descriptors);
+    if (descriptors == NULL) {
+        fprintf_untraced(stderr, "libinterpose: calloc: %s\n", strerror(errno));
+    }
 
     debug("Max descriptors: %d", max_descriptors);
 

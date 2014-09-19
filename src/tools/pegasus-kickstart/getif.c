@@ -112,6 +112,10 @@ int interface_list(struct ifconf* ifc) {
     for (;;) {
         /* guestimate correct buffer length */
         buf = (char*) malloc(len);
+        if (buf == NULL) {
+            fprintf(stderr, "malloc: %s\n", strerror(errno));
+            return -1;
+        }
         memset(buf, 0, len);
         ifc->ifc_len = len;
         ifc->ifc_buf = buf;
@@ -228,6 +232,10 @@ struct ifreq* primary_interface(void) {
 
     /* create a freshly allocated copy */
     ifrcopy = (struct ifreq*) malloc(sizeof(struct ifreq));
+    if (ifrcopy == NULL) {
+        fprintf(stderr, "malloc: %s\n", strerror(errno));
+        return NULL;
+    }
     memcpy(ifrcopy, &result, sizeof(struct ifreq));
     return ifrcopy;
 }

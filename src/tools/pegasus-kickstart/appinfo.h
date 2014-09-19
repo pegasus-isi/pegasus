@@ -81,7 +81,7 @@ typedef struct {
     int            status;     /* The final status of the job */
 } AppInfo;
 
-extern void initAppInfo(AppInfo* appinfo, int argc, char* const* argv);
+extern int initAppInfo(AppInfo* appinfo, int argc, char* const* argv);
 extern int printAppInfo(AppInfo* runinfo);
 extern void envIntoAppInfo(AppInfo* runinfo, char* envp[]);
 extern void deleteAppInfo(AppInfo* runinfo);

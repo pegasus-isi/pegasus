@@ -117,6 +117,10 @@ char* findApp(const char* fn) {
     for (s=strtok(path,":"); s; s=strtok(NULL,":")) {
         size_t len = strlen(fn) + strlen(s) + 2;
         t = (char*) malloc(len);
+        if (t == NULL) {
+            fprintf(stderr, "malloc: %s\n", strerror(errno));
+            return NULL;
+        }
         strncpy(t, s, len);
         strncat(t, "/", len);
         strncat(t, fn, len);
@@ -291,6 +295,10 @@ RETRY:
                 if (key != NULL) {
                     size_t size = strlen(key) + strlen(pattern) + 2;
                     char* temp = (char*) malloc(size);
+                    if (temp == NULL) {
+                        fprintf(stderr, "malloc: %s\n", strerror(errno));
+                        return -1;
+                    }
                     memset(temp, 0, size--);
                     strncpy(temp, key, size);
                     strncat(temp, "=", size);
@@ -323,6 +331,10 @@ static int preserveFile(const char* fn) {
         /* file exists, do something */
         size_t size = strlen(fn)+8;
         char* newfn = malloc(size);
+        if (newfn == NULL) {
+            fprintf(stderr, "malloc: %s\n", strerror(errno));
+            return -1;
+        }
 
         close(fd);
         strncpy(newfn, fn, size);
@@ -643,7 +655,7 @@ size_t printXMLStatInfo(FILE *out, int indent, const char* tag, const char* id,
         fprintf(out, "%*s<data%s", indent+2, "",
                 (fsize > dsize ? " truncated=\"true\"" : ""));
         if (fsize > 0) {
-            char* buf = (char*) malloc(BUFSIZ);
+            char buf [BUFSIZ];
             int fd = dup(info->file.descriptor);
 
             fprintf(out, ">");
@@ -672,7 +684,6 @@ size_t printXMLStatInfo(FILE *out, int indent, const char* tag, const char* id,
             }
 
             fprintf(out, "</data>\n");
-            free(buf);
         } else {
             fprintf(out, "/>\n");
         }

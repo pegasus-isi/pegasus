@@ -41,11 +41,6 @@
 #define XML_SCHEMA_URI "http://pegasus.isi.edu/schema/invocation"
 #define XML_SCHEMA_VERSION "2.3"
 
-static int mycompare(const void* a, const void* b) {
-    return strcmp((a ? *((const char**) a) : ""),
-                  (b ? *((const char**) b) : ""));
-}
-
 static size_t convert2XML(FILE *out, const AppInfo* run) {
     size_t i;
     struct passwd* user = getpwuid(getuid());
@@ -191,26 +186,18 @@ static size_t convert2XML(FILE *out, const AppInfo* run) {
 
         /* <environment> */
         if (run->envp && run->envc) {
-            char* s;
-
-            /* attempt a sorted version */
-            char** keys = malloc(sizeof(char*) * run->envc);
-            for (i=0; i < run->envc; ++i) {
-                keys[i] = run->envp[i] ? strdup(run->envp[i]) : "";
-            }
-            qsort((void*) keys, run->envc, sizeof(char*), mycompare);
-
             fprintf(out, "  <environment>\n");
             for (i=0; i < run->envc; ++i) {
-                if (keys[i] && (s = strchr(keys[i], '='))) {
+                char *key = run->envp[i];
+                char *s;
+                if (key && (s = strchr(key, '='))) {
                     *s = '\0'; /* temporarily cut string here */
-                    fprintf(out, "    <env key=\"%s\">", keys[i]);
+                    fprintf(out, "    <env key=\"%s\">", key);
                     xmlquote(out, s+1, strlen(s+1));
                     fprintf(out, "</env>\n");
                     *s = '='; /* reset string to original */
                 }
             }
-            free((void*) keys);
             fprintf(out, "  </environment>\n");
         }
 
@@ -235,7 +222,7 @@ static char* pattern(char* buffer, size_t size, const char* dir,
     return buffer;
 }
 
-void initAppInfo(AppInfo* appinfo, int argc, char* const* argv) {
+int initAppInfo(AppInfo* appinfo, int argc, char* const* argv) {
     /* purpose: initialize the data structure with defaults
      * paramtr: appinfo (OUT): initialized memory block
      *          argc (IN): from main()
@@ -243,6 +230,10 @@ void initAppInfo(AppInfo* appinfo, int argc, char* const* argv) {
      */
     size_t tempsize = getpagesize();
     char* tempname = (char*) malloc(tempsize);
+    if (tempname == NULL) {
+        fprintf(stderr, "malloc: %s\n", strerror(errno));
+        return -1;
+    }
 
     /* find a suitable directory for temporary files */
     const char* tempdir = getTempDir();
@@ -301,6 +292,8 @@ void initAppInfo(AppInfo* appinfo, int argc, char* const* argv) {
     appinfo->killTimeout = 5;
     appinfo->currentChild = 0;
     appinfo->nextSignal = SIGTERM;
+
+    return 0;
 }
 
 int countProcs(JobInfo *job) {
@@ -383,8 +376,12 @@ void envIntoAppInfo(AppInfo* runinfo, char* envp[]) {
         char* const* src = envp;
         size_t size = 0;
         while (*src++) ++size;
-        runinfo->envc = size;
         runinfo->envp = (char**) calloc(size+1, sizeof(char*));
+        if (runinfo->envp == NULL) {
+            fprintf(stderr, "calloc: %s\n", strerror(errno));
+            return;
+        }
+        runinfo->envc = size;
 
         dst = (char**) runinfo->envp;
         for (src = envp; dst - runinfo->envp <= size; ++src) { 

@@ -35,6 +35,10 @@ extern void initLimitInfo(LimitInfo* limits) {
 #error "Need to write a fragment to guesstimate max# of resources"
 #endif
     limits->limits = (SingleLimitInfo*) calloc(sizeof(SingleLimitInfo), limits->size);
+    if (limits->limits == NULL) {
+        fprintf(stderr, "calloc: %s\n", strerror(errno));
+        return;
+    }
 }
 
 extern void updateLimitInfo(LimitInfo* limits) {

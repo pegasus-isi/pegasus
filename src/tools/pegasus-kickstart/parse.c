@@ -17,6 +17,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include "parse.h"
 #include "utils.h"
@@ -58,6 +59,10 @@ static void add(Node** head, Node** tail, const char* data) {
      *          data (IN): string to save the pointer to (shallow copy)
      */
     Node* temp = (Node*) malloc(sizeof(Node));
+    if (temp == NULL) {
+        fprintf(stderr, "malloc: %s\n", strerror(errno));
+        exit(1);
+    }
     temp->data = data;
     temp->next = NULL;
 
@@ -385,7 +390,7 @@ Node* parseCommandLine(const char* line, int* state) {
     size_t size = KS_ARG_MAX;
     char* buffer = malloc(size);
     if (buffer == NULL) {
-        perror("malloc");
+        fprintf(stderr, "malloc: %s\n", strerror(errno));
         exit(1);
     }
     char* p = buffer;
@@ -428,7 +433,7 @@ Node* parseArgVector(int argc, char* const* argv, int* state) {
     size_t size = KS_ARG_MAX;
     char* buffer = malloc(size);
     if (buffer == NULL) {
-        perror("malloc");
+        fprintf(stderr, "malloc: %s\n", strerror(errno));
         exit(1);
     }
     char* p = buffer;

@@ -55,10 +55,18 @@ void initJobInfoFromString(JobInfo* jobinfo, const char* commandline) {
 
         /* prepare copy area */
         jobinfo->copy = (char*) malloc(size+argc);
+        if (jobinfo->copy == NULL) {
+            fprintf(stderr, "malloc: %s\n", strerror(errno));
+            return;
+        }
 
         /* prepare argument vector */
         jobinfo->argc = argc;
         jobinfo->argv = (char* const*) calloc(argc+1, sizeof(char*));
+        if (jobinfo->argv == NULL) {
+            fprintf(stderr, "calloc: %s\n", strerror(errno));
+            return;
+        }
 
         /* copy list while updating argument vector and freeing lose arguments */
         t = jobinfo->copy;
@@ -126,10 +134,18 @@ void initJobInfo(JobInfo* jobinfo, int argc, char* const* argv) {
 
         /* prepare copy area */
         jobinfo->copy = (char*) malloc(size+argc);
+        if (jobinfo->copy == NULL) {
+            fprintf(stderr, "malloc: %s\n", strerror(errno));
+            return;
+        }
 
         /* prepare argument vector */
         jobinfo->argc = argc;
         jobinfo->argv = (char* const*) calloc(argc+1, sizeof(char*));
+        if (jobinfo->argv == NULL) {
+            fprintf(stderr, "calloc: %s\n", strerror(errno));
+            return;
+        }
 
         /* copy list while updating argument vector and freeing lose arguments */
         t = jobinfo->copy;

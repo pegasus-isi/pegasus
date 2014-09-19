@@ -133,6 +133,10 @@ static FileInfo *readTraceFileRecord(const char *buf, FileInfo *files) {
     if (file == NULL) {
         /* No duplicate found */
         file = (FileInfo *)calloc(sizeof(FileInfo), 1);
+        if (file == NULL) {
+            fprintf(stderr, "calloc: %s\n", strerror(errno));
+            return files;
+        }
         file->filename = strdup(filename);
         file->size = size;
         file->bread = bread;
@@ -181,6 +185,10 @@ static SockInfo *readTraceSocketRecord(const char *buf, SockInfo *sockets) {
     if (sock == NULL) {
         /* No duplicate found */
         sock = (SockInfo *)calloc(sizeof(SockInfo), 1);
+        if (sock == NULL) {
+            fprintf(stderr, "calloc: %s\n", strerror(errno));
+            return sockets;
+        }
         sock->address = strdup(address);
         sock->port = port;
         sock->brecv = brecv;
@@ -216,6 +224,10 @@ static ProcInfo *processTraceFile(const char *fullpath) {
     }
 
     ProcInfo *proc = (ProcInfo *)calloc(sizeof(ProcInfo), 1);
+    if (proc == NULL) {
+        fprintf(stderr, "calloc: %s\n", strerror(errno));
+        return NULL;
+    }
 
     /* Read data from the trace file */
     char line[BUFSIZ];
@@ -345,6 +357,10 @@ static char **tryGetNewEnvironment(char **envp, const char *tempdir, const char 
 
     /* Copy the environment variables to a new array */
     char **newenvp = (char **)malloc(sizeof(char **)*(vars+3));
+    if (newenvp == NULL) {
+        fprintf(stderr, "malloc: %s\n", strerror(errno));
+        return envp;
+    }
     for (vars=0; envp[vars] != NULL; vars++) {
         newenvp[vars] = envp[vars];
     }

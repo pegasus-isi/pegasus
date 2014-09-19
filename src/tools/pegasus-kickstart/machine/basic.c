@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
+#include <errno.h>
 
 #include "basic.h"
 #include "../utils.h"
@@ -36,14 +37,12 @@ void* initBasicMachine(void) {
      * returns: initialized MachineBasicInfo structure.
      */
     long result;
-    MachineBasicInfo* p = (MachineBasicInfo*) malloc(sizeof(MachineBasicInfo));
+    MachineBasicInfo* p = (MachineBasicInfo*) calloc(1, sizeof(MachineBasicInfo));
 
     /* extra sanity check */
     if (p == NULL) {
-        fputs("initBasicMachine c'tor failed\n", stderr);
+        fprintf(stderr, "calloc: %s\n", strerror(errno));
         return NULL;
-    } else {
-        memset(p, 0, sizeof(MachineBasicInfo));
     }
 
     /* name of this provider -- overwritten by importers */

@@ -49,7 +49,7 @@ static ProcInfo *proc_lookup(ProcInfo **list, pid_t pid) {
 static ProcInfo *initProcInfo() {
     ProcInfo *new = (ProcInfo *)calloc(1, sizeof(ProcInfo));
     if (new == NULL) {
-        perror("calloc");
+        fprintf(stderr, "calloc: %s\n", strerror(errno));
         return NULL;
     }
     new->next = NULL;

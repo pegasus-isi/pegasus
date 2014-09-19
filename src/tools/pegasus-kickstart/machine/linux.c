@@ -349,14 +349,10 @@ void* initMachine(void) {
      * returns: initialized MachineLinuxInfo structure.
      */
     unsigned long version;
-    MachineLinuxInfo* p = (MachineLinuxInfo*) malloc(sizeof(MachineLinuxInfo));
-
-    /* extra sanity check */
+    MachineLinuxInfo* p = (MachineLinuxInfo*) calloc(1, sizeof(MachineLinuxInfo));
     if (p == NULL) {
-        fputs("initMachine c'tor failed\n", stderr);
+        fprintf(stderr, "calloc: %s\n", strerror(errno));
         return NULL;
-    } else {
-        memset(p, 0, sizeof(MachineLinuxInfo));
     }
 
     /* name of this provider -- overwritten by importers */
