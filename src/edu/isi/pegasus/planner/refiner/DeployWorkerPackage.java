@@ -257,7 +257,7 @@ public class DeployWorkerPackage
         if( mOSToNMIOSReleaseAndVersion == null ){
             mOSToNMIOSReleaseAndVersion = new HashMap();
             mOSToNMIOSReleaseAndVersion.put( SysInfo.OS.LINUX, "rhel_5" );
-            mOSToNMIOSReleaseAndVersion.put( SysInfo.OS.MACOSX, "macos_10.7" );
+            mOSToNMIOSReleaseAndVersion.put( SysInfo.OS.MACOSX, "macos_10" );
         }
         return mOSToNMIOSReleaseAndVersion;
     }
@@ -275,7 +275,7 @@ public class DeployWorkerPackage
             mSupportedOSReleaseVersions.add( "rhel_6" );
             mSupportedOSReleaseVersions.add( "deb_6" );
             mSupportedOSReleaseVersions.add( "deb_7" );
-            mSupportedOSReleaseVersions.add( "macos_10.7" );
+            mSupportedOSReleaseVersions.add( "macos_10" );
             
         }
         return mSupportedOSReleaseVersions;
