@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 
 #include "syscall.h"
+#include "error.h"
 
 #ifdef HAS_PTRACE
 
@@ -68,7 +69,7 @@ static FileInfo *openFileInfo(ProcInfo *c, int fd, char *filename) {
     if (file == NULL) {
         file = (FileInfo *)calloc(1, sizeof(FileInfo));
         if (file == NULL) {
-            fprintf(stderr, "calloc: %s\n", strerror(errno));
+            printerr("calloc: %s\n", strerror(errno));
             exit(1);
         }
         file->filename = strdup(filename);
@@ -77,7 +78,7 @@ static FileInfo *openFileInfo(ProcInfo *c, int fd, char *filename) {
 
     // XXX Fix with dynamic array
     if (fd >= 1024) {
-        fprintf(stderr, "ERROR: Too many file descriptors (>1024) for process %d\n", c->pid);
+        printerr("ERROR: Too many file descriptors (>1024) for process %d\n", c->pid);
         exit(1);
     }
 
@@ -89,7 +90,7 @@ static FileInfo *openFileInfo(ProcInfo *c, int fd, char *filename) {
 static FileInfo *getFileInfo(ProcInfo *c, int fd) {
     // XXX Fix with dynamic array
     if (fd >= 1024) {
-        fprintf(stderr, "ERROR: Too many file descriptors (>1024) for process %d\n", c->pid);
+        printerr("ERROR: Too many file descriptors (>1024) for process %d\n", c->pid);
         exit(1);
     }
 

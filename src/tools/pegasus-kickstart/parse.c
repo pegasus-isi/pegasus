@@ -21,6 +21,7 @@
 
 #include "parse.h"
 #include "utils.h"
+#include "error.h"
 
 /* In Linux, 32 pages is the max for a single argument.
  * In Darwin it is larger, but we will just use the same
@@ -60,7 +61,7 @@ static void add(Node** head, Node** tail, const char* data) {
      */
     Node* temp = (Node*) malloc(sizeof(Node));
     if (temp == NULL) {
-        fprintf(stderr, "malloc: %s\n", strerror(errno));
+        printerr("malloc: %s\n", strerror(errno));
         exit(1);
     }
     temp->data = data;
@@ -91,7 +92,7 @@ static void resolve(char** v, char* varname, char** p, char* buffer, size_t size
         while (pp - buffer < size && *value) *pp++ = *value++;
         *p = pp;
     } else {
-        fprintf(stderr, "ERROR: Variable $%s does not exist\n", varname);
+        printerr("ERROR: Variable $%s does not exist\n", varname);
         exit(1);
     }
 
@@ -308,7 +309,7 @@ static void internalParse(const char* line, const char** cursor, int* state,
                     *p = *s;
                     p++;
                 } else {
-                    fprintf(stderr, "ERROR: Argument too long\n");
+                    printerr("ERROR: Argument too long\n");
                     exit(1);
                 }
                 break;
@@ -321,7 +322,7 @@ static void internalParse(const char* line, const char** cursor, int* state,
                 if (v-varname < vsize) {
                     *v++ = *s;
                 } else {
-                    fprintf(stderr, "ERROR: Variable name too long\n");
+                    printerr("ERROR: Variable name too long\n");
                     exit(1);
                 }
                 break;
@@ -390,7 +391,7 @@ Node* parseCommandLine(const char* line, int* state) {
     size_t size = KS_ARG_MAX;
     char* buffer = malloc(size);
     if (buffer == NULL) {
-        fprintf(stderr, "malloc: %s\n", strerror(errno));
+        printerr("malloc: %s\n", strerror(errno));
         exit(1);
     }
     char* p = buffer;
@@ -433,7 +434,7 @@ Node* parseArgVector(int argc, char* const* argv, int* state) {
     size_t size = KS_ARG_MAX;
     char* buffer = malloc(size);
     if (buffer == NULL) {
-        fprintf(stderr, "malloc: %s\n", strerror(errno));
+        printerr("malloc: %s\n", strerror(errno));
         exit(1);
     }
     char* p = buffer;

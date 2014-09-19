@@ -12,13 +12,6 @@
  * Copyright 1999-2004 University of Chicago and The University of
  * Southern California. All rights reserved.
  */
-#include "getif.h"
-#include "utils.h"
-#include "useinfo.h"
-#include "machine.h"
-#include "jobinfo.h"
-#include "statinfo.h"
-#include "appinfo.h"
 #include <ctype.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -37,6 +30,15 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+
+#include "getif.h"
+#include "utils.h"
+#include "useinfo.h"
+#include "machine.h"
+#include "jobinfo.h"
+#include "statinfo.h"
+#include "appinfo.h"
+#include "error.h"
 
 #define XML_SCHEMA_URI "http://pegasus.isi.edu/schema/invocation"
 #define XML_SCHEMA_VERSION "2.3"
@@ -231,7 +233,7 @@ int initAppInfo(AppInfo* appinfo, int argc, char* const* argv) {
     size_t tempsize = getpagesize();
     char* tempname = (char*) malloc(tempsize);
     if (tempname == NULL) {
-        fprintf(stderr, "malloc: %s\n", strerror(errno));
+        printerr("malloc: %s\n", strerror(errno));
         return -1;
     }
 
@@ -321,7 +323,7 @@ int printAppInfo(AppInfo* run) {
     }
 
     if (fd < 0) {
-        fprintf(stderr, "ERROR: Unable to open output file\n");
+        printerr("ERROR: Unable to open output file\n");
         return -1;
     }
 
@@ -330,7 +332,7 @@ int printAppInfo(AppInfo* run) {
      */
     FILE *out = fdopen(dup(fd), "w");
     if (out == NULL) {
-        fprintf(stderr, "ERROR: Unable to open output stream\n");
+        printerr("ERROR: Unable to open output stream\n");
         goto exit;
     }
 
@@ -378,7 +380,7 @@ void envIntoAppInfo(AppInfo* runinfo, char* envp[]) {
         while (*src++) ++size;
         runinfo->envp = (char**) calloc(size+1, sizeof(char*));
         if (runinfo->envp == NULL) {
-            fprintf(stderr, "calloc: %s\n", strerror(errno));
+            printerr("calloc: %s\n", strerror(errno));
             return;
         }
         runinfo->envc = size;

@@ -29,6 +29,7 @@
 #include "useinfo.h"
 #include "jobinfo.h"
 #include "parse.h"
+#include "error.h"
 
 void initJobInfoFromString(JobInfo* jobinfo, const char* commandline) {
     /* purpose: initialize the data structure with default
@@ -56,7 +57,7 @@ void initJobInfoFromString(JobInfo* jobinfo, const char* commandline) {
         /* prepare copy area */
         jobinfo->copy = (char*) malloc(size+argc);
         if (jobinfo->copy == NULL) {
-            fprintf(stderr, "malloc: %s\n", strerror(errno));
+            printerr("malloc: %s\n", strerror(errno));
             return;
         }
 
@@ -64,7 +65,7 @@ void initJobInfoFromString(JobInfo* jobinfo, const char* commandline) {
         jobinfo->argc = argc;
         jobinfo->argv = (char* const*) calloc(argc+1, sizeof(char*));
         if (jobinfo->argv == NULL) {
-            fprintf(stderr, "calloc: %s\n", strerror(errno));
+            printerr("calloc: %s\n", strerror(errno));
             return;
         }
 
@@ -135,7 +136,7 @@ void initJobInfo(JobInfo* jobinfo, int argc, char* const* argv) {
         /* prepare copy area */
         jobinfo->copy = (char*) malloc(size+argc);
         if (jobinfo->copy == NULL) {
-            fprintf(stderr, "malloc: %s\n", strerror(errno));
+            printerr("malloc: %s\n", strerror(errno));
             return;
         }
 
@@ -143,7 +144,7 @@ void initJobInfo(JobInfo* jobinfo, int argc, char* const* argv) {
         jobinfo->argc = argc;
         jobinfo->argv = (char* const*) calloc(argc+1, sizeof(char*));
         if (jobinfo->argv == NULL) {
-            fprintf(stderr, "calloc: %s\n", strerror(errno));
+            printerr("calloc: %s\n", strerror(errno));
             return;
         }
 

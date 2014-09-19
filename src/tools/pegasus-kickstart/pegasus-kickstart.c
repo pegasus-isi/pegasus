@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <limits.h>
 
+#include "error.h"
 #include "appinfo.h"
 #include "mysystem.h"
 #include "mylist.h"
@@ -117,7 +118,7 @@ StatInfo* initStatFromList(mylist_p list, size_t* size) {
 
     StatInfo* result = (StatInfo*) calloc(sizeof(StatInfo), list->count);
     if (result == NULL) {
-        fprintf(stderr, "calloc: %s\n", strerror(errno));
+        printerr("calloc: %s\n", strerror(errno));
         return NULL;
     }
 
@@ -245,7 +246,7 @@ static int readFromFile(const char* fn, char*** argv, int* argc, int* i, int j) 
     size_t index = 0;
     char** newv = calloc(sizeof(char*), newc+1);
     if (newv == NULL) {
-        fprintf(stderr, "calloc: %s\n", strerror(errno));
+        printerr("calloc: %s\n", strerror(errno));
         return -1;
     }
 
@@ -301,7 +302,7 @@ static char* noquote(char* s) {
         (s[0] == '"' && s[len-1] == '"')) {
         char* tmp = calloc(sizeof(char), len);
         if (tmp == NULL) {
-            fprintf(stderr, "calloc: %s\n", strerror(errno));
+            printerr("calloc: %s\n", strerror(errno));
         }
         memcpy(tmp, s+1, len-2);
         return tmp;
@@ -332,7 +333,7 @@ int main(int argc, char* argv[]) {
     if (atexit(finish) == -1) {
         appinfo.application.status = -1;
         appinfo.application.saverr = errno;
-        fprintf(stderr, "Unable to register an exit handler\n");
+        printerr("Unable to register an exit handler\n");
         return 127;
     } else {
         global_no_atexit = 0;
@@ -639,7 +640,7 @@ int main(int argc, char* argv[]) {
                 appinfo.application.saverr = ENOENT; 
                 break;
         }
-        fprintf(stderr, "FATAL: The main job specification is invalid or missing.\n");
+        printerr("FATAL: The main job specification is invalid or missing.\n");
         return 127;
     }
 
@@ -657,8 +658,8 @@ REDIR:
             }
 
             appinfo.application.saverr = errno;
-            fprintf(stderr, "Unable to mkdir %s: %d: %s\n",
-                    workdir, errno, strerror(errno));
+            printerr("Unable to mkdir %s: %d: %s\n",
+                     workdir, errno, strerror(errno));
             appinfo.application.prefix = "Unable to mkdir: ";
             appinfo.application.status = -1;
             return 127;
@@ -666,8 +667,8 @@ REDIR:
 
         /* unable to use alternate workdir */
         appinfo.application.saverr = errno;
-        fprintf(stderr, "Unable to chdir %s: %d: %s\n",
-                workdir, errno, strerror(errno));
+        printerr("Unable to chdir %s: %d: %s\n",
+                 workdir, errno, strerror(errno));
         appinfo.application.prefix = "Unable to chdir: ";
         appinfo.application.status = -1;
         return 127;
@@ -676,7 +677,7 @@ REDIR:
     /* record the current working directory */
     appinfo.workdir = calloc(cwd_size, sizeof(char));
     if (appinfo.workdir == NULL) {
-        fprintf(stderr, "calloc: %s\n", strerror(errno));
+        printerr("calloc: %s\n", strerror(errno));
         return 127;
     }
 
@@ -708,7 +709,7 @@ REDIR:
         handler.sa_flags = 0;
         sigemptyset(&handler.sa_mask);
         if (sigaction(SIGALRM, &handler, NULL) < 0) {
-            fprintf(stderr, "Unable to set handler for SIGALRM: %s", strerror(errno));
+            printerr("Unable to set handler for SIGALRM: %s", strerror(errno));
             return 127;
         }
 

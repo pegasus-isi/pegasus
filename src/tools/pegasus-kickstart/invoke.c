@@ -16,7 +16,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+
 #include "invoke.h"
+#include "error.h"
 
 static int append_arg(char* data, char*** arg, size_t* index, size_t* capacity) {
     /* purpose: adds a string to a list of arguments
@@ -32,7 +34,7 @@ static int append_arg(char* data, char*** arg, size_t* index, size_t* capacity) 
         *capacity <<= 1;
         *arg = realloc(*arg, *capacity * sizeof(char*));
         if (*arg == NULL) {
-            fprintf(stderr, "realloc: %s\n", strerror(errno));
+            printerr("realloc: %s\n", strerror(errno));
             return -1;
         }
         /* re-calloc: init new space with NULL */
@@ -56,7 +58,7 @@ static char* merge(char* s1, char* s2) {
         size_t len = strlen(s1) + strlen(s2) + 2;
         char* temp = (char*) malloc(len);
         if (temp == NULL) {
-            fprintf(stderr, "malloc: %s\n", strerror(errno));
+            printerr("malloc: %s\n", strerror(errno));
             return NULL;
         }
         strncpy(temp, s1, len);
@@ -82,7 +84,7 @@ int expand_arg(const char* fn, char*** arg, size_t* index, size_t* capacity, int
     unsigned long lineno = 0ul;
 
     if (level >= 32) {
-        fprintf(stderr, "ERROR: Nesting too deep (%d levels), "
+        printerr("ERROR: Nesting too deep (%d levels), "
                 "circuit breaker triggered!\n", level);
         errno = EMLINK;
         return -1;

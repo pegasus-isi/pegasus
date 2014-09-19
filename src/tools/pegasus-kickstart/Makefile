@@ -41,29 +41,32 @@ pegasus-kickstart: getif.o utils.o useinfo.o statinfo.o jobinfo.o \
   mysystem.o mylist.o invoke.o pegasus-kickstart.o procinfo.o
 	$(LD) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-appinfo.o: appinfo.c getif.h utils.h useinfo.h machine.h \
-  jobinfo.h statinfo.h appinfo.h limitinfo.h
-getif.o: getif.c getif.h
-invoke.o: invoke.c invoke.h
-jobinfo.o: jobinfo.c getif.h utils.h useinfo.h jobinfo.h \
-  statinfo.h parse.h procinfo.h
-pegasus-kickstart.o: pegasus-kickstart.c appinfo.h \
-  statinfo.h jobinfo.h limitinfo.h machine.h mysystem.h mylist.h \
-  invoke.h utils.h version.h ptrace.h
-limitinfo.o: limitinfo.c utils.h limitinfo.h
+appinfo.o: appinfo.c getif.h utils.h useinfo.h machine.h jobinfo.h \
+	  statinfo.h procinfo.h ptrace.h appinfo.h limitinfo.h error.h
+getif.o: getif.c getif.h utils.h error.h
+invoke.o: invoke.c invoke.h error.h
+jobinfo.o: jobinfo.c getif.h utils.h useinfo.h jobinfo.h statinfo.h \
+  procinfo.h ptrace.h parse.h error.h
+limitinfo.o: limitinfo.c utils.h limitinfo.h error.h
 machine.o: machine.c machine.h machine/basic.h
 mylist.o: mylist.c mylist.h
-mysystem.o: mysystem.c utils.h appinfo.h statinfo.h jobinfo.h \
-  limitinfo.h machine.h mysystem.h procinfo.h
-parse.o: parse.c parse.h
-statinfo.o: statinfo.c statinfo.h utils.h
-utils.o: utils.c utils.h
+mysystem.o: mysystem.c utils.h appinfo.h statinfo.h jobinfo.h procinfo.h \
+  ptrace.h limitinfo.h machine.h mysystem.h error.h
+parse.o: parse.c parse.h utils.h error.h
+pegasus-kickstart.o: pegasus-kickstart.c error.h appinfo.h statinfo.h \
+  jobinfo.h procinfo.h ptrace.h limitinfo.h machine.h mysystem.h \
+  mylist.h invoke.h utils.h version.h
+procinfo.o: procinfo.c procinfo.h ptrace.h utils.h syscall.h error.h
+statinfo.o: statinfo.c statinfo.h utils.h error.h
+syscall.o: syscall.c syscall.h syscall_32.h syscall_64.h ptrace.h \
+  procinfo.h error.h
 useinfo.o: useinfo.c utils.h useinfo.h
-machine/basic.o: machine/basic.c machine/basic.h utils.h
-machine/linux.o: machine/linux.c machine/basic.h machine/linux.h utils.h
-machine/darwin.o: machine/darwin.c machine/basic.h machine/darwin.h utils.h
-procinfo.o: procinfo.c procinfo.h ptrace.h utils.h
-syscall.o: syscall.c syscall.h syscall_32.h syscall_64.h ptrace.h procinfo.h
+utils.o: utils.c utils.h
+machine/basic.o: machine/basic.c machine/basic.h utils.h error.h
+machine/darwin.o: machine/darwin.c machine/basic.h machine/darwin.h \
+  utils.h error.h
+machine/linux.o: machine/linux.c machine/basic.h machine/linux.h \
+  utils.h error.h
 
 libinterpose.so: interpose.c
 	$(CC) $(CFLAGS) -std=gnu99 -shared -fPIC -o libinterpose.so interpose.c -ldl

@@ -15,6 +15,7 @@
 #include "basic.h"
 #include "darwin.h"
 #include "../utils.h"
+#include "../error.h"
 
 #include <ctype.h>
 #include <string.h>
@@ -128,7 +129,7 @@ static void gather_darwin_procstate(unsigned state[MAX_STATE]) {
     if (sysctl(mib, 3, NULL, &len, NULL, 0) != -1 && len > 0) {
         void* buffer = malloc(len + sizeof(struct kinfo_proc));
         if (buffer == NULL) {
-            fprintf(stderr, "malloc: %s\n", strerror(errno));
+            printerr("malloc: %s\n", strerror(errno));
             return;
         }
         if (sysctl(mib, 3, buffer, &len, NULL, 0) != -1 && len > 0) {
@@ -182,7 +183,7 @@ void* initMachine(void) {
      */
     MachineDarwinInfo* p = (MachineDarwinInfo*) calloc(1, sizeof(MachineDarwinInfo));
     if (p == NULL) {
-        fprintf(stderr, "calloc: %s\n", strerror(errno));
+        printerr("calloc: %s\n", strerror(errno));
         return NULL;
     }
 

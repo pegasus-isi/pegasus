@@ -31,6 +31,7 @@
 #include "procinfo.h"
 #include "utils.h"
 #include "syscall.h"
+#include "error.h"
 
 #ifdef HAS_PTRACE
 
@@ -49,7 +50,7 @@ static ProcInfo *proc_lookup(ProcInfo **list, pid_t pid) {
 static ProcInfo *initProcInfo() {
     ProcInfo *new = (ProcInfo *)calloc(1, sizeof(ProcInfo));
     if (new == NULL) {
-        fprintf(stderr, "calloc: %s\n", strerror(errno));
+        printerr("calloc: %s\n", strerror(errno));
         return NULL;
     }
     new->next = NULL;

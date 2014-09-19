@@ -16,8 +16,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+
 #include "utils.h"
 #include "limitinfo.h"
+#include "error.h"
 
 #ifndef RLIMIT_NLIMITS
 #ifdef RLIM_NLIMITS
@@ -36,7 +38,7 @@ extern void initLimitInfo(LimitInfo* limits) {
 #endif
     limits->limits = (SingleLimitInfo*) calloc(sizeof(SingleLimitInfo), limits->size);
     if (limits->limits == NULL) {
-        fprintf(stderr, "calloc: %s\n", strerror(errno));
+        printerr("calloc: %s\n", strerror(errno));
         return;
     }
 }

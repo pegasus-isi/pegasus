@@ -22,6 +22,7 @@
 
 #include "basic.h"
 #include "../utils.h"
+#include "../error.h"
 
 static char* mytolower(char* s, size_t max) {
     /* array version */
@@ -41,7 +42,7 @@ void* initBasicMachine(void) {
 
     /* extra sanity check */
     if (p == NULL) {
-        fprintf(stderr, "calloc: %s\n", strerror(errno));
+        printerr("calloc: %s\n", strerror(errno));
         return NULL;
     }
 
