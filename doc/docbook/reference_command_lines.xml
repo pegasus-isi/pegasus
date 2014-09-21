@@ -13,6 +13,7 @@
   <xi:include href="manpage.pegasus-dax-validator.xml"/>
   <xi:include href="manpage.pegasus-em.xml"/>
   <xi:include href="manpage.pegasus-exitcode.xml"/>
+  <xi:include href="manpage.pegasus-graphviz.xml"/>
   <xi:include href="manpage.pegasus-gridftp.xml"/>
   <xi:include href="manpage.pegasus-invoke.xml"/>
   <xi:include href="manpage.pegasus-keg.xml"/>

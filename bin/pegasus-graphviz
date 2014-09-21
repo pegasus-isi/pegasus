@@ -417,9 +417,9 @@ def emit_dot(dag, label_type="label", outfile="/dev/stdout", width=None, height=
     out.close()
 
 def main():
-    usage = "%prog [options] DAGFILE"
-    description = """Parses DAGFILE and generates a DOT-formatted
-graphical representation of the DAG. DAGFILE can be a Condor
+    usage = "%prog [options] FILE"
+    description = """Parses FILE and generates a DOT-formatted
+graphical representation of the DAG. FILE can be a Condor
 DAGMan file, or a Pegasus DAX file."""
     parser = OptionParser(usage=usage,description=description)
     parser.add_option("-s", "--nosimplify", action="store_false",
@@ -454,7 +454,7 @@ DAGMan file, or a Pegasus DAX file."""
         parser.error("--label must be one of 'label', 'xform' or 'id")
 
     if len(args) < 1:
-        parser.error("Please specify DAGFILE")
+        parser.error("Please specify FILE")
 
     if len(args) > 1:
         parser.error("Invalid argument")
@@ -475,3 +475,4 @@ DAGMan file, or a Pegasus DAX file."""
 
 if __name__ == '__main__':
     main()
+
