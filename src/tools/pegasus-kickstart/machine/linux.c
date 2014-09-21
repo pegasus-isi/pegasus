@@ -15,6 +15,7 @@
 #include "basic.h"
 #include "linux.h"
 #include "../utils.h"
+#include "../error.h"
 
 #include <ctype.h>
 #include <errno.h>
@@ -217,7 +218,7 @@ static void parse_stat_file(const char* fn, LinuxStatus* proc, LinuxStatus* task
         }
         fclose(f);
     } else {
-        fprintf(stderr, "open %s: %s\n", fn, strerror(errno));
+        printerr("open %s: %s\n", fn, strerror(errno));
     }
 }
 
@@ -349,14 +350,10 @@ void* initMachine(void) {
      * returns: initialized MachineLinuxInfo structure.
      */
     unsigned long version;
-    MachineLinuxInfo* p = (MachineLinuxInfo*) malloc(sizeof(MachineLinuxInfo));
-
-    /* extra sanity check */
+    MachineLinuxInfo* p = (MachineLinuxInfo*) calloc(1, sizeof(MachineLinuxInfo));
     if (p == NULL) {
-        fputs("initMachine c'tor failed\n", stderr);
+        printerr("calloc: %s\n", strerror(errno));
         return NULL;
-    } else {
-        memset(p, 0, sizeof(MachineLinuxInfo));
     }
 
     /* name of this provider -- overwritten by importers */
@@ -380,8 +377,8 @@ void* initMachine(void) {
     } else if (version >= 2004000 && version <= 2004999) {
         gather_linux_proc24(&p->procs, &p->tasks);
     } else {
-        fprintf(stderr, "Info: Kernel v%lu.%lu.%lu is not supported for proc stats gathering\n",
-                version / 1000000, (version % 1000000) / 1000, version % 1000);
+        printerr("Info: Kernel v%lu.%lu.%lu is not supported for proc stats gathering\n",
+                 version / 1000000, (version % 1000000) / 1000, version % 1000);
     }
 
     return p;

@@ -15,12 +15,14 @@
 #include "basic.h"
 #include "darwin.h"
 #include "../utils.h"
+#include "../error.h"
 
 #include <ctype.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include <sys/sysctl.h>
 
@@ -126,6 +128,10 @@ static void gather_darwin_procstate(unsigned state[MAX_STATE]) {
     mib[2] = KERN_PROC_ALL;
     if (sysctl(mib, 3, NULL, &len, NULL, 0) != -1 && len > 0) {
         void* buffer = malloc(len + sizeof(struct kinfo_proc));
+        if (buffer == NULL) {
+            printerr("malloc: %s\n", strerror(errno));
+            return;
+        }
         if (sysctl(mib, 3, buffer, &len, NULL, 0) != -1 && len > 0) {
             struct extern_proc* p;
             struct kinfo_proc* kp;
@@ -175,14 +181,10 @@ void* initMachine(void) {
     /* purpose: initialize the data structure.
      * returns: initialized MachineDarwinInfo structure.
      */
-    MachineDarwinInfo* p = (MachineDarwinInfo*) malloc(sizeof(MachineDarwinInfo));
-
-    /* extra sanity check */
+    MachineDarwinInfo* p = (MachineDarwinInfo*) calloc(1, sizeof(MachineDarwinInfo));
     if (p == NULL) {
-        fputs("initMachine c'tor failed\n", stderr);
+        printerr("calloc: %s\n", strerror(errno));
         return NULL;
-    } else {
-        memset(p, 0, sizeof(MachineDarwinInfo));
     }
 
     /* name of this provider -- overwritten by importers */

@@ -12,9 +12,6 @@
  * Copyright 1999-2004 University of Chicago and The University of
  * Southern California. All rights reserved.
  */
-#include "getif.h"
-#include "utils.h"
-
 #include <errno.h>
 #include <string.h>
 #include <fcntl.h>
@@ -33,6 +30,10 @@
 #ifdef DARWIN
 #include <sys/sockio.h>
 #endif
+
+#include "getif.h"
+#include "utils.h"
+#include "error.h"
 
 static unsigned long vpn_network[6] = { 0, 0, 0, 0, 0 };
 static unsigned long vpn_netmask[6] = { 0, 0, 0, 0, 0 };
@@ -75,7 +76,7 @@ int interface_list(struct ifconf* ifc) {
     /* create a socket */
     if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) { 
         int saverr = errno; 
-        fprintf(stderr, "ERROR: socket DGRAM: %d: %s\n",
+        printerr("ERROR: socket DGRAM: %d: %s\n",
                 errno, strerror(errno));
         errno = saverr; 
         return -1;
@@ -90,7 +91,7 @@ int interface_list(struct ifconf* ifc) {
     memset(&ifnr, 0, sizeof(ifnr));
     ifnr.lifn_family = AF_INET;
     if (ioctl(sockfd, SIOCGLIFNUM, &ifnr) < 0) {
-        fprintf(stderr, "ERROR: ioctl SIOCGLIFNUM: %d: %s\n",
+        printerr("ERROR: ioctl SIOCGLIFNUM: %d: %s\n",
                 errno, strerror(errno));
 
         if (errno != EINVAL) {
@@ -112,11 +113,15 @@ int interface_list(struct ifconf* ifc) {
     for (;;) {
         /* guestimate correct buffer length */
         buf = (char*) malloc(len);
+        if (buf == NULL) {
+            printerr("malloc: %s\n", strerror(errno));
+            return -1;
+        }
         memset(buf, 0, len);
         ifc->ifc_len = len;
         ifc->ifc_buf = buf;
         if (ioctl(sockfd, SIOCGIFCONF, ifc) < 0) {
-            fprintf(stderr, "WARN: ioctl SIOCGIFCONF: %d: %s\n",
+            printerr("WARN: ioctl SIOCGIFCONF: %d: %s\n",
                     errno, strerror(errno));
             if (errno != EINVAL || lastlen != 0) {
                 int saverr = errno; 
@@ -228,6 +233,10 @@ struct ifreq* primary_interface(void) {
 
     /* create a freshly allocated copy */
     ifrcopy = (struct ifreq*) malloc(sizeof(struct ifreq));
+    if (ifrcopy == NULL) {
+        printerr("malloc: %s\n", strerror(errno));
+        return NULL;
+    }
     memcpy(ifrcopy, &result, sizeof(struct ifreq));
     return ifrcopy;
 }

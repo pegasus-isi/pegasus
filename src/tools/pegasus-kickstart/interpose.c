@@ -40,6 +40,10 @@
  *      mmap and assume that the total size being mapped is read/written
  */
 
+#define printerr(fmt, ...) \
+    fprintf_untraced(stderr, "libinterpose[%d]: %s[%d]: " fmt, \
+                     getpid(), __FILE__, __LINE__, ##__VA_ARGS__)
+
 #ifdef DEBUG
 #define debug(format, args...) \
     fprintf_untraced(stderr, "libinterpose: " format "\n" , ##args)
@@ -154,7 +158,7 @@ static int topen() {
 
     char *kickstart_prefix = getenv("KICKSTART_PREFIX");
     if (kickstart_prefix == NULL) {
-        fprintf_untraced(stderr, "libinterpose: Unable to open trace file: KICKSTART_PREFIX not set in environment");
+        printerr("Unable to open trace file: KICKSTART_PREFIX not set in environment");
         return -1;
     }
 
@@ -163,7 +167,7 @@ static int topen() {
 
     trace = fopen_untraced(filename, "w+");
     if (trace == NULL) {
-        fprintf_untraced(stderr, "libinterpose: Unable to open trace file");
+        printerr("Unable to open trace file");
         return -1;
     }
 
@@ -237,8 +241,8 @@ static Descriptor *get_descriptor(int fd) {
 static char *get_fullpath(const char *path) {
     static char fullpath[BUFSIZ];
     if (realpath(path, fullpath) == NULL) {
-        fprintf_untraced(stderr, "libinterpose: Unable to get real path for '%s': %s\n",
-                path, strerror(errno));
+        printerr("Unable to get real path for '%s': %s\n",
+                 path, strerror(errno));
         return NULL;
     }
     return fullpath;
@@ -432,13 +436,13 @@ static void trace_openat(int fd) {
     char fullpath[BUFSIZ];
     int len = readlink(linkpath, fullpath, BUFSIZ);
     if (len <= 0) {
-        fprintf_untraced(stderr, "libinterpose: Unable to get real path for fd %d: %s\n",
-                fd, strerror(errno));
+        printerr("Unable to get real path for fd %d: %s\n",
+                 fd, strerror(errno));
         return;
     }
     if (len == BUFSIZ) {
-        fprintf_untraced(stderr, "libinterpose: Path too long for fd %d: %s\n",
-                fd, strerror(errno));
+        printerr("Path too long for fd %d: %s\n",
+                 fd, strerror(errno));
         return;
     }
     /* readlink doesn't add a null byte */
@@ -580,6 +584,9 @@ static void __attribute__((constructor)) interpose_init(void) {
     getrlimit(RLIMIT_NOFILE, &nofile_limit);
     max_descriptors = nofile_limit.rlim_max;
     descriptors = (Descriptor *)calloc(sizeof(Descriptor), max_descriptors);
+    if (descriptors == NULL) {
+        printerr("calloc: %s\n", strerror(errno));
+    }
 
     debug("Max descriptors: %d", max_descriptors);
 

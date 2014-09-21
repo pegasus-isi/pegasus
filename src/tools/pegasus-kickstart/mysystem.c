@@ -30,6 +30,7 @@
 #include "statinfo.h"
 #include "mysystem.h"
 #include "procinfo.h"
+#include "error.h"
 
 /* The name of the program (argv[0]) set in pegasus-kickstart.c:main */
 char *programname;
@@ -113,7 +114,7 @@ static FileInfo *readTraceFileRecord(const char *buf, FileInfo *files) {
     size_t bread = 0;
     size_t bwrite = 0;
     if (sscanf(buf, "file: '%[^']' %lu %lu %lu\n", filename, &size, &bread, &bwrite) != 4) {
-        fprintf(stderr, "Invalid file record: %s", buf);
+        printerr("Invalid file record: %s", buf);
         return files;
     }
 
@@ -133,6 +134,10 @@ static FileInfo *readTraceFileRecord(const char *buf, FileInfo *files) {
     if (file == NULL) {
         /* No duplicate found */
         file = (FileInfo *)calloc(sizeof(FileInfo), 1);
+        if (file == NULL) {
+            printerr("calloc: %s\n", strerror(errno));
+            return files;
+        }
         file->filename = strdup(filename);
         file->size = size;
         file->bread = bread;
@@ -161,7 +166,7 @@ static SockInfo *readTraceSocketRecord(const char *buf, SockInfo *sockets) {
     size_t brecv = 0;
     size_t bsend = 0;
     if (sscanf(buf, "socket: %s %d %lu %lu\n", address, &port, &brecv, &bsend) != 4) {
-        fprintf(stderr, "Invalid socket record: %s", buf);
+        printerr("Invalid socket record: %s", buf);
         return sockets;
     }
 
@@ -181,6 +186,10 @@ static SockInfo *readTraceSocketRecord(const char *buf, SockInfo *sockets) {
     if (sock == NULL) {
         /* No duplicate found */
         sock = (SockInfo *)calloc(sizeof(SockInfo), 1);
+        if (sock == NULL) {
+            printerr("calloc: %s\n", strerror(errno));
+            return sockets;
+        }
         sock->address = strdup(address);
         sock->port = port;
         sock->brecv = brecv;
@@ -210,12 +219,16 @@ static int startswith(const char *line, const char *tok) {
 static ProcInfo *processTraceFile(const char *fullpath) {
     FILE *trace = fopen(fullpath, "r");
     if (trace == NULL) {
-        fprintf(stderr, "Unable to open trace file '%s': %s\n",
+        printerr("Unable to open trace file '%s': %s\n",
                 fullpath, strerror(errno));
         return NULL;
     }
 
     ProcInfo *proc = (ProcInfo *)calloc(sizeof(ProcInfo), 1);
+    if (proc == NULL) {
+        printerr("calloc: %s\n", strerror(errno));
+        return NULL;
+    }
 
     /* Read data from the trace file */
     char line[BUFSIZ];
@@ -265,7 +278,7 @@ static ProcInfo *processTraceFile(const char *fullpath) {
         } else if (startswith(line, "stop:")) {
             sscanf(line,"stop:%lf\n", &(proc->stop));
         } else {
-            fprintf(stderr, "Unrecognized libinterpose record: %s", line);
+            printerr("Unrecognized libinterpose record: %s", line);
         }
     }
 
@@ -281,7 +294,7 @@ static ProcInfo *processTraceFile(const char *fullpath) {
 static ProcInfo *processTraceFiles(const char *tempdir, const char *trace_file_prefix) {
     DIR *tmp = opendir(tempdir);
     if (tmp == NULL) {
-        fprintf(stderr, "Unable to open trace file directory: %s", tempdir);
+        printerr("Unable to open trace file directory: %s", tempdir);
         return NULL;
     }
 
@@ -330,7 +343,7 @@ static char **tryGetNewEnvironment(char **envp, const char *tempdir, const char 
     /* If the interpose library can't be found, then we can't trace */
     char libpath[BUFSIZ];
     if (findInterposeLibrary(libpath, BUFSIZ) < 0) {
-        fprintf(stderr, "kickstart: Cannot locate libinterpose.so\n");
+        printerr("Cannot locate libinterpose.so\n");
         return envp;
     }
 
@@ -345,6 +358,10 @@ static char **tryGetNewEnvironment(char **envp, const char *tempdir, const char 
 
     /* Copy the environment variables to a new array */
     char **newenvp = (char **)malloc(sizeof(char **)*(vars+3));
+    if (newenvp == NULL) {
+        printerr("malloc: %s\n", strerror(errno));
+        return envp;
+    }
     for (vars=0; envp[vars] != NULL; vars++) {
         newenvp[vars] = envp[vars];
     }
@@ -458,7 +475,7 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
 
         /* sanity check */
         if (kill(jobinfo->child, 0) == 0) {
-            fprintf(stderr, "ERROR: job %d is still running!\n", jobinfo->child);
+            printerr("ERROR: job %d is still running!\n", jobinfo->child);
             if (!errno) errno = EINPROGRESS;
         }
 

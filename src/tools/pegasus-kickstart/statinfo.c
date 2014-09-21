@@ -27,6 +27,7 @@
 
 #include "statinfo.h"
 #include "utils.h"
+#include "error.h"
 
 int make_application_executable = 0;
 size_t data_section_size = 262144ul;
@@ -117,6 +118,10 @@ char* findApp(const char* fn) {
     for (s=strtok(path,":"); s; s=strtok(NULL,":")) {
         size_t len = strlen(fn) + strlen(s) + 2;
         t = (char*) malloc(len);
+        if (t == NULL) {
+            printerr("malloc: %s\n", strerror(errno));
+            return NULL;
+        }
         strncpy(t, s, len);
         strncat(t, "/", len);
         strncat(t, fn, len);
@@ -241,7 +246,7 @@ RETRY:
         /* mkstemp has failed, au weia! */
         statinfo->source = IS_INVALID;
         statinfo->error = errno;
-        fprintf(stderr, "Warning! Invalid FIFO: mkstemp failed: %d: %s\n",
+        printerr("Warning! Invalid FIFO: mkstemp failed: %d: %s\n",
                 errno, strerror(errno));
 
     } else {
@@ -259,7 +264,7 @@ RETRY:
                 /* other errors are treated as more fatal */
                 statinfo->source = IS_INVALID;
                 statinfo->error = errno;
-                fprintf(stderr, "Warning! Invalid FIFO: mkfifo failed: %d: %s\n",
+                printerr("Warning! Invalid FIFO: mkfifo failed: %d: %s\n",
                         errno, strerror(errno));
             }
         } else {
@@ -270,7 +275,7 @@ RETRY:
             if ((result = open(pattern, O_RDWR | O_NONBLOCK)) == -1) {
                 statinfo->source = IS_INVALID;
                 statinfo->error = errno;
-                fprintf(stderr, "Warning! Invalid FIFO: open failed: %d: %s\n",
+                printerr("Warning! Invalid FIFO: open failed: %d: %s\n",
                         errno, strerror(errno));
             } else {
                 /* this file descriptor is NOT to be passed to the jobs? So far,
@@ -291,12 +296,16 @@ RETRY:
                 if (key != NULL) {
                     size_t size = strlen(key) + strlen(pattern) + 2;
                     char* temp = (char*) malloc(size);
+                    if (temp == NULL) {
+                        printerr("malloc: %s\n", strerror(errno));
+                        return -1;
+                    }
                     memset(temp, 0, size--);
                     strncpy(temp, key, size);
                     strncat(temp, "=", size);
                     strncat(temp, pattern, size);
                     if (putenv(temp) == -1) {
-                        fprintf(stderr, "Warning: Unable to putenv %s: %d: %s\n",
+                        printerr("Warning: Unable to putenv %s: %d: %s\n",
                                 key, errno, strerror(errno));
                     }
                     /* do not free this string here nor now */
@@ -323,6 +332,10 @@ static int preserveFile(const char* fn) {
         /* file exists, do something */
         size_t size = strlen(fn)+8;
         char* newfn = malloc(size);
+        if (newfn == NULL) {
+            printerr("malloc: %s\n", strerror(errno));
+            return -1;
+        }
 
         close(fd);
         strncpy(newfn, fn, size);
@@ -643,7 +656,7 @@ size_t printXMLStatInfo(FILE *out, int indent, const char* tag, const char* id,
         fprintf(out, "%*s<data%s", indent+2, "",
                 (fsize > dsize ? " truncated=\"true\"" : ""));
         if (fsize > 0) {
-            char* buf = (char*) malloc(BUFSIZ);
+            char buf [BUFSIZ];
             int fd = dup(info->file.descriptor);
 
             fprintf(out, ">");
@@ -660,7 +673,7 @@ size_t printXMLStatInfo(FILE *out, int indent, const char* tag, const char* id,
                         if (rsize == 0) {
                             break;
                         } else if (rsize < 0) {
-                            fprintf(stderr, "ERROR reading %s: %s",
+                            printerr("ERROR reading %s: %s",
                                     info->file.name, strerror(errno));
                             break;
                         }
@@ -672,7 +685,6 @@ size_t printXMLStatInfo(FILE *out, int indent, const char* tag, const char* id,
             }
 
             fprintf(out, "</data>\n");
-            free(buf);
         } else {
             fprintf(out, "/>\n");
         }

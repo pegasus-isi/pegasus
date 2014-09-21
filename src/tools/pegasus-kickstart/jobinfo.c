@@ -29,6 +29,7 @@
 #include "useinfo.h"
 #include "jobinfo.h"
 #include "parse.h"
+#include "error.h"
 
 void initJobInfoFromString(JobInfo* jobinfo, const char* commandline) {
     /* purpose: initialize the data structure with default
@@ -55,10 +56,18 @@ void initJobInfoFromString(JobInfo* jobinfo, const char* commandline) {
 
         /* prepare copy area */
         jobinfo->copy = (char*) malloc(size+argc);
+        if (jobinfo->copy == NULL) {
+            printerr("malloc: %s\n", strerror(errno));
+            return;
+        }
 
         /* prepare argument vector */
         jobinfo->argc = argc;
         jobinfo->argv = (char* const*) calloc(argc+1, sizeof(char*));
+        if (jobinfo->argv == NULL) {
+            printerr("calloc: %s\n", strerror(errno));
+            return;
+        }
 
         /* copy list while updating argument vector and freeing lose arguments */
         t = jobinfo->copy;
@@ -126,10 +135,18 @@ void initJobInfo(JobInfo* jobinfo, int argc, char* const* argv) {
 
         /* prepare copy area */
         jobinfo->copy = (char*) malloc(size+argc);
+        if (jobinfo->copy == NULL) {
+            printerr("malloc: %s\n", strerror(errno));
+            return;
+        }
 
         /* prepare argument vector */
         jobinfo->argc = argc;
         jobinfo->argv = (char* const*) calloc(argc+1, sizeof(char*));
+        if (jobinfo->argv == NULL) {
+            printerr("calloc: %s\n", strerror(errno));
+            return;
+        }
 
         /* copy list while updating argument vector and freeing lose arguments */
         t = jobinfo->copy;
