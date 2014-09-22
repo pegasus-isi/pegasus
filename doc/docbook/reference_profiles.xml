@@ -204,6 +204,112 @@ pegasus.stagein.clusters 3</programlisting>
   </section>
 
   <section>
+    <title>Profiles Conflict Resolution</title>
+
+    <para>Irrespective of where the profiles are specified, eventually the
+    profiles are associated with jobs. Multiple sources may specify the same
+    profile for the same job. For instance, DAX may specify an environment
+    variable X. The site catalog may also specify an environment variable X
+    for the chosen site. The transformation catalog may specify an environment
+    variable X for the chosen site and application. When the job is
+    concretized, these three conflicts need to be resolved.</para>
+
+    <para>Pegasus defines a priority ordering of profiles. The higher priority
+    takes precedence (overwrites) a profile of a lower priority.</para>
+
+    <orderedlist>
+      <listitem>
+        <para>Transformation Catalog Profiles</para>
+      </listitem>
+
+      <listitem>
+        <para>Site Catalog Profiles</para>
+      </listitem>
+
+      <listitem>
+        <para>DAX Profiles</para>
+      </listitem>
+
+      <listitem>
+        <para>Profiles in Properties</para>
+      </listitem>
+    </orderedlist>
+  </section>
+
+  <section>
+    <title>Details of Profile Handling</title>
+
+    <para>The previous sections omitted some of the finer details for the sake
+    of clarity. To understand some of the constraints that Pegasus imposes, it
+    is required to look at the way profiles affect jobs.</para>
+
+    <section>
+      <title>Details of env Profiles</title>
+
+      <para>Profiles in the env namespace are translated to a
+      semicolon-separated list of key-value pairs. The list becomes the
+      argument for the Condor environment command in the job's submit
+      file.</para>
+
+      <programlisting>######################################################################
+# Pegasus WMS  SUBMIT FILE GENERATOR
+# DAG : black-diamond, Index = 0, Count = 1
+# SUBMIT FILE NAME : findrange_ID000002.sub
+######################################################################
+globusrsl = (jobtype=single)
+<emphasis role="bold">environment=GLOBUS_LOCATION=/shared/globus;LD_LIBRARY_PATH=/shared/globus/lib;</emphasis>
+executable = /shared/software/linux/pegasus/default/bin/kickstart
+globusscheduler = columbus.isi.edu/jobmanager-condor
+remote_initialdir = /shared/CONDOR/workdir/isi_hourglass
+universe = globus
+&amp;mldr;
+queue
+######################################################################
+# END OF SUBMIT FILE
+</programlisting>
+
+      <para>Condor-G, in turn, will translate the
+      <emphasis>environment</emphasis> command for any remote job into Globus
+      RSL environment settings, and append them to any existing RSL syntax it
+      generates. To permit proper mixing, all <emphasis>environment</emphasis>
+      setting should solely use the env profiles, and none of the Condor nor
+      Globus environment settings.</para>
+
+      <para>If <emphasis>kickstart</emphasis> starts a job, it may make use of
+      environment variables in its executable and arguments setting.</para>
+    </section>
+
+    <section>
+      <title>Details of globus Profiles</title>
+
+      <para>Profiles in the <emphasis>globus</emphasis> Namespaces are
+      translated into a list of paranthesis-enclosed equal-separated key-value
+      pairs. The list becomes the value for the Condor
+      <emphasis>globusrsl</emphasis> setting in the job's submit file:</para>
+
+      <programlisting>######################################################################
+# Pegasus WMS SUBMIT FILE GENERATOR
+# DAG : black-diamond, Index = 0, Count = 1
+# SUBMIT FILE NAME : findrange_ID000002.sub
+######################################################################
+<emphasis role="bold">globusrsl = (jobtype=single)(queue=fast)(project=nvo)</emphasis>
+executable = /shared/software/linux/pegasus/default/bin/kickstart
+globusscheduler = columbus.isi.edu/jobmanager-condor
+remote_initialdir = /shared/CONDOR/workdir/isi_hourglass
+universe = globus
+&amp;mldr;
+queue
+######################################################################
+# END OF SUBMIT FILE
+</programlisting>
+
+      <para>For this reason, Pegasus prohibits the use of the
+      <emphasis>globusrsl</emphasis> key in the <emphasis>condor</emphasis>
+      profile namespace.</para>
+    </section>
+  </section>
+
+  <section>
     <title>Profile Namespaces</title>
 
     <para>Each namespace refers to a different aspect of a job&amp;rsquor;s
@@ -265,51 +371,50 @@ pegasus.stagein.clusters 3</programlisting>
         <tgroup cols="4">
           <tbody>
             <row>
-              <entry><emphasis role="bold">Environment
-              Variable</emphasis></entry>
+              <entry><emphasis role="bold">Property Key </emphasis></entry>
+
+              <entry><emphasis role="bold">Corresponding Profile Key
+              </emphasis></entry>
 
               <entry><emphasis role="bold">Where can it be
               specified</emphasis></entry>
-
-              <entry><emphasis role="bold">Corresponding Property Key if
-              applicable</emphasis></entry>
 
               <entry><emphasis role="bold">Description</emphasis></entry>
             </row>
 
             <row>
+              <entry>env.PEGASUS_HOME</entry>
+
               <entry>PEGASUS_HOME</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
 
-              <entry>env.PEGASUS_HOME</entry>
-
               <entry>Used by auxillary jobs created by Pegasus both on remote
               site and local site. Should be set usually set in the Site
               Catalog for the sites</entry>
             </row>
 
             <row>
+              <entry>env.GLOBUS_LOCATION</entry>
+
               <entry>GLOBUS_LOCATION</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
 
-              <entry>env.GLOBUS_LOCATION</entry>
-
               <entry>Used by auxillary jobs created by Pegasus both on remote
               site and local site. Should be set usually set in the Site
               Catalog for the sites</entry>
             </row>
 
             <row>
+              <entry>env.LD_LIBRARY_PATH</entry>
+
               <entry>LD_LIBRARY_PATH</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>env.LD_LIBRARY_PATH</entry>
 
               <entry>Point this to $GLOBUS_LOCATION/lib, except you cannot use
               the dollar variable. You must use the full path. Applies to
@@ -351,35 +456,35 @@ pegasus.stagein.clusters 3</programlisting>
         <tgroup cols="4">
           <tbody>
             <row>
-              <entry><emphasis role="bold">Key</emphasis></entry>
+              <entry><emphasis role="bold">Property Key </emphasis></entry>
+
+              <entry><emphasis role="bold">Corresponding Profile
+              Key</emphasis></entry>
 
               <entry><emphasis role="bold">Where can it be
               specified</emphasis></entry>
-
-              <entry><emphasis role="bold">Corresponding Property Key if
-              applicable</emphasis></entry>
 
               <entry><emphasis role="bold">Description</emphasis></entry>
             </row>
 
             <row>
+              <entry>globus.count</entry>
+
               <entry>count</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
 
-              <entry>globus.count</entry>
-
               <entry>the number of times an executable is started.</entry>
             </row>
 
             <row>
+              <entry>globus.jobtype</entry>
+
               <entry>jobtype</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>globus.jobtype</entry>
 
               <entry>specifies how the job manager should start the remote
               job. While Pegasus defaults to single, use mpi when running MPI
@@ -387,83 +492,83 @@ pegasus.stagein.clusters 3</programlisting>
             </row>
 
             <row>
+              <entry>globus.maxcputime</entry>
+
               <entry>maxcputime</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>globus.maxcputime</entry>
 
               <entry>the max CPU time in minutes for a single execution of a
               job.</entry>
             </row>
 
             <row>
+              <entry>globus.maxmemory</entry>
+
               <entry>maxmemory</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
 
-              <entry>globus.maxmemory</entry>
-
               <entry>the maximum memory in MB required for the job</entry>
             </row>
 
             <row>
+              <entry>globus.maxtime</entry>
+
               <entry>maxtime</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>globus.maxtime</entry>
 
               <entry>the maximum time or walltime in minutes for a single
               execution of a job.</entry>
             </row>
 
             <row>
+              <entry>globus.maxwalltime</entry>
+
               <entry>maxwalltime</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>globus.maxwalltime</entry>
 
               <entry>the maximum walltime in minutes for a single execution of
               a job.</entry>
             </row>
 
             <row>
+              <entry>globus.minmemory</entry>
+
               <entry>minmemory</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>globus.minmemory</entry>
 
               <entry>the minumum amount of memory required for this
               job</entry>
             </row>
 
             <row>
+              <entry>globus.project</entry>
+
               <entry>project</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>globus.project</entry>
 
               <entry>associates an account with a job at the remote
               end.</entry>
             </row>
 
             <row>
+              <entry>globus.queue</entry>
+
               <entry>queue</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>globus.queue</entry>
 
               <entry>the remote queue in which the job should be run. Used
               when remote scheduler is PBS that supports queues.</entry>
@@ -569,24 +674,24 @@ pegasus.stagein.clusters 3</programlisting>
         <tgroup cols="4">
           <tbody>
             <row>
-              <entry><emphasis role="bold">Key</emphasis></entry>
+              <entry><emphasis role="bold">Property Key </emphasis></entry>
+
+              <entry><emphasis role="bold">Corresponding Profile
+              Key</emphasis></entry>
 
               <entry><emphasis role="bold">Where can it be
               specified</emphasis></entry>
-
-              <entry><emphasis role="bold">Corresponding Property Key if
-              applicable</emphasis></entry>
 
               <entry><emphasis role="bold">Description</emphasis></entry>
             </row>
 
             <row>
+              <entry>condor.universe</entry>
+
               <entry>universe</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>condor.universe</entry>
 
               <entry>Pegasus defaults to either globus or scheduler universes.
               Set to standard for compute jobs that require standard universe.
@@ -595,12 +700,12 @@ pegasus.stagein.clusters 3</programlisting>
             </row>
 
             <row>
+              <entry>condor.periodic_release</entry>
+
               <entry>periodic_release</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>condor.periodic_release</entry>
 
               <entry>is the number of times job is released back to the queue
               if it goes to HOLD, e.g. due to Globus errors. Pegasus defaults
@@ -608,12 +713,12 @@ pegasus.stagein.clusters 3</programlisting>
             </row>
 
             <row>
+              <entry>condor.periodic_remove</entry>
+
               <entry>periodic_remove</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>condor.periodic_remove</entry>
 
               <entry>is the number of times a job is allowed to get into HOLD
               state before being removed from the queue. Pegasus defaults to
@@ -621,48 +726,48 @@ pegasus.stagein.clusters 3</programlisting>
             </row>
 
             <row>
+              <entry>condor.filesystemdomain</entry>
+
               <entry>filesystemdomain</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>condor.filesystemdomain</entry>
 
               <entry>Useful for Condor glide-ins to pin a job to a remote
               site.</entry>
             </row>
 
             <row>
+              <entry>condor.stream_error</entry>
+
               <entry>stream_error</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>condor.stream_error</entry>
 
               <entry>boolean to turn on the streaming of the stderr of the
               remote job back to submit host.</entry>
             </row>
 
             <row>
+              <entry>condor.stream_output</entry>
+
               <entry>stream_output</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>condor.stream_output</entry>
 
               <entry>boolean to turn on the streaming of the stdout of the
               remote job back to submit host.</entry>
             </row>
 
             <row>
+              <entry>condor.priority</entry>
+
               <entry>priority</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>condor.priority</entry>
 
               <entry>integer value to assign the priority of a job. Higher
               value means higher priority. The priorities are only applied for
@@ -671,36 +776,36 @@ pegasus.stagein.clusters 3</programlisting>
             </row>
 
             <row>
+              <entry>condor.request_cpus</entry>
+
               <entry>request_cpus</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>condor.request_cpus</entry>
 
               <entry>New in Condor 7.8.0 . Number of CPU's a job
               requires.</entry>
             </row>
 
             <row>
+              <entry>condor.request_memory</entry>
+
               <entry>request_memory</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>condor.request_memory</entry>
 
               <entry>New in Condor 7.8.0 . Amount of memory a job
               requires.</entry>
             </row>
 
             <row>
+              <entry>condor.request_disk</entry>
+
               <entry>request_disk</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>condor.request_disk</entry>
 
               <entry>New in Condor 7.8.0 . Amount of disk a job
               requires.</entry>
@@ -816,48 +921,48 @@ pegasus.stagein.clusters 3</programlisting>
           <tgroup cols="4">
             <tbody>
               <row>
-                <entry><emphasis role="bold">Key</emphasis></entry>
+                <entry><emphasis role="bold">Property Key </emphasis></entry>
+
+                <entry><emphasis role="bold">Corresponding Profile Key
+                </emphasis></entry>
 
                 <entry><emphasis role="bold">Where can it be
                 specified</emphasis></entry>
-
-                <entry><emphasis role="bold">Corresponding Property Key if
-                applicable</emphasis></entry>
 
                 <entry><emphasis role="bold">Description</emphasis></entry>
               </row>
 
               <row>
+                <entry>dagman.pre</entry>
+
                 <entry>PRE</entry>
 
                 <entry>Transformation Catalog, Site Catalog, DAX, Properties
                 File</entry>
-
-                <entry>dagman.pre</entry>
 
                 <entry>is the path to the pre-script. DAGMan executes the
                 pre-script before it runs the job.</entry>
               </row>
 
               <row>
+                <entry>dagman.pre.arguments</entry>
+
                 <entry>PRE.ARGUMENTS</entry>
 
                 <entry>Transformation Catalog, Site Catalog, DAX, Properties
                 File</entry>
-
-                <entry>dagman.pre.arguments</entry>
 
                 <entry>are command-line arguments for the pre-script, if
                 any.</entry>
               </row>
 
               <row>
+                <entry>dagman.post</entry>
+
                 <entry>POST</entry>
 
                 <entry>Transformation Catalog, Site Catalog, DAX, Properties
                 File</entry>
-
-                <entry>dagman.post</entry>
 
                 <entry>is the postscript type/mode that a user wants to
                 associate with a job. <orderedlist>
@@ -917,36 +1022,36 @@ pegasus.stagein.clusters 3</programlisting>
               </row>
 
               <row>
+                <entry>dagman.post.path.[value of dagman.post]</entry>
+
                 <entry>POST.PATH.* ( where * is replaced by the value of the
                 POST Profile )</entry>
 
                 <entry>Transformation Catalog, Site Catalog, DAX, Properties
                 File</entry>
 
-                <entry>dagman.post.path.[value of dagman.post]</entry>
-
                 <entry>the path to the post script on the submit host.</entry>
               </row>
 
               <row>
+                <entry>dagman.post.arguments</entry>
+
                 <entry>POST.ARGUMENTS</entry>
 
                 <entry>Transformation Catalog, Site Catalog, DAX, Properties
                 File</entry>
-
-                <entry>dagman.post.arguments</entry>
 
                 <entry>are the command line arguments for the post script, if
                 any.</entry>
               </row>
 
               <row>
+                <entry>dagman.retry</entry>
+
                 <entry>RETRY</entry>
 
                 <entry>Transformation Catalog, Site Catalog, DAX, Properties
                 File</entry>
-
-                <entry>dagman.retry</entry>
 
                 <entry>is the number of times DAGMan retries the full job
                 cycle from pre-script through post-script, if failure was
@@ -954,23 +1059,23 @@ pegasus.stagein.clusters 3</programlisting>
               </row>
 
               <row>
+                <entry>dagman.category</entry>
+
                 <entry>CATEGORY</entry>
 
                 <entry>Transformation Catalog, Site Catalog, DAX, Properties
                 File</entry>
 
-                <entry>dagman.category</entry>
-
                 <entry>the DAGMan category the job belongs to.</entry>
               </row>
 
               <row>
+                <entry>dagman.priority</entry>
+
                 <entry>PRIORITY</entry>
 
                 <entry>Transformation Catalog, Site Catalog, DAX, Properties
                 File</entry>
-
-                <entry>dagman.priority</entry>
 
                 <entry>the priority to apply to a job. DAGMan uses this to
                 select what jobs to release when MAXJOBS is enforced for the
@@ -994,13 +1099,13 @@ pegasus.stagein.clusters 3</programlisting>
         <tgroup cols="4">
           <tbody>
             <row>
-              <entry><emphasis role="bold">Key</emphasis></entry>
+              <entry><emphasis role="bold">Corresponding Profile Key if
+              applicable</emphasis></entry>
 
               <entry><emphasis role="bold">Where can it be
               specified</emphasis></entry>
 
-              <entry><emphasis role="bold">Corresponding Property Key if
-              applicable</emphasis></entry>
+              <entry><emphasis role="bold">Property Key </emphasis></entry>
 
               <entry><emphasis role="bold">Description</emphasis></entry>
             </row>
@@ -1118,24 +1223,24 @@ pegasus.stagein.clusters 3</programlisting>
         <tgroup cols="4">
           <tbody>
             <row>
-              <entry><emphasis role="bold">Key</emphasis></entry>
+              <entry><emphasis role="bold">Property Key </emphasis></entry>
+
+              <entry><emphasis role="bold">Corresponding Profile
+              Key</emphasis></entry>
 
               <entry><emphasis role="bold">Where can it be
               specified</emphasis></entry>
-
-              <entry><emphasis role="bold">Corresponding Property Key if
-              applicable</emphasis></entry>
 
               <entry><emphasis role="bold">Description</emphasis></entry>
             </row>
 
             <row>
+              <entry>pegasus.clusters.num</entry>
+
               <entry>clusters.num</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>pegasus.clusters.num</entry>
 
               <entry>Please refer to the <link
               linkend="horizontal_clustering">Pegasus Clustering Guide</link>
@@ -1145,12 +1250,12 @@ pegasus.stagein.clusters 3</programlisting>
             </row>
 
             <row>
+              <entry>pegasus.clusters.size</entry>
+
               <entry>clusters.size</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>pegasus.clusters.size</entry>
 
               <entry>Please refer to the <link
               linkend="horizontal_clustering">Pegasus Clustering Guide</link>
@@ -1160,12 +1265,12 @@ pegasus.stagein.clusters 3</programlisting>
             </row>
 
             <row>
+              <entry>pegasus.cores</entry>
+
               <entry>cores</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>pegasus.cores</entry>
 
               <entry>The number of cores, associated with the job. This is
               solely used for accounting purposes in the database while
@@ -1175,12 +1280,12 @@ pegasus.stagein.clusters 3</programlisting>
             </row>
 
             <row>
+              <entry>pegasus.runtime</entry>
+
               <entry>runtime</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>pegasus.runtime</entry>
 
               <entry>Please refer to the <link
               linkend="runtime_clustering">Pegasus Clustering Guide</link> for
@@ -1189,12 +1294,12 @@ pegasus.stagein.clusters 3</programlisting>
             </row>
 
             <row>
+              <entry>pegasus.clusters.maxruntime</entry>
+
               <entry>clusters.maxruntime</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>pegasus.clusters.maxruntime</entry>
 
               <entry>Please refer to the <link
               linkend="runtime_clustering">Pegasus Clustering Guide</link> for
@@ -1203,24 +1308,24 @@ pegasus.stagein.clusters 3</programlisting>
             </row>
 
             <row>
+              <entry>pegasus.job.aggregator</entry>
+
               <entry>job.aggregator</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>pegasus.job.aggregator</entry>
 
               <entry>Indicates the clustering executable that is used to run
               the clustered job on the remote site.</entry>
             </row>
 
             <row>
+              <entry>pegasus.gridstart</entry>
+
               <entry>gridstart</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>pegasus.gridstart</entry>
 
               <entry>Determines the executable for launching a job. Possible
               values are <emphasis role="bold"><emphasis>Kickstart |
@@ -1228,36 +1333,36 @@ pegasus.stagein.clusters 3</programlisting>
             </row>
 
             <row>
+              <entry>pegasus.gridstart.path</entry>
+
               <entry>gridstart.path</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>pegasus.gridstart.path</entry>
 
               <entry>Sets the path to the gridstart . This profile is best set
               in the Site Catalog.</entry>
             </row>
 
             <row>
+              <entry>pegasus.gridstart.arguments</entry>
+
               <entry>gridstart.arguments</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>pegasus.gridstart.arguments</entry>
 
               <entry>Sets the arguments with which GridStart is used to launch
               a job on the remote site.</entry>
             </row>
 
             <row>
+              <entry>pegasus.stagein.clusters</entry>
+
               <entry>stagein.clusters</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>pegasus.stagein.clusters</entry>
 
               <entry>This key determines the maximum number of
               <emphasis>stage-in</emphasis> jobs that are can executed locally
@@ -1268,12 +1373,12 @@ pegasus.stagein.clusters 3</programlisting>
             </row>
 
             <row>
+              <entry>pegasus.stagein.local.clusters</entry>
+
               <entry>stagein.local.clusters</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>pegasus.stagein.local.clusters</entry>
 
               <entry>This key provides finer grained control in determining
               the number of stage-in jobs that are executed locally and are
@@ -1283,12 +1388,12 @@ pegasus.stagein.clusters 3</programlisting>
             </row>
 
             <row>
+              <entry>pegasus.stagein.remote.clusters</entry>
+
               <entry>stagein.remote.clusters</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>pegasus.stagein.remote.clusters</entry>
 
               <entry>This key provides finer grained control in determining
               the number of stage-in jobs that are executed remotely on the
@@ -1298,12 +1403,12 @@ pegasus.stagein.clusters 3</programlisting>
             </row>
 
             <row>
+              <entry>pegasus.stageout.clusters</entry>
+
               <entry>stageout.clusters</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>pegasus.stageout.clusters</entry>
 
               <entry>This key determines the maximum number of
               <emphasis>stage-out</emphasis> jobs that are can executed
@@ -1313,12 +1418,12 @@ pegasus.stagein.clusters 3</programlisting>
             </row>
 
             <row>
+              <entry>pegasus.stageout.local.clusters</entry>
+
               <entry>stageout.local.clusters</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>pegasus.stageout.local.clusters</entry>
 
               <entry>This key provides finer grained control in determining
               the number of stage-out jobs that are executed locally and are
@@ -1328,12 +1433,12 @@ pegasus.stagein.clusters 3</programlisting>
             </row>
 
             <row>
+              <entry>pegasus.stageout.remote.clusters</entry>
+
               <entry>stageout.remote.clusters</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>pegasus.stageout.remote.clusters</entry>
 
               <entry>This key provides finer grained control in determining
               the number of stage-out jobs that are executed remotely on the
@@ -1343,24 +1448,24 @@ pegasus.stagein.clusters 3</programlisting>
             </row>
 
             <row>
+              <entry>pegasus.group</entry>
+
               <entry>group</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>pegasus.group</entry>
 
               <entry>Tags a job with an arbitrary group identifier. The group
               site selector makes use of the tag.</entry>
             </row>
 
             <row>
+              <entry>pegasus.change.dir</entry>
+
               <entry>change.dir</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>pegasus.change.dir</entry>
 
               <entry>If true, tells <emphasis>kickstart</emphasis> to change
               into the remote working directory. Kickstart itself is executed
@@ -1369,12 +1474,12 @@ pegasus.stagein.clusters 3</programlisting>
             </row>
 
             <row>
+              <entry>pegasus.create.dir</entry>
+
               <entry>create.dir</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>pegasus.create.dir</entry>
 
               <entry>If true, tells <emphasis>kickstart</emphasis> to create
               the the remote working directory before changing into the remote
@@ -1384,12 +1489,12 @@ pegasus.stagein.clusters 3</programlisting>
             </row>
 
             <row>
+              <entry>pegasus.transfer.proxy</entry>
+
               <entry>transfer.proxy</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>pegasus.transfer.proxy</entry>
 
               <entry>If true, tells Pegasus to explicitly transfer the proxy
               for transfer jobs to the remote site. This is useful, when you
@@ -1398,12 +1503,12 @@ pegasus.stagein.clusters 3</programlisting>
             </row>
 
             <row>
+              <entry>pegasus.transfer.arguments</entry>
+
               <entry>transfer.arguments</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>pegasus.transfer.arguments</entry>
 
               <entry>Allows the user to specify the arguments with which the
               transfer executable is invoked. However certain options are
@@ -1413,12 +1518,12 @@ pegasus.stagein.clusters 3</programlisting>
             </row>
 
             <row>
+              <entry>pegasus.transfer.threads</entry>
+
               <entry>transfer.threads</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>pegasus.transfer.threads</entry>
 
               <entry>the number of threads launched by pegasus-transfer when
               doing the transfers. The profile applies to the separate data
@@ -1427,12 +1532,12 @@ pegasus.stagein.clusters 3</programlisting>
             </row>
 
             <row>
+              <entry>pegasus.transfer.lite.arguments</entry>
+
               <entry>transfer.lite.arguments</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>pegasus.transfer.lite.arguments</entry>
 
               <entry>Similar to transfer.arguments, but applies to the
               transfers performed in the PegasusLite jobs in the nonsharedfs
@@ -1440,12 +1545,12 @@ pegasus.stagein.clusters 3</programlisting>
             </row>
 
             <row>
+              <entry>pegasus.transfer.lite.threads</entry>
+
               <entry>transfer.lite.threads</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>pegasus.transfer.lite.threads</entry>
 
               <entry>Similar to threads, but applies to the transfers
               performed in the PegasusLite jobs in the nonsharedfs data
@@ -1453,12 +1558,12 @@ pegasus.stagein.clusters 3</programlisting>
             </row>
 
             <row>
+              <entry>pegasus.style</entry>
+
               <entry>style</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>pegasus.style</entry>
 
               <entry>Sets the condor submit file style. If set to globus,
               submit file generated refers to CondorG job submissions. If set
@@ -1470,12 +1575,12 @@ pegasus.stagein.clusters 3</programlisting>
             </row>
 
             <row>
+              <entry>pegasus.pmc_request_memory</entry>
+
               <entry>pmc_request_memory</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>pegasus.pmc_request_memory</entry>
 
               <entry>This key is used to set the -m option for
               pegasus-mpi-cluster. It specifies the amount of memory in MB
@@ -1484,12 +1589,12 @@ pegasus.stagein.clusters 3</programlisting>
             </row>
 
             <row>
+              <entry>pegasus.pmc_request_cpus</entry>
+
               <entry>pmc_request_cpus</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>pegasus.pmc_request_cpus</entry>
 
               <entry>This key is used to set the -c option for
               pegasus-mpi-cluster. It specifies the number of cpu's that a job
@@ -1498,12 +1603,12 @@ pegasus.stagein.clusters 3</programlisting>
             </row>
 
             <row>
+              <entry>pegasus.pmc_priority</entry>
+
               <entry>pmc_priority</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>pegasus.pmc_priority</entry>
 
               <entry>This key is used to set the -p option for
               pegasus-mpi-cluster. It specifies the priority for a job . This
@@ -1512,12 +1617,12 @@ pegasus.stagein.clusters 3</programlisting>
             </row>
 
             <row>
+              <entry>pegasus.pmc_task_arguments</entry>
+
               <entry>pmc_task_arguments</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>pegasus.pmc_task_arguments</entry>
 
               <entry>The key is used to pass any extra arguments to the PMC
               task during the planning time. They are added to the very end of
@@ -1527,24 +1632,24 @@ pegasus.stagein.clusters 3</programlisting>
             </row>
 
             <row>
+              <entry>pegasus.exitcode.failuremsg</entry>
+
               <entry>exitcode.failuremsg</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>pegasus.exitcode.failuremsg</entry>
 
               <entry>The message string that pegasus-exitcode searches for in
               the stdout and stderr of the job to flag failures.</entry>
             </row>
 
             <row>
+              <entry>pegasus.exitcode.successmsg</entry>
+
               <entry>exitcode.successmsg</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>pegasus.exitcode.successmsg</entry>
 
               <entry>The message string that pegasus-exitcode searches for in
               the stdout and stderr of the job to determine whether a job
@@ -1557,12 +1662,12 @@ pegasus.stagein.clusters 3</programlisting>
             </row>
 
             <row>
+              <entry>pegasus.checkpoint_time</entry>
+
               <entry>checkpoint_time</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>pegasus.checkpoint_time</entry>
 
               <entry>the expected time in seconds for a job after which it
               should be sent a TERM signal to generate a job checkpoint
@@ -1570,12 +1675,12 @@ pegasus.stagein.clusters 3</programlisting>
             </row>
 
             <row>
+              <entry>pegasus.maxwalltime</entry>
+
               <entry>maxwalltime</entry>
 
               <entry>Transformation Catalog, Site Catalog, DAX, Properties
               File</entry>
-
-              <entry>pegasus.maxwalltime</entry>
 
               <entry>the maximum walltime in minutes for a single execution of
               a job.</entry>
@@ -1587,108 +1692,8 @@ pegasus.stagein.clusters 3</programlisting>
   </section>
 
   <section>
-    <title>Profiles Conflict Resolution</title>
+    <title>Properties</title>
 
-    <para>Irrespective of where the profiles are specified, eventually the
-    profiles are associated with jobs. Multiple sources may specify the same
-    profile for the same job. For instance, DAX may specify an environment
-    variable X. The site catalog may also specify an environment variable X
-    for the chosen site. The transformation catalog may specify an environment
-    variable X for the chosen site and application. When the job is
-    concretized, these three conflicts need to be resolved.</para>
-
-    <para>Pegasus defines a priority ordering of profiles. The higher priority
-    takes precedence (overwrites) a profile of a lower priority.</para>
-
-    <orderedlist>
-      <listitem>
-        <para>Transformation Catalog Profiles</para>
-      </listitem>
-
-      <listitem>
-        <para>Site Catalog Profiles</para>
-      </listitem>
-
-      <listitem>
-        <para>DAX Profiles</para>
-      </listitem>
-
-      <listitem>
-        <para>Profiles in Properties</para>
-      </listitem>
-    </orderedlist>
-  </section>
-
-  <section>
-    <title>Details of Profile Handling</title>
-
-    <para>The previous sections omitted some of the finer details for the sake
-    of clarity. To understand some of the constraints that Pegasus imposes, it
-    is required to look at the way profiles affect jobs.</para>
-
-    <section>
-      <title>Details of env Profiles</title>
-
-      <para>Profiles in the env namespace are translated to a
-      semicolon-separated list of key-value pairs. The list becomes the
-      argument for the Condor environment command in the job's submit
-      file.</para>
-
-      <programlisting>######################################################################
-# Pegasus WMS  SUBMIT FILE GENERATOR
-# DAG : black-diamond, Index = 0, Count = 1
-# SUBMIT FILE NAME : findrange_ID000002.sub
-######################################################################
-globusrsl = (jobtype=single)
-<emphasis role="bold">environment=GLOBUS_LOCATION=/shared/globus;LD_LIBRARY_PATH=/shared/globus/lib;</emphasis>
-executable = /shared/software/linux/pegasus/default/bin/kickstart
-globusscheduler = columbus.isi.edu/jobmanager-condor
-remote_initialdir = /shared/CONDOR/workdir/isi_hourglass
-universe = globus
-&amp;mldr;
-queue
-######################################################################
-# END OF SUBMIT FILE
-</programlisting>
-
-      <para>Condor-G, in turn, will translate the
-      <emphasis>environment</emphasis> command for any remote job into Globus
-      RSL environment settings, and append them to any existing RSL syntax it
-      generates. To permit proper mixing, all <emphasis>environment</emphasis>
-      setting should solely use the env profiles, and none of the Condor nor
-      Globus environment settings.</para>
-
-      <para>If <emphasis>kickstart</emphasis> starts a job, it may make use of
-      environment variables in its executable and arguments setting.</para>
-    </section>
-
-    <section>
-      <title>Details of globus Profiles</title>
-
-      <para>Profiles in the <emphasis>globus</emphasis> Namespaces are
-      translated into a list of paranthesis-enclosed equal-separated key-value
-      pairs. The list becomes the value for the Condor
-      <emphasis>globusrsl</emphasis> setting in the job's submit file:</para>
-
-      <programlisting>######################################################################
-# Pegasus WMS SUBMIT FILE GENERATOR
-# DAG : black-diamond, Index = 0, Count = 1
-# SUBMIT FILE NAME : findrange_ID000002.sub
-######################################################################
-<emphasis role="bold">globusrsl = (jobtype=single)(queue=fast)(project=nvo)</emphasis>
-executable = /shared/software/linux/pegasus/default/bin/kickstart
-globusscheduler = columbus.isi.edu/jobmanager-condor
-remote_initialdir = /shared/CONDOR/workdir/isi_hourglass
-universe = globus
-&amp;mldr;
-queue
-######################################################################
-# END OF SUBMIT FILE
-</programlisting>
-
-      <para>For this reason, Pegasus prohibits the use of the
-      <emphasis>globusrsl</emphasis> key in the <emphasis>condor</emphasis>
-      profile namespace.</para>
-    </section>
+    <para/>
   </section>
 </section>
