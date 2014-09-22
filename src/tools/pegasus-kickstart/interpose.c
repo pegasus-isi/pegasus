@@ -410,8 +410,14 @@ static void trace_file(const char *path, int fd) {
         return;
     }
 
+    char *temp = strdup(path);
+    if (temp == NULL) {
+        printerr("strdup: %s\n", strerror(errno));
+        return;
+    }
+
     f->type = DTYPE_FILE;
-    f->path = strdup(path);
+    f->path = temp;
     f->bread = 0;
     f->bwrite = 0;
 }
@@ -528,10 +534,20 @@ static void trace_sock(int sockfd, const struct sockaddr *addr, socklen_t addrle
          */
         trace_close(sockfd);
 
-        d->type = DTYPE_SOCK;
-        d->path = strdup(addrstr);
+        /* Reset the descriptor */
+        d->type = DTYPE_NONE;
+        d->path = NULL;
         d->bread = 0;
         d->bwrite = 0;
+
+        char *temp = strdup(addrstr);
+        if (temp == NULL) {
+            printerr("strdup: %s\n", strerror(errno));
+            return;
+        }
+
+        d->type = DTYPE_SOCK;
+        d->path = temp;
     }
 }
 
@@ -551,10 +567,16 @@ static void trace_dup(int oldfd, int newfd) {
     /* Just in case newfd is already open */
     trace_close(newfd);
 
+    char *temp = strdup(o->path);
+    if (temp == NULL) {
+        printerr("strdup: %s\n", strerror(errno));
+        return;
+    }
+
     /* Copy the old descriptor into the new */
     Descriptor *n = get_descriptor(newfd);
     n->type = o->type;
-    n->path = strdup(o->path);
+    n->path = temp;
     n->bread = 0;
     n->bwrite = 0;
 }

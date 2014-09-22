@@ -74,6 +74,10 @@ static FileInfo *openFileInfo(ProcInfo *c, int fd, char *filename) {
             exit(1);
         }
         file->filename = strdup(filename);
+        if (file->filename == NULL) {
+            printerr("strdup: %s\n", strerror(errno));
+            exit(1);
+        }
         addFileInfo(c, file);
     }
 

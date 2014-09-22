@@ -86,7 +86,6 @@ char* findApp(const char* fn) {
      * paramtr: fn (IN): current knowledge of filename
      * returns: newly allocated fqpn of path to exectuble, or NULL if not found
      */
-    char* s, *path, *t = NULL;
 
     /* sanity check */
     if (fn == NULL || *fn == '\0') {
@@ -94,9 +93,14 @@ char* findApp(const char* fn) {
     }
 
     /* don't touch absolute paths */
-    if (*fn == '/') {
+    if (fn[0] == '/') {
         if (myaccess(fn) == 0) {
-            return strdup(fn);
+            char *exe = strdup(fn);
+            if (exe == NULL) {
+                printerr("strdup: %s\n", strerror(errno));
+                return NULL;
+            }
+            return exe;
         } else {
             return NULL;
         }
@@ -104,15 +108,28 @@ char* findApp(const char* fn) {
 
     /* try from CWD */
     if (myaccess(fn) == 0) {
-        return strdup(fn);
+        char *exe = strdup(fn);
+        if (exe == NULL) {
+            printerr("strdup: %s\n", strerror(errno));
+            return NULL;
+        }
+        return exe;
     }
 
     /* continue only if there is a PATH to check */
-    if ((s=getenv("PATH")) == NULL) {
+    char *s = getenv("PATH");
+    if (s == NULL) {
+        printerr("PATH not set\n");
         return NULL;
-    } else {
-        path = strdup(s);
     }
+
+    char *path = strdup(s);
+    if (path == NULL) {
+        printerr("strdup: %s\n", strerror(errno));
+        return NULL;
+    }
+
+    char *t = NULL;
 
     /* tokenize to compare */
     for (s=strtok(path,":"); s; s=strtok(NULL,":")) {
@@ -128,13 +145,13 @@ char* findApp(const char* fn) {
         if (myaccess(t) == 0) {
             break;
         } else {
-            free((void*) t);
+            free(t);
             t = NULL;
         }
     }
 
     /* some or no matches found */
-    free((void*) path);
+    free(path);
     return t;
 }
 
@@ -190,136 +207,58 @@ int initStatInfoAsTemp(StatInfo* statinfo, char* pattern) {
      *          pattern (IO): is the input pattern to mkstemp(), will be modified!
      * returns: a value of -1 indicates an error
      */
-    int result = mkstemp(pattern);
     memset(statinfo, 0, sizeof(StatInfo));
 
-    if (result == -1) {
-        /* mkstemp has failed, au weia! */
-        statinfo->source = IS_INVALID;
-        statinfo->error = errno;
-
-    } else {
-        /* try to ensure append mode for the file, because it is shared
-         * between jobs. If the SETFL operation fails, well there is nothing
-         * we can do about that. */
-        int flags = fcntl(result, F_GETFL);
-        if (flags != -1) {
-            fcntl(result, F_SETFL, flags | O_APPEND);
-        }
-
-        /* this file descriptor is NOT to be passed to the jobs? So far, the
-         * answer is true. We close this fd on exec of sub jobs, so it will
-         * be invisible to them. */
-        flags = fcntl(result, F_GETFD);
-        if (flags != -1) {
-            fcntl(result, F_SETFD, flags | FD_CLOEXEC);
-        }
-
-        /* the return is the chosen filename as well as the opened descriptor.
-         * we *could* unlink the filename right now, and be truly private, but
-         * users may want to look into the log files of long persisting operations. */
-        statinfo->source = IS_TEMP;
-        statinfo->file.descriptor = result;
-        statinfo->file.name = strdup(pattern);
-
-        errno = 0;
-        result = fstat(result, &statinfo->info);
-        statinfo->error = errno;
+    int fd = mkstemp(pattern);
+    if (fd < 0) {
+        printerr("mkstemp: %s\n", strerror(errno));
+        goto error;
     }
 
-    return result;
-}
-
-int initStatInfoAsFifo(StatInfo* statinfo, char* pattern, const char* key) {
-    /* purpose: Initialize a stat info buffer associated with a named pipe
-     * paramtr: statinfo (OUT): the newly initialized buffer
-     *          pattern (IO): is the input pattern to mkstemp(), will be modified!
-     *          key (IN): is the environment key at which to store the filename
-     * returns: a value of -1 indicates an error
-     */
-    int result = -1;
-    char* race = strdup(pattern);
-    memset(statinfo, 0, sizeof(StatInfo));
-
-RETRY:
-    if ((result = mkstemp(pattern)) == -1) {
-        /* mkstemp has failed, au weia! */
-        statinfo->source = IS_INVALID;
-        statinfo->error = errno;
-        printerr("Warning! Invalid FIFO: mkstemp failed: %d: %s\n",
-                errno, strerror(errno));
-
-    } else {
-        /* create a FIFO instead of a regular tmp file. */
-        /* we could have used mktemp() right away, mkstemp() is NOT safer here! */
-        close(result);
-        unlink(pattern);
-
-        if ((result = mkfifo(pattern, 0660)) == -1) {
-            if (errno == EEXIST) {
-                /* filename was taken, restore pattern and retry */
-                strcpy(pattern, race);
-                goto RETRY;
-            } else {
-                /* other errors are treated as more fatal */
-                statinfo->source = IS_INVALID;
-                statinfo->error = errno;
-                printerr("Warning! Invalid FIFO: mkfifo failed: %d: %s\n",
-                        errno, strerror(errno));
-            }
-        } else {
-            /* open in non-blocking mode for reading.
-             * WARNING: DO NOT open in O_RDONLY or suffer the consequences.
-             * You must open in O_RDWR to avoid having to deal with EOF
-             * whenever the clients drop to zero. */
-            if ((result = open(pattern, O_RDWR | O_NONBLOCK)) == -1) {
-                statinfo->source = IS_INVALID;
-                statinfo->error = errno;
-                printerr("Warning! Invalid FIFO: open failed: %d: %s\n",
-                        errno, strerror(errno));
-            } else {
-                /* this file descriptor is NOT to be passed to the jobs? So far,
-                 * the answer is true. We close this fd on exec of sub jobs, so
-                 * it will be invisible to them. */
-                int flags = fcntl(result, F_GETFD);
-                if (flags != -1) {
-                    fcntl(result, F_SETFD, flags | FD_CLOEXEC);
-                }
-
-                /* the return is the chosen filename as well as the opened
-                 * descriptor. We cannot unlink the filename right now. */
-                statinfo->source = IS_FIFO;
-                statinfo->file.descriptor = result;
-                statinfo->file.name = strdup(pattern);
-
-                /* fix environment */
-                if (key != NULL) {
-                    size_t size = strlen(key) + strlen(pattern) + 2;
-                    char* temp = (char*) malloc(size);
-                    if (temp == NULL) {
-                        printerr("malloc: %s\n", strerror(errno));
-                        return -1;
-                    }
-                    memset(temp, 0, size--);
-                    strncpy(temp, key, size);
-                    strncat(temp, "=", size);
-                    strncat(temp, pattern, size);
-                    if (putenv(temp) == -1) {
-                        printerr("Warning: Unable to putenv %s: %d: %s\n",
-                                key, errno, strerror(errno));
-                    }
-                    /* do not free this string here nor now */
-                }
-
-                errno = 0;
-                result = fstat(result, &statinfo->info);
-                statinfo->error = errno;
-            }
-        }
+    char *filename = strdup(pattern);
+    if (filename == NULL) {
+        printerr("strdup: %s\n", strerror(errno));
+        goto error;
     }
 
-    free((void*) race);
-    return result;
+    /* try to ensure append mode for the file, because it is shared
+     * between jobs. If the SETFL operation fails, well there is nothing
+     * we can do about that. */
+    int flags = fcntl(fd, F_GETFL);
+    if (flags != -1) {
+        fcntl(fd, F_SETFL, flags | O_APPEND);
+    }
+
+    /* this file descriptor is NOT to be passed to the jobs? So far, the
+     * answer is true. We close this fd on exec of sub jobs, so it will
+     * be invisible to them. */
+    flags = fcntl(fd, F_GETFD);
+    if (flags != -1) {
+        fcntl(fd, F_SETFD, flags | FD_CLOEXEC);
+    }
+
+    /* the return is the chosen filename as well as the opened descriptor.
+     * we *could* unlink the filename right now, and be truly private, but
+     * users may want to look into the log files of long persisting operations. */
+    statinfo->source = IS_TEMP;
+    statinfo->file.descriptor = fd;
+    statinfo->file.name = filename;
+    statinfo->error = 0;
+
+    errno = 0;
+    int result = fstat(fd, &statinfo->info);
+    if (result < 0) {
+        printerr("fstat: %s\n", strerror(errno));
+        goto error;
+    }
+
+    return 0;
+
+error:
+    statinfo->source = IS_INVALID;
+    statinfo->error = errno;
+
+    return -1;
 }
 
 static int preserveFile(const char* fn) {
@@ -377,6 +316,11 @@ int initStatInfoFromName(StatInfo* statinfo, const char* filename,
     statinfo->source = IS_FILE;
     statinfo->file.descriptor = openmode;
     statinfo->file.name = strdup(filename);
+    if (statinfo->file.name == NULL) {
+        printerr("strdup: %s\n", strerror(errno));
+        statinfo->error = errno;
+        return -1;
+    }
 
     if ((flag & 0x01) == 1) {
         /* FIXME: As long as we use shared stdio for stdout and stderr, we need
@@ -507,8 +451,12 @@ int addLFNToStatInfo(StatInfo* info, const char* lfn) {
 
     if (lfn == NULL) {
         info->lfn = NULL;
-    } else if ((info->lfn = strdup(lfn)) == NULL) {
-        return ENOMEM;
+    } else {
+        info->lfn = strdup(lfn);
+        if (info->lfn == NULL) {
+            printerr("strdup: %s\n", strerror(errno));
+            return ENOMEM;
+        }
     }
 
     return 0;

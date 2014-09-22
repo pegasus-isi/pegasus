@@ -57,7 +57,6 @@ extern int myaccess(const char* path);
 extern char* findApp(const char* fn);
 extern int forcefd(const StatInfo* info, int fd);
 extern int initStatInfoAsTemp(StatInfo* statinfo, char* pattern);
-extern int initStatInfoAsFifo(StatInfo* statinfo, char* pattern, const char* key);
 extern int initStatInfoFromName(StatInfo* statinfo, const char* filename,
                                 int openmode, int flag);
 extern int initStatInfoFromHandle(StatInfo* statinfo, int descriptor);

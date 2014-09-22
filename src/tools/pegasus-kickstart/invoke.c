@@ -41,7 +41,17 @@ static int append_arg(char* data, char*** arg, size_t* index, size_t* capacity) 
         memset(*arg + *index, 0, sizeof(char*) * (*capacity - *index));
     }
 
-    (*arg)[(*index)++] = data ? strdup(data) : NULL;
+    if (data == NULL) {
+        (*arg)[(*index)++] = NULL;
+    } else {
+        char * temp = strdup(data);
+        if (temp == NULL) {
+            printerr("strdup: %s\n", strerror(errno));
+            return -1;
+        }
+        (*arg)[(*index)++] = temp;
+    }
+
     return 0;
 }
 
@@ -52,11 +62,17 @@ static char* merge(char* s1, char* s2) {
      * returns: merge of strings into newly allocated area.
      *          NULL, if the allocation failed. 
      */
+    char *temp;
     if (s1 == NULL) {
-        return strdup(s2);
+        temp = strdup(s2);
+        if (temp == NULL) {
+            printerr("strdup: %s\n", strerror(errno));
+            return NULL;
+        }
+        return temp;
     } else {
         size_t len = strlen(s1) + strlen(s2) + 2;
-        char* temp = (char*) malloc(len);
+        temp = (char*) malloc(len);
         if (temp == NULL) {
             printerr("malloc: %s\n", strerror(errno));
             return NULL;

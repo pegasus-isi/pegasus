@@ -138,7 +138,13 @@ static FileInfo *readTraceFileRecord(const char *buf, FileInfo *files) {
             printerr("calloc: %s\n", strerror(errno));
             return files;
         }
-        file->filename = strdup(filename);
+        char *temp = strdup(filename);
+        if (temp == NULL) {
+            free(file);
+            printerr("strdup: %s\n", strerror(errno));
+            return files;
+        }
+        file->filename = temp;
         file->size = size;
         file->bread = bread;
         file->bwrite = bwrite;
@@ -190,7 +196,13 @@ static SockInfo *readTraceSocketRecord(const char *buf, SockInfo *sockets) {
             printerr("calloc: %s\n", strerror(errno));
             return sockets;
         }
-        sock->address = strdup(address);
+        char *temp = strdup(address);
+        if (temp == NULL) {
+            free(sock);
+            printerr("strdup: %s\n", strerror(errno));
+            return sockets;
+        }
+        sock->address = temp;
         sock->port = port;
         sock->brecv = brecv;
         sock->bsend = bsend;
@@ -241,6 +253,10 @@ static ProcInfo *processTraceFile(const char *fullpath) {
             char exe[BUFSIZ];
             sscanf(line, "exe: %s\n", exe);
             proc->exe = strdup(exe);
+            if (proc->exe == NULL) {
+                printerr("strdup: %s\n", strerror(errno));
+                break;
+            }
         } else if (startswith(line, "Pid")) {
             sscanf(line, "Pid:%d\n", &(proc->pid));
         } else if (startswith(line, "PPid")) {

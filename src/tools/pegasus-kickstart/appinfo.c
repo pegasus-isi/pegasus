@@ -386,8 +386,16 @@ void envIntoAppInfo(AppInfo* runinfo, char* envp[]) {
         runinfo->envc = size;
 
         dst = (char**) runinfo->envp;
-        for (src = envp; dst - runinfo->envp <= size; ++src) { 
-            *dst++ = *src ? strdup(*src) : NULL;
+        for (src = envp; dst - runinfo->envp <= size; ++src, ++dst) {
+            if (*src == NULL) {
+                *dst = NULL;
+            } else {
+                *dst = strdup(*src);
+                if (*dst == NULL) {
+                    printerr("strdup: %s\n", strerror(errno));
+                    return;
+                }
+            }
         }
     }
 }

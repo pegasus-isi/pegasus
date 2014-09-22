@@ -298,6 +298,7 @@ static void internalParse(const char* line, const char** cursor, int* state,
     char* v = *vp;
     Node* head = *headp;
     Node* tail = *tailp;
+    char *temp;
 
     while (*state < 32) {
         int charclass = xlate(*s);
@@ -315,7 +316,12 @@ static void internalParse(const char* line, const char** cursor, int* state,
                 break;
             case 1: /* conditionally finalize buffer */
                 *p = '\0';
-                add(&head, &tail, strdup(buffer));
+                temp = strdup(buffer);
+                if (temp == NULL) {
+                    printerr("strdup: %s\n", strerror(errno));
+                    exit(1);
+                }
+                add(&head, &tail, temp);
                 p = buffer;
                 break;
             case 2: /* store variable part */
@@ -332,7 +338,12 @@ static void internalParse(const char* line, const char** cursor, int* state,
             case 4: /* case 3 followed by case 1 */
                 resolve(&v, varname, &p, buffer, size);
                 *p = '\0';
-                add(&head, &tail, strdup(buffer));
+                temp = strdup(buffer);
+                if (temp == NULL) {
+                    printerr("strdup: %s\n", strerror(errno));
+                    exit(1);
+                }
+                add(&head, &tail, temp);
                 p = buffer;
                 break;
             case 5: /* skip */

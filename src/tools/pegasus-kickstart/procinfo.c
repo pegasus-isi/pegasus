@@ -91,11 +91,15 @@ static int proc_read_exe(ProcInfo *item) {
     sprintf(link, "/proc/%d/exe", item->pid);
     size = readlink(link, exe, PATH_MAX);
     if (size < 0) {
-        perror("readlink");
+        printerr("readlink: %s\n", strerror(errno));
         return -1;
     }
     exe[size] = '\0';
     item->exe = strdup(exe);
+    if (item->exe == NULL) {
+        printerr("strdup: %s\n", strerror(errno));
+        return -1;
+    }
     return size;
 }
 
