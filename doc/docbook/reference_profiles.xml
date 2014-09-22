@@ -1692,8 +1692,98 @@ queue
   </section>
 
   <section>
-    <title>Properties</title>
+    <title>Differences between Profiles and Properties</title>
 
-    <para/>
+    <para>The main difference between properties and profiles is that profiles
+    eventually get associated at a per job level in the workflow. On the other
+    hand, properties are a way of configuring and controlling the behavior of
+    the whole system. While all profiles can be specified in the properties
+    file, not all properties can be used as profiles. This section lists out
+    the properties supported by Pegasus and if any can be used as a profile,
+    it is clearly indicated.</para>
+  </section>
+
+  <section>
+    <title>Properties For System Configuration</title>
+
+    <para>Properties are primarily used to configure the behavior of the
+    Pegasus Workflow Planner at a global level. The properties file is
+    actually a java properties file and follows the same conventions as that
+    to specify the properties. </para>
+
+    <para>Please note that the values rely on proper capitalization, unless
+    explicitly noted otherwise.</para>
+
+    <para>Some properties rely with their default on the value of other
+    properties. As a notation, the curly braces refer to the value of the
+    named property. For instance, ${pegasus.home} means that the value depends
+    on the value of the pegasus.home property plus any noted additions. You
+    can use this notation to refer to other properties, though the extent of
+    the subsitutions are limited. Usually, you want to refer to a set of the
+    standard system properties. Nesting is not allowed. Substitutions will
+    only be done once.</para>
+
+    <para>There is a priority to the order of reading and evaluating
+    properties. Usually one does not need to worry about the priorities.
+    However, it is good to know the details of when which property applies,
+    and how one property is able to overwrite another. The following is a
+    mutually exclusive list ( highest priority first ) of property file
+    locations.</para>
+
+    <para><orderedlist>
+        <listitem>
+          --conf option to the tools. Almost all of the clients that use properties have a --conf option to specify the property file to pick up. 
+        </listitem>
+
+        <listitem>
+           submit-dir/pegasus.xxxxxxx.properties file. All tools that work on the submit directory ( i.e after pegasus has planned a workflow) pick up the pegasus.xxxxx.properties file from the submit directory. The location for the pegasus.xxxxxxx.propertiesis picked up from the braindump file. 
+        </listitem>
+
+        <listitem>
+          The properties defined in the user property file 
+
+          <emphasis>${user.home}/.pegasusrc</emphasis>
+
+           have lowest priority. 
+        </listitem>
+      </orderedlist></para>
+
+    <para>Commandline properties have the highest priority. These override any
+    property loaded from a property file. Each commandline property is
+    introduced by a -D argument. Note that these arguments are parsed by the
+    shell wrapper, and thus the -D arguments must be the first arguments to
+    any command. Commandline properties are useful for debugging
+    purposes.</para>
+
+    <para>From Pegasus 3.1 release onwards, support has been dropped for the
+    following properties that were used to signify the location of the
+    properties file</para>
+
+    <para><itemizedlist>
+        <listitem>
+          pegasus.properties
+        </listitem>
+
+        <listitem>
+          pegasus.user.properties
+        </listitem>
+      </itemizedlist></para>
+
+    <para>The following example provides a sensible set of properties to be
+    set by the user property file. These properties use mostly non-default
+    settings. It is an example only, and will not work for you:</para>
+
+    <para><screen>
+pegasus.catalog.replica              File
+pegasus.catalog.replica.file         ${pegasus.home}/etc/sample.rc.data
+pegasus.catalog.transformation       Text
+pegasus.catalog.transformation.file  ${pegasus.home}/etc/sample.tc.text
+pegasus.catalog.site.file            ${pegasus.home}/etc/sample.sites.xml
+</screen></para>
+
+    <para>If you are in doubt which properties are actually visible, pegasus
+    during the planning of the workflow dumps all properties after reading and
+    prioritizing in the submit directory in a file with the suffix
+    properties.</para>
   </section>
 </section>
