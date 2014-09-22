@@ -11,9 +11,26 @@
   behavior to remote environment settings. At various stages during the
   mapping process, profiles may be added associated with the job.</para>
 
+  <para>Properties are primarily used to configure the behavior of the Pegasus
+  Workflow Planner at a global level. The properties file is actually a java
+  properties file and follows the same conventions as that to specify the
+  properties.</para>
+
   <para>This document describes various types of profiles and properties,
   levels of priorities for intersecting profiles, and how to specify profiles
   in different contexts.</para>
+
+  <section>
+    <title>Differences between Profiles and Properties</title>
+
+    <para>The main difference between properties and profiles is that profiles
+    eventually get associated at a per job level in the workflow. On the other
+    hand, properties are a way of configuring and controlling the behavior of
+    the whole system. While all profiles can be specified in the properties
+    file, not all properties can be used as profiles. This section lists out
+    the properties supported by Pegasus and if any can be used as a profile,
+    it is clearly indicated.</para>
+  </section>
 
   <section>
     <title>Profile Structure Heading</title>
@@ -1689,18 +1706,6 @@ queue
         </tgroup>
       </table>
     </section>
-  </section>
-
-  <section>
-    <title>Differences between Profiles and Properties</title>
-
-    <para>The main difference between properties and profiles is that profiles
-    eventually get associated at a per job level in the workflow. On the other
-    hand, properties are a way of configuring and controlling the behavior of
-    the whole system. While all profiles can be specified in the properties
-    file, not all properties can be used as profiles. This section lists out
-    the properties supported by Pegasus and if any can be used as a profile,
-    it is clearly indicated.</para>
   </section>
 
   <section>
