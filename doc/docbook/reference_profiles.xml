@@ -2,21 +2,34 @@
 <!DOCTYPE section PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <section id="profiles">
-  <title>Profiles and Properties</title>
+  <title>Configuration</title>
 
-  <para>The Pegasus Workflow Mapper uses the concept of profiles to
+  <para>Pegasus has configuration options to configure </para>
+
+  <orderedlist>
+    <listitem>
+      <para>the behaviour of an individual job</para>
+    </listitem>
+
+    <listitem>
+      <para>the behavior of the whole system.</para>
+    </listitem>
+  </orderedlist>
+
+  <para>For job level configuration ( such as what environment a job is set
+  with ), the Pegasus Workflow Mapper uses the concept of profiles. Profiles
   encapsulate configurations for various aspects of dealing with the Grid
-  infrastructure. Profiles provide an abstract yet uniform interface to
-  specify configuration options for various layers from planner/mapper
-  behavior to remote environment settings. At various stages during the
-  mapping process, profiles may be added associated with the job.</para>
+  infrastructure. They provide an abstract yet uniform interface to specify
+  configuration options for various layers from planner/mapper behavior to
+  remote environment settings. At various stages during the mapping process,
+  profiles may be added associated with the job.</para>
 
   <para>Properties are primarily used to configure the behavior of the Pegasus
-  Workflow Planner at a global level. The properties file is actually a java
+  WMS system at a global level. The properties file is actually a java
   properties file and follows the same conventions as that to specify the
   properties.</para>
 
-  <para>This document describes various types of profiles and properties,
+  <para>This chapter describes various types of profiles and properties,
   levels of priorities for intersecting profiles, and how to specify profiles
   in different contexts.</para>
 
@@ -1714,7 +1727,7 @@ queue
     <para>Properties are primarily used to configure the behavior of the
     Pegasus Workflow Planner at a global level. The properties file is
     actually a java properties file and follows the same conventions as that
-    to specify the properties. </para>
+    to specify the properties.</para>
 
     <para>Please note that the values rely on proper capitalization, unless
     explicitly noted otherwise.</para>
@@ -1737,7 +1750,7 @@ queue
 
     <para><orderedlist>
         <listitem>
-          --conf option to the tools. Almost all of the clients that use properties have a --conf option to specify the property file to pick up. 
+           --conf option to the tools. Almost all of the clients that use properties have a --conf option to specify the property file to pick up. 
         </listitem>
 
         <listitem>
@@ -1745,7 +1758,7 @@ queue
         </listitem>
 
         <listitem>
-          The properties defined in the user property file 
+           The properties defined in the user property file 
 
           <emphasis>${user.home}/.pegasusrc</emphasis>
 
@@ -1766,11 +1779,11 @@ queue
 
     <para><itemizedlist>
         <listitem>
-          pegasus.properties
+           pegasus.properties 
         </listitem>
 
         <listitem>
-          pegasus.user.properties
+           pegasus.user.properties 
         </listitem>
       </itemizedlist></para>
 
