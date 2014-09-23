@@ -398,7 +398,7 @@ queue
       GLOBUS_LOCATION even for jobs that run locally</para>
 
       <table>
-        <title>Table 1: Useful Environment Settings</title>
+        <title>Useful Environment Settings</title>
 
         <tgroup cols="4">
           <tbody>
@@ -483,7 +483,7 @@ queue
       RSL specification.</para>
 
       <table>
-        <title>Table 2: Useful Globus RSL Instructions</title>
+        <title>Useful Globus RSL Instructions</title>
 
         <tgroup cols="4">
           <tbody>
@@ -616,7 +616,7 @@ queue
       key in the globus profiles. Use one or more env profiles instead.</para>
 
       <table>
-        <title>Table 3: RSL Instructions that are not permissible</title>
+        <title> RSL Instructions that are not permissible</title>
 
         <tgroup cols="2">
           <tbody>
@@ -701,7 +701,7 @@ queue
       where it is being run.</para>
 
       <table>
-        <title>Table 4: Useful Condor Commands</title>
+        <title> Useful Condor Commands</title>
 
         <tgroup cols="4">
           <tbody>
@@ -947,8 +947,8 @@ queue
       understood by Pegasus and can be associated at a per job basis.</para>
 
       <para><table>
-          <title>Table 6: Useful dagman Commands that can be associated at a
-          per job basis</title>
+          <title> Useful dagman Commands that can be associated at a per job
+          basis</title>
 
           <tgroup cols="4">
             <tbody>
@@ -1125,73 +1125,73 @@ queue
       are recommended to be specified in the properties file.</para>
 
       <table>
-        <title>Table 7: Useful dagman Commands that can be specified in the
-        properties file.</title>
+        <title>Useful dagman Commands that can be specified in the properties
+        file.</title>
 
         <tgroup cols="4">
           <tbody>
             <row>
-              <entry><emphasis role="bold">Corresponding Profile Key if
-              applicable</emphasis></entry>
+              <entry><emphasis role="bold">Property Key </emphasis></entry>
+
+              <entry><emphasis role="bold">Corresponding Profile
+              Key</emphasis></entry>
 
               <entry><emphasis role="bold">Where can it be
               specified</emphasis></entry>
-
-              <entry><emphasis role="bold">Property Key </emphasis></entry>
 
               <entry><emphasis role="bold">Description</emphasis></entry>
             </row>
 
             <row>
+              <entry>dagman.maxpre</entry>
+
               <entry>MAXPRE</entry>
 
               <entry>Properties File</entry>
 
-              <entry>dagman.maxpre</entry>
-
               <entry>sets the maximum number of PRE scripts within the DAG
               that may be running at one time</entry>
             </row>
 
             <row>
+              <entry>dagman.maxpost</entry>
+
               <entry>MAXPOST</entry>
 
               <entry>Properties File</entry>
 
-              <entry>dagman.maxpost</entry>
-
               <entry>sets the maximum number of PRE scripts within the DAG
               that may be running at one time</entry>
             </row>
 
             <row>
+              <entry>dagman.maxjobs</entry>
+
               <entry>MAXJOBS</entry>
 
               <entry>Properties File</entry>
-
-              <entry>dagman.maxjobs</entry>
 
               <entry>sets the maximum number of jobs within the DAG that will
               be submitted to Condor at one time.</entry>
             </row>
 
             <row>
+              <entry>dagman.maxidle</entry>
+
               <entry>MAXIDLE</entry>
 
               <entry>Properties File</entry>
-
-              <entry>dagman.maxidle</entry>
 
               <entry>sets the maximum number of idle jobs within the DAG that
               will be submitted to Condor at one time.</entry>
             </row>
 
             <row>
+              <entry>dagman.[CATEGORY-NAME].maxjobs</entry>
+
               <entry>[CATEGORY-NAME].MAXJOBS</entry>
 
               <entry>Properties File</entry>
-
-              <entry>dagman.[CATEGORY-NAME].maxjobs</entry>
 
               <entry>is the value of maxjobs for a particular category. Users
               can associate different categories to the jobs at a per job
@@ -1201,11 +1201,11 @@ queue
             </row>
 
             <row>
+              <entry>dagman.post.scope</entry>
+
               <entry>POST.SCOPE</entry>
 
               <entry>Properties File</entry>
-
-              <entry>dagman.post.scope</entry>
 
               <entry>scope for the postscripts. <orderedlist>
                   <listitem>
@@ -1250,7 +1250,7 @@ queue
       understands.</para>
 
       <table>
-        <title>Table 8: Useful pegasus Profiles.</title>
+        <title>Useful pegasus Profiles.</title>
 
         <tgroup cols="4">
           <tbody>
@@ -1817,7 +1817,7 @@ pegasus.catalog.site.file            ${pegasus.home}/etc/sample.sites.xml
       directories.</para>
 
       <para><table>
-          <title>Table 8: Local Directory Related Properties</title>
+          <title> Local Directory Related Properties</title>
 
           <tgroup cols="5">
             <tbody>
