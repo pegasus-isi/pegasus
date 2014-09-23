@@ -8,11 +8,13 @@
 
   <orderedlist>
     <listitem>
-      <para>the behaviour of an individual job</para>
+      <para>the behaviour of an individual job via <emphasis
+      role="bold">profiles</emphasis></para>
     </listitem>
 
     <listitem>
-      <para>the behavior of the whole system.</para>
+      <para>the behavior of the whole system via <emphasis
+      role="bold">properties</emphasis></para>
     </listitem>
   </orderedlist>
 
@@ -1803,5 +1805,115 @@ pegasus.catalog.site.file            ${pegasus.home}/etc/sample.sites.xml
     during the planning of the workflow dumps all properties after reading and
     prioritizing in the submit directory in a file with the suffix
     properties.</para>
+
+    <section>
+      <title>Local Directory Related Properties</title>
+
+      <para>This section describes the GNU directory structure conventions.
+      GNU distinguishes between architecture independent and thus sharable
+      directories, and directories with data specific to a platform, and thus
+      often local. It also distinguishes between frequently modified data and
+      rarely changing data. These two axis form a space of four distinct
+      directories.</para>
+
+      <para><table>
+          <title>Table 8: Local Directory Related Properties</title>
+
+          <tgroup cols="5">
+            <tbody>
+              <row>
+                <entry><emphasis role="bold">Property Key </emphasis></entry>
+
+                <entry><emphasis role="bold">Corresponding Profile Key
+                </emphasis></entry>
+
+                <entry><emphasis role="bold">Where can it be
+                specified</emphasis></entry>
+
+                <entry><emphasis role="bold">Default Value</emphasis></entry>
+
+                <entry><emphasis role="bold">Description</emphasis></entry>
+              </row>
+
+              <row>
+                <entry>pegasus.home.datadir</entry>
+
+                <entry>N/A</entry>
+
+                <entry>Properties</entry>
+
+                <entry>${pegasus.home}/share</entry>
+
+                <entry>The datadir directory contains broadly visible and
+                possibly exported configuration files that rarely change. This
+                directory is currently unused.</entry>
+              </row>
+
+              <row>
+                <entry>pegasus.home.sysconfdir</entry>
+
+                <entry>N/A</entry>
+
+                <entry>Properties</entry>
+
+                <entry>${pegasus.home}/etc</entry>
+
+                <entry>The system configuration directory contains
+                configuration files that are specific to the machine or
+                installation, and that rarely change. This is the directory
+                where the XML schema definition copies are stored, and where
+                the base pool configuration file is stored.</entry>
+              </row>
+
+              <row>
+                <entry>pegasus.home.sharedstatedir</entry>
+
+                <entry>N/A</entry>
+
+                <entry>Properties</entry>
+
+                <entry>${pegasus.home}/com</entry>
+
+                <entry>Frequently changing files that are broadly visible are
+                stored in the shared state directory. This is currently
+                unused.</entry>
+              </row>
+
+              <row>
+                <entry>pegasus.home.localstatedir</entry>
+
+                <entry>N/A</entry>
+
+                <entry>Properties</entry>
+
+                <entry>${pegasus.home}/var</entry>
+
+                <entry>Frequently changing files that are specific to a
+                machine and/or installation are stored in the local state
+                directory. This is currently unused</entry>
+              </row>
+
+              <row>
+                <entry>pegasus.dir.submit.logs</entry>
+
+                <entry>N/A</entry>
+
+                <entry>Properties</entry>
+
+                <entry>No Default</entry>
+
+                <entry><para>This property can be used to specify the
+                directory where the condor logs for the workflow should go to.
+                By default, starting 4.2.1 release, Pegasus will setup the log
+                to be in the workflow submit directory. This can create
+                problems, in case users submit directories are on
+                NSF.</para><para>This is done to ensure that the logs are
+                created in a local directory even though the submit directory
+                maybe on NFS</para></entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table></para>
+    </section>
   </section>
 </section>
