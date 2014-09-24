@@ -1946,7 +1946,7 @@ pegasus.catalog.site.file            ${pegasus.home}/etc/sample.sites.xml
               <entry>While creating the submit directory, Pegasus employs a
               run numbering scheme. Users can use this Boolean property to use
               a timestamp based numbering scheme instead of the runxxxx
-              scheme. </entry>
+              scheme.</entry>
             </row>
 
             <row>
@@ -1964,8 +1964,8 @@ pegasus.catalog.site.file            ${pegasus.home}/etc/sample.sites.xml
               in which all your jobs will run. If the path is relative then it
               is appended to the work directory (associated with the site), as
               specified in the site catalog. If the path is absolute then it
-              overrides the work directory specified in the site catalog.
-              </entry>
+              overrides the work directory specified in the site
+              catalog.</entry>
             </row>
 
             <row>
@@ -2108,6 +2108,284 @@ pegasus.dir.storage.mapper.replica.file  the RC file at the backend to use if us
       </table>
 
       <para/>
+    </section>
+
+    <section>
+      <title>Schema File Location Properties</title>
+
+      <para>This section defines the location of XML schema files that are
+      used to parse the various XML document instances in the PEGASUS. The
+      schema backups in the installed file-system permit PEGASUS operations
+      without being online.</para>
+
+      <para><table>
+          <title>Schema File Location Properties</title>
+
+          <tgroup cols="6">
+            <tbody>
+              <row>
+                <entry><emphasis role="bold">Property Key </emphasis></entry>
+
+                <entry><emphasis role="bold">Corresponding Profile Key
+                </emphasis></entry>
+
+                <entry><emphasis role="bold">Where can it be
+                specified</emphasis></entry>
+
+                <entry><emphasis role="bold">Since</emphasis></entry>
+
+                <entry><emphasis role="bold">Default Value</emphasis></entry>
+
+                <entry><emphasis role="bold">Description</emphasis></entry>
+              </row>
+
+              <row>
+                <entry>pegasus.schema.dax</entry>
+
+                <entry>N/A</entry>
+
+                <entry>Properties</entry>
+
+                <entry>2.0</entry>
+
+                <entry>${pegasus.home.sysconfdir}/dax-3.4.xsd</entry>
+
+                <entry>This file is a copy of the XML schema that describes
+                abstract DAG files that are the result of the abstract
+                planning process, and input into any concrete planning.
+                Providing a copy of the schema enables the parser to use the
+                local copy instead of reaching out to the Internet, and
+                obtaining the latest version from the Pegasus website
+                dynamically.</entry>
+              </row>
+
+              <row>
+                <entry>pegasus.schema.sc</entry>
+
+                <entry>N/A</entry>
+
+                <entry>Properties</entry>
+
+                <entry>2.0</entry>
+
+                <entry>${pegasus.home.sysconfdir}/sc-4.0.xsd</entry>
+
+                <entry>This file is a copy of the XML schema that describes
+                the xml description of the site catalog. Providing a copy of
+                the schema enables the parser to use the local copy instead of
+                reaching out to the internet, and obtaining the latest version
+                from the GriPhyN website dynamically.</entry>
+              </row>
+
+              <row>
+                <entry>pegasus.schema.ivr</entry>
+
+                <entry>N/A</entry>
+
+                <entry>Properties</entry>
+
+                <entry>2.0</entry>
+
+                <entry>${pegasus.home.sysconfdir}/iv-2.0.xsd</entry>
+
+                <entry>This file is a copy of the XML schema that describes
+                invocation record files that are the result of the a grid
+                launch in a remote or local site. Providing a copy of the
+                schema enables the parser to use the local copy instead of
+                reaching out to the Internet, and obtaining the latest version
+                from the Pegasus website dynamically.</entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table></para>
+    </section>
+
+    <section>
+      <title>Database Drivers For All Relational Catalogs</title>
+
+      <para/>
+
+      <table>
+        <title>Database Driver Properties</title>
+
+        <tgroup cols="6">
+          <tbody>
+            <row>
+              <entry><emphasis role="bold">Property Key </emphasis></entry>
+
+              <entry><emphasis role="bold">Corresponding Profile Key
+              </emphasis></entry>
+
+              <entry><emphasis role="bold">Where can it be
+              specified</emphasis></entry>
+
+              <entry><emphasis role="bold">Since</emphasis></entry>
+
+              <entry><emphasis role="bold">Default Value</emphasis></entry>
+
+              <entry><emphasis role="bold">Description</emphasis></entry>
+            </row>
+
+            <row>
+              <entry>pegasus.catalog.*.db.driver</entry>
+
+              <entry>N/A</entry>
+
+              <entry>Properties</entry>
+
+              <entry>2.0</entry>
+
+              <entry>(no default)</entry>
+
+              <entry><para>The database driver class is dynamically loaded, as
+              required by the schema. Currently, only MySQL 5.x, PostGreSQL
+              7.3 and SQlite are supported. Their respective JDBC3 driver is
+              provided as part and parcel of the PEGASUS.</para><para>A user
+              may provide their own implementation, derived from
+              org.griphyn.vdl.dbdriver.DatabaseDriver, to talk to a database
+              of their choice.</para><para>The * in the property name can be
+              replaced by a catalog name to apply the property only for that
+              catalog. Valid catalog names are</para><para><screen>replica
+</screen></para></entry>
+            </row>
+
+            <row>
+              <entry>pegasus.catalog.*.db.url</entry>
+
+              <entry>N/A</entry>
+
+              <entry>Properties</entry>
+
+              <entry>2.0</entry>
+
+              <entry>(no default)</entry>
+
+              <entry>Each database has its own string to contact the database
+              on a given host, port, and database. Although most driver URLs
+              allow to pass arbitrary arguments, please use the
+              pegasus.catalog.[catalog-name].db.* keys or
+              pegasus.catalog.*.db.* to preload these arguments. <para/>THE
+              URL IS A MANDATORY PROPERTY FOR ANY DBMS BACKEND.</entry>
+            </row>
+
+            <row>
+              <entry>pegasus.catalog.*.db.user</entry>
+
+              <entry>N/A</entry>
+
+              <entry>Properties</entry>
+
+              <entry>2.0</entry>
+
+              <entry>(no default)</entry>
+
+              <entry><para>In order to access a database, you must provide the
+              name of your account on the DBMS. This property is
+              database-independent. THIS IS A MANDATORY PROPERTY FOR MANY DBMS
+              BACKENDS.</para><para>The * in the property name can be replaced
+              by a catalog name to apply the property only for that catalog.
+              Valid catalog names are</para><para><screen>replica</screen></para></entry>
+            </row>
+
+            <row>
+              <entry>pegasus.catalog.*.db.password</entry>
+
+              <entry>N/A</entry>
+
+              <entry>Properties</entry>
+
+              <entry>2.0</entry>
+
+              <entry>(no default)</entry>
+
+              <entry><para>In order to access a database, you must provide an
+              optional password of your account on the DBMS. This property is
+              database-independent. THIS IS A MANDATORY PROPERTY, IF YOUR DBMS
+              BACKEND ACCOUNT REQUIRES A PASSWORD.</para><para>The * in the
+              property name can be replaced by a catalog name to apply the
+              property only for that catalog. Valid catalog names are<screen>replica</screen></para></entry>
+            </row>
+
+            <row>
+              <entry>pegasus.catalog.*.db.*</entry>
+
+              <entry>N/A</entry>
+
+              <entry>Properties</entry>
+
+              <entry>2.0</entry>
+
+              <entry>(no default)</entry>
+
+              <entry><para/><para>Each database has a multitude of options to
+              control in fine detail the further behaviour. You may want to
+              check the JDBC3 documentation of the JDBC driver for your
+              database for details. The keys will be passed as part of the
+              connect properties by stripping the
+              "pegasus.catalog.[catalog-name].db." prefix from them. The
+              catalog-name can be replaced by the following values provenance
+              for Provenance Catalog (PTC), replica for Replica Catalog
+              (RC)</para><para>Postgres 7.3 parses the following properties:
+              <screen>
+pegasus.catalog.*.db.user
+pegasus.catalog.*.db.password
+pegasus.catalog.*.db.PGHOST
+pegasus.catalog.*.db.PGPORT
+pegasus.catalog.*.db.charSet
+pegasus.catalog.*.db.compatible
+</screen></para><para>MySQL 5.0 parses the following
+              properties:</para><para><screen>
+pegasus.catalog.*.db.user
+pegasus.catalog.*.db.password
+pegasus.catalog.*.db.databaseName
+pegasus.catalog.*.db.serverName
+pegasus.catalog.*.db.portNumber
+pegasus.catalog.*.db.socketFactory
+pegasus.catalog.*.db.strictUpdates
+pegasus.catalog.*.db.ignoreNonTxTables
+pegasus.catalog.*.db.secondsBeforeRetryMaster
+pegasus.catalog.*.db.queriesBeforeRetryMaster
+pegasus.catalog.*.db.allowLoadLocalInfile
+pegasus.catalog.*.db.continueBatchOnError
+pegasus.catalog.*.db.pedantic
+pegasus.catalog.*.db.useStreamLengthsInPrepStmts
+pegasus.catalog.*.db.useTimezone
+pegasus.catalog.*.db.relaxAutoCommit
+pegasus.catalog.*.db.paranoid
+pegasus.catalog.*.db.autoReconnect
+pegasus.catalog.*.db.capitalizeTypeNames
+pegasus.catalog.*.db.ultraDevHack
+pegasus.catalog.*.db.strictFloatingPoint
+pegasus.catalog.*.db.useSSL
+pegasus.catalog.*.db.useCompression
+pegasus.catalog.*.db.socketTimeout
+pegasus.catalog.*.db.maxReconnects
+pegasus.catalog.*.db.initialTimeout
+pegasus.catalog.*.db.maxRows
+pegasus.catalog.*.db.useHostsInPrivileges
+pegasus.catalog.*.db.interactiveClient
+pegasus.catalog.*.db.useUnicode
+pegasus.catalog.*.db.characterEncoding
+</screen></para><para>MS SQL Server 2000 support the following properties
+              (keys are case-insensitive, e.g. both "user" and "User" are
+              valid):</para><para><screen>
+pegasus.catalog.*.db.User
+pegasus.catalog.*.db.Password
+pegasus.catalog.*.db.DatabaseName
+pegasus.catalog.*.db.ServerName
+pegasus.catalog.*.db.HostProcess
+pegasus.catalog.*.db.NetAddress
+pegasus.catalog.*.db.PortNumber
+pegasus.catalog.*.db.ProgramName
+pegasus.catalog.*.db.SendStringParametersAsUnicode
+pegasus.catalog.*.db.SelectMethod
+</screen></para><para>The * in the property name can be replaced by a catalog
+              name to apply the property only for that catalog. Valid catalog
+              names are</para><para><screen>replica</screen></para></entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
     </section>
   </section>
 </section>
