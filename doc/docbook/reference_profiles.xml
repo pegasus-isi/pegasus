@@ -4,7 +4,7 @@
 <section id="profiles">
   <title>Configuration</title>
 
-  <para>Pegasus has configuration options to configure </para>
+  <para>Pegasus has configuration options to configure</para>
 
   <orderedlist>
     <listitem>
@@ -612,7 +612,7 @@ queue
     globus profiles. Use one or more env profiles instead.</para>
 
     <table>
-      <title> RSL Instructions that are not permissible</title>
+      <title>RSL Instructions that are not permissible</title>
 
       <tgroup cols="2">
         <tbody>
@@ -697,7 +697,7 @@ queue
     where it is being run.</para>
 
     <table>
-      <title> Useful Condor Commands</title>
+      <title>Useful Condor Commands</title>
 
       <tgroup cols="4">
         <tbody>
@@ -943,7 +943,7 @@ queue
     understood by Pegasus and can be associated at a per job basis.</para>
 
     <para><table>
-        <title> Useful dagman Commands that can be associated at a per job
+        <title>Useful dagman Commands that can be associated at a per job
         basis</title>
 
         <tgroup cols="4">
@@ -1806,7 +1806,7 @@ pegasus.catalog.site.file            ${pegasus.home}/etc/sample.sites.xml
     directories.</para>
 
     <para><table>
-        <title> Local Directories Related Properties</title>
+        <title>Local Directories Related Properties</title>
 
         <tgroup cols="5">
           <tbody>
@@ -2410,10 +2410,10 @@ pegasus.catalog.*.db.SelectMethod
 
             <entry>N/A</entry>
 
-            <entry><emphasis role="bold">Scope:</emphasis>
-            Properties<para/><emphasis role="bold">Since:</emphasis>
-            2.0<para/><emphasis role="bold">Default Value:</emphasis>
-            File</entry>
+            <entry><screen><emphasis role="bold">Scope  :</emphasis> Properties
+<emphasis role="bold">Since  :</emphasis> 2.0
+<emphasis role="bold">Default:</emphasis> File
+</screen></entry>
 
             <entry><para>Pegasus queries a Replica Catalog to discover the
             physical filenames (PFN) for input files specified in the DAX.
@@ -2514,8 +2514,8 @@ LFN PFN a="b" [..]
                     f0a, etc.</para>
 
                     <para><screen>
-f.a file:///Volumes/data/input/f.a pool="local"
-f.a file:///Volumes/data/input/f.a pool="local" regex="true"
+f.a file:///Vol/input/f.a pool="local"
+f.a file:///Vol/input/f.a pool="local" regex="true"
 </screen></para>
 
                     <para>Regular expression based entries also support
@@ -2538,7 +2538,7 @@ f.a file:///Volumes/data/input/f.a pool="local" regex="true"
                     can utilize as many sections as they wish.</para>
 
                     <para><screen>
-alpha\.(csv|txt|xml) file:///Volumes/data/input/[1]/[0] pool="local" regex="true"
+alpha\.(csv|txt|xml) file:///Vol/input/[1]/[0] pool="local" regex="true"
 </screen></para>
 
                     <para>To use File, the user additionally needs to specify
@@ -2615,14 +2615,11 @@ pegasus.catalog.replica MRC
                     following properties.</para>
 
                     <para><screen>
-pegasus.catalog.replica.mrc.[value]       specifies the type of replica catalog.
-pegasus.catalog.replica.mrc.[value].key   specifies a property name key for a
-particular catalog
+pegasus.catalog.replica.mrc.[value]       specifies the type of \
+                                          replica catalog.
+pegasus.catalog.replica.mrc.[value].key   specifies a property name\
+                                          key for a particular catalog
 </screen></para>
-
-                    <para>For example, if a user wants to query two
-                    directories at the same time he/she can specify as
-                    follows</para>
 
                     <para><screen>
 pegasus.catalog.replica.mrc.directory1 LRC
@@ -2644,10 +2641,10 @@ pegasus.catalog.replica.mrc.directory2.url /input/dir2
 
             <entry>N/A</entry>
 
-            <entry><emphasis role="bold">Scope:</emphasis>
-            Properties<para/><emphasis role="bold">Since:</emphasis>
-            2.0<para/><emphasis role="bold">Default Value:</emphasis> (no
-            default)</entry>
+            <entry><screen><emphasis role="bold">Scope  :</emphasis> Properties
+<emphasis role="bold">Since  :</emphasis> 2.0
+<emphasis role="bold">Default:</emphasis> (no default)
+</screen> </entry>
 
             <entry>When using the modern RLS replica catalog, the URI to the
             Replica catalog must be provided to Pegasus to enable it to look
@@ -2659,10 +2656,10 @@ pegasus.catalog.replica.mrc.directory2.url /input/dir2
 
             <entry>N/A</entry>
 
-            <entry><emphasis role="bold">Scope:</emphasis>
-            Properties<para/><emphasis role="bold">Since:</emphasis>
-            2.0<para/><emphasis role="bold">Default Value:</emphasis>
-            1000</entry>
+            <entry><screen><emphasis role="bold">Scope  :</emphasis> Properties
+<emphasis role="bold">Since  :</emphasis> 2.0
+<emphasis role="bold">Default:</emphasis> 1000
+</screen></entry>
 
             <entry><para>The rc-client takes in an input file containing the
             mappings upon which to work. This property determines, the number
@@ -2677,10 +2674,10 @@ pegasus.catalog.replica.mrc.directory2.url /input/dir2
 
             <entry>N/A</entry>
 
-            <entry><emphasis role="bold">Scope:</emphasis>
-            Properties<para/><emphasis role="bold">Since:</emphasis>
-            2.0<para/><emphasis role="bold">Default Value:</emphasis>
-            false</entry>
+            <entry><screen><emphasis role="bold">Scope  :</emphasis> Properties
+<emphasis role="bold">Since  :</emphasis> 2.0
+<emphasis role="bold">Default:</emphasis> false
+</screen></entry>
 
             <entry><para>This Boolean property determines whether to treat the
             cache file specified as a supplemental replica catalog or not.
