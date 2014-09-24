@@ -2382,4 +2382,332 @@ pegasus.catalog.*.db.SelectMethod
       </tgroup>
     </table>
   </section>
+
+  <section>
+    <title>Catalog Related Properties</title>
+
+    <para/>
+
+    <table>
+      <title>Replica Catalog Properties</title>
+
+      <tgroup cols="6">
+        <tbody>
+          <row>
+            <entry><emphasis role="bold">Property Key </emphasis></entry>
+
+            <entry><emphasis role="bold">Corresponding Profile Key
+            </emphasis></entry>
+
+            <entry><emphasis role="bold">Where can it be
+            specified</emphasis></entry>
+
+            <entry><emphasis role="bold">Since</emphasis></entry>
+
+            <entry><emphasis role="bold">Default Value</emphasis></entry>
+
+            <entry><emphasis role="bold">Description</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>pegasus.catalog.replica</entry>
+
+            <entry>N/A</entry>
+
+            <entry>Properties</entry>
+
+            <entry>2.0</entry>
+
+            <entry>File</entry>
+
+            <entry><para>Pegasus queries a Replica Catalog to discover the
+            physical filenames (PFN) for input files specified in the DAX.
+            Pegasus can interface with various types of Replica Catalogs. This
+            property specifies which type of Replica Catalog to use during the
+            planning process.</para><para><variablelist>
+                <varlistentry>
+                  <term>JDBCRC</term>
+
+                  <listitem>
+                     In this mode, Pegasus queries a SQL based replica catalog that is accessed via JDBC. The sql schema's for this catalog can be found at $PEGASUS_HOME/sql directory. To use JDBCRC, the user additionally needs to set the following properties 
+
+                    <orderedlist>
+                      <listitem>pegasus.catalog.replica.db.driver =
+                      mysql</listitem>
+
+                      <listitem>pegasus.catalog.replica.db.url = jdbc url to
+                      database e.g
+                      jdbc:mysql://database-host.isi.edu/database-name</listitem>
+
+                      <listitem>pegasus.catalog.replica.db.user =
+                      database-user</listitem>
+
+                      <listitem>pegasus.catalog.replica.db.password =
+                      database-password</listitem>
+                    </orderedlist>
+
+                     
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term>File</term>
+
+                  <listitem>
+                    <para>In this mode, Pegasus queries a file based replica
+                    catalog. It is neither transactionally safe, nor advised
+                    to use for production purposes in any way. Multiple
+                    concurrent instances <emphasis>will clobber</emphasis>
+                    each other!. The site attribute should be specified
+                    whenever possible. The attribute key for the site
+                    attribute is "pool".</para>
+
+                    <para>The LFN may or may not be quoted. If it contains
+                    linear whitespace, quotes, backslash or an equality sign,
+                    it must be quoted and escaped. Ditto for the PFN. The
+                    attribute key-value pairs are separated by an equality
+                    sign without any whitespaces. The value may be in quoted.
+                    The LFN sentiments about quoting apply.</para>
+
+                    <para><screen>
+LFN PFN
+LFN PFN a=b [..]
+LFN PFN a="b" [..]
+"LFN w/LWS" "PFN w/LWS" [..]
+</screen></para>
+
+                    <para>To use File, the user additionally needs to specify
+                    pegasus.catalog.replica.file property to specify the path
+                    to the file based RC.</para>
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term>Regex</term>
+
+                  <listitem>
+                    <para>In this mode, Pegasus queries a file based replica
+                    catalog. It is neither transactionally safe, nor advised
+                    to use for production purposes in any way. Multiple
+                    concurrent access to the File will end up clobbering the
+                    contents of the file. The site attribute should be
+                    specified whenever possible. The attribute key for the
+                    site attribute is "pool".</para>
+
+                    <para>The LFN may or may not be quoted. If it contains
+                    linear whitespace, quotes, backslash or an equality sign,
+                    it must be quoted and escaped. Ditto for the PFN. The
+                    attribute key-value pairs are separated by an equality
+                    sign without any whitespaces. The value may be in quoted.
+                    The LFN sentiments about quoting apply.</para>
+
+                    <para>In addition users can specifiy regular expression
+                    based LFN's. A regular expression based entry should be
+                    qualified with an attribute named 'regex'. The attribute
+                    regex when set to true identifies the catalog entry as a
+                    regular expression based entry. Regular expressions should
+                    follow Java regular expression syntax.</para>
+
+                    <para>For example, consider a replica catalog as shown
+                    below.</para>
+
+                    <para>Entry 1 refers to an entry which does not use a
+                    resular expressions. This entry would only match a file
+                    named 'f.a', and nothing else. Entry 2 referes to an entry
+                    which uses a regular expression. In this entry f.a referes
+                    to files having name as f[any-character]a i.e. faa, f.a,
+                    f0a, etc.</para>
+
+                    <para><screen>
+f.a file:///Volumes/data/input/f.a pool="local"
+f.a file:///Volumes/data/input/f.a pool="local" regex="true"
+</screen></para>
+
+                    <para>Regular expression based entries also support
+                    substitutions. For example, consider the regular
+                    expression based entry shown below.</para>
+
+                    <para>Entry 3 will match files with name alpha.csv,
+                    alpha.txt, alpha.xml. In addition, values matched in the
+                    expression can be used to generate a PFN.</para>
+
+                    <para>For the entry below if the file being looked up is
+                    alpha.csv, the PFN for the file would be generated as
+                    file:///Volumes/data/input/csv/alpha.csv. Similary if the
+                    file being lookedup was alpha.csv, the PFN for the file
+                    would be generated as
+                    file:///Volumes/data/input/xml/alpha.xml i.e. The section
+                    [0], [1] will be replaced. Section [0] refers to the
+                    entire string i.e. alpha.csv. Section [1] refers to a
+                    partial match in the input i.e. csv, or txt, or xml. Users
+                    can utilize as many sections as they wish.</para>
+
+                    <para><screen>
+alpha\.(csv|txt|xml) file:///Volumes/data/input/[1]/[0] pool="local" regex="true"
+</screen></para>
+
+                    <para>To use File, the user additionally needs to specify
+                    pegasus.catalog.replica.file property to specify the path
+                    to the file based RC.</para>
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term>Directory</term>
+
+                  <listitem>
+                    <para>In this mode, Pegasus does a directory listing on an
+                    input directory to create the LFN to PFN mappings. The
+                    directory listing is performed recursively, resulting in
+                    deep LFN mappings. For example, if an input directory
+                    $input is specified with the following structure <screen>
+$input
+$input/f.1
+$input/f.2
+$input/D1
+$input/D1/f.3
+</screen> Pegasus will create the mappings the following LFN PFN mappings
+                    internally <screen>
+f.1 file://$input/f.1  pool="local"
+f.2 file://$input/f.2  pool="local"
+D1/f.3 file://$input/D2/f.3 pool="local"
+</screen></para>
+
+                    <para>If you don't want the deep lfn's to be created then,
+                    you can set pegasus.catalog.replica.directory.flat.lfn to
+                    true In that case, for the previous example, Pegasus will
+                    create the following LFN PFN mappings internally. <screen>
+f.1 file://$input/f.1  pool="local"
+f.2 file://$input/f.2  pool="local"
+f.3 file://$input/D2/f.3 pool="local"
+</screen></para>
+
+                    <para>pegasus-plan has --input-dir option that can be used
+                    to specify an input directory.</para>
+
+                    <para>Users can optionally specify additional properties
+                    to configure the behvavior of this implementation.</para>
+
+                    <para>pegasus.catalog.replica.directory.site to specify a
+                    site attribute other than local to associate with the
+                    mappings.</para>
+
+                    <para>pegasus.catalog.replica.directory.url.prefix to
+                    associate a URL prefix for the PFN's constructed. If not
+                    specified, the URL defaults to file://</para>
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term>MRC</term>
+
+                  <listitem>
+                    <para>In this mode, Pegasus queries multiple replica
+                    catalogs to discover the file locations on the grid. To
+                    use it set</para>
+
+                    <para><screen>
+pegasus.catalog.replica MRC
+</screen></para>
+
+                    <para>Each associated replica catalog can be configured
+                    via properties as follows.</para>
+
+                    <para>The user associates a variable name referred to as
+                    [value] for each of the catalogs, where [value] is any
+                    legal identifier (concretely [A-Za-z][_A-Za-z0-9]*) For
+                    each associated replica catalogs the user specifies the
+                    following properties.</para>
+
+                    <para><screen>
+pegasus.catalog.replica.mrc.[value]       specifies the type of replica catalog.
+pegasus.catalog.replica.mrc.[value].key   specifies a property name key for a
+particular catalog
+</screen></para>
+
+                    <para>For example, if a user wants to query two
+                    directories at the same time he/she can specify as
+                    follows</para>
+
+                    <para><screen>
+pegasus.catalog.replica.mrc.directory1 LRC
+pegasus.catalog.replica.mrc.directory1.url /input/dir1
+pegasus.catalog.replica.mrc.directory2 LRC
+pegasus.catalog.replica.mrc.directory2.url /input/dir2
+</screen></para>
+
+                    <para>In the above example, directory1, directory2 are any
+                    valid identifier names and url is the property key that
+                    needed to be specified.</para>
+                  </listitem>
+                </varlistentry>
+              </variablelist></para></entry>
+          </row>
+
+          <row>
+            <entry>pegasus.catalog.replica.url</entry>
+
+            <entry>N/A</entry>
+
+            <entry>Properties</entry>
+
+            <entry>2.0</entry>
+
+            <entry>(no default)</entry>
+
+            <entry>When using the modern RLS replica catalog, the URI to the
+            Replica catalog must be provided to Pegasus to enable it to look
+            up filenames. There is no default.</entry>
+          </row>
+
+          <row>
+            <entry>pegasus.catalog.replica.chunk.size</entry>
+
+            <entry>N/A</entry>
+
+            <entry>Properties</entry>
+
+            <entry>2.0</entry>
+
+            <entry>1000</entry>
+
+            <entry><para>The rc-client takes in an input file containing the
+            mappings upon which to work. This property determines, the number
+            of lines that are read in at a time, and worked upon at together.
+            This allows the various operations like insert, delete happen in
+            bulk if the underlying replica implementation supports
+            it.</para></entry>
+          </row>
+
+          <row>
+            <entry>pegasus.catalog.replica.cache.asrc</entry>
+
+            <entry>N/A</entry>
+
+            <entry>Properties</entry>
+
+            <entry>2.0</entry>
+
+            <entry>false</entry>
+
+            <entry><para>This Boolean property determines whether to treat the
+            cache file specified as a supplemental replica catalog or not.
+            User can specify on the command line to pegasus-plan a comma
+            separated list of cache files using the --cache option. By
+            default, the LFN-&gt;PFN mappings contained in the cache file are
+            treated as cache, i.e if an entry is found in a cache file the
+            replica catalog is not queried. This results in only the entry
+            specified in the cache file to be available for replica
+            selection.</para>Setting this property to true, results in the
+            cache files to be treated as supplemental replica catalogs. This
+            results in the mappings found in the replica catalog (as specified
+            by pegasus.catalog.replica) to be merged with the ones found in
+            the cache files. Thus, mappings for a particular LFN found in both
+            the cache and the replica catalog are available for replica
+            selection.</entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+  </section>
 </section>
