@@ -2391,24 +2391,21 @@ pegasus.catalog.*.db.SelectMethod
     <table>
       <title>Replica Catalog Properties</title>
 
-      <tgroup cols="3">
+      <tgroup cols="2">
         <tbody>
           <row>
-            <entry><emphasis role="bold">Property Key </emphasis></entry>
-
-            <entry><emphasis role="bold">Attributes</emphasis></entry>
+            <entry><emphasis role="bold">Key Attributes</emphasis></entry>
 
             <entry><emphasis role="bold">Description</emphasis></entry>
           </row>
 
           <row>
-            <entry>pegasus.catalog.replica</entry>
-
-            <entry><literallayout><emphasis role="bold">Corresponding Profile: </emphasis>N/A<emphasis
+            <entry><literallayout><emphasis role="bold">Property Key: </emphasis>pegasus.catalog.replica<emphasis
                   role="bold">
-Scope  :</emphasis> Properties
-<emphasis role="bold">Since  :</emphasis> 2.0
-<emphasis role="bold">Default:</emphasis> File
+Profile  Key: </emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Default     :</emphasis> File
 </literallayout></entry>
 
             <entry><para>Pegasus queries a Replica Catalog to discover the
@@ -2633,13 +2630,12 @@ pegasus.catalog.replica.mrc.directory2.url /input/dir2
           </row>
 
           <row>
-            <entry>pegasus.catalog.replica.url</entry>
-
-            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Corresponding Profile: </emphasis></emphasis>N/A<emphasis
-                  role="bold">
-Scope  :</emphasis> Properties
-<emphasis role="bold">Since  :</emphasis> 2.0
-<emphasis role="bold">Default:</emphasis> (no default)</literallayout>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.catalog.replica.url<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Default     :</emphasis> (no default)</literallayout>
             </entry>
 
             <entry>When using the modern RLS replica catalog, the URI to the
@@ -2648,14 +2644,14 @@ Scope  :</emphasis> Properties
           </row>
 
           <row>
-            <entry>pegasus.catalog.replica.chunk.size</entry>
-
             <entry><literallayout><emphasis role="bold"><emphasis role="bold"><emphasis
-                      role="bold">Corresponding Profile: </emphasis></emphasis></emphasis>N/A<emphasis
-                  role="bold">
-Scope  :</emphasis> Properties
-<emphasis role="bold">Since  :</emphasis> 2.0
-<emphasis role="bold">Default:</emphasis> 1000
+                      role="bold"><emphasis role="bold"><emphasis role="bold">Property Key:</emphasis></emphasis></emphasis></emphasis><emphasis
+                    role="bold"><emphasis role="bold"><emphasis role="bold"> </emphasis></emphasis></emphasis></emphasis>pegasus.catalog.replica.chunk.size<emphasis
+                  role="bold"><emphasis role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Default     :</emphasis> 1000
 </literallayout></entry>
 
             <entry><para>The rc-client takes in an input file containing the
@@ -2667,15 +2663,18 @@ Scope  :</emphasis> Properties
           </row>
 
           <row>
-            <entry>pegasus.catalog.replica.cache.asrc</entry>
-
             <entry><literallayout><emphasis role="bold"><emphasis role="bold"><emphasis
-                      role="bold"><emphasis role="bold">Corresponding Profile:</emphasis></emphasis></emphasis></emphasis><emphasis
-                  role="bold"><emphasis role="bold"><emphasis role="bold"> </emphasis></emphasis></emphasis>N/A<emphasis
+                      role="bold"><emphasis role="bold"><emphasis role="bold"><emphasis
+                            role="bold"><emphasis role="bold"><emphasis
+                                role="bold">Property Key:</emphasis></emphasis></emphasis></emphasis></emphasis></emphasis> </emphasis></emphasis>pegasus.catalog.replica.cache.asrc<emphasis
+                  role="bold"><emphasis role="bold"><emphasis role="bold"><emphasis
+                        role="bold">
+Profile Key :</emphasis></emphasis></emphasis></emphasis><emphasis role="bold"><emphasis
+                    role="bold"><emphasis role="bold"> </emphasis></emphasis></emphasis>N/A<emphasis
                   role="bold">
-Scope  :</emphasis> Properties
-<emphasis role="bold">Since  :</emphasis> 2.0
-<emphasis role="bold">Default:</emphasis> false
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Default     :</emphasis> false
 </literallayout></entry>
 
             <entry><para>This Boolean property determines whether to treat the
@@ -2697,5 +2696,142 @@ Scope  :</emphasis> Properties
         </tbody>
       </tgroup>
     </table>
+
+    <table>
+      <title>Site Catalog Properties</title>
+
+      <tgroup cols="2">
+        <tbody>
+          <row>
+            <entry><emphasis role="bold">Key Attributes</emphasis></entry>
+
+            <entry><emphasis role="bold">Description</emphasis></entry>
+          </row>
+
+          <row>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold"><emphasis
+                      role="bold"><emphasis role="bold"><emphasis role="bold"><emphasis
+                            role="bold"><emphasis role="bold"><emphasis
+                                role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis></emphasis></emphasis></emphasis></emphasis></emphasis></emphasis></emphasis>pegasus.catalog.site<emphasis
+                  role="bold">
+Profile  Key: </emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Default     :</emphasis> XML
+</literallayout></entry>
+
+            <entry>Pegasus supports two different types of site catalogs in
+            XML format conforming to sc-3.0.xsd and sc-4.0.xsd. Pegasus is
+            able to auto-detect what schema a user site catalog refers to.
+            Hence, this property may no longer be set.</entry>
+          </row>
+
+          <row>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key:</emphasis> </emphasis>pegasus.catalog.site.file<emphasis
+                  role="bold"><emphasis role="bold">
+Profile Key : </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Default     :</emphasis> ${pegasus.home.sysconfdir}/sites.xml</literallayout></entry>
+
+            <entry>The path to the site catalog file, that describes the
+            various sites and their layouts to Pegasus.</entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+
+    <table>
+      <title>Transformation Catalog Properties</title>
+
+      <tgroup cols="2">
+        <tbody>
+          <row>
+            <entry><emphasis role="bold">Key Attributes</emphasis></entry>
+
+            <entry><emphasis role="bold">Description</emphasis></entry>
+          </row>
+
+          <row>
+            <entry><literallayout><emphasis role="bold">Property Key: </emphasis>pegasus.catalog.transformation<emphasis
+                  role="bold">
+Profile  Key: </emphasis>N/A<emphasis role="bold">
+Scope       : </emphasis>Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Default     :</emphasis> Text
+</literallayout></entry>
+
+            <entry><para>The only recommended and supported version of
+            Transformation Catalog for Pegasus is Text. For the old File based
+            formats, users should use pegasus-tc-converter to convert File
+            format to Text Format.</para><para><variablelist>
+                <varlistentry>
+                  <term>Text</term>
+
+                  <listitem>
+                    <para>In this mode, a multiline file based format is
+                    understood. The file is read and cached in memory. Any
+                    modifications, as adding or deleting, causes an update of
+                    the memory and hence to the file underneath. All queries
+                    are done against the memory representation.</para>
+
+                    <para>The file sample.tc.text in the etc directory
+                    contains an example</para>
+
+                    <para>Here is a sample textual format for transfomation
+                    catalog containing one transformation on two sites</para>
+
+                    <para><screen>
+tr example::keg:1.0 {
+#specify profiles that apply for all the sites for the transformation
+#in each site entry the profile can be overriden
+profile env "APP_HOME" "/tmp/karan"
+profile env "JAVA_HOME" "/bin/app"
+site isi {
+profile env "me" "with"
+profile condor "more" "test"
+profile env "JAVA_HOME" "/bin/java.1.6"
+pfn "/path/to/keg"
+arch  "x86"
+os    "linux"
+osrelease "fc"
+osversion "4"
+type "INSTALLED"
+site wind {
+profile env "me" "with"
+profile condor "more" "test"
+pfn "/path/to/keg"
+arch  "x86"
+os    "linux"
+osrelease "fc"
+osversion "4"
+type "STAGEABLE"
+</screen></para>
+                  </listitem>
+                </varlistentry>
+              </variablelist></para></entry>
+          </row>
+
+          <row>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis></emphasis>pegasus.catalog.transformation<emphasis
+                  role="bold"><emphasis role="bold">
+Profile Key : </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Default     :</emphasis> ${pegasus.home.sysconfdir}/tc.text </literallayout></entry>
+
+            <entry>The path to the transformation catalog file, that describes
+            the locations of the executables.</entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+  </section>
+
+  <section>
+    <title>Site Catalog Properties</title>
+
+    <para/>
   </section>
 </section>
