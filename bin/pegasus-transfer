@@ -1414,7 +1414,7 @@ class Alarm(Exception):
 
 # --- global variables ----------------------------------------------------------------
 
-prog_dir  = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0])))
+prog_dir  = os.path.realpath(os.path.join(os.path.dirname(sys.argv[0])))
 prog_base = os.path.split(sys.argv[0])[1]   # Name of this program
 
 logger = logging.getLogger("my_logger")
@@ -1530,12 +1530,15 @@ def env_setup():
     # fink on macos x
     if os.path.exists("/sw/bin") and not("/sw/bin" in path_entries):
         path_entries.append("/sw/bin")
-       
-    # need LD_LIBRARY_PATH for Globus tools
-    ld_library_path = ""
-    if "LD_LIBRARY_PATH" in os.environ:
-        ld_library_path = os.environ['LD_LIBRARY_PATH']
-    ld_library_path_entries = ld_library_path.split(':')
+    
+    # prepend the path pegasus-transfer was launched from - this ensures
+    # a consistent environment where all the Pegasus tools are picked
+    # up from the same location
+    try:
+        path_entries.remove(prog_dir)
+    except Exception:
+        pass
+    path_entries.insert(0, prog_dir)
     
     # if PEGASUS_HOME is set, prepend it to the PATH (we want it early to
     # override other cruft)
@@ -1546,6 +1549,12 @@ def env_setup():
             pass
         path_entries.insert(0, os.environ['PEGASUS_HOME'] + "/bin")
     
+    # need LD_LIBRARY_PATH for Globus tools
+    ld_library_path = ""
+    if "LD_LIBRARY_PATH" in os.environ:
+        ld_library_path = os.environ['LD_LIBRARY_PATH']
+    ld_library_path_entries = ld_library_path.split(':')
+
     # if GLOBUS_LOCATION is set, prepend it to the PATH and LD_LIBRARY_PATH 
     # (we want it early to override other cruft)
     if "GLOBUS_LOCATION" in os.environ:
