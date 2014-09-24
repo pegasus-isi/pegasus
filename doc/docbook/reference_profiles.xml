@@ -2391,16 +2391,12 @@ pegasus.catalog.*.db.SelectMethod
     <table>
       <title>Replica Catalog Properties</title>
 
-      <tgroup cols="4">
+      <tgroup cols="3">
         <tbody>
           <row>
             <entry><emphasis role="bold">Property Key </emphasis></entry>
 
-            <entry><para><emphasis
-            role="bold">Corresponding</emphasis></para><emphasis
-            role="bold">Profile Key </emphasis></entry>
-
-            <entry><emphasis role="bold">Metadata</emphasis></entry>
+            <entry><emphasis role="bold">Attributes</emphasis></entry>
 
             <entry><emphasis role="bold">Description</emphasis></entry>
           </row>
@@ -2408,12 +2404,12 @@ pegasus.catalog.*.db.SelectMethod
           <row>
             <entry>pegasus.catalog.replica</entry>
 
-            <entry>N/A</entry>
-
-            <entry><screen><emphasis role="bold">Scope  :</emphasis> Properties
+            <entry><literallayout><emphasis role="bold">Corresponding Profile: </emphasis>N/A<emphasis
+                  role="bold">
+Scope  :</emphasis> Properties
 <emphasis role="bold">Since  :</emphasis> 2.0
 <emphasis role="bold">Default:</emphasis> File
-</screen></entry>
+</literallayout></entry>
 
             <entry><para>Pegasus queries a Replica Catalog to discover the
             physical filenames (PFN) for input files specified in the DAX.
@@ -2639,12 +2635,12 @@ pegasus.catalog.replica.mrc.directory2.url /input/dir2
           <row>
             <entry>pegasus.catalog.replica.url</entry>
 
-            <entry>N/A</entry>
-
-            <entry><screen><emphasis role="bold">Scope  :</emphasis> Properties
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Corresponding Profile: </emphasis></emphasis>N/A<emphasis
+                  role="bold">
+Scope  :</emphasis> Properties
 <emphasis role="bold">Since  :</emphasis> 2.0
-<emphasis role="bold">Default:</emphasis> (no default)
-</screen> </entry>
+<emphasis role="bold">Default:</emphasis> (no default)</literallayout>
+            </entry>
 
             <entry>When using the modern RLS replica catalog, the URI to the
             Replica catalog must be provided to Pegasus to enable it to look
@@ -2654,12 +2650,13 @@ pegasus.catalog.replica.mrc.directory2.url /input/dir2
           <row>
             <entry>pegasus.catalog.replica.chunk.size</entry>
 
-            <entry>N/A</entry>
-
-            <entry><screen><emphasis role="bold">Scope  :</emphasis> Properties
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold"><emphasis
+                      role="bold">Corresponding Profile: </emphasis></emphasis></emphasis>N/A<emphasis
+                  role="bold">
+Scope  :</emphasis> Properties
 <emphasis role="bold">Since  :</emphasis> 2.0
 <emphasis role="bold">Default:</emphasis> 1000
-</screen></entry>
+</literallayout></entry>
 
             <entry><para>The rc-client takes in an input file containing the
             mappings upon which to work. This property determines, the number
@@ -2672,12 +2669,14 @@ pegasus.catalog.replica.mrc.directory2.url /input/dir2
           <row>
             <entry>pegasus.catalog.replica.cache.asrc</entry>
 
-            <entry>N/A</entry>
-
-            <entry><screen><emphasis role="bold">Scope  :</emphasis> Properties
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold"><emphasis
+                      role="bold"><emphasis role="bold">Corresponding Profile:</emphasis></emphasis></emphasis></emphasis><emphasis
+                  role="bold"><emphasis role="bold"><emphasis role="bold"> </emphasis></emphasis></emphasis>N/A<emphasis
+                  role="bold">
+Scope  :</emphasis> Properties
 <emphasis role="bold">Since  :</emphasis> 2.0
 <emphasis role="bold">Default:</emphasis> false
-</screen></entry>
+</literallayout></entry>
 
             <entry><para>This Boolean property determines whether to treat the
             cache file specified as a supplemental replica catalog or not.
