@@ -2654,12 +2654,12 @@ Scope       :</emphasis> Properties
 <emphasis role="bold">Default     :</emphasis> 1000
 </literallayout></entry>
 
-            <entry><para>The rc-client takes in an input file containing the
-            mappings upon which to work. This property determines, the number
-            of lines that are read in at a time, and worked upon at together.
-            This allows the various operations like insert, delete happen in
-            bulk if the underlying replica implementation supports
-            it.</para></entry>
+            <entry><para>The pegasus-rc-client takes in an input file
+            containing the mappings upon which to work. This property
+            determines, the number of lines that are read in at a time, and
+            worked upon at together. This allows the various operations like
+            insert, delete happen in bulk if the underlying replica
+            implementation supports it.</para></entry>
           </row>
 
           <row>
@@ -2830,8 +2830,482 @@ Scope       :</emphasis> Properties
   </section>
 
   <section>
-    <title>Site Catalog Properties</title>
+    <title>Replica Selection Properties</title>
 
-    <para/>
+    <para><table>
+        <title>Replica Selection Properties</title>
+
+        <tgroup cols="2">
+          <tbody>
+            <row>
+              <entry><emphasis role="bold">Key Attributes</emphasis></entry>
+
+              <entry><emphasis role="bold">Description</emphasis></entry>
+            </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold">Property Key: </emphasis>pegasus.selector.replica<emphasis
+                    role="bold">
+Profile  Key: </emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>String
+<emphasis role="bold">Default     :</emphasis> Default
+<emphasis role="bold">See Also    :</emphasis> pegasus.selector.replica.*.ignore.stagein.sites<emphasis
+                    role="bold">
+See Also    :</emphasis> pegasus.selector.replica.*.prefer.stagein.sites
+</literallayout></entry>
+
+              <entry><para>Each job in the DAX maybe associated with input
+              LFN's denoting the files that are required for the job to run.
+              To determine the physical replica (PFN) for a LFN, Pegasus
+              queries the replica catalog to get all the PFN's (replicas)
+              associated with a LFN. Pegasus then calls out to a replica
+              selector to select a replica amongst the various replicas
+              returned. This property determines the replica selector to use
+              for selecting the replicas.</para><para><variablelist>
+                  <varlistentry>
+                    <term>Default</term>
+
+                    <listitem>
+                       If a PFN that is a file URL (starting with file:///) and has a pool attribute matching to the site handle of the site where the compute is to be run is found, then that is returned. Else,a random PFN is selected amongst all the PFN's that have a pool attribute matching to the site handle of the site where a compute job is to be run. Else, a random pfn is selected amongst all the PFN's. 
+                    </listitem>
+                  </varlistentry>
+
+                  <varlistentry>
+                    <term>Restricted</term>
+
+                    <listitem>
+                      <para>This replica selector, allows the user to specify
+                      good sites and bad sites for staging in data to a
+                      particular compute site. A good site for a compute site
+                      X, is a preferred site from which replicas should be
+                      staged to site X. If there are more than one good sites
+                      having a particular replica, then a random site is
+                      selected amongst these preferred sites.</para>
+
+                      <para>A bad site for a compute site X, is a site from
+                      which replica's should not be staged. The reason of not
+                      accessing replica from a bad site can vary from the link
+                      being down, to the user not having permissions on that
+                      site's data.</para>
+
+                      <para>The good | bad sites are specified by the
+                      properties</para>
+
+                      <para><screen>
+pegasus.replica.*.prefer.stagein.sites
+pegasus.replica.*.ignore.stagein.sites
+</screen></para>
+
+                      <para>where the * in the property name denotes the name
+                      of the compute site. A * in the property key is taken to
+                      mean all sites.</para>
+
+                      <para>The pegasus.replica.*.prefer.stagein.sites
+                      property takes precedence over
+                      pegasus.replica.*.ignore.stagein.sites property i.e. if
+                      for a site X, a site Y is specified both in the ignored
+                      and the preferred set, then site Y is taken to mean as
+                      only a preferred site for a site X.</para>
+                    </listitem>
+                  </varlistentry>
+
+                  <varlistentry>
+                    <term>Regex</term>
+
+                    <listitem>
+                      <para>This replica selector allows the user allows the
+                      user to specific regex expressions that can be used to
+                      rank various PFN's returned from the Replica Catalog for
+                      a particular LFN. This replica selector selects the
+                      highest ranked PFN i.e the replica with the lowest rank
+                      value.</para>
+
+                      <para>The regular expressions are assigned different
+                      rank, that determine the order in which the expressions
+                      are employed. The rank values for the regex can
+                      expressed in user properties using the property.</para>
+
+                      <para><screen>
+pegasus.selector.replica.regex.rank.[value]   regex-expression
+</screen></para>
+
+                      <para>The value is an integer value that denotes the
+                      rank of an expression with a rank value of 1 being the
+                      highest rank.</para>
+
+                      <para>Please note that before applying any regular
+                      expressions on the PFN's, the file URL's that dont match
+                      the preferred site are explicitly filtered out.</para>
+                    </listitem>
+                  </varlistentry>
+
+                  <varlistentry>
+                    <term>Local</term>
+
+                    <listitem>
+                       This replica selector prefers replicas from the local host and that start with a file: URL scheme. It is useful, when users want to stagin files to a remote site from your submit host using the Condor file transfer mechanism. 
+                    </listitem>
+                  </varlistentry>
+                </variablelist></para></entry>
+            </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.selector.replica.*.ignore.stagein.sites<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Default     :</emphasis> (no default)<emphasis
+                    role="bold">
+See Also    :</emphasis> pegasus.selector.replica<emphasis role="bold">
+See Also    :</emphasis> pegasus.selector.replica.*.prefer.stagein.sites</literallayout></entry>
+
+              <entry><para>A comma separated list of storage sites from which
+              to never stage in data to a compute site. The property can apply
+              to all or a single compute site, depending on how the * in the
+              property name is expanded.</para><para>The * in the property
+              name means all compute sites unless replaced by a site
+              name.</para><para>For e.g setting
+              pegasus.selector.replica.*.ignore.stagein.sites to usc means
+              that ignore all replicas from site usc for staging in to any
+              compute site. Setting pegasus.replica.isi.ignore.stagein.sites
+              to usc means that ignore all replicas from site usc for staging
+              in data to site isi.</para></entry>
+            </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.selector.replica.*.prefer.stagein.sites<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Default     :</emphasis> (no default)<emphasis
+                    role="bold">
+See Also    :</emphasis> pegasus.selector.replica<emphasis role="bold">
+See Also    :</emphasis> pegasus.selector.replica.*.ignore.stagein.sites</literallayout></entry>
+
+              <entry><para>A comma separated list of preferred storage sites
+              from which to stage in data to a compute site. The property can
+              apply to all or a single compute site, depending on how the * in
+              the property name is expanded.</para><para>The * in the property
+              name means all compute sites unless replaced by a site
+              name.</para><para>For e.g setting
+              pegasus.selector.replica.*.prefer.stagein.sites to usc means
+              that prefer all replicas from site usc for staging in to any
+              compute site. Setting pegasus.replica.isi.prefer.stagein.sites
+              to usc means that prefer all replicas from site usc for staging
+              in data to site isi.</para></entry>
+            </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.selector.replica.regex.rank.[value]<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.3.0
+<emphasis role="bold">Default     :</emphasis> (no default)<emphasis
+                    role="bold">
+See Also    :</emphasis> pegasus.selector.replica</literallayout></entry>
+
+              <entry><para>Specifies the regex expressions to be applied on
+              the PFNs returned for a particular LFN. Refer to <screen>
+http://java.sun.com/javase/6/docs/api/java/util/regex/Pattern.html
+</screen> on information of how to construct a regex
+              expression.</para><para>The [value] in the property key is to be
+              replaced by an int value that designates the rank value for the
+              regex expression to be applied in the Regex replica
+              selector.</para><para>The example below indicates preference for
+              file URL's over URL's referring to gridftp server at
+              example.isi.edu</para><para><screen>
+pegasus.selector.replica.regex.rank.1 file://.*
+pegasus.selector.replica.regex.rank.2 gsiftp://example\.isi\.edu.*
+</screen></para></entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table></para>
+  </section>
+
+  <section>
+    <title>Site Selection Properties</title>
+
+    <para><table>
+        <title>Site Selection Properties</title>
+
+        <tgroup cols="2">
+          <tbody>
+            <row>
+              <entry><emphasis role="bold">Key Attributes</emphasis></entry>
+
+              <entry><emphasis role="bold">Description</emphasis></entry>
+            </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold">Property Key: </emphasis>pegasus.selector.site<emphasis
+                    role="bold">
+Profile  Key: </emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>String
+<emphasis role="bold">Default     :</emphasis> Random
+<emphasis role="bold">See Also    :</emphasis> pegasus.selector.site.path<emphasis
+                    role="bold">
+See Also    :</emphasis> pegasus.selector.site.timeout
+<emphasis role="bold">See Also    :</emphasis> pegasus.selector.site.keep.tmp<emphasis
+                    role="bold">
+See Also    : </emphasis>pegasus.selector.site.env.*</literallayout></entry>
+
+              <entry><para>The site selection in Pegasus can be on basis of
+              any of the following strategies.</para><para><variablelist>
+                  <varlistentry>
+                    <term>Random</term>
+
+                    <listitem>
+                      In this mode, the jobs will be randomly distributed among the sites that can execute them. 
+                    </listitem>
+                  </varlistentry>
+
+                  <varlistentry>
+                    <term>RoundRobin</term>
+
+                    <listitem>
+                      In this mode. the jobs will be assigned in a round robin manner amongst the sites that can execute them. Since each site cannot execute everytype of job, the round robin scheduling is done per level on a sorted list. The sorting is on the basis of the number of jobs a particular site has been assigned in that level so far. If a job cannot be run on the first site in the queue (due to no matching entry in the transformation catalog for the transformation referred to by the job), it goes to the next one and so on. This implementation defaults to classic round robin in the case where all the jobs in the workflow can run on all the sites. 
+                    </listitem>
+                  </varlistentry>
+
+                  <varlistentry>
+                    <term>NonJavaCallout</term>
+
+                    <listitem>
+                      <para>In this mode, Pegasus will callout to an external
+                      site selector.In this mode a temporary file is prepared
+                      containing the job information that is passed to the
+                      site selector as an argument while invoking it. The path
+                      to the site selector is specified by setting the
+                      property pegasus.site.selector.path. The environment
+                      variables that need to be set to run the site selector
+                      can be specified using the properties with a
+                      pegasus.site.selector.env. prefix. The temporary file
+                      contains information about the job that needs to be
+                      scheduled. It contains key value pairs with each key
+                      value pair being on a new line and separated by a
+                      =.</para>
+
+                      <para>The following pairs are currently generated for
+                      the site selector temporary file that is generated in
+                      the NonJavaCallout.</para>
+
+                      <para><informaltable frame="none">
+                          <tgroup align="left" cols="2" colsep="1" rowsep="1">
+                            <tbody>
+                              <row>
+                                <entry>version</entry>
+
+                                <entry>is the version of the site selector
+                                api,currently 2.0.</entry>
+                              </row>
+
+                              <row>
+                                <entry>transformation</entry>
+
+                                <entry>is the fully-qualified definition identifier
+                                for the transformation (TR)
+                                namespace::name:version.</entry>
+                              </row>
+
+                              <row>
+                                <entry>derivation</entry>
+
+                                <entry>is teh fully qualified definition identifier
+                                for the derivation (DV),
+                                namespace::name:version.</entry>
+                              </row>
+
+                              <row>
+                                <entry>job.level</entry>
+
+                                <entry>is the job's depth in the tree of the
+                                workflow DAG.</entry>
+                              </row>
+
+                              <row>
+                                <entry>job.id</entry>
+
+                                <entry>is the job's ID, as used in the DAX
+                                file.</entry>
+                              </row>
+
+                              <row>
+                                <entry>resource.id</entry>
+
+                                <entry>is a pool handle, followed by whitespace,
+                                followed by a gridftp server. Typically, each
+                                gridftp server is enumerated once, so you may have
+                                multiple occurances of the same site. There can be
+                                multiple occurances of this key.</entry>
+                              </row>
+
+                              <row>
+                                <entry>input.lfn</entry>
+
+                                <entry>is an input LFN, optionally followed by a
+                                whitespace and file size. There can be multiple
+                                occurances of this key,one for each input LFN
+                                required by the job.</entry>
+                              </row>
+
+                              <row>
+                                <entry>wf.name</entry>
+
+                                <entry>label of the dax, as found in the DAX's root
+                                element. wf.index is the DAX index, that is
+                                incremented for each partition in case of deferred
+                                planning.</entry>
+                              </row>
+
+                              <row>
+                                <entry>wf.time</entry>
+
+                                <entry>is the mtime of the workflow.</entry>
+                              </row>
+
+                              <row>
+                                <entry>wf.manager</entry>
+
+                                <entry>is the name of the workflow manager being
+                                used .e.g condor</entry>
+                              </row>
+
+                              <row>
+                                <entry>vo.name</entry>
+
+                                <entry>is the name of the virtual organization that
+                                is running this workflow. It is currently set to
+                                NONE</entry>
+                              </row>
+
+                              <row>
+                                <entry>vo.group</entry>
+
+                                <entry>unused at present and is set to NONE.</entry>
+                              </row>
+
+                              <row>
+                                <entry/>
+                              </row>
+                            </tbody>
+                          </tgroup>
+                        </informaltable></para>
+                    </listitem>
+                  </varlistentry>
+
+                  <varlistentry>
+                    <term>Group</term>
+
+                    <listitem>
+                      In this mode, a group of jobs will be assigned to the same site that can execute them. The use of the PEGASUS profile key group in the dax, associates a job with a particular group. The jobs that do not have the profile key associated with them, will be put in the default group. The jobs in the default group are handed over to the "Random" Site Selector for scheduling. 
+                    </listitem>
+                  </varlistentry>
+
+                  <varlistentry>
+                    <term>Heft</term>
+
+                    <listitem>
+                      <para>In this mode, a version of the HEFT processor
+                      scheduling algorithm is used to schedule jobs in the
+                      workflow to multiple grid sites. The implementation
+                      assumes default data communication costs when jobs are
+                      not scheduled on to the same site. Later on this may be
+                      made more configurable.</para>
+
+                      <para>The runtime for the jobs is specified in the
+                      transformation catalog by associating the pegasus
+                      profile key runtime with the entries.</para>
+
+                      <para>The number of processors in a site is picked up
+                      from the attribute idle-nodes associated with the
+                      vanilla jobmanager of the site in the site
+                      catalog.</para>
+                    </listitem>
+                  </varlistentry>
+                </variablelist></para></entry>
+            </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.selector.site.path<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Default     :</emphasis> (no default)</literallayout></entry>
+
+              <entry>If one calls out to an external site selector using the
+              NonJavaCallout mode, this refers to the path where the site
+              selector is installed. In case other strategies are used it does
+              not need to be set.</entry>
+            </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.site.selector.env.*<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Default     :</emphasis> (no default)</literallayout></entry>
+
+              <entry><para>The environment variables that need to be set while
+              callout to the site selector. These are the variables that the
+              user would set if running the site selector on the command line.
+              The name of the environment variable is got by stripping the
+              keys of the prefix "pegasus.site.selector.env." prefix from
+              them. The value of the environment variable is the value of the
+              property.</para><para>e.g
+              pegasus.site.selector.path.LD_LIBRARY_PATH /globus/lib would
+              lead to the site selector being called with the LD_LIBRARY_PATH
+              set to /globus/lib.</para></entry>
+            </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.selector.site.timeout<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.3.0
+<emphasis role="bold">Default     :</emphasis> 60<emphasis role="bold">
+See Also    :</emphasis> pegasus.selector.site</literallayout></entry>
+
+              <entry>It sets the number of seconds Pegasus waits to hear back
+              from an external site selector using the NonJavaCallout
+              interface before timing out.</entry>
+            </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.selector.site.keep.tmp<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.3.0
+<emphasis role="bold">Values</emphasis>      : onerror|always|never
+<emphasis role="bold">Default     :</emphasis> onerror<emphasis role="bold">
+See Also    :</emphasis> pegasus.selector.site</literallayout></entry>
+
+              <entry><para>It determines whether Pegasus deletes the temporary
+              input files that are generated in the temp directory or not.
+              These temporary input files are passed as input to the external
+              site selectors.</para><para>A temporary input file is created
+              for each that needs to be scheduled.</para></entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table></para>
   </section>
 </section>
