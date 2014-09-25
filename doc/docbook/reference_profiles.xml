@@ -2098,34 +2098,23 @@ Default     :</emphasis> Minimal</literallayout></entry>
     <para><table>
         <title>Schema File Location Properties</title>
 
-        <tgroup cols="6">
+        <tgroup cols="2">
           <tbody>
             <row>
               <entry><emphasis role="bold">Key Attributes </emphasis></entry>
-
-              <entry><emphasis role="bold">Corresponding Profile Key
-              </emphasis></entry>
-
-              <entry><emphasis role="bold">Where can it be
-              specified</emphasis></entry>
-
-              <entry><emphasis role="bold">Since</emphasis></entry>
-
-              <entry><emphasis role="bold">Default Value</emphasis></entry>
 
               <entry><emphasis role="bold">Description</emphasis></entry>
             </row>
 
             <row>
-              <entry>pegasus.schema.dax</entry>
-
-              <entry>N/A</entry>
-
-              <entry>Properties</entry>
-
-              <entry>2.0</entry>
-
-              <entry>${pegasus.home.sysconfdir}/dax-3.4.xsd</entry>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.schema.dax<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>file path
+<emphasis role="bold">Default     :</emphasis> ${pegasus.home.sysconfdir}/dax-3.4.xsd</literallayout></entry>
 
               <entry>This file is a copy of the XML schema that describes
               abstract DAG files that are the result of the abstract planning
@@ -2136,15 +2125,14 @@ Default     :</emphasis> Minimal</literallayout></entry>
             </row>
 
             <row>
-              <entry>pegasus.schema.sc</entry>
-
-              <entry>N/A</entry>
-
-              <entry>Properties</entry>
-
-              <entry>2.0</entry>
-
-              <entry>${pegasus.home.sysconfdir}/sc-4.0.xsd</entry>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.schema.sc<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>file path
+<emphasis role="bold">Default     :</emphasis> ${pegasus.home.sysconfdir}/sc-4.0.xsd</literallayout></entry>
 
               <entry>This file is a copy of the XML schema that describes the
               xml description of the site catalog. Providing a copy of the
@@ -2154,15 +2142,14 @@ Default     :</emphasis> Minimal</literallayout></entry>
             </row>
 
             <row>
-              <entry>pegasus.schema.ivr</entry>
-
-              <entry>N/A</entry>
-
-              <entry>Properties</entry>
-
-              <entry>2.0</entry>
-
-              <entry>${pegasus.home.sysconfdir}/iv-2.0.xsd</entry>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.schema.ivr<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>file path
+<emphasis role="bold">Default     :</emphasis> ${pegasus.home.sysconfdir}/iv-2.0.xsd</literallayout></entry>
 
               <entry>This file is a copy of the XML schema that describes
               invocation record files that are the result of the a grid launch
@@ -2184,57 +2171,43 @@ Default     :</emphasis> Minimal</literallayout></entry>
     <table>
       <title>Database Driver Properties</title>
 
-      <tgroup cols="6">
+      <tgroup cols="2">
         <tbody>
           <row>
             <entry><emphasis role="bold">Property Key </emphasis></entry>
-
-            <entry><emphasis role="bold">Corresponding Profile Key
-            </emphasis></entry>
-
-            <entry><emphasis role="bold">Where can it be
-            specified</emphasis></entry>
-
-            <entry><emphasis role="bold">Since</emphasis></entry>
-
-            <entry><emphasis role="bold">Default Value</emphasis></entry>
 
             <entry><emphasis role="bold">Description</emphasis></entry>
           </row>
 
           <row>
-            <entry>pegasus.catalog.*.db.driver</entry>
-
-            <entry>N/A</entry>
-
-            <entry>Properties</entry>
-
-            <entry>2.0</entry>
-
-            <entry>(no default)</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.catalog.*.db.driver<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>Enumeration
+<emphasis role="bold">Values      : </emphasis>MySQL|PostGres|SQLite<emphasis
+                  role="bold">
+Default     :</emphasis> (no default)</literallayout></entry>
 
             <entry><para>The database driver class is dynamically loaded, as
             required by the schema. Currently, only MySQL 5.x, PostGreSQL 7.3
             and SQlite are supported. Their respective JDBC3 driver is
-            provided as part and parcel of the PEGASUS.</para><para>A user may
-            provide their own implementation, derived from
-            org.griphyn.vdl.dbdriver.DatabaseDriver, to talk to a database of
-            their choice.</para><para>The * in the property name can be
-            replaced by a catalog name to apply the property only for that
-            catalog. Valid catalog names are</para><para><screen>replica
+            provided as part and parcel of the PEGASUS.</para><para>The * in
+            the property name can be replaced by a catalog name to apply the
+            property only for that catalog. Valid catalog names
+            are</para><para><screen>replica
 </screen></para></entry>
           </row>
 
           <row>
-            <entry>pegasus.catalog.*.db.url</entry>
-
-            <entry>N/A</entry>
-
-            <entry>Properties</entry>
-
-            <entry>2.0</entry>
-
-            <entry>(no default)</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.catalog.*.db.url<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>Database URL
+<emphasis role="bold">Default     :</emphasis> (no default)</literallayout></entry>
 
             <entry>Each database has its own string to contact the database on
             a given host, port, and database. Although most driver URLs allow
@@ -2245,15 +2218,13 @@ Default     :</emphasis> Minimal</literallayout></entry>
           </row>
 
           <row>
-            <entry>pegasus.catalog.*.db.user</entry>
-
-            <entry>N/A</entry>
-
-            <entry>Properties</entry>
-
-            <entry>2.0</entry>
-
-            <entry>(no default)</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.catalog.*.db.user<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>String
+<emphasis role="bold">Default     :</emphasis> </literallayout></entry>
 
             <entry><para>In order to access a database, you must provide the
             name of your account on the DBMS. This property is
@@ -2264,15 +2235,13 @@ Default     :</emphasis> Minimal</literallayout></entry>
           </row>
 
           <row>
-            <entry>pegasus.catalog.*.db.password</entry>
-
-            <entry>N/A</entry>
-
-            <entry>Properties</entry>
-
-            <entry>2.0</entry>
-
-            <entry>(no default)</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.catalog.*.db.password<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>String
+<emphasis role="bold">Default     :</emphasis> (no default)</literallayout></entry>
 
             <entry><para>In order to access a database, you must provide an
             optional password of your account on the DBMS. This property is
@@ -2283,15 +2252,13 @@ Default     :</emphasis> Minimal</literallayout></entry>
           </row>
 
           <row>
-            <entry>pegasus.catalog.*.db.*</entry>
-
-            <entry>N/A</entry>
-
-            <entry>Properties</entry>
-
-            <entry>2.0</entry>
-
-            <entry>(no default)</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.catalog.*.db.*<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>String
+<emphasis role="bold">Default     :</emphasis> (no default)</literallayout></entry>
 
             <entry><para/><para>Each database has a multitude of options to
             control in fine detail the further behaviour. You may want to

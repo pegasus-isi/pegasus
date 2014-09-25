@@ -310,7 +310,7 @@ public class JDBCRC implements ReplicaCatalog
                 else if ( driver.equalsIgnoreCase( "Postgres" )){
                     driver = "org.postgresql.Driver";
                 }
-                else if( driver.equals( "sqlite") ){
+                else if( driver.equalsIgnoreCase( "sqlite") ){
                     driver = "org.sqlite.JDBC";
                     //foreign key support needs to be enabled 
                     //per connection PRAGMA foreign_keys ON
