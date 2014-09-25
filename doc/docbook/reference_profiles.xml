@@ -374,7 +374,7 @@ queue
     </section>
   </section>
 
-  <section>
+  <section id="env_profiles">
     <title>The env Profile Namespace</title>
 
     <para>The <emphasis>env</emphasis> namespace allows users to specify
@@ -459,7 +459,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
   </section>
 
   <section>
-    <title>The Globus Profile Namespace</title>
+    <title id="globus_profiles">The Globus Profile Namespace</title>
 
     <para>The <emphasis>globus</emphasis> profile namespace encapsulates
     Globus resource specification language (RSL) instructions. The RSL
@@ -677,7 +677,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
     </table>
   </section>
 
-  <section>
+  <section id="condor_profiles">
     <title>The Condor Profile Namespace</title>
 
     <para>The Condor submit file controls every detail how and where a job is
@@ -921,7 +921,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
     </table>
   </section>
 
-  <section>
+  <section id="dagman_profiles">
     <title>The Dagman Profile Namespace</title>
 
     <para>DAGMan is Condor's workflow manager. While planners generate most of
@@ -1248,7 +1248,7 @@ Scope       :</emphasis> Properties
     </table>
   </section>
 
-  <section>
+  <section id="pegasus_profiles">
     <title>The Pegasus Profile Namespace</title>
 
     <para>The <emphasis>pegasus</emphasis> profiles allow users to configure
@@ -1785,7 +1785,7 @@ pegasus.catalog.site.file            ${pegasus.home}/etc/sample.sites.xml
     properties.</para>
   </section>
 
-  <section>
+  <section id="local_dir_props">
     <title>Local Directories Properties</title>
 
     <para>This section describes the GNU directory structure conventions. GNU
@@ -1891,7 +1891,7 @@ Scope       :</emphasis> Properties
       </table></para>
   </section>
 
-  <section>
+  <section id="site_dir_props">
     <title>Site Directories Properties</title>
 
     <para>The site directory properties modify the behavior of remotely run
@@ -2077,7 +2077,7 @@ Default     :</emphasis> Minimal</literallayout></entry>
     <para/>
   </section>
 
-  <section>
+  <section id="schema_props">
     <title>Schema File Location Properties</title>
 
     <para>This section defines the location of XML schema files that are used
@@ -2153,7 +2153,7 @@ Scope       :</emphasis> Properties
       </table></para>
   </section>
 
-  <section>
+  <section id="db_props">
     <title>Database Drivers For All Relational Catalogs</title>
 
     <para/>
@@ -2320,7 +2320,7 @@ pegasus.catalog.*.db.SelectMethod
     </table>
   </section>
 
-  <section>
+  <section id="catalog_props">
     <title>Catalog Related Properties</title>
 
     <para/>
@@ -2765,7 +2765,7 @@ Scope       :</emphasis> Properties
     </table>
   </section>
 
-  <section>
+  <section id="replica_sel_props">
     <title>Replica Selection Properties</title>
 
     <para><table>
@@ -2967,7 +2967,7 @@ pegasus.selector.replica.regex.rank.2 gsiftp://example\.isi\.edu.*
       </table></para>
   </section>
 
-  <section>
+  <section id="site_sel_props">
     <title>Site Selection Properties</title>
 
     <para><table>
@@ -3245,8 +3245,8 @@ See Also    :</emphasis> pegasus.selector.site</literallayout></entry>
       </table></para>
   </section>
 
-  <section>
-    <title>Data Staging Configuration Properties</title>
+  <section id="data_conf_props">
+    <title id="data_conf_props">Data Staging Configuration Properties</title>
 
     <para><table>
         <title>Data Configuration Properties</title>
@@ -3353,7 +3353,7 @@ See Also    :</emphasis> pegasus.data.configuration</literallayout></entry>
       </table></para>
   </section>
 
-  <section>
+  <section id="transfer_props">
     <title>Transfer Configuration Properties</title>
 
     <para><table>
@@ -3847,7 +3847,7 @@ Scope       :</emphasis> Properties
       </table></para>
   </section>
 
-  <section>
+  <section id="monitoring_props">
     <title>Monitoring Properties</title>
 
     <table>
@@ -4085,7 +4085,7 @@ Scope       :</emphasis> Properties
     <para/>
   </section>
 
-  <section>
+  <section id="job_clustering_props">
     <title>Job Clustering Properties</title>
 
     <table>
@@ -4227,7 +4227,7 @@ Scope       :</emphasis> Properties
     <para/>
   </section>
 
-  <section>
+  <section id="logging_props">
     <title>Logging Properties</title>
 
     <table>
@@ -4411,7 +4411,7 @@ pegasus.metrics.app.[arribute-name]       attribute-value
     <para/>
   </section>
 
-  <section>
+  <section id="cleanup_props">
     <title>Cleanup Properties</title>
 
     <table>
@@ -4545,7 +4545,7 @@ Scope       :</emphasis> Properties
     <para/>
   </section>
 
-  <section>
+  <section id="misc__props">
     <title>Miscellaneous Properties</title>
 
     <table>
