@@ -17,7 +17,7 @@ XML += reference_hierarchical_workflow.xml
 XML += reference_job_clustering.xml
 XML += reference_monitoring.xml
 XML += reference_notifications.xml
-XML += reference_profiles.xml
+XML += reference_configuration.xml
 XML += reference_replica_selection.xml
 XML += reference_transfers.xml
 XML += running_workflows.xml
@@ -28,7 +28,7 @@ XML += useful_tips.xml
 XML += service.xml
 
 # Generated stuff
-XML += title.xml basic_properties.xml reference_properties.xml
+XML += title.xml 
 
 # Generated manpages
 MANPAGES=$(shell ls ../manpages | grep txt)
@@ -56,12 +56,6 @@ $(XMLMANPAGES): $(TXTMANPAGES)
 title.xml: ../../build.properties
 	echo "<title>Pegasus $(VERSION) User Guide</title>" > title.xml
 
-basic_properties.xml: $(BASICPROPS) $(SAMPLEPROPS)
-	$(PROP2DOC) $(BASICPROPS) > basic_properties.xml
-
-reference_properties.xml: $(ADVANCEDPROPS) $(SAMPLEPROPS)
-	$(PROP2DOC) $(ADVANCEDPROPS) > reference_properties.xml
-
 html: $(XML) pegasus-php-style.xsl
 	mkdir -p ./html/images
 	xsltproc --noout --stringparam base.dir ./html/ --xinclude pegasus-php-style.xsl pegasus-book.xml
@@ -83,5 +77,5 @@ install: $(TARGETS)
 	cp pegasus-user-guide.pdf ${prefix}/
 
 clean:
-	rm -rf html pegasus-user-guide.pdf pegasus-user-guide.fo ./*~ title.xml basic_properties.xml reference_properties.xml manpage.*.xml
+	rm -rf html pegasus-user-guide.pdf pegasus-user-guide.fo ./*~ title.xml  manpage.*.xml
 
