@@ -4294,7 +4294,7 @@ Scope       :</emphasis> Properties
     <title>Logging Properties</title>
 
     <table>
-      <title>Job Clustering Properties</title>
+      <title>Logging Properties</title>
 
       <tgroup cols="2">
         <tbody>
@@ -4467,79 +4467,431 @@ pegasus.metrics.app.[arribute-name]       attribute-value
             is automatically assigned the value from
             pegasus.metrics.app</para></entry>
           </row>
+        </tbody>
+      </tgroup>
+    </table>
 
+    <para/>
+  </section>
+
+  <section>
+    <title>Cleanup Properties</title>
+
+    <table>
+      <title>Cleanup Properties</title>
+
+      <tgroup cols="2">
+        <tbody>
           <row>
-            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.clusterer.job.aggregator.seqexec.log<emphasis
-                  role="bold"><emphasis role="bold">
-Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
-Scope       :</emphasis> Properties
-<emphasis role="bold">Since       :</emphasis> 2.3
-<emphasis role="bold">Type        : </emphasis>Boolean
-<emphasis role="bold">Default     :</emphasis> false<emphasis role="bold">
-See Also    :</emphasis> pegasus.clusterer.job.aggregator<emphasis role="bold">
-See Also    :</emphasis> pegasus.clusterer.job.aggregator.seqexec.log.global</literallayout></entry>
+            <entry><emphasis role="bold">Key Attributes</emphasis></entry>
 
-            <entry><para>The tool pegasus-cluster logs the progress of the
-            jobs that are being run by it in a progress file on the remote
-            cluster where it is executed. The progress log is useful for you
-            to track the progress of your computations and remote grid
-            debugging. The progress log file can be shared by multiple
-            pegasus-cluster jobs that are running on a particular cluster as
-            part of the same workflow. Or it can be per job.</para><para>This
-            property sets the Boolean flag, that indicates whether to have a
-            single global log for all the pegasus-cluster jobs on a particular
-            cluster or progress log per job.</para></entry>
+            <entry><emphasis role="bold">Description</emphasis></entry>
           </row>
 
           <row>
-            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.clusterer.job.aggregator.seqexec.firstjobfail<emphasis
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.file.cleanup.strategy<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.2-
+<emphasis role="bold">Type  </emphasis>      : String
+<emphasis role="bold">Default     :</emphasis> InPlace</literallayout></entry>
+
+            <entry><para>This property is used to select the strategy of how
+            the the cleanup nodes are added to the executable
+            workflow.</para><para><variablelist>
+                <varlistentry>
+                  <term>InPlace</term>
+
+                  <listitem>
+                     This is the only mode available . 
+                  </listitem>
+                </varlistentry>
+              </variablelist></para></entry>
+          </row>
+
+          <row>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.file.cleanup.impl<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
 Scope       :</emphasis> Properties
 <emphasis role="bold">Since       :</emphasis> 2.2
-<emphasis role="bold">Type        : </emphasis>Boolean
-<emphasis role="bold">Default     :</emphasis> true<emphasis role="bold">
-See Also    :</emphasis> pegasus.clusterer.job.aggregator</literallayout></entry>
+<emphasis role="bold">Type        : </emphasis>String
+<emphasis role="bold">Default     :</emphasis> Cleanup</literallayout></entry>
 
-            <entry><para>By default "pegasus-cluster" does not stop execution
-            even if one of the clustered jobs it is executing fails. This is
-            because "pegasus-cluster" tries to get as much work done as
-            possible.</para><para>This property sets the Boolean flag, that
-            indicates whether to make "pegasus-cluster" stop on the first job
-            failure it detects.</para></entry>
+            <entry><para>This property is used to select the executable that
+            is used to create the working directory on the compute
+            sites.</para><para><variablelist>
+                <varlistentry>
+                  <term>Cleanup</term>
+
+                  <listitem>
+                     The default executable that is used to delete files is the "pegasus-cleanup" executable shipped with Pegasus. It is found at $PEGASUS_HOME/bin/pegasus-cleanup in the pegasus distribution. An entry for transformation pegasus::dirmanager needs to exist in the Transformation Catalog or the PEGASUS_HOME environment variable should be specified in the site catalog for the sites for this mode to work. 
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term>RM</term>
+
+                  <listitem>
+                     This mode results in the rm executable to be used to delete files from remote directories. The rm executable is standard on *nix systems and is usually found at /bin/rm location. 
+                  </listitem>
+                </varlistentry>
+              </variablelist></para></entry>
           </row>
 
           <row>
-            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.clusterer.label.key<emphasis
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.file.cleanup.clusters.num<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
 Scope       :</emphasis> Properties
-<emphasis role="bold">Since       :</emphasis> 2.0
-<emphasis role="bold">Type  </emphasis>      : String
-<emphasis role="bold">Default     :</emphasis> label
-</literallayout></entry>
+<emphasis role="bold">Since       :</emphasis> 4.2.0
+<emphasis role="bold">Type        : </emphasis>Integer
+<emphasis role="bold">Default     :</emphasis> 2</literallayout></entry>
 
-            <entrytbl cols="1">
-              <tbody>
-                <row>
-                  <entry><para>While clustering jobs in the workflow into
-                  larger jobs, you can optionally label your graph to control
-                  which jobs are clustered and to which clustered job they
-                  belong. This done using a label based clustering scheme and
-                  is done by associating a profile/label key in the PEGASUS
-                  namespace with the jobs in the DAX. Each job that has the
-                  same value/label value for this profile key, is put in the
-                  same clustered job.</para><para>This property allows you to
-                  specify the PEGASUS profile key that you want to use for
-                  label based clustering.</para></entry>
-                </row>
-              </tbody>
-            </entrytbl>
+            <entry>In case of the InPlace strategy for adding the cleanup
+            nodes to the workflow, this property specifies the maximum number
+            of cleanup jobs that are added to the executable workflow on each
+            level.</entry>
+          </row>
+
+          <row>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.file.cleanup.clusters.size<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 4.2.0
+<emphasis role="bold">Type        : </emphasis>Integer
+<emphasis role="bold">Default     :</emphasis> 2</literallayout></entry>
+
+            <entry>In case of the InPlace strategy this property sets the
+            number of cleanup jobs that get clustered into a bigger cleanup
+            job. This parameter is only used if
+            pegasus.file.cleanup.clusters.num is not set.</entry>
+          </row>
+
+          <row>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.file.cleanup.scope<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.3.0
+<emphasis role="bold">Type        : </emphasis>Enumeration
+<emphasis role="bold">Value       : </emphasis>fullahead|deferred
+<emphasis role="bold">Default     :</emphasis> fullahead</literallayout></entry>
+
+            <entry><para>By default in case of deferred planning InPlace file
+            cleanup is turned OFF. This is because the cleanup algorithm does
+            not work across partitions. This property can be used to turn on
+            the cleanup in case of deferred planning. <variablelist>
+                <varlistentry>
+                  <term>fullahead</term>
+
+                  <listitem>
+                     This is the default scope. The pegasus cleanup algorithm does not work across partitions in deferred planning. Hence the cleanup is always turned OFF , when deferred planning occurs and cleanup scope is set to full ahead. 
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term>deferred</term>
+
+                  <listitem>
+                     If the scope is set to deferred, then Pegasus will not disable file cleanup in case of deferred planning. This is useful for scenarios where the partitions themselves are independant ( i.e. dont share files ). Even if the scope is set to deferred, users can turn off cleanup by specifying --nocleanup option to pegasus-plan. 
+                  </listitem>
+                </varlistentry>
+              </variablelist></para></entry>
           </row>
         </tbody>
       </tgroup>
     </table>
 
     <para/>
+  </section>
+
+  <section>
+    <title>Miscellaneous Properties</title>
+
+    <table>
+      <title>Miscellaneous Properties</title>
+
+      <tgroup cols="2">
+        <tbody>
+          <row>
+            <entry><emphasis role="bold">Key Attributes</emphasis></entry>
+
+            <entry><emphasis role="bold">Description</emphasis></entry>
+          </row>
+
+          <row>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.code.generator<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 3.0
+<emphasis role="bold">Type  </emphasis>      : String
+<emphasis role="bold">Values</emphasis>      : Condor|Shell|PMC
+<emphasis role="bold">Default     :</emphasis> Condor<emphasis role="bold">
+See Also    :</emphasis> pegasus.log.manager.formatter</literallayout></entry>
+
+            <entry><para>This property is used to load the appropriate Code
+            Generator to use for writing out the executable
+            workflow.</para><para><variablelist>
+                <varlistentry>
+                  <term>Condor</term>
+
+                  <listitem>
+                     This is the default code generator for Pegasus . This generator generates the executable workflow as a Condor DAG file and associated job submit files. The Condor DAG file is passed as input to Condor DAGMan for job execution. 
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term>Shell</term>
+
+                  <listitem>
+                     This Code Generator generates the executable workflow as a shell script that can be executed on the submit host. While using this code generator, all the jobs should be mapped to site local i.e specify --sites local to pegasus-plan. 
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term>PMC</term>
+
+                  <listitem>
+                     This Code Generator generates the executable workflow as a PMC task workflow. This is useful to run on platforms where it not feasible to run Condor such as the new XSEDE machines such as Blue Waters. In this mode, Pegasus will generate the executable workflow as a PMC task workflow and a sample PBS submit script that submits this workflow. 
+                  </listitem>
+                </varlistentry>
+              </variablelist></para></entry>
+          </row>
+
+          <row>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.register<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 4.1.-
+<emphasis role="bold">Type  </emphasis>      : Boolean
+<emphasis role="bold">Default     :</emphasis> true</literallayout></entry>
+
+            <entry><para>Pegasus creates registration jobs to register the
+            output files in the replica catalog. An output file is registered
+            only if</para><para>1) a user has configured a replica catalog in
+            the properties 2) the register flags for the output files in the
+            DAX are set to true</para><para>This property can be used to turn
+            off the creation of the registration jobs even though the files
+            maybe marked to be registered in the replica
+            catalog.</para></entry>
+          </row>
+
+          <row>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.data.reuse.scope<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 4.5.0
+<emphasis role="bold">Type        : </emphasis>Enumeration
+<emphasis role="bold">Value       : </emphasis>none|partial|full
+<emphasis role="bold">Default     :</emphasis> full</literallayout></entry>
+
+            <entry><para>This property is used to control the behavior of the
+            data reuse algorithm in Pegasus</para><para><variablelist>
+                <varlistentry>
+                  <term>none</term>
+
+                  <listitem>
+                     This is same as disabling data reuse. It is equivalent to passing the --force option to pegasus-plan on the command line. 
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term>partial</term>
+
+                  <listitem>
+                     In this case, only certain jobs ( those that have pegasus profile key enable_for_data_reuse set to true ) are checked for presence of output files in the replica catalog. This gives users control over what jobs are deleted as part of the data reuse algorithm. 
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term>full</term>
+
+                  <listitem>
+                     This is the default behavior, where all the jobs output files are looked up in the replica catalog. 
+                  </listitem>
+                </varlistentry>
+              </variablelist></para></entry>
+          </row>
+
+          <row>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.catalog.transformation.mapper<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>Enumeration
+<emphasis role="bold">Value       : </emphasis>All|Installed|Staged|Submit
+<emphasis role="bold">Default     :</emphasis> All</literallayout></entry>
+
+            <entry><para>Pegasus supports transfer of statically linked
+            executables as part of the executable workflow. At present, there
+            is only support for staging of executables referred to by the
+            compute jobs specified in the DAX file. Pegasus determines the
+            source locations of the binaries from the transformation catalog,
+            where it searches for entries of type STATIC_BINARY for a
+            particular architecture type. The PFN for these entries should
+            refer to a globus-url-copy valid and accessible remote URL. For
+            transfer of executables, Pegasus constructs a soft state map that
+            resides on top of the transformation catalog, that helps in
+            determining the locations from where an executable can be staged
+            to the remote site.</para><para>This property determines, how that
+            map is created. <variablelist>
+                <varlistentry>
+                  <term>All</term>
+
+                  <listitem>
+                     In this mode, all sources with entries of type STATIC_BINARY for a particular transformation are considered valid sources for the transfer of executables. This the most general mode, and results in the constructing the map as a result of the cartesian product of the matches. 
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term>Installed</term>
+
+                  <listitem>
+                     In this mode, only entries that are of type INSTALLED are used while constructing the soft state map. This results in Pegasus never doing any transfer of executables as part of the workflow. It always prefers the installed executables at the remote sites. 
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term>Staged</term>
+
+                  <listitem>
+                     In this mode, only entries that are of type STATIC_BINARY are used while constructing the soft state map. This results in the concrete workflow referring only to the staged executables, irrespective of the fact that the executables are already installed at the remote end. 
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term>Submit</term>
+
+                  <listitem>
+                     In this mode, only entries that are of type STATIC_BINARY and reside at the submit host (pool local), are used while constructing the soft state map. This is especially helpful, when the user wants to use the latest compute code for his computations on the grid and that relies on his submit host. 
+                  </listitem>
+                </varlistentry>
+              </variablelist></para></entry>
+          </row>
+
+          <row>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.selector.transformation<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>Enumeration
+<emphasis role="bold">Value       : </emphasis>Random|Installed|Staged|Submit
+<emphasis role="bold">Default     :</emphasis> Random</literallayout></entry>
+
+            <entry><para>In case of transfer of executables, Pegasus could
+            have various transformations to select from when it schedules to
+            run a particular compute job at a remote site. For e.g it can have
+            the choice of staging an executable from a particular remote pool,
+            from the local (submit host) only, use the one that is installed
+            on the remote site only.</para><para>This property determines, how
+            a transformation amongst the various candidate transformations is
+            selected, and is applied after the property pegasus.tc has been
+            applied. For e.g specifying pegasus.tc as Staged and then
+            pegasus.transformation.selector as INSTALLED does not work, as by
+            the time this property is applied, the soft state map only has
+            entries of type STAGED.</para><para><variablelist>
+                <varlistentry>
+                  <term>Random</term>
+
+                  <listitem>
+                     In this mode, a random matching candidate transformation is selected to be staged to the remote execution pool. 
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term>Installed</term>
+
+                  <listitem>
+                     In this mode, only entries that are of type INSTALLED are selected. This means that the concrete workflow only refers to the transformations already pre installed on the remote pools. 
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term>Staged</term>
+
+                  <listitem>
+                     In this mode, only entries that are of type STATIC_BINARY are selected, ignoring the ones that are installed at the remote site. 
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term>Submit</term>
+
+                  <listitem>
+                     In this mode, only entries that are of type STATIC_BINARY and reside at the submit host (pool local), are selected as sources for staging the executables to the remote execution pools
+                  </listitem>
+                </varlistentry>
+              </variablelist></para></entry>
+          </row>
+
+          <row>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.execute.*.filesystem.local<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.1.0
+<emphasis role="bold">Type        : </emphasis>Boolean
+<emphasis role="bold">Default     :</emphasis> false<emphasis role="bold">
+See Also    :</emphasis> pegasus.data.configuration</literallayout></entry>
+
+            <entry><para>Normally, Pegasus transfers the data to and from a
+            directory on the shared filesystem on the head node of a compute
+            site. The directory needs to be visible to both the head node and
+            the worker nodes for the compute jobs to execute
+            correctly.</para><para>By setting this property to true, you can
+            get Pegasus to execute jobs on the worker node filesystem. In this
+            case, when the jobs are launched on the worker nodes, the jobs
+            grab the input data from the workflow specific execution directory
+            on the compute site and push the output data to the same directory
+            after completion. The transfer of data to and from the worker node
+            directory is referred to as PegasusLite Data
+            Transfers.</para><para><emphasis role="bold">Note</emphasis>:
+            Users don't need to set this property. This is an internal
+            property for use of developers only</para></entry>
+          </row>
+
+          <row>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.parser.dax.preserver.linebreaks<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.2.0
+<emphasis role="bold">Type        : </emphasis>Boolean
+<emphasis role="bold">Default     :</emphasis> false</literallayout></entry>
+
+            <entry>The DAX Parser normally does not preserve line breaks while
+            parsing the CDATA section that appears in the arguments section of
+            the job element in the DAX. On setting this to true, the DAX
+            Parser preserves any line line breaks that appear in the CDATA
+            section.</entry>
+          </row>
+
+          <row>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.parser.dax.data.dependencies<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 4.4.0
+<emphasis role="bold">Type        : </emphasis>Boolean
+<emphasis role="bold">Default     :</emphasis> true</literallayout></entry>
+
+            <entry>If this property is set to true, then the planner will
+            automatically add edges between jobs in the DAX on the basis of
+            exisitng data dependencies between jobs. For example, if a JobA
+            generates an output file that is listed as input for JobB, then
+            the planner will automatically add an edge between JobA and
+            JobB.</entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
   </section>
 </section>
