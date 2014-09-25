@@ -261,28 +261,22 @@ void TaskHandler::child_process() {
     }
     argp[j] = NULL;
 
-    // Create environment structure. We need to copy the worker's
-    // environment, but also add env variables for the pipes used
-    // to forward I/O from the task.
-    unsigned nenvs = 0;
-    while (environ[nenvs] != NULL) nenvs++;
-    char **envp = new char*[nenvs+pipes.size()+1];
-    int k = 0;
-    for (unsigned i=0; i<nenvs; i++) {
-        envp[k++] = environ[i];
-    }
+    // Update environment. We need to add env variables for the pipes used to
+    // forward I/O from the task.
     for (unsigned i=0; i<pipes.size(); i++) {
         PipeForward *p = pipes[i];
-        int sz = p->varname.size() + 32;
-        char *e = new char[sz];
-        if (snprintf(e, sz, "%s=%d", p->varname.c_str(), p->writefd) >= sz) {
-            log_fatal("Unable to create environment entry for pipe forward: %s",
+        char buf[32];
+        if (snprintf(buf, 32, "%d", p->writefd) >= 32) {
+            log_fatal("Unable to create environment value for pipe forward: %s",
                       strerror(errno));
             _exit(1);
         }
-        envp[k++] = e;
+        if (setenv(p->varname.c_str(), buf, 1) < 0) {
+            log_fatal("Unable to set environment entry for pipe forward: %s",
+                      strerror(errno));
+            _exit(1);
+        }
     }
-    envp[k] = NULL;
 
     // If the executable is not an absolute or relative path, then search PATH
     string executable = argp[0];
@@ -318,7 +312,7 @@ void TaskHandler::child_process() {
     }
 
     // Exec process
-    execve(executable.c_str(), argp, envp);
+    execve(executable.c_str(), argp, environ);
     fprintf(stderr, "Unable to exec command %s for task %s: %s\n", 
         executable.c_str(), name.c_str(), strerror(errno));
     _exit(1);
