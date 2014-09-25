@@ -398,40 +398,23 @@ queue
     <table>
       <title>Useful Environment Settings</title>
 
-      <tgroup cols="4">
+      <tgroup cols="2">
         <tbody>
           <row>
-            <entry><emphasis role="bold">Property Key </emphasis></entry>
-
-            <entry><emphasis role="bold">Corresponding Profile Key
-            </emphasis></entry>
-
-            <entry><emphasis role="bold">Where can it be
-            specified</emphasis></entry>
+            <entry><emphasis role="bold">Key Attributes </emphasis></entry>
 
             <entry><emphasis role="bold">Description</emphasis></entry>
           </row>
 
           <row>
-            <entry>env.PEGASUS_HOME</entry>
-
-            <entry>PEGASUS_HOME</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
-
-            <entry>Used by auxillary jobs created by Pegasus both on remote
-            site and local site. Should be set usually set in the Site Catalog
-            for the sites</entry>
-          </row>
-
-          <row>
-            <entry>env.GLOBUS_LOCATION</entry>
-
-            <entry>GLOBUS_LOCATION</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>env.PEGASUS_HOME<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>PEGASUS_HOME<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>String
+</literallayout></entry>
 
             <entry>Used by auxillary jobs created by Pegasus both on remote
             site and local site. Should be set usually set in the Site Catalog
@@ -439,12 +422,27 @@ queue
           </row>
 
           <row>
-            <entry>env.LD_LIBRARY_PATH</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>env.GLOBUS_LOCATION<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>GLOBUS_LOCATION<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
-            <entry>LD_LIBRARY_PATH</entry>
+            <entry>Used by auxillary jobs created by Pegasus both on remote
+            site and local site. Should be set usually set in the Site Catalog
+            for the sites</entry>
+          </row>
 
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+          <row>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>env.LD_LIBRARY_PATH<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>LD_LIBRARY_PATH<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
             <entry>Point this to $GLOBUS_LOCATION/lib, except you cannot use
             the dollar variable. You must use the full path. Applies to both,
@@ -483,38 +481,34 @@ queue
     <table>
       <title>Useful Globus RSL Instructions</title>
 
-      <tgroup cols="4">
+      <tgroup cols="2">
         <tbody>
           <row>
             <entry><emphasis role="bold">Property Key </emphasis></entry>
-
-            <entry><emphasis role="bold">Corresponding Profile
-            Key</emphasis></entry>
-
-            <entry><emphasis role="bold">Where can it be
-            specified</emphasis></entry>
 
             <entry><emphasis role="bold">Description</emphasis></entry>
           </row>
 
           <row>
-            <entry>globus.count</entry>
-
-            <entry>count</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>globus.count<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>count<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
             <entry>the number of times an executable is started.</entry>
           </row>
 
           <row>
-            <entry>globus.jobtype</entry>
-
-            <entry>jobtype</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>globus.jobtype<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>jobtype<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
             <entry>specifies how the job manager should start the remote job.
             While Pegasus defaults to single, use mpi when running MPI
@@ -522,81 +516,88 @@ queue
           </row>
 
           <row>
-            <entry>globus.maxcputime</entry>
-
-            <entry>maxcputime</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>globus.maxcputime<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>maxcputime<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
             <entry>the max CPU time in minutes for a single execution of a
             job.</entry>
           </row>
 
           <row>
-            <entry>globus.maxmemory</entry>
-
-            <entry>maxmemory</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>globus.maxmemory<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>maxmemory<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
             <entry>the maximum memory in MB required for the job</entry>
           </row>
 
           <row>
-            <entry>globus.maxtime</entry>
-
-            <entry>maxtime</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>globus.maxtime<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>maxtime<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
             <entry>the maximum time or walltime in minutes for a single
             execution of a job.</entry>
           </row>
 
           <row>
-            <entry>globus.maxwalltime</entry>
-
-            <entry>maxwalltime</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>globus.maxwalltime<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>maxwalltime<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
             <entry>the maximum walltime in minutes for a single execution of a
             job.</entry>
           </row>
 
           <row>
-            <entry>globus.minmemory</entry>
-
-            <entry>minmemory</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>globus.minmemory<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>minmemory<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
             <entry>the minumum amount of memory required for this job</entry>
           </row>
 
           <row>
-            <entry>globus.project</entry>
-
-            <entry>project</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>globus.project<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>project<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
             <entry>associates an account with a job at the remote end.</entry>
           </row>
 
           <row>
-            <entry>globus.queue</entry>
-
-            <entry>queue</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>globus.queue<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>queue<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
             <entry>the remote queue in which the job should be run. Used when
             remote scheduler is PBS that supports queues.</entry>
@@ -699,27 +700,22 @@ queue
     <table>
       <title>Useful Condor Commands</title>
 
-      <tgroup cols="4">
+      <tgroup cols="2">
         <tbody>
           <row>
             <entry><emphasis role="bold">Property Key </emphasis></entry>
-
-            <entry><emphasis role="bold">Corresponding Profile
-            Key</emphasis></entry>
-
-            <entry><emphasis role="bold">Where can it be
-            specified</emphasis></entry>
 
             <entry><emphasis role="bold">Description</emphasis></entry>
           </row>
 
           <row>
-            <entry>condor.universe</entry>
-
-            <entry>universe</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>condor.universe<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>universe<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
             <entry>Pegasus defaults to either globus or scheduler universes.
             Set to standard for compute jobs that require standard universe.
@@ -728,12 +724,13 @@ queue
           </row>
 
           <row>
-            <entry>condor.periodic_release</entry>
-
-            <entry>periodic_release</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>condor.periodic_release<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>periodic_release<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
             <entry>is the number of times job is released back to the queue if
             it goes to HOLD, e.g. due to Globus errors. Pegasus defaults to
@@ -741,12 +738,13 @@ queue
           </row>
 
           <row>
-            <entry>condor.periodic_remove</entry>
-
-            <entry>periodic_remove</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>condor.periodic_remove<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>periodic_remove<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
             <entry>is the number of times a job is allowed to get into HOLD
             state before being removed from the queue. Pegasus defaults to
@@ -754,48 +752,52 @@ queue
           </row>
 
           <row>
-            <entry>condor.filesystemdomain</entry>
-
-            <entry>filesystemdomain</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>condor.filesystemdomain<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>filesystemdomain<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
             <entry>Useful for Condor glide-ins to pin a job to a remote
             site.</entry>
           </row>
 
           <row>
-            <entry>condor.stream_error</entry>
-
-            <entry>stream_error</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>condor.stream_error<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>stream_error <emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>Boolean</literallayout></entry>
 
             <entry>boolean to turn on the streaming of the stderr of the
             remote job back to submit host.</entry>
           </row>
 
           <row>
-            <entry>condor.stream_output</entry>
-
-            <entry>stream_output</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>condor.stream_output<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>stream_output<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>Boolean</literallayout></entry>
 
             <entry>boolean to turn on the streaming of the stdout of the
             remote job back to submit host.</entry>
           </row>
 
           <row>
-            <entry>condor.priority</entry>
-
-            <entry>priority</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>condor.priority<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>priority<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
             <entry>integer value to assign the priority of a job. Higher value
             means higher priority. The priorities are only applied for vanilla
@@ -804,36 +806,39 @@ queue
           </row>
 
           <row>
-            <entry>condor.request_cpus</entry>
-
-            <entry>request_cpus</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>condor.request_cpus<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>request_cpus<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
             <entry>New in Condor 7.8.0 . Number of CPU's a job
             requires.</entry>
           </row>
 
           <row>
-            <entry>condor.request_memory</entry>
-
-            <entry>request_memory</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>condor.request_memory<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>request_memory<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
             <entry>New in Condor 7.8.0 . Amount of memory a job
             requires.</entry>
           </row>
 
           <row>
-            <entry>condor.request_disk</entry>
-
-            <entry>request_disk</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>condor.request_disk<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>request_disk<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
             <entry>New in Condor 7.8.0 . Amount of disk a job
             requires.</entry>
@@ -946,51 +951,51 @@ queue
         <title>Useful dagman Commands that can be associated at a per job
         basis</title>
 
-        <tgroup cols="4">
+        <tgroup cols="2">
           <tbody>
             <row>
               <entry><emphasis role="bold">Property Key </emphasis></entry>
-
-              <entry><emphasis role="bold">Corresponding Profile Key
-              </emphasis></entry>
-
-              <entry><emphasis role="bold">Where can it be
-              specified</emphasis></entry>
 
               <entry><emphasis role="bold">Description</emphasis></entry>
             </row>
 
             <row>
-              <entry>dagman.pre</entry>
-
-              <entry>PRE</entry>
-
-              <entry>Transformation Catalog, Site Catalog, DAX, Properties
-              File</entry>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>dagman.pre<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>PRE<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
               <entry>is the path to the pre-script. DAGMan executes the
               pre-script before it runs the job.</entry>
             </row>
 
             <row>
-              <entry>dagman.pre.arguments</entry>
-
-              <entry>PRE.ARGUMENTS</entry>
-
-              <entry>Transformation Catalog, Site Catalog, DAX, Properties
-              File</entry>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>dagman.pre.arguments<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>PRE.ARGUMENTS<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
               <entry>are command-line arguments for the pre-script, if
               any.</entry>
             </row>
 
             <row>
-              <entry>dagman.post</entry>
-
-              <entry>POST</entry>
-
-              <entry>Transformation Catalog, Site Catalog, DAX, Properties
-              File</entry>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>dagman.post<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>POST<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
               <entry>is the postscript type/mode that a user wants to
               associate with a job. <orderedlist>
@@ -1050,36 +1055,43 @@ queue
             </row>
 
             <row>
-              <entry>dagman.post.path.[value of dagman.post]</entry>
-
-              <entry>POST.PATH.* ( where * is replaced by the value of the
-              POST Profile )</entry>
-
-              <entry>Transformation Catalog, Site Catalog, DAX, Properties
-              File</entry>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>dagman.post.path.[value of dagman.post]<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>post.path.[value of dagman.post]<emphasis
+                    role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
               <entry>the path to the post script on the submit host.</entry>
             </row>
 
             <row>
-              <entry>dagman.post.arguments</entry>
-
-              <entry>POST.ARGUMENTS</entry>
-
-              <entry>Transformation Catalog, Site Catalog, DAX, Properties
-              File</entry>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>dagman.post.arguments<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>POST.ARGUMENTS<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
               <entry>are the command line arguments for the post script, if
               any.</entry>
             </row>
 
             <row>
-              <entry>dagman.retry</entry>
-
-              <entry>RETRY</entry>
-
-              <entry>Transformation Catalog, Site Catalog, DAX, Properties
-              File</entry>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>dagman.retry<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>RETRY<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>Integer
+<emphasis role="bold">Default     :</emphasis> 3</literallayout></entry>
 
               <entry>is the number of times DAGMan retries the full job cycle
               from pre-script through post-script, if failure was
@@ -1087,23 +1099,27 @@ queue
             </row>
 
             <row>
-              <entry>dagman.category</entry>
-
-              <entry>CATEGORY</entry>
-
-              <entry>Transformation Catalog, Site Catalog, DAX, Properties
-              File</entry>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>dagman.category<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>CATEGORY<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
               <entry>the DAGMan category the job belongs to.</entry>
             </row>
 
             <row>
-              <entry>dagman.priority</entry>
-
-              <entry>PRIORITY</entry>
-
-              <entry>Transformation Catalog, Site Catalog, DAX, Properties
-              File</entry>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>dagman.priority<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>PRIORITY<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
               <entry>the priority to apply to a job. DAGMan uses this to
               select what jobs to release when MAXJOBS is enforced for the
@@ -1124,70 +1140,70 @@ queue
       <title>Useful dagman Commands that can be specified in the properties
       file.</title>
 
-      <tgroup cols="4">
+      <tgroup cols="2">
         <tbody>
           <row>
             <entry><emphasis role="bold">Property Key </emphasis></entry>
-
-            <entry><emphasis role="bold">Corresponding Profile
-            Key</emphasis></entry>
-
-            <entry><emphasis role="bold">Where can it be
-            specified</emphasis></entry>
 
             <entry><emphasis role="bold">Description</emphasis></entry>
           </row>
 
           <row>
-            <entry>dagman.maxpre</entry>
-
-            <entry>MAXPRE</entry>
-
-            <entry>Properties File</entry>
-
-            <entry>sets the maximum number of PRE scripts within the DAG that
-            may be running at one time</entry>
-          </row>
-
-          <row>
-            <entry>dagman.maxpost</entry>
-
-            <entry>MAXPOST</entry>
-
-            <entry>Properties File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>dagman.maxpre<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>MAXPRE<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
             <entry>sets the maximum number of PRE scripts within the DAG that
             may be running at one time</entry>
           </row>
 
           <row>
-            <entry>dagman.maxjobs</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>dagman.maxpost<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>MAXPOST<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
-            <entry>MAXJOBS</entry>
+            <entry>sets the maximum number of PRE scripts within the DAG that
+            may be running at one time</entry>
+          </row>
 
-            <entry>Properties File</entry>
+          <row>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>dagman.maxjobs<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>MAXJOBS<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
             <entry>sets the maximum number of jobs within the DAG that will be
             submitted to Condor at one time.</entry>
           </row>
 
           <row>
-            <entry>dagman.maxidle</entry>
-
-            <entry>MAXIDLE</entry>
-
-            <entry>Properties File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>dagman.maxidle<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>MAXIDLE<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
             <entry>sets the maximum number of idle jobs within the DAG that
             will be submitted to Condor at one time.</entry>
           </row>
 
           <row>
-            <entry>dagman.[CATEGORY-NAME].maxjobs</entry>
-
-            <entry>[CATEGORY-NAME].MAXJOBS</entry>
-
-            <entry>Properties File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>dagman.[CATEGORY-NAME].maxjobs<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>[CATEGORY-NAME].MAXJOBS<emphasis
+                  role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
             <entry>is the value of maxjobs for a particular category. Users
             can associate different categories to the jobs at a per job basis.
@@ -1196,11 +1212,12 @@ queue
           </row>
 
           <row>
-            <entry>dagman.post.scope</entry>
-
-            <entry>POST.SCOPE</entry>
-
-            <entry>Properties File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>dagman.post.scope<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>POST.SCOPE<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
             <entry>scope for the postscripts. <orderedlist>
                 <listitem>
@@ -1245,27 +1262,22 @@ queue
     <table>
       <title>Useful pegasus Profiles.</title>
 
-      <tgroup cols="4">
+      <tgroup cols="2">
         <tbody>
           <row>
             <entry><emphasis role="bold">Property Key </emphasis></entry>
-
-            <entry><emphasis role="bold">Corresponding Profile
-            Key</emphasis></entry>
-
-            <entry><emphasis role="bold">Where can it be
-            specified</emphasis></entry>
 
             <entry><emphasis role="bold">Description</emphasis></entry>
           </row>
 
           <row>
-            <entry>pegasus.clusters.num</entry>
-
-            <entry>clusters.num</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.clusters.num<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>clusters.num<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 3.0
+<emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
             <entry>Please refer to the <link
             linkend="horizontal_clustering">Pegasus Clustering Guide</link>
@@ -1275,12 +1287,13 @@ queue
           </row>
 
           <row>
-            <entry>pegasus.clusters.size</entry>
-
-            <entry>clusters.size</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.clusters.size<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>clusters.size<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 3.0
+<emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
             <entry>Please refer to the <link
             linkend="horizontal_clustering">Pegasus Clustering Guide</link>
@@ -1290,12 +1303,13 @@ queue
           </row>
 
           <row>
-            <entry>pegasus.cores</entry>
-
-            <entry>cores</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.cores<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>cores<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 4.0
+<emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
             <entry>The number of cores, associated with the job. This is
             solely used for accounting purposes in the database while
@@ -1305,12 +1319,13 @@ queue
           </row>
 
           <row>
-            <entry>pegasus.runtime</entry>
-
-            <entry>runtime</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.runtime<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>runtime<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
             <entry>Please refer to the <link
             linkend="runtime_clustering">Pegasus Clustering Guide</link> for
@@ -1319,12 +1334,14 @@ queue
           </row>
 
           <row>
-            <entry>pegasus.clusters.maxruntime</entry>
-
-            <entry>clusters.maxruntime</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>clusters.maxruntime<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>pegasus.clusters.maxruntime<emphasis
+                  role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 4.0
+<emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
             <entry>Please refer to the <link
             linkend="runtime_clustering">Pegasus Clustering Guide</link> for
@@ -1333,61 +1350,67 @@ queue
           </row>
 
           <row>
-            <entry>pegasus.job.aggregator</entry>
-
-            <entry>job.aggregator</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.job.aggregator<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>job.aggregator<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
             <entry>Indicates the clustering executable that is used to run the
             clustered job on the remote site.</entry>
           </row>
 
           <row>
-            <entry>pegasus.gridstart</entry>
-
-            <entry>gridstart</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.gridstart<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>gridstart<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
             <entry>Determines the executable for launching a job. Possible
             values are <emphasis role="bold"><emphasis>Kickstart |
-            NoGridStart</emphasis></emphasis> at the moment.</entry>
+            NoGridStart</emphasis></emphasis> | PegasusLite at the
+            moment.</entry>
           </row>
 
           <row>
-            <entry>pegasus.gridstart.path</entry>
-
-            <entry>gridstart.path</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.gridstart.path<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>gridstart.path<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>file path</literallayout></entry>
 
             <entry>Sets the path to the gridstart . This profile is best set
             in the Site Catalog.</entry>
           </row>
 
           <row>
-            <entry>pegasus.gridstart.arguments</entry>
-
-            <entry>gridstart.arguments</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.gridstart.arguments<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>gridstart.arguments<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
             <entry>Sets the arguments with which GridStart is used to launch a
             job on the remote site.</entry>
           </row>
 
           <row>
-            <entry>pegasus.stagein.clusters</entry>
-
-            <entry>stagein.clusters</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.stagein.clusters<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>stagein.clusters<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 4.0
+<emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
             <entry>This key determines the maximum number of
             <emphasis>stage-in</emphasis> jobs that are can executed locally
@@ -1398,12 +1421,14 @@ queue
           </row>
 
           <row>
-            <entry>pegasus.stagein.local.clusters</entry>
-
-            <entry>stagein.local.clusters</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.stagein.local.clusters<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>stagein.local.clusters<emphasis
+                  role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 4.0
+<emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
             <entry>This key provides finer grained control in determining the
             number of stage-in jobs that are executed locally and are
@@ -1413,12 +1438,14 @@ queue
           </row>
 
           <row>
-            <entry>pegasus.stagein.remote.clusters</entry>
-
-            <entry>stagein.remote.clusters</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.stagein.remote.clusters<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>stagein.remote.clusters<emphasis
+                  role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 4.0
+<emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
             <entry>This key provides finer grained control in determining the
             number of stage-in jobs that are executed remotely on the remote
@@ -1427,12 +1454,13 @@ queue
           </row>
 
           <row>
-            <entry>pegasus.stageout.clusters</entry>
-
-            <entry>stageout.clusters</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.stageout.clusters<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>stageout.clusters<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 4.0
+<emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
             <entry>This key determines the maximum number of
             <emphasis>stage-out</emphasis> jobs that are can executed locally
@@ -1442,12 +1470,14 @@ queue
           </row>
 
           <row>
-            <entry>pegasus.stageout.local.clusters</entry>
-
-            <entry>stageout.local.clusters</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.stageout.local.clusters<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>stageout.local.clusters<emphasis
+                  role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 4.0
+<emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
             <entry>This key provides finer grained control in determining the
             number of stage-out jobs that are executed locally and are
@@ -1457,12 +1487,14 @@ queue
           </row>
 
           <row>
-            <entry>pegasus.stageout.remote.clusters</entry>
-
-            <entry>stageout.remote.clusters</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.stageout.remote.clusters<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>stageout.remote.clusters<emphasis
+                  role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 4.0
+<emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
             <entry>This key provides finer grained control in determining the
             number of stage-out jobs that are executed remotely on the remote
@@ -1471,24 +1503,26 @@ queue
           </row>
 
           <row>
-            <entry>pegasus.group</entry>
-
-            <entry>group</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.group<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>group<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
             <entry>Tags a job with an arbitrary group identifier. The group
             site selector makes use of the tag.</entry>
           </row>
 
           <row>
-            <entry>pegasus.change.dir</entry>
-
-            <entry>change.dir</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.change.dir<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>change.dir<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>Boolean</literallayout></entry>
 
             <entry>If true, tells <emphasis>kickstart</emphasis> to change
             into the remote working directory. Kickstart itself is executed in
@@ -1497,12 +1531,13 @@ queue
           </row>
 
           <row>
-            <entry>pegasus.create.dir</entry>
-
-            <entry>create.dir</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.create.dir<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>create.dir<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>Boolean</literallayout></entry>
 
             <entry>If true, tells <emphasis>kickstart</emphasis> to create the
             the remote working directory before changing into the remote
@@ -1511,12 +1546,13 @@ queue
           </row>
 
           <row>
-            <entry>pegasus.transfer.proxy</entry>
-
-            <entry>transfer.proxy</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.transfer.proxy<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>transfer.proxy<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>Boolean</literallayout></entry>
 
             <entry>If true, tells Pegasus to explicitly transfer the proxy for
             transfer jobs to the remote site. This is useful, when you want to
@@ -1525,67 +1561,13 @@ queue
           </row>
 
           <row>
-            <entry>pegasus.transfer.arguments</entry>
-
-            <entry>transfer.arguments</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
-
-            <entry>Allows the user to specify the arguments with which the
-            transfer executable is invoked. However certain options are always
-            generated for the transfer executable. The profile applies to the
-            separate data transfer nodes added by Pegasus to the executable
-            workflow.</entry>
-          </row>
-
-          <row>
-            <entry>pegasus.transfer.threads</entry>
-
-            <entry>transfer.threads</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
-
-            <entry>the number of threads launched by pegasus-transfer when
-            doing the transfers. The profile applies to the separate data
-            transfer nodes added by Pegasus to the executable
-            workflow.</entry>
-          </row>
-
-          <row>
-            <entry>pegasus.transfer.lite.arguments</entry>
-
-            <entry>transfer.lite.arguments</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
-
-            <entry>Similar to transfer.arguments, but applies to the transfers
-            performed in the PegasusLite jobs in the nonsharedfs data
-            configuration.</entry>
-          </row>
-
-          <row>
-            <entry>pegasus.transfer.lite.threads</entry>
-
-            <entry>transfer.lite.threads</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
-
-            <entry>Similar to threads, but applies to the transfers performed
-            in the PegasusLite jobs in the nonsharedfs data
-            configuration.</entry>
-          </row>
-
-          <row>
-            <entry>pegasus.style</entry>
-
-            <entry>style</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.style<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>style<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
             <entry>Sets the condor submit file style. If set to globus, submit
             file generated refers to CondorG job submissions. If set to
@@ -1596,12 +1578,13 @@ queue
           </row>
 
           <row>
-            <entry>pegasus.pmc_request_memory</entry>
-
-            <entry>pmc_request_memory</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.pmc_request_memory<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>pmc_request_memory<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 4.2
+<emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
             <entry>This key is used to set the -m option for
             pegasus-mpi-cluster. It specifies the amount of memory in MB that
@@ -1610,12 +1593,13 @@ queue
           </row>
 
           <row>
-            <entry>pegasus.pmc_request_cpus</entry>
-
-            <entry>pmc_request_cpus</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.pmc_request_cpus<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>pmc_request_cpus<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 4.2
+<emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
             <entry>This key is used to set the -c option for
             pegasus-mpi-cluster. It specifies the number of cpu's that a job
@@ -1624,12 +1608,13 @@ queue
           </row>
 
           <row>
-            <entry>pegasus.pmc_priority</entry>
-
-            <entry>pmc_priority</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.pmc_priority<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>pmc_priority<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 4.2
+<emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
             <entry>This key is used to set the -p option for
             pegasus-mpi-cluster. It specifies the priority for a job . This
@@ -1638,12 +1623,13 @@ queue
           </row>
 
           <row>
-            <entry>pegasus.pmc_task_arguments</entry>
-
-            <entry>pmc_task_arguments</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.pmc_task_arguments<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>pmc_task_arguments<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 4.2
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
             <entry>The key is used to pass any extra arguments to the PMC task
             during the planning time. They are added to the very end of the
@@ -1653,24 +1639,26 @@ queue
           </row>
 
           <row>
-            <entry>pegasus.exitcode.failuremsg</entry>
-
-            <entry>exitcode.failuremsg</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.exitcode.failuremsg<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>exitcode.failuremsg<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 4.4
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
             <entry>The message string that pegasus-exitcode searches for in
             the stdout and stderr of the job to flag failures.</entry>
           </row>
 
           <row>
-            <entry>pegasus.exitcode.successmsg</entry>
-
-            <entry>exitcode.successmsg</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.exitcode.successmsg<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>exitcode.successmsg<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 4.4
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
             <entry>The message string that pegasus-exitcode searches for in
             the stdout and stderr of the job to determine whether a job logged
@@ -1683,12 +1671,13 @@ queue
           </row>
 
           <row>
-            <entry>pegasus.checkpoint_time</entry>
-
-            <entry>checkpoint_time</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.checkpoint_time<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>checkpoint_time<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 4.5
+<emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
             <entry>the expected time in seconds for a job after which it
             should be sent a TERM signal to generate a job checkpoint
@@ -1696,12 +1685,13 @@ queue
           </row>
 
           <row>
-            <entry>pegasus.maxwalltime</entry>
-
-            <entry>maxwalltime</entry>
-
-            <entry>Transformation Catalog, Site Catalog, DAX, Properties
-            File</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.maxwalltime<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>maxwalltime<emphasis role="bold">
+Scope       :</emphasis> Transformation Catalog, Site Catalog
+              DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 4.5
+<emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
             <entry>the maximum walltime in minutes for a single execution of a
             job.</entry>
