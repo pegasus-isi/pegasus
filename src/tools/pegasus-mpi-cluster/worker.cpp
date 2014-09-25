@@ -104,7 +104,7 @@ FileForward::FileForward(const string &srcfile, const string &destfile, char *bu
 }
 
 FileForward::~FileForward() {
-    delete buff;
+    delete [] buff;
 }
 
 const char *FileForward::data() {
