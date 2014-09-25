@@ -1808,30 +1808,23 @@ pegasus.catalog.site.file            ${pegasus.home}/etc/sample.sites.xml
     <para><table>
         <title>Local Directories Related Properties</title>
 
-        <tgroup cols="5">
+        <tgroup cols="2">
           <tbody>
             <row>
-              <entry><emphasis role="bold">Property Key </emphasis></entry>
-
-              <entry><emphasis role="bold">Corresponding Profile Key
-              </emphasis></entry>
-
-              <entry><emphasis role="bold">Where can it be
-              specified</emphasis></entry>
-
-              <entry><emphasis role="bold">Default Value</emphasis></entry>
+              <entry><emphasis role="bold">Key Attributes </emphasis></entry>
 
               <entry><emphasis role="bold">Description</emphasis></entry>
             </row>
 
             <row>
-              <entry>pegasus.home.datadir</entry>
-
-              <entry>N/A</entry>
-
-              <entry>Properties</entry>
-
-              <entry>${pegasus.home}/share</entry>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.home.datadir<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>file path
+<emphasis role="bold">Default     :</emphasis> ${pegasus.home}/share</literallayout></entry>
 
               <entry>The datadir directory contains broadly visible and
               possibly exported configuration files that rarely change. This
@@ -1839,13 +1832,14 @@ pegasus.catalog.site.file            ${pegasus.home}/etc/sample.sites.xml
             </row>
 
             <row>
-              <entry>pegasus.home.sysconfdir</entry>
-
-              <entry>N/A</entry>
-
-              <entry>Properties</entry>
-
-              <entry>${pegasus.home}/etc</entry>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.home.sysconfdir<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>file path
+<emphasis role="bold">Default     :</emphasis> ${pegasus.home}/etc</literallayout></entry>
 
               <entry>The system configuration directory contains configuration
               files that are specific to the machine or installation, and that
@@ -1855,13 +1849,14 @@ pegasus.catalog.site.file            ${pegasus.home}/etc/sample.sites.xml
             </row>
 
             <row>
-              <entry>pegasus.home.sharedstatedir</entry>
-
-              <entry>N/A</entry>
-
-              <entry>Properties</entry>
-
-              <entry>${pegasus.home}/com</entry>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.home.sharedstatedir<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>file path
+<emphasis role="bold">Default     :</emphasis> ${pegasus.home}/com</literallayout></entry>
 
               <entry>Frequently changing files that are broadly visible are
               stored in the shared state directory. This is currently
@@ -1869,13 +1864,14 @@ pegasus.catalog.site.file            ${pegasus.home}/etc/sample.sites.xml
             </row>
 
             <row>
-              <entry>pegasus.home.localstatedir</entry>
-
-              <entry>N/A</entry>
-
-              <entry>Properties</entry>
-
-              <entry>${pegasus.home}/var</entry>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.home.localstatedir<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>file path
+<emphasis role="bold">Default     :</emphasis> ${pegasus.home}/var</literallayout></entry>
 
               <entry>Frequently changing files that are specific to a machine
               and/or installation are stored in the local state directory.
@@ -1883,13 +1879,14 @@ pegasus.catalog.site.file            ${pegasus.home}/etc/sample.sites.xml
             </row>
 
             <row>
-              <entry>pegasus.dir.submit.logs</entry>
-
-              <entry>N/A</entry>
-
-              <entry>Properties</entry>
-
-              <entry>(no default)</entry>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.dir.submit.logs<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>file path
+<emphasis role="bold">Default     :</emphasis> (no default)</literallayout></entry>
 
               <entry><para>This property can be used to specify the directory
               where the condor logs for the workflow should go to. By default,
@@ -1914,34 +1911,22 @@ pegasus.catalog.site.file            ${pegasus.home}/etc/sample.sites.xml
     <table>
       <title>Site Directories Related Properties</title>
 
-      <tgroup cols="6">
+      <tgroup cols="2">
         <tbody>
           <row>
-            <entry><emphasis role="bold">Property Key </emphasis></entry>
-
-            <entry><emphasis role="bold">Corresponding Profile Key
-            </emphasis></entry>
-
-            <entry><emphasis role="bold">Where can it be
-            specified</emphasis></entry>
-
-            <entry><emphasis role="bold">Since</emphasis></entry>
-
-            <entry><emphasis role="bold">Default Value</emphasis></entry>
+            <entry><emphasis role="bold">Key Attributes </emphasis></entry>
 
             <entry><emphasis role="bold">Description</emphasis></entry>
           </row>
 
           <row>
-            <entry>pegasus.dir.useTimestamp</entry>
-
-            <entry>N/A</entry>
-
-            <entry>Properties</entry>
-
-            <entry>2.1</entry>
-
-            <entry>false</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.dir.useTimestamp<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.1
+<emphasis role="bold">Type        : </emphasis>Boolean
+<emphasis role="bold">Default     :</emphasis> false</literallayout></entry>
 
             <entry>While creating the submit directory, Pegasus employs a run
             numbering scheme. Users can use this Boolean property to use a
@@ -1950,15 +1935,13 @@ pegasus.catalog.site.file            ${pegasus.home}/etc/sample.sites.xml
           </row>
 
           <row>
-            <entry>pegasus.dir.exec</entry>
-
-            <entry>N/A</entry>
-
-            <entry>Properties</entry>
-
-            <entry>2.0</entry>
-
-            <entry>(no default)</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.dir.exec<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>file path
+<emphasis role="bold">Default     :</emphasis> (no default)</literallayout></entry>
 
             <entry>This property modifies the remote location work directory
             in which all your jobs will run. If the path is relative then it
@@ -1969,15 +1952,14 @@ pegasus.catalog.site.file            ${pegasus.home}/etc/sample.sites.xml
           </row>
 
           <row>
-            <entry>pegasus.dir.storage.mapper</entry>
-
-            <entry>N/A</entry>
-
-            <entry>Properties</entry>
-
-            <entry>4.3</entry>
-
-            <entry>Flat</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.dir.storage.mapper<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 4.3
+<emphasis role="bold">Type        : </emphasis>Enumeration
+<emphasis role="bold">Values      :</emphasis> Flat|Fixed|Hashed|Replica
+<emphasis role="bold">Default     :</emphasis> Flat</literallayout></entry>
 
             <entry>This property modifies determines how the output files are
             mapped on the output site storage location. <para/>In order to
@@ -2034,15 +2016,13 @@ pegasus.dir.storage.mapper.replica.file  the RC file at the backend to use if us
           </row>
 
           <row>
-            <entry>pegasus.dir.storage.deep</entry>
-
-            <entry>N/A</entry>
-
-            <entry>Properties</entry>
-
-            <entry>2.1</entry>
-
-            <entry>false</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.dir.storage.deep<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.1
+<emphasis role="bold">Type        : </emphasis>Boolean
+<emphasis role="bold">Default     :</emphasis> false</literallayout></entry>
 
             <entry><para>This Boolean property results in the creation of a
             deep directory structure on the output site, while populating the
@@ -2059,15 +2039,15 @@ pegasus.dir.storage.mapper.replica.file  the RC file at the backend to use if us
           </row>
 
           <row>
-            <entry>pegasus.dir.create.strategy</entry>
-
-            <entry>N/A</entry>
-
-            <entry>Properties</entry>
-
-            <entry>2.2</entry>
-
-            <entry>Minimal</entry>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.dir.create.strategy<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 2.2
+<emphasis role="bold">Type        : </emphasis>Enumeration
+<emphasis role="bold">Values      :</emphasis> HourGlass|Tentacles|Minimal<emphasis
+                  role="bold">
+Default     :</emphasis> Minimal</literallayout></entry>
 
             <entry><para>If the <screen>--randomdir</screen> option is given
             to the Planner at runtime, the Pegasus planner adds nodes that
@@ -2121,7 +2101,7 @@ pegasus.dir.storage.mapper.replica.file  the RC file at the backend to use if us
         <tgroup cols="6">
           <tbody>
             <row>
-              <entry><emphasis role="bold">Property Key </emphasis></entry>
+              <entry><emphasis role="bold">Key Attributes </emphasis></entry>
 
               <entry><emphasis role="bold">Corresponding Profile Key
               </emphasis></entry>
