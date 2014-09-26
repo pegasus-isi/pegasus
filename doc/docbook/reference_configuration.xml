@@ -410,8 +410,7 @@ queue
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>env.PEGASUS_HOME<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>PEGASUS_HOME<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>String
 </literallayout></entry>
@@ -425,8 +424,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>env.GLOBUS_LOCATION<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>GLOBUS_LOCATION<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
@@ -439,8 +437,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>env.LD_LIBRARY_PATH<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>LD_LIBRARY_PATH<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
@@ -493,8 +490,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>globus.count<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>count<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
@@ -505,8 +501,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>globus.jobtype<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>jobtype<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
@@ -519,8 +514,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>globus.maxcputime<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>maxcputime<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
@@ -532,8 +526,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>globus.maxmemory<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>maxmemory<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
@@ -544,8 +537,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>globus.maxtime<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>maxtime<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
@@ -557,8 +549,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>globus.maxwalltime<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>maxwalltime<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
@@ -570,8 +561,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>globus.minmemory<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>minmemory<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
@@ -582,8 +572,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>globus.project<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>project<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
@@ -594,8 +583,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>globus.queue<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>queue<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
@@ -712,8 +700,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>condor.universe<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>universe<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
@@ -727,8 +714,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>condor.periodic_release<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>periodic_release<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
@@ -741,8 +727,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>condor.periodic_remove<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>periodic_remove<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
@@ -755,8 +740,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>condor.filesystemdomain<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>filesystemdomain<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
@@ -768,8 +752,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>condor.stream_error<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>stream_error <emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>Boolean</literallayout></entry>
 
@@ -781,8 +764,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>condor.stream_output<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>stream_output<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>Boolean</literallayout></entry>
 
@@ -794,8 +776,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>condor.priority<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>priority<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
@@ -809,8 +790,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>condor.request_cpus<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>request_cpus<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
@@ -822,8 +802,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>condor.request_memory<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>request_memory<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
@@ -835,8 +814,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>condor.request_disk<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>request_disk<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
@@ -964,8 +942,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
                       role="bold">Property Key: </emphasis></emphasis>dagman.pre<emphasis
                     role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>PRE<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
@@ -978,8 +955,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
                       role="bold">Property Key: </emphasis></emphasis>dagman.pre.arguments<emphasis
                     role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>PRE.ARGUMENTS<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
@@ -992,8 +968,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
                       role="bold">Property Key: </emphasis></emphasis>dagman.post<emphasis
                     role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>POST<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
@@ -1060,8 +1035,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
                     role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>post.path.[value of dagman.post]<emphasis
                     role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
@@ -1073,8 +1047,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
                       role="bold">Property Key: </emphasis></emphasis>dagman.post.arguments<emphasis
                     role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>POST.ARGUMENTS<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
@@ -1087,8 +1060,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
                       role="bold">Property Key: </emphasis></emphasis>dagman.retry<emphasis
                     role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>RETRY<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>Integer
 <emphasis role="bold">Default     :</emphasis> 3</literallayout></entry>
@@ -1103,8 +1075,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
                       role="bold">Property Key: </emphasis></emphasis>dagman.category<emphasis
                     role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>CATEGORY<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
@@ -1116,8 +1087,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
                       role="bold">Property Key: </emphasis></emphasis>dagman.priority<emphasis
                     role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>PRIORITY<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
@@ -1274,8 +1244,7 @@ Scope       :</emphasis> Properties
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.clusters.num<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>clusters.num<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 3.0
 <emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
@@ -1290,8 +1259,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.clusters.size<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>clusters.size<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 3.0
 <emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
@@ -1306,8 +1274,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.cores<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>cores<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 4.0
 <emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
@@ -1322,8 +1289,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.runtime<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>runtime<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
@@ -1338,8 +1304,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>pegasus.clusters.maxruntime<emphasis
                   role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 4.0
 <emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
@@ -1353,8 +1318,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.job.aggregator<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>job.aggregator<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
@@ -1366,8 +1330,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.gridstart<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>gridstart<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
@@ -1381,8 +1344,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.gridstart.path<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>gridstart.path<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>file path</literallayout></entry>
 
@@ -1394,8 +1356,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.gridstart.arguments<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>gridstart.arguments<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
@@ -1407,8 +1368,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.stagein.clusters<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>stagein.clusters<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 4.0
 <emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
@@ -1425,8 +1385,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>stagein.local.clusters<emphasis
                   role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 4.0
 <emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
@@ -1442,8 +1401,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>stagein.remote.clusters<emphasis
                   role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 4.0
 <emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
@@ -1457,8 +1415,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.stageout.clusters<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>stageout.clusters<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 4.0
 <emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
@@ -1474,8 +1431,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>stageout.local.clusters<emphasis
                   role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 4.0
 <emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
@@ -1491,8 +1447,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>stageout.remote.clusters<emphasis
                   role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 4.0
 <emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
@@ -1506,8 +1461,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.group<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>group<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
@@ -1519,8 +1473,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.change.dir<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>change.dir<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>Boolean</literallayout></entry>
 
@@ -1534,8 +1487,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.create.dir<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>create.dir<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>Boolean</literallayout></entry>
 
@@ -1549,8 +1501,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.transfer.proxy<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>transfer.proxy<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>Boolean</literallayout></entry>
 
@@ -1564,8 +1515,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.style<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>style<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
@@ -1581,8 +1531,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.pmc_request_memory<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>pmc_request_memory<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 4.2
 <emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
@@ -1596,8 +1545,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.pmc_request_cpus<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>pmc_request_cpus<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 4.2
 <emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
@@ -1611,8 +1559,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.pmc_priority<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>pmc_priority<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 4.2
 <emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
@@ -1626,8 +1573,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.pmc_task_arguments<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>pmc_task_arguments<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 4.2
 <emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
@@ -1642,8 +1588,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.exitcode.failuremsg<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>exitcode.failuremsg<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 4.4
 <emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
@@ -1655,8 +1600,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.exitcode.successmsg<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>exitcode.successmsg<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 4.4
 <emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
@@ -1674,8 +1618,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.checkpoint_time<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>checkpoint_time<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 4.5
 <emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
@@ -1688,8 +1631,7 @@ Scope       :</emphasis> Transformation Catalog, Site Catalog
             <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.maxwalltime<emphasis
                   role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>maxwalltime<emphasis role="bold">
-Scope       :</emphasis> Transformation Catalog, Site Catalog
-              DAX, Properties
+Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 4.5
 <emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
@@ -4763,7 +4705,7 @@ Scope       :</emphasis> Properties
                   <term>Submit</term>
 
                   <listitem>
-                     In this mode, only entries that are of type STATIC_BINARY and reside at the submit host (pool local), are selected as sources for staging the executables to the remote execution pools
+                     In this mode, only entries that are of type STATIC_BINARY and reside at the submit host (pool local), are selected as sources for staging the executables to the remote execution pools 
                   </listitem>
                 </varlistentry>
               </variablelist></para></entry>
