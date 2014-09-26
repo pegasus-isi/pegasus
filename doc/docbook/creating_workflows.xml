@@ -951,14 +951,6 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
       </orderedlist>
     </section>
 
-    <section id="pegasus-sc-client">
-      <title>Site Catalog Client pegasus-sc-client</title>
-
-      <para>The pegasus-sc-client can be used to generate a site catalog for
-      Open Science Grid (OSG) by querying their Monitoring Interface likes
-      VORS or OSGMM. See pegasus-sc-client --help for more details</para>
-    </section>
-
     <section>
       <title>Site Catalog Converter pegasus-sc-converter</title>
 

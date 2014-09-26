@@ -26,7 +26,6 @@
   <xi:include href="manpage.pegasus-remove.xml"/>
   <xi:include href="manpage.pegasus-run.xml"/>
   <xi:include href="manpage.pegasus-s3.xml"/>
-  <xi:include href="manpage.pegasus-sc-client.xml"/>
   <xi:include href="manpage.pegasus-sc-converter.xml"/>
   <xi:include href="manpage.pegasus-service.xml"/>
   <xi:include href="manpage.pegasus-statistics.xml"/>
