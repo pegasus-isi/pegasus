@@ -349,6 +349,8 @@ def ls(args):
 
     parser.add_option("-l", "--long", dest="long_format", action="store_true",
         default=False, help="Use long listing format")
+    parser.add_option("-H", "--human-sized", dest="human_sized", action="store_true",
+        default=False, help="Use human readable sizes")
 
     options, args = parser.parse_args(args)
 
@@ -361,9 +363,31 @@ def ls(args):
     for uri in args:
         items.append(parse_uri(uri))
 
+    def human_sized(sz):
+        if sz > TB:
+            return "%6.1fT" % (sz / (1.0*TB))
+        elif sz > GB:
+            return "%6.1fG" % (sz / (1.0*GB))
+        elif sz > MB:
+            return "%6.1fM" % (sz / (1.0*MB))
+        elif sz > KB:
+            return "%6.1fK" % (sz / (1.0*KB))
+        else:
+            return "%6dB" % sz
+
     def print_key(key):
         if options.long_format:
-            sys.stdout.write("\t%10d %s\n" % (key.size, key.name))
+            if options.human_sized:
+                size = human_sized(key.size)
+            else:
+                size = "%13d" % key.size
+            name = key.name
+            modified = key.last_modified
+            owner = key.owner.display_name
+            storage_class = key.storage_class
+            if storage_class.startswith("REDUCED"):
+                storage_class = "REDUCED"
+            sys.stdout.write("\t%15s %s %s %8s %s\n" % (owner, size, modified, storage_class, name))
         else:
             sys.stdout.write("\t%s\n" % key.name)
 
