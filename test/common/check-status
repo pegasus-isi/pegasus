@@ -31,23 +31,26 @@ if [ ! -e braindump.txt ]; then
     exit 1
 fi
 
-TIMEOUT=360
-COUNT=0
+# minutes
+TIMEOUT=15
+
+START_TS=`date +'%s'`
+MAX_TS=`echo "$START_TS + $TIMEOUT * 60" | bc`
 
 sleep 30s
 update_status
 show_state
 
 while [ "$STATUS" = "Running" -o "$STATUS" = "" -o "$STATUS" = "Unknown"  ] ; do 
-    if [ $COUNT -ge $TIMEOUT ]; then
-        echo "Reached TIMEOUT of $TIMEOUT. Calling pegasus-remove"
+    NOW=`date +'%s'`
+    if [ $MAX_TS -gt $NOW ]; then
+        echo "Reached TIMEOUT of $TIMEOUT minutes. Calling pegasus-remove"
         pegasus-remove `pwd`
         STATUS=TIMEOUT
         sleep 1m
         break;
     fi
-    ((COUNT++))
-    sleep 30s
+    sleep 1m
     update_status
     show_state
 done
