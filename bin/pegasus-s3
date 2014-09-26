@@ -346,6 +346,10 @@ def parse_uri(uri):
 
 def ls(args):
     parser = option_parser("ls URL...")
+
+    parser.add_option("-l", "--long", dest="long_format", action="store_true",
+        default=False, help="Use long listing format")
+
     options, args = parser.parse_args(args)
 
     if len(args) == 0:
@@ -357,6 +361,22 @@ def ls(args):
     for uri in args:
         items.append(parse_uri(uri))
 
+    def print_key(key):
+        if options.long_format:
+            sys.stdout.write("\t%10d %s\n" % (key.size, key.name))
+        else:
+            sys.stdout.write("\t%s\n" % key.name)
+
+    def print_bucket(bucket):
+        if options.long_format:
+            # Also list the location of each bucket
+            loc = bucket.get_location()
+            if not loc:
+                loc = "-"
+            sys.stdout.write("\t%-50s%s\n" % (bucket.name, loc))
+        else:
+            sys.stdout.write("\t%s\n" % bucket.name)
+
     for uri in items:
         conn = get_connection(config, uri)
 
@@ -367,21 +387,19 @@ def ls(args):
         if bucket is None:
             buckets = conn.get_all_buckets()
             for bucket in buckets:
-                # Also list the location of each bucket
-                loc = bucket.get_location()
-                sys.stdout.write("\t%-50s%s\n" % (bucket.name, loc))
+                print_bucket(bucket)
         else:
             b = conn.get_bucket(uri.bucket)
             if has_wildcards(uri.key):
                 for o in b.list():
                     if fnmatch.fnmatch(o.name, uri.key):
-                        sys.stdout.write("\t%s\n" % o.name)
+                        print_key(o)
             else:
                 for o in b.list(prefix=uri.key):
                     # For some reason, Walrus sometimes returns a Prefix object
                     if isinstance(o, boto.s3.prefix.Prefix):
                         continue
-                    sys.stdout.write("\t%s\n" % o.name)
+                    print_key(o)
 
 def cp(args):
     parser = option_parser("cp SRC[...] DEST")
