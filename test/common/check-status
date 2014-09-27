@@ -43,7 +43,7 @@ show_state
 
 while [ "$STATUS" = "Running" -o "$STATUS" = "" -o "$STATUS" = "Unknown"  ] ; do 
     NOW=`date +'%s'`
-    if [ $MAX_TS -gt $NOW ]; then
+    if [ $NOW -gt $MAX_TS ]; then
         echo "Reached TIMEOUT of $TIMEOUT minutes. Calling pegasus-remove"
         pegasus-remove `pwd`
         STATUS=TIMEOUT
