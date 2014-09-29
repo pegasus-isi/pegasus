@@ -38,6 +38,13 @@ import tempfile
 import threading
 import time
 
+try:
+    # Python 3.0 and later
+    from urllib.parse import unquote
+except ImportError:
+    # Fall back to Python 2's urllib2
+    from urllib2 import unquote
+
 
 __author__ = "Mats Rynge <rynge@isi.edu>"
 
@@ -45,7 +52,7 @@ __author__ = "Mats Rynge <rynge@isi.edu>"
 # --- regular expressions -----------------------------------------------------
 
 re_parse_comment = re.compile(r'^# +[\w]+ +[\w]+ +([\w\-_]+)')
-re_parse_url = re.compile(r'([\w]+)://([\w\.\-:@]*)(/[\S]*)?')
+re_parse_url = re.compile(r'([\w]+)://([\w\.\-:@]*)(/[\S ]*)?')
 
 
 # --- classes -----------------------------------------------------------------
@@ -92,6 +99,9 @@ class Transfer:
         proto = ""
         host = ""
         path = ""
+            
+        # the url should be URL decoded to work with our shell callouts
+        url = unquote(url)
 
         # default protocol is file://
         if string.find(url, ":") == -1:
@@ -1125,8 +1135,10 @@ class ScpHandler(TransferHandlerBase):
                     cmd += " -i " + os.environ['SSH_PRIVATE_KEY']
 
                 prepare_local_dir(os.path.dirname(transfer.dst_path))
-                cmd += " " + transfer.src_host + ":" + transfer.src_path
-                cmd += " " + transfer.dst_path
+                # scp wants escaped remote paths, even with quotes
+                src_path = re.sub(' ', '\\ ', transfer.src_path)
+                cmd += " '" + transfer.src_host + ":" + src_path + "'"
+                cmd += " '" + transfer.dst_path + "'"
             else:
                 # file -> scp
                 key = "SSH_PRIVATE_KEY_" + transfer.dst_sitename
@@ -1144,8 +1156,12 @@ class ScpHandler(TransferHandlerBase):
                                           transfer.dst_host,
                                           os.path.dirname(transfer.dst_path))
                     remote_dirs_created[mkdir_key] = True
+                
+                # scp wants escaped remote paths, even with quotes
+                dst_path = re.sub(' ', '\\ ', transfer.dst_path)
+                
                 cmd += " '" + transfer.src_path + "'"
-                cmd += " '" + transfer.dst_host + ":" + transfer.dst_path + "'"
+                cmd += " '" + transfer.dst_host + ":" + dst_path + "'"
                 stats_add(transfer.src_path)
 
             myexec(cmd, default_subshell_timeout, True)

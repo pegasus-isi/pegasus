@@ -37,6 +37,13 @@ import stat
 import time
 from collections import deque
 
+try:
+    # Python 3.0 and later
+    from urllib.parse import unquote
+except ImportError:
+    # Fall back to Python 2's urllib2
+    from urllib2 import unquote
+
 
 __author__ = "Mats Rynge <rynge@isi.edu>"
 
@@ -68,6 +75,9 @@ class URL:
         proto = ""
         host  = ""
         path  = ""
+        
+        # the url should be URL decoded to work with our shell callouts
+        url = unquote(url)
 
         # default protocol is file://
         if string.find(url, ":") == -1:
