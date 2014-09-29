@@ -40,10 +40,10 @@ import time
 
 try:
     # Python 3.0 and later
-    from urllib.parse import unquote
+    import urllib.parse as urllib
 except ImportError:
     # Fall back to Python 2's urllib2
-    from urllib2 import unquote
+    import urllib2 as urllib
 
 
 __author__ = "Mats Rynge <rynge@isi.edu>"
@@ -101,7 +101,7 @@ class Transfer:
         path = ""
             
         # the url should be URL decoded to work with our shell callouts
-        url = unquote(url)
+        url = urllib.unquote(url)
 
         # default protocol is file://
         if string.find(url, ":") == -1:
@@ -148,6 +148,9 @@ class Transfer:
 
     def src_url(self):
         return "%s://%s%s" % (self.src_proto, self.src_host, self.src_path)
+    
+    def src_url_encoded(self):
+        return "%s://%s%s" % (self.src_proto, self.src_host, urllib.quote(self.src_path))
 
     def src_url_srm(self):
         """
@@ -159,6 +162,9 @@ class Transfer:
 
     def dst_url(self):
         return "%s://%s%s" % (self.dst_proto, self.dst_host, self.dst_path)
+    
+    def dst_url_encoded(self):
+        return "%s://%s%s" % (self.dst_proto, self.dst_host, urllib.quote(self.dst_path))
 
     def dst_url_srm(self):
         """
@@ -539,7 +545,8 @@ class GridFtpHandler(TransferHandlerBase):
             
         for i, t in enumerate(transfers):
             num_pairs += 1
-            logger.debug("   adding %s %s" % (t.src_url(), t.dst_url()))
+            logger.debug("   adding %s %s" % (t.src_url_encoded(),
+                                              t.dst_url_encoded()))
     
             # delay stating until we have finished the transfers
             if t.src_proto == "file":
@@ -547,7 +554,8 @@ class GridFtpHandler(TransferHandlerBase):
             elif t.dst_proto == "file":
                 delayed_file_stat.append(t.dst_path)
     
-            tmp_file.write("%s %s\n" % (t.src_url(), t.dst_url()))
+            tmp_file.write("%s %s\n" % (t.src_url_encoded(),
+                                        t.dst_url_encoded()))
     
         tmp_file.close()
         
