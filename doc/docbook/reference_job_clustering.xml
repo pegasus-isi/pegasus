@@ -25,8 +25,7 @@
       <listitem>
         <para>level based horizontal clustering - where you can denote how
         many jobs get clustered into a single clustered job per level, or how
-        many clustered jobs should be created per level of the workflow
-        </para>
+        many clustered jobs should be created per level of the workflow</para>
       </listitem>
 
       <listitem>
@@ -117,10 +116,27 @@ Valid clustering techniques are horizontal and label.</programlisting></para>
               The clusters.size factor can be specified in the transformation
               catalog as follows</para>
 
-              <programlisting><emphasis role="bold">#site   transformation   pfn            type               architecture  profiles
-</emphasis>
-siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX  PEGASUS::clusters.size=3
-siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX  PEGASUS::clusters.size=2
+              <programlisting># multiple line text-based transformation catalog: 2014-09-30T16:05:01.731-07:00
+tr B {
+        site siteX {
+                profile pegasus "clusters.size" "3" 
+                pfn "/shared/PEGASUS/bin/jobB"
+                arch "x86"
+                os "LINUX"
+                type "INSTALLED"
+        }
+}
+
+tr C {
+        site siteX {
+                profile pegasus "clusters.size" "2" 
+                pfn "/shared/PEGASUS/bin/jobC"
+                arch "x86"
+                os "LINUX"
+                type "INSTALLED"
+        }
+}
+
 </programlisting>
 
               <figure>
@@ -131,6 +147,7 @@ siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX  PEGASUS:
                     <imagedata align="center" contentdepth="750px"
                                fileref="images/advanced-clustering-1.png"/>
                   </imageobject>
+
                   <imageobject role="fo">
                     <imagedata align="center" contentdepth="5in"
                                fileref="images/advanced-clustering-1.png"/>
@@ -155,19 +172,44 @@ siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX  PEGASUS:
               clusters.num factor in the transformation catalog can be
               specified as follows</para>
 
-              <programlisting><emphasis role="bold">#site  transformation      pfn           type            architecture    profiles
-</emphasis>
-siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX  PEGASUS::clusters.num=3
-siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX  PEGASUS::clusters.num=2
+              <programlisting># multiple line text-based transformation catalog: 2014-09-30T16:06:23.397-07:00
+tr B {
+        site siteX {
+                profile pegasus "clusters.num" "3" 
+                pfn "/shared/PEGASUS/bin/jobB"
+                arch "x86"
+                os "LINUX"
+                type "INSTALLED"
+        }
+}
+
+tr C {
+        site siteX {
+                profile pegasus "clusters.num" "2" 
+                pfn "/shared/PEGASUS/bin/jobC"
+                arch "x86"
+                os "LINUX"
+                type "INSTALLED"
+        }
+}
+
 </programlisting>
 
               <para>In the case, where both the factors are associated with
               the job, the clusters.num value supersedes the clusters.size
               value.</para>
 
-              <programlisting><emphasis role="bold">#site  transformation   pfn             type             architecture   profiles
-</emphasis>
-siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX PEGASUS::clusters.size=3,clusters.num=3
+              <programlisting># multiple line text-based transformation catalog: 2014-09-30T16:08:01.537-07:00
+tr B {
+        site siteX {
+                profile pegasus "clusters.num" "3" 
+                profile pegasus "clusters.size" "3" 
+                pfn "/shared/PEGASUS/bin/jobB"
+                arch "x86"
+                os "LINUX"
+                type "INSTALLED"
+        }
+}
 </programlisting>
 
               <para>In the above case the jobs referring to logical
@@ -184,6 +226,7 @@ siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX PEGASUS::
                     <imagedata align="center" contentdepth="750px"
                                fileref="images/advanced-clustering-2.png"/>
                   </imageobject>
+
                   <imageobject role="fo">
                     <imagedata align="center" contentdepth="5in"
                                fileref="images/advanced-clustering-2.png"/>
@@ -321,13 +364,32 @@ siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX PEGASUS::
         in turn overrides the one in the DAX. The two parameters are described
         below.</para>
 
-        <programlisting><emphasis role="bold">#site  transformation   pfn             type             architecture   profiles
-</emphasis>
+        <programlisting># multiple line text-based transformation catalog: 2014-09-30T16:09:40.610-07:00
 #Cluster all jobs of type B at siteX, into 2 clusters such that the 2 clusters have similar runtimes
-siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX PEGASUS::clusters.num=2,runtime=100
+tr B {
+        site siteX {
+                profile pegasus "clusters.num" "2" 
+                profile pegasus "runtime" "100" 
+                pfn "/shared/PEGASUS/bin/jobB"
+                arch "x86"
+                os "LINUX"
+                type "INSTALLED"
+        }
+}
 
 #Cluster all jobs of type C at siteX, such that the duration of the clustered job does not exceed 300.
-siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX PEGASUS::clusters.maxruntime=300,runtime=100</programlisting>
+tr C {
+        site siteX {
+                profile pegasus "clusters.maxruntime" "300" 
+                profile pegasus "runtime" "100" 
+                pfn "/shared/PEGASUS/bin/jobC"
+                arch "x86"
+                os "LINUX"
+                type "INSTALLED"
+        }
+}
+
+</programlisting>
 
         <figure>
           <title>Clustering by runtime</title>
@@ -337,6 +399,7 @@ siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX PEGASUS::
               <imagedata align="center" contentdepth="750px"
                          fileref="images/advanced-clustering-5.png"/>
             </imageobject>
+
             <imageobject role="fo">
               <imagedata align="center" contentdepth="5in"
                          fileref="images/advanced-clustering-5.png"/>
@@ -377,6 +440,7 @@ siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX PEGASUS::
                 <imagedata align="center" contentdepth="750px"
                            fileref="images/advanced-clustering-3.png"/>
               </imageobject>
+
               <imageobject role="fo">
                 <imagedata align="center" contentdepth="5in"
                            fileref="images/advanced-clustering-3.png"/>
@@ -469,6 +533,7 @@ siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX PEGASUS::
               <imagedata align="center" contentdepth="1000px"
                          fileref="images/advanced-clustering-4.png"/>
             </imageobject>
+
             <imageobject role="fo">
               <imagedata align="center" contentdepth="7in"
                          fileref="images/advanced-clustering-4.png"/>
@@ -597,11 +662,19 @@ siteX    pegasus::seqexec     /usr/pegasus/bin/pegasus-cluster INSTALLED       I
           specify the relevant globus profiles such as xcount, host_xcount and
           maxwalltime to control size of the MPI job.</para>
 
-          <programlisting><emphasis role="bold">#site  transformation   pfn            type                 architecture    profiles</emphasis>
+          <programlisting># multiple line text-based transformation catalog: 2014-09-30T16:11:11.947-07:00
+tr pegasus::mpiexec {
+        site siteX {
+                profile globus "host_xcount" "1" 
+                profile globus "xcount" "32" 
+                pfn "/usr/pegasus/bin/pegasus-mpi-cluster"
+                arch "x86"
+                os "LINUX"
+                type "INSTALLED"
+        }
+}</programlisting>
 
-siteX    pegasus::mpiexec     /usr/pegasus/bin/pegasus-mpi-cluster INSTALLED       INTEL32::LINUX globus::xcount=32;globus::host_xcount=1</programlisting>
-
-          <para>If the entry is not specified, Pegasus will attempt create a
+          <para>the entry is not specified, Pegasus will attempt create a
           default path on the basis of the environment profile PEGASUS_HOME
           specified in the site catalog for the remote site.</para>
 
@@ -660,9 +733,18 @@ pegasus.clusterer.job.aggregator seqexec|mpiexec</programlisting>
             with the transformation that is being clustered, in the
             transformation catalog</emphasis></para>
 
-            <programlisting><emphasis role="bold">#site  transformation   pfn            type                architecture profiles
-</emphasis>
-siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX pegasus::clusters.size=3,job.aggregator=mpiexec</programlisting>
+            <programlisting># multiple line text-based transformation catalog: 2014-09-30T16:11:52.230-07:00
+tr B {
+        site siteX {
+                profile pegasus "clusters.size" "3" 
+                profile pegasus "job.aggregator" "mpiexec" 
+                pfn "/shared/PEGASUS/bin/jobB"
+                arch "x86"
+                os "LINUX"
+                type "INSTALLED"
+        }
+}
+</programlisting>
 
             <para>In the above example, all the clustered jobs that consist of
             transformation B on siteX will be executed via mpiexec.</para>
