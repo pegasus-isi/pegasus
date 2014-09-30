@@ -124,7 +124,7 @@ sub getPlatform(){
         my $x64=`/usr/sbin/sysctl -a -n hw.cpu64bit_capable 2>/dev/null`;
         my $vers = `/usr/bin/sw_vers -productVersion`;
         chomp $vers;
-        $vers =~ s/(^\d+\.\d+).*/$1/;
+        $vers =~ s/(^\d+)\.\d+.*/$1/;
         
         return (  ($x64) ? $short_arch{$arch}."_64" : $short_arch{$arch},$short_os{$os},$vers);
     }
@@ -149,6 +149,9 @@ sub get_linux_distro () {
     my $issue_file;
     if (-f "/etc/rocks-release") {
         $issue_file = "/etc/rocks-release";
+    }
+    elsif (-f "/etc/redhat-release") {
+        $issue_file = "/etc/redhat-release";
     }
     else {
         $issue_file = "/etc/issue";
@@ -226,10 +229,13 @@ sub get_linux_distro () {
               $distro{"version"} = $1;
             }
         }
-        elsif ($line =~ m!CentOS!) {  
+        elsif ($line =~ m!CentOS!) {
+            # CentOS 7 has an extra token compared to CentOS 6
+            # Assume the major version is just the first number in the line
+            $line =~ m/([0-9]+)/;
             $distro{"long"} = "$distro_strs[0]";
-            $distro{"version"} = "$distro_strs[2]";
-            $distro{"short"} = "rhel";   
+            $distro{"version"} = $1;
+            $distro{"short"} = "rhel";
         } 
         elsif ($line =~ m!Yellow!) {
             $distro{"long"} = "$distro_strs[0] $distro_strs[1]";
