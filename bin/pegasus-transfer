@@ -42,8 +42,8 @@ try:
     # Python 3.0 and later
     import urllib.parse as urllib
 except ImportError:
-    # Fall back to Python 2's urllib2
-    import urllib2 as urllib
+    # Fall back to Python 2's urllib
+    import urllib as urllib
 
 
 __author__ = "Mats Rynge <rynge@isi.edu>"
