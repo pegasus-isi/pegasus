@@ -41,8 +41,8 @@ try:
     # Python 3.0 and later
     from urllib.parse import unquote
 except ImportError:
-    # Fall back to Python 2's urllib2
-    from urllib2 import unquote
+    # Fall back to Python 2's urllib
+    from urllib import unquote
 
 
 __author__ = "Mats Rynge <rynge@isi.edu>"
