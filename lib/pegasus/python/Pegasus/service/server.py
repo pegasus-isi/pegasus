@@ -45,8 +45,8 @@ class ServerCommand(Command):
         if cert is not None and pkey is not None:
             ssl_context = (cert, pkey)
         else:
-            log.warning("SSL is not configured: passwords will not be encrypted")
-            ssl_context = None
+            log.warning("SSL is not configured: Using adhoc certificate")
+            ssl_context = 'adhoc'
 
         if os.getuid() != 0:
             log.warning("Service not running as root: Will not be able to switch users")
