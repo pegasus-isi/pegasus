@@ -43,35 +43,38 @@ class Provisioner(threading.Thread):
         self.slots = slots
         self.interval = interval
 
+    def simulate(self, start, slots):
+        newdag = self.dag.clone()
+        for j in newdag.jobs.values():
+
+            # Update the runtime estimates
+            if j.name in self.estimates:
+                j.runtime = self.estimates[j.name]
+
+        # Simulate the workflow to determine time remaining
+        s = sim.Simulation(start=start)
+        wfe = sim.WorkflowEngine('Engine', s, newdag, slots)
+        s.simulate()
+
+        return wfe.runtime
+
     def run(self):
         while True:
+
             log.info("Provisioning resources...")
+            start = time.time()
+            slots = self.slots
+            runtime = self.simulate(start, slots)
+            if start + runtime <= self.deadline:
+                while start + runtime <= self.deadline:
+                    slots -= 1
+                    runtime = self.simulate(start, slots)
+            else:
+                while start + runtime >= self.deadline:
+                    slots += 1
+                    runtime = self.simulate(start, slots)
 
-            newdag = self.dag.clone()
-
-            for j in newdag.jobs.values():
-
-                # Update the runtime estimates
-                if j.name in self.estimates:
-                    j.runtime = self.estimates[j.name]
-
-            # Simulate the workflow to determine time remaining
-            simstart = time.time()
-            s = sim.Simulation(start=simstart)
-            wfe = sim.WorkflowEngine('Engine', s, newdag, self.slots)
-            s.simulate()
-            simend = time.time()
-            runtime = wfe.runtime
-
-            log.info("Simulation took: %f seconds", (simend-simstart))
-
-            # Write a record to the trace
-            trace = open("shadowq.trace", "a")
-            trace.write("%f %f %f\n" % (simstart, runtime, simstart + runtime))
-            trace.close()
-
-            log.info("Time remaining: %s", runtime)
-            log.info("Workflow should finish at: %s", (simstart + runtime))
+            # TODO Send request
 
             time.sleep(self.interval)
 
