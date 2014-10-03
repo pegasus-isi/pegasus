@@ -18,8 +18,8 @@ pegasus_config = os.path.join(bin_dir, "pegasus-config") + " --noeoln --python-e
 lib_ext_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
 
 # Insert this directory in our search path
-os.sys.path.insert(0, lib_ext_dir)
 os.sys.path.insert(0, lib_dir)
+os.sys.path.insert(0, lib_ext_dir)
 
 from Pegasus.tools import utils
 from Pegasus.tools import db_utils

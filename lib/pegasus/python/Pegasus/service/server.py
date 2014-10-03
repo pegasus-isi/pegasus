@@ -37,16 +37,16 @@ class ServerCommand(Command):
             except manager.EMException, e:
                 log.warning("%s: Ensemble manager disabled" % e.message)
             else:
-                mgr = manager.EnsembleManager()
-                mgrpid = mgr.start()
+                mgr =  manager.EnsembleManager()
+                mgr.start()
 
         cert = app.config.get("CERTIFICATE", None)
         pkey = app.config.get("PRIVATE_KEY", None)
         if cert is not None and pkey is not None:
             ssl_context = (cert, pkey)
         else:
-            log.warning("SSL is not configured: passwords will not be encrypted")
-            ssl_context = None
+            log.warning("SSL is not configured: Using adhoc certificate")
+            ssl_context = 'adhoc'
 
         if os.getuid() != 0:
             log.warning("Service not running as root: Will not be able to switch users")
@@ -55,8 +55,6 @@ class ServerCommand(Command):
                 host=app.config["SERVER_HOST"],
                 processes=app.config["MAX_PROCESSES"],
                 ssl_context=ssl_context)
-
-        os.waitpid(mgrpid, 0)
 
         log.info("Exiting")
 

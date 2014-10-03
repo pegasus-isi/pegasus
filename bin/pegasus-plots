@@ -26,8 +26,8 @@ share_dir = os.path.normpath(os.path.join(bin_dir, "../share/pegasus"))
 javascript_dir = os.path.normpath(os.path.join(lib_dir, "../../pegasus/javascript"))
 
 # Insert this directory in our search path
-os.sys.path.insert(0, lib_ext_dir)
 os.sys.path.insert(0, lib_dir)
+os.sys.path.insert(0, lib_ext_dir)
 
 from Pegasus.plots_stats import utils as plot_utils
 from Pegasus.plots_stats.plots import populate

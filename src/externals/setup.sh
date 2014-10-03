@@ -22,6 +22,7 @@ else
     packages+=("boto-2.5.2")
     packages+=("SQLAlchemy-0.8.0")
     packages+=("pam-0.1.4")
+    packages+=("pyOpenSSL-0.13")
 fi
 
 dir=$(cd $(dirname $0) && pwd)
