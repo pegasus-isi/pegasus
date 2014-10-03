@@ -103,7 +103,7 @@ public class DataReuseEngineTest  {
 
     
     /**
-     * Test of the Flat Output Mapper.
+     * Test for  cascading of data reuse. 
      */
     @Test
     public void testCascading() {
@@ -212,6 +212,44 @@ public class DataReuseEngineTest  {
         assertArrayEquals( "Deleted Jobs don't match ", expectedDeletedJobs, toSortedStringArray(actualDeletedJobs) );
         mLogger.logEventCompletion();
         System.out.println("\n");
+    }
+
+      
+    /**
+     * Test for partial data reuse.
+     */
+    @Test
+    public void testPartialDataReuse() {
+        
+        mLogger.logEventStart( "test.refiner.datareuse", "set", Integer.toString(mTestNumber++) );
+        ADag dax = ((DataReuseEngineTestSetup)mTestSetup).loadDAX( mBag, "blackdiamond.dax" );
+        MyReplicaCatalogBridge rcb = new MyReplicaCatalogBridge( dax, mBag );
+        
+        //turn on partial data reuse
+        mProps.setProperty( "pegasus.data.reuse.scope", "partial");
+        
+        //all output files are in the replica catalog
+        //however findrange_ID0000002 output file needs to be checked for
+        //in the RC for datareuse. PM-774
+        Set<String> filesInRC = new HashSet();
+        filesInRC.add( "f.a" );
+        filesInRC.add( "f.b1"); 
+        filesInRC.add( "f.b2" ); 
+        filesInRC.add( "f.c1" ); 
+        filesInRC.add( "f.c2"); 
+        filesInRC.add( "f.d"); 
+        rcb.addFilesInReplica(filesInRC);
+
+        DataReuseEngine engine = new DataReuseEngine( dax, mBag );
+        engine.reduceWorkflow(dax, rcb);
+        Job[] actualDeletedJobs = (Job[]) engine.getDeletedJobs().toArray( new Job[0] );
+        
+        String[] expectedDeletedJobs ={	"findrange_ID0000002",};
+        assertArrayEquals( "Deleted Jobs don't match ", expectedDeletedJobs, toSortedStringArray(actualDeletedJobs) );
+        mLogger.logEventCompletion();
+        System.out.println("\n");
+       
+        mProps.removeProperty( "pegasus.data.reuse.scope") ;
     }
     
     

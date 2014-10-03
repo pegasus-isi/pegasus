@@ -17,45 +17,6 @@
 
 #include <sys/types.h>
 
-extern
-int
-append_arg( char* data, char*** arg, size_t* index, size_t* capacity );
-/* purpose: adds a string to a list of arguments
- *          This is a low-level function, use add_arg instead.
- * paramtr: data (IN): string to append
- *          arg (OUT): list of arguments as vector
- *          index (IO): index where a new data should be inserted into
- *          capacity (IO): capacity (extend) of vector
- * returns: 0 means ok, -1 means error, see errno
- * warning: Always creates a strdup of data
- */
-
-extern
-int
-expand_arg( const char* fn, char*** arg, size_t* index, size_t* capacity,
-            int level );
-/* purpose: adds the contents of a file, line by line, to an argument vector
- *          This is a low-level function, use add_arg instead.
- * paramtr: fn (IN): name of file with contents to append
- *          arg (OUT): list of arguments as vector
- *          index (IO): index where a new data should be inserted into
- *          capacity (IO): capacity (extend) of vector
- *          level (IN): level of recursion
- * returns: 0 means ok, -1 means error, see errno
- */
-
-extern
-int
-add_arg( char* data, char*** arg, size_t* index, size_t* capacity, 
-         int level );
-/* purpose: sorts a given full argument string, whether to add or extend
- *          This is the high-level interface to previous functions.
- * paramtr: data (IN): string to append
- *          arg (OUT): list of arguments as vector
- *          index (IO): index where a new data should be inserted into
- *          capacity (IO): capacity (extend) of vector
- *          level (IN): level of recursion, use 1
- * returns: 0 means ok, -1 means error, see errno
- */
+extern int expand_arg(const char* fn, char*** arg, size_t* index, size_t* capacity, int level);
 
 #endif /* _INVOKE_H */

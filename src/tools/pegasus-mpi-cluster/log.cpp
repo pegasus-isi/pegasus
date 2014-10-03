@@ -64,7 +64,7 @@ void log_message(int level, const char *message, va_list args) {
                  loglabels[level], message);    
     } else {
         // If logging to a file, add the date
-        char ts[26];
+        char ts[128];
         timestr(ts);
         snprintf(logformat, MAX_LOG_MESSAGE, "%s [%s] %s\n", 
                  ts, loglabels[level], message);

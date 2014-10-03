@@ -11,7 +11,9 @@
   <xi:include href="manpage.pegasus-create-dir.xml"/>
   <xi:include href="manpage.pegasus-dagman.xml"/>
   <xi:include href="manpage.pegasus-dax-validator.xml"/>
+  <xi:include href="manpage.pegasus-em.xml"/>
   <xi:include href="manpage.pegasus-exitcode.xml"/>
+  <xi:include href="manpage.pegasus-graphviz.xml"/>
   <xi:include href="manpage.pegasus-gridftp.xml"/>
   <xi:include href="manpage.pegasus-invoke.xml"/>
   <xi:include href="manpage.pegasus-keg.xml"/>
@@ -24,8 +26,8 @@
   <xi:include href="manpage.pegasus-remove.xml"/>
   <xi:include href="manpage.pegasus-run.xml"/>
   <xi:include href="manpage.pegasus-s3.xml"/>
-  <xi:include href="manpage.pegasus-sc-client.xml"/>
   <xi:include href="manpage.pegasus-sc-converter.xml"/>
+  <xi:include href="manpage.pegasus-service.xml"/>
   <xi:include href="manpage.pegasus-statistics.xml"/>
   <xi:include href="manpage.pegasus-status.xml"/>
   <xi:include href="manpage.pegasus-submit-dag.xml"/>

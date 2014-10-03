@@ -18,24 +18,8 @@
 #include <sys/types.h>
 #include <sys/resource.h>
 
-extern
-int
-printXMLUseInfo(FILE *out, int indent, const char* id, 
-                const struct rusage* use);
-/* purpose: format the rusage record into the given stream as XML.
- * paramtr: out (IO): the stream
- *          indent (IN): indentation level
- *          id (IN): object identifier to use as element tag name.
- *          use (IN): struct rusage info
- * returns: number of characters put into buffer (buffer length)
- */
+extern int printXMLUseInfo(FILE *out, int indent, const char* id,
+                           const struct rusage* use);
+extern void addUseInfo(struct rusage* sum, const struct rusage* summand);
 
-extern
-void
-addUseInfo( struct rusage* sum, const struct rusage* summand );
-/* purpose: add a given rusage record to an existing one
- * paramtr: sum (IO): initialized rusage record to add to
- *          summand (IN): values to add to
- * returns: sum += summand;
- */
 #endif /* _USEINFO_H */

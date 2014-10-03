@@ -4,7 +4,7 @@
 INSTALL = install
 RM      = rm -f
 CXX	= g++ -ffor-scope 
-CXXFLAGS = -O
+CXXFLAGS += -O
 LD      = $(CXX)
 LOADLIBES = -lm
 SYSTEM  = $(shell uname -s | tr '[a-z]' '[A-Z]' | tr -d '_ -/')
@@ -30,13 +30,19 @@ ifeq (DARWIN,${SYSTEM})
   EXTRA_INC += darwin.hh
 else
   ifeq (LINUX,${SYSTEM})
-    CXXFLAGS = -Wall -O2 -ggdb -DMACHINE_SPECIFIC=linux
+    CXXFLAGS += -Wall -O2 -ggdb -DMACHINE_SPECIFIC=linux
     EXTRA_OBJ += linux.o
     EXTRA_INC += linux.hh
     CFLAGS += $(shell getconf LFS_CFLAGS 2>>/dev/null)
     LDFLAGS += $(shell getconf LFS_LDFLAGS 2>>/dev/null)
   else
-    $(error Unsupported system: $(SYSTEM))
+    ifeq (GNUKFREEBSD,${SYSTEM})
+      CXXFLAGS = -Wall -O2 -ggdb -DMACHINE_SPECIFIC=gnukfreebsd
+      EXTRA_OBJ += gnukfreebsd.o
+      EXTRA_INC += gnukfreebsd.hh
+    else
+      $(error Unsupported system: $(SYSTEM))
+    endif
   endif
 endif
 
@@ -46,7 +52,7 @@ ifneq (,${SOCKIO})
 endif
 
 %.o : %.cc
-	$(CXX) $(CXXFLAGS) $< -c -o $@
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< -c -o $@
 
 all: pegasus-keg
 

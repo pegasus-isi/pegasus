@@ -16,50 +16,37 @@
 
 package edu.isi.pegasus.planner.code.gridstart;
 
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.Separator;
+import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
-
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
-import edu.isi.pegasus.planner.classes.TransferJob;
-import edu.isi.pegasus.planner.classes.PegasusFile;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
-
-import edu.isi.pegasus.common.logging.LogManager;
-import edu.isi.pegasus.planner.common.PegasusProperties;
-
-
-import edu.isi.pegasus.planner.namespace.Condor;
-import edu.isi.pegasus.planner.namespace.Pegasus;
-
+import edu.isi.pegasus.planner.classes.TransferJob;
+import edu.isi.pegasus.planner.cluster.JobAggregator;
 import edu.isi.pegasus.planner.code.GridStart;
-
 import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParser;
 import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParserException;
-
+import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.namespace.Condor;
+import edu.isi.pegasus.planner.namespace.Globus;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.transfer.SLS;
-
-
-import edu.isi.pegasus.common.util.Separator;
-
-import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
-
-import edu.isi.pegasus.planner.catalog.TransformationCatalog;
-import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
-
-import edu.isi.pegasus.planner.cluster.JobAggregator;
-
-import java.util.Iterator;
-import java.util.StringTokenizer;
-import java.util.Set;
-import java.util.List;
-import java.util.ArrayList;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.StringTokenizer;
 
 
 /**
@@ -668,6 +655,8 @@ public class Kickstart implements GridStart {
             gridStartArgs.append("-T ").append(mConcDAG.getMTime()).append(" ");
         }
 
+        gridStartArgs.append( getKickstartTimeoutOptions( job ) );
+        
         /*
         mLogger.log( "User executables staged for job " + job.getID() + " " + job.userExecutablesStagedForJob() ,
                      LogManager.DEBUG_MESSAGE_LEVEL );
@@ -1296,6 +1285,71 @@ public class Kickstart implements GridStart {
         job.envVariables.construct( this.KICKSTART_CLEANUP, ps.toString() );
 
         return;
+    }
+
+    /**
+     * Generates the argument fragment related to kickstart -k and -K options
+     * 
+     * @param job   the job.
+     * 
+     * @return 
+     */
+    private String getKickstartTimeoutOptions(Job job) {
+        StringBuilder sb = new StringBuilder();
+        
+        if( job.vdsNS.containsKey( Pegasus.CHECKPOINT_TIME ) ){
+            //means there is expectation of timeout functionality
+            int checkpointTime = job.vdsNS.getIntValue( Pegasus.CHECKPOINT_TIME, Integer.MAX_VALUE );
+            
+            if( checkpointTime == Integer.MAX_VALUE ){
+                //malformed value
+                return sb.toString();
+            }
+            
+            //expected time is the time after which kickstart sends
+            //the TERM signal to job 
+            sb.append( " -k " ).append( checkpointTime );
+            
+            int max = Integer.MAX_VALUE;
+            if( job.vdsNS.containsKey( Pegasus.MAX_WALLTIME) ){
+                max = job.vdsNS.getIntValue( Pegasus.MAX_WALLTIME, Integer.MAX_VALUE  );
+            }
+            else if ( job.globusRSL.containsKey( Globus.MAX_WALLTIME) ){
+                max = job.globusRSL.getIntValue( Globus.MAX_WALLTIME, Integer.MAX_VALUE  );
+            }
+            
+            if( max == Integer.MAX_VALUE ){
+                //means user never specified a maxwalltime
+                //or a malformed value
+                //we don't determnine the -K parameter
+                return sb.toString();
+            }
+            
+            //maxwalltime is specified in minutes.
+            //convert to seconds for kickstart
+            max = max * 60;
+            
+            //we set the -K parameter to half the difference between
+            //maxwalltime - checkpointTime
+            int diff = max - checkpointTime;
+            if( diff < 10 ){
+                //throw error
+                throw new RuntimeException( "Insufficient difference between maxwalltime " + 
+                                            max + " and expected walltime " + checkpointTime );
+            }
+            
+            //we divide the difference equaully.
+            //give equal time to generate the checkpoint file and 
+            //the time to transfer the file
+            //kill time is the time after which kickstart sends
+            //the KILL signal to job 
+            sb.append( " -K " ).append( diff/2 ).append( " " );
+            
+            return sb.toString();
+        }
+        
+        return sb.toString();
+        
     }
 
 

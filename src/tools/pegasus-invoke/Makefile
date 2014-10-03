@@ -57,15 +57,15 @@ endif
 
 ifeq (LINUX,${SYSTEM})
 ifeq (ia64,${MARCH})
-CFLAGS  = -Wall -O2 -ggdb
+CFLAGS  += -Wall -O2 -ggdb
 else
 ifeq (x86_64,${MARCH})
-CFLAGS  = -Wall -O2 -ggdb -m64
+CFLAGS  += -Wall -O2 -ggdb -m64
 else
 ifeq (armv7l,${MARCH})
-CFLAGS	= -Wall -02 -ggdb
+CFLAGS	+= -Wall -O2 -ggdb
 else
-CFLAGS  = -Wall -O2 -march=i686 -ggdb
+CFLAGS  += -Wall -O2 -ggdb
 #EXTRA_LDFLAGS += -static
 endif
 endif
@@ -80,7 +80,7 @@ CFLAGS += -D${SYSTEM} -DMAJOR=${MAJOR} -DMINOR=${MINOR}
 #CFLAGS += -D_POSIX_C_SOURCE=199506 -D__USE_XOPEN_EXTENDED
 
 %.o : %.c
-	$(CC) $(CFLAGS) $< -c -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) $< -c -o $@
 
 all : pegasus-invoke
 

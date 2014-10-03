@@ -41,7 +41,7 @@ CommandMessage::CommandMessage(char *msg, unsigned msgsize, int source) : Messag
     off += sizeof(nargs);
 
     // Now retrieve the arguments
-    for (int i = 0; i<nargs; i++) {
+    for (unsigned i = 0; i<nargs; i++) {
         string arg = msg + off;
         off += arg.length() + 1;
         this->args.push_back(arg);

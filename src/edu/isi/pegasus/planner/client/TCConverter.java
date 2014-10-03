@@ -50,8 +50,7 @@ public class TCConverter
     extends Executable {
     
 	
-	
-	/**
+    /**
      * The default database .
      */
     private static String DEFAULT_DATABASE = "MySQL";
@@ -73,7 +72,7 @@ public class TCConverter
     /**
      * The supported transformation formats.
      */
-    private static final String[] SUPPORTED_TRANSFORMATION_FORMAT = {TEXT_FORMAT ,FILE_FORMAT,DATABASE_FORMAT};
+    private static final String[] SUPPORTED_TRANSFORMATION_FORMAT = {TEXT_FORMAT ,FILE_FORMAT};
     
     
     /**
@@ -148,8 +147,8 @@ public class TCConverter
     protected void initialize(String[] opts){
     	super.initialize(opts);
     	//the output format is whatever user specified in the properties
-        mOutputFormat = mProps.getTCMode();
-        mInputFormat  = TCConverter.TEXT_FORMAT;
+        mOutputFormat = TCConverter.TEXT_FORMAT;
+        mInputFormat  = TCConverter.FILE_FORMAT;
         mDatabase = TCConverter.DEFAULT_DATABASE;
         mDatabaseHost ="localhost";
         mInputFiles = null;
@@ -482,7 +481,9 @@ public class TCConverter
             "\n " + getGVDSVersion() +
             "\n Usage: pegasus-tc-converter [-Dprop  [..]]  -I <input format> -O <output format> " +
             "\n        [-i <list of input files>] [-o <output file to write>] " +
+            /* Disable Database conversion options
             "\n        [-N <database user name>] [-P <database user password>] [-U <database url>] [-H <database host>] " +
+             */
             "\n        [-c <path to property file>] [-v] [-q] [-V] [-h] \n Type 'pegasus-tc-converter --help' for more help.";
 
         System.out.println(text);
@@ -496,24 +497,28 @@ public class TCConverter
         text.append("\n " );
         text.append("\n Usage: pegasus-tc-converter [-Dprop  [..]]  [--iformat <input format>] [--oformat <output format>]" );
         text.append("\n       [--input <list of input files>] [--output <output file to write>] ");
+        /* Disable Database conversion options
         text.append("\n       [--db-user-name <database user name>] [--db-user-pwd <database user password>] [--db-url <database url>] [--db-host <database host>]");
+        */
         text.append("\n       [--conf <path to property file>] [--verbose] [--quiet][--Version] [--help]" );
         text.append("\n" );   
         text.append("\n" );
         text.append("\n Mandatory Options " );
         text.append("\n" );
-        text.append("\n -I |--iformat        the input format for the files . Can be [Text ,File ,Database] "  ); 
-        text.append("\n -O |--oformat        the output format of the file. Can be [Text ,File ,Database] " );
+        text.append("\n -I |--iformat        the input format for the files . Can be [Text ,File] "  ); 
+        text.append("\n -O |--oformat        the output format of the file. Can be [Text ,File ] " );
         text.append("\n -i |--input          comma separated list of input files to convert.This option is mandatory when input format is Text or file " );
         text.append("\n -o |--output         the output file to which the output needs to be written to. This option is mandatory when output format is Text or file " );
         text.append("\n" );
         text.append("\n" );
         text.append("\n Other Options " );
         text.append("\n" );
+        /* Disable Database conversion options
         text.append("\n -N |--db-user-name   the database user name "  ); 
         text.append("\n -P |--db-user-pwd    the database user password " );
         text.append("\n -U |--db-url         the database url "  ); 
         text.append("\n -H |--db-host        the database host " );
+        */
         text.append("\n -c |--conf           path to  property file" );
         text.append("\n -v |--verbose        increases the verbosity of messages about what is going on" );
         text.append("\n -q |--quiet          decreases the verbosity of messages about what is going on" );
@@ -523,11 +528,13 @@ public class TCConverter
         text.append("\n" ); 
         text.append("\n Example Usage " );
         text.append("\n Text to file format conversion :- " ); 
-        text.append("  pegasus-tc-converter  -i tc.txt -I Text -o tc.data  -O File -v");
+        text.append("  pegasus-tc-converter  -i tc.data -I File -o tc.text  -O Text -v");
+        /* Disable Database conversion options
         text.append("\n File to Database(new) format conversion  :- " ); 
         text.append("  pegasus-tc-converter  -i tc.data -I File -N mysql_user -P mysql_pwd -U jdbc:mysql://localhost:3306/tc -H localhost  -O Database -v" );
         text.append("\n Database(existing specified in properties file) to text format conversion  :-" ); 
         text.append("  pegasus-tc-converter  -I Database -o tc.txt -O Text -vvvvv");
+        */
             
         System.out.println(text.toString());
 

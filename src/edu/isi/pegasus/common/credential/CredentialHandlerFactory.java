@@ -62,6 +62,8 @@ public class CredentialHandlerFactory {
 
     private static final String S3_IMPLEMENTING_CLASS = "S3CFG";
 
+    private static final String GS_IMPLEMENTING_CLASS = "BotoConfig";
+    
     private static final String SSH_IMPLEMENTING_CLASS = "Ssh";
     
     /**
@@ -77,6 +79,7 @@ public class CredentialHandlerFactory {
             mImplementingClassNameTable.put( CredentialHandler.TYPE.x509, X509_IMPLEMENTING_CLASS);
             mImplementingClassNameTable.put( CredentialHandler.TYPE.irods, IRODS_IMPLEMENTING_CLASS);
             mImplementingClassNameTable.put( CredentialHandler.TYPE.s3, S3_IMPLEMENTING_CLASS);
+            mImplementingClassNameTable.put( CredentialHandler.TYPE.gs, GS_IMPLEMENTING_CLASS);
             mImplementingClassNameTable.put( CredentialHandler.TYPE.ssh, SSH_IMPLEMENTING_CLASS);
         }
         return mImplementingClassNameTable;

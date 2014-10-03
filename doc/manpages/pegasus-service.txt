@@ -1,0 +1,30 @@
+pegasus-service(1)
+==================
+:doctype: manpage
+
+Name
+----
+pegasus-service - Runs the Pegasus Service server
+
+Synopsis
+--------
+[verse]
+*pegasus-service* [options]
+
+Options
+-------
+*-h*::
+*--help*::
+    Print help message
+*-d*::
+*--debug*::
+    Enable debugging
+
+Configuration
+-------------
+The host, port and database can be specified in the configuration file.
+
+Authors
+-------
+Pegasus Team `<pegasus@isi.edu>`
+

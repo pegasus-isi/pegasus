@@ -19,45 +19,19 @@
 #include <sys/resource.h>
 
 typedef struct {
-  int            resource;  /* which resource, e.g. RLIMIT_STACK */
-  int            error;     /* errno after call to getrlimit */
-  struct rlimit  limit;     /* resource limits acquired */
+    int            resource;  /* which resource, e.g. RLIMIT_STACK */
+    int            error;     /* errno after call to getrlimit */
+    struct rlimit  limit;     /* resource limits acquired */
 } SingleLimitInfo;
 
 typedef struct {
-  size_t            size;
-  SingleLimitInfo*  limits;
+    size_t            size;
+    SingleLimitInfo*  limits;
 } LimitInfo;
 
-extern
-void
-initLimitInfo( LimitInfo* limits );
-/* purpose: initializes the data structure
- * paramtr: limits (OUT): sufficiently large memory block
- */
-
-extern
-void
-updateLimitInfo( LimitInfo* limits );
-/* purpose: initializes the data with current limits
- * paramtr: limits (IO): sufficiently large memory block
- */
-
-extern
-void
-deleteLimitInfo( LimitInfo* limits );
-/* purpose: destructor
- * paramtr: limits (IO): valid LimitInfo structure to destroy. 
- */
-
-extern
-int
-printXMLLimitInfo(FILE *out, int indent, const LimitInfo* limits);
-/* purpose: format the rusage record into the given stream as XML.
- * paramtr: out (IO): the stream
- *          indent (IN): indentation level
- *          limits (IN): observed resource limits
- * returns: 0 if no error
- */
+extern void initLimitInfo(LimitInfo* limits);
+extern void updateLimitInfo(LimitInfo* limits);
+extern void deleteLimitInfo(LimitInfo* limits);
+extern int printXMLLimitInfo(FILE *out, int indent, const LimitInfo* limits);
 
 #endif /* _LIMIT_INFO_H */

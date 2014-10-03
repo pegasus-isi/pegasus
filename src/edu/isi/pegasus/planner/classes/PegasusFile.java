@@ -99,6 +99,11 @@ public class PegasusFile extends Data {
      */
     public static final String EXECUTABLE_TYPE = "executable";
     
+    /**
+     * The string value of a file that is of type checkpoint file.
+     * @see #DATA_FILE
+     */
+    public static final String CHECKPOINT_TYPE = "checkpoint";
     
     /**
      * The string value of a file that is of type other.
@@ -117,9 +122,14 @@ public class PegasusFile extends Data {
     public static final int EXECUTABLE_FILE = 1;
 
     /**
+     * The type denoting that a logical file is a checkpoint file.
+     */
+    public static final int CHECKPOINT_FILE = 2;
+    
+    /**
      * The type denoting that a logical file is an other file.
      */
-    public static final int OTHER_FILE = 2;
+    public static final int OTHER_FILE = 3;
     
     /**
      * The logical name of the file.
@@ -133,6 +143,7 @@ public class PegasusFile extends Data {
      * @see #DATA_FILE
      * @see #EXECUTABLE_FILE
      * @see #OTHER_FILE
+     * @see #CHECKPOINT_FILE
      */
     protected int mType;
 
@@ -297,11 +308,17 @@ public class PegasusFile extends Data {
      *
      * @see #DATA_FILE
      * @see #EXECUTABLE_FILE
+     * @see #CHECKPOINT_FILE
      */
     public void setType(int type) throws IllegalArgumentException{
 
         if(typeValid(type)){
             mType = type;
+            
+            if( mType == PegasusFile.CHECKPOINT_FILE ){
+                //a checkpoint file is also an optional file
+                this.setFileOptional();
+            }
         }
         else{
             throw new IllegalArgumentException();
@@ -324,13 +341,16 @@ public class PegasusFile extends Data {
             throw new IllegalArgumentException( "Invalid Type passed " + type );
 
         if( type.equals( PegasusFile.DATA_TYPE )){
-            mType = PegasusFile.DATA_FILE;
+            setType( PegasusFile.DATA_FILE );
         }
         else if( type.equals( PegasusFile.EXECUTABLE_TYPE )){
-            mType = PegasusFile.EXECUTABLE_FILE;
+            setType( PegasusFile.EXECUTABLE_FILE );
+        }
+        else if( type.equals( PegasusFile.CHECKPOINT_TYPE )){
+            setType( PegasusFile.CHECKPOINT_FILE );
         }
         else if( type.equals( PegasusFile.OTHER_TYPE )){
-            mType = PegasusFile.OTHER_FILE;
+            setType( PegasusFile.OTHER_FILE );
         }
         else{
             throw new IllegalArgumentException( "Invalid Type passed " + type );
@@ -599,17 +619,26 @@ public class PegasusFile extends Data {
          return this.mLogicalFile.hashCode();
      }
 
-     /**
+    /**
+     * Returns a boolean indicating if a file that is being staged is an
+     * executable or not (i.e is a data file).
+     *
+     * @return boolean indicating whether a file is executable or not.
+     */
+    public boolean isExecutable(){
+       return (this.mType == PegasusFile.EXECUTABLE_FILE);
+    }
+
+
+    /**
       * Returns a boolean indicating if a file that is being staged is an
       * executable or not (i.e is a data file).
       *
-      * @return boolean indicating whether a file is executable or not.
+      * @return boolean indicating whether a file is a checkpoint file or not.
       */
-     public boolean isExecutable(){
-        return (this.mType == PegasusFile.EXECUTABLE_FILE);
+     public boolean isCheckpointFile(){
+        return (this.mType == PegasusFile.CHECKPOINT_FILE);
      }
-
-
 
     /**
      * Returns a copy of the existing data object.

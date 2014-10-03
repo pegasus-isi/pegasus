@@ -59,7 +59,7 @@ START_TS=`/bin/date +'%s'`
     --conf pegasusrc \
     --sites condorpool \
     --staging-site local \
-    --dir work \
+    --dir submit \
     --output-site local \
     --cleanup leaf \
     --dax dax.xml \

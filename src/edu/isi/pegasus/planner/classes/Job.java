@@ -425,6 +425,11 @@ public class Job extends Data implements GraphNodeContent{
      * Set of credential types required by a job to execute remotely.
      */
     private Map<String, Set<CredentialHandler.TYPE>> mCredentialsType;
+    
+    /**
+     * The node label
+     */
+    private String mNodeLabel;
 
     /**
      * Intialises the member variables.
@@ -464,6 +469,7 @@ public class Job extends Data implements GraphNodeContent{
         mDirectory       = null;
         mCredentialsType = new HashMap<String, Set<CredentialHandler.TYPE> >();
         mSubmissionCredential = null;
+        mNodeLabel       = null;
 //        submitDirectory  = null;
     }
 
@@ -507,6 +513,7 @@ public class Job extends Data implements GraphNodeContent{
         mDirectory       = job.mDirectory;
         mSubmissionCredential = job.mSubmissionCredential;
         mCredentialsType = new HashMap<String, Set<CredentialHandler.TYPE>>();
+        mNodeLabel       = null;
 //        submitDirectory  = job.submitDirectory;
     }
 
@@ -573,6 +580,7 @@ public class Job extends Data implements GraphNodeContent{
             }
         }
 
+        newSub.mNodeLabel = this.mNodeLabel;
         return newSub;
     }
     
@@ -786,6 +794,9 @@ public class Job extends Data implements GraphNodeContent{
         }
         else if( url.startsWith( "s3" ) ){
             this.addCredentialType( site, CredentialHandler.TYPE.s3 );
+        }
+        else if( url.startsWith( "gs" ) ){
+            this.addCredentialType( site, CredentialHandler.TYPE.gs );
         }
         else if( url.startsWith( "irods" ) ){
             this.addCredentialType( site, CredentialHandler.TYPE.irods  );
@@ -1085,6 +1096,26 @@ public class Job extends Data implements GraphNodeContent{
     public void setName(String name){
         jobName = name;
     }
+    
+    /**
+     * Get the node label for the job
+     * 
+     * @return the label
+     */
+    public String getNodeLabel( ) {
+        return mNodeLabel;
+    }
+    
+    
+    /**
+     * Sets the node label for the job
+     * 
+     * @param label  the label value specified
+     */
+    public void setNodeLabel(String label) {
+        mNodeLabel = label;
+    }
+
 
     /**
      * Returns the directory where the job runs.
@@ -1875,6 +1906,7 @@ public class Job extends Data implements GraphNodeContent{
         append( sb, "Logical Id", this.logicalId , newline );
         append( sb, "Transformation", this.getCompleteTCName() , newline );
         append( sb, "Derivation", this.getCompleteDVName() , newline );
+        append( sb, "Node Label", this.getNodeLabel(), newline );
         append( sb, "Level", new Integer(this.level).toString() , newline );
         append( sb, "Job Type Description", getJobTypeDescription(this.jobClass) , newline );
         append( sb, "Job Id" , this.jobID , newline );
@@ -2077,5 +2109,6 @@ public class Job extends Data implements GraphNodeContent{
             }
     }
 
+    
 
 }

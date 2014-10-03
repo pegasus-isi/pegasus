@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<chapter id="service">
+    <title>Pegasus Service</title>
+    <section>
+        <title>Service Administration</title>
+
+        <section>
+            <title>Service Configuration</title>
+
+            <para>
+                The configuration file is $HOME/.pegasus/service.py. Look in
+                lib/pegasus/python/pegasus/service/defaults.py for the variable
+                names and default values.
+            </para>
+
+            <para>
+                You can change the host and port of the service by setting the
+                SERVER\_HOST and SERVER\_PORT variables.
+            </para>
+
+            <para>
+                All clients that connect to the web API will require the
+                USERNAME and PASSWORD settings in the configuration file.
+            </para>
+        </section>
+
+        <section>
+            <title>Running the Service</title>
+
+            <para>
+                Once the service is installed (normally or in development mode)
+                and configured you can start the server by running:
+            </para>
+
+            <literallayout class="monospaced">$ pegasus-service</literallayout>
+
+            <para>
+                By default, the server will start on 
+                <ulink url="http://localhost:5000">http://localhost:5000</ulink>.
+                You can set the host and port in the configuration file.
+            </para>
+        </section>
+    </section>
+
+    <section>
+        <title>Dashboard</title>
+
+        <para>TBD</para>
+
+    </section>
+
+    <section>
+        <title>Ensemble Manager</title>
+
+        <para>
+            The ensemble manager is a service that manages collections of workflows
+            called ensembles. The ensemble manager is useful when you have a set of
+            workflows you need to run over a long period of time. It can throttle
+            the number of concurrent planning and running workflows, and plan and
+            run workflows in priority order. A typical use-case is a user with 100
+            workflows to run, who needs no more than one to be planned at a time,
+            and needs no more than two to be running concurrently.
+        </para>
+
+        <para>
+            The ensemble manager also allows workflows to be submitted and monitored
+            programmatically through its RESTful interface, which makes it an ideal
+            platform for integrating workflows into larger applications such as
+            science gateways and portals.
+        </para>
+
+        <para>
+            The ensemble manager requires Pegasus and Condor. It will start
+            automatically when pegasus-service is started if Pegasus and Condor
+            are found in the server&apos;s PATH, or if the PEGASUS\_HOME and
+            CONDOR\_HOME settings are specified correctly in the configuration
+            file.
+        </para>
+
+        <para>
+            Once the ensemble manager is running, you can create an ensemble with:
+        </para>
+
+        <literallayout class="monospaced">$ pegasus-em create -e "myruns"</literallayout>
+
+        <para>where "myruns" is the name of the ensemble.</para>
+
+        <para>
+            Then you can submit a workflow to the ensemble using the previously
+            uploaded catalogs:
+        </para>
+
+        <literallayout class="monospaced">$ pegasus-em submit -e "myruns" -w "run1" -b run1.zip \
+        -s local -o local --cleanup leaf</literallayout>
+
+        <para>
+            Where the name of the workflow is run1, and run1.zip is a
+            workflow bundle containing a pegasus.properties file with a
+            property pegasus.dax.file that contains the path of the dax file.
+        </para>
+
+        <para>To check the status of your ensembles run:</para>
+
+        <literallayout class="monospaced">$ pegasus-em ensembles</literallayout>
+
+        <para>To check the status of your workflows run:</para>
+
+        <literallayout class="monospaced">$ pegasus-em workflows -e "myruns"</literallayout>
+
+    </section>
+
+</chapter>

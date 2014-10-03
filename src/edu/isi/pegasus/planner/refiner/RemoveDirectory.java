@@ -155,7 +155,7 @@ public class RemoveDirectory extends Engine {
 
     
     /**
-     * The job prefix that needs to be applied to the job file basenames.
+     * The job prefix that needs to be applied to the job url basenames.
      */
     protected String mJobPrefix;
     
@@ -384,41 +384,81 @@ public class RemoveDirectory extends Engine {
      */
     public Job makeRemoveDirJob( String site, String jobName ) {
         
-        List<String> l = new LinkedList<String>();
-
+        List<String> urls = new LinkedList<String>();
+        List<String> files = new LinkedList<String>();
         //the externally accessible url to the directory/ workspace for the workflow
-        l.add( mSiteStore.getExternalWorkDirectoryURL( site, FileServer.OPERATION.put )  );
-        return makeRemoveDirJob( site, jobName, l  );
+        urls.add( mSiteStore.getExternalWorkDirectoryURL( site, FileServer.OPERATION.put )  );
+        files.add(mSiteStore.getInternalWorkDirectory( site, null ) );
+        return makeRemoveDirJob( site, jobName, urls, files  );
     }
     
     /**
-     * It creates a remove directory job that creates a directory on the remote pool
-     * using the perl executable that Gaurang wrote. It access mkdir underneath.
-     * It gets the name of the random directory from the Pool handle.
-     *
+     * It creates a remove directory job that creates a directory on the remote site
+     * using pegasus-cleanup executable
+     * 
      * @param site      the site from where the directory need to be removed.
      * @param jobName   the name that is to be assigned to the job.
-     * @param files  the list of files to be cleaned up.
+     * @param urls      the list of urls for the files to be cleaned up.
      *
      * @return the remove dir job.
      */
-    public Job makeRemoveDirJob( String site, String jobName, List<String> files ) {
+    public Job makeRemoveDirJob( String site, String jobName, List<String> urls ) {
+        return this.makeRemoveDirJob(site, jobName, urls, null );
+    }
+    
+    /**
+     * It creates a remove directory job that creates a directory on the remote site
+     * using pegasus-cleanup executable
+     * 
+     * @param site      the site from where the directory need to be removed.
+     * @param jobName   the name that is to be assigned to the job.
+     * @param urls      the list of urls for the files to be cleaned u
+     * @param files     the corresponding list of file url paths.
+     *
+     * @return the remove dir job.
+     */
+    public Job makeRemoveDirJob( String site, String jobName, List<String> urls, List<String> files ) {
         Job newJob  = new Job();
         List entries    = null;
         String execPath = null;
         TransformationCatalogEntry entry   = null;
 
-
+        //PM-773 we only do checks for leaf cleanup jobs
+        boolean additionalChecks = !(files == null);
+        if( additionalChecks && urls.size() != files.size() ){
+            throw new RuntimeException( "Mismatch in URLS and corresponding files " + urls.size() + "," + files.size());
+        }
 
         //the site where the cleanup job will run
         String eSite = "local";
 
-        for( String file: files ){
-            if( file.startsWith( PegasusURL.FILE_URL_SCHEME ) ){
+        int index = 0;
+        for( String url: urls ){
+            if( url.startsWith( PegasusURL.FILE_URL_SCHEME ) ){
                 //means the cleanup job should run on the staging site
-                mLogger.log( "Directory URL is a file url for site " + site + "  " +  files,
+                mLogger.log( "Directory URL is a file url for site " + site + "  " +  urls,
                                  LogManager.DEBUG_MESSAGE_LEVEL );
                 eSite = site;
+            }
+        }
+        
+        //PM-773
+        if( additionalChecks ){
+            String submitDir = mPOptions.getSubmitDirectory();
+            //check if the submit directory is the same the file being asked to remove
+            for( String file: files ){
+                if( submitDir.equals( file) ){
+                    //if the staging site is local then it is fatal error 
+                    //else we log a warning
+                    String error = "The submit directory and the scratch directory for the cleanup job match " + file;
+                    if( site.equals( "local") ){
+                        error += " . This will result in the cleanup job removing the submit directory as the workflow is running.";
+                        throw new RuntimeException( error );
+                    }
+                    else{
+                        mLogger.log( error, LogManager.WARNING_MESSAGE_LEVEL );
+                    }
+                }
             }
         }
 
@@ -482,7 +522,7 @@ public class RemoveDirectory extends Engine {
                                         new File( mSubmitDirectory, stdIn ) ));
 
             int fileNum = 1;
-            for( String file: files ){
+            for( String file: urls ){
                 writer.write( "# " + fileNum + " " + site );
                 writer.write( "\n" );
                 writer.write( file );
@@ -501,7 +541,7 @@ public class RemoveDirectory extends Engine {
             throw new RuntimeException( "While writing the stdIn file " + stdIn, e );
         }
 
-        //set the stdin file for the job
+        //set the stdin url for the job
         newJob.setStdIn( stdIn );
         
         newJob.jobName = jobName;
@@ -520,7 +560,7 @@ public class RemoveDirectory extends Engine {
         newJob.jobID = jobName;
 
         //PM-150 for leaf cleanup nodes we will set a specific recursive flag
-        newJob.setArguments( " --recursive ");
+        newJob.setArguments( " --recursive " );
         
         //the profile information from the pool catalog needs to be
         //assimilated into the job.
@@ -535,7 +575,7 @@ public class RemoveDirectory extends Engine {
         //overriding the one from pool catalog.
         newJob.updateProfiles(entry);
 
-        //the profile information from the properties file
+        //the profile information from the properties url
         //is assimilated overidding the one from transformation
         //catalog.
         newJob.updateProfiles(mProps);

@@ -151,7 +151,14 @@ public class GLite extends Abstract {
 
         job.condorVariables.construct( GLite.CONDOR_REMOTE_DIRECTORY_KEY,
                                        workdir == null ? null : quote(workdir) );
-
+        
+        //also set it as an environment variable, since for MPI jobs
+        //glite and BLAHP dont honor +remote_iwd and we cannot use kickstart
+        //the only way to get it to work is for the wrapper around the mpi
+        //executable to a cd to the directory pointed to by this variable.
+        if( workdir != null ){
+            job.envVariables.construct( "_PEGASUS_SCRATCH_DIR", workdir);
+        }
         
         /* transfer_executable does not work with gLite
          * Explicitly set to false */

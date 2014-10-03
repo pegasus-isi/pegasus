@@ -14,9 +14,11 @@ log = logging.getLogger(__name__)
 
 def main():
     # This configures logging
-    import Pegasus.common
+    from Pegasus.tools import utils
 
-    logging.getLogger("Pegasus.shadowq").setLevel(logging.INFO)
+    utils.configureLogging(logging.INFO)
+
+    logging.getLogger("Pegasus.shadowq")
 
     if len(sys.argv) != 2:
         print "Usage: %s DAGFILE" % sys.argv[0]

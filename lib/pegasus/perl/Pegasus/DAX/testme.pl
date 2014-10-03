@@ -65,10 +65,12 @@ if ( exists $ENV{'PEGASUS_HOME'} ) {
 
 my %hash = ( link => LINK_OUT, register => 'false', transfer => 'true' ); 
 my $fna = newFilename( name => $file->name, link => LINK_IN, size => '200' );
+my $fnchk = newFilename( name => 'test.checkpoint', link => LINK_CHECKPOINT );
 my $fnb1 = newFilename( name => 'f.b1', %hash );
 my $fnb2 = newFilename( name => 'f.b2', %hash ); 
 $job1->addArgument( '-a', $job1->name, '-T60', '-i', $fna,
 		    '-o', $fnb1, $fnb2 ); 
+$job1->uses( $fnchk);
 $adag->addJob($job1); 
 
 my %hash1 = ( link => LINK_OUT, register => 'false', transfer => 'true', size => '100' );

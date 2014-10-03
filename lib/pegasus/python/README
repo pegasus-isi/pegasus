@@ -10,4 +10,5 @@ This package contains the Python APIs for Pegasus WMS, including:
 5. The Pegasus statistics API
 6. The Pegasus plots API
 7. Misc. Pegasus utilities
+8. The pegasus service, including the ensemble manager and dashboard
 

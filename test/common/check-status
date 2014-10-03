@@ -31,23 +31,26 @@ if [ ! -e braindump.txt ]; then
     exit 1
 fi
 
-TIMEOUT=360
-COUNT=0
+# minutes
+TIMEOUT=120
+
+START_TS=`date +'%s'`
+MAX_TS=`echo "$START_TS + $TIMEOUT * 60" | bc`
 
 sleep 30s
 update_status
 show_state
 
 while [ "$STATUS" = "Running" -o "$STATUS" = "" -o "$STATUS" = "Unknown"  ] ; do 
-    if [ $COUNT -ge $TIMEOUT ]; then
-        echo "Reached TIMEOUT of $TIMEOUT. Calling pegasus-remove"
+    NOW=`date +'%s'`
+    if [ $NOW -gt $MAX_TS ]; then
+        echo "Reached TIMEOUT of $TIMEOUT minutes. Calling pegasus-remove" 1>&2
         pegasus-remove `pwd`
         STATUS=TIMEOUT
         sleep 1m
         break;
     fi
-    ((COUNT++))
-    sleep 30s
+    sleep 1m
     update_status
     show_state
 done
@@ -58,7 +61,7 @@ if [ "$STATUS" = "Success" ]; then
     echo "*** Workflow finished succesfully ***"
     exit 0
 else
-    echo "*** Workflow failed ***"
+    echo "*** Workflow failed ***" 1>&1
     exit 1
 fi
 

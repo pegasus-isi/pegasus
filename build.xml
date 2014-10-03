@@ -119,18 +119,6 @@
     </javac>
   </target>
 
-  <target name="compile-contrib" depends="setup" description="Compile contributed java code">
-    <javac destdir="${build.src}" srcdir="src"
-           encoding="UTF-8" deprecation="true" debug="true"
-           target="${build.target}" source="${build.source}"
-           includes="edu/clemson/**/*.java"
-           excludes="edu/clemson/**/*Test.java"
-           classpathref="build.classpath"
-           includeantruntime="false">
-      <compilerarg value="${compile.lint}"/>
-    </javac>
-  </target>
-
   <target name="compile-vdl" depends="setup" description="Compile java VDL code">
     <javac destdir="${build.src}" srcdir="src"
            target="${build.target}" source="${build.source}"
@@ -181,16 +169,16 @@
     </javac>
   </target>
 
-  <target name="compile-java" depends="compile-vdl,compile-planner,compile-contrib,compile-common,compile-examples,compile-junit" description="Copile all java code"/>
+  <target name="compile-java" depends="compile-vdl,compile-planner,compile-common,compile-examples,compile-junit" description="Copile all java code"/>
 
   <target name="compile" depends="compile-java,compile-ctools,compile-externals" description="Compile all code"/>
 
   <target name="jar" depends="jar-planner,jar-junit,jar-vdl" description="Generate all jar files"/>
 
-  <target name="jar-planner" depends="compile-contrib,compile-common,compile-planner,compile-examples" description="Generate planner jar">
+  <target name="jar-planner" depends="compile-common,compile-planner,compile-examples" description="Generate planner jar">
     <mkdir dir="${dist.jars}"/>
     <jar destfile="${dist.jars}/pegasus.jar" basedir="${build.src}"
-         includes="*.properties,edu/isi/pegasus/**/*.class,edu/isi/ikcap/**/*.class,edu/clemson/**/*.class"
+         includes="*.properties,edu/isi/pegasus/**/*.class,edu/isi/ikcap/**/*.class"
          excludes="*.class,edu/isi/pegasus/planner/test/**/*.class,edu/isi/pegasus/**/*Test.class,org/griphyn/**/*Test.class,org/griphyn/**/*.class"/>
     <chmod perm="0644" file="${dist.jars}/pegasus.jar"/>
   </target>
@@ -315,12 +303,18 @@
   <target name="doc" depends="setup,doc-schemas,doc-manpages,doc-user-guide,doc-java,doc-python,doc-perl,doc-tutorial" description="Generate documentation"/>
 
   <target name="compile-ctools" depends="setup" description="Compile C tools">
-    <mkdir dir="${dist.bin}"/>
     <exec executable="${make}" dir="src/tools" failonerror="true">
       <env key="prefix" value="${dist.dir}"/>
       <env key="datadir" value="${dist.data}"/>
       <arg line="prefix=${dist.dir}"/>
       <arg line="datadir=${dist.data}"/>
+      <arg line="install"/>
+    </exec>
+  </target>
+
+  <target name="compile-pmc" depends="setup" description="Compile Pegasus MPI cluster">
+    <exec executable="${make}" dir="src/tools/pegasus-mpi-cluster" failonerror="true">
+      <arg line="prefix=${dist.dir}"/>
       <arg line="install"/>
     </exec>
   </target>
@@ -341,12 +335,9 @@
 
   <target name="compile-python" depends="dist-clean,setup">
     <mkdir dir="${dist.python-lib}"/>
-    <copy preservelastmodified="true" todir="${dist.python-lib}">
-      <fileset dir="lib/pegasus/python">
-        <exclude name="setup.py"/>
-        <include name="**/*.py"/>
-      </fileset>
-    </copy>
+    <exec executable="/usr/bin/env" dir="lib/pegasus/python" failonerror="true">
+      <arg line="python setup.py install_lib -d ${dist.python-lib}"/>
+    </exec>
     <chmod perm="0755" type="file">
       <fileset dir="${dist.python-lib}">
         <include name="Pegasus/plots_stats/plots/populate.py"/>
@@ -497,6 +488,9 @@
     <exec executable="${make}" dir="src/tools" failonerror="true">
       <arg line="distclean"/>
     </exec>
+    <exec executable="${make}" dir="src/tools/pegasus-mpi-cluster" failonerror="true">
+      <arg line="distclean"/>
+    </exec>
     <exec executable="${bash}" dir="src/externals" failonerror="true">
       <arg line="setup.sh clean"/>
     </exec>
@@ -523,11 +517,11 @@
     </junit>
   </target>
 
-  <target name="test-python" description="Execute python unit tests">
-    <exec executable="/usr/bin/env" dir="test/python" failonerror="true">
-        <arg line="python -m unittest discover -v"/>
-        <env key="PYTHONPATH" value="${basedir}/lib/pegasus/python"/>
-   </exec>
+  <target name="test-python" depends="compile-externals" description="Execute python unit tests">
+    <exec executable="/usr/bin/env" dir="lib/pegasus/python" failonerror="true">
+      <env key="PYTHONPATH" value="${dist.lib}/pegasus/externals/python"/>
+      <arg line="python test.py"/>
+    </exec>
   </target>
 
   <target name="test-kickstart" description="Run kickstart unit tests">

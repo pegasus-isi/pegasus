@@ -416,6 +416,27 @@ public abstract class Namespace /*extends Data*/{
    }
 
    /**
+     * Returns a boolean value, that a particular key is mapped to in this
+     * namespace. If the key is mapped to a non boolean
+     * value or the key is not populated in the namespace false is returned.
+     *
+     * @param key  The key whose boolean value you desire.
+     *
+     * @return boolean
+     */
+    public int getIntValue(Object key, int deflt ){
+        int value = deflt;
+        if(mProfileMap != null && mProfileMap.containsKey(key)){
+            try{
+                value = Integer.parseInt( (String) mProfileMap.get(key));
+            }catch( Exception e ){
+                
+            }
+        }
+        return value;
+    }
+    
+   /**
     * Warns about an unknown profile key and constructs it anyway.
     * Constructs a new RSL element of the format (key=value).
     *

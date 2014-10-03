@@ -48,6 +48,10 @@ ifeq (Darwin,$(OS))
   OPSYS = DARWIN
   SIGN = codesign -s "Pegasus Development" $@ || true
 endif
+ifeq (GNU/kFreeBSD,$(OS))
+  OPSYS = GNUKFREEBSD
+  SIGN = 
+endif
 ifndef OPSYS
   $(error Unsupported OS: $(OS))
 endif

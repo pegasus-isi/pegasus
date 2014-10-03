@@ -180,7 +180,6 @@ public class PegasusProperties implements Cloneable {
     public static final String DEFAULT_DAGMAN_MAX_PRE_VALUE = "1";
 
 
-
     /**
      * An enum defining The scope for cleanup algorithm
      */
@@ -625,6 +624,17 @@ public class PegasusProperties implements Cloneable {
      */
     public File getSysConfDir() {
         return mProps.getSysConfDir();
+    }
+    
+    /**
+     * Removes a property from the soft state.
+     * 
+     * @param key  the key
+     * 
+     * @return the corresponding value if key exits, else null 
+     */
+    public String removeProperty( String key ){
+        return mProps.removeProperty( key );
     }
     
     //PROPERTIES RELATED TO SCHEMAS
@@ -2071,32 +2081,6 @@ public class PegasusProperties implements Cloneable {
     }
 
 
-    
-
-    /**
-     * Returns a boolean indicating whether to write out the planner metrics
-     * or not.
-     *
-     * Referred to by the "pegasus.log.metrics" property.
-     *
-     * @return boolean in the properties, else true
-     */
-    public boolean writeOutMetrics(){
-        return Boolean.parse( mProps.getProperty( "pegasus.log.metrics" ), true ) &&
-               (this.getMetricsLogFile() != null);
-    }
-
-    /**
-     * Returns the path to the file that is used to be logging metrics
-     *
-     * Referred to by the "pegasus.log.metrics.file" property.
-     *
-     * @return path to the metrics file if specified, else rundir/pegasus.metrics
-     */
-    public String getMetricsLogFile(){
-        String file = mProps.getProperty( "pegasus.log.metrics.file" );
-        return file;
-    }
 
     /**
      * Returns a boolean indicating whether to log JVM memory usage or not.
@@ -2251,6 +2235,17 @@ public class PegasusProperties implements Cloneable {
      */
     public String getPartitionParsingMode() {
         return mProps.getProperty( "pegasus.partition.parser.load", "single" );
+    }
+
+    /**
+     * Returns the scope for the data reusue module.
+     *
+     * Referred to by the "pegasus.data.reuse.scope" property.
+     *
+     * @return the value specified in the properties file, else null
+     */
+    public String getDataReuseScope() {
+        return mProps.getProperty( "pegasus.data.reuse.scope" );
     }
 
     

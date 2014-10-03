@@ -45,8 +45,7 @@ re_inline_comments = re.compile("#(.*)$") # not using it right now...
 system = {} # System properties
 initial = {} # Command-line properties
 
-# Get logger object (initialized elsewhere)
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 # Assemble system properties
 system["file.separator"] = ','
@@ -123,25 +122,21 @@ if len(sys.argv) > 0:
 # Merge the two, with command-line taking precedence over environmental variables
 system.update(initial)
 
-def parse_properties(fn, hashref={}):
+def parse_properties(my_file, hashref={}):
     """
     This functions parses properties from a file
     """
-    # fn is the filename of the property file to read
+    # my_file is the filename or file-like of the property file to read
     # hashref contains more properties for substitution (optional)
     # global system contains yet more properties for substitution
     # returns a map of properties, possibly empty
     my_result = {}
     my_save = ''
 
-    try:
-        my_file = open(fn, 'r')
-    except:
-        # Error opening file
-        logger.warn("Could not open %s!" % (fn))
-        return my_result
+    if isinstance(my_file, str):
+        my_file = open(my_file, 'r')
 
-    logger.debug("# parsing properties in %s..." % (fn))
+    logger.debug("# parsing properties in %s..." % (my_file))
 
     for line in my_file:
         line = line.strip(" \t") # Remove leading and trailing spaces, tabs
@@ -199,7 +194,7 @@ def parse_properties(fn, hashref={}):
                 # Insert key, value into my_result
                 my_result[k] = v
             else:
-                logger.fatal("Illegal content in %s: %s" % (fn, line))
+                logger.fatal("Illegal content in %s: %s" % (my_file, line))
                 sys.exit(1)
 
     my_file.close()

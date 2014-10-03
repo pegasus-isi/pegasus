@@ -393,7 +393,24 @@ public class Pegasus extends Namespace {
      * Arguments that need to be passed to the PMC clustering executable.
      */
     public static final String PMC_TASK_ARGUMENTS = "pmc_task_arguments";
-
+    
+    /**
+     * Key indicating whether to consider job for data reuse in the partial mode.
+     */
+    public static final String ENABLE_FOR_DATA_REUSE_KEY = "enable_for_data_reuse";
+    
+    /**
+     * Key indicating indicating time in seconds after which kickstart sends out a
+     * TERM signal to a job indicating that is should create a checkpoint file.
+     */
+    public static final String  CHECKPOINT_TIME = "checkpoint_time";
+    
+    /**
+     * Key indicating max walltime for a job in minutes
+     */
+    public static final String  MAX_WALLTIME = "maxwalltime";
+    
+    
     //credential related constant keys
     private static final String S3CFG_FILE_VARIABLE = S3CFG.S3CFG_FILE_VARIABLE.toLowerCase();
     private static final String SSH_PRIVATE_KEY_VARIABLE = Ssh.SSH_PRIVATE_KEY_VARIABLE.toLowerCase();
@@ -414,6 +431,8 @@ public class Pegasus extends Namespace {
      * Static Handle to the delimiter aggregator.
      */
     private static Aggregator SUCCESS_MESSAGE_AGGREGATOR = new UniqueMerge();
+   
+    
 
     /**
      * The name of the implementing namespace. It should be one of the valid
@@ -530,7 +549,8 @@ public class Pegasus extends Namespace {
                     (key.compareTo( MAX_RUN_TIME ) == 0) ||
                     (key.compareTo(CREATE_AND_CHANGE_DIR_KEY ) == 0 ) ||
                     (key.compareTo( CLUSTER_ARGUMENTS) == 0 ) ||
-                    (key.compareTo( CORES_KEY ) == 0 ) ) {
+                    (key.compareTo( CORES_KEY ) == 0 ) ||
+                    (key.compareTo( Pegasus.CHECKPOINT_TIME) == 0 )   ) {
                     res = VALID_KEY;
                 }
                 else if(key.compareTo(DEPRECATED_CHANGE_DIR_KEY) == 0 ||
@@ -544,7 +564,8 @@ public class Pegasus extends Namespace {
             
             case 'e':
                 if ((key.compareTo( Pegasus.EXITCODE_FAILURE_MESSAGE ) == 0) ||
-                    (key.compareTo(  Pegasus.EXITCODE_SUCCESS_MESSAGE  ) == 0) ) {
+                    (key.compareTo( Pegasus.EXITCODE_SUCCESS_MESSAGE ) == 0)||
+                    (key.compareTo( Pegasus.ENABLE_FOR_DATA_REUSE_KEY ) == 0 )  ) {
                     res = VALID_KEY;
                 }
                 else {
@@ -587,6 +608,15 @@ public class Pegasus extends Namespace {
 
             case 'l':
                 if( key.compareTo( LABEL_KEY ) == 0 ){
+                    res = VALID_KEY;
+                }
+                else{
+                    res = UNKNOWN_KEY;
+                }
+                break;
+                
+            case 'm':
+                if( key.compareTo( MAX_WALLTIME ) == 0 ){
                     res = VALID_KEY;
                 }
                 else{
@@ -881,9 +911,9 @@ public class Pegasus extends Namespace {
     }
 
     /**
-     * Returns a boolean value, that a particular key is mapped to in this
-     * namespace. If the key is mapped to a non boolean
-     * value or the key is not populated in the namespace false is returned.
+     * Returns a int value, that a particular key is mapped to in this
+     * namespace. If the key is mapped to a non integer, then the 
+     * default value is returned
      *
      * @param key  The key whose boolean value you desire.
      *
@@ -896,7 +926,6 @@ public class Pegasus extends Namespace {
         }
         return value;
     }
-
 
     /**
      * Returns a String value, that a particular key is mapped to in this

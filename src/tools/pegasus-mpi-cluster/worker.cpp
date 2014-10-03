@@ -104,7 +104,7 @@ FileForward::FileForward(const string &srcfile, const string &destfile, char *bu
 }
 
 FileForward::~FileForward() {
-    delete buff;
+    delete [] buff;
 }
 
 const char *FileForward::data() {
@@ -235,12 +235,12 @@ void TaskHandler::child_process() {
     if (dup2(task_stdout, STDOUT_FILENO) < 0) {
         log_fatal("Error redirecting stdout of task %s: %s", 
             name.c_str(), strerror(errno));
-        exit(1);
+        _exit(1);
     }
     if (dup2(task_stderr, STDERR_FILENO) < 0) {
         log_fatal("Error redirecting stderr of task %s: %s", 
             name.c_str(), strerror(errno));
-        exit(1);
+        _exit(1);
     }
 
     // Close the read end of all the pipes. This should force a
@@ -251,37 +251,32 @@ void TaskHandler::child_process() {
     }
 
     // Create argument structure
-    unsigned nargs = args.size();
-    char **argp = new char*[nargs+1];
-    for (unsigned i=0; i<nargs; i++) {
-        string arg = args.front();
-        argp[i] = new char[arg.size()+1];
-        if (sprintf(argp[i], "%s", arg.c_str()) == -1) {
-            log_fatal("Unable to create arguments: %s", strerror(errno));
-            exit(1);
-        }
-        args.pop_front();
+    char **argp = new char*[args.size()+1];
+    int j = 0;
+    for (list<string>::iterator i = args.begin(); i != args.end(); i++) {
+        string arg = *i;
+        char *a = new char[arg.size()+1];
+        strncpy(a, arg.c_str(), arg.size()+1);
+        argp[j++] = a;
     }
-    argp[nargs] = NULL;
+    argp[j] = NULL;
 
-    // Create environment structure. We need to copy the worker's
-    // environment, but also add env variables for the pipes used
-    // to forward I/O from the task.
-    unsigned nenvs = 0;
-    while (environ[nenvs]) nenvs++;
-    char **envp = new char*[nenvs+pipes.size()+1];
-    for (unsigned i=0; i<nenvs; i++) {
-        envp[i] = environ[i];
-    }
+    // Update environment. We need to add env variables for the pipes used to
+    // forward I/O from the task.
     for (unsigned i=0; i<pipes.size(); i++) {
         PipeForward *p = pipes[i];
-        envp[nenvs+i] = new char[p->varname.size()+11];
-        if (sprintf(envp[nenvs+i], "%s=%d", p->varname.c_str(), p->writefd) == -1) {
-            log_fatal("Unable to create environment: %s", strerror(errno));
-            exit(1);
+        char buf[32];
+        if (snprintf(buf, 32, "%d", p->writefd) >= 32) {
+            log_fatal("Unable to create environment value for pipe forward: %s",
+                      strerror(errno));
+            _exit(1);
+        }
+        if (setenv(p->varname.c_str(), buf, 1) < 0) {
+            log_fatal("Unable to set environment entry for pipe forward: %s",
+                      strerror(errno));
+            _exit(1);
         }
     }
-    envp[nenvs+pipes.size()] = NULL;
 
     // If the executable is not an absolute or relative path, then search PATH
     string executable = argp[0];
@@ -317,10 +312,10 @@ void TaskHandler::child_process() {
     }
 
     // Exec process
-    execve(executable.c_str(), argp, envp);
+    execve(executable.c_str(), argp, environ);
     fprintf(stderr, "Unable to exec command %s for task %s: %s\n", 
         executable.c_str(), name.c_str(), strerror(errno));
-    exit(1);
+    _exit(1);
 }
 
 /* Send all I/O forwarded data to master */
@@ -737,7 +732,7 @@ void Worker::run_host_script() {
         if (dup2(STDERR_FILENO, STDOUT_FILENO) < 0) {
             log_fatal("Unable to redirect host script stdout to stderr: %s", 
                 strerror(errno));
-            exit(1);
+            _exit(1);
         }
 
         // Create a new process group so we can kill it later if
@@ -745,7 +740,7 @@ void Worker::run_host_script() {
         if (setpgid(0, 0) < 0) {
             log_fatal("Unable to set process group in host script: %s", 
                 strerror(errno));
-            exit(1);
+            _exit(1);
         }
 
         // Close any other open descriptors. This will not really close
@@ -762,7 +757,7 @@ void Worker::run_host_script() {
         };
         execvp(argv[0], argv);
         fprintf(stderr, "Unable to exec host script: %s\n", strerror(errno));
-        exit(1);
+        _exit(1);
     } else {
 
         // Also set process group here to avoid potential races. It is 
@@ -906,11 +901,10 @@ int Worker::run() {
                     cmd->file_forwards);
 
             task.execute();
+            delete cmd;
         } else {
             myfailure("Unexpected message");
         }
-
-        delete mesg;
     }
 
     kill_host_script_group();

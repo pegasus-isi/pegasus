@@ -30,77 +30,36 @@
 #endif /* SYS_NMLN */
 
 typedef struct {
-  /* common (shared) portion */
-  const char*      provider;    /* name of this provider */
-  struct timeval   stamp;   /* when was this snapshot taken */
-  struct utsname   uname;   /* general system information */ 
-  unsigned long    pagesize;    /* size of a page in bytes */
+    /* common (shared) portion */
+    const char*      provider;    /* name of this provider */
+    struct timeval   stamp;   /* when was this snapshot taken */
+    struct utsname   uname;   /* general system information */ 
+    unsigned long    pagesize;    /* size of a page in bytes */
 
-  /* fall-back provider-specific portion */
+    /* fall-back provider-specific portion */
 #ifdef _SC_PHYS_PAGES
-  unsigned long long ram_total; 
+    unsigned long long ram_total; 
 #endif /* _SC_PHYS_PAGES */
 #ifdef _SC_AVPHYS_PAGES
-  unsigned long long ram_avail; 
+    unsigned long long ram_avail; 
 #endif /* _SC_AVPHYS_PAGES */
 
 #ifdef _SC_NPROCESSORS_CONF
-  unsigned short   cpu_total; 
+    unsigned short   cpu_total; 
 #endif /* _SC_NPROCESSORS_CONF */
 #ifdef _SC_NPROCESSORS_ONLN
-  unsigned short   cpu_online; 
+    unsigned short   cpu_online; 
 #endif /* _SC_NPROCESSORS_ONLN */
 
 } MachineBasicInfo;
 
-extern
-void*
-initBasicMachine( void );
-/* purpose: initialize the data structure.
- * returns: initialized MachineBasicInfo structure.
- */
-
-extern
-int
-startBasicMachine(FILE *out, int indent, const char* tag,
-                  const MachineBasicInfo* machine);
-/* purpose: start format the information into the given stream as XML.
- * paramtr: out (IO): the stream
- *          indent (IN): indentation level
- *          tag (IN): name to use for element tags.
- *          machine (IN): basic machine structure info to print.
- * returns: 0 if no error
- */
-
-extern
-int
-finalBasicMachine(FILE *out, int indent, const char* tag,
-                  const MachineBasicInfo* machine);
-/* purpose: finish format the information into the given stream as XML.
- * paramtr: out (IO): The stream
- *          indent (IN): indentation level
- *          tag (IN): name to use for element tags.
- *          machine (IN): basic machine structure info to print.
- * returns: 0 if no error
- */
-
-extern
-int
-printBasicMachine(FILE *out, int indent, const char* tag,
-                  const void* data);
-/* purpose: format the machine information into the given stream as XML.
- * paramtr: out (IO): The stream
- *          indent (IN): indentation level
- *          tag (IN): name to use for element tags.
- *          data (IN): MachineBasicInfo info to print.
- * returns: number of characters put into buffer (buffer length)
- */
-
-extern
-void
-deleteBasicMachine( void* data );
-/* purpose: destructor
- * paramtr: data (IO): valid MachineBasicInfo structure to destroy. 
- */
+extern void* initBasicMachine();
+extern int startBasicMachine(FILE *out, int indent, const char* tag,
+                             const MachineBasicInfo* machine);
+extern int finalBasicMachine(FILE *out, int indent, const char* tag,
+                             const MachineBasicInfo* machine);
+extern int printBasicMachine(FILE *out, int indent, const char* tag,
+                             const void* data);
+extern void deleteBasicMachine(void* data);
 
 #endif /* _MACHINE_BASIC_H */

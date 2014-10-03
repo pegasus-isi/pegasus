@@ -17,30 +17,24 @@
 package edu.isi.pegasus.planner.refiner;
 
 
+import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.Job;
-
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PegasusFile;
+import edu.isi.pegasus.planner.namespace.Pegasus;
+import edu.isi.pegasus.planner.partitioner.graph.Bag;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
-
-import edu.isi.pegasus.common.logging.LogManager;
-
-import edu.isi.pegasus.planner.provenance.pasoa.XMLProducer;
-import edu.isi.pegasus.planner.provenance.pasoa.producer.XMLProducerFactory;
-
 import edu.isi.pegasus.planner.provenance.pasoa.PPS;
+import edu.isi.pegasus.planner.provenance.pasoa.XMLProducer;
 import edu.isi.pegasus.planner.provenance.pasoa.pps.PPSFactory;
-
-import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.partitioner.graph.Bag;
-
-
-import java.util.Set;
+import edu.isi.pegasus.planner.provenance.pasoa.producer.XMLProducerFactory;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * The data reuse engine reduces the workflow on the basis of existing output
@@ -78,6 +72,11 @@ import java.util.List;
 public class DataReuseEngine extends Engine implements Refiner{
 
     /**
+     * enumeration of the various supported modes for data reuse.
+     */
+    public static enum SCOPE  { full, partial, none };
+    
+    /**
      * List of all deleted jobs during workflow reduction.
      */
     private List<Job> mAllDeletedJobs;
@@ -96,6 +95,11 @@ public class DataReuseEngine extends Engine implements Refiner{
      * The workflow object being worked upon.
      */
     private ADag mWorkflow;
+    
+    /**
+     * The reduction mode set by the user.
+     */
+    private SCOPE mDataReuseScope;
 
     /**
      * The constructor
@@ -107,9 +111,10 @@ public class DataReuseEngine extends Engine implements Refiner{
         super( bag) ;
 
         mAllDeletedJobs  = new LinkedList();
-        mAllDeletedNodes  = new LinkedList();
+        mAllDeletedNodes = new LinkedList();
         mXMLStore        = XMLProducerFactory.loadXMLProducer( mProps );
         mWorkflow        = orgDag;
+        mDataReuseScope  = getDataReuseScope( mProps.getDataReuseScope() );
     }
 
 
@@ -177,9 +182,14 @@ public class DataReuseEngine extends Engine implements Refiner{
 
         //we reduce the dag only if the
         //force option is not specified.
-        if(mPOptions.getForce())
+        if(mPOptions.getForce() || mDataReuseScope.equals( SCOPE.none )){
             return workflow;
+        }
 
+        mLogger.log( "Data Reuse Scope for the workflow: " + mDataReuseScope,
+                     LogManager.CONFIG_MESSAGE_LEVEL );
+        
+        
         //load the PPS implementation
         PPS pps = PPSFactory.loadPPS( this.mProps );
 
@@ -196,7 +206,6 @@ public class DataReuseEngine extends Engine implements Refiner{
 
         //clear the XML store
         mXMLStore.clear();
-
 
         mLogger.log("Reducing the workflow",LogManager.DEBUG_MESSAGE_LEVEL);
         mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_REDUCE, LoggingKeys.DAX_ID, mWorkflow.getAbstractWorkflowName() );
@@ -219,8 +228,6 @@ public class DataReuseEngine extends Engine implements Refiner{
 
         //call the end workflow method for pasoa interactions
         try{
-          
-
             for( Iterator it = reducedWorkflow.nodeIterator(); it.hasNext(); ){
                 GraphNode node = ( GraphNode )it.next();
                 pps.isIdenticalTo( node.getName(), node.getName() );
@@ -317,6 +324,18 @@ public class DataReuseEngine extends Engine implements Refiner{
                 continue;
             }
 
+            if( mDataReuseScope.equals( SCOPE.partial) ){
+                //PM-774 in case of partial data reuse, we look
+                //for a marker to figure out whether job;s output files
+                //should be looked for
+                if( !(job.vdsNS.containsKey( Pegasus.ENABLE_FOR_DATA_REUSE_KEY ) ||
+                      job.vdsNS.getBooleanValue( Pegasus.ENABLE_FOR_DATA_REUSE_KEY))){
+                    
+                    mLogger.log( "Partial Data Reuse Enabled. Not looking for output files in RC for job " + job.getID(),
+                                 LogManager.DEBUG_MESSAGE_LEVEL );
+                    continue;
+                }
+            }
 
             /* Commented on Oct10. This ended up making the
             Planner doing duplicate transfers
@@ -499,7 +518,28 @@ public class DataReuseEngine extends Engine implements Refiner{
     }
 
 
-
+    /**
+     * Returns a scope value from String if a valid string is passed
+     * 
+     * @param value  the string value
+     * 
+     * @return corresponding valid enum value, else the default value i.e Scope.full;
+     */
+    private SCOPE getDataReuseScope(String value) {
+        SCOPE scope = SCOPE.full;
+       if( value == null ){
+            return scope;
+        }
+        
+        //try to assign a cleanup value
+        try{
+            scope = SCOPE.valueOf( value );
+        }catch( IllegalArgumentException iae ){
+            //ignore do nothing.
+        }
+        
+        return scope;
+    }
     
 
 

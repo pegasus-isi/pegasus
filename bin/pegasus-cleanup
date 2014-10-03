@@ -37,6 +37,13 @@ import stat
 import time
 from collections import deque
 
+try:
+    # Python 3.0 and later
+    from urllib.parse import unquote
+except ImportError:
+    # Fall back to Python 2's urllib
+    from urllib import unquote
+
 
 __author__ = "Mats Rynge <rynge@isi.edu>"
 
@@ -67,6 +74,9 @@ class URL:
         proto = ""
         host  = ""
         path  = ""
+
+        # the url should be URL decoded to work with our shell callouts
+        url = unquote(url)
 
         # default protocol is file://
         if string.find(url, ":") == -1:
@@ -127,6 +137,7 @@ tool_map['gsiftp'  ] = 'gsiftp'
 tool_map['irods'   ] = 'irods'
 tool_map['s3'      ] = 's3'
 tool_map['s3s'     ] = 's3'
+tool_map['gs'      ] = 'gs'
 tool_map['scp'     ] = 'scp'
 tool_map['srm'     ] = 'srm'
 tool_map['symlink' ] = 'rm'
@@ -323,6 +334,7 @@ def check_env_and_tools():
     check_tool("irm", "-h", "Version[ \t]+([\.0-9a-zA-Z]+)")
     check_tool("pegasus-gridftp", "", None)
     check_tool("pegasus-s3", "help", None)
+    check_tool("gsutil", "version", "gsutil version: ([\.0-9a-zA-Z]+)")
 
 
 def rm(urls):
@@ -388,9 +400,7 @@ def gsiftp(urls):
         os.environ["X509_USER_PROXY"] = os.environ[key]
     
     # use pegasus-transfer
-    cmd = prog_dir + "/pegasus-gridftp rm"
-    if options.ignore_failures:
-        cmd += " -f"
+    cmd = prog_dir + "/pegasus-gridftp rm -f"
     if options.recursive:
         cmd += " -r"
             
@@ -524,6 +534,38 @@ def s3(urls):
             raise
 
 
+def gs(urls):
+    """
+    gs - uses gsutil to interact with Google Storage 
+    """
+
+    if tool_info['gsutil']['full_path'] == None:
+        raise RuntimeError("Unable to do S3 transfers becuase pegasus-s3 could not be found")
+
+    for i, url in enumerate(urls):
+        
+        key = "BOTO_CONFIG_" + url.sitename
+        if key in os.environ:
+            os.environ["BOTO_CONFIG"] = os.environ[key]
+        
+        cmd = "gsutil rm -a"
+        if options.ignore_failures or options.recursive:
+            cmd += " -f"
+        if options.recursive:
+            cmd += " -r"  
+        cmd += " " + url.url()
+
+        try:
+            myexec(cmd, 60, True)
+        except Exception, err:
+            # gsutil returns non-zero even when the -f flag is used
+            if options.ignore_failures or options.recursive:
+                logger.warn(err)
+            else:
+                logger.error(err)
+                raise
+        
+        
 def urls_groupable(a, b):
     """
     compares two urls, and determins if they are similar enough to be
@@ -553,6 +595,8 @@ def handle_removes(urls):
                 srm(urls)
             elif tool == "s3":
                 s3(urls)
+            elif tool == "gs":
+                gs(urls)
             else:
                 logger.critical("Error: No mapping for the tool '%s'" %(tool))
                 myexit(1)

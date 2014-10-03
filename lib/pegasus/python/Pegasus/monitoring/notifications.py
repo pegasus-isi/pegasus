@@ -34,8 +34,7 @@ from Pegasus.tools import utils
 NOTIFICATION_FILE = "monitord-notifications.log" # filename for writing the output of notification scripts
 WAIT_CHILD_FINISH = 5                            # in seconds
 
-# Get logger object (initialized elsewhere)
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 class Notifications:
     """

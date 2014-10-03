@@ -31,7 +31,7 @@ public class File extends CatalogType {
      */
     public static enum LINK {
 
-        INPUT, input, OUTPUT, output, INOUT, inout
+        INPUT, input, OUTPUT, output, INOUT, inout, CHECKPOINT, checkpoint 
     };
 
     /**

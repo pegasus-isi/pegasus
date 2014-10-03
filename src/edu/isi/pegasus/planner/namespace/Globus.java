@@ -50,6 +50,11 @@ public class Globus extends Namespace {
      * The name of the namespace that this class implements.
      */
     public static final String NAMESPACE_NAME = Profile.GLOBUS;
+    
+    /**
+     * Key indicating max walltime for a job.
+     */
+    public static final String  MAX_WALLTIME = "maxwalltime";
 
     /**
      * The table that maps the various globus profile keys to their aggregator
@@ -267,7 +272,7 @@ public class Globus extends Namespace {
                 if (key.compareTo("maxcputime") == 0 ||
                     key.compareTo("maxmemory") == 0 ||
                     key.compareTo("maxtime") == 0 ||
-                    key.compareTo("maxwalltime") == 0 ||
+                    key.compareTo(Globus.MAX_WALLTIME) == 0 ||
                     key.compareTo("minmemory") == 0) {
                     res = VALID_KEY;
                 }

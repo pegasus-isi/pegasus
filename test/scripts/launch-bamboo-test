@@ -120,7 +120,7 @@ if [ $STATUS -ne 0 ]; then
         DIR="/tmp"
     fi
     TARFILE=$(mktemp $DIR/pegasus-failure-XXXXXX.tar.gz)
-    tar czf $TARFILE $RUN_DIR
+    tar czf $TARFILE $RUN_DIR 2>&1
     chmod 0644 $TARFILE
     echo "Created tarball $TARFILE"
 fi

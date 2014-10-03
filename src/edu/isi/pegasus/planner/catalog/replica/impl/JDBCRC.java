@@ -17,13 +17,14 @@
 
 package edu.isi.pegasus.planner.catalog.replica.impl;
 
+import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
-import java.util.*;
-import java.sql.*;
+import edu.isi.pegasus.common.util.CommonProperties;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
-import edu.isi.pegasus.common.util.CommonProperties;
-import edu.isi.pegasus.common.logging.LogManager;
+import java.sql.*;
+import java.util.*;
+import org.sqlite.SQLiteConfig;
 
 /**
  * This class implements a replica catalog on top of a simple table in a
@@ -121,11 +122,16 @@ public class JDBCRC implements ReplicaCatalog
    */
   protected PreparedStatement mStatements[] = null;
 
-  /**
+    /**
      * The handle to the logging object.
      */
     protected LogManager mLogger;
 
+    /**
+     * Boolean to flag whether we are operating against a SQLite
+     * backend or not.
+     */
+    protected boolean mUsingSQLiteBackend;
 
   /**
    * The statement to prepare to slurp attributes.
@@ -251,8 +257,13 @@ public class JDBCRC implements ReplicaCatalog
     // establish connection to database generically
     mConnection = DriverManager.getConnection( url, username, password );
 
+    //special handling for sqlite
+    if( url.contains( "sqlite") ){
+        this.mUsingSQLiteBackend = true;
+    }
+    
     // may throws SQLException
-    m_autoinc = mConnection.getMetaData().supportsGetGeneratedKeys();
+    m_autoinc = (mUsingSQLiteBackend)|| mConnection.getMetaData().supportsGetGeneratedKeys();
 
     // prepared statements are Singletons -- prepared on demand
     mStatements = new PreparedStatement[ mCStatements.length ];
@@ -299,6 +310,15 @@ public class JDBCRC implements ReplicaCatalog
                 else if ( driver.equalsIgnoreCase( "Postgres" )){
                     driver = "org.postgresql.Driver";
                 }
+                else if( driver.equalsIgnoreCase( "sqlite") ){
+                    driver = "org.sqlite.JDBC";
+                    //foreign key support needs to be enabled 
+                    //per connection PRAGMA foreign_keys ON
+                    SQLiteConfig config = new SQLiteConfig();  
+                    config.enforceForeignKeys(true);    
+                    localProps.putAll( config.toProperties() );
+                    mUsingSQLiteBackend = true;
+                }
                 Class.forName(driver);
             }
         }
@@ -308,8 +328,12 @@ public class JDBCRC implements ReplicaCatalog
         }
 
         try {
+            mLogger.log( "Connecting to Database Backend " + url +" with properties " + localProps, 
+                         LogManager.DEBUG_MESSAGE_LEVEL );
             mConnection = DriverManager.getConnection( url, localProps );
-            m_autoinc = mConnection.getMetaData().supportsGetGeneratedKeys();
+            
+            //JDBC sqlite driver returns false, but does support autoincrement of keys
+            m_autoinc = mUsingSQLiteBackend ||  mConnection.getMetaData().supportsGetGeneratedKeys();
 
             // prepared statements are Singletons -- prepared on demand
             mStatements = new PreparedStatement[mCStatements.length];
@@ -995,8 +1019,13 @@ public class JDBCRC implements ReplicaCatalog
         m.append("')");
 	query = m.toString();
 	st = mConnection.createStatement();
-	result = st.executeUpdate(query, Statement.RETURN_GENERATED_KEYS);
-	state++; // state == 3
+        //sqlite driver complains if Statement.RETURN_GENERATED_KEYS is set, even though
+        //the id's are set in the ResultSet
+        result = (this.mUsingSQLiteBackend)?
+                 st.executeUpdate(query): 
+                 st.executeUpdate(query, Statement.RETURN_GENERATED_KEYS);
+        
+        state++; // state == 3
 
 	rs = st.getGeneratedKeys();
         if ( rs.next() ) id = rs.getString(1);
@@ -1033,7 +1062,6 @@ public class JDBCRC implements ReplicaCatalog
       } catch ( SQLException e2 ) {
 	// ignore rollback problems
       }
-
       throw new RuntimeException( "Unable to tell database " +
 				  query + " (state=" + state + "): " +
 				  e.getMessage() );
@@ -1201,6 +1229,7 @@ public class JDBCRC implements ReplicaCatalog
    * @param tuple is a description of the PFN and its attributes.
    * @return the number of removed entries, either 0 or 1.
    */
+  @Override
   public int delete( String lfn, ReplicaCatalogEntry tuple )
   {
     int result = 0;
@@ -1211,63 +1240,48 @@ public class JDBCRC implements ReplicaCatalog
     if ( mConnection == null ) throw new RuntimeException( c_error );
 
     try {
-      int index = 1;
       StringBuilder m = new StringBuilder(256);
-      for ( Iterator i=tuple.getAttributeIterator(); i.hasNext(); ) {
-	String name = (String) i.next();
-        if (name.equals(ReplicaCatalogEntry.RESOURCE_HANDLE)) {
-            continue;
-        }
-	if (m.length() == 0) {
-            m.append("SELECT DISTINCT rc_attr.id FROM rc_attr");
-        }
-        Object value = tuple.getAttribute(name);
-	m.append( " INNER JOIN rc_attr a").append(index).append(" ON ");
-        m.append("a").append(index).append(".name='");
-	m.append(quote(name)).append( "' AND a").append(index).append(".value" );
-	if ( value == null ) m.append( " IS NULL" );
-	else m.append("='").append(quote(value.toString())).append('\'');
-        index++;
-      }
-      query = m.toString();
-
-      m = new StringBuilder(256);
-      m.append( "DELETE FROM rc_lfn WHERE lfn='" ).append(quote(lfn));
-      m.append("' AND pfn='" ).append(quote(tuple.getPFN())).append("'");
+      m.append("SELECT id FROM rc_lfn WHERE lfn='").append(lfn).append("'");
       if (tuple.getResourceHandle() != null) {
           m.append(" AND site='").append(quote(tuple.getResourceHandle())).append("'");
       } else {
           m.append(" AND site IS NULL");
       }
-      
       Statement st = mConnection.createStatement();
-      
-      if (!query.isEmpty()) {
-          m.append(" AND id=?");    
-          ResultSet rs = st.executeQuery(query);
-
-          query = m.toString();
-          PreparedStatement ps = mConnection.prepareStatement(query);
-          while ( rs.next() ) {
-            ps.setString( 1, rs.getString(1) );
-            result += ps.executeUpdate();
-          }
-          ps.close();
+      ResultSet rs = st.executeQuery(m.toString());
+      if (!rs.next()) {
+          st.close();
           rs.close();
-      
-      } else {
-          query = m.toString();
-          result = st.executeUpdate(query);
+          return result;
       }
+      int id = rs.getInt("id");
+      
+      m = new StringBuilder(256);
+      m.append("SELECT name,value FROM rc_attr WHERE id=").append(id);
+      st = mConnection.createStatement();
+      rs = st.executeQuery(m.toString());
+      while (rs.next()) {
+          String name = rs.getString("name");
+          String value = rs.getString("value");
+          if (!tuple.hasAttribute(name) || !tuple.getAttribute(name).equals(value)) {
+              st.close();
+              rs.close();
+              return result;
+          }
+      }
+      
+      m = new StringBuilder(256);
+      m.append("DELETE FROM rc_lfn WHERE id=").append(id);
+      st = mConnection.createStatement();
+      result = st.executeUpdate(m.toString());
       st.close();
+      rs.close();
+      return result;
 
     } catch ( SQLException e ) {
       throw new RuntimeException( "Unable to tell database " +
 				  query + ": " + e.getMessage() );
     }
-
-    // done
-    return result;
   }
 
   /**

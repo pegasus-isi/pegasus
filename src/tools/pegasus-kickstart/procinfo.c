@@ -29,9 +29,13 @@
 #include <errno.h>
 
 #include "procinfo.h"
-#include "tools.h"
+#include "utils.h"
+#include "syscall.h"
+#include "error.h"
 
 #ifdef HAS_PTRACE
+
+#include <sys/user.h> /* struct user_regs_struct */
 
 /* Find ProcInfo in a list by pid */
 static ProcInfo *proc_lookup(ProcInfo **list, pid_t pid) {
@@ -46,7 +50,7 @@ static ProcInfo *proc_lookup(ProcInfo **list, pid_t pid) {
 static ProcInfo *initProcInfo() {
     ProcInfo *new = (ProcInfo *)calloc(1, sizeof(ProcInfo));
     if (new == NULL) {
-        perror("calloc");
+        printerr("calloc: %s\n", strerror(errno));
         return NULL;
     }
     new->next = NULL;
@@ -68,6 +72,7 @@ static ProcInfo *proc_add(ProcInfo **list, pid_t pid) {
         cur->next = new;
         new->prev = cur;
     }
+
     return new;
 }
 
@@ -86,11 +91,15 @@ static int proc_read_exe(ProcInfo *item) {
     sprintf(link, "/proc/%d/exe", item->pid);
     size = readlink(link, exe, PATH_MAX);
     if (size < 0) {
-        perror("readlink");
+        printerr("readlink: %s\n", strerror(errno));
         return -1;
     }
     exe[size] = '\0';
     item->exe = strdup(exe);
+    if (item->exe == NULL) {
+        printerr("strdup: %s\n", strerror(errno));
+        return -1;
+    }
     return size;
 }
 
@@ -124,6 +133,8 @@ static int proc_read_meminfo(ProcInfo *item) {
             sscanf(line,"PPid:%d\n",&(item->ppid));
         } else if (startswith(line, "Tgid")) {
             sscanf(line,"Tgid:%d\n",&(item->tgid));
+        } else if (startswith(line, "Threads")) {
+            sscanf(line,"Threads:%d\n",&(item->threads));
         } else if (startswith(line,"VmPeak")) {
             sscanf(line,"VmPeak:%d kB\n",&(item->vmpeak));
         } else if (startswith(line,"VmHWM")) {
@@ -158,15 +169,25 @@ static int proc_read_statinfo(ProcInfo *item) {
         return -1;
     }
 
-    unsigned long utime, stime;
-    fscanf(f, "%*d %*s %*c %*d %*d %*d %*d %*d "
-              "%*u %*u %*u %*u %*u %lu %lu %*d %*d",
-           &utime, &stime);
+    unsigned long utime, stime = 0;
+    unsigned long long iowait = 0; //delayacct_blkio_ticks
+
+    //pid comm state ppid pgrp session tty_nr tpgid flags minflt cminflt majflt
+    //cmajflt utime stime cutime cstime priority nice num_threads itrealvalue
+    //starttime vsize rss rsslim startcode endcode startstack kstkesp kstkeip
+    //signal blocked sigignore sigcatch wchan nswap cnswap exit_signal
+    //processor rt_priority policy delayacct_blkio_ticks guest_time cguest_time
+    fscanf(f, "%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu "
+              "%lu %*d %*d %*d %*d %*d %*d %*u %*u %*d %*u %*u "
+              "%*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*d "
+              "%*d %*u %*u %llu %*u %*d",
+           &utime, &stime, &iowait);
 
     /* Adjust by number of clock ticks per second */
     long clocks = sysconf(_SC_CLK_TCK);
     item->utime = ((double)utime) / clocks;
     item->stime = ((double)stime) / clocks;
+    item->iowait = ((double)iowait) / clocks;
 
     if (ferror(f)) {
         fclose(f);
@@ -235,10 +256,17 @@ int procChild() {
 }
 
 /* Do the parent part of fork() */
-int procParentTrace(pid_t main, int *main_status, struct rusage *main_usage, ProcInfo **procs) {
+int procParentTrace(pid_t main, int *main_status, struct rusage *main_usage, ProcInfo **procs, int interpose) {
 #ifndef HAS_PTRACE
     return procParentWait(main, main_status, main_usage, procs);
 #else
+
+    /* If we are interposing system calls, then we need to call PTRACE_SYSCALL */
+    int PTRACE_NEXTSTOP = PTRACE_CONT;
+    if (interpose) {
+        PTRACE_NEXTSTOP = PTRACE_SYSCALL;
+    }
+
     /* TODO We need to find a way to stop tracing all of our children 
      * if we encounter an error so that we don't leave a lot of processes
      * hanging around in the t state
@@ -274,18 +302,35 @@ int procParentTrace(pid_t main, int *main_status, struct rusage *main_usage, Pro
             if (child == NULL) return -1;
             child->start = get_time();
 
-            /* Set the tracing options for this child so that we
-             * can see when it creates children and when it exits
-             */
             /* TODO Trace exec so we can get the original exe path.
              * Right now shell scripts are reported as the shell, not
              * as the original script
              */
-            if (ptrace(PTRACE_SETOPTIONS, cpid, NULL,
-                       PTRACE_O_TRACEEXIT|PTRACE_O_TRACEFORK|
-                       PTRACE_O_TRACEVFORK|PTRACE_O_TRACECLONE)) {
+            unsigned long options = PTRACE_O_TRACEEXIT|
+                PTRACE_O_TRACEFORK|PTRACE_O_TRACEVFORK|
+                PTRACE_O_TRACECLONE;
+
+            /* If system call interposition is enabled, then tell
+             * the kernel to set bit 7 in the signal number so we can
+             * distinguish system calls from other events.
+             */
+            if (interpose) {
+                options |= PTRACE_O_TRACESYSGOOD;
+            }
+
+            /* Set the tracing options for this child so that we
+             * can see when it creates children and when it exits
+             */
+            if (ptrace(PTRACE_SETOPTIONS, cpid, NULL, options)) {
                 perror("ptrace(PTRACE_SETOPTIONS)");
                 return -1;
+            }
+
+            /* The new child may have inherited some file descriptors
+             * Fill in the initial descriptor table for the process
+             */
+            if (interpose) {
+                initFileInfo(child);
             }
         }
 
@@ -296,6 +341,11 @@ int procParentTrace(pid_t main, int *main_status, struct rusage *main_usage, Pro
              */
             if (main == cpid) {
                 memcpy(main_usage, &usage, sizeof(struct rusage));
+            }
+
+            /* Now that the child is done, stat all the files it accessed */
+            if (interpose) {
+                finiFileInfo(child);
             }
         }
 
@@ -337,20 +387,57 @@ int procParentTrace(pid_t main, int *main_status, struct rusage *main_usage, Pro
                 }
 
                 /* tell child to continue */
-                if (ptrace(PTRACE_CONT, cpid, NULL, NULL)) {
-                    perror("ptrace(PTRACE_CONT)");
+                if (ptrace(PTRACE_NEXTSTOP, cpid, NULL, NULL)) {
+                    perror("ptrace(PTRACE_NEXTSTOP)");
                     return -1;
                 }
             }
 
-            /* because it got a signal */
+            /* stopped because it is entering or leaving a system call.
+             * bit 7 is set because of PTRACE_O_TRACESYSGOOD.
+             */
+            else if(WSTOPSIG(status) == (SIGTRAP|0x80)) {
+                struct user_regs_struct regs;
+
+                if (ptrace(PTRACE_GETREGS, cpid, NULL, &regs)) {
+                    perror("PTRACE_GETREGS");
+                    return -1;
+                }
+
+                if (child->insyscall) {
+                    child->sc_rval = SC_RVAL(regs);
+                    if (child->sc_nr <= MAX_SYSCALL) {
+                        int (*handler)(ProcInfo *c) = syscalls[child->sc_nr].handler;
+                        if (handler) {
+                            handler(child);
+                        }
+                    }
+                    child->insyscall = 0;
+                } else {
+                    child->sc_nr = SC_NR(regs);
+                    child->sc_args[0] = SC_ARG0(regs);
+                    child->sc_args[1] = SC_ARG1(regs);
+                    child->sc_args[2] = SC_ARG2(regs);
+                    child->sc_args[3] = SC_ARG3(regs);
+                    child->sc_args[4] = SC_ARG4(regs);
+                    child->sc_args[5] = SC_ARG5(regs);
+                    child->insyscall = 1;
+                }
+
+                if (ptrace(PTRACE_NEXTSTOP, cpid, NULL, NULL)) {
+                    perror("ptrace(PTRACE_NEXTSTOP)");
+                    return -1;
+                }
+            }
+
+            /* stopped because it got a signal */
             else {
                 int signal = WSTOPSIG(status);
 
                 /* Mask the STOP signal. Since we are running a batch job
                  * we should assume that the children never need to be sent
                  * SIGSTOP. It looks like shells try to send SIGSTOP to all
-                 * the processes they fork so that they can do something 
+                 * the processes they fork so that they can do something
                  * and send them SIGCONT. The problem is that this does not
                  * work under ptrace because wait() does not return in the
                  * parent, rather it returns in the tracing process so there
@@ -358,15 +445,16 @@ int procParentTrace(pid_t main, int *main_status, struct rusage *main_usage, Pro
                  * as a result the parent never sends SIGCONT and the job
                  * hangs. It is not entirely clear if that explanation is
                  * correct, but blocking STOP (and for completeness TSTP)
-                 * fixes the problem.
+                 * fixes the problem. XXX Maybe it is possible to send
+                 * SIGSTOP to the parent directly?
                  */
                 if (signal == SIGSTOP || signal == SIGTSTP) {
                     signal = 0;
                 }
 
                 /* pass the signal on to the child */
-                if (ptrace(PTRACE_CONT, cpid, NULL, signal)) {
-                    perror("ptrace(PTRACE_CONT)");
+                if (ptrace(PTRACE_NEXTSTOP, cpid, NULL, signal)) {
+                    perror("ptrace(PTRACE_NEXTSTOP)");
                     return -1;
                 }
             }
@@ -388,33 +476,75 @@ int procParentWait(pid_t main, int *main_status,  struct rusage *main_usage, Pro
     return *main_status;
 }
 
+static int printXMLFileInfo(FILE *out, int indent, FileInfo *files) {
+    FileInfo *i;
+    for (i = files; i != NULL; i = i->next) {
+        fprintf(out, "%*s<file name=\"%s\" bread=\"%"PRIu64"\" "
+                "bwrite=\"%"PRIu64"\" size=\"%"PRIu64"\"/>\n",
+                indent, "", i->filename, i->bread, i->bwrite, i->size);
+    }
+    return 0;
+}
+
+static int printXMLSockInfo(FILE *out, int indent, SockInfo *sockets) {
+    SockInfo *i;
+    for (i = sockets; i != NULL; i = i->next) {
+        fprintf(out, "%*s<socket address=\"%s\" port=\"%d\" "
+                "brecv=\"%"PRIu64"\" bsend=\"%"PRIu64"\"/>\n",
+                indent, "", i->address, i->port, i->brecv, i->bsend);
+    }
+    return 0;
+}
+
 /* Write <proc> records to buffer */
 int printXMLProcInfo(FILE *out, int indent, ProcInfo* procs) {
     ProcInfo *i;
     for (i = procs; i; i = i->next) {
         /* Skip non-main threads in multithreaded programs */
+        // XXX How does this affect FileInfo?
         if (i->tgid != i->pid) continue;
 
         fprintf(out, "%*s<proc ppid=\"%d\" pid=\"%d\" exe=\"%s\" "
-                "start=\"%lf\" stop=\"%lf\" utime=\"%.2f\" stime=\"%.2f\" "
+                "start=\"%lf\" stop=\"%lf\" utime=\"%lf\" stime=\"%lf\" "
+                "iowait=\"%lf\" threads=\"%d\" "
                 "vmpeak=\"%d\" rsspeak=\"%d\" rchar=\"%"PRIu64"\" wchar=\"%"PRIu64"\" "
                 "rbytes=\"%"PRIu64"\" wbytes=\"%"PRIu64"\" cwbytes=\"%"PRIu64"\" "
-                "syscr=\"%"PRIu64"\" syscw=\"%"PRIu64"\"/>\n",
-                indent, "", i->ppid, i->pid, i->exe,
-                i->start, i->stop, i->utime, i->stime,
-                i->vmpeak, i->rsspeak, i->rchar, i->wchar,
-                i->read_bytes, i->write_bytes, i->cancelled_write_bytes,
+                "syscr=\"%"PRIu64"\" syscw=\"%"PRIu64"\"", 
+                indent, "", i->ppid, i->pid, i->exe, 
+                i->start, i->stop, i->utime, i->stime, i->iowait, i->threads,
+                i->vmpeak, i->rsspeak, i->rchar, i->wchar, 
+                i->read_bytes, i->write_bytes, i->cancelled_write_bytes, 
                 i->syscr, i->syscw);
+        if (i->files == NULL && i->sockets == NULL) {
+            fprintf(out, "/>\n");
+        } else {
+            fprintf(out, ">\n");
+            printXMLFileInfo(out, indent+2, i->files);
+            printXMLSockInfo(out, indent+2, i->sockets);
+            fprintf(out, "%*s</proc>\n", indent, "");
+        }
     }
     return 0;
 }
 
 /* Delete all the ProcInfo objects in a list */
-void deleteProcInfo(ProcInfo *list) {
-    while (list != NULL) {
-        ProcInfo *i = list;
-        list = list->next;
-        free(i);
+void deleteProcInfo(ProcInfo *procs) {
+    while (procs != NULL) {
+        ProcInfo *p = procs;
+        FileInfo *files = p->files;
+        while (files != NULL) {
+            FileInfo *f = files;
+            files = files->next;
+            free(f);
+        }
+        SockInfo *sockets = p->sockets;
+        while (sockets != NULL) {
+            SockInfo *s = sockets;
+            sockets = sockets->next;
+            free(s);
+        }
+        procs = procs->next;
+        free(p);
     }
 }
 

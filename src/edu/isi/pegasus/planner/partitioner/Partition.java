@@ -48,7 +48,7 @@ public class Partition extends Data {
     /**
      * The set of node id's in the partition.
      */
-    private Set mNodeSet;
+    private Set<String> mNodeSet;
 
     /**
      * A map containing a node and it's parents ids in the partition.
@@ -56,13 +56,13 @@ public class Partition extends Data {
      * String id's of it's parents. The map only contain those nodes for
      * which there is a parent.
      */
-    private Map mParentsMap;
+    private Map <String,List<String>>mParentsMap;
 
     /**
      * The list of <code>GraphNode<code> objects corresponding to the nodes
      * making the partiition.
      */
-    private List mNodeList;
+    private List<GraphNode> mNodeList;
 
     /**
      * The partition id of the partition.
@@ -84,6 +84,12 @@ public class Partition extends Data {
      * A pointer to the last added node to the partition.
      */
     private GraphNode mLastAddedNode;
+    
+    /**
+     * A boolean indicating whether a label was associated with the
+     * jobs in the partition or not.
+     */
+    private boolean mHasAssociatedLabel;
 
     /**
      * The default constructor.
@@ -96,6 +102,7 @@ public class Partition extends Data {
         mParentsMap = new HashMap();
         mNodeList   = new java.util.LinkedList();
         mLastAddedNode = null;
+        mHasAssociatedLabel = false;
     }
 
     /**
@@ -112,6 +119,7 @@ public class Partition extends Data {
         mIndex      = -1;
         //default to test
         mName       = "test";
+        mHasAssociatedLabel = false;
         mLastAddedNode = null;
         for( Iterator it = mNodeList.iterator(); it.hasNext(); ){
             mNodeSet.add(((GraphNode)it.next()).getID());
@@ -216,7 +224,35 @@ public class Partition extends Data {
     public String getName(){
         return mName;
     }
+    
+    /**
+     * Returns a boolean indicating if partition was associated with a label.
+     * 
+     * @return boolean
+     */
+    public boolean hasAssociatedLabel(){
+        return this.mHasAssociatedLabel;
+    }
 
+    
+    /**
+     * Set a boolean indicating if partition was associated with a label.
+     * 
+     * @param value boolean value
+     */
+    public void doesHaveAssociatedLabel(boolean value ){
+        this.mHasAssociatedLabel = value;
+    }
+    
+    /**
+     * Returns the number of nodes in the partition
+     * 
+     * @return the size 
+     */
+    public int getSize(){
+        return this.mNodeList.size();
+    }
+    
     /**
      * It sets the index associated with this partition to the value passed.
      *

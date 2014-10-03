@@ -24,12 +24,7 @@ import os
 import sys
 import logging
 
-
-# Initialize logging object
-logger = logging.getLogger()
-# Set default level to INFO
-logger.setLevel(logging.INFO)
-
+logger = logging.getLogger(__name__)
 
 from Pegasus.tools import utils
 from Pegasus.plots_stats import utils as plot_utils
@@ -40,24 +35,6 @@ from datetime import datetime
 
 #Global variables----
 output_dir = None
-
-
-
-def setup_logger(level_str):
-	"""
-	Sets the logging level  
-	@param level_str:  logging level
-	"""
-	level_str = level_str.lower()
-	if level_str == "debug":
-		logger.setLevel(logging.DEBUG)
-	if level_str == "warning":
-		logger.setLevel(logging.WARNING)
-	if level_str == "error":
-		logger.setLevel(logging.ERROR)
-	if level_str == "info":
-		logger.setLevel(logging.INFO)
-	return
 
 
 #----------print workflow details--------
@@ -1037,20 +1014,16 @@ def create_gantt_plot_page(workflow_info ,output_dir, extn = "html"):
 	else:
 		fh.close()	
 	return
-def setup(submit_dir,out_dir, env, log_level):
+def setup(submit_dir,out_dir, env):
 	"""
 	Setup the pegasus gantt module
 	@param submit_dir submit directory path 
 	@out_dir the output directory path
 	@env the environment variables
-	@log_level logging level
 	"""
 	# global reference
 	global output_dir
 	output_dir = out_dir
-	if log_level == None:
-		log_level = "info"
-	setup_logger(log_level)
 	utils.create_directory(output_dir)
 	src_js_path = env['pegasus_javascript_dir'] 
 	src_img_path = os.path.join(env['pegasus_share_dir'] , "plots/images/protovis/")

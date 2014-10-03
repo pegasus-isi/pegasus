@@ -76,7 +76,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
      * The "not-so-official" location URL of the Site Catalog Schema.
      */
     public static final String SCHEMA_LOCATION =
-                                        "http://pegasus.isi.edu/schema/dax-3.3.xsd";
+                                        "http://pegasus.isi.edu/schema/dax-3.5.xsd";
 
     /**
      * uri namespace
@@ -96,9 +96,19 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
     public static final long DAX_VERSION_3_2_0 = CondorVersion.numericValue( "3.2.0" );
     
     /*
-     * Predefined Constant  for dax version 3.2.0
+     * Predefined Constant  for dax version 3.3.0
      */
     public static final long DAX_VERSION_3_3_0 = CondorVersion.numericValue( "3.3.0" );
+    
+    /*
+     * Predefined Constant  for dax version 3.4.0
+     */
+    public static final long DAX_VERSION_3_4_0 = CondorVersion.numericValue( "3.4.0" );
+    
+    /*
+     * Predefined Constant  for dax version 3.5.0
+     */
+    public static final long DAX_VERSION_3_5_0 = CondorVersion.numericValue( "3.5.0" );
     
     /**
      * Constant denoting default metadata type
@@ -312,7 +322,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                             file = value;
                         }
                         else if( name.equals( "node-label"  ) ){
-                            this.attributeNotSupported( element, name, value );
+                            j.setNodeLabel( value );
                         }
                         else {
                 	    this.complain( element, name, value );
@@ -553,7 +563,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                             j.setLogicalID( value );
                         }
                         else if( name.equals( "node-label"  ) ){
-                            this.attributeNotSupported( element, name, value );
+                            j.setNodeLabel( value );
                         }
                         else {
                 	    this.complain( element, name, value );
@@ -756,8 +766,19 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                  	    this.log( element, name, value );
                         }
                         else if ( name.equals( "link" ) ) {
-                            pf.setLinkage( PegasusFile.LINKAGE.valueOf( value.toUpperCase() ) );
-                            this.log( element, name, value );
+                            if( value != null && value.equals( PegasusFile.CHECKPOINT_TYPE) ){
+                                //introduced in dax 3.5
+                                //cleaner for DAX API to have checkpoint files marked
+                                //via linkage. Planner still treats it as a type
+                                pf.setType( value );
+                                pf.setLinkage(LINKAGE.INOUT);
+                                this.log( element, name, value );
+                            }
+                            else{
+                                pf.setLinkage( PegasusFile.LINKAGE.valueOf( value.toUpperCase() ) );
+                                this.log( element, name, value );
+                            }
+                       
                         }
                         else if ( name.equals( "optional" ) ) {
                             Boolean bValue = Boolean.parseBoolean( value );

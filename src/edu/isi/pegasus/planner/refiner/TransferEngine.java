@@ -1210,9 +1210,10 @@ public class TransferEngine extends Engine {
                     //no need to add a transfer node for it if no location found
 
                     //remove the PegasusFile object from the list of
-                    //input files for the job
-                    boolean removed = job.getInputFiles().remove( pf );
-                    //System.out.println( "Removed " + pf.getLFN() + " " + removed );
+                    //input files for the job, only if file is not a checkpoint file
+                    if ( !pf.isCheckpointFile()){
+                         job.getInputFiles().remove( pf );
+                    }
 
                     continue;
                 }

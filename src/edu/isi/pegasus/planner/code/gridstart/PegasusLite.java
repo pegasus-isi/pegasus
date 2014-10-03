@@ -16,60 +16,49 @@
 
 package edu.isi.pegasus.planner.code.gridstart;
 
-import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
-
 import edu.isi.pegasus.common.logging.LogManager;
-
 import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
-
 import edu.isi.pegasus.common.util.StreamGobbler;
 import edu.isi.pegasus.common.util.StreamGobblerCallback;
 import edu.isi.pegasus.common.util.Version;
-
-import edu.isi.pegasus.planner.common.PegasusProperties;
-
-import edu.isi.pegasus.planner.code.GridStart;
-
-import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.Job;
-import edu.isi.pegasus.planner.classes.AggregatedJob;
-import edu.isi.pegasus.planner.classes.PegasusFile;
-import edu.isi.pegasus.planner.classes.TransferJob;
-import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.classes.PlannerOptions;
-
-import edu.isi.pegasus.planner.namespace.Condor;
-import edu.isi.pegasus.planner.namespace.Pegasus;
-
-import edu.isi.pegasus.planner.transfer.sls.SLSFactory;
-import edu.isi.pegasus.planner.transfer.SLS;
-
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
-
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
-
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
+import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.FileTransfer;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.NameValue;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PegasusFile;
+import edu.isi.pegasus.planner.classes.PlannerOptions;
+import edu.isi.pegasus.planner.classes.TransferJob;
+import edu.isi.pegasus.planner.code.GridStart;
+import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Namespace;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.refiner.DeployWorkerPackage;
+import edu.isi.pegasus.planner.transfer.SLS;
+import edu.isi.pegasus.planner.transfer.sls.SLSFactory;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.BufferedWriter;
 import java.io.FileReader;
-import java.io.IOException;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -809,16 +798,33 @@ public class PegasusLite implements GridStart {
                                                           stagingSiteDirectory,
                                                           workerNodeDir );
 
-
-                sb.append( "# stage in " ).append( '\n' );
-                sb.append(  mSLS.invocationString( job, null ) );
-
-                sb.append( " 1>&2" ).append( " << EOF" ).append( '\n' );
-
-                sb.append( convertToTransferInputFormat( files ) );
-                sb.append( "EOF" ).append( '\n' );
-                sb.append( '\n' );
-
+                //PM-779 split the checkpoint files from the input files
+                //as we want to stage them separately
+                Collection<FileTransfer> inputFiles = new LinkedList();
+                Collection<FileTransfer> chkpointFiles = new LinkedList();
+                for(FileTransfer ft: files ){
+                    if( ft.isCheckpointFile() ){
+                        chkpointFiles.add(ft);
+                    }
+                    else{
+                        inputFiles.add(ft);
+                    }
+                }
+                
+                //stage the input files first
+                if( !inputFiles.isEmpty() ){
+                    sb.append( "# stage in data and executables" ).append( '\n' );
+                    sb.append(  mSLS.invocationString( job, null ) );
+                    sb.append( " 1>&2" ).append( " << EOF" ).append( '\n' );
+                    sb.append( convertToTransferInputFormat( inputFiles ) );
+                    sb.append( "EOF" ).append( '\n' );
+                    sb.append( '\n' );
+                }
+                
+                //PM-779 checkpoint files need to be setup to never fail
+                sb.append( "# stage in checkpoint files " ).append( '\n' );
+                sb.append( checkpointFilesToPegasusLite( job, chkpointFiles) );
+                
                 //associate any credentials if required with the job
                 associateCredentials( job, files );
             }
@@ -898,16 +904,35 @@ public class PegasusLite implements GridStart {
                                                             workerNodeDir );
 
 
-                //generate the post constituentJob
-                String postJob = mSLS.invocationString( job, null );
-                sb.append( "# stage out" ).append( '\n' );
-                sb.append( postJob );
+                //PM-779 split the checkpoint files from the output files
+                //as we want to stage them separately
+                Collection<FileTransfer> outputFiles = new LinkedList();
+                Collection<FileTransfer> chkpointFiles = new LinkedList();
+                for(FileTransfer ft: files ){
+                    if( ft.isCheckpointFile() ){
+                        chkpointFiles.add(ft);
+                    }
+                    else{
+                        outputFiles.add(ft);
+                    }
+                }
                 
-                sb.append( " 1>&2" ).append( " << EOF" ).append( '\n' );
-                sb.append( convertToTransferInputFormat( files ) );
-                sb.append( "EOF" ).append( '\n' );
-                sb.append( '\n' );
+                //PM-779 checkpoint files need to be setup to never fail
+                sb.append( "# stage out checkpoint files " ).append( '\n' );
+                sb.append( checkpointFilesToPegasusLite( job, chkpointFiles) );
+                
+                if( !outputFiles.isEmpty() ){
+                    //generate the stage out fragment for staging out outputs
+                    String postJob = mSLS.invocationString( job, null );
+                    sb.append( "# stage out" ).append( '\n' );
+                    sb.append( postJob );
 
+                    sb.append( " 1>&2" ).append( " << EOF" ).append( '\n' );
+                    sb.append( convertToTransferInputFormat( outputFiles ) );
+                    sb.append( "EOF" ).append( '\n' );
+                    sb.append( '\n' );
+                }
+                
                 //associate any credentials if required with the job
                 associateCredentials( job, files );
             }
@@ -970,7 +995,8 @@ public class PegasusLite implements GridStart {
         int num = 1;
         for( FileTransfer ft :  files ){
             NameValue nv = ft.getSourceURL();
-            sb.append( "# "  ).append( "src " ).append( num ).append( " " ).append( nv.getKey() ).append( '\n' );
+            sb.append( "# "  ).append( "src " ).append( num ).append( " " ).append( nv.getKey() ).
+               append( " " ).append( "checkpoint=\"").append(ft.isCheckpointFile()).append("\"").append( '\n' );
             sb.append( nv.getValue() );
             sb.append( '\n' );
 
@@ -1232,5 +1258,31 @@ public class PegasusLite implements GridStart {
               append( site );
         throw new RuntimeException( error.toString() );
         
+    }
+
+    /**
+     * Takes in the checkpoint files, and generates a pegasus-transfer invocation
+     * that should succeed in case of errors
+     * 
+     * @param job       the job being wrapped with PegasusLite
+     * @param files     the checkpoint files
+     * @return string representation of the PegasusLite fragment
+     */
+    private String checkpointFilesToPegasusLite(Job job, Collection<FileTransfer> files) {
+        StringBuilder sb = new StringBuilder();
+        if( !files.isEmpty() ){
+            sb.append( "set +e " ).append( "\n");
+            sb.append(  mSLS.invocationString( job, null ) );
+            sb.append( " 1>&2" ).append( " << EOF" ).append( '\n' );
+            sb.append( convertToTransferInputFormat( files ) );
+            sb.append( "EOF" ).append( '\n' );
+            sb.append( "ec=$?" ).append( '\n' );
+            sb.append( "set -e").append( '\n' );
+            sb.append( "if [ $ec -ne 0 ]; then").append( '\n' );
+            sb.append( "    echo \" Ignoring failure while transferring chkpoint files. Exicode was $ec\" ").append( '\n' );
+            sb.append( "fi" ).append( '\n' );
+            sb.append( "\n" );
+        }
+        return sb.toString();
     }
 }

@@ -36,23 +36,39 @@ import time
 import math
 import shutil
 
+def find_prog(prog,dir=[]):
+    def is_prog(fpath):
+        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+
+    fpath, fname = os.path.split(prog)
+    if fpath:
+        if is_prog(prog):
+            return prog
+    else:
+        for path in dir+os.environ["PATH"].split(os.pathsep):
+            exe_file = os.path.join(path, prog)
+            if is_prog(exe_file):
+                return exe_file
+    return None
+
+logger = logging.getLogger("pegasus-dagman")
+
 # Use pegasus-config to find our lib path
 bin_dir = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0])))
 pegasus_config = os.path.join(bin_dir, "pegasus-config")
 lib_dir = subprocess.Popen([pegasus_config,"--noeoln","--python"], stdout=subprocess.PIPE, shell=False).communicate()[0]
 lib_ext_dir = subprocess.Popen([pegasus_config,"--noeoln","--python-externals"], stdout=subprocess.PIPE, shell=False).communicate()[0]
-
+print "Pegasus LIB %s" % lib_dir
+print "Pegasus LIB %s" % lib_ext_dir
+print "Pegasus BIN_DIR %s" % bin_dir
+print "Pegasus DAGMAN is  %s" % sys.argv[0]
 
 # Insert this directory in our search path
 os.sys.path.insert(0, lib_ext_dir)
 os.sys.path.insert(0, lib_dir)
 
-import Pegasus.common
 from Pegasus.tools import utils
-
-# logger is setup in common
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+utils.configureLogging()
 
 dagman = None
 monitord = None

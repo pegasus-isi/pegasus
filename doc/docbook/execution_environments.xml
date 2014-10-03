@@ -1,882 +1,795 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
-"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<?xml version='1.0'?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="execution_environments">
-  <title>Execution Environments</title>
+	<title>Execution Environments</title>
+	<para>Pegasus supports a number of execution environments. An 
+	execution environment is a setup where jobs from a workflow are 
+	running.</para>
+	<section id="localhost">
+		<title>Localhost</title>
+		<para>In this configuration, Pegasus schedules the jobs to run 
+		locally on the submit host. Running locally is a good approach for 
+		smaller workflows, testing workflows, and for demonstations such as 
+		the <link linkend="tutorial">Pegasus tutorial</link>. Pegasus 
+		supports two methods of local execution: local HTCondor pool, and 
+		shell planner. The former is preferred as the latter does not support 
+		all Pegasus&apos; features (such as notifications).</para>
+		<para>Running on a local HTCondor pool is achieved by executing the 
+		workflow on site local ( <emphasis role="bold">--sites 
+		local</emphasis>option to pegasus-plan ). The site &quot;local&quot; 
+		is a reserved site in Pegasus and results in the jobs to run on the 
+		submit host in HTCondor universe local. The site catalog can be left 
+		very simple in this case:</para>
+		<programlisting>
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;sitecatalog xmlns=&quot;http://pegasus.isi.edu/schema/sitecatalog&quot;
+             xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+             xsi:schemaLocation=&quot;http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd&quot;
+             version=&quot;4.0&quot;&gt;
 
-  <para>Pegasus supports a number of execution environments. An execution
-  environment is a setup where jobs from a workflow are running.</para>
-
-  <section id="localhost">
-    <title>Localhost</title>
-
-    <para>In this configuration, Pegasus schedules the jobs to run locally on
-    the submit host. Running locally is a good approach for smaller workflows,
-    testing workflows, and for demonstations such as the <link
-    linkend="tutorial">Pegasus tutorial</link>. Pegasus supports two methods
-    of local execution: local Condor pool, and shell planner. The former is
-    preferred as the latter does not support all Pegasus' features (such as
-    notifications).</para>
-
-    <para>Running on a local Condor pool is achieved by executing the workflow
-    on site local ( <emphasis role="bold">--sites local </emphasis>option to
-    pegasus-plan ). The site "local" is a reserved site in Pegasus and results
-    in the jobs to run on the submit host in condor universe local. The site
-    catalog can be left very simple in this case:</para>
-
-    <programlisting>
-&lt;?xml version="1.0" encoding="UTF-8"?&gt;
-&lt;sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
-             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-             xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd"
-             version="4.0"&gt;
-
-    &lt;site  handle="local" arch="x86_64" os="LINUX"&gt;
-        &lt;directory type="shared-scratch" path="/tmp/wf/work"&gt;
-            &lt;file-server operation="all" url="file:///tmp/wf/work"/&gt;
+    &lt;site  handle=&quot;local&quot; arch=&quot;x86_64&quot; os=&quot;LINUX&quot;&gt;
+        &lt;directory type=&quot;shared-scratch&quot; path=&quot;/tmp/wf/work&quot;&gt;
+            &lt;file-server operation=&quot;all&quot; url=&quot;file:///tmp/wf/work&quot;/&gt;
         &lt;/directory&gt;
-        &lt;directory type="local-storage" path="/tmp/wf/storage"&gt;
-            &lt;file-server operation="all" url="file:///tmp/wf/storage"/&gt;
+        &lt;directory type=&quot;local-storage&quot; path=&quot;/tmp/wf/storage&quot;&gt;
+            &lt;file-server operation=&quot;all&quot; url=&quot;file:///tmp/wf/storage&quot;/&gt;
         &lt;/directory&gt;
     &lt;/site&gt;
 
 &lt;/sitecatalog&gt;
 </programlisting>
+		<para>The simplest execution environment does not involve HTCondor. 
+		Pegasus is capable of planning small workflows for local execution 
+		using a shell planner. Please refer to the 
+		<filename class="directory">share/pegasus/examples</filename> 
+		directory in your Pegasus installation, the shell planner&apos;s 
+		<link linkend="local_shell_examples">documentation section</link>, or 
+		the tutorials, for details.</para>
+	</section>
+	<section id="condor_pool">
+		<title>Condor Pool</title>
+		<para>A HTCondor pool is a set of machines that use HTCondor for 
+		resource management. A HTCondor pool can be a cluster of dedicated 
+		machines or a set of distributively owned machines. Pegasus can 
+		generate concrete workflows that can be executed on a HTCondor 
+		pool.</para>
+		<figure>
+			<title>The distributed resources appear to be part of a HTCondor 
+			pool.</title>
+			<mediaobject><imageobject>
+			<imagedata contentdepth="100%" fileref="images/condor_layout.png" scalefit="1" width="100%"/>
+			</imageobject></mediaobject>
+		</figure>
+		<para>The workflow is submitted using DAGMan from one of the job 
+		submission machines in the HTCondor pool. It is the responsibility of 
+		the Central Manager of the pool to match the task in the workflow 
+		submitted by DAGMan to the execution machines in the pool. This 
+		matching process can be guided by including HTCondor specific 
+		attributes in the submit files of the tasks. If the user wants to 
+		execute the workflow on the execution machines (worker nodes) in a 
+		HTCondor pool, there should be a resource defined in the site catalog 
+		which represents these execution machines. The universe attribute of 
+		the resource should be vanilla. There can be multiple resources 
+		associated with a single HTCondor pool, where each resource 
+		identifies a subset of machine (worker nodes) in the pool.</para>
+		<para>When running on a HTCondor pool, the user has to decide how 
+		Pegasus should transfer data. Please see the 
+		<link linkend="data_staging_configuration">Data Staging 
+		Configuration</link> for the options. The easiest is to use 
+		<emphasis role="bold">condorio</emphasis> as that mode does not 
+		require any extra setup - HTCondor will do the transfers using the 
+		existing HTCondor daemons. For an example of this mode see the 
+		example workflow in <filename>
+		share/pegasus/examples/condor-blackdiamond-condorio/</filename> . In 
+		HTCondorio mode, the site catalog for the execution site is very 
+		simple as storage is provided by HTCondor:</para>
+		<programlisting>
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;sitecatalog xmlns=&quot;http://pegasus.isi.edu/schema/sitecatalog&quot;
+             xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+             xsi:schemaLocation=&quot;http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd&quot;
+             version=&quot;4.0&quot;&gt;
 
-    <para>The simplest execution environment does not involve Condor. Pegasus
-    is capable of planning small workflows for local execution using a shell
-    planner. Please refer to the <filename
-    class="directory">share/pegasus/examples</filename> directory in your
-    Pegasus installation, the shell planner's <link
-    linkend="local_shell_examples">documentation section</link>, or the
-    tutorials, for details.</para>
-  </section>
-
-  <section id="condor_pool">
-    <title>Condor Pool</title>
-
-    <para>A Condor pool is a set of machines that use Condor for resource
-    management. A Condor pool can be a cluster of dedicated machines or a set
-    of distributively owned machines. Pegasus can generate concrete workflows
-    that can be executed on a Condor pool.</para>
-
-    <figure>
-      <title>The distributed resources appear to be part of a Condor
-      pool.</title>
-
-      <mediaobject>
-        <imageobject>
-          <imagedata contentdepth="100%" fileref="images/condor_layout.png"
-                     scalefit="1" width="100%"/>
-        </imageobject>
-      </mediaobject>
-    </figure>
-
-    <para>The workflow is submitted using DAGMan from one of the job
-    submission machines in the Condor pool. It is the responsibility of the
-    Central Manager of the pool to match the task in the workflow submitted by
-    DAGMan to the execution machines in the pool. This matching process can be
-    guided by including Condor specific attributes in the submit files of the
-    tasks. If the user wants to execute the workflow on the execution machines
-    (worker nodes) in a Condor pool, there should be a resource defined in the
-    site catalog which represents these execution machines. The universe
-    attribute of the resource should be vanilla. There can be multiple
-    resources associated with a single Condor pool, where each resource
-    identifies a subset of machine (worker nodes) in the pool.</para>
-
-    <para>When running on a Condor pool, the user has to decide how Pegasus
-    should transfer data. Please see the <link
-    linkend="data_staging_configuration">Data Staging Configuration</link> for
-    the options. The easiest is to use <emphasis
-    role="bold">condorio</emphasis> as that mode does not require any extra
-    setup - Condor will do the transfers using the existing Condor daemons.
-    For an example of this mode see the example workflow in
-    <filename>share/pegasus/examples/condor-blackdiamond-condorio/</filename>
-    . In condorio mode, the site catalog for the execution site is very simple
-    as storage is provided by Condor:</para>
-
-    <programlisting>
-&lt;?xml version="1.0" encoding="UTF-8"?&gt;
-&lt;sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
-             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-             xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd"
-             version="4.0"&gt;
-
-    &lt;site  handle="local" arch="x86_64" os="LINUX"&gt;
-        &lt;directory type="shared-scratch" path="/tmp/wf/work"&gt;
-            &lt;file-server operation="all" url="file:///tmp/wf/work"/&gt;
+    &lt;site  handle=&quot;local&quot; arch=&quot;x86_64&quot; os=&quot;LINUX&quot;&gt;
+        &lt;directory type=&quot;shared-scratch&quot; path=&quot;/tmp/wf/work&quot;&gt;
+            &lt;file-server operation=&quot;all&quot; url=&quot;file:///tmp/wf/work&quot;/&gt;
         &lt;/directory&gt;
-        &lt;directory type="local-storage" path="/tmp/wf/storage"&gt;
-            &lt;file-server operation="all" url="file:///tmp/wf/storage"/&gt;
+        &lt;directory type=&quot;local-storage&quot; path=&quot;/tmp/wf/storage&quot;&gt;
+            &lt;file-server operation=&quot;all&quot; url=&quot;file:///tmp/wf/storage&quot;/&gt;
         &lt;/directory&gt;
     &lt;/site&gt;
 
-    &lt;site  handle="condorpool" arch="x86_64" os="LINUX"&gt;
-        &lt;profile namespace="pegasus" key="style" &gt;condor&lt;/profile&gt;
-        &lt;profile namespace="condor" key="universe" &gt;vanilla&lt;/profile&gt;
+    &lt;site  handle=&quot;condorpool&quot; arch=&quot;x86_64&quot; os=&quot;LINUX&quot;&gt;
+        &lt;profile namespace=&quot;pegasus&quot; key=&quot;style&quot; &gt;condor&lt;/profile&gt;
+        &lt;profile namespace=&quot;condor&quot; key=&quot;universe&quot; &gt;vanilla&lt;/profile&gt;
     &lt;/site&gt;
 
 &lt;/sitecatalog&gt;
 </programlisting>
-
-    <para>There is a set of Condor profiles which are used commonly when
-    running Pegasus workflows. You may have to set some or all of these
-    depending on the setup of the Condor pool:</para>
-
-    <programlisting>  &lt;!-- Change the style to Condor for jobs to be executed in the Condor Pool.
+		<para>There is a set of HTCondor profiles which are used commonly 
+		when running Pegasus workflows. You may have to set some or all of 
+		these depending on the setup of the HTCondor pool:</para>
+		<programlisting>  &lt;!-- Change the style to HTCondor for jobs to be executed in the HTCondor Pool.
        By default, Pegasus creates jobs suitable for grid execution. --&gt;
-  &lt;profile namespace="pegasus" key="style"&gt;condor&lt;/profile&gt;
+  &lt;profile namespace=&quot;pegasus&quot; key=&quot;style&quot;&gt;condor&lt;/profile&gt;
 
   &lt;!-- Change the universe to vanilla to make the jobs go to remote compute
        nodes. The default is local which will only run jobs on the submit host --&gt;
-  &lt;profile namespace="condor" key="universe" &gt;vanilla&lt;/profhile&gt;
+  &lt;profile namespace=&quot;condor&quot; key=&quot;universe&quot; &gt;vanilla&lt;/profhile&gt;
 
   &lt;!-- The requirements expression allows you to limit where your jobs go --&gt;
-  &lt;profile namespace="condor" key="requirements"&gt;(Target.FileSystemDomain != &amp;quot;yggdrasil.isi.edu&amp;quot;)&lt;/profile&gt;
+  &lt;profile namespace=&quot;condor&quot; key=&quot;requirements&quot;&gt;(Target.FileSystemDomain != &amp;quot;yggdrasil.isi.edu&amp;quot;)&lt;/profile&gt;
 
-  &lt;!-- The following two profiles forces Condor to always transfer files. This
+  &lt;!-- The following two profiles forces HTCondor to always transfer files. This
        has to be used if the pool does not have a shared filesystem --&gt;
-  &lt;profile namespace="condor" key="should_transfer_files"&gt;True&lt;/profile&gt;
-  &lt;profile namespace="condor" key="when_to_transfer_output"&gt;ON_EXIT&lt;/profile&gt;</programlisting>
-
-    <section id="glideins">
-      <title>Glideins</title>
-
-      <para>In this section we describe how machines from different
-      administrative domains and supercomputing centers can be dynamically
-      added to a Condor pool for certain timeframe. These machines join the
-      Condor pool temporarily and can be used to execute jobs in a non
-      preemptive manner. This functionality is achieved using a Condor feature
-      called <emphasis role="bold">glideins</emphasis> (see <ulink
-      url="http://cs.wisc.edu/condor/glidein">http://cs.wisc.edu/condor/glidein</ulink>)
-      . The startd daemon is the Condor daemon which provides the compute
-      slots and runs the jobs. In the glidein case, the submit machine is
-      usually a static machine and the glideins are told configued to report
-      to that submit machine. The glideins can be submitted to any type of
-      resource: a GRAM enabled cluster, a campus cluster, a cloud environment
-      such as Amazon AWS, or even another Condor cluster.</para>
-
-      <tip>
-        <para>As glideins are usually coming from different compute resource,
-        and/or the glideins are running in an administrative domain different
-        from the submit node, there is usually no shared filesystem available.
-        Thus the most common <link linkend="data_staging_configuration">data
-        staging modes</link> are <emphasis role="bold">condorio</emphasis> and
-        <emphasis role="bold">nonsharedfs</emphasis> .</para>
-      </tip>
-
-      <para>There are many useful tools which submits and manages glideins for
-      you:</para>
-
-      <itemizedlist>
-        <listitem>
-          <para><ulink
-          url="http://www.uscms.org/SoftwareComputing/Grid/WMS/glideinWMS/">GlideinWMS</ulink>
-          is a tool and host environment used mostly on the <ulink
-          url="http://www.opensciencegrid.org/">Open Science
-          Grid</ulink>.</para>
-        </listitem>
-
-        <listitem>
-          <para><ulink
-          url="http://pegasus.isi.edu/projects/corralwms">CorralWMS</ulink> is
-          a personal frontend for GlideinWMS. CorralWMS was developed by the
-          Pegasus team and works very well for high throughput
-          workflows.</para>
-        </listitem>
-
-        <listitem>
-          <para><ulink
-          url="http://research.cs.wisc.edu/condor/manual/v7.6/condor_glidein.html">condor_glidein</ulink>
-          is a simple glidein tool for Globus GRAM clusters. condor_glidein is
-          shipped with Condor.</para>
-        </listitem>
-
-        <listitem>
-          <para>Glideins can also be created by hand or scripts. This is a
-          useful solution for example for cluster which have no external job
-          submit mechanisms or do not allow outside networking.</para>
-        </listitem>
-      </itemizedlist>
-    </section>
-
-    <section>
-      <title>CondorC</title>
-
-      <para>Using CondorC users can submit workflows to remote condor pools.
-      CondorC is a condor specific solution for remote submission that does
-      not involve the setting up a GRAM on the headnode. To enable CondorC
-      submission to a site, user needs to associate pegasus profile key named
-      style with value as condorc. In case, the remote Condor pool does not
-      have a shared filesytem between the nodes making up the pool, users
-      should use pegasus in the condorio data configuration. In this mode, all
-      the data is staged to the remote node in the Condor pool using Condor
-      File transfers and is executed using PegasusLite.</para>
-
-      <para>A sample site catalog for submission to a CondorC enabled site is
-      listed below</para>
-
-      <programlisting>
-&lt;sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
-             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-             xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd"
-             version="4.0"&gt;
+  &lt;profile namespace=&quot;condor&quot; key=&quot;should_transfer_files&quot;&gt;True&lt;/profile&gt;
+  &lt;profile namespace=&quot;condor&quot; key=&quot;when_to_transfer_output&quot;&gt;ON_EXIT&lt;/profile&gt;</programlisting>
+		<section id="glideins">
+			<title>Glideins</title>
+			<para>In this section we describe how machines from different 
+			administrative domains and supercomputing centers can be dynamically 
+			added to a HTCondor pool for certain timeframe. These machines join 
+			the HTCondor pool temporarily and can be used to execute jobs in a 
+			non preemptive manner. This functionality is achieved using a 
+			HTCondor feature called <emphasis role="bold">glideins</emphasis> 
+			(see <ulink url="http://cs.wisc.edu/condor/glidein">
+			http://cs.wisc.edu/condor/glidein</ulink>) . The startd daemon is 
+			the HTCondor daemon which provides the compute slots and runs the 
+			jobs. In the glidein case, the submit machine is usually a static 
+			machine and the glideins are told configued to report to that submit 
+			machine. The glideins can be submitted to any type of resource: a 
+			GRAM enabled cluster, a campus cluster, a cloud environment such as 
+			Amazon AWS, or even another HTCondor cluster.</para>
+			<tip>
+				<para>As glideins are usually coming from different compute 
+				resource, and/or the glideins are running in an administrative 
+				domain different from the submit node, there is usually no shared 
+				filesystem available. Thus the most common 
+				<link linkend="data_staging_configuration">data staging 
+				modes</link> are <emphasis role="bold">condorio</emphasis> and 
+				<emphasis role="bold">nonsharedfs</emphasis> .</para>
+			</tip>
+			<para>There are many useful tools which submits and manages glideins 
+			for you:</para>
+			<itemizedlist>
+				<listitem>
+					<para>
+					<ulink url="http://www.uscms.org/SoftwareComputing/Grid/WMS/glideinWMS/">
+					GlideinWMS</ulink> is a tool and host environment used mostly on 
+					the <ulink url="http://www.opensciencegrid.org/">Open Science 
+					Grid</ulink>.</para>
+				</listitem>
+				<listitem>
+					<para><ulink url="http://pegasus.isi.edu/projects/corralwms">
+					CorralWMS</ulink> is a personal frontend for GlideinWMS. CorralWMS 
+					was developed by the Pegasus team and works very well for high 
+					throughput workflows.</para>
+				</listitem>
+				<listitem>
+					<para>
+					<ulink url="http://research.cs.wisc.edu/condor/manual/v7.6/condor_glidein.html">
+					condor_glidein</ulink> is a simple glidein tool for Globus GRAM 
+					clusters. HTCondor_glidein is shipped with HTCondor.</para>
+				</listitem>
+				<listitem>
+					<para>Glideins can also be created by hand or scripts. This is a 
+					useful solution for example for cluster which have no external job 
+					submit mechanisms or do not allow outside networking.</para>
+				</listitem>
+			</itemizedlist>
+		</section>
+		<section>
+			<title>CondorC</title>
+			<para>Using HTCondorC users can submit workflows to remote HTCondor 
+			pools. HTCondorC is a HTCondor specific solution for remote 
+			submission that does not involve the setting up a GRAM on the 
+			headnode. To enable HTCondorC submission to a site, user needs to 
+			associate pegasus profile key named style with value as HTCondorc. 
+			In case, the remote HTCondor pool does not have a shared filesytem 
+			between the nodes making up the pool, users should use pegasus in 
+			the HTCondorio data configuration. In this mode, all the data is 
+			staged to the remote node in the HTCondor pool using HTCondor File 
+			transfers and is executed using PegasusLite.</para>
+			<para>A sample site catalog for submission to a HTCondorC enabled 
+			site is listed below</para>
+			<programlisting>
+&lt;sitecatalog xmlns=&quot;http://pegasus.isi.edu/schema/sitecatalog&quot;
+             xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+             xsi:schemaLocation=&quot;http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd&quot;
+             version=&quot;4.0&quot;&gt;
       
-    &lt;site  handle="local" arch="x86_64" os="LINUX"&gt;
-        &lt;directory type="shared-scratch" path="/tmp/wf/work"&gt;
-            &lt;file-server operation="all" url="file:///tmp/wf/work"/&gt;
+    &lt;site  handle=&quot;local&quot; arch=&quot;x86_64&quot; os=&quot;LINUX&quot;&gt;
+        &lt;directory type=&quot;shared-scratch&quot; path=&quot;/tmp/wf/work&quot;&gt;
+            &lt;file-server operation=&quot;all&quot; url=&quot;file:///tmp/wf/work&quot;/&gt;
         &lt;/directory&gt;
-        &lt;directory type="local-storage" path="/tmp/wf/storage"&gt;
-            &lt;file-server operation="all" url="file:///tmp/wf/storage"/&gt;
+        &lt;directory type=&quot;local-storage&quot; path=&quot;/tmp/wf/storage&quot;&gt;
+            &lt;file-server operation=&quot;all&quot; url=&quot;file:///tmp/wf/storage&quot;/&gt;
         &lt;/directory&gt;
     &lt;/site&gt;
 
-    &lt;site  handle="condorcpool" arch="x86_86" os="LINUX"&gt;
+    &lt;site  handle=&quot;condorcpool&quot; arch=&quot;x86_86&quot; os=&quot;LINUX&quot;&gt;
          &lt;!-- the grid gateway entries are used to designate
-              the remote schedd for the CondorC pool --&gt;
-         &lt;grid type="condor" contact="ccg-condorctest.isi.edu" scheduler="Condor" jobtype="compute" /&gt;
-         &lt;grid type="condor" contact="ccg-condorctest.isi.edu" scheduler="Condor" jobtype="auxillary" /&gt;
+              the remote schedd for the HTCondorC pool --&gt;
+         &lt;grid type=&quot;condor&quot; contact=&quot;ccg-condorctest.isi.edu&quot; scheduler=&quot;Condor&quot; jobtype=&quot;compute&quot; /&gt;
+         &lt;grid type=&quot;condor&quot; contact=&quot;ccg-condorctest.isi.edu&quot; scheduler=&quot;Condor&quot; jobtype=&quot;auxillary&quot; /&gt;
         
-        &lt;!-- enable submission using condorc --&gt;
-        &lt;profile namespace="pegasus" key="style"&gt;condorc&lt;/profile&gt;
+        &lt;!-- enable submission using HTCondorc --&gt;
+        &lt;profile namespace=&quot;pegasus&quot; key=&quot;style&quot;&gt;condorc&lt;/profile&gt;
 
-        &lt;!-- specify which condor collector to use. 
+        &lt;!-- specify which HTCondor collector to use. 
              If not specified defaults to remote schedd specified in grid gateway --&gt;
-        &lt;profile namespace="condor" key="condor_collector"&gt;condorc-collector.isi.edu&lt;/profile&gt;
+        &lt;profile namespace=&quot;condor&quot; key=&quot;condor_collector&quot;&gt;condorc-collector.isi.edu&lt;/profile&gt;
         
-        &lt;profile namespace="condor" key="should_transfer_files"&gt;Yes&lt;/profile&gt;
-        &lt;profile namespace="condor" key="when_to_transfer_output"&gt;ON_EXIT&lt;/profile&gt;
-        &lt;profile namespace="env" key="PEGASUS_HOME" &gt;/usr&lt;/profile&gt;
-        &lt;profile namespace="condor" key="universe"&gt;vanilla&lt;/profile&gt;
+        &lt;profile namespace=&quot;condor&quot; key=&quot;should_transfer_files&quot;&gt;Yes&lt;/profile&gt;
+        &lt;profile namespace=&quot;condor&quot; key=&quot;when_to_transfer_output&quot;&gt;ON_EXIT&lt;/profile&gt;
+        &lt;profile namespace=&quot;env&quot; key=&quot;PEGASUS_HOME&quot; &gt;/usr&lt;/profile&gt;
+        &lt;profile namespace=&quot;condor&quot; key=&quot;universe&quot;&gt;vanilla&lt;/profile&gt;
 
     &lt;/site&gt;
 
 &lt;/sitecatalog&gt;
 </programlisting>
+			<para>To enable PegasusLite in HTCondorIO mode, users should set the 
+			following in their properties</para>
+			<programlisting># pegasus properties
+pegasus.data.configuration    HTCondorio</programlisting>
+		</section>
+	</section>
+	<section id="cloud">
+		<title>Cloud (Amazon EC2/S3, Google Cloud, ...)</title>
+		<para>
+			<figure id="concepts-fig-cloud-layout">
+				<title>Cloud Sample Site Layout</title>
+				<mediaobject><imageobject>
+				<imagedata align="center" contentdepth="100%" fileref="images/fg-pwms-prefio.3.png" scalefit="1" valign="middle" width="100%"/>
+				</imageobject></mediaobject>
+			</figure>
+		</para>
+		<para>This figure shows a sample environment for executing Pegasus 
+		across multiple clouds. At this point, it is up to the user to 
+		provision the remote resources with a proper VM image that includes a 
+		HTCondor worker that is configured to report back to a HTCondor 
+		master, which can be located inside one of the clouds, or outside the 
+		cloud.</para>
+		<para>The submit host is the point where a user submits Pegasus 
+		workflows for execution. This site typically runs a HTCondor 
+		collector to gather resource announcements, or is part of a larger 
+		HTCondor pool that collects these announcements. HTCondor makes the 
+		remote resources available to the submit host&apos;s HTCondor 
+		installation.</para>
+		<para>The <link linkend="concepts-fig-cloud-layout">figure 
+		above</link> shows the way Pegasus WMS is deployed in cloud computing 
+		resources, ignoring how these resources were provisioned. The 
+		provisioning request shows multiple resources per provisioning 
+		request.</para>
+		<para>The initial stage-in and final stage-out of application data 
+		into and out of the node set is part of any Pegasus-planned workflow. 
+		Several configuration options exist in Pegasus to deal with the 
+		dynamics of push and pull of data, and when to stage data. In many 
+		use-cases, some form of external access to or from the shared file 
+		system that is visible to the application workflow is required to 
+		facilitate successful data staging. However, Pegasus is prepared to 
+		deal with a set of boundary cases.</para>
+		<para>The data server in the figure is shown at the submit host. This 
+		is not a strict requirement. The data server for consumed data and 
+		data products may both be different and external to the submit host, 
+		or one of the object storage solution offered by the cloud 
+		providers</para>
+		<para>Once resources begin appearing in the pool managed by the 
+		submit machine&amp;rsquor;s HTCondor collector, the application 
+		workflow can be submitted to HTCondor. A HTCondor DAGMan will manage 
+		the application workflow execution. Pegasus run-time tools obtain 
+		timing-, performance and provenance information as the application 
+		workflow is executed. At this point, it is the user&apos;s 
+		responsibility to de-provision the allocated resources.</para>
+		<para>In the figure, the cloud resources on the right side are 
+		assumed to have uninhibited outside connectivity. This enables the 
+		HTCondor I/O to communicate with the resources. The right side 
+		includes a setup where the worker nodes use all private IP, but have 
+		out-going connectivity and a NAT router to talk to the internet. The 
+		<emphasis>Condor connection broker</emphasis> (CCB) facilitates this 
+		setup almost effortlessly.</para>
+		<para>The left side shows a more difficult setup where the 
+		connectivity is fully firewalled without any connectivity except to 
+		in-site nodes. In this case, a proxy server process, the <emphasis>
+		generic connection broker</emphasis> (GCB), needs to be set up in the 
+		DMZ of the cloud site to facilitate HTCondor I/O between the submit 
+		host and worker nodes.</para>
+		<para>If the cloud supports data storage servers, Pegasus is starting 
+		to support workflows that require staging in two steps: Consumed data 
+		is first staged to a data server in the remote site&apos;s DMZ, and 
+		then a second staging task moves the data from the data server to the 
+		worker node where the job runs. For staging out, data needs to be 
+		first staged from the job&apos;s worker node to the site&apos;s data 
+		server, and possibly from there to another data server external to 
+		the site. Pegasus is capable to plan both steps: Normal staging to 
+		the site&apos;s data server, and the worker-node staging from and to 
+		the site&apos;s data server as part of the job.</para>
+		<section id="amazon_aws">
+			<title>Amazon EC2</title>
+			<para>There are many different ways to set up an execution 
+			environment in Amazon EC2. The easiest way is to use a submit 
+			machine outside the cloud, and to provision several worker nodes and 
+			a file server node in the cloud as shown here:</para>
+			<para>
+				<figure id="ec2">
+					<title>Amazon EC2</title>
+					<mediaobject><imageobject>
+					<imagedata align="center" contentdepth="100%" fileref="images/ec2.png" scalefit="1" valign="middle" width="100%"/>
+					</imageobject></mediaobject>
+				</figure>
+			</para>
+			<para>The submit machine runs Pegasus and a HTCondor master 
+			(collector, schedd, negotiator). The workers run a HTCondor startd. 
+			And the file server node exports an NFS file system. The startd on 
+			the workers is configured to connect to the master running outside 
+			the cloud, and the workers also mount the NFS file system. More 
+			information on setting up HTCondor for this environment can be found 
+			at <ulink url="http://www.isi.edu/~gideon/condor-ec2/">
+			http://www.isi.edu/~gideon/condor-ec2</ulink>.</para>
+			<para>The site catalog entry for this configuration is similar to 
+			what you would create for running on a local 
+			<link linkend="condor_pool">Condor pool</link> with a shared file 
+			system.</para>
+		</section>
+		<section id="google_cloud">
+			<title>Google Cloud Platform</title>
+			<para>Using the Google Cloud Platform is just like any other cloud 
+			platform. You can choose to host the central manager / submit host 
+			inside the cloud or outside. The compute VMs will have HTCondor 
+			installed and configured to join the pool managed by the central 
+			manager.</para>
+			<para>Google Storage is supported using gsutil. First, create a 
+			.boto file by running:</para>
+			<programlisting>gsutil config
+</programlisting>
+			<para>Then, use a site catalog which specifies which .boto file to 
+			use. You can then use gs:// URLs in your workflow. Example:</para>
+			<programlisting>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;sitecatalog xmlns=&quot;http://pegasus.isi.edu/schema/sitecatalog&quot;
+             xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+             xsi:schemaLocation=&quot;http://pegasus.isi.edu/schema/sitecatalog
+                 http://pegasus.isi.edu/schema/sc-4.0.xsd&quot; version=&quot;4.0&quot;&gt;
 
-      <para>To enable PegasusLite in CondorIO mode, users should set the
-      following in their properties</para>
+    &lt;site  handle=&quot;local&quot; arch=&quot;x86_64&quot; os=&quot;LINUX&quot;&gt;
+        &lt;directory type=&quot;shared-scratch&quot; path=&quot;/tmp&quot;&gt;
+            &lt;file-server operation=&quot;all&quot; url=&quot;file:///tmp&quot;/&gt;
+        &lt;/directory&gt;
+        &lt;profile namespace=&quot;env&quot; key=&quot;PATH&quot;&gt;/opt/gsutil:/usr/bin:/bin&lt;/profile&gt;                                    
+    &lt;/site&gt;                                                                                                                                                                                                                                                                                                                                                                                                             
+    &lt;!-- compute site --&gt;
+    &lt;site  handle=&quot;condorpool&quot; arch=&quot;x86_86&quot; os=&quot;LINUX&quot;&gt;
+        &lt;profile namespace=&quot;pegasus&quot; key=&quot;style&quot; &gt;condor&lt;/profile&gt;
+        &lt;profile namespace=&quot;condor&quot; key=&quot;universe&quot; &gt;vanilla&lt;/profile&gt;
+    &lt;/site&gt;
 
-      <programlisting># pegasus properties
-pegasus.data.configuration    condorio</programlisting>
-    </section>
-  </section>
+    &lt;!-- storage sites have to be in the site catalog, just liek a compute site --&gt;
+    &lt;site  handle=&quot;google_storage&quot; arch=&quot;x86_64&quot; os=&quot;LINUX&quot;&gt;
+        &lt;directory type=&quot;shared-scratch&quot; path=&quot;/my-bucket/scratch&quot;&gt;
+            &lt;file-server operation=&quot;all&quot; url=&quot;gs://my-bucket/scratch&quot;/&gt;
+        &lt;/directory&gt;
+        &lt;directory type=&quot;local-storage&quot; path=&quot;/my-bucket/outputs&quot;&gt;
+            &lt;file-server operation=&quot;all&quot; url=&quot;gs://my-bucket/outputs&quot;/&gt;
+        &lt;/directory&gt;
+        &lt;profile namespace=&quot;pegasus&quot; key=&quot;BOTO_CONFIG&quot;&gt;/home/myuser/.boto&lt;/profile&gt;
+    &lt;/site&gt;
 
-  <section id="cloud">
-    <title>Infrastructure Clouds</title>
-
-    <para><figure id="concepts-fig-cloud-layout">
-        <title>Cloud Sample Site Layout</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center" contentdepth="100%"
-                       fileref="images/fg-pwms-prefio.3.png" scalefit="1"
-                       valign="middle" width="100%"/>
-          </imageobject>
-        </mediaobject>
-      </figure></para>
-
-    <para>This figure shows a sample environment for executing Pegasus on
-    multiple clouds (known as "sky computing"). At this point, it is up to the
-    user to provision the remote resources with a proper VM image that
-    includes a Condor worker that is configured to report back to a Condor
-    master outside the cloud.</para>
-
-    <para>In this discussion, the <emphasis>submit host</emphasis> (SH) is
-    located logically external to the cloud provider(s). The SH is the point
-    where a user submits Pegasus workflows for execution. This site typically
-    runs a Condor collector to gather resource announcements, or is part of a
-    larger Condor pool that collects these announcements. Condor makes the
-    remote resources available to the submit host's Condor
-    installation.</para>
-
-    <para>The <link linkend="concepts-fig-cloud-layout">figure above</link>
-    shows the way Pegasus WMS is deployed in cloud computing resources,
-    ignoring how these resources were provisioned. The provisioning request
-    shows multiple resources per provisioning request.</para>
-
-    <para>The provisioning broker -- Nimbus, Eucalyptus or EC2 -- at the
-    remote site is responsible to allocate and set up the resources. For a
-    multi-node request, the worker nodes often require access to a form of
-    shared data storage. Concretely, either a POSIX-compliant shared file
-    system (e.g. NFS, PVFS) is available to the nodes, or can be brought up
-    for the lifetime of the application workflow. The task steps of the
-    application workflow facilitate shared file systems to exchange
-    intermediary results between tasks on the same cloud site. Pegasus also
-    supports an S3 data mode for the application workflow data staging.</para>
-
-    <para>The initial stage-in and final stage-out of application data into
-    and out of the node set is part of any Pegasus-planned workflow. Several
-    configuration options exist in Pegasus to deal with the dynamics of push
-    and pull of data, and when to stage data. In many use-cases, some form of
-    external access to or from the shared file system that is visible to the
-    application workflow is required to facilitate successful data staging.
-    However, Pegasus is prepared to deal with a set of boundary cases.</para>
-
-    <para>The data server in the figure is shown at the submit host. This is
-    not a strict requirement. The data server for consumed data and data
-    products may both be different and external to the submit host.</para>
-
-    <para>Once resources begin appearing in the pool managed by the submit
-    machine&amp;rsquor;s Condor collector, the application workflow can be
-    submitted to Condor. A Condor DAGMan will manage the application workflow
-    execution. Pegasus run-time tools obtain timing-, performance and
-    provenance information as the application workflow is executed. At this
-    point, it is the user's responsibility to de-provision the allocated
-    resources.</para>
-
-    <para>In the figure, the cloud resources on the right side are assumed to
-    have uninhibited outside connectivity. This enables the Condor I/O to
-    communicate with the resources. The right side includes a setup where the
-    worker nodes use all private IP, but have out-going connectivity and a NAT
-    router to talk to the internet. The <emphasis>Condor connection
-    broker</emphasis> (CCB) facilitates this setup almost effortlessly.</para>
-
-    <para>The left side shows a more difficult setup where the connectivity is
-    fully firewalled without any connectivity except to in-site nodes. In this
-    case, a proxy server process, the <emphasis>generic connection
-    broker</emphasis> (GCB), needs to be set up in the DMZ of the cloud site
-    to facilitate Condor I/O between the submit host and worker nodes.</para>
-
-    <para>If the cloud supports data storage servers, Pegasus is starting to
-    support workflows that require staging in two steps: Consumed data is
-    first staged to a data server in the remote site's DMZ, and then a second
-    staging task moves the data from the data server to the worker node where
-    the job runs. For staging out, data needs to be first staged from the
-    job's worker node to the site's data server, and possibly from there to
-    another data server external to the site. Pegasus is capable to plan both
-    steps: Normal staging to the site's data server, and the worker-node
-    staging from and to the site's data server as part of the job.</para>
-
-    <section id="amazon_aws">
-      <title>Amazon EC2</title>
-
-      <para>There are many different ways to set up an execution environment
-      in Amazon EC2. The easiest way is to use a submit machine outside the
-      cloud, and to provision several worker nodes and a file server node in
-      the cloud as shown here:</para>
-
-      <para><figure id="ec2">
-          <title>Amazon EC2</title>
-
-          <mediaobject>
-            <imageobject>
-              <imagedata align="center" contentdepth="100%"
-                         fileref="images/ec2.png" scalefit="1" valign="middle"
-                         width="100%"/>
-            </imageobject>
-          </mediaobject>
-        </figure></para>
-
-      <para>The submit machine runs Pegasus and a Condor master (collector,
-      schedd, negotiator). The workers run a Condor startd. And the file
-      server node exports an NFS file system. The startd on the workers is
-      configured to connect to the master running outside the cloud, and the
-      workers also mount the NFS file system. More information on setting up
-      Condor for this environment can be found at <ulink
-      url="http://www.isi.edu/~gideon/condor-ec2/">http://www.isi.edu/~gideon/condor-ec2</ulink>.</para>
-
-      <para>The site catalog entry for this configuration is similar to what
-      you would create for running on a local <link
-      linkend="condor_pool">Condor pool</link> with a shared file
-      system.</para>
-    </section>
-
-    <section id="futuregrid_nimbus">
-      <title>FutureGrid</title>
-
-      <para><ulink url="https://portal.futuregrid.org/">FutureGrid</ulink> is
-      a distributed testbed for cloud computing. There is a tutorial on how to
-      run Pegasus on FutureGrid using the Nimbus cloud management system here:
-      <ulink
-      url="http://pegasus.isi.edu/futuregrid/tutorials/">http://pegasus.isi.edu/futuregrid/tutorials</ulink></para>
-    </section>
-  </section>
-
-  <section id="globus_gram">
-    <title>Remote Cluster using Globus GRAM</title>
-
-    <para><figure id="concepts-fig-site-layout">
-        <title>Grid Sample Site Layout</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center" contentdepth="100%"
-                       fileref="images/concepts-site-layout.jpg" scalefit="1"
-                       valign="middle" width="100%"/>
-          </imageobject>
-        </mediaobject>
-      </figure></para>
-
-    <para>A generic grid environment shown in the figure <link
-    linkend="concepts-fig-site-layout">above</link>. We will work from the
-    left to the right top, then the right bottom.</para>
-
-    <para>On the left side, you have a submit machine where Pegasus runs,
-    Condor schedules jobs, and workflows are executed. We call it the
-    <emphasis>submit host</emphasis> (SH), though its functionality can be
-    assumed by a virtual machine image. In order to properly communicate over
-    secured channels, it is important that the submit machine has a proper
-    notion of time, i.e. runs an NTP daemon to keep accurate time. To be able
-    to connect to remote clusters and receive connections from the remote
-    clusters, the submit host has a public IP address to facilitate this
-    communication.</para>
-
-    <para>In order to send a job request to the remote cluster, Condor wraps
-    the job into Globus calls via Condor-G. Globus uses GRAM to manage jobs on
-    remote sites. In terms of a software stack, Pegasus wraps the job into
-    Condor. Condor wraps the job into Globus. Globus transports the job to the
-    remote site, and unwraps the Globus component, sending it to the remote
-    site's <emphasis>resource manager</emphasis> (RM).</para>
-
-    <para>To be able to communicate using the Globus security infrastructure
-    (GSI), the submit machine needs to have the certificate authority (CA)
-    certificates configured, requires a host certificate in certain
-    circumstances, and the user a user certificate that is enabled on the
-    remote site. On the remote end, the remote gatekeeper node requires a host
-    certificate, all signing CA certificate chains and policy files, and a
-    goot time source.</para>
-
-    <para>In a grid environment, there are one or more clusters accessible via
-    grid middleware like the <ulink url="http://www.globus.org/">Globus
-    Toolkit</ulink>. In case of Globus, there is the Globus gatekeeper
-    listening on TCP port 2119 of the remote cluster. The port is opened to a
-    single machine called <emphasis>head node</emphasis> (HN).The head-node is
-    typically located in a de-militarized zone (DMZ) of the firewall setup, as
-    it requires limited outside connectivity and a public IP address so that
-    it can be contacted. Additionally, once the gatekeeper accepted a job, it
-    passes it on to a jobmanager. Often, these jobmanagers require a limited
-    port range, in the example TCP ports 40000-41000, to call back to the
-    submit machine.</para>
-
-    <para>For the user to be able to run jobs on the remote site, the user
-    must have some form of an account on the remtoe site. The user's grid
-    identity is passed from the submit host. An entity called <emphasis>grid
-    mapfile</emphasis> on the gatekeeper maps the user's grid identity into a
-    remote account. While most sites do not permit account sharing, it is
-    possible to map multiple user certificates to the same account.</para>
-
-    <para>The gatekeeper is the interface through which jobs are submitted to
-    the remote cluster's resource manager. A resource manager is a scheduling
-    system like PBS, Maui, LSF, FBSNG or Condor that queues tasks and
-    allocates worker nodes. The <emphasis>worker nodes</emphasis> (WN) in the
-    remote cluster might not have outside connectivity and often use all
-    private IP addresses. The Globus toolkit requires a shared filesystem to
-    properly stage files between the head node and worker nodes.</para>
-
-    <note>
-      <para>The shared filesystem requirement is imposed by Globus. Pegasus is
-      capable of supporting advanced site layouts that do not require a shared
-      filesystem. Please contact us for details, should you require such a
-      setup.</para>
-    </note>
-
-    <para>To stage data between external sites for the job, it is recommended
-    to enable a GridFTP server. If a shared networked filesystem is involved,
-    the GridFTP server should be located as close to the file-server as
-    possible. The GridFTP server requires TCP port 2811 for the control
-    channel, and a limited port range for data channels, here as an example
-    the TPC ports from 40000 to 41000. The GridFTP server requires a host
-    certificate, the signing CA chain and policy files, a stable time source,
-    and a gridmap file that maps between a user's grid identify and the user's
-    account on the remote site.</para>
-
-    <para>The GridFTP server is often installed on the head node, the same as
-    the gatekeeper, so that they can share the grid mapfile, CA certificate
-    chains and other setups. However, for performance purposes it is
-    recommended that the GridFTP server has its own machine.</para>
-
-    <para>An example site catalog entry for a GRAM enabled site looks as
-    follow in the site catalog</para>
-
-    <programlisting>&lt;sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
-             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-             xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd"
-             version="4.0"&gt;
+&lt;/sitecatalog&gt;
+</programlisting>
+		</section>
+	</section>
+	<section id="globus_gram">
+		<title>Remote Cluster using Globus GRAM</title>
+		<para>
+			<figure id="concepts-fig-site-layout">
+				<title>Grid Sample Site Layout</title>
+				<mediaobject><imageobject>
+				<imagedata align="center" contentdepth="100%" fileref="images/concepts-site-layout.jpg" scalefit="1" valign="middle" width="100%"/>
+				</imageobject></mediaobject>
+			</figure>
+		</para>
+		<para>A generic grid environment shown in the figure 
+		<link linkend="concepts-fig-site-layout">above</link>. We will work 
+		from the left to the right top, then the right bottom.</para>
+		<para>On the left side, you have a submit machine where Pegasus runs, 
+		HTCondor schedules jobs, and workflows are executed. We call it the 
+		<emphasis>submit host</emphasis> (SH), though its functionality can 
+		be assumed by a virtual machine image. In order to properly 
+		communicate over secured channels, it is important that the submit 
+		machine has a proper notion of time, i.e. runs an NTP daemon to keep 
+		accurate time. To be able to connect to remote clusters and receive 
+		connections from the remote clusters, the submit host has a public IP 
+		address to facilitate this communication.</para>
+		<para>In order to send a job request to the remote cluster, HTCondor 
+		wraps the job into Globus calls via HTCondor-G. Globus uses GRAM to 
+		manage jobs on remote sites. In terms of a software stack, Pegasus 
+		wraps the job into HTCondor. HTCondor wraps the job into Globus. 
+		Globus transports the job to the remote site, and unwraps the Globus 
+		component, sending it to the remote site&apos;s <emphasis>resource 
+		manager</emphasis> (RM).</para>
+		<para>To be able to communicate using the Globus security 
+		infrastructure (GSI), the submit machine needs to have the 
+		certificate authority (CA) certificates configured, requires a host 
+		certificate in certain circumstances, and the user a user certificate 
+		that is enabled on the remote site. On the remote end, the remote 
+		gatekeeper node requires a host certificate, all signing CA 
+		certificate chains and policy files, and a goot time source.</para>
+		<para>In a grid environment, there are one or more clusters 
+		accessible via grid middleware like the 
+		<ulink url="http://www.globus.org/">Globus Toolkit</ulink>. In case 
+		of Globus, there is the Globus gatekeeper listening on TCP port 2119 
+		of the remote cluster. The port is opened to a single machine called 
+		<emphasis>head node</emphasis> (HN).The head-node is typically 
+		located in a de-militarized zone (DMZ) of the firewall setup, as it 
+		requires limited outside connectivity and a public IP address so that 
+		it can be contacted. Additionally, once the gatekeeper accepted a 
+		job, it passes it on to a jobmanager. Often, these jobmanagers 
+		require a limited port range, in the example TCP ports 40000-41000, 
+		to call back to the submit machine.</para>
+		<para>For the user to be able to run jobs on the remote site, the 
+		user must have some form of an account on the remtoe site. The 
+		user&apos;s grid identity is passed from the submit host. An entity 
+		called <emphasis>grid mapfile</emphasis> on the gatekeeper maps the 
+		user&apos;s grid identity into a remote account. While most sites do 
+		not permit account sharing, it is possible to map multiple user 
+		certificates to the same account.</para>
+		<para>The gatekeeper is the interface through which jobs are 
+		submitted to the remote cluster&apos;s resource manager. A resource 
+		manager is a scheduling system like PBS, Maui, LSF, FBSNG or HTCondor 
+		that queues tasks and allocates worker nodes. The <emphasis>worker 
+		nodes</emphasis> (WN) in the remote cluster might not have outside 
+		connectivity and often use all private IP addresses. The Globus 
+		toolkit requires a shared filesystem to properly stage files between 
+		the head node and worker nodes.</para>
+		<note>
+			<para>The shared filesystem requirement is imposed by Globus. 
+			Pegasus is capable of supporting advanced site layouts that do not 
+			require a shared filesystem. Please contact us for details, should 
+			you require such a setup.</para>
+		</note>
+		<para>To stage data between external sites for the job, it is 
+		recommended to enable a GridFTP server. If a shared networked 
+		filesystem is involved, the GridFTP server should be located as close 
+		to the file-server as possible. The GridFTP server requires TCP port 
+		2811 for the control channel, and a limited port range for data 
+		channels, here as an example the TPC ports from 40000 to 41000. The 
+		GridFTP server requires a host certificate, the signing CA chain and 
+		policy files, a stable time source, and a gridmap file that maps 
+		between a user&apos;s grid identify and the user&apos;s account on 
+		the remote site.</para>
+		<para>The GridFTP server is often installed on the head node, the 
+		same as the gatekeeper, so that they can share the grid mapfile, CA 
+		certificate chains and other setups. However, for performance 
+		purposes it is recommended that the GridFTP server has its own 
+		machine.</para>
+		<para>An example site catalog entry for a GRAM enabled site looks as 
+		follow in the site catalog</para>
+		<programlisting>&lt;sitecatalog xmlns=&quot;http://pegasus.isi.edu/schema/sitecatalog&quot;
+             xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+             xsi:schemaLocation=&quot;http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd&quot;
+             version=&quot;4.0&quot;&gt;
       
-     &lt;site handle="Trestles" arch="x86_64" os="LINUX"&gt;
-        &lt;grid type="gt5" contact="trestles.sdsc.edu/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/&gt;
-        &lt;grid type="gt5" contact="trestles.sdsc.edu/jobmanager-pbs" scheduler="unknown" jobtype="compute"/&gt;
+     &lt;site handle=&quot;Trestles&quot; arch=&quot;x86_64&quot; os=&quot;LINUX&quot;&gt;
+        &lt;grid type=&quot;gt5&quot; contact=&quot;trestles.sdsc.edu/jobmanager-fork&quot; scheduler=&quot;Fork&quot; jobtype=&quot;auxillary&quot;/&gt;
+        &lt;grid type=&quot;gt5&quot; contact=&quot;trestles.sdsc.edu/jobmanager-pbs&quot; scheduler=&quot;unknown&quot; jobtype=&quot;compute&quot;/&gt;
 
-        &lt;directory type="shared-scratch" path="/oasis/projects/nsf/USERNAME"&gt;
-            &lt;file-server operation="all" url="gsiftp://trestles-dm1.sdsc.edu/oasis/projects/nsf/USERNAME"/&gt;
+        &lt;directory type=&quot;shared-scratch&quot; path=&quot;/oasis/projects/nsf/USERNAME&quot;&gt;
+            &lt;file-server operation=&quot;all&quot; url=&quot;gsiftp://trestles-dm1.sdsc.edu/oasis/projects/nsf/USERNAME&quot;/&gt;
         &lt;/directory&gt;
 
         &lt;!-- specify the path to a PEGASUS WORKER INSTALL on the site --&gt;
-        &lt;profile namespace="env" key="PEGASUS_HOME" &gt;/path/to/PEGASUS/INSTALL&lt;/profile&gt;
+        &lt;profile namespace=&quot;env&quot; key=&quot;PEGASUS_HOME&quot; &gt;/path/to/PEGASUS/INSTALL&lt;/profile&gt;
     &lt;/site&gt;
 
 
  &lt;/sitecatalog&gt;</programlisting>
-  </section>
-
-  <section id="creamce_submission">
-    <title>Remote Cluster using CREAMCE</title>
-
-    <para><ulink
-    url="https://wiki.italiangrid.it/twiki/bin/view/CREAM/FunctionalDescription">CREAM</ulink>
-    is a webservices based job submission front end for remote compute
-    clusters. It can be viewed as a replaced for Globus GRAM and is mainly
-    popular in Europe. It widely used in the Italian Grid.</para>
-
-    <para>In order to submit a workflow to compute site using the CREAMCE
-    front end, the user needs to specify the following for the site in their
-    site catalog</para>
-
-    <orderedlist>
-      <listitem>
-        <para><emphasis role="bold">pegasus</emphasis> profile <emphasis
-        role="bold">style</emphasis> with value set to <emphasis
-        role="bold">cream</emphasis></para>
-      </listitem>
-
-      <listitem>
-        <para><emphasis role="bold">grid gateway </emphasis>defined for the
-        site with <emphasis role="bold">contact</emphasis> attribute set to
-        CREAMCE frontend and <emphasis role="bold">scheduler</emphasis>
-        attribute to remote scheduler.</para>
-      </listitem>
-
-      <listitem>
-        <para>a remote queue can be optionally specified using <emphasis
-        role="bold">globus</emphasis> profile <emphasis
-        role="bold">queue</emphasis> with value set to <emphasis
-        role="bold">queue-name</emphasis></para>
-      </listitem>
-    </orderedlist>
-
-    <para>An example site catalog entry for a creamce site looks as follow in
-    the site catalog</para>
-
-    <programlisting>&lt;sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
-             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-             xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd"
-             version="4.0"&gt;
+	</section>
+	<section id="creamce_submission">
+		<title>Remote Cluster using CREAMCE</title>
+		<para>
+		<ulink url="https://wiki.italiangrid.it/twiki/bin/view/CREAM/FunctionalDescription">
+		CREAM</ulink> is a webservices based job submission front end for 
+		remote compute clusters. It can be viewed as a replaced for Globus 
+		GRAM and is mainly popular in Europe. It widely used in the Italian 
+		Grid.</para>
+		<para>In order to submit a workflow to compute site using the CREAMCE 
+		front end, the user needs to specify the following for the site in 
+		their site catalog</para>
+		<orderedlist>
+			<listitem>
+				<para><emphasis role="bold">pegasus</emphasis> profile 
+				<emphasis role="bold">style</emphasis> with value set to 
+				<emphasis role="bold">cream</emphasis></para>
+			</listitem>
+			<listitem>
+				<para><emphasis role="bold">grid gateway</emphasis>defined for the 
+				site with <emphasis role="bold">contact</emphasis> attribute set to 
+				CREAMCE frontend and <emphasis role="bold">scheduler</emphasis> 
+				attribute to remote scheduler.</para>
+			</listitem>
+			<listitem>
+				<para>a remote queue can be optionally specified using 
+				<emphasis role="bold">globus</emphasis> profile 
+				<emphasis role="bold">queue</emphasis> with value set to 
+				<emphasis role="bold">queue-name</emphasis></para>
+			</listitem>
+		</orderedlist>
+		<para>An example site catalog entry for a creamce site looks as 
+		follow in the site catalog</para>
+		<programlisting>&lt;sitecatalog xmlns=&quot;http://pegasus.isi.edu/schema/sitecatalog&quot;
+             xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+             xsi:schemaLocation=&quot;http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd&quot;
+             version=&quot;4.0&quot;&gt;
       
-    &lt;site  handle="creamce" arch="x86" os="LINUX"&gt;
-        &lt;grid type="cream" contact="https://ce01-lcg.cr.cnaf.infn.it:8443/ce-cream/services/CREAM2" scheduler="LSF" jobtype="compute" /&gt;
-        &lt;grid type="cream" contact="https://ce01-lcg.cr.cnaf.infn.it:8443/ce-cream/services/CREAM2" scheduler="LSF" jobtype="auxillary" /&gt;
+    &lt;site  handle=&quot;creamce&quot; arch=&quot;x86&quot; os=&quot;LINUX&quot;&gt;
+        &lt;grid type=&quot;cream&quot; contact=&quot;https://ce01-lcg.cr.cnaf.infn.it:8443/ce-cream/services/CREAM2&quot; scheduler=&quot;LSF&quot; jobtype=&quot;compute&quot; /&gt;
+        &lt;grid type=&quot;cream&quot; contact=&quot;https://ce01-lcg.cr.cnaf.infn.it:8443/ce-cream/services/CREAM2&quot; scheduler=&quot;LSF&quot; jobtype=&quot;auxillary&quot; /&gt;
 
          &lt;!-- Scratch directory on the cluster --&gt;
-        &lt;directory type="shared-scratch" path="/home/virgo034"&gt;
-            &lt;file-server operation="all" url="gsiftp://ce01-lcg.cr.cnaf.infn.it/home/virgo034"/&gt;
+        &lt;directory type=&quot;shared-scratch&quot; path=&quot;/home/virgo034&quot;&gt;
+            &lt;file-server operation=&quot;all&quot; url=&quot;gsiftp://ce01-lcg.cr.cnaf.infn.it/home/virgo034&quot;/&gt;
         &lt;/directory&gt;
 
         &lt;!-- cream is the style to use for CREAMCE submits --&gt;                                                                                                                                                                                                                               
-        &lt;profile namespace="pegasus" key="style"&gt;cream&lt;/profile&gt;
+        &lt;profile namespace=&quot;pegasus&quot; key=&quot;style&quot;&gt;cream&lt;/profile&gt;
 
         &lt;!-- the remote queue is picked up from globus profile --&gt; 
-        &lt;profile namespace="globus" key="queue"&gt;virgo&lt;/profile&gt;
+        &lt;profile namespace=&quot;globus&quot; key=&quot;queue&quot;&gt;virgo&lt;/profile&gt;
 
-        &lt;!-- Staring Condor 8.0 additional cream attributes 
+        &lt;!-- Staring HTCondor 8.0 additional cream attributes 
              can be passed by setting cream_attributes --&gt;
-        &lt;profile namespace="condor" key="cream_attributes"&gt;key1=value1;key2=value2&lt;/profile&gt;
+        &lt;profile namespace=&quot;condor&quot; key=&quot;cream_attributes&quot;&gt;key1=value1;key2=value2&lt;/profile&gt;
     &lt;/site&gt;
 
  &lt;/sitecatalog&gt;</programlisting>
-
-    <para>The pegasus distribution comes with creamce examples in the examples
-    directory. They can be used as a starting point to configure your
-    setup.</para>
-
-    <tip>
-      <para>Usually , the CREAMCE frontends accept VOMS generated user proxies
-      using the command voms-proxy-init . Steps on generating a VOMS proxy are
-      listed in the CREAM User Guide <ulink type=""
-      url="https://wiki.italiangrid.it/twiki/bin/view/CREAM/UserGuide#1_1_Before_starting_get_your_use">here</ulink>
-      .</para>
-    </tip>
-  </section>
-
-  <section id="glite">
-    <title>Local Cluster Using Glite</title>
-
-    <para>This section describes the various changes required in the site
-    catalog for Pegasus to generate an executable workflow that uses gLite
-    blahp to directly submit to PBS on the local machine. This mode of
-    submission should only be used when the condor on the submit host can
-    directly talk to scheduler running on the cluster.</para>
-
-    <para>For the job submissions to work from HTCondor to underlying PBS
-    correctly, you need to use the pbs_local_attributes.sh file distributed
-    with the Pegasus distribution in in the share/pegasus/htcondor/glite
-    directory. You need to copy this file into the bin directory of the glite
-    installation as part of the HTCondor installation on the submit node. The
-    HTCondor glite installation can be determined by running the command
-    condor_config_val GLITE_LOCATION. The Pegasus team currently only provides
-    a local attributes file for PBS.</para>
-
-    <programlisting>$ condor_config_val GLITE_LOCATION
+		<para>The pegasus distribution comes with creamce examples in the 
+		examples directory. They can be used as a starting point to configure 
+		your setup.</para>
+		<tip>
+			<para>Usually , the CREAMCE frontends accept VOMS generated user 
+			proxies using the command voms-proxy-init . Steps on generating a 
+			VOMS proxy are listed in the CREAM User Guide 
+			<ulink type="" url="https://wiki.italiangrid.it/twiki/bin/view/CREAM/UserGuide#1_1_Before_starting_get_your_use">
+			here</ulink> .</para>
+		</tip>
+	</section>
+	<section id="glite">
+		<title>Local Cluster Using Glite</title>
+		<para>This section describes the various changes required in the site 
+		catalog for Pegasus to generate an executable workflow that uses 
+		gLite blahp to directly submit to PBS on the local machine. This mode 
+		of submission should only be used when the HTCondor on the submit 
+		host can directly talk to scheduler running on the cluster.</para>
+		<para>For the job submissions to work from HTCondor to underlying PBS 
+		correctly, you need to use the pbs_local_attributes.sh file 
+		distributed with the Pegasus distribution in in the 
+		share/pegasus/htcondor/glite directory. You need to copy this file 
+		into the bin directory of the glite installation as part of the 
+		HTCondor installation on the submit node. The HTCondor glite 
+		installation can be determined by running the command 
+		HTCondor_config_val GLITE_LOCATION. The Pegasus team currently only 
+		provides a local attributes file for PBS.</para>
+		<programlisting>$ HTCondor_config_val GLITE_LOCATION
 /usr/libexec/condor/glite
 
 $ ls  /usr/libexec/condor/glite/bin/pbs_local_submit_attributes.sh
 -rwxrwxr-x 1 vahi isi-ar 1.8K May 29 17:34 /usr/libexec/condor/glite/bin/pbs_local_submit_attributes.sh</programlisting>
-
-    <para> It is recommended that the cluster that gLite talks to is
-    designated as a separate compute site in the Pegasus site catalog. To tag
-    a site as a gLite site the following two profiles need to be specified for
-    the site in the site catalog.</para>
-
-    <orderedlist>
-      <listitem>
-        <para><emphasis role="bold">pegasus</emphasis> profile <emphasis
-        role="bold">style</emphasis> with value set to <emphasis
-        role="bold">glite</emphasis>.</para>
-      </listitem>
-
-      <listitem>
-        <para><emphasis role="bold">condor</emphasis> profile <emphasis
-        role="bold">grid_resource</emphasis> with value set to <emphasis
-        role="bold">pbs|lsf</emphasis></para>
-      </listitem>
-    </orderedlist>
-
-    <para>An example site catalog entry for a glite site looks as follows in
-    the site catalog</para>
-
-    <programlisting>
-&lt;sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
-             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-             xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd"
-             version="4.0"&gt;
+		<para>It is recommended that the cluster that gLite talks to is 
+		designated as a separate compute site in the Pegasus site catalog. To 
+		tag a site as a gLite site the following two profiles need to be 
+		specified for the site in the site catalog.</para>
+		<orderedlist>
+			<listitem>
+				<para><emphasis role="bold">pegasus</emphasis> profile 
+				<emphasis role="bold">style</emphasis> with value set to 
+				<emphasis role="bold">glite</emphasis>.</para>
+			</listitem>
+			<listitem>
+				<para><emphasis role="bold">condor</emphasis> profile 
+				<emphasis role="bold">grid_resource</emphasis> with value set to 
+				<emphasis role="bold">pbs|lsf</emphasis></para>
+			</listitem>
+		</orderedlist>
+		<para>An example site catalog entry for a glite site looks as follows 
+		in the site catalog</para>
+		<programlisting>
+&lt;sitecatalog xmlns=&quot;http://pegasus.isi.edu/schema/sitecatalog&quot;
+             xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+             xsi:schemaLocation=&quot;http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd&quot;
+             version=&quot;4.0&quot;&gt;
     
-    &lt;site  handle="local" arch="x86" os="LINUX"&gt;
-        &lt;directory type="shared-scratch" path="/lfs/shared-scratch/glite-sharedfs-example/work"&gt;
-            &lt;file-server operation="all" url="file:///lfs/local-scratch/glite-sharedfs-example/work"/&gt;
+    &lt;site  handle=&quot;local&quot; arch=&quot;x86&quot; os=&quot;LINUX&quot;&gt;
+        &lt;directory type=&quot;shared-scratch&quot; path=&quot;/lfs/shared-scratch/glite-sharedfs-example/work&quot;&gt;
+            &lt;file-server operation=&quot;all&quot; url=&quot;file:///lfs/local-scratch/glite-sharedfs-example/work&quot;/&gt;
         &lt;/directory&gt;
-        &lt;directory type="local-storage" path="/shared-scratch//glite-sharedfs-example/outputs"&gt;
-            &lt;file-server operation="all" url="file:///lfs/local-scratch/glite-sharedfs-example/outputs"/&gt;
+        &lt;directory type=&quot;local-storage&quot; path=&quot;/shared-scratch//glite-sharedfs-example/outputs&quot;&gt;
+            &lt;file-server operation=&quot;all&quot; url=&quot;file:///lfs/local-scratch/glite-sharedfs-example/outputs&quot;/&gt;
         &lt;/directory&gt;
     &lt;/site&gt;
 
-    &lt;site  handle="local-pbs" arch="x86" os="LINUX"&gt;
+    &lt;site  handle=&quot;local-pbs&quot; arch=&quot;x86&quot; os=&quot;LINUX&quot;&gt;
         
         &lt;!-- the following is a shared directory shared amongst all the nodes in the cluster --&gt;
-        &lt;directory type="shared-scratch" path="/lfs/glite-sharedfs-example/local-pbs/shared-scratch"&gt;
-            &lt;file-server operation="all" url="file:///lfs/glite-sharedfs-example/local-pbs/shared-scratch"/&gt;
+        &lt;directory type=&quot;shared-scratch&quot; path=&quot;/lfs/glite-sharedfs-example/local-pbs/shared-scratch&quot;&gt;
+            &lt;file-server operation=&quot;all&quot; url=&quot;file:///lfs/glite-sharedfs-example/local-pbs/shared-scratch&quot;/&gt;
         &lt;/directory&gt;
 
-        &lt;profile namespace="env" key="PEGASUS_HOME"&gt;/lfs/software/pegasus/pegasus-4.2.0&lt;/profile&gt;
+        &lt;profile namespace=&quot;env&quot; key=&quot;PEGASUS_HOME&quot;&gt;/lfs/software/pegasus/pegasus-4.2.0&lt;/profile&gt;
 
-        &lt;profile namespace="pegasus" key="style" &gt;glite&lt;/profile&gt;
-        &lt;profile namespace="pegasus" key="change.dir"&gt;true&lt;/profile&gt;
+        &lt;profile namespace=&quot;pegasus&quot; key=&quot;style&quot; &gt;glite&lt;/profile&gt;
+        &lt;profile namespace=&quot;pegasus&quot; key=&quot;change.dir&quot;&gt;true&lt;/profile&gt;
 
-        &lt;profile namespace="condor" key="grid_resource"&gt;pbs&lt;/profile&gt;
-        &lt;profile namespace="condor" key="batch_queue"&gt;batch&lt;/profile&gt;
-        &lt;profile namespace="globus" key="maxwalltime"&gt;30000&lt;/profile&gt;
+        &lt;profile namespace=&quot;condor&quot; key=&quot;grid_resource&quot;&gt;pbs&lt;/profile&gt;
+        &lt;profile namespace=&quot;condor&quot; key=&quot;batch_queue&quot;&gt;batch&lt;/profile&gt;
+        &lt;profile namespace=&quot;globus&quot; key=&quot;maxwalltime&quot;&gt;30000&lt;/profile&gt;
     &lt;/site&gt;
 
 
 &lt;/sitecatalog&gt;
 
 </programlisting>
-
-    <tip>
-      <para>Starting 4.2.1 , in the examples directory you can find a glite
-      shared filesystem example that you can use to test out this
-      configuration</para>
-    </tip>
-
-    <section>
-      <title>Changes to Jobs</title>
-
-      <para>As part of applying the style to the job, this style adds the
-      following classads expressions to the job description.</para>
-
-      <orderedlist>
-        <listitem>
-          <para>+remote_queue - value picked up from globus profile
-          queue</para>
-        </listitem>
-
-        <listitem>
-          <para>+remote_cerequirements - See below</para>
-        </listitem>
-      </orderedlist>
-
-      <section>
-        <title>Remote CE Requirements</title>
-
-        <para>The remote CE requirements are constructed from the following
-        profiles associated with the job. The profiles for a job are derived
-        from various sources</para>
-
-        <orderedlist>
-          <listitem>
-            <para>transformation catalog</para>
-          </listitem>
-
-          <listitem>
-            <para>site catalog</para>
-          </listitem>
-
-          <listitem>
-            <para>DAX</para>
-          </listitem>
-
-          <listitem>
-            <para>user properties</para>
-          </listitem>
-        </orderedlist>
-
-        <para>The following globus profiles if associated with the job are
-        picked up and translated to corresponding key in
-        +remote_cerequirements picked up by pbs_local_attributes.sh file that
-        then is translated to appropriate PBS parameters</para>
-
-        <table>
-          <title>Table mapping translation of profiles to corresponding PBS
-          parameters</title>
-
-          <tgroup cols="3">
-            <thead>
-              <row>
-                <entry align="center">Globus Profile Key</entry>
-
-                <entry align="center"> KEY in +remote_cerequirements
-                classad</entry>
-
-                <entry>Corresponding PBS Parameter in qsub file</entry>
-              </row>
-            </thead>
-
-            <tbody>
-              <row>
-                <entry>hostcount</entry>
-
-                <entry>NODES</entry>
-
-                <entry>nodes</entry>
-              </row>
-
-              <row>
-                <entry>xcount</entry>
-
-                <entry>PROCS</entry>
-
-                <entry>ppn</entry>
-              </row>
-
-              <row>
-                <entry>maxwalltime</entry>
-
-                <entry>WALLTIME</entry>
-
-                <entry>walltime</entry>
-              </row>
-
-              <row>
-                <entry>totalmemory</entry>
-
-                <entry>TOTAL_MEMORY</entry>
-
-                <entry>mem</entry>
-              </row>
-
-              <row>
-                <entry>maxmemory</entry>
-
-                <entry>PER_PROCESS_MEMORY</entry>
-
-                <entry>pmem</entry>
-              </row>
-            </tbody>
-          </tgroup>
-        </table>
-
-        <tip>
-          <para>The above key mappings are supported in Pegasus 4.4 or
-          later.</para>
-        </tip>
-
-        <para>The following condor profiles if associated with the job are
-        picked up and translated to corresponding glite key</para>
-
-        <orderedlist>
-          <listitem>
-            <para>priority -&gt; PRIORITY</para>
-          </listitem>
-        </orderedlist>
-
-        <para>All the env profiles are translated to MYENV</para>
-
-        <para>The remote_cerequirements expression is constructed on the basis
-        of the profiles associated with job . An example
-        +remote_cerequirements classad expression in the submit file is listed
-        below</para>
-
-        <programlisting><emphasis role="bold">+remote_cerequirements = "PROCS==18 &amp;&amp; NODES==1 &amp;&amp; PRIORITY==10 &amp;&amp; WALLTIME==3600 \
-   &amp;&amp; PASSENV==1 &amp;&amp; JOBNAME==\"TEST JOB\" &amp;&amp; MYENV ==\"JAVA_HOME=/bin/java,APP_HOME=/bin/app\""</emphasis></programlisting>
-
-        <note>
-          <para>The above translation only works if you use the
-          pbs_local_attributes.sh file from the Pegasus distribution </para>
-        </note>
-      </section>
-
-      <section>
-        <title>Specifying directory for the jobs</title>
-
-        <para>gLite blahp does not follow the remote_initialdir or initialdir
-        classad directives. Hence, all the jobs that have this style applied
-        don't have a remote directory specified in the submit directory.
-        Instead, Pegasus relies on kickstart to change to the working
-        directory when the job is launched on the remote node.</para>
-      </section>
-    </section>
-  </section>
-
-  <section>
-    <title>Remote Cluster using BOSCO and SSH submissions</title>
-
-    <para><ulink url="http://bosco.opensciencegrid.org/about/">BOSCO</ulink>
-    enables users to submit jobs to remote clusters using SSH. This section
-    describes how to specify a site catalog entry for a site to which jobs can
-    be submitted over SSH. To tag a site for SSH submission, the following
-    profiles need to be specified for the site in the site catalog:</para>
-
-    <orderedlist>
-      <listitem>
-        <para><emphasis role="bold">pegasus</emphasis> profile <emphasis
-        role="bold">style</emphasis> with value set to <emphasis
-        role="bold">ssh</emphasis></para>
-      </listitem>
-
-      <listitem>
-        <para>Specify the service information as grid gateways. This should
-        match what Bosco provided when the cluster was set up.</para>
-      </listitem>
-    </orderedlist>
-
-    <para>An example site catalog entry for a BOSCO site looks as follows in
-    the site catalog</para>
-
-    <programlisting>
-&lt;sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
-             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-             xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd"
-             version="4.0"&gt;
+		<tip>
+			<para>Starting 4.2.1 , in the examples directory you can find a 
+			glite shared filesystem example that you can use to test out this 
+			configuration</para>
+		</tip>
+		<section>
+			<title>Changes to Jobs</title>
+			<para>As part of applying the style to the job, this style adds the 
+			following classads expressions to the job description.</para>
+			<orderedlist>
+				<listitem>
+					<para>+remote_queue - value picked up from globus profile 
+					queue</para>
+				</listitem>
+				<listitem>
+					<para>+remote_cerequirements - See below</para>
+				</listitem>
+			</orderedlist>
+			<section>
+				<title>Remote CE Requirements</title>
+				<para>The remote CE requirements are constructed from the following 
+				profiles associated with the job. The profiles for a job are 
+				derived from various sources</para>
+				<orderedlist>
+					<listitem>
+						<para>transformation catalog</para>
+					</listitem>
+					<listitem>
+						<para>site catalog</para>
+					</listitem>
+					<listitem>
+						<para>DAX</para>
+					</listitem>
+					<listitem>
+						<para>user properties</para>
+					</listitem>
+				</orderedlist>
+				<para>The following globus profiles if associated with the job are 
+				picked up and translated to corresponding key in 
+				+remote_cerequirements picked up by pbs_local_attributes.sh file 
+				that then is translated to appropriate PBS parameters</para>
+				<table>
+					<title>Table mapping translation of profiles to corresponding PBS 
+					parameters</title>
+					<tgroup cols="3">
+						<thead>
+							<row>
+								<entry align="center">Globus Profile Key</entry>
+								<entry align="center">KEY in +remote_cerequirements 
+								classad</entry>
+								<entry>Corresponding PBS Parameter in qsub file</entry>
+							</row>
+						</thead>
+						<tbody>
+							<row>
+								<entry>hostcount</entry>
+								<entry>NODES</entry>
+								<entry>nodes</entry>
+							</row>
+							<row>
+								<entry>xcount</entry>
+								<entry>PROCS</entry>
+								<entry>ppn</entry>
+							</row>
+							<row>
+								<entry>maxwalltime</entry>
+								<entry>WALLTIME</entry>
+								<entry>walltime</entry>
+							</row>
+							<row>
+								<entry>totalmemory</entry>
+								<entry>TOTAL_MEMORY</entry>
+								<entry>mem</entry>
+							</row>
+							<row>
+								<entry>maxmemory</entry>
+								<entry>PER_PROCESS_MEMORY</entry>
+								<entry>pmem</entry>
+							</row>
+						</tbody>
+					</tgroup>
+				</table>
+				<tip>
+					<para>The above key mappings are supported in Pegasus 4.4 or 
+					later.</para>
+				</tip>
+				<para>The following HTCondor profiles if associated with the job 
+				are picked up and translated to corresponding glite key</para>
+				<orderedlist>
+					<listitem>
+						<para>priority -&gt; PRIORITY</para>
+					</listitem>
+				</orderedlist>
+				<para>All the env profiles are translated to MYENV</para>
+				<para>The remote_cerequirements expression is constructed on the 
+				basis of the profiles associated with job . An example 
+				+remote_cerequirements classad expression in the submit file is 
+				listed below</para>
+				<programlisting><emphasis role="bold">+remote_cerequirements = &quot;PROCS==18 &amp;&amp; NODES==1 &amp;&amp; PRIORITY==10 &amp;&amp; WALLTIME==3600 \
+   &amp;&amp; PASSENV==1 &amp;&amp; JOBNAME==\&quot;TEST JOB\&quot; &amp;&amp; MYENV ==\&quot;JAVA_HOME=/bin/java,APP_HOME=/bin/app\&quot;&quot;</emphasis></programlisting>
+				<note>
+					<para>The above translation only works if you use the 
+					pbs_local_attributes.sh file from the Pegasus distribution</para>
+				</note>
+			</section>
+			<section>
+				<title>Specifying directory for the jobs</title>
+				<para>gLite blahp does not follow the remote_initialdir or 
+				initialdir classad directives. Hence, all the jobs that have this 
+				style applied don&apos;t have a remote directory specified in the 
+				submit directory. Instead, Pegasus relies on kickstart to change to 
+				the working directory when the job is launched on the remote 
+				node.</para>
+			</section>
+		</section>
+	</section>
+	<section>
+		<title>Remote Cluster using BOSCO and SSH submissions</title>
+		<para><ulink url="http://bosco.opensciencegrid.org/about/">
+		BOSCO</ulink> enables users to submit jobs to remote clusters using 
+		SSH. This section describes how to specify a site catalog entry for a 
+		site to which jobs can be submitted over SSH. To tag a site for SSH 
+		submission, the following profiles need to be specified for the site 
+		in the site catalog:</para>
+		<orderedlist>
+			<listitem>
+				<para><emphasis role="bold">pegasus</emphasis> profile 
+				<emphasis role="bold">style</emphasis> with value set to 
+				<emphasis role="bold">ssh</emphasis></para>
+			</listitem>
+			<listitem>
+				<para>Specify the service information as grid gateways. This should 
+				match what Bosco provided when the cluster was set up.</para>
+			</listitem>
+		</orderedlist>
+		<para>An example site catalog entry for a BOSCO site looks as follows 
+		in the site catalog</para>
+		<programlisting>
+&lt;sitecatalog xmlns=&quot;http://pegasus.isi.edu/schema/sitecatalog&quot;
+             xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+             xsi:schemaLocation=&quot;http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd&quot;
+             version=&quot;4.0&quot;&gt;
     
-    &lt;site  handle="USC_HPCC_Bosco" arch="x86_64" os="LINUX"&gt;
+    &lt;site  handle=&quot;USC_HPCC_Bosco&quot; arch=&quot;x86_64&quot; os=&quot;LINUX&quot;&gt;
 
         &lt;!-- Specify the service information as grid gateways. This should match what Bosco provided when the cluster
              was set up. --&gt;
-        &lt;grid type="batch" contact="username@hpc-login2.usc.edu" scheduler="PBS" jobtype="compute"/&gt;
-        &lt;grid type="batch" contact="username@hpc-login2.usc.edu" scheduler="PBS" jobtype="auxillary"/&gt;
+        &lt;grid type=&quot;batch&quot; contact=&quot;username@hpc-login2.usc.edu&quot; scheduler=&quot;PBS&quot; jobtype=&quot;compute&quot;/&gt;
+        &lt;grid type=&quot;batch&quot; contact=&quot;username@hpc-login2.usc.edu&quot; scheduler=&quot;PBS&quot; jobtype=&quot;auxillary&quot;/&gt;
 
         &lt;!-- Scratch directory on the cluster --&gt;
-        &lt;directory type="shared-scratch" path="/home/rcf-40/tmp"&gt;
-            &lt;file-server operation="all" url="scp://username@hpc-login2.usc.edu/home/rcf-40/tmp"/&gt;
+        &lt;directory type=&quot;shared-scratch&quot; path=&quot;/home/rcf-40/tmp&quot;&gt;
+            &lt;file-server operation=&quot;all&quot; url=&quot;scp://username@hpc-login2.usc.edu/home/rcf-40/tmp&quot;/&gt;
         &lt;/directory&gt;
 
         &lt;!-- SSH is the style to use for Bosco SSH submits --&gt;
-        &lt;profile namespace="pegasus" key="style"&gt;ssh&lt;/profile&gt;
+        &lt;profile namespace=&quot;pegasus&quot; key=&quot;style&quot;&gt;ssh&lt;/profile&gt;
 
         &lt;!-- Bosco is using the grid universe, which means the globus
              namespace can be used to control the jobs --&gt;
-        &lt;profile namespace="globus" key="queue"&gt;default&lt;/profile&gt;
-        &lt;profile namespace="globus" key="maxwalltime"&gt;30&lt;/profile&gt;
+        &lt;profile namespace=&quot;globus&quot; key=&quot;queue&quot;&gt;default&lt;/profile&gt;
+        &lt;profile namespace=&quot;globus&quot; key=&quot;maxwalltime&quot;&gt;30&lt;/profile&gt;
 
     &lt;/site&gt;
 
@@ -885,101 +798,88 @@ $ ls  /usr/libexec/condor/glite/bin/pbs_local_submit_attributes.sh
 &lt;/sitecatalog&gt;
 
 </programlisting>
-
-    <note>
-      <para>It is recommended to have a submit node configured either as a
-      BOSCO submit node or a vanilla HTCondor node. You cannot have HTCondor
-      configured both as a BOSCO install and a traditional HTCondor submit
-      node at the same time as BOSCO will override the traditional HTCondor
-      pool in the user environment.</para>
-    </note>
-
-    <para>Starting 4.3 there is a bosco-shared-fs example in the examples
-    directory of the distribution.</para>
-  </section>
-
-  <section id="campus_cluster">
-    <title>Campus Cluster</title>
-
-    <para>There are almost as many different configurations of campus clusters
-    as there are campus clusters, and because of that it can be hard to
-    determine what the best way to run Pegasus workflows. Below is a ordered
-    checklist with some ideas we have collected from working with users in the
-    past:</para>
-
-    <orderedlist>
-      <listitem>
-        <para>If the cluster scheduler is Condor, please see the Condor Pool
-        section.</para>
-      </listitem>
-
-      <listitem>
-        <para>If the cluster is Globus GRAM enabled, see the Globus GRAM
-        section. If you have have a lot of short jobs, also read the Glidein
-        section.</para>
-      </listitem>
-
-      <listitem>
-        <para>For clusters without GRAM, you might be able to do glideins. If
-        outbound network connectivity is allowed, your submit host can be
-        anywhere. If the cluster is setup to not allow any network connections
-        to the outside, you will probably have to run the submit host inside
-        the cluster as well.</para>
-      </listitem>
-    </orderedlist>
-
-    <para>If the cluster you are trying to use is not fitting any of the above
-    scenarios, please post to the <ulink
-    url="http://pegasus.isi.edu/support">Pegasus users mailing list</ulink>
-    and we will help you find a solution.</para>
-  </section>
-
-  <section id="xsede">
-    <title>XSEDE</title>
-
-    <para>The <ulink url="https://www.xsede.org/">Extreme Science and
-    Engineering Discovery Environment (XSEDE)</ulink> provides a set of High
-    Performance Computing (HPC) and High Throughput Computing (HTC)
-    resources.</para>
-
-    <para>For the HPC resources, it is recommended to run using <link
-    linkend="globus_gram">Globus GRAM</link> or <link
-    linkend="glideins">glideins</link>. Most of these resources have fast
-    parallel file systesm, so running with <link
-    linkend="data_staging_configuration">sharedfs data staging</link> is
-    recommended. Below is example site catalog and pegasusrc to run on <ulink
-    url="http://www.sdsc.edu/us/resources/trestles/">SDSC
-    Trestles</ulink>:</para>
-
-    <programlisting>
-&lt;sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
-             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-             xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd"
-             version="4.0"&gt;
+		<note>
+			<para>It is recommended to have a submit node configured either as a 
+			BOSCO submit node or a vanilla HTCondor node. You cannot have 
+			HTCondor configured both as a BOSCO install and a traditional 
+			HTCondor submit node at the same time as BOSCO will override the 
+			traditional HTCondor pool in the user environment.</para>
+		</note>
+		<para>Starting 4.3 there is a bosco-shared-fs example in the examples 
+		directory of the distribution.</para>
+	</section>
+	<section id="campus_cluster">
+		<title>Campus Cluster</title>
+		<para>There are almost as many different configurations of campus 
+		clusters as there are campus clusters, and because of that it can be 
+		hard to determine what the best way to run Pegasus workflows. Below 
+		is a ordered checklist with some ideas we have collected from working 
+		with users in the past:</para>
+		<orderedlist>
+			<listitem>
+				<para>If the cluster scheduler is HTCondor, please see the HTCondor 
+				Pool section.</para>
+			</listitem>
+			<listitem>
+				<para>If the cluster is Globus GRAM enabled, see the Globus GRAM 
+				section. If you have have a lot of short jobs, also read the 
+				Glidein section.</para>
+			</listitem>
+			<listitem>
+				<para>For clusters without GRAM, you might be able to do glideins. 
+				If outbound network connectivity is allowed, your submit host can 
+				be anywhere. If the cluster is setup to not allow any network 
+				connections to the outside, you will probably have to run the 
+				submit host inside the cluster as well.</para>
+			</listitem>
+		</orderedlist>
+		<para>If the cluster you are trying to use is not fitting any of the 
+		above scenarios, please post to the 
+		<ulink url="http://pegasus.isi.edu/support">Pegasus users mailing 
+		list</ulink> and we will help you find a solution.</para>
+	</section>
+	<section id="xsede">
+		<title>XSEDE</title>
+		<para>The <ulink url="https://www.xsede.org/">Extreme Science and 
+		Engineering Discovery Environment (XSEDE)</ulink> provides a set of 
+		High Performance Computing (HPC) and High Throughput Computing (HTC) 
+		resources.</para>
+		<para>For the HPC resources, it is recommended to run using 
+		<link linkend="globus_gram">Globus GRAM</link> or 
+		<link linkend="glideins">glideins</link>. Most of these resources 
+		have fast parallel file systesm, so running with 
+		<link linkend="data_staging_configuration">sharedfs data 
+		staging</link> is recommended. Below is example site catalog and 
+		pegasusrc to run on 
+		<ulink url="http://www.sdsc.edu/us/resources/trestles/">SDSC 
+		Trestles</ulink>:</para>
+		<programlisting>
+&lt;sitecatalog xmlns=&quot;http://pegasus.isi.edu/schema/sitecatalog&quot;
+             xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+             xsi:schemaLocation=&quot;http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd&quot;
+             version=&quot;4.0&quot;&gt;
       
-    &lt;site  handle="local" arch="x86_64" os="LINUX"&gt;
-        &lt;directory type="shared-scratch" path="/tmp/wf/work"&gt;
-            &lt;file-server operation="all" url="file:///tmp/wf/work"/&gt;
+    &lt;site  handle=&quot;local&quot; arch=&quot;x86_64&quot; os=&quot;LINUX&quot;&gt;
+        &lt;directory type=&quot;shared-scratch&quot; path=&quot;/tmp/wf/work&quot;&gt;
+            &lt;file-server operation=&quot;all&quot; url=&quot;file:///tmp/wf/work&quot;/&gt;
         &lt;/directory&gt;
-        &lt;directory type="local-storage" path="/tmp/wf/storage"&gt;
-            &lt;file-server operation="all" url="file:///tmp/wf/storage"/&gt;
+        &lt;directory type=&quot;local-storage&quot; path=&quot;/tmp/wf/storage&quot;&gt;
+            &lt;file-server operation=&quot;all&quot; url=&quot;file:///tmp/wf/storage&quot;/&gt;
         &lt;/directory&gt;
     &lt;/site&gt;
 
-    &lt;site handle="Trestles" arch="x86_64" os="LINUX"&gt;
-       &lt;grid type="gt5" contact="trestles.sdsc.edu:2119/jobmanager-fork" scheduler="PBS" jobtype="auxillary"/&gt;
-       &lt;grid type="gt5" contact="trestles.sdsc.edu:2119/jobmanager-pbs" scheduler="PBS" jobtype="compute"/&gt;
-       &lt;directory type="shared-scratch" path="/phase1/USERNAME"&gt;
-           &lt;file-server operation="all" url="gsiftp://trestles-dm1.sdsc.edu/phase1/USERNAME"/&gt;
+    &lt;site handle=&quot;Trestles&quot; arch=&quot;x86_64&quot; os=&quot;LINUX&quot;&gt;
+       &lt;grid type=&quot;gt5&quot; contact=&quot;trestles.sdsc.edu:2119/jobmanager-fork&quot; scheduler=&quot;PBS&quot; jobtype=&quot;auxillary&quot;/&gt;
+       &lt;grid type=&quot;gt5&quot; contact=&quot;trestles.sdsc.edu:2119/jobmanager-pbs&quot; scheduler=&quot;PBS&quot; jobtype=&quot;compute&quot;/&gt;
+       &lt;directory type=&quot;shared-scratch&quot; path=&quot;/phase1/USERNAME&quot;&gt;
+           &lt;file-server operation=&quot;all&quot; url=&quot;gsiftp://trestles-dm1.sdsc.edu/phase1/USERNAME&quot;/&gt;
        &lt;/directory&gt;
     &lt;/site&gt;
 
 &lt;/sitecatalog&gt;
 </programlisting>
-
-    <para>pegasusrc:</para>
-
-    <programlisting>pegasus.catalog.replica=SimpleFile
+		<para>pegasusrc:</para>
+		<programlisting>pegasus.catalog.replica=SimpleFile
 pegasus.catalog.replica.file=rc
 
 pegasus.catalog.site.file=sites.xml
@@ -993,26 +893,23 @@ pegasus.data.configuration = sharedfs
 # so stage the worker package
 pegasus.transfer.worker.package = true
 </programlisting>
-
-    <para>The HTC resources available on XSEDE are all Condor based, so
-    standard <link linkend="condor_pool">Condor Pool</link> setup will work
-    fine.</para>
-
-    <para>If you need to run high throughput workloads on the HPC machines
-    (for example, post processing after a large parallel job), <link
-    linkend="glideins">glideins</link> can be useful as it is a more efficient
-    method for small jobs on these systems.</para>
-  </section>
-
-  <section id="open_science_grid">
-    <title>Open Science Grid Using glideinWMS</title>
-
-    <section>
-      <para><ulink
-      url="http://www.uscms.org/SoftwareComputing/Grid/WMS/glideinWMS/">glideinWMS</ulink>
-      is a glidein system widely used on Open Science Grid. Running on top of
-      glideinWMS is like running on a <link linkend="condor_pool">Condor
-      Pool</link> without a shared filesystem.</para>
-    </section>
-  </section>
+		<para>The HTC resources available on XSEDE are all HTCondor based, so 
+		standard <link linkend="condor_pool">HTCondor Pool</link> setup will 
+		work fine.</para>
+		<para>If you need to run high throughput workloads on the HPC 
+		machines (for example, post processing after a large parallel job), 
+		<link linkend="glideins">glideins</link> can be useful as it is a 
+		more efficient method for small jobs on these systems.</para>
+	</section>
+	<section id="open_science_grid">
+		<title>Open Science Grid Using glideinWMS</title>
+		<section>
+			<para>
+			<ulink url="http://www.uscms.org/SoftwareComputing/Grid/WMS/glideinWMS/">
+			glideinWMS</ulink> is a glidein system widely used on Open Science 
+			Grid. Running on top of glideinWMS is like running on a 
+			<link linkend="condor_pool">Condor Pool</link> without a shared 
+			filesystem.</para>
+		</section>
+	</section>
 </chapter>

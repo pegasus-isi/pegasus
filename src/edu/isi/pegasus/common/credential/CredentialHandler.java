@@ -30,13 +30,13 @@ public interface CredentialHandler {
     /**
      * The version of the API being used.
      */
-    public static final String VERSION = "1.1";
+    public static final String VERSION = "1.2";
 
     //type of credentials associated
     /**
      * An enumeration of valid types of credentials that are supported.
      */
-    public static enum TYPE { x509, s3, irods, ssh };
+    public static enum TYPE { x509, s3, gs, irods, ssh };
 
     /**
      * Initializes the credential implementation. Implementations require

@@ -38,6 +38,13 @@ import tempfile
 import threading
 import time
 
+try:
+    # Python 3.0 and later
+    import urllib.parse as urllib
+except ImportError:
+    # Fall back to Python 2's urllib
+    import urllib as urllib
+
 
 __author__ = "Mats Rynge <rynge@isi.edu>"
 
@@ -45,7 +52,7 @@ __author__ = "Mats Rynge <rynge@isi.edu>"
 # --- regular expressions -----------------------------------------------------
 
 re_parse_comment = re.compile(r'^# +[\w]+ +[\w]+ +([\w\-_]+)')
-re_parse_url = re.compile(r'([\w]+)://([\w\.\-:@]*)(/[\S]*)?')
+re_parse_url = re.compile(r'([\w]+)://([\w\.\-:@]*)(/[\S ]*)?')
 
 
 # --- classes -----------------------------------------------------------------
@@ -92,6 +99,9 @@ class Transfer:
         proto = ""
         host = ""
         path = ""
+            
+        # the url should be URL decoded to work with our shell callouts
+        url = urllib.unquote(url)
 
         # default protocol is file://
         if string.find(url, ":") == -1:
@@ -138,6 +148,9 @@ class Transfer:
 
     def src_url(self):
         return "%s://%s%s" % (self.src_proto, self.src_host, self.src_path)
+    
+    def src_url_encoded(self):
+        return "%s://%s%s" % (self.src_proto, self.src_host, urllib.quote(self.src_path))
 
     def src_url_srm(self):
         """
@@ -149,6 +162,9 @@ class Transfer:
 
     def dst_url(self):
         return "%s://%s%s" % (self.dst_proto, self.dst_host, self.dst_path)
+    
+    def dst_url_encoded(self):
+        return "%s://%s%s" % (self.dst_proto, self.dst_host, urllib.quote(self.dst_path))
 
     def dst_url_srm(self):
         """
@@ -529,7 +545,8 @@ class GridFtpHandler(TransferHandlerBase):
             
         for i, t in enumerate(transfers):
             num_pairs += 1
-            logger.debug("   adding %s %s" % (t.src_url(), t.dst_url()))
+            logger.debug("   adding %s %s" % (t.src_url_encoded(),
+                                              t.dst_url_encoded()))
     
             # delay stating until we have finished the transfers
             if t.src_proto == "file":
@@ -537,7 +554,8 @@ class GridFtpHandler(TransferHandlerBase):
             elif t.dst_proto == "file":
                 delayed_file_stat.append(t.dst_path)
     
-            tmp_file.write("%s %s\n" % (t.src_url(), t.dst_url()))
+            tmp_file.write("%s %s\n" % (t.src_url_encoded(),
+                                        t.dst_url_encoded()))
     
         tmp_file.close()
         
@@ -888,13 +906,11 @@ class S3Handler(TransferHandlerBase):
                     "s3s->s3s"
                     ]
 
-    buckets_created = {}
-
     def do_transfer(self, transfer, attempt):
     
         tools = Tools()
         if tools.find("pegasus-s3", "help", None) is None:
-            raise RuntimeError("Unable to do S3 transfers becuase"
+            raise RuntimeError("Unable to do S3 transfers because"
                                + " pegasus-s3 could not be found")
 
         local_filename = None
@@ -940,7 +956,7 @@ class S3Handler(TransferHandlerBase):
                 os.environ["S3CFG"] = os.environ[key]
             if "S3CFG" not in os.environ:
                 logger.error("At least one of the S3CFG_" + 
-                             transfer.src_sitename + " or S3CFG" +
+                             transfer.dst_sitename + " or S3CFG" +
                              " environment variables has to be set")
                 return False
 
@@ -949,6 +965,87 @@ class S3Handler(TransferHandlerBase):
             local_filename = transfer.src_path
             cmd = "pegasus-s3 put -f -b '%s' '%s'" % (transfer.src_path,
                                                       transfer.dst_url())
+
+        try:
+            myexec(cmd, default_subshell_timeout, True)
+            if local_filename is not None:
+                stats_add(local_filename)
+        except Exception, err:
+            logger.error(err)
+            return False
+        return True
+
+
+class GSHandler(TransferHandlerBase):
+    """
+    Handler for Google Storage services
+    """
+    
+    _name = "GSHandler"
+    _protocol_map = [
+                    "file->gs",
+                    "gs->file",
+                    "gs->gs",
+                    ]
+
+    def do_transfer(self, transfer, attempt):
+    
+        tools = Tools()
+        if tools.find("gsutil", "version", "gsutil version: ([\.0-9a-zA-Z]+)") is None:
+            raise RuntimeError("Unable to do Google Storage transfers because"
+                               + " the gsutil tool could not be found")
+
+        local_filename = None
+        
+        # use cp for s3->s3 transfers, and get/put when one end is a file://
+        if (transfer.src_proto == "gs" and transfer.dst_proto == "gs"):
+            # gs -> gs
+            key = "BOTO_CONFIG_" + transfer.src_sitename
+            if key in os.environ:
+                os.environ["BOTO_CONFIG"] = os.environ[key]
+            if "BOTO_CONFIG" not in os.environ:
+                logger.error("At least one of the BOTO_CONFIG_" + 
+                             transfer.src_sitename + " or BOTO_CONFIG" +
+                             " environment variables has to be set")
+                return False
+
+            check_cred_fs_permissions(os.environ["BOTO_CONFIG"])
+
+            cmd = "gsutil -q cp '%s' '%s'" % (transfer.src_url(),
+                                              transfer.dst_url())
+        elif transfer.dst_proto == "file":
+            # this is a 'get'
+            key = "BOTO_CONFIG_" + transfer.src_sitename
+            if key in os.environ:
+                os.environ["BOTO_CONFIG"] = os.environ[key]
+            if "BOTO_CONFIG" not in os.environ:
+                logger.error("At least one of the BOTO_CONFIG_" + 
+                             transfer.src_sitename + " or BOTO_CONFIG" +
+                             " environment variables has to be set")
+                return False
+
+            check_cred_fs_permissions(os.environ["BOTO_CONFIG"])
+
+            local_filename = transfer.dst_path
+            prepare_local_dir(os.path.dirname(transfer.dst_path))
+            cmd = "gsutil -q cp '%s' '%s'" % (transfer.src_url(),
+                                              transfer.dst_path)
+        else:
+            # this is a 'put'
+            key = "BOTO_CONFIG_" + transfer.dst_sitename
+            if key in os.environ:
+                os.environ["BOTO_CONFIG"] = os.environ[key]
+            if "BOTO_CONFIG" not in os.environ:
+                logger.error("At least one of the BOTO_CONFIG_" + 
+                             transfer.dst_sitename + " or BOTO_CONFIG" +
+                             " environment variables has to be set")
+                return False
+
+            check_cred_fs_permissions(os.environ["BOTO_CONFIG"])
+
+            local_filename = transfer.src_path
+            cmd = "gsutil -q cp '%s' '%s'" % (transfer.src_path,
+                                              transfer.dst_url())
 
         try:
             myexec(cmd, default_subshell_timeout, True)
@@ -1046,8 +1143,10 @@ class ScpHandler(TransferHandlerBase):
                     cmd += " -i " + os.environ['SSH_PRIVATE_KEY']
 
                 prepare_local_dir(os.path.dirname(transfer.dst_path))
-                cmd += " " + transfer.src_host + ":" + transfer.src_path
-                cmd += " " + transfer.dst_path
+                # scp wants escaped remote paths, even with quotes
+                src_path = re.sub(' ', '\\ ', transfer.src_path)
+                cmd += " '" + transfer.src_host + ":" + src_path + "'"
+                cmd += " '" + transfer.dst_path + "'"
             else:
                 # file -> scp
                 key = "SSH_PRIVATE_KEY_" + transfer.dst_sitename
@@ -1065,8 +1164,12 @@ class ScpHandler(TransferHandlerBase):
                                           transfer.dst_host,
                                           os.path.dirname(transfer.dst_path))
                     remote_dirs_created[mkdir_key] = True
+                
+                # scp wants escaped remote paths, even with quotes
+                dst_path = re.sub(' ', '\\ ', transfer.dst_path)
+                
                 cmd += " '" + transfer.src_path + "'"
-                cmd += " '" + transfer.dst_host + ":" + transfer.dst_path + "'"
+                cmd += " '" + transfer.dst_host + ":" + dst_path + "'"
                 stats_add(transfer.src_path)
 
             myexec(cmd, default_subshell_timeout, True)
@@ -1159,6 +1262,7 @@ class TransferSet:
         self._available_handlers.append( HTTPHandler() )
         self._available_handlers.append( IRodsHandler() )
         self._available_handlers.append( S3Handler() )
+        self._available_handlers.append( GSHandler() )
         self._available_handlers.append( SRMHandler() )
         self._available_handlers.append( ScpHandler() )
         self._available_handlers.append( SymlinkHandler() )
@@ -1334,7 +1438,7 @@ class Alarm(Exception):
 
 # --- global variables ----------------------------------------------------------------
 
-prog_dir  = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0])))
+prog_dir  = os.path.realpath(os.path.join(os.path.dirname(sys.argv[0])))
 prog_base = os.path.split(sys.argv[0])[1]   # Name of this program
 
 logger = logging.getLogger("my_logger")
@@ -1450,12 +1554,15 @@ def env_setup():
     # fink on macos x
     if os.path.exists("/sw/bin") and not("/sw/bin" in path_entries):
         path_entries.append("/sw/bin")
-       
-    # need LD_LIBRARY_PATH for Globus tools
-    ld_library_path = ""
-    if "LD_LIBRARY_PATH" in os.environ:
-        ld_library_path = os.environ['LD_LIBRARY_PATH']
-    ld_library_path_entries = ld_library_path.split(':')
+    
+    # prepend the path pegasus-transfer was launched from - this ensures
+    # a consistent environment where all the Pegasus tools are picked
+    # up from the same location
+    try:
+        path_entries.remove(prog_dir)
+    except Exception:
+        pass
+    path_entries.insert(0, prog_dir)
     
     # if PEGASUS_HOME is set, prepend it to the PATH (we want it early to
     # override other cruft)
@@ -1466,6 +1573,12 @@ def env_setup():
             pass
         path_entries.insert(0, os.environ['PEGASUS_HOME'] + "/bin")
     
+    # need LD_LIBRARY_PATH for Globus tools
+    ld_library_path = ""
+    if "LD_LIBRARY_PATH" in os.environ:
+        ld_library_path = os.environ['LD_LIBRARY_PATH']
+    ld_library_path_entries = ld_library_path.split(':')
+
     # if GLOBUS_LOCATION is set, prepend it to the PATH and LD_LIBRARY_PATH 
     # (we want it early to override other cruft)
     if "GLOBUS_LOCATION" in os.environ:
@@ -1766,7 +1879,7 @@ def main():
         # pool of worker threads
         t_id = 0
         num_threads = min(options.threads, work_q.qsize())
-        if attempt_current > 1:
+        if attempt_current > 2:
             num_threads = 1
         logger.info("Using %d threads for this round of transfers"
                     %(num_threads))
