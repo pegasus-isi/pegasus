@@ -64,8 +64,8 @@ print "Pegasus BIN_DIR %s" % bin_dir
 print "Pegasus DAGMAN is  %s" % sys.argv[0]
 
 # Insert this directory in our search path
-os.sys.path.insert(0, lib_ext_dir)
 os.sys.path.insert(0, lib_dir)
+os.sys.path.insert(0, lib_ext_dir)
 
 from Pegasus.tools import utils
 utils.configureLogging()
