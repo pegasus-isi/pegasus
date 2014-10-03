@@ -3,6 +3,7 @@ import sys
 import subprocess
 import logging
 import time
+import threading
 
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -467,20 +468,15 @@ class EnsembleProcessor:
                 self.db.session.rollback()
 
 
-class EnsembleManager(object):
+class EnsembleManager(threading.Thread):
     Processor = EnsembleProcessor
 
     def __init__(self, interval=None):
+        threading.Thread.__init__(self)
+        self.daemon = True
         if interval is None:
             interval = float(app.config["EM_INTERVAL"])
         self.interval = interval
-
-    def start(self):
-        pid = os.fork()
-        if pid == 0:
-            self.run()
-        else:
-            return pid
 
     def run(self):
         log.info("Ensemble Manager starting")
@@ -493,10 +489,13 @@ class EnsembleManager(object):
 
     def get_active_users(self):
         # TODO Identify the active users
-        return [request.get_user_by_uid(os.getuid())]
+        #return [request.get_user_by_uid(os.getuid())]
+        return []
 
     def loop_once(self):
         for u in self.get_active_users():
+
+            # TODO Fork process
 
             # Switch to user
             if os.getuid() != u.uid:

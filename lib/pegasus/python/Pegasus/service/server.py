@@ -37,8 +37,8 @@ class ServerCommand(Command):
             except manager.EMException, e:
                 log.warning("%s: Ensemble manager disabled" % e.message)
             else:
-                mgr = manager.EnsembleManager()
-                mgrpid = mgr.start()
+                mgr =  manager.EnsembleManager()
+                mgr.start()
 
         cert = app.config.get("CERTIFICATE", None)
         pkey = app.config.get("PRIVATE_KEY", None)
@@ -55,8 +55,6 @@ class ServerCommand(Command):
                 host=app.config["SERVER_HOST"],
                 processes=app.config["MAX_PROCESSES"],
                 ssl_context=ssl_context)
-
-        os.waitpid(mgrpid, 0)
 
         log.info("Exiting")
 
