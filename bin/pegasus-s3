@@ -714,15 +714,11 @@ def put(args):
 
     # Create the bucket if the user requested it and it does not exist
     if options.create_bucket:
-        try:
+        if conn.lookup(uri.bucket):
+            info("Bucket %s exists" % uri.bucket)
+        else:
+            info("Creating bucket %s" % uri.bucket)
             conn.create_bucket(uri.bucket)
-        except Exception, e:
-            # We were seeing lots of 409 errors for this
-            # operation when the bucket already exists. Since
-            # we assume that the bucket will exist in most cases,
-            # and the transfer will fail if it doesn't, then
-            # any errors caught here can be safely ignored.
-            warn("Error creating bucket '%s': %s" % (uri.bucket, e))
 
     b = Bucket(connection=conn, name=uri.bucket)
     k = Key(bucket=b, name=uri.key)
