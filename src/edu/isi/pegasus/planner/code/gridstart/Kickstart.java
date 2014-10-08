@@ -1332,10 +1332,12 @@ public class Kickstart implements GridStart {
             //we set the -K parameter to half the difference between
             //maxwalltime - checkpointTime
             int diff = max - checkpointTime;
-            if( diff < 10 ){
+            int minDiff = 10;
+            if( diff < minDiff ){
                 //throw error
                 throw new RuntimeException( "Insufficient difference between maxwalltime " + 
-                                            max + " and expected walltime " + checkpointTime );
+                                            max + " and checkpoint time " + checkpointTime +
+                                            " Should be at least " + minDiff + " seconds ");
             }
             
             //we divide the difference equaully.
