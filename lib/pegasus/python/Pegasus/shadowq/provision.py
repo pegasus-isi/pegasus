@@ -35,13 +35,15 @@ def read_estimates(filename):
     return estimates
 
 class Provisioner(threading.Thread):
-    def __init__(self, dag, estimates, slots, interval):
+    def __init__(self, dag, estimates, interval, deadline, listener, publisher):
         threading.Thread.__init__(self)
         self.setDaemon(True)
         self.dag = dag
         self.estimates = read_estimates(estimates)
-        self.slots = slots
         self.interval = interval
+        self.deadline = deadline
+        self.listener = listener
+        self.publisher = publisher
 
     def simulate(self, start, slots):
         newdag = self.dag.clone()
@@ -59,22 +61,47 @@ class Provisioner(threading.Thread):
         return wfe.runtime
 
     def run(self):
-        while True:
+        log.info("Provisioner starting...")
 
+        while self.listener.status != "ready":
+            log.info("Slice not ready. Waiting...")
+            time.sleep(60)
+
+        while True:
             log.info("Provisioning resources...")
+
             start = time.time()
-            slots = self.slots
+            slots = self.listener.current
             runtime = self.simulate(start, slots)
+            deadline_diff = (start + runtime) - self.deadline
             if start + runtime <= self.deadline:
+                # We are going to meet the deadline
                 while start + runtime <= self.deadline:
                     slots -= 1
                     runtime = self.simulate(start, slots)
+                    if slots == 1:
+                        log.info("Requesting minimum number of slots")
+                        break
             else:
+                # We are not going to meet the deadline
                 while start + runtime >= self.deadline:
                     slots += 1
-                    runtime = self.simulate(start, slots)
+                    current_runtime = self.simulate(start, slots)
+                    if runtime - current_runtime < 60:
+                        # Runtime didn't significantly improve, so
+                        # assume that we cannot meet the deadline
+                        log.info("Cannot meet deadline")
+                        break
+                    runtime = current_runtime
 
-            # TODO Send request
+            log.info("Requesting %d slots" % slots)
+
+            self.publisher.send_modify_request(
+                    self.deadline,
+                    deadline_diff,
+                    0, #util_max
+                    self.listener.current,
+                    slots)
 
             time.sleep(self.interval)
 

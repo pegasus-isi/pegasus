@@ -3,26 +3,23 @@ import sys
 import logging
 import time
 
+from Pegasus.tools import utils
 from Pegasus.shadowq.dag import parse_dag
 from Pegasus.shadowq.jobstate import JSLog
 from Pegasus.shadowq.wfmonitor import WorkflowMonitor
 from Pegasus.shadowq.provision import Provisioner
+from Pegasus.shadowq.messaging import ManifestListener, RequestPublisher
 
 __all__ = ["main"]
 
 log = logging.getLogger(__name__)
 
 def main():
-    # This configures logging
-    from Pegasus.tools import utils
-
-    utils.configureLogging(logging.INFO)
-
-    logging.getLogger("Pegasus.shadowq")
-
     if len(sys.argv) != 2:
         print "Usage: %s DAGFILE" % sys.argv[0]
         exit(1)
+
+    utils.configureLogging(logging.INFO)
 
     log.info("Shadow queue starting...")
 
@@ -34,6 +31,11 @@ def main():
 
     jslog_file = os.path.join(wf_dir, "jobstate.log")
 
+    braindump = utils.slurp_braindb(wf_dir)
+
+    wf_uuid = braindump["wf_uuid"]
+
+    log.info("wf_uuid: %s", wf_uuid)
     log.info("DAG: %s", dag_file)
     log.info("Workflow Dir: %s", wf_dir)
     log.info("Jobstate Log: %s", jslog_file)
@@ -68,7 +70,16 @@ def main():
     slots = int(os.getenv("SHADOWQ_SLOTS", 1))
     estimates = os.getenv("SHADOWQ_ESTIMATES", None)
     interval = int(os.getenv("SHADOWQ_PROVISIONER_INTERVAL", 60))
-    provisioner = Provisioner(dag, estimates, slots, interval)
+    deadline = int(os.getenv("SHADOWQ_DEADLINE", 0))
+    amqp_url = os.getenv("SHADOWQ_AMQP_URL")
+    sliceid = os.getenv("SHADOWQ_SLICEID")
+
+    listener = ManifestListener(amqp_url, sliceid)
+    listener.start()
+
+    publisher = RequestPublisher(amqp_url, sliceid, wf_uuid)
+
+    provisioner = Provisioner(dag, estimates, interval, deadline, listener, publisher)
     provisioner.start()
 
     monitor.join()

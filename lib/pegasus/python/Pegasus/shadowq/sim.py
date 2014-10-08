@@ -69,7 +69,7 @@ class Simulation(object):
         self.running = False
 
     def log(self, message):
-        log.info("%s" % (message))
+        log.debug("%s" % (message))
 
     def simulate(self, until=None):
         self.log("Simulation starting...")
@@ -197,7 +197,7 @@ class WorkflowEngine(Entity):
         while self.last_schedule + SCHEDULER_INTERVAL < self.time():
             self.last_schedule += SCHEDULER_INTERVAL
 
-        log.info("Last real schedule: %f", self.last_schedule)
+        log.debug("Last real schedule: %f", self.last_schedule)
 
         # Figure out the next schedule time
         if self.dag.start is None:
@@ -220,7 +220,7 @@ class WorkflowEngine(Entity):
                     log.info("Setting next_schedule based on queued job: %s", j.name)
                     next_schedule = min(next_schedule, j.queue_start + SCHEDULER_CYCLE_DELAY)
 
-        log.info("Next simulated schedule: %f", next_schedule)
+        log.debug("Next simulated schedule: %f", next_schedule)
 
         assert(next_schedule > self.time())
 
@@ -237,13 +237,13 @@ class WorkflowEngine(Entity):
             self.queue_job(job)
 
     def run_prescript(self, job, delay=PRE_SCRIPT_DELAY):
-        log.info("%s %s %s", self.time(), job.name, "PRESCRIPT")
+        log.debug("%s %s %s", self.time(), job.name, "PRESCRIPT")
 
         job.state = JobState.PRESCRIPT
         self.send(self, 'prescript.finished', delay=delay, data=job)
 
     def queue_job(self, job):
-        log.info("%s %s %s", self.time(), job.name, "QUEUED")
+        log.debug("%s %s %s", self.time(), job.name, "QUEUED")
 
         job.state = JobState.QUEUED
         # The heapq package uses min heaps, so we use negative priority
@@ -252,7 +252,7 @@ class WorkflowEngine(Entity):
         heappush(self.queue, ((-job.priority, job.sequence), job))
 
         # If the last scheduler cycle was recent, then schedule now
-        log.info("last_schedule: %s", self.last_schedule)
+        log.debug("last_schedule: %s", self.last_schedule)
         next_schedule = self.simulation.find_next('schedule')
         if self.last_schedule + SCHEDULER_CYCLE_DELAY <= self.time():
             self.simulation.cancel('schedule') # Cancel future schedule events
@@ -262,7 +262,7 @@ class WorkflowEngine(Entity):
             self.send(self, 'schedule', delay=SCHEDULER_CYCLE_DELAY)
 
     def run_job(self, job, delay=None):
-        log.info("%s %s %s", self.time(), job.name, "RUNNING")
+        log.debug("%s %s %s", self.time(), job.name, "RUNNING")
 
         # The job uses 1 slot
         self.slots -= 1
@@ -275,7 +275,7 @@ class WorkflowEngine(Entity):
         self.send(self, 'job.finished', delay=delay, data=job)
 
     def run_postscript(self, job, delay=POST_SCRIPT_DELAY):
-        log.info("%s %s %s", self.time(), job.name, "POSTSCRIPT")
+        log.debug("%s %s %s", self.time(), job.name, "POSTSCRIPT")
 
         job.state = JobState.POSTSCRIPT
         self.send(self, 'postscript.finished', delay=delay, data=job)
@@ -333,7 +333,7 @@ class WorkflowEngine(Entity):
             self.queue_ready(job.children)
 
     def postscript_finished(self, job):
-        log.info("%s %s %s", self.time(), job.name, "SUCCESSFUL")
+        log.debug("%s %s %s", self.time(), job.name, "SUCCESSFUL")
         self.log("post script finished for %s" % job.name)
         job.state = JobState.SUCCESSFUL
         self.queue_ready(job.children)
