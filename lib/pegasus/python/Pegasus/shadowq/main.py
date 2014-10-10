@@ -67,12 +67,17 @@ def main():
     monitor = WorkflowMonitor(dag, jslog)
     monitor.start()
 
-    slots = int(os.getenv("SHADOWQ_SLOTS", 1))
     estimates = os.getenv("SHADOWQ_ESTIMATES", None)
-    interval = int(os.getenv("SHADOWQ_PROVISIONER_INTERVAL", 60))
-    deadline = int(os.getenv("SHADOWQ_DEADLINE", 0))
+    interval = int(os.getenv("SHADOWQ_PROVISIONER_INTERVAL", 120))
+    makespan = int(os.getenv("SHADOWQ_MAKESPAN", 0))
     amqp_url = os.getenv("SHADOWQ_AMQP_URL")
     sliceid = os.getenv("SHADOWQ_SLICEID")
+
+    deadline = time.time() + makespan
+
+    log.info("Interval: %d", interval)
+    log.info("Makespan: %d", makespan)
+    log.info("Deadline: %d", deadline)
 
     listener = ManifestListener(amqp_url, sliceid)
     listener.start()
