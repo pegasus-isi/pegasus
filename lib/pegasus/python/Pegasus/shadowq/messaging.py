@@ -19,7 +19,7 @@ class ManifestListener(threading.Thread):
 
         # Connect
         self.connection = pika.BlockingConnection(pika.connection.URLParameters(self.url))
-        self.channel = connection.channel()
+        self.channel = self.connection.channel()
 
         # Declare the exchange
         self.channel.exchange_declare(exchange=self.manifest_exchange, type='topic')
@@ -56,7 +56,7 @@ class RequestPublisher(object):
         self.request_queue = request_queue
 
         self.connection = pika.BlockingConnection(pika.connection.URLParameters(self.url))
-        self.channel = connection.channel()
+        self.channel = self.connection.channel()
         self.channel.queue_declare(queue=self.request_queue)
 
     def send_modify_request(self, deadline, deadline_diff, util_max, current, required):
