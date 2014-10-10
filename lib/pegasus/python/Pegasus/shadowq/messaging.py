@@ -65,8 +65,8 @@ class RequestPublisher(object):
             "req_sliceID": self.sliceid,
             "req_wfuuid": self.wf_uuid,
             "req_numCurrentRes": current,
-            "req_deadline": deadline,
-            "req_deadlineDiff": deadline_diff,
+            "req_deadline": int(deadline),
+            "req_deadlineDiff": int(deadline_diff),
             "req_numResReqToMeetDeadline": required,
             "req_numResUtilMax": util_max
         }
