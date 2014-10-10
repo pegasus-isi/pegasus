@@ -65,7 +65,7 @@ class Provisioner(threading.Thread):
 
         while self.listener.status != "ready":
             log.info("Slice not ready. Waiting...")
-            time.sleep(60)
+            time.sleep(10)
 
         while True:
             log.info("Provisioning resources...")
@@ -78,10 +78,12 @@ class Provisioner(threading.Thread):
                 # We are going to meet the deadline
                 while start + runtime <= self.deadline:
                     slots -= 1
-                    runtime = self.simulate(start, slots)
-                    if slots == 1:
-                        log.info("Requesting minimum number of slots")
+                    if slots == 0:
                         break
+                    runtime = self.simulate(start, slots)
+                slots += 1
+                if slots == 1:
+                    log.info("Requesting minimum number of slots")
             else:
                 # We are not going to meet the deadline
                 while start + runtime >= self.deadline:
