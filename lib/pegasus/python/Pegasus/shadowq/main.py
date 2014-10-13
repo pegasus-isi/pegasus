@@ -89,5 +89,7 @@ def main():
 
     monitor.join()
 
+    publisher.send_workflow_finished()
+
     log.info("Shadow queue exiting")
 

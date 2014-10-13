@@ -50,6 +50,7 @@ class RequestPublisher(object):
 
     def __init__(self, url, sliceid, wf_uuid, request_queue='testRequestQ'):
         self.daemon = True
+        self.lock = threading.Lock()
         self.url = url
         self.sliceid = sliceid
         self.wf_uuid = wf_uuid
@@ -60,6 +61,7 @@ class RequestPublisher(object):
         self.channel.queue_declare(queue=self.request_queue)
 
     def send_modify_request(self, deadline, deadline_diff, util_max, current, required):
+        self.lock.acquire()
         req = {
             "requestType": "modifyCompute",
             "req_sliceID": self.sliceid,
@@ -73,4 +75,17 @@ class RequestPublisher(object):
         self.channel.basic_publish(exchange='',
                                    routing_key=self.request_queue,
                                    body=json.dumps(req))
+        self.lock.release()
+
+    def send_workflow_finished(self):
+        self.lock.acquire()
+        req = {
+            "requestType": "workflowFinished",
+            "req_sliceID": self.sliceid,
+            "req_wfuuid": self.wf_uuid,
+        }
+        self.channel.basic_publish(exchange='',
+                                   routing_key=self.request_queue,
+                                   body=json.dumps(req))
+        self.lock.release()
 
