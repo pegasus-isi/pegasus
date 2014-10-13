@@ -217,12 +217,12 @@ class WorkflowEngine(Entity):
                 # schedule will be after a minimum cycle delay. The 5.0 is just
                 # a fudge factor based on DAGMan's polling interval.
                 if j.state == JobState.QUEUED and j.queue_start >= (self.last_schedule - 5.0):
-                    log.info("Setting next_schedule based on queued job: %s", j.name)
+                    log.debug("Setting next_schedule based on queued job: %s", j.name)
                     next_schedule = min(next_schedule, j.queue_start + SCHEDULER_CYCLE_DELAY)
 
         log.debug("Next simulated schedule: %f", next_schedule)
 
-        assert(next_schedule > self.time())
+        assert(next_schedule >= self.time())
 
         # If the next schedule time is in the past, schedule now, otherwise schedule
         # at the right time

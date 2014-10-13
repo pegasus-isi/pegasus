@@ -80,61 +80,67 @@ class Provisioner(threading.Thread):
             time.sleep(10)
 
         while True:
-            log.info("Provisioning resources...")
-
-            current_slots = get_slots() or self.listener.current
-
-            start = time.time()
-
-            slots = current_slots
-            runtime = self.simulate(start, slots)
-            finish = start + runtime
-            deadline_diff = finish - self.deadline
-
-            log.info("Slots: %d", slots)
-            log.info("Estimated runtime: %f", runtime)
-            log.info("Estimated finish: %f", finish)
-            log.info("Deadline diff: %f", deadline_diff)
-            log.info("Need runtime of: %f", self.deadline - start)
-
-            if start > self.deadline:
-                log.error("Exceeded deadline: Maintaining current slots")
-            elif start + runtime <= self.deadline:
-                log.info("Will meet deadline with current slots")
-                # We are going to meet the deadline
-                while start + runtime <= self.deadline:
-                    slots -= 1
-                    if slots == 0:
-                        break
-                    log.info("Trying %d slots", slots)
-                    runtime = self.simulate(start, slots)
-                    log.info("Runtime: %f", runtime)
-                slots += 1
-                if slots == 1:
-                    log.info("Requesting minimum number of slots")
-            else:
-                log.info("Will NOT meet deadline with current slots")
-                # We are not going to meet the deadline
-                while start + runtime >= self.deadline:
-                    slots += 1
-                    log.info("Trying %d slots", slots)
-                    current_runtime = self.simulate(start, slots)
-                    log.info("Runtime: %f", current_runtime)
-                    if runtime - current_runtime < 60:
-                        # Runtime didn't significantly improve, so
-                        # assume that we cannot meet the deadline
-                        log.info("Cannot meet deadline")
-                        break
-                    runtime = current_runtime
-
-            log.info("Requesting %d slots" % slots)
-
-            self.publisher.send_modify_request(
-                    self.deadline,
-                    deadline_diff,
-                    0, #util_max
-                    current_slots,
-                    slots)
-
+            try:
+                self.loop()
+            except Exception, e:
+                log.error("Unable to complete provisioning cycle...")
+                log.exception(e)
+                log.info("Trying again later...")
             time.sleep(self.interval)
+
+    def loop(self):
+        log.info("Provisioning resources...")
+
+        current_slots = get_slots() or self.listener.current
+
+        start = time.time()
+        slots = current_slots
+        runtime = self.simulate(start, slots)
+        finish = start + runtime
+        deadline_diff = finish - self.deadline
+
+        log.info("Slots: %d", slots)
+        log.info("Estimated runtime: %f", runtime)
+        log.info("Estimated finish: %f", finish)
+        log.info("Deadline diff: %f", deadline_diff)
+        log.info("Need runtime of: %f", self.deadline - start)
+
+        if start > self.deadline:
+            log.error("Exceeded deadline: Maintaining current slots")
+        elif start + runtime <= self.deadline:
+            log.info("Will meet deadline with current slots")
+            # We are going to meet the deadline
+            while start + runtime <= self.deadline:
+                slots -= 1
+                if slots == 0:
+                    break
+                log.info("Trying %d slots", slots)
+                runtime = self.simulate(start, slots)
+                log.info("Runtime: %f", runtime)
+            slots += 1
+            if slots == 1:
+                log.info("Requesting minimum number of slots")
+        else:
+            log.info("Will NOT meet deadline with current slots")
+            # We are not going to meet the deadline
+            while start + runtime >= self.deadline:
+                slots += 1
+                log.info("Trying %d slots", slots)
+                current_runtime = self.simulate(start, slots)
+                log.info("Runtime: %f", current_runtime)
+                if runtime - current_runtime < 60:
+                    # Runtime didn't significantly improve, so
+                    # assume that we cannot meet the deadline
+                    log.info("Cannot meet deadline")
+                    break
+                runtime = current_runtime
+
+        log.info("Requesting %d slots" % slots)
+
+        self.publisher.send_modify_request(
+                self.deadline,
+                deadline_diff,
+                0, #util_max
+                current_slots,
+                slots)
 
