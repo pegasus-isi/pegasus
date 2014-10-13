@@ -9,7 +9,11 @@ log = logging.getLogger(__name__)
 
 def get_slots():
     try:
-        output = subprocess.check_output(["condor_status", "-total"])
+        proc = subprocess.Popen(["condor_status", "-total"], shell=True,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        output, error = proc.communicate()
+        if proc.wait() != 0:
+            raise Exception("Non-zero exitcode")
         totals = output.split("\n")[-2]
         totals = totals.split()
         return int(totals[1])
