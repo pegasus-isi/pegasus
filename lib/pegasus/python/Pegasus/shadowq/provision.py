@@ -1,10 +1,22 @@
 import logging
 import time
 import threading
+import subprocess
 from Pegasus.shadowq import sim
 from Pegasus.shadowq.dag import JobState, JobType
 
 log = logging.getLogger(__name__)
+
+def get_slots():
+    try:
+        output = subprocess.check_output(["condor_status", "-total"])
+        totals = output.split("\n")[-2]
+        totals = totals.split()
+        return int(totals[1])
+    except Exception, e:
+        log.error("Unable to get total number of slots from condor_status")
+        log.exception(e)
+        return None
 
 def uses_slot(jobtype):
     # FIXME This is probably not 100% correct
@@ -71,7 +83,7 @@ class Provisioner(threading.Thread):
             log.info("Provisioning resources...")
 
             start = time.time()
-            slots = self.listener.current
+            slots = get_slots() or self.listener.current
             runtime = self.simulate(start, slots)
             deadline_diff = (start + runtime) - self.deadline
             if start + runtime <= self.deadline:
