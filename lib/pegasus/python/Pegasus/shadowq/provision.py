@@ -75,10 +75,6 @@ class Provisioner(threading.Thread):
     def run(self):
         log.info("Provisioner starting...")
 
-        while self.listener.status != "ready":
-            log.info("Slice not ready. Waiting...")
-            time.sleep(10)
-
         while True:
             try:
                 self.loop()
@@ -91,7 +87,7 @@ class Provisioner(threading.Thread):
     def loop(self):
         log.info("Provisioning resources...")
 
-        current_slots = get_slots() or self.listener.current
+        current_slots = get_slots() or self.listener.current or 1
 
         start = time.time()
         slots = current_slots

@@ -14,7 +14,7 @@ class ManifestListener(threading.Thread):
         self.url = url
         self.manifest_exchange = manifest_exchange
         self.sliceid = sliceid
-        self.current = 0
+        self.current = None
         self.status = None
 
         # Connect
@@ -40,6 +40,7 @@ class ManifestListener(threading.Thread):
         man = json.loads(body)
         self.current = man["response_numWorkersReady"]
         self.status = man["response_sliceStatus"]
+        log.info("Slice Manifest: sliceStatus = %s, numWorkersReady = %d", self.status, self.current)
 
     def run(self):
         self.channel.basic_consume(self.manifest_message,
