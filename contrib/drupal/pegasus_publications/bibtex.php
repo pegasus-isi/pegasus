@@ -242,8 +242,100 @@ class Bibtex {
         return $result;
     }
 
-    function RenderEntry($entry) {
+    function RenderCoins($entry) {
+        $type = $entry["type"];
+
+        $coins = array();
+        $coins["ctx_ver"] = "Z39.88-2004";
+        $coins["rfr_id"] = "info:sid/pegasus.isi.edu";
+
+        if ($type === "article") {
+            $coins["rft.genre"] = "article";
+            $coins["rft_val_fmt"] = "info:ofi/fmt:kev:mtx:journal";
+            $coins["rft.atitle"] = $entry["title"];
+            $coins["rft.jtitle"] = $entry["journal"];
+            if (array_key_exists("volume", $entry)) {
+                $coins["rft.volume"] = $entry["volume"];
+            }
+            if (array_key_exists("number", $entry)) {
+                $coins["rft.issue"] = $entry["number"];
+            }
+            if (array_key_exists("pages", $entry)) {
+                $coins["rft.pages"] = $entry["pages"];
+            }
+        }
+        else if ($type === "inproceedings") {
+            $coins["rft_val_fmt"] = "info:ofi/fmt:kev:mtx:book";
+            $coins["rft.genre"] = "proceeding";
+            $coins["rft.atitle"] = $entry["title"];
+            $coins["rft.btitle"] = $entry["booktitle"];
+        }
+        else if ($type === "inbook") {
+            $coins["rft_val_fmt"] = "info:ofi/fmt:kev:mtx:book";
+            $coins["rft.genre"] = "bookitem";
+            $coins["rft.atitle"] = $entry["title"];
+            $coins["rft.btitle"] = $entry["booktitle"];
+            if (array_key_exists("publisher", $entry)) {
+                $coins["rft.pub"] = $entry["publisher"];
+            }
+            if (array_key_exists("pages", $entry)) {
+                $coins["rft.pages"] = $entry["pages"];
+            }
+        }
+        else if ($type === "book") {
+            $coins["rft_val_fmt"] = "info:ofi/fmt:kev:mtx:book";
+            $coins["rft.genre"] = "book";
+            $coins["rft.btitle"] = $entry["title"];
+            $coins["rft.pub"] = $entry["publisher"];
+        }
+        else if ($type === "techreport") {
+            $coins["rft_val_fmt"] = "info:ofi/fmt:kev:mtx:book";
+            $coins["rft.genre"] = "report";
+            $coins["rft.btitle"] = $entry["title"];
+            $coins["rft.pub"] = $entry["institution"];
+            $coins["rft.series"] = $entry["number"];
+        }
+        else {
+            // Don't generate COinS markup for this entry
+            return "";
+        }
+
+        $coins["rft.au"] = $entry["author"];
+
+        $date = "";
+        if (array_key_exists("month", $entry)) {
+            $date .= $entry["month"] . " ";
+        }
+        $date .= $entry["year"];
+        $coins["rft.date"] = $date;
+
         $result = "";
+        foreach($coins as $key => $value) {
+            if ($result != "") {
+                $result .= "&";
+            }
+
+            // Reprocess the authors
+            if ($key === "rft.au") {
+                $authors = "";
+                foreach($value as $author) {
+                    if ($authors != "") {
+                        $authors .= "&";
+                    }
+                    $authors .= "rft.au=" . urlencode($author[1] . ", " . $author[0]);
+                }
+                $result .= $authors;
+            }
+            else {
+                $result .= $key . "=" . urlencode($value);
+            }
+        }
+
+        return '<span class="Z3988" title="' . $result . '"></span>';
+    }
+
+    function RenderEntry($entry) {
+        $result = Bibtex::RenderCoins($entry);
 
         $type = $entry["type"];
 
