@@ -128,33 +128,3 @@ class JobLog(object):
 
         return record
 
-def main():
-    import sys
-    if len(sys.argv) != 2:
-        print "Usage: %s JOB_LOG" % sys.argv[0]
-        exit(1)
-
-    class Job(object): pass
-
-    jobs = {}
-
-    jl = JobLog(sys.argv[1])
-
-    for r in jl:
-        if r.job_name not in jobs:
-            jobs[r.job_name] = Job()
-
-        j = jobs[r.job_name]
-
-        if r.event == JobLogEvent.EXECUTE:
-            j.start = r.ts
-        elif r.event == JobLogEvent.JOB_TERMINATED:
-            j.finish = r.ts
-
-    for name, j in jobs.items():
-        print name, (j.finish - j.start)
-
-if __name__ == '__main__':
-    main()
-
-
