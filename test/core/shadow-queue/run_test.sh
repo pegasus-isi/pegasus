@@ -139,9 +139,16 @@ tr analyze {
 }
 END
 
-export SHADOWQ_ESTIMATES=$dir/estimates.txt
+if [ -z "$SHADOWQ_AMQP_PASSWORD" ]; then
+    echo "Set SHADOWQ_AMQP_PASSWORD"
+    exit 1
+fi
+
 export SHADOWQ_PROVISIONER_INTERVAL=30
-export SHADOWQ_SLOTS=4
+export SHADOWQ_ESTIMATES=$dir/estimates.txt
+export SHADOWQ_MAKESPAN=300
+export SHADOWQ_AMQP_URL="amqps://gideon:$SHADOWQ_AMQP_PASSWORD@gaul.isi.edu:5671/%2F"
+export SHADOWQ_SLICEID="test"
 
 pegasus-plan --conf pegasus.conf -d diamond.dax --dir submit \
 	--force --sites pegasus -o local --cleanup none --submit
