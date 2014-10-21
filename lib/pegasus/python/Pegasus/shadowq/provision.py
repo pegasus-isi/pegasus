@@ -132,6 +132,7 @@ class Provisioner(threading.Thread):
                     # Runtime didn't significantly improve, so
                     # assume that we cannot meet the deadline
                     log.info("Cannot meet deadline")
+                    slots -= 1
                     break
                 runtime = current_runtime
 
