@@ -91,7 +91,7 @@ class Provisioner(threading.Thread):
     def loop(self):
         log.info("Provisioning resources...")
 
-        current_slots = get_slots() or self.listener.current or 1
+        current_slots = get_slots() or self.listener.slots() or 1
 
         start = time.time()
         slots = current_slots

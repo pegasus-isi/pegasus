@@ -14,7 +14,8 @@ class ManifestListener(threading.Thread):
         self.url = url
         self.manifest_exchange = manifest_exchange
         self.sliceid = sliceid
-        self.current = None
+        self.ready = 0
+        self.provisioning = 0
         self.status = None
 
         # Connect
@@ -38,9 +39,13 @@ class ManifestListener(threading.Thread):
         # "response_orcaSliceID":"testSlice",
         # "response_numWorkersReady":2}
         man = json.loads(body)
-        self.current = man["response_numWorkersReady"]
+        self.ready = int(man["response_numWorkersReady"])
+        self.provisioning = int(man["response_numWorkersProvisioning"])
         self.status = man["response_sliceStatus"]
         log.info("Slice Manifest: sliceStatus = %s, numWorkersReady = %d", self.status, self.current)
+
+    def slots(self):
+        return self.ready + self.provisioning
 
     def run(self):
         self.channel.basic_consume(self.manifest_message,
