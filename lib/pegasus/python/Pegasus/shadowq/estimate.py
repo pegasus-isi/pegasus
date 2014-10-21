@@ -27,7 +27,10 @@ def estimate_jobstate(jslog_file):
             j.finish = ts
 
     for name, j in jobs.items():
-        print "%s %f" % (name, j.finish - j.start)
+        if hasattr(j, "finish"):
+            print "%s %f" % (name, j.finish - j.start)
+        else:
+            print "%s not finished" % (name)
 
 def estimate_joblog(joblog_file):
     jobs = {}
@@ -44,7 +47,10 @@ def estimate_joblog(joblog_file):
             j.finish = r.ts
 
     for name, j in jobs.items():
-        print name, (j.finish - j.start)
+        if hasattr(j, "finish"):
+            print name, (j.finish - j.start)
+        else:
+            print name, "not finished"
 
 def main():
     if len(sys.argv) != 2:
