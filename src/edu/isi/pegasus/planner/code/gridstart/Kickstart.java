@@ -1308,7 +1308,7 @@ public class Kickstart implements GridStart {
             
             //expected time is the time after which kickstart sends
             //the TERM signal to job 
-            sb.append( " -k " ).append( checkpointTime );
+            sb.append( "-k " ).append( checkpointTime ).append( " " );
             
             int max = Integer.MAX_VALUE;
             if( job.vdsNS.containsKey( Pegasus.MAX_WALLTIME) ){
@@ -1345,7 +1345,7 @@ public class Kickstart implements GridStart {
             //the time to transfer the file
             //kill time is the time after which kickstart sends
             //the KILL signal to job 
-            sb.append( " -K " ).append( diff/2 ).append( " " );
+            sb.append( "-K " ).append( diff/2 ).append( " " );
             
             return sb.toString();
         }
