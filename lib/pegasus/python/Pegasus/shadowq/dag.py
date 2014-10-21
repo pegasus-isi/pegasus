@@ -91,6 +91,9 @@ class Job(object):
         elif record.event == JSLogEvent.EXECUTE:
             self.state = JobState.RUNNING
             self.running_start = record.ts
+        elif record.event == JSLogEvent.JOB_EVICTED:
+            self.state = JobState.QUEUED
+            self.running_start = 0
         elif record.event == JSLogEvent.JOB_TERMINATED:
             pass
         elif record.event == JSLogEvent.JOB_SUCCESS:
