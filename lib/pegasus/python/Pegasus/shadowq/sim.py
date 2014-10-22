@@ -220,13 +220,14 @@ class WorkflowEngine(Entity):
                     log.debug("Setting next_schedule based on queued job: %s", j.name)
                     next_schedule = min(next_schedule, j.queue_start + SCHEDULER_CYCLE_DELAY)
 
-        log.debug("Next simulated schedule: %f", next_schedule)
-
-        assert(next_schedule >= self.time())
-
         # If the next schedule time is in the past, schedule now, otherwise schedule
         # at the right time
         delay_until_next_schedule = next_schedule - self.time()
+        if delay_until_next_schedule < 0:
+            delay_until_next_schedule = 0
+
+        log.debug("Delay until next simulated schedule: %f", delay_until_next_schedule)
+
         self.send(self, 'schedule', delay=delay_until_next_schedule)
 
     def ready_job(self, job):
