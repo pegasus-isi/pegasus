@@ -151,5 +151,5 @@ export SHADOWQ_AMQP_URL="amqps://gideon:$SHADOWQ_AMQP_PASSWORD@gaul.isi.edu:5671
 export SHADOWQ_SLICEID="test"
 
 pegasus-plan --conf pegasus.conf -d diamond.dax --dir submit \
-	--force --sites pegasus -o local --cleanup none --submit
+	--force --sites pegasus -o local --cleanup none --submit "$@"
 
