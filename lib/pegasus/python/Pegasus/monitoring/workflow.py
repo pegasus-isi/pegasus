@@ -244,6 +244,12 @@ class Workflow:
         # script information for job in this workflow, and all subdag
         # jobs, with the their dag files, and directories
 
+    def job_has_postscript(self, jobid):
+        # This function returns whether a job matching a jobid in the workflow
+        # has a postscript associated with or not
+        return (self._job_info[jobid][3] is not None )
+
+
     def parse_in_file(self, jobname, tasks):
         """
         This function parses the in file for a given job, reading the
@@ -1978,7 +1984,10 @@ class Workflow:
         # Parse the kickstart output file, also send mainjob tasks, if needed
         if job_state == "JOB_SUCCESS" or job_state == "JOB_FAILURE":
             # Main job has ended
-            self.parse_job_output(my_job, job_state)
+            if not self.job_has_postscript(jobid):
+                # PM-793 only parse job output here if a postscript is not associated with
+                # the job in the .dag file
+                self.parse_job_output(my_job, job_state)
 
         # Take care of job-level notifications
         if self.check_notifications() == True and self._notifications_manager is not None:
@@ -2004,6 +2013,9 @@ class Workflow:
             self.db_send_task_start(my_job, "PRE_SCRIPT")
             self.db_send_task_end(my_job, "PRE_SCRIPT")
         elif job_state == "POST_SCRIPT_SUCCESS" or job_state == "POST_SCRIPT_FAILURE":
+            #PM-793 we parse the job.out and .err files when postscript finishes
+            self.parse_job_output(my_job, job_state)
+
             # POST script finished
             self.db_send_task_start(my_job, "POST_SCRIPT")
             self.db_send_task_end(my_job, "POST_SCRIPT")
