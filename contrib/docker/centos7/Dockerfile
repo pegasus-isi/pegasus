@@ -6,17 +6,17 @@ RUN yum -y update | /bin/true
 
 RUN useradd --gid 100 --uid 550 --create-home --password bamboo123 bamboo 
 
-# Set Timezone
-RUN cp /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
-
 # Test requirements
 RUN yum -y install ant | /bin/true
-RUN yum -y install ant-junit gcc gcc-c++ tar make bc mpich-devel python-setuptools
+RUN yum -y install ant-junit gcc gcc-c++ tar make bc mpich-devel python-setuptools openssl-devel
 
 #RUN echo -e "MPD_SECRETWORD=mr45-j9z\n" > ~/.mpd.conf && chmod 600 ~/.mpd.conf
 
 # RPM Build requirements
 RUN yum -y install rpm-build ant-apache-regexp java7-devel python-devel asciidoc libxslt fop
+
+# Set Timezone
+RUN cp /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
 
 USER bamboo
 

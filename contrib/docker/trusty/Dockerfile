@@ -6,14 +6,14 @@ RUN apt-get update
 
 RUN useradd --gid 100 --uid 550 --create-home --password bamboo123 bamboo 
 
-# Set Timezone
-RUN cp /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
-
 # Test requirements
-RUN apt-get -y install ant ant-optional gcc g++ tar openjdk-7-jdk make libmysql-java mpich2 bc python-setuptools 
+RUN apt-get -y install ant ant-optional gcc g++ tar openjdk-7-jdk make libmysql-java mpich2 bc python-setuptools python-dev libssl-dev
 
 # Deb package build requirements
 RUN apt-get -y install build-essential debhelper asciidoc fop xsltproc lintian
+
+# Set Timezone
+RUN cp /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
 
 USER bamboo
 
