@@ -174,6 +174,11 @@ class Workflow:
                             self._job_info[my_jobid][0] = None
                         else:
                             self._job_info[my_jobid] = [None, None, None, None, None, False, None, None, None]
+                        #PM-793 PMC only case always have rotated stdout and stderr
+                        #even though there is no postscript in the .dag. associate
+                        #a fake one.
+                        self._job_info[my_jobid][3] = "pmc_postscript"
+                        self._job_info[my_jobid][4] = ""
                 elif lc_dag_line.startswith("script post"):
                     # Found SCRIPT POST line, parse it
                     my_match = re_parse_dag_script.search(dag_line)
