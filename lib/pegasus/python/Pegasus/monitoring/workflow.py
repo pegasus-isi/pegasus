@@ -1666,33 +1666,20 @@ class Workflow:
         if parse_kickstart:
             # Compose kickstart output file name (base is the filename before rotation)
             my_job_output_fn_base = os.path.join(self._run_dir, my_job._exec_job_id) + ".out"
-            my_job_output_fn = my_job_output_fn_base + ".%03d" % (my_job._job_output_counter)
+
+            #PM-793 if there is a postscript associated then a job has rotated stdout|stderr
+            my_job_output_fn = my_job_output_fn_base
+            if self.job_has_postscript( my_job._exec_job_id):
+                my_job_output_fn = my_job_output_fn_base + ".%03d" % (my_job._job_output_counter)
+                my_job._has_rotated_stdout_err_files = True
 
             # First assume we will find rotated file
             my_parser = kickstart_parser.Parser(my_job_output_fn)
             my_output = my_parser.parse_stampede()
 
-            # Check if we were able to find it
-            if my_parser._open_error == True:
-                # File wasn't there, look for the file before the rotation
-                my_parser.__init__(my_job_output_fn_base)
-                my_output = my_parser.parse_stampede()
-
-                if my_parser._open_error == True:
-                    # Couldn't find it again, one last try, as it might have just been moved
-                    my_parser.__init__(my_job_output_fn)
-                    my_output = my_parser.parse_stampede()
-                    if my_parser._open_error == False:
-                        #we found the rotated file. update the flag
-                        my_job._has_rotated_stdout_err_files = True
-
-            else:
-                #we were able to find the rotated file
-                my_job._has_rotated_stdout_err_files = True
-
             # Check if successful
             if my_parser._open_error == True:
-                logger.info("unable to find output file for job %s" % (my_job._exec_job_id))
+                logger.info("unable to find output file %s for job %s" % (my_job_output_fn, my_job._exec_job_id))
 
         # Initialize task id counter
         my_task_id = 1
