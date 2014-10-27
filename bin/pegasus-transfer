@@ -762,6 +762,12 @@ class HTTPHandler(TransferHandlerBase):
             stats_add(transfer.dst_path)
         except RuntimeError, err:
             logger.error(err)
+            # wget and curl might leave 0 sized files behind after failures
+            # make sure those get cleaned up
+            try:
+                os.unlink(transfer.dst_path)
+            except:
+                pass
             return False
         return True
 
