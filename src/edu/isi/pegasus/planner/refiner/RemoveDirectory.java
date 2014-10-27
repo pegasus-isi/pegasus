@@ -16,39 +16,35 @@
 
 package edu.isi.pegasus.planner.refiner;
 
-import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
-
-import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.Job;
-import edu.isi.pegasus.planner.classes.PegasusBag;
-
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.PegasusURL;
-
-import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
-
-import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
-
 import edu.isi.pegasus.common.util.Separator;
-
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
+import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.DAGJob;
+import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.DAXJob;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.TransferJob;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.List;
-import java.util.LinkedList;
-
-import java.io.File;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.refiner.createdir.AbstractStrategy;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -210,7 +206,7 @@ public class RemoveDirectory extends Engine {
         //create the remove dir jobs required but don't add to the workflow
         //till edges are figured out
         //for each execution pool add a remove directory node.
-        Map<GraphNode,List<GraphNode>> removeDirParentsMap = new HashMap();
+        Map<GraphNode,Set<GraphNode>> removeDirParentsMap = new HashMap();
         Map<String,GraphNode> removeDirMap = new HashMap();//mas site to the associated remove dir node
         for (String site: sites ){
             String jobName = getRemoveDirJobName( workflow, site );
@@ -218,7 +214,7 @@ public class RemoveDirectory extends Engine {
             mLogger.log( "Creating remove directory node " + jobName , LogManager.DEBUG_MESSAGE_LEVEL );
             GraphNode node = new GraphNode( newJob.getID() );
             node.setContent(newJob);
-            removeDirParentsMap.put(node, new LinkedList<GraphNode>());
+            removeDirParentsMap.put(node, new LinkedHashSet<GraphNode>());
             removeDirMap.put( site, node );
         }
         
@@ -232,6 +228,18 @@ public class RemoveDirectory extends Engine {
             BitSet set     = new BitSet( bitSetSize );
             Job job        = (Job)node.getContent();
             String site    = getAssociatedCreateDirSite( job );
+            
+            //PM-795 for each DAX|DAG job in the workflow, we need to add
+            //a dependency to all the leaf cleanup jobs
+            if( job instanceof DAXJob || job instanceof DAGJob ){
+                for ( Map.Entry<GraphNode, Set<GraphNode>> entry : removeDirParentsMap.entrySet()  ){
+                    GraphNode removeDirNode = entry.getKey();
+                    Set<GraphNode> parents = entry.getValue();
+                    mLogger.log( "Need to add edge for DAX|DAG job "  + job.getID() + " -> " + removeDirNode.getID(),
+                             LogManager.DEBUG_MESSAGE_LEVEL );
+                    parents.add(node);
+                }
+            }
             
             //check if for stage out jobs there are any parents specified 
             //or not.
@@ -291,11 +299,11 @@ public class RemoveDirectory extends Engine {
         }
         
         
-        //for each create dir job add it to the workflow
+        //for each leaf cleanup job add it to the workflow
         //and connect the edges
-        for ( Map.Entry<GraphNode, List<GraphNode>> entry : removeDirParentsMap.entrySet()  ){
+        for ( Map.Entry<GraphNode, Set<GraphNode>> entry : removeDirParentsMap.entrySet()  ){
             GraphNode removeDirNode = entry.getKey();
-            List<GraphNode> parents = entry.getValue();
+            Set<GraphNode> parents = entry.getValue();
             mLogger.log(  "Adding node to the worklfow " + removeDirNode.getID(),
                           LogManager.DEBUG_MESSAGE_LEVEL );
             for( GraphNode parent: parents ){
