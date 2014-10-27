@@ -515,15 +515,31 @@ def s3(urls):
         raise RuntimeError("Unable to do S3 transfers becuase pegasus-s3 could not be found")
 
     for i, url in enumerate(urls):
+
+        fixed_url = url.url()
+        
+        # PM-790: recursive deletes are really a pattern matching. For example,
+        # if told to remove the foo/bar directory, we need to translate it into
+        # foo/bar/*
+        if options.recursive:
+            # first make sure there are no trailing slashes
+            last_char = len(fixed_url) - 1
+            while len(fixed_url) > 0 and last_char > 0 and fixed_url[last_char] == "/":
+                fixed_url = fixed_url[0:last_char]
+                last_char -= 1
+            fixed_url += "/*"
+            logger.info("Transformed remote URL to " + fixed_url)
         
         key = "S3CFG_" + url.sitename
         if key in os.environ:
             os.environ["S3CFG"] = os.environ[key]
         
         cmd = "pegasus-s3 rm"
+        if options.debug:
+            cmd += " -v"
         if options.ignore_failures:
             cmd += " -f"
-        cmd += " " + url.url()
+        cmd += " " + fixed_url
 
         try:
             myexec(cmd, 60, True)
@@ -608,14 +624,14 @@ signal.signal(signal.SIGINT, prog_sigint_handler)
 
 # stdin or file input?
 if options.file == None:
-    logger.info("Reading URL pairs from stdin")
+    logger.info("Reading URLs from stdin")
     input_file = sys.stdin
 else:
-    logger.info("Reading URL pairs from %s" % (options.file))
+    logger.info("Reading URLs from %s" % (options.file))
     try:
         input_file = open(options.file, 'r')
     except Exception, err:
-        logger.critical('Error reading url pair list: %s' % (err))
+        logger.critical('Error reading url list: %s' % (err))
         myexit(1)
 
 # check environment and tools
@@ -679,7 +695,8 @@ while url_q:
     # magic!
     try:
         handle_removes(u_list)
-    except:
+    except Exception, err:
+        logger.error(err)
         exit_code = 1
 
 # sometimes we just want to ignore the failures
