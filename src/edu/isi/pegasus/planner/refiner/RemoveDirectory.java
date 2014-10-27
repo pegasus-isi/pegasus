@@ -52,13 +52,8 @@ import java.util.Map;
 
 
 /**
- * Ends up creating a cleanup dag that deletes the remote directories that
- * were created by the create dir jobs. The cleanup dag is generated in a
- * sub directory from the main directory containing the submit files of the
- * dag. The dag consists of independant jobs, with each job responsible for
- * deleting directory for a execution pool. The current way of generating the
- * dag is tied to the fact, that the directories in which a job are executed
- * is tied to the pool not the job itself.
+ * This adds leaf cleanup jobs to the workflow. The strategy is symmetric to the
+ * one used for adding the create dir jobs to the workflow.
  *
  * @author Karan Vahi
  * @version $Revision$
@@ -66,19 +61,6 @@ import java.util.Map;
  */
 public class RemoveDirectory extends Engine {
 
-
-
-    /**
-     * The prefix that is attached to the name of the dag for which the
-     * cleanup Dag is being generated, to generate the name of the cleanup
-     * Dag.
-     */
-    public static final String CLEANUP_DAG_PREFIX = "del_";
-
-    /**
-     * Constant suffix for the names of the remote directory nodes.
-     */
-    public static final String REMOVE_DIR_SUFFIX = "_rdir";
 
     /**
      * The logical name of the transformation that removes directories on the
@@ -201,14 +183,14 @@ public class RemoveDirectory extends Engine {
     /**
      * Adds create dir nodes to the workflow.
      * 
-     * The strategy involves in walking the graph in a BFS order, and updating a 
-     * bit set associated with each job based on the BitSet of the parent jobs. 
-     * The BitSet indicates whether an edge exists from the create dir job to an 
-     * ancestor of the node.
+     * The strategy involves in walking the graph in a bottom up BFS order, and updating a 
+     * bit set associated with each job based on the BitSet of the children jobs. 
+     * The BitSet indicates whether an edge exists from the descendant of the node
+     * to the remove directory node.
      * 
-     * For a node, the bit set is the union of all the parents BitSets. The BFS 
+     * For a node, the bit set is the union of all the children BitSets. The BFS 
      * traversal ensures that the bitsets are of a node are only updated once the 
-     * parents have been processed.
+     * children have been processed.
      * 
      * @param workflow  the workflow 
      * @param sites     the staging sites the workflow refers to.
@@ -268,7 +250,7 @@ public class RemoveDirectory extends Engine {
                 continue;
             }
             
-            //the set is a union of all the parents set
+            //the set is a union of all the children's set
             for( GraphNode child: node.getChildren()){
                 BitSet cSet = nodeBitMap.get( child );
                 set.or( cSet );
