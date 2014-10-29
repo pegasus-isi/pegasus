@@ -233,8 +233,8 @@ class Tools(object):
                     return None
                 return self._info[executable]
             
-            logger.info("Trying to detect availability/location of tool: %s"
-                        %(executable))
+            logger.debug("Trying to detect availability/location of tool: %s"
+                         %(executable))
             
             # initialize the global tool info for this executable
             self._info[executable] = {}
@@ -370,7 +370,7 @@ class CpHandler(TransferHandlerBase):
         cmd = "/bin/cp -f -L '%s' '%s'" \
             % (transfer.src_path, transfer.dst_path)
         try:
-            myexec(cmd, default_subshell_timeout, True)
+            myexec(cmd, default_subshell_timeout, False)
         except RuntimeError, err:
             logger.error(err)
             return False
@@ -393,7 +393,7 @@ class FDTHandler(TransferHandlerBase):
         if not os.path.exists("fdt.jar"):
             cmd = "wget -nv -O fdt.jar http://monalisa.cern.ch/FDT/lib/fdt.jar"
             try:
-                myexec(cmd, 10*60, True)
+                myexec(cmd, 10*60, False)
             except RuntimeError, err:
                 logger.error(err)
                 
@@ -407,7 +407,7 @@ class FDTHandler(TransferHandlerBase):
             cmd += " " + transfer.dst_host + ":" + transfer.dst_path
             stats_add(transfer.src_path)
         try:
-            myexec(cmd, default_subshell_timeout, True)
+            myexec(cmd, default_subshell_timeout, False)
             if transfer.dst_proto == "file":
                 stats_add(transfer.dst_path)    
         except RuntimeError, err:
@@ -558,9 +558,10 @@ class GridFtpHandler(TransferHandlerBase):
                                         t.dst_url_encoded()))
     
         tmp_file.close()
-        
-        logger.info("Grouped %d similar gsiftp transfers together in"
-                    " temporary file %s" %(num_pairs, tmp_name))
+       
+        if num_pairs > 1:
+            logger.info("Grouped %d similar gsiftp transfers together in"
+                        " temporary file %s" %(num_pairs, tmp_name))
     
         transfer_success = False
 
@@ -618,7 +619,7 @@ class GridFtpHandler(TransferHandlerBase):
         
         cmd += " -f " + tmp_name
         try:
-            myexec(cmd, default_subshell_timeout, True)
+            myexec(cmd, default_subshell_timeout, False)
             transfer_success = True
         except Exception, err:
             logger.error(err)
@@ -735,33 +736,37 @@ class HTTPHandler(TransferHandlerBase):
         prepare_local_dir(os.path.dirname(transfer.dst_path))
         
         # try wget first, then curl
-        if tools.find("wget", "--version", "([0-9]+\.[0-9]+)") is not None:
-            cmd = tools.full_path('wget')
-            if logger.isEnabledFor(logging.DEBUG):
-                cmd += " -v"
-            else:
-                cmd += " -q"
-            cmd += " --no-check-certificate" + \
-                   " -O '" + transfer.dst_path + "'" + \
-                   " '" + transfer.src_url() + "'"
-        elif tools.find("curl", "--version", " ([0-9]+\.[0-9]+)") is not None:
+        if tools.find("curl", "--version", " ([0-9]+\.[0-9]+)") is not None:
             cmd = tools.full_path('curl')
-            if logger.isEnabledFor(logging.DEBUG):
-                cmd += " -v"
-            else:
+            if not logger.isEnabledFor(logging.DEBUG):
                 cmd += " -s -S"
             cmd += " --insecure" + \
                    " -o '" + transfer.dst_path + "'" + \
                    " '" + transfer.src_url() + "'"
+        elif tools.find("wget", "--version", "([0-9]+\.[0-9]+)") is not None:
+            cmd = tools.full_path('wget')
+            if logger.isEnabledFor(logging.DEBUG):
+                cmd += " -v"
+            else:
+                cmd += " -nv"
+            cmd += " --no-cookies --no-check-certificate" + \
+                   " -O '" + transfer.dst_path + "'" + \
+                   " '" + transfer.src_url() + "'"
         else:
             raise RuntimeError("Unable to do http/https transfers because" +
-                               " neither wget not curl could not be found")
+                               " neither curl nor wget could not be found")
             
         try:
-            myexec(cmd, default_subshell_timeout, True)
+            myexec(cmd, default_subshell_timeout, False)
             stats_add(transfer.dst_path)
         except RuntimeError, err:
             logger.error(err)
+            # wget and curl might leave 0 sized files behind after failures
+            # make sure those get cleaned up
+            try:
+                os.unlink(transfer.dst_path)
+            except:
+                pass
             return False
         return True
 
@@ -820,7 +825,7 @@ class IRodsHandler(TransferHandlerBase):
                 h.write(password + "\n")
                 h.close()
                 cmd = "cat .irodsAc | iinit"
-                myexec(cmd, 5*60, True)
+                myexec(cmd, 5*60, False)
                 os.unlink(".irodsAc")
                 check_cred_fs_permissions(os.environ['irodsAuthFileName'])
 
@@ -862,7 +867,7 @@ class IRodsHandler(TransferHandlerBase):
             # file->irods
             cmd = "imkdir -p '" + os.path.dirname(transfer.dst_path) + "'"
             try:
-                myexec(cmd, 60*60, True)
+                myexec(cmd, 60*60, False)
             except:
                 # ignore errors from the mkdir command
                 pass
@@ -876,7 +881,7 @@ class IRodsHandler(TransferHandlerBase):
 
         cmd += " </dev/null"
         try:
-            myexec(cmd, default_subshell_timeout, True)
+            myexec(cmd, default_subshell_timeout, False)
             # stats      
             if transfer.dst_proto == "file":
                 stats_add(transfer.dst_path)
@@ -967,7 +972,7 @@ class S3Handler(TransferHandlerBase):
                                                       transfer.dst_url())
 
         try:
-            myexec(cmd, default_subshell_timeout, True)
+            myexec(cmd, default_subshell_timeout, False)
             if local_filename is not None:
                 stats_add(local_filename)
         except Exception, err:
@@ -1048,7 +1053,7 @@ class GSHandler(TransferHandlerBase):
                                               transfer.dst_url())
 
         try:
-            myexec(cmd, default_subshell_timeout, True)
+            myexec(cmd, default_subshell_timeout, False)
             if local_filename is not None:
                 stats_add(local_filename)
         except Exception, err:
@@ -1112,7 +1117,7 @@ class SRMHandler(TransferHandlerBase):
                 cmd = cmd + " >/dev/null"
             
         try:
-            myexec(cmd, 6*60*60, True)
+            myexec(cmd, 6*60*60, False)
         except Exception, err:
             logger.error(err)
             return False
@@ -1172,7 +1177,7 @@ class ScpHandler(TransferHandlerBase):
                 cmd += " '" + transfer.dst_host + ":" + dst_path + "'"
                 stats_add(transfer.src_path)
 
-            myexec(cmd, default_subshell_timeout, True)
+            myexec(cmd, default_subshell_timeout, False)
             if transfer.dst_proto == "file":
                 stats_add(transfer.dst_path)    
 
@@ -1196,7 +1201,7 @@ class ScpHandler(TransferHandlerBase):
             cmd += " -i " + os.environ['SSH_PRIVATE_KEY']
         cmd += " -q -o StrictHostKeyChecking=no"
         cmd += " " + rhost + " '/bin/mkdir -p " + rdir + "'"
-        myexec(cmd, default_subshell_timeout, True)
+        myexec(cmd, default_subshell_timeout, False)
 
 
 class SymlinkHandler(TransferHandlerBase):
@@ -1232,7 +1237,7 @@ class SymlinkHandler(TransferHandlerBase):
 
         cmd = "ln -f -s '%s' '%s'" % (transfer.src_path, transfer.dst_path)
         try:
-            myexec(cmd, 60, True)
+            myexec(cmd, 60, False)
         except RuntimeError, err:
             logger.error(err)
             return False
@@ -1325,6 +1330,8 @@ class TransferSet:
                                                     self._transfers,
                                                     attempt,
                                                     failed_q)
+            except RuntimeError, rte:
+                raise
             except Exception, e:
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.exception("Exception while doing transfer:")
@@ -1720,7 +1727,7 @@ def main():
     parser.add_option("-n", "--threads", action = "store", type="int",
                       dest = "threads", default = 0,
                       help = "Number of threads to process transfers." +
-                             " Default is 2. This option can also be set" +
+                             " Default is 8. This option can also be set" +
                              " via the PEGASUS_TRANSFER_THREADS environment" +
                              " variable. The command line option takes" +
                              " precedence over the environment variable.")
@@ -1740,7 +1747,7 @@ def main():
         if "PEGASUS_TRANSFER_THREADS" in os.environ:
             options.threads = int(os.environ["PEGASUS_TRANSFER_THREADS"])
         else:
-            options.threads = 2
+            options.threads = 8
     
     # stdin or file input?
     if options.file is None:
@@ -1894,6 +1901,9 @@ def main():
             t.join()
             # do we need to do any better error handling here?
             if t.exception is not None:
+                if type(t.exception) is RuntimeError:
+                    logger.critical(t.exception)
+                    myexit(2)
                 raise t.exception
         threads = []
     

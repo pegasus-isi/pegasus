@@ -1279,7 +1279,7 @@ public class PegasusLite implements GridStart {
             sb.append( "ec=$?" ).append( '\n' );
             sb.append( "set -e").append( '\n' );
             sb.append( "if [ $ec -ne 0 ]; then").append( '\n' );
-            sb.append( "    echo \" Ignoring failure while transferring chkpoint files. Exicode was $ec\" ").append( '\n' );
+            sb.append( "    echo \" Ignoring failure while transferring chkpoint files. Exicode was $ec\" 1>&2").append( '\n' );
             sb.append( "fi" ).append( '\n' );
             sb.append( "\n" );
         }

@@ -173,6 +173,8 @@ class Workflow:
                             self._job_info[my_jobid][0] = None
                         else:
                             self._job_info[my_jobid] = [None, None, None, None, None, False, None, None, None]
+                        #PM-793 PMC only case always have rotated stdout and stderr
+                        self._is_pmc_dag = True
                 elif lc_dag_line.startswith("script post"):
                     # Found SCRIPT POST line, parse it
                     my_match = re_parse_dag_script.search(dag_line)
@@ -242,6 +244,12 @@ class Workflow:
         # jobs. In addition, _job_info should contain all PRE and POST
         # script information for job in this workflow, and all subdag
         # jobs, with the their dag files, and directories
+
+    def job_has_postscript(self, jobid):
+        # This function returns whether a job matching a jobid in the workflow
+        # has a postscript associated with or not
+        return (self._job_info[jobid][3] is not None )
+
 
     def parse_in_file(self, jobname, tasks):
         """
@@ -792,7 +800,8 @@ class Workflow:
         self._multiline_file_flag = False       # Track multiline user log files, DAGMan > 6.6
         self._walltime = {}                     # jid --> walltime
         self._job_site = {}                     # last site a job was planned for
-        self._last_known_state = None  #last known state of the workflow. updated whenever change_wf_state is called
+        self._last_known_state = None           # last known state of the workflow. updated whenever change_wf_state is called
+        self._is_pmc_dag = False                # boolean to track whether monitord is parsing a PMC DAG i.e pmc-only mode of Pegasus
 
         self.init_clean()
 
@@ -1659,33 +1668,22 @@ class Workflow:
         if parse_kickstart:
             # Compose kickstart output file name (base is the filename before rotation)
             my_job_output_fn_base = os.path.join(self._run_dir, my_job._exec_job_id) + ".out"
-            my_job_output_fn = my_job_output_fn_base + ".%03d" % (my_job._job_output_counter)
+
+            # PM-793 if there is a postscript associated then a job has rotated stdout|stderr
+            # OR we are in the PMC only mode where there are no postscripts associated, but
+            # still we have rotated logs
+            my_job_output_fn = my_job_output_fn_base
+            if self.job_has_postscript( my_job._exec_job_id) or self._is_pmc_dag:
+                my_job_output_fn = my_job_output_fn_base + ".%03d" % (my_job._job_output_counter)
+                my_job._has_rotated_stdout_err_files = True
 
             # First assume we will find rotated file
             my_parser = kickstart_parser.Parser(my_job_output_fn)
             my_output = my_parser.parse_stampede()
 
-            # Check if we were able to find it
-            if my_parser._open_error == True:
-                # File wasn't there, look for the file before the rotation
-                my_parser.__init__(my_job_output_fn_base)
-                my_output = my_parser.parse_stampede()
-
-                if my_parser._open_error == True:
-                    # Couldn't find it again, one last try, as it might have just been moved
-                    my_parser.__init__(my_job_output_fn)
-                    my_output = my_parser.parse_stampede()
-                    if my_parser._open_error == False:
-                        #we found the rotated file. update the flag
-                        my_job._has_rotated_stdout_err_files = True
-
-            else:
-                #we were able to find the rotated file
-                my_job._has_rotated_stdout_err_files = True
-
             # Check if successful
             if my_parser._open_error == True:
-                logger.info("unable to find output file for job %s" % (my_job._exec_job_id))
+                logger.info("unable to find output file %s for job %s" % (my_job_output_fn, my_job._exec_job_id))
 
         # Initialize task id counter
         my_task_id = 1
@@ -1977,7 +1975,11 @@ class Workflow:
         # Parse the kickstart output file, also send mainjob tasks, if needed
         if job_state == "JOB_SUCCESS" or job_state == "JOB_FAILURE":
             # Main job has ended
-            self.parse_job_output(my_job, job_state)
+            if not self.job_has_postscript(jobid) or self._is_pmc_dag:
+                # PM-793 only parse job output here if a postscript is NOT associated with
+                # the job in the .dag file
+                # OR we are in the PMC only mode where there are no postscripts associated
+                self.parse_job_output(my_job, job_state)
 
         # Take care of job-level notifications
         if self.check_notifications() == True and self._notifications_manager is not None:
@@ -2003,6 +2005,9 @@ class Workflow:
             self.db_send_task_start(my_job, "PRE_SCRIPT")
             self.db_send_task_end(my_job, "PRE_SCRIPT")
         elif job_state == "POST_SCRIPT_SUCCESS" or job_state == "POST_SCRIPT_FAILURE":
+            #PM-793 we parse the job.out and .err files when postscript finishes
+            self.parse_job_output(my_job, job_state)
+
             # POST script finished
             self.db_send_task_start(my_job, "POST_SCRIPT")
             self.db_send_task_end(my_job, "POST_SCRIPT")
