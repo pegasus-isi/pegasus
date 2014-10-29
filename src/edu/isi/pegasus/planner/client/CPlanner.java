@@ -988,6 +988,17 @@ public class CPlanner extends Executable{
             }
         }
 
+        //try and detect if there are any unparsed components of the 
+        //argument string such as inadvertent white space in values
+        int nonOptionArgumentIndex = g.getOptind();
+        if( nonOptionArgumentIndex < args.length ){
+            //this works as planner does not take any positional arguments
+            StringBuilder error = new StringBuilder();
+            error.append( "Unparsed component ").append( args[nonOptionArgumentIndex] ).
+                  append( " of the command line argument string: ").
+                  append( " " ).append( options.getOriginalArgString());
+            throw new RuntimeException( error.toString() );
+        }
 
         return options;
 
