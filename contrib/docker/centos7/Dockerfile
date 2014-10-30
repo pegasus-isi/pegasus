@@ -27,4 +27,6 @@ RUN mkdir /home/bamboo/.pegasus
 
 ENV HOME /home/bamboo
 
+ENV PATH $PATH:/usr/lib64/mpich/bin
+
 WORKDIR /home/bamboo/pegasus-source
