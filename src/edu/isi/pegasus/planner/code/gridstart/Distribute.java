@@ -17,21 +17,27 @@
 package edu.isi.pegasus.planner.code.gridstart;
 
 import edu.isi.pegasus.common.logging.LogManager;
+
 import edu.isi.pegasus.common.util.Version;
+
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
+
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
+
 import edu.isi.pegasus.planner.code.GridStart;
+
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
-import edu.isi.pegasus.planner.namespace.Condor;
+
 import edu.isi.pegasus.planner.namespace.Pegasus;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -234,26 +240,38 @@ public class Distribute implements GridStart {
         //worker node directories
         for( Iterator it = job.constituentJobsIterator(); it.hasNext() ; ){
             Job j = (Job) it.next();
-            j.vdsNS.construct( Pegasus.CHANGE_DIR_KEY , "false" );
+            j.vdsNS.construct( Pegasus.CHANGE_DIR_KEY , "true" );
             j.vdsNS.construct( Pegasus.CREATE_AND_CHANGE_DIR_KEY, "false" );
         }
 
         //for time being we treat clustered jobs same as normal jobs
         //in pegasus-lite
-        return this.enable( (Job)job, isGlobusJob );
+        //return this.enable( (Job)job, isGlobusJob );
 
-        /*
-        boolean result = true;
+        //consider case for non worker node execution first
+        if( !mWorkerNodeExecution ){
+            //shared filesystem case.
 
-        if( mWorkerNodeExecution ){
-            File jobWrapper = wrapJobWithPegasusLite( job, isGlobusJob );
-             //the .sh file is set as the executable for the job
-            //in addition to setting transfer_executable as true
-            job.setRemoteExecutable( jobWrapper.getAbsolutePath() );
-            job.condorVariables.construct( "transfer_executable", "true" );
+            System.out.println( "Job " + job.getID() + " scheduled at site " + job.getSiteHandle() );
+            if( job.getSiteHandle().equals( "local") ){
+                //all jobs scheduled to local site just get 
+                //vanilla treatment from the kickstart enabling.
+                return mKickstartGridStartImpl.enable( job, isGlobusJob );
+            }
+            else{
+                //the clustered jobs are never lauched via kickstart
+                //as their constitutents are enabled
+                mKickstartGridStartImpl.enable( job, isGlobusJob );
+               
+                //now we enable the jobs with the distribute wrapper
+                wrapJobWithDistribute( job, isGlobusJob );
+            }
+                
         }
-        return result;
-         */
+        else{
+            throw new RuntimeException( "Distribute Job Wrapper only works for sharedfs deployments");
+        }
+        return true;
     }
 
 
@@ -293,34 +311,9 @@ public class Distribute implements GridStart {
                 //with distribute after wrapping them with kickstart
                 mKickstartGridStartImpl.enable( job, isGlobusJob );
                
-                //retrieve the kickstart invocation
-                StringBuilder ksInvocation = new StringBuilder();
-                ksInvocation.append( job.getRemoteExecutable() ).append( " " ).
-                             append( job.getArguments() );
-                
-                //construct the path to distribute executable
-                //on local site.
-                TransformationCatalogEntry entry = this.getTransformationCatalogEntry( "local" );
-            
-                String distributePath = ( entry == null )?
-                             //rely on the path determined from profiles 
-                             (String)job.vdsNS.get( Pegasus.GRIDSTART_PATH_KEY ):
-                             //else the tc entry has highest priority
-                             entry.getPhysicalTransformation();
-                
-                if( distributePath == null ){
-                    throw new RuntimeException( "Unable to determine path to the distribute wrapper on local site");
-                }
-                
-                job.setRemoteExecutable( distributePath );
-                job.setArguments( ksInvocation.toString() );
-                
-                //update the job to run on local site
-                //and the style to condor
-                job.setSiteHandle( "local" );
-                job.condorVariables.construct(Pegasus.STYLE_KEY, Pegasus.CONDOR_STYLE );
+                //now we enable the jobs with the distribute wrapper
+                wrapJobWithDistribute( job, isGlobusJob );
             }
-                
         }
         else{
             throw new RuntimeException( "Distribute Job Wrapper only works for sharedfs deployments");
@@ -328,6 +321,47 @@ public class Distribute implements GridStart {
         return true;
 
     }
+    
+    /**
+     * Wraps a job with the distribute wrapper.
+     * The job existing executable and arguments are retrived to construct
+     * an invocation string that is passed as an argument to the distribute
+     * job launcher. Also, the job is modified to run on local site.
+     * 
+     * @param job          the job to be wrapped with distribute
+     * @param globusJob    boolean
+     */
+    protected void wrapJobWithDistribute(Job job, boolean globusJob) {
+        //retrieve the kickstart invocation
+        StringBuilder ksInvocation = new StringBuilder();
+        ksInvocation.append( job.getRemoteExecutable() ).append( " " ).
+                     append( job.getArguments() );
+
+        //construct the path to distribute executable
+        //on local site.
+        TransformationCatalogEntry entry = this.getTransformationCatalogEntry( "local" );
+
+        String distributePath = ( entry == null )?
+                     //rely on the path determined from profiles 
+                     (String)job.vdsNS.get( Pegasus.GRIDSTART_PATH_KEY ):
+                     //else the tc entry has highest priority
+                     entry.getPhysicalTransformation();
+
+        if( distributePath == null ){
+            throw new RuntimeException( "Unable to determine path to the distribute wrapper on local site");
+        }
+
+        job.setRemoteExecutable( distributePath );
+        job.setArguments( ksInvocation.toString() );
+
+        //update the job to run on local site
+        //and the style to condor
+        job.setSiteHandle( "local" );
+        job.condorVariables.construct(Pegasus.STYLE_KEY, Pegasus.CONDOR_STYLE );
+        return;
+    }
+
+
 
     /**
      * Returns the transformation catalog entry for kickstart on a site
@@ -336,7 +370,7 @@ public class Distribute implements GridStart {
      * 
      * @return the entry if found else null
      */
-    public TransformationCatalogEntry getTransformationCatalogEntry( String site ){
+    protected TransformationCatalogEntry getTransformationCatalogEntry( String site ){
         List entries = null;
         try {
             entries = mTCHandle.lookup( Distribute.TRANSFORMATION_NAMESPACE,
@@ -405,55 +439,6 @@ public class Distribute implements GridStart {
         return this.mKickstartGridStartImpl.defaultPOSTScript();
     }
 
-    /**
-     * Returns the directory that is associated with the job to specify
-     * the directory in which the job needs to run
-     * 
-     * @param job  the job
-     * 
-     * @return the condor key . can be initialdir or remote_initialdir
-     */
-    private String getDirectoryKey(Job job) {
-        /*
-        String style = (String)job.vdsNS.get( Pegasus.STYLE_KEY );
-                    //remove the remote or initial dir's for the compute jobs
-                    String key = ( style.equalsIgnoreCase( Pegasus.GLOBUS_STYLE )  )?
-                                   "remote_initialdir" :
-                                   "initialdir";
-         */
-        String universe = (String) job.condorVariables.get( Condor.UNIVERSE_KEY );
-        return ( universe.equals( Condor.STANDARD_UNIVERSE ) ||
-                 universe.equals( Condor.LOCAL_UNIVERSE) ||
-                 universe.equals( Condor.SCHEDULER_UNIVERSE ) )?
-                "initialdir" :
-                "remote_initialdir";
-    }
-
-
-    /**
-     * Returns a boolean indicating whether to remove remote directory
-     * information or not from the job. This is determined on the basis of the
-     * style key that is associated with the job.
-     *
-     * @param job the job in question.
-     *
-     * @return boolean
-     */
-    private boolean removeDirectoryKey(Job job){
-        String style = job.vdsNS.containsKey(Pegasus.STYLE_KEY) ?
-                       null :
-                       (String)job.vdsNS.get(Pegasus.STYLE_KEY);
-
-        //is being run. Remove remote_initialdir if there
-        //condor style associated with the job
-        //Karan Nov 15,2005
-        return (style == null)?
-                false:
-                style.equalsIgnoreCase(Pegasus.CONDOR_STYLE);
-
-    }
-
- 
     public void useFullPathToGridStarts(boolean fullPath) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
