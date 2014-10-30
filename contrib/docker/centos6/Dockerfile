@@ -18,8 +18,6 @@ RUN cp /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
 
 USER bamboo
 
-RUN echo -e "export PATH=$PATH:/usr/lib64/mpich/bin" >> /home/bamboo/.bashrc
-
 RUN echo -e "pegasus.catalog.replica.db.driver = com.mysql.jdbc.Driver\n"\
 "pegasus.catalog.replica.db.url = jdbc:mysql://stewie.isi.edu/jdbcrc_test\n"\
 "pegasus.catalog.replica.db.user = jdbcrc_test\n"\
@@ -28,5 +26,7 @@ RUN echo -e "pegasus.catalog.replica.db.driver = com.mysql.jdbc.Driver\n"\
 RUN mkdir /home/bamboo/.pegasus
 
 ENV HOME /home/bamboo
+
+ENV PATH $PATH:/usr/lib64/mpich/bin
 
 WORKDIR /home/bamboo/pegasus-source
