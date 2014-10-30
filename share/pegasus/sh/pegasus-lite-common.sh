@@ -91,32 +91,21 @@ function pegasus_lite_internal_wp_in_env()
 
 function pegasus_lite_internal_wp_download() 
 {
-    # fall back - download a worker package from pegasus.isi.edu
-    os=rhel
-    major=5
+    # fall back - download a worker package from download.pegasus.isi.edu
 
-    arch=`uname -m`
-    if [ $arch != "x86_64" ]; then
-        arch="x86"
-    fi
-
-    if [ -e /etc/redhat-release ]; then
-        os=rhel
-        major=`cat /etc/redhat-release | sed 's/.*release //' | sed 's/[\. ].*//'`
-    else
-        if [ -e /etc/debian_version ]; then
-            os=deb
-            major=`cat /etc/debian_version | sed 's/\..*//'`
-        fi
+    system=$(pegasus_lite_get_system)
+    if [ $? != 0 ]; then
+        # not sure what system we are on - try the default package
+        system="x86_rhel_6"
     fi
     
     url="http://download.pegasus.isi.edu/pegasus/${pegasus_lite_version_major}"
     url="${url}.${pegasus_lite_version_minor}.${pegasus_lite_version_patch}"
     url="${url}/pegasus-worker"
     url="${url}-${pegasus_lite_version_major}.${pegasus_lite_version_minor}.${pegasus_lite_version_patch}"
-    url="${url}-${arch}_${os}_${major}.tar.gz"
+    url="${url}-${system}.tar.gz"
     pegasus_lite_log "Downloading Pegasus worker package from $url"
-    wget -q -O pegasus-worker.tar.gz "$url"
+    curl -s -S --insecure -o pegasus-worker.tar.gz "$url" || wget -q -O pegasus-worker.tar.gz "$url"
     tar xzf pegasus-worker.tar.gz
     rm -f pegasus-worker.tar.gz
 
@@ -230,4 +219,80 @@ function pegasus_lite_exit()
     exit $rc
 }
 
+
+function pegasus_lite_get_system()
+{
+    # PM-781
+    # This function is a replacement of the old release-tools/getsystem
+    # and was moved here because we need the getsystem functionallity not
+    # only at build time, but at runtime fromt he jobs so that the jobs
+    # can determine what worker package is required.
+
+    # The goal is to get a triple identify the system:
+    # arch _ osname _ osversion
+    # for example: x86_64_deb_7
+
+    arch=`uname -m 2>&1` || arch="UNKNOWN"
+    osname=`uname -s 2>&1` || osname="UNKNOWN"
+    osversion=`uname -r 2>&1` || osversion="UNKNOWN"
+
+    if [ "$osname" = "Linux" ]; then
+
+        # /etc/issue works most of the time, but there are exceptions
+        osname=`cat /etc/issue | head -n1 | awk '{print $1;}' | tr '[:upper:]' '[:lower:]'`
+
+        if [ "X$osname" = "Xubuntu" ]; then
+            osversion=`cat /etc/issue | head -n1 | awk '{print $2;}'` 
+        elif [ -e /etc/debian_version ]; then
+            osname="deb"
+            osversion=`cat /etc/debian_version`
+        elif [ "X$osname" = "Xfedora" ]; then
+            osname="fc"
+            osversion=`cat /etc/issue | head -n1 | awk '{print $3;}'`
+        elif [ -e /etc/redhat-release ]; then
+            osname="rhel"
+            osversion=`cat /etc/redhat-release | grep -o -E ' [0-9]+.[0-9]+'`
+        elif [ -e /etc/rocks-release ]; then
+            osname="rhel"
+            osversion=`cat /etc/rocks-release | grep -o -E ' [0-9]+.[0-9]+'`
+        fi
+        
+        # remove spaces/tabs in the version
+        osversion=`echo $osversion | sed 's/[ \t]//g'`
+
+        # remove / in the version
+        osversion=`echo $osversion | sed 's/\//_/g'`
+
+        # we only want major version numbers
+        osversion=`echo $osversion | sed 's/[\.-].*//'`
+
+        echo "${arch}_${osname}_${osversion}"
+        return 0
+    fi
+
+    if [ "$osname" = "Darwin" ]; then
+        osname="macos"
+        osversion=`/usr/bin/sw_vers -productVersion`
+        
+        # we only want major version numbers
+        osversion=`echo $osversion | sed 's/[\.-].*//'`
+
+        echo "${arch}_${osname}_${osversion}"
+        return 0
+    fi
+    
+    if [ "$osname" = "FreeBSD" ]; then
+        osname="freebsd"
+        
+        # we only want major version numbers
+        osversion=`echo $osversion | sed 's/[\.-].*//'`
+
+        echo "${arch}_${osname}_${osversion}"
+        return 0
+    fi
+        
+    # unable to determine detailed system information
+    echo "${arch}_${osname}_${osversion}"
+    return 1
+}
 
