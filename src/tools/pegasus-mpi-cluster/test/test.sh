@@ -350,12 +350,6 @@ function test_max_wall_time {
         return 1
     fi
     
-    if ! [[ "$OUTPUT" =~ "Caught signal 14" ]]; then
-        echo "$OUTPUT"
-        echo "ERROR: Max wall time test failed on catching signal"
-        return 1
-    fi
-    
     if ! [[ "$OUTPUT" =~ "Aborting workflow" ]]; then
         echo "$OUTPUT"
         echo "ERROR: Max wall time test failed on aborting"
