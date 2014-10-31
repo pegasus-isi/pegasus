@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+set -o pipefail
 
 TOP_DIR=`pwd`
 
@@ -9,7 +10,7 @@ export PEGASUS_BIN_DIR=`pegasus-config --bin`
 if [ "x$PEGASUS_BIN_DIR" = "x" ]; then
     echo "Please make sure pegasus-plan is in your path"
     exit 1
-fi 
+fi
 
 # build the dax generator
 export PYTHONPATH=.:`pegasus-config --python`
@@ -72,15 +73,15 @@ do
 	if [ -e "diamond-a_ID0000001/monitord.done" ]; then
 		BREAK=1
 	fi
-	
+
 	if [ -e "diamond-a_ID0000001/diamond-a-0.cache" ]; then
 		set +e
-		grep -v -P "diamond-.*-4\.0" diamond-a_ID0000001/diamond-a-0.cache | grep -v "http://" 
+		grep -v -P "diamond-.*-4\.0" diamond-a_ID0000001/diamond-a-0.cache | grep -v "http://"
 		EC=$?
 		set -e
 
 		if [ $EC -eq 0 ]; then
-			echo "Cache file contains non http URL's" 
+			echo "Cache file contains non http URL's"
 			exit 1
 		fi
 
