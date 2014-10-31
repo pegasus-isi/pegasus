@@ -235,6 +235,10 @@ function pegasus_lite_get_system()
     arch=`uname -m 2>&1` || arch="UNKNOWN"
     osname=`uname -s 2>&1` || osname="UNKNOWN"
     osversion=`uname -r 2>&1` || osversion="UNKNOWN"
+        
+    if (echo $arch | grep -E '^i[0-9]86$') >/dev/null 2>&1; then
+        arch="x86" 
+    fi
 
     if [ "$osname" = "Linux" ]; then
 
