@@ -277,6 +277,12 @@ public class SUBDAXGenerator{
      */
     public Job generateCode( Job job ){
         String arguments = job.getArguments();
+        
+        //trim the arguments first, else
+        //our check in cplanner for unparsed option may fail
+        //that relies on getopt.getOptind()
+        arguments = arguments.trim();
+        
         String [] args = arguments.split( " " );
         
         mLogger.log( "Generating code for DAX job  " + job.getID(),
