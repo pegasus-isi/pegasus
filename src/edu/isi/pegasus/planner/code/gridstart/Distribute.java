@@ -252,7 +252,7 @@ public class Distribute implements GridStart {
         if( !mWorkerNodeExecution ){
             //shared filesystem case.
 
-            System.out.println( "Job " + job.getID() + " scheduled at site " + job.getSiteHandle() );
+            //System.out.println( "Job " + job.getID() + " scheduled at site " + job.getSiteHandle() );
             if( job.getSiteHandle().equals( "local") ){
                 //all jobs scheduled to local site just get 
                 //vanilla treatment from the kickstart enabling.
@@ -300,7 +300,6 @@ public class Distribute implements GridStart {
         if( !mWorkerNodeExecution ){
             //shared filesystem case.
 
-            System.out.println( "Job " + job.getID() + " scheduled at site " + job.getSiteHandle() );
             if( job.getSiteHandle().equals( "local") ){
                 //all jobs scheduled to local site just get 
                 //vanilla treatment from the kickstart enabling.
