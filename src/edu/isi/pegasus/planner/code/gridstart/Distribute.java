@@ -308,6 +308,9 @@ public class Distribute implements GridStart {
             else{
                 //jobs scheduled to non local site are wrapped
                 //with distribute after wrapping them with kickstart
+                //we always want the kickstart -w option                   
+                job.vdsNS.construct( Pegasus.CHANGE_DIR_KEY , "true" );
+                job.vdsNS.construct( Pegasus.CREATE_AND_CHANGE_DIR_KEY, "false" );
                 mKickstartGridStartImpl.enable( job, isGlobusJob );
                
                 //now we enable the jobs with the distribute wrapper
