@@ -829,9 +829,12 @@ public class PegasusLite implements GridStart {
                 }
                 
                 //PM-779 checkpoint files need to be setup to never fail
-                appendStderrFragment( sb, "staging in checkpoint files" );
-                sb.append( "# stage in checkpoint files " ).append( '\n' );
-                sb.append( checkpointFilesToPegasusLite( job, chkpointFiles) );
+                String checkPointFragment = checkpointFilesToPegasusLite( job, chkpointFiles);
+                if( !checkPointFragment.isEmpty() ){
+                    appendStderrFragment( sb, "staging in checkpoint files" );
+                    sb.append( "# stage in checkpoint files " ).append( '\n' );
+                    sb.append( checkPointFragment );
+                }
                 
                 //associate any credentials if required with the job
                 associateCredentials( job, files );
@@ -927,9 +930,12 @@ public class PegasusLite implements GridStart {
                 }
                 
                 //PM-779 checkpoint files need to be setup to never fail
-                appendStderrFragment( sb, "staging out checkpoint files" );
-                sb.append( "# stage out checkpoint files " ).append( '\n' );
-                sb.append( checkpointFilesToPegasusLite( job, chkpointFiles) );
+                String checkPointFragment = checkpointFilesToPegasusLite( job, chkpointFiles);
+                if( !checkPointFragment.isEmpty() ){
+                    appendStderrFragment( sb, "staging out checkpoint files" );
+                    sb.append( "# stage out checkpoint files " ).append( '\n' );
+                    sb.append( checkPointFragment );
+                }
                 
                 if( !outputFiles.isEmpty() ){
                     //generate the stage out fragment for staging out outputs
