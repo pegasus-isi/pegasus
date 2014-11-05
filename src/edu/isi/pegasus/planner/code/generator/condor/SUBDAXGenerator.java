@@ -48,6 +48,7 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.code.GridStartFactory;
 import edu.isi.pegasus.planner.code.generator.DAXReplicaStore;
+import edu.isi.pegasus.planner.code.generator.Metrics;
 import edu.isi.pegasus.planner.code.gridstart.PegasusLite;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.ENV;
@@ -211,14 +212,18 @@ public class SUBDAXGenerator{
      */
     private String mCurrentDAGCacheFile;
     
+    /**
+     * Handle to the metrics generator to determine if DAGMan metrics
+     * reporting needs to be turned on or not.
+     */
+    private Metrics mMetricsReporter;
     
     /**
      * The default constructor.
      */
     public SUBDAXGenerator() {
         mNumFormatter = new DecimalFormat( "0000" );
-
-
+        mMetricsReporter = new Metrics();
     }
 
 
@@ -260,7 +265,7 @@ public class SUBDAXGenerator{
             mLogger.log( "Condor Version detected is " + mCondorVersion , LogManager.DEBUG_MESSAGE_LEVEL );
         }
 
-
+        mMetricsReporter.initialize(bag);
       
     }
 
@@ -817,6 +822,9 @@ public class SUBDAXGenerator{
                                             getBasename( basenamePrefix, ".dag.dagman.out")).getAbsolutePath()
                                             );
        job.envVariables.construct("_CONDOR_MAX_DAGMAN_LOG","0");
+       
+       //PM-797 add any keys if required for DAGMan metrics reporting
+       job.envVariables.merge( mMetricsReporter.getDAGManMetricsEnv() );
 
        //set the arguments for the job
        job.setArguments(sb.toString());

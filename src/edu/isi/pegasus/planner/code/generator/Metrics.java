@@ -23,6 +23,7 @@ import edu.isi.pegasus.planner.classes.PlannerMetrics;
 import edu.isi.pegasus.common.util.Boolean;
 
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.namespace.ENV;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -80,6 +81,12 @@ public class Metrics  {
      * The name of the environment variable that overrides the default server url
      */
     public static final String SECONDARY_METRICS_SERVER_URL_ENV_VARIABLE = "PEGASUS_USER_METRICS_SERVER";
+    
+    /**
+     * The name of the environment variable that if set to true enables DAGMan
+     * to report metrics
+     */
+    public static final String DAGMAN_METRICS_ENV_VARIABLE = "PEGASUS_METRICS";
 
     /**
      * The timeout in seconds for sending the metrics to the server
@@ -143,6 +150,31 @@ public class Metrics  {
         if( mLogger == null ){
             mLogger = LogManagerFactory.loadSingletonInstance();
         }
+    }
+    
+    /**
+     * Returns a boolean indicating whether to enable DAGMan metrics
+     * or not
+     * 
+     * @return 
+     */
+    public boolean areDAGManMetricsEnabled(){
+        //right now same environment variable
+        //dictate whether to send planner and dagman metrics
+        //or not
+        return mSendMetricsToServer;
+    }
+    
+    /**
+     * Returns the environment variables  as an env profiles,
+     * that enabled HTCondor dagman to report metrics
+     */
+    public ENV getDAGManMetricsEnv(){
+        ENV env = new ENV();
+        if( this.areDAGManMetricsEnabled() ){
+            env.construct( DAGMAN_METRICS_ENV_VARIABLE, "true");
+        }
+        return env;
     }
 
     /**
