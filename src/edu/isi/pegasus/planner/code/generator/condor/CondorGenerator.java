@@ -515,6 +515,9 @@ public class CondorGenerator extends Abstract {
         //write out the braindump file
         this.writeOutBraindump( dag );
         
+        //write out the dag.condor.sub file
+        this.writeOutDAGManSubmitFile( dag, dagFile );
+        
         //we are donedirectory
         mDone = true;
 
@@ -1176,6 +1179,21 @@ public class CondorGenerator extends Abstract {
 
     }
 
+    /**
+     * Writes out the condor submit file for the dag created
+     * 
+     * @param dag 
+     * @param dagFile
+     */
+    protected void writeOutDAGManSubmitFile(ADag dag, File dagFile ) throws CodeGeneratorException{
+        PegasusSubmitDAG psd = new PegasusSubmitDAG();
+        psd.intialize(mBag);
+        psd.generateCode(dag, dagFile);
+    }
+
+
+
+    
     /**
      * Writes a string to the dag file. When calling this function the
      * file handle to file is already initialized.
@@ -1884,6 +1902,5 @@ public class CondorGenerator extends Abstract {
         return rslString.toString();
     }
 
-
-
+  
 }
