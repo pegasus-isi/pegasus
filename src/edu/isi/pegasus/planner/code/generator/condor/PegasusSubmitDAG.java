@@ -239,7 +239,7 @@ push( @arg, '-append', '+pegasus_wf_xformation="pegasus::dagman"' );
         }
         
         args.append( "-append " ).append( "executable" ).
-                 append( "=\"" ).append( pegasusDAGMan.getAbsolutePath() ).append( "\"" ).
+                 append( "=" ).append( pegasusDAGMan.getAbsolutePath() ).
                  append( " " );
         
         Map<String,Object> entries = new LinkedHashMap();
