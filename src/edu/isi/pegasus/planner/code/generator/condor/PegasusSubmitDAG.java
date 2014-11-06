@@ -32,6 +32,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -162,41 +163,48 @@ public class PegasusSubmitDAG {
         }
         else{
             //we read the DAGMan submit file in and grab the environment from it
-            String dagmanEnvString = "";
-            try {
-                BufferedReader fin = new BufferedReader(new  FileReader(file) );
-                String line = null;
-                while((line=fin.readLine())!= null){
+            //and add the environment key to the second last line with the
+            //Pegasus metrics environment variables added.
+            try{
+                RandomAccessFile raf = new RandomAccessFile(file, "rw");
+                String dagmanEnvString = "";
+                String line   = null;
+                long previous = raf.getFilePointer();
+                while( (line=raf.readLine()) != null ){
                     if( line.startsWith( "environment" ) ){
                         dagmanEnvString = line;
+                    }
+                    if( line.startsWith( "queue" ) ){
+                        //backtrack to previous file position i.e just before queue
+                        raf.seek(previous);
+                        StringBuilder dagmanEnv = new StringBuilder( dagmanEnvString );
+                        if( dagmanEnvString.isEmpty() ){
+                            dagmanEnv.append( "environment=");
+                        }
+                        else{
+                            dagmanEnv.append( ";" );
+                        }
+                        for( Iterator it = env.getProfileKeyIterator(); it.hasNext(); ){
+                            String key = (String) it.next();
+                            dagmanEnv.append( key ).append("=").append( env.get( key ) ).append( ";" );
+                        }
+                        mLogger.log( "Updated environment for dagman is " + dagmanEnv.toString(), LogManager.DEBUG_MESSAGE_LEVEL );
+                        raf.writeBytes( dagmanEnv.toString() );
+                        raf.writeBytes( System.getProperty("line.separator", "\r\n") );
+                        raf.writeBytes( "queue" );
                         break;
                     }
+                    previous = raf.getFilePointer();
                 }
-                fin.close();
-            } catch (IOException e) {
-                throw new CodeGeneratorException( "Error while reading dagman .condor.sub file " + file,
-                                                  e );
+                
+                raf.close();
             }
-            
-            //we read the DAGMan submit file in append mode, and add to it
-            StringBuilder dagmanEnv = new StringBuilder(dagmanEnvString);
-            if( !dagmanEnvString.isEmpty() ){
-                dagmanEnv.append( ";" );
-            }
-            for( Iterator it = env.getProfileKeyIterator(); it.hasNext(); ){
-                String key = (String) it.next();
-                dagmanEnv.append( key ).append("=").append( env.get( key ) ).append( ";" );
-            }
-            mLogger.log( "Updated environment for dagman is " + dagmanEnv.toString(), LogManager.DEBUG_MESSAGE_LEVEL );
-            
-            try {
-                PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(file, true)));
-                out.println( dagmanEnv.toString() );
-                out.close();
-            } catch (IOException e) {
+            catch (IOException e) {
                  throw new CodeGeneratorException( "Error while reading dagman .condor.sub file " + file,
                                                   e );
             }
+            
+           
         }
         return true;
     }
