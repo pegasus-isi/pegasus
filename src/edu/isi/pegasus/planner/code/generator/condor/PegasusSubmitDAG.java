@@ -254,10 +254,10 @@ push( @arg, '-append', '+pegasus_wf_xformation="pegasus::dagman"' );
         entries.put( ClassADSGenerator.VERSION_AD_KEY,   dag.getReleaseVersion() );
         
         //update entries with some hardcode pegasus dagman specific ones
-        entries.put( "+pegasus_job_class", 11 );
-        entries.put( "+pegasus_cluster_size", 1 );
-        entries.put( "+pegasus_site", "local" );
-        entries.put( "+pegasus_wf_xformation", "pegasus::dagman" );
+        entries.put( "pegasus_job_class", 11 );
+        entries.put( "pegasus_cluster_size", 1 );
+        entries.put( "pegasus_site", "local" );
+        entries.put( "pegasus_wf_xformation", "pegasus::dagman" );
         
         //we do a -no_submit option
         args.append( "-no_submit " );
@@ -267,7 +267,7 @@ push( @arg, '-append', '+pegasus_wf_xformation="pegasus::dagman"' );
         //construct all the braindump entries as append options to dagman
         for( Map.Entry<String,Object> entry: entries.entrySet() ){
             String key = entry.getKey();
-            args.append( "-append " ).append( key );
+            args.append( "-append " ).append( "+" ).append( key );
             Object value = entry.getValue();
             if( value instanceof String ){
                 args.append( "=\"" ).append( entry.getValue() ).append( "\"" );

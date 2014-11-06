@@ -188,6 +188,14 @@ if ( $config{dag} ) {
     die "ERROR: Unable to access $psd\n" unless -x $psd;
     print STDERR "# found $psd\n" if $main::DEBUG;
 
+    #PM-797 move away from using pegasus-submit-dag
+    my $c_s = find_exec('condor_submit') || die "Unable to locate condor_submit\n";
+    die "ERROR: Unable to access condor_submit $c_s\n" unless -x $c_s;
+    print STDERR "# found $c_s\n" if $main::DEBUG;
+    my $dag_submit_file = File::Spec->catfile( $run, "$config{dag}.condor.sub" );
+    #my $dag_submit_file = "$config{dag}.condor.sub";
+    print STDERR "# dagman condor submit file is $dag_submit_file\n";
+
     # sanity check: Is the DAG file there? 
     die "ERROR: Unable to locate $config{dag}\n" unless -r $config{dag};
     print STDERR "# found $config{dag}\n" if $main::DEBUG;
@@ -229,16 +237,27 @@ if ( $config{dag} ) {
 	push( @extra, "-D$k=$initial{$k}" );
     }
 
-    my @args = ( $psd );
-    push( @args, @extra ) if @extra > 0;
-    push( @args, '-d', 0+$main::DEBUG);
-    push( @args, '--grid' ) if $grid;
-    push( @args, '--dagman', $dagman, $config{dag} );
-
-    print STDERR "# @args\n" if $main::DEBUG;
-    system(@args) == 0 
-	or die( "ERROR: Running pegasus-submit-dag failed with ", parse_exit($?));
-    print STDERR "# dagman is running\n" if $main::DEBUG;
+    if( -r $dag_submit_file ){
+	#PM-797 do condor_submit on dagman.condor.sub file if it exists
+	print STDERR "Submitting to condor $dag_submit_file\n";
+	my @args = ( $c_s );
+	push( @args, $dag_submit_file);
+	system(@args) == 0 
+	    or die( "ERROR: Running condor_submit @args failed with ", parse_exit($?));
+	print STDERR "# dagman is running\n" if $main::DEBUG;
+    }
+    else{
+	my @args = ( $psd );
+	push( @args, @extra ) if @extra > 0;
+	push( @args, '-d', 0+$main::DEBUG);
+	push( @args, '--grid' ) if $grid;
+	push( @args, '--dagman', $dagman, $config{dag} );
+	
+	print STDERR "# @args\n" if $main::DEBUG;
+	system(@args) == 0 
+	    or die( "ERROR: Running pegasus-submit-dag failed with ", parse_exit($?));
+	print STDERR "# dagman is running\n" if $main::DEBUG;
+    }
 
     if ( $monitor ) {
 	if ( -x $tsd ) {
