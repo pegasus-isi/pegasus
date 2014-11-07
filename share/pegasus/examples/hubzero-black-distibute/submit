@@ -11,7 +11,6 @@ CLUSTER_HOSTNAME="pbs.hubzero.org"
 CLUSTER_SCHEDULER="condor"
 CLUSTER_WORK_DIR="/nfs/ccg4/scratch-6-months-purge"
 CLUSTER_PEGASUS_HOME="/ccg/software/pegasus/dev/trunk"
-CLUSTER_GLOBUS_LOCATION="/ccg/software/globus/default"
 ##################################################################################
 
 
@@ -25,10 +24,7 @@ if [ "x$PEGASUS_HOME" = "x" ]; then
     exit 1
 fi 
 
-if [ "x$GLOBUS_LOCATION" = "x" ]; then
-    echo "Please set GLOBUS_LOCATION to the location of your Pegasus install"
-    exit 1
-fi 
+
 
 # generate the input file
 echo "This is sample input to KEG" >f.a
@@ -49,7 +45,7 @@ cat >sites.xml <<EOF
         <directory type="local-storage" path="$TOPDIR/outputs">
             <file-server operation="all" url="file://$TOPDIR/outputs"/>
         </directory>
-        <profile namespace="env" key="GLOBUS_LOCATION" >$GLOBUS_LOCATION</profile>
+
     </site>
     <site  handle="pbs-cluster" arch="x86_64" os="LINUX" osrelease="" osversion="" glibc="">
 
@@ -83,7 +79,6 @@ cat >sites.xml <<EOF
             <file-server operation="all" url="gsiftp://$CLUSTER_HOSTNAME/$CLUSTER_WORK_DIR"/>
         </directory>
 
-        <profile namespace="env" key="GLOBUS_LOCATION" >$CLUSTER_GLOBUS_LOCATION</profile>
     </site>
 
 </sitecatalog>
