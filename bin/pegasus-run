@@ -53,19 +53,16 @@ sub usage(;$);			# { }
 
 # constants
 $main::DEBUG = 0;		# for now
-my $condor;			# if set, use Condor for pegasus-monitord
+
 my $grid=0;                     # if set, enable grid checks, disabled by default
-my $default_tsd = make_path( 'pegasus-monitord' );
+
 my $dagman = make_path( 'pegasus-dagman' );
-my ($tsd,$monitor,$conffile); 
+my $conffile; 
 GetOptions( "help|h" => \&usage
-	  , "monitor|m=s" => \$tsd
-	  , "condor" => \$condor
 	  , "debug|d=o" => \$main::DEBUG
 	  , "verbose|v+" => \$main::DEBUG
           , "grid!" => \$grid
 	  , 'conf|c=s' => \$conffile
-	  , "M" => \$monitor
 	  );
 
 my $run = shift;
@@ -85,8 +82,6 @@ my %config = slurp_braindb( $run ) or die "ERROR: open braindb: $!\n";
 # pre-condition: The planner writes all properties per workflow into the DAG dir.
 my $props = Pegasus::Properties->new( $conffile, File::Spec->catfile($run,$config{properties}) );
 
-# if TSD is empty, fill in from default locations
-$tsd ||=  $props->property('pegasus.monitord') || $default_tsd;
 
 #
 # --- functions -------------------------------------------------
@@ -116,11 +111,8 @@ Optional arguments:
  -c|--conf fn	    Use file fn as pegasus properties file. (only use for debugging purposes.
                     pegasus-run will pick the correct planned properties by default.
  -h|--help          Print this help message and exit.
- -m|--monitor l     Uses the workflow monitor daemon installed as l, default
-                    is $default_tsd.
  -d|--debug lvl     Sets the debug level (verbosity), default is $main::DEBUG. 
  -v|--verbose       Raises debug level by 1, see --debug. 
- --condor           Uses Condor to submit daemons (prototype).
  --nogrid           Disable checking for grids (default).
  --grid             Enable checking for grids. 
 
@@ -235,10 +227,6 @@ $SIG{'__DIE__'} = sub {
 };
 chdir($run) || die "ERROR: chdir $run: $!\n";
 
-# sanity check: find the pegasus-monitord daemon
-warn "WARN: Either $tsd does not exist or is not executable\n" unless -x $tsd;
-print STDERR "# found $tsd\n" if $main::DEBUG;
-
 # Do GRID check if $grid enabled
 if ( $grid ) {
     # sanity check: Is there a GLOBUS_LOCATION?
@@ -351,21 +339,6 @@ if ( $config{dag} ) {
 	system(@args) == 0 
 	    or die( "ERROR: Running pegasus-submit-dag failed with ", parse_exit($?));
 	print STDERR "# dagman is running\n" if $main::DEBUG;
-    }
-
-    if ( $monitor ) {
-	if ( -x $tsd ) {
-	    # run pegasus-monitord to update job stats until DAGMan finishes
-	    my @tsdargs = ($tsd);
-	    push( @tsdargs, $config{dag} . '.dagman.out' );
-
-	    print STDERR "# @tsdargs\n" if $main::DEBUG;
-	    if ( system(@tsdargs) == 0 ) {
-		print STDERR "# $tsd is running\n" if $main::DEBUG;
-	    } else {
-		warn( "WARN: Running $tsd failed with ", parse_exit($?) );
-	    }
-	}
     }
 
     # next step
