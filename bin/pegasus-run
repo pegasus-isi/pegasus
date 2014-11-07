@@ -281,32 +281,6 @@ if ( $config{dag} ) {
     die "ERROR: Unable to locate $config{dag}\n" unless -r $config{dag};
     print STDERR "# found $config{dag}\n" if $main::DEBUG;
 
-    # NEW: is there a rescue file, or multiple rescue levels?
-    my $original;
-    my @rescue = check_rescue($run,$config{dag});
-    if ( @rescue > 0 ) {
-	my (@stat,%rescue,$maxsize);
-	foreach my $fn ( @rescue ) {
-	    if ( (@stat = stat($fn)) > 0 ) {
-		$rescue{$fn} = [ @stat ];
-		$maxsize = $stat[7] if $maxsize < $stat[7];
-	    }
-	}
-
-	print "\n\nDetected the presence of Rescue DAGs:\n";
-	my $width = log10($maxsize);
-	foreach my $fn ( @rescue ) {
-	    printf( " %s %*u %s\n", 
-		    isodate($rescue{$fn}[9]), 
-		    $width, $rescue{$fn}[7], 
-		    basename($fn) );
-	}
-
-	# overwrite with "latest" (read: longest basename) rescue DAG
-	$original = $config{dag};
-	$config{dag} = $rescue[$#rescue];
-	print "\nWILL USE ", $config{dag}, "\n\n";
-    }
 
     # find the workflow name and timestamp for pegasus-status
     my $workflow=$config{'pegasus_wf_name'};
