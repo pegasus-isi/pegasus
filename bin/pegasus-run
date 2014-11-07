@@ -30,6 +30,7 @@ use Cwd;
 use File::Spec;
 use File::Basename qw(basename dirname);
 use Getopt::Long qw(:config bundling no_ignore_case);
+use File::Copy;
 
 # path to load our libs.. 
 BEGIN { 
@@ -126,6 +127,99 @@ Optional arguments:
 EOF
     exit( $flag ? 1 : 0 );
 }
+
+sub salvage_logfile($) {
+    # purpose: salvage Condor common log file from truncation
+    # paramtr: $dagfn (IN): Name of dag filename
+    # returns: -
+    #
+    my $dagfn = shift;
+    my $result = undef;
+    local(*DAG,*SUB,*LOG);
+    if ( open( DAG, "<$dagfn" ) ) {
+	# read to to figure out submit files
+	my @x;
+	my %submit = ();
+	while ( <DAG> ) {
+	    next unless /^\s*job/i;
+	    s/[\r\n]+$//;	# safe chomp
+	    @x = split;
+	    $submit{$x[1]} = $x[2]; # dagjobid -> subfn
+	}
+	close DAG;
+
+	if ( $main::DEBUG > 2 ) {
+	    print STDERR "# found the following associations:\n";
+
+	    local $Data::Dumper::Indent = 1;
+	    local $Data::Dumper::Pad = "# ";
+	    print STDERR Data::Dumper->Dump( [\%submit], [qw(config)] );
+	}
+
+	# read two submit files to figure out condor common log file
+	foreach my $subfn ( values %submit ) {
+	    if ( open( SUB, "<$subfn" ) ) {
+		my $logfile = undef;
+		while ( <SUB> ) {
+		    next unless /^log(=|\s)/i;
+		    s/[\r\n]+$//; # safe chomp
+		    @x = split /\s*=\s*/, $_, 2;
+		    $logfile = ( substr( $x[1], 0, 1 ) =~ /[''""]/ ?
+				 substr( $x[1], 1, -1 ) : $x[1] );
+		    last;
+		}
+		close SUB;
+		
+		print STDERR "# $subfn points to $logfile\n"
+		    if ( $main::DEBUG > 1 );
+
+		if ( ! defined $result ) {
+		    $result = $logfile;
+		} else {
+		    last if $result eq $logfile;
+		    warn "# Using distinct, different log files, skipping preservation.\n";
+		    return undef;
+		}
+	    } else {
+		warn "Unable to read sub file $subfn: $!\n";
+	    }
+	}
+
+	# try to preserve log file
+	if ( defined $result && -s $result ) {
+	    my $newfn;
+	    print STDERR "# log $result exists, rescuing from DAGMan.\n" 
+		if $main::DEBUG;
+	    for ( my $i=0; $i<1000; ++$i ) {
+		$newfn = sprintf "%s.%03d", $result, $i;
+		if ( open( LOG, "<$newfn" ) ) {
+		    # file exists
+		    close LOG;
+		} else {
+		    # file does not exist, use that
+		    my $newresult=$result;
+		    #check if the file is a smylink then dereference it.
+		    if ( -l $result ) {
+			$newresult=readlink($result);
+		    }
+		    print STDOUT "Rescued $result as $newfn\n" 
+			if copy( $newresult, $newfn )  or warn "Could not rescue the log file $newresult to $newfn\n $! \nTrying to continue\n";
+		    last;
+		}
+	    }
+	} else {
+	    print STDERR "# log $result does not yet exist (good)\n"
+		if ( $main::DEBUG );
+	}
+    } else {
+	die "ERROR: Unable to read dag file $dagfn: $!\n";
+    }
+
+    $result;
+}
+
+
+
 
 #
 # --- main ------------------------------------------------------
@@ -239,6 +333,7 @@ if ( $config{dag} ) {
 
     if( -r $dag_submit_file ){
 	#PM-797 do condor_submit on dagman.condor.sub file if it exists
+	salvage_logfile( $config{dag} );
 	print STDERR "Submitting to condor $dag_submit_file\n";
 	my @args = ( $c_s );
 	push( @args, $dag_submit_file);
