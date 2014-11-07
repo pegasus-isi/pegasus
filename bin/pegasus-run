@@ -315,14 +315,6 @@ if ( $config{dag} ) {
 	print STDERR "# dagman is running\n" if $main::DEBUG;
     }
 
-    # next step
-    if ( @rescue > 0 ) {
-	my $n = @rescue + 0;
-	print( "\nI found $n rescue DAG", ( $n>1 ? 's' : '' ), 
-	       ". I submitted the rescue DAG\n", 
-	       $config{dag}, "\ninstead of\n", $original, "\n" );
-    }
-
     my $did=undef;
     my $daglogfile=$config{dag}.".dagman.out";
     if ( open( DID, "<$daglogfile" ) ) {
