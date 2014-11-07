@@ -17,9 +17,11 @@
 package edu.isi.pegasus.planner.code.generator.condor;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
 import edu.isi.pegasus.common.util.FindExecutable;
 import edu.isi.pegasus.common.util.StreamGobbler;
+import edu.isi.pegasus.common.util.StreamGobblerCallback;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.code.CodeGeneratorException;
@@ -100,7 +102,7 @@ public class PegasusSubmitDAG {
                 new StreamGobbler( p.getInputStream(), new DefaultStreamGobblerCallback(
                                                                    LogManager.CONSOLE_MESSAGE_LEVEL ));
             StreamGobbler eps =
-                new StreamGobbler( p.getErrorStream(), new DefaultStreamGobblerCallback(
+                new StreamGobbler( p.getErrorStream(), new PSDErrorStreamGobblerCallback(
                                                              LogManager.ERROR_MESSAGE_LEVEL));
 
             ips.start();
@@ -291,5 +293,45 @@ push( @arg, '-append', '+pegasus_wf_xformation="pegasus::dagman"' );
         args.append( dagFile.getAbsolutePath() );
         
         return args.toString();
+    }
+
+    private static class PSDErrorStreamGobblerCallback implements StreamGobblerCallback {
+
+        public static final String IGNORE_LOG_LINE= "Renaming rescue DAGs newer than number 0";
+        
+        /**
+          * 
+          */
+        private int mLevel;
+
+        /**
+         * The instance to the logger to log messages.
+         */
+        private LogManager mLogger;
+
+        /**
+         * The overloaded constructor.
+         *
+         * @param level   the level on which to log.
+         */
+        public PSDErrorStreamGobblerCallback(int level) {
+            //should do a sanity check on the levels
+            mLevel  = level;
+            mLogger    = LogManagerFactory.loadSingletonInstance(  );
+        }
+
+        /**
+         * Callback whenever a line is read from the stream by the StreamGobbler.
+         * The line is logged to the level specified while initializing the
+         * class.
+         *
+         * @param line   the line that is read.
+         */
+        public void work(String line) {
+            if( !line.startsWith( IGNORE_LOG_LINE ) ){
+                mLogger.log( line , mLevel);
+            }
+        }
+
     }
 }
