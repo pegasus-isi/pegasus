@@ -286,9 +286,8 @@ if ( $config{dag} ) {
     my $c_s = find_exec('condor_submit') || die "Unable to locate condor_submit\n";
     die "ERROR: Unable to access condor_submit $c_s\n" unless -x $c_s;
     print STDERR "# found $c_s\n" if $main::DEBUG;
-    my $dag_submit_file = File::Spec->catfile( $run, "$config{dag}.condor.sub" );
-    #my $dag_submit_file = "$config{dag}.condor.sub";
-    print STDERR "# dagman condor submit file is $dag_submit_file\n";
+    my $dag_submit_file = File::Spec->catfile( $run, "$config{dag}.condor.sub" );    
+    print STDOUT "# dagman condor submit file is $dag_submit_file\n";
 
     # sanity check: Is the DAG file there? 
     die "ERROR: Unable to locate $config{dag}\n" unless -r $config{dag};
@@ -334,7 +333,7 @@ if ( $config{dag} ) {
     if( -r $dag_submit_file ){
 	#PM-797 do condor_submit on dagman.condor.sub file if it exists
 	salvage_logfile( $config{dag} );
-	print STDERR "Submitting to condor $dag_submit_file\n";
+	print STDOUT "Submitting to condor $dag_submit_file\n";
 	my @args = ( $c_s );
 	push( @args, $dag_submit_file);
 	system(@args) == 0 
