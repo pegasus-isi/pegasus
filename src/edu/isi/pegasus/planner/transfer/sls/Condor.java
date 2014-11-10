@@ -403,7 +403,7 @@ public class Condor   implements SLS {
             sb.append( "Condor File Transfers don't support deep LFN's. ").append( type ).
                append( " file " ).append( lfn ).append(" for job " ).append( id ).
                append( " . Set the property pegasus.data.configuration to " ).
-               append( PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE );
+               append( PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE ).append( " ." );
             throw new RuntimeException( sb.toString() );
         }
     }
