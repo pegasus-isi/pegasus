@@ -89,6 +89,10 @@ public class Metrics  {
     public static final String DAGMAN_METRICS_ENV_VARIABLE = "PEGASUS_METRICS";
 
     /**
+     * Getting DAGMan to report to additional metrics servers.comma-separated list of URLs.
+     */
+    public static final String DAGMAN_SECONDARY_METRICS_SERVER_URL_ENV_VARIABLE = "PEGASUS_USER_METRICS_SERVER";
+    /**
      * The timeout in seconds for sending the metrics to the server
      */
     public static final int METRICS_SEND_TIMEOUT  = 5;
@@ -173,6 +177,14 @@ public class Metrics  {
         ENV env = new ENV();
         if( this.areDAGManMetricsEnabled() ){
             env.construct( DAGMAN_METRICS_ENV_VARIABLE, "true");
+            
+            //check if metrics need to be reported to additional servers
+            String value = System.getenv(DAGMAN_SECONDARY_METRICS_SERVER_URL_ENV_VARIABLE );
+            if( value != null ){
+                //populate that as another argument to be sent 
+                mLogger.log( "DAGMan will send metrics additionally to these servers " + value, LogManager.DEBUG_MESSAGE_LEVEL );
+                env.construct(DAGMAN_SECONDARY_METRICS_SERVER_URL_ENV_VARIABLE, value);
+            }
         }
         return env;
     }
