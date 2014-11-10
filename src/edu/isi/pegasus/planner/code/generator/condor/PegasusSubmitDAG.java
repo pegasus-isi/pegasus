@@ -26,20 +26,18 @@ import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.code.CodeGeneratorException;
 import edu.isi.pegasus.planner.code.generator.Metrics;
+import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.ENV;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * A helper class, that mimics the functionality of pegasus-submit-dag, and 
@@ -51,19 +49,39 @@ import java.util.Map;
 public class PegasusSubmitDAG {
     
     /**
+     * The dagman knobs controlled through property. They map the property name to
+     * the corresponding dagman option.
+     */
+    public static final String DAGMAN_KNOBS[][]={
+        { Dagman.MAXPRE_KEY.toLowerCase(),  " -MaxPre " },
+        { Dagman.MAXPOST_KEY.toLowerCase(), " -MaxPost " },
+        { Dagman.MAXJOBS_KEY.toLowerCase(), " -MaxJobs " },
+        { Dagman.MAXIDLE_KEY.toLowerCase(), " -MaxIdle " },
+    };
+    
+    /**
+     * Default number of max postscripts run by dagman at a time.
+     */
+    public static final int DEFAULT_MAX_POST_SCRIPTS = 20;
+    
+    
+    /**
      * The Bag of Pegasus initialization objects.
      */
     private PegasusBag mBag;
     
     private LogManager mLogger;
     
+    private PegasusProperties mProps;
+    
     public PegasusSubmitDAG(){
         
     }
     
     public void intialize( PegasusBag bag ){
-        mBag = bag;
+        mBag    = bag;
         mLogger = bag.getLogger();
+        mProps  = bag.getPegasusProperties();
     }
     
     /**
@@ -274,6 +292,10 @@ push( @arg, '-append', '+pegasus_wf_xformation="pegasus::dagman"' );
         //also for safety case -update_submit or -force?
         args.append( "-force " );
         
+        //get any dagman runtime parameters that are controlled
+        //via profiles
+        args.append( constructDAGManKnobs() );
+        
         //construct all the braindump entries as append options to dagman
         for( Map.Entry<String,Object> entry: entries.entrySet() ){
             String key = entry.getKey();
@@ -293,6 +315,55 @@ push( @arg, '-append', '+pegasus_wf_xformation="pegasus::dagman"' );
         args.append( dagFile.getAbsolutePath() );
         
         return args.toString();
+    }
+    
+    /**
+     * Constructs Any extra arguments that need to be passed to dagman, as determined
+     * from the properties file.
+     *
+     *
+     * @return any arguments to be added, else empty string
+     */
+    public  String constructDAGManKnobs(  ){
+        StringBuilder sb = new StringBuilder();
+
+        //get all the values for the dagman knows
+        int value;
+        Properties props = mProps.matchingSubset( "dagman", false );
+        for( int i = 0; i < DAGMAN_KNOBS.length; i++ ){
+            String key = DAGMAN_KNOBS[i][0];
+            value = parseInt( (String)props.get( key ) );
+            if( value < 0 && key.equalsIgnoreCase( Dagman.MAXPOST_KEY) ){
+                value = DEFAULT_MAX_POST_SCRIPTS;
+            }
+            if ( value > 0 ){
+                //add the option
+                sb.append( DAGMAN_KNOBS[i][1] );
+                sb.append( value );
+            }
+            
+        }
+        sb.append( " " );
+        return sb.toString();
+
+    }
+    
+    /**
+     * Parses a string into an integer. Non valid values returned as -1
+     *
+     * @param s  the String to be parsed as integer
+     *
+     * @return the int value if valid, else -1
+     */
+    protected static int parseInt( String s ){
+        int value = -1;
+        try{
+            value = Integer.parseInt( s );
+        }
+        catch( Exception e ){
+            //ignore
+        }
+        return value;
     }
 
     private static class PSDErrorStreamGobblerCallback implements StreamGobblerCallback {
