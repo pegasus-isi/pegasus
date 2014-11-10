@@ -400,9 +400,9 @@ public class Condor   implements SLS {
     private void sanityCheckForDeepLFN(String id, String lfn, String type) throws RuntimeException {
         if( lfn.contains( File.separator) ){
             StringBuilder sb = new StringBuilder();
-            sb.append( "Condor File Transfers don't support deep LFN's. ").append( type ).
-               append( " file " ).append( lfn ).append(" for job " ).append( id ).
-               append( " . Set the property pegasus.data.configuration to " ).
+            sb.append( "Condor File Transfers don't support deep LFN's. ").
+               append( " The " ).append( type ).append( " file " ).append( lfn ).append(" for job " ).append( id ).
+               append( " has a file separator. Set the property pegasus.data.configuration to " ).
                append( PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE ).append( " ." );
             throw new RuntimeException( sb.toString() );
         }
