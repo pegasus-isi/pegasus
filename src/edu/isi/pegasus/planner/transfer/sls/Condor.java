@@ -32,6 +32,7 @@ import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType;
 import edu.isi.pegasus.planner.classes.PlannerCache;
+import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.transfer.SLS;
 
 import edu.isi.pegasus.planner.namespace.Pegasus;
@@ -327,6 +328,9 @@ public class Condor   implements SLS {
             PegasusFile pf = ( PegasusFile )it.next();
             String lfn = pf.getLFN();
             
+            //sanity check case
+            sanityCheckForDeepLFN( job.getID(), lfn, "input" );
+            
             ReplicaCatalogEntry cacheLocation = null;
             
             String pfn = null;
@@ -364,6 +368,9 @@ public class Condor   implements SLS {
         for( Iterator it = job.getOutputFiles().iterator(); it.hasNext(); ){
             PegasusFile pf = ( PegasusFile )it.next();
             String lfn = pf.getLFN();
+            
+            //sanity check case
+            sanityCheckForDeepLFN( job.getID(), lfn, "output" );
 
             //ignore any input files of FileTransfer as they are first level
             //staging put in by Condor Transfer refiner
@@ -381,6 +388,24 @@ public class Condor   implements SLS {
 
         return true;
 
+    }
+
+    /**
+     * Complains for a deep lfn if separator character is found in the lfn
+     * 
+     * @param id    the id of the associated job
+     * @param lfn   lfn of file
+     * @param type  type of file as string
+     */
+    private void sanityCheckForDeepLFN(String id, String lfn, String type) throws RuntimeException {
+        if( lfn.contains( File.separator) ){
+            StringBuilder sb = new StringBuilder();
+            sb.append( "Condor File Transfers don't support deep LFN's. ").append( type ).
+               append( " file " ).append( lfn ).append(" for job " ).append( id ).
+               append( " . Set the property pegasus.data.configuration to " ).
+               append( PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE );
+            throw new RuntimeException( sb.toString() );
+        }
     }
 
 }
