@@ -1018,31 +1018,7 @@ public class Kickstart implements GridStart {
         return workdir;
     }
     
-    /**
-     * Returns the exectionSiteDirectory that is associated with the constituentJob to specify
-     * the exectionSiteDirectory in which the constituentJob needs to run
-     * 
-     * @param constituentJob  the constituentJob
-     * 
-     * @return the condor key . can be initialdir or remote_initialdir
-     */
-    private String getDirectoryKey(Job job) {
-        /*String exectionSiteDirectory = (style.equalsIgnoreCase(Pegasus.GLOBUS_STYLE) ||
-                                style.equalsIgnoreCase(Pegasus.GLIDEIN_STYLE) ||
-                                style.equalsIgnoreCase(Pegasus.GLITE_STYLE))?
-                     (String)constituentJob.condorVariables.removeKey("remote_initialdir"):
-                     (String)constituentJob.condorVariables.removeKey("initialdir");
-        */ 
-        String universe = (String) job.condorVariables.get( Condor.UNIVERSE_KEY );
-        
-        return ( universe.equals( Condor.STANDARD_UNIVERSE ) ||
-                 universe.equals( Condor.LOCAL_UNIVERSE) ||
-                 universe.equals( Condor.SCHEDULER_UNIVERSE ) )?
-                "initialdir" :
-                "remote_initialdir";
-    }
-
-
+    
     /**
      * Triggers the creation of the kickstart input file, that contains the
      * the remote executable and the arguments with which it has to be invoked.

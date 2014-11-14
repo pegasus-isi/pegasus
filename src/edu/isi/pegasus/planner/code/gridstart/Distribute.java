@@ -16,11 +16,16 @@
 
 package edu.isi.pegasus.planner.code.gridstart;
 
+import edu.isi.pegasus.common.credential.CredentialHandler;
+import edu.isi.pegasus.common.credential.CredentialHandlerFactory;
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.Escape;
 
 import edu.isi.pegasus.common.util.Version;
 
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
@@ -35,8 +40,10 @@ import edu.isi.pegasus.planner.code.GridStart;
 
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.namespace.ENV;
 
 import edu.isi.pegasus.planner.namespace.Pegasus;
+import java.io.File;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -167,6 +174,12 @@ public class Distribute implements GridStart {
      *location in the submit directory
      */
     Map<String,String> mWorkerPackageMap ;
+    
+    /**
+     * The Credential handler for SSH transfer
+     */
+    private CredentialHandler mSSHCredHandler;
+    private ENV mLocalENV;
 
     
     /**
@@ -216,6 +229,19 @@ public class Distribute implements GridStart {
         mKickstartGridStartImpl = new Kickstart();
         mKickstartGridStartImpl.initialize( bag, dag );
         
+        //initialize the SSH credential handler
+        CredentialHandlerFactory factory = new CredentialHandlerFactory();
+        factory.initialize( mBag );
+        mSSHCredHandler = factory.loadInstance(CredentialHandler.TYPE.ssh );
+        
+        //get the local env
+        mSiteStore = mBag.getHandleToSiteStore();
+        SiteCatalogEntry localSite = mSiteStore.lookup( "local" );
+        if( localSite == null ){
+            throw new RuntimeException( "Unable to locate site catalog entry for site local ");
+        } else {
+            mLocalENV = (ENV) localSite.getProfiles().get( Profiles.NAMESPACES.env);
+        }
     }
     
     /**
@@ -334,11 +360,8 @@ public class Distribute implements GridStart {
      * @param globusJob    boolean
      */
     protected void wrapJobWithDistribute(Job job, boolean globusJob) {
-        //retrieve the kickstart invocation
-        StringBuilder ksInvocation = new StringBuilder();
-        ksInvocation.append( job.getRemoteExecutable() ).append( " " ).
-                     append( job.getArguments() );
-
+        StringBuilder arguments = new StringBuilder();
+        
         //construct the path to distribute executable
         //on local site.
         TransformationCatalogEntry entry = this.getTransformationCatalogEntry( "local" );
@@ -354,16 +377,111 @@ public class Distribute implements GridStart {
         }
 
         job.setRemoteExecutable( distributePath );
-        job.setArguments( ksInvocation.toString() );
+        
+        //job arguments are combination of arguments to distribute
+        //and the kickstart invocation
+        arguments.append( getDistributeArguments( job ) );
+        arguments.append( job.getRemoteExecutable() ).append( " " ).
+                     append( job.getArguments() );
+        
+        job.setArguments(arguments.toString() );
 
         //update the job to run on local site
         //and the style to condor
         job.setSiteHandle( "local" );
         job.condorVariables.construct(Pegasus.STYLE_KEY, Pegasus.CONDOR_STYLE );
+        
+        //a lot of distribute arguments are picked up via the environment
+        ENV distributeENV = this.getEnvironmentForDistribute(job);
+        //since the job is running locally it's environment
+        //has to be from the local entry of the site catalog
+        ENV env = new ENV();
+        env.merge( mLocalENV );
+        env.merge( distributeENV );
+        job.envVariables = env;
+        
         return;
     }
 
+    /**
+     * Constructs the argument string for the distribute job
+     * 
+     * @param job
+     * 
+     * @return the argument string 
+     */
+    protected String getDistributeArguments(Job job) {
+        StringBuilder args = new StringBuilder();
+        
+        /*
+        
+        */
+        
+        return args.toString();
+    }
 
+    /**
+     * Returns the environment variables that are required for distribute
+     * to generate the appropriate PBS submit file for the job
+     * 
+     * @param job
+     * 
+     * @return the job environment variables 
+     */
+    protected ENV getEnvironmentForDistribute( Job job ){
+        ENV env = new ENV();
+        
+        //jobs environment variables for a ; separated list under
+        //the key DISTRIBUTE_REMOTE_ENVIRONMENT
+        String key = "DISTRIBUTE_REMOTE_ENVIRONMENT";
+        StringBuilder remoteEnv = new StringBuilder();
+        Escape es = new Escape();
+        for( Iterator it = job.envVariables.getProfileKeyIterator(); it.hasNext(); ){
+            String envVariable = (String) it.next();
+            String value = (String) job.envVariables.get(envVariable);
+            remoteEnv.append( envVariable ).append( "=" ).
+                append( es.escape( value ) ).
+                append( ";" );
+        }
+        env.construct( key, remoteEnv.toString());
+                
+        //DISTRIBUTE_SITE_DESIGNATOR is the site handle
+        env.construct( "DISTRIBUTE_SITE_DESIGNATOR", job.getSiteHandle() );
+        
+        //SSH PRIVATE KEY
+        String sshKeyPath = mSSHCredHandler.getPath( job.getSiteHandle() );
+        env.construct( "DISTRIBUTE_SSH_IDENTITY_PATH", sshKeyPath );
+        
+        //construct a name for DISTRIBUTE to tell PBS to where to place the
+        //kickstart stdout and stderr . some cheating here..
+        //job.getDirectory() returns null since we have -w enabled for kickstart
+        String directory = mSiteStore.getInternalWorkDirectory(job);
+        env.construct( "DISTRIBUTE_JOB_STDOUT", directory + File.separator + job.getID() + ".stdout" );
+        env.construct( "DISTRIBUTE_JOB_STDERR", directory + File.separator + job.getID() + ".stderr" );
+        
+        /* the globus key hostCount is NODES */
+        if( job.globusRSL.containsKey( "hostcount" ) ){
+            env.construct( "DISTRIBUTE_NODES", (String)job.globusRSL.get( "hostcount" ) );
+        }
+        
+        /* the globus key xcount is PROCS or PPN */
+        if( job.globusRSL.containsKey( "xcount" ) ){
+            env.construct( "DISTRIBUTE_PPN", (String)job.globusRSL.get( "xcount" ) );
+        }
+        
+        /* the globus key maxwalltime is WALLTIME */
+        if( job.globusRSL.containsKey( "maxwalltime" ) ){
+            env.construct( "DISTRIBUTE_WALLTIME", (String)job.globusRSL.get( "maxwalltime" ) );          
+        }
+
+        /* the globus key maxmemory is PER_PROCESS_MEMORY */
+        if( job.globusRSL.containsKey( "maxmemory" ) ){
+            env.construct( "DISTRIBUTE_PER_PROCESS_MEMORY", (String)job.globusRSL.get( "maxmemory" ) );
+        }
+        
+        return env;
+    }
+    
 
     /**
      * Returns the transformation catalog entry for kickstart on a site
@@ -448,6 +566,5 @@ public class Distribute implements GridStart {
     public String getWorkerNodeDirectory(Job job) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-
     
 }
