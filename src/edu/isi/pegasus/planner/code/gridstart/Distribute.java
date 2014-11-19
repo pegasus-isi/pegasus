@@ -386,13 +386,14 @@ public class Distribute implements GridStart {
         
         job.setArguments(arguments.toString() );
 
+        //a lot of distribute arguments are picked up via the environment
+        ENV distributeENV = this.getEnvironmentForDistribute(job);
+        
         //update the job to run on local site
         //and the style to condor
         job.setSiteHandle( "local" );
         job.condorVariables.construct(Pegasus.STYLE_KEY, Pegasus.CONDOR_STYLE );
         
-        //a lot of distribute arguments are picked up via the environment
-        ENV distributeENV = this.getEnvironmentForDistribute(job);
         //since the job is running locally it's environment
         //has to be from the local entry of the site catalog
         ENV env = new ENV();
@@ -440,8 +441,10 @@ public class Distribute implements GridStart {
             String envVariable = (String) it.next();
             String value = (String) job.envVariables.get(envVariable);
             remoteEnv.append( envVariable ).append( "=" ).
-                append( es.escape( value ) ).
-                append( ";" );
+                append( es.escape( value ) );
+            if( it.hasNext() ){
+                remoteEnv.append( "," );
+            }
         }
         env.construct( key, remoteEnv.toString());
                 
@@ -450,6 +453,10 @@ public class Distribute implements GridStart {
         
         //SSH PRIVATE KEY
         String sshKeyPath = mSSHCredHandler.getPath( job.getSiteHandle() );
+        if( sshKeyPath == null ){
+            throw new RuntimeException( "Distribute Wrapper needs path to the private SSH Key. Please set the pegasus profile " + 
+                                        mSSHCredHandler.getProfileKey() + " for site " + job.getSiteHandle() );
+        }
         env.construct( "DISTRIBUTE_SSH_IDENTITY_PATH", sshKeyPath );
         
         //construct a name for DISTRIBUTE to tell PBS to where to place the
