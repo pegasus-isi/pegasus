@@ -39,6 +39,14 @@ preprocess.addArguments("-a preprocess","-T60","-i",a,"-o",b1,b2)
 preprocess.uses(a, link=Link.INPUT)
 preprocess.uses(b1, link=Link.OUTPUT)
 preprocess.uses(b2, link=Link.OUTPUT)
+
+# add profiles indicating PBS specific parameters for pbs-cluster
+# the globus key hostCount is NODES
+preprocess.addProfile( Profile("globus", "hostcount", "4" ))
+# the globus key xcount is PROCS or PPN
+preprocess.addProfile( Profile("globus", "xcount", "2" ))    
+#  the globus key maxwalltime is WALLTIME in minutes
+preprocess.addProfile( Profile("globus", "maxwalltime", "120"))
 diamond.addJob(preprocess)
 
 # Add left Findrange job

@@ -61,6 +61,7 @@ cat >sites.xml <<EOF
         </directory>
 
         <profile namespace="env" key="PEGASUS_HOME" >$CLUSTER_PEGASUS_HOME</profile>
+        <profile namespace="env" key="ENV-KEY" >TEST_VALUE</profile>
         
         <!-- all jobs need to be wrapped with distribute and then run                                                                                                                                                                                                                                                           locally through condor -->
         <profile namespace="pegasus" key="style">condor</profile>

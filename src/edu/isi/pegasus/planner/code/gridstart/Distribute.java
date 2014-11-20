@@ -392,7 +392,7 @@ public class Distribute implements GridStart {
         //update the job to run on local site
         //and the style to condor
         job.setSiteHandle( "local" );
-        job.condorVariables.construct(Pegasus.STYLE_KEY, Pegasus.CONDOR_STYLE );
+        job.vdsNS.construct(Pegasus.STYLE_KEY, Pegasus.CONDOR_STYLE );
         
         //since the job is running locally it's environment
         //has to be from the local entry of the site catalog
