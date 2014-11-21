@@ -376,8 +376,6 @@ public class Distribute implements GridStart {
             throw new RuntimeException( "Unable to determine path to the distribute wrapper on local site");
         }
 
-        job.setRemoteExecutable( distributePath );
-        
         //job arguments are combination of arguments to distribute
         //and the kickstart invocation
         arguments.append( getDistributeArguments( job ) );
@@ -385,6 +383,8 @@ public class Distribute implements GridStart {
                      append( job.getArguments() );
         
         job.setArguments(arguments.toString() );
+        
+        job.setRemoteExecutable( distributePath );
 
         //a lot of distribute arguments are picked up via the environment
         ENV distributeENV = this.getEnvironmentForDistribute(job);
