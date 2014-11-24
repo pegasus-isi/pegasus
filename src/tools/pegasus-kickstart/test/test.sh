@@ -354,6 +354,20 @@ function test_timeout_setup {
     return 0
 }
 
+function test_failure_environment {
+    kickstart -w /doesnotexistever /bin/echo Main job
+    rc=$?
+    if [ $rc -eq 0 ]; then
+        echo "Expected non-zero exit"
+        return 1
+    fi
+    if ! [[ $(cat test.out) =~ "<environment>" ]]; then
+        echo "Expected environment"
+        return 1
+    fi
+    return 0
+}
+
 # RUN THE TESTS
 run_test lotsofprocs
 run_test lotsofprocs_buffer
@@ -385,4 +399,5 @@ run_test test_timeout_pre
 run_test test_timeout_post
 run_test test_timeout_cleanup
 run_test test_timeout_setup
+run_test test_failure_environment
 

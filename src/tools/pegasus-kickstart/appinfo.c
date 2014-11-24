@@ -43,6 +43,17 @@
 #define XML_SCHEMA_URI "http://pegasus.isi.edu/schema/invocation"
 #define XML_SCHEMA_VERSION "2.3"
 
+/* Return non-zero if any part of the job failed */
+static int any_failure(const AppInfo *run) {
+    if (run->status) return 1;
+    if (run->setup.status) return 1;
+    if (run->prejob.status) return 1;
+    if (run->application.status) return 1;
+    if (run->postjob.status) return 1;
+    if (run->cleanup.status) return 1;
+    return 0;
+}
+
 static size_t convert2XML(FILE *out, const AppInfo* run) {
     size_t i;
     struct passwd* user = getpwuid(getuid());
@@ -156,9 +167,9 @@ static size_t convert2XML(FILE *out, const AppInfo* run) {
         printXMLMachineInfo(out, 2, "machine", &run->machine);
     }
 
-    /* We include <data> in the <statcall>s if the job failed, or if the user
+    /* We include <data> in the <statcall>s if any job failed, or if the user
      * did not specify -q */
-    int includeData = run->status || !run->omitData;
+    int includeData = !run->omitData || any_failure(run);
 
     /* User-specified initial and final arbitrary <statcall> records */
     if (run->icount && run->initial) {
@@ -180,7 +191,7 @@ static size_t convert2XML(FILE *out, const AppInfo* run) {
     printXMLStatInfo(out, 2, "statcall", "stderr", &run->error, includeData);
 
     /* If the job failed, or if the user requested the full kickstart record */
-    if (run->status || run->fullInfo) {
+    if (any_failure(run) || run->fullInfo) {
         /* Extra <statcall> records */
         printXMLStatInfo(out, 2, "statcall", "gridstart", &run->gridstart, includeData);
         updateStatInfo(&(((AppInfo*) run)->logfile));
