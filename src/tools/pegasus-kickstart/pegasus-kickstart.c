@@ -314,7 +314,7 @@ static char* noquote(char* s) {
 
 int main(int argc, char* argv[]) {
     size_t cwd_size = getpagesize();
-    int status, result;
+    int status, result = 0;
     int i, j, keeploop;
     int createDir = 0;
     char* temp;
