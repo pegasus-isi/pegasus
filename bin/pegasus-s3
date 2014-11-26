@@ -61,6 +61,10 @@ if boto_version < (2,2,2):
     sys.stderr.write("Requires boto 2.2.2 or later, not %s\n" % boto.__version__)
     exit(1)
 
+# set boto config options
+boto.config.add_section('Boto')
+boto.config.set('Boto','http_socket_timeout','30')
+
 COMMANDS = {
     'ls': 'List the contents of a bucket',
     'mkdir': 'Create a bucket in S3',
