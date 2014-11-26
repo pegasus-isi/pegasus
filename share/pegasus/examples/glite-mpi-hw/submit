@@ -4,7 +4,7 @@ set -e
 
 TOP_DIR=`pwd`
 
-# pegasus bin directory is needed to find keg
+# pegasus bin directory 
 BIN_DIR=`pegasus-config --bin`
 
 LOCAL_PBS_PEGASUS_HOME=`dirname $BIN_DIR`
