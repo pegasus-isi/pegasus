@@ -309,6 +309,47 @@ class Tools(object):
             self.lock.release()
                 
 
+class TimedCommand(object):
+    """ Provides a shell callout with a timeout """
+        
+    def __init__(self, cmd, timeout_secs = 5*60*60, should_log = False):
+        self.cmd = cmd
+        self.timeout_secs = timeout_secs
+        self.should_log = should_log
+        self.process = None
+
+    def run(self):
+        def target():
+            self.process = subprocess.Popen(self.cmd, shell=True, preexec_fn=os.setpgrp)
+            self.process.communicate()
+
+        if self.should_log or logger.isEnabledFor(logging.DEBUG):
+            logger.info(self.cmd)
+            
+        sys.stdout.flush()
+        
+        thread = threading.Thread(target=target)
+        thread.start()
+
+        thread.join(self.timeout_secs)
+        if thread.is_alive():
+            # do our best to kill the whole process group
+            try:
+                # os.killpg did not work in all environments
+                #os.killpg(os.getpgid(self.process.pid), signal.SIGTERM)
+                kill_cmd = "kill -TERM -%d" %(os.getpgid(self.process.pid))
+                kp = subprocess.Popen(kill_cmd, shell=True)
+                kp.communicate()
+                self.process.terminate()
+            except:
+                pass
+            thread.join()
+            raise RuntimeError("Command timed out after %d seconds: %s" %(self.timeout_secs, self.cmd))
+        if self.process.returncode != 0:
+            raise RuntimeError("Command exited with non-zero exit code (%d): %s" \
+                               %(self.process.returncode, self.cmd))
+
+
 class TransferHandlerBase(object):
     """
     Base class for all transfer handlers. Derived classes should set the 
@@ -370,7 +411,8 @@ class CpHandler(TransferHandlerBase):
         cmd = "/bin/cp -f -L '%s' '%s'" \
             % (transfer.src_path, transfer.dst_path)
         try:
-            myexec(cmd, default_subshell_timeout, False)
+            tc = TimedCommand(cmd)
+            tc.run()
         except RuntimeError, err:
             logger.error(err)
             return False
@@ -393,7 +435,8 @@ class FDTHandler(TransferHandlerBase):
         if not os.path.exists("fdt.jar"):
             cmd = "wget -nv -O fdt.jar http://monalisa.cern.ch/FDT/lib/fdt.jar"
             try:
-                myexec(cmd, 10*60, False)
+                tc = TimedCommand(cmd, timeout_secs = 10*60)
+                tc.run()
             except RuntimeError, err:
                 logger.error(err)
                 
@@ -407,7 +450,8 @@ class FDTHandler(TransferHandlerBase):
             cmd += " " + transfer.dst_host + ":" + transfer.dst_path
             stats_add(transfer.src_path)
         try:
-            myexec(cmd, default_subshell_timeout, False)
+            tc = TimedCommand(cmd)
+            tc.run()
             if transfer.dst_proto == "file":
                 stats_add(transfer.dst_path)    
         except RuntimeError, err:
@@ -619,7 +663,8 @@ class GridFtpHandler(TransferHandlerBase):
         
         cmd += " -f " + tmp_name
         try:
-            myexec(cmd, default_subshell_timeout, False)
+            tc = TimedCommand(cmd)
+            tc.run()
             transfer_success = True
         except Exception, err:
             logger.error(err)
@@ -757,7 +802,8 @@ class HTTPHandler(TransferHandlerBase):
                                " neither curl nor wget could not be found")
             
         try:
-            myexec(cmd, default_subshell_timeout, False)
+            tc = TimedCommand(cmd)
+            tc.run()
             stats_add(transfer.dst_path)
         except RuntimeError, err:
             logger.error(err)
@@ -825,7 +871,8 @@ class IRodsHandler(TransferHandlerBase):
                 h.write(password + "\n")
                 h.close()
                 cmd = "cat .irodsAc | iinit"
-                myexec(cmd, 5*60, False)
+                tc = TimedCommand(cmd, timeout_secs = 5*60)
+                tc.run()
                 os.unlink(".irodsAc")
                 check_cred_fs_permissions(os.environ['irodsAuthFileName'])
 
@@ -867,7 +914,8 @@ class IRodsHandler(TransferHandlerBase):
             # file->irods
             cmd = "imkdir -p '" + os.path.dirname(transfer.dst_path) + "'"
             try:
-                myexec(cmd, 60*60, False)
+                tc = TimedCommand(cmd, timeout_secs = 60*60)
+                tc.run()
             except:
                 # ignore errors from the mkdir command
                 pass
@@ -881,7 +929,8 @@ class IRodsHandler(TransferHandlerBase):
 
         cmd += " </dev/null"
         try:
-            myexec(cmd, default_subshell_timeout, False)
+            tc = TimedCommand(cmd)
+            tc.run()
             # stats      
             if transfer.dst_proto == "file":
                 stats_add(transfer.dst_path)
@@ -972,7 +1021,8 @@ class S3Handler(TransferHandlerBase):
                                                       transfer.dst_url())
 
         try:
-            myexec(cmd, default_subshell_timeout, False)
+            tc = TimedCommand(cmd)
+            tc.run()
             if local_filename is not None:
                 stats_add(local_filename)
         except Exception, err:
@@ -1053,7 +1103,8 @@ class GSHandler(TransferHandlerBase):
                                               transfer.dst_url())
 
         try:
-            myexec(cmd, default_subshell_timeout, False)
+            tc = TimedCommand(cmd)
+            tc.run()
             if local_filename is not None:
                 stats_add(local_filename)
         except Exception, err:
@@ -1117,7 +1168,8 @@ class SRMHandler(TransferHandlerBase):
                 cmd = cmd + " >/dev/null"
             
         try:
-            myexec(cmd, 6*60*60, False)
+            tc = TimedCommand(cmd)
+            tc.run()
         except Exception, err:
             logger.error(err)
             return False
@@ -1177,7 +1229,8 @@ class ScpHandler(TransferHandlerBase):
                 cmd += " '" + transfer.dst_host + ":" + dst_path + "'"
                 stats_add(transfer.src_path)
 
-            myexec(cmd, default_subshell_timeout, False)
+            tc = TimedCommand(cmd)
+            tc.run()
             if transfer.dst_proto == "file":
                 stats_add(transfer.dst_path)    
 
@@ -1201,7 +1254,8 @@ class ScpHandler(TransferHandlerBase):
             cmd += " -i " + os.environ['SSH_PRIVATE_KEY']
         cmd += " -q -o StrictHostKeyChecking=no"
         cmd += " " + rhost + " '/bin/mkdir -p " + rdir + "'"
-        myexec(cmd, default_subshell_timeout, False)
+        tc = TimedCommand(cmd)
+        tc.run()
 
 
 class SymlinkHandler(TransferHandlerBase):
@@ -1237,7 +1291,8 @@ class SymlinkHandler(TransferHandlerBase):
 
         cmd = "ln -f -s '%s' '%s'" % (transfer.src_path, transfer.dst_path)
         try:
-            myexec(cmd, 60, False)
+            tc.TimedCommand(cmd, timeout_secs = 60)
+            tc.run()
         except RuntimeError, err:
             logger.error(err)
             return False
@@ -1453,9 +1508,6 @@ logger = logging.getLogger("my_logger")
 # threads we have currently running
 threads = []
 
-# timeout for when shelling out
-default_subshell_timeout = 6 * 60 * 60;
-
 # track remote directories created so that don't have to
 # try to create them over and over again
 remote_dirs_created = {}
@@ -1518,23 +1570,6 @@ def get_env_var(match):
     if name in os.environ:
         value = os.environ[name]
     return value
-
-
-def myexec(cmd_line, timeout_secs, should_log):
-    """
-    executes shell commands with the ability to time out if the command hangs
-    """
-    global delay_exit_code
-    if should_log or logger.isEnabledFor(logging.DEBUG):
-        logger.info(cmd_line)
-    sys.stdout.flush()
-
-    p = subprocess.Popen(cmd_line, shell=True)
-    stdoutdata, stderrdata = p.communicate()
-    rc = p.returncode
-    if rc != 0:
-        raise RuntimeError("Command '%s' failed with error code %s"
-                           % (cmd_line, rc))
 
 
 def backticks(cmd_line):
