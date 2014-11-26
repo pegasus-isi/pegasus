@@ -123,7 +123,7 @@ public class Client {
         int i = 0;
         
         //check if we want to throw the whole stack trace
-        if( logLevel >= LogManager.TRACE_MESSAGE_LEVEL ){
+        if( logLevel >= LogManager.DEBUG_MESSAGE_LEVEL ){
             //we want the stack trace to a String Writer.
             StringWriter sw = new StringWriter();
             e.printStackTrace( new PrintWriter( sw ) );
