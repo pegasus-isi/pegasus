@@ -270,13 +270,14 @@ public class PegasusConfiguration {
      * @return Properties
      */
     public Properties getConfigurationProperties( String configuration ){
+        Properties p = new Properties( );
         //sanity check
         if( configuration == null ){
             //default is the sharedfs
             configuration = SHARED_FS_CONFIGURATION_VALUE;
         }        
         
-        Properties p = new Properties( );
+        
         if( configuration.equalsIgnoreCase( DEPRECATED_S3_CONFIGURATION_VALUE ) || configuration.equalsIgnoreCase( NON_SHARED_FS_CONFIGURATION_VALUE ) ){
 
             //throw warning for deprecated value
@@ -312,6 +313,10 @@ public class PegasusConfiguration {
             //we should not explicitly set it to false. false is default value
             //in Pegasus Properties.
             //p.setProperty( "pegasus.execute.*.filesystem.local", "false" );
+        }
+        else{
+            throw new RuntimeException( "Invalid value " + configuration + 
+                                        " specified for property " + PegasusConfiguration.PEGASUS_CONFIGURATION_PROPERTY_KEY );
         }
         
         return p;
