@@ -463,8 +463,9 @@ public class Distribute implements GridStart {
         //kickstart stdout and stderr . some cheating here..
         //job.getDirectory() returns null since we have -w enabled for kickstart
         String directory = mSiteStore.getInternalWorkDirectory(job);
-        env.construct( "DISTRIBUTE_JOB_STDOUT", directory + File.separator + job.getID() + ".stdout" );
-        env.construct( "DISTRIBUTE_JOB_STDERR", directory + File.separator + job.getID() + ".stderr" );
+        env.construct( "DISTRIBUTE_JOB_PATH" ,  directory );
+        env.construct( "DISTRIBUTE_JOB_STDOUT", job.getID() + ".stdout" );
+        env.construct( "DISTRIBUTE_JOB_STDERR", job.getID() + ".stderr" );
         
         /* the globus key hostCount is NODES */
         if( job.globusRSL.containsKey( "hostcount" ) ){
