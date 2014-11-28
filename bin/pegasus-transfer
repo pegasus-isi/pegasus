@@ -1291,7 +1291,7 @@ class SymlinkHandler(TransferHandlerBase):
 
         cmd = "ln -f -s '%s' '%s'" % (transfer.src_path, transfer.dst_path)
         try:
-            tc.TimedCommand(cmd, timeout_secs = 60)
+            tc = TimedCommand(cmd, timeout_secs = 60)
             tc.run()
         except RuntimeError, err:
             logger.error(err)
