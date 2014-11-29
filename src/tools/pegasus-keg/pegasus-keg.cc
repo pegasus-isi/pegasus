@@ -46,6 +46,10 @@ extern char** environ;
 
 #include "version.h"
 
+#ifdef WITH_MPI
+#include <mpi.h>
+#endif
+
 static char output[4096];
 static char pattern[] = 
 "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz\r\n";
@@ -544,179 +548,202 @@ helpMe( const char* ptr, unsigned long timeout, unsigned long spinout,
 int
 main( int argc, char* argv[] ) 
 {
-  int state = 0;
-  bool condor = false; 
-  unsigned long timeout = 0;
-  unsigned long spinout = 0;
-  unsigned long gensize = 0;
-  DirtyVector iox[4];
+  #ifdef WITH_MPI
+  int rank, size;
+  MPI_Comm new_comm;
 
-  // when did we start
-  double start = now();
-  char* prefix = strdup("  ");
+  MPI_Init( &argc, &argv );
+  MPI_Comm_rank( MPI_COMM_WORLD, &rank );
+  MPI_Comm_split( MPI_COMM_WORLD, rank == 0, 0, &new_comm );
+  if (rank == 0) { // master
+    // printf("Message from Master: %d\n", rank);
+  #endif
 
-  // determine base name of input file
-  char* logfile = 0;
-  char* ptr = 0;
-  if ( (ptr=strrchr(argv[0],'/')) == 0 ) ptr = argv[0];
-  else ptr++;
+    int state = 0;
+    bool condor = false; 
+    unsigned long timeout = 0;
+    unsigned long spinout = 0;
+    unsigned long gensize = 0;
+    DirtyVector iox[4];
 
-  // complain, if no parameters were given
-  if ( argc == 1 ) {
-    helpMe( ptr, timeout, spinout, prefix ); 
-    return 0;
-  }
-  
-  // prepare generator pattern
-  for ( size_t i=0; i<sizeof(output); i++ ) output[i] = pattern[i & 63];
-  
-  for ( int i=1; i<argc; ++i ) {
-    char* s = argv[i];
-    if ( s[0] == '-' && s[1] != 0 ) {
-      if ( strchr( "iotTGaepPlC\0", s[1] ) != NULL ) {
-	switch (s[1]) {
-	case 'i':
-	  state = 1;
-	  break;
-	case 'o':
-	  state = 2;
-	  break;
-	case 'e':
-	  state = 3;
-	  break;
-	case 'a':
-	  state = 10;
-	  break;
-	case 't':
-	  state = 11;
-	  break;
-	case 'l':
-	  state = 12;
-	  break;
-	case 'T':
-	  state = 13;
-	  break;
-	case 'p':
-	  state = 0;
-	  break;
-	case 'P':
-	  state = 14;
-	  break;
-	case 'G':
-	  state = 15;
-	  break;
-	case 'C':
-	  condor = true;
-	  continue; 
-	}
-	s += 2;
-      }
+    // when did we start
+    double start = now();
+    char* prefix = strdup("  ");
+
+    // determine base name of input file
+    char* logfile = 0;
+    char* ptr = 0;
+    if ( (ptr=strrchr(argv[0],'/')) == 0 ) ptr = argv[0];
+    else ptr++;
+
+    // complain, if no parameters were given
+    if ( argc == 1 ) {
+      helpMe( ptr, timeout, spinout, prefix ); 
+      return 0;
     }
-    if ( strlen(s) == 0 ) continue;
-    if ( state >= 10 ) {
-      switch ( state ) {
-      case 10:
-	ptr = s;
-	break;
-      case 11:
-	timeout = strtoul(s,0,10);
-	break;
-      case 12:
-	logfile = s;
-	break;
-      case 13:
-	spinout = strtoul(s,0,10);
-	break;
-      case 14:
-	free( static_cast<void*>(prefix) );
-	prefix = strdup(s);
-	break;
-      case 15:
-	gensize = strtoul(s,0,10);
-	break;
-      }
+    
+    // prepare generator pattern
+    for ( size_t i=0; i<sizeof(output); i++ ) output[i] = pattern[i & 63];
+    
+    for ( int i=1; i<argc; ++i ) {
+      char* s = argv[i];
+      if ( s[0] == '-' && s[1] != 0 ) {
+        if ( strchr( "iotTGaepPlC\0", s[1] ) != NULL ) {
+    switch (s[1]) {
+    case 'i':
+      state = 1;
+      break;
+    case 'o':
+      state = 2;
+      break;
+    case 'e':
+      state = 3;
+      break;
+    case 'a':
+      state = 10;
+      break;
+    case 't':
+      state = 11;
+      break;
+    case 'l':
+      state = 12;
+      break;
+    case 'T':
+      state = 13;
+      break;
+    case 'p':
       state = 0;
-    } else {
-      iox[state].push_back(s);
+      break;
+    case 'P':
+      state = 14;
+      break;
+    case 'G':
+      state = 15;
+      break;
+    case 'C':
+      condor = true;
+      continue; 
     }
-  }
-
-  // thinktime
-  if ( timeout ) sleep(timeout);
-  if ( spinout ) spin(spinout);
-
-  // output buffer
-  size_t bufsize = getpagesize() << 4;
-  if ( bufsize < 16384 ) bufsize = 16384;
-  char* buffer = static_cast<char*>( malloc(bufsize) );
-
-#ifndef MIN
-#define MIN(a,b) ((a) < (b) ? (a) : (b))
-#endif // MIN
-
-  // all input, all output files
-  FILE *out, *in;
-  for ( unsigned i=0; i<iox[2].size(); ++i ) {
-    out = ( iox[2][i][0] == '-' && iox[2][i][1] == '\0' ) ? 
-      fdopen( STDOUT_FILENO, "a" ) :
-      fopen( iox[2][i], "w" );
-    if ( out ) {
-      if ( gensize > 0 ) {
-	unsigned long xsize = gensize-1; // final LF counts
-	while ( xsize > 0 ) {
-	  ssize_t wsize = fwrite( output, sizeof(char),
-				  MIN(xsize,sizeof(output)), out );
-	  if ( wsize > 0 ) xsize -= wsize;
-	  else break;
-	}
-	fputc( '\n', out );
-      } else {
-	// copy input files
-	for ( unsigned j=0; j<iox[1].size(); ++j ) {
-	  in = ( iox[1][j][0] == '-' && iox[1][j][1] == '\0' ) ? 
-	    fdopen( STDIN_FILENO, "r" ) : 
-	    fopen( iox[1][j], "r" );
-	  fprintf( out, "--- start %s ----\n", iox[1][j] );
-	  if ( in ) {
-	    while ( fgets( buffer, bufsize, in ) ) {
-	      fputs( prefix, out );
-	      fputs( buffer, out );
-	    }
-	    fclose(in);
-	  } else {
-	    fprintf( out, "  open \"%s\": %d: %s\n", iox[1][j], 
-		     errno, strerror(errno) );
-	  }
-	  fprintf( out, "--- final %s ----\n", iox[1][j] );
-	}
+    s += 2;
+        }
       }
-
-      // create buffer, and fill with content
-      memset( buffer, 0, bufsize );
-      identify( buffer, bufsize, ptr, start, condor, iox, iox[2][i] );
-      fputs( buffer, out );
-      fclose(out);
-    } else {
-      fprintf( stderr, "open(%s): %s\n", iox[2][i], strerror(errno) );
-      free( static_cast<void*>(buffer) );
-      return 2;
+      if ( strlen(s) == 0 ) continue;
+      if ( state >= 10 ) {
+        switch ( state ) {
+        case 10:
+    ptr = s;
+    break;
+        case 11:
+    timeout = strtoul(s,0,10);
+    break;
+        case 12:
+    logfile = s;
+    break;
+        case 13:
+    spinout = strtoul(s,0,10);
+    break;
+        case 14:
+    free( static_cast<void*>(prefix) );
+    prefix = strdup(s);
+    break;
+        case 15:
+    gensize = strtoul(s,0,10);
+    break;
+        }
+        state = 0;
+      } else {
+        iox[state].push_back(s);
+      }
     }
-  }
 
-  // append atomically to logfile
-  if ( logfile != 0 ) {
-    int fd = -1;
-    if ( (fd=open( logfile, O_WRONLY | O_CREAT | O_APPEND, 0666 )) == -1 ) {
-      fprintf( stderr, "WARNING: open(%s): %s\n", logfile, strerror(errno) );
-    } else {
-      memset( buffer, 0, bufsize );
-      identify( buffer, bufsize, ptr, start, condor, iox, logfile );
-      append( buffer, bufsize, '\n' );
-      write( fd, buffer, strlen(buffer) ); // atomic write
-      close(fd);
+    // thinktime
+    if ( timeout ) sleep(timeout);
+    if ( spinout ) spin(spinout);
+
+    // output buffer
+    size_t bufsize = getpagesize() << 4;
+    if ( bufsize < 16384 ) bufsize = 16384;
+    char* buffer = static_cast<char*>( malloc(bufsize) );
+
+  #ifndef MIN
+  #define MIN(a,b) ((a) < (b) ? (a) : (b))
+  #endif // MIN
+
+    // all input, all output files
+    FILE *out, *in;
+    for ( unsigned i=0; i<iox[2].size(); ++i ) {
+      out = ( iox[2][i][0] == '-' && iox[2][i][1] == '\0' ) ? 
+        fdopen( STDOUT_FILENO, "a" ) :
+        fopen( iox[2][i], "w" );
+      if ( out ) {
+        if ( gensize > 0 ) {
+    unsigned long xsize = gensize-1; // final LF counts
+    while ( xsize > 0 ) {
+      ssize_t wsize = fwrite( output, sizeof(char),
+            MIN(xsize,sizeof(output)), out );
+      if ( wsize > 0 ) xsize -= wsize;
+      else break;
     }
-  }
+    fputc( '\n', out );
+        } else {
+    // copy input files
+    for ( unsigned j=0; j<iox[1].size(); ++j ) {
+      in = ( iox[1][j][0] == '-' && iox[1][j][1] == '\0' ) ? 
+        fdopen( STDIN_FILENO, "r" ) : 
+        fopen( iox[1][j], "r" );
+      fprintf( out, "--- start %s ----\n", iox[1][j] );
+      if ( in ) {
+        while ( fgets( buffer, bufsize, in ) ) {
+          fputs( prefix, out );
+          fputs( buffer, out );
+        }
+        fclose(in);
+      } else {
+        fprintf( out, "  open \"%s\": %d: %s\n", iox[1][j], 
+           errno, strerror(errno) );
+      }
+      fprintf( out, "--- final %s ----\n", iox[1][j] );
+    }
+        }
 
-  free( static_cast<void*>(buffer) );
+        // create buffer, and fill with content
+        memset( buffer, 0, bufsize );
+        identify( buffer, bufsize, ptr, start, condor, iox, iox[2][i] );
+        fputs( buffer, out );
+        fclose(out);
+      } else {
+        fprintf( stderr, "open(%s): %s\n", iox[2][i], strerror(errno) );
+        free( static_cast<void*>(buffer) );
+        return 2;
+      }
+    }
+
+    // append atomically to logfile
+    if ( logfile != 0 ) {
+      int fd = -1;
+      if ( (fd=open( logfile, O_WRONLY | O_CREAT | O_APPEND, 0666 )) == -1 ) {
+        fprintf( stderr, "WARNING: open(%s): %s\n", logfile, strerror(errno) );
+      } else {
+        memset( buffer, 0, bufsize );
+        identify( buffer, bufsize, ptr, start, condor, iox, logfile );
+        append( buffer, bufsize, '\n' );
+        write( fd, buffer, strlen(buffer) ); // atomic write
+        close(fd);
+      }
+    }
+
+    free( static_cast<void*>(buffer) );
+
+  #ifdef WITH_MPI
+  } else { // worker
+    // printf("Message from a worker: %d\n", rank);
+  }
+  #endif
+
+  #ifdef WITH_MPI
+  MPI_Finalize();
+  #endif
+
+  
   return 0;
 }
