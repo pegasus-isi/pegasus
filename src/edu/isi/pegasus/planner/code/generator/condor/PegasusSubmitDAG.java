@@ -117,10 +117,10 @@ public class PegasusSubmitDAG {
 
             //spawn off the gobblers with the already initialized default callback
             StreamGobbler ips =
-                new StreamGobbler( p.getInputStream(), new DefaultStreamGobblerCallback(
+                new StreamGobbler( p.getInputStream(), new PSDStreamGobblerCallback(
                                                                    LogManager.CONSOLE_MESSAGE_LEVEL ));
             StreamGobbler eps =
-                new StreamGobbler( p.getErrorStream(), new PSDErrorStreamGobblerCallback(
+                new StreamGobbler( p.getErrorStream(), new PSDStreamGobblerCallback(
                                                              LogManager.ERROR_MESSAGE_LEVEL));
 
             ips.start();
@@ -366,9 +366,14 @@ push( @arg, '-append', '+pegasus_wf_xformation="pegasus::dagman"' );
         return value;
     }
 
-    private static class PSDErrorStreamGobblerCallback implements StreamGobblerCallback {
+    private static class PSDStreamGobblerCallback implements StreamGobblerCallback {
 
-        public static final String IGNORE_LOG_LINE= "Renaming rescue DAGs newer than number 0";
+        public static final String[] IGNORE_LOG_LINES= {
+                                    "Renaming rescue DAGs newer than number 0",
+                                    "-no_submit given, not submitting DAG to Condor.",
+                                    "\"condor_submit"
+        };
+   
         
         /**
           * 
@@ -385,7 +390,7 @@ push( @arg, '-append', '+pegasus_wf_xformation="pegasus::dagman"' );
          *
          * @param level   the level on which to log.
          */
-        public PSDErrorStreamGobblerCallback(int level) {
+        public PSDStreamGobblerCallback(int level) {
             //should do a sanity check on the levels
             mLevel  = level;
             mLogger    = LogManagerFactory.loadSingletonInstance(  );
@@ -399,7 +404,15 @@ push( @arg, '-append', '+pegasus_wf_xformation="pegasus::dagman"' );
          * @param line   the line that is read.
          */
         public void work(String line) {
-            if( !line.startsWith( IGNORE_LOG_LINE ) ){
+            boolean log = true;
+            for( String ignore: IGNORE_LOG_LINES ){
+                if( line.startsWith( ignore ) ){
+                    log = false;
+                    break;
+                }
+            }
+            
+            if( log ){
                 mLogger.log( line , mLevel);
             }
         }
