@@ -15,9 +15,6 @@ SOCKIO  = $(shell /bin/ls /usr/include/sys/sockio.h 2>/dev/null)
 EXTRA_OBJ = basic.o
 EXTRA_INC = version.h
 
-MPICC	= mpicc
-MPICCFLAGS = -DWITH_MPI
-LD_MPI	= $(MPICC)
 
 
 ifndef ${prefix}
@@ -32,7 +29,6 @@ ifeq (DARWIN,${SYSTEM})
   CXXFLAGS += -DMACHINE_SPECIFIC=darwin
   EXTRA_OBJ += darwin.o
   EXTRA_INC += darwin.hh
-  LDFLAGS += -lstdc++
 else
   ifeq (LINUX,${SYSTEM})
     CXXFLAGS += -Wall -O2 -ggdb -DMACHINE_SPECIFIC=linux
@@ -59,7 +55,7 @@ endif
 %.o : %.cc
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< -c -o $@
 
-all: pegasus-keg pegasus-mpi-keg
+all: pegasus-keg
 
 pegasus-keg: pegasus-keg.o $(EXTRA_OBJ)
 	$(LD) $(LDFLAGS) $^ -o $@ $(LOADLIBES)
@@ -72,23 +68,40 @@ linux.o: linux.cc linux.hh basic.hh
 version.h:
 	$(CURDIR)/genversion.sh > $(CURDIR)/version.h
 
-install: pegasus-keg pegasus-mpi-keg
+install: pegasus-keg 
 	$(INSTALL) -m 0755 pegasus-keg $(prefix)/bin
-	$(INSTALL) -m 0755 pegasus-mpi-keg $(prefix)/bin
-
-test check: pegasus-keg pegasus-mpi-keg
+	
+test check: pegasus-keg
 	@./pegasus-keg -o /dev/fd/1 || echo "test failed" && echo "test ok"
-	@mpiexec -n 2 ./pegasus-mpi-keg -o /dev/fd/1 || echo "test failed" && echo "test ok"
 
 clean:
-	$(RM) pegasus-keg.o pegasus-mpi-keg.o core core.* $(EXTRA_OBJ) $(EXTRA_COBJ)
+	$(RM) pegasus-keg.o core core.* $(EXTRA_OBJ) $(EXTRA_COBJ)
 
 distclean: clean
-	$(RM) pegasus-keg pegasus-mpi-keg
+	$(RM) pegasus-keg
+
+# MPI version	
+
+MPICC	= mpicc
+MPICCFLAGS = -DWITH_MPI
+LD_MPI	= $(MPICC)
+LD_MPIFLAGS = -lstdc++
+
+install-mpi-keg: pegasus-mpi-keg
+	$(INSTALL) -m 0755 pegasus-mpi-keg $(prefix)/bin
 
 pegasus-mpi-keg: pegasus-mpi-keg.o $(EXTRA_OBJ)
-	$(LD_MPI) $(LDFLAGS) $^ -o $@ $(LOADLIBES)
+	$(LD_MPI) $(LDFLAGS) $(LD_MPIFLAGS) $^ -o $@ $(LOADLIBES)
 
 pegasus-mpi-keg.o : pegasus-keg.cc $(EXTRA_INC)
 	$(MPICC) $(MPICCFLAGS) $(CPPFLAGS) $(CXXFLAGS) $< -c -o $@
+
+test-mpi check-mpi: pegasus-mpi-keg
+	@mpiexec -n 2 ./pegasus-mpi-keg -o /dev/fd/1 || echo "test failed" && echo "test ok"
+
+clean-mpi:
+	$(RM) pegasus-mpi-keg.o core core.* $(EXTRA_OBJ) $(EXTRA_COBJ)
+
+distclean-mpi: clean-mpi
+	$(RM) pegasus-mpi-keg
 
