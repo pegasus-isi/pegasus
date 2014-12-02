@@ -59,19 +59,12 @@ endif
 %.o : %.cc
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< -c -o $@
 
-pegasus-mpi-keg.o : pegasus-keg.cc
-	$(MPICC) $(MPICCFLAGS) $(CPPFLAGS) $(CXXFLAGS) $< -c -o $@
-
-all: pegasus-keg
+all: pegasus-keg pegasus-mpi-keg
 
 pegasus-keg: pegasus-keg.o $(EXTRA_OBJ)
 	$(LD) $(LDFLAGS) $^ -o $@ $(LOADLIBES)
 
-pegasus-mpi-keg: pegasus-mpi-keg.o $(EXTRA_OBJ)
-	$(LD_MPI) $(LDFLAGS) $^ -o $@ $(LOADLIBES)
-
 pegasus-keg.o: pegasus-keg.cc $(EXTRA_INC)
-pegasus-mpi-keg.o: pegasus-keg.cc $(EXTRA_INC)
 basic.o: basic.cc basic.hh
 darwin.o: darwin.cc darwin.hh basic.hh
 linux.o: linux.cc linux.hh basic.hh
@@ -83,11 +76,19 @@ install: pegasus-keg pegasus-mpi-keg
 	$(INSTALL) -m 0755 pegasus-keg $(prefix)/bin
 	$(INSTALL) -m 0755 pegasus-mpi-keg $(prefix)/bin
 
-test check: pegasus-keg
+test check: pegasus-keg pegasus-mpi-keg
 	@./pegasus-keg -o /dev/fd/1 || echo "test failed" && echo "test ok"
+	@mpiexec -n 2 ./pegasus-mpi-keg -o /dev/fd/1 || echo "test failed" && echo "test ok"
 
 clean:
 	$(RM) pegasus-keg.o pegasus-mpi-keg.o core core.* $(EXTRA_OBJ) $(EXTRA_COBJ)
 
 distclean: clean
 	$(RM) pegasus-keg pegasus-mpi-keg
+
+pegasus-mpi-keg: pegasus-mpi-keg.o $(EXTRA_OBJ)
+	$(LD_MPI) $(LDFLAGS) $^ -o $@ $(LOADLIBES)
+
+pegasus-mpi-keg.o : pegasus-keg.cc $(EXTRA_INC)
+	$(MPICC) $(MPICCFLAGS) $(CPPFLAGS) $(CXXFLAGS) $< -c -o $@
+
