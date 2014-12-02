@@ -549,116 +549,123 @@ int
 main( int argc, char* argv[] ) 
 {
   #ifdef WITH_MPI
-  int rank, size;
-  MPI_Comm new_comm;
+  int rank;
 
   MPI_Init( &argc, &argv );
+  
   MPI_Comm_rank( MPI_COMM_WORLD, &rank );
-  MPI_Comm_split( MPI_COMM_WORLD, rank == 0, 0, &new_comm );
-  if (rank == 0) { // master
-    // printf("Message from Master: %d\n", rank);
   #endif
 
-    int state = 0;
-    bool condor = false; 
-    unsigned long timeout = 0;
-    unsigned long spinout = 0;
-    unsigned long gensize = 0;
-    DirtyVector iox[4];
+  unsigned long spinout = 0;
+  unsigned long timeout = 0;
 
-    // when did we start
-    double start = now();
-    char* prefix = strdup("  ");
+  int state = 0;
+  bool condor = false; 
+  unsigned long gensize = 0;
+  DirtyVector iox[4];
 
-    // determine base name of input file
-    char* logfile = 0;
-    char* ptr = 0;
-    if ( (ptr=strrchr(argv[0],'/')) == 0 ) ptr = argv[0];
-    else ptr++;
+  // when did we start
+  double start = now();
+  char* prefix = strdup("  ");
 
-    // complain, if no parameters were given
+  // determine base name of input file
+  char* logfile = 0;
+  char* ptr = 0;
+  if ( (ptr=strrchr(argv[0],'/')) == 0 ) ptr = argv[0];
+  else ptr++;
+
+  // complain, if no parameters were given - only in the sequential version
+  #ifdef WITH_MPI
+  if (rank == 0) {
+  #endif
     if ( argc == 1 ) {
       helpMe( ptr, timeout, spinout, prefix ); 
       return 0;
     }
-    
-    // prepare generator pattern
-    for ( size_t i=0; i<sizeof(output); i++ ) output[i] = pattern[i & 63];
-    
-    for ( int i=1; i<argc; ++i ) {
-      char* s = argv[i];
-      if ( s[0] == '-' && s[1] != 0 ) {
-        if ( strchr( "iotTGaepPlC\0", s[1] ) != NULL ) {
-    switch (s[1]) {
-    case 'i':
-      state = 1;
-      break;
-    case 'o':
-      state = 2;
-      break;
-    case 'e':
-      state = 3;
-      break;
-    case 'a':
-      state = 10;
-      break;
-    case 't':
-      state = 11;
-      break;
-    case 'l':
-      state = 12;
-      break;
-    case 'T':
-      state = 13;
-      break;
-    case 'p':
+  #ifdef WITH_MPI
+  }
+  #endif
+  
+  // prepare generator pattern
+  for ( size_t i=0; i<sizeof(output); i++ ) output[i] = pattern[i & 63];
+  
+  for ( int i=1; i<argc; ++i ) {
+    char* s = argv[i];
+    if ( s[0] == '-' && s[1] != 0 ) {
+      if ( strchr( "iotTGaepPlC\0", s[1] ) != NULL ) {
+  switch (s[1]) {
+  case 'i':
+    state = 1;
+    break;
+  case 'o':
+    state = 2;
+    break;
+  case 'e':
+    state = 3;
+    break;
+  case 'a':
+    state = 10;
+    break;
+  case 't':
+    state = 11;
+    break;
+  case 'l':
+    state = 12;
+    break;
+  case 'T':
+    state = 13;
+    break;
+  case 'p':
+    state = 0;
+    break;
+  case 'P':
+    state = 14;
+    break;
+  case 'G':
+    state = 15;
+    break;
+  case 'C':
+    condor = true;
+    continue; 
+  }
+  s += 2;
+      }
+    }
+    if ( strlen(s) == 0 ) continue;
+    if ( state >= 10 ) {
+      switch ( state ) {
+      case 10:
+  ptr = s;
+  break;
+      case 11:
+  timeout = strtoul(s,0,10);
+  break;
+      case 12:
+  logfile = s;
+  break;
+      case 13:
+  spinout = strtoul(s,0,10);
+  break;
+      case 14:
+  free( static_cast<void*>(prefix) );
+  prefix = strdup(s);
+  break;
+      case 15:
+  gensize = strtoul(s,0,10);
+  break;
+      }
       state = 0;
-      break;
-    case 'P':
-      state = 14;
-      break;
-    case 'G':
-      state = 15;
-      break;
-    case 'C':
-      condor = true;
-      continue; 
+    } else {
+      iox[state].push_back(s);
     }
-    s += 2;
-        }
-      }
-      if ( strlen(s) == 0 ) continue;
-      if ( state >= 10 ) {
-        switch ( state ) {
-        case 10:
-    ptr = s;
-    break;
-        case 11:
-    timeout = strtoul(s,0,10);
-    break;
-        case 12:
-    logfile = s;
-    break;
-        case 13:
-    spinout = strtoul(s,0,10);
-    break;
-        case 14:
-    free( static_cast<void*>(prefix) );
-    prefix = strdup(s);
-    break;
-        case 15:
-    gensize = strtoul(s,0,10);
-    break;
-        }
-        state = 0;
-      } else {
-        iox[state].push_back(s);
-      }
-    }
+  }
 
-    // thinktime
-    if ( timeout ) sleep(timeout);
-    if ( spinout ) spin(spinout);
+  if ( timeout ) sleep(timeout);
+  if ( spinout ) spin(spinout);
+
+  #ifdef WITH_MPI
+  if (rank == 0) {
+  #endif
 
     // output buffer
     size_t bufsize = getpagesize() << 4;
@@ -736,7 +743,7 @@ main( int argc, char* argv[] )
 
   #ifdef WITH_MPI
   } else { // worker
-    // printf("Message from a worker: %d\n", rank);
+
   }
   #endif
 
