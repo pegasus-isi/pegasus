@@ -5,7 +5,7 @@
 --
 INSERT INTO pegasus_schema VALUES ('JDBCRC','rc','1.3',"vahi",NULL);
 
-CREATE TABLE rc_lfn (
+CREATE TABLE IF NOT EXISTS rc_lfn (
    id      INTEGER PRIMARY KEY AUTOINCREMENT,
    lfn     VARCHAR(245) NOT NULL,
    pfn     VARCHAR(245) NOT NULL,
@@ -14,9 +14,9 @@ CREATE TABLE rc_lfn (
    CONSTRAINT sk_rc_lfn UNIQUE(lfn,pfn,site)
 );
 
-CREATE INDEX ix_rc_lfn ON rc_lfn(lfn);
+CREATE INDEX IF NOT EXISTS ix_rc_lfn ON rc_lfn(lfn);
 
-CREATE TABLE rc_attr (
+CREATE TABLE IF NOT EXISTS rc_attr (
    id      BIGINT, 
    name    VARCHAR(64) NOT NULL,
    value   VARCHAR(255) NOT NULL,
@@ -25,4 +25,4 @@ CREATE TABLE rc_attr (
    CONSTRAINT fk_rc_attr FOREIGN KEY(id) REFERENCES rc_lfn(id) ON DELETE CASCADE
 );
 
-CREATE INDEX ix_rc_attr ON rc_attr(name);
+CREATE INDEX IF NOT EXISTS ix_rc_attr ON rc_attr(name);

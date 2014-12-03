@@ -13,18 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package edu.isi.pegasus.planner.catalog.replica.impl;
 
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Properties;
 import org.junit.After;
+import static java.nio.file.Files.readAllBytes;
+import static java.nio.file.Paths.get;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -53,10 +56,17 @@ public class JDBCRCTest {
             prop.load(input);
 
             jdbcrc = new JDBCRC(
-                    prop.getProperty("pegasus.catalog.replica.db.driver", "com.mysql.jdbc.Driver"),
-                    prop.getProperty("pegasus.catalog.replica.db.url", "jdbc:mysql://localhost/jdbcrc_test"),
-                    prop.getProperty("pegasus.catalog.replica.db.user", "root"),
-                    prop.getProperty("pegasus.catalog.replica.db.password", ""));
+                    "org.sqlite.JDBC",
+                    "jdbc:sqlite:jdbcrc_test.db",
+                    "root", ""
+            );
+            
+            Statement stm = jdbcrc.mConnection.createStatement();
+            stm.executeUpdate(new String(readAllBytes(get("share/pegasus/sql/create-sqlite-init.sql"))));
+            String sql = new String(readAllBytes(get("share/pegasus/sql/create-sqlite-rc.sql")));
+            sql = sql.substring(sql.indexOf(";") + 1);
+            stm.executeUpdate(sql);
+            stm.close();
 
         } catch (LinkageError ex) {
             throw new IOException(ex);
@@ -172,5 +182,6 @@ public class JDBCRCTest {
         jdbcrc.delete("a", "c");
         jdbcrc.delete("a", "d");
         jdbcrc.close();
+        new File("jdbcrc_test.db").delete();
     }
 }

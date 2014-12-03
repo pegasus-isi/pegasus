@@ -4,14 +4,14 @@
 -- $Revision$
 --
 
-CREATE TABLE sequences (
+CREATE TABLE IF NOT EXISTS sequences (
 	name		VARCHAR(32) NOT NULL,
 	currval		BIGINT DEFAULT 0,
 
 	CONSTRAINT      pk_sequences PRIMARY KEY(name)
 );
 
-CREATE TABLE pegasus_schema (
+CREATE TABLE IF NOT EXISTS pegasus_schema (
 	name		VARCHAR(64) NOT NULL,
 	catalog		VARCHAR(16),
 	version		FLOAT,
