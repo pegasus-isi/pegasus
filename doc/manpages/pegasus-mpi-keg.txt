@@ -12,8 +12,8 @@ Synopsis
 --------
 [verse]
 *pegasus-mpi-keg* [-a appname] [-t interval |-T interval] [-l logname]
-            [-P prefix] [-o fn [..]] [-i fn [..]] [-G sz] 
-            [-C] [-e env [..]] [-p parm [..]]
+            [-P prefix] [-o fn [..]] [-i fn [..]] [-G sz] [-m memory]
+            [-r root_memory_allocation] [-C] [-e env [..]] [-p parm [..]]
 
 
 Description
@@ -30,7 +30,12 @@ to be executed as an MPI task. *pegasus-mpi-keg* accepts the same parameters as
 Arguments
 ---------
 
-The same as *pegasus-keg*.
+The same as *pegasus-keg*. But there are some MPI-specific arguments.
+
+*-r root_memory_allocation_only*::
+Works use only with the *-m* option. When set, the memory allocation will
+take place in the root MPI process only. By default, each MPI processe allocates
+the amount of memory set by the *-m* option.
 
 Return Value
 ------------
