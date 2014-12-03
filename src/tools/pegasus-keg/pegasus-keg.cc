@@ -687,7 +687,7 @@ main( int argc, char *argv[] )
                     break;
                 case 'r':
                     root_only_memory_allocation = true;
-                    break;                
+                    break;
                 case 'C':
                     condor = true;
                     continue;
@@ -731,14 +731,14 @@ main( int argc, char *argv[] )
         }
     }
 
-    if ( memory_size ) 
-    {        
+    if ( memory_size )
+    {
 #ifdef WITH_MPI
         if ( (rank == 0) || (! root_only_memory_allocation) )
         {
 #endif
             memory_buffer = static_cast<char *>( malloc(sizeof(char) * 1024 * 1024 * memory_size) );
-            mlock(memory_buffer, sizeof(char) * 1024 * 1024 * memory_size);
+            mlock( memory_buffer, sizeof(char) * 1024 * 1024 * memory_size );
 #ifdef WITH_MPI
         }
 #endif
@@ -842,7 +842,7 @@ main( int argc, char *argv[] )
         }
 
         if ( memory_buffer )
-            free( static_cast<void *>(memory_buffer) );    
+            free( static_cast<void *>(memory_buffer) );
 
         free( static_cast<void *>(buffer) );
 
