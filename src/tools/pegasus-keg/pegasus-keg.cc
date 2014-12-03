@@ -18,6 +18,7 @@
 #include <sys/ioctl.h>
 #include <net/if.h>
 #include <netdb.h>
+#include <sys/mman.h>
 
 #ifdef HAS_SYS_SOCKIO
 #include <sys/sockio.h>
@@ -606,6 +607,9 @@ main( int argc, char *argv[] )
 
     unsigned long spinout = 0;
     unsigned long timeout = 0;
+    unsigned long memory_size = 0;
+    char *memory_buffer = NULL;
+    bool root_only_memory_allocation = false;
 
     int state = 0;
     bool condor = false;
@@ -644,7 +648,7 @@ main( int argc, char *argv[] )
         char *s = argv[i];
         if ( s[0] == '-' && s[1] != 0 )
         {
-            if ( strchr( "iotTGaepPlC\0", s[1] ) != NULL )
+            if ( strchr( "iotTGaepPlCmr\0", s[1] ) != NULL )
             {
                 switch (s[1])
                 {
@@ -678,6 +682,12 @@ main( int argc, char *argv[] )
                 case 'G':
                     state = 15;
                     break;
+                case 'm':
+                    state = 16;
+                    break;
+                case 'r':
+                    root_only_memory_allocation = true;
+                    break;                
                 case 'C':
                     condor = true;
                     continue;
@@ -709,6 +719,9 @@ main( int argc, char *argv[] )
             case 15:
                 gensize = strtoul(s, 0, 10);
                 break;
+            case 16:
+                memory_size = strtoul(s, 0, 10);
+                break;
             }
             state = 0;
         }
@@ -716,6 +729,19 @@ main( int argc, char *argv[] )
         {
             iox[state].push_back(s);
         }
+    }
+
+    if ( memory_size ) 
+    {        
+#ifdef WITH_MPI
+        if ( (rank == 0) || (! root_only_memory_allocation) )
+        {
+#endif
+            memory_buffer = static_cast<char *>( malloc(sizeof(char) * 1024 * 1024 * memory_size) );
+            mlock(memory_buffer, sizeof(char) * 1024 * 1024 * memory_size);
+#ifdef WITH_MPI
+        }
+#endif
     }
 
     if ( timeout ) sleep(timeout);
@@ -814,6 +840,9 @@ main( int argc, char *argv[] )
                 close(fd);
             }
         }
+
+        if ( memory_buffer )
+            free( static_cast<void *>(memory_buffer) );    
 
         free( static_cast<void *>(buffer) );
 

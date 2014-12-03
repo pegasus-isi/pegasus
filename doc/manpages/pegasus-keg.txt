@@ -12,7 +12,7 @@ Synopsis
 --------
 [verse]
 *pegasus-keg* [-a appname] [-t interval |-T interval] [-l logname]
-            [-P prefix] [-o fn [..]] [-i fn [..]] [-G sz] 
+            [-P prefix] [-o fn [..]] [-i fn [..]] [-G sz] [-m memory] 
             [-C] [-e env [..]] [-p parm [..]]
 
 
@@ -117,6 +117,10 @@ intense work to strain pool resources. If used together with the *-t*
 sleep option, the sleep interval comes before the spin interval. The
 default is no spin time.
 
+*-m memory*::
+The amount of memory ([MB]) the Keg process should use. This option
+can be used to emulated application's memory requirements. The default
+is not to allocate anything.
 
 Return Value
 ------------
