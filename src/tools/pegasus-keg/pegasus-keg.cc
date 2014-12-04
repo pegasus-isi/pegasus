@@ -687,7 +687,7 @@ main( int argc, char *argv[] )
                     break;
                 case 'r':
                     root_only_memory_allocation = true;
-                    break;
+                    continue;
                 case 'C':
                     condor = true;
                     continue;
@@ -848,10 +848,9 @@ main( int argc, char *argv[] )
 
 #ifdef WITH_MPI
     }
-    else     // worker
-    {
-
-    }
+    // else     // worker
+    // {
+    // }
 #endif
 
 #ifdef WITH_MPI
