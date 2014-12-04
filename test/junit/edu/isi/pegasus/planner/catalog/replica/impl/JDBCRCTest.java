@@ -16,23 +16,24 @@
 package edu.isi.pegasus.planner.catalog.replica.impl;
 
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
+
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
+
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Properties;
-import org.junit.After;
+
 import static java.nio.file.Files.readAllBytes;
 import static java.nio.file.Paths.get;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.After;
 
 /**
  *
@@ -48,19 +49,13 @@ public class JDBCRCTest {
     @Before
     public void setUp() throws IOException {
 
-        Properties prop = new Properties();
-        InputStream input = null;
-
         try {
-            input = new FileInputStream(System.getProperty("user.home") + "/.jdbcrc.conf");
-            prop.load(input);
-
             jdbcrc = new JDBCRC(
                     "org.sqlite.JDBC",
                     "jdbc:sqlite:jdbcrc_test.db",
                     "root", ""
             );
-            
+
             Statement stm = jdbcrc.mConnection.createStatement();
             stm.executeUpdate(new String(readAllBytes(get("share/pegasus/sql/create-sqlite-init.sql"))));
             String sql = new String(readAllBytes(get("share/pegasus/sql/create-sqlite-rc.sql")));
@@ -74,10 +69,6 @@ public class JDBCRCTest {
             throw new IOException(ex);
         } catch (SQLException ex) {
             throw new IOException(ex);
-        } finally {
-            if (input != null) {
-                input.close();
-            }
         }
     }
 
