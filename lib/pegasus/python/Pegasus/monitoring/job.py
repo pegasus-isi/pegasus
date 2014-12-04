@@ -135,6 +135,8 @@ class Job:
             self._main_job_start = int(timestamp)
         elif job_state == "JOB_TERMINATED":
             self._main_job_done = int(timestamp)
+        elif job_state == "JOB_ABORTED":
+            self._main_job_done = int(timestamp) # PM-805 job was aborted, good chance job terminated event did not happen.
         elif job_state == "JOB_SUCCESS" or job_state == "JOB_FAILURE":
             self._main_job_exitcode = utils.regular_to_raw(status)
         elif (job_state == "POST_SCRIPT_SUCCESS" or
