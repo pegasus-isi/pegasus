@@ -98,7 +98,7 @@ re_parse_script_successful = re.compile(r"completed successfully\.$")
 re_parse_script_failed = re.compile(r"failed with status\s+(-?\d+)\.?$")
 re_parse_job_submit = re.compile(r"Submitting Condor Node (.+) job")
 re_parse_job_submit_error = re.compile(r"ERROR: submit attempt failed")
-re_parse_job_failed = re.compile(r"\d{2}\sNode (\S+) job proc \(([0-9\.]+)\) failed with status\s+(-?\d+)\.$")
+re_parse_job_failed = re.compile(r"\d{2}\sNode (\S+) job proc \(([0-9\.]+)\) failed with (status|signal)\s+(-?\d+)\.$")
 re_parse_job_successful = re.compile(r"\d{2}\sNode (\S+) job proc \(([0-9\.]+)\) completed successfully\.$")
 re_parse_retry = re.compile(r"Retrying node (\S+) \(retry \#(\d+) of (\d+)\)")
 re_parse_dagman_condor_id = re.compile(r"\*\* condor_scheduniv_exec\.([0-9\.]+) \(CONDOR_DAGMAN\) STARTING UP")
@@ -737,8 +737,9 @@ def process_dagman_out(wf, log_line):
             # groups = jobid, schedid, jobstatus
             my_jobid = my_expr.group(1)
             my_sched_id = my_expr.group(2)
+            my_failure_type = my_expr.group(3)
             try:
-                my_jobstatus = int(my_expr.group(3))
+                my_jobstatus = int(my_expr.group(4))
             except ValueError:
                 # Unable to convert exit code to integet -- should not happen
                 logger.warning("unable to convert exit code to integer!")
