@@ -829,10 +829,9 @@ def print_individual_wf_job_stats(workflow_stats, workflow_id, dax_label, output
 
         job_stats_list.append(job_stats)
 
-    max_length = [i + 1 for i in max_length]
-
     # Print header
     if output_format == "text":
+        max_length = [i + 1 for i in max_length]
         job_status_str += print_row(job_stats_col_name_text, max_length, output_format)
     else:
         job_status_str += print_row(job_stats_col_name_csv, job_stats_col_size, output_format)
