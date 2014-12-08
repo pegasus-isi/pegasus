@@ -544,7 +544,7 @@ def s3(urls):
         cmd += " " + fixed_url
 
         try:
-            myexec(cmd, 60, True)
+            myexec(cmd, 3*60*60, True)
         except Exception, err:
             logger.error(err)
             raise
