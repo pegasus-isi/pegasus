@@ -60,21 +60,21 @@ cat >sites.xml <<EOF
 
     <site  handle="local" arch="x86" os="LINUX">
         <!-- the base directory where workflow jobs will execute for local site -->
-        <directory type="shared-scratch" path="$TOPDIR/work">
-            <file-server operation="all" url="file://$TOPDIR/work"/>
+        <directory type="shared-scratch" path="$TOP_DIR/work">
+            <file-server operation="all" url="file://$TOP_DIR/work"/>
         </directory>
 
         <!-- the directory where outputs will be placed  -->
-        <directory type="local-storage" path="$TOPDIR/outputs">
-            <file-server operation="all" url="file://$TOPDIR/outputs"/>
+        <directory type="local-storage" path="$TOP_DIR/outputs">
+            <file-server operation="all" url="file://$TOP_DIR/outputs"/>
         </directory>
     </site>
 
     <site  handle="hpcc" arch="x86_64" os="LINUX">
         
         <!-- the base directory where workflow jobs will execute on HPCC cluster -->
-        <directory type="shared-scratch" path="$TOPDIR/HPCC/shared-scratch">
-            <file-server operation="all" url="file://$TOPDIR/HPCC/shared-scratch"/>
+        <directory type="shared-scratch" path="$TOP_DIR/HPCC/shared-scratch">
+            <file-server operation="all" url="file://$TOP_DIR/HPCC/shared-scratch"/>
         </directory>
 
         <profile namespace="env" key="PEGASUS_HOME">$LOCAL_PBS_PEGASUS_HOME</profile>
