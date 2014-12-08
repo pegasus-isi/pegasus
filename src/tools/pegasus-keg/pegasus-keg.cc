@@ -529,16 +529,17 @@ identify( char *result, size_t size, const char *arg0,
     pegasus_statfs( result, size );
 #endif
 
-    if ( condor )
-    {
-        for ( char **p = environ; *p; p++ )
-        {
-            if ( strncmp( *p, "_CONDOR", 7 ) == 0 )
-            {
-                append( result, size, "Condor Variable: %s\n", *p );
-            }
-        }
-    }
+    // DK: not sure what it is - environ does not seem to be set
+    // if ( condor )
+    // {
+    //     for ( char **p = environ; *p; p++ )
+    //     {
+    //         if ( strncmp( *p, "_CONDOR", 7 ) == 0 )
+    //         {
+    //             append( result, size, "Condor Variable: %s\n", *p );
+    //         }
+    //     }
+    // }
 
     append( result, size, "Output Filename: %s\n", outfn );
     if ( iox[1].size() )
