@@ -16,6 +16,7 @@
 
 package edu.isi.pegasus.planner.code.generator.condor.style;
 
+import edu.isi.pegasus.common.util.GliteEscape;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -33,15 +34,15 @@ import edu.isi.pegasus.planner.classes.TransferJob;
 /**
  * This implementation enables a job to be submitted via gLite to a
  * grid sites. This is the style applied when job has a pegasus profile style key
- * with value GLite associated with it. 
- * 
- * 
+ * with value GLite associated with it.
+ *
+ *
  * <p>
  * This style should only be used when the condor on the submit host can directly
  * talk to scheduler running on the cluster. In Pegasus there should  be a separate
  * compute site that has this style associated with it. This style should not be
  * specified for the local site.
- * 
+ *
  * As part of applying the style to the job, this style adds the following
  * classads expressions to the job description
  * <pre>
@@ -52,57 +53,57 @@ import edu.isi.pegasus.planner.classes.TransferJob;
  *
  * <p>
  * The remote CE requirements are constructed from the following profiles
- * associated with the job.The profiles for a job are derived from various 
+ * associated with the job.The profiles for a job are derived from various
  * sources
  *  - user properties
  *  - transformation catalog
  *  - site catalog
- *  - DAX 
- * 
+ *  - DAX
+ *
  * Note it is upto the user to specify these or a subset of them.
- * 
+ *
  * The following globus profiles if associated with the job are picked up and
  * translated to +remote_cerequirements key in the job submit files.
  * <pre>
- * 
+ *
  * hostcount    -> NODES
  * xcount       -> PROCS
  * maxwalltime  -> WALLTIME
  * totalmemory  -> TOTAL_MEMORY
  * maxmemory    -> PER_PROCESS_MEMORY
  * </pre>
- * 
- * 
+ *
+ *
  * The following condor profiles if associated with the job are picked up
  * <pre>
  * priority  -> PRIORITY
  * </pre>
- * 
+ *
  * All the env profiles are translated to MYENV
- * 
- * For e.g. the expression in the submit file may look as 
+ *
+ * For e.g. the expression in the submit file may look as
  * <pre>
  * +remote_cerequirements = "PROCS==18 && NODES==1 && PRIORITY==10 && WALLTIME==3600
  *   && PASSENV==1 && JOBNAME==\"TEST JOB\" && MYENV ==\"MONTAGE_HOME=/usr/montage,JAVA_HOME=/usr\""
  * </pre>
- * 
+ *
  * The pbs_local_attributes.sh file in share/pegasus/htcondor/glite picks up
  * these values and translated to appropriate PBS parameters
- * 
+ *
  * <pre>
  * NODES                 -> nodes
  * PROCS                 -> ppn
  * WALLTIME              -> walltime
  * TOTAL_MEMORY          -> mem
- * PER_PROCESS_MEMORY    -> pmem 
+ * PER_PROCESS_MEMORY    -> pmem
  * </pre>
- * 
- * 
- * 
- * All the jobs that have this style applied dont have a remote directory 
+ *
+ *
+ *
+ * All the jobs that have this style applied dont have a remote directory
  * specified in the submit directory. They rely on kickstart to change to the
  * working directory when the job is launched on the remote node.
- * 
+ *
  * @author Karan Vahi
  * @version $Revision$
  */
@@ -127,7 +128,7 @@ public class GLite extends Abstract {
         super();
     }
 
-    
+
 
     /**
      * Applies the gLite style to the job.
@@ -142,7 +143,7 @@ public class GLite extends Abstract {
 
         /* universe is always set to grid*/
         job.condorVariables.construct( Condor.UNIVERSE_KEY,Condor.GRID_UNIVERSE );
-        
+
         /* figure out the remote scheduler. should be specified with the job*/
         if( !job.condorVariables.containsKey( Condor.GRID_RESOURCE_KEY )  ){
             throw new CondorStyleException( missingKeyError( job, Condor.GRID_RESOURCE_KEY ) );
@@ -151,7 +152,7 @@ public class GLite extends Abstract {
 
         job.condorVariables.construct( GLite.CONDOR_REMOTE_DIRECTORY_KEY,
                                        workdir == null ? null : quote(workdir) );
-        
+
         //also set it as an environment variable, since for MPI jobs
         //glite and BLAHP dont honor +remote_iwd and we cannot use kickstart
         //the only way to get it to work is for the wrapper around the mpi
@@ -159,17 +160,17 @@ public class GLite extends Abstract {
         if( workdir != null ){
             job.envVariables.construct( "_PEGASUS_SCRATCH_DIR", workdir);
         }
-        
+
         /* transfer_executable does not work with gLite
          * Explicitly set to false */
         job.condorVariables.construct( Condor.TRANSFER_EXECUTABLE_KEY, "false" );
-        
+
         /* retrieve some keys from globus rsl and convert to gLite format */
         if( job.globusRSL.containsKey( "queue" ) ){
             job.condorVariables.construct(  "batch_queue" , (String)job.globusRSL.get( "queue" ) );
         }
-        
-        /* convert some condor keys and globus keys to remote ce requirements 
+
+        /* convert some condor keys and globus keys to remote ce requirements
          +remote_cerequirements = blah */
         job.condorVariables.construct( "+remote_cerequirements", getCERequirementsForJob( job ) );
 
@@ -177,18 +178,18 @@ public class GLite extends Abstract {
          * as condor file transfer mechanism does not work
          * Special handling for the JPL cluster */
         if( job.getSiteHandle().equals( "local" ) && job instanceof TransferJob ){
-                /* remove the change dir requirments for the 
+                /* remove the change dir requirments for the
                  * third party transfer on local host */
                 job.condorVariables.removeKey( GLite.CONDOR_REMOTE_DIRECTORY_KEY );
         }
-        
+
         /* similar handling for registration jobs */
         if( job.getSiteHandle().equals( "local" ) && job.getJobType() == Job.REPLICA_REG_JOB ){
-                /* remove the change dir requirments for the 
+                /* remove the change dir requirments for the
                  * third party transfer on local host */
                 job.condorVariables.removeKey( GLite.CONDOR_REMOTE_DIRECTORY_KEY );
         }
-        
+
         if ( job.getSiteHandle().equals("local") ) {
             applyCredentialsForLocalExec(job);
         }
@@ -196,19 +197,19 @@ public class GLite extends Abstract {
             applyCredentialsForRemoteExec(job);
         }
     }
-    
-   
+
+
 
     /**
      * Constructs the value for remote CE requirements expression for the job .
-     * 
-     * For e.g. the expression in the submit file may look as 
+     *
+     * For e.g. the expression in the submit file may look as
      * <pre>
      * +remote_cerequirements = "PROCS==18 && NODES==1 && PRIORITY==10 && WALLTIME==3600
      *   && PASSENV==1 && JOBNAME==\"TEST JOB\" && MYENV ==\"GAURANG=MEHTA,KARAN=VAHI\""
-     * 
+     *
      * </pre>
-     * 
+     *
      * The requirements are generated on the basis of certain profiles associated
      * with the jobs.
      * The following globus profiles if associated with the job are picked up
@@ -219,25 +220,26 @@ public class GLite extends Abstract {
      * totalmemory  -> TOTAL_MEMORY
      * maxmemory    -> PER_PROCESS_MEMORY
      * </pre>
-     * 
+     *
      * The following condor profiles if associated with the job are picked up
      * <pre>
      * priority  -> PRIORITY
      * </pre>
-     * 
+     *
      * All the env profiles are translated to MYENV
-     * 
+     *
      * @param job
-     * 
+     *
      * @return the value to the expression and it is condor quoted
-     * 
+     *
      * @throws CondorStyleException in case of condor quoting error
      */
     protected String getCERequirementsForJob( Job job ) throws CondorStyleException {
         StringBuffer value = new StringBuffer();
 
+        //PM-802 - Disable outermost quotes, to support better quoting of env. variables encoded in MYENV
         //do quoting ourselves
-        value.append( "\"" );
+        //value.append( "\"" );
 
         /* append the job name */
         /* job name cannot have - or _ */
@@ -248,7 +250,7 @@ public class GLite extends Abstract {
 
         //add the jobname so that it appears when we do qstat
         addSubExpression( value, "JOBNAME" , id   );
-	value.append( " && ");
+	    value.append( " && ");
 
         /* always have PASSENV to true */
         //value.append( " && ");
@@ -260,24 +262,24 @@ public class GLite extends Abstract {
             value.append( " && ");
             addSubExpression( value, "QUEUE", (String)job.globusRSL.get( "queue" ) );
         }
-        
-        
+
+
         /* the globus key hostCount is NODES */
         if( job.globusRSL.containsKey( "hostcount" ) ){
             value.append( " && " );
             addSubExpression( value, "NODES" ,  (String)job.globusRSL.get( "hostcount" ) )  ;
         }
-        
+
         /* the globus key xcount is PROCS */
         if( job.globusRSL.containsKey( "xcount" ) ){
             value.append( " && " );
             addSubExpression( value, "PROCS" ,  (String)job.globusRSL.get( "xcount" )  );
         }
-        
+
         /* the globus key maxwalltime is WALLTIME */
         if( job.globusRSL.containsKey( "maxwalltime" ) ){
             value.append( " && " );
-            addSubExpression( value,"WALLTIME" , Integer.parseInt( (String)job.globusRSL.get( "maxwalltime" ) ) );            
+            addSubExpression( value,"WALLTIME" , Integer.parseInt( (String)job.globusRSL.get( "maxwalltime" ) ) );
         }
 
         /* the globus key maxmemory is PER_PROCESS_MEMORY */
@@ -285,76 +287,96 @@ public class GLite extends Abstract {
             value.append( " && " );
             addSubExpression( value, "PER_PROCESS_MEMORY" ,  (String)job.globusRSL.get( "maxmemory" )  );
         }
-        
+
         /* the globus key totalmemory is TOTAL_MEMORY */
         if( job.globusRSL.containsKey( "totalmemory" ) ){
             value.append( " && " );
             addSubExpression( value, "TOTAL_MEMORY" ,  (String)job.globusRSL.get( "totalmemory" )  );
         }
-        
+
         /* the condor key priority is PRIORITY */
         if( job.condorVariables.containsKey( "priority" ) ){
             value.append( " && " );
-            addSubExpression( value, "PRIORITY" , Integer.parseInt( (String)job.condorVariables.get( "priority" ) ) );            
+            addSubExpression( value, "PRIORITY" , Integer.parseInt( (String)job.condorVariables.get( "priority" ) ) );
         }
-        
+
         /* add the environment that is to be associated with the job */
         StringBuffer env = new StringBuffer();
         for( Iterator it = job.envVariables.getProfileKeyIterator(); it.hasNext(); ){
            String key = (String)it.next();
-           env.append( key ).append( "=" ).append( job.envVariables.get(key) );
+            /*
+             * PM-802 -
+             * Originally +remote_cerequirements were quoted as " .. MYENV==\"A=XYZ,B=LMN\"", which made it difficult
+             * to encode environment values with spaces in them.
+             * Now, quoting is as +remote_cerequirements = .. MYENV=="A1=AB,A11=A\ \\B,A111=A\\"\ B" where,
+             * A1=AB
+             * A11=A \B
+             * A111=A" B"
+             * Single Quotes are not supported due to the he way Condor processes it before passing it to PBS.
+             *
+             */
+            GliteEscape g = new GliteEscape();
+
+           env.append( key ).append( "=" ).append( g.escape( (String) job.envVariables.get( key ) ) );
+
            if( it.hasNext() ){
                env.append( "," );
            }
         }
         if( env.length() > 0 ){
             value.append( " && " );
-            addSubExpression( value, "MYENV" , env.toString() );
+
+            //PM-802
+            value.append( "MYENV" ).append( "==" ).
+                    append( "\"" ).
+                    append( env ).
+                    append( "\"" );
         }
-        
+
         //No quoting to be applied
         // JIRA PM-109
         //return this.quote( value.toString() );
 
-
+        //PM-802 - Disable outermost quotes, to support better quoting of env. variables encoded in MYENV
         //do quoting ourselves
-        value.append( "\"" );
+        //value.append( "\"" );
 
         return value.toString();
     }
-    
-   
+
+
     /**
      * Adds a sub expression to a string buffer
-     * 
-     * @param sb    the StringBuffer 
+     *
+     * @param sb    the StringBuffer
      * @param key   the key
      * @param value the value
      */
     protected void addSubExpression( StringBuffer sb, String key, String value ) {
-        sb.append( key ).append( "==" ).
-           append( "\\" ).append( "\"" ).
-           append( value ).
-           append( "\\" ).append( "\"" );
+        //PM-802
+        sb.append( key ).append( "==" )
+           .append( "\"" )
+           .append( value )
+           .append( "\"" );
     }
 
-    
+
     /**
      * Adds a sub expression to a string buffer
-     * 
-     * @param sb    the StringBuffer 
+     *
+     * @param sb    the StringBuffer
      * @param key   the key
      * @param value the value
      */
     protected void addSubExpression( StringBuffer sb, String key, Integer value ) {
         sb.append( key ).append( "==" ).append( value );
     }
-    
+
      /**
      * Constructs an error message in case of style mismatch.
      *
      * @param job      the job object.
-     * @param key      the missing key 
+     * @param key      the missing key
      */
     protected String missingKeyError( Job job, String key ){
         StringBuffer sb = new StringBuffer();
@@ -365,14 +387,14 @@ public class GLite extends Abstract {
 
          return sb.toString();
     }
-    
+
     /**
      * Condor Quotes a string
      *
      * @param string   the string to be quoted.
      *
      * @return quoted string.
-     * 
+     *
      * @throws CondorStyleException in case of condor quoting error
      */
     private String quote( String string ) throws CondorStyleException{
