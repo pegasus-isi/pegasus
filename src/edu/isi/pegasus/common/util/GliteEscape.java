@@ -63,7 +63,7 @@ public class GliteEscape {
     public GliteEscape() {
         m_escape = '\\';
         m_escapable = " \"\\";
-        m_unescapable = "'\\";
+        m_unescapable = "'\n\t\\";
     }
 
     /**
