@@ -738,8 +738,21 @@ main( int argc, char *argv[] )
         if ( (rank == 0) || (! root_only_memory_allocation) )
         {
 #endif
-            memory_buffer = static_cast<char *>( malloc(sizeof(char) * 1024 * 1024 * memory_size) );
-            mlock( memory_buffer, sizeof(char) * 1024 * 1024 * memory_size );
+            int memory_buffer_size = sizeof(char) * 1024 * 1024 * memory_size;
+            memory_buffer = static_cast<char *>( malloc(memory_buffer_size) );
+
+            if ( memory_buffer == NULL ) 
+            {
+                printf( "Memory allocation failure:  %s\n", strerror(errno) );
+            } 
+            else 
+            {
+                // printf( "Memory allocation was successfull\n" );
+                for (int i = 0; i < memory_buffer_size; i += 4096)
+                    memory_buffer[i] = 'Z';
+            }
+
+            
 #ifdef WITH_MPI
         }
 #endif
