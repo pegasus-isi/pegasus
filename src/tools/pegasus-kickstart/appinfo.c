@@ -205,7 +205,9 @@ static size_t convert2XML(FILE *out, const AppInfo* run) {
                 char *s;
                 if (key && (s = strchr(key, '='))) {
                     *s = '\0'; /* temporarily cut string here */
-                    fprintf(out, "    <env key=\"%s\">", key);
+                    fprintf(out, "    <env key=\"");
+                    xmlquote(out, key, strlen(key));
+                    fprintf(out, "\">");
                     xmlquote(out, s+1, strlen(s+1));
                     fprintf(out, "</env>\n");
                     *s = '='; /* reset string to original */

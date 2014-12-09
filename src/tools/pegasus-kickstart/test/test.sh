@@ -368,6 +368,26 @@ function test_failure_environment {
     return 0
 }
 
+function test_quote_env_var {
+    KICKSTART_SAVE=$KICKSTART
+    KICKSTART="env GIDEON\"=juve $KICKSTART"
+    kickstart -f /bin/date
+    rc=$?
+    KICKSTART=$KICKSTART_SAVE
+
+    if [ $rc -ne 0 ]; then
+        echo "Expected job to succeed"
+        return 1
+    fi
+
+    if ! [[ $(cat test.out) =~ "GIDEON&quot;" ]]; then
+        echo "Expected environment variable name to be quoted"
+        return 1
+    fi
+
+    return 0
+}
+
 # RUN THE TESTS
 run_test lotsofprocs
 run_test lotsofprocs_buffer
@@ -400,4 +420,5 @@ run_test test_timeout_post
 run_test test_timeout_cleanup
 run_test test_timeout_setup
 run_test test_failure_environment
+run_test test_quote_env_var
 
