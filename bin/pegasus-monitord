@@ -108,7 +108,7 @@ re_parse_condor_version = re.compile(r"\*\* \$CondorVersion: ((\d+\.\d+)\.\d+)")
 re_parse_condor_logfile = re.compile(r"Condor log will be written to ([^,]+)")
 re_parse_condor_logfile_insane = re.compile(r"\d{2}\s{3,}(\S+)")
 re_parse_multiline_files = re.compile(r"All DAG node user log files:")
-re_parse_dagman_aborted  = re.compile(r"Aborting DAG...")
+re_parse_dagman_aborted  = re.compile(r"Received SIGUSR1")
 
 # Constants
 logbase = "monitord.log"                  # Basename of daemon logfile
