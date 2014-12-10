@@ -584,7 +584,7 @@ helpMe( const char *ptr, unsigned long timeout, unsigned long spinout,
             ptr );
     printf( " -a app\tset name of application to something else, default %s\n", ptr );
     printf( " -m me\tallocate 'me' MB of memory\n" );
-#ifdef WITH_MPI    
+#ifdef WITH_MPI
     printf( " -r \tallocate memory specified with the '-m' switch only in the root process\n" );
 #endif
     printf( " -t to\tsleep for 'to' seconds during execution, default %lu\n", timeout );
@@ -605,7 +605,7 @@ data_unit_multiplier( char data_unit )
 {
     unsigned long long data_unit_multiplier = 1;
 
-    switch( data_unit ) 
+    switch ( data_unit )
     {
     case 'B':
         data_unit_multiplier = 1;
@@ -614,14 +614,59 @@ data_unit_multiplier( char data_unit )
         data_unit_multiplier = 1024;
         break;
     case 'M':
-        data_unit_multiplier = 1024*1024;
+        data_unit_multiplier = 1024 * 1024;
         break;
     case 'G':
-        data_unit_multiplier = 1024*1024*1024;
+        data_unit_multiplier = 1024 * 1024 * 1024;
         break;
     }
 
     return data_unit_multiplier;
+}
+
+#ifndef MIN
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+#endif // MIN
+
+unsigned long
+calculate_input_file_size( DirtyVector input_files )
+{
+    unsigned long input_files_size = 0;
+    FILE *in;
+    int fd, error = 0;
+    struct stat file_stat;
+
+    for ( unsigned int j = 0; j < input_files.size(); j++ )
+    {
+        in = ( input_files[j][0] == '-' && input_files[j][1] == '\0' ) ?
+             fdopen( STDIN_FILENO, "r" ) :
+             fopen( input_files[j], "r" );
+
+        if ( in )
+        {
+            fd = fileno( in );
+            error = fstat( fd, &file_stat );
+
+            if ( error != 0 )
+            {
+                printf( "[error] couldn't fstat of \"%s\": %d: %s\n", input_files[j], errno, strerror(errno) );
+            }
+            else
+            {
+                input_files_size += file_stat.st_size;
+            }
+
+            fclose(in);
+        }
+        else
+        {
+            printf( "[error] open \"%s\": %d: %s\n", input_files[j], errno, strerror(errno) );
+        }
+    }
+
+    printf( "[debug] total file size of all input files is %lu\n", input_files_size );
+
+    return input_files_size;
 }
 
 int
@@ -639,13 +684,13 @@ main( int argc, char *argv[] )
     unsigned long timeout = 0;
     unsigned long memory_size = 0;
     char *memory_buffer = NULL;
-#ifdef WITH_MPI    
+#ifdef WITH_MPI
     bool root_only_memory_allocation = false;
 #endif
 
     int state = 0;
     bool condor = false;
-    // DK: DEPRACTED 
+    // DK: DEPRACTED
     // unsigned long gensize = 0;
     char data_unit = 'B';
     DirtyVector iox[5];
@@ -721,12 +766,12 @@ main( int argc, char *argv[] )
                     break;
                 case 'u':
                     state = 17;
-                    break;                    
+                    break;
 #ifdef WITH_MPI
                 case 'r':
                     root_only_memory_allocation = true;
                     continue;
-#endif                    
+#endif
                 case 'C':
                     condor = true;
                     continue;
@@ -783,42 +828,119 @@ main( int argc, char *argv[] )
             int memory_buffer_size = sizeof(char) * 1024 * 1024 * memory_size;
             memory_buffer = static_cast<char *>( malloc(memory_buffer_size) );
 
-            if ( memory_buffer == NULL ) 
+            if ( memory_buffer == NULL )
             {
                 printf( "Memory allocation failure:  %s\n", strerror(errno) );
-            } 
-            else 
+            }
+            else
             {
                 // printf( "Memory allocation was successfull\n" );
                 for (int i = 0; i < memory_buffer_size; i += 4096)
                     memory_buffer[i] = 'Z';
             }
 
-            
+
 #ifdef WITH_MPI
         }
 #endif
     }
 
-    if ( timeout ) sleep(timeout);
-    if ( spinout ) spin(spinout);
+    // PHASE 1 - reading input files to memory if any; use the memory_buffer for storing all the file content
+    // 1. check how much memory do we need
+    // unsigned long input_files_size = calculate_input_file_size( iox[1] );
+    unsigned long input_files_size = 0, mem_buf_offset = 0;
+    // all input, all output files
+    FILE *out, *in;
+    int fd, error = 0;
+    struct stat file_stat;
+    size_t bufsize = getpagesize() << 4;
+    if ( bufsize < 16384 ) bufsize = 16384;
+    char *buffer = static_cast<char *>( malloc(bufsize) );
 
+    for ( unsigned int j = 0; j < iox[1].size(); j++ )
+    {
+        in = ( iox[1][j][0] == '-' && iox[1][j][1] == '\0' ) ?
+             fdopen( STDIN_FILENO, "r" ) :
+             fopen( iox[1][j], "r" );
+
+        if ( in )
+        {
+            fd = fileno( in );
+            error = fstat( fd, &file_stat );
+
+            if ( error != 0 )
+            {
+                printf( "[error] couldn't fstat of \"%s\": %d: %s\n", iox[1][j], errno, strerror(errno) );
+            }
+            else
+            {
+                // buffer for start and final lines
+                sprintf( buffer, "--- start %s ----\n", iox[1][j] );
+                input_files_size += 2 * strlen( buffer );
+                input_files_size += file_stat.st_size;
+            }
+
+            fclose(in);
+        }
+        else
+        {
+            printf( "[error] open \"%s\": %d: %s\n", iox[1][j], errno, strerror(errno) );
+        }
+    }
+    // printf( "[debug] total file size of all input files is %lu\n", input_files_size );
+
+    unsigned long memory_buffer_size = 1024 * 1024 * memory_size;
+
+    // 2. allocate memory buffer
+    if ( input_files_size > memory_buffer_size )
+    {
+        if ( memory_buffer == NULL )
+        {
+            memory_buffer = static_cast<char *>( malloc( sizeof(char) * input_files_size ) );
+        }
+        else
+        {
+            memory_buffer = static_cast<char *>( realloc( memory_buffer, sizeof(char) * input_files_size ) );
+        }
+    }
+
+    // 3. read the input files content
+    for ( unsigned int j = 0; j < iox[1].size(); j++ )
+    {
+        in = ( iox[1][j][0] == '-' && iox[1][j][1] == '\0' ) ?
+             fdopen( STDIN_FILENO, "r" ) :
+             fopen( iox[1][j], "r" );
+
+        if ( in )
+        {
+            sprintf( buffer, "--- start %s ----\n", iox[1][j] );
+            memcpy( memory_buffer + mem_buf_offset, buffer, strlen( buffer ) );
+            mem_buf_offset += strlen( buffer );
+
+            while ( fgets( buffer, bufsize, in ) )
+            {
+                memcpy( memory_buffer + mem_buf_offset, buffer, strlen( buffer ) );
+                mem_buf_offset += strlen( buffer );
+            }
+
+            sprintf( buffer, "--- final %s ----\n", iox[1][j] );
+            memcpy( memory_buffer + mem_buf_offset, buffer, strlen( buffer ) );
+            mem_buf_offset += strlen( buffer );
+
+            fclose(in);
+        }
+        else
+        {
+            printf( "[error] open \"%s\": %d: %s\n", iox[1][j], errno, strerror(errno) );
+        }
+    }
+    // printf( "%s\n", memory_buffer );
+
+    // PHASE 2 - writing output files if any; the -G switch has higher priority than input files
 #ifdef WITH_MPI
     if (rank == 0)
     {
 #endif
-
-        // output buffer
-        size_t bufsize = getpagesize() << 4;
-        if ( bufsize < 16384 ) bufsize = 16384;
-        char *buffer = static_cast<char *>( malloc(bufsize) );
-
-#ifndef MIN
-#define MIN(a,b) ((a) < (b) ? (a) : (b))
-#endif // MIN
-
-        // all input, all output files
-        FILE *out, *in;
         for ( unsigned i = 0; i < iox[2].size(); ++i )
         {
             out = ( iox[2][i][0] == '-' && iox[2][i][1] == '\0' ) ?
@@ -826,11 +948,11 @@ main( int argc, char *argv[] )
                   fopen( iox[2][i], "w" );
             if ( out )
             {
-                // DK: DEPRACTED 
+                // DK: DEPRACTED
                 // if ( gensize > 0 )
-                if ( iox[4].size() > 0 )    
+                if ( iox[4].size() > 0 )
                 {
-                    const char* xsize_str = iox[4][ i % iox[4].size() ];
+                    const char *xsize_str = iox[4][ i % iox[4].size() ];
                     unsigned long xsize = strtoul(xsize_str, 0, 10) * data_unit_multiplier( data_unit );
                     while ( xsize > 0 )
                     {
@@ -844,29 +966,8 @@ main( int argc, char *argv[] )
                 }
                 else
                 {
-                    // copy input files
-                    for ( unsigned j = 0; j < iox[1].size(); ++j )
-                    {
-                        in = ( iox[1][j][0] == '-' && iox[1][j][1] == '\0' ) ?
-                             fdopen( STDIN_FILENO, "r" ) :
-                             fopen( iox[1][j], "r" );
-                        fprintf( out, "--- start %s ----\n", iox[1][j] );
-                        if ( in )
-                        {
-                            while ( fgets( buffer, bufsize, in ) )
-                            {
-                                fputs( prefix, out );
-                                fputs( buffer, out );
-                            }
-                            fclose(in);
-                        }
-                        else
-                        {
-                            fprintf( out, "  open \"%s\": %d: %s\n", iox[1][j],
-                                     errno, strerror(errno) );
-                        }
-                        fprintf( out, "--- final %s ----\n", iox[1][j] );
-                    }
+                    fputs( prefix, out );
+                    fputs( memory_buffer, out );
                 }
 
                 // create buffer, and fill with content
@@ -882,7 +983,69 @@ main( int argc, char *argv[] )
                 return 2;
             }
         }
+#ifdef WITH_MPI
+    }
+#endif
 
+    double timestamp = now();
+    int time_diff = spinout - ( (int) (timestamp - start) );
+    // printf( "Start time: %f - Current timestamp: %f - Difference: %f\n", start, timestamp, timestamp - start);
+    printf( "[debug] we spent %d [s] on IO stuff\n", (int) (timestamp - start) );
+
+    // PHASE 3 - spinning out
+    if ( spinout )
+    {
+        if ( time_diff < 0 )
+        {
+            printf("[error] you specified %lu [s] to spin but you've already exceeded this value by %d [s]\n", spinout, -time_diff );
+
+            if ( memory_buffer != NULL )
+                free( static_cast<void *>(memory_buffer) );
+
+            if ( buffer != NULL )
+                free( static_cast<void *>(buffer) );
+
+            return 3;
+
+        }
+        else
+        {
+            printf( "[debug] You specified %lu [s] to spin so we will spin for %d [s]\n", spinout, time_diff );
+            spin(time_diff);
+        }
+    }
+
+    // PHASE 4 - sleeping
+    if ( timeout )
+    {
+        timestamp = now();
+        time_diff = timeout - ( (int) (timestamp - start) );
+
+        if ( time_diff < 0 )
+        {
+            printf("[error] you specified %lu [s] to sleep but you've already exceeded this value by %d [s]\n", timeout, -time_diff );
+
+            if ( memory_buffer != NULL )
+                free( static_cast<void *>(memory_buffer) );
+
+            if ( buffer != NULL )
+                free( static_cast<void *>(buffer) );
+
+            return 3;
+
+        }
+        else
+        {
+            printf( "You specified %lu [s] to sleep so we will sleep for %d [s]\n", timeout, time_diff );
+            sleep(time_diff);
+        }
+    }
+
+
+#ifdef WITH_MPI
+    if (rank == 0)
+    {
+#endif
         // append atomically to logfile
         if ( logfile != 0 )
         {
@@ -901,10 +1064,11 @@ main( int argc, char *argv[] )
             }
         }
 
-        if ( memory_buffer )
+        if ( memory_buffer != NULL )
             free( static_cast<void *>(memory_buffer) );
 
-        free( static_cast<void *>(buffer) );
+        if ( buffer != NULL )
+            free( static_cast<void *>(buffer) );
 
 #ifdef WITH_MPI
     }
