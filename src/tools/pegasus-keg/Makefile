@@ -4,7 +4,7 @@
 INSTALL = install
 RM      = rm -f
 CXX	= g++ -ffor-scope 
-CXXFLAGS += -O
+CXXFLAGS += -O -Wall
 LD      = $(CXX)
 LOADLIBES = -lm
 SYSTEM  = $(shell uname -s | tr '[a-z]' '[A-Z]' | tr -d '_ -/')
