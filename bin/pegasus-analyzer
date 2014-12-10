@@ -1090,8 +1090,8 @@ def analyze_db(config_properties):
 
                 # Now, print task information
                 for my_task in my_tasks:
-                    if my_task[0] < 1:
-                        # Skip pre, and post script tasks
+                    if my_task[0] < -1:
+                        # Skip only post script tasks. Pre script invocations have task_submit_seq as -1
                         continue
                     if my_task[1] == 0:
                         # Skip tasks that succeeded
@@ -1164,6 +1164,13 @@ def analyze_db(config_properties):
                             print_console( ("Task #" + str(my_task[0]) + " - " + str(my_task[4]) + " - " + str(my_task[5]) + " - stderr").center(80, '-') )
                             print_console()
                             print_console( my_info.stderr_text )
+                            print_console()
+
+                        # PM-808 print jobinstance stdout for prescript failures only.
+                        if my_task[0] == -1 and my_info.stdout_text is not None:
+                            print_console( ("Task #" + str(my_task[0]) + " - " + str(my_task[4]) + " - " + str(my_task[5]) + " - stdout").center(80, '-') )
+                            print_console()
+                            print_console( my_info.stdout_text )
                             print_console()
 
                     # recurse for sub workflow
