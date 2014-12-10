@@ -91,7 +91,7 @@ install-mpi-keg: pegasus-mpi-keg
 	$(INSTALL) -m 0755 pegasus-mpi-keg $(prefix)/bin
 
 pegasus-mpi-keg: pegasus-mpi-keg.o $(EXTRA_OBJ)
-	$(LD_MPI) $(LDFLAGS) $(LD_MPIFLAGS) $^ -o $@ $(LOADLIBES)
+	$(LD_MPI) $(LDFLAGS) $^ -o $@ $(LOADLIBES) $(LD_MPIFLAGS)
 
 pegasus-mpi-keg.o : pegasus-keg.cc $(EXTRA_INC)
 	$(MPICC) $(MPICCFLAGS) $(CPPFLAGS) $(CXXFLAGS) $< -c -o $@
