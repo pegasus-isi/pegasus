@@ -614,7 +614,9 @@ main( int argc, char *argv[] )
     unsigned long timeout = 0;
     unsigned long memory_size = 0;
     char *memory_buffer = NULL;
+#ifdef WITH_MPI    
     bool root_only_memory_allocation = false;
+#endif
 
     int state = 0;
     bool condor = false;
@@ -690,9 +692,11 @@ main( int argc, char *argv[] )
                 case 'm':
                     state = 16;
                     break;
+#ifdef WITH_MPI
                 case 'r':
                     root_only_memory_allocation = true;
-                    continue;
+                    break;
+#endif                    
                 case 'C':
                     condor = true;
                     continue;
