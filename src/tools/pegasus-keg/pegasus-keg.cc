@@ -583,6 +583,10 @@ helpMe( const char *ptr, unsigned long timeout, unsigned long spinout,
             "\t[-i fn [..] | -G size] [-e env [..]] [-p p [..]] [-P ps]\n",
             ptr );
     printf( " -a app\tset name of application to something else, default %s\n", ptr );
+    printf( " -m me\tallocate 'me' MB of memory\n" );
+#ifdef WITH_MPI    
+    printf( " -r \tallocate memory specified with the '-m' switch only in the root process\n" );
+#endif
     printf( " -t to\tsleep for 'to' seconds during execution, default %lu\n", timeout );
     printf( " -T to\tspin for 'to' seconds during execution, default %lu\n", spinout );
     printf( " -l fn\tappend own information atomically to a logfile\n" );
