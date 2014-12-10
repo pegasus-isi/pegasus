@@ -431,7 +431,7 @@ whoami( char *buffer, size_t size )
 void
 identify( char *result, size_t size, const char *arg0,
           double start, bool condor,
-          const DirtyVector iox[4], const char *outfn )
+          const DirtyVector iox[5], const char *outfn )
 {
     size_t linsize = getpagesize();
     char *line = static_cast<char *>( malloc(linsize) );
@@ -599,6 +599,30 @@ helpMe( const char *ptr, unsigned long timeout, unsigned long spinout,
     printf( " -P ps\tprefix input file lines with 'ps', default \"%s\"\n", prefix );
 }
 
+unsigned long long
+data_unit_multiplier( char data_unit )
+{
+    unsigned long long data_unit_multiplier = 1;
+
+    switch( data_unit ) 
+    {
+    case 'B':
+        data_unit_multiplier = 1;
+        break;
+    case 'K':
+        data_unit_multiplier = 1024;
+        break;
+    case 'M':
+        data_unit_multiplier = 1024*1024;
+        break;
+    case 'G':
+        data_unit_multiplier = 1024*1024*1024;
+        break;
+    }
+
+    return data_unit_multiplier;
+}
+
 int
 main( int argc, char *argv[] )
 {
@@ -620,8 +644,10 @@ main( int argc, char *argv[] )
 
     int state = 0;
     bool condor = false;
-    unsigned long gensize = 0;
-    DirtyVector iox[4];
+    // DK: DEPRACTED 
+    // unsigned long gensize = 0;
+    char data_unit = 'B';
+    DirtyVector iox[5];
 
     // when did we start
     double start = now();
@@ -655,7 +681,7 @@ main( int argc, char *argv[] )
         char *s = argv[i];
         if ( s[0] == '-' && s[1] != 0 )
         {
-            if ( strchr( "iotTGaepPlCmr\0", s[1] ) != NULL )
+            if ( strchr( "iotTGaepPlCmru\0", s[1] ) != NULL )
             {
                 switch (s[1])
                 {
@@ -687,15 +713,18 @@ main( int argc, char *argv[] )
                     state = 14;
                     break;
                 case 'G':
-                    state = 15;
+                    state = 4;
                     break;
                 case 'm':
                     state = 16;
                     break;
+                case 'u':
+                    state = 17;
+                    break;                    
 #ifdef WITH_MPI
                 case 'r':
                     root_only_memory_allocation = true;
-                    break;
+                    continue;
 #endif                    
                 case 'C':
                     condor = true;
@@ -725,11 +754,15 @@ main( int argc, char *argv[] )
                 free( static_cast<void *>(prefix) );
                 prefix = strdup(s);
                 break;
-            case 15:
-                gensize = strtoul(s, 0, 10);
-                break;
+            // DK: DEPRECATED not used since we allow to specify size of each output file
+            // case 15:
+            //     gensize = strtoul(s, 0, 10);
+            //     break;
             case 16:
                 memory_size = strtoul(s, 0, 10);
+                break;
+            case 17:
+                data_unit = s[0];
                 break;
             }
             state = 0;
@@ -792,13 +825,17 @@ main( int argc, char *argv[] )
                   fopen( iox[2][i], "w" );
             if ( out )
             {
-                if ( gensize > 0 )
+                // DK: DEPRACTED 
+                // if ( gensize > 0 )
+                if ( iox[4].size() > 0 )    
                 {
-                    unsigned long xsize = gensize - 1; // final LF counts
+                    const char* xsize_str = iox[4][ i % iox[4].size() ];
+                    unsigned long xsize = strtoul(xsize_str, 0, 10) * data_unit_multiplier( data_unit );
                     while ( xsize > 0 )
                     {
                         ssize_t wsize = fwrite( output, sizeof(char),
                                                 MIN(xsize, sizeof(output)), out );
+                        // printf( "[%d] writing %ld bytes\n", i, wsize );
                         if ( wsize > 0 ) xsize -= wsize;
                         else break;
                     }
