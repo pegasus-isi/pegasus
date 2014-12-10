@@ -592,7 +592,8 @@ helpMe( const char *ptr, unsigned long timeout, unsigned long spinout,
     printf( " -l fn\tappend own information atomically to a logfile\n" );
     printf( " -o ..\tenumerate space-separated list output files to create\n" );
     printf( " -i ..\tenumerate space-separated list input to read and copy\n" );
-    printf( " -G sz\tuse the generated size pattern instead of input files\n" );
+    printf( " -G ..\tenumerate space-separated list of output file sizes\n" );
+    printf( " -u un\tdata unit for output files generator - accepted values includes [ B K M G ], default is B\n" );
     printf( " -p ..\tenumerate space-separated parameters to mention\n" );
     printf( " -e ..\tenumerate space-separated environment values to print\n" );
     printf( " -C\tprint all environment variables starting with _CONDOR\n" );
