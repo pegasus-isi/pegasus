@@ -32,6 +32,7 @@ import org.junit.runners.Suite.SuiteClasses;
     edu.isi.pegasus.planner.transfer.mapper.ReplicaOutputMapperTest.class,
     edu.isi.pegasus.planner.transfer.mapper.FixedOutputMapperTest.class,
     edu.isi.pegasus.planner.refiner.DataReuseEngineTest.class,
+    edu.isi.pegasus.common.util.GLiteEscapeTest.class
 })
 public class AllTests {
 }
