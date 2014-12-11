@@ -150,7 +150,10 @@ Return Value
 
 Execution as planned will return 0. The failure to open an input file
 will return 1, the failure to open an output file, including the log
-file, will return with exit code 2.
+file, will return with exit code 2. If the time spent on IO exceeds
+the specified time CPU load period with *-T* or the time spent on IO 
+and CPU load exceeds the specified wall time with *-T* the return code
+will be 3.
 
 
 Example
