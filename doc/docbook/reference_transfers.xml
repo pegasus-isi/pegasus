@@ -924,8 +924,35 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
 		</section>
 		<section id="gs_cred">
 			<title>Google Storage</title>
-			<para>If a workflow is using gs:// URLs, Pegasus has to be told where 
-			to find the .boto file as created by gsutil. For the file to be picked
+            <para>If a workflow is using gs:// URLs, Pegasus needs access to a Google Storage service account. First generate the credential by
+            following the instructions at:</para>
+
+            <para><ulink url="https://cloud.google.com/storage/docs/authentication#service_accounts">https://cloud.google.com/storage/docs/authentication#service_accounts</ulink></para>
+
+            <para>Download the credential in PKCS12 format, and then use "gsutil congfig -e" to convert the credential to a .boto file. For example:</para>
+
+            <programlisting>
+$ gsutil config -e
+This command will create a boto config file at /home/username/.boto
+containing your credentials, based on your responses to the following
+questions.
+What is your service account email address? some-identifier@developer.gserviceaccount.com
+What is the full path to your private key file? /home/username/my-cred.p12
+What is the password for your service key file [if you haven't set one
+explicitly, leave this line blank]? 
+
+Please navigate your browser to https://cloud.google.com/console#/project,
+then find the project you will use, and copy the Project ID string from the
+second column. Older projects do not have Project ID strings. For such projects,
+click the project and then copy the Project Number listed under that project.
+
+What is your project-id? your-project-id
+
+Boto config file "/home/username/.boto" created. If you need to use a
+proxy to access the Internet please see the instructions in that file.
+            </programlisting>
+
+            <para>Pegasus has to be told where to find the .boto file as created by gsutil. For the file to be picked
 			up by the workflow, set 
 			the <varname>BOTO_CONFIG</varname> profile to the location of 
 			the file. Site catalog example:</para>
