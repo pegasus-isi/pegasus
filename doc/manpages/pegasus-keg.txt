@@ -12,8 +12,8 @@ Synopsis
 --------
 [verse]
 *pegasus-keg* [-a appname] [-t interval |-T interval] [-l logname]
-            [-P prefix] [-o fn [..]] [-i fn [..]] [-G sz] [-m memory] 
-            [-C] [-e env [..]] [-p parm [..]]
+            [-P prefix] [-o fn [..]] [-i fn [..]] [-G sz [..]] [-m memory] 
+            [-C] [-e env [..]] [-p parm [..]] [-u data_unit]
 
 
 Description
@@ -32,11 +32,25 @@ working directory and some information on the system environment.
 *pegasus-keg* will also report all input files, the current output files
 and any requested string and environment value.
 
+The workflow of the Keg tool is as follows:
+- if *-m* - allocate a memory buffer of the specified amount 
+- if *-i* - read all input files into the memory buffer
+- if *-o* - write either the input files content (or a generated content 
+  if *-G*) to output files
+- if *-T* - generate CPU load for the specified time period decreased by 
+  the time period spent on IO stuff; if the IO stuff time period exceeds
+  the time period specified here the program exits with code status 3
+- if *-t* - wait/sleep for the specified time period decreased by time periods
+  spent on IO stuff (and CPU load generating if any); if the time period spent
+  on previous activities exceeds the amount specified here the program exits 
+  with code status 3
+- if *-l* - write info to the specified log file.
+
 
 Arguments
 ---------
 
-The *-e*, *-i*, *-o* and *-p* arguments allow lists with arbitrary
+The *-e*, *-i*, *-o*, *-p* and *-G* arguments allow lists with arbitrary
 number of arguments. These options may also occur repeatedly on the
 command line. The file options may be provided with the special filename
 - to indicate _stdout_ in append mode for writing, or _stdin_ for
@@ -81,10 +95,19 @@ copied, the data dump from this instance of *pegasus-keg* is appended to
 the output file. Without output files, *pegasus-keg* operates in _data
 sink_ mode.
 
-*-G size*::
+*-G size [..]*::
 If you want *pegasus-keg* to generate a lot of output, the generator
-option will do that for you. Just specify how much, in bytes, you want.
+option will do that for you. Just specify how much, in bytes (but you can change
+it with *-u* switch), you want. You can specify more than 1 value here if
+you specify more than 1 output file. Subsequent values specified here will
+correspond to sizes of subsequent output files.
 This option is off by default.
+
+*-u data_unit*::
+By default, the output data generator (the *-G* switch) generates the specified
+amount of data in Bytes. You can alter this behavior with this switch. It accepts
+one of the following characters as 'data_unit' value: B for Bytes, K for KiloBytes,
+M for MegaBytes, and G for GigaBytes.
 
 *-C*::
 This option causes *pegasus-keg* to list all environment variables that
