@@ -115,7 +115,11 @@ static FileInfo *readTraceFileRecord(const char *buf, FileInfo *files) {
     size_t bwrite = 0;
     size_t nread = 0;
     size_t nwrite = 0;
-    if (sscanf(buf, "file: '%[^']' %lu %lu %lu %lu %lu\n", filename, &size, &bread, &bwrite, &nread, &nwrite) != 6) {
+    size_t bseek = 0;
+    size_t nseek = 0;
+
+    if (sscanf(buf, "file: '%[^']' %lu %lu %lu %lu %lu %lu %lu\n",
+               filename, &size, &bread, &bwrite, &nread, &nwrite, &bseek, &nseek) != 8) {
         printerr("Invalid file record: %s", buf);
         return files;
     }
@@ -152,6 +156,8 @@ static FileInfo *readTraceFileRecord(const char *buf, FileInfo *files) {
         file->bwrite = bwrite;
         file->nread = nread;
         file->nwrite = nwrite;
+        file->bseek = bseek;
+        file->nseek = nseek;
 
         if (files == NULL) {
             /* List was empty */
@@ -167,6 +173,8 @@ static FileInfo *readTraceFileRecord(const char *buf, FileInfo *files) {
         file->bwrite += bwrite;
         file->nread += nread;
         file->nwrite += nwrite;
+        file->bseek += bseek;
+        file->nseek += nseek;
     }
 
     return files;

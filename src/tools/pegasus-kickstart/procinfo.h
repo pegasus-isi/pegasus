@@ -17,6 +17,8 @@ typedef struct _FileInfo {
     uint64_t size;          /* Size of the file at exit */
     uint64_t nread;         /* Number of read operations */
     uint64_t nwrite;        /* Number of write operations */
+    uint64_t bseek;         /* Total seek distance */
+    uint64_t nseek;         /* Number of seek operations */
     struct _FileInfo *next;
 } FileInfo;
 

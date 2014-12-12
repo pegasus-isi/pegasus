@@ -479,9 +479,13 @@ int procParentWait(pid_t main, int *main_status,  struct rusage *main_usage, Pro
 static int printXMLFileInfo(FILE *out, int indent, FileInfo *files) {
     FileInfo *i;
     for (i = files; i != NULL; i = i->next) {
-        fprintf(out, "%*s<file name=\"%s\" bread=\"%"PRIu64"\" "
-                "bwrite=\"%"PRIu64"\" nread=\"%"PRIu64"\" nwrite=\"%"PRIu64"\" size=\"%"PRIu64"\"/>\n",
-                indent, "", i->filename, i->bread, i->bwrite, i->nread, i->nwrite, i->size);
+        fprintf(out, "%*s<file name=\"%s\" "
+                "bread=\"%"PRIu64"\" nread=\"%"PRIu64"\" "
+                "bwrite=\"%"PRIu64"\" nwrite=\"%"PRIu64"\" "
+                "bseek=\"%"PRIu64"\" nseek=\"%"PRIu64"\" "
+                "size=\"%"PRIu64"\"/>\n",
+                indent, "", i->filename, i->bread, i->nread,
+                i->bwrite, i->nwrite, i->bseek, i->nseek, i->size);
     }
     return 0;
 }
