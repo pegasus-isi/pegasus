@@ -861,17 +861,49 @@ main( int argc, char *argv[] )
         // PHASE 2 - writing output files if any; the -G switch has higher priority than input files
         for ( unsigned i = 0; i < iox[2].size(); ++i )
         {
-            out = ( iox[2][i][0] == '-' && iox[2][i][1] == '\0' ) ?
-                  fdopen( STDOUT_FILENO, "a" ) :
-                  fopen( iox[2][i], "w" );
+            unsigned long xsize = 0;
+
+            if ( iox[2][i][0] == '-' && iox[2][i][1] == '\0' )
+            {
+                out = fdopen( STDOUT_FILENO, "a" );
+            }
+            else 
+            {
+                char *filesize = strrchr( iox[2][i], '=' );
+                char filename[256];
+                
+                if ( filesize != NULL )
+                {
+                    memcpy( filename, iox[2][i], sizeof(char) * ( filesize - iox[2][i] ) );
+
+                    out = fopen( filename, "w" );
+
+                    unsigned long long unit_multiplier = 1;
+
+                    if ( strchr( "BKMG\0", filesize[ strlen( filesize ) - 1 ] ) != NULL ) 
+                    {
+                        unit_multiplier = data_unit_multiplier( filesize[ strlen( filesize ) - 1 ] );
+                    }
+
+                    filesize[ strlen( filesize ) - 1 ] = '\0';
+                    xsize = strtoul(filesize + 1, 0, 10) * unit_multiplier;
+                }
+                else 
+                {
+                    out = fopen( iox[2][i], "w" );
+                }
+            }
+
             if ( out )
             {
-                // DK: DEPRACTED
-                // if ( gensize > 0 )
-                if ( iox[4].size() > 0 )
+                if ( iox[4].size() > 0 || xsize > 0 )
                 {
-                    const char *xsize_str = iox[4][ i % iox[4].size() ];
-                    unsigned long xsize = strtoul(xsize_str, 0, 10) * data_unit_multiplier( data_unit );
+                    if ( xsize <= 0 )
+                    {
+                        const char *xsize_str = iox[4][ i % iox[4].size() ];    
+                        xsize = strtoul(xsize_str, 0, 10) * data_unit_multiplier( data_unit );
+                    }
+
                     generate_output_file( out, xsize );
                 }
                 else
