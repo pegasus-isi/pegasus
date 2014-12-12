@@ -480,8 +480,8 @@ static int printXMLFileInfo(FILE *out, int indent, FileInfo *files) {
     FileInfo *i;
     for (i = files; i != NULL; i = i->next) {
         fprintf(out, "%*s<file name=\"%s\" bread=\"%"PRIu64"\" "
-                "bwrite=\"%"PRIu64"\" size=\"%"PRIu64"\"/>\n",
-                indent, "", i->filename, i->bread, i->bwrite, i->size);
+                "bwrite=\"%"PRIu64"\" nread=\"%"PRIu64"\" nwrite=\"%"PRIu64"\" size=\"%"PRIu64"\"/>\n",
+                indent, "", i->filename, i->bread, i->bwrite, i->nread, i->nwrite, i->size);
     }
     return 0;
 }
@@ -490,8 +490,8 @@ static int printXMLSockInfo(FILE *out, int indent, SockInfo *sockets) {
     SockInfo *i;
     for (i = sockets; i != NULL; i = i->next) {
         fprintf(out, "%*s<socket address=\"%s\" port=\"%d\" "
-                "brecv=\"%"PRIu64"\" bsend=\"%"PRIu64"\"/>\n",
-                indent, "", i->address, i->port, i->brecv, i->bsend);
+                "brecv=\"%"PRIu64"\" bsend=\"%"PRIu64"\" nrecv=\"%"PRIu64"\" nsend=\"%"PRIu64"\"/>\n",
+                indent, "", i->address, i->port, i->brecv, i->bsend, i->nrecv, i->nsend);
     }
     return 0;
 }

@@ -133,6 +133,8 @@ typedef struct {
     char *path;
     size_t bread;
     size_t bwrite;
+    size_t nread;
+    size_t nwrite;
 } Descriptor;
 
 const char DTYPE_NONE = 0;
@@ -420,6 +422,8 @@ static void trace_file(const char *path, int fd) {
     f->path = temp;
     f->bread = 0;
     f->bwrite = 0;
+    f->nread = 0;
+    f->nwrite = 0;
 }
 
 static void trace_open(const char *path, int fd) {
@@ -465,6 +469,7 @@ static void trace_read(int fd, ssize_t amount) {
         return;
     }
     f->bread += amount;
+    f->nread += 1;
 }
 
 static void trace_write(int fd, ssize_t amount) {
@@ -475,6 +480,7 @@ static void trace_write(int fd, ssize_t amount) {
         return;
     }
     f->bwrite += amount;
+    f->nwrite += 1;
 }
 
 static void trace_close(int fd) {
@@ -498,9 +504,9 @@ static void trace_close(int fd) {
             size = st.st_size;
         }
 
-        tprintf("file: '%s' %lu %lu %lu\n", f->path, size, f->bread, f->bwrite);
+        tprintf("file: '%s' %lu %lu %lu %lu %lu\n", f->path, size, f->bread, f->bwrite, f->nread, f->nwrite);
     } else if (f->type == DTYPE_SOCK) {
-        tprintf("socket: %s %lu %lu\n", f->path, f->bread, f->bwrite);
+        tprintf("socket: %s %lu %lu %lu %lu\n", f->path, f->bread, f->bwrite, f->nread, f->nwrite);
     }
 
     /* Reset the entry */
@@ -539,6 +545,8 @@ static void trace_sock(int sockfd, const struct sockaddr *addr, socklen_t addrle
         d->path = NULL;
         d->bread = 0;
         d->bwrite = 0;
+        d->nread = 0;
+        d->nwrite = 0;
 
         char *temp = strdup(addrstr);
         if (temp == NULL) {
@@ -579,6 +587,8 @@ static void trace_dup(int oldfd, int newfd) {
     n->path = temp;
     n->bread = 0;
     n->bwrite = 0;
+    n->nread = 0;
+    n->nwrite = 0;
 }
 
 static void trace_truncate(const char *path, off_t length) {
@@ -589,7 +599,7 @@ static void trace_truncate(const char *path, off_t length) {
         return;
     }
 
-    tprintf("file: '%s' %lu 0 0\n", fullpath, length);
+    tprintf("file: '%s' %lu 0 0 0 0\n", fullpath, length);
 }
 
 /* Library initialization function */
