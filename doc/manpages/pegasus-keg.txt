@@ -94,6 +94,8 @@ an start and end section, see 2nd example. After all input files are
 copied, the data dump from this instance of *pegasus-keg* is appended to
 the output file. Without output files, *pegasus-keg* operates in _data
 sink_ mode.
+Accept also '<filename>=<filesize><data_unit>' form, where <data_unit> 
+is a character supported by the *-u* switch.
 
 *-G size [..]*::
 If you want *pegasus-keg* to generate a lot of output, the generator
