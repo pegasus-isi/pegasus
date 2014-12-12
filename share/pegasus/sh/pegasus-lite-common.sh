@@ -173,7 +173,7 @@ function pegasus_lite_init()
     pegasus_lite_log "PegasusLite: version ${pegasus_lite_full_version}" 1>&2
 
     # for staged credentials, expand the paths and set strict permissions
-    for base in X509_USER_PROXY S3CFG BOTO_CONFIG SSH_PRIVATE_KEY irodsEnvFile; do
+    for base in X509_USER_PROXY S3CFG BOTO_CONFIG SSH_PRIVATE_KEY irodsEnvFile GOOGLE_PKCS12 ; do
         for key in `(env | grep -i ^$base | sed 's/=.*//') 2>/dev/null`; do
             eval val="\$$key"
             # expand the path

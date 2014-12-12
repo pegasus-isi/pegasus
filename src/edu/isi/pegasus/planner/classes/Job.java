@@ -796,7 +796,8 @@ public class Job extends Data implements GraphNodeContent{
             this.addCredentialType( site, CredentialHandler.TYPE.s3 );
         }
         else if( url.startsWith( "gs" ) ){
-            this.addCredentialType( site, CredentialHandler.TYPE.gs );
+        	this.addCredentialType( site, CredentialHandler.TYPE.boto );
+            this.addCredentialType( site, CredentialHandler.TYPE.googlep12 );
         }
         else if( url.startsWith( "irods" ) ){
             this.addCredentialType( site, CredentialHandler.TYPE.irods  );

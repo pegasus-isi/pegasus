@@ -929,7 +929,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
 
             <para><ulink url="https://cloud.google.com/storage/docs/authentication#service_accounts">https://cloud.google.com/storage/docs/authentication#service_accounts</ulink></para>
 
-            <para>Download the credential in PKCS12 format, and then use "gsutil congfig -e" to convert the credential to a .boto file. For example:</para>
+            <para>Download the credential in PKCS12 format, and then use "gsutil congfig -e" to generate a .boto file. For example:</para>
 
             <programlisting>
 $ gsutil config -e
@@ -952,11 +952,14 @@ Boto config file "/home/username/.boto" created. If you need to use a
 proxy to access the Internet please see the instructions in that file.
             </programlisting>
 
-            <para>Pegasus has to be told where to find the .boto file as created by gsutil. For the file to be picked
+            <para>Pegasus has to be told where to find both the .boto file as well as the PKCS12 file. For the files to be picked
 			up by the workflow, set 
-			the <varname>BOTO_CONFIG</varname> profile to the location of 
-			the file. Site catalog example:</para>
-			<programlisting>&lt;profile namespace=&quot;pegasus&quot; pegasus=&quot;BOTO_CONFIG&quot; &gt;/home/user/.boto&lt;/profile&gt;</programlisting>
+			the <varname>BOTO_CONFIG</varname> and <varname>GOOGLE_PKCS12</varname> profiles 
+			for the storage site. Site catalog example:</para>
+			<programlisting>
+&lt;profile namespace=&quot;pegasus&quot; pegasus=&quot;BOTO_CONFIG&quot; &gt;/home/user/.boto&lt;/profile&gt;
+&lt;profile namespace=&quot;pegasus&quot; pegasus=&quot;GOOGLE_PKCS12&quot; &gt;/home/user/.google-service-account.p12&lt;/profile&gt;
+</programlisting>
 		</section>
 		<section id="irods_cred">
 			<title>iRods Password</title>

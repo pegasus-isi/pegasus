@@ -20,6 +20,8 @@ import edu.isi.pegasus.common.credential.impl.Irods;
 import edu.isi.pegasus.common.credential.impl.Proxy;
 import edu.isi.pegasus.common.credential.impl.S3CFG;
 import edu.isi.pegasus.common.credential.impl.Ssh;
+import edu.isi.pegasus.common.credential.impl.BotoConfig;
+import edu.isi.pegasus.common.credential.impl.GoogleP12;
 
 import edu.isi.pegasus.planner.classes.Profile;
 
@@ -416,6 +418,8 @@ public class Pegasus extends Namespace {
     private static final String SSH_PRIVATE_KEY_VARIABLE = Ssh.SSH_PRIVATE_KEY_VARIABLE.toLowerCase();
     private static final String IRODSENVFILE = Irods.IRODSENVFILE.toLowerCase();
     private static final String X509_USER_PROXY_KEY = Proxy.X509_USER_PROXY_KEY.toLowerCase();
+    private static final String BOTOCONFIG = BotoConfig.BOTO_CONFIG_FILE_VARIABLE.toLowerCase();
+    private static final String GOOGLEP12 = GoogleP12.GOOGLEP12_FILE_VARIABLE.toLowerCase();
     
     /**
      * Static Handle to the sum aggregator.
@@ -529,7 +533,8 @@ public class Pegasus extends Namespace {
                 if ( 
                      (key.compareTo(BUNDLE_STAGE_IN_KEY) == 0) ||
                      (key.compareTo(BUNDLE_STAGE_OUT_KEY) == 0 ) ||
-                     (key.compareTo( BUNDLE_REMOTE_STAGE_IN_KEY) == 0 )) {
+                     (key.compareTo( BUNDLE_REMOTE_STAGE_IN_KEY) == 0 ) ||
+                     (key.compareTo(BOTOCONFIG) == 0)) {
                     res = VALID_KEY;
                 }
                 else if( key.compareTo(DEPRECATED_BUNDLE_STAGE_IN_KEY) == 0){
@@ -577,7 +582,8 @@ public class Pegasus extends Namespace {
                 if (key.compareTo( GROUP_KEY ) == 0 ||
                     key.compareTo( GRIDSTART_KEY ) == 0 ||
                     key.compareTo( GRIDSTART_PATH_KEY ) == 0 ||
-                    key.compareTo( GRIDSTART_ARGUMENTS_KEY ) == 0 ) {
+                    key.compareTo( GRIDSTART_ARGUMENTS_KEY ) == 0 ||
+                    key.compareTo( GOOGLEP12 ) == 0) {
                     res = VALID_KEY;
                 }
                 else {

@@ -7,6 +7,7 @@ pegasus.spec
 .project
 .pydevproject
 .externalToolBuilders
+.settings
 var
 .idea
 

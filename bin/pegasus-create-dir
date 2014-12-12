@@ -36,6 +36,7 @@ import string
 import stat
 import time
 from collections import deque
+import ConfigParser
 
 try:
     # Python 3.0 and later
@@ -554,6 +555,27 @@ def gs(url):
     if key in os.environ:
         os.environ["BOTO_CONFIG"] = os.environ[key]
 
+    key = "GOOGLE_PKCS12_" + url.site
+    if key in os.environ:
+        os.environ["GOOGLE_PKCS12"] = os.environ[key]
+        
+    # we need to update the boto config file to specify the full
+    # path to the PKCS12 file
+    try:
+        tmp_fd, tmp_name = tempfile.mkstemp(prefix="pegasus-transfer-", suffix=".lst")
+        tmp_file = os.fdopen(tmp_fd, "w+b")
+    except:
+      raise RuntimeError("Unable to create tmp file for gs boto file")
+    try:
+        conf = ConfigParser.SafeConfigParser()
+        conf.read(os.environ["BOTO_CONFIG"])
+        conf.set("Credentials", "gs_service_key_file", os.environ["GOOGLE_PKCS12"])
+        conf.write(tmp_file)
+        tmp_file.close()
+    except Exception, err:
+        logger.error(err)
+        raise RuntimeError("Unable to convert boto config file")
+
     # extract the bucket part
     re_bucket = re.compile(r'(gs://[\w-]+/)[/\w-]*')
     bucket = url.url()
@@ -564,11 +586,13 @@ def gs(url):
         raise RuntimeError("Unable to parse bucket: %s" % (bucket))
 
     # first ensure that the bucket exists
-    cmd = "gsutil mb %s" %(bucket)
+    cmd = "BOTO_CONFIG=%s gsutil mb %s" %(tmp_name, bucket)
     try:
         myexec(cmd, 60, True)
     except Exception, err:
         logger.warn("mkdir failed - possibly due to the bucket already existing, so continuing...")
+        
+    os.unlink(tmp_name)
 
 
 def create_dir(url):

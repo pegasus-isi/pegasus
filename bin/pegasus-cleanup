@@ -36,6 +36,7 @@ import string
 import stat
 import time
 from collections import deque
+import ConfigParser
 
 try:
     # Python 3.0 and later
@@ -558,13 +559,34 @@ def gs(urls):
     if tool_info['gsutil']['full_path'] == None:
         raise RuntimeError("Unable to do S3 transfers becuase pegasus-s3 could not be found")
 
+    key = "BOTO_CONFIG_" + urls[0].sitename
+    if key in os.environ:
+        os.environ["BOTO_CONFIG"] = os.environ[key]
+
+    key = "GOOGLE_PKCS12_" + urls[0].sitename
+    if key in os.environ:
+        os.environ["GOOGLE_PKCS12"] = os.environ[key]
+        
+    # we need to update the boto config file to specify the full
+    # path to the PKCS12 file
+    try:
+        tmp_fd, tmp_name = tempfile.mkstemp(prefix="pegasus-transfer-", suffix=".lst")
+        tmp_file = os.fdopen(tmp_fd, "w+b")
+    except:
+      raise RuntimeError("Unable to create tmp file for gs boto file")
+    try:
+        conf = ConfigParser.SafeConfigParser()
+        conf.read(os.environ["BOTO_CONFIG"])
+        conf.set("Credentials", "gs_service_key_file", os.environ["GOOGLE_PKCS12"])
+        conf.write(tmp_file)
+        tmp_file.close()
+    except Exception, err:
+        logger.error(err)
+        raise RuntimeError("Unable to convert boto config file")
+
     for i, url in enumerate(urls):
         
-        key = "BOTO_CONFIG_" + url.sitename
-        if key in os.environ:
-            os.environ["BOTO_CONFIG"] = os.environ[key]
-        
-        cmd = "gsutil rm -a"
+        cmd = "BOTO_CONFIG=%s gsutil rm -a" %(tmp_name)
         if options.ignore_failures or options.recursive:
             cmd += " -f"
         if options.recursive:
@@ -579,7 +601,9 @@ def gs(urls):
                 logger.warn(err)
             else:
                 logger.error(err)
+                os.unlink(tmp_name)
                 raise
+        os.unlink(tmp_name)
         
         
 def urls_groupable(a, b):
