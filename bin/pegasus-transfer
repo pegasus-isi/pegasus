@@ -783,14 +783,7 @@ class HTTPHandler(TransferHandlerBase):
         prepare_local_dir(os.path.dirname(transfer.dst_path))
         
         # try wget first, then curl
-        if tools.find("curl", "--version", " ([0-9]+\.[0-9]+)") is not None:
-            cmd = tools.full_path('curl')
-            if not logger.isEnabledFor(logging.DEBUG):
-                cmd += " -s -S"
-            cmd += " --insecure" + \
-                   " -o '" + transfer.dst_path + "'" + \
-                   " '" + transfer.src_url() + "'"
-        elif tools.find("wget", "--version", "([0-9]+\.[0-9]+)") is not None:
+        if tools.find("wget", "--version", "([0-9]+\.[0-9]+)") is not None:
             cmd = tools.full_path('wget')
             if logger.isEnabledFor(logging.DEBUG):
                 cmd += " -v"
@@ -799,9 +792,16 @@ class HTTPHandler(TransferHandlerBase):
             cmd += " --no-cookies --no-check-certificate" + \
                    " -O '" + transfer.dst_path + "'" + \
                    " '" + transfer.src_url() + "'"
+        elif tools.find("curl", "--version", " ([0-9]+\.[0-9]+)") is not None:
+            cmd = tools.full_path('curl')
+            if not logger.isEnabledFor(logging.DEBUG):
+                cmd += " -s -S"
+            cmd += " --insecure" + \
+                   " -o '" + transfer.dst_path + "'" + \
+                   " '" + transfer.src_url() + "'"
         else:
             raise RuntimeError("Unable to do http/https transfers because" +
-                               " neither curl nor wget could not be found")
+                               " neither wget nor curl could not be found")
             
         try:
             tc = TimedCommand(cmd)
