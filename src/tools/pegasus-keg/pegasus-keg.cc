@@ -503,8 +503,8 @@ helpMe( const char *ptr, unsigned long timeout, unsigned long spinout,
     printf( " -t to\tsleep for 'to' seconds during execution, default %lu\n", timeout );
     printf( " -T to\tspin for 'to' seconds during execution, default %lu\n", spinout );
     printf( " -l fn\tappend own information atomically to a logfile\n" );
-    printf( " -o ..\tenumerate space-separated list output files to create\n
-        Accept also '<filename>=<filesize><data_unit>' form, where <data_unit> 
+    printf( " -o ..\tenumerate space-separated list output files to create\n\
+        Accept also '<filename>=<filesize><data_unit>' form, where <data_unit>\
         is a character supported by '-u' switch.\n" );
     printf( " -i ..\tenumerate space-separated list input to read and copy\n" );
     printf( " -G ..\tenumerate space-separated list of output file sizes\n" );
