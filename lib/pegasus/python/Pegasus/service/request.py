@@ -161,7 +161,7 @@ def before():
     #
 
     # Root user is off limits.
-    """if g.username == 'root':
+    if g.username == 'root':
         log.error('Accessing root user info. is not allowed')
         # If the user has logged in as root, then ask user to login as a regular user.
         # If the non-root logged in user is attempting to access root user's data, then return 403 FORBIDDEN
@@ -169,7 +169,7 @@ def before():
             return basic_auth_response()
         else:
             abort(403)
-    """
+
     user_info = g.user
     print g.username != g.user.username
     if g.username != g.user.username:
