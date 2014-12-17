@@ -84,6 +84,26 @@ def is_user_valid(username):
         return False
 
 
+def is_user_an_admin(username):
+    """
+        Check if user ia a valid admin user.
+    """
+    admin_users = app.config['ADMIN_USERS']
+
+    if isinstance(admin_users, str) or isinstance(admin_users, unicode):
+        admin_users = admin_users.strip()
+
+    if admin_users is None or admin_users is False or admin_users == '':
+        return False
+    elif admin_users == '*':
+        return True
+    elif hasattr(admin_users, '__iter__'):
+        return username in admin_users
+    else:
+        log.error('Invalid configuration: ADMIN_USERS is invalid.')
+        abort(500)
+
+
 @app.url_defaults
 def add_username(endpoint, values):
     """
@@ -141,7 +161,7 @@ def before():
     #
 
     # Root user is off limits.
-    if g.username == 'root':
+    """if g.username == 'root':
         log.error('Accessing root user info. is not allowed')
         # If the user has logged in as root, then ask user to login as a regular user.
         # If the non-root logged in user is attempting to access root user's data, then return 403 FORBIDDEN
@@ -149,14 +169,14 @@ def before():
             return basic_auth_response()
         else:
             abort(403)
-
+    """
     user_info = g.user
-
+    print g.username != g.user.username
     if g.username != g.user.username:
         # Is user (g.user.username) allowed to view user (g.username) runs?
-        # TODO Check user's admin privileges.
-        # if g.user.username is not admin
-        log.error("User %s is accessing user %s's runs" % (g.user.username, g.username))
+        if not is_user_an_admin(g.user.username):
+            log.error("User %s is accessing user %s's runs" % (g.user.username, g.username))
+            abort(403)
 
         # Is user a valid system user?
         user_info = is_user_valid(g.username)
