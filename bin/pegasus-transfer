@@ -28,6 +28,7 @@ import math
 import optparse
 import os
 import Queue
+import random
 import re
 import signal
 import stat
@@ -776,7 +777,7 @@ class HTTPHandler(TransferHandlerBase):
 
         # but only allow squid caching for the first try - after that go to
         # the source
-        if attempt > 1 and "http_proxy" in os.environ:
+        if attempt > 2 and "http_proxy" in os.environ:
             logger.info("Disabling HTTP proxy due to previous failures")
             del os.environ['http_proxy']
 
@@ -801,7 +802,7 @@ class HTTPHandler(TransferHandlerBase):
                    " '" + transfer.src_url() + "'"
         else:
             raise RuntimeError("Unable to do http/https transfers because" +
-                               " neither wget nor curl could not be found")
+                               " neither curl nor wget could not be found")
             
         try:
             tc = TimedCommand(cmd)
@@ -1453,12 +1454,10 @@ class TransferSet:
                 t_two.set_dst(transfer.dst_url())
                 t_two.set_dst_sitename(transfer.dst_sitename)
                 try:
-                    success = self._primary_handler.do_transfer(t_one,
-                                                                attempt)
-                    os.chmod(self._tmp_name, 0644)
-                    success = success and \
-                              self._secondary_handler.do_transfer(t_two,
-                                                                  attempt)
+                    success = self._primary_handler.do_transfer(t_one, attempt)
+                    if success:
+                        os.chmod(self._tmp_name, 0644)
+                        success = self._secondary_handler.do_transfer(t_two, attempt)
                 except Exception, e:
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.exception("Exception while doing transfer:")
@@ -1974,10 +1973,12 @@ def main():
             done = True
             break
         
-        # retry failed transfers with a delay
+        # retry failed transfers with a random delay - useful when
+        # large workflows overwhelm data services
         if not failed_q.empty() and attempt_current < attempts_max:
-            time.sleep(10) # do not sleep too long - we want to give quick
-                            # feedback on failures to the workflow
+            d = random.randint(30, 180)
+            logger.debug("Sleeping for the random amount of %d seconds before the next attempt" %(d))
+            time.sleep(d)
         while not failed_q.empty():
             t = failed_q.get()
             t.allow_grouping = False # only allow grouping on the first try
