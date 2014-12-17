@@ -1,6 +1,5 @@
 import os
 import logging
-from optparse import OptionParser
 
 from Pegasus.service import app
 from Pegasus.service.command import Command
