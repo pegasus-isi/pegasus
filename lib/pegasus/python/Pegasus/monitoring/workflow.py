@@ -330,7 +330,7 @@ class Workflow:
         is used for restarting the logging information from where we
         stopped last time.
         """
-        
+
         if self._output_dir is None:
             my_fn = os.path.join(self._run_dir, MONITORD_STATE_FILE)
         else:
@@ -341,7 +341,7 @@ class Workflow:
         except:
             logger.info("cannot open state file %s, continuing without state..." % (my_fn))
             return
-        
+
         try:
             for line in INPUT:
                 # Split the input line in 2, and make the second part an integer
@@ -362,7 +362,7 @@ class Workflow:
                     self._job_counters[my_job] = my_count
         except:
             logger.error("error processing state file %s" % (my_fn))
-        
+
         # Close the file
         try:
             INPUT.close()
@@ -391,7 +391,7 @@ class Workflow:
         except:
             logger.error("cannot open state file %s" % (my_fn))
             return
-        
+
         try:
             # Write first line with the last job_submit_seq used
             OUT.write("monitord_job_sequence %d\n" % (self._job_submit_seq))
@@ -407,7 +407,7 @@ class Workflow:
                 OUT.write("%s %d\n" % (my_job, self._job_counters[my_job]))
         except:
             logger.error("cannot write state to log file %s" % (my_fn))
-        
+
         # Close the file
         try:
             OUT.close()
@@ -452,7 +452,7 @@ class Workflow:
         # Nothing to do if we still haven't caught up with the last instance's progress...
         if self._line < self._previous_processed_line:
             return
- 
+
         if self._output_dir is None:
             my_recover_file = os.path.join(self._run_dir, MONITORD_RECOVER_FILE)
         else:
@@ -1250,7 +1250,7 @@ class Workflow:
         # Send job state event to database
         self.output_to_db("job_inst.main.start", kwargs)
 
-    def db_send_job_end(self, my_job, status=None):
+    def db_send_job_end(self, my_job, status=None, flush_to_stampede=True):
         """
         This function sends to the DB the main.end event
         """
@@ -1299,6 +1299,64 @@ class Workflow:
         else:
             # This is not mandatory, according to the schema
             pass
+
+
+        # Use constant for now... will change it
+        if my_job._main_job_multiplier_factor is not None:
+            kwargs["multiplier_factor"] = str(my_job._main_job_multiplier_factor)
+
+        # Use the job exitcode for now (if the job has a postscript, it will get updated later
+        kwargs["exitcode"] = str(my_job._main_job_exitcode)
+
+        if my_job._sched_id is not None:
+            kwargs["sched__id"] = my_job._sched_id
+        if status is not None:
+            kwargs["status"] = status
+            if status != 0:
+                kwargs["level"] = "Error"
+        else:
+            kwargs["status"] = -1
+            kwargs["level"] = "Error"
+
+        if flush_to_stampede:
+            self.flush_db_send_job_end( my_job, kwargs )
+        else:
+            # PM-793 we cannot load the stdout stderr right now
+            # have to wait for the postscript to finish
+            my_job._deferred_job_end_kwargs = kwargs
+
+
+
+    def flush_db_send_job_end(self, my_job, kwargs):
+        """
+        This function sends to the DB the main.end event
+        Note: this is a soft flush from a monitord to the stampede loader
+        Not the stampede loader, that has a separate mechanism
+        to batch and load events into the database
+        """
+        self.load_stdout_err_in_job_instance( my_job, kwargs )
+        # Send job state event to database
+        self.output_to_db("job_inst.main.end", kwargs)
+
+        # Clean up stdout and stderr, to avoid memory issues...
+        if my_job._deferred_job_end_kwargs is not None:
+            my_job._deferred_job_end_kwargs = None
+
+        if my_job._stdout_text is not None:
+            my_job._stdout_text = None
+        if my_job._stderr_text is not None:
+            my_job._stderr_text = None
+        return
+
+
+    def load_stdout_err_in_job_instance( self, my_job, kwargs ):
+        """
+        Loads the information from the job stdout and stderr into the job_instance event's kwargs
+
+        :param my_job:
+        :param kwargs:
+        :return:
+        """
         if my_job._output_file is not None:
             if my_job._kickstart_parsed or my_job._has_rotated_stdout_err_files:
                 # Only use rotated filename for job with kickstart output
@@ -1334,31 +1392,7 @@ class Workflow:
                     # Put everything in
                     kwargs["stderr__text"] = my_job._stderr_text
 
-        # Use constant for now... will change it
-        if my_job._main_job_multiplier_factor is not None:
-            kwargs["multiplier_factor"] = str(my_job._main_job_multiplier_factor)
 
-        # Use the job exitcode for now (if the job has a postscript, it will get updated later
-        kwargs["exitcode"] = str(my_job._main_job_exitcode)
-
-        if my_job._sched_id is not None:
-            kwargs["sched__id"] = my_job._sched_id
-        if status is not None:
-            kwargs["status"] = status
-            if status != 0:
-                kwargs["level"] = "Error"
-        else:
-            kwargs["status"] = -1
-            kwargs["level"] = "Error"
-
-        # Send job state event to database
-        self.output_to_db("job_inst.main.end", kwargs)
-
-        # Clean up stdout and stderr, to avoid memory issues...
-        if my_job._stdout_text is not None:
-            my_job._stdout_text = None
-        if my_job._stderr_text is not None:
-            my_job._stderr_text = None
 
     def db_send_task_start(self, my_job, task_type, task_id=None, invocation_record=None):
         """
@@ -1714,7 +1748,7 @@ class Workflow:
                     # Take care of invocation-level notifications
                     if self.check_notifications() == True and self._notifications_manager is not None:
                         self._notifications_manager.process_invocation_notifications(self, my_job, my_task_id, record)
-	
+
                     # Send task information to the database
                     self.db_send_task_start(my_job, "MAIN_JOB", my_task_id, record)
                     self.db_send_task_end(my_job, "MAIN_JOB", my_task_id, record)
@@ -1763,7 +1797,7 @@ class Workflow:
                             # Take care of invocation-level notifications
                             if self.check_notifications() == True and self._notifications_manager is not None:
                                 self._notifications_manager.process_invocation_notifications(self, my_job, my_task_id, record)
-	
+
                             # Ok, it all validates, send task information to the database
                             self.db_send_task_start(my_job, "MAIN_JOB", my_task_id, record)
                             self.db_send_task_end(my_job, "MAIN_JOB", my_task_id, record)
@@ -1973,10 +2007,15 @@ class Workflow:
             # Not generating events and notifcations, nothing else to do
             return
 
+        # PM-793 only parse job output here if a postscript is NOT associated with
+        # the job in the .dag file
+        # OR we are in the PMC only mode where there are no postscripts associated
+        parse_job_output_on_job_success_failure = not self.job_has_postscript(jobid) or self._is_pmc_dag
+
         # Parse the kickstart output file, also send mainjob tasks, if needed
         if job_state == "JOB_SUCCESS" or job_state == "JOB_FAILURE":
             # Main job has ended
-            if not self.job_has_postscript(jobid) or self._is_pmc_dag:
+            if parse_job_output_on_job_success_failure:
                 # PM-793 only parse job output here if a postscript is NOT associated with
                 # the job in the .dag file
                 # OR we are in the PMC only mode where there are no postscripts associated
@@ -2009,6 +2048,12 @@ class Workflow:
             #PM-793 we parse the job.out and .err files when postscript finishes
             self.parse_job_output(my_job, job_state)
 
+            # check to see if there is a deferred job_inst.main.end event that
+            # has to be sent to the database
+            if( my_job._deferred_job_end_kwargs is not None ):
+                self.load_stdout_err_in_job_instance( my_job, my_job._deferred_job_end_kwargs )
+                self.flush_db_send_job_end(my_job, my_job._deferred_job_end_kwargs )
+
             # POST script finished
             self.db_send_task_start(my_job, "POST_SCRIPT")
             self.db_send_task_end(my_job, "POST_SCRIPT")
@@ -2038,7 +2083,7 @@ class Workflow:
             # PM-704 and send the job end event to record failure
             # in addition to the brief
             self.db_send_job_brief(my_job, "pre.end", -1)
-            self.db_send_job_end(my_job, -1 )
+            self.db_send_job_end(my_job, -1, True )
         elif job_state == "SUBMIT":
             self.db_send_job_brief(my_job, "submit.start")
             self.db_send_job_brief(my_job, "submit.end", 0)
@@ -2066,16 +2111,16 @@ class Workflow:
         elif job_state == "JOB_TERMINATED":
             self.db_send_job_brief(my_job, "main.term", 0)
         elif job_state == "JOB_SUCCESS":
-            self.db_send_job_end(my_job, 0)
+            self.db_send_job_end( my_job, 0, parse_job_output_on_job_success_failure )
         elif job_state == "JOB_FAILURE":
-            self.db_send_job_end(my_job, -1)
+            self.db_send_job_end(my_job, -1, parse_job_output_on_job_success_failure)
         elif job_state == "JOB_ABORTED":
             #job abort should trigger a job failure to account for case
             #when no postscript is associated and failure does not get
             #captured.
             my_job._main_job_exitcode = 1
             self.db_send_job_brief( my_job, "abort.info")
-            self.db_send_job_end(my_job, -1 );
+            self.db_send_job_end(my_job, -1, True );
         elif job_state == "JOB_HELD":
             self.db_send_job_brief(my_job, "held.start")
         elif job_state == "JOB_EVICTED":
