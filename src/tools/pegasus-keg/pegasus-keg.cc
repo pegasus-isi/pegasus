@@ -877,6 +877,7 @@ main( int argc, char *argv[] )
                 if ( filesize != NULL )
                 {
                     memcpy( filename, iox[2][i], sizeof(char) * ( filesize - iox[2][i] ) );
+                    filename[( filesize - iox[2][i] )] = '\0';
 
                     out = fopen( filename, "w" );
 
