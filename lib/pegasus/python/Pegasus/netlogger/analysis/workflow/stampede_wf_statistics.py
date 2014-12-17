@@ -558,7 +558,7 @@ class StampedeWorkflowStatistics(SQLAlchemyInit, DoesLogging):
             self._time_filter_mode = filter
             self.log.debug('set_time_filter', msg='Setting filter to: %s' % filter)
         except:
-            self._job_filter_mode = 'month'
+            self._time_filter_mode = 'month'
             self.log.error('set_time_filter', msg='Unknown time filter %s - setting to month' % filter)
 
     def set_host_filter(self, host=None):
