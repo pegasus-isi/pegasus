@@ -146,6 +146,13 @@ dax job may require
     AS a result, because of a typo in the properties file planner failed with NPE. 
     More details at https://jira.isi.edu/browse/PM-799
 
+11) pegasus-statistics output padding
+
+    Value padding is done only for text output files so they are human
+    readable. However, due to a bug the value padding computation were
+    being done for CSV file as well at one point in code. This caused an
+    exception when output filetype for job statistics was csv 
+
 
 ===============================
 Release Notes for PEGASUS 4.4.0
