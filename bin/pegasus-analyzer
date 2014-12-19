@@ -1088,13 +1088,23 @@ def analyze_db(config_properties):
                     print
                 print
 
+                some_tasks_failed = False
+                for my_task in my_tasks:
+                    #PM-798 we want to detect if some tasks failed or not
+                    if my_task[0] < -1:
+                        # Skip only post script tasks. Pre script invocations have task_submit_seq as -1
+                        continue
+                    some_tasks_failed = some_tasks_failed or ( my_task[1] != 0 )
+
+
                 # Now, print task information
                 for my_task in my_tasks:
                     if my_task[0] < -1:
                         # Skip only post script tasks. Pre script invocations have task_submit_seq as -1
                         continue
-                    if my_task[1] == 0:
-                        # Skip tasks that succeeded
+
+                    if my_task[1] == 0 and some_tasks_failed:
+                        # Skip tasks that succeeded only if we know some tasks did fail
                         continue
 
                     # Got a task with a non-zero exitcode
