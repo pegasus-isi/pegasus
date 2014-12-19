@@ -129,8 +129,17 @@ dax job may require
     between the leaf cleanup job and the subdax jobs. 
  
     More details at https://jira.isi.edu/browse/PM-795
- 
-9)  pegasus-analyzer shows job stderr for failed pegasus-lite jobs
+
+9)  pegasus-analyzer did not show planner prescript log for failed subdax jobs 
+
+    For prescript failures for sub dax jobs ( i.e the failure of
+    planning operation on the sub workflow ), pegasus-analyzer never
+    showed the content of the log. It only pointed to the location of
+    the log in the submit directory. This is now fixed. 
+
+    https://jira.isi.edu/browse/PM-808
+
+10)  pegasus-analyzer shows job stderr for failed pegasus-lite jobs
 
     When a Pegasus Lite job fails, pegasus-analyzer showed stderr from
     both the Kickstart record and the job stderr. This was pretty
@@ -141,12 +150,12 @@ dax job may require
  
     More details at https://jira.isi.edu/browse/PM-798
  
-10) Planner did not validate pegasus.data.configuration value.
+11) Planner did not validate pegasus.data.configuration value.
  
     AS a result, because of a typo in the properties file planner failed with NPE. 
     More details at https://jira.isi.edu/browse/PM-799
 
-11) pegasus-statistics output padding
+12) pegasus-statistics output padding
 
     Value padding is done only for text output files so they are human
     readable. However, due to a bug the value padding computation were
