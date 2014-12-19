@@ -1159,8 +1159,9 @@ def analyze_db(config_properties):
                                 print_console( )
 
                         # Now print the stderr output from the .err file
-                        if my_info.stderr_text.strip("\n\t \r") != "" and my_print_job_stderr:
+                        if my_info.stderr_text.strip("\n\t \r") != "" and ( my_print_job_stderr or my_exitcode == 0 ):
                             # Something to display
+                            # if task exitcode is 0, it should indicate PegasusLite case compute job succeeded but stageout failed
                             print_console( ("Task #" + str(my_task[0]) + " - " + str(my_task[4]) + " - " + str(my_task[5]) + " - stderr").center(80, '-') )
                             print_console()
                             print_console( my_info.stderr_text )
