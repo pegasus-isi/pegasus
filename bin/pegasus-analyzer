@@ -1087,13 +1087,23 @@ def analyze_db(config_properties):
                     print
                 print
 
+                some_tasks_failed = False
+                for my_task in my_tasks:
+                    #PM-798 we want to detect if some tasks failed or not
+                    if my_task[0] < -1:
+                        # Skip only post script tasks. Pre script invocations have task_submit_seq as -1
+                        continue
+                    some_tasks_failed = some_tasks_failed or ( my_task[1] != 0 )
+
+
                 # Now, print task information
                 for my_task in my_tasks:
                     if my_task[0] < -1:
                         # Skip only post script tasks. Pre script invocations have task_submit_seq as -1
                         continue
-                    if my_task[1] == 0:
-                        # Skip tasks that succeeded
+
+                    if my_task[1] == 0 and some_tasks_failed:
+                        # Skip tasks that succeeded only if we know some tasks did fail
                         continue
 
                     # Got a task with a non-zero exitcode
@@ -1158,8 +1168,9 @@ def analyze_db(config_properties):
                                 print_console( )
 
                         # Now print the stderr output from the .err file
-                        if my_info.stderr_text.strip("\n\t \r") != "" and my_print_job_stderr:
+                        if my_info.stderr_text.strip("\n\t \r") != "" and ( my_print_job_stderr or my_exitcode == 0 ):
                             # Something to display
+                            # if task exitcode is 0, it should indicate PegasusLite case compute job succeeded but stageout failed
                             print_console( ("Task #" + str(my_task[0]) + " - " + str(my_task[4]) + " - " + str(my_task[5]) + " - stderr").center(80, '-') )
                             print_console()
                             print_console( my_info.stderr_text )
