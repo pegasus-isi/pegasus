@@ -1,4 +1,152 @@
-$Id$
+$Id
+===============================
+Release Notes for PEGASUS 4.4.1
+===============================
+
+We are happy to annouce the release of Pegasus 4.4.1. Pegasus 4.4.1 is
+a minor release, which contains minor enhancements and fixes bugs to
+Pegasus 4.4.0 release.  
+ 
+Enhancements 
+--------------
+
+1) Leaf cleanup job failures don't trigger workflow failures
+ 
+2) Finer grained capturing of GridFTP errors 
+
+   Moved to only ignore common failures of GridFTP removals, instead
+   of ignoring all errors 
+ 
+3) pegasus-transfer threading enhancements
+
+   Allow two retrie with threading before falling back on
+   single-threaded transfers. This prevents pegasus-transfer from
+   overwhelming remote file servers when failures happen. 
+
+4) Support for MPI Jobs when submitting using Glite to PBS
+
+   For user specified MPI jobs in the DAX, the only way to ensure that
+   the MPI job launches in the right directory through GLITE and blahp
+   is to have a wrapper around the user mpi job and refer to that in
+   the transformation catalog. The wrapper should cd in to the
+   directory set by Pegasus in the job's environment. The following
+   environment variable is set _PEGASUS_SCRATCH_DIR 
+ 
+5) Updated quoting support for glite jobs
+ 
+   Quoting in the blahp layer in Condor for glite jobs is
+   broken. There were fixes made to the planner and
+   pbs_loca_submit_attributes.sh files such that env. var values can
+   contain spaces or double quotes.  
+   
+   The fix relies on users to put the pbs_local_submit_attributes.sh
+   from the pegasus distribution to the condor glite bin directory.  
+
+   More details at https://jira.isi.edu/browse/PM-802
+ 
+6) pegasus-s3 now has support for copying objects larger than 5GB
+ 
+7) pegasus-tc-converter code was cleaned up . support for database
+    backed TC was dropped. 
+ 
+8) The planner now complaisn for deep LFN's when using condor file transfers
+ 
+9) The planner stack trace is enabled for errors with a single -v (
+i.e INFO messagae level or higher)  
+ 
+More details at https://jira.isi.edu/browse/PM-800
+ 
+
+Bugs Fixed
+--------------
+ 
+1) Change in  how monitord parses job output and error files
+
+   Earlier pegasus-monitord had a race condition, at it tried to parse
+   the .out and .err file when a JOB_FAILURE or JOB_SUCCESS happened,
+   instead of doing it at POST_SCRIPT_SUCCESS or POST_SCRIPT_FAILURE
+   message, if a postscript was associated . This resulted in it
+   detecting empty kickstart output files, as postscript might have
+   moved it before monitord opened a file handle to it. The fix for
+   this , changed the monitord logic to parse files on JOB_FAILURE  or
+   JOB_SUCCESS only if postscript is not associated with the job 
+ 
+   More details at https://jira.isi.edu/browse/PM-793
+
+2) pegasus-monitord did not handle aborted jobs well
+
+   For aborted jobs that failed with signal,  monitord did not parse
+   the  job status . Because of that no corresponding JOB_FAILURE was
+   recorded, and hence the exitcode for the inv.end event is not
+   recorded.  
+
+   https://jira.isi.edu/browse/PM-805
+
+3) A set of portability fixes from the Debian packaging were
+incorporated into pegasus builds. 
+ 
+4) Clusters of size 1 should be allowed when using PMC
+
+   An earlier fix for 4.4.0 allowed single jobs to be clustered using
+   PMC. However, this resulted in regular MPI jobs that should not be
+   clustered, to be clustered also using PMC. The logic was updated to
+   only wrap a single job with PMC if label based clustering is turned
+   on and the job is associated with a label.  
+
+   More details at https://jira.isi.edu/browse/PM-745
+ 
+5) Round robin site selector did not do correct distribution
+ 
+   The selector was not distributing the jobs round robin at each
+   level as it was suppposed to. 
+ More details at https://jira.isi.edu/browse/PM-775
+ 
+6) Based on user configuration, the leaf cleanup jobs tried to delete the
+submit directory for the workflow  
+
+   A user can configure a workflow such that the workflow submit
+   directory and the workflow scratch directory are the same on local
+   site. This can result in stuck workflows if the leaf cleanup jobs
+   are enabled. The planner now throws an error during planning if it
+   detects the directories are the same 
+ 
+   More details at https://jira.isi.edu/browse/PM-773
+ 
+7) pegasus-cleanup needs to add wildcards to s3:// URLs when
+--recursive is used
+   
+   More details at https://jira.isi.edu/browse/PM-790
+ 
+8) leaf cleanup jobs delete directory that a workflow corresponding to
+dax job may require 
+
+    For hierarchical workflows, there maybe a case where the jobs that
+    make up the workflow referred to by the subdax job may run in a
+    child directory of the scratch directory in whcih jobs of top
+    level worklfow are running. With leaf cleanup enabled, the parent
+    scratch directory maybe cleaned before the subdax job has been
+    completed. Fix for this involved, putting in explicit dependencies
+    between the leaf cleanup job and the subdax jobs. 
+ 
+    More details at https://jira.isi.edu/browse/PM-795
+ 
+9)  pegasus-analyzer shows job stderr for failed pegasus-lite jobs
+
+    When a Pegasus Lite job fails, pegasus-analyzer showed stderr from
+    both the Kickstart record and the job stderr. This was pretty
+    confusing as stderr for those jobs are used to log all kinds of
+    PegasusLite stuff, and has usually nothing to do with the
+    failure. To make these jobs easier to debug for our users, we
+    added logic to only show the Kickstart stderr in these cases.  
+ 
+    More details at https://jira.isi.edu/browse/PM-798
+ 
+10) Planner did not validate pegasus.data.configuration value.
+ 
+    AS a result, because of a typo in the properties file planner failed with NPE. 
+    More details at https://jira.isi.edu/browse/PM-799
+
+
 ===============================
 Release Notes for PEGASUS 4.4.0
 ===============================
