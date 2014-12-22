@@ -132,25 +132,7 @@ public class JDBCRCTest {
         jdbcrc.delete("a", new ReplicaCatalogEntry("b", attr));
         c = jdbcrc.lookup("a");
         assertFalse(c.contains(new ReplicaCatalogEntry("b", attr)));
-    }
-
-    @Test
-    public void deleteSpecificMapping() {
-        HashMap attr = new HashMap();
-        attr.put(ReplicaCatalogEntry.RESOURCE_HANDLE, "x");
-        attr.put("name", "value");
-        jdbcrc.insert("a", new ReplicaCatalogEntry("b", attr));
-        
-        HashMap attr2 = new HashMap();
-        attr2.put(ReplicaCatalogEntry.RESOURCE_HANDLE, "x");
-        jdbcrc.delete("a", new ReplicaCatalogEntry("b", attr2));
-        
-        Collection<ReplicaCatalogEntry> c = jdbcrc.lookup("a");
-        assertTrue(c.contains(new ReplicaCatalogEntry("b", attr)));
-        
-        jdbcrc.delete("a", new ReplicaCatalogEntry("b", attr));
-        c = jdbcrc.lookup("a");
-        assertFalse(c.contains(new ReplicaCatalogEntry("b", attr)));
+        assertFalse(c.contains(new ReplicaCatalogEntry("b", attr2)));
     }
     
     @Test
