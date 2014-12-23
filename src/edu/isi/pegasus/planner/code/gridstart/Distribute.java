@@ -99,12 +99,7 @@ public class Distribute implements GridStart {
      * The basename of the distribute executable.
      */
     public static final String EXECUTABLE_BASENAME = "distribute";
-    
-    /**
-     * The +pegasus_site classad key
-     */
-    private static final String RESOURCE_AD_KEY = "+" + ClassADSGenerator.RESOURCE_AD_KEY;
-    
+     
     /**
      * Stores the major version of the planner.
      */
@@ -397,7 +392,7 @@ public class Distribute implements GridStart {
         
         
         //we want want the generated classad to still point to the remote site
-        job.condorVariables.construct( RESOURCE_AD_KEY , job.getSiteHandle() );
+        job.condorVariables.construct( ClassADSGenerator.PLUS_RESOURCE_AD_KEY , job.getSiteHandle() );
         //update the job to run on local site
         //and the style to condor
         job.setSiteHandle( "local" );

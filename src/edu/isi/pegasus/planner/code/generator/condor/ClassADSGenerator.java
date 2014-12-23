@@ -121,6 +121,7 @@ public class ClassADSGenerator {
      * this execution pool.
      */
     public static final String RESOURCE_AD_KEY = "pegasus_site";
+    public static final String PLUS_RESOURCE_AD_KEY = "+" + RESOURCE_AD_KEY;
     
     /**
      * The class ad to designate the size of the clustered jobs.
@@ -198,7 +199,13 @@ public class ClassADSGenerator {
         //the resource on which the job is scheduled
         //PM-796 only generate the resource ad key 
         //if job is not previously associated with it
-        if( !job.condorVariables.containsKey( "+" + ClassADSGenerator.RESOURCE_AD_KEY)){
+        String plusResourceKey = ClassADSGenerator.PLUS_RESOURCE_AD_KEY;
+        if( job.condorVariables.containsKey( plusResourceKey )){
+            //pick the one pre populated
+            writer.println(generateClassAdAttribute( ClassADSGenerator.RESOURCE_AD_KEY, (String)job.condorVariables.removeKey(  plusResourceKey ) ) );
+        }
+        else{
+            //generate the default one
             writer.println(generateClassAdAttribute( ClassADSGenerator.RESOURCE_AD_KEY, job.getSiteHandle() ) );
         }
         
