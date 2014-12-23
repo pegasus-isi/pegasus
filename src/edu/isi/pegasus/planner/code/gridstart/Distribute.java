@@ -37,6 +37,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 
 import edu.isi.pegasus.planner.code.GridStart;
+import edu.isi.pegasus.planner.code.generator.condor.ClassADSGenerator;
 
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -98,6 +99,11 @@ public class Distribute implements GridStart {
      * The basename of the distribute executable.
      */
     public static final String EXECUTABLE_BASENAME = "distribute";
+    
+    /**
+     * The +pegasus_site classad key
+     */
+    private static final String RESOURCE_AD_KEY = "+" + ClassADSGenerator.RESOURCE_AD_KEY;
     
     /**
      * Stores the major version of the planner.
@@ -389,6 +395,9 @@ public class Distribute implements GridStart {
         //a lot of distribute arguments are picked up via the environment
         ENV distributeENV = this.getEnvironmentForDistribute(job);
         
+        
+        //we want want the generated classad to still point to the remote site
+        job.condorVariables.construct( RESOURCE_AD_KEY , job.getSiteHandle() );
         //update the job to run on local site
         //and the style to condor
         job.setSiteHandle( "local" );

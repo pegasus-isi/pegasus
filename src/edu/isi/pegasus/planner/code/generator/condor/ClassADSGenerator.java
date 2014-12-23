@@ -195,10 +195,13 @@ public class ClassADSGenerator {
         //the class of the job
         writer.println(generateClassAdAttribute( ClassADSGenerator.JOB_CLASS_AD_KEY, job.getJobType() ) );
 
-
         //the resource on which the job is scheduled
-        writer.println(generateClassAdAttribute( ClassADSGenerator.RESOURCE_AD_KEY, job.getSiteHandle() ) );
-
+        //PM-796 only generate the resource ad key 
+        //if job is not previously associated with it
+        if( !job.condorVariables.containsKey( "+" + ClassADSGenerator.RESOURCE_AD_KEY)){
+            writer.println(generateClassAdAttribute( ClassADSGenerator.RESOURCE_AD_KEY, job.getSiteHandle() ) );
+        }
+        
         //add the pegasus value if defined.
         String value = (String)job.vdsNS.getStringValue( Pegasus.RUNTIME_KEY );
         //else see if globus maxwalltime defined
