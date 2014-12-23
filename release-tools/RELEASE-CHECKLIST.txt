@@ -17,10 +17,9 @@ NOTE: Do not copy and paste the commands below without double checking.
 
        ant doc
 
-3.  Copy and check the geneated PDFs and man pages in:
+3.  Check in the geneated man pages:
 
-       cp dist/pegasus-*/share/doc/pegasus/html/*.pdf doc/
-       git commit -a -m "Updated man pages PDFs"
+       git commit -a -m "Updated man pages"
 
 4.  Set the version number in build.properties and commit:
 
@@ -40,11 +39,12 @@ NOTE: Do not copy and paste the commands below without double checking.
 
        git checkout master
        git merge --no-commit N.M
-       git commit -m "Merged 4.2"
+    (edit build.properties)
+       git commit -a -m "Merged N.M"
 
-8.  Build using the NMI system.
+8.  git push --tags
 
-9.  Copy the build binaries from nightlies to their final place.
+9.  Build with Bamboo
 
 10. Build APT repo. First copy the debs into their final place in 
     the apt tree. Then run update-pegasus-apt-repo on a Debian
