@@ -69,6 +69,7 @@ import java.io.IOException;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.InputStream;
+import java.io.StringWriter;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -632,14 +633,20 @@ public class CondorGenerator extends Abstract {
 
         // handle Condor variables
         handleCondorVarForJob( job );
-        writer.print( job.condorVariables );
 
         //write the classad's that have the information regarding
         //which Pegasus super node is a node part of, in addition to the
         //release version of Chimera/Pegasus, the jobClass and the
         //workflow id
-        ClassADSGenerator.generate( writer, dag, job );
-
+        StringWriter classADWriter = new StringWriter();
+        PrintWriter pwClassADWriter = new PrintWriter( classADWriter );
+        ClassADSGenerator.generate( pwClassADWriter, dag, job );
+        
+        //PM-796 we print all the condor variables after the classad
+        //generator has generated the user classads
+        writer.print( job.condorVariables );
+        writer.print( classADWriter.getBuffer() );
+        
         // DONE
         fragment = new StringBuffer();
 
