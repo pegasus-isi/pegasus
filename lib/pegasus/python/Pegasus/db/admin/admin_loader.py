@@ -29,7 +29,7 @@ class AdminDB(object):
         self._dbg = debug
         
         homedir = os.getenv("HOME", None)
-        self.dashConnString = os.path.join(homedir, "pegasus", "workflow.db")
+        self.dashConnString = os.path.join(homedir, ".pegasus", "workflow.db")
         self.connection = None
         
         try:
