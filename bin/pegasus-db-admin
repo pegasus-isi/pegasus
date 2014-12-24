@@ -198,18 +198,10 @@ def check(args):
         help = "Specify the properties file to use. This overrides all other property files.")
         
     options, args = parser.parse_args(args)
-    
-    db = DashboardDB(options.config_properties, VERBOSE, DEBUG)
-    data = db.current_version()
-    
-    print pegasus_current_version
+       
     ver = re.search('(\d+)\.(\d+)\.(\d+)', pegasus_current_version).group()
-    print ver
     verF = COMPATIBILITY[ver]
-    
-    #verF = CURRENT_DB_VERSION
-    #ver = next(reversed(COMPATIBILITY))
-    
+        
     if len(args) > 0:
         ver = args[0]
         if ver not in COMPATIBILITY:
@@ -218,6 +210,9 @@ def check(args):
             version(["-C"])
             exit(1)
         verF = COMPATIBILITY[ver]
+        
+    db = DashboardDB(options.config_properties, VERBOSE, DEBUG)
+    data = db.current_version()
     
     if (data[0] == verF):
         sys.stdout.write("Your database is compatible with the current Pegasus version: %s.\n" % ver)
