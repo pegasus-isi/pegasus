@@ -15,7 +15,6 @@ class Version(BaseVersion):
                 
 # -------------------------------------------------------------------
     def update(self, force):
-        print 'Updating database to version v%s' % DB_VERSION
                 
         replica_catalog = self.get_property('pegasus.catalog.replica')
         if replica_catalog != "JDBCRC":
@@ -68,7 +67,6 @@ class Version(BaseVersion):
 
 # -------------------------------------------------------------------
     def downgrade(self, force):
-        print 'Downgrading database from version v%s to version v%s' % (DB_VERSION, DB_VERSION - 0.1)
         
         replica_catalog = self.get_property('pegasus.catalog.replica')
         if replica_catalog != "JDBCRC":

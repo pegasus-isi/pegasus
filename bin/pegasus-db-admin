@@ -259,6 +259,12 @@ def downgrade(args):
         vClass.dispose()
         temp -= 0.1
         db.update_version(temp)
+    sys.stdout.write("Database has been successfully downgraded.\n")
+    sys.stdout.write("The current version of the Database is compatible with the following Pegasus versions:\n")
+    for cmd in COMPATIBILITY:
+        if abs(COMPATIBILITY[cmd] - temp) < 0.01:
+            sys.stdout.write(" %s" % cmd)
+    sys.stdout.write("\n")
 
 # ------------------------------------------------------
 def update(args):
@@ -290,8 +296,14 @@ def update(args):
         v = get_class(temp + 0.1, options.config_properties, VERBOSE, DEBUG)
         v.update(options.force)
         v.dispose()
-        temp += 0.1  
+        temp += 0.1
         db.update_version(temp)
+    sys.stdout.write("Database has been successfully updated.\n")
+    sys.stdout.write("The current version of the Database is compatible with the following Pegasus versions:\n")
+    for cmd in COMPATIBILITY:
+        if abs(COMPATIBILITY[cmd] - temp) < 0.01:
+            sys.stdout.write(" %s" % cmd)
+    sys.stdout.write("\n")
 
 # ------------------------------------------------------
 def validate_version(ver):
