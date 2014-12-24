@@ -159,6 +159,12 @@ class JDBCRC(object):
         self._dbg = debug
         self.connection = None
         
+        props = properties.Properties()
+        props.new(config_file=config_properties)
+        replica_catalog = props.property('pegasus.catalog.replica')
+        if replica_catalog != "JDBCRC":
+            return
+        
         rc_info = self.get_rc_info(config_properties)
         url = rc_info["url"]
         url = url.replace("jdbc:", "")
