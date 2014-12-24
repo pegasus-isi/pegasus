@@ -21,40 +21,41 @@ def get_class(version, config_properties, verbose=False, debug=False):
     return klass(config_properties, verbose, debug)
 
 #-------------------------------------------------------------------
-class DashboardDB(object):
+class AdminDB(object):
 
     def __init__(self, config_properties, verbose=False, debug=False):
-
         self.config_properties = config_properties
         self._vbs = verbose
         self._dbg = debug
         
         homedir = os.getenv("HOME", None)
-        self.dashConnString = os.path.join(homedir, ".pegasus", "workflow.db")
+        self.dashConnString = os.path.join(homedir, "pegasus", "workflow.db")
         self.connection = None
         
         try:
             self.connection = lite.connect(self.dashConnString)
             cur = self.connection.cursor()
-            cur.execute("SELECT name FROM sqlite_master "
-                "WHERE type='table' AND name='db_admin'")
-            data = cur.fetchone()
-            if data == None:
-                self.create_admin_table()
+            try:
+                cur.execute("SELECT version_number FROM db_version ORDER BY id DESC")
+                data = cur.fetchone()
+                if len(data) == 0:
+                    self.create_admin_table()
+            except:
+                self.create_admin_table()                
             
         except lite.Error, e:
             raise RuntimeError(e)
-    
+        
     def get_connection(self):
         return self.connection
 
     def current_version(self):
         cur = self.connection.cursor()
         cur.execute("SELECT version_number, version_timestamp "
-            "FROM db_admin ORDER BY id DESC")
+            "FROM db_version ORDER BY id DESC")
         data = cur.fetchone()
         return data
-        
+    
     def execute_update(self, query):
         try:
             cur = self.connection.cursor()
@@ -68,7 +69,7 @@ class DashboardDB(object):
         try:
             cur = self.connection.cursor()
             ts = time.time()
-            cur.execute("INSERT INTO db_admin(version_number, version_timestamp) "
+            cur.execute("INSERT INTO db_version(version_number, version_timestamp) "
                 "VALUES(%.2f, %d)" % (version, ts))
             self.connection.commit()
         except lite.Error, e:
@@ -78,11 +79,11 @@ class DashboardDB(object):
     def create_admin_table(self):
         try:
             cur = self.connection.cursor()
-            cur.execute("CREATE TABLE db_admin ("
+            cur.execute("CREATE TABLE IF NOT EXISTS db_version ("
                 "id                 INTEGER PRIMARY KEY AUTOINCREMENT,"
                 "version_number     NUMERIC(2,1) NOT NULL, "
                 "version_timestamp  NUMERIC(16,6) NOT NULL, "
-                "CONSTRAINT sk_db_admin UNIQUE (version_number, version_timestamp)"
+                "CONSTRAINT sk_db_version UNIQUE (version_number, version_timestamp)"
                 ")")
                 
             version = MIN_VERSION
@@ -94,17 +95,14 @@ class DashboardDB(object):
                     version = temp
                             
             ts = time.time()
-            cur.execute("INSERT INTO db_admin(version_number, version_timestamp) "
+            cur.execute("INSERT INTO db_version(version_number, version_timestamp) "
                 "VALUES(%.2f, %d)" % (version, ts))
             self.connection.commit()
             
         except lite.Error, e:
             self.connection.rollback()
             raise RuntimeError(e)
-        
-    def create_tables(self):
-        stampede_dashboard_loader.Analyzer("sqlite:///" + self.dashConnString)
-    
+
     def close(self):
         if self.connection:
             self.connection.close()
@@ -112,9 +110,45 @@ class DashboardDB(object):
     def history(self):
         cur = self.connection.cursor()
         cur.execute("SELECT version_number, version_timestamp "
-            "FROM db_admin ORDER BY id DESC")
+            "FROM db_version ORDER BY id DESC")
         data = cur.fetchall()
         return data
+
+#-------------------------------------------------------------------
+class DashboardDB(object):
+
+    def __init__(self, config_properties, verbose=False, debug=False):
+
+        self.config_properties = config_properties
+        self._vbs = verbose
+        self._dbg = debug
+        
+        homedir = os.getenv("HOME", None)
+        self.dashConnString = os.path.join(homedir, "pegasus", "workflow.db")
+        self.connection = None
+        
+        try:
+            self.connection = lite.connect(self.dashConnString)
+            
+        except lite.Error, e:
+            raise RuntimeError(e)
+        
+    def execute_update(self, query):
+        try:
+            cur = self.connection.cursor()
+            cur.execute(query)
+            self.connection.commit()
+        except lite.Error, e:
+            self.connection.rollback()
+            raise RuntimeError(e)
+
+        
+    def create_tables(self):
+        stampede_dashboard_loader.Analyzer("sqlite:///" + self.dashConnString)
+    
+    def close(self):
+        if self.connection:
+            self.connection.close()
     
 #-------------------------------------------------------------------
 class JDBCRC(object):

@@ -37,6 +37,7 @@ pegasus_config = os.path.join(bin_dir, "pegasus-config") + " --noeoln --python-e
 lib_ext_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
 pegasus_version = os.path.join(bin_dir, "pegasus-version")
 pegasus_current_version = subprocess.Popen(pegasus_version, stdout=subprocess.PIPE, shell=True).communicate()[0]
+#pegasus_current_version = "4.5.0cvs"
 
 # Insert this directory in our search path
 os.sys.path.insert(0, lib_dir)
@@ -122,8 +123,10 @@ def create(args):
                 sys.stderr.write("    %-8s%s\n" % (dbs, DBS[dbs]))
             exit(1)
         
+        adminDB = AdminDB(options.config_properties, VERBOSE, DEBUG)
         dashboardDB = DashboardDB(options.config_properties, VERBOSE, DEBUG)
-        current_version = float(dashboardDB.current_version()[0])
+        
+        current_version = float(adminDB.current_version()[0])
 
         if name == 'JDBCRC':
             jdbcrc = JDBCRC(options.config_properties, debug=DEBUG)
@@ -162,7 +165,7 @@ def version(args):
         
     options, args = parser.parse_args(args)
         
-    db = DashboardDB(options.config_properties, VERBOSE, DEBUG)
+    db = AdminDB(options.config_properties, VERBOSE, DEBUG)
     dateFormat = '%Y-%m-%d %H:%M:%S'
     
     if options.history:
@@ -211,7 +214,7 @@ def check(args):
             exit(1)
         verF = COMPATIBILITY[ver]
         
-    db = DashboardDB(options.config_properties, VERBOSE, DEBUG)
+    db = AdminDB(options.config_properties, VERBOSE, DEBUG)
     data = db.current_version()
     
     if (data[0] == verF):
@@ -242,7 +245,7 @@ def downgrade(args):
         validate_version(ver)
         verF = float(COMPATIBILITY[ver])
         
-    db = DashboardDB(options.config_properties, VERBOSE, DEBUG)
+    db = AdminDB(options.config_properties, VERBOSE, DEBUG)
     current_version = float(db.current_version()[0])
     
     if current_version <= verF:
@@ -275,7 +278,7 @@ def update(args):
         validate_version(ver)
         verF = float(COMPATIBILITY[ver])
 
-    db = DashboardDB(options.config_properties, VERBOSE, DEBUG)
+    db = AdminDB(options.config_properties, VERBOSE, DEBUG)
     current_version = float(db.current_version()[0])
     
     if current_version >= verF:
