@@ -22,7 +22,9 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
 import edu.isi.pegasus.common.util.FactoryException;
+import edu.isi.pegasus.common.util.FindExecutable;
 import edu.isi.pegasus.common.util.StreamGobbler;
+import edu.isi.pegasus.common.util.StreamGobblerCallback;
 import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
 import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
@@ -668,6 +670,8 @@ public class CPlanner extends Executable{
             mLogger.logEventCompletion();
         }
 
+        checkForDatabaseCompatibility( );
+        
         if ( mPOptions.submitToScheduler() ) {//submit the jobs
             StringBuffer invocation = new StringBuffer();
             //construct the path to the bin directory
@@ -1011,7 +1015,7 @@ public class CPlanner extends Executable{
      * Submits the workflow for execution using pegasus-run, a wrapper around
      * pegasus-submit-dag.
      *
-     * @param invocation    the pegasus run invocation
+     * @param invocation    the pegasus run command
      *
      * @return boolean indicating whether could successfully submit the workflow or not.
      */
@@ -1049,7 +1053,7 @@ public class CPlanner extends Executable{
             result = (status == 0) ?true : false;
         }
         catch(IOException ioe){
-            mLogger.log("IOException while running pegasus-run ", ioe,
+            mLogger.log("IOException while executing pegasus-run ", ioe,
                         LogManager.ERROR_MESSAGE_LEVEL);
         }
         catch( InterruptedException ie){
@@ -1708,10 +1712,10 @@ public class CPlanner extends Executable{
     }
 
     /**
-     * Returns the pegasus-run invocation on the workflow planned.
+     * Returns the pegasus-run command on the workflow planned.
      *
      *
-     * @return  the pegasus-run invocation
+     * @return  the pegasus-run command
      */
     private String getPegasusRunInvocation( ){
         StringBuffer result = new StringBuffer();
@@ -1841,6 +1845,65 @@ public class CPlanner extends Executable{
         Callback cb = ((DAXParser)p).getDAXCallback();
         p.startParser( dax );
         return (ADag)cb.getConstructedObject();
+    }
+
+    /**
+     * Calls out to the pegasus-db-admin tool to check for database compatibility.
+     */
+    private void checkForDatabaseCompatibility() {
+        //find path to pegasus-db-admin
+        String basename = "pegasus-db-admin";
+        File pegasusDBAdmin = FindExecutable.findExec( basename );
+        if( pegasusDBAdmin == null ){
+            throw new RuntimeException( "Unable to find path to " + basename );
+        }
+        
+        //construct arguments for pegasus-db-admin
+        StringBuffer args = new StringBuffer();
+        args.append( "check");
+        String command = pegasusDBAdmin.getAbsolutePath() + " " + args;
+        mLogger.log("Executing  " + command,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            
+        
+        try{
+            //set the callback and run the pegasus-run command
+            Runtime r = Runtime.getRuntime();
+            Process p = r.exec(command );
+
+            //spawn off the gobblers with the already initialized default callback
+            StreamGobbler ips =
+                new StreamGobbler( p.getInputStream(), new DefaultStreamGobblerCallback(
+                                                                   LogManager.CONSOLE_MESSAGE_LEVEL ));
+            StreamGobbler eps =
+                new StreamGobbler( p.getErrorStream(), new DefaultStreamGobblerCallback(
+                                                             LogManager.ERROR_MESSAGE_LEVEL));
+
+            ips.start();
+            eps.start();
+
+            //wait for the threads to finish off
+            ips.join();
+            eps.join();
+
+            //get the status
+            int status = p.waitFor();
+
+            mLogger.log( basename + " exited with status " + status,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+
+            if( status != 0 ){
+                throw new RuntimeException( basename + " failed with non zero exit status " + command );
+            }
+        }
+        catch(IOException ioe){
+            mLogger.log("IOException while executing " + basename, ioe,
+                        LogManager.ERROR_MESSAGE_LEVEL);
+            throw new RuntimeException( "IOException while executing " + command , ioe );
+        }
+        catch( InterruptedException ie){
+            //ignore
+        }
     }
 
     
