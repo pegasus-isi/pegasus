@@ -42,7 +42,7 @@ EOF
 pegasus-plan \
     --conf pegasusrc \
     --sites local \
-    --dir work \
+    --dir work/dags \
     --output-site local \
     --dax outer.dax \
     --submit 
