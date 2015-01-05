@@ -107,9 +107,12 @@ public class XML implements SiteCatalog {
      * @throws SiteCatalogException
      */
     public boolean connect( Properties props ) throws SiteCatalogException{
-        if ( props.containsKey("file") )
+        if ( props.containsKey("file") ){
           return connect( props.getProperty("file") );
-        return false;
+        }
+        
+        //complain for the property not set
+        throw new SiteCatalogException( "Please specify the property " +  SiteCatalog.c_prefix + ".file" + " in your properties file "  );
     } 
 
     /**
@@ -119,14 +122,14 @@ public class XML implements SiteCatalog {
      * 
      * @return true, 
      */
-    public boolean connect( String filename ){
+    public boolean connect( String filename ) throws SiteCatalogException{
         mFilename = filename;
         File f = new File( filename );
         if ( f.exists() && f.canRead() ){    
             return true;
         }
         else{
-            throw new RuntimeException( "Cannot read or access file " + filename );
+            throw new SiteCatalogException( "Cannot read or access file " + filename );
         }
     }
     
