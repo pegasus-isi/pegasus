@@ -13,12 +13,10 @@ class Version(BaseVersion):
     
 # -------------------------------------------------------------------
     def update(self, force):
-        print 'Updating database to version v%s' % DB_VERSION
         self.update_dashboard()
         
 # -------------------------------------------------------------------
     def downgrade(self, force):
-        print 'Downgrading database from version v%s to version v%s' % (DB_VERSION, DB_VERSION - 0.1)
         self.downgrade_dashboard()
 
 # -------------------------------------------------------------------
@@ -85,7 +83,7 @@ class Version(BaseVersion):
     def is_compatible(self):
         try:
             cur = self.db.get_connection().cursor()
-            cur.execute("SELECT * FROM master_workflow")
+            cur.execute("SELECT wf_id FROM master_workflow")
         except:
             return False
         try:

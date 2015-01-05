@@ -133,6 +133,9 @@ class DashboardDB(object):
         except lite.Error, e:
             raise RuntimeError(e)
         
+    def get_connection(self):
+        return self.connection
+        
     def execute_update(self, query):
         try:
             cur = self.connection.cursor()
