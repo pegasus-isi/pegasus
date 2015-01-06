@@ -57,6 +57,7 @@ def index(username):
 
     return render_template('workflow.html', workflows=workflows, counts=totals)
 
+
 @app.route('/u/<username>/root/<root_wf_id>/workflow')
 @app.route('/u/<username>/root/<root_wf_id>/workflow/<wf_id>')
 def workflow(username, root_wf_id, wf_id=None):
@@ -79,6 +80,7 @@ def workflow(username, root_wf_id, wf_id=None):
         return render_template('error/workflow/workflow_details_missing.html')
 
     return render_template('workflow/workflow_details.html', root_wf_id=root_wf_id, wf_id=details.wf_id, workflow=details, counts=counts, statistics=statistics);
+
 
 @app.route('/u/<username>/root/<root_wf_id>/workflow/<wf_id>/sub_workflows/', methods=['GET'])
 def sub_workflows(username, root_wf_id, wf_id):
@@ -115,6 +117,7 @@ def failed_jobs(username, root_wf_id, wf_id):
 
     return render_template('workflow/jobs_failed.xhr.json', count=total_count, filtered=filtered_count, jobs=failed_jobs_list, table_args=args)
 
+
 @app.route('/u/<username>/root/<root_wf_id>/workflow/<wf_id>/jobs/running/', methods=['GET'])
 def running_jobs(username, root_wf_id, wf_id):
     '''
@@ -129,6 +132,7 @@ def running_jobs(username, root_wf_id, wf_id):
         job.exec_job_id = '<a href="' + url_for('job', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id) + '">' + job.exec_job_id + '</a>'
 
     return render_template('workflow/jobs_running.xhr.json', count=total_count, filtered=filtered_count, jobs=running_jobs_list, table_args=args)
+
 
 @app.route('/u/<username>/root/<root_wf_id>/workflow/<wf_id>/jobs/successful/', methods=['GET'])
 def successful_jobs(username, root_wf_id, wf_id):
@@ -145,6 +149,7 @@ def successful_jobs(username, root_wf_id, wf_id):
         job.exec_job_id = '<a href="' + url_for('job', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id) + '">' + job.exec_job_id + '</a>'
 
     return render_template('workflow/jobs_successful.xhr.json', count=total_count, filtered=filtered_count, jobs=successful_jobs_list, table_args=args)
+
 
 
 @app.route('/u/<username>/root/<root_wf_id>/workflow/<wf_id>/job/<job_id>', methods=['GET'])
@@ -174,6 +179,7 @@ def job(username, root_wf_id, wf_id, job_id):
 
     return render_template('workflow/job/job_details.html', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job_id, job=job, job_states=job_states)
 
+
 @app.route('/u/<username>/root/<root_wf_id>/workflow/<wf_id>/job/<job_id>/stdout', methods=['GET'])
 def stdout(username, root_wf_id, wf_id, job_id):
     '''
@@ -188,6 +194,7 @@ def stdout(username, root_wf_id, wf_id, job_id):
         return '<pre>%s</pre>' % utils.unquote(text.stdout_text)
 
 
+
 @app.route('/u/<username>/root/<root_wf_id>/workflow/<wf_id>/job/<job_id>/stderr', methods=['GET'])
 def stderr(username, root_wf_id, wf_id, job_id):
     '''
@@ -200,6 +207,7 @@ def stderr(username, root_wf_id, wf_id, job_id):
         return 'No Standard error for workflow ' + wf_id + ' job-id ' + job_id;
     else:
         return '<pre>%s</pre>' % utils.unquote(text.stderr_text)
+
 
 @app.route('/u/<username>/root/<root_wf_id>/workflow/<wf_id>/job/<job_id>/invocations/successful', methods=['GET'])
 def successful_invocations(username, root_wf_id, wf_id, job_id):
@@ -273,6 +281,7 @@ def time_chart(username, root_wf_id, wf_id):
 
     return render_template('workflow/charts/time_chart.json', root_wf_id=root_wf_id, wf_id=wf_id, time_chart_job=time_chart_job, time_chart_invocation=time_chart_invocation)
 
+
 @app.route('/u/<username>/root/<root_wf_id>/workflow/<wf_id>/charts/gantt_chart', methods=['GET'])
 def gantt_chart(username, root_wf_id, wf_id):
     '''
@@ -281,6 +290,7 @@ def gantt_chart(username, root_wf_id, wf_id):
     dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
     gantt_chart = dashboard.plots_gantt_chart()
     return render_template('workflow/charts/gantt_chart.json', root_wf_id=root_wf_id, wf_id=wf_id, gantt_chart=gantt_chart)
+
 
 @app.route('/u/<username>/root/<root_wf_id>/workflow/<wf_id>/statistics', methods=['GET'])
 def statistics(username, root_wf_id, wf_id):
@@ -333,13 +343,16 @@ def time_stats(username, root_wf_id, wf_id):
 
     return '{}'
 
+
 def __update_timestamp(workflows):
     for workflow in workflows:
         workflow.timestamp = strftime('%a, %d %b %Y %H:%M:%S', localtime(workflow.timestamp))
 
+
 def __update_label_link(workflows):
     for workflow in workflows:
         workflow.dax_label = '<a href="' + url_for('workflow', root_wf_id=workflow.wf_id, wf_uuid=workflow.wf_uuid) + '">' + workflow.dax_label + '</a>'
+
 
 def __get_datatables_args():
     '''
@@ -401,13 +414,16 @@ def __get_datatables_args():
 
     return table_args
 
+
 @app.errorhandler(404)
 def page_not_found(error):
     return render_template('error/404.html')
 
+
 @app.errorhandler(MasterDBNotFoundError)
 def master_database_missing(error):
     return render_template('error/master_database_missing.html')
+
 
 @app.errorhandler(StampedeDBNotFoundError)
 def stampede_database_missing(error):
