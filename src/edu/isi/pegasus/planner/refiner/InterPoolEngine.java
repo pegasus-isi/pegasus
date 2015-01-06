@@ -20,7 +20,6 @@ package edu.isi.pegasus.planner.refiner;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
-import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
@@ -313,12 +312,8 @@ public class InterPoolEngine extends Engine implements Refiner {
                             LogManager.ERROR_MESSAGE_LEVEL );
                 throw new RuntimeException( error.toString() );
             }
+ 
             
-/*           JIRA PM-277 
-            String jm = job.getJobManager();
-            jm = ( (jm == null) || jm.length() == 0 ) ?
-                null : jm;
-*/
             if ( site.length() == 0 ||
                  site.equalsIgnoreCase( SiteSelector.SITE_NOT_FOUND ) ) {
                 error = new StringBuffer();
@@ -328,12 +323,6 @@ public class InterPoolEngine extends Engine implements Refiner {
                 mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL );
                 throw new RuntimeException( error.toString() );
             }
-            
-/*           JIRA PM-277 
-            job.setJobManager( jm == null ?
-                                          getJobManager( site, job.getUniverse() ) :
-                                          jm );
-*/
 
             mLogger.log("Job was mapped to " + job.jobName + " to site " + site,
                         LogManager.DEBUG_MESSAGE_LEVEL);
@@ -357,15 +346,6 @@ public class InterPoolEngine extends Engine implements Refiner {
             }
             */
 
-/*            
-            //modify the jobs if required for worker node execution
-            if( mWorkerNodeExecution ){
-                mSLS.modifyJobForFirstLevelStaging( job,
-                                                    mPOptions.getSubmitDirectory(),
-                                                    mSLS.getSLSInputLFN( job ),
-                                                    mSLS.getSLSOutputLFN( job )   );
-            }
-*/
             //log actions as XML fragment
             try{
                 logRefinerAction(job);
@@ -745,37 +725,6 @@ public class InterPoolEngine extends Engine implements Refiner {
                       (TransformationCatalogEntry) entries.get( PegRandom.getInteger( entries.size() - 1 )):
                       //return the first one
                       (TransformationCatalogEntry) entries.get(0);
-    }
-
-    /**
-     * It returns a jobmanager for the given pool.
-     *
-     * @param site      the name of the pool.
-     * @param universe  the universe for which you need the scheduler on that
-     *                  particular pool.
-     *
-     * @return the jobmanager for that pool and universe.
-     *         null if not found.
-     */
-    private String getJobManager( String site, String universe) {
-        SiteCatalogEntry p = mSiteStore.lookup( site );
-        
-        GridGateway jm = ( p == null )? null : p.selectGridGateway( GridGateway.JOB_TYPE.valueOf( universe ) );
-        String result = ( jm == null ) ? null : jm.getContact( );
-
-
-        if ( result == null) {
-            StringBuffer error = new StringBuffer();
-            error = new StringBuffer();
-            error.append( "Could not find a jobmanager at site (").
-                  append( site ).append( ") for universe " ).
-                  append( universe );
-            mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL );
-            throw new RuntimeException( error.toString() );
-
-        }
-
-        return result;
     }
 
     /**
