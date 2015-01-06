@@ -142,11 +142,6 @@ public class Transfer   implements SLS {
     protected boolean mStageSLSFile;
 
     /**
-     * Boolean to track whether the gridstart used in PegasusLite or not
-     */
-    protected boolean mSeqExecGridStartUsed;
-
-    /**
      * A boolean indicating whether to bypass first level staging for inputs
      */
     private boolean mBypassStagingForInputs;
@@ -184,7 +179,6 @@ public class Transfer   implements SLS {
         mTCHandle   = bag.getHandleToTransformationCatalog();
         mExtraArguments = mProps.getSLSTransferArguments();
         mStageSLSFile = mProps.stageSLSFilesViaFirstLevelStaging();
-        mSeqExecGridStartUsed = mProps.getGridStart().equals( PegasusLite.CLASSNAME );
         mBypassStagingForInputs = mProps.bypassFirstLevelStagingForInputs();
         mPlannerCache = bag.getHandleToPlannerCache();
         mUseSymLinks = mProps.getUseOfSymbolicLinks();

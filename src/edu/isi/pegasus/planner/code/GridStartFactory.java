@@ -419,7 +419,7 @@ public class GridStartFactory {
             
             if( (conf.equalsIgnoreCase( PegasusConfiguration.CONDOR_CONFIGURATION_VALUE) ||
                 conf.equalsIgnoreCase( PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE ) ) &&
-                        propValue != null ){
+                        propValue == null ){
                 //PegasusLite for condorio and nonsharedfs mode
                 //as long as user did not specify explicilty in the properties file
                 return "PegasusLite";
