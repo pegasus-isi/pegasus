@@ -151,7 +151,6 @@ def successful_jobs(username, root_wf_id, wf_id):
     return render_template('workflow/jobs_successful.xhr.json', count=total_count, filtered=filtered_count, jobs=successful_jobs_list, table_args=args)
 
 
-
 @app.route('/u/<username>/root/<root_wf_id>/workflow/<wf_id>/job/<job_id>', methods=['GET'])
 def job(username, root_wf_id, wf_id, job_id):
     '''
@@ -192,7 +191,6 @@ def stdout(username, root_wf_id, wf_id, job_id):
         return 'No stdout for workflow ' + wf_id + ' job-id ' + job_id
     else:
         return '<pre>%s</pre>' % utils.unquote(text.stdout_text)
-
 
 
 @app.route('/u/<username>/root/<root_wf_id>/workflow/<wf_id>/job/<job_id>/stderr', methods=['GET'])
