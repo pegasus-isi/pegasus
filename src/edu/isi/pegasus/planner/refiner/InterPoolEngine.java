@@ -276,16 +276,14 @@ public class InterPoolEngine extends Engine implements Refiner {
 
         //Iterate through the jobs and hand them to
         //the site selector if required
-        String site ;
         for( Iterator<GraphNode> it = dag.jobIterator(); it.hasNext(); i++ ){
             GraphNode node = it.next();
             Job job = ( Job )node.getContent();
-            site  = job.getSiteHandle();
-            mLogger.log( "Setting up site mapping for job "  + job.getName(), 
-                         LogManager.DEBUG_MESSAGE_LEVEL );
-
-            
+           
             //check if the user has specified any hints in the dax
+            incorporateHint(job, "executionPool");
+            
+            /*PM-810 
             if (incorporateHint(job, "executionPool")) {
                 TransformationCatalogEntry entry = lookupTC(job);
                 incorporateProfiles(job, entry );
@@ -294,8 +292,12 @@ public class InterPoolEngine extends Engine implements Refiner {
                 job.setStagingSiteHandle( getStagingSite( job ) );
                 handleExecutableFileTransfers(job, entry);
                 continue;
-            }
+            }*/
  
+            String site  = job.getSiteHandle();
+            mLogger.log( "Setting up site mapping for job "  + job.getName(), 
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            
             if ( site == null ) {
                 error = new StringBuffer();
                 error.append( "Site Selector could not map the job " ).
