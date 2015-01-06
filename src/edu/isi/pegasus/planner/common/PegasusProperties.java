@@ -128,7 +128,6 @@ public class PegasusProperties implements Cloneable {
     public static final String DEFAULT_TRANSFER_STREAMS = "1";
 
     //grid start constants
-    public static final String DEFAULT_GRIDSTART_MODE = "Kickstart";
 
     public static final String DEFAULT_INVOKE_LENGTH = "4000";
 
@@ -1635,12 +1634,11 @@ public class PegasusProperties implements Cloneable {
      * Referred to by the "pegasus.gridstart" property.
      *
      * @return the value specified in the property file,
-     *         else DEFAULT_GRIDSTART_MODE
+     *         else null
      *
-     * @see #DEFAULT_GRIDSTART_MODE
      */
     public String getGridStart(){
-        return mProps.getProperty("pegasus.gridstart",DEFAULT_GRIDSTART_MODE);
+        return mProps.getProperty("pegasus.gridstart" );
     }
 
     /**

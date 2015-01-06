@@ -34,6 +34,7 @@ import edu.isi.pegasus.planner.cluster.JobAggregator;
 import edu.isi.pegasus.planner.code.GridStart;
 import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParser;
 import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParserException;
+import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Globus;
@@ -199,8 +200,13 @@ public class Kickstart implements GridStart {
     /**
      * A boolean indicating whether to have worker node execution or not.
      */
-    boolean mWorkerNodeExecution;
+    //boolean mWorkerNodeExecution;
 
+    /**
+     * handle to PegasusConfiguration
+     */
+    private PegasusConfiguration mPegasusConfiguration;
+    
     /**
      * The handle to the SLS implementor
      */
@@ -268,8 +274,8 @@ public class Kickstart implements GridStart {
 
         mDynamicDeployment =  mProps.transferWorkerPackage();
         
-        mWorkerNodeExecution = mProps.executeOnWorkerNode();
-
+        //mWorkerNodeExecution = mProps.executeOnWorkerNode();
+        mPegasusConfiguration = new PegasusConfiguration( bag.getLogger() );
 
 
         mEnablingPartOfAggregatedJob = false;
@@ -769,7 +775,7 @@ public class Kickstart implements GridStart {
             return gridStartPath;
         }
         else if( mDynamicDeployment &&
-                 job.runInWorkDirectory()  && !mWorkerNodeExecution ){
+                 job.runInWorkDirectory()  && ! mPegasusConfiguration.jobSetupForWorkerNodeExecution(job, mProps) ){
 
             //worker package deployment 
             //pick up the path from the transformation catalog of
