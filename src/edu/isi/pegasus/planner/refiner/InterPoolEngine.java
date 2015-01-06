@@ -101,16 +101,6 @@ public class InterPoolEngine extends Engine implements Refiner {
     private XMLProducer mXMLStore;
 
     /**
-     * The handle to the SLS implementor
-     */
-    private SLS mSLS;
-
-    /**
-     * A boolean indicating whether to have worker node execution or not.
-     */
-    private boolean mWorkerNodeExecution;
-
-    /**
      * Handle to the transformation store that stores the transformation catalog
      * user specifies in the DAX
      */
@@ -133,13 +123,6 @@ public class InterPoolEngine extends Engine implements Refiner {
 
         mTXSelector = null;
         mXMLStore        = XMLProducerFactory.loadXMLProducer( mProps );
-
-        mWorkerNodeExecution = mProps.executeOnWorkerNode();
-        
-        if( mWorkerNodeExecution ){
-            //load SLS
-            mSLS = SLSFactory.loadInstance( mBag );
-        }
 
     }
 
@@ -167,13 +150,6 @@ public class InterPoolEngine extends Engine implements Refiner {
 
         this.mDAXTransformationStore = aDag.getTransformationStore();
         
-        mWorkerNodeExecution = mProps.executeOnWorkerNode();
-
-        if( mWorkerNodeExecution ){
-            //load SLS
-            mSLS = SLSFactory.loadInstance( mBag );
-        }
-
     }
 
     /**
