@@ -59,9 +59,15 @@ public class GridStartFactory {
      */
     public static String[] GRIDSTART_SHORT_NAMES = {
                                            "kickstart",
-                                           "none",
-                                           "seqexec"
+                                           "none"
                                           };
+    /**
+     * The known gridstart implementations.
+     */
+    public static String[] GRIDSTART_IMPLEMENTING_CLASSES = {
+                                                     "Kickstart",
+                                                     "NoGridStart"
+                                                    };
     
     /**
      * The index in the constant arrays for NoGridStart.
@@ -91,13 +97,7 @@ public class GridStartFactory {
     public static final String ALL_POST_SCRIPT_SCOPE = "all";
 
 
-    /**
-     * The known gridstart implementations.
-     */
-    public static String[] GRIDSTART_IMPLEMENTING_CLASSES = {
-                                                     "Kickstart",
-                                                     "NoGridStart"
-                                                    };
+    
 
     //
 
