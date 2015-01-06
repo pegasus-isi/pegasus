@@ -37,9 +37,9 @@ def redirect_to_index():
 
 @app.route('/u/<username>/')
 def index(username):
-    '''
+    """
     List all workflows from the master database.
-    '''
+    """
     try:
         dashboard = Dashboard(g.master_db_url)
         args = __get_datatables_args()
@@ -61,9 +61,9 @@ def index(username):
 @app.route('/u/<username>/root/<root_wf_id>/workflow')
 @app.route('/u/<username>/root/<root_wf_id>/workflow/<wf_id>')
 def workflow(username, root_wf_id, wf_id=None):
-    '''
+    """
     Get details for a specific workflow.
-    '''
+    """
     wf_uuid = request.args.get('wf_uuid', None)
 
     if not wf_id and not wf_uuid:
@@ -84,9 +84,9 @@ def workflow(username, root_wf_id, wf_id=None):
 
 @app.route('/u/<username>/root/<root_wf_id>/workflow/<wf_id>/sub_workflows/', methods=['GET'])
 def sub_workflows(username, root_wf_id, wf_id):
-    '''
+    """
     Get a list of all sub-workflow of a given workflow.
-    '''
+    """
     dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
     sub_workflows = dashboard.get_sub_workflows(wf_id)
 
@@ -102,9 +102,9 @@ def sub_workflows(username, root_wf_id, wf_id):
 
 @app.route('/u/<username>/root/<root_wf_id>/workflow/<wf_id>/jobs/failed/', methods=['GET'])
 def failed_jobs(username, root_wf_id, wf_id):
-    '''
+    """
     Get a list of all failed jobs of the latest instance for a given workflow.
-    '''
+    """
     dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
     args = __get_datatables_args()
 
@@ -120,9 +120,9 @@ def failed_jobs(username, root_wf_id, wf_id):
 
 @app.route('/u/<username>/root/<root_wf_id>/workflow/<wf_id>/jobs/running/', methods=['GET'])
 def running_jobs(username, root_wf_id, wf_id):
-    '''
+    """
     Get a list of all running jobs of the latest instance for a given workflow.
-    '''
+    """
     dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
     args = __get_datatables_args()
 
@@ -136,9 +136,9 @@ def running_jobs(username, root_wf_id, wf_id):
 
 @app.route('/u/<username>/root/<root_wf_id>/workflow/<wf_id>/jobs/successful/', methods=['GET'])
 def successful_jobs(username, root_wf_id, wf_id):
-    '''
+    """
     Get a list of all successful jobs of the latest instance for a given workflow.
-    '''
+    """
     dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
     args = __get_datatables_args()
 
@@ -153,9 +153,9 @@ def successful_jobs(username, root_wf_id, wf_id):
 
 @app.route('/u/<username>/root/<root_wf_id>/workflow/<wf_id>/job/<job_id>', methods=['GET'])
 def job(username, root_wf_id, wf_id, job_id):
-    '''
+    """
     Get details of a specific job instance.
-    '''
+    """
     dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
     job = dashboard.get_job_information(wf_id, job_id)
     job_states = dashboard.get_job_states(wf_id, job_id)
@@ -181,9 +181,9 @@ def job(username, root_wf_id, wf_id, job_id):
 
 @app.route('/u/<username>/root/<root_wf_id>/workflow/<wf_id>/job/<job_id>/stdout', methods=['GET'])
 def stdout(username, root_wf_id, wf_id, job_id):
-    '''
+    """
     Get stdout contents for a specific job instance.
-    '''
+    """
     dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
     text = dashboard.get_stdout(wf_id, job_id)
 
@@ -195,9 +195,9 @@ def stdout(username, root_wf_id, wf_id, job_id):
 
 @app.route('/u/<username>/root/<root_wf_id>/workflow/<wf_id>/job/<job_id>/stderr', methods=['GET'])
 def stderr(username, root_wf_id, wf_id, job_id):
-    '''
+    """
     Get stderr contents for a specific job instance.
-    '''
+    """
     dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
     text = dashboard.get_stderr(wf_id, job_id)
 
@@ -209,9 +209,9 @@ def stderr(username, root_wf_id, wf_id, job_id):
 
 @app.route('/u/<username>/root/<root_wf_id>/workflow/<wf_id>/job/<job_id>/invocations/successful', methods=['GET'])
 def successful_invocations(username, root_wf_id, wf_id, job_id):
-    '''
+    """
     Get list of successful invocations for a given job.
-    '''
+    """
     dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
     successful_invocations_list = dashboard.get_successful_job_invocation(wf_id, job_id)
 
@@ -230,9 +230,9 @@ def successful_invocations(username, root_wf_id, wf_id, job_id):
 
 @app.route('/u/<username>/root/<root_wf_id>/workflow/<wf_id>/job/<job_id>/invocations/failed', methods=['GET'])
 def failed_invocations(username, root_wf_id, wf_id, job_id):
-    '''
+    """
     Get list of failed invocations for a given job.
-    '''
+    """
     dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
     failed_invocations_list = dashboard.get_failed_job_invocation(wf_id, job_id)
 
@@ -249,9 +249,9 @@ def failed_invocations(username, root_wf_id, wf_id, job_id):
 @app.route('/u/<username>/root/<root_wf_id>/workflow/<wf_id>/job/<job_id>/invocation/', methods=['GET'])
 @app.route('/u/<username>/root/<root_wf_id>/workflow/<wf_id>/job/<job_id>/invocation/<task_id>', methods=['GET'])
 def invocation(username, root_wf_id, wf_id, job_id, task_id=None):
-    '''
+    """
     Get detailed invocation information
-    '''
+    """
     dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
     invocation = dashboard.get_invocation_information(wf_id, job_id, task_id)
 
@@ -260,9 +260,9 @@ def invocation(username, root_wf_id, wf_id, job_id, task_id=None):
 
 @app.route('/u/<username>/root/<root_wf_id>/workflow/<wf_id>/charts', methods=['GET'])
 def charts(username, root_wf_id, wf_id):
-    '''
+    """
     Get job-distribution information
-    '''
+    """
     dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
     job_dist = dashboard.plots_transformation_statistics(wf_id)
 
@@ -271,9 +271,9 @@ def charts(username, root_wf_id, wf_id):
 
 @app.route('/u/<username>/root/<root_wf_id>/workflow/<wf_id>/charts/time_chart', methods=['GET'])
 def time_chart(username, root_wf_id, wf_id):
-    '''
+    """
     Get job-distribution information
-    '''
+    """
     dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
     time_chart_job, time_chart_invocation = dashboard.plots_time_chart(wf_id)
 
@@ -282,9 +282,9 @@ def time_chart(username, root_wf_id, wf_id):
 
 @app.route('/u/<username>/root/<root_wf_id>/workflow/<wf_id>/charts/gantt_chart', methods=['GET'])
 def gantt_chart(username, root_wf_id, wf_id):
-    '''
+    """
     Get information required to generate a Gantt chart.
-    '''
+    """
     dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
     gantt_chart = dashboard.plots_gantt_chart()
     return render_template('workflow/charts/gantt_chart.json', root_wf_id=root_wf_id, wf_id=wf_id, gantt_chart=gantt_chart)
@@ -292,9 +292,9 @@ def gantt_chart(username, root_wf_id, wf_id):
 
 @app.route('/u/<username>/root/<root_wf_id>/workflow/<wf_id>/statistics', methods=['GET'])
 def statistics(username, root_wf_id, wf_id):
-    '''
+    """
     Get workflow statistics information
-    '''
+    """
     dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
     summary_times = dashboard.workflow_summary_stats(wf_id)
 
@@ -353,9 +353,9 @@ def __update_label_link(workflows):
 
 
 def __get_datatables_args():
-    '''
+    """
     Extract list of arguments passed in the request
-    '''
+    """
     table_args = dict()
 
     if request.args.get('sEcho'):
