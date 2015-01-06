@@ -14,8 +14,6 @@
 
 __author__ = 'Rajiv Mayani'
 
-import os
-
 from datetime import datetime
 
 from time import localtime, strftime
