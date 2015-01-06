@@ -40,8 +40,7 @@ import edu.isi.pegasus.planner.provenance.pasoa.producer.XMLProducerFactory;
 import edu.isi.pegasus.planner.selector.SiteSelector;
 import edu.isi.pegasus.planner.selector.TransformationSelector;
 import edu.isi.pegasus.planner.selector.site.SiteSelectorFactory;
-import edu.isi.pegasus.planner.transfer.SLS;
-import edu.isi.pegasus.planner.transfer.sls.SLSFactory;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
