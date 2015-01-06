@@ -50,6 +50,7 @@ import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.classes.TransferJob;
 
 import edu.isi.pegasus.planner.code.GridStartFactory;
+import edu.isi.pegasus.planner.common.PegasusConfiguration;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
@@ -202,7 +203,14 @@ public abstract class Abstract implements Implementation{
      * A boolean indicating whether chmod jobs should be created that set the
      * xbit in case of executable staging.
      */
-    protected boolean mAddNodesForSettingXBit;
+    //protected boolean mAddNodesForSettingXBit;
+    
+    
+    /**
+     * handle to PegasusConfiguration
+     */
+    protected PegasusConfiguration mPegasusConfiguration;
+
 
     /**
      * The overloaded constructor, that is called by the Factory to load the
@@ -223,7 +231,9 @@ public abstract class Abstract implements Implementation{
 
         //from pegasus release 3.2 onwards xbit jobs are not added
         //for worker node execution/Pegasus Lite
-        mAddNodesForSettingXBit = !mProps.executeOnWorkerNode();
+        //PM-810 it is now per job instead of global.
+        mPegasusConfiguration = new PegasusConfiguration( mLogger );
+        //mAddNodesForSettingXBit = !mProps.executeOnWorkerNode();
 
         Proxy p = new Proxy();
         p.initialize(bag);

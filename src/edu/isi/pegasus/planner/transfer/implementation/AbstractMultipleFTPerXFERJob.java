@@ -212,7 +212,9 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
         //profile incorporation
         txJob.strargs = this.generateArgumentString(txJob);
 
-        if(execFiles != null && this.mAddNodesForSettingXBit ){
+        //PM-810 worker node exeucution is per job level now
+        boolean addNodesForSettingXBit = !mPegasusConfiguration.jobSetupForWorkerNodeExecution(job, mProps);
+        if(execFiles != null && addNodesForSettingXBit ){
             //we need to add setup jobs to change the XBit
             super.addSetXBitJobs(job,txJob,execFiles);
         }

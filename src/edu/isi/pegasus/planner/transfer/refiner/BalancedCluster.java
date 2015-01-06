@@ -43,6 +43,7 @@ import java.util.Set;
 import java.util.HashSet;
 
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge;
 import edu.isi.pegasus.planner.transfer.Implementation;
 import java.util.LinkedList;
@@ -192,12 +193,18 @@ public class BalancedCluster extends Basic {
      * A boolean indicating whether chmod jobs should be created that set the
      * xbit in case of executable staging.
      */
-    protected boolean mAddNodesForSettingXBit;
+    //protected boolean mAddNodesForSettingXBit;
     
     /**
      * The current level of the jobs being traversed.
      */
     private int mCurrentSILevel;
+    
+    
+    /**
+     * handle to PegasusConfiguration
+     */
+    protected PegasusConfiguration mPegasusConfiguration;
 
     /**
      * The overloaded constructor.
@@ -211,7 +218,9 @@ public class BalancedCluster extends Basic {
 
         //from pegasus release 3.2 onwards xbit jobs are not added
         //for worker node execution/Pegasus Lite
-        mAddNodesForSettingXBit = !mProps.executeOnWorkerNode();
+        //PM-810 it is now per job instead of global.
+        mPegasusConfiguration = new PegasusConfiguration( mLogger );
+        //mAddNodesForSettingXBit = !mProps.executeOnWorkerNode();
 
         mStageInLocalMapPerLevel   = new HashMap( mPOptions.getExecutionSites().size());
         mStageInRemoteMapPerLevel   = new HashMap( mPOptions.getExecutionSites().size());
@@ -404,7 +413,10 @@ public class BalancedCluster extends Basic {
                 //check if tempSet does not contain the parent
                 tempSet.add(par);
 
-                if(ft.isTransferringExecutableFile() && this.mAddNodesForSettingXBit ){
+                //PM-810 worker node exeucution is per job level now
+                boolean addNodeForSettingXBit = !mPegasusConfiguration.jobSetupForWorkerNodeExecution(job, mProps);
+                
+                if(ft.isTransferringExecutableFile() && addNodeForSettingXBit ){
                     //currently we have only one file to be staged per
                     //compute job . Taking a short cut in determining
                     //the name of setXBit job
@@ -467,8 +479,10 @@ public class BalancedCluster extends Basic {
 
         //stageInExecJobs has corresponding list of transfer
         //jobs that transfer the files
-      
-        if( !stagedExecutableFiles.isEmpty() && mAddNodesForSettingXBit ){
+        //PM-810 worker node exeucution is per job level now
+        boolean addNodeForSettingXBit = !mPegasusConfiguration.jobSetupForWorkerNodeExecution(job, mProps);
+                
+        if( !stagedExecutableFiles.isEmpty() && addNodeForSettingXBit ){
             Job xBitJob = implementation.createSetXBitJob( job,
                                                                stagedExecutableFiles,
                                                                Job.STAGE_IN_JOB,

@@ -43,6 +43,7 @@ import java.util.Set;
 import java.util.HashSet;
 
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge;
 import edu.isi.pegasus.planner.transfer.Implementation;
 import java.util.LinkedList;
@@ -189,7 +190,12 @@ public class Bundle extends Basic {
      * A boolean indicating whether chmod jobs should be created that set the
      * xbit in case of executable staging.
      */
-    protected boolean mAddNodesForSettingXBit;
+    //protected boolean mAddNodesForSettingXBit;
+    
+    /**
+     * handle to PegasusConfiguration
+     */
+    protected PegasusConfiguration mPegasusConfiguration;
 
     /**
      * The overloaded constructor.
@@ -203,7 +209,9 @@ public class Bundle extends Basic {
 
         //from pegasus release 3.2 onwards xbit jobs are not added
         //for worker node execution/Pegasus Lite
-        mAddNodesForSettingXBit = !mProps.executeOnWorkerNode();
+        //PM-810 it is now per job instead of global.
+        mPegasusConfiguration = new PegasusConfiguration( mLogger );
+        //mAddNodesForSettingXBit = !mProps.executeOnWorkerNode();
 
         mStageInLocalMap   = new HashMap( mPOptions.getExecutionSites().size());
         mStageInRemoteMap   = new HashMap( mPOptions.getExecutionSites().size());
@@ -390,8 +398,11 @@ public class Bundle extends Basic {
                 //check if tempSet does not contain the parent
                 //fix for sonal's bug
                 tempSet.add(par);
+                
+                //PM-810 worker node exeucution is per job level now
+                boolean addNodeForSettingXBit = !mPegasusConfiguration.jobSetupForWorkerNodeExecution(job, mProps);
 
-                if(ft.isTransferringExecutableFile() && this.mAddNodesForSettingXBit ){
+                if(ft.isTransferringExecutableFile() && addNodeForSettingXBit ){
                     //currently we have only one file to be staged per
                     //compute job . Taking a short cut in determining
                     //the name of setXBit job
@@ -454,8 +465,11 @@ public class Bundle extends Basic {
 
         //stageInExecJobs has corresponding list of transfer
         //jobs that transfer the files
-      
-        if( !stagedExecutableFiles.isEmpty() && mAddNodesForSettingXBit ){
+        
+        //PM-810 worker node exeucution is per job level now
+        boolean addNodeForSettingXBit = !mPegasusConfiguration.jobSetupForWorkerNodeExecution(job, mProps);
+                
+        if( !stagedExecutableFiles.isEmpty() && addNodeForSettingXBit ){
             Job xBitJob = implementation.createSetXBitJob( job,
                                                                stagedExecutableFiles,
                                                                Job.STAGE_IN_JOB,
