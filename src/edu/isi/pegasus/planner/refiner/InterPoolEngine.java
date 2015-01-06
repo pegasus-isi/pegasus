@@ -31,7 +31,9 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.common.PegRandom;
+import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.namespace.Hints;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.provenance.pasoa.PPS;
 import edu.isi.pegasus.planner.provenance.pasoa.XMLProducer;
@@ -45,6 +47,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 import java.util.Vector;
 /**
@@ -98,6 +101,11 @@ public class InterPoolEngine extends Engine implements Refiner {
      * The XML Producer object that records the actions.
      */
     private XMLProducer mXMLStore;
+    
+    /**
+     * handle to PegasusConfiguration
+     */
+    private PegasusConfiguration mPegasusConfiguration;
 
     /**
      * Handle to the transformation store that stores the transformation catalog
@@ -122,7 +130,8 @@ public class InterPoolEngine extends Engine implements Refiner {
 
         mTXSelector = null;
         mXMLStore        = XMLProducerFactory.loadXMLProducer( mProps );
-
+        
+        mPegasusConfiguration = new PegasusConfiguration( bag.getLogger() );
     }
 
     /**
@@ -135,18 +144,12 @@ public class InterPoolEngine extends Engine implements Refiner {
      *
      */
     public InterPoolEngine( ADag aDag, PegasusBag bag ) {
-        super( bag );
+        this( bag );
         mDag = aDag;
         mExecPools = (Set)mPOptions.getExecutionSites();
         mLogger.log( "List of executions sites is " + mExecPools,
                      LogManager.DEBUG_MESSAGE_LEVEL );
         
-        mTCMapper = Mapper.loadTCMapper( mProps.getTCMapperMode(), mBag );
-        mBag.add( PegasusBag.TRANSFORMATION_MAPPER, mTCMapper );
-
-        mTXSelector = null;
-        mXMLStore        = XMLProducerFactory.loadXMLProducer( mProps );
-
         this.mDAXTransformationStore = aDag.getTransformationStore();
         
     }
@@ -350,6 +353,17 @@ public class InterPoolEngine extends Engine implements Refiner {
      * @return the staging site
      */
     public String getStagingSite( Job job ){
+        //check to see if job has data.configuration set
+        if( job.vdsNS.containsKey( Pegasus.DATA_CONFIGURATION_KEY ) ){
+            String conf = job.vdsNS.getStringValue( Pegasus.DATA_CONFIGURATION_KEY );
+            Properties props = mPegasusConfiguration.getConfigurationProperties( conf );
+            
+            //shortcut for condorio
+            if( conf.equalsIgnoreCase( PegasusConfiguration.CONDOR_CONFIGURATION_VALUE) ){
+                return "local";
+            }
+        }
+        
         String ss =  this.mPOptions.getStagingSite( job.getSiteHandle() );
         return (ss == null) ? job.getSiteHandle(): ss;
     }

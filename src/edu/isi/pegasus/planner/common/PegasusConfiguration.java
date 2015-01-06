@@ -24,7 +24,9 @@ import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.InternalMountPoint;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.transfer.sls.SLSFactory;
 import java.io.File;
 import java.util.Iterator;
@@ -323,13 +325,49 @@ public class PegasusConfiguration {
     }
 
     /**
+     * Returns a boolean indicating whether a job is setup for worker node execution or not
+     * 
+     * @param job
+     * @param properties
+     * 
+     * @return 
+     */
+    public boolean jobSetupForWorkerNodeExecution( Job job, PegasusProperties properties ){
+        String configuration  = job.vdsNS.getStringValue( Pegasus.DATA_CONFIGURATION_KEY ) ;
+
+        return ( configuration == null )?
+                properties.executeOnWorkerNode()://pick global value from properties
+                (  configuration.equalsIgnoreCase( CONDOR_CONFIGURATION_VALUE ) ||
+                   configuration.equalsIgnoreCase( NON_SHARED_FS_CONFIGURATION_VALUE )||
+                   configuration.equalsIgnoreCase( DEPRECATED_CONDOR_CONFIGURATION_VALUE )
+                );
+        
+    }
+    
+    /**
+     * Returns a boolean indicating if job has to be executed using condorio
+     *
+     * @param job
+     *
+     * @return boolean
+     */
+    public boolean jobSetupForCondorIO( Job job, PegasusProperties properties ){
+        String configuration  = job.vdsNS.getStringValue( Pegasus.DATA_CONFIGURATION_KEY ) ;
+
+        return ( configuration == null )?
+                this.setupForCondorIO( properties ):
+                configuration.equalsIgnoreCase( CONDOR_CONFIGURATION_VALUE ) ||
+                    configuration.equalsIgnoreCase( DEPRECATED_CONDOR_CONFIGURATION_VALUE );
+    }
+    
+    /**
      * Returns a boolean indicating if properties are setup for condor io
      *
      * @param properties
      *
      * @return boolean
      */
-    public boolean setupForCondorIO( PegasusProperties properties ){
+    private boolean setupForCondorIO( PegasusProperties properties ){
         String configuration  = properties.getProperty( PEGASUS_CONFIGURATION_PROPERTY_KEY ) ;
 
         return ( configuration == null )?
