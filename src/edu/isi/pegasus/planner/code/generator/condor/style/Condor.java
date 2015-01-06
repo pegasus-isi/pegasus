@@ -26,6 +26,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleFactoryException;
+import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
 /**
@@ -104,7 +105,11 @@ public class Condor extends Abstract {
     /**
      * A boolean indicating whether pegasus lite mode is picked up or not.
      */
-    private boolean mPegasusLiteEnabled;
+    //private boolean mPegasusLiteEnabled;
+    /**
+     * Handle to Pegasus Configuration
+     */
+    private PegasusConfiguration mPegasusConfiguration;
 
     /**
      * Path to Pegasus Lite local wrapper script.
@@ -130,7 +135,11 @@ public class Condor extends Abstract {
      */
     public void initialize( PegasusBag bag , CredentialHandlerFactory credentialFactory )throws CondorStyleException{
         super.initialize( bag, credentialFactory );
-        mPegasusLiteEnabled = mProps.getGridStart().equalsIgnoreCase( "PegasusLite" );
+        
+        //PM-810 pegasus lite enablign is now per job
+        //mPegasusLiteEnabled = mProps.getGridStart().equalsIgnoreCase( "PegasusLite" );
+        mPegasusConfiguration = new PegasusConfiguration( bag.getLogger() );
+        
         mPegasusLiteLocalWrapper = this.getSubmitHostPathToPegasusLiteLocal();
 
 
@@ -353,7 +362,7 @@ public class Condor extends Abstract {
             job.envVariables.construct( Condor.PEGASUS_INITIAL_DIR_KEY, workdir );
 
 
-            if ( !this.mPegasusLiteEnabled ){
+            if ( ! mPegasusConfiguration.jobSetupForWorkerNodeExecution( job, mProps ) ){
                 //for shared file system mode we want the wrapped job
                 //to execute in workdir
                 job.envVariables.construct( Condor.PEGASUS_EXECUTE_IN_INITIAL_DIR, "true" );
