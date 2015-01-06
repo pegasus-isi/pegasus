@@ -1225,10 +1225,11 @@ class ScpHandler(TransferHandlerBase):
                     check_cred_fs_permissions(os.environ['SSH_PRIVATE_KEY'])
                     cmd += " -i " + os.environ['SSH_PRIVATE_KEY']
 
+                cmd += " -P " + self._extract_port(transfer.src_host)
                 prepare_local_dir(os.path.dirname(transfer.dst_path))
                 # scp wants escaped remote paths, even with quotes
                 src_path = re.sub(' ', '\\ ', transfer.src_path)
-                cmd += " '" + transfer.src_host + ":" + src_path + "'"
+                cmd += " '" + self._extract_hostname(transfer.src_host) + ":" + src_path + "'"
                 cmd += " '" + transfer.dst_path + "'"
             else:
                 # file -> scp
@@ -1240,7 +1241,7 @@ class ScpHandler(TransferHandlerBase):
                     check_cred_fs_permissions(os.environ['SSH_PRIVATE_KEY'])
                     cmd += " -i " + os.environ['SSH_PRIVATE_KEY']
 
-                mkdir_key = "scp://" + transfer.dst_host + ":" \
+                mkdir_key = "scp://" + self._extract_hostname(transfer.dst_host) + ":" \
                           + os.path.dirname(transfer.dst_path)
                 if not mkdir_key in remote_dirs_created:
                     self._prepare_scp_dir(transfer.dst_sitename,
@@ -1248,11 +1249,12 @@ class ScpHandler(TransferHandlerBase):
                                           os.path.dirname(transfer.dst_path))
                     remote_dirs_created[mkdir_key] = True
                 
+                cmd += " -P " + self._extract_port(transfer.dst_host)
                 # scp wants escaped remote paths, even with quotes
                 dst_path = re.sub(' ', '\\ ', transfer.dst_path)
                 
                 cmd += " '" + transfer.src_path + "'"
-                cmd += " '" + transfer.dst_host + ":" + dst_path + "'"
+                cmd += " '" + self._extract_hostname(transfer.dst_host) + ":" + dst_path + "'"
                 stats_add(transfer.src_path)
 
             tc = TimedCommand(cmd)
@@ -1279,9 +1281,28 @@ class ScpHandler(TransferHandlerBase):
             check_cred_fs_permissions(os.environ['SSH_PRIVATE_KEY'])
             cmd += " -i " + os.environ['SSH_PRIVATE_KEY']
         cmd += " -q -o StrictHostKeyChecking=no"
-        cmd += " " + rhost + " '/bin/mkdir -p " + rdir + "'"
+        cmd += " -p " + self._extract_port(rhost)
+        cmd += " " + self._extract_hostname(rhost) + " '/bin/mkdir -p " + rdir + "'"
         tc = TimedCommand(cmd)
         tc.run()
+
+
+    def _extract_hostname(self, host):
+        """
+        returns only the host component (strips :...)
+        """
+        return re.sub(':.*', '', host)
+
+    
+    def _extract_port(self, host):
+        """
+        returns the port to connect to, defaults to 22
+        """
+        port = "22"
+        r = re.search(':([0-9]+)', host)
+        if r:
+            port = r.group(1)
+        return str(port)
 
 
 class SymlinkHandler(TransferHandlerBase):

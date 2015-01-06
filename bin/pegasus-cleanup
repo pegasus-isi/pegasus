@@ -360,6 +360,14 @@ def scp(urls):
     removes using ssh+rm
     """
     for i, url in enumerate(urls):
+    
+        # split up the host into host/port components
+        host = re.sub(':.*', '', url.host)
+        port = "22"
+        r = re.search(':([0-9]+)', url.host)
+        if r:
+            port = r.group(1)
+
         cmd = "/usr/bin/ssh"
         key = "SSH_PRIVATE_KEY_" + url.sitename
         if key in os.environ:
@@ -368,7 +376,8 @@ def scp(urls):
             cmd += " -i " + os.environ['SSH_PRIVATE_KEY']
         cmd += " -o PasswordAuthentication=no"
         cmd += " -o StrictHostKeyChecking=no" + \
-               " " + url.host + " " + \
+               " -p " + port + \
+               " " + host + " " + \
                " \"/bin/rm"
         if options.ignore_failures:
             cmd += " -f"
