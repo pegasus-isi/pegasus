@@ -35,7 +35,6 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
-import edu.isi.pegasus.planner.code.gridstart.PegasusLite;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;

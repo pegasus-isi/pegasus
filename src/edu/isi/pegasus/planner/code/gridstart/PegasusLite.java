@@ -38,6 +38,7 @@ import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.code.GridStart;
+import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Namespace;
@@ -204,8 +205,14 @@ public class PegasusLite implements GridStart {
     /**
      * A boolean indicating whether to have worker node execution or not.
      */
-    protected boolean mWorkerNodeExecution;
+    //protected boolean mWorkerNodeExecution;
 
+    //PM-810 done throught PegasusConfiguration
+    /**
+     * Handle to PegasusConfiguration
+     */
+    private PegasusConfiguration mPegasusConfiguration;
+    
     /**
      * The handle to the SLS implementor
      */
@@ -302,6 +309,8 @@ public class PegasusLite implements GridStart {
         mMinorVersionLevel = version.getMinor();
         mPatchVersionLevel = version.getPatch();
 
+        mPegasusConfiguration = new PegasusConfiguration( bag.getLogger() );
+        
         mSLSFactory = new SLSFactory();
         mSLSFactory.initialize(bag);
         
@@ -411,7 +420,9 @@ public class PegasusLite implements GridStart {
         
         //consider case for non worker node execution first
 
-        if( !mWorkerNodeExecution ){
+        //PM-810
+        //if( !mWorkerNodeExecution ){
+        if( !mPegasusConfiguration.jobSetupForWorkerNodeExecution( job, mProps) ){
             //shared filesystem case.
 
             //for now a single job is launched via kickstart only
