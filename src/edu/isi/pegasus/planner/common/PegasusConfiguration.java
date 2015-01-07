@@ -349,9 +349,6 @@ public class PegasusConfiguration {
                              LogManager.WARNING_MESSAGE_LEVEL );
             }
 
-            p.setProperty( "pegasus.execute.*.filesystem.local", "true" );
-            p.setProperty( "pegasus.gridstart", "PegasusLite" );
-
             //we want the worker package to be staged, unless user sets it to false explicitly
             p.setProperty( PegasusProperties.PEGASUS_TRANSFER_WORKER_PACKAGE_PROPERTY, "true" );
         }
@@ -362,9 +359,6 @@ public class PegasusConfiguration {
                 mLogger.log( deprecatedValueMessage( PEGASUS_CONFIGURATION_PROPERTY_KEY,DEPRECATED_CONDOR_CONFIGURATION_VALUE ,CONDOR_CONFIGURATION_VALUE ),
                              LogManager.WARNING_MESSAGE_LEVEL );
             }
-
-            p.setProperty( "pegasus.execute.*.filesystem.local", "true" );
-            p.setProperty( "pegasus.gridstart", "PegasusLite" );
             
             //we want the worker package to be staged, unless user sets it to false explicitly
             p.setProperty( PegasusProperties.PEGASUS_TRANSFER_WORKER_PACKAGE_PROPERTY, "true" );
