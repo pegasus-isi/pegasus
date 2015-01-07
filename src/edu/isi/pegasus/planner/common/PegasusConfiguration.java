@@ -27,11 +27,9 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.namespace.Pegasus;
-import edu.isi.pegasus.planner.transfer.sls.SLSFactory;
 import java.io.File;
 import java.util.Iterator;
 import java.util.Properties;
-import java.util.Set;
 
 /**
  * A utility class that returns JAVA Properties that need to be set based on
@@ -365,7 +363,6 @@ public class PegasusConfiguration {
                              LogManager.WARNING_MESSAGE_LEVEL );
             }
 
-            p.setProperty( "pegasus.transfer.lite.*.impl", "Condor" );
             p.setProperty( "pegasus.execute.*.filesystem.local", "true" );
             p.setProperty( "pegasus.gridstart", "PegasusLite" );
             
