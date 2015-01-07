@@ -314,19 +314,6 @@ public class PegasusLite implements GridStart {
         mSLSFactory = new SLSFactory();
         mSLSFactory.initialize(bag);
         
-        /* PM-810 maybe check needs to be moved downstream per job
-        mWorkerNodeExecution = mProps.executeOnWorkerNode();
-        if( mWorkerNodeExecution ){
-            //load SLS
-            mSLS = SLSFactory.loadInstance( bag );
-        }
-        else{
-            //sanity check
-            throw new RuntimeException( "PegasusLite only works if worker node execution is set. Please set  " +
-                                        PegasusProperties.PEGASUS_WORKER_NODE_EXECUTION_PROPERTY  + " to true .");
-        }
-        */
-
         //pegasus lite needs to disable invoke functionality
         mProps.setProperty( PegasusProperties.DISABLE_INVOKE_PROPERTY, "true" );
 
@@ -421,6 +408,7 @@ public class PegasusLite implements GridStart {
         //consider case for non worker node execution first
 
         //PM-810
+        /*
         //if( !mWorkerNodeExecution ){
         if( !mPegasusConfiguration.jobSetupForWorkerNodeExecution( job, mProps) ){
             //shared filesystem case.
@@ -434,8 +422,18 @@ public class PegasusLite implements GridStart {
             //handle stuff differently 
             enableForWorkerNodeExecution( job, isGlobusJob );
         }//end of worker node execution
+        */
 
-
+        if( !mPegasusConfiguration.jobSetupForWorkerNodeExecution( job, mProps) ){
+            //shared filesystem case.
+            StringBuilder error = new StringBuilder();
+            error.append( "Job " ).append( job.getID() ).
+                  append( " cannot be wrapped with PegasusLite. Invalid data.configuration associated " ).
+                  append( job.vdsNS.get( Pegasus.DATA_CONFIGURATION_KEY ) );
+            throw new RuntimeException( error.toString() );
+                
+        }
+        enableForWorkerNodeExecution( job, isGlobusJob );
 
         if( mGenerateLOF ){
             //but generate lof files nevertheless
