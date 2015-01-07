@@ -149,6 +149,23 @@ def successful_jobs(username, root_wf_id, wf_id):
     return render_template('workflow/jobs_successful.xhr.json', count=total_count, filtered=filtered_count, jobs=successful_jobs_list, table_args=args)
 
 
+@app.route('/u/<username>/root/<root_wf_id>/workflow/<wf_id>/jobs/failing/', methods=['GET'])
+def failing_jobs(username, root_wf_id, wf_id):
+    """
+    Get a list of failing jobs of the latest instance for a given workflow.
+    """
+    dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
+    args = __get_datatables_args()
+
+    total_count, filtered_count, failing_jobs_list = dashboard.get_failing_jobs(wf_id, **args)
+
+    for job in failing_jobs_list:
+        job.duration_formatted = filters.time_to_str(job.duration)
+        job.exec_job_id = '<a href="' + url_for('job', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id) + '">' + job.exec_job_id + '</a>'
+
+    return render_template('workflow/jobs_failing.xhr.json', count=total_count, filtered=filtered_count, jobs=failing_jobs_list, table_args=args)
+
+
 @app.route('/u/<username>/root/<root_wf_id>/workflow/<wf_id>/job/<job_id>', methods=['GET'])
 def job(username, root_wf_id, wf_id, job_id):
     """

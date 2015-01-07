@@ -483,6 +483,57 @@ class WorkflowInfo(SQLAlchemyInit):
 
         return (count, filtered, q.all())
 
+    def get_failing_jobs(self, **table_args):
+
+        q = self._jobs_by_type()
+        q = q.filter(JobInstance.exitcode != 0).filter(JobInstance.exitcode != None)
+
+        # Get Total Count. Need this to pass to jQuery Datatable.
+        count = q.count()
+        if count == 0:
+            return (0, 0, [])
+
+        filtered = count
+        if 'filter' in table_args:
+            filter_text = '%' + table_args['filter'] + '%'
+            q = q.filter(or_(Job.exec_job_id.like(filter_text), JobInstance.exitcode.like(filter_text)))
+
+            # Get Total Count. Need this to pass to jQuery Datatable.
+            filtered = q.count()
+
+            if filtered == 0:
+                return (count, 0, [])
+
+        display_columns = [Job.exec_job_id, JobInstance.exitcode]
+
+        if 'sort-col-count' in table_args:
+            for i in range(table_args['sort-col-count']):
+
+                if 'iSortCol_' + str(i) in table_args:
+                    sort_order = desc;
+
+                    if 'sSortDir_' + str(i) in table_args and table_args['sSortDir_' + str(i)] == 'asc':
+                        sort_order = asc;
+
+                    i = table_args['iSortCol_' + str(i)]
+
+                    if i >= 0 and i < len(display_columns):
+                        q = q.order_by(sort_order(display_columns[i]))
+                    elif i >= len(display_columns) and i < 4:
+                        pass
+                    else:
+                        raise ValueError,('Invalid column(%s) in failed jobs listing ' % i)
+
+        else:
+            # Default sorting order
+            q = q.order_by(desc(Job.exec_job_id))
+
+        if 'limit' in table_args and 'offset' in table_args:
+            q = q.limit(table_args['limit'])
+            q = q.offset(table_args['offset'])
+
+        return (count, filtered, q.all())
+
     def __get_jobs_maxjss_sq(self):
 
         qmax = self.session.query(Job.job_id, func.max(JobInstance.job_submit_seq).label('max_jss'))

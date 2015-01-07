@@ -393,6 +393,14 @@ class Dashboard(object):
         finally:
             Dashboard.close(workflow)
 
+    def get_failing_jobs(self, wf_id, **table_args):
+        try:
+            workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id=wf_id)
+            total_count, filtered_count, failed_jobs = workflow.get_failing_jobs(**table_args)
+            return total_count, filtered_count, failed_jobs
+        finally:
+            Dashboard.close(workflow)
+
     def get_sub_workflows(self, wf_id):
         try:
             workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id=wf_id)

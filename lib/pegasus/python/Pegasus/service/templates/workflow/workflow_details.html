@@ -5,7 +5,7 @@
 {% endblock %}
 {% block javascript_init %}
 <script type="text/javascript" charset="utf-8">
-var tablesInitialized = [false, false, false, false]
+var tablesInitialized = [false, false, false, false, false]
 
 var chart;
 var chartOptions;
@@ -104,6 +104,18 @@ $(document).ready (function ()
                                     "bProcessing"                                  : true,
                                     "bServerSide"                                  : true,
                                     "sAjaxSource"                                  : "{{ url_for ('successful_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
+                                    "bAutoWidth"                                   : false
+                                });
+                            }
+                            else if (tabIndex == 4 && !tablesInitialized [tabIndex])
+                            {
+                                tablesInitialized [tabIndex] = true;
+
+                                $ ('#failing_jobs_list').dataTable ({"bJQueryUI": true,
+                                    "sPaginationType"                              : "full_numbers",
+                                    "bProcessing"                                  : true,
+                                    "bServerSide"                                  : true,
+                                    "sAjaxSource"                                  : "{{ url_for ('failing_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
                                     "bAutoWidth"                                   : false
                                 });
                             }
@@ -325,6 +337,9 @@ verticalTableInitStatus ('#workflow_text_info', '{{workflow.state}}' );
             <li>
                 <a href="#successful_jobs" title="successful_jobs">Successful</a>
             </li>
+            <li>
+                <a href="#failing_jobs" title="failing_jobs">Failing</a>
+            </li>
         </ul>
         <div id="sub_workflows"></div>
         <div id="failed_jobs">
@@ -358,6 +373,20 @@ verticalTableInitStatus ('#workflow_text_info', '{{workflow.state}}' );
                 <tr>
                     <th>Job Name</th>
                     <th>Time Taken</th>
+                </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+        <div id="failing_jobs">
+            <table id="failing_jobs_list">
+                <thead>
+                <tr>
+                    <th>Job Name</th>
+                    <th>Exit Code</th>
+                    <th>Standard Out</th>
+                    <th>Standard Error</th>
                 </tr>
                 </thead>
                 <tbody>
