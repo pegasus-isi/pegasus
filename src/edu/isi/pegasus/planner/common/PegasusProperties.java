@@ -1087,9 +1087,11 @@ public class PegasusProperties implements Cloneable {
      * @return the transfer implementation
      * 
      */
+    /* PM-810 done away.
     public String getSLSTransferImplementation(){
         return getTransferImplementation( "pegasus.transfer.lite.*.impl" );
     }
+    */
 
 
     /**

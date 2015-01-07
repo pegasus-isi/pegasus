@@ -266,7 +266,7 @@ public class InterPoolEngine extends Engine implements Refiner {
                 incorporateProfiles(job, entry );
                 //the staging site needs to be set before any
                 //file transfers for executable staging are incorporated PM-618
-                job.setStagingSiteHandle( getStagingSite( job ) );
+                job.setStagingSiteHandle( determineStagingSite( job ) );
                 handleExecutableFileTransfers(job, entry);
                 continue;
             }*/
@@ -318,7 +318,7 @@ public class InterPoolEngine extends Engine implements Refiner {
             if( !job.vdsNS.containsKey( Pegasus.DATA_CONFIGURATION_KEY) ){
                 job.vdsNS.construct( Pegasus.DATA_CONFIGURATION_KEY, PegasusConfiguration.DEFAULT_DATA_CONFIGURATION_VALUE );
             }
-            job.setStagingSiteHandle( getStagingSite( job ) );
+            job.setStagingSiteHandle( determineStagingSite( job ) );
             handleExecutableFileTransfers(job, entry);
             
             /* PM-810
@@ -354,27 +354,19 @@ public class InterPoolEngine extends Engine implements Refiner {
     }
 
     /**
-     * Returns the staging site to be used for a job. If a staging site is not
-     * determined from the options it is set to be the execution site for the job
+     * Returns the staging site to be used for a job. The determination is made
+     * on the basis of the following
+     *  - data configuration value for job
+     *  - from planner command line options
+     *  - If a staging site is not determined from the options it is set to be the execution site for the job
      *
      * @param job  the job for which to determine the staging site
      *
      * @return the staging site
      */
-    public String getStagingSite( Job job ){
-        //check to see if job has data.configuration set
-        if( job.vdsNS.containsKey( Pegasus.DATA_CONFIGURATION_KEY ) ){
-            String conf = job.vdsNS.getStringValue( Pegasus.DATA_CONFIGURATION_KEY );
-            Properties props = mPegasusConfiguration.getConfigurationProperties( conf );
-            
-            //shortcut for condorio
-            if( conf.equalsIgnoreCase( PegasusConfiguration.CONDOR_CONFIGURATION_VALUE) ){
-                return "local";
-            }
-        }
+    private String determineStagingSite( Job job ){
+        return mPegasusConfiguration.determineStagingSite(job, mPOptions);
         
-        String ss =  this.mPOptions.getStagingSite( job.getSiteHandle() );
-        return (ss == null) ? job.getSiteHandle(): ss;
     }
 
     

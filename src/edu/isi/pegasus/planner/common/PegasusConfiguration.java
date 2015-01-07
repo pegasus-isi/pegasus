@@ -105,6 +105,9 @@ public class PegasusConfiguration {
         this.loadConfigurationProperties( properties );
 
         //sanitize on the planner options
+        //PM-810 no longer required
+        //checks done per job
+        /*
         if( properties.executeOnWorkerNode() ){
             String slsImplementor = properties.getSLSTransferImplementation();
             if( slsImplementor == null ){
@@ -138,8 +141,68 @@ public class PegasusConfiguration {
 
             }
         }
+        */
     }
 
+    /**
+     * Returns the staging site to be used for a job. The determination is made
+     * on the basis of the following
+     *  - data configuration value for job
+     *  - from planner command line options
+     *  - If a staging site is not determined from the options it is set to be the execution site for the job
+     *
+     * @param job  the job for which to determine the staging site
+     *
+     * @return the staging site
+     */
+    public String determineStagingSite( Job job, PlannerOptions options ){
+        //check to see if job has data.configuration set
+        if( !job.vdsNS.containsKey( Pegasus.DATA_CONFIGURATION_KEY ) ){
+            throw new RuntimeException( "Internal Planner Error: Data Configuration shoudl have been set for job " + job.getID() );
+        }
+        
+        String conf = job.vdsNS.getStringValue( Pegasus.DATA_CONFIGURATION_KEY );
+        //shortcut for condorio
+        if( conf.equalsIgnoreCase( PegasusConfiguration.CONDOR_CONFIGURATION_VALUE) ){
+            //sanity check against the command line option
+            //we are leaving the data configuration to be per site
+            //by this check
+            String stagingSite = options.getStagingSite( job.getSiteHandle() );
+            if( stagingSite == null ){
+                stagingSite = "local";
+            }
+            else if (!( stagingSite.equalsIgnoreCase( "local" ) )){
+                StringBuffer sb = new StringBuffer();
+
+                sb.append( "Mismatch in the between execution site ").append( job.getSiteHandle() ).
+                   append( " and staging site " ).append( stagingSite ).
+                   append( " for job " ).append( job.getID() ).
+                   append( " . For Condor IO staging site should be set to local ." );
+
+                throw new RuntimeException( sb.toString() );
+            }
+
+            return stagingSite;
+        }
+        
+        String ss =  options.getStagingSite( job.getSiteHandle() );
+        ss = (ss == null) ? job.getSiteHandle(): ss;
+        //check for sharedfs
+        if( conf.equalsIgnoreCase( PegasusConfiguration.SHARED_FS_CONFIGURATION_VALUE) &&
+            !ss.equalsIgnoreCase( job.getSiteHandle()) ){
+            StringBuffer sb = new StringBuffer();
+
+                sb.append( "Mismatch in the between execution site ").append( job.getSiteHandle() ).
+                   append( " and staging site " ).append( ss ).
+                   append( " for job " ).append( job.getID() ).
+                   append( " . For sharedfs they should be the same" );
+
+                throw new RuntimeException( sb.toString() );
+        }
+        
+        return ss;
+        
+    }
     
 
     /**
