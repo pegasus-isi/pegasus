@@ -1,3 +1,6 @@
+{% macro status_code(exitcode=None) -%}
+{% if job.exitcode == None %}"running"{% elif job.exitcode !=  0 %}"failed"{% else  %}"successful"{% endif %}
+{%- endmacro %}
 {% extends "base.html" %}
 {% block title %}Job Details{% endblock %}
 {% block javascript_init %}
@@ -54,8 +57,8 @@
             }
         });
 
-        verticalTableInitStatus ('#job_text_info', {% if job.exitcode !=  0 %}"failed"{% else  %}"successful"{% endif %});
-        verticalTableInitStatus ('#job_states_info', {% if job.exitcode !=  0 %}"failed"{% else  %}"successful"{% endif %});
+        verticalTableInitStatus ('#job_text_info', {{ status_code(job.exitcode) }});
+        verticalTableInitStatus ('#job_states_info', {{ status_code(job.exitcode) }});
     })
 </script>
 {% endblock %}
@@ -110,6 +113,7 @@
             </tr>
         </table>
     </div>
+    {% if job_states|length %}
     <br />
     <header class="title ui-widget-header">
         Job States
@@ -125,6 +129,7 @@
             {% endfor %}
         </table>
     </div>
+    {% endif %}
 </div>
 <br/>
 <div id="invocation_table_wrapper">
