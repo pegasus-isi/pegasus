@@ -362,7 +362,7 @@ public class Condor extends Abstract {
             job.envVariables.construct( Condor.PEGASUS_INITIAL_DIR_KEY, workdir );
 
 
-            if ( ! mPegasusConfiguration.jobSetupForWorkerNodeExecution( job, mProps ) ){
+            if ( ! mPegasusConfiguration.jobSetupForWorkerNodeExecution( job ) ){
                 //for shared file system mode we want the wrapped job
                 //to execute in workdir
                 job.envVariables.construct( Condor.PEGASUS_EXECUTE_IN_INITIAL_DIR, "true" );

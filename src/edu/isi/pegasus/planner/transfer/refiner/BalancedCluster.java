@@ -414,7 +414,7 @@ public class BalancedCluster extends Basic {
                 tempSet.add(par);
 
                 //PM-810 worker node exeucution is per job level now
-                boolean addNodeForSettingXBit = !mPegasusConfiguration.jobSetupForWorkerNodeExecution(job, mProps);
+                boolean addNodeForSettingXBit = !mPegasusConfiguration.jobSetupForWorkerNodeExecution(job);
                 
                 if(ft.isTransferringExecutableFile() && addNodeForSettingXBit ){
                     //currently we have only one file to be staged per
@@ -480,7 +480,7 @@ public class BalancedCluster extends Basic {
         //stageInExecJobs has corresponding list of transfer
         //jobs that transfer the files
         //PM-810 worker node exeucution is per job level now
-        boolean addNodeForSettingXBit = !mPegasusConfiguration.jobSetupForWorkerNodeExecution(job, mProps);
+        boolean addNodeForSettingXBit = !mPegasusConfiguration.jobSetupForWorkerNodeExecution(job);
                 
         if( !stagedExecutableFiles.isEmpty() && addNodeForSettingXBit ){
             Job xBitJob = implementation.createSetXBitJob( job,

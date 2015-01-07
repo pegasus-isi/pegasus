@@ -775,7 +775,7 @@ public class Kickstart implements GridStart {
             return gridStartPath;
         }
         else if( mDynamicDeployment &&
-                 job.runInWorkDirectory()  && ! mPegasusConfiguration.jobSetupForWorkerNodeExecution(job, mProps) ){
+                 job.runInWorkDirectory()  && ! mPegasusConfiguration.jobSetupForWorkerNodeExecution(job ) ){
 
             //worker package deployment 
             //pick up the path from the transformation catalog of

@@ -360,7 +360,7 @@ public class Cluster extends Bundle {
                 String key = this.constructFileKey( ft.getLFN(), job.getStagingSiteHandle() );
                 
                 //PM-810 worker node exeucution is per job level now
-                boolean addNodeForSettingXBit = !mPegasusConfiguration.jobSetupForWorkerNodeExecution(job, mProps);
+                boolean addNodeForSettingXBit = !mPegasusConfiguration.jobSetupForWorkerNodeExecution(job);
         
                 if( ft.isTransferringExecutableFile() && addNodeForSettingXBit ){
                     //the staged execution file should be having the setup
@@ -402,7 +402,7 @@ public class Cluster extends Bundle {
             }
             
             //PM-810 worker node exeucution is per job level now
-            boolean addNodeForSettingXBit = !mPegasusConfiguration.jobSetupForWorkerNodeExecution(job, mProps);
+            boolean addNodeForSettingXBit = !mPegasusConfiguration.jobSetupForWorkerNodeExecution(job);
         
             if( !stagedExecFiles.isEmpty() && addNodeForSettingXBit ){
                 //create en-mass the setXBit jobs

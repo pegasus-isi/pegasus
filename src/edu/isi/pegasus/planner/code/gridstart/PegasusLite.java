@@ -424,7 +424,7 @@ public class PegasusLite implements GridStart {
         }//end of worker node execution
         */
 
-        if( !mPegasusConfiguration.jobSetupForWorkerNodeExecution( job, mProps) ){
+        if( !mPegasusConfiguration.jobSetupForWorkerNodeExecution( job ) ){
             //shared filesystem case.
             StringBuilder error = new StringBuilder();
             error.append( "Job " ).append( job.getID() ).

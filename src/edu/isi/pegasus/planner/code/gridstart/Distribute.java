@@ -318,7 +318,7 @@ public class Distribute implements GridStart {
         //take care of relative submit directory if specified
         String submitDir = mSubmitDir + mSeparator;
 
-        if( mPegasusConfiguration.jobSetupForWorkerNodeExecution( job, mProps) ){
+        if( mPegasusConfiguration.jobSetupForWorkerNodeExecution( job ) ){
             //shared filesystem case.
             StringBuilder error = new StringBuilder();
             error.append( "Job " ).append( job.getID() ).

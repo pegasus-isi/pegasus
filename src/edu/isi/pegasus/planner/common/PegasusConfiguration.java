@@ -382,15 +382,14 @@ public class PegasusConfiguration {
      * Returns a boolean indicating whether a job is setup for worker node execution or not
      * 
      * @param job
-     * @param properties
      * 
      * @return 
      */
-    public boolean jobSetupForWorkerNodeExecution( Job job, PegasusProperties properties ){
+    public boolean jobSetupForWorkerNodeExecution( Job job ){
         String configuration  = job.vdsNS.getStringValue( Pegasus.DATA_CONFIGURATION_KEY ) ;
 
         return ( configuration == null )?
-                properties.executeOnWorkerNode()://pick global value from properties
+                false: //DEFAULT is sharedfs case if nothing is specified
                 (  configuration.equalsIgnoreCase( CONDOR_CONFIGURATION_VALUE ) ||
                    configuration.equalsIgnoreCase( NON_SHARED_FS_CONFIGURATION_VALUE )||
                    configuration.equalsIgnoreCase( DEPRECATED_CONDOR_CONFIGURATION_VALUE )

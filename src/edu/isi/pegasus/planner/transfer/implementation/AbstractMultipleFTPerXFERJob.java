@@ -213,7 +213,7 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
         txJob.strargs = this.generateArgumentString(txJob);
 
         //PM-810 worker node exeucution is per job level now
-        boolean addNodesForSettingXBit = !mPegasusConfiguration.jobSetupForWorkerNodeExecution(job, mProps);
+        boolean addNodesForSettingXBit = !mPegasusConfiguration.jobSetupForWorkerNodeExecution(job);
         if(execFiles != null && addNodesForSettingXBit ){
             //we need to add setup jobs to change the XBit
             super.addSetXBitJobs(job,txJob,execFiles);

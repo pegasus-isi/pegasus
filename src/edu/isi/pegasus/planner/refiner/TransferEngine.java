@@ -1800,7 +1800,7 @@ public class TransferEngine extends Engine {
         String computeSite = job.getSiteHandle();
         //check if user has it configured for bypassing the staging and
         //we are in pegasus lite mode
-        if( this.mBypassStagingForInputs && mPegasusConfiguration.jobSetupForWorkerNodeExecution(job, mProps) ){
+        if( this.mBypassStagingForInputs && mPegasusConfiguration.jobSetupForWorkerNodeExecution(job) ){
             boolean isFileURL = entry.getPFN().startsWith( PegasusURL.FILE_URL_SCHEME);
             String fileSite = entry.getResourceHandle();
 
