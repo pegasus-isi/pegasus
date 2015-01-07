@@ -160,8 +160,9 @@ def failing_jobs(username, root_wf_id, wf_id):
     total_count, filtered_count, failing_jobs_list = dashboard.get_failing_jobs(wf_id, **args)
 
     for job in failing_jobs_list:
-        job.duration_formatted = filters.time_to_str(job.duration)
         job.exec_job_id = '<a href="' + url_for('job', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id) + '">' + job.exec_job_id + '</a>'
+        job.stdout = '<a href="' + url_for('stdout', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id) + '">stdout</a>'
+        job.stderr = '<a href="' + url_for('stderr', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id) + '">stderr</a>'
 
     return render_template('workflow/jobs_failing.xhr.json', count=total_count, filtered=filtered_count, jobs=failing_jobs_list, table_args=args)
 
