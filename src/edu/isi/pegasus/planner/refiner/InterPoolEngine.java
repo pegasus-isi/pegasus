@@ -529,6 +529,11 @@ public class InterPoolEngine extends Engine implements Refiner {
         
         if(entry.getType().equals( TCType.STAGEABLE )){
             SiteCatalogEntry site = mSiteStore.lookup( stagingSiteHandle );
+            
+            if( site == null ){
+                throw new RuntimeException( "Unable to find site catalog entry for staging site " + stagingSiteHandle + " for job " + job.getID() );
+            }
+            
             //construct a file transfer object and add it
             //as an input file to the job in the dag
             fTx = new FileTransfer( job.getStagedExecutableBaseName(),
