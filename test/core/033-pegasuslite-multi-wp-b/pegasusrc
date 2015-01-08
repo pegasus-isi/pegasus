@@ -10,3 +10,5 @@ pegasus.condor.logs.symlink = false
 pegasus.transfer.worker.package true
 
 pegasus.metrics.app bamboo
+
+pegasus.data.configuration condorio
