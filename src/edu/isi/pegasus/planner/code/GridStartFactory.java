@@ -84,10 +84,6 @@ public class GridStartFactory {
      */
     public static final int NO_GRIDSTART_INDEX = 1;
 
-    /**
-     * The index in constant arrays for SeqExec
-     */
-    public static final int SEQEXEC_INDEX = 2;
 
     /**
      * The postscript mode in which post scripts are added only for essential
