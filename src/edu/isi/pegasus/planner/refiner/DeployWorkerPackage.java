@@ -750,7 +750,10 @@ public class DeployWorkerPackage
         }
 
         
-        if( !deploymentSites[0].isEmpty() ){
+        if( mTransferWorkerPackage && !deploymentSites[0].isEmpty() ){
+            //PM-810 for sharedfs case, worker package transfer can only happen
+            //if the property is set by the user in the proeprties file
+            
             //we add untar nodes only if worker node execution/pegasus lite
             //mode is disabled
             dag =addSetupNodesWithUntarNodes( dag , deploymentSites[0] );//non pegasus lite case. shared fs
