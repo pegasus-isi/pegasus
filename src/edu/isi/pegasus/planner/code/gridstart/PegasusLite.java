@@ -291,7 +291,11 @@ public class PegasusLite implements GridStart {
         mTCHandle  = bag.getHandleToTransformationCatalog();
 
         mTransferWorkerPackage = mProps.transferWorkerPackage();
-
+        mWorkerPackageMap = bag.getWorkerPackageMap();
+        if( mWorkerPackageMap == null ){
+                mWorkerPackageMap = new HashMap<String,String>();
+        }
+        /* PM-810    
         if( mTransferWorkerPackage ){
             mWorkerPackageMap = bag.getWorkerPackageMap();
             if( mWorkerPackageMap == null ){
@@ -301,6 +305,7 @@ public class PegasusLite implements GridStart {
         else{
             mWorkerPackageMap = new HashMap<String,String>();
         }
+        */
 
         mChmodOnExecutionSiteMap = new HashMap<String,String>();
 
