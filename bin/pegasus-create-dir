@@ -366,9 +366,18 @@ def scp(url):
 
     if "SSH_PRIVATE_KEY" in os.environ:
         cmd += " -i " + os.environ['SSH_PRIVATE_KEY']
+
+    # split up the host into host/port components
+    host = re.sub(':.*', '', url.host)
+    port = "22"
+    r = re.search(':([0-9]+)', url.host)
+    if r:
+        port = r.group(1)
+
     cmd += " -o PasswordAuthentication=no"
     cmd += " -o StrictHostKeyChecking=no"
-    cmd += " " + url.host
+    cmd += " -p " + port
+    cmd += " " + host
     cmd += " '/bin/mkdir -p " + url.path + "'"
     myexec(cmd, 60, True)
 

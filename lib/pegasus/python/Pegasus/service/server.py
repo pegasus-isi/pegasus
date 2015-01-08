@@ -7,6 +7,7 @@ from Pegasus.service.ensembles import manager
 
 log = logging.getLogger(__name__)
 
+
 class ServerCommand(Command):
     usage = "%prog [options]"
     description = "Start Pegasus Service"
@@ -14,13 +15,27 @@ class ServerCommand(Command):
     def __init__(self):
         Command.__init__(self)
         self.parser.add_option("-d", "--debug", action="store_true", dest="debug",
-                default=None, help="Enable debugging")
+                               default=None, help="Enable debugging")
+        self.parser.add_option("-v", "--verbose", action="count", default=0, dest="verbose",
+                               help="Increase logging verbosity, repeatable")
 
     def run(self):
         if self.options.debug:
             app.config.update(DEBUG=True)
 
-        logging.basicConfig(level=logging.INFO)
+        log_level = logging.DEBUG if self.options.debug else self.options.verbose
+
+        if log_level < 0:
+            log_level = logging.ERROR
+        elif log_level == 0:
+            log_level = logging.WARNING
+        elif log_level == 1:
+            log_level = logging.INFO
+        elif log_level > 1:
+            log_level = logging.DEBUG
+
+        logging.basicConfig(level=log_level)
+        logging.getLogger().setLevel(log_level)
 
 
         # We only start the ensemble manager if we are not debugging
@@ -57,6 +72,6 @@ class ServerCommand(Command):
 
         log.info("Exiting")
 
+
 def main():
     ServerCommand().main()
-
