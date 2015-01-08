@@ -37,6 +37,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.code.gridstart.PegasusExitCode;
+import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
@@ -336,7 +337,7 @@ public class DeployWorkerPackage
     /**
      * Boolean indicating worker node execution.
      */
-    protected boolean mWorkerNodeExecution;
+    //protected boolean mWorkerNodeExecution;
 
     /**
      * Loads the implementing class corresponding to the mode specified by the
@@ -369,6 +370,7 @@ public class DeployWorkerPackage
 
         return dp;
     }
+    private Refiner mDefaultTransferRefiner;
 
     /**
      * A pratically nothing constructor !
@@ -385,7 +387,8 @@ public class DeployWorkerPackage
         mJobPrefix  = bag.getPlannerOptions().getJobnamePrefix();
 
         mTransferWorkerPackage = mProps.transferWorkerPackage();
-        mWorkerNodeExecution   = mProps.executeOnWorkerNode();
+        
+        //mWorkerNodeExecution   = mProps.executeOnWorkerNode();
 
         //load the transfer setup implementation
         //To DO . specify type for loading
@@ -417,56 +420,69 @@ public class DeployWorkerPackage
             m = Mapper.loadTCMapper( "Staged", mBag );
         }
 
-        SiteStore siteStore = mBag.getHandleToSiteStore();
         
         RemoteTransfer remoteTransfers = new RemoteTransfer( mProps );
         remoteTransfers.buildState();
 
+        Set[] deploymentSites = this.getDeploymentSites( scheduledDAG );
         
 
         //figure if we need to deploy or not
-        if( !mTransferWorkerPackage ){
+        if( !mTransferWorkerPackage && ( deploymentSites[1].isEmpty() ) ){
+            //PM-810 user specified property is false for worker package
+            //and nonsharedfs|condorio deployment is empty
             mLogger.log( "No Deployment of Worker Package needed" ,
                          LogManager.DEBUG_MESSAGE_LEVEL );
             return;
         }
 
-        mLogger.log( "Deployment of Worker Package needed" ,
+        mLogger.log( "Deployment of Worker Package needed",
                      LogManager.DEBUG_MESSAGE_LEVEL );
 
         //load the transformation selector. different
         //selectors may end up being loaded for different jobs.
         TransformationSelector txSelector = TransformationSelector.loadTXSelector( mProps.getTXSelectorMode() );
 
-        Refiner defaultRefiner = RefinerFactory.loadInstance( DeployWorkerPackage.DEFAULT_REFINER, mBag, scheduledDAG ) ;
-        mSetupTransferImplementation.setRefiner( defaultRefiner );
+        mDefaultTransferRefiner = RefinerFactory.loadInstance( DeployWorkerPackage.DEFAULT_REFINER, mBag, scheduledDAG ) ;
+        mSetupTransferImplementation.setRefiner( mDefaultTransferRefiner );
 
 
+        setupTCForWorkerPackageLocations( deploymentSites[0], m, txSelector, false );
+        setupTCForWorkerPackageLocations( deploymentSites[1], m, txSelector, true );
+        
+    }
+    
+    
+    protected void setupTCForWorkerPackageLocations( Set sites, 
+                                                     Mapper mapper,
+                                                     TransformationSelector selector,
+                                                     boolean workerNodeExecution) {
+        
         //a map indexed by execution site and the corresponding worker package
         //location in the submit directory
         Map<String,String> workerPackageMap = new HashMap<String,String>();
 
+        SiteStore siteStore = mBag.getHandleToSiteStore();
 
         //for the   pegasus lite case, we insert entries into the
         //transformation catalog for all worker package executables
         //the planner requires with just the basename
-        boolean useFullPath = !( mWorkerNodeExecution );
-
+        boolean useFullPath = !( workerNodeExecution );
+        
         //for each site insert default entries in the Transformation Catalog
         //for each scheduled site query TCMapper
-        Set deploymentSites = this.getDeploymentSites( scheduledDAG );
-        for( Iterator it = deploymentSites.iterator(); it.hasNext(); ){
+        for( Iterator it = sites.iterator(); it.hasNext(); ){
             String site = ( String ) it.next();
             
             //check if there is a valid entry for worker package
             List entries, selectedEntries = null;
             try{
-                entries = m.getTCList( DeployWorkerPackage.TRANSFORMATION_NAMESPACE,
+                entries = mapper.getTCList( DeployWorkerPackage.TRANSFORMATION_NAMESPACE,
                                        DeployWorkerPackage.TRANSFORMATION_NAME,
                                        DeployWorkerPackage.TRANSFORMATION_VERSION,
                                        site );
 
-                selectedEntries = txSelector.getTCEntry( entries );
+                selectedEntries = selector.getTCEntry( entries );
             }catch( Exception e ){ /*ignore*/}
             
             //try and create a default entry for pegasus::worker if 
@@ -484,18 +500,22 @@ public class DeployWorkerPackage
             
         }
         
+        
         //for each scheduled site query TCMapper
-        for( Iterator it = deploymentSites.iterator(); it.hasNext(); ){
+        for( Iterator it = sites.iterator(); it.hasNext(); ){
             String site = ( String ) it.next();
-            String stagingSite = this.getStagingSite( site );
+            String stagingSite = workerNodeExecution ? 
+                                 "local":// For PegasusLite Jobs we stage to the submit directory
+                                 site;
+            
             //get the set of valid tc entries
-            List entries = m.getTCList( DeployWorkerPackage.TRANSFORMATION_NAMESPACE,
+            List entries = mapper.getTCList( DeployWorkerPackage.TRANSFORMATION_NAMESPACE,
                                         DeployWorkerPackage.TRANSFORMATION_NAME,
                                         DeployWorkerPackage.TRANSFORMATION_VERSION,
                                         site );
 
             //get selected entries
-            List selectedEntries = txSelector.getTCEntry( entries );
+            List selectedEntries = selector.getTCEntry( entries );
             if( selectedEntries == null || selectedEntries.size() == 0 ){
                 throw new RuntimeException( "Unable to find a valid location to stage " +
                                             Separator.combine( DeployWorkerPackage.TRANSFORMATION_NAMESPACE,
@@ -523,7 +543,7 @@ public class DeployWorkerPackage
             //the execution site and also pick up a FileServer accordingly
             String baseRemoteWorkDir = null;
             String baseRemoteWorkDirURL = null;//externally accessible URL
-            if(  mWorkerNodeExecution ){
+            if(  workerNodeExecution ){
                 //for pegasus-lite the worker package goes
                 //to the submit directory on the local site.
                 //the staging site is set to local
@@ -600,7 +620,7 @@ public class DeployWorkerPackage
 //            String destURLPrefix = this.selectHeadNodeScratchSharedFileServerURLPrefix( stagingSite );
             
             
-            boolean localTransfer = this.runTransferOnLocalSite( defaultRefiner, stagingSite, destURLPrefix, Job.STAGE_IN_JOB);
+            boolean localTransfer = this.runTransferOnLocalSite( mDefaultTransferRefiner, stagingSite, destURLPrefix, Job.STAGE_IN_JOB);
             if( localTransfer ){
                 //then we use the external work directory url
                 ft.addDestination( stagingSite, baseRemoteWorkDirURL  + File.separator + baseName );
@@ -616,7 +636,7 @@ public class DeployWorkerPackage
                                "file://";
             ft.addDestination( stagingSite, urlPrefix + new File( baseRemoteWorkDir, baseName ).getAbsolutePath() );
 */
-            if( mWorkerNodeExecution ){
+            if( workerNodeExecution ){
                 //populate the map with the submit directory locations
                 workerPackageMap.put( site, new File( baseRemoteWorkDir, baseName ).getAbsolutePath() );
             }
@@ -624,11 +644,10 @@ public class DeployWorkerPackage
             mFTMap.put( site, ft );
             mLocalTransfers.put( stagingSite, localTransfer );
         }
-
-
+        
         //for pegasus lite and worker package execution
         //we add the worker package map to PegasusBag
-        if( mWorkerNodeExecution ){
+        if( workerNodeExecution ){
             mBag.add( PegasusBag.WORKER_PACKAGE_MAP,  workerPackageMap );
         }
     }
@@ -717,24 +736,31 @@ public class DeployWorkerPackage
     public ADag addSetupNodes( ADag dag ){
         Mapper m = mBag.getHandleToTransformationMapper();
         
-        //figure if we need to deploy or not
-        if( !mTransferWorkerPackage ){
+
+        //boolean addUntarJobs = !mWorkerNodeExecution;
+
+        Set[] deploymentSites = this.getDeploymentSites( dag );
+                
+        if( !mTransferWorkerPackage && ( deploymentSites[1].isEmpty() ) ){
+            //PM-810 user specified property is false for worker package
+            //and nonsharedfs|condorio deployment is empty
             mLogger.log( "No Deployment of Worker Package needed" ,
                          LogManager.DEBUG_MESSAGE_LEVEL );
             return dag;
         }
 
-
-        //we add untar nodes only if worker node execution/pegasus lite
-        //mode is disabled
-        boolean addUntarJobs = !mWorkerNodeExecution;
-
-        Set deploymentSites = this.getDeploymentSites( dag );
-        ADag workflow = ( addUntarJobs )?
-                         addSetupNodesWithUntarNodes( dag , deploymentSites ): //non pegasus lite case. shared fs
-                         addSetupNodesWithoutUntarNodes( dag, deploymentSites );
+        
+        if( !deploymentSites[0].isEmpty() ){
+            //we add untar nodes only if worker node execution/pegasus lite
+            //mode is disabled
+            dag =addSetupNodesWithUntarNodes( dag , deploymentSites[0] );//non pegasus lite case. shared fs
+        }
+        if( !deploymentSites[1].isEmpty() ){
+            dag = addSetupNodesWithoutUntarNodes( dag, deploymentSites[1] );
+        }
+        
        
-        return workflow;
+        return dag;
     }
 
     /**
@@ -760,7 +786,8 @@ public class DeployWorkerPackage
 
             //for pegauss lite mode the staging site for worker package
             //should be local site , submit directory.
-            String stagingSite = this.getStagingSite(site);
+            //String stagingSite = this.getStagingSite(site);
+            String stagingSite = site; //PM-810
 
             mLogger.log( "Adding worker package deployment node for " + site +
                          " and staging site as " + stagingSite,
@@ -934,12 +961,18 @@ public class DeployWorkerPackage
      *
      * @param dag   the dag on which the jobs need to execute.
      *
-     * @return  a Set containing a list of siteID's of the sites where the
-     *          dag has to be run.
+     * @return  a Set array containing a list of siteID's of the sites where the
+     *          dag has to be run. Index[0] has the sites for sharedfs deployment
+     *          while Index[1] for ( nonsharedfs and condorio).
      */
-    protected Set getDeploymentSites( ADag dag ){
-        Set set = new HashSet();
-
+    protected Set[] getDeploymentSites( ADag dag ){
+        Set[] result = new Set[2];
+        result[0]    = new HashSet();
+        result[1]    = new HashSet();
+        
+        Set sharedFSSet    = result[0];
+        Set nonsharedFSSet = result[1];
+        
         for(Iterator<GraphNode> it = dag.jobIterator();it.hasNext();){
             GraphNode node = it.next();
             Job job = (Job)node.getContent();
@@ -953,15 +986,33 @@ public class DeployWorkerPackage
             //add to the set only if the job is
             //being run in the work directory
             //this takes care of local site create dir
-            if(job.runInWorkDirectory()){
-                set.add(job.executionPool);
+            String conf = job.vdsNS.getStringValue( Pegasus.DATA_CONFIGURATION_KEY);
+            if( conf != null && job.runInWorkDirectory()){
+                
+                if( conf.equalsIgnoreCase( PegasusConfiguration.SHARED_FS_CONFIGURATION_VALUE) ){
+                    sharedFSSet.add( job.getSiteHandle() );
+                }
+                else{
+                    nonsharedFSSet.add( job.getSiteHandle() );
+                }
             }
+        }
+        
+        //PM-810 sanity check to make sure sites are not setup
+        //for both modes
+        Set<String> intersection = new HashSet<String>( sharedFSSet );
+        intersection.retainAll( nonsharedFSSet );
+        if( !intersection.isEmpty() ){
+            throw new RuntimeException( 
+                    "Worker package is set to be staged for both sharedfs and nonsharedfs|condorio mode for sites " 
+                            + intersection );
         }
 
         //remove the stork pool
-        set.remove("stork");
-
-        return set;
+        sharedFSSet.remove("stork");
+        nonsharedFSSet.remove( "stork" );
+        
+        return result;
     }
 
 
@@ -1473,12 +1524,14 @@ public class DeployWorkerPackage
      *
      * @return the staging site
      */
-    private String getStagingSite(String site) {
+    /*private String getStagingSite(String site) {
         //for pegauss lite mode the staging site for worker package
         //should be local site , submit directory.
         return mWorkerNodeExecution ?  "local":
                                         site;
-    }
+    }*/
+
+    
 
     
 
