@@ -616,10 +616,6 @@ public class DeployWorkerPackage
             //figure out the URL prefix depending on
             //the TPT configuration                            
 
-            //PM-590 stricter checks
-//            String destURLPrefix = this.selectHeadNodeScratchSharedFileServerURLPrefix( stagingSite );
-            
-            
             boolean localTransfer = this.runTransferOnLocalSite( mDefaultTransferRefiner, stagingSite, destURLPrefix, Job.STAGE_IN_JOB);
             if( localTransfer ){
                 //then we use the external work directory url
@@ -628,14 +624,7 @@ public class DeployWorkerPackage
             else{
                 ft.addDestination( stagingSite, "file://" + new File( baseRemoteWorkDir, baseName ).getAbsolutePath() );
             }
-/*
-            String urlPrefix =  localTransfer ?
-                               //lookup the site catalog to get the URL prefix
-                               destURLPrefix :
-                               //push pull mode. File URL will do
-                               "file://";
-            ft.addDestination( stagingSite, urlPrefix + new File( baseRemoteWorkDir, baseName ).getAbsolutePath() );
-*/
+
             if( workerNodeExecution ){
                 //populate the map with the submit directory locations
                 workerPackageMap.put( site, new File( baseRemoteWorkDir, baseName ).getAbsolutePath() );
@@ -1166,10 +1155,6 @@ public class DeployWorkerPackage
 
         SiteCatalogEntry ePool = mSiteStore.lookup( site );
         
- /*      JIRA PM-277 
-        jobManager = ePool.selectGridGateway( GridGateway.JOB_TYPE.transfer );
- */
-        
         //String argString = "zxvf " + wpBasename;
         // tar -C /tmp/ -zxvf pegasus-worker-2.4.0cvs-x86_rhas_3.tar.gz 
         //we want to fully specify the directory where we want tar file
@@ -1187,11 +1172,6 @@ public class DeployWorkerPackage
                               DeployWorkerPackage.UNTAR_DERIVATION_NAME,
                               DeployWorkerPackage.UNTAR_DERIVATION_VERSION );
         
-//        newJob.condorUniverse = "vanilla";
-/*      JIRA PM-277
-        newJob.condorUniverse = GridGateway.JOB_TYPE.auxillary.toString();
-        newJob.globusScheduler = jobManager.getContact();
-*/
         newJob.executable = execPath;
         newJob.executionPool = site;
         newJob.strargs = arguments.toString();
@@ -1533,10 +1513,6 @@ public class DeployWorkerPackage
         return mWorkerNodeExecution ?  "local":
                                         site;
     }*/
-
-    
-
-    
 
     
 }
