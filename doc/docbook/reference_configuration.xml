@@ -3205,15 +3205,18 @@ See Also    :</emphasis> pegasus.selector.site</literallayout></entry>
               <entry><literallayout><emphasis role="bold"><emphasis
                       role="bold">Property Key: </emphasis></emphasis>pegasus.data.configuration<emphasis
                     role="bold"><emphasis role="bold">
-Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
-Scope       :</emphasis> Properties
+Profile  Key: </emphasis></emphasis>data.configuration<emphasis role="bold">
+Scope       :</emphasis> Properties, Site Catalog
 <emphasis role="bold">Since       :</emphasis> 4.0.0
 <emphasis role="bold">Values</emphasis>      : sharedfs|nonsharedfs|condorio
 <emphasis role="bold">Default     :</emphasis> sharedfs<emphasis role="bold">
 See Also    :</emphasis> pegasus.transfer.bypass.input.staging</literallayout></entry>
 
               <entry><para>This property sets up Pegasus to run in different
-              environments.</para><para><variablelist>
+              environments. For Pegasus 4.5.0 and above, users can set the
+              pegasus profile data.configuration with the sites in their site
+              catalog, to run multisite workflows with each site having a
+              different data configuration.</para><para><variablelist>
                   <varlistentry>
                     <term>sharedfs</term>
 
