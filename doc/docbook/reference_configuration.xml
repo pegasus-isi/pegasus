@@ -3218,13 +3218,7 @@ See Also    :</emphasis> pegasus.transfer.bypass.input.staging</literallayout></
                     <term>sharedfs</term>
 
                     <listitem>
-                       If this is set, Pegasus will be setup to execute jobs on the shared filesystem on the execution site. This assumes, that the head node of a cluster and the worker nodes share a filesystem. The staging site in this case is the same as the execution site. Pegasus adds a create dir job to the executable workflow that creates a workflow specific directory on the shared filesystem . The data transfer jobs in the executable workflow ( stage_in_ , stage_inter_ , stage_out_ ) transfer the data to this directory.The compute jobs in the executable workflow are launched in the directory on the shared filesystem. Internally, if this is set the following properties are set. 
-
-                      <screen>
-pegasus.execute.*.filesystem.local   false
-</screen>
-
-                       
+                       If this is set, Pegasus will be setup to execute jobs on the shared filesystem on the execution site. This assumes, that the head node of a cluster and the worker nodes share a filesystem. The staging site in this case is the same as the execution site. Pegasus adds a create dir job to the executable workflow that creates a workflow specific directory on the shared filesystem . The data transfer jobs in the executable workflow ( stage_in_ , stage_inter_ , stage_out_ ) transfer the data to this directory.The compute jobs in the executable workflow are launched in the directory on the shared filesystem.  
                     </listitem>
                   </varlistentry>
 
@@ -3232,12 +3226,9 @@ pegasus.execute.*.filesystem.local   false
                     <term>condorio</term>
 
                     <listitem>
-                       If this is set, Pegasus will be setup to run jobs in a pure condor pool, with the nodes not sharing a filesystem. Data is staged to the compute nodes from the submit host using Condor File IO. The planner is automatically setup to use the submit host ( site local ) as the staging site. All the auxillary jobs added by the planner to the executable workflow ( create dir, data stagein and stage-out, cleanup ) jobs refer to the workflow specific directory on the local site. The data transfer jobs in the executable workflow ( stage_in_ , stage_inter_ , stage_out_ ) transfer the data to this directory. When the compute jobs start, the input data for each job is shipped from the workflow specific directory on the submit host to compute/worker node using Condor file IO. The output data for each job is similarly shipped back to the submit host from the compute/worker node. This setup is particularly helpful when running workflows in the cloud environment where setting up a shared filesystem across the VM's may be tricky. On loading this property, internally the following properies are set 
+                       If this is set, Pegasus will be setup to run jobs in a pure condor pool, with the nodes not sharing a filesystem. Data is staged to the compute nodes from the submit host using Condor File IO. The planner is automatically setup to use the submit host ( site local ) as the staging site. All the auxillary jobs added by the planner to the executable workflow ( create dir, data stagein and stage-out, cleanup ) jobs refer to the workflow specific directory on the local site. The data transfer jobs in the executable workflow ( stage_in_ , stage_inter_ , stage_out_ ) transfer the data to this directory. When the compute jobs start, the input data for each job is shipped from the workflow specific directory on the submit host to compute/worker node using Condor file IO. The output data for each job is similarly shipped back to the submit host from the compute/worker node. This setup is particularly helpful when running workflows in the cloud environment where setting up a shared filesystem across the VM's may be tricky. 
 
-                      <screen>
-pegasus.transfer.lite.*.impl          Condor
-pegasus.execute.*.filesystem.local   true
-pegasus.gridstart 		   PegasusLite
+                      <screen>pegasus.gridstart                    PegasusLite
 pegasus.transfer.worker.package      true
 </screen>
 
@@ -3251,9 +3242,7 @@ pegasus.transfer.worker.package      true
                     <listitem>
                        If this is set, Pegasus will be setup to execute jobs on an execution site without relying on a shared filesystem between the head node and the worker nodes. You can specify staging site ( using --staging-site option to pegasus-plan) to indicate the site to use as a central storage location for a workflow. The staging site is independant of the execution sites on which a workflow executes. All the auxillary jobs added by the planner to the executable workflow ( create dir, data stagein and stage-out, cleanup ) jobs refer to the workflow specific directory on the staging site. The data transfer jobs in the executable workflow ( stage_in_ , stage_inter_ , stage_out_ ) transfer the data to this directory. When the compute jobs start, the input data for each job is shipped from the workflow specific directory on the submit host to compute/worker node using pegasus-transfer. The output data for each job is similarly shipped back to the submit host from the compute/worker node. The protocols supported are at this time SRM, GridFTP, iRods, S3. This setup is particularly helpful when running workflows on OSG where most of the execution sites don't have enough data storage. Only a few sites have large amounts of data storage exposed that can be used to place data during a workflow run. This setup is also helpful when running workflows in the cloud environment where setting up a shared filesystem across the VM's may be tricky. On loading this property, internally the following properies are set 
 
-                      <screen>
-pegasus.execute.*.filesystem.local   true
-pegasus.gridstart 		   PegasusLite
+                      <screen>pegasus.gridstart                    PegasusLite
 pegasus.transfer.worker.package      true
 </screen>
 
@@ -3422,90 +3411,6 @@ See Also    :</emphasis> pegasus.transfer.refiner</literallayout></entry>
 
                           <listitem>
                              This refers to the new guc client that does multiple file transfers per invocation. The globus-url-copy client distributed with Globus 4.x is compatible with this mode. 
-                          </listitem>
-                        </varlistentry>
-                      </variablelist></para></entry>
-                  </row>
-                </tbody>
-              </entrytbl>
-            </row>
-
-            <row>
-              <entry><literallayout><emphasis role="bold"><emphasis
-                      role="bold">Property Key: </emphasis></emphasis>pegasus.transfer.lite.*.impl<emphasis
-                    role="bold"><emphasis role="bold">
-Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
-Scope       :</emphasis> Properties
-<emphasis role="bold">Since       :</emphasis> 4.0
-<emphasis role="bold">Type        : </emphasis>String
-<emphasis role="bold">Values</emphasis>      : Transfer|Condor<emphasis
-                    role="bold">
-Default     :</emphasis> Transfer<emphasis role="bold">
-See Also    :</emphasis> pegasus.data.configuration
-<emphasis role="bold">See Also    :</emphasis> pegasus.execute.*.filesystem.local</literallayout></entry>
-
-              <entrytbl cols="1">
-                <tbody>
-                  <row>
-                    <entry><para>This property specifies the transfer tool to
-                    be used for staging of input and output data between the
-                    staging site and worker node filesystems in
-                    PegasusLite.</para><para>Currently, the * in the property
-                    name CANNOT be replaced to achieve finer grained control
-                    to dictate what type of transfers need to be managed with
-                    which grid transfer tool.</para><para>The various grid
-                    transfer tools that can be used to manage PegasusLite data
-                    transfers are explained below</para><para><variablelist>
-                        <varlistentry>
-                          <term>Transfer</term>
-
-                          <listitem>
-                            <para>This results in pegasus-transfer to be used
-                            for transferring of files. It is a python based
-                            wrapper around various transfer clients like
-                            globus-url-copy, lcg-copy, wget, cp, ln .
-                            pegasus-transfer looks at source and destination url
-                            and figures out automatically which underlying
-                            client to use. pegasus-transfer is distributed with
-                            the PEGASUS and can be found at
-                            $PEGASUS_HOME/bin/pegasus-transfer.</para>
-
-                            <para>For remote sites, Pegasus constructs the
-                            default path to pegasus-transfer on the basis of
-                            PEGASUS_HOME env profile specified in the site
-                            catalog. To specify a different path to the
-                            pegasus-transfer client , users can add an entry
-                            into the transformation catalog with fully qualified
-                            logical name as pegasus::pegasus-transfer</para>
-                          </listitem>
-                        </varlistentry>
-
-                        <varlistentry>
-                          <term>Condor</term>
-
-                          <listitem>
-                            <para>This results in Condor file transfer mechanism
-                            to be used to transfer the input data files from the
-                            submit host directly to the worker node directories.
-                            This is used when running in pure Condor mode or in
-                            a Condor pool that does not have a shared filesystem
-                            between the nodes.</para>
-
-                            <para>When setting the PegasusLite transfers to
-                            Condor make sure that the following properties are
-                            also set <screen>
-pegasus.gridstart		        PegasusLite
-pegasus.execute.*.filesystem.local  true
-</screen> Alternatively, you can set <screen>
-pegasus.data.configuration           condorio
-</screen> in lieu of the above 3 properties.</para>
-
-                            <para>Also make sure that pegasus.gridstart is not
-                            set.</para>
-
-                            <para>Please refer to the section on "Condor Pool
-                            Without a Shared Filesystem" in the chapter on
-                            Planning and Submitting.</para>
                           </listitem>
                         </varlistentry>
                       </variablelist></para></entry>
@@ -4709,32 +4614,6 @@ Scope       :</emphasis> Properties
                   </listitem>
                 </varlistentry>
               </variablelist></para></entry>
-          </row>
-
-          <row>
-            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>pegasus.execute.*.filesystem.local<emphasis
-                  role="bold"><emphasis role="bold">
-Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
-Scope       :</emphasis> Properties
-<emphasis role="bold">Since       :</emphasis> 2.1.0
-<emphasis role="bold">Type        : </emphasis>Boolean
-<emphasis role="bold">Default     :</emphasis> false<emphasis role="bold">
-See Also    :</emphasis> pegasus.data.configuration</literallayout></entry>
-
-            <entry><para>Normally, Pegasus transfers the data to and from a
-            directory on the shared filesystem on the head node of a compute
-            site. The directory needs to be visible to both the head node and
-            the worker nodes for the compute jobs to execute
-            correctly.</para><para>By setting this property to true, you can
-            get Pegasus to execute jobs on the worker node filesystem. In this
-            case, when the jobs are launched on the worker nodes, the jobs
-            grab the input data from the workflow specific execution directory
-            on the compute site and push the output data to the same directory
-            after completion. The transfer of data to and from the worker node
-            directory is referred to as PegasusLite Data
-            Transfers.</para><para><emphasis role="bold">Note</emphasis>:
-            Users don't need to set this property. This is an internal
-            property for use of developers only</para></entry>
           </row>
 
           <row>
