@@ -1334,10 +1334,53 @@ Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
-            <entry>Determines the executable for launching a job. Possible
+            <entry>Determines the executable for launching a job. This covers
+            both tasks ( jobs specifed by the user in the DAX) and additional
+            jobs added by Pegasus during the planning opertation. Possible
             values are <emphasis role="bold"><emphasis>Kickstart |
-            NoGridStart</emphasis></emphasis> | PegasusLite at the
-            moment.</entry>
+            NoGridStart</emphasis></emphasis> | PegasusLite | Distribute at
+            the moment. <note>
+                <para>This profile should only be set by users if you know
+                what you are doing. Otherwise, let Pegasus do the right thing
+                based on your configuration.</para>
+              </note><para><variablelist>
+                <varlistentry>
+                  <term>Kickstart</term>
+
+                  <listitem>
+                     By default, all jobs executed are launched using a lightweight C executable called pegasus-kickstart. This generates valuable runtime provenance information for the job as it is executed on a remote node. This information serves as the basis for the monitoring and debugging capabilities provided by Pegasus.
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term>NoGridStart</term>
+
+                  <listitem>
+                     This explicity disables the wrapping of the jobs with pegasus-kickstart. This is internally used by the planner to launch dax jobs directly. If this is set, then the information populated in the monitording database is on the basis of what is recorded in the DAGMan out file.  
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term>PegasusLite</term>
+
+                  <listitem>
+                     This value is automatically associated by the Planner whenever the job runs in either nonsharedfs or condorio mode. The property pegasus.data.configuration decides whether a job is launched via PegasusLite or not.  PegasusLite is a lightweight Pegasus wrapper generated for each job that allows a job to run in a nonshared file system environment and is responsible for staging in the input data and staging out the output data back to a remote staging site for the job.  
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term>Distribute</term>
+
+                  <listitem>
+                    <para>This wrapper is a HubZero specfiic wrapper that
+                    allows compute jobs that are scheduled for a local PBS
+                    cluster to be run locally on the submit host. The jobs are
+                    wrapped with a distribute wrapper that is responsible for
+                    doing the qsub and tracking of the status of the jobs in
+                    the PBS cluster.</para>
+                  </listitem>
+                </varlistentry>
+              </variablelist></para></entry>
           </row>
 
           <row>
