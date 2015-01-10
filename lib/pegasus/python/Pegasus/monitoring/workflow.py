@@ -1276,15 +1276,7 @@ class Workflow:
         else:
             if self._user is not None:
                 kwargs["user"] = self._user
-        if my_job._remote_working_dir is not None:
-            kwargs["work_dir"] = my_job._remote_working_dir
-        else:
-            if self._original_submit_dir is not None:
-                kwargs["work_dir"] = self._original_submit_dir
-        if my_job._cluster_start_time is not None:
-            kwargs["cluster__start"] = my_job._cluster_start_time
-        if my_job._cluster_duration is not None:
-            kwargs["cluster__dur"] = my_job._cluster_duration
+
         if my_job._main_job_start is not None and my_job._main_job_done is not None:
             # If we have both timestamps, let's try to compute the local duration
             try:
@@ -1333,6 +1325,22 @@ class Workflow:
         Not the stampede loader, that has a separate mechanism
         to batch and load events into the database
         """
+
+        #PM-814 remote working directory , cluster_start and cluster duration are
+        #all parsed from the job output file. So these can only be set after
+        #the job output has been parsed
+        if my_job._remote_working_dir is not None:
+            kwargs["work_dir"] = my_job._remote_working_dir
+        else:
+            if self._original_submit_dir is not None:
+                kwargs["work_dir"] = self._original_submit_dir
+        if my_job._cluster_start_time is not None:
+            kwargs["cluster__start"] = my_job._cluster_start_time
+        if my_job._cluster_duration is not None:
+            kwargs["cluster__dur"] = my_job._cluster_duration
+
+
+
         self.load_stdout_err_in_job_instance( my_job, kwargs )
         # Send job state event to database
         self.output_to_db("job_inst.main.end", kwargs)
@@ -2050,7 +2058,6 @@ class Workflow:
             # check to see if there is a deferred job_inst.main.end event that
             # has to be sent to the database
             if( my_job._deferred_job_end_kwargs is not None ):
-                self.load_stdout_err_in_job_instance( my_job, my_job._deferred_job_end_kwargs )
                 self.flush_db_send_job_end(my_job, my_job._deferred_job_end_kwargs )
 
             # POST script finished
