@@ -2051,7 +2051,6 @@ class Workflow:
             # check to see if there is a deferred job_inst.main.end event that
             # has to be sent to the database
             if( my_job._deferred_job_end_kwargs is not None ):
-                self.load_stdout_err_in_job_instance( my_job, my_job._deferred_job_end_kwargs )
                 self.flush_db_send_job_end(my_job, my_job._deferred_job_end_kwargs )
 
             # POST script finished
