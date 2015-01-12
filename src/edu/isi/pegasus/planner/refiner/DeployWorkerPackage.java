@@ -447,7 +447,11 @@ public class DeployWorkerPackage
         mSetupTransferImplementation.setRefiner( mDefaultTransferRefiner );
 
 
-        setupTCForWorkerPackageLocations( deploymentSites[0], m, txSelector, false );
+        if( mTransferWorkerPackage && !deploymentSites[0].isEmpty() ){
+            //PM-810 for sharedfs case, worker package transfer can only happen
+            //if the property is set by the user in the proeprties file
+             setupTCForWorkerPackageLocations( deploymentSites[0], m, txSelector, false );
+        }
         setupTCForWorkerPackageLocations( deploymentSites[1], m, txSelector, true );
         
     }
