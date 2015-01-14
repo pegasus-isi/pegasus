@@ -76,6 +76,11 @@ public class PegasusProperties implements Cloneable {
     
     public static final String PEGASUS_SITE_CATALOG_FILE_PROPERTY = "pegasus.catalog.site.file";
     
+    
+    public static final String PEGASUS_LOG_METRICS_PROPERTY        = "pegasus.log.metrics";
+    
+    public static final String PEGASUS_LOG_METRICS_PROPERTY_FILE   = "pegasus.log.metrics.file";
+    
     public static final String PEGASUS_APP_METRICS_PREFIX = "pegasus.metrics.app";
     
     
@@ -2082,7 +2087,7 @@ public class PegasusProperties implements Cloneable {
      * @return boolean in the properties, else true
      */
     public boolean writeOutMetrics(){
-        return Boolean.parse( mProps.getProperty( "pegasus.log.metrics" ), true ) &&
+        return Boolean.parse(mProps.getProperty(PegasusProperties.PEGASUS_LOG_METRICS_PROPERTY ), true ) &&
                (this.getMetricsLogFile() != null);
     }
 
@@ -2094,7 +2099,7 @@ public class PegasusProperties implements Cloneable {
      * @return path to the metrics file if specified, else rundir/pegasus.metrics
      */
     public String getMetricsLogFile(){
-        String file = mProps.getProperty( "pegasus.log.metrics.file" );
+        String file = mProps.getProperty( PegasusProperties.PEGASUS_LOG_METRICS_PROPERTY_FILE );
         return file;
     }
 

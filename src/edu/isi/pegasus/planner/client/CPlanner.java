@@ -381,7 +381,12 @@ public class CPlanner extends Executable{
         Collection result = null;
 
         //print help if asked for
-        if( mPOptions.getHelp() ) { printLongVersion(); return result; }
+        if( mPOptions.getHelp() ) { 
+            //PM-816 disable metrics logging
+            this.mSendMetrics = false;
+            printLongVersion(); 
+            return result; 
+        }
 
         //set the logging level only if -v was specified
         if(mPOptions.getLoggingLevel() >= 0){
