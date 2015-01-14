@@ -43,11 +43,12 @@ import java.util.Set;
 
 /**
  * An implementation of the Site Catalog interface that is backed up by 
- * an XML file conforming to site catalog xml schema version 3.
+ * an XML file conforming to site catalog xml schema version 3 or version 4
  * 
- * The schema can be found online at 
+ * The schemas can be found online at 
  * 
  * <pre>
+ *  http://pegasus.isi.edu/schema/sc-3.0.xsd
  *  http://pegasus.isi.edu/schema/sc-3.0.xsd
  * </pre>
  * 
