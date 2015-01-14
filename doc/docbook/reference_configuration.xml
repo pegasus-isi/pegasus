@@ -1348,7 +1348,7 @@ Scope       :</emphasis> TC, SC, DAX, Properties
                   <term>Kickstart</term>
 
                   <listitem>
-                     By default, all jobs executed are launched using a lightweight C executable called pegasus-kickstart. This generates valuable runtime provenance information for the job as it is executed on a remote node. This information serves as the basis for the monitoring and debugging capabilities provided by Pegasus.
+                     By default, all jobs executed are launched using a lightweight C executable called pegasus-kickstart. This generates valuable runtime provenance information for the job as it is executed on a remote node. This information serves as the basis for the monitoring and debugging capabilities provided by Pegasus. 
                   </listitem>
                 </varlistentry>
 
@@ -1356,7 +1356,7 @@ Scope       :</emphasis> TC, SC, DAX, Properties
                   <term>NoGridStart</term>
 
                   <listitem>
-                     This explicity disables the wrapping of the jobs with pegasus-kickstart. This is internally used by the planner to launch dax jobs directly. If this is set, then the information populated in the monitording database is on the basis of what is recorded in the DAGMan out file.  
+                     This explicity disables the wrapping of the jobs with pegasus-kickstart. This is internally used by the planner to launch dax jobs directly. If this is set, then the information populated in the monitording database is on the basis of what is recorded in the DAGMan out file. 
                   </listitem>
                 </varlistentry>
 
@@ -1364,7 +1364,7 @@ Scope       :</emphasis> TC, SC, DAX, Properties
                   <term>PegasusLite</term>
 
                   <listitem>
-                     This value is automatically associated by the Planner whenever the job runs in either nonsharedfs or condorio mode. The property pegasus.data.configuration decides whether a job is launched via PegasusLite or not.  PegasusLite is a lightweight Pegasus wrapper generated for each job that allows a job to run in a nonshared file system environment and is responsible for staging in the input data and staging out the output data back to a remote staging site for the job.  
+                     This value is automatically associated by the Planner whenever the job runs in either nonsharedfs or condorio mode. The property pegasus.data.configuration decides whether a job is launched via PegasusLite or not. PegasusLite is a lightweight Pegasus wrapper generated for each job that allows a job to run in a nonshared file system environment and is responsible for staging in the input data and staging out the output data back to a remote staging site for the job. 
                   </listitem>
                 </varlistentry>
 
@@ -2642,9 +2642,19 @@ Scope       :</emphasis> Properties
 </literallayout></entry>
 
             <entry>Pegasus supports two different types of site catalogs in
-            XML format conforming to sc-3.0.xsd and sc-4.0.xsd. Pegasus is
-            able to auto-detect what schema a user site catalog refers to.
-            Hence, this property may no longer be set.</entry>
+            XML format conforming <itemizedlist>
+                <listitem>
+                  <para>sc-3.0.xsd
+                  http://pegasus.isi.edu/schema/sc-3.0.xsd</para>
+                </listitem>
+
+                <listitem>
+                  <para>sc-4.0.xsd
+                  http://pegasus.isi.edu/schema/sc-4.0.xsd</para>
+                </listitem>
+              </itemizedlist>Pegasus is able to auto-detect what schema a user
+            site catalog refers to. Hence, this property may no longer be
+            set.</entry>
           </row>
 
           <row>
@@ -3264,7 +3274,7 @@ See Also    :</emphasis> pegasus.transfer.bypass.input.staging</literallayout></
                     <term>sharedfs</term>
 
                     <listitem>
-                       If this is set, Pegasus will be setup to execute jobs on the shared filesystem on the execution site. This assumes, that the head node of a cluster and the worker nodes share a filesystem. The staging site in this case is the same as the execution site. Pegasus adds a create dir job to the executable workflow that creates a workflow specific directory on the shared filesystem . The data transfer jobs in the executable workflow ( stage_in_ , stage_inter_ , stage_out_ ) transfer the data to this directory.The compute jobs in the executable workflow are launched in the directory on the shared filesystem.  
+                       If this is set, Pegasus will be setup to execute jobs on the shared filesystem on the execution site. This assumes, that the head node of a cluster and the worker nodes share a filesystem. The staging site in this case is the same as the execution site. Pegasus adds a create dir job to the executable workflow that creates a workflow specific directory on the shared filesystem . The data transfer jobs in the executable workflow ( stage_in_ , stage_inter_ , stage_out_ ) transfer the data to this directory.The compute jobs in the executable workflow are launched in the directory on the shared filesystem. 
                     </listitem>
                   </varlistentry>
 
