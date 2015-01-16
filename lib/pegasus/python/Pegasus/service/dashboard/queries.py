@@ -180,9 +180,9 @@ class MasterDatabase(SQLAlchemyInit):
         qmax = qmax.subquery('max_timestamp')
 
         q = self.session.query(func.count(w.wf_id).label('total'),
-                                func.sum(case([(ws.status == 0, 1)], else_=0)).label('success'),
-                                func.sum(case([(ws.status != 0, 1)], else_=0)).label('fail'),
-                                func.sum(case([(ws.status == None, 1)], else_=0)).label('others'))
+                               func.sum(case([(ws.status == 0, 1)], else_=0)).label('success'),
+                               func.sum(case([(ws.status != 0, 1)], else_=0)).label('fail'),
+                               func.sum(case([(ws.status == None, 1)], else_=0)).label('others'))
 
         q = q.filter(w.wf_id == ws.wf_id)
         q = q.filter(ws.wf_id == qmax.c.wf_id)
@@ -484,11 +484,82 @@ class WorkflowInfo(SQLAlchemyInit):
         return (count, filtered, q.all())
 
     def get_failing_jobs(self, **table_args):
+        """
+        SELECT job.job_id                   AS job_job_id,
+            job_instance.job_instance_id AS job_instance_job_instance_id,
+            job.exec_job_id              AS job_exec_job_id,
+            job_instance.exitcode        AS job_instance_exitcode
+        FROM   job,
+               job_instance,
+               (SELECT job.job_id                       AS job_id,
+                       Max(job_instance.job_submit_seq) AS max_jss
+                FROM   job,
+                       job_instance
+                WHERE  job.wf_id = :wf_id_1
+                       AND job.job_id = job_instance.job_id
+                       AND job.type_desc != 'dag'
+                       AND job.type_desc != 'dax'
+                       AND job_instance.exitcode IS NOT NULL
+                       AND job_instance.exitcode != :exitcode_1
+                GROUP  BY job.job_id) AS allmaxjss
+        WHERE  job.wf_id = :wf_id_2
+               AND job.type_desc != 'dag'
+               AND job.type_desc != 'dax'
+               AND job.job_id = job_instance.job_id
+               AND job_instance.exitcode != :exitcode_2
+               AND job_instance.exitcode IS NOT NULL
+               AND job.job_id = allmaxjss.job_id
+               AND job_instance.job_submit_seq = allmaxjss.max_jss
+               AND job.job_id IN (SELECT DISTINCT job.job_id AS anon_1
+                                  FROM   job
+                                  WHERE  job.wf_id = :wf_id_3
+                                        AND job.type_desc != 'dag'
+                                        AND job.type_desc != 'dax'
+                                        AND job.job_id = job_instance.job_id
+                                        AND job_instance.exitcode IS NULL);
+        """
+        # Get a list of running jobs.
+        q_sub = self.session.query(distinct(Job.job_id))
 
-        q = self._jobs_by_type()
+        q_sub = q_sub.filter(Job.wf_id == self._wf_id)
+        q_sub = q_sub.filter(Job.type_desc != 'dax', Job.type_desc != 'dag')
+
+        q_sub = q_sub.filter(Job.job_id == JobInstance.job_id)
+
+        q_sub = q_sub.filter(JobInstance.exitcode == None).correlate(JobInstance)
+
+        q_sub = q_sub.subquery()
+
+
+        #
+        # Get max(job_submit_seq) of all the failed job instances, for each job.
+        #
+        qmax = self.__get_jobs_maxjss_q()
+        qmax = qmax.filter(JobInstance.exitcode != None).filter(JobInstance.exitcode != 0)
+        qmax = qmax.subquery('allmaxjss')
+
+        #
+        # Get the latest failed job instances
+        # whose job_id matches the job_ids of the currently running jobs.
+        #
+
+        q = self.session.query(Job.job_id, JobInstance.job_instance_id, Job.exec_job_id, JobInstance.exitcode)
+
+        q = q.filter(Job.wf_id == self._wf_id)
+        q = q.filter(Job.type_desc != 'dax', Job.type_desc != 'dag')
+
+        q = q.filter(Job.job_id == JobInstance.job_id)
+
         q = q.filter(JobInstance.exitcode != 0).filter(JobInstance.exitcode != None)
 
+        q = q.filter(Job.job_id == qmax.c.job_id)
+        q = q.filter(JobInstance.job_submit_seq == qmax.c.max_jss)
+
+        q = q.filter(Job.job_id.in_(q_sub))
+
+        #
         # Get Total Count. Need this to pass to jQuery Datatable.
+        #
         count = q.count()
         if count == 0:
             return (0, 0, [])
@@ -534,16 +605,18 @@ class WorkflowInfo(SQLAlchemyInit):
 
         return (count, filtered, q.all())
 
-    def __get_jobs_maxjss_sq(self):
-
+    def __get_jobs_maxjss_q(self):
         qmax = self.session.query(Job.job_id, func.max(JobInstance.job_submit_seq).label('max_jss'))
         qmax = qmax.filter(Job.wf_id == self._wf_id)
         qmax = qmax.filter(Job.job_id == JobInstance.job_id)
         qmax = qmax.filter(Job.type_desc != 'dax', Job.type_desc != 'dag')
         qmax = qmax.group_by(Job.job_id)
 
-        qmax = qmax.subquery('allmaxjss')
+        return qmax
 
+    def __get_jobs_maxjss_sq(self):
+        qmax = self.__get_jobs_maxjss_q()
+        qmax = qmax.subquery('allmaxjss')
         return qmax
 
     def get_sub_workflows(self):
