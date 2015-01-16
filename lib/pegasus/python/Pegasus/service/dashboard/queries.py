@@ -486,50 +486,53 @@ class WorkflowInfo(SQLAlchemyInit):
     def get_failing_jobs(self, **table_args):
         """
         SELECT job.job_id                   AS job_job_id,
-            job_instance.job_instance_id AS job_instance_job_instance_id,
-            job.exec_job_id              AS job_exec_job_id,
-            job_instance.exitcode        AS job_instance_exitcode
+               job_instance.job_instance_id AS job_instance_job_instance_id,
+               job.exec_job_id              AS job_exec_job_id,
+               job_instance.exitcode        AS job_instance_exitcode
         FROM   job,
                job_instance,
                (SELECT job.job_id                       AS job_id,
                        Max(job_instance.job_submit_seq) AS max_jss
                 FROM   job,
                        job_instance
-                WHERE  job.wf_id = :wf_id_1
+                WHERE  job.wf_id = 1
                        AND job.job_id = job_instance.job_id
                        AND job.type_desc != 'dag'
                        AND job.type_desc != 'dax'
                        AND job_instance.exitcode IS NOT NULL
-                       AND job_instance.exitcode != :exitcode_1
+                       AND job_instance.exitcode != 0
                 GROUP  BY job.job_id) AS allmaxjss
-        WHERE  job.wf_id = :wf_id_2
+        WHERE  job.wf_id = 1
                AND job.type_desc != 'dag'
                AND job.type_desc != 'dax'
                AND job.job_id = job_instance.job_id
-               AND job_instance.exitcode != :exitcode_2
+               AND job_instance.exitcode != 0
                AND job_instance.exitcode IS NOT NULL
                AND job.job_id = allmaxjss.job_id
                AND job_instance.job_submit_seq = allmaxjss.max_jss
-               AND job.job_id IN (SELECT DISTINCT job.job_id AS anon_1
-                                  FROM   job
-                                  WHERE  job.wf_id = :wf_id_3
-                                        AND job.type_desc != 'dag'
-                                        AND job.type_desc != 'dax'
-                                        AND job.job_id = job_instance.job_id
-                                        AND job_instance.exitcode IS NULL);
+               AND job.job_id IN (SELECT DISTINCT j1.job_id AS anon_1
+                                  FROM   job AS j1,
+                                         job_instance AS ji1
+                                  WHERE  j1.wf_id = 1
+                                         AND j1.type_desc != 'dag'
+                                         AND j1.type_desc != 'dax'
+                                         AND j1.job_id = ji1.job_id
+                                         AND ji1.exitcode IS NULL);
         """
         # Get a list of running jobs.
-        q_sub = self.session.query(distinct(Job.job_id))
+        j1 = orm.aliased(Job, name='j1')
+        ji1 = orm.aliased(JobInstance, name='ji1')
 
-        q_sub = q_sub.filter(Job.wf_id == self._wf_id)
-        q_sub = q_sub.filter(Job.type_desc != 'dax', Job.type_desc != 'dag')
+        q_sub = self.session.query(distinct(j1.job_id))
 
-        q_sub = q_sub.filter(Job.job_id == JobInstance.job_id)
+        q_sub = q_sub.filter(j1.wf_id == self._wf_id)
+        q_sub = q_sub.filter(j1.type_desc != 'dax', j1.type_desc != 'dag')
 
-        q_sub = q_sub.filter(JobInstance.exitcode == None).correlate(JobInstance)
+        q_sub = q_sub.filter(j1.job_id == ji1.job_id)
+
+        q_sub = q_sub.filter(ji1.exitcode == None)
 
         q_sub = q_sub.subquery()
-
 
         #
         # Get max(job_submit_seq) of all the failed job instances, for each job.
@@ -556,7 +559,7 @@ class WorkflowInfo(SQLAlchemyInit):
         q = q.filter(JobInstance.job_submit_seq == qmax.c.max_jss)
 
         q = q.filter(Job.job_id.in_(q_sub))
-
+        print q
         #
         # Get Total Count. Need this to pass to jQuery Datatable.
         #
@@ -744,4 +747,3 @@ class WorkflowInfo(SQLAlchemyInit):
     def close(self):
         log.debug('close')
         self.disconnect()
-
