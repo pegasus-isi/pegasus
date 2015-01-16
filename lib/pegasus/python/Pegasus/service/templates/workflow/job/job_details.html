@@ -8,57 +8,57 @@
     $(document).ready (function ()
     {
         $('#invocations_tabs').tabs (
-        {
-            beforeLoad: function (event, ui)
-            {
-                var isInitialized = ui.panel.data ('initialized');
-
-                if (isInitialized === true)
                 {
-                    return false;
-                }
-
-                ui.jqXHR.error (function ()
-                {
-                    ui.panel.html ('Error loading contents of this tab.');
-                })
-            },
-            load: function (event, ui)
-            {
-                var index = ui.tab.index ();
-                var panel = ui.panel;
-
-                if (index == 0)
-                {
-                    panel.data ('initialized', true);
-
-                    if (panel.html () == '')
+                    beforeLoad: function (event, ui)
                     {
-                        panel.html ('No failed invocations.')
-                    }
-                    else
-                    {
-                        $('#failed_invocations_list').dataTable ({"bJQueryUI" : true, "sPaginationType": "full_numbers"});
-                    }
-                }
-                else if (index == 1)
-                {
-                    panel.data ('initialized', true);
+                        var isInitialized = ui.panel.data ('initialized');
 
-                    if (panel.html () == '')
+                        if (isInitialized === true)
+                        {
+                            return false;
+                        }
+
+                        ui.jqXHR.error (function ()
+                        {
+                            ui.panel.html ('Error loading contents of this tab.');
+                        })
+                    },
+                    load: function (event, ui)
                     {
-                        panel.html ('No successful invocations.')
+                        var index = ui.tab.index ();
+                        var panel = ui.panel;
+
+                        if (index == 0)
+                        {
+                            panel.data ('initialized', true);
+
+                            if (panel.html () == '')
+                            {
+                                panel.html ('No failed invocations.')
+                            }
+                            else
+                            {
+                                $('#failed_invocations_list').dataTable ({"bJQueryUI" : true, "sPaginationType": "full_numbers"});
+                            }
+                        }
+                        else if (index == 1)
+                        {
+                            panel.data ('initialized', true);
+
+                            if (panel.html () == '')
+                            {
+                                panel.html ('No successful invocations.')
+                            }
+                            else
+                            {
+                                $('#successful_invocations_list').dataTable ({"bJQueryUI" : true, "sPaginationType": "full_numbers"});
+                            }
+                        }
                     }
-                    else
-                    {
-                        $('#successful_invocations_list').dataTable ({"bJQueryUI" : true, "sPaginationType": "full_numbers"});
-                    }
-                }
-            }
-        });
+                });
 
         verticalTableInitStatus ('#job_text_info', {{ status_code(job.exitcode) }});
-        verticalTableInitStatus ('#job_states_info', {{ status_code(job.exitcode) }});
+    verticalTableInitStatus ('#job_states_info', {{ status_code(job.exitcode) }});
     })
 </script>
 {% endblock %}
@@ -69,7 +69,7 @@
     }
 </style>
 {% endblock %}
-{% block navigation_bar %} | <a href="{{ url_for ('workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a> | <a href="{{ url_for ('job', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id) }}">Job</a>{% endblock %}
+{% block navigation_bar %} | <a href="{{ url_for ('workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a> | <a href="{{ url_for ('job', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}">Job</a>{% endblock %}
 {% block title_header %}Job Details{% endblock %}
 {% block content %}
 <div id="job_details">
@@ -89,7 +89,7 @@
             </tr>
             <tr>
                 <th class="job_table_width">Stdout Preview</th>
-                <td><a href="{{ url_for ('stdout', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id) }}">Preview</a></td>
+                <td><a href="{{ url_for ('stdout', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}">Preview</a></td>
             </tr>
             <tr>
                 <th class="job_table_width">Stdout File</th>
@@ -97,7 +97,7 @@
             </tr>
             <tr>
                 <th class="job_table_width">Stderr Preview</th>
-                <td><a href="{{ url_for ('stderr', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id) }}">Preview</a></td>
+                <td><a href="{{ url_for ('stderr', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}">Preview</a></td>
             </tr>
             <tr>
                 <th class="job_table_width">Stderr File</th>
@@ -136,10 +136,10 @@
     <div id="invocations_tabs">
         <ul>
             <li>
-                <a href="{{ url_for ('failed_invocations', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id) }}" title="failed_invocations">Failed</a>
+                <a href="{{ url_for ('failed_invocations', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}" title="failed_invocations">Failed</a>
             </li>
             <li>
-                <a href="{{ url_for ('successful_invocations', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id) }}" title="successful_invocations">Successful</a>
+                <a href="{{ url_for ('successful_invocations', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}" title="successful_invocations">Successful</a>
             </li>
         </ul>
     </div>

@@ -25,6 +25,7 @@ from Pegasus.db.workflow import stampede_statistics
 from Pegasus.service import app
 from Pegasus.service.dashboard import queries
 
+
 class NoWorkflowsFoundError(Exception):
     def __init__(self, **args):
         if 'count' in args:
@@ -34,6 +35,7 @@ class NoWorkflowsFoundError(Exception):
 
         if 'filtered' in args:
             self.filtered = args['filtered']
+
 
 class Dashboard(object):
 
@@ -344,27 +346,27 @@ class Dashboard(object):
 
         return statistics
 
-    def get_job_information(self, wf_id, job_id):
+    def get_job_information(self, wf_id, job_id, job_instance_id):
         """
         Get job specific information. This is when user click on a job link, on the workflow details page.
         Returns a Job object.
         """
         try:
             workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id)
-            job_details = workflow.get_job_information(job_id)
+            job_details = workflow.get_job_information(job_id, job_instance_id)
             return job_details
         except NoResultFound:
             return None
         finally:
             Dashboard.close(workflow)
 
-    def get_job_states(self, wf_id, job_id):
+    def get_job_states(self, wf_id, job_id, job_instance_id):
         """
         Get information about the job states that a job has gone through.
         """
         try:
             workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id)
-            job_states = workflow.get_job_states(job_id)
+            job_states = workflow.get_job_states(job_id, job_instance_id)
             return job_states
         finally:
             Dashboard.close(workflow)
@@ -409,42 +411,42 @@ class Dashboard(object):
         finally:
             Dashboard.close(workflow)
 
-    def get_stdout(self, wf_id, job_id):
+    def get_stdout(self, wf_id, job_id, job_instance_id):
         try:
             workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id)
-            stdout = workflow.get_stdout(job_id)
+            stdout = workflow.get_stdout(job_id, job_instance_id)
             return stdout
         finally:
             Dashboard.close(workflow)
 
-    def get_successful_job_invocation(self, wf_id, job_id):
+    def get_successful_job_invocation(self, wf_id, job_id, job_instance_id):
         try:
             workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id)
-            successful_invocations = workflow.get_successful_job_invocations(job_id)
+            successful_invocations = workflow.get_successful_job_invocations(job_id, job_instance_id)
             return successful_invocations
         finally:
             Dashboard.close(workflow)
 
-    def get_failed_job_invocation(self, wf_id, job_id):
+    def get_failed_job_invocation(self, wf_id, job_id, job_instance_id):
         try:
             workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id)
-            failed_invocations = workflow.get_failed_job_invocations(job_id)
+            failed_invocations = workflow.get_failed_job_invocations(job_id, job_instance_id)
             return failed_invocations
         finally:
             Dashboard.close(workflow)
 
-    def get_stderr(self, wf_id, job_id):
+    def get_stderr(self, wf_id, job_id, job_instance_id):
         try:
             workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id)
-            stderr = workflow.get_stderr(job_id)
+            stderr = workflow.get_stderr(job_id, job_instance_id)
             return stderr
         finally:
             Dashboard.close(workflow)
 
-    def get_invocation_information(self, wf_id, job_id, task_id):
+    def get_invocation_information(self, wf_id, job_id, job_instance_id, task_id):
         try:
             workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id)
-            invocation = workflow.get_invocation_information(job_id, task_id)
+            invocation = workflow.get_invocation_information(job_id, job_instance_id, task_id)
             invocation.start_time = strftime("%a, %d %b %Y %H:%M:%S", localtime(invocation.start_time))
             return invocation
         finally:
