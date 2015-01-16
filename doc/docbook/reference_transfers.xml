@@ -1177,7 +1177,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
       url="https://cloud.google.com/storage/docs/authentication#service_accounts">https://cloud.google.com/storage/docs/authentication#service_accounts</ulink></para>
 
       <para>Download the credential in PKCS12 format, and then use "gsutil
-      congfig -e" to generate a .boto file. For example:</para>
+      config -e" to generate a .boto file. For example:</para>
 
       <programlisting>
 $ gsutil config -e
@@ -1206,8 +1206,8 @@ proxy to access the Internet please see the instructions in that file.
       profiles for the storage site. Site catalog example:</para>
 
       <programlisting>
-&lt;profile namespace="pegasus" pegasus="BOTO_CONFIG" &gt;/home/user/.boto&lt;/profile&gt;
-&lt;profile namespace="pegasus" pegasus="GOOGLE_PKCS12" &gt;/home/user/.google-service-account.p12&lt;/profile&gt;
+&lt;profile namespace="pegasus" key="BOTO_CONFIG" &gt;/home/user/.boto&lt;/profile&gt;
+&lt;profile namespace="pegasus" key="GOOGLE_PKCS12" &gt;/home/user/.google-service-account.p12&lt;/profile&gt;
 </programlisting>
     </section>
 
