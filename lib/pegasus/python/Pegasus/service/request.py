@@ -171,7 +171,7 @@ def before():
             abort(403)
 
     user_info = g.user
-    print g.username != g.user.username
+
     if g.username != g.user.username:
         # Is user (g.user.username) allowed to view user (g.username) runs?
         if not is_user_an_admin(g.user.username):

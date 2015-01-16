@@ -1,0 +1,18 @@
+{
+{% if table_args ['sequence'] %}"sEcho" : {{ table_args ['sequence'] }},{% else %}"sEcho" : 0,{% endif %}
+{% if count != None %}"iTotalRecords" : {{ count }},{% else %}"iTotalRecords" : {{ jobs|count }},{% endif %}
+{% if table_args ['limit'] %}"iTotalDisplayRecords" : {{ filtered }},{% endif %}
+"aaData" : [
+{% if jobs %}
+{% for i in range(0, jobs|count) %}
+{
+"DT_RowClass" : "failed",
+"0" : {{ jobs[i].exec_job_id|tojson|safe  }}, "1" : {{ jobs[i].exitcode|tojson|safe }}, "2" : {{ jobs[i].stdout|tojson|safe }}, "3" : {{ jobs[i].stderr|tojson|safe }}
+}
+{% if i + 1 != jobs|count %}
+,
+{% endif %}
+{% endfor %}
+{% endif %}
+]
+}
