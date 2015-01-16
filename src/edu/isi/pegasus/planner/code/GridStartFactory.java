@@ -32,6 +32,7 @@ import edu.isi.pegasus.common.util.DynamicLoader;
 import java.util.Map;
 import java.util.HashMap;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.common.PegasusConfiguration;
 
 /**
  * An abstract factory class to load the appropriate type of GridStart
@@ -53,15 +54,25 @@ public class GridStartFactory {
      */
     public static final String DEFAULT_PACKAGE_NAME = "edu.isi.pegasus.planner.code.gridstart";
 
+    /**
+     * The default Gridstart mode
+     */
+    public static final String DEFAULT_GRIDSTART_MODE = "Kickstart";
 
     /**
      * The corresponding short names for the implementations.
      */
     public static String[] GRIDSTART_SHORT_NAMES = {
                                            "kickstart",
-                                           "none",
-                                           "seqexec"
+                                           "none"
                                           };
+    /**
+     * The known gridstart implementations.
+     */
+    public static String[] GRIDSTART_IMPLEMENTING_CLASSES = {
+                                                     "Kickstart",
+                                                     "NoGridStart"
+                                                    };
     
     /**
      * The index in the constant arrays for NoGridStart.
@@ -73,10 +84,6 @@ public class GridStartFactory {
      */
     public static final int NO_GRIDSTART_INDEX = 1;
 
-    /**
-     * The index in constant arrays for SeqExec
-     */
-    public static final int SEQEXEC_INDEX = 2;
 
     /**
      * The postscript mode in which post scripts are added only for essential
@@ -91,13 +98,7 @@ public class GridStartFactory {
     public static final String ALL_POST_SCRIPT_SCOPE = "all";
 
 
-    /**
-     * The known gridstart implementations.
-     */
-    public static String[] GRIDSTART_IMPLEMENTING_CLASSES = {
-                                                     "Kickstart",
-                                                     "NoGridStart"
-                                                    };
+    
 
     //
 
@@ -287,11 +288,7 @@ public class GridStartFactory {
 
         //determine the short name of GridStart implementation
         //on the basis of any profile associated or from the properties file
-        String shortName = ( job.vdsNS.containsKey( Pegasus.GRIDSTART_KEY) ) ?
-                           //pick the one associated in profiles
-                           ( String ) job.vdsNS.get( Pegasus.GRIDSTART_KEY ):
-                           //pick the one in the properties file
-                           mProps.getGridStart();
+        String shortName = this.getGridStartShortName(job);
 
         //try loading on the basis of short name from the cache
         Object obj = this.gridStart( shortName );
@@ -306,7 +303,7 @@ public class GridStartFactory {
      }
 
 
-     /**
+    /**
      * Loads the appropriate POST Script implementation for a job on the basis of
      * the value of the Pegasus profile GRIDSTART_KEY, and the DAGMan profile
      * POST_SCRIPT_KEY in the Pegasus namepsace. If no value is
@@ -394,6 +391,42 @@ public class GridStartFactory {
         return ps;
      }
 
+    
+    
+    /**
+     * Returns the short name for the gridstart implementation that needs to be
+     * loaded for the job. 
+     * 
+     * @param job
+     * 
+     * @return 
+     */
+    protected String getGridStartShortName( Job job ){
+        
+        if ( job.vdsNS.containsKey( Pegasus.GRIDSTART_KEY) ){
+            //pick the one associated in profiles
+            return ( String ) job.vdsNS.get( Pegasus.GRIDSTART_KEY );
+        }
+        
+        String propValue = mProps.getGridStart();
+        if ( job.vdsNS.containsKey( Pegasus.DATA_CONFIGURATION_KEY ) ){
+            //pick up on the basis of the data configuration key value
+            String conf = job.vdsNS.getStringValue( Pegasus.DATA_CONFIGURATION_KEY );
+            
+            if( (conf.equalsIgnoreCase( PegasusConfiguration.CONDOR_CONFIGURATION_VALUE) ||
+                conf.equalsIgnoreCase( PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE ) ) &&
+                        propValue == null ){
+                //PegasusLite for condorio and nonsharedfs mode
+                //as long as user did not specify explicilty in the properties file
+                return "PegasusLite";
+            }
+        }
+        
+        return ( propValue == null ) ? 
+                GridStartFactory.DEFAULT_GRIDSTART_MODE:
+                propValue; //return what was specified in the properties file.
+                          
+    }
 
     /**
      * Loads the implementing class corresponding to the class. If the package

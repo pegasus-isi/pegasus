@@ -1414,10 +1414,16 @@ class TransferSet:
         self._tmp_name = None
         if self._secondary_handler is not None:
             # we have a two stage transfer to deal with and we need a temp file
-            self._tmp_fd, self._tmp_name = \
+            tmp_fd, self._tmp_name = \
                 tempfile.mkstemp(prefix="pegasus-transfer-two-stage-",
                                  suffix=".data")
-            # need to open the permission up to make sure files downstream
+            # the temp file is only used in shell callouts, so let's close
+            # the fd to make sure we are not leaving any open fds around
+            try:
+                os.close(tmp_fd)
+            except:
+                pass
+            # open the permission up to make sure files downstream
             # get sane permissions to inherit
             os.chmod(self._tmp_name, 0644)
             logger.debug("Using temporary file %s for transfers" 

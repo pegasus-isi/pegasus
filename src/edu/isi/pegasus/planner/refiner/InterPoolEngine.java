@@ -31,7 +31,9 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.common.PegRandom;
+import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.namespace.Hints;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.provenance.pasoa.PPS;
 import edu.isi.pegasus.planner.provenance.pasoa.XMLProducer;
@@ -45,6 +47,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 import java.util.Vector;
 /**
@@ -98,6 +101,11 @@ public class InterPoolEngine extends Engine implements Refiner {
      * The XML Producer object that records the actions.
      */
     private XMLProducer mXMLStore;
+    
+    /**
+     * handle to PegasusConfiguration
+     */
+    private PegasusConfiguration mPegasusConfiguration;
 
     /**
      * Handle to the transformation store that stores the transformation catalog
@@ -122,7 +130,8 @@ public class InterPoolEngine extends Engine implements Refiner {
 
         mTXSelector = null;
         mXMLStore        = XMLProducerFactory.loadXMLProducer( mProps );
-
+        
+        mPegasusConfiguration = new PegasusConfiguration( bag.getLogger() );
     }
 
     /**
@@ -135,18 +144,12 @@ public class InterPoolEngine extends Engine implements Refiner {
      *
      */
     public InterPoolEngine( ADag aDag, PegasusBag bag ) {
-        super( bag );
+        this( bag );
         mDag = aDag;
         mExecPools = (Set)mPOptions.getExecutionSites();
         mLogger.log( "List of executions sites is " + mExecPools,
                      LogManager.DEBUG_MESSAGE_LEVEL );
         
-        mTCMapper = Mapper.loadTCMapper( mProps.getTCMapperMode(), mBag );
-        mBag.add( PegasusBag.TRANSFORMATION_MAPPER, mTCMapper );
-
-        mTXSelector = null;
-        mXMLStore        = XMLProducerFactory.loadXMLProducer( mProps );
-
         this.mDAXTransformationStore = aDag.getTransformationStore();
         
     }
@@ -263,7 +266,7 @@ public class InterPoolEngine extends Engine implements Refiner {
                 incorporateProfiles(job, entry );
                 //the staging site needs to be set before any
                 //file transfers for executable staging are incorporated PM-618
-                job.setStagingSiteHandle( getStagingSite( job ) );
+                job.setStagingSiteHandle( determineStagingSite( job ) );
                 handleExecutableFileTransfers(job, entry);
                 continue;
             }*/
@@ -301,12 +304,21 @@ public class InterPoolEngine extends Engine implements Refiner {
 
             mLogger.log("Job was mapped to " + job.jobName + " to site " + site,
                         LogManager.DEBUG_MESSAGE_LEVEL);
+            
+            
+            
             //incorporate the profiles and
             //do transformation selection
             //set the staging site for the job
             TransformationCatalogEntry entry = lookupTC(job);
             incorporateProfiles(job, entry );
-            job.setStagingSiteHandle( getStagingSite( job ) );
+            
+            //PM-810 assign data configuration for the job if
+            //not already incorporated from profiles and properites
+            if( !job.vdsNS.containsKey( Pegasus.DATA_CONFIGURATION_KEY) ){
+                job.vdsNS.construct( Pegasus.DATA_CONFIGURATION_KEY, PegasusConfiguration.DEFAULT_DATA_CONFIGURATION_VALUE );
+            }
+            job.setStagingSiteHandle( determineStagingSite( job ) );
             handleExecutableFileTransfers(job, entry);
             
             /* PM-810
@@ -342,16 +354,19 @@ public class InterPoolEngine extends Engine implements Refiner {
     }
 
     /**
-     * Returns the staging site to be used for a job. If a staging site is not
-     * determined from the options it is set to be the execution site for the job
+     * Returns the staging site to be used for a job. The determination is made
+     * on the basis of the following
+     *  - data configuration value for job
+     *  - from planner command line options
+     *  - If a staging site is not determined from the options it is set to be the execution site for the job
      *
      * @param job  the job for which to determine the staging site
      *
      * @return the staging site
      */
-    public String getStagingSite( Job job ){
-        String ss =  this.mPOptions.getStagingSite( job.getSiteHandle() );
-        return (ss == null) ? job.getSiteHandle(): ss;
+    private String determineStagingSite( Job job ){
+        return mPegasusConfiguration.determineStagingSite(job, mPOptions);
+        
     }
 
     
@@ -514,6 +529,11 @@ public class InterPoolEngine extends Engine implements Refiner {
         
         if(entry.getType().equals( TCType.STAGEABLE )){
             SiteCatalogEntry site = mSiteStore.lookup( stagingSiteHandle );
+            
+            if( site == null ){
+                throw new RuntimeException( "Unable to find site catalog entry for staging site " + stagingSiteHandle + " for job " + job.getID() );
+            }
+            
             //construct a file transfer object and add it
             //as an input file to the job in the dag
             fTx = new FileTransfer( job.getStagedExecutableBaseName(),

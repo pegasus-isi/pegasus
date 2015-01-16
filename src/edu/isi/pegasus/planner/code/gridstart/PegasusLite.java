@@ -38,6 +38,7 @@ import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.code.GridStart;
+import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Namespace;
@@ -204,12 +205,18 @@ public class PegasusLite implements GridStart {
     /**
      * A boolean indicating whether to have worker node execution or not.
      */
-    protected boolean mWorkerNodeExecution;
+    //protected boolean mWorkerNodeExecution;
 
+    //PM-810 done throught PegasusConfiguration
+    /**
+     * Handle to PegasusConfiguration
+     */
+    private PegasusConfiguration mPegasusConfiguration;
+    
     /**
      * The handle to the SLS implementor
      */
-    protected SLS mSLS;
+    protected SLSFactory mSLSFactory;
 
     /**
      * The options passed to the planner.
@@ -284,7 +291,11 @@ public class PegasusLite implements GridStart {
         mTCHandle  = bag.getHandleToTransformationCatalog();
 
         mTransferWorkerPackage = mProps.transferWorkerPackage();
-
+        mWorkerPackageMap = bag.getWorkerPackageMap();
+        if( mWorkerPackageMap == null ){
+                mWorkerPackageMap = new HashMap<String,String>();
+        }
+        /* PM-810    
         if( mTransferWorkerPackage ){
             mWorkerPackageMap = bag.getWorkerPackageMap();
             if( mWorkerPackageMap == null ){
@@ -294,6 +305,7 @@ public class PegasusLite implements GridStart {
         else{
             mWorkerPackageMap = new HashMap<String,String>();
         }
+        */
 
         mChmodOnExecutionSiteMap = new HashMap<String,String>();
 
@@ -302,17 +314,11 @@ public class PegasusLite implements GridStart {
         mMinorVersionLevel = version.getMinor();
         mPatchVersionLevel = version.getPatch();
 
-        mWorkerNodeExecution = mProps.executeOnWorkerNode();
-        if( mWorkerNodeExecution ){
-            //load SLS
-            mSLS = SLSFactory.loadInstance( bag );
-        }
-        else{
-            //sanity check
-            throw new RuntimeException( "PegasusLite only works if worker node execution is set. Please set  " +
-                                        PegasusProperties.PEGASUS_WORKER_NODE_EXECUTION_PROPERTY  + " to true .");
-        }
-
+        mPegasusConfiguration = new PegasusConfiguration( bag.getLogger() );
+        
+        mSLSFactory = new SLSFactory();
+        mSLSFactory.initialize(bag);
+        
         //pegasus lite needs to disable invoke functionality
         mProps.setProperty( PegasusProperties.DISABLE_INVOKE_PROPERTY, "true" );
 
@@ -406,7 +412,10 @@ public class PegasusLite implements GridStart {
         
         //consider case for non worker node execution first
 
-        if( !mWorkerNodeExecution ){
+        //PM-810
+        /*
+        //if( !mWorkerNodeExecution ){
+        if( !mPegasusConfiguration.jobSetupForWorkerNodeExecution( job, mProps) ){
             //shared filesystem case.
 
             //for now a single job is launched via kickstart only
@@ -418,8 +427,18 @@ public class PegasusLite implements GridStart {
             //handle stuff differently 
             enableForWorkerNodeExecution( job, isGlobusJob );
         }//end of worker node execution
+        */
 
-
+        if( !mPegasusConfiguration.jobSetupForWorkerNodeExecution( job ) ){
+            //shared filesystem case.
+            StringBuilder error = new StringBuilder();
+            error.append( "Job " ).append( job.getID() ).
+                  append( " cannot be wrapped with PegasusLite. Invalid data.configuration associated " ).
+                  append( job.vdsNS.get( Pegasus.DATA_CONFIGURATION_KEY ) );
+            throw new RuntimeException( error.toString() );
+                
+        }
+        enableForWorkerNodeExecution( job, isGlobusJob );
 
         if( mGenerateLOF ){
             //but generate lof files nevertheless
@@ -755,6 +774,9 @@ public class PegasusLite implements GridStart {
         String stagingSiteDirectory      = mSiteStore.getInternalWorkDirectory( job, true );
         String workerNodeDir             = getWorkerNodeDirectory( job );
 
+        //PM-810 load SLS factory per job
+        SLS sls = mSLSFactory.loadInstance(job);
+            
 
         try{
             OutputStream ostream = new FileOutputStream( shellWrapper , true );
@@ -781,7 +803,8 @@ public class PegasusLite implements GridStart {
             appendStderrFragment( sb, "Setting up workdir" );
             sb.append( "# work dir" ).append( '\n' );
 
-            if( mSLS.doesCondorModifications() ){
+            
+            if( sls.doesCondorModifications() ){
                 //when using condor IO with pegasus lite we dont want
                 //pegasus lite to change the directory where condor
                 //launches the jobs
@@ -796,10 +819,10 @@ public class PegasusLite implements GridStart {
             sb.append( "pegasus_lite_worker_package" ).append( '\n' );
             sb.append( '\n' );
 
-            if(  mSLS.needsSLSInputTransfers( job ) ){
+            if(  sls.needsSLSInputTransfers( job ) ){
                 //generate the sls file with the mappings in the submit exectionSiteDirectory
-                Collection<FileTransfer> files = mSLS.determineSLSInputTransfers( job,
-                                                          mSLS.getSLSInputLFN( job ),
+                Collection<FileTransfer> files = sls.determineSLSInputTransfers( job,
+                                                          sls.getSLSInputLFN( job ),
                                                           stagingSiteServerForRetrieval,
                                                           stagingSiteDirectory,
                                                           workerNodeDir );
@@ -821,7 +844,7 @@ public class PegasusLite implements GridStart {
                 if( !inputFiles.isEmpty() ){
                     appendStderrFragment( sb, "staging in input data and executables" );
                     sb.append( "# stage in data and executables" ).append( '\n' );
-                    sb.append(  mSLS.invocationString( job, null ) );
+                    sb.append(  sls.invocationString( job, null ) );
                     sb.append( " 1>&2" ).append( " << EOF" ).append( '\n' );
                     sb.append( convertToTransferInputFormat( inputFiles ) );
                     sb.append( "EOF" ).append( '\n' );
@@ -829,7 +852,7 @@ public class PegasusLite implements GridStart {
                 }
                 
                 //PM-779 checkpoint files need to be setup to never fail
-                String checkPointFragment = checkpointFilesToPegasusLite( job, chkpointFiles);
+                String checkPointFragment = checkpointFilesToPegasusLite( job, sls, chkpointFiles);
                 if( !checkPointFragment.isEmpty() ){
                     appendStderrFragment( sb, "staging in checkpoint files" );
                     sb.append( "# stage in checkpoint files " ).append( '\n' );
@@ -896,7 +919,7 @@ public class PegasusLite implements GridStart {
             //arguments passed
             job.setArguments( "" );
 
-             if( mSLS.needsSLSOutputTransfers( job ) ){
+             if( sls.needsSLSOutputTransfers( job ) ){
                  FileServer stagingSiteServerForStore = stagingSiteEntry.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.put );
                  if( stagingSiteServerForStore == null ){
                     this.complainForHeadNodeFileServer( job.getID(),  job.getStagingSiteHandle());
@@ -909,8 +932,8 @@ public class PegasusLite implements GridStart {
                 //back to head node exectionSiteDirectory
                 //to fix later. right now post constituentJob only created is pre constituentJob
                 //created
-                Collection<FileTransfer> files = mSLS.determineSLSOutputTransfers( job,
-                                                            mSLS.getSLSOutputLFN( job ),
+                Collection<FileTransfer> files = sls.determineSLSOutputTransfers( job,
+                                                            sls.getSLSOutputLFN( job ),
                                                             stagingSiteServerForStore,
                                                             stagingSiteDirectoryForStore,
                                                             workerNodeDir );
@@ -930,7 +953,7 @@ public class PegasusLite implements GridStart {
                 }
                 
                 //PM-779 checkpoint files need to be setup to never fail
-                String checkPointFragment = checkpointFilesToPegasusLite( job, chkpointFiles);
+                String checkPointFragment = checkpointFilesToPegasusLite( job, sls, chkpointFiles);
                 if( !checkPointFragment.isEmpty() ){
                     appendStderrFragment( sb, "staging out checkpoint files" );
                     sb.append( "# stage out checkpoint files " ).append( '\n' );
@@ -939,7 +962,7 @@ public class PegasusLite implements GridStart {
                 
                 if( !outputFiles.isEmpty() ){
                     //generate the stage out fragment for staging out outputs
-                    String postJob = mSLS.invocationString( job, null );
+                    String postJob = sls.invocationString( job, null );
                     appendStderrFragment( sb, "staging out output files" );
                     sb.append( "# stage out" ).append( '\n' );
                     sb.append( postJob );
@@ -983,7 +1006,7 @@ public class PegasusLite implements GridStart {
         }
 
         //modify the constituentJob if required
-        if ( !mSLS.modifyJobForWorkerNodeExecution( job,
+        if ( !sls.modifyJobForWorkerNodeExecution( job,
                                                     stagingSiteServerForRetrieval.getURLPrefix(),
                                                     stagingSiteDirectory,
                                                     workerNodeDir ) ){
@@ -1282,14 +1305,15 @@ public class PegasusLite implements GridStart {
      * that should succeed in case of errors
      * 
      * @param job       the job being wrapped with PegasusLite
+     * @param sls       associated SLS implementation
      * @param files     the checkpoint files
      * @return string representation of the PegasusLite fragment
      */
-    private String checkpointFilesToPegasusLite(Job job, Collection<FileTransfer> files) {
+    private String checkpointFilesToPegasusLite(Job job, SLS sls, Collection<FileTransfer> files) {
         StringBuilder sb = new StringBuilder();
         if( !files.isEmpty() ){
             sb.append( "set +e " ).append( "\n");
-            sb.append(  mSLS.invocationString( job, null ) );
+            sb.append(  sls.invocationString( job, null ) );
             sb.append( " 1>&2" ).append( " << EOF" ).append( '\n' );
             sb.append( convertToTransferInputFormat( files ) );
             sb.append( "EOF" ).append( '\n' );

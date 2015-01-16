@@ -35,7 +35,6 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
-import edu.isi.pegasus.planner.code.gridstart.PegasusLite;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
@@ -142,11 +141,6 @@ public class Transfer   implements SLS {
     protected boolean mStageSLSFile;
 
     /**
-     * Boolean to track whether the gridstart used in PegasusLite or not
-     */
-    protected boolean mSeqExecGridStartUsed;
-
-    /**
      * A boolean indicating whether to bypass first level staging for inputs
      */
     private boolean mBypassStagingForInputs;
@@ -184,7 +178,6 @@ public class Transfer   implements SLS {
         mTCHandle   = bag.getHandleToTransformationCatalog();
         mExtraArguments = mProps.getSLSTransferArguments();
         mStageSLSFile = mProps.stageSLSFilesViaFirstLevelStaging();
-        mSeqExecGridStartUsed = mProps.getGridStart().equals( PegasusLite.CLASSNAME );
         mBypassStagingForInputs = mProps.bypassFirstLevelStagingForInputs();
         mPlannerCache = bag.getHandleToPlannerCache();
         mUseSymLinks = mProps.getUseOfSymbolicLinks();

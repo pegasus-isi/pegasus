@@ -181,6 +181,7 @@ public class Distribute implements GridStart {
      */
     private CredentialHandler mSSHCredHandler;
     private ENV mLocalENV;
+    private PegasusConfiguration mPegasusConfiguration;
 
     
     /**
@@ -218,14 +219,8 @@ public class Distribute implements GridStart {
         mMinorVersionLevel = version.getMinor();
         mPatchVersionLevel = version.getPatch();
 
-        mWorkerNodeExecution = mProps.executeOnWorkerNode();
-        if( mWorkerNodeExecution ){
-            //sanity check
-            throw new RuntimeException( "Distribute wrapper only works in the sharedfs mode. Please set " +
-                                        PegasusConfiguration.PEGASUS_CONFIGURATION_PROPERTY_KEY  + " to " +
-                                        PegasusConfiguration.SHARED_FS_CONFIGURATION_VALUE );
-        }
-
+        mPegasusConfiguration = new PegasusConfiguration( bag.getLogger() );
+        
         mEnablingPartOfAggregatedJob = false;
         mKickstartGridStartImpl = new Kickstart();
         mKickstartGridStartImpl.initialize( bag, dag );
@@ -323,30 +318,34 @@ public class Distribute implements GridStart {
         //take care of relative submit directory if specified
         String submitDir = mSubmitDir + mSeparator;
 
-        //consider case for non worker node execution first
-        if( !mWorkerNodeExecution ){
+        if( mPegasusConfiguration.jobSetupForWorkerNodeExecution( job ) ){
             //shared filesystem case.
-
-            if( job.getSiteHandle().equals( "local") ){
-                //all jobs scheduled to local site just get 
-                //vanilla treatment from the kickstart enabling.
-                return mKickstartGridStartImpl.enable( job, isGlobusJob );
-            }
-            else{
-                //jobs scheduled to non local site are wrapped
-                //with distribute after wrapping them with kickstart
-                //we always want the kickstart -w option                   
-                job.vdsNS.construct( Pegasus.CHANGE_DIR_KEY , "true" );
-                job.vdsNS.construct( Pegasus.CREATE_AND_CHANGE_DIR_KEY, "false" );
-                mKickstartGridStartImpl.enable( job, isGlobusJob );
-               
-                //now we enable the jobs with the distribute wrapper
-                wrapJobWithDistribute( job, isGlobusJob );
-            }
+            StringBuilder error = new StringBuilder();
+            error.append( "Job " ).append( job.getID() ).
+                  append( " cannot be wrapped with Distribute. It works only in sharedfs case. Invalid data.configuration associated " ).
+                  append( job.vdsNS.get( Pegasus.DATA_CONFIGURATION_KEY ) );
+            throw new RuntimeException( error.toString() );
+                
+        }
+        
+        //shared filesystem case.
+        if( job.getSiteHandle().equals( "local") ){
+            //all jobs scheduled to local site just get 
+            //vanilla treatment from the kickstart enabling.
+            return mKickstartGridStartImpl.enable( job, isGlobusJob );
         }
         else{
-            throw new RuntimeException( "Distribute Job Wrapper only works for sharedfs deployments");
+            //jobs scheduled to non local site are wrapped
+            //with distribute after wrapping them with kickstart
+            //we always want the kickstart -w option                   
+            job.vdsNS.construct( Pegasus.CHANGE_DIR_KEY , "true" );
+            job.vdsNS.construct( Pegasus.CREATE_AND_CHANGE_DIR_KEY, "false" );
+            mKickstartGridStartImpl.enable( job, isGlobusJob );
+
+            //now we enable the jobs with the distribute wrapper
+            wrapJobWithDistribute( job, isGlobusJob );
         }
+
         return true;
 
     }

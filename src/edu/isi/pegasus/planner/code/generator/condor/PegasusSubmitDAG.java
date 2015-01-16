@@ -113,7 +113,7 @@ public class PegasusSubmitDAG {
             String invocation = condorSubmitDAG.getAbsolutePath() + " " + args;
             mLogger.log( "Executing  " + invocation,
                          LogManager.DEBUG_MESSAGE_LEVEL );
-            Process p = r.exec( invocation );
+            Process p = r.exec( invocation, null, dagFile.getParentFile() );
 
             //spawn off the gobblers with the already initialized default callback
             StreamGobbler ips =
@@ -312,7 +312,7 @@ push( @arg, '-append', '+pegasus_wf_xformation="pegasus::dagman"' );
         }
         
         //the last argument is the path to the .dag file
-        args.append( dagFile.getAbsolutePath() );
+        args.append( dagFile.getName() );
         
         return args.toString();
     }

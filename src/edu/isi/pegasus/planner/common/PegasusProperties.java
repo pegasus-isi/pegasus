@@ -76,6 +76,11 @@ public class PegasusProperties implements Cloneable {
     
     public static final String PEGASUS_SITE_CATALOG_FILE_PROPERTY = "pegasus.catalog.site.file";
     
+    
+    public static final String PEGASUS_LOG_METRICS_PROPERTY        = "pegasus.log.metrics";
+    
+    public static final String PEGASUS_LOG_METRICS_PROPERTY_FILE   = "pegasus.log.metrics.file";
+    
     public static final String PEGASUS_APP_METRICS_PREFIX = "pegasus.metrics.app";
     
     
@@ -128,7 +133,6 @@ public class PegasusProperties implements Cloneable {
     public static final String DEFAULT_TRANSFER_STREAMS = "1";
 
     //grid start constants
-    public static final String DEFAULT_GRIDSTART_MODE = "Kickstart";
 
     public static final String DEFAULT_INVOKE_LENGTH = "4000";
 
@@ -1088,9 +1092,11 @@ public class PegasusProperties implements Cloneable {
      * @return the transfer implementation
      * 
      */
+    /* PM-810 done away.
     public String getSLSTransferImplementation(){
         return getTransferImplementation( "pegasus.transfer.lite.*.impl" );
     }
+    */
 
 
     /**
@@ -1635,12 +1641,11 @@ public class PegasusProperties implements Cloneable {
      * Referred to by the "pegasus.gridstart" property.
      *
      * @return the value specified in the property file,
-     *         else DEFAULT_GRIDSTART_MODE
+     *         else null
      *
-     * @see #DEFAULT_GRIDSTART_MODE
      */
     public String getGridStart(){
-        return mProps.getProperty("pegasus.gridstart",DEFAULT_GRIDSTART_MODE);
+        return mProps.getProperty("pegasus.gridstart" );
     }
 
     /**
@@ -2080,8 +2085,31 @@ public class PegasusProperties implements Cloneable {
         return mProps.getProperty( "pegasus.log4j.log" );
     }
 
+    /**
+     * Returns a boolean indicating whether to write out the planner metrics
+     * or not.
+     *
+     * Referred to by the "pegasus.log.metrics" property.
+     *
+     * @return boolean in the properties, else true
+     */
+    public boolean writeOutMetrics(){
+        return Boolean.parse(mProps.getProperty(PegasusProperties.PEGASUS_LOG_METRICS_PROPERTY ), true ) &&
+               (this.getMetricsLogFile() != null);
+    }
 
-
+    /**
+     * Returns the path to the file that is used to be logging metrics
+     *
+     * Referred to by the "pegasus.log.metrics.file" property.
+     *
+     * @return path to the metrics file if specified, else rundir/pegasus.metrics
+     */
+    public String getMetricsLogFile(){
+        String file = mProps.getProperty( PegasusProperties.PEGASUS_LOG_METRICS_PROPERTY_FILE );
+        return file;
+    }
+    
     /**
      * Returns a boolean indicating whether to log JVM memory usage or not.
      *

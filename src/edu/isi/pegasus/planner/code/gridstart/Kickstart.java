@@ -17,12 +17,8 @@
 package edu.isi.pegasus.planner.code.gridstart;
 
 import edu.isi.pegasus.common.logging.LogManager;
-import edu.isi.pegasus.common.util.Separator;
-import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
-import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
-import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
@@ -30,15 +26,26 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.classes.TransferJob;
-import edu.isi.pegasus.planner.cluster.JobAggregator;
 import edu.isi.pegasus.planner.code.GridStart;
 import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParser;
 import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParserException;
+import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Globus;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.transfer.SLS;
+
+import edu.isi.pegasus.common.util.Separator;
+
+import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
+
+import edu.isi.pegasus.planner.catalog.TransformationCatalog;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+
+import edu.isi.pegasus.planner.cluster.JobAggregator;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -199,8 +206,13 @@ public class Kickstart implements GridStart {
     /**
      * A boolean indicating whether to have worker node execution or not.
      */
-    boolean mWorkerNodeExecution;
+    //boolean mWorkerNodeExecution;
 
+    /**
+     * handle to PegasusConfiguration
+     */
+    private PegasusConfiguration mPegasusConfiguration;
+    
     /**
      * The handle to the SLS implementor
      */
@@ -268,8 +280,8 @@ public class Kickstart implements GridStart {
 
         mDynamicDeployment =  mProps.transferWorkerPackage();
         
-        mWorkerNodeExecution = mProps.executeOnWorkerNode();
-
+        //mWorkerNodeExecution = mProps.executeOnWorkerNode();
+        mPegasusConfiguration = new PegasusConfiguration( bag.getLogger() );
 
 
         mEnablingPartOfAggregatedJob = false;
@@ -290,7 +302,7 @@ public class Kickstart implements GridStart {
     public void useFullPathToGridStarts( boolean fullPath ){
         this.mUseFullPathToGridStart = fullPath;
     }
-
+    
     /**
      * Enables a constituentJob to run on the grid. This also determines how the
      * stdin,stderr and stdout of the constituentJob are to be propogated.
@@ -308,10 +320,28 @@ public class Kickstart implements GridStart {
      * @return boolean true if enabling was successful,else false.
      */
     public boolean enable( AggregatedJob job,boolean isGlobusJob){
-         boolean first = true;
+        //PM-817 when the recursion first starts parameter first is true
+        return this.enable(job, isGlobusJob, true);
+    }
 
-
-     
+    /**
+     * Enables a constituentJob to run on the grid. This also determines how the
+     * stdin,stderr and stdout of the constituentJob are to be propogated.
+     * To grid enable a constituentJob, the constituentJob may need to be wrapped into another
+     * constituentJob, that actually launches the constituentJob. It usually results in the constituentJob
+     * description passed being modified modified.
+     *
+     * @param job
+     * @param isGlobusJob is <code>true</code>, if the constituentJob generated a
+     *        line <code>universe = globus</code>, and thus runs remotely.
+     *        Set to <code>false</code>, if the constituentJob runs on the submit
+     *        host in any way.
+     * @param first
+     *
+     * @return boolean true if enabling was successful,else false.
+     */
+    public boolean enable( AggregatedJob job,boolean isGlobusJob, Boolean first){
+         //boolean first = true;
         
         //get hold of the JobAggregator determined for this clustered job
         //during clustering
@@ -324,8 +354,29 @@ public class Kickstart implements GridStart {
         
         //we want to evaluate the exectionSiteDirectory only once
         //for the clustered job
-       for (Iterator it = job.constituentJobsIterator(); it.hasNext(); ) {
-            Job constituentJob = (Job)it.next();
+       for (Iterator it = aggregator.topologicalOrderingRequired() ?
+                            job.topologicalSortIterator()://PM-817 we care about order, else -H option maynot be omitted always for first job
+                            job.nodeIterator();
+               it.hasNext(); ) {
+            //PM-817Job constituentJob = (Job)it.next();
+            GraphNode node = ( GraphNode )it.next();
+            Job constituentJob = (Job) node.getContent();
+            if( constituentJob instanceof AggregatedJob ){
+                //PM-817 we need to make sure that the constituten
+                //clustered job also gets enabled correctly
+                AggregatedJob constituentClusteredJob = (AggregatedJob)constituentJob;
+                
+                if( !aggregator.getClass().equals( constituentClusteredJob.getJobAggregator().getClass() ) ){
+                    //sanity check first to ensure the aggreagtors are not mixed
+                    StringBuilder error = new StringBuilder();
+                    error.append( "Recursive Clustering does not support different job aggregators. Job Aggregator for clustered job " ).
+                          append( job.getID() ).append( " ").append( aggregator.getClass() ).
+                          append( " does not match with constitutent job " ).append( constituentJob.getID() ).
+                          append( " " ).append( constituentClusteredJob.getJobAggregator().getClass() );
+                    throw new RuntimeException( error.toString() );
+                }
+                this.enable( constituentClusteredJob, isGlobusJob, first );
+            }
 
             //earlier was set in SeqExec JobAggregator in the enable function
             constituentJob.vdsNS.construct( Pegasus.GRIDSTART_KEY,
@@ -769,7 +820,7 @@ public class Kickstart implements GridStart {
             return gridStartPath;
         }
         else if( mDynamicDeployment &&
-                 job.runInWorkDirectory()  && !mWorkerNodeExecution ){
+                 job.runInWorkDirectory()  && ! mPegasusConfiguration.jobSetupForWorkerNodeExecution(job ) ){
 
             //worker package deployment 
             //pick up the path from the transformation catalog of

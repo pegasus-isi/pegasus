@@ -412,6 +412,10 @@ public class Pegasus extends Namespace {
      */
     public static final String  MAX_WALLTIME = "maxwalltime";
     
+    /**
+     * Key indicating data configuration property. 
+     */
+    public static final String DATA_CONFIGURATION_KEY = "data.configuration";
     
     //credential related constant keys
     private static final String S3CFG_FILE_VARIABLE = S3CFG.S3CFG_FILE_VARIABLE.toLowerCase();
@@ -567,6 +571,15 @@ public class Pegasus extends Namespace {
                 }
                 break;
             
+            case 'd':
+                if (key.compareTo( DATA_CONFIGURATION_KEY ) == 0) {
+                    res = VALID_KEY;
+                }
+                else {
+                    res = UNKNOWN_KEY;
+                }
+                break;
+                
             case 'e':
                 if ((key.compareTo( Pegasus.EXITCODE_FAILURE_MESSAGE ) == 0) ||
                     (key.compareTo( Pegasus.EXITCODE_SUCCESS_MESSAGE ) == 0)||
