@@ -50,6 +50,7 @@ import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
 import edu.isi.pegasus.planner.cluster.JobAggregator;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 
 import java.util.Iterator;
 import java.util.StringTokenizer;
@@ -303,7 +304,7 @@ public class Kickstart implements GridStart {
     public void useFullPathToGridStarts( boolean fullPath ){
         this.mUseFullPathToGridStart = fullPath;
     }
-
+    
     /**
      * Enables a constituentJob to run on the grid. This also determines how the
      * stdin,stderr and stdout of the constituentJob are to be propogated.
@@ -321,10 +322,28 @@ public class Kickstart implements GridStart {
      * @return boolean true if enabling was successful,else false.
      */
     public boolean enable( AggregatedJob job,boolean isGlobusJob){
-         boolean first = true;
+        //PM-817 when the recursion first starts parameter first is true
+        return this.enable(job, isGlobusJob, true);
+    }
 
-
-     
+    /**
+     * Enables a constituentJob to run on the grid. This also determines how the
+     * stdin,stderr and stdout of the constituentJob are to be propogated.
+     * To grid enable a constituentJob, the constituentJob may need to be wrapped into another
+     * constituentJob, that actually launches the constituentJob. It usually results in the constituentJob
+     * description passed being modified modified.
+     *
+     * @param job
+     * @param isGlobusJob is <code>true</code>, if the constituentJob generated a
+     *        line <code>universe = globus</code>, and thus runs remotely.
+     *        Set to <code>false</code>, if the constituentJob runs on the submit
+     *        host in any way.
+     * @param first
+     *
+     * @return boolean true if enabling was successful,else false.
+     */
+    public boolean enable( AggregatedJob job,boolean isGlobusJob, Boolean first){
+         //boolean first = true;
         
         //get hold of the JobAggregator determined for this clustered job
         //during clustering
@@ -337,8 +356,18 @@ public class Kickstart implements GridStart {
         
         //we want to evaluate the exectionSiteDirectory only once
         //for the clustered job
-       for (Iterator it = job.constituentJobsIterator(); it.hasNext(); ) {
-            Job constituentJob = (Job)it.next();
+       for (Iterator it = aggregator.topologicalOrderingRequired() ?
+                            job.topologicalSortIterator()://PM-817 we care about order, else -H option maynot be omitted always for first job
+                            job.nodeIterator();
+               it.hasNext(); ) {
+            //PM-817Job constituentJob = (Job)it.next();
+            GraphNode node = ( GraphNode )it.next();
+            Job constituentJob = (Job) node.getContent();
+            if( constituentJob instanceof AggregatedJob ){
+                //PM-817 we need to make sure that the constituten
+                //clustered job also gets enabled correctly
+                this.enable( (AggregatedJob)constituentJob, isGlobusJob, first );
+            }
 
             //earlier was set in SeqExec JobAggregator in the enable function
             constituentJob.vdsNS.construct( Pegasus.GRIDSTART_KEY,

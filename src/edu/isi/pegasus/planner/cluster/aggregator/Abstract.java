@@ -51,6 +51,7 @@ import java.util.Set;
 import java.util.Iterator;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import java.util.Arrays;
 import java.util.HashSet;
 
 /**
@@ -453,11 +454,25 @@ public abstract class Abstract implements JobAggregator {
      * @return the comment invocation
      */
     protected String getCommentString( Job job, int taskid ){
+        return this.getCommentString(taskid, job.getCompleteTCName(), job.getDAXID());
+    }
+    
+    /**
+     * Generates the comment string for the job . It generates a comment of the 
+     * format # task_id transformation derivation. 
+     * 
+     * @param taskid    the task id to put in.
+     * @param transformationName
+     * @param daxID     the id of the job from the DAX
+     * 
+     * @return the comment invocation
+     */
+    protected String getCommentString( int taskid, String transformationName, String daxID ){
         StringBuffer sb = new StringBuffer();
         sb.append( MONITORD_COMMENT_MARKER ).append( " " ).
            append( taskid ).append( " " ).
-           append( job.getCompleteTCName() ).append( " " ).
-           append( job.getDAXID() ).append( " " );
+           append( transformationName ).append( " " ).
+           append( daxID ).append( " " );
            
         return sb.toString();
     }
@@ -874,6 +889,7 @@ public abstract class Abstract implements JobAggregator {
 
     }
 
+    
     /**
      * Writes out the input file for the aggregated job
      *
@@ -881,7 +897,19 @@ public abstract class Abstract implements JobAggregator {
      *
      * @return path to the input file
      */
-    protected File writeOutInputFileForJobAggregator(AggregatedJob job) {
+    protected File writeOutInputFileForJobAggregator(AggregatedJob job ) {
+        return this.writeOutInputFileForJobAggregator(job, 1);
+    }
+    
+    
+    /**
+     * Writes out the input file for the aggregated job
+     *
+     * @param job   the aggregated job
+     *
+     * @return path to the input file
+     */
+    protected File writeOutInputFileForJobAggregator(AggregatedJob job, Integer taskid) {
         File stdin = null;
         try {
             BufferedWriter writer;
@@ -891,26 +919,34 @@ public abstract class Abstract implements JobAggregator {
 
             //traverse throught the jobs to determine input/output files
             //and merge the profiles for the jobs
-            int taskid = 1;
+            //int taskid = 1;
             
             for(  Iterator it = this.topologicalOrderingRequired() ?
                             job.topologicalSortIterator()://we care about order
                             job.nodeIterator();//dont care about order
-                                                it.hasNext(); taskid++ ) {
+                                                it.hasNext();  ) {
                 GraphNode node = ( GraphNode )it.next();
                 Job constitutentJob = (Job) node.getContent();
 
                 //handle stdin
                 if( constitutentJob instanceof AggregatedJob ){
+                    //PM-817 recursive clustering case, we need to 
+                    //write out merge_XXXX.in file for constitutent job
+                    //that is a clustered job itself
+                    File file = this.writeOutInputFileForJobAggregator( (AggregatedJob)constitutentJob, taskid );
                     //slurp in contents of it's stdin
-                    File file = new File ( mDirectory, job.getStdIn() );
+                    //taking care of the taskid increments across recursion
                     BufferedReader reader = new BufferedReader(
                                                              new FileReader( file )
                                                                );
                     String line;
                     while( (line = reader.readLine()) != null ){
                         //ignore comment out lines
-                        if( line.startsWith( "#" ) ){
+                        if( line.startsWith( MONITORD_COMMENT_MARKER) ){
+                            String[] split = line.split( "\\s+" );
+                            System.out.println(Arrays.toString(split));
+                            //taskid = Integer.parseInt( split[1] );
+                            writer.write( getCommentString(  taskid, split[2], split[3] ) + "\n" );
                             continue;
                         }
                         writer.write( line );
@@ -934,6 +970,7 @@ public abstract class Abstract implements JobAggregator {
                     // the Condor Code Generator only.
                     writer.write( constitutentJob.getRemoteExecutable()  + " " +
                                    constitutentJob.getArguments() + "\n");
+                    taskid++;
                 }
             }
 
