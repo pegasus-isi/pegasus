@@ -366,7 +366,18 @@ public class Kickstart implements GridStart {
             if( constituentJob instanceof AggregatedJob ){
                 //PM-817 we need to make sure that the constituten
                 //clustered job also gets enabled correctly
-                this.enable( (AggregatedJob)constituentJob, isGlobusJob, first );
+                AggregatedJob constituentClusteredJob = (AggregatedJob)constituentJob;
+                
+                if( !aggregator.getClass().equals( constituentClusteredJob.getJobAggregator().getClass() ) ){
+                    //sanity check first to ensure the aggreagtors are not mixed
+                    StringBuilder error = new StringBuilder();
+                    error.append( "Recursive Clustering does not support different job aggregators. Job Aggregator for clustered job " ).
+                          append( job.getID() ).append( " ").append( aggregator.getClass() ).
+                          append( " does not match with constitutent job " ).append( constituentJob.getID() ).
+                          append( " " ).append( constituentClusteredJob.getJobAggregator().getClass() );
+                    throw new RuntimeException( error.toString() );
+                }
+                this.enable( constituentClusteredJob, isGlobusJob, first );
             }
 
             //earlier was set in SeqExec JobAggregator in the enable function
