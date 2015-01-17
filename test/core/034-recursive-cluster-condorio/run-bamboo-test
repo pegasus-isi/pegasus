@@ -76,7 +76,7 @@ pegasus-plan \
     --output-site local \
     --cluster label,horizontal \
     --dax blackdiamond.dax \
-    -v \
+    -vvvv \
     --submit | tee plan.out
 
 
