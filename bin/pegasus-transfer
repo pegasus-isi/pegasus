@@ -1051,7 +1051,7 @@ class ScpHandler(TransferHandlerBase):
     def do_transfer(self, transfer, attempt):
         global remote_dirs_created
         cmd = "/usr/bin/scp"
-        cmd += " -q -B -o StrictHostKeyChecking=no"
+        cmd += " -B -o StrictHostKeyChecking=no"
         try:
             if transfer.dst_proto == "file":
                 # scp -> file
@@ -1115,7 +1115,7 @@ class ScpHandler(TransferHandlerBase):
         elif "SSH_PRIVATE_KEY" in os.environ:
             check_cred_fs_permissions(os.environ['SSH_PRIVATE_KEY'])
             cmd += " -i " + os.environ['SSH_PRIVATE_KEY']
-        cmd += " -q -o StrictHostKeyChecking=no"
+        cmd += " -o StrictHostKeyChecking=no"
         cmd += " " + rhost + " '/bin/mkdir -p " + rdir + "'"
         myexec(cmd, default_subshell_timeout, True)
 
