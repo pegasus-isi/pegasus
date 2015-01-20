@@ -1014,7 +1014,10 @@ public class DeployWorkerPackage
 
             //PM-497
             //we ignore any clean up jobs that may be running
-            if( job.getJobType() == Job.CLEANUP_JOB ){
+            if( job.getJobType() == Job.CLEANUP_JOB || 
+                ( job.getJobType() == Job.STAGE_IN_JOB || job.getJobType() == Job.STAGE_OUT_JOB || job.getJobType() == Job.INTER_POOL_JOB )){
+                //we also ignore any remote transfer jobs that maybe associated to run in the work directory
+                //because of the fact that staging site may have a file server URL.
                 continue;
             }
 
