@@ -6,7 +6,7 @@
 {% if jobs %}
 {% for i in range(0, jobs|count) %}
 {
-"DT_RowClass" : "failed",
+"DT_RowClass" : "failing",
 "0" : {{ jobs[i].exec_job_id|tojson|safe  }}, "1" : {{ jobs[i].exitcode|tojson|safe }}, "2" : {{ jobs[i].stdout|tojson|safe }}, "3" : {{ jobs[i].stderr|tojson|safe }}
 }
 {% if i + 1 != jobs|count %}
