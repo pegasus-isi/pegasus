@@ -22,7 +22,6 @@ from Pegasus.tools import utils
 from Pegasus.plots_stats import utils as stats_utils
 from Pegasus.db.workflow import stampede_statistics
 
-from Pegasus.service import app
 from Pegasus.service.dashboard import queries
 
 
@@ -360,14 +359,13 @@ class Dashboard(object):
         finally:
             Dashboard.close(workflow)
 
-    def get_job_instances(self, wf_id, job_id, job_instance_id):
+    def get_job_instances(self, wf_id, job_id):
         """
-        Get job specific information. This is when user click on a job link, on the workflow details page.
-        Returns a Job object.
+        Get a list of all job instances for a given job
         """
         try:
             workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id)
-            job_instances = workflow.get_job_instances(job_id, job_instance_id)
+            job_instances = workflow.get_job_instances(job_id)
             return job_instances
         except NoResultFound:
             return None

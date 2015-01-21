@@ -294,7 +294,7 @@ class WorkflowInfo(SQLAlchemyInit):
 
         return q.one()
 
-    def get_job_instances(self, job_id, job_instance_id):
+    def get_job_instances(self, job_id):
 
         #qmax = self.__get_maxjss_subquery(job_id)
 

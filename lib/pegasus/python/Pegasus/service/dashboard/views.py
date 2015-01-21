@@ -175,7 +175,7 @@ def job(username, root_wf_id, wf_id, job_id, job_instance_id):
     dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
     job = dashboard.get_job_information(wf_id, job_id, job_instance_id)
     job_states = dashboard.get_job_states(wf_id, job_id, job_instance_id)
-    job_instances = dashboard.get_job_instances(wf_id, job_id, job_instance_id)
+    job_instances = dashboard.get_job_instances(wf_id, job_id)
 
     previous = None
 
