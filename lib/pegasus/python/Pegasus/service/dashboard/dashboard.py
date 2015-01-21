@@ -360,6 +360,20 @@ class Dashboard(object):
         finally:
             Dashboard.close(workflow)
 
+    def get_job_instances(self, wf_id, job_id, job_instance_id):
+        """
+        Get job specific information. This is when user click on a job link, on the workflow details page.
+        Returns a Job object.
+        """
+        try:
+            workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id)
+            job_instances = workflow.get_job_instances(job_id, job_instance_id)
+            return job_instances
+        except NoResultFound:
+            return None
+        finally:
+            Dashboard.close(workflow)
+
     def get_job_states(self, wf_id, job_id, job_instance_id):
         """
         Get information about the job states that a job has gone through.

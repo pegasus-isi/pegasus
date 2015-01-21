@@ -294,6 +294,19 @@ class WorkflowInfo(SQLAlchemyInit):
 
         return q.one()
 
+    def get_job_instances(self, job_id, job_instance_id):
+
+        #qmax = self.__get_maxjss_subquery(job_id)
+
+        q = self.session.query(Job.exec_job_id, JobInstance.job_instance_id, JobInstance.exitcode)
+        q = q.filter(Job.wf_id == self._wf_id)
+        q = q.filter(Job.job_id == job_id)
+        q = q.filter(Job.job_id == JobInstance.job_id)
+
+        q = q.order_by(desc(JobInstance.job_submit_seq))
+
+        return q.all()
+
     def get_job_states(self, job_id, job_instance_id):
 
         #qmax = self.__get_maxjss_subquery(job_id)

@@ -1,5 +1,5 @@
 {% macro status_code(exitcode=None) -%}
-{% if job.exitcode == None %}"running"{% elif job.exitcode !=  0 %}"failed"{% else  %}"successful"{% endif %}
+{% if exitcode == None %}"running"{% elif exitcode !=  0 %}"failed"{% else  %}"successful"{% endif %}
 {%- endmacro %}
 {% extends "base.html" %}
 {% block title %}Job Details{% endblock %}
@@ -59,6 +59,14 @@
 
         verticalTableInitStatus ('#job_text_info', {{ status_code(job.exitcode) }});
     verticalTableInitStatus ('#job_states_info', {{ status_code(job.exitcode) }});
+
+    $('#job_instances_info').dataTable ({"bJQueryUI" : true,
+        "bJQueryUI": true,
+        "sDom"     : '<"top"iflp<"clear">>rt<"bottom"iflp<"clear">>',
+        "bFilter"  : false,
+        "bPaginate": false,
+        "bInfo"    : false
+    });
     })
 </script>
 {% endblock %}
@@ -130,6 +138,38 @@
         </table>
     </div>
     {% endif %}
+    <br />
+    <header class="title ui-widget-header">
+        Job Instances
+    </header>
+    <br />
+    <div id="job_instances">
+        <table id="job_instances_info">
+            <thead>
+            <tr>
+                <th>Job Instance ID</th>
+                <th>Exitcode</th>
+                <th>Stdout</th>
+                <th>Stderr</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for instance in job_instances %}
+            <tr class={{ status_code(instance.exitcode) }}>
+            <td>{% if instance.job_instance_id == job.instance_id %}
+                {{ instance.job_instance_id }}
+                {% else %}
+                <a href="{{ url_for ('job', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = instance.job_instance_id) }}">{{ instance.job_instance_id }}</a>
+                {% endif %}
+            </td>
+            <td>{{ instance.exitcode }}</td>
+            <td><a href="{{ url_for ('stdout', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = instance.job_instance_id) }}">Preview</a></td>
+            <td><a href="{{ url_for ('stderr', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = instance.job_instance_id) }}">Preview</a></td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 <br/>
 <div id="invocation_table_wrapper">

@@ -175,6 +175,7 @@ def job(username, root_wf_id, wf_id, job_id, job_instance_id):
     dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
     job = dashboard.get_job_information(wf_id, job_id, job_instance_id)
     job_states = dashboard.get_job_states(wf_id, job_id, job_instance_id)
+    job_instances = dashboard.get_job_instances(wf_id, job_id, job_instance_id)
 
     previous = None
 
@@ -192,7 +193,8 @@ def job(username, root_wf_id, wf_id, job_id, job_instance_id):
     if not job:
         return 'Bad Request', 400
 
-    return render_template('workflow/job/job_details.html', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job_id, job=job, job_states=job_states)
+    return render_template('workflow/job/job_details.html', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job_id, job=job,
+                           job_instances=job_instances, job_states=job_states)
 
 
 @app.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>/stdout', methods=['GET'])
