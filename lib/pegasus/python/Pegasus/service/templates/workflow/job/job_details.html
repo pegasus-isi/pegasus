@@ -5,6 +5,25 @@
 {% block title %}Job Details{% endblock %}
 {% block javascript_init %}
 <script type="text/javascript" charset="utf-8">
+    //
+    // http://stackoverflow.com/questions/1899500/sorting-column-with-anchor-tags-in-jquery-datatables
+    //
+    jQuery.fn.dataTableExt.oSort['num-html-asc'] = function (a, b) {
+        var x = a.replace(/<.*?>/g, "");
+        var y = b.replace(/<.*?>/g, "");
+        x = parseInt(x);
+        y = parseInt(y);
+        return ((x < y || isNaN(y) ) ? -1 : ((x > y || isNaN(x)) ? 1 : 0));
+    };
+
+    jQuery.fn.dataTableExt.oSort['num-html-desc'] = function (a, b) {
+        var x = a.replace(/<.*?>/g, "");
+        var y = b.replace(/<.*?>/g, "");
+        x = parseInt(x);
+        y = parseInt(y);
+        return ((x < y || isNaN(x)) ? 1 : ((x > y || isNaN(y) ) ? -1 : 0));
+    };
+
     $(document).ready (function ()
     {
         $('#invocations_tabs').tabs (
@@ -67,6 +86,12 @@
             "bInfo": true,
             "aaSorting"      : [
                 [ 0, "desc" ]
+            ],
+            "aoColumns": [
+                { "sType": "num-html" },
+                null,
+                null,
+                null
             ]
         });
     })
@@ -158,12 +183,7 @@
             <tbody>
             {% for instance in job_instances %}
             <tr class={{ status_code(instance.exitcode) }}>
-            <td>{% if instance.job_instance_id == job.instance_id %}
-                {{ instance.job_instance_id }}
-                {% else %}
-                <a href="{{ url_for ('job', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = instance.job_instance_id) }}">{{ instance.job_instance_id }}</a>
-                {% endif %}
-            </td>
+            <td><a href="{{ url_for ('job', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = instance.job_instance_id) }}">{{ instance.job_instance_id }}</a></td>
             <td>{{ instance.exitcode }}</td>
             <td><a href="{{ url_for ('stdout', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = instance.job_instance_id) }}">Preview</a></td>
             <td><a href="{{ url_for ('stderr', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = instance.job_instance_id) }}">Preview</a></td>
