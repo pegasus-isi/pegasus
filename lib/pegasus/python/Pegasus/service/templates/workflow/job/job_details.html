@@ -58,15 +58,17 @@
                 });
 
         verticalTableInitStatus ('#job_text_info', {{ status_code(job.exitcode) }});
-    verticalTableInitStatus ('#job_states_info', {{ status_code(job.exitcode) }});
+        verticalTableInitStatus ('#job_states_info', {{ status_code(job.exitcode) }});
 
-    $('#job_instances_info').dataTable ({"bJQueryUI" : true,
-        "bJQueryUI": true,
-        "sDom"     : '<"top"iflp<"clear">>rt<"bottom"iflp<"clear">>',
-        "bFilter"  : false,
-        "bPaginate": false,
-        "bInfo"    : false
-    });
+        $('#job_instances_info').dataTable({"bJQueryUI": true,
+            "bJQueryUI": true,
+            "sPaginationType": "full_numbers",
+            "bFilter": false,
+            "bInfo": true,
+            "aaSorting"      : [
+                [ 1, "desc" ]
+            ]
+        });
     })
 </script>
 {% endblock %}
