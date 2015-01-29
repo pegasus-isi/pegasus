@@ -411,7 +411,7 @@ class CpHandler(TransferHandlerBase):
                 logger.warning("cp: src (%s) and dst (%s) already exists"
                                % (transfer.src_path, transfer.dst_path))
                 return True
-        cmd = "/bin/cp -f -L '%s' '%s'" \
+        cmd = "/bin/cp -f -R -L '%s' '%s'" \
             % (transfer.src_path, transfer.dst_path)
         try:
             tc = TimedCommand(cmd)
@@ -690,7 +690,7 @@ class GridFtpHandler(TransferHandlerBase):
         global gsiftp_failures
     
         tools = Tools()
-        options = ""
+        options = " -r"
     
         # make output from guc match our current log level
         if logger.isEnabledFor(logging.DEBUG):
@@ -906,7 +906,7 @@ class IRodsHandler(TransferHandlerBase):
         if transfer.dst_proto == "file":
             # irods->file
             prepare_local_dir(os.path.dirname(transfer.dst_path))
-            cmd = "iget -v -f -T -K"
+            cmd = "iget -v -f -r -T -K"
             if self.ticket is not None:
                 cmd += " -t " + irods.ticket
             if transfer.src_host is not "" and attempt == 1:
@@ -922,7 +922,7 @@ class IRodsHandler(TransferHandlerBase):
             except:
                 # ignore errors from the mkdir command
                 pass
-            cmd = "iput -v -f -T -K" 
+            cmd = "iput -v -f -r -T -K" 
             if self.ticket is not None:
                 cmd += " -t " + irods.ticket
             if transfer.dst_host is not "" and attempt == 1:
@@ -1213,7 +1213,7 @@ class ScpHandler(TransferHandlerBase):
     def do_transfer(self, transfer, attempt):
         global remote_dirs_created
         cmd = "/usr/bin/scp"
-        cmd += " -B -o StrictHostKeyChecking=no"
+        cmd += " -r -B -o StrictHostKeyChecking=no"
         try:
             if transfer.dst_proto == "file":
                 # scp -> file
