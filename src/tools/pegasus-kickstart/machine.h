@@ -19,40 +19,18 @@
 #include <sys/types.h>
 
 typedef struct {
-  /* virtual method table */
-  void* (*ctor)( void );
-  int   (*show)( FILE*, int, const char*, const void* );
-  void  (*dtor)( void* );
+    /* virtual method table */
+    void* (*ctor)(void);
+    int   (*show)(FILE*, int, const char*, const void*);
+    void  (*dtor)(void*);
 
-  /* mutable object data */
-  void*   data;
+    /* mutable object data */
+    void*   data;
 } MachineInfo;
 
-extern
-void
-initMachineInfo( MachineInfo* machine );
-/* purpose: initialize the data structure.
- * paramtr: machine (OUT): initialized MachineInfo structure.
- */
-
-extern
-int
-printXMLMachineInfo(FILE *out, int indent, const char* tag,
-                    const MachineInfo* machine);
-/* purpose: format the job information into the given stream as XML.
- * paramtr: out (IO): The stream
- *          indent (IN): indentation level
- *          tag (IN): name to use for element tags.
- *          machine (IN): machine info to print.
- * returns: number of characters put into buffer (buffer length)
- */
-
-
-extern
-void
-deleteMachineInfo( MachineInfo* machine );
-/* purpose: destructor
- * paramtr: machine (IO): valid MachineInfo structure to destroy. 
- */
+extern void initMachineInfo(MachineInfo* machine);
+extern int printXMLMachineInfo(FILE *out, int indent, const char* tag,
+                               const MachineInfo* machine);
+extern void deleteMachineInfo(MachineInfo* machine);
 
 #endif /* _MACHINE_H */

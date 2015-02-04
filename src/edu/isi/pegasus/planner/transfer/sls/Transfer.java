@@ -35,7 +35,6 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
-import edu.isi.pegasus.planner.code.gridstart.PegasusLite;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
@@ -45,6 +44,7 @@ import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.namespace.ENV;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 
 import java.io.File;
 
@@ -94,6 +94,11 @@ public class Transfer   implements SLS {
      * The derivation version number for the transfer job.
      */
     public static final String DERIVATION_VERSION = "1.0";
+    
+    /**
+     * The default number of threads pegasus-transfer uses
+     */
+    public static final int DEFAULT_NUMBER_OF_THREADS = 1;
 
     /**
      * A short description of the transfer implementation.
@@ -136,11 +141,6 @@ public class Transfer   implements SLS {
     protected boolean mStageSLSFile;
 
     /**
-     * Boolean to track whether the gridstart used in PegasusLite or not
-     */
-    protected boolean mSeqExecGridStartUsed;
-
-    /**
      * A boolean indicating whether to bypass first level staging for inputs
      */
     private boolean mBypassStagingForInputs;
@@ -178,7 +178,6 @@ public class Transfer   implements SLS {
         mTCHandle   = bag.getHandleToTransformationCatalog();
         mExtraArguments = mProps.getSLSTransferArguments();
         mStageSLSFile = mProps.stageSLSFilesViaFirstLevelStaging();
-        mSeqExecGridStartUsed = mProps.getGridStart().equals( PegasusLite.CLASSNAME );
         mBypassStagingForInputs = mProps.bypassFirstLevelStagingForInputs();
         mPlannerCache = bag.getHandleToPlannerCache();
         mUseSymLinks = mProps.getUseOfSymbolicLinks();
@@ -218,11 +217,25 @@ public class Transfer   implements SLS {
         
         invocation.append( executable );
 
+        //get the value if any that is present in the associated compute job
+        //that should take care of the properties also
+        int threads = Transfer.DEFAULT_NUMBER_OF_THREADS;
+        if(job.vdsNS.containsKey(Pegasus.TRANSFER_THREADS_KEY )){
+            try{
+                threads = Integer.parseInt( job.vdsNS.getStringValue( Pegasus.TRANSFER_THREADS_KEY ) );
+            }
+            catch( Exception e ){
+                mLogger.log( "Invalid value picked up for Pegasus profile " + Pegasus.TRANSFER_THREADS_KEY + " PegasusLite job " + job.getID(),
+                             LogManager.ERROR_MESSAGE_LEVEL );
+            }
+        }
+        invocation.append( " --threads ").append( threads ).append( " " );
+        
 
         //append any extra arguments set by user
-        //in properties
-        if( mExtraArguments != null ){
-            invocation.append( " " ).append( mExtraArguments );
+        String args = job.vdsNS.getStringValue( Pegasus.TRANSFER_SLS_ARGUMENTS_KEY );
+        if( args != null ){
+            invocation.append( " " ).append( args );
         }
 
 
@@ -240,11 +253,6 @@ public class Transfer   implements SLS {
                 invocation.append( slsFile.getName() );
             }
         }
-
-
-
-       
-
         return invocation.toString();
 
     }
@@ -358,12 +366,16 @@ public class Transfer   implements SLS {
             }
 
             FileTransfer ft = new FileTransfer();
+            //ensure that right type gets associated, especially
+            //whether a file is a checkpoint file or not
+            ft.setType( pf.getType() );
 
             //create the default path from the directory
             //on the head node
             StringBuffer url = new StringBuffer();
 
             ReplicaCatalogEntry cacheLocation = null;
+            boolean symlink = false;
             if( mBypassStagingForInputs ){
                 //we retrieve the URL from the Planner Cache as a get URL
                 //bypassed URL's are stored as GET urls in the cache and
@@ -374,21 +386,45 @@ public class Transfer   implements SLS {
                 cacheLocation = mPlannerCache.lookup( lfn, OPERATION.get );
             }
             if( cacheLocation == null ){
+                String stagingSite = job.getStagingSiteHandle();
                 //construct the location with respect to the staging site
-                url.append( mSiteStore.getExternalWorkDirectoryURL(stagingSiteServer, job.getStagingSiteHandle() ));
+                if( mUseSymLinks && //specified in configuration
+                    stagingSite.equals( job.getSiteHandle() ) ){ //source URL logically on the same site where job is to be run
+                    //we can symlink . construct the source URL as a file url
+                    symlink = true;
+                    url.append( PegasusURL.FILE_URL_SCHEME ).append( "//" ).append( stagingSiteDirectory );
+                    if( pf.isExecutable() ){
+                        //PM-734 for executable files we can have the source url as file url 
+                        //but we cannot have the destination URL as symlink://
+                        //as we want to do chmod on the local copy on the worker node
+                        symlink = false;
+                    }
+                    if( pf.isCheckpointFile() ){
+                        //we never symlink checkpoint files
+                        symlink = false;
+                    }
+                }
+                else{
+                    url.append( mSiteStore.getExternalWorkDirectoryURL(stagingSiteServer, stagingSite ));
+                }
                 url.append( File.separator ).append( lfn );
-                ft.addSource( job.getStagingSiteHandle(), url.toString() );
+                ft.addSource( stagingSite, url.toString() );
             }
             else{
                 //construct the URL wrt to the planner cache location
                 url.append( cacheLocation.getPFN() );
                 ft.addSource( cacheLocation.getResourceHandle(), url.toString() );
+                
+                symlink = ( mUseSymLinks && //specified in configuration
+                            !pf.isCheckpointFile() && //can only do symlinks for data files . not checkpoint files
+                            !pf.isExecutable() && //can only do symlinks for data files . not executables
+                            ft.getSourceURL().getKey().equals( job.getSiteHandle()) && //source URL logically on the same site where job is to be run
+                            url.toString().startsWith( PegasusURL.FILE_URL_SCHEME ) ); //source URL is a file URL
             }
             
             //if the source URL is already present at the compute site
             //and is a file URL, then the destination URL has to be a symlink
-            String destURLScheme = ( mUseSymLinks && 
-                                     ft.getSourceURL().getKey().equals( job.getSiteHandle() ))?
+            String destURLScheme = ( symlink )?
                                    PegasusURL.SYMLINK_URL_SCHEME:
                                    PegasusURL.FILE_URL_SCHEME;//default is file URL
 
@@ -447,6 +483,10 @@ public class Transfer   implements SLS {
             pf = ( PegasusFile ) it.next();
 
             FileTransfer ft = new FileTransfer();
+            //ensure that right type gets associated, especially
+            //whether a file is a checkpoint file or not
+            ft.setType( pf.getType() );
+            
             //source
             StringBuffer url = new StringBuffer();
             url.append( "file://" ).append( sourceDir ).append( File.separator ).

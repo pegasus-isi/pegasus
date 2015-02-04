@@ -1,133 +1,94 @@
 INSTALL = install
 RM = rm -f
 CC = gcc
-CFLAGS = -O
+CFLAGS = -Wall -O2 -ggdb -std=gnu99
 LD = $(CC)
-LOADLIBES = -lm
+LDLIBS = -lm
 SYSTEM = $(shell uname -s | tr '[a-z]' '[A-Z]' | tr -d '_ -/')
-VERSION = $(shell uname -r)
-MARCH = $(shell uname -m | tr '[A-Z]' '[a-z]')
-MAJOR = $(firstword $(subst ., ,$(VERSION)))
-MINOR = $(strip $(word 2,$(subst ., ,$(VERSION))))
-EXTRA_OBJ = machine/basic.o
-SOCKIO = $(shell /bin/ls /usr/include/sys/sockio.h 2>/dev/null)
-LFS_CFLAGS = -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE 
-LFS_LDFLAGS =
+ARCH = $(shell uname -m)
+TARGET = pegasus-kickstart
 
 ifndef ${prefix}
-prefix = $(PEGASUS_HOME)
+    prefix = $(CURDIR)/../../../
 endif
 
-ifndef ${datadir}
-datadir = $(prefix)/share
-endif
+libdir = ${prefix}/$(shell $(CURDIR)/../../../release-tools/system/determine-lib-dir)/pegasus
 
 ifeq (DARWIN,${SYSTEM})
-CFLAGS += -Wall -DMUST_USE_SELECT_NOT_POLL=1 -DHAS_REALPATH_EXT=1 -ggdb
-LOADLIBES += -ggdb
-EXTRA_OBJ += machine/darwin.o
+    SYSTEM_OBJ = machine/darwin.o
 endif
 
 ifeq (LINUX,${SYSTEM})
-ifeq (ia64,${MARCH})
-# old Intel-only IA64 architecture
-CFLAGS = -Wall -O2 -ggdb
-else
-ifeq (x86_64,${MARCH})
-# new Intel/AMD 64bit architecture
-CFLAGS = -Wall -O2 -ggdb -m64
-else
-ifeq (i686,${MARCH})
-# regular 32bit x86 architecture
-CFLAGS = -Wall -O2 -march=i686 -ggdb
-else
-# UNKNOWN ARCHITECTURE -- MAKE NO ASSUMPTIONS
-CFLAGS = -Wall -O2 -ggdb
+ifeq (x86_64,${ARCH})
+    TARGET += libinterpose.so
 endif
-endif
-endif
-LFS_CFLAGS = $(shell getconf LFS_CFLAGS 2>>/dev/null)
-LFS_LDFLAGS = $(shell getconf LFS_LDFLAGS 2>>/dev/null)
-EXTRA_OBJ += machine/linux.o
-CFLAGS += -DHAS_REALPATH_EXT=1
+    CFLAGS += $(shell getconf LFS_CFLAGS 2>>/dev/null)
+    LDFLAGS += $(shell getconf LFS_LDFLAGS 2>>/dev/null)
+    SYSTEM_OBJ = machine/linux.o syscall.o
 endif
 
-CFLAGS += -D${SYSTEM} -DMAJOR=${MAJOR} -DWITH_NEW_ARGS=1
-ifneq (,${SOCKIO})
-CFLAGS += -DHAS_SYS_SOCKIO=1
-endif
-CFLAGS += -DUSE_PARSE=1
+CFLAGS += -D${SYSTEM}
 
-# add large file support
-ifneq (,${LFS_CFLAGS})
-NOLFS_CFLAGS := $(CFLAGS)
-CFLAGS += $(LFS_CFLAGS)
-endif
-ifneq (,${LFS_LDFLAGS})
-LDFLAGS += $(LFS_LDFLAGS)
-endif
-
-.PHONY: test
+.PHONY: install clean test
 
 %.o : %.c
-	$(CC) $(CFLAGS) $< -c -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) $< -c -o $@
 
-all : pegasus-kickstart
+all: $(TARGET)
 
-pegasus-kickstart: debug.o getif.o rwio.o tools.o useinfo.o mynss.o statinfo.o jobinfo.o limitinfo.o $(EXTRA_OBJ) machine.o appinfo.o parse.o mysystem.o mylist.o invoke.o pegasus-kickstart.o procinfo.o
-	$(LD) $(EXTRA_LDFLAGS) $(CFLAGS) $^ -o $@ $(LOADLIBES)
-show-if: show-if.o getif.o debug.o rwio.o
-	$(LD) $(EXTRA_LDFLAGS) $(CFLAGS) $^ -o $@ $(LOADLIBES)
-try-parse: try-parse.o parse.o debug.o rwio.o
-	$(LD) $(EXTRA_LDFLAGS) $(CFLAGS) $^ -o $@ $(LOADLIBES)
+pegasus-kickstart: getif.o utils.o useinfo.o statinfo.o jobinfo.o \
+  limitinfo.o machine.o machine/basic.o $(SYSTEM_OBJ) appinfo.o parse.o \
+  mysystem.o mylist.o invoke.o pegasus-kickstart.o procinfo.o
+	$(LD) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-appinfo.o: appinfo.c getif.h rwio.h debug.h tools.h useinfo.h machine.h \
-  jobinfo.h statinfo.h appinfo.h limitinfo.h mynss.h
-debug.o: debug.c debug.h rwio.h
-fail.o: fail.c
-getif.o: getif.c debug.h getif.h rwio.h
-invoke.o: invoke.c invoke.h
-jobinfo.o: jobinfo.c getif.h debug.h tools.h useinfo.h jobinfo.h \
-  statinfo.h parse.h procinfo.h
-pegasus-kickstart.o: pegasus-kickstart.c rwio.h debug.h appinfo.h \
-  statinfo.h jobinfo.h limitinfo.h machine.h mysystem.h mylist.h \
-  invoke.h tools.h version.h ptrace.h
-limitinfo.o: limitinfo.c debug.h tools.h limitinfo.h
-machine.o: machine.c machine.h machine/basic.h debug.h
+appinfo.o: appinfo.c getif.h utils.h useinfo.h machine.h jobinfo.h \
+	  statinfo.h procinfo.h ptrace.h appinfo.h limitinfo.h error.h
+getif.o: getif.c getif.h utils.h error.h
+invoke.o: invoke.c invoke.h error.h
+jobinfo.o: jobinfo.c getif.h utils.h useinfo.h jobinfo.h statinfo.h \
+  procinfo.h ptrace.h parse.h error.h
+limitinfo.o: limitinfo.c utils.h limitinfo.h error.h
+machine.o: machine.c machine.h machine/basic.h
 mylist.o: mylist.c mylist.h
-mynss.o: mynss.c mynss.h
-mysystem.o: mysystem.c debug.h tools.h appinfo.h statinfo.h jobinfo.h \
-  limitinfo.h machine.h mysystem.h mysignal.h procinfo.h
-parse.o: parse.c debug.h parse.h
-procinfo.o: procinfo.c procinfo.h ptrace.h tools.h
-rwio.o: rwio.c rwio.h
-show-if.o: show-if.c getif.h
-statinfo.o: statinfo.c mynss.h debug.h statinfo.h tools.h
-test-ascii.o: test-ascii.c
-test-post.o: test-post.c
-test-pre.o: test-pre.c
-tools.o: tools.c tools.h
-try-parse.o: try-parse.c parse.h rwio.h
-useinfo.o: useinfo.c tools.h useinfo.h
-zio.o: zio.c zio.h
+mysystem.o: mysystem.c utils.h appinfo.h statinfo.h jobinfo.h procinfo.h \
+  ptrace.h limitinfo.h machine.h mysystem.h error.h
+parse.o: parse.c parse.h utils.h error.h
+pegasus-kickstart.o: pegasus-kickstart.c error.h appinfo.h statinfo.h \
+  jobinfo.h procinfo.h ptrace.h limitinfo.h machine.h mysystem.h \
+  mylist.h invoke.h utils.h version.h
+procinfo.o: procinfo.c procinfo.h ptrace.h utils.h syscall.h error.h
+statinfo.o: statinfo.c statinfo.h utils.h error.h
+syscall.o: syscall.c syscall.h syscall_32.h syscall_64.h ptrace.h \
+  procinfo.h error.h
+useinfo.o: useinfo.c utils.h useinfo.h
+utils.o: utils.c utils.h
+machine/basic.o: machine/basic.c machine/basic.h utils.h error.h
+machine/darwin.o: machine/darwin.c machine/basic.h machine/darwin.h \
+  utils.h error.h
+machine/linux.o: machine/linux.c machine/basic.h machine/linux.h \
+  utils.h error.h
 
-machine/basic.o: machine/basic.c machine/basic.h machine/../tools.h
-machine/linux.o: machine/linux.c machine/basic.c machine/linux.h \
-  machine/../tools.h
-machine/darwin.o: machine/darwin.c machine/basic.c machine/darwin.h \
-  machine/../tools.h
+libinterpose.so: interpose.c
+	$(CC) $(CFLAGS) -std=gnu99 -shared -fPIC -o libinterpose.so interpose.c -ldl
 
 version.h:
-	$(CURDIR)/genversion.sh > $(CURDIR)/version.h
+	$(CURDIR)/../../../release-tools/getversion --header > $(CURDIR)/version.h
 
-install: pegasus-kickstart
+install: $(TARGET)
 	$(INSTALL) -m 0755 pegasus-kickstart $(prefix)/bin
+ifeq (LINUX,${SYSTEM})
+ifeq (x86_64,${ARCH})
+	mkdir -p $(libdir)
+	$(INSTALL) -m 0755 libinterpose.so $(libdir)
+endif
+endif
 
 clean:
-	$(RM) *.o machine/*.o core core.* version.h
+	$(RM) *.o *.so machine/*.o core core.* version.h
 
-distclean: clean
-	$(RM) pegasus-kickstart fail test-post test-pre test-ascii show-if
+distclean:
+	$(RM) $(TARGET)
 
-test: pegasus-kickstart
+test: $(TARGET)
 	cd $(CURDIR)/test && ./test.sh
+

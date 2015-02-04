@@ -32,20 +32,9 @@ import commands
 import datetime
 import traceback
 import subprocess
-
-# The unquote routine comes from urllib
-from urllib import unquote
+import urllib
 
 __all__ = ['quote', 'unquote']
-_mapping = {}
-
-# Initialize _mapping
-for i, c in zip(xrange(256), ''.join([chr(x) for x in xrange(256)])):
-    if (i >= 32 and i < 127 and c not in '"%\''):
-        _mapping[c] = c
-    else:
-        _mapping[c] = ('%%%02X'%i)
-del i; del c
 
 # Compile our regular expressions
 
@@ -60,19 +49,82 @@ MAXLOGFILE = 1000                # For log rotation, check files from .000 to .9
 jobbase = "jobstate.log"        # Default name for jobstate.log file
 brainbase = "braindump.txt"        # Default name for workflow information file
 
-# Get logger object (initialized elsewhere)
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
+
+def configureLogging(level=logging.INFO):
+    root = logging.getLogger()
+    root.setLevel(level)
+    cl = logging.StreamHandler()
+    formatter = logging.Formatter("%(asctime)s:%(name)s:%(lineno)d: %(levelname)s: %(message)s")
+    cl.setFormatter(formatter)
+    root.addHandler(cl)
 
 def quote(s):
     """
-    Encodes a string using a partial URL encoding. The encoding
-    replaces the following elements with their URL-encoded
-    equivalents:
-    1. Non-printing and control characters (characters < 0x20 and 0x7F [DEL])
-    2. Extended ASCII characters (characters >= 0x80)
-    3. Percent (0x25), quote (0x27), and double quote (0x22)
+    Encodes a byte string using URL encoding. This replaces bytes with their
+    URL-encoded equivalent %XX where XX is the hexadecimal value of the byte.
+    In particular, the bytes that are encoded include:
+
+    1. Bytes < 0x20 or >= 0x7F (C0 and C1 control codes)
+    2. Quote/apostrophe (0x27), double quote (0x22), and percent (0x25)
+
+    This will always return a byte string. If the argument is a unicode string
+    then it will be utf-8 encoded before being quoted.
     """
-    return ''.join(map(_mapping.__getitem__, s))
+    if not isinstance(s, basestring):
+        raise TypeError("Not a string: %s" % str(s))
+
+    if isinstance(s, unicode):
+        # We need to utf-8 encode unicode strings
+        s = s.encode('utf-8')
+
+    buf = []
+    for c in s:
+        i = ord(c)
+        if i < 0x20 or i >= 0x7F:
+            # Any byte less than 0x20 is a control character
+            # any byte >= 0x7F is either a control character
+            # or a multibyte unicode character
+            buf.append("%%%02X" % i)
+        elif c == '%':
+            buf.append('%25')
+        elif c == "'":
+            buf.append('%27')
+        elif c == '"':
+            buf.append('%22')
+        else:
+            # These are regular bytes
+            buf.append(c)
+
+    return ''.join(buf)
+
+def unquote(s):
+    """
+    Unquote a URL-quoted string.
+
+    This will always return a byte string with an unknown encoding. If the
+    argument is a unicode string then it will be encoded in latin-1 before being
+    unquoted. Latin-1 is used because it doesn't modify bytes <= 0xFF, which
+    is all we expect a quoted string to contain.
+
+    Unfortunately, this cannot return a unicode string because we have no
+    way of knowing what encoding was used for the original string that was
+    passed to quote().
+    """
+    if not isinstance(s, basestring):
+        raise TypeError("Not a string: %s" % str(s))
+
+    if isinstance(s, unicode):
+        # Technically, this should not happen because
+        # quote always returns a byte string, but if it was
+        # passed through a database or something then it might happen
+        # Latin-1 is used because it has the nice property that every
+        # unicode code point <= 0xFF has the same value in latin-1
+        # We ignore anything else (i.e. >0xFF) because, tecnically, it
+        # should have been removed by quote()
+        s = s.encode('latin-1', 'ignore')
+
+    return urllib.unquote(s)
 
 def isodate(now=int(time.time()), utc=False, short=False):
     """
@@ -354,8 +406,7 @@ def raw_to_regular(exitcode):
     For signals, it returns the negative signal number (-1 through -127)
     For failures (when exitcode < 0), it returns the special value -128
     """
-    if not type(exitcode) is int and not type(exitcode) is long :
-        logger.warning("exitcode not an integer!")
+    if type(exitcode) is not int and type(exitcode) is not long:
         return exitcode
     if exitcode < 0:
         return -128

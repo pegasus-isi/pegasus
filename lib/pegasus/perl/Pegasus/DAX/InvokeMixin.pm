@@ -12,7 +12,7 @@ use Carp;
 use Exporter;
 our @ISA = qw(Exporter); 
 
-our $VERSION = '3.3';
+our $VERSION = '3.5';
 our @EXPORT = ();
 our @EXPORT_OK = ();
 our %EXPORT_TAGS = (); 

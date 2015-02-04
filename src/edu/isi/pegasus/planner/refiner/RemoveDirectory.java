@@ -16,45 +16,40 @@
 
 package edu.isi.pegasus.planner.refiner;
 
-import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
-import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
-
-import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.Job;
-import edu.isi.pegasus.planner.classes.PegasusBag;
-
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.PegasusURL;
-
-import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
-
-import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
-
 import edu.isi.pegasus.common.util.Separator;
-
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
+import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.DAGJob;
+import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.DAXJob;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.TransferJob;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.List;
-import java.util.LinkedList;
-
-import java.io.File;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import edu.isi.pegasus.planner.refiner.createdir.AbstractStrategy;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.BitSet;
+import java.util.HashMap;
+import java.util.IdentityHashMap;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 
 /**
- * Ends up creating a cleanup dag that deletes the remote directories that
- * were created by the create dir jobs. The cleanup dag is generated in a
- * sub directory from the main directory containing the submit files of the
- * dag. The dag consists of independant jobs, with each job responsible for
- * deleting directory for a execution pool. The current way of generating the
- * dag is tied to the fact, that the directories in which a job are executed
- * is tied to the pool not the job itself.
+ * This adds leaf cleanup jobs to the workflow. The strategy is symmetric to the
+ * one used for adding the create dir jobs to the workflow.
  *
  * @author Karan Vahi
  * @version $Revision$
@@ -62,19 +57,6 @@ import java.io.IOException;
  */
 public class RemoveDirectory extends Engine {
 
-
-
-    /**
-     * The prefix that is attached to the name of the dag for which the
-     * cleanup Dag is being generated, to generate the name of the cleanup
-     * Dag.
-     */
-    public static final String CLEANUP_DAG_PREFIX = "del_";
-
-    /**
-     * Constant suffix for the names of the remote directory nodes.
-     */
-    public static final String REMOVE_DIR_SUFFIX = "_rdir";
 
     /**
      * The logical name of the transformation that removes directories on the
@@ -115,6 +97,10 @@ public class RemoveDirectory extends Engine {
      */
     public static final String DERIVATION_VERSION = "1.0";
 
+    /**
+     * Constant suffix for the names of the deployment nodes.
+     */
+    public static final String CLEANUP_PREFIX = "cleanup_";
 
     /**
      * The concrete dag so far, for which the clean up dag needs to be generated.
@@ -145,7 +131,12 @@ public class RemoveDirectory extends Engine {
      */
     private  String mSubmitDirectory;
 
-
+    
+    /**
+     * The job prefix that needs to be applied to the job url basenames.
+     */
+    protected String mJobPrefix;
+    
     /**
      * The overloaded constructor that sets the dag for which we have to
      * generated the cleanup dag for.
@@ -159,71 +150,172 @@ public class RemoveDirectory extends Engine {
         mConcDag = concDag;
         mTransferFromSubmitHost = bag.getPegasusProperties().transferWorkerPackage();
         mSubmitDirectory = submitDirectory;
+        
+        mJobPrefix  = bag.getPlannerOptions().getJobnamePrefix();
+    }
 
-        //check to see if it exists
-        File dir = new File( submitDirectory );
-        if( !dir.exists() ){
-            // does not exist, try to make it
-            if ( ! dir.mkdirs() ) {
-
-                //try to get around JVM bug. JIRA PM-91
-                if( dir.getPath().endsWith( "." ) ){
-                    //just try to create the parent directory
-                    if( !dir.getParentFile().mkdirs() ){
-                        throw new RuntimeException( "Unable to create  directory " +
-                                       dir.getPath() );
-                    }
-                    return;
+    /**
+     * Modifies the workflow to add remove directory nodes. The workflow passed
+     * is a worklow, where the jobs have been mapped to sites.
+     * 
+     * The strategy involves in walking the graph in a BFS order, and updating a 
+     * bit set associated with each job based on the BitSet of the parents jobs. 
+     * The BitSet indicates whether an edge exists from the descendant of a node
+     * to the remove dir job.
+     * 
+     * For a node, the bit set is the union of all the parents BitSets. The BFS 
+     * traversal ensures that the bitsets are of a node are only updated once the 
+     * parents have been processed.
+     * 
+     * @param dag   the workflow to which the nodes have to be added.
+     * 
+     * @return the added workflow
+     */
+    public ADag addRemoveDirectoryNodes( ADag dag ){
+        //PM-747 no need for conversion as ADag now implements Graph interface
+        return this.addRemoveDirectoryNodes( dag  ,this.getCreateDirSites(dag));
+    }
+    
+    /**
+     * Adds create dir nodes to the workflow.
+     * 
+     * The strategy involves in walking the graph in a bottom up BFS order, and updating a 
+     * bit set associated with each job based on the BitSet of the children jobs. 
+     * The BitSet indicates whether an edge exists from the descendant of the node
+     * to the remove directory node.
+     * 
+     * For a node, the bit set is the union of all the children BitSets. The BFS 
+     * traversal ensures that the bitsets are of a node are only updated once the 
+     * children have been processed.
+     * 
+     * @param workflow  the workflow 
+     * @param sites     the staging sites the workflow refers to.
+     * 
+     * @return 
+     */
+    public ADag addRemoveDirectoryNodes( ADag workflow, Set<String> sites ) {
+        //the number of sites dictates the size of the BitSet associated with each job.
+        Map<String, Integer> siteToBitIndexMap = new HashMap();
+        int bitSetSize = sites.size();
+        int i = 0;
+        for( String site: sites ){
+            siteToBitIndexMap.put( site, i++ );
+        }
+        
+        
+        //create the remove dir jobs required but don't add to the workflow
+        //till edges are figured out
+        //for each execution pool add a remove directory node.
+        Map<GraphNode,Set<GraphNode>> removeDirParentsMap = new HashMap();
+        Map<String,GraphNode> removeDirMap = new HashMap();//mas site to the associated remove dir node
+        for (String site: sites ){
+            String jobName = getRemoveDirJobName( workflow, site );
+            Job newJob  = this.makeRemoveDirJob( site, jobName );
+            mLogger.log( "Creating remove directory node " + jobName , LogManager.DEBUG_MESSAGE_LEVEL );
+            GraphNode node = new GraphNode( newJob.getID() );
+            node.setContent(newJob);
+            removeDirParentsMap.put(node, new LinkedHashSet<GraphNode>());
+            removeDirMap.put( site, node );
+        }
+        
+        
+        //we use an identity hash map to associate the nodes with the bitmaps 
+        Map<GraphNode,BitSet> nodeBitMap = new IdentityHashMap( workflow.size() );
+        
+        //do a BFS walk over the workflow
+        for( Iterator<GraphNode> it = workflow.bottomUpIterator(); it.hasNext(); ){
+            GraphNode node = it.next();
+            BitSet set     = new BitSet( bitSetSize );
+            Job job        = (Job)node.getContent();
+            String site    = getAssociatedCreateDirSite( job );
+            
+            //PM-795 for each DAX|DAG job in the workflow, we need to add
+            //a dependency to all the leaf cleanup jobs
+            if( job instanceof DAXJob || job instanceof DAGJob ){
+                for ( Map.Entry<GraphNode, Set<GraphNode>> entry : removeDirParentsMap.entrySet()  ){
+                    GraphNode removeDirNode = entry.getKey();
+                    Set<GraphNode> parents = entry.getValue();
+                    mLogger.log( "Need to add edge for DAX|DAG job "  + job.getID() + " -> " + removeDirNode.getID(),
+                             LogManager.DEBUG_MESSAGE_LEVEL );
+                    parents.add(node);
                 }
-                throw new RuntimeException( "Unable to create  directory " +
-                                       dir.getPath() );
             }
+            
+            //check if for stage out jobs there are any parents specified 
+            //or not.
+            if( job instanceof TransferJob && job.getJobType() == Job.STAGE_OUT_JOB ){
+                if( node.getParents().isEmpty() ){
+                    //means we have a stage out job only. probably the workflow
+                    //was fully reduced in data reuse
+                    mLogger.log( "Not considering job for remove dir edges " + job.getID() , LogManager.DEBUG_MESSAGE_LEVEL );
+                    nodeBitMap.put(node, set);
+                    continue;
+                }
+            }
+            
+            if( job.getJobType() == Job.CREATE_DIR_JOB ){
+                //no need to do anything for the create dir jobs
+                continue;
+            }
+            
+            //the set is a union of all the children's set
+            for( GraphNode child: node.getChildren()){
+                BitSet cSet = nodeBitMap.get( child );
+                set.or( cSet );
+            }
+            
+            if( site == null ){
+                //only ok for stage worker jobs
+                if( job instanceof TransferJob || job.getJobType() == Job.REPLICA_REG_JOB ){
+                    mLogger.log( "Not adding edge to create dir job for job " + job.getID(),
+                                     LogManager.DEBUG_MESSAGE_LEVEL );
+                    nodeBitMap.put(node, set);
+                    continue;
+                }
+                else{
+                    throw new RuntimeException( "Job not associated with staging site " + job.getID() );
+                }
+            }
+            
+          
+            //System.out.println( "Create dir site for job " + job.getID() + " is " + site );
+
+
+            int index = siteToBitIndexMap.get( site );
+            if(! set.get( index ) ){
+                //none of the parents have an index to the site
+                //need to add an edge.
+                GraphNode child = removeDirMap.get( site );
+                mLogger.log( "Need to add edge "  + job.getID() + " -> " + child.getID(),
+                             LogManager.DEBUG_MESSAGE_LEVEL );
+                removeDirParentsMap.get( child ).add( node );
+
+                //edge has been added . set the bit to true
+                set.set( index );
+            }
+            
+            //set the bitset of remove dirs for the node
+            nodeBitMap.put(node, set);
+        }
+        
+        
+        //for each leaf cleanup job add it to the workflow
+        //and connect the edges
+        for ( Map.Entry<GraphNode, Set<GraphNode>> entry : removeDirParentsMap.entrySet()  ){
+            GraphNode removeDirNode = entry.getKey();
+            Set<GraphNode> parents = entry.getValue();
+            mLogger.log(  "Adding node to the worklfow " + removeDirNode.getID(),
+                          LogManager.DEBUG_MESSAGE_LEVEL );
+            for( GraphNode parent: parents ){
+                removeDirNode.addParent(parent);
+                parent.addChild( removeDirNode );
+            }
+            workflow.addNode( removeDirNode );
 
         }
-    }
 
-    /**
-     * Generates a cleanup DAG for the dag associated with the class. Creates a
-     * cleanup node per remote pool. It looks at the ADAG, to determine the
-     * sites at which the jobs in the dag have been scheduled.
-     *
-     * @return the cleanup DAG.
-     */
-    public ADag generateCleanUPDAG(  ){
-        return this.generateCleanUPDAG( mConcDag );
-    }
-
-
-    /**
-     * Generates a cleanup DAG for the dag object passed. Creates a cleanup
-     * node per remote pool. It looks at the ADAG, to determine the sites at
-     * which the jobs in the dag have been scheduled.
-     *
-     * @param dag  the dag for which cleanup dag needs to be generated.
-     *
-     * @return the cleanup DAG.
-     * @see org.griphyn.cPlanner.classes.ADag#getExecutionSites()
-     */
-    public ADag generateCleanUPDAG(ADag dag  ){
-        ADag cDAG = new ADag();
-        cDAG.dagInfo.nameOfADag = this.CLEANUP_DAG_PREFIX + dag.dagInfo.nameOfADag;
-        cDAG.dagInfo.index      = dag.dagInfo.index;
-        cDAG.dagInfo.setDAXMTime( dag.getMTime() );
-
-        Set pools = this.getCreateDirSites(dag);
-        String pool    = null;
-        String jobName = null;
-
-        //remove the entry for the local pool
-        //pools.remove("local");
-
-        for(Iterator it = pools.iterator();it.hasNext();){
-            pool    = (String)it.next();
-            jobName = getRemoveDirJobName(dag,pool);
-            cDAG.add(makeRemoveDirJob( pool,jobName ));
-        }
-
-        return cDAG;
+        
+        return workflow;
     }
 
     /**
@@ -235,38 +327,7 @@ public class RemoveDirectory extends Engine {
      *          dag has to be run.
      */
     protected Set getCreateDirSites( ADag dag ){
-        Set set = new HashSet();
-
-        for( Iterator it = dag.vJobSubInfos.iterator();it.hasNext();){
-            Job job = (Job)it.next();
-
-            if( job.getJobType() == Job.CHMOD_JOB ){
-                //skip
-                //chmod jobs dont have a staging site associated
-                //they are only created in the shared fs mode.
-                continue;
-            }
-
-            //add to the set only if the job is
-            //being run in the work directory
-            //this takes care of local site create dir
-            if( job.runInWorkDirectory()){
-
-                String site = job.getStagingSiteHandle();
-                //sanity check for remote transfer jobs
-                if( job instanceof TransferJob ){
-                    site = ((TransferJob)job).getNonThirdPartySite();
-                }
-
-                //System.out.println( "Job staging site handle " + job.getID() + " " + site );
-                set.add( site );
-            }
-        }
-
-        //remove the stork pool
-        set.remove("stork");
-
-        return set;
+        return AbstractStrategy.getCreateDirSites(dag);
     }
 
 
@@ -277,18 +338,26 @@ public class RemoveDirectory extends Engine {
      * planning.
      *
      * @param dag   the dag for which the cleanup DAG is being generated.
-     * @param pool  the execution pool for which the remove directory job
+     * @param site  the execution site for which the remove directory job
      *              is responsible.
      *
      * @return String corresponding to the name of the job.
      */
-    private String getRemoveDirJobName(ADag dag,String pool){
+    private String getRemoveDirJobName(ADag dag,String site){
         StringBuffer sb = new StringBuffer();
-        sb.append(dag.dagInfo.nameOfADag).append("_").
-           append(dag.dagInfo.index).append("_").
-           append(pool).append(this.REMOVE_DIR_SUFFIX);
 
-       return sb.toString();
+        //append setup prefix
+        sb.append( DeployWorkerPackage.CLEANUP_PREFIX );
+        //append the job prefix if specified in options at runtime
+        if ( mJobPrefix != null ) { sb.append( mJobPrefix ); }
+
+        sb.append( dag.getLabel() ).append( "_" ).
+           append( dag.getIndex() ).append( "_" );
+
+
+        sb.append( site );
+
+        return sb.toString();
     }
 
 
@@ -305,41 +374,81 @@ public class RemoveDirectory extends Engine {
      */
     public Job makeRemoveDirJob( String site, String jobName ) {
         
-        List<String> l = new LinkedList<String>();
-
+        List<String> urls = new LinkedList<String>();
+        List<String> files = new LinkedList<String>();
         //the externally accessible url to the directory/ workspace for the workflow
-        l.add( mSiteStore.getExternalWorkDirectoryURL( site, FileServer.OPERATION.put )  );
-        return makeRemoveDirJob( site, jobName, l  );
+        urls.add( mSiteStore.getExternalWorkDirectoryURL( site, FileServer.OPERATION.put )  );
+        files.add(mSiteStore.getInternalWorkDirectory( site, null ) );
+        return makeRemoveDirJob( site, jobName, urls, files  );
     }
     
     /**
-     * It creates a remove directory job that creates a directory on the remote pool
-     * using the perl executable that Gaurang wrote. It access mkdir underneath.
-     * It gets the name of the random directory from the Pool handle.
-     *
+     * It creates a remove directory job that creates a directory on the remote site
+     * using pegasus-cleanup executable
+     * 
      * @param site      the site from where the directory need to be removed.
      * @param jobName   the name that is to be assigned to the job.
-     * @param files  the list of files to be cleaned up.
+     * @param urls      the list of urls for the files to be cleaned up.
      *
      * @return the remove dir job.
      */
-    public Job makeRemoveDirJob( String site, String jobName, List<String> files ) {
+    public Job makeRemoveDirJob( String site, String jobName, List<String> urls ) {
+        return this.makeRemoveDirJob(site, jobName, urls, null );
+    }
+    
+    /**
+     * It creates a remove directory job that creates a directory on the remote site
+     * using pegasus-cleanup executable
+     * 
+     * @param site      the site from where the directory need to be removed.
+     * @param jobName   the name that is to be assigned to the job.
+     * @param urls      the list of urls for the files to be cleaned u
+     * @param files     the corresponding list of file url paths.
+     *
+     * @return the remove dir job.
+     */
+    public Job makeRemoveDirJob( String site, String jobName, List<String> urls, List<String> files ) {
         Job newJob  = new Job();
         List entries    = null;
         String execPath = null;
         TransformationCatalogEntry entry   = null;
 
-
+        //PM-773 we only do checks for leaf cleanup jobs
+        boolean additionalChecks = !(files == null);
+        if( additionalChecks && urls.size() != files.size() ){
+            throw new RuntimeException( "Mismatch in URLS and corresponding files " + urls.size() + "," + files.size());
+        }
 
         //the site where the cleanup job will run
         String eSite = "local";
 
-        for( String file: files ){
-            if( file.startsWith( PegasusURL.FILE_URL_SCHEME ) ){
+        int index = 0;
+        for( String url: urls ){
+            if( url.startsWith( PegasusURL.FILE_URL_SCHEME ) ){
                 //means the cleanup job should run on the staging site
-                mLogger.log( "Directory URL is a file url for site " + site + "  " +  files,
+                mLogger.log( "Directory URL is a file url for site " + site + "  " +  urls,
                                  LogManager.DEBUG_MESSAGE_LEVEL );
                 eSite = site;
+            }
+        }
+        
+        //PM-773
+        if( additionalChecks ){
+            String submitDir = mPOptions.getSubmitDirectory();
+            //check if the submit directory is the same the file being asked to remove
+            for( String file: files ){
+                if( submitDir.equals( file) ){
+                    //if the staging site is local then it is fatal error 
+                    //else we log a warning
+                    String error = "The submit directory and the scratch directory for the cleanup job match " + file;
+                    if( site.equals( "local") ){
+                        error += " . This will result in the cleanup job removing the submit directory as the workflow is running.";
+                        throw new RuntimeException( error );
+                    }
+                    else{
+                        mLogger.log( error, LogManager.WARNING_MESSAGE_LEVEL );
+                    }
+                }
             }
         }
 
@@ -402,9 +511,15 @@ public class RemoveDirectory extends Engine {
             writer = new BufferedWriter( new FileWriter(
                                         new File( mSubmitDirectory, stdIn ) ));
 
-            for( String file: files ){
+            int fileNum = 1;
+            for( String file: urls ){
+                writer.write( "# " + fileNum + " " + site );
+                writer.write( "\n" );
                 writer.write( file );
                 writer.write( "\n" );
+                
+                //associate a credential if required
+                newJob.addCredentialType( site, file );
             }
 
             //closing the handle to the writer
@@ -416,7 +531,7 @@ public class RemoveDirectory extends Engine {
             throw new RuntimeException( "While writing the stdIn file " + stdIn, e );
         }
 
-        //set the stdin file for the job
+        //set the stdin url for the job
         newJob.setStdIn( stdIn );
         
         newJob.jobName = jobName;
@@ -434,6 +549,9 @@ public class RemoveDirectory extends Engine {
         newJob.jobClass = Job.CLEANUP_JOB;
         newJob.jobID = jobName;
 
+        //PM-150 for leaf cleanup nodes we will set a specific recursive flag
+        newJob.setArguments( " --recursive " );
+        
         //the profile information from the pool catalog needs to be
         //assimilated into the job.
         newJob.updateProfiles( mSiteStore.lookup( newJob.getSiteHandle() ).getProfiles() );
@@ -447,7 +565,7 @@ public class RemoveDirectory extends Engine {
         //overriding the one from pool catalog.
         newJob.updateProfiles(entry);
 
-        //the profile information from the properties file
+        //the profile information from the properties url
         //is assimilated overidding the one from transformation
         //catalog.
         newJob.updateProfiles(mProps);
@@ -528,6 +646,39 @@ public class RemoveDirectory extends Engine {
         return defaultTCEntry;
     }
 
+    /**
+     * Returns the associated site that job is dependant on.
+     * This is site, whose create dir job should be a parent or an ancestor of 
+     * the job.
+     * 
+     * @param job  the job for which we need the associated create dir site.
+     * 
+     * @return the site 
+     */
+    private String getAssociatedCreateDirSite( Job job ) {
+        String site = null;
+        if( job.getJobType() == Job.CHMOD_JOB ){
+            site =  job.getSiteHandle();
+        }
+        else{
+            //the parent in case of a transfer job
+            //is the non third party site
+            site = ( job instanceof TransferJob )?
+                               ((TransferJob)job).getNonThirdPartySite():
+                               job.getStagingSiteHandle();
 
+            
+            if( site == null ){
+                //only ok for stage worker jobs
+                if( job instanceof TransferJob ){
+                    mLogger.log( "Not adding edge to create dir job for job " + job.getID(),
+                                     LogManager.DEBUG_MESSAGE_LEVEL );
+                    return site;
+                    
+                }
+            }
+        }
+        return site;
+    }
 
 }

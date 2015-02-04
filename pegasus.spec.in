@@ -1,0 +1,85 @@
+Name:           pegasus
+Version:        @PEGASUS_VERSION@
+Release:        1%{?dist}
+Summary:        Workflow management system for HTCondor, grids, and clouds
+Group:          Applications/System
+License:        ASL 2.0
+URL:            http://pegasus.isi.edu/
+Packager:       Pegasus Development Team <pegasus-support@isi.edu>
+
+Source:         pegasus-source-%{version}.tar.gz
+
+BuildRoot:      %{_tmppath}/%{name}-root
+
+BuildRequires:  ant, ant-nodeps, ant-apache-regexp, java7-devel, gcc, groff, python-devel, gcc-c++, make, jpackage-utils, /usr/share/java-1.7.0, asciidoc, libxslt, fop
+Requires:       java, python >= 2.4, condor >= 7.6, graphviz, jpackage-utils
+
+%define sourcedir %{name}-source-%{version}
+
+%description
+The Pegasus project encompasses a set of technologies that
+help workflow-based applications execute in a number of
+different environments including desktops, campus clusters,
+grids, and now clouds. Scientific workflows allow users to
+easily express multi-step computations. Once an application
+is formalized as a workflow the Pegasus Workflow Management
+Service can map it onto available compute resources and
+execute the steps in appropriate order.
+
+
+%prep
+%setup -q -n %{sourcedir}
+
+%build
+ant dist-release
+
+# strip executables
+strip dist/pegasus-%{version}/bin/pegasus-invoke
+strip dist/pegasus-%{version}/bin/pegasus-cluster
+strip dist/pegasus-%{version}/bin/pegasus-kickstart
+strip dist/pegasus-%{version}/bin/pegasus-keg
+
+%install
+rm -Rf %{buildroot}
+
+mkdir -p %{buildroot}/%{_sysconfdir}/%{name}
+mkdir -p %{buildroot}/%{_bindir}
+mkdir -p %{buildroot}/%{_datadir}
+
+cp -aR dist/pegasus-%{version}/etc/* %{buildroot}/%{_sysconfdir}/%{name}/
+cp -aR dist/pegasus-%{version}/bin/* %{buildroot}/%{_bindir}/
+cp -aR dist/pegasus-%{version}/lib* %{buildroot}/usr/
+cp -aR dist/pegasus-%{version}/share/* %{buildroot}/%{_datadir}/
+
+# rm unwanted files
+rm -f %{buildroot}/%{_bindir}/keg.condor
+rm -f %{buildroot}/%{_datadir}/%{name}/java/COPYING.*
+rm -f %{buildroot}/%{_datadir}/%{name}/java/EXCEPTIONS.*
+rm -f %{buildroot}/%{_datadir}/%{name}/java/LICENSE.*
+rm -f %{buildroot}/%{_datadir}/%{name}/java/NOTICE.*
+
+%clean
+ant clean
+rm -Rf %{buildroot}
+
+
+%files
+%defattr(-,root,root,-)
+%config(noreplace) %{_sysconfdir}/%{name}/
+%{_bindir}/*
+%{_libdir}/pegasus
+%{_libdir}/python*
+%{_datadir}/doc/%{name}
+%{_datadir}/man/man1/*
+%{_datadir}/%{name}
+
+
+%changelog
+* @DATE@ Pegasus Development Team <pegasus-support@isi.edu> @PEGASUS_VERSION@
+- @PEGASUS_VERSION@ automatic build
+
+%changelog
+* Mon Dec 02 2013 Pegasus Development Team <pegasus-support@isi.edu> 4.3.2cvs
+- Relaxed the "java" requirements in order for the package to work on plan
+  CentOS machines
+

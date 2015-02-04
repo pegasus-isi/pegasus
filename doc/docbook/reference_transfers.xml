@@ -164,10 +164,14 @@
         <title>Shared File System Setup</title>
 
         <mediaobject>
-          <imageobject>
-            <imagedata align="center" contentdepth="100%"
-                       fileref="images/data-configuration-sharedfs.png"
-                       scalefit="1" width="100%"/>
+          <imageobject role="html">
+            <imagedata align="center" contentdepth="450px"
+                       fileref="images/data-configuration-sharedfs.png"/>
+          </imageobject>
+
+          <imageobject role="fo">
+            <imagedata align="center" contentdepth="4in"
+                       fileref="images/data-configuration-sharedfs.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -199,8 +203,8 @@
       </orderedlist>
 
       <tip>
-        <para>Set <emphasis role="bold">pegasus.data.configuration</emphasis>
-        to <emphasis role="bold">sharedfs</emphasis> to run in this
+        <para>Set <emphasis role="bold"> pegasus.data.configuration</emphasis>
+        to <emphasis role="bold"> sharedfs</emphasis> to run in this
         configuration.</para>
       </tip>
     </section>
@@ -214,7 +218,7 @@
       coordination site. The staging site server can be a file server on the
       head node of a cluster or can be on a separate machine.</para>
 
-      <para><emphasis role="bold">Setup</emphasis><itemizedlist>
+      <para><emphasis role="bold">Setup</emphasis> <itemizedlist>
           <listitem>
             <para>compute and staging site are the different</para>
           </listitem>
@@ -237,11 +241,15 @@
       <figure>
         <title>Non Shared Filesystem Setup</title>
 
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center" contentdepth="100%"
-                       fileref="images/data-configuration-nonsharedfs.png"
-                       id="Figure2" scalefit="1" width="100%"/>
+        <mediaobject id="Figure2">
+          <imageobject role="html">
+            <imagedata align="center" contentdepth="450px"
+                       fileref="images/data-configuration-nonsharedfs.png"/>
+          </imageobject>
+
+          <imageobject role="fo">
+            <imagedata align="center" contentdepth="4in"
+                       fileref="images/data-configuration-nonsharedfs.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -293,10 +301,30 @@
       linkend="amazon_aws">here.</link></para>
 
       <tip>
-        <para>Set p<emphasis role="bold">egasus.data.configuration</emphasis>
+        <para>Set p <emphasis role="bold">egasus.data.configuration</emphasis>
         to <emphasis role="bold">nonsharedfs</emphasis> to run in this
         configuration. The staging site can be specified using the <emphasis
         role="bold">--staging-site</emphasis> option to pegasus-plan.</para>
+      </tip>
+
+      <para>In this setup, Pegasus always stages the input files through the
+      staging site i.e the stage-in job stages in data from the input site to
+      the staging site. The PegasusLite jobs that start up on the worker
+      nodes, then pull the input data from the staging site for each job. In
+      some cases, it might be useful to setup the PegasusLite jobs to pull
+      input data directly from the input site without going through the
+      staging server. This is based on the assumption that the worker nodes
+      can access the input site. Starting 4.3 release, users can enable this.
+      However, you should be aware that the access to the input site is no
+      longer throttled ( as in case of stage in jobs). If large number of
+      compute jobs start at the same time in a workflow, the input server will
+      see a connection from each job.</para>
+
+      <tip>
+        <para>Set <emphasis role="bold">
+        pegasus.transfer.bypass.input.staging</emphasis> to <emphasis
+        role="bold">true</emphasis>to enable the bypass of staging of input
+        files via the staging server.</para>
       </tip>
     </section>
 
@@ -309,7 +337,7 @@
       setup, where instead of using pegasus-transfer to transfer input and
       output data, Condor File IO is used.</para>
 
-      <para><emphasis role="bold">Setup</emphasis><itemizedlist>
+      <para><emphasis role="bold">Setup</emphasis> <itemizedlist>
           <listitem>
             <para>Submit Host and staging site are same</para>
           </listitem>
@@ -332,11 +360,15 @@
       <figure>
         <title>Condor Pool Without a Shared Filesystem</title>
 
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center" contentdepth="100%"
-                       fileref="images/data-configuration-condorio.png"
-                       id="Figure13" scalefit="1" width="100%"/>
+        <mediaobject id="Figure13">
+          <imageobject role="html">
+            <imagedata align="center" contentdepth="450px"
+                       fileref="images/data-configuration-condorio.png"/>
+          </imageobject>
+
+          <imageobject role="fo">
+            <imagedata align="center" contentdepth="4in"
+                       fileref="images/data-configuration-condorio.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -389,10 +421,30 @@
       linkend="amazon_aws">here.</link></para>
 
       <tip>
-        <para>Set p<emphasis role="bold">egasus.data.configuration</emphasis>
+        <para>Set p <emphasis role="bold">egasus.data.configuration</emphasis>
         to <emphasis role="bold">condorio</emphasis> to run in this
         configuration. In this mode, the staging site is automatically set to
         site <emphasis role="bold">local</emphasis></para>
+      </tip>
+
+      <para>In this setup, Pegasus always stages the input files through the
+      submit host i.e the stage-in job stages in data from the input site to
+      the submit host (local site). The input data is then transferred to
+      remote worker nodes from the submit host using Condor file transfers. In
+      the case, where the input data is locally accessible at the submit host
+      i.e the input site and the submit host are the same, then it is possible
+      to bypass the creation of separate stage in jobs that copy the data to
+      the workflow specific directory on the submit host. Instead, Condor file
+      transfers can be setup to transfer the input files directly from the
+      locally accessible input locations ( file URL's with site attribute set
+      to local) specified in the replica catalog. Starting 4.3 release, users
+      can enable this.</para>
+
+      <tip>
+        <para>Set <emphasis role="bold">
+        pegasus.transfer.bypass.input.staging</emphasis> to <emphasis
+        role="bold">true</emphasis>to bypass the creation of separate stage in
+        jobs.</para>
       </tip>
     </section>
   </section>
@@ -411,12 +463,12 @@
     jobs that symlink against the input data on the compute site, will be
     executed remotely ( on the compute site ).</para>
 
-    <para>Users can specify the property <emphasis
-    role="bold">pegasus.transfer.*.remote.sites</emphasis> to change the
-    default behaviour of Pegasus and force pegasus to run different types of
-    transfer jobs for the sites specified on the remote site. The value of the
-    property is a comma separated list of compute sites for which you want the
-    transfer jobs to run remotely.</para>
+    <para>Users can specify the property <emphasis role="bold">
+    pegasus.transfer.*.remote.sites</emphasis> to change the default behaviour
+    of Pegasus and force pegasus to run different types of transfer jobs for
+    the sites specified on the remote site. The value of the property is a
+    comma separated list of compute sites for which you want the transfer jobs
+    to run remotely.</para>
 
     <para>The table below illustrates all the possible variations of the
     property.</para>
@@ -467,8 +519,31 @@
     stage_in_local_isi_viz_0 indicates that the transfer job is a stage in
     transfer job that is executed locally and is used to transfer input data
     to compute site isi_viz. The prefix naming scheme for the transfer jobs is
-    <emphasis
-    role="bold">[stage_in|stage_out|inter]_[local|remote]_</emphasis> .</para>
+    <emphasis role="bold">
+    [stage_in|stage_out|inter]_[local|remote]_</emphasis> .</para>
+  </section>
+
+  <section id="controlling_transfer_parallelism">
+    <title>Controlling Transfer Parallelism</title>
+
+    <para>When it comes to data transfers, Pegasus ships with a default
+    configuration which is trying to strike a balance between performance and
+    aggressiveness. We obviously want data transfers to be as quick as
+    possibly, but we also do not want our transfers to overwhelm data services
+    and systems. The default configuration consists of a combination of the
+    maximum number of transfer jobs per level in the workflow, and how many
+    threads such a pegasus-transfer job can spawn.</para>
+
+    <para>Information on how to control the number of stagein and stageout
+    jobs can be found in the <link linkend="data_movement_nodes"> Data
+    Movement Nodes</link> section.</para>
+
+    <para>How to control the number of threads pegasus-transfer can use
+    depends on if you want to control standard transfer jobs, or PegasusLite.
+    For the former, see the <link linkend="transfer_props">
+    pegasus.transfer.threads</link> property, and for the latter the <link
+    linkend="transfer_props"> pegasus.transfer.lite.threads</link>
+    property.</para>
   </section>
 
   <section>
@@ -490,8 +565,9 @@
 
     <orderedlist>
       <listitem>
-        <para>Property <emphasis role="bold">pegasus.transfer.links</emphasis>
-        is set to <emphasis role="bold">true</emphasis></para>
+        <para>Property <emphasis role="bold">
+        pegasus.transfer.links</emphasis> is set to <emphasis role="bold">
+        true</emphasis></para>
       </listitem>
 
       <listitem>
@@ -525,7 +601,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
 </programlisting>
   </section>
 
-  <section>
+  <section id="data_movement_nodes">
     <title>Addition of Separate Data Movement Nodes to Executable
     Workflow</title>
 
@@ -539,12 +615,14 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
     associated with them that are staging the shared files to the same
     destination workflow execution directory.</para>
 
-    <para>The default Transfer Refiner used in Pegasus is the Bundle Refiner
-    that allows the user to specify how many local|remote stagein|stageout
-    jobs are created per execution site.</para>
+    <para>Pegasus supports three different transfer refiners that dictate how
+    the stagein and stageout jobs are added for the workflow.The default
+    Transfer Refiner used in Pegasus is the BalancedCluster Refiner that
+    allows the user to specify how many local|remote stagein|stageout jobs are
+    created per execution site.</para>
 
-    <para>The behavior of the refiner is controlled by specifying certain
-    pegasus profiles</para>
+    <para>The behavior of the refiners (BalancedCluster and Cluster) are
+    controlled by specifying certain pegasus profiles</para>
 
     <orderedlist>
       <listitem>
@@ -621,27 +699,165 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
       </tgroup>
     </table>
 
-    <figure>
-      <title>Default Transfer Case : Input Data To Workflow Specific Directory
-      on Shared File System</title>
+    <tip>
+      <para>Which transfer refiner to use is controlled by property
+      pegasus.transfer.refiner</para>
+    </tip>
 
-      <mediaobject>
-        <imageobject>
-          <imagedata contentdepth="100%"
-                     fileref="images/cluster-transfer-refiner.png"
-                     scalefit="1" width="100%"/>
-        </imageobject>
-      </mediaobject>
-    </figure>
+    <section>
+      <title>BalancedCluster</title>
+
+      <para>This is a new transfer refiner that was introduced in Pegasus
+      4.4.0 and is the default one used in Pegasus. It does a round robin
+      distribution of the files amongst the stagein and stageout jobs per
+      level of the workflow. The figure below illustrates the behavior of this
+      transfer refiner.</para>
+
+      <figure>
+        <title>BalancedCluster Transfer Refiner : Input Data To Workflow
+        Specific Directory on Shared File System</title>
+
+        <mediaobject id="img-balanced-cluster-transfer-refiner">
+          <imageobject role="html">
+            <imagedata align="center" contentdepth="650px"
+                       fileref="images/balanced-cluster-transfer-refiner.png"/>
+          </imageobject>
+
+          <imageobject role="fo">
+            <imagedata align="center" contentdepth="4in"
+                       fileref="images/balanced-cluster-transfer-refiner.png"/>
+          </imageobject>
+        </mediaobject>
+      </figure>
+    </section>
+
+    <section>
+      <title>Cluster</title>
+
+      <para>This transfer refiner is similar to BalancedCluster but differs in
+      the way how distribution of files happen across stagein and stageout
+      jobs per level of the workflow. In this refiner, all the input files for
+      a job get associated with a single transfer job. As illustrated in the
+      figure below each compute usually gets associated with one stagein
+      transfer job. In contrast, for the BalancedCluster a compute job maybe
+      associated with multiple data stagein jobs.</para>
+
+      <figure>
+        <title>Cluster Transfer Refiner : Input Data To Workflow Specific
+        Directory on Shared File System</title>
+
+        <mediaobject id="img-cluster-transfer-refiner">
+          <imageobject role="html">
+            <imagedata align="center" contentdepth="650px"
+                       fileref="images/cluster-transfer-refiner.png"/>
+          </imageobject>
+
+          <imageobject role="fo">
+            <imagedata align="center" contentdepth="4in"
+                       fileref="images/cluster-transfer-refiner.png"/>
+          </imageobject>
+        </mediaobject>
+      </figure>
+    </section>
+
+    <section>
+      <title>Basic</title>
+
+      <para>Pegasus also supports a basic Transfer Refiner that adds one
+      stagein and stageout job per compute job of the workflow. This is not
+      recommended to be used for large workflows as the number of data
+      transfer nodes in the worst case are 2n where n is the number of compute
+      jobs in the workflow.</para>
+    </section>
+  </section>
+
+  <section id="ref_output_mapper">
+    <title>Output Mappers</title>
+
+    <para>Starting 4.3 release, Pegasus has support for output mappers, that
+    allow users fine grained control over how the output files on the output
+    site are laid out. By default, Pegasus stages output products to the
+    storage directory specified in the site catalog for the output site.
+    Output mappers allow users finer grained control over where the output
+    files are placed on the output site.</para>
+
+    <para>The following mappers are supported currently</para>
+
+    <orderedlist>
+      <listitem>
+        <para><emphasis role="bold">Flat</emphasis> : By default, Pegasus will
+        place the output files in the storage directory specified in the site
+        catalog for the output site.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Fixed</emphasis> : This mapper allows
+        users to specify an externally accesible url to the storage directory
+        in their properties file. To use this mapper, the following property
+        needs to be set.</para>
+
+        <itemizedlist>
+          <listitem>
+            <para>pegasus.dir.storage.mapper.fixed.url an externally
+            accessible URL to the storage directory on the output site e.g.
+            gsiftp://outputs.isi.edu/shared/outputs</para>
+          </listitem>
+        </itemizedlist>
+
+        <para>Note: For hierarchal workflows, the above property needs to be
+        set separately for each dax job, if you want the sub workflow outputs
+        to goto a different directory.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Hashed</emphasis> : This mapper results in
+        the creation of a deep directory structure on the output site, while
+        populating the results. The base directory on the remote end is
+        determined from the site catalog. Depending on the number of files
+        being staged to the remote site a Hashed File Structure is created
+        that ensures that only 256 files reside in one directory. To create
+        this directory structure on the storage site, Pegasus relies on the
+        directory creation feature of the underlying file servers such as
+        theGrid FTP server, which appeared in globus 4.0.x</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Replica:</emphasis>This mapper determines
+        the path for an output file on the output site by querying an output
+        replica catalog. The output site is one that is passed on the command
+        line. The output replica catalog can be configured by specifying the
+        properties</para>
+
+        <itemizedlist>
+          <listitem>
+            <para>pegasus.dir.storage.mapper.replica Regex|File</para>
+          </listitem>
+
+          <listitem>
+            <para>pegasus.dir.storage.mapper.replica.file the RC file at the
+            backend to use</para>
+          </listitem>
+        </itemizedlist>
+      </listitem>
+    </orderedlist>
+
+    <tip>
+      <para>The mappers can be configured by setting the property <emphasis
+      role="bold">pegasus.dir.storage.mapper</emphasis></para>
+    </tip>
+
+    <note>
+      <para>The Fixed mapper will be available starting 4.3.1 release.</para>
+    </note>
   </section>
 
   <section>
     <title>Executable Used for Transfer Jobs</title>
 
-    <para>Pegasus refers to a python script called <emphasis
-    role="bold">pegasus-transfer</emphasis> as the executable in the transfer
-    jobs to transfer the data. pegasus-transfer is a python based wrapper
-    around various transfer clients . pegasus-transfer looks at source and
+    <para>Pegasus refers to a python script called <emphasis role="bold">
+    pegasus-transfer</emphasis> as the executable in the transfer jobs to
+    transfer the data. pegasus-transfer is a python based wrapper around
+    various transfer clients . pegasus-transfer looks at source and
     destination url and figures out automatically which underlying client to
     use. pegasus-transfer is distributed with the PEGASUS and can be found at
     $PEGASUS_HOME/bin/pegasus-transfer.</para>
@@ -693,10 +909,16 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
           </row>
 
           <row>
-            <entry>pegasus-s3/s3cmd</entry>
+            <entry>pegasus-s3</entry>
 
-            <entry>staging files to and from s3 bucket in the amazon
+            <entry>staging files to and from S3 bucket in the Amazon
             cloud</entry>
+          </row>
+
+          <row>
+            <entry>gsutil</entry>
+
+            <entry>staging files to and from Google Storage buckets</entry>
           </row>
 
           <row>
@@ -782,7 +1004,13 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
           <row>
             <entry>pegasus-s3</entry>
 
-            <entry>to create a s3 bucket in the amazon cloud</entry>
+            <entry>to create a S3 bucket in the Amazon cloud</entry>
+          </row>
+
+          <row>
+            <entry>gsutil</entry>
+
+            <entry>to create a Google Storage bucket</entry>
           </row>
 
           <row>
@@ -839,6 +1067,12 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
           </row>
 
           <row>
+            <entry>gsutil</entry>
+
+            <entry>to remove an object from a Google Storage bucket</entry>
+          </row>
+
+          <row>
             <entry>scp</entry>
 
             <entry>to remove a file against a scp server. In this case a zero
@@ -867,10 +1101,45 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
     jobs do data staging</link>. An example of such a case is when running in
     <link linkend="ref_data_staging_configuration">nonsharedfs</link> mode.
     Depending on the transfer protocols used, the job may have to carry
-    credentials to enable these datat transfers. To specify where which
+    credentials to enable these data transfers. To specify where which
     credential to use and where Pegasus can find it, use environment variable
     profiles in your site catalog. The supported credential types are X.509
-    grid proxies, Amazon AWS S3 keys, iRods password and SSH keys.</para>
+    grid proxies, Amazon AWS S3 keys, Google Cloud Platform OAuth token (.boto
+    file), iRods password and SSH keys.</para>
+
+    <para>Credentials are usually associated per site in the site catalog.
+    Users can associate the credentials either as a Pegasus profile or an
+    environment profile with the site.</para>
+
+    <orderedlist>
+      <listitem>
+        <para>A pegasus profile with the value pointing to the path to the
+        credential on the local site or the submit host. If a pegasus
+        credential profile associated with the site, then Pegasus
+        automatically transfers it along with the remote jobs.</para>
+      </listitem>
+
+      <listitem>
+        <para>A env profile with the value pointing to the path to the
+        credential on the remote site. If an env profile is specified, then no
+        credential is transferred along with the job. Instead the job's
+        environment is set to ensure that the job picks up the path to the
+        credential on the remote site.</para>
+      </listitem>
+    </orderedlist>
+
+    <tip>
+      <para>Specifying credentials as Pegasus profiles was introduced in 4.4.0
+      release.</para>
+    </tip>
+
+    <para>In case of data transfer jobs, it is possible to associate different
+    credentials for a single file transfer ( one for the source server and the
+    other for the destination server) . For example, when leveraging GridFTP
+    transfers between two sides that accept different grid credentials such as
+    XSEDE Stampede site and NCSA Bluewaters. In that case, Pegasus picks up
+    the associated credentials from the site catalog entries for the source
+    and the destination sites associated with the transfer.</para>
 
     <section id="x509_cred">
       <title>X.509 Grid Proxies</title>
@@ -881,7 +1150,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
       <varname>X509_USER_PROXY</varname> environment variable. Site catalog
       example:</para>
 
-      <programlisting>&lt;profile namespace="env" key="X509_USER_PROXY" &gt;/some/location/x509up&lt;/profile&gt;</programlisting>
+      <programlisting>&lt;profile namespace="pegasus" key="X509_USER_PROXY" &gt;/some/location/x509up&lt;/profile&gt;</programlisting>
     </section>
 
     <section id="s3_cred">
@@ -891,10 +1160,55 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
       find the .s3cfg file. This format of the file is described in the <link
       linkend="cli-pegasus-s3">pegaus-s3 command line client's man
       page</link>. For the file to be picked up by the workflow, set the
-      <varname>S3CFG</varname> environment profile to the location of the
-      file. Site catalog example:</para>
+      <varname>S3CFG</varname> profile to the location of the file. Site
+      catalog example:</para>
 
-      <programlisting>&lt;profile namespace="env" key="S3CFG" &gt;/home/user/.s3cfg&lt;/profile&gt;</programlisting>
+      <programlisting>&lt;profile namespace="pegasus" pegasus="S3CFG" &gt;/home/user/.s3cfg&lt;/profile&gt;</programlisting>
+    </section>
+
+    <section id="gs_cred">
+      <title>Google Storage</title>
+
+      <para>If a workflow is using gs:// URLs, Pegasus needs access to a
+      Google Storage service account. First generate the credential by
+      following the instructions at:</para>
+
+      <para><ulink
+      url="https://cloud.google.com/storage/docs/authentication#service_accounts">https://cloud.google.com/storage/docs/authentication#service_accounts</ulink></para>
+
+      <para>Download the credential in PKCS12 format, and then use "gsutil
+      config -e" to generate a .boto file. For example:</para>
+
+      <programlisting>
+$ gsutil config -e
+This command will create a boto config file at /home/username/.boto
+containing your credentials, based on your responses to the following
+questions.
+What is your service account email address? some-identifier@developer.gserviceaccount.com
+What is the full path to your private key file? /home/username/my-cred.p12
+What is the password for your service key file [if you haven't set one
+explicitly, leave this line blank]? 
+
+Please navigate your browser to https://cloud.google.com/console#/project,
+then find the project you will use, and copy the Project ID string from the
+second column. Older projects do not have Project ID strings. For such projects,
+click the project and then copy the Project Number listed under that project.
+
+What is your project-id? your-project-id
+
+Boto config file "/home/username/.boto" created. If you need to use a
+proxy to access the Internet please see the instructions in that file.
+            </programlisting>
+
+      <para>Pegasus has to be told where to find both the .boto file as well
+      as the PKCS12 file. For the files to be picked up by the workflow, set
+      the <varname>BOTO_CONFIG</varname> and <varname>GOOGLE_PKCS12</varname>
+      profiles for the storage site. Site catalog example:</para>
+
+      <programlisting>
+&lt;profile namespace="pegasus" key="BOTO_CONFIG" &gt;/home/user/.boto&lt;/profile&gt;
+&lt;profile namespace="pegasus" key="GOOGLE_PKCS12" &gt;/home/user/.google-service-account.p12&lt;/profile&gt;
+</programlisting>
     </section>
 
     <section id="irods_cred">
@@ -929,7 +1243,7 @@ irodsPassword 'somesecretpassword'</programlisting>
       <varname>irodsEnvFile</varname> environment profile. Site catalog
       example:</para>
 
-      <programlisting>&lt;profile namespace="env" key="irodsEnvFile" &gt;/home/user/.irods/.irodsEnv&lt;/profile&gt;</programlisting>
+      <programlisting>&lt;profile namespace="pegasus" key="irodsEnvFile" &gt;/home/user/.irods/.irodsEnv&lt;/profile&gt;</programlisting>
     </section>
 
     <section id="ssh_cred">
@@ -945,14 +1259,14 @@ irodsPassword 'somesecretpassword'</programlisting>
         your personal ssh keys secure, It is recommended that a special set of
         keys are created for use with the workflow. Note that Pegasus will not
         pick up ssh keys automatically. The user will have to specify which
-        key to use with <varname>SSH_PRIVATE_KEY</varname>.</para>
+        key to use with <varname> SSH_PRIVATE_KEY</varname>.</para>
       </warning>
 
       <para>The location of the ssh private key can be specified with the
       <varname>SSH_PRIVATE_KEY</varname> environment profile. Site catalog
       example:</para>
 
-      <programlisting>&lt;profile namespace="env" key="SSH_PRIVATE_KEY" &gt;/home/user/wf/wfsshkey&lt;/profile&gt;</programlisting>
+      <programlisting>&lt;profile namespace="pegasus" key="SSH_PRIVATE_KEY" &gt;/home/user/wf/wfsshkey&lt;/profile&gt;</programlisting>
     </section>
   </section>
 
@@ -964,7 +1278,7 @@ irodsPassword 'somesecretpassword'</programlisting>
     workflow specific execution directory on the compute site. The URL
     locations of the executables need to be specified in the transformation
     catalog as the PFN and the type of executable needs to be set to <emphasis
-    role="bold">STAGEABLE</emphasis> .</para>
+    role="bold"> STAGEABLE</emphasis> .</para>
 
     <para>The location of a transformation can be specified either in</para>
 
@@ -1146,6 +1460,44 @@ irodsPassword 'somesecretpassword'</programlisting>
     </section>
   </section>
 
+  <section id="staging_job_checkpoint_files">
+    <title>Staging of Job Checkpoint Files</title>
+
+    <para>Pegasus has support for transferring job checkpoint files back to
+    the staging site, when a job exceeds it's advertised running time. In
+    order to use this feature, you need to</para>
+
+    <orderedlist>
+      <listitem>
+        <para>Associate a job checkpoint file ( that the job creates ) with
+        the job in the DAX. A checkpoint file is specified by setting the link
+        attribute to checkpoint for the uses tag.</para>
+      </listitem>
+
+      <listitem>
+        <para>Associate a Pegasus profile key named <emphasis role="bold">
+        checkpoint_time</emphasis> with the job that specifies the expected
+        runtime for the job in seconds.</para>
+      </listitem>
+
+      <listitem>
+        <para>Associate a Pegasus profile key named <emphasis role="bold">
+        maxwalltime</emphasis> with the job that specifies the max runtime
+        before the job will be killed by the local resource manager ( such as
+        PBS) deployed on the site. Usually, this value should be associated
+        with the execution site in the site catalog. Note that this value is
+        in minutes.</para>
+      </listitem>
+    </orderedlist>
+
+    <para>Pegasus planner uses the above mentioned profile keys to setup
+    pegasus-kickstart such that the job is sent a TERM signal when expected
+    runtime of job is reached. A KILL signal is sent at (expected_walltime +
+    (maxwalltime-expected_walltime)/2) seconds. This ensures that there is
+    enough time for pegasus-lite to transfer the checkpoint file before the
+    job is killed by the underlying scheduler.</para>
+  </section>
+
   <section>
     <title>Using Amazon S3 as a Staging Site</title>
 
@@ -1157,7 +1509,7 @@ irodsPassword 'somesecretpassword'</programlisting>
     output data from S3 to the output site.</para>
 
     <para>In order to use S3, it is necessary to create a config file for the
-    S3 transfer client, <link linkend="cli-pegasus-s3">pegasus-s3</link>. See
+    S3 transfer client, <link linkend="cli-pegasus-s3"> pegasus-s3</link>. See
     the <link linkend="cli-pegasus-s3">man page</link> for details on how to
     create the config file. You also need to specify <link
     linkend="non_shared_fs">S3 as a staging site</link>.</para>
@@ -1213,5 +1565,25 @@ irodsPassword 'somesecretpassword'</programlisting>
     &lt;/site&gt;
 &lt;/sitecatalog&gt;
 </programlisting>
+  </section>
+
+  <section>
+    <title>iRODS data access</title>
+
+    <para>iRODS can be used as a input data location, a storage site for
+    intermediate data during workflow execution, or a location for final
+    output data. Pegasus uses a URL notation to identify iRODS files.
+    Example:</para>
+
+    <programlisting>irods://some-host.org/path/to/file.txt</programlisting>
+
+    <para>The path to the file is <emphasis role="bold"> relative</emphasis>
+    to the internal iRODS location. In the example above, the path used to
+    refer to the file in iRODS is <emphasis> path/to/file.txt</emphasis> (no
+    leading /).</para>
+
+    <para>See <link linkend="cred_staging">the section on credential
+    staging</link> for information on how to set up an irodsEnv file to be
+    used by Pegasus.</para>
   </section>
 </section>

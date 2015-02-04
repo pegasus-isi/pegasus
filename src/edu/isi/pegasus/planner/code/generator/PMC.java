@@ -20,7 +20,6 @@ package edu.isi.pegasus.planner.code.generator;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -40,7 +39,6 @@ import edu.isi.pegasus.planner.code.GridStartFactory;
 
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
-import edu.isi.pegasus.planner.partitioner.graph.Adapter;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 
@@ -115,10 +113,8 @@ public class PMC extends Abstract {
     public Collection<File> generateCode( ADag dag ) throws CodeGeneratorException{
         Collection result = new ArrayList( 1 );
 
-//        this.writeOutStampedeEvents( dag );
-
-        //we first need to convert internally into graph format
-        Graph workflow =    Adapter.convert( dag );
+        //PM-747 no need for conversion as ADag now implements Graph interface
+        Graph workflow = dag;
 
         mGridStartFactory.initialize(mBag, dag);
 
@@ -259,7 +255,7 @@ public class PMC extends Abstract {
     protected String pmcBasename( ADag dag ) {
         StringBuffer name = new StringBuffer();
         name.append(  dag.getLabel() ).append( "-" ).
-             append( dag.dagInfo.index ).append( ".dag" );
+             append( dag.getIndex() ).append( ".dag" );
         return name.toString();
     }
     

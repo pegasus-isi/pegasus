@@ -16,39 +16,26 @@
 
 package edu.isi.pegasus.planner.cluster;
 
+import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PCRelation;
-import edu.isi.pegasus.planner.classes.AggregatedJob;
-
-import edu.isi.pegasus.planner.common.PegasusProperties;
-import edu.isi.pegasus.common.logging.LogManager;
-
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.cluster.aggregator.JobAggregatorInstanceFactory;
-
+import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Pegasus;
-
 import edu.isi.pegasus.planner.partitioner.Partition;
-
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import edu.isi.pegasus.planner.provenance.pasoa.PPS;
 import edu.isi.pegasus.planner.provenance.pasoa.XMLProducer;
+import edu.isi.pegasus.planner.provenance.pasoa.pps.PPSFactory;
 import edu.isi.pegasus.planner.provenance.pasoa.producer.XMLProducerFactory;
 
-import edu.isi.pegasus.planner.provenance.pasoa.PPS;
-import edu.isi.pegasus.planner.provenance.pasoa.pps.PPSFactory;
 
+import java.util.*;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Comparator;
-import java.util.Set;
-import java.util.StringTokenizer;
-import edu.isi.pegasus.planner.classes.PegasusBag;
 
 /**
  * The horizontal clusterer, that clusters jobs on the same level.
@@ -198,9 +185,10 @@ public class Horizontal implements Clusterer,
         mReplacementTable = new HashMap();
         mSubInfoMap = new HashMap();
 
-        for(Iterator it = mScheduledDAG.vJobSubInfos.iterator();it.hasNext();){
+        for(Iterator<GraphNode> it = mScheduledDAG.jobIterator();it.hasNext();){
             //pass the jobs to the callback
-            Job job = (Job)it.next();
+            GraphNode node = it.next();
+            Job job = (Job)node.getContent();
             mSubInfoMap.put(job.getLogicalID(), job );
         }
 
@@ -252,7 +240,7 @@ public class Horizontal implements Clusterer,
     public void determineClusters( Partition partition ) throws ClustererException {
         Set s = partition.getNodeIDs();
         List l = new ArrayList(s.size());
-        mLogger.log("Collapsing jobs in partition " + partition.getID() +
+        mLogger.log("Clustering jobs in partition " + partition.getID() +
                     " " +  s,
                     LogManager.DEBUG_MESSAGE_LEVEL);
 
@@ -323,7 +311,7 @@ public class Horizontal implements Clusterer,
         int[] cFactor  = new int[] {0, 0, 0, 0}; //the collapse factor for collapsing the jobs
         AggregatedJob fatJob = null;
 
-        mLogger.log("Collapsing jobs of type " + name,
+        mLogger.log("Clustering jobs of type " + name,
                     LogManager.DEBUG_MESSAGE_LEVEL);
 
         //traverse through all the jobs and order them by the
@@ -362,17 +350,17 @@ public class Horizontal implements Clusterer,
             key = (String)entry.getKey();
 
             if( size <= 1 ){
-                //no need to collapse one job. go to the next iteration
-                mLogger.log("\t No collapsing for execution pool " + key,
+                //no need to cluster one job. go to the next iteration
+                mLogger.log("\t No clustering of jobs mapped to execution site " + key,
                             LogManager.DEBUG_MESSAGE_LEVEL);
                 continue;
             }
 
             JobAggregator aggregator = mJobAggregatorFactory.loadInstance( (Job)l.get(0) );
             if(aggregator.entryNotInTC(key)){
-                //no need to collapse one job. go to the next iteration
-                mLogger.log("\t No collapsing for execution pool because job aggregator entry not in tc " + key,
-                            LogManager.DEBUG_MESSAGE_LEVEL);
+                //no need to cluster one job. go to the next iteration
+                mLogger.log("\t No clustering for jobs mapped to execution site "  + key + " as nojob aggregator entry  in tc ",
+                            LogManager.WARNING_MESSAGE_LEVEL);
                 continue;
             }
 
@@ -381,38 +369,64 @@ public class Horizontal implements Clusterer,
             if( cFactor[0] == 1 && cFactor[1] == 0 ){
                 mLogger.log("\t Collapse factor of (" + cFactor[0] + "," + cFactor[1] +
                             ") determined for pool. " + key +
-                            ". Skipping collapsing", LogManager.DEBUG_MESSAGE_LEVEL);
+                            ". Skipping clustering", LogManager.DEBUG_MESSAGE_LEVEL);
                 continue;
             }
 
+        // Does the user prefer runtime based clustering?
 	    if (mProps.getHorizontalClusterPreference() != null
-		    && mProps.getHorizontalClusterPreference()
-		            .equalsIgnoreCase( "runtime" )) {
+		    && mProps.getHorizontalClusterPreference().equalsIgnoreCase("runtime")) {
 
-		double maxRunTime = -1;
-		try {
-		    maxRunTime = Double
-			    .parseDouble( (String) ((Job) l.get( 0 )).vdsNS
-			            .get( Pegasus.MAX_RUN_TIME ) );
-		} catch (RuntimeException e) {
-		    throw new RuntimeException( "Profile key "
-			    + Pegasus.MAX_RUN_TIME
-			    + " is either not set, or is not a valid number.",
-			    e );
-		}
+        List<List<Job>> bins = null;
+        String sMaxRunTime = (String) ((Job) l.get( 0 )).vdsNS.get(Pegasus.MAX_RUN_TIME);
 
-		mLogger.log( "\t Collapsing jobs at execution pool " + key
-		        + " having maximum run time  " + cFactor[2],
-		        LogManager.DEBUG_MESSAGE_LEVEL );
+        // Does the user prefer to cluster jobs into bins of a fixed capacity?
+        // If not, cluster jobs evenly into a fixed number of bins.
+        // The number of bins should be specified through clusters.num property
+        if (sMaxRunTime != null) {
+            double maxRunTime = -1;
+            try {
+                maxRunTime = Double.parseDouble(sMaxRunTime);
+            } catch (RuntimeException e) {
+                throw new RuntimeException( "Profile key "
+                    + Pegasus.MAX_RUN_TIME
+                    + " is either not set, or is not a valid number.",
+                    e );
+            }
 
-		Collections.sort( l, getBinPackingComparator() );
+            mLogger.log( "\t Clustering jobs mapped to execution site " + key
+                    + " having maximum run time  " + cFactor[2],
+                    LogManager.DEBUG_MESSAGE_LEVEL );
 
-		mLogger.log(
-		        "Job Type: " + ((Job) l.get( 0 )).getCompleteTCName()
-		                + " max runtime " + maxRunTime,
-		        LogManager.DEBUG_MESSAGE_LEVEL );
+            Collections.sort(l, getBinPackingComparator());
 
-		List<List<Job>> bins = bestFitBinPack( l, maxRunTime );
+            mLogger.log(
+                    "Job Type: " + ((Job) l.get( 0 )).getCompleteTCName()
+                            + " max runtime " + maxRunTime,
+                    LogManager.DEBUG_MESSAGE_LEVEL );
+
+            mLogger.log( "Clustering into fixed capacity bins " + maxRunTime,
+                    LogManager.DEBUG_MESSAGE_LEVEL );
+
+            bins = bestFitBinPack( l, maxRunTime );
+        } else {
+            int clusterNum = 1;
+            String bundle = (String) job.vdsNS.get( Pegasus.BUNDLE_KEY );
+
+            if (bundle != null) {
+                clusterNum = Integer.parseInt(bundle);
+            } else {
+                mLogger.log( "Neither " + Pegasus.MAX_RUN_TIME + ", nor " + Pegasus.BUNDLE_KEY +
+                        " specified. Merging all tasks into one job",
+                        LogManager.WARNING_MESSAGE_LEVEL );
+            }
+
+            mLogger.log( "Clustering into fixed number of bins " + clusterNum,
+                    LogManager.DEBUG_MESSAGE_LEVEL );
+
+            Collections.sort(l, getBinPackingComparator());
+            bins = bestFitBinPack( l, clusterNum );
+        }
 
 		mLogger.log( "Jobs are merged into " + bins.size()
 		        + " clustered jobs.", LogManager.DEBUG_MESSAGE_LEVEL );
@@ -436,12 +450,12 @@ public class Horizontal implements Clusterer,
 		tempMap = null;
 		return;
 	    }
-            	
+
             //we do collapsing in chunks of 3 instead of picking up
             //from the properties file. ceiling is (x + y -1)/y
             //cFactor = (size + 2)/3;
 	    else {
-		mLogger.log( "\t Collapsing jobs at execution pool " + key
+		mLogger.log( "\t Clustering jobs mapped to execution site " + key
 		        + " with collapse factor " + cFactor[0] + ","
 		        + cFactor[1], LogManager.DEBUG_MESSAGE_LEVEL );
 		if (cFactor[0] >= size) {
@@ -514,7 +528,7 @@ public class Horizontal implements Clusterer,
 
     /**
      * Perform best fit bin packing.
-     * 
+     *
      * @param jobs
      *            List of jobs sorted in decreasing order of the job runtime.
      * @param maxTime
@@ -598,6 +612,71 @@ public class Horizontal implements Clusterer,
 	return returnBins;
     }
 
+    /**
+     * Perform best fit bin packing.
+     *
+     * @param jobs    List of jobs sorted in decreasing order of the job runtime.
+     * @param maxBins The fixed-number of bins taht should be created
+     * @return List of List of Jobs where each List <Job> is the set of jobs
+     * which should be clustered together so as to run in under maxTime.
+     */
+    private List<List<Job>> bestFitBinPack(List<Job> jobs, int maxBins) {
+
+        class Bin {
+            private List<Job> bin = new LinkedList<Job>();
+            private double time = 0;
+
+            public void addJob(Job j) {
+                bin.add(j);
+                double jobRunTime = Double.parseDouble(getRunTime(j));
+                time += jobRunTime;
+            }
+
+            public List<Job> getJobs() {
+                return bin;
+            }
+
+            public double getTime() {
+                return time;
+            }
+        }
+
+        PriorityQueue<Bin> bins = new PriorityQueue<Bin>(maxBins, new Comparator<Bin>() {
+            @Override
+            public int compare(Bin bin1, Bin bin2) {
+                return (int) (bin1.getTime() - bin2.getTime());
+            }
+        });
+
+        // Initialize the bins, to the specified number of bins.
+        // If the number of jobs n is less than @maxBins then create n bins
+        maxBins = Math.min(maxBins, jobs.size());
+
+        for (int i = 0; i < maxBins; ++i) {
+            bins.add(new Bin());
+        }
+
+        for (Job j : jobs) {
+            Bin bin;
+            mLogger.log("Job " + j.getID() + " runtime " + getRunTime(j),
+                    LogManager.DEBUG_MESSAGE_LEVEL);
+
+            // Add the job to the bin with the shortest combined runtime
+            bin = bins.poll();
+            bin.addJob(j);
+            bins.offer(bin);
+        }
+
+        List<List<Job>> returnBins = new LinkedList<List<Job>>();
+
+        for (Bin b : bins) {
+            mLogger.log("Bin Size: " + b.getTime(), LogManager.DEBUG_MESSAGE_LEVEL);
+            returnBins.add(b.getJobs());
+        }
+
+        return returnBins;
+    }
+
     private String getRunTime(Job job) {
 
 	String sTmp = (String) job.vdsNS.get( Pegasus.RUNTIME_KEY );
@@ -620,7 +699,7 @@ public class Horizontal implements Clusterer,
     /**
      * The comparator is used to sort a collection of jobs in decreasing order
      * of their run times as specified by the Pegasus.JOB_RUN_TIME property.
-     * 
+     *
      * @return
      */
     private Comparator<Job> getBinPackingComparator() {
@@ -636,7 +715,7 @@ public class Horizontal implements Clusterer,
 
 		return (int) (jobTime2 - jobTime1);
 	    }
-	    
+
 	    private String getRunTime (Job job) {
 
 		String sTmp = (String) job.vdsNS.get( Pegasus.RUNTIME_KEY );
@@ -656,7 +735,7 @@ public class Horizontal implements Clusterer,
 
 	};
     }
-    
+
     /**
      * Returns the clustered workflow.
      *
@@ -760,7 +839,7 @@ public class Horizontal implements Clusterer,
     private void collapseJobs(Partition partition){
         Set s = partition.getNodeIDs();
         List l = new ArrayList(s.size());
-        mLogger.log("Collapsing jobs in partition " + partition.getID() +
+        mLogger.log("Clustering jobs in partition " + partition.getID() +
                     " " +  s,
                     LogManager.DEBUG_MESSAGE_LEVEL);
 
@@ -819,7 +898,7 @@ public class Horizontal implements Clusterer,
      *
      * @return int array of size 4 where int[0] is the the collapse factor
      *         int[1] is the number of jobs for whom collapsing is int[0] + 1.
-     *         int [2] is maximum time for which the clusterd job should run.
+     *         int [2] is maximum time for which the clustered job should run.
      *         int [3] is time for which the single job would run.
      */
     public int[] getCollapseFactor(String pool, Job job, int size) {
@@ -908,13 +987,12 @@ public class Horizontal implements Clusterer,
      * by the logical name of the jobs.
      */
     private void assimilateJobs(){
-        Iterator it = mScheduledDAG.vJobSubInfos.iterator();
-        Job job = null;
         List l      = null;
         String key  = null;
 
-        while(it.hasNext()){
-            job = (Job)it.next();
+        for( Iterator<GraphNode> it = mScheduledDAG.jobIterator();it.hasNext(); ){
+            GraphNode node = it.next();
+            Job job = ( Job)node.getContent();
             key = job.logicalName;
             //check if the job logical name is already in the map
             if(mJobMap.containsKey(key)){
@@ -970,7 +1048,52 @@ public class Horizontal implements Clusterer,
         List nl = null;
         Job sub = new Job();
         String msg;
+        
+        //Set mergedEdges = new java.util.HashSet();
+        //this is temp thing till the hast thing sorted out correctly
+        List<PCRelation> mergedEdges = new java.util.ArrayList(mScheduledDAG.size());
 
+        //traverse the edges and do appropriate replacements
+        for( Iterator<GraphNode> it = mScheduledDAG.jobIterator(); it.hasNext(); ){
+            GraphNode node = it.next();
+            Job childJob = (Job)node.getContent();
+            for( GraphNode parentNode: node.getParents() ){
+                Job parentJob = (Job)parentNode.getContent();
+                PCRelation rel = new PCRelation( parentJob.getID(), childJob.getID());
+                String parent = rel.getParent();
+                String child  = rel.getChild();
+                msg = ("\n Replacing " + rel);
+
+                String value = (String)mReplacementTable.get(parent);
+                if(value != null){
+                    rel.parent = value;
+                }
+                value = (String)mReplacementTable.get(child);
+                if(value != null){
+                    rel.child = value;
+                }
+                msg += (" with " + rel);
+
+                //put in the merged edges set
+                if(!mergedEdges.contains(rel)){
+                    val = mergedEdges.add(rel);
+                    msg += "Add to set : " + val;
+                }
+               else{
+                   msg += "\t Duplicate Entry for " + rel;
+               }
+               mLogger.log( msg, LogManager.DEBUG_MESSAGE_LEVEL );
+            }
+        }
+        
+        //the final edges need to be updated
+        mScheduledDAG.resetEdges();
+        for( PCRelation pc: mergedEdges){
+            mScheduledDAG.addEdge( pc.getParent(), pc.getChild());
+        }
+        
+        //PM-747 once new edges are added, then remove
+        //the original nodes that are now clustered
         for( Iterator it = mReplacementTable.entrySet().iterator(); it.hasNext(); ){
             Map.Entry entry = (Map.Entry)it.next();
             String key = (String)entry.getKey();
@@ -987,46 +1110,6 @@ public class Horizontal implements Clusterer,
         }
         mLogger.log("All clustered jobs removed from the workflow",
                     LogManager.DEBUG_MESSAGE_LEVEL);
-
-        //Set mergedEdges = new java.util.HashSet();
-        //this is temp thing till the hast thing sorted out correctly
-        List mergedEdges = new java.util.ArrayList(mScheduledDAG.vJobSubInfos.size());
-
-        //traverse the edges and do appropriate replacements
-        String parent = null; String child = null;
-        String value = null;
-        for( Iterator it = mScheduledDAG.dagInfo.relations.iterator(); it.hasNext(); ){
-            PCRelation rel = (PCRelation)it.next();
-            //replace the parent and child if there is a need
-            parent = rel.parent;
-            child  = rel.child;
-
-            msg = ("\n Replacing " + rel);
-
-            value = (String)mReplacementTable.get(parent);
-            if(value != null){
-                rel.parent = value;
-            }
-            value = (String)mReplacementTable.get(child);
-            if(value != null){
-                rel.child = value;
-            }
-            msg += (" with " + rel);
-
-            //put in the merged edges set
-            if(!mergedEdges.contains(rel)){
-                val = mergedEdges.add(rel);
-                msg += "Add to set : " + val;
-            }
-           else{
-               msg += "\t Duplicate Entry for " + rel;
-           }
-           mLogger.log( msg, LogManager.DEBUG_MESSAGE_LEVEL );
-       }
-
-       //the final edges need to be updated
-       mScheduledDAG.dagInfo.relations = null;
-       mScheduledDAG.dagInfo.relations = new java.util.Vector(mergedEdges);
    }
 
    /**

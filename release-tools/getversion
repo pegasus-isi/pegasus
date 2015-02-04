@@ -1,0 +1,36 @@
+#!/bin/bash
+
+DIR=$(cd $(dirname $0) && pwd)
+HOME=$(cd $DIR/.. && pwd)
+
+VERSION=$(grep pegasus.version $HOME/build.properties | tr '=:' '  ' | awk '{print $2}')
+
+# If no argument, just print version
+if [ $# -eq 0 ]; then
+    echo $VERSION
+    exit 0
+fi
+
+# Generate a header file if the user specified --header
+if [ "$1" == "--header" ]; then
+    cat <<EOF
+#ifndef VERSION_H
+#define VERSION_H
+
+#define PEGASUS_VERSION "$VERSION"
+
+#endif /* VERSION_H */
+EOF
+    exit 0
+fi
+
+# Just the major and minor versions
+if [ "$1" == "--majorminor" ]; then
+    echo $VERSION | cut -d. -f1,2
+    exit 0
+fi
+
+# In all other cases, print usage
+echo "Usage: $0 [--header | --majorminor]"
+exit 1
+

@@ -66,7 +66,7 @@ pegasus-plan \
     --sites OSG \
     --staging-site SRM \
     --dir work \
-    --output local \
-    --nocleanup \
+    --output-site local \
+    --cleanup leaf \
     --dax blackdiamond.dax \
 

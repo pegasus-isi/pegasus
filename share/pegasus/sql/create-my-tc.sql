@@ -33,7 +33,7 @@ CREATE TABLE tc_sysinfo (
 	osversion	VARCHAR(10) DEFAULT NULL,
 	PRIMARY KEY(id),
 	UNIQUE KEY unique_arch(architecture,os,glibc,osversion)
-) TYPE=InnoDB COMMENT='Stores the different types of architecture';
+) ENGINE=InnoDB COMMENT='Stores the different types of architecture';
 
 --
 -- Table structure for table `tc_physicaltx`
@@ -54,7 +54,7 @@ CREATE TABLE tc_physicaltx (
 	UNIQUE KEY unique_physicaltx(resourceid,pfn,type),
 	INDEX (archid),
 	FOREIGN KEY tc_physicaltx(archid) REFERENCES tc_sysinfo(id) ON DELETE CASCADE
-) TYPE=InnoDB COMMENT='Stores info about the physical transformation';
+) ENGINE=InnoDB COMMENT='Stores info about the physical transformation';
 
 
 --
@@ -71,7 +71,7 @@ CREATE TABLE tc_logicaltx (
 	version		VARCHAR(20) NOT NULL DEFAULT '',
 	PRIMARY KEY(id),
 	UNIQUE KEY unique_logicaltx(namespace,name,version)
-) TYPE=InnoDB COMMENT='Stores the infor about the logical transformation';
+) ENGINE=InnoDB COMMENT='Stores the infor about the logical transformation';
 
 
 --
@@ -87,7 +87,7 @@ CREATE TABLE tc_lfnprofile (
 	PRIMARY KEY(namespace,name,value(255),lfnid),
 	INDEX (lfnid),
 	FOREIGN KEY tc_lfnprofile(lfnid) REFERENCES tc_logicaltx(id) ON DELETE CASCADE
-) TYPE=InnoDB COMMENT='Stores the profile information for lfns';
+) ENGINE=InnoDB COMMENT='Stores the profile information for lfns';
 
 --
 -- Table structure for table `tc_lfnpfnmap`
@@ -101,7 +101,7 @@ CREATE TABLE tc_lfnpfnmap (
 	INDEX (pfnid),
 	FOREIGN KEY tc_lfnpfnmap(lfnid) REFERENCES tc_logicaltx(id) ON DELETE CASCADE,
 	FOREIGN KEY tc_lfnpfnmap(pfnid) REFERENCES tc_physicaltx(id) ON DELETE CASCADE
-) TYPE=InnoDB COMMENT='Maps Lfns to Pfns';
+) ENGINE=InnoDB COMMENT='Maps Lfns to Pfns';
 
 
 
@@ -118,5 +118,5 @@ CREATE TABLE tc_pfnprofile (
 	PRIMARY KEY(namespace,name,value(255),pfnid),
 	INDEX (pfnid),
 	FOREIGN KEY tc_pfnprofile(pfnid) REFERENCES tc_physicaltx(id) ON DELETE CASCADE
-) TYPE=InnoDB COMMENT='Stores the profile information for pfns';
+) ENGINE=InnoDB COMMENT='Stores the profile information for pfns';
 

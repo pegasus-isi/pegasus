@@ -7,8 +7,8 @@ import optparse
 import subprocess
 import traceback
 
-# Initialize logging object
-logger = logging.getLogger()
+root_logger = logging.getLogger()
+logger = logging.getLogger("pegasus-statistics")
 
 # Use pegasus-config to find our lib path
 bin_dir = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0])))
@@ -18,18 +18,17 @@ pegasus_config = os.path.join(bin_dir, "pegasus-config") + " --noeoln --python-e
 lib_ext_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
 
 # Insert this directory in our search path
-os.sys.path.insert(0, lib_ext_dir)
 os.sys.path.insert(0, lib_dir)
+os.sys.path.insert(0, lib_ext_dir)
 
 from Pegasus.tools import utils
 from Pegasus.tools import db_utils
 from Pegasus.plots_stats import utils as stats_utils
-from Pegasus.netlogger.analysis.workflow.stampede_statistics import StampedeStatistics
-from Pegasus.netlogger.analysis.workflow.stampede_wf_statistics import StampedeWorkflowStatistics
-from Pegasus.netlogger.analysis.schema.schema_check import SchemaVersionError
+from Pegasus.db.workflow.stampede_statistics import StampedeStatistics
+from Pegasus.db.workflow.stampede_wf_statistics import StampedeWorkflowStatistics
+from Pegasus.db.schema.schema_check import SchemaVersionError
 
-# Not unused. Logging get initialized
-import Pegasus.common
+utils.configureLogging(level=logging.WARNING)
 
 # Regular expressions
 re_parse_property = re.compile(r'([^:= \t]+)\s*[:=]?\s*(.*)')
@@ -61,7 +60,7 @@ transformation_stats_col_name_csv = ["Workflow_Id", "Dax_Label", "Transformation
 transformation_stats_col_size = [25, 10, 10, 8, 10, 10, 10, 10]
 
 # Jobs file column names
-job_stats_col_name_text = ['#Job', 'Try', 'Site', 'Kickstart', 'Mult', 'Kickstart-Mult', 'CPU-Time', 'Post', 'CondorQTime', 'Resource', 'Runtime', 'Seqexec', 'Seqexec-Delay', 'Exitcode', 'Hostname']
+job_stats_col_name_text = ['Job', 'Try', 'Site', 'Kickstart', 'Mult', 'Kickstart-Mult', 'CPU-Time', 'Post', 'CondorQTime', 'Resource', 'Runtime', 'Seqexec', 'Seqexec-Delay', 'Exitcode', 'Hostname']
 job_stats_col_name_csv = ['Workflow_Id', 'Dax_Label', 'Job', 'Try', 'Site', 'Kickstart', 'Mult', 'Kickstart-Mult', 'CPU-Time', 'Post', 'CondorQTime', 'Resource', 'Runtime', 'Seqexec', 'Seqexec-Delay', 'Exitcode', 'Hostname']
 job_stats_col_size = [35, 4, 12, 12, 6, 16, 12, 6, 12, 12, 12, 12, 15, 10, 30]
 
@@ -334,7 +333,7 @@ def print_row(row, sizes, fmt):
         print "Output format %s not recognized!" % fmt
         sys.exit(1)
 
-def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf = False):
+def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf=False):
     """
     Prints the workflow statistics information of all workflows
     @param output_db_url : URL of stampede DB
@@ -342,7 +341,11 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf = Fal
     @param output_dir    : directory to write output files
     """
     try:
-        expanded_workflow_stats = StampedeWorkflowStatistics(output_db_url) if multiple_wf else StampedeStatistics(output_db_url)
+        if multiple_wf:
+            expanded_workflow_stats = StampedeWorkflowStatistics(output_db_url)
+        else:
+             expanded_workflow_stats = StampedeStatistics(output_db_url)
+
         expanded_workflow_stats.initialize(wf_uuid)
     except SchemaVersionError:
         logger.error("------------------------------------------------------")
@@ -481,7 +484,7 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf = Fal
         if file_type == FILE_TYPE_TXT:
             summary_output = formatted_wf_summary_legends_txt()
             summary_output += NEW_LINE_STR
-            summary_output += print_workflow_summary(expanded_workflow_stats, "text", wf_summary=True, time_summary=True)
+            summary_output += print_workflow_summary(expanded_workflow_stats, "text", wf_summary=True, time_summary=True, multiple_wf=multiple_wf)
             wf_summary_file_txt = os.path.join(output_dir, workflow_summary_file_name + text_file_extension)
             write_to_file(wf_summary_file_txt, "w", summary_output)
 
@@ -492,7 +495,7 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf = Fal
             # Generate the first csv summary file
             summary_output = formatted_wf_summary_legends_csv1()
             summary_output += NEW_LINE_STR
-            summary_output += print_workflow_summary(expanded_workflow_stats, "csv", wf_summary=True, time_summary=False)
+            summary_output += print_workflow_summary(expanded_workflow_stats, "csv", wf_summary=True, time_summary=False, multiple_wf=multiple_wf)
             wf_summary_file_csv = os.path.join(output_dir, workflow_summary_file_name + csv_file_extension)
             write_to_file(wf_summary_file_csv, "w", summary_output)
 
@@ -501,7 +504,7 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf = Fal
             # Generate the second csv summary file
             summary_output = formatted_wf_summary_legends_csv2()
             summary_output += NEW_LINE_STR
-            summary_output += print_workflow_summary(expanded_workflow_stats, "csv", wf_summary=False, time_summary=True)
+            summary_output += print_workflow_summary(expanded_workflow_stats, "csv", wf_summary=False, time_summary=True, multiple_wf=multiple_wf)
             wf_summary_file2_csv = os.path.join(output_dir, workflow_summary_time_file_name + csv_file_extension)
             write_to_file(wf_summary_file2_csv, "w", summary_output)
 
@@ -555,7 +558,7 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf = Fal
 
     print stats_output
 
-def print_workflow_summary(workflow_stats, output_format, wf_summary=True, time_summary=True):
+def print_workflow_summary(workflow_stats, output_format, wf_summary=True, time_summary=True, multiple_wf=False):
     """
     Prints the workflow statistics summary of an top level workflow
     @param workflow_stats :  workflow statistics object reference
@@ -636,7 +639,8 @@ def print_workflow_summary(workflow_stats, output_format, wf_summary=True, time_
             def myfmt(val):
                 if val is None: return "-"
                 else: return format_seconds(val)
-            summary_str += "%-49s: %s\n" % ("Workflow wall time", myfmt(wwt))
+            if not multiple_wf:
+                summary_str += "%-49s: %s\n" % ("Workflow wall time", myfmt(wwt))
             summary_str += "%-49s: %s\n" % ("Workflow cumulative job wall time", myfmt(wcjwt))
             summary_str += "%-49s: %s\n" % ("Cumulative job walltime as seen from submit side", myfmt(ssjwt))
         else:
@@ -721,8 +725,15 @@ def print_individual_workflow_stats(workflow_stats, workflow_id, dax_label, outp
     total_sub_wfs = workflow_stats.get_total_jobs_status()
 
     tmp = workflow_stats.get_total_succeeded_failed_jobs_status()
-    total_succeeded_sub_wfs = tmp.succeeded if tmp.succeeded else 0
-    total_failed_sub_wfs = tmp.failed if tmp.failed else 0
+
+    total_succeeded_sub_wfs = 0
+    if tmp.succeeded:
+        total_succeeded_sub_wfs = tmp.succeeded
+
+    total_failed_sub_wfs = 0
+    if tmp.failed:
+        total_failed_sub_wfs = tmp.failed
+
     total_unsubmitted_sub_wfs = total_sub_wfs - (total_succeeded_sub_wfs + total_failed_sub_wfs)
     total_sub_wfs_retries = workflow_stats.get_total_jobs_retries()
     total_sub_wfs_invocations = total_succeeded_sub_wfs + total_failed_sub_wfs + total_sub_wfs_retries
@@ -769,13 +780,8 @@ def print_individual_wf_job_stats(workflow_stats, workflow_id, dax_label, output
     else:
         job_status_str = "\n"
 
-    # Print header
     if output_format == "text":
-        job_status_str += print_row(job_stats_col_name_text, job_stats_col_size, output_format)
-    else:
-        job_status_str += print_row(job_stats_col_name_csv, job_stats_col_size, output_format)
-
-    job_status_str += "\n"
+        max_length = [max(0, len (i)) for i in job_stats_col_name_text]
 
     wf_job_stats_list = workflow_stats.get_job_statistics()
 
@@ -802,7 +808,34 @@ def print_individual_wf_job_stats(workflow_stats, workflow_id, dax_label, output
         else:
             job_retry_count_dict[job.job_name] = 1
         job_stats.retry_count = job_retry_count_dict[job.job_name]
+
+        if output_format == "text":
+            max_length[0] = max(max_length[0], len(job_stats.name))
+            max_length[1] = max(max_length[1], len(str(job_stats.retry_count)))
+            max_length[2] = max(max_length[2], len(job_stats.site))
+            max_length[3] = max(max_length[3], len(str(job_stats.kickstart)))
+            max_length[4] = max(max_length[4], len(str(job_stats.multiplier_factor)))
+            max_length[5] = max(max_length[5], len(str(job_stats.kickstart_mult)))
+            max_length[6] = max(max_length[6], len(str(job_stats.remote_cpu_time)))
+            max_length[7] = max(max_length[7], len(str(job_stats.post)))
+            max_length[8] = max(max_length[8], len(str(job_stats.condor_delay)))
+            max_length[9] = max(max_length[9], len(str(job_stats.resource)))
+            max_length[10] = max(max_length[10], len(str(job_stats.runtime)))
+            max_length[11] = max(max_length[11], len(str(job_stats.seqexec)))
+            max_length[12] = max(max_length[12], len(str(job_stats.seqexec_delay)))
+            max_length[13] = max(max_length[13], len(str(job_stats.exitcode)))
+            max_length[14] = max(max_length[14], len(job_stats.hostname if job_stats.hostname else 'None'))
+
         job_stats_list.append(job_stats)
+
+    # Print header
+    if output_format == "text":
+        max_length = [i + 1 for i in max_length]
+        job_status_str += print_row(job_stats_col_name_text, max_length, output_format)
+    else:
+        job_status_str += print_row(job_stats_col_name_csv, job_stats_col_size, output_format)
+
+    job_status_str += "\n"
 
     # printing
     content_list = []
@@ -812,7 +845,7 @@ def print_individual_wf_job_stats(workflow_stats, workflow_id, dax_label, output
         if output_format == "text":
             index = 0
             for content in job_det:
-                job_status_str += str(content).ljust(job_stats_col_size[index])
+                job_status_str += str(content).ljust(max_length[index])
                 index = index + 1
         else:
             job_status_str += workflow_id
@@ -820,7 +853,9 @@ def print_individual_wf_job_stats(workflow_stats, workflow_id, dax_label, output
             job_status_str += dax_label
             for content in job_det:
                 job_status_str += "," + str(content)
+
         job_status_str += NEW_LINE_STR
+
     return job_status_str
 
 
@@ -845,16 +880,45 @@ def print_wf_transformation_stats(stats, workflow_id, dax_label, fmt):
     col_names = transformation_stats_col_name_text
     if fmt == "csv": col_names = transformation_stats_col_name_csv
 
-    report.append(print_row(col_names, transformation_stats_col_size, fmt))
+    transformation_statistics = stats.get_transformation_statistics()
 
-    for t in stats.get_transformation_statistics():
+    if fmt == "text":
+        max_length = [max(0, len(col_names[i])) for i in range(8)]
+
+        for t in transformation_statistics:
+            max_length[0] = max(max_length[0], len(t.transformation))
+            max_length[1] = max(max_length[1], len(str(t.count)))
+            max_length[2] = max(max_length[2], len(str(t.success)))
+            max_length[3] = max(max_length[3], len(str(t.failure)))
+            max_length[4] = max(max_length[4], len(str(t.min)))
+            max_length[5] = max(max_length[5], len(str(t.max)))
+            max_length[6] = max(max_length[6], len(str(t.avg)))
+            max_length[6] = max(max_length[7], len(str(t.sum)))
+
+        max_length = [i + 1 for i in max_length]
+
+    header_printed = False
+
+    for t in transformation_statistics:
         content = [t.transformation, str(t.count), str(t.success), str(t.failure),
                    fstr(t.min), fstr(t.max), fstr(t.avg), fstr(t.sum)]
+
+        if fmt == "text":
+            for i in range(0, 8):
+                col_names[i] = col_names[i].ljust(max_length[i])
+                content[i] = content[i].ljust(max_length[i])
+
         if fmt == "csv":
             content = [workflow_id, dax_label] + content
+
+        if not header_printed:
+            header_printed = True
+            report.append(print_row(col_names, transformation_stats_col_size, fmt))
+
         report.append(print_row(content, transformation_stats_col_size, fmt))
 
-    return "\n".join(report)
+    return NEW_LINE_STR.join(report) + NEW_LINE_STR
+
 
 def print_statistics_by_time_and_host(stats, fmt, combined=True, per_host=True):
     """
@@ -958,7 +1022,9 @@ def main():
 
     if len(args) < 1:
         # * means all workflows in the database, and . means current directory
-        submit_dir = '*' if multiple_wf else '.'
+        submit_dir = '.'
+        if multiple_wf:
+            submit_dir = '*'
     elif len(args) > 1:
         options.multiple_wf = True
         multiple_wf = True
@@ -970,13 +1036,13 @@ def main():
 
     log_level = options.verbose - options.quiet
     if log_level < 0:
-        logger.setLevel(logging.ERROR)
+        root_logger.setLevel(logging.ERROR)
     elif log_level == 0:
-        logger.setLevel(logging.WARNING)
+        root_logger.setLevel(logging.WARNING)
     elif log_level == 1:
-        logger.setLevel(logging.INFO)
+        root_logger.setLevel(logging.INFO)
     elif log_level > 1:
-        logger.setLevel(logging.DEBUG)
+        root_logger.setLevel(logging.DEBUG)
 
     def check_dump (dir):
         braindump = os.path.join(dir,"braindump.txt")
@@ -1038,6 +1104,9 @@ def main():
     elif sl =='wf_stats':
         calc_wf_stats = True
     elif sl == 'jb_stats':
+        if multiple_wf:
+            logger.fatal('Job breakdown statistics cannot be computed over multiple workflows')
+            sys.exit(1)
         calc_jb_stats = True
     elif sl == 'tf_stats':
         calc_tf_stats = True

@@ -19,7 +19,8 @@ Synopsis
                  [*--debug-job* 'job'][*--debug-dir* 'debug_dir']
 		 [*--local-executable* 'local user executable']
                  [*--conf*|*-c* 'property_file'] [*--files*]
-                 [*--top-dir* 'dir_name'] ['workflow_directory']
+                 [*--top-dir* 'dir_name'] [*--recurse*|*-r*]
+		 ['workflow_directory'] 
 
 
 Description
@@ -154,6 +155,18 @@ sub-workflows when using the database mode. When debugging a top-level
 workflow with failures in sub-workflows, the analyzer will automatically
 print the command users should use to debug a failed sub-workflow. This
 allows the analyzer to find the database it needs to access.
+
+
+*-r*::
+*--recurse*::
+This option sets *pegasus-analyzer* to automatically recurse
+into sub workflows in case of failure. By default, if a workflow has a
+sub workflow in it, and that sub workflow fails , *pegasus-analyzer*
+reports that the sub workflow node failed, and lists a command
+invocation that the user must execute to determine what jobs in the
+sub workflow failed. If this option is set, then the analyzer
+automatically issues the command invocation and in addition displays
+the failed jobs in the sub workflow.
 
 
 Environment Variables

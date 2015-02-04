@@ -7,7 +7,7 @@ TOPDIR=`pwd`
 
 # unique directory for this run
 RUN_ID=`/bin/date +'%F_%H%M%S'`
-RUN_DIR=`pwd`/work/$RUN_ID
+RUN_DIR=`pwd`/work/submit/$RUN_ID
 
 # generate the input file
 echo "This is sample input to KEG" > f.a
@@ -52,10 +52,10 @@ pegasus-plan \
     -Dpegasus.code.generator=Shell \
     --conf pegasusrc \
     --sites local \
-    --dir work \
+    --dir work/submit \
     --relative-submit-dir ${RUN_ID} \
-    --output local \
-    --nocleanup \
+    --output-site local \
+    --cleanup leaf \
     --dax blackdiamond.dax \
     --submit | tee plan.out
 

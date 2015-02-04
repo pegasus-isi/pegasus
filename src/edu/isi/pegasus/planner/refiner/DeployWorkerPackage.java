@@ -16,62 +16,48 @@
 
 package edu.isi.pegasus.planner.refiner;
 
-import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
-import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
-
-import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.Job;
-import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.classes.FileTransfer;
-import edu.isi.pegasus.planner.classes.Profile;
-import edu.isi.pegasus.planner.classes.NameValue;
-
 import edu.isi.pegasus.common.logging.LogManager;
-
-import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
-import edu.isi.pegasus.planner.partitioner.graph.Graph;
-import edu.isi.pegasus.planner.partitioner.graph.Adapter;
-
-import edu.isi.pegasus.planner.namespace.Pegasus;
-
-import edu.isi.pegasus.planner.transfer.Implementation;
-import edu.isi.pegasus.planner.transfer.implementation.ImplementationFactory;
-import edu.isi.pegasus.planner.transfer.Refiner;
-import edu.isi.pegasus.planner.transfer.refiner.RefinerFactory;
-
-import edu.isi.pegasus.planner.selector.TransformationSelector;
-
 import edu.isi.pegasus.common.util.DynamicLoader;
 import edu.isi.pegasus.common.util.FactoryException;
 import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.common.util.Version;
-
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
-
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
-
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
-
+import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.FileTransfer;
+import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.NameValue;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.code.gridstart.PegasusExitCode;
+import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.namespace.Dagman;
+import edu.isi.pegasus.planner.namespace.Pegasus;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import edu.isi.pegasus.planner.selector.TransformationSelector;
+import edu.isi.pegasus.planner.transfer.Implementation;
+import edu.isi.pegasus.planner.transfer.Refiner;
 import edu.isi.pegasus.planner.transfer.RemoteTransfer;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.HashMap;
-
+import edu.isi.pegasus.planner.transfer.implementation.ImplementationFactory;
+import edu.isi.pegasus.planner.transfer.refiner.RefinerFactory;
 import java.io.File;
-
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.regex.Pattern;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * The refiner that is responsible for adding 
@@ -229,7 +215,7 @@ public class DeployWorkerPackage
     /**
      * The base directory URL for the builds.
      */
-    public static final String BASE_BUILD_DIRECTORY_URL = "http://download.pegasus.isi.edu/wms/download/";
+    public static final String BASE_BUILD_DIRECTORY_URL = "http://download.pegasus.isi.edu/pegasus/";
     
     
     /**
@@ -254,6 +240,12 @@ public class DeployWorkerPackage
     private static Map<SysInfo.OS,String> mOSToNMIOSReleaseAndVersion = null;
     
     /**
+     * A set of supported OS release and versions that our build process
+     * builds for.
+     */
+    private static Set<String> mSupportedOSReleaseVersions = null;
+    
+    /**
      * Maps each to OS to a specific OS release for purposes of picking up the 
      * correct worker package for a site. The mapping is to be kept consistent
      * with the NMI builds for the releases.
@@ -266,9 +258,28 @@ public class DeployWorkerPackage
         if( mOSToNMIOSReleaseAndVersion == null ){
             mOSToNMIOSReleaseAndVersion = new HashMap();
             mOSToNMIOSReleaseAndVersion.put( SysInfo.OS.LINUX, "rhel_5" );
-            mOSToNMIOSReleaseAndVersion.put( SysInfo.OS.MACOSX, "macos_10.5" );
+            mOSToNMIOSReleaseAndVersion.put( SysInfo.OS.MACOSX, "macos_10" );
         }
         return mOSToNMIOSReleaseAndVersion;
+    }
+    
+    /**
+     * A set of OS release and version combinations for which our build
+     * processes build Pegasus binaries.
+     * 
+     * @return 
+     */
+    private static Set<String> supportedOSReleaseAndVersions(){
+        if( mSupportedOSReleaseVersions == null ){
+            mSupportedOSReleaseVersions = new HashSet();
+            mSupportedOSReleaseVersions.add( "rhel_5" );
+            mSupportedOSReleaseVersions.add( "rhel_6" );
+            mSupportedOSReleaseVersions.add( "deb_6" );
+            mSupportedOSReleaseVersions.add( "deb_7" );
+            mSupportedOSReleaseVersions.add( "macos_10" );
+            
+        }
+        return mSupportedOSReleaseVersions;
     }
     
     /**
@@ -324,15 +335,9 @@ public class DeployWorkerPackage
     protected boolean mTransferWorkerPackage;
 
     /**
-     * The major minor version that is used to construct the URL for the
-     * pegasus website.
-     */
-    protected String mPlannerMajorMinorVersion;
-
-    /**
      * Boolean indicating worker node execution.
      */
-    protected boolean mWorkerNodeExecution;
+    //protected boolean mWorkerNodeExecution;
 
     /**
      * Loads the implementing class corresponding to the mode specified by the
@@ -365,6 +370,7 @@ public class DeployWorkerPackage
 
         return dp;
     }
+    private Refiner mDefaultTransferRefiner;
 
     /**
      * A pratically nothing constructor !
@@ -381,7 +387,8 @@ public class DeployWorkerPackage
         mJobPrefix  = bag.getPlannerOptions().getJobnamePrefix();
 
         mTransferWorkerPackage = mProps.transferWorkerPackage();
-        mWorkerNodeExecution   = mProps.executeOnWorkerNode();
+        
+        //mWorkerNodeExecution   = mProps.executeOnWorkerNode();
 
         //load the transfer setup implementation
         //To DO . specify type for loading
@@ -394,9 +401,6 @@ public class DeployWorkerPackage
                   !( mUserSpecifiedSourceLocation == null || mUserSpecifiedSourceLocation.trim().length()== 0 );
     
         Version version = Version.instance();
-        StringBuffer sb = new StringBuffer();
-        sb.append( version.MAJOR ).append( "." ).append( version.MINOR );
-        mPlannerMajorMinorVersion = sb.toString();
     }
 
 
@@ -416,56 +420,73 @@ public class DeployWorkerPackage
             m = Mapper.loadTCMapper( "Staged", mBag );
         }
 
-        SiteStore siteStore = mBag.getHandleToSiteStore();
         
         RemoteTransfer remoteTransfers = new RemoteTransfer( mProps );
         remoteTransfers.buildState();
 
+        Set[] deploymentSites = this.getDeploymentSites( scheduledDAG );
         
 
         //figure if we need to deploy or not
-        if( !mTransferWorkerPackage ){
+        if( !mTransferWorkerPackage && ( deploymentSites[1].isEmpty() ) ){
+            //PM-810 user specified property is false for worker package
+            //and nonsharedfs|condorio deployment is empty
             mLogger.log( "No Deployment of Worker Package needed" ,
                          LogManager.DEBUG_MESSAGE_LEVEL );
             return;
         }
 
-        mLogger.log( "Deployment of Worker Package needed" ,
+        mLogger.log( "Deployment of Worker Package needed",
                      LogManager.DEBUG_MESSAGE_LEVEL );
 
         //load the transformation selector. different
         //selectors may end up being loaded for different jobs.
         TransformationSelector txSelector = TransformationSelector.loadTXSelector( mProps.getTXSelectorMode() );
 
-        Refiner defaultRefiner = RefinerFactory.loadInstance( DeployWorkerPackage.DEFAULT_REFINER, mBag, scheduledDAG ) ;
-        mSetupTransferImplementation.setRefiner( defaultRefiner );
+        mDefaultTransferRefiner = RefinerFactory.loadInstance( DeployWorkerPackage.DEFAULT_REFINER, mBag, scheduledDAG ) ;
+        mSetupTransferImplementation.setRefiner( mDefaultTransferRefiner );
 
 
+        if( mTransferWorkerPackage && !deploymentSites[0].isEmpty() ){
+            //PM-810 for sharedfs case, worker package transfer can only happen
+            //if the property is set by the user in the proeprties file
+             setupTCForWorkerPackageLocations( deploymentSites[0], m, txSelector, false );
+        }
+        setupTCForWorkerPackageLocations( deploymentSites[1], m, txSelector, true );
+        
+    }
+    
+    
+    protected void setupTCForWorkerPackageLocations( Set sites, 
+                                                     Mapper mapper,
+                                                     TransformationSelector selector,
+                                                     boolean workerNodeExecution) {
+        
         //a map indexed by execution site and the corresponding worker package
         //location in the submit directory
         Map<String,String> workerPackageMap = new HashMap<String,String>();
 
+        SiteStore siteStore = mBag.getHandleToSiteStore();
 
         //for the   pegasus lite case, we insert entries into the
         //transformation catalog for all worker package executables
         //the planner requires with just the basename
-        boolean useFullPath = !( mWorkerNodeExecution );
-
+        boolean useFullPath = !( workerNodeExecution );
+        
         //for each site insert default entries in the Transformation Catalog
         //for each scheduled site query TCMapper
-        Set deploymentSites = this.getDeploymentSites( scheduledDAG );
-        for( Iterator it = deploymentSites.iterator(); it.hasNext(); ){
+        for( Iterator it = sites.iterator(); it.hasNext(); ){
             String site = ( String ) it.next();
             
             //check if there is a valid entry for worker package
             List entries, selectedEntries = null;
             try{
-                entries = m.getTCList( DeployWorkerPackage.TRANSFORMATION_NAMESPACE,
+                entries = mapper.getTCList( DeployWorkerPackage.TRANSFORMATION_NAMESPACE,
                                        DeployWorkerPackage.TRANSFORMATION_NAME,
                                        DeployWorkerPackage.TRANSFORMATION_VERSION,
                                        site );
 
-                selectedEntries = txSelector.getTCEntry( entries );
+                selectedEntries = selector.getTCEntry( entries );
             }catch( Exception e ){ /*ignore*/}
             
             //try and create a default entry for pegasus::worker if 
@@ -483,18 +504,22 @@ public class DeployWorkerPackage
             
         }
         
+        
         //for each scheduled site query TCMapper
-        for( Iterator it = deploymentSites.iterator(); it.hasNext(); ){
+        for( Iterator it = sites.iterator(); it.hasNext(); ){
             String site = ( String ) it.next();
-            String stagingSite = this.getStagingSite( site );
+            String stagingSite = workerNodeExecution ? 
+                                 "local":// For PegasusLite Jobs we stage to the submit directory
+                                 site;
+            
             //get the set of valid tc entries
-            List entries = m.getTCList( DeployWorkerPackage.TRANSFORMATION_NAMESPACE,
+            List entries = mapper.getTCList( DeployWorkerPackage.TRANSFORMATION_NAMESPACE,
                                         DeployWorkerPackage.TRANSFORMATION_NAME,
                                         DeployWorkerPackage.TRANSFORMATION_VERSION,
                                         site );
 
             //get selected entries
-            List selectedEntries = txSelector.getTCEntry( entries );
+            List selectedEntries = selector.getTCEntry( entries );
             if( selectedEntries == null || selectedEntries.size() == 0 ){
                 throw new RuntimeException( "Unable to find a valid location to stage " +
                                             Separator.combine( DeployWorkerPackage.TRANSFORMATION_NAMESPACE,
@@ -522,7 +547,7 @@ public class DeployWorkerPackage
             //the execution site and also pick up a FileServer accordingly
             String baseRemoteWorkDir = null;
             String baseRemoteWorkDirURL = null;//externally accessible URL
-            if(  mWorkerNodeExecution ){
+            if(  workerNodeExecution ){
                 //for pegasus-lite the worker package goes
                 //to the submit directory on the local site.
                 //the staging site is set to local
@@ -595,11 +620,7 @@ public class DeployWorkerPackage
             //figure out the URL prefix depending on
             //the TPT configuration                            
 
-            //PM-590 stricter checks
-//            String destURLPrefix = this.selectHeadNodeScratchSharedFileServerURLPrefix( stagingSite );
-            
-            
-            boolean localTransfer = this.runTransferOnLocalSite( defaultRefiner, stagingSite, destURLPrefix, Job.STAGE_IN_JOB);
+            boolean localTransfer = this.runTransferOnLocalSite( mDefaultTransferRefiner, stagingSite, destURLPrefix, Job.STAGE_IN_JOB);
             if( localTransfer ){
                 //then we use the external work directory url
                 ft.addDestination( stagingSite, baseRemoteWorkDirURL  + File.separator + baseName );
@@ -607,15 +628,8 @@ public class DeployWorkerPackage
             else{
                 ft.addDestination( stagingSite, "file://" + new File( baseRemoteWorkDir, baseName ).getAbsolutePath() );
             }
-/*
-            String urlPrefix =  localTransfer ?
-                               //lookup the site catalog to get the URL prefix
-                               destURLPrefix :
-                               //push pull mode. File URL will do
-                               "file://";
-            ft.addDestination( stagingSite, urlPrefix + new File( baseRemoteWorkDir, baseName ).getAbsolutePath() );
-*/
-            if( mWorkerNodeExecution ){
+
+            if( workerNodeExecution ){
                 //populate the map with the submit directory locations
                 workerPackageMap.put( site, new File( baseRemoteWorkDir, baseName ).getAbsolutePath() );
             }
@@ -623,11 +637,10 @@ public class DeployWorkerPackage
             mFTMap.put( site, ft );
             mLocalTransfers.put( stagingSite, localTransfer );
         }
-
-
+        
         //for pegasus lite and worker package execution
         //we add the worker package map to PegasusBag
-        if( mWorkerNodeExecution ){
+        if( workerNodeExecution ){
             mBag.add( PegasusBag.WORKER_PACKAGE_MAP,  workerPackageMap );
         }
     }
@@ -716,46 +729,34 @@ public class DeployWorkerPackage
     public ADag addSetupNodes( ADag dag ){
         Mapper m = mBag.getHandleToTransformationMapper();
         
-        //figure if we need to deploy or not
-        if( !mTransferWorkerPackage ){
+
+        //boolean addUntarJobs = !mWorkerNodeExecution;
+
+        Set[] deploymentSites = this.getDeploymentSites( dag );
+                
+        if( !mTransferWorkerPackage && ( deploymentSites[1].isEmpty() ) ){
+            //PM-810 user specified property is false for worker package
+            //and nonsharedfs|condorio deployment is empty
             mLogger.log( "No Deployment of Worker Package needed" ,
                          LogManager.DEBUG_MESSAGE_LEVEL );
             return dag;
         }
 
-
-        //we add untar nodes only if worker node execution/pegasus lite
-        //mode is disabled
-        boolean addUntarJobs = !mWorkerNodeExecution;
-
-        Set deploymentSites = this.getDeploymentSites( dag );
-        Graph workflow = ( addUntarJobs )?
-                         addSetupNodesWithUntarNodes( dag , deploymentSites ): //non pegasus lite case. shared fs
-                         addSetupNodesWithoutUntarNodes( dag, deploymentSites );
         
-        
+        if( mTransferWorkerPackage && !deploymentSites[0].isEmpty() ){
+            //PM-810 for sharedfs case, worker package transfer can only happen
+            //if the property is set by the user in the proeprties file
+            
+            //we add untar nodes only if worker node execution/pegasus lite
+            //mode is disabled
+            dag =addSetupNodesWithUntarNodes( dag , deploymentSites[0] );//non pegasus lite case. shared fs
+        }
+        if( !deploymentSites[1].isEmpty() ){
+            dag = addSetupNodesWithoutUntarNodes( dag, deploymentSites[1] );
+        }
         
        
-        //convert back to ADag and return
-        ADag result = dag;
-        //we need to reset the jobs and the relations in it
-        result.clearJobs();
-
-        //traverse through the graph and jobs and edges
-        for( Iterator it = workflow.nodeIterator(); it.hasNext(); ){
-            GraphNode node = ( GraphNode )it.next();
-
-            //get the job associated with node
-            result.add( ( Job )node.getContent() );
-
-            //all the children of the node are the edges of the DAG
-            for( Iterator childrenIt = node.getChildren().iterator(); childrenIt.hasNext(); ){
-                GraphNode child = ( GraphNode ) childrenIt.next();
-                result.addNewRelation( node.getID(), child.getID() );
-            }
-        }
-
-        return result;
+        return dag;
     }
 
     /**
@@ -766,13 +767,14 @@ public class DeployWorkerPackage
      * 
      * @return  the workflow in the graph representation with the nodes added.
      */
-    private Graph addSetupNodesWithUntarNodes( ADag dag, Set<String> deploymentSites ) {
+    private ADag addSetupNodesWithUntarNodes( ADag dag, Set<String> deploymentSites ) {
         //convert the dag to a graph representation and walk it
         //in a top down manner
-        Graph workflow = Adapter.convert( dag );
+        //PM-747 no need for conversion as ADag now implements Graph interface
+        ADag workflow =  dag;
         
         //get the root nodes of the workflow
-        List roots = workflow.getRoots();
+        List<GraphNode> roots = workflow.getRoots();
 
         //add a setup job per execution site
         for( Iterator it = deploymentSites.iterator(); it.hasNext(); ){
@@ -780,7 +782,8 @@ public class DeployWorkerPackage
 
             //for pegauss lite mode the staging site for worker package
             //should be local site , submit directory.
-            String stagingSite = this.getStagingSite(site);
+            //String stagingSite = this.getStagingSite(site);
+            String stagingSite = site; //PM-810
 
             mLogger.log( "Adding worker package deployment node for " + site +
                          " and staging site as " + stagingSite,
@@ -838,13 +841,15 @@ public class DeployWorkerPackage
 
             //untar node is child of setup
             setupNode.addChild( untarNode );
+            untarNode.addParent( setupNode );
             
             //add the original roots as children to untar node
-            for( Iterator rIt = roots.iterator(); rIt.hasNext(); ){
+            for( Iterator<GraphNode> rIt = roots.iterator(); rIt.hasNext(); ){
                     GraphNode n = ( GraphNode ) rIt.next();
                     mLogger.log( "Added edge " + untarNode.getID() + " -> " + n.getID(),
                                   LogManager.DEBUG_MESSAGE_LEVEL );
                     untarNode.addChild( n );
+                    n.addParent( untarNode );
             }
                 
             workflow.addNode( untarNode );
@@ -864,13 +869,14 @@ public class DeployWorkerPackage
      * 
      * @return  the workflow in the graph representation with the nodes added.
      */
-    private Graph addSetupNodesWithoutUntarNodes( ADag dag, Set<String> deploymentSites ) {
+    private ADag addSetupNodesWithoutUntarNodes( ADag dag, Set<String> deploymentSites ) {
         //convert the dag to a graph representation and walk it
         //in a top down manner
-        Graph workflow = Adapter.convert( dag );
+        //PM-747 no need for conversion as ADag now implements Graph interface
+        ADag workflow = dag ;
         
         //get the root nodes of the workflow
-        List roots = workflow.getRoots();
+        List<GraphNode> roots = workflow.getRoots();
 
         
         Set<FileTransfer> fts = new HashSet<FileTransfer>();
@@ -938,7 +944,7 @@ public class DeployWorkerPackage
             mLogger.log( "Added edge " + setupNode.getID() + " -> " + n.getID(),
                                   LogManager.DEBUG_MESSAGE_LEVEL );
             setupNode.addChild( n );
-
+            n.addParent( setupNode );
         }
 
         workflow.addNode( setupNode );
@@ -947,124 +953,65 @@ public class DeployWorkerPackage
     }
     
     /**
-     * Adds cleanup nodes in the workflow for sites specified.
-     * 
-     * @param dag  the workflow
-     *
-     * @return workflow with cleanup jobs added
-     */
-    public ADag addCleanupNodesForWorkerPackage( ADag dag ) {
-        Mapper m = mBag.getHandleToTransformationMapper();
-        
-        //figure if we need to deploy or not
-        if( !mTransferWorkerPackage ){
-            mLogger.log( "No cleanup of Worker Package needed" ,
-                         LogManager.DEBUG_MESSAGE_LEVEL );
-            return dag;
-        }
-        
-        //convert the dag to a graph representation and walk it
-        //in a top down manner
-        Graph workflow = Adapter.convert( dag );
-
-        RemoveDirectory removeDirectory = new RemoveDirectory( dag, mBag, this.mPOptions.getSubmitDirectory() );
-        
-        //add a setup job per execution site
-        Set sites = this.getDeploymentSites( dag );       
-        for( Iterator it = sites.iterator(); it.hasNext(); ){
-            String site = ( String ) it.next();
-            mLogger.log( "Adding worker package cleanup node for " + site,
-                         LogManager.DEBUG_MESSAGE_LEVEL );
-
-            String baseRemoteWorkDir = mSiteStore.getInternalWorkDirectory( site );
-
-            //figure out what needs to be deleted for the site
-            FileTransfer ft = (FileTransfer)mFTMap.get( site ); 
-            List<String> cleanupFiles = new LinkedList<String>();
-            cleanupFiles.add( new File ( baseRemoteWorkDir,
-                                         getBasename( ft.getSourceURL().getValue() )).getAbsolutePath() );
-            
-            for( String f : cleanupFiles ){
-                StringBuffer sb = new StringBuffer();
-                sb.append( "Need to cleanup file " ).append( f ).append( " on site " ).append( site );
-                mLogger.log( sb.toString(),
-                             LogManager.DEBUG_MESSAGE_LEVEL );
-            }
-            
-            //create a remove directory job per site
-            String cleanupJobname = this.getCleanupJobname( dag, site );
-            Job cleanupJob = removeDirectory.makeRemoveDirJob( site, cleanupJobname, cleanupFiles);
-                
-            //add the original leaves as parents to cleanup node 
-            for( Iterator lIt = workflow.getLeaves().iterator(); lIt.hasNext(); ){                
-                GraphNode gn = ( GraphNode ) lIt.next();
-                mLogger.log( "Added edge " + gn.getID() + " -> " + cleanupJobname,
-                              LogManager.DEBUG_MESSAGE_LEVEL );
-                
-                GraphNode cleanupNode = new GraphNode( cleanupJob.getName(), cleanupJob );
-                cleanupNode.addParent( gn );
-                gn.addChild( cleanupNode );
-                
-                workflow.addNode( cleanupNode );
-            }
-        }
-        
-        //convert back to ADag and return
-        ADag result = dag;
-        //we need to reset the jobs and the relations in it
-        result.clearJobs();
-
-        //traverse through the graph and jobs and edges
-        for( Iterator it = workflow.nodeIterator(); it.hasNext(); ){
-            GraphNode node = ( GraphNode )it.next();
-
-            //get the job associated with node
-            result.add( ( Job )node.getContent() );
-
-            //all the children of the node are the edges of the DAG
-            for( Iterator childrenIt = node.getChildren().iterator(); childrenIt.hasNext(); ){
-                GraphNode child = ( GraphNode ) childrenIt.next();
-                result.addNewRelation( node.getID(), child.getID() );
-            }
-        }
-
-        return result;
-    }
- 
-    
-    /**
      * Retrieves the sites for which the deployment jobs need to be created.
      *
      * @param dag   the dag on which the jobs need to execute.
      *
-     * @return  a Set containing a list of siteID's of the sites where the
-     *          dag has to be run.
+     * @return  a Set array containing a list of siteID's of the sites where the
+     *          dag has to be run. Index[0] has the sites for sharedfs deployment
+     *          while Index[1] for ( nonsharedfs and condorio).
      */
-    protected Set getDeploymentSites( ADag dag ){
-        Set set = new HashSet();
-
-        for(Iterator it = dag.vJobSubInfos.iterator();it.hasNext();){
-            Job job = (Job)it.next();
-
+    protected Set[] getDeploymentSites( ADag dag ){
+        Set[] result = new Set[2];
+        result[0]    = new HashSet();
+        result[1]    = new HashSet();
+        
+        Set sharedFSSet    = result[0];
+        Set nonsharedFSSet = result[1];
+        
+        for(Iterator<GraphNode> it = dag.jobIterator();it.hasNext();){
+            GraphNode node = it.next();
+            Job job = (Job)node.getContent();
 
             //PM-497
             //we ignore any clean up jobs that may be running
-            if( job.getJobType() == Job.CLEANUP_JOB ){
+            if( job.getJobType() == Job.CLEANUP_JOB || 
+                ( job.getJobType() == Job.STAGE_IN_JOB || job.getJobType() == Job.STAGE_OUT_JOB || job.getJobType() == Job.INTER_POOL_JOB )){
+                //we also ignore any remote transfer jobs that maybe associated to run in the work directory
+                //because of the fact that staging site may have a file server URL.
                 continue;
             }
 
             //add to the set only if the job is
             //being run in the work directory
             //this takes care of local site create dir
-            if(job.runInWorkDirectory()){
-                set.add(job.executionPool);
+            String conf = job.vdsNS.getStringValue( Pegasus.DATA_CONFIGURATION_KEY);
+            if( conf != null && job.runInWorkDirectory()){
+                
+                if( conf.equalsIgnoreCase( PegasusConfiguration.SHARED_FS_CONFIGURATION_VALUE) ){
+                    sharedFSSet.add( job.getSiteHandle() );
+                }
+                else{
+                    nonsharedFSSet.add( job.getSiteHandle() );
+                }
             }
+        }
+        
+        //PM-810 sanity check to make sure sites are not setup
+        //for both modes
+        Set<String> intersection = new HashSet<String>( sharedFSSet );
+        intersection.retainAll( nonsharedFSSet );
+        if( !intersection.isEmpty() ){
+            throw new RuntimeException( 
+                    "Worker package is set to be staged for both sharedfs and nonsharedfs|condorio mode for sites " 
+                            + intersection );
         }
 
         //remove the stork pool
-        set.remove("stork");
-
-        return set;
+        sharedFSSet.remove("stork");
+        nonsharedFSSet.remove( "stork" );
+        
+        return result;
     }
 
 
@@ -1097,8 +1044,8 @@ public class DeployWorkerPackage
         //append the job prefix if specified in options at runtime
         if ( mJobPrefix != null ) { sb.append( mJobPrefix ); }
 
-        sb.append( dag.dagInfo.nameOfADag ).append( "_" ).
-           append( dag.dagInfo.index ).append( "_" );
+        sb.append( dag.getLabel() ).append( "_" ).
+           append( dag.getIndex() ).append( "_" );
         sb.append( site );
 
         return sb.toString();
@@ -1124,8 +1071,8 @@ public class DeployWorkerPackage
         //append the job prefix if specified in options at runtime
         if ( mJobPrefix != null ) { sb.append( mJobPrefix ); }
 
-        sb.append( dag.dagInfo.nameOfADag ).append( "_" ).
-           append( dag.dagInfo.index ).append( "_" );
+        sb.append( dag.getLabel() ).append( "_" ).
+           append( dag.getIndex() ).append( "_" );
 
 
         sb.append( site );
@@ -1153,8 +1100,8 @@ public class DeployWorkerPackage
         //append the job prefix if specified in options at runtime
         if ( mJobPrefix != null ) { sb.append( mJobPrefix ); }
 
-        sb.append( dag.dagInfo.nameOfADag ).append( "_" ).
-           append( dag.dagInfo.index ).append( "_" );
+        sb.append( dag.getLabel() ).append( "_" ).
+           append( dag.getIndex() ).append( "_" );
 
 
         sb.append( site );
@@ -1215,10 +1162,6 @@ public class DeployWorkerPackage
 
         SiteCatalogEntry ePool = mSiteStore.lookup( site );
         
- /*      JIRA PM-277 
-        jobManager = ePool.selectGridGateway( GridGateway.JOB_TYPE.transfer );
- */
-        
         //String argString = "zxvf " + wpBasename;
         // tar -C /tmp/ -zxvf pegasus-worker-2.4.0cvs-x86_rhas_3.tar.gz 
         //we want to fully specify the directory where we want tar file
@@ -1236,11 +1179,6 @@ public class DeployWorkerPackage
                               DeployWorkerPackage.UNTAR_DERIVATION_NAME,
                               DeployWorkerPackage.UNTAR_DERIVATION_VERSION );
         
-//        newJob.condorUniverse = "vanilla";
-/*      JIRA PM-277
-        newJob.condorUniverse = GridGateway.JOB_TYPE.auxillary.toString();
-        newJob.globusScheduler = jobManager.getContact();
-*/
         newJob.executable = execPath;
         newJob.executionPool = site;
         newJob.strargs = arguments.toString();
@@ -1439,9 +1377,36 @@ public class DeployWorkerPackage
         //get the matching architecture
         //String arch = ( String )DeployWorkerPackage.archToNMIArch().get( sysinfo.getArch() );
         String arch = sysinfo.getArchitecture().toString();
-        String os   = ( String )DeployWorkerPackage.osToOSReleaseAndVersion().get( sysinfo.getOS() );
         
-        if( arch == null || os == null ){
+        //PM-732 lets figure out if a user has specified an OS release or OS version
+        //or not
+        String osRelease = sysinfo.getOSRelease();
+        String osVersion = sysinfo.getOSVersion();
+        //for mac there is only single OSRelease
+        osRelease = ( sysinfo.getOS() == SysInfo.OS.MACOSX ) ? "macos" : osRelease;
+        
+        String osReleaseAndVersion = null;
+        if ( ( osRelease != null && osRelease.length() != 0 ) &&
+             ( osVersion != null && osVersion.length() != 0 ) ){
+            //if both os release and version are specified by user
+            //then we know user is being specific. check to see if it
+            //is built by our built system
+            osReleaseAndVersion = osRelease + "_" + osVersion;
+            if( !DeployWorkerPackage.supportedOSReleaseAndVersions().contains(osReleaseAndVersion) ){
+                //set back to null  and log a warning
+                mLogger.log( "Worker Package Deployment: Unsupported os release and version " + osReleaseAndVersion + " for OS " + sysinfo.getOS() +
+                             " . Will rely on default package for the OS.",
+                             LogManager.WARNING_MESSAGE_LEVEL );
+                osReleaseAndVersion = null;
+            }
+        }
+        
+        //if osReleaseAndVersion is null, then construct a default one based on OS
+        if( osReleaseAndVersion == null){ 
+            osReleaseAndVersion = ( String )DeployWorkerPackage.osToOSReleaseAndVersion().get( sysinfo.getOS() );
+        }
+        
+        if( arch == null || osReleaseAndVersion == null ){
             mLogger.log( "Unable to construct url for pegasus worker for " + sysinfo , 
                          LogManager.DEBUG_MESSAGE_LEVEL );
             return null;
@@ -1454,18 +1419,14 @@ public class DeployWorkerPackage
             url.append( mUserSpecifiedSourceLocation ).append( File.separator);   
         }
         else{
-
             url.append( DeployWorkerPackage.BASE_BUILD_DIRECTORY_URL ).
-                append( this.mPlannerMajorMinorVersion ).append( "/" );
-            url.append( PEGASUS_VERSION.endsWith( "cvs" ) ?
-                    "nightly/" :
-                    "" );
+                append( PEGASUS_VERSION ).append( "/" );
         }
         
         url.append( "pegasus-" ).append( name ).append( "-" ).
             append( PEGASUS_VERSION ).append( "-" ).
             append( arch ).append( "_" ).
-            append( os ).append( ".tar.gz" );
+            append( osReleaseAndVersion ).append( ".tar.gz" );
             
         return url.toString();
     }
@@ -1553,14 +1514,12 @@ public class DeployWorkerPackage
      *
      * @return the staging site
      */
-    private String getStagingSite(String site) {
+    /*private String getStagingSite(String site) {
         //for pegauss lite mode the staging site for worker package
         //should be local site , submit directory.
         return mWorkerNodeExecution ?  "local":
                                         site;
-    }
-
-    
+    }*/
 
     
 }

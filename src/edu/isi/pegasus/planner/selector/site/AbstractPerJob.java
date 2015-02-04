@@ -15,14 +15,13 @@
  */
 package edu.isi.pegasus.planner.selector.site;
 
+import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.Job;
-
-import edu.isi.pegasus.planner.partitioner.graph.Graph;
-import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
-
-import java.util.List;
-import java.util.Iterator;
 import edu.isi.pegasus.planner.namespace.Hints;
+
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * The base class for the site selectors that want to map one job at a time.
@@ -40,12 +39,14 @@ public abstract class AbstractPerJob extends Abstract {
      *              execution sites that can be used.
      *
      */
-    public void mapWorkflow(Graph workflow, List sites) {
+    public void mapWorkflow(ADag workflow, List sites) {
         //iterate through the jobs in BFS
         for (Iterator it = workflow.iterator(); it.hasNext(); ) {
             GraphNode node = (GraphNode) it.next();
             
             Job job = (Job) node.getContent();
+            //System.out.println( "Setting job level for " + job.getID() + " to " + node.getDepth());
+            job.setLevel( node.getDepth() );
             
             //only map a job for which execute site hint
             //is not specified in the DAX

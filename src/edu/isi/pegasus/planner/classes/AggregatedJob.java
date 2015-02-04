@@ -266,6 +266,16 @@ public class AggregatedJob extends Job implements Graph{
     public void addEdge(String parent, String child) {
         this.mGraphImplementor.addEdge(parent, child);
     }
+    
+    /**
+     * Adds an edge between two already existing nodes in the graph.
+     *
+     * @param parent   the parent node .
+     * @param child    the child node .
+     */
+    public void addEdge( GraphNode parent, GraphNode child ){
+        this.mGraphImplementor.addEdge(parent, child);
+    }
 
     /**
      * A convenience method that allows for bulk addition of edges between
@@ -312,6 +322,14 @@ public class AggregatedJob extends Job implements Graph{
         return this.mGraphImplementor.remove(identifier);
     }
 
+    /**
+     * Resets all the dependencies in the Graph, while preserving the nodes. 
+     * The resulting Graph is a graph of independent nodes.
+     */
+    public void resetEdges(){
+        this.mGraphImplementor.resetEdges();
+    }
+    
      /**
      * Returns an iterator for the nodes in the Graph. These iterators are
      * fail safe.
@@ -330,6 +348,17 @@ public class AggregatedJob extends Job implements Graph{
      */
     public Iterator<GraphNode> iterator() {
         return this.mGraphImplementor.iterator();
+    }
+    
+    /**
+     * Returns an iterator that traverses the graph bottom up from the leaves.
+     * At any one time, only one iterator can
+     * iterate through the graph.
+     *
+     * @return Iterator through the nodes of the graph.
+     */
+    public Iterator bottomUpIterator(){
+        return this.mGraphImplementor.bottomUpIterator();
     }
 
     /**

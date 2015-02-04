@@ -156,11 +156,11 @@ public class ADAG {
      * The "not-so-official" location URL of the DAX schema definition.
      */
     public static final String SCHEMA_LOCATION =
-            "http://pegasus.isi.edu/schema/dax-3.3.xsd";
+            "http://pegasus.isi.edu/schema/dax-3.5.xsd";
     /**
      * The version to report.
      */
-    public static final String SCHEMA_VERSION = "3.3";
+    public static final String SCHEMA_VERSION = "3.5";
     /**
      * The Name / Label of the DAX
      */

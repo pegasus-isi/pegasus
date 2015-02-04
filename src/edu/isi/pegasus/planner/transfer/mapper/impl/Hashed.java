@@ -19,6 +19,7 @@ import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.transfer.mapper.MapperException;
 import java.io.IOException;
 import java.util.HashMap;
@@ -91,8 +92,9 @@ public class Hashed extends AbstractFileFactoryBasedMapper {
             String addOn = mSiteStore.getRelativeStorageDirectoryAddon( );
             //get the total number of files that need to be stageout
             int totalFiles = 0;
-            for ( Iterator it = workflow.jobIterator(); it.hasNext(); ){
-                Job job = ( Job )it.next();
+            for ( Iterator<GraphNode> it = workflow.jobIterator(); it.hasNext(); ){
+                GraphNode node = it.next();
+                Job job = ( Job )node.getContent();
 
                 //traverse through all the job output files
                 for( Iterator opIt = job.getOutputFiles().iterator(); opIt.hasNext(); ){

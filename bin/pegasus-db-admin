@@ -1,0 +1,343 @@
+#!/usr/bin/env python
+#
+#  Copyright 2014 University Of Southern California
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
+
+# Notes:
+# Downgrade at least to 4.4; test the dashboard; test with sqlite
+# dashboard + service and monitord
+
+__author__ = "Rafael Ferreira da Silva"
+
+import collections
+import datetime
+import os
+import re
+import subprocess
+import sys
+from optparse import OptionParser
+
+# Use pegasus-config to find our lib path
+bin_dir = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0])))
+pegasus_config = os.path.join(bin_dir, "pegasus-config") + " --noeoln --python"
+lib_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
+pegasus_config = os.path.join(bin_dir, "pegasus-config") + " --noeoln --python-externals"
+lib_ext_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
+pegasus_version = os.path.join(bin_dir, "pegasus-version")
+pegasus_current_version = subprocess.Popen(pegasus_version, stdout=subprocess.PIPE, shell=True).communicate()[0]
+#pegasus_current_version = "4.5.0cvs"
+
+# Insert this directory in our search path
+os.sys.path.insert(0, lib_dir)
+os.sys.path.insert(0, lib_ext_dir)
+
+from Pegasus.db.admin.admin_loader import *
+from Pegasus.db.admin.versions import *
+
+
+COMMANDS = collections.OrderedDict([
+    ('create', ''),
+    ('downgrade', 'Downgrade the database to a specific version.'),
+    ('update', 'Update the database to a specific version.'),
+    ('check', ''),
+    ('version', 'Print the current version of the database'),
+    ('help', 'Print this message')
+])
+
+COMPATIBILITY = collections.OrderedDict([
+    ('4.3.0', 1.0), ('4.3.1', 1.0), ('4.3.2', 1.0),
+    ('4.4.0', 1.1), ('4.4.1', 1.1),
+    ('4.5.0', 1.2)
+])
+
+DBS = collections.OrderedDict([
+    ('JDBCRC', 'Replica Catalog'),
+    ('DASH', 'Dashboard Database'),
+])
+
+DEBUG = False
+VERBOSE = False
+
+# ------------------------------------------------------
+def help(args):
+    sys.stderr.write("Usage: %s COMMAND\n\n" % os.path.basename(sys.argv[0]))
+    sys.stderr.write("Commands:\n")
+    for cmd in COMMANDS:
+        sys.stderr.write("    %-20s%s\n" % (cmd, COMMANDS[cmd]))
+
+# ------------------------------------------------------
+def option_parser(usage):
+    command = os.path.basename(sys.argv[0])
+
+    parser = OptionParser(usage="usage: %s %s" % (command, usage))
+    parser.add_option("-d", "--debug", dest="debug", action="store_true",
+        default=False, help="Turn on debugging")
+    parser.add_option("-v", "--verbose", dest="verbose", action="store_true",
+        default=False, help="Show progress messages")
+
+    # Add a hook so we can handle global arguments
+    fn = parser.parse_args
+    def parse(*args, **kwargs):
+        options, args = fn(*args, **kwargs)
+
+        if options.debug:
+            global DEBUG
+            DEBUG = True
+
+        if options.verbose:
+            global VERBOSE
+            VERBOSE = True
+
+        return options, args
+    parser.parse_args = parse
+
+    return parser
+
+# ------------------------------------------------------
+def create(args):
+    parser = option_parser("create NAME...")
+    
+    parser.add_option("-c","--conf", action = "store", type = "string", dest = "config_properties",
+        help = "Specify the properties file to use. This overrides all other property files.")
+    
+    options, args = parser.parse_args(args)
+    
+    if len(args) == 1:
+        name = args[0]
+        if name not in DBS:
+            sys.stderr.write("ERROR: Unknown database: %s\n" % name)
+            sys.stderr.write("List of available databases:\n")
+            for dbs in DBS:
+                sys.stderr.write("    %-8s%s\n" % (dbs, DBS[dbs]))
+            exit(1)
+        
+        adminDB = AdminDB(options.config_properties, VERBOSE, DEBUG)
+        dashboardDB = DashboardDB(options.config_properties, VERBOSE, DEBUG)
+        
+        current_version = float(adminDB.current_version()[0])
+
+        if name == 'JDBCRC':
+            jdbcrc = JDBCRC(options.config_properties, debug=DEBUG)
+            jdbcrc.create_tables()
+            jdbcrc.close()
+            sys.stdout.write("JDBCRC database successfully created.\n")
+            
+        elif name == 'DASH':
+            dashboardDB.create_tables()
+            dashboardDB.close()
+            sys.stdout.write("Dashboard database successfully created.\n")
+            
+        if current_version < CURRENT_DB_VERSION:
+            temp = CURRENT_DB_VERSION
+            while (temp > current_version):
+                v = get_class(temp, options.config_properties, VERBOSE, DEBUG)
+                v.downgrade(force=True)
+                v.dispose()
+                temp -= 0.1  
+            
+    else:
+        sys.stderr.write("List of available databases:\n")
+        for dbs in DBS:
+            sys.stderr.write("    %-8s%s\n" % (dbs, DBS[dbs]))
+            
+# ------------------------------------------------------
+def version(args):
+    parser = option_parser("version...")
+    
+    parser.add_option("-H", "--history", dest="history", action="store_true",
+        default=False, help="History of version updates")
+    parser.add_option("-C", "--compatibility", dest="compatibility", action="store_true",
+        default=False, help="Print the list of compatible Pegasus versions.")
+    parser.add_option("-c","--conf", action = "store", type = "string", dest = "config_properties",
+        help = "Specify the properties file to use. This overrides all other property files.")
+        
+    options, args = parser.parse_args(args)
+        
+    db = AdminDB(options.config_properties, VERBOSE, DEBUG)
+    dateFormat = '%Y-%m-%d %H:%M:%S'
+    
+    if options.history:
+        data = db.history()
+        for ver in data:
+            date = datetime.datetime.fromtimestamp(ver[1]).strftime(dateFormat)
+            sys.stdout.write("    %-8.1f%s\n" % (ver[0], date))
+    
+    elif options.compatibility:
+        for cmd in COMPATIBILITY:
+            sys.stderr.write("    %-8s%s\n" % (cmd, COMPATIBILITY[cmd]))
+    
+    else:
+        data = db.current_version()    
+        date = datetime.datetime.fromtimestamp(data[1]).strftime(dateFormat)
+        sys.stdout.write("The current version of the Database is compatible with the following Pegasus versions:\n")
+        for cmd in COMPATIBILITY:
+            if COMPATIBILITY[cmd] == data[0]:
+                sys.stdout.write(" %s" % cmd)
+        if (data[0] == CURRENT_DB_VERSION):
+            sys.stdout.write("\nYou have the latest version.")
+        else:
+            sys.stdout.write("\nYour database is out of date. The latest version is: %.1f\n" % CURRENT_DB_VERSION)
+            sys.stdout.write("Use 'pegasus-db-admin update' to update your database to the latest version.\n")
+    
+    db.close()
+    
+# ------------------------------------------------------
+def check(args):
+    parser = option_parser("check VERSION...")
+    
+    parser.add_option("-c","--conf", action = "store", type = "string", dest = "config_properties",
+        help = "Specify the properties file to use. This overrides all other property files.")
+        
+    options, args = parser.parse_args(args)
+       
+    ver = re.search('(\d+)\.(\d+)\.(\d+)', pegasus_current_version).group()
+    verF = COMPATIBILITY[ver]
+        
+    if len(args) > 0:
+        ver = args[0]
+        if ver not in COMPATIBILITY:
+            sys.stderr.write("ERROR: Unknown version: %s\n" % ver)
+            sys.stderr.write("\nList of compatible Pegasus versions:\n")
+            version(["-C"])
+            exit(1)
+        verF = COMPATIBILITY[ver]
+        
+    db = AdminDB(options.config_properties, VERBOSE, DEBUG)
+    data = db.current_version()
+    
+    if (data[0] == verF):
+        sys.stdout.write("Your database is compatible with the current Pegasus version: %s.\n" % ver)
+    else:
+        sys.stderr.write("Your database is NOT compatible with the current Pegasus version: %s\n" % ver)
+        if verF > data[0]:
+            sys.stderr.write("Use 'pegasus-db-admin update' to update your database.\n")
+        else:
+            sys.stderr.write("Use 'pegasus-db-admin downgrade' to downgrade your database version.\n")
+        exit(1)
+
+# ------------------------------------------------------
+def downgrade(args):
+    parser = option_parser("downgrade VERSION...")
+    
+    parser.add_option("-c","--conf", action = "store", type = "string", dest = "config_properties",
+        help = "Specify the properties file to use. This overrides all other property files.")
+    parser.add_option("-f", "--force", dest="force", action="store_true",
+        default=False, help="Ignore conflicts or data loss")
+    
+    options, args = parser.parse_args(args)
+    
+    verF = CURRENT_DB_VERSION - 0.1
+    
+    if len(args) > 0:
+        ver = args[0]
+        validate_version(ver)
+        verF = float(COMPATIBILITY[ver])
+        
+    db = AdminDB(options.config_properties, VERBOSE, DEBUG)
+    current_version = float(db.current_version()[0])
+    
+    if current_version <= verF:
+        sys.stdout.write("Your database is already downgraded to version %.1f.\n" % current_version)
+        return
+    
+    temp = current_version
+    while temp > verF:
+        vClass = get_class(temp, options.config_properties, VERBOSE, DEBUG)
+        vClass.downgrade(options.force)
+        vClass.dispose()
+        temp -= 0.1
+        db.update_version(temp)
+    sys.stdout.write("Database has been successfully downgraded.\n")
+    sys.stdout.write("The current version of the Database is compatible with the following Pegasus versions:\n")
+    for cmd in COMPATIBILITY:
+        if abs(COMPATIBILITY[cmd] - temp) < 0.01:
+            sys.stdout.write(" %s" % cmd)
+    sys.stdout.write("\n")
+
+# ------------------------------------------------------
+def update(args):
+    parser = option_parser("update VERSION...")
+       
+    parser.add_option("-c","--conf", action = "store", type = "string", dest = "config_properties",
+        help = "Specifies the properties file to use. This overrides all other property files.")
+    parser.add_option("-f", "--force", dest="force", action="store_true",
+        default=False, help="Ignore conflicts or data loss")
+        
+    options, args = parser.parse_args(args)
+                  
+    verF = CURRENT_DB_VERSION
+    
+    if len(args) > 0:
+        ver = args[0]
+        validate_version(ver)
+        verF = float(COMPATIBILITY[ver])
+
+    db = AdminDB(options.config_properties, VERBOSE, DEBUG)
+    current_version = float(db.current_version()[0])
+    
+    if current_version >= verF:
+        sys.stdout.write("Your database is already updated to version %.1f.\n" % current_version)
+        return
+    
+    temp = current_version
+    while temp < verF:
+        v = get_class(temp + 0.1, options.config_properties, VERBOSE, DEBUG)
+        v.update(options.force)
+        v.dispose()
+        temp += 0.1
+        db.update_version(temp)
+    sys.stdout.write("Database has been successfully updated.\n")
+    sys.stdout.write("The current version of the Database is compatible with the following Pegasus versions:\n")
+    for cmd in COMPATIBILITY:
+        if abs(COMPATIBILITY[cmd] - temp) < 0.01:
+            sys.stdout.write(" %s" % cmd)
+    sys.stdout.write("\n")
+
+# ------------------------------------------------------
+def validate_version(ver):
+    if ver not in COMPATIBILITY:
+        sys.stderr.write("ERROR: Unknown version: %s\n" % ver)
+        sys.stderr.write("\nList of compatible Pegasus versions:\n")
+        version(["-C"])
+        exit(1)
+
+# ------------------------------------------------------
+def main():
+    if len(sys.argv) < 2:
+        help(sys.argv)
+        exit(1)
+
+    command = sys.argv[1].lower()
+    args = sys.argv[2:]
+
+    if command in COMMANDS:
+        fn = globals()[command]
+        try:
+            fn(args)
+        except Exception, e:
+            # Just raise the exception if the user wants more info
+            if VERBOSE or DEBUG: raise
+
+            error = str(e)
+
+            sys.stderr.write("ERROR: %s\n" % error)
+            exit(1)
+    else:
+        sys.stderr.write("ERROR: Unknown command: %s\n" % command)
+        help(sys.argv)
+        exit(1)
+
+if __name__ == '__main__':
+    main()

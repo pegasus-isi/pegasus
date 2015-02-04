@@ -51,6 +51,13 @@ Show progress messages
 Path to configuration file
 
 
+ls Options
+~~~~~~~~~~
+*-l*::
+*--long*::
+Use long listing format that includes size, etc.
+
+
 rm Options
 ~~~~~~~~~~
 *-f*::

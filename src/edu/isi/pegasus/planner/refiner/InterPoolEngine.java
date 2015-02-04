@@ -17,57 +17,37 @@
 
 package edu.isi.pegasus.planner.refiner;
 
-import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.Separator;
+import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
-
+import edu.isi.pegasus.planner.catalog.transformation.Mapper;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.FileTransfer;
-import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
-
-
-
-
-import edu.isi.pegasus.common.logging.LogManager;
-
+import edu.isi.pegasus.planner.classes.PegasusFile;
+import edu.isi.pegasus.planner.common.PegRandom;
+import edu.isi.pegasus.planner.common.PegasusConfiguration;
+import edu.isi.pegasus.planner.namespace.Hints;
+import edu.isi.pegasus.planner.namespace.Pegasus;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import edu.isi.pegasus.planner.provenance.pasoa.PPS;
+import edu.isi.pegasus.planner.provenance.pasoa.XMLProducer;
+import edu.isi.pegasus.planner.provenance.pasoa.pps.PPSFactory;
+import edu.isi.pegasus.planner.provenance.pasoa.producer.XMLProducerFactory;
 import edu.isi.pegasus.planner.selector.SiteSelector;
-
+import edu.isi.pegasus.planner.selector.TransformationSelector;
 import edu.isi.pegasus.planner.selector.site.SiteSelectorFactory;
 
-import edu.isi.pegasus.planner.selector.TransformationSelector;
-
-import edu.isi.pegasus.planner.namespace.Hints;
-
-import edu.isi.pegasus.planner.provenance.pasoa.XMLProducer;
-import edu.isi.pegasus.planner.provenance.pasoa.producer.XMLProducerFactory;
-
-import edu.isi.pegasus.planner.provenance.pasoa.PPS;
-import edu.isi.pegasus.planner.provenance.pasoa.pps.PPSFactory;
-
-
-import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
-
-
-import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
-
-import edu.isi.pegasus.planner.catalog.transformation.Mapper;
-
-import edu.isi.pegasus.common.util.Separator;
-
-import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
-import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
-import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
-import edu.isi.pegasus.planner.common.PegRandom;
-import edu.isi.pegasus.planner.transfer.SLS;
-
-import edu.isi.pegasus.planner.transfer.sls.SLSFactory;
-
 import java.io.File;
-
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ArrayList;
+import java.util.Properties;
 import java.util.Set;
 import java.util.Vector;
 /**
@@ -121,16 +101,11 @@ public class InterPoolEngine extends Engine implements Refiner {
      * The XML Producer object that records the actions.
      */
     private XMLProducer mXMLStore;
-
+    
     /**
-     * The handle to the SLS implementor
+     * handle to PegasusConfiguration
      */
-    private SLS mSLS;
-
-    /**
-     * A boolean indicating whether to have worker node execution or not.
-     */
-    private boolean mWorkerNodeExecution;
+    private PegasusConfiguration mPegasusConfiguration;
 
     /**
      * Handle to the transformation store that stores the transformation catalog
@@ -155,14 +130,8 @@ public class InterPoolEngine extends Engine implements Refiner {
 
         mTXSelector = null;
         mXMLStore        = XMLProducerFactory.loadXMLProducer( mProps );
-
-        mWorkerNodeExecution = mProps.executeOnWorkerNode();
         
-        if( mWorkerNodeExecution ){
-            //load SLS
-            mSLS = SLSFactory.loadInstance( mBag );
-        }
-
+        mPegasusConfiguration = new PegasusConfiguration( bag.getLogger() );
     }
 
     /**
@@ -175,27 +144,14 @@ public class InterPoolEngine extends Engine implements Refiner {
      *
      */
     public InterPoolEngine( ADag aDag, PegasusBag bag ) {
-        super( bag );
+        this( bag );
         mDag = aDag;
         mExecPools = (Set)mPOptions.getExecutionSites();
         mLogger.log( "List of executions sites is " + mExecPools,
                      LogManager.DEBUG_MESSAGE_LEVEL );
         
-        mTCMapper = Mapper.loadTCMapper( mProps.getTCMapperMode(), mBag );
-        mBag.add( PegasusBag.TRANSFORMATION_MAPPER, mTCMapper );
-
-        mTXSelector = null;
-        mXMLStore        = XMLProducerFactory.loadXMLProducer( mProps );
-
         this.mDAXTransformationStore = aDag.getTransformationStore();
         
-        mWorkerNodeExecution = mProps.executeOnWorkerNode();
-
-        if( mWorkerNodeExecution ){
-            //load SLS
-            mSLS = SLSFactory.loadInstance( mBag );
-        }
-
     }
 
     /**
@@ -238,10 +194,7 @@ public class InterPoolEngine extends Engine implements Refiner {
      *
      */
     public void determineSites() {
-        Job job;
-
         //at present we schedule the whole workflow at once
-        List jobs = convertToList( mDag.vJobSubInfos );
         List pools = convertToList( mExecPools );
 
         //going through all the jobs making up the Adag, to do the physical mapping
@@ -278,7 +231,7 @@ public class InterPoolEngine extends Engine implements Refiner {
         mSiteSelector = SiteSelectorFactory.loadInstance( mBag );
         mSiteSelector.mapWorkflow( dag, sites );
 
-        int i = 0;
+        int i = 0; 
         StringBuffer error;
 
         //load the PPS implementation
@@ -300,30 +253,28 @@ public class InterPoolEngine extends Engine implements Refiner {
 
         //Iterate through the jobs and hand them to
         //the site selector if required
-        String site ;
-        for( Iterator it = dag.jobIterator(); it.hasNext(); i++ ){
-
-            Job job = ( Job ) it.next();
-            site  = job.getSiteHandle();
-            mLogger.log( "Mapping Job "  + job.getName(), 
-                         LogManager.DEBUG_MESSAGE_LEVEL );
-
-
+        for( Iterator<GraphNode> it = dag.jobIterator(); it.hasNext(); i++ ){
+            GraphNode node = it.next();
+            Job job = ( Job )node.getContent();
+           
             //check if the user has specified any hints in the dax
+            incorporateHint(job, "executionPool");
+            
+            /*PM-810 
             if (incorporateHint(job, "executionPool")) {
-                //i++;
+                TransformationCatalogEntry entry = lookupTC(job);
+                incorporateProfiles(job, entry );
                 //the staging site needs to be set before any
-                //profiles are incorporated PM-618
-                job.setStagingSiteHandle( getStagingSite( job ) );
-
-                incorporateProfiles(job);
+                //file transfers for executable staging are incorporated PM-618
+                job.setStagingSiteHandle( determineStagingSite( job ) );
+                handleExecutableFileTransfers(job, entry);
                 continue;
-            }
-
-            //set the staging site for the job
-            job.setStagingSiteHandle( getStagingSite( job ) );
-
+            }*/
  
+            String site  = job.getSiteHandle();
+            mLogger.log( "Setting up site mapping for job "  + job.getName(), 
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            
             if ( site == null ) {
                 error = new StringBuffer();
                 error.append( "Site Selector could not map the job " ).
@@ -339,12 +290,8 @@ public class InterPoolEngine extends Engine implements Refiner {
                             LogManager.ERROR_MESSAGE_LEVEL );
                 throw new RuntimeException( error.toString() );
             }
+ 
             
-/*           JIRA PM-277 
-            String jm = job.getJobManager();
-            jm = ( (jm == null) || jm.length() == 0 ) ?
-                null : jm;
-*/
             if ( site.length() == 0 ||
                  site.equalsIgnoreCase( SiteSelector.SITE_NOT_FOUND ) ) {
                 error = new StringBuffer();
@@ -354,17 +301,27 @@ public class InterPoolEngine extends Engine implements Refiner {
                 mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL );
                 throw new RuntimeException( error.toString() );
             }
-            
-/*           JIRA PM-277 
-            job.setJobManager( jm == null ?
-                                          getJobManager( site, job.getUniverse() ) :
-                                          jm );
-*/
 
-            mLogger.log("Mapped job " + job.jobName + " to pool " + site,
+            mLogger.log("Job was mapped to " + job.jobName + " to site " + site,
                         LogManager.DEBUG_MESSAGE_LEVEL);
+            
+            
+            
             //incorporate the profiles and
             //do transformation selection
+            //set the staging site for the job
+            TransformationCatalogEntry entry = lookupTC(job);
+            incorporateProfiles(job, entry );
+            
+            //PM-810 assign data configuration for the job if
+            //not already incorporated from profiles and properites
+            if( !job.vdsNS.containsKey( Pegasus.DATA_CONFIGURATION_KEY) ){
+                job.vdsNS.construct( Pegasus.DATA_CONFIGURATION_KEY, PegasusConfiguration.DEFAULT_DATA_CONFIGURATION_VALUE );
+            }
+            job.setStagingSiteHandle( determineStagingSite( job ) );
+            handleExecutableFileTransfers(job, entry);
+            
+            /* PM-810
             if ( !incorporateProfiles(job) ){
                 error = new StringBuffer();
                 error.append( "Profiles incorrectly incorporated for ").
@@ -374,16 +331,8 @@ public class InterPoolEngine extends Engine implements Refiner {
                throw new RuntimeException( error.toString() );
 
             }
+            */
 
-/*            
-            //modify the jobs if required for worker node execution
-            if( mWorkerNodeExecution ){
-                mSLS.modifyJobForFirstLevelStaging( job,
-                                                    mPOptions.getSubmitDirectory(),
-                                                    mSLS.getSLSInputLFN( job ),
-                                                    mSLS.getSLSOutputLFN( job )   );
-            }
-*/
             //log actions as XML fragment
             try{
                 logRefinerAction(job);
@@ -405,16 +354,19 @@ public class InterPoolEngine extends Engine implements Refiner {
     }
 
     /**
-     * Returns the staging site to be used for a job. If a staging site is not
-     * determined from the options it is set to be the execution site for the job
+     * Returns the staging site to be used for a job. The determination is made
+     * on the basis of the following
+     *  - data configuration value for job
+     *  - from planner command line options
+     *  - If a staging site is not determined from the options it is set to be the execution site for the job
      *
      * @param job  the job for which to determine the staging site
      *
      * @return the staging site
      */
-    public String getStagingSite( Job job ){
-        String ss =  this.mPOptions.getStagingSite( job.getSiteHandle() );
-        return (ss == null) ? job.getSiteHandle(): ss;
+    private String determineStagingSite( Job job ){
+        return mPegasusConfiguration.determineStagingSite(job, mPOptions);
+        
     }
 
     
@@ -428,16 +380,13 @@ public class InterPoolEngine extends Engine implements Refiner {
      * amongst the various transformations returned by the TC Mapper.
      *
      * @param job  the job into which the profiles have been incorporated.
+     * @param tcEntry  the transformation catalog entry to be associated with the job
      *
      * @return true profiles were successfully incorporated.
      *         false otherwise
      */
-    private boolean incorporateProfiles(Job job){
-        TransformationCatalogEntry tcEntry = null;
-        List tcEntries           = null;
+    private boolean incorporateProfiles(Job job, TransformationCatalogEntry tcEntry ){
         String siteHandle        = job.getSiteHandle();
-        String stagingSiteHandle = job.getStagingSiteHandle();
-
         
         mLogger.log( "For job "  + job.getName() + " updating profiles from site " + job.getSiteHandle() ,
                      LogManager.TRACE_MESSAGE_LEVEL );
@@ -446,7 +395,52 @@ public class InterPoolEngine extends Engine implements Refiner {
         //assimilated into the job.
         job.updateProfiles( mSiteStore.lookup( siteHandle ).getProfiles() );
 
+        /* PM-810
+        TransformationCatalogEntry tcEntry = lookupTC( job );
 
+        FileTransfer fTx = handleFileTransfersForMainExecutable( job, tcEntry );
+        */
+        
+        //add any notifications specified in the transformation
+        //catalog for the job. JIRA PM-391
+        job.addNotifications( tcEntry );
+
+
+        //the profile information from the transformation
+        //catalog needs to be assimilated into the job
+        //overriding the one from pool catalog.
+        job.updateProfiles(tcEntry);
+
+        //the profile information from the properties file
+        //is assimilated overidding the one from transformation
+        //catalog.
+        job.updateProfiles(mProps);
+
+        /* PM-810
+        //handle dependant executables
+        handleFileTransfersForDependantExecutables( job );
+        if( fTx != null ){
+            //add the main executable back as input
+            job.addInputFile( fTx);
+        }
+        */
+        
+        return true;
+    }
+
+    /**
+     * Returns the main executable to be associated with the job.
+     * 
+     * @param job  the job
+     * 
+     * @return 
+     */
+    private TransformationCatalogEntry lookupTC(Job job) {
+        
+        TransformationCatalogEntry tcEntry = null;
+        List tcEntries           = null;
+        String siteHandle        = job.getSiteHandle();
+        
         //we now query the TCMapper only if there is no hint available
         //by the user in the DAX 3.0 .  
         if( job.getRemoteExecutable() == null || job.getRemoteExecutable().length() == 0 ){ 
@@ -473,12 +467,11 @@ public class InterPoolEngine extends Engine implements Refiner {
             else{
                 //mismatch. should be unreachable code!!!
                 //as error should have been thrown in the site selector
-                mLogger.log(
+                throw new RuntimeException( 
                     "Site selector mapped job " +
                     job.getCompleteTCName() + " to pool " +
                     job.executionPool + " for which no mapping exists in " +
-                    "transformation mapper.",LogManager.FATAL_MESSAGE_LEVEL);
-                return false;
+                    "transformation mapper.");
             }
         }
         else{
@@ -498,13 +491,49 @@ public class InterPoolEngine extends Engine implements Refiner {
                              TCType.STAGEABLE );
                 
         }
+        
+        return tcEntry;
+    }
+    
+    /**
+     * Handles any file transfer related to staging of executables required by
+     * the job.
+     * 
+     * @param job
+     * @param entry 
+     */
+    private void handleExecutableFileTransfers( Job job, TransformationCatalogEntry entry ){
+        FileTransfer fTx = handleFileTransfersForMainExecutable( job, entry );
 
+        //handle dependant executables
+        handleFileTransfersForDependantExecutables( job );
+        
+        if( fTx != null ){
+            //add the main executable back as input
+            job.addInputFile( fTx);
+        }
+    }
+    
+    /**
+     * Handles any file transfer related to the main executable for the job, and
+     * also maps the executable for the job
+     * 
+     * @param job      the job
+     * @param entry    the transformation catalog entry
+     * 
+     * @return FileTransfer if required for the staging the main executable
+     */
+    private FileTransfer handleFileTransfersForMainExecutable(Job job, TransformationCatalogEntry entry) {
         FileTransfer fTx = null;
-        //something seriously wrong in this code line below.
-        //Need to verify further after more runs. (Gaurang 2-7-2006).
-//            tcEntry = (TransformationCatalogEntry) tcEntries.get(0);
-        if(tcEntry.getType().equals( TCType.STAGEABLE )){
+        String stagingSiteHandle = job.getStagingSiteHandle();
+        
+        if(entry.getType().equals( TCType.STAGEABLE )){
             SiteCatalogEntry site = mSiteStore.lookup( stagingSiteHandle );
+            
+            if( site == null ){
+                throw new RuntimeException( "Unable to find site catalog entry for staging site " + stagingSiteHandle + " for job " + job.getID() );
+            }
+            
             //construct a file transfer object and add it
             //as an input file to the job in the dag
             fTx = new FileTransfer( job.getStagedExecutableBaseName(),
@@ -514,21 +543,12 @@ public class InterPoolEngine extends Engine implements Refiner {
             //the physical transformation points to
             //guc or the user specified transfer mechanism
             //accessible url
-            fTx.addSource( tcEntry.getResourceId(),
-                           tcEntry.getPhysicalTransformation());
-            
-            //the destination url is the working directory for
-            //pool where it needs to be staged to
-            //always creating a third party transfer URL
-            //for the destination.
-//            String externalStagedPath =  mSiteStore.getInternalWorkDirectory( job, true )
-//                                + File.separator + job.getStagedExecutableBaseName();
-
+            fTx.addSource(entry.getResourceId(),
+                           entry.getPhysicalTransformation());
             StringBuffer externalStagedPath = new StringBuffer();
 
 
             //PM-590 Stricter checks
-//            String headnodeURLPrefix = this.selectHeadNodeScratchSharedFileServerURLPrefix( site );
             FileServer headNodeScratchServer = site.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.put );
 
             if( headNodeScratchServer == null ){
@@ -557,41 +577,19 @@ public class InterPoolEngine extends Engine implements Refiner {
             //the executable needs to point to the physical
             //path gotten from the selected transformantion
             //entry
-            job.executable = tcEntry.getPhysicalTransformation();
+            job.executable = entry.getPhysicalTransformation();
         }
-
-        //add any notifications specified in the transformation
-        //catalog for the job. JIRA PM-391
-        job.addNotifications( tcEntry );
-
-
-        //the profile information from the transformation
-        //catalog needs to be assimilated into the job
-        //overriding the one from pool catalog.
-        job.updateProfiles(tcEntry);
-
-        //the profile information from the properties file
-        //is assimilated overidding the one from transformation
-        //catalog.
-        job.updateProfiles(mProps);
-
-        //handle dependant executables
-        handleDependantExecutables( job );
-        if( fTx != null ){
-            //add the main executable back as input
-            job.addInputFile( fTx);
-        }
-
-        return true;
+        
+        return fTx;
     }
-
+    
     /**
      * Handles the dependant executables that need to be staged.
      *
      * @param job Job
      *
      */
-    private void handleDependantExecutables( Job job ){
+    private void handleFileTransfersForDependantExecutables( Job job ){
         String siteHandle        = job.getSiteHandle();
         String stagingSiteHandle = job.getStagingSiteHandle();
         boolean installedTX =  !( job.userExecutablesStagedForJob() );
@@ -725,37 +723,6 @@ public class InterPoolEngine extends Engine implements Refiner {
     }
 
     /**
-     * It returns a jobmanager for the given pool.
-     *
-     * @param site      the name of the pool.
-     * @param universe  the universe for which you need the scheduler on that
-     *                  particular pool.
-     *
-     * @return the jobmanager for that pool and universe.
-     *         null if not found.
-     */
-    private String getJobManager( String site, String universe) {
-        SiteCatalogEntry p = mSiteStore.lookup( site );
-        
-        GridGateway jm = ( p == null )? null : p.selectGridGateway( GridGateway.JOB_TYPE.valueOf( universe ) );
-        String result = ( jm == null ) ? null : jm.getContact( );
-
-
-        if ( result == null) {
-            StringBuffer error = new StringBuffer();
-            error = new StringBuffer();
-            error.append( "Could not find a jobmanager at site (").
-                  append( site ).append( ") for universe " ).
-                  append( universe );
-            mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL );
-            throw new RuntimeException( error.toString() );
-
-        }
-
-        return result;
-    }
-
-    /**
      * It incorporates a hint in the namespace to the job. After the hint
      * is incorporated the key is deleted from the hint namespace for that
      * job.
@@ -861,5 +828,7 @@ public class InterPoolEngine extends Engine implements Refiner {
         sb.append( "\n" );
         mXMLStore.add( sb.toString() );
     }
+
+    
 
 }

@@ -18,84 +18,71 @@
 package edu.isi.pegasus.planner.client;
 
 
+import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LoggingKeys;
+import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
+import edu.isi.pegasus.common.util.FactoryException;
+import edu.isi.pegasus.common.util.FindExecutable;
+import edu.isi.pegasus.common.util.StreamGobbler;
+import edu.isi.pegasus.common.util.StreamGobblerCallback;
+import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
-
 import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
 import edu.isi.pegasus.planner.catalog.site.SiteFactory;
-
-import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
-
-import edu.isi.pegasus.planner.code.CodeGenerator;
-import edu.isi.pegasus.planner.code.CodeGeneratorFactory;
-
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationFactory;
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.DagInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.NameValue;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerMetrics;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
-import edu.isi.pegasus.planner.classes.PegasusBag;
-
-import edu.isi.pegasus.planner.common.PegasusProperties;
-import edu.isi.pegasus.common.logging.LogManager;
-import edu.isi.pegasus.common.util.StreamGobbler;
-import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
-import edu.isi.pegasus.planner.common.RunDirectoryFilenameFilter;
-
-import edu.isi.pegasus.planner.refiner.MainEngine;
-
-
-import edu.isi.pegasus.planner.parser.dax.Callback;
-import edu.isi.pegasus.planner.parser.DAXParserFactory;
-
-import edu.isi.pegasus.planner.catalog.transformation.TransformationFactory;
-
-import edu.isi.pegasus.common.util.Version;
-import edu.isi.pegasus.common.util.FactoryException;
-
-import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
+import edu.isi.pegasus.planner.code.CodeGenerator;
+import edu.isi.pegasus.planner.code.CodeGeneratorFactory;
 import edu.isi.pegasus.planner.code.GridStartFactory;
-
-
-import edu.isi.pegasus.planner.classes.Job;
-
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
-
+import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.RunDirectoryFilenameFilter;
 import edu.isi.pegasus.planner.common.Shiwa;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+import edu.isi.pegasus.planner.parser.DAXParserFactory;
 import edu.isi.pegasus.planner.parser.Parser;
+import edu.isi.pegasus.planner.parser.dax.Callback;
 import edu.isi.pegasus.planner.parser.dax.DAXParser;
+import edu.isi.pegasus.planner.refiner.MainEngine;
 
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.FileOutputStream;
-import java.io.FileInputStream;
-import java.nio.channels.FileChannel;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Date;
-import java.util.Iterator;
-
-
-import java.text.NumberFormat;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.LinkedList;
-
-import java.util.Set;
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryPoolMXBean;
+import java.lang.management.MemoryUsage;
+
+import java.nio.channels.FileChannel;
+
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 
@@ -258,6 +245,13 @@ public class CPlanner extends Executable{
             cPlanner.log( fe.convertException() , LogManager.FATAL_MESSAGE_LEVEL);
             result = 2;
         }
+        catch( OutOfMemoryError error ){
+            cPlanner.log( "Out of Memory Error " + error.getMessage(), LogManager.FATAL_MESSAGE_LEVEL );
+            error.printStackTrace();
+            //lets print out some GC stats
+            cPlanner.logMemoryUsage();
+            result = 4;
+        }
         catch ( RuntimeException rte ) {
             plannerException = rte;
             //catch all runtime exceptions including our own that
@@ -331,7 +325,7 @@ public class CPlanner extends Executable{
 	    // also ignore
 	  }
 	}
-
+        
         // warn about non zero exit code
         if ( result != 0 ) {
             cPlanner.log("Non-zero exit-code " + result,
@@ -389,7 +383,12 @@ public class CPlanner extends Executable{
         Collection result = null;
 
         //print help if asked for
-        if( mPOptions.getHelp() ) { printLongVersion(); return result; }
+        if( mPOptions.getHelp() ) { 
+            //PM-816 disable metrics logging
+            this.mSendMetrics = false;
+            printLongVersion(); 
+            return result; 
+        }
 
         //set the logging level only if -v was specified
         if(mPOptions.getLoggingLevel() >= 0){
@@ -409,6 +408,8 @@ public class CPlanner extends Executable{
         PegasusConfiguration configurator = new PegasusConfiguration( mLogger );
         configurator.loadConfigurationPropertiesAndOptions( mProps , mPOptions );
 
+        mLogger.log( "Planner invoked with following arguments " + mPOptions.getOriginalArgString(),
+                      LogManager.INFO_MESSAGE_LEVEL );
 
         //do sanity check on dax file
         String dax         = mPOptions.getDAX();
@@ -488,20 +489,15 @@ public class CPlanner extends Executable{
 
         }
 
-        
         //load the parser and parse the dax
-        Parser p = (Parser)DAXParserFactory.loadDAXParser( mBag, "DAX2CDAG", dax );
-        Callback cb = ((DAXParser)p).getDAXCallback();
-        p.startParser( dax );
-
-        ADag orgDag = (ADag)cb.getConstructedObject();
+        ADag orgDag = this.parseDAX( dax );
 
         //generate the flow ids for the classads information
-        orgDag.dagInfo.generateFlowName();
-        orgDag.dagInfo.setFlowTimestamp( mPOptions.getDateTime( mProps.useExtendedTimeStamp() ));
-        orgDag.dagInfo.setDAXMTime( new File(dax) );
-        orgDag.dagInfo.generateFlowID();
-        orgDag.dagInfo.setReleaseVersion();
+        orgDag.generateFlowName();
+        orgDag.setFlowTimestamp( mPOptions.getDateTime( mProps.useExtendedTimeStamp() ));
+        orgDag.setDAXMTime( new File(dax) );
+        orgDag.generateFlowID();
+        orgDag.setReleaseVersion();
 
         //set out the root workflow id
         orgDag.setRootWorkflowUUID( determineRootWorkflowUUID(
@@ -513,11 +509,7 @@ public class CPlanner extends Executable{
         mPMetrics.setRootWorkflowUUID( orgDag.getRootWorkflowUUID() );
         mPMetrics.setWorkflowUUID( orgDag.getWorkflowUUID() );
         mPMetrics.setWorkflowMetrics( orgDag.getWorkflowMetrics() );
-        
-        //log id hiearchy message
-        //that connects dax with the jobs
-        logIDHierarchyMessage( orgDag , LoggingKeys.DAX_ID, orgDag.getAbstractWorkflowName() );
-
+       
         //write out a the relevant properties to submit directory
         int state = 0;
         String relativeSubmitDir; //the submit directory relative to the base specified
@@ -599,8 +591,8 @@ public class CPlanner extends Executable{
                             new File( mPOptions.getSubmitDirectory() ,
                                       edu.isi.pegasus.planner.code.generator.Abstract.getDAGFilename(
                                                             mPOptions,
-                                                            orgDag.dagInfo.nameOfADag,
-                                                            orgDag.dagInfo.index,
+                                                            orgDag.getLabel(),
+                                                            orgDag.getIndex(),
                                                             edu.isi.pegasus.planner.code.generator.Metrics.METRICS_FILE_SUFFIX )
                                                             ));
 
@@ -644,7 +636,6 @@ public class CPlanner extends Executable{
         MainEngine cwmain = new MainEngine( orgDag, mBag );
 
         ADag finalDag = cwmain.runPlanner();
-        DagInfo ndi = finalDag.dagInfo;
 
         //store the workflow metrics from the final dag into
         //the planner metrics
@@ -674,18 +665,6 @@ public class CPlanner extends Executable{
 
             result = codeGenerator.generateCode( finalDag );
 
-            //connect the DAX and the DAG via the hieararcy message
-            List l = new ArrayList(1);
-            l.add( finalDag.getExecutableWorkflowName() );
-            mLogger.logEntityHierarchyMessage( LoggingKeys.DAX_ID, 
-                                               finalDag.getAbstractWorkflowName(),
-                                               LoggingKeys.DAG_ID,
-                                               l);
-
-            //connect the jobs and the DAG via the hierarchy message
-            this.logIDHierarchyMessage( finalDag, LoggingKeys.DAG_ID, finalDag.getExecutableWorkflowName() );
-
-
         } catch (Exception e) {
             throw new RuntimeException( "Unable to generate code", e );
         } 
@@ -696,62 +675,8 @@ public class CPlanner extends Executable{
             mLogger.logEventCompletion();
         }
 
-//            mLogger.log( message + " -DONE", LogManager.INFO_MESSAGE_LEVEL );
-
-// CLEANUP WORKFLOW GENERATION IS DISABLED FOR 3.2
-// JIRA PM-529
-//
-//            //create the submit files for cleanup dag if
-//            //random dir option specified
-//            if(mPOptions.generateRandomDirectory() && !emptyWorkflow ){
-//                ADag cleanupDAG = cwmain.getCleanupDAG();
-//
-//                //the cleanup dags are never part of hierarichal workflows
-//                //for time being
-//                cleanupDAG.setRootWorkflowUUID( cleanupDAG.getWorkflowUUID() );
-//
-//                //set the refinement started flag to get right events
-//                //generated for stampede for cleanup workflow
-//                cleanupDAG.setWorkflowRefinementStarted( true );
-//
-//                PlannerOptions cleanupOptions = (PlannerOptions)mPOptions.clone();
-//
-//                //submit files are generated in a subdirectory
-//                //of the submit directory
-//                message = "Generating code for the cleanup workflow";
-//                mLogger.log( message, LogManager.INFO_MESSAGE_LEVEL );
-//                //set the submit directory in the planner options for cleanup wf
-//                cleanupOptions.setSubmitDirectory( cleanupOptions.getSubmitDirectory(), CPlanner.CLEANUP_DIR );
-//                PegasusBag bag = cwmain.getPegasusBag();
-//                bag.add( PegasusBag.PLANNER_OPTIONS, cleanupOptions );
-//
-//                //create a separate properties file for the cleanup workflow.
-//                //pegasus run should not launch monitord for the cleanup workflow
-//                PegasusProperties cleanupWFProperties = PegasusProperties.nonSingletonInstance();
-//                cleanupWFProperties.setProperty( PEGASUS_MONITORD_LAUNCH_PROPERTY_KEY, "false" );
-//                try {
-//                    cleanupWFProperties.writeOutProperties(cleanupOptions.getSubmitDirectory());
-//                } catch (IOException ex) {
-//                    throw new RuntimeException( "Unable to write out properties for the cleanup workflow ", ex );
-//                }
-//                bag.add( PegasusBag.PEGASUS_PROPERTIES , cleanupWFProperties );
-//
-//                codeGenerator = CodeGeneratorFactory.
-//                              loadInstance( bag );
-//
-//                try{
-//                    codeGenerator.generateCode(cleanupDAG);
-//                }
-//                catch ( Exception e ){
-//                    throw new RuntimeException( "Unable to generate code", e );
-//                }
-//
-//                mLogger.log(message + " -DONE",LogManager.INFO_MESSAGE_LEVEL);
-//            }
-// END OF COMMENTED OUT CODE
-
+        checkForDatabaseCompatibility( );
         
-
         if ( mPOptions.submitToScheduler() ) {//submit the jobs
             StringBuffer invocation = new StringBuffer();
             //construct the path to the bin directory
@@ -768,7 +693,11 @@ public class CPlanner extends Executable{
             this.logSuccessfulCompletion( emptyWorkflow );
         }
 
-            
+        //log some memory usage
+        //PM-747
+        if( mProps.logMemoryUsage() ){
+            this.logMemoryUsage();
+        }
         return result;
     }
 
@@ -782,7 +711,7 @@ public class CPlanner extends Executable{
     public String getNOOPJobName( ADag dag ){
         StringBuffer sb = new StringBuffer();
         sb.append( CPlanner.NOOP_PREFIX ).append( dag.getLabel() ).
-           append( "_" ).append( dag.dagInfo.index );
+           append( "_" ).append( dag.getIndex() );
         return sb.toString();
     }
 
@@ -871,9 +800,11 @@ public class CPlanner extends Executable{
         PlannerOptions options = new PlannerOptions();
         options.setSanitizePath( sanitizePath );
         options.setOriginalArgString( args );
+        //we default to inplace cleanup unless overriden on command line
+        options.setCleanup(PlannerOptions.CLEANUP_OPTIONS.inplace );
         
         Getopt g = new Getopt("pegasus-plan",args,
-                              "vqhfSnzpVr::aD:d:s:o:O:y:P:c:C:b:g:2:j:3:F:X:4:5:6:78:9:B:",
+                              "vqhfSnzpVr::aD:d:s:o:O:y:P:c:C:b:g:2:j:3:F:X:4:5:6:78:9:B:1:",
                               longOptions,false);
         g.setOpterr(false);
 
@@ -886,10 +817,6 @@ public class CPlanner extends Executable{
         while( (option = g.getopt()) != -1){
             //System.out.println("Option tag " + (char)option);
             switch (option) {
-
-                case 1://monitor
-                    options.setMonitoring( true );
-                    break;
 
                 case 'z'://deferred
                     options.setPartOfDeferredRun( true );
@@ -915,7 +842,10 @@ public class CPlanner extends Executable{
                     options.setClusteringTechnique( g.getOptarg() );
                     break;
 
-
+                case '1'://cleanup
+                    options.setCleanup( g.getOptarg() );
+                    break;
+                    
                 case '6':// conf
                     //PM-667 we need to track conf file option
                     options.setConfFile( g.getOptarg() );
@@ -997,7 +927,9 @@ public class CPlanner extends Executable{
                     break;
 
                 case 'n'://nocleanup option
-                    options.setCleanup( false );
+                    mLogger.log( "--nocleanup option is deprecated. Use --cleanup none  " ,
+                                 LogManager.WARNING_MESSAGE_LEVEL );
+                    options.setCleanup( PlannerOptions.CLEANUP_OPTIONS.none );
                     break;
 
                 case 'y'://output option
@@ -1065,6 +997,17 @@ public class CPlanner extends Executable{
             }
         }
 
+        //try and detect if there are any unparsed components of the 
+        //argument string such as inadvertent white space in values
+        int nonOptionArgumentIndex = g.getOptind();
+        if( nonOptionArgumentIndex < args.length ){
+            //this works as planner does not take any positional arguments
+            StringBuilder error = new StringBuilder();
+            error.append( "Unparsed component ").append( args[nonOptionArgumentIndex] ).
+                  append( " of the command line argument string: ").
+                  append( " " ).append( options.getOriginalArgString());
+            throw new RuntimeException( error.toString() );
+        }
 
         return options;
 
@@ -1077,7 +1020,7 @@ public class CPlanner extends Executable{
      * Submits the workflow for execution using pegasus-run, a wrapper around
      * pegasus-submit-dag.
      *
-     * @param invocation    the pegasus run invocation
+     * @param invocation    the pegasus run command
      *
      * @return boolean indicating whether could successfully submit the workflow or not.
      */
@@ -1115,7 +1058,7 @@ public class CPlanner extends Executable{
             result = (status == 0) ?true : false;
         }
         catch(IOException ioe){
-            mLogger.log("IOException while running pegasus-run ", ioe,
+            mLogger.log("IOException while executing pegasus-run ", ioe,
                         LogManager.ERROR_MESSAGE_LEVEL);
         }
         catch( InterruptedException ie){
@@ -1145,11 +1088,11 @@ public class CPlanner extends Executable{
             sb.append(bprefix);
             sb.append("-");
             //append timestamp to generate some uniqueness
-            sb.append(dag.dagInfo.getFlowTimestamp());
+            sb.append(dag.getFlowTimestamp());
         }
         else{
             //use the flow ID that contains the timestamp and the name both.
-            sb.append(dag.dagInfo.flowID);
+            sb.append(dag.getFlowID() );
         }
         return sb.toString();
     }
@@ -1163,7 +1106,7 @@ public class CPlanner extends Executable{
      * options
      */
     public LongOpt[] generateValidOptions(){
-        LongOpt[] longopts = new LongOpt[36];
+        LongOpt[] longopts = new LongOpt[37];
 
         longopts[0]   = new LongOpt( "dir", LongOpt.REQUIRED_ARGUMENT, null, '8' );
         longopts[1]   = new LongOpt( "dax", LongOpt.REQUIRED_ARGUMENT, null, 'd' );
@@ -1204,6 +1147,7 @@ public class CPlanner extends Executable{
         longopts[33]  = new LongOpt( "input-dir" , LongOpt.REQUIRED_ARGUMENT, null, 'I' );
         longopts[34]  = new LongOpt( "output-dir" , LongOpt.REQUIRED_ARGUMENT, null, 'O' );
         longopts[35]  = new LongOpt( "output-site" , LongOpt.REQUIRED_ARGUMENT, null, 'o' );
+        longopts[36]  = new LongOpt( "cleanup", LongOpt.REQUIRED_ARGUMENT, null, '1' );
         return longopts;
     }
 
@@ -1219,7 +1163,7 @@ public class CPlanner extends Executable{
           " [-s site[,site[..]]] [--staging-site s1=ss1[,s2=ss2[..]][-b prefix] [-c f1[,f2[..]]] [--conf <path to property file>] "+
           "\n [-f] [--force-replan]  [-b basename] [-C t1[,t2[..]]  [--dir  <base dir  for o/p files>] [-j <job-prefix>] " +
           "\n [--relative-dir <relative directory to base directory> ] [--relative-submit-dir <relative submit directory to base directory>]" +
-          "\n [--inherited-rc-files f1[,f2[..]]]  " +
+          "\n [--inherited-rc-files f1[,f2[..]]]  [--cleanup <cleanup strategy to use>] " + 
           "\n [-g <vogroup>] [-I <input dir>] [-O <output dir>] [-o <output site>]  [-r[dir name]] [-F option[=value] ] " +
           //"[--rescue <number of rescues before replanning>]"
           "\n [-S] [-n] [-v] [-q] [-V] [-X[non standard jvm option] [-h]";
@@ -1239,7 +1183,8 @@ public class CPlanner extends Executable{
              append( "\n pegasus-plan - The main class which is used to run  Pegasus. "   ).
              append( "\n Usage: pegasus-plan [-Dprop  [..]] --dax|--pdax <file> [--sites <execution sites>] " ).
              append( "\n [--staging-site s1=ss1[,s2=ss2[..]] [--basename prefix] [--cache f1[,f2[..]] [--cluster t1[,t2[..]] [--conf <path to property file>]"  ).
-             append( "\n [--dir <dir for o/p files>] [--force] [--force-replan] [--forward option=[value] ] [--group vogroup] [--nocleanup] "  ).
+             append( "\n [--inherited-rc-files f1[,f2[..]]]  [--cleanup <cleanup strategy to use>] " ).
+             append( "\n [--dir <dir for o/p files>] [--force] [--force-replan] [--forward option=[value] ] [--group vogroup] "  ).
              append( "\n [--input-dir <input dir>] [--output-dir <output dir>] [--output output site] [--randomdir=[dir name]]   [--verbose] [--version][--help] " ).
              append( "\n"  ).
              append( "\n Mandatory Options "  ).
@@ -1250,6 +1195,7 @@ public class CPlanner extends Executable{
              append( "\n -B |--bundle       the shiwa bundle to be used. ( prototypical option )  "  ).
              append( "\n -c |--cache        comma separated list of replica cache files."  ).
              append( "\n --inherited-rc-files  comma separated list of replica files. Locations mentioned in these have a lower priority than the locations in the DAX file"  ).
+             append( "\n --cleanup          the cleanup strategy to use. Can be none|inplace|leaf ").
              append( "\n -C |--cluster      comma separated list of clustering techniques to be applied to the workflow to "  ).
              append( "\n                    to cluster jobs in to larger jobs, to avoid scheduling overheads."  ).
              append( "\n --conf             the path to the properties file to use for planning. "  ).
@@ -1273,7 +1219,7 @@ public class CPlanner extends Executable{
              append( "\n -r |--randomdir    create random directories on remote execution sites in which jobs are executed"  ).
           // "\n --rescue           the number of times rescue dag should be submitted for sub workflows before triggering re-planning" +
              append( "\n                    can optionally specify the basename of the remote directories"  ).
-             append( "\n -n |--nocleanup    generates only the separate cleanup workflow. Does not add cleanup nodes to the executable workflow."  ).
+             append( "\n -n |--nocleanup    deprecated option. use --cleanup none instead"  ).
              append( "\n -S |--submit       submit the executable workflow generated"  ).
              append( "\n --staging-site     comma separated list of key=value pairs, where key is the execution site and value is the staging site"  ).
              append( "\n -v |--verbose      increases the verbosity of messages about what is going on"  ).
@@ -1282,10 +1228,12 @@ public class CPlanner extends Executable{
              append( "\n -X[non standard java option]  pass to jvm a non standard option . e.g. -Xmx1024m -Xms512m"  ).
              append( "\n -h |--help         generates this help."  ).
              append( "\n The following exitcodes are produced"  ).
-             append( "\n 0 concrete planner planner was able to generate a concretized workflow" ).
+             append( "\n 0 planner was able to generate an executable workflow" ).
              append( "\n 1 an error occured. In most cases, the error message logged should give a"  ).
              append( "\n   clear indication as to where  things went wrong." ).
              append( "\n 2 an error occured while loading a specific module implementation at runtime"  ).
+             append( "\n 3 an unaccounted java exception occured at runtime"  ).
+             append( "\n 4 encountered an out of memory exception. Most probably ran out of heap memory."  ).
              append( "\n " );
 
         System.out.println(text);
@@ -1483,8 +1431,8 @@ public class CPlanner extends Executable{
         }
         else{
             //generate the prefix from the name of the dag
-            sb.append(dag.dagInfo.nameOfADag).append("-").
-                append(dag.dagInfo.index);
+            sb.append(dag.getLabel() ).append("-").
+                append( dag.getIndex() );
         }
         //append the suffix
         sb.append( ".dag" );
@@ -1751,29 +1699,7 @@ public class CPlanner extends Executable{
         return result;
     }
 
-    /**
-     * Logs a message that connects the jobs with DAX/DAG
-     * 
-     * 
-     * @param dag           the DAG object
-     * @param parentType    the parent type
-     * @param parentID      the parent id
-     */
-    private void logIDHierarchyMessage(ADag dag, String parentType, String parentID ) {
-        //log the create id hieararchy message that 
-        //ties the DAX with the jobs in it.
-        //in bunches of 1000
-        Enumeration e = dag.vJobSubInfos.elements();
-        while( e.hasMoreElements() ){
-            List<String> l = new LinkedList<String>();
-            for( int i = 0; e.hasMoreElements() && i++ < 1000; ){
-                Job job = (Job)e.nextElement();
-                l.add( job.getID() );
-            }
-            mLogger.logEntityHierarchyMessage( parentType, parentID, LoggingKeys.JOB_ID, l );
-        }
-    }
-
+    
 
 
     /**
@@ -1791,10 +1717,10 @@ public class CPlanner extends Executable{
     }
 
     /**
-     * Returns the pegasus-run invocation on the workflow planned.
+     * Returns the pegasus-run command on the workflow planned.
      *
      *
-     * @return  the pegasus-run invocation
+     * @return  the pegasus-run command
      */
     private String getPegasusRunInvocation( ){
         StringBuffer result = new StringBuffer();
@@ -1879,6 +1805,110 @@ public class CPlanner extends Executable{
 
         return relativeSubmitDirXXX;
 
+    }
+
+    /**
+     * Logs memory usage of the JVM 
+     */
+    private void logMemoryUsage() {
+        try {
+            String memoryUsage = new String();
+            List<MemoryPoolMXBean> pools = ManagementFactory.getMemoryPoolMXBeans();
+            double totalUsed = 0; //in bytes
+            double totalReserved = 0; //in bytes
+            double divisor = 1024*1024;// display stats in MB
+            for (MemoryPoolMXBean pool : pools) {
+                MemoryUsage peak = pool.getPeakUsage();
+                totalUsed += peak.getUsed();
+                totalReserved += peak.getCommitted();
+                memoryUsage += String.format("Peak %s memory used    : %.3f MB%n", pool.getName(),peak.getUsed()/divisor );
+                memoryUsage += String.format("Peak %s memory reserved: %.3f MB%n", pool.getName(), peak.getCommitted()/divisor);
+            }
+            
+            // we print the result in the console
+            mLogger.log( "JVM Memory Usage Breakdown \n" +  memoryUsage.toString(), LogManager.INFO_MESSAGE_LEVEL);
+            mLogger.log( String.format( "Total Peak memory used      : %.3f MB", totalUsed/divisor), 
+                         LogManager.INFO_MESSAGE_LEVEL);
+            mLogger.log( String.format( "Total Peak memory reserved  : %.3f MB", totalReserved/divisor), 
+                         LogManager.INFO_MESSAGE_LEVEL);
+        } catch (Throwable t) {
+            //not fatal
+            mLogger.log( "Error while logging peak memory usage " + t.getMessage(),
+                         LogManager.ERROR_MESSAGE_LEVEL );
+        }
+    }
+
+    /**
+     * Parses the DAX and returns the associated ADag object 
+     * 
+     * @param dax  path to the DAX file.
+     * 
+     * @return 
+     */
+    private ADag parseDAX(String dax) {
+        Parser p = (Parser)DAXParserFactory.loadDAXParser( mBag, "DAX2CDAG", dax );
+        Callback cb = ((DAXParser)p).getDAXCallback();
+        p.startParser( dax );
+        return (ADag)cb.getConstructedObject();
+    }
+
+    /**
+     * Calls out to the pegasus-db-admin tool to check for database compatibility.
+     */
+    private void checkForDatabaseCompatibility() {
+        //find path to pegasus-db-admin
+        String basename = "pegasus-db-admin";
+        File pegasusDBAdmin = FindExecutable.findExec( basename );
+        if( pegasusDBAdmin == null ){
+            throw new RuntimeException( "Unable to find path to " + basename );
+        }
+        
+        //construct arguments for pegasus-db-admin
+        StringBuffer args = new StringBuffer();
+        args.append( "check");
+        String command = pegasusDBAdmin.getAbsolutePath() + " " + args;
+        mLogger.log("Executing  " + command,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            
+        
+        try{
+            //set the callback and run the pegasus-run command
+            Runtime r = Runtime.getRuntime();
+            Process p = r.exec(command );
+
+            //spawn off the gobblers with the already initialized default callback
+            StreamGobbler ips =
+                new StreamGobbler( p.getInputStream(), new DefaultStreamGobblerCallback(
+                                                                   LogManager.CONSOLE_MESSAGE_LEVEL ));
+            StreamGobbler eps =
+                new StreamGobbler( p.getErrorStream(), new DefaultStreamGobblerCallback(
+                                                             LogManager.ERROR_MESSAGE_LEVEL));
+
+            ips.start();
+            eps.start();
+
+            //wait for the threads to finish off
+            ips.join();
+            eps.join();
+
+            //get the status
+            int status = p.waitFor();
+
+            mLogger.log( basename + " exited with status " + status,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+
+            if( status != 0 ){
+                throw new RuntimeException( basename + " failed with non zero exit status " + command );
+            }
+        }
+        catch(IOException ioe){
+            mLogger.log("IOException while executing " + basename, ioe,
+                        LogManager.ERROR_MESSAGE_LEVEL);
+            throw new RuntimeException( "IOException while executing " + command , ioe );
+        }
+        catch( InterruptedException ie){
+            //ignore
+        }
     }
 
     

@@ -17,32 +17,27 @@
 package edu.isi.pegasus.planner.transfer.refiner;
 
 
-import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.Job;
-import edu.isi.pegasus.planner.classes.FileTransfer;
-import edu.isi.pegasus.planner.classes.NameValue;
-
 import edu.isi.pegasus.common.logging.LogManager;
-
-import edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge;
-
-import edu.isi.pegasus.planner.transfer.MultipleFTPerXFERJobRefiner;
-
-
-import edu.isi.pegasus.planner.provenance.pasoa.PPS;
-import edu.isi.pegasus.planner.provenance.pasoa.pps.PPSFactory;
-
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.List;
+import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.FileTransfer;
+import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.NameValue;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.namespace.Condor;
+import edu.isi.pegasus.planner.provenance.pasoa.PPS;
+import edu.isi.pegasus.planner.provenance.pasoa.pps.PPSFactory;
+import edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge;
 import edu.isi.pegasus.planner.transfer.Implementation;
+import edu.isi.pegasus.planner.transfer.MultipleFTPerXFERJobRefiner;
 import edu.isi.pegasus.planner.transfer.Refiner;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * The default transfer refiner, that implements the multiple refiner.
@@ -81,6 +76,13 @@ public class Basic extends MultipleFTPerXFERJobRefiner {
      *
      */
     protected Map mFileTable;
+    
+    /**
+     * The map indexed by a node name, where the associated value is the set
+     * of  child nodes.
+     */
+    protected Map<String,Set<String>> mRelationsMap;
+
 
     /**
      * The handle to the provenance store implementation.
@@ -104,6 +106,7 @@ public class Basic extends MultipleFTPerXFERJobRefiner {
         super( dag, bag );
         mLogMsg = null;
         mFileTable = new HashMap(10000);
+        mRelationsMap = new HashMap<String,Set<String>>( dag.size());
         
         mCreateRegistrationJobs = ( mProps.getReplicaMode() != null ) &&
                                     mProps.createRegistrationJobs();
@@ -694,6 +697,19 @@ public class Basic extends MultipleFTPerXFERJobRefiner {
             throw new RuntimeException( "PASOA Exception", e );
         }
 
+        //add all the edges required
+        for(Iterator it = mRelationsMap.entrySet().iterator();it.hasNext();){
+            Map.Entry entry = (Map.Entry)it.next();
+            String parent   = (String)entry.getKey();
+            mLogger.log("Adding relations for job " + parent,
+                        LogManager.DEBUG_MESSAGE_LEVEL);
+            Collection<String> children = (Collection)entry.getValue();
+            for( String child: children ){
+                mLogger.log("Adding Edge " + parent + " -> " + child,
+                        LogManager.DEBUG_MESSAGE_LEVEL);
+                this.mDAG.addEdge(parent, child );
+            }
+        }
 
     }
 
@@ -744,8 +760,7 @@ public class Basic extends MultipleFTPerXFERJobRefiner {
                             String child){
         mLogger.log("Adding relation " + parent + " -> " + child,
                     LogManager.DEBUG_MESSAGE_LEVEL);
-        
-        mDAG.addNewRelation(parent,child);
+        this.addRelation(parent, child, null, true);
 
     }
 
@@ -768,7 +783,16 @@ public class Basic extends MultipleFTPerXFERJobRefiner {
                             boolean parentNew){
         mLogger.log("Adding relation " + parent + " -> " + child,
                     LogManager.DEBUG_MESSAGE_LEVEL);
-        mDAG.addNewRelation(parent,child);
+        
+        Set s = null;
+        if( this.mRelationsMap.containsKey( parent) ){
+            s = this.mRelationsMap.get( parent );
+        }
+        else{
+            s = new HashSet<String>();
+            this.mRelationsMap.put( parent, s );
+        }
+        s.add( child );
 
     }
 

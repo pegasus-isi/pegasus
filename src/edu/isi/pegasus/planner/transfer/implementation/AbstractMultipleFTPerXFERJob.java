@@ -132,8 +132,10 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
         if(tcEntry == null){
             //should throw a TC specific exception
             StringBuffer error = new StringBuffer();
-            error.append( "Could not find entry in tc for lfn " ).append( getCompleteTCName() ).
+            error.append( "Could not find entry in TC for lfn " ).append( getCompleteTCName() ).
                   append(" at site " ).append( txJob.getSiteHandle());
+            error.append( " . " ).append( "Either add an entry in the TC or make sure that PEGASUS_HOME is set as an env profile in the site catalog for site " ).
+                  append( txJob.getSiteHandle() ).append( " . " );
             mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL);
             throw new RuntimeException( error.toString() );
         }
@@ -177,11 +179,11 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
             //written out
             txJob.stdIn = prepareSTDINAndAssociateCredentials( txJob, files, job.getSiteHandle(), jobClass );
         } catch (Exception e) {
-            mLogger.log("Unable to write the stdIn file for job " +
-                        txJob.getCompleteTCName() + " " + e.getMessage(),
-                        LogManager.ERROR_MESSAGE_LEVEL);
-            mLogger.log( "Files that were being written out " + files,
-                         LogManager.ERROR_MESSAGE_LEVEL );
+            StringBuffer error = new StringBuffer();
+            error.append( "Unable to write the stdIn file for job " ).
+                  append( txJob.getCompleteTCName() ).append( " " ).append( e.getMessage());
+            error.append( "Files that were being written out " ).append(files);
+            throw new RuntimeException( error.toString(), e );
         }
 
         //the profile information from the pool catalog needs to be
@@ -210,7 +212,9 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
         //profile incorporation
         txJob.strargs = this.generateArgumentString(txJob);
 
-        if(execFiles != null && this.mAddNodesForSettingXBit ){
+        //PM-810 worker node exeucution is per job level now
+        boolean addNodesForSettingXBit = !mPegasusConfiguration.jobSetupForWorkerNodeExecution(job);
+        if(execFiles != null && addNodesForSettingXBit ){
             //we need to add setup jobs to change the XBit
             super.addSetXBitJobs(job,txJob,execFiles);
         }

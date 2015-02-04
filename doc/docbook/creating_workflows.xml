@@ -69,7 +69,7 @@
         <mediaobject>
           <imageobject>
             <imagedata align="center" fileref="images/DiamondWorkflow.png"
-                       valign="middle" />
+                       valign="middle"/>
           </imageobject>
         </mediaobject>
       </figure></para>
@@ -281,7 +281,7 @@ LFN PFN a="b" [..]
 
       <para>For example, consider a replica catalog as shown below.</para>
 
-      <para>Entry 1 refers to an entry which does not use a resular
+      <para>Entry 1 refers to an entry which does not use a regular
       expressions. This entry would only match a file named 'f.a', and nothing
       else.</para>
 
@@ -380,21 +380,51 @@ D1/f.3 file://$input/D1/f.3 pool="local"</programlisting>
       accessed via JDBC. The sql schema&amp;rsquor;s for this catalog can be
       found at <emphasis role="bold">$PEGASUS_HOME/sql</emphasis> directory.
       You will have to install the schema into either PostgreSQL or MySQL by
-      running the appropriate commands to load the two scheams <emphasis
+      running the appropriate commands to load the two schemas <emphasis
       role="bold">create-XX-init.sql</emphasis> and <emphasis
       role="bold">create-XX-rc.sql</emphasis> where <emphasis
       role="bold">XX</emphasis> is either <emphasis role="bold">my</emphasis>
       (for MySQL) or <emphasis role="bold">pg</emphasis> (for
       PostgreSQL)</para>
+      
+      <note>
+          <para>
+            A site attribute was added to the SQL schema as a unique key.
+            To update the database schema, use the <emphasis role="bold">
+            alter-XX-rc.py</emphasis> script that can be found at <emphasis 
+            role="bold">$PEGASUS_HOME/sql</emphasis>.
+          </para>
+          
+          <figure>
+          <title>Schema Image of the JDBCRC.</title>
+
+          <mediaobject>
+            <imageobject>
+              <imagedata fileref="images/jdbcrc-schema.png"/>
+            </imageobject>
+          </mediaobject>
+        </figure>
+      </note>
 
       <para>To use JDBCRC, the user additionally needs to set the following
       properties</para>
 
       <orderedlist>
         <listitem>
+          <para><emphasis role="bold">pegasus.catalog.replica JDBCRC
+          </emphasis></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">pegasus.catalog.replica.db.driver mysql
+          </emphasis></para>
+        </listitem>
+
+        <listitem>
           <para><emphasis
           role="bold">pegasus.catalog.replica.db.url=<replaceable>&lt;jdbc url
-          to the databse&gt;</replaceable></emphasis></para>
+          to the database&gt; e.g
+          jdbc:mysql://database-host.isi.edu/database-name</replaceable></emphasis></para>
         </listitem>
 
         <listitem>
@@ -409,6 +439,10 @@ D1/f.3 file://$input/D1/f.3 pool="local"</programlisting>
           password&gt;</replaceable></emphasis></para>
         </listitem>
       </orderedlist>
+
+      <para>Users can use the command line client
+      <emphasis>pegasus-rc-client</emphasis> to interface to query, insert and
+      remove entries from the JDBCRC backend.</para>      
     </section>
 
     <section id="rc-RLS">
@@ -468,6 +502,11 @@ D1/f.3 file://$input/D1/f.3 pool="local"</programlisting>
         <para>Details about Globus Replica Catalog and LRC can be found at
         <ulink
         url="http://www.globus.org/toolkit/data/rls/">http://www.globus.org/toolkit/data/rls/</ulink></para>
+
+        <note>
+          <para>Replica Location Service is no longer officially supported by
+          Globus.</para>
+        </note>
       </section>
     </section>
 
@@ -625,7 +664,7 @@ f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/sc-4.0_p2.png" />
+            <imagedata fileref="images/sc-4.0_p2.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -771,7 +810,7 @@ f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/sc-3.0_p2.png" />
+            <imagedata fileref="images/sc-3.0_p2.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -858,13 +897,13 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
 
             <itemizedlist>
               <listitem>
-                <para><emphasis role="bold"></emphasis> SHARED for shared file
-                systems like NFS, LUSTRE etc.</para>
+                <para><emphasis role="bold"/> SHARED for shared file systems
+                like NFS, LUSTRE etc.</para>
               </listitem>
 
               <listitem>
-                <para><emphasis role="bold"></emphasis> LOCAL for local file
-                systems (local to the node/machine)</para>
+                <para><emphasis role="bold"/> LOCAL for local file systems
+                (local to the node/machine)</para>
               </listitem>
             </itemizedlist>
 
@@ -910,14 +949,6 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
           site catalog file&gt;</replaceable></emphasis></para>
         </listitem>
       </orderedlist>
-    </section>
-
-    <section id="pegasus-sc-client">
-      <title>Site Catalog Client pegasus-sc-client</title>
-
-      <para>The pegasus-sc-client can be used to generate a site catalog for
-      Open Science Grid (OSG) by querying their Monitoring Interface likes
-      VORS or OSGMM. See pegasus-sc-client --help for more details</para>
     </section>
 
     <section>
@@ -1315,7 +1346,7 @@ Output Filename: /dev/fd/1</computeroutput></screen>
 clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
                 STAGEABLE    INTEL32::LINUX</computeroutput></screen>
 
-      <para></para>
+      <para/>
     </section>
 
     <section>

@@ -113,7 +113,7 @@ function test_rescue_file {
 
 # Make sure we can run host scripts
 function test_host_script {
-    OUTPUT=$(mpiexec -np 2 $PMC -v -s test/sleep.dag -o /dev/null -e /dev/null --host-script test/hostscript.sh 2>&1)
+    OUTPUT=$(mpiexec -np 2 $PMC -v -s test/sleep.dag -o /dev/null -e /dev/null --host-cpus 4 --host-script test/hostscript.sh 2>&1)
     RC=$?
     
     if [ $RC -ne 0 ]; then
@@ -143,7 +143,7 @@ function test_host_script {
 
 # Make sure a failing host script causes the job to fail
 function test_fail_script {
-    OUTPUT=$(mpiexec -np 2 $PMC -s test/sleep.dag -o /dev/null -e /dev/null --host-script /usr/bin/false 2>&1)
+    OUTPUT=$(mpiexec -np 2 $PMC -s test/sleep.dag -o /dev/null -e /dev/null --host-cpus 4 --host-script /usr/bin/false 2>&1)
     RC=$?
     
     if [ $RC -eq 0 ]; then
@@ -161,7 +161,7 @@ function test_fail_script {
 
 # Make sure we can kill the process group of the host script when it forks children
 function test_fork_script {
-    OUTPUT=$(mpiexec -np 2 $PMC -s test/sleep.dag -o /dev/null -e /dev/null --host-script test/forkscript.sh -v 2>&1)
+    OUTPUT=$(mpiexec -np 2 $PMC -s test/sleep.dag -o /dev/null -e /dev/null --host-cpus 4 --host-script test/forkscript.sh -v 2>&1)
     RC=$?
     
     if [ $RC -ne 0 ]; then
@@ -181,7 +181,7 @@ function test_fork_script {
 function test_hang_script {
     echo "This should take 60 seconds..."
     
-    OUTPUT=$(mpiexec -np 2 $PMC -s test/sleep.dag -o /dev/null -e /dev/null --host-script test/hangscript.sh -v 2>&1)
+    OUTPUT=$(mpiexec -np 2 $PMC -s test/sleep.dag -o /dev/null -e /dev/null --host-cpus 4 --host-script test/hangscript.sh -v 2>&1)
     RC=$?
     
     if [ $RC -eq 0 ]; then
@@ -215,7 +215,7 @@ function test_insufficient_memory {
     RC=$?
     
     # This test should fail because 99 MB isn't enough to run the tasks in the DAG
-    if [ $RC -ne 1 ]; then
+    if [ $RC -eq 0 ]; then
         echo "$OUTPUT"
         echo "ERROR: Insufficient memory test failed (1)"
         return 1
@@ -272,7 +272,7 @@ function test_insufficient_cpus {
     RC=$?
     
     # This test should fail because 1 CPU isn't enough to run the tasks in the DAG
-    if [ $RC -ne 1 ]; then
+    if [ $RC -eq 0 ]; then
         echo "$OUTPUT"
         echo "ERROR: Insufficient CPUs test failed (1)"
         return 1
@@ -347,12 +347,6 @@ function test_max_wall_time {
     if [ $RC -eq 0 ]; then
         echo "$OUTPUT"
         echo "ERROR: Max wall time test failed on exitcode"
-        return 1
-    fi
-    
-    if ! [[ "$OUTPUT" =~ "Caught signal 14" ]]; then
-        echo "$OUTPUT"
-        echo "ERROR: Max wall time test failed on catching signal"
         return 1
     fi
     
@@ -616,6 +610,55 @@ function test_maxfds {
     fi
 }
 
+function test_keep_affinity {
+    OUTPUT=$(mpiexec -np 2 numactl --physcpubind=1 $PMC --keep-affinity test/cpuset.dag 2>&1)
+    RC=$?
+
+    if [ $RC -ne 0 ]; then
+        echo "$OUTPUT"
+        echo "ERROR: --keep-affinity test failed"
+        return 1
+    fi
+
+    if ! [[ "$OUTPUT" =~ "physcpubind: 1" ]]; then
+        echo "ERROR: clear_affinity test failed"
+        return 1
+    fi
+}
+
+
+function test_clear_affinity {
+    OUTPUT=$(mpiexec -np 2 numactl --physcpubind=1 $PMC test/cpuset.dag 2>&1)
+    RC=$?
+
+    if [ $RC -ne 0 ]; then
+        echo "$OUTPUT"
+        echo "ERROR: clear_affinity test failed"
+        return 1
+    fi
+
+    if ! [[ "$OUTPUT" =~ "physcpubind: 0 1" ]]; then
+        echo "ERROR: clear_affinity test failed"
+        return 1
+    fi
+}
+
+function test_complex_args {
+    OUTPUT=$(mpiexec -np 2 $PMC test/complexargs.dag 2>&1)
+    RC=$?
+
+    if [ $RC -ne 0 ]; then
+        echo "$OUTPUT"
+        echo "ERROR: complex_args test failed"
+        return 1
+    fi
+
+    if ! [[ "$OUTPUT" =~ "I count 3 arguments" ]]; then
+        echo "ERROR: complex_args test failed"
+        return 1
+    fi
+}
+
 run_test ./test-strlib
 run_test ./test-tools
 run_test ./test-dag
@@ -652,8 +695,24 @@ run_test test_monitord_hack_failure
 run_test test_max_wall_time
 run_test test_hang_script
 run_test test_maxfds
+run_test test_complex_args
 
 # setrlimit is broken on Darwin, so the strict limits test won't work
 if [ $(uname -s) != "Darwin" ]; then
     run_test test_strict_limits_failure
 fi
+
+function count_cpus {
+    if [ -f /proc/cpuinfo ]; then
+        grep processor /proc/cpuinfo | wc -l
+    else
+        echo 1
+    fi
+}
+
+# For the CPU affinity tests we need numactl and > 1 CPU
+if ! [ -z "$(which numactl)" ] && [ $(count_cpus) -gt 1 ]; then
+    run_test test_clear_affinity
+    run_test test_keep_affinity
+fi
+

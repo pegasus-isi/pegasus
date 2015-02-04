@@ -50,7 +50,7 @@ cat >sites.xml <<EOF
             <file-server operation="all" url="file://$TOP_DIR/outputs"/>
         </directory>
         <profile namespace="env" key="PEGASUS_BIN_DIR" >$PEGASUS_BIN_DIR</profile>
-        <profile namespace="env" key="SSH_PRIVATE_KEY" >/localhome/bamboo/.ssh/workflow_id_rsa</profile>
+        <profile namespace="pegasus" key="SSH_PRIVATE_KEY" >/localhome/bamboo/.ssh/workflow_id_rsa</profile>
     </site>
     <site  handle="condor_pool" arch="x86" os="LINUX">
         <profile namespace="pegasus" key="style" >condor</profile>
@@ -79,7 +79,7 @@ pegasus-plan \
     --dax dax.xml \
     --sites condor_pool \
     --staging-site staging_site \
-    --output local \
+    --output-site local \
     --submit | tee $TOP_DIR/plan.out
 
 

@@ -39,19 +39,19 @@ fi
 
 TASKS=$(echo "select count(*) from task;" | sqlite3 $RUN_DIR/pmc-only-0.stampede.db)
 if [ $TASKS -ne 40 ]; then
-    echo "Not enough tasks in stampede database"
+    echo "Not enough tasks $TASKS in stampede database. Expected 40"
     exit 1
 fi
 
 JOBS=$(echo "select count(*) from job_instance;" | sqlite3 $RUN_DIR/pmc-only-0.stampede.db)
-if [ $JOBS -ne 49 ]; then
-    echo "Not enough jobs in stampede database"
+if [ $JOBS -ne 46 ]; then
+    echo "Not enough jobs $JOBS in stampede database. Expected 46"
     exit 1
 fi
 
 INVOCATIONS=$(echo "select count(*) from invocation;" | sqlite3 $RUN_DIR/pmc-only-0.stampede.db)
-if [ $INVOCATIONS -ne 49 ]; then
-    echo "Not enough invocations in stampede database"
+if [ $INVOCATIONS -ne 46 ]; then
+    echo "Not enough invocations $INVOCATIONS in stampede database. Expected 46"
     exit 1
 fi
 

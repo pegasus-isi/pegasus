@@ -35,7 +35,7 @@ public interface Graph
     /**
      * The version number associated with this Graph API.
      */
-    public static final String VERSION = "1.3";
+    public static final String VERSION = "1.5";
 
 
     /**
@@ -53,6 +53,14 @@ public interface Graph
      * @param child    the child node ID.
      */
     public void addEdge( String parent, String child );
+    
+    /**
+     * Adds an edge between two already existing nodes in the graph.
+     *
+     * @param parent   the parent node .
+     * @param child    the child node .
+     */
+    public void addEdge( GraphNode parent, GraphNode child );
 
     /**
      * A convenience method that allows for bulk addition of edges between
@@ -61,7 +69,13 @@ public interface Graph
      * @param child   the child node ID
      * @param parents list of parent identifiers as <code>String</code>.
      */
-    public void addEdges( String child, List parents );
+    public void addEdges( String child, List<String> parents );
+    
+    /**
+     * Resets all the dependencies in the Graph, while preserving the nodes. 
+     * The resulting Graph is a graph of independent nodes.
+     */
+    public void resetEdges();
 
     /**
      * Returns the node matching the id passed.
@@ -116,7 +130,15 @@ public interface Graph
      */
     public Iterator<GraphNode> topologicalSortIterator();
 
-
+    /**
+     * Returns an iterator that traverses the graph bottom up from the leaves.
+     * At any one time, only one iterator can
+     * iterate through the graph.
+     *
+     * @return Iterator through the nodes of the graph.
+     */
+    public Iterator<GraphNode> bottomUpIterator();
+    
     /**
      * Returns the number of nodes in the graph.
      */

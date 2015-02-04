@@ -251,8 +251,12 @@ public class PartitionDAX extends Executable {
         String daxName          = null;
         int state = 0;
         try{
+            PegasusBag bag = new PegasusBag();
+            bag.add( PegasusBag.PEGASUS_PROPERTIES, properties );
+            bag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
+            
             callback = DAXParserFactory.loadDAXParserCallback( type,
-                                                        properties,
+                                                        bag,
                                                         daxFile );
 
             //set the appropriate key that is to be used for picking up the labels
@@ -261,12 +265,6 @@ public class PartitionDAX extends Executable {
             }
 
             state = 1;
-
-            PegasusBag bag = new PegasusBag();
-            bag.add( PegasusBag.PEGASUS_PROPERTIES, properties );
-            bag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
-
-//            DAXParser2 d = new DAXParser2( daxFile, bag, callback );
             Parser p = (Parser)DAXParserFactory.loadDAXParser( bag, callback, daxFile );
             p.startParser( daxFile );
 

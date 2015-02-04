@@ -22,12 +22,13 @@ Usage: pegasus-transfer [options]
 #  limitations under the License.
 ##
 
-from collections import deque
 import errno
 import logging
 import math
 import optparse
 import os
+import Queue
+import random
 import re
 import signal
 import stat
@@ -35,7 +36,17 @@ import string
 import subprocess
 import sys
 import tempfile
+import threading
 import time
+import cmd
+import ConfigParser
+
+try:
+    # Python 3.0 and later
+    import urllib.parse as urllib
+except ImportError:
+    # Fall back to Python 2's urllib
+    import urllib as urllib
 
 
 __author__ = "Mats Rynge <rynge@isi.edu>"
@@ -43,7 +54,8 @@ __author__ = "Mats Rynge <rynge@isi.edu>"
 
 # --- regular expressions -----------------------------------------------------
 
-re_parse_url = re.compile(r'([\w]+)://([\w\.\-:@]*)(/[\S]*)?')
+re_parse_comment = re.compile(r'^# +[\w]+ +[\w]+ +([\w\-_]+)')
+re_parse_url = re.compile(r'([\w]+)://([\w\.\-:@]*)(/[\S ]*)?')
 
 
 # --- classes -----------------------------------------------------------------
@@ -53,20 +65,32 @@ class Transfer:
     Represents a single transfer request.
     """
 
-    pair_id        = 0       # the id of the pair in the input (nth pair)
-    src_proto      = ""      # 
-    src_host       = ""      # 
-    src_path       = ""      #
-    dst_proto      = ""      #
-    dst_host       = ""      #
-    dst_path       = ""      #
-    allow_grouping = True    # can this transfer be grouped with others?
+    pair_id        = 0          # the id of the pair in the input (nth pair)
+    src_sitename   = "UNKNOWN"  # name from the Pegasus site catalog
+    src_proto      = ""         # 
+    src_host       = ""         # 
+    src_path       = ""         #
+    dst_sitename   = "UNKNOWN"  # name from the Pegasus site catalog
+    dst_proto      = ""         #
+    dst_host       = ""         #
+    dst_path       = ""         #
+    allow_grouping = True       # can this transfer be grouped with others?
 
     def __init__(self, pair_id):
         """
         Initializes the transfer class
         """
         self.pair_id = pair_id
+        
+    def set_src_sitename(self, sitename):
+        # the site name is used to match against shell variables, so we have
+        # have to replace dashes with underscores (as we do in the planner)
+        self.src_sitename = string.replace(sitename, "-", "_")
+
+    def set_dst_sitename(self, sitename):
+        # the site name is used to match against shell variables, so we have
+        # have to replace dashes with underscores (as we do in the planner)
+        self.dst_sitename = string.replace(sitename, "-", "_")
 
     def set_src(self, url):
         self.src_proto, self.src_host, self.src_path = self.parse_url(url)
@@ -78,6 +102,9 @@ class Transfer:
         proto = ""
         host = ""
         path = ""
+            
+        # the url should be URL decoded to work with our shell callouts
+        url = urllib.unquote(url)
 
         # default protocol is file://
         if string.find(url, ":") == -1:
@@ -114,7 +141,7 @@ class Transfer:
         host = r.group(2)
         path = r.group(3)
         
-        if path == None:
+        if path is None:
             path = ""
         
         # no double slashes in urls
@@ -124,6 +151,9 @@ class Transfer:
 
     def src_url(self):
         return "%s://%s%s" % (self.src_proto, self.src_host, self.src_path)
+    
+    def src_url_encoded(self):
+        return "%s://%s%s" % (self.src_proto, self.src_host, urllib.quote(self.src_path))
 
     def src_url_srm(self):
         """
@@ -132,9 +162,12 @@ class Transfer:
         if self.src_proto != "srm":
             return "%s://%s/%s" % (self.src_proto, self.src_host, self.src_path)
         return self.src_url()
-    
+
     def dst_url(self):
         return "%s://%s%s" % (self.dst_proto, self.dst_host, self.dst_path)
+    
+    def dst_url_encoded(self):
+        return "%s://%s%s" % (self.dst_proto, self.dst_host, urllib.quote(self.dst_path))
 
     def dst_url_srm(self):
         """
@@ -182,6 +215,7 @@ class Singleton(type):
         if cls not in cls._instances:
             cls._instances[cls] = \
                 super(Singleton, cls).__call__(*args, **kwargs)
+            cls.lock = threading.Lock()
         return cls._instances[cls]
 
 
@@ -194,75 +228,130 @@ class Tools(object):
     _info = {}
 
     def find(self, executable, version_arg, version_regex):
+
+        self.lock.acquire()
+        try:
+            if executable in self._info:
+                if self._info[executable] is None:
+                    return None
+                return self._info[executable]
+            
+            logger.debug("Trying to detect availability/location of tool: %s"
+                         %(executable))
+            
+            # initialize the global tool info for this executable
+            self._info[executable] = {}
+            self._info[executable]['full_path'] = None
+            self._info[executable]['version'] = None
+            self._info[executable]['version_major'] = None
+            self._info[executable]['version_minor'] = None
+            self._info[executable]['version_patch'] = None
         
-        if executable in self._info:
-            if self._info[executable] == None:
-                return None
-            return self._info[executable]
+            # figure out the full path to the executable
+            full_path = backticks("which " + executable + " 2>/dev/null") 
+            full_path = full_path.rstrip('\n')
+            if full_path == "":
+                logger.info("Command '%s' not found in the current environment"
+                            %(executable))
+                self._info[executable] = None
+                return self._info[executable]
+            self._info[executable]['full_path'] = full_path
         
-        logger.info("Trying to detect availability/location of tool: %s"
-                    %(executable))
+            # version
+            if version_regex is None:
+                version = "N/A"
+            else:
+                version = backticks(executable + " " + version_arg + " 2>&1")
+                version = version.replace('\n', "")
+                re_version = re.compile(version_regex)
+                result = re_version.search(version)
+                if result:
+                    version = result.group(1)
+                self._info[executable]['version'] = version
         
-        # initialize the global tool info for this executable
-        self._info[executable] = {}
-        self._info[executable]['full_path'] = None
-        self._info[executable]['version'] = None
-        self._info[executable]['version_major'] = None
-        self._info[executable]['version_minor'] = None
-        self._info[executable]['version_patch'] = None
-    
-        # figure out the full path to the executable
-        full_path = backticks("which " + executable + " 2>/dev/null") 
-        full_path = full_path.rstrip('\n')
-        if full_path == "":
-            logger._info("Command '%s' not found in the current environment"
-                        %(executable))
-            self._info[executable] = None
-            return self._info[executable]
-        self._info[executable]['full_path'] = full_path
-    
-        # version
-        if version_regex == None:
-            version = "N/A"
-        else:
-            version = backticks(executable + " " + version_arg + " 2>&1")
-            version = version.replace('\n', "")
-            re_version = re.compile(version_regex)
+            # if possible, break up version into major, minor, patch
+            re_version = re.compile("([0-9]+)\.([0-9]+)(\.([0-9]+)){0,1}")
             result = re_version.search(version)
             if result:
-                version = result.group(1)
-            self._info[executable]['version'] = version
-    
-        # if possible, break up version into major, minor, patch
-        re_version = re.compile("([0-9]+)\.([0-9]+)(\.([0-9]+)){0,1}")
-        result = re_version.search(version)
-        if result:
-            self._info[executable]['version_major'] = int(result.group(1))
-            self._info[executable]['version_minor'] = int(result.group(2))
-            self._info[executable]['version_patch'] = result.group(4)
-        if self._info[executable]['version_patch'] == None or \
-           self._info[executable]['version_patch'] == "":
-            self._info[executable]['version_patch'] = None
-        else:
-            self._info[executable]['version_patch'] = \
-                int(self._info[executable]['version_patch'])
-    
-        logger.info("Tool found: %s   Version: %s   Path: %s" 
-                    % (executable, version, full_path))
-        return self._info[executable]['full_path']
+                self._info[executable]['version_major'] = int(result.group(1))
+                self._info[executable]['version_minor'] = int(result.group(2))
+                self._info[executable]['version_patch'] = result.group(4)
+            if self._info[executable]['version_patch'] is None or \
+               self._info[executable]['version_patch'] == "":
+                self._info[executable]['version_patch'] = None
+            else:
+                self._info[executable]['version_patch'] = \
+                    int(self._info[executable]['version_patch'])
+        
+            logger.info("Tool found: %s   Version: %s   Path: %s" 
+                        % (executable, version, full_path))
+            return self._info[executable]['full_path']
+        finally:
+            self.lock.release()
+
 
     def full_path(self, executable):
         """ Returns the full path to a given executable """
-        if executable in self._info and self._info[executable] != None:
-            return self._info[executable]['full_path']
-        return None
+        self.lock.acquire()
+        try:
+            if executable in self._info and self._info[executable] is not None:
+                return self._info[executable]['full_path']
+            return None
+        finally:
+            self.lock.release()
+
 
     def major_version(self, executable):
         """ Returns the detected major version given executable """
-        if executable in self._info and self._info[executable] != None:
-            return self._info[executable]['version_major']
-        return None
+        self.lock.acquire()
+        try:
+            if executable in self._info and self._info[executable] is not None:
+                return self._info[executable]['version_major']
+            return None
+        finally:
+            self.lock.release()
                 
+
+class TimedCommand(object):
+    """ Provides a shell callout with a timeout """
+        
+    def __init__(self, cmd, timeout_secs = 5*60*60, should_log = False):
+        self.cmd = cmd
+        self.timeout_secs = timeout_secs
+        self.should_log = should_log
+        self.process = None
+
+    def run(self):
+        def target():
+            self.process = subprocess.Popen(self.cmd, shell=True, preexec_fn=os.setpgrp)
+            self.process.communicate()
+
+        if self.should_log or logger.isEnabledFor(logging.DEBUG):
+            logger.info(self.cmd)
+            
+        sys.stdout.flush()
+        
+        thread = threading.Thread(target=target)
+        thread.start()
+
+        thread.join(self.timeout_secs)
+        if thread.isAlive():
+            # do our best to kill the whole process group
+            try:
+                # os.killpg did not work in all environments
+                #os.killpg(os.getpgid(self.process.pid), signal.SIGTERM)
+                kill_cmd = "kill -TERM -%d" %(os.getpgid(self.process.pid))
+                kp = subprocess.Popen(kill_cmd, shell=True)
+                kp.communicate()
+                self.process.terminate()
+            except:
+                pass
+            thread.join()
+            raise RuntimeError("Command timed out after %d seconds: %s" %(self.timeout_secs, self.cmd))
+        if self.process.returncode != 0:
+            raise RuntimeError("Command exited with non-zero exit code (%d): %s" \
+                               %(self.process.returncode, self.cmd))
+
 
 class TransferHandlerBase(object):
     """
@@ -273,6 +362,8 @@ class TransferHandlerBase(object):
     
     _name = "BaseHandler"
     _protocol_map = []
+    
+    lock = threading.Lock()
     
     def do_transfer(self, transfer, attempt):
         """
@@ -310,10 +401,21 @@ class CpHandler(TransferHandlerBase):
 
     def do_transfer(self, transfer, attempt):
         prepare_local_dir(os.path.dirname(transfer.dst_path))
-        cmd = "/bin/cp -f -L '%s' '%s'" \
+        if os.path.exists(transfer.src_path) \
+           and os.path.exists(transfer.dst_path):
+            # make sure src and target are not the same file - have to
+            # compare at the inode level as paths can differ
+            src_inode = os.stat(transfer.src_path)[stat.ST_INO]
+            dst_inode = os.stat(transfer.dst_path)[stat.ST_INO]
+            if src_inode == dst_inode:
+                logger.warning("cp: src (%s) and dst (%s) already exists"
+                               % (transfer.src_path, transfer.dst_path))
+                return True
+        cmd = "/bin/cp -f -R -L '%s' '%s'" \
             % (transfer.src_path, transfer.dst_path)
         try:
-            myexec(cmd, default_subshell_timeout, True)
+            tc = TimedCommand(cmd)
+            tc.run()
         except RuntimeError, err:
             logger.error(err)
             return False
@@ -336,7 +438,8 @@ class FDTHandler(TransferHandlerBase):
         if not os.path.exists("fdt.jar"):
             cmd = "wget -nv -O fdt.jar http://monalisa.cern.ch/FDT/lib/fdt.jar"
             try:
-                myexec(cmd, 10*60, True)
+                tc = TimedCommand(cmd, timeout_secs = 10*60)
+                tc.run()
             except RuntimeError, err:
                 logger.error(err)
                 
@@ -350,7 +453,8 @@ class FDTHandler(TransferHandlerBase):
             cmd += " " + transfer.dst_host + ":" + transfer.dst_path
             stats_add(transfer.src_path)
         try:
-            myexec(cmd, default_subshell_timeout, True)
+            tc = TimedCommand(cmd)
+            tc.run()
             if transfer.dst_proto == "file":
                 stats_add(transfer.dst_path)    
         except RuntimeError, err:
@@ -383,7 +487,7 @@ class GridFtpHandler(TransferHandlerBase):
         
         tools = Tools()
         if tools.find("globus-url-copy", "-version", "([0-9]+\.[0-9]+)") \
-           == None:
+           is None:
             raise RuntimeError("Unable to do gsiftp transfers because" +
                                " globus-url-copy could not be found")
             
@@ -403,7 +507,7 @@ class GridFtpHandler(TransferHandlerBase):
         
         tools = Tools()
         if tools.find("globus-url-copy", "-version", "([0-9]+\.[0-9]+)") \
-           == None:
+           is None:
             raise RuntimeError("Unable to do gsiftp transfers because" +
                                " globus-url-copy could not be found")
         
@@ -460,12 +564,12 @@ class GridFtpHandler(TransferHandlerBase):
                 for l in chunks:
                     if not self._exec_transfers(l, attempt, False, third_party):
                         for i, t in enumerate(l):
-                            failed_q.append(t)
+                            failed_q.put(t)
             else:
                 # mkdir job failed - all subsequent jobs will fail
-                failed_q.append(first_list[0])
+                failed_q.put(first_list[0])
                 for i, t in enumerate(similar_list):
-                    failed_q.append(t)
+                    failed_q.put(t)
    
     
     def _exec_transfers(self, transfers, attempt, create_dest, third_party):
@@ -488,7 +592,8 @@ class GridFtpHandler(TransferHandlerBase):
             
         for i, t in enumerate(transfers):
             num_pairs += 1
-            logger.debug("   adding %s %s" % (t.src_url(), t.dst_url()))
+            logger.debug("   adding %s %s" % (t.src_url_encoded(),
+                                              t.dst_url_encoded()))
     
             # delay stating until we have finished the transfers
             if t.src_proto == "file":
@@ -496,22 +601,73 @@ class GridFtpHandler(TransferHandlerBase):
             elif t.dst_proto == "file":
                 delayed_file_stat.append(t.dst_path)
     
-            tmp_file.write("%s %s\n" % (t.src_url(), t.dst_url()))
+            tmp_file.write("%s %s\n" % (t.src_url_encoded(),
+                                        t.dst_url_encoded()))
     
         tmp_file.close()
-        
-        logger.info("Grouped %d similar gsiftp transfers together in"
-                    " temporary file %s" %(num_pairs, tmp_name))
+       
+        if num_pairs > 1:
+            logger.info("Grouped %d similar gsiftp transfers together in"
+                        " temporary file %s" %(num_pairs, tmp_name))
     
         transfer_success = False
-        
+
+        # for transfer to file://, run a normal mkdir command instead of
+        # having g-u-c use -create-dest
+        if transfers[0].dst_proto == "file":
+            prepare_local_dir(os.path.dirname(transfers[0].dst_path))
+            # override the create_dest flag as the directory now exists
+            create_dest = False
+
         # build command line for globus-url-copy
         tools = Tools()
         cmd = tools.full_path('globus-url-copy')
-        cmd += self._guc_options(attempt, create_dest, third_party)
+        
+        # separate credentials for src and dst? note that if one is
+        # set, so must the other even if a credential is not required
+        src_cred = None
+        dst_cred = None
+        key = "X509_USER_PROXY_" + transfers[0].src_sitename
+        if key in os.environ:
+            src_cred = os.environ[key]
+        key = "X509_USER_PROXY_" + transfers[0].dst_sitename
+        if key in os.environ:
+            dst_cred = os.environ[key]
+
+        # only set src-cred / dst-cred if at least one is specified
+        if src_cred is not None or dst_cred is not None:
+
+            if src_cred is None:
+                if "X509_USER_PROXY" in os.environ:
+                    src_cred = os.environ["X509_USER_PROXY"]
+                else:
+                    src_cred = dst_cred
+
+            if dst_cred is None:
+                if "X509_USER_PROXY" in os.environ:
+                    dst_cred = os.environ["X509_USER_PROXY"]
+                else:
+                    dst_cred = src_cred
+
+            cmd += " -src-cred " + src_cred + " -dst-cred " + dst_cred
+            check_cred_fs_permissions(src_cred)
+            check_cred_fs_permissions(dst_cred)
+
+        # if the src and dest credentials are different, we might need
+        # a data channel credential
+        data_cred_req = False
+        if third_party and src_cred != dst_cred:
+            data_cred_req = True
+       
+        # options
+        cmd += self._guc_options(attempt, create_dest,
+                                 third_party,
+                                 data_cred_req)
+        
         cmd += " -f " + tmp_name
         try:
-            myexec(cmd, default_subshell_timeout, True)
+            tc = TimedCommand(cmd)
+            tc.run()
             transfer_success = True
         except Exception, err:
             logger.error(err)
@@ -526,7 +682,7 @@ class GridFtpHandler(TransferHandlerBase):
     
         return transfer_success
    
-    def _guc_options(self, attempt, create_dest, third_party):
+    def _guc_options(self, attempt, create_dest, third_party, data_cred_req):
         """
         determine a set of globus-url-copy options based on how previous
         transfers went
@@ -534,7 +690,7 @@ class GridFtpHandler(TransferHandlerBase):
         global gsiftp_failures
     
         tools = Tools()
-        options = ""
+        options = " -r"
     
         # make output from guc match our current log level
         if logger.isEnabledFor(logging.DEBUG):
@@ -544,30 +700,26 @@ class GridFtpHandler(TransferHandlerBase):
         if create_dest:
             options += " -create-dest"
     
-        # concurrency is safe for both pull/push and 3rd party
-        if tools.major_version('globus-url-copy') >= 5 \
-           and gsiftp_failures == 0:
-            options += " -concurrency 4"
-    
         # Only do third party transfers for gsiftp->gsiftp. For other
         # combinations, fall back to settings which will for well over for
         # example NAT
         if third_party:
+
+            # pipeline is experimental so only allow this for the first attempt
+            if gsiftp_failures == 0:
+                options += " -pipeline"
     
             # parallism
             options += " -parallel 4"
     
-            # -fast only for Globus 4 and above
-            if tools.major_version('globus-version') >= 4:
-                options += " -fast"
-        
-            # -pipeline only for 3rd party transfers and Globus 4.2 and above
-            # this is experimental so only allow this for the first attempt
-            #if (attempt == 1 and \
-            #    tool_info['globus-version']['version_major'] == 5 \
-            #        or (tool_info['globus-version']['version_major'] >= 4 \
-            #            and tool_info['globus-version']['version_minor'] >= 2)):
-            #    options += " -pipeline"
+            # -fast should be supported by all servers today
+            options += " -fast"
+
+            if data_cred_req:
+                if gsiftp_failures == 0:
+                    options += " -data-cred auto"
+                else:
+                    options += " -no-data-channel-authentication"
         else:
             # gsiftp<->file transfers
             options += " -no-third-party-transfers" \
@@ -617,9 +769,6 @@ class HTTPHandler(TransferHandlerBase):
     def do_transfer(self, transfer, attempt):
         
         tools = Tools()
-        if tools.find("wget", "--version", "([0-9]+\.[0-9]+)") == None:
-            raise RuntimeError("Unable to do http/https transfers becuase" +
-                               " wget could not be found")
                                
         # Open Science Grid sites can inform us about local Squid proxies
         if "OSG_SQUID_LOCATION" in os.environ \
@@ -628,23 +777,45 @@ class HTTPHandler(TransferHandlerBase):
 
         # but only allow squid caching for the first try - after that go to
         # the source
-        if attempt > 1 and "http_proxy" in os.environ:
+        if attempt > 2 and "http_proxy" in os.environ:
             logger.info("Disabling HTTP proxy due to previous failures")
             del os.environ['http_proxy']
 
         prepare_local_dir(os.path.dirname(transfer.dst_path))
-        cmd = tools.full_path('wget')
-        if logger.isEnabledFor(logging.DEBUG):
-            cmd += " -v"
+        
+        # try wget first, then curl
+        if tools.find("wget", "--version", "([0-9]+\.[0-9]+)") is not None:
+            cmd = tools.full_path('wget')
+            if logger.isEnabledFor(logging.DEBUG):
+                cmd += " -v"
+            else:
+                cmd += " -nv"
+            cmd += " --no-cookies --no-check-certificate" + \
+                   " -O '" + transfer.dst_path + "'" + \
+                   " '" + transfer.src_url() + "'"
+        elif tools.find("curl", "--version", " ([0-9]+\.[0-9]+)") is not None:
+            cmd = tools.full_path('curl')
+            if not logger.isEnabledFor(logging.DEBUG):
+                cmd += " -s -S"
+            cmd += " --insecure" + \
+                   " -o '" + transfer.dst_path + "'" + \
+                   " '" + transfer.src_url() + "'"
         else:
-            cmd += " -q"
-        cmd += " --no-check-certificate -O '" + transfer.dst_path + "' '" + \
-               transfer.src_url() + "'"
+            raise RuntimeError("Unable to do http/https transfers because" +
+                               " neither curl nor wget could not be found")
+            
         try:
-            myexec(cmd, default_subshell_timeout, True)
+            tc = TimedCommand(cmd)
+            tc.run()
             stats_add(transfer.dst_path)
         except RuntimeError, err:
             logger.error(err)
+            # wget and curl might leave 0 sized files behind after failures
+            # make sure those get cleaned up
+            try:
+                os.unlink(transfer.dst_path)
+            except:
+                pass
             return False
         return True
 
@@ -656,38 +827,60 @@ class IRodsHandler(TransferHandlerBase):
     
     _name = "IRodsHandler"
     _protocol_map = ["file->irods", "irods->file"]
+    
+    ticket = None
 
-    def _irods_login(self):
+    def _irods_login(self, sitename):
         """
         log in to irods by using the iinit command - if the file already exists,
         we are already logged in
         """
-        f = os.environ['irodsAuthFileName']
-        if os.path.exists(f):
-            return
-    
-        # read password from env file
-        if not "irodsEnvFile" in os.environ:
-            raise RuntimeError("Missing irodsEnvFile - unable to do irods "
-                               + " transfers")
-        password = None
-        h = open(os.environ['irodsEnvFile'], 'r')
-        for line in h:
-            items = line.split(" ", 2)
-            if items[0].lower() == "irodspassword":
-                password = items[1].strip(" \t'\"\r\n")
-        h.close()
-        if password == None:
-            raise RuntimeError("No irodsPassword specified in irods env file")
+        self.lock.acquire()
+        try:
+            key = "irodsEnvFile_" + sitename
+            if key in os.environ:
+                os.environ["irodsEnvFile"] = os.environ[key]
         
-        h = open(".irodsAc", "w")
-        h.write(password + "\n")
-        h.close()
-        
-        cmd = "cat .irodsAc | iinit"
-        myexec(cmd, 5*60, True)
+            if self.ticket != None:
+                return
+
+            f = os.environ['irodsAuthFileName']
+            if os.path.exists(f):
+                return
             
-        os.unlink(".irodsAc")
+            # read password from env file
+            if not "irodsEnvFile" in os.environ:
+                raise RuntimeError("Missing irodsEnvFile - unable to do irods "
+                                   + " transfers")
+            
+            check_cred_fs_permissions(os.environ["irodsEnvFile"])
+                    
+            password = None
+            self.ticket = None
+            h = open(os.environ['irodsEnvFile'], 'r')
+            for line in h:
+                items = line.split(" ", 2)
+                if items[0].lower() == "irodspassword":
+                    password = items[1].strip(" \t'\"\r\n")
+                if items[0].lower() == "irodsticket":
+                    self.ticket = items[1].strip(" \t'\"\r\n")
+            h.close()
+            if password is None and self.ticket is None:
+                raise RuntimeError("No irodsTicket or irodsPassword" +
+                                   " specified in irods env file")
+            
+            if password is not None:
+                h = open(".irodsAc", "w")
+                h.write(password + "\n")
+                h.close()
+                cmd = "cat .irodsAc | iinit"
+                tc = TimedCommand(cmd, timeout_secs = 5*60)
+                tc.run()
+                os.unlink(".irodsAc")
+                check_cred_fs_permissions(os.environ['irodsAuthFileName'])
+
+        finally:
+            self.lock.release()
     
     
     def do_transfer(self, transfer, attempt):
@@ -696,41 +889,60 @@ class IRodsHandler(TransferHandlerBase):
         """
     
         tools = Tools()
-        if tools.find("iget", "-h", "Version[ \t]+([\.0-9a-zA-Z]+)") == None:
+        if tools.find("iget", "-h", "Version[ \t]+([\.0-9a-zA-Z]+)") is None:
             raise RuntimeError("Unable to do irods transfers becuase iget"
                                + " could not be found in the current path")
-    
+   
         # log in to irods
+        sitename = transfer.src_sitename
+        if transfer.dst_proto == "irods":
+            sitename = transfer.dst_sitename
         try:
-            self._irods_login()
+            self._irods_login(sitename)
         except Exception, loginErr:
             logger.error(loginErr)
             raise RuntimeError("Unable to log into irods")
-    
+
         if transfer.dst_proto == "file":
             # irods->file
             prepare_local_dir(os.path.dirname(transfer.dst_path))
-            cmd = "iget -f '" + transfer.src_path + "' '" + transfer.dst_path + "'"
+            cmd = "iget -v -f -r -T -K"
+            if self.ticket is not None:
+                cmd += " -t " + irods.ticket
+            if transfer.src_host is not "" and attempt == 1:
+                cmd += " -R " + transfer.src_host
+            cmd += " '" + transfer.src_path + "'"
+            cmd += " '" + transfer.dst_path + "'"
         else:
             # file->irods
             cmd = "imkdir -p '" + os.path.dirname(transfer.dst_path) + "'"
             try:
-                myexec(cmd, 60*60, True)
+                tc = TimedCommand(cmd, timeout_secs = 60*60)
+                tc.run()
             except:
                 # ignore errors from the mkdir command
                 pass
-            cmd = "iput -f '" + transfer.src_path + "' '" +  transfer.dst_path + "'"
+            cmd = "iput -v -f -r -T -K" 
+            if self.ticket is not None:
+                cmd += " -t " + irods.ticket
+            if transfer.dst_host is not "" and attempt == 1:
+                cmd += " -R " + transfer.dst_host
+            cmd += " '" + transfer.src_path + "'"
+            cmd += " '" +  transfer.dst_path + "'"
 
+        cmd += " </dev/null"
         try:
-            myexec(cmd, default_subshell_timeout, True)
+            tc = TimedCommand(cmd)
+            tc.run()
             # stats      
-            if url_pair.dst_proto == "file":
+            if transfer.dst_proto == "file":
                 stats_add(transfer.dst_path)
             else:
                 stats_add(transfer.src_path)
         except Exception, err:
             logger.error(err)
-            failed_q.append(transfer)
+            return False
+        return True
 
 
 
@@ -751,13 +963,11 @@ class S3Handler(TransferHandlerBase):
                     "s3s->s3s"
                     ]
 
-    buckets_created = {}
-
     def do_transfer(self, transfer, attempt):
     
         tools = Tools()
-        if tools.find("pegasus-s3", "help", None) == None:
-            raise RuntimeError("Unable to do S3 transfers becuase"
+        if tools.find("pegasus-s3", "help", None) is None:
+            raise RuntimeError("Unable to do S3 transfers because"
                                + " pegasus-s3 could not be found")
 
         local_filename = None
@@ -766,9 +976,31 @@ class S3Handler(TransferHandlerBase):
         if (transfer.src_proto == "s3" or transfer.src_proto == "s3s") and \
            (transfer.dst_proto == "s3" or transfer.dst_proto == "s3s"):
             # s3 -> s3
+            key = "S3CFG_" + transfer.src_sitename
+            if key in os.environ:
+                os.environ["S3CFG"] = os.environ[key]
+            if "S3CFG" not in os.environ:
+                logger.error("At least one of the S3CFG_" + 
+                             transfer.src_sitename + " or S3CFG" +
+                             " environment variables has to be set")
+                return False
+
+            check_cred_fs_permissions(os.environ["S3CFG"])
+
             cmd = "pegasus-s3 cp -f -c '%s' '%s'" % (transfer.src_url(),
                                                      transfer.dst_url())
         elif transfer.dst_proto == "file":
+            key = "S3CFG_" + transfer.src_sitename
+            if key in os.environ:
+                os.environ["S3CFG"] = os.environ[key]
+            if "S3CFG" not in os.environ:
+                logger.error("At least one of the S3CFG_" + 
+                             transfer.src_sitename + " or S3CFG" +
+                             " environment variables has to be set")
+                return False
+
+            check_cred_fs_permissions(os.environ["S3CFG"])
+
             # this is a 'get'
             local_filename = transfer.dst_path
             prepare_local_dir(os.path.dirname(transfer.dst_path))
@@ -776,13 +1008,25 @@ class S3Handler(TransferHandlerBase):
                                                 transfer.dst_path)
         else:
             # this is a 'put'
+            key = "S3CFG_" + transfer.dst_sitename
+            if key in os.environ:
+                os.environ["S3CFG"] = os.environ[key]
+            if "S3CFG" not in os.environ:
+                logger.error("At least one of the S3CFG_" + 
+                             transfer.dst_sitename + " or S3CFG" +
+                             " environment variables has to be set")
+                return False
+
+            check_cred_fs_permissions(os.environ["S3CFG"])
+
             local_filename = transfer.src_path
             cmd = "pegasus-s3 put -f -b '%s' '%s'" % (transfer.src_path,
                                                       transfer.dst_url())
 
         try:
-            myexec(cmd, default_subshell_timeout, True)
-            if local_filename != None:
+            tc = TimedCommand(cmd)
+            tc.run()
+            if local_filename is not None:
                 stats_add(local_filename)
         except Exception, err:
             logger.error(err)
@@ -790,9 +1034,114 @@ class S3Handler(TransferHandlerBase):
         return True
 
 
+class GSHandler(TransferHandlerBase):
+    """
+    Handler for Google Storage services
+    """
+    
+    _name = "GSHandler"
+    _protocol_map = [
+                    "file->gs",
+                    "gs->file",
+                    "gs->gs",
+                    ]
+
+    def fix_env(self, site_name):
+        
+        key = "BOTO_CONFIG_" + site_name
+        if key in os.environ:
+            os.environ["BOTO_CONFIG"] = os.environ[key]
+        if "BOTO_CONFIG" not in os.environ:
+            logger.error("At least one of the BOTO_CONFIG_" + 
+                         site_name + " or BOTO_CONFIG" +
+                         " environment variables has to be set")
+            return False
+
+        key = "GOOGLE_PKCS12_" + site_name
+        if key in os.environ:
+            os.environ["GOOGLE_PKCS12"] = os.environ[key]
+        if "GOOGLE_PKCS12" not in os.environ:
+            logger.error("At least one of the GOOGLE_PKCS12_" + 
+                         site_name + " or GOOGLE_PKCS12" +
+                         " environment variables has to be set")
+            return False
+
+            check_cred_fs_permissions(os.environ["BOTO_CONFIG"])
+            check_cred_fs_permissions(os.environ["GOOGLE_PKCS12"])                
+
+        return True
+    
+
+    def do_transfer(self, transfer, attempt):
+    
+        tools = Tools()
+        if tools.find("gsutil", "version", "gsutil version: ([\.0-9a-zA-Z]+)") is None:
+            raise RuntimeError("Unable to do Google Storage transfers because"
+                               + " the gsutil tool could not be found")
+
+        local_filename = None
+        
+        # use cp for gs->gs transfers, and get/put when one end is a file://
+        if (transfer.src_proto == "gs" and transfer.dst_proto == "gs"):
+            # gs -> gs
+            if not self.fix_env(transfer.src_sitename):
+                return False
+
+            cmd = "gsutil -q cp '%s' '%s'" % (transfer.src_url(),
+                                              transfer.dst_url())
+        elif transfer.dst_proto == "file":
+            # this is a 'get'
+            if not self.fix_env(transfer.src_sitename):
+                return False
+
+            local_filename = transfer.dst_path
+            prepare_local_dir(os.path.dirname(transfer.dst_path))
+            cmd = "gsutil -q cp '%s' '%s'" % (transfer.src_url(),
+                                              transfer.dst_path)
+        else:
+            # this is a 'put'
+            if not self.fix_env(transfer.dst_sitename):
+                return False
+
+            local_filename = transfer.src_path
+            cmd = "gsutil -q cp '%s' '%s'" % (transfer.src_path,
+                                              transfer.dst_url())
+
+        # we need to update the boto config file to specify the full
+        # path to the PKCS12 file
+        try:
+            tmp_fd, tmp_name = tempfile.mkstemp(prefix="pegasus-transfer-", suffix=".lst")
+            tmp_file = os.fdopen(tmp_fd, "w+b")
+        except:
+          raise RuntimeError("Unable to create tmp file for gs boto file")
+        try:
+            conf = ConfigParser.SafeConfigParser()
+            conf.read(os.environ["BOTO_CONFIG"])
+            conf.set("Credentials", "gs_service_key_file", os.environ["GOOGLE_PKCS12"])
+            conf.write(tmp_file)
+            tmp_file.close()
+        except Exception, err:
+            logger.error(err)
+            raise RuntimeError("Unable to convert boto config file")
+        
+        cmd = "BOTO_CONFIG=%s %s" %(tmp_name, cmd)
+        
+        result = True
+        try:
+            tc = TimedCommand(cmd)
+            tc.run()
+            if local_filename is not None:
+                stats_add(local_filename)
+        except Exception, err:
+            logger.error(err)
+            result = False
+        os.unlink(tmp_name)
+        return result
+
+
 class SRMHandler(TransferHandlerBase):
     
-    _name = "S3Handler"
+    _name = "SRMHandler"
     _protocol_map = ["srm->file", "file->srm", "gsiftp->srm", "srm->gsiftp"]
 
     def do_transfer(self, transfer, failed_q):
@@ -804,14 +1153,23 @@ class SRMHandler(TransferHandlerBase):
         tools = Tools()
         if tools.find("lcg-cp",
                       "--version", 
-                      "lcg_util-([\.0-9a-zA-Z]+)") == None \
+                      "lcg_util-([\.0-9a-zA-Z]+)") is None \
            and \
            tools.find("srm-copy",
                       "-version",
-                      "srm-copy[ \t]+([\.0-9a-zA-Z]+)") == None:
+                      "srm-copy[ \t]+([\.0-9a-zA-Z]+)") is None:
             raise RuntimeError("Unable to do srm transfers because" 
                                + " lcg-cp/srm-copy could not be found")
-    
+        
+        if transfer.dst_proto == "file":
+            key = "X509_USER_PROXY_" + transfer.src_sitename
+            if key in os.environ:
+                os.environ["X509_USER_PROXY"] = os.environ[key]
+        else:
+            key = "X509_USER_PROXY_" + transfer.dst_sitename
+            if key in os.environ:
+                os.environ["X509_USER_PROXY"] = os.environ[key]
+
         if transfer.dst_proto == "file":
             prepare_local_dir(os.path.dirname(transfer.dst_path))
             
@@ -821,7 +1179,7 @@ class SRMHandler(TransferHandlerBase):
                        or transfer.dst_proto == "srm")
       
         # prefer lcg-cp
-        if tools.full_path('lcg-cp') != None:
+        if tools.full_path('lcg-cp') is not None:
             cmd = "lcg-cp"
             if logger.isEnabledFor(logging.DEBUG):
                 cmd = cmd + " -v"
@@ -836,7 +1194,8 @@ class SRMHandler(TransferHandlerBase):
                 cmd = cmd + " >/dev/null"
             
         try:
-            myexec(cmd, 6*60*60, True)
+            tc = TimedCommand(cmd)
+            tc.run()
         except Exception, err:
             logger.error(err)
             return False
@@ -854,26 +1213,52 @@ class ScpHandler(TransferHandlerBase):
     def do_transfer(self, transfer, attempt):
         global remote_dirs_created
         cmd = "/usr/bin/scp"
-        if "SSH_PRIVATE_KEY" in os.environ:
-            cmd += " -i " + os.environ['SSH_PRIVATE_KEY']
-        cmd += " -q -B -o StrictHostKeyChecking=no"
+        cmd += " -r -B -o StrictHostKeyChecking=no"
         try:
             if transfer.dst_proto == "file":
+                # scp -> file
+                key = "SSH_PRIVATE_KEY_" + transfer.src_sitename
+                if key in os.environ:
+                    check_cred_fs_permissions(os.environ[key])
+                    cmd += " -i " + os.environ[key]
+                elif "SSH_PRIVATE_KEY" in os.environ:
+                    check_cred_fs_permissions(os.environ['SSH_PRIVATE_KEY'])
+                    cmd += " -i " + os.environ['SSH_PRIVATE_KEY']
+
+                cmd += " -P " + self._extract_port(transfer.src_host)
                 prepare_local_dir(os.path.dirname(transfer.dst_path))
-                cmd += " " + transfer.src_host + ":" + transfer.src_path
-                cmd += " " + transfer.dst_path
+                # scp wants escaped remote paths, even with quotes
+                src_path = re.sub(' ', '\\ ', transfer.src_path)
+                cmd += " '" + self._extract_hostname(transfer.src_host) + ":" + src_path + "'"
+                cmd += " '" + transfer.dst_path + "'"
             else:
-                mkdir_key = "scp://" + transfer.dst_host + ":" \
+                # file -> scp
+                key = "SSH_PRIVATE_KEY_" + transfer.dst_sitename
+                if key in os.environ:
+                    check_cred_fs_permissions(os.environ[key])
+                    cmd += " -i " + os.environ[key]
+                elif "SSH_PRIVATE_KEY" in os.environ:
+                    check_cred_fs_permissions(os.environ['SSH_PRIVATE_KEY'])
+                    cmd += " -i " + os.environ['SSH_PRIVATE_KEY']
+
+                mkdir_key = "scp://" + self._extract_hostname(transfer.dst_host) + ":" \
                           + os.path.dirname(transfer.dst_path)
                 if not mkdir_key in remote_dirs_created:
-                    self._prepare_scp_dir(transfer.dst_host,
-                                         os.path.dirname(transfer.dst_path))
+                    self._prepare_scp_dir(transfer.dst_sitename,
+                                          transfer.dst_host,
+                                          os.path.dirname(transfer.dst_path))
                     remote_dirs_created[mkdir_key] = True
+                
+                cmd += " -P " + self._extract_port(transfer.dst_host)
+                # scp wants escaped remote paths, even with quotes
+                dst_path = re.sub(' ', '\\ ', transfer.dst_path)
+                
                 cmd += " '" + transfer.src_path + "'"
-                cmd += " '" + transfer.dst_host + ":" + transfer.dst_path + "'"
+                cmd += " '" + self._extract_hostname(transfer.dst_host) + ":" + dst_path + "'"
                 stats_add(transfer.src_path)
 
-            myexec(cmd, default_subshell_timeout, True)
+            tc = TimedCommand(cmd)
+            tc.run()
             if transfer.dst_proto == "file":
                 stats_add(transfer.dst_path)    
 
@@ -883,16 +1268,41 @@ class ScpHandler(TransferHandlerBase):
         return True
 
 
-    def _prepare_scp_dir(self, rhost, rdir):
+    def _prepare_scp_dir(self, rsite, rhost, rdir):
         """
         makes sure a local path exists before putting files into it
         """
         cmd = "/usr/bin/ssh"
-        if "SSH_PRIVATE_KEY" in os.environ:
+        key = "SSH_PRIVATE_KEY_" + rsite
+        if key in os.environ:
+            check_cred_fs_permissions(os.environ[key])
+            cmd += " -i " + os.environ[key]
+        elif "SSH_PRIVATE_KEY" in os.environ:
+            check_cred_fs_permissions(os.environ['SSH_PRIVATE_KEY'])
             cmd += " -i " + os.environ['SSH_PRIVATE_KEY']
-        cmd += " -q -o StrictHostKeyChecking=no"
-        cmd += " " + rhost + " '/bin/mkdir -p " + rdir + "'"
-        myexec(cmd, default_subshell_timeout, True)
+        cmd += " -o StrictHostKeyChecking=no"
+        cmd += " -p " + self._extract_port(rhost)
+        cmd += " " + self._extract_hostname(rhost) + " '/bin/mkdir -p " + rdir + "'"
+        tc = TimedCommand(cmd)
+        tc.run()
+
+
+    def _extract_hostname(self, host):
+        """
+        returns only the host component (strips :...)
+        """
+        return re.sub(':.*', '', host)
+
+    
+    def _extract_port(self, host):
+        """
+        returns the port to connect to, defaults to 22
+        """
+        port = "22"
+        r = re.search(':([0-9]+)', host)
+        if r:
+            port = r.group(1)
+        return str(port)
 
 
 class SymlinkHandler(TransferHandlerBase):
@@ -912,7 +1322,7 @@ class SymlinkHandler(TransferHandlerBase):
         if not os.path.exists(transfer.src_path):
             logger.warning("Symlink source (%s) does not exist"
                            % (transfer.src_path))
-            failed_q.append(transfer)
+            failed_q.put(transfer)
             return True
 
         if os.path.exists(transfer.src_path) \
@@ -928,7 +1338,8 @@ class SymlinkHandler(TransferHandlerBase):
 
         cmd = "ln -f -s '%s' '%s'" % (transfer.src_path, transfer.dst_path)
         try:
-            myexec(cmd, 60, True)
+            tc = TimedCommand(cmd, timeout_secs = 60)
+            tc.run()
         except RuntimeError, err:
             logger.error(err)
             return False
@@ -958,6 +1369,7 @@ class TransferSet:
         self._available_handlers.append( HTTPHandler() )
         self._available_handlers.append( IRodsHandler() )
         self._available_handlers.append( S3Handler() )
+        self._available_handlers.append( GSHandler() )
         self._available_handlers.append( SRMHandler() )
         self._available_handlers.append( ScpHandler() )
         self._available_handlers.append( SymlinkHandler() )
@@ -984,7 +1396,7 @@ class TransferSet:
             if h.protocol_map_check("file", dst_proto):
                 self._secondary_handler = h
                 break
-        if self._primary_handler == None or self._secondary_handler == None:
+        if self._primary_handler is None or self._secondary_handler is None:
             raise RuntimeError("Unable to find handlers for '%s' to '%s'"
                                %(src_proto, dst_proto))
 
@@ -999,18 +1411,26 @@ class TransferSet:
         and then execute the transfers
         """
 
-        if self._secondary_handler != None:
+        self._tmp_name = None
+        if self._secondary_handler is not None:
             # we have a two stage transfer to deal with and we need a temp file
-            self._tmp_fd, self._tmp_name = \
-                tempfile.mkstemp(prefix="pegasus-transfer-", suffix=".data")
-            # need to open the permission up to make sure files downstream
+            tmp_fd, self._tmp_name = \
+                tempfile.mkstemp(prefix="pegasus-transfer-two-stage-",
+                                 suffix=".data")
+            # the temp file is only used in shell callouts, so let's close
+            # the fd to make sure we are not leaving any open fds around
+            try:
+                os.close(tmp_fd)
+            except:
+                pass
+            # open the permission up to make sure files downstream
             # get sane permissions to inherit
             os.chmod(self._tmp_name, 0644)
             logger.debug("Using temporary file %s for transfers" 
                          %(self._tmp_name))
 
         # gsiftp multi transfer case
-        if (self._secondary_handler == None) and \
+        if (self._secondary_handler is None) and \
            (self._transfers[0].src_proto == "gsiftp" \
             or self._transfers[0].dst_proto == "gsiftp"):
             try:
@@ -1018,11 +1438,16 @@ class TransferSet:
                                                     self._transfers,
                                                     attempt,
                                                     failed_q)
+            except RuntimeError, rte:
+                raise
             except Exception, e:
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.exception("Exception while doing transfer:")
                 else:
                     logger.error(e)
+                # add all the transfers back to the failed queue
+                for i, t in enumerate(self._transfers):
+                    failed_q.put(t)
             return
         
         # standard src->dst single transfer case
@@ -1032,7 +1457,8 @@ class TransferSet:
             # considering both a False being returned or an exception being
             # thrown as a failed transfer
             success = False
-            if self._secondary_handler == None:
+
+            if self._secondary_handler is None:
                 # one handler to rule them all!
                 try:
                     success = self._primary_handler.do_transfer(transfer,
@@ -1048,16 +1474,17 @@ class TransferSet:
                 # failed queue in case of failure
                 t_one = Transfer(transfer.pair_id)
                 t_one.set_src(transfer.src_url())
+                t_one.set_src_sitename(transfer.src_sitename)
                 t_one.set_dst("file://" + self._tmp_name)
                 t_two =  Transfer(transfer.pair_id)
                 t_two.set_src("file://" + self._tmp_name)
                 t_two.set_dst(transfer.dst_url())
+                t_two.set_dst_sitename(transfer.dst_sitename)
                 try:
-                    success = self._primary_handler.do_transfer(t_one,
-                                                                attempt) \
-                              and \
-                              self._secondary_handler.do_transfer(t_two,
-                                                                  attempt)
+                    success = self._primary_handler.do_transfer(t_one, attempt)
+                    if success:
+                        os.chmod(self._tmp_name, 0644)
+                        success = self._secondary_handler.do_transfer(t_two, attempt)
                 except Exception, e:
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.exception("Exception while doing transfer:")
@@ -1065,7 +1492,57 @@ class TransferSet:
                         logger.error(e)
 
             if success == False:
-                failed_q.append(transfer)
+                failed_q.put(transfer)
+        
+        # remove temp file
+        if self._tmp_name is not None:
+            logger.debug("Removing temporary file %s" %(self._tmp_name))
+            try:
+                os.unlink(self._tmp_name)
+            except:
+                pass
+
+
+    def has_gridftp_transfers(self):
+        """
+        Check if this transfer set has gridftp transfers
+        """
+        if (self._transfers[0].src_proto == "gsiftp" \
+            or self._transfers[0].dst_proto == "gsiftp"):
+            return True
+        return False
+        
+        
+
+class WorkThread(threading.Thread):
+    """
+    A thread which processes TransferSets
+    """
+    def __init__(self, thread_id, queue, current_attempt, failed_queue):
+        threading.Thread.__init__(self)
+        self.thread_id = thread_id
+        self.queue = queue
+        self.current_attempt = current_attempt
+        self.failed_queue = failed_queue
+        self.exception = None
+        self.daemon = True
+
+    def run(self):
+        # give the threads a slow start
+        time.sleep(self.thread_id * 2)
+        logger.debug("Started new WorkThread with id " + str(self.thread_id))
+        try:
+            # Just keep grabbing TransferSets and executing them until
+            # there are no more to process, then exit
+            while True:
+                ts = self.queue.get(False)
+                logger.debug("Thread " + str(self.thread_id) +
+                             " is executing transfer " + str(ts))
+                ts.do_transfers(self.failed_queue, self.current_attempt)
+        except Queue.Empty:
+            return
+        except Exception, e:
+            self.exception = e
 
 
 class Alarm(Exception):
@@ -1074,13 +1551,13 @@ class Alarm(Exception):
 
 # --- global variables ----------------------------------------------------------------
 
-prog_dir  = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0])))
+prog_dir  = os.path.realpath(os.path.join(os.path.dirname(sys.argv[0])))
 prog_base = os.path.split(sys.argv[0])[1]   # Name of this program
 
 logger = logging.getLogger("my_logger")
 
-# timeout for when shelling out
-default_subshell_timeout = 6 * 60 * 60;
+# threads we have currently running
+threads = []
 
 # track remote directories created so that don't have to
 # try to create them over and over again
@@ -1093,6 +1570,9 @@ gsiftp_failures = 0
 stats_start = 0
 stats_end = 0
 stats_total_bytes = 0
+
+# singleton - but should we make it a global instead?
+tools = Tools()
 
 
 # --- functions ----------------------------------------------------------------
@@ -1137,37 +1617,10 @@ def expand_env_vars(s):
 def get_env_var(match):
     name = match.group(1)
     value = ""
-    logger.debug("Looking up " + name)
+    logger.debug("Looking up " + name + " environment variable")
     if name in os.environ:
         value = os.environ[name]
     return value
-
-
-def myexec(cmd_line, timeout_secs, should_log):
-    """
-    executes shell commands with the ability to time out if the command hangs
-    """
-    global delay_exit_code
-    if should_log or logger.isEnabledFor(logging.DEBUG):
-        logger.info(cmd_line)
-    sys.stdout.flush()
-
-    # set up signal handler for timeout
-    signal.signal(signal.SIGALRM, alarm_handler)
-    signal.alarm(timeout_secs)
-
-    p = subprocess.Popen(cmd_line, shell=True)
-    try:
-        stdoutdata, stderrdata = p.communicate()
-    except Alarm:
-        if sys.version_info >= (2, 6):
-            p.terminate()
-        raise RuntimeError("Command '%s' timed out after %s seconds"
-                           % (cmd_line, timeout_secs))
-    rc = p.returncode
-    if rc != 0:
-        raise RuntimeError("Command '%s' failed with error code %s"
-                           % (cmd_line, rc))
 
 
 def backticks(cmd_line):
@@ -1194,12 +1647,15 @@ def env_setup():
     # fink on macos x
     if os.path.exists("/sw/bin") and not("/sw/bin" in path_entries):
         path_entries.append("/sw/bin")
-       
-    # need LD_LIBRARY_PATH for Globus tools
-    ld_library_path = ""
-    if "LD_LIBRARY_PATH" in os.environ:
-        ld_library_path = os.environ['LD_LIBRARY_PATH']
-    ld_library_path_entries = ld_library_path.split(':')
+    
+    # prepend the path pegasus-transfer was launched from - this ensures
+    # a consistent environment where all the Pegasus tools are picked
+    # up from the same location
+    try:
+        path_entries.remove(prog_dir)
+    except Exception:
+        pass
+    path_entries.insert(0, prog_dir)
     
     # if PEGASUS_HOME is set, prepend it to the PATH (we want it early to
     # override other cruft)
@@ -1210,6 +1666,12 @@ def env_setup():
             pass
         path_entries.insert(0, os.environ['PEGASUS_HOME'] + "/bin")
     
+    # need LD_LIBRARY_PATH for Globus tools
+    ld_library_path = ""
+    if "LD_LIBRARY_PATH" in os.environ:
+        ld_library_path = os.environ['LD_LIBRARY_PATH']
+    ld_library_path_entries = ld_library_path.split(':')
+
     # if GLOBUS_LOCATION is set, prepend it to the PATH and LD_LIBRARY_PATH 
     # (we want it early to override other cruft)
     if "GLOBUS_LOCATION" in os.environ:
@@ -1235,6 +1697,17 @@ def env_setup():
     # irods requires a password hash file
     os.environ['irodsAuthFileName'] = os.getcwd() + "/.irodsA"
 
+
+def check_cred_fs_permissions(path):
+    """
+    Checks to make sure a given credential is protected by the file system
+    permissions. If left too open (for example after a transfer over GASS,
+    chmod it to be readable only by us.
+    """
+    if oct(os.stat(path).st_mode & 0777) != '0600':
+        logger.warning("%s found to have weak permissions. chmod to 0600."
+                       %(path))
+        os.chmod(path, 0600)
 
 
 def prepare_local_dir(path):
@@ -1308,7 +1781,7 @@ def iso_prefix_formatted(n):
 
 def myexit(rc):
     """
-    system exit without a stack trace - silly python
+    system exit without a stack trace
     """
     try:
         sys.exit(rc)
@@ -1319,6 +1792,7 @@ def myexit(rc):
 # --- main ----------------------------------------------------------------------------
 
 def main():
+    global threads
     global stats_start
     global stats_end
     
@@ -1332,10 +1806,17 @@ def main():
     parser.add_option("-f", "--file", action = "store", dest = "file",
                       help = "File containing URL pairs to be transferred." +
                              " If not given, list is read from stdin.")
-    parser.add_option("", "--max-attempts", action = "store", type="int",
+    parser.add_option("-m", "--max-attempts", action = "store", type="int",
                       dest = "max_attempts", default = 3,
                       help = "Number of attempts allowed for each transfer." +
                              " Default is 3.")
+    parser.add_option("-n", "--threads", action = "store", type="int",
+                      dest = "threads", default = 0,
+                      help = "Number of threads to process transfers." +
+                             " Default is 8. This option can also be set" +
+                             " via the PEGASUS_TRANSFER_THREADS environment" +
+                             " variable. The command line option takes" +
+                             " precedence over the environment variable.")
     parser.add_option("-d", "--debug", action = "store_true", dest = "debug",
                       help = "Enables debugging ouput.")
     
@@ -1348,8 +1829,14 @@ def main():
     
     attempts_max = options.max_attempts
     
+    if options.threads is None or options.threads == 0:
+        if "PEGASUS_TRANSFER_THREADS" in os.environ:
+            options.threads = int(os.environ["PEGASUS_TRANSFER_THREADS"])
+        else:
+            options.threads = 8
+    
     # stdin or file input?
-    if options.file == None:
+    if options.file is None:
         logger.info("Reading URL pairs from stdin")
         input_file = sys.stdin
     else:
@@ -1368,91 +1855,161 @@ def main():
         myexit(1)
     
     # queues to track the work
-    transfer_q = deque()
-    failed_q = deque()
+    transfer_q = Queue.Queue()
+    failed_q = Queue.Queue()
+    work_q = Queue.Queue()
     
     # fill the transfer queue with user provided entries
     line_nr = 0
     pair_nr = 0
     inputs = []
-    url_first = True
+    line_state = 3  # 0=SrcComment, 1=SrcUrl, 2=DstComment, 3=DstUrl
+    url_pair = None
     try:
         for line in input_file.readlines():
             line_nr += 1
-            if line[0] != '#' and len(line) > 4:
+            if len(line) > 4:
                 line = line.rstrip('\n')
-                if url_first:
-                    pair_nr += 1
-                    url_pair = Transfer(pair_nr)
+
+                # src comment
+                if line_state == 3 and line[0] == '#':
+                    line_state = 0
+                    if url_pair is None:
+                        pair_nr += 1
+                        url_pair = Transfer(pair_nr)
+                    r = re_parse_comment.search(line)
+                    if r:
+                        url_pair.set_src_sitename(r.group(1))
+                    else:
+                        logger.critical('Unable to parse comment on line %d' 
+                                        %(line_nr))
+                        myexit(1)
+                
+                # src url
+                elif line_state == 0 or line_state == 3:
+                    line_state = 1
+                    if url_pair is None:
+                        pair_nr += 1
+                        url_pair = Transfer(pair_nr)
                     url_pair.set_src(line)
-                    url_first = False
-                else:
+
+                # dst comment
+                elif line_state == 1 and line[0] == '#':
+                    line_state = 2
+                    r = re_parse_comment.search(line)
+                    if r:
+                        url_pair.set_dst_sitename(r.group(1))
+                    else:
+                        logger.critical('Unable to parse comment on line %d'
+                                        %(line_nr))
+                        myexit(1)
+                
+                # dst url
+                elif line_state == 2 or line_state == 1:
+                    line_state = 3
                     url_pair.set_dst(line)
                     inputs.append(url_pair)
-                    url_first = True
+                    url_pair = None
+
     except Exception, err:
-        logger.critical('Error reading url pair list: %s' % (err))
+        logger.critical('Error reading url list: %s' % (err))
         myexit(1)
-    
+    total_transfers = len(inputs)
+    logger.info("%d transfers loaded" % (total_transfers))
+
     # we will now sort the list as some tools (gridftp) can optimize when
     # given a group of similar transfers
-    logger.info("Sorting the tranfers based on transfer type and source/destination")
+    logger.info("Sorting the tranfers based on transfer type and" +
+                " source/destination")
     inputs.sort()
     
-    transfer_q = deque(inputs)
+    for t in inputs:
+        transfer_q.put(t)
     
     # start the stats time
     stats_start = time.time()
     
-    # attempt transfers until the queue is empty
+    # Attempt transfers until the queue is empty. We create TransferSets
+    # of the transfers, and then hand then of to our worker threads. But
+    # note that we are only doing the threads for one attempt at a time.
+    # After failures, transfers might be regrouped, and then handed of to the
+    # thread pool again.
     done = False
     attempt_current = 0
+    approx_transfer_per_thread = total_transfers / (float)(options.threads)
     while not done:
     
         attempt_current = attempt_current + 1
         logger.info('-' * 80)
         logger.info("Starting transfers - attempt %d" % (attempt_current))
-    
-        # do the transfers
-        while transfer_q:
-            
-            t_main = transfer_q.popleft()
+
+        # organize the transfers
+        while not transfer_q.empty():
+            t_main = transfer_q.get()
             
             # create a list of transfers to pass to underlying tool
             t_list = []
             t_list.append(t_main)
     
             try:
-                t_next = transfer_q[0]
-            except IndexError, err:
-                t_next = False
-            while t_next and transfers_groupable(t_main, t_next):
-                t_list.append(t_next)
-                transfer_q.popleft()
-                try:
-                    t_next = transfer_q[0]
-                except IndexError, err:
-                    t_next = False
-    
+                t_next = transfer_q.get(False)
+                while t_next is not None:
+                    if len(t_list) <  approx_transfer_per_thread and \
+                       transfers_groupable(t_main, t_next):
+                        t_list.append(t_next)
+                        t_next = transfer_q.get(False)
+                    else:
+                        # done, put the last transfer back
+                        transfer_q.put(t_next)
+                        t_next = None
+            except Queue.Empty:
+                pass
+            
             # magic!
             ts = TransferSet(t_list)
-            ts.do_transfers(failed_q, attempt_current)
+            work_q.put(ts)
+
+        # pool of worker threads
+        t_id = 0
+        num_threads = min(options.threads, work_q.qsize())
+        if attempt_current > 2:
+            num_threads = 1
+        logger.info("Using %d threads for this round of transfers"
+                    %(num_threads))
+        for i in range(num_threads):
+            t_id += 1
+            t = WorkThread(t_id, work_q, attempt_current, failed_q)
+            threads.append(t)
+            t.start()
     
-            logger.debug("%d items in failed_q" %(len(failed_q)))
+        # wait for the threads to finish all the transfers
+        for t in threads:
+            t.join()
+            # do we need to do any better error handling here?
+            if t.exception is not None:
+                if type(t.exception) is RuntimeError:
+                    logger.critical(t.exception)
+                    myexit(2)
+                raise t.exception
+        threads = []
+    
+        logger.debug("%d items in failed_q" %(failed_q.qsize()))
         
         # are we done?
-        if attempt_current == attempts_max or not failed_q:
+        if attempt_current == attempts_max or failed_q.empty():
             done = True
             break
         
-        # retry failed transfers with a delay
-        if failed_q and attempt_current < attempts_max:
-            time.sleep(10) # do not sleep too long - we want to give quick
-                            # feedback on failures to the workflow
-        while failed_q:
-            t = failed_q.popleft()
+        # retry failed transfers with a random delay - useful when
+        # large workflows overwhelm data services
+        if not failed_q.empty() and attempt_current < attempts_max:
+            d = random.randint(30, 180)
+            logger.debug("Sleeping for the random amount of %d seconds before the next attempt" %(d))
+            time.sleep(d)
+        while not failed_q.empty():
+            t = failed_q.get()
             t.allow_grouping = False # only allow grouping on the first try
-            transfer_q.append(t)
+            transfer_q.put(t)
     
     logger.info('-' * 80)
     
@@ -1460,8 +2017,9 @@ def main():
     stats_end = time.time()
     stats_summarize()
     
-    if failed_q:
-        logger.critical("Some transfers failed! See above, and possibly stderr.")
+    if not failed_q.empty():
+        logger.critical("Some transfers failed! See above," +
+                        " and possibly stderr.")
         myexit(1)
     
     logger.info("All transfers completed successfully.")

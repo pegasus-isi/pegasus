@@ -415,7 +415,10 @@ class Log:
 # set up urlparse to recognize x-netlog schemes
 for scheme in 'x-netlog','x-netlog-udp':
     urlparse.uses_netloc.append(scheme)
-    urlparse.uses_query.append(scheme)
+    try:
+        urlparse.uses_query.append(scheme)
+    except AttributeError as errorstring:
+        pass
 
 def urlfile(url):
     """urlfile(url:str) -> file

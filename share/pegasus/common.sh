@@ -9,9 +9,10 @@
 # RPMs and DEBs which have explicit Java dependencies
 if [ "X${JAVA_HOME}" = "X" ]; then
     for TARGET in \
-        /usr/lib/jvm/java-1.6.0-openjdk-1.6.0.0.x86_64/jre \
-        /usr/lib/jvm/java-1.6.0-openjdk-1.6.0.0/jre \
-        /usr/lib/jvm/java-6-openjdk/jre \
+        /usr/lib/jvm/java-openjdk \
+        /usr/lib/jvm/jre-openjdk \
+        /usr/lib/jvm/java-sun \
+        /usr/lib/jvm/jre-sun \
     ; do
         if [ -e "${TARGET}" -a -x "${TARGET}/bin/java" ]; then
             JAVA_HOME="${TARGET}"
@@ -74,6 +75,13 @@ if [ "X${JAVA_HEAPMIN}" = "X" -a "X${JAVA_HEAPMAX}" = "X" ]; then
     if [ "X$memulimit" != "X" ]; then
         if [ $memulimit -gt 128 ]; then
             heap_max=$(($memulimit / 1024 / 2))
+        fi
+    else
+        memulimit=`(ulimit -v | grep -v -i unlimited) 2>/dev/null` || true
+        if [ "X$memulimit" != "X" ]; then
+            if [ $memulimit -gt 128 ]; then
+                heap_max=$(($memulimit / 1024 / 2))
+            fi
         fi
     fi
 

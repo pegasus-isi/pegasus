@@ -37,8 +37,8 @@ pegasus_config = os.path.join(bin_dir, "pegasus-config") + " --noeoln --python-e
 lib_ext_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
 
 # Insert this directory in our search path
-os.sys.path.insert(0, lib_ext_dir)
 os.sys.path.insert(0, lib_dir)
+os.sys.path.insert(0, lib_ext_dir)
 
 
 try:
@@ -51,11 +51,22 @@ except ImportError, e:
     sys.stderr.write("ERROR: Unable to load boto library: %s\n" % e)
     exit(1)
 
+# do not use http proxies for S3
+if "http_proxy" in os.environ:
+    del os.environ['http_proxy']
+
 # The multipart upload feature we require was introduced in 2.2.2
 boto_version = tuple(int(x) for x in boto.__version__.split("."))
 if boto_version < (2,2,2):
     sys.stderr.write("Requires boto 2.2.2 or later, not %s\n" % boto.__version__)
     exit(1)
+
+# set boto config options
+try:
+    boto.config.add_section('Boto')
+except:
+    pass
+boto.config.set('Boto','http_socket_timeout','60')
 
 COMMANDS = {
     'ls': 'List the contents of a bucket',
@@ -342,6 +353,12 @@ def parse_uri(uri):
 
 def ls(args):
     parser = option_parser("ls URL...")
+
+    parser.add_option("-l", "--long", dest="long_format", action="store_true",
+        default=False, help="Use long listing format")
+    parser.add_option("-H", "--human-sized", dest="human_sized", action="store_true",
+        default=False, help="Use human readable sizes")
+
     options, args = parser.parse_args(args)
 
     if len(args) == 0:
@@ -353,6 +370,44 @@ def ls(args):
     for uri in args:
         items.append(parse_uri(uri))
 
+    def human_sized(sz):
+        if sz > TB:
+            return "%6.1fT" % (sz / (1.0*TB))
+        elif sz > GB:
+            return "%6.1fG" % (sz / (1.0*GB))
+        elif sz > MB:
+            return "%6.1fM" % (sz / (1.0*MB))
+        elif sz > KB:
+            return "%6.1fK" % (sz / (1.0*KB))
+        else:
+            return "%6dB" % sz
+
+    def print_key(key):
+        if options.long_format:
+            if options.human_sized:
+                size = human_sized(key.size)
+            else:
+                size = "%13d" % key.size
+            name = key.name
+            modified = key.last_modified
+            owner = key.owner.display_name
+            storage_class = key.storage_class
+            if storage_class.startswith("REDUCED"):
+                storage_class = "REDUCED"
+            sys.stdout.write("\t%15s %s %s %8s %s\n" % (owner, size, modified, storage_class, name))
+        else:
+            sys.stdout.write("\t%s\n" % key.name)
+
+    def print_bucket(bucket):
+        if options.long_format:
+            # Also list the location of each bucket
+            loc = bucket.get_location()
+            if not loc:
+                loc = "-"
+            sys.stdout.write("\t%-50s%s\n" % (bucket.name, loc))
+        else:
+            sys.stdout.write("\t%s\n" % bucket.name)
+
     for uri in items:
         conn = get_connection(config, uri)
 
@@ -363,21 +418,19 @@ def ls(args):
         if bucket is None:
             buckets = conn.get_all_buckets()
             for bucket in buckets:
-                # Also list the location of each bucket
-                loc = bucket.get_location()
-                sys.stdout.write("\t%-50s%s\n" % (bucket.name, loc))
+                print_bucket(bucket)
         else:
             b = conn.get_bucket(uri.bucket)
             if has_wildcards(uri.key):
                 for o in b.list():
                     if fnmatch.fnmatch(o.name, uri.key):
-                        sys.stdout.write("\t%s\n" % o.name)
+                        print_key(o)
             else:
                 for o in b.list(prefix=uri.key):
                     # For some reason, Walrus sometimes returns a Prefix object
                     if isinstance(o, boto.s3.prefix.Prefix):
                         continue
-                    sys.stdout.write("\t%s\n" % o.name)
+                    print_key(o)
 
 def cp(args):
     parser = option_parser("cp SRC[...] DEST")
@@ -423,25 +476,28 @@ def cp(args):
                             "do not match: %s -> %s" % (src,dest))
 
     conn = get_connection(config, dest)
-    bucket = conn.lookup(dest.bucket)
-    if bucket is None:
+    destbucket = conn.lookup(dest.bucket)
+    if destbucket is None:
         if options.create:
             info("Creating destination bucket %s" % dest.bucket)
-            bucket = conn.create_bucket(dest.bucket)
+            destbucket = conn.create_bucket(dest.bucket)
         else:
             raise Exception("Destination bucket %s does not exist "
                             "(see -c)" % dest.bucket)
 
+    # Does the destination site support multipart uploads?
+    multipart_uploads = config.getboolean(dest.site, "multipart_uploads")
+
     for src in srcs:
+        srcbucket = conn.get_bucket(src.bucket)
 
         # If there is no src key, then copy all of the keys from
         # the src bucket. We already checked for -r above.
         if src.key is None:
-            srcbucket = conn.get_bucket(src.bucket)
-            srckeys = [k.name for k in srcbucket.list()]
+            srckeys = srcbucket.list()
             info("Copying %d keys from %s to %s" % (len(srckeys), src, dest))
         else:
-            srckeys = [src.key]
+            srckeys = [srcbucket.get_key(src.key)]
 
         # It doesn't make sense to copy several keys into one destination
         if len(srckeys) > 1 and dest.key:
@@ -450,20 +506,46 @@ def cp(args):
         for srckey in srckeys:
             # If the destination key is not specified, then just use
             # the same key name as the source
-            destkey = dest.key or srckey
+            destkeyname = dest.key or srckey
 
             # If the user did not specify force, then check to make sure
             # the destination key does not exist
             if not options.force:
-                info("Checking for existence of %s" % destkey)
-                if bucket.get_key(destkey) is not None:
+                info("Checking for existence of %s" % destkeyname)
+                if destbucket.get_key(destkeyname) is not None:
                     raise Exception("Destination key %s exists "
-                                    "(see -f)" % destkey)
+                                    "(see -f)" % destkeyname)
 
-            info("Copying %s/%s to %s/%s" % (src.bucket, srckey, dest.bucket, destkey))
-            bucket.copy_key(new_key_name = destkey, 
-                            src_bucket_name = src.bucket, 
-                            src_key_name = srckey)
+            info("Copying %s/%s to %s/%s" % (src.bucket, srckey.name, dest.bucket, destkeyname))
+
+            start_time = time.time()
+
+            # If the source is larger than 5GB we need to use multipart uploads
+            if multipart_uploads and srckey.size > 5*GB:
+                info("Object is larger than 5GB: Using multipart uploads")
+                i = 1
+                start = 0
+                parts = math.ceil(srckey.size / (1.0*GB))
+                mp = destbucket.initiate_multipart_upload(destkeyname)
+                while start < srckey.size:
+                    end = min(start+GB-1, srckey.size-1)
+                    info("Copying part %d of %d (%d-%d)" % (i, parts, start, end))
+                    mp.copy_part_from_key(src.bucket, srckey.name, i, start, end)
+                    i += 1
+                    start = end + 1
+                mp.complete_upload()
+            else:
+                destbucket.copy_key(new_key_name = destkeyname,
+                                    src_bucket_name = src.bucket,
+                                    src_key_name = srckey.name)
+
+            end_time = time.time()
+
+            size = srckey.size / 1024.0
+            elapsed = end_time - start_time
+            rate = size / elapsed
+
+            info("Copied %0.1f KB in %0.6f seconds: %0.2f KB/s" % (size, elapsed, rate))
 
 def mkdir(args):
     parser = option_parser("mkdir URL...")
@@ -639,15 +721,11 @@ def put(args):
 
     # Create the bucket if the user requested it and it does not exist
     if options.create_bucket:
-        try:
+        if conn.lookup(uri.bucket):
+            info("Bucket %s exists" % uri.bucket)
+        else:
+            info("Creating bucket %s" % uri.bucket)
             conn.create_bucket(uri.bucket)
-        except Exception, e:
-            # We were seeing lots of 409 errors for this
-            # operation when the bucket already exists. Since
-            # we assume that the bucket will exist in most cases,
-            # and the transfer will fail if it doesn't, then
-            # any errors caught here can be safely ignored.
-            warn("Error creating bucket '%s': %s" % (uri.bucket, e))
 
     b = Bucket(connection=conn, name=uri.bucket)
     k = Key(bucket=b, name=uri.key)
@@ -794,12 +872,29 @@ def rmup(args):
             info("Removing upload %s" % up.id)
             up.cancel_upload()
 
-def PartialDownload(key, fname, part, parts, start, end):
+def PartialDownload(bucket, uri, fname, part, parts, start, end):
     def download():
         info("Downloading part %d of %d" % (part, parts))
         f = open(fname, "r+b")
-        f.seek(start, os.SEEK_SET)
-        key.get_file(f, headers={"Range": "bytes=%d-%d" % (start, end)})
+
+        attempt = 0
+        done = False
+        saved_ex = None
+        while attempt < 3 and done == False:
+            attempt += 1
+            try:
+                f.seek(start, os.SEEK_SET)
+                # Need to use a different key object to each thread because
+                # the Key object in boto is not thread-safe
+                key = Key(bucket=bucket, name=uri.key)
+                key.get_file(f, headers={"Range": "bytes=%d-%d" % (start, end)})
+                done = True
+            except Exception as e:
+                saved_ex = e
+                debug("Attempt %d failed for part %d" %(attempt, part))
+        if done == False:
+            raise saved_ex
+
         info("Part %d finished" % (part))
         f.close()
 
@@ -895,10 +990,7 @@ def get(args):
             for i in range(0, num_parts):
                 dstart = i*part_size
                 dend = min(size, dstart+part_size-1)
-                # Need to pass a different key object to each thread because
-                # the Key object in boto is not thread-safe
-                ki = Key(bucket=b, name=uri.key)
-                down = PartialDownload(ki, outfile, i+1, num_parts, dstart, dend)
+                down = PartialDownload(b, uri, outfile, i+1, num_parts, dstart, dend)
                 downloads.append(down)
 
             if options.parallel <= 1:

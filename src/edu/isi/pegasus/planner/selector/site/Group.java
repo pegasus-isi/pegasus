@@ -17,16 +17,13 @@
 
 package edu.isi.pegasus.planner.selector.site;
 
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
-
-import edu.isi.pegasus.common.logging.LogManager;
-
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
-import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
-
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -48,12 +45,16 @@ import java.util.TreeMap;
  *
  * In the DAX, a job tagged with groups will look as follows
  * <pre>
- * <job id="ID000001" namespace="pegasus" name="preprocess" version="1.0" level="3" dv-namespace="vahi" dv-name="top" dv-version="1.0">
+ * 
+ * {@code
+ * <job id="ID000001" namespace="pegasus" name="preprocess" version="1.0" level="3">
  *    <profile namespace="pegasus" key="group">group-1</profile>
  *    <argument>-a top -T 6  -i <filename file="f.a"/>  -o <filename file="f.b"/> </argument>
  *    <uses file="f.a" link="input" register="false" transfer="true" type="data"/>
  *    <uses file="f.b" link="output" register="true" transfer="true" type="data"/>
  * </job>
+ * }
+ * 
  * </pre>
  *
  * @author Karan Vahi
@@ -139,7 +140,7 @@ public class Group extends Abstract {
      *                  execution pools that can be used.
      *
      */
-    public void mapWorkflow( Graph workflow, List sites) {
+    public void mapWorkflow( ADag workflow, List sites) {
           Job job;
           List l = null;
 

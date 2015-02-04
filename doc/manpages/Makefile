@@ -1,4 +1,14 @@
-ASCIIDOC = asciidoc -d manpage -b docbook
+ifndef ${prefix}
+prefix = ../..
+endif
+
+ifndef ${datadir}
+datadir = $(prefix)/share
+endif
+
+VERSION = $(shell ../../release-tools/getversion)
+
+ASCIIDOC = asciidoc -a manversion=$(VERSION) -a mansource="Pegasus" -a manmanual="Pegasus Manual" -d manpage -b docbook
 XSLTPROC = xsltproc -xinclude
 FOP = fop
 
@@ -12,11 +22,12 @@ XMLMANPAGES = $(TXTFILES:.txt=.xml)
 PDFMANPAGES = $(TXTFILES:.txt=.pdf)
 HTMLMANPAGES = $(TXTFILES:.txt=.html)
 
+
 .PHONY: manpages pdfmanpages htmlmanpages
 
 .PRECIOUS: %.xml
 
-all : manpages
+all: manpages
 
 manpages: $(MANPAGES)
 pdfmanpages: $(PDFMANPAGES)
@@ -48,11 +59,13 @@ manpages.html : manpages.xml $(XMLMANPAGES)
 clean:
 	rm -f pegasus-*.xml *.fo *.pdf *.1 *.html
 
-install: $(MANPAGES)
-	# copy to the right locations - user still needs to svn commit the results
-	for MPAGE in `ls *.1`; do \
-		cp $$MPAGE ../../share/man/man1/; \
+install: manpages
+	mkdir -p $(datadir)/man/man1
+	for MPAGE in $(MANPAGES); do \
+		cp $$MPAGE $(datadir)/man/man1/; \
 	done
+
+install-docbook: $(XMLMANPAGES)
 	for XML in `ls *.xml`; do \
 		cp $$XML ../docbook/manpage.$$XML; \
 	done

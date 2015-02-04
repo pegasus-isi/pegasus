@@ -17,15 +17,14 @@ montage_location: /ccg/software/montage/Montage_v3.3_mats
 
 [cluster]
 name:             CCG
-pegasus_home:     /ccg/software/pegasus/dev/trunk
 globus_location:  /ccg/software/globus/5.0.4
 montage_location: /ccg/software/montage/Montage_v3.3_mats
 gridftp_server:   cartman.isi.edu
-work_dir:         /nfs/ccg4/scratch-6-months-purge/bamboo/galactic-plane-test
+work_dir:         /nfs/ccg4/scratch-purge-no-backups/bamboo/galactic-plane-test
 
 [output]
 name:             CCG_Data
 storage_proto:    gridftp
 storage_url:      gsiftp://cartman.isi.edu
-storage_mount:    /nfs/ccg4/scratch-6-months-purge/bamboo/outputs
+storage_mount:    /nfs/ccg4/scratch-purge-no-backups/bamboo/outputs
 

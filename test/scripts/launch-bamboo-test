@@ -34,6 +34,12 @@ if [ $STATUS != 0 ]; then
    exit $STATUS
 fi
 
+# check for bad planner outputs
+if grep 'ERROR' $PLANFILE >/dev/null 2>&1; then
+    echo "The planner logged a line with the string 'ERROR'"
+    exit 1
+fi
+
 #Get RUNDIR from the planning output
 RUN_DIR=`grep pegasus-remove $PLANFILE | awk '{print $5}'`
 if [ "x$RUN_DIR" = "x" ]; then
@@ -94,6 +100,29 @@ if cat monitord.log | grep WARN | grep -v -E '(read_stdout_stderr_files)|(unable
     cat monitord.log
     echo
     STATUS=$(($STATUS + 1))
+fi
+
+# check for metrics file consistency with submit files
+METRICS_FILE=`ls *metrics 2>/dev/null|  grep -v dag`
+METRICS_TOTAL_JOBS=`grep total_jobs $METRICS_FILE | sed -E "s/.*\"total_jobs\": //"`
+NUM_SUBMIT_FILES=`ls *sub 2>/dev/null| grep -v condor.sub | wc -l | sed -E "s/\s//"`
+
+if [ $METRICS_TOTAL_JOBS -ne $NUM_SUBMIT_FILES ]; then
+    echo "Test failed, the number of submit files $NUM_SUBMIT_FILES does not match total_jobs value $METRICS_TOTAL_JOBS in metrics file $METRICS_FILE"
+    STATUS=$(($STATUS + 1))
+fi
+
+
+if [ $STATUS -ne 0 ]; then
+    echo "Test failed, creating tarball..."
+    DIR="/nfs/ccg3/scratch/gideon/pegasus-failures"
+    if ! [ -d "$DIR" ]; then
+        DIR="/tmp"
+    fi
+    TARFILE=$(mktemp $DIR/pegasus-failure-XXXXXX.tar.gz)
+    tar czf $TARFILE $RUN_DIR 2>&1
+    chmod 0644 $TARFILE
+    echo "Created tarball $TARFILE"
 fi
 
 if [ $STATUS != 0 ]; then

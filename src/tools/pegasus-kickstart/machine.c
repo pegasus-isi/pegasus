@@ -12,6 +12,8 @@
  * Copyright 1999-2004 University of Chicago and The University of
  * Southern California. All rights reserved.
  */
+#include <string.h>
+
 #include "machine.h"
 
 #ifdef LINUX
@@ -24,73 +26,52 @@
 #include "machine/darwin.h"
 #endif /* DARWIN */
 
-#ifdef SUNOS
-#define __MFLAG 3
-#include "machine/sunos.h"
-#include <memory.h>
-#endif /* SUNOS */
-
 #ifndef __MFLAG
 #include "machine/basic.h"
 #endif /* unknown */
 
-#ifdef EXTRA_DEBUG
-#include <stdio.h>
-#endif /* EXTRA_DEBUG */
-
-#include <string.h>
-#include "debug.h"
-
-void
-initMachineInfo( MachineInfo* machine )
-/* purpose: initialize the data structure. 
- * paramtr: machine (OUT): initialized MachineInfo structure. 
- */
-{
-  /* initialize virtual method table */
+void initMachineInfo(MachineInfo* machine) {
+    /* purpose: initialize the data structure. 
+     * paramtr: machine (OUT): initialized MachineInfo structure. 
+     */
+    /* initialize virtual method table */
 #ifdef __MFLAG
-  machine->ctor = initMachine;
-  machine->show = printMachine;
-  machine->dtor = deleteMachine;
+    machine->ctor = initMachine;
+    machine->show = printMachine;
+    machine->dtor = deleteMachine;
 #else
-  machine->ctor = initBasicMachine;
-  machine->show = printBasicMachine;
-  machine->dtor = deleteBasicMachine;
+    machine->ctor = initBasicMachine;
+    machine->show = printBasicMachine;
+    machine->dtor = deleteBasicMachine;
 #endif /* __MFLAG */
 
-  /* call constructor on data */
-  machine->data = machine->ctor();
+    /* call constructor on data */
+    machine->data = machine->ctor();
 }
 
-int
-printXMLMachineInfo(FILE *out, int indent, const char* tag,
-                    const MachineInfo* machine)
-/* purpose: format the job information into the given stream as XML.
- * paramtr: out (IO): The stream
- *          indent (IN): indentation level
- *          tag (IN): name to use for element tags.
- *          machine (IN): machine info to print.
- * returns: number of characters put into buffer (buffer length)
- */
-{
-  /* sanity check */
-  if (machine && machine->show && machine->data)
-    machine->show(out, indent, tag, machine->data);
+int printXMLMachineInfo(FILE *out, int indent, const char* tag,
+                        const MachineInfo* machine) {
+    /* purpose: format the job information into the given stream as XML.
+     * paramtr: out (IO): The stream
+     *          indent (IN): indentation level
+     *          tag (IN): name to use for element tags.
+     *          machine (IN): machine info to print.
+     * returns: number of characters put into buffer (buffer length)
+     */
 
-  return 0;
+    /* sanity check */
+    if (machine && machine->show && machine->data) {
+        machine->show(out, indent+2, tag, machine->data);
+    }
+
+    return 0;
 }
 
-void
-deleteMachineInfo( MachineInfo* machine )
-/* purpose: destructor
- * paramtr: machine (IO): valid MachineInfo structure to destroy. 
- */
-{
-#ifdef EXTRA_DEBUG
-  debugmsg( "# deleteMachineInfo(%p)\n", machine );
-#endif
-
-  machine->dtor( machine->data ); 
-  memset( machine, 0, sizeof(MachineInfo) ); 
+void deleteMachineInfo(MachineInfo* machine) {
+    /* purpose: destructor
+     * paramtr: machine (IO): valid MachineInfo structure to destroy.
+     */
+    machine->dtor(machine->data);
+    memset(machine, 0, sizeof(MachineInfo));
 }
 

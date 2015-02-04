@@ -121,6 +121,7 @@ public class ClassADSGenerator {
      * this execution pool.
      */
     public static final String RESOURCE_AD_KEY = "pegasus_site";
+    public static final String PLUS_RESOURCE_AD_KEY = "+" + RESOURCE_AD_KEY;
     
     /**
      * The class ad to designate the size of the clustered jobs.
@@ -138,8 +139,6 @@ public class ClassADSGenerator {
     public static void generate( PrintWriter writer, ADag dag ) {
         //get hold of the object holding the metadata
         //information about the workflow
-        DagInfo dinfo = dag.dagInfo;
-
         //pegasus is the generator
         writer.println( generateClassAdAttribute( GENERATOR_AD_KEY, GENERATOR) );
         
@@ -148,20 +147,18 @@ public class ClassADSGenerator {
         writer.println( generateClassAdAttribute( WF_UUID_KEY, dag.getWorkflowUUID()) );
 
         //the vds version
-        if (dinfo.releaseVersion != null) {
-            writer.println(
-                generateClassAdAttribute(VERSION_AD_KEY, dinfo.releaseVersion));
-        }
+        writer.println(
+                generateClassAdAttribute(VERSION_AD_KEY, dag.getReleaseVersion() ));
+        
 
         //the workflow name
-        if (dinfo.flowIDName != null) {
-            writer.println(
-                generateClassAdAttribute(WF_NAME_AD_KEY, dinfo.flowIDName));
-        }
+        writer.println(
+                generateClassAdAttribute(WF_NAME_AD_KEY, dag.getFlowName() ));
+        
         //the workflow time
-        if (dinfo.getMTime() != null) {
+        if ( dag.getMTime() != null) {
             writer.println(
-                generateClassAdAttribute(WF_TIME_AD_KEY, dinfo.getFlowTimestamp()));
+                generateClassAdAttribute(WF_TIME_AD_KEY, dag.getFlowTimestamp()));
         }
     }
 
@@ -199,10 +196,19 @@ public class ClassADSGenerator {
         //the class of the job
         writer.println(generateClassAdAttribute( ClassADSGenerator.JOB_CLASS_AD_KEY, job.getJobType() ) );
 
-
         //the resource on which the job is scheduled
-        writer.println(generateClassAdAttribute( ClassADSGenerator.RESOURCE_AD_KEY, job.getSiteHandle() ) );
-
+        //PM-796 only generate the resource ad key 
+        //if job is not previously associated with it
+        String plusResourceKey = ClassADSGenerator.PLUS_RESOURCE_AD_KEY;
+        if( job.condorVariables.containsKey( plusResourceKey )){
+            //pick the one pre populated
+            writer.println(generateClassAdAttribute( ClassADSGenerator.RESOURCE_AD_KEY, (String)job.condorVariables.removeKey(  plusResourceKey ) ) );
+        }
+        else{
+            //generate the default one
+            writer.println(generateClassAdAttribute( ClassADSGenerator.RESOURCE_AD_KEY, job.getSiteHandle() ) );
+        }
+        
         //add the pegasus value if defined.
         String value = (String)job.vdsNS.getStringValue( Pegasus.RUNTIME_KEY );
         //else see if globus maxwalltime defined

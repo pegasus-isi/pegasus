@@ -50,6 +50,9 @@ import java.io.Writer;
 import java.io.StringWriter;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * The object of this class holds the information to generate a submit file about
@@ -414,9 +417,19 @@ public class Job extends Data implements GraphNodeContent{
 
 
     /**
-     * Set of credential types required by a job.
+     * The credential to use for job submission if required.
      */
-    private Set<CredentialHandler.TYPE> mCredentialsType;
+    private CredentialHandler.TYPE mSubmissionCredential;
+    
+    /**
+     * Set of credential types required by a job to execute remotely.
+     */
+    private Map<String, Set<CredentialHandler.TYPE>> mCredentialsType;
+    
+    /**
+     * The node label
+     */
+    private String mNodeLabel;
 
     /**
      * Intialises the member variables.
@@ -454,7 +467,9 @@ public class Job extends Data implements GraphNodeContent{
         mNotifications   = new Notifications();
         mStagingSite     = null;
         mDirectory       = null;
-        mCredentialsType = new HashSet<CredentialHandler.TYPE>();
+        mCredentialsType = new HashMap<String, Set<CredentialHandler.TYPE> >();
+        mSubmissionCredential = null;
+        mNodeLabel       = null;
 //        submitDirectory  = null;
     }
 
@@ -496,7 +511,9 @@ public class Job extends Data implements GraphNodeContent{
         mNotifications   = job.mNotifications;
         mStagingSite     = job.mStagingSite;
         mDirectory       = job.mDirectory;
-        mCredentialsType = new HashSet<CredentialHandler.TYPE>();
+        mSubmissionCredential = job.mSubmissionCredential;
+        mCredentialsType = new HashMap<String, Set<CredentialHandler.TYPE>>();
+        mNodeLabel       = null;
 //        submitDirectory  = job.submitDirectory;
     }
 
@@ -555,11 +572,15 @@ public class Job extends Data implements GraphNodeContent{
         newSub.mStagingSite   = this.mStagingSite;
 
         newSub.mDirectory       = this.mDirectory;
-
-        for( CredentialHandler.TYPE type : this.getCredentialTypes()  ){
-            newSub.addCredentialType( type );
+        newSub.mSubmissionCredential = this.mSubmissionCredential;
+        for( Map.Entry<String,Set<CredentialHandler.TYPE>> entry : this.getCredentialTypes().entrySet()  ){
+            String site = entry.getKey();
+            for( CredentialHandler.TYPE cred: entry.getValue()){
+                newSub.addCredentialType( site, cred );
+            }
         }
 
+        newSub.mNodeLabel = this.mNodeLabel;
         return newSub;
     }
     
@@ -676,7 +697,7 @@ public class Job extends Data implements GraphNodeContent{
      *
      * @param ipFiles  Set of <code>PegasusFile</code> objects containing the input files.
      */
-    public void setInputFiles( Set ipFiles ){
+    public void setInputFiles( Set<PegasusFile> ipFiles ){
         this.inputFiles = ipFiles;
     }
 
@@ -685,7 +706,7 @@ public class Job extends Data implements GraphNodeContent{
      *
      * @return Set of <code>PegasusFile</code> objects containing the input files.
      */
-    public Set getInputFiles( ){
+    public Set<PegasusFile> getInputFiles( ){
         return this.inputFiles;
     }
 
@@ -746,30 +767,43 @@ public class Job extends Data implements GraphNodeContent{
        return this.mNotifications;
     }
 
+    /**
+     * Sets the credential to use for job submission.
+     * 
+     * @param cred   the job submission credential
+     */
+    public void setSubmissionCredential( CredentialHandler.TYPE cred ){
+        this.mSubmissionCredential = cred;
+    }
 
     /**
      * Looks at a URL to determine whether a credential should be associated with
      * a job or not.
      *
+     * @param site  the site with which the credential is associated
      * @param url   the url for which a credential needs to be added
      */
-    public void addCredentialType( String url ){
+    public void addCredentialType( String site, String url ){
         //sanity check
         if( url == null ){
             return;
         }
 
         if( url.startsWith( "gsiftp" ) ){
-            this.addCredentialType( CredentialHandler.TYPE.x509 );
+            this.addCredentialType( site, CredentialHandler.TYPE.x509   );
         }
         else if( url.startsWith( "s3" ) ){
-            this.addCredentialType( CredentialHandler.TYPE.s3 );
+            this.addCredentialType( site, CredentialHandler.TYPE.s3 );
+        }
+        else if( url.startsWith( "gs" ) ){
+        	this.addCredentialType( site, CredentialHandler.TYPE.boto );
+            this.addCredentialType( site, CredentialHandler.TYPE.googlep12 );
         }
         else if( url.startsWith( "irods" ) ){
-            this.addCredentialType( CredentialHandler.TYPE.irods );
+            this.addCredentialType( site, CredentialHandler.TYPE.irods  );
         }
         else if( url.startsWith( "scp" ) ){
-            this.addCredentialType( CredentialHandler.TYPE.ssh );
+            this.addCredentialType( site, CredentialHandler.TYPE.ssh );
         }
     }
 
@@ -778,17 +812,47 @@ public class Job extends Data implements GraphNodeContent{
      *
      * @param type  the credential type.
      */
-    public void addCredentialType( CredentialHandler.TYPE type ){
-       this.mCredentialsType.add( type );
+    public void addCredentialType( String site, CredentialHandler.TYPE type ){
+        Set<CredentialHandler.TYPE> set = null;
+        if ( this.mCredentialsType.containsKey( site ) ){
+            set = this.mCredentialsType.get( site );
+        }
+        else{
+            set = new HashSet();
+            this.mCredentialsType.put(site, set);
+        }
+        set.add(type);
     }
 
 
     /**
-     * Returns the various credential types required by a job
+     * A boolean method indicating whether credentials are associated with the 
+     * job
+     * 
+     * @return boolean 
+     */
+    public boolean requiresCredentials(){
+        return this.mSubmissionCredential != null ||//job requires a submission credential
+                !(this.mCredentialsType == null || this.mCredentialsType.isEmpty());//additional credentials associated
+    }
+    
+    
+    /**
+     * Sets the credential to use for job submission.
+     * 
+     * @return the credential to use for job submission
+     */
+    public CredentialHandler.TYPE getSubmissionCredential(  ){
+        return this.mSubmissionCredential;
+    }
+    
+    /**
+     * Returns the various credential types required by a job indexed by a site
+     * from which to pick up the credential
      *
      * @return the set of credentials required.
      */
-    public Set<CredentialHandler.TYPE> getCredentialTypes(  ){
+    public Map<String, Set<CredentialHandler.TYPE>> getCredentialTypes(  ){
        return this.mCredentialsType;
     }
 
@@ -818,7 +882,7 @@ public class Job extends Data implements GraphNodeContent{
      * @param opFiles  Set of <code>PegasusFile</code> objects containing the
      *                 output files.
      */
-    public void setOutputFiles( Set opFiles ){
+    public void setOutputFiles( Set<PegasusFile> opFiles ){
         this.outputFiles = opFiles;
     }
 
@@ -827,7 +891,7 @@ public class Job extends Data implements GraphNodeContent{
      *
      * @return Set of <code>PegasusFile</code> objects containing the output files.
      */
-    public Set getOutputFiles( ){
+    public Set<PegasusFile> getOutputFiles( ){
         return this.outputFiles;
     }
 
@@ -1033,6 +1097,26 @@ public class Job extends Data implements GraphNodeContent{
     public void setName(String name){
         jobName = name;
     }
+    
+    /**
+     * Get the node label for the job
+     * 
+     * @return the label
+     */
+    public String getNodeLabel( ) {
+        return mNodeLabel;
+    }
+    
+    
+    /**
+     * Sets the node label for the job
+     * 
+     * @param label  the label value specified
+     */
+    public void setNodeLabel(String label) {
+        mNodeLabel = label;
+    }
+
 
     /**
      * Returns the directory where the job runs.
@@ -1823,6 +1907,7 @@ public class Job extends Data implements GraphNodeContent{
         append( sb, "Logical Id", this.logicalId , newline );
         append( sb, "Transformation", this.getCompleteTCName() , newline );
         append( sb, "Derivation", this.getCompleteDVName() , newline );
+        append( sb, "Node Label", this.getNodeLabel(), newline );
         append( sb, "Level", new Integer(this.level).toString() , newline );
         append( sb, "Job Type Description", getJobTypeDescription(this.jobClass) , newline );
         append( sb, "Job Id" , this.jobID , newline );
@@ -2025,5 +2110,6 @@ public class Job extends Data implements GraphNodeContent{
             }
     }
 
+    
 
 }

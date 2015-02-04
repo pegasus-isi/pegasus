@@ -36,21 +36,36 @@ import string
 import stat
 import time
 from collections import deque
+import ConfigParser
+
+try:
+    # Python 3.0 and later
+    from urllib.parse import unquote
+except ImportError:
+    # Fall back to Python 2's urllib
+    from urllib import unquote
 
 
 __author__ = "Mats Rynge <rynge@isi.edu>"
 
 # --- regular expressions -------------------------------------------------------------
 
+re_parse_comment = re.compile(r'^# +[\w]+ +([\w-]+)')
 re_parse_url = re.compile(r'([\w]+)://([\w\.\-:@]*)(/[\S]*)')
 
 # --- classes -------------------------------------------------------------------------
 
 class URL:
 
+    sitename   = ""
     proto      = ""
     host       = ""
     path       = ""
+
+    def set_sitename(self, sitename):
+        # the site name is used to match against shell variables, so we have
+        # have to replace dashes with underscores (as we do in the planner)
+        self.sitename = string.replace(sitename, "-", "_")
 
     def set_url(self, url):
         self.proto, self.host, self.path = self.parse_url(url)
@@ -60,6 +75,9 @@ class URL:
         proto = ""
         host  = ""
         path  = ""
+
+        # the url should be URL decoded to work with our shell callouts
+        url = unquote(url)
 
         # default protocol is file://
         if string.find(url, ":") == -1:
@@ -120,6 +138,7 @@ tool_map['gsiftp'  ] = 'gsiftp'
 tool_map['irods'   ] = 'irods'
 tool_map['s3'      ] = 's3'
 tool_map['s3s'     ] = 's3'
+tool_map['gs'      ] = 'gs'
 tool_map['scp'     ] = 'scp'
 tool_map['srm'     ] = 'srm'
 tool_map['symlink' ] = 'rm'
@@ -130,7 +149,7 @@ tool_info = {}
 # --- functions -----------------------------------------------------------------------
 
 
-def setup_logger(level_str):
+def setup_logger(debug_flag):
     
     # log to the console
     console = logging.StreamHandler()
@@ -139,17 +158,10 @@ def setup_logger(level_str):
     logger.setLevel(logging.INFO)
     console.setLevel(logging.INFO)
 
-    # level - from the command line
-    level_str = level_str.lower()
-    if level_str == "debug":
+    # debug - from command line
+    if debug_flag:
         logger.setLevel(logging.DEBUG)
         console.setLevel(logging.DEBUG)
-    if level_str == "warning":
-        logger.setLevel(logging.WARNING)
-        console.setLevel(logging.WARNING)
-    if level_str == "error":
-        logger.setLevel(logging.ERROR)
-        console.setLevel(logging.ERROR)
 
     # formatter
     formatter = logging.Formatter("%(asctime)s %(levelname)7s:  %(message)s")
@@ -323,6 +335,7 @@ def check_env_and_tools():
     check_tool("irm", "-h", "Version[ \t]+([\.0-9a-zA-Z]+)")
     check_tool("pegasus-gridftp", "", None)
     check_tool("pegasus-s3", "help", None)
+    check_tool("gsutil", "version", "gsutil version: ([\.0-9a-zA-Z]+)")
 
 
 def rm(urls):
@@ -330,30 +343,52 @@ def rm(urls):
     removes locally using /bin/rm
     """
     for i, url in enumerate(urls):
-        cmd = "/bin/rm -f \"%s\"" % (url.path)
+        cmd = "/bin/rm"
+        if options.ignore_failures:
+            cmd += " -f"
+        if options.recursive:
+            cmd += " -r"
+        cmd += " \"%s\"" % (url.path)
         try:
             myexec(cmd, 5*60, True)
         except RuntimeError, err:
             logger.error(err)
-
+            raise
 
 def scp(urls):
     """
     removes using ssh+rm
     """
     for i, url in enumerate(urls):
+    
+        # split up the host into host/port components
+        host = re.sub(':.*', '', url.host)
+        port = "22"
+        r = re.search(':([0-9]+)', url.host)
+        if r:
+            port = r.group(1)
+
         cmd = "/usr/bin/ssh"
-        if "SSH_PRIVATE_KEY" in os.environ:
+        key = "SSH_PRIVATE_KEY_" + url.sitename
+        if key in os.environ:
+            cmd += " -i " + os.environ[key]
+        elif "SSH_PRIVATE_KEY" in os.environ:
             cmd += " -i " + os.environ['SSH_PRIVATE_KEY']
         cmd += " -o PasswordAuthentication=no"
         cmd += " -o StrictHostKeyChecking=no" + \
-               " " + url.host + " " + \
-               " \"/bin/rm -f " + url.path + "\""
+               " -p " + port + \
+               " " + host + " " + \
+               " \"/bin/rm"
+        if options.ignore_failures:
+            cmd += " -f"
+        if options.recursive:
+            cmd += " -r"       
+        cmd += " " + url.path + "\""
         try:
             myexec(cmd, 5*60, True)
         except RuntimeError, err:
             logger.error(err)
-
+            raise
 
 def gsiftp(urls):
     """
@@ -370,9 +405,15 @@ def gsiftp(urls):
 
     tmp_file.close()
     
+    key = "X509_USER_PROXY_" + urls[0].sitename
+    if key in os.environ:
+        os.environ["X509_USER_PROXY"] = os.environ[key]
+    
     # use pegasus-transfer
     cmd = prog_dir + "/pegasus-gridftp rm -f"
-
+    if options.recursive:
+        cmd += " -r"
+            
     # make output match our current log level
     if logger.isEnabledFor(logging.DEBUG):
         cmd += " -v"
@@ -383,15 +424,21 @@ def gsiftp(urls):
         myexec(cmd, 1*60*60, True)
     except RuntimeError, err:
         logger.error(err)
+        os.unlink(tmp_name)
+        raise
 
     os.unlink(tmp_name)
 
 
-def irods_login():
+def irods_login(sitename):
     """
     log in to irods by using the iinit command - if the file already exists,
     we are already logged in
     """
+    key = "irodsEnvFile_" + sitename
+    if key in os.environ:
+        os.environ["irodsEnvFile"] = os.environ[key]
+    
     f = os.environ['irodsAuthFileName']
     if os.path.exists(f):
         return
@@ -425,28 +472,34 @@ def irods(urls):
     """
 
     if tool_info['irm']['full_path'] == None:
-        raise RuntimeError("Unable to do irods transfers becuase iget could not be found in the current path")
+        raise RuntimeError("Unable to do irods transfers becuase iget could" +
+                           "not be found in the current path")
 
     # log in to irods
     try:
-        irods_login()
+        irods_login(urls[0].sitename)
     except Exception, loginErr:
         logger.error(loginErr)
         raise RuntimeError("Unable to log into irods")
 
     for i, url in enumerate(urls):
         cmd = "irm -f " + url.path
-
+        if options.recursive:
+            cmd += " -r"
         try:
             myexec(cmd, 5*60, True)
         except Exception, err:
             logger.error(err)
-
+            raise
 
 def srm(urls):
     """
     srm - use lcg-del or srm-rm
     """
+
+    key = "X509_USER_PROXY_" + urls[0].sitename
+    if key in os.environ:
+        os.environ["X509_USER_PROXY"] = os.environ[key]
 
     base_cmd = ""
     if tool_info['lcg-del']['full_path'] != None:
@@ -463,7 +516,7 @@ def srm(urls):
             myexec(cmd, 5*60, True)
         except Exception, err:
             logger.error(err)
-
+            raise
 
 def s3(urls):
     """
@@ -474,20 +527,100 @@ def s3(urls):
         raise RuntimeError("Unable to do S3 transfers becuase pegasus-s3 could not be found")
 
     for i, url in enumerate(urls):
-        cmd = "pegasus-s3 rm " + url.url()
+
+        fixed_url = url.url()
+        
+        # PM-790: recursive deletes are really a pattern matching. For example,
+        # if told to remove the foo/bar directory, we need to translate it into
+        # foo/bar/*
+        if options.recursive:
+            # first make sure there are no trailing slashes
+            last_char = len(fixed_url) - 1
+            while len(fixed_url) > 0 and last_char > 0 and fixed_url[last_char] == "/":
+                fixed_url = fixed_url[0:last_char]
+                last_char -= 1
+            fixed_url += "/*"
+            logger.info("Transformed remote URL to " + fixed_url)
+        
+        key = "S3CFG_" + url.sitename
+        if key in os.environ:
+            os.environ["S3CFG"] = os.environ[key]
+        
+        cmd = "pegasus-s3 rm"
+        if options.debug:
+            cmd += " -v"
+        if options.ignore_failures:
+            cmd += " -f"
+        cmd += " " + fixed_url
+
+        try:
+            myexec(cmd, 3*60*60, True)
+        except Exception, err:
+            logger.error(err)
+            raise
+
+
+def gs(urls):
+    """
+    gs - uses gsutil to interact with Google Storage 
+    """
+
+    if tool_info['gsutil']['full_path'] == None:
+        raise RuntimeError("Unable to do S3 transfers becuase pegasus-s3 could not be found")
+
+    key = "BOTO_CONFIG_" + urls[0].sitename
+    if key in os.environ:
+        os.environ["BOTO_CONFIG"] = os.environ[key]
+
+    key = "GOOGLE_PKCS12_" + urls[0].sitename
+    if key in os.environ:
+        os.environ["GOOGLE_PKCS12"] = os.environ[key]
+        
+    # we need to update the boto config file to specify the full
+    # path to the PKCS12 file
+    try:
+        tmp_fd, tmp_name = tempfile.mkstemp(prefix="pegasus-transfer-", suffix=".lst")
+        tmp_file = os.fdopen(tmp_fd, "w+b")
+    except:
+      raise RuntimeError("Unable to create tmp file for gs boto file")
+    try:
+        conf = ConfigParser.SafeConfigParser()
+        conf.read(os.environ["BOTO_CONFIG"])
+        conf.set("Credentials", "gs_service_key_file", os.environ["GOOGLE_PKCS12"])
+        conf.write(tmp_file)
+        tmp_file.close()
+    except Exception, err:
+        logger.error(err)
+        raise RuntimeError("Unable to convert boto config file")
+
+    for i, url in enumerate(urls):
+        
+        cmd = "BOTO_CONFIG=%s gsutil rm -a" %(tmp_name)
+        if options.ignore_failures or options.recursive:
+            cmd += " -f"
+        if options.recursive:
+            cmd += " -r"  
+        cmd += " " + url.url()
 
         try:
             myexec(cmd, 60, True)
         except Exception, err:
-            logger.error(err)
-
-
+            # gsutil returns non-zero even when the -f flag is used
+            if options.ignore_failures or options.recursive:
+                logger.warn(err)
+            else:
+                logger.error(err)
+                os.unlink(tmp_name)
+                raise
+        os.unlink(tmp_name)
+        
+        
 def urls_groupable(a, b):
     """
     compares two urls, and determins if they are similar enough to be
     grouped together for one tool
     """
-    if a.proto != b.proto:
+    if a.sitename != b.sitename or a.proto != b.proto:
         return False
     return True
 
@@ -511,6 +644,8 @@ def handle_removes(urls):
                 srm(urls)
             elif tool == "s3":
                 s3(urls)
+            elif tool == "gs":
+                gs(urls)
             else:
                 logger.critical("Error: No mapping for the tool '%s'" %(tool))
                 myexit(1)
@@ -519,8 +654,7 @@ def handle_removes(urls):
             myexit(1)
 
     except RuntimeError, err:
-        logger.critical(err)
-        myexit(1)
+        raise
 
 
 def myexit(rc):
@@ -541,30 +675,32 @@ sys.stderr = sys.stdout
 # Configure command line option parser
 prog_usage = "usage: %s [options]" % (prog_base)
 parser = optparse.OptionParser(usage=prog_usage)
-parser.add_option("-l", "--loglevel", action = "store", dest = "log_level",
-                  help = "Log level. Valid levels are: debug,info,warning,error, Default is info.")
 parser.add_option("-f", "--file", action = "store", dest = "file",
                   help = "File containing URLs to be removed. If not given, list is read from stdin.")
+parser.add_option("-i", "--ignore-failures", action = "store_true", dest = "ignore_failures",
+                  help = "When specified, the tool ignores any failures and always exits with 0.")
+parser.add_option("-r", "--recursive", action = "store_true", dest = "recursive",
+                  help = "Enable recursive removal for tools that support it.")
+parser.add_option("-d", "--debug", action = "store_true", dest = "debug",
+                  help = "Enables debugging ouput.")
 
 # Parse command line options
 (options, args) = parser.parse_args()
-if options.log_level == None:
-    options.log_level = "info"
-setup_logger(options.log_level)
+setup_logger(options.debug)
 
 # Die nicely when asked to (Ctrl+C, system shutdown)
 signal.signal(signal.SIGINT, prog_sigint_handler)
 
 # stdin or file input?
 if options.file == None:
-    logger.info("Reading URL pairs from stdin")
+    logger.info("Reading URLs from stdin")
     input_file = sys.stdin
 else:
-    logger.info("Reading URL pairs from %s" % (options.file))
+    logger.info("Reading URLs from %s" % (options.file))
     try:
         input_file = open(options.file, 'r')
     except Exception, err:
-        logger.critical('Error reading url pair list: %s' % (err))
+        logger.critical('Error reading url list: %s' % (err))
         myexit(1)
 
 # check environment and tools
@@ -579,19 +715,32 @@ url_q = deque()
 
 # fill the url queue with user provided entries
 line_nr = 0
+sitename = ""
 try:
     for line in input_file.readlines():
         line_nr += 1
-        if line[0] != '#' and len(line) > 4:
+        if len(line) > 3:
             line = line.rstrip('\n')
-            url = URL()
-            url.set_url(line)
-            url_q.append(url)
+            if line[0] == '#':
+                r = re_parse_comment.search(line)
+                if r:
+                    sitename =  r.group(1)
+                else:
+                    logger.critical('Unable to parse comment on line %d'
+                                    %(line_nr))
+                    myexit(1)
+            else:
+                url = URL()
+                url.set_sitename(sitename)
+                url.set_url(line)
+                url_q.append(url)
+                sitename = ""
 except Exception, err:
     logger.critical('Error handling url: %s' % (err))
     myexit(1)
 
 # do the removals
+exit_code = 0
 while url_q:
 
     u_main = url_q.popleft()
@@ -613,8 +762,16 @@ while url_q:
             u_next = False
 
     # magic!
-    handle_removes(u_list)
+    try:
+        handle_removes(u_list)
+    except Exception, err:
+        logger.error(err)
+        exit_code = 1
 
-myexit(0)
+# sometimes we just want to ignore the failures
+if options.ignore_failures:
+    exit_code = 0
+
+myexit(exit_code)
 
 

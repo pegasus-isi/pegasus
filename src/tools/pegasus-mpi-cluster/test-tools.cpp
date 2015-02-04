@@ -11,8 +11,8 @@ void test_is_executable() {
 }
 
 void test_pathfind() {
-    assert(pathfind("sh") == "/bin/sh");
-    assert(pathfind("echo") == "/bin/echo");
+    assert(pathfind("sh") == "/bin/sh" || pathfind("sh") == "/usr/bin/sh");
+    assert(pathfind("echo") == "/bin/echo" || pathfind("echo") == "/usr/bin/echo");
     assert(pathfind("/notfound") == "/notfound");
     assert(pathfind("./notfound") == "./notfound");
     assert(pathfind("test/notfound") == "test/notfound");
@@ -21,21 +21,21 @@ void test_pathfind() {
 void test_mkdirs() {
     assert(mkdirs("test/scratch") >= 0);
     chdir("test/scratch");
-    
+
     assert(mkdirs("./foo") >= 0);
     assert(mkdirs("../scratch/bar") >= 0);
     assert(mkdirs("bar/../baz") >= 0);
     assert(mkdirs(".boo") >= 0);
-    
+
     char temp[PATH_MAX];
     string curdir = getcwd(temp, PATH_MAX);
-    
+
     string testdir = curdir + "/bii";
     assert(mkdirs(testdir.c_str()) >= 0);
-    
+
     testdir = curdir + "/gii/gii";
     assert(mkdirs(testdir.c_str()) >= 0);
-    
+
     chdir("../..");
 }
 

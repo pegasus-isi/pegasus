@@ -61,7 +61,11 @@ import org.xml.sax.SAXException;
 
 /**
  * This class uses the Xerces SAX2 parser to validate and parse an XML
- * document conforming to the Site Catalog schema v3.0
+ * document conforming to the Site Catalog schema v3.0.
+ * 
+ * This parses site catalog corresponding to the schema
+ * 
+ * http://pegasus.isi.edu/schema/sc-3.0.xsd
  * 
  * @author Karan Vahi vahi@isi.edu
  * @version $Revision$

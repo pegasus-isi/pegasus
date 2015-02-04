@@ -170,7 +170,12 @@ public class DefaultImplementation implements Implementation {
 
 
         //associate a credential if required
-        newJob.addCredentialType( directoryURL );
+        newJob.addCredentialType( site, directoryURL );
+        
+        //PM-741
+        //set the staging site handle for create dir jobs. it is the one
+        //for which the directory is created, not where the create dir job runs
+        newJob.setStagingSiteHandle(site);
 
         //figure out on the basis of directory URL
         //where to run the job.
@@ -211,7 +216,7 @@ public class DefaultImplementation implements Implementation {
         SiteCatalogEntry ePool = mSiteStore.lookup( eSite );
 
 
-        String argString = null;
+        StringBuffer argString = new StringBuffer();
        
         if( mUseMkdir ){
             
@@ -223,21 +228,21 @@ public class DefaultImplementation implements Implementation {
                                               DefaultImplementation.POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE );
 
 
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             sb.append( mProps.getBinDir() ).
                append( File.separator ).append( DefaultImplementation.EXECUTABLE_BASENAME );
             execPath = sb.toString();
 
-            argString = "-u " +
-                        mSiteStore.getExternalWorkDirectoryURL( site , FileServer.OPERATION.put );
+            argString.append( " --site " ).append( site ).append( " -u " ).
+                      append( mSiteStore.getExternalWorkDirectoryURL( site , FileServer.OPERATION.put ) );
             
             newJob.condorVariables.setExecutableForTransfer();
             
         }
         else{
             execPath = entry.getPhysicalTransformation();
-            argString = "-u " +
-                        directoryURL;
+            argString.append( " --site " ).append( site ).append( " -u " ).
+                      append( directoryURL );
         }
 
         newJob.jobName = name;
@@ -250,7 +255,7 @@ public class DefaultImplementation implements Implementation {
 
         newJob.executable = execPath;
         newJob.executionPool = eSite;
-        newJob.strargs = argString;
+        newJob.setArguments( argString.toString());
         newJob.jobClass = Job.CREATE_DIR_JOB;
         newJob.jobID = name;
 

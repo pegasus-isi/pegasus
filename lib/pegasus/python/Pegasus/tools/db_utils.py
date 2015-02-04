@@ -27,8 +27,7 @@ import logging
 from Pegasus.tools import properties
 from Pegasus.tools import utils
 
-# Get logger object (initialized elsewhere)
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 def get_db_url(config_properties):
     # Parse, and process properties

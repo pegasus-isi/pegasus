@@ -17,11 +17,14 @@
 package edu.isi.pegasus.common.credential.impl;
 
 import edu.isi.pegasus.common.credential.CredentialHandler;
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
 
 import java.io.File;
 import java.util.Map;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.namespace.Namespace;
 
 
 
@@ -41,12 +44,19 @@ public class S3CFG  extends Abstract implements CredentialHandler {
      * s3cfg file.
      */
     public static final String S3CFG_FILE_VARIABLE = "S3CFG";
+    
+    
+    private static final String S3CFG_PEGASUS_PROFILE_KEY = S3CFG.S3CFG_FILE_VARIABLE.toLowerCase() ;//has to be lowercased
 
     /**
      * The description
      */
     private static final String DESCRIPTION = "S3 Conf File Credential Handler";
 
+    /**
+     * The local path to the credential
+     */
+    private String mLocalCredentialPath;
 
     /**
      * The default constructor.
@@ -54,57 +64,123 @@ public class S3CFG  extends Abstract implements CredentialHandler {
     public S3CFG(){
         super();
     }
-
     
     /**
-     * Returns the path to s3cfg. The order of preference is as follows
+     * Initializes the credential implementation. Implementations require
+     * access to the logger, properties and the SiteCatalog Store.
      *
-     * - If a s3cfg is specified in the site catalog entry that is used
-     * - Else the one pointed to by the environment variable S3CFG
-     * - Else the default path of ~/.pegasus/s3cfg
-     * - Else the legacy default path of ~/.s3cfg
+     * @param bag  the bag of Pegasus objects.
+     */
+    public void initialize( PegasusBag bag ){
+        super.initialize( bag );
+        mLocalCredentialPath = this.getLocalPath();
+    }
+    
+    /**
+     * Returns the path to S3CFG . The order of preference is as follows
+     *
+     * - If a S3CFG is specified as a Pegasus Profile in the site catalog
+     * - Else the path on the local site
      *
      * @param site   the  site handle
      *
-     * @return  the path to s3cfg.
+     * @return  the path to S3CFG.S3CFG_FILE_VARIABLE for the site.
      */
-    public String getPath( String site ){
+    public  String getPath( String site ){
+
         SiteCatalogEntry siteEntry = mSiteStore.lookup( site );
-        Map<String,String> envs = System.getenv();
+        //check if one is specified in site catalog entry
+        String path = ( siteEntry == null )? null :
+                       (String)siteEntry.getProfiles().get( Profiles.NAMESPACES.pegasus).get( S3CFG.S3CFG_FILE_VARIABLE.toLowerCase() );
 
-        // check if one is specified in site catalog entry
-        String path = ( siteEntry == null )? null :siteEntry.getEnvironmentVariable( S3CFG.S3CFG_FILE_VARIABLE );
-
-        if( path == null){
-            //check if S3Cfg is specified in the environment
-            if( envs.containsKey( S3CFG.S3CFG_FILE_VARIABLE ) ){
-                path = envs.get( S3CFG.S3CFG_FILE_VARIABLE );
-            }
-        }
-
-        if (path == null) {
-            // New default
-            path = envs.get("HOME") + "/.pegasus/s3cfg";
-
-            File cfg = new File(path);
-            if (!cfg.isFile()) {
-                // Old default
-                path = envs.get("HOME") + "/.s3cfg";
-            }
-        }
-
-        return path;
+        return( path == null ) ?
+                //PM-731 return the path on the local site
+                mLocalCredentialPath:
+                path;
+       
     }
+
+    /**
+     * Returns the path to user cred on the local site. 
+     * The order of preference is as follows
+     *
+     * - If a S3CFG.S3CFG_FILE_VARIABLE is specified in the site catalog entry as a Pegasus Profile that is used, else the corresponding env profile for backward support
+     * - Else S3CFG.S3CFG_FILE_VARIABLE Pegasus Profile specified in the properties, else the corresponding env profile for backward support
+     * - Else the one pointed to by the environment variable S3CFG.S3CFG_FILE_VARIABLE
+     * - Else the default path of ~/.pegasus/s3cfg
+     * - Else the legacy default path of ~/.s3cfg
+     * 
+     * @param site   the  site catalog entry object.
+     *
+     * @return  the path to user cred.
+     */
+    public String getLocalPath(){
+        SiteCatalogEntry siteEntry = mSiteStore.lookup( "local" );
+
+        //check if corresponding Pegasus Profile is specified in site catalog entry
+        String cred = ( siteEntry == null )? null :
+                        (String)siteEntry.getProfiles().get( Profiles.NAMESPACES.pegasus).get( S3CFG.S3CFG_PEGASUS_PROFILE_KEY );
+        if( cred == null && siteEntry != null ){
+            //try to check for an env profile in the site entry 
+            cred = (String)siteEntry.getProfiles().get( Profiles.NAMESPACES.env).get( S3CFG.S3CFG_FILE_VARIABLE );
+        }
+        
+        //try from properites file
+        if( cred == null ){
+            //load the pegasus profile from property file 
+            Namespace profiles = mProps.getProfiles( Profiles.NAMESPACES.pegasus );
+            cred = (String)profiles.get( S3CFG.S3CFG_PEGASUS_PROFILE_KEY  );
+        }
+        if( cred == null ) {
+            //load the env profile from the  property file
+            Namespace env = mProps.getProfiles(Profiles.NAMESPACES.env);
+            cred = (String)env.get( S3CFG.S3CFG_FILE_VARIABLE  );
+        }
+        
+        if( cred == null){
+            //check if S3CFG is specified in the environment
+            Map<String,String> envs = System.getenv();
+            if( envs.containsKey( S3CFG.S3CFG_FILE_VARIABLE ) ){
+                cred = envs.get( S3CFG.S3CFG_FILE_VARIABLE  );
+            }
+            
+            if (cred == null) {
+                // New default
+                cred = envs.get("HOME") + "/.pegasus/s3cfg";
+
+                File cfg = new File(cred);
+                if (!cfg.isFile()) {
+                    // Old default
+                    cred = envs.get("HOME") + "/.s3cfg";
+                }
+            }
+        }
+        
+        return cred;
+    }
+
+   
 
     
     /**
      * returns the basename of the path to the local credential
+     * 
+     * @param site  the site handle
      */
-    public String getBaseName() {
-        File path = new File(this.getPath());
+    public String getBaseName( String site ) {
+        File path = new File(this.getPath( site ) );
         return path.getName();
     }
 
+    /**
+     * Returns the env or pegasus profile key that needs to be associated
+     * for the credential.
+     * 
+     * @return the name of the environment variable.
+     */
+    public String getProfileKey( ){
+        return S3CFG.S3CFG_FILE_VARIABLE;
+    }
 
     /**
      * Returns the name of the environment variable that needs to be set
@@ -112,8 +188,8 @@ public class S3CFG  extends Abstract implements CredentialHandler {
      *
      * @return the name of the environment variable.
      */
-    public String getEnvironmentVariable(){
-        return S3CFG.S3CFG_FILE_VARIABLE;
+    public String getEnvironmentVariable( String site ){
+        return S3CFG.S3CFG_FILE_VARIABLE + "_" + this.getSiteNameForEnvironmentKey(site);
     }
 
     /**

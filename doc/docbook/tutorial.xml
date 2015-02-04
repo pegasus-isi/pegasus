@@ -47,23 +47,26 @@ you get this</programlisting>
     linkend="vm_amazon">Amazon EC2</link> and <link
     linkend="vm_futuregrid">FutureGrid</link>. Information about deploying the
     tutorial VM on these platforms is in <link linkend="tutorial_vm">the
-    appendix</link>. Please go to the appendix for the platform you are using
-    and follow the instructions for starting the VM found there before
-    continuing with this tutorial.</para>
+    appendix</link>. If you want to use the tutorial VM, please go to the
+    appendix for the platform you are using and follow the instructions for
+    starting the VM found there before continuing with this tutorial.</para>
 
-    <para><emphasis role="bold">Advanced Users:</emphasis> In the case that
-    you want to install Pegasus and Condor and go through the tutorial on your
-    own machine instead of using one of the virtual machines, the tutorial
-    files are available in the <filename>doc/tutorial</filename> directory of
-    the Pegasus source distribution. These files will need to be modified in
-    several places to fix the paths to the users home directory (which is
-    assumed to be <filename>/home/tutorial</filename>). It is assumed that 
-    Pegasus was installed from the RPM, so the path to the Pegasus install is
-    assumed to be <filename>/usr</filename>. Condor should be installed in
-    the "Personal Condor" configuration. You will also need a passwordless ssh
-    key to enable SCP file transfers to/from localhost. Getting everything set
-    up correctly can be tricky, so we recommend getting started with one of
-    the VMs if you are not familiar with Condor and UNIX.</para>
+    <para><emphasis role="bold">Advanced Users:</emphasis> If you have installed
+    Pegasus and Condor on your own machine, then you don't need to use the VM for
+    the tutorial. If you installed Pegasus from one of the native packages
+    (RPM, DEB, DMG), then you can find the tutorial files in <filename>
+    /usr/share/doc/pegasus/tutorial</filename>. If you installed a binary
+    tarball, or compiled Pegasus from source, then you can find the tutorial
+    files in <filename>PEGASUS_HOME/share/doc/pegasus/tutorial</filename>.
+    These files will need to be modified in several places to fix the paths to
+    the users home directory (which is assumed to be <filename>/home/tutorial
+    </filename>). It is assumed that Pegasus was installed from a native package,
+    so the path to the Pegasus install is assumed to be <filename>/usr</filename>.
+    Condor should be installed in the "Personal Condor" configuration. You will
+    also need a passwordless ssh key to enable SCP file transfers to/from
+    localhost. Getting everything set up correctly can be tricky, so we
+    recommend getting started with one of the VMs if you are not familiar with
+    Condor and UNIX.</para>
 
     <para>The remainder of this tutorial will assume that you have a terminal
     open to the directory where the tutorial files are installed. If you are
@@ -194,6 +197,26 @@ Writing diamond.dax</programlisting>
       <para>The site catalog is in <filename>sites.xml</filename>:</para>
 
       <programlisting>$ <emphasis role="bold">more sites.xml</emphasis>
+...
+﻿    ﻿&lt;!-- The local site contains information about the submit host --&gt;
+    &lt;!-- The arch and os keywords are used to match binaries in the transformation catalog --&gt;
+    &lt;site handle="local" arch="x86_64" os="LINUX"&gt;
+
+        &lt;!-- These are the paths on the submit host were Pegasus stores data --&gt;
+        &lt;!-- Scratch is where temporary files go --&gt;
+        &lt;directory type="shared-scratch" path="/home/tutorial/run"&gt;
+            &lt;file-server operation="all" url="file:///home/tutorial/run"/&gt;
+        &lt;/directory&gt;
+        &lt;!-- Storage is where pegasus stores output files --&gt;
+        &lt;directory type="local-storage" path="/home/tutorial/outputs"&gt;
+            &lt;file-server operation="all" url="file:///home/tutorial/outputs"/&gt;
+        &lt;/directory&gt;
+
+        &lt;!-- This profile tells Pegasus where to find the user's private key for SCP transfers --&gt;
+        &lt;profile namespace="env" key="SSH_PRIVATE_KEY"&gt;/home/tutorial/.ssh/id_rsa&lt;/profile&gt;
+    &lt;/site&gt;
+
+
 ...</programlisting>
 
       <para>There are two sites defined in the site catalog: “local” and
@@ -249,6 +272,20 @@ Writing diamond.dax</programlisting>
       <filename>tc.dat</filename>:</para>
 
       <programlisting>$ <emphasis role="bold">more tc.dat</emphasis>
+...
+﻿# This is the transformation catalog. It lists information about each of the
+# executables that are used by the workflow.
+
+tr preprocess {
+    site PegasusVM {
+        pfn "/home/tutorial/bin/preprocess"
+        arch "x86_64"
+        os "linux"
+        type "INSTALLED"
+    }
+}
+
+
 ...</programlisting>
 
       <para>The <filename>tc.dat</filename> file contains information about
@@ -719,6 +756,217 @@ preprocess       1      1          0       30.025  30.025  30.025   30.025
     <para>In this case, because the example transformation sleeps for 30
     seconds, the min, mean, and max runtimes for each of the analyze,
     findrange, and preprocess transformations are all close to 30.</para>
+  </section>
+
+  <section>
+    <title>Workflow Dashboard</title>
+
+    <para>The Virtual Box image is also bundled with the Pegasus Service
+    bundle.This is available as a separate project in <ulink
+    url="https://github.com/pegasus-isi/pegasus-service">Github</ulink>. The
+    pegasus-service-server is developed in Python and uses the Flask framework
+    to implement the web interface.The users can then connect to this server
+    using a browser to monitor/debug workflows.</para>
+
+    <para><note>
+        <para>The workflow dashboard can only monitor workflows which have
+        been executed using Pegasus 4.2.0 and above.</para>
+
+        <para>Currently, only the Virtual Box Tutorial image for 4.3.0 has the
+        dashboard enabled. It is not enabled in the EC2 and FutureGrid
+        image.</para>
+      </note>By default, the server is configured to listen on all network
+    interfaces on port 5000. A user can view the dashboard on
+    http://&lt;IP_ADDRESS&gt;:5000/</para>
+
+    <para>By default, the dashboard server can only monitor workflows run by
+    the current user i.e. the user who is running the
+    pegasus-service-server.</para>
+
+    <para>To access the workflow dashboard, in the Virtual BOX VM you can
+    launch firefox by clicking the globe icon in the top menu of the desktop.
+    The home page for the dashboard is accessible at
+    http://localhost:5000</para>
+
+    <para>The Dashboard's home page lists all workflows, which have been run
+    by the current-user. The home page shows the status of each of the
+    workflow i.e. Running/Successful/Failed. The home page lists only the top
+    level workflows (Pegasus supports hierarchical workflows i.e. workflows
+    within a workflow). The rows in the table are color coded</para>
+
+    <itemizedlist>
+      <listitem>
+        <para><emphasis role="bold">Green</emphasis>: indicates workflow
+        finished successfully.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Red</emphasis>: indicates workflow
+        finished with a failure.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Blue</emphasis>: indicates a workflow is
+        currently running.</para>
+      </listitem>
+    </itemizedlist>
+
+    <figure>
+      <title>Dashboard Home Page</title>
+
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="images/dashboard_home.png" width="100%"/>
+        </imageobject>
+      </mediaobject>
+    </figure>
+
+    <para>To view details specific to a workflow, the user can click on
+    corresponding workflow label. The workflow details page lists workflow
+    specific information like workflow label, workflow status, location of the
+    submit directory, etc. The details page also displays pie charts showing
+    the distribution of jobs based on status.</para>
+
+    <para>In addition, the details page displays a tab listing all
+    sub-workflows and their statuses. Additional tabs exist which list
+    information for all running, failed, and successful jobs.</para>
+
+    <para>The information displayed for a job depends on it's status. For
+    example, the failed jobs tab displays the job name, exit code, links to
+    available standard output, and standard error contents.</para>
+
+    <figure>
+      <title>Dashboard Workflow Page</title>
+
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="images/dashboard_workflow_details.png"
+                     width="100%"/>
+        </imageobject>
+      </mediaobject>
+    </figure>
+
+    <para>To view details specific to a job the user can click on the
+    corresponding job's job label. The job details page lists information
+    relevant to a specific job. For example, the page lists information like
+    job name, exit code, run time, etc.</para>
+
+    <para>The job details page also shows tab's for failed, and successful
+    task invocations (Pegasus allows users to group multiple smaller task's
+    into a single job i.e. a job may consist of one or more tasks)</para>
+
+    <figure>
+      <title>Dashboard Job Description Page</title>
+
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="images/dashboard_job_details.png" width="100%"/>
+        </imageobject>
+      </mediaobject>
+    </figure>
+
+    <para>The task invocation details page provides task specific information
+    like task name, exit code, duration etc. Task details differ from job
+    details, as they are more granular in nature.</para>
+
+    <figure>
+      <title>Dashboard Invocation Page</title>
+
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="images/dashboard_invocation_details.png"
+                     width="100%"/>
+        </imageobject>
+      </mediaobject>
+    </figure>
+
+    <para>The dashboard also has web pages for workflow statistics and
+    workflow charts, which graphically renders information provided by the
+    pegasus-statistics and pegasus-plots command respectively.</para>
+
+    <para>The Statistics page shows the following statistics.</para>
+
+    <orderedlist>
+      <listitem>
+        <para>Workflow level statistics</para>
+      </listitem>
+
+      <listitem>
+        <para>Job breakdown statistics</para>
+      </listitem>
+
+      <listitem>
+        <para>Job specific statistics</para>
+      </listitem>
+    </orderedlist>
+
+    <figure>
+      <title>Dashboard Statistics Page</title>
+
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="images/dashboard_statistics.png" width="100%"/>
+        </imageobject>
+      </mediaobject>
+    </figure>
+
+    <para>The Charts page shows the following charts.</para>
+
+    <orderedlist>
+      <listitem>
+        <para>Job Distribution by Count/Time</para>
+      </listitem>
+
+      <listitem>
+        <para>Time Chart by Job/Invocation</para>
+      </listitem>
+
+      <listitem>
+        <para>Workflow Execution Gantt Chart</para>
+      </listitem>
+    </orderedlist>
+
+    <para>The chart below shows the invocation distribution by count or
+    time.</para>
+
+    <figure>
+      <title>Dashboard Plots - Job Distribution</title>
+
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="images/dashboard_plots_job_dist.png"
+                     width="100%"/>
+        </imageobject>
+      </mediaobject>
+    </figure>
+
+    <para>The time chart shown below shows the number of jobs/invocations in
+    the workflow and their total runtime</para>
+
+    <figure>
+      <title>Dashboard Plots - Time Chart</title>
+
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="images/dashboard_plots_time_charts.png"
+                     width="100%"/>
+        </imageobject>
+      </mediaobject>
+    </figure>
+
+    <para>The workflow gantt chart lays out the execution of the jobs in the
+    workflow over time.</para>
+
+    <figure>
+      <title>Dashboard Plots - Workflow Gantt Chart</title>
+
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="images/dashboard_plots_wf_gantt.png"
+                     width="100%"/>
+        </imageobject>
+      </mediaobject>
+    </figure>
   </section>
 
   <section>

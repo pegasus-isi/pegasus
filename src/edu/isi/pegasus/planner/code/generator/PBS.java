@@ -174,7 +174,7 @@ public class PBS extends Abstract {
     protected String pbsBasename( ADag dag ) {
         StringBuffer name = new StringBuffer();
         name.append(  dag.getLabel() ).append( "-" ).
-             append( dag.dagInfo.index ).append( ".pbs" );
+             append( dag.getIndex() ).append( ".pbs" );
         return name.toString();
     }
     

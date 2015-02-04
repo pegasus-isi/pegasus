@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
  * @author  Mats Rynge
  */
 public class PegasusURL {
-    
+
     /**
      * The scheme name for file url.
      */
@@ -40,12 +40,12 @@ public class PegasusURL {
     public static final String DEFAULT_PROTOCOL = "file";
 
     /**
-     * 
+     *
      * Stores the regular expressions necessary to parse a PegasusURL into 3 components
      * protocol, host and path
      */
-    private static final String mRegexExpression = "([\\w]+)://([\\w\\.\\-:@]*)(/[\\S]*)";
-            
+    private static final String mRegexExpression = "([\\w]+)://([\\w\\.\\-:@]*)(/?[\\S]*)";
+
     /**
      * Stores compiled patterns at first use, quasi-Singleton.
      */
@@ -57,7 +57,7 @@ public class PegasusURL {
     private String mProtocol;
 
     /**
-     * The hpstname referred to by the PegasusURL.
+     * The hostname referred to by the PegasusURL.
      * Can include the port also
      */
     private String mHost;
@@ -111,7 +111,7 @@ public class PegasusURL {
             mPath     = m.group( 3 );
         }
         else{
-            throw new RuntimeException( "Unable to pass URL " + url );
+            throw new RuntimeException( "Unable to parse URL " + url );
         }
     }
 
@@ -174,7 +174,7 @@ public class PegasusURL {
 
     /**
      * The contents represented as a string
-     * 
+     *
      * @return
      */
     public String toString(){
@@ -215,6 +215,18 @@ public class PegasusURL {
         //should print
         //protocol -> file , host ->  , path -> /tmp/path/to/input/file , url-prefix -> file://
         url =  "/tmp/path/to/input/file" ;
+        System.out.println( url );
+        System.out.println( new PegasusURL(url) );
+
+        url =  "http://isis.isi.edu/" ;
+        System.out.println( url );
+        System.out.println( new PegasusURL(url) );
+
+        url =  "http://isis.isi.edu/filename" ;
+        System.out.println( url );
+        System.out.println( new PegasusURL(url) );
+
+        url =  "http://isis.isi.edu/directory/filename" ;
         System.out.println( url );
         System.out.println( new PegasusURL(url) );
 

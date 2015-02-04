@@ -65,10 +65,9 @@ EOF
 # plan and submit the  workflow
 pegasus-plan \
     --conf ${testdir}/pegasusrc \
-    --sites condorpool \
-    --dir work \
+    --sites local \
+    --dir work/submit \
     --output-site local \
     --dax dax.xml \
-    --nocleanup \
-    -vvvvv \
-    --submit | tee $TOPDIR/plan.out
+    --cleanup leaf \
+    -vvvvv | tee $TOPDIR/plan.out

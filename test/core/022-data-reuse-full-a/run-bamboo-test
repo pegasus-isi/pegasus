@@ -1,0 +1,104 @@
+#!/bin/bash
+
+set -e
+#set -v
+
+if [ X${testdir} = "X" ]; then
+    testdir=`dirname  $0`
+    export testdir
+fi
+
+TOPDIR=`pwd`
+
+# generate the input file
+echo "This is sample input to KEG" > f.a
+
+#generate the final output file
+echo "This is preexisitng output file for the workflow" > f.d
+
+cat > rc.data <<EOF
+f.a file://$TOPDIR/f.a pool="local"
+f.d file://$TOPDIR/f.d pool="local"
+EOF
+
+
+# output directory
+mkdir -p outputs
+
+# build the dax generator
+export PYTHONPATH=`pegasus-config --python`
+$testdir/blackdiamond.py /usr > blackdiamond.dax
+
+# create the site catalog
+cat > sites.xml <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
+    <site  handle="local" arch="x86" os="LINUX">
+        <head-fs>
+            <scratch>
+                <shared>
+                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/work"/>
+                    <internal-mount-point mount-point="$TOPDIR/work"/>
+                </shared>
+            </scratch>
+            <storage>
+                <shared>
+                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/outputs"/>
+                    <internal-mount-point mount-point="$TOPDIR/outputs"/>
+                </shared>
+            </storage>
+        </head-fs>
+    </site>
+     <site handle="isi-condorc" arch="x86" os="LINUX">
+         <grid type="condor" contact="ccg-testing1.isi.edu" scheduler="Condor" jobtype="compute" total-nodes="50"/>
+         <grid type="condor" contact="ccg-testing1.isi.edu" scheduler="Condor" jobtype="auxillary" total-nodes="50"/>
+
+        <head-fs>
+            <scratch />
+            <storage />
+        </head-fs>
+
+        <replica-catalog type="LRC" url="rlsn://dummyValue.url.edu" />
+        <profile namespace="pegasus" key="style">condorc</profile>
+        <profile namespace="condor" key="universe">vanilla</profile>
+        <profile namespace="pegasus" key="clusters.num">1</profile>
+    </site>
+
+    <site  handle="condorpool" arch="x86" os="LINUX">
+        <head-fs>
+            <scratch />
+            <storage />
+        </head-fs>
+        <profile namespace="pegasus" key="style">condor</profile>
+        <profile namespace="condor" key="universe">vanilla</profile>
+    </site>
+</sitecatalog>
+EOF
+
+# plan and submit the  workflow
+pegasus-plan \
+    --conf $testdir/pegasusrc \
+    --sites condorpool \
+    --output-site local \
+    --dir work \
+    --cluster horizontal \
+    --dax blackdiamond.dax  | tee plan.out
+
+
+WORK_DIR=`cat plan.out | grep pegasus-run | sed -E 's/.*pegasus-run[ ]+//'`
+
+echo "WORK_DIR is $WORK_DIR"
+
+# check in the submit directory to make sure that only stage_out and register jobs are generated
+set +e
+ls $WORK_DIR/*sub | grep -v register | grep -v condor.sub | grep -v stage_out
+EC=$?
+set -e
+
+if [ $EC -eq 0 ]; then
+    echo "ERROR: Test Failed - Submit directory contains jobs other than stageout and register jobs." 
+    exit 1
+fi
+
+#submit the workflow
+pegasus-run $WORK_DIR

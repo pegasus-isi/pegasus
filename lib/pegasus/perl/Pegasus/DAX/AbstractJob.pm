@@ -13,7 +13,7 @@ use Pegasus::DAX::Filename qw(LINK_IN LINK_OUT);
 use Exporter;
 our @ISA = qw(Pegasus::DAX::Base Pegasus::DAX::InvokeMixin Exporter); 
 
-our $VERSION = '3.3'; 
+our $VERSION = '3.5'; 
 our @EXPORT = (); 
 our %EXPORT_TAGS = (); 
 our @EXPORT_OK = (); 

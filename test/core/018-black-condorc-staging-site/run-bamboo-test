@@ -79,7 +79,7 @@ pegasus-plan \
     --staging-site cartman-data \
     --output-site local \
     --dir work \
-    --nocleanup \
+    --cleanup leaf \
     --cluster horizontal \
     --dax blackdiamond.dax \
     --submit | tee plan.out

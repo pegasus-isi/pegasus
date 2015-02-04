@@ -1,0 +1,881 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!-- edited with XMLSpy v2006 U (http://www.altova.com) by Gaurang Mehta (USC ISI) -->
+<!-- edited with XMLSPY v2004 rel. 3 U (http://www.xmlspy.com) by Rebecca Y Jordan (UNIV OF SOUTHERN CALIF) -->
+<xs:schema targetNamespace="http://pegasus.isi.edu/schema/invocation" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://pegasus.isi.edu/schema/invocation" elementFormDefault="qualified" attributeFormDefault="unqualified" version="2.2" xml:lang="en">
+	<xs:simpleType name="DottedQuad">
+		<xs:annotation>
+			<xs:documentation>dotted quad notation of a IPv4 host address.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:minLength value="7"/>
+			<xs:maxLength value="15"/>
+			<xs:whiteSpace value="collapse"/>
+			<xs:pattern value="(\d{1,3}\.){3}\d{1,3}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="PositiveDecimal">
+		<xs:annotation>
+			<xs:documentation>restricted version of the 'decimal' type.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:decimal">
+			<xs:minInclusive value="0"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="ResourceValue">
+		<xs:annotation>
+			<xs:documentation>value for a resource usage</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="(unlimited|\d+)"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="RUsageType" mixed="true">
+		<xs:annotation>
+			<xs:documentation>Information from the rusage record.</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="utime" type="xs:decimal" use="required">
+			<xs:annotation>
+				<xs:documentation>Total amount of user time used, in seconds with millisecond fraction.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="stime" type="xs:decimal" use="required">
+			<xs:annotation>
+				<xs:documentation>Total amount of system time used, in seconds with millisecond fraction.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="minflt" type="xs:unsignedLong" use="required">
+			<xs:annotation>
+				<xs:documentation>Number of soft page faults (i.e. those serviced by reclaiming a page from the list of pages awaiting reallocation.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="majflt" type="xs:unsignedLong" use="required">
+			<xs:annotation>
+				<xs:documentation>Number of hard page faults (i.e. those that required I/O). </xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="nswap" type="xs:unsignedLong" use="required">
+			<xs:annotation>
+				<xs:documentation>Number of times a process was swapped out of physical memory.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="nsignals" type="xs:unsignedLong" use="required">
+			<xs:annotation>
+				<xs:documentation>Number of signals delivered.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="nvcsw" type="xs:unsignedLong" use="optional">
+			<xs:annotation>
+				<xs:documentation>Number of voluntary context switches, i.e. because the process gave up the process before it had to (usually to wait for some resource to be available).</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="nivcsw" type="xs:unsignedLong" use="optional">
+			<xs:annotation>
+				<xs:documentation>Number of involuntary context switches, i.e. a higher priority process became runnable or the current process used up its time slice.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="maxrss" type="xs:unsignedLong" use="optional"/>
+		<xs:attribute name="ixrss" type="xs:unsignedLong" use="optional"/>
+		<xs:attribute name="idrss" type="xs:unsignedLong" use="optional"/>
+		<xs:attribute name="isrss" type="xs:unsignedLong" use="optional"/>
+		<xs:attribute name="inblock" type="xs:unsignedLong" use="optional"/>
+		<xs:attribute name="outblock" type="xs:unsignedLong" use="optional"/>
+		<xs:attribute name="msgsnd" type="xs:unsignedLong" use="optional"/>
+		<xs:attribute name="msgrcv" type="xs:unsignedLong" use="optional"/>
+	</xs:complexType>
+	<xs:complexType name="StatCallType">
+		<xs:annotation>
+			<xs:documentation>Information about a named file or descriptor.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:choice>
+				<xs:element name="file">
+					<xs:annotation>
+						<xs:documentation>Named file in filesystem.</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:simpleContent>
+							<xs:extension base="xs:hexBinary">
+								<xs:attribute name="name" type="xs:string" use="required">
+									<xs:annotation>
+										<xs:documentation>A named file may be a regular file like a shell script or executable, or it may be a device file like /dev/null. Only regular files may incur element content. </xs:documentation>
+									</xs:annotation>
+								</xs:attribute>
+							</xs:extension>
+						</xs:simpleContent>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="descriptor">
+					<xs:annotation>
+						<xs:documentation>Pre-opened descriptor.</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:attribute name="number" type="xs:nonNegativeInteger" use="required"/>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="temporary">
+					<xs:annotation>
+						<xs:documentation>Created temporary file.</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:attribute name="name" type="xs:string" use="required"/>
+						<xs:attribute name="descriptor" type="xs:integer" use="required"/>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="fifo">
+					<xs:annotation>
+						<xs:documentation>Auto-created feedback FIFO.</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:attribute name="name" type="xs:string" use="required"/>
+						<xs:attribute name="descriptor" type="xs:integer" use="required"/>
+						<xs:attribute name="count" type="xs:nonNegativeInteger" use="optional" default="0"/>
+						<xs:attribute name="rsize" type="xs:nonNegativeInteger" use="optional" default="0"/>
+						<xs:attribute name="wsize" type="xs:nonNegativeInteger" use="optional" default="0"/>
+					</xs:complexType>
+				</xs:element>
+			</xs:choice>
+			<xs:element name="statinfo" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Kernel inode information.</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:attribute name="size" type="xs:integer" use="required"/>
+					<xs:attribute name="mode" type="xs:token" use="optional">
+						<xs:annotation>
+							<xs:documentation>file protection in octal number with leading zero.</xs:documentation>
+						</xs:annotation>
+					</xs:attribute>
+					<xs:attribute name="inode" type="xs:integer" use="optional"/>
+					<xs:attribute name="nlink" type="xs:nonNegativeInteger" use="optional"/>
+					<xs:attribute name="blocks" type="xs:nonNegativeInteger" use="optional"/>
+					<xs:attribute name="blksize" type="xs:nonNegativeInteger" use="optional"/>
+					<xs:attribute name="atime" type="xs:dateTime" use="optional"/>
+					<xs:attribute name="mtime" type="xs:dateTime" use="optional"/>
+					<xs:attribute name="ctime" type="xs:dateTime" use="optional"/>
+					<xs:attribute name="uid" type="xs:integer" use="optional"/>
+					<xs:attribute name="user" type="xs:string" use="optional"/>
+					<xs:attribute name="gid" type="xs:integer" use="optional"/>
+					<xs:attribute name="group" type="xs:string" use="optional"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="data" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>One page of content from temporary files.</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attribute name="truncated" type="xs:boolean" use="optional">
+								<xs:annotation>
+									<xs:documentation>This flag will be true, if there is more information than included in the data tag. </xs:documentation>
+								</xs:annotation>
+							</xs:attribute>
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="error" type="xs:int" use="required">
+			<xs:annotation>
+				<xs:documentation>result from the stat call on a named file or descriptor.
+
+</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="JobType">
+		<xs:annotation>
+			<xs:documentation>Information about a specific job that ran as part of the invocation.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="usage" type="RUsageType">
+				<xs:annotation>
+					<xs:documentation>Excerpt of the struct rusage returned for the application.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="status">
+				<xs:annotation>
+					<xs:documentation>Exit status of application, which may be a signal with core dump.</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:choice>
+						<xs:element name="failure">
+							<xs:annotation>
+								<xs:documentation>Failure to start application. This is an error by gridstart.</xs:documentation>
+							</xs:annotation>
+							<xs:complexType>
+								<xs:simpleContent>
+									<xs:extension base="xs:string">
+										<xs:attribute name="error" type="xs:short" use="required"/>
+									</xs:extension>
+								</xs:simpleContent>
+							</xs:complexType>
+						</xs:element>
+						<xs:element name="regular">
+							<xs:annotation>
+								<xs:documentation>Controlled application exit, may indicate error.</xs:documentation>
+							</xs:annotation>
+							<xs:complexType>
+								<xs:attribute name="exitcode" type="xs:unsignedByte" use="required"/>
+							</xs:complexType>
+						</xs:element>
+						<xs:element name="signalled">
+							<xs:annotation>
+								<xs:documentation>Application died on signal.</xs:documentation>
+							</xs:annotation>
+							<xs:complexType>
+								<xs:simpleContent>
+									<xs:extension base="xs:string">
+										<xs:attribute name="signal" type="xs:byte" use="required"/>
+										<xs:attribute name="corefile" type="xs:boolean" use="optional"/>
+									</xs:extension>
+								</xs:simpleContent>
+							</xs:complexType>
+						</xs:element>
+						<xs:element name="suspended">
+							<xs:annotation>
+								<xs:documentation>This should not happen.</xs:documentation>
+							</xs:annotation>
+							<xs:complexType>
+								<xs:simpleContent>
+									<xs:extension base="xs:string">
+										<xs:attribute name="signal" type="xs:byte" use="required"/>
+									</xs:extension>
+								</xs:simpleContent>
+							</xs:complexType>
+						</xs:element>
+					</xs:choice>
+					<xs:attribute name="raw" type="xs:int" use="required"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="statcall" type="StatCallType">
+				<xs:annotation>
+					<xs:documentation>Inode information about the application that was run.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:choice>
+				<xs:element name="arguments">
+					<xs:annotation>
+						<xs:documentation>Name and arguments of the executable of application.</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:simpleContent>
+							<xs:extension base="xs:string">
+								<xs:attribute name="executable" type="xs:string" use="optional">
+									<xs:annotation>
+										<xs:documentation>DEPRECATED - redundant attribute will be dropped soon.</xs:documentation>
+									</xs:annotation>
+								</xs:attribute>
+							</xs:extension>
+						</xs:simpleContent>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="argument-vector">
+					<xs:annotation>
+						<xs:documentation>Enumerates the argument vector for debugging.</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:sequence minOccurs="0" maxOccurs="unbounded">
+							<xs:element name="arg">
+								<xs:annotation>
+									<xs:documentation>Single argument vector entry.</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:simpleContent>
+										<xs:extension base="xs:string">
+											<xs:attribute name="nr" type="xs:nonNegativeInteger" use="required"/>
+										</xs:extension>
+									</xs:simpleContent>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+						<xs:attribute name="executable" type="xs:string" use="optional"/>
+					</xs:complexType>
+				</xs:element>
+			</xs:choice>
+			<xs:sequence>
+				<xs:element name="proc" minOccurs="0" maxOccurs="unbounded">
+					<xs:complexType>
+						<xs:attribute name="ppid" type="xs:nonNegativeInteger" use="required">
+							<xs:annotation>
+								<xs:documentation>Parent process ID</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+						<xs:attribute name="pid" type="xs:nonNegativeInteger" use="required">
+							<xs:annotation>
+								<xs:documentation>Process ID</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+						<xs:attribute name="exe" type="xs:nonNegativeInteger" use="required">
+							<xs:annotation>
+								<xs:documentation>Path to executable</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+						<xs:attribute name="start" type="PositiveDecimal" use="required">
+							<xs:annotation>
+								<xs:documentation>Start time in seconds since epoch</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+						<xs:attribute name="stop" type="PositiveDecimal" use="required">
+							<xs:annotation>
+								<xs:documentation>Stop time in seconds since epoch</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+						<xs:attribute name="utime" type="PositiveDecimal" use="required">
+							<xs:annotation>
+								<xs:documentation>CPU time spent in user mode</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+						<xs:attribute name="stime" type="PositiveDecimal" use="required">
+							<xs:annotation>
+								<xs:documentation>CPU time spent in kernel mode</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+						<xs:attribute name="vmpeak" type="xs:nonNegativeInteger" use="required">
+							<xs:annotation>
+								<xs:documentation>Peak virtual memory size in KB</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+						<xs:attribute name="rsspeak" type="xs:nonNegativeInteger" use="required">
+							<xs:annotation>
+								<xs:documentation>Peak resident set size in KB</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+						<xs:attribute name="rchar" type="xs:nonNegativeInteger" use="required">
+							<xs:annotation>
+								<xs:documentation>Characters read</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+						<xs:attribute name="wchar" type="xs:nonNegativeInteger" use="required">
+							<xs:annotation>
+								<xs:documentation>Characters written</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+						<xs:attribute name="rbytes" type="xs:nonNegativeInteger" use="required">
+							<xs:annotation>
+								<xs:documentation>Bytes read</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+						<xs:attribute name="wbytes" type="xs:nonNegativeInteger" use="required">
+							<xs:annotation>
+								<xs:documentation>Bytes written</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+						<xs:attribute name="cwbytes" type="xs:nonNegativeInteger" use="required">
+							<xs:annotation>
+								<xs:documentation>Bytes written and later cancelled</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+						<xs:attribute name="syscr" type="xs:nonNegativeInteger" use="required">
+							<xs:annotation>
+								<xs:documentation>Number of read system calls</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+						<xs:attribute name="syscw" type="xs:nonNegativeInteger" use="required">
+							<xs:annotation>
+								<xs:documentation>Number of write system calls</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+		</xs:sequence>
+		<xs:attribute name="start" type="xs:dateTime" use="required"/>
+		<xs:attribute name="duration" type="PositiveDecimal" use="required"/>
+		<xs:attribute name="pid" type="xs:decimal" use="optional"/>
+	</xs:complexType>
+	<xs:complexType name="MachineDarwin">
+		<xs:annotation>
+			<xs:documentation>Machine-specific info for Mac OS X.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="ram">
+				<xs:annotation>
+					<xs:documentation>Main memory states.</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:attribute name="total" type="xs:nonNegativeInteger"/>
+					<xs:attribute name="avail" type="xs:nonNegativeInteger"/>
+					<xs:attribute name="active" type="xs:nonNegativeInteger"/>
+					<xs:attribute name="inactive" type="xs:nonNegativeInteger"/>
+					<xs:attribute name="wired" type="xs:nonNegativeInteger"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="swap">
+				<xs:annotation>
+					<xs:documentation>Swap disk states.</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:attribute name="total" type="xs:nonNegativeInteger"/>
+					<xs:attribute name="avail" type="xs:nonNegativeInteger" use="optional"/>
+					<xs:attribute name="used" type="xs:nonNegativeInteger" use="optional"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="boot">
+				<xs:annotation>
+					<xs:documentation>Time stamp of last boot.</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:dateTime"/>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="cpu">
+				<xs:annotation>
+					<xs:documentation>Information about installed CPUs.</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attribute name="count" type="xs:nonNegativeInteger"/>
+							<xs:attribute name="speed" type="xs:nonNegativeInteger"/>
+							<xs:attribute name="vendor" type="xs:string"/>
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="load">
+				<xs:annotation>
+					<xs:documentation>Load average info.</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:attribute name="min1" type="PositiveDecimal" use="required"/>
+					<xs:attribute name="min5" type="PositiveDecimal" use="required"/>
+					<xs:attribute name="min15" type="PositiveDecimal" use="required"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="proc">
+				<xs:annotation>
+					<xs:documentation>Process states count.</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:attribute name="total" type="xs:nonNegativeInteger"/>
+					<xs:attribute name="idle" type="xs:nonNegativeInteger"/>
+					<xs:attribute name="running" type="xs:nonNegativeInteger"/>
+					<xs:attribute name="sleeping" type="xs:nonNegativeInteger"/>
+					<xs:attribute name="waiting" type="xs:nonNegativeInteger"/>
+					<xs:attribute name="stopped" type="xs:nonNegativeInteger"/>
+					<xs:attribute name="zombie" type="xs:nonNegativeInteger"/>
+					<xs:attribute name="other" type="xs:nonNegativeInteger"/>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="MachineLinux">
+		<xs:annotation>
+			<xs:documentation>Machine-specific info for Linux kernels 2.4 and 2.6.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="ram">
+				<xs:annotation>
+					<xs:documentation>Main memory states.</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:attribute name="total" type="xs:nonNegativeInteger"/>
+					<xs:attribute name="free" type="xs:nonNegativeInteger"/>
+					<xs:attribute name="shared" type="xs:nonNegativeInteger"/>
+					<xs:attribute name="buffer" type="xs:nonNegativeInteger"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="swap">
+				<xs:annotation>
+					<xs:documentation>Swap disk states.</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:attribute name="total" type="xs:nonNegativeInteger"/>
+					<xs:attribute name="free" type="xs:nonNegativeInteger"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="boot">
+				<xs:annotation>
+					<xs:documentation>Time stamp of last boot.</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:dateTime">
+							<xs:attribute name="idle" type="PositiveDecimal" use="optional"/>
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="cpu">
+				<xs:annotation>
+					<xs:documentation>Information about installed CPUs.</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attribute name="count" type="xs:nonNegativeInteger"/>
+							<xs:attribute name="speed" type="xs:nonNegativeInteger"/>
+							<xs:attribute name="vendor" type="xs:string"/>
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="load">
+				<xs:annotation>
+					<xs:documentation>Load average info.</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:attribute name="min1" type="PositiveDecimal" use="required"/>
+					<xs:attribute name="min5" type="PositiveDecimal" use="required"/>
+					<xs:attribute name="min15" type="PositiveDecimal" use="required"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="procs" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Process states count.</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:attribute name="total" type="xs:nonNegativeInteger" use="required"/>
+					<xs:attribute name="running" type="xs:nonNegativeInteger" use="optional"/>
+					<xs:attribute name="sleeping" type="xs:nonNegativeInteger"/>
+					<xs:attribute name="waiting" type="xs:nonNegativeInteger"/>
+					<xs:attribute name="stopped" type="xs:nonNegativeInteger"/>
+					<xs:attribute name="zombie" type="xs:nonNegativeInteger"/>
+					<xs:attribute name="other" type="xs:nonNegativeInteger"/>
+					<xs:attribute name="vmsize" type="xs:nonNegativeInteger"/>
+					<xs:attribute name="rss" type="xs:nonNegativeInteger"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="task" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Task/thread state count.</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:attribute name="total" type="xs:nonNegativeInteger" use="required"/>
+					<xs:attribute name="running" type="xs:nonNegativeInteger" use="optional"/>
+					<xs:attribute name="sleeping" type="xs:nonNegativeInteger"/>
+					<xs:attribute name="waiting" type="xs:nonNegativeInteger"/>
+					<xs:attribute name="stopped" type="xs:nonNegativeInteger"/>
+					<xs:attribute name="zombie" type="xs:nonNegativeInteger"/>
+					<xs:attribute name="other" type="xs:nonNegativeInteger"/>
+					<xs:attribute name="vmsize" type="xs:nonNegativeInteger" use="optional"/>
+					<xs:attribute name="rss" type="xs:nonNegativeInteger" use="optional"/>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="MachineSunos">
+		<xs:annotation>
+			<xs:documentation>Machine-specific info for Solaris 8 or higher.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="ram">
+				<xs:annotation>
+					<xs:documentation>Main memory states.</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:attribute name="total" type="xs:nonNegativeInteger" use="optional"/>
+					<xs:attribute name="avail" type="xs:nonNegativeInteger"/>
+					<xs:attribute name="free" type="xs:nonNegativeInteger"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="swap" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Swap disk states.</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:attribute name="total" type="xs:nonNegativeInteger"/>
+					<xs:attribute name="free" type="xs:nonNegativeInteger"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="boot">
+				<xs:annotation>
+					<xs:documentation>Time stamp of last boot.</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:dateTime"/>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="cpu">
+				<xs:annotation>
+					<xs:documentation>Information about installed CPUs.</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attribute name="count" type="xs:nonNegativeInteger"/>
+							<xs:attribute name="speed" type="xs:nonNegativeInteger"/>
+							<xs:attribute name="online" type="xs:nonNegativeInteger"/>
+							<xs:attribute name="type" type="xs:string"/>
+							<xs:attribute name="brand" type="xs:string"/>
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="load">
+				<xs:annotation>
+					<xs:documentation>Load average info.</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:attribute name="min1" type="PositiveDecimal" use="required"/>
+					<xs:attribute name="min5" type="PositiveDecimal" use="required"/>
+					<xs:attribute name="min15" type="PositiveDecimal" use="required"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="proc">
+				<xs:annotation>
+					<xs:documentation>Process state count.</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:attribute name="total" type="xs:nonNegativeInteger"/>
+					<xs:attribute name="found" type="xs:nonNegativeInteger"/>
+					<xs:attribute name="size" type="xs:nonNegativeInteger"/>
+					<xs:attribute name="rss" type="xs:nonNegativeInteger"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="lwp">
+				<xs:annotation>
+					<xs:documentation>Solaris LWP state count.</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:attribute name="active" type="xs:nonNegativeInteger"/>
+					<xs:attribute name="zombie" type="xs:nonNegativeInteger"/>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="MachineBasic">
+		<xs:annotation>
+			<xs:documentation>Machine-unspecific when we cannot identify it.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="ram" minOccurs="0">
+				<xs:complexType>
+					<xs:attribute name="total" type="xs:nonNegativeInteger" use="optional"/>
+					<xs:attribute name="avail" type="xs:nonNegativeInteger" use="optional"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="cpu" minOccurs="0">
+				<xs:complexType>
+					<xs:attribute name="total" type="xs:nonNegativeInteger" use="optional"/>
+					<xs:attribute name="online" type="xs:nonNegativeInteger" use="optional"/>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:element name="invocation">
+		<xs:annotation>
+			<xs:documentation>record of an application that was run.</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="setup" type="JobType" minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>Optional job to run independently first.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="prejob" type="JobType" minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>Optional job to run before invoking the application.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="mainjob" type="JobType" minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>The application itself.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="postjob" type="JobType" minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>Optional job to run after invoking the application.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="cleanup" type="JobType" minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>Optional job to run independently last.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="cwd">
+					<xs:annotation>
+						<xs:documentation>Record the current working directory at time of execution.</xs:documentation>
+					</xs:annotation>
+					<xs:simpleType>
+						<xs:restriction base="xs:string">
+							<xs:maxLength value="4096"/>
+							<xs:whiteSpace value="preserve"/>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:element>
+				<xs:element name="usage" type="RUsageType">
+					<xs:annotation>
+						<xs:documentation>Resource usage recorded of gridstart itself.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="machine">
+					<xs:annotation>
+						<xs:documentation>Report machine-specific characteristics like OS, release, CPUs, etc.</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="stamp" type="xs:dateTime">
+								<xs:annotation>
+									<xs:documentation>snapshot time.</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+							<xs:element name="uname">
+								<xs:annotation>
+									<xs:documentation>Report basic kernel information.</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:simpleContent>
+										<xs:extension base="xs:token">
+											<xs:attribute name="archmode" use="optional">
+												<xs:annotation>
+													<xs:documentation>IA32, IA64, ILP32, LP64</xs:documentation>
+												</xs:annotation>
+												<xs:simpleType>
+													<xs:restriction base="xs:NMTOKEN">
+														<xs:maxLength value="16"/>
+														<xs:minLength value="4"/>
+													</xs:restriction>
+												</xs:simpleType>
+											</xs:attribute>
+											<xs:attribute name="system" type="xs:NMTOKEN" use="required"/>
+											<xs:attribute name="nodename" type="xs:NMTOKEN" use="required"/>
+											<xs:attribute name="release" type="xs:NMTOKEN" use="required"/>
+											<xs:attribute name="machine" type="xs:NMTOKEN" use="required"/>
+											<xs:attribute name="domainname" type="xs:NMTOKEN" use="optional"/>
+										</xs:extension>
+									</xs:simpleContent>
+								</xs:complexType>
+							</xs:element>
+							<xs:choice>
+								<xs:element name="darwin" type="MachineDarwin"/>
+								<xs:element name="linux" type="MachineLinux"/>
+								<xs:element name="sunos" type="MachineSunos"/>
+								<xs:element name="basic" type="MachineBasic"/>
+							</xs:choice>
+						</xs:sequence>
+						<xs:attribute name="page-size" type="xs:nonNegativeInteger" use="required"/>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="statcall" maxOccurs="unbounded">
+					<xs:annotation>
+						<xs:documentation>Inode info on shared and outside apps and streams.</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:complexContent>
+							<xs:extension base="StatCallType">
+								<xs:attribute name="id" use="required">
+									<xs:simpleType>
+										<xs:restriction base="xs:NMTOKEN">
+											<xs:enumeration value="gridstart"/>
+											<xs:enumeration value="stdin"/>
+											<xs:enumeration value="stdout"/>
+											<xs:enumeration value="stderr"/>
+											<xs:enumeration value="logfile"/>
+											<xs:enumeration value="channel"/>
+											<xs:enumeration value="initial"/>
+											<xs:enumeration value="final"/>
+										</xs:restriction>
+									</xs:simpleType>
+								</xs:attribute>
+								<xs:attribute name="lfn" type="xs:NMTOKEN" use="optional"/>
+							</xs:extension>
+						</xs:complexContent>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="environment" minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>Environment setting as seen by process.</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:sequence minOccurs="0" maxOccurs="unbounded">
+							<xs:element name="env">
+								<xs:annotation>
+									<xs:documentation>single environment key-value pair.</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:simpleContent>
+										<xs:extension base="xs:string">
+											<xs:attribute name="key" type="xs:string" use="required"/>
+										</xs:extension>
+									</xs:simpleContent>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="resource" minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>Resource limits as imposed by the compute enviroment.</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:choice minOccurs="0" maxOccurs="unbounded">
+							<xs:element name="soft">
+								<xs:complexType>
+									<xs:simpleContent>
+										<xs:extension base="ResourceValue">
+											<xs:attribute name="id" type="xs:NMTOKEN" use="required"/>
+										</xs:extension>
+									</xs:simpleContent>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="hard">
+								<xs:complexType>
+									<xs:simpleContent>
+										<xs:extension base="ResourceValue">
+											<xs:attribute name="id" type="xs:NMTOKEN" use="required"/>
+										</xs:extension>
+									</xs:simpleContent>
+								</xs:complexType>
+							</xs:element>
+						</xs:choice>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+			<xs:attribute name="version" use="required">
+				<xs:simpleType>
+					<xs:restriction base="xs:NMTOKEN">
+						<xs:pattern value="[0-9]+\.[0-9]+"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:attribute>
+			<xs:attribute name="start" type="xs:dateTime" use="required">
+				<xs:annotation>
+					<xs:documentation>Start of application according to host clock.</xs:documentation>
+				</xs:annotation>
+			</xs:attribute>
+			<xs:attribute name="duration" type="PositiveDecimal" use="required">
+				<xs:annotation>
+					<xs:documentation>Duration of application run in seconds with microsecond fraction, according to host clock.</xs:documentation>
+				</xs:annotation>
+			</xs:attribute>
+			<xs:attribute name="transformation" type="xs:string" use="optional" default="null"/>
+			<xs:attribute name="derivation" type="xs:string" use="optional" default="null"/>
+			<xs:attribute name="resource" type="xs:string" use="optional"/>
+			<xs:attribute name="interface" type="xs:NMTOKEN" use="optional"/>
+			<xs:attribute name="hostaddr" type="DottedQuad" use="optional" default="0.0.0.0">
+				<xs:annotation>
+					<xs:documentation>Host address of the primary interface, as far as discernable.</xs:documentation>
+				</xs:annotation>
+			</xs:attribute>
+			<xs:attribute name="hostname" type="xs:string" use="optional"/>
+			<xs:attribute name="ram" type="xs:nonNegativeInteger" use="optional"/>
+			<xs:attribute name="pid" type="xs:decimal" use="optional">
+				<xs:annotation>
+					<xs:documentation>process number of the gridlaunch application itself.</xs:documentation>
+				</xs:annotation>
+			</xs:attribute>
+			<xs:attribute name="uid" type="xs:integer" use="optional">
+				<xs:annotation>
+					<xs:documentation>real user id on the compute node that started grid launch.</xs:documentation>
+				</xs:annotation>
+			</xs:attribute>
+			<xs:attribute name="user" type="xs:string" use="optional"/>
+			<xs:attribute name="gid" type="xs:integer" use="optional">
+				<xs:annotation>
+					<xs:documentation>real group id of the user that started gridlaunch</xs:documentation>
+				</xs:annotation>
+			</xs:attribute>
+			<xs:attribute name="group" type="xs:string" use="optional"/>
+			<xs:attribute name="wf-label" type="xs:string" use="optional"/>
+			<xs:attribute name="wf-stamp" type="xs:dateTime" use="optional"/>
+			<xs:attribute name="umask" type="xs:token" use="optional"/>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>

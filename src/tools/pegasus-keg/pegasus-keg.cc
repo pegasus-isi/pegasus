@@ -37,7 +37,14 @@ extern char** environ;
 #include "basic.hh"
 #include "linux.hh"
 #endif // LINUX
+
+#ifdef GNUKFREEBSD
+#include "basic.hh"
+#include "linux.hh"
+#endif // GNUKFREEBSD
 #endif // MACHINE_SPECIFIC
+
+#include "version.h"
 
 static char output[4096];
 static char pattern[] = 
@@ -458,12 +465,12 @@ identify( char* result, size_t size, const char* arg0,
 	  line, ms+1, hours, minutes, start, that-start );
 
   // phase 1: Say hi
-#ifdef HAS_SVNVERSION
-  append( result, size, "Applicationname: %s [v%s] @ %s\n", 
-	  arg0, HAS_SVNVERSION, hostname );
+#ifdef KEG_VERSION
+  append( result, size, "Applicationname: %s [%s] @ %s\n", 
+	  arg0, KEG_VERSION, hostname );
 #else
   append( result, size, "Applicationname: %s @ %s\n", arg0, hostname );
-#endif // HAS_SVNVERSION
+#endif
 
   if ( getcwd( line, linsize ) == 0 ) strcpy( line, "(n.a.)" );
   append( result, size, "Current Workdir: %s\n", line );
@@ -475,7 +482,7 @@ identify( char* result, size_t size, const char* arg0,
   pegasus_loadavg( result, size ); 
   pegasus_meminfo( result, size ); 
   pegasus_statfs( result, size ); 
-#endif // MACHINE_SPECIFIC
+#endif
 
   if ( condor ) { 
     for ( char** p = environ; *p; p++ ) {

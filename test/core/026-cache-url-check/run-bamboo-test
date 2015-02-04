@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+set -o pipefail
 
 TOP_DIR=`pwd`
 
@@ -9,7 +10,7 @@ export PEGASUS_BIN_DIR=`pegasus-config --bin`
 if [ "x$PEGASUS_BIN_DIR" = "x" ]; then
     echo "Please make sure pegasus-plan is in your path"
     exit 1
-fi 
+fi
 
 # build the dax generator
 export PYTHONPATH=.:`pegasus-config --python`
@@ -25,9 +26,9 @@ cat >sites.xml <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0">
     <site  handle="local" arch="x86" os="LINUX">
-        <directory type="shared-scratch" path="/nfs/ccg4/scratch-6-months-purge/http-scratch/bamboo">
+        <directory type="shared-scratch" path="/nfs/ccg4/scratch-purge-no-backups/http-scratch/bamboo">
             <file-server operation="get" url="http://obelix.isi.edu/shared-scratch/bamboo"/>
-            <file-server operation="put" url="file:///nfs/ccg4/scratch-6-months-purge/http-scratch/bamboo"/>
+            <file-server operation="put" url="file:///nfs/ccg4/scratch-purge-no-backups/http-scratch/bamboo"/>
         </directory>
         <directory type="local-storage" path="$TOP_DIR/outputs">
             <file-server operation="all" url="file://$TOP_DIR/outputs"/>
@@ -62,22 +63,39 @@ pegasus-plan \
 WORK_DIR=`cat plan.out | grep pegasus-remove | sed -E 's/.*pegasus-remove[ ]+//'`
 cd $WORK_DIR
 
-while :
+BREAK=0
+COUNTER=0
+
+while [[ $BREAK -eq 0 && $COUNTER -lt 600 ]];
 do
 	sleep 1
-	
+
+	if [ -e "diamond-a_ID0000001/monitord.done" ]; then
+		BREAK=1
+	fi
+
 	if [ -e "diamond-a_ID0000001/diamond-a-0.cache" ]; then
 		set +e
-		grep -v -P "diamond-.*-4\.0" diamond-a_ID0000001/diamond-a-0.cache | grep -v "http://" 
+		grep -v -P "diamond-.*-4\.0" diamond-a_ID0000001/diamond-a-0.cache | grep -v "http://"
 		EC=$?
 		set -e
 
 		if [ $EC -eq 0 ]; then
-			echo "Cache file contains non http URL's" 
+			echo "Cache file contains non http URL's"
 			exit 1
 		fi
 
-		break
+		exit 0
 	fi
+
+	let COUNTER=COUNTER+1
 done
+
+if [ $BREAK -eq 1 ]; then
+	echo "Sub workflow finished, but did not find diamond-a_ID0000001/diamond-a-0.cache file"
+	exit 2
+else
+	echo "Timer Expired: Waited 10 mins for diamond-a_ID0000001/diamond-a-0.cache file to be created"
+	exit 3
+fi
 

@@ -16,18 +16,24 @@
 
 package edu.isi.pegasus.planner.namespace;
 
-import java.util.Iterator;
-import java.util.Map;
-import java.util.TreeMap;
+import edu.isi.pegasus.common.credential.impl.Irods;
+import edu.isi.pegasus.common.credential.impl.Proxy;
+import edu.isi.pegasus.common.credential.impl.S3CFG;
+import edu.isi.pegasus.common.credential.impl.Ssh;
+import edu.isi.pegasus.common.credential.impl.BotoConfig;
+import edu.isi.pegasus.common.credential.impl.GoogleP12;
 
 import edu.isi.pegasus.planner.classes.Profile;
 
-import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.aggregator.Aggregator;
+import edu.isi.pegasus.planner.namespace.aggregator.UniqueMerge;
 import edu.isi.pegasus.planner.namespace.aggregator.Sum;
 
+import java.util.Iterator;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * A Planner specific namespace. It defines profiles that are used to fine
@@ -127,7 +133,17 @@ public class Pegasus extends Namespace {
      */
     public static final String GRIDSTART_PATH_KEY = "gridstart.path";
 
-
+    /**
+     * The message to look for while detecting failures condor job's stdout/stderr
+     */
+    public static final String EXITCODE_FAILURE_MESSAGE = "exitcode.failuremsg";
+    
+    /**
+     * the message to look for while detecting success in condor job's stdout/stderr
+     */
+    public static final String EXITCODE_SUCCESS_MESSAGE = "exitcode.successmsg";
+    
+    
     /**
      * The deprecated change dir key.
      * @see #CHANGE_DIR_KEY
@@ -255,6 +271,27 @@ public class Pegasus extends Namespace {
      * determines the arguments with which the transfer executable is invoked.
      */
     public static final String TRANSFER_ARGUMENTS_KEY = "transfer.arguments";
+    
+    
+    /**
+     * The name of the profile key, that when associated with transfer jobs
+     * determines the number of threads that pegasus-transfer uses to do the transfer
+     */
+    public static final String TRANSFER_THREADS_KEY = "transfer.threads";
+    
+    /**
+     * The name of the profile key, that when associated with transfer jobs
+     * determines the arguments with which the transfer executable is invoked.
+     */
+    public static final String TRANSFER_SLS_ARGUMENTS_KEY = "transfer.lite.arguments";
+    
+    
+    /**
+     * The name of the profile key, that when associated with transfer jobs
+     * determines the number of threads that pegasus-transfer uses to do the transfer
+     */
+    public static final String TRANSFER_SLS_THREADS_KEY = "transfer.lite.threads";
+
 
     /**
      * The name of the profile key when associated with a transformation in the
@@ -358,11 +395,52 @@ public class Pegasus extends Namespace {
      * Arguments that need to be passed to the PMC clustering executable.
      */
     public static final String PMC_TASK_ARGUMENTS = "pmc_task_arguments";
-
+    
+    /**
+     * Key indicating whether to consider job for data reuse in the partial mode.
+     */
+    public static final String ENABLE_FOR_DATA_REUSE_KEY = "enable_for_data_reuse";
+    
+    /**
+     * Key indicating indicating time in seconds after which kickstart sends out a
+     * TERM signal to a job indicating that is should create a checkpoint file.
+     */
+    public static final String  CHECKPOINT_TIME = "checkpoint_time";
+    
+    /**
+     * Key indicating max walltime for a job in minutes
+     */
+    public static final String  MAX_WALLTIME = "maxwalltime";
+    
+    /**
+     * Key indicating data configuration property. 
+     */
+    public static final String DATA_CONFIGURATION_KEY = "data.configuration";
+    
+    //credential related constant keys
+    private static final String S3CFG_FILE_VARIABLE = S3CFG.S3CFG_FILE_VARIABLE.toLowerCase();
+    private static final String SSH_PRIVATE_KEY_VARIABLE = Ssh.SSH_PRIVATE_KEY_VARIABLE.toLowerCase();
+    private static final String IRODSENVFILE = Irods.IRODSENVFILE.toLowerCase();
+    private static final String X509_USER_PROXY_KEY = Proxy.X509_USER_PROXY_KEY.toLowerCase();
+    private static final String BOTOCONFIG = BotoConfig.BOTO_CONFIG_FILE_VARIABLE.toLowerCase();
+    private static final String GOOGLEP12 = GoogleP12.GOOGLEP12_FILE_VARIABLE.toLowerCase();
+    
     /**
      * Static Handle to the sum aggregator.
      */
     private static Aggregator SUM_AGGREGATOR = new Sum();
+    
+    /**
+     * Static Handle to the delimiter aggregator.
+     */
+    private static Aggregator ERROR_MESSAGE_AGGREGATOR = new UniqueMerge();
+    
+    /**
+     * Static Handle to the delimiter aggregator.
+     */
+    private static Aggregator SUCCESS_MESSAGE_AGGREGATOR = new UniqueMerge();
+   
+    
 
     /**
      * The name of the implementing namespace. It should be one of the valid
@@ -456,10 +534,11 @@ public class Pegasus extends Namespace {
         switch (key.charAt(0)) {
 
             case 'b':
-                if ( (key.compareTo(BUNDLE_KEY) == 0) ||
+                if ( 
                      (key.compareTo(BUNDLE_STAGE_IN_KEY) == 0) ||
                      (key.compareTo(BUNDLE_STAGE_OUT_KEY) == 0 ) ||
-                     (key.compareTo( BUNDLE_REMOTE_STAGE_IN_KEY) == 0 )) {
+                     (key.compareTo( BUNDLE_REMOTE_STAGE_IN_KEY) == 0 ) ||
+                     (key.compareTo(BOTOCONFIG) == 0)) {
                     res = VALID_KEY;
                 }
                 else if( key.compareTo(DEPRECATED_BUNDLE_STAGE_IN_KEY) == 0){
@@ -471,17 +550,20 @@ public class Pegasus extends Namespace {
                 break;
 
             case 'c':
-                if ((key.compareTo( COLLAPSE_KEY ) == 0) ||
-                    (key.compareTo( COLLAPSER_KEY ) == 0) ||
+                if (
+                    (key.compareTo(BUNDLE_KEY) == 0) ||
+                    (key.compareTo( COLLAPSE_KEY ) == 0) ||
                     (key.compareTo( CHANGE_DIR_KEY ) == 0) ||
                     (key.compareTo( CHAIN_STAGE_IN_KEY ) == 0) ||
                     (key.compareTo( MAX_RUN_TIME ) == 0) ||
                     (key.compareTo(CREATE_AND_CHANGE_DIR_KEY ) == 0 ) ||
                     (key.compareTo( CLUSTER_ARGUMENTS) == 0 ) ||
-                    (key.compareTo( CORES_KEY ) == 0 ) ) {
+                    (key.compareTo( CORES_KEY ) == 0 ) ||
+                    (key.compareTo( Pegasus.CHECKPOINT_TIME) == 0 )   ) {
                     res = VALID_KEY;
                 }
-                else if(key.compareTo(DEPRECATED_CHANGE_DIR_KEY) == 0){
+                else if(key.compareTo(DEPRECATED_CHANGE_DIR_KEY) == 0 ||
+                    (key.compareTo( COLLAPSER_KEY ) == 0)){
                     res = DEPRECATED_KEY;
                 }
                 else {
@@ -489,11 +571,32 @@ public class Pegasus extends Namespace {
                 }
                 break;
             
+            case 'd':
+                if (key.compareTo( DATA_CONFIGURATION_KEY ) == 0) {
+                    res = VALID_KEY;
+                }
+                else {
+                    res = UNKNOWN_KEY;
+                }
+                break;
+                
+            case 'e':
+                if ((key.compareTo( Pegasus.EXITCODE_FAILURE_MESSAGE ) == 0) ||
+                    (key.compareTo( Pegasus.EXITCODE_SUCCESS_MESSAGE ) == 0)||
+                    (key.compareTo( Pegasus.ENABLE_FOR_DATA_REUSE_KEY ) == 0 )  ) {
+                    res = VALID_KEY;
+                }
+                else {
+                    res = UNKNOWN_KEY;
+                }
+                break;
+                
             case 'g':
                 if (key.compareTo( GROUP_KEY ) == 0 ||
                     key.compareTo( GRIDSTART_KEY ) == 0 ||
                     key.compareTo( GRIDSTART_PATH_KEY ) == 0 ||
-                    key.compareTo( GRIDSTART_ARGUMENTS_KEY ) == 0 ) {
+                    key.compareTo( GRIDSTART_ARGUMENTS_KEY ) == 0 ||
+                    key.compareTo( GOOGLEP12 ) == 0) {
                     res = VALID_KEY;
                 }
                 else {
@@ -501,6 +604,15 @@ public class Pegasus extends Namespace {
                 }
                 break;
 
+            case 'i':
+                if (key.compareTo( IRODSENVFILE ) == 0) {
+                    res = VALID_KEY;
+                }
+                else {
+                    res = UNKNOWN_KEY;
+                }
+                break;
+                
             case 'j':
                 if (key.compareTo( JOB_RUN_TIME ) == 0) {
                     res = VALID_KEY;
@@ -515,6 +627,15 @@ public class Pegasus extends Namespace {
 
             case 'l':
                 if( key.compareTo( LABEL_KEY ) == 0 ){
+                    res = VALID_KEY;
+                }
+                else{
+                    res = UNKNOWN_KEY;
+                }
+                break;
+                
+            case 'm':
+                if( key.compareTo( MAX_WALLTIME ) == 0 ){
                     res = VALID_KEY;
                 }
                 else{
@@ -545,7 +666,15 @@ public class Pegasus extends Namespace {
                 break;
 
             case 's':
-                if(key.compareTo(STYLE_KEY) == 0){
+                if( key.compareTo( STYLE_KEY ) == 0 ||
+                    key.compareTo( S3CFG_FILE_VARIABLE ) == 0 ||
+                    key.compareTo( SSH_PRIVATE_KEY_VARIABLE ) == 0 ||
+                    key.compareTo( CLUSTER_STAGE_IN_KEY ) == 0 ||  
+                    key.compareTo( CLUSTER_REMOTE_STAGE_IN_KEY ) == 0 ||
+                    key.compareTo( CLUSTER_LOCAL_STAGE_IN_KEY ) == 0 ||
+                    key.compareTo( CLUSTER_STAGE_OUT_KEY ) == 0 ||  
+                    key.compareTo( CLUSTER_REMOTE_STAGE_OUT_KEY ) == 0 ||
+                    key.compareTo( CLUSTER_LOCAL_STAGE_OUT_KEY ) == 0   ){
                     res = VALID_KEY;
                 }
                 else{
@@ -555,8 +684,12 @@ public class Pegasus extends Namespace {
                 break;
 
             case 't':
-                if ((key.compareTo(TRANSFER_PROXY_KEY) == 0) ||
-		     (key.compareTo(TRANSFER_ARGUMENTS_KEY) == 0)){
+                if  ( ( key.compareTo( TRANSFER_PROXY_KEY ) == 0) ||
+                      ( key.compareTo( TRANSFER_ARGUMENTS_KEY ) == 0) || 
+                      ( key.compareTo( TRANSFER_THREADS_KEY ) == 0) ||
+		      ( key.compareTo( TRANSFER_SLS_ARGUMENTS_KEY ) == 0) || 
+                      ( key.compareTo( TRANSFER_SLS_THREADS_KEY ) == 0) || 
+                      ( key.compareTo( TYPE_KEY ) == 0) ){
                     res = VALID_KEY;
                 }
                 else{
@@ -574,6 +707,15 @@ public class Pegasus extends Namespace {
                 }
                 break;
 
+            case 'x':
+                if ( key.compareTo( X509_USER_PROXY_KEY ) == 0) {
+                    res = VALID_KEY;
+                }
+                else {
+                    res = UNKNOWN_KEY;
+                }
+                break;
+                
 
             default:
                 res = UNKNOWN_KEY;
@@ -650,7 +792,7 @@ public class Pegasus extends Namespace {
      
     
     /**
-     * Merge the profiles in the namespace in a controlled manner.
+     * UniqueMerge the profiles in the namespace in a controlled manner.
      * In case of intersection, the new profile value (except for key runtime where
      * the values are summed ) overrides, the existing
      * profile value.
@@ -671,6 +813,18 @@ public class Pegasus extends Namespace {
             if( key.equals( Pegasus.RUNTIME_KEY ) ){
                 this.construct( key, 
                                 SUM_AGGREGATOR.compute((String)get( key ), (String)profiles.get( key ), "0" )
+                               );
+            }
+            else if( key.equals( Pegasus.EXITCODE_FAILURE_MESSAGE) ){
+                System.out.println( "Old Key " + key + " -> " + (String)get( key ) + " New Value " +  (String)profiles.get( key ));
+                this.construct( key, 
+                                ERROR_MESSAGE_AGGREGATOR.compute((String)get( key ), (String)profiles.get( key ), null )
+                               );
+
+            }
+            else if(  key.equals( Pegasus.EXITCODE_SUCCESS_MESSAGE) ){
+                this.construct( key, 
+                                SUCCESS_MESSAGE_AGGREGATOR.compute((String)get( key ), (String)profiles.get( key ), null )
                                );
             }
             else{
@@ -733,7 +887,12 @@ public class Pegasus extends Namespace {
    public void unknownKey(String key, String value) {
        //mLogger.log("unknown profile " + mNamespace + "." + key +
        //            ",  using anyway", LogManager.DEBUG_MESSAGE_LEVEL);
-       construct(key, value);
+       
+       //Starting 4.4 unknown keys are not added to jobs. this will help 
+       //in reducing the number of profiles associated with the jobs, as
+       //not all pegasus properties are handled as profiles.
+       //construct(key, value);
+       
    }
 
 
@@ -771,9 +930,9 @@ public class Pegasus extends Namespace {
     }
 
     /**
-     * Returns a boolean value, that a particular key is mapped to in this
-     * namespace. If the key is mapped to a non boolean
-     * value or the key is not populated in the namespace false is returned.
+     * Returns a int value, that a particular key is mapped to in this
+     * namespace. If the key is mapped to a non integer, then the 
+     * default value is returned
      *
      * @param key  The key whose boolean value you desire.
      *
@@ -786,7 +945,6 @@ public class Pegasus extends Namespace {
         }
         return value;
     }
-
 
     /**
      * Returns a String value, that a particular key is mapped to in this

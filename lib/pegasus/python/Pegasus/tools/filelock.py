@@ -39,8 +39,7 @@ def intent_exit_handler():
         except:
             logger.debug("error unlinking %s" % (key))
 
-# Get logger object (initialized elsewhere)
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 class Intent:
     """

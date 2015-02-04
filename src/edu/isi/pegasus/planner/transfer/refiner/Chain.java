@@ -208,6 +208,7 @@ public class Chain extends Basic {
      * Prints out the bundles and chains that have been constructed.
      */
     public void done(){
+        super.done();
         //print out all the Site transfers that you have
         mLogger.log("Chains of stagein jobs per sites are " ,
                     LogManager.DEBUG_MESSAGE_LEVEL);

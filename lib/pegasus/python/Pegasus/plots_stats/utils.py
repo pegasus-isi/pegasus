@@ -33,8 +33,7 @@ from datetime import datetime
 from Pegasus.tools import properties
 from Pegasus.tools import utils
 
-# Initialize logging object
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 def isSubWfJob(job_name):
 	"""
@@ -155,6 +154,7 @@ def format_seconds(duration, max_comp = 2):
 	sec = int(duration)
 	formatted_duration = ''
 	years = sec / 31536000
+	sec -= 31536000 * years
 	days = sec / 86400
 	sec -= 86400 * days
 	hrs = sec / 3600

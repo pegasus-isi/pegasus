@@ -14,17 +14,16 @@ NOTE: Do not copy and paste the commands below without double checking.
 2.  Generate man pages documentation PDFs. This step has a set of 
     dependencies the normal build does not. To mention a few: fop,
     asciidoc, xsltproc, docbook. 
+
        ant doc
 
+3.  Check in the geneated man pages:
 
-3.  Copy and check the geneated PDFs and man pages in:
+       git commit -a -m "Updated man pages"
 
-       cp dist/pegasus-*/share/doc/pegasus/html/*.pdf doc/
-       git commit -a -m "Updated man pages PDFs"
+4.  Set the version number in build.properties and commit:
 
-4.  Set the version number in Version.in and commit:
-
-       vim ./src/edu/isi/pegasus/common/util/Version.in
+       vim build.properties
        git commit -a -m "Setting version for tag"
 
 5.  Tag. Example:
@@ -33,18 +32,19 @@ NOTE: Do not copy and paste the commands below without double checking.
 
 6.  Open branch for new checkins with new version:
 
-       vim ./src/edu/isi/pegasus/common/util/Version.in
+       vim build.properties
        git commit -a -m "Branch reopen for checkins"
 
 7.  Bring the branch back to master, but ignore the commits.
 
        git checkout master
        git merge --no-commit N.M
-       git commit -m "Merged 4.2"
+    (edit build.properties)
+       git commit -a -m "Merged N.M"
 
-8.  Build using the NMI system.
+8.  git push --tags
 
-9.  Copy the build binaries from nightlies to their final place.
+9.  Build with Bamboo
 
 10. Build APT repo. First copy the debs into their final place in 
     the apt tree. Then run update-pegasus-apt-repo on a Debian

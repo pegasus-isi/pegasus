@@ -83,28 +83,28 @@ public class Cluster extends Bundle {
      * that are being created per execution pool for stageing in data for
      * the workflow.
      */
-    public static final String DEFAULT_LOCAL_STAGE_IN_CLUSTER_FACTOR = "4";
+    public static final String DEFAULT_LOCAL_STAGE_IN_CLUSTER_FACTOR = "2";
 
     /**
      * The default clustering factor that identifies the number of transfer jobs
      * that are being created per execution pool for stageing in data for
      * the workflow.
      */
-    public static final String DEFAULT_REMOTE_STAGE_IN_CLUSTER_FACTOR = "4";
+    public static final String DEFAULT_REMOTE_STAGE_IN_CLUSTER_FACTOR = "2";
 
     /**
      * The default bundling factor that identifies the number of transfer jobs
      * that are being created per execution pool for stageing out data for
      * the workflow.
      */
-    public static final String DEFAULT_LOCAL_STAGE_OUT_CLUSTER_FACTOR = "4";
+    public static final String DEFAULT_LOCAL_STAGE_OUT_CLUSTER_FACTOR = "2";
 
     /**
      * The default bundling factor that identifies the number of transfer jobs
      * that are being created per execution pool for stageing out data for
      * the workflow.
      */
-    public static final String DEFAULT_REMOTE_STAGE_OUT_CLUSTER_FACTOR = "4";
+    public static final String DEFAULT_REMOTE_STAGE_OUT_CLUSTER_FACTOR = "2";
 
     /**
      * A map indexed by site name, that contains the pointer to the stage in
@@ -359,7 +359,10 @@ public class Cluster extends Bundle {
                 FileTransfer ft = ( FileTransfer)it.next();
                 String key = this.constructFileKey( ft.getLFN(), job.getStagingSiteHandle() );
                 
-                if( ft.isTransferringExecutableFile() && this.mAddNodesForSettingXBit ){
+                //PM-810 worker node exeucution is per job level now
+                boolean addNodeForSettingXBit = !mPegasusConfiguration.jobSetupForWorkerNodeExecution(job);
+        
+                if( ft.isTransferringExecutableFile() && addNodeForSettingXBit ){
                     //the staged execution file should be having the setup
                     //job as parent if it does not preserve x bit
                     if( implementation.doesPreserveXBit()){
@@ -398,7 +401,10 @@ public class Cluster extends Bundle {
                 }
             }
             
-            if( !stagedExecFiles.isEmpty() && mAddNodesForSettingXBit ){
+            //PM-810 worker node exeucution is per job level now
+            boolean addNodeForSettingXBit = !mPegasusConfiguration.jobSetupForWorkerNodeExecution(job);
+        
+            if( !stagedExecFiles.isEmpty() && addNodeForSettingXBit ){
                 //create en-mass the setXBit jobs
                 //if there were any staged files
                /*implementation.addSetXBitJobs( job,
@@ -617,6 +623,9 @@ public class Cluster extends Bundle {
         //reset the stageout stagein map too
         this.resetStageInMaps();
         this.resetStageOutMaps();
+        
+        //PM-747 add the edges in the very end
+        super.done();
     }
 
     /**

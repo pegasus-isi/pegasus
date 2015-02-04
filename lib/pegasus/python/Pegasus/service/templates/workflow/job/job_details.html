@@ -1,0 +1,209 @@
+{% macro status_code(exitcode=None) -%}
+{% if exitcode == None %}"running"{% elif exitcode !=  0 %}"failed"{% else  %}"successful"{% endif %}
+{%- endmacro %}
+{% extends "base.html" %}
+{% block title %}Job Details{% endblock %}
+{% block javascript_init %}
+<script type="text/javascript" charset="utf-8">
+    //
+    // http://stackoverflow.com/questions/1899500/sorting-column-with-anchor-tags-in-jquery-datatables
+    //
+    jQuery.fn.dataTableExt.oSort['num-html-asc'] = function (a, b) {
+        var x = a.replace(/<.*?>/g, "");
+        var y = b.replace(/<.*?>/g, "");
+        x = parseInt(x);
+        y = parseInt(y);
+        return ((x < y || isNaN(y) ) ? -1 : ((x > y || isNaN(x)) ? 1 : 0));
+    };
+
+    jQuery.fn.dataTableExt.oSort['num-html-desc'] = function (a, b) {
+        var x = a.replace(/<.*?>/g, "");
+        var y = b.replace(/<.*?>/g, "");
+        x = parseInt(x);
+        y = parseInt(y);
+        return ((x < y || isNaN(x)) ? 1 : ((x > y || isNaN(y) ) ? -1 : 0));
+    };
+
+    $(document).ready (function ()
+    {
+        $('#invocations_tabs').tabs (
+                {
+                    beforeLoad: function (event, ui)
+                    {
+                        var isInitialized = ui.panel.data ('initialized');
+
+                        if (isInitialized === true)
+                        {
+                            return false;
+                        }
+
+                        ui.jqXHR.error (function ()
+                        {
+                            ui.panel.html ('Error loading contents of this tab.');
+                        })
+                    },
+                    load: function (event, ui)
+                    {
+                        var index = ui.tab.index ();
+                        var panel = ui.panel;
+
+                        if (index == 0)
+                        {
+                            panel.data ('initialized', true);
+
+                            if (panel.html () == '')
+                            {
+                                panel.html ('No failed invocations.')
+                            }
+                            else
+                            {
+                                $('#failed_invocations_list').dataTable ({"bJQueryUI" : true, "sPaginationType": "full_numbers"});
+                            }
+                        }
+                        else if (index == 1)
+                        {
+                            panel.data ('initialized', true);
+
+                            if (panel.html () == '')
+                            {
+                                panel.html ('No successful invocations.')
+                            }
+                            else
+                            {
+                                $('#successful_invocations_list').dataTable ({"bJQueryUI" : true, "sPaginationType": "full_numbers"});
+                            }
+                        }
+                    }
+                });
+
+        verticalTableInitStatus ('#job_text_info', {{ status_code(job.exitcode) }});
+        verticalTableInitStatus ('#job_states_info', {{ status_code(job.exitcode) }});
+
+        $('#job_instances_info').dataTable({"bJQueryUI": true,
+            "bJQueryUI": true,
+            "sPaginationType": "full_numbers",
+            "bFilter": false,
+            "bInfo": true,
+            "aaSorting"      : [
+                [ 0, "desc" ]
+            ],
+            "aoColumns": [
+                { "sType": "num-html" },
+                null,
+                null,
+                null
+            ]
+        });
+    })
+</script>
+{% endblock %}
+{% block css_includes %}
+<style>
+    .job_table_width {
+        width: 40%;
+    }
+</style>
+{% endblock %}
+{% block navigation_bar %} | <a href="{{ url_for ('workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a> | <a href="{{ url_for ('job', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}">Job</a>{% endblock %}
+{% block title_header %}Job Details{% endblock %}
+{% block content %}
+<div id="job_details">
+    <div id="job_text">
+        <table id="job_text_info">
+            <tr>
+                <th class="job_table_width">Label</th>
+                <td><strong>{{ job.exec_job_id  }}</strong></td>
+            </tr>
+            <tr>
+                <th class="job_table_width">Type</th>
+                <td>{% if job.clustered %}Clustered{% else %}Compute{% endif %}</td>
+            </tr>
+            <tr>
+                <th class="job_table_width">Exit Code</th>
+                <td>{{ job.exitcode  }}</td>
+            </tr>
+            <tr>
+                <th class="job_table_width">Stdout Preview</th>
+                <td><a href="{{ url_for ('stdout', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}">Preview</a></td>
+            </tr>
+            <tr>
+                <th class="job_table_width">Stdout File</th>
+                <td>{{ job.stdout_file }}</td>
+            </tr>
+            <tr>
+                <th class="job_table_width">Stderr Preview</th>
+                <td><a href="{{ url_for ('stderr', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}">Preview</a></td>
+            </tr>
+            <tr>
+                <th class="job_table_width">Stderr File</th>
+                <td>{{ job.stderr_file }}</td>
+            </tr>
+            <tr>
+                <th class="job_table_width">Site</th>
+                <td>{{ job.site }}</td>
+            </tr>
+            <tr>
+                <th class="job_table_width">Host</th>
+                <td>{{ job.ip }} > {{ job.hostname }}</td>
+            </tr>
+        </table>
+    </div>
+    {% if job_states|length %}
+    <br />
+    <header class="title ui-widget-header">
+        Job States
+    </header>
+    <br />
+    <div id="job_states">
+        <table id="job_states_info">
+            {% for state in job_states %}
+            <tr>
+                <th class="job_table_width" style="text-transform: capitalize;">{{ state.state|replace('_', ' ')|capitalize }}</th>
+                <td>{{ state.timestamp }} ( {{ state.interval|time_to_str }} )</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    {% endif %}
+    <br />
+    <header class="title ui-widget-header">
+        Job Instances
+    </header>
+    <br />
+    <div id="job_instances">
+        <table id="job_instances_info">
+            <thead>
+            <tr>
+                <th>Job Instance ID</th>
+                <th>Exitcode</th>
+                <th>Stdout</th>
+                <th>Stderr</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for instance in job_instances %}
+            <tr class={{ status_code(instance.exitcode) }}>
+            <td><a href="{{ url_for ('job', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = instance.job_instance_id) }}">{{ instance.job_instance_id }}</a></td>
+            <td>{{ instance.exitcode }}</td>
+            <td><a href="{{ url_for ('stdout', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = instance.job_instance_id) }}">Preview</a></td>
+            <td><a href="{{ url_for ('stderr', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = instance.job_instance_id) }}">Preview</a></td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<br/>
+<div id="invocation_table_wrapper">
+    <div id="invocations_tabs">
+        <ul>
+            <li>
+                <a href="{{ url_for ('failed_invocations', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}" title="failed_invocations">Failed</a>
+            </li>
+            <li>
+                <a href="{{ url_for ('successful_invocations', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}" title="successful_invocations">Successful</a>
+            </li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

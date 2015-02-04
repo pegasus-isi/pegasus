@@ -18,18 +18,19 @@ package edu.isi.pegasus.planner.classes;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.dax.Invoke;
-
-import java.util.Enumeration;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.Vector;
-
-
-import java.io.Writer;
-import java.io.StringWriter;
+import edu.isi.pegasus.planner.partitioner.graph.Graph;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import edu.isi.pegasus.planner.partitioner.graph.MapGraph;
+import java.io.File;
 import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 
@@ -49,19 +50,13 @@ import java.util.UUID;
  * @see Job
  */
 
-public class ADag extends Data {
+public class ADag extends Data implements Graph{
 
     /**
      * The DagInfo object which contains the information got from parsing the
      * dax file.
      */
-    public DagInfo dagInfo;
-
-    /**
-     * Vector of <code>Job</code> objects. Each Job object contains
-     * information corresponding to the submit file for one job.
-     */
-    public Vector vJobSubInfos;
+    private DagInfo mDAGInfo;
 
     /**
      * The root of the submit directory hierarchy for the DAG. This is the
@@ -110,38 +105,27 @@ public class ADag extends Data {
     protected Notifications mNotifications;
     
     /**
+     * Handle to the Graph implementor.
+     */
+    private Graph mGraphImplementor;
+    
+    /**
      * Initialises the class member variables.
      */
     public ADag() {
-        dagInfo          = new DagInfo();
-        vJobSubInfos     = new Vector();
+         mDAGInfo          = new DagInfo();
         mSubmitDirectory = ".";
         mWorkflowUUID    = generateWorkflowUUID();
         mRootWorkflowUUID = null;
         mWorkflowRefinementStarted = false;
         mNotifications = new Notifications();
+        mGraphImplementor = new MapGraph();
         resetStores();
     }
 
-    /**
-     * Overloaded constructor.
-     *
-     * @param dg     the <code>DagInfo</code>
-     * @param vSubs  the jobs in the workflow.
-     */
-    public ADag (DagInfo dg, Vector vSubs){
-        this.dagInfo      = (DagInfo)dg.clone();
-        this.vJobSubInfos = (Vector)vSubs.clone();
-        mSubmitDirectory  = ".";
-        mWorkflowUUID    = generateWorkflowUUID();
-        mRootWorkflowUUID = null;
-        mWorkflowRefinementStarted = false;
-        mNotifications    = new Notifications();
-        resetStores();
-    }
     
     /**
-     * Adds a Invoke object correpsonding to a notification.
+     * Adds a Invoke object corresponding to a notification.
      * 
      * @param invoke  the invoke object containing the notification
      */
@@ -195,8 +179,8 @@ public class ADag extends Data {
      */
     public Object clone(){
         ADag newAdag        = new ADag();
-        newAdag.dagInfo     = (DagInfo)this.dagInfo.clone();
-        newAdag.vJobSubInfos= (Vector)this.vJobSubInfos.clone();
+//        newAdag.mDAGInfo     = (DagInfo)this.mDAGInfo.clone();
+//        newAdag.vJobSubInfos= (Vector)this.vJobSubInfos.clone();
         newAdag.setBaseSubmitDirectory( this.mSubmitDirectory );
         newAdag.setRequestID( this.mRequestID );
         newAdag.setRootWorkflowUUID( this.getRootWorkflowUUID() );
@@ -282,13 +266,32 @@ public class ADag extends Data {
      * @return textual description.
      */
     public String toString(){
-        String st = "\n Submit Directory " + this.mSubmitDirectory +
-                    "\n Root Workflow UUID " + this.getRootWorkflowUUID() +
-                    "\n Workflow UUID " + this.getWorkflowUUID() +
-                    "\n Workflow Refinement Started " + this.hasWorkflowRefinementStarted() +
-                    "\n" + this.dagInfo.toString() +
-                    vectorToString("\n Jobs making the DAG ",this.vJobSubInfos);
-        return st;
+        String newLine = System.getProperty( "line.separator", "\r\n" );
+        StringBuilder sb = new StringBuilder();
+        sb.append( "Submit Directory ").append( this.mSubmitDirectory ).append( newLine ).
+           append( "Root Workflow UUID ").append( this.getRootWorkflowUUID()).append( newLine ).
+           append( "Workflow UUID " ).append( this.getWorkflowUUID()).append( newLine ).
+           append( "Workflow Refinement Started ").append( this.hasWorkflowRefinementStarted()).append( newLine );
+ 
+        sb.append( "DAG Structure ").append( newLine );
+        //lets write out the edges
+        for( Iterator<GraphNode> it = this.nodeIterator(); it.hasNext() ; ){
+            GraphNode gn = (GraphNode) it.next();
+            sb.append(  "JOB" ).append( " " ).append( gn.getID() ).append( newLine );
+        }
+        
+        //lets write out the edges
+        for( Iterator<GraphNode> it = this.nodeIterator(); it.hasNext() ; ){
+            GraphNode gn = (GraphNode) it.next();
+
+            //get a list of parents of the node
+            for( GraphNode child : gn.getChildren() ){
+                sb.append(  "EDGE" ).append( " " ).append( gn.getID() ).
+                     append( " -> " ).append( child.getID() ).append( newLine );
+             }
+        }
+
+        return sb.toString();
     }
 
     /**
@@ -298,34 +301,7 @@ public class ADag extends Data {
      * @param job  the new job that is to be added to the ADag.
      */
     public void add(Job job){
-        //add to the dagInfo
-        dagInfo.addNewJob(job );
-        vJobSubInfos.addElement(job);
-    }
-
-
-    /**
-     * Removes all the jobs from the workflow, and all the edges between
-     * the workflows. The only thing that remains is the meta data about the
-     * workflow.
-     *
-     *
-     */
-    public void clearJobs(){
-        vJobSubInfos.clear();
-        dagInfo.dagJobs.clear();
-        dagInfo.relations.clear();
-        dagInfo.lfnMap.clear();
-        //reset the workflow metrics but not the task metrics
-        this.getWorkflowMetrics().reset( false );
-    }
-
-    /**
-     * Returns whether the workflow is empty or not.
-     * @return boolean
-     */
-    public boolean isEmpty(){
-        return vJobSubInfos.isEmpty();
+        this.addNode( new GraphNode( job.getID(), job) );
     }
 
     /**
@@ -337,9 +313,7 @@ public class ADag extends Data {
      * @return boolean indicating whether the removal was successful or not.
      */
     public boolean remove(Job job){
-	boolean a = dagInfo.remove( job );
-	boolean b = vJobSubInfos.remove(job);
-	return a && b;
+        return this.remove( job.getID() );
     }
 
     /**
@@ -349,7 +323,8 @@ public class ADag extends Data {
      * @return the number of jobs.
      */
     public int getNoOfJobs(){
-        return this.dagInfo.getNoOfJobs();
+        return this.size();
+ //       return this.mDAGInfo.getNoOfJobs();
     }
 
     /**
@@ -376,7 +351,7 @@ public class ADag extends Data {
      */
     public String getAbstractWorkflowName(){
         StringBuffer id = new StringBuffer();
-        id.append( this.dagInfo.getLabel() ).append( "_" ).append( this.dagInfo.index );
+        id.append( this.mDAGInfo.getLabel() ).append( "_" ).append( this.mDAGInfo.getIndex() );
         return id.toString();
     }
 
@@ -386,7 +361,7 @@ public class ADag extends Data {
      */
     public String getExecutableWorkflowName(){
         StringBuffer id = new StringBuffer();
-        id.append( this.dagInfo.getLabel() ).append( "_" ).append( this.dagInfo.index ).
+        id.append( this.mDAGInfo.getLabel() ).append( "_" ).append( this.mDAGInfo.getIndex() ).
            append( "." ).append( "dag");
         return id.toString();
     }
@@ -398,29 +373,15 @@ public class ADag extends Data {
      * @param parent    The parent in the relation pair
      * @param child     The child in the relation pair
      *
-     * @see org.griphyn.cPlanner.classes.PCRelation
+     * 
      */
     public void addNewRelation(String parent, String child){
-        PCRelation newRelation = new PCRelation(parent,child);
-        this.dagInfo.relations.addElement(newRelation);
+        this.addEdge(parent, child);
+/*        PCRelation newRelation = new PCRelation(parent,child);
+        this.mDAGInfo.relations.addElement(newRelation);
+ */
     }
 
-
-    /**
-     * Adds a new PCRelation pair to the Vector of <code>PCRelation</code>
-     * pairs.
-     *
-     * @param parent    The parent in the relation pair
-     * @param child     The child in the relation pair
-     * @param isDeleted Whether the relation has been deleted due to the reduction
-     *                  algorithm or not.
-     *
-     * @see org.griphyn.cPlanner.classes.PCRelation
-     */
-    public void addNewRelation(String parent, String child, boolean isDeleted){
-        PCRelation newRelation = new PCRelation(parent,child,isDeleted);
-        this.dagInfo.relations.addElement(newRelation);
-    }
 
     /**
      * Sets the submit directory for the workflow.
@@ -437,17 +398,62 @@ public class ADag extends Data {
      * @return the label of the workflow.
      */
     public String getLabel(){
-        return this.dagInfo.getLabel();
+        return this.mDAGInfo.getLabel();
+    }
+    
+    /**
+     * Sets the label for the workflow.
+     *
+     * @param label the label to be assigned to the workflow
+     */
+    public void setLabel(String label){
+        this.mDAGInfo.setLabel( label );
     }
 
+    /**
+     * Returns the index of the workflow, that was specified in the DAX.
+     *
+     * @return the index of the workflow.
+     */
+    public String getIndex(){
+        return this.mDAGInfo.getIndex();
+    }
+    
+    /**
+     * Set the index of the workflow, that was specified in the DAX.
+     *
+     * @param index  the count
+     */
+    public void setIndex( String index ) {
+        this.mDAGInfo.setIndex( index );
+    }
+    
+    /**
+     * Set the count of the workflow, that was specified in the DAX.
+     *
+     * @param count  the count
+     */
+    public void setCount( String count ) {
+        this.mDAGInfo.setCount( count );
+    }
+    
 
+    /**
+     * Returns the count of the workflow, that was specified in the DAX.
+     *
+     * @return the count
+     */
+    public String getCount() {
+        return this.mDAGInfo.getCount();
+    }
+    
     /**
      * Returns the dax version
      *
      * @return teh dax version.
      */
     public String getDAXVersion(  ) {
-        return this.dagInfo.getDAXVersion();
+        return this.mDAGInfo.getDAXVersion();
     }
 
     /**
@@ -457,7 +463,7 @@ public class ADag extends Data {
      * @return the MTime
      */
     public String getMTime(){
-        return this.dagInfo.getMTime();
+        return this.mDAGInfo.getMTime();
     }
 
 
@@ -470,71 +476,62 @@ public class ADag extends Data {
         return this.mSubmitDirectory;
     }
 
-
     /**
-     * Gets all the parents of a particular node
-     *
-     * @param node the name of the job whose parents are to be found.
-     *
-     * @return    Vector corresponding to the parents of the node
+     * Checks the underlying graph structure for any corruption.
+     * Corruption can be where a parent or a child of a node refers to an object,
+     * that is not in underlying graph node list.
+     * 
+     * @throws RuntimeException in case of corruption.
      */
-    public Vector getParents(String node){
-        return this.dagInfo.getParents(node);
-    }
-
-    /**
-     * Get all the children of a particular node.
-     *
-     * @param node  the name of the node whose children we want to find.
-     *
-     * @return  Vector containing the
-     *          children of the node
-     *
-     */
-    public Vector getChildren(String node){
-       return this.dagInfo.getChildren(node);
-    }
-
-
-     /**
-     * Returns all the leaf nodes of the dag. The way the structure of Dag is
-     * specified, in terms of the parent child relationship pairs, the
-     * determination of the leaf nodes can be computationally intensive. The
-     * complexity is of order n^2
-     *
-     * @return Vector of <code>String</code> corresponding to the job names of
-     *         the leaf nodes.
-     *
-     * @see org.griphyn.cPlanner.classes.PCRelation
-     * @see org.griphyn.cPlanner.classes.DagInfo#relations
-     */
-    public Vector getLeafNodes(){
-        return this.dagInfo.getLeafNodes();
-    }
-
-    /**
-     * It returns the a unique list of the execution sites that the Planner
-     * has mapped the dax to so far in it's stage of planning . This is a
-     * subset of the pools specified by the user at runtime.
-     *
-     * @return  a TreeSet containing a list of siteID's of the sites where the
-     *          dag has to be run.
-     */
-    public Set getExecutionSites(){
-        Set set = new TreeSet();
-        Job sub = null;
-
-        for(Iterator it = this.vJobSubInfos.iterator();it.hasNext();){
-            sub = (Job)it.next();
-            set.add(sub.executionPool);
+    public void checkForCorruption(){
+        Set<GraphNode> s = Collections.newSetFromMap( new IdentityHashMap() );
+        
+        //put all the nodes in the idendity backed set
+        for(Iterator<GraphNode> it = this.nodeIterator(); it.hasNext(); ){
+            s.add( it.next() );
         }
-
-        //remove the stork pool
-        set.remove("stork");
-
-        return set;
+        
+        //now again traverse and make sure all the parents and children
+        //of each node exist in the set
+        for(Iterator<GraphNode> it = this.nodeIterator(); it.hasNext(); ){
+            GraphNode node = it.next();
+           
+            for(GraphNode parent: node.getParents() ){
+                //contains operation is on basis of underlying IdentityHashMap
+                if( !s.contains(parent) ){
+                    throw new RuntimeException( complain( "Parent" , node, parent ));
+                }
+            }
+            
+            for(GraphNode child: node.getChildren()){
+                if( !s.contains(child) ){
+                    throw new RuntimeException( complain( "Child" , node, child ));
+                }
+            }
+           
+        }
+        
     }
+    
+    /**
+     * Convenience method to complain for a linked node from a node that 
+     * does not exist in the DAG
+     * 
+     * @param desc
+     * @param node
+     * @param linkedNode 
+     */
+    private String complain( String desc, GraphNode node, GraphNode linkedNode ){
 
+        StringBuilder error = new StringBuilder();
+        error.append( desc ).append( " " ).append( linkedNode.getID() ).append( " for node " ).
+              append( node.getID()).append( " is corrupted. " );
+        GraphNode fromNodeMap = this.getNode( linkedNode.getID() );
+        error.append( "Two instances of node " ).append( linkedNode.getID() ).append( " with identities ").
+              append( System.identityHashCode( fromNodeMap ) ).append( " and ").append( System.identityHashCode( linkedNode ) );
+        return error.toString();
+    }
+    
     /**
      * Sets the Replica Store
      *
@@ -572,6 +569,106 @@ public class ADag extends Data {
     public TransformationStore getTransformationStore(  ){
         return this.mTransformationStore;
     }
+    
+    /**
+     * Returns the DAGInfo that stores the metadata about the DAX
+     * @return 
+     */
+    public DagInfo getDAGInfo() {
+        return this.mDAGInfo;
+    }
+    
+    /**
+     * Generates the flow id for this current run. It is made of the name of the
+     * dag and a timestamp. This is a simple concat of the mFlowTimestamp and the
+     * flowName. For it work correctly the function needs to be called after the
+     * flow name and timestamp have been generated.
+     */
+    public void generateFlowID() {
+        this.mDAGInfo.generateFlowID();
+    }
+    
+    /**
+     * Returns the flow ID for the workflow.
+     *
+     * @return
+     */
+    public String getFlowID(){
+        return mDAGInfo.getFlowID();
+    }
+
+
+    /**
+     * Generates the name of the flow. It is same as the mNameOfADag if specified
+     * in dax generated by Chimera.
+     */
+    public void generateFlowName(){
+        this.mDAGInfo.generateFlowName();
+
+    }
+    
+     /**
+     * Returns the flow name
+     */
+    public String getFlowName(){
+        return this.mDAGInfo.getFlowName();
+    }
+    
+    /**
+     * Sets the dax version
+     * @param version   the version of the DAX
+     */
+    public void setDAXVersion( String version ) {
+        this.mDAGInfo.setDAXVersion(version);
+    }
+
+    /**
+     * Sets the mtime (last modified time) for the DAX. It is the time, when
+     * the DAX file was last modified. If the DAX file does not exist or an
+     * IO error occurs, the MTime is set to OL i.e . The DAX mTime is always
+     * generated in an extended format. Generating not in extended format, leads
+     * to the XML parser tripping while parsing the invocation record generated
+     * by Kickstart.
+     *
+     * @param f  the file descriptor to the DAX|PDAX file.
+     */
+    public void setDAXMTime( File f ){
+        this.mDAGInfo.setDAXMTime(f);
+    }
+
+
+   /**
+     * Return the release version
+     */
+    public String getReleaseVersion() {
+        return mDAGInfo.getReleaseVersion();
+    }
+    
+    /**
+     * Grabs the release version from VDS.Properties file.
+     *
+     */
+    public void setReleaseVersion() {
+        this.mDAGInfo.setReleaseVersion();
+    }
+    
+    /**
+     * Returns the flow timestamp for the workflow.
+     *
+     * @return the flowtimestamp
+     */
+    public String getFlowTimestamp(){
+        return this.mDAGInfo.getFlowTimestamp();
+    }
+
+    /**
+     * Sets the flow timestamp for the workflow.
+     *
+     * @param timestamp the flowtimestamp
+     */
+    public void setFlowTimestamp( String timestamp ){
+       this.mDAGInfo.setFlowTimestamp(timestamp);
+    }
 
     /**
      * It determines the root Nodes for the ADag looking at the relation pairs
@@ -585,45 +682,22 @@ public class ADag extends Data {
      * @see org.griphyn.cPlanner.classes.PCRelation
      * @see org.griphyn.cPlanner.classes.DagInfo#relations
      */
-    public Vector getRootNodes(){
-        return this.dagInfo.getRootNodes();
+/*    public Vector getRootNodes(){
+        return this.mDAGInfo.getRootNodes();
     }
-
+*/
 
     /**
      * Returns an iterator for traversing through the jobs in the workflow.
      *
-     * @return Iterator
+     * @return a bative java failsafe iterator to the underlying collection.
      */
-    public Iterator jobIterator(){
-        return this.vJobSubInfos.iterator();
+    public Iterator<GraphNode> jobIterator(){
+        return this.nodeIterator();
+//        return this.vJobSubInfos.iterator();
     }
 
-    /**
-     * This returns a Job object corresponding to the job by looking through
-     * all the subInfos.
-     *
-     *
-     *@param job   jobName of the job for which we need the subInfo object.
-     *
-     *@return      the <code>Job</code> objects corresponding to the job
-     */
-    public Job getSubInfo(String job){
-
-        Job sub = null;
-
-        //System.out.println("Job being considered is " + job);
-        for ( Enumeration e = this.vJobSubInfos.elements(); e.hasMoreElements(); ){
-            sub = (Job)e.nextElement();
-            if(job.equalsIgnoreCase(sub.jobName)){
-                return sub;
-            }
-
-        }
-
-        throw new RuntimeException("Can't find the sub info object for job " + job);
-
-    }
+   
 
     /**
      * Returns the metrics about the workflow.
@@ -631,7 +705,7 @@ public class ADag extends Data {
      * @return the WorkflowMetrics
      */
     public WorkflowMetrics getWorkflowMetrics(){
-        return this.dagInfo.getWorkflowMetrics();
+        return this.mDAGInfo.getWorkflowMetrics();
     }
 
 
@@ -673,19 +747,56 @@ public class ADag extends Data {
 
         //traverse through the jobs
         for( Iterator it = jobIterator(); it.hasNext(); ){
-            ( (Job)it.next() ).toDOT( stream, newIndent );
+            GraphNode node = (GraphNode)it.next();
+            ( (Job)node.getContent() ).toDOT( stream, newIndent );
         }
 
         stream.write( newLine );
+        
+        for( Iterator<GraphNode> it = this.jobIterator(); it.hasNext() ; ){
+            GraphNode gn = (GraphNode) it.next();
 
-        //traverse through the edges
-        for( Iterator it = dagInfo.relations.iterator(); it.hasNext(); ){
-            ( (PCRelation)it.next() ).toDOT( stream, newIndent );
+            //get a list of parents of the node
+            for( GraphNode child : gn.getChildren() ){
+                this.edgeToDOT(stream, newIndent, gn.getID(), child.getID() );
+            }
         }
-
+        
         //write out the tail
         stream.write( "}" );
         stream.write( newLine );
+    }
+    
+    /**
+     * Returns the DOT description of the object. This is used for visualizing
+     * the workflow.
+     *
+     * @param stream is a stream opened and ready for writing. This can also
+     *               be a StringWriter for efficient output.
+     * @param indent  is a <code>String</code> of spaces used for pretty
+     *                printing. The initial amount of spaces should be an empty
+     *                string. The parameter is used internally for the recursive
+     *                traversal.
+     * @param parent  the parent 
+     * @param child   the child
+     *
+     *
+     * @exception IOException if something fishy happens to the stream.
+     */
+    private void edgeToDOT( Writer stream, String indent, String parent, String child ) throws IOException {
+        String newLine = System.getProperty( "line.separator", "\r\n" );
+
+        //write out the edge
+        stream.write( indent );
+        stream.write( "\"" );
+        stream.write( parent );
+        stream.write( "\"" );
+        stream.write( " -> ");
+        stream.write( "\"" );
+        stream.write( child );
+        stream.write( "\"" );
+        stream.write( newLine );
+        stream.flush();
     }
 
 
@@ -734,6 +845,178 @@ public class ADag extends Data {
 
     }
 
+    /**
+     * Adds a node to the Graph. It overwrites an already existing node with the
+     * same ID.
+     *
+     * @param node  the node to be added to the Graph.
+     */
+    public void addNode(GraphNode node) {
+        this.mGraphImplementor.addNode(node);
+        //increment associated workflow metrics
+        this.mDAGInfo.getWorkflowMetrics().increment( (Job)node.getContent() );
+    }
+
+    /**
+     * Adds an edge between two already existing nodes in the graph.
+     *
+     * @param parent   the parent node ID.
+     * @param child    the child node ID.
+     */
+    public void addEdge(String parent, String child) {
+        this.mGraphImplementor.addEdge(parent, child);
+    }
+    
+    /**
+     * Adds an edge between two already existing nodes in the graph.
+     *
+     * @param parent   the parent node .
+     * @param child    the child node .
+     */
+    public void addEdge( GraphNode parent, GraphNode child ){
+        this.mGraphImplementor.addEdge(parent, child);
+    }
+
+    /**
+     * A convenience method that allows for bulk addition of edges between
+     * already existing nodes in the graph.
+     *
+     * @param child   the child node ID
+     * @param parents list of parent identifiers as <code>String</code>.
+     */
+    public void addEdges(String child, List<String> parents) {
+        this.mGraphImplementor.addEdges(child, parents);
+    }
+
+    /**
+     * Returns the node matching the id passed.
+     *
+     * @param identifier  the id of the node.
+     *
+     * @return the node matching the ID else null.
+     */
+    public GraphNode getNode(String identifier) {
+        return this.mGraphImplementor.getNode(identifier);
+    }
+
+    /**
+     * Adds a single root node to the Graph. All the exisitng roots of the
+     * Graph become children of the root.
+     *
+     * @param root  the <code>GraphNode</code> to be added as a root.
+     *
+     * @throws RuntimeException if a node with the same id already exists.
+     */
+    public void addRoot(GraphNode root) {
+        this.mGraphImplementor.addRoot(root);
+    }
+
+    /**
+     * Removes a node from the Graph.
+     *
+     * @param identifier   the id of the node to be removed.
+     *
+     * @return boolean indicating whether the node was removed or not.
+     */
+    public boolean remove(String identifier) {
+        GraphNode node = this.getNode(identifier);
+        if( node != null ){
+            this.mDAGInfo.getWorkflowMetrics().decrement((Job)node.getContent());
+        }
+        return this.mGraphImplementor.remove(identifier);
+    }
+
+    /**
+     * Resets all the dependencies in the Graph, while preserving the nodes. 
+     * The resulting Graph is a graph of independent nodes.
+     */
+    public void resetEdges(){
+        this.mGraphImplementor.resetEdges();
+    }
+    
+     /**
+     * Returns an iterator for the nodes in the Graph. These iterators are
+     * fail safe.
+     *
+     * @return Iterator
+     */
+    public Iterator<GraphNode> nodeIterator() {
+        return this.mGraphImplementor.nodeIterator();
+    }
+
+    /**
+     * Returns an iterator that traverses through the graph using a graph
+     * traversal algorithm.
+     *
+     * @return Iterator through the nodes of the graph.
+     */
+    public Iterator<GraphNode> iterator() {
+        return this.mGraphImplementor.iterator();
+    }
+    
+    /**
+     * Returns an iterator that traverses the graph bottom up from the leaves.
+     * At any one time, only one iterator can
+     * iterate through the graph.
+     *
+     * @return Iterator through the nodes of the graph.
+     */
+    public Iterator<GraphNode> bottomUpIterator(){
+        return this.mGraphImplementor.bottomUpIterator();
+    }
+
+    /**
+     * Returns an iterator for the graph that traverses in topological sort
+     * order.
+     *
+     * @return Iterator through the nodes of the graph.
+     */
+    public Iterator<GraphNode> topologicalSortIterator() {
+        return this.mGraphImplementor.topologicalSortIterator();
+    }
+
+
+    /**
+     * Returns the number of nodes in the graph.
+     */
+    public int size() {
+        return this.mGraphImplementor.size();
+    }
+
+    /**
+     * Returns the root nodes of the Graph.
+     *
+     * @return  a list containing <code>GraphNode</code> corressponding to the
+     *          root nodes.
+     */
+    public List<GraphNode> getRoots() {
+        return this.mGraphImplementor.getRoots();
+    }
+
+    /**
+     * Returns the leaf nodes of the Graph.
+     *
+     * @return  a list containing <code>GraphNode</code> corressponding to the
+     *          leaf nodes.
+     */
+    public List<GraphNode> getLeaves() {
+        return this.mGraphImplementor.getLeaves();
+    }
+
+    /**
+     * Returns a boolean if there are no nodes in the graph.
+     *
+     * @return boolean
+     */
+    public boolean isEmpty() {
+        return this.mGraphImplementor.isEmpty();
+    }
+
+    
+
+    
+
+    
     
 
 }

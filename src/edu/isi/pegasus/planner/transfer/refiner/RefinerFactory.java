@@ -16,6 +16,7 @@
 
 package edu.isi.pegasus.planner.transfer.refiner;
 
+import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.ADag;
 
 import edu.isi.pegasus.planner.transfer.Refiner;
@@ -45,7 +46,7 @@ public class RefinerFactory {
     /**
      * The default refiner implementation that is picked up.
      */
-    public static final String DEFAULT_REFINER_IMPLEMENTATION = "Cluster";
+    public static final String DEFAULT_REFINER_IMPLEMENTATION = "BalancedCluster";
 
     /**
      * Loads the implementing class corresponding to the value specified in the
@@ -120,6 +121,12 @@ public class RefinerFactory {
                         //load directly
                         className;
 
+            //log a warning for the old Bundle Refiner
+            if( className.equals( Bundle.class.getName() )){
+               bag.getLogger().log( "Bundle Transfer Refiner is deprecated. Instead use " + RefinerFactory.DEFAULT_REFINER_IMPLEMENTATION ,
+                                    LogManager.WARNING_MESSAGE_LEVEL );
+            }
+            
             //try loading the class dynamically
             DynamicLoader dl = new DynamicLoader(className);
             Object argList[] = new Object[2];

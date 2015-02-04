@@ -27,8 +27,6 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.DAXJob;
-import edu.isi.pegasus.planner.partitioner.graph.Adapter;
-import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.util.BitSet;
 import java.util.HashMap;
@@ -88,32 +86,9 @@ public class Minimal extends AbstractStrategy {
      * @return the added workflow
      */
     public ADag addCreateDirectoryNodes( ADag dag ){
-        ADag result;
+        //PM-747 no need for conversion as ADag now implements Graph interface
+        return this.addCreateDirectoryNodes( dag , this.getCreateDirSites(dag));
 
-       
-        //we first need to convert internally into graph format
-        Graph resultGraph =  this.addCreateDirectoryNodes( Adapter.convert(dag ) ,dag, this.getCreateDirSites(dag));
-
-        //convert back to ADag and return
-        result = dag;
-        //we need to reset the jobs and the relations in it
-        result.clearJobs();
-
-        //traverse through the graph and jobs and edges
-        for( Iterator it = resultGraph.nodeIterator(); it.hasNext(); ){
-            GraphNode node = ( GraphNode )it.next();
-
-            //get the job associated with node
-            result.add( ( Job )node.getContent() );
-
-            //all the children of the node are the edges of the DAG
-            for( Iterator childrenIt = node.getChildren().iterator(); childrenIt.hasNext(); ){
-                GraphNode child = ( GraphNode ) childrenIt.next();
-                result.addNewRelation( node.getID(), child.getID() );
-            }
-        }
-
-        return result;
     }
     
     /**
@@ -129,12 +104,11 @@ public class Minimal extends AbstractStrategy {
      * parents have been processed.
      * 
      * @param workflow  the workflow 
-     * @param dag       the original dag structure
      * @param sites     the staging sites the workflow refers to.
      * 
      * @return 
      */
-    public Graph addCreateDirectoryNodes( Graph workflow, ADag dag, Set<String> sites ) {
+    public ADag addCreateDirectoryNodes( ADag workflow,  Set<String> sites ) {
         //the number of sites dictates the size of the BitSet associated with each job.
         Map<String, Integer> siteToBitIndexMap = new HashMap();
         int bitSetSize = sites.size();
@@ -150,7 +124,7 @@ public class Minimal extends AbstractStrategy {
         Map<GraphNode,List<GraphNode>> createDirChildrenMap = new HashMap();
         Map<String,GraphNode> createDirMap = new HashMap();//mas site to the associated create dir node
         for (String site: sites ){
-            String jobName = getCreateDirJobName( dag, site );
+            String jobName = getCreateDirJobName( workflow, site );
             Job newJob  = mImpl.makeCreateDirJob( site,
                                               jobName,
                                               mSiteStore.getExternalWorkDirectoryURL( site , FileServer.OPERATION.put )  );
@@ -169,14 +143,27 @@ public class Minimal extends AbstractStrategy {
         for( Iterator<GraphNode> it = workflow.iterator(); it.hasNext(); ){
             GraphNode node = it.next();
             BitSet set     = new BitSet( bitSetSize );
+            Job job        = (Job)node.getContent();
+            String site    = getAssociatedCreateDirSite( job );
+            
+            //check if for stage out jobs there are any parents specified 
+            //or not.
+            if( job instanceof TransferJob && job.getJobType() == Job.STAGE_OUT_JOB ){
+                if( node.getParents().isEmpty() ){
+                    //means we have a stage out job only. probably the workflow
+                    //was fully reduced in data reuse
+                    mLogger.log( "Not considering job for create dir edges " + job.getID() , LogManager.DEBUG_MESSAGE_LEVEL );
+                    nodeBitMap.put(node, set);
+                    continue;
+                }
+            }
+            
             //the set is a union of all the parents set
             for( GraphNode parent: node.getParents() ){
                 BitSet pSet = nodeBitMap.get( parent );
                 set.or( pSet );
             }
             
-            Job job        = (Job)node.getContent();
-            String site    = getAssociatedCreateDirSite( job );
             if( site == null ){
                 //only ok for stage worker jobs
                 if( job instanceof TransferJob || job.getJobType() == Job.REPLICA_REG_JOB ){

@@ -17,31 +17,24 @@
 package edu.isi.pegasus.planner.refiner;
 
 
+import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.Job;
-
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PegasusFile;
+import edu.isi.pegasus.planner.namespace.Pegasus;
+import edu.isi.pegasus.planner.partitioner.graph.Bag;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
-import edu.isi.pegasus.planner.partitioner.graph.Adapter;
-
-import edu.isi.pegasus.common.logging.LogManager;
-
-import edu.isi.pegasus.planner.provenance.pasoa.XMLProducer;
-import edu.isi.pegasus.planner.provenance.pasoa.producer.XMLProducerFactory;
-
 import edu.isi.pegasus.planner.provenance.pasoa.PPS;
+import edu.isi.pegasus.planner.provenance.pasoa.XMLProducer;
 import edu.isi.pegasus.planner.provenance.pasoa.pps.PPSFactory;
-
-import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.partitioner.graph.Bag;
-
-
-import java.util.Set;
+import edu.isi.pegasus.planner.provenance.pasoa.producer.XMLProducerFactory;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * The data reuse engine reduces the workflow on the basis of existing output
@@ -79,10 +72,19 @@ import java.util.List;
 public class DataReuseEngine extends Engine implements Refiner{
 
     /**
+     * enumeration of the various supported modes for data reuse.
+     */
+    public static enum SCOPE  { full, partial, none };
+    
+    /**
      * List of all deleted jobs during workflow reduction.
      */
     private List<Job> mAllDeletedJobs;
 
+    /**
+     * List of all deleted jobs during workflow reduction.
+     */
+    private List<GraphNode> mAllDeletedNodes;
 
     /**
      * The XML Producer object that records the actions.
@@ -93,6 +95,11 @@ public class DataReuseEngine extends Engine implements Refiner{
      * The workflow object being worked upon.
      */
     private ADag mWorkflow;
+    
+    /**
+     * The reduction mode set by the user.
+     */
+    private SCOPE mDataReuseScope;
 
     /**
      * The constructor
@@ -104,8 +111,10 @@ public class DataReuseEngine extends Engine implements Refiner{
         super( bag) ;
 
         mAllDeletedJobs  = new LinkedList();
+        mAllDeletedNodes = new LinkedList();
         mXMLStore        = XMLProducerFactory.loadXMLProducer( mProps );
         mWorkflow        = orgDag;
+        mDataReuseScope  = getDataReuseScope( mProps.getDataReuseScope() );
     }
 
 
@@ -145,33 +154,13 @@ public class DataReuseEngine extends Engine implements Refiner{
     public ADag reduceWorkflow( ADag workflow,  ReplicaCatalogBridge rcb ){
 
         //clone the original workflow. it will be reduced later on
-        ADag reducedWorkflow = (ADag) workflow.clone();
+        //PM-747 ADag reducedWorkflow = (ADag) workflow.clone();
 
-        //we first need to convert internally into graph format
-        Graph reducedGraph =  this.reduceWorkflow( Adapter.convert( reducedWorkflow ), rcb );
+        //PM-747 no need for conversion as ADag now implements Graph interface
+        Graph reducedGraph =  this.reduceWorkflow( (Graph)workflow, rcb );
 
-        //convert back to ADag and return
-
-        //we need to reset the jobs and the relations in it
-        reducedWorkflow.clearJobs();
-
-        //traverse through the graph and jobs and edges
-        for( Iterator it = reducedGraph.nodeIterator(); it.hasNext(); ){
-            GraphNode node = ( GraphNode )it.next();
-
-            //get the job associated with node
-            reducedWorkflow.add( ( Job )node.getContent() );
-
-            //all the children of the node are the edges of the DAG
-            for( Iterator childrenIt = node.getChildren().iterator(); childrenIt.hasNext(); ){
-                GraphNode child = ( GraphNode ) childrenIt.next();
-//                System.out.println(  node.getID() + " -> "  + child.getID() );
-                reducedWorkflow.addNewRelation( node.getID(), child.getID() );
-            }
-        }
-
-        mWorkflow = reducedWorkflow;
-        return reducedWorkflow;
+        mWorkflow = (ADag)reducedGraph;
+        return mWorkflow;
     }
 
 
@@ -193,9 +182,14 @@ public class DataReuseEngine extends Engine implements Refiner{
 
         //we reduce the dag only if the
         //force option is not specified.
-        if(mPOptions.getForce())
+        if(mPOptions.getForce() || mDataReuseScope.equals( SCOPE.none )){
             return workflow;
+        }
 
+        mLogger.log( "Data Reuse Scope for the workflow: " + mDataReuseScope,
+                     LogManager.CONFIG_MESSAGE_LEVEL );
+        
+        
         //load the PPS implementation
         PPS pps = PPSFactory.loadPPS( this.mProps );
 
@@ -213,7 +207,6 @@ public class DataReuseEngine extends Engine implements Refiner{
         //clear the XML store
         mXMLStore.clear();
 
-
         mLogger.log("Reducing the workflow",LogManager.DEBUG_MESSAGE_LEVEL);
         mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_REDUCE, LoggingKeys.DAX_ID, mWorkflow.getAbstractWorkflowName() );
            
@@ -225,9 +218,9 @@ public class DataReuseEngine extends Engine implements Refiner{
         
         mLogMsg = "Nodes/Jobs Deleted from the Workflow during reduction ";
         mLogger.log( mLogMsg,LogManager.INFO_MESSAGE_LEVEL );
-        for( Job job : this.mAllDeletedJobs){
-            mLogger.log("\t" + job.getID(), LogManager.INFO_MESSAGE_LEVEL );
-            mXMLStore.add( "<removed job = \"" + job.getID() + "\"/>" );
+        for( GraphNode node : this.mAllDeletedNodes){
+            mLogger.log("\t" + node.getID(), LogManager.INFO_MESSAGE_LEVEL );
+            mXMLStore.add( "<removed job = \"" + node.getID() + "\"/>" );
             mXMLStore.add( "\n" );
         }
         mLogger.log( mLogMsg +  " - DONE", LogManager.INFO_MESSAGE_LEVEL );
@@ -235,8 +228,6 @@ public class DataReuseEngine extends Engine implements Refiner{
 
         //call the end workflow method for pasoa interactions
         try{
-          
-
             for( Iterator it = reducedWorkflow.nodeIterator(); it.hasNext(); ){
                 GraphNode node = ( GraphNode )it.next();
                 pps.isIdenticalTo( node.getName(), node.getName() );
@@ -333,6 +324,18 @@ public class DataReuseEngine extends Engine implements Refiner{
                 continue;
             }
 
+            if( mDataReuseScope.equals( SCOPE.partial) ){
+                //PM-774 in case of partial data reuse, we look
+                //for a marker to figure out whether job;s output files
+                //should be looked for
+                if( !(job.vdsNS.containsKey( Pegasus.ENABLE_FOR_DATA_REUSE_KEY ) ||
+                      job.vdsNS.getBooleanValue( Pegasus.ENABLE_FOR_DATA_REUSE_KEY))){
+                    
+                    mLogger.log( "Partial Data Reuse Enabled. Not looking for output files in RC for job " + job.getID(),
+                                 LogManager.DEBUG_MESSAGE_LEVEL );
+                    continue;
+                }
+            }
 
             /* Commented on Oct10. This ended up making the
             Planner doing duplicate transfers
@@ -371,9 +374,6 @@ public class DataReuseEngine extends Engine implements Refiner{
             //files in job
             if(noOfOutputFilesInJob == noOfSuccessfulMatches){
                 mLogger.log("\t" + jobName, LogManager.DEBUG_MESSAGE_LEVEL);
-
-                //COLOR the node as while
-                node.setColor( GraphNode.BLACK_COLOR );
                 jobsInReplica.add( node );
             }
             //reinitialise the variables
@@ -411,59 +411,32 @@ public class DataReuseEngine extends Engine implements Refiner{
      * @param originalJobsInRC  list of nodes found to be in the Replica Catalog.
      */
     protected Graph cascadeDeletionUpwards(Graph workflow, List<GraphNode> originalJobsInRC) {
-        LinkedList<GraphNode> queue = new LinkedList();
-        int currentDepth = -1;
-
+        
         //sanity intialization of all nodes depth
         //also associate a boolean bag with the nodes
-        //that tracks whether a node has been traversed or not
+        //that tracks whether a node has been marked for deletion or not
         for( Iterator it = workflow.nodeIterator(); it.hasNext(); ){
             GraphNode node = ( GraphNode )it.next();
-            node.setDepth( currentDepth );
             BooleanBag bag = new BooleanBag();
             node.setBag(bag);
 
         }
-
-        //intialize all the leave nodes depth to 0
-        //and put them in the queue
-        currentDepth = 0;
-        for( Iterator<GraphNode> it = workflow.getLeaves().iterator(); it.hasNext(); ){
-            GraphNode node = it.next();
-            node.setDepth( currentDepth );
-            queue.add( node );
+        
+        //PM-756 the boolean value assoicated with the bag is treated
+        //to mean that the node is marked for deletion.
+        //all jobs whose files were in the RC are marked for deletion initially
+        for( GraphNode job: originalJobsInRC ){
+            ((BooleanBag)job.getBag()).add(true);
         }
 
-        //A node with COLOR set to BLACK means it is marked for deletion
-
+        
         //start the bottom up traversal
-        while( !queue.isEmpty() ){
-            GraphNode node  = (GraphNode)queue.removeFirst();
-
-            int depth  = node.getDepth();
+        for( Iterator it = workflow.bottomUpIterator(); it.hasNext(); ){
+            GraphNode node  = (GraphNode)it.next();
 
             //System.out.println( "Traversing " + node.getID() );
-
-            //traverse through all the parents and add to the queue
-            for( Iterator it = node.getParents().iterator(); it.hasNext(); ){
-                GraphNode parent = (GraphNode)it.next();
-                //if the parent has already made it's way to the queue
-                //dont add again. this is when multiple nodes have same parent
-                //if( parent.isColor( GraphNode.GRAY_COLOR ) ){
-                if( ((BooleanBag)parent.getBag()).getBooleanValue() ){
-                    continue;
-                }
-
-                parent.setDepth( depth + 1 );
-                //parent.setColor( GraphNode.GRAY_COLOR );
-                ((BooleanBag)parent.getBag()).add(true);
-                //System.out.println( "Adding parent " + parent.getID() );
-                queue.addLast( parent );
-                
-            }
-
-
-            if( !node.isColor( GraphNode.BLACK_COLOR ) ){
+            boolean markedForDeletion = ((BooleanBag)node.getBag()).getBooleanValue() ;
+            if( !markedForDeletion ){
                 //If a node is not already marked for deletion , it  can be marked
                 //for deletion if
                 //    a) all it's children have been marked for deletion AND
@@ -471,7 +444,10 @@ public class DataReuseEngine extends Engine implements Refiner{
                 boolean delete = true;
                 for( Iterator cit = node.getChildren().iterator(); cit.hasNext(); ){
                     GraphNode child = (GraphNode)cit.next();
-                    if( !child.isColor( GraphNode.BLACK_COLOR  ) ){
+                    //check whether a child node is marked for deletion or not
+                    if( !((BooleanBag)child.getBag()).getBooleanValue()  ){
+                        mLogger.log( node.getID() + "  will not be deleted as not as child " + child.getID() + " is not marked for deletion " ,
+                                     LogManager.DEBUG_MESSAGE_LEVEL );
                         delete = false;
                         break;
                     }
@@ -479,25 +455,35 @@ public class DataReuseEngine extends Engine implements Refiner{
                 if( delete ){
                     //all the children are deleted. However delete only if
                     // all the output files have transfer flags set to false
-                    if( /*node.isColor( GraphNode.BLACK_COLOR ) ||*/ !transferOutput( node ) ){
-                        mLogger.log( "Node can be deleted "  + node.getID() ,
+                    if(  !transferOutput( node ) ){
+                        mLogger.log( "Cascaded Deletion: Node can be deleted "  + node.getID() ,
                                      LogManager.DEBUG_MESSAGE_LEVEL );
-                        node.setColor( GraphNode.BLACK_COLOR );
+                        ((BooleanBag)node.getBag()).add(true);
+                        markedForDeletion = true;
                     }
                 }
             }
 
-            //if the node is colored BLACK at this point
-            //remove the node from the workflow
-            if( node.isColor( GraphNode.BLACK_COLOR ) ){
-                mLogger.log( "Removing node from the workflow "  + node.getID() ,
+            
+            //if the node is marked for deletion at this point
+            //add the node for deletion
+            if( markedForDeletion ){
+                mLogger.log( "Marking node for removal from the workflow "  + node.getID() ,
                                  LogManager.DEBUG_MESSAGE_LEVEL );
                 this.mAllDeletedJobs.add( (Job)node.getContent() );
-                workflow.remove( node.getID() );
+                this.mAllDeletedNodes.add( node );
             }
-
+        
         }
-
+        
+        //remove all the nodes marked for deletion separately
+        //after the bottom up iteration is done
+        for( GraphNode node: mAllDeletedNodes ){
+            mLogger.log( "Removing node from the workflow "  + node.getID() ,
+                                 LogManager.DEBUG_MESSAGE_LEVEL );
+            workflow.remove( node.getID() );
+        }
+       
         return workflow;
     }
 
@@ -532,7 +518,28 @@ public class DataReuseEngine extends Engine implements Refiner{
     }
 
 
-
+    /**
+     * Returns a scope value from String if a valid string is passed
+     * 
+     * @param value  the string value
+     * 
+     * @return corresponding valid enum value, else the default value i.e Scope.full;
+     */
+    private SCOPE getDataReuseScope(String value) {
+        SCOPE scope = SCOPE.full;
+       if( value == null ){
+            return scope;
+        }
+        
+        //try to assign a cleanup value
+        try{
+            scope = SCOPE.valueOf( value );
+        }catch( IllegalArgumentException iae ){
+            //ignore do nothing.
+        }
+        
+        return scope;
+    }
     
 
 

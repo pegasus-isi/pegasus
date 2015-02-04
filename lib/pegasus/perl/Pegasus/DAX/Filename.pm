@@ -19,16 +19,18 @@ use constant LINK_INPUT  => 'input';
 use constant LINK_OUTPUT => 'output';
 use constant LINK_INOUT  => 'inout'; 
 use constant LINK_IO     => 'inout'; 
+use constant LINK_CHECKPOINT => 'checkpoint';
+use constant LINK_CHK    => 'checkpoint';
 
 use constant TRANSFER_TRUE => 'true';
 use constant TRANSFER_FALSE => 'false';
 use constant TRANSFER_OPTIONAL => 'optional'; 
 
-our $VERSION = '3.3'; 
+our $VERSION = '3.5'; 
 our @EXPORT = (); 
 our %EXPORT_TAGS = ( 
     'link' => [qw(LINK_NONE LINK_IN LINK_OUT LINK_INPUT LINK_OUTPUT 
-	LINK_INOUT LINK_IO)],
+	LINK_INOUT LINK_IO LINK_CHECKPOINT LINK_CHK)],
     'transfer' => [qw(TRANSFER_TRUE TRANSFER_FALSE TRANSFER_OPTIONAL)]
     );
 $EXPORT_TAGS{all} = [ map { @{$_} } values %EXPORT_TAGS ]; 
@@ -148,6 +150,13 @@ I<link> attribute.
 
 Constant denoting that a file is an input- and output file. To be used
 with the I<link> attribute.
+
+=item LINK_CHK
+
+=item LINK_CHECKPOINT
+
+Constant denoting that a file is a job checkpoint file. To be used
+with the I<link> attribute.=item 
 
 =back
 

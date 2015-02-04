@@ -17,7 +17,7 @@ export PATH=/ccg/software/montage/Montage_v3.3_mats/bin:$PATH
 
 # unique directory for this run
 RUN_ID=`/bin/date +'%F_%H%M%S'`
-RUN_DIR=/nfs/ccg4/scratch-6-months-purge/bamboo/wf/$RUN_ID
+RUN_DIR=/nfs/ccg4/scratch-purge-no-backups/bamboo/wf/$RUN_ID
 
 echo "Work directory: $RUN_DIR"
 
@@ -73,14 +73,14 @@ cat >sites.xml <<EOF
         <head-fs>
             <scratch>
                 <shared>
-                    <file-server protocol="file" url="file://" mount-point="/nfs/ccg4/scratch-6-months-purge"/>
-                    <internal-mount-point mount-point="/nfs/ccg4/scratch-6-months-purge"/>
+                    <file-server protocol="file" url="file://" mount-point="/nfs/ccg4/scratch-purge-no-backups"/>
+                    <internal-mount-point mount-point="/nfs/ccg4/scratch-purge-no-backups"/>
                 </shared>
             </scratch>
             <storage>
                 <shared>
-                    <file-server protocol="file" url="file://" mount-point="/nfs/ccg4/scratch-6-months-purge/bamboo/outputs"/>
-                    <internal-mount-point mount-point="/nfs/ccg4/scratch-6-months-purge/bamboo/outputs"/>
+                    <file-server protocol="file" url="file://" mount-point="/nfs/ccg4/scratch-purge-no-backups/bamboo/outputs"/>
+                    <internal-mount-point mount-point="/nfs/ccg4/scratch-purge-no-backups/bamboo/outputs"/>
                 </shared>
             </storage>
         </head-fs>
@@ -110,7 +110,7 @@ pegasus-plan \
     --dir work \
     --sites CCG \
     --output-site CCG \
-    --nocleanup \
+    --cleanup leaf \
     --dax dag.xml \
     --cluster horizontal \
     --submit | tee $TOP_DIR/plan.out

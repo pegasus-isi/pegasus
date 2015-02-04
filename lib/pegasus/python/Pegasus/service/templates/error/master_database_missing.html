@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Workflow - Not found{% endblock %}
+{% block title_header %}Workflow database not found{% endblock %}
+{% block content %}
+<div class="ui-widget">
+    <div class="ui-state-highlight ui-corner-all" style="padding: .3em .7em;">
+        <p>
+            <span class="ui-icon ui-icon-info" style="float: left; margin-right: .3em;"></span>
+            <strong>Info:</strong>
+            We were unable to locate the master workflow database. Possible Reasons:
+            <ol>
+                <li>No workflows have been run using Pegasus 4.2.0 or above.</li>
+                <li>The master database URL provided to the pegasus service is invalid.</li>
+            </ol>
+        </p>
+    </div>
+</div>
+{% endblock %}

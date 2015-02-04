@@ -32,8 +32,7 @@ from Pegasus.tools import utils
 from Pegasus.monitoring.job import Job
 from Pegasus.tools import kickstart_parser
 
-# Get logger object (initialized elsewhere)
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 # Optional imports, only generate 'warnings' if they fail
 NLSimpleParser = None
@@ -51,6 +50,8 @@ re_parse_pmc_submit_files = re.compile(r"TASK\s+(\S*)\s(\S+)", re.IGNORECASE)
 re_parse_dag_script = re.compile(r"SCRIPT (?:PRE|POST)\s+(\S+)\s(\S+)\s(.*)", re.IGNORECASE)
 re_parse_dag_subdag = re.compile(r"SUBDAG EXTERNAL\s+(\S+)\s(\S+)\s?(?:DIR)?\s?(\S+)?", re.IGNORECASE)
 re_parse_planner_args = re.compile(r"\s*-Dpegasus.log.\*=(\S+)\s.*", re.IGNORECASE )
+# used while parsing the job .err file.
+re_parse_pegasuslite_ec = re.compile(r'^PegasusLite: exitcode (\d+)$', re.MULTILINE)
 
 # Constants
 MONITORD_START_FILE = "monitord.started"   # filename for writing when monitord starts
@@ -147,7 +148,8 @@ class Workflow:
             logger.warning("unable to read %s!" % (dag_file))
         else:
             for dag_line in DAG:
-                if (dag_line.lower()).find("job") >= 0:
+                lc_dag_line = dag_line.lower().lstrip();
+                if lc_dag_line.startswith("job"):
                     # Found Job line, parse it
                     my_match = re_parse_dag_submit_files.search(dag_line)
                     if my_match:
@@ -161,7 +163,7 @@ class Workflow:
                             else:
                                 # No entry for this job, let's create a new one
                                 self._job_info[my_jobid] = [my_sub, None, None, None, None, False, None, None, None]
-                elif dag_line.strip().lower().startswith("task"):
+                elif lc_dag_line.startswith("task"):
                     # This is a PMC DAG entry
                     my_match = re_parse_pmc_submit_files.search(dag_line)
                     if my_match:
@@ -171,7 +173,9 @@ class Workflow:
                             self._job_info[my_jobid][0] = None
                         else:
                             self._job_info[my_jobid] = [None, None, None, None, None, False, None, None, None]
-                elif (dag_line.lower()).find("script post") >= 0:
+                        #PM-793 PMC only case always have rotated stdout and stderr
+                        self._is_pmc_dag = True
+                elif lc_dag_line.startswith("script post"):
                     # Found SCRIPT POST line, parse it
                     my_match = re_parse_dag_script.search(dag_line)
                     if my_match:
@@ -185,7 +189,7 @@ class Workflow:
                         else:
                             # No entry for this job, let's create a new one
                             self._job_info[my_jobid] = [None, None, None, my_exec, my_args, False, None, None, None]
-                elif (dag_line.lower()).find("script pre") >= 0:
+                elif lc_dag_line.startswith("script pre"):
                     # Found SCRIPT PRE line, parse it
                     my_match = re_parse_dag_script.search(dag_line)
                     if my_match:
@@ -209,7 +213,7 @@ class Workflow:
                         else:
                             # No entry for this job, let's create a new one
                             self._job_info[my_jobid] = [None, my_exec, my_args, None, None, False, None, None, my_pegasus_pre_log ]
-                elif (dag_line.lower()).find("subdag external") >= 0:
+                elif lc_dag_line.startswith("subdag external") :
                     # Found SUBDAG line, parse it
                     my_match = re_parse_dag_subdag.search(dag_line)
                     if my_match:
@@ -240,6 +244,12 @@ class Workflow:
         # jobs. In addition, _job_info should contain all PRE and POST
         # script information for job in this workflow, and all subdag
         # jobs, with the their dag files, and directories
+
+    def job_has_postscript(self, jobid):
+        # This function returns whether a job matching a jobid in the workflow
+        # has a postscript associated with or not
+        return (self._job_info[jobid][3] is not None )
+
 
     def parse_in_file(self, jobname, tasks):
         """
@@ -319,7 +329,7 @@ class Workflow:
         is used for restarting the logging information from where we
         stopped last time.
         """
-        
+
         if self._output_dir is None:
             my_fn = os.path.join(self._run_dir, MONITORD_STATE_FILE)
         else:
@@ -330,7 +340,7 @@ class Workflow:
         except:
             logger.info("cannot open state file %s, continuing without state..." % (my_fn))
             return
-        
+
         try:
             for line in INPUT:
                 # Split the input line in 2, and make the second part an integer
@@ -351,7 +361,7 @@ class Workflow:
                     self._job_counters[my_job] = my_count
         except:
             logger.error("error processing state file %s" % (my_fn))
-        
+
         # Close the file
         try:
             INPUT.close()
@@ -380,7 +390,7 @@ class Workflow:
         except:
             logger.error("cannot open state file %s" % (my_fn))
             return
-        
+
         try:
             # Write first line with the last job_submit_seq used
             OUT.write("monitord_job_sequence %d\n" % (self._job_submit_seq))
@@ -396,7 +406,7 @@ class Workflow:
                 OUT.write("%s %d\n" % (my_job, self._job_counters[my_job]))
         except:
             logger.error("cannot write state to log file %s" % (my_fn))
-        
+
         # Close the file
         try:
             OUT.close()
@@ -441,7 +451,7 @@ class Workflow:
         # Nothing to do if we still haven't caught up with the last instance's progress...
         if self._line < self._previous_processed_line:
             return
- 
+
         if self._output_dir is None:
             my_recover_file = os.path.join(self._run_dir, MONITORD_RECOVER_FILE)
         else:
@@ -790,7 +800,8 @@ class Workflow:
         self._multiline_file_flag = False       # Track multiline user log files, DAGMan > 6.6
         self._walltime = {}                     # jid --> walltime
         self._job_site = {}                     # last site a job was planned for
-        self._last_known_state = None  #last known state of the workflow. updated whenever change_wf_state is called
+        self._last_known_state = None           # last known state of the workflow. updated whenever change_wf_state is called
+        self._is_pmc_dag = False                # boolean to track whether monitord is parsing a PMC DAG i.e pmc-only mode of Pegasus
 
         self.init_clean()
 
@@ -1238,7 +1249,7 @@ class Workflow:
         # Send job state event to database
         self.output_to_db("job_inst.main.start", kwargs)
 
-    def db_send_job_end(self, my_job, status=None):
+    def db_send_job_end(self, my_job, status=None, flush_to_stampede=True):
         """
         This function sends to the DB the main.end event
         """
@@ -1265,15 +1276,7 @@ class Workflow:
         else:
             if self._user is not None:
                 kwargs["user"] = self._user
-        if my_job._remote_working_dir is not None:
-            kwargs["work_dir"] = my_job._remote_working_dir
-        else:
-            if self._original_submit_dir is not None:
-                kwargs["work_dir"] = self._original_submit_dir
-        if my_job._cluster_start_time is not None:
-            kwargs["cluster__start"] = my_job._cluster_start_time
-        if my_job._cluster_duration is not None:
-            kwargs["cluster__dur"] = my_job._cluster_duration
+
         if my_job._main_job_start is not None and my_job._main_job_done is not None:
             # If we have both timestamps, let's try to compute the local duration
             try:
@@ -1287,8 +1290,82 @@ class Workflow:
         else:
             # This is not mandatory, according to the schema
             pass
+
+
+        # Use constant for now... will change it
+        if my_job._main_job_multiplier_factor is not None:
+            kwargs["multiplier_factor"] = str(my_job._main_job_multiplier_factor)
+
+        # Use the job exitcode for now (if the job has a postscript, it will get updated later
+        kwargs["exitcode"] = str(my_job._main_job_exitcode)
+
+        if my_job._sched_id is not None:
+            kwargs["sched__id"] = my_job._sched_id
+        if status is not None:
+            kwargs["status"] = status
+            if status != 0:
+                kwargs["level"] = "Error"
+        else:
+            kwargs["status"] = -1
+            kwargs["level"] = "Error"
+
+        if flush_to_stampede:
+            self.flush_db_send_job_end( my_job, kwargs )
+        else:
+            # PM-793 we cannot load the stdout stderr right now
+            # have to wait for the postscript to finish
+            my_job._deferred_job_end_kwargs = kwargs
+
+
+
+    def flush_db_send_job_end(self, my_job, kwargs):
+        """
+        This function sends to the DB the main.end event
+        Note: this is a soft flush from a monitord to the stampede loader
+        Not the stampede loader, that has a separate mechanism
+        to batch and load events into the database
+        """
+
+        #PM-814 remote working directory , cluster_start and cluster duration are
+        #all parsed from the job output file. So these can only be set after
+        #the job output has been parsed
+        if my_job._remote_working_dir is not None:
+            kwargs["work_dir"] = my_job._remote_working_dir
+        else:
+            if self._original_submit_dir is not None:
+                kwargs["work_dir"] = self._original_submit_dir
+        if my_job._cluster_start_time is not None:
+            kwargs["cluster__start"] = my_job._cluster_start_time
+        if my_job._cluster_duration is not None:
+            kwargs["cluster__dur"] = my_job._cluster_duration
+
+
+
+        self.load_stdout_err_in_job_instance( my_job, kwargs )
+        # Send job state event to database
+        self.output_to_db("job_inst.main.end", kwargs)
+
+        # Clean up stdout and stderr, to avoid memory issues...
+        if my_job._deferred_job_end_kwargs is not None:
+            my_job._deferred_job_end_kwargs = None
+
+        if my_job._stdout_text is not None:
+            my_job._stdout_text = None
+        if my_job._stderr_text is not None:
+            my_job._stderr_text = None
+        return
+
+
+    def load_stdout_err_in_job_instance( self, my_job, kwargs ):
+        """
+        Loads the information from the job stdout and stderr into the job_instance event's kwargs
+
+        :param my_job:
+        :param kwargs:
+        :return:
+        """
         if my_job._output_file is not None:
-            if my_job._kickstart_parsed:
+            if my_job._kickstart_parsed or my_job._has_rotated_stdout_err_files:
                 # Only use rotated filename for job with kickstart output
                 kwargs["stdout__file"] = my_job._output_file + ".%03d" % (my_job._job_output_counter)
             else:
@@ -1296,7 +1373,7 @@ class Workflow:
         else:
             kwargs["stdout__file"] = ""
         if my_job._error_file is not None:
-            if my_job._kickstart_parsed:
+            if my_job._kickstart_parsed or my_job._has_rotated_stdout_err_files:
                 # Only use rotated filename for job with kickstart output
                 kwargs["stderr__file"] = my_job._error_file + ".%03d" % (my_job._job_output_counter)
             else:
@@ -1322,31 +1399,7 @@ class Workflow:
                     # Put everything in
                     kwargs["stderr__text"] = my_job._stderr_text
 
-        # Use constant for now... will change it
-        if my_job._main_job_multiplier_factor is not None:
-            kwargs["multiplier_factor"] = str(my_job._main_job_multiplier_factor)
 
-        # Use the job exitcode for now (if the job has a postscript, it will get updated later
-        kwargs["exitcode"] = str(my_job._main_job_exitcode)
-
-        if my_job._sched_id is not None:
-            kwargs["sched__id"] = my_job._sched_id
-        if status is not None:
-            kwargs["status"] = status
-            if status != 0:
-                kwargs["level"] = "Error"
-        else:
-            kwargs["status"] = -1
-            kwargs["level"] = "Error"
-
-        # Send job state event to database
-        self.output_to_db("job_inst.main.end", kwargs)
-
-        # Clean up stdout and stderr, to avoid memory issues...
-        if my_job._stdout_text is not None:
-            my_job._stdout_text = None
-        if my_job._stderr_text is not None:
-            my_job._stderr_text = None
 
     def db_send_task_start(self, my_job, task_type, task_id=None, invocation_record=None):
         """
@@ -1657,33 +1710,32 @@ class Workflow:
         if parse_kickstart:
             # Compose kickstart output file name (base is the filename before rotation)
             my_job_output_fn_base = os.path.join(self._run_dir, my_job._exec_job_id) + ".out"
-            my_job_output_fn = my_job_output_fn_base + ".%03d" % (my_job._job_output_counter)
+
+            # PM-793 if there is a postscript associated then a job has rotated stdout|stderr
+            # OR we are in the PMC only mode where there are no postscripts associated, but
+            # still we have rotated logs
+            my_job_output_fn = my_job_output_fn_base
+            if self.job_has_postscript( my_job._exec_job_id) or self._is_pmc_dag:
+                my_job_output_fn = my_job_output_fn_base + ".%03d" % (my_job._job_output_counter)
+                my_job._has_rotated_stdout_err_files = True
 
             # First assume we will find rotated file
             my_parser = kickstart_parser.Parser(my_job_output_fn)
             my_output = my_parser.parse_stampede()
 
-            # Check if we were able to find it
-            if my_parser._open_error == True:
-                # File wasn't there, look for the file before the rotation
-                my_parser.__init__(my_job_output_fn_base)
-                my_output = my_parser.parse_stampede()
-
-                if my_parser._open_error == True:
-                    # Couldn't find it again, one last try, as it might have just been moved
-                    my_parser.__init__(my_job_output_fn)
-                    my_output = my_parser.parse_stampede()
-
-            else:
-                #we were able to find the rotated file
-                my_job_has_rotated_stdout_err_files = True
-
             # Check if successful
             if my_parser._open_error == True:
-                logger.info("unable to find output file for job %s" % (my_job._exec_job_id))
+                logger.info("unable to find output file %s for job %s" % (my_job_output_fn, my_job._exec_job_id))
 
         # Initialize task id counter
         my_task_id = 1
+
+        #PM-733 update the job with PegasusLite exitcode if it is one.
+        my_pegasuslite_ec = self.get_pegasuslite_exitcode( my_job );
+        if my_pegasuslite_ec is not None:
+            #update the main job exitcode
+            my_job._main_job_exitcode = my_pegasuslite_ec
+            logger.debug ("Pegasus Lite Exitcode for job %s is %s" %( my_job._exec_job_id, my_pegasuslite_ec) )
 
         if len(my_output) > 0:
             # Parsing the output file resulted in some info... let's parse it
@@ -1703,7 +1755,7 @@ class Workflow:
                     # Take care of invocation-level notifications
                     if self.check_notifications() == True and self._notifications_manager is not None:
                         self._notifications_manager.process_invocation_notifications(self, my_job, my_task_id, record)
-	
+
                     # Send task information to the database
                     self.db_send_task_start(my_job, "MAIN_JOB", my_task_id, record)
                     self.db_send_task_end(my_job, "MAIN_JOB", my_task_id, record)
@@ -1752,7 +1804,7 @@ class Workflow:
                             # Take care of invocation-level notifications
                             if self.check_notifications() == True and self._notifications_manager is not None:
                                 self._notifications_manager.process_invocation_notifications(self, my_job, my_task_id, record)
-	
+
                             # Ok, it all validates, send task information to the database
                             self.db_send_task_start(my_job, "MAIN_JOB", my_task_id, record)
                             self.db_send_task_end(my_job, "MAIN_JOB", my_task_id, record)
@@ -1774,12 +1826,6 @@ class Workflow:
             self.db_send_task_start(my_job, "MAIN_JOB", my_task_id)
             self.db_send_task_end(my_job, "MAIN_JOB", my_task_id)
 
-            #update job data structure if the stdout/stderr files are rotated
-            #for non kickstart launched jobs
-            if my_job_has_rotated_stdout_err_files:
-                my_job._output_file += ".%03d" % (my_job._job_output_counter)
-                my_job._error_file += ".%03d" % (my_job._job_output_counter)
-
             # Read stdout/stderr files, if not disabled by user
             if self._store_stdout_stderr:
                 my_job.read_stdout_stderr_files(self._run_dir)
@@ -1796,6 +1842,44 @@ class Workflow:
                 record["resource"] = my_job._site_name
                 # Send event to the database
                 self.db_send_host_info(my_job, record)
+
+
+    def get_pegasuslite_exitcode( self, job ):
+        """
+        Determine if the stderr contains PegasusLite output, and if so returns the PegasusLite exitcode
+        if found , else None
+        """
+
+        ec = None
+
+        # if the stdout/stderr files are rotated
+        # for non kickstart and kickstart launched jobs both
+        error_basename = job._error_file
+
+        #sanity check subdax or subdag jobs can have no error files
+        if error_basename is None:
+            return ec
+
+        if job._has_rotated_stdout_err_files:
+            error_basename += ".%03d" % ( job._job_output_counter)
+
+        errfile =  os.path.join(self._run_dir, error_basename )
+        if errfile is None or not os.path.isfile(errfile):
+            return ec
+
+        # Read the file first
+        f = open(errfile)
+        txt = f.read()
+        f.close()
+
+        #try and determine the exitcode from .err file
+        ec_match = re_parse_pegasuslite_ec.search( txt )
+        if ec_match:
+            #a match yes it is a PegasusLite job . gleam the exitcode
+            ec = ec_match.group(1)
+
+        return ec
+
 
     def add_job(self, jobid, job_state, sched_id=None):
         """
@@ -1930,10 +2014,19 @@ class Workflow:
             # Not generating events and notifcations, nothing else to do
             return
 
+        # PM-793 only parse job output here if a postscript is NOT associated with
+        # the job in the .dag file
+        # OR we are in the PMC only mode where there are no postscripts associated
+        parse_job_output_on_job_success_failure = not self.job_has_postscript(jobid) or self._is_pmc_dag
+
         # Parse the kickstart output file, also send mainjob tasks, if needed
         if job_state == "JOB_SUCCESS" or job_state == "JOB_FAILURE":
             # Main job has ended
-            self.parse_job_output(my_job, job_state)
+            if parse_job_output_on_job_success_failure:
+                # PM-793 only parse job output here if a postscript is NOT associated with
+                # the job in the .dag file
+                # OR we are in the PMC only mode where there are no postscripts associated
+                self.parse_job_output(my_job, job_state)
 
         # Take care of job-level notifications
         if self.check_notifications() == True and self._notifications_manager is not None:
@@ -1959,6 +2052,14 @@ class Workflow:
             self.db_send_task_start(my_job, "PRE_SCRIPT")
             self.db_send_task_end(my_job, "PRE_SCRIPT")
         elif job_state == "POST_SCRIPT_SUCCESS" or job_state == "POST_SCRIPT_FAILURE":
+            #PM-793 we parse the job.out and .err files when postscript finishes
+            self.parse_job_output(my_job, job_state)
+
+            # check to see if there is a deferred job_inst.main.end event that
+            # has to be sent to the database
+            if( my_job._deferred_job_end_kwargs is not None ):
+                self.flush_db_send_job_end(my_job, my_job._deferred_job_end_kwargs )
+
             # POST script finished
             self.db_send_task_start(my_job, "POST_SCRIPT")
             self.db_send_task_end(my_job, "POST_SCRIPT")
@@ -1988,7 +2089,7 @@ class Workflow:
             # PM-704 and send the job end event to record failure
             # in addition to the brief
             self.db_send_job_brief(my_job, "pre.end", -1)
-            self.db_send_job_end(my_job, -1 )
+            self.db_send_job_end(my_job, -1, True )
         elif job_state == "SUBMIT":
             self.db_send_job_brief(my_job, "submit.start")
             self.db_send_job_brief(my_job, "submit.end", 0)
@@ -2016,9 +2117,16 @@ class Workflow:
         elif job_state == "JOB_TERMINATED":
             self.db_send_job_brief(my_job, "main.term", 0)
         elif job_state == "JOB_SUCCESS":
-            self.db_send_job_end(my_job, 0)
+            self.db_send_job_end( my_job, 0, parse_job_output_on_job_success_failure )
         elif job_state == "JOB_FAILURE":
-            self.db_send_job_end(my_job, -1)
+            self.db_send_job_end(my_job, -1, parse_job_output_on_job_success_failure)
+        elif job_state == "JOB_ABORTED":
+            #job abort should trigger a job failure to account for case
+            #when no postscript is associated and failure does not get
+            #captured.
+            my_job._main_job_exitcode = 1
+            self.db_send_job_brief( my_job, "abort.info")
+            self.db_send_job_end(my_job, -1, True );
         elif job_state == "JOB_HELD":
             self.db_send_job_brief(my_job, "held.start")
         elif job_state == "JOB_EVICTED":

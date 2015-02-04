@@ -169,7 +169,7 @@ $main::time     = $^T;    # initialization only
 %main::width =            # width selection (0=unlimited)
   (
 	dagnodename => 30     # width of concrete dag node identifiers
-	, pegasus_wf_name => 24    # width of abstract workflow identifiers
+	, pegasus_wf_name => 0     # width of abstract workflow identifiers
 	, cmd             => 20    # width of executable that is actually run
   );
 $main::cache = undef;          # debug
@@ -1221,7 +1221,8 @@ sub assemble_dag($$$;$$) {
 	my @result = ();
 
 	# show dagman itself
-	push( @result, assemble_job( $jobref->{$dagid}, $indent ) );
+	push( @result, assemble_job( $jobref->{$dagid}, $indent ) )
+		if scalar keys %{$jobref->{$dagid}};
 	delete $main::seen{$dagid};
 
 	# show dependent jobs for dagman
@@ -1314,7 +1315,7 @@ sub x_job1 {
 		$result = $row->{dagnodename};
 	}
 	elsif ( exists $row->{'pegasus_wf_name'} ) {
-		$result = $row->{'pegasus_wf_name'};
+		$result = $row->{'pegasus_wf_name'} . " ( " . $row->{'iwd'} . " )";
 	}
 	else {
 		my $cmd = basename( $row->{cmd} || '' );
@@ -1357,7 +1358,7 @@ sub x_job2 {
 	}
 	elsif ( exists $row->{'pegasus_wf_name'} ) {
 		$result .=
-		  cfit( $main::width{'pegasus_wf_name'}, $row->{'pegasus_wf_name'} );
+		  cfit( $main::width{'pegasus_wf_name'}, $row->{'pegasus_wf_name'} . " ( " . $row->{'iwd'} . " )" );
 	}
 
 	# replace commandline ('cmd' and 'arguments')

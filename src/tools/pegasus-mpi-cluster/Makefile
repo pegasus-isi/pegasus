@@ -35,10 +35,22 @@ OS=$(shell uname -s)
 ifeq (Linux,$(OS))
   OPSYS = LINUX
   SIGN = 
+  LIBNUMA=$(shell /sbin/ldconfig -p | grep libnuma.so)
+  NUMAIF=$(shell ls /usr/include/numaif.h)
+  ifneq ($(LIBNUMA),)
+    ifneq ($(NUMAIF),)
+      CXXFLAGS += -DHAS_LIBNUMA
+      LDFLAGS += -lnuma
+    endif
+  endif
 endif
 ifeq (Darwin,$(OS))
   OPSYS = DARWIN
   SIGN = codesign -s "Pegasus Development" $@ || true
+endif
+ifeq (GNU/kFreeBSD,$(OS))
+  OPSYS = GNUKFREEBSD
+  SIGN = 
 endif
 ifndef OPSYS
   $(error Unsupported OS: $(OS))
@@ -68,7 +80,7 @@ TESTS += test-tools
 TESTS += test-fdcache
 TESTS += test-protocol
 
-.PHONY: clean depends test install
+.PHONY: clean depends test install check
 
 ifeq ($(shell which $(CXX) || echo n),n)
 $(warning To build pegasus-mpi-cluster set CXX to the path to your MPI C++ compiler wrapper)
@@ -92,6 +104,11 @@ test-fdcache: test-fdcache.o $(OBJS)
 test-protocol: test-protocol.o $(OBJS)
 
 test: $(TESTS) $(PROGRAMS)
+ifeq ($(shell which cppcheck || echo n),n)
+	echo "Install cppcheck for static analysis"
+else
+	cppcheck --quiet *.cpp
+endif
 	test/test.sh
 
 distclean: clean
@@ -104,7 +121,7 @@ depends:
 	g++ -MM *.cpp > depends.mk
 
 version.h:
-	$(CURDIR)/genversion.sh $(CURDIR) > $(CURDIR)/version.h
+	$(CURDIR)/../../../release-tools/getversion --header > $(CURDIR)/version.h
 
 ifeq ($(shell which ctags || echo n),n)
 tags:

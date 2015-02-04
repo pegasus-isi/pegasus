@@ -45,7 +45,7 @@
 
 #endif /* glibc */
 
-#endif /* Linux > 2.5.46 */
+#endif /* Linux >= version */
 
 #endif /* Linux */
 

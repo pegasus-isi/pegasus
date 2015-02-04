@@ -16,6 +16,7 @@
 
 package edu.isi.pegasus.planner.code.generator.condor.style;
 
+import edu.isi.pegasus.common.credential.CredentialHandler;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyle;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 
@@ -116,6 +117,10 @@ public class CondorG extends Abstract {
         //bwSubmit.println("remote_initialdir = " + workdir);
         job.condorVariables.construct( "remote_initialdir", workdir );
 
+        //associate the proxy to be used
+        //we always say a proxy is required for CondorG submission
+        //PM-731
+        job.setSubmissionCredential( CredentialHandler.TYPE.x509 );
         applyCredentialsForRemoteExec(job);
     }
 

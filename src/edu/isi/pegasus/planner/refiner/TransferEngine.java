@@ -36,7 +36,6 @@ import edu.isi.pegasus.planner.namespace.Pegasus;
 
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
-import edu.isi.pegasus.planner.partitioner.graph.Adapter;
 
 import edu.isi.pegasus.planner.selector.ReplicaSelector;
 import edu.isi.pegasus.planner.selector.replica.ReplicaSelectorFactory;
@@ -166,7 +165,7 @@ public class TransferEngine extends Engine {
     /**
      * Holds all the jobs deleted by the reduction algorithm.
      */
-    private List mDeletedJobs;
+    private List<Job> mDeletedJobs;
     
     
     /**
@@ -212,12 +211,7 @@ public class TransferEngine extends Engine {
     /**
      * A boolean indicating whether we are doing worker node execution or not.
      */
-    private boolean mWorkerNodeExecution;
-
-    /**
-     * The planner options passed to the planner
-     */
-    private PlannerOptions mPlannerOptions;
+    //private boolean mWorkerNodeExecution;
 
     /**
      * A boolean indicating whether to bypass first level staging for inputs
@@ -227,7 +221,8 @@ public class TransferEngine extends Engine {
     /**
      * A boolean to track whether condor file io is used for the workflow or not.
      */
-    private final boolean mSetupForCondorIO;
+    //private final boolean mSetupForCondorIO;
+    private PegasusConfiguration mPegasusConfiguration;
     
     /**
      * The output site where files need to be staged to.
@@ -248,18 +243,16 @@ public class TransferEngine extends Engine {
                            List<Job> deletedLeafJobs){
         super( bag );
 
-        mPlannerOptions  = bag.getPlannerOptions();
         mUseSymLinks = mProps.getUseOfSymbolicLinks();
         mSRMServiceURLToMountPointMap = constructSiteToSRMServerMap( mProps );
         
         mDag = reducedDag;
         mDeletedJobs     = deletedJobs;
 
-        mWorkerNodeExecution    = mProps.executeOnWorkerNode();
-        mSetupForCondorIO       = new PegasusConfiguration( mLogger).setupForCondorIO( mProps );
         mBypassStagingForInputs = mProps.bypassFirstLevelStagingForInputs();
 
-
+        mPegasusConfiguration = new PegasusConfiguration( bag.getLogger() );   
+         
         try{
             mTXRefiner = RefinerFactory.loadInstance( reducedDag,
                                                       bag );
@@ -347,7 +340,8 @@ public class TransferEngine extends Engine {
 
         //convert the dax to a graph representation and walk it
         //in a top down manner
-        Graph workflow = Adapter.convert( mDag );
+        //PM-747 no need for conversion as ADag now implements Graph interface
+        Graph workflow =  mDag;
 
         //go through each job in turn
 
@@ -371,7 +365,7 @@ public class TransferEngine extends Engine {
             mLogger.log(msg, LogManager.DEBUG_MESSAGE_LEVEL);
 
             //getting the parents of that node
-            List<GraphNode> parents = node.getParents();
+            Collection<GraphNode> parents = node.getParents();
             mLogger.log("Parents of job:" + node.parentsToString(),
                         LogManager.DEBUG_MESSAGE_LEVEL);
             processParents(currentJob, parents);
@@ -461,8 +455,11 @@ public class TransferEngine extends Engine {
      * @return the staging site
      */
     public String getStagingSite( Job job ){
+        /*
         String ss =  this.mPOptions.getStagingSite( job.getSiteHandle() );
         return (ss == null) ? job.getSiteHandle(): ss;
+        */
+        return job.getStagingSiteHandle();
     }
 
     /**
@@ -483,6 +480,12 @@ public class TransferEngine extends Engine {
         for( Iterator it = job.getOutputFiles().iterator(); it.hasNext(); ){
             PegasusFile pf = (PegasusFile)it.next();
             String  lfn = pf.getLFN();
+            
+            //PM-739 all output files for deleted jobs should have their
+            //cleanup flag set to false. these output files are not 
+            //generated during the workflow, but are retrieved from a
+            //location specified in the replica catalog.
+            pf.setForCleanup( false );
 
             //we only have to get a deleted file that user wants to be transferred
             if( pf.getTransientTransferFlag() ){
@@ -492,7 +495,7 @@ public class TransferEngine extends Engine {
             ReplicaLocation rl = mRCBridge.getFileLocs( lfn );
             //sanity check
             if( rl == null ){
-                throw new RuntimeException( "Unable to find a location in the Replica Catalog for output file "  + lfn );
+                throw new RuntimeException( "Unable to find a physical filename (PFN) in the Replica Catalog for output file with logical filename (LFN) as "  + lfn );
             }
 
             String putDestURL = mOutputMapper.map( lfn, mOutputSite,  FileServer.OPERATION.put );
@@ -529,6 +532,7 @@ public class TransferEngine extends Engine {
                 ft.addDestination( pool, putDestURL  );
                 ft.setURLForRegistrationOnDestination( getDestURL );
                 ft.setSize( pf.getSize() );
+                ft.setForCleanup( false );//PM-739
 
                 //System.out.println("Deleted Leaf Job File transfer object " + ft);
 
@@ -551,7 +555,7 @@ public class TransferEngine extends Engine {
      * @param parents   list <code>GraphNode</code> ojbects corresponding to the parent jobs
      *                  of the job.
      */
-    private void processParents(Job job, List<GraphNode> parents) {
+    private void processParents(Job job, Collection<GraphNode> parents) {
 
         Set nodeIpFiles = job.getInputFiles();
         Vector vRCSearchFiles = new Vector(); //vector of PegasusFile
@@ -587,11 +591,13 @@ public class TransferEngine extends Engine {
             }
         }
 
-        if (!vRCSearchFiles.isEmpty()) {
-            if( job instanceof DAXJob ){
-                getFilesFromRC( (DAXJob)job, vRCSearchFiles);
-            }
-            else if( job instanceof DAGJob ){
+        if( job instanceof DAXJob ){
+            //for the DAX jobs we should always call the method
+            //as DAX may just be referred as the LFN
+            getFilesFromRC( (DAXJob)job, vRCSearchFiles);
+        }
+        else if (!vRCSearchFiles.isEmpty()) {
+            if( job instanceof DAGJob ){
                 getFilesFromRC( (DAGJob)job, vRCSearchFiles);
             }
             else{
@@ -853,12 +859,12 @@ public class TransferEngine extends Engine {
      *
      * @param job     the job with reference to which interpool file transfers
      *                need to be determined.
-     * @param parents   list <code>GraphNode</code> ojbects corresponding to the
+     * @param parents   Collection of <code>GraphNode</code> ojbects corresponding to the
      *                  parent jobs of the job.
      *
      * @return    array of Collection of  <code>FileTransfer</code> objects
      */
-    private Collection<FileTransfer>[] getInterpoolFileTX(Job job, List<GraphNode>parents ) {
+    private Collection<FileTransfer>[] getInterpoolFileTX(Job job, Collection<GraphNode>parents ) {
         String destSiteHandle = job.getStagingSiteHandle();
         //contains the remote_initialdir if specified for the job
         String destRemoteDir = job.vdsNS.getStringValue(
@@ -1093,6 +1099,9 @@ public class TransferEngine extends Engine {
                 append(" --dax ").append( dax );
         job.setArguments(arguments.toString());
         
+        mLogger.log( "Set arguments for DAX job " + job.getID()+ " to " + arguments.toString(),
+                     LogManager.DEBUG_MESSAGE_LEVEL );
+        
         this.getFilesFromRC( (Job)job, searchFiles );
     }
 
@@ -1198,9 +1207,10 @@ public class TransferEngine extends Engine {
                     //no need to add a transfer node for it if no location found
 
                     //remove the PegasusFile object from the list of
-                    //input files for the job
-                    boolean removed = job.getInputFiles().remove( pf );
-                    //System.out.println( "Removed " + pf.getLFN() + " " + removed );
+                    //input files for the job, only if file is not a checkpoint file
+                    if ( !pf.isCheckpointFile()){
+                         job.getInputFiles().remove( pf );
+                    }
 
                     continue;
                 }
@@ -1301,7 +1311,7 @@ public class TransferEngine extends Engine {
                 
             //add locations of input data on the remote site to the transient RC
             
-            boolean bypassFirstLevelStaging = this.bypassStagingForInputFile( selLoc , pf , job.getSiteHandle()  );
+            boolean bypassFirstLevelStaging = this.bypassStagingForInputFile( selLoc , pf , job  );
             if( bypassFirstLevelStaging ){
                 //only the files for which we bypass first level staging , we
                 //store them in the planner cache as a GET URL and associate with the compute site
@@ -1534,7 +1544,7 @@ public class TransferEngine extends Engine {
      *
      * @return   Set of PegasusFile objects
      */
-    private Set<PegasusFile> getOutputFiles( List<GraphNode> nodes ) {
+    private Set<PegasusFile> getOutputFiles( Collection<GraphNode> nodes ) {
 
         Set<PegasusFile> files = new HashSet();
 
@@ -1765,8 +1775,8 @@ public class TransferEngine extends Engine {
         }
         else{
             //generate the prefix from the name of the dag
-            sb.append(adag.dagInfo.nameOfADag).append("-").
-           append(adag.dagInfo.index);
+            sb.append(adag.getLabel()).append("-").
+           append(adag.getIndex());
         }
         //append the suffix
         sb.append(".cache");
@@ -1781,21 +1791,20 @@ public class TransferEngine extends Engine {
      *
      * @param entry        a ReplicaCatalogEntry matching the selected replica location.
      * @param file         the corresponding Pegasus File object
-     * @param computeSite  the compute site where the associated job will run.
-     * @param isExecutable whether the file transferred is an executable file or not
+     * @param job          the associated job
      *
      * @return  boolean indicating whether we need to enable bypass or not
      */
-    private boolean bypassStagingForInputFile( ReplicaCatalogEntry entry , PegasusFile file, String computeSite ) {
+    private boolean bypassStagingForInputFile( ReplicaCatalogEntry entry , PegasusFile file, Job job ) {
         boolean bypass = false;
-
+        String computeSite = job.getSiteHandle();
         //check if user has it configured for bypassing the staging and
         //we are in pegasus lite mode
-        if( this.mBypassStagingForInputs && mWorkerNodeExecution ){
+        if( this.mBypassStagingForInputs && mPegasusConfiguration.jobSetupForWorkerNodeExecution(job) ){
             boolean isFileURL = entry.getPFN().startsWith( PegasusURL.FILE_URL_SCHEME);
             String fileSite = entry.getResourceHandle();
 
-            if( this.mSetupForCondorIO ){
+            if( mPegasusConfiguration.jobSetupForCondorIO(job, mProps) ){
                 //additional check for condor io
                 //we need to inspect the URL and it's location
                 //only file urls for input files are eligible for bypass

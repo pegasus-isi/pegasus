@@ -43,6 +43,7 @@ import java.util.Set;
 import java.util.HashSet;
 
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge;
 import edu.isi.pegasus.planner.transfer.Implementation;
 import java.util.LinkedList;
@@ -69,7 +70,7 @@ public class Bundle extends Basic {
      * that are being created per execution pool for stageing in data for
      * the workflow.
      */
-    public static final String DEFAULT_LOCAL_STAGE_IN_BUNDLE_FACTOR = "4";
+    public static final String DEFAULT_LOCAL_STAGE_IN_BUNDLE_FACTOR = "2";
 
     
     /**
@@ -77,14 +78,14 @@ public class Bundle extends Basic {
      * that are being created per execution pool for stageing in data for
      * the workflow.
      */
-    public static final String DEFAULT_REMOTE_STAGE_IN_BUNDLE_FACTOR = "4";
+    public static final String DEFAULT_REMOTE_STAGE_IN_BUNDLE_FACTOR = "2";
 
     /**
      * The default bundling factor that identifies the number of transfer jobs
      * that are being created per execution pool for stageing out data for
      * the workflow.
      */
-    public static final String DEFAULT_LOCAL_STAGE_OUT_BUNDLE_FACTOR = "4";
+    public static final String DEFAULT_LOCAL_STAGE_OUT_BUNDLE_FACTOR = "2";
 
 
     /**
@@ -92,7 +93,7 @@ public class Bundle extends Basic {
      * that are being created per execution pool for stageing out data for
      * the workflow.
      */
-    public static final String DEFAULT_REMOTE_STAGE_OUT_BUNDLE_FACTOR = "4";
+    public static final String DEFAULT_REMOTE_STAGE_OUT_BUNDLE_FACTOR = "2";
 
 
     /**
@@ -113,7 +114,7 @@ public class Bundle extends Basic {
      * used to construct the relations that need to be added to workflow, once
      * the traversal is done.
      */
-    private Map mRelationsMap;
+    private Map mRelationsParentMap;
 
     
     /**
@@ -189,7 +190,12 @@ public class Bundle extends Basic {
      * A boolean indicating whether chmod jobs should be created that set the
      * xbit in case of executable staging.
      */
-    protected boolean mAddNodesForSettingXBit;
+    //protected boolean mAddNodesForSettingXBit;
+    
+    /**
+     * handle to PegasusConfiguration
+     */
+    protected PegasusConfiguration mPegasusConfiguration;
 
     /**
      * The overloaded constructor.
@@ -203,12 +209,14 @@ public class Bundle extends Basic {
 
         //from pegasus release 3.2 onwards xbit jobs are not added
         //for worker node execution/Pegasus Lite
-        mAddNodesForSettingXBit = !mProps.executeOnWorkerNode();
+        //PM-810 it is now per job instead of global.
+        mPegasusConfiguration = new PegasusConfiguration( mLogger );
+        //mAddNodesForSettingXBit = !mProps.executeOnWorkerNode();
 
         mStageInLocalMap   = new HashMap( mPOptions.getExecutionSites().size());
         mStageInRemoteMap   = new HashMap( mPOptions.getExecutionSites().size());
         
-        mRelationsMap = new HashMap();
+        mRelationsParentMap = new HashMap();
         mSetupMap     = new HashMap();
         mCurrentSOLevel = -1;
         mJobPrefix    = mPOptions.getJobnamePrefix();
@@ -390,8 +398,11 @@ public class Bundle extends Basic {
                 //check if tempSet does not contain the parent
                 //fix for sonal's bug
                 tempSet.add(par);
+                
+                //PM-810 worker node exeucution is per job level now
+                boolean addNodeForSettingXBit = !mPegasusConfiguration.jobSetupForWorkerNodeExecution(job);
 
-                if(ft.isTransferringExecutableFile() && this.mAddNodesForSettingXBit ){
+                if(ft.isTransferringExecutableFile() && addNodeForSettingXBit ){
                     //currently we have only one file to be staged per
                     //compute job . Taking a short cut in determining
                     //the name of setXBit job
@@ -454,8 +465,11 @@ public class Bundle extends Basic {
 
         //stageInExecJobs has corresponding list of transfer
         //jobs that transfer the files
-      
-        if( !stagedExecutableFiles.isEmpty() && mAddNodesForSettingXBit ){
+        
+        //PM-810 worker node exeucution is per job level now
+        boolean addNodeForSettingXBit = !mPegasusConfiguration.jobSetupForWorkerNodeExecution(job);
+                
+        if( !stagedExecutableFiles.isEmpty() && addNodeForSettingXBit ){
             Job xBitJob = implementation.createSetXBitJob( job,
                                                                stagedExecutableFiles,
                                                                Job.STAGE_IN_JOB,
@@ -492,12 +506,12 @@ public class Bundle extends Basic {
 
         //add the temp set to the relations
         //relations are added to the workflow in the end.
-        if( mRelationsMap.containsKey( jobName )){
+        if( mRelationsParentMap.containsKey( jobName )){
             //the map already has some relations for the job
             //add those to temp set to 
-            tempSet.addAll( (Set) mRelationsMap.get( jobName ) );
+            tempSet.addAll( (Set) mRelationsParentMap.get( jobName ) );
         }
-        mRelationsMap.put(jobName,tempSet);
+        mRelationsParentMap.put(jobName,tempSet);
 
 
     }
@@ -645,24 +659,29 @@ public class Bundle extends Basic {
                      this.mTXStageInImplementation,
                      Job.STAGE_IN_JOB,
                      false );
+        
+        //reset the stageout map too
+        this.resetStageOutMaps();
        
         //adding relations that tie in the stagin
         //jobs to the compute jobs.
-        for(Iterator it = mRelationsMap.entrySet().iterator();it.hasNext();){
+        for(Iterator it = mRelationsParentMap.entrySet().iterator();it.hasNext();){
             Map.Entry entry = (Map.Entry)it.next();
             String key   = (String)entry.getKey();
-            mLogger.log("Adding relations for job " + key,
+            mLogger.log("Adding stagein relations for job " + key,
                         LogManager.DEBUG_MESSAGE_LEVEL);
             for(Iterator pIt = ((Collection)entry.getValue()).iterator();
                                                               pIt.hasNext();){
                 String value = (String)pIt.next();
-                addRelation( value, key );
+                mLogger.log("Adding Edge " + value + " -> " + key,
+                        LogManager.DEBUG_MESSAGE_LEVEL);
+                this.mDAG.addEdge( value, key );
             }
         }
-
         
-        //reset the stageout map too
-        this.resetStageOutMaps();
+        //PM-747 add the edges in the very end
+        super.done();
+        
     }
     
     /**

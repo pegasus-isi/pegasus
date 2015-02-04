@@ -57,6 +57,12 @@ public class SiteFactory {
      * We still have to load the right class in the factory.
      */
     private static final String OLD_XML3_IMPLEMENTING_CLASS_BASENAME = "XML3";
+    
+    /**
+     * The name of old XML4 implementation class.  It was removed for 4.2 release.
+     * We still have to load the right class in the factory.
+     */
+    private static final String XML4_IMPLEMENTING_CLASS_BASENAME = "XML4";
 
 
     /**
@@ -160,7 +166,8 @@ public class SiteFactory {
         /* get the implementor from properties */
         String catalogImplementor = properties.getPoolMode().trim();
 
-        if( catalogImplementor.equals( SiteFactory.OLD_XML3_IMPLEMENTING_CLASS_BASENAME )){
+        if( catalogImplementor.equals( SiteFactory.OLD_XML3_IMPLEMENTING_CLASS_BASENAME ) ||
+            catalogImplementor.equals( SiteFactory.XML4_IMPLEMENTING_CLASS_BASENAME) ){
             catalogImplementor = SiteFactory.XML_IMPLEMENTING_CLASS_BASENAME;
         }
 

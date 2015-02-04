@@ -43,6 +43,10 @@ public class GridFTPConnection {
         
         client.setMode(Session.MODE_STREAM);
         client.setType(Session.TYPE_ASCII);
+        
+        //by default jglobus 2.0.5 is set to 30 seconds
+        //increase it to 60 seconds . stick with the default wait delay
+        client.setClientWaitParams( 60*1000, Session.DEFAULT_WAIT_DELAY);
     }
     
     /**

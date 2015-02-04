@@ -119,9 +119,9 @@ public class Stork extends Abstract {
      * @throws CodeGeneratorException in case of any error occuring code generation.
      */
     public void generateCode( ADag dag, Job job ) throws CodeGeneratorException{
-        String dagname  = dag.dagInfo.nameOfADag;
-        String dagindex = dag.dagInfo.index;
-        String dagcount = dag.dagInfo.count;
+        String dagname  = dag.getLabel();
+        String dagindex = dag.getIndex();
+        String dagcount = dag.getCount();
 
 
         StringTokenizer st = new StringTokenizer(job.strargs,"\n");

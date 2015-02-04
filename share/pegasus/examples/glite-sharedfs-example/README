@@ -9,31 +9,16 @@ Tested with
 
 
 Setting PBS Parameters for jobs
-       - Put the pbs_local_submit_attributes.sh file in the GLITE bin
-       directory
+       - Put the pbs_local_submit_attributes.sh file distributed with
+       Pegasus in share/pegasus/htcondor/glite directory in the GLITE bin
+       directory of the HTCondor installation.
 
-       - GLITE directory can be determinged by running
+       - GLITE directory can be determined by running
        condor_config_val GLITE_LOCATION
 
-       - The following profiles can be assocaited with the jobs to
-         change the corresponding PBS parameters
-
-	 The file format is the foramt for specifying profiles in the
-	 properties. Look up the profiles chapter if you want to
-	 specify these profiles elsewhere	 
-
-	 #the pbs queue the job runs in 
-	 condor.batch_queue   <queue name>
-
-	 # the pbs nodes
-	 globus.count  <number of pbs nodes to use>
-
-	 #the number of cpus/procs to use
-	 globus.hostcount <number of procs to use>
-
-	 #the maxwalltime for the jobs
-	 globus.maxwalltime <walltime in seconds>
-
+       - The profiles to set the PBS parameters for jobs are explained
+         here
+	 https://pegasus.isi.edu/wms/docs/latest/execution_environments.php#glite
 
 	
 

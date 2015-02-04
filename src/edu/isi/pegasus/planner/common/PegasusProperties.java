@@ -76,6 +76,11 @@ public class PegasusProperties implements Cloneable {
     
     public static final String PEGASUS_SITE_CATALOG_FILE_PROPERTY = "pegasus.catalog.site.file";
     
+    
+    public static final String PEGASUS_LOG_METRICS_PROPERTY        = "pegasus.log.metrics";
+    
+    public static final String PEGASUS_LOG_METRICS_PROPERTY_FILE   = "pegasus.log.metrics.file";
+    
     public static final String PEGASUS_APP_METRICS_PREFIX = "pegasus.metrics.app";
     
     
@@ -128,7 +133,6 @@ public class PegasusProperties implements Cloneable {
     public static final String DEFAULT_TRANSFER_STREAMS = "1";
 
     //grid start constants
-    public static final String DEFAULT_GRIDSTART_MODE = "Kickstart";
 
     public static final String DEFAULT_INVOKE_LENGTH = "4000";
 
@@ -178,7 +182,6 @@ public class PegasusProperties implements Cloneable {
      * The default value to be assigned for dagman.maxpre .
      */
     public static final String DEFAULT_DAGMAN_MAX_PRE_VALUE = "1";
-
 
 
     /**
@@ -627,6 +630,17 @@ public class PegasusProperties implements Cloneable {
         return mProps.getSysConfDir();
     }
     
+    /**
+     * Removes a property from the soft state.
+     * 
+     * @param key  the key
+     * 
+     * @return the corresponding value if key exits, else null 
+     */
+    public String removeProperty( String key ){
+        return mProps.removeProperty( key );
+    }
+    
     //PROPERTIES RELATED TO SCHEMAS
     /**
      * Returns the location of the schema for the DAX.
@@ -1073,14 +1087,16 @@ public class PegasusProperties implements Cloneable {
      * Returns the sls transfer implementation that is to be used for constructing
      * the transfer jobs.
      *
-     * Referred to by the "pegasus.transfer.sls.*.impl" property.
+     * Referred to by the "pegasus.transfer.lite.*.impl" property.
      *
      * @return the transfer implementation
      * 
      */
+    /* PM-810 done away.
     public String getSLSTransferImplementation(){
-        return getTransferImplementation( "pegasus.transfer.sls.*.impl" );
+        return getTransferImplementation( "pegasus.transfer.lite.*.impl" );
     }
+    */
 
 
     /**
@@ -1101,13 +1117,13 @@ public class PegasusProperties implements Cloneable {
      * Returns a boolean indicating whether to stage sls files via Pegasus
      * First Level Staging or let Condor do it.
      *
-     * Referred to by the property "pegasus.transfer.stage.sls.file"
+     * Referred to by the property "pegasus.transfer.stage.lite.file"
      *
      * @return boolean value mentioned in the properties or else the default
      *         value which is true.
      */
     public boolean stageSLSFilesViaFirstLevelStaging( ){
-        return Boolean.parse( mProps.getProperty( "pegasus.transfer.stage.sls.file" ),
+        return Boolean.parse( mProps.getProperty( "pegasus.transfer.stage.lite.file" ),
                               false );
     }
 
@@ -1392,16 +1408,16 @@ public class PegasusProperties implements Cloneable {
     }
     
     /**
-     * Returns the extra arguments with which the SLS transfer executables needs
-     * to be invoked.
+     * Returns the extra arguments with which the  transfer executable used in
+     * PegasusLite needs to be invoked.
      *
-     * Referred to by "pegasus.transfer.sls.arguments" property.
+     * Referred to by "pegasus.transfer.lite.arguments" property.
      *
      * @return the arguments specified in the properties file,
      *         else null if property is not specified.
      */
     public String getSLSTransferArguments() {
-	return mProps.getProperty("pegasus.transfer.sls.arguments");
+	return mProps.getProperty("pegasus.transfer.lite.arguments");
     }
     
 
@@ -1625,12 +1641,11 @@ public class PegasusProperties implements Cloneable {
      * Referred to by the "pegasus.gridstart" property.
      *
      * @return the value specified in the property file,
-     *         else DEFAULT_GRIDSTART_MODE
+     *         else null
      *
-     * @see #DEFAULT_GRIDSTART_MODE
      */
     public String getGridStart(){
-        return mProps.getProperty("pegasus.gridstart",DEFAULT_GRIDSTART_MODE);
+        return mProps.getProperty("pegasus.gridstart" );
     }
 
     /**
@@ -2070,9 +2085,6 @@ public class PegasusProperties implements Cloneable {
         return mProps.getProperty( "pegasus.log4j.log" );
     }
 
-
-    
-
     /**
      * Returns a boolean indicating whether to write out the planner metrics
      * or not.
@@ -2082,7 +2094,7 @@ public class PegasusProperties implements Cloneable {
      * @return boolean in the properties, else true
      */
     public boolean writeOutMetrics(){
-        return Boolean.parse( mProps.getProperty( "pegasus.log.metrics" ), true ) &&
+        return Boolean.parse(mProps.getProperty(PegasusProperties.PEGASUS_LOG_METRICS_PROPERTY ), true ) &&
                (this.getMetricsLogFile() != null);
     }
 
@@ -2094,11 +2106,21 @@ public class PegasusProperties implements Cloneable {
      * @return path to the metrics file if specified, else rundir/pegasus.metrics
      */
     public String getMetricsLogFile(){
-        String file = mProps.getProperty( "pegasus.log.metrics.file" );
+        String file = mProps.getProperty( PegasusProperties.PEGASUS_LOG_METRICS_PROPERTY_FILE );
         return file;
     }
-
     
+    /**
+     * Returns a boolean indicating whether to log JVM memory usage or not.
+     *
+     * Referred to by the "pegasus.log.memory.usage" property.
+     *
+     * @return boolean value specified in properties else false.
+     */
+    public boolean logMemoryUsage(){
+        return Boolean.parse( mProps.getProperty( "pegasus.log.memory.usage" ) ,
+                              false  ); 
+    }
 
     //SOME MISCELLANEOUS PROPERTIES
 
@@ -2168,6 +2190,20 @@ public class PegasusProperties implements Cloneable {
     }
 
     /**
+     * Returns a boolean indicating whether to automatically
+     * add edges as a result of underlying data dependecnies between jobs. 
+     * 
+     * Referred to by the "pegasus.parser.dax.data.dependencies" property.
+     * 
+     * @return boolean value in the properties file, else true if not specified
+     *         or an invalid value specified.
+     */
+    public boolean addDataDependencies(){
+        return Boolean.parse( mProps.getProperty( "pegasus.parser.dax.data.dependencies" ),
+                              true) ;
+    }
+    
+    /**
      * Returns the path to the wings properties file.
      * 
      * Referred to by the "pegasus.wings.properties" property.
@@ -2227,6 +2263,17 @@ public class PegasusProperties implements Cloneable {
      */
     public String getPartitionParsingMode() {
         return mProps.getProperty( "pegasus.partition.parser.load", "single" );
+    }
+
+    /**
+     * Returns the scope for the data reusue module.
+     *
+     * Referred to by the "pegasus.data.reuse.scope" property.
+     *
+     * @return the value specified in the properties file, else null
+     */
+    public String getDataReuseScope() {
+        return mProps.getProperty( "pegasus.data.reuse.scope" );
     }
 
     

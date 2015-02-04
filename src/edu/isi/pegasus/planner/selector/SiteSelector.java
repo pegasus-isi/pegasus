@@ -58,16 +58,6 @@ public interface SiteSelector {
      */
     public void initialize( PegasusBag bag );
 
-    /**
-     * Maps the jobs in the workflow to the various grid sites.
-     * The jobs are mapped by setting the site handle for the jobs.
-     *
-     * @param workflow   the workflow in a Graph form.
-     *
-     * @param sites     the list of <code>String</code> objects representing the
-     *                  execution sites that can be used.
-     */
-    public void mapWorkflow( Graph workflow, List sites );
 
     /**
      * Maps the jobs in the workflow to the various grid sites.

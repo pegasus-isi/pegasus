@@ -24,5 +24,7 @@ string pathfind(const string &file);
 int read_file(const string &file, char *buf, size_t size);
 string dirname(const string &path);
 string filename(const string &path);
+int clear_cpu_affinity();
+int clear_memory_affinity();
 
 #endif /* _TOOLS_H */

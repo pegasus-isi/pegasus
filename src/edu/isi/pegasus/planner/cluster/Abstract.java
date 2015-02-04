@@ -25,21 +25,18 @@ import edu.isi.pegasus.planner.classes.PCRelation;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
 
-import edu.isi.pegasus.planner.cluster.JobAggregator;
-
 import edu.isi.pegasus.planner.cluster.aggregator.JobAggregatorInstanceFactory;
 
 import edu.isi.pegasus.planner.partitioner.Partition;
 
 import java.util.Collection;
-import java.util.Vector;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Set;
+
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.cluster.aggregator.MPIExec;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.util.LinkedList;
 
@@ -59,12 +56,12 @@ public abstract class Abstract implements Clusterer {
      * A Map to store all the job(Job) objects indexed by their logical ID found in
      * the dax. This should actually be in the ADag structure.
      */
-    protected Map mSubInfoMap;
+    protected Map<String,Job> mSubInfoMap;
 
     /**
-     * A Map that indexes the partition ID to the name of clustered job.
+     * A Map that indexes the partition ID to the clustered job.
      */
-    protected Map mPartitionClusterMap;
+    protected Map<String,Job> mPartitionClusterMap;
 
 
     /**
@@ -87,7 +84,7 @@ public abstract class Abstract implements Clusterer {
      * The collection of relations, that is constructed for the clustered
      * workflow.
      */
-    protected Collection mClusteredRelations;
+    protected Collection<PCRelation> mClusteredRelations;
 
     /**
      * ADag object containing the jobs that have been scheduled by the site
@@ -160,13 +157,16 @@ public abstract class Abstract implements Clusterer {
         mProps = bag.getPegasusProperties();
         mJobAggregatorFactory.initialize( dag, bag );
 
-        mClusteredRelations = new Vector( dag.dagInfo.relations.size()/2 );
-
-        mSubInfoMap = new HashMap( dag.vJobSubInfos.size() );
+        //PM-747
+        //mClusteredRelations = new Vector( dag.dagInfo.relations.size()/2 );
+        mClusteredRelations = new LinkedList<PCRelation>(  );
+        
+        mSubInfoMap = new HashMap<String,Job>( dag.size() );
         mPartitionClusterMap = new HashMap();
 
-        for(Iterator it = mScheduledDAG.vJobSubInfos.iterator();it.hasNext();){
-            Job job = (Job)it.next();
+        for(Iterator<GraphNode> it = mScheduledDAG.jobIterator();it.hasNext();){
+            GraphNode node = it.next();
+            Job job = (Job)node.getContent();
             addJob( job );
         }
     }
@@ -221,7 +221,11 @@ public abstract class Abstract implements Clusterer {
 
 //        System.out.println( " Job to be clustered is " + firstJob);
 
-        if(size == 1){
+        JobAggregator aggregator = mJobAggregatorFactory.loadInstance( firstJob );
+        if( size == 1 &&
+                //PM-745 we want to launch a label based cluster via
+                //the clustering executable
+                ( aggregator == null ||  !( partition.hasAssociatedLabel() ) )){
             //no need to collapse one job. go to the next iteration
             mLogger.log("\t No clustering for partition " + pID,
                         LogManager.DEBUG_MESSAGE_LEVEL);
@@ -230,10 +234,7 @@ public abstract class Abstract implements Clusterer {
         }
 
         //do the ordering of the list
-
-
-        JobAggregator aggregator = mJobAggregatorFactory.loadInstance( firstJob );
-        if( aggregator.entryNotInTC( currSite ) ){
+        if( aggregator == null || aggregator.entryNotInTC( currSite ) ){
             throw new ClustererException ("No installed aggregator executable found for partition " +
                                           pID + " at site " + currSite );
         }
@@ -341,9 +342,15 @@ public abstract class Abstract implements Clusterer {
      */
     public ADag getClusteredDAG() throws ClustererException{
         //replace the relations of the original DAG and return
+        /* PM-747 
         mScheduledDAG.dagInfo.relations = null;
         mScheduledDAG.dagInfo.relations = (Vector)mClusteredRelations;
-
+        */
+        mScheduledDAG.resetEdges();
+        for( PCRelation pc: mClusteredRelations){
+            mScheduledDAG.addEdge( pc.getParent(), pc.getChild());
+        }
+        
         return mScheduledDAG;
     }
 

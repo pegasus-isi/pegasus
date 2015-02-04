@@ -28,7 +28,6 @@ import java.util.Iterator;
 import java.util.Map;
 
 import edu.isi.pegasus.common.credential.CredentialHandler;
-import edu.isi.pegasus.common.credential.CredentialHandler.TYPE;
 import edu.isi.pegasus.common.credential.CredentialHandlerFactory;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
@@ -46,9 +45,9 @@ import edu.isi.pegasus.planner.code.GridStartFactory;
 import edu.isi.pegasus.planner.code.POSTScript;
 import edu.isi.pegasus.planner.code.generator.condor.SUBDAXGenerator;
 import edu.isi.pegasus.planner.namespace.Dagman;
-import edu.isi.pegasus.planner.partitioner.graph.Adapter;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import java.util.Set;
 
 /**
  * This code generator generates a shell script in the submit directory.
@@ -97,10 +96,15 @@ public class Shell extends Abstract {
     protected GridStartFactory mGridStartFactory;
 
     /**
+     * Handle to the Credential Factory
+     */
+    protected CredentialHandlerFactory mFactory;
+
+    /**
      * A boolean indicating whether grid start has been initialized or not.
      */
     protected boolean mInitializeGridStart;
-
+    
     
     /**
      * The default constructor.
@@ -128,7 +132,9 @@ public class Shell extends Abstract {
 
         //get the handle to pool file
         mSiteStore = bag.getHandleToSiteStore();
-
+        
+        mFactory = new CredentialHandlerFactory();
+	mFactory.initialize( mBag );
     }
 
     /**
@@ -154,8 +160,8 @@ public class Shell extends Abstract {
         //write out the script header
         writeString(this.getScriptHeader( mSubmitFileDir ) );
 
-        //we first need to convert internally into graph format
-        Graph workflow =    Adapter.convert( dag );
+        //PM-747 no need for conversion as ADag now implements Graph interface
+        Graph workflow =  dag;
 
         //traverse the workflow in topological sort order
         for( Iterator<GraphNode> it = workflow.topologicalSortIterator(); it.hasNext(); ){
@@ -206,20 +212,21 @@ public class Shell extends Abstract {
         }
         if ( job.getJobType () == Job.DAX_JOB ) {
             SUBDAXGenerator subdax = new SUBDAXGenerator ();
-            subdax.initialize ( mBag, dag, Adapter.convert( dag ), mWriteHandle );
+            subdax.initialize ( mBag, dag,  mWriteHandle );
             subdax.generateCode ( job );
         }
         
-	CredentialHandlerFactory factory = new CredentialHandlerFactory();
-	factory.initialize( mBag );
-
-	for (TYPE type : job.getCredentialTypes()) {
-	    CredentialHandler handler = factory.loadInstance( type );
-	    job.addProfile( new Profile( Profile.ENV, handler
-		    .getEnvironmentVariable(), handler.getPath() ) );
-	}
+	//handle credentials for the job
+        for( Map.Entry<String,Set<CredentialHandler.TYPE>> entry : job.getCredentialTypes().entrySet()  ){
+            String site = entry.getKey();
+            for( CredentialHandler.TYPE cred: entry.getValue()){
+                CredentialHandler handler = mFactory.loadInstance( cred );
+                job.addProfile( new Profile( Profile.ENV,
+                                             handler.getEnvironmentVariable( site ), 
+                                             handler.getPath( site ) ) );
+            }
 	
-	factory = null;
+        }
 	
         //initialize GridStart if required.
         if ( mInitializeGridStart ){
@@ -239,7 +246,6 @@ public class Shell extends Abstract {
 
         //JIRA PM-491 . Path to kickstart should not be passed
         //to the factory.
-//        String gridStartPath = site.getKickstartPath();
         GridStart gridStart = mGridStartFactory.loadGridStart( job , null );
 
         //enable the job
@@ -503,7 +509,7 @@ public class Shell extends Abstract {
     protected String getPathToShellScript(ADag dag) {
         StringBuilder script = new StringBuilder();
         script.append( this.mSubmitFileDir ).append( File.separator ).
-               append( dag.dagInfo.nameOfADag ).append( ".sh" );
+               append( dag.getLabel() ).append( ".sh" );
         return script.toString();
     }
 

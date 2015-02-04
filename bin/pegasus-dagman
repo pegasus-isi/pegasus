@@ -51,6 +51,8 @@ def find_prog(prog,dir=[]):
                 return exe_file
     return None
 
+logger = logging.getLogger("pegasus-dagman")
+
 # Use pegasus-config to find our lib path
 bin_dir = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0])))
 pegasus_config = find_prog("pegasus-config",[bin_dir])
@@ -61,22 +63,16 @@ print "Pegasus LIB %s" % lib_ext_dir
 print "Pegasus BIN_DIR %s" % bin_dir
 print "Pegasus DAGMAN is  %s" % sys.argv[0]
 
-
-
-
 # Insert this directory in our search path
-os.sys.path.insert(0, lib_ext_dir)
 os.sys.path.insert(0, lib_dir)
+os.sys.path.insert(0, lib_ext_dir)
 
-import Pegasus.common
 from Pegasus.tools import utils
-
-# logger is setup in common
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+utils.configureLogging()
 
 SLEEP_TIME = 15
-DIED_TOO_QUICKLY_TIME = 120
+DIED_TOO_QUICKLY_TIME  = 120
+MONITORD_KILL_TIME = 100 #the number of seconds after pegasus-remove is called, that monitord is sent the kill signal
 
 dagman = None
 
@@ -84,6 +80,8 @@ monitord = None
 monitord_last_start = 0
 monitord_next_start = 0
 monitord_current_restarts = 0
+monitord_shutdown_mode = False
+monitord_shutdown_time = 0
 
 
 def dagman_launch(dagman_bin,arguments=[]):
@@ -146,13 +144,25 @@ def is_dagman_copy_to_spool():
 def sighandler(signum, frame):
     ''' Signal handler to catch and pass SIGTERM, SIGABRT, SIGUSR1, SIGTERM '''
  #   global dagman, monitord
-    print "pegasus-dagman caught SIGNAL", signum
+    logger.info( "pegasus-dagman caught SIGNAL %s" %signum)
     if dagman != None :
         os.kill(dagman.pid, signum)
+
     if monitord != None:
+        # PM-767 when pegasus-remove is called, internally condor_rm is called
+        # that sends a SIGUSR1 to pegasus-dagman.
+        # we pass that signal to condor_dagman. But for monitord, we don't, as
+        # we want monitord to gracefully exit after reaching the end of dagman
+        # log file, so that the stampede database records workflow failed.
         if signum == signal.SIGUSR1 :
             signum = signal.SIGINT
-        os.kill(monitord.pid, signum)
+            global monitord_shutdown_mode, monitord_shutdown_time
+            monitord_shutdown_mode = True
+            monitord_shutdown_time = time.time()
+        else:
+            # All signals other than SIGUSR1 are passed as is
+            logger.info( "pegasus-dagman sent signal %s to monitord" %signum)
+            os.kill(monitord.pid, signum)
 
 #-- main--------------------------------------------------------------
     
@@ -211,6 +221,13 @@ if __name__ == "__main__":
                 monitord_next_start = 0
                 monitord_last_start = t
                 monitord = monitord_launch(monitord_bin)
+
+        #PM-767 if in shutdown mode, check to see if we need to kill monitord
+        if monitord_shutdown_mode:
+            t = time.time();
+            if t - monitord_shutdown_time > MONITORD_KILL_TIME:
+                logger.info( "monitord shudown time expired. Sending SIGINT to process %d" %monitord.pid)
+                os.kill(monitord.pid, signal.SIGINT)
 
         # sleep in between polls
         time.sleep(SLEEP_TIME)

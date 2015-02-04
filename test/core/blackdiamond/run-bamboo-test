@@ -79,14 +79,14 @@ cat > sites.xml << EOF
 	<head-fs>
             <scratch>
                 <shared>
-                    <file-server protocol="file" url="file://" mount-point="/nfs/ccg4/scratch-6-months-purge/$USER/scratch/$RUN_ID"/>
-                    <internal-mount-point mount-point="/nfs/ccg4/scratch-6-months-purge/$USER/scratch/$RUN_ID"/>
+                    <file-server protocol="file" url="file://" mount-point="/nfs/ccg4/scratch-purge-no-backups/$USER/scratch/$RUN_ID"/>
+                    <internal-mount-point mount-point="/nfs/ccg4/scratch-purge-no-backups/$USER/scratch/$RUN_ID"/>
                 </shared>
             </scratch>
             <storage>
                 <shared>
-                    <file-server protocol="file" url="file://" mount-point="/nfs/ccg4/scratch-6-months-purge/$USER/storage/black-diamond-output/$RUN_ID"/>
-                    <internal-mount-point mount-point="/nfs/ccg4/scratch-6-months-purge/testing/$USER/black-diamond-output/$RUN_ID"/>
+                    <file-server protocol="file" url="file://" mount-point="/nfs/ccg4/scratch-purge-no-backups/$USER/storage/black-diamond-output/$RUN_ID"/>
+                    <internal-mount-point mount-point="/nfs/ccg4/scratch-purge-no-backups/testing/$USER/black-diamond-output/$RUN_ID"/>
                 </shared>
             </storage>
         </head-fs>
@@ -117,11 +117,7 @@ properties execution_site execution_site
 properties staging_site staging_site
 properties output_site output_site
 properties planner_args planner_args 
-properties clean_up clean_up '--nocleanup'
-
-if [ "$clean_up" = 'True' ]; then
-	clean_up=''
-fi 
+properties clean_up clean_up 'leaf'
 
 set -x
 
@@ -129,9 +125,9 @@ pegasus-plan \
     --conf ${CONFIG}/pegasusrc \
     --sites $execution_site \
     --staging-site $staging_site \
-    --output $output_site \
-    --dir work/ \
-    $clean_up \
+    --output-site $output_site \
+    --dir work/submit \
+    --cleanup $clean_up \
     --dax ${DAX} \
     --submit ${planner_args}
 

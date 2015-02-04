@@ -559,6 +559,9 @@ public class Condor extends Namespace{
                 if (key.compareTo("copy_to_spool") == 0) {
                     res = VALID_KEY;
                 }
+                else if (key.compareTo( "cream_attributes" ) == 0) {
+                    res = VALID_KEY;
+                }
                 else {
                     res = UNKNOWN_KEY;
                 }

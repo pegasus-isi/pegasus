@@ -3,9 +3,11 @@ build
 dist
 *stamp
 .classpath
+pegasus.spec
 .project
 .pydevproject
 .externalToolBuilders
+.settings
 var
 .idea
 
@@ -27,3 +29,4 @@ var
 *.so.[0-9]*
 *.a 
 .*.swp
+*.iml

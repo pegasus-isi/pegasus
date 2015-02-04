@@ -30,7 +30,7 @@ use constant OS_SUNOS     => 'sunos';
 use constant OS_SOLARIS   => 'sunos'; 
 use constant OS_WINDOWS   => 'windows'; 
 
-our $VERSION = '3.3'; 
+our $VERSION = '3.5'; 
 our @EXPORT = (); 
 our %EXPORT_TAGS = ( 
     arch =>[qw(ARCH_IA64 ARCH_PPC ARCH_PPC_64 ARCH_SPARCV7 ARCH_SPARCV9 

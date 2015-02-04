@@ -26,8 +26,7 @@ import logging
 
 from Pegasus.tools import utils
 
-# Get logger object (initialized elsewhere)
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 # Global variables
 good_rsl = {"maxcputime": 1, "maxtime":1, "maxwalltime": 1}
@@ -104,6 +103,9 @@ class Job:
                                        # line for pegasus-plan and subdax_ jobs
         self._kickstart_parsed = False # Flag indicating if the kickstart
                                        # output for this job was parsed or not
+        self._has_rotated_stdout_err_files = False #Flag indicating whether we detected that job stdout|stderr
+                                                  #was rotated or not, as is the default case.
+        self._deferred_job_end_kwargs = None
 
     def set_job_state(self, job_state, sched_id, timestamp, status):
         """
@@ -133,6 +135,8 @@ class Job:
             self._main_job_start = int(timestamp)
         elif job_state == "JOB_TERMINATED":
             self._main_job_done = int(timestamp)
+        elif job_state == "JOB_ABORTED":
+            self._main_job_done = int(timestamp) # PM-805 job was aborted, good chance job terminated event did not happen.
         elif job_state == "JOB_SUCCESS" or job_state == "JOB_FAILURE":
             self._main_job_exitcode = utils.regular_to_raw(status)
         elif (job_state == "POST_SCRIPT_SUCCESS" or
@@ -325,17 +329,23 @@ class Job:
             #PM-641 optimization Modified string concatenation to a list join 
             if "stdout" in my_record:
                 if len(my_record["stdout"])<= MAX_OUTPUT_LENGTH - stdout_size:
-                    stdout_text_list.append(utils.quote("#@ %d stdout\n" % (my_task_number)))
-                    stdout_text_list.append(utils.quote(my_record["stdout"]))
-                    stdout_text_list.append(utils.quote("\n"))
-                    stdout_size+=len(my_record["stdout"])+20
+                    try:
+                        stdout_text_list.append(utils.quote("#@ %d stdout\n" % (my_task_number)))
+                        stdout_text_list.append(utils.quote(my_record["stdout"]))
+                        stdout_text_list.append(utils.quote("\n"))
+                        stdout_size+=len(my_record["stdout"])+20
+                    except KeyError:
+                        logger.exception( "Unable to parse stdout section from kickstart record for task %s from file %s " %(my_task_number, self.get_rotated_out_filename() ))
 
             if "stderr" in my_record:
                 if len(my_record["stderr"]) <= MAX_OUTPUT_LENGTH - stdout_size :
-                    stdout_text_list.append(utils.quote("#@ %d stderr\n" % (my_task_number)))
-                    stdout_text_list.append(utils.quote(my_record["stderr"]))
-                    stdout_text_list.append(utils.quote("\n"))
-                    stdout_size+=len(my_record["stderr"])+20
+                    try:
+                        stdout_text_list.append(utils.quote("#@ %d stderr\n" % (my_task_number)))
+                        stdout_text_list.append(utils.quote(my_record["stderr"]))
+                        stdout_text_list.append(utils.quote("\n"))
+                        stdout_size+=len(my_record["stderr"])+20
+                    except KeyError:
+                        logger.exception( "Unable to parse stderr section from kickstart record for task %s from file %s " %(my_task_number, self.get_rotated_out_filename() ))
 
         if len(stdout_text_list) > 0 :
             self._stdout_text = "".join(stdout_text_list)
@@ -391,6 +401,30 @@ class Job:
         # Done populating Job class with information from the output file
         return my_invocation_found
 
+    def get_rotated_out_filename(self):
+        """
+        Returns the name of the rotated .out file for the job on the basis
+        of the current counter
+        """
+
+        basename = self._output_file
+        if self._has_rotated_stdout_err_files:
+            basename += ".%03d" % ( self._job_output_counter)
+
+        return basename
+
+    def get_rotated_err_filename(self ):
+        """
+        Returns the name of the rotated .err file for the job on the basis
+        of the current counter
+        """
+
+        basename = self._error_file
+        if self._has_rotated_stdout_err_files:
+            basename += ".%03d" % ( self._job_output_counter)
+
+        return basename
+
     def read_stdout_stderr_files(self, run_dir):
         """
         This function reads both stdout and stderr files and populates
@@ -401,7 +435,11 @@ class Job:
             # This is the case for SUBDAG jobs
             self._stdout_text = None
         else:
-            my_out_file = os.path.join(run_dir, self._output_file)
+            basename = self._output_file
+            if self._has_rotated_stdout_err_files:
+                basename += ".%03d" % ( self._job_output_counter)
+
+            my_out_file = os.path.join(run_dir, basename)
 
             try:
                 OUT = open(my_out_file, 'r')
@@ -419,7 +457,11 @@ class Job:
             # This is the case for SUBDAG jobs
             self._stderr_text = None
         else:
-            my_err_file = os.path.join(run_dir, self._error_file)
+            basename = self._error_file
+            if self._has_rotated_stdout_err_files:
+                basename += ".%03d" % ( self._job_output_counter)
+
+            my_err_file = os.path.join(run_dir, basename)
 
             try:
                 ERR = open(my_err_file, 'r')

@@ -24,12 +24,12 @@ import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.InternalMountPoint;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
-import edu.isi.pegasus.planner.transfer.sls.SLSFactory;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.File;
 import java.util.Iterator;
 import java.util.Properties;
-import java.util.Set;
 
 /**
  * A utility class that returns JAVA Properties that need to be set based on
@@ -103,6 +103,9 @@ public class PegasusConfiguration {
         this.loadConfigurationProperties( properties );
 
         //sanitize on the planner options
+        //PM-810 no longer required
+        //checks done per job
+        /*
         if( properties.executeOnWorkerNode() ){
             String slsImplementor = properties.getSLSTransferImplementation();
             if( slsImplementor == null ){
@@ -136,8 +139,68 @@ public class PegasusConfiguration {
 
             }
         }
+        */
     }
 
+    /**
+     * Returns the staging site to be used for a job. The determination is made
+     * on the basis of the following
+     *  - data configuration value for job
+     *  - from planner command line options
+     *  - If a staging site is not determined from the options it is set to be the execution site for the job
+     *
+     * @param job  the job for which to determine the staging site
+     *
+     * @return the staging site
+     */
+    public String determineStagingSite( Job job, PlannerOptions options ){
+        //check to see if job has data.configuration set
+        if( !job.vdsNS.containsKey( Pegasus.DATA_CONFIGURATION_KEY ) ){
+            throw new RuntimeException( "Internal Planner Error: Data Configuration shoudl have been set for job " + job.getID() );
+        }
+        
+        String conf = job.vdsNS.getStringValue( Pegasus.DATA_CONFIGURATION_KEY );
+        //shortcut for condorio
+        if( conf.equalsIgnoreCase( PegasusConfiguration.CONDOR_CONFIGURATION_VALUE) ){
+            //sanity check against the command line option
+            //we are leaving the data configuration to be per site
+            //by this check
+            String stagingSite = options.getStagingSite( job.getSiteHandle() );
+            if( stagingSite == null ){
+                stagingSite = "local";
+            }
+            else if (!( stagingSite.equalsIgnoreCase( "local" ) )){
+                StringBuffer sb = new StringBuffer();
+
+                sb.append( "Mismatch in the between execution site ").append( job.getSiteHandle() ).
+                   append( " and staging site " ).append( stagingSite ).
+                   append( " for job " ).append( job.getID() ).
+                   append( " . For Condor IO staging site should be set to local ." );
+
+                throw new RuntimeException( sb.toString() );
+            }
+
+            return stagingSite;
+        }
+        
+        String ss =  options.getStagingSite( job.getSiteHandle() );
+        ss = (ss == null) ? job.getSiteHandle(): ss;
+        //check for sharedfs
+        if( conf.equalsIgnoreCase( PegasusConfiguration.SHARED_FS_CONFIGURATION_VALUE) &&
+            !ss.equalsIgnoreCase( job.getSiteHandle()) ){
+            StringBuffer sb = new StringBuffer();
+
+                sb.append( "Mismatch in the between execution site ").append( job.getSiteHandle() ).
+                   append( " and staging site " ).append( ss ).
+                   append( " for job " ).append( job.getID() ).
+                   append( " . For sharedfs they should be the same" );
+
+                throw new RuntimeException( sb.toString() );
+        }
+        
+        return ss;
+        
+    }
     
 
     /**
@@ -270,13 +333,14 @@ public class PegasusConfiguration {
      * @return Properties
      */
     public Properties getConfigurationProperties( String configuration ){
+        Properties p = new Properties( );
         //sanity check
         if( configuration == null ){
             //default is the sharedfs
             configuration = SHARED_FS_CONFIGURATION_VALUE;
         }        
         
-        Properties p = new Properties( );
+        
         if( configuration.equalsIgnoreCase( DEPRECATED_S3_CONFIGURATION_VALUE ) || configuration.equalsIgnoreCase( NON_SHARED_FS_CONFIGURATION_VALUE ) ){
 
             //throw warning for deprecated value
@@ -284,9 +348,6 @@ public class PegasusConfiguration {
                 mLogger.log( deprecatedValueMessage( PEGASUS_CONFIGURATION_PROPERTY_KEY,DEPRECATED_S3_CONFIGURATION_VALUE ,NON_SHARED_FS_CONFIGURATION_VALUE ),
                              LogManager.WARNING_MESSAGE_LEVEL );
             }
-
-            p.setProperty( "pegasus.execute.*.filesystem.local", "true" );
-            p.setProperty( "pegasus.gridstart", "PegasusLite" );
 
             //we want the worker package to be staged, unless user sets it to false explicitly
             p.setProperty( PegasusProperties.PEGASUS_TRANSFER_WORKER_PACKAGE_PROPERTY, "true" );
@@ -298,10 +359,6 @@ public class PegasusConfiguration {
                 mLogger.log( deprecatedValueMessage( PEGASUS_CONFIGURATION_PROPERTY_KEY,DEPRECATED_CONDOR_CONFIGURATION_VALUE ,CONDOR_CONFIGURATION_VALUE ),
                              LogManager.WARNING_MESSAGE_LEVEL );
             }
-
-            p.setProperty( "pegasus.transfer.sls.*.impl", "Condor" );
-            p.setProperty( "pegasus.execute.*.filesystem.local", "true" );
-            p.setProperty( "pegasus.gridstart", "PegasusLite" );
             
             //we want the worker package to be staged, unless user sets it to false explicitly
             p.setProperty( PegasusProperties.PEGASUS_TRANSFER_WORKER_PACKAGE_PROPERTY, "true" );
@@ -313,10 +370,49 @@ public class PegasusConfiguration {
             //in Pegasus Properties.
             //p.setProperty( "pegasus.execute.*.filesystem.local", "false" );
         }
+        else{
+            throw new RuntimeException( "Invalid value " + configuration + 
+                                        " specified for property " + PegasusConfiguration.PEGASUS_CONFIGURATION_PROPERTY_KEY );
+        }
         
         return p;
     }
 
+    /**
+     * Returns a boolean indicating whether a job is setup for worker node execution or not
+     * 
+     * @param job
+     * 
+     * @return 
+     */
+    public boolean jobSetupForWorkerNodeExecution( Job job ){
+        String configuration  = job.vdsNS.getStringValue( Pegasus.DATA_CONFIGURATION_KEY ) ;
+
+        return ( configuration == null )?
+                false: //DEFAULT is sharedfs case if nothing is specified
+                (  configuration.equalsIgnoreCase( CONDOR_CONFIGURATION_VALUE ) ||
+                   configuration.equalsIgnoreCase( NON_SHARED_FS_CONFIGURATION_VALUE )||
+                   configuration.equalsIgnoreCase( DEPRECATED_CONDOR_CONFIGURATION_VALUE )
+                );
+        
+    }
+    
+    /**
+     * Returns a boolean indicating if job has to be executed using condorio
+     *
+     * @param job
+     *
+     * @return boolean
+     */
+    public boolean jobSetupForCondorIO( Job job, PegasusProperties properties ){
+        String configuration  = job.vdsNS.getStringValue( Pegasus.DATA_CONFIGURATION_KEY ) ;
+
+        return ( configuration == null )?
+                this.setupForCondorIO( properties ):
+                configuration.equalsIgnoreCase( CONDOR_CONFIGURATION_VALUE ) ||
+                    configuration.equalsIgnoreCase( DEPRECATED_CONDOR_CONFIGURATION_VALUE );
+    }
+    
     /**
      * Returns a boolean indicating if properties are setup for condor io
      *
@@ -324,7 +420,7 @@ public class PegasusConfiguration {
      *
      * @return boolean
      */
-    public boolean setupForCondorIO( PegasusProperties properties ){
+    private boolean setupForCondorIO( PegasusProperties properties ){
         String configuration  = properties.getProperty( PEGASUS_CONFIGURATION_PROPERTY_KEY ) ;
 
         return ( configuration == null )?
