@@ -309,9 +309,29 @@
 											<xs:documentation>Bytes read from the file</xs:documentation>
 										</xs:annotation>
 									</xs:attribute>
+									<xs:attribute name="nread" type="xs:nonNegativeInteger" use="required">
+										<xs:annotation>
+											<xs:documentation>Number of read operations performed on the file</xs:documentation>
+										</xs:annotation>
+									</xs:attribute>
 									<xs:attribute name="bwrite" type="xs:nonNegativeInteger" use="required">
 										<xs:annotation>
 											<xs:documentation>Bytes written to the file</xs:documentation>
+										</xs:annotation>
+									</xs:attribute>
+									<xs:attribute name="nwrite" type="xs:nonNegativeInteger" use="required">
+										<xs:annotation>
+											<xs:documentation>Number of write operations performed on the file</xs:documentation>
+										</xs:annotation>
+									</xs:attribute>
+									<xs:attribute name="bseek" type="xs:nonNegativeInteger" use="required">
+										<xs:annotation>
+											<xs:documentation>Total seek distance in bytes</xs:documentation>
+										</xs:annotation>
+									</xs:attribute>
+									<xs:attribute name="nseek" type="xs:nonNegativeInteger" use="required">
+										<xs:annotation>
+											<xs:documentation>Number of seek operations performed on the file</xs:documentation>
 										</xs:annotation>
 									</xs:attribute>
 									<xs:attribute name="size" type="xs:nonNegativeInteger" use="required">
