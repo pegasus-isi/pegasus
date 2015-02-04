@@ -82,7 +82,13 @@ static FileInfo *readTraceFileRecord(const char *buf, FileInfo *files) {
     size_t size = 0;
     size_t bread = 0;
     size_t bwrite = 0;
-    if (sscanf(buf, "file: '%[^']' %lu %lu %lu\n", filename, &size, &bread, &bwrite) != 4) {
+    size_t nread = 0;
+    size_t nwrite = 0;
+    size_t bseek = 0;
+    size_t nseek = 0;
+
+    if (sscanf(buf, "file: '%[^']' %lu %lu %lu %lu %lu %lu %lu\n",
+               filename, &size, &bread, &bwrite, &nread, &nwrite, &bseek, &nseek) != 8) {
         printerr("Invalid file record: %s", buf);
         return files;
     }
@@ -117,6 +123,10 @@ static FileInfo *readTraceFileRecord(const char *buf, FileInfo *files) {
         file->size = size;
         file->bread = bread;
         file->bwrite = bwrite;
+        file->nread = nread;
+        file->nwrite = nwrite;
+        file->bseek = bseek;
+        file->nseek = nseek;
 
         if (files == NULL) {
             /* List was empty */
@@ -130,6 +140,10 @@ static FileInfo *readTraceFileRecord(const char *buf, FileInfo *files) {
         file->size = file->size > size ? file->size : size; /* max */
         file->bread += bread;
         file->bwrite += bwrite;
+        file->nread += nread;
+        file->nwrite += nwrite;
+        file->bseek += bseek;
+        file->nseek += nseek;
     }
 
     return files;
@@ -140,7 +154,9 @@ static SockInfo *readTraceSocketRecord(const char *buf, SockInfo *sockets) {
     int port = 0;
     size_t brecv = 0;
     size_t bsend = 0;
-    if (sscanf(buf, "socket: %s %d %lu %lu\n", address, &port, &brecv, &bsend) != 4) {
+    size_t nrecv = 0;
+    size_t nsend = 0;
+    if (sscanf(buf, "socket: %s %d %lu %lu %lu %lu\n", address, &port, &brecv, &bsend, &nrecv, &nsend) != 4) {
         printerr("Invalid socket record: %s", buf);
         return sockets;
     }
@@ -175,6 +191,8 @@ static SockInfo *readTraceSocketRecord(const char *buf, SockInfo *sockets) {
         sock->port = port;
         sock->brecv = brecv;
         sock->bsend = bsend;
+        sock->nrecv = nrecv;
+        sock->nsend = nsend;
 
         if (sockets == NULL) {
             /* List was empty */
@@ -187,6 +205,8 @@ static SockInfo *readTraceSocketRecord(const char *buf, SockInfo *sockets) {
         /* Duplicate found, increment counters */
         sock->brecv += brecv;
         sock->bsend += bsend;
+        sock->nrecv += nrecv;
+        sock->nsend += nsend;
     }
 
     return sockets;
