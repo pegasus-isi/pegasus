@@ -83,6 +83,9 @@ class Braindump:
 def extract_arguments(job):
     elem = job.find("./argument")
 
+    if elem is None:
+        return []
+
     args = []
 
     if elem.text is not None:
