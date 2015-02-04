@@ -41,7 +41,6 @@
 /* truly shared globals */
 extern int make_application_executable;
 extern size_t data_section_size;
-extern char *programname;
 extern char** environ;
 
 /* module local globals */
@@ -322,8 +321,6 @@ int main(int argc, char* argv[]) {
     char* workdir = NULL;
     mylist_t initial;
     mylist_t final;
-
-    programname = argv[0];
 
     /* premature init with defaults */
     if (mylist_init(&initial)) return 43;
