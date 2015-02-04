@@ -166,7 +166,7 @@ def parse_dax(daxfile):
             for p in e:
                 parent = dax.tasks[p.attrib["ref"]]
                 dax.edges.append((parent,child))
-        elif e.tag in ["file","filename"]:
+        elif e.tag in ["file","filename","executable","invoke"]:
             pass
         else:
             print "UNEXPECTED TAG: %s" % e.tag
