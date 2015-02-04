@@ -562,7 +562,7 @@ def write_output_dvdt(daxfile, dax, braindump, outdir, wfname):
             sf.write("wall_time:                %s s\n" % inv.duration)
             sf.write("max_concurrent_processes: %d procs\n" % 1)
             sf.write("total_processes:          %d procs\n" % 1)
-            sf.write("cpu_time:                 %f s\n" % inv.proc_utime + inv.proc_stime)
+            sf.write("cpu_time:                 %f s\n" % (inv.proc_utime + inv.proc_stime))
             sf.write("virtual_memory:           %f MB\n" % (float(inv.vmpeak)/1024.0))
             sf.write("resident_memory:          %f MB\n" % (float(inv.rsspeak)/1024.0))
             sf.write("swap_memory:              %d MB\n" % 0)
