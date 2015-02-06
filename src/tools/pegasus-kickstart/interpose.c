@@ -247,17 +247,6 @@ static Descriptor *get_descriptor(int fd) {
     return &(descriptors[fd]);
 }
 
-/* Get the full path to a file */
-static char *get_fullpath(const char *path) {
-    static char fullpath[BUFSIZ];
-    if (realpath(path, fullpath) == NULL) {
-        printerr("Unable to get real path for '%s': %s\n",
-                 path, strerror(errno));
-        return NULL;
-    }
-    return fullpath;
-}
-
 /* Read /proc/self/exe to get path to executable */
 static void read_exe() {
     debug("Reading exe");
@@ -439,12 +428,16 @@ static void trace_file(const char *path, int fd) {
 static void trace_open(const char *path, int fd) {
     debug("trace_open %s %d", path, fd);
 
-    char *fullpath = get_fullpath(path);
+    char *fullpath = realpath(path, NULL);
     if (fullpath == NULL) {
+        printerr("Unable to get real path for '%s': %s\n",
+                 path, strerror(errno));
         return;
     }
 
     trace_file(fullpath, fd);
+
+    free(fullpath);
 }
 
 static void trace_openat(int fd) {
@@ -624,12 +617,16 @@ static void trace_dup(int oldfd, int newfd) {
 static void trace_truncate(const char *path, off_t length) {
     debug("trace_truncate %s %lu", path, length);
 
-    char *fullpath = get_fullpath(path);
+    char *fullpath = realpath(path, NULL);
     if (fullpath == NULL) {
+        printerr("Unable to get real path for '%s': %s\n",
+                 path, strerror(errno));
         return;
     }
 
     tprintf("file: '%s' %lu 0 0 0 0\n", fullpath, length);
+
+    free(fullpath);
 }
 
 /* Library initialization function */
