@@ -156,7 +156,7 @@ static SockInfo *readTraceSocketRecord(const char *buf, SockInfo *sockets) {
     size_t bsend = 0;
     size_t nrecv = 0;
     size_t nsend = 0;
-    if (sscanf(buf, "socket: %s %d %lu %lu %lu %lu\n", address, &port, &brecv, &bsend, &nrecv, &nsend) != 4) {
+    if (sscanf(buf, "socket: %s %d %lu %lu %lu %lu\n", address, &port, &brecv, &bsend, &nrecv, &nsend) != 6) {
         printerr("Invalid socket record: %s", buf);
         return sockets;
     }
