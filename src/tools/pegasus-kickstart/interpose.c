@@ -19,6 +19,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+/* TODO Handle directories */
 /* TODO Interpose accept (for network servers) */
 /* TODO Is it necessary to interpose shutdown? Would that help the DNS issue? */
 /* TODO Interpose unlink, unlinkat, remove */
@@ -399,7 +400,21 @@ static void trace_file(const char *path, int fd) {
         return;
     }
 
+    /* If this env var is *not* set, then */
+    if (getenv("KICKSTART_TRACE_ALL_FILES") == NULL) {
+
+        /* Skip all files not in the current working directory */
+        char *wd = getcwd(NULL, 0);
+        int incwd = startswith(path, wd);
+        free(wd);
+
+        if (!incwd) {
+            return;
+        }
+    }
+
     /* Skip all the common system paths, which we don't care about */
+    /*
     if (startswith(path, "/lib") ||
         startswith(path, "/usr") ||
         startswith(path, "/dev") ||
@@ -408,6 +423,7 @@ static void trace_file(const char *path, int fd) {
         startswith(path, "/sys")) {
         return;
     }
+    */
 
     char *temp = strdup(path);
     if (temp == NULL) {
