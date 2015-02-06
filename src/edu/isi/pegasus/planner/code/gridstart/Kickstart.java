@@ -384,13 +384,19 @@ public class Kickstart implements GridStart {
             constituentJob.vdsNS.construct( Pegasus.GRIDSTART_KEY,
                                             this.getVDSKeyValue() );
 
-            if(first){
+            if (first) {
                 first = false;
-            }
-            else{
+            } else {
                 //we need to pass -H to kickstart
                 //to suppress the header creation
-                constituentJob.vdsNS.construct(Pegasus.GRIDSTART_ARGUMENTS_KEY,"-H");
+                // PM-823 Add -H to pegasus.gridstart.arguments if it is already set
+                Pegasus jobconf = constituentJob.vdsNS;
+                if (jobconf.containsKey(Pegasus.GRIDSTART_ARGUMENTS_KEY)) {
+                    String args = jobconf.getStringValue(Pegasus.GRIDSTART_ARGUMENTS_KEY);
+                    jobconf.construct(Pegasus.GRIDSTART_ARGUMENTS_KEY, args + " -H");
+                } else {
+                    jobconf.construct(Pegasus.GRIDSTART_ARGUMENTS_KEY, "-H");
+                }
             }
 
 
