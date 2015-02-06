@@ -43,9 +43,8 @@ you get this</programlisting>
     <para>In order to reduce the amount of work required to get started we
     have provided several virtual machines that contain all of the software
     required for this tutorial. Virtual machine images are provided for <link
-    linkend="vm_virtualbox">VirtualBox</link>, <link
-    linkend="vm_amazon">Amazon EC2</link> and <link
-    linkend="vm_futuregrid">FutureGrid</link>. Information about deploying the
+    linkend="vm_virtualbox">VirtualBox</link> and <link
+    linkend="vm_amazon">Amazon EC2</link>. Information about deploying the
     tutorial VM on these platforms is in <link linkend="tutorial_vm">the
     appendix</link>. If you want to use the tutorial VM, please go to the
     appendix for the platform you are using and follow the instructions for
@@ -762,7 +761,7 @@ preprocess       1      1          0       30.025  30.025  30.025   30.025
     <title>Workflow Dashboard</title>
 
     <para>The Virtual Box image is also bundled with the Pegasus Service
-    bundle.This is available as a separate project in <ulink
+    bundle. This is available as a separate project in <ulink
     url="https://github.com/pegasus-isi/pegasus-service">Github</ulink>. The
     pegasus-service-server is developed in Python and uses the Flask framework
     to implement the web interface.The users can then connect to this server
@@ -773,7 +772,7 @@ preprocess       1      1          0       30.025  30.025  30.025   30.025
         been executed using Pegasus 4.2.0 and above.</para>
 
         <para>Currently, only the Virtual Box Tutorial image for 4.3.0 has the
-        dashboard enabled. It is not enabled in the EC2 and FutureGrid
+        dashboard enabled. It is not enabled in the EC2.
         image.</para>
       </note>By default, the server is configured to listen on all network
     interfaces on port 5000. A user can view the dashboard on
@@ -974,10 +973,9 @@ preprocess       1      1          0       30.025  30.025  30.025   30.025
 
     <para>Congratulations! You have completed the tutorial.</para>
 
-    <para>If you used Amazon EC2 or FutureGrid for this tutorial make sure to
-    terminate your VM. Refer to the <link
-    linkend="tutorial_vm">appendix</link> for more information about how to do
-    this.</para>
+    <para>If you used Amazon EC2 for this tutorial make sure to terminate your
+        VM. Refer to the <link linkend="tutorial_vm">appendix</link> for more
+        information about how to do this.</para>
 
     <para>Refer to the other chapters in this guide for more information about
     creating, planning, and executing workflows with Pegasus.</para>
