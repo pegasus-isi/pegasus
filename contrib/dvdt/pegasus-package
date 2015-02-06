@@ -13,7 +13,7 @@ except ImportError:
     import xml.etree.ElementTree as etree
 
 # Use pegasus-config to find our lib path
-home_dir = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0]), ".."))
+home_dir = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0]), "..", ".."))
 python_dir = os.path.join(home_dir, "lib", "pegasus", "python")
 
 # also need the python externals dir
@@ -284,6 +284,7 @@ def outfiles(dirname):
 
 def parse_invocations(filename):
     invs = []
+    files = {}
     f = open(filename, "r")
     cpu = None
     cores = None
@@ -292,7 +293,10 @@ def parse_invocations(filename):
     # For PMC jobs, when that comes up, we can get it from the cluster-task record
     slot = None
 
-    for l in f:
+    # Get a generator so that we can pull extra lines off if we need to
+    x = f.__iter__()
+
+    for l in x:
         l = l.lstrip()
         if l.startswith("<invocation "):
             l = l[:-2] + "/>"
@@ -320,8 +324,25 @@ def parse_invocations(filename):
 
             invs.append(inv)
         elif l.startswith("<proc ppid"):
-            e = etree.fromstring(l)
-            inv.procs.append(e)
+            if l.rstrip().endswith("/>"):
+                e = etree.fromstring(l)
+                inv.procs.append(e)
+            else:
+                e = etree.fromstring("".join([l, "</proc>"]))
+                inv.procs.append(e)
+
+                while True:
+                    l = x.next()
+                    if l.lstrip().startswith("<file "):
+                        e = etree.fromstring(l)
+                        name = e.attrib["name"]
+                        size = int(e.attrib["size"])
+                        if name in files:
+                            files[name] = max(size, files[name])
+                        else:
+                            files[name] = size
+                    else:
+                        break
         elif l.startswith("<status"):
             e = etree.fromstring(l)
             inv.exitcode = e.attrib["raw"]
@@ -370,6 +391,8 @@ def parse_invocations(filename):
             inv.wbytes += int(p.attrib["wchar"])
 
         inv.procs = len(inv.procs) > 0
+
+    print files
 
     return invs
 
