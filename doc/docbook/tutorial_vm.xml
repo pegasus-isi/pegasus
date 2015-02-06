@@ -344,7 +344,10 @@
       <para>On the next page choose “Create a new Security Group”. Name the
       security group “Pegasus Tutorial” and give it a description. Create an
       inbound TCP rule to allow connections on port 22 (SSH) from source
-      0.0.0.0/0 and click "Add Rule". Then click “Continue”.</para>
+      0.0.0.0/0 and click "Add Rule". This rule allows you to SSH into your
+      EC2 instance. Create another TCP rule to allow connections on port 5000
+      from source 0.0.0.0/0 and click "Add Rule" again. This rule is for the
+      Pegasus Dashboard web interface. Then click “Continue”.</para>
 
       <para>Note that you will only need to create this security group once.
       If you launch the Pegasus Tutorial VM again the security group should

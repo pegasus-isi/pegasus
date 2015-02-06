@@ -760,32 +760,25 @@ preprocess       1      1          0       30.025  30.025  30.025   30.025
   <section>
     <title>Workflow Dashboard</title>
 
-    <para>The Virtual Box image is also bundled with the Pegasus Service
-    bundle. This is available as a separate project in <ulink
-    url="https://github.com/pegasus-isi/pegasus-service">Github</ulink>. The
-    pegasus-service-server is developed in Python and uses the Flask framework
-    to implement the web interface.The users can then connect to this server
-    using a browser to monitor/debug workflows.</para>
+    <para>The Pegasus Dashboard is a web interfaces for monitoring and debugging
+    workflows.</para>
 
-    <para><note>
-        <para>The workflow dashboard can only monitor workflows which have
-        been executed using Pegasus 4.2.0 and above.</para>
-
-        <para>Currently, only the Virtual Box Tutorial image for 4.3.0 has the
-        dashboard enabled. It is not enabled in the EC2.
-        image.</para>
-      </note>By default, the server is configured to listen on all network
-    interfaces on port 5000. A user can view the dashboard on
-    http://&lt;IP_ADDRESS&gt;:5000/</para>
+    <para>
+        <note>
+            <para>The workflow dashboard can only monitor workflows which have
+            been executed using Pegasus 4.2.0 and above.</para> 
+        </note>
+    </para>
 
     <para>By default, the dashboard server can only monitor workflows run by
-    the current user i.e. the user who is running the
-    pegasus-service-server.</para>
+    the current user i.e. the user who is running the pegasus-service-server.
+    </para>
 
-    <para>To access the workflow dashboard, in the Virtual BOX VM you can
-    launch firefox by clicking the globe icon in the top menu of the desktop.
-    The home page for the dashboard is accessible at
-    http://localhost:5000</para>
+    <para>To access the workflow dashboard, in the VirtualBox VM you can
+    launch Firefox by clicking the globe icon in the top menu of the desktop.
+    The home page for the dashboard is accessible at http://localhost:5000 .
+    If you are using EC2 you will need to replace 'localhost' with the IP
+    address of your EC2 instance.</para>
 
     <para>The Dashboard's home page lists all workflows, which have been run
     by the current-user. The home page shows the status of each of the
