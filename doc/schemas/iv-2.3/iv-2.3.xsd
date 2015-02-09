@@ -297,50 +297,86 @@
 				<xs:element name="proc" minOccurs="0" maxOccurs="unbounded">
 					<xs:complexType>
 						<xs:sequence minOccurs="0" maxOccurs="unbounded">
-							<xs:element name="file">
-								<xs:complexType>
-									<xs:attribute name="name" type="xs:string" use="required">
-										<xs:annotation>
-											<xs:documentation>Path to the file</xs:documentation>
-										</xs:annotation>
-									</xs:attribute>
-									<xs:attribute name="bread" type="xs:nonNegativeInteger" use="required">
-										<xs:annotation>
-											<xs:documentation>Bytes read from the file</xs:documentation>
-										</xs:annotation>
-									</xs:attribute>
-									<xs:attribute name="nread" type="xs:nonNegativeInteger" use="required">
-										<xs:annotation>
-											<xs:documentation>Number of read operations performed on the file</xs:documentation>
-										</xs:annotation>
-									</xs:attribute>
-									<xs:attribute name="bwrite" type="xs:nonNegativeInteger" use="required">
-										<xs:annotation>
-											<xs:documentation>Bytes written to the file</xs:documentation>
-										</xs:annotation>
-									</xs:attribute>
-									<xs:attribute name="nwrite" type="xs:nonNegativeInteger" use="required">
-										<xs:annotation>
-											<xs:documentation>Number of write operations performed on the file</xs:documentation>
-										</xs:annotation>
-									</xs:attribute>
-									<xs:attribute name="bseek" type="xs:nonNegativeInteger" use="required">
-										<xs:annotation>
-											<xs:documentation>Total seek distance in bytes</xs:documentation>
-										</xs:annotation>
-									</xs:attribute>
-									<xs:attribute name="nseek" type="xs:nonNegativeInteger" use="required">
-										<xs:annotation>
-											<xs:documentation>Number of seek operations performed on the file</xs:documentation>
-										</xs:annotation>
-									</xs:attribute>
-									<xs:attribute name="size" type="xs:nonNegativeInteger" use="required">
-										<xs:annotation>
-											<xs:documentation>Size of the file</xs:documentation>
-										</xs:annotation>
-									</xs:attribute>
-								</xs:complexType>
-							</xs:element>
+							<xs:choice>
+								<xs:element name="file">
+									<xs:complexType>
+										<xs:attribute name="name" type="xs:string" use="required">
+											<xs:annotation>
+												<xs:documentation>Path to the file</xs:documentation>
+											</xs:annotation>
+										</xs:attribute>
+										<xs:attribute name="bread" type="xs:nonNegativeInteger" use="required">
+											<xs:annotation>
+												<xs:documentation>Bytes read from the file</xs:documentation>
+											</xs:annotation>
+										</xs:attribute>
+										<xs:attribute name="nread" type="xs:nonNegativeInteger" use="required">
+											<xs:annotation>
+												<xs:documentation>Number of read operations performed on the file</xs:documentation>
+											</xs:annotation>
+										</xs:attribute>
+										<xs:attribute name="bwrite" type="xs:nonNegativeInteger" use="required">
+											<xs:annotation>
+												<xs:documentation>Bytes written to the file</xs:documentation>
+											</xs:annotation>
+										</xs:attribute>
+										<xs:attribute name="nwrite" type="xs:nonNegativeInteger" use="required">
+											<xs:annotation>
+												<xs:documentation>Number of write operations performed on the file</xs:documentation>
+											</xs:annotation>
+										</xs:attribute>
+										<xs:attribute name="bseek" type="xs:nonNegativeInteger" use="required">
+											<xs:annotation>
+												<xs:documentation>Total seek distance in bytes</xs:documentation>
+											</xs:annotation>
+										</xs:attribute>
+										<xs:attribute name="nseek" type="xs:nonNegativeInteger" use="required">
+											<xs:annotation>
+												<xs:documentation>Number of seek operations performed on the file</xs:documentation>
+											</xs:annotation>
+										</xs:attribute>
+										<xs:attribute name="size" type="xs:nonNegativeInteger" use="required">
+											<xs:annotation>
+												<xs:documentation>Size of the file</xs:documentation>
+											</xs:annotation>
+										</xs:attribute>
+									</xs:complexType>
+								</xs:element>
+								<xs:element name="socket">
+									<xs:complexType>
+										<xs:attribute name="address" type="xs:string" use="required">
+											<xs:annotation>
+												<xs:documentation>Remote address</xs:documentation>
+											</xs:annotation>
+										</xs:attribute>
+										<xs:attribute name="port" type="xs:nonNegativeInteger" use="required">
+											<xs:annotation>
+												<xs:documentation>Remote port</xs:documentation>
+											</xs:annotation>
+										</xs:attribute>
+										<xs:attribute name="brecv" type="xs:nonNegativeInteger" use="required">
+											<xs:annotation>
+												<xs:documentation>Bytes received on socket</xs:documentation>
+											</xs:annotation>
+										</xs:attribute>
+										<xs:attribute name="bsend" type="xs:nonNegativeInteger" use="required">
+											<xs:annotation>
+												<xs:documentation>Bytes sent on socket</xs:documentation>
+											</xs:annotation>
+										</xs:attribute>
+										<xs:attribute name="nrecv" type="xs:nonNegativeInteger" use="required">
+											<xs:annotation>
+												<xs:documentation>Number of receive ops</xs:documentation>
+											</xs:annotation>
+										</xs:attribute>
+										<xs:attribute name="nsend" type="xs:nonNegativeInteger" use="required">
+											<xs:annotation>
+												<xs:documentation>Number of send ops</xs:documentation>
+											</xs:annotation>
+										</xs:attribute>
+									</xs:complexType>
+								</xs:element>
+							</xs:choice>
 						</xs:sequence>
 						<xs:attribute name="ppid" type="xs:nonNegativeInteger" use="required">
 							<xs:annotation>
