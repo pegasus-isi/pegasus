@@ -409,24 +409,21 @@ static void read_io() {
     fclose_untraced(f);
 }
 
-static void trace_file(const char *path, int fd) {
-    debug("trace_file %s %d", path, fd);
-
-    Descriptor *f = get_descriptor(fd);
-    if (f == NULL) {
-        return;
+/* Determine which paths should be traced */
+static int should_trace(const char *path) {
+    /* Trace all files */
+    if (getenv("KICKSTART_TRACE_ALL") != NULL) {
+        return 1;
     }
 
-    /* Skip all files not in the current working directory */
-    /*
-    char *wd = getcwd(NULL, 0);
-    int incwd = startswith(path, wd);
-    free(wd);
+    /* Trace files in the current working directory */
+    if (getenv("KICKSTART_TRACE_CWD") != NULL) {
+        char *wd = getcwd(NULL, 0);
+        int incwd = startswith(path, wd);
+        free(wd);
 
-    if (!incwd) {
-        return;
+        return incwd;
     }
-    */
 
     /* Skip all the common system paths, which we don't care about */
     if (startswith(path, "/lib") ||
@@ -436,13 +433,28 @@ static void trace_file(const char *path, int fd) {
         startswith(path, "/proc")||
         startswith(path, "/sys") ||
         startswith(path, "/selinux")) {
-        return;
+        return 0;
     }
 
     /* Skip files with known extensions that we don't care about */
     if (endswith(path, ".py") ||
         endswith(path, ".pyc") ||
         endswith(path, ".jar")) {
+        return 0;
+    }
+
+    return 1;
+}
+
+static void trace_file(const char *path, int fd) {
+    debug("trace_file %s %d", path, fd);
+
+    Descriptor *f = get_descriptor(fd);
+    if (f == NULL) {
+        return;
+    }
+
+    if (!should_trace(path)) {
         return;
     }
 
