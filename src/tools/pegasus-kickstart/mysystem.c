@@ -232,8 +232,10 @@ static ProcInfo *processTraceFile(const char *fullpath) {
     }
 
     /* Read data from the trace file */
+    int lines = 0;
     char line[BUFSIZ];
     while (fgets(line, BUFSIZ, trace) != NULL) {
+        lines++;
         if (startswith(line, "file:")) {
             proc->files = readTraceFileRecord(line, proc->files);
         } else if (startswith(line, "socket:")) {
@@ -291,6 +293,12 @@ static ProcInfo *processTraceFile(const char *fullpath) {
 
     /* Remove the file */
     unlink(fullpath);
+
+    /* Empty file? */
+    if (lines == 0) {
+        printerr("Empty trace file: %s\n", fullpath);
+        return NULL;
+    }
 
     return proc;
 }
