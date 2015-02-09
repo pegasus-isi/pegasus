@@ -458,6 +458,17 @@ static void trace_file(const char *path, int fd) {
         return;
     }
 
+    struct stat s;
+    if (fstat(fd, &s) != 0) {
+        printerr("fstat: %s\n", strerror(errno));
+        return;
+    }
+
+    /* Skip directories */
+    if (s.st_mode & S_IFDIR) {
+        return;
+    }
+
     char *temp = strdup(path);
     if (temp == NULL) {
         printerr("strdup: %s\n", strerror(errno));
