@@ -425,6 +425,13 @@ static int should_trace(const char *path) {
         return incwd;
     }
 
+    /* Skip files with known extensions that we don't care about */
+    if (endswith(path, ".py") ||
+        endswith(path, ".pyc") ||
+        endswith(path, ".jar")) {
+        return 0;
+    }
+
     /* Skip all the common system paths, which we don't care about */
     if (startswith(path, "/lib") ||
         startswith(path, "/usr") ||
@@ -433,13 +440,6 @@ static int should_trace(const char *path) {
         startswith(path, "/proc")||
         startswith(path, "/sys") ||
         startswith(path, "/selinux")) {
-        return 0;
-    }
-
-    /* Skip files with known extensions that we don't care about */
-    if (endswith(path, ".py") ||
-        endswith(path, ".pyc") ||
-        endswith(path, ".jar")) {
         return 0;
     }
 
