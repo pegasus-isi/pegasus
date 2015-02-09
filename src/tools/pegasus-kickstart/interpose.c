@@ -266,6 +266,23 @@ static int startswith(const char *line, const char *tok) {
     return strstr(line, tok) == line;
 }
 
+/* Return 1 if line ends with tok */
+static int endswith(const char *line, const char *tok) {
+    int n = strlen(line);
+    int m = strlen(tok);
+    if (n < m) {
+        return 0;
+    }
+
+    for(int i=0; i<m; i++) {
+        if (line[n-i-1] != tok[m-i-1]) {
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
 /* Read useful information from /proc/self/status */
 static void read_status() {
     debug("Reading status file");
@@ -400,30 +417,34 @@ static void trace_file(const char *path, int fd) {
         return;
     }
 
-    /* If this env var is *not* set, then */
-    if (getenv("KICKSTART_TRACE_ALL_FILES") == NULL) {
+    /* Skip all files not in the current working directory */
+    /*
+    char *wd = getcwd(NULL, 0);
+    int incwd = startswith(path, wd);
+    free(wd);
 
-        /* Skip all files not in the current working directory */
-        char *wd = getcwd(NULL, 0);
-        int incwd = startswith(path, wd);
-        free(wd);
-
-        if (!incwd) {
-            return;
-        }
+    if (!incwd) {
+        return;
     }
+    */
 
     /* Skip all the common system paths, which we don't care about */
-    /*
     if (startswith(path, "/lib") ||
         startswith(path, "/usr") ||
         startswith(path, "/dev") ||
         startswith(path, "/etc") ||
         startswith(path, "/proc")||
-        startswith(path, "/sys")) {
+        startswith(path, "/sys") ||
+        startswith(path, "/selinux")) {
         return;
     }
-    */
+
+    /* Skip files with known extensions that we don't care about */
+    if (endswith(path, ".py") ||
+        endswith(path, ".pyc") ||
+        endswith(path, ".jar")) {
+        return;
+    }
 
     char *temp = strdup(path);
     if (temp == NULL) {
