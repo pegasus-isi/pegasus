@@ -440,7 +440,10 @@ public class Braindump {
             InetAddress localMachine = java.net.InetAddress.getLocalHost();
             return localMachine.getHostName();
         } catch ( UnknownHostException ex) {
-            throw new CodeGeneratorException( "Unable to determine hostname", ex );
+        	// With all the different type of VMs floating around today, it is
+        	// not uncommon that the hostname is undefined. Make sure we do not
+        	// get hung up on that case, so always return a string.
+            return "Unknown";
         }
     }
     
