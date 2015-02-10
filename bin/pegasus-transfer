@@ -631,7 +631,7 @@ class GridFtpHandler(TransferHandlerBase):
         cmd = tools.full_path('globus-url-copy')
         
         # credential handling
-        cmd_creds, data_cred_req = self._guc_creds(transfers[0])
+        cmd_creds, data_cred_req = self._guc_creds(transfers[0], third_party)
         cmd += cmd_creds
        
         # options
@@ -658,7 +658,7 @@ class GridFtpHandler(TransferHandlerBase):
         return transfer_success
     
     
-    def _guc_creds(self, sample_transfer):
+    def _guc_creds(self, sample_transfer, third_party):
         """
         determine and set up credentials for the transfer
         """
