@@ -675,10 +675,10 @@ class GridFtpHandler(TransferHandlerBase):
             # set, so must the other even if a credential is not required
             src_cred = None
             dst_cred = None
-            key = "X509_USER_PROXY_" + transfers[0].src_sitename
+            key = "X509_USER_PROXY_" + sample_transfer.src_sitename
             if key in os.environ:
                 src_cred = os.environ[key]
-            key = "X509_USER_PROXY_" + transfers[0].dst_sitename
+            key = "X509_USER_PROXY_" + sample_transfer.dst_sitename
             if key in os.environ:
                 dst_cred = os.environ[key]
         
