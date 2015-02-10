@@ -477,7 +477,10 @@ class GridFtpHandler(TransferHandlerBase):
                     "ftp->ftp",
                     "ftp->gsiftp",
                     "gsiftp->ftp",
-                    "http->gsiftp"
+                    "http->gsiftp",
+                    "file->sshftp",
+                    "sshftp->file",
+                    "sshftp->sshftp"
                     ]
 
     def do_transfer(self, transfer, attempt):
@@ -491,8 +494,10 @@ class GridFtpHandler(TransferHandlerBase):
             raise RuntimeError("Unable to do gsiftp transfers because" +
                                " globus-url-copy could not be found")
             
-        third_party = transfer.src_proto == "gsiftp" \
-                      and transfer.dst_proto == "gsiftp"
+        third_party = (transfer.src_proto == "gsiftp" \
+                       and transfer.dst_proto == "gsiftp") or \
+                      (transfer.src_proto == "sshftp" \
+                       and transfer.dst_proto == "sshftp")
 
         success = self._exec_transfers([transfer], attempt,  True, third_party)
         return success
@@ -519,8 +524,10 @@ class GridFtpHandler(TransferHandlerBase):
     
             curr = full_list.pop()
             prev = curr
-            third_party = curr.src_proto == "gsiftp" \
-                          and curr.dst_proto == "gsiftp"
+            third_party = (curr.src_proto == "gsiftp" \
+                           and curr.dst_proto == "gsiftp") or \
+                          (curr.src_proto == "sshftp" \
+                           and curr.dst_proto == "sshftp")
     
             while self._check_similar(curr, prev):
                 
@@ -623,41 +630,9 @@ class GridFtpHandler(TransferHandlerBase):
         tools = Tools()
         cmd = tools.full_path('globus-url-copy')
         
-        # separate credentials for src and dst? note that if one is
-        # set, so must the other even if a credential is not required
-        src_cred = None
-        dst_cred = None
-        key = "X509_USER_PROXY_" + transfers[0].src_sitename
-        if key in os.environ:
-            src_cred = os.environ[key]
-        key = "X509_USER_PROXY_" + transfers[0].dst_sitename
-        if key in os.environ:
-            dst_cred = os.environ[key]
-
-        # only set src-cred / dst-cred if at least one is specified
-        if src_cred is not None or dst_cred is not None:
-
-            if src_cred is None:
-                if "X509_USER_PROXY" in os.environ:
-                    src_cred = os.environ["X509_USER_PROXY"]
-                else:
-                    src_cred = dst_cred
-
-            if dst_cred is None:
-                if "X509_USER_PROXY" in os.environ:
-                    dst_cred = os.environ["X509_USER_PROXY"]
-                else:
-                    dst_cred = src_cred
-
-            cmd += " -src-cred " + src_cred + " -dst-cred " + dst_cred
-            check_cred_fs_permissions(src_cred)
-            check_cred_fs_permissions(dst_cred)
-
-        # if the src and dest credentials are different, we might need
-        # a data channel credential
-        data_cred_req = False
-        if third_party and src_cred != dst_cred:
-            data_cred_req = True
+        # credential handling
+        cmd_creds, data_cred_req = self._guc_creds(transfers[0])
+        cmd += cmd_creds
        
         # options
         cmd += self._guc_options(attempt, create_dest,
@@ -681,6 +656,72 @@ class GridFtpHandler(TransferHandlerBase):
         os.unlink(tmp_name)
     
         return transfer_success
+    
+    
+    def _guc_creds(self, sample_transfer):
+        """
+        determine and set up credentials for the transfer
+        """
+
+        cmd = ""
+        data_cred_req = False
+        
+        # gsi credentials for gsiftp transfers, ssh credentials
+        # for sshftp 
+        
+        if sample_transfer.src_proto == "gsiftp" or \
+           sample_transfer.dst_proto == "gsiftp":
+            # separate credentials for src and dst? note that if one is
+            # set, so must the other even if a credential is not required
+            src_cred = None
+            dst_cred = None
+            key = "X509_USER_PROXY_" + transfers[0].src_sitename
+            if key in os.environ:
+                src_cred = os.environ[key]
+            key = "X509_USER_PROXY_" + transfers[0].dst_sitename
+            if key in os.environ:
+                dst_cred = os.environ[key]
+        
+            # only set src-cred / dst-cred if at least one is specified
+            if src_cred is not None or dst_cred is not None:
+        
+                if src_cred is None:
+                    if "X509_USER_PROXY" in os.environ:
+                        src_cred = os.environ["X509_USER_PROXY"]
+                    else:
+                        src_cred = dst_cred
+        
+                if dst_cred is None:
+                    if "X509_USER_PROXY" in os.environ:
+                        dst_cred = os.environ["X509_USER_PROXY"]
+                    else:
+                        dst_cred = src_cred
+        
+                cmd += " -src-cred " + src_cred + " -dst-cred " + dst_cred
+                check_cred_fs_permissions(src_cred)
+                check_cred_fs_permissions(dst_cred)
+        
+            # if the src and dest credentials are different, we might need
+            # a data channel credential
+            if third_party and src_cred != dst_cred:
+                data_cred_req = True
+        
+        else:
+            # sshftp transfers
+            if sample_transfer.dst_proto == "file":
+                # sshftp -> file
+                key = "SSH_PRIVATE_KEY_" + sample_transfer.src_sitename
+                if key in os.environ:
+                    os.environ['SSH_PRIVATE_KEY'] = os.environ[key]
+            else:
+                # file -> sshftp
+                key = "SSH_PRIVATE_KEY_" + sample_transfer.dst_sitename
+                if key in os.environ:
+                    os.environ['SSH_PRIVATE_KEY'] = os.environ[key]
+            check_cred_fs_permissions(os.environ['SSH_PRIVATE_KEY'])
+
+        return cmd, data_cred_req
+            
    
     def _guc_options(self, attempt, create_dest, third_party, data_cred_req):
         """

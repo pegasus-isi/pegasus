@@ -139,6 +139,7 @@ tool_map = {}
 tool_map['file'  ] = 'mkdir'
 tool_map['ftp'   ] = 'gsiftp'
 tool_map['gsiftp'] = 'gsiftp'
+tool_map['sshftp'] = 'sshftp'
 tool_map['irods' ] = 'irods'
 tool_map['s3'    ] = 's3'
 tool_map['s3s'   ] = 's3'
@@ -388,7 +389,7 @@ def gsiftp(url):
     """
  
     if tool_info['pegasus-gridftp']['full_path'] == None:
-        raise RuntimeError("Unable to do gsiftp mkdir becuase pegasus-gridftp could not be found")
+        raise RuntimeError("Unable to do gsiftp mkdir because pegasus-gridftp could not be found")
         
     key = "X509_USER_PROXY_" + url.site
     if key in os.environ:
@@ -418,6 +419,34 @@ def gsiftp(url):
         cmd += " file:///dev/null"
         cmd += " " + url.url() + "/.create-dir"
         myexec(cmd, 60, True)
+
+
+def sshftp(url):
+    """
+    create directories on gridftp servers
+    """
+ 
+    if tool_info['globus-url-copy']['full_path'] == None:
+        raise RuntimeError("Unable to do sshftp mkdir because globus-url-copy could not be found")
+
+    # build command line for globus-url-copy
+    cmd = tool_info['globus-url-copy']['full_path']
+    # make output match our current log level
+    if logger.isEnabledFor(logging.DEBUG):
+        cmd += " -dbg"
+
+    key = "SSH_PRIVATE_KEY_" + url.site
+    if key in os.environ:
+        os.environ["SSH_PRIVATE_KEY"] = os.environ[key]
+  
+    cmd += " -create-dest"
+    cmd += " file:///dev/null"
+    cmd += " " + url.url() + "/.create-dir"
+
+    try:
+        myexec(cmd, 60, True)
+    except:
+        raise RuntimeError("globus-url-copy command failed")
 
 
 def irods_login():
@@ -619,6 +648,9 @@ def create_dir(url):
                 check_tool("pegasus-gridftp", "", None)
                 check_tool("globus-url-copy", "-version", "globus-url-copy: ([\.0-9a-zA-Z]+)")
                 gsiftp(url)
+            elif tool == "sshftp":
+                check_tool("globus-url-copy", "-version", "globus-url-copy: ([\.0-9a-zA-Z]+)")
+                sshftp(url)
             elif tool == "irods":
                 check_tool("imkdir", "-h", "Version[ \t]+([\.0-9a-zA-Z]+)")
                 irods(url)

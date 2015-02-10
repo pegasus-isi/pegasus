@@ -792,6 +792,9 @@ public class Job extends Data implements GraphNodeContent{
         if( url.startsWith( "gsiftp" ) ){
             this.addCredentialType( site, CredentialHandler.TYPE.x509   );
         }
+        else if( url.startsWith( "sshftp" ) ){
+            this.addCredentialType( site, CredentialHandler.TYPE.ssh );
+        }
         else if( url.startsWith( "s3" ) ){
             this.addCredentialType( site, CredentialHandler.TYPE.s3 );
         }
