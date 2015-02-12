@@ -248,7 +248,7 @@ tr.odd.failed td.sorting_1
     background-color : #ffc4c4 !important;
 }
 
-tr.even.failing td.sorting_1
+tr.even.failed td.sorting_1
 {
     background-color : #ffd5d5 !important;
 }
