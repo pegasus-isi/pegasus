@@ -96,6 +96,43 @@ f.close()
 __author__ = "Gideon Juve <juve@usc.edu>"
 __version__ = "3.3"
 
+__all__ = [
+    "DAX3Error",
+    "DuplicateError",
+    "NotFoundError",
+    "FormatError",
+    "ParseError",
+    "Element",
+    "Namespace",
+    "Arch",
+    "Link",
+    "Transfer",
+    "OS",
+    "When",
+    "Invoke",
+    "InvokeMixin",
+    "ProfileMixin",
+    "MetadataMixin",
+    "PFNMixin",
+    "CatalogType",
+    "File",
+    "Executable",
+    "Metadata",
+    "PFN",
+    "Profile",
+    "Use",
+    "UseMixin",
+    "Transformation",
+    "AbstractJob",
+    "Job",
+    "DAX",
+    "DAG",
+    "Dependency",
+    "ADAG",
+    "parseString",
+    "parse"
+]
+
 import datetime, os, sys
 from StringIO import StringIO
 import codecs
