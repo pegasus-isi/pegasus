@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!-- edited with XMLSpy v2006 U (http://www.altova.com) by Gaurang Mehta (USC ISI) -->
 <!-- edited with XMLSPY v2004 rel. 3 U (http://www.xmlspy.com) by Rebecca Y Jordan (UNIV OF SOUTHERN CALIF) -->
-<xs:schema targetNamespace="http://pegasus.isi.edu/schema/invocation" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://pegasus.isi.edu/schema/invocation" elementFormDefault="qualified" attributeFormDefault="unqualified" version="2.2" xml:lang="en">
+<xs:schema targetNamespace="http://pegasus.isi.edu/schema/invocation" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://pegasus.isi.edu/schema/invocation" elementFormDefault="qualified" attributeFormDefault="unqualified" version="2.3" xml:lang="en">
 	<xs:simpleType name="DottedQuad">
 		<xs:annotation>
 			<xs:documentation>dotted quad notation of a IPv4 host address.</xs:documentation>
