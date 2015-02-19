@@ -35,9 +35,33 @@ class Job: pass
 
 class Task: pass
 
-class File: pass
+class File:
+    def __init__(self):
+        self.name = None
+        self.link = None
+        self.optional = None
+        self.type = None
+        self.size = None
+        self.bread = None
+        self.bwrite = None
 
-class Invocation: pass
+class Invocation:
+    def __init__(self):
+        self.duration = None
+        self.xform = None
+        self.derivation = None
+        self.site = None
+        self.host = None
+        self.start = None
+        self.cpu = None
+        self.cores = None
+        self.sent = None
+        self.received = None
+        self.procs = []
+        self.files = []
+        self.arguments = []
+        self.connections = []
+        self.slot = None
 
 class Braindump:
     def __init__(self, bdfile):
@@ -123,6 +147,14 @@ def extract_files(job):
             else:
                 f.name = e.attrib["name"]
             f.link = e.attrib["link"]
+            if "optional" in e.attrib:
+                f.optional = e.attrib["optional"].lower() == 'true'
+            else:
+                f.optional = False
+            if "type" in e.attrib:
+                f.type = e.attrib["type"]
+            else:
+                f.type = "data"
             files.append(f)
 
     return files
@@ -284,7 +316,6 @@ def outfiles(dirname):
 
 def parse_invocations(filename):
     invs = []
-    files = {}
     f = open(filename, "r")
     cpu = None
     cores = None
@@ -310,8 +341,12 @@ def parse_invocations(filename):
             inv.start = utils.epochdate(e.attrib["start"])
             inv.cpu = cpu
             inv.cores = cores
+            inv.sent = 0
+            inv.received = 0
             inv.procs = []
+            inv.files = []
             inv.arguments = []
+            inv.connections = []
             inv.slot = slot
 
             # XXX Skip auxilliary jobs
@@ -335,12 +370,20 @@ def parse_invocations(filename):
                     l = x.next()
                     if l.lstrip().startswith("<file "):
                         e = etree.fromstring(l)
-                        name = e.attrib["name"]
-                        size = int(e.attrib["size"])
-                        if name in files:
-                            files[name] = max(size, files[name])
-                        else:
-                            files[name] = size
+                        use = File()
+                        use.name = e.attrib["name"]
+                        use.size = int(e.attrib["size"])
+                        use.bread = int(e.attrib["bread"])
+                        use.bwrite = int(e.attrib["bwrite"])
+                        inv.files.append(use)
+                    elif l.lstrip().startswith("<socket "):
+                        e = etree.fromstring(l)
+                        address = e.attrib["address"]
+                        port = e.attrib["port"]
+                        bsend = e.attrib["bsend"]
+                        brecv = e.attrib["brecv"]
+                        inv.sent += int(bsend)
+                        inv.received += int(brecv)
                     else:
                         break
         elif l.startswith("<status"):
@@ -369,10 +412,14 @@ def parse_invocations(filename):
             usage = etree.fromstring(l)
             inv.utime = usage.attrib["utime"]
             inv.stime = usage.attrib["stime"]
+        elif l.startswith("<cwd>"):
+            e = etree.fromstring(l)
+            inv.cwd = e.text
 
 
     f.close()
 
+    files = {}
     for inv in invs:
         inv.proc_utime = 0.0
         inv.proc_stime = 0.0
@@ -392,20 +439,30 @@ def parse_invocations(filename):
 
         inv.procs = len(inv.procs) > 0
 
-    print files
+        # Keep track of sizes of files relative to CWD
+        newfiles = []
+        for f in inv.files:
+            if f.name.startswith(inv.cwd):
+                f.name = f.name[len(inv.cwd)+1:]
+                files[f.name] = f.size
+                newfiles.append(f)
+        inv.files = newfiles
 
-    return invs
+    return files, invs
 
 def parse_submit_dir(submitdir):
     print "Parsing invocation records..."
     invocations = {}
+    files = {}
 
     for path, jobname, retry in outfiles(submitdir):
-        invs = parse_invocations(path)
+        job_files, invs = parse_invocations(path)
         for i in invs:
             i.retry = retry
             i.jobname = jobname
         invocations[jobname] = invs
+
+        files.update(job_files)
 
     finallist = []
     for jobname in invocations:
@@ -417,7 +474,7 @@ def parse_submit_dir(submitdir):
 
     print "%d invocations" % len(finallist)
 
-    return finallist
+    return files, finallist
 
 def merge_by_derivation(dax, invocations):
     print "Merging by derivation..."
@@ -431,10 +488,13 @@ def merge_by_derivation(dax, invocations):
         if j.derivation is None or j.derivation == "":
             print "ERROR: Derivation missing for job %s" % j.id
             exit(1)
-        if j.derivation not in derivations:
+        if j.derivation in derivations:
+            j.invocation = derivations[j.derivation]
+        elif j.id in derivations:
+            j.invocation = derivations[j.id]
+        else:
             print "ERROR: Invocation missing for job %s" % j.id
             exit(1)
-        j.invocation = derivations[j.derivation]
 
 def merge_by_transformation(dax, invocations):
     print "Merging by transformation..."
@@ -536,7 +596,7 @@ def write_output_dag(dag, metadata, outfile):
     out.write("</workflow>\n")
     out.close()
 
-def write_output_dvdt(daxfile, dax, braindump, outdir, wfname):
+def write_output_dvdt(daxfile, dax, braindump, outdir, wfname, files):
     dagfile = os.path.join(outdir, "dag")
     workflowfile = os.path.join(outdir, "workflow")
 
@@ -591,7 +651,38 @@ def write_output_dvdt(daxfile, dax, braindump, outdir, wfname):
             sf.write("swap_memory:              %d MB\n" % 0)
             sf.write("bytes_read:               %d B\n" % inv.rbytes)
             sf.write("bytes_written:            %d B\n" % inv.wbytes)
+            sf.write("sent:                     %d B\n" % inv.sent)
+            sf.write("received:                 %d B\n" % inv.received)
+
+            for f in inv.files:
+                if f.bread > 0:
+                    sf.write("input:                    %s\n" % f.name)
+                if f.bwrite > 0:
+                    sf.write("output:                   %s\n" % f.name)
+                if f.bread == 0 and f.bwrite == 0:
+                    # Try to find it in the dax files
+                    for g in t.files:
+                        if f.name == g.name:
+                            if g.link == "output":
+                                sf.write("output:                   %s\n" % f.name)
+                            elif g.link == "input":
+                                sf.write("input:                    %s\n" % f.name)
+                            elif g.link in ["inout", "checkpoint"]:
+                                sf.write("input:                    %s\n" % f.name)
+                                sf.write("output:                   %s\n" % f.name)
+                            else:
+                                raise Exception("Unexpected link value for %s: %s" % (f.name, f.link))
+                            break
+
+            sf.write("\n")
         sf.close()
+
+    # Generate a 'files' file
+    ff = open(os.path.join(outdir, "files"), "w")
+    for f in files:
+        ff.write("name: %s\n" % f)
+        ff.write("size: %d B\n\n" % files[f])
+    ff.close()
 
     # Copy the dax file
     shutil.copy(daxfile, os.path.join(outdir, specification))
@@ -732,7 +823,7 @@ def main():
     makespan = get_makespan(dagman_log)
     dag = parse_dag(dagfile)
     parse_job_log(logfile, dag)
-    invocations = parse_submit_dir(submitdir)
+    files, invocations = parse_submit_dir(submitdir)
     dax = parse_dax(daxfile)
 
     if len(dax.tasks) != len(invocations):
@@ -753,7 +844,6 @@ def main():
 
     metadata["makespan"] = makespan
 
-    files = {}
     if options.file_sizes:
         files = parse_file_sizes(options.file_sizes)
 
@@ -762,7 +852,7 @@ def main():
         write_output_dax(dax, metadata, files, basename + ".wf")
         write_output_dag(dag, metadata, basename + "_dag.wf")
     elif options.format == "dvdt":
-        write_output_dvdt(daxfile, dax, braindump, outdir, wfname)
+        write_output_dvdt(daxfile, dax, braindump, outdir, wfname, files)
 
 if __name__ == '__main__':
     main()
