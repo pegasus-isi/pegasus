@@ -176,6 +176,11 @@ public class Dagman extends Namespace {
      */
     public static final String MAXJOBS_KEY = "MAXJOBS";
     
+    /**
+     * The key name for triggering a job return code to abort the DAG
+     * ABORT-DAG-ON JobName AbortExitValue [RETURN DAGReturnValue]
+     */
+    public static final String ABORT_DAG_ON_KEY = "ABORT-DAG-ON";
 
     /**
      * Determines whether a key is category related or not.
@@ -372,6 +377,15 @@ public class Dagman extends Namespace {
 
         switch (key.charAt(0)) {
 
+            case 'A':
+                if ( key.compareTo( Dagman.ABORT_DAG_ON_KEY ) == 0 ){
+                    res = VALID_KEY;
+                }
+                else {
+                    res = NOT_PERMITTED_KEY;
+                }
+                break;
+                
             case 'C':
                 if ( key.compareTo( Dagman.CATEGORY_KEY ) == 0 ){
                     res = VALID_KEY;
@@ -608,6 +622,11 @@ public class Dagman extends Namespace {
 
         }
 
+        //add the ABORT_DAG_ON ky
+        if( this.containsKey( Dagman.ABORT_DAG_ON_KEY) ){
+            append( sb, Dagman.ABORT_DAG_ON_KEY, name, replacementValue( Dagman.ABORT_DAG_ON_KEY ));
+        }
+        
         //add the category key in the end if required
         if( this.containsKey( Dagman.CATEGORY_KEY ) ){
             append( sb, replacementKey( Dagman.CATEGORY_KEY  ), name, replacementValue( Dagman.CATEGORY_KEY  ) );
@@ -640,7 +659,8 @@ public class Dagman extends Namespace {
                key.equals( Dagman.CATEGORY_KEY ) ||
                key.equals ( Dagman.POST_SCRIPT_SCOPE_KEY ) ||
                key.startsWith( Dagman.POST_SCRIPT_PATH_PREFIX ) ||
-               key.startsWith( Dagman.MAX_KEYS_PREFIX );
+               key.startsWith( Dagman.MAX_KEYS_PREFIX )||
+               key.startsWith( Dagman.ABORT_DAG_ON_KEY );
     }
 
 

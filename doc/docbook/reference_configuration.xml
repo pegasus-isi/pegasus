@@ -1095,6 +1095,24 @@ Scope       :</emphasis> TC, SC, DAX, Properties
               select what jobs to release when MAXJOBS is enforced for the
               DAG.</entry>
             </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>dagman.abort-dag-on<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>ABORT-DAG-ON 
+<emphasis role="bold">Scope       :</emphasis> TC, DAX,
+<emphasis role="bold">Since       :</emphasis> 4.5
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
+
+              <entry>The ABORT-DAG-ON key word provides a way to abort the
+              entire DAG if a given node returns a specific exit code
+              (AbortExitValue). The syntax for the value of the key is
+              AbortExitValue [RETURN DAGReturnValue] . When a DAG aborts, by
+              default it exits with the node return value that caused the
+              abort. This can be changed by using the optional RETURN key word
+              along with specifying the desired DAGReturnValue</entry>
+            </row>
           </tbody>
         </tgroup>
       </table></para>
