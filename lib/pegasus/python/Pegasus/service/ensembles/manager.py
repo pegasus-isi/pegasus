@@ -7,7 +7,7 @@ import threading
 
 from sqlalchemy.orm.exc import NoResultFound
 
-from Pegasus.service import app, request
+from Pegasus.service import app, user
 from Pegasus.service.ensembles.models import Ensembles, EnsembleStates, EnsembleWorkflowStates
 from Pegasus.db.schema.stampede_dashboard_schema import DashboardWorkflow, DashboardWorkflowstate
 
@@ -491,7 +491,7 @@ class EnsembleManager(threading.Thread):
             time.sleep(self.interval)
 
     def loop_once(self):
-        u = request.get_user_by_uid(os.getuid())
+        u = user.get_user_by_uid(os.getuid())
 
         db = Ensembles(u.get_master_db_url())
 

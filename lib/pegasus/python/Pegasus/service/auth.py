@@ -1,37 +1,13 @@
 import os
-import pwd
 import logging
 
 from flask import request, Response, g, abort
 import pam
 
-from Pegasus.service import app
+from Pegasus.service import app, user
 
 log = logging.getLogger(__name__)
 
-class User(object):
-    def __init__(self, uid, gid, username, homedir):
-        self.uid = uid
-        self.gid = gid
-        self.username = username
-        self.homedir = homedir
-
-    def get_userdata_dir(self):
-        return os.path.join(app.config["STORAGE_DIRECTORY"], self.username)
-
-    def get_master_db(self):
-        return os.path.join(self.homedir, ".pegasus", "workflow.db")
-
-    def get_master_db_url(self):
-        return "sqlite:///%s" % self.get_master_db()
-
-def get_user_by_uid(uid):
-    pw = pwd.getpwuid(uid)
-    return User(pw.pw_uid, pw.pw_gid, pw.pw_name, pw.pw_dir)
-
-def get_user_by_username(username):
-    pw = pwd.getpwnam(username)
-    return User(pw.pw_uid, pw.pw_gid, pw.pw_name, pw.pw_dir)
 
 class BaseAuthentication(object):
     def __init__(self, username, password):
@@ -51,7 +27,7 @@ class NoAuthentication(BaseAuthentication):
 
     def get_user(self):
         # Just return info for the user running the service
-        return get_user_by_uid(os.getuid())
+        return user.get_user_by_uid(os.getuid())
 
 class PAMAuthentication(BaseAuthentication):
     def authenticate(self):
@@ -62,26 +38,12 @@ class PAMAuthentication(BaseAuthentication):
             return False
 
     def get_user(self):
-        try:
-            return get_user_by_username(self.username)
-        except KeyError:
-            raise Exception("Invalid user: %s" % self.username)
+        return user.get_user_by_username(self.username)
 
 
 def basic_auth_response():
     return Response('Basic Auth Required', 401,
                     {'WWW-Authenticate': 'Basic realm="Pegasus Service"'})
-
-
-def is_user_valid(username):
-    """
-        Check if username is a valid UNIX user.
-    """
-    try:
-        pw = pwd.getpwnam(username)
-        return User(pw.pw_uid, pw.pw_gid, pw.pw_name, pw.pw_dir)
-    except KeyError:
-        return False
 
 
 def is_user_an_admin(username):
@@ -149,7 +111,12 @@ def before():
         log.error("Invalid login: %s", cred.username)
         return basic_auth_response()
 
-    g.user = auth.get_user()
+    try:
+        g.user = auth.get_user()
+    except user.NoSuchUser, e:
+        log.error("No such user: %s" % cred.username)
+        return basic_auth_response()
+
     log.info('Authenticated user %s', g.user.username)
 
     # If a username is not specified in the requested URI, then set username to the logged in user?
@@ -179,8 +146,9 @@ def before():
             abort(403)
 
         # Is user a valid system user?
-        user_info = is_user_valid(g.username)
-        if user_info is False:
+        try:
+            user_info = user.get_user_by_username(g.username)
+        except user.NoSuchUser, e:
             log.error('User %s is not a valid user' % g.username)
             abort(400)
 
@@ -194,7 +162,7 @@ def before():
     os.setuid(user_info.uid)
 
     # Does the user have a Pegasus home directory?
-    user_pegasus_dir = os.path.join(os.path.expanduser('~%s' % g.username), '.pegasus')
+    user_pegasus_dir = user_info.get_pegasus_dir()
 
     if not os.path.isdir(user_pegasus_dir):
         log.info("User's pegasus directory does not exist. Creating one...")
@@ -204,3 +172,4 @@ def before():
     g.master_db_url = user_info.get_master_db_url()
 
     # TODO Add login page and session for storing authentication status
+

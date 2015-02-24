@@ -4,6 +4,7 @@ import zipfile
 from Pegasus.service import app
 from Pegasus.service.command import Command, ClientCommand, CompoundCommand
 from Pegasus.service.ensembles.models import EnsembleStates, EnsembleWorkflowStates
+from Pegasus.service.ensembles import views
 from Pegasus.service.ensembles import manager
 
 log = logging.getLogger(__name__)
