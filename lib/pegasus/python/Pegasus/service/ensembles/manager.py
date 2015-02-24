@@ -279,6 +279,8 @@ class WorkflowProcessor:
                     .one()
             return w
         except NoResultFound:
+            name = self.workflow.name
+            log.debug("No dashboard record for workflow %s (%s)" % (name, wf_uuid))
             return None
 
     def get_dashboard_state(self):
@@ -434,6 +436,7 @@ class EnsembleProcessor:
         p = self.Processor(self.db, workflow)
 
         if p.pending() or p.running():
+            log.debug("Workflow %s is pending or running" % workflow.name)
             return
 
         self.running -= 1
@@ -487,34 +490,18 @@ class EnsembleManager(threading.Thread):
             self.loop_once()
             time.sleep(self.interval)
 
-    def get_active_users(self):
-        # TODO Identify the active users
-        #return [request.get_user_by_uid(os.getuid())]
-        return []
-
     def loop_once(self):
-        for u in self.get_active_users():
+        u = request.get_user_by_uid(os.getuid())
 
-            # TODO Fork process
+        db = Ensembles(u.get_master_db_url())
 
-            # Switch to user
-            if os.getuid() != u.uid:
-                if os.getuid() != 0:
-                    log.error("Pegasus service must run as root to process ensembles for %s", u.username)
-                    continue
+        actionable = db.list_actionable_ensembles()
+        if len(actionable) == 0:
+            return
 
-                os.setegid(u.gid)
-                os.seteuid(u.uid)
-
-            db = Ensembles(u.get_master_db_url())
-
-            actionable = db.list_actionable_ensembles()
-            if len(actionable) == 0:
-                continue
-
-            log.info("Processing ensembles for %s", u.username)
-            for e in actionable:
-                log.info("Processing ensemble %s", e.name)
-                p = self.Processor(db, e)
-                p.run()
+        log.info("Processing ensembles for %s", u.username)
+        for e in actionable:
+            log.info("Processing ensemble %s", e.name)
+            p = self.Processor(db, e)
+            p.run()
 

@@ -1,6 +1,14 @@
+import os
+import logging
 import zipfile
-from Pegasus.service.command import ClientCommand, CompoundCommand
+from Pegasus.service import app
+from Pegasus.service.command import Command, ClientCommand, CompoundCommand
 from Pegasus.service.ensembles.models import EnsembleStates, EnsembleWorkflowStates
+from Pegasus.service.ensembles import manager
+
+log = logging.getLogger(__name__)
+
+EM_PORT = os.getuid() + 7919
 
 def add_ensemble_option(self):
     self.parser.add_option("-e", "--ensemble", action="store", dest="ensemble",
@@ -10,7 +18,55 @@ def add_workflow_option(self):
     self.parser.add_option("-w", "--workflow", action="store", dest="workflow",
         default=None, help="Workflow name")
 
-class EnsemblesCommand(ClientCommand):
+class ServerCommand(Command):
+    description = "Start ensemble manager"
+    usage = "%prog [options]"
+
+    def __init__(self):
+        Command.__init__(self)
+        self.parser.add_option("-d", "--debug", action="store_true", dest="debug",
+                               default=None, help="Enable debugging")
+
+    def run(self):
+        if self.options.debug:
+            app.config.update(DEBUG=True)
+            log_level = logging.DEBUG
+        else:
+            log_level = logging.INFO
+
+        logging.basicConfig(level=log_level)
+        logging.getLogger().setLevel(log_level)
+
+        # We only start the ensemble manager if we are not debugging
+        # or if we are debugging and Werkzeug is restarting. This
+        # prevents us from having two ensemble managers running in
+        # the debug case.
+        WERKZEUG_RUN_MAIN = os.environ.get('WERKZEUG_RUN_MAIN') == 'true'
+        DEBUG = app.config.get("DEBUG", False)
+        if (not DEBUG) or WERKZEUG_RUN_MAIN:
+            # Make sure the environment is OK for the ensemble manager
+            try:
+                manager.check_environment()
+            except manager.EMException, e:
+                log.warning("%s: Ensemble manager disabled" % e.message)
+            else:
+                mgr =  manager.EnsembleManager()
+                mgr.start()
+
+        if os.getuid() == 0:
+            log.fatal("The ensemble manager should not be run as root")
+            exit(1)
+
+        app.run(port=EM_PORT, host="127.0.0.1")
+
+        log.info("Exiting")
+
+class EnsembleClientCommand(ClientCommand):
+    def __init__(self, *args, **kwargs):
+        ClientCommand.__init__(self, *args, **kwargs)
+        self.endpoint = "http://127.0.0.1:%d/" % EM_PORT
+
+class EnsemblesCommand(EnsembleClientCommand):
     description = "List ensembles"
     usage = "Usage: %prog ensembles"
 
@@ -28,12 +84,12 @@ class EnsemblesCommand(ClientCommand):
         for r in result:
             print fmt % (r["name"], r["state"], r["created"], r["updated"], r["max_planning"], r["max_running"])
 
-class CreateCommand(ClientCommand):
+class CreateCommand(EnsembleClientCommand):
     description = "Create ensemble"
     usage = "Usage: %prog create [options] -e ENSEMBLE"
 
     def __init__(self):
-        ClientCommand.__init__(self)
+        EnsembleClientCommand.__init__(self)
         add_ensemble_option(self)
         self.parser.add_option("-P", "--max-planning", action="store", dest="max_planning",
             default=1, type="int", help="Maximum number of workflows being planned at once")
@@ -57,12 +113,12 @@ class CreateCommand(ClientCommand):
             print "ERROR:", result["message"]
             exit(1)
 
-class SubmitCommand(ClientCommand):
+class SubmitCommand(EnsembleClientCommand):
     description = "Submit workflow"
     usage = "Usage: %prog submit [options] -e ENSEMBLE -w WORKFLOW -b BUNDLE -s SITE -o SITE"
 
     def __init__(self):
-        ClientCommand.__init__(self)
+        EnsembleClientCommand.__init__(self)
         add_ensemble_option(self)
         add_workflow_option(self)
         self.parser.add_option("-b", "--bundle", action="store", dest="bundle",
@@ -128,12 +184,12 @@ class SubmitCommand(ClientCommand):
             result = response.json()
             print "ERROR:",response.status_code,result["message"]
 
-class WorkflowsCommand(ClientCommand):
+class WorkflowsCommand(EnsembleClientCommand):
     description = "List workflows in ensemble"
     usage = "Usage: %prog workflows [options] -e ENSEMBLE."
 
     def __init__(self):
-        ClientCommand.__init__(self)
+        EnsembleClientCommand.__init__(self)
         add_ensemble_option(self)
         self.parser.add_option("-l", "--long", action="store_true", dest="long",
             default=False, help="Show detailed output")
@@ -172,9 +228,9 @@ class WorkflowsCommand(ClientCommand):
             for w in result:
                 print fmt % (w["name"],w["state"],w["priority"],w["created"],w["updated"])
 
-class StateChangeCommand(ClientCommand):
+class StateChangeCommand(EnsembleClientCommand):
     def __init__(self):
-        ClientCommand.__init__(self)
+        EnsembleClientCommand.__init__(self)
         add_ensemble_option(self)
 
     def run(self):
@@ -204,12 +260,12 @@ class HoldCommand(StateChangeCommand):
     usage = "Usage: %prog hold -e ENSEMBLE"
     newstate = EnsembleStates.HELD
 
-class ConfigCommand(ClientCommand):
+class ConfigCommand(EnsembleClientCommand):
     description = "Change ensemble configuration"
     usage = "Usage: %prog config [options] -e ENSEMBLE"
 
     def __init__(self):
-        ClientCommand.__init__(self)
+        EnsembleClientCommand.__init__(self)
         add_ensemble_option(self)
         self.parser.add_option("-P", "--max-planning", action="store", dest="max_planning",
             default=None, type="int", help="Maximum number of workflows being planned at once")
@@ -241,9 +297,9 @@ class ConfigCommand(ClientCommand):
         print "Max Planning:",result["max_planning"]
         print "Max Running:",result["max_running"]
 
-class WorkflowStateChangeCommand(ClientCommand):
+class WorkflowStateChangeCommand(EnsembleClientCommand):
     def __init__(self):
-        ClientCommand.__init__(self)
+        EnsembleClientCommand.__init__(self)
         add_ensemble_option(self)
         add_workflow_option(self)
 
@@ -283,12 +339,12 @@ class AbortCommand(WorkflowStateChangeCommand):
     usage = "Usage: %prog abort -e ENSEMBLE -w WORKFLOW"
     newstate = EnsembleWorkflowStates.ABORTED
 
-class PriorityCommand(ClientCommand):
+class PriorityCommand(EnsembleClientCommand):
     description = "Update workflow priority"
     usage = "Usage: %prog priority -e ENSEMBLE -w WORKFLOW -p PRIORITY"
 
     def __init__(self):
-        ClientCommand.__init__(self)
+        EnsembleClientCommand.__init__(self)
         add_ensemble_option(self)
         add_workflow_option(self)
         self.parser.add_option("-p","--priority",action="store",dest="priority",
@@ -320,6 +376,7 @@ class PriorityCommand(ClientCommand):
 class EnsembleCommand(CompoundCommand):
     description = "Client for ensemble management"
     commands = [
+        ("server", ServerCommand),
         ("ensembles", EnsemblesCommand),
         ("create", CreateCommand),
         ("pause", PauseCommand),
@@ -333,6 +390,6 @@ class EnsembleCommand(CompoundCommand):
     ]
 
 def main():
-    "The entry point for pegasus-service-ensemble"
+    "The entry point for pegasus-em"
     EnsembleCommand().main()
 
