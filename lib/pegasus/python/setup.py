@@ -64,7 +64,8 @@ setup(
         "MarkupSafe==0.18",
         "itsdangerous==0.21",
         "boto==2.5.2",
-        "pam==0.1.4"
+        "pam==0.1.4",
+        "pyOpenSSL==0.13"
     ]
 )
 
