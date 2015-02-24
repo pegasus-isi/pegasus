@@ -4,7 +4,7 @@ import traceback
 
 from flask import json, make_response
 
-from Pegasus.service import app
+from Pegasus.service.ensembles import emapp
 
 JSON_HEADERS = {"Content-Type":"application/json"}
 
@@ -14,10 +14,10 @@ class APIError(Exception):
         self.status_code = status_code
         self.cause = sys.exc_info()
 
-@app.errorhandler(APIError)
+@emapp.errorhandler(APIError)
 def json_api_error(e):
     response = {"message": e.message}
-    if e.cause is not (None, None, None) and app.config["DEBUG"]:
+    if e.cause is not (None, None, None) and emapp.config["DEBUG"]:
         response["cause"] = u"".join(traceback.format_exception(*e.cause))
     return make_response(json.dumps(response), e.status_code, JSON_HEADERS)
 

@@ -34,14 +34,9 @@ ADMIN_USERS = None
 
 # CLIENT CONFIGURATION
 
-# Service endpoint. This is only required if you install the service
-# at a URL other than "http://SERVER_HOST:SERVER_PORT/".
-ENDPOINT = None
-
 # User credentials
 USERNAME = ""
 PASSWORD = ""
-
 
 
 # ENSEMBLE MANAGER CONFIGURATION

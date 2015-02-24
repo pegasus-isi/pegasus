@@ -10,7 +10,7 @@ from sqlalchemy import sql
 import werkzeug
 
 from Pegasus.db.modules import SQLAlchemyInit
-from Pegasus.service.api import *
+from Pegasus.service.ensembles.api import *
 from Pegasus.service.ensembles.bundle import Bundle
 
 def validate_ensemble_name(name):

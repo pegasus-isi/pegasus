@@ -1,11 +1,14 @@
 import os
+import sys
+import urlparse
+import requests
 import logging
 import zipfile
-from Pegasus.service import app
-from Pegasus.service.command import Command, ClientCommand, CompoundCommand
+from optparse import OptionParser
+
+from Pegasus.service.command import Command, CompoundCommand
+from Pegasus.service.ensembles import emapp, manager
 from Pegasus.service.ensembles.models import EnsembleStates, EnsembleWorkflowStates
-from Pegasus.service.ensembles import views
-from Pegasus.service.ensembles import manager
 
 log = logging.getLogger(__name__)
 
@@ -19,6 +22,38 @@ def add_workflow_option(self):
     self.parser.add_option("-w", "--workflow", action="store", dest="workflow",
         default=None, help="Workflow name")
 
+class EnsembleClientCommand(Command):
+    def __init__(self):
+        Command.__init__(self)
+        self.endpoint = "http://127.0.0.1:%d/" % EM_PORT
+        self.username = emapp.config["USERNAME"]
+        if not self.username:
+            raise Exception("Specify USERNAME in configuration")
+        self.password = emapp.config["PASSWORD"]
+        if not self.password:
+            raise Exception("Specify PASSWORD in configuration")
+
+    def _request(self, method, path, **kwargs):
+        headers = {
+            'accept': 'application/json'
+        }
+        defaults = {"auth": (self.username, self.password), "headers": headers}
+        defaults.update(kwargs)
+        url = urlparse.urljoin(self.endpoint, path)
+        return requests.request(method, url, **defaults)
+
+    def get(self, path, **kwargs):
+        return self._request("get", path, **kwargs)
+
+    def post(self, path, **kwargs):
+        return self._request("post", path, **kwargs)
+
+    def delete(self, path, **kwargs):
+        return self._request("delete", path, **kwargs)
+
+    def put(self, path, **kwargs):
+        return self._request("put", path, **kwargs)
+
 class ServerCommand(Command):
     description = "Start ensemble manager"
     usage = "%prog [options]"
@@ -30,7 +65,7 @@ class ServerCommand(Command):
 
     def run(self):
         if self.options.debug:
-            app.config.update(DEBUG=True)
+            emapp.config.update(DEBUG=True)
             log_level = logging.DEBUG
         else:
             log_level = logging.INFO
@@ -43,7 +78,7 @@ class ServerCommand(Command):
         # prevents us from having two ensemble managers running in
         # the debug case.
         WERKZEUG_RUN_MAIN = os.environ.get('WERKZEUG_RUN_MAIN') == 'true'
-        DEBUG = app.config.get("DEBUG", False)
+        DEBUG = emapp.config.get("DEBUG", False)
         if (not DEBUG) or WERKZEUG_RUN_MAIN:
             # Make sure the environment is OK for the ensemble manager
             try:
@@ -51,21 +86,16 @@ class ServerCommand(Command):
             except manager.EMException, e:
                 log.warning("%s: Ensemble manager disabled" % e.message)
             else:
-                mgr =  manager.EnsembleManager()
+                mgr = manager.EnsembleManager()
                 mgr.start()
 
         if os.getuid() == 0:
             log.fatal("The ensemble manager should not be run as root")
             exit(1)
 
-        app.run(port=EM_PORT, host="127.0.0.1")
+        emapp.run(port=EM_PORT, host="127.0.0.1")
 
         log.info("Exiting")
-
-class EnsembleClientCommand(ClientCommand):
-    def __init__(self, *args, **kwargs):
-        ClientCommand.__init__(self, *args, **kwargs)
-        self.endpoint = "http://127.0.0.1:%d/" % EM_PORT
 
 class EnsemblesCommand(EnsembleClientCommand):
     description = "List ensembles"

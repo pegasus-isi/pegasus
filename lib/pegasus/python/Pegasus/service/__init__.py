@@ -1,4 +1,3 @@
-import sys
 import os
 from flask import Flask
 
@@ -32,5 +31,5 @@ def get_pegasus_home():
 from flask.ext.cache import Cache
 cache = Cache(app)
 
-from Pegasus.service import auth, filters, api, dashboard
+from Pegasus.service import auth, filters, dashboard
 

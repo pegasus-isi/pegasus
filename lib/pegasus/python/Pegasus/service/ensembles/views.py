@@ -2,18 +2,17 @@ import os
 
 from flask import g, url_for, make_response, request, send_file, json
 
-from Pegasus.service import app, api
-from Pegasus.service.ensembles import models
+from Pegasus.service.ensembles import emapp, models, api
 from Pegasus.service.ensembles.bundle import BundleException
 
-@app.route("/ensembles", methods=["GET"])
+@emapp.route("/ensembles", methods=["GET"])
 def route_list_ensembles():
     db = models.Ensembles(g.master_db_url)
     ensembles = db.list_ensembles(g.user.username)
     result = [e.get_object() for e in ensembles]
     return api.json_response(result)
 
-@app.route("/ensembles", methods=["POST"])
+@emapp.route("/ensembles", methods=["POST"])
 def route_create_ensemble():
     name = request.form.get("name", None)
     if name is None:
@@ -28,14 +27,14 @@ def route_create_ensemble():
 
     return api.json_created(url_for("route_get_ensemble", name=name, _external=True))
 
-@app.route("/ensembles/<string:name>", methods=["GET"])
+@emapp.route("/ensembles/<string:name>", methods=["GET"])
 def route_get_ensemble(name):
     db = models.Ensembles(g.master_db_url)
     e = db.get_ensemble(g.user.username, name)
     result = e.get_object()
     return api.json_response(result)
 
-@app.route("/ensembles/<string:name>", methods=["PUT","POST"])
+@emapp.route("/ensembles/<string:name>", methods=["PUT","POST"])
 def route_update_ensemble(name):
     db = models.Ensembles(g.master_db_url)
     e = db.get_ensemble(g.user.username, name)
@@ -60,14 +59,14 @@ def route_update_ensemble(name):
 
     return api.json_response(e.get_object())
 
-@app.route("/ensembles/<string:name>/workflows", methods=["GET"])
+@emapp.route("/ensembles/<string:name>/workflows", methods=["GET"])
 def route_list_ensemble_workflows(name):
     db = models.Ensembles(g.master_db_url)
     e = db.get_ensemble(g.user.username, name)
     result = [w.get_object() for w in db.list_ensemble_workflows(e.id)]
     return api.json_response(result)
 
-@app.route("/ensembles/<string:ensemble>/workflows", methods=["POST"])
+@emapp.route("/ensembles/<string:ensemble>/workflows", methods=["POST"])
 def route_create_ensemble_workflow(ensemble):
     db = models.Ensembles(g.master_db_url)
     e = db.get_ensemble(g.user.username, ensemble)
@@ -133,7 +132,7 @@ def route_create_ensemble_workflow(ensemble):
 
     return api.json_created(url_for("route_get_ensemble_workflow", ensemble=ensemble, workflow=name))
 
-@app.route("/ensembles/<string:ensemble>/workflows/<string:workflow>", methods=["GET"])
+@emapp.route("/ensembles/<string:ensemble>/workflows/<string:workflow>", methods=["GET"])
 def route_get_ensemble_workflow(ensemble, workflow):
     db = models.Ensembles(g.master_db_url)
     e = db.get_ensemble(g.user.username, ensemble)
@@ -141,7 +140,7 @@ def route_get_ensemble_workflow(ensemble, workflow):
     result = w.get_detail_object()
     return api.json_response(result)
 
-@app.route("/ensembles/<string:ensemble>/workflows/<string:workflow>", methods=["PUT","POST"])
+@emapp.route("/ensembles/<string:ensemble>/workflows/<string:workflow>", methods=["PUT","POST"])
 def route_update_ensemble_workflow(ensemble, workflow):
     db = models.Ensembles(g.master_db_url)
     e = db.get_ensemble(g.user.username, ensemble)
@@ -161,7 +160,7 @@ def route_update_ensemble_workflow(ensemble, workflow):
 
     return api.json_response(w.get_detail_object())
 
-@app.route("/ensembles/<string:ensemble>/workflows/<string:workflow>/<string:filename>", methods=["GET"])
+@emapp.route("/ensembles/<string:ensemble>/workflows/<string:workflow>/<string:filename>", methods=["GET"])
 def route_get_ensemble_workflow_file(ensemble, workflow, filename):
     db = models.Ensembles(g.master_db_url)
     e = db.get_ensemble(g.user.username, ensemble)
