@@ -5,7 +5,7 @@ import warnings
 import logging
 
 from sqlalchemy import *
-from sqlalchemy import MetaData, orm, exc
+from sqlalchemy import MetaData, orm
 
 from Pegasus.db.schema import SABase, KeyInteger
 

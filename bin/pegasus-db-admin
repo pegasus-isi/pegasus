@@ -15,10 +15,6 @@
 #  limitations under the License.
 #
 
-# Notes:
-# Downgrade at least to 4.4; test the dashboard; test with sqlite
-# dashboard + service and monitord
-
 __author__ = "Rafael Ferreira da Silva"
 
 import collections

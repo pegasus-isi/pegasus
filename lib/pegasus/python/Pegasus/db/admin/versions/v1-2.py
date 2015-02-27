@@ -87,11 +87,11 @@ class Version(BaseVersion):
         except:
             return False
         try:
-            self.db.execute_update("CREATE INDEX KEY_MASTER_WF_ID ON master_workflow (wf_id)")
-            self.db.execute_update("DROP INDEX KEY_MASTER_WF_ID")
+            self.db.execute_update("DROP INDEX UNIQUE_MASTER_WF_UUID")
+            self.db.execute_update("CREATE INDEX IF NOT EXISTS UNIQUE_MASTER_WF_UUID ON master_workflow (wf_uuid)")
         except:
-            return True
-        return False
+            return False
+        return True
 
 # -------------------------------------------------------------------
     def dispose(self):

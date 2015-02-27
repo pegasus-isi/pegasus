@@ -33,6 +33,14 @@ class AdminDB(object):
         self.connection = None
         
         try:
+            pegasusDir = os.path.dirname(self.dashConnString)
+            if not os.path.exists(pegasusDir):
+                os.mkdir(pegasusDir)
+            
+            # Initialize the DashboarDB
+            dashDB = DashboardDB(config_properties, verbose, debug)
+            dashDB.create_tables()               
+                
             self.connection = lite.connect(self.dashConnString)
             cur = self.connection.cursor()
             try:
@@ -41,8 +49,8 @@ class AdminDB(object):
                 if len(data) == 0:
                     self.create_admin_table()
             except:
-                self.create_admin_table()                
-            
+                self.create_admin_table()
+                        
         except lite.Error, e:
             raise RuntimeError(e)
         
