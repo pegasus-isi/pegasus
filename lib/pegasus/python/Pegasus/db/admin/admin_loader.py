@@ -64,6 +64,13 @@ class AdminDB(object):
         data = cur.fetchone()
         return data
     
+    def check_version(self):
+        data = self.current_version()
+        if (data[0] == CURRENT_DB_VERSION):
+            return True
+        else:
+            return False
+    
     def execute_update(self, query):
         try:
             cur = self.connection.cursor()
