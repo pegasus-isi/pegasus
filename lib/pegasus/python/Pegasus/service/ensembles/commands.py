@@ -144,30 +144,36 @@ class CreateCommand(EnsembleClientCommand):
             print "ERROR:", result["message"]
             exit(1)
 
+def pathfind(command):
+    def isexe(fn):
+        return os.path.isfile(fn) and os.access(fn, os.X_OK)
+
+    path, exe = os.path.split(command)
+
+    if path:
+        if isexe(command):
+            return os.path.abspath(command)
+        return None
+
+    # Search PATH
+    for path in os.environ["PATH"].split(os.pathsep):
+        fn = os.path.join(path, command)
+        if isexe(fn):
+            return fn
+
+    return None
+
 class SubmitCommand(EnsembleClientCommand):
     description = "Submit workflow"
-    usage = "Usage: %prog submit [options] -e ENSEMBLE -w WORKFLOW -b BUNDLE -s SITE -o SITE"
+    usage = "Usage: %prog submit [options] -e ENSEMBLE -w WORKFLOW plan_command [arg...]"
 
     def __init__(self):
         EnsembleClientCommand.__init__(self)
         add_ensemble_option(self)
         add_workflow_option(self)
-        self.parser.add_option("-b", "--bundle", action="store", dest="bundle",
-            default=None, help="Workflow bundle (zip file)", metavar="PATH")
-        self.parser.add_option("-s", "--site", action="store", dest="sites",
-            default=None, help="Execution sites (see pegasus-plan man page)", metavar="SITE[,SITE...]")
-        self.parser.add_option("-o", "--output-site", action="store", dest="output_site",
-            default=None, help="Output storage site (see pegasus-plan man page)", metavar="SITE")
+        self.parser.disable_interspersed_args()
         self.parser.add_option("-p", "--priority", action="store", dest="priority",
             default=0, help="Workflow priority", metavar="NUMBER")
-        self.parser.add_option("--staging-site", action="store", dest="staging_sites",
-            default=None, help="Staging sites (see pegasus-plan man page)", metavar="s=ss[,s=ss...]")
-        self.parser.add_option("--cleanup", action="store", dest="cleanup",
-            default=None, help="Cleanup strategy [none, inplace, leaf] (see pegasus-plan man page)")
-        self.parser.add_option("-f", "--force", action="store_true", dest="force",
-            default=None, help="Skip workflow reduction (see pegasus-plan man page)")
-        self.parser.add_option("-C", "--cluster", action="store", dest="clustering",
-            default=None, help="Clustering techniques to apply (see pegasus-plan man page)", metavar="STYLE[,STYLE...]")
 
     def run(self):
         o = self.options
@@ -177,39 +183,29 @@ class SubmitCommand(EnsembleClientCommand):
             p.error("Specify -e/--ensemble")
         if o.workflow is None:
             p.error("Specify -w/--workflow")
-        if o.bundle is None:
-            p.error("Specify -b/--bundle")
-        if o.sites is None:
-            p.error("Specify -s/--site")
-        if o.output_site is None:
-            p.error("Specify -o/--output-site")
+
+        if len(self.args) == 0:
+            p.error("Specify planning command")
+
+        command = self.args[0]
+        args = self.args[1:]
+
+        exe = pathfind(command)
+        if exe is None:
+            p.error("invalid planning command: %s" % command)
+
+        args.insert(0, exe)
+
+        command = '"%s"' % '" "'.join(args)
 
         data = {
             "name": o.workflow,
             "priority": o.priority,
-            "sites": o.sites,
-            "output_site": o.output_site
+            "basedir": os.getcwd(),
+            "plan_command": command
         }
 
-        if o.cleanup is not None:
-            data["cleanup"] = o.cleanup
-
-        if o.force is not None:
-            data["force"] = o.force
-
-        if o.staging_sites is not None:
-            data["staging_sites"] = o.staging_sites
-
-        if o.clustering is not None:
-            data["clustering"] = [s.strip() for s in o.clustering.split(",")]
-
-        # TODO Verify bundle format
-
-        files = {
-            "bundle": open(o.bundle, "rb")
-        }
-
-        response = self.post("/ensembles/%s/workflows" % o.ensemble, data=data, files=files)
+        response = self.post("/ensembles/%s/workflows" % o.ensemble, data=data)
 
         if response.status_code != 201:
             result = response.json()

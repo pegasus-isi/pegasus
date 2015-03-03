@@ -7,11 +7,9 @@ from datetime import datetime
 from flask import url_for, g
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import sql
-import werkzeug
 
 from Pegasus.db.modules import SQLAlchemyInit
 from Pegasus.service.ensembles.api import *
-from Pegasus.service.ensembles.bundle import Bundle
 
 def validate_ensemble_name(name):
     if name is None:
@@ -96,7 +94,7 @@ class Ensemble(EnsembleBase):
         }
 
 class EnsembleWorkflow(EnsembleBase):
-    def __init__(self, ensemble_id, name, basedir):
+    def __init__(self, ensemble_id, name, basedir, plan_command):
         self.ensemble_id = ensemble_id
         self.set_name(name)
         self.set_basedir(basedir)
@@ -104,6 +102,7 @@ class EnsembleWorkflow(EnsembleBase):
         self.set_updated()
         self.state = EnsembleWorkflowStates.READY
         self.set_priority(0)
+        self.set_plan_command(plan_command)
         self.set_wf_uuid(None)
         self.set_submitdir(None)
 
@@ -148,6 +147,9 @@ class EnsembleWorkflow(EnsembleBase):
     def set_submitdir(self, submitdir):
         self.submitdir = submitdir
 
+    def set_plan_command(self, plan_command):
+        self.plan_command = plan_command
+
     def get_object(self):
         return {
             "id": self.id,
@@ -166,12 +168,8 @@ class EnsembleWorkflow(EnsembleBase):
                            ensemble=self.ensemble.name, workflow=self.name,
                            filename=filename, _external=True)
         o = self.get_object()
-        o["dax"] = myurl_for("dax.xml")
-        o["replicas"] = myurl_for("rc.txt")
-        o["transformations"] = myurl_for("tc.txt")
-        o["sites"] = myurl_for("sites.xml")
-        o["conf"] = myurl_for("pegasus.properties")
-        o["plan_script"] = myurl_for("plan.sh")
+        o["basedir"] = self.basedir
+        o["plan_command"] = self.plan_command
         return o
 
 class Ensembles(SQLAlchemyInit):
@@ -225,9 +223,7 @@ class Ensembles(SQLAlchemyInit):
         except NoResultFound:
             raise APIError("No such ensemble workflow: %s" % name, 404)
 
-    def create_ensemble_workflow(self, ensemble_id, name, basedir, priority, bundlefile,
-            sites, output_site, staging_sites=None, clustering=None,
-            force=None, cleanup=None):
+    def create_ensemble_workflow(self, ensemble_id, name, basedir, priority, plan_command):
 
         # Verify that the workflow doesn't already exist
         q = self.session.query(EnsembleWorkflow)
@@ -237,51 +233,10 @@ class Ensembles(SQLAlchemyInit):
             raise APIError("Ensemble workflow %s already exists" % name, 400)
 
         # Create database record
-        w = EnsembleWorkflow(ensemble_id, name, basedir)
+        w = EnsembleWorkflow(ensemble_id, name, basedir, plan_command)
         w.set_priority(priority)
         self.session.add(w)
         self.session.flush()
-
-        # If the directory already exists, then we need to remove it
-        if os.path.isdir(basedir):
-            shutil.rmtree(basedir)
-
-        # Create the workflow directory
-        os.makedirs(basedir)
-
-        # Save bundle
-        bundlefilename = werkzeug.secure_filename(bundlefile.filename)
-        bundlepath = os.path.join(basedir, bundlefilename)
-        f = open(bundlepath, "wb")
-        try:
-            shutil.copyfileobj(bundlefile, f)
-        finally:
-            f.close()
-
-        bundledir = os.path.join(basedir, "bundle")
-
-        # Verify and unpack the bundle
-        bundle = Bundle(bundlepath)
-        bundle.verify()
-        bundle.unpack(bundledir)
-
-        properties = bundle.get_properties()
-
-        # TODO Filter out properties that are not allowed and rewrite properties
-
-        # Get path to dax file
-        dax = properties["pegasus.dax.file"]
-
-        # Create planning script
-        planfile = os.path.join(basedir, "plan.sh")
-        f = open(planfile, "w")
-        try:
-            self.write_planning_script(f, basedir, bundledir, dax, sites=sites,
-                    output_site=output_site, staging_sites=staging_sites,
-                    clustering=clustering, force=force, cleanup=cleanup)
-        finally:
-            f.close()
-        os.chmod(planfile, stat.S_IRWXU|stat.S_IRGRP|stat.S_IXGRP|stat.S_IROTH|stat.S_IXOTH)
 
         return w
 

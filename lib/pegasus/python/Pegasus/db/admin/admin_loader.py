@@ -10,7 +10,7 @@ from Pegasus.tools import properties
 from urlparse import urlparse
 
 MIN_VERSION = 1.0
-CURRENT_DB_VERSION = 1.2
+CURRENT_DB_VERSION = 1.3
 
 def get_class(version, config_properties, verbose=False, debug=False):
     version = "v%s" % version

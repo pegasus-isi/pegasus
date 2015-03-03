@@ -118,6 +118,7 @@ pg_ensemble_workflow = Table('ensemble_workflow', metadata,
     Column('priority', Integer, nullable=False),
     Column('wf_uuid', String(36)),
     Column('submitdir', String(512)),
+    Column('plan_command', String(1024), nullable=False, default="./plan.sh"),
     Column('ensemble_id', KeyInteger, ForeignKey('ensemble.id'), nullable=False),
     **table_keywords
 )

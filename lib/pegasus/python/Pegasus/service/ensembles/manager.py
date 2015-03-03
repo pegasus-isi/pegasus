@@ -132,11 +132,14 @@ class WorkflowProcessor:
         self.db = db
         self.workflow = workflow
 
-    def get_file(self, filename):
+    def get_file(self, suffix):
+        em = self.workflow.ensemble.name
+        wf = self.workflow.name
+        filename = "%s.%s.%s" % (em, wf, suffix)
         return os.path.join(self.workflow.basedir, filename)
 
-    def get_bundledir(self):
-        return os.path.join(self.workflow.basedir, "bundle")
+    def get_workdir(self):
+        return self.workflow.basedir
 
     def get_pidfile(self):
         return self.get_file("planner.pid")
@@ -147,16 +150,16 @@ class WorkflowProcessor:
     def get_logfile(self):
         return self.get_file("planner.log")
 
-    def get_planfile(self):
-        return self.get_file("plan.sh")
+    def get_plan_command(self):
+        return self.workflow.plan_command
 
     def plan(self):
         "Launch the pegasus planner"
-        workdir = self.get_bundledir()
+        workdir = self.get_workdir()
         pidfile = self.get_pidfile()
         logfile = self.get_logfile()
-        planfile = self.get_planfile()
         resultfile = self.get_resultfile()
+        plan_command = self.get_plan_command()
 
         if os.path.isfile(pidfile) and self.planning():
             raise EMException("Planner already running")
@@ -173,7 +176,7 @@ class WorkflowProcessor:
             if os.path.isfile(f):
                 os.remove(f)
 
-        script = "%s >%s 2>&1; /bin/echo $? >%s" % (planfile, logfile, resultfile)
+        script = "%s >%s 2>&1; /bin/echo $? >%s" % (plan_command, logfile, resultfile)
         forkscript(script, cwd=workdir, pidfile=pidfile, env=get_script_env())
 
     def planning(self):
@@ -205,7 +208,16 @@ class WorkflowProcessor:
 
         exitcode = int(open(resultfile, "r").read())
 
-        return exitcode == 0
+        if exitcode != 0:
+            return False
+
+        try:
+            self.get_submitdir()
+        except Exception, e:
+            log.exception(e)
+            return False
+
+        return True
 
     def get_submitdir(self):
         "Get the workflow submitdir from the workflow log"

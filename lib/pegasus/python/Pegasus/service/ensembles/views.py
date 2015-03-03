@@ -3,7 +3,6 @@ import os
 from flask import g, url_for, make_response, request, send_file, json
 
 from Pegasus.service.ensembles import emapp, models, api
-from Pegasus.service.ensembles.bundle import BundleException
 
 @emapp.route("/ensembles", methods=["GET"])
 def route_list_ensembles():
@@ -73,60 +72,21 @@ def route_create_ensemble_workflow(ensemble):
 
     name = request.form.get("name", None)
     if name is None:
-        raise api.APIError("Specify ensemble workflow name")
+        raise api.APIError("Specify ensemble workflow 'name'")
 
     priority = request.form.get("priority", 0)
 
-    sites = request.form.get("sites", None)
-    if sites is None:
-        raise api.APIError("Specify sites")
-    else:
-        sites = [s.strip() for s in sites.split(",")]
-        sites = [s for s in sites if len(s) > 0]
-    if len(sites) == 0:
-        raise api.APIError("Specify sites")
+    basedir = request.form.get("basedir")
+    if basedir is None:
+        raise api.APIError("Specify 'basedir' where plan command should be executed")
 
-    output_site = request.form.get("output_site", None)
-    if output_site is None:
-        raise api.APIError("Specify output_site")
-
-    cleanup = request.form.get("cleanup", None)
-    if cleanup is not None:
-        cleanup = cleanup.lower()
-        if cleanup not in ["none","leaf","inplace"]:
-            raise api.APIError("Invalid value for cleanup: %s" % cleanup)
-
-    force = request.form.get("force", None)
-    if force is not None:
-        if force.lower() not in ["true","false"]:
-            raise api.APIError("Invalid value for force: %s" % force)
-        force = force.lower() == "true"
-
-    clustering = request.form.get("clustering", None)
-    if clustering is not None:
-        clustering = [s.strip() for s in clustering.split(",")]
-        clustering = [s for s in clustering if len(s) > 0]
-
-    staging_sites = request.form.get("staging_sites", None)
-    if staging_sites is not None:
-        kvs = [s.strip() for s in staging_sites.split(",")]
-        kvs = [s for s in kvs if len(s) > 0]
-        staging_sites = dict([s.split("=") for s in kvs])
-
-    bundle = request.files.get("bundle", None)
-    if bundle is None:
-        raise api.APIError("Specify bundle")
+    plan_command = request.form.get("plan_command")
+    if plan_command is None:
+        raise api.APIError("Specify 'plan_command' that should be executed to plan workflow")
 
     db = models.Ensembles(g.master_db_url)
 
-    basedir = os.path.join(g.user.get_userdata_dir(), "ensembles", e.name, "workflows", name)
-
-    try:
-        db.create_ensemble_workflow(e.id, name, basedir, priority, bundle,
-                sites=sites, output_site=output_site, cleanup=cleanup,
-                force=force, clustering=clustering, staging_sites=staging_sites)
-    except BundleException, e:
-        raise api.APIError(e.message)
+    db.create_ensemble_workflow(e.id, name, basedir, priority, plan_command)
 
     db.session.commit()
 
