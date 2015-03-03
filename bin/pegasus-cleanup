@@ -422,7 +422,7 @@ def gsiftp(urls):
     cmd += " -i " + tmp_name
 
     try:
-        myexec(cmd, 1*60*60, True)
+        myexec(cmd, 12*60*60, True)
     except RuntimeError, err:
         logger.error(err)
         os.unlink(tmp_name)
@@ -455,7 +455,7 @@ def sshftp(urls):
         cmd += " " + url.url() + "/.create-dir"
     
         try:
-            myexec(cmd, 60, True)
+            myexec(cmd, 5*60, True)
         except:
             raise RuntimeError("globus-url-copy command failed")
 
