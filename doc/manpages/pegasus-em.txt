@@ -9,38 +9,49 @@ pegasus-em - Submit and monitor ensembles of workflows
 Synopsis
 --------
 [verse]
-*pegasus-em* 'COMMAND'[options] [ARGUMENTS...]
+*pegasus-em* 'COMMAND' [options] [ARGUMENT...]
 
 Commands
 --------
+*server* [-d]::
+    Start the ensemble manager server.
+
 *ensembles*::
     List ensembles.
 
-*create* -e 'NAME' [-R 'MAX_RUNNING'] [-P 'MAX_PLANNING']::
+*create* 'ENSEMBLE' [-R 'MAX_RUNNING'] [-P 'MAX_PLANNING']::
     Create an ensemble.
 
-*pause* -e 'NAME'::
+*pause* 'ENSEMBLE'::
     Pause ensemble.
 
-*activate* -e 'NAME'::
+*activate* 'ENSEMBLE'::
     Activate a paused ensemble.
 
-*config* -e 'NAME' [-R 'MAX_RUNNING'] | [-P 'MAX_PLANNING']::
+*config* 'ENSEMBLE' [-R 'MAX_RUNNING'] | [-P 'MAX_PLANNING']::
     Configure an ensemble.
 
-*submit* -e 'NAME' -w 'NAME' -R 'RC' -T 'TC' -S 'SC' -d 'DAX' -s 'SITES' -o 'SITE'::
-    Submit a workflow.
+*submit* 'ENSEMBLE.WORKFLOW' 'plan_command' [ARGUMENT...]::
+    Submit a workflow. The command is either *pegasus-plan*, or
+    a shell script that calls *pegasus-plan*. The output of
+    'plan_command' must contain the output of *pegasus-plan*.
 
-*workflows* -e 'NAME' [-l]::
-    List workflows.
+*workflows* 'ENSEMBLE' [-l]::
+    List the workflows in an ensemble.
 
-*replan* -e 'NAME' -w 'NAME'::
+*replan* 'ENSEMBLE.WORKFLOW'::
     Replan a failed workflow.
 
-*rerun* -e 'NAME' -w 'NAME'::
+*rerun* 'ENSEMBLE.WORKFLOW'::
     Rerun a failed workflow.
 
-*priority* -e 'NAME' -w 'NAME' -p 'PRIORITY'::
+*status* 'ENSEMBLE.WORKFLOW'::
+    Display the status of a workflow.
+
+*analyze* 'ENSEMBLE.WORKFLOW'::
+    Analyze the current state of a workflow.
+
+*priority* 'ENSEMBLE.WORKFLOW' -p 'PRIORITY'::
     Alter the priority of a workflow.
 
 Common Options
@@ -52,14 +63,6 @@ Common Options
 *-d*::
 *--debug*::
     Enable debugging
-
-*-e* 'NAME'::
-*--ensemble* 'NAME'::
-    Name of ensemble.
-
-*-w* 'NAME'::
-*--workflow* 'NAME'::
-    Name of workflow.
 
 Create and Config Options
 -------------------------
@@ -76,49 +79,6 @@ Workflows Options
 *-l*::
 *--long*::
     Use long listing format.
-
-Submit Options
---------------
-*-R* 'NAME'::
-*--replica-catalog* 'NAME'::
-    Name of replica catalog to use.
-
-*-S* 'NAME'::
-*--site-catalog* 'NAME'::
-    Name of site catalog to use.
-
-*-T* 'NAME'::
-*--transformation-catalog* 'NAME'::
-    Name of transformation catalog to use.
-
-*-s* 'SITE'[,'SITE'...]::
-*--site* 'SITE'[,'SITE'...]::
-    Names of execution sites.
-
-*-o* 'SITE'::
-*--output-site* 'SITE'::
-    Name of output site.
-
-*-p* 'PRIORITY'::
-*--priority* 'PRIORITY'::
-    Priority of workflow
-
-*-c* 'PATH'::
-*--conf* 'PATH'::
-    Path to pegasus.properties file.
-
-*--staging-site* 's=ss'[,'s=ss'...]::
-    Staging sites (ss) for each execution site (s).
-
-*--nocleanup*::
-    Do not add cleanup jobs to the workflow (see pegasus-plan).
-
-*--force*::
-    Skip workflow reduction (see pegasus-plan).
-
-*-C* 'STYLE'[,'STYLE'...]::
-*--cluster* 'STYLE'[,'STYLE'...]::
-    Clustering techniques to apply (see pegasus-plan).
 
 Authors
 -------
