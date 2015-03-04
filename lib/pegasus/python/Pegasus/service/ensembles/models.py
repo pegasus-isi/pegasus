@@ -150,6 +150,27 @@ class EnsembleWorkflow(EnsembleBase):
     def set_plan_command(self, plan_command):
         self.plan_command = plan_command
 
+    def _get_file(self, suffix):
+        em = self.ensemble.name
+        wf = self.name
+        filename = "%s.%s.%s" % (em, wf, suffix)
+        return os.path.join(self.basedir, filename)
+
+    def get_basedir(self):
+        return self.basedir
+
+    def get_pidfile(self):
+        return self._get_file("planner.pid")
+
+    def get_resultfile(self):
+        return self._get_file("planner.result")
+
+    def get_plan_logfile(self):
+        return self._get_file("planner.log")
+
+    def get_plan_command(self):
+        return self.plan_command
+
     def get_object(self):
         return {
             "id": self.id,
@@ -170,6 +191,8 @@ class EnsembleWorkflow(EnsembleBase):
         o = self.get_object()
         o["basedir"] = self.basedir
         o["plan_command"] = self.plan_command
+        o["plan_log"] = self.get_plan_logfile()
+        o["submitdir"] = self.submitdir
         return o
 
 class Ensembles(SQLAlchemyInit):

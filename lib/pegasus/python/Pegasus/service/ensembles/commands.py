@@ -255,6 +255,44 @@ class WorkflowsCommand(EnsembleClientCommand):
             for w in result:
                 print fmt % (w["name"],w["state"],w["priority"],w["created"],w["updated"])
 
+class StatusCommand(EnsembleClientCommand):
+    description = "Check workflow status"
+    usage = "Usage: %prog status [options] -e ENSEMBLE -w WORKFLOW"
+
+    def __init__(self):
+        EnsembleClientCommand.__init__(self)
+        add_ensemble_option(self)
+        add_workflow_option(self)
+
+    def run(self):
+        o = self.options
+        p = self.parser
+
+        if o.ensemble is None:
+            p.error("Specify -e/--ensemble")
+        if o.workflow is None:
+            p.error("Specify -w/--workflow")
+
+        response = self.get("/ensembles/%s/workflows/%s" % (o.ensemble, o.workflow))
+
+        result = response.json()
+
+        if response.status_code != 200:
+            print "ERROR:",response.status_code,result["message"]
+            exit(1)
+
+        print "ID:           %s" % result['id']
+        print "Name:         %s" % result['name']
+        print "Plan Command: %s" % result['plan_command']
+        print "Created:      %s" % result['created']
+        print "Updated:      %s" % result['updated']
+        print "State:        %s" % result['state']
+        print "UUID:         %s" % (result['wf_uuid'] or "")
+        print "Priority:     %s" % result['priority']
+        print "Base Dir:     %s" % result['basedir']
+        print "Submit Dir:   %s" % (result['submitdir'] or "")
+        print "Plan Log:     %s" % result['plan_log']
+
 class StateChangeCommand(EnsembleClientCommand):
     def __init__(self):
         EnsembleClientCommand.__init__(self)
@@ -411,6 +449,7 @@ class EnsembleCommand(CompoundCommand):
         ("config", ConfigCommand),
         ("submit", SubmitCommand),
         ("workflows", WorkflowsCommand),
+        ("status", StatusCommand),
         ("replan", ReplanCommand),
         ("rerun", RerunCommand),
         ("priority", PriorityCommand)
