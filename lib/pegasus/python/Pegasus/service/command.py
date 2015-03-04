@@ -24,6 +24,7 @@ class CompoundCommand(Command):
     description = None
     usage = "%prog COMMAND [options] [args]"
     commands = []
+    aliases = {}
 
     def __init__(self):
         Command.__init__(self)
@@ -56,6 +57,9 @@ class CompoundCommand(Command):
             exit(1)
 
         commandmap = dict(self.commands)
+
+        if command in self.aliases:
+            command = self.aliases[command]
 
         if command not in commandmap:
             sys.stderr.write("Invalid command: %s\n" % command)
