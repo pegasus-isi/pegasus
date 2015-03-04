@@ -17,7 +17,7 @@ def validate_ensemble_name(name):
         raise APIError("Specify ensemble name")
     if len(name) >= 100:
         raise APIError("Ensemble name too long: %d" % len(name))
-    if ".." in name or re.match(r"\A[a-zA-Z0-9._-]+\Z", name) is None:
+    if re.match(r"\A[a-zA-Z0-9_-]+\Z", name) is None:
         raise APIError("Invalid ensemble name: %s" % name)
     return name
 
