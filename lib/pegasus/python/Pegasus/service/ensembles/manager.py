@@ -454,6 +454,11 @@ class EnsembleProcessor:
             self.handle_running(w)
 
     def run(self):
+        edir = self.ensemble.get_localdir()
+        if not os.path.isdir(edir):
+            log.info("Creating ensemble directory: %s" % edir)
+            os.makedirs(edir, 0700)
+
         log.info("Processing %d ensemble workflows..." % len(self.workflows))
         for w in self.workflows:
             try:

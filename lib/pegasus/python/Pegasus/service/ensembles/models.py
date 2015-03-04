@@ -10,6 +10,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import sql
 
 from Pegasus.db.modules import SQLAlchemyInit
+from Pegasus.service import user
 from Pegasus.service.ensembles.api import *
 
 def validate_ensemble_name(name):
@@ -80,6 +81,11 @@ class Ensemble(EnsembleBase):
             self.max_planning = x
         except ValueError:
             raise APIError("Invalid value for max_planning: %s" % max_planning)
+
+    def get_localdir(self):
+        u = user.get_user_by_username(self.username)
+        edir = u.get_ensembles_dir()
+        return os.path.join(edir, self.name)
 
     def get_object(self):
         return {
@@ -152,10 +158,10 @@ class EnsembleWorkflow(EnsembleBase):
         self.plan_command = plan_command
 
     def _get_file(self, suffix):
-        em = self.ensemble.name
+        edir = self.ensemble.get_localdir()
         wf = self.name
-        filename = "%s.%s.%s" % (em, wf, suffix)
-        return os.path.join(self.basedir, filename)
+        filename = "%s.%s" % (wf, suffix)
+        return os.path.join(edir, filename)
 
     def get_basedir(self):
         return self.basedir
