@@ -2,6 +2,7 @@ import os
 import re
 import stat
 import shutil
+import subprocess
 from datetime import datetime
 
 from flask import url_for, g
@@ -93,6 +94,17 @@ class Ensemble(EnsembleBase):
             "href": url_for("route_get_ensemble", name=self.name, _external=True)
         }
 
+class Analyzer:
+    def __init__(self, workflow):
+        self.workflow = workflow
+
+    def __call__(self, *args, **kwargs):
+        print args, kwargs
+        return self
+
+    def next(self):
+        return "Hello"
+
 class EnsembleWorkflow(EnsembleBase):
     def __init__(self, ensemble_id, name, basedir, plan_command):
         self.ensemble_id = ensemble_id
@@ -160,13 +172,16 @@ class EnsembleWorkflow(EnsembleBase):
         return self.basedir
 
     def get_pidfile(self):
-        return self._get_file("planner.pid")
+        return self._get_file("plan.pid")
 
     def get_resultfile(self):
-        return self._get_file("planner.result")
+        return self._get_file("plan.result")
 
-    def get_plan_logfile(self):
-        return self._get_file("planner.log")
+    def get_runfile(self):
+        return self._get_file("plan.run")
+
+    def get_logfile(self):
+        return self._get_file("log")
 
     def get_plan_command(self):
         return self.plan_command
@@ -191,7 +206,7 @@ class EnsembleWorkflow(EnsembleBase):
         o = self.get_object()
         o["basedir"] = self.basedir
         o["plan_command"] = self.plan_command
-        o["plan_log"] = self.get_plan_logfile()
+        o["log"] = self.get_logfile()
         o["submitdir"] = self.submitdir
         return o
 
@@ -295,4 +310,36 @@ class Ensembles(SQLAlchemyInit):
         f.write("--input-dir %s \n" % bundledir)
 
         f.write("exit $?")
+
+def analyze(workflow):
+    w = workflow
+
+    yield "Workflow state is %s\n" % w.state
+    yield "Plan command is: %s\n" % w.plan_command
+
+    logfile = w.get_logfile()
+    if os.path.isfile(logfile):
+        yield "Workflow log:\n"
+        for l in open(w.get_logfile(), "rb"):
+            yield "LOG: %s" % l
+    else:
+        yield "No workflow log available\n"
+
+    if w.submitdir is None or not os.path.isdir(w.submitdir):
+        yield "No submit directory available\n"
+    else:
+        yield "pegasus-analyzer output is:\n"
+        p = subprocess.Popen(["pegasus-analyzer", w.submitdir], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        out, err = p.communicate()
+        for l in out.split("\n"):
+            yield "ANALYZER: %s\n" % l
+        rc = p.wait()
+        yield "ANALYZER: Exited with code %d\n" % rc
+
+    if w.state == EnsembleWorkflowStates.PLAN_FAILED:
+        yield "Planner failure detected\n"
+    elif w.state == EnsembleWorkflowStates.RUN_FAILED:
+        yield "pegasus-run failure detected\n"
+    elif w.state == EnsembleWorkflowStates.FAILED:
+        yield "Workflow failure detected\n"
 

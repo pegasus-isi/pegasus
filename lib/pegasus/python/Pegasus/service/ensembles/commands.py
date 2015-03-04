@@ -291,7 +291,34 @@ class StatusCommand(EnsembleClientCommand):
         print "Priority:     %s" % result['priority']
         print "Base Dir:     %s" % result['basedir']
         print "Submit Dir:   %s" % (result['submitdir'] or "")
-        print "Plan Log:     %s" % result['plan_log']
+        print "Log:          %s" % result['log']
+
+class AnalyzeCommand(EnsembleClientCommand):
+    description = "Analyze workflow status"
+    usage = "Usage: %prog analyze [options] -e ENSEMBLE -w WORKFLOW"
+
+    def __init__(self):
+        EnsembleClientCommand.__init__(self)
+        add_ensemble_option(self)
+        add_workflow_option(self)
+
+    def run(self):
+        o = self.options
+        p = self.parser
+
+        if o.ensemble is None:
+            p.error("Specify -e/--ensemble")
+        if o.workflow is None:
+            p.error("Specify -w/--workflow")
+
+        response = self.get("/ensembles/%s/workflows/%s/analyze" % (o.ensemble, o.workflow))
+
+        if response.status_code != 200:
+            result = response.json()
+            print "ERROR:",response.status_code,result["message"]
+            exit(1)
+
+        sys.stdout.write(response.text)
 
 class StateChangeCommand(EnsembleClientCommand):
     def __init__(self):
@@ -450,6 +477,7 @@ class EnsembleCommand(CompoundCommand):
         ("submit", SubmitCommand),
         ("workflows", WorkflowsCommand),
         ("status", StatusCommand),
+        ("analyze", AnalyzeCommand),
         ("replan", ReplanCommand),
         ("rerun", RerunCommand),
         ("priority", PriorityCommand)

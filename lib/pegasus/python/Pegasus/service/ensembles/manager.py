@@ -137,7 +137,8 @@ class WorkflowProcessor:
         w = self.workflow
         basedir = w.get_basedir()
         pidfile = w.get_pidfile()
-        logfile = w.get_plan_logfile()
+        logfile = w.get_logfile()
+        runfile = w.get_runfile()
         resultfile = w.get_resultfile()
         plan_command = w.get_plan_command()
 
@@ -148,7 +149,7 @@ class WorkflowProcessor:
         # files so that the ensemble manager doesn't get
         # confused.
         files = [
-            logfile,
+            runfile,
             resultfile,
             pidfile
         ]
@@ -156,7 +157,7 @@ class WorkflowProcessor:
             if os.path.isfile(f):
                 os.remove(f)
 
-        script = "%s >%s 2>&1; /bin/echo $? >%s" % (plan_command, logfile, resultfile)
+        script = "(%s) 2>&1 | tee -a %s | grep pegasus-run >%s ; /bin/echo $? >%s" % (plan_command, logfile, runfile, resultfile)
         forkscript(script, cwd=basedir, pidfile=pidfile, env=get_script_env())
 
     def planning(self):
@@ -201,10 +202,10 @@ class WorkflowProcessor:
 
     def find_submitdir(self):
         "Get the workflow submitdir from the workflow log"
-        logfile = self.workflow.get_plan_logfile()
+        logfile = self.workflow.get_runfile()
 
         if not os.path.isfile(logfile):
-            raise EMException("Workflow log file not found: %s" % logfile)
+            raise EMException("Workflow run file not found: %s" % logfile)
 
         submitdir = None
 
@@ -217,7 +218,7 @@ class WorkflowProcessor:
             f.close()
 
         if submitdir is None:
-            raise EMException("No pegasus-run found in the workflow log: %s" % logfile)
+            raise EMException("No pegasus-run found in the workflow run file: %s" % logfile)
 
         return submitdir
 
@@ -255,9 +256,9 @@ class WorkflowProcessor:
         if not os.path.isdir(submitdir):
             raise EMException("Workflow submit dir does not exist: %s" % submitdir)
 
-        logfile = self.workflow.get_plan_logfile()
+        logfile = self.workflow.get_logfile()
 
-        runscript("pegasus-run %s >>%s 2>&1" % (submitdir,logfile), env=get_script_env())
+        runscript("pegasus-run %s >>%s 2>&1" % (submitdir, logfile), env=get_script_env())
 
     def get_dashboard(self):
         "Get the dashboard record for the workflow"
