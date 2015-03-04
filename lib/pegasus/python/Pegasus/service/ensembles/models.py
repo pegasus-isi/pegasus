@@ -94,17 +94,6 @@ class Ensemble(EnsembleBase):
             "href": url_for("route_get_ensemble", name=self.name, _external=True)
         }
 
-class Analyzer:
-    def __init__(self, workflow):
-        self.workflow = workflow
-
-    def __call__(self, *args, **kwargs):
-        print args, kwargs
-        return self
-
-    def next(self):
-        return "Hello"
-
 class EnsembleWorkflow(EnsembleBase):
     def __init__(self, ensemble_id, name, basedir, plan_command):
         self.ensemble_id = ensemble_id
