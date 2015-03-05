@@ -2,6 +2,7 @@ import os
 import re
 import stat
 import shutil
+import subprocess
 from datetime import datetime
 
 from flask import url_for, g
@@ -9,6 +10,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import sql
 
 from Pegasus.db.modules import SQLAlchemyInit
+from Pegasus.service import user
 from Pegasus.service.ensembles.api import *
 
 def validate_ensemble_name(name):
@@ -16,7 +18,7 @@ def validate_ensemble_name(name):
         raise APIError("Specify ensemble name")
     if len(name) >= 100:
         raise APIError("Ensemble name too long: %d" % len(name))
-    if ".." in name or re.match(r"\A[a-zA-Z0-9._-]+\Z", name) is None:
+    if re.match(r"\A[a-zA-Z0-9_-]+\Z", name) is None:
         raise APIError("Invalid ensemble name: %s" % name)
     return name
 
@@ -79,6 +81,11 @@ class Ensemble(EnsembleBase):
             self.max_planning = x
         except ValueError:
             raise APIError("Invalid value for max_planning: %s" % max_planning)
+
+    def get_localdir(self):
+        u = user.get_user_by_username(self.username)
+        edir = u.get_ensembles_dir()
+        return os.path.join(edir, self.name)
 
     def get_object(self):
         return {
@@ -150,6 +157,30 @@ class EnsembleWorkflow(EnsembleBase):
     def set_plan_command(self, plan_command):
         self.plan_command = plan_command
 
+    def _get_file(self, suffix):
+        edir = self.ensemble.get_localdir()
+        wf = self.name
+        filename = "%s.%s" % (wf, suffix)
+        return os.path.join(edir, filename)
+
+    def get_basedir(self):
+        return self.basedir
+
+    def get_pidfile(self):
+        return self._get_file("plan.pid")
+
+    def get_resultfile(self):
+        return self._get_file("plan.result")
+
+    def get_runfile(self):
+        return self._get_file("plan.run")
+
+    def get_logfile(self):
+        return self._get_file("log")
+
+    def get_plan_command(self):
+        return self.plan_command
+
     def get_object(self):
         return {
             "id": self.id,
@@ -170,6 +201,8 @@ class EnsembleWorkflow(EnsembleBase):
         o = self.get_object()
         o["basedir"] = self.basedir
         o["plan_command"] = self.plan_command
+        o["log"] = self.get_logfile()
+        o["submitdir"] = self.submitdir
         return o
 
 class Ensembles(SQLAlchemyInit):
@@ -272,4 +305,36 @@ class Ensembles(SQLAlchemyInit):
         f.write("--input-dir %s \n" % bundledir)
 
         f.write("exit $?")
+
+def analyze(workflow):
+    w = workflow
+
+    yield "Workflow state is %s\n" % w.state
+    yield "Plan command is: %s\n" % w.plan_command
+
+    logfile = w.get_logfile()
+    if os.path.isfile(logfile):
+        yield "Workflow log:\n"
+        for l in open(w.get_logfile(), "rb"):
+            yield "LOG: %s" % l
+    else:
+        yield "No workflow log available\n"
+
+    if w.submitdir is None or not os.path.isdir(w.submitdir):
+        yield "No submit directory available\n"
+    else:
+        yield "pegasus-analyzer output is:\n"
+        p = subprocess.Popen(["pegasus-analyzer", w.submitdir], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        out, err = p.communicate()
+        for l in out.split("\n"):
+            yield "ANALYZER: %s\n" % l
+        rc = p.wait()
+        yield "ANALYZER: Exited with code %d\n" % rc
+
+    if w.state == EnsembleWorkflowStates.PLAN_FAILED:
+        yield "Planner failure detected\n"
+    elif w.state == EnsembleWorkflowStates.RUN_FAILED:
+        yield "pegasus-run failure detected\n"
+    elif w.state == EnsembleWorkflowStates.FAILED:
+        yield "Workflow failure detected\n"
 

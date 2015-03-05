@@ -13,6 +13,9 @@ class User(object):
     def get_pegasus_dir(self):
         return os.path.join(self.homedir, ".pegasus")
 
+    def get_ensembles_dir(self):
+        return os.path.join(self.homedir, ".pegasus", "ensembles")
+
     def get_master_db(self):
         return os.path.join(self.homedir, ".pegasus", "workflow.db")
 

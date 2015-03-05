@@ -132,34 +132,15 @@ class WorkflowProcessor:
         self.db = db
         self.workflow = workflow
 
-    def get_file(self, suffix):
-        em = self.workflow.ensemble.name
-        wf = self.workflow.name
-        filename = "%s.%s.%s" % (em, wf, suffix)
-        return os.path.join(self.workflow.basedir, filename)
-
-    def get_workdir(self):
-        return self.workflow.basedir
-
-    def get_pidfile(self):
-        return self.get_file("planner.pid")
-
-    def get_resultfile(self):
-        return self.get_file("planner.result")
-
-    def get_logfile(self):
-        return self.get_file("planner.log")
-
-    def get_plan_command(self):
-        return self.workflow.plan_command
-
     def plan(self):
         "Launch the pegasus planner"
-        workdir = self.get_workdir()
-        pidfile = self.get_pidfile()
-        logfile = self.get_logfile()
-        resultfile = self.get_resultfile()
-        plan_command = self.get_plan_command()
+        w = self.workflow
+        basedir = w.get_basedir()
+        pidfile = w.get_pidfile()
+        logfile = w.get_logfile()
+        runfile = w.get_runfile()
+        resultfile = w.get_resultfile()
+        plan_command = w.get_plan_command()
 
         if os.path.isfile(pidfile) and self.planning():
             raise EMException("Planner already running")
@@ -168,7 +149,7 @@ class WorkflowProcessor:
         # files so that the ensemble manager doesn't get
         # confused.
         files = [
-            logfile,
+            runfile,
             resultfile,
             pidfile
         ]
@@ -176,12 +157,12 @@ class WorkflowProcessor:
             if os.path.isfile(f):
                 os.remove(f)
 
-        script = "%s >%s 2>&1; /bin/echo $? >%s" % (plan_command, logfile, resultfile)
-        forkscript(script, cwd=workdir, pidfile=pidfile, env=get_script_env())
+        script = "(%s) 2>&1 | tee -a %s | grep pegasus-run >%s ; /bin/echo $? >%s" % (plan_command, logfile, runfile, resultfile)
+        forkscript(script, cwd=basedir, pidfile=pidfile, env=get_script_env())
 
     def planning(self):
         "Check pidfile to see if the planner is still running"
-        pidfile = self.get_pidfile()
+        pidfile = self.workflow.get_pidfile()
 
         if not os.path.exists(pidfile):
             raise EMException("pidfile missing")
@@ -201,7 +182,7 @@ class WorkflowProcessor:
 
     def planning_successful(self):
         "Check to see if planning was successful"
-        resultfile = self.get_resultfile()
+        resultfile = self.workflow.get_resultfile()
 
         if not os.path.exists(resultfile):
             raise EMException("Result file not found: %s" % resultfile)
@@ -212,19 +193,19 @@ class WorkflowProcessor:
             return False
 
         try:
-            self.get_submitdir()
+            self.find_submitdir()
         except Exception, e:
             log.exception(e)
             return False
 
         return True
 
-    def get_submitdir(self):
+    def find_submitdir(self):
         "Get the workflow submitdir from the workflow log"
-        logfile = self.get_logfile()
+        logfile = self.workflow.get_runfile()
 
         if not os.path.isfile(logfile):
-            raise EMException("Workflow log file not found: %s" % logfile)
+            raise EMException("Workflow run file not found: %s" % logfile)
 
         submitdir = None
 
@@ -237,13 +218,13 @@ class WorkflowProcessor:
             f.close()
 
         if submitdir is None:
-            raise EMException("No pegasus-run found in the workflow log: %s" % logfile)
+            raise EMException("No pegasus-run found in the workflow run file: %s" % logfile)
 
         return submitdir
 
     def get_wf_uuid(self):
         "Get the workflow UUID from the braindump file"
-        submitdir = self.get_submitdir()
+        submitdir = self.find_submitdir()
 
         braindump = os.path.join(submitdir, "braindump.txt")
 
@@ -275,9 +256,9 @@ class WorkflowProcessor:
         if not os.path.isdir(submitdir):
             raise EMException("Workflow submit dir does not exist: %s" % submitdir)
 
-        logfile = self.get_logfile()
+        logfile = self.workflow.get_logfile()
 
-        runscript("pegasus-run %s >>%s 2>&1" % (submitdir,logfile), env=get_script_env())
+        runscript("pegasus-run %s >>%s 2>&1" % (submitdir, logfile), env=get_script_env())
 
     def get_dashboard(self):
         "Get the dashboard record for the workflow"
@@ -411,7 +392,7 @@ class EnsembleProcessor:
 
         # Planning succeeded, get uuid and queue workflow
         workflow.set_wf_uuid(p.get_wf_uuid())
-        workflow.set_submitdir(p.get_submitdir())
+        workflow.set_submitdir(p.find_submitdir())
         workflow.set_state(EnsembleWorkflowStates.QUEUED)
         workflow.set_updated()
         self.db.session.commit()
@@ -473,6 +454,11 @@ class EnsembleProcessor:
             self.handle_running(w)
 
     def run(self):
+        edir = self.ensemble.get_localdir()
+        if not os.path.isdir(edir):
+            log.info("Creating ensemble directory: %s" % edir)
+            os.makedirs(edir, 0700)
+
         log.info("Processing %d ensemble workflows..." % len(self.workflows))
         for w in self.workflows:
             try:

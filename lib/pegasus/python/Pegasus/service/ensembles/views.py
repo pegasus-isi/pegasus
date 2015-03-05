@@ -120,14 +120,16 @@ def route_update_ensemble_workflow(ensemble, workflow):
 
     return api.json_response(w.get_detail_object())
 
-@emapp.route("/ensembles/<string:ensemble>/workflows/<string:workflow>/<string:filename>", methods=["GET"])
-def route_get_ensemble_workflow_file(ensemble, workflow, filename):
+@emapp.route("/ensembles/<string:ensemble>/workflows/<string:workflow>/analyze", methods=["GET"])
+def route_analyze_ensemble_workflow(ensemble, workflow):
     db = models.Ensembles(g.master_db_url)
     e = db.get_ensemble(g.user.username, ensemble)
     w = db.get_ensemble_workflow(e.id, workflow)
-    mimetype = "text/plain"
-    path = os.path.join(w.basedir, filename)
-    if not os.path.isfile(path):
-        raise api.APIError("Invalid file: %s" % filename)
 
-    return send_file(path, mimetype=mimetype)
+    def respond(environ, start_response):
+        start_response('200 OK', [('Content-Type', 'text/plain')])
+        for l in models.analyze(w):
+            yield l
+
+    return respond
+

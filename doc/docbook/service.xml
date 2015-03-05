@@ -70,34 +70,29 @@
             science gateways and portals.
         </para>
 
-        <para>
-            The ensemble manager requires Pegasus and Condor. It will start
-            automatically when pegasus-service is started if Pegasus and Condor
-            are found in the server&apos;s PATH, or if the PEGASUS\_HOME and
-            CONDOR\_HOME settings are specified correctly in the configuration
-            file.
-        </para>
+        <para>To start the ensemble manager server, run:</para>
 
-        <para>
-            Once the ensemble manager is running, you can create an ensemble with:
-        </para>
+        <literallayout class="monospaced">$ pegasus-em server</literallayout>
 
-        <literallayout class="monospaced">$ pegasus-em create -e "myruns"</literallayout>
+        <para>Once the ensemble manager is running, you can create an ensemble with:</para>
+
+        <literallayout class="monospaced">$ pegasus-em create myruns</literallayout>
 
         <para>where "myruns" is the name of the ensemble.</para>
 
-        <para>
-            Then you can submit a workflow to the ensemble using the previously
-            uploaded catalogs:
-        </para>
+        <para>Then you can submit a workflow to the ensemble by running:</para>
 
-        <literallayout class="monospaced">$ pegasus-em submit -e "myruns" -w "run1" -b run1.zip \
-        -s local -o local --cleanup leaf</literallayout>
+        <literallayout class="monospaced">$ pegasus-em submit myruns.run1 ./plan.sh run1.dax</literallayout>
 
         <para>
-            Where the name of the workflow is run1, and run1.zip is a
-            workflow bundle containing a pegasus.properties file with a
-            property pegasus.dax.file that contains the path of the dax file.
+            Where the name of the ensemble is "myruns", the name of the workflow
+            is "run1", and "./plan.sh run1.dax" is the command for planning the
+            workflow from the current working directory. The planning command
+            should either be a direct invocation of pegasus-plan, or a shell
+            script that calls pegasus-plan. If a shell script is used, then it
+            should not redirect the output of pegasus-plan, because the ensemble
+            manager reads the output to determine whether pegasus-plan succeeded
+            and what is the submit directory of the workflow.
         </para>
 
         <para>To check the status of your ensembles run:</para>
@@ -106,7 +101,69 @@
 
         <para>To check the status of your workflows run:</para>
 
-        <literallayout class="monospaced">$ pegasus-em workflows -e "myruns"</literallayout>
+        <literallayout class="monospaced">$ pegasus-em workflows myruns</literallayout>
+
+        <para>To check the status of a specific workflow, run:</para>
+
+        <literallayout class="monospaced">$ pegasus-em status myruns.run1</literallayout>
+
+        <para>To help with debugging, the ensemble manager has an analyze
+            command that emits diagnostic information about a workflow, including
+            the output of pegasus-analyzer, if possible. To analyze a
+            workflow, run:</para>
+
+        <literallayout class="monospaced">$ pegasus-em analyze myruns.run1</literallayout>
+
+        <para>
+            Ensembles can be paused to prevent workflows from being planned
+            and executed. Workflows in a paused ensemble will continue to run,
+            but no new workflows will be planned or executed. To pause an
+            ensemble, run:
+        </para>
+
+        <literallayout class="monospaced">$ pegasus-em pause myruns</literallayout>
+
+        <para>Paused ensembles can be reactivated by running:</para>
+
+        <literallayout class="monospaced">$ pegasus-em activate myruns</literallayout>
+
+        <para>A workflow might fail during planning. In that case, run the
+            analyze command to examine the planner output, make the necessary
+            corrections to the workflow configuration, and replan the workflow
+            by running:</para>
+
+        <literallayout class="monospaced">$ pegasus-em replan myruns.run1</literallayout>
+
+        <para>A workflow might also fail during execution. In that case, run
+            the analyze command to identify the issue, correct the problem,
+            and rerun the workflow by running:</para>
+
+        <literallayout class="monospaced">$ pegasus-em rerun myruns.run1</literallayout>
+
+        <para>Workflows in an ensemble can have different priorities. These
+            priorities are used to determine the order in which workflows in
+            the ensemble will be planned and executed. Priorities are specified
+            using the '-p' option of the submit command. They can also be
+            modified after a workflow has been submitted by running:</para>
+
+        <literallayout class="monospaced">$ pegasus-em priority myruns.run1 -p 10</literallayout>
+
+        <para>where 10 is the desired priority. Higher values have higher
+            priority, the default is 0, and negative values are allowed.</para>
+
+        <para>Each ensemble has a pair of throttles that limit the number of
+            workflows that are concurrently planning and executing. These
+            throttles are called max_planning and max_running. Max planning
+            limits the number of workflows in the ensemble that can be planned
+            concurrently. Max running limits the number of workflows in the
+            ensemble that can be running concurrently. These throttles are
+            useful to limit the impact of planning on the memory usage of the
+            submit host, and the load on the submit host and remote site caused
+            by concurrently running workflows. The throttles can be specified
+            with the '-R' and '-P' options of the create command.
+            They can also be updated using the config command:</para>
+
+        <literallayout class="monospaced">$ pegasus-em config myruns.run1 -P 1 -R 5</literallayout>
 
     </section>
 
