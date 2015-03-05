@@ -17,11 +17,10 @@ def authenticate(username, password):
         return False
 
 def basic_auth_response():
-    return Response('Basic Auth Required', 401,
+    return Response('Invalid Login', 401,
                     {'WWW-Authenticate': 'Basic realm="Pegasus Service"'})
 
-@emapp.before_request
-def before():
+def authorize_request():
     cred = request.authorization
 
     if not cred:

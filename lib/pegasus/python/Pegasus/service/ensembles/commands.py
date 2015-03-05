@@ -40,7 +40,18 @@ class EnsembleClientCommand(Command):
         defaults = {"auth": (self.username, self.password), "headers": headers}
         defaults.update(kwargs)
         url = urlparse.urljoin(self.endpoint, path)
-        return requests.request(method, url, **defaults)
+        response = requests.request(method, url, **defaults)
+
+        if 200 <= response.status_code < 300:
+            return response
+
+        try:
+            result = response.json()
+            print "ERROR:", result["message"]
+        except:
+            print "ERROR:", response.text
+
+        exit(1)
 
     def get(self, path, **kwargs):
         return self._request("get", path, **kwargs)
@@ -110,11 +121,6 @@ class EnsemblesCommand(EnsembleClientCommand):
     def run(self):
         response = self.get("/ensembles")
         result = response.json()
-
-        if response.status_code != 200:
-            print "ERROR:",result["message"]
-            exit(1)
-
         fmt = "%-20s %-8s %-30s %-30s %14s %12s"
         if len(result) > 0:
             print fmt % ("NAME","STATE","CREATED","UPDATED","MAX PLANNING","MAX RUNNING")
@@ -145,11 +151,6 @@ class CreateCommand(EnsembleClientCommand):
         }
 
         response = self.post("/ensembles", data=request)
-
-        if response.status_code != 201:
-            result = response.json()
-            print "ERROR:", result["message"]
-            exit(1)
 
 def pathfind(command):
     def isexe(fn):
@@ -211,10 +212,6 @@ class SubmitCommand(EnsembleClientCommand):
 
         response = self.post("/ensembles/%s/workflows" % ensemble, data=data)
 
-        if response.status_code != 201:
-            result = response.json()
-            print "ERROR:",response.status_code,result["message"]
-
 class WorkflowsCommand(EnsembleClientCommand):
     description = "List workflows in ensemble"
     usage = "Usage: %prog workflows [options] ENSEMBLE."
@@ -233,10 +230,6 @@ class WorkflowsCommand(EnsembleClientCommand):
         response = self.get("/ensembles/%s/workflows" % self.args[0])
 
         result = response.json()
-
-        if response.status_code != 200:
-            print "ERROR:",response.status_code,result["message"]
-            exit(1)
 
         if len(result) == 0:
             return
@@ -274,10 +267,6 @@ class StatusCommand(EnsembleClientCommand):
 
         result = response.json()
 
-        if response.status_code != 200:
-            print "ERROR:",response.status_code,result["message"]
-            exit(1)
-
         print "ID:           %s" % result['id']
         print "Name:         %s" % result['name']
         print "Plan Command: %s" % result['plan_command']
@@ -304,11 +293,6 @@ class AnalyzeCommand(EnsembleClientCommand):
 
         response = self.get("/ensembles/%s/workflows/%s/analyze" % (ensemble, workflow))
 
-        if response.status_code != 200:
-            result = response.json()
-            print "ERROR:",response.status_code,result["message"]
-            exit(1)
-
         sys.stdout.write(response.text)
 
 class StateChangeCommand(EnsembleClientCommand):
@@ -320,9 +304,6 @@ class StateChangeCommand(EnsembleClientCommand):
 
         response = self.post("/ensembles/%s" % self.args[0], data={"state":self.newstate})
         result = response.json()
-
-        if response.status_code != 200:
-            print "ERROR:",result["message"]
 
         print "State:", result["state"]
 
@@ -374,10 +355,6 @@ class ConfigCommand(EnsembleClientCommand):
 
         result = response.json()
 
-        if response.status_code != 200:
-            print "ERROR:", result["message"]
-            exit(1)
-
         print "Max Planning:",result["max_planning"]
         print "Max Running:",result["max_running"]
 
@@ -395,10 +372,6 @@ class WorkflowStateChangeCommand(EnsembleClientCommand):
         response = self.post("/ensembles/%s/workflows/%s" % (ensemble, workflow), data=request)
 
         result = response.json()
-
-        if response.status_code != 200:
-            print "ERROR:", result["message"]
-            exit(1)
 
         print "State:", result["state"]
 
@@ -441,10 +414,6 @@ class PriorityCommand(EnsembleClientCommand):
         response = self.post("/ensembles/%s/workflows/%s" % (ensemble, workflow), data=request)
 
         result = response.json()
-
-        if response.status_code != 200:
-            print "ERROR:", result["message"]
-            exit(1)
 
         print "Priority:", result["priority"]
 

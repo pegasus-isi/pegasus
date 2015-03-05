@@ -1,25 +1,13 @@
-import sys
-from functools import wraps
-import traceback
-
 from flask import json, make_response
-
-from Pegasus.service.ensembles import emapp
 
 JSON_HEADERS = {"Content-Type":"application/json"}
 
-class APIError(Exception):
-    def __init__(self, message, status_code=400):
-        Exception.__init__(self, message)
-        self.status_code = status_code
-        self.cause = sys.exc_info()
-
-@emapp.errorhandler(APIError)
 def json_api_error(e):
     response = {"message": e.message}
-    if e.cause is not (None, None, None) and emapp.config["DEBUG"]:
-        response["cause"] = u"".join(traceback.format_exception(*e.cause))
-    return make_response(json.dumps(response), e.status_code, JSON_HEADERS)
+    status_code = 500
+    if hasattr(e, "status_code"):
+        status_code = e.status_code
+    return make_response(json.dumps(response), status_code, JSON_HEADERS)
 
 def json_created(location):
     response = {"message": "created"}
