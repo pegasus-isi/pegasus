@@ -122,7 +122,7 @@ public class DagInfo extends Data {
      * file is an input(i) or output(o) or both (b) or none(n). A value of
      * none(n) would denote an error condition.
      */
-    public TreeMap lfnMap;
+    private TreeMap mLFNMap;
 
     /**
      * The DAX Version
@@ -148,7 +148,7 @@ public class DagInfo extends Data {
         mDAXMTime      = "";
         mReleaseVersion = "";
         mDAXVersion    = "";
-        lfnMap         = new TreeMap();
+        mLFNMap         = new TreeMap();
         mWFMetrics     = new WorkflowMetrics();
     }
 
@@ -224,7 +224,7 @@ public class DagInfo extends Data {
 
     /**
      * It returns the list of lfns referred to by the DAG. The list is unique
-     * as it is gotten from iterating through the lfnMap.
+ as it is gotten from iterating through the mLFNMap.
      *
      * @return a Set of <code>String<code> objects corresponding to the
      *         logical filenames
@@ -235,10 +235,10 @@ public class DagInfo extends Data {
 
     /**
      * Returns the list of lfns referred to by the DAG. The list is unique
-     * as it is gotten from iterating through the lfnMap. The contents of the list
-     * are determined on the basis of the command line options passed by the user
-     * at runtime. For e.g. if the user has specified force, then one needs to
-     * search only for the input files.
+ as it is gotten from iterating through the mLFNMap. The contents of the list
+ are determined on the basis of the command line options passed by the user
+ at runtime. For e.g. if the user has specified force, then one needs to
+ search only for the input files.
      *
      * @param onlyInput  a boolean flag indicating that you need only the input
      *                   files to the whole workflow
@@ -247,8 +247,8 @@ public class DagInfo extends Data {
      */
     public Set getLFNs( boolean onlyInput ) {
 
-        Set lfns = onlyInput ? new HashSet( lfnMap.size()/3 ):
-                                   new HashSet( lfnMap.size() );
+        Set lfns = onlyInput ? new HashSet( mLFNMap.size()/3 ):
+                                   new HashSet( mLFNMap.size() );
         String key = null;
         String val = null;
 
@@ -258,9 +258,9 @@ public class DagInfo extends Data {
         //whose link is set to input in
         //the dag.
         if ( onlyInput ){
-            for (Iterator it = lfnMap.keySet().iterator(); it.hasNext(); ) {
+            for (Iterator it = mLFNMap.keySet().iterator(); it.hasNext(); ) {
                 key = (String) it.next();
-                val = (String) lfnMap.get(key);
+                val = (String) mLFNMap.get(key);
 
                 if ( val.equals( "i" ) ) {
                     lfns.add( key );
@@ -268,7 +268,7 @@ public class DagInfo extends Data {
             }
         }
         else {
-            lfns=new HashSet( lfnMap.keySet() );
+            lfns=new HashSet( mLFNMap.keySet() );
         }
 
         return lfns;
@@ -637,6 +637,7 @@ public class DagInfo extends Data {
 
     /**
      * Return the release version
+     * @return 
      */
     public String getReleaseVersion() {
         return this.mReleaseVersion;
@@ -659,9 +660,9 @@ public class DagInfo extends Data {
      * @param type  type the type of lfn (i|o|b). usually a character.
      */
     public void updateLFNMap(String lfn,String type){
-        Object entry = lfnMap.get(lfn);
+        Object entry = mLFNMap.get(lfn);
         if(entry == null){
-            lfnMap.put(lfn,type);
+            mLFNMap.put(lfn,type);
             return;
         }
         else{
@@ -669,9 +670,40 @@ public class DagInfo extends Data {
             //updated
             if(!(entry.equals("b") || entry.equals(type))){
                 //types do not match. so upgrade the type to both
-                lfnMap.put(lfn,"b");
+                mLFNMap.put(lfn,"b");
             }
         }
+    }
+    
+    /**
+     * Returns file counts in a workflow metrics object.
+     * 
+     * @return 
+     */
+    public WorkflowMetrics computeDAXFileCounts(){
+        int input = 0;
+        int inter = 0;
+        int output = 0;
+        for( Object type: mLFNMap.values()){
+            if( type.equals( "i") ){
+                input++;
+            }
+            else if( type.equals( "b" ) ){
+                inter++;
+            }
+            else if( type.equals( "o" ) ){
+                output++;
+            }
+            else{
+                throw new RuntimeException( "Invalid type " + type);
+            }
+        }
+        WorkflowMetrics result = new WorkflowMetrics();
+        result.setNumDAXFiles(WorkflowMetrics.FILE_TYPE.input, input);
+        result.setNumDAXFiles(WorkflowMetrics.FILE_TYPE.intermediate, inter);
+        result.setNumDAXFiles(WorkflowMetrics.FILE_TYPE.output, output);
+ 
+        return result;
     }
 
     /**
@@ -693,7 +725,7 @@ public class DagInfo extends Data {
         dag.mFlowTimestamp  = this.mFlowTimestamp;
         dag.mDAXMTime       = this.mDAXMTime;
         dag.mReleaseVersion = this.mReleaseVersion;
-        dag.lfnMap = (TreeMap)this.lfnMap.clone();
+        dag.mLFNMap = (TreeMap)this.mLFNMap.clone();
         dag.mWFMetrics = ( WorkflowMetrics )this.mWFMetrics.clone();
         return dag;
     }
@@ -722,7 +754,7 @@ public class DagInfo extends Data {
             "\n FlowTimestamp: " + this.mFlowTimestamp +
             "\n Release Ver  : " + this.mReleaseVersion +
 //            vectorToString(" Relations making the Dag ", this.relations) +
-            "\n LFN List is " + this.lfnMap;
+            "\n LFN List is " + this.mLFNMap;
 
 
         return st;

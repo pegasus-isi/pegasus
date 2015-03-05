@@ -31,6 +31,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.classes.ReplicaStore;
+import edu.isi.pegasus.planner.classes.WorkflowMetrics;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.dax.Invoke;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
@@ -253,6 +254,16 @@ public class DAX2CDAG implements Callback {
      */
     public void cbDone() {
         mDone = true;
+        
+        //compute some file count metrics and set them
+        WorkflowMetrics fileMetrics = this.mDag.getDAGInfo().computeDAXFileCounts();
+        WorkflowMetrics metrics  = this.mDag.getWorkflowMetrics();
+        metrics.setNumDAXFiles( WorkflowMetrics.FILE_TYPE.input, 
+                                fileMetrics.getNumDAXFiles(WorkflowMetrics.FILE_TYPE.input));
+        metrics.setNumDAXFiles( WorkflowMetrics.FILE_TYPE.intermediate,
+                                fileMetrics.getNumDAXFiles(WorkflowMetrics.FILE_TYPE.intermediate));
+        metrics.setNumDAXFiles( WorkflowMetrics.FILE_TYPE.output, 
+                                fileMetrics.getNumDAXFiles(WorkflowMetrics.FILE_TYPE.output));
         
         if( this.mAddDataDependencies ){
             this.addDataDependencies();
