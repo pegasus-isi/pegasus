@@ -4,7 +4,7 @@ import subprocess
 import logging
 import time
 import threading
-
+import datetime
 from sqlalchemy.orm.exc import NoResultFound
 
 from Pegasus.service import app, user
@@ -273,22 +273,37 @@ class WorkflowProcessor:
             return w
         except NoResultFound:
             name = self.workflow.name
-            log.debug("No dashboard record for workflow %s (%s)" % (name, wf_uuid))
+            log.debug("No dashboard record for workflow %s" % name)
             return None
 
-    def get_dashboard_state(self):
-        "Get the latest state of the workflow from the dashboard tables"
+    def get_dashboard_state_for_running_workflow(self):
+        """Get the latest state of the workflow from the dashboard
+           tables where timestamp is > last updated of the ensemble workflow"""
+        # We can only use this for running workflows because we are assuming
+        # that the last state of the workflow should be after the updated
+        # timestamp of the ensemble workflow. That might not be true for
+        # workflows in states other than RUNNING.
+        if self.workflow.state != EnsembleWorkflowStates.RUNNING:
+            raise EMException("This method should only be called for running workflows")
+
         w = self.get_dashboard()
         if w is None:
             raise EMException("Dashboard workflow not found")
 
-        try:
-            ws = self.db.session.query(DashboardWorkflowstate)\
-                    .filter_by(wf_id=w.wf_id)\
-                    .order_by("timestamp desc")\
-                    .first()
-        except NoResultFound:
-            raise EMException("Dashboard workflow state not found")
+        # Need to compute the unix ts for updated in this ugly way
+        updated = (self.workflow.updated - datetime.datetime(1970,1,1)).total_seconds()
+
+        # Get the last event for the workflow where the event timestamp is
+        # greater than the last updated ts for the ensemble workflow
+        ws = self.db.session.query(DashboardWorkflowstate)\
+                .filter_by(wf_id=w.wf_id)\
+                .filter(DashboardWorkflowstate.timestamp >= updated)\
+                .order_by("timestamp desc")\
+                .first()
+
+        if ws is None:
+            name = self.workflow.name
+            log.info("No recent workflow state records for workflow %s" % name)
 
         return ws
 
@@ -299,13 +314,15 @@ class WorkflowProcessor:
 
     def running(self):
         "Is the workflow running"
-        ws = self.get_dashboard_state()
+        ws = self.get_dashboard_state_for_running_workflow()
+        if ws is None:
+            return True
         return ws.state == "WORKFLOW_STARTED"
 
     def running_successful(self):
         "Assuming the workflow is done running, did it finish successfully?"
-        ws = self.get_dashboard_state()
-        if ws.state == "WORKFLOW_STARTED":
+        ws = self.get_dashboard_state_for_running_workflow()
+        if ws is None or ws.state == "WORKFLOW_STARTED":
             raise EMException("Workflow is running")
         return ws.status == 0
 
@@ -363,6 +380,7 @@ class EnsembleProcessor:
         try:
             p.plan()
         except Exception, e:
+            log.error("Planning failed for workflow %s" % workflow.name)
             log.exception(e)
             workflow.set_state(EnsembleWorkflowStates.PLAN_FAILED)
             workflow.set_updated()
@@ -372,17 +390,22 @@ class EnsembleProcessor:
     def handle_ready(self, workflow):
         if self.can_plan():
             self.plan_workflow(workflow)
+        else:
+            log.debug("Delaying planning of workflow %s due to policy" % workflow.name)
 
     def handle_planning(self, workflow):
         p = self.Processor(self.db, workflow)
 
         if p.planning():
+            log.info("Workflow %s is still planning" % workflow.name)
             return
 
+        log.info("Workflow %s is no longer planning" % workflow.name)
         self.planning -= 1
 
         # Planning failed
         if not p.planning_successful():
+            log.error("Planning failed for workflow %s" % workflow.name)
             workflow.set_state(EnsembleWorkflowStates.PLAN_FAILED)
             workflow.set_updated()
             self.db.session.commit()
@@ -415,6 +438,7 @@ class EnsembleProcessor:
         try:
             p.run()
         except Exception, e:
+            log.debug("Running of workflow %s failed" % workflow.name)
             log.exception(e)
             workflow.set_state(EnsembleWorkflowStates.RUN_FAILED)
             workflow.set_updated()
@@ -424,19 +448,28 @@ class EnsembleProcessor:
     def handle_queued(self, workflow):
         if self.can_run():
             self.run_workflow(workflow)
+        else:
+            log.debug("Delaying run of workflow %s due to policy" % workflow.name)
 
     def handle_running(self, workflow):
         p = self.Processor(self.db, workflow)
 
-        if p.pending() or p.running():
-            log.debug("Workflow %s is pending or running" % workflow.name)
+        if p.pending():
+            log.info("Workflow %s is pending" % workflow.name)
             return
 
+        if p.running():
+            log.info("Workflow %s is running" % workflow.name)
+            return
+
+        log.info("Workflow %s is no longer running" % workflow.name)
         self.running -= 1
 
         if p.running_successful():
+            log.info("Workflow %s was successful" % workflow.name)
             workflow.set_state(EnsembleWorkflowStates.SUCCESSFUL)
         else:
+            log.info("Workflow %s failed" % workflow.name)
             workflow.set_state(EnsembleWorkflowStates.FAILED)
 
         workflow.set_updated()
