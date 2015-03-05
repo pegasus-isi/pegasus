@@ -220,14 +220,14 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         """
         if not self._batch:
             return
-        
+
+        self._flush_count += 1
+
         if self._flush_count >= self._flush_every:
             self.hard_flush()
             self.log.debug('check_flush', msg='Flush: flush count')
             return
-        else:
-            self._flush_count += 1
-            
+
         if (time.time() - self._last_flush) > 30:
             self.hard_flush()
             self.log.debug('check_flush', msg='Flush: time based')
