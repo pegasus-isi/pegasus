@@ -698,11 +698,12 @@ public class DagInfo extends Data {
                 throw new RuntimeException( "Invalid type " + type);
             }
         }
+        int total = input + inter + output;
         WorkflowMetrics result = new WorkflowMetrics();
         result.setNumDAXFiles(WorkflowMetrics.FILE_TYPE.input, input);
         result.setNumDAXFiles(WorkflowMetrics.FILE_TYPE.intermediate, inter);
         result.setNumDAXFiles(WorkflowMetrics.FILE_TYPE.output, output);
- 
+        result.setNumDAXFiles(WorkflowMetrics.FILE_TYPE.total, total);
         return result;
     }
 
