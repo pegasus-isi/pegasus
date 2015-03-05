@@ -264,6 +264,8 @@ public class DAX2CDAG implements Callback {
                                 fileMetrics.getNumDAXFiles(WorkflowMetrics.FILE_TYPE.intermediate));
         metrics.setNumDAXFiles( WorkflowMetrics.FILE_TYPE.output, 
                                 fileMetrics.getNumDAXFiles(WorkflowMetrics.FILE_TYPE.output));
+        metrics.setNumDAXFiles( WorkflowMetrics.FILE_TYPE.total, 
+                                fileMetrics.getNumDAXFiles(WorkflowMetrics.FILE_TYPE.total));
         
         if( this.mAddDataDependencies ){
             this.addDataDependencies();
