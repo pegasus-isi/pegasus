@@ -489,6 +489,8 @@ public class CPlanner extends Executable{
 
         //load the parser and parse the dax
         ADag orgDag = this.parseDAX( dax );
+        mLogger.log( "Parsed DAX with following metrics " + orgDag.getWorkflowMetrics().toJson(), 
+                     LogManager.DEBUG_MESSAGE_LEVEL);
 
         //generate the flow ids for the classads information
         orgDag.generateFlowName();
