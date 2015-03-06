@@ -369,6 +369,11 @@ def time_stats(username, root_wf_id, wf_id):
     return '{}'
 
 
+@app.route('/u/<username>/info')
+def info(username):
+    return render_template('info.html')
+
+
 def __update_timestamp(workflows):
     for workflow in workflows:
         workflow.timestamp = strftime('%a, %d %b %Y %H:%M:%S', localtime(workflow.timestamp))

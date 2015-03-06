@@ -104,15 +104,18 @@
     }
 </style>
 {% endblock %}
-{% block navigation_bar %} | <a href="{{ url_for ('workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a> | <a href="{{ url_for ('job', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}">Job</a>{% endblock %}
+{% block navigation_bar %}
+<li><a href="{{ url_for ('workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a></li>
+<li class="active">Job</li>
+{% endblock %}
 {% block title_header %}Job Details{% endblock %}
 {% block content %}
-<div id="job_details">
-    <div id="job_text">
+<section class="row">
+    <div id="job_text" class="col-xs-12">
         <table id="job_text_info">
             <tr>
                 <th class="job_table_width">Label</th>
-                <td><strong>{{ job.exec_job_id  }}</strong></td>
+                <td><strong>{{ job.exec_job_id }}</strong></td>
             </tr>
             <tr>
                 <th class="job_table_width">Type</th>
@@ -120,11 +123,13 @@
             </tr>
             <tr>
                 <th class="job_table_width">Exit Code</th>
-                <td>{{ job.exitcode  }}</td>
+                <td>{{ job.exitcode }}</td>
             </tr>
             <tr>
                 <th class="job_table_width">Stdout Preview</th>
-                <td><a href="{{ url_for ('stdout', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}">Preview</a></td>
+                <td>
+                    <a href="{{ url_for ('stdout', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}">Preview</a>
+                </td>
             </tr>
             <tr>
                 <th class="job_table_width">Stdout File</th>
@@ -132,7 +137,9 @@
             </tr>
             <tr>
                 <th class="job_table_width">Stderr Preview</th>
-                <td><a href="{{ url_for ('stderr', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}">Preview</a></td>
+                <td>
+                    <a href="{{ url_for ('stderr', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}">Preview</a>
+                </td>
             </tr>
             <tr>
                 <th class="job_table_width">Stderr File</th>
@@ -148,62 +155,82 @@
             </tr>
         </table>
     </div>
-    {% if job_states|length %}
-    <br />
-    <header class="title ui-widget-header">
-        Job States
-    </header>
-    <br />
-    <div id="job_states">
-        <table id="job_states_info">
-            {% for state in job_states %}
-            <tr>
-                <th class="job_table_width" style="text-transform: capitalize;">{{ state.state|replace('_', ' ')|capitalize }}</th>
-                <td>{{ state.timestamp }} ( {{ state.interval|time_to_str }} )</td>
-            </tr>
-            {% endfor %}
-        </table>
+</section>
+
+{% if job_states|length %}
+<section class="row">
+    <div class="col-xs-12">
+        <h3>Job States</h3>
+        <hr>
+        <div id="job_states">
+            <table id="job_states_info">
+                {% for state in job_states %}
+                <tr>
+                    <th class="job_table_width" style="text-transform: capitalize;">{{ state.state|replace('_', '
+                        ')|capitalize }}
+                    </th>
+                    <td>{{ state.timestamp }} ( {{ state.interval|time_to_str }} )</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
     </div>
-    {% endif %}
-    <br />
-    <header class="title ui-widget-header">
-        Job Instances
-    </header>
-    <br />
-    <div id="job_instances">
-        <table id="job_instances_info">
-            <thead>
-            <tr>
-                <th>Job Instance ID</th>
-                <th>Exitcode</th>
-                <th>Stdout</th>
-                <th>Stderr</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for instance in job_instances %}
-            <tr class={{ status_code(instance.exitcode) }}>
-            <td><a href="{{ url_for ('job', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = instance.job_instance_id) }}">{{ instance.job_instance_id }}</a></td>
-            <td>{{ instance.exitcode }}</td>
-            <td><a href="{{ url_for ('stdout', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = instance.job_instance_id) }}">Preview</a></td>
-            <td><a href="{{ url_for ('stderr', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = instance.job_instance_id) }}">Preview</a></td>
-            </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+</section>
+{% endif %}
+
+<section class="row">
+    <div class="col-xs-12">
+        <h3>Job Instances</h3>
+        <hr>
+        <div id="job_instances">
+            <table id="job_instances_info">
+                <thead>
+                <tr>
+                    <th>Job Instance ID</th>
+                    <th>Exitcode</th>
+                    <th>Stdout</th>
+                    <th>Stderr</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for instance in job_instances %}
+                <tr class={{ status_code
+                (instance.exitcode) }}>
+                <td>
+                    <a href="{{ url_for ('job', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = instance.job_instance_id) }}">{{
+                        instance.job_instance_id }}</a></td>
+                <td>{{ instance.exitcode }}</td>
+                <td>
+                    <a href="{{ url_for ('stdout', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = instance.job_instance_id) }}">Preview</a>
+                </td>
+                <td>
+                    <a href="{{ url_for ('stderr', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = instance.job_instance_id) }}">Preview</a>
+                </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
-<br/>
-<div id="invocation_table_wrapper">
-    <div id="invocations_tabs">
-        <ul>
-            <li>
-                <a href="{{ url_for ('failed_invocations', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}" title="failed_invocations">Failed</a>
-            </li>
-            <li>
-                <a href="{{ url_for ('successful_invocations', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}" title="successful_invocations">Successful</a>
-            </li>
-        </ul>
+</section>
+
+<section class="row">
+    <div class="col-xs-12">
+        <h3>Job Invocations</h3>
+        <hr>
+        <div id="invocations_tabs">
+            <ul>
+                <li>
+                    <a href="{{ url_for ('failed_invocations', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}"
+                       title="failed_invocations">Failed</a>
+                </li>
+                <li>
+                    <a href="{{ url_for ('successful_invocations', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}"
+                       title="successful_invocations">Successful</a>
+                </li>
+            </ul>
+        </div>
+
     </div>
-</div>
+</section>
 {% endblock %}

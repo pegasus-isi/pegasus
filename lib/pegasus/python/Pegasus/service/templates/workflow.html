@@ -38,7 +38,7 @@ $(document).ready (function ()
             null,
             null,
             null,
-            { "sClass": "nowrap" }
+            { "sClass": "text-nowrap" }
         ],
         "fnServerParams" : function (aoData)
         {
@@ -126,27 +126,36 @@ chart = new Highcharts.Chart (chartOptions);
 {% endblock %}
 {% block title_header %}Workflow Listing{% endblock %}
 {% block content %}
-    <div id="workflow_counts"></div>
-    <div id="table_wrapper">
-        Show results for: <select name="time_filter" id="time_filter">
-            <option value="all">all</option>
-            <option value="day">last day</option>
-            <option value="week">last week</option>
-            <option value="month">last month</option>
-            <option value="year">last year</option>
-        </select>
+<section class="row">
+    <div id="workflow_counts" class="col-xs-12"></div>
+</section>
+<section class="row">
+    <div id="table_wrapper" class="col-xs-12">
+        <label for="time_filter" class="control-label">Show results for </label>
+
+        <div style="display: inline-block; margin-bottom: .5em;">
+            <select id="time_filter" name="time_filter" class="form-control" style="width: auto;">
+                <option value="all">all</option>
+                <option value="day">last day</option>
+                <option value="week">last week</option>
+                <option value="month">last month</option>
+                <option value="year">last year</option>
+            </select>
+        </div>
+
         <table id="workflow_list">
             <thead>
-                <tr>
-                    <th>Workflow Label</th>
-                    <th>Submit Host</th>
-                    <th>Submit Directory</th>
-                    <th>State</th>
-                    <th>Submitted On</th>
-                </tr>
+            <tr>
+                <th>Workflow Label</th>
+                <th>Submit Host</th>
+                <th>Submit Directory</th>
+                <th>State</th>
+                <th>Submitted On</th>
+            </tr>
             </thead>
             <tbody>
             </tbody>
         </table>
     </div>
+</section>
 {% endblock %}

@@ -1,13 +1,16 @@
-{% extends "base.html" %}
+{% extends "base-error.html" %}
 {% block title %}Workflow - Not found{% endblock %}
-{% block title_header %}Workflow database not found{% endblock %}
+{% block title_header %}Workflow Database Not Found{% endblock %}
+{% block navigation_bar %}-{% endblock %}
 {% block content %}
-<div class="ui-widget">
-    <div class="ui-state-highlight ui-corner-all" style="padding: .3em .7em;">
-        <p>
-            <span class="ui-icon ui-icon-info" style="float: left; margin-right: .3em;"></span>
-            <strong>Info:</strong>
-            We were unable to locate the database containing information for the specified workflow. The most likely reason is that the submit directory containing the database was moved or deleted from the file system.</p>
+<section class="row">
+    <div class="col-xs-12">
+        <h3>Possible Reasons</h3>
+        <ul>
+            <li>
+                Workflow submit directory was moved or deleted from the file system.
+            </li>
+        </ul>
     </div>
-</div>
+</section>
 {% endblock %}

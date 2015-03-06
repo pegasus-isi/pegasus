@@ -7,14 +7,18 @@ $(document).ready (function ()
 })
 </script>
 {% endblock %}
-{% block title %}Invocation Details{% endblock %}
-{% block title_header %}Invocation Details{% endblock %}
-{% block navigation_bar %} | <a href="{{ url_for ('workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a> | <a href="{{ url_for ('job', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job_instance_id) }}">Job</a> | <a href="{{ url_for ('invocation', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job_instance_id, task_id = task_id) }}">Task</a>
+{% block title %}Task Details{% endblock %}
+{% block title_header %}Task Details{% endblock %}
+{% block navigation_bar %}
+<li><a href="{{ url_for ('workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a></li>
+<li><a href="{{ url_for ('job', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job_instance_id) }}">Job</a></li>
+<li class="active">Task Details</li>
 {% endblock %}
 {% block content %}
-<div id="invocation_details">
-    <div id="invocation_text">
+<section class="row">
+    <div class="col-xs-12">
         <table id="invocation_text_info">
+            <col width="25%">
             <tr>
                 <th>Task Label</th>
                 <td>{{ task_id }}</td>
@@ -27,7 +31,7 @@ $(document).ready (function ()
                 <th>Executable</th>
                 <td>{{ invocation.executable }}</td>
             </tr>
-            <tr >
+            <tr>
                 <th>Arguments</th>
                 <td>{{ invocation.argv }}</td>
             </tr>
@@ -49,6 +53,5 @@ $(document).ready (function ()
             </tr>
         </table>
     </div>
-</div>
-<br/>
+</section>
 {% endblock %}
