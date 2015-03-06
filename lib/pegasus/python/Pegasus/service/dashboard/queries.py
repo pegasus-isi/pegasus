@@ -118,7 +118,7 @@ class MasterDatabase(SQLAlchemyInit):
 
         if 'filter' in table_args:
             filter_text = '%' + table_args['filter'] + '%'
-            q = q.filter(or_(w.dax_label.like(filter_text), w.submit_dir.like(filter_text), state.like(filter_text)))
+            q = q.filter(or_(w.dax_label.like(filter_text), w.submit_hostname.like(filter_text), w.submit_dir.like(filter_text), state.like(filter_text)))
 
         if 'time_filter' in table_args:
             time_filter = table_args['time_filter']
