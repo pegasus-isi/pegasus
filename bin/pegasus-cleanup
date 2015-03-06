@@ -351,7 +351,7 @@ def rm(urls):
             cmd += " -r"
         cmd += " \"%s\"" % (url.path)
         try:
-            myexec(cmd, 5*60, True)
+            myexec(cmd, 6*60*60, True)
         except RuntimeError, err:
             logger.error(err)
             raise
@@ -386,7 +386,7 @@ def scp(urls):
             cmd += " -r"       
         cmd += " " + url.path + "\""
         try:
-            myexec(cmd, 5*60, True)
+            myexec(cmd, 6*60*60, True)
         except RuntimeError, err:
             logger.error(err)
             raise
@@ -455,7 +455,7 @@ def sshftp(urls):
         cmd += " " + url.url() + "/.create-dir"
     
         try:
-            myexec(cmd, 5*60, True)
+            myexec(cmd, 6*60*60, True)
         except:
             raise RuntimeError("globus-url-copy command failed")
 
@@ -491,7 +491,7 @@ def irods_login(sitename):
     h.close()
     
     cmd = "cat .irodsAc | iinit"
-    myexec(cmd, 60*60, True)
+    myexec(cmd, 6*60*60, True)
         
     os.unlink(".irodsAc")
 
@@ -517,7 +517,7 @@ def irods(urls):
         if options.recursive:
             cmd += " -r"
         try:
-            myexec(cmd, 5*60, True)
+            myexec(cmd, 6*60*60, True)
         except Exception, err:
             logger.error(err)
             raise
@@ -543,7 +543,7 @@ def srm(urls):
         cmd = base_cmd + " " + url.url()
         
         try:
-            myexec(cmd, 5*60, True)
+            myexec(cmd, 6*60*60, True)
         except Exception, err:
             logger.error(err)
             raise
@@ -584,7 +584,7 @@ def s3(urls):
         cmd += " " + fixed_url
 
         try:
-            myexec(cmd, 3*60*60, True)
+            myexec(cmd, 6*60*60, True)
         except Exception, err:
             logger.error(err)
             raise
@@ -633,7 +633,7 @@ def gs(urls):
         cmd += " " + url.url()
 
         try:
-            myexec(cmd, 60, True)
+            myexec(cmd, 6*60*60, True)
         except Exception, err:
             # gsutil returns non-zero even when the -f flag is used
             if options.ignore_failures or options.recursive:
