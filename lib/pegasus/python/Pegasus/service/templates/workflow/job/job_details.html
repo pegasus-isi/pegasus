@@ -128,7 +128,7 @@
             <tr>
                 <th class="job_table_width">Stdout Preview</th>
                 <td>
-                    <a href="{{ url_for ('stdout', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}">Preview</a>
+                    <a target="_blank" href="{{ url_for ('stdout', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}">Preview</a>
                 </td>
             </tr>
             <tr>
@@ -138,7 +138,7 @@
             <tr>
                 <th class="job_table_width">Stderr Preview</th>
                 <td>
-                    <a href="{{ url_for ('stderr', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}">Preview</a>
+                    <a target="_blank" href="{{ url_for ('stderr', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}">Preview</a>
                 </td>
             </tr>
             <tr>
@@ -201,10 +201,10 @@
                         instance.job_instance_id }}</a></td>
                 <td>{{ instance.exitcode }}</td>
                 <td>
-                    <a href="{{ url_for ('stdout', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = instance.job_instance_id) }}">Preview</a>
+                    <a target="_blank" href="{{ url_for ('stdout', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = instance.job_instance_id) }}">Preview</a>
                 </td>
                 <td>
-                    <a href="{{ url_for ('stderr', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = instance.job_instance_id) }}">Preview</a>
+                    <a target="_blank" href="{{ url_for ('stderr', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = instance.job_instance_id) }}">Preview</a>
                 </td>
                 </tr>
                 {% endfor %}
