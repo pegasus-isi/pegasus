@@ -40,7 +40,18 @@ class EnsembleClientCommand(Command):
         defaults = {"auth": (self.username, self.password), "headers": headers}
         defaults.update(kwargs)
         url = urlparse.urljoin(self.endpoint, path)
-        return requests.request(method, url, **defaults)
+        response = requests.request(method, url, **defaults)
+
+        if 200 <= response.status_code < 300:
+            return response
+
+        try:
+            result = response.json()
+            print "ERROR:", result["message"]
+        except:
+            print "ERROR:", response.text
+
+        exit(1)
 
     def get(self, path, **kwargs):
         return self._request("get", path, **kwargs)
@@ -53,6 +64,12 @@ class EnsembleClientCommand(Command):
 
     def put(self, path, **kwargs):
         return self._request("put", path, **kwargs)
+
+    def splitew(self, ew):
+        r = ew.split(".")
+        if len(r) != 2:
+            self.parser.error("Invalid ENSEMBLE.WORKFLOW: %s" % ew)
+        return r
 
 class ServerCommand(Command):
     description = "Start ensemble manager"
@@ -104,11 +121,6 @@ class EnsemblesCommand(EnsembleClientCommand):
     def run(self):
         response = self.get("/ensembles")
         result = response.json()
-
-        if response.status_code != 200:
-            print "ERROR:",result["message"]
-            exit(1)
-
         fmt = "%-20s %-8s %-30s %-30s %14s %12s"
         if len(result) > 0:
             print fmt % ("NAME","STATE","CREATED","UPDATED","MAX PLANNING","MAX RUNNING")
@@ -117,32 +129,28 @@ class EnsemblesCommand(EnsembleClientCommand):
 
 class CreateCommand(EnsembleClientCommand):
     description = "Create ensemble"
-    usage = "Usage: %prog create [options] -e ENSEMBLE"
+    usage = "Usage: %prog create [options] ENSEMBLE"
 
     def __init__(self):
         EnsembleClientCommand.__init__(self)
-        add_ensemble_option(self)
         self.parser.add_option("-P", "--max-planning", action="store", dest="max_planning",
             default=1, type="int", help="Maximum number of workflows being planned at once")
         self.parser.add_option("-R", "--max-running", action="store", dest="max_running",
             default=1, type="int", help="Maximum number of workflows running at once")
 
     def run(self):
-        if self.options.ensemble is None:
-            self.parser.error("Specify -e/--ensemble")
+        if len(self.args) != 1:
+            self.parser.error("Specify ENSEMBLE")
+
+        name = self.args[0]
 
         request = {
-            "name": self.options.ensemble,
+            "name": name,
             "max_planning": self.options.max_planning,
             "max_running": self.options.max_running
         }
 
         response = self.post("/ensembles", data=request)
-
-        if response.status_code != 201:
-            result = response.json()
-            print "ERROR:", result["message"]
-            exit(1)
 
 def pathfind(command):
     def isexe(fn):
@@ -163,14 +171,13 @@ def pathfind(command):
 
     return None
 
+
 class SubmitCommand(EnsembleClientCommand):
     description = "Submit workflow"
-    usage = "Usage: %prog submit [options] -e ENSEMBLE -w WORKFLOW plan_command [arg...]"
+    usage = "Usage: %prog submit [options] ENSEMBLE.WORKFLOW plan_command [arg...]"
 
     def __init__(self):
         EnsembleClientCommand.__init__(self)
-        add_ensemble_option(self)
-        add_workflow_option(self)
         self.parser.disable_interspersed_args()
         self.parser.add_option("-p", "--priority", action="store", dest="priority",
             default=0, help="Workflow priority", metavar="NUMBER")
@@ -179,16 +186,14 @@ class SubmitCommand(EnsembleClientCommand):
         o = self.options
         p = self.parser
 
-        if o.ensemble is None:
-            p.error("Specify -e/--ensemble")
-        if o.workflow is None:
-            p.error("Specify -w/--workflow")
+        if len(self.args) < 2:
+            p.error("Specify ENSEMBLE.WORKFLOW and planning command")
 
-        if len(self.args) == 0:
-            p.error("Specify planning command")
+        ew = self.args[0]
+        command = self.args[1]
+        args = self.args[2:]
 
-        command = self.args[0]
-        args = self.args[1:]
+        ensemble, workflow = self.splitew(ew)
 
         exe = pathfind(command)
         if exe is None:
@@ -199,41 +204,32 @@ class SubmitCommand(EnsembleClientCommand):
         command = '"%s"' % '" "'.join(args)
 
         data = {
-            "name": o.workflow,
+            "name": workflow,
             "priority": o.priority,
             "basedir": os.getcwd(),
             "plan_command": command
         }
 
-        response = self.post("/ensembles/%s/workflows" % o.ensemble, data=data)
-
-        if response.status_code != 201:
-            result = response.json()
-            print "ERROR:",response.status_code,result["message"]
+        response = self.post("/ensembles/%s/workflows" % ensemble, data=data)
 
 class WorkflowsCommand(EnsembleClientCommand):
     description = "List workflows in ensemble"
-    usage = "Usage: %prog workflows [options] -e ENSEMBLE."
+    usage = "Usage: %prog workflows [options] ENSEMBLE."
 
     def __init__(self):
         EnsembleClientCommand.__init__(self)
-        add_ensemble_option(self)
         self.parser.add_option("-l", "--long", action="store_true", dest="long",
             default=False, help="Show detailed output")
 
     def run(self):
-        if self.options.ensemble is None:
-            self.parser.error("Specify -e/--ensemble")
-        if len(self.args) > 0:
+        if len(self.args) == 0:
+            self.parser.error("Specify ENSEMBLE")
+        if len(self.args) > 1:
             self.parser.error("Invalid argument")
 
-        response = self.get("/ensembles/%s/workflows" % self.options.ensemble)
+        response = self.get("/ensembles/%s/workflows" % self.args[0])
 
         result = response.json()
-
-        if response.status_code != 200:
-            print "ERROR:",response.status_code,result["message"]
-            exit(1)
 
         if len(result) == 0:
             return
@@ -255,53 +251,95 @@ class WorkflowsCommand(EnsembleClientCommand):
             for w in result:
                 print fmt % (w["name"],w["state"],w["priority"],w["created"],w["updated"])
 
-class StateChangeCommand(EnsembleClientCommand):
-    def __init__(self):
-        EnsembleClientCommand.__init__(self)
-        add_ensemble_option(self)
+class StatusCommand(EnsembleClientCommand):
+    description = "Check workflow status"
+    usage = "Usage: %prog status ENSEMBLE.WORKFLOW"
 
     def run(self):
-        if self.options.ensemble is None:
-            self.parser.error("Specify -e/--ensemble")
+        if len(self.args) == 0:
+            self.parser.error("Specify ENSEMBLE.WORKFLOW")
+        if len(self.args) > 1:
+            self.parser.error("Invalid argument")
 
-        response = self.post("/ensembles/%s" % self.options.ensemble, data={"state":self.newstate})
+        ensemble, workflow = self.splitew(self.args[0])
+
+        response = self.get("/ensembles/%s/workflows/%s" % (ensemble, workflow))
+
         result = response.json()
 
-        if response.status_code != 200:
-            print "ERROR:",result["message"]
+        print "ID:           %s" % result['id']
+        print "Name:         %s" % result['name']
+        print "Plan Command: %s" % result['plan_command']
+        print "Created:      %s" % result['created']
+        print "Updated:      %s" % result['updated']
+        print "State:        %s" % result['state']
+        print "UUID:         %s" % (result['wf_uuid'] or "")
+        print "Priority:     %s" % result['priority']
+        print "Base Dir:     %s" % result['basedir']
+        print "Submit Dir:   %s" % (result['submitdir'] or "")
+        print "Log:          %s" % result['log']
+
+class AnalyzeCommand(EnsembleClientCommand):
+    description = "Analyze workflow status"
+    usage = "Usage: %prog analyze ENSEMBLE.WORKFLOW"
+
+    def run(self):
+        if len(self.args) == 0:
+            self.parser.error("Specify ENSEMBLE.WORKFLOW")
+        if len(self.args) > 1:
+            self.parser.error("Invalid argument")
+
+        ensemble, workflow = self.splitew(self.args[0])
+
+        response = self.get("/ensembles/%s/workflows/%s/analyze" % (ensemble, workflow))
+
+        sys.stdout.write(response.text)
+
+class StateChangeCommand(EnsembleClientCommand):
+    def run(self):
+        if len(self.args) == 0:
+            self.parser.error("Specify ENSEMBLE")
+        if len(self.args) > 1:
+            self.parser.error("Invalid argument")
+
+        response = self.post("/ensembles/%s" % self.args[0], data={"state":self.newstate})
+        result = response.json()
 
         print "State:", result["state"]
 
 class PauseCommand(StateChangeCommand):
     description = "Pause active ensemble"
-    usage = "Usage: %prog pause -e ENSEMBLE"
+    usage = "Usage: %prog pause ENSEMBLE"
     newstate = EnsembleStates.PAUSED
 
 class ActivateCommand(StateChangeCommand):
     description = "Activate paused or held ensemble"
-    usage = "Usage: %prog activate -e ENSEMBLE"
+    usage = "Usage: %prog activate ENSEMBLE"
     newstate = EnsembleStates.ACTIVE
 
 class HoldCommand(StateChangeCommand):
     description = "Hold active ensemble"
-    usage = "Usage: %prog hold -e ENSEMBLE"
+    usage = "Usage: %prog hold ENSEMBLE"
     newstate = EnsembleStates.HELD
 
 class ConfigCommand(EnsembleClientCommand):
     description = "Change ensemble configuration"
-    usage = "Usage: %prog config [options] -e ENSEMBLE"
+    usage = "Usage: %prog config [options] ENSEMBLE"
 
     def __init__(self):
         EnsembleClientCommand.__init__(self)
-        add_ensemble_option(self)
         self.parser.add_option("-P", "--max-planning", action="store", dest="max_planning",
             default=None, type="int", help="Maximum number of workflows being planned at once")
         self.parser.add_option("-R", "--max-running", action="store", dest="max_running",
             default=None, type="int", help="Maximum number of workflows running at once")
 
     def run(self):
-        if self.options.ensemble is None:
-            self.parser.error("Specify -e/--ensemble")
+        if len(self.args) == 0:
+            self.parser.error("Specify ENSEMBLE")
+        if len(self.args) > 1:
+            self.parser.error("Invalid argument")
+
+        ensemble = self.args[0]
 
         request = {}
 
@@ -313,90 +351,69 @@ class ConfigCommand(EnsembleClientCommand):
         if len(request) == 0:
             self.parser.error("Specify --max-planning or --max-running")
 
-        response = self.post("/ensembles/%s" % self.options.ensemble, data=request)
+        response = self.post("/ensembles/%s" % ensemble, data=request)
 
         result = response.json()
-
-        if response.status_code != 200:
-            print "ERROR:", result["message"]
-            exit(1)
 
         print "Max Planning:",result["max_planning"]
         print "Max Running:",result["max_running"]
 
 class WorkflowStateChangeCommand(EnsembleClientCommand):
-    def __init__(self):
-        EnsembleClientCommand.__init__(self)
-        add_ensemble_option(self)
-        add_workflow_option(self)
-
     def run(self):
-        if self.options.ensemble is None:
-            self.parser.error("Specify -e/--ensemble")
-        if self.options.workflow is None:
-            self.parser.error("Specify -w/--workflow")
-
-        if len(self.args) > 0:
+        if len(self.args) == 0:
+            self.parser.error("Specify ENSEMBLE.WORKFLOW")
+        if len(self.args) > 1:
             self.parser.error("Invalid argument")
+
+        ensemble, workflow = self.splitew(self.args[0])
 
         request = {"state": self.newstate}
 
-        response = self.post("/ensembles/%s/workflows/%s" % (self.options.ensemble, self.options.workflow), data=request)
+        response = self.post("/ensembles/%s/workflows/%s" % (ensemble, workflow), data=request)
 
         result = response.json()
-
-        if response.status_code != 200:
-            print "ERROR:", result["message"]
-            exit(1)
 
         print "State:", result["state"]
 
 class ReplanCommand(WorkflowStateChangeCommand):
     description = "Replan failed workflow"
-    usage = "Usage: %prog replan -e ENSEMBLE -w WORKFLOW"
+    usage = "Usage: %prog replan ENSEMBLE.WORKFLOW"
     newstate = EnsembleWorkflowStates.READY
 
 class RerunCommand(WorkflowStateChangeCommand):
     description = "Rerun failed workflow"
-    usage = "Usage: %prog rerun -e ENSEMBLE -w WORKFLOW"
+    usage = "Usage: %prog rerun ENSEMBLE.WORKFLOW"
     newstate = EnsembleWorkflowStates.QUEUED
 
 class AbortCommand(WorkflowStateChangeCommand):
     description = "Abort workflow"
-    usage = "Usage: %prog abort -e ENSEMBLE -w WORKFLOW"
+    usage = "Usage: %prog abort ENSEMBLE.WORKFLOW"
     newstate = EnsembleWorkflowStates.ABORTED
 
 class PriorityCommand(EnsembleClientCommand):
     description = "Update workflow priority"
-    usage = "Usage: %prog priority -e ENSEMBLE -w WORKFLOW -p PRIORITY"
+    usage = "Usage: %prog priority ENSEMBLE.WORKFLOW -p PRIORITY"
 
     def __init__(self):
         EnsembleClientCommand.__init__(self)
-        add_ensemble_option(self)
-        add_workflow_option(self)
         self.parser.add_option("-p","--priority",action="store",dest="priority",
                 default=None,type="int",help="New workflow priority")
 
     def run(self):
-        if self.options.ensemble is None:
-            self.parser.error("Specify -e/--ensemble")
-        if self.options.workflow is None:
-            self.parser.error("Specify -w/--workflow")
         if self.options.priority is None:
             self.parser.error("Specify -p/--priority")
-
-        if len(self.args) > 0:
+        if len(self.args) == 0:
+            self.parser.error("Specify ENSEMBLE.WORKFLOW")
+        if len(self.args) > 1:
             self.parser.error("Invalid argument")
+
+        ensemble, workflow = self.splitew(self.args[0])
 
         request = {"priority": self.options.priority}
 
-        response = self.post("/ensembles/%s/workflows/%s" % (self.options.ensemble, self.options.workflow), data=request)
+        response = self.post("/ensembles/%s/workflows/%s" % (ensemble, workflow), data=request)
 
         result = response.json()
-
-        if response.status_code != 200:
-            print "ERROR:", result["message"]
-            exit(1)
 
         print "Priority:", result["priority"]
 
@@ -411,10 +428,20 @@ class EnsembleCommand(CompoundCommand):
         ("config", ConfigCommand),
         ("submit", SubmitCommand),
         ("workflows", WorkflowsCommand),
+        ("status", StatusCommand),
+        ("analyze", AnalyzeCommand),
         ("replan", ReplanCommand),
         ("rerun", RerunCommand),
         ("priority", PriorityCommand)
     ]
+    aliases = {
+        "c": "create",
+        "e": "ensembles",
+        "w": "workflows",
+        "sub": "submit",
+        "an": "analyze",
+        "st": "status"
+    }
 
 def main():
     "The entry point for pegasus-em"

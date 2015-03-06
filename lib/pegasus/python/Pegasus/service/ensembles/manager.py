@@ -4,16 +4,14 @@ import subprocess
 import logging
 import time
 import threading
-
+import datetime
 from sqlalchemy.orm.exc import NoResultFound
 
 from Pegasus.service import app, user
-from Pegasus.service.ensembles.models import Ensembles, EnsembleStates, EnsembleWorkflowStates
+from Pegasus.service.ensembles.models import Ensembles, EnsembleStates, EnsembleWorkflowStates, EMError
 from Pegasus.db.schema.stampede_dashboard_schema import DashboardWorkflow, DashboardWorkflowstate
 
 log = logging.getLogger(__name__)
-
-class EMException(Exception): pass
 
 def pathfind(exe):
     PATH = os.getenv("PATH","/bin:/usr/bin:/usr/local/bin")
@@ -22,7 +20,7 @@ def pathfind(exe):
         exepath = os.path.join(prefix, exe)
         if os.path.isfile(exepath):
             return exepath
-    raise EMException("%s not found on PATH" % exe)
+    raise EMError("%s not found on PATH" % exe)
 
 def get_bin(name, exe):
     # Try to find NAME/bin using 1) NAME env var, 2) NAME config
@@ -33,16 +31,16 @@ def get_bin(name, exe):
 
     if HOME is not None:
         if not os.path.isdir(HOME):
-            raise EMException("%s is not a directory: %s" % (name, HOME))
+            raise EMError("%s is not a directory: %s" % (name, HOME))
         BIN = os.path.join(HOME, "bin")
         if not os.path.isdir(BIN):
-            raise EMException("%s/bin is not a directory: %s" % (name, BIN))
+            raise EMError("%s/bin is not a directory: %s" % (name, BIN))
         exepath = os.path.join(BIN, exe)
 
     exepath = exepath or pathfind(exe)
 
     if not os.path.isfile(exepath):
-        raise EMException("%s not found: %s" % (exe, exepath))
+        raise EMError("%s not found: %s" % (exe, exepath))
 
     BIN = os.path.dirname(exepath)
 
@@ -75,7 +73,7 @@ def get_script_env():
 def runscript(script, cwd=None, env=None):
     # Make sure the cwd is OK
     if cwd is not None and not os.path.isdir(cwd):
-        raise EMException("Working directory does not exist: %s" % cwd)
+        raise EMError("Working directory does not exist: %s" % cwd)
 
     if env is None:
         env = dict(os.environ)
@@ -85,7 +83,7 @@ def runscript(script, cwd=None, env=None):
     rc = p.wait()
 
     if rc != 0:
-        raise EMException("Script failed with exitcode %d" % rc)
+        raise EMError("Script failed with exitcode %d" % rc)
 
 def forkscript(script, pidfile=None, cwd=None, env=None):
     # This does a double fork to detach the process from the python
@@ -93,7 +91,7 @@ def forkscript(script, pidfile=None, cwd=None, env=None):
 
     # Make sure the cwd is OK
     if cwd is not None and not os.path.isdir(cwd):
-        raise EMException("Working directory does not exist: %s" % cwd)
+        raise EMError("Working directory does not exist: %s" % cwd)
 
     if env is None:
         env = dict(os.environ)
@@ -104,7 +102,7 @@ def forkscript(script, pidfile=None, cwd=None, env=None):
         try:
             open(pidfile, "w").close()
         except:
-            raise EMException("Unable to write pidfile: %s" % pidfile)
+            raise EMError("Unable to write pidfile: %s" % pidfile)
 
     pid1 = os.fork()
     if pid1 == 0:
@@ -125,50 +123,31 @@ def forkscript(script, pidfile=None, cwd=None, env=None):
 
     pid, exitcode = os.waitpid(pid1, 0)
     if exitcode != 0:
-        raise EMException("Non-zero exitcode launching script: %d" % exitcode)
+        raise EMError("Non-zero exitcode launching script: %d" % exitcode)
 
 class WorkflowProcessor:
     def __init__(self, db, workflow):
         self.db = db
         self.workflow = workflow
 
-    def get_file(self, suffix):
-        em = self.workflow.ensemble.name
-        wf = self.workflow.name
-        filename = "%s.%s.%s" % (em, wf, suffix)
-        return os.path.join(self.workflow.basedir, filename)
-
-    def get_workdir(self):
-        return self.workflow.basedir
-
-    def get_pidfile(self):
-        return self.get_file("planner.pid")
-
-    def get_resultfile(self):
-        return self.get_file("planner.result")
-
-    def get_logfile(self):
-        return self.get_file("planner.log")
-
-    def get_plan_command(self):
-        return self.workflow.plan_command
-
     def plan(self):
         "Launch the pegasus planner"
-        workdir = self.get_workdir()
-        pidfile = self.get_pidfile()
-        logfile = self.get_logfile()
-        resultfile = self.get_resultfile()
-        plan_command = self.get_plan_command()
+        w = self.workflow
+        basedir = w.get_basedir()
+        pidfile = w.get_pidfile()
+        logfile = w.get_logfile()
+        runfile = w.get_runfile()
+        resultfile = w.get_resultfile()
+        plan_command = w.get_plan_command()
 
         if os.path.isfile(pidfile) and self.planning():
-            raise EMException("Planner already running")
+            raise EMError("Planner already running")
 
         # When we re-plan, we need to remove all the old
         # files so that the ensemble manager doesn't get
         # confused.
         files = [
-            logfile,
+            runfile,
             resultfile,
             pidfile
         ]
@@ -176,15 +155,15 @@ class WorkflowProcessor:
             if os.path.isfile(f):
                 os.remove(f)
 
-        script = "%s >%s 2>&1; /bin/echo $? >%s" % (plan_command, logfile, resultfile)
-        forkscript(script, cwd=workdir, pidfile=pidfile, env=get_script_env())
+        script = "(%s) 2>&1 | tee -a %s | grep pegasus-run >%s ; /bin/echo $? >%s" % (plan_command, logfile, runfile, resultfile)
+        forkscript(script, cwd=basedir, pidfile=pidfile, env=get_script_env())
 
     def planning(self):
         "Check pidfile to see if the planner is still running"
-        pidfile = self.get_pidfile()
+        pidfile = self.workflow.get_pidfile()
 
         if not os.path.exists(pidfile):
-            raise EMException("pidfile missing")
+            raise EMError("pidfile missing")
 
         pid = int(open(pidfile,"r").read())
 
@@ -201,10 +180,10 @@ class WorkflowProcessor:
 
     def planning_successful(self):
         "Check to see if planning was successful"
-        resultfile = self.get_resultfile()
+        resultfile = self.workflow.get_resultfile()
 
         if not os.path.exists(resultfile):
-            raise EMException("Result file not found: %s" % resultfile)
+            raise EMError("Result file not found: %s" % resultfile)
 
         exitcode = int(open(resultfile, "r").read())
 
@@ -212,19 +191,19 @@ class WorkflowProcessor:
             return False
 
         try:
-            self.get_submitdir()
+            self.find_submitdir()
         except Exception, e:
             log.exception(e)
             return False
 
         return True
 
-    def get_submitdir(self):
+    def find_submitdir(self):
         "Get the workflow submitdir from the workflow log"
-        logfile = self.get_logfile()
+        logfile = self.workflow.get_runfile()
 
         if not os.path.isfile(logfile):
-            raise EMException("Workflow log file not found: %s" % logfile)
+            raise EMError("Workflow run file not found: %s" % logfile)
 
         submitdir = None
 
@@ -237,18 +216,18 @@ class WorkflowProcessor:
             f.close()
 
         if submitdir is None:
-            raise EMException("No pegasus-run found in the workflow log: %s" % logfile)
+            raise EMError("No pegasus-run found in the workflow run file: %s" % logfile)
 
         return submitdir
 
     def get_wf_uuid(self):
         "Get the workflow UUID from the braindump file"
-        submitdir = self.get_submitdir()
+        submitdir = self.find_submitdir()
 
         braindump = os.path.join(submitdir, "braindump.txt")
 
         if not os.path.isfile(braindump):
-            raise EMException("braindump.txt not found")
+            raise EMError("braindump.txt not found")
 
         wf_uuid = None
 
@@ -261,7 +240,7 @@ class WorkflowProcessor:
             f.close()
 
         if wf_uuid is None:
-            raise EMException("wf_uuid not found in braindump.txt")
+            raise EMError("wf_uuid not found in braindump.txt")
 
         return wf_uuid
 
@@ -270,20 +249,20 @@ class WorkflowProcessor:
         submitdir = self.workflow.submitdir
 
         if submitdir is None:
-            raise EMException("Workflow submitdir not set")
+            raise EMError("Workflow submitdir not set")
 
         if not os.path.isdir(submitdir):
-            raise EMException("Workflow submit dir does not exist: %s" % submitdir)
+            raise EMError("Workflow submit dir does not exist: %s" % submitdir)
 
-        logfile = self.get_logfile()
+        logfile = self.workflow.get_logfile()
 
-        runscript("pegasus-run %s >>%s 2>&1" % (submitdir,logfile), env=get_script_env())
+        runscript("pegasus-run %s >>%s 2>&1" % (submitdir, logfile), env=get_script_env())
 
     def get_dashboard(self):
         "Get the dashboard record for the workflow"
         wf_uuid = self.workflow.wf_uuid
         if wf_uuid is None:
-            raise EMException("wf_uuid is none")
+            raise EMError("wf_uuid is none")
 
         try:
             w = self.db.session.query(DashboardWorkflow)\
@@ -292,22 +271,37 @@ class WorkflowProcessor:
             return w
         except NoResultFound:
             name = self.workflow.name
-            log.debug("No dashboard record for workflow %s (%s)" % (name, wf_uuid))
+            log.debug("No dashboard record for workflow %s" % name)
             return None
 
-    def get_dashboard_state(self):
-        "Get the latest state of the workflow from the dashboard tables"
+    def get_dashboard_state_for_running_workflow(self):
+        """Get the latest state of the workflow from the dashboard
+           tables where timestamp is > last updated of the ensemble workflow"""
+        # We can only use this for running workflows because we are assuming
+        # that the last state of the workflow should be after the updated
+        # timestamp of the ensemble workflow. That might not be true for
+        # workflows in states other than RUNNING.
+        if self.workflow.state != EnsembleWorkflowStates.RUNNING:
+            raise EMError("This method should only be called for running workflows")
+
         w = self.get_dashboard()
         if w is None:
-            raise EMException("Dashboard workflow not found")
+            raise EMError("Dashboard workflow not found")
 
-        try:
-            ws = self.db.session.query(DashboardWorkflowstate)\
-                    .filter_by(wf_id=w.wf_id)\
-                    .order_by("timestamp desc")\
-                    .first()
-        except NoResultFound:
-            raise EMException("Dashboard workflow state not found")
+        # Need to compute the unix ts for updated in this ugly way
+        updated = (self.workflow.updated - datetime.datetime(1970,1,1)).total_seconds()
+
+        # Get the last event for the workflow where the event timestamp is
+        # greater than the last updated ts for the ensemble workflow
+        ws = self.db.session.query(DashboardWorkflowstate)\
+                .filter_by(wf_id=w.wf_id)\
+                .filter(DashboardWorkflowstate.timestamp >= updated)\
+                .order_by("timestamp desc")\
+                .first()
+
+        if ws is None:
+            name = self.workflow.name
+            log.info("No recent workflow state records for workflow %s" % name)
 
         return ws
 
@@ -318,14 +312,16 @@ class WorkflowProcessor:
 
     def running(self):
         "Is the workflow running"
-        ws = self.get_dashboard_state()
+        ws = self.get_dashboard_state_for_running_workflow()
+        if ws is None:
+            return True
         return ws.state == "WORKFLOW_STARTED"
 
     def running_successful(self):
         "Assuming the workflow is done running, did it finish successfully?"
-        ws = self.get_dashboard_state()
-        if ws.state == "WORKFLOW_STARTED":
-            raise EMException("Workflow is running")
+        ws = self.get_dashboard_state_for_running_workflow()
+        if ws is None or ws.state == "WORKFLOW_STARTED":
+            raise EMError("Workflow is running")
         return ws.status == 0
 
 class EnsembleProcessor:
@@ -382,6 +378,7 @@ class EnsembleProcessor:
         try:
             p.plan()
         except Exception, e:
+            log.error("Planning failed for workflow %s" % workflow.name)
             log.exception(e)
             workflow.set_state(EnsembleWorkflowStates.PLAN_FAILED)
             workflow.set_updated()
@@ -391,17 +388,22 @@ class EnsembleProcessor:
     def handle_ready(self, workflow):
         if self.can_plan():
             self.plan_workflow(workflow)
+        else:
+            log.debug("Delaying planning of workflow %s due to policy" % workflow.name)
 
     def handle_planning(self, workflow):
         p = self.Processor(self.db, workflow)
 
         if p.planning():
+            log.info("Workflow %s is still planning" % workflow.name)
             return
 
+        log.info("Workflow %s is no longer planning" % workflow.name)
         self.planning -= 1
 
         # Planning failed
         if not p.planning_successful():
+            log.error("Planning failed for workflow %s" % workflow.name)
             workflow.set_state(EnsembleWorkflowStates.PLAN_FAILED)
             workflow.set_updated()
             self.db.session.commit()
@@ -411,7 +413,7 @@ class EnsembleProcessor:
 
         # Planning succeeded, get uuid and queue workflow
         workflow.set_wf_uuid(p.get_wf_uuid())
-        workflow.set_submitdir(p.get_submitdir())
+        workflow.set_submitdir(p.find_submitdir())
         workflow.set_state(EnsembleWorkflowStates.QUEUED)
         workflow.set_updated()
         self.db.session.commit()
@@ -434,6 +436,7 @@ class EnsembleProcessor:
         try:
             p.run()
         except Exception, e:
+            log.debug("Running of workflow %s failed" % workflow.name)
             log.exception(e)
             workflow.set_state(EnsembleWorkflowStates.RUN_FAILED)
             workflow.set_updated()
@@ -443,19 +446,28 @@ class EnsembleProcessor:
     def handle_queued(self, workflow):
         if self.can_run():
             self.run_workflow(workflow)
+        else:
+            log.debug("Delaying run of workflow %s due to policy" % workflow.name)
 
     def handle_running(self, workflow):
         p = self.Processor(self.db, workflow)
 
-        if p.pending() or p.running():
-            log.debug("Workflow %s is pending or running" % workflow.name)
+        if p.pending():
+            log.info("Workflow %s is pending" % workflow.name)
             return
 
+        if p.running():
+            log.info("Workflow %s is running" % workflow.name)
+            return
+
+        log.info("Workflow %s is no longer running" % workflow.name)
         self.running -= 1
 
         if p.running_successful():
+            log.info("Workflow %s was successful" % workflow.name)
             workflow.set_state(EnsembleWorkflowStates.SUCCESSFUL)
         else:
+            log.info("Workflow %s failed" % workflow.name)
             workflow.set_state(EnsembleWorkflowStates.FAILED)
 
         workflow.set_updated()
@@ -473,6 +485,11 @@ class EnsembleProcessor:
             self.handle_running(w)
 
     def run(self):
+        edir = self.ensemble.get_localdir()
+        if not os.path.isdir(edir):
+            log.info("Creating ensemble directory: %s" % edir)
+            os.makedirs(edir, 0700)
+
         log.info("Processing %d ensemble workflows..." % len(self.workflows))
         for w in self.workflows:
             try:

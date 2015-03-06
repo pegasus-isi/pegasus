@@ -2,6 +2,7 @@ import os
 import re
 import stat
 import shutil
+import subprocess
 from datetime import datetime
 
 from flask import url_for, g
@@ -9,22 +10,27 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import sql
 
 from Pegasus.db.modules import SQLAlchemyInit
-from Pegasus.service.ensembles.api import *
+from Pegasus.service import user
+
+class EMError(Exception):
+    def __init__(self, message, status_code=500):
+        Exception.__init__(self, message)
+        self.status_code = status_code
 
 def validate_ensemble_name(name):
     if name is None:
-        raise APIError("Specify ensemble name")
+        raise EMError("Specify ensemble name")
     if len(name) >= 100:
-        raise APIError("Ensemble name too long: %d" % len(name))
-    if ".." in name or re.match(r"\A[a-zA-Z0-9._-]+\Z", name) is None:
-        raise APIError("Invalid ensemble name: %s" % name)
+        raise EMError("Ensemble name too long: %d" % len(name))
+    if re.match(r"\A[a-zA-Z0-9_-]+\Z", name) is None:
+        raise EMError("Invalid ensemble name: %s" % name)
     return name
 
 def validate_priority(priority):
     try:
         return int(priority)
     except ValueError:
-        raise APIError("Invalid priority: %s" % priority)
+        raise EMError("Invalid priority: %s" % priority)
 
 class EnsembleBase(object):
     def set_name(self, name):
@@ -59,26 +65,31 @@ class Ensemble(EnsembleBase):
     def set_state(self, state):
         state = state.upper()
         if state not in EnsembleStates:
-            raise APIError("Invalid ensemble state: %s" % state)
+            raise EMError("Invalid ensemble state: %s" % state)
         self.state = state
 
     def set_max_running(self, max_running):
         try:
-            x = int(max_running)
+            max_running = int(max_running)
             if max_running < 1:
-                raise APIError("Value for max_running must be >= 1: %s" % max_running)
-            self.max_running = x
+                raise EMError("Value for max_running must be >= 1: %s" % max_running)
+            self.max_running = max_running
         except ValueError:
-            raise APIError("Invalid value for max_running: %s" % max_running)
+            raise EMError("Invalid value for max_running: %s" % max_running)
 
     def set_max_planning(self, max_planning):
         try:
-            x = int(max_planning)
+            max_planning = int(max_planning)
             if max_planning < 1:
-                raise APIError("Value for max_planning must be >= 1: %s" % max_planning)
-            self.max_planning = x
+                raise EMError("Value for max_planning must be >= 1: %s" % max_planning)
+            self.max_planning = max_planning
         except ValueError:
-            raise APIError("Invalid value for max_planning: %s" % max_planning)
+            raise EMError("Invalid value for max_planning: %s" % max_planning)
+
+    def get_localdir(self):
+        u = user.get_user_by_username(self.username)
+        edir = u.get_ensembles_dir()
+        return os.path.join(edir, self.name)
 
     def get_object(self):
         return {
@@ -109,7 +120,7 @@ class EnsembleWorkflow(EnsembleBase):
     def set_state(self, state):
         state = state.upper()
         if state not in EnsembleWorkflowStates:
-            raise APIError("Invalid ensemble workflow state: %s" % state)
+            raise EMError("Invalid ensemble workflow state: %s" % state)
         self.state = state
 
     def change_state(self, state):
@@ -121,15 +132,15 @@ class EnsembleWorkflow(EnsembleBase):
         #   FAILED -> READY
         if self.state == EnsembleWorkflowStates.PLAN_FAILED:
             if state != EnsembleWorkflowStates.READY:
-                raise APIError("Can only replan workflows in PLAN_FAILED state")
+                raise EMError("Can only replan workflows in PLAN_FAILED state")
         elif self.state == EnsembleWorkflowStates.RUN_FAILED:
             if state not in (EnsembleWorkflowStates.READY, EnsembleWorkflowStates.QUEUED):
-                raise APIError("Can only replan or rerun workflows in RUN_FAILED state")
+                raise EMError("Can only replan or rerun workflows in RUN_FAILED state")
         elif self.state == EnsembleWorkflowStates.FAILED:
             if state not in (EnsembleWorkflowStates.READY, EnsembleWorkflowStates.QUEUED):
-                raise APIError("Can only replan or rerun workflows in FAILED state")
+                raise EMError("Can only replan or rerun workflows in FAILED state")
         else:
-            raise APIError("Invalid state change: %s -> %s" % (self.state, state))
+            raise EMError("Invalid state change: %s -> %s" % (self.state, state))
 
         self.set_state(state)
 
@@ -138,7 +149,7 @@ class EnsembleWorkflow(EnsembleBase):
 
     def set_wf_uuid(self, wf_uuid):
         if wf_uuid is not None and len(wf_uuid) != 36:
-            raise APIError("Invalid wf_uuid")
+            raise EMError("Invalid wf_uuid")
         self.wf_uuid = wf_uuid
 
     def set_basedir(self, basedir):
@@ -149,6 +160,30 @@ class EnsembleWorkflow(EnsembleBase):
 
     def set_plan_command(self, plan_command):
         self.plan_command = plan_command
+
+    def _get_file(self, suffix):
+        edir = self.ensemble.get_localdir()
+        wf = self.name
+        filename = "%s.%s" % (wf, suffix)
+        return os.path.join(edir, filename)
+
+    def get_basedir(self):
+        return self.basedir
+
+    def get_pidfile(self):
+        return self._get_file("plan.pid")
+
+    def get_resultfile(self):
+        return self._get_file("plan.result")
+
+    def get_runfile(self):
+        return self._get_file("plan.run")
+
+    def get_logfile(self):
+        return self._get_file("log")
+
+    def get_plan_command(self):
+        return self.plan_command
 
     def get_object(self):
         return {
@@ -170,6 +205,8 @@ class EnsembleWorkflow(EnsembleBase):
         o = self.get_object()
         o["basedir"] = self.basedir
         o["plan_command"] = self.plan_command
+        o["log"] = self.get_logfile()
+        o["submitdir"] = self.submitdir
         return o
 
 class Ensembles(SQLAlchemyInit):
@@ -195,11 +232,11 @@ class Ensembles(SQLAlchemyInit):
         try:
             return self.session.query(Ensemble).filter(Ensemble.username==username, Ensemble.name==name).one()
         except NoResultFound:
-            raise APIError("No such ensemble: %s" % name, 404)
+            raise EMError("No such ensemble: %s" % name, 404)
 
     def create_ensemble(self, username, name, max_running, max_planning):
         if self.session.query(Ensemble).filter(Ensemble.username==username, Ensemble.name==name).count() > 0:
-            raise APIError("Ensemble %s already exists" % name, 400)
+            raise EMError("Ensemble %s already exists" % name, 400)
 
         ensemble = Ensemble(username, name)
         ensemble.set_max_running(max_running)
@@ -221,7 +258,7 @@ class Ensembles(SQLAlchemyInit):
                          EnsembleWorkflow.name==name)
             return q.one()
         except NoResultFound:
-            raise APIError("No such ensemble workflow: %s" % name, 404)
+            raise EMError("No such ensemble workflow: %s" % name, 404)
 
     def create_ensemble_workflow(self, ensemble_id, name, basedir, priority, plan_command):
 
@@ -230,7 +267,7 @@ class Ensembles(SQLAlchemyInit):
         q = q.filter(EnsembleWorkflow.ensemble_id==ensemble_id,
                      EnsembleWorkflow.name==name)
         if q.count() > 0:
-            raise APIError("Ensemble workflow %s already exists" % name, 400)
+            raise EMError("Ensemble workflow %s already exists" % name, 400)
 
         # Create database record
         w = EnsembleWorkflow(ensemble_id, name, basedir, plan_command)
@@ -272,4 +309,36 @@ class Ensembles(SQLAlchemyInit):
         f.write("--input-dir %s \n" % bundledir)
 
         f.write("exit $?")
+
+def analyze(workflow):
+    w = workflow
+
+    yield "Workflow state is %s\n" % w.state
+    yield "Plan command is: %s\n" % w.plan_command
+
+    logfile = w.get_logfile()
+    if os.path.isfile(logfile):
+        yield "Workflow log:\n"
+        for l in open(w.get_logfile(), "rb"):
+            yield "LOG: %s" % l
+    else:
+        yield "No workflow log available\n"
+
+    if w.submitdir is None or not os.path.isdir(w.submitdir):
+        yield "No submit directory available\n"
+    else:
+        yield "pegasus-analyzer output is:\n"
+        p = subprocess.Popen(["pegasus-analyzer", w.submitdir], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        out, err = p.communicate()
+        for l in out.split("\n"):
+            yield "ANALYZER: %s\n" % l
+        rc = p.wait()
+        yield "ANALYZER: Exited with code %d\n" % rc
+
+    if w.state == EnsembleWorkflowStates.PLAN_FAILED:
+        yield "Planner failure detected\n"
+    elif w.state == EnsembleWorkflowStates.RUN_FAILED:
+        yield "pegasus-run failure detected\n"
+    elif w.state == EnsembleWorkflowStates.FAILED:
+        yield "Workflow failure detected\n"
 
