@@ -695,7 +695,6 @@ public abstract class Abstract implements Implementation{
         newJob.setTransformation( "pegasus", "noop", "1.0" );
         newJob.setDerivation( "pegasus", "noop", "1.0" );
 
-//        newJob.setUniverse( "vanilla" );
         newJob.setUniverse( GridGateway.JOB_TYPE.auxillary.toString());
                 
         //the noop job does not get run by condor
@@ -736,7 +735,6 @@ public abstract class Abstract implements Implementation{
     protected Job createSetXBitJob( Collection<FileTransfer> files, String name, String site ){
         Job xBitJob = new Job();
         TransformationCatalogEntry entry   = null;
-//        GridGateway jobManager = null;
         String eSiteHandle = site;
 
         List entries;
@@ -774,11 +772,6 @@ public abstract class Abstract implements Implementation{
 
 
         SiteCatalogEntry eSite = mSiteStore.lookup( eSiteHandle );
-        
-/* JIRA PM-277
-        jobManager             = eSite.selectGridGateway( GridGateway.JOB_TYPE.transfer );
-*/
-        
         StringBuffer arguments = new StringBuffer();
         arguments.append( " +x " );
         for( FileTransfer file : files ){
@@ -793,11 +786,6 @@ public abstract class Abstract implements Implementation{
         xBitJob.dvName      = Abstract.CHANGE_XBIT_TRANSFORMATION;
         xBitJob.dvNamespace = Abstract.XBIT_DERIVATION_NS;
         xBitJob.dvVersion   = Abstract.XBIT_DERIVATION_VERSION;
-
-/*      JIRA PM-277
-        xBitJob.setUniverse( GridGateway.JOB_TYPE.auxillary.toString());
-        xBitJob.globusScheduler = jobManager.getContact();
- */       
         xBitJob.executable      = entry.getPhysicalTransformation();
         xBitJob.executionPool   = eSiteHandle;
         xBitJob.strargs         = arguments.toString();
@@ -877,9 +865,6 @@ public abstract class Abstract implements Implementation{
 
 
         SiteCatalogEntry eSite = mSiteStore.lookup( eSiteHandle );
-
-        //  JIRA PM-277
-//        jobManager             = eSite.selectGridGateway( GridGateway.JOB_TYPE.transfer );
         String arguments = " -X -f " + new PegasusURL( destURL.getValue() ).getPath() ;
 
         xBitJob.jobName     = name;
@@ -891,8 +876,6 @@ public abstract class Abstract implements Implementation{
         xBitJob.dvVersion   = Abstract.XBIT_DERIVATION_VERSION;
         xBitJob.setUniverse( GridGateway.JOB_TYPE.auxillary.toString());
 
-        //JIRA PM-277
-//        xBitJob.globusScheduler = jobManager.getContact();
 
         xBitJob.executable      = entry.getPhysicalTransformation();
         xBitJob.executionPool   = eSiteHandle;
