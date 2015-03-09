@@ -704,7 +704,7 @@ public abstract class Abstract implements Implementation{
 
         //construct noop keys
         newJob.setSiteHandle( "local" );
-        newJob.setJobType( Job.CREATE_DIR_JOB );
+        newJob.setJobType( Job.CHMOD_JOB );
         construct(newJob,"noop_job","true");
         construct(newJob,"noop_job_exit_code","0");
 
