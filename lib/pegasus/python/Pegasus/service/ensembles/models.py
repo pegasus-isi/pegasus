@@ -12,6 +12,9 @@ from sqlalchemy import sql
 from Pegasus.db.modules import SQLAlchemyInit
 from Pegasus.service import user
 
+def timestamp(dt):
+    return (dt - datetime(1970, 1, 1)).total_seconds()
+
 class EMError(Exception):
     def __init__(self, message, status_code=500):
         Exception.__init__(self, message)
@@ -95,8 +98,8 @@ class Ensemble(EnsembleBase):
         return {
             "id": self.id,
             "name": self.name,
-            "created": self.created,
-            "updated": self.updated,
+            "created": timestamp(self.created),
+            "updated": timestamp(self.updated),
             "state": self.state,
             "max_running": self.max_running,
             "max_planning": self.max_planning,
@@ -189,8 +192,8 @@ class EnsembleWorkflow(EnsembleBase):
         return {
             "id": self.id,
             "name": self.name,
-            "created": self.created,
-            "updated": self.updated,
+            "created": timestamp(self.created),
+            "updated": timestamp(self.updated),
             "state": self.state,
             "priority": self.priority,
             "wf_uuid": self.wf_uuid,

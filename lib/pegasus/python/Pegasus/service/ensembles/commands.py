@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 import urlparse
 import requests
 import logging
@@ -114,6 +115,10 @@ class ServerCommand(Command):
 
         log.info("Exiting")
 
+def formatts(ts):
+    t = time.localtime(ts)
+    return time.strftime("%Y-%m-%d %H:%M:%S %Z", t)
+
 class EnsemblesCommand(EnsembleClientCommand):
     description = "List ensembles"
     usage = "Usage: %prog ensembles"
@@ -121,11 +126,11 @@ class EnsemblesCommand(EnsembleClientCommand):
     def run(self):
         response = self.get("/ensembles")
         result = response.json()
-        fmt = "%-20s %-8s %-30s %-30s %14s %12s"
+        fmt = "%-20s %-8s %-24s %-24s %12s %12s"
         if len(result) > 0:
             print fmt % ("NAME","STATE","CREATED","UPDATED","MAX PLANNING","MAX RUNNING")
         for r in result:
-            print fmt % (r["name"], r["state"], r["created"], r["updated"], r["max_planning"], r["max_running"])
+            print fmt % (r["name"], r["state"], formatts(r["created"]), formatts(r["updated"]), r["max_planning"], r["max_running"])
 
 class CreateCommand(EnsembleClientCommand):
     description = "Create ensemble"
@@ -238,18 +243,18 @@ class WorkflowsCommand(EnsembleClientCommand):
             for w in result:
                 print "ID:      ",w["id"]
                 print "Name:    ",w["name"]
-                print "Created: ",w["created"]
-                print "Updated: ",w["updated"]
+                print "Created: ",formatts(w["created"])
+                print "Updated: ",formatts(w["updated"])
                 print "State:   ",w["state"]
                 print "Priority:",w["priority"]
                 print "UUID:    ",w["wf_uuid"]
                 print "URL:     ",w["href"]
                 print
         else:
-            fmt = "%-20s %-15s %-8s %-30s %-30s"
+            fmt = "%-20s %-15s %-8s %-24s %-24s"
             print fmt % ("NAME","STATE","PRIORITY","CREATED","UPDATED")
             for w in result:
-                print fmt % (w["name"],w["state"],w["priority"],w["created"],w["updated"])
+                print fmt % (w["name"],w["state"],w["priority"],formatts(w["created"]),formatts(w["updated"]))
 
 class StatusCommand(EnsembleClientCommand):
     description = "Check workflow status"
@@ -270,8 +275,8 @@ class StatusCommand(EnsembleClientCommand):
         print "ID:           %s" % result['id']
         print "Name:         %s" % result['name']
         print "Plan Command: %s" % result['plan_command']
-        print "Created:      %s" % result['created']
-        print "Updated:      %s" % result['updated']
+        print "Created:      %s" % formatts(result['created'])
+        print "Updated:      %s" % formatts(result['updated'])
         print "State:        %s" % result['state']
         print "UUID:         %s" % (result['wf_uuid'] or "")
         print "Priority:     %s" % result['priority']
