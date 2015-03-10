@@ -22,6 +22,9 @@ import edu.isi.pegasus.common.util.StreamGobbler;
 import edu.isi.pegasus.common.util.StreamGobblerCallback;
 import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
+
+import edu.isi.pegasus.planner.catalog.site.classes.Directory;
+
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
@@ -158,6 +161,11 @@ public class PegasusLite implements GridStart {
      */
     public static final String PEGASUS_LITE_EXITCODE_SUCCESS_MESSAGE = "PegasusLite: exitcode 0";
 
+    /**
+     * The environment variable to set if we want a job to execute in 
+     * a particular directory on the worker node
+     */
+    public static final String WORKER_NODE_DIRECTORY_KEY = "PEGASUS_WN_TMP";
     
     /**
      * Stores the major version of the planner.
@@ -809,6 +817,37 @@ public class PegasusLite implements GridStart {
                 //pegasus lite to change the directory where condor
                 //launches the jobs
                 sb.append( "export pegasus_lite_work_dir=$PWD" ).append( '\n' );
+            }
+            else{
+                //PM-822 check if the user has specified a local directory 
+                //for the execution site then set that as PEGASUS_WN_TMP
+                //and let pegasus lite at runtime launch the job in that
+                //directory
+                SiteCatalogEntry execSiteEntry = mSiteStore.lookup( job.getSiteHandle() );
+                String dir = null;
+                
+                if( job.envVariables.containsKey(PegasusLite.WORKER_NODE_DIRECTORY_KEY  )){
+                    //user metioned it as a profile that got assocaited with the job
+                    dir = (String) job.envVariables.get( PegasusLite.WORKER_NODE_DIRECTORY_KEY);
+                }
+                else if( execSiteEntry != null ){
+                    Directory directory = execSiteEntry.getDirectory( Directory.TYPE.local_scratch );
+                    if( directory != null ){
+                        dir = directory.getInternalMountPoint().getMountPoint();
+                    }
+                }
+                                    
+                if( dir != null ){
+                    StringBuilder message = new StringBuilder();
+                    message.append( "Job " ).append( job.getID()  ).append( " will execute in directory " ).
+                            append( dir ).append( " on the local filesystem at site "  ).
+                            append( job.getSiteHandle() );
+                    mLogger.log( message.toString(),
+                                 LogManager.DEBUG_MESSAGE_LEVEL );
+                    sb.append( "export ").append( PegasusLite.WORKER_NODE_DIRECTORY_KEY ).
+                       append( "=" ).append( dir ).append( '\n' );
+                }
+
             }
 
             sb.append( "pegasus_lite_setup_work_dir" ).append( '\n' );
