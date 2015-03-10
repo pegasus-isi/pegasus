@@ -218,8 +218,10 @@ class Ensembles(SQLAlchemyInit):
         SQLAlchemyInit.__init__(self, dburl, initializeToDashboardDB)
 
     def list_ensembles(self, username):
-        ensembles = self.session.query(Ensemble).filter(Ensemble.username==username).all()
-        return ensembles
+        q = self.session.query(Ensemble)
+        q = q.filter(Ensemble.username==username)
+        q = q.order_by(Ensemble.created)
+        return q.all()
 
     def list_actionable_ensembles(self):
         states = (
