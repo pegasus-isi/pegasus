@@ -4,7 +4,7 @@
 INSTALL = install
 RM      = rm -f
 CXX	= g++ -ffor-scope 
-CXXFLAGS += -O
+CXXFLAGS += -O -Wall
 LD      = $(CXX)
 LOADLIBES = -lm
 SYSTEM  = $(shell uname -s | tr '[a-z]' '[A-Z]' | tr -d '_ -/')
@@ -14,6 +14,7 @@ MAJOR   = $(firstword $(subst ., ,$(VERSION)))
 SOCKIO  = $(shell /bin/ls /usr/include/sys/sockio.h 2>/dev/null)
 EXTRA_OBJ = basic.o
 EXTRA_INC = version.h
+
 
 
 ifndef ${prefix}
@@ -67,9 +68,9 @@ linux.o: linux.cc linux.hh basic.hh
 version.h:
 	$(CURDIR)/genversion.sh > $(CURDIR)/version.h
 
-install: pegasus-keg
+install: pegasus-keg 
 	$(INSTALL) -m 0755 pegasus-keg $(prefix)/bin
-
+	
 test check: pegasus-keg
 	@./pegasus-keg -o /dev/fd/1 || echo "test failed" && echo "test ok"
 
@@ -78,3 +79,29 @@ clean:
 
 distclean: clean
 	$(RM) pegasus-keg
+
+# MPI version	
+
+MPICC	= mpicc
+MPICCFLAGS = -DWITH_MPI
+LD_MPI	= $(MPICC)
+LD_MPIFLAGS = -lstdc++
+
+install-mpi-keg: pegasus-mpi-keg
+	$(INSTALL) -m 0755 pegasus-mpi-keg $(prefix)/bin
+
+pegasus-mpi-keg: pegasus-mpi-keg.o $(EXTRA_OBJ)
+	$(LD_MPI) $(LDFLAGS) $^ -o $@ $(LOADLIBES) $(LD_MPIFLAGS)
+
+pegasus-mpi-keg.o : pegasus-keg.cc $(EXTRA_INC)
+	$(MPICC) $(MPICCFLAGS) $(CPPFLAGS) $(CXXFLAGS) $< -c -o $@
+
+test-mpi check-mpi: pegasus-mpi-keg
+	@mpiexec -n 2 ./pegasus-mpi-keg -o /dev/fd/1 || echo "test failed" && echo "test ok"
+
+clean-mpi:
+	$(RM) pegasus-mpi-keg.o core core.* $(EXTRA_OBJ) $(EXTRA_COBJ)
+
+distclean-mpi: clean-mpi
+	$(RM) pegasus-mpi-keg
+
