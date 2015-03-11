@@ -19,7 +19,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <pthread.h>
-#include <dlfcn.h>
 
 /* TODO Interpose accept (for network servers) */
 /* TODO Is it necessary to interpose shutdown? Would that help the DNS issue? */
@@ -137,28 +136,6 @@ typedef struct {
     size_t bwrite;
 } Descriptor;
 
-typedef struct {
-    double real_utime;
-    double real_stime;
-    double real_iowait;
-} CpuUtilInfo;
-
-typedef struct {
-    int vmSize;
-    int vmRSS;
-    int threads;
-} MemUtilInfo;
-
-typedef struct {
-    int rchar;
-    int wchar;
-    int syscr;
-    int syscw;
-    int read_bytes;
-    int write_bytes;
-    int cancelled_write_bytes;
-} IoUtilInfo;
-
 const char DTYPE_NONE = 0;
 const char DTYPE_FILE = 1;
 const char DTYPE_SOCK = 2;
@@ -169,8 +146,8 @@ static int max_descriptors = 0;
 
 /* This is the trace file where we write information about the process */
 static FILE* trace = NULL;
+static FILE* global_trace = NULL;
 static pthread_t timer_thread;
-static int library_loaded = 1;
 
 static FILE *fopen_untraced(const char *path, const char *mode);
 static int fprintf_untraced(FILE *stream, const char *format, ...);
@@ -178,91 +155,13 @@ static int vfprintf_untraced(FILE *stream, const char *format, va_list ap);
 static char *fgets_untraced(char *s, int size, FILE *stream);
 static int fclose_untraced(FILE *fp);
 
-static double get_time();
-static CpuUtilInfo read_cpu_status();
-static MemUtilInfo read_mem_status();
-static IoUtilInfo read_io_status();
-static char* read_exe();
-
-
-
-// Utility function to open the kickstart status file based on environment variable
-static FILE* open_kickstart_status_file() {
-    char *kickstart_status = getenv("KICKSTART_MON_FILE");
-
-    if (kickstart_status == NULL) {
-        printerr("Unable to open kickstart status file: KICKSTART_MON_FILE not set in environment\n");
-        return NULL;
-    }
-
-    return fopen(kickstart_status, "a");
-}
-
-/*
- * It is a timer thread function, which dumps monitoring information to a global trace file 
- * - a full path is stored in KICKSTART_PREFIX
- * - it stores a single entry each time which follows the pattern:
- * <mpi_rank> <timestamp> <utime> <stime> <io_wait> <vm_peak> <pm_peak> <threads> <read_bytes> <write_bytes> <syscr> <syscw>
- */
 static void* timer_thread_func(void* mpi_rank_void) {
-    time_t timestamp;
-    int interval = 5;
-    int mpi_rank = atoi( (char*) mpi_rank_void ) + 1;
-    char* exec_name = read_exe();
-    char hostname[BUFSIZ];
+    char filename[BUFSIZ];
+    char* mpi_rank = (char*) mpi_rank_void;
 
-    printerr("We are now in a thread: %d\n", mpi_rank);
-
-    if( gethostname(hostname, BUFSIZ) ) {
-        printerr("[Thread-%d] ERROR: couldn't get hostname: %s\n", mpi_rank, strerror(errno));
-        return NULL;
-    }
-
-    FILE* kickstart_status = open_kickstart_status_file();
-    if(kickstart_status == NULL) {
-        pthread_exit(NULL);
-        return NULL;
-    }
-
-    char* kickstart_pid = getenv("KICKSTART_MON_PID");
-    if (kickstart_pid == NULL) {
-        printerr("KICKSTART_MON_PID not set in environment\n");
-        return NULL;
-    }
-
-
-    while(library_loaded) {        
-        sleep(interval);
-
-        timestamp = time(NULL);
-
-        printerr("[Thread-%d][%d] is dumping monitoring information\n", mpi_rank, (int)timestamp);
-        CpuUtilInfo cpu_info = read_cpu_status();
-        MemUtilInfo mem_info = read_mem_status();
-        IoUtilInfo io_info = read_io_status();
-
-
-        fprintf(kickstart_status, "ts=%d event=workflow_trace level=INFO status=0 "         
-            "guid=na kickstart_pid=%s executable=%s hostname=%s mpi_rank=%d utime=%.3f stime=%.3f "
-            "iowait=%.3f vmSize=%d vmRSS=%d threads=%d read_bytes=%d write_bytes=%d "
-            "syscr=%d syscw=%d\n", 
-
-            (int)timestamp, kickstart_pid, exec_name, hostname, mpi_rank, 
-            cpu_info.real_utime, cpu_info.real_stime, cpu_info.real_iowait,
-            mem_info.vmSize, mem_info.vmRSS, mem_info.threads,
-            io_info.read_bytes, io_info.write_bytes, io_info.syscr, io_info.syscw);
-
-        fflush(kickstart_status);
-    }
-
-    fclose(kickstart_status);
-    
-    if(exec_name != NULL) {
-        free(exec_name);
-    }
+    printerr("We are now in a thread: %s\n", mpi_rank);
 
     pthread_exit(NULL);
-    return NULL;
 }
 
 /* Open the trace file */
@@ -275,12 +174,31 @@ static int topen() {
         return -1;
     }
 
+    char* mpi_rank = getenv("OMPI_COMM_WORLD_RANK");
+
+    if(mpi_rank == NULL) {
+        mpi_rank = (char*) calloc(1024, sizeof(char));
+        strcpy(mpi_rank, "0");
+    }
+
     char filename[BUFSIZ];
     snprintf(filename, BUFSIZ, "%s.%d", kickstart_prefix, getpid());
+
+    printerr("[%s] Trace file is: %s\n", mpi_rank, filename);
 
     trace = fopen_untraced(filename, "w+");
     if (trace == NULL) {
         printerr("Unable to open trace file");
+        return -1;
+    }
+
+    snprintf(filename, BUFSIZ, "%s", kickstart_prefix);
+
+    printerr("[%s] Global trace file is: %s\n", mpi_rank, filename);
+
+    global_trace = fopen_untraced(filename, "w+");
+    if (global_trace == NULL) {
+        printerr("Unable to open globale trace file");
         return -1;
     }
 
@@ -361,68 +279,17 @@ static char *get_fullpath(const char *path) {
     return fullpath;
 }
 
-/* Read /proc/self/exe to get path to executable 
- * You need to free memory allocated to keep results of this function
- */
-static char* read_exe() {
+/* Read /proc/self/exe to get path to executable */
+static void read_exe() {
     debug("Reading exe");
-    printerr("Reading exe \n");
-    char* exe;
-
-    exe = (char*) calloc(sizeof(char), BUFSIZ);
-    if(exe == NULL) {
-        perror("libinterpose: couldn't allocate memory");
-        return NULL;
-    }
-
+    char exe[BUFSIZ];
     int size = readlink("/proc/self/exe", exe, BUFSIZ);
     if (size < 0) {
         perror("libinterpose: Unable to readlink /proc/self/exe");
-        return NULL;
+        return;
     }
-
     exe[size] = '\0';
-
-    // if it is linux loader we need to read its first argument
-    if( strstr(exe, "ld-") != NULL ) {
-        // printerr("libinterpose: we have ld-linux involved\n");
-        char buffer[BUFSIZ];
-        // so we read /proc/self/cmdline - it a string with \0 delimeter
-        int fd = open("/proc/self/cmdline", O_RDONLY);
-        if(fd < 0) {
-            printerr("libinterpose: Unable to open /proc/self/cmdline: %s\n", strerror(errno));
-        }
-        else {
-            // printerr("libinterpose: we opend cmdline file\n");
-
-            int nbytesread = read(fd, buffer, BUFSIZ);
-            if(nbytesread < 0) {
-                printerr("libinterpose: Unable to read /proc/self/cmdline: %s\n", strerror(errno));    
-            }
-            else {
-                // printerr("libinterpose: we read: %s\n", buffer);
-
-                char *buf_idx = buffer;
-
-                // we need to take only the first token without ld-
-                while( strstr(buf_idx, "ld-") != NULL ) {
-                    char* idx = index(buf_idx, 0);
-                    if(idx != NULL) {  
-                        buf_idx = idx + 1;
-                    }
-                }
-                strcpy(exe, buf_idx);
-            }
-            // printerr("libinterpose: executable read from cmdline: %s\n", exe);
-
-            close(fd);
-        }
-
-    }
-    
     tprintf("exe: %s\n", exe);
-
-    return exe;
 }
 
 /* Return 1 if line begins with tok */
@@ -465,45 +332,6 @@ static void read_status() {
     }
 
     fclose_untraced(f);
-}
-
-/* Read useful information from /proc/self/status and returns a structure with this information */
-static MemUtilInfo read_mem_status() {
-    debug("Reading status file");
-    MemUtilInfo info = { 0, 0, 0 };
-
-    char statf[] = "/proc/self/status";
-
-    /* If the status file is missing, then just skip it */
-    if (access(statf, F_OK) < 0) {
-        return info;
-    }
-
-    FILE *f = fopen_untraced(statf, "r");
-    if (f == NULL) {
-        perror("libinterpose: Unable to fopen /proc/self/status");
-        return info;
-    }
-
-    char line[BUFSIZ];
-    
-    while (fgets_untraced(line, BUFSIZ, f) != NULL) {
-
-        if (startswith(line,"VmSize")) {
-            sscanf(line, "VmSize: %d", &(info.vmSize));
-        } 
-        else if (startswith(line,"VmRSS")) {
-            sscanf(line, "VmRSS: %d", &(info.vmRSS));
-        } 
-        else if (startswith(line,"Threads")) {
-            sscanf(line, "Threads: %d", &(info.threads));
-        }
-
-    }
-
-    fclose_untraced(f);
-
-    return info;
 }
 
 /* Read /proc/self/stat to get CPU usage */
@@ -553,59 +381,6 @@ static void read_stat() {
     tprintf("iowait: %lf\n", real_iowait);
 }
 
-
-/* Read /proc/self/stat to get CPU usage and returns a structure with this information */
-static CpuUtilInfo read_cpu_status() {
-    CpuUtilInfo info = { 0.0, 0.0 };
-
-    debug("Reading stat file");
-
-    char statf[] = "/proc/self/stat";
-
-    /* If the stat file is missing, then just skip it */
-    if (access(statf, F_OK) < 0) {
-        return info;
-    }
-
-    FILE *f = fopen_untraced(statf,"r");
-    if (f == NULL) {
-        perror("libinterpose: Unable to fopen /proc/self/stat");
-        return info;
-    }
-
-    unsigned long utime, stime = 0;
-    unsigned long long iowait = 0; //delayacct_blkio_ticks
-
-    //pid comm state ppid pgrp session tty_nr tpgid flags minflt cminflt majflt
-    //cmajflt utime stime cutime cstime priority nice num_threads itrealvalue
-    //starttime vsize rss rsslim startcode endcode startstack kstkesp kstkeip
-    //signal blocked sigignore sigcatch wchan nswap cnswap exit_signal
-    //processor rt_priority policy delayacct_blkio_ticks guest_time cguest_time
-    fscanf(f, "%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu "
-              "%lu %*d %*d %*d %*d %*d %*d %*u %*u %*d %*u %*u "
-              "%*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*d "
-              "%*d %*u %*u %llu %*u %*d",
-           &utime, &stime, &iowait);
-
-    fclose_untraced(f);
-
-    /* Adjust by number of clock ticks per second */
-    long clocks = sysconf(_SC_CLK_TCK);
-
-    double real_utime;
-    double real_stime;
-    double real_iowait;
-    real_utime = ((double)utime) / clocks;
-    real_stime = ((double)stime) / clocks;
-    real_iowait = ((double)iowait) / clocks;
-
-    info.real_utime = real_utime;
-    info.real_stime = real_stime;
-    info.real_iowait = real_iowait;
-
-    return info;
-}
-
 /* Read /proc/self/io to get I/O usage */
 static void read_io() {
     debug("Reading io file");
@@ -646,51 +421,6 @@ static void read_io() {
     }
 
     fclose_untraced(f);
-}
-
-/* Read /proc/self/io to get I/O usage */
-static IoUtilInfo read_io_status() {
-    IoUtilInfo info = { 0, 0, 0, 0, 0, 0, 0 };
-    debug("Reading io file");
-
-    char iofile[] = "/proc/self/io";
-
-    /* This proc file was added in Linux 2.6.20. It won't be
-     * there on older kernels, or on kernels without task IO 
-     * accounting. If it is missing, just bail out.
-     */
-    if (access(iofile, F_OK) < 0) {
-        return info;
-    }
-
-    FILE *f = fopen_untraced(iofile, "r");
-    if (f == NULL) {
-        perror("libinterpose: Unable to fopen /proc/self/io");
-        return info;
-    }
-
-    char line[BUFSIZ];
-    while (fgets_untraced(line, BUFSIZ, f) != NULL) {
-        if (startswith(line, "rchar")) {
-            sscanf(line, "rchar: %d", &(info.rchar));
-        } else if (startswith(line, "wchar")) {
-            sscanf(line, "wchar: %d", &(info.wchar));
-        } else if (startswith(line,"syscr")) {
-            sscanf(line, "syscr: %d", &(info.syscr));
-        } else if (startswith(line,"syscw")) {
-            sscanf(line, "syscw: %d", &(info.syscw));
-        } else if (startswith(line,"read_bytes")) {
-            sscanf(line, "read_bytes: %d", &(info.read_bytes));
-        } else if (startswith(line,"write_bytes")) {
-            sscanf(line, "write_bytes: %d", &(info.write_bytes));
-        } else if (startswith(line,"cancelled_write_bytes")) {
-            sscanf(line, "cancelled_write_bytes: %d", &(info.cancelled_write_bytes));
-        }
-    }
-
-    fclose_untraced(f);
-
-    return info;
 }
 
 static void trace_file(const char *path, int fd) {
@@ -855,11 +585,6 @@ static void trace_sock(int sockfd, const struct sockaddr *addr, socklen_t addrle
 static void trace_dup(int oldfd, int newfd) {
     debug("trace_dup %d %d", oldfd, newfd);
 
-    if(oldfd == newfd) {
-        printerr("Old and new fds are the same\n");
-        return;
-    }
-
     Descriptor *o = get_descriptor(oldfd);
     if (o == NULL) {
         return;
@@ -898,7 +623,7 @@ static void trace_truncate(const char *path, off_t length) {
     tprintf("file: '%s' %lu 0 0\n", fullpath, length);
 }
 
-int tfile_exists() {
+int tfile_exists(char* mpi_rank) {
     char filename[BUFSIZ];
     char *kickstart_prefix = getenv("KICKSTART_PREFIX");
 
@@ -909,45 +634,26 @@ int tfile_exists() {
     
     snprintf(filename, BUFSIZ, "%s.%d", kickstart_prefix, getpid());
 
+    printerr("[%s] Trace file is: %s\n", mpi_rank, filename);
+
     if( access( filename, F_OK ) != -1 ) {
+        printerr("[%d] Trace file exists: %s\n", getpid(), filename);        
+        // file exists
         return 1;
     } else {
+        printerr("[%d] Trace file doesnt exist: %s\n", getpid(), filename);
+        // file doesn't exist
         return 0;
     }
 }
 
 void spawn_timer_thread() {
-    pid_t current_pid = getpid();
-
     // spawning a timer thread only when
     char* mpi_rank = getenv("OMPI_COMM_WORLD_RANK");
-    printerr("Spawning thread in process: %d\n", (int)current_pid);
-    // printerr("Setting mpi rank based on OMPI_COMM_WORLD_RANK\n");
 
     if(mpi_rank == NULL) {
-        mpi_rank = getenv("ALPS_APP_PE");        
-        // printerr("Setting mpi rank based on MPIRUN_RANK\n");
-
-        if(mpi_rank == NULL) {
-            mpi_rank = getenv("PMI_RANK");
-            // printerr("Setting mpi rank based on PMI_RANK\n");
-
-            if(mpi_rank == NULL) {
-                mpi_rank = getenv("PMI_ID");
-                // printerr("Setting mpi rank based on PMI_ID\n");
-
-                if(mpi_rank == NULL) {
-                    mpi_rank = getenv("MPIRUN_RANK");
-                    // printerr("Setting mpi rank based on ALPS_APP_PE\n"); 
-                }
-            }
-        }
-    }
-
-    if(mpi_rank == NULL) {
-        // printerr("Setting mpi rank based on ... it is still nil\n");
         mpi_rank = (char*) calloc(1024, sizeof(char));
-        strcpy(mpi_rank, "-1");
+        strcpy(mpi_rank, "na");
     }
 
     int rc = pthread_create(&timer_thread, NULL, timer_thread_func, (void *)mpi_rank);
@@ -959,16 +665,22 @@ void spawn_timer_thread() {
 
 /* Library initialization function */
 static void __attribute__((constructor)) interpose_init(void) {
-
     /* XXX Note that this might be called twice in one program. Java
      * seems to do this, for example.
      */
 
+    // spawning a timer thread only when
+    char* mpi_rank = getenv("OMPI_COMM_WORLD_RANK");
+
+    if(mpi_rank == NULL) {
+        mpi_rank = (char*) calloc(1024, sizeof(char));
+        strcpy(mpi_rank, "na");
+    }
+
     /* Open the trace file and spawning a thread only when there was no one */
-    switch( tfile_exists() ) {
+    switch( tfile_exists(mpi_rank) ) {
         case 0:
             topen();
-            printerr("I am creating a new thread...\n");
             spawn_timer_thread();
             break;
         case 1:
@@ -1006,9 +718,6 @@ static void __attribute__((destructor)) interpose_fini(void) {
 
     /* Close trace file */
     tclose();
-
-    printerr("I am stopping thread...\n");
-    library_loaded = 0;
 }
 
 
