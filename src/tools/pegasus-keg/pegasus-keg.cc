@@ -871,7 +871,7 @@ main( int argc, char *argv[] )
             }
             else 
             {
-                char *filesize = strrchr( iox[2][i], '=' );
+                char *filesize = strrchr( (char*)iox[2][i], '=' );
                 char filename[256];
                 
                 if ( filesize != NULL )
