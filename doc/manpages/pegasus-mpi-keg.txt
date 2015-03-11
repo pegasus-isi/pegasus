@@ -1,5 +1,5 @@
 pegasus-mpi-keg(1)
-==============
+==================
 :doctype: manpage
 
 Name
