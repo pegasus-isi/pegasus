@@ -1,0 +1,72 @@
+#!/bin/bash
+
+set -e
+set -v
+
+
+if [ X${testdir} = "X" ]; then
+    testdir=`dirname  $0`
+    export testdir
+fi
+
+TOPDIR=`pwd`
+
+# generate the input file
+echo "This is sample input to KEG" > f.a
+
+# output directory
+mkdir -p outputs
+mkdir -p staging-site
+
+# build the dax generator
+export PYTHONPATH=`pegasus-config --python`
+$testdir/blackdiamond.py /usr > blackdiamond.dax
+
+#set the local scratch for the jobs                                                                                                                                                        
+LOCALSCRATCH=/nfs/ccg3/scratch/bamboo/local-scratch
+mkdir -p $LOCALSCRATCH
+
+# create the site catalog
+cat > sites.xml <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0">
+<site  handle="local" arch="x86" os="LINUX" osrelease="" osversion="" glibc="">
+        <directory  path="$TOPDIR/outputs" type="shared-storage" free-size="" total-size="">
+                <file-server  operation="all" url="file://$TOPDIR/outputs">
+                </file-server>
+        </directory>
+        <directory  path="$TOPDIR/work" type="shared-scratch" free-size="" total-size="">
+                <file-server  operation="all" url="file://$TOPDIR/work">
+                </file-server>
+        </directory>
+</site>
+<site  handle="condorpool" arch="x86" os="LINUX" osrelease="" osversion="" glibc="">
+        <profile namespace="condor" key="universe" >vanilla</profile>
+        <profile namespace="pegasus" key="style" >condor</profile>
+        <directory  path="${LOCALSCRATCH}/local-scratch" type="local-scratch" free-size="" total-size=""> 
+        </directory>            
+</site>
+<site  handle="cartman-data" arch="x86" os="LINUX" osrelease="" osversion="" glibc="">
+        <directory  path="${TOPDIR}/staging-site/scratch" type="shared-scratch" free-size="" total-size="">
+                <file-server  operation="all" url="gsiftp://cartman.isi.edu/${TOPDIR}/staging-site/scratch">
+                </file-server>
+        </directory>
+        <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu">
+        </replica-catalog>
+</site>
+</sitecatalog>
+
+EOF
+
+# plan and submit the  workflow
+pegasus-plan \
+    --conf $testdir/pegasusrc \
+    --sites condorpool \
+    --staging-site cartman-data \
+    --output-site local \
+    --dir work \
+    --cleanup leaf \
+    --dax blackdiamond.dax \
+    --submit | tee plan.out
+
