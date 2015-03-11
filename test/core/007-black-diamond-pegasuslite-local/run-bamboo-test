@@ -35,8 +35,8 @@ cat >sites.xml <<EOF
                 <file-server  operation="all" url="file://$TOPDIR/outputs">
                 </file-server>
         </directory>
-        <directory  path="$TOPDIR/work" type="shared-scratch" free-size="" total-size="">
-                <file-server  operation="all" url="file://$TOPDIR/work">
+        <directory  path="$TOPDIR/work/scratch" type="shared-scratch" free-size="" total-size="">
+                <file-server  operation="all" url="file://$TOPDIR/work/scratch">
                 </file-server>
         </directory>
 </site>
@@ -47,7 +47,7 @@ EOF
 pegasus-plan \
     --conf $testdir/pegasusrc \
     --sites local \
-    --dir work \
+    --dir work/dags \
     --output-site local \
     --cluster horizontal \
     --dax blackdiamond.dax \
