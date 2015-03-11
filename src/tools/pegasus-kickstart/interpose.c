@@ -18,6 +18,7 @@
 #include <string.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <pthread.h>
 
 /* TODO Interpose accept (for network servers) */
 /* TODO Is it necessary to interpose shutdown? Would that help the DNS issue? */
@@ -145,12 +146,23 @@ static int max_descriptors = 0;
 
 /* This is the trace file where we write information about the process */
 static FILE* trace = NULL;
+static FILE* global_trace = NULL;
+static pthread_t timer_thread;
 
 static FILE *fopen_untraced(const char *path, const char *mode);
 static int fprintf_untraced(FILE *stream, const char *format, ...);
 static int vfprintf_untraced(FILE *stream, const char *format, va_list ap);
 static char *fgets_untraced(char *s, int size, FILE *stream);
 static int fclose_untraced(FILE *fp);
+
+static void* timer_thread_func(void* mpi_rank_void) {
+    char filename[BUFSIZ];
+    char* mpi_rank = (char*) mpi_rank_void;
+
+    printerr("We are now in a thread: %s\n", mpi_rank);
+
+    pthread_exit(NULL);
+}
 
 /* Open the trace file */
 static int topen() {
@@ -162,12 +174,31 @@ static int topen() {
         return -1;
     }
 
+    char* mpi_rank = getenv("OMPI_COMM_WORLD_RANK");
+
+    if(mpi_rank == NULL) {
+        mpi_rank = (char*) calloc(1024, sizeof(char));
+        strcpy(mpi_rank, "0");
+    }
+
     char filename[BUFSIZ];
     snprintf(filename, BUFSIZ, "%s.%d", kickstart_prefix, getpid());
+
+    printerr("[%s] Trace file is: %s\n", mpi_rank, filename);
 
     trace = fopen_untraced(filename, "w+");
     if (trace == NULL) {
         printerr("Unable to open trace file");
+        return -1;
+    }
+
+    snprintf(filename, BUFSIZ, "%s", kickstart_prefix);
+
+    printerr("[%s] Global trace file is: %s\n", mpi_rank, filename);
+
+    global_trace = fopen_untraced(filename, "w+");
+    if (global_trace == NULL) {
+        printerr("Unable to open globale trace file");
         return -1;
     }
 
@@ -592,14 +623,69 @@ static void trace_truncate(const char *path, off_t length) {
     tprintf("file: '%s' %lu 0 0\n", fullpath, length);
 }
 
+int tfile_exists(char* mpi_rank) {
+    char filename[BUFSIZ];
+    char *kickstart_prefix = getenv("KICKSTART_PREFIX");
+
+    if (kickstart_prefix == NULL) {
+        printerr("Unable to open trace file: KICKSTART_PREFIX not set in environment");
+        return -1;
+    }
+    
+    snprintf(filename, BUFSIZ, "%s.%d", kickstart_prefix, getpid());
+
+    printerr("[%s] Trace file is: %s\n", mpi_rank, filename);
+
+    if( access( filename, F_OK ) != -1 ) {
+        printerr("[%d] Trace file exists: %s\n", getpid(), filename);        
+        // file exists
+        return 1;
+    } else {
+        printerr("[%d] Trace file doesnt exist: %s\n", getpid(), filename);
+        // file doesn't exist
+        return 0;
+    }
+}
+
+void spawn_timer_thread() {
+    // spawning a timer thread only when
+    char* mpi_rank = getenv("OMPI_COMM_WORLD_RANK");
+
+    if(mpi_rank == NULL) {
+        mpi_rank = (char*) calloc(1024, sizeof(char));
+        strcpy(mpi_rank, "na");
+    }
+
+    int rc = pthread_create(&timer_thread, NULL, timer_thread_func, (void *)mpi_rank);
+    if (rc) {
+        printerr("ERROR; return code from pthread_create() is %d\n", rc);
+        exit(-1);
+    }    
+}
+
 /* Library initialization function */
 static void __attribute__((constructor)) interpose_init(void) {
     /* XXX Note that this might be called twice in one program. Java
      * seems to do this, for example.
      */
 
-    /* Open the trace file */
-    topen();
+    // spawning a timer thread only when
+    char* mpi_rank = getenv("OMPI_COMM_WORLD_RANK");
+
+    if(mpi_rank == NULL) {
+        mpi_rank = (char*) calloc(1024, sizeof(char));
+        strcpy(mpi_rank, "na");
+    }
+
+    /* Open the trace file and spawning a thread only when there was no one */
+    switch( tfile_exists(mpi_rank) ) {
+        case 0:
+            topen();
+            spawn_timer_thread();
+            break;
+        case 1:
+            break;
+    }
 
     /* Get file descriptor limit and allocate descriptor table */
     struct rlimit nofile_limit;
