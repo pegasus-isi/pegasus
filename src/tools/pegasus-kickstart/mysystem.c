@@ -301,7 +301,7 @@ static ProcInfo *processTraceFile(const char *fullpath) {
     fclose(trace);
 
     /* Remove the file */
-    unlink(fullpath);
+    // unlink(fullpath);
 
     return proc;
 }
