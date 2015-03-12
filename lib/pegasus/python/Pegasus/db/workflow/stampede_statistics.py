@@ -453,7 +453,7 @@ class StampedeStatistics(SQLAlchemyInit):
         q = q.filter(JobInstance.exitcode == 0).filter(JobInstance.exitcode != None)
         return q.count()
 
-    def get_total_failed_jobs_status(self):
+    def _get_total_failed_jobs_status(self):
         """
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Totalfailedjobs
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Totalfailedjobs
@@ -477,7 +477,13 @@ class StampedeStatistics(SQLAlchemyInit):
         q = q.filter(JobInstance.job_submit_seq == sq_1.c.jss)
         q = q.filter(JobInstance.exitcode != 0).filter(JobInstance.exitcode != None)
 
+        return q
+
+    def get_total_failed_jobs_status(self):
+
+        q = self._get_total_failed_jobs_status()
         return q.count()
+
 
     def _query_jobstate_for_instance(self, states):
         """
@@ -976,9 +982,20 @@ class StampedeStatistics(SQLAlchemyInit):
         q = q.filter(self._dax_or_dag_cond())
         return q.all()
 
-    def get_failed_job_instances(self, final=False, all_jobs=False):
+
+    def get_failed_job_instances(self):
         """
         https://confluence.pegasus.isi.edu/display/pegasus/Job+Statistics+file#JobStatisticsfile-Failedjobinstances
+        """
+
+        # PM-752 we use the same query that we used to get the count of failed jobs
+        q = self._get_total_failed_jobs_status()
+        return q.all()
+
+    def get_plots_failed_job_instances(self, final=False, all_jobs=False):
+        """
+        https://confluence.pegasus.isi.edu/display/pegasus/Job+Statistics+file#JobStatisticsfile-Failedjobinstances
+        used in the pegasus plots code. is deprecated
         """
         if self._expand:
             return []
