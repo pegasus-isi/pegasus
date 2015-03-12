@@ -2,6 +2,7 @@
 {% block title %}Workflow Details{% endblock %}
 {% block javascript_includes %}
 <script type="text/javascript" src="//code.highcharts.com/4.0.4/highcharts.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/zeroclipboard/2.2.0/ZeroClipboard.min.js"></script>
 {% endblock %}
 {% block javascript_init %}
 <script type="text/javascript" charset="utf-8">
@@ -264,6 +265,20 @@ stats_chart = new Highcharts.Chart (statOptions);
 chart = new Highcharts.Chart (chartOptions);
 verticalTableInitStatus ('#workflow_text_info', '{{workflow.state}}' );
 //verticalTableInit ('#workflow_stats_info');
+
+var client = new ZeroClipboard(document.getElementById('copy-button'));
+
+client.on("ready", function (readyEvent) {
+    client.on("aftercopy", function (event) {
+        var parent = $('#' + event.target.id).parent();
+        var popoverWrapper = parent.attr('aria-describedby');
+
+        if (popoverWrapper) {
+            $('#' + popoverWrapper + ' .popover-content').html('Copied!');
+        }
+    });
+});
+
 });
 </script>
 {% endblock %}
@@ -274,7 +289,7 @@ verticalTableInitStatus ('#workflow_text_info', '{{workflow.state}}' );
 {% block content %}
 <section class="row">
     <div class="col-md-12">
-        <table id="workflow_text_info" class="workflow_info">
+        <table id="workflow_text_info" class="table-fixed workflow_info">
             <col width="30%">
             <tr>
                 <th>Label</th>
@@ -298,7 +313,12 @@ verticalTableInitStatus ('#workflow_text_info', '{{workflow.state}}' );
             </tr>
             <tr>
                 <th>Submit Directory</th>
-                <td>
+                <td class="text-nowrap">
+                    <span data-container="body" data-toggle="popover" data-trigger="hover" data-placement="right"
+                          data-content="Copy to clipboard">
+                        <button id="copy-button" class="copy-button" data-clipboard-text="{{ workflow.submit_dir }}">
+                        </button>
+                    </span>
                     {{ workflow.submit_dir }}
                 </td>
             </tr>

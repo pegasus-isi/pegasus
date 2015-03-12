@@ -6,6 +6,37 @@
     font-size: 1.5em;
 }
 
+.table-fixed {
+    table-layout: fixed;
+}
+
+.table-fixed td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.copy-button {
+    padding: 0;
+    border: none;
+    background: none;
+}
+
+.copy-button:hover {
+    color: #31708f;
+}
+
+.copy-button:active, .copy-button:focus {
+    outline: none;
+    border: none;
+}
+
+.copy-button:before {
+    font-family: 'Pe-icon-7-stroke';
+    font-size: 1.33333333em;
+    vertical-align: -15%;
+    content: '\e665';
+}
+
 /*
  * Sticky Footer
  */
