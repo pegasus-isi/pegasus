@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <libgen.h>
 #include <dirent.h>
+#include <pthread.h>
 
 #include "utils.h"
 #include "appinfo.h"
@@ -37,6 +38,7 @@
 char *programname;
 
 static pthread_t monitoring_thread;
+static void* monitoring_thread_func(void* global_trace_file);
 
 static int isRelativePath(char *path) {
     // Absolute path
@@ -304,7 +306,7 @@ static ProcInfo *processTraceFile(const char *fullpath) {
     fclose(trace);
 
     /* Remove the file */
-    // unlink(fullpath);
+    unlink(fullpath);
 
     return proc;
 }
@@ -346,16 +348,10 @@ static ProcInfo *processTraceFiles(const char *tempdir, const char *trace_file_p
 }
 
 /* Try to get a new environment for the child process that has the tracing vars */
-static char **tryGetNewEnvironment(char **envp, const char *tempdir, const char *trace_file_prefix, 
-    const char* kickstart_status_path) {
+static char **tryGetNewEnvironment(char **envp, const char *tempdir, const char *trace_file_prefix) {
     int vars;
 
-    /* If KICKSTART_PREFIX 
-     *      or LD_PRELOAD 
-     *      or KICKSTART_MON_FILE 
-     *      or KICKSTART_MON_PID 
-     * are already set then we can't trace 
-     */
+    /* If KICKSTART_PREFIX or LD_PRELOAD are already set then we can't trace */
     for (vars=0; envp[vars] != NULL; vars++) {
         if (startswith(envp[vars], "KICKSTART_PREFIX=")) {
             return envp;
@@ -363,12 +359,6 @@ static char **tryGetNewEnvironment(char **envp, const char *tempdir, const char 
         if (startswith(envp[vars], "LD_PRELOAD=")) {
             return envp;
         }
-        if (startswith(envp[vars], "KICKSTART_MON_FILE=")) {
-            return envp;
-        }
-        if (startswith(envp[vars], "KICKSTART_MON_PID=")) {
-            return envp;
-        }        
     }
 
     /* If the interpose library can't be found, then we can't trace */
@@ -387,15 +377,6 @@ static char **tryGetNewEnvironment(char **envp, const char *tempdir, const char 
     snprintf(kickstart_prefix, BUFSIZ, "KICKSTART_PREFIX=%s/%s",
              tempdir, trace_file_prefix);
 
-    /* Set KICKSTART_MON_FILE to be current_working_directory/kickstart_status_ */
-    char kickstart_status[BUFSIZ];
-    snprintf(kickstart_status, BUFSIZ, "KICKSTART_MON_FILE=%s", kickstart_status_path);
-
-    /* Set KICKSTART_MON_PID to be pid of the kickstart process */
-    char kickstart_pid[BUFSIZ];
-    snprintf(kickstart_pid, BUFSIZ, "KICKSTART_MON_PID=%d", getpid());
-
-
     /* Copy the environment variables to a new array */
     char **newenvp = (char **)malloc(sizeof(char **)*(vars+3));
     if (newenvp == NULL) {
@@ -407,31 +388,11 @@ static char **tryGetNewEnvironment(char **envp, const char *tempdir, const char 
     }
 
     /* Set the new variables */
-    newenvp[vars]   = ld_preload;
+    newenvp[vars] = ld_preload;
     newenvp[vars+1] = kickstart_prefix;
-    newenvp[vars+2] = kickstart_status;
-    newenvp[vars+3] = kickstart_pid;
-    newenvp[vars+4] = NULL;
+    newenvp[vars+2] = NULL;
 
     return newenvp;
-}
-
-int kickstart_status_path(char* buf, size_t buf_size) {
-    char cwd[BUFSIZ];
-    if( getcwd(cwd, BUFSIZ) == NULL) {
-        printerr("ERROR: couldn't get current working directory: %s\n", strerror(errno));
-        return 1;
-    }
-
-    char hostname[BUFSIZ];
-    if( gethostname(hostname, BUFSIZ) ) {
-        printerr("ERROR: couldn't get hostname: %s\n", strerror(errno));
-        return 1;
-    }
-
-    snprintf(buf, buf_size, "%s/kickstart_status_%d_%s.log", cwd, getpid(), hostname);
-
-    return 0;    
 }
 
 int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
@@ -489,17 +450,18 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
     }
 
 //  DK: monitoring thread init
-    char kickstart_status[BUFSIZ];
-    if( kickstart_status_path(kickstart_status, BUFSIZ) ) {
-        printerr("ERROR: couldn't create kickstart status filepath\n");
+    char global_trace_file[BUFSIZ];
+    snprintf(global_trace_file, BUFSIZ, "%s/%s", tempdir, trace_file_prefix);
+
+    int rc = pthread_create(&monitoring_thread, NULL, monitoring_thread_func, (void *)global_trace_file);
+    if (rc) {
+        printerr("ERROR; return code from pthread_create() is %d\n", rc);
     }
     else {
-        printerr("KICKSTART_MON_FILE: %s\n", kickstart_status);
-    }
-
-    int rc = start_status_thread(&monitoring_thread, kickstart_status);
-    if (rc) {
-        printerr("ERROR: when starting a monitoring thread: is %s\n", strerror(errno));
+        rc = pthread_detach(monitoring_thread);
+        if (rc) {
+            printerr("ERROR; return code from pthread_detach() is %d\n", rc);
+        }   
     }
 
     /* start wall-clock */
@@ -515,7 +477,7 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
         // If we are using library tracing, try to set the necessary
         // environment variables
         if (appinfo->enableLibTrace) {
-            envp = tryGetNewEnvironment(envp, tempdir, trace_file_prefix, kickstart_status);
+            envp = tryGetNewEnvironment(envp, tempdir, trace_file_prefix);
         }
 
         /* connect jobs stdio */
@@ -574,4 +536,60 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
 
     /* finalize */
     return jobinfo->status;
+}
+
+/*
+ * Main monitoring thread loop - it periodically read global trace file as sent this info somewhere, e.g. to another file
+ * or to an external service. 
+ * It parses any information from the global monitoring and calculates some mean values.
+ */
+static void* monitoring_thread_func(void* global_trace_file) {
+    int interval = 10;
+    char line[BUFSIZ];
+
+    printerr("[kickstart-thread] We are starting a monitoring function - %s\n", (char*)global_trace_file);
+
+    FILE* global_trace = fopen((char*)global_trace_file, "r");
+    if(global_trace == NULL) {
+        printerr("[kickstart-thread] Couldn't open global_trace_file for read - %s\n", strerror(errno));
+    }
+
+    FILE* monitoring_file = fopen("monitoring.log", "a");
+    if(monitoring_file == NULL) {
+        printerr("[kickstart-thread] Couldn't open monitoring file for append\n");
+        pthread_exit(NULL);
+        return NULL;
+    }
+
+    printerr("[kickstart-thread] We opened the ./monitoring.log to append online monitoring information\n");
+
+    while(1) {        
+        sleep(interval);
+
+        printerr("[kickstart-thread] monitoring loop\n");
+
+        if(global_trace == NULL) {
+            global_trace = fopen((char*)global_trace_file, "r");
+                
+            if(global_trace == NULL) {
+                printerr("[kickstart-thread] Couldn't open global_trace_file for read - %s\n", strerror(errno));
+            }    
+        }
+
+        if(global_trace != NULL) {
+
+            while(fgets(line, BUFSIZ, global_trace) != NULL)
+            {
+                printerr("[kickstart-thread] are writing another line: %s", line);
+                fprintf(monitoring_file, "%s", line);
+            }
+
+            fflush(monitoring_file);
+        }
+    }
+
+    fclose(monitoring_file);
+    fclose(global_trace);
+
+    pthread_exit(NULL);
 }
