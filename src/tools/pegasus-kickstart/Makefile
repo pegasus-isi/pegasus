@@ -3,7 +3,7 @@ RM = rm -f
 CC = gcc
 CFLAGS = -Wall -O2 -ggdb -std=gnu99
 LD = $(CC)
-LDLIBS = -lm
+LDLIBS = -lm -lpthread
 SYSTEM = $(shell uname -s | tr '[a-z]' '[A-Z]' | tr -d '_ -/')
 ARCH = $(shell uname -m)
 TARGET = pegasus-kickstart

@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <libgen.h>
 #include <dirent.h>
+#include <pthread.h>
 
 #include "utils.h"
 #include "appinfo.h"
@@ -32,8 +33,12 @@
 #include "procinfo.h"
 #include "error.h"
 
+
 /* The name of the program (argv[0]) set in pegasus-kickstart.c:main */
 char *programname;
+
+static pthread_t monitoring_thread;
+static void* monitoring_thread_func(void* global_trace_file);
 
 static int isRelativePath(char *path) {
     // Absolute path
@@ -301,7 +306,7 @@ static ProcInfo *processTraceFile(const char *fullpath) {
     fclose(trace);
 
     /* Remove the file */
-    // unlink(fullpath);
+    unlink(fullpath);
 
     return proc;
 }
@@ -444,6 +449,21 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
         tempdir = "/tmp";
     }
 
+//  DK: monitoring thread init
+    char global_trace_file[BUFSIZ];
+    snprintf(global_trace_file, BUFSIZ, "%s/%s", tempdir, trace_file_prefix);
+
+    int rc = pthread_create(&monitoring_thread, NULL, monitoring_thread_func, (void *)global_trace_file);
+    if (rc) {
+        printerr("ERROR; return code from pthread_create() is %d\n", rc);
+    }
+    else {
+        rc = pthread_detach(monitoring_thread);
+        if (rc) {
+            printerr("ERROR; return code from pthread_detach() is %d\n", rc);
+        }   
+    }
+
     /* start wall-clock */
     now(&(jobinfo->start));
 
@@ -493,7 +513,7 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
         if (kill(jobinfo->child, 0) == 0) {
             printerr("ERROR: job %d is still running!\n", jobinfo->child);
             if (!errno) errno = EINPROGRESS;
-        }
+        }        
 
         /* Child is no longer running */
         appinfo->currentChild = 0;
@@ -518,3 +538,58 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
     return jobinfo->status;
 }
 
+/*
+ * Main monitoring thread loop - it periodically read global trace file as sent this info somewhere, e.g. to another file
+ * or to an external service. 
+ * It parses any information from the global monitoring and calculates some mean values.
+ */
+static void* monitoring_thread_func(void* global_trace_file) {
+    int interval = 10;
+    char line[BUFSIZ];
+
+    printerr("[kickstart-thread] We are starting a monitoring function - %s\n", (char*)global_trace_file);
+
+    FILE* global_trace = fopen((char*)global_trace_file, "r");
+    if(global_trace == NULL) {
+        printerr("[kickstart-thread] Couldn't open global_trace_file for read - %s\n", strerror(errno));
+    }
+
+    FILE* monitoring_file = fopen("monitoring.log", "a");
+    if(monitoring_file == NULL) {
+        printerr("[kickstart-thread] Couldn't open monitoring file for append\n");
+        pthread_exit(NULL);
+        return NULL;
+    }
+
+    printerr("[kickstart-thread] We opened the ./monitoring.log to append online monitoring information\n");
+
+    while(1) {        
+        sleep(interval);
+
+        printerr("[kickstart-thread] monitoring loop\n");
+
+        if(global_trace == NULL) {
+            global_trace = fopen((char*)global_trace_file, "r");
+                
+            if(global_trace == NULL) {
+                printerr("[kickstart-thread] Couldn't open global_trace_file for read - %s\n", strerror(errno));
+            }    
+        }
+
+        if(global_trace != NULL) {
+
+            while(fgets(line, BUFSIZ, global_trace) != NULL)
+            {
+                printerr("[kickstart-thread] are writing another line: %s", line);
+                fprintf(monitoring_file, "%s", line);
+            }
+
+            fflush(monitoring_file);
+        }
+    }
+
+    fclose(monitoring_file);
+    fclose(global_trace);
+
+    pthread_exit(NULL);
+}
