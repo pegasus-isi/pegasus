@@ -266,18 +266,7 @@ chart = new Highcharts.Chart (chartOptions);
 verticalTableInitStatus ('#workflow_text_info', '{{workflow.state}}' );
 //verticalTableInit ('#workflow_stats_info');
 
-var client = new ZeroClipboard(document.getElementById('copy-button'));
-
-client.on("ready", function (readyEvent) {
-    client.on("aftercopy", function (event) {
-        var parent = $('#' + event.target.id).parent();
-        var popoverWrapper = parent.attr('aria-describedby');
-
-        if (popoverWrapper) {
-            $('#' + popoverWrapper + ' .popover-content').html('Copied!');
-        }
-    });
-});
+clipboardTooltipInitialization();
 
 });
 </script>
@@ -285,7 +274,12 @@ client.on("ready", function (readyEvent) {
 {% block navigation_bar %}
 <li class="active">Workflow</li>
 {% endblock %}
-{% block title_header %}Workflow Details <small>{{ workflow.wf_uuid }}</small>{% endblock %}
+{% block title_header %}Workflow Details
+<small>{{ workflow.wf_uuid }}
+    <span data-container="body" data-toggle="tooltip" data-placement="right" title="Copy to clipboard">
+        <button class="copy-button" data-clipboard-text="{{ workflow.wf_uuid }}"></button>
+    </span>
+</small>{% endblock %}
 {% block content %}
 <section class="row">
     <div class="col-md-12">
@@ -314,9 +308,8 @@ client.on("ready", function (readyEvent) {
             <tr>
                 <th>Submit Directory</th>
                 <td class="text-nowrap">
-                    <span data-container="body" data-toggle="popover" data-trigger="hover" data-placement="right"
-                          data-content="Copy to clipboard">
-                        <button id="copy-button" class="copy-button" data-clipboard-text="{{ workflow.submit_dir }}">
+                    <span data-container="body" data-toggle="tooltip" data-placement="right" title="Copy to clipboard">
+                        <button class="copy-button" data-clipboard-text="{{ workflow.submit_dir }}">
                         </button>
                     </span>
                     {{ workflow.submit_dir }}

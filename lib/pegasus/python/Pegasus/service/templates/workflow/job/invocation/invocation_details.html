@@ -7,20 +7,7 @@
 $(document).ready (function ()
 {
     verticalTableInitStatus ('#invocation_text_info', {% if invocation.exitcode == 0 %}'successful' {% else %} 'failed' {% endif %});
-
-    var client = new ZeroClipboard(document.getElementsByClassName('copy-button'));
-
-    client.on("ready", function (readyEvent) {
-        client.on("aftercopy", function (event) {
-            var parent = $('#' + event.target.id).parent();
-            var popoverWrapper = parent.attr('aria-describedby');
-
-            if (popoverWrapper) {
-                $('#' + popoverWrapper + ' .popover-content').html('Copied!');
-            }
-        });
-    });
-
+    clipboardTooltipInitialization();
 });
 </script>
 {% endblock %}
@@ -47,9 +34,8 @@ $(document).ready (function ()
             <tr>
                 <th>Executable</th>
                 <td class="text-nowrap">
-                    <span data-container="body" data-toggle="popover" data-trigger="hover" data-placement="right"
-                          data-content="Copy to clipboard">
-                        <button id="executable" class="copy-button" data-clipboard-text="{{ invocation.executable }}">
+                    <span data-container="body" data-toggle="tooltip" data-placement="right" title="Copy to clipboard">
+                        <button class="copy-button" data-clipboard-text="{{ invocation.executable }}">
                         </button>
                     </span>
                     {{ invocation.executable }}
@@ -59,9 +45,8 @@ $(document).ready (function ()
                 <th>Arguments</th>
                 <td class="text-nowrap">
                     {% if invocation.argv %}
-                    <span data-container="body" data-toggle="popover" data-trigger="hover" data-placement="right"
-                          data-content="Copy to clipboard">
-                        <button id="argv" class="copy-button" data-clipboard-text="{{ invocation.argv }}">
+                    <span data-container="body" data-toggle="tooltip" data-placement="right" title="Copy to clipboard">
+                        <button class="copy-button" data-clipboard-text="{{ invocation.argv }}">
                         </button>
                     </span>
                     {% endif %}
