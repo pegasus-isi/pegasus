@@ -1,10 +1,14 @@
 {% extends "base.html" %}
+{% block javascript_includes %}
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/zeroclipboard/2.2.0/ZeroClipboard.min.js"></script>
+{% endblock %}
 {% block javascript_init %}
 <script type="text/javascript" charset="utf-8">
 $(document).ready (function ()
 {
     verticalTableInitStatus ('#invocation_text_info', {% if invocation.exitcode == 0 %}'successful' {% else %} 'failed' {% endif %});
-})
+    clipboardTooltipInitialization();
+});
 </script>
 {% endblock %}
 {% block title %}Task Details{% endblock %}
@@ -17,7 +21,7 @@ $(document).ready (function ()
 {% block content %}
 <section class="row">
     <div class="col-xs-12">
-        <table id="invocation_text_info">
+        <table id="invocation_text_info" class="table-fixed">
             <col width="25%">
             <tr>
                 <th>Task Label</th>
@@ -29,11 +33,21 @@ $(document).ready (function ()
             </tr>
             <tr>
                 <th>Executable</th>
-                <td>{{ invocation.executable }}</td>
+                <td class="text-nowrap">
+                    <button class="copy-button" data-clipboard-text="{{ invocation.executable }}">
+                    </button>
+                    {{ invocation.executable }}
+                </td>
             </tr>
             <tr>
                 <th>Arguments</th>
-                <td>{{ invocation.argv }}</td>
+                <td class="text-nowrap">
+                    {% if invocation.argv %}
+                    <button class="copy-button" data-clipboard-text="{{ invocation.argv }}">
+                    </button>
+                    {% endif %}
+                    {{ invocation.argv }}
+                </td>
             </tr>
             <tr>
                 <th>Exit Code</th>
