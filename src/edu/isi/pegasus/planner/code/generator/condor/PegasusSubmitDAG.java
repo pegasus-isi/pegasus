@@ -24,6 +24,7 @@ import edu.isi.pegasus.common.util.StreamGobbler;
 import edu.isi.pegasus.common.util.StreamGobblerCallback;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.code.CodeGeneratorException;
 import edu.isi.pegasus.planner.code.generator.Metrics;
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -73,6 +74,7 @@ public class PegasusSubmitDAG {
     private LogManager mLogger;
     
     private PegasusProperties mProps;
+    private PlannerOptions mPOptions;
     
     public PegasusSubmitDAG(){
         
@@ -82,6 +84,7 @@ public class PegasusSubmitDAG {
         mBag    = bag;
         mLogger = bag.getLogger();
         mProps  = bag.getPegasusProperties();
+        mPOptions = bag.getPlannerOptions();
     }
     
     /**
@@ -270,6 +273,14 @@ push( @arg, '-append', '+pegasus_wf_xformation="pegasus::dagman"' );
                  append( "=" ).append( pegasusDAGMan.getAbsolutePath() ).
                  append( " " );
         
+        StringBuilder sb = new StringBuilder();
+        for (Iterator it = mPOptions.getExecutionSites().iterator(); it.hasNext();) {
+            String site = (String) it.next();
+            sb.append( site );
+            sb.append( "," );
+        }
+        String execSites = sb.length() > 1 ? sb.substring(0, sb.length() - 1 ): sb.toString();
+        
         Map<String,Object> entries = new LinkedHashMap();
         //the root workflow and workflow uuid
         entries.put( ClassADSGenerator.WF_UUID_KEY,      dag.getWorkflowUUID()  );
@@ -285,6 +296,7 @@ push( @arg, '-append', '+pegasus_wf_xformation="pegasus::dagman"' );
         entries.put( "pegasus_job_class", 11 );
         entries.put( "pegasus_cluster_size", 1 );
         entries.put( "pegasus_site", "local" );
+        entries.put( "pegasus_execution_sites",  execSites  );
         entries.put( "pegasus_wf_xformation", "pegasus::dagman" );
         
         //we do a -no_submit option
