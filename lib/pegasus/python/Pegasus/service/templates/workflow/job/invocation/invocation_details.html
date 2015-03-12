@@ -34,10 +34,8 @@ $(document).ready (function ()
             <tr>
                 <th>Executable</th>
                 <td class="text-nowrap">
-                    <span data-container="body" data-toggle="tooltip" data-placement="right" title="Copy to clipboard">
-                        <button class="copy-button" data-clipboard-text="{{ invocation.executable }}">
-                        </button>
-                    </span>
+                    <button class="copy-button" data-clipboard-text="{{ invocation.executable }}">
+                    </button>
                     {{ invocation.executable }}
                 </td>
             </tr>
@@ -45,10 +43,8 @@ $(document).ready (function ()
                 <th>Arguments</th>
                 <td class="text-nowrap">
                     {% if invocation.argv %}
-                    <span data-container="body" data-toggle="tooltip" data-placement="right" title="Copy to clipboard">
-                        <button class="copy-button" data-clipboard-text="{{ invocation.argv }}">
-                        </button>
-                    </span>
+                    <button class="copy-button" data-clipboard-text="{{ invocation.argv }}">
+                    </button>
                     {% endif %}
                     {{ invocation.argv }}
                 </td>

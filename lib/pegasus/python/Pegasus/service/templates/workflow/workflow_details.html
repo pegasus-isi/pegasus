@@ -275,11 +275,8 @@ clipboardTooltipInitialization();
 <li class="active">Workflow</li>
 {% endblock %}
 {% block title_header %}Workflow Details
-<small>{{ workflow.wf_uuid }}
-    <span data-container="body" data-toggle="tooltip" data-placement="right" title="Copy to clipboard">
-        <button class="copy-button" data-clipboard-text="{{ workflow.wf_uuid }}"></button>
-    </span>
-</small>{% endblock %}
+<small>{{ workflow.wf_uuid }}<button class="copy-button" data-clipboard-text="{{ workflow.wf_uuid }}"></button></small>
+{% endblock %}
 {% block content %}
 <section class="row">
     <div class="col-md-12">
@@ -308,10 +305,8 @@ clipboardTooltipInitialization();
             <tr>
                 <th>Submit Directory</th>
                 <td class="text-nowrap">
-                    <span data-container="body" data-toggle="tooltip" data-placement="right" title="Copy to clipboard">
-                        <button class="copy-button" data-clipboard-text="{{ workflow.submit_dir }}">
-                        </button>
-                    </span>
+                    <button class="copy-button" data-clipboard-text="{{ workflow.submit_dir }}">
+                    </button>
                     {{ workflow.submit_dir }}
                 </td>
             </tr>
