@@ -15,7 +15,12 @@ SOCKIO  = $(shell /bin/ls /usr/include/sys/sockio.h 2>/dev/null)
 EXTRA_OBJ = basic.o
 EXTRA_INC = version.h
 
+# for the MPI version	
 
+MPICC	= mpicc
+MPICCFLAGS = -DWITH_MPI
+LD_MPI	= $(MPICC)
+LD_MPIFLAGS = -lstdc++
 
 ifndef ${prefix}
   prefix = $(PEGASUS_HOME)
@@ -55,7 +60,12 @@ endif
 %.o : %.cc
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< -c -o $@
 
+ifeq ($(shell which $(MPICC) || echo n),n)
+$(warning To build pegasus-mpi-keg set MPICC to the path to your MPI C compiler wrapper)
 all: pegasus-keg
+else
+all: pegasus-keg pegasus-mpi-keg
+endif
 
 pegasus-keg: pegasus-keg.o $(EXTRA_OBJ)
 	$(LD) $(LDFLAGS) $^ -o $@ $(LOADLIBES)
@@ -79,13 +89,6 @@ clean:
 
 distclean: clean
 	$(RM) pegasus-keg
-
-# MPI version	
-
-MPICC	= mpicc
-MPICCFLAGS = -DWITH_MPI
-LD_MPI	= $(MPICC)
-LD_MPIFLAGS = -lstdc++
 
 install-mpi-keg: pegasus-mpi-keg
 	$(INSTALL) -m 0755 pegasus-mpi-keg $(prefix)/bin
