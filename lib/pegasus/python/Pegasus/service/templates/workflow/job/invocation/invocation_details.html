@@ -1,10 +1,27 @@
 {% extends "base.html" %}
+{% block javascript_includes %}
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/zeroclipboard/2.2.0/ZeroClipboard.min.js"></script>
+{% endblock %}
 {% block javascript_init %}
 <script type="text/javascript" charset="utf-8">
 $(document).ready (function ()
 {
     verticalTableInitStatus ('#invocation_text_info', {% if invocation.exitcode == 0 %}'successful' {% else %} 'failed' {% endif %});
-})
+
+    var client = new ZeroClipboard(document.getElementsByClassName('copy-button'));
+
+    client.on("ready", function (readyEvent) {
+        client.on("aftercopy", function (event) {
+            var parent = $('#' + event.target.id).parent();
+            var popoverWrapper = parent.attr('aria-describedby');
+
+            if (popoverWrapper) {
+                $('#' + popoverWrapper + ' .popover-content').html('Copied!');
+            }
+        });
+    });
+
+});
 </script>
 {% endblock %}
 {% block title %}Task Details{% endblock %}
@@ -17,7 +34,7 @@ $(document).ready (function ()
 {% block content %}
 <section class="row">
     <div class="col-xs-12">
-        <table id="invocation_text_info">
+        <table id="invocation_text_info" class="table-fixed">
             <col width="25%">
             <tr>
                 <th>Task Label</th>
@@ -29,11 +46,27 @@ $(document).ready (function ()
             </tr>
             <tr>
                 <th>Executable</th>
-                <td>{{ invocation.executable }}</td>
+                <td class="text-nowrap">
+                    <span data-container="body" data-toggle="popover" data-trigger="hover" data-placement="right"
+                          data-content="Copy to clipboard">
+                        <button id="executable" class="copy-button" data-clipboard-text="{{ invocation.executable }}">
+                        </button>
+                    </span>
+                    {{ invocation.executable }}
+                </td>
             </tr>
             <tr>
                 <th>Arguments</th>
-                <td>{{ invocation.argv }}</td>
+                <td class="text-nowrap">
+                    {% if invocation.argv %}
+                    <span data-container="body" data-toggle="popover" data-trigger="hover" data-placement="right"
+                          data-content="Copy to clipboard">
+                        <button id="argv" class="copy-button" data-clipboard-text="{{ invocation.argv }}">
+                        </button>
+                    </span>
+                    {% endif %}
+                    {{ invocation.argv }}
+                </td>
             </tr>
             <tr>
                 <th>Exit Code</th>
