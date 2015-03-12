@@ -2,8 +2,9 @@
 {% block title %}Charts{% endblock %}
 {% block javascript_includes %}
 
-<script type="text/javascript" src="//code.highcharts.com/4.0.4/highcharts.js"></script>
-<script type="text/javascript" src="//code.highcharts.com/4.0.4/highcharts-more.js"></script>
+<script type="text/javascript" src="//code.highcharts.com/4.1.4/highcharts.js"></script>
+<script type="text/javascript" src="//code.highcharts.com/4.1.4/highcharts-more.js"></script>
+<script type="text/javascript" src="//code.highcharts.com/4.1.4/modules/exporting.js"></script>
 <script type="text/javascript" src="{{ url_for ('static', filename='js/charts.js') }}"></script>
 {% endblock %}
 {% block javascript_init %}
@@ -21,13 +22,18 @@
 
     function init ()
     {
-        radializeChartColors ();
+        highChartsInitialization();
 
         var charts = $ ("#charts_container");
-        charts.accordion ({ heightStyle: "content", autoHeight: false, activate: activateEventHandler, create : accordianCreate });
+        charts.accordion ({
+            heightStyle: "content",
+            autoHeight: false,
+            activate: activateEventHandler,
+            create : accordianCreate
+        });
     }
 
-    $(document).ready (function ()
+    $(function ()
     {
         init();
     });
