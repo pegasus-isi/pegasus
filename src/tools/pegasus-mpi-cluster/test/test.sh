@@ -659,6 +659,12 @@ function test_complex_args {
     fi
 }
 
+# If a test name was specified, then run just that test
+if ! [ -z "$*" ]; then
+    run_test "$@"
+    exit 0
+fi
+
 run_test ./test-strlib
 run_test ./test-tools
 run_test ./test-dag
