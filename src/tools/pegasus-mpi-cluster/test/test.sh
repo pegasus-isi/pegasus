@@ -659,6 +659,17 @@ function test_complex_args {
     fi
 }
 
+function test_PM848 {
+    OUTPUT=$(mpiexec -n 11 pegasus-mpi-cluster --host-cpus 22 test/PM848.dag 2>&1)
+    RC=$?
+
+    if [ $RC -ne 0 ]; then
+        echo "$OUTPUT"
+        echo "ERROR: PM848 test failed"
+        return 1
+    fi
+}
+
 # If a test name was specified, then run just that test
 if ! [ -z "$*" ]; then
     run_test "$@"
@@ -702,6 +713,7 @@ run_test test_max_wall_time
 run_test test_hang_script
 run_test test_maxfds
 run_test test_complex_args
+run_test test_PM848
 
 # setrlimit is broken on Darwin, so the strict limits test won't work
 if [ $(uname -s) != "Darwin" ]; then
