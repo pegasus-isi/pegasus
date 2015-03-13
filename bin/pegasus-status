@@ -1642,32 +1642,8 @@ sub dag_status($$;%) {
 			# I need this separately for bookeeping
 			my %detail = dag_process_tab(@tab);
 
-			# tinker with the job count. The "master" workflow dagman is
-			# not counted in any of job counts, yet it does appear in
-			# the Condor Q.
+			# Is this the master dag?
 			if ( $fn eq $lastfn ) {
-				if ( $state == 0 ) {
-
-					# map unknown to unready
-					$detail{unready}++;
-				}
-				elsif ( $state == 1 || $state == 2 ) {
-
-					# map interdeterminate and running to queued
-					$detail{queued}++;
-				}
-				elsif ( $state == 3 ) {
-
-					# map success to done
-					$detail{done}++;
-				}
-				elsif ( $state == 4 ) {
-
-					# map failure to failed
-					$detail{failed}++;
-				}
-				$detail{total}++;
-
 				# tag root workflow that we included itself by asterisk
 				$short = '*' . $short;
 			}
