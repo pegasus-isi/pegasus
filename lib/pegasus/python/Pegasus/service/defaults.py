@@ -31,7 +31,7 @@ CACHE_TYPE = 'simple'
 # * -> All users are admin users and can access data of any other user.
 # {'u1', .., 'un'} OR ['u1', .., 'un'] -> Only users in the set/list are admin users.
 #
-ADMIN_USERS = {'mayani'}
+ADMIN_USERS = None
 
 # CLIENT CONFIGURATION
 
