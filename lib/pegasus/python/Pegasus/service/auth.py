@@ -183,9 +183,6 @@ def before():
     # Does the user have a Pegasus home directory?
     user_pegasus_dir = user_info.get_pegasus_dir()
 
-    if user_info.username != 'mayani':
-        user_pegasus_dir += 'a'
-
     if not os.path.isdir(user_pegasus_dir):
         log.info("User's pegasus directory does not exist. Creating one...")
         try:
