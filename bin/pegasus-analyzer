@@ -1010,8 +1010,11 @@ def analyze_db(config_properties):
         sys.exit(1)
 
     total = workflow_stats.get_total_jobs_status()
-    success = workflow_stats.get_total_succeeded_jobs_status()
-    failed = workflow_stats.get_total_failed_jobs_status()
+    #success = workflow_stats.get_total_succeeded_jobs_status()
+    #failed = workflow_stats.get_total_failed_jobs_status()
+    total_success_failed = workflow_stats.get_total_succeeded_failed_jobs_status()
+    success = total_success_failed.succeeded
+    failed = total_success_failed.failed
     unsubmitted = total - success - failed
 
     # Let's print the results
@@ -1029,7 +1032,7 @@ def analyze_db(config_properties):
     # Now, print information about jobs that failed...
     if failed > 0:
         # Get list of failed jobs from database
-        my_failed_jobs = workflow_stats.get_failed_job_instances(final=True, all_jobs=True)
+        my_failed_jobs = workflow_stats.get_failed_job_instances()
 
         # Print header
         print_console("Failed jobs' details".center(80, '*'))

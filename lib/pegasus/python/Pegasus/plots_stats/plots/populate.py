@@ -256,7 +256,7 @@ def populate_job_instance_details(workflow_stats , workflow_info):
 		end_event = worklow_states_list[len(worklow_states_list)-1].timestamp
 	else:
 		logger.warning("Workflow states are missing for workflow  " + workflow_info.wf_uuid)
-	failed_job_list = workflow_stats.get_failed_job_instances()
+	failed_job_list = workflow_stats.get_plots_failed_job_instances()
 	job_states_list =  workflow_stats.get_job_states()
 	for job_states in job_states_list:
 		# Additional check for the case where "WORKFLOW_STARTED" event is missing
