@@ -617,7 +617,7 @@ function test_maxfds {
 }
 
 function test_keep_affinity {
-    OUTPUT=$(mpiexec -np 2 numactl --physcpubind=1 $PMC --keep-affinity test/cpuset.dag 2>&1)
+    OUTPUT=$(mpiexec -np 2 -bind-to core $PMC --keep-affinity test/cpuset.dag 2>&1)
     RC=$?
 
     if [ $RC -ne 0 ]; then
@@ -634,7 +634,7 @@ function test_keep_affinity {
 
 
 function test_clear_affinity {
-    OUTPUT=$(mpiexec -np 2 numactl --physcpubind=1 $PMC test/cpuset.dag 2>&1)
+    OUTPUT=$(mpiexec -np 2 -bind-to core $PMC test/cpuset.dag 2>&1)
     RC=$?
 
     if [ $RC -ne 0 ]; then
