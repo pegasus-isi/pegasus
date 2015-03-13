@@ -1,5 +1,111 @@
 $Id
 ===============================
+Release Notes for PEGASUS 4.4.2
+===============================
+
+We are happy to annouce the release of Pegasus 4.4.2. Pegasus 4.4.2 is
+a minor release, which contains minor enhancements and fixes bugs to
+Pegasus 4.4.1 release.  
+ 
+Enhancements
+--------------
+
+1) Support for recursive clustering 
+
+   Pegasus now supports recursive clustering, where users can employ
+   multiple clustering techniques on the same graph. For example a
+   user can do label based clustering on the graph, and then do a
+   level based clustering. 
+
+   More details at
+   https://jira.isi.edu/browse/PM-817
+ 
+2) Planner reports file breakdowns in the metrics sent to the metrics
+   server. 
+
+   The planner now send file breakdowns ( number of input,
+   intermediate and output files ) as part of the metrics message to
+   the metrics server. This is also reported in the metrics file left
+   in the submit directory. 
+ 
+3) pegasus-transfer does not hide scp errors. 
+ 
+4) more helpul message is thrown if user does not set
+pegasus.catalog.site.file property 
+
+Bugs Fixed
+--------------
+
+1) work dir in job instance table was populated incorrectly
+
+   The work directory in the job instance table of the monitoring
+   database was populated by the submit directory instead of the
+   directory in wihch the job was executed. This resulted in
+   pegasus-analyzer displaying the submit directory for the failed job
+   instead of the directory in which the job actually ran on the
+   remote node. 
+ 
+   More details at
+   https://jira.isi.edu/browse/PM-817
+ 
+2) pegasus-status showed master dag job as failure also
+
+   When a job in a workflow fails, pegasus-status also includes the
+   corresonding dag job as failed. This leads to it reporting 1 more
+   than the actual number of user compute jobs that failed. this is
+   now fixed. 
+
+   More details at
+   https://jira.isi.edu/browse/PM-811 
+ 
+3) local-scratch directory not picked up for PegasusLite jobs
+
+   Users can specify a local-scratch directory in the site catalog for
+   a site, to designate the local directory on the worker node where a
+   PegasusLite job should be run. However, this was not picked up by
+   the planner and set for the jobs. This is now fixed. This only
+   works when user is executing workflows in nonsharedfs mode. 
+ 
+4) pegasus dashboard tables were not updated in real time. 
+ 
+   Fixed off by 1 error in the flush command, where we decide whether
+   we want to flush the event to the database or batch them up. This
+   one off error affected the pegasus dashboard as the workflow start
+   and end events were not updated to the database when they happened
+   by pegasus-monitord. this is now fixed. 
+
+ 
+5) Input files in the DAX where transfer flag is set to false, should
+   not be considered for cleanup, as they are never staged to scratch 
+   directory on the staging site by the stage in jobs 
+ 
+6) pegasus.gridstart.arguments was not set for all clustered jobs. 
+
+   User provided extra arguments for kickstart invocation were not
+   passed to all the constitutent jobs making up a job cluster, in
+   case of job clustering.  This is now fixed.  
+ 
+   More details at https://jira.isi.edu/browse/PM-823
+ 
+7) MPI_ERR_TRUNCATE: message truncated in PMC
+
+   This error was encountered in certain conditions and was a result
+   of  mismatched tag/source between an MPI_Probe/MPI_Iprobe and
+   MPI_Recv. This is now fixed 
+
+   More details at https://jira.isi.edu/browse/PM-848
+ 
+8) Setting pegasus.catalog.site XML4 raised an error 
+
+   Introduced backward compatibility for this.
+   More details at https://jira.isi.edu/browse/PM-815
+ 
+9) pegasus-plan --help resulted in metrics to be sent.
+   
+   This is now fixed
+   More details at https://jira.isi.edu/browse/PM-816
+
+===============================
 Release Notes for PEGASUS 4.4.1
 ===============================
 
