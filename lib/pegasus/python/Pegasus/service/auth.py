@@ -1,8 +1,8 @@
 import os
+import pam
 import logging
 
-from flask import request, Response, g, abort
-import pam
+from flask import request, Response, g, abort, make_response, url_for
 
 from Pegasus.service import app, user
 
@@ -20,6 +20,7 @@ class BaseAuthentication(object):
     def get_user(self):
         raise Exception("Not implemented")
 
+
 class NoAuthentication(BaseAuthentication):
     def authenticate(self):
         # Always authenticate the user
@@ -28,6 +29,7 @@ class NoAuthentication(BaseAuthentication):
     def get_user(self):
         # Just return info for the user running the service
         return user.get_user_by_uid(os.getuid())
+
 
 class PAMAuthentication(BaseAuthentication):
     def authenticate(self):
@@ -72,11 +74,23 @@ def add_username(endpoint, values):
         If the endpoint expects a variable username, then set it's value to g.username.
         This is done so as not to provide g.username as a parameter to every call to url_for.
     """
-    if 'username' in values or not g.username:
+
+    #
+    # Route does not expects a value for username
+    #
+
+    if not app.url_map.is_endpoint_expecting(endpoint, 'username'):
         return
 
-    if app.url_map.is_endpoint_expecting(endpoint, 'username'):
-        values['username'] = g.username
+    #
+    # Route expects a value for username
+    #
+
+    # Value for username has already been provided
+    if 'username' in values or ('username' in g and not g.username):
+        return
+
+    values['username'] = g.username
 
 
 @app.url_value_preprocessor
@@ -90,6 +104,10 @@ def pull_username(endpoint, values):
 
 @app.before_request
 def before():
+
+    # Static files do not need to be authenticated.
+    if request.path.startswith(url_for('static', filename='')):
+        return
 
     #
     # Authentication
@@ -152,21 +170,29 @@ def before():
             log.error('User %s is not a valid user' % g.username)
             abort(400)
 
-    # If required, set uid and gid of handler process
-    if os.getuid() != user_info.uid:
-        if os.getuid() != 0:
-            log.error("Pegasus service must run as root to enable multi-user access")
-            return basic_auth_response()
+    if app.config["PROCESS_SWITCHING"]:
+        # If required, set uid and gid of handler process
+        if os.getuid() != user_info.uid:
+            if os.getuid() != 0:
+                log.error("Pegasus service must run as root to enable process switching")
+                return make_response("Pegasus service must run as root to enable process switching", 500)
 
-    os.setgid(user_info.gid)
-    os.setuid(user_info.uid)
+        os.setgid(user_info.gid)
+        os.setuid(user_info.uid)
 
     # Does the user have a Pegasus home directory?
     user_pegasus_dir = user_info.get_pegasus_dir()
 
+    if user_info.username != 'mayani':
+        user_pegasus_dir += 'a'
+
     if not os.path.isdir(user_pegasus_dir):
         log.info("User's pegasus directory does not exist. Creating one...")
-        os.makedirs(user_pegasus_dir, mode=0644)
+        try:
+            os.makedirs(user_pegasus_dir, mode=0644)
+        except OSError:
+            log.info("Invalid Permissions: Could not create user's pegasus directory.")
+            return make_response("Could not find user's Pegasus directory", 404)
 
     # Set master DB URL for the dashboard
     g.master_db_url = user_info.get_master_db_url()
