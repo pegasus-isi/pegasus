@@ -13,8 +13,12 @@ class ServerCommand(Command):
 
     def __init__(self):
         Command.__init__(self)
-        self.parser.add_option("-d", "--debug", action="store_true", dest="debug",
-                               default=None, help="Enable debugging")
+        self.parser.add_option("-H", "--host", dest="host", default=app.config["SERVER_HOST"],
+                               help="Network interface on which to listen for requests")
+        self.parser.add_option("-p", "--port", dest="port", type='int', default=app.config["SERVER_PORT"],
+                               help="Request listener port")
+        self.parser.add_option("-d", "--debug", action="store_true", dest="debug", default=None,
+                               help="Enable debugging")
         self.parser.add_option("-v", "--verbose", action="count", default=0, dest="verbose",
                                help="Increase logging verbosity, repeatable")
 
@@ -47,8 +51,8 @@ class ServerCommand(Command):
         if os.getuid() != 0:
             log.warning("Service not running as root: Will not be able to switch users")
 
-        app.run(port=app.config["SERVER_PORT"],
-                host=app.config["SERVER_HOST"],
+        app.run(host=self.options.host,
+                port=self.options.port,
                 processes=app.config["MAX_PROCESSES"],
                 ssl_context=ssl_context)
 
