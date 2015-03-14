@@ -14,8 +14,8 @@ $(document).ready (function ()
 {% block title %}Task Details{% endblock %}
 {% block title_header %}Task Details{% endblock %}
 {% block navigation_bar %}
-<li><a href="{{ url_for ('workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a></li>
-<li><a href="{{ url_for ('job', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job_instance_id) }}">Job</a></li>
+<li><a href="{{ url_for ('.workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a></li>
+<li><a href="{{ url_for ('.job', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job_instance_id) }}">Job</a></li>
 <li class="active">Task Details</li>
 {% endblock %}
 {% block content %}

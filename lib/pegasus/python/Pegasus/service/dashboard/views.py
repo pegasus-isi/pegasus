@@ -23,17 +23,19 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from Pegasus.db.errors import StampedeDBNotFoundError
 from Pegasus.tools import utils
-from Pegasus.service import app, filters
+from Pegasus.service import filters
 from Pegasus.service.dashboard.dashboard import Dashboard, NoWorkflowsFoundError
 from Pegasus.service.dashboard.queries import MasterDBNotFoundError
 
+from Pegasus.service.dashboard import dashboard_routes
 
-@app.route('/')
+
+@dashboard_routes.route('/')
 def redirect_to_index():
-    return redirect(url_for('index'))
+    return redirect(url_for('.index'))
 
 
-@app.route('/u/<username>/')
+@dashboard_routes.route('/u/<username>/')
 def index(username):
     """
     List all workflows from the master database.
@@ -56,8 +58,8 @@ def index(username):
     return render_template('workflow.html', workflows=workflows, counts=totals)
 
 
-@app.route('/u/<username>/r/<root_wf_id>/w')
-@app.route('/u/<username>/r/<root_wf_id>/w/<wf_id>')
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w')
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>')
 def workflow(username, root_wf_id, wf_id=None):
     """
     Get details for a specific workflow.
@@ -77,10 +79,10 @@ def workflow(username, root_wf_id, wf_id=None):
     except NoResultFound:
         return render_template('error/workflow/workflow_details_missing.html')
 
-    return render_template('workflow/workflow_details.html', root_wf_id=root_wf_id, wf_id=details.wf_id, workflow=details, counts=counts, statistics=statistics);
+    return render_template('workflow/workflow_details.html', root_wf_id=root_wf_id, wf_id=details.wf_id, workflow=details, counts=counts, statistics=statistics)
 
 
-@app.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/sw/', methods=['GET'])
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/sw/', methods=['GET'])
 def sub_workflows(username, root_wf_id, wf_id):
     """
     Get a list of all sub-workflow of a given workflow.
@@ -98,7 +100,7 @@ def sub_workflows(username, root_wf_id, wf_id):
         return render_template('workflow/sub_workflows.html', root_wf_id=root_wf_id, wf_id=wf_id, workflows=sub_workflows)
 
 
-@app.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/jobs/failed/', methods=['GET'])
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/jobs/failed/', methods=['GET'])
 def failed_jobs(username, root_wf_id, wf_id):
     """
     Get a list of all failed jobs of the latest instance for a given workflow.
@@ -109,14 +111,14 @@ def failed_jobs(username, root_wf_id, wf_id):
     total_count, filtered_count, failed_jobs_list = dashboard.get_failed_jobs(wf_id, **args)
 
     for job in failed_jobs_list:
-        job.exec_job_id = '<a href="' + url_for('job', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id, job_instance_id=job.job_instance_id) + '">' + job.exec_job_id + '</a>'
-        job.stdout = '<a target="_blank" href="' + url_for('stdout', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id, job_instance_id=job.job_instance_id) + '">stdout</a>'
-        job.stderr = '<a target="_blank" href="' + url_for('stderr', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id, job_instance_id=job.job_instance_id) + '">stderr</a>'
+        job.exec_job_id = '<a href="' + url_for('.job', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id, job_instance_id=job.job_instance_id) + '">' + job.exec_job_id + '</a>'
+        job.stdout = '<a target="_blank" href="' + url_for('.stdout', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id, job_instance_id=job.job_instance_id) + '">stdout</a>'
+        job.stderr = '<a target="_blank" href="' + url_for('.stderr', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id, job_instance_id=job.job_instance_id) + '">stderr</a>'
 
     return render_template('workflow/jobs_failed.xhr.json', count=total_count, filtered=filtered_count, jobs=failed_jobs_list, table_args=args)
 
 
-@app.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/jobs/running/', methods=['GET'])
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/jobs/running/', methods=['GET'])
 def running_jobs(username, root_wf_id, wf_id):
     """
     Get a list of all running jobs of the latest instance for a given workflow.
@@ -127,12 +129,12 @@ def running_jobs(username, root_wf_id, wf_id):
     total_count, filtered_count, running_jobs_list = dashboard.get_running_jobs(wf_id, **args)
 
     for job in running_jobs_list:
-        job.exec_job_id = '<a href="' + url_for('job', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id, job_instance_id=job.job_instance_id) + '">' + job.exec_job_id + '</a>'
+        job.exec_job_id = '<a href="' + url_for('.job', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id, job_instance_id=job.job_instance_id) + '">' + job.exec_job_id + '</a>'
 
     return render_template('workflow/jobs_running.xhr.json', count=total_count, filtered=filtered_count, jobs=running_jobs_list, table_args=args)
 
 
-@app.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/jobs/successful/', methods=['GET'])
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/jobs/successful/', methods=['GET'])
 def successful_jobs(username, root_wf_id, wf_id):
     """
     Get a list of all successful jobs of the latest instance for a given workflow.
@@ -144,12 +146,12 @@ def successful_jobs(username, root_wf_id, wf_id):
 
     for job in successful_jobs_list:
         job.duration_formatted = filters.time_to_str(job.duration)
-        job.exec_job_id = '<a href="' + url_for('job', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id, job_instance_id=job.job_instance_id) + '">' + job.exec_job_id + '</a>'
+        job.exec_job_id = '<a href="' + url_for('.job', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id, job_instance_id=job.job_instance_id) + '">' + job.exec_job_id + '</a>'
 
     return render_template('workflow/jobs_successful.xhr.json', count=total_count, filtered=filtered_count, jobs=successful_jobs_list, table_args=args)
 
 
-@app.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/jobs/failing/', methods=['GET'])
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/jobs/failing/', methods=['GET'])
 def failing_jobs(username, root_wf_id, wf_id):
     """
     Get a list of failing jobs of the latest instance for a given workflow.
@@ -160,14 +162,14 @@ def failing_jobs(username, root_wf_id, wf_id):
     total_count, filtered_count, failing_jobs_list = dashboard.get_failing_jobs(wf_id, **args)
 
     for job in failing_jobs_list:
-        job.exec_job_id = '<a href="' + url_for('job', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id, job_instance_id=job.job_instance_id) + '">' + job.exec_job_id + '</a>'
-        job.stdout = '<a target="_blank" href="' + url_for('stdout', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id, job_instance_id=job.job_instance_id) + '">stdout</a>'
-        job.stderr = '<a target="_blank" href="' + url_for('stderr', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id, job_instance_id=job.job_instance_id) + '">stderr</a>'
+        job.exec_job_id = '<a href="' + url_for('.job', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id, job_instance_id=job.job_instance_id) + '">' + job.exec_job_id + '</a>'
+        job.stdout = '<a target="_blank" href="' + url_for('.stdout', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id, job_instance_id=job.job_instance_id) + '">stdout</a>'
+        job.stderr = '<a target="_blank" href="' + url_for('.stderr', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id, job_instance_id=job.job_instance_id) + '">stderr</a>'
 
     return render_template('workflow/jobs_failing.xhr.json', count=total_count, filtered=filtered_count, jobs=failing_jobs_list, table_args=args)
 
 
-@app.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>', methods=['GET'])
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>', methods=['GET'])
 def job(username, root_wf_id, wf_id, job_id, job_instance_id):
     """
     Get details of a specific job instance.
@@ -197,7 +199,7 @@ def job(username, root_wf_id, wf_id, job_id, job_instance_id):
                            job_instances=job_instances, job_states=job_states)
 
 
-@app.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>/stdout', methods=['GET'])
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>/stdout', methods=['GET'])
 def stdout(username, root_wf_id, wf_id, job_id, job_instance_id):
     """
     Get stdout contents for a specific job instance.
@@ -211,7 +213,7 @@ def stdout(username, root_wf_id, wf_id, job_id, job_instance_id):
         return '<pre>%s</pre>' % utils.unquote(text.stdout_text)
 
 
-@app.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>/stderr', methods=['GET'])
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>/stderr', methods=['GET'])
 def stderr(username, root_wf_id, wf_id, job_id, job_instance_id):
     """
     Get stderr contents for a specific job instance.
@@ -220,12 +222,12 @@ def stderr(username, root_wf_id, wf_id, job_id, job_instance_id):
     text = dashboard.get_stderr(wf_id, job_id, job_instance_id)
 
     if text.stderr_text == None:
-        return 'No Standard error for workflow ' + wf_id + ' job-id ' + job_id;
+        return 'No Standard error for workflow ' + wf_id + ' job-id ' + job_id
     else:
         return '<pre>%s</pre>' % utils.unquote(text.stderr_text)
 
 
-@app.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>/invocations/successful', methods=['GET'])
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>/invocations/successful', methods=['GET'])
 def successful_invocations(username, root_wf_id, wf_id, job_id, job_instance_id):
     """
     Get list of successful invocations for a given job.
@@ -249,7 +251,7 @@ def successful_invocations(username, root_wf_id, wf_id, job_id, job_instance_id)
                                job_id=job_id, job_instance_id=job_instance_id, invocations=successful_invocations_list)
 
 
-@app.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>/invocations/failed', methods=['GET'])
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>/invocations/failed', methods=['GET'])
 def failed_invocations(username, root_wf_id, wf_id, job_id, job_instance_id):
     """
     Get list of failed invocations for a given job.
@@ -272,8 +274,8 @@ def failed_invocations(username, root_wf_id, wf_id, job_id, job_instance_id):
                                job_id=job_id, job_instance_id=job_instance_id, invocations=failed_invocations_list)
 
 
-@app.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>/i/', methods=['GET'])
-@app.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>/i/<task_id>', methods=['GET'])
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>/i/', methods=['GET'])
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>/i/<task_id>', methods=['GET'])
 def invocation(username, root_wf_id, wf_id, job_id, job_instance_id, task_id=None):
     """
     Get detailed invocation information
@@ -285,7 +287,7 @@ def invocation(username, root_wf_id, wf_id, job_id, job_instance_id, task_id=Non
                            job_id=job_id, job_instance_id=job_instance_id, task_id=task_id, invocation=invocation)
 
 
-@app.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/charts', methods=['GET'])
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/charts', methods=['GET'])
 def charts(username, root_wf_id, wf_id):
     """
     Get job-distribution information
@@ -296,7 +298,7 @@ def charts(username, root_wf_id, wf_id):
     return render_template('workflow/charts.html', root_wf_id=root_wf_id, wf_id=wf_id, job_dist=job_dist)
 
 
-@app.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/charts/time_chart', methods=['GET'])
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/charts/time_chart', methods=['GET'])
 def time_chart(username, root_wf_id, wf_id):
     """
     Get job-distribution information
@@ -307,7 +309,7 @@ def time_chart(username, root_wf_id, wf_id):
     return render_template('workflow/charts/time_chart.json', root_wf_id=root_wf_id, wf_id=wf_id, time_chart_job=time_chart_job, time_chart_invocation=time_chart_invocation)
 
 
-@app.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/charts/gantt_chart', methods=['GET'])
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/charts/gantt_chart', methods=['GET'])
 def gantt_chart(username, root_wf_id, wf_id):
     """
     Get information required to generate a Gantt chart.
@@ -317,7 +319,7 @@ def gantt_chart(username, root_wf_id, wf_id):
     return render_template('workflow/charts/gantt_chart.json', root_wf_id=root_wf_id, wf_id=wf_id, gantt_chart=gantt_chart)
 
 
-@app.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/statistics', methods=['GET'])
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/statistics', methods=['GET'])
 def statistics(username, root_wf_id, wf_id):
     """
     Get workflow statistics information
@@ -333,7 +335,7 @@ def statistics(username, root_wf_id, wf_id):
     return render_template('workflow/statistics.html', root_wf_id=root_wf_id, wf_id=wf_id, summary_stats=summary_times, workflow_stats=workflow_stats)
 
 
-@app.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/statistics/summary', methods=['GET'])
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/statistics/summary', methods=['GET'])
 def workflow_summary_stats(username, root_wf_id, wf_id):
     dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
     summary_times = dashboard.workflow_summary_stats(wf_id)
@@ -344,32 +346,32 @@ def workflow_summary_stats(username, root_wf_id, wf_id):
     return json.dumps(summary_times)
 
 
-@app.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/statistics/workflow', methods=['GET'])
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/statistics/workflow', methods=['GET'])
 def workflow_stats(username, root_wf_id, wf_id):
     dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
     return json.dumps(dashboard.workflow_stats())
 
 
-@app.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/statistics/job_breakdown', methods=['GET'])
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/statistics/job_breakdown', methods=['GET'])
 def job_breakdown_stats(username, root_wf_id, wf_id):
     dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
     return json.dumps(dashboard.job_breakdown_stats())
 
 
-@app.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/statistics/job', methods=['GET'])
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/statistics/job', methods=['GET'])
 def job_stats(username, root_wf_id, wf_id):
     dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
     return json.dumps(dashboard.job_stats())
 
 
-@app.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/statistics/time', methods=['GET'])
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/statistics/time', methods=['GET'])
 def time_stats(username, root_wf_id, wf_id):
     dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
 
     return '{}'
 
 
-@app.route('/u/<username>/info')
+@dashboard_routes.route('/u/<username>/info')
 def info(username):
     return render_template('info.html')
 
@@ -381,7 +383,7 @@ def __update_timestamp(workflows):
 
 def __update_label_link(workflows):
     for workflow in workflows:
-        workflow.dax_label = '<a href="' + url_for('workflow', root_wf_id=workflow.wf_id, wf_uuid=workflow.wf_uuid) + '">' + workflow.dax_label + '</a>'
+        workflow.dax_label = '<a href="' + url_for('.workflow', root_wf_id=workflow.wf_id, wf_uuid=workflow.wf_uuid) + '">' + workflow.dax_label + '</a>'
 
 
 def __get_datatables_args():
@@ -445,17 +447,17 @@ def __get_datatables_args():
     return table_args
 
 
-@app.errorhandler(404)
+@dashboard_routes.errorhandler(404)
 def page_not_found(error):
     return render_template('error/404.html')
 
 
-@app.errorhandler(MasterDBNotFoundError)
+@dashboard_routes.errorhandler(MasterDBNotFoundError)
 def master_database_missing(error):
     return render_template('error/master_database_missing.html')
 
 
-@app.errorhandler(StampedeDBNotFoundError)
+@dashboard_routes.errorhandler(StampedeDBNotFoundError)
 def stampede_database_missing(error):
     return render_template('error/stampede_database_missing.html')
 

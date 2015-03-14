@@ -40,7 +40,7 @@
 </script>
 {% endblock %}
 {% block navigation_bar %}
-<li><a href="{{ url_for ('workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a></li>
+<li><a href="{{ url_for ('.workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a></li>
 <li class="active">Charts</li>
 {% endblock %}
 {% block title_header %}Charts{% endblock %}
@@ -48,7 +48,7 @@
 <section class="row">
     <div class="col-xs-12">
         <div id="charts_container">
-            <h3 href="{{ url_for ('workflow_stats', root_wf_id = root_wf_id, wf_id = wf_id) }}"
+            <h3 href="{{ url_for ('.workflow_stats', root_wf_id = root_wf_id, wf_id = wf_id) }}"
                 title="distribution_chart_container">Job Distribution
             </h3>
 
@@ -61,7 +61,7 @@
                         for="by_time">By Time</label>
                 </div>
             </div>
-            <h3 href="{{ url_for ('time_chart', root_wf_id = root_wf_id, wf_id = wf_id) }}"
+            <h3 href="{{ url_for ('.time_chart', root_wf_id = root_wf_id, wf_id = wf_id) }}"
                 title="time_chart_container">Time Chart
             </h3>
 
@@ -75,7 +75,7 @@
                         for="by_runtime">By Invocations</label>
                 </div>
             </div>
-            <h3 href="{{ url_for ('gantt_chart', root_wf_id = root_wf_id, wf_id = wf_id) }}" title="gantt_chart">
+            <h3 href="{{ url_for ('.gantt_chart', root_wf_id = root_wf_id, wf_id = wf_id) }}" title="gantt_chart">
                 Gantt Chart
             </h3>
 

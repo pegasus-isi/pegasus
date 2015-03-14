@@ -10,9 +10,9 @@
         {% for invocation in invocations %}
         <tr class="successful">
             {% if invocation.abs_task_id == None %}
-            <td><a href="{{ url_for ('invocation', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job_instance_id, task_id = '') }}">{{ invocation.exec_job_id }}</a></td>
+            <td><a href="{{ url_for ('.invocation', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job_instance_id, task_id = '') }}">{{ invocation.exec_job_id }}</a></td>
             {% else %}
-            <td><a href="{{ url_for ('invocation', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job_instance_id, task_id = invocation.abs_task_id) }}">{{ invocation.abs_task_id }}</a></td>
+            <td><a href="{{ url_for ('.invocation', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job_instance_id, task_id = invocation.abs_task_id) }}">{{ invocation.abs_task_id }}</a></td>
             {% endif %}
             <td>{{ invocation.remote_duration_formatted }}</td>
         </tr>

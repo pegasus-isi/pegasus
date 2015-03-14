@@ -2,7 +2,7 @@
 {% block title %}Home Page - Title{% endblock %}
 {% block javascript_init %}
         <script type="text/javascript" charset="utf-8">
-        $(document).ready(function() 
+        $(document).ready(function()
         {
                 $('#failed_jobs_list').dataTable({"bJQueryUI" : true});
         });
@@ -24,10 +24,10 @@
             <tbody>
                 {% for job in jobs %}
                 <tr class="failed">
-                    <td>{% block item1 scoped %}<a href="{{ url_for ('job', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job.job_id) }}">{{ job.exec_job_id }}{% endblock %}</a></td>
+                    <td>{% block item1 scoped %}<a href="{{ url_for ('.job', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job.job_id) }}">{{ job.exec_job_id }}{% endblock %}</a></td>
                     <td>{% block item2 scoped %}{{ job.exitcode }}{% endblock %}</td>
-                    <td><a href="{{ url_for ('stdout', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job.job_id) }}">stdout</a></td>
-                    <td><a href="{{ url_for ('stderr', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job.job_id) }}">stderr</a></td>
+                    <td><a href="{{ url_for ('.stdout', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job.job_id) }}">stdout</a></td>
+                    <td><a href="{{ url_for ('.stderr', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job.job_id) }}">stderr</a></td>
                 </tr>
                 {% endfor %}
             </tbody>

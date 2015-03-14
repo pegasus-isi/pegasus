@@ -16,7 +16,7 @@ $(document).ready (function ()
         "sPaginationType": "full_numbers",
         "bProcessing"    : true,
         "bServerSide"    : true,
-        "sAjaxSource"    : "{{ url_for ('index') }}",
+        "sAjaxSource"    : "{{ url_for ('.index') }}",
         "bAutoWidth"     : false,
         "aaSorting"      : [
             [ 4, "desc" ]
