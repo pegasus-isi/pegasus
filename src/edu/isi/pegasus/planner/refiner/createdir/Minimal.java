@@ -233,7 +233,7 @@ public class Minimal extends AbstractStrategy {
     private String getAssociatedCreateDirSite( Job job ) {
         String site = null;
         if( job.getJobType() == Job.CHMOD_JOB ){
-            site =  job.getSiteHandle();
+            site =  job.getStagingSiteHandle();
         }
         else{
             //the parent in case of a transfer job

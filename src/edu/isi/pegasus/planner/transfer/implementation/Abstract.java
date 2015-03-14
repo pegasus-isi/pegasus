@@ -500,7 +500,7 @@ public abstract class Abstract implements Implementation{
 
 
             Job xBitJob =  noop  ?
-                               this.createNoOPJob( xBitJobName ) : //create a NOOP job
+                               this.createNoOPJob( xBitJobName , computeJob.getSiteHandle() ) : //create a NOOP job
                                this.createSetXBitJob( execFile, xBitJobName ); //create a chmod job
 
             if( xBitJob == null ){
@@ -563,7 +563,7 @@ public abstract class Abstract implements Implementation{
 
         String xBitJobName = this.getSetXBitJobName( computeJobName, xbitIndex );//create a chmod job
         Job xBitJob =  noop  ?
-                               this.createNoOPJob( xBitJobName ) : //create a NOOP job
+                               this.createNoOPJob( xBitJobName, computeJob.getSiteHandle() ) : //create a NOOP chmod job
                                this.createSetXBitJob( execFiles, xBitJobName, computeJob.getSiteHandle() ); //create a chmod job
 
         if( xBitJob == null ){
@@ -625,7 +625,7 @@ public abstract class Abstract implements Implementation{
 
 
             Job xBitJob =  noop  ?
-                               this.createNoOPJob( xBitJobName ) : //create a NOOP job
+                               this.createNoOPJob( xBitJobName, computeJob.getSiteHandle()  ) : //create a NOOP job
                                this.createSetXBitJob( execFile, xBitJobName ); //create a chmod job
 
             if( xBitJob == null ){
@@ -690,10 +690,11 @@ public abstract class Abstract implements Implementation{
      * It creates a NoOP job that runs on the submit host.
      *
      * @param name the name to be assigned to the noop job
+     * @param computeSiteHandle  the execution site of the associated compute job
      *
      * @return  the noop job.
      */
-    public Job createNoOPJob( String name ) {
+    public Job createNoOPJob( String name, String computeSiteHandle ) {
 
         Job newJob = new Job();
         List entries = null;
@@ -714,6 +715,13 @@ public abstract class Abstract implements Implementation{
 
         //construct noop keys
         newJob.setSiteHandle( "local" );
+        
+        //PM-845
+        //we need to set the staging site handle to compute job execution site
+        //this is to ensure dependencies are added correctly when adding
+        //create dir jobs
+        newJob.setStagingSiteHandle( computeSiteHandle );
+        
         newJob.setJobType( Job.CHMOD_JOB );
         construct(newJob,"noop_job","true");
         construct(newJob,"noop_job_exit_code","0");
@@ -798,6 +806,8 @@ public abstract class Abstract implements Implementation{
         xBitJob.dvVersion   = Abstract.XBIT_DERIVATION_VERSION;
         xBitJob.executable      = entry.getPhysicalTransformation();
         xBitJob.executionPool   = eSiteHandle;
+        //PM-845 set staging site handle to same as execution site of compute job
+        xBitJob.setStagingSiteHandle( eSiteHandle );
         xBitJob.strargs         = arguments.toString();
         xBitJob.jobClass        = Job.CHMOD_JOB;
         xBitJob.jobID           = name;
@@ -889,6 +899,9 @@ public abstract class Abstract implements Implementation{
 
         xBitJob.executable      = entry.getPhysicalTransformation();
         xBitJob.executionPool   = eSiteHandle;
+        //PM-845 set staging site handle to same as execution site of compute job
+        xBitJob.setStagingSiteHandle( eSiteHandle );
+        
         xBitJob.strargs         = arguments;
         xBitJob.jobClass        = Job.CREATE_DIR_JOB;
         xBitJob.jobID           = name;

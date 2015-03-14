@@ -5,8 +5,11 @@
 
 class MPICommunicator : public Communicator {
 private:
+    int myrank;
+    int mysize;
     unsigned long bytes_sent;
     unsigned long bytes_recvd;
+    virtual int wait_for_message(MPI_Status &status, double timeout);
     
 public:
     bool sleep_on_recv;
@@ -22,7 +25,6 @@ public:
     virtual int size();
     virtual unsigned long sent();
     virtual unsigned long recvd();
-    virtual int wait_for_message(double timeout);
 };
 
 #endif /* MPICOMM_H */

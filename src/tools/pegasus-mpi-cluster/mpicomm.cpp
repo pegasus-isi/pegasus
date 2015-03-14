@@ -5,10 +5,13 @@
 #include "protocol.h"
 #include "failure.h"
 #include "tools.h"
+#include "log.h"
 
 MPICommunicator::MPICommunicator(int *argc, char ***argv) {
     MPI_Init(argc, argv);
-    MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
+    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
+    MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+    MPI_Comm_size(MPI_COMM_WORLD, &mysize);
     bytes_sent = 0;
     bytes_recvd = 0;
     sleep_on_recv = true;
@@ -22,29 +25,46 @@ void MPICommunicator::send_message(Message *message, int dest) {
     char *msg = message->msg;
     unsigned msgsize = message->msgsize;
     int tag = message->tag();
+
+    log_trace("Rank %d: Sending %d byte message of type %d to %d",
+              myrank, msgsize, tag, dest);
+
     MPI_Send(msg, msgsize, MPI_CHAR, dest, tag, MPI_COMM_WORLD);
     bytes_sent += msgsize;
 }
 
 Message *MPICommunicator::recv_message(double timeout) {
     // We wait for the message first in order to get the size
-    // so that we can allocate an appropriate buffer.
-    int msgsize = wait_for_message(timeout);
-    if (msgsize < 0) {
+    // so that we can allocate an appropriate buffer. We also
+    // need to get the source and tag so that we can match the
+    // recv below.
+    MPI_Status status;
+    int got_message = wait_for_message(status, timeout);
+    if (!got_message) {
+        log_trace("Rank %d: No message waiting", myrank);
         return NULL;
     }
-    
+
+    // This is the message sender, and the type of message
+    // We need to match these in the recv below
+    int source = status.MPI_SOURCE;
+    int tag = status.MPI_TAG;
+
+    // Get the size of the message and allocate a buffer for it
+    int msgsize = 0;
+    MPI_Get_count(&status, MPI_CHAR, &msgsize);
     char *msg = new char[msgsize];
-    
-    MPI_Status status;
-    MPI_Recv(msg, msgsize, MPI_CHAR, MPI_ANY_SOURCE, MPI_ANY_TAG, 
-            MPI_COMM_WORLD, &status);
+
+    log_trace("Rank %d: Receiving %d byte message of type %d from %d",
+              myrank, msgsize, tag, source);
+
+    // Recieve the message
+    MPI_Recv(msg, msgsize, MPI_CHAR, source, tag, MPI_COMM_WORLD, &status);
     bytes_recvd += msgsize;
-    
+
     // Create the right type of message
     Message *message = NULL;
-    int source = status.MPI_SOURCE;
-    MessageType type = (MessageType)status.MPI_TAG;
+    MessageType type = (MessageType)tag;
     switch(type) {
         case SHUTDOWN:
             message = new ShutdownMessage(msg, msgsize, source);
@@ -68,7 +88,7 @@ Message *MPICommunicator::recv_message(double timeout) {
         default:
             myfailure("Unknown message type: %d", type);
     }
-    
+
     return message;
 }
 
@@ -78,7 +98,7 @@ bool MPICommunicator::message_waiting() {
     return flag != 0;
 }
 
-int MPICommunicator::wait_for_message(double timeout) {
+int MPICommunicator::wait_for_message(MPI_Status &status, double timeout) {
     /* On many MPI implementations MPI_Probe uses a busy wait loop. This
      * really wreaks havoc on the load and CPU utilization of the workers 
      * when there are no tasks to process or some slots are idle due to 
@@ -90,27 +110,29 @@ int MPICommunicator::wait_for_message(double timeout) {
      * should reduce the load/CPU usage on the system significantly. It
      * decreases responsiveness a bit, but it is a fair tradeoff.
      */
-    MPI_Status status;
+
+    log_trace("Rank %d: waiting for message", myrank);
+
     if (sleep_on_recv || timeout > 0) {
         double start = current_time();
         unsigned i = 0;
         while (1) {
             i++;
-            
+
             int message = 0;
             MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &message, &status);
             if (message) {
                 // We got the message
-                break;
+                return 1;
             }
-            
+
             if (timeout > 0) {
                 double now = current_time();
                 if (now-start >= timeout) {
-                   return -1;
+                   return 0;
                 }
             }
-            
+
             // This causes the loop to spin rapidly for 1 second
             useconds_t sleeptime = 10; // Default is 10 usec
             if (i > 1e5) {
@@ -119,22 +141,20 @@ int MPICommunicator::wait_for_message(double timeout) {
                 // This is only approximate of course
                 sleeptime = 5e5;
             }
-            
+
             if (usleep(sleeptime)) {
                 // The sleep was interrupted by a signal
-                return -1;
+                return 0;
             }
         }
     } else {
         // This call blocks, potentially in a busy loop depending on the
         // MPI implementation used
         MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+        return 1;
     }
-    
-    // Return the size of the waiting message
-    int msgsize = 0;
-    MPI_Get_count(&status, MPI_CHAR, &msgsize);
-    return msgsize;
+
+    myfailure("Reached end of wait_for_message");
 }
 
 void MPICommunicator::barrier() {
@@ -146,15 +166,11 @@ void MPICommunicator::abort(int exitcode) {
 }
 
 int MPICommunicator::rank() {
-    int rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    return rank;
+    return myrank;
 }
 
 int MPICommunicator::size() {
-    int size;
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
-    return size;
+    return mysize;
 }
 
 unsigned long MPICommunicator::sent() {
