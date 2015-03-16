@@ -223,7 +223,7 @@ static void* timer_thread_func(void* mpi_rank_void) {
 
         timestamp = get_time();
 
-        fprintf(kickstart_status, "%d %f %f %f %f %d %d %d %d %d %d %d\n", mpi_rank, timestamp, 
+        fprintf(kickstart_status, "ts=%f event=workflow_trace level=INFO status=0 guid=na mpi_rank=%d utime=%.3f stime=%.3f iowait=%.3f vmSize=%d vmRSS=%d threads=%d read_bytes=%d write_bytes=%d syscr=%d syscw=%d\n", timestamp, mpi_rank, 
                 cpu_info.real_utime, cpu_info.real_stime, cpu_info.real_iowait,
                 mem_info.vmSize, mem_info.vmRSS, mem_info.threads,
                 io_info.read_bytes, io_info.write_bytes, io_info.syscr, io_info.syscw);
