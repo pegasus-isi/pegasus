@@ -438,15 +438,15 @@ identify( char *result, size_t size, const char *arg0,
 
     // phase 2: where am i
     struct utsname uts;
-    char *release = const_cast<char *>("");
-    char *machine = const_cast<char *>("");
-    char *sysname = const_cast<char *>("");
+    // char *release = const_cast<char *>("");
+    // char *machine = const_cast<char *>("");
+    // char *sysname = const_cast<char *>("");
     char *hostname = getenv("HOSTNAME");
     if ( uname(&uts) >= 0 )
     {
-        release = strdup( uts.release );
-        machine = strdup( uts.machine );
-        sysname = strdup( uts.sysname );
+        // release = strdup( uts.release );
+        // machine = strdup( uts.machine );
+        // sysname = strdup( uts.sysname );
         if ( hostname == 0 ) hostname = uts.nodename;
     }
 
@@ -561,7 +561,7 @@ allocate_mem_buffer( size_t mem_buf_size )
     else
     {
         // printf( "Memory allocation was successfull\n" );
-        for (int i = 0; i < mem_buf_size; i += getpagesize())
+        for (unsigned int i = 0; i < mem_buf_size; i += getpagesize())
             memory_buffer[i] = 'Z';
     }
 
@@ -614,7 +614,7 @@ calculate_input_file_size( DirtyVector iox[5], char *buffer )
     return input_files_size;
 }
 
-void
+int
 read_input_files( DirtyVector iox[5], char *buffer, size_t bufsize, char *memory_buffer )
 /* purpose: read input file content to a memory buffer
  * paramtr: iox (DirtyVector[]): a data structure with information about all input/output files
@@ -653,8 +653,11 @@ read_input_files( DirtyVector iox[5], char *buffer, size_t bufsize, char *memory
         else
         {
             printf( "[error] open \"%s\": %d: %s\n", iox[1][j], errno, strerror(errno) );
+            return 1;
         }
     }
+
+    return 0;
 }
 
 void
@@ -857,7 +860,10 @@ main( int argc, char *argv[] )
         }
 
         // 3. read the input files content
-        read_input_files( iox, buffer, bufsize, memory_buffer );
+        if( read_input_files( iox, buffer, bufsize, memory_buffer ) ) {
+            free( static_cast<void *>(buffer) );
+            return 2;
+        }
         // printf( "%s\n", memory_buffer );
 
         // PHASE 2 - writing output files if any; the -G switch has higher priority than input files
