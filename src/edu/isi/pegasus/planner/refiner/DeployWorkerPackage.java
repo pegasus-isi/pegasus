@@ -1181,6 +1181,8 @@ public class DeployWorkerPackage
         
         newJob.executable = execPath;
         newJob.executionPool = site;
+        //PM-845 set staging site handle to same as execution site of compute job
+        newJob.setStagingSiteHandle(site);
         newJob.strargs = arguments.toString();
         
         //for JIRA PM-38 we used to run as a compute job
