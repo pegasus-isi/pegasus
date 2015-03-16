@@ -168,7 +168,6 @@ static int max_descriptors = 0;
 
 /* This is the trace file where we write information about the process */
 static FILE* trace = NULL;
-static char global_trace_file[1024];
 static pthread_t timer_thread;
 
 static FILE *fopen_untraced(const char *path, const char *mode);
@@ -181,6 +180,19 @@ static double get_time();
 static CpuUtilInfo read_cpu_status();
 static MemUtilInfo read_mem_status();
 static IoUtilInfo read_io_status();
+
+
+// Utility function to open the kickstart status file based on environment variable
+static FILE* open_kickstart_status_file() {
+    char *kickstart_status = getenv("KICKSTART_STATUS");
+
+    if (kickstart_status == NULL) {
+        printerr("Unable to open kickstart status file: KICKSTART_STATUS not set in environment");
+        return NULL;
+    }
+
+    return fopen(kickstart_status, "a");
+}
 
 /*
  * It is a timer thread function, which dumps monitoring information to a global trace file 
@@ -195,8 +207,8 @@ static void* timer_thread_func(void* mpi_rank_void) {
 
     printerr("We are now in a thread: %d\n", mpi_rank);
 
-    FILE* global_trace = fopen(global_trace_file, "a");
-    if(global_trace == NULL) {
+    FILE* kickstart_status = open_kickstart_status_file();
+    if(kickstart_status == NULL) {
         pthread_exit(NULL);
         return NULL;
     }
@@ -211,16 +223,17 @@ static void* timer_thread_func(void* mpi_rank_void) {
 
         timestamp = get_time();
 
-        fprintf(global_trace, "%d %f %f %f %f %d %d %d %d %d %d %d\n", mpi_rank, timestamp, 
+        fprintf(kickstart_status, "%d %f %f %f %f %d %d %d %d %d %d %d\n", mpi_rank, timestamp, 
                 cpu_info.real_utime, cpu_info.real_stime, cpu_info.real_iowait,
                 mem_info.vmSize, mem_info.vmRSS, mem_info.threads,
                 io_info.read_bytes, io_info.write_bytes, io_info.syscr, io_info.syscw);
-        fflush(global_trace);
+        fflush(kickstart_status);
     }
 
-    fclose(global_trace);
+    fclose(kickstart_status);
 
     pthread_exit(NULL);
+    return NULL;
 }
 
 /* Open the trace file */
@@ -232,7 +245,6 @@ static int topen() {
         printerr("Unable to open trace file: KICKSTART_PREFIX not set in environment");
         return -1;
     }
-    strcpy(global_trace_file, kickstart_prefix);
 
     char filename[BUFSIZ];
     snprintf(filename, BUFSIZ, "%s.%d", kickstart_prefix, getpid());
