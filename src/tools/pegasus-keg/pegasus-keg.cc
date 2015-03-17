@@ -493,7 +493,7 @@ helpMe( const char *ptr, unsigned long timeout, unsigned long spinout,
         const char *prefix )
 {
     printf( "Usage:\t%s [-a appname] [(-t|-T) thinktime] [-l fn] [-o fn [..]]\n"
-            "\t[-i fn [..] | -G size] [-e env [..]] [-p p [..]] [-P ps]\n",
+            "\t[-i fn [..] | -G size] [-e env [..]] [-p p [..]] [-P ps] [-h]\n",
             ptr );
     printf( " -a app\tset name of application to something else, default %s\n", ptr );
     printf( " -m me\tallocate 'me' MB of memory\n" );
@@ -504,8 +504,9 @@ helpMe( const char *ptr, unsigned long timeout, unsigned long spinout,
     printf( " -T to\tspin for 'to' seconds during execution, default %lu\n", spinout );
     printf( " -l fn\tappend own information atomically to a logfile\n" );
     printf( " -o ..\tenumerate space-separated list output files to create\n\
-        Accept also '<filename>=<filesize><data_unit>' form, where <data_unit>\
-        is a character supported by '-u' switch.\n" );
+        Accept also '<filename>=<filesize><data_unit>' form, where <data_unit>\n\
+        is a character supported by '-u' switch.\n\
+        If you don't specify input files you have to specify output file size.\n" );
     printf( " -i ..\tenumerate space-separated list input to read and copy\n" );
     printf( " -G ..\tenumerate space-separated list of output file sizes\n" );
     printf( " -u un\tdata unit for output files generator - accepted values includes [ B K M G ], default is B\n" );
@@ -513,6 +514,7 @@ helpMe( const char *ptr, unsigned long timeout, unsigned long spinout,
     printf( " -e ..\tenumerate space-separated environment values to print\n" );
     printf( " -C\tprint all environment variables starting with _CONDOR\n" );
     printf( " -P ps\tprefix input file lines with 'ps', default \"%s\"\n", prefix );
+    printf( " -h\tshows this help message\n" );
 }
 
 unsigned long long
@@ -736,7 +738,7 @@ main( int argc, char *argv[] )
         char *s = argv[i];
         if ( s[0] == '-' && s[1] != 0 )
         {
-            if ( strchr( "iotTGaepPlCmru\0", s[1] ) != NULL )
+            if ( strchr( "iotTGaepPlCmruh\0", s[1] ) != NULL )
             {
                 switch (s[1])
                 {
@@ -784,6 +786,10 @@ main( int argc, char *argv[] )
                 case 'C':
                     condor = true;
                     continue;
+
+                case 'h':
+                    helpMe( ptr, timeout, spinout, prefix );
+                    return 0;
                 }
                 s += 2;
             }
@@ -899,6 +905,8 @@ main( int argc, char *argv[] )
                 }
                 else 
                 {
+
+
                     out = fopen( iox[2][i], "w" );
                 }
             }
@@ -909,7 +917,7 @@ main( int argc, char *argv[] )
                 {
                     if ( xsize <= 0 )
                     {
-                        const char *xsize_str = iox[4][ i % iox[4].size() ];    
+                        const char *xsize_str = iox[4][ i % iox[4].size() ];  
                         xsize = strtoul(xsize_str, 0, 10) * data_unit_multiplier( data_unit );
                     }
 
@@ -917,6 +925,13 @@ main( int argc, char *argv[] )
                 }
                 else
                 {
+                    if(input_files_size == 0) {
+                        printf( "[error] couldn't determine output file size\n" );
+                        printf( "[error] you need to provide either input files or size of output files\n" );
+                        printf( "[error] execute 'pegasus-keg -h' to see available options\n" );
+                        return 1;
+                    }
+                    
                     fputs( prefix, out );
                     fputs( memory_buffer, out );
                 }
