@@ -6,8 +6,6 @@ import zipfile
 import shutil
 from optparse import OptionParser
 
-VERBOSE = False
-
 def extract(submitdir):
     # Locate braindump file
     braindump = os.path.join(submitdir, "braindump.txt")
@@ -64,7 +62,6 @@ def archive(submitdir):
     # Archive the files
     zf = zipfile.ZipFile(archname, "w", zipfile.ZIP_DEFLATED, True)
     for name, path in visit(submitdir):
-        if VERBOSE: print "Archiving %s" % name
         zf.write(filename=path, arcname=name)
     zf.close()
 
@@ -73,20 +70,14 @@ def archive(submitdir):
     # because we want to make sure there are no errors in creating
     # the archive before we start removing files
     for name, path in visit(submitdir):
-        if VERBOSE: print "Removing %s" % name
-
         if os.path.isfile(path) or os.path.islink(path):
             os.remove(path)
         else:
             shutil.rmtree(path)
 
-def __main():
-    global VERBOSE
-
+def main():
     parser = OptionParser(usage="Usage: %prog [options] SUBMIT_DIR",
             description="Compress a workflow without causing it to be unusable by analysis tools")
-    parser.add_option("-v", "--verbose", dest="verbose", action="store_true",
-                      default=False, help="Turn on verbose logging")
     parser.add_option("-x", "--extract", dest="archive", action="store_false",
                       default=True, help="Extract previously archived submit dir")
 
@@ -94,8 +85,6 @@ def __main():
 
     if len(args) != 1:
         parser.error("Specify SUBMIT_DIR")
-
-    VERBOSE = options.verbose
 
     submitdir = args[0]
 
@@ -111,12 +100,4 @@ def __main():
         archive(submitdir)
     else:
         extract(submitdir)
-
-def main():
-    try:
-        __main()
-    except Exception, e:
-        if VERBOSE: raise
-        print e
-        exit(1)
 
