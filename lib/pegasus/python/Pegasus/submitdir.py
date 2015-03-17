@@ -6,16 +6,18 @@ import zipfile
 import shutil
 from optparse import OptionParser
 
+class SubmitDirException(Exception): pass
+
 def extract(submitdir):
     # Locate braindump file
     braindump = os.path.join(submitdir, "braindump.txt")
     if not os.path.isfile(braindump):
-        raise Exception("Not a submit directory: braindump.txt missing")
+        raise SubmitDirException("Not a submit directory: braindump.txt missing")
 
     # Locate archive file
     archname = os.path.join(submitdir, "archive.zip")
     if not os.path.isfile(archname):
-        raise Exception("Submit dir not archived")
+        raise SubmitDirException("Submit dir not archived")
 
     zf = zipfile.ZipFile(archname, "r")
     zf.extractall(path=submitdir)
@@ -29,7 +31,7 @@ def archive(submitdir):
     # Locate and exclude braindump file
     braindump = os.path.join(submitdir, "braindump.txt")
     if not os.path.isfile(braindump):
-        raise Exception("Not a submit directory: braindump.txt missing")
+        raise SubmitDirException("Not a submit directory: braindump.txt missing")
     exclude.add(braindump)
 
     # Ignore monitord files. This is needed so that tools like pegasus-statistics
@@ -48,7 +50,7 @@ def archive(submitdir):
     # Locate and exclude archive file
     archname = os.path.join(submitdir, "archive.zip")
     if os.path.exists(archname):
-        raise Exception("Submit dir already archived")
+        raise SubmitDirException("Submit dir already archived")
     exclude.add(archname)
 
     # Visit all the files in the submit dir that we want to archive
