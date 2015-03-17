@@ -2,7 +2,7 @@
 
 import os
 import glob
-import tarfile
+import zipfile
 import shutil
 from optparse import OptionParser
 
@@ -15,13 +15,13 @@ def extract(submitdir):
         raise Exception("Not a submit directory: braindump.txt missing")
 
     # Locate archive file
-    archname = os.path.join(submitdir, "archive.tar.gz")
+    archname = os.path.join(submitdir, "archive.zip")
     if not os.path.isfile(archname):
         raise Exception("Submit dir not archived")
 
-    tar = tarfile.open(archname, "r|gz")
-    tar.extractall(path=submitdir)
-    tar.close()
+    zf = zipfile.ZipFile(archname, "r")
+    zf.extractall(path=submitdir)
+    zf.close()
 
     os.remove(archname)
 
@@ -48,7 +48,7 @@ def archive(submitdir):
         exclude.add(prop)
 
     # Locate and exclude archive file
-    archname = os.path.join(submitdir, "archive.tar.gz")
+    archname = os.path.join(submitdir, "archive.zip")
     if os.path.exists(archname):
         raise Exception("Submit dir already archived")
     exclude.add(archname)
@@ -62,11 +62,11 @@ def archive(submitdir):
                 yield name, path
 
     # Archive the files
-    tar = tarfile.open(name=archname, mode="w|gz")
+    zf = zipfile.ZipFile(archname, "w", zipfile.ZIP_DEFLATED, True)
     for name, path in visit(submitdir):
         if VERBOSE: print "Archiving %s" % name
-        tar.add(name=path, arcname=name)
-    tar.close()
+        zf.write(filename=path, arcname=name)
+    zf.close()
 
     # Remove the files and directories
     # We do this here, instead of doing it in the loop above
