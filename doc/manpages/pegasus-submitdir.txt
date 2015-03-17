@@ -1,11 +1,11 @@
-pegasus-archive(1)
-==================
+pegasus-submitdir(1)
+====================
 :doctype: manpage
 
 
 Name
 ----
-pegasus-archive - Compresses a workflow submit directory in a way that
+pegasus-submitdir - Compresses a workflow submit directory in a way that
 allows pegasus-dashboard, pegasus-statistics, pegasus-plots, and
 pegasus-analyzer to keep working.
 
@@ -13,15 +13,15 @@ pegasus-analyzer to keep working.
 Synopsis
 --------
 [verse]
-*pegasus-archive* [*-h*][*-v*][*-x*] 'submit_dir'
+*pegasus-submitdir* [*-h*][*-v*][*-x*] 'submit_dir'
 
 
 Description
 -----------
-*pegasus-archive* significantly reduces the size of workflow submit
+*pegasus-submitdir* significantly reduces the size of workflow submit
 directories by compressing the data in a way such that it remains accessible
 to tools such as pegasus-statistics, pegasus-plots, and pegasus-analyzer.
-It creates a .tar.gz archive of the submit files and logs that excludes
+It creates a .zip archive of the submit files and logs that excludes
 files such as the stampede database, braindump file, and monitord logs, which
 are used by pegasus reporting tools.
 
@@ -39,7 +39,7 @@ Print detailed messages about the archiving process.
 *-x*::
 *--extract*::
 Un-archive a previously archived submit directory. This option returns the
-submit directory to the state it was before *pegasus-archive* was applied to
+submit directory to the state it was before *pegasus-submitdir* was applied to
 it.
 
 

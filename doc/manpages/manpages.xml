@@ -5,7 +5,6 @@
     <title>Man Pages</title>
 
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-analyzer.xml"/>
-    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-archive.xml"/>
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-cleanup.xml"/>
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-cluster.xml"/>
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-config.xml"/>
@@ -33,6 +32,7 @@
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-statistics.xml"/>
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-status.xml"/>
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-submit-dag.xml"/>
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-submitdir.xml"/>
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-tc-client.xml"/>
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-tc-converter.xml"/>
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-transfer.xml"/>
