@@ -863,6 +863,8 @@ main( int argc, char *argv[] )
             {
                 memory_buffer = static_cast<char *>( realloc( memory_buffer, sizeof(char) * input_files_size ) );
             }
+
+            strcpy(memory_buffer, "");
         }
 
         // 3. read the input files content
@@ -925,15 +927,11 @@ main( int argc, char *argv[] )
                 }
                 else
                 {
-                    if(input_files_size == 0) {
-                        printf( "[error] couldn't determine output file size\n" );
-                        printf( "[error] you need to provide either input files or size of output files\n" );
-                        printf( "[error] execute 'pegasus-keg -h' to see available options\n" );
-                        return 1;
-                    }
-                    
                     fputs( prefix, out );
-                    fputs( memory_buffer, out );
+                    
+                    if(memory_buffer != NULL) {
+                        fputs( memory_buffer, out );
+                    }                    
                 }
 
                 // create buffer, and fill with content
