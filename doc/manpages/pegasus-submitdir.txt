@@ -20,7 +20,7 @@ Pegasus planner.
 The *archive* command significantly reduces the size of workflow submit
 directories by compressing the data in a way such that it remains accessible
 to tools such as pegasus-statistics, pegasus-plots, and pegasus-analyzer.
-It creates a .zip archive of the submit files and logs that excludes
+It creates a gzipped tar archive of the submit files and logs that excludes
 files such as the stampede database, braindump file, and monitord logs, which
 are used by pegasus reporting tools.
 
