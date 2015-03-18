@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import os
 import glob
 import tarfile
@@ -42,6 +40,26 @@ class MasterDatabase(SQLAlchemyInit):
         q = self.session.query(EnsembleWorkflow)
         q = q.filter(EnsembleWorkflow.wf_uuid == wf_uuid)
         return q.first()
+
+    def delete_workflow(self, wf_uuid):
+        w = self.get_workflow(wf_uuid)
+        if w is None:
+            return
+
+        # Delete any ensemble workflows
+        q = self.session.query(EnsembleWorkflow)
+        q = q.filter(EnsembleWorkflow.wf_uuid == wf_uuid)
+        q.delete()
+
+        # Delete workflow states
+        q = self.session.query(DashboardWorkflowstate)
+        q = q.filter(DashboardWorkflowstate.wf_id == w.wf_id)
+        q.delete()
+
+        # Delete the workflow
+        q = self.session.query(DashboardWorkflow)
+        q = q.filter(DashboardWorkflow.wf_id == w.wf_id)
+        q.delete()
 
     def commit(self):
         self.session.flush()
@@ -262,7 +280,69 @@ def move(submitdir, dest):
     items["basedir"] = os.path.dirname(dest)
     utils.write_braindump(os.path.join(dest, "braindump.txt"), items)
 
+    # TODO We might want to update all of the absolute paths in the condor submit files
+    # if we plan on moving workflows that could be resubmitted in the future
+
+    # TODO We might want to update the braindump files for subworkflows
+
     # Update master database
+    mdb.commit()
+    mdb.close()
+
+def delete(submitdir):
+    submitdir = os.path.abspath(submitdir)
+
+    if not os.path.isdir(submitdir):
+        raise SubmitDirException("Invalid submit dir: %s" % submitdir)
+
+    bd = os.path.join(submitdir, "braindump.txt")
+    if not os.path.isfile(bd):
+        raise SubmitDirException("Not a submit dir (no braindump.txt): %s" % submitdir)
+
+    # Read the braindump file
+    items = utils.read_braindump(bd)
+    wf_uuid = items["wf_uuid"]
+    root_wf_uuid = items["root_wf_uuid"]
+
+    # Verify that we aren't trying to move a subworkflow
+    if wf_uuid != root_wf_uuid:
+        raise SubmitDirException("Subworkflows cannot be deleted independent of the root workflow")
+
+    # Confirm that the username matches
+    wf_user = items["user"]
+    os_user = getpass.getuser()
+    if wf_user != os_user:
+        raise SubmitDirException("Workflow username from braindump does not match current username: %s != %s" % (wf_user, os_user))
+
+    # Find the master db
+    u = user.get_user_by_username(wf_user)
+    mdb_file = u.get_master_db()
+    if not os.path.isfile(mdb_file):
+        raise SubmitDirException("Master database does not exist: %s" % mdb_file)
+
+    # Confirm that they want to delete the workflow
+    while True:
+        sys.stdout.write("Are you sure you want to delete this workflow? This operation cannot be undone. [y/n]: ")
+        answer = raw_input().strip().lower()
+        if answer == "y":
+            break
+        if answer == "n":
+            return
+
+    # Connect to master database
+    mdb_url = u.get_master_db_url()
+    mdb = MasterDatabase(mdb_url)
+
+    # TODO We might want to delete all of the records from the workflow db
+    # if they are not using an sqlite db that is in the submit dir
+
+    # Delete the workflow
+    mdb.delete_workflow(wf_uuid)
+
+    # Remove all the files
+    shutil.rmtree(submitdir)
+
+    # Update master db
     mdb.commit()
     mdb.close()
 
@@ -296,17 +376,29 @@ class MoveCommand(Command):
 
         move(self.args[0], self.args[1])
 
+class DeleteCommand(Command):
+    description = "Delete a submit directory and the associated DB entries"
+    usage = "Usage: %prog delete SUBMITDIR"
+
+    def run(self):
+        if len(self.args) != 1:
+            self.parser.error("Specify SUBMITDIR")
+
+        delete(self.args[0])
+
 class SubmitDirCommand(CompoundCommand):
     description = "Manages submit directories"
     commands = [
         ("archive", ArchiveCommand),
         ("extract", ExtractCommand),
-        ("move", MoveCommand)
+        ("move", MoveCommand),
+        ("delete", DeleteCommand)
     ]
     aliases = {
         "ar": "archive",
         "ex": "extract",
-        "mv": "move"
+        "mv": "move",
+        "rm": "delete"
     }
 
 def main():
