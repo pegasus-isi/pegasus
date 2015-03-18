@@ -142,7 +142,7 @@ public abstract class AbstractStrategy implements Strategy {
         for( Iterator<GraphNode> it = dag.jobIterator();it.hasNext();){
             GraphNode node = it.next();
             Job job = (Job)node.getContent();
-
+            
             if( job.getJobType() == Job.CHMOD_JOB ){
                 //PM-845 staging site is always set to the associated 
                 //compute jobs execution site

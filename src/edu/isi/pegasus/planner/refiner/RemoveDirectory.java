@@ -267,7 +267,7 @@ public class RemoveDirectory extends Engine {
             if( site == null ){
                 //only ok for stage worker jobs
                 if( job instanceof TransferJob || job.getJobType() == Job.REPLICA_REG_JOB ){
-                    mLogger.log( "Not adding edge to create dir job for job " + job.getID(),
+                    mLogger.log( "Not adding edge to leaf cleanup job for job " + job.getID(),
                                      LogManager.DEBUG_MESSAGE_LEVEL );
                     nodeBitMap.put(node, set);
                     continue;
@@ -277,11 +277,14 @@ public class RemoveDirectory extends Engine {
                 }
             }
             
-          
-            //System.out.println( "Create dir site for job " + job.getID() + " is " + site );
-
-
-            int index = siteToBitIndexMap.get( site );
+            //int index = siteToBitIndexMap.get( site );
+            Object value = siteToBitIndexMap.get( site );
+            if( value == null){
+                throw new RuntimeException( "Remove dir site " + site + " for job " + job.getID() + 
+                                            " is not present in staging sites for workflow " +  removeDirMap.keySet() );
+            }
+            int index = (Integer)value; 
+            
             if(! set.get( index ) ){
                 //none of the parents have an index to the site
                 //need to add an edge.
@@ -660,7 +663,7 @@ public class RemoveDirectory extends Engine {
     private String getAssociatedCreateDirSite( Job job ) {
         String site = null;
         if( job.getJobType() == Job.CHMOD_JOB ){
-            site =  job.getSiteHandle();
+            site =  job.getStagingSiteHandle();
         }
         else{
             //the parent in case of a transfer job
@@ -673,7 +676,7 @@ public class RemoveDirectory extends Engine {
             if( site == null ){
                 //only ok for stage worker jobs
                 if( job instanceof TransferJob ){
-                    mLogger.log( "Not adding edge to create dir job for job " + job.getID(),
+                    mLogger.log( "Not adding edge to leaf cleanup job for job " + job.getID(),
                                      LogManager.DEBUG_MESSAGE_LEVEL );
                     return site;
                     
