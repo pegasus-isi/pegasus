@@ -351,6 +351,25 @@ def add_to_braindb(run, missing_keys, brain_alternate=None):
     except IOError:
         pass
 
+def write_braindump(filename, items):
+    "This simply writes a dict to the file specified in braindump format"
+    f = open(filename, "w")
+    for k in items:
+        f.write("%s %s\n" % (k,items[k]))
+    f.close()
+
+def read_braindump(filename):
+    "This simply reads a braindump dict from the file specified"
+    items = {}
+    f = open(filename, "r")
+    for l in f:
+        k,v = l.strip().split(" ", 1)
+        k = k.strip()
+        v = v.strip()
+        items[k] = v
+    f.close()
+    return items
+
 def slurp_braindb(run, brain_alternate=None):
     """
     Reads extra configuration from braindump database
