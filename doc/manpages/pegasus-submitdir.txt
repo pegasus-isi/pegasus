@@ -20,23 +20,44 @@ Pegasus planner.
 The *archive* command significantly reduces the size of workflow submit
 directories by compressing the data in a way such that it remains accessible
 to tools such as pegasus-statistics, pegasus-plots, and pegasus-analyzer.
-It creates a gzipped tar archive of the submit files and logs that excludes
-files such as the stampede database, braindump file, and monitord logs, which
-are used by pegasus reporting tools.
 
 The *extract* command reverses the effect of the *archive* command.
+
+The *move* command relocates a submit directory and updates relevant pointers
+in the database so that it can still be accessed through the dashboard.
+
+The *delete* command removes the submit directory and cleans up any associated
+records in the user's master database.
 
 Commands
 --------
 *archive* SUBMITDIR::
     Compresses a workflow submit directory in a way that allows
     pegasus-dashboard, pegasus-statistics, pegasus-plots, and
-    pegasus-analyzer to keep working.
+    pegasus-analyzer to keep working. It creates a gzipped tar archive of
+    the submit files and logs that excludes files such as the workflow
+    database, braindump file, and monitord logs, which are used by pegasus
+    reporting tools.
 
 *extract* SUBMITDIR::
     Uncompresses a previously archived submit directory. This option returns
     the submit directory to the state it was before *pegasus-submitdir archive*
     was applied to it.
+
+*move* SUBMITDIR DEST::
+    Move a workflow submit dir from SUBMITDIR to DEST. This operation updates
+    the relevant database records so that the dashboard continues to function.
+    DEST can be either an existing directory, in which case the submit dir
+    becomes a subdirectory, or a new path, in which case the submit dir is
+    renamed. *IMPORTANT* This operation should only be performed on
+    workflows that will not be resubmitted in the future. Moving a workflow
+    does not update absolute paths in any of the submit files, so after a
+    workflow has been moved it is not possible to rerun it.
+
+*delete* SUBMITDIR::
+    Delete a workflow submit dir. This operation removes all related records
+    from the user's master database, including ensemble manager records.
+    Deleted workflows do not appear in the dashboard.
 
 Global Options
 --------------
