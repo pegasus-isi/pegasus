@@ -1,0 +1,32 @@
+#ifndef _PEGASUS_MONITORING_H
+
+#include <pthread.h>
+#include "error.h"
+
+typedef struct {
+    char* url;
+    char* credentials;
+    char* routing_key;
+    char* kickstart_status;
+} MonitoringEndpoint;
+
+extern
+int
+start_status_thread(pthread_t* monitoring_thread, char* kickstart_status);
+/* purpose: read environment variables, starts a monitoring thread and detaches it
+ * paramtr:	monitoring_thread (OUT) a thread struct
+ *			kickstart_status  (IN)	an absolute path to a global trace file	
+ * returns:	0 success
+ *			1 failure
+ */
+
+extern 
+void* 
+monitoring_thread_func(void* monitoring_endpoint_struct);
+/* purpose: monitoring thread - periodically reads global trace file (kickstart status file) 
+ *			and sends each line (i.e. measurement) to external rabbitmq through HTTP
+ * paramtr: monitoring_endpoint_struct (IN): a pointer to an instance of MonitoringEndpoint 
+ *				- it has all the information necessary to connect to rabbitmq
+ */
+
+#endif /* _PEGASUS_MONITORING_H */
