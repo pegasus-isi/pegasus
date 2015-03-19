@@ -15,13 +15,12 @@ class Version(BaseVersion):
     def update(self, force):
         "Add plan_command field to ensemble_workflow table"
         # TODO We might need to check to see if the field already exists first
-        if self.database_name == "DASHBOARD" or not self.database_name:
-            if self.connections["DASHBOARD"]:
-                dashDB = self.connections["DASHBOARD"].db
-                try:
-                    dashDB.execute("ALTER TABLE ensemble_workflow ADD plan_command VARCHAR(1024) NOT NULL default './plan.sh'")
-                except OperationalError, e:
-                    pass
+        if self.connections[self.database_name]:
+            db = self.connections[self.database_name].db
+            try:
+                db.execute("ALTER TABLE ensemble_workflow ADD plan_command VARCHAR(1024) NOT NULL default './plan.sh'")
+            except OperationalError, e:
+                pass
 
     def downgrade(self, force):
         "Downgrade is not necessary as plan_command is added with a default that works for old versions"
@@ -29,12 +28,12 @@ class Version(BaseVersion):
 
 
     def is_compatible(self):
-        if self.database_name == "DASHBOARD" or not self.database_name:
-            if self.connections["DASHBOARD"]:
-                try:
-                    self.connections["DASHBOARD"].db.execute("SELECT plan_command FROM ensemble_workflow")
-                except Exception, e:
-                    return False
+        if self.connections[self.database_name]:
+            db = self.connections[self.database_name].db
+            try:
+                db.execute("SELECT plan_command FROM ensemble_workflow")
+            except Exception, e:
+                return False
         return True
 
 

@@ -47,14 +47,14 @@ class AdminDB(object):
         
         # configure database objects
         self.connections = {
-            'JDBCRC': self._connect_jdbcrc(),
+            'CATALOGS': self._connect_catalogs(),
             'MASTER': self._connect_master(),
             'WORKFLOW': self._connect_workflow(),
         }
         
 
-    def _connect_jdbcrc(self):
-        """ Connect to the JDBCRC database """
+    def _connect_catalogs(self):
+        """ Connect to the CATALOGS database """
         props = properties.Properties()
         props.new(config_file=self.config_properties)
         replica_catalog = props.property('pegasus.catalog.replica')
@@ -116,7 +116,6 @@ class AdminDB(object):
             if not self.submit_dir:
                 return None
             connString = db_utils.get_db_url_wf_uuid(self.submit_dir, self.config_properties)[0]
-            print connString
            
         if connString:
             return stampede_loader.Analyzer(connString)
@@ -159,8 +158,8 @@ class AdminDB(object):
         return True
 
 
-    def current_version(self, database_name, parse=False):
-        """ Get the current version of the database."""
+    def current_version(self, database_name=None, parse=False, print_friendly=False):
+        """ Get the current version of the databases."""
         current_version = {}
         
         if database_name:
@@ -170,10 +169,18 @@ class AdminDB(object):
                     current_version[database_name.upper()] = self._discover_version(database_name.upper())
         else:
             for db_name in self.connections:
+                if print_friendly:
+                    if self.connections[db_name]:
+                        key = "%s (%s)" % (db_name, self.connections[db_name].db.url)
+                    else:
+                        key = "%s (Not configured)" % (db_name)
+                else:
+                    key = db_name
                 try:
-                   current_version[db_name] = self._get_version(db_name) 
+                    current_version[key] = self._get_version(db_name) 
                 except NoResultFound:
-                    current_version[db_name] = self._discover_version(db_name)
+                    current_version[key] = self._discover_version(db_name)
+                        
                     
         if parse:
             for key in current_version:
@@ -184,10 +191,10 @@ class AdminDB(object):
         return current_version
 
 
-    def update(self, pegasus_version=None, database_name=None, force=False):
+    def update(self, pegasus_version=None, force=False):
         """ Update the database. """
         
-        current_version = self.current_version(database_name)
+        current_version = self.current_version()
         version = self._parse_pegasus_version(pegasus_version)
         
         for db_name in current_version:
@@ -199,10 +206,10 @@ class AdminDB(object):
                         self._update_version(i, db_name)
                     
                     
-    def downgrade(self, pegasus_version=None, database_name=None, force=False):
+    def downgrade(self, pegasus_version=None, force=False):
         """ Downgrade the database. """
         
-        current_version = self.current_version(database_name)
+        current_version = self.current_version()
         version = self._parse_pegasus_version(pegasus_version)
         if version == CURRENT_DB_VERSION:
             version = version - 1
@@ -278,8 +285,8 @@ class AdminDB(object):
     def get_master_connection(self):
         return self.connections['MASTER']
     
-    def get_jdbcrc_connection(self):
-        return self.connections['JDBCRC']
+    def get_catalogs_connection(self):
+        return self.connections['CATALOGS']
     
     def get_workflow_connection(self):
         return self.connections['WORKFLOW']

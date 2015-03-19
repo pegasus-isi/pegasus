@@ -11,9 +11,9 @@ log = logging.getLogger(__name__)
 
 # ------------------------------------------------------
 def print_versions(data):
-    sys.stdout.write("Your database is compatible with the following Pegasus versions:\n")
+    sys.stdout.write("Database compatibilities:\n")
     for key in data:
-        sys.stdout.write("    %s\t%s\n" % (key, data[key]))
+        sys.stdout.write("    %s\t%s\n" % (data[key], key))
 
 
 def set_log_level(debug):
@@ -65,8 +65,6 @@ class DowngradeCommand(Command):
             help = "Specify properties file. This overrides all other property files.")
         self.parser.add_option("-u","--url",action="store",type="string", 
             dest="database_url",default=None, help = "Database URL.")
-        self.parser.add_option("-n","--database",action="store",type="string", 
-            dest="database_name",default=None, help = "Database Name.")
         self.parser.add_option("-f","--force",action="store_true",dest="force",
             default=None, help = "Ignore conflicts or data loss.")
         self.parser.add_option("-V","--version",action="store",type="string", 
@@ -83,10 +81,10 @@ class DowngradeCommand(Command):
             
         adminDB = AdminDB(self.options.config_properties, self.options.database_url, submit_dir)
         
-        if not self.options.pegasus_version or not adminDB.verify(self.options.pegasus_version, self.options.database_name):
-            adminDB.downgrade(self.options.pegasus_version, self.options.database_name, self.options.force)
+        if not self.options.pegasus_version or not adminDB.verify(self.options.pegasus_version):
+            adminDB.downgrade(self.options.pegasus_version, self.options.force)
         
-        data = adminDB.current_version(self.options.database_name, True)
+        data = adminDB.current_version(parse=True, print_friendly=True)
         print_versions(data)
     
     
@@ -102,8 +100,6 @@ class UpdateCommand(Command):
             help = "Specify properties file. This overrides all other property files.")
         self.parser.add_option("-u","--url",action="store",type="string", 
             dest="database_url",default=None, help = "Database URL.")
-        self.parser.add_option("-n","--database",action="store",type="string", 
-            dest="database_name",default=None, help = "Database Name.")
         self.parser.add_option("-f","--force",action="store_true",dest="force",
             default=None, help = "Ignore conflicts or data loss.")
         self.parser.add_option("-V","--version",action="store",type="string", 
@@ -120,10 +116,10 @@ class UpdateCommand(Command):
             
         adminDB = AdminDB(self.options.config_properties, self.options.database_url, submit_dir)
         
-        if not adminDB.verify(self.options.pegasus_version, self.options.database_name):
-            adminDB.update(self.options.pegasus_version, self.options.database_name, self.options.force)
+        if not adminDB.verify(self.options.pegasus_version):
+            adminDB.update(self.options.pegasus_version, self.options.force)
         
-        data = adminDB.current_version(self.options.database_name, True)
+        data = adminDB.current_version(parse=True, print_friendly=True)
         print_versions(data)
     
     
@@ -194,7 +190,7 @@ class VersionCommand(Command):
             submit_dir = self.args[0]
         
         adminDB = AdminDB(self.options.config_properties, self.options.database_url, submit_dir)
-        data = adminDB.current_version(self.options.database_name, self.options.version_value)
+        data = adminDB.current_version(self.options.database_name, self.options.version_value, True)
         print_versions(data)
 
 
