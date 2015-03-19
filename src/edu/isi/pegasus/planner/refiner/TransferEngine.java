@@ -56,7 +56,6 @@ import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
 import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.classes.PlannerCache;
-import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.transfer.mapper.OutputMapper;
@@ -277,6 +276,42 @@ public class TransferEngine extends Engine {
                     "]",LogManager.CONFIG_MESSAGE_LEVEL);
     }
 
+    /**
+     * Determines a particular created transfer pair has to be binned
+     * for remote transfer or local.
+     * 
+     * @param job the associated compute job
+     * @param ft  the file transfer created
+     * @return 
+     */
+    private boolean runTransferRemotely(Job job , FileTransfer ft) {
+        NameValue sourceTX = ft.getSourceURL();
+        String sourceSite = sourceTX.getKey();
+        String sourceURL  = sourceTX.getValue();
+        boolean remote = false;
+        
+        //if the source URL is a FILE URL and 
+        //source site matches the destination site
+        //then has to run remotely
+        if( sourceURL != null && sourceURL.startsWith( PegasusURL.FILE_URL_SCHEME ) ){
+            //sanity check to make sure source site 
+            //matches destination site
+            NameValue destTX = ft.getDestURL();
+            if( sourceSite.equalsIgnoreCase( destTX.getKey()) ){
+                remote = true;
+            }
+            else if( sourceSite.equals( "local") ){
+                remote = false;
+            }
+            else{
+                //should indicate a bug
+                throw new RuntimeException( "Mismatched file transfer created " + ft + " for job " +
+                                            job.getID());
+            }
+        }
+        return remote;
+    }
+    
     /**
      * Returns whether to run a transfer job on local site or not.
      *
@@ -1359,7 +1394,10 @@ public class TransferEngine extends Engine {
             if(ft.getDestURL() == null)
                 ft.addDestination(stagingSiteHandle,destPutURL);
             
-            if( symLinkSelectedLocation || !runTransferOnLocalSite ){
+            if(  symLinkSelectedLocation || //symlinks can run only locally
+                 !runTransferOnLocalSite ||
+                 runTransferRemotely( job, ft ) ){ //check on the basis of constructed source URL whether to run remotely
+                    
                 //all symlink transfers and user specified remote transfers
                 remoteFileTransfers.add(ft);
             }
@@ -1855,6 +1893,8 @@ public class TransferEngine extends Engine {
             mLogger.log( message.toString() , LogManager.WARNING_MESSAGE_LEVEL );
         }
     }
+
+    
 
 
 }
