@@ -32,7 +32,7 @@ echo "Creating the transformation catalog..."
 for BINARY in `(cd /ccg/software/montage/Montage_v3.3_mats/bin/ && ls)`; do
     cat >>tc <<EOF
 tr $BINARY:3.3 {
-    site CCG {
+    site local {
         pfn "/ccg/software/montage/Montage_v3.3_mats/bin/$BINARY"
         arch "x86"
         os "linux"
