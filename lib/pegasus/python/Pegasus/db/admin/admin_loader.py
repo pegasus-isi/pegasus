@@ -111,14 +111,8 @@ class AdminDB(object):
         if self.database_url:
             connString = self.database_url
         else:
-            db_file = None
-            for file in os.listdir(os.getcwd()):
-                if fnmatch.fnmatch(file, "*.stampede.db"):
-                    db_file = file
-                    break
-            if db_file:
-                connString = os.path.join(os.getcwd(), file)
-                connString = "sqlite:///" + connString
+            # TODO connection to Stampede database
+            pass
            
         if connString:
             return stampede_loader.Analyzer(connString)

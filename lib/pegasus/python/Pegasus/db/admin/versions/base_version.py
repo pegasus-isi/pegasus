@@ -25,11 +25,11 @@ class BaseVersion(object):
     def is_compatible(self):
         """Used for checking the compatibility of the database with the version class."""
         
-    def _verbose(self, message):
+    def verbose(self, message):
         if (self._vbs):
             sys.stdout.write(message)
             
-    def _debug(self, message):
+    def debug(self, message):
         if (self._dbg):
             sys.stdout.write(message)
             
