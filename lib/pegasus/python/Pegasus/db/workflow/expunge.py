@@ -4,8 +4,7 @@ import os
 import time
 import logging
 
-from Pegasus.db.schema.stampede_schema import *
-from Pegasus.db.schema.stampede_dashboard_schema import *
+from Pegasus.db.schema.pegasus_schema import *
 from Pegasus.db.modules import SQLAlchemyInit
 from Pegasus.netlogger import util
 
@@ -79,7 +78,7 @@ class StampedeExpunge(Expunge):
 
 class DashboardExpunge(Expunge):
     def __init__(self, connString, wf_uuid):
-        Expunge.__init__(self, connString, wf_uuid, initializeToDashboardDB)
+        Expunge.__init__(self, connString, wf_uuid, initializeToPegasusDB)
 
     def expunge(self):
         """

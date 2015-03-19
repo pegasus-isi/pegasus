@@ -4,7 +4,7 @@ import logging
 
 from Pegasus.db.modules import SQLAlchemyInit
 from Pegasus.db.schema.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
-from Pegasus.db.schema.stampede_schema import *
+from Pegasus.db.schema.pegasus_schema import *
 from Pegasus.db.errors import StampedeDBNotFoundError
 
 # Main stats class.

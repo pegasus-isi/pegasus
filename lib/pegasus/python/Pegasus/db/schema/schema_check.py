@@ -7,7 +7,7 @@ __author__ = "Monte Goode"
 import logging
 
 from Pegasus.db.modules import SQLAlchemyInit
-from Pegasus.db.schema.stampede_schema import *
+from Pegasus.db.schema.pegasus_schema import *
 
 class SchemaVersionError(Exception): 
     """

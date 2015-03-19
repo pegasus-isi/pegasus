@@ -10,12 +10,12 @@ dax = ADAG("022-data-reuse-regexrc")
 # Add executables to the DAX-level replica catalog
 e_hello = Executable(namespace="hello_world", name="hello", version="1.0", \
                      os="linux", arch="x86_64", installed=False)
-e_hello.addPFN(PFN("file://" + os.getcwd() + "/hello.sh", "condorpool"))
+e_hello.addPFN(PFN("file://" + os.getcwd() + "/hello.sh", "local"))
 dax.addExecutable(e_hello)
 	
 e_world = Executable(namespace="hello_world", name="world", version="1.0", \
                      os="linux", arch="x86_64", installed=False)
-e_world.addPFN(PFN("file://" + os.getcwd() + "/world.sh", "condorpool"))
+e_world.addPFN(PFN("file://" + os.getcwd() + "/world.sh", "local"))
 dax.addExecutable(e_world)
 
 for i in range(3):	

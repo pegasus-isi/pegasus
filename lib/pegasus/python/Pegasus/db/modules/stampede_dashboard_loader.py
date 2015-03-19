@@ -21,10 +21,11 @@ __author__ = "Monte Goode"
 __author__ = "Karan Vahi"
 
 from Pegasus.db.schema.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
-from Pegasus.db.schema.stampede_dashboard_schema import *
+from Pegasus.db.schema.pegasus_schema import *
 from Pegasus.db.modules import Analyzer as BaseAnalyzer
 from Pegasus.db.modules import SQLAlchemyInit
 from Pegasus.netlogger import util
+from sqlalchemy.exc import *
 import time
 
 class Analyzer(BaseAnalyzer, SQLAlchemyInit):
@@ -52,8 +53,8 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         if connString is None:
             raise ValueError("connString is required")
         try:
-            SQLAlchemyInit.__init__(self, connString, initializeToDashboardDB)
-        except exc.OperationalError, e:
+            SQLAlchemyInit.__init__(self, connString, initializeToPegasusDB)
+        except OperationalError, e:
             self.log.exception(e)
             self.log.error('Error initializing dashboard loader')
             raise RuntimeError

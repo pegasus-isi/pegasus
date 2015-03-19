@@ -1,12 +1,13 @@
 __author__ = "Rafael Ferreira da Silva"
 
-from Pegasus.db.schema.schema_check import ErrorStrings
-from Pegasus.db.schema.jdbcrc_schema import *
+from Pegasus.db.schema.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
+from Pegasus.db.schema.pegasus_schema import *
 from Pegasus.db.modules import Analyzer as BaseAnalyzer
 from Pegasus.db.modules import SQLAlchemyInit
+from sqlalchemy.exc import *
 
 class Analyzer(BaseAnalyzer, SQLAlchemyInit):
-    """Load into the Stampede SQL schema through SQLAlchemy.
+    """Load into the JDBCRC SQL schema through SQLAlchemy.
 
     Parameters:
       - connString {string,None*}: SQLAlchemy connection string.
@@ -30,9 +31,11 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             raise ValueError("connString is required")
 
         try:
-            SQLAlchemyInit.__init__(self, connString, initializeToJDBCRC)
-        except exc.OperationalError, e:
-            self.log.error('Connection String %s  %s', (connString, ErrorStrings.get_init_error(e)))
+            SQLAlchemyInit.__init__(self, connString, initializeToPegasusDB)
+        except OperationalError, e:
+            self.log.exception(e)
+            self.log.error('Error initializing jdbcrc loader.')
+            print e
             raise RuntimeError
         
         

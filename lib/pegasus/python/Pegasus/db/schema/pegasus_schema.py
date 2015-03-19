@@ -1,17 +1,15 @@
-"""
-Contains the code to create and map objects to the Stampede DB schema
-via a SQLAlchemy interface.
-"""
-__author__ = "Monte Goode MMGoode@lbl.gov"
+__author__ = "Monte Goode"
+__author__ = "Karan Vahi"
+__author__ = "Rafael Ferreira da Silva"
 
 import time
 import warnings
-import sys
 import logging
 
 from sqlalchemy import *
-from sqlalchemy import MetaData, orm, func, exc
-from sqlalchemy.orm import relation, backref
+from sqlalchemy import MetaData, orm
+from sqlalchemy.exc import *
+from sqlalchemy.orm import relation
 
 from Pegasus.db.schema import SABase, KeyInteger
 
@@ -29,16 +27,30 @@ table_keywords['mysql_engine'] = 'InnoDB'
 def initializeToPegasusDB(db):
     # for SQLite
     warnings.filterwarnings('ignore', '.*does \*not\* support Decimal*.')
-
+    
     # This is only required if you want to query using the domain objects
     # instead of the session
     #metadata.bind = db
-
+    
     # Create all the tables if they don't exist
     metadata.create_all(db)
-
+    try:
+        db.execute(rc_schema.insert(), name='JDBCRC', catalog='rc', 
+            version=CURRENT_SCHEMA_VERSION, creator='vahi')
+    except IntegrityError, e:
+        pass
+        
+    
 # Empty classes that will be populated and mapped
 # to tables via the SQLAlch mapper.
+
+# ---------------------------------------------
+# STAMPEDE
+class DBVersion(SABase):
+    pass
+
+# ---------------------------------------------
+# STAMPEDE
 class Host(SABase):
     pass
 
@@ -75,6 +87,50 @@ class File(SABase):
 class SchemaInfo(SABase):
     pass
 
+# ---------------------------------------------
+# DASHBOARD
+class DashboardWorkflow(SABase):
+    pass
+
+class DashboardWorkflowstate(SABase):
+    pass
+
+# ---------------------------------------------
+# JDBCRC
+class Sequences(SABase):
+    pass
+
+class PegasusSchema(SABase):
+    pass
+
+class RCLFN(SABase):
+    pass
+
+class RCAttr(SABase):
+    pass
+
+
+# ---------------------------------------------
+# DB ADMIN
+# ---------------------------------------------
+db_version = Table('dbversion', metadata,
+    Column('id', KeyInteger, primary_key=True, autoincrement=True, nullable=False),
+    Column('version_number', INT, nullable=False),
+    Column('version_timestamp', INT, nullable=False),
+    sqlite_autoincrement=True
+)
+
+Index('UNIQUE_VERSION', 
+    db_version.c.version_number, 
+    db_version.c.version_timestamp, 
+    unique=True)
+
+orm.mapper(DBVersion, db_version)
+
+
+# ---------------------------------------------
+# STAMPEDE
+# ---------------------------------------------
 
 st_workflow = Table('workflow', metadata,
     # ==> Information comes from braindump.txt file
@@ -365,3 +421,142 @@ st_schema_info = Table('schema_info', metadata,
 
 orm.mapper(SchemaInfo, st_schema_info)
 
+
+# ---------------------------------------------
+# DASHBOARD
+# ---------------------------------------------
+
+from Pegasus.service.ensembles import Ensemble, EnsembleStates
+from Pegasus.service.ensembles import EnsembleWorkflow, EnsembleWorkflowStates
+
+pg_workflow = Table('master_workflow', metadata,
+    # ==> Information comes from braindump.txt file
+    Column('wf_id', KeyInteger, primary_key=True, nullable=False),
+    Column('wf_uuid', VARCHAR(255), nullable=False),
+    Column('dax_label', VARCHAR(255), nullable=True),
+    Column('dax_version', VARCHAR(255), nullable=True),
+    Column('dax_file', VARCHAR(255), nullable=True),
+    Column('dag_file_name', VARCHAR(255), nullable=True),
+    Column('timestamp', NUMERIC(precision=16,scale=6), nullable=True),
+    Column('submit_hostname', VARCHAR(255), nullable=True),
+    Column('submit_dir', TEXT, nullable=True),
+    Column('planner_arguments', TEXT, nullable=True),
+    Column('user', VARCHAR(255), nullable=True),
+    Column('grid_dn', VARCHAR(255), nullable=True),
+    Column('planner_version', VARCHAR(255), nullable=True),
+    Column('db_url', TEXT, nullable=True),
+    **table_keywords
+)
+
+Index('UNIQUE_MASTER_WF_UUID', pg_workflow.c.wf_uuid, unique=True)
+
+orm.mapper(DashboardWorkflow, pg_workflow )
+
+
+pg_workflowstate = Table('master_workflowstate', metadata,
+    # All three columns are marked as primary key to produce the desired
+    # effect - ie: it is the combo of the three columns that make a row
+    # unique.
+    Column('wf_id', KeyInteger, ForeignKey('master_workflow.wf_id', ondelete='CASCADE'), nullable=False, primary_key=True),
+    Column('state', Enum('WORKFLOW_STARTED', 'WORKFLOW_TERMINATED'), nullable=False, primary_key=True),
+    Column('timestamp', NUMERIC(precision=16,scale=6), nullable=False, primary_key=True),
+    Column('restart_count', INT, nullable=False),
+    Column('status', INT, nullable=True),    
+    **table_keywords
+)
+
+Index('UNIQUE_MASTER_WORKFLOWSTATE',
+      pg_workflowstate.c.wf_id,
+      pg_workflowstate.c.state,
+      pg_workflowstate.c.timestamp,
+      unique=True)
+
+orm.mapper(DashboardWorkflowstate, pg_workflowstate)
+
+
+pg_ensemble = Table('ensemble', metadata,
+    Column('id', KeyInteger, primary_key=True),
+    Column('name', String(100), nullable=False),
+    Column('created', DateTime, nullable=False),
+    Column('updated', DateTime, nullable=False),
+    Column('state', Enum(*EnsembleStates), nullable=False),
+    Column('max_running', Integer, nullable=False),
+    Column('max_planning', Integer, nullable=False),
+    Column('username', String(100), nullable=False),
+    **table_keywords
+)
+
+Index('UNIQUE_ENSEMBLE',
+      pg_ensemble.c.username,
+      pg_ensemble.c.name)
+
+orm.mapper(Ensemble, pg_ensemble)
+
+
+pg_ensemble_workflow = Table('ensemble_workflow', metadata,
+    Column('id', KeyInteger, primary_key=True),
+    Column('name', String(100), nullable=False),
+    Column('basedir', String(512), nullable=False),
+    Column('created', DateTime, nullable=False),
+    Column('updated', DateTime, nullable=False),
+    Column('state', Enum(*EnsembleWorkflowStates), nullable=False),
+    Column('priority', Integer, nullable=False),
+    Column('wf_uuid', String(36)),
+    Column('submitdir', String(512)),
+    Column('plan_command', String(1024), nullable=False, default="./plan.sh"),
+    Column('ensemble_id', KeyInteger, ForeignKey('ensemble.id'), nullable=False),
+    **table_keywords
+)
+
+Index('UNIQUE_ENSEMBLE_WORKFLOW',
+      pg_ensemble_workflow.c.ensemble_id,
+      pg_ensemble_workflow.c.name,
+      unique=True)
+
+orm.mapper(EnsembleWorkflow, pg_ensemble_workflow, properties = {
+    'ensemble':orm.relation(Ensemble, backref='workflows')
+})
+
+
+# ---------------------------------------------
+# JDBCRC
+# ---------------------------------------------
+
+rc_sequences = Table('sequences', metadata,
+    Column('name', VARCHAR(32), nullable=False, primary_key=True),
+    Column('currval', BIGINT, nullable=False),
+    **table_keywords
+)
+orm.mapper(Sequences, rc_sequences)
+
+rc_schema = Table('pegasus_schema', metadata,
+    Column('name', VARCHAR(64), nullable=False, primary_key=True),
+    Column('catalog', VARCHAR(16)),
+    Column('version', FLOAT),
+    Column('creator', VARCHAR(32)),
+    Column('creation', NUMERIC(precision=16,scale=6), default=time.time()),
+    **table_keywords
+)
+orm.mapper(PegasusSchema, rc_schema)
+
+rc_lfn = Table('rc_lfn', metadata,
+    Column('id', KeyInteger, primary_key=True, nullable=False),
+    Column('lfn', VARCHAR(245), nullable=False),
+    Column('pfn', VARCHAR(245), nullable=False),
+    Column('site', VARCHAR(245)),
+    UniqueConstraint('lfn', 'pfn', 'site', name='sk_rc_lfn'),
+    **table_keywords
+)
+
+Index('ix_rc_lfn', rc_lfn.c.lfn, unique=True)
+orm.mapper(RCLFN, rc_lfn)
+
+rc_attr = Table('rc_attr', metadata,
+    Column('id', KeyInteger, ForeignKey('rc_lfn.id', ondelete='CASCADE', name='fk_rc_attr'), primary_key=True, nullable=False),
+    Column('name', VARCHAR(64), nullable=False, primary_key=True),
+    Column('value', VARCHAR(32), nullable=False),
+    **table_keywords
+)
+
+Index('ix_rc_attr', rc_attr.c.name, unique=True)
+orm.mapper(RCAttr, rc_attr)

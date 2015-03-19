@@ -7,8 +7,9 @@ from Pegasus.tools import properties
 class BaseVersion(object):
     __metaclass__  = abc.ABCMeta
     
-    def __init__(self, config_properties, verbose=False, debug=False):
-        self.set_properties(config_properties)
+    def __init__(self, connections, database_name, verbose=False, debug=False):
+        self.connections = connections
+        self.database_name = database_name
         self._vbs = verbose
         self._dbg = debug
     
@@ -23,10 +24,6 @@ class BaseVersion(object):
     @abc.abstractmethod
     def is_compatible(self):
         """Used for checking the compatibility of the database with the version class."""
-
-    @abc.abstractmethod
-    def dispose(self):
-        """Dispose the class."""
         
     def verbose(self, message):
         if (self._vbs):
@@ -36,10 +33,10 @@ class BaseVersion(object):
         if (self._dbg):
             sys.stdout.write(message)
             
-    def set_properties(self, config_properties):
+    def _set_properties(self, config_properties):
         self.props = properties.Properties()
         self.props.new(config_file=config_properties)
         
-    def get_property(self, name):
+    def _get_property(self, name):
         return self.props.property(name)
     
