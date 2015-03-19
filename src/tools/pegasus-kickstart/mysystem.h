@@ -18,6 +18,7 @@
 #include "appinfo.h"
 #include "statinfo.h"
 #include "jobinfo.h"
+#include "monitoring.h"
 
 extern 
 int 

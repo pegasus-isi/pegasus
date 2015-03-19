@@ -24,7 +24,6 @@
 #include <stdio.h>
 #include <libgen.h>
 #include <dirent.h>
-#include <pthread.h>
 
 #include "utils.h"
 #include "appinfo.h"
@@ -38,7 +37,6 @@
 char *programname;
 
 static pthread_t monitoring_thread;
-static void* monitoring_thread_func(void* global_trace_file);
 
 static int isRelativePath(char *path) {
     // Absolute path
@@ -486,15 +484,9 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
         printerr("KICKSTART_STATUS: %s\n", kickstart_status);
     }
 
-    int rc = pthread_create(&monitoring_thread, NULL, monitoring_thread_func, (void *)kickstart_status);
+    int rc = start_status_thread(&monitoring_thread, kickstart_status);
     if (rc) {
-        printerr("ERROR: return code from pthread_create() is %d\n", rc);
-    }
-    else {
-        rc = pthread_detach(monitoring_thread);
-        if (rc) {
-            printerr("ERROR: return code from pthread_detach() is %d\n", rc);
-        }   
+        printerr("ERROR: when starting a monitoring thread: is %s\n", strerror(errno));
     }
 
     /* start wall-clock */
@@ -569,60 +561,4 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
 
     /* finalize */
     return jobinfo->status;
-}
-
-/*
- * Main monitoring thread loop - it periodically read global trace file as sent this info somewhere, e.g. to another file
- * or to an external service. 
- * It parses any information from the global monitoring and calculates some mean values.
- */
-static void* monitoring_thread_func(void* kickstart_status_path) {
-    int interval = 10;
-    char line[BUFSIZ];
-
-    printerr("[kickstart-thread] We are starting a monitoring function - %s\n", (char*)kickstart_status_path);
-
-    FILE* kickstart_status = fopen((char*)kickstart_status_path, "r");
-    if(kickstart_status == NULL) {
-        printerr("[kickstart-thread] Couldn't open kickstart_status_path for read - %s\n", strerror(errno));
-    }
-
-    FILE* monitoring_file = fopen("monitoring.log", "a");
-    if(monitoring_file == NULL) {
-        printerr("[kickstart-thread] Couldn't open monitoring file for append\n");
-        pthread_exit(NULL);
-        return NULL;
-    }
-
-    printerr("[kickstart-thread] We opened the ./monitoring.log to append online monitoring information\n");
-
-    while(1) {        
-        sleep(interval);
-
-        printerr("[kickstart-thread] monitoring loop\n");
-
-        if(kickstart_status == NULL) {
-            kickstart_status = fopen((char*)kickstart_status_path, "r");
-                
-            if(kickstart_status == NULL) {
-                printerr("[kickstart-thread] Couldn't open kickstart_status_path for read - %s\n", strerror(errno));
-            }    
-        }
-
-        if(kickstart_status != NULL) {
-
-            while(fgets(line, BUFSIZ, kickstart_status) != NULL)
-            {
-                printerr("[kickstart-thread] are writing another line: %s", line);
-                fprintf(monitoring_file, "%s", line);
-            }
-
-            fflush(monitoring_file);
-        }
-    }
-
-    fclose(monitoring_file);
-    fclose(kickstart_status);
-
-    pthread_exit(NULL);
 }
