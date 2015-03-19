@@ -1,0 +1,17 @@
+# This is the pegasus-mpi-cluster transformation
+tr pegasus-mpi-keg { 
+
+    # This is the site
+    site hopper {
+        
+        # This is the physical file name (physical path) of the wrapper script
+        pfn "/project/projectdirs/m2187/pegasus/pegasus-4.4.0/bin/pegasus-mpi-keg"
+        
+        # This should match the site catalog
+        arch "x86_64"
+        os "linux"
+        
+        # This indicates that the executable is already installed
+        type "INSTALLED"
+    }
+}
