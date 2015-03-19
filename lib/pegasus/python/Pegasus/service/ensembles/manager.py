@@ -9,7 +9,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from Pegasus.service import app, user
 from Pegasus.service.ensembles.models import Ensembles, EnsembleStates, EnsembleWorkflowStates, EMError
-from Pegasus.db.schema.stampede_dashboard_schema import DashboardWorkflow, DashboardWorkflowstate
+from Pegasus.db.schema.pegasus_schema import DashboardWorkflow, DashboardWorkflowstate
 
 log = logging.getLogger(__name__)
 

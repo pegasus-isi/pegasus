@@ -20,10 +20,11 @@ __rcsid__ = "$Id: stampede_loader.py 31116 2012-03-29 15:45:15Z mgoode $"
 __author__ = "Monte Goode"
 
 from Pegasus.db.schema.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
-from Pegasus.db.schema.stampede_schema import *
+from Pegasus.db.schema.pegasus_schema import *
 from Pegasus.db.modules import Analyzer as BaseAnalyzer
 from Pegasus.db.modules import SQLAlchemyInit
 from Pegasus.netlogger import util
+from sqlalchemy.exc import *
 import sys
 import time
 
@@ -53,7 +54,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
 
         try:
             SQLAlchemyInit.__init__(self, connString, initializeToPegasusDB)
-        except exc.OperationalError, e:
+        except OperationalError, e:
             self.log.error('Connection String %s  %s', (connString, ErrorStrings.get_init_error(e)))
             raise RuntimeError
 

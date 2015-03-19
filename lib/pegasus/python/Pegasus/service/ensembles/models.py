@@ -214,8 +214,8 @@ class EnsembleWorkflow(EnsembleBase):
 
 class Ensembles(SQLAlchemyInit):
     def __init__(self, dburl):
-        from Pegasus.db.schema.stampede_dashboard_schema import initializeToDashboardDB
-        SQLAlchemyInit.__init__(self, dburl, initializeToDashboardDB)
+        from Pegasus.db.schema.pegasus_schema import initializeToPegasusDB
+        SQLAlchemyInit.__init__(self, dburl, initializeToPegasusDB)
 
     def list_ensembles(self, username):
         q = self.session.query(Ensemble)

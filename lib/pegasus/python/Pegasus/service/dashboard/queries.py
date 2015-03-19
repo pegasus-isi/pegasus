@@ -17,8 +17,7 @@ import logging
 
 from Pegasus.db.modules import SQLAlchemyInit
 from Pegasus.db.schema.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
-from Pegasus.db.schema.stampede_dashboard_schema import *
-from Pegasus.db.schema.stampede_schema import *
+from Pegasus.db.schema.pegasus_schema import *
 from Pegasus.db.errors import StampedeDBNotFoundError
 
 log = logging.getLogger(__name__)
@@ -37,7 +36,7 @@ class MasterDatabase(SQLAlchemyInit):
             raise ValueError('Connection string is required')
 
         try:
-            SQLAlchemyInit.__init__(self, connString, initializeToDashboardDB)
+            SQLAlchemyInit.__init__(self, connString, initializeToPegasusDB)
         except exc.OperationalError, e:
             log.error(ErrorStrings.get_init_error(e))
             raise MasterDBNotFoundError
