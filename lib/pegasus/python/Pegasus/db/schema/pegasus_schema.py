@@ -113,8 +113,8 @@ class RCAttr(SABase):
 # ---------------------------------------------
 # DB ADMIN
 # ---------------------------------------------
-db_version = Table('db_versions', metadata,
-    Column('id', KeyInteger, primary_key=True, autoincrement=True, nullable=False),
+db_version = Table('dbversion', metadata,
+    Column('id', KeyInteger, primary_key=True, autoincrement=True, sqlite_autoincrement=True, nullable=False),
     Column('version_number', INT, nullable=False),
     Column('version_timestamp', INT, nullable=False),
 )
