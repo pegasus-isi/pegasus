@@ -249,17 +249,22 @@ class AdminDB(object):
         v = DBVersion()
         v.version_number = version
         v.version_timestamp = datetime.datetime.now().strftime("%s")    
-        self.connections[db_name].session.add(v)
-        self.connections[db_name].session.commit()
+        db = self.connections[db_name]
+        if db:
+            db.session.add(v)
+            db.session.commit()
     
 
     def _get_version(self, db_name):
         db = self.connections[db_name]
-        current_version = db.session.query(DBVersion.version_number).order_by(
-            DBVersion.id.desc()).first()
-        if not current_version:
-            raise NoResultFound()
-        return current_version[0]
+        if db:
+            current_version = db.session.query(DBVersion.version_number).order_by(
+                DBVersion.id.desc()).first()
+            if not current_version:
+                raise NoResultFound()
+            return current_version[0]
+        # TODO fix this return once connection to stampede database is fixed.
+        return CURRENT_DB_VERSION
 
 
     def get_connections(self):
