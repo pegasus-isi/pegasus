@@ -16,10 +16,20 @@ def print_versions(data):
         sys.stdout.write("    %s\t%s\n" % (key, data[key]))
 
 
+def set_log_level(debug):
+    if debug:
+        log_level = logging.DEBUG
+    else:
+        log_level = logging.INFO
+
+    logging.basicConfig(level=log_level)
+    logging.getLogger().setLevel(log_level)
+
+
 # ------------------------------------------------------
 class CreateCommand(Command):
     description = "Create Pegasus databases."
-    usage = "Usage: %prog create [options]"
+    usage = "Usage: %prog create [options] [SUBMITDIR]"
     
     def __init__(self):
         Command.__init__(self)
@@ -29,16 +39,24 @@ class CreateCommand(Command):
         self.parser.add_option("-u","--url",action="store",type="string", 
             dest="database_url",default=None,
             help = "Database URL.")
+        self.parser.add_option("-d", "--debug", action="store_true", dest="debug",
+                               default=None, help="Enable debugging")
             
     def run(self):
-        AdminDB(self.options.config_properties, self.options.database_url)
+        set_log_level(self.options.debug)
+        
+        submit_dir = None
+        if len(self.args) > 0:
+            submit_dir = self.args[0]
+        
+        AdminDB(self.options.config_properties, self.options.database_url, submit_dir)
         sys.stdout.write("Pegasus databases were successfully created.\n")
     
     
 # ------------------------------------------------------
 class DowngradeCommand(Command):
-    description = "Downgrade the database to a specific version."
-    usage = "Usage: %prog downgrade [options] [version]"
+    description = "Downgrade the database version."
+    usage = "Usage: %prog downgrade [options] [SUBMITDIR]"
 
     def __init__(self):
         Command.__init__(self)
@@ -51,16 +69,22 @@ class DowngradeCommand(Command):
             dest="database_name",default=None, help = "Database Name.")
         self.parser.add_option("-f","--force",action="store_true",dest="force",
             default=None, help = "Ignore conflicts or data loss.")
+        self.parser.add_option("-V","--version",action="store",type="string", 
+            dest="pegasus_version",default=None, help = "Pegasus version.")
+        self.parser.add_option("-d", "--debug", action="store_true", dest="debug",
+                               default=None, help="Enable debugging")
 
     def run(self):
-        pegasus_version = None
-        if len(self.args) > 0:
-            pegasus_version = self.args[0]
-            
-        adminDB = AdminDB(self.options.config_properties, self.options.database_url)
+        set_log_level(self.options.debug)
         
-        if not pegasus_version or not adminDB.verify(pegasus_version, self.options.database_name):
-            adminDB.downgrade(pegasus_version, self.options.database_name, self.options.force)
+        submit_dir = None
+        if len(self.args) > 0:
+            submit_dir = self.args[0]
+            
+        adminDB = AdminDB(self.options.config_properties, self.options.database_url, submit_dir)
+        
+        if not self.options.pegasus_version or not adminDB.verify(self.options.pegasus_version, self.options.database_name):
+            adminDB.downgrade(self.options.pegasus_version, self.options.database_name, self.options.force)
         
         data = adminDB.current_version(self.options.database_name, True)
         print_versions(data)
@@ -69,7 +93,7 @@ class DowngradeCommand(Command):
 # ------------------------------------------------------
 class UpdateCommand(Command):
     description = "Update the database to a specific version."
-    usage = "Usage: %prog update [options] [version]"
+    usage = "Usage: %prog update [options] [SUBMITDIR]"
     
     def __init__(self):
         Command.__init__(self)
@@ -82,16 +106,22 @@ class UpdateCommand(Command):
             dest="database_name",default=None, help = "Database Name.")
         self.parser.add_option("-f","--force",action="store_true",dest="force",
             default=None, help = "Ignore conflicts or data loss.")
+        self.parser.add_option("-V","--version",action="store",type="string", 
+            dest="pegasus_version",default=None, help = "Pegasus version.")
+        self.parser.add_option("-d", "--debug", action="store_true", dest="debug",
+                               default=None, help="Enable debugging")
     
     def run(self):
-        pegasus_version = None
-        if len(self.args) > 0:
-            pegasus_version = self.args[0]
-            
-        adminDB = AdminDB(self.options.config_properties, self.options.database_url)
+        set_log_level(self.options.debug)
         
-        if not adminDB.verify(pegasus_version, self.options.database_name):
-            adminDB.update(pegasus_version, self.options.database_name, self.options.force)
+        submit_dir = None
+        if len(self.args) > 0:
+            submit_dir = self.args[0]
+            
+        adminDB = AdminDB(self.options.config_properties, self.options.database_url, submit_dir)
+        
+        if not adminDB.verify(self.options.pegasus_version, self.options.database_name):
+            adminDB.update(self.options.pegasus_version, self.options.database_name, self.options.force)
         
         data = adminDB.current_version(self.options.database_name, True)
         print_versions(data)
@@ -100,7 +130,7 @@ class UpdateCommand(Command):
 # ------------------------------------------------------
 class CheckCommand(Command):
     description = "Verify if the database is updated to the latest or a given version."
-    usage = "Usage: %prog check [pegasus_version]"
+    usage = "Usage: %prog check [SUBMITDIR]"
 
     def __init__(self):
         Command.__init__(self)
@@ -111,21 +141,27 @@ class CheckCommand(Command):
             dest="database_url",default=None, help = "Database URL.")
         self.parser.add_option("-n","--database",action="store",type="string", 
             dest="database_name",default=None, help = "Database Name.")
+        self.parser.add_option("-V","--version",action="store",type="string", 
+            dest="pegasus_version",default=None, help = "Pegasus version.")
+        self.parser.add_option("-d", "--debug", action="store_true", dest="debug",
+                               default=None, help="Enable debugging")
                     
     def run(self):
-        pegasus_version = None
+        set_log_level(self.options.debug)
+        
+        submit_dir = None
         if len(self.args) > 0:
-            pegasus_version = self.args[0]
+            submit_dir = self.args[0]
 
-        adminDB = AdminDB(self.options.config_properties, self.options.database_url)
-        if adminDB.verify(pegasus_version, self.options.database_name):
-            if pegasus_version:
-                sys.stdout.write("Your database is compatible with Pegasus version: %s.\n" % pegasus_version)
+        adminDB = AdminDB(self.options.config_properties, self.options.database_url, submit_dir)
+        if adminDB.verify(self.options.pegasus_version, self.options.database_name):
+            if self.options.pegasus_version:
+                sys.stdout.write("Your database is compatible with Pegasus version: %s.\n" % self.options.pegasus_version)
             else:
                 sys.stdout.write("Your database is compatible with the current Pegasus version.\n")
         else:
-            if pegasus_version:
-                sys.stderr.write("Your database is NOT compatible with Pegasus version: %s\n" % pegasus_version)
+            if self.options.pegasus_version:
+                sys.stderr.write("Your database is NOT compatible with Pegasus version: %s\n" % self.options.pegasus_version)
             else:
                 sys.stderr.write("Your database is NOT compatible with the current Pegasus version.\n")
             exit(1)
@@ -134,7 +170,7 @@ class CheckCommand(Command):
 # ------------------------------------------------------
 class VersionCommand(Command):
     description = "Print the current version of the database."
-    usage = "Usage: %prog version"
+    usage = "Usage: %prog version [SUBMITDIR]"
 
     def __init__(self):
         Command.__init__(self)
@@ -147,9 +183,17 @@ class VersionCommand(Command):
             dest="database_name",default=None, help = "Database Name.")
         self.parser.add_option("-e", "--version-value", action="store_false", dest="version_value",
                                default=True, help="Show actual version values.")
+        self.parser.add_option("-d", "--debug", action="store_true", dest="debug",
+                               default=None, help="Enable debugging")
         
     def run(self):
-        adminDB = AdminDB(self.options.config_properties, self.options.database_url)
+        set_log_level(self.options.debug)
+        
+        submit_dir = None
+        if len(self.args) > 0:
+            submit_dir = self.args[0]
+        
+        adminDB = AdminDB(self.options.config_properties, self.options.database_url, submit_dir)
         data = adminDB.current_version(self.options.database_name, self.options.version_value)
         print_versions(data)
 

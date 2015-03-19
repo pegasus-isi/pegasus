@@ -3,15 +3,17 @@ __author__ = "Rafael Ferreira da Silva"
 import collections
 import datetime
 import os
-import time
 
 from Pegasus.db.modules import stampede_loader
 from Pegasus.db.modules import stampede_dashboard_loader
 from Pegasus.db.modules import jdbcrc_loader
 from Pegasus.db.schema.pegasus_schema import *
+from Pegasus.tools import db_utils
 from Pegasus.tools import properties
 from sqlalchemy.orm.exc import *
 from urlparse import urlparse
+
+log = logging.getLogger(__name__)
 
 #-------------------------------------------------------------------
 # DB Admin configuration
@@ -36,17 +38,18 @@ def get_class(version, connections, database_name=None, verbose=False, debug=Fal
 #-------------------------------------------------------------------
 class AdminDB(object):
 
-    def __init__(self, config_properties, database_url, verbose=False, debug=False):
+    def __init__(self, config_properties=None, database_url=None, submit_dir=None, verbose=False, debug=False):
         self.config_properties = config_properties
         self.database_url = database_url
+        self.submit_dir = submit_dir
         self._vbs = verbose
         self._dbg = debug
         
         # configure database objects
         self.connections = {
             'JDBCRC': self._connect_jdbcrc(),
-            'DASHBOARD': self._connect_dashboard(),
-            'STAMPEDE': self._connect_stampede(),
+            'MASTER': self._connect_master(),
+            'WORKFLOW': self._connect_workflow(),
         }
         
 
@@ -85,8 +88,8 @@ class AdminDB(object):
         return None
     
 
-    def _connect_dashboard(self):
-        """ Connect to the Dashboard database """
+    def _connect_master(self):
+        """ Connect to the Master database """
         connString = None
         if self.database_url:
            connString = self.database_url
@@ -104,14 +107,16 @@ class AdminDB(object):
         return None
             
 
-    def _connect_stampede(self):
-        """ Connect to the Stampede database """
+    def _connect_workflow(self):
+        """ Connect to the Workflow database """
         connString = None
         if self.database_url:
             connString = self.database_url
         else:
-            # TODO connection to Stampede database
-            pass
+            if not self.submit_dir:
+                return None
+            connString = db_utils.get_db_url_wf_uuid(self.submit_dir, self.config_properties)[0]
+            print connString
            
         if connString:
             return stampede_loader.Analyzer(connString)
@@ -139,7 +144,7 @@ class AdminDB(object):
         if database_name:
             try:
                 return self._check_version(database_name.upper(), version)
-            except NoResultFound, e:
+            except NoResultFound:
                 self._discover_version(database_name.upper())
                 return self._check_version(database_name.upper(), version)
         else:
@@ -147,7 +152,7 @@ class AdminDB(object):
                 try:
                     if not self._check_version(db_name, version):
                         return False
-                except NoResultFound, e:
+                except NoResultFound:
                     self._discover_version(db_name)
                     if not self._check_version(db_name, version):
                         return False
@@ -161,13 +166,13 @@ class AdminDB(object):
         if database_name:
             try:
                 current_version[database_name.upper()] = self._get_version(database_name.upper())
-            except NoResultFound, e:
+            except NoResultFound:
                     current_version[database_name.upper()] = self._discover_version(database_name.upper())
         else:
             for db_name in self.connections:
                 try:
                    current_version[db_name] = self._get_version(db_name) 
-                except NoResultFound, e:
+                except NoResultFound:
                     current_version[db_name] = self._discover_version(db_name)
                     
         if parse:
@@ -186,12 +191,12 @@ class AdminDB(object):
         version = self._parse_pegasus_version(pegasus_version)
         
         for db_name in current_version:
-            cv = current_version[db_name]
-            if cv < version:
-                for i in range(cv + 1, version + 1):
-                    k = get_class(i, self.connections, db_name, self._vbs, self._dbg)
-                    k.update(force)
-                    self._update_version(i, db_name)
+                cv = current_version[db_name]
+                if cv and cv < version:
+                    for i in range(cv + 1, version + 1):
+                        k = get_class(i, self.connections, db_name, self._vbs, self._dbg)
+                        k.update(force)
+                        self._update_version(i, db_name)
                     
                     
     def downgrade(self, pegasus_version=None, database_name=None, force=False):
@@ -204,7 +209,7 @@ class AdminDB(object):
         
         for db_name in current_version:
             cv = current_version[db_name]
-            if cv > version:
+            if cv and cv > version:
                 for i in range(cv, version, -1):
                     k = get_class(i, self.connections, db_name, self._vbs, self._dbg)
                     k.downgrade(force)
@@ -226,7 +231,8 @@ class AdminDB(object):
 
 
     def _check_version(self, db_name, version):
-        if not version == self._get_version(db_name):
+        db_version = self._get_version(db_name)
+        if db_version and not version == db_version:
             return False
         return True
     
@@ -262,10 +268,19 @@ class AdminDB(object):
             if not current_version:
                 raise NoResultFound()
             return current_version[0]
-        # TODO fix this return once connection to stampede database is fixed.
-        return CURRENT_DB_VERSION
+        return None
 
 
     def get_connections(self):
         return self.connections
+    
+    
+    def get_master_connection(self):
+        return self.connections['MASTER']
+    
+    def get_jdbcrc_connection(self):
+        return self.connections['JDBCRC']
+    
+    def get_workflow_connection(self):
+        return self.connections['WORKFLOW']
     
