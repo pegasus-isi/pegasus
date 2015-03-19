@@ -1240,9 +1240,10 @@ class TransferSet:
         if (self._secondary_handler is None) and \
            (self._transfers[0].src_proto == "gsiftp" \
             or self._transfers[0].dst_proto == "gsiftp"):
+            success = False
             try:
                 success =  self._primary_handler.do_multi_transfer(
-                                                    self._transfers,
+                                                    list(self._transfers),
                                                     attempt,
                                                     failed_q)
             except Exception, e:
@@ -1253,7 +1254,7 @@ class TransferSet:
                 # add all the transfers back to the failed queue
                 for i, t in enumerate(self._transfers):
                     failed_q.put(t)
-            return
+            return success
         
         # standard src->dst single transfer case
         for i, transfer in enumerate(self._transfers):
@@ -1522,6 +1523,8 @@ def check_cred_fs_permissions(path):
     permissions. If left too open (for example after a transfer over GASS,
     chmod it to be readable only by us.
     """
+    if not os.path.exists(path):
+        raise Exception("Credential file %s does not exist" %(path))
     if oct(os.stat(path).st_mode & 0777) != '0600':
         logger.warning("%s found to have weak permissions. chmod to 0600."
                        %(path))
