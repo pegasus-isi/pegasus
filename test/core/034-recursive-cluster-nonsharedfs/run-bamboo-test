@@ -72,6 +72,7 @@ EOF
 pegasus-plan \
     --conf $testdir/pegasusrc \
     --sites condorpool \
+    --staging-site local \
     --dir work/dags \
     --output-site local \
     --cluster label,horizontal \
