@@ -20,7 +20,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from Pegasus.tools import utils
 from Pegasus.plots_stats import utils as stats_utils
-from Pegasus.db.workflow import stampede_statistics
+#from Pegasus.db.workflow import stampede_statistics
 
 from Pegasus.service.dashboard import queries
 

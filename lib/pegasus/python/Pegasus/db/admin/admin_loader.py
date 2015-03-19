@@ -2,7 +2,6 @@ __author__ = "Rafael Ferreira da Silva"
 
 import collections
 import datetime
-import fnmatch
 import os
 import time
 
