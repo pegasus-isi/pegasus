@@ -735,8 +735,10 @@ public class Kickstart implements GridStart {
 
         //invoke is disabled if part of clustered job or because of a global disable
         //JIRA PM-526
-        boolean disableInvoke = mDisableInvokeFunctionality || partOfClusteredJob;
-
+        boolean disableInvoke = mDisableInvokeFunctionality ||
+                                partOfClusteredJob ||
+                                job.getJobType() != Job.COMPUTE_JOB; //PM-851
+                                
         if( !disableInvoke && (mInvokeAlways || argumentLength > mInvokeLength) ){
             if(!useInvoke(job, jobExecutable, gridStartArgs)){
                 mLogger.log("Unable to use invoke for job ",
