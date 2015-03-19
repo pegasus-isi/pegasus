@@ -10,27 +10,25 @@ from Pegasus.tools import utils
 from Pegasus.service.command import Command, CompoundCommand
 from Pegasus.service import user
 
-from Pegasus.db.modules import SQLAlchemyInit
-from Pegasus.db.schema.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
+from Pegasus import db
 from Pegasus.db.schema.pegasus_schema import *
-from Pegasus.db.errors import StampedeDBNotFoundError
 
 log = logging.getLogger(__name__)
 
 class SubmitDirException(Exception): pass
 
-class MasterDatabase(SQLAlchemyInit):
+class Database:
     def __init__(self, connString):
-        if connString is None:
-            raise ValueError('Connection string is required')
+        self.session = db.connect(connString)
 
-        try:
-            SQLAlchemyInit.__init__(self, connString, initializeToPegasusDB)
-        except exc.OperationalError, e:
-            log.error(ErrorStrings.get_init_error(e))
-            raise MasterDBNotFoundError
+    def commit(self):
+        self.session.flush()
+        self.session.commit()
 
-    def get_workflow(self, wf_uuid):
+    def close(self):
+        self.session.close()
+
+    def get_master_workflow(self, wf_uuid):
         q = self.session.query(DashboardWorkflow)
         q = q.filter(DashboardWorkflow.wf_uuid == wf_uuid)
         return q.first()
@@ -40,8 +38,8 @@ class MasterDatabase(SQLAlchemyInit):
         q = q.filter(EnsembleWorkflow.wf_uuid == wf_uuid)
         return q.first()
 
-    def delete_workflow(self, wf_uuid):
-        w = self.get_workflow(wf_uuid)
+    def delete_master_workflow(self, wf_uuid):
+        w = self.get_master_workflow(wf_uuid)
         if w is None:
             return
 
@@ -50,33 +48,10 @@ class MasterDatabase(SQLAlchemyInit):
         q = q.filter(EnsembleWorkflow.wf_uuid == wf_uuid)
         q.delete()
 
-        # Delete workflow states
-        q = self.session.query(DashboardWorkflowstate)
-        q = q.filter(DashboardWorkflowstate.wf_id == w.wf_id)
-        q.delete()
-
         # Delete the workflow
         q = self.session.query(DashboardWorkflow)
         q = q.filter(DashboardWorkflow.wf_id == w.wf_id)
         q.delete()
-
-    def commit(self):
-        self.session.flush()
-        self.session.commit()
-
-    def close(self):
-        self.disconnect()
-
-class Database(SQLAlchemyInit):
-    def __init__(self, connString):
-        if connString is None:
-            raise ValueError('Connection string is required')
-
-        try:
-            SQLAlchemyInit.__init__(self, connString, initializeToPegasusDB)
-        except exc.OperationalError, e:
-            log.error(ErrorStrings.get_init_error(e))
-            raise StampedeDBNotFoundError
 
     def get_workflow(self, wf_uuid):
         q = self.session.query(Workflow)
@@ -90,13 +65,6 @@ class Database(SQLAlchemyInit):
             log.info("Old submit dir: %s" % wf.submit_dir)
             wf.submit_dir = wf.submit_dir.replace(src, dest)
             log.info("New submit dir: %s" % wf.submit_dir)
-
-    def commit(self):
-        self.session.flush()
-        self.session.commit()
-
-    def close(self):
-        self.disconnect()
 
 def extract(submitdir):
     if not os.path.isdir(submitdir):
@@ -219,11 +187,11 @@ def move(submitdir, dest):
 
     # Connect to master database
     mdb_url = u.get_master_db_url()
-    mdb = MasterDatabase(mdb_url)
+    mdb = Database(mdb_url)
 
     # Get the workflow record from the master db
     db_url = None
-    wf = mdb.get_workflow(wf_uuid)
+    wf = mdb.get_master_workflow(wf_uuid)
     if wf is None:
         # No mdb record found to update
         log.warning("No master db record found for this workflow: %s" % wf_uuid)
@@ -330,13 +298,13 @@ def delete(submitdir):
 
     # Connect to master database
     mdb_url = u.get_master_db_url()
-    mdb = MasterDatabase(mdb_url)
+    mdb = Database(mdb_url)
 
     # TODO We might want to delete all of the records from the workflow db
     # if they are not using an sqlite db that is in the submit dir
 
     # Delete the workflow
-    mdb.delete_workflow(wf_uuid)
+    mdb.delete_master_workflow(wf_uuid)
 
     # Remove all the files
     shutil.rmtree(submitdir)
@@ -402,6 +370,6 @@ class SubmitDirCommand(CompoundCommand):
 
 def main():
     "The entry point for pegasus-submitdir"
-    logging.basicConfig()
+    logging.basicConfig(level=logging.DEBUG)
     SubmitDirCommand().main()
 
