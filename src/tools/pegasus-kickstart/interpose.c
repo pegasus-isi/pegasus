@@ -180,6 +180,7 @@ static double get_time();
 static CpuUtilInfo read_cpu_status();
 static MemUtilInfo read_mem_status();
 static IoUtilInfo read_io_status();
+static char* read_exe();
 
 
 // Utility function to open the kickstart status file based on environment variable
@@ -204,8 +205,15 @@ static void* timer_thread_func(void* mpi_rank_void) {
     double timestamp;
     int interval = 5;
     int mpi_rank = atoi( (char*) mpi_rank_void ) + 1;
+    char* exec_name = read_exe();
+    char hostname[BUFSIZ];
 
     printerr("We are now in a thread: %d\n", mpi_rank);
+
+    if( gethostname(hostname, BUFSIZ) ) {
+        printerr("[Thread-%d] ERROR: couldn't get hostname: %s\n", mpi_rank, strerror(errno));
+        return 1;
+    }
 
     FILE* kickstart_status = open_kickstart_status_file();
     if(kickstart_status == NULL) {
@@ -223,10 +231,16 @@ static void* timer_thread_func(void* mpi_rank_void) {
 
         timestamp = get_time();
 
-        fprintf(kickstart_status, "ts=%f event=workflow_trace level=INFO status=0 guid=na mpi_rank=%d utime=%.3f stime=%.3f iowait=%.3f vmSize=%d vmRSS=%d threads=%d read_bytes=%d write_bytes=%d syscr=%d syscw=%d\n", timestamp, mpi_rank, 
-                cpu_info.real_utime, cpu_info.real_stime, cpu_info.real_iowait,
-                mem_info.vmSize, mem_info.vmRSS, mem_info.threads,
-                io_info.read_bytes, io_info.write_bytes, io_info.syscr, io_info.syscw);
+        fprintf(kickstart_status, "ts=%f event=workflow_trace level=INFO status=0 "         
+            "guid=na executable=%s hostname=%s mpi_rank=%d utime=%.3f stime=%.3f "
+            "iowait=%.3f vmSize=%d vmRSS=%d threads=%d read_bytes=%d write_bytes=%d "
+            "syscr=%d syscw=%d\n", 
+
+            timestamp, exec_name, hostname, mpi_rank, 
+            cpu_info.real_utime, cpu_info.real_stime, cpu_info.real_iowait,
+            mem_info.vmSize, mem_info.vmRSS, mem_info.threads,
+            io_info.read_bytes, io_info.write_bytes, io_info.syscr, io_info.syscw);
+
         fflush(kickstart_status);
     }
 
@@ -333,7 +347,7 @@ static char *get_fullpath(const char *path) {
 }
 
 /* Read /proc/self/exe to get path to executable */
-static void read_exe() {
+static char* read_exe() {
     debug("Reading exe");
     char exe[BUFSIZ];
     int size = readlink("/proc/self/exe", exe, BUFSIZ);
@@ -343,6 +357,8 @@ static void read_exe() {
     }
     exe[size] = '\0';
     tprintf("exe: %s\n", exe);
+
+    return exe;
 }
 
 /* Return 1 if line begins with tok */
