@@ -3,19 +3,20 @@ import logging
 
 from flask import g, url_for, make_response, request, send_file, json
 
+from Pegasus import db
 from Pegasus.service.ensembles import emapp, models, api, auth
-from Pegasus.service.ensembles.models import EMError
+from Pegasus.service.ensembles.models import EMError, Ensembles
 
 log = logging.getLogger(__name__)
 
 def connect():
     log.debug("Connecting to database")
-    g.db = models.Ensembles(g.master_db_url)
+    g.session = db.connect(g.master_db_url)
 
 def disconnect():
-    if "db" in g:
+    if "conn" in g:
         log.debug("Disconnecting from database")
-        g.db.disconnect()
+        g.session.close()
 
 @emapp.errorhandler(Exception)
 def handle_error(e):
@@ -33,7 +34,8 @@ def teardown_request(exception):
 
 @emapp.route("/ensembles", methods=["GET"])
 def route_list_ensembles():
-    ensembles = g.db.list_ensembles(g.user.username)
+    dao = Ensembles(g.session)
+    ensembles = dao.list_ensembles(g.user.username)
     result = [e.get_object() for e in ensembles]
     return api.json_response(result)
 
@@ -46,20 +48,23 @@ def route_create_ensemble():
     max_running = request.form.get("max_running", 1)
     max_planning = request.form.get("max_planning", 1)
 
-    g.db.create_ensemble(g.user.username, name, max_running, max_planning)
-    g.db.session.commit()
+    dao = Ensembles(g.session)
+    dao.create_ensemble(g.user.username, name, max_running, max_planning)
+    g.session.commit()
 
     return api.json_created(url_for("route_get_ensemble", name=name, _external=True))
 
 @emapp.route("/ensembles/<string:name>", methods=["GET"])
 def route_get_ensemble(name):
-    e = g.db.get_ensemble(g.user.username, name)
+    dao = Ensembles(g.session)
+    e = dao.get_ensemble(g.user.username, name)
     result = e.get_object()
     return api.json_response(result)
 
 @emapp.route("/ensembles/<string:name>", methods=["PUT","POST"])
 def route_update_ensemble(name):
-    e = g.db.get_ensemble(g.user.username, name)
+    dao = Ensembles(g.session)
+    e = dao.get_ensemble(g.user.username, name)
 
     max_running = request.form.get("max_running", None)
     if max_running is not None:
@@ -77,19 +82,21 @@ def route_update_ensemble(name):
 
     e.set_updated()
 
-    g.db.session.commit()
+    g.session.commit()
 
     return api.json_response(e.get_object())
 
 @emapp.route("/ensembles/<string:name>/workflows", methods=["GET"])
 def route_list_ensemble_workflows(name):
-    e = g.db.get_ensemble(g.user.username, name)
-    result = [w.get_object() for w in g.db.list_ensemble_workflows(e.id)]
+    dao = Ensembles(g.session)
+    e = dao.get_ensemble(g.user.username, name)
+    result = [w.get_object() for w in dao.list_ensemble_workflows(e.id)]
     return api.json_response(result)
 
 @emapp.route("/ensembles/<string:ensemble>/workflows", methods=["POST"])
 def route_create_ensemble_workflow(ensemble):
-    e = g.db.get_ensemble(g.user.username, ensemble)
+    dao = Ensembles(g.session)
+    e = dao.get_ensemble(g.user.username, ensemble)
 
     name = request.form.get("name", None)
     if name is None:
@@ -105,23 +112,26 @@ def route_create_ensemble_workflow(ensemble):
     if plan_command is None:
         raise EMError("Specify 'plan_command' that should be executed to plan workflow")
 
-    g.db.create_ensemble_workflow(e.id, name, basedir, priority, plan_command)
+    dao.create_ensemble_workflow(e.id, name, basedir, priority, plan_command)
 
-    g.db.session.commit()
+    g.session.commit()
 
     return api.json_created(url_for("route_get_ensemble_workflow", ensemble=ensemble, workflow=name))
 
 @emapp.route("/ensembles/<string:ensemble>/workflows/<string:workflow>", methods=["GET"])
 def route_get_ensemble_workflow(ensemble, workflow):
-    e = g.db.get_ensemble(g.user.username, ensemble)
-    w = g.db.get_ensemble_workflow(e.id, workflow)
+    dao = Ensembles(g.session)
+    e = dao.get_ensemble(g.user.username, ensemble)
+    w = dao.get_ensemble_workflow(e.id, workflow)
     result = w.get_detail_object()
     return api.json_response(result)
 
 @emapp.route("/ensembles/<string:ensemble>/workflows/<string:workflow>", methods=["PUT","POST"])
 def route_update_ensemble_workflow(ensemble, workflow):
-    e = g.db.get_ensemble(g.user.username, ensemble)
-    w = g.db.get_ensemble_workflow(e.id, workflow)
+    dao = Ensembles(g.session)
+
+    e = dao.get_ensemble(g.user.username, ensemble)
+    w = dao.get_ensemble_workflow(e.id, workflow)
 
     priority = request.form.get("priority", None)
     if priority is not None:
@@ -133,14 +143,15 @@ def route_update_ensemble_workflow(ensemble, workflow):
 
     w.set_updated()
 
-    g.db.session.commit()
+    g.session.commit()
 
     return api.json_response(w.get_detail_object())
 
 @emapp.route("/ensembles/<string:ensemble>/workflows/<string:workflow>/analyze", methods=["GET"])
 def route_analyze_ensemble_workflow(ensemble, workflow):
-    e = g.db.get_ensemble(g.user.username, ensemble)
-    w = g.db.get_ensemble_workflow(e.id, workflow)
+    dao = Ensembles(g.session)
+    e = dao.get_ensemble(g.user.username, ensemble)
+    w = dao.get_ensemble_workflow(e.id, workflow)
     report = "".join(models.analyze(w))
     resp = make_response(report, 200)
     resp.headers['Content-Type'] = 'text/plain'

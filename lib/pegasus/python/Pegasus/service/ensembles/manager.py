@@ -7,6 +7,7 @@ import threading
 import datetime
 from sqlalchemy.orm.exc import NoResultFound
 
+from Pegasus import db
 from Pegasus.service import app, user
 from Pegasus.service.ensembles.models import Ensembles, EnsembleStates, EnsembleWorkflowStates, EMError
 from Pegasus.db.schema.pegasus_schema import DashboardWorkflow, DashboardWorkflowstate
@@ -126,8 +127,8 @@ def forkscript(script, pidfile=None, cwd=None, env=None):
         raise EMError("Non-zero exitcode launching script: %d" % exitcode)
 
 class WorkflowProcessor:
-    def __init__(self, db, workflow):
-        self.db = db
+    def __init__(self, dao, workflow):
+        self.dao = dao
         self.workflow = workflow
 
     def plan(self):
@@ -265,7 +266,7 @@ class WorkflowProcessor:
             raise EMError("wf_uuid is none")
 
         try:
-            w = self.db.session.query(DashboardWorkflow)\
+            w = self.dao.session.query(DashboardWorkflow)\
                     .filter_by(wf_uuid=str(wf_uuid))\
                     .one()
             return w
@@ -293,7 +294,7 @@ class WorkflowProcessor:
 
         # Get the last event for the workflow where the event timestamp is
         # greater than the last updated ts for the ensemble workflow
-        ws = self.db.session.query(DashboardWorkflowstate)\
+        ws = self.dao.session.query(DashboardWorkflowstate)\
                 .filter_by(wf_id=w.wf_id)\
                 .filter(DashboardWorkflowstate.timestamp >= updated)\
                 .order_by("timestamp desc")\
@@ -327,8 +328,8 @@ class WorkflowProcessor:
 class EnsembleProcessor:
     Processor = WorkflowProcessor
 
-    def __init__(self, db, ensemble):
-        self.db = db
+    def __init__(self, dao, ensemble):
+        self.dao = dao
         self.ensemble = ensemble
         self.active = ensemble.state == EnsembleStates.ACTIVE
         self.max_running = ensemble.max_running
@@ -371,10 +372,10 @@ class EnsembleProcessor:
         workflow.set_state(EnsembleWorkflowStates.PLANNING)
         workflow.set_updated()
 
-        self.db.session.flush()
+        self.dao.session.flush()
 
         # Fork planning task
-        p = self.Processor(self.db, workflow)
+        p = self.Processor(self.dao, workflow)
         try:
             p.plan()
         except Exception, e:
@@ -383,7 +384,7 @@ class EnsembleProcessor:
             workflow.set_state(EnsembleWorkflowStates.PLAN_FAILED)
             workflow.set_updated()
 
-        self.db.session.commit()
+        self.dao.session.commit()
 
     def handle_ready(self, workflow):
         if self.can_plan():
@@ -392,7 +393,7 @@ class EnsembleProcessor:
             log.debug("Delaying planning of workflow %s due to policy" % workflow.name)
 
     def handle_planning(self, workflow):
-        p = self.Processor(self.db, workflow)
+        p = self.Processor(self.dao, workflow)
 
         if p.planning():
             log.info("Workflow %s is still planning" % workflow.name)
@@ -406,7 +407,7 @@ class EnsembleProcessor:
             log.error("Planning failed for workflow %s" % workflow.name)
             workflow.set_state(EnsembleWorkflowStates.PLAN_FAILED)
             workflow.set_updated()
-            self.db.session.commit()
+            self.dao.session.commit()
             return
 
         log.info("Queueing workflow %s" % workflow.name)
@@ -416,7 +417,7 @@ class EnsembleProcessor:
         workflow.set_submitdir(p.find_submitdir())
         workflow.set_state(EnsembleWorkflowStates.QUEUED)
         workflow.set_updated()
-        self.db.session.commit()
+        self.dao.session.commit()
 
         # Go ahead and handle the queued state now
         self.handle_queued(workflow)
@@ -430,9 +431,9 @@ class EnsembleProcessor:
         self.running += 1
         workflow.set_state(EnsembleWorkflowStates.RUNNING)
         workflow.set_updated()
-        self.db.session.flush()
+        self.dao.session.flush()
 
-        p = self.Processor(self.db, workflow)
+        p = self.Processor(self.dao, workflow)
         try:
             p.run()
         except Exception, e:
@@ -441,7 +442,7 @@ class EnsembleProcessor:
             workflow.set_state(EnsembleWorkflowStates.RUN_FAILED)
             workflow.set_updated()
 
-        self.db.session.commit()
+        self.dao.session.commit()
 
     def handle_queued(self, workflow):
         if self.can_run():
@@ -450,7 +451,7 @@ class EnsembleProcessor:
             log.debug("Delaying run of workflow %s due to policy" % workflow.name)
 
     def handle_running(self, workflow):
-        p = self.Processor(self.db, workflow)
+        p = self.Processor(self.dao, workflow)
 
         if p.pending():
             log.info("Workflow %s is pending" % workflow.name)
@@ -472,7 +473,7 @@ class EnsembleProcessor:
 
         workflow.set_updated()
 
-        self.db.session.commit()
+        self.dao.session.commit()
 
     def handle_workflow(self, w):
         if w.state == EnsembleWorkflowStates.READY:
@@ -497,7 +498,7 @@ class EnsembleProcessor:
             except Exception, e:
                 log.error("Processing workflow %s of ensemble %s" % (w.name, self.ensemble.name))
                 log.exception(e)
-                self.db.session.rollback()
+                self.dao.session.rollback()
 
 
 class EnsembleManager(threading.Thread):
@@ -516,21 +517,23 @@ class EnsembleManager(threading.Thread):
 
     def loop_forever(self):
         while True:
-            self.loop_once()
+            u = user.get_user_by_uid(os.getuid())
+            session = db.connect(u.get_master_db_url())
+            try:
+                dao = Ensembles(session)
+                self.loop_once(dao)
+            finally:
+                session.close()
             time.sleep(self.interval)
 
-    def loop_once(self):
-        u = user.get_user_by_uid(os.getuid())
-
-        db = Ensembles(u.get_master_db_url())
-
-        actionable = db.list_actionable_ensembles()
+    def loop_once(self, dao):
+        actionable = dao.list_actionable_ensembles()
         if len(actionable) == 0:
             return
 
-        log.info("Processing ensembles for %s", u.username)
+        log.info("Processing ensembles")
         for e in actionable:
             log.info("Processing ensemble %s", e.name)
-            p = self.Processor(db, e)
+            p = self.Processor(dao, e)
             p.run()
 

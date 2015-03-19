@@ -9,7 +9,7 @@ from flask import url_for, g
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import sql
 
-from Pegasus.db.modules import SQLAlchemyInit
+from Pegasus import db
 from Pegasus.service import user
 
 def timestamp(dt):
@@ -212,10 +212,9 @@ class EnsembleWorkflow(EnsembleBase):
         o["submitdir"] = self.submitdir
         return o
 
-class Ensembles(SQLAlchemyInit):
-    def __init__(self, dburl):
-        from Pegasus.db.schema.pegasus_schema import initializeToPegasusDB
-        SQLAlchemyInit.__init__(self, dburl, initializeToPegasusDB)
+class Ensembles:
+    def __init__(self, session):
+        self.session = session
 
     def list_ensembles(self, username):
         q = self.session.query(Ensemble)
