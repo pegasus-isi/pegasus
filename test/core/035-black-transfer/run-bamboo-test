@@ -15,7 +15,7 @@ CONDOR_POOL_SHARED_FS=/nfs/ccg4/scratch-purge-no-backups/bamboo
 mkdir -p $CONDOR_POOL_SHARED_FS/inputs
 
 # generate the input file
-echo "This is sample input to KEG" > f.Oa
+echo "This is sample input to KEG" > f.a
 echo "This is sample input to KEG" > $CONDOR_POOL_SHARED_FS/inputs/f.a1
 
 #A output directory
