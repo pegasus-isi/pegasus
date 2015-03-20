@@ -4,7 +4,7 @@ import os
 import time
 import logging
 
-from Pegasus.db.schema.pegasus_schema import *
+from Pegasus.db.schema import *
 from Pegasus.db.modules import SQLAlchemyInit
 from Pegasus.netlogger import util
 

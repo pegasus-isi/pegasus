@@ -7,7 +7,7 @@ import os
 from Pegasus.db.modules import stampede_loader
 from Pegasus.db.modules import stampede_dashboard_loader
 from Pegasus.db.modules import jdbcrc_loader
-from Pegasus.db.schema.pegasus_schema import *
+from Pegasus.db.schema import *
 from Pegasus.tools import db_utils
 from Pegasus.tools import properties
 from sqlalchemy.orm.exc import *

@@ -17,7 +17,7 @@ import logging
 
 from Pegasus.db.modules import SQLAlchemyInit
 from Pegasus.db.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
-from Pegasus.db.schema.pegasus_schema import *
+from Pegasus.db.schema import *
 from Pegasus.db.errors import StampedeDBNotFoundError
 from sqlalchemy.orm.exc import *
 

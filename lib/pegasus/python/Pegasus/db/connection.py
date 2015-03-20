@@ -23,7 +23,7 @@ def connect(dburi, echo=False):
     engine = create_engine(dburi, echo=echo, pool_recycle=True)
 
     # Create all the tables if they don't exist
-    #from Pegasus.db.schema.pegasus_schema import metadata
+    #from Pegasus.db.schema import metadata
     #metadata.create_all(engine)
 
     Session = orm.sessionmaker(bind=engine, autoflush=False, autocommit=False,

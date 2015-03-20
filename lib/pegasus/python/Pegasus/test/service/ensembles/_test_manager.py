@@ -5,7 +5,7 @@ import subprocess
 import logging
 from StringIO import StringIO
 
-from Pegasus.db.schema import pegasus_schema as dash
+from Pegasus.db import schema as dash
 
 from Pegasus.service import app, db, em, catalogs, ensembles
 from Pegasus.test.service import *
