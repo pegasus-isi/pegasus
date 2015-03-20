@@ -335,6 +335,8 @@
 
   <target name="compile-python" depends="dist-clean,setup">
     <mkdir dir="${dist.python-lib}"/>
+    <!-- To avoid getting stale packages when we refactor -->
+    <delete dir="lib/pegasus/python/build"/>
     <exec executable="/usr/bin/env" dir="lib/pegasus/python" failonerror="true">
       <arg line="python setup.py install_lib -d ${dist.python-lib}"/>
     </exec>
