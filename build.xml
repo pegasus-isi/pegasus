@@ -336,7 +336,7 @@
   <target name="compile-python" depends="dist-clean,setup">
     <mkdir dir="${dist.python-lib}"/>
     <exec executable="/usr/bin/env" dir="lib/pegasus/python" failonerror="true">
-      <arg line="python setup.py install_lib -d ${dist.python-lib}"/>
+      <arg line="python setup.py clean --all install_lib -d ${dist.python-lib}"/>
     </exec>
     <chmod perm="0755" type="file">
       <fileset dir="${dist.python-lib}">
