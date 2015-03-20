@@ -53,7 +53,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         if connString is None:
             raise ValueError("connString is required")
         try:
-            SQLAlchemyInit.__init__(self, connString, initializeToPegasusDB)
+            SQLAlchemyInit.__init__(self, connString)
         except OperationalError, e:
             self.log.exception(e)
             self.log.error('Error initializing dashboard loader')

@@ -14,7 +14,7 @@ class StampedeWorkflowStatistics(SQLAlchemyInit):
             raise ValueError("connString is required")
         self.log = logging.getLogger("%s.%s" % (self.__module__, self.__class__.__name__))
         try:
-            SQLAlchemyInit.__init__(self, connString, initializeToPegasusDB)
+            SQLAlchemyInit.__init__(self, connString)
         except exc.OperationalError, e:
             self.log.exception(e)
             raise StampedeDBNotFoundError

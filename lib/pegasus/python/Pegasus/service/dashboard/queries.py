@@ -37,7 +37,7 @@ class MasterDatabase(SQLAlchemyInit):
             raise ValueError('Connection string is required')
 
         try:
-            SQLAlchemyInit.__init__(self, connString, initializeToPegasusDB)
+            SQLAlchemyInit.__init__(self, connString)
         except OperationalError, e:
             log.error(ErrorStrings.get_init_error(e))
             raise MasterDBNotFoundError
@@ -202,7 +202,7 @@ class WorkflowInfo(SQLAlchemyInit):
             raise ValueError('Connection string is required')
 
         try:
-            SQLAlchemyInit.__init__(self, connString, initializeToPegasusDB)
+            SQLAlchemyInit.__init__(self, connString)
         except OperationalError, e:
             log.error(ErrorStrings.get_init_error(e))
             raise StampedeDBNotFoundError

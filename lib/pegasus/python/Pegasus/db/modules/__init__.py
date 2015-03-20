@@ -10,6 +10,7 @@ import logging
 
 from sqlalchemy import create_engine, orm
 
+from Pegasus import db
 from Pegasus.netlogger import util
 from Pegasus.netlogger.nlapi import TS_FIELD, EVENT_FIELD, HASH_FIELD
 from Pegasus.netlogger.util import hash_event
@@ -26,36 +27,18 @@ class ProcessException(AnalyzerException):
 """
 Mixin class to provide SQLAlchemy database initialization/mapping.
 Takes a SQLAlchemy connection string and a module function as
-required arguments.  The initialization function takes the db and
-metadata objects (and optional args) as args, initializes to the
-appropriate schema and sets "self.session" as a class member for
-loader classes to interact with the DB with.
-
-See: Pegasus.db.schema.stampede_schema.initializeToPegasusDB
-
-For an example of what the intialization function needs to do to setup
-the schema mappings and the metadata object.  This should be __init__'ed
-in the subclass AFTER the Analyzer superclass gets called.
-
-The module Pegasus.db.modules.stampede_loader shows the use
-of this to initialize to a DB.
+required arguments. 
 """
 class SQLAlchemyInit:
-    def __init__(self, dburi, initFunction, **kwarg):
-        if not hasattr(self, '_dbg'):
-            # The Analyzer superclass SHOULD have been _init__'ed
-            # already but if not, bulletproof this attr.
-            self._dbg = False
+    def __init__(self, dburi, **kwarg):
         self.dburi = dburi
-        self.db = create_engine(dburi, echo=self._dbg, pool_recycle=True)
-        initFunction(self.db)
-        sm = orm.sessionmaker(bind=self.db, autoflush=False, autocommit=False,
-                              expire_on_commit=False)
-        self.session = orm.scoped_session(sm)
+        self.session = db.connect(dburi)
 
     def disconnect(self):
-        self.session.remove()
-        self.db.dispose()
+        self.session.close()
+
+    def close(self):
+        self.session.close()
 
 
 class Analyzer(object):

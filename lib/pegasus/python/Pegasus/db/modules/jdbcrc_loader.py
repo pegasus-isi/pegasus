@@ -1,10 +1,9 @@
 __author__ = "Rafael Ferreira da Silva"
 
-from Pegasus.db.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
+from Pegasus import db
 from Pegasus.db.schema import *
 from Pegasus.db.modules import Analyzer as BaseAnalyzer
 from Pegasus.db.modules import SQLAlchemyInit
-from sqlalchemy.exc import *
 
 class Analyzer(BaseAnalyzer, SQLAlchemyInit):
     """Load into the JDBCRC SQL schema through SQLAlchemy.
@@ -27,15 +26,5 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         @param  connString: SQLAlchemy connection string - REQUIRED
         """
         BaseAnalyzer.__init__(self, **kw)
-        if connString is None:
-            raise ValueError("connString is required")
+        self.session = db.connect(connString)
 
-        try:
-            SQLAlchemyInit.__init__(self, connString, initializeToPegasusDB)
-        except OperationalError, e:
-            self.log.exception(e)
-            self.log.error('Error initializing jdbcrc loader.')
-            print e
-            raise RuntimeError
-        
-        

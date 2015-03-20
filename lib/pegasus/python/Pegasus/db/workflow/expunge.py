@@ -32,7 +32,7 @@ class Expunge(SQLAlchemyInit):
     All children/grand-children/etc information and associated
     workflows will be removed.
     """
-    def __init__(self, connString, wf_uuid, initFunction):
+    def __init__(self, connString, wf_uuid):
         """
         Init object
 
@@ -45,7 +45,7 @@ class Expunge(SQLAlchemyInit):
         self.log = logging.getLogger("%s.%s" % (self.__module__, self.__class__.__name__))
         self._connString = connString
         self._wf_uuid = wf_uuid
-        SQLAlchemyInit.__init__(self, connString, initFunction)
+        SQLAlchemyInit.__init__(self, connString)
 
     def expunge(self):
         """
@@ -54,9 +54,6 @@ class Expunge(SQLAlchemyInit):
         raise NotImplementedError("Please use the appropriate Expunge implementation")
 
 class StampedeExpunge(Expunge):
-    def __init__(self, connString, wf_uuid):
-        Expunge.__init__(self, connString, wf_uuid, initializeToPegasusDB)
-
     def expunge(self):
 
         self.log.info('Expunging %s from workflow database', self._wf_uuid)
@@ -77,9 +74,6 @@ class StampedeExpunge(Expunge):
         self.log.info('Flush took: %f seconds', time.time() - i)
 
 class DashboardExpunge(Expunge):
-    def __init__(self, connString, wf_uuid):
-        Expunge.__init__(self, connString, wf_uuid, initializeToPegasusDB)
-
     def expunge(self):
         """
         Invoke this to remove workflow/information from DB.

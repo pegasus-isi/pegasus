@@ -34,14 +34,6 @@ KeyInteger = KeyInteger.with_variant(postgresql.BIGINT(), 'postgresql')
 KeyInteger = KeyInteger.with_variant(mysql.BIGINT(), 'mysql')
 KeyInteger = KeyInteger.with_variant(sqlite.INTEGER(), 'sqlite')
 
-def initializeToPegasusDB(db):
-    # This is only required if you want to query using the domain objects
-    # instead of the session
-    #metadata.bind = db
-
-    # Create all the tables if they don't exist
-    metadata.create_all(db)
-
 class SABase(object):
     """
     Base class for all the DB mapper objects.

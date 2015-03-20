@@ -53,7 +53,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             raise ValueError("connString is required")
 
         try:
-            SQLAlchemyInit.__init__(self, connString, initializeToPegasusDB)
+            SQLAlchemyInit.__init__(self, connString)
         except OperationalError, e:
             self.log.error('Connection String %s  %s', (connString, ErrorStrings.get_init_error(e)))
             raise RuntimeError
