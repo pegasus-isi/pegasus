@@ -172,7 +172,7 @@ class AdminDB(object):
             for db_name in self.connections:
                 if print_friendly:
                     if self.connections[db_name]:
-                        key = "%s (%s)" % (db_name, self.connections[db_name].db.url)
+                        key = "%s (%s)" % (db_name, self.connections[db_name].dburi)
                     else:
                         key = "%s (Not configured)" % (db_name)
                 else:

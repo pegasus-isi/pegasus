@@ -16,7 +16,7 @@ class Version(BaseVersion):
         "Add plan_command field to ensemble_workflow table"
         # TODO We might need to check to see if the field already exists first
         if self.connections[self.database_name]:
-            db = self.connections[self.database_name].db
+            db = self.connections[self.database_name].session
             try:
                 db.execute("ALTER TABLE ensemble_workflow ADD plan_command VARCHAR(1024) NOT NULL default './plan.sh'")
             except OperationalError, e:
@@ -29,7 +29,7 @@ class Version(BaseVersion):
 
     def is_compatible(self):
         if self.connections[self.database_name]:
-            db = self.connections[self.database_name].db
+            db = self.connections[self.database_name].session
             try:
                 db.execute("SELECT plan_command FROM ensemble_workflow")
             except Exception, e:

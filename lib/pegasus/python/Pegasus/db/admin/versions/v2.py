@@ -14,7 +14,7 @@ class Version(BaseVersion):
 
     def update(self, force):
         if self.connections[self.database_name]:
-            db = self.connections[self.database_name].db
+            db = self.connections[self.database_name].session
             try:
                 db.execute("SELECT db_url FROM workflow")
                 data = db.execute("SELECT COUNT(wf_id) FROM master_workflow").first()
@@ -85,7 +85,7 @@ class Version(BaseVersion):
 
     def is_compatible(self):
         if self.connections[self.database_name]:
-            db = self.connections[self.database_name].db
+            db = self.connections[self.database_name].session
             try:
                 db.execute("SELECT wf_id FROM master_workflow")
             except:

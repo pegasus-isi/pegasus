@@ -96,7 +96,7 @@ class Version(BaseVersion):
     def is_compatible(self):
         if self.connections[self.database_name]:  
             try:
-                self.connections[self.database_name].db.execute("SELECT site FROM rc_lfn")
+                self.connections[self.database_name].session.execute("SELECT site FROM rc_lfn")
             except:
                 return False
         return True
