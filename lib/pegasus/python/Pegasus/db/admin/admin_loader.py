@@ -1,5 +1,6 @@
 __author__ = "Rafael Ferreira da Silva"
 
+import logging
 import collections
 import datetime
 import os
