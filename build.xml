@@ -503,6 +503,9 @@
     <exec executable="/usr/bin/env" dir="lib/pegasus/python" failonerror="true">
       <arg line="python setup.py clean --all"/>
     </exec>
+    <delete>
+      <fileset dir="lib/pegasus/python/Pegasus" includes="**/*.pyc"/>
+    </delete>
   </target>
 
   <target name="test-java" depends="jar" description="Run java unit tests">
