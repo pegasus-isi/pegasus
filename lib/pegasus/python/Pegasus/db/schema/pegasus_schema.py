@@ -12,6 +12,8 @@ from sqlalchemy.exc import *
 from sqlalchemy.orm import relation
 
 from Pegasus.db.schema import SABase, KeyInteger
+from Pegasus.db.modules.ensembles import Ensemble, EnsembleStates
+from Pegasus.db.modules.ensembles import EnsembleWorkflow, EnsembleWorkflowStates
 
 log = logging.getLogger(__name__)
 
@@ -19,28 +21,22 @@ CURRENT_SCHEMA_VERSION = 4.0
 
 metadata = MetaData()
 
+# for SQLite
+warnings.filterwarnings('ignore', '.*does \*not\* support Decimal*.')
+
 # These are keywords that all tables should have
 table_keywords = {}
 table_keywords['mysql_charset'] = 'latin1'
 table_keywords['mysql_engine'] = 'InnoDB'
 
 def initializeToPegasusDB(db):
-    # for SQLite
-    warnings.filterwarnings('ignore', '.*does \*not\* support Decimal*.')
-    
     # This is only required if you want to query using the domain objects
     # instead of the session
     #metadata.bind = db
-    
+
     # Create all the tables if they don't exist
     metadata.create_all(db)
-    try:
-        db.execute(rc_schema.insert(), name='JDBCRC', catalog='rc', 
-            version=CURRENT_SCHEMA_VERSION, creator='vahi')
-    except IntegrityError, e:
-        pass
-        
-    
+
 # Empty classes that will be populated and mapped
 # to tables via the SQLAlch mapper.
 
@@ -426,8 +422,6 @@ orm.mapper(SchemaInfo, st_schema_info)
 # DASHBOARD
 # ---------------------------------------------
 
-from Pegasus.db.modules.ensembles import Ensemble, EnsembleStates
-from Pegasus.db.modules.ensembles import EnsembleWorkflow, EnsembleWorkflowStates
 
 pg_workflow = Table('master_workflow', metadata,
     # ==> Information comes from braindump.txt file

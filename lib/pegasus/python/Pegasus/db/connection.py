@@ -1,5 +1,4 @@
 import logging
-import warnings
 
 from sqlalchemy import create_engine, orm, event
 from sqlalchemy.engine import Engine
@@ -10,9 +9,6 @@ from sqlite3 import Connection as SQLite3Connection
 __all__ = ['connect']
 
 log = logging.getLogger(__name__)
-
-# for SQLite
-warnings.filterwarnings('ignore', '.*does \*not\* support Decimal*.')
 
 # This turns on foreign keys for SQLite3 connections
 @event.listens_for(Engine, "connect")
