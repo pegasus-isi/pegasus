@@ -677,7 +677,7 @@ public class CPlanner extends Executable{
             mLogger.logEventCompletion();
         }
 
-        checkForDatabaseCompatibility( );
+        checkForDatabaseCompatibility( mPOptions.getSubmitDirectory() );
         
         if ( mPOptions.submitToScheduler() ) {//submit the jobs
             StringBuffer invocation = new StringBuffer();
@@ -1856,8 +1856,10 @@ public class CPlanner extends Executable{
 
     /**
      * Calls out to the pegasus-db-admin tool to check for database compatibility.
+     * 
+     * @param submitDirectory  the submit directory created by the planner
      */
-    private void checkForDatabaseCompatibility() {
+    private void checkForDatabaseCompatibility(String submitDirectory ) {
         //find path to pegasus-db-admin
         String basename = "pegasus-db-admin";
         File pegasusDBAdmin = FindExecutable.findExec( basename );
@@ -1867,7 +1869,8 @@ public class CPlanner extends Executable{
         
         //construct arguments for pegasus-db-admin
         StringBuffer args = new StringBuffer();
-        args.append( "check");
+        args.append( "check" );
+        args.append( " " ).append( submitDirectory );
         String command = pegasusDBAdmin.getAbsolutePath() + " " + args;
         mLogger.log("Executing  " + command,
                          LogManager.DEBUG_MESSAGE_LEVEL );
