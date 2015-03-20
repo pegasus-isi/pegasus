@@ -3,7 +3,7 @@ __author__ = "Rafael Ferreira da Silva"
 import sys
 import logging
 
-from Pegasus.service.command import Command, CompoundCommand
+from Pegasus.command import Command, CompoundCommand
 from Pegasus.db.admin.admin_loader import *
 from Pegasus.db.admin.versions import *
 

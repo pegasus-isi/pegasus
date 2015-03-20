@@ -1,8 +1,8 @@
 import os
 import logging
 
+from Pegasus.command import Command
 from Pegasus.service import app
-from Pegasus.service.command import Command
 
 log = logging.getLogger(__name__)
 

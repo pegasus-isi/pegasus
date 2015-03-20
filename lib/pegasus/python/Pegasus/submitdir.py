@@ -9,7 +9,7 @@ from optparse import OptionParser
 
 from Pegasus import db, user
 from Pegasus.tools import utils
-from Pegasus.service.command import Command, CompoundCommand
+from Pegasus.command import Command, CompoundCommand
 from Pegasus.db.schema import *
 
 log = logging.getLogger(__name__)

@@ -7,7 +7,7 @@ import logging
 import zipfile
 from optparse import OptionParser
 
-from Pegasus.service.command import Command, CompoundCommand
+from Pegasus.command import Command, CompoundCommand
 from Pegasus.service.ensembles import emapp, manager
 from Pegasus.db.modules.ensembles import EnsembleStates, EnsembleWorkflowStates
 
