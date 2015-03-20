@@ -10,7 +10,7 @@ import logging
 
 from sqlalchemy import create_engine, orm
 
-from Pegasus import db
+from Pegasus.db import connection
 from Pegasus.netlogger import util
 from Pegasus.netlogger.nlapi import TS_FIELD, EVENT_FIELD, HASH_FIELD
 from Pegasus.netlogger.util import hash_event
@@ -32,7 +32,7 @@ required arguments.
 class SQLAlchemyInit:
     def __init__(self, dburi, **kwarg):
         self.dburi = dburi
-        self.session = db.connect(dburi)
+        self.session = connection.connect(dburi)
 
     def disconnect(self):
         self.session.close()

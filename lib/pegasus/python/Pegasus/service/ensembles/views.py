@@ -4,7 +4,7 @@ import subprocess
 
 from flask import g, url_for, make_response, request, send_file, json
 
-from Pegasus import db
+from Pegasus.db import connection
 from Pegasus.service.ensembles import emapp, api, auth
 from Pegasus.db.modules.ensembles import EMError, Ensembles, EnsembleWorkflowStates
 
@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 
 def connect():
     log.debug("Connecting to database")
-    g.session = db.connect(g.master_db_url)
+    g.session = connection.connect(g.master_db_url)
 
 def disconnect():
     if "conn" in g:

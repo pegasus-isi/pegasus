@@ -7,7 +7,8 @@ import threading
 import datetime
 from sqlalchemy.orm.exc import NoResultFound
 
-from Pegasus import db, user
+from Pegasus import user
+from Pegasus.db import connection
 from Pegasus.service import app
 from Pegasus.db.modules.ensembles import Ensembles, EnsembleStates, EnsembleWorkflowStates, EMError
 from Pegasus.db.schema import DashboardWorkflow, DashboardWorkflowstate
@@ -518,7 +519,7 @@ class EnsembleManager(threading.Thread):
     def loop_forever(self):
         while True:
             u = user.get_user_by_uid(os.getuid())
-            session = db.connect(u.get_master_db_url())
+            session = connection.connect(u.get_master_db_url())
             try:
                 dao = Ensembles(session)
                 self.loop_once(dao)

@@ -1,7 +1,5 @@
 __author__ = "Rafael Ferreira da Silva"
 
-from Pegasus import db
-from Pegasus.db.schema import *
 from Pegasus.db.modules import Analyzer as BaseAnalyzer
 from Pegasus.db.modules import SQLAlchemyInit
 
@@ -26,5 +24,5 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         @param  connString: SQLAlchemy connection string - REQUIRED
         """
         BaseAnalyzer.__init__(self, **kw)
-        self.session = db.connect(connString)
+        SQLAlchemyInit.__self__(connString, **kw)
 

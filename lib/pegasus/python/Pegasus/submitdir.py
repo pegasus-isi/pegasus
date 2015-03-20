@@ -7,7 +7,8 @@ import getpass
 from optparse import OptionParser
 
 
-from Pegasus import db, user
+from Pegasus import user
+from Pegasus.db import connection
 from Pegasus.tools import utils
 from Pegasus.command import Command, CompoundCommand
 from Pegasus.db.schema import *
@@ -18,7 +19,7 @@ class SubmitDirException(Exception): pass
 
 class Database:
     def __init__(self, connString):
-        self.session = db.connect(connString)
+        self.session = connection.connect(connString)
 
     def commit(self):
         self.session.flush()
