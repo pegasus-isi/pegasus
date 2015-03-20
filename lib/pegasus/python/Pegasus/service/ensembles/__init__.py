@@ -12,9 +12,5 @@ if os.path.isfile(conf):
     emapp.config.from_pyfile(conf)
 del conf
 
-from Pegasus.service.ensembles.models import *
-from Pegasus.service.ensembles.commands import *
-from Pegasus.service.ensembles.manager import *
-
 from Pegasus.service.ensembles import api, views, auth
 

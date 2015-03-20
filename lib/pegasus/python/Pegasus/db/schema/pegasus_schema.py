@@ -426,8 +426,8 @@ orm.mapper(SchemaInfo, st_schema_info)
 # DASHBOARD
 # ---------------------------------------------
 
-from Pegasus.service.ensembles import Ensemble, EnsembleStates
-from Pegasus.service.ensembles import EnsembleWorkflow, EnsembleWorkflowStates
+from Pegasus.db.modules.ensembles import Ensemble, EnsembleStates
+from Pegasus.db.modules.ensembles import EnsembleWorkflow, EnsembleWorkflowStates
 
 pg_workflow = Table('master_workflow', metadata,
     # ==> Information comes from braindump.txt file
@@ -560,3 +560,4 @@ rc_attr = Table('rc_attr', metadata,
 
 Index('ix_rc_attr', rc_attr.c.name, unique=True)
 orm.mapper(RCAttr, rc_attr)
+

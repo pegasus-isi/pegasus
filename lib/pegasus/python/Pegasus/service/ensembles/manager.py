@@ -7,9 +7,9 @@ import threading
 import datetime
 from sqlalchemy.orm.exc import NoResultFound
 
-from Pegasus import db
-from Pegasus.service import app, user
-from Pegasus.service.ensembles.models import Ensembles, EnsembleStates, EnsembleWorkflowStates, EMError
+from Pegasus import db, user
+from Pegasus.service import app
+from Pegasus.db.modules.ensembles import Ensembles, EnsembleStates, EnsembleWorkflowStates, EMError
 from Pegasus.db.schema.pegasus_schema import DashboardWorkflow, DashboardWorkflowstate
 
 log = logging.getLogger(__name__)

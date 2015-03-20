@@ -4,7 +4,8 @@ import logging
 
 from flask import request, Response, g, abort, make_response, url_for
 
-from Pegasus.service import app, user
+from Pegasus import user
+from Pegasus.service import app
 
 log = logging.getLogger(__name__)
 

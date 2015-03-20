@@ -1,16 +1,12 @@
 import os
 import re
-import stat
-import shutil
-import subprocess
 from datetime import datetime
 
 from flask import url_for, g
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import sql
 
-from Pegasus import db
-from Pegasus.service import user
+from Pegasus import db, user
 
 def timestamp(dt):
     return (dt - datetime(1970, 1, 1)).total_seconds()
@@ -201,10 +197,6 @@ class EnsembleWorkflow(EnsembleBase):
         }
 
     def get_detail_object(self):
-        def myurl_for(filename):
-            return url_for("route_get_ensemble_workflow_file",
-                           ensemble=self.ensemble.name, workflow=self.name,
-                           filename=filename, _external=True)
         o = self.get_object()
         o["basedir"] = self.basedir
         o["plan_command"] = self.plan_command
@@ -313,36 +305,4 @@ class Ensembles:
         f.write("--input-dir %s \n" % bundledir)
 
         f.write("exit $?")
-
-def analyze(workflow):
-    w = workflow
-
-    yield "Workflow state is %s\n" % w.state
-    yield "Plan command is: %s\n" % w.plan_command
-
-    logfile = w.get_logfile()
-    if os.path.isfile(logfile):
-        yield "Workflow log:\n"
-        for l in open(w.get_logfile(), "rb"):
-            yield "LOG: %s" % l
-    else:
-        yield "No workflow log available\n"
-
-    if w.submitdir is None or not os.path.isdir(w.submitdir):
-        yield "No submit directory available\n"
-    else:
-        yield "pegasus-analyzer output is:\n"
-        p = subprocess.Popen(["pegasus-analyzer", w.submitdir], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        out, err = p.communicate()
-        for l in out.split("\n"):
-            yield "ANALYZER: %s\n" % l
-        rc = p.wait()
-        yield "ANALYZER: Exited with code %d\n" % rc
-
-    if w.state == EnsembleWorkflowStates.PLAN_FAILED:
-        yield "Planner failure detected\n"
-    elif w.state == EnsembleWorkflowStates.RUN_FAILED:
-        yield "pegasus-run failure detected\n"
-    elif w.state == EnsembleWorkflowStates.FAILED:
-        yield "Workflow failure detected\n"
 

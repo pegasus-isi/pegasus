@@ -6,11 +6,10 @@ import logging
 import getpass
 from optparse import OptionParser
 
+
+from Pegasus import db, user
 from Pegasus.tools import utils
 from Pegasus.service.command import Command, CompoundCommand
-from Pegasus.service import user
-
-from Pegasus import db
 from Pegasus.db.schema.pegasus_schema import *
 
 log = logging.getLogger(__name__)

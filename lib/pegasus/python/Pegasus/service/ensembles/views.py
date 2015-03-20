@@ -1,11 +1,12 @@
 import os
 import logging
+import subprocess
 
 from flask import g, url_for, make_response, request, send_file, json
 
 from Pegasus import db
-from Pegasus.service.ensembles import emapp, models, api, auth
-from Pegasus.service.ensembles.models import EMError, Ensembles
+from Pegasus.service.ensembles import emapp, api, auth
+from Pegasus.db.modules.ensembles import EMError, Ensembles, EnsembleWorkflowStates
 
 log = logging.getLogger(__name__)
 
@@ -152,8 +153,40 @@ def route_analyze_ensemble_workflow(ensemble, workflow):
     dao = Ensembles(g.session)
     e = dao.get_ensemble(g.user.username, ensemble)
     w = dao.get_ensemble_workflow(e.id, workflow)
-    report = "".join(models.analyze(w))
+    report = "".join(analyze(w))
     resp = make_response(report, 200)
     resp.headers['Content-Type'] = 'text/plain'
     return resp
+
+def analyze(workflow):
+    w = workflow
+
+    yield "Workflow state is %s\n" % w.state
+    yield "Plan command is: %s\n" % w.plan_command
+
+    logfile = w.get_logfile()
+    if os.path.isfile(logfile):
+        yield "Workflow log:\n"
+        for l in open(w.get_logfile(), "rb"):
+            yield "LOG: %s" % l
+    else:
+        yield "No workflow log available\n"
+
+    if w.submitdir is None or not os.path.isdir(w.submitdir):
+        yield "No submit directory available\n"
+    else:
+        yield "pegasus-analyzer output is:\n"
+        p = subprocess.Popen(["pegasus-analyzer", w.submitdir], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        out, err = p.communicate()
+        for l in out.split("\n"):
+            yield "ANALYZER: %s\n" % l
+        rc = p.wait()
+        yield "ANALYZER: Exited with code %d\n" % rc
+
+    if w.state == EnsembleWorkflowStates.PLAN_FAILED:
+        yield "Planner failure detected\n"
+    elif w.state == EnsembleWorkflowStates.RUN_FAILED:
+        yield "pegasus-run failure detected\n"
+    elif w.state == EnsembleWorkflowStates.FAILED:
+        yield "Workflow failure detected\n"
 
