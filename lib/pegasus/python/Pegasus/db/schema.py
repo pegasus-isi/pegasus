@@ -7,7 +7,7 @@ import warnings
 import logging
 
 from sqlalchemy import *
-from sqlalchemy import MetaData, orm
+from sqlalchemy import orm
 from sqlalchemy.exc import *
 from sqlalchemy.orm import relation
 from sqlalchemy.dialects import postgresql, mysql, sqlite
@@ -549,7 +549,7 @@ Index('UNIQUE_ENSEMBLE_WORKFLOW',
       unique=True)
 
 orm.mapper(EnsembleWorkflow, pg_ensemble_workflow, properties = {
-    'ensemble':orm.relation(Ensemble, backref='workflows')
+    'ensemble':relation(Ensemble, backref='workflows')
 })
 
 
