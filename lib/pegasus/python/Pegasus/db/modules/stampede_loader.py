@@ -19,7 +19,7 @@ See http://www.sqlalchemy.org/ for details on SQLAlchemy
 __rcsid__ = "$Id: stampede_loader.py 31116 2012-03-29 15:45:15Z mgoode $"
 __author__ = "Monte Goode"
 
-from Pegasus.db.schema.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
+from Pegasus.db.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
 from Pegasus.db.schema.pegasus_schema import *
 from Pegasus.db.modules import Analyzer as BaseAnalyzer
 from Pegasus.db.modules import SQLAlchemyInit

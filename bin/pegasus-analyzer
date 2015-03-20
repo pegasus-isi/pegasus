@@ -57,7 +57,7 @@ from Pegasus.tools import utils
 from Pegasus.tools import db_utils
 from Pegasus.tools import kickstart_parser
 from Pegasus.db.workflow import stampede_statistics
-from Pegasus.db.schema.schema_check import SchemaVersionError
+from Pegasus.db.schema_check import SchemaVersionError
 
 utils.configureLogging(level=logging.WARNING)
 

@@ -20,7 +20,7 @@ __rcsid__ = "$Id$"
 __author__ = "Monte Goode"
 __author__ = "Karan Vahi"
 
-from Pegasus.db.schema.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
+from Pegasus.db.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
 from Pegasus.db.schema.pegasus_schema import *
 from Pegasus.db.modules import Analyzer as BaseAnalyzer
 from Pegasus.db.modules import SQLAlchemyInit

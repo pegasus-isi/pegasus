@@ -20,7 +20,7 @@ import pegasus_host_over_time
 import traceback
 
 from Pegasus.db.workflow.stampede_statistics import StampedeStatistics
-from Pegasus.db.schema.schema_check import SchemaVersionError
+from Pegasus.db.schema_check import SchemaVersionError
 from datetime import timedelta
 from datetime import datetime
 
