@@ -11,20 +11,20 @@ fi
 
 TOPDIR=`pwd`
 
-CONDOR_POOL_SHARED_FS=/nfs/ccg4/scratch-purge-no-backups/inputs
+CONDOR_POOL_SHARED_FS=/nfs/ccg4/scratch-purge-no-backups/bamboo
+mkdir -p $CONDOR_POOL_SHARED_FS/inputs
 
 # generate the input file
-echo "This is sample input to KEG" > f.a
-echo "This is sample input to KEG" > $CONDOR_POOL_SHARED_FS/f.a1
+echo "This is sample input to KEG" > f.Oa
+echo "This is sample input to KEG" > $CONDOR_POOL_SHARED_FS/inputs/f.a1
 
-# output directory
+#A output directory
 mkdir -p outputs
 mkdir -p work
-mkdir -p $CONDOR_POOL_SHARED_FS
 
 # build the dax generator
 export PYTHONPATH=`pegasus-config --python`
-$testdir/blackdiamond.py /usr $CONDOR_POOL_SHARED_FS > blackdiamond.dax
+$testdir/blackdiamond.py /usr $CONDOR_POOL_SHARED_FS/inputs > blackdiamond.dax
 
 # create the site catalog
 cat > sites.xml <<EOF
@@ -42,22 +42,14 @@ cat > sites.xml <<EOF
         </directory>
 </site>
 <site  handle="condorpool" arch="x86" os="LINUX" osrelease="" osversion="" glibc="">
-        <directory  path="${TOPDIR}/shared-scratch" type="shared-scratch" free-size="" total-size="">
-                <file-server  operation="all" url="gsiftp://cartman.isi.edu/${TOPDIR}/shared-scratch">
+        <directory  path="${CONDOR_POOL_SHARED_FS}/shared-scratch" type="shared-scratch" free-size="" total-size="">
+             <file-server  operation="all" url="gsiftp://cartman.isi.edu/${CONDOR_POOL_SHARED_FS}/shared-scratch">
                 </file-server> 
         </directory>           
-
         <profile namespace="condor" key="universe" >vanilla</profile>
         <profile namespace="pegasus" key="style" >condor</profile>
 </site>
-<site  handle="cartman-data" arch="x86" os="LINUX" osrelease="" osversion="" glibc="">
-        <directory  path="${TOPDIR}/staging-site/scratch" type="shared-scratch" free-size="" total-size="">
-                <file-server  operation="all" url="gsiftp://cartman.isi.edu/${TOPDIR}/staging-site/scratch">
-                </file-server>
-        </directory>
-        <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu">
-        </replica-catalog>
-</site>
+
 </sitecatalog>
 
 EOF
