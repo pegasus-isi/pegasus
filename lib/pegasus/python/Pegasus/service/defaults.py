@@ -1,4 +1,5 @@
 import os
+import tempfile
 
 # SERVER CONFIGURATION
 
@@ -23,7 +24,8 @@ AUTHENTICATION = "PAMAuthentication"
 PROCESS_SWITCHING = True
 
 # Flask cache configuration
-CACHE_TYPE = 'simple'
+CACHE_TYPE = 'filesystem'
+CACHE_DIR = os.path.join(tempfile.gettempdir(), 'pegasus-service')
 
 #
 # Authorization -
