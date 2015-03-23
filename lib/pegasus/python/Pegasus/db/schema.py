@@ -480,6 +480,7 @@ pg_workflow = Table('master_workflow', metadata,
     Column('grid_dn', VARCHAR(255), nullable=True),
     Column('planner_version', VARCHAR(255), nullable=True),
     Column('db_url', TEXT, nullable=True),
+    Column('archived', BOOLEAN, nullable=False, default=False),
     **table_keywords
 )
 
