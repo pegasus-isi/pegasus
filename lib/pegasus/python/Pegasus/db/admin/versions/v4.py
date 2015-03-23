@@ -14,7 +14,7 @@ class Version(BaseVersion):
         if self.connections[self.database_name]:
             db = self.connections[self.database_name].session
             try:
-                db.execute("ALTER TABLE master_workflow ADD archived BOOLEAN NOT NULL default FALSE")
+                db.execute("ALTER TABLE master_workflow ADD archived BOOLEAN NOT NULL default 0")
             except Exception, e:
                 log.error("Error adding archived field to master_workflow table")
                 log.exception(e)
