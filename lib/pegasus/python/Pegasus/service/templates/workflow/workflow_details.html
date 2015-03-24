@@ -292,9 +292,13 @@ clipboardTooltipInitialization();
             <tr>
                 <th>Submit Directory</th>
                 <td class="text-nowrap">
+                    <a href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}"
+                       class="file-browser" data-toggle="tooltip" data-placement="top" title="File Browser">
+                    </a>
                     <button class="copy-button" data-clipboard-text="{{ workflow.submit_dir }}">
                     </button>
                     {{ workflow.submit_dir }}
+
                 </td>
             </tr>
             <tr>

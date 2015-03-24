@@ -14,11 +14,13 @@
 
 __author__ = 'Rajiv Mayani'
 
+import os
+
 from datetime import datetime
 
 from time import localtime, strftime
 
-from flask import request, render_template, url_for, json, g, redirect
+from flask import request, render_template, url_for, json, g, redirect, send_from_directory
 from sqlalchemy.orm.exc import NoResultFound
 
 from Pegasus.db.errors import StampedeDBNotFoundError
@@ -369,6 +371,52 @@ def time_stats(username, root_wf_id, wf_id):
     dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
 
     return '{}'
+
+
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/browser', methods=['GET'])
+def file_browser(username, root_wf_id, wf_id):
+    try:
+        dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id=wf_id)
+        details = dashboard.get_workflow_details(wf_id)
+        submit_dir = details.submit_dir
+
+        if os.path.isdir(submit_dir):
+            folders = {}
+
+            for folder, sub_folders, files in os.walk(submit_dir):
+                folder = '/' + folder.replace(submit_dir, '', 1).lstrip('/')
+                folders[folder] = {'D' : [], 'F': files}
+
+                for sub_folder in sub_folders:
+                    full_sub_folder = folder + sub_folder
+                    folders[folder]['D'].append(full_sub_folder)
+
+            init_file = request.args.get('init_file', None)
+            return render_template('file-browser.html', root_wf_id=root_wf_id, wf_id=wf_id, folders=folders,
+                                   init_file=init_file)
+
+    except NoResultFound:
+        return render_template('error/workflow/workflow_details_missing.html')
+
+    return 'Error', 500
+
+
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/file/<path:path>', methods=['GET'])
+def file_view(username, root_wf_id, wf_id, path):
+    try:
+        dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id=wf_id)
+        details = dashboard.get_workflow_details(wf_id)
+        submit_dir = details.submit_dir
+
+        file_path = os.path.join(submit_dir, path)
+        if not os.path.isfile(file_path):
+            return 'File not found', 404
+
+        return send_from_directory(submit_dir, path)
+    except NoResultFound:
+        return render_template('error/workflow/workflow_details_missing.html')
+
+    return 'Error', 500
 
 
 @dashboard_routes.route('/u/<username>/info')
