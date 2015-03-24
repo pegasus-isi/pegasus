@@ -2,101 +2,99 @@ __author__ = "Rafael Ferreira da Silva"
 
 DB_VERSION = 1
 
+import logging
+
 from Pegasus.db.admin.admin_loader import *
 from Pegasus.db.admin.versions.base_version import *
 
+log = logging.getLogger(__name__)
 
 class Version(BaseVersion):
         
-    def __init__(self, connections, database_name=None, verbose=False, debug=False):
-        super(Version, self).__init__(connections, database_name, verbose, debug)
+    def __init__(self, connection):
+        super(Version, self).__init__(connection)
 
         
     def update(self, force):
-        if self.connections[self.database_name]:
-            db = self.connections[self.database_name].session
-            db.begin()
-            self.verbose("  Updating database schema...\n")
-            db.execute("UPDATE pegasus_schema SET version='1.3' WHERE name='JDBCRC' AND catalog='rc'")
-            self.verbose("    Creating new table...\n")
-            db.execute("CREATE TABLE rc_lfn_new ( LIKE rc_lfn )")
-            db.execute("ALTER TABLE rc_lfn_new ADD COLUMN site VARCHAR(245)")
-            self.verbose("    Removing index...\n")
-            db.execute("ALTER TABLE rc_lfn_new DROP INDEX sk_rc_lfn")
-            self.verbose("    Adding new constraint...\n")
-            db.execute("ALTER TABLE rc_lfn_new ADD CONSTRAINT sk_rc_lfn UNIQUE(lfn,pfn,site)")
-            self.verbose("    Copying data...\n")
-            db.execute("INSERT INTO rc_lfn_new(id, lfn, pfn) SELECT * FROM rc_lfn")
-            self.verbose("    Renaming table...\n")
-            db.execute("RENAME TABLE rc_lfn TO rc_lfn_old, rc_lfn_new TO rc_lfn")
-            self.verbose("    Droping old table...\n")
-            db.execute("ALTER TABLE rc_attr DROP FOREIGN KEY fk_rc_attr")
-            db.execute("DROP TABLE rc_lfn_old")
-            self.verbose("  Data schema successfully updated.\n")
+        self.db.begin()
+        log.debug("  Updating database schema...")
+        self.db.execute("UPDATE pegasus_schema SET version='1.3' WHERE name='JDBCRC' AND catalog='rc'")
+        log.debug("    Creating new table...")
+        self.db.execute("CREATE TABLE rc_lfn_new ( LIKE rc_lfn )")
+        self.db.execute("ALTER TABLE rc_lfn_new ADD COLUMN site VARCHAR(245)")
+        log.debug("    Removing index...")
+        self.db.execute("ALTER TABLE rc_lfn_new DROP INDEX sk_rc_lfn")
+        log.debug("    Adding new constraint...")
+        self.db.execute("ALTER TABLE rc_lfn_new ADD CONSTRAINT sk_rc_lfn UNIQUE(lfn,pfn,site)")
+        log.debug("    Copying data...")
+        self.db.execute("INSERT INTO rc_lfn_new(id, lfn, pfn) SELECT * FROM rc_lfn")
+        log.debug("    Renaming table...")
+        self.db.execute("RENAME TABLE rc_lfn TO rc_lfn_old, rc_lfn_new TO rc_lfn")
+        log.debug("    Droping old table...")
+        self.db.execute("ALTER TABLE rc_attr DROP FOREIGN KEY fk_rc_attr")
+        self.db.execute("DROP TABLE rc_lfn_old")
+        log.debug("  Data schema successfully updated.")
 
-            self.verbose("  Migrating attribute data...\n")
-            db.execute("UPDATE rc_lfn l INNER JOIN rc_attr a ON (l.id=a.id AND a.name='pool') SET l.site=a.value")
-            self.verbose("  Migration successfully completed.\n")
+        log.debug("  Migrating attribute data...")
+        self.db.execute("UPDATE rc_lfn l INNER JOIN rc_attr a ON (l.id=a.id AND a.name='pool') SET l.site=a.value")
+        log.debug("  Migration successfully completed.")
 
-            self.verbose("  Cleaning the database...\n")  
-            db.execute("DELETE FROM rc_attr WHERE name='pool'")
-            self.verbose("  Database successfully cleaned.\n")
+        log.debug("  Cleaning the database...")  
+        self.db.execute("DELETE FROM rc_attr WHERE name='pool'")
+        log.debug("  Database successfully cleaned.")
 
-            self.verbose("  Adding new foreign constraint\n")
-            db.execute("ALTER TABLE rc_attr ADD CONSTRAINT fk_rc_attr FOREIGN KEY (id) REFERENCES rc_lfn(id)")
-            self.verbose("  Foreign constraint successfully added.\n")
+        log.debug("  Adding new foreign constraint")
+        self.db.execute("ALTER TABLE rc_attr ADD CONSTRAINT fk_rc_attr FOREIGN KEY (id) REFERENCES rc_lfn(id)")
+        log.debug("  Foreign constraint successfully added.")
 
-            self.verbose("  Validating the update process...\n")
-            data = db.execute("SELECT COUNT(id) FROM rc_attr WHERE name='pool'").first()
-            if data is not None:
-                if data[0] > 0:
-                    sys.stderr.write("  Error: attribute pool failed to be removed. There are still %d entries." % data[0])
-                    db.rollback()
-                    sys.exit(1)
+        log.debug("  Validating the update process...")
+        data = self.db.execute("SELECT COUNT(id) FROM rc_attr WHERE name='pool'").first()
+        if data is not None:
+            if data[0] > 0:
+                log.error("Attribute pool failed to be removed. There are still %d entries." % data[0])
+                self.db.rollback()
+                raise RuntimeError("attribute pool failed to be removed. There are still %d entries." % data[0])
 
-            updated = db.execute("SELECT COUNT(id) FROM rc_lfn WHERE site IS NOT NULL").first()
-            self.verbose("  Updated %d entries in the database.\n" % updated)
-            db.commit()
+        updated = self.db.execute("SELECT COUNT(id) FROM rc_lfn WHERE site IS NOT NULL").first()
+        log.debug("  Updated %d entries in the database." % updated)
+        self.db.commit()
 
 
     def downgrade(self, force):
-        if self.connections[self.database_name]:
-            db = self.connections[self.database_name].session
-            db.begin()
+        self.db.begin()
+        data = self.db.execute("SELECT COUNT(id) AS c FROM rc_Lfn GROUP BY lfn, pfn ORDER BY c DESC LIMIT 1").first()
+        if data is not None:
+            count = int(data[0])
+            if count > 1 and not force:
+                log.error("A possible data loss was detected: use '--force' to ignore this message.")
+                raise RuntimeError("A possible data loss was detected: use '--force' to ignore this message.")
 
-            data = db.execute("SELECT COUNT(id) AS c FROM rc_Lfn GROUP BY lfn, pfn ORDER BY c DESC LIMIT 1").first()
-            if data is not None:
-                count = int(data[0])
-                if count > 1 and not force:
-                    sys.stderr.write("ERROR: A possible data loss was detected: use '--force' to ignore this message.\n")
-                    exit(1)
+        log.debug("  Updating database schema...")
+        self.db.execute("UPDATE pegasus_schema SET version='1.2' WHERE name='JDBCRC' AND catalog='rc'")
 
-            self.verbose("  Updating database schema...\n")
-            db.execute("UPDATE pegasus_schema SET version='1.2' WHERE name='JDBCRC' AND catalog='rc'")
-
-            self.verbose("    Creating new table...\n")
-            db.execute("CREATE TABLE rc_lfn_new ( LIKE rc_lfn )")
-            db.execute("ALTER TABLE rc_lfn_new DROP INDEX sk_rc_lfn")
-            db.execute("ALTER TABLE rc_lfn_new DROP COLUMN site")
-            self.verbose("    Adding new constraint...\n")
-            db.execute("ALTER TABLE rc_lfn_new ADD CONSTRAINT sk_rc_lfn UNIQUE(lfn,pfn)")
-            self.verbose("    Copying data...\n")
-            db.execute("INSERT INTO rc_lfn_new(id, lfn, pfn) SELECT MAX(id), lfn, pfn FROM rc_lfn GROUP BY lfn, pfn")
-            db.execute("INSERT INTO rc_attr(id, name, value) SELECT n.id, 'pool', site FROM rc_lfn o INNER JOIN rc_lfn_new n ON (n.id = o.id)")
-            db.execute("DELETE FROM rc_attr WHERE NOT EXISTS (SELECT id FROM rc_lfn_new WHERE rc_lfn_new.id = rc_attr.id)")
-            self.verbose("    Renaming table...\n")
-            db.execute("RENAME TABLE rc_lfn TO rc_lfn_old, rc_lfn_new TO rc_lfn")
-            self.verbose("    Droping old table...\n")
-            db.execute("ALTER TABLE rc_attr DROP FOREIGN KEY fk_rc_attr")
-            db.execute("DROP TABLE rc_lfn_old")
-            db.execute("ALTER TABLE rc_attr ADD CONSTRAINT fk_rc_attr FOREIGN KEY (id) REFERENCES rc_lfn(id)")
-            self.verbose("  Data schema successfully updated.\n")
+        log.debug("    Creating new table...")
+        self.db.execute("CREATE TABLE rc_lfn_new ( LIKE rc_lfn )")
+        self.db.execute("ALTER TABLE rc_lfn_new DROP INDEX sk_rc_lfn")
+        self.db.execute("ALTER TABLE rc_lfn_new DROP COLUMN site")
+        log.debug("    Adding new constraint...")
+        self.db.execute("ALTER TABLE rc_lfn_new ADD CONSTRAINT sk_rc_lfn UNIQUE(lfn,pfn)")
+        log.debug("    Copying data...")
+        self.db.execute("INSERT INTO rc_lfn_new(id, lfn, pfn) SELECT MAX(id), lfn, pfn FROM rc_lfn GROUP BY lfn, pfn")
+        self.db.execute("INSERT INTO rc_attr(id, name, value) SELECT n.id, 'pool', site FROM rc_lfn o INNER JOIN rc_lfn_new n ON (n.id = o.id)")
+        self.db.execute("DELETE FROM rc_attr WHERE NOT EXISTS (SELECT id FROM rc_lfn_new WHERE rc_lfn_new.id = rc_attr.id)")
+        log.debug("    Renaming table...")
+        self.db.execute("RENAME TABLE rc_lfn TO rc_lfn_old, rc_lfn_new TO rc_lfn")
+        log.debug("    Droping old table...")
+        self.db.execute("ALTER TABLE rc_attr DROP FOREIGN KEY fk_rc_attr")
+        self.db.execute("DROP TABLE rc_lfn_old")
+        self.db.execute("ALTER TABLE rc_attr ADD CONSTRAINT fk_rc_attr FOREIGN KEY (id) REFERENCES rc_lfn(id)")
+        log.debug("  Data schema successfully updated.")
+        self.db.commit()
 
 
     def is_compatible(self):
-        if self.connections[self.database_name]:  
-            try:
-                self.connections[self.database_name].session.execute("SELECT site FROM rc_lfn")
-            except:
-                return False
+        try:
+            self.db.execute("SELECT site FROM rc_lfn")
+        except:
+            return False
         return True
