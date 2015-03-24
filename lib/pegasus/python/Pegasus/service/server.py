@@ -1,11 +1,44 @@
 import os
 import logging
+import random
+from OpenSSL import crypto, SSL
 
 from Pegasus.command import Command
 from Pegasus.service import app
 
 log = logging.getLogger(__name__)
 
+def generate_self_signed_certificate(certfile, pkeyfile):
+    "If certfile and pkeyfile don't exist, create a self-signed certificate"
+
+    if os.path.isfile(certfile) and os.path.isfile(pkeyfile):
+        return
+
+    log.info("Generating self-signed certificate")
+
+    pkey = crypto.PKey()
+    pkey.generate_key(crypto.TYPE_RSA, 2048)
+
+    cert = crypto.X509()
+
+    sub = cert.get_subject()
+    sub.C = "US"
+    sub.ST = "California"
+    sub.L = "Marina Del Rey"
+    sub.O = "University of Southern California"
+    sub.OU = "Information Sciences Institute"
+    sub.CN = "Pegasus Service"
+
+    cert.set_version(1)
+    cert.set_serial_number(random.randint(0,2**32))
+    cert.gmtime_adj_notBefore(0)
+    cert.gmtime_adj_notAfter(10*365*24*60*60) # 10 years
+    cert.set_issuer(sub)
+    cert.set_pubkey(pkey)
+    cert.sign(pkey, 'sha1')
+
+    open(certfile, "w").write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
+    open(pkeyfile, "w").write(crypto.dump_privatekey(crypto.FILETYPE_PEM, pkey))
 
 class ServerCommand(Command):
     usage = "%prog [options]"
@@ -42,11 +75,12 @@ class ServerCommand(Command):
 
         cert = app.config.get("CERTIFICATE", None)
         pkey = app.config.get("PRIVATE_KEY", None)
-        if cert is not None and pkey is not None:
-            ssl_context = (cert, pkey)
-        else:
-            log.warning("SSL is not configured: Using adhoc certificate")
-            ssl_context = 'adhoc'
+        if cert is None or pkey is None:
+            log.warning("SSL is not configured: Using self-signed certificate")
+            cert = os.path.expanduser("~/.pegasus/selfcert.pem")
+            pkey = os.path.expanduser("~/.pegasus/selfkey.pem")
+            generate_self_signed_certificate(cert, pkey)
+        ssl_context = (cert, pkey)
 
         if os.getuid() != 0:
             log.warning("Service not running as root: Will not be able to switch users")
