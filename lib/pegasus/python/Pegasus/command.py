@@ -1,8 +1,11 @@
 import os
 import sys
+import logging
 from optparse import OptionParser
 
-class Command:
+log = logging.getLogger(__name__)
+
+class Command(object):
     description = None
     usage = "Usage: %prog [options] [args]"
 
@@ -18,6 +21,37 @@ class Command:
     def main(self, args=None):
         self.parse(args)
         self.run()
+
+class LoggingCommand(Command):
+    def __init__(self):
+        Command.__init__(self)
+        self.parser.add_option("-v", "--verbose", action="count", default=0, dest="verbosity",
+                               help="Increase logging verbosity, repeatable")
+
+    def main(self, args=None):
+        self.parse(args)
+
+        verbosity = self.options.verbosity
+
+        if verbosity == 0:
+            log_level = logging.WARNING
+        elif verbosity == 1:
+            log_level = logging.INFO
+        elif verbosity >= 2:
+            log_level = logging.DEBUG
+
+        logging.basicConfig(level=log_level)
+        logging.getLogger().setLevel(log_level)
+
+        try:
+            self.run()
+        except Exception, e:
+            # Only log stack grace if -v has been used
+            if verbosity >= 1:
+                log.exception(e)
+            else:
+                sys.stderr.write("%s\n" % e)
+            exit(1)
 
 class CompoundCommand(Command):
     "A Command with multiple sub-commands"

@@ -1,8 +1,10 @@
 import logging
-
+import getpass
 from sqlalchemy import create_engine, orm, event
 from sqlalchemy.engine import Engine
 from sqlite3 import Connection as SQLite3Connection
+
+from Pegasus import user as users
 
 __all__ = ['connect']
 
@@ -17,6 +19,17 @@ def _set_sqlite_pragma(conn, record):
         cursor.execute("PRAGMA foreign_keys=ON;")
         cursor.close()
 
+def connect_to_master_db(user=None):
+    "Connect to 'user's master database"
+
+    if user is None:
+        user = getpass.getuser()
+
+    u = users.get_user_by_username(user)
+
+    dburi = u.get_master_db_url()
+
+    return connect(dburi)
 
 def connect(dburi, echo=False, schema_check=True, create=False):
     engine = create_engine(dburi, echo=echo, pool_recycle=True)
