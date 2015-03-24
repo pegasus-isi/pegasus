@@ -676,6 +676,8 @@ public class RCClient extends Toolkit {
 				unescape(noquote(attr.substring(pos + 1))));
 		    }
 		}
+                //PM-813 backward support for pool attribute
+                rce.checkAndUpdateForPoolAttribute();
 
 		if (cmd.equals("insert")) {
 		    result = m_rc.insert(lfn, rce);
