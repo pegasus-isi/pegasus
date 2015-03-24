@@ -6,7 +6,6 @@ import logging
 from optparse import OptionParser
 
 
-from Pegasus import user
 from Pegasus.db import connection
 from Pegasus.tools import utils
 from Pegasus.command import Command, CompoundCommand
@@ -16,16 +15,9 @@ log = logging.getLogger(__name__)
 
 class SubmitDirException(Exception): pass
 
-class Database:
-    def __init__(self, connString):
-        self.session = connection.connect(connString)
-
-    def commit(self):
-        self.session.flush()
-        self.session.commit()
-
-    def close(self):
-        self.session.close()
+class MasterDatabase:
+    def __init__(self, session):
+        self.session = session
 
     def get_master_workflow(self, wf_uuid):
         q = self.session.query(DashboardWorkflow)
@@ -54,6 +46,10 @@ class Database:
         q = self.session.query(DashboardWorkflow)
         q = q.filter(DashboardWorkflow.wf_id == w.wf_id)
         q.delete()
+
+class WorkflowDatabase(object):
+    def __init__(self, session):
+        self.session = session
 
     def get_workflow(self, wf_uuid):
         q = self.session.query(Workflow)
@@ -91,17 +87,6 @@ class SubmitDir(object):
         "Check to see if this workflow is a subworkflow"
         return self.wf_uuid != self.root_wf_uuid
 
-    def open_master_db(self):
-        "Connect to master database"
-        u = user.get_user_by_username(self.user)
-
-        mdb_file = u.get_master_db()
-        if not os.path.isfile(mdb_file):
-            raise SubmitDirException("Master database does not exist: %s" % mdb_file)
-
-        mdb_url = u.get_master_db_url()
-        return Database(mdb_url)
-
     def extract(self):
         "Extract files from an archived submit dir"
 
@@ -111,7 +96,8 @@ class SubmitDir(object):
             raise SubmitDirException("Submit dir not archived")
 
         # Update record in master db
-        mdb = self.open_master_db()
+        mdbsession = connection.connect_to_master_db(self.user)
+        mdb = MasterDatabase(mdbsession)
         wf = mdb.get_master_workflow(self.wf_uuid)
         if wf is not None:
             wf.archived = False
@@ -125,14 +111,15 @@ class SubmitDir(object):
         os.remove(archname)
 
         # Commit the workflow changes
-        mdb.commit()
-        mdb.close()
+        mdbsession.commit()
+        mdbsession.close()
 
     def archive(self):
         "Archive a submit dir by adding files to a compressed archive"
 
         # Update record in master db
-        mdb = self.open_master_db()
+        mdbsession = connection.connect_to_master_db(self.user)
+        mdb = MasterDatabase(mdbsession)
         wf = mdb.get_master_workflow(self.wf_uuid)
         if wf is not None:
             wf.archived = True
@@ -187,8 +174,8 @@ class SubmitDir(object):
                 shutil.rmtree(path)
 
         # Commit the workflow changes
-        mdb.commit()
-        mdb.close()
+        mdbsession.commit()
+        mdbsession.close()
 
     def move(self, dest):
         "Move this submit directory to dest"
@@ -208,7 +195,8 @@ class SubmitDir(object):
             raise SubmitDirException("Subworkflows cannot be moved independent of the root workflow")
 
         # Connect to master database
-        mdb = self.open_master_db()
+        mdbsession = connection.connect_to_master_db(self.user)
+        mdb = MasterDatabase(mdbsession)
 
         # Get the workflow record from the master db
         db_url = None
@@ -253,11 +241,12 @@ class SubmitDir(object):
 
         # Update the workflow database if we found one
         if db_url is not None:
-            db = Database(db_url)
+            dbsession = connection.connect(db_url)
+            db = WorkflowDatabase(dbsession)
             root_wf = db.get_workflow(self.wf_uuid)
             db.update_submit_dirs(root_wf.wf_id, self.submitdir, dest)
-            db.commit()
-            db.close()
+            dbsession.commit()
+            dbsession.close()
 
         # Move all the files
         shutil.move(self.submitdir, dest)
@@ -273,8 +262,8 @@ class SubmitDir(object):
         # TODO We might want to update the braindump files for subworkflows
 
         # Update master database
-        mdb.commit()
-        mdb.close()
+        mdbsession.commit()
+        mdbsession.close()
 
         # Finally, update object
         self.submitdir = dest
@@ -296,7 +285,8 @@ class SubmitDir(object):
                 return
 
         # Connect to master database
-        mdb = self.open_master_db()
+        mdbsession = connection.connect_to_master_db(self.user)
+        mdb = MasterDatabase(mdbsession)
 
         # TODO We might want to delete all of the records from the workflow db
         # if they are not using an sqlite db that is in the submit dir
@@ -308,8 +298,8 @@ class SubmitDir(object):
         shutil.rmtree(self.submitdir)
 
         # Update master db
-        mdb.commit()
-        mdb.close()
+        mdbsession.commit()
+        mdbsession.close()
 
 class ExtractCommand(Command):
     description = "Extract (uncompress) submit directory"
