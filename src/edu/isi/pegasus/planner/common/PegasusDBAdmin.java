@@ -120,7 +120,7 @@ public class PegasusDBAdmin {
     public boolean checkMasterDatabaseForVersionCompatibility() {
         StringBuilder arguments = new StringBuilder();
         arguments.append( "-t master " ).
-                  append( "-p " ).append( mProps.getPropertiesInSubmitDirectory() );
+                  append( "-c " ).append( mProps.getPropertiesInSubmitDirectory() );
 
         return this.checkDatabase( arguments.toString() );
     }
