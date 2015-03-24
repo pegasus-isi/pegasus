@@ -37,6 +37,59 @@
     content: '\e665';
 }
 
+.file-browser {
+    padding: 0;
+    border: none;
+    background: none;
+    color: inherit;
+}
+
+.file-browser:hover {
+    color: #31708f;
+    text-decoration: none;
+}
+
+.file-browser:active, .file-browser:focus {
+    outline: none;
+    border: none;
+}
+
+.file-browser:before {
+    font-family: 'Pe-icon-7-stroke';
+    font-size: 1.33333333em;
+    vertical-align: -15%;
+    content: '\e653';
+}
+
+.file-list {
+    height: 100vh;
+    overflow: scroll;
+}
+
+.file-list ul {
+    list-style: none;
+}
+
+.file-list ul:first-child {
+    padding-left: 1em;
+}
+
+.file-list .directory:before {
+    font-family: 'Pe-icon-7-stroke';
+    font-size: 1.2em;
+    vertical-align: -15%;
+    padding-right: .2em;
+    content: '\e653';
+}
+
+.file-list ul li:before {
+    font-family: 'Pe-icon-7-stroke';
+    font-size: 1.2em;
+    vertical-align: -15%;
+    padding-right: .2em;
+    content: '\e656';
+}
+
 /*
  * Sticky Footer
  */

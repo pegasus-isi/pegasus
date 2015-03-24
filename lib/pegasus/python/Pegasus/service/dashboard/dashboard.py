@@ -287,6 +287,25 @@ class Dashboard(object):
             Dashboard.close(workflow)
             Dashboard.close(workflow_statistics)
 
+    def get_workflow_details(self, wf_id=None, wf_uuid=None):
+        """
+        Get workflow specific information. This is when user click on a workflow link.
+        Returns a workflow object.
+        """
+        try:
+            if not wf_id and not wf_uuid:
+                raise ValueError, 'Workflow ID or Workflow UUID is required'
+
+            workflow = None
+            workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id=wf_id, wf_uuid=wf_uuid)
+
+            details = self._get_workflow_details(workflow)
+
+            return details
+
+        finally:
+            Dashboard.close(workflow)
+
     def workflow_summary_stats(self, wf_id=None, wf_uuid=None):
 
         try:

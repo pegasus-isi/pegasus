@@ -2,6 +2,22 @@ import time
 import decimal
 from Pegasus.service import app
 
+
+@app.template_filter('lstrip')
+def lstrip(value, chars=' '):
+    value.lstrip(chars)
+
+
+@app.template_filter('rstrip')
+def rstrip(value, chars=' '):
+    value.rstrip(chars)
+
+
+@app.template_filter('strip')
+def strip(value, chars=' '):
+    value.strip(chars)
+
+
 @app.template_filter('dec_to_float')
 def dec_to_float(dec):
     '''
