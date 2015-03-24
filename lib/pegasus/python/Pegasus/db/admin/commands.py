@@ -109,7 +109,7 @@ class UpdateCommand(Command):
             
         try:
             adminDB = AdminDB(self.options.config_properties, self.options.db_type, dburi)
-            if not adminDB.verify(self.options.pegasus_version, verbose=True):
+            if not adminDB.verify(self.options.pegasus_version):
                 adminDB.update(self.options.pegasus_version, self.options.force)
                 
             version = adminDB.current_version(parse=True)

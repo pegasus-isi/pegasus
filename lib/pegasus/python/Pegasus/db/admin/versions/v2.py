@@ -16,7 +16,7 @@ class Version(BaseVersion):
         super(Version, self).__init__(connection)
     
 
-    def update(self, force):
+    def update(self, force=False):
         try:
             self.db.execute("SELECT db_url FROM workflow")
             data = self.db.execute("SELECT COUNT(wf_id) FROM master_workflow").first()
@@ -65,35 +65,16 @@ class Version(BaseVersion):
                 "FOREIGN KEY(ensemble_id) REFERENCES ensemble(id)"
                 ")")
             self.db.execute("CREATE INDEX IF NOT EXISTS UNIQUE_ENSEMBLE_WORKFLOW ON ensemble_workflow (ensemble_id, name)")
+            self.db.commit()
+            
         except OperationalError:
             pass
+        except Exception, e:
+            self.db.rollback()
+            log.exception(e)
+            raise Exception(e)
 
         
-    def downgrade(self, force):
-        data = self.db.execute("SELECT COUNT(wf_id) FROM master_workflow").first()
-        if data is not None:
-            if data[0] > 0 and not force:
-                log.error("A possible data loss was detected: use '--force' to ignore this message.")
-                raise RuntimeError("A possible data loss was detected: use '--force' to ignore this message.")
-            
-        data = self.db.execute("SELECT COUNT(wf_id) FROM master_workflowstate").first()
-        if data is not None:
-            if data[0] > 0 and not force:
-                log.error("A possible data loss was detected: use '--force' to ignore this message.")
-                raise RuntimeError("A possible data loss was detected: use '--force' to ignore this message.")
-        
-        self.db.execute("DROP TABLE master_workflowstate")
-        self.db.execute("DROP TABLE master_workflow")
-
-
-    def is_compatible(self):
-        try:
-            self.db.execute("SELECT wf_id FROM master_workflow")
-        except:
-            return False
-        try:
-            self.db.execute("DROP INDEX UNIQUE_MASTER_WF_UUID")
-            self.db.execute("CREATE INDEX IF NOT EXISTS UNIQUE_MASTER_WF_UUID ON master_workflow (wf_uuid)")
-        except:
-            return False
-        return True
+    def downgrade(self, force=False):
+        "Downgrade is not necessary as master tables have no conflict with previous versions."
+        pass

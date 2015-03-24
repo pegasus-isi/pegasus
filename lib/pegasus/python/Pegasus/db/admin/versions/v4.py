@@ -13,7 +13,7 @@ class Version(BaseVersion):
         super(Version, self).__init__(connection)
 
 
-    def update(self, force):
+    def update(self, force=False):
         "Add archived field to master_workflow table"
         # TODO We might need to check to see if the field already exists first
         try:
@@ -26,15 +26,6 @@ class Version(BaseVersion):
             raise RuntimeError(e)
 
 
-    def downgrade(self, force):
+    def downgrade(self, force=False):
         "Downgrade is not necessary as archived is added with a default that works for old versions"
         pass
-
-
-    def is_compatible(self):
-        try:
-            self.db.execute("SELECT archived FROM master_workflow")
-        except Exception, e:
-            return False
-        return True
-

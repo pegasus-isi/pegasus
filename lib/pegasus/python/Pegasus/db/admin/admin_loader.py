@@ -241,8 +241,8 @@ class AdminDB(object):
         version = 0
         for i in range(1, CURRENT_DB_VERSION + 1):
             k = get_class(i, self.db)
-            if k.is_compatible():
-                version = i
+            k.update()
+            version = i
         
         if version > 0:
             self._update_version(version)
@@ -275,7 +275,7 @@ class AdminDB(object):
     def _update_version(self, version):
         v = DBVersion()
         v.version_number = version
-        v.version_timestamp = datetime.datetime.now().strftime("%s")    
+        v.version_timestamp = datetime.datetime.now().strftime("%s")
         if self.db:
             self.db.add(v)
             self.db.commit()
