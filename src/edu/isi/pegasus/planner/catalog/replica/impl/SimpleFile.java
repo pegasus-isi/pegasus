@@ -305,7 +305,6 @@ public class SimpleFile implements ReplicaCatalog {
             // valid entry
             if (state == 16){
                 ReplicaCatalogEntry rce = new ReplicaCatalogEntry(pfn, attr);
-                rce.checkAndUpdateForPoolAttribute();
                 insert(lfn, rce );
             }
             return true;
