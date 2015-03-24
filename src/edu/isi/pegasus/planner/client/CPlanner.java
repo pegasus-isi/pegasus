@@ -579,12 +579,6 @@ public class CPlanner extends Executable{
 
             state++;
             
-            //PM-778 set various properties for pegasus-db-admin
-            //only for top level workflow
-            if( !mPOptions.partOfDeferredRun() ){
-                PegasusDBAdmin.updateProperties( mBag, orgDag );
-            }
-            
             mProps.writeOutProperties( mPOptions.getSubmitDirectory() );
 
             mPMetrics.setRelativeSubmitDirectory( mPOptions.getRelativeSubmitDirectory() );
@@ -1870,7 +1864,6 @@ public class CPlanner extends Executable{
      */
     private void checkMasterDatabaseForVersionCompatibility() {
         PegasusDBAdmin dbCheck = new PegasusDBAdmin( mBag );
-        
         dbCheck.checkMasterDatabaseForVersionCompatibility();
     }
 
