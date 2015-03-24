@@ -3,7 +3,6 @@ import glob
 import tarfile
 import shutil
 import logging
-import getpass
 from optparse import OptionParser
 
 
@@ -31,7 +30,10 @@ class Database:
     def get_master_workflow(self, wf_uuid):
         q = self.session.query(DashboardWorkflow)
         q = q.filter(DashboardWorkflow.wf_uuid == wf_uuid)
-        return q.first()
+        wf = q.first()
+        if wf is None:
+            log.warning("No master db record found for workflow: %s" % wf_uuid)
+        return wf
 
     def get_ensemble_workflow(self, wf_uuid):
         q = self.session.query(EnsembleWorkflow)
@@ -66,252 +68,248 @@ class Database:
             wf.submit_dir = wf.submit_dir.replace(src, dest)
             log.info("New submit dir: %s" % wf.submit_dir)
 
-def extract(submitdir):
-    if not os.path.isdir(submitdir):
-        raise SubmitDirException("Invalid submit dir: %s" % submitdir)
+class SubmitDir(object):
+    def __init__(self, submitdir):
+        if not os.path.isdir(submitdir):
+            raise SubmitDirException("Invalid submit dir: %s" % submitdir)
+        self.submitdir = os.path.abspath(submitdir)
 
-    submitdir = os.path.abspath(submitdir)
+        # Locate braindump file
+        self.braindump_file = os.path.join(self.submitdir, "braindump.txt")
+        if not os.path.isfile(self.braindump_file):
+            raise SubmitDirException("Not a submit directory: braindump.txt missing")
 
-    # Locate braindump file
-    braindump = os.path.join(submitdir, "braindump.txt")
-    if not os.path.isfile(braindump):
-        raise SubmitDirException("Not a submit directory: braindump.txt missing")
+        # Read the braindump file
+        self.braindump = utils.read_braindump(self.braindump_file)
 
-    # Locate archive file
-    archname = os.path.join(submitdir, "archive.tar.gz")
-    if not os.path.isfile(archname):
-        raise SubmitDirException("Submit dir not archived")
+        # Read some attributes from braindump file
+        self.wf_uuid = self.braindump["wf_uuid"]
+        self.root_wf_uuid = self.braindump["root_wf_uuid"]
+        self.user = self.braindump["user"]
 
-    tar = tarfile.open(archname, "r:gz")
-    tar.extractall(path=submitdir)
-    tar.close()
+    def is_subworkflow(self):
+        "Check to see if this workflow is a subworkflow"
+        return self.wf_uuid != self.root_wf_uuid
 
-    os.remove(archname)
+    def open_master_db(self):
+        "Connect to master database"
+        u = user.get_user_by_username(self.user)
 
-def archive(submitdir):
-    if not os.path.isdir(submitdir):
-        raise SubmitDirException("Invalid submit dir: %s" % submitdir)
+        mdb_file = u.get_master_db()
+        if not os.path.isfile(mdb_file):
+            raise SubmitDirException("Master database does not exist: %s" % mdb_file)
 
-    submitdir = os.path.abspath(submitdir)
+        mdb_url = u.get_master_db_url()
+        return Database(mdb_url)
 
-    exclude = set()
+    def extract(self):
+        "Extract files from an archived submit dir"
 
-    # Locate and exclude braindump file
-    braindump = os.path.join(submitdir, "braindump.txt")
-    if not os.path.isfile(braindump):
-        raise SubmitDirException("Not a submit directory: braindump.txt missing")
-    exclude.add(braindump)
+        # Locate archive file
+        archname = os.path.join(self.submitdir, "archive.tar.gz")
+        if not os.path.isfile(archname):
+            raise SubmitDirException("Submit dir not archived")
 
-    # Ignore monitord files. This is needed so that tools like pegasus-statistics
-    # will consider the workflow to be complete
-    for name in ["monitord.started", "monitord.done", "monitord.log"]:
-        exclude.add(os.path.join(submitdir, name))
+        # Update record in master db
+        mdb = self.open_master_db()
+        wf = mdb.get_master_workflow(self.wf_uuid)
+        if wf is not None:
+            wf.archived = False
 
-    # Exclude stampede db
-    for db in glob.glob(os.path.join(submitdir, "*.stampede.db")):
-        exclude.add(db)
+        # Untar the files
+        tar = tarfile.open(archname, "r:gz")
+        tar.extractall(path=self.submitdir)
+        tar.close()
 
-    # Exclude properties file
-    for prop in glob.glob(os.path.join(submitdir, "pegasus.*.properties")):
-        exclude.add(prop)
+        # Remove the tar file
+        os.remove(archname)
 
-    # Locate and exclude archive file
-    archname = os.path.join(submitdir, "archive.tar.gz")
-    if os.path.exists(archname):
-        raise SubmitDirException("Submit dir already archived")
-    exclude.add(archname)
+        # Commit the workflow changes
+        mdb.commit()
+        mdb.close()
 
-    # Visit all the files in the submit dir that we want to archive
-    def visit(submitdir):
-        for name in os.listdir(submitdir):
-            path = os.path.join(submitdir, name)
+    def archive(self):
+        "Archive a submit dir by adding files to a compressed archive"
 
-            if path not in exclude:
-                yield name, path
+        # Update record in master db
+        mdb = self.open_master_db()
+        wf = mdb.get_master_workflow(self.wf_uuid)
+        if wf is not None:
+            wf.archived = True
 
-    # Archive the files
-    tar = tarfile.open(name=archname, mode="w:gz")
-    for name, path in visit(submitdir):
-        tar.add(name=path, arcname=name)
-    tar.close()
+        # The set of files to exclude from the archive
+        exclude = set()
 
-    # Remove the files and directories
-    # We do this here, instead of doing it in the loop above
-    # because we want to make sure there are no errors in creating
-    # the archive before we start removing files
-    for name, path in visit(submitdir):
-        if os.path.isfile(path) or os.path.islink(path):
-            os.remove(path)
+        # Exclude braindump file
+        exclude.add(self.braindump_file)
+
+        # Locate and exclude archive file
+        archname = os.path.join(self.submitdir, "archive.tar.gz")
+        if os.path.exists(archname):
+            raise SubmitDirException("Submit dir already archived")
+        exclude.add(archname)
+
+        # Ignore monitord files. This is needed so that tools like pegasus-statistics
+        # will consider the workflow to be complete
+        for name in ["monitord.started", "monitord.done", "monitord.log"]:
+            exclude.add(os.path.join(self.submitdir, name))
+
+        # Exclude stampede db
+        for db in glob.glob(os.path.join(self.submitdir, "*.stampede.db")):
+            exclude.add(db)
+
+        # Exclude properties file
+        for prop in glob.glob(os.path.join(self.submitdir, "pegasus.*.properties")):
+            exclude.add(prop)
+
+        # Visit all the files in the submit dir that we want to archive
+        def visit(dirpath):
+            for name in os.listdir(dirpath):
+                filepath = os.path.join(dirpath, name)
+
+                if filepath not in exclude:
+                    yield name, filepath
+
+        # Archive the files
+        tar = tarfile.open(name=archname, mode="w:gz")
+        for name, path in visit(self.submitdir):
+            tar.add(name=path, arcname=name)
+        tar.close()
+
+        # Remove the files and directories
+        # We do this here, instead of doing it in the loop above
+        # because we want to make sure there are no errors in creating
+        # the archive before we start removing files
+        for name, path in visit(self.submitdir):
+            if os.path.isfile(path) or os.path.islink(path):
+                os.remove(path)
+            else:
+                shutil.rmtree(path)
+
+        # Commit the workflow changes
+        mdb.commit()
+        mdb.close()
+
+    def move(self, dest):
+        "Move this submit directory to dest"
+
+        dest = os.path.abspath(dest)
+
+        if os.path.isfile(dest):
+            raise SubmitDirException("Destination is a file: %s" % dest)
+
+        if os.path.isdir(dest):
+            if os.path.exists(os.path.join(dest, "braindump.txt")):
+                raise SubmitDirException("Destination is a submit dir: %s" % dest)
+            dest = os.path.join(dest, os.path.basename(self.submitdir))
+
+        # Verify that we aren't trying to move a subworkflow
+        if self.is_subworkflow():
+            raise SubmitDirException("Subworkflows cannot be moved independent of the root workflow")
+
+        # Connect to master database
+        mdb = self.open_master_db()
+
+        # Get the workflow record from the master db
+        db_url = None
+        wf = mdb.get_master_workflow(self.wf_uuid)
+        if wf is None:
+            # No master db record
+
+            # Try looking in the workflow directory for workflow db
+            pegasus_wf_name = self.braindump["pegasus_wf_name"]
+            db_file = os.path.join(self.submitdir, pegasus_wf_name + ".stampede.db")
+            if os.path.isfile(db_file):
+                log.info("Found workflow db in submit dir: %s" % db_file)
+                db_url = "sqlite:///%s" % db_file
+            else:
+                # TODO Try looking at the pegasus properties configuration
+                log.warning("Unable to locate workflow database")
+                db_url = None
         else:
-            shutil.rmtree(path)
+            # We found an mdb record, so we need to update it
 
-def move(submitdir, dest):
-    submitdir = os.path.abspath(submitdir)
-    dest = os.path.abspath(dest)
+            # Save the master db's pointer
+            db_url = wf.db_url
 
-    if not os.path.isdir(submitdir):
-        raise SubmitDirException("Invalid submit dir: %s" % submitdir)
+            # Update the master db's db_url
+            # Note that this will only update the URL if it is an sqlite file
+            # located in the submitdir
+            log.info("Old master db_url: %s" % wf.db_url)
+            wf.db_url = db_url.replace(self.submitdir, dest)
+            log.info("New master db_url: %s" % wf.db_url)
 
-    if os.path.isfile(dest):
-        raise SubmitDirException("Destination is a file: %s" % dest)
+            # Change the master db's submit_dir
+            log.info("Old master submit_dir: %s" % wf.submit_dir)
+            wf.submit_dir = dest
+            log.info("New master submit_dir: %s" % wf.submit_dir)
 
-    if os.path.isdir(dest):
-        if os.path.exists(os.path.join(dest, "braindump.txt")):
-            raise SubmitDirException("Destination is a submit dir: %s" % dest)
-        dest = os.path.join(dest, os.path.basename(submitdir))
+        # Update the ensemble record if one exists
+        ew = mdb.get_ensemble_workflow(self.wf_uuid)
+        if ew is not None:
+            log.info("Old ensemble submit dir: %s", ew.submitdir)
+            ew.submitdir = dest
+            log.info("New ensemble submit dir: %s", ew.submitdir)
 
-    bd = os.path.join(submitdir, "braindump.txt")
-    if not os.path.isfile(bd):
-        raise SubmitDirException("Not a submit dir (no braindump.txt): %s" % submitdir)
+        # Update the workflow database if we found one
+        if db_url is not None:
+            db = Database(db_url)
+            root_wf = db.get_workflow(self.wf_uuid)
+            db.update_submit_dirs(root_wf.wf_id, self.submitdir, dest)
+            db.commit()
+            db.close()
 
-    # Read the braindump file
-    items = utils.read_braindump(bd)
-    wf_uuid = items["wf_uuid"]
-    root_wf_uuid = items["root_wf_uuid"]
+        # Move all the files
+        shutil.move(self.submitdir, dest)
 
-    # Verify that we aren't trying to move a subworkflow
-    if wf_uuid != root_wf_uuid:
-        raise SubmitDirException("Subworkflows cannot be moved independent of the root workflow")
+        # Set new paths in the braindump file
+        self.braindump["submit_dir"] = dest
+        self.braindump["basedir"] = os.path.dirname(dest)
+        utils.write_braindump(os.path.join(dest, "braindump.txt"), self.braindump)
 
-    # Confirm that the username matches
-    wf_user = items["user"]
-    os_user = getpass.getuser()
-    if wf_user != os_user:
-        raise SubmitDirException("Workflow username from braindump does not match current username: %s != %s" % (wf_user, os_user))
+        # TODO We might want to update all of the absolute paths in the condor submit files
+        # if we plan on moving workflows that could be resubmitted in the future
 
-    # Find the master db
-    u = user.get_user_by_username(wf_user)
-    mdb_file = u.get_master_db()
-    if not os.path.isfile(mdb_file):
-        raise SubmitDirException("Master database does not exist: %s" % mdb_file)
+        # TODO We might want to update the braindump files for subworkflows
 
-    # Connect to master database
-    mdb_url = u.get_master_db_url()
-    mdb = Database(mdb_url)
+        # Update master database
+        mdb.commit()
+        mdb.close()
 
-    # Get the workflow record from the master db
-    db_url = None
-    wf = mdb.get_master_workflow(wf_uuid)
-    if wf is None:
-        # No mdb record found to update
-        log.warning("No master db record found for this workflow: %s" % wf_uuid)
+        # Finally, update object
+        self.submitdir = dest
 
-        # Try looking in the workflow directory
-        pegasus_wf_name = items["pegasus_wf_name"]
-        db_file = os.path.join(submitdir, pegasus_wf_name + ".stampede.db")
-        if os.path.isfile(db_file):
-            log.info("Found workflow db in submit dir: %s" % db_file)
-            db_url = "sqlite:///%s" % db_file
-        else:
-            # TODO Try looking at the pegasus properties configuration
-            log.warning("Unable to locate workflow database")
-            db_url = None
-    else:
-        # We found an mdb record, so we need to update it
+    def delete(self):
+        "Delete this submit dir and its entry in the master db"
 
-        # Save the master db's pointer
-        db_url = wf.db_url
+        # Verify that we aren't trying to move a subworkflow
+        if self.is_subworkflow():
+            raise SubmitDirException("Subworkflows cannot be deleted independent of the root workflow")
 
-        # Update the master db's db_url
-        # Note that this will only update the URL if it is an sqlite file
-        # located in the submitdir
-        log.info("Old master db_url: %s" % wf.db_url)
-        wf.db_url = db_url.replace(submitdir, dest)
-        log.info("New master db_url: %s" % wf.db_url)
+        # Confirm that they want to delete the workflow
+        while True:
+            sys.stdout.write("Are you sure you want to delete this workflow? This operation cannot be undone. [y/n]: ")
+            answer = raw_input().strip().lower()
+            if answer == "y":
+                break
+            if answer == "n":
+                return
 
-        # Change the master db's submit_dir
-        log.info("Old master submit_dir: %s" % wf.submit_dir)
-        wf.submit_dir = dest
-        log.info("New master submit_dir: %s" % wf.submit_dir)
+        # Connect to master database
+        mdb = self.open_master_db()
 
-    # Update the ensemble record if one exists
-    ew = mdb.get_ensemble_workflow(wf_uuid)
-    if ew is not None:
-        log.info("Old ensemble submit dir: %s", ew.submitdir)
-        ew.submitdir = dest
-        log.info("New ensemble submit dir: %s", ew.submitdir)
+        # TODO We might want to delete all of the records from the workflow db
+        # if they are not using an sqlite db that is in the submit dir
 
-    # Update the workflow database if we found one
-    if db_url is not None:
-        db = Database(db_url)
-        root_wf = db.get_workflow(wf_uuid)
-        db.update_submit_dirs(root_wf.wf_id, submitdir, dest)
-        db.commit()
-        db.close()
+        # Delete the workflow
+        mdb.delete_master_workflow(self.wf_uuid)
 
-    # Move all the files
-    shutil.move(submitdir, dest)
+        # Remove all the files
+        shutil.rmtree(self.submitdir)
 
-    # Set new paths in the braindump file
-    items["submit_dir"] = dest
-    items["basedir"] = os.path.dirname(dest)
-    utils.write_braindump(os.path.join(dest, "braindump.txt"), items)
-
-    # TODO We might want to update all of the absolute paths in the condor submit files
-    # if we plan on moving workflows that could be resubmitted in the future
-
-    # TODO We might want to update the braindump files for subworkflows
-
-    # Update master database
-    mdb.commit()
-    mdb.close()
-
-def delete(submitdir):
-    submitdir = os.path.abspath(submitdir)
-
-    if not os.path.isdir(submitdir):
-        raise SubmitDirException("Invalid submit dir: %s" % submitdir)
-
-    bd = os.path.join(submitdir, "braindump.txt")
-    if not os.path.isfile(bd):
-        raise SubmitDirException("Not a submit dir (no braindump.txt): %s" % submitdir)
-
-    # Read the braindump file
-    items = utils.read_braindump(bd)
-    wf_uuid = items["wf_uuid"]
-    root_wf_uuid = items["root_wf_uuid"]
-
-    # Verify that we aren't trying to move a subworkflow
-    if wf_uuid != root_wf_uuid:
-        raise SubmitDirException("Subworkflows cannot be deleted independent of the root workflow")
-
-    # Confirm that the username matches
-    wf_user = items["user"]
-    os_user = getpass.getuser()
-    if wf_user != os_user:
-        raise SubmitDirException("Workflow username from braindump does not match current username: %s != %s" % (wf_user, os_user))
-
-    # Find the master db
-    u = user.get_user_by_username(wf_user)
-    mdb_file = u.get_master_db()
-    if not os.path.isfile(mdb_file):
-        raise SubmitDirException("Master database does not exist: %s" % mdb_file)
-
-    # Confirm that they want to delete the workflow
-    while True:
-        sys.stdout.write("Are you sure you want to delete this workflow? This operation cannot be undone. [y/n]: ")
-        answer = raw_input().strip().lower()
-        if answer == "y":
-            break
-        if answer == "n":
-            return
-
-    # Connect to master database
-    mdb_url = u.get_master_db_url()
-    mdb = Database(mdb_url)
-
-    # TODO We might want to delete all of the records from the workflow db
-    # if they are not using an sqlite db that is in the submit dir
-
-    # Delete the workflow
-    mdb.delete_master_workflow(wf_uuid)
-
-    # Remove all the files
-    shutil.rmtree(submitdir)
-
-    # Update master db
-    mdb.commit()
-    mdb.close()
+        # Update master db
+        mdb.commit()
+        mdb.close()
 
 class ExtractCommand(Command):
     description = "Extract (uncompress) submit directory"
@@ -321,7 +319,7 @@ class ExtractCommand(Command):
         if len(self.args) != 1:
             self.parser.error("Specify SUBMITDIR")
 
-        extract(self.args[0])
+        SubmitDir(self.args[0]).extract()
 
 class ArchiveCommand(Command):
     description = "Archive (compress) submit directory"
@@ -331,7 +329,7 @@ class ArchiveCommand(Command):
         if len(self.args) != 1:
             self.parser.error("Specify SUBMITDIR")
 
-        archive(self.args[0])
+        SubmitDir(self.args[0]).archive()
 
 class MoveCommand(Command):
     description = "Move a submit directory"
@@ -341,7 +339,7 @@ class MoveCommand(Command):
         if len(self.args) != 2:
             self.parser.error("Specify SUBMITDIR and DEST")
 
-        move(self.args[0], self.args[1])
+        SubmitDir(self.args[0]).move(self.args[1])
 
 class DeleteCommand(Command):
     description = "Delete a submit directory and the associated DB entries"
@@ -351,7 +349,7 @@ class DeleteCommand(Command):
         if len(self.args) != 1:
             self.parser.error("Specify SUBMITDIR")
 
-        delete(self.args[0])
+        SubmitDir(self.args[0]).delete()
 
 class SubmitDirCommand(CompoundCommand):
     description = "Manages submit directories"
@@ -370,6 +368,6 @@ class SubmitDirCommand(CompoundCommand):
 
 def main():
     "The entry point for pegasus-submitdir"
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     SubmitDirCommand().main()
 

@@ -4,9 +4,6 @@ from sqlalchemy import create_engine, orm, event
 from sqlalchemy.engine import Engine
 from sqlite3 import Connection as SQLite3Connection
 
-from Pegasus.db import schema
-#from Pegasus.db.errors import StampedeDBNotFoundError
-
 __all__ = ['connect']
 
 log = logging.getLogger(__name__)
@@ -24,6 +21,8 @@ def connect(dburi, echo=False):
     engine = create_engine(dburi, echo=echo, pool_recycle=True)
 
     # Create all the tables if they don't exist
+    # FIXME This should actually happen in the pegasus-db-admin tool
+    from Pegasus.db import schema
     schema.metadata.create_all(engine)
 
     Session = orm.sessionmaker(bind=engine, autoflush=False, autocommit=False,
