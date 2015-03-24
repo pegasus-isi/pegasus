@@ -99,7 +99,7 @@ class AdminDB(object):
         """ Get MASTER URI """
         props = properties.Properties()
         props.new(config_file=config_properties)
-        return props.property('pegasus.monitord.output')
+        return props.property('pegasus.catalog.master.url')
     
     
     def _get_workflow_uri(self, config_properties=None):
@@ -107,7 +107,7 @@ class AdminDB(object):
         if config_properties:
             props = properties.Properties()
             props.new(config_file=config_properties)
-            dburi = props.property('pegasus.dashboard.output')
+            dburi = props.property('pegasus.catalog.workflow.url')
             if dburi:
                 return dburi
     
