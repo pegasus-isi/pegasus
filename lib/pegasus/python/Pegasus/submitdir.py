@@ -368,6 +368,6 @@ class SubmitDirCommand(CompoundCommand):
 
 def main():
     "The entry point for pegasus-submitdir"
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     SubmitDirCommand().main()
 
