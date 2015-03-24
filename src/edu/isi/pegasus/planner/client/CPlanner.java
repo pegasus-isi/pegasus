@@ -20,12 +20,14 @@ package edu.isi.pegasus.planner.client;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LoggingKeys;
+
+import edu.isi.pegasus.planner.common.PegasusDBAdmin;
 import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
 import edu.isi.pegasus.common.util.FactoryException;
-import edu.isi.pegasus.common.util.FindExecutable;
 import edu.isi.pegasus.common.util.StreamGobbler;
-import edu.isi.pegasus.common.util.StreamGobblerCallback;
 import edu.isi.pegasus.common.util.Version;
+
+
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
 import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
 import edu.isi.pegasus.planner.catalog.site.SiteFactory;
@@ -576,6 +578,13 @@ public class CPlanner extends Executable{
             }
 
             state++;
+            
+            //PM-778 set various properties for pegasus-db-admin
+            //only for top level workflow
+            if( !mPOptions.partOfDeferredRun() ){
+                PegasusDBAdmin.updateProperties( mBag, orgDag );
+            }
+            
             mProps.writeOutProperties( mPOptions.getSubmitDirectory() );
 
             mPMetrics.setRelativeSubmitDirectory( mPOptions.getRelativeSubmitDirectory() );
@@ -677,7 +686,7 @@ public class CPlanner extends Executable{
             mLogger.logEventCompletion();
         }
 
-        checkForDatabaseCompatibility( mPOptions.getSubmitDirectory() );
+        checkMasterDatabaseForVersionCompatibility();
         
         if ( mPOptions.submitToScheduler() ) {//submit the jobs
             StringBuffer invocation = new StringBuffer();
@@ -1859,61 +1868,10 @@ public class CPlanner extends Executable{
      * 
      * @param submitDirectory  the submit directory created by the planner
      */
-    private void checkForDatabaseCompatibility(String submitDirectory ) {
-        //find path to pegasus-db-admin
-        String basename = "pegasus-db-admin";
-        File pegasusDBAdmin = FindExecutable.findExec( basename );
-        if( pegasusDBAdmin == null ){
-            throw new RuntimeException( "Unable to find path to " + basename );
-        }
+    private void checkMasterDatabaseForVersionCompatibility() {
+        PegasusDBAdmin dbCheck = new PegasusDBAdmin( mBag );
         
-        //construct arguments for pegasus-db-admin
-        StringBuffer args = new StringBuffer();
-        args.append( "check" );
-        args.append( " " ).append( submitDirectory );
-        String command = pegasusDBAdmin.getAbsolutePath() + " " + args;
-        mLogger.log("Executing  " + command,
-                         LogManager.DEBUG_MESSAGE_LEVEL );
-            
-        
-        try{
-            //set the callback and run the pegasus-run command
-            Runtime r = Runtime.getRuntime();
-            Process p = r.exec(command );
-
-            //spawn off the gobblers with the already initialized default callback
-            StreamGobbler ips =
-                new StreamGobbler( p.getInputStream(), new DefaultStreamGobblerCallback(
-                                                                   LogManager.CONSOLE_MESSAGE_LEVEL ));
-            StreamGobbler eps =
-                new StreamGobbler( p.getErrorStream(), new DefaultStreamGobblerCallback(
-                                                             LogManager.ERROR_MESSAGE_LEVEL));
-
-            ips.start();
-            eps.start();
-
-            //wait for the threads to finish off
-            ips.join();
-            eps.join();
-
-            //get the status
-            int status = p.waitFor();
-
-            mLogger.log( basename + " exited with status " + status,
-                         LogManager.DEBUG_MESSAGE_LEVEL );
-
-            if( status != 0 ){
-                throw new RuntimeException( basename + " failed with non zero exit status " + command );
-            }
-        }
-        catch(IOException ioe){
-            mLogger.log("IOException while executing " + basename, ioe,
-                        LogManager.ERROR_MESSAGE_LEVEL);
-            throw new RuntimeException( "IOException while executing " + command , ioe );
-        }
-        catch( InterruptedException ie){
-            //ignore
-        }
+        dbCheck.checkMasterDatabaseForVersionCompatibility();
     }
 
     

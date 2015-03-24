@@ -293,9 +293,6 @@ public class Braindump {
                  //append( "dag " ).append(dagFile).append("\n").
         entries.put( Braindump.SUBMIT_DIR_KEY, absPath );
         
-        //the properties file
-        entries.put( Braindump.PROPERTIES_KEY, new File( mProps.getPropertiesInSubmitDirectory() ).getName() );
-        
         //information about the planner
         StringBuffer planner = new StringBuffer();
         planner.append( mProps.getBinDir() ).append( File.separator ).append( "pegasus-plan" );
@@ -349,7 +346,11 @@ public class Braindump {
         try {
 
             Collection<File> result = new LinkedList();
-            result.add(writeOutBraindumpFile(this.defaultBrainDumpEntries(dag)));
+            
+            Map entries = this.defaultBrainDumpEntries(dag);
+            //add the location of the properties file
+            entries.put( Braindump.PROPERTIES_KEY, new File( mProps.getPropertiesInSubmitDirectory() ).getName() );
+            result.add(writeOutBraindumpFile( entries) );
             return result;
         } catch (IOException ioe) {
             throw new CodeGeneratorException( "IOException while writing out the braindump file" ,
