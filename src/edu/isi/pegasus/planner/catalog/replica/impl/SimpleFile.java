@@ -51,7 +51,7 @@ import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
  * concurrent instances <b>will clobber</b> each other!<p>
  * <p/>
  * The site attribute should be specified whenever possible. The
- * attribute key for the site attribute is "pool". For the shell
+ * attribute key for the site attribute is "site". For the shell
  * planner, its value will always be "local".<p>
  * <p/>
  * The class is permissive in what inputs it accepts. The LFN may or may
@@ -303,8 +303,11 @@ public class SimpleFile implements ReplicaCatalog {
             return false;
         } else {
             // valid entry
-            if (state == 16)
-                insert(lfn, new ReplicaCatalogEntry(pfn, attr));
+            if (state == 16){
+                ReplicaCatalogEntry rce = new ReplicaCatalogEntry(pfn, attr);
+                rce.checkAndUpdateForPoolAttribute();
+                insert(lfn, rce );
+            }
             return true;
         }
     }

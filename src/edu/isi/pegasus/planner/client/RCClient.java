@@ -16,18 +16,13 @@
 
 package edu.isi.pegasus.planner.client;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -545,7 +540,7 @@ public class RCClient extends Toolkit {
 				    unescape(noquote(attr.substring(pos + 1))));
 			}
 		    }
-
+                    rce.checkAndUpdateForPoolAttribute();
 		    // check to see if the lfn is already there
 		    // not doing a contains check as most of
 		    // the times lfn is expected to be unique

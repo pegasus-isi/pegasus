@@ -40,7 +40,12 @@ public class ReplicaCatalogEntry implements CatalogEntry, Cloneable
   /**
    * The (reserved) attribute name used for the resource handle.
    */
-  public static final String RESOURCE_HANDLE = "pool";
+  public static final String RESOURCE_HANDLE = "site";
+  
+  /**
+   * The (reserved) attribute name used for the resource handle.
+   */
+  public static final String DEPRECATED_RESOURCE_HANDLE = "pool";
 
   /**
    * The physical filename.
@@ -101,6 +106,7 @@ public class ReplicaCatalogEntry implements CatalogEntry, Cloneable
   {
     m_pfn  = pfn;
     m_attributeMap = new TreeMap(attributes);
+    this.checkAndUpdateForPoolAttribute();
   }
 
   /**
@@ -299,7 +305,11 @@ public class ReplicaCatalogEntry implements CatalogEntry, Cloneable
    */
   public String getResourceHandle()
   {
-    return (String) this.m_attributeMap.get( RESOURCE_HANDLE );
+    String site = (String) this.m_attributeMap.get( RESOURCE_HANDLE );
+    
+    return (site == null )? 
+                (String) this.m_attributeMap.get( DEPRECATED_RESOURCE_HANDLE ):
+                site;
   }
 
   /**
@@ -420,4 +430,20 @@ public class ReplicaCatalogEntry implements CatalogEntry, Cloneable
 
 	  return r;
   }
+
+    /**
+     * Checks to see if pool attribute is specified. If specified it is set as the site attribute. 
+     * In case both are specified an exception is thrown
+     * 
+     */
+    public final void checkAndUpdateForPoolAttribute() {
+        if( m_attributeMap.containsKey( ReplicaCatalogEntry.DEPRECATED_RESOURCE_HANDLE ) ){
+            String pool = (String) m_attributeMap.remove( ReplicaCatalogEntry.DEPRECATED_RESOURCE_HANDLE );
+            //PM-813 update the site attribute with the pool value
+            if( m_attributeMap.containsKey( ReplicaCatalogEntry.RESOURCE_HANDLE) ){
+                throw new RuntimeException( "Both site and pool attribute specified for entry " + this );
+            }
+            m_attributeMap.put( ReplicaCatalogEntry.RESOURCE_HANDLE, pool );
+        }
+    }
 }
