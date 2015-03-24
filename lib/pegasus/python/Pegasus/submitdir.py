@@ -3,7 +3,6 @@ import glob
 import tarfile
 import shutil
 import logging
-import getpass
 from optparse import OptionParser
 
 
@@ -94,10 +93,6 @@ class SubmitDir(object):
 
     def open_master_db(self):
         "Connect to master database"
-        os_user = getpass.getuser()
-        if os_user != self.user:
-            raise SubmitDirException("Unable to open master DB: Workflow username from braindump does not match current username: %s != %s" % (self.user, os_user))
-
         u = user.get_user_by_username(self.user)
 
         mdb_file = u.get_master_db()
