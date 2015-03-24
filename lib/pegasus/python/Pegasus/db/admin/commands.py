@@ -2,7 +2,7 @@ __author__ = "Rafael Ferreira da Silva"
 
 import logging
 
-from Pegasus.command import LoggingCommand, CompoundCommand
+from Pegasus.command import Command, CompoundCommand
 from Pegasus.db.admin.admin_loader import *
 from Pegasus.db.admin.versions import *
 
@@ -23,7 +23,7 @@ def set_log_level(debug):
 
 
 # ------------------------------------------------------
-class CreateCommand(LoggingCommand):
+class CreateCommand(Command):
     description = "Create Pegasus databases."
     usage = "Usage: %prog create [options] [DATABASE_URL]"
     
@@ -44,7 +44,7 @@ class CreateCommand(LoggingCommand):
     
     
 # ------------------------------------------------------
-class DowngradeCommand(LoggingCommand):
+class DowngradeCommand(Command):
     description = "Downgrade the database version."
     usage = "Usage: %prog downgrade [options] [DATABASE_URL]"
 
@@ -82,7 +82,7 @@ class DowngradeCommand(LoggingCommand):
 
 
 # ------------------------------------------------------
-class UpdateCommand(LoggingCommand):
+class UpdateCommand(Command):
     description = "Update the database to a specific version."
     usage = "Usage: %prog update [options] [DATABASE_URL]"
     
@@ -120,7 +120,7 @@ class UpdateCommand(LoggingCommand):
     
     
 # ------------------------------------------------------
-class CheckCommand(LoggingCommand):
+class CheckCommand(Command):
     description = "Verify if the database is updated to the latest or a given version."
     usage = "Usage: %prog check [options] [DATABASE_URL]"
 
@@ -153,7 +153,7 @@ class CheckCommand(LoggingCommand):
     
     
 # ------------------------------------------------------
-class VersionCommand(LoggingCommand):
+class VersionCommand(Command):
     description = "Print the current version of the database."
     usage = "Usage: %prog version [options] [DATABASE_URL]"
 
