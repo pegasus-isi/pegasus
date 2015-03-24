@@ -15,14 +15,6 @@ log = logging.getLogger(__name__)
 
 EM_PORT = os.getuid() + 7919
 
-def add_ensemble_option(self):
-    self.parser.add_option("-e", "--ensemble", action="store", dest="ensemble",
-        default=None, help="Ensemble name")
-
-def add_workflow_option(self):
-    self.parser.add_option("-w", "--workflow", action="store", dest="workflow",
-        default=None, help="Workflow name")
-
 class EnsembleClientCommand(Command):
     def __init__(self):
         Command.__init__(self)
