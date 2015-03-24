@@ -97,7 +97,7 @@ public class SimpleFile implements ReplicaCatalog {
     /**
      * Maintains a memory slurp of the file representation.
      */
-    protected Map m_lfn = null;
+    protected Map<String, Collection<ReplicaCatalogEntry>> m_lfn = null;
 
     /**
      * A boolean indicating whether the catalog is read only or not.
@@ -887,9 +887,8 @@ public class SimpleFile implements ReplicaCatalog {
      * Deletes multiple mappings into the replica catalog. The input is a
      * map indexed by the LFN. The value for each LFN key is a collection
      * of replica catalog entries. On setting matchAttributes to false, all entries
-     * having matching lfn pfn mapping to an entry in the Map are deleted.
-     * However, upon removal of an entry, all attributes associated with the pfn
-     * also evaporate (cascaded deletion).
+     * having matching lfn pfn and site mapping to an entry in the Map are deleted.
+     * 
      *
      * @param x               is a map from logical filename string to list of
      *                        replica catalog entries.
@@ -898,8 +897,26 @@ public class SimpleFile implements ReplicaCatalog {
      * @return the number of deletions.
      * @see ReplicaCatalogEntry
      */
-    public int delete( Map x, boolean matchAttributes ) {
-        throw new java.lang.UnsupportedOperationException("delete(Map,boolean) not implemented as yet");
+    public int delete( Map<String, Collection<ReplicaCatalogEntry>> x, boolean matchAttributes ) {
+        int result = 0;
+        if( matchAttributes ){
+            for (Map.Entry<String, Collection<ReplicaCatalogEntry>> entry: x.entrySet()){
+                String lfn = entry.getKey();
+                for( ReplicaCatalogEntry rce: entry.getValue() ){
+                    result += this.delete(lfn, rce);
+                }
+            }
+        }
+        else{
+            for (Map.Entry<String, Collection<ReplicaCatalogEntry>> entry: x.entrySet()){
+                String lfn = entry.getKey();
+                for( ReplicaCatalogEntry rce: entry.getValue() ){
+                    //only match for site attribute
+                    result += this.delete(lfn, new ReplicaCatalogEntry( rce.getPFN(), rce.getResourceHandle()));
+                }
+            }
+        }
+        return result;
     }
 
     /**
