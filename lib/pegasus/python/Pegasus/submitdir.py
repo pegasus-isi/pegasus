@@ -8,7 +8,7 @@ from optparse import OptionParser
 
 from Pegasus.db import connection
 from Pegasus.tools import utils
-from Pegasus.command import Command, CompoundCommand
+from Pegasus.command import LoggingCommand, CompoundCommand
 from Pegasus.db.schema import *
 
 log = logging.getLogger(__name__)
@@ -301,7 +301,7 @@ class SubmitDir(object):
         mdbsession.commit()
         mdbsession.close()
 
-class ExtractCommand(Command):
+class ExtractCommand(LoggingCommand):
     description = "Extract (uncompress) submit directory"
     usage = "Usage: %prog extract SUBMITDIR"
 
@@ -311,7 +311,7 @@ class ExtractCommand(Command):
 
         SubmitDir(self.args[0]).extract()
 
-class ArchiveCommand(Command):
+class ArchiveCommand(LoggingCommand):
     description = "Archive (compress) submit directory"
     usage = "Usage: %prog archive SUBMITDIR"
 
@@ -321,7 +321,7 @@ class ArchiveCommand(Command):
 
         SubmitDir(self.args[0]).archive()
 
-class MoveCommand(Command):
+class MoveCommand(LoggingCommand):
     description = "Move a submit directory"
     usage = "Usage: %prog move SUBMITDIR DEST"
 
@@ -331,7 +331,7 @@ class MoveCommand(Command):
 
         SubmitDir(self.args[0]).move(self.args[1])
 
-class DeleteCommand(Command):
+class DeleteCommand(LoggingCommand):
     description = "Delete a submit directory and the associated DB entries"
     usage = "Usage: %prog delete SUBMITDIR"
 
@@ -358,6 +358,5 @@ class SubmitDirCommand(CompoundCommand):
 
 def main():
     "The entry point for pegasus-submitdir"
-    logging.basicConfig(level=logging.INFO)
     SubmitDirCommand().main()
 
