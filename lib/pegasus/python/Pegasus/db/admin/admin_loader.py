@@ -50,7 +50,7 @@ class AdminDB(object):
                     raise RuntimeError("Invalid database type '%s'." % db_type)
                 
             else:
-                dburi = self._get_workflow_uri()
+                dburi = self._get_master_uri()
                 
         if dburi:
             log.debug("Using database: %s" % dburi)
@@ -95,11 +95,24 @@ class AdminDB(object):
         return None
     
     
-    def _get_master_uri(self, config_properties):
+    def _get_master_uri(self, config_properties=None):
         """ Get MASTER URI """
-        props = properties.Properties()
-        props.new(config_file=config_properties)
-        return props.property('pegasus.catalog.master.url')
+        if config_properties:
+            props = properties.Properties()
+            props.new(config_file=config_properties)
+            dburi = props.property('pegasus.catalog.master.url')
+            if dburi:
+                return dburi
+            dburi = props.property('pegasus.dashboard.output')
+            if dburi:
+                return dburi
+        
+        homedir = os.getenv("HOME", None)
+        dburi = os.path.join(homedir, ".pegasus", "workflow.db")
+        pegasusDir = os.path.dirname(dburi)
+        if not os.path.exists(pegasusDir):
+            os.mkdir(pegasusDir)
+        return "sqlite:///" + dburi
     
     
     def _get_workflow_uri(self, config_properties=None):
@@ -110,13 +123,10 @@ class AdminDB(object):
             dburi = props.property('pegasus.catalog.workflow.url')
             if dburi:
                 return dburi
-    
-        homedir = os.getenv("HOME", None)
-        dburi = os.path.join(homedir, ".pegasus", "workflow.db")
-        pegasusDir = os.path.dirname(dburi)
-        if not os.path.exists(pegasusDir):
-            os.mkdir(pegasusDir)
-        return "sqlite:///" + dburi
+            dburi = props.property('pegasus.monitord.output')
+            if dburi:
+                return dburi
+        return None
 
 
 ################################################################################
