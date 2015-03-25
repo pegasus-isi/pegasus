@@ -20,6 +20,7 @@ package edu.isi.pegasus.planner.code.generator.condor.style;
 import java.io.File;
 
 import edu.isi.pegasus.common.credential.CredentialHandlerFactory;
+import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -64,7 +65,7 @@ public class Condor extends Abstract {
     public static final String TRANSFER_EXECUTABLE_KEY =
                          edu.isi.pegasus.planner.namespace.Condor.TRANSFER_EXECUTABLE_KEY;
 
-    //
+    public static final String EMPTY_TRANSFER_OUTPUT_KEY = "+TransferOutput";
 
     /**
      * The name of the style being implemented.
@@ -237,9 +238,20 @@ public class Condor extends Abstract {
                 job.condorVariables.construct("when_to_transfer_output",
                                               "ON_EXIT");
             }
-            //isGlobus = false;
             
             applyCredentialsForRemoteExec(job);
+            
+            //PM-820 inspect the job to check if it has 
+            //transfer_output_files specified and that is not empty
+            String condorOutputTransfers = job.condorVariables.getOutputFilesForTransfer();
+            if ( condorOutputTransfers != null && condorOutputTransfers.isEmpty() ){
+                //add +TransferOutput instead of transfer_output_files
+                job.condorVariables.removeOutputFilesForTransfer();
+                job.condorVariables.construct( EMPTY_TRANSFER_OUTPUT_KEY, "" );
+                mLogger.log( "Added empty " + EMPTY_TRANSFER_OUTPUT_KEY + " key for job " + job.getID() ,
+                             LogManager.DEBUG_MESSAGE_LEVEL );
+            }
+            
         }
         else if(universe.equalsIgnoreCase(Condor.SCHEDULER_UNIVERSE) || universe.equalsIgnoreCase( Condor.LOCAL_UNIVERSE )){
 
