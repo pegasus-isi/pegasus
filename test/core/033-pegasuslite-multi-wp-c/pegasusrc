@@ -10,4 +10,4 @@ pegasus.condor.logs.symlink = false
 # site condorpool
 # pegasus.transfer.worker.package true
 
-pegasus.metrics.app bamboo
+
