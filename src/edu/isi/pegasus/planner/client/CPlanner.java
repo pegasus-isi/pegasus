@@ -1863,8 +1863,8 @@ public class CPlanner extends Executable{
      * @param submitDirectory  the submit directory created by the planner
      */
     private void checkMasterDatabaseForVersionCompatibility() {
-        PegasusDBAdmin dbCheck = new PegasusDBAdmin( mBag );
-        dbCheck.checkMasterDatabaseForVersionCompatibility();
+        PegasusDBAdmin dbCheck = new PegasusDBAdmin( mBag.getLogger() );
+        dbCheck.checkMasterDatabaseForVersionCompatibility( mProps.getPropertiesInSubmitDirectory() );
     }
 
     

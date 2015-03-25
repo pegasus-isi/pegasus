@@ -22,6 +22,7 @@ import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.util.CommonProperties;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
+import edu.isi.pegasus.planner.common.PegasusDBAdmin;
 import java.sql.*;
 import java.util.*;
 import org.sqlite.SQLiteConfig;
@@ -251,7 +252,7 @@ public class JDBCRC implements ReplicaCatalog
    * @see #JDBCRC( String, String, String, String )
    * @see java.sql.DriverManager#getConnection( String, String, String )
    */
-  public void connect( String url, String username, String password )
+  private void connect( String url, String username, String password )
     throws SQLException
   {
     // establish connection to database generically
@@ -290,6 +291,13 @@ public class JDBCRC implements ReplicaCatalog
   public boolean connect( Properties props ){
 
       boolean result = false;
+      
+      String propertiesFile = (String) props.remove( "properties.file" );
+      if( propertiesFile != null ){
+          PegasusDBAdmin check = new PegasusDBAdmin( mLogger );
+          check.checkJDBCRCForCompatibility(propertiesFile);
+      }
+      
         // class loader: Will propagate any runtime errors!!!
         String driver = (String) props.remove("db.driver");
 

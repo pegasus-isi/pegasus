@@ -219,6 +219,7 @@ public class RCClient extends Toolkit {
     	m_log = Logger.getLogger(RCClient.class);
     	String propertyFile =lookupConfProperty(opts, confChar);
         m_pegasus_props = PegasusProperties.getInstance(propertyFile);
+        m_conf_property_file = propertyFile;
     	m_rls_logger = LogManagerFactory.loadSingletonInstance(m_pegasus_props);
     	m_rls_logger.setLevel(Level.WARN);
     	m_rls_logger.logEventStart("pegasus-rc-client", "planner.version",
@@ -337,13 +338,13 @@ public class RCClient extends Toolkit {
      * @exception IOException
      * @exception MissingResourceException
      * 
-     * @see org.griphyn.vdl.util.ChimeraProperties
      */
-    void connect(PegasusProperties properties ) throws ClassNotFoundException, IOException,
+    void connect(PegasusProperties properties, String file ) throws ClassNotFoundException, IOException,
 	    NoSuchMethodException, InstantiationException,
 	    IllegalAccessException, InvocationTargetException,
 	    MissingResourceException {
-    m_rc = ReplicaFactory.loadInstance(properties);
+  
+        m_rc = ReplicaFactory.loadInstance(properties, file);
 
 	// auto-disconnect, should we forget it, or die in an orderly fashion
 	Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -1038,7 +1039,7 @@ public class RCClient extends Toolkit {
 	    // Set verbosity level
 	    me.setLevel(level);
 	    // now work with me
-	    me.connect(me.m_pegasus_props);
+	    me.connect(me.m_pegasus_props, me.m_conf_property_file );
 	    RCClient.log(Level.DEBUG, "connected to backend");
 	    // are there any remaining CLI arguments?
 	    if (opts.getOptind() < args.length) {

@@ -104,12 +104,11 @@ public class PegasusDBAdmin {
     private PegasusProperties mProps;
     
     public PegasusDBAdmin(){
-        mLogger = LogManagerFactory.loadSingletonInstance();
+        this( LogManagerFactory.loadSingletonInstance() );
     }
     
-    public PegasusDBAdmin( PegasusBag bag ){
-        mLogger = bag.getLogger();
-        mProps  = bag.getPegasusProperties();
+    public PegasusDBAdmin( LogManager logger ){
+        mLogger = logger;
     }
     
     /**
@@ -117,10 +116,23 @@ public class PegasusDBAdmin {
      * 
      * @return 
      */
-    public boolean checkMasterDatabaseForVersionCompatibility() {
+    public boolean checkMasterDatabaseForVersionCompatibility( String propertiesFile ) {
         StringBuilder arguments = new StringBuilder();
         arguments.append( "-t master " ).
-                  append( "-c " ).append( mProps.getPropertiesInSubmitDirectory() );
+                  append( "-c " ).append( propertiesFile );
+
+        return this.checkDatabase( arguments.toString() );
+    }
+    
+    /**
+     * Calls out to the pegasus-db-admin tool to check for jdbrc compatibility.
+     * 
+     * @return 
+     */
+    public boolean checkJDBCRCForCompatibility( String propertiesFile ) {
+        StringBuilder arguments = new StringBuilder();
+        arguments.append( "-t jdbcrc " ).
+                  append( "-c " ).append( propertiesFile );
 
         return this.checkDatabase( arguments.toString() );
     }
