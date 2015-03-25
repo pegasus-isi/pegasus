@@ -243,8 +243,10 @@ public class Condor extends Abstract {
             
             //PM-820 inspect the job to check if it has 
             //transfer_output_files specified and that is not empty
+            //s_t_f is specified and no t_o_f specified
             String condorOutputTransfers = job.condorVariables.getOutputFilesForTransfer();
-            if ( condorOutputTransfers != null && condorOutputTransfers.isEmpty() ){
+            if ( ( condorOutputTransfers != null || job.condorVariables.containsKey( "should_transfer_files") ) &&
+                 ( condorOutputTransfers == null || condorOutputTransfers.isEmpty() ) ){
                 //add +TransferOutput instead of transfer_output_files
                 job.condorVariables.removeOutputFilesForTransfer();
                 job.condorVariables.construct( EMPTY_TRANSFER_OUTPUT_KEY, "" );
