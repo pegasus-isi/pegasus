@@ -30,8 +30,8 @@ cat > sites.xml <<EOF
                 <file-server  operation="all" url="file://$TOPDIR/outputs">
                 </file-server>
         </directory>
-        <directory  path="$TOPDIR/work" type="shared-scratch" free-size="" total-size="">
-                <file-server  operation="all" url="file://$TOPDIR/work">
+        <directory  path="$TOPDIR/work/local/shared-scratch" type="shared-scratch" free-size="" total-size="">
+                <file-server  operation="all" url="file://$TOPDIR/work/local/shared-scratch">
                 </file-server>
         </directory>
 </site>
@@ -48,7 +48,7 @@ EOF
 pegasus-plan \
     --conf pegasusrc \
     --sites condorpool \
-    --dir work \
+    --dir work/dags \
     --dax dax.xml \
     --cleanup none \
      | tee $TOPDIR/plan.out
