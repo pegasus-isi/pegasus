@@ -34,9 +34,11 @@ def connect_to_master_db(user=None):
 def connect(dburi, echo=False, schema_check=True, create=False):
     engine = create_engine(dburi, echo=echo, pool_recycle=True)
 
-    if create:
-        from Pegasus.db import schema
-        schema.metadata.create_all(engine)
+#    if create:
+#        from Pegasus.db import schema
+#        schema.metadata.create_all(engine)
+    from Pegasus.db import schema
+    schema.metadata.create_all(engine)
 
     Session = orm.sessionmaker(bind=engine, autoflush=False, autocommit=False,
                                expire_on_commit=False)
