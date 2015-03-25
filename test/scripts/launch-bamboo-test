@@ -27,6 +27,7 @@ PLANFILE=`mktemp plan.XXXXXX`
 
 #add common properties to pegasusrc
 if [ -e pegasusrc ]; then
+    echo "" >> pegasusrc
     cat ../common.properties >> pegasusrc
 else
     echo "ERROR Test $TEST not setup with pegasusrc file"
