@@ -25,6 +25,14 @@ pwd
 
 PLANFILE=`mktemp plan.XXXXXX`
 
+#add common properties to pegasusrc
+if [ -e pegasusrc ]; then
+    cat ../common.properties >> pegasusrc
+else
+    echo "ERROR Test $TEST not setup with pegasusrc file"
+    exit 1
+fi
+
 #Launch the test
 ./run-bamboo-test "$@" | tee $PLANFILE
 
