@@ -35,7 +35,7 @@ cat > sites.xml <<EOF
                 </file-server>
         </directory>
 </site>
-<site  handle="condorpool" arch="x86" os="LINUX" osrelease="" osversion="" glibc="">
+<site  handle="condorpool" arch="x86_64" os="LINUX" osrelease="" osversion="" glibc="">
         <profile namespace="condor" key="universe" >vanilla</profile>
         <profile namespace="pegasus" key="style" >condor</profile>
 </site>
@@ -46,7 +46,7 @@ EOF
 
 # plan the  workflow
 pegasus-plan \
-    --conf pegasus.conf \
+    --conf pegasusrc \
     --sites condorpool \
     --dir work \
     --dax dax.xml \
@@ -57,16 +57,10 @@ pegasus-plan \
 WORK_DIR=`cat plan.out | grep pegasus-run | sed -E 's/.*pegasus-run[ ]+//'`
 
 #check if planner did the right thing
-if [ ls "$WORK_DIR/stage_in_remote_*in" 1> /dev/null 2>&1 ]; then
-    echo "Planner did not create any remote stagein jobs"
-    exit 1
-fi
-
 set +e
 grep +TransferOutput *sub | grep -v test.sh_ID0000001 1> /dev/null 2>&1
 EC=$?
 set -e
-
 
 if [ $EC -eq 0 ]; then
     echo "+TransferOutput should be associated only with the compute job in the DAX test.sh_ID0000001"
