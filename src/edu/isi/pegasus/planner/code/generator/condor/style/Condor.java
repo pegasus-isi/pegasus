@@ -249,7 +249,7 @@ public class Condor extends Abstract {
                  ( condorOutputTransfers == null || condorOutputTransfers.isEmpty() ) ){
                 //add +TransferOutput instead of transfer_output_files
                 job.condorVariables.removeOutputFilesForTransfer();
-                job.condorVariables.construct( EMPTY_TRANSFER_OUTPUT_KEY, "" );
+                job.condorVariables.construct( EMPTY_TRANSFER_OUTPUT_KEY, "\"\"" );
                 mLogger.log( "Added empty " + EMPTY_TRANSFER_OUTPUT_KEY + " key for job " + job.getID() ,
                              LogManager.DEBUG_MESSAGE_LEVEL );
             }
