@@ -161,13 +161,6 @@ public class Condor extends Abstract {
      */
     public void apply(Job job) throws CondorStyleException{
 
-        //mLogger.log( "Credentials required for job " + job.getID() + " "  + job.getCredentialTypes() ,
-         //            LogManager.DEBUG_MESSAGE_LEVEL );
-
-        //           Removed for JIRA PM-543
-//      String execSiteWorkDir = mSiteStore.getInternalWorkDirectory(job);
-//        String workdir = (String) job.globusRSL.removeKey("directory"); // returns old value
-//        workdir = (workdir == null)?execSiteWorkDir:workdir;
         String workdir = job.getDirectory();
 
         String defaultUniverse = job.getSiteHandle().equalsIgnoreCase("local")?
@@ -263,51 +256,7 @@ public class Condor extends Abstract {
                         job.condorVariables.construct("initialdir", workdir);
                     }
                 }
-
-
-
                 wrapJobWithLocalPegasusLite( job );
-
-                /*
-                if( this.mPegasusLiteEnabled ){
-                    //wrap the job with local pegasus lite wrapped job
-                    //to work around the Condor IO bug for PegasusLite
-                    //PM-542
-                    wrapJobWithLocalPegasusLite( job );
-                }
-                else{
-                    //do same as earlier for time being.
-                
-                    //check explicitly for any input files transferred via condor
-                    //file transfer mechanism
-                    if( ipFiles != null ){
-                        //log a debug message before removing the files
-                        StringBuffer sb = new StringBuffer();
-                        sb.append( "Removing the following ip files from condor file tx for job " ).
-                           append( job.getID() ).append( " " ).append( ipFiles );
-                        mLogger.log(  sb.toString(), LogManager.DEBUG_MESSAGE_LEVEL );
-                        job.condorVariables.removeIPFilesForTransfer();
-                    }
-                
-                    //check for transfer_executable and remove if set
-                    //transfer_executable does not work in local/scheduler universe
-                    if( job.condorVariables.containsKey( Condor.TRANSFER_EXECUTABLE_KEY )){
-                        job.condorVariables.removeKey( Condor.TRANSFER_EXECUTABLE_KEY );
-                        job.condorVariables.removeKey( "should_transfer_files" );
-                        job.condorVariables.removeKey( "when_to_transfer_output" );
-                    }
-                
-                    //for local or scheduler universe we never should have
-                    //should_transfer_file or w_t_f
-                    //the keys can appear if a user in site catalog for local sites
-                    //specifies these keys for the vanilla universe jobs
-                    if( job.condorVariables.containsKey( "should_transfer_files" ) ||
-                        job.condorVariables.containsKey( "when_to_transfer_output" )){
-                        job.condorVariables.removeKey( "should_transfer_files" );
-                        job.condorVariables.removeKey( "when_to_transfer_output" );
-                    }
-                }
-                */
                 applyCredentialsForLocalExec(job);
         }
         else{
