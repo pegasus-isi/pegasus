@@ -50,22 +50,23 @@ you get this</programlisting>
     appendix for the platform you are using and follow the instructions for
     starting the VM found there before continuing with this tutorial.</para>
 
-    <para><emphasis role="bold">Advanced Users:</emphasis> If you have installed
-    Pegasus and Condor on your own machine, then you don't need to use the VM for
-    the tutorial. If you installed Pegasus from one of the native packages
-    (RPM, DEB, DMG), then you can find the tutorial files in <filename>
-    /usr/share/doc/pegasus/tutorial</filename>. If you installed a binary
-    tarball, or compiled Pegasus from source, then you can find the tutorial
-    files in <filename>PEGASUS_HOME/share/doc/pegasus/tutorial</filename>.
-    These files will need to be modified in several places to fix the paths to
-    the users home directory (which is assumed to be <filename>/home/tutorial
-    </filename>). It is assumed that Pegasus was installed from a native package,
-    so the path to the Pegasus install is assumed to be <filename>/usr</filename>.
-    Condor should be installed in the "Personal Condor" configuration. You will
-    also need a passwordless ssh key to enable SCP file transfers to/from
-    localhost. Getting everything set up correctly can be tricky, so we
-    recommend getting started with one of the VMs if you are not familiar with
-    Condor and UNIX.</para>
+    <para><emphasis role="bold">Advanced Users:</emphasis> If you have
+    installed Pegasus and Condor on your own machine, then you don't need to
+    use the VM for the tutorial. If you installed Pegasus from one of the
+    native packages (RPM, DEB, DMG), then you can find the tutorial files in
+    <filename> /usr/share/doc/pegasus/tutorial</filename>. If you installed a
+    binary tarball, or compiled Pegasus from source, then you can find the
+    tutorial files in
+    <filename>PEGASUS_HOME/share/doc/pegasus/tutorial</filename>. These files
+    will need to be modified in several places to fix the paths to the users
+    home directory (which is assumed to be <filename>/home/tutorial
+    </filename>). It is assumed that Pegasus was installed from a native
+    package, so the path to the Pegasus install is assumed to be
+    <filename>/usr</filename>. Condor should be installed in the "Personal
+    Condor" configuration. You will also need a passwordless ssh key to enable
+    SCP file transfers to/from localhost. Getting everything set up correctly
+    can be tricky, so we recommend getting started with one of the VMs if you
+    are not familiar with Condor and UNIX.</para>
 
     <para>The remainder of this tutorial will assume that you have a terminal
     open to the directory where the tutorial files are installed. If you are
@@ -321,9 +322,9 @@ tr preprocess {
 # input files used by the workflow.
 
 # The format is:
-# LFN     PFN    pool="SITE"
+# LFN     PFN    site="SITE"
 
-f.a    file:///home/tutorial/input/f.a    pool="local"</programlisting>
+f.a    file:///home/tutorial/input/f.a    site="local"</programlisting>
 
       <para>This replica catalog contains only one entry for the diamond
       workflow’s only input file. This entry has an LFN of “f.a” with a PFN of
@@ -760,19 +761,17 @@ preprocess       1      1          0       30.025  30.025  30.025   30.025
   <section>
     <title>Workflow Dashboard</title>
 
-    <para>The Pegasus Dashboard is a web interfaces for monitoring and debugging
-    workflows.</para>
+    <para>The Pegasus Dashboard is a web interfaces for monitoring and
+    debugging workflows.</para>
 
-    <para>
-        <note>
-            <para>The workflow dashboard can only monitor workflows which have
-            been executed using Pegasus 4.2.0 and above.</para> 
-        </note>
-    </para>
+    <para><note>
+        <para>The workflow dashboard can only monitor workflows which have
+        been executed using Pegasus 4.2.0 and above.</para>
+      </note></para>
 
     <para>By default, the dashboard server can only monitor workflows run by
-    the current user i.e. the user who is running the pegasus-service-server.
-    </para>
+    the current user i.e. the user who is running the
+    pegasus-service-server.</para>
 
     <para>To access the workflow dashboard, in the VirtualBox VM you can
     launch Firefox by clicking the globe icon in the top menu of the desktop.
@@ -967,8 +966,8 @@ preprocess       1      1          0       30.025  30.025  30.025   30.025
     <para>Congratulations! You have completed the tutorial.</para>
 
     <para>If you used Amazon EC2 for this tutorial make sure to terminate your
-        VM. Refer to the <link linkend="tutorial_vm">appendix</link> for more
-        information about how to do this.</para>
+    VM. Refer to the <link linkend="tutorial_vm">appendix</link> for more
+    information about how to do this.</para>
 
     <para>Refer to the other chapters in this guide for more information about
     creating, planning, and executing workflows with Pegasus.</para>

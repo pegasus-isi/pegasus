@@ -589,7 +589,7 @@
     <para>For example if a user has the following URL catalogued in the
     Replica Catalog for an input file f.input</para>
 
-    <programlisting>f.input   gsiftp://server.isi.edu/shared/storage/input/data/f.input pool="isi"</programlisting>
+    <programlisting>f.input   gsiftp://server.isi.edu/shared/storage/input/data/f.input site="isi"</programlisting>
 
     <para>and the compute job that requires this file executes on a compute
     site named isi , then if symlinking is turned on the data stage in job
@@ -1384,7 +1384,7 @@ irodsPassword 'somesecretpassword'</programlisting>
 
               <entry>This mapper only on matching transformation catalog
               entries that are of type STAGEABLE and reside at the submit host
-              (pool local), are used while constructing the soft state map.
+              (site local), are used while constructing the soft state map.
               This is especially helpful, when the user wants to use the
               latest compute code for his computations on the grid and that
               relies on his submit host.</entry>
