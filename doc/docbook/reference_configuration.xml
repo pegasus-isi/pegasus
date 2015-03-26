@@ -212,34 +212,18 @@ pegasus.stagein.clusters 3</programlisting>
           role="bold">key=</emphasis>"<emphasis>key</emphasis>"&gt;<emphasis>value</emphasis><emphasis
           role="bold">&lt;/profile&gt;</emphasis></programlisting>
 
-      <para>The XML schema requires that profiles are the first children of a
-      pool element. If the element ordering is wrong, the XML parser will
-      produce errors and warnings:</para>
-
-      <programlisting>&lt;pool handle="isi_condor" gridlaunch="/home/shared/pegasus/bin/kickstart"&gt;
-  <emphasis role="bold">&lt;profile namespace="env"
-   key="GLOBUS_LOCATION"&gt;/home/shared/globus/&lt;/profile&gt;
-  &lt;profile namespace="env"
-   key="LD_LIBRARY_PATH" &gt;/home/shared/globus/lib&lt;/profile&gt;</emphasis>
-  &lt;lrc url="rls://sukhna.isi.edu" /&gt;
-  &amp;mldr;
-&lt;/pool&gt;
-</programlisting>
-
-      <para>The multi-line textual version of the site catalog uses the
-      following syntax:</para>
-
-      <programlisting><emphasis role="bold">profile</emphasis> <emphasis>namespace "key" "value"</emphasis></programlisting>
-
-      <para>The order within the textual pool definition is not important.
-      Profiles can appear anywhere:</para>
-
-      <programlisting>pool isi_condor {
-  gridlaunch "/home/shared/pegasus/bin/kickstart"
-  <emphasis role="bold">profile env "GLOBUS_LOCATION" "/home/shared/globus"
-  profile env "LD_LIBRARY_PATH" "/home/shared/globus/lib"</emphasis>
-  &amp;mldr;
-}
+      <programlisting>&lt;site  handle="CCG" arch="x86_64" os="LINUX"&gt;
+     &lt;grid  type="gt5" contact="obelix.isi.edu/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/&gt;
+        
+     &lt;directory type="shared-scratch" path="/shared-scratch"&gt;
+            &lt;file-server operation="all" url="gsiftp://headnode.isi.edu/shared-scratch"/&gt;
+     &lt;/directory&gt;
+     &lt;directory type="local-storage" path="/local-storage"&gt;
+            &lt;file-server operation="all" url="gsiftp://headnode.isi.edu/local-storage"/&gt;
+     &lt;/directory&gt; 
+     &lt;profile namespace="pegasus" key="clusters.num"&gt;1&lt;/profile&gt;
+     &lt;profile namespace="env" key="PEGASUS_HOME"&gt;/usr&lt;/profile&gt;        
+&lt;/site&gt;
 </programlisting>
     </section>
 
@@ -269,6 +253,41 @@ pegasus.stagein.clusters 3</programlisting>
       the application /home/shared/executables/analyze on site isi_condor. The
       transformation catalog guide has more details on the usage of the
       tc-client.</para>
+
+      <programlisting>tr example::keg:1.0 { 
+
+#specify profiles that apply for all the sites for the transformation 
+#in each site entry the profile can be overriden 
+
+  profile env "APP_HOME" "/tmp/myscratch"
+  profile env "JAVA_HOME" "/opt/java/1.6"
+
+  site isi {
+    <emphasis role="bold">profile env "HELLo" "WORLD"
+    profile condor "FOO" "bar"
+    profile env "JAVA_HOME" "/bin/java.1.6"</emphasis>
+    pfn "/path/to/keg"
+    arch "x86"
+    os "linux"
+    osrelease "fc"
+    osversion "4"
+    type "INSTALLED"
+  }
+
+  site wind {
+    profile env "CPATH" "/usr/cpath"
+    profile condor "universe" "condor"
+    pfn "file:///path/to/keg"
+    arch "x86"
+    os "linux"
+    osrelease "fc"
+    osversion "4"
+    type "STAGEABLE"
+  }
+}</programlisting>
+
+      <para>Most of the users prefer to edit the transformation catalog file
+      directly in the editor.</para>
     </section>
   </section>
 
