@@ -486,6 +486,7 @@ public class Pegasus extends Namespace {
      * @return Namespace.VALID_KEY
      *         Namespace.UNKNOWN_KEY
      *         Namespace.EMPTY_KEY
+     *         Namespace.MERGE_KEY
      *
      */
     public int checkKey(String key, String value) {
@@ -545,7 +546,7 @@ public class Pegasus extends Namespace {
             case 'e':
                 if ((key.compareTo( Pegasus.EXITCODE_FAILURE_MESSAGE ) == 0) ||
                     (key.compareTo(  Pegasus.EXITCODE_SUCCESS_MESSAGE  ) == 0) ) {
-                    res = VALID_KEY;
+                    res = MERGE_KEY;
                 }
                 else {
                     res = UNKNOWN_KEY;
@@ -695,51 +696,30 @@ public class Pegasus extends Namespace {
         
         this.assimilate( properties ,Profiles.NAMESPACES.pegasus ) ;
         
-        /*
-        //get the value that might have been populated
-        //from other profile sources
-        String value = (String)get(this.COLLAPSER_KEY);
-        value = (value == null)?
-                //load the global from the properties file
-                properties.getJobAggregator():
-                //prefer the existing one
-                value;
-
-        //no strict type check required
-        //populate directly
-        this.construct(this.COLLAPSER_KEY,value);
-
-        value = (String)get(this.TRANSFER_PROXY_KEY);
-        value = (value == null) ?
-                //load the property from the properties file
-                Boolean.toString(properties.transferProxy()):
-                //prefer the existing one
-                value;
-        //no strict type check required
-        //populate directly
-        this.construct(this.TRANSFER_PROXY_KEY,value);
-
-	value = (String)get(this.TRANSFER_ARGUMENTS_KEY);
-        value = (value == null) ?
-	    //load the property from the properties file
-	    properties.getTransferArguments():
-	    //prefer the existing one
-	    value;
-
-	if(value!=null){
-	    //no strict type check required
-	    //populate directly
-	    this.construct(Pegasus.TRANSFER_ARGUMENTS_KEY,value);
-	}
-
-        value = (String)get( this.GRIDSTART_PATH_KEY );
-        value = ( value == null ) ?
-                */
     }
 
    
 
-    
+   /**
+    * Merges key value to an existing value if it exists
+    * 
+    * @param key
+    * @param value 
+    */ 
+   public void mergeKey(String key, String value) {
+       String existing = this.getStringValue(key);
+       if( key.equals( Pegasus.EXITCODE_FAILURE_MESSAGE) ||  key.equals( Pegasus.EXITCODE_SUCCESS_MESSAGE) ){
+            existing = ( existing == null )?
+                         value:
+                         existing  + UniqueMerge.DEFAULT_DELIMITER + value;
+            this.construct(key, existing);
+       }
+       else{
+           throw new RuntimeException( "Merge operation not supported for pegasus profile key " + key );
+       }
+       
+       
+   }
      
     
     /**
@@ -767,7 +747,6 @@ public class Pegasus extends Namespace {
                                );
             }
             else if( key.equals( Pegasus.EXITCODE_FAILURE_MESSAGE) ){
-                System.out.println( "Old Key " + key + " -> " + (String)get( key ) + " New Value " +  (String)profiles.get( key ));
                 this.construct( key, 
                                 ERROR_MESSAGE_AGGREGATOR.compute((String)get( key ), (String)profiles.get( key ), null )
                                );
