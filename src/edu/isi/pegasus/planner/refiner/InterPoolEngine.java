@@ -747,7 +747,6 @@ public class InterPoolEngine extends Engine implements Refiner {
                     job.executionPool = (String) job.hints.removeKey(
                         Hints.EXECUTION_SITE_KEY);
 
-                    incorporateHint( job, "globusScheduler");
                     incorporateHint( job, Hints.PFN_HINT_KEY );
                     return true;
                 }
