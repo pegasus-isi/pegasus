@@ -4,12 +4,19 @@ import logging
 import collections
 import datetime
 import os
+import sys
 
 from Pegasus.db import connection
 from Pegasus.db.schema import *
 from Pegasus.tools import properties
 from sqlalchemy.orm.exc import *
 from urlparse import urlparse
+
+consoleHandler = logging.StreamHandler(sys.stdout)
+errorHandler = logging.StreamHandler(sys.stderr)
+errorHandler.setLevel(logging.ERROR)
+logging.getLogger().addHandler(consoleHandler)
+logging.getLogger().addHandler(errorHandler)
 
 log = logging.getLogger(__name__)
 
