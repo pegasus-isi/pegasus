@@ -47,10 +47,12 @@ class AdminDB(object):
         """ Database connection """
         if not dburi:
             if config_properties and db_type:
+                props = properties.Properties()
+                props.new(config_file=config_properties)
                 dburi = {
-                    "JDBCRC": self._get_jdbcrc_uri(config_properties),
-                    "MASTER": self._get_master_uri(config_properties),
-                    "WORKFLOW": self._get_workflow_uri(config_properties),
+                    "JDBCRC": self._get_jdbcrc_uri(props),
+                    "MASTER": self._get_master_uri(props),
+                    "WORKFLOW": self._get_workflow_uri(props),
                 }.get(db_type.upper(), "invalid")
                 if dburi == "invalid":
                     log.error("Invalid database type '%s'." % db_type)
@@ -67,46 +69,45 @@ class AdminDB(object):
             raise RuntimeError("Unable to find a database URI to connect.")
     
     
-    def _get_jdbcrc_uri(self, config_properties):
+    def _get_jdbcrc_uri(self, props=None):
         """ Get JDBCRC URI """
-        props = properties.Properties()
-        props.new(config_file=config_properties)
-        replica_catalog = props.property('pegasus.catalog.replica')
-        if replica_catalog != "JDBCRC":
-            return None
-    
-        rc_info = {
-            "driver" : props.property('pegasus.catalog.replica.db.driver'),
-            "url" : props.property('pegasus.catalog.replica.db.url'),
-            "user" : props.property('pegasus.catalog.replica.db.user'),
-            "password" : props.property('pegasus.catalog.replica.db.password'),
-        }
+        if props:
+            props = properties.Properties()
+            props.new(config_file=config_properties)
+            replica_catalog = props.property('pegasus.catalog.replica')
+            if replica_catalog != "JDBCRC":
+                return None
 
-        url = rc_info["url"]
-        url = url.replace("jdbc:", "")
-        o = urlparse(url)
-        host = o.netloc
-        database = o.path.replace("/", "")
+            rc_info = {
+                "driver" : props.property('pegasus.catalog.replica.db.driver'),
+                "url" : props.property('pegasus.catalog.replica.db.url'),
+                "user" : props.property('pegasus.catalog.replica.db.user'),
+                "password" : props.property('pegasus.catalog.replica.db.password'),
+            }
 
-        if rc_info["driver"].lower() == "mysql":
-            return "mysql://" + rc_info["user"] + ":" + rc_info["password"] + "@" + host + "/" + database
+            url = rc_info["url"]
+            url = url.replace("jdbc:", "")
+            o = urlparse(url)
+            host = o.netloc
+            database = o.path.replace("/", "")
 
-        if rc_info["driver"].lower() == "sqlite":
-            connString = os.path.join(host, "workflow.db")
-            return "sqlite:///" + connString
+            if rc_info["driver"].lower() == "mysql":
+                return "mysql://" + rc_info["user"] + ":" + rc_info["password"] + "@" + host + "/" + database
 
-        if rc_info["driver"].lower() == "postgresql":
-            return "postgresql://" + rc_info["user"] + ":" + rc_info["password"] + "@" + host + "/" + database
-        
-        log.error("Invalid JDBCRC driver: %s" % rc_info["driver"])
+            if rc_info["driver"].lower() == "sqlite":
+                connString = os.path.join(host, "workflow.db")
+                return "sqlite:///" + connString
+
+            if rc_info["driver"].lower() == "postgresql":
+                return "postgresql://" + rc_info["user"] + ":" + rc_info["password"] + "@" + host + "/" + database
+
+            log.error("Invalid JDBCRC driver: %s" % rc_info["driver"])
         return None
     
     
-    def _get_master_uri(self, config_properties=None):
+    def _get_master_uri(self, props=None):
         """ Get MASTER URI """
-        if config_properties:
-            props = properties.Properties()
-            props.new(config_file=config_properties)
+        if props:
             dburi = props.property('pegasus.catalog.master.url')
             if dburi:
                 return dburi
@@ -122,11 +123,9 @@ class AdminDB(object):
         return "sqlite:///" + dburi
     
     
-    def _get_workflow_uri(self, config_properties=None):
+    def _get_workflow_uri(self, props=None):
         """ Get WORKFLOW URI """
-        if config_properties:
-            props = properties.Properties()
-            props.new(config_file=config_properties)
+        if props:
             dburi = props.property('pegasus.catalog.workflow.url')
             if dburi:
                 return dburi
