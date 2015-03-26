@@ -119,6 +119,12 @@ properties staging_site staging_site local
 properties output_site output_site local
 properties planner_args planner_args
 
+if [ -e ${TOPDIR}/pegasusrc ]; then
+    cat ${TOPDIR}/pegasusrc >> ${CONFIG}/pegasusrc
+else
+    exit 1
+fi
+
 set -x
 
 pegasus-plan \
