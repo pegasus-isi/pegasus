@@ -72,8 +72,6 @@ class AdminDB(object):
     def _get_jdbcrc_uri(self, props=None):
         """ Get JDBCRC URI """
         if props:
-            props = properties.Properties()
-            props.new(config_file=config_properties)
             replica_catalog = props.property('pegasus.catalog.replica')
             if replica_catalog != "JDBCRC":
                 return None
