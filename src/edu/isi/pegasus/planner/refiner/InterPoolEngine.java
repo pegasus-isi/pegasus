@@ -258,7 +258,7 @@ public class InterPoolEngine extends Engine implements Refiner {
             Job job = ( Job )node.getContent();
            
             //check if the user has specified any hints in the dax
-            incorporateHint(job, "executionPool");
+            incorporateHint(job, Hints.EXECUTION_SITE_KEY );
             
             /*PM-810 
             if (incorporateHint(job, "executionPool")) {
@@ -742,10 +742,10 @@ public class InterPoolEngine extends Engine implements Refiner {
 
         switch (key.charAt(0)) {
             case 'e':
-                if (key.equals("executionPool") && job.hints.containsKey(key)) {
+                if (key.equals( Hints.EXECUTION_SITE_KEY) && job.hints.containsKey(key)) {
                     //user has overridden in the dax which execution Pool to use
                     job.executionPool = (String) job.hints.removeKey(
-                        "executionPool");
+                        Hints.EXECUTION_SITE_KEY);
 
                     incorporateHint( job, "globusScheduler");
                     incorporateHint( job, Hints.PFN_HINT_KEY );

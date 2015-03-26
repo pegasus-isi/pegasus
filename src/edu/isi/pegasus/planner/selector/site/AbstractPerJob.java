@@ -15,6 +15,7 @@
  */
 package edu.isi.pegasus.planner.selector.site;
 
+import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.namespace.Hints;
@@ -50,7 +51,11 @@ public abstract class AbstractPerJob extends Abstract {
             
             //only map a job for which execute site hint
             //is not specified in the DAX
-            if( !job.hints.containsKey(Hints.EXECUTION_SITE_KEY ) ){
+            if( job.hints.containsKey(Hints.EXECUTION_SITE_KEY ) ){
+                mLogger.log( "Job " + job.getID() + " will be mapped based on hints profile to site " + job.hints.get( Hints.EXECUTION_SITE_KEY),
+                             LogManager.DEBUG_MESSAGE_LEVEL );
+            }
+            else{
                 mapJob( job, sites);
             }
         }
