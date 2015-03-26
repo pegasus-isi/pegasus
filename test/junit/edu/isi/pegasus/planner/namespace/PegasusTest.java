@@ -148,11 +148,11 @@ public class PegasusTest {
         mLogger.logEventCompletion();
         
         mLogger.logEventStart( "test.namespace.Pegasus", "set", Integer.toString(set++) );
-        testKey( Pegasus.EXITCODE_FAILURE_MESSAGE, "dummy", Namespace.VALID_KEY );
+        testKey( Pegasus.EXITCODE_FAILURE_MESSAGE, "dummy", Namespace.MERGE_KEY );
         mLogger.logEventCompletion();
         
         mLogger.logEventStart( "test.namespace.Pegasus", "set", Integer.toString(set++) );
-        testKey( Pegasus.EXITCODE_SUCCESS_MESSAGE, "dummy", Namespace.VALID_KEY );
+        testKey( Pegasus.EXITCODE_SUCCESS_MESSAGE, "dummy", Namespace.MERGE_KEY );
         mLogger.logEventCompletion();
         
         mLogger.logEventStart( "test.namespace.Pegasus", "set", Integer.toString(set++) );
