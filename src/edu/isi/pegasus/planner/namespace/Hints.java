@@ -55,10 +55,6 @@ public class Hints extends Namespace {
      */
     public static final String EXECUTION_POOL_KEY = "executionPool";
     
-    /**
-     * The globus scheduler hints key
-     */
-    public static final String GLOBUS_SCHEDULER_KEY = "globusScheduler";
     
     /**
      * The pfnHint key
@@ -178,10 +174,7 @@ public class Hints extends Namespace {
                 break;
 
             case 'g':
-                if (key.compareTo( Hints.GLOBUS_SCHEDULER_KEY ) == 0) {
-                    res = VALID_KEY;
-                }
-                else if (key.compareTo( Hints.GRID_JOB_TYPE_KEY  ) == 0 ) {
+                if (key.compareTo( Hints.GRID_JOB_TYPE_KEY  ) == 0 ) {
                     res = VALID_KEY;
                 }
                 else {
