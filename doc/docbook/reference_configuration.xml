@@ -55,9 +55,13 @@
       <para><emphasis role="bold">pegasus</emphasis> configures the behaviour
       of various planner/mapper components.</para>
     </listitem>
-  </itemizedlist>
 
-  <para/>
+    <listitem>
+      <para><emphasis role="bold">hints</emphasis> allows to override site
+      selection behavior of the planner. Can be specified only in the
+      DAX.</para>
+    </listitem>
+  </itemizedlist>
 
   <para>Properties are primarily used to configure the behavior of the Pegasus
   WMS system at a global level. The properties file is actually a java
@@ -1698,6 +1702,80 @@ Scope       :</emphasis> TC, SC, DAX, Properties
 
             <entry>the maximum walltime in minutes for a single execution of a
             job.</entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+  </section>
+
+  <section id="hints_profiles">
+    <title>The hints Profile Namespace</title>
+
+    <para>The <emphasis>hints</emphasis> namespace allows users to override
+    the behavior of the Workflow Mapper during site selection. This gives you
+    finer grained control over where a job executes and what executable it
+    refers to. The hints namespace keys ( execution.site and pfn ) can only be
+    specified in the DAX. It is important to note that these particular keys
+    once specified in the DAX, cannot be overriden like other profiles.
+    </para>
+
+    <para> </para>
+
+    <table>
+      <title>Useful Hints Profile Keys</title>
+
+      <tgroup cols="2">
+        <tbody>
+          <row>
+            <entry><emphasis role="bold">Key Attributes </emphasis></entry>
+
+            <entry><emphasis role="bold">Description</emphasis></entry>
+          </row>
+
+          <row>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>N/A<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>execution.site<emphasis role="bold">
+Scope       :</emphasis> DAX
+<emphasis role="bold">Since       :</emphasis> 4.5
+<emphasis role="bold">Type        : </emphasis>String
+</literallayout></entry>
+
+            <entry> the execution site where a job should be executed.</entry>
+          </row>
+
+          <row>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>N/A<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>pfn<emphasis role="bold">
+Scope       :</emphasis> TC, SC, DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 4.5
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
+
+            <entry>the physical file name to the main executable that a job
+            refers to. Overrides any entries specified in the transformation
+            catalog.</entry>
+          </row>
+
+          <row>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Property Key: </emphasis></emphasis>hints.grid.jobtype<emphasis
+                  role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>grid.jobtype<emphasis role="bold">
+Scope       :</emphasis> TC, SC, DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 4.5
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
+
+            <entry>applicable when submitting to remote sites via GRAM. The
+            site catalog allows you to associate multiple jobmanagers with a
+            GRAM site, for different type of jobs [compute, auxillary,
+            transfer, register, cleanup ] that Pegasus generates in the
+            executable workflow. This profile is usually used to ensure that a
+            compute job executes on another job manager. For example, if in
+            site catalog you have headnode.example.com/jobmanager-condor for
+            compute jobs, and headnode.example.com/jobmanager-fork for
+            auxillary jobs. Associating this profile and setting value to
+            auxillary for a compute job, will cause the compute job to run on
+            the fork jobmanager instead of the condor jobmanager.</entry>
           </row>
         </tbody>
       </tgroup>
