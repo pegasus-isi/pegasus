@@ -25,6 +25,7 @@ else
     packages+=("pyOpenSSL-0.13")
     packages+=("psycopg2-2.6")
     packages+=("MySQL-python-1.2.5")
+    packages+=("setuptools-14.3.1")
 fi
 
 dir=$(cd $(dirname $0) && pwd)
