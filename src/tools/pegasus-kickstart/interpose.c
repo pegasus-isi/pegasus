@@ -643,6 +643,11 @@ static void trace_sock(int sockfd, const struct sockaddr *addr, socklen_t addrle
 static void trace_dup(int oldfd, int newfd) {
     debug("trace_dup %d %d", oldfd, newfd);
 
+    if (oldfd == newfd) {
+        printerr("trace_dup: duplicating the same fd %d\n", oldfd);
+        return;
+    }
+
     Descriptor *o = get_descriptor(oldfd);
     if (o == NULL) {
         return;
