@@ -36,6 +36,7 @@ import java.io.IOException;
 import edu.isi.pegasus.planner.classes.Profile;
 
 import edu.isi.pegasus.planner.dax.Invoke;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.util.Collection;
 import java.util.List;
 
@@ -438,7 +439,13 @@ public class TransformationCatalogEntry
             if ( this.mProfiles == null ) {
                 this.mProfiles = new Profiles();
             }
-            this.mProfiles.addProfileDirectly( profile );
+            //PM-826 allow multiple profiles with same key 
+            if( profile.getProfileNamespace().equalsIgnoreCase( Pegasus.NAMESPACE_NAME ) ){
+                this.mProfiles.addProfile( profile );
+            }
+            else{
+                this.mProfiles.addProfileDirectly( profile );
+            }
         }
     }
 

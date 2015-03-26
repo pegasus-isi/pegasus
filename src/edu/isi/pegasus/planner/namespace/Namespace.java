@@ -88,6 +88,12 @@ public abstract class Namespace /*extends Data*/{
     * The key value is empty . 
     */
    public static final int EMPTY_KEY = 4;
+   
+   /**
+    * The key value is valid but contents should be merged to existing value if
+    * it exists
+    */
+   public static final int MERGE_KEY = 5;
 
    /**
     * The Map object that contains the profiles for a particular namespace.
@@ -288,9 +294,9 @@ public abstract class Namespace /*extends Data*/{
      *
      */
     public void checkKeyInNS(String key, String value){
-        int rslVal = checkKey(key,value);
+        int action = checkKey(key,value);
 
-        switch (rslVal){
+        switch (action){
 
             case Namespace.MALFORMED_KEY:
                 //key is malformed ignore
@@ -316,6 +322,13 @@ public abstract class Namespace /*extends Data*/{
             case Namespace.EMPTY_KEY:
                 emptyKey( key );
                 break;
+             
+            case Namespace.MERGE_KEY:
+                mergeKey( key , value );
+                break;
+                
+            default:
+                throw new RuntimeException( "Invalid return type for checkKey " + key + " " + value );
         }
 
    }
@@ -524,6 +537,16 @@ public abstract class Namespace /*extends Data*/{
    
    
    /**
+    * Merges key value to an existing value if it exists
+    * 
+    * @param key
+    * @param value 
+    */ 
+   public void mergeKey(String key, String value) {
+       throw new UnsupportedOperationException( "Function mergeKey(String,String not supported for namespace "  + this.namespaceName());
+   }
+   
+   /**
      * Returns the clone of the object.
      *
      * @return the clone
@@ -545,6 +568,7 @@ public abstract class Namespace /*extends Data*/{
         }
         return obj;
     }
+
 
     
    /**
