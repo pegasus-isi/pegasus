@@ -23,6 +23,7 @@ else
     packages+=("SQLAlchemy-0.8.0")
     packages+=("pam-0.1.4")
     packages+=("pyOpenSSL-0.13")
+    packages+=("psycopg2-2.6")
     packages+=("MySQL-python-1.2.5")
 fi
 
