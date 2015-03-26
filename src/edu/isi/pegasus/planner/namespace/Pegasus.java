@@ -707,16 +707,27 @@ public class Pegasus extends Namespace {
     * @param value 
     */ 
    public void mergeKey(String key, String value) {
-       String existing = this.getStringValue(key);
+       /*String existing = this.getStringValue(key);
        if( key.equals( Pegasus.EXITCODE_FAILURE_MESSAGE) ||  key.equals( Pegasus.EXITCODE_SUCCESS_MESSAGE) ){
             existing = ( existing == null )?
                          value:
                          existing  + UniqueMerge.DEFAULT_DELIMITER + value;
             this.construct(key, existing);
-       }
-       else{
+       }*/
+       
+       if( key.equals( Pegasus.EXITCODE_FAILURE_MESSAGE) ){
+           this.construct( key, 
+                           ERROR_MESSAGE_AGGREGATOR.compute((String)get( key ), value, null )
+                           );
+        }
+        else if(  key.equals( Pegasus.EXITCODE_SUCCESS_MESSAGE) ){
+           this.construct( key, 
+                            SUCCESS_MESSAGE_AGGREGATOR.compute((String)get( key ), value, null )
+                           );
+        }
+        else{
            throw new RuntimeException( "Merge operation not supported for pegasus profile key " + key );
-       }
+        }
        
        
    }
