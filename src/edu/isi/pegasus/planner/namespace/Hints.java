@@ -50,17 +50,35 @@ public class Hints extends Namespace {
      */
     public static final String GRID_JOB_TYPE_KEY = "grid.jobtype";
     
+    
+    /**
+     * The deprecated execution site key
+     */
+    public static final String DEPRECATED_EXECUTION_SITE_KEY = "executionPool";
+    
     /**
      * The execution pool key
      */
-    public static final String EXECUTION_POOL_KEY = "executionPool";
+    public static final String EXECUTION_SITE_KEY = "execution.site";
     
     
     /**
      * The pfnHint key
      */
-    public static final String PFN_HINT_KEY = "pfnHint";
+    public static final String DEPRECATED_PFN_HINT_KEY = "pfnHint";
+    
+    /**
+     * The pfnHint key
+     */
+    public static final String PFN_HINT_KEY = "pfn";
 
+    
+    /**
+     * The table containing the mapping of the deprecated keys to the newer keys.
+     */
+    protected static Map mDeprecatedTable = null;
+
+    
     /**
      * The name of the implementing namespace. It should be one of the valid
      * namespaces always.
@@ -165,8 +183,11 @@ public class Hints extends Namespace {
 
         switch (key.charAt(0)) {
             case 'e':
-                if (key.compareTo( Hints.EXECUTION_POOL_KEY ) == 0) {
+                if (key.compareTo( Hints.EXECUTION_SITE_KEY  ) == 0 ) {
                     res = VALID_KEY;
+                }
+                else if (key.compareTo(Hints.DEPRECATED_EXECUTION_SITE_KEY ) == 0) {
+                    res = DEPRECATED_KEY;
                 }
                 else {
                     res = NOT_PERMITTED_KEY;
@@ -183,19 +204,18 @@ public class Hints extends Namespace {
                 break;
 
          
-
-
             case 'p':
                 if (key.compareTo( Hints.PFN_HINT_KEY ) == 0 /*||
                     key.compareTo("pfnUniverse") == 0*/) {
                     res = VALID_KEY;
                 }
+                else if (key.compareTo( Hints.DEPRECATED_PFN_HINT_KEY ) == 0 ) {
+                    res = DEPRECATED_KEY;
+                }
                 else {
                     res = NOT_PERMITTED_KEY;
                 }
                 break;
-
-
 
             default:
                 res = NOT_PERMITTED_KEY;
@@ -222,6 +242,26 @@ public class Hints extends Namespace {
        this.assimilate( properties, Profiles.NAMESPACES.hints  );
     }
 
+    /**
+     * Singleton access to the deprecated table that holds the deprecated keys,
+     * and the keys that replace them.
+     *
+     * @return Map
+     */
+    public  java.util.Map deprecatedTable() {
+        if ( mDeprecatedTable == null ) {
+            // only initialize once and only once, as needed.
+            mDeprecatedTable = new java.util.HashMap();
+            mDeprecatedTable.put( DEPRECATED_EXECUTION_SITE_KEY,
+                                  EXECUTION_SITE_KEY );
+            mDeprecatedTable.put( DEPRECATED_PFN_HINT_KEY,
+                                  PFN_HINT_KEY );
+        }
+
+        return mDeprecatedTable;
+    }
+
+    
     /**
      * Merge the profiles in the namespace in a controlled manner.
      * In case of intersection, the new profile value overrides, the existing

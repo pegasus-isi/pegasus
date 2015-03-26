@@ -50,7 +50,7 @@ public abstract class AbstractPerJob extends Abstract {
             
             //only map a job for which execute site hint
             //is not specified in the DAX
-            if( !job.hints.containsKey( Hints.EXECUTION_POOL_KEY ) ){
+            if( !job.hints.containsKey(Hints.EXECUTION_SITE_KEY ) ){
                 mapJob( job, sites);
             }
         }

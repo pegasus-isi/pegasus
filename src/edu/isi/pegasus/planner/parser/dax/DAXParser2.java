@@ -116,7 +116,7 @@ public class DAXParser2 extends Parser implements DAXParser {
     private static String executionToHintsNamespace( String key ){
         if ( mExecutionToHintsNamespace == null ){
             mExecutionToHintsNamespace = new HashMap<String,String>();
-            mExecutionToHintsNamespace.put( "site", Hints.EXECUTION_POOL_KEY );
+            mExecutionToHintsNamespace.put("site", Hints.EXECUTION_SITE_KEY );
             mExecutionToHintsNamespace.put( "executable", Hints.PFN_HINT_KEY  );
         }
         return mExecutionToHintsNamespace.get( key );
@@ -816,7 +816,7 @@ public class DAXParser2 extends Parser implements DAXParser {
         
         //the job should always execute on local site
         //for time being
-        mCurrentJobSubInfo.hints.construct( Hints.EXECUTION_POOL_KEY, "local" );
+        mCurrentJobSubInfo.hints.construct(Hints.EXECUTION_SITE_KEY, "local" );
         
         //also set the executable to be used
         mCurrentJobSubInfo.hints.construct( Hints.PFN_HINT_KEY, "/opt/condor/bin/condor-dagman" );
@@ -865,7 +865,7 @@ public class DAXParser2 extends Parser implements DAXParser {
         
         //the job should always execute on local site
         //for time being
-        mCurrentJobSubInfo.hints.construct( Hints.EXECUTION_POOL_KEY, "local" );
+        mCurrentJobSubInfo.hints.construct(Hints.EXECUTION_SITE_KEY, "local" );
         
         //also set the executable to be used
         mCurrentJobSubInfo.hints.construct( Hints.PFN_HINT_KEY, "/tmp/pegasus-plan" );

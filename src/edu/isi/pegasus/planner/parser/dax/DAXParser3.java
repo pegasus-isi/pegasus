@@ -348,7 +348,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         
                         //the job should always execute on local site
                         //for time being
-                        dagJob.hints.construct(Hints.EXECUTION_POOL_KEY, "local");
+                        dagJob.hints.construct(Hints.EXECUTION_SITE_KEY, "local");
 
                         //also set the executable to be used
                         dagJob.hints.construct(Hints.PFN_HINT_KEY, "/opt/condor/bin/condor-dagman");
@@ -389,7 +389,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
 
                         //the job should always execute on local site
                         //for time being
-                        daxJob.hints.construct( Hints.EXECUTION_POOL_KEY, "local" );
+                        daxJob.hints.construct(Hints.EXECUTION_SITE_KEY, "local" );
 
                         //also set a fake executable to be used
                         daxJob.hints.construct( Hints.PFN_HINT_KEY, "/tmp/pegasus-plan" );
