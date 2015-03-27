@@ -27,7 +27,7 @@ cat >sites.xml <<EOF
             <scratch>
                 <shared>
                     <file-server protocol="file" url="file://" mount-point="$TOPDIR/work/shared-scratch"/>
-                    <internal-mount-point mount-point="$TOPDIR/work/shared-scratchk"/>
+                    <internal-mount-point mount-point="$TOPDIR/work/shared-scratch"/>
                 </shared>
             </scratch>
             <storage>
