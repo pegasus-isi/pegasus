@@ -130,9 +130,9 @@
         <para><emphasis role="bold">Input Site</emphasis></para>
 
         <para>The site where the input data is stored. The locations of the
-        input data are catalogued in the Replica Catalog, and the pool
-        attribute of the locations gives us the site handle for the input
-        site.</para>
+        input data are catalogued in the Replica Catalog, and the
+        <emphasis>"site"</emphasis> attribute of the locations gives us the
+        site handle for the input site.</para>
       </listitem>
 
       <listitem>
@@ -436,9 +436,9 @@
       to bypass the creation of separate stage in jobs that copy the data to
       the workflow specific directory on the submit host. Instead, Condor file
       transfers can be setup to transfer the input files directly from the
-      locally accessible input locations ( file URL's with site attribute set
-      to local) specified in the replica catalog. Starting 4.3 release, users
-      can enable this.</para>
+      locally accessible input locations ( file URL's with
+      "<emphasis>site</emphasis>" attribute set to local) specified in the
+      replica catalog. Starting 4.3 release, users can enable this.</para>
 
       <tip>
         <para>Set <emphasis role="bold">
@@ -555,10 +555,11 @@
     will symlink instead of doing a copy of the data.</para>
 
     <para>Pegasus determines whether a file is on the same site as the compute
-    site, by inspecting the pool attribute associated with the URL in the
-    Replica Catalog. If the pool attribute of an input file location matches
-    the compute site where the job is scheduled, then that particular input
-    file is a candidate for symlinking.</para>
+    site, by inspecting the <emphasis>"site</emphasis>" attribute associated
+    with the URL in the Replica Catalog. If the <emphasis>"site"</emphasis>
+    attribute of an input file location matches the compute site where the job
+    is scheduled, then that particular input file is a candidate for
+    symlinking.</para>
 
     <para>For Pegasus to symlink against existing input data on a compute
     site, following must be true</para>
@@ -571,8 +572,9 @@
       </listitem>
 
       <listitem>
-        <para>The input file location in the Replica Catalog has the pool
-        attribute matching the compute site.</para>
+        <para>The input file location in the Replica Catalog has the
+        <emphasis>"site"</emphasis> attribute matching the compute
+        site.</para>
       </listitem>
     </orderedlist>
 

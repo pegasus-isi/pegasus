@@ -1735,10 +1735,9 @@ Scope       :</emphasis> TC, SC, DAX, Properties
     finer grained control over where a job executes and what executable it
     refers to. The hints namespace keys ( execution.site and pfn ) can only be
     specified in the DAX. It is important to note that these particular keys
-    once specified in the DAX, cannot be overriden like other profiles.
-    </para>
+    once specified in the DAX, cannot be overriden like other profiles.</para>
 
-    <para> </para>
+    <para/>
 
     <table>
       <title>Useful Hints Profile Keys</title>
@@ -1760,7 +1759,7 @@ Scope       :</emphasis> DAX
 <emphasis role="bold">Type        : </emphasis>String
 </literallayout></entry>
 
-            <entry> the execution site where a job should be executed.</entry>
+            <entry>the execution site where a job should be executed.</entry>
           </row>
 
           <row>
@@ -2485,7 +2484,7 @@ Scope       :</emphasis> Properties
                     concurrent instances <emphasis>will clobber</emphasis>
                     each other!. The site attribute should be specified
                     whenever possible. The attribute key for the site
-                    attribute is "pool".</para>
+                    attribute is "site".</para>
 
                     <para>The LFN may or may not be quoted. If it contains
                     linear whitespace, quotes, backslash or an equality sign,
@@ -2517,7 +2516,7 @@ LFN PFN a="b" [..]
                     concurrent access to the File will end up clobbering the
                     contents of the file. The site attribute should be
                     specified whenever possible. The attribute key for the
-                    site attribute is "pool".</para>
+                    site attribute is "site".</para>
 
                     <para>The LFN may or may not be quoted. If it contains
                     linear whitespace, quotes, backslash or an equality sign,
@@ -2914,7 +2913,7 @@ See Also    :</emphasis> pegasus.selector.replica.*.prefer.stagein.sites
                     <term>Default</term>
 
                     <listitem>
-                       If a PFN that is a file URL (starting with file:///) and has a pool attribute matching to the site handle of the site where the compute is to be run is found, then that is returned. Else,a random PFN is selected amongst all the PFN's that have a pool attribute matching to the site handle of the site where a compute job is to be run. Else, a random pfn is selected amongst all the PFN's. 
+                       If a PFN that is a file URL (starting with file:///) and has a "site" attribute matching to the site handle of the site where the compute is to be run is found, then that is returned. Else,a random PFN is selected amongst all the PFN's that have a "site" attribute matching to the site handle of the site where a compute job is to be run. Else, a random pfn is selected amongst all the PFN's. 
                     </listitem>
                   </varlistentry>
 
@@ -3189,7 +3188,7 @@ See Also    : </emphasis>pegasus.selector.site.env.*</literallayout></entry>
                               <row>
                                 <entry>resource.id</entry>
 
-                                <entry>is a pool handle, followed by whitespace,
+                                <entry>is a site handle, followed by whitespace,
                                 followed by a gridftp server. Typically, each
                                 gridftp server is enumerated once, so you may have
                                 multiple occurances of the same site. There can be
@@ -3521,7 +3520,7 @@ See Also    :</emphasis> pegasus.transfer.refiner</literallayout></entry>
                             <row>
                               <entry>pegasus.transfer.inter.impl</entry>
 
-                              <entry>the inter pool transfer jobs</entry>
+                              <entry>the inter site transfer jobs</entry>
                             </row>
 
                             <row>
@@ -3711,16 +3710,16 @@ Default     :</emphasis> false<emphasis role="bold">
               <entry>If this is set, and the transfer implementation is set to
               Transfer i.e. using the transfer executable distributed with the
               PEGASUS. On setting this property, if Pegasus while fetching
-              data from the Replica Catalog sees a pool attribute associated
-              with the PFN that matches the execution pool on which the data
+              data from the Replica Catalog sees a "site" attribute associated
+              with the PFN that matches the execution site on which the data
               has to be transferred to, Pegasus instead of the URL returned by
               the Replica Catalog replaces it with a file based URL. This is
-              based on the assumption that the if the pools match the
-              filesystems are visible to the remote execution directory where
-              input data resides. On seeing both the source and destination
-              urls as file based URLs the transfer executable spawns a job
-              that creates a symbolic link by calling ln -s on the remote
-              site.</entry>
+              based on the assumption that the if the "site" attributes match,
+              the filesystems are visible to the remote execution directory
+              where input data resides. On seeing both the source and
+              destination urls as file based URLs the transfer executable
+              spawns a job that creates a symbolic link by calling ln -s on
+              the remote site.</entry>
             </row>
 
             <row>
@@ -3773,7 +3772,7 @@ be run remotely.
                       <row>
                         <entry>pegasus.transfer.inter.remote.sites</entry>
 
-                        <entry>the inter pool transfer jobs</entry>
+                        <entry>the inter site transfer jobs</entry>
                       </row>
 
                       <row>
@@ -4725,7 +4724,7 @@ Scope       :</emphasis> Properties
                   <term>Submit</term>
 
                   <listitem>
-                     In this mode, only entries that are of type STATIC_BINARY and reside at the submit host (pool local), are used while constructing the soft state map. This is especially helpful, when the user wants to use the latest compute code for his computations on the grid and that relies on his submit host. 
+                     In this mode, only entries that are of type STATIC_BINARY and reside at the submit host ("site" local), are used while constructing the soft state map. This is especially helpful, when the user wants to use the latest compute code for his computations on the grid and that relies on his submit host. 
                   </listitem>
                 </varlistentry>
               </variablelist></para></entry>
@@ -4744,7 +4743,7 @@ Scope       :</emphasis> Properties
             <entry><para>In case of transfer of executables, Pegasus could
             have various transformations to select from when it schedules to
             run a particular compute job at a remote site. For e.g it can have
-            the choice of staging an executable from a particular remote pool,
+            the choice of staging an executable from a particular remote site,
             from the local (submit host) only, use the one that is installed
             on the remote site only.</para><para>This property determines, how
             a transformation amongst the various candidate transformations is
@@ -4757,7 +4756,7 @@ Scope       :</emphasis> Properties
                   <term>Random</term>
 
                   <listitem>
-                     In this mode, a random matching candidate transformation is selected to be staged to the remote execution pool. 
+                     In this mode, a random matching candidate transformation is selected to be staged to the remote execution site. 
                   </listitem>
                 </varlistentry>
 
@@ -4765,7 +4764,7 @@ Scope       :</emphasis> Properties
                   <term>Installed</term>
 
                   <listitem>
-                     In this mode, only entries that are of type INSTALLED are selected. This means that the concrete workflow only refers to the transformations already pre installed on the remote pools. 
+                     In this mode, only entries that are of type INSTALLED are selected. This means that the concrete workflow only refers to the transformations already pre installed on the remote sites. 
                   </listitem>
                 </varlistentry>
 
@@ -4781,7 +4780,7 @@ Scope       :</emphasis> Properties
                   <term>Submit</term>
 
                   <listitem>
-                     In this mode, only entries that are of type STATIC_BINARY and reside at the submit host (pool local), are selected as sources for staging the executables to the remote execution pools 
+                     In this mode, only entries that are of type STATIC_BINARY and reside at the submit host ("site" local), are selected as sources for staging the executables to the remote execution sites. 
                   </listitem>
                 </varlistentry>
               </variablelist></para></entry>
