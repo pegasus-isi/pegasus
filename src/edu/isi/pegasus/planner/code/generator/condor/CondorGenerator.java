@@ -110,7 +110,7 @@ public class CondorGenerator extends Abstract {
     /**
      * Default value for the periodic_remove for a job
      */
-    public static final String DEFAULT_PERIODIC_REMOVE_VALUE = "(JobStatus == 5) && ((CurrentTime - EnteredCurrentStatus) > 3600)";
+    public static final String DEFAULT_PERIODIC_REMOVE_VALUE = "(JobStatus == 5) && ((CurrentTime - EnteredCurrentStatus) > 1800)";
 
 
     /**

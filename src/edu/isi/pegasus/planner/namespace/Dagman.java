@@ -108,7 +108,7 @@ public class Dagman extends Namespace {
     /**
      * The default value for the JOB Retries
      */
-    public static final String DEFAULT_RETRY_VALUE = "3";
+    public static final String DEFAULT_RETRY_VALUE = "1";
 
     /**
      * The name of the key that determines the category to which the job
