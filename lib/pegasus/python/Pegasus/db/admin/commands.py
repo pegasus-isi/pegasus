@@ -1,10 +1,18 @@
 __author__ = "Rafael Ferreira da Silva"
 
 import logging
+import sys
 
 from Pegasus.command import Command, CompoundCommand
 from Pegasus.db.admin.admin_loader import *
 from Pegasus.db.admin.versions import *
+
+consoleHandler = logging.StreamHandler(sys.stdout)
+consoleHandler.setLevel(logging.INFO)
+errorHandler = logging.StreamHandler(sys.stderr)
+errorHandler.setLevel(logging.ERROR)
+logging.getLogger().addHandler(consoleHandler)
+logging.getLogger().addHandler(errorHandler)
 
 log = logging.getLogger(__name__)
 
