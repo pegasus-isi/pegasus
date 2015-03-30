@@ -1,3 +1,4 @@
+import imp
 import logging
 import getpass
 from sqlalchemy import create_engine, orm, event
@@ -33,26 +34,33 @@ def connect_to_master_db(user=None):
 
 def connect(dburi, echo=False, schema_check=True, create=False):
     
-    try:
-        engine = create_engine(dburi, echo=echo, pool_recycle=True)
-
-    #    if create:
-    #        from Pegasus.db import schema
-    #        schema.metadata.create_all(engine)
-        from Pegasus.db import schema
-        schema.metadata.create_all(engine)
-
-        Session = orm.sessionmaker(bind=engine, autoflush=False, autocommit=False,
-                                   expire_on_commit=False)
-
-        # TODO Check schema
-        if schema_check:
-            pass
-
-        return orm.scoped_session(Session)
+    _validate(dburi)
     
+    engine = create_engine(dburi, echo=echo, pool_recycle=True)
+
+#    if create:
+#        from Pegasus.db import schema
+#        schema.metadata.create_all(engine)
+    from Pegasus.db import schema
+    schema.metadata.create_all(engine)
+
+    Session = orm.sessionmaker(bind=engine, autoflush=False, autocommit=False,
+                               expire_on_commit=False)
+
+    # TODO Check schema
+    if schema_check:
+        pass
+
+    return orm.scoped_session(Session)
+
+def _validate(dburi):
+    
+    try:
+        if "postgresql" in dburi:
+            imp.find_module('psycopg2')
+        if "mysql" in dburi:
+            imp.find_module('mysqldb')
+            
     except ImportError, e:
         log.error("Missing Python module: %s" % e)
         raise RuntimeError(e)
-    return None
-
