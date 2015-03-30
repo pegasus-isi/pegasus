@@ -8,9 +8,9 @@
   <xi:include href="installation.xml"/>
   <xi:include href="creating_workflows.xml"/>
   <xi:include href="running_workflows.xml"/>
+  <xi:include href="monitoring_debugging_stats.xml"/>
   <xi:include href="execution_environments.xml"/>
   <xi:include href="submit_directory.xml"/>
-  <xi:include href="monitoring_debugging_stats.xml"/>
   <xi:include href="example_workflows.xml"/>
   <xi:include href="optimization.xml"/>
   <xi:include href="service.xml"/>
