@@ -33,7 +33,6 @@ else
     else
         echo "WARNING: mysql_config not found: skipping python mysql library" >&2
     fi
-    packages+=("setuptools-14.3.1")
 fi
 
 dir=$(cd $(dirname $0) && pwd)
