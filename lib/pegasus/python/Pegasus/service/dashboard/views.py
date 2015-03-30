@@ -507,7 +507,6 @@ def __get_datatables_args():
 
         i += 1
 
-    print i, table_args
     return table_args
 
 
