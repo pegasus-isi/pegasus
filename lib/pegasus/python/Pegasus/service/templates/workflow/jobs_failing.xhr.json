@@ -1,7 +1,7 @@
 {
-{% if table_args ['sequence'] %}"sEcho" : {{ table_args ['sequence'] }},{% else %}"sEcho" : 0,{% endif %}
-{% if count != None %}"iTotalRecords" : {{ count }},{% else %}"iTotalRecords" : {{ jobs|count }},{% endif %}
-{% if table_args ['limit'] %}"iTotalDisplayRecords" : {{ filtered }},{% endif %}
+{% if table_args ['sequence'] %}"draw" : {{ table_args ['sequence'] }},{% else %}"draw" : 0,{% endif %}
+{% if count != None %}"recordsTotal" : {{ count }},{% else %}"recordsTotal" : {{ jobs|count }},{% endif %}
+{% if table_args ['limit'] %}"recordsFiltered" : {{ filtered }},{% endif %}
 "aaData" : [
 {% if jobs %}
 {% for i in range(0, jobs|count) %}
