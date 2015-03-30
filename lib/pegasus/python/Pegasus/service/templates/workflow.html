@@ -12,26 +12,27 @@ $(document).ready (function ()
     highChartsInitialization();
 
     $ ('#workflow_list').dataTable ({
-        "bJQueryUI"      : true,
-        "sPaginationType": "full_numbers",
-        "bProcessing"    : true,
-        "bServerSide"    : true,
-        "sAjaxSource"    : "{{ url_for ('.index') }}",
-        "bAutoWidth"     : false,
-        "aaSorting"      : [
+        "jQueryUI"      : true,
+        "pagingType": "full_numbers",
+        "processing"    : true,
+        "serverSide"    : true,
+        "ajax": {
+            "url": "{{ url_for ('.index') }}",
+            "data": function (aoData) {
+                aoData.time_filter =  $ ('#time_filter').val ();
+            }
+        },
+        "autoWidth"     : false,
+        "order"      : [
             [ 4, "desc" ]
         ],
-        "aoColumns": [
+        "columns": [
             null,
             null,
             null,
             null,
             { "sClass": "text-nowrap" }
-        ],
-        "fnServerParams" : function (aoData)
-        {
-            aoData.push ({ "name": "time_filter", "value": $ ('#time_filter').val () });
-        }
+        ]
     });
 
     $("#time_filter").change ( function()

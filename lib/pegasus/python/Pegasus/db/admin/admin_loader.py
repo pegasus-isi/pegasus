@@ -1,22 +1,14 @@
 __author__ = "Rafael Ferreira da Silva"
 
 import logging
-import collections
 import datetime
 import os
-import sys
 
 from Pegasus.db import connection
 from Pegasus.db.schema import *
 from Pegasus.tools import properties
 from sqlalchemy.orm.exc import *
 from urlparse import urlparse
-
-consoleHandler = logging.StreamHandler(sys.stdout)
-errorHandler = logging.StreamHandler(sys.stderr)
-errorHandler.setLevel(logging.ERROR)
-logging.getLogger().addHandler(consoleHandler)
-logging.getLogger().addHandler(errorHandler)
 
 log = logging.getLogger(__name__)
 
@@ -25,13 +17,21 @@ log = logging.getLogger(__name__)
 #-------------------------------------------------------------------
 CURRENT_DB_VERSION = 4
 
-COMPATIBILITY = collections.OrderedDict([
-    ('4.3.0', 1), ('4.3.1', 1), ('4.3.2', 1),
-    ('4.4.0', 2), ('4.4.1', 2), ('4.4.2', 2),
-    ('4.5.0', 4)
-])
+COMPATIBILITY = {
+    '4.3.0': 1, '4.3.1': 1, '4.3.2': 1,
+    '4.4.0': 2, '4.4.1': 2, '4.4.2': 2,
+    '4.5.0': 4
+}
 #-------------------------------------------------------------------
 
+def get_compatible_version(version):
+    print_version = None
+    previous_version = None
+    for ver in COMPATIBILITY:
+        if COMPATIBILITY[ver] == version and ver > previous_version:
+            print_version = ver
+            previous_version = ver
+    return print_version
 
 def get_class(version, connection):
     module = "Pegasus.db.admin.versions.v%s" % version
@@ -146,12 +146,8 @@ class AdminDB(object):
             current_version = self._discover_version()
                         
         if parse:
-            parsed = False
-            for ver in COMPATIBILITY:
-                if COMPATIBILITY[ver] == current_version:
-                    current_version = ver
-                    parsed = True
-            if not parsed:
+            current_version = get_compatible_version(current_version)
+            if not current_version:
                 log.error("Your database is not compatible with any Pegasus version.")
                 log.error("Use 'pegasus-db-admin check' to verify its compatibility.")
                 raise RuntimeError("Your database is not compatible with any Pegasus version.")
@@ -178,9 +174,7 @@ class AdminDB(object):
                 if pegasus_version:
                     friendly_version = pegasus_version
                 else:
-                    for ver in COMPATIBILITY:
-                        if COMPATIBILITY[ver] == version:
-                            friendly_version = ver
+                    friendly_version = get_compatible_version(version)
 
             if compatible:
                 log.info("Your database is compatible with version %s." % friendly_version)
@@ -226,9 +220,11 @@ class AdminDB(object):
         
         if version == CURRENT_DB_VERSION:
             version = version - 1
+            previous_version = 'Z'
             for ver in COMPATIBILITY:
-                if COMPATIBILITY[ver] < CURRENT_DB_VERSION:
+                if COMPATIBILITY[ver] < CURRENT_DB_VERSION and ver < previous_version:
                     version = COMPATIBILITY[ver]
+                    previous_version = ver
         
         if current_version < version:
             log.error("Unable to run downgrade. Current database version is older than specified version '%s'." % (pegasus_version))
