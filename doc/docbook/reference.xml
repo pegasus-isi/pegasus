@@ -9,6 +9,4 @@
   <xi:include href="reference_transfers.xml"/>
   <xi:include href="reference_hierarchical_workflow.xml"/>
   <xi:include href="reference_notifications.xml"/>
-  <xi:include href="reference_api.xml"/>
-  <xi:include href="reference_command_lines.xml"/>
 </chapter>

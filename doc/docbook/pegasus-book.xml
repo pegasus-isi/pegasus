@@ -15,6 +15,8 @@
   <xi:include href="optimization.xml"/>
   <xi:include href="service.xml"/>
   <xi:include href="reference.xml"/>
+  <xi:include href="reference_api.xml"/>
+  <xi:include href="reference_command_lines.xml"/>
   <xi:include href="useful_tips.xml"/>
   <xi:include href="funding_citing_usage_stats.xml"/>
   <xi:include href="glossary.xml"/>
