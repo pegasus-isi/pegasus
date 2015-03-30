@@ -134,7 +134,7 @@
     &lt;uses name="f.a" link="input"  register="false" transfer="true" type="data" /&gt;
     &lt;uses name="f.b" link="output" register="false" transfer="true" type="data" /&gt;
     
-    &lt;!-- 'WHEN' enumeration: never, start, on_error, on_success, on_end, all --&gt;
+    &lt;!-- 'WHEN' enumeration: never, start, on_error, on_success, at_end, all --&gt;
     <emphasis role="bold">&lt;invoke when="start"&gt;/path/to/notify1 arg1 arg2&lt;/invoke&gt;
     &lt;invoke when="start"&gt;/path/to/notify1 arg3 arg4&lt;/invoke&gt;
     &lt;invoke when="on_success"&gt;/path/to/notify2 arg3 arg4&lt;/invoke&gt;</emphasis>
