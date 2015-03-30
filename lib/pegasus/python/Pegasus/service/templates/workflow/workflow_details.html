@@ -55,7 +55,7 @@ $(document).ready (function ()
                         }
                         else
                         {
-                            $ ('#sub_workflows_list').dataTable ({"bJQueryUI": true, "sPaginationType": "full_numbers"});
+                            $ ('#sub_workflows_list').dataTable ({"jQueryUI": true, "pagingType": "full_numbers"});
                         }
                     },
                     activate: function (event, ui)
@@ -66,48 +66,48 @@ $(document).ready (function ()
                         {
                             tablesInitialized [tabIndex] = true;
 
-                            $ ('#failed_jobs_list').dataTable ({"bJQueryUI": true,
-                                "sPaginationType"                          : "full_numbers",
-                                "bProcessing"                              : true,
-                                "bServerSide"                              : true,
-                                "sAjaxSource"                              : "{{ url_for ('.failed_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
-                                "bAutoWidth"                               : false
+                            $ ('#failed_jobs_list').dataTable ({"jQueryUI": true,
+                                "pagingType"                          : "full_numbers",
+                                "processing"                              : true,
+                                "serverSide"                              : true,
+                                "ajax"                              : "{{ url_for ('.failed_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
+                                "autoWidth"                               : false
                             });
                         }
                         else if (tabIndex == 2 && !tablesInitialized [tabIndex])
                         {
                             tablesInitialized [tabIndex] = true;
 
-                            $ ('#running_jobs_list').dataTable ({"bJQueryUI": true,
-                                "sPaginationType"                           : "full_numbers",
-                                "bProcessing"                               : true,
-                                "bServerSide"                               : true,
-                                "sAjaxSource"                               : "{{ url_for ('.running_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
-                                "bAutoWidth"                                : false
+                            $ ('#running_jobs_list').dataTable ({"jQueryUI": true,
+                                "pagingType"                           : "full_numbers",
+                                "processing"                               : true,
+                                "serverSide"                               : true,
+                                "ajax"                               : "{{ url_for ('.running_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
+                                "autoWidth"                                : false
                             });
                         }
                         else if (tabIndex == 3 && !tablesInitialized [tabIndex])
                         {
                             tablesInitialized [tabIndex] = true;
 
-                            $ ('#successful_jobs_list').dataTable ({"bJQueryUI": true,
-                                "sPaginationType"                              : "full_numbers",
-                                "bProcessing"                                  : true,
-                                "bServerSide"                                  : true,
-                                "sAjaxSource"                                  : "{{ url_for ('.successful_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
-                                "bAutoWidth"                                   : false
+                            $ ('#successful_jobs_list').dataTable ({"jQueryUI": true,
+                                "pagingType"                              : "full_numbers",
+                                "processing"                                  : true,
+                                "serverSide"                                  : true,
+                                "ajax"                                  : "{{ url_for ('.successful_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
+                                "autoWidth"                                   : false
                             });
                         }
                         else if (tabIndex == 4 && !tablesInitialized [tabIndex])
                         {
                             tablesInitialized [tabIndex] = true;
 
-                            $ ('#failing_jobs_list').dataTable ({"bJQueryUI": true,
-                                "sPaginationType"                              : "full_numbers",
-                                "bProcessing"                                  : true,
-                                "bServerSide"                                  : true,
-                                "sAjaxSource"                                  : "{{ url_for ('.failing_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
-                                "bAutoWidth"                                   : false
+                            $ ('#failing_jobs_list').dataTable ({"jQueryUI": true,
+                                "pagingType"                              : "full_numbers",
+                                "processing"                                  : true,
+                                "serverSide"                                  : true,
+                                "ajax"                                  : "{{ url_for ('.failing_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
+                                "autoWidth"                                   : false
                             });
                         }
                     }

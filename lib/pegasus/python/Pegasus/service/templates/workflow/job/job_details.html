@@ -57,7 +57,7 @@
                             }
                             else
                             {
-                                $('#failed_invocations_list').dataTable ({"bJQueryUI" : true, "sPaginationType": "full_numbers"});
+                                $('#failed_invocations_list').dataTable ({"jQueryUI" : true, "pagingType": "full_numbers"});
                             }
                         }
                         else if (index == 1)
@@ -70,7 +70,7 @@
                             }
                             else
                             {
-                                $('#successful_invocations_list').dataTable ({"bJQueryUI" : true, "sPaginationType": "full_numbers"});
+                                $('#successful_invocations_list').dataTable ({"jQueryUI" : true, "pagingType": "full_numbers"});
                             }
                         }
                     }
@@ -79,15 +79,15 @@
         verticalTableInitStatus ('#job_text_info', {{ status_code(job.exitcode) }});
         verticalTableInitStatus ('#job_states_info', {{ status_code(job.exitcode) }});
 
-        $('#job_instances_info').dataTable({"bJQueryUI": true,
-            "bJQueryUI": true,
-            "sPaginationType": "full_numbers",
-            "bFilter": false,
-            "bInfo": true,
-            "aaSorting"      : [
+        $('#job_instances_info').dataTable({"jQueryUI": true,
+            "jQueryUI": true,
+            "pagingType": "full_numbers",
+            "searching": false,
+            "info": true,
+            "order"      : [
                 [ 0, "desc" ]
             ],
-            "aoColumns": [
+            "columns": [
                 { "sType": "num-html" },
                 null,
                 null,
