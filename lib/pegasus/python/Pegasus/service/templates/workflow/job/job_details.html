@@ -133,7 +133,13 @@
             </tr>
             <tr>
                 <th class="job_table_width">Stdout File</th>
-                <td>{{ job.stdout_file }}</td>
+                <td class="text-nowrap">
+                    <span class="pe-7s-link"> </span>
+                    <a target="_blank" href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}?init_file={{ job.stdout_file }}"
+                       data-toggle="tooltip" data-placement="top" title="View in file browser">
+                        {{ job.stdout_file }}
+                    </a>
+                </td>
             </tr>
             <tr>
                 <th class="job_table_width">Stderr Preview</th>
@@ -143,7 +149,23 @@
             </tr>
             <tr>
                 <th class="job_table_width">Stderr File</th>
-                <td>{{ job.stderr_file }}</td>
+                <td class="text-nowrap">
+                    <span class="pe-7s-link"> </span>
+                    <a target="_blank" href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}?init_file={{ job.stderr_file }}"
+                       data-toggle="tooltip" data-placement="top" title="View in file browser">
+                        {{ job.stderr_file }}
+                    </a>
+                </td>
+            </tr>
+            <tr>
+                <th class="job_table_width">Condor Submit File</th>
+                <td class="text-nowrap">
+                    <span class="pe-7s-link"> </span>
+                    <a target="_blank" href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}?init_file={{ job.exec_job_id }}.sub"
+                       data-toggle="tooltip" data-placement="top" title="View in file browser">
+                        {{ job.exec_job_id }}.sub
+                    </a>
+                </td>
             </tr>
             <tr>
                 <th class="job_table_width">Site</th>

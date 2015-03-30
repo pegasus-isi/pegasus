@@ -292,13 +292,22 @@ clipboardTooltipInitialization();
             <tr>
                 <th>Submit Directory</th>
                 <td class="text-nowrap">
-                    <a href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}"
-                       class="file-browser" data-toggle="tooltip" data-placement="top" title="File Browser">
+                    <a target="_blank" href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}"
+                       class="file-browser" data-toggle="tooltip" data-placement="top" title="Browse directory">
                     </a>
                     <button class="copy-button" data-clipboard-text="{{ workflow.submit_dir }}">
                     </button>
                     {{ workflow.submit_dir }}
-
+                </td>
+            </tr>
+            <tr>
+                <th>DAGMan Out File</th>
+                <td class="text-nowrap">
+                    <span class="pe-7s-link"> </span>
+                    <a target="_blank" href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}?init_file={{ workflow.dax_label }}-0.dag.dagman.out"
+                       data-toggle="tooltip" data-placement="top" title="View in file browser">
+                        {{ workflow.dax_label }}-0.dag.dagman.out
+                    </a>
                 </td>
             </tr>
             <tr>
