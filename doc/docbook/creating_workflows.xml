@@ -594,7 +594,7 @@ D1/f.3 file://$input/D1/f.3 site="local"</programlisting>
         the <emphasis role="bold">gsiftp://url</emphasis> with the appropriate
         parameters for your grid site.</para>
 
-        <screen><emphasis>$<command> rc-client -Dpegasus.catalog.replica=File -Dpegasus.catalog.replica.file=$HOME/rc insert \
+        <screen><emphasis>$<command> pegasus-rc-client -Dpegasus.catalog.replica=File -Dpegasus.catalog.replica.file=$HOME/rc insert \
  f.a</command> <replaceable>gsiftp://somehost:port/path/to/file/f.a site=local</replaceable></emphasis></screen>
 
         <para>You may first want to verify that the file registeration is in
