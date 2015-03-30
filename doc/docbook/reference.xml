@@ -8,5 +8,4 @@
   <xi:include href="reference_job_clustering.xml"/>
   <xi:include href="reference_transfers.xml"/>
   <xi:include href="reference_hierarchical_workflow.xml"/>
-  <xi:include href="reference_notifications.xml"/>
 </chapter>
