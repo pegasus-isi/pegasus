@@ -742,11 +742,11 @@
     &lt;uses name="f.a" link="input"  register="false" transfer="true" type="data" /&gt;
     &lt;uses name="f.b" link="output" register="false" transfer="true" type="data" /&gt;
     
-    &lt;!-- 'WHEN' enumeration: never, start, on_error, on_success, on_end, all --&gt;
+    &lt;!-- 'WHEN' enumeration: never, start, on_error, on_success, at_end, all --&gt;
     &lt;!-- PEGASUS_* env-vars: event, status, submit dir, wf/job id, stdout, stderr --&gt;
     &lt;invoke when="start"&gt;/path/to arg arg&lt;/invoke&gt;
     &lt;invoke when="on_success"&gt;&lt;![CDATA[/path/to arg arg]]&gt;&lt;/invoke&gt;
-    &lt;invoke when="on_end"&gt;&lt;![CDATA[/path/to arg arg]]&gt;&lt;/invoke&gt;
+    &lt;invoke when="at_end"&gt;&lt;![CDATA[/path/to arg arg]]&gt;&lt;/invoke&gt;
   &lt;/job&gt;</programlisting>
 
           <para>The <emphasis>argument</emphasis> element contains the
