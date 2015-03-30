@@ -13,10 +13,89 @@ longer necessary to set the PEGASUS_HOME environment variable. However, in
 order to find all tools, you must include Pegasus's "bin" directory in your
 PATH environment variable.
 
-Please refer to the user guide for instructions on the packages and
-their installation. You can find the documentation online at
+Please refer to the user guide for instructions on the packages and their
+installation. You can find [online documentation](http://pegasus.isi.edu/documentation)
+on the Pegasus webpage and in the distributed "doc" directory. 
 
-  http://pegasus.isi.edu/documentation
+Installation
+------------
 
-and in the distributed "doc" directory. 
+The easiest way to install Pegasus is to use one of the binary packages
+available on the [Pegasus downloads page](http://pegasus.isi.edu/downloads).
+Consult [Chapter 3 of the Pegasus User Guide](http://pegasus.isi.edu/wms/docs/latest/installation.php)
+for more information about installing Pegasus from binary packages.
+
+Pegasus requires the following software to be installed on your system:
+
+* Java 1.6 or later
+* Python 2.4 or later (2.5 or later preferred)
+* Condor 8.0 or later
+* Perl 5
+* Globus 5 (optional, required for GRAM and GridFTP)
+
+Building from Source
+--------------------
+
+Pegasus can be compiled on any recent Linux or Mac OS X system.
+
+### Source Dependencies
+
+In order to build Pegasus from source, make sure you have the following
+packages installed:
+
+#### Debian systems (Debian, Ubuntu, etc.)
+
+Install the following packages using apt-get:
+
+* default-jdk
+* ant
+* gcc
+* g++
+* make
+* python-setuptools
+* asciidoc (optional, required to build documentation)
+* fop (optional, required to build documentation)
+* lintian (optional, required to build DEB package)
+* debhelper (optional, required to build DEB package)
+* asciidoc (optional, required to build documentation)
+* fop (optional, required to build documentation)
+* libmysqlclient-dev (optional, required to access MySQL databases)
+* libpq-dev (optional, required to access PostgreSQL databases)
+
+#### Red Hat systems (RHEL, CentOS, Scientific Linux, Fedora, etc.)
+
+Install the following packages using yum:
+
+* java
+* java-devel
+* ant
+* ant-junit
+* gcc
+* gcc-c++
+* make
+* python-devel
+* rpm-build (optional, required to build RPM package)
+* mysql-devel (optional, required to access MySQL databases)
+* postgresql-devel (optional, required to access PostgreSQL databases)
+
+#### Mac OS X
+
+Install Xcode and the Xcode command-line tools.
+
+Install homebrew and the following homebrew packages:
+
+* mysql (optional, required to access MySQL databases)
+* postgresql (optional, required to access PostgreSQL databases)
+
+### Compiling
+
+Ant is used to compile Pegasus.
+
+To build a binary tarball (excluding documentation), run:
+
+ $ ant dist
+
+To build the release tarball (including documentation), run:
+
+ $ ant dist-release
 
