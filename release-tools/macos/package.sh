@@ -29,7 +29,7 @@ mkdir -p $DMG_DIR $PKG_DIR
 cp -r $ROOT_DIR/bin $ROOT_DIR/share $ROOT_DIR/lib $PKG_DIR
 
 # Add other files to the DMG
-cp $ROOT_DIR/README $ROOT_DIR/LICENSE $ROOT_DIR/RELEASE_NOTES $ROOT_DIR/share/doc/pegasus/pegasus-user-guide.pdf $DMG_DIR/
+cp $ROOT_DIR/README.md $ROOT_DIR/LICENSE $ROOT_DIR/RELEASE_NOTES $ROOT_DIR/share/doc/pegasus/pegasus-user-guide.pdf $DMG_DIR/
 cp $MYDIR/Uninstall.tool "$DMG_DIR/Uninstall Pegasus.tool"
 
 # Build the package

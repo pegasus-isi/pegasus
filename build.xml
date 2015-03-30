@@ -421,7 +421,7 @@
     </chmod>
     <chmod perm="0755" type="file">
       <fileset dir="${dist.share}/visualize">
-        <exclude name="README"/>
+        <exclude name="README.md"/>
         <exclude name="Common.pm"/>
       </fileset>
     </chmod>
@@ -443,7 +443,7 @@
 
     <copy preservelastmodified="true" todir="${dist.dir}">
       <fileset dir="${basedir}">
-        <include name="README"/>
+        <include name="README.md"/>
         <include name="LICENSE"/>
         <include name="RELEASE_NOTES"/>
       </fileset>
