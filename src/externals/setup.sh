@@ -23,8 +23,16 @@ else
     packages+=("SQLAlchemy-0.8.0")
     packages+=("pam-0.1.4")
     packages+=("pyOpenSSL-0.13")
-    packages+=("psycopg2-2.6")
-    packages+=("MySQL-python-1.2.5")
+    if [ -x "$(which pg_config 2>/dev/null)" ]; then
+        packages+=("psycopg2-2.6")
+    else
+        echo "WARNING: pg_config not found: skipping python postgresql library" >&2
+    fi
+    if [ -x "$(which mysql_config 2>/dev/null)" ]; then
+        packages+=("MySQL-python-1.2.5")
+    else
+        echo "WARNING: mysql_config not found: skipping python mysql library" >&2
+    fi
     packages+=("setuptools-14.3.1")
 fi
 
