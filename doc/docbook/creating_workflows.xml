@@ -204,20 +204,6 @@
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">Replica Location Service</emphasis></para>
-
-        <itemizedlist>
-          <listitem>
-            <para><emphasis role="bold">RLS</emphasis></para>
-          </listitem>
-
-          <listitem>
-            <para><emphasis role="bold">LRC</emphasis></para>
-          </listitem>
-        </itemizedlist>
-      </listitem>
-
-      <listitem>
         <para><emphasis role="bold">MRC</emphasis></para>
       </listitem>
     </orderedlist>
@@ -443,71 +429,6 @@ D1/f.3 file://$input/D1/f.3 site="local"</programlisting>
       remove entries from the JDBCRC backend.</para>
     </section>
 
-    <section id="rc-RLS">
-      <title>Replica Location Service</title>
-
-      <para>Replica Location Service (RLS) is a distributed replica catalog,
-      that ships with Globus. There is an index service called Replica
-      Location Index (RLI) to which 1 or more Local Replica Catalog (LRC)
-      report. Each LRC can contain all or a subset of mappings.</para>
-
-      <para>Details about RLS can be found at <ulink
-      url="http://www.globus.org/toolkit/data/rls/">http://www.globus.org/toolkit/data/rls/</ulink></para>
-
-      <section>
-        <title>RLS</title>
-
-        <para>In this mode, Pegasus queries the central RLI to discover in
-        which LRC&amp;rsquor;s the mappings for a LFN reside. It then queries
-        the individual LRC&amp;rsquor;s for the PFN&amp;rsquor;s. To use this
-        mode the following properties need to be set:</para>
-
-        <para><orderedlist>
-            <listitem>
-              <para><emphasis
-              role="bold">pegasus.catalog.replica=RLS</emphasis></para>
-            </listitem>
-
-            <listitem>
-              <para><emphasis
-              role="bold">pegasus.catalog.replica.url=<replaceable>&lt;url to
-              the globus LRC&gt;</replaceable></emphasis></para>
-            </listitem>
-          </orderedlist></para>
-      </section>
-
-      <section>
-        <title>LRC</title>
-
-        <para>This mode is availabe If the user does not want to query the RLI
-        (Replica Location Index), but instead wishes to directly query a
-        single Local Replica Catalog. To use the LRC mode the follow
-        properties need to be set</para>
-
-        <para><orderedlist>
-            <listitem>
-              <para><emphasis
-              role="bold">pegasus.catalog.replica=<replaceable>LRC</replaceable></emphasis></para>
-            </listitem>
-
-            <listitem>
-              <para><emphasis
-              role="bold">pegasus.catalog.replica.url=<replaceable>&lt;url to
-              the globus LRC&gt;</replaceable></emphasis></para>
-            </listitem>
-          </orderedlist></para>
-
-        <para>Details about Globus Replica Catalog and LRC can be found at
-        <ulink
-        url="http://www.globus.org/toolkit/data/rls/">http://www.globus.org/toolkit/data/rls/</ulink></para>
-
-        <note>
-          <para>Replica Location Service is no longer officially supported by
-          Globus.</para>
-        </note>
-      </section>
-    </section>
-
     <section id="rc-MRC">
       <title>MRC</title>
 
@@ -544,35 +465,36 @@ D1/f.3 file://$input/D1/f.3 site="local"</programlisting>
         </listitem>
       </itemizedlist>
 
-      <para>For example, to query two lrcs at the same time specify the
-      following:</para>
+      <para>For example, to query a File catalog and JDBCRC t the same time
+      specify the following:</para>
 
       <para><itemizedlist>
           <listitem>
             <para><emphasis
-            role="bold">pegasus.catalog.replica.mrc.lrc1=LRC</emphasis></para>
+            role="bold">pegasus.catalog.replica.mrc.jdbcrc=JDBCRC</emphasis></para>
           </listitem>
 
           <listitem>
             <para><emphasis
-            role="bold">pegasus.catalog.replica.mrc.lrc1.url=<replaceable>&lt;url
-            to the 1st globus LRC&gt;</replaceable></emphasis></para>
+            role="bold">pegasus.catalog.replica.mrc.jdbcrc.url=<replaceable>&lt;jdbc
+            url &gt;</replaceable></emphasis></para>
           </listitem>
 
           <listitem>
             <para><emphasis
-            role="bold">pegasus.catalog.replica.mrc.lrc2=LRC</emphasis></para>
+            role="bold">pegasus.catalog.replica.mrc.file1=File</emphasis></para>
           </listitem>
 
           <listitem>
             <para><emphasis
-            role="bold">pegasus.catalog.replica.mrc.lrc2.url=</emphasis><emphasis
-            role="bold">&lt;url to the 2nd globus LRC&gt;</emphasis></para>
+            role="bold">pegasus.catalog.replica.mrc.file1.url=</emphasis><emphasis
+            role="bold">&lt;path to file based replica
+            catalog&gt;</emphasis></para>
           </listitem>
         </itemizedlist></para>
 
-      <para>In the above example,<emphasis role="bold">lrc1</emphasis> and
-      <emphasis role="bold"> lrc2</emphasis> are any valid identifier names
+      <para>In the above example,<emphasis role="bold"> jdbcrc</emphasis> and
+      <emphasis role="bold"> file1</emphasis> are any valid identifier names
       and <emphasis role="bold">url</emphasis> is the property key that needed
       to be specified.</para>
 
@@ -766,7 +688,8 @@ f.a gsiftp://somehost:port/path/to/file/f.a site=local</computeroutput></screen>
           <listitem>
             <para><emphasis role="bold">replica-catalog</emphasis> - URL for a
             local replica catalog (LRC) to register your files in. Only used
-            for RLS implementation of the RC. This is optional</para>
+            for RLS implementation of the RC. This is optional and support for
+            RLS has been dropped in Pegasus 4.5.0 release.</para>
           </listitem>
 
           <listitem>
@@ -856,7 +779,8 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
           <listitem>
             <para><emphasis role="bold">replica-catalog</emphasis> - URL for a
             local replica catalog (LRC) to register your files in. Only used
-            for RLS implementation of the RC. This is optional</para>
+            for RLS implementation of the RC. This is optional and support for
+            RLS has been dropped in Pegasus 4.5.0.</para>
           </listitem>
 
           <listitem>
