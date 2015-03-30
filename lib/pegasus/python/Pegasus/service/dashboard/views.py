@@ -438,60 +438,76 @@ def __get_datatables_args():
     """
     Extract list of arguments passed in the request
     """
+
     table_args = dict()
 
-    if request.args.get('sEcho'):
-        table_args['sequence'] = request.args.get('sEcho')
+    #
+    # Common Arguments
+    #
 
-    if request.args.get('iColumns'):
-        table_args['column-count'] = int(request.args.get('iColumns'))
+    table_args['column-count'] = 0
+    table_args['sort-col-count'] = 0
 
-    if request.args.get('sColumns'):
-        table_args['columns'] = request.args.get('sColumns')
+    if request.args.get('draw'):
+        table_args['sequence'] = request.args.get('draw')
 
-    if request.args.get('iDisplayStart'):
-        table_args['offset'] = int(request.args.get('iDisplayStart'))
+    if request.args.get('start'):
+        table_args['offset'] = int(request.args.get('start'))
 
-    if request.args.get('iDisplayLength'):
-        table_args['limit'] = int(request.args.get('iDisplayLength'))
+    if request.args.get('length'):
+        table_args['limit'] = int(request.args.get('length'))
 
-    if request.args.get('sSearch'):
-        table_args['filter'] = request.args.get('sSearch')
+    if request.args.get('search[value]'):
+        table_args['filter'] = request.args.get('search[value]')
 
-    if request.args.get('bRegex'):
-        table_args['filter-regex'] = request.args.get('bRegex')
+    if request.args.get('search[regex]'):
+        table_args['filter-regex'] = request.args.get('search[regex]')
 
-    if request.args.get('iSortingCols'):
-        table_args['sort-col-count'] = int(request.args.get('iSortingCols'))
+    #
+    # Custom Arguments
+    #
 
     if request.args.get('time_filter'):
         table_args['time_filter'] = request.args.get('time_filter')
 
-    if request.args.get('iColumns'):
-        for i in range(int(request.args.get('iColumns'))):
-            i = str(i)
+    i = 0
+    while True:
+        if request.args.get('columns[%d][data]' % i):
+            table_args['column-count'] += 1
+            table_args['mDataProp_%d' % i] = request.args.get('columns[%d][data]' % i)
+        else:
+            break
 
-            if request.args.get('mDataProp_' + i):
-                table_args['mDataProp_' + i] = request.args.get('mDataProp_' + i)
+        #
+        # Column Search
+        #
 
-            if request.args.get('sSearch_' + i):
-                table_args['sSearch_' + i] = request.args.get('sSearch_' + i)
+        if request.args.get('columns[%d][searchable]' % i):
+            table_args['bSearchable_%d' % i] = request.args.get('columns[%d][searchable]' % i)
 
-            if request.args.get('bRegex_' + i):
-                table_args['bRegex_' + i] = request.args.get('bRegex_' + i)
+        if request.args.get('columns[%d][search][value]' % i):
+            table_args['sSearch_%d' % i] = request.args.get('columns[%d][search][value]' % i)
 
-            if request.args.get('bSearchable_' + i):
-                table_args['bSearchable_' + i] = request.args.get('bSearchable_' + i)
+        if request.args.get('columns[%d][search][regex]' % i):
+            table_args['bRegex_%d' % i] = request.args.get('columns[%d][search][regex]' % i)
 
-            if request.args.get('iSortCol_' + i):
-                table_args['iSortCol_' + i] = int(request.args.get('iSortCol_' + i))
+        #
+        # Column Sort
+        #
 
-            if request.args.get('bSortable_' + i):
-                table_args['bSortable_' + i] = request.args.get('bSortable_' + i)
+        if request.args.get('columns[%d][orderable]' % i):
+            table_args['bSortable_%d' % i] = request.args.get('columns[%d][orderable]' % i)
 
-            if request.args.get('sSortDir_' + i):
-                table_args['sSortDir_' + i] = request.args.get('sSortDir_' + i)
+        if request.args.get('order[%d][column]' % i):
+            table_args['sort-col-count'] += 1
+            table_args['iSortCol_%d' % i] = int(request.args.get('order[%d][column]' % i))
 
+        if request.args.get('order[%d][dir]' % i):
+            table_args['sSortDir_%d' % i] = request.args.get('order[%d][dir]' % i)
+
+        i += 1
+
+    print i, table_args
     return table_args
 
 
