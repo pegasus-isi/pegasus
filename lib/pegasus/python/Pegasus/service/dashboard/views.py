@@ -102,7 +102,7 @@ def sub_workflows(username, root_wf_id, wf_id):
         return render_template('workflow/sub_workflows.html', root_wf_id=root_wf_id, wf_id=wf_id, workflows=sub_workflows)
 
 
-@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/jobs/failed/', methods=['GET'])
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/j/failed/', methods=['GET'])
 def failed_jobs(username, root_wf_id, wf_id):
     """
     Get a list of all failed jobs of the latest instance for a given workflow.
@@ -120,7 +120,7 @@ def failed_jobs(username, root_wf_id, wf_id):
     return render_template('workflow/jobs_failed.xhr.json', count=total_count, filtered=filtered_count, jobs=failed_jobs_list, table_args=args)
 
 
-@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/jobs/running/', methods=['GET'])
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/j/running/', methods=['GET'])
 def running_jobs(username, root_wf_id, wf_id):
     """
     Get a list of all running jobs of the latest instance for a given workflow.
@@ -136,7 +136,7 @@ def running_jobs(username, root_wf_id, wf_id):
     return render_template('workflow/jobs_running.xhr.json', count=total_count, filtered=filtered_count, jobs=running_jobs_list, table_args=args)
 
 
-@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/jobs/successful/', methods=['GET'])
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/j/successful/', methods=['GET'])
 def successful_jobs(username, root_wf_id, wf_id):
     """
     Get a list of all successful jobs of the latest instance for a given workflow.
@@ -153,7 +153,7 @@ def successful_jobs(username, root_wf_id, wf_id):
     return render_template('workflow/jobs_successful.xhr.json', count=total_count, filtered=filtered_count, jobs=successful_jobs_list, table_args=args)
 
 
-@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/jobs/failing/', methods=['GET'])
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/j/failing/', methods=['GET'])
 def failing_jobs(username, root_wf_id, wf_id):
     """
     Get a list of failing jobs of the latest instance for a given workflow.
@@ -229,7 +229,7 @@ def stderr(username, root_wf_id, wf_id, job_id, job_instance_id):
         return '<pre>%s</pre>' % utils.unquote(text.stderr_text)
 
 
-@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>/invocations/successful', methods=['GET'])
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>/i/successful', methods=['GET'])
 def successful_invocations(username, root_wf_id, wf_id, job_id, job_instance_id):
     """
     Get list of successful invocations for a given job.
@@ -253,7 +253,7 @@ def successful_invocations(username, root_wf_id, wf_id, job_id, job_instance_id)
                                job_id=job_id, job_instance_id=job_instance_id, invocations=successful_invocations_list)
 
 
-@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>/invocations/failed', methods=['GET'])
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>/i/failed', methods=['GET'])
 def failed_invocations(username, root_wf_id, wf_id, job_id, job_instance_id):
     """
     Get list of failed invocations for a given job.
