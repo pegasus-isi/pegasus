@@ -62,7 +62,10 @@ class AdminDB(object):
                 dburi = self._get_master_uri()
                 
         if dburi:
-            log.debug("Using database: %s" % dburi)
+            if create:
+                log.debug("Using database: %s" % dburi)
+            else:
+                log.debug("Using database: %s" % dburi)
             self.db = connection.connect(dburi, create=create)
         else:
             log.error("Unable to find a database URI to connect.")

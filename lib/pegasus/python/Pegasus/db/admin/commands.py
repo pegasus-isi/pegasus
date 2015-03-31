@@ -26,8 +26,8 @@ def set_log_level(debug):
     if debug:
         log_level = logging.DEBUG
 
-    logging.basicConfig(level=log_level)
     logging.getLogger().setLevel(log_level)
+    consoleHandler.setLevel(log_level)
 
 
 # ------------------------------------------------------
@@ -47,7 +47,7 @@ class CreateCommand(Command):
         if len(self.args) > 0:
             dburi = self.args[0]
         
-        AdminDB(dburi, create=True)
+        AdminDB(dburi=dburi, create=True)
         log.info("Pegasus databases were successfully created.")
     
     
