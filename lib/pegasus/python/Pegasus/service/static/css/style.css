@@ -74,12 +74,24 @@
     padding-left: 1em;
 }
 
-.file-list .directory:before {
-    font-family: 'Pe-icon-7-stroke';
-    font-size: 1.2em;
+.file-list .directory {
+    cursor: pointer;
+}
+
+.file-list .directory .collapsed:before {
+    font-family: 'FontAwesome';
+    font-size: 1.1em;
     vertical-align: -15%;
     padding-right: .2em;
-    content: '\e653';
+    content: '\f114';
+}
+
+.file-list .directory:before {
+    font-family: 'FontAwesome';
+    font-size: 1.1em;
+    vertical-align: -15%;
+    padding-right: .2em;
+    content: '\f115';
 }
 
 .file-list ul li:before {
