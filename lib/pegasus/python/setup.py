@@ -65,7 +65,9 @@ setup(
         "itsdangerous==0.21",
         "boto==2.5.2",
         "pam==0.1.4",
-        "pyOpenSSL==0.13"
+        "pyOpenSSL==0.13",
+        "MySQL-python==1.2.5",
+        "psycopg2==2.6"
     ]
 )
 
