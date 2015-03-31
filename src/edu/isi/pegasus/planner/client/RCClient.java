@@ -1075,19 +1075,19 @@ public class RCClient extends Toolkit {
 
 	} catch (ReplicaCatalogException rce) {
 	    do {
-		RCClient.log(Level.ERROR, rce.getMessage());
+		RCClient.log(Level.FATAL, rce.getMessage());
 		rce = (ReplicaCatalogException) rce.getNextException();
 	    } while (rce != null);
 	    result = 1;
 	} catch (RuntimeException rte) {
 	    do {
-		RCClient.log(Level.ERROR,
+		RCClient.log(Level.FATAL,
 			rte.getClass() + " " + rte.getMessage());
 		rte = (RuntimeException) rte.getCause();
 	    } while (rte != null);
 	    result = 1;
 	} catch (Exception e) {
-	    RCClient.log(Level.ERROR, e.getMessage());
+	    RCClient.log(Level.FATAL, e.getMessage());
 	    e.printStackTrace();
 	    result = 2;
 	} finally {
