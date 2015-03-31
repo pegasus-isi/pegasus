@@ -169,6 +169,7 @@ static int max_descriptors = 0;
 /* This is the trace file where we write information about the process */
 static FILE* trace = NULL;
 static pthread_t timer_thread;
+static int library_loaded = 1;
 
 static FILE *fopen_untraced(const char *path, const char *mode);
 static int fprintf_untraced(FILE *stream, const char *format, ...);
@@ -183,12 +184,13 @@ static IoUtilInfo read_io_status();
 static char* read_exe();
 
 
+
 // Utility function to open the kickstart status file based on environment variable
 static FILE* open_kickstart_status_file() {
-    char *kickstart_status = getenv("KICKSTART_STATUS");
+    char *kickstart_status = getenv("KICKSTART_MON_FILE");
 
     if (kickstart_status == NULL) {
-        printerr("Unable to open kickstart status file: KICKSTART_STATUS not set in environment");
+        printerr("Unable to open kickstart status file: KICKSTART_MON_FILE not set in environment\n");
         return NULL;
     }
 
@@ -212,7 +214,7 @@ static void* timer_thread_func(void* mpi_rank_void) {
 
     if( gethostname(hostname, BUFSIZ) ) {
         printerr("[Thread-%d] ERROR: couldn't get hostname: %s\n", mpi_rank, strerror(errno));
-        return 1;
+        return NULL;
     }
 
     FILE* kickstart_status = open_kickstart_status_file();
@@ -221,7 +223,14 @@ static void* timer_thread_func(void* mpi_rank_void) {
         return NULL;
     }
 
-    while(1) {        
+    char* kickstart_pid = getenv("KICKSTART_MON_PID");
+    if (kickstart_pid == NULL) {
+        printerr("KICKSTART_MON_PID not set in environment\n");
+        return NULL;
+    }
+
+
+    while(library_loaded) {        
         sleep(interval);
 
         printerr("[Thread-%d] is dumping monitoring information\n", mpi_rank);
@@ -232,11 +241,11 @@ static void* timer_thread_func(void* mpi_rank_void) {
         timestamp = get_time();
 
         fprintf(kickstart_status, "ts=%f event=workflow_trace level=INFO status=0 "         
-            "guid=na executable=%s hostname=%s mpi_rank=%d utime=%.3f stime=%.3f "
+            "guid=na kickstart_pid=%s executable=%s hostname=%s mpi_rank=%d utime=%.3f stime=%.3f "
             "iowait=%.3f vmSize=%d vmRSS=%d threads=%d read_bytes=%d write_bytes=%d "
             "syscr=%d syscw=%d\n", 
 
-            timestamp, exec_name, hostname, mpi_rank, 
+            timestamp, kickstart_pid, exec_name, hostname, mpi_rank, 
             cpu_info.real_utime, cpu_info.real_stime, cpu_info.real_iowait,
             mem_info.vmSize, mem_info.vmRSS, mem_info.threads,
             io_info.read_bytes, io_info.write_bytes, io_info.syscr, io_info.syscw);
@@ -245,6 +254,10 @@ static void* timer_thread_func(void* mpi_rank_void) {
     }
 
     fclose(kickstart_status);
+    
+    if(exec_name != NULL) {
+        free(exec_name);
+    }
 
     pthread_exit(NULL);
     return NULL;
@@ -346,14 +359,23 @@ static char *get_fullpath(const char *path) {
     return fullpath;
 }
 
-/* Read /proc/self/exe to get path to executable */
+/* Read /proc/self/exe to get path to executable 
+ * You need to free memory allocated to keep results of this function
+ */
 static char* read_exe() {
     debug("Reading exe");
-    char exe[BUFSIZ];
+    char* exe;
+
+    exe = (char*) calloc(sizeof(char), BUFSIZ);
+    if(exe == NULL) {
+        perror("libinterpose: couldn't allocate memory");
+        return NULL;
+    }
+
     int size = readlink("/proc/self/exe", exe, BUFSIZ);
     if (size < 0) {
         perror("libinterpose: Unable to readlink /proc/self/exe");
-        return;
+        return NULL;
     }
     exe[size] = '\0';
     tprintf("exe: %s\n", exe);
@@ -791,6 +813,11 @@ static void trace_sock(int sockfd, const struct sockaddr *addr, socklen_t addrle
 static void trace_dup(int oldfd, int newfd) {
     debug("trace_dup %d %d", oldfd, newfd);
 
+    if(oldfd == newfd) {
+        printerr("Old and new fds are the same\n");
+        return;
+    }
+
     Descriptor *o = get_descriptor(oldfd);
     if (o == NULL) {
         return;
@@ -865,6 +892,7 @@ void spawn_timer_thread() {
 
 /* Library initialization function */
 static void __attribute__((constructor)) interpose_init(void) {
+
     /* XXX Note that this might be called twice in one program. Java
      * seems to do this, for example.
      */
@@ -873,6 +901,7 @@ static void __attribute__((constructor)) interpose_init(void) {
     switch( tfile_exists() ) {
         case 0:
             topen();
+            printerr("I am creating a new thread...\n");
             spawn_timer_thread();
             break;
         case 1:
@@ -910,6 +939,9 @@ static void __attribute__((destructor)) interpose_fini(void) {
 
     /* Close trace file */
     tclose();
+
+    printerr("I am stopping thread...\n");
+    library_loaded = 0;
 }
 
 

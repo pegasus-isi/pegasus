@@ -71,7 +71,7 @@ machine/linux.o: machine/linux.c machine/basic.h machine/linux.h \
 monitoring.o: monitoring.c monitoring.h
 
 libinterpose.so: interpose.c
-	$(CC) $(CFLAGS) -std=gnu99 -shared -fPIC -o libinterpose.so interpose.c -ldl
+	$(CC) $(CFLAGS) -std=gnu99 -shared -fPIC -o libinterpose.so interpose.c -ldl -lpthread
 
 version.h:
 	$(CURDIR)/../../../release-tools/getversion --header > $(CURDIR)/version.h
