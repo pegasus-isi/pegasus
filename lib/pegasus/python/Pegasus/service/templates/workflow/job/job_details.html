@@ -27,59 +27,66 @@
     $(document).ready (function ()
     {
         $('#invocations_tabs').tabs (
+        {
+            beforeLoad: function (event, ui)
+            {
+                var isInitialized = ui.panel.data ('initialized');
+
+                if (isInitialized === true)
                 {
-                    beforeLoad: function (event, ui)
+                    return false;
+                }
+
+                ui.jqXHR.error (function ()
+                {
+                    ui.panel.html ('Error loading contents of this tab.');
+                })
+            },
+            load: function (event, ui)
+            {
+                var index = ui.tab.index ();
+                var panel = ui.panel;
+
+                if (index == 0)
+                {
+                    panel.data ('initialized', true);
+
+                    if (panel.html () == '')
                     {
-                        var isInitialized = ui.panel.data ('initialized');
-
-                        if (isInitialized === true)
-                        {
-                            return false;
-                        }
-
-                        ui.jqXHR.error (function ()
-                        {
-                            ui.panel.html ('Error loading contents of this tab.');
-                        })
-                    },
-                    load: function (event, ui)
-                    {
-                        var index = ui.tab.index ();
-                        var panel = ui.panel;
-
-                        if (index == 0)
-                        {
-                            panel.data ('initialized', true);
-
-                            if (panel.html () == '')
-                            {
-                                panel.html ('No failed invocations.')
-                            }
-                            else
-                            {
-                                $('#failed_invocations_list').dataTable ({"jQueryUI" : true, "pagingType": "full_numbers"});
-                            }
-                        }
-                        else if (index == 1)
-                        {
-                            panel.data ('initialized', true);
-
-                            if (panel.html () == '')
-                            {
-                                panel.html ('No successful invocations.')
-                            }
-                            else
-                            {
-                                $('#successful_invocations_list').dataTable ({"jQueryUI" : true, "pagingType": "full_numbers"});
-                            }
-                        }
+                        panel.html ('No failed invocations.')
                     }
-                });
+                    else
+                    {
+                        $('#failed_invocations_list').dataTable ({
+                            "jQueryUI" : true,
+                            "pagingType": "full_numbers"
+                        });
+                    }
+                }
+                else if (index == 1)
+                {
+                    panel.data ('initialized', true);
+
+                    if (panel.html () == '')
+                    {
+                        panel.html ('No successful invocations.')
+                    }
+                    else
+                    {
+                        $('#successful_invocations_list').dataTable ({
+                            "jQueryUI"   : true,
+                            "pagingType" : "full_numbers",
+                            "processing" : true
+                        });
+                    }
+                }
+            }
+        });
 
         verticalTableInitStatus ('#job_text_info', {{ status_code(job.exitcode) }});
         verticalTableInitStatus ('#job_states_info', {{ status_code(job.exitcode) }});
 
-        $('#job_instances_info').dataTable({"jQueryUI": true,
+        $('#job_instances_info').dataTable({
             "jQueryUI": true,
             "pagingType": "full_numbers",
             "searching": false,

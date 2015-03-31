@@ -2,12 +2,15 @@
 {% if table_args ['sequence'] %}"draw" : {{ table_args ['sequence'] }},{% else %}"draw" : 0,{% endif %}
   {% if count != None %}"recordsTotal" : {{ count }},{% else %}"recordsTotal" : {{ jobs|count }},{% endif %}
 {% if table_args ['limit'] %}"recordsFiltered" : {{ filtered }},{% endif %}
-"aaData" : [
+"data" : [
 {% if jobs %}
 {% for i in range(0, jobs|count) %}
 {
     "DT_RowClass" : "failed",
-    "0" : {{ jobs[i].exec_job_id|tojson|safe  }}, "1" : {{ jobs[i].exitcode|tojson|safe }}, "2" : {{ jobs[i].stdout|tojson|safe }}, "3" : {{ jobs[i].stderr|tojson|safe }}
+    "exec_job_id" : {{ jobs[i].exec_job_id|tojson|safe  }},
+    "exitcode" : {{ jobs[i].exitcode|tojson|safe }},
+    "stdout" : {{ jobs[i].stdout|tojson|safe }},
+    "stderr" : {{ jobs[i].stderr|tojson|safe }}
 }
 {% if i + 1 != jobs|count %}
 ,
