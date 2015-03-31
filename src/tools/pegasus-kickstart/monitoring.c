@@ -5,7 +5,8 @@
 
 #include "monitoring.h"
 
-// a util function for reading env variables with monitoring endpoint data or set default values
+// a util function for reading env variables by the main kickstart process 
+// with monitoring endpoint data or set default values
 // TODO: default values are for testing only !!!
 static void initialize_monitoring_endpoint(MonitoringEndpoint* monitoring_endpoint, char* kickstart_status_path) {
     char url[BUFSIZ], credentials[BUFSIZ], routing_key[BUFSIZ]; 
@@ -13,34 +14,25 @@ static void initialize_monitoring_endpoint(MonitoringEndpoint* monitoring_endpoi
 
     monitoring_endpoint->kickstart_status = kickstart_status_path;
 
-    envptr = getenv("KICKSTART_MON_URL");
+    envptr = getenv("KICKSTART_MON_ENDPOINT_URL");
 
-    if (envptr == NULL) {
-        strcpy(url, "http://obelix.isi.edu:15672/api/exchanges/panorama/monitoring/publish");
-    }
-    else {
+    if (envptr != NULL) {
         strcpy(url, envptr);
     }
 
     monitoring_endpoint->url = url;
 
-    envptr = getenv("KICKSTART_MON_CREDENTIALS");
+    envptr = getenv("KICKSTART_MON_ENDPOINT_CREDENTIALS");
 
-    if (envptr == NULL) {
-        strcpy(credentials, "panorama:bunny");
-    }
-    else {
+    if (envptr != NULL) {
         strcpy(credentials, envptr);
     }
 
     monitoring_endpoint->credentials = credentials;
 
-    envptr = getenv("KICKSTART_MON_ROUTE_KEY");
+    envptr = getenv("KICKSTART_MON_ENDPOINT_ROUTE_KEY");
 
-    if (envptr == NULL) {
-        strcpy(routing_key, "direct");
-    }
-    else {
+    if (envptr != NULL) {
         strcpy(routing_key, envptr);
     }
 
