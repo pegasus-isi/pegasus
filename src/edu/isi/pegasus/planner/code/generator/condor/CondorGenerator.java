@@ -164,7 +164,18 @@ public class CondorGenerator extends Abstract {
      * The default priority key associated with the cleanup jobs.
      */
     public static final int DEFAULT_CLEANUP_PRIORITY_KEY = 1000;
+    
+    /**
+     * the environment variable key populated with all jobs to have the
+     * condor job id set in the environment.
+     */
+    public static final String CONDOR_JOB_ID_ENV_KEY = "CONDOR_JOBID";
    
+    /**
+     * default value for CONDOR_JOBID env variable
+     */
+    public static final String DEFAULT_CONDOR_JOB_ID_ENV_VALUE = "$(cluster).$(process)";
+    
     /**
      * Handle to the Transformation Catalog.
      */
@@ -1691,17 +1702,14 @@ public class CondorGenerator extends Abstract {
 
 
     /**
-     * It updates/adds the environment variables that are got through the Dax with
-     * the values specified in the properties file, pool config file or adds some
-     * variables internally. In case of clashes of environment variables from
-     * various sources the following order is followed,property file,
-     * transformation catalog, pool config file and then dax.
-     * At present values are not picked from the properties file.
+     * Adds common environment variables to the job
      *
      * @param job  The Job object containing the information about the job.
      */
-    protected void handleEnvVarForJob(Job sinfo) {
-
+    protected void handleEnvVarForJob(Job job ) {
+        //PM-867 add CONDOR_JOBID
+        job.envVariables.construct( CondorGenerator.CONDOR_JOB_ID_ENV_KEY, 
+                                    CondorGenerator.DEFAULT_CONDOR_JOB_ID_ENV_VALUE );
     }
 
     /**
