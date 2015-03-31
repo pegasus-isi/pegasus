@@ -96,9 +96,16 @@ cat cache.list | grep -v ".fits " >rc
 perl -p -i -e 's/ipac_cluster/local/' rc
 cat url.list | sed 's/ http:.*ref=/ http:\/\/obelix.isi.edu\/irsa-cache/' >>rc
 
-while read p; do
-    pegasus-rc-client --conf pegasusrc insert $p
-done < rc
+echo "Updating the database..."
+pegasus-db-admin --conf pegasusrc update
+
+echo "Cleanning the database..."
+pegasus-rc-clien --conf pegasusrc list > tmp
+pegasus-rc-client -vvv --conf pegasusrc --delete tmp
+rm -rf tmp
+
+echo "Inserting new data on the database..."
+pegasus-rc-client -vvv --conf pegasusrc --insert rc
 
 echo "Planning and submitting the workflow..."
 pegasus-plan \
