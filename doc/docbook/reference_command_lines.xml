@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE section PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
-<section id="cli" xmlns:xi="http://www.w3.org/2001/XInclude">
+<chapter id="cli" xmlns:xi="http://www.w3.org/2001/XInclude">
   <title id="pegasus-cli-chapter">Command Line Tools</title>
   <xi:include href="manpage.pegasus-analyzer.xml"/>
   <xi:include href="manpage.pegasus-cleanup.xml"/>
