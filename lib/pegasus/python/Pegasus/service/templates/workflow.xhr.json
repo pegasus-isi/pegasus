@@ -6,7 +6,7 @@
 {% if workflows %}
 {% for i in range(0, workflows|count) %}
 {
-    "DT_RowClass" : "{{ workflows[i].state | to_lower_case }}",
+    "DT_RowClass" : "{% if workflows[i].archived %}archived{% else %}{{ workflows[i].state | to_lower_case }}{% endif %}",
     "0" : {{ workflows[i].dax_label|tojson|safe  }}, "1" : {{ workflows[i].submit_hostname|tojson|safe }}, "2" : {{ workflows[i].submit_dir|tojson|safe }},"3" : {{ workflows[i].state|tojson|safe }}, "4" : {{ workflows[i].timestamp|tojson|safe }}
 }
 {% if i + 1 != workflows|count %}

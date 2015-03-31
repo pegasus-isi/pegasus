@@ -104,7 +104,7 @@ class MasterDatabase(SQLAlchemyInit):
                                w.dag_file_name, w.submit_hostname,
                                w.submit_dir, w.planner_arguments,
                                w.user, w.grid_dn, w.planner_version,
-                               w.dax_label, w.dax_version, w.db_url,
+                               w.dax_label, w.dax_version, w.db_url, w.archived,
                                state)
 
         q = q.filter(w.wf_id == ws.wf_id)
