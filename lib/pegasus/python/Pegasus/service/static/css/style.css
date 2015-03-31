@@ -196,43 +196,22 @@ table.dataTable th {
 }
 
 table.dataTable tr.odd {
-    background-color: #DFD;
+    background-color: #dfd;
 }
 
 table.dataTable tr.even {
-    background-color: #EFE;
+    background-color: #efe;
 }
 
+/*
+ * Successful
+ */
 table.dataTable tr.odd.successful {
     background-color: #ddffdd;
 }
 
 table.dataTable tr.even.successful {
     background-color: #eeffee;
-}
-
-table.dataTable tr.odd.running {
-    background-color: #ddddff;
-}
-
-table.dataTable tr.even.running {
-    background-color: #eeeeff;
-}
-
-table.dataTable tr.odd.failed {
-    background-color: #ffdddd;
-}
-
-table.dataTable tr.even.failed {
-    background-color: #ffeeee;
-}
-
-table.dataTable tr.odd.failing {
-    background-color: #fff2e3;
-}
-
-table.dataTable tr.even.failing {
-    background-color: #fff9f3;
 }
 
 tr.odd.successful td.sorting_1 {
@@ -243,12 +222,34 @@ tr.even.successful td.sorting_1 {
     background-color: #d5ffd5 !important;
 }
 
+/*
+ * Running
+ */
+table.dataTable tr.odd.running {
+    background-color: #ddddff;
+}
+
+table.dataTable tr.even.running {
+    background-color: #eeeeff;
+}
+
 tr.odd.running td.sorting_1 {
     background-color: #c4c4ff !important;
 }
 
 tr.even.running td.sorting_1 {
     background-color: #d5d5ff !important;
+}
+
+/*
+ * Failed
+ */
+table.dataTable tr.odd.failed {
+    background-color: #ffdddd;
+}
+
+table.dataTable tr.even.failed {
+    background-color: #ffeeee;
 }
 
 tr.odd.failed td.sorting_1 {
@@ -259,10 +260,40 @@ tr.even.failed td.sorting_1 {
     background-color: #ffd5d5 !important;
 }
 
+/*
+ * Failing
+ */
+table.dataTable tr.odd.failing {
+    background-color: #fff2e3;
+}
+
+table.dataTable tr.even.failing {
+    background-color: #fff9f3;
+}
+
 tr.odd.failing td.sorting_1 {
     background-color: #ffe0c2 !important;
 }
 
 tr.even.failing td.sorting_1 {
     background-color: #fff0e0 !important;
+}
+
+/*
+ * Archived
+ */
+table.dataTable tr.odd.archived {
+    background-color: #e0e0e0;
+}
+
+table.dataTable tr.even.archived {
+    background-color: #f0f0f0;
+}
+
+tr.odd.archived td.sorting_1 {
+    background-color: #c0c0c0 !important;
+}
+
+tr.even.archived td.sorting_1 {
+    background-color: #d0d0d0 !important;
 }

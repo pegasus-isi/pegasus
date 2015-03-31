@@ -54,7 +54,7 @@ class SABase(object):
 
         @type   session: sqlalchemy.orm.scoping.ScopedSession object
         @param  session: SQLAlch session to commit row to.
-        """ 
+        """
         self._commit(session, batch)
 
     def merge_to_db(self, session, batch=False):
@@ -157,9 +157,9 @@ db_version = Table('dbversion', metadata,
     sqlite_autoincrement=True
 )
 
-Index('UNIQUE_VERSION', 
-    db_version.c.version_number, 
-    db_version.c.version_timestamp, 
+Index('UNIQUE_VERSION',
+    db_version.c.version_number,
+    db_version.c.version_timestamp,
     unique=True)
 
 orm.mapper(DBVersion, db_version)
@@ -480,7 +480,7 @@ pg_workflow = Table('master_workflow', metadata,
     Column('grid_dn', VARCHAR(255), nullable=True),
     Column('planner_version', VARCHAR(255), nullable=True),
     Column('db_url', TEXT, nullable=True),
-    Column('archived', BOOLEAN, nullable=False, default=False),
+    Column('archived', BOOLEAN, nullable=False, default=0),
     **table_keywords
 )
 
@@ -497,7 +497,7 @@ pg_workflowstate = Table('master_workflowstate', metadata,
     Column('state', Enum('WORKFLOW_STARTED', 'WORKFLOW_TERMINATED'), nullable=False, primary_key=True),
     Column('timestamp', NUMERIC(precision=16,scale=6), nullable=False, primary_key=True),
     Column('restart_count', INT, nullable=False),
-    Column('status', INT, nullable=True),    
+    Column('status', INT, nullable=True),
     **table_keywords
 )
 
