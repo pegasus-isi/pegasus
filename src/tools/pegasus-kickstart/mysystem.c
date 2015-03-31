@@ -350,7 +350,12 @@ static char **tryGetNewEnvironment(char **envp, const char *tempdir, const char 
     const char* kickstart_status_path) {
     int vars;
 
-    /* If KICKSTART_PREFIX or LD_PRELOAD or KICKSTART_STATUS are already set then we can't trace */
+    /* If KICKSTART_PREFIX 
+     *      or LD_PRELOAD 
+     *      or KICKSTART_MON_FILE 
+     *      or KICKSTART_MON_PID 
+     * are already set then we can't trace 
+     */
     for (vars=0; envp[vars] != NULL; vars++) {
         if (startswith(envp[vars], "KICKSTART_PREFIX=")) {
             return envp;
@@ -358,9 +363,12 @@ static char **tryGetNewEnvironment(char **envp, const char *tempdir, const char 
         if (startswith(envp[vars], "LD_PRELOAD=")) {
             return envp;
         }
-        if (startswith(envp[vars], "KICKSTART_STATUS=")) {
+        if (startswith(envp[vars], "KICKSTART_MON_FILE=")) {
             return envp;
         }
+        if (startswith(envp[vars], "KICKSTART_MON_PID=")) {
+            return envp;
+        }        
     }
 
     /* If the interpose library can't be found, then we can't trace */
@@ -379,10 +387,14 @@ static char **tryGetNewEnvironment(char **envp, const char *tempdir, const char 
     snprintf(kickstart_prefix, BUFSIZ, "KICKSTART_PREFIX=%s/%s",
              tempdir, trace_file_prefix);
 
-    /* Set KICKSTART_STATUS to be current_working_directory/kickstart_status_ */
+    /* Set KICKSTART_MON_FILE to be current_working_directory/kickstart_status_ */
     char kickstart_status[BUFSIZ];
-    snprintf(kickstart_status, BUFSIZ, "KICKSTART_STATUS=%s",
-             kickstart_status_path);
+    snprintf(kickstart_status, BUFSIZ, "KICKSTART_MON_FILE=%s", kickstart_status_path);
+
+    /* Set KICKSTART_MON_PID to be pid of the kickstart process */
+    char kickstart_pid[BUFSIZ];
+    snprintf(kickstart_pid, BUFSIZ, "KICKSTART_MON_PID=%d", getpid());
+
 
     /* Copy the environment variables to a new array */
     char **newenvp = (char **)malloc(sizeof(char **)*(vars+3));
@@ -395,10 +407,11 @@ static char **tryGetNewEnvironment(char **envp, const char *tempdir, const char 
     }
 
     /* Set the new variables */
-    newenvp[vars] = ld_preload;
+    newenvp[vars]   = ld_preload;
     newenvp[vars+1] = kickstart_prefix;
     newenvp[vars+2] = kickstart_status;
-    newenvp[vars+3] = NULL;
+    newenvp[vars+3] = kickstart_pid;
+    newenvp[vars+4] = NULL;
 
     return newenvp;
 }
@@ -478,10 +491,10 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
 //  DK: monitoring thread init
     char kickstart_status[BUFSIZ];
     if( kickstart_status_path(kickstart_status, BUFSIZ) ) {
-        printerr("ERROR: couldn't create kickstart status path\n");
+        printerr("ERROR: couldn't create kickstart status filepath\n");
     }
     else {
-        printerr("KICKSTART_STATUS: %s\n", kickstart_status);
+        printerr("KICKSTART_MON_FILE: %s\n", kickstart_status);
     }
 
     int rc = start_status_thread(&monitoring_thread, kickstart_status);
