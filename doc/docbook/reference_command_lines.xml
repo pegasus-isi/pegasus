@@ -35,4 +35,4 @@
   <xi:include href="manpage.pegasus-tc-converter.xml"/>
   <xi:include href="manpage.pegasus-transfer.xml"/>
   <xi:include href="manpage.pegasus-version.xml"/>
-</section>
+</chapter>
