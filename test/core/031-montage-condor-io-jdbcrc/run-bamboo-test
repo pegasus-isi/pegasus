@@ -100,7 +100,7 @@ echo "Updating the database..."
 pegasus-db-admin --conf pegasusrc update
 
 echo "Cleanning the database..."
-pegasus-rc-clien --conf pegasusrc list > tmp
+pegasus-rc-client --conf pegasusrc list > tmp
 pegasus-rc-client -vvv --conf pegasusrc --delete tmp
 rm -rf tmp
 
