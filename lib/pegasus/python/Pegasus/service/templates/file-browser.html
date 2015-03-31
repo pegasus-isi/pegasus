@@ -49,12 +49,12 @@
             </section>
         </section>
         <section class="row">
-            {% macro folder_structure(path) -%}
+            {% macro folder_structure(path, collapse=False) -%}
                 {% if folders[path] %}
-                    <ul>
+                    <ul style="{% if collapse %}display: none;{% endif %}">
                         {% for folder in folders[path]['D'] %}
-                            <li class="directory">{{ folder|replace(path, '') }}
-                                {{ folder_structure(folder) }}
+                            <li class="directory collapsed">{{ folder|replace(path, '') }}
+                                {{ folder_structure(folder, True) }}
                             </li>
                         {% endfor %}
                         {% for file in folders[path]['F'] %}
@@ -124,6 +124,7 @@ $(function () {
     $('.file-list .directory').click(function(event) {
         event.stopPropagation();
         $('ul', this).toggle();
+        $('ul', this).parent().toggleClass('collapsed');
     });
 
     $('.file-list li').click(function(event) {
