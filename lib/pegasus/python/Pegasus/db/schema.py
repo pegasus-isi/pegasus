@@ -157,11 +157,6 @@ db_version = Table('dbversion', metadata,
     sqlite_autoincrement=True
 )
 
-Index('UNIQUE_VERSION',
-    db_version.c.version_number,
-    db_version.c.version_timestamp,
-    unique=True)
-
 orm.mapper(DBVersion, db_version)
 
 
