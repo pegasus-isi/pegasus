@@ -1100,7 +1100,7 @@ public class RCClient extends Toolkit {
 
 	// get out
 	if (result != 0) {
-	    RCClient.log(Level.WARN, "non-zero exit-code " + result);
+	    RCClient.log(Level.ERROR, "non-zero exit-code " + result);
 	    System.exit(result);
 	}
     }
