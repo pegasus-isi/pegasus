@@ -99,3 +99,30 @@ To build the release tarball (including documentation), run:
 
  $ ant dist-release
 
+Getting Started
+---------------
+
+You can find more information about Pegasus on the [Pegasus Website](http://pegasus.isi.edu).
+
+Pegasus has an extensive [User Guide](http://pegasus.isi.edu/wms/docs/latest/)
+that documents how to create, plan, and monitor workflows.
+
+We recommend you start by completing the Pegasus Tutorial from [Chapter 2 of the
+Pegasus User Guide](http://pegasus.isi.edu/wms/docs/latest/tutorial.php).
+
+There is documentation on the Pegasus website for the
+[Python](http://pegasus.isi.edu/wms/docs/latest/python/),
+[Java](http://pegasus.isi.edu/wms/docs/latest/javadoc/) and
+[Perl](http://pegasus.isi.edu/wms/docs/latest/perl/) APIs used to construct DAXes.
+
+There are [several examples](http://pegasus.isi.edu/examples) of how to
+construct workflows on the Pegasus website and in the [Pegasus Git repository
+](https://github.com/pegasus-isi/pegasus/tree/master/share/pegasus/examples).
+
+There are also examples of how to [configure Pegasus for different execution
+environments](http://pegasus.isi.edu/wms/docs/latest/execution_environments.php)
+in the Pegasus User Guide.
+
+If you need help using Pegasus, please contact us. See the [support page]
+(http://pegasus.isi.edu/support) on the Pegasus website for contact information.
+
