@@ -781,6 +781,14 @@
 						<xs:documentation>Optional job to run independently last.</xs:documentation>
 					</xs:annotation>
 				</xs:element>
+				<xs:element name="jobids" minOccurs="0" maxOccurs="1">
+					<xs:complexType>
+						<xs:attribute name="condor" type="xs:string" use="optional"/>
+						<xs:attribute name="gram" type="xs:string" use="optional"/>
+						<xs:attribute name="lrm" type="xs:string" use="optional"/>
+						<xs:attribute name="lrmtype" type="xs:string" use="optional"/>
+					</xs:complexType>
+				</xs:element>
 				<xs:element name="cwd">
 					<xs:annotation>
 						<xs:documentation>Record the current working directory at time of execution.</xs:documentation>

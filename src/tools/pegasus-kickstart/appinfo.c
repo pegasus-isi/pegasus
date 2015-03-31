@@ -54,6 +54,59 @@ static int any_failure(const AppInfo *run) {
     return 0;
 }
 
+/* Extract all of the available job IDs out of the environment and put them in a <jobids> element */
+static void printJobIDs(FILE *out) {
+
+    fprintf(out, "  <jobids");
+
+    char *condor = getenv("CONDOR_JOBID");
+    if (condor) {
+        fprintf(out, " condor=\"%s\"", condor);
+    }
+
+    char *gram = getenv("GLOBUS_GRAM_JOB_CONTACT");
+    if (gram) {
+        fprintf(out, " gram=\"%s\"", gram);
+    }
+
+    /* We assume that there is only going to be one LRM job ID */
+    char *lrm;
+
+    lrm = getenv("SLURM_JOBID");
+    if (lrm) {
+        fprintf(out, " lrm=\"%s\" lrmtype=\"slurm\"", lrm);
+        goto end;
+    }
+
+    lrm = getenv("COBALT_JOBID");
+    if (lrm) {
+        fprintf(out, " lrm=\"%s\" lrmtype=\"cobalt\"", lrm);
+        goto end;
+    }
+
+    lrm = getenv("JOB_ID");
+    if (lrm) {
+        fprintf(out, " lrm=\"%s\" lrmtype=\"sge\"", lrm);
+        goto end;
+    }
+
+    lrm = getenv("LSB_JOBID");
+    if (lrm) {
+        fprintf(out, " lrm=\"%s\" lrmtype=\"lsf\"", lrm);
+        goto end;
+    }
+
+    /* Do PBS last so that a more specific LRM is identified, if possible */
+    lrm = getenv("PBS_JOBID");
+    if (lrm) {
+        fprintf(out, " lrm=\"%s\" lrmtype=\"pbs\"", lrm);
+        goto end;
+    }
+
+end:
+    fprintf(out, "/>\n");
+}
+
 static size_t convert2XML(FILE *out, const AppInfo* run) {
     size_t i;
     struct passwd* user = getpwuid(getuid());
@@ -152,6 +205,9 @@ static size_t convert2XML(FILE *out, const AppInfo* run) {
     printXMLJobInfo(out, 2, "mainjob", &run->application);
     printXMLJobInfo(out, 2, "postjob", &run->postjob);
     printXMLJobInfo(out, 2, "cleanup", &run->cleanup);
+
+    /* <jobid> */
+    printJobIDs(out);
 
     /* <cwd> */
     if (run->workdir != NULL) {
