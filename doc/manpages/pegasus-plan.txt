@@ -104,12 +104,12 @@ A comma separated list of paths to replica cache files that override
 the results from the replica catalog for a particular LFN.
 +
 Each entry in the cache file describes a LFN , the corresponding PFN and
-the associated attributes. The pool attribute should be specified for
+the associated attributes. The site attribute should be specified for
 each entry.
 +
 -----------
-LFN_1 PFN_1 pool=[site handle 1] 
-LFN_2 PFN_2 pool=[site handle 2]
+LFN_1 PFN_1 site=[site handle 1] 
+LFN_2 PFN_2 site=[site handle 2]
  ...
 LFN_N PFN_N [site handle N]
 -----------
@@ -266,7 +266,7 @@ properties either on the command line or the properties file to
 control the site attribute and url prefix associated with the
 mappings.
 +
-pegasus.catalog.replica.directory.site  specifies the pool attribute
+pegasus.catalog.replica.directory.site  specifies the site attribute
 to associate with the mappings. Defaults to local
 +
 pegasus.catalog.replica.directory.url.prefix specifies the URL prefix
