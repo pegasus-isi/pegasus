@@ -1216,7 +1216,7 @@ public class CPlanner extends Executable{
              append( "\n -j |--job-prefix   the prefix to be applied while construction job submit filenames "  ).
              append( "\n -I |--input-dir    an optional input directory where the input files reside on submit host"  ).
              append( "\n -O |--output-dir   an optional output directory where the output files should be transferred to on submit host. "  ).
-             append( "                      the directory specified is asscociated with the local-storage directory for the output site."  ).
+             append( "\n                      the directory specified is asscociated with the local-storage directory for the output site."  ).
              append( "\n -o |--output-site  the output site where the data products during workflow execution are transferred to."  ).
              append( "\n --output           deprecated option . Replaced by --output-site option"  ).
              append( "\n -s |--sites        comma separated list of executions sites on which to map the workflow."  ).
