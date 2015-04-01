@@ -281,8 +281,6 @@ class WorkflowInfo(SQLAlchemyInit):
 
     def get_job_information(self, job_id, job_instance_id):
 
-        #qmax = self.__get_maxjss_subquery(job_id)
-
         q = self.session.query(Job.exec_job_id, Job.clustered, JobInstance.job_instance_id, JobInstance.exitcode,
                                JobInstance.stdout_file, JobInstance.stderr_file, Host.site, Host.hostname, Host.ip)
         q = q.filter(Job.wf_id == self._wf_id)
@@ -290,13 +288,10 @@ class WorkflowInfo(SQLAlchemyInit):
         q = q.filter(JobInstance.job_instance_id == job_instance_id)
         q = q.filter(Job.job_id == JobInstance.job_id)
         q = q.outerjoin(Host, JobInstance.host_id == Host.host_id)
-        #q = q.filter(JobInstance.job_instance_id == qmax.c.job_instance_id)
 
         return q.one()
 
     def get_job_instances(self, job_id):
-
-        #qmax = self.__get_maxjss_subquery(job_id)
 
         q = self.session.query(Job.exec_job_id, JobInstance.job_instance_id, JobInstance.exitcode,
                                JobInstance.job_submit_seq)
@@ -310,15 +305,12 @@ class WorkflowInfo(SQLAlchemyInit):
 
     def get_job_states(self, job_id, job_instance_id):
 
-        #qmax = self.__get_maxjss_subquery(job_id)
-
         q = self.session.query(Jobstate.state, Jobstate.timestamp)
         q = q.filter(Job.wf_id == self._wf_id)
         q = q.filter(Job.job_id == job_id)
         q = q.filter(JobInstance.job_instance_id == job_instance_id)
         q = q.filter(Job.job_id == JobInstance.job_id)
         q = q.filter(JobInstance.job_instance_id == Jobstate.job_instance_id)
-        #q = q.filter(JobInstance.job_instance_id == qmax.c.job_instance_id)
 
         q = q.order_by(asc(Jobstate.jobstate_submit_seq))
 
@@ -659,36 +651,18 @@ class WorkflowInfo(SQLAlchemyInit):
         return q.all()
 
     def get_stdout(self, job_id, job_instance_id):
-        #jiq = orm.aliased(JobInstance, name='jii')
-        #qmax = self.session.query(JobInstance.job_instance_id, func.max(JobInstance.job_submit_seq))
-        #qmax = qmax.filter(Job.wf_id == self._wf_id)
-        #qmax = qmax.filter(Job.job_id == job_id)
-        #qmax = qmax.filter(Job.job_id == JobInstance.job_id).correlate(jiq)
-
-        #qmax = qmax.subquery('maxjss')
-
         q = self.session.query(JobInstance.stdout_file, JobInstance.stdout_text)
         q = q.filter(JobInstance.job_instance_id == job_instance_id)
 
         return q.one()
 
     def get_stderr(self, job_id, job_instance_id):
-        #jiq = orm.aliased(JobInstance, name='jii')
-        #qmax = self.session.query(JobInstance.job_instance_id, func.max(JobInstance.job_submit_seq))
-        #qmax = qmax.filter(Job.wf_id == self._wf_id)
-        #qmax = qmax.filter(Job.job_id == job_id)
-        #qmax = qmax.filter(Job.job_id == JobInstance.job_id).correlate(jiq)
-
-        #qmax = qmax.subquery('maxjss')
-
         q = self.session.query(JobInstance.stderr_file, JobInstance.stderr_text)
         q = q.filter(JobInstance.job_instance_id == job_instance_id)
 
         return q.one()
 
     def get_successful_job_invocations(self, job_id, job_instance_id):
-
-        #qmax = self.__get_maxjss_subquery(job_id)
 
         q = self.session.query(Job.exec_job_id, Invocation.abs_task_id, Invocation.exitcode, Invocation.remote_duration)
         q = q.filter(Job.wf_id == self._wf_id)
@@ -703,8 +677,6 @@ class WorkflowInfo(SQLAlchemyInit):
         return q.all()
 
     def get_failed_job_invocations(self, job_id, job_instance_id):
-
-        #qmax = self.__get_maxjss_subquery(job_id)
 
         q = self.session.query(Job.exec_job_id, Invocation.abs_task_id, Invocation.exitcode, Invocation.remote_duration)
         q = q.filter(Job.wf_id == self._wf_id)
@@ -745,8 +717,6 @@ class WorkflowInfo(SQLAlchemyInit):
         return qmax
 
     def get_invocation_information(self, job_id, job_instance_id, task_id):
-
-        #qmax = self.__get_maxjss_subquery(job_id)
 
         q = self.session.query(Invocation.abs_task_id, Invocation.start_time, Invocation.remote_duration,
                                Invocation.remote_cpu_time, Invocation.exitcode, Invocation.transformation,
