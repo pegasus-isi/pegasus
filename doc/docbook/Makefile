@@ -10,7 +10,6 @@ XML += glossary.xml
 XML += installation.xml
 XML += monitoring_debugging_stats.xml
 XML += pegasus-book.xml
-XML += reference.xml
 XML += data_management.xml
 XML += reference_api.xml
 XML += reference_command_lines.xml
