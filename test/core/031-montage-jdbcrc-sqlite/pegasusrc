@@ -1,0 +1,18 @@
+
+pegasus.catalog.site.file=sites.xml
+
+pegasus.catalog.transformation=Text
+pegasus.catalog.transformation.file=tc
+
+pegasus.dir.useTimestamp=true
+
+pegasus.data.configuration = condorio
+
+pegasus.condor.logs.symlink = false
+
+pegasus.catalog.replica = JDBCRC
+pegasus.catalog.replica.db.driver sqlite
+
+pegasus.stageout.clusters = 20
+
+
