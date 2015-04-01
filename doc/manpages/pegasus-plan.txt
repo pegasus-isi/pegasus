@@ -200,7 +200,7 @@ will go into the same clustered job.
 *--cleanup* 'cleanup strategy'::
 The cleanup strategy to be used for workflows. Pegasus can add cleanup
 jobs to the executable workflow that can remove files and directories
-during the workflow execution.
+during the workflow execution. The default strategy is inplace . 
 +
 The following type of cleanup strategies are currently supported:
 +
@@ -215,6 +215,26 @@ cleanup nodes per level of the workflow that remove files no longer
 required during execution. For example, an added cleanup node will
 remove input files for a particular compute job after the job has
 finished successfully. 
+
+By default, for hierarchal workflows the inplace cleanup is always
+turned off. This is because the cleanup algorithm ( InPlace ) does not
+work across the sub workflows. For example, if you have two DAX jobs
+in your top level workflow and the child DAX job refers to a file
+generated during the execution of the parent DAX job, the InPlace
+cleanup algorithm when applied to the parent dax job will result in
+the file being deleted, when the sub workflow corresponding to parent
+DAX job is executed. This would result in failure of sub workflow
+corresponding to the child DAX job, as the file deleted is required to
+present during it's execution.
+
+In case there are no data dependencies across the dax jobs, then yes
+you can enable the InPlace algorithm for the sub dax’es . To do this
+you can set the property 
+
+pegasus.file.cleanup.scope deferred
+
+This will result in cleanup option to be picked up from the arguments
+for the DAX job in the top level DAX. 
 
 *--conf* 'propfile'::
 The path to properties file that contains the properties planner needs to
@@ -428,11 +448,11 @@ specified the default value of *Random* is used. Other supported modes are
 *pegasus.catalog.replica*::
 Specifies the type of replica catalog to be used. 
 +
-If not specified, then the value defaults to *RLS*.
+If not specified, then the value defaults to *File*.
 
 *pegasus.catalog.replica.url*::
-Contact string to access the replica catalog. In case of RLS it is the
-RLI url.
+Contact string to access the replica catalog. In case of File it is
+path to the file based replica catalog.
 
 *pegasus.dir.exec*::
 A suffix to the workdir in the site catalog to determine the current
