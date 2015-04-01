@@ -60,6 +60,8 @@ def db_get_uri(config_properties=None, db_type=None, dburi=None):
 
         else:
             dburi = _get_master_uri()
+    else:
+        dburi = dburi.replace("jdbc:", "")
 
     if dburi:
         log.debug("Using database: %s" % dburi)
