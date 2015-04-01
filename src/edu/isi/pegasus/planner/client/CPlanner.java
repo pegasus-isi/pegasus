@@ -1200,7 +1200,7 @@ public class CPlanner extends Executable{
              append( "\n -B |--bundle       the shiwa bundle to be used. ( prototypical option )  "  ).
              append( "\n -c |--cache        comma separated list of replica cache files."  ).
              append( "\n --inherited-rc-files  comma separated list of replica files. Locations mentioned in these have a lower priority than the locations in the DAX file"  ).
-             append( "\n --cleanup          the cleanup strategy to use. Can be none|inplace|leaf ").
+             append( "\n --cleanup          the cleanup strategy to use. Can be none|inplace|leaf . Defaults to inplace. ").
              append( "\n -C |--cluster      comma separated list of clustering techniques to be applied to the workflow to "  ).
              append( "\n                    to cluster jobs in to larger jobs, to avoid scheduling overheads."  ).
              append( "\n --conf             the path to the properties file to use for planning. "  ).

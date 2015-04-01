@@ -1656,10 +1656,77 @@ irodsPassword 'somesecretpassword'</programlisting>
     </note>
   </section>
 
-  <section>
+  <section id="data_cleanup">
     <title>Data Cleanup</title>
 
-    <para>TBD</para>
+    <para>When executing large workflows, users often may run out of diskspace
+    on the remote clusters / staging site. Pegasus provides a couple of ways
+    of enabling automated data cleanup on the staging site ( i.e the scratch
+    space used by the workflows). This is achieved by adding data cleanup jobs
+    to the executable workflow that the Pegasus Mapper generates. These
+    cleanup jobs are responsible for removing files and directories during the
+    workflow execution. To enable data cleanup you can pass the --cleanup
+    option to pegasus-plan . The value passed decides the cleanup strategy
+    implemented</para>
+
+    <orderedlist>
+      <listitem>
+        <para><emphasis role="bold">none </emphasis> disables cleanup
+        altogether. The planner does not add any cleanup jobs in the
+        executable workflow whatsoever. </para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">leaf</emphasis> the planner adds a leaf
+        cleanup node per staging site that removes the directory created by
+        the create dir job in the workflow</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">inplace t</emphasis>he mapper adds cleanup
+        nodes per level of the workflow in addition to leaf cleanup nodes. The
+        nodes remove files no longer required during execution. For example,
+        an added cleanup node will remove input files for a particular compute
+        job after the job has finished successfully. This is the default
+        value.</para>
+      </listitem>
+    </orderedlist>
+
+    <note>
+      <para>For large workflows with lots of files, the inplace strategy may
+      take a long time as the algorithm works at a per file level to figure
+      out when it is safe to remove a file.</para>
+    </note>
+
+    <para/>
+
+    <section>
+      <title>Data cleanup in hierarchal workflows</title>
+
+      <para>By default, for hierarchal workflows the inplace cleanup is always
+      turned off. This is because the cleanup algorithm ( InPlace ) does not
+      work across the sub workflows. For example, if you have two DAX jobs in
+      your top level workflow and the child DAX job refers to a file generated
+      during the execution of the parent DAX job, the InPlace cleanup
+      algorithm when applied to the parent dax job will result in the file
+      being deleted, when the sub workflow corresponding to parent DAX job is
+      executed. This would result in failure of sub workflow corresponding to
+      the child DAX job, as the file deleted is required to present during
+      it's execution. </para>
+
+      <para>In case there are no data dependencies across the dax jobs, then
+      yes you can enable the InPlace algorithm for the sub dax’es . To do this
+      you can set the property </para>
+
+      <itemizedlist>
+        <listitem>
+          <para>pegasus.file.cleanup.scope deferred</para>
+        </listitem>
+      </itemizedlist>
+
+      <para> This will result in cleanup option to be picked up from the
+      arguments for the DAX job in the top level DAX .</para>
+    </section>
 
     <section>
       <title>Executables used for Directory Creation and Cleanup Jobs</title>
