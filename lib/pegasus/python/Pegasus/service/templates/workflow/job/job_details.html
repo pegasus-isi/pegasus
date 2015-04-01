@@ -95,6 +95,7 @@
                 [ 0, "desc" ]
             ],
             "columns": [
+                null,
                 { "sType": "num-html" },
                 null,
                 null,
@@ -215,6 +216,7 @@
             <table id="job_instances_info">
                 <thead>
                 <tr>
+                    <th>Retry</th>
                     <th>Job Instance ID</th>
                     <th>Exitcode</th>
                     <th>Stdout</th>
@@ -223,11 +225,13 @@
                 </thead>
                 <tbody>
                 {% for instance in job_instances %}
-                <tr class={{ status_code
-                (instance.exitcode) }}>
+                <tr class={{ status_code (instance.exitcode) }}>
+                <td>{{ loop.revindex }}</td>
                 <td>
-                    <a href="{{ url_for ('.job', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = instance.job_instance_id) }}">{{
-                        instance.job_instance_id }}</a></td>
+                    <a href="{{ url_for ('.job', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = instance.job_instance_id) }}">
+                        {{ instance.job_instance_id }}
+                    </a>
+                </td>
                 <td>{{ instance.exitcode }}</td>
                 <td>
                     <a target="_blank" href="{{ url_for ('.stdout', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = instance.job_instance_id) }}">Preview</a>

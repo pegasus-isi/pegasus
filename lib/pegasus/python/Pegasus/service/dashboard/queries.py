@@ -298,7 +298,8 @@ class WorkflowInfo(SQLAlchemyInit):
 
         #qmax = self.__get_maxjss_subquery(job_id)
 
-        q = self.session.query(Job.exec_job_id, JobInstance.job_instance_id, JobInstance.exitcode)
+        q = self.session.query(Job.exec_job_id, JobInstance.job_instance_id, JobInstance.exitcode,
+                               JobInstance.job_submit_seq)
         q = q.filter(Job.wf_id == self._wf_id)
         q = q.filter(Job.job_id == job_id)
         q = q.filter(Job.job_id == JobInstance.job_id)
