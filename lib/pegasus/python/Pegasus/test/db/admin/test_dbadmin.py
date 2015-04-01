@@ -71,7 +71,14 @@ class TestDBAdmin(unittest.TestCase):
         dburi = db_get_uri(dburi="jdbc:sqlite://tmp/test-sqlite.db")
         db = connection.connect(dburi, create=True)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
-        os.remove("/tmp/test-sqlite.db")        
+        os.remove("/tmp/test-sqlite.db")
+        
+    def test_non_existent_url(self):
+        dburi = db_get_uri(dburi="jdbc:mysql://test-url/db")
+        self.assertRaises(RuntimeError, connection.connect, dburi, create=True)
+        
+        dburi = db_get_uri(dburi="sqlite:test-url.db")
+        self.assertRaises(RuntimeError, connection.connect, dburi, create=True)
 
 if __name__ == '__main__':
     unittest.main()

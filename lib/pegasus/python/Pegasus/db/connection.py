@@ -36,8 +36,13 @@ def connect(dburi, echo=False, schema_check=True, create=False):
     
     _validate(dburi)
     
-    engine = create_engine(dburi, echo=echo, pool_recycle=True)
-
+    try:
+        engine = create_engine(dburi, echo=echo, pool_recycle=True)
+        engine.connect()
+    except Exception, e:
+        log.error(e)
+        raise RuntimeError(e)
+    
 #    if create:
 #        from Pegasus.db.admin.admin_loader import create_database
 #        create_database(dburi, engine)
