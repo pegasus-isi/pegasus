@@ -467,7 +467,7 @@ only a file based transformation catalog, with the value as *Text*.
 *pegasus.catalog.transformation.file*::
 The location of file to use as transformation catalog.
 +
-If not specified, then the default location of $PEGASUS_HOME/var/tc.data.text
+If not specified, then the default location of $PEGASUS_HOME/etc/tc.text
 
 
 *pegasus.catalog.site*::
