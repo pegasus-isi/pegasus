@@ -56,10 +56,11 @@ def connect(dburi, echo=False, schema_check=True, create=False):
 def _validate(dburi):
     
     try:
-        if "postgresql" in dburi:
-            imp.find_module('psycopg2')
-        if "mysql" in dburi:
-            imp.find_module('MySQLdb')
+        if dburi:
+            if dburi.startswith("postgresql:"):
+                imp.find_module('psycopg2')
+            if dburi.startswith("mysql:"):
+                imp.find_module('MySQLdb')
             
     except ImportError, e:
         log.error("Missing Python module: %s" % e)

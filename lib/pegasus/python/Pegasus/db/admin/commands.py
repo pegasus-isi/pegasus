@@ -18,52 +18,23 @@ logging.getLogger().addHandler(errorHandler)
 log = logging.getLogger(__name__)
 
 # ------------------------------------------------------
-def print_version(data):
-    log.info("Your database is compatible with Pegasus version: %s" % data)
-
-
-def set_log_level(debug):
-    log_level = logging.INFO
-    if debug:
-        log_level = logging.DEBUG
-
-    logging.getLogger().setLevel(log_level)
-    consoleHandler.setLevel(log_level)
-
-
-def validate_conf_type_options(config_properties, type):
-    if config_properties and not type:
-        log.error("A type should be provided with the property file.")
-        raise RuntimeError("A type should be provided with the property file.")
-    if not config_properties and type:
-        log.error("A property file should be provided with the type option.")
-        raise RuntimeError("A property file should be provided with the type option.")
-
-
-# ------------------------------------------------------
 class CreateCommand(Command):
     description = "Create Pegasus databases."
     usage = "Usage: %prog create [options] [DATABASE_URL]"
     
     def __init__(self):
         Command.__init__(self)
-        self.parser.add_option("-c","--conf",action="store",type="string", 
-            dest="config_properties",default=None,
-            help = "Specify properties file. This overrides all other property files.")
-        self.parser.add_option("-t","--type",action="store",type="string", 
-            dest="db_type",default=None, help = "Type of the database.")
-        self.parser.add_option("-d", "--debug", action="store_true", dest="debug",
-                               default=None, help="Enable debugging")
+        _add_common_options(self)
                               
     def run(self):
-        set_log_level(self.options.debug)
+        _set_log_level(self.options.debug)
         
         dburi = None
         if len(self.args) > 0:
             dburi = self.args[0]
         
         try:
-            validate_conf_type_options(self.options.config_properties, self.options.db_type)
+            _validate_conf_type_options(self.options.config_properties, self.options.db_type)
             dburi = db_get_uri(self.options.config_properties, self.options.db_type, dburi)
             connection.connect(dburi, create=True)
             log.info("Pegasus databases were successfully created.")
@@ -79,34 +50,28 @@ class DowngradeCommand(Command):
 
     def __init__(self):
         Command.__init__(self)
-        self.parser.add_option("-c","--conf",action="store",type="string", 
-            dest="config_properties",default=None,
-            help = "Specify properties file. This overrides all other property files.")
-        self.parser.add_option("-t","--type",action="store",type="string", 
-            dest="db_type",default=None, help = "Type of the database.")
+        _add_common_options(self)
         self.parser.add_option("-f","--force",action="store_true",dest="force",
             default=None, help = "Ignore conflicts or data loss.")
         self.parser.add_option("-V","--version",action="store",type="string", 
             dest="pegasus_version",default=None, help = "Pegasus version.")
-        self.parser.add_option("-d", "--debug", action="store_true", dest="debug",
-                               default=None, help="Enable debugging")
 
     def run(self):
-        set_log_level(self.options.debug)
+        _set_log_level(self.options.debug)
         
         dburi = None
         if len(self.args) > 0:
             dburi = self.args[0]
             
         try:
-            validate_conf_type_options(self.options.config_properties, self.options.db_type)
+            _validate_conf_type_options(self.options.config_properties, self.options.db_type)
             dburi = db_get_uri(self.options.config_properties, self.options.db_type, dburi)
             db = connection.connect(dburi)
             if not self.options.pegasus_version or not db_verify(db, self.options.pegasus_version):
                 db_downgrade(db, self.options.pegasus_version, self.options.force)
             
             version = db_current_version(db, parse=True)
-            print_version(version)
+            _print_version(version)
                 
         except RuntimeError:
             exit(1)
@@ -119,34 +84,28 @@ class UpdateCommand(Command):
     
     def __init__(self):
         Command.__init__(self)
-        self.parser.add_option("-c","--conf",action="store",type="string", 
-            dest="config_properties",default=None,
-            help = "Specify properties file. This overrides all other property files.")
-        self.parser.add_option("-t","--type",action="store",type="string", 
-            dest="db_type",default=None, help = "Type of the database")
+        _add_common_options(self)
         self.parser.add_option("-f","--force",action="store_true",dest="force",
             default=None, help = "Ignore conflicts or data loss")
         self.parser.add_option("-V","--version",action="store",type="string", 
             dest="pegasus_version",default=None, help = "Pegasus version")
-        self.parser.add_option("-d", "--debug", action="store_true", dest="debug",
-                               default=None, help="Enable debugging")
     
     def run(self):
-        set_log_level(self.options.debug)
+        _set_log_level(self.options.debug)
         
         dburi = None
         if len(self.args) > 0:
             dburi = self.args[0]
             
         try:
-            validate_conf_type_options(self.options.config_properties, self.options.db_type)
+            _validate_conf_type_options(self.options.config_properties, self.options.db_type)
             dburi = db_get_uri(self.options.config_properties, self.options.db_type, dburi)
             db = connection.connect(dburi)
             if not db_verify(db, self.options.pegasus_version):
                 db_update(db, self.options.pegasus_version, self.options.force)
                 
             version = db_current_version(db, parse=True)
-            print_version(version)
+            _print_version(version)
             
         except RuntimeError:
             exit(1)
@@ -159,27 +118,21 @@ class CheckCommand(Command):
 
     def __init__(self):
         Command.__init__(self)
-        self.parser.add_option("-c","--conf",action="store",type="string", 
-            dest="config_properties",default=None,
-            help = "Specify properties file. This overrides all other property files.")
-        self.parser.add_option("-t","--type",action="store",type="string", 
-            dest="db_type",default=None, help = "Type of the database")
+        _add_common_options(self)
         self.parser.add_option("-V","--version",action="store",type="string", 
             dest="pegasus_version",default=None, help = "Pegasus version")
         self.parser.add_option("-e", "--version-value", action="store_false", dest="version_value",
                                default=True, help="Show actual version values")
-        self.parser.add_option("-d", "--debug", action="store_true", dest="debug",
-                               default=None, help="Enable debugging")
                     
     def run(self):
-        set_log_level(self.options.debug)
+        _set_log_level(self.options.debug)
         
         dburi = None
         if len(self.args) > 0:
             dburi = self.args[0]
 
         try:
-            validate_conf_type_options(self.options.config_properties, self.options.db_type)
+            _validate_conf_type_options(self.options.config_properties, self.options.db_type)
             dburi = db_get_uri(self.options.config_properties, self.options.db_type, dburi)
             db = connection.connect(dburi)
             db_verify(db, self.options.pegasus_version, self.options.version_value, verbose=True)
@@ -194,31 +147,59 @@ class VersionCommand(Command):
 
     def __init__(self):
         Command.__init__(self)
-        self.parser.add_option("-c","--conf",action="store",type="string", 
-            dest="config_properties",default=None,
-            help = "Specify properties file. This overrides all other property files")
-        self.parser.add_option("-t","--type",action="store",type="string", 
-            dest="db_type",default=None, help = "Type of the database")
+        _add_common_options(self)
         self.parser.add_option("-e", "--version-value", action="store_false", dest="version_value",
                                default=True, help="Show actual version values.")
-        self.parser.add_option("-d", "--debug", action="store_true", dest="debug",
-                               default=None, help="Enable debugging")
         
     def run(self):
-        set_log_level(self.options.debug)
+        _set_log_level(self.options.debug)
         
         dburi = None
         if len(self.args) > 0:
             dburi = self.args[0]
         
         try:
-            validate_conf_type_options(self.options.config_properties, self.options.db_type)
+            _validate_conf_type_options(self.options.config_properties, self.options.db_type)
             dburi = db_get_uri(self.options.config_properties, self.options.db_type, dburi)
             db = connection.connect(dburi)
             version = db_current_version(db, self.options.version_value)
-            print_version(version)
+            _print_version(version)
         except RuntimeError:
             exit(1)
+
+
+# ------------------------------------------------------
+def _print_version(data):
+    log.info("Your database is compatible with Pegasus version: %s" % data)
+
+
+def _set_log_level(debug):
+    log_level = logging.INFO
+    if debug:
+        log_level = logging.DEBUG
+
+    logging.getLogger().setLevel(log_level)
+    consoleHandler.setLevel(log_level)
+
+
+def _validate_conf_type_options(config_properties, type):
+    if config_properties and not type:
+        log.error("A type should be provided with the property file.")
+        raise RuntimeError("A type should be provided with the property file.")
+    if not config_properties and type:
+        log.error("A property file should be provided with the type option.")
+        raise RuntimeError("A property file should be provided with the type option.")
+
+
+def _add_common_options(object):
+
+    object.parser.add_option("-c","--conf",action="store",type="string", 
+        dest="config_properties",default=None,
+        help = "Specify properties file. This overrides all other property files. Should be used with '-t'")
+    object.parser.add_option("-t","--type",action="store",type="string", 
+        dest="db_type",default=None, help = "Type of the database. Should be used with '-c'")
+    object.parser.add_option("-d", "--debug", action="store_true", dest="debug",
+        default=None, help="Enable debugging")
 
 
 # ------------------------------------------------------

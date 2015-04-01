@@ -60,10 +60,9 @@ def db_get_uri(config_properties=None, db_type=None, dburi=None):
 
         else:
             dburi = _get_master_uri()
-    else:
-        dburi = dburi.replace("jdbc:", "")
 
     if dburi:
+        dburi = _parse_jdbc_uri(dburi)
         log.debug("Using database: %s" % dburi)
         return dburi
     
@@ -219,7 +218,7 @@ def _get_jdbcrc_uri(props=None):
         if not url:
             log.error("'pegasus.catalog.replica.db.url' property not set.")
             raise RuntimeError("'pegasus.catalog.replica.db.url' property not set.")
-        url = url.replace("jdbc:", "")
+        url = _parse_jdbc_uri(url)
         o = urlparse(url)
         host = o.netloc
         database = o.path.replace("/", "")
@@ -248,11 +247,9 @@ def _get_master_uri(props=None):
     if props:
         dburi = props.property('pegasus.catalog.master.url')
         if dburi:
-            dburi = dburi.replace("jdbc:", "")
             return dburi
         dburi = props.property('pegasus.dashboard.output')
         if dburi:
-            dburi = dburi.replace("jdbc:", "")
             return dburi
 
     homedir = os.getenv("HOME", None)
@@ -268,12 +265,20 @@ def _get_workflow_uri(props=None):
     if props:
         dburi = props.property('pegasus.catalog.workflow.url')
         if dburi:
-            dburi = dburi.replace("jdbc:", "")
             return dburi
         dburi = props.property('pegasus.monitord.output')
         if dburi:
-            dburi = dburi.replace("jdbc:", "")
             return dburi
+    return None
+
+
+def _parse_jdbc_uri(dburi):
+    if dburi:
+        if dburi.startswith("jdbc:"):
+            dburi = dburi.replace("jdbc:", "")
+            if dburi.startswith("sqlite:"):
+                dburi = dburi.replace("sqlite:", "sqlite:///")
+        return dburi
     return None
 
 
