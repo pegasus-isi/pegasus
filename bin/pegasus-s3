@@ -100,7 +100,9 @@ LOCATIONS = {
 DEFAULT_CONFIG = {
     "max_object_size": str(5),
     "multipart_uploads": str(False),
-    "ranged_downloads": str(False)
+    "ranged_downloads": str(False),
+    "batch_delete": str(True),
+    "batch_delete_size": str(1000)
 }
 
 DEBUG = False
@@ -628,19 +630,62 @@ def rm(args):
     config = get_config(options)
 
     for bucket in buckets:
+
+        # Connect to the bucket
+        debug("Deleting keys from bucket %s" % bucket)
         uri, keys = buckets[bucket]
         conn = get_connection(config, uri)
         b = Bucket(connection=conn, name=uri.bucket)
+
+        # Get a final list of all the keys, resolving wildcards as necessary
+        bucket_contents = None
+        keys_to_delete = set()
         for key in keys:
             key_name = key.key
+
             if has_wildcards(key_name):
-                for k in b.list():
+
+                # If we haven't yet queried the bucket, then do so now
+                # so that we can match the wildcards
+                if bucket_contents is None:
+                    bucket_contents = b.list()
+
+                # Collect all the keys that match
+                for k in bucket_contents:
                     if fnmatch.fnmatch(k.name, key_name):
-                        info("Removing key %s" % k.name)
-                        k.delete()
+                        keys_to_delete.add(k.name)
+
             else:
-                info("Removing key %s" % key.key)
-                b.delete_key(key_name=key.key)
+                keys_to_delete.add(key_name)
+
+        info("Deleting %d keys" % len(keys_to_delete))
+
+        batch_delete = config.getboolean(uri.site, "batch_delete")
+
+        if batch_delete:
+            debug("Using batch deletes")
+
+            # Delete the keys in batches
+            batch_delete_size = config.getint(uri.site, "batch_delete_size")
+            debug("batch_delete_size: %d" % batch_delete_size)
+            batch = []
+            for k in keys_to_delete:
+                batch.append(k)
+                if len(batch) == batch_delete_size:
+                    info("Deleting batch of %d keys" % len(batch))
+                    b.delete_keys(batch, quiet=True)
+                    batch = []
+
+            # Delete the final batch
+            if len(batch) > 0:
+                info("Deleting batch of %d keys" % len(batch))
+                b.delete_keys(batch, quiet=True)
+
+        else:
+            for key_name in keys_to_delete:
+                debug("Deleting %s" % key_name)
+                b.delete_key(key_name)
+
 
 def PartialUpload(up, part, parts, fname, offset, length):
     def upload():

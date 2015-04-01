@@ -39,10 +39,10 @@ def connect(dburi, echo=False, schema_check=True, create=False):
     engine = create_engine(dburi, echo=echo, pool_recycle=True)
 
 #    if create:
-#        from Pegasus.db import schema
-#        schema.metadata.create_all(engine)
-    from Pegasus.db import schema
-    schema.metadata.create_all(engine)
+#        from Pegasus.db.admin.admin_loader import create_database
+#        create_database(dburi, engine)
+    from Pegasus.db.admin.admin_loader import db_create
+    db_create(dburi, engine)
 
     Session = orm.sessionmaker(bind=engine, autoflush=False, autocommit=False,
                                expire_on_commit=False)
@@ -59,7 +59,7 @@ def _validate(dburi):
         if "postgresql" in dburi:
             imp.find_module('psycopg2')
         if "mysql" in dburi:
-            imp.find_module('mysqldb')
+            imp.find_module('MySQLdb')
             
     except ImportError, e:
         log.error("Missing Python module: %s" % e)

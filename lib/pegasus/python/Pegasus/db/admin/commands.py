@@ -4,6 +4,7 @@ import logging
 import sys
 
 from Pegasus.command import Command, CompoundCommand
+from Pegasus.db import connection
 from Pegasus.db.admin.admin_loader import *
 from Pegasus.db.admin.versions import *
 
@@ -30,6 +31,15 @@ def set_log_level(debug):
     consoleHandler.setLevel(log_level)
 
 
+def validate_conf_type_options(config_properties, type):
+    if config_properties and not type:
+        log.error("A type should be provided with the property file.")
+        raise RuntimeError("A type should be provided with the property file.")
+    if not config_properties and type:
+        log.error("A property file should be provided with the type option.")
+        raise RuntimeError("A property file should be provided with the type option.")
+
+
 # ------------------------------------------------------
 class CreateCommand(Command):
     description = "Create Pegasus databases."
@@ -37,9 +47,14 @@ class CreateCommand(Command):
     
     def __init__(self):
         Command.__init__(self)
+        self.parser.add_option("-c","--conf",action="store",type="string", 
+            dest="config_properties",default=None,
+            help = "Specify properties file. This overrides all other property files.")
+        self.parser.add_option("-t","--type",action="store",type="string", 
+            dest="db_type",default=None, help = "Type of the database.")
         self.parser.add_option("-d", "--debug", action="store_true", dest="debug",
                                default=None, help="Enable debugging")
-            
+                              
     def run(self):
         set_log_level(self.options.debug)
         
@@ -47,8 +62,14 @@ class CreateCommand(Command):
         if len(self.args) > 0:
             dburi = self.args[0]
         
-        AdminDB(dburi=dburi, create=True)
-        log.info("Pegasus databases were successfully created.")
+        try:
+            validate_conf_type_options(self.options.config_properties, self.options.db_type)
+            dburi = db_get_uri(self.options.config_properties, self.options.db_type, dburi)
+            connection.connect(dburi, create=True)
+            log.info("Pegasus databases were successfully created.")
+            
+        except RuntimeError:
+            exit(1)
     
     
 # ------------------------------------------------------
@@ -78,11 +99,13 @@ class DowngradeCommand(Command):
             dburi = self.args[0]
             
         try:
-            adminDB = AdminDB(self.options.config_properties, self.options.db_type, dburi)
-            if not self.options.pegasus_version or not adminDB.verify(self.options.pegasus_version):
-                adminDB.downgrade(self.options.pegasus_version, self.options.force)
+            validate_conf_type_options(self.options.config_properties, self.options.db_type)
+            dburi = db_get_uri(self.options.config_properties, self.options.db_type, dburi)
+            db = connection.connect(dburi)
+            if not self.options.pegasus_version or not db_verify(db, self.options.pegasus_version):
+                db_downgrade(db, self.options.pegasus_version, self.options.force)
             
-            version = adminDB.current_version(parse=True)
+            version = db_current_version(db, parse=True)
             print_version(version)
                 
         except RuntimeError:
@@ -116,11 +139,13 @@ class UpdateCommand(Command):
             dburi = self.args[0]
             
         try:
-            adminDB = AdminDB(self.options.config_properties, self.options.db_type, dburi)
-            if not adminDB.verify(self.options.pegasus_version):
-                adminDB.update(self.options.pegasus_version, self.options.force)
+            validate_conf_type_options(self.options.config_properties, self.options.db_type)
+            dburi = db_get_uri(self.options.config_properties, self.options.db_type, dburi)
+            db = connection.connect(dburi)
+            if not db_verify(db, self.options.pegasus_version):
+                db_update(db, self.options.pegasus_version, self.options.force)
                 
-            version = adminDB.current_version(parse=True)
+            version = db_current_version(db, parse=True)
             print_version(version)
             
         except RuntimeError:
@@ -154,8 +179,10 @@ class CheckCommand(Command):
             dburi = self.args[0]
 
         try:
-            adminDB = AdminDB(self.options.config_properties, self.options.db_type, dburi)
-            adminDB.verify(self.options.pegasus_version, self.options.version_value, verbose=True)
+            validate_conf_type_options(self.options.config_properties, self.options.db_type)
+            dburi = db_get_uri(self.options.config_properties, self.options.db_type, dburi)
+            db = connection.connect(dburi)
+            db_verify(db, self.options.pegasus_version, self.options.version_value, verbose=True)
         except RuntimeError:
             exit(1)
     
@@ -185,8 +212,10 @@ class VersionCommand(Command):
             dburi = self.args[0]
         
         try:
-            adminDB = AdminDB(self.options.config_properties, self.options.db_type, dburi)
-            version = adminDB.current_version(self.options.version_value)
+            validate_conf_type_options(self.options.config_properties, self.options.db_type)
+            dburi = db_get_uri(self.options.config_properties, self.options.db_type, dburi)
+            db = connection.connect(dburi)
+            version = db_current_version(db, self.options.version_value)
             print_version(version)
         except RuntimeError:
             exit(1)
