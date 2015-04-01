@@ -274,7 +274,9 @@ if ( $config{dag} ) {
     my $c_s = find_exec('condor_submit') || die "Unable to locate condor_submit\n";
     die "ERROR: Unable to access condor_submit $c_s\n" unless -x $c_s;
     print STDERR "# found $c_s\n" if $main::DEBUG;
-    my $dag_submit_file = File::Spec->catfile( $run, "$config{dag}.condor.sub" );    
+    
+    # PM-870 we have already changed to the directory, don't prepend $run again
+    my $dag_submit_file = "$config{dag}.condor.sub";
     print STDOUT "# dagman condor submit file is $dag_submit_file\n";
 
     # sanity check: Is the DAG file there? 
