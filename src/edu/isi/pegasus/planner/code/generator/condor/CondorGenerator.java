@@ -621,22 +621,17 @@ public class CondorGenerator extends Abstract {
         fragment.append(CondorGenerator.mSeparator);
         writer.println( fragment );
 
-/*
-        writer.println(CondorGenerator.mSeparator);
-        writer.println("# PEGASUS WMS GENERATED SUBMIT FILE");
-        writer.println("# DAG : " + dagname + ", Index = " + dagindex +
-                       ", Count = " + dagcount);
-        writer.println("# SUBMIT FILE NAME : " + subfilename);
-        writer.println(CondorGenerator.mSeparator);
-*/
+        // handle environment settings
+        //before we apply any styles
+        //allows for glite to escape environment values
+        handleEnvVarForJob( job );
+        
         //figure out the style to apply for a job
         applyStyle( job, writer );
 
         // handling of  log file is now done through condor profile
         //bwSubmit.println("log = " + dagname + "_" + dagindex + ".log");
 
-        // handle environment settings
-        handleEnvVarForJob( job );
         envStr = job.envVariables.toString();
         if (envStr != null) {
             writer.print( job.envVariables );
