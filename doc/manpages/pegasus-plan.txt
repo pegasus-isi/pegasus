@@ -461,25 +461,23 @@ working directory from the site.config file. If absolute it
 constitutes the  working directory.
 
 *pegasus.catalog.transformation*::
-Specifies the type of transformation catalog to be used. One can use either a
-file based or a database based transformation catalog.  At present the
-default is *Text*.
+Specifies the type of transformation catalog to be used. One can use
+only a file based transformation catalog, with the value as *Text*.
 
 *pegasus.catalog.transformation.file*::
 The location of file to use as transformation catalog.
 +
-If not specified, then the default location of $PEGASUS_HOME/var/tc.data
-is used.
+If not specified, then the default location of $PEGASUS_HOME/var/tc.data.text
+
 
 *pegasus.catalog.site*::
 Specifies the type of site catalog to be used. One can use either a
 text based or an xml based site catalog.  At present the default is 
-*XML3*.
+*XML*.
 
 *pegasus.catalog.site.file*::
 The location of file to use as a site catalog. If not specified, then 
 default value of $PEGASUS_HOME/etc/sites.xml is used in case of the xml 
-based site catalog and $PEGASUS_HOME/etc/sites.txt in case of the text 
 based site catalog.
 
 *pegasus.data.configuration*::
