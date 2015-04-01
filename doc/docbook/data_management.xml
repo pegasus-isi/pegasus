@@ -1673,7 +1673,7 @@ irodsPassword 'somesecretpassword'</programlisting>
       <listitem>
         <para><emphasis role="bold">none </emphasis> disables cleanup
         altogether. The planner does not add any cleanup jobs in the
-        executable workflow whatsoever. </para>
+        executable workflow whatsoever.</para>
       </listitem>
 
       <listitem>
@@ -1698,10 +1698,12 @@ irodsPassword 'somesecretpassword'</programlisting>
       out when it is safe to remove a file.</para>
     </note>
 
-    <para/>
+    <para>Behaviour of the cleanup strategies implemented in the Pegasus
+    Mapper can be controlled by properties described <link
+    linkend="cleanup_props">here</link> . </para>
 
     <section>
-      <title>Data cleanup in hierarchal workflows</title>
+      <title>Data Cleanup in Hierarchal Workflows</title>
 
       <para>By default, for hierarchal workflows the inplace cleanup is always
       turned off. This is because the cleanup algorithm ( InPlace ) does not
@@ -1712,11 +1714,11 @@ irodsPassword 'somesecretpassword'</programlisting>
       being deleted, when the sub workflow corresponding to parent DAX job is
       executed. This would result in failure of sub workflow corresponding to
       the child DAX job, as the file deleted is required to present during
-      it's execution. </para>
+      it's execution.</para>
 
       <para>In case there are no data dependencies across the dax jobs, then
       yes you can enable the InPlace algorithm for the sub dax’es . To do this
-      you can set the property </para>
+      you can set the property</para>
 
       <itemizedlist>
         <listitem>
@@ -1724,7 +1726,7 @@ irodsPassword 'somesecretpassword'</programlisting>
         </listitem>
       </itemizedlist>
 
-      <para> This will result in cleanup option to be picked up from the
+      <para>This will result in cleanup option to be picked up from the
       arguments for the DAX job in the top level DAX .</para>
     </section>
 
