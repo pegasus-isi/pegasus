@@ -34,12 +34,13 @@ class CreateCommand(Command):
             dburi = self.args[0]
         
         try:
-            _validate_conf_type_options(self.options.config_properties, self.options.db_type)
-            dburi = db_get_uri(self.options.config_properties, self.options.db_type, dburi)
-            connection.connect(dburi, create=True)
-            log.info("Pegasus databases were successfully created.")
+            _validate_conf_type_options(self.options.config_properties, self.options.submit_dir, self.options.db_type)
+            db = _get_connection(dburi, self.options.config_properties, self.options.submit_dir, self.options.db_type, create=True)
+            db.close()
             
-        except RuntimeError:
+        except DBAdminError:
+            exit(1)
+        except connection.ConnectionError:
             exit(1)
     
     
@@ -64,16 +65,16 @@ class DowngradeCommand(Command):
             dburi = self.args[0]
             
         try:
-            _validate_conf_type_options(self.options.config_properties, self.options.db_type)
-            dburi = db_get_uri(self.options.config_properties, self.options.db_type, dburi)
-            db = connection.connect(dburi)
-            if not self.options.pegasus_version or not db_verify(db, self.options.pegasus_version):
-                db_downgrade(db, self.options.pegasus_version, self.options.force)
-            
+            _validate_conf_type_options(self.options.config_properties, self.options.submit_dir, self.options.db_type)
+            db = _get_connection(dburi, self.options.config_properties, self.options.submit_dir, self.options.db_type)
+            db_downgrade(db, self.options.pegasus_version, self.options.force)
             version = db_current_version(db, parse=True)
             _print_version(version)
+            db.close()
                 
-        except RuntimeError:
+        except DBAdminError:
+            exit(1)
+        except connection.ConnectionError:
             exit(1)
 
 
@@ -98,18 +99,18 @@ class UpdateCommand(Command):
             dburi = self.args[0]
             
         try:
-            _validate_conf_type_options(self.options.config_properties, self.options.db_type)
-            dburi = db_get_uri(self.options.config_properties, self.options.db_type, dburi)
-            db = connection.connect(dburi)
-            if not db_verify(db, self.options.pegasus_version):
-                db_update(db, self.options.pegasus_version, self.options.force)
-                
+            _validate_conf_type_options(self.options.config_properties, self.options.submit_dir, self.options.db_type)
+            db = _get_connection(dburi, self.options.config_properties, self.options.submit_dir, self.options.db_type)
+            db_update(db, self.options.pegasus_version, self.options.force)
             version = db_current_version(db, parse=True)
             _print_version(version)
+            db.close()
             
-        except RuntimeError:
+        except DBAdminError:
             exit(1)
-    
+        except connection.ConnectionError:
+            exit(1)
+  
     
 # ------------------------------------------------------
 class CheckCommand(Command):
@@ -132,13 +133,17 @@ class CheckCommand(Command):
             dburi = self.args[0]
 
         try:
-            _validate_conf_type_options(self.options.config_properties, self.options.db_type)
-            dburi = db_get_uri(self.options.config_properties, self.options.db_type, dburi)
-            db = connection.connect(dburi)
-            db_verify(db, self.options.pegasus_version, self.options.version_value, verbose=True)
-        except RuntimeError:
+            _validate_conf_type_options(self.options.config_properties, self.options.submit_dir, self.options.db_type)
+            db = _get_connection(dburi, self.options.config_properties, self.options.submit_dir, self.options.db_type)
+            compatible = db_verify(db, self.options.pegasus_version)
+            _print_db_check(db, compatible, self.options.pegasus_version, self.options.version_value)
+            db.close()
+
+        except DBAdminError:
             exit(1)
-    
+        except connection.ConnectionError:
+            exit(1)
+   
     
 # ------------------------------------------------------
 class VersionCommand(Command):
@@ -159,12 +164,15 @@ class VersionCommand(Command):
             dburi = self.args[0]
         
         try:
-            _validate_conf_type_options(self.options.config_properties, self.options.db_type)
-            dburi = db_get_uri(self.options.config_properties, self.options.db_type, dburi)
-            db = connection.connect(dburi)
+            _validate_conf_type_options(self.options.config_properties, self.options.submit_dir, self.options.db_type)
+            db = _get_connection(dburi, self.options.config_properties, self.options.submit_dir, self.options.db_type)
             version = db_current_version(db, self.options.version_value)
             _print_version(version)
-        except RuntimeError:
+            db.close()
+
+        except DBAdminError:
+            exit(1)
+        except connection.ConnectionError:
             exit(1)
 
 
@@ -182,24 +190,68 @@ def _set_log_level(debug):
     consoleHandler.setLevel(log_level)
 
 
-def _validate_conf_type_options(config_properties, type):
-    if config_properties and not type:
-        log.error("A type should be provided with the property file.")
-        raise RuntimeError("A type should be provided with the property file.")
-    if not config_properties and type:
-        log.error("A property file should be provided with the type option.")
-        raise RuntimeError("A property file should be provided with the type option.")
+def _validate_conf_type_options(config_properties, submit_dir, db_type):
+    """ Validate DB type parameter """
+    if (config_properties or submit_dir) and not db_type:
+        log.error("A type should be provided with the property file/submit directory.")
+        raise RuntimeError("A type should be provided with the property file/submit directory.")
+    
+    if (not config_properties and not submit_dir) and db_type:
+        log.error("A property file/submit directory should be provided with the type option.")
+        raise RuntimeError("A property file/submit directory should be provided with the type option.")
 
 
 def _add_common_options(object):
-
+    """ Add command line common options """
     object.parser.add_option("-c","--conf",action="store",type="string", 
         dest="config_properties",default=None,
         help = "Specify properties file. This overrides all other property files. Should be used with '-t'")
+    object.parser.add_option("-s","--submitdir",action="store",type="string", 
+        dest="submit_dir",default=None, help = "Specify submit directory. Should be used with '-t'")
     object.parser.add_option("-t","--type",action="store",type="string", 
         dest="db_type",default=None, help = "Type of the database. Should be used with '-c'")
     object.parser.add_option("-d", "--debug", action="store_true", dest="debug",
         default=None, help="Enable debugging")
+
+
+def _get_connection(dburi=None, config_properties=None, submit_dir=None, db_type=None, create=False):
+    """ Get connection to the database based on the parameters"""
+    if dburi:
+        return connection.connect(dburi, create=create)
+    elif config_properties:
+        return connection.connect_by_properties(config_properties, db_type, create=create)
+    elif submit_dir:
+        return connection.connect_by_submitdir(submit_dir, db_type, config_properties, create=create)
+    
+    if not db_type:
+        dburi = connection._get_master_uri()
+        return connection.connect(dburi, create=create)
+    return None
+
+
+def _print_db_check(db, compatible, pegasus_version=None, parse=False):
+    """ Print result for db_verify """
+    version = parse_pegasus_version(pegasus_version)
+    friendly_version = version
+    if parse:
+        if pegasus_version:
+            friendly_version = pegasus_version
+        else:
+            friendly_version = get_compatible_version(version)
+
+    if compatible:
+        log.info("Your database is compatible with version %s." % friendly_version)
+    else:
+        log.error("Your database is NOT compatible with version %s." % friendly_version)
+        current_version = db_current_version(db)
+        command = "update"
+        if current_version > version:
+            command = "downgrade"
+        if version == CURRENT_DB_VERSION:
+            log.error("Use 'pegasus-db-admin %s %s' to %s your database." % (command, db.get_bind().url, command))
+        else:
+            log.error("Use 'pegasus-db-admin %s %s -V %s' to %s your database." % (command, db.get_bind().url, friendly_version, command))
+        exit(1)
 
 
 # ------------------------------------------------------

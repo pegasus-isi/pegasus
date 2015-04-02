@@ -2,12 +2,9 @@ __author__ = "Rafael Ferreira da Silva"
 
 import logging
 import datetime
-import os
 
 from Pegasus.db.schema import *
-from Pegasus.tools import properties
 from sqlalchemy.orm.exc import *
-from urlparse import urlparse
 
 log = logging.getLogger(__name__)
 
@@ -22,6 +19,10 @@ COMPATIBILITY = {
     '4.5.0': 4
 }
 #-------------------------------------------------------------------
+
+class DBAdminError(Exception):
+    pass
+
 
 def get_compatible_version(version):
     print_version = None
@@ -41,50 +42,26 @@ def get_class(version, db):
 
 
 #-------------------------------------------------------------------
-def db_get_uri(config_properties=None, db_type=None, dburi=None):
-    """ Database connection """
-    if not dburi:
-        if config_properties and db_type:
-            props = properties.Properties()
-            props.new(config_file=config_properties)
-            
-            if db_type.upper() == "JDBCRC":
-                dburi = _get_jdbcrc_uri(props)
-            elif db_type.upper() == "MASTER":
-                dburi = _get_master_uri(props)
-            elif db_type.upper() == "WORKFLOW":
-                dburi = _get_workflow_uri(props)
-            else:
-                log.error("Invalid database type '%s'." % db_type)
-                raise RuntimeError("Invalid database type '%s'." % db_type)
-
-        else:
-            dburi = _get_master_uri()
-
-    if dburi:
-        dburi = _parse_jdbc_uri(dburi)
-        log.debug("Using database: %s" % dburi)
-        return dburi
+def db_create(dburi, engine, db):
+    """ Create/Update the Pegasus database from the schema """
+    ck_dbversion = _check_table_exists(db, db_version)
+    ck_jdbcrc = _check_table_exists(db, rc_lfn)
+    ck_master = _check_table_exists(db, pg_workflow)
+    ck_workflow = _check_table_exists(db, st_workflow)
     
-    log.error("Unable to find a database URI to connect.")
-    raise RuntimeError("Unable to find a database URI to connect.")
+    metadata.create_all(engine)
 
-
-def db_create(dburi, engine):
-    """ Create the Pegasus database from the schema """
-    try:
-        metadata.create_all(engine)
-        data = engine.execute("SELECT * FROM dbversion").fetchone()
-        if not data:
-            engine.execute(db_version.insert(), version_number=CURRENT_DB_VERSION, 
+    if not ck_dbversion and not ck_jdbcrc and not ck_master and not ck_workflow:
+        engine.execute(db_version.insert(), version_number=CURRENT_DB_VERSION, 
                 version_timestamp=datetime.datetime.now().strftime("%s"))
-            log.info("Created Pegasus database in: %s" % dburi)
-            
-    except OperationalError, e:
-        if "mysql" in dburi and "unknown database" in str(e).lower():
-            log.error("MySQL database should be previously created.")
-            raise RuntimeError(e)
+        log.info("Created Pegasus database in: %s" % dburi)
+        
+    elif not ck_dbversion or not ck_jdbcrc or not ck_master or not ck_workflow:
+        _discover_version(db)
     
+    db_verify(db)
+    log.info("Your database is compatible with Pegasus version: %s" % db_current_version(db, parse=True))
+        
 
 def db_current_version(db, parse=False):
     """ Get the current version of the database."""
@@ -101,47 +78,22 @@ def db_current_version(db, parse=False):
         if not current_version:
             log.error("Your database is not compatible with any Pegasus version.")
             log.error("Use 'pegasus-db-admin check' to verify its compatibility.")
-            raise RuntimeError("Your database is not compatible with any Pegasus version.")
+            raise DBAdminError("Your database is not compatible with any Pegasus version.")
 
     return current_version
 
 
-def db_verify(db, pegasus_version=None, parse=False, verbose=False):
+def db_verify(db, pegasus_version=None):
     """ Verify whether the database is compatible to the specified 
         Pegasus version."""
     _verify_tables(db)
-    version = _parse_pegasus_version(pegasus_version)       
+    version = parse_pegasus_version(pegasus_version)
 
-    compatible = False
     try:
-        compatible = _check_version(db, version)
+        return _check_version(db, version)
     except NoResultFound:
         _discover_version(db)
-        compatible = _check_version(db, version)
-
-    if verbose:
-        friendly_version = version
-        if parse:
-            if pegasus_version:
-                friendly_version = pegasus_version
-            else:
-                friendly_version = get_compatible_version(version)
-
-        if compatible:
-            log.info("Your database is compatible with version %s." % friendly_version)
-        else:
-            log.error("Your database is NOT compatible with version %s." % friendly_version)
-            current_version = db_current_version(db)
-            command = "update"
-            if current_version > version:
-                command = "downgrade"
-            if version == CURRENT_DB_VERSION:
-                log.error("Use 'pegasus-db-admin %s' to %s your database." % (command, command))
-            else:
-                log.error("Use 'pegasus-db-admin %s -V %s' to %s your database." % (command, friendly_version, command))
-            raise RuntimeError("Your database is NOT compatible with version %s." % friendly_version)
-
-    return compatible
+        return _check_version(db, version)
 
 
 def db_update(db, pegasus_version=None, force=False):
@@ -149,11 +101,15 @@ def db_update(db, pegasus_version=None, force=False):
     _verify_tables(db)
 
     current_version = db_current_version(db)
-    version = _parse_pegasus_version(pegasus_version)
+    version = parse_pegasus_version(pegasus_version)
+
+    if current_version == version:
+        log.info("Your database is already updated.")
+        return
 
     if current_version > version:
         log.error("Unable to run update. Current database version is newer than specified version '%s'." % (pegasus_version))
-        raise RuntimeError("Unable to run update. Current database version is newer than specified version '%s'." % (pegasus_version))
+        raise DBAdminError("Unable to run update. Current database version is newer than specified version '%s'." % (pegasus_version))
 
     for i in range(current_version + 1, version + 1):
         k = get_class(i, db)
@@ -168,10 +124,14 @@ def db_downgrade(db, pegasus_version=None, force=False):
 
     current_version = db_current_version(db)
     if pegasus_version:
-        version = _parse_pegasus_version(pegasus_version)
+        version = parse_pegasus_version(pegasus_version)
     else:
         version = current_version - 1
 
+    if current_version == version:
+        log.info("Your database is already downgraded.")
+        return
+    
     if version == 0:
         log.info("Your database is already downgraded to the minimum version.")
         return
@@ -185,7 +145,7 @@ def db_downgrade(db, pegasus_version=None, force=False):
 
     if current_version < version:
         log.error("Unable to run downgrade. Current database version is older than specified version '%s'." % (pegasus_version))
-        raise RuntimeError("Unable to run downgrade. Current database version is older than specified version '%s'." % (pegasus_version))
+        raise DBAdminError("Unable to run downgrade. Current database version is older than specified version '%s'." % (pegasus_version))
 
     for i in range(current_version, version, -1):
         k = get_class(i, db)
@@ -194,98 +154,46 @@ def db_downgrade(db, pegasus_version=None, force=False):
     log.info("Your database was successfully downgraded.")
 
 
+def parse_pegasus_version(pegasus_version=None):
+    version = None
+    if pegasus_version == 0 or pegasus_version:
+        for key in COMPATIBILITY:
+            if key == pegasus_version:
+                version = COMPATIBILITY[key]
+                break
+        if not version:
+            log.error("Version does not exist: %s." % pegasus_version)
+            raise DBAdminError("Version does not exist: %s." % pegasus_version)
+
+    if not version:
+        version = CURRENT_DB_VERSION
+    return version
+
+
 ################################################################################
-
-def _get_jdbcrc_uri(props=None):
-    """ Get JDBCRC URI """
-    if props:
-        replica_catalog = props.property('pegasus.catalog.replica')
-        if not replica_catalog:
-            log.error("'pegasus.catalog.replica' property not set.")
-            raise RuntimeError("'pegasus.catalog.replica' property not set.")
+def _check_table_exists(engine, table):
+    try:
+        engine.execute(table.select())
+        return True
+    
+    except OperationalError, e:
+        if "no such table" in str(e).lower() or "unknown" in str(e).lower() \
+          or "no such column" in str(e).lower():
+            return False
+        log.error(e)
+        raise DBAdminError(e)
+    except ProgrammingError, e:
+        if "doesn't exist" in str(e).lower():
+            return False
+        log.error(e)
+        raise DBAdminError(e)       
         
-        if replica_catalog != "JDBCRC":
-            return None
-
-        rc_info = {
-            "driver" : props.property('pegasus.catalog.replica.db.driver'),
-            "url" : props.property('pegasus.catalog.replica.db.url'),
-            "user" : props.property('pegasus.catalog.replica.db.user'),
-            "password" : props.property('pegasus.catalog.replica.db.password'),
-        }
-
-        url = rc_info["url"]
-        if not url:
-            log.error("'pegasus.catalog.replica.db.url' property not set.")
-            raise RuntimeError("'pegasus.catalog.replica.db.url' property not set.")
-        url = _parse_jdbc_uri(url)
-        o = urlparse(url)
-        host = o.netloc
-        database = o.path.replace("/", "")
-
-        driver = rc_info["driver"]
-        if not driver:
-            log.error("'pegasus.catalog.replica.db.driver' property not set.")
-            raise RuntimeError("'pegasus.catalog.replica.db.driver' property not set.")
-        
-        if driver.lower() == "mysql":
-            return "mysql://" + rc_info["user"] + ":" + rc_info["password"] + "@" + host + "/" + database
-
-        if driver.lower() == "sqlite":
-            connString = os.path.join(host, "workflow.db")
-            return "sqlite:///" + connString
-
-        if driver.lower() == "postgresql":
-            return "postgresql://" + rc_info["user"] + ":" + rc_info["password"] + "@" + host + "/" + database
-
-        log.error("Invalid JDBCRC driver: %s" % rc_info["driver"])
-    return None
-    
-    
-def _get_master_uri(props=None):
-    """ Get MASTER URI """
-    if props:
-        dburi = props.property('pegasus.catalog.master.url')
-        if dburi:
-            return dburi
-        dburi = props.property('pegasus.dashboard.output')
-        if dburi:
-            return dburi
-
-    homedir = os.getenv("HOME", None)
-    dburi = os.path.join(homedir, ".pegasus", "workflow.db")
-    pegasusDir = os.path.dirname(dburi)
-    if not os.path.exists(pegasusDir):
-        os.mkdir(pegasusDir)
-    return "sqlite:///" + dburi
-    
-    
-def _get_workflow_uri(props=None):
-    """ Get WORKFLOW URI """
-    if props:
-        dburi = props.property('pegasus.catalog.workflow.url')
-        if dburi:
-            return dburi
-        dburi = props.property('pegasus.monitord.output')
-        if dburi:
-            return dburi
-    return None
-
-
-def _parse_jdbc_uri(dburi):
-    if dburi:
-        if dburi.startswith("jdbc:"):
-            dburi = dburi.replace("jdbc:", "")
-            if dburi.startswith("sqlite:"):
-                dburi = dburi.replace("sqlite:", "sqlite:///")
-        return dburi
-    return None
-
 
 def _get_version(db):
     current_version = db.query(DBVersion.version_number).order_by(
         DBVersion.id.desc()).first()
     if not current_version:
+        log.debug("No version record found on dbversion table.")
         raise NoResultFound()
     return current_version[0]
 
@@ -299,22 +207,7 @@ def _discover_version(db):
 
     if version > 0:
         _update_version(db, version)
-    return version
-
-
-def _parse_pegasus_version(pegasus_version):
-    version = None
-    if pegasus_version:
-        for key in COMPATIBILITY:
-            if key == pegasus_version:
-                version = COMPATIBILITY[key]
-                break
-        if not version:
-            log.error("Version does not exist: %s." % pegasus_version)
-            raise RuntimeError("Version does not exist: %s." % pegasus_version)
-
-    if not version:
-        version = CURRENT_DB_VERSION
+    log.info("Your database has been updated.")
     return version
 
 
@@ -333,10 +226,14 @@ def _update_version(db, version):
         db.add(v)
         db.commit()
 
+
 def _verify_tables(db):
-    try:
-        db.execute("SELECT * FROM dbversion")
-    except:
+    ck_dbversion = _check_table_exists(db, db_version)
+    ck_jdbcrc = _check_table_exists(db, rc_lfn)
+    ck_master = _check_table_exists(db, pg_workflow)
+    ck_workflow = _check_table_exists(db, st_workflow)
+    
+    if not ck_dbversion or not ck_jdbcrc or not ck_master or not ck_workflow:
         log.error("Non-existent or missing database tables.")
-        log.error("Run 'pegasus-db-admin create' to create the missing tables.")
-        raise RuntimeError("Non-existent or missing database tables.")
+        log.error("Run 'pegasus-db-admin create %s' to create the missing tables." % db.get_bind().url)
+        raise DBAdminError("Non-existent or missing database tables.\nRun 'pegasus-db-admin create %s' to create the missing tables." % db.get_bind().url)

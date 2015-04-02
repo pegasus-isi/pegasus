@@ -54,8 +54,8 @@ os.sys.path.insert(0, lib_ext_dir)
 
 # Import our modules
 from Pegasus.tools import utils
-from Pegasus.tools import db_utils
 from Pegasus.tools import kickstart_parser
+from Pegasus.db import connection
 from Pegasus.db.workflow import stampede_statistics
 from Pegasus.db.schema_check import SchemaVersionError
 
@@ -988,7 +988,8 @@ def analyze_db(config_properties):
     global total, success, failed, unsubmitted, unknown
 
     # Get the database URL
-    output_db_url, wf_uuid = db_utils.get_db_url_wf_uuid(input_dir, config_properties, top_dir)
+    output_db_url = connection.url_by_submitdir(input_dir, connection.DBType.WORKFLOW, config_properties, top_dir)
+    wf_uuid = connection.get_wf_uuid(input_dir)
 
     # Nothing to do if we cannot resolve the database URL
     if output_db_url is None:

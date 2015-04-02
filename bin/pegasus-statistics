@@ -22,8 +22,8 @@ os.sys.path.insert(0, lib_dir)
 os.sys.path.insert(0, lib_ext_dir)
 
 from Pegasus.tools import utils
-from Pegasus.tools import db_utils
 from Pegasus.plots_stats import utils as stats_utils
+from Pegasus.db import connection
 from Pegasus.db.workflow.stampede_statistics import StampedeStatistics
 from Pegasus.db.workflow.stampede_wf_statistics import StampedeWorkflowStatistics
 from Pegasus.db.schema_check import SchemaVersionError
@@ -1182,7 +1182,7 @@ def main():
     if multiple_wf:
         if options.is_uuid or submit_dir == '*':
             # URL picked from config_properties file.
-            output_db_url = db_utils.get_db_url(options.config_properties)
+            output_db_url = connection.url_by_properties(options.config_properties, connection.DBType.WORKFLOW)
             wf_uuid = submit_dir
 
             if not output_db_url:
@@ -1193,7 +1193,8 @@ def main():
             wf_uuid = []
 
             for dir in submit_dir:
-                db_url, uuid = db_utils.get_db_url_wf_uuid(dir, options.config_properties)
+                db_url = connection.url_by_submitdir(dir, connection.DBType.WORKFLOW, options.config_properties)
+                uuid = connection.get_wf_uuid(dir)
                 db_url_set.add(db_url)
                 wf_uuid.append(uuid)
 
@@ -1205,14 +1206,15 @@ def main():
 
     else:
         if options.is_uuid:
-            output_db_url = db_utils.get_db_url(options.config_properties)
+            output_db_url = connection.url_by_properties(options.config_properties, connection.DBType.WORKFLOW)
             wf_uuid = submit_dir
 
             if not output_db_url:
                 logger.error('Unable to determine database URL. Kindly specify a value for "pegasus.monitord.output" property')
                 sys.exit(1)
         else:
-            output_db_url, wf_uuid = db_utils.get_db_url_wf_uuid(submit_dir, options.config_properties)
+            output_db_url = connection.url_by_submitdir(submit_dir, connection.DBType.WORKFLOW, options.config_properties)
+            wf_uuid = connection.get_wf_uuid(submit_dir)
 
     logger.info('DB URL is: %s' % output_db_url)
     logger.info('workflow UUID is: %s' % wf_uuid)
