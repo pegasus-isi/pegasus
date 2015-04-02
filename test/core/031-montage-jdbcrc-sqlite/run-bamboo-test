@@ -102,7 +102,7 @@ perl -p -i -e 's/ipac_cluster/local/' rc
 cat url.list | sed 's/ http:.*ref=/ http:\/\/obelix.isi.edu\/irsa-cache/' >>rc
 
 sqlitedb=`mktemp -p ${RUN_DIR} pegasus-XXXX.jdbcrc.sqlite.db`
-sqlitedburl=jdbc:sqlite:///${sqlitedb}
+sqlitedburl=jdbc:sqlite:/${sqlitedb}
 echo "" >> pegasusrc
 echo "pegasus.catalog.replica.db.url = ${sqlitedburl}" >> pegasusrc
 
