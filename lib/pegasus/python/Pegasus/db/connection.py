@@ -113,19 +113,12 @@ def url_by_submitdir(submit_dir, db_type, config_properties, top_dir=None):
         if "submit_dir" in top_level_wf_params:
             top_level_prop_file = os.path.join(top_level_wf_params["submit_dir"], top_level_prop_file)
             
-    if top_level_prop_file:
-        return url_by_properties(top_level_prop_file, db_type, submit_dir, config_properties)
-
-    log.error("Unable to find path to properties file in braindump.txt")
-    raise None
+    return url_by_properties(config_properties, db_type, submit_dir, rundir_properties=top_level_prop_file)
 
     
 def url_by_properties(config_properties, db_type, submit_dir=None, rundir_properties=None):
     """ Get URL from the property file """
     # Validate parameters
-    if not config_properties:
-        log.error("A property file should be provided with the type parameter.")
-        raise ConnectionError("A property file should be provided with the type parameter.")
     if not db_type:
         log.error("A type should be provided with the property file.")
         raise ConnectionError("A type should be provided with the property file.")
