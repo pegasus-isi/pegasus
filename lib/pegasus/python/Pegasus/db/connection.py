@@ -228,6 +228,8 @@ def _get_jdbcrc_uri(props=None):
             return "mysql://" + rc_info["user"] + ":" + rc_info["password"] + "@" + host + "/" + database
 
         if driver.lower() == "sqlite":
+            if "sqlite:" in url:
+                return url
             connString = os.path.join(host, "workflow.db")
             return "sqlite:///" + connString
 
