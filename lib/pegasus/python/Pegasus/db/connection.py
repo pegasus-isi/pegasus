@@ -63,13 +63,13 @@ def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=
 def connect_by_submitdir(submit_dir, db_type, config_properties=None, echo=False, schema_check=True, create=False, force=False):
     """ Connect to the database from submit directory and database type """
     dburi = url_by_submitdir(submit_dir, db_type, config_properties)
-    return connect(dburi, echo, schema_check, create, force)
+    return connect(dburi, echo, schema_check, create=create, force=force)
 
     
 def connect_by_properties(config_properties, db_type, echo=False, schema_check=True, create=False, force=False):
     """ Connect to the database from properties file and database type """
     dburi = url_by_properties(config_properties, db_type)
-    return connect(dburi, echo, schema_check, create, force)
+    return connect(dburi, echo, schema_check, create=create, force=force)
 
 
 def url_by_submitdir(submit_dir, db_type, config_properties, top_dir=None):
@@ -295,6 +295,7 @@ def _get_workflow_uri(props=None, submit_dir=None):
             raise ConnectionError("DAG file name cannot be found in the braindump.txt.")
 
         # Create the sqllite db url
+        dag_file_name = os.path.basename(dag_file_name)
         output_db_file = (submit_dir) + "/" + dag_file_name[:dag_file_name.find(".dag")] + ".stampede.db"
         dburi = "sqlite:///" + output_db_file
         return dburi

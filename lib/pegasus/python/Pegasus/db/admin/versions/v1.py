@@ -52,9 +52,8 @@ class Version(BaseVersion):
             data = self.db.execute("SELECT COUNT(id) FROM rc_attr WHERE name='pool'").first()
             if data is not None:
                 if data[0] > 0:
-                    log.error("Attribute pool failed to be removed. There are still %d entries." % data[0])
                     self.db.rollback()
-                    raise RuntimeError("attribute pool failed to be removed. There are still %d entries." % data[0])
+                    raise DBAdminError("attribute pool failed to be removed. There are still %d entries." % data[0])
 
             updated = self.db.execute("SELECT COUNT(id) FROM rc_lfn WHERE site IS NOT NULL").first()
             log.debug("  Updated %d entries in the database." % updated)
@@ -64,8 +63,7 @@ class Version(BaseVersion):
             pass
         except Exception, e:
             self.db.rollback()
-            log.exception(e)
-            raise Exception(e)
+            raise DBAdminError(e)
 
 
     def downgrade(self, force=False):
@@ -74,8 +72,7 @@ class Version(BaseVersion):
             if data is not None:
                 count = int(data[0])
                 if count > 1 and not force:
-                    log.error("A possible data loss was detected: use '--force' to ignore this message.")
-                    raise RuntimeError("A possible data loss was detected: use '--force' to ignore this message.")
+                    raise DBAdminError("A possible data loss was detected: use '--force' to ignore this message.")
 
             log.debug("  Updating database schema...")
             self.db.execute("UPDATE pegasus_schema SET version='1.2' WHERE name='JDBCRC' AND catalog='rc'")
@@ -102,5 +99,4 @@ class Version(BaseVersion):
             pass
         except Exception, e:
             self.db.rollback()
-            log.exception(e)
-            raise Exception(e)
+            raise DBAdminError(e)
