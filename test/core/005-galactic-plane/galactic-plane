@@ -236,8 +236,10 @@ def generate_pegasus_rc(mode):
     rc.write("dagman.subworkflow.maxjobs=15\n")
     if monitord_output != None:
         rc.write("pegasus.monitord.output=%s\n" % (monitord_output))
-
     rc.close()
+    # special sauce for Bamboo test framework - append the test override
+    cmd = "cat " + local_galacticplane_location + "/pegasusrc >>" + work_dir + "/pegasusrc"
+    myexec(cmd)
 
 
 def generate_sc():
