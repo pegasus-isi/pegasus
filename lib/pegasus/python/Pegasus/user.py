@@ -1,7 +1,10 @@
 import os
 import pwd
 
-class NoSuchUser(Exception): pass
+
+class NoSuchUser(Exception):
+    pass
+
 
 class User(object):
     def __init__(self, uid, gid, username, homedir):
@@ -22,8 +25,10 @@ class User(object):
     def get_master_db_url(self):
         return "sqlite:///%s" % self.get_master_db()
 
+
 def __user_from_pwd(pw):
     return User(pw.pw_uid, pw.pw_gid, pw.pw_name, pw.pw_dir)
+
 
 def get_user_by_uid(uid):
     try:
@@ -32,10 +37,12 @@ def get_user_by_uid(uid):
     except KeyError, e:
         raise NoSuchUser(uid)
 
+
 def get_user_by_username(username):
     try:
         pw = pwd.getpwnam(username)
         return __user_from_pwd(pw)
-    except KeyError, e:
+    except KeyError:
         raise NoSuchUser(username)
-
+    except TypeError:
+        raise NoSuchUser(username)
