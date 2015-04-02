@@ -14,12 +14,12 @@ dax.addFile(a)
 	
 # Add executables to the DAX-level replica catalog
 e_hello = Executable(namespace="hello_world", name="hello", version="1.0", \
-                     os="macosx", arch="x86_64", installed=False)
+                     os="linux", arch="x86_64", installed=False)
 e_hello.addPFN(PFN("file://" + os.getcwd() + "/hello.sh", "local"))
 dax.addExecutable(e_hello)
 	
 e_world = Executable(namespace="hello_world", name="world", version="1.0", \
-                     os="macosx", arch="x86_64", installed=False)
+                     os="linux", arch="x86_64", installed=False)
 e_world.addPFN(PFN("file://" + os.getcwd() + "/world.sh", "local"))
 dax.addExecutable(e_world)
 	
