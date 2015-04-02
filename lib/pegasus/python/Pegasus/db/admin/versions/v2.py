@@ -19,24 +19,35 @@ class Version(BaseVersion):
     def update(self, force=False):
         try:
             self.db.execute("SELECT db_url FROM workflow")
-            data = self.db.execute("SELECT COUNT(wf_id) FROM master_workflow").first()
-            data2 = self.db.execute("SELECT COUNT(wf_id) FROM master_workflowstate").first()
+            data = None
+            data2 = None
+            try:
+                data = self.db.execute("SELECT COUNT(wf_id) FROM master_workflow").first()
+                data2 = self.db.execute("SELECT COUNT(wf_id) FROM master_workflowstate").first()
+            except:
+                pass
+            
             if data is not None or data2 is not None:
                 if (data[0] > 0 or data2[0] > 0) and not force:
-                    log.error("A possible data loss was detected: use '--force' to ignore this message.")
-                    raise RuntimeError("A possible data loss was detected: use '--force' to ignore this message.")
-
-            self.db.execute("DROP TABLE IF EXISTS master_workflow")
-            self.db.execute("ALTER TABLE workflow RENAME TO master_workflow")
-            self.db.execute("DROP INDEX IF EXISTS wf_id_KEY")
-            self.db.execute("DROP INDEX IF EXISTS wf_uuid_UNIQUE")
-            self.db.execute("CREATE INDEX IF NOT EXISTS KEY_MASTER_WF_ID ON master_workflow (wf_id)")
-            self.db.execute("CREATE INDEX IF NOT EXISTS UNIQUE_MASTER_WF_UUID ON master_workflow (wf_uuid)")
-            self.db.execute("DROP TABLE IF EXISTS master_workflowstate")
-            self.db.execute("ALTER TABLE workflowstate RENAME TO master_workflowstate")
-            self.db.execute("DROP INDEX IF EXISTS UNIQUE_WORKFLOWSTATE")
-            self.db.execute("CREATE INDEX IF NOT EXISTS UNIQUE_MASTER_WORKFLOWSTATE ON master_workflowstate (wf_id)")
-
+                    raise DBAdminError("A possible data loss was detected: use '--force' to ignore this message.")
+            
+            if data:
+                self.db.execute("DELETE FROM master_workflow")
+                self.db.execute("INSERT INTO master_workflow(wf_id, wf_uuid, \
+                    dax_label, dax_version, dax_file, dag_file_name, timestamp, \
+                    submit_hostname, submit_dir, planner_arguments, user, \
+                    grid_dn, planner_version) SELECT wf_id, wf_uuid, \
+                    dax_label, dax_version, dax_file, dag_file_name, timestamp, \
+                    submit_hostname, submit_dir, planner_arguments, user, \
+                    grid_dn, planner_version FROM workflow")
+            if data2:
+                self.db.execute("DELETE FROM master_workflowstate")
+                self.db.execute("INSERT INTO master_workflowstate(wf_id, state, \
+                    timestamp, restart_count, status) SELECT wf_id, state, \
+                    timestamp, restart_count, status FROM workflowstate")
+            
+            self.db.execute("ALTER TABLE workflow DROP COLUMN db_url")
+            
             self.db.execute("CREATE TABLE IF NOT EXISTS ensemble ("
                 "id INTEGER PRIMARY KEY,"
                 "name VARCHAR(100) NOT NULL,"
@@ -48,7 +59,6 @@ class Version(BaseVersion):
                 "username VARCHAR(100) NOT NULL,"
                 "CHECK (state IN('ACTIVE', 'HELD', 'PAUSED'))"
                 ")")
-            self.db.execute("CREATE INDEX IF NOT EXISTS UNIQUE_ENSEMBLE ON ensemble (username, name)")
 
             self.db.execute("CREATE TABLE IF NOT EXISTS ensemble_workflow ("
                 "id INTEGER NOT NULL PRIMARY KEY,"
@@ -64,17 +74,24 @@ class Version(BaseVersion):
                 "CHECK (state IN('PLAN_FAILED', 'RUN_FAILED', 'FAILED', 'RUNNING', 'PLANNING', 'SUCCESSFUL', 'ABORTED', 'READY', 'QUEUED')),"
                 "FOREIGN KEY(ensemble_id) REFERENCES ensemble(id)"
                 ")")
-            self.db.execute("CREATE INDEX IF NOT EXISTS UNIQUE_ENSEMBLE_WORKFLOW ON ensemble_workflow (ensemble_id, name)")
+            try :
+                self.db.execute("CREATE INDEX UNIQUE_ENSEMBLE ON ensemble (username, name)")
+            except:
+                pass
+            try:
+                self.db.execute("CREATE INDEX UNIQUE_ENSEMBLE_WORKFLOW ON ensemble_workflow (ensemble_id, name)")
+            except:
+                pass
+            
             self.db.commit()
             
         except OperationalError:
             pass
         except Exception, e:
             self.db.rollback()
-            log.exception(e)
-            raise Exception(e)
+            raise DBAdminError(e)
 
         
     def downgrade(self, force=False):
-        "Downgrade is not necessary as master tables have no conflict with previous versions."
-        pass
+        
+        self.db.execute("ALTER TABLE workflow ADD COLUMN db_url TEXT")

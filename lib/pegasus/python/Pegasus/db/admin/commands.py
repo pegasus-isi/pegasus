@@ -129,7 +129,7 @@ class UpdateCommand(Command):
         try:
             _validate_conf_type_options(self.options.config_properties, self.options.submit_dir, self.options.db_type)
             db = _get_connection(dburi, self.options.config_properties, self.options.submit_dir, self.options.db_type, force=self.options.force)
-            db_update(db, self.options.pegasus_version, self.options.force)
+            db_update(db, self.options.pegasus_version, force=self.options.force)
             version = db_current_version(db, parse=True)
             _print_version(version)
             db.close()
@@ -235,11 +235,11 @@ def _validate_conf_type_options(config_properties, submit_dir, db_type):
     """ Validate DB type parameter """
     if (config_properties or submit_dir) and not db_type:
         log.error("A type should be provided with the property file/submit directory.")
-        raise RuntimeError("A type should be provided with the property file/submit directory.")
+        exit(1)
     
     if (not config_properties and not submit_dir) and db_type:
         log.error("A property file/submit directory should be provided with the type option.")
-        raise RuntimeError("A property file/submit directory should be provided with the type option.")
+        exit(1)
 
 
 def _add_common_options(object):
