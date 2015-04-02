@@ -36,7 +36,7 @@ required arguments.
 class SQLAlchemyInit(object):
     def __init__(self, dburi, **kwarg):
         self.dburi = dburi
-        self.session = connection.connect(dburi)
+        self.session = connection.connect(dburi, create=True)
 
     def __getattr__(self, name):
         if name == "db":

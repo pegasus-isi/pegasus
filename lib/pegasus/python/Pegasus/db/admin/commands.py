@@ -35,7 +35,7 @@ class CreateCommand(Command):
         
         try:
             _validate_conf_type_options(self.options.config_properties, self.options.submit_dir, self.options.db_type)
-            db = _get_connection(dburi, self.options.config_properties, self.options.submit_dir, self.options.db_type, create=True)
+            db = _get_connection(dburi, self.options.config_properties, self.options.submit_dir, self.options.db_type, create=True, force=self.options.force)
             db.close()
             
         except DBAdminError:
@@ -52,8 +52,6 @@ class DowngradeCommand(Command):
     def __init__(self):
         Command.__init__(self)
         _add_common_options(self)
-        self.parser.add_option("-f","--force",action="store_true",dest="force",
-            default=None, help = "Ignore conflicts or data loss.")
         self.parser.add_option("-V","--version",action="store",type="string", 
             dest="pegasus_version",default=None, help = "Pegasus version.")
 
@@ -66,7 +64,7 @@ class DowngradeCommand(Command):
             
         try:
             _validate_conf_type_options(self.options.config_properties, self.options.submit_dir, self.options.db_type)
-            db = _get_connection(dburi, self.options.config_properties, self.options.submit_dir, self.options.db_type)
+            db = _get_connection(dburi, self.options.config_properties, self.options.submit_dir, self.options.db_type, force=self.options.force)
             db_downgrade(db, self.options.pegasus_version, self.options.force)
             version = db_current_version(db, parse=True)
             _print_version(version)
@@ -100,7 +98,7 @@ class UpdateCommand(Command):
             
         try:
             _validate_conf_type_options(self.options.config_properties, self.options.submit_dir, self.options.db_type)
-            db = _get_connection(dburi, self.options.config_properties, self.options.submit_dir, self.options.db_type)
+            db = _get_connection(dburi, self.options.config_properties, self.options.submit_dir, self.options.db_type, force=self.options.force)
             db_update(db, self.options.pegasus_version, self.options.force)
             version = db_current_version(db, parse=True)
             _print_version(version)
@@ -134,7 +132,7 @@ class CheckCommand(Command):
 
         try:
             _validate_conf_type_options(self.options.config_properties, self.options.submit_dir, self.options.db_type)
-            db = _get_connection(dburi, self.options.config_properties, self.options.submit_dir, self.options.db_type)
+            db = _get_connection(dburi, self.options.config_properties, self.options.submit_dir, self.options.db_type, force=self.options.force)
             compatible = db_verify(db, self.options.pegasus_version)
             _print_db_check(db, compatible, self.options.pegasus_version, self.options.version_value)
             db.close()
@@ -165,7 +163,7 @@ class VersionCommand(Command):
         
         try:
             _validate_conf_type_options(self.options.config_properties, self.options.submit_dir, self.options.db_type)
-            db = _get_connection(dburi, self.options.config_properties, self.options.submit_dir, self.options.db_type)
+            db = _get_connection(dburi, self.options.config_properties, self.options.submit_dir, self.options.db_type, force=self.options.force)
             version = db_current_version(db, self.options.version_value)
             _print_version(version)
             db.close()
@@ -212,20 +210,23 @@ def _add_common_options(object):
         dest="db_type",default=None, help = "Type of the database. Should be used with '-c'")
     object.parser.add_option("-d", "--debug", action="store_true", dest="debug",
         default=None, help="Enable debugging")
+    object.parser.add_option("-f","--force",action="store_true",dest="force",
+            default=None, help = "Ignore conflicts or data loss.")
 
 
-def _get_connection(dburi=None, config_properties=None, submit_dir=None, db_type=None, create=False):
+
+def _get_connection(dburi=None, config_properties=None, submit_dir=None, db_type=None, create=False, force=False):
     """ Get connection to the database based on the parameters"""
     if dburi:
-        return connection.connect(dburi, create=create)
+        return connection.connect(dburi, create=create, force=force)
     elif config_properties:
-        return connection.connect_by_properties(config_properties, db_type, create=create)
+        return connection.connect_by_properties(config_properties, db_type, create=create, force=force)
     elif submit_dir:
-        return connection.connect_by_submitdir(submit_dir, db_type, config_properties, create=create)
+        return connection.connect_by_submitdir(submit_dir, db_type, config_properties, create=create, force=force)
     
     if not db_type:
         dburi = connection._get_master_uri()
-        return connection.connect(dburi, create=create)
+        return connection.connect(dburi, create=create, force=force)
     return None
 
 

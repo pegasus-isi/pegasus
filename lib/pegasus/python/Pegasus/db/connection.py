@@ -27,13 +27,12 @@ class DBType:
     WORKFLOW = "WORKFLOW"
 
 
-def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=None):
+def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=None, force=False):
     """ Connect to the provided URL database."""
     dburi = _parse_jdbc_uri(dburi)
     _validate(dburi)
     
     try:
-        log.info(dburi)
         engine = create_engine(dburi, echo=echo, pool_recycle=True)
         engine.connect()
 
@@ -55,25 +54,25 @@ def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=
     # Database creation
     if create:
         from Pegasus.db.admin.admin_loader import db_create
-        db_create(dburi, engine, db)
+        db_create(dburi, engine, db, force)
 
     if schema_check:
         from Pegasus.db.admin.admin_loader import db_verify
-        db_verify(db, pegasus_version)
+        db_verify(db, pegasus_version, force)
 
     return db
 
 
-def connect_by_submitdir(submit_dir, db_type, config_properties=None, echo=False, schema_check=True, create=False):
+def connect_by_submitdir(submit_dir, db_type, config_properties=None, echo=False, schema_check=True, create=False, force=False):
     """ Connect to the database from submit directory and database type """
     dburi = url_by_submitdir(submit_dir, db_type, config_properties)
-    return connect(dburi, echo, schema_check, create)
+    return connect(dburi, echo, schema_check, create, force)
 
     
-def connect_by_properties(config_properties, db_type, echo=False, schema_check=True, create=False):
+def connect_by_properties(config_properties, db_type, echo=False, schema_check=True, create=False, force=False):
     """ Connect to the database from properties file and database type """
     dburi = url_by_properties(config_properties, db_type)
-    return connect(dburi, echo, schema_check, create)
+    return connect(dburi, echo, schema_check, create, force)
 
 
 def url_by_submitdir(submit_dir, db_type, config_properties, top_dir=None):
@@ -118,7 +117,7 @@ def url_by_submitdir(submit_dir, db_type, config_properties, top_dir=None):
         return url_by_properties(top_level_prop_file, db_type, submit_dir, config_properties)
 
     log.error("Unable to find path to properties file in braindump.txt")
-    raise ConnectionError("Unable to find path to properties file in braindump.txt")
+    raise None
 
     
 def url_by_properties(config_properties, db_type, submit_dir=None, rundir_properties=None):

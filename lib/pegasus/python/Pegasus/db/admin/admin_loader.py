@@ -42,7 +42,7 @@ def get_class(version, db):
 
 
 #-------------------------------------------------------------------
-def db_create(dburi, engine, db):
+def db_create(dburi, engine, db, force=False):
     """ Create/Update the Pegasus database from the schema """
     ck_dbversion = _check_table_exists(db, db_version)
     ck_jdbcrc = _check_table_exists(db, rc_lfn)
@@ -58,12 +58,13 @@ def db_create(dburi, engine, db):
         
     elif not ck_dbversion or not ck_jdbcrc or not ck_master or not ck_workflow:
         _discover_version(db)
+        metadata.create_all(engine)
     
-    db_verify(db)
-    log.info("Your database is compatible with Pegasus version: %s" % db_current_version(db, parse=True))
+    db_verify(db, force)
+    log.info("Your database is compatible with Pegasus version: %s" % db_current_version(db, parse=True, force=force))
         
 
-def db_current_version(db, parse=False):
+def db_current_version(db, parse=False, force=False):
     """ Get the current version of the database."""
     _verify_tables(db)
     current_version = None
@@ -71,7 +72,7 @@ def db_current_version(db, parse=False):
     try:
         current_version = _get_version(db)
     except NoResultFound:
-        current_version = _discover_version(db)
+        current_version = _discover_version(db, force)
 
     if parse:
         current_version = get_compatible_version(current_version)
@@ -83,7 +84,7 @@ def db_current_version(db, parse=False):
     return current_version
 
 
-def db_verify(db, pegasus_version=None):
+def db_verify(db, pegasus_version=None, force=False):
     """ Verify whether the database is compatible to the specified 
         Pegasus version."""
     _verify_tables(db)
@@ -92,7 +93,7 @@ def db_verify(db, pegasus_version=None):
     try:
         return _check_version(db, version)
     except NoResultFound:
-        _discover_version(db)
+        _discover_version(db, force)
         return _check_version(db, version)
 
 
@@ -100,7 +101,7 @@ def db_update(db, pegasus_version=None, force=False):
     """ Update the database. """
     _verify_tables(db)
 
-    current_version = db_current_version(db)
+    current_version = db_current_version(db, force)
     version = parse_pegasus_version(pegasus_version)
 
     if current_version == version:
@@ -122,7 +123,7 @@ def db_downgrade(db, pegasus_version=None, force=False):
     """ Downgrade the database. """
     _verify_tables(db)
 
-    current_version = db_current_version(db)
+    current_version = db_current_version(db, force)
     if pegasus_version:
         version = parse_pegasus_version(pegasus_version)
     else:
@@ -198,11 +199,11 @@ def _get_version(db):
     return current_version[0]
 
 
-def _discover_version(db):
+def _discover_version(db, force=False):
     version = 0
     for i in range(1, CURRENT_DB_VERSION + 1):
         k = get_class(i, db)
-        k.update()
+        k.update(force=force)
         version = i
 
     if version > 0:
