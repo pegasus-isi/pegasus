@@ -60,7 +60,7 @@ def db_create(dburi, engine, db, force=False):
         _discover_version(db)
         metadata.create_all(engine)
     
-    db_verify(db, force)
+    db_verify(db, force=force)
     log.info("Your database is compatible with Pegasus version: %s" % db_current_version(db, parse=True, force=force))
         
 
@@ -72,7 +72,7 @@ def db_current_version(db, parse=False, force=False):
     try:
         current_version = _get_version(db)
     except NoResultFound:
-        current_version = _discover_version(db, force)
+        current_version = _discover_version(db, force=force)
 
     if parse:
         current_version = get_compatible_version(current_version)
@@ -93,7 +93,7 @@ def db_verify(db, pegasus_version=None, force=False):
     try:
         return _check_version(db, version)
     except NoResultFound:
-        _discover_version(db, force)
+        _discover_version(db, force=force)
         return _check_version(db, version)
 
 
@@ -101,7 +101,7 @@ def db_update(db, pegasus_version=None, force=False):
     """ Update the database. """
     _verify_tables(db)
 
-    current_version = db_current_version(db, force)
+    current_version = db_current_version(db, force=force)
     version = parse_pegasus_version(pegasus_version)
 
     if current_version == version:
@@ -123,7 +123,7 @@ def db_downgrade(db, pegasus_version=None, force=False):
     """ Downgrade the database. """
     _verify_tables(db)
 
-    current_version = db_current_version(db, force)
+    current_version = db_current_version(db, force=force)
     if pegasus_version:
         version = parse_pegasus_version(pegasus_version)
     else:
