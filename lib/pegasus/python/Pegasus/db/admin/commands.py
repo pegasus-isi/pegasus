@@ -66,9 +66,11 @@ class CreateCommand(Command):
             db = _get_connection(dburi, self.options.config_properties, self.options.submit_dir, self.options.db_type, create=True, force=self.options.force)
             db.close()
             
-        except DBAdminError:
+        except DBAdminError, e:
+            log.error(e)
             exit(1)
-        except connection.ConnectionError:
+        except connection.ConnectionError, e:
+            log.error(e)
             exit(1)
     
     
@@ -98,9 +100,11 @@ class DowngradeCommand(Command):
             _print_version(version)
             db.close()
                 
-        except DBAdminError:
+        except DBAdminError, e:
+            log.error(e)
             exit(1)
-        except connection.ConnectionError:
+        except connection.ConnectionError, e:
+            log.error(e)
             exit(1)
 
 
@@ -130,9 +134,14 @@ class UpdateCommand(Command):
             _print_version(version)
             db.close()
             
-        except DBAdminError:
-            exit(1)
-        except connection.ConnectionError:
+        except DBAdminError, e:
+            if "Non-existent or missing database tables" in str(e):
+                db = _get_connection(dburi, self.options.config_properties, self.options.submit_dir, self.options.db_type, create=True, force=self.options.force)
+            else:
+                log.error(e)
+                exit(1)
+        except connection.ConnectionError, e:
+            log.error(e)
             exit(1)
   
     
@@ -163,9 +172,11 @@ class CheckCommand(Command):
             _print_db_check(db, compatible, self.options.pegasus_version, self.options.version_value)
             db.close()
 
-        except DBAdminError:
+        except DBAdminError, e:
+            log.error(e)
             exit(1)
-        except connection.ConnectionError:
+        except connection.ConnectionError, e:
+            log.error(e)
             exit(1)
    
     
@@ -194,9 +205,11 @@ class VersionCommand(Command):
             _print_version(version)
             db.close()
 
-        except DBAdminError:
+        except DBAdminError, e:
+            log.error(e)
             exit(1)
-        except connection.ConnectionError:
+        except connection.ConnectionError, e:
+            log.error(e)
             exit(1)
 
 
