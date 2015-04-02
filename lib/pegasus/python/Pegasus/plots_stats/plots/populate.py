@@ -441,5 +441,6 @@ def setup(submit_dir , config_properties):
 	
 	# Create the sqllite db url
         global_db_url = connection.url_by_submitdir(submit_dir, connection.DBType.WORKFLOW, config_properties)
+        global_top_wf_uuid = connection.get_wf_uuid(submit_dir)
 	if global_db_url is None:
 		sys.exit(1)
