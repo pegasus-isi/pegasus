@@ -1064,7 +1064,11 @@ class Transformation(UseMixin,InvokeMixin):
         ])
         
         # Uses
-        for u in self.used:
+        def getlink(a):
+            return a.link
+        used = list(self.used)
+        used.sort(key=getlink)
+        for u in used:
             e.element(u.toTransformationXML())
         
         # Invocations
@@ -1178,7 +1182,11 @@ class AbstractJob(ProfileMixin,UseMixin,InvokeMixin):
             element.element(self.stderr.toStdioXML('stderr'))
         
         # Uses
-        for use in self.used:
+        def getlink(a):
+            return a.link
+        used = list(self.used)
+        used.sort(key=getlink)
+        for use in used:
             element.element(use.toJobXML())
         
         # Invocations
