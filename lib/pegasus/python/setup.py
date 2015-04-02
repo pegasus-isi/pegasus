@@ -28,7 +28,7 @@ install_requires = [
 def setup_installer_dependencies():
     global install_requires
 
-    if sys.version_info.minor <= 4:
+    if sys.version_info[1] <= 4:
         install_requires.append('SQLAlchemy==0.7.6')
         install_requires.append('pysqlite==2.6.0')
     else:
