@@ -54,7 +54,7 @@ class TestConnection(unittest.TestCase):
         filename = "/tmp/connect-1.db"
         self._silentremove(filename)
         dburi = "sqlite:///%s" % filename
-        db = connect(dburi, echo=False, schema_check=True, create=True)
+        db = connection.connect(dburi, echo=False, schema_check=True, create=True)
         db.close()
         os.remove(filename)
         
