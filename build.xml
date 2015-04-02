@@ -42,6 +42,12 @@
           outputproperty="dist.arch"
           failonerror="true"/>
     <echo>Architecture: ${dist.arch}</echo>
+    
+    <!-- OSID is used for Debian package builds -->
+    <exec executable="${basedir}/release-tools/getsystem/getosid"
+          outputproperty="dist.osid"
+          failonerror="true"/>
+    <echo>OSID: ${dist.osid}</echo>
 
     <!-- Determine the system library location (lib64 or lib) -->
     <exec executable="${basedir}/release-tools/system/determine-lib-dir"
@@ -89,6 +95,7 @@
     <copy preservelastmodified="true" file="debian/changelog.in" tofile="debian/changelog">
       <filterset>
         <filter token="PEGASUS_VERSION" value="${pegasus.version}"/>
+        <filter token="OSID" value="${dist.osid}"/>
         <filter token="DATE" value="${ISODATE.deb}"/>
       </filterset>
     </copy>

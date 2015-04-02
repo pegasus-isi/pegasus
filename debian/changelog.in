@@ -1,4 +1,4 @@
-pegasus (@PEGASUS_VERSION@-1) unstable; urgency=low
+pegasus (@PEGASUS_VERSION@-1+@OSID@) unstable; urgency=low
 
   * Pegasus @PEGASUS_VERSION@ automatic build
 
