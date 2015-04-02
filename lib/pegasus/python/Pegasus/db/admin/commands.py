@@ -136,7 +136,11 @@ class UpdateCommand(Command):
             
         except DBAdminError, e:
             if "Non-existent or missing database tables" in str(e):
-                db = _get_connection(dburi, self.options.config_properties, self.options.submit_dir, self.options.db_type, create=True, force=self.options.force)
+                try:
+                    db = _get_connection(dburi, self.options.config_properties, self.options.submit_dir, self.options.db_type, create=True, force=self.options.force)
+                except DBAdminError, e:
+                    log.error(e)
+                    exit(1)
             else:
                 log.error(e)
                 exit(1)
