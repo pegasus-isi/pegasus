@@ -84,8 +84,6 @@ class UpdateCommand(Command):
     def __init__(self):
         Command.__init__(self)
         _add_common_options(self)
-        self.parser.add_option("-f","--force",action="store_true",dest="force",
-            default=None, help = "Ignore conflicts or data loss")
         self.parser.add_option("-V","--version",action="store",type="string", 
             dest="pegasus_version",default=None, help = "Pegasus version")
     

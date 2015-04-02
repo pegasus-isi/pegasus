@@ -133,7 +133,7 @@ def url_by_properties(config_properties, db_type, submit_dir=None, rundir_proper
     elif db_type.upper() == DBType.MASTER:
         dburi = _get_master_uri(props)
     elif db_type.upper() == DBType.WORKFLOW:
-        dburi = _get_workflow_uri(props, submit_dir, rundir_properties)
+        dburi = _get_workflow_uri(props, submit_dir)
     else:
         log.error("Invalid database type '%s'." % db_type)
         raise ConnectionError("Invalid database type '%s'." % db_type)
@@ -251,14 +251,42 @@ def _get_master_uri(props=None):
             return dburi
 
     homedir = os.getenv("HOME", None)
-    dburi = os.path.join(homedir, ".pegasus", "workflow.db")
-    pegasusDir = os.path.dirname(dburi)
-    if not os.path.exists(pegasusDir):
-        os.mkdir(pegasusDir)
-    return "sqlite:///" + dburi
+    if homedir == None:
+        log.error("Environment variable HOME not defined, set pegasus.dashboard.output property to point to the Dashboard database.")
+        raise ConnectionError("Environment variable HOME not defined.")
+    
+    dir = os.path.join( homedir, ".pegasus" );
+    
+    # check for writability and create directory if required
+    if not os.path.isdir(dir):
+        try:
+            os.mkdir(dir)
+        except OSError:
+            log.error("Unable to create directory: %s" % dir)
+            raise ConnectionError("Unable to create directory: %s" % dir)
+    elif not os.access(dir, os.W_OK):
+        log.warning("Unable to write to directory: %s" % dir)
+        return None
+    
+    #directory exists, touch the file and set permissions
+    filename =  os.path.join(dir, "workflow.db")
+    if not os.access(filename, os.F_OK):
+        try:
+            # touch the file
+            open(filename, 'w').close()
+            os.chmod(filename, 0600)
+        except:
+            log.warning("unable to initialize MASTER db %s." % filename)
+            log.warning(traceback.format_exc())
+            return None
+    elif not os.access( filename, os.W_OK ):
+        log.warning("No read access for file: %s" % filename)
+        return None
+
+    return "sqlite:///" + filename
     
     
-def _get_workflow_uri(props=None, submit_dir=None, top_dir=None):
+def _get_workflow_uri(props=None, submit_dir=None):
     """ Get WORKFLOW URI """
     if props:
         dburi = props.property('pegasus.catalog.workflow.url')
