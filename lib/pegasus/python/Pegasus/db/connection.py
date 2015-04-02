@@ -312,9 +312,6 @@ def _get_workflow_uri(props=None, submit_dir=None):
         # Create the sqllite db url
         output_db_file = (submit_dir) + "/" + dag_file_name[:dag_file_name.find(".dag")] + ".stampede.db"
         dburi = "sqlite:///" + output_db_file
-        if not os.path.isfile(output_db_file):
-            log.error("Unable to find database file in %s." % submit_dir)
-            raise ConnectionError("Unable to find database file in %s." % submit_dir)
         return dburi
     
     return None
