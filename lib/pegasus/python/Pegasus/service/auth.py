@@ -23,13 +23,20 @@ class BaseAuthentication(object):
 
 
 class NoAuthentication(BaseAuthentication):
+    def __init__(self, *args):
+        # For no auth. username and password is not required
+        pass
+
     def authenticate(self):
         # Always authenticate the user
         return True
 
     def get_user(self):
         # Just return info for the user running the service
-        return user.get_user_by_uid(os.getuid())
+        if 'username' in g:
+            return user.get_user_by_username(g.username)
+        else:
+            return user.get_user_by_uid(os.getuid())
 
 
 class PAMAuthentication(BaseAuthentication):
@@ -115,25 +122,24 @@ def before():
     #
 
     cred = request.authorization
-
-    if not cred:
-        return basic_auth_response()
+    username = cred.username if cred else None
+    password = cred.password if cred else None
 
     authclass = app.config["AUTHENTICATION"]
     if authclass not in globals():
         log.error("Unknown authentication method: %s", authclass)
-        return basic_auth_response()
+        return make_response("Invalid server configuration", 500)
 
     Authentication = globals()[authclass]
-    auth = Authentication(cred.username, cred.password)
+    auth = Authentication(username, password)
     if not auth.authenticate():
-        log.error("Invalid login: %s", cred.username)
+        log.error("Invalid login: %s", username)
         return basic_auth_response()
 
     try:
         g.user = auth.get_user()
     except user.NoSuchUser, e:
-        log.error("No such user: %s" % cred.username)
+        log.error("No such user: %s" % username)
         return basic_auth_response()
 
     log.info('Authenticated user %s', g.user.username)
@@ -194,6 +200,3 @@ def before():
 
     # Set master DB URL for the dashboard
     g.master_db_url = user_info.get_master_db_url()
-
-    # TODO Add login page and session for storing authentication status
-
