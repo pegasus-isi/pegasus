@@ -62,6 +62,7 @@ exec subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).commun
 os.sys.path.insert(0, pegasus_python_dir)
 os.sys.path.insert(0, pegasus_python_externals_dir)
 
+from Pegasus.db import connection
 from Pegasus.tools import utils
 from Pegasus.tools import properties
 from Pegasus.monitoring.workflow import Workflow, MONITORD_RECOVER_FILE
@@ -448,19 +449,14 @@ if options.event_dest is None:
             # Default is to generate events
             no_events = False
 
-    if props.property("pegasus.monitord.output") is None:
-        # No command-line or property specified, use default
-        event_dest = "sqlite:///" + out[:out.find(".dag.dagman.out")] + ".stampede.db"
-    else:
-        # Ok, get it from the properties file
-        event_dest = props.property("pegasus.monitord.output")
+    event_dest = connection.url_by_properties(options.config_properties, connection.DBType.WORKFLOW, run, rundir_properties=top_level_prop_file)
 else:
     # Use command-line option
     event_dest = options.event_dest
 
 #hardcoded for the time being
 #dashboard_event_dest = "sqlite:////tmp/workflow.db"
-dashboard_event_dest = utils.get_path_dashboard_db( props );
+dashboard_event_dest = connection.url_by_properties(options.config_properties, connection.DBType.MASTER, rundir_properties=top_level_prop_file)
 
 if options.enc is not None:
     # Get encoding from command-line options

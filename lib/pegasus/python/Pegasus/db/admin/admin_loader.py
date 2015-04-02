@@ -77,9 +77,7 @@ def db_current_version(db, parse=False, force=False):
     if parse:
         current_version = get_compatible_version(current_version)
         if not current_version:
-            log.error("Your database is not compatible with any Pegasus version.")
-            log.error("Use 'pegasus-db-admin check' to verify its compatibility.")
-            raise DBAdminError("Your database is not compatible with any Pegasus version.")
+            raise DBAdminError("Your database is not compatible with any Pegasus version.\nUse 'pegasus-db-admin check %s' to verify its compatibility." % db.get_bind().url)
 
     return current_version
 
@@ -109,7 +107,6 @@ def db_update(db, pegasus_version=None, force=False):
         return
 
     if current_version > version:
-        log.error("Unable to run update. Current database version is newer than specified version '%s'." % (pegasus_version))
         raise DBAdminError("Unable to run update. Current database version is newer than specified version '%s'." % (pegasus_version))
 
     for i in range(current_version + 1, version + 1):
@@ -145,7 +142,6 @@ def db_downgrade(db, pegasus_version=None, force=False):
             break
 
     if current_version < version:
-        log.error("Unable to run downgrade. Current database version is older than specified version '%s'." % (pegasus_version))
         raise DBAdminError("Unable to run downgrade. Current database version is older than specified version '%s'." % (pegasus_version))
 
     for i in range(current_version, version, -1):
@@ -163,7 +159,6 @@ def parse_pegasus_version(pegasus_version=None):
                 version = COMPATIBILITY[key]
                 break
         if not version:
-            log.error("Version does not exist: %s." % pegasus_version)
             raise DBAdminError("Version does not exist: %s." % pegasus_version)
 
     if not version:
@@ -181,12 +176,10 @@ def _check_table_exists(engine, table):
         if "no such table" in str(e).lower() or "unknown" in str(e).lower() \
           or "no such column" in str(e).lower():
             return False
-        log.error(e)
         raise DBAdminError(e)
     except ProgrammingError, e:
         if "doesn't exist" in str(e).lower():
             return False
-        log.error(e)
         raise DBAdminError(e)       
         
 
@@ -235,6 +228,4 @@ def _verify_tables(db):
     ck_workflow = _check_table_exists(db, st_workflow)
     
     if not ck_dbversion or not ck_jdbcrc or not ck_master or not ck_workflow:
-        log.error("Non-existent or missing database tables.")
-        log.error("Run 'pegasus-db-admin create %s' to create the missing tables." % db.get_bind().url)
         raise DBAdminError("Non-existent or missing database tables.\nRun 'pegasus-db-admin create %s' to create the missing tables." % db.get_bind().url)

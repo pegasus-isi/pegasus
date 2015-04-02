@@ -38,13 +38,10 @@ def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=
 
     except exc.OperationalError, e:
         if "mysql" in dburi and "unknown database" in str(e).lower():
-            log.error("MySQL database should be previously created: %s" % e)
-            raise ConnectionError(e)
-        log.error(e)
+            raise ConnectionError("MySQL database should be previously created: %s" % e)
         raise ConnectionError(e)
     
     except Exception, e:
-        log.error(e)
         raise ConnectionError(e)
 
     Session = orm.sessionmaker(bind=engine, autoflush=False, autocommit=False,
@@ -66,22 +63,20 @@ def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=
 def connect_by_submitdir(submit_dir, db_type, config_properties=None, echo=False, schema_check=True, create=False, force=False):
     """ Connect to the database from submit directory and database type """
     dburi = url_by_submitdir(submit_dir, db_type, config_properties)
-    return connect(dburi, echo, schema_check, create, force)
+    return connect(dburi, echo, schema_check, create=create, force=force)
 
     
 def connect_by_properties(config_properties, db_type, echo=False, schema_check=True, create=False, force=False):
     """ Connect to the database from properties file and database type """
     dburi = url_by_properties(config_properties, db_type)
-    return connect(dburi, echo, schema_check, create, force)
+    return connect(dburi, echo, schema_check, create=create, force=force)
 
 
 def url_by_submitdir(submit_dir, db_type, config_properties, top_dir=None):
     """ Get URL from the submit directory """
     if not submit_dir:
-        log.error("A submit directory should be provided with the type parameter.")
         raise ConnectionError("A submit directory should be provided with the type parameter.")
     if not db_type:
-        log.error("A type should be provided with the property file.")
         raise ConnectionError("A type should be provided with the property file.")
 
     # From the submit dir, we need the wf_uuid
@@ -90,7 +85,6 @@ def url_by_submitdir(submit_dir, db_type, config_properties, top_dir=None):
     
     # Return if we cannot parse the braindump.txt file
     if not top_level_wf_params:
-        log.error("Unable to process braindump.txt in %s" % (submit_dir))
         raise ConnectionError("Unable to process braindump.txt in %s" % (submit_dir))
     
     # Load the top-level braindump now if top_dir is not None
@@ -120,7 +114,6 @@ def url_by_properties(config_properties, db_type, submit_dir=None, rundir_proper
     """ Get URL from the property file """
     # Validate parameters
     if not db_type:
-        log.error("A type should be provided with the property file.")
         raise ConnectionError("A type should be provided with the property file.")
     
     # Parse, and process properties
@@ -133,16 +126,14 @@ def url_by_properties(config_properties, db_type, submit_dir=None, rundir_proper
     elif db_type.upper() == DBType.MASTER:
         dburi = _get_master_uri(props)
     elif db_type.upper() == DBType.WORKFLOW:
-        dburi = _get_workflow_uri(props, submit_dir, rundir_properties)
+        dburi = _get_workflow_uri(props, submit_dir)
     else:
-        log.error("Invalid database type '%s'." % db_type)
         raise ConnectionError("Invalid database type '%s'." % db_type)
 
     if dburi:
         log.debug("Using database: %s" % dburi)
         return dburi
     
-    log.error("Unable to find a database URI to connect.")
     raise ConnectionError("Unable to find a database URI to connect.")
 
 
@@ -197,7 +188,6 @@ def _get_jdbcrc_uri(props=None):
     if props:
         replica_catalog = props.property('pegasus.catalog.replica')
         if not replica_catalog:
-            log.error("'pegasus.catalog.replica' property not set.")
             raise ConnectionError("'pegasus.catalog.replica' property not set.")
         
         if replica_catalog.upper() != DBType.JDBCRC:
@@ -212,7 +202,6 @@ def _get_jdbcrc_uri(props=None):
 
         url = rc_info["url"]
         if not url:
-            log.error("'pegasus.catalog.replica.db.url' property not set.")
             raise ConnectionError("'pegasus.catalog.replica.db.url' property not set.")
         url = _parse_jdbc_uri(url)
         o = urlparse(url)
@@ -221,7 +210,6 @@ def _get_jdbcrc_uri(props=None):
 
         driver = rc_info["driver"]
         if not driver:
-            log.error("'pegasus.catalog.replica.db.driver' property not set.")
             raise ConnectionError("'pegasus.catalog.replica.db.driver' property not set.")
         
         if driver.lower() == "mysql":
@@ -236,7 +224,7 @@ def _get_jdbcrc_uri(props=None):
         if driver.lower() == "postgresql":
             return "postgresql://" + rc_info["user"] + ":" + rc_info["password"] + "@" + host + "/" + database
 
-        log.error("Invalid JDBCRC driver: %s" % rc_info["driver"])
+        log.debug("Invalid JDBCRC driver: %s" % rc_info["driver"])
     return None
     
     
@@ -251,14 +239,40 @@ def _get_master_uri(props=None):
             return dburi
 
     homedir = os.getenv("HOME", None)
-    dburi = os.path.join(homedir, ".pegasus", "workflow.db")
-    pegasusDir = os.path.dirname(dburi)
-    if not os.path.exists(pegasusDir):
-        os.mkdir(pegasusDir)
-    return "sqlite:///" + dburi
+    if homedir == None:
+        raise ConnectionError("Environment variable HOME not defined, set pegasus.dashboard.output property to point to the Dashboard database.")
+    
+    dir = os.path.join( homedir, ".pegasus" );
+    
+    # check for writability and create directory if required
+    if not os.path.isdir(dir):
+        try:
+            os.mkdir(dir)
+        except OSError:
+            raise ConnectionError("Unable to create directory: %s" % dir)
+    elif not os.access(dir, os.W_OK):
+        log.warning("Unable to write to directory: %s" % dir)
+        return None
+    
+    #directory exists, touch the file and set permissions
+    filename =  os.path.join(dir, "workflow.db")
+    if not os.access(filename, os.F_OK):
+        try:
+            # touch the file
+            open(filename, 'w').close()
+            os.chmod(filename, 0600)
+        except:
+            log.warning("unable to initialize MASTER db %s." % filename)
+            log.warning(traceback.format_exc())
+            return None
+    elif not os.access( filename, os.W_OK ):
+        log.warning("No read access for file: %s" % filename)
+        return None
+
+    return "sqlite:///" + filename
     
     
-def _get_workflow_uri(props=None, submit_dir=None, top_dir=None):
+def _get_workflow_uri(props=None, submit_dir=None):
     """ Get WORKFLOW URI """
     if props:
         dburi = props.property('pegasus.catalog.workflow.url')
@@ -278,15 +292,12 @@ def _get_workflow_uri(props=None, submit_dir=None, top_dir=None):
         if (top_level_wf_params.has_key('dag')):
             dag_file_name = top_level_wf_params['dag']
         else:
-            log.error("DAG file name cannot be found in the braindump.txt.")
             raise ConnectionError("DAG file name cannot be found in the braindump.txt.")
 
         # Create the sqllite db url
+        dag_file_name = os.path.basename(dag_file_name)
         output_db_file = (submit_dir) + "/" + dag_file_name[:dag_file_name.find(".dag")] + ".stampede.db"
         dburi = "sqlite:///" + output_db_file
-        if not os.path.isfile(output_db_file):
-            log.error("Unable to find database file in %s." % submit_dir)
-            raise ConnectionError("Unable to find database file in %s." % submit_dir)
         return dburi
     
     return None
@@ -310,6 +321,5 @@ def _validate(dburi):
                 imp.find_module('MySQLdb')
             
     except ImportError, e:
-        log.error("Missing Python module: %s" % e)
-        raise ConnectionError(e)
+        raise ConnectionError("Missing Python module: %s" % e)
     

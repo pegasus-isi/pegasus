@@ -32,7 +32,7 @@ def setup_installer_dependencies():
         install_requires.append('SQLAlchemy==0.7.6')
         install_requires.append('pysqlite==2.6.0')
     else:
-        install_requires.append('SQLAlchemy==0.7.6')
+        install_requires.append('SQLAlchemy==0.8.0')
 
     if subprocess.call(["which", "pg_config"]) == 0:
         install_requires.append('psycopg2==2.6')

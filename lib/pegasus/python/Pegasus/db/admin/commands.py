@@ -8,12 +8,40 @@ from Pegasus.db import connection
 from Pegasus.db.admin.admin_loader import *
 from Pegasus.db.admin.versions import *
 
-consoleHandler = logging.StreamHandler(sys.stdout)
-consoleHandler.setLevel(logging.INFO)
-errorHandler = logging.StreamHandler(sys.stderr)
-errorHandler.setLevel(logging.ERROR)
+class ConsoleHandler(logging.StreamHandler):
+    """A handler that logs to console in the sensible way.
+
+    StreamHandler can log to *one of* sys.stdout or sys.stderr.
+
+    It is more sensible to log to sys.stdout by default with only error
+    (logging.ERROR and above) messages going to sys.stderr. This is how
+    ConsoleHandler behaves.
+    """
+
+    def __init__(self):
+        logging.StreamHandler.__init__(self)
+        self.stream = None # reset it; we are not going to use it anyway
+
+    def emit(self, record):
+        if record.levelno >= logging.ERROR:
+            self.__emit(record, sys.stderr)
+        else:
+            self.__emit(record, sys.stdout)
+
+    def __emit(self, record, strm):
+        self.stream = strm
+        logging.StreamHandler.emit(self, record)
+
+    def flush(self):
+        # Workaround a bug in logging module
+        # See:
+        #   http://bugs.python.org/issue6333
+        if self.stream and hasattr(self.stream, 'flush') and not self.stream.closed:
+            logging.StreamHandler.flush(self)
+
+
+consoleHandler = ConsoleHandler()
 logging.getLogger().addHandler(consoleHandler)
-logging.getLogger().addHandler(errorHandler)
 
 log = logging.getLogger(__name__)
 
@@ -38,9 +66,11 @@ class CreateCommand(Command):
             db = _get_connection(dburi, self.options.config_properties, self.options.submit_dir, self.options.db_type, create=True, force=self.options.force)
             db.close()
             
-        except DBAdminError:
+        except DBAdminError, e:
+            log.error(e)
             exit(1)
-        except connection.ConnectionError:
+        except connection.ConnectionError, e:
+            log.error(e)
             exit(1)
     
     
@@ -70,9 +100,11 @@ class DowngradeCommand(Command):
             _print_version(version)
             db.close()
                 
-        except DBAdminError:
+        except DBAdminError, e:
+            log.error(e)
             exit(1)
-        except connection.ConnectionError:
+        except connection.ConnectionError, e:
+            log.error(e)
             exit(1)
 
 
@@ -84,8 +116,6 @@ class UpdateCommand(Command):
     def __init__(self):
         Command.__init__(self)
         _add_common_options(self)
-        self.parser.add_option("-f","--force",action="store_true",dest="force",
-            default=None, help = "Ignore conflicts or data loss")
         self.parser.add_option("-V","--version",action="store",type="string", 
             dest="pegasus_version",default=None, help = "Pegasus version")
     
@@ -99,14 +129,23 @@ class UpdateCommand(Command):
         try:
             _validate_conf_type_options(self.options.config_properties, self.options.submit_dir, self.options.db_type)
             db = _get_connection(dburi, self.options.config_properties, self.options.submit_dir, self.options.db_type, force=self.options.force)
-            db_update(db, self.options.pegasus_version, self.options.force)
+            db_update(db, self.options.pegasus_version, force=self.options.force)
             version = db_current_version(db, parse=True)
             _print_version(version)
             db.close()
             
-        except DBAdminError:
-            exit(1)
-        except connection.ConnectionError:
+        except DBAdminError, e:
+            if "Non-existent or missing database tables" in str(e):
+                try:
+                    db = _get_connection(dburi, self.options.config_properties, self.options.submit_dir, self.options.db_type, create=True, force=self.options.force)
+                except DBAdminError, e:
+                    log.error(e)
+                    exit(1)
+            else:
+                log.error(e)
+                exit(1)
+        except connection.ConnectionError, e:
+            log.error(e)
             exit(1)
   
     
@@ -137,9 +176,11 @@ class CheckCommand(Command):
             _print_db_check(db, compatible, self.options.pegasus_version, self.options.version_value)
             db.close()
 
-        except DBAdminError:
+        except DBAdminError, e:
+            log.error(e)
             exit(1)
-        except connection.ConnectionError:
+        except connection.ConnectionError, e:
+            log.error(e)
             exit(1)
    
     
@@ -168,9 +209,11 @@ class VersionCommand(Command):
             _print_version(version)
             db.close()
 
-        except DBAdminError:
+        except DBAdminError, e:
+            log.error(e)
             exit(1)
-        except connection.ConnectionError:
+        except connection.ConnectionError, e:
+            log.error(e)
             exit(1)
 
 
@@ -192,11 +235,11 @@ def _validate_conf_type_options(config_properties, submit_dir, db_type):
     """ Validate DB type parameter """
     if (config_properties or submit_dir) and not db_type:
         log.error("A type should be provided with the property file/submit directory.")
-        raise RuntimeError("A type should be provided with the property file/submit directory.")
+        exit(1)
     
     if (not config_properties and not submit_dir) and db_type:
         log.error("A property file/submit directory should be provided with the type option.")
-        raise RuntimeError("A property file/submit directory should be provided with the type option.")
+        exit(1)
 
 
 def _add_common_options(object):
