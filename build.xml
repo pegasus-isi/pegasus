@@ -515,12 +515,17 @@
     </delete>
   </target>
   
-  <target name="debian-package" depends="clean,setup">
+  <target name="debian-package" depends="setup">
     <exec executable="dpkg-buildpackage" failonerror="true">
       <arg line="-b -uc"/>
     </exec>
     <apply executable="lintian" dir=".." failonerror="false">
       <fileset dir=".." includes="pegasus_${pegasus.version}*.changes"/>
+    </apply>
+    <apply executable="mv" failonerror="true">
+      <srcfile/>
+      <arg value="dist/"/>
+      <fileset dir=".." includes="pegasus_${pegasus.version}*.deb"/>
     </apply>
   </target>
 
