@@ -89,7 +89,7 @@
       </listitem>
     </itemizedlist>
 
-    <para>The <link linkend="reference">" Reference Manual"</link> Chapter
+    <para>The <link linkend="data_management">Data Management</link> chapter
     details more about when and how staging nodes are inserted into the
     workflow.</para>
 
@@ -454,8 +454,8 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       job clustering module, which clusters jobs that are scheduled to the
       same site. Clustering is usually done on short running jobs in order to
       reduce the remote execution overheads associated with a job. Clustering
-      is described in detail in the <link linkend="reference">Reference
-      Manual</link> chapter.</para>
+      is described in detail in the <link
+      linkend="job_clustering">optimization</link> chapter.</para>
 
       <tip>
         <para>The job clustering is turned on by passing the <emphasis
@@ -477,9 +477,10 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       option to the planner. In case, multiple locations are specified for the
       same input file, the location from where to stage the data is selected
       using a <emphasis role="bold">Replica Selector</emphasis> . Replica
-      Selection is described in detail in the Replica Selection section of the
-      <link linkend="reference">Reference Manual.</link> More details about
-      staging site can be found in the <link
+      Selection is described in detail in the <link
+      linkend="replica_selection">Replica Selection</link> section of the
+      <link linkend="data_management">Data Management</link> chapter. More
+      details about staging site can be found in the <link
       linkend="data_staging_configuration">data staging configuration</link>
       chapter.</para>
 
@@ -492,11 +493,12 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       automatically which underlying client to use. pegasus-transfer is
       distributed with the PEGASUS and can be found in the bin subdirectory .
       Pegasus Transfer Refiners are are described in the detail in the
-      Transfers section of the <link linkend="reference">Reference
-      Manual</link>. The default transfer refiner that is used in Pegasus is
-      the <emphasis role="bold">Bundle</emphasis> Transfer Refiner, that
-      bundles data stage-in nodes and data stage-out nodes on the basis of
-      certain pegasus profile keys associated with the workflow.</para>
+      Transfers section of the <link linkend="data_management">Data
+      Management</link> chapter. The default transfer refiner that is used in
+      Pegasus is the <emphasis role="bold">BalancedCluster</emphasis> Transfer
+      Refiner, that clusters data stage-in nodes and data stage-out nodes per
+      level of the workflow, on the basis of certain pegasus profile keys
+      associated with the workflow.</para>
 
       <figure>
         <title>Addition of Data Transfer Nodes to the Workflow</title>
@@ -1161,7 +1163,8 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
         to use. These properties are described in the <emphasis
         role="bold">basic.properties</emphasis> files in the <emphasis
         role="bold">etc</emphasis> sub directory (see the Properties section
-        of the<link linkend="reference">Reference</link> chapter.</para>
+        of the<link linkend="configuration"> Configuration</link>
+        chapter.</para>
 
         <para>The basic properties that need to be set usually are listed
         below:</para>
