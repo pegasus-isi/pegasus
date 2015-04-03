@@ -46,8 +46,6 @@ class Version(BaseVersion):
                     timestamp, restart_count, status) SELECT wf_id, state, \
                     timestamp, restart_count, status FROM workflowstate")
             
-            self.db.execute("ALTER TABLE workflow DROP COLUMN db_url")
-            
             self.db.execute("CREATE TABLE IF NOT EXISTS ensemble ("
                 "id INTEGER PRIMARY KEY,"
                 "name VARCHAR(100) NOT NULL,"
@@ -94,4 +92,7 @@ class Version(BaseVersion):
         
     def downgrade(self, force=False):
         
-        self.db.execute("ALTER TABLE workflow ADD COLUMN db_url TEXT")
+        try:
+            self.db.execute("ALTER TABLE workflow ADD COLUMN db_url TEXT")
+        except:
+            pass
