@@ -19,6 +19,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <pthread.h>
+#include <dlfcn.h>
 
 /* TODO Interpose accept (for network servers) */
 /* TODO Is it necessary to interpose shutdown? Would that help the DNS issue? */
@@ -204,7 +205,7 @@ static FILE* open_kickstart_status_file() {
  * <mpi_rank> <timestamp> <utime> <stime> <io_wait> <vm_peak> <pm_peak> <threads> <read_bytes> <write_bytes> <syscr> <syscw>
  */
 static void* timer_thread_func(void* mpi_rank_void) {
-    double timestamp;
+    time_t timestamp;
     int interval = 5;
     int mpi_rank = atoi( (char*) mpi_rank_void ) + 1;
     char* exec_name = read_exe();
@@ -233,19 +234,20 @@ static void* timer_thread_func(void* mpi_rank_void) {
     while(library_loaded) {        
         sleep(interval);
 
-        printerr("[Thread-%d] is dumping monitoring information\n", mpi_rank);
+        timestamp = time(NULL);
+
+        printerr("[Thread-%d][%d] is dumping monitoring information\n", mpi_rank, (int)timestamp);
         CpuUtilInfo cpu_info = read_cpu_status();
         MemUtilInfo mem_info = read_mem_status();
         IoUtilInfo io_info = read_io_status();
 
-        timestamp = get_time();
 
-        fprintf(kickstart_status, "ts=%f event=workflow_trace level=INFO status=0 "         
+        fprintf(kickstart_status, "ts=%d event=workflow_trace level=INFO status=0 "         
             "guid=na kickstart_pid=%s executable=%s hostname=%s mpi_rank=%d utime=%.3f stime=%.3f "
             "iowait=%.3f vmSize=%d vmRSS=%d threads=%d read_bytes=%d write_bytes=%d "
             "syscr=%d syscw=%d\n", 
 
-            timestamp, kickstart_pid, exec_name, hostname, mpi_rank, 
+            (int)timestamp, kickstart_pid, exec_name, hostname, mpi_rank, 
             cpu_info.real_utime, cpu_info.real_stime, cpu_info.real_iowait,
             mem_info.vmSize, mem_info.vmRSS, mem_info.threads,
             io_info.read_bytes, io_info.write_bytes, io_info.syscr, io_info.syscw);
@@ -875,10 +877,35 @@ int tfile_exists() {
 }
 
 void spawn_timer_thread() {
+    pid_t current_pid = getpid();
+
     // spawning a timer thread only when
     char* mpi_rank = getenv("OMPI_COMM_WORLD_RANK");
+    printerr("Spawning thread in process: %d\n", (int)current_pid);
+    // printerr("Setting mpi rank based on OMPI_COMM_WORLD_RANK\n");
 
     if(mpi_rank == NULL) {
+        mpi_rank = getenv("ALPS_APP_PE");        
+        // printerr("Setting mpi rank based on MPIRUN_RANK\n");
+
+        if(mpi_rank == NULL) {
+            mpi_rank = getenv("PMI_RANK");
+            // printerr("Setting mpi rank based on PMI_RANK\n");
+
+            if(mpi_rank == NULL) {
+                mpi_rank = getenv("PMI_ID");
+                // printerr("Setting mpi rank based on PMI_ID\n");
+
+                if(mpi_rank == NULL) {
+                    mpi_rank = getenv("MPIRUN_RANK");
+                    // printerr("Setting mpi rank based on ALPS_APP_PE\n"); 
+                }
+            }
+        }
+    }
+
+    if(mpi_rank == NULL) {
+        // printerr("Setting mpi rank based on ... it is still nil\n");
         mpi_rank = (char*) calloc(1024, sizeof(char));
         strcpy(mpi_rank, "-1");
     }
