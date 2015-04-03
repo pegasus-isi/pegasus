@@ -366,6 +366,7 @@ static char *get_fullpath(const char *path) {
  */
 static char* read_exe() {
     debug("Reading exe");
+    printerr("Reading exe \n");
     char* exe;
 
     exe = (char*) calloc(sizeof(char), BUFSIZ);
@@ -379,7 +380,46 @@ static char* read_exe() {
         perror("libinterpose: Unable to readlink /proc/self/exe");
         return NULL;
     }
+
     exe[size] = '\0';
+
+    // if it is linux loader we need to read its first argument
+    if( strstr(exe, "ld-") != NULL ) {
+        // printerr("libinterpose: we have ld-linux involved\n");
+        char buffer[BUFSIZ];
+        // so we read /proc/self/cmdline - it a string with \0 delimeter
+        int fd = open("/proc/self/cmdline", O_RDONLY);
+        if(fd < 0) {
+            printerr("libinterpose: Unable to open /proc/self/cmdline: %s\n", strerror(errno));
+        }
+        else {
+            // printerr("libinterpose: we opend cmdline file\n");
+
+            int nbytesread = read(fd, buffer, BUFSIZ);
+            if(nbytesread < 0) {
+                printerr("libinterpose: Unable to read /proc/self/cmdline: %s\n", strerror(errno));    
+            }
+            else {
+                // printerr("libinterpose: we read: %s\n", buffer);
+
+                char *buf_idx = buffer;
+
+                // we need to take only the first token without ld-
+                while( strstr(buf_idx, "ld-") != NULL ) {
+                    char* idx = index(buf_idx, 0);
+                    if(idx != NULL) {  
+                        buf_idx = idx + 1;
+                    }
+                }
+                strcpy(exe, buf_idx);
+            }
+            // printerr("libinterpose: executable read from cmdline: %s\n", exe);
+
+            close(fd);
+        }
+
+    }
+    
     tprintf("exe: %s\n", exe);
 
     return exe;
