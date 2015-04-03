@@ -51,6 +51,19 @@ class WorkflowDatabase(object):
     def __init__(self, session):
         self.session = session
 
+    def delete_workflow(self, wf_uuid):
+        q = self.session.query(Workflow)
+        q = q.filter(Workflow.wf_uuid == wf_uuid)
+        w = q.first()
+
+        # If not found, do nothing
+        if w is None:
+            log.warning("Workflow not found in workflow DB: %s" % wf_uuid)
+            return
+
+        # Delete it
+        self.session.delete(w)
+
     def get_workflow(self, wf_uuid):
         q = self.session.query(Workflow)
         q = q.filter(Workflow.wf_uuid == wf_uuid)
@@ -96,7 +109,7 @@ class SubmitDir(object):
             raise SubmitDirException("Submit dir not archived")
 
         # Update record in master db
-        mdbsession = connection.connect_to_master_db(self.user)
+        mdbsession = connection.connect_by_submitdir(self.submitdir, connection.DBType.MASTER)
         mdb = MasterDatabase(mdbsession)
         wf = mdb.get_master_workflow(self.wf_uuid)
         if wf is not None:
@@ -118,7 +131,7 @@ class SubmitDir(object):
         "Archive a submit dir by adding files to a compressed archive"
 
         # Update record in master db
-        mdbsession = connection.connect_to_master_db(self.user)
+        mdbsession = connection.connect_by_submitdir(self.submitdir, connection.DBType.MASTER)
         mdb = MasterDatabase(mdbsession)
         wf = mdb.get_master_workflow(self.wf_uuid)
         if wf is not None:
@@ -195,25 +208,14 @@ class SubmitDir(object):
             raise SubmitDirException("Subworkflows cannot be moved independent of the root workflow")
 
         # Connect to master database
-        mdbsession = connection.connect_to_master_db(self.user)
+        mdbsession = connection.connect_by_submitdir(self.submitdir, connection.DBType.MASTER)
         mdb = MasterDatabase(mdbsession)
 
         # Get the workflow record from the master db
         db_url = None
         wf = mdb.get_master_workflow(self.wf_uuid)
         if wf is None:
-            # No master db record
-
-            # Try looking in the workflow directory for workflow db
-            pegasus_wf_name = self.braindump["pegasus_wf_name"]
-            db_file = os.path.join(self.submitdir, pegasus_wf_name + ".stampede.db")
-            if os.path.isfile(db_file):
-                log.info("Found workflow db in submit dir: %s" % db_file)
-                db_url = "sqlite:///%s" % db_file
-            else:
-                # TODO Try looking at the pegasus properties configuration
-                log.warning("Unable to locate workflow database")
-                db_url = None
+            db_url = connection.url_by_submitdir(self.submitdir, connection.DBType.WORKFLOW)
         else:
             # We found an mdb record, so we need to update it
 
@@ -256,6 +258,10 @@ class SubmitDir(object):
         self.braindump["basedir"] = os.path.dirname(dest)
         utils.write_braindump(os.path.join(dest, "braindump.txt"), self.braindump)
 
+        # Note that we do not need to update the properties file even though it
+        # might contain DB URLs because it cannot contain a DB URL with the submit
+        # dir in it.
+
         # TODO We might want to update all of the absolute paths in the condor submit files
         # if we plan on moving workflows that could be resubmitted in the future
 
@@ -285,11 +291,18 @@ class SubmitDir(object):
                 return
 
         # Connect to master database
-        mdbsession = connection.connect_to_master_db(self.user)
+        mdbsession = connection.connect_by_submitdir(self.submitdir, connection.DBType.MASTER)
         mdb = MasterDatabase(mdbsession)
 
-        # TODO We might want to delete all of the records from the workflow db
-        # if they are not using an sqlite db that is in the submit dir
+        # Delete all of the records from the workflow db if they are not using
+        # an sqlite db that is in the submit dir.
+        db_url = connection.url_by_submitdir(self.submitdir, connection.DBType.WORKFLOW)
+        if self.submitdir not in db_url:
+            dbsession = connection.connect(db_url)
+            db = WorkflowDatabase(dbsession)
+            db.delete_workflow(self.wf_uuid)
+            dbsession.commit()
+            dbsession.close()
 
         # Delete the workflow
         mdb.delete_master_workflow(self.wf_uuid)

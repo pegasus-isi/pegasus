@@ -72,7 +72,7 @@ def connect_by_properties(config_properties, db_type, echo=False, schema_check=T
     return connect(dburi, echo, schema_check, create=create, force=force)
 
 
-def url_by_submitdir(submit_dir, db_type, config_properties, top_dir=None):
+def url_by_submitdir(submit_dir, db_type, config_properties=None, top_dir=None):
     """ Get URL from the submit directory """
     if not submit_dir:
         raise ConnectionError("A submit directory should be provided with the type parameter.")
