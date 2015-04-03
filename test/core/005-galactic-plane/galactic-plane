@@ -48,7 +48,7 @@ for path in paths:
 if pegasus_home == None:
     raise RuntimeError("pegasus-plan not found in the PATH")
 
-sys.path.append(os.getenv("PEGASUS_HOME") + "/lib/pegasus/python")
+sys.path.insert(0, os.getenv("PEGASUS_HOME") + "/lib/pegasus/python")
 from Pegasus.DAX3 import *
 
 __author__ = "Mats Rynge <rynge@isi.edu>"
