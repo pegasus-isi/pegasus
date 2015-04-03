@@ -84,7 +84,7 @@
     </propertyfile>
 
     <!-- RPM spec file with updated version number -->
-    <copy preservelastmodified="true" file="pegasus.spec.in" tofile="pegasus.spec">
+    <copy preservelastmodified="true" overwrite="true" file="pegasus.spec.in" tofile="pegasus.spec">
       <filterset>
         <filter token="PEGASUS_VERSION" value="${pegasus.version}"/>
         <filter token="DATE" value="${ISODATE.rpm}"/>
@@ -92,7 +92,7 @@
     </copy>
 
     <!-- Debian changelog file with updated version number -->
-    <copy preservelastmodified="true" file="debian/changelog.in" tofile="debian/changelog">
+    <copy preservelastmodified="true" overwrite="true" file="debian/changelog.in" tofile="debian/changelog">
       <filterset>
         <filter token="PEGASUS_VERSION" value="${pegasus.version}"/>
         <filter token="OSID" value="${dist.osid}"/>
@@ -514,6 +514,15 @@
       <fileset dir="lib/pegasus/python/Pegasus" includes="**/*.pyc"/>
     </delete>
   </target>
+  
+  <target name="debian-package" depends="clean,setup">
+    <exec executable="dpkg-buildpackage" failonerror="true">
+      <arg line="-b -uc"/>
+    </exec>
+    <apply executable="lintian" dir=".." failonerror="false">
+      <fileset dir=".." includes="pegasus_${pegasus.version}*.changes"/>
+    </apply>
+  </target>
 
   <target name="test-java" depends="jar" description="Run java unit tests">
     <mkdir dir="${junitreport.dir}"/>
@@ -550,5 +559,6 @@
   </target>
 
   <target name="test" depends="test-python,test-java,test-kickstart,test-pmc" description="Run all unit tests"/>
+  
 </project>
 

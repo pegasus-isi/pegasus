@@ -52,6 +52,9 @@ install: build
 	# remove stuff we don't need
 	rm -rf debian/pegasus/usr/lib/pegasus/externals/python/boto/tests
 	
+	# no pyc files in debian packages
+	find debian/pegasus/ -name \*.pyc -exec rm {} \;
+	
 
 # Build architecture-independent files here.
 binary-indep: build install
