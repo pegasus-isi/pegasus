@@ -19,20 +19,8 @@ class Version(BaseVersion):
     def update(self, force=False):
         try:
             self.db.execute("SELECT db_url FROM workflow")
-            data = None
-            data2 = None
+            
             try:
-                data = self.db.execute("SELECT COUNT(wf_id) FROM master_workflow").first()
-                data2 = self.db.execute("SELECT COUNT(wf_id) FROM master_workflowstate").first()
-            except:
-                pass
-            
-            if data is not None or data2 is not None:
-                if (data[0] > 0 or data2[0] > 0) and not force:
-                    raise DBAdminError("A possible data loss was detected: use '--force' to ignore this message.")
-            
-            if data:
-                self.db.execute("DELETE FROM master_workflow")
                 self.db.execute("INSERT INTO master_workflow(wf_id, wf_uuid, \
                     dax_label, dax_version, dax_file, dag_file_name, timestamp, \
                     submit_hostname, submit_dir, planner_arguments, user, \
@@ -40,13 +28,14 @@ class Version(BaseVersion):
                     dax_label, dax_version, dax_file, dag_file_name, timestamp, \
                     submit_hostname, submit_dir, planner_arguments, user, \
                     grid_dn, planner_version FROM workflow")
-            if data2:
-                self.db.execute("DELETE FROM master_workflowstate")
+            except:
+                pass
+            try:
                 self.db.execute("INSERT INTO master_workflowstate(wf_id, state, \
                     timestamp, restart_count, status) SELECT wf_id, state, \
                     timestamp, restart_count, status FROM workflowstate")
-            
-            self.db.execute("ALTER TABLE workflow DROP COLUMN db_url")
+            except:
+                pass
             
             self.db.execute("CREATE TABLE IF NOT EXISTS ensemble ("
                 "id INTEGER PRIMARY KEY,"
@@ -94,4 +83,7 @@ class Version(BaseVersion):
         
     def downgrade(self, force=False):
         
-        self.db.execute("ALTER TABLE workflow ADD COLUMN db_url TEXT")
+        try:
+            self.db.execute("ALTER TABLE workflow ADD COLUMN db_url TEXT")
+        except:
+            pass
