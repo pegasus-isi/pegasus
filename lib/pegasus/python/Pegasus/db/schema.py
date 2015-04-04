@@ -179,6 +179,7 @@ st_workflow = Table('workflow', metadata,
     Column('dax_label', VARCHAR(255), nullable=True),
     Column('dax_version', VARCHAR(255), nullable=True),
     Column('dax_file', VARCHAR(255), nullable=True),
+    Column('db_url', TEXT, nullable=True),
     Column('parent_wf_id', KeyInteger, ForeignKey("workflow.wf_id", ondelete='CASCADE'), nullable=True),
     # not marked as FK to not screw up the cascade.
     Column('root_wf_id', KeyInteger, nullable=True),

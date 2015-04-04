@@ -59,7 +59,7 @@ class Version(BaseVersion):
             log.debug("  Updated %d entries in the database." % updated)
             self.db.commit()
             
-        except OperationalError:
+        except (OperationalError, ProgrammingError):
             pass
         except Exception, e:
             self.db.rollback()

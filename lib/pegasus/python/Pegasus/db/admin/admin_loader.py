@@ -2,6 +2,8 @@ __author__ = "Rafael Ferreira da Silva"
 
 import logging
 import datetime
+import glob
+import shutil
 
 from Pegasus.db.schema import *
 from sqlalchemy.orm.exc import *
@@ -42,27 +44,20 @@ def get_class(version, db):
 
 
 #-------------------------------------------------------------------
-def db_create(dburi, engine, db, force=False):
+def db_create(dburi, engine, db, pegasus_version=None, force=False):
     """ Create/Update the Pegasus database from the schema """
-    ck_dbversion = _check_table_exists(db, db_version)
-    ck_jdbcrc = _check_table_exists(db, rc_lfn)
-    ck_master = _check_table_exists(db, pg_workflow)
-    ck_workflow = _check_table_exists(db, st_workflow)
-    
-    metadata.create_all(engine)
+    table_names = engine.table_names()
+    db_version.create(engine, checkfirst=True)
 
-    if not ck_dbversion and not ck_jdbcrc and not ck_master and not ck_workflow:
+    if len(table_names) == 0:
         engine.execute(db_version.insert(), version_number=CURRENT_DB_VERSION, 
                 version_timestamp=datetime.datetime.now().strftime("%s"))
         log.info("Created Pegasus database in: %s" % dburi)
-        
-    elif not ck_dbversion or not ck_jdbcrc or not ck_master or not ck_workflow:
-        _discover_version(db)
-        metadata.create_all(engine)
+    else:
+        _discover_version(db, pegasus_version=pegasus_version, force=force)
     
-    db_verify(db, force=force)
-    log.info("Your database is compatible with Pegasus version: %s" % db_current_version(db, parse=True, force=force))
-        
+    metadata.create_all(engine)
+            
 
 def db_current_version(db, parse=False, force=False):
     """ Get the current version of the database."""
@@ -77,7 +72,7 @@ def db_current_version(db, parse=False, force=False):
     if parse:
         current_version = get_compatible_version(current_version)
         if not current_version:
-            raise DBAdminError("Your database is not compatible with any Pegasus version.\nUse 'pegasus-db-admin check %s' to verify its compatibility." % db.get_bind().url)
+            raise DBAdminError("Your database is not compatible with any Pegasus version.\nRun 'pegasus-db-admin update %s' to update it to the latest version." % db.get_bind().url)
 
     return current_version
 
@@ -88,32 +83,17 @@ def db_verify(db, pegasus_version=None, force=False):
     _verify_tables(db)
     version = parse_pegasus_version(pegasus_version)
 
+    compatible = False
     try:
-        return _check_version(db, version)
+        compatible = _check_version(db, version)
     except NoResultFound:
-        _discover_version(db, force=force)
-        return _check_version(db, version)
-
-
-def db_update(db, pegasus_version=None, force=False):
-    """ Update the database. """
-    _verify_tables(db)
-
-    current_version = db_current_version(db, force=force)
-    version = parse_pegasus_version(pegasus_version)
-
-    if current_version == version:
-        log.info("Your database is already updated.")
-        return
-
-    if current_version > version:
-        raise DBAdminError("Unable to run update. Current database version is newer than specified version '%s'." % (pegasus_version))
-
-    for i in range(current_version + 1, version + 1):
-        k = get_class(i, db)
-        k.update(force)
-        _update_version(db, i)
-    log.info("Your database was successfully updated.")
+        _discover_version(db, pegasus_version=pegasus_version, force=force)
+        compatible = _check_version(db, version)
+    
+    if not compatible:
+        raise DBAdminError("Your database is NOT compatible with version %s" % get_compatible_version(version))
+    
+    return compatible
 
 
 def db_downgrade(db, pegasus_version=None, force=False):
@@ -192,17 +172,34 @@ def _get_version(db):
     return current_version[0]
 
 
-def _discover_version(db, force=False):
-    version = 0
-    for i in range(1, CURRENT_DB_VERSION + 1):
+def _discover_version(db, pegasus_version=None, force=False):
+    version = parse_pegasus_version(pegasus_version)
+
+    current_version = 0
+    if not force:
+        try:
+            current_version = _get_version(db)
+        except NoResultFound:
+            pass
+    
+    if current_version == version:
+        log.info("Your database is already updated.")
+        return
+    
+    if current_version > version:
+        raise DBAdminError("Unable to run update. Current database version is newer than specified version '%s'." % (pegasus_version))
+    
+    _backup_db(db)
+    v = 0
+    for i in range(current_version + 1, version + 1):
         k = get_class(i, db)
         k.update(force=force)
-        version = i
-
-    if version > 0:
-        _update_version(db, version)
-    log.info("Your database has been updated.")
-    return version
+        v = i
+        
+    if v > current_version:
+        _update_version(db, i)
+        log.info("Your database has been updated.")
+    return v
 
 
 def _check_version(db, version):
@@ -221,6 +218,21 @@ def _update_version(db, version):
         db.commit()
 
 
+def _backup_db(db):
+    url = db.get_bind().url
+    if url.drivername == "sqlite":
+        db_list = glob.glob(url.database + ".[0-9][0-9][0-9]")
+        max_index = -1
+        for file in db_list:
+            index = int(file[-3:])
+            if index > max_index:
+                max_index = index
+        dest_file = url.database + ".%03d" % (max_index + 1)
+        shutil.copy(url.database, dest_file)
+        log.debug("Created backup database file at: %s" % dest_file)
+        pass
+
+
 def _verify_tables(db):
     ck_dbversion = _check_table_exists(db, db_version)
     ck_jdbcrc = _check_table_exists(db, rc_lfn)
@@ -228,4 +240,5 @@ def _verify_tables(db):
     ck_workflow = _check_table_exists(db, st_workflow)
     
     if not ck_dbversion or not ck_jdbcrc or not ck_master or not ck_workflow:
-        raise DBAdminError("Non-existent or missing database tables.\nRun 'pegasus-db-admin create %s' to create the missing tables." % db.get_bind().url)
+        raise DBAdminError("Non-existent or missing database tables.\nRun 'pegasus-db-admin update %s' to create the missing tables."
+            % db.get_bind().url)

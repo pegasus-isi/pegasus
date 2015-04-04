@@ -38,7 +38,7 @@ def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=
 
     except exc.OperationalError, e:
         if "mysql" in dburi and "unknown database" in str(e).lower():
-            raise ConnectionError("MySQL database should be previously created: %s" % e)
+            raise ConnectionError("MySQL database should be previously created: %s" % e.message)
         raise ConnectionError(e)
     
     except Exception, e:
@@ -51,25 +51,25 @@ def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=
     # Database creation
     if create:
         from Pegasus.db.admin.admin_loader import db_create
-        db_create(dburi, engine, db, force)
+        db_create(dburi, engine, db, pegasus_version=pegasus_version, force=force)
 
     if schema_check:
         from Pegasus.db.admin.admin_loader import db_verify
-        db_verify(db, pegasus_version, force)
+        db_verify(db, pegasus_version=pegasus_version, force=force)
 
     return db
 
 
-def connect_by_submitdir(submit_dir, db_type, config_properties=None, echo=False, schema_check=True, create=False, force=False):
+def connect_by_submitdir(submit_dir, db_type, config_properties=None, echo=False, schema_check=True, create=False, pegasus_version=None, force=False):
     """ Connect to the database from submit directory and database type """
     dburi = url_by_submitdir(submit_dir, db_type, config_properties)
-    return connect(dburi, echo, schema_check, create=create, force=force)
+    return connect(dburi, echo, schema_check, create=create, pegasus_version=pegasus_version, force=force)
 
     
-def connect_by_properties(config_properties, db_type, echo=False, schema_check=True, create=False, force=False):
+def connect_by_properties(config_properties, db_type, echo=False, schema_check=True, create=False, pegasus_version=None, force=False):
     """ Connect to the database from properties file and database type """
     dburi = url_by_properties(config_properties, db_type)
-    return connect(dburi, echo, schema_check, create=create, force=force)
+    return connect(dburi, echo, schema_check, create=create, pegasus_version=pegasus_version, force=force)
 
 
 def url_by_submitdir(submit_dir, db_type, config_properties=None, top_dir=None):

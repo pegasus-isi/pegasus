@@ -171,7 +171,7 @@ class StampedeStatistics(SQLAlchemyInit):
         self.log = logging.getLogger("%s.%s" % (self.__module__, self.__class__.__name__))
         try:
             SQLAlchemyInit.__init__(self, connString)
-        except exc.OperationalError, e:
+        except OperationalError, e:
             self.log.exception(e)
             raise StampedeDBNotFoundError
 

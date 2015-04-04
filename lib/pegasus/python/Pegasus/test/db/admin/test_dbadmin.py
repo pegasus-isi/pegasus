@@ -74,17 +74,19 @@ class TestDBAdmin(unittest.TestCase):
 
         db_downgrade(db, "4.4.2")
         self.assertEquals(db_current_version(db), 2)
-        self.assertFalse(db_verify(db))
+        self.assertRaises(DBAdminError, db_verify, db)
         
         db_downgrade(db)
         self.assertEquals(db_current_version(db), 1)
-        self.assertFalse(db_verify(db))
-                
-        db_update(db, "4.4.0")
-        self.assertEquals(db_current_version(db), 2)
-        self.assertFalse(db_verify(db))
+        self.assertRaises(DBAdminError, db_verify, db)
+        db.close()
         
-        db_update(db)
+        db = connection.connect(dburi, create=True, pegasus_version="4.4.0")
+        self.assertEquals(db_current_version(db), 2)
+        self.assertRaises(DBAdminError, db_verify, db)
+        db.close()
+        
+        db = connection.connect(dburi, create=True)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         self.assertTrue(db_verify(db))
         os.remove(filename)
@@ -110,10 +112,11 @@ class TestDBAdmin(unittest.TestCase):
 
         db_downgrade(db, "4.3.0")
         self.assertEquals(db_current_version(db), 1)
-        self.assertFalse(db_verify(db))
+        self.assertRaises(DBAdminError, db_verify, db)
         self.assertTrue(db_verify(db, "4.3.0"))
+        db.close()
         
-        db_update(db)
+        db = connection.connect(dburi, create=True)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         self.assertTrue(db_verify(db))
         os.remove(filename)

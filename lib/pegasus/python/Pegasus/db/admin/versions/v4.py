@@ -18,7 +18,7 @@ class Version(BaseVersion):
         # TODO We might need to check to see if the field already exists first
         try:
             self.db.execute("ALTER TABLE master_workflow ADD archived BOOLEAN NOT NULL default 0")
-        except OperationalError:
+        except (OperationalError, ProgrammingError):
             pass
         except Exception, e:
             log.error("Error adding archived field to master_workflow table")
