@@ -1,0 +1,46 @@
+#!/bin/bash
+#
+# Halts a workflow gracefully by putting .halt files in place
+#
+
+PEGASUS_CONFIG="`dirname $0`/pegasus-config"
+eval `$PEGASUS_CONFIG --sh-dump`
+. $PEGASUS_SHARE_DIR/common.sh
+
+function usage()
+{
+    echo "Usage: pegasus-halt [rundir]" 1>&2
+    exit 1
+}
+
+
+RUN_DIR=$1
+
+# special case, no run dir given, but current dir is a run dir
+if [ "x$RUN_DIR" = "x" -a -e braindump.txt ]; then
+    RUN_DIR=`pwd`
+fi
+
+if [ "x$RUN_DIR" = "x" ]; then
+    echo "Please specify a run dir" 1>&2
+    usage
+fi
+
+if [ ! -e $RUN_DIR ]; then
+    echo "$RUN_DIR does not exist!" 1>&2
+    usage
+fi
+
+if [ ! -e $RUN_DIR/braindump.txt ]; then
+    echo "$RUN_DIR does contain a braindump file, and hence is not probably not a run directory." 1>&2
+    usage
+fi
+
+for DAG_FILE in `find $RUN_DIR -type f -name \*.dag`; do
+    touch "$DAG_FILE.halt"
+done
+
+echo "Workflow has been given the halt signal, and will gracefully exit once"
+echo "all current jobs have finished. The workflow can be restarted from"
+echo "where it was left off with the pegasus-run command."
+

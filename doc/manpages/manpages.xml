@@ -15,6 +15,7 @@
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-em.xml"/>
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-exitcode.xml"/>
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-gridftp.xml"/>
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-halt.xml"/>
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-invoke.xml"/>
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-keg.xml"/>
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-kickstart.xml"/>

@@ -1,0 +1,177 @@
+#!/bin/bash
+
+set -e
+
+function update_status
+{
+   STATUS=`pegasus-status --noqueue | tail -1 | sed 's/[:\(\)]/ /g'| awk '{print $5}'`
+   SUMMARY=`pegasus-status | grep "Condor jobs total" | sed 's/Summary: //'`
+}
+
+
+function show_state
+{
+    OUT="# STATUS is $STATUS"
+    if [ "x$STATUS" = "xRunning" -a "x$SUMMARY" != "x" ]; then
+        OUT="$OUT - $SUMMARY"
+    fi
+
+    if [ "x$OLD_OUT" = "x$OUT" ]; then
+        return
+    fi
+
+    OLD_OUT="$OUT"
+    echo "$OUT"
+}
+
+TOPDIR=`pwd`
+
+# generate the input file
+echo "This is sample input to KEG" >f.a
+
+# output directory
+mkdir -p outputs
+
+# build the dax generator
+export CLASSPATH=.:`pegasus-config --classpath`
+javac HierarchicalDiamonds.java
+
+# generate the dax
+java HierarchicalDiamonds /usr
+
+# create the site catalog
+cat >sites.xml <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
+    <site  handle="local" arch="x86" os="LINUX">
+        <head-fs>
+            <scratch>
+                <shared>
+                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/scratch"/>
+                    <internal-mount-point mount-point="$TOPDIR/scratch"/>
+                </shared>
+            </scratch>
+            <storage>
+                <shared>
+                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/outputs"/>
+                    <internal-mount-point mount-point="$TOPDIR/outputs"/>
+                </shared>
+            </storage>
+        </head-fs>
+    </site>
+    <site  handle="condorpool" arch="x86" os="LINUX">
+        <head-fs>
+            <scratch />
+            <storage />
+        </head-fs>
+        <profile namespace="pegasus" key="style" >condor</profile>
+        <profile namespace="condor" key="universe" >vanilla</profile>
+        <profile namespace="env" key="PEGASUS_HOME" >/usr</profile>
+    </site>
+</sitecatalog>
+EOF
+
+# plan and submit the  workflow
+pegasus-plan \
+    --conf pegasusrc \
+    --sites condorpool \
+    --staging-site local \
+    --dir work \
+    --output-site local \
+    --cleanup leaf \
+    --dax top.dax \
+    --submit | tee plan.out
+
+# we need to wait for a while, halt the workflow, wait for it to stop, than start it again
+RUN_DIR=`grep pegasus-remove plan.out | awk '{print $5}'`
+cd $RUN_DIR
+
+# wait for subworkflow to start
+echo `date`": Waiting for subworkflow to start..."
+COUNT=0
+while [ ! -e subdiamond_j3 -a $COUNT -lt 5 ]; do
+    COUNT=$(($COUNT + 1))
+    sleep 60s
+done
+sleep 60s
+
+echo
+echo `date`": subworkflow has started, sending halt command..."
+pegasus-halt $RUN_DIR
+
+# wait for all jobs to go away before restarting
+
+if [ ! -e braindump.txt ]; then
+    echo "braindump.txt was not found in this directory. Planner probably failed!" 1>&2
+    exit 1
+fi
+
+# minutes
+TIMEOUT=30
+
+START_TS=`date +'%s'`
+MAX_TS=`echo "$START_TS + $TIMEOUT * 60" | bc`
+
+update_status
+show_state
+while [ "$STATUS" = "Running" -o "$STATUS" = "" -o "$STATUS" = "Unknown"  ] ; do 
+    NOW=`date +'%s'`
+    if [ $NOW -gt $MAX_TS ]; then
+        echo "Reached TIMEOUT of $TIMEOUT minutes. Calling pegasus-remove" 1>&2
+        pegasus-remove `pwd`
+        STATUS=TIMEOUT
+        sleep 1m
+        break;
+    fi
+    sleep 1m
+    update_status
+    show_state
+done
+
+echo
+echo `date`": Workflow halted! Trying to restart..."
+
+pegasus-run
+
+sleep 30s
+update_status
+show_state
+while [ "$STATUS" = "Running" -o "$STATUS" = "" -o "$STATUS" = "Unknown"  ] ; do 
+    NOW=`date +'%s'`
+    if [ $NOW -gt $MAX_TS ]; then
+        echo "Reached TIMEOUT of $TIMEOUT minutes. Calling pegasus-remove" 1>&2
+        pegasus-remove `pwd`
+        STATUS=TIMEOUT
+        sleep 1m
+        break;
+    fi
+    sleep 1m
+    update_status
+    show_state
+done
+if [ "$STATUS" = "Success" ]; then
+    # give monitord some time to finish
+    sleep 1m
+    echo "*** Workflow finished succesfully ***"
+    exit 0
+else
+    echo "*** Workflow failed ***" 1>&1
+    exit 1
+fi
+
+if cat monitord.log* | grep "ERR|Traceback" >/dev/null 2>&1; then
+    echo "monitord log contains errors:"
+    echo
+    cat monitord.log*
+    echo
+    exit 1
+fi
+
+if cat monitord.log* | grep WARN | grep -v -E '(read_stdout_stderr_files)|(unable to read error file)|(truncating std)' >/dev/null 2>&1; then
+    echo "monitord log contains warnings:"
+    echo
+    cat monitord.log*
+    echo
+    exit 1
+fi
+
