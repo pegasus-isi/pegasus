@@ -45,6 +45,8 @@ public class PegasusDBAdmin {
     public static final String WORKFLOW_DATABASE_PROPERTY_KEY = "pegasus.catalog.workflow.url";
     public static final String WORKFLOW_DATABASE_DEPRECATED_PROPERTY_KEY = "pegasus.monitord.output";
     
+    private static enum DB_ADMIN_COMMANDS { create, downgrade, update, check, version };
+    
     /**
      * 
      */
@@ -112,8 +114,10 @@ public class PegasusDBAdmin {
     }
     
     /**
-     * Calls out to the pegasus-db-admin tool to check for master database compatibility.
+     * Calls out to the pegasus-db-admin tool to check and update master database 
+     * if required.
      * 
+     * @param propertiesFile
      * @return 
      */
     public boolean checkMasterDatabaseForVersionCompatibility( String propertiesFile ) {
@@ -121,12 +125,13 @@ public class PegasusDBAdmin {
         arguments.append( "-t master " ).
                   append( "-c " ).append( propertiesFile );
 
-        return this.checkDatabase( arguments.toString() );
+        return this.checkDatabase( DB_ADMIN_COMMANDS.update.name(), arguments.toString() );
     }
     
     /**
      * Calls out to the pegasus-db-admin tool to check for jdbrc compatibility.
      * 
+     * @param propertiesFile
      * @return 
      */
     public boolean checkJDBCRCForCompatibility( String propertiesFile ) {
@@ -134,10 +139,10 @@ public class PegasusDBAdmin {
         arguments.append( "-t jdbcrc " ).
                   append( "-c " ).append( propertiesFile );
 
-        return this.checkDatabase( arguments.toString() );
+        return this.checkDatabase( DB_ADMIN_COMMANDS.check.name(), arguments.toString() );
     }
     
-    public boolean checkDatabase( String checkDBArguments ){
+    public boolean checkDatabase( String dbCommand, String checkDBArguments ){
         String basename = "pegasus-db-admin";
         File pegasusDBAdmin = FindExecutable.findExec( basename );
         if( pegasusDBAdmin == null ){
@@ -146,7 +151,7 @@ public class PegasusDBAdmin {
         
         //construct arguments for pegasus-db-admin
         StringBuffer args = new StringBuffer();
-        args.append( "check" );
+        args.append( dbCommand );
         args.append( " " ).append( checkDBArguments );
         String command = pegasusDBAdmin.getAbsolutePath() + " " + args;
         mLogger.log("Executing  " + command,
