@@ -57,6 +57,16 @@ public class ENV extends Namespace {
      * The name of the environment variable that specifies the Gridstart PREJOB.
      */
     public static final String GRIDSTART_PREJOB = "GRIDSTART_PREJOB";
+    
+    /**
+     * the env variable containing the workflow uuid assigned by pegasus
+     */
+    public static final String PEGASUS_WF_ID_ENV_KEY  = "PEGASUS_WF_ID";
+    
+    /**
+     * the env variable containing the job id of a job in the executable workflow
+     */
+    public static final String PEGASUS_JOB_ID_ENV_KEY = "PEGASUS_DAG_JOB_ID";
 
     /**
      * The name of the environment variable that specifies the s3cfg path

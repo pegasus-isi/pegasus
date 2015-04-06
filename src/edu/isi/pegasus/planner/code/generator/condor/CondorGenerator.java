@@ -176,6 +176,7 @@ public class CondorGenerator extends Abstract {
      */
     public static final String DEFAULT_CONDOR_JOB_ID_ENV_VALUE = "$(cluster).$(process)";
     
+    
     /**
      * Handle to the Transformation Catalog.
      */
@@ -624,7 +625,7 @@ public class CondorGenerator extends Abstract {
         // handle environment settings
         //before we apply any styles
         //allows for glite to escape environment values
-        handleEnvVarForJob( job );
+        handleEnvVarForJob( dag, job );
         
         //figure out the style to apply for a job
         applyStyle( job, writer );
@@ -1699,12 +1700,17 @@ public class CondorGenerator extends Abstract {
     /**
      * Adds common environment variables to the job
      *
+     * @param dag
      * @param job  The Job object containing the information about the job.
      */
-    protected void handleEnvVarForJob(Job job ) {
+    protected void handleEnvVarForJob( ADag dag, Job job ) {
         //PM-867 add CONDOR_JOBID
         job.envVariables.construct( CondorGenerator.CONDOR_JOB_ID_ENV_KEY, 
                                     CondorGenerator.DEFAULT_CONDOR_JOB_ID_ENV_VALUE );
+        //PM-875
+        job.envVariables.construct( ENV.PEGASUS_WF_ID_ENV_KEY, dag.getWorkflowUUID());
+        job.envVariables.construct( ENV.PEGASUS_JOB_ID_ENV_KEY,
+                                    job.getID() );
     }
 
     /**
