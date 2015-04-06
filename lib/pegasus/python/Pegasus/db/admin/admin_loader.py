@@ -124,6 +124,7 @@ def db_downgrade(db, pegasus_version=None, force=False):
     if current_version < version:
         raise DBAdminError("Unable to run downgrade. Current database version is older than specified version '%s'." % (pegasus_version))
 
+    _backup_db(db)
     for i in range(current_version, version, -1):
         k = get_class(i, db)
         k.downgrade(force)
