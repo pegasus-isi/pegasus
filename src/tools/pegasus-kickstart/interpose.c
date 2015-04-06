@@ -205,11 +205,11 @@ static FILE* open_kickstart_status_file() {
  * <mpi_rank> <timestamp> <utime> <stime> <io_wait> <vm_peak> <pm_peak> <threads> <read_bytes> <write_bytes> <syscr> <syscw>
  */
 static void* timer_thread_func(void* mpi_rank_void) {
+    FILE* kickstart_status;
     time_t timestamp;
     int interval = 5;
     int mpi_rank = atoi( (char*) mpi_rank_void ) + 1;
-    char* exec_name = read_exe();
-    char hostname[BUFSIZ];
+    char *exec_name = read_exe(), *kickstart_pid, hostname[BUFSIZ], *job_id;
 
     printerr("We are now in a thread: %d\n", mpi_rank);
 
@@ -218,18 +218,20 @@ static void* timer_thread_func(void* mpi_rank_void) {
         return NULL;
     }
 
-    FILE* kickstart_status = open_kickstart_status_file();
+    kickstart_status = open_kickstart_status_file();
     if(kickstart_status == NULL) {
         pthread_exit(NULL);
         return NULL;
     }
 
-    char* kickstart_pid = getenv("KICKSTART_MON_PID");
+    kickstart_pid = getenv("KICKSTART_MON_PID");
     if (kickstart_pid == NULL) {
         printerr("KICKSTART_MON_PID not set in environment\n");
         return NULL;
     }
 
+    // we don't really care if this is NULL or not
+    job_id = getenv("CONDOR_JOBID");
 
     while(library_loaded) {        
         sleep(interval);
@@ -243,11 +245,11 @@ static void* timer_thread_func(void* mpi_rank_void) {
 
 
         fprintf(kickstart_status, "ts=%d event=workflow_trace level=INFO status=0 "         
-            "guid=na kickstart_pid=%s executable=%s hostname=%s mpi_rank=%d utime=%.3f stime=%.3f "
+            "job_id=%s kickstart_pid=%s executable=%s hostname=%s mpi_rank=%d utime=%.3f stime=%.3f "
             "iowait=%.3f vmSize=%d vmRSS=%d threads=%d read_bytes=%d write_bytes=%d "
             "syscr=%d syscw=%d\n", 
 
-            (int)timestamp, kickstart_pid, exec_name, hostname, mpi_rank, 
+            (int)timestamp, job_id, kickstart_pid, exec_name, hostname, mpi_rank, 
             cpu_info.real_utime, cpu_info.real_stime, cpu_info.real_iowait,
             mem_info.vmSize, mem_info.vmRSS, mem_info.threads,
             io_info.read_bytes, io_info.write_bytes, io_info.syscr, io_info.syscw);
