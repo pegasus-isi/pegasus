@@ -13,16 +13,22 @@ Synopsis
 
 Options
 -------
-*-h*::
-*--help*::
-    Print help message
+*-H*::
+*--host*::
+    Hostname on which the service listens for request. Default: 127.0.0.1s
+*-p*::
+*--port*::
+    Port on which the service listens for requests. Default: 5000
 *-d*::
 *--debug*::
     Enable debugging
+*-h*::
+*--help*::
+    Print help message
 
 Configuration
 -------------
-The host, port and database can be specified in the configuration file.
+The authentication/authorization settings can be specified in the configuration file.
 
 Authors
 -------
