@@ -61,7 +61,7 @@ public class ENV extends Namespace {
     /**
      * the env variable containing the workflow uuid assigned by pegasus
      */
-    public static final String PEGASUS_WF_ID_ENV_KEY  = "PEGASUS_WF_ID";
+    public static final String PEGASUS_WF_ID_ENV_KEY  = "PEGASUS_WF_UUID";
     
     /**
      * the env variable containing the job id of a job in the executable workflow
