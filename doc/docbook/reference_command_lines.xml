@@ -10,6 +10,7 @@
   <xi:include href="manpage.pegasus-create-dir.xml"/>
   <xi:include href="manpage.pegasus-dagman.xml"/>
   <xi:include href="manpage.pegasus-dax-validator.xml"/>
+  <xi:include href="manpage.pegasus-db-admin.xml"/>
   <xi:include href="manpage.pegasus-em.xml"/>
   <xi:include href="manpage.pegasus-exitcode.xml"/>
   <xi:include href="manpage.pegasus-graphviz.xml"/>

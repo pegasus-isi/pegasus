@@ -1,0 +1,69 @@
+pegasus-db-admin(1)
+====================
+:doctype: manpage
+
+
+Name
+----
+pegasus-db-admin - Manage Pegasus databases.
+
+Synopsis
+--------
+[verse]
+*pegasus-db-admin* 'COMMAND' [options] [DATABASE_URL]
+
+Description
+-----------
+*pegasus-db-admin* is used to manage Pegasus databases.
+
+Commands
+--------
+*create*::
+    Creates Pegasus databases from new or empty databases, or updates current
+    database to the latest version. If a database already exists, it will 
+    create a backup (SQLite only) of the current database in the database folder
+    as a 3-digit integer (e.g., workflow.db.000).
+
+*update*::
+    Updates the database to the latest or a given Pegasus version provided with 
+    the *-V* or *--version* option. If a database already exists, it will 
+    create a backup (SQLite only) of the current database in the database folder
+    as a 3-digit integer (e.g., workflow.db.000).
+
+*check*::
+    Verifies if the database is updated to the latest or a given Pegasus version 
+    provided with the *-V* or *--version* option.
+
+*version*::
+    Prints the current version of the database.
+
+Global Options
+--------------
+*-h*::
+*--help*::
+Prints a usage summary with all the available command-line options.
+
+*-c*::
+*--conf*::
+Specifies the properties file. This overrides all other property files. Should 
+be used with '-t'.
+
+*-s*::
+*--submitdir*::
+Specifies the submit directory. Should be used with '-t'.
+
+*-t*::
+*--type*::
+Type of the database (JDBCRC, MASTER, or WORKFLOW). Should be used with '-c' 
+or '-s'.
+
+*-d*::
+*--debug*::
+Enables debugging.
+
+Authors
+-------
+Rafael Ferreira da Silva <rafsilva@isi.edu>
+
+Pegasus Team <http://pegasus.isi.edu>
+
