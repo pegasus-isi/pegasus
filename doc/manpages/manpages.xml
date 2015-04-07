@@ -12,6 +12,7 @@
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-dagman.xml"/>
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-dashboard.xml"/>
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-dax-validator.xml"/>
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-db-admin.xml"/>
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-em.xml"/>
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-exitcode.xml"/>
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-gridftp.xml"/>

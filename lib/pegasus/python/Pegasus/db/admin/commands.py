@@ -229,7 +229,7 @@ def _add_common_options(object):
     object.parser.add_option("-s","--submitdir",action="store",type="string", 
         dest="submit_dir",default=None, help = "Specify submit directory. Should be used with '-t'")
     object.parser.add_option("-t","--type",action="store",type="string", 
-        dest="db_type",default=None, help = "Type of the database. Should be used with '-c'")
+        dest="db_type",default=None, help = "Type of the database (JDBCRC, MASTER, or WORKFLOW). Should be used with '-c' or '-s'")
     object.parser.add_option("-d", "--debug", action="store_true", dest="debug",
         default=None, help="Enable debugging")
     object.parser.add_option("-f","--force",action="store_true",dest="force",
