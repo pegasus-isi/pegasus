@@ -207,9 +207,20 @@ static FILE* open_kickstart_status_file() {
 static void* timer_thread_func(void* mpi_rank_void) {
     FILE* kickstart_status;
     time_t timestamp;
-    int interval = 5;
+    int interval;
     int mpi_rank = atoi( (char*) mpi_rank_void ) + 1;
-    char *exec_name = read_exe(), *kickstart_pid, hostname[BUFSIZ], *job_id;
+    char *exec_name = read_exe(), *kickstart_pid, hostname[BUFSIZ], *job_id, *envptr;
+
+    envptr = getenv("KICKSTART_MON_INTERVAL");
+
+    if (envptr != NULL) {
+        interval = atoi(envptr);        
+    }
+    else {
+        printerr("[Thread-%d] Couldn't read KICKSTART_MON_INTERVAL\n", mpi_rank);
+        pthread_exit(NULL);
+        return;
+    }
 
     printerr("We are now in a thread: %d\n", mpi_rank);
 
