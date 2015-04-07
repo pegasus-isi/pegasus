@@ -176,7 +176,7 @@ def _get_version(db):
 def _discover_version(db, pegasus_version=None, force=False):
     version = parse_pegasus_version(pegasus_version)
 
-    current_version = 0
+    current_version = -1
     if not force:
         try:
             current_version = _get_version(db)
@@ -191,7 +191,7 @@ def _discover_version(db, pegasus_version=None, force=False):
         raise DBAdminError("Unable to run update. Current database version is newer than specified version '%s'." % (pegasus_version))
     
     _backup_db(db)
-    v = 0
+    v = -1
     for i in range(current_version + 1, version + 1):
         k = get_class(i, db)
         k.update(force=force)

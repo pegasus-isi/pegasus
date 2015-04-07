@@ -27,7 +27,6 @@ import urlparse
 
 from Pegasus.tools import utils
 from Pegasus.netlogger import nlapi
-from Pegasus.db.schema_check import SchemaVersionError
 from Pegasus.db.modules import stampede_loader
 from Pegasus.db.modules import stampede_dashboard_loader
 from Pegasus.db.workflow.expunge import StampedeExpunge

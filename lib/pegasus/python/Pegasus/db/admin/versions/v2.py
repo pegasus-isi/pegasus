@@ -17,6 +17,7 @@ class Version(BaseVersion):
     
 
     def update(self, force=False):
+        log.debug("Updating to version %s" % DB_VERSION)
         try:
             self.db.execute("SELECT parent_wf_id FROM workflow")
             try:

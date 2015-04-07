@@ -17,6 +17,7 @@ class Version(BaseVersion):
 
         
     def update(self, force=False):
+        log.debug("Updating to version %s" % DB_VERSION)
         try:
             log.debug("  Updating database schema...")
             self.db.execute("UPDATE pegasus_schema SET version='1.3' WHERE name='JDBCRC' AND catalog='rc'")

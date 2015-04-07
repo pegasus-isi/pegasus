@@ -157,8 +157,9 @@ __author__ = "Monte Goode"
 
 import logging
 
+from Pegasus.db import connection
+from Pegasus.db.admin.admin_loader import DBAdminError
 from Pegasus.db.modules import SQLAlchemyInit
-from Pegasus.db.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
 from Pegasus.db.schema import *
 from Pegasus.db.errors import StampedeDBNotFoundError
 
@@ -171,14 +172,9 @@ class StampedeStatistics(SQLAlchemyInit):
         self.log = logging.getLogger("%s.%s" % (self.__module__, self.__class__.__name__))
         try:
             SQLAlchemyInit.__init__(self, connString)
-        except OperationalError, e:
+        except (connection.ConnectionError, DBAdminError), e:
             self.log.exception(e)
             raise StampedeDBNotFoundError
-
-        # Check the schema version before proceeding.
-        self.s_check = SchemaCheck(self.session)
-        if not self.s_check.check_schema():
-            raise SchemaVersionError
 
         self._expand = expand_workflow
 

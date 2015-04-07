@@ -12,6 +12,7 @@ import commands
 logger = logging.getLogger(__name__)
 
 from Pegasus.db import connection
+from Pegasus.db.admin.admin_loader import DBAdminError
 from Pegasus.tools import utils
 from Pegasus.plots_stats import utils as plot_utils
 from workflow_info import WorkflowInfo, JobInfo , TransformationInfo
@@ -20,7 +21,6 @@ import pegasus_host_over_time
 import traceback
 
 from Pegasus.db.workflow.stampede_statistics import StampedeStatistics
-from Pegasus.db.schema_check import SchemaVersionError
 from datetime import timedelta
 from datetime import datetime
 
@@ -152,11 +152,6 @@ def get_workflows_uuid():
 		expanded_workflow_stats = StampedeStatistics(global_db_url)
 	 	expanded_workflow_stats.initialize(global_top_wf_uuid)
 	 	expanded_workflow_stats.set_job_filter('all')
-        except SchemaVersionError:
-                logger.error("------------------------------------------------------")
-                logger.error("Database schema mismatch! Please run the upgrade tool")
-                logger.error("to upgrade the database to the latest schema version.")
-                sys.exit(1)
  	except:
  		logger.error("Failed to load the database." + global_db_url )
 		sys.exit(1)
@@ -165,11 +160,6 @@ def get_workflows_uuid():
 	 	root_workflow_stats = StampedeStatistics(global_db_url , False)
 	 	root_workflow_stats.initialize(global_top_wf_uuid)
 	 	root_workflow_stats.set_job_filter('all')
-        except SchemaVersionError:
-                logger.error("------------------------------------------------------")
-                logger.error("Database schema mismatch! Please run the upgrade tool")
-                logger.error("to upgrade the database to the latest schema version.")
-                sys.exit(1)
  	except:
  		logger.error("Failed to load the database." + global_db_url )
 		sys.exit(1)
@@ -344,10 +334,9 @@ def get_wf_stats(wf_uuid,expand = False):
 	try:
 		workflow_stampede_stats = StampedeStatistics(global_db_url , expand)
 		workflow_stampede_stats.initialize(wf_uuid)
-        except SchemaVersionError:
+        except (connection.ConnectionError, DBAdminError), e:
                 logger.error("------------------------------------------------------")
-                logger.error("Database schema mismatch! Please run the upgrade tool")
-                logger.error("to upgrade the database to the latest schema version.")
+                logger.error(e)
                 sys.exit(1)
 	except:
  		logger.error("Failed to load the database." + global_db_url )

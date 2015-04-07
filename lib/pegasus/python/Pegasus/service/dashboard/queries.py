@@ -15,8 +15,9 @@
 __author__ = 'Rajiv Mayani'
 import logging
 
+from Pegasus.db import connection
+from Pegasus.db.admin.admin_loader import DBAdminError
 from Pegasus.db.modules import SQLAlchemyInit
-from Pegasus.db.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
 from Pegasus.db.schema import *
 from Pegasus.db.errors import StampedeDBNotFoundError
 from sqlalchemy.orm.exc import *
@@ -38,8 +39,8 @@ class MasterDatabase(SQLAlchemyInit):
 
         try:
             SQLAlchemyInit.__init__(self, connString)
-        except OperationalError, e:
-            log.error(ErrorStrings.get_init_error(e))
+        except (connection.ConnectionError, DBAdminError), e:
+            log.error(e)
             raise MasterDBNotFoundError
 
     def close(self):
@@ -203,14 +204,9 @@ class WorkflowInfo(SQLAlchemyInit):
 
         try:
             SQLAlchemyInit.__init__(self, connString)
-        except OperationalError, e:
-            log.error(ErrorStrings.get_init_error(e))
+        except (connection.ConnectionError, DBAdminError), e:
+            log.error(e)
             raise StampedeDBNotFoundError
-
-        # Check the schema version before proceeding.
-        self.s_check = SchemaCheck(self.session)
-        if not self.s_check.check_schema():
-            raise SchemaVersionError
 
         self.initialize(wf_id, wf_uuid)
 

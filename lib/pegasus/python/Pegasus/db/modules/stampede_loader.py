@@ -19,7 +19,8 @@ See http://www.sqlalchemy.org/ for details on SQLAlchemy
 __rcsid__ = "$Id: stampede_loader.py 31116 2012-03-29 15:45:15Z mgoode $"
 __author__ = "Monte Goode"
 
-from Pegasus.db.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
+from Pegasus.db import connection
+from Pegasus.db.admin.admin_loader import DBAdminError
 from Pegasus.db.schema import *
 from Pegasus.db.modules import Analyzer as BaseAnalyzer
 from Pegasus.db.modules import SQLAlchemyInit
@@ -54,14 +55,10 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
 
         try:
             SQLAlchemyInit.__init__(self, connString)
-        except OperationalError, e:
-            self.log.error('Connection String %s  %s', (connString, ErrorStrings.get_init_error(e)))
+        except (connection.ConnectionError, DBAdminError), e:
+            self.log.exception(e)
+            self.log.error('Error initializing workflow loader')
             raise RuntimeError
-
-        # Check the schema version before proceeding.
-        s_check = SchemaCheck(self.session)
-        if not s_check.check_schema():
-            raise SchemaVersionError
 
         # "Case" dict to map events to handler methods
         self.eventMap = {

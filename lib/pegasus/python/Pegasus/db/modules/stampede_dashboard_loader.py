@@ -20,7 +20,8 @@ __rcsid__ = "$Id$"
 __author__ = "Monte Goode"
 __author__ = "Karan Vahi"
 
-from Pegasus.db.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
+from Pegasus.db import connection
+from Pegasus.db.admin.admin_loader import DBAdminError
 from Pegasus.db.schema import *
 from Pegasus.db.modules import Analyzer as BaseAnalyzer
 from Pegasus.db.modules import SQLAlchemyInit
@@ -54,7 +55,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             raise ValueError("connString is required")
         try:
             SQLAlchemyInit.__init__(self, connString)
-        except OperationalError, e:
+        except (connection.ConnectionError, DBAdminError), e:
             self.log.exception(e)
             self.log.error('Error initializing dashboard loader')
             raise RuntimeError
