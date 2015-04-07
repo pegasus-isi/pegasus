@@ -28,20 +28,23 @@ class Version(BaseVersion):
         success = ['JOB_SUCCESS', 'POST_SCRIPT_SUCCESS']
         failure = ['PRE_SCRIPT_FAILED', 'SUBMIT_FAILED', 'JOB_FAILURE', 'POST_SCRIPT_FAILED']
 
-        q = self.db.query(JobInstance.job_instance_id).order_by(JobInstance.job_instance_id)
-        for r in q.all():
-            qq = self.db.query(Jobstate.state)
-            qq = qq.filter(Jobstate.job_instance_id == r.job_instance_id)
-            qq = qq.order_by(Jobstate.jobstate_submit_seq.desc()).limit(1)
-            for rr in qq.all():
-                if rr.state in success:
-                    self.db.execute('UPDATE job_instance SET exitcode = 0 WHERE job_instance_id = %s' \
-                        % r.job_instance_id )
-                elif rr.state in failure:
-                    self.db.execute('UPDATE job_instance SET exitcode = 256 WHERE job_instance_id = %s' \
-                    % r.job_instance_id)
-                else:
-                    pass
+        try:
+            q = self.db.query(JobInstance.job_instance_id).order_by(JobInstance.job_instance_id)
+            for r in q.all():
+                qq = self.db.query(Jobstate.state)
+                qq = qq.filter(Jobstate.job_instance_id == r.job_instance_id)
+                qq = qq.order_by(Jobstate.jobstate_submit_seq.desc()).limit(1)
+                for rr in qq.all():
+                    if rr.state in success:
+                        self.db.execute('UPDATE job_instance SET exitcode = 0 WHERE job_instance_id = %s' \
+                            % r.job_instance_id )
+                    elif rr.state in failure:
+                        self.db.execute('UPDATE job_instance SET exitcode = 256 WHERE job_instance_id = %s' \
+                        % r.job_instance_id)
+                    else:
+                        pass
+        except (OperationalError, ProgrammingError):
+            pass                
         
         self.db.commit()
          
