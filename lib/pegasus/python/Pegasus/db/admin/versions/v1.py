@@ -19,6 +19,15 @@ class Version(BaseVersion):
     def update(self, force=False):
         log.debug("Updating to version %s" % DB_VERSION)
         try:
+            self.db.execute("SELECT site FROM rc_lfn")
+            return
+        except (OperationalError, ProgrammingError):
+            pass
+        except Exception, e:
+            self.db.rollback()
+            raise DBAdminError(e)
+            
+        try:
             log.debug("  Updating database schema...")
             self.db.execute("UPDATE pegasus_schema SET version='1.3' WHERE name='JDBCRC' AND catalog='rc'")
             log.debug("    Creating new table...")
