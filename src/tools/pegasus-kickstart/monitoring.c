@@ -120,10 +120,21 @@ void print_debug_info(MonitoringEndpoint *monitoring_endpoint, JobIdInfo *job_id
 void* monitoring_thread_func(void* kickstart_status_path) {
     CURL *curl;
     CURLcode res;
-    int interval = 10;
-    char payload[BUFSIZ], enriched_line[BUFSIZ], line[BUFSIZ];
+    int interval;
+    char payload[BUFSIZ], enriched_line[BUFSIZ], line[BUFSIZ], *envptr;
     MonitoringEndpoint monitoring_endpoint;
     JobIdInfo job_id_info = { "", "", "", "" };
+
+    envptr = getenv("KICKSTART_MON_INTERVAL");
+
+    if (envptr != NULL) {
+        interval = atoi(envptr) + 2;        
+    }
+    else {
+        printerr("[mon-thread] Couldn't read KICKSTART_MON_INTERVAL\n");
+        pthread_exit(NULL);
+        return;
+    }
 
     initialize_monitoring_endpoint(&monitoring_endpoint, (char*)kickstart_status_path);
     initialize_job_id_info(&job_id_info);
@@ -132,7 +143,7 @@ void* monitoring_thread_func(void* kickstart_status_path) {
 
     FILE* kickstart_status = fopen(monitoring_endpoint.kickstart_status, "r");
     if(kickstart_status == NULL) {
-        printerr("[kickstart-thread] Couldn't open kickstart_status_path for read - %s\n", 
+        printerr("[mon-thread] Couldn't open kickstart_status_path for read - %s\n", 
             strerror(errno));
     }
 
@@ -141,12 +152,12 @@ void* monitoring_thread_func(void* kickstart_status_path) {
     while(1) {                
         sleep(interval);
 
-        printerr("[kickstart-thread] monitoring loop\n");
+        printerr("[mon-thread] monitoring loop\n");
 
         if(kickstart_status == NULL) {
             kickstart_status = fopen(monitoring_endpoint.kickstart_status, "r");                
             if(kickstart_status == NULL) {
-                printerr("[kickstart-thread] Couldn't open kickstart_status_path for read - %s\n", 
+                printerr("[mon-thread] Couldn't open kickstart_status_path for read - %s\n", 
                     strerror(errno));
             }    
         }
@@ -186,11 +197,11 @@ void* monitoring_thread_func(void* kickstart_status_path) {
                     res = curl_easy_perform(curl);
                     /* Check for errors */
                     if(res != CURLE_OK) {
-                        printerr("[kickstart-thread] an error occured while sending measurement: %s\n", 
+                        printerr("[mon-thread] an error occured while sending measurement: %s\n", 
                             curl_easy_strerror(res));
                     }
                     else {
-                        printerr("[kickstart-thread] measurement sent\n");
+                        printerr("[mon-thread] measurement sent\n");
                     }
 
                     /* always cleanup */
@@ -199,7 +210,7 @@ void* monitoring_thread_func(void* kickstart_status_path) {
                     curl_slist_free_all(http_header);
                 }
                 else {
-                    printerr("[kickstart-thread] we couldn't initialize curl\n");
+                    printerr("[mon-thread] we couldn't initialize curl\n");
                 }
             }
         }        
