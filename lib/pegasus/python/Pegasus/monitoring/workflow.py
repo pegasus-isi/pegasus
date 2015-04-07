@@ -2101,6 +2101,7 @@ class Workflow:
             self.db_send_job_brief(my_job, "globus.submit.start")
             self.db_send_job_brief(my_job, "globus.submit.end", 0)
         elif job_state == "SUBMIT_FAILED":
+            my_job._main_job_exitcode = 1
             self.db_send_job_brief(my_job, "submit.start")
             self.db_send_job_brief(my_job, "submit.end", -1)
         elif job_state == "GLOBUS_SUBMIT_FAILED":
