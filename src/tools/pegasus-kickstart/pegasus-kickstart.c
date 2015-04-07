@@ -469,6 +469,12 @@ int main(int argc, char* argv[]) {
                     return 127;
                 }
                 appinfo.wf_label = noquote(argv[i][2] ? &argv[i][2] : argv[++i]);
+                // exposing the label as an environment variable
+                int rc = setenv("PEGASUS_WF_LABEL", appinfo.wf_label, 1);
+                if(rc) {
+                    fprintf(stderr, "ERROR: Could'nt set PEGASUS_WF_LABEL environment variable\n");
+                    return 127;
+                }
                 break;
             case 'n':
                 if (!argv[i][2] && argc <= i+1) {
