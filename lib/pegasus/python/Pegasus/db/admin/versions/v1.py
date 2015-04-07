@@ -19,7 +19,7 @@ class Version(BaseVersion):
     def update(self, force=False):
         log.debug("Updating to version %s" % DB_VERSION)
         try:
-            self.db.execute("SELECT COUNT(site) FROM rc_lfn")
+            self.db.execute("SELECT site FROM rc_lfn LIMIT 0,1")
             return
         except (OperationalError, ProgrammingError):
             pass
