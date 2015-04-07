@@ -222,8 +222,6 @@ static void helpMe(const AppInfo* run) {
 #endif
 #ifdef LINUX
             " -Z\tEnable library call interposition to get files and I/O\n"
-            " -m I\tEnable an online monitoring with a I-seconds interval between measurements.\n"
-            "     \tWorks only with the -Z option.\n"
 #endif
            );
 
@@ -317,7 +315,7 @@ static char* noquote(char* s) {
 int main(int argc, char* argv[]) {
     size_t cwd_size = getpagesize();
     int status, result = 0;
-    int i, j, keeploop, rc;
+    int i, j, keeploop;
     int createDir = 0;
     char* temp;
     char* end;
@@ -472,7 +470,7 @@ int main(int argc, char* argv[]) {
                 }
                 appinfo.wf_label = noquote(argv[i][2] ? &argv[i][2] : argv[++i]);
                 // exposing the label as an environment variable
-                rc = setenv("PEGASUS_WF_LABEL", appinfo.wf_label, 1);
+                int rc = setenv("PEGASUS_WF_LABEL", appinfo.wf_label, 1);
                 if(rc) {
                     fprintf(stderr, "ERROR: Could'nt set PEGASUS_WF_LABEL environment variable\n");
                     return 127;
@@ -625,22 +623,6 @@ int main(int argc, char* argv[]) {
                 break;
             case '-':
                 keeploop = 0;
-                break;
-            case 'm':
-                if (!argv[i][2] && argc <= i+1) {
-                    fprintf(stderr, "ERROR: -m argument missing\n");
-                    return 127;
-                }
-
-                rc = setenv("KICKSTART_MON_INTERVAL", 
-                    noquote(argv[i][2] ? &argv[i][2] : argv[++i]),
-                    1);
-
-                if(rc) {
-                    fprintf(stderr, "ERROR: Could'nt set KICKSTART_MON_INTERVAL environment variable\n");
-                    return 127;
-                }
-
                 break;
             default:
                 i -= 1;

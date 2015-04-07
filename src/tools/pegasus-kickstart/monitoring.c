@@ -7,36 +7,80 @@
 
 // a util function for reading env variables by the main kickstart process 
 // with monitoring endpoint data or set default values
-// TODO: default values are for testing only !!!
-static void initialize_monitoring_endpoint(MonitoringEndpoint* monitoring_endpoint, char* kickstart_status_path) {
-    char url[BUFSIZ], credentials[BUFSIZ], routing_key[BUFSIZ]; 
+static void initialize_monitoring_endpoint(MonitoringEndpoint* endpoint, char* kickstart_status_path) {
     char* envptr;
 
-    monitoring_endpoint->kickstart_status = kickstart_status_path;
+    endpoint->kickstart_status = kickstart_status_path;
 
     envptr = getenv("KICKSTART_MON_ENDPOINT_URL");
 
     if (envptr != NULL) {
-        strcpy(url, envptr);
+        endpoint->url = (char*) calloc(sizeof(char), strlen(envptr) + 1);
+        strcpy(endpoint->url, envptr);
     }
-
-    monitoring_endpoint->url = url;
 
     envptr = getenv("KICKSTART_MON_ENDPOINT_CREDENTIALS");
 
     if (envptr != NULL) {
-        strcpy(credentials, envptr);
+        endpoint->credentials = (char*) calloc(sizeof(char), strlen(envptr) + 1);
+        strcpy(endpoint->credentials, envptr);
     }
+}
 
-    monitoring_endpoint->credentials = credentials;
+static void release_monitoring_endpoint(MonitoringEndpoint* monitoring_endpoint) {
+    if(monitoring_endpoint->url != NULL)
+        free(monitoring_endpoint->url);
 
-    envptr = getenv("KICKSTART_MON_ENDPOINT_ROUTE_KEY");
+    if(monitoring_endpoint->credentials != NULL)
+        free(monitoring_endpoint->credentials);
+}
+
+// read information about workflow and job ids
+// and put it into a JobIdInfo struct
+static void initialize_job_id_info(JobIdInfo *info) {
+    char* envptr;
+
+    envptr = getenv("PEGASUS_WF_UUID");
 
     if (envptr != NULL) {
-        strcpy(routing_key, envptr);
+        info->wf_uuid = (char*) calloc(sizeof(char), strlen(envptr) + 1);
+        strcpy(info->wf_uuid, envptr);
     }
 
-    monitoring_endpoint->routing_key = routing_key;
+    envptr = getenv("PEGASUS_WF_LABEL");
+
+    if (envptr != NULL) {
+        info->wf_label = (char*) calloc(sizeof(char), strlen(envptr) + 1);
+        strcpy(info->wf_label, envptr);
+    }
+
+    envptr = getenv("PEGASUS_DAG_JOB_ID");
+
+    if (envptr != NULL) {
+        info->dag_job_id = (char*) calloc(sizeof(char), strlen(envptr) + 1);
+        strcpy(info->dag_job_id, envptr);
+    }
+
+    envptr = getenv("CONDOR_JOBID");
+
+    if (envptr != NULL) {
+        info->condor_job_id = (char*) calloc(sizeof(char), strlen(envptr) + 1);
+        strcpy(info->condor_job_id, envptr);
+    }    
+}
+
+static void release_job_id_info(JobIdInfo *job_id_info) {
+    if(job_id_info->wf_uuid != NULL)
+        free(job_id_info->wf_uuid);
+
+    if(job_id_info->wf_label != NULL)
+        free(job_id_info->wf_label);
+
+    if(job_id_info->dag_job_id != NULL)
+        free(job_id_info->dag_job_id);
+
+    if(job_id_info->condor_job_id != NULL)
+        free(job_id_info->condor_job_id);
 }
 
 int start_status_thread(pthread_t* monitoring_thread, char* kickstart_status) {
@@ -56,6 +100,18 @@ int start_status_thread(pthread_t* monitoring_thread, char* kickstart_status) {
     return rc;
 }
 
+void print_debug_info(MonitoringEndpoint *monitoring_endpoint, JobIdInfo *job_id_info) {
+    printerr("[mon-thread] Our monitoring information:\n");
+    printerr("[mon-thread] kickstart-status-file: %s\n", monitoring_endpoint->kickstart_status);
+    printerr("[mon-thread] url: %s\n", monitoring_endpoint->url);
+    printerr("[mon-thread] credentials: %s\n", monitoring_endpoint->credentials);
+
+    printerr("[mon-thread] wf uuid: %s\n", job_id_info->wf_uuid);
+    printerr("[mon-thread] wf label: %s\n", job_id_info->wf_label);
+    printerr("[mon-thread] dag job id: %s\n", job_id_info->dag_job_id);
+    printerr("[mon-thread] condor job id: %s\n", job_id_info->condor_job_id);
+}
+
 /*
  * Main monitoring thread loop - it periodically read global trace file as sent this info somewhere, e.g. to another file
  * or to an external service. 
@@ -65,55 +121,42 @@ void* monitoring_thread_func(void* kickstart_status_path) {
     CURL *curl;
     CURLcode res;
     int interval = 10;
-    char line[BUFSIZ];
-    char payload[4096];
-
+    char payload[BUFSIZ], enriched_line[BUFSIZ], line[BUFSIZ];
     MonitoringEndpoint monitoring_endpoint;
+    JobIdInfo job_id_info = { "", "", "", "" };
 
     initialize_monitoring_endpoint(&monitoring_endpoint, (char*)kickstart_status_path);
+    initialize_job_id_info(&job_id_info);
 
-    printerr("[mon-thread] We are starting a monitoring function\n");
-    printerr("[mon-thread] Our monitoring information:\n");
-    printerr("[mon-thread] kickstart-status-file: %s\n", monitoring_endpoint.kickstart_status);
-    printerr("[mon-thread] url: %s\n", monitoring_endpoint.url);
-    printerr("[mon-thread] credentials: %s\n", monitoring_endpoint.credentials);
-    printerr("[mon-thread] routing_key: %s\n", monitoring_endpoint.routing_key);
+    print_debug_info(&monitoring_endpoint, &job_id_info);
 
     FILE* kickstart_status = fopen(monitoring_endpoint.kickstart_status, "r");
     if(kickstart_status == NULL) {
-        printerr("[kickstart-thread] Couldn't open kickstart_status_path for read - %s\n", strerror(errno));
+        printerr("[kickstart-thread] Couldn't open kickstart_status_path for read - %s\n", 
+            strerror(errno));
     }
 
     curl_global_init(CURL_GLOBAL_ALL);
 
-    // FILE* monitoring_file = fopen("monitoring.log", "a");
-    // if(monitoring_file == NULL) {
-    //     printerr("[kickstart-thread] Couldn't open monitoring file for append\n");
-    //     pthread_exit(NULL);
-    //     return NULL;
-    // }
-
-    // printerr("[kickstart-thread] We opened the ./monitoring.log to append online monitoring information\n");    
-
-    while(1) {        
+    while(1) {                
         sleep(interval);
 
         printerr("[kickstart-thread] monitoring loop\n");
 
         if(kickstart_status == NULL) {
-            kickstart_status = fopen(monitoring_endpoint.kickstart_status, "r");
-                
+            kickstart_status = fopen(monitoring_endpoint.kickstart_status, "r");                
             if(kickstart_status == NULL) {
-                printerr("[kickstart-thread] Couldn't open kickstart_status_path for read - %s\n", strerror(errno));
+                printerr("[kickstart-thread] Couldn't open kickstart_status_path for read - %s\n", 
+                    strerror(errno));
             }    
         }
 
         if(kickstart_status != NULL) {
-
             while(fgets(line, BUFSIZ, kickstart_status) != NULL)
             {
-                // printerr("[kickstart-thread] are writing another line: %s", line);
-                // fprintf(monitoring_file, "%s", line);
+                sprintf(enriched_line, "%s wf_uuid=%s wf_label=%s dag_job_id=%s condor_job_id=%s",
+                    line, job_id_info.wf_uuid, job_id_info.wf_label, job_id_info.dag_job_id,
+                    job_id_info.condor_job_id);
 
                 // sending this message to rabbitmq
                 curl = curl_easy_init();
@@ -122,13 +165,16 @@ void* monitoring_thread_func(void* kickstart_status_path) {
                     curl_easy_setopt(curl, CURLOPT_USERPWD, monitoring_endpoint.credentials);
                     curl_easy_setopt(curl, CURLOPT_POST, 1);
 
+                    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
+                    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0);
+
                     struct curl_slist *http_header = NULL;
                     http_header = curl_slist_append(http_header, "Content-Type: application/json");
                     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, http_header);
 
                     sprintf(payload, "{\"properties\":{},\"routing_key\":\"%s\",\"payload\":\"%s\",\"payload_encoding\":\"string\"}",
-                        monitoring_endpoint.routing_key,
-                        line);
+                        job_id_info.wf_uuid,
+                        enriched_line);
 
                     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload);
 
@@ -136,7 +182,8 @@ void* monitoring_thread_func(void* kickstart_status_path) {
                     res = curl_easy_perform(curl);
                     /* Check for errors */
                     if(res != CURLE_OK) {
-                        printerr("[kickstart-thread] an error occured while sending measurement: %s\n", curl_easy_strerror(res));
+                        printerr("[kickstart-thread] an error occured while sending measurement: %s\n", 
+                            curl_easy_strerror(res));
                     }
                     else {
                         printerr("[kickstart-thread] measurement sent\n");
@@ -151,12 +198,11 @@ void* monitoring_thread_func(void* kickstart_status_path) {
                     printerr("[kickstart-thread] we couldn't initialize curl\n");
                 }
             }
-
-            // fflush(monitoring_file);
-        }
-
-        
+        }        
     }
+
+    release_monitoring_endpoint(&monitoring_endpoint);
+    release_job_id_info(&job_id_info);
 
     // fclose(monitoring_file);
     fclose(kickstart_status);

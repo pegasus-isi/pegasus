@@ -6,9 +6,15 @@
 typedef struct {
     char* url;
     char* credentials;
-    char* routing_key;
     char* kickstart_status;
 } MonitoringEndpoint;
+
+typedef struct {
+	char* wf_label;
+	char* wf_uuid;
+	char* dag_job_id;
+	char* condor_job_id;	
+} JobIdInfo;
 
 extern
 int
