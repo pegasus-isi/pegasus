@@ -236,7 +236,8 @@ def _backup_db(db):
 
 def _verify_tables(db):
     ck_dbversion = _check_table_exists(db, db_version)
-    ck_jdbcrc = _check_table_exists(db, rc_lfn)
+#    ck_jdbcrc = _check_table_exists(db, rc_lfn)
+    ck_jdbcrc = True # TODO improve queries
     ck_master = _check_table_exists(db, pg_workflow)
     ck_workflow = _check_table_exists(db, st_workflow)
     
