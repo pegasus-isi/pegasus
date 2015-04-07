@@ -4,6 +4,7 @@ import unittest
 
 from Pegasus.db import connection
 from Pegasus.db.admin.admin_loader import *
+from Pegasus.db.schema import *
 
 class TestDBAdmin(unittest.TestCase):
     
@@ -114,6 +115,23 @@ class TestDBAdmin(unittest.TestCase):
         self.assertEquals(db_current_version(db), 1)
         self.assertRaises(DBAdminError, db_verify, db)
         self.assertTrue(db_verify(db, "4.3.0"))
+        db.close()
+        
+        db = connection.connect(dburi, create=True)
+        self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
+        self.assertTrue(db_verify(db))
+        os.remove(filename)
+        
+    def test_partial_database(self):
+        filename = "/tmp/test-partial.db"
+        self._silentremove(filename)
+        dburi = "sqlite:///%s" % filename
+        db = connection.connect(dburi, schema_check=False, create=False)
+        rc_sequences.create(db.get_bind(), checkfirst=True)
+        rc_schema.create(db.get_bind(), checkfirst=True)
+        rc_lfn.create(db.get_bind(), checkfirst=True)
+        rc_attr.create(db.get_bind(), checkfirst=True)
+        self.assertRaises(DBAdminError, db_verify, db)
         db.close()
         
         db = connection.connect(dburi, create=True)
