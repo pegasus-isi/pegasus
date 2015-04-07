@@ -551,7 +551,7 @@ def add(wf, jobid, event, sched_id=None, status=None):
 
     # A SUBMIT event brings sched id and job type information (it can also be
     # a new job for us when there is no PRE_SCRIPT)
-    if event == "SUBMIT":
+    if event == "SUBMIT" or event == "SUBMIT_FAILED":
         # Add job to our workflow (if not alredy there), will update sched_id in both cases
         my_job_submit_seq = wf.add_job(jobid, event, sched_id=sched_id)
 
