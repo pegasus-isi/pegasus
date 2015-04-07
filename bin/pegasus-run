@@ -277,14 +277,36 @@ if ( $config{dag} ) {
     
     # PM-870 we have already changed to the directory, don't prepend $run again
     my $dag_submit_file = "$config{dag}.condor.sub";
-    print STDOUT "# dagman condor submit file is $dag_submit_file\n";
+    print STDOUT "# dagman condor submit file is $dag_submit_file\n" if $main::DEBUG;
 
     # sanity check: Is the DAG file there? 
     die "ERROR: Unable to locate $config{dag}\n" unless -r $config{dag};
     print STDERR "# found $config{dag}\n" if $main::DEBUG;
 
     # PM-702: clean up .halt files from pegasus-halt
-    system("find . -name \\*.dag.halt -exec rm {} \\;");
+    my $just_released = 0;
+    if ( -e $config{dag}.".halt" ) {
+        print STDOUT "Found a previously halted workflow. Releasing it now.\n";
+        system("find . -name \\*.dag.halt -exec rm {} \\;");
+        $just_released = 1;
+    }
+
+    # After the switch from condor_submit_dag, we lost the check to see if
+    # a workflow is already running. This replaces those checks.
+    if ( -e "monitord.pid" ) {
+        if ($just_released) {
+            # Support the rare instance were a user want to release a halted
+            # workflow while it is still running. In that case, we just
+            # quietly exit here
+            exit 0;
+        }
+        else {
+            print STDERR "ERROR: It looks like the workflow is already running! If you are sure\n" .
+                         "       that is not the case, please remove the monitord.pid file and try\n" .
+                         "       again.\n";
+            exit 1;
+        }
+    }
 
     # find the workflow name and timestamp for pegasus-status
     my $workflow=$config{'pegasus_wf_name'};
