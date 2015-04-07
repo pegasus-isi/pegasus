@@ -24,7 +24,7 @@ from Pegasus.db.schema import *
 from Pegasus.db.modules import Analyzer as BaseAnalyzer
 from Pegasus.db.modules import SQLAlchemyInit
 from Pegasus.netlogger import util
-from sqlalchemy.exc import *
+from sqlalchemy import exc
 import sys
 import time
 
