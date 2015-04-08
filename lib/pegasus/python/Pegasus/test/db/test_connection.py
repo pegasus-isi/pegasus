@@ -1,6 +1,8 @@
 import errno
 import os
+import re
 import unittest
+import uuid
 
 from Pegasus.db import connection
 from Pegasus.db.admin.admin_loader import *
@@ -27,37 +29,36 @@ class TestConnection(unittest.TestCase):
         self.assertRaises(connection.ConnectionError, connection.connect, dburi)
 
     def test_jdbc_sqlite(self):
-        filename = "test-sqlite.db"
+        filename = str(uuid.uuid4())
         self._silentremove(filename)
         dburi = "jdbc:sqlite:%s" % filename
         db = connection.connect(dburi, create=True)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         db.close()
-        os.remove(filename)
+        self.remove(".", filename)
         
-        filename = "/tmp/test-sqlite.db"
+        filename = "/tmp/" + str(uuid.uuid4())
         self._silentremove(filename)
         dburi = "jdbc:sqlite:%s" % filename
         db = connection.connect(dburi, create=True)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         db.close()
-        os.remove(filename)
+        self.remove("/tmp", filename)
         
         self._silentremove(filename)
         dburi = "jdbc:sqlite:/%s" % filename
         db = connection.connect(dburi, create=True)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         db.close()
-        os.remove(filename)
+        self.remove("/tmp", filename)
     
     def test_connection_by_uri(self):
-        filename = "/tmp/connect-1.db"
+        filename = str(uuid.uuid4())
         self._silentremove(filename)
         dburi = "sqlite:///%s" % filename
         db = connection.connect(dburi, echo=False, schema_check=True, create=True)
         db.close()
-        os.remove(filename)
-        
+        self.remove(".", filename)
     
     def _silentremove(self, filename):
         try:
@@ -65,7 +66,11 @@ class TestConnection(unittest.TestCase):
         except OSError, e:
             if e.errno != errno.ENOENT: # errno.ENOENT = no such file or directory
                 raise # re-raise exception if a different error occured
-
+            
+    def remove(self, dir, filename):
+        for f in os.listdir(dir):
+            if re.search(filename + ".*", f):
+                os.remove(os.path.join(dir, f))
     
 if __name__ == '__main__':
     unittest.main()

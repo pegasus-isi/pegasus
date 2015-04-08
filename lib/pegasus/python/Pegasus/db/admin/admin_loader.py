@@ -184,8 +184,12 @@ def _discover_version(db, pegasus_version=None, force=False):
             pass
     
     if current_version == version:
-        log.info("Your database is already updated.")
-        return
+        try:
+            _verify_tables(db)
+            log.info("Your database is already updated.")
+            return
+        except DBAdminError:
+            current_version = -1
     
     if current_version > version:
         raise DBAdminError("Unable to run update. Current database version is newer than specified version '%s'." % (pegasus_version))
