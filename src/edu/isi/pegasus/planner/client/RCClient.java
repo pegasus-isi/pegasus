@@ -964,9 +964,9 @@ public class RCClient extends Toolkit {
      */
     public static void main(String[] args) {
 	int result = 0;
-	int level = Level.FATAL_INT;
+	int level = Level.ERROR_INT;
 	RCClient me = null;
-
+       
 	try {
 	    // create an instance of self
 	    me = new RCClient("pegasus-rc-client");
@@ -1080,11 +1080,19 @@ public class RCClient extends Toolkit {
 	    } while (rce != null);
 	    result = 1;
 	} catch (RuntimeException rte) {
+            Exception org = rte;
 	    do {
 		RCClient.log(Level.FATAL,
 			rte.getClass() + " " + rte.getMessage());
 		rte = (RuntimeException) rte.getCause();
 	    } while (rte != null);
+            
+            //print stack trace if debug or higher
+            //or logmanger is not set at all
+            if( me == null || me.m_log == null || me.m_log.getLevel().toInt() <= Level.DEBUG_INT ){
+                org.printStackTrace();
+            }
+            
 	    result = 1;
 	} catch (Exception e) {
 	    RCClient.log(Level.FATAL, e.getMessage());
