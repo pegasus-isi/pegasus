@@ -1,6 +1,8 @@
 import errno
 import os
+import re
 import unittest
+import uuid
 
 from Pegasus.db import connection
 from Pegasus.db.admin.admin_loader import *
@@ -9,7 +11,7 @@ from Pegasus.db.schema import *
 class TestDBAdmin(unittest.TestCase):
     
     def test_create_database(self):
-        filename = "/tmp/test-create.db"
+        filename = str(uuid.uuid4())
         self._silentremove(filename)
         dburi = "sqlite:///%s" % filename
         
@@ -52,7 +54,7 @@ class TestDBAdmin(unittest.TestCase):
         db = connection.connect(dburi, create=True)
         self.assertTrue(db_verify(db))
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
-        os.remove(filename)
+        self.remove(filename)
         
     def test_parse_pegasus_version(self):
         self.assertEquals(parse_pegasus_version(), CURRENT_DB_VERSION)
@@ -68,7 +70,7 @@ class TestDBAdmin(unittest.TestCase):
         self.assertRaises(DBAdminError, parse_pegasus_version, "4")
         
     def test_version_operations(self):
-        filename = "/tmp/test-version.db"
+        filename = str(uuid.uuid4())
         self._silentremove(filename)
         dburi = "sqlite:///%s" % filename
         db = connection.connect(dburi, create=True)
@@ -90,10 +92,10 @@ class TestDBAdmin(unittest.TestCase):
         db = connection.connect(dburi, create=True)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         self.assertTrue(db_verify(db))
-        os.remove(filename)
+        self.remove(filename)
         
     def test_minimum_downgrade(self):
-        filename = "/tmp/test-minimum.db"
+        filename = str(uuid.uuid4())
         self._silentremove(filename)
         dburi = "sqlite:///%s" % filename
         db = connection.connect(dburi, create=True)
@@ -103,10 +105,11 @@ class TestDBAdmin(unittest.TestCase):
         
         db_downgrade(db)
         self.assertEquals(db_current_version(db), 1)       
-        os.remove(filename)
+        self.remove(filename)
         
     def test_all_downgrade_update(self):
-        filename = "/tmp/test-all.db"
+        filename = str(uuid.uuid4())
+        print filename
         self._silentremove(filename)
         dburi = "sqlite:///%s" % filename
         db = connection.connect(dburi, create=True)
@@ -120,15 +123,14 @@ class TestDBAdmin(unittest.TestCase):
         db = connection.connect(dburi, create=True)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         self.assertTrue(db_verify(db))
-        os.remove(filename)
+        self.remove(filename)
         
     def test_partial_database(self):
-        filename = "/tmp/test-partial.db"
+        filename = str(uuid.uuid4())
         self._silentremove(filename)
         dburi = "sqlite:///%s" % filename
         db = connection.connect(dburi, schema_check=False, create=False)
         rc_sequences.create(db.get_bind(), checkfirst=True)
-        rc_schema.create(db.get_bind(), checkfirst=True)
         rc_lfn.create(db.get_bind(), checkfirst=True)
         rc_attr.create(db.get_bind(), checkfirst=True)
         self.assertRaises(DBAdminError, db_verify, db)
@@ -137,7 +139,40 @@ class TestDBAdmin(unittest.TestCase):
         db = connection.connect(dburi, create=True)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         self.assertTrue(db_verify(db))
-        os.remove(filename)
+        self.remove(filename)
+        
+        db = connection.connect(dburi, schema_check=False, create=False)
+        pg_workflow.create(db.get_bind(), checkfirst=True)
+        pg_workflowstate.create(db.get_bind(), checkfirst=True)
+        pg_ensemble.create(db.get_bind(), checkfirst=True)
+        pg_ensemble_workflow.create(db.get_bind(), checkfirst=True)
+        self.assertRaises(DBAdminError, db_verify, db)
+        db.close()
+        
+        db = connection.connect(dburi, create=True)
+        self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
+        self.assertTrue(db_verify(db))
+        self.remove(filename)
+        
+        db = connection.connect(dburi, schema_check=False, create=False)
+        st_workflow.create(db.get_bind(), checkfirst=True)
+        st_workflowstate.create(db.get_bind(), checkfirst=True)
+        st_host.create(db.get_bind(), checkfirst=True)
+        st_job.create(db.get_bind(), checkfirst=True)
+        st_job_edge.create(db.get_bind(), checkfirst=True)
+        st_job_instance.create(db.get_bind(), checkfirst=True)
+        st_jobstate.create(db.get_bind(), checkfirst=True)
+        st_task.create(db.get_bind(), checkfirst=True)
+        st_task_edge.create(db.get_bind(), checkfirst=True)
+        st_invocation.create(db.get_bind(), checkfirst=True)
+        st_file.create(db.get_bind(), checkfirst=True)
+        self.assertRaises(DBAdminError, db_verify, db)
+        db.close()
+        
+        db = connection.connect(dburi, create=True)
+        self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
+        self.assertTrue(db_verify(db))
+        self.remove(filename)
                 
     def _silentremove(self, filename):
         try:
@@ -145,6 +180,11 @@ class TestDBAdmin(unittest.TestCase):
         except OSError, e:
             if e.errno != errno.ENOENT: # errno.ENOENT = no such file or directory
                 raise # re-raise exception if a different error occured
+            
+    def remove(self, filename):
+        for f in os.listdir("."):
+            if re.search(filename + ".*", f):
+                os.remove(f)
 
 if __name__ == '__main__':
     unittest.main()
