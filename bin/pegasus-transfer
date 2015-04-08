@@ -227,7 +227,7 @@ class Tools(object):
     
     _info = {}
 
-    def find(self, executable, version_arg, version_regex):
+    def find(self, executable, version_arg=None, version_regex=None):
 
         self.lock.acquire()
         try:
@@ -1346,6 +1346,39 @@ class ScpHandler(TransferHandlerBase):
         return str(port)
 
 
+class StashHandler(TransferHandlerBase):
+    """
+    Uses the OSG stashcp command to trasfer from stash to file
+    """
+    
+    _name = "StashHandler"
+    _protocol_map = ["stash->file"]
+
+    def do_transfer(self, transfer, attempt):
+        
+        tools = Tools()
+        if tools.find("stashcp") is None:
+            raise RuntimeError("Unable to do Stash transfers because" 
+                               + " stashcp could not be found")
+
+        # stashcp wants just the path with no leading slash
+        src_path = transfer.src_url()
+        src_path = re.sub('^stash:', '', src_path)
+        src_path = re.sub('^/+', '', src_path)
+
+        prepare_local_dir(os.path.dirname(transfer.dst_path))
+        cmd = "%s -s '%s' -l '%s'" \
+            % (tools.full_path("stashcp"), src_path, transfer.dst_path)
+        try:
+            tc = TimedCommand(cmd)
+            tc.run()
+        except RuntimeError, err:
+            logger.error(err)
+            return False
+        stats_add(transfer.dst_path)
+        return True
+
+
 class SymlinkHandler(TransferHandlerBase):
     """
     Sets up symlinks - this is often used when data is local, but needs a
@@ -1413,6 +1446,7 @@ class TransferSet:
         self._available_handlers.append( GSHandler() )
         self._available_handlers.append( SRMHandler() )
         self._available_handlers.append( ScpHandler() )
+        self._available_handlers.append( StashHandler() )
         self._available_handlers.append( SymlinkHandler() )
 
         src_proto = transfers_l[0].src_proto
