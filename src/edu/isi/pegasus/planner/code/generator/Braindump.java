@@ -377,6 +377,8 @@ public class Braindump {
 
             Collection<File> result = new LinkedList();
             Map<String, String> entries = this.defaultBrainDumpEntries(dag);
+            //add the location of the properties file
+            entries.put( Braindump.PROPERTIES_KEY, new File( mProps.getPropertiesInSubmitDirectory() ).getName() );
             entries.putAll(additionalEntries);
             result.add(writeOutBraindumpFile(entries));
             return result;
