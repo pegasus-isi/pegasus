@@ -41,13 +41,9 @@ virsh undefine $name
 # Create virtualbox image
 qemu-img convert -f raw -O vmdk $image.ec2 $image.vmdk
 
-# Create futuregrid image
-dd if=$image.ec2 of=$image.fg bs=1M skip=1
-
 # Zip all the images
 zip $image.vmdk.zip $image.vmdk
 rm $image.vmdk
 gzip $image.ec2
-gzip $image.fg
 
 
