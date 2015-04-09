@@ -58,7 +58,6 @@ def get_missing_tables(db):
         pg_ensemble_workflow,
         # JDBCRC
         rc_sequences,
-        rc_schema,
         rc_lfn,
         rc_attr
     ]
@@ -184,9 +183,6 @@ class DashboardWorkflowstate(SABase):
 # ---------------------------------------------
 # JDBCRC
 class Sequences(SABase):
-    pass
-
-class PegasusSchema(SABase):
     pass
 
 class RCLFN(SABase):
@@ -601,16 +597,6 @@ rc_sequences = Table('sequences', metadata,
     **table_keywords
 )
 orm.mapper(Sequences, rc_sequences)
-
-rc_schema = Table('pegasus_schema', metadata,
-    Column('name', VARCHAR(64), nullable=False, primary_key=True),
-    Column('catalog', VARCHAR(16)),
-    Column('version', FLOAT),
-    Column('creator', VARCHAR(32)),
-    Column('creation', NUMERIC(precision=16,scale=6), default=time.time()),
-    **table_keywords
-)
-orm.mapper(PegasusSchema, rc_schema)
 
 rc_lfn = Table('rc_lfn', metadata,
     Column('id', KeyInteger, primary_key=True, nullable=False),

@@ -29,7 +29,6 @@ class Version(BaseVersion):
             
         try:
             log.debug("  Updating database schema...")
-            self.db.execute("UPDATE pegasus_schema SET version='1.3' WHERE name='JDBCRC' AND catalog='rc'")
             log.debug("    Creating new table...")
             self.db.execute("CREATE TABLE rc_lfn_new ( LIKE rc_lfn )")
             self.db.execute("ALTER TABLE rc_lfn_new ADD COLUMN site VARCHAR(245)")
@@ -85,8 +84,6 @@ class Version(BaseVersion):
                     raise DBAdminError("A possible data loss was detected: use '--force' to ignore this message.")
 
             log.debug("  Updating database schema...")
-            self.db.execute("UPDATE pegasus_schema SET version='1.2' WHERE name='JDBCRC' AND catalog='rc'")
-
             log.debug("    Creating new table...")
             self.db.execute("CREATE TABLE rc_lfn_new ( LIKE rc_lfn )")
             self.db.execute("ALTER TABLE rc_lfn_new DROP INDEX sk_rc_lfn")
