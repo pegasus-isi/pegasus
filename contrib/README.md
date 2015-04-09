@@ -12,5 +12,4 @@ This directory contains:
 * **drupal** Drupal modules used on pegasus.isi.edu
 * **globus_rls_client** Our fork of the Globus RLS Java client library
 * **plots** Scripts for generating useful plots of workflow data
-* **tutorial_vm** Scripts for building the Pegasus Tutorial VM
 

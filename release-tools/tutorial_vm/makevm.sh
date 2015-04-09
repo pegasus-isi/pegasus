@@ -17,7 +17,7 @@ set -x
 name=$(mktemp -u tutorial_vm.XXXXXXXXXXXX)
 
 dir=$(cd $(dirname $0) && pwd)
-VERSION=$($dir/../../release-tools/getversion)
+VERSION=$($dir/../getversion)
 RPMURL=http://download.pegasus.isi.edu/pegasus/$VERSION/pegasus-$VERSION-1.el6.x86_64.rpm
 sed "s|@@RPMURL@@|$RPMURL|" $dir/pegasus-tutorial.cfg.in > pegasus-tutorial.cfg
 
