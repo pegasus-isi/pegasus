@@ -31,11 +31,6 @@ TXTMANPAGES=$(addprefix ../manpages/,$(MANPAGES))
 XMLMANPAGES += manpage.manpages.xml
 XML += $(XMLMANPAGES)
 
-SAMPLEPROPS=../../libexec/docbook-sample-props
-PROP2DOC=env PEGASUS_HOME=$(PEGASUS_HOME) $(SAMPLEPROPS)
-BASICPROPS=../../etc/basic.properties
-ADVANCEDPROPS=../../etc/advanced.properties
-
 ifndef ${prefix}
 prefix = $(PEGASUS_HOME)/share/pegasus/doc
 endif

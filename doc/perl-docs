@@ -5,7 +5,7 @@ set -e
 TARGET_DIR=$1
 if [ "x$TARGET_DIR" = "x" ]; then
     echo "Please specify a target dir as first argument"
-    echo "Example: ./libexec/perl-doc dist/pegasus-3.1/docs/html/perl"
+    echo "Example: perl-doc dist/pegasus-3.1/docs/html/perl"
     exit 1
 fi
 

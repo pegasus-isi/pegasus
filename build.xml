@@ -285,7 +285,7 @@
   <target name="doc-perl" depends="setup" description="Generate perl documentation">
     <delete dir="${dist.doc}/html/perl"/>
     <mkdir dir="${dist.doc}/html/perl"/>
-    <exec executable="./libexec/perl-docs" dir="${basedir}" failonerror="true">
+    <exec executable="./doc/perl-docs" dir="${basedir}" failonerror="true">
       <arg line="${dist.doc}/html/perl"/>
     </exec>
   </target>
