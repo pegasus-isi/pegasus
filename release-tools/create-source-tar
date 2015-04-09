@@ -1,0 +1,28 @@
+#!/bin/bash
+
+set -e
+set -v
+
+VERSION=$1
+
+# make sure we are in a source dir
+if [ ! -e build.xml ]; then
+    echo "This does not look a like a source directory. Exiting..."
+    exit 1
+fi
+
+mkdir -p dist/pegasus-source-$VERSION
+
+for ITEM in `ls | grep -E -v '^(build|dist)$'`; do
+    cp -a $ITEM dist/pegasus-source-$VERSION/
+done
+
+# remove some stuff we don't want in the source tar
+for ITEM in .git .gitignore; do
+    find dist/pegasus-source-$VERSION/ -name $ITEM -exec rm -rf {} \;
+done
+
+cd dist/
+tar czf pegasus-source-$VERSION.tar.gz pegasus-source-$VERSION
+rm -rf pegasus-source-$VERSION
+

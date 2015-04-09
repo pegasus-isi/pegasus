@@ -10,6 +10,7 @@
   <property name="build.src" location="build/main/classes"/>
   <property name="test.src"  location="build/tests/classes"/>
   <property name="junitreport.dir"  value="${test.src}/junitreport"/>
+  <property name="dist.src.dir" location="dist/pegasus-source-${pegasus.version}"/>
   <property name="dist.dir" location="dist/pegasus-${pegasus.version}"/>
   <property name="dist.bin" location="${dist.dir}/bin"/>
   <property name="dist.etc" location="${dist.dir}/etc"/>
@@ -515,6 +516,18 @@
     </delete>
   </target>
   
+  <target name="dist-source" depends="clean">
+    <exec executable="release-tools/create-source-tar" failonerror="true">
+      <arg line="${pegasus.version}"/>
+    </exec>
+  </target>
+
+  <target name="rpm-package" depends="dist-source,setup">
+    <exec executable="release-tools/build-rpms" failonerror="true">
+      <arg line="${pegasus.version}"/>
+    </exec>
+  </target>
+
   <target name="debian-package" depends="setup">
     <exec executable="dpkg-buildpackage" failonerror="true">
       <arg line="-b -uc"/>
