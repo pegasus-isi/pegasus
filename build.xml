@@ -38,13 +38,13 @@
     <echo>Build timestamp: ${ISODATE.utc}</echo>
 
     <!-- Determine the system architecture and platform -->
-    <exec executable="${basedir}/release-tools/getsystem/getsystem"
+    <exec executable="${basedir}/release-tools/getsystem"
           outputproperty="dist.arch"
           failonerror="true"/>
     <echo>Architecture: ${dist.arch}</echo>
     
     <!-- OSID is used for Debian package builds -->
-    <exec executable="${basedir}/release-tools/getsystem/getosid"
+    <exec executable="${basedir}/release-tools/getosid"
           outputproperty="dist.osid"
           failonerror="true"/>
     <echo>OSID: ${dist.osid}</echo>

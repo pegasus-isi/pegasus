@@ -1,6 +1,6 @@
 #!/bin/bash
 
-TOP_DIR=`(cd ${BASH_SOURCE%/*}/../.. && pwd)`
+TOP_DIR=`(cd ${BASH_SOURCE%/*}/.. && pwd)`
 
 . $TOP_DIR/share/pegasus/sh/pegasus-lite-common.sh
 
@@ -9,10 +9,6 @@ if [ $? != 0 ]; then
     echo "Unable to determine the system identifier. pegasus_lite_get_system returned: $SYSTEM"
     exit 1
 fi
-
-# strip architechture
-OSID=`echo $SYSTEM | sed -E 's/x86_(64_)*//' | sed -E 's/_//g'`
-
-echo $OSID
+echo $SYSTEM
 exit 0
 
