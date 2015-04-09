@@ -279,7 +279,7 @@ public class GLite extends Abstract {
         /* the globus key maxwalltime is WALLTIME */
         if( job.globusRSL.containsKey( "maxwalltime" ) ){
             value.append( " && " );
-            addSubExpression( value,"WALLTIME" , Integer.parseInt( (String)job.globusRSL.get( "maxwalltime" ) ) );
+            addSubExpression( value,"WALLTIME" , pbsFormattedTimestamp(   (String)job.globusRSL.get( "maxwalltime" ) ) );
         }
 
         /* the globus key maxmemory is PER_PROCESS_MEMORY */
@@ -412,5 +412,52 @@ public class GLite extends Abstract {
 
     }
 
+    /**
+     * Converts minutes into hh:dd:ss for PBS formatting purposes
+     * 
+     * @param minutes
+     * 
+     * @return 
+     */
+    private String pbsFormattedTimestamp(String minutes ) {
+        int minutesValue = Integer.parseInt(minutes);
+        
+        if( minutesValue < 0 ){
+            throw new IllegalArgumentException( "Invalid value for minutes provided for conversion " + minutes );
+        }
+        
+        int hours = minutesValue/60;
+        int mins   = minutesValue%60;
+        
+        StringBuffer result = new StringBuffer();
+        if( hours < 10 ){
+            result.append( "0" ).append( hours );
+        }
+        else{
+            result.append( hours );
+        }
+        result.append(":");
+        if( mins < 10 ){
+            result.append( "0" ).append( mins );
+        }
+        else{
+            result.append( mins );
+        }
+        result.append( ":00" );//we don't have second precision
+        
+        return result.toString();
+        
+    }
+
+    public static void main(String[] args ){
+        GLite gl = new GLite();
+        
+        System.out.println( "0 mins is " + gl.pbsFormattedTimestamp( "0") );
+        System.out.println( "11 mins is " + gl.pbsFormattedTimestamp( "11") );
+        System.out.println( "60 mins is " + gl.pbsFormattedTimestamp( "60") );
+        System.out.println( "69 mins is " + gl.pbsFormattedTimestamp( "69") );
+        System.out.println( "169 mins is " + gl.pbsFormattedTimestamp( "169") );
+        System.out.println( "1690 mins is " + gl.pbsFormattedTimestamp( "169056") );
+    }
 
 }
