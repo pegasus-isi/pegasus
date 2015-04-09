@@ -33,8 +33,12 @@ pbs_nodes=`echo $pbs_nodes | sed 's/"//g'`
 echo $pbs_nodes
 
 if [ ! -z $WALLTIME ]; then
-    echo "#PBS -l walltime=${WALLTIME}"
+    # strip any quotes . e.g condor expects it to be quoted                                                                                                                                                                  
+    # however pbs does not like it                                                                                                                                                                                                 
+    walltime=`echo $WALLTIME | sed 's/"//g'`
+    echo "#PBS -l walltime=${walltime}"
 fi
+
 
 if [ ! -z $PER_PROCESS_MEMORY ]; then
     # strip any quotes . e.g 1gb condor expects it to be quoted
