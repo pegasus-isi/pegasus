@@ -226,7 +226,7 @@ def _verify_tables(db):
     try:
         missing_tables = get_missing_tables(db)
         if len(missing_tables) > 0:
-            raise DBAdminError("Non-existent or missing database tables:\n    %s\nRun 'pegasus-db-admin update %s' to create the missing tables."
+            raise DBAdminError("Missing database tables or tables are not updated:\n    %s\nRun 'pegasus-db-admin update %s' to create/update your database."
                 % (" \n    ".join(missing_tables), db.get_bind().url))
     except Exception, e:
         raise DBAdminError(e)
