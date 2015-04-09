@@ -20,6 +20,25 @@ class Version(BaseVersion):
     def update(self, force=False):
         log.debug("Updating to version %s" % DB_VERSION)
         try:
+            res = self.db.query(EnsembleWorkflow.id).limit(1).first()
+            if not res:
+                self.db.execute("DROP TABLE ensemble_workflow")
+        except (OperationalError, ProgrammingError), e:
+            pass
+        except Exception, e:
+            self.db.rollback()
+            raise DBAdminError(e)
+        try:
+            res = self.db.query(Ensemble.id).limit(1).first()
+            if not res:
+                self.db.execute("DROP TABLE ensemble")
+        except (OperationalError, ProgrammingError), e:
+            pass
+        except Exception, e:
+            self.db.rollback()
+            raise DBAdminError(e)
+            
+        try:
             pg_ensemble.create(self.db.get_bind(), checkfirst=True)
         except (OperationalError, ProgrammingError):
             pass
