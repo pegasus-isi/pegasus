@@ -10,7 +10,8 @@ clearpart --all --initlabel
 part / --fstype=ext4 --label=rootpart --grow --size=1
 #url --url=http://gaul.isi.edu/sl/6x/x86_64/os/
 #url --url=http://mirrors.usc.edu/pub/linux/distributions/centos/6/os/x86_64/
-url --url=http://gaul.isi.edu/centos/6/os/x86_64/
+#url --url=http://gaul.isi.edu/centos/6/os/x86_64/
+url --url=http://linux.mirrors.es.net/centos/6/os/x86_64/
 install
 auth  --useshadow  --enablemd5
 rootpw --plaintext pegasus

@@ -8,7 +8,8 @@ fi
 image=$1
 #location="http://gaul.isi.edu/sl/6x/x86_64/os/"
 #location="http://mirrors.usc.edu/pub/linux/distributions/centos/6/os/x86_64/"
-location="http://gaul.isi.edu/centos/6/os/x86_64/"
+#location="http://gaul.isi.edu/centos/6/os/x86_64/"
+location="http://linux.mirrors.es.net/centos/6/os/x86_64/"
 #ks="http://gaul.isi.edu/sl/pegasus-tutorial.cfg"
 
 set -e
