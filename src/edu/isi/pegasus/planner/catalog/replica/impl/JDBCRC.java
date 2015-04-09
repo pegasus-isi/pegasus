@@ -23,6 +23,10 @@ import edu.isi.pegasus.common.util.CommonProperties;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.common.PegasusDBAdmin;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.sql.*;
 import java.util.*;
 import org.sqlite.SQLiteConfig;
@@ -290,13 +294,25 @@ public class JDBCRC implements ReplicaCatalog
    */
   public boolean connect( Properties props ){
 
-      boolean result = false;
+        boolean result = false;
+
+        String propertiesFile = (String) props.remove( "properties.file" );
+        boolean removePropertiesFile = false;
+        File temp = null;
+        if( propertiesFile == null ){
+            //PM-778 no conf option specified 
+            //write out the properties to a file and invoke pegasus-db-admin
+            //create a temporary file in directory
+            temp = writeOutProperties( props );
+            propertiesFile = temp.getAbsolutePath();
+            removePropertiesFile = true;
+        }
+        PegasusDBAdmin check = new PegasusDBAdmin( mLogger );
+        check.checkJDBCRCForCompatibility(propertiesFile);
+        if( removePropertiesFile && temp != null ){
+            temp.delete();
+        }
       
-      String propertiesFile = (String) props.remove( "properties.file" );
-      if( propertiesFile != null ){
-          PegasusDBAdmin check = new PegasusDBAdmin( mLogger );
-          check.checkJDBCRCForCompatibility(propertiesFile);
-      }
       
         // class loader: Will propagate any runtime errors!!!
         String driver = (String) props.remove("db.driver");
@@ -1478,5 +1494,32 @@ public class JDBCRC implements ReplicaCatalog
     // done
     return result;
   }
+
+  /**
+   * Writes out the properties to a temporary file in the current working directory
+   * 
+   * @param props
+   * @return 
+   */
+    private File writeOutProperties(Properties props) {
+        File f = null;
+        try{  
+            f = File.createTempFile( "pegasus.", ".properties" );
+
+            //the header of the file
+            StringBuffer header = new StringBuffer(64);
+            header.append("Pegasus Replica Catalog properties with " + ReplicaCatalog.c_prefix + " \n")
+                  .append("#ESCAPES IN VALUES ARE INTRODUCED");
+
+            //create an output stream to this file and write out the properties
+            OutputStream os = new FileOutputStream(f);
+            props.store( os, header.toString() );
+            os.close();
+        }
+        catch( IOException ioe ){
+            throw new RuntimeException( "IOException while creating temporary properties file ", ioe );
+        }
+        return f;
+    }
 }
 

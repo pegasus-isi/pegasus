@@ -151,9 +151,11 @@ public class ReplicaFactory{
         //pegasus.catalog.work.db.driver.*
         db.putAll( props.matchingSubset( ReplicaCatalog.DB_PREFIX , false ) );
         
-        //PM-778 properties file location
-        connect.put( "properties.file", file );
-
+        //PM-778 properties file location requried for pegasus-db-admin
+        if( file != null ){
+            connect.put( "properties.file", file );
+        }
+        
         //to make sure that no confusion happens.
         //add the db prefix to all the db properties
         for( Enumeration e = db.propertyNames(); e.hasMoreElements(); ){
