@@ -57,7 +57,7 @@
     <property name="dist.lib" location="${dist.dir}/${dist.lib.subdir}"/>
 
     <!-- Determine the system Python module location -->
-    <exec executable="${basedir}/release-tools/python/python-modules-dir"
+    <exec executable="${basedir}/release-tools/python-modules-dir"
           outputproperty="dist.python-lib.subdir"
           failonerror="true">
       <arg value="${dist.lib.subdir}"/>
