@@ -97,7 +97,7 @@ perl -p -i -e 's/ipac_cluster/local/' rc
 cat url.list | sed 's/ http:.*ref=/ http:\/\/obelix.isi.edu\/irsa-cache/' >>rc
 
 echo "Updating the database..."
-pegasus-db-admin update --conf pegasusrc -t jdbcrc -f
+pegasus-db-admin update --conf pegasusrc -t jdbcrc
 
 echo "Cleanning the database..."
 pegasus-rc-client -vvv --conf pegasusrc list > tmp
@@ -117,5 +117,4 @@ pegasus-plan \
     --dax dag.xml \
     --cluster horizontal \
     --submit | tee $TOP_DIR/plan.out
-
 
