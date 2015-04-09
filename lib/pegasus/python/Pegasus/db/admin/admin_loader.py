@@ -148,22 +148,6 @@ def parse_pegasus_version(pegasus_version=None):
 
 
 ################################################################################
-def _check_table_exists(engine, table):
-    try:
-        engine.execute(table.select().limit(1))
-        return True
-    
-    except OperationalError, e:
-        if "no such table" in str(e).lower() or "unknown" in str(e).lower() \
-          or "no such column" in str(e).lower():
-            return False
-        raise DBAdminError(e)
-    except ProgrammingError, e:
-        if "doesn't exist" in str(e).lower():
-            return False
-        raise DBAdminError(e)       
-        
-
 def _get_version(db):
     current_version = db.query(DBVersion.version_number).order_by(
         DBVersion.id.desc()).first()
@@ -239,11 +223,11 @@ def _backup_db(db):
 
 
 def _verify_tables(db):
-    ck_dbversion = _check_table_exists(db, db_version)
-    ck_jdbcrc = _check_table_exists(db, rc_lfn)
-    ck_master = _check_table_exists(db, pg_workflow)
-    ck_workflow = _check_table_exists(db, st_workflow)
+    try:
+        missing_tables = get_missing_tables(db)
+        if len(missing_tables) > 0:
+            raise DBAdminError("Non-existent or missing database tables:\n    %s\nRun 'pegasus-db-admin update %s' to create the missing tables."
+                % (" \n    ".join(missing_tables), db.get_bind().url))
+    except Exception, e:
+        raise DBAdminError(e)
     
-    if not ck_dbversion or not ck_jdbcrc or not ck_master or not ck_workflow:
-        raise DBAdminError("Non-existent or missing database tables.\nRun 'pegasus-db-admin update %s' to create the missing tables."
-            % db.get_bind().url)

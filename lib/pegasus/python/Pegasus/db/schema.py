@@ -17,8 +17,6 @@ from Pegasus.db.modules.ensembles import EnsembleWorkflow, EnsembleWorkflowState
 
 log = logging.getLogger(__name__)
 
-CURRENT_SCHEMA_VERSION = 4.0
-
 metadata = MetaData()
 
 # for SQLite
@@ -33,6 +31,60 @@ KeyInteger = BigInteger()
 KeyInteger = KeyInteger.with_variant(postgresql.BIGINT(), 'postgresql')
 KeyInteger = KeyInteger.with_variant(mysql.BIGINT(), 'mysql')
 KeyInteger = KeyInteger.with_variant(sqlite.INTEGER(), 'sqlite')
+
+
+# --------------------------------------------------------------------
+# Method to verify if tables exist or are according to the schema
+# --------------------------------------------------------------------
+def get_missing_tables(db):
+    tables = [
+        db_version,
+        # WORKFLOW
+        st_workflow,
+        st_workflowstate,
+        st_host,
+        st_job,
+        st_job_edge,
+        st_job_instance,
+        st_jobstate,
+        st_task,
+        st_task_edge,
+        st_invocation,
+        st_file,
+        # MASTER
+        pg_workflow,
+        pg_workflowstate,
+        pg_ensemble,
+        pg_ensemble_workflow,
+        # JDBCRC
+        rc_sequences,
+        rc_schema,
+        rc_lfn,
+        rc_attr
+    ]
+    missing_tables = []
+    for table in tables:
+        if not _check_table_exists(db, table):
+            missing_tables.append(table.name)
+
+    return missing_tables
+
+def _check_table_exists(engine, table):
+    try:
+        engine.execute(table.select().limit(1))
+        return True
+    
+    except OperationalError, e:
+        if "no such table" in str(e).lower() or "unknown" in str(e).lower() \
+          or "no such column" in str(e).lower():
+            return False
+        raise OperationalError(e)
+    except ProgrammingError, e:
+        if "doesn't exist" in str(e).lower():
+            return False
+        raise ProgrammingError(e)
+# --------------------------------------------------------------------
+
 
 class SABase(object):
     """
@@ -82,7 +134,7 @@ class SABase(object):
 # to tables via the SQLAlch mapper.
 
 # ---------------------------------------------
-# STAMPEDE
+# DB Admin
 class DBVersion(SABase):
     pass
 
@@ -119,9 +171,6 @@ class Invocation(SABase):
     pass
 
 class File(SABase):
-    pass
-
-class SchemaInfo(SABase):
     pass
 
 # ---------------------------------------------
@@ -445,14 +494,6 @@ Index('file_id_UNIQUE', st_file.c.file_id, unique=True)
 Index('FK_FILE_TASK_ID', st_task.c.task_id, unique=False)
 
 orm.mapper(File, st_file)
-
-
-st_schema_info = Table('schema_info', metadata,
-    Column('version_number', NUMERIC(2,1), primary_key=True, nullable=False),
-    Column('version_timestamp', NUMERIC(16,6), primary_key=True, nullable=False, default=time.time())
-)
-
-orm.mapper(SchemaInfo, st_schema_info)
 
 
 # ---------------------------------------------
