@@ -282,14 +282,14 @@ class DBAdminCommand(CompoundCommand):
     description = "Database administrator client"
     commands = [
         ("create", CreateCommand),
-        ('downgrade', DowngradeCommand),
+#        ('downgrade', DowngradeCommand),
         ('update', UpdateCommand),
         ('check', CheckCommand),
         ('version', VersionCommand)
     ]
     aliases = {
         "c": "create",
-        "d": "downgrade",
+#        "d": "downgrade",
         "u": "update",
         "k": "check",
         "v": "version"
