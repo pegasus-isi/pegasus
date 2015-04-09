@@ -11,7 +11,7 @@ if [ $? != 0 ]; then
 fi
 
 # strip architechture
-OSID=`echo $SYSTEM | sed -r 's/x86_(64_)*|//' | sed -r 's/_//g'`
+OSID=`echo $SYSTEM | sed -E 's/x86_(64_)*//' | sed -E 's/_//g'`
 
 echo $OSID
 exit 0
