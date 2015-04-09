@@ -1,7 +1,0 @@
-SVN-NIGHTLY Scripts
-==================
-
-The svn-nightly scripts downloads the PEGASUS TRUNK and builds the
-pegasus-binary, pegasus-worker and pegasus-source tarballs.
-
-Usage: svn-nightly <dir where to download the trunk> <dir to save the tars>
