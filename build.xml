@@ -50,7 +50,7 @@
     <echo>OSID: ${dist.osid}</echo>
 
     <!-- Determine the system library location (lib64 or lib) -->
-    <exec executable="${basedir}/release-tools/system/determine-lib-dir"
+    <exec executable="${basedir}/release-tools/determine-lib-dir"
           outputproperty="dist.lib.subdir"
           failonerror="true"/>
     <echo>Library subdir: ${dist.lib.subdir}</echo>
