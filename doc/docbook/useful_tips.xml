@@ -4,6 +4,50 @@
 <chapter id="useful_tips" lang="">
   <title>Useful Tips</title>
 
+  <section id="migrating_from_leq44">
+    <title>Migrating From Pegasus &lt;4.5 to Pegasus &gt;=4.5</title>
+      
+    <para>Since Pegasus 4.5 all databases are managed by a single tool: <emphasis
+    role="bold">pegasus-db-admin</emphasis>. Databases will be automatically
+    updated when <emphasis role="bold">pegasus-planner</emphasis> is invoked, but
+    it may require manually invocation of the <emphasis role="bold">
+    pegasus-db-admin</emphasis> for other Pegasus tools.</para>
+
+    <para>The <emphasis role="bold">check</emphasis> command verifies if the
+    database is compatible with the Pegasus' latest version. If the database is
+    not compatible, it will print the following message:</para>
+    
+    <programlisting>
+$ pegasus-db-admin check
+Your database is NOT compatible with version 4.5.0
+    </programlisting>
+    
+    <para>If you are running the <emphasis role="bold">check</emphasis> command
+    for the first time, the tool will prompt the following message:</para>
+    
+    <programlisting>
+Missing database tables or tables are not updated:
+    dbversion
+Run 'pegasus-db-admin update &lt;path_to_database&gt;' to create/update your database.
+    </programlisting>
+    
+    <para>To update the database, run the following command:</para>
+    
+    <programlisting>
+$ pegasus-db-admin update
+Your database has been updated.
+Your database is compatible with Pegasus version: 4.5.0
+    </programlisting>
+                         
+    <para>Note that, if no URL is provided, the tool will create/use a SQLite 
+    database in the user's home directory: 
+    <emphasis>${HOME}/.pegasus/workflow.db</emphasis>.</para>
+      
+    <para>For complete description of pegasus-db-admin, see the <link
+    linkend="cli-pegasus-db-admin">man page</link>.</para>
+      
+  </section>
+
   <section id="migrating_from_3x">
     <title>Migrating From Pegasus 3.1 to Pegasus 4.X</title>
 
