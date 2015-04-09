@@ -1,4 +1,0 @@
-This is the original wfprof tool written for the workflow characterization
-paper. The ioprof tool uses strace, and the pprof tool uses ptrace. These 
-old versions are meant to remain as a reference when incorporating the 
-fuctionality into new and existing tools.
