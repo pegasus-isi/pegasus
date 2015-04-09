@@ -1508,12 +1508,21 @@ public class JDBCRC implements ReplicaCatalog
 
             //the header of the file
             StringBuffer header = new StringBuffer(64);
-            header.append("Pegasus Replica Catalog properties with " + ReplicaCatalog.c_prefix + " \n")
+            header.append("PEGASUS REPLICA CATALOG PROPERTIES \n")
                   .append("#ESCAPES IN VALUES ARE INTRODUCED");
 
+            //we first need to duplicate properties and replica catalog prefix back
+            //again
+            Properties duplicate = new Properties();
+            duplicate.setProperty( ReplicaCatalog.c_prefix, "JDBCRC" );
+            for(Enumeration e = props.propertyNames(); e.hasMoreElements(); ){
+                String key = (String) e.nextElement();
+                duplicate.put( ReplicaCatalog.c_prefix + "." + key, props.getProperty(key));
+            }
+            
             //create an output stream to this file and write out the properties
             OutputStream os = new FileOutputStream(f);
-            props.store( os, header.toString() );
+            duplicate.store( os, header.toString() );
             os.close();
         }
         catch( IOException ioe ){
