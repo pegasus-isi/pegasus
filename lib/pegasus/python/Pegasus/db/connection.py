@@ -261,9 +261,9 @@ def _get_master_uri(props=None):
             # touch the file
             open(filename, 'w').close()
             os.chmod(filename, 0600)
-        except:
+        except Exception, e:
             log.warning("unable to initialize MASTER db %s." % filename)
-            log.warning(traceback.format_exc())
+            log.exception(e)
             return None
     elif not os.access( filename, os.W_OK ):
         log.warning("No read access for file: %s" % filename)
