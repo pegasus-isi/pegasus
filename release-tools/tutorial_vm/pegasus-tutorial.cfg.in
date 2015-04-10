@@ -1,5 +1,5 @@
 text
-network --device eth0 --bootproto dhcp --onboot yes --ipv6 auto
+network --device=eth0 --bootproto=dhcp --onboot=on --ipv6=auto
 keyboard us
 lang en_US.UTF-8
 timezone --utc America/Los_Angeles
@@ -13,7 +13,7 @@ part / --fstype=ext4 --label=rootpart --grow --size=1
 #url --url=http://gaul.isi.edu/centos/6/os/x86_64/
 url --url=http://linux.mirrors.es.net/centos/6/os/x86_64/
 install
-auth  --useshadow  --enablemd5
+auth  --useshadow  --passalgo=sha512
 rootpw --plaintext pegasus
 firewall --enabled --port=22:tcp
 firstboot --disable
