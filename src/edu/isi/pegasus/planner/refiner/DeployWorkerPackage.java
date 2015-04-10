@@ -115,7 +115,7 @@ public class DeployWorkerPackage
      */
     private static final String mRegexExpression =
     //                                 "(pegasus-)(binary|worker)-([0-9]\\.[0-9]\\.[0-9][a-zA-Z]*)-x86.*";
-                                        "(pegasus-)(binary|worker)-([0-9]\\.[0-9]\\.[0-9][a-zA-Z]*)-(x86|x86_64|ia64|ppc).*";
+                                        "(pegasus-)(binary|worker)-([0-9]\\.[0-9]\\.[0-9][a-zA-Z0-9]*)-(x86|x86_64|ia64|ppc).*";
 
     /**
      * The path to be set for create dir jobs.
