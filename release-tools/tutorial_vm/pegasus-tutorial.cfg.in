@@ -1,24 +1,26 @@
 text
-network --device eth0 --bootproto dhcp --onboot yes --ipv6 auto
+network --device=eth0 --bootproto=dhcp --onboot=on --ipv6=auto
 keyboard us
 lang en_US.UTF-8
 timezone --utc America/Los_Angeles
 logging --level=info
 zerombr
-bootloader --location=mbr --driveorder=sda --append="rhgb quiet selinux=0 vga=792" --timeout=1
+bootloader --location=mbr --driveorder=sda --append="rhgb quiet selinux=0" --timeout=1
 clearpart --all --initlabel
 part / --fstype=ext4 --label=rootpart --grow --size=1
 #url --url=http://gaul.isi.edu/sl/6x/x86_64/os/
 #url --url=http://mirrors.usc.edu/pub/linux/distributions/centos/6/os/x86_64/
-url --url=http://gaul.isi.edu/centos/6/os/x86_64/
+#url --url=http://gaul.isi.edu/centos/6/os/x86_64/
+url --url=http://linux.mirrors.es.net/centos/6/os/x86_64/
 install
-auth  --useshadow  --enablemd5
+auth  --useshadow  --passalgo=sha512
 rootpw --plaintext pegasus
 firewall --enabled --port=22:tcp
 firstboot --disable
 selinux --disabled
 services --enabled=ntpd,ntpdate
-user --name=tutorial --password=pegasus --plaintext
+# This stopped working for some reason. We are no using useradd in post
+#user --name=tutorial --password=pegasus --plaintext
 xconfig --startxonboot
 poweroff
 
@@ -81,6 +83,10 @@ END
 # Install the Pegasus RPM
 yum install -y "@@RPMURL@@"
 
+# Create tutorial user
+SHA512PASS=$(python -c 'import crypt; print(crypt.crypt("pegasus", "$6$workflow"))')
+useradd -p $SHA512PASS tutorial
+
 # Add tutorial user to sudoers file
 echo 'tutorial	ALL=(ALL) 	ALL' >> /etc/sudoers
 
@@ -112,14 +118,11 @@ chown -R tutorial:tutorial /home/tutorial
 chmod 755 /home/tutorial/bin/* /home/tutorial/*.py /home/tutorial/*.sh
 
 # Install dashboard
+mkdir /root/.pegasus
 cat >> /etc/rc.local <<END
-# Start dashboard
-su tutorial -c pegasus-service-server >/var/log/pegasus-service.log 2>&1 &
+# Start pegasus service
+pegasus-service >/var/log/pegasus-service.log 2>&1 &
 END
-su tutorial -c "mkdir ~/.pegasus"
-su tutorial -c "sqlite3 ~/.pegasus/workflow.db 'SELECT 1'"
-su tutorial -c "pegasus-service-admin create"
-su tutorial -c "pegasus-service-admin useradd tutorial tutorial@localhost -p pegasus"
 
 ) 1>/root/post-install.log 2>&1
 %end
