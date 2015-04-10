@@ -10,7 +10,7 @@ pegasus-plan \
     --dir work \
     --sites Trestles \
     --output-site local \
-    --nocleanup \
+    --cleanup none \
     --dax workflow.dax \
     --submit
 
