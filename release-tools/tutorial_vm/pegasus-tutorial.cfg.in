@@ -118,6 +118,7 @@ chown -R tutorial:tutorial /home/tutorial
 chmod 755 /home/tutorial/bin/* /home/tutorial/*.py /home/tutorial/*.sh
 
 # Install dashboard
+mkdir /root/.pegasus
 cat >> /etc/rc.local <<END
 # Start pegasus service
 pegasus-service >/var/log/pegasus-service.log 2>&1 &
