@@ -5,7 +5,7 @@ lang en_US.UTF-8
 timezone --utc America/Los_Angeles
 logging --level=info
 zerombr
-bootloader --location=mbr --driveorder=sda --append="rhgb quiet selinux=0 vga=792" --timeout=1
+bootloader --location=mbr --driveorder=sda --append="rhgb quiet selinux=0" --timeout=1
 clearpart --all --initlabel
 part / --fstype=ext4 --label=rootpart --grow --size=1
 #url --url=http://gaul.isi.edu/sl/6x/x86_64/os/
