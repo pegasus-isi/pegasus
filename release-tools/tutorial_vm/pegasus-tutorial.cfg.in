@@ -19,7 +19,8 @@ firewall --enabled --port=22:tcp
 firstboot --disable
 selinux --disabled
 services --enabled=ntpd,ntpdate
-user --name=tutorial --password=pegasus --plaintext
+# This stopped working for some reason. We are no using useradd in post
+#user --name=tutorial --password=pegasus --plaintext
 xconfig --startxonboot
 poweroff
 
@@ -81,6 +82,10 @@ END
 
 # Install the Pegasus RPM
 yum install -y "@@RPMURL@@"
+
+# Create tutorial user
+SHA512PASS=$(python -c 'import crypt; print(crypt.crypt("pegasus", "$6$workflow"))')
+useradd -p $SHA512PASS tutorial
 
 # Add tutorial user to sudoers file
 echo 'tutorial	ALL=(ALL) 	ALL' >> /etc/sudoers
