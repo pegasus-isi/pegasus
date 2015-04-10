@@ -18,6 +18,6 @@ pegasus-plan \
     --output-site local \
     --dir work \
     --dax dax.xml \
-    --nocleanup \
+    --cleanup none \
     --submit
 
