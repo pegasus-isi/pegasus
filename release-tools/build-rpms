@@ -17,10 +17,9 @@ mkdir -p build/rpm/BUILD build/rpm/RPMS build/rpm/SOURCES build/rpm/SPECS build/
 cp dist/pegasus-source-$VERSION.tar.gz build/rpm/SOURCES/
 
 # special sauce for el7
-DIST=`rpmbuild --showrc | grep ": dist" | awk '{print $3;}'`
+DIST=`./release-tools/getosid | perl -pe 's/rhel/.el/'`
 if (rpmbuild --showrc | grep ": dist" | grep "el7") >/dev/null 2>&1; then
     perl -pi -e 's@BuildRequires:  ant, ant-nodeps, ant-apache-regexp, java7-devel, gcc, groff@BuildRequires:  ant, ant-apache-regexp, gcc@' pegasus.spec
-    DIST=".el7"
 fi
 
 cp pegasus.spec build/rpm/SPECS/

@@ -516,7 +516,7 @@
     </delete>
   </target>
   
-  <target name="dist-source" depends="clean">
+  <target name="dist-source">
     <exec executable="release-tools/create-source-tar" failonerror="true">
       <arg line="${pegasus.version}"/>
     </exec>
