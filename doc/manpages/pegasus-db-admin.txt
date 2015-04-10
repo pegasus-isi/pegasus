@@ -61,6 +61,25 @@ or '-s'.
 *--debug*::
 Enables debugging.
 
+Example
+-------
+
+----------------
+#
+# Updating the database schema by passing a database URL.
+$ pegasus-db-admin update sqlite:///${HOME}/.pegasus/workflow.db
+#
+# Updating the database schema from the properties file. Note that a database
+# type should be provided.
+$ pegasus-db-admin update -c pegasus.properties -t MASTER
+
+# Updating the database schema from the submit directory. Note that a database
+# type should be provided.
+$ pegasus-db-admin update -s /path/to/submitdir -t WORKFLOW
+
+----------------
+
+
 Authors
 -------
 Rafael Ferreira da Silva <rafsilva@isi.edu>
