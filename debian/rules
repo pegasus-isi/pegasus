@@ -33,7 +33,6 @@ install: build
 	mkdir -p debian/pegasus/usr
 	cp -a dist/pegasus/bin debian/pegasus/usr/
 	strip debian/pegasus/usr/bin/pegasus-cluster
-	strip debian/pegasus/usr/bin/pegasus-invoke
 	strip debian/pegasus/usr/bin/pegasus-keg
 	strip debian/pegasus/usr/bin/pegasus-kickstart
 	
