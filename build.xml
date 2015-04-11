@@ -165,25 +165,13 @@
     </javac>
   </target>
 
-  <target name="compile-examples" depends="setup" description="Compile examples">
-    <javac destdir="${build.src}" srcdir="src"
-           target="${build.target}" source="${build.source}"
-           encoding="UTF-8" debug="true"
-           includes="examples/**/*.java"
-           excludes="org/griphyn/**/*.java"
-           classpathref="build.classpath"
-           includeantruntime="false">
-      <compilerarg value="${compile.lint}"/>
-    </javac>
-  </target>
-
-  <target name="compile-java" depends="compile-vdl,compile-planner,compile-common,compile-examples,compile-junit" description="Copile all java code"/>
+  <target name="compile-java" depends="compile-vdl,compile-planner,compile-common,compile-junit" description="Copile all java code"/>
 
   <target name="compile" depends="compile-java,compile-ctools,compile-externals" description="Compile all code"/>
 
   <target name="jar" depends="jar-planner,jar-junit,jar-vdl" description="Generate all jar files"/>
 
-  <target name="jar-planner" depends="compile-common,compile-planner,compile-examples" description="Generate planner jar">
+  <target name="jar-planner" depends="compile-common,compile-planner" description="Generate planner jar">
     <mkdir dir="${dist.jars}"/>
     <jar destfile="${dist.jars}/pegasus.jar" basedir="${build.src}"
          includes="*.properties,edu/isi/pegasus/**/*.class,edu/isi/ikcap/**/*.class"
@@ -240,46 +228,10 @@
   </target>
 
   <target name="doc-python" depends="setup" description="Generate python documentation">
-    <!-- TODO Wouldn't it be better to put this in a script? -->
     <delete dir="${dist.doc}/html/python"/>
     <mkdir dir="${dist.doc}/html/python"/>
-    <exec executable="pydoc" dir="${basedir}/lib/pegasus/python/Pegasus" failonerror="true">
-      <arg line="-w"/>
-      <arg line="DAX3"/>
-      <env key="PYTHONDOCS" value="http://docs.python.org/library/"/>
-    </exec>
-    <!-- remove local file paths and make them links relative -->
-    <exec executable="perl" dir="${basedir}/lib/pegasus/python/Pegasus" failonerror="true">
-      <arg line="-p"/>
-      <arg line="-i"/>
-      <arg line="-e"/>
-      <arg line="'s:(file\:){0,1}[\w\.\-_/]+lib/pegasus/python/Pegasus/::g'"/>
-      <arg line="DAX3.html"/>
-    </exec>
-    <!-- change the file name from DAX3.html to index.html -->
-    <exec executable="perl" dir="${basedir}/lib/pegasus/python/Pegasus" failonerror="true">
-      <arg line="-p"/>
-      <arg line="-i"/>
-      <arg line="-e"/>
-      <arg line="'s/DAX3\.html/index.html/g'"/>
-      <arg line="DAX3.html"/>
-    </exec>
-    <!-- prepend core module links with http://docs.python.org/library/ -->
-    <exec executable="perl" dir="${basedir}/lib/pegasus/python/Pegasus" failonerror="true">
-      <arg line="-p"/>
-      <arg line="-i"/>
-      <arg line="-e"/>
-      <arg line="'s/&quot;(codecs|os|sys|shlex|datetime|exceptions)\.html/&quot;http:\/\/docs.python.org\/library\/\1.html/g'"/>
-      <arg line="DAX3.html"/>
-    </exec>
-    <exec executable="/bin/mv" dir="${basedir}/lib/pegasus/python/Pegasus" failonerror="true">
-      <arg line="DAX3.html"/>
-      <arg line="${dist.doc}/html/python/index.html"/>
-    </exec>
-    <!-- the documentation also links to the source module, so we need a copy -->
-    <exec executable="/bin/cp" dir="${basedir}/lib/pegasus/python/Pegasus" failonerror="true">
-      <arg line="DAX3.py"/>
-      <arg line="${dist.doc}/html/python/DAX3.py"/>
+    <exec executable="./doc/python-docs" dir="" failonerror="true">
+      <arg line="${basedir}/lib/pegasus/python/Pegasus ${dist.doc}/html/python"/>
     </exec>
   </target>
 
@@ -426,12 +378,6 @@
     </chmod>
     <chmod perm="0755" type="file">
       <fileset dir="${dist.share}/notification" includes="*"/>
-    </chmod>
-    <chmod perm="0755" type="file">
-      <fileset dir="${dist.share}/visualize">
-        <exclude name="README.md"/>
-        <exclude name="Common.pm"/>
-      </fileset>
     </chmod>
     <chmod perm="0755" type="file">
       <fileset dir="${dist.share}/examples" includes="**/submit"/>
