@@ -165,25 +165,13 @@
     </javac>
   </target>
 
-  <target name="compile-examples" depends="setup" description="Compile examples">
-    <javac destdir="${build.src}" srcdir="src"
-           target="${build.target}" source="${build.source}"
-           encoding="UTF-8" debug="true"
-           includes="examples/**/*.java"
-           excludes="org/griphyn/**/*.java"
-           classpathref="build.classpath"
-           includeantruntime="false">
-      <compilerarg value="${compile.lint}"/>
-    </javac>
-  </target>
-
-  <target name="compile-java" depends="compile-vdl,compile-planner,compile-common,compile-examples,compile-junit" description="Copile all java code"/>
+  <target name="compile-java" depends="compile-vdl,compile-planner,compile-common,compile-junit" description="Copile all java code"/>
 
   <target name="compile" depends="compile-java,compile-ctools,compile-externals" description="Compile all code"/>
 
   <target name="jar" depends="jar-planner,jar-junit,jar-vdl" description="Generate all jar files"/>
 
-  <target name="jar-planner" depends="compile-common,compile-planner,compile-examples" description="Generate planner jar">
+  <target name="jar-planner" depends="compile-common,compile-planner" description="Generate planner jar">
     <mkdir dir="${dist.jars}"/>
     <jar destfile="${dist.jars}/pegasus.jar" basedir="${build.src}"
          includes="*.properties,edu/isi/pegasus/**/*.class,edu/isi/ikcap/**/*.class"
