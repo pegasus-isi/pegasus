@@ -34,7 +34,6 @@ execute the steps in appropriate order.
 ant dist-release
 
 # strip executables
-strip dist/pegasus-%{version}/bin/pegasus-invoke
 strip dist/pegasus-%{version}/bin/pegasus-cluster
 strip dist/pegasus-%{version}/bin/pegasus-kickstart
 strip dist/pegasus-%{version}/bin/pegasus-keg
