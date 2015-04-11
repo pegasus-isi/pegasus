@@ -380,12 +380,6 @@
       <fileset dir="${dist.share}/notification" includes="*"/>
     </chmod>
     <chmod perm="0755" type="file">
-      <fileset dir="${dist.share}/visualize">
-        <exclude name="README.md"/>
-        <exclude name="Common.pm"/>
-      </fileset>
-    </chmod>
-    <chmod perm="0755" type="file">
       <fileset dir="${dist.share}/examples" includes="**/submit"/>
       <fileset dir="${dist.share}/examples" includes="**/*.sh"/>
       <fileset dir="${dist.share}/examples" includes="**/*.py"/>
