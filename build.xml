@@ -228,46 +228,10 @@
   </target>
 
   <target name="doc-python" depends="setup" description="Generate python documentation">
-    <!-- TODO Wouldn't it be better to put this in a script? -->
     <delete dir="${dist.doc}/html/python"/>
     <mkdir dir="${dist.doc}/html/python"/>
-    <exec executable="pydoc" dir="${basedir}/lib/pegasus/python/Pegasus" failonerror="true">
-      <arg line="-w"/>
-      <arg line="DAX3"/>
-      <env key="PYTHONDOCS" value="http://docs.python.org/library/"/>
-    </exec>
-    <!-- remove local file paths and make them links relative -->
-    <exec executable="perl" dir="${basedir}/lib/pegasus/python/Pegasus" failonerror="true">
-      <arg line="-p"/>
-      <arg line="-i"/>
-      <arg line="-e"/>
-      <arg line="'s:(file\:){0,1}[\w\.\-_/]+lib/pegasus/python/Pegasus/::g'"/>
-      <arg line="DAX3.html"/>
-    </exec>
-    <!-- change the file name from DAX3.html to index.html -->
-    <exec executable="perl" dir="${basedir}/lib/pegasus/python/Pegasus" failonerror="true">
-      <arg line="-p"/>
-      <arg line="-i"/>
-      <arg line="-e"/>
-      <arg line="'s/DAX3\.html/index.html/g'"/>
-      <arg line="DAX3.html"/>
-    </exec>
-    <!-- prepend core module links with http://docs.python.org/library/ -->
-    <exec executable="perl" dir="${basedir}/lib/pegasus/python/Pegasus" failonerror="true">
-      <arg line="-p"/>
-      <arg line="-i"/>
-      <arg line="-e"/>
-      <arg line="'s/&quot;(codecs|os|sys|shlex|datetime|exceptions)\.html/&quot;http:\/\/docs.python.org\/library\/\1.html/g'"/>
-      <arg line="DAX3.html"/>
-    </exec>
-    <exec executable="/bin/mv" dir="${basedir}/lib/pegasus/python/Pegasus" failonerror="true">
-      <arg line="DAX3.html"/>
-      <arg line="${dist.doc}/html/python/index.html"/>
-    </exec>
-    <!-- the documentation also links to the source module, so we need a copy -->
-    <exec executable="/bin/cp" dir="${basedir}/lib/pegasus/python/Pegasus" failonerror="true">
-      <arg line="DAX3.py"/>
-      <arg line="${dist.doc}/html/python/DAX3.py"/>
+    <exec executable="./doc/python-docs" dir="" failonerror="true">
+      <arg line="${basedir}/lib/pegasus/python/Pegasus ${dist.doc}/html/python"/>
     </exec>
   </target>
 
