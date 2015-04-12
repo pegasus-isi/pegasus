@@ -462,19 +462,19 @@
     </delete>
   </target>
   
-  <target name="dist-source">
+  <target name="dist-source" description="Build source tarball">
     <exec executable="release-tools/create-source-tar" failonerror="true">
       <arg line="${pegasus.version}"/>
     </exec>
   </target>
 
-  <target name="rpm-package" depends="dist-source,setup">
+  <target name="dist-rpm" depends="dist-source,setup" description="Build RPM package">
     <exec executable="release-tools/build-rpms" failonerror="true">
       <arg line="${pegasus.version}"/>
     </exec>
   </target>
 
-  <target name="debian-package" depends="setup">
+  <target name="dist-deb" depends="setup" description="Build Debian package">
     <exec executable="dpkg-buildpackage" failonerror="true">
       <arg line="-b -uc"/>
     </exec>
