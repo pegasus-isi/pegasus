@@ -761,7 +761,7 @@ preprocess       1      1          0       30.025  30.025  30.025   30.025
   <section>
     <title>Workflow Dashboard</title>
 
-    <para>The Pegasus Dashboard is a web interfaces for monitoring and
+    <para>The Pegasus Dashboard is a web interface for monitoring and
     debugging workflows.</para>
 
     <para><note>
@@ -769,9 +769,17 @@ preprocess       1      1          0       30.025  30.025  30.025   30.025
         been executed using Pegasus 4.2.0 and above.</para>
       </note></para>
 
+    <para>To start the Pegasus Dashboard execute the following command</para>
+
+    <para><programlisting>$ pegasus-service --host 127.0.0.1 --port 5000
+
+SSL is not configured: Using self-signed certificate
+2015-04-13 16:14:23,074:Pegasus.service.server:79: WARNING: SSL is not configured: Using self-signed certificate
+Service not running as root: Will not be able to switch users
+2015-04-13 16:14:23,074:Pegasus.service.server:86: WARNING: Service not running as root: Will not be able to switch users</programlisting></para>
+
     <para>By default, the dashboard server can only monitor workflows run by
-    the current user i.e. the user who is running the
-    pegasus-service.</para>
+    the current user i.e. the user who is running the pegasus-service.</para>
 
     <para>To access the workflow dashboard, in the VirtualBox VM you can
     launch Firefox by clicking the globe icon in the top menu of the desktop.
@@ -781,9 +789,9 @@ preprocess       1      1          0       30.025  30.025  30.025   30.025
 
     <para>The Dashboard's home page lists all workflows, which have been run
     by the current-user. The home page shows the status of each of the
-    workflow i.e. Running/Successful/Failed. The home page lists only the top
-    level workflows (Pegasus supports hierarchical workflows i.e. workflows
-    within a workflow). The rows in the table are color coded</para>
+    workflow i.e. Running/Successful/Failed/Failing. The home page lists only
+    the top level workflows (Pegasus supports hierarchical workflows i.e.
+    workflows within a workflow). The rows in the table are color coded</para>
 
     <itemizedlist>
       <listitem>
@@ -802,8 +810,8 @@ preprocess       1      1          0       30.025  30.025  30.025   30.025
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">Gray</emphasis>: indicates a workflow
-        that was archived.</para>
+        <para><emphasis role="bold">Gray</emphasis>: indicates a workflow that
+        was archived.</para>
       </listitem>
     </itemizedlist>
 
@@ -825,7 +833,7 @@ preprocess       1      1          0       30.025  30.025  30.025   30.025
 
     <para>In addition, the details page displays a tab listing all
     sub-workflows and their statuses. Additional tabs exist which list
-    information for all running, failed, and successful jobs.</para>
+    information for all running, failed, successful, and failing jobs.</para>
 
     <para>The information displayed for a job depends on it's status. For
     example, the failed jobs tab displays the job name, exit code, links to
@@ -846,6 +854,11 @@ preprocess       1      1          0       30.025  30.025  30.025   30.025
     corresponding job's job label. The job details page lists information
     relevant to a specific job. For example, the page lists information like
     job name, exit code, run time, etc.</para>
+
+    <para>The job instance section of the job details page lists all attempts
+    made to run the job i.e. if a job failed in its first attempt due to
+    transient errors, but ran successfully when retried, the job instance
+    section shows two entries; one for each attempt to run the job. </para>
 
     <para>The job details page also shows tab's for failed, and successful
     task invocations (Pegasus allows users to group multiple smaller task's
