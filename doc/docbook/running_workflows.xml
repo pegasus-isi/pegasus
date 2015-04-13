@@ -788,6 +788,21 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       </listitem>
     </orderedlist>
 
+    <para>You can specifiy the data configuration to use either in </para>
+
+    <orderedlist>
+      <listitem>
+        <para>properties - Specify the global property <link
+        linkend="data_conf_props">pegasus.data.configuration</link> .</para>
+      </listitem>
+
+      <listitem>
+        <para>site catalog - Starting 4.5.0 release, you can specify pegasus
+        profile key named data.configuration and associate that with your
+        compute sites in the site catalog.</para>
+      </listitem>
+    </orderedlist>
+
     <section>
       <title>Shared File System</title>
 
