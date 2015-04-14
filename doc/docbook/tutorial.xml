@@ -43,14 +43,14 @@ you get this</programlisting>
     <para>Easiest way to start the tutorial is to connect to a hosted service
     using SSH as shown below.</para>
 
+    <programlisting>$ <emphasis role="bold">ssh tutorial@pegasus-tutorial.isi.edu</emphasis>
+tutorial@pegasus-tutorial.isi.edu's password: <emphasis role="bold">pegasus123</emphasis></programlisting>
+
     <para><note>
         <para>The workflow dashboard is not run the hosted tutorial service.
         To try out the workflow dashboard use the virtual machines provided
         below.</para>
       </note></para>
-
-    <programlisting>$ <emphasis role="bold">ssh tutorial@pegasus-tutorial.isi.edu</emphasis>
-tutorial@pegasus-tutorial.isi.edu's password: <emphasis role="bold">pegasus123</emphasis></programlisting>
 
     <para><emphasis role="bold">OR</emphasis></para>
 
@@ -776,7 +776,7 @@ preprocess       1      1          0       30.025  30.025  30.025   30.025
 
     <para><note>
         <para>If you are running this tutorial through the hosted service then
-        skip this step. Tp try out the workflow dashboard use the virtual
+        skip this step. To try out the workflow dashboard use the virtual
         machines provided above.</para>
       </note></para>
 
