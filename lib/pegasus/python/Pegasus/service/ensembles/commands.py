@@ -76,6 +76,7 @@ class ServerCommand(LoggingCommand):
     def run(self):
         if self.options.debug:
             emapp.config.update(DEBUG=True)
+            logging.getLogger().setLevel(logging.DEBUG)
 
         # We only start the ensemble manager if we are not debugging
         # or if we are debugging and Werkzeug is restarting. This

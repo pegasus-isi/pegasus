@@ -56,6 +56,7 @@ class ServerCommand(LoggingCommand):
     def run(self):
         if self.options.debug:
             app.config.update(DEBUG=True)
+            logging.getLogger().setLevel(logging.DEBUG)
 
         pegasusdir = os.path.expanduser("~/.pegasus")
         if not os.path.isdir(pegasusdir):
