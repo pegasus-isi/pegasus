@@ -41,7 +41,6 @@ class ConsoleHandler(logging.StreamHandler):
 
 
 consoleHandler = ConsoleHandler()
-logging.getLogger().addHandler(consoleHandler)
 
 log = logging.getLogger(__name__)
 
@@ -298,4 +297,6 @@ class DBAdminCommand(CompoundCommand):
 
 def main():
     "The entry point for pegasus-db-admin"
+    logging.getLogger().addHandler(consoleHandler)
     DBAdminCommand().main()
+
