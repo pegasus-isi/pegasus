@@ -45,19 +45,23 @@ def index(username):
     try:
         dashboard = Dashboard(g.master_db_url)
         args = __get_datatables_args()
-        count, filtered, workflows, totals = dashboard.get_root_workflow_list(**args)
-        __update_label_link(workflows)
-        __update_timestamp(workflows)
+        if request.is_xhr:
+            count, filtered, workflows, totals = dashboard.get_root_workflow_list(**args)
+            __update_label_link(workflows)
+            __update_timestamp(workflows)
+        else:
+            totals = dashboard.get_root_workflow_list(counts_only=True, **args)
+
     except NoWorkflowsFoundError, e:
         if request.is_xhr:
             return render_template('workflow.xhr.json', count=e.count, filtered=e.filtered, workflows=[], table_args=args)
 
-        return render_template('workflow.html', workflows=[], counts=(0, 0, 0, 0))
+        return render_template('workflow.html', counts=(0, 0, 0, 0))
 
     if request.is_xhr:
         return render_template('workflow.xhr.json', count=count, filtered=filtered, workflows=workflows, table_args=args)
 
-    return render_template('workflow.html', workflows=workflows, counts=totals)
+    return render_template('workflow.html', counts=totals)
 
 
 @dashboard_routes.route('/u/<username>/r/<root_wf_id>/w')

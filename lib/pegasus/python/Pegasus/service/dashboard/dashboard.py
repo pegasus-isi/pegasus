@@ -65,7 +65,7 @@ class Dashboard(object):
 
         return self._wf_db_url
 
-    def get_root_workflow_list(self, **table_args):
+    def get_root_workflow_list(self, counts_only=False, **table_args):
         """
         Get basic information about all workflows running, on all databases. This is for the index page.
         Returns a list of workflows.
@@ -76,6 +76,11 @@ class Dashboard(object):
         try:
             all_workflows = None
             all_workflows = queries.MasterDatabase(self._master_db_url)
+            counts = all_workflows.get_workflow_counts()
+
+            if counts_only:
+                return counts
+
             count, filtered, workflows = all_workflows.get_all_workflows(**table_args)
 
             if workflows:
@@ -85,7 +90,6 @@ class Dashboard(object):
                 # Throw no workflows found error.
                 raise NoWorkflowsFoundError(count=count, filtered=filtered)
 
-            counts = all_workflows.get_workflow_counts()
             return(count, filtered, self._workflows, counts)
 
         finally:
