@@ -40,10 +40,23 @@ you get this</programlisting>
   <section>
     <title>Getting Started</title>
 
-    <para>In order to reduce the amount of work required to get started we
-    have provided several virtual machines that contain all of the software
-    required for this tutorial. Virtual machine images are provided for <link
-    linkend="vm_virtualbox">VirtualBox</link> and <link
+    <para>Easiest way to start the tutorial is to connect to a hosted service
+    using SSH as shown below.</para>
+
+    <para><note>
+        <para>The workflow dashboard is not run the hosted tutorial service.
+        To try out the workflow dashboard use the virtual machines provided
+        below.</para>
+      </note></para>
+
+    <programlisting>$ <emphasis role="bold">ssh tutorial@pegasus-tutorial.isi.edu</emphasis>
+tutorial@pegasus-tutorial.isi.edu's password: <emphasis role="bold">pegasus123</emphasis></programlisting>
+
+    <para><emphasis role="bold">OR</emphasis></para>
+
+    <para>We have provided several virtual machines that contain all of the
+    software required for this tutorial. Virtual machine images are provided
+    for <link linkend="vm_virtualbox">VirtualBox</link> and <link
     linkend="vm_amazon">Amazon EC2</link>. Information about deploying the
     tutorial VM on these platforms is in <link linkend="tutorial_vm">the
     appendix</link>. If you want to use the tutorial VM, please go to the
@@ -760,6 +773,12 @@ preprocess       1      1          0       30.025  30.025  30.025   30.025
 
   <section>
     <title>Workflow Dashboard</title>
+
+    <para><note>
+        <para>If you are running this tutorial through the hosted service then
+        skip this step. Tp try out the workflow dashboard use the virtual
+        machines provided above.</para>
+      </note></para>
 
     <para>The Pegasus Dashboard is a web interface for monitoring and
     debugging workflows.</para>
