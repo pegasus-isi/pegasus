@@ -16,12 +16,8 @@
     <section>
       <title>Resource Definition</title>
 
-      <para/>
-
       <section>
         <title id="resource-root-workflow">Root Workflow</title>
-
-        <para/>
 
         <programlisting>{
     "wf_id"             : &lt;int:wf_id&gt;,
@@ -43,8 +39,6 @@
 
       <section>
         <title id="resource-workflow">Workflow</title>
-
-        <para/>
 
         <programlisting>{
     "wf_id"             : &lt;int:wf_id&gt;,
@@ -75,8 +69,6 @@
       <section>
         <title id="resource-workflow-state">Workflow State</title>
 
-        <para/>
-
         <programlisting>{
     "state"         : &lt;string:state&gt;,
     "status"        : &lt;int:status&gt;,
@@ -87,8 +79,6 @@
 
       <section>
         <title id="resource-job">Job</title>
-
-        <para/>
 
         <programlisting>{
     "job_id"      : &lt;int: job_id&gt;,
@@ -111,8 +101,6 @@
       <section>
         <title id="resource-host">Host</title>
 
-        <para/>
-
         <programlisting>{
     "host_id"      : &lt;int:host_id&gt;,
     "site_name"    : &lt;string:site_name&gt;,
@@ -130,8 +118,6 @@
       <section>
         <title id="resource-job-state">Job State</title>
 
-        <para/>
-
         <programlisting>{
     "job_instance_id"     : &lt;int:job_instance_id&gt;,
     "state"               : &lt;string:state&gt;,
@@ -142,8 +128,6 @@
 
       <section>
         <title id="resource-task">Task</title>
-
-        <para/>
 
         <programlisting>{
     "task_id"        : &lt;int:task_id&gt;,
@@ -160,8 +144,6 @@
 
       <section>
         <title id="resource-job-instance">Job Instance</title>
-
-        <para/>
 
         <programlisting>{
     "job_instance_id"   : &lt;int:job_instance_id&gt;,
@@ -193,8 +175,6 @@
       <section>
         <title id="resource-invocation">Invocation</title>
 
-        <para/>
-
         <programlisting>{
     "invocation_id"   : &lt;int:invocation_id&gt;,
     "job_instance_id" : &lt;int:job_instance_id&gt;,
@@ -218,8 +198,6 @@
     <section>
       <title>Endpoints</title>
 
-      <para/>
-
       <para>All URIs are prefixed by<emphasis
       role="bold">/api/v1/user/&lt;string:user&gt;</emphasis>.</para>
 
@@ -237,15 +215,11 @@
       </emphasis> for<emphasis role="bold">Authorization
       failure</emphasis>.</para>
 
-      <para/>
-
       <section>
         <title>GET /root OR POST /root/query</title>
 
         <para>Returns a collection of the <link
         linkend="resource-root-workflow">Root Workflow</link> resource.</para>
-
-        <para/>
 
         <para><table frame="box" rules="all">
             <caption>Options</caption>
@@ -281,8 +255,6 @@
             </tbody>
           </table></para>
 
-        <para/>
-
         <para><table frame="box" rules="all">
             <caption>Returns</caption>
 
@@ -295,6 +267,12 @@
             </thead>
 
             <tbody>
+              <tr>
+                <td>200</td>
+
+                <td>OK</td>
+              </tr>
+
               <tr>
                 <td>204</td>
 
@@ -350,7 +328,7 @@
         <para>Returns a collection of the <link
         linkend="resource-workflow">Workflow</link> resource.</para>
 
-        <para/>
+
 
         <para><table frame="box" rules="all">
             <caption>Options</caption>
@@ -393,7 +371,7 @@
             </tbody>
           </table></para>
 
-        <para/>
+
 
         <para><table frame="box" rules="all">
             <caption>Returns</caption>
@@ -407,6 +385,12 @@
             </thead>
 
             <tbody>
+              <tr>
+                <td>200</td>
+
+                <td>OK</td>
+              </tr>
+
               <tr>
                 <td>204</td>
 
@@ -469,7 +453,7 @@
         linkend="resource-workflow-state">Workflow State</link>
         resource.</para>
 
-        <para/>
+
 
         <para><table frame="box" rules="all">
             <caption>Options</caption>
@@ -512,7 +496,7 @@
             </tbody>
           </table></para>
 
-        <para/>
+
 
         <para><table frame="box" rules="all">
             <caption>Returns</caption>
@@ -560,7 +544,7 @@
         <para>Returns a collection of the <link
         linkend="resource-host">Host</link> resource.</para>
 
-        <para/>
+
 
         <para><table frame="box" rules="all">
             <caption>Options</caption>
@@ -603,7 +587,7 @@
             </tbody>
           </table></para>
 
-        <para/>
+
 
         <para><table frame="box" rules="all">
             <caption>Returns</caption>
@@ -685,7 +669,7 @@
         <para>Returns a collection of the <link
         linkend="resource-task">Task</link> resource.</para>
 
-        <para/>
+
 
         <para><table frame="box" rules="all">
             <caption>Options</caption>
@@ -728,7 +712,7 @@
             </tbody>
           </table></para>
 
-        <para/>
+
 
         <para><table frame="box" rules="all">
             <caption>Returns</caption>
@@ -811,7 +795,7 @@
         <para>Returns a collection of the <link
         linkend="resource-invocation">Invocation</link> resource.</para>
 
-        <para/>
+
 
         <para><table frame="box" rules="all">
             <caption>Options</caption>
@@ -854,7 +838,7 @@
             </tbody>
           </table></para>
 
-        <para/>
+
 
         <para><table frame="box" rules="all">
             <caption>Returns</caption>
@@ -936,7 +920,7 @@
         <para>Returns a collection of the <link
         linkend="resource-job">Job</link> resource.</para>
 
-        <para/>
+
 
         <para><table frame="box" rules="all">
             <caption>Options</caption>
@@ -979,7 +963,7 @@
             </tbody>
           </table></para>
 
-        <para/>
+
 
         <para><table frame="box" rules="all">
             <caption>Returns</caption>
@@ -1063,7 +1047,7 @@
         <para>Returns a collection of the <link
         linkend="resource-job-instance">Job Instance</link> resource.</para>
 
-        <para/>
+
 
         <para><table frame="box" rules="all">
             <caption>Options</caption>
@@ -1106,7 +1090,7 @@
             </tbody>
           </table></para>
 
-        <para/>
+
 
         <para><table frame="box" rules="all">
             <caption>Returns</caption>
@@ -1191,7 +1175,7 @@
         <para>Returns a collection of the <link
         linkend="resource-job-state">Job State</link> resource.</para>
 
-        <para/>
+
 
         <para><table frame="box" rules="all">
             <caption>Options</caption>
@@ -1234,7 +1218,7 @@
             </tbody>
           </table></para>
 
-        <para/>
+
 
         <para><table frame="box" rules="all">
             <caption>Returns</caption>
@@ -1318,7 +1302,7 @@
         <para>Returns a collection of the <link
         linkend="resource-invocation">Invocation</link> resource.</para>
 
-        <para/>
+
 
         <para><table frame="box" rules="all">
             <caption>Options</caption>
@@ -1361,7 +1345,7 @@
             </tbody>
           </table></para>
 
-        <para/>
+
 
         <para><table frame="box" rules="all">
             <caption>Returns</caption>
@@ -1557,19 +1541,15 @@
       <section>
         <title>Advanced Queries</title>
 
-        <para/>
+
       </section>
     </section>
 
     <section>
       <title>Examples</title>
 
-      <para/>
-
       <section>
         <title>Resource - Single</title>
-
-        <para/>
 
         <programlisting><emphasis role="bold">$ curl --request GET \
        --user user-a:user-a-password \
@@ -1606,8 +1586,6 @@ HTTP/1.1 200 OK
 
       <section>
         <title>Resource - Collection</title>
-
-        <para/>
 
         <programlisting><emphasis role="bold">$ curl --request GET \
        --user user-a:user-a-password \
