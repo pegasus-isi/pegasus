@@ -73,3 +73,9 @@ if [ ! -z "$MYENV" ] ; then
     eval "NEWENV=$MYENV"
     echo "#PBS -v ${NEWENV}"
 fi
+
+# if a user passed any extra arguments set them in the end
+if [ ! -z $EXTRA_ARGUMENTS ]; then
+    echo "#PBS ${EXTRA_ARGUMENTS}"
+fi
+
