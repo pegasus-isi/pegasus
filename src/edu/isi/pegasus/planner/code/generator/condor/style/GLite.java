@@ -30,6 +30,7 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParserException;
 
 import java.util.Iterator;
 import edu.isi.pegasus.planner.classes.TransferJob;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 
 /**
  * This implementation enables a job to be submitted via gLite to a
@@ -299,6 +300,13 @@ public class GLite extends Abstract {
             value.append( " && " );
             addSubExpression( value, "PRIORITY" , Integer.parseInt( (String)job.condorVariables.get( "priority" ) ) );
         }
+        
+        /* the pegasus key glite.arguments is EXTRA_ARGUMENTS */
+        if( job.vdsNS.containsKey( Pegasus.GLITE_ARGUMENTS_KEY ) ){
+            value.append( " && " );
+            addSubExpression( value, "EXTRA_ARGUMENTS" , (String)job.condorVariables.get( Pegasus.GLITE_ARGUMENTS_KEY   ) );
+        }
+
 
         /* add the environment that is to be associated with the job */
         StringBuffer env = new StringBuffer();

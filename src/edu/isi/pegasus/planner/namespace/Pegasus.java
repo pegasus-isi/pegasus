@@ -417,6 +417,12 @@ public class Pegasus extends Namespace {
      */
     public static final String DATA_CONFIGURATION_KEY = "data.configuration";
     
+    /**
+     * Users specified arguments for the local LRMS that we pass through glite and
+     * add to the eventual qsub file.
+     */
+    public static final String GLITE_ARGUMENTS_KEY = "glite.arguments";
+    
     //credential related constant keys
     private static final String S3CFG_FILE_VARIABLE = S3CFG.S3CFG_FILE_VARIABLE.toLowerCase();
     private static final String SSH_PRIVATE_KEY_VARIABLE = Ssh.SSH_PRIVATE_KEY_VARIABLE.toLowerCase();
@@ -599,7 +605,8 @@ public class Pegasus extends Namespace {
                     key.compareTo( GRIDSTART_KEY ) == 0 ||
                     key.compareTo( GRIDSTART_PATH_KEY ) == 0 ||
                     key.compareTo( GRIDSTART_ARGUMENTS_KEY ) == 0 ||
-                    key.compareTo( GOOGLEP12 ) == 0) {
+                    key.compareTo( GOOGLEP12 ) == 0 ||
+                    key.compareTo( GLITE_ARGUMENTS_KEY ) == 0 ) {
                     res = VALID_KEY;
                 }
                 else {
