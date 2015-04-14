@@ -7,7 +7,7 @@ import logging
 import zipfile
 from optparse import OptionParser
 
-from Pegasus.command import Command, CompoundCommand
+from Pegasus.command import Command, CompoundCommand, LoggingCommand
 from Pegasus.service.ensembles import emapp, manager
 from Pegasus.db.modules.ensembles import EnsembleStates, EnsembleWorkflowStates
 
@@ -64,24 +64,19 @@ class EnsembleClientCommand(Command):
             self.parser.error("Invalid ENSEMBLE.WORKFLOW: %s" % ew)
         return r
 
-class ServerCommand(Command):
+class ServerCommand(LoggingCommand):
     description = "Start ensemble manager"
     usage = "%prog [options]"
 
     def __init__(self):
-        Command.__init__(self)
+        LoggingCommand.__init__(self)
         self.parser.add_option("-d", "--debug", action="store_true", dest="debug",
                                default=None, help="Enable debugging")
 
     def run(self):
         if self.options.debug:
             emapp.config.update(DEBUG=True)
-            log_level = logging.DEBUG
-        else:
-            log_level = logging.INFO
-
-        logging.basicConfig(level=log_level)
-        logging.getLogger().setLevel(log_level)
+            logging.getLogger().setLevel(logging.DEBUG)
 
         # We only start the ensemble manager if we are not debugging
         # or if we are debugging and Werkzeug is restarting. This

@@ -3,6 +3,8 @@ import sys
 import logging
 from optparse import OptionParser
 
+from Pegasus.tools import utils
+
 log = logging.getLogger(__name__)
 
 class Command(object):
@@ -40,8 +42,7 @@ class LoggingCommand(Command):
         elif verbosity >= 2:
             log_level = logging.DEBUG
 
-        logging.basicConfig(level=log_level)
-        logging.getLogger().setLevel(log_level)
+        utils.configureLogging(level=log_level)
 
         try:
             self.run()

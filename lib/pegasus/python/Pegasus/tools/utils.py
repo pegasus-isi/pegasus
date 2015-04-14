@@ -55,7 +55,7 @@ def configureLogging(level=logging.INFO):
     root = logging.getLogger()
     root.setLevel(level)
     cl = logging.StreamHandler()
-    formatter = logging.Formatter("%(asctime)s:%(name)s:%(lineno)d: %(levelname)s: %(message)s")
+    formatter = logging.Formatter("%(asctime)s:%(levelname)s:%(name)s(%(lineno)d): %(message)s")
     cl.setFormatter(formatter)
     root.addHandler(cl)
 
