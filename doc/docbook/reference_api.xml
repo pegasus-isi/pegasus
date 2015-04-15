@@ -1709,4 +1709,1680 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
     regards to the line number where the issue occurred. However, it will
     return with a non-zero exit code whenever errors were detected.</para>
   </section>
+
+  <section id="rest-api-monitoring">
+    <title>Monitoring</title>
+
+    <para>Monitoring REST API allows developers to query a Pegasus workflow's
+    STAMPEDE database.</para>
+
+    <section>
+      <title>Resource Definition</title>
+
+      <section>
+        <title id="resource-root-workflow">Root Workflow</title>
+
+        <programlisting>{
+    "wf_id"             : &lt;int:wf_id&gt;,
+    "wf_uuid"           : &lt;string:wf_uuid&gt;,
+    "submit_hostname"   : &lt;string:submit_hostname&gt;,
+    "submit_dir"        : &lt;string:submit_dir&gt;,
+    "planner_arguments" : &lt;string:planner_arguments&gt;,
+    "planner_version"   : &lt;string:planner_version&gt;,
+    "user"              : &lt;string:user&gt;,
+    "grid_dn"           : &lt;string:grid_dn&gt;,
+    "dax_label"         : &lt;string:dax_label&gt;,
+    "dax_version"       : &lt;string:dax_version&gt;,
+    "dax_file"          : &lt;string:dax_file&gt;,
+    "dag_file_name"     : &lt;string:dag_file_name&gt;,
+    "timestamp"         : &lt;int:timestamp&gt;,
+    "workflow_state"    : &lt;object:workflow_state&gt;
+}</programlisting>
+      </section>
+
+      <section>
+        <title id="resource-workflow">Workflow</title>
+
+        <programlisting>{
+    "wf_id"             : &lt;int:wf_id&gt;,
+    "root_wf_id"        : &lt;int:root_wf_id&gt;,
+    "parent_wf_id"      : &lt;int:parent_wf_id&gt;,
+    "wf_uuid"           : &lt;string:wf_uuid&gt;,
+    "submit_hostname"   : &lt;string:submit_hostname&gt;,
+    "submit_dir"        : &lt;string:submit_dir&gt;,
+    "planner_arguments" : &lt;string:planner_arguments&gt;,
+    "planner_version"   : &lt;string:planner_version&gt;,
+    "user"              : &lt;string:user&gt;,
+    "grid_dn"           : &lt;string:grid_dn&gt;,
+    "dax_label"         : &lt;string:dax_label&gt;,
+    "dax_version"       : &lt;string:dax_version&gt;,
+    "dax_file"          : &lt;string:dax_file&gt;,
+    "dag_file_name"     : &lt;string:dag_file_name&gt;,
+    "timestamp"         : &lt;int:timestamp&gt;,
+    "_links"            : {
+        "workflow_state" : &lt;href:workflow_state&gt;,
+        "job"            : &lt;href:job&gt;,
+        "task"           : &lt;href:task&gt;,
+        "host"           : &lt;href:host&gt;,
+        "invocation"     : &lt;href:invocation&gt;
+    }
+}</programlisting>
+      </section>
+
+      <section>
+        <title id="resource-workflow-state">Workflow State</title>
+
+        <programlisting>{
+    "state"         : &lt;string:state&gt;,
+    "status"        : &lt;int:status&gt;,
+    "restart_count" : &lt;int:restart_count&gt;,
+    "timestamp"     : &lt;datetime:timestamp&gt;
+}</programlisting>
+      </section>
+
+      <section>
+        <title id="resource-job">Job</title>
+
+        <programlisting>{
+    "job_id"      : &lt;int: job_id&gt;,
+    "exec_job_id" : &lt;string: exec_job_id&gt;,
+    "submit_file" : &lt;string: submit_file&gt;,
+    "type_desc"   : &lt;string: type_desc&gt;,
+    "max_retries" : &lt;int: max_retries&gt;,
+    "clustered"   : &lt;bool: clustered&gt;,
+    "task_count"  : &lt;int: task_count&gt;,
+    "executable"  : &lt;string: executable&gt;,
+    "argv"        : &lt;string: argv&gt;,
+    "_links"      : {
+        "workflow"     : &lt;href:workflow&gt;,
+        "task"         : &lt;href:task&gt;,
+        "job_instance" : &lt;href:job_instance&gt;
+    }
+}</programlisting>
+      </section>
+
+      <section>
+        <title id="resource-host">Host</title>
+
+        <programlisting>{
+    "host_id"      : &lt;int:host_id&gt;,
+    "site_name"    : &lt;string:site_name&gt;,
+    "hostname"     : &lt;string:hostname&gt;,
+    "ip"           : &lt;string:ip&gt;,
+    "uname"        : &lt;string:uname&gt;,
+    "total_memory" : &lt;string:total_memory&gt;,
+    "_links"       : {
+        "workflow"     : &lt;href:workflow&gt;,
+        "job_instance" : &lt;href:job_instance&gt;
+    }
+}</programlisting>
+      </section>
+
+      <section>
+        <title id="resource-job-state">Job State</title>
+
+        <programlisting>{
+    "job_instance_id"     : &lt;int:job_instance_id&gt;,
+    "state"               : &lt;string:state&gt;,
+    "jobstate_submit_seq" : &lt;int:jobstate_submit_seq&gt;,
+    "timestamp"           : &lt;int:timestamp&gt;
+}</programlisting>
+      </section>
+
+      <section>
+        <title id="resource-task">Task</title>
+
+        <programlisting>{
+    "task_id"        : &lt;int:task_id&gt;,
+    "abs_task_id"    : &lt;string:abs_task_id&gt;,
+    "type_desc"      : &lt;string: type_desc&gt;,
+    "transformation" : &lt;string:transformation&gt;,
+    "argv"           : &lt;string:argv&gt;,
+    "_links"         : {
+        "workflow" : &lt;href:workflow&gt;,
+        "job"      : &lt;href:job&gt;
+    }
+}</programlisting>
+      </section>
+
+      <section>
+        <title id="resource-job-instance">Job Instance</title>
+
+        <programlisting>{
+    "job_instance_id"   : &lt;int:job_instance_id&gt;,
+    "host_id"           : &lt;int:host_id&gt;,
+    "job_submit_seq"    : &lt;int:job_submit_seq&gt;,
+    "sched_id"          : &lt;string:sched_id&gt;,
+    "site_name"         : &lt;string:site_name&gt;,
+    "user"              : &lt;string:user&gt;,
+    "work_dir"          : &lt;string:work_dir&gt;,
+    "cluster_start"     : &lt;int:cluster_start&gt;,
+    "cluster_duration"  : &lt;int:cluster_duration&gt;,
+    "local_duration"    : &lt;int:local_duration&gt;,
+    "subwf_id"          : &lt;int:subwf_id&gt;,
+    "stdout_text"       : &lt;string:stdout_text&gt;,
+    "stderr_text"       : &lt;string:stderr_text&gt;,
+    "stdin_file"        : &lt;string:stdin_file&gt;,
+    "stdout_file"       : &lt;string:stdout_file&gt;,
+    "stderr_file"       : &lt;string:stderr_file&gt;,
+    "multiplier_factor" : &lt;int:multiplier_factor&gt;,
+    "_links"            : {
+        "job_state"  : &lt;href:job_state&gt;,
+        "host"       : &lt;href:host&gt;,
+        "invocation" : &lt;href:invocation&gt;,
+        "job"        : &lt;href:job&gt;
+    }
+}</programlisting>
+      </section>
+
+      <section>
+        <title id="resource-invocation">Invocation</title>
+
+        <programlisting>{
+    "invocation_id"   : &lt;int:invocation_id&gt;,
+    "job_instance_id" : &lt;int:job_instance_id&gt;,
+    "abs_task_id"     : &lt;string:abs_task_id&gt;,
+    "task_submit_seq" : &lt;int:task_submit_seq&gt;,
+    "start_time"      : &lt;int:start_time&gt;,
+    "remote_duration" : &lt;int:remote_duration&gt;,
+    "remote_cpu_time" : &lt;int:remote_cpu_time&gt;,
+    "exitcode"        : &lt;int:exitcode&gt;,
+    "transformation"  : &lt;string:transformation&gt;,
+    "executable"      : &lt;string:executable&gt;,
+    "argv"            : &lt;string:argv&gt;,
+    "_links"          : {
+        "workflow"     : &lt;href:workflow&gt;,
+        "job_instance" : &lt;href:job_instance&gt;
+    }
+}</programlisting>
+      </section>
+    </section>
+
+    <section>
+      <title>Endpoints</title>
+
+      <para>All URIs are prefixed by<emphasis
+      role="bold">/api/v1/user/&lt;string:user&gt;</emphasis>.</para>
+
+      <para>All endpoints return response with content-type as
+      application/json.</para>
+
+      <para>All endpoints support <emphasis role="bold">`pretty-print`
+      </emphasis> query argument, to return a formatted JSON response.</para>
+
+      <para>All endpoints return status code <emphasis role="bold">401
+      </emphasis> for<emphasis role="bold">Authentication
+      failure</emphasis>.</para>
+
+      <para>All endpoints return status code <emphasis role="bold">403
+      </emphasis> for<emphasis role="bold">Authorization
+      failure</emphasis>.</para>
+
+      <section>
+        <title>GET /root OR POST /root/query</title>
+
+        <para>Returns a collection of the <link
+        linkend="resource-root-workflow">Root Workflow</link> resource.</para>
+
+        <para><table frame="box" rules="all">
+            <caption>Options</caption>
+
+            <thead>
+              <tr align="center">
+                <th>Argument</th>
+
+                <th>Description</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>start-index</td>
+
+                <td>Return results starting from record &lt;start-index&gt; (0
+                indexed)</td>
+              </tr>
+
+              <tr>
+                <td>max-results</td>
+
+                <td>Return a maximum of &lt;max-results&gt; records</td>
+              </tr>
+
+              <tr>
+                <td>query</td>
+
+                <td>Search criteria. See<link
+                linkend="querying">Querying</link>.</td>
+              </tr>
+            </tbody>
+          </table></para>
+
+        <para><table frame="box" rules="all">
+            <caption>Returns</caption>
+
+            <thead>
+              <tr align="center">
+                <th>Status Code</th>
+
+                <th>Description</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>200</td>
+
+                <td>OK</td>
+              </tr>
+
+              <tr>
+                <td>204</td>
+
+                <td>No content; when no workflows found.</td>
+              </tr>
+
+              <tr>
+                <td>400</td>
+
+                <td>Bad request</td>
+              </tr>
+            </tbody>
+          </table></para>
+      </section>
+
+      <section>
+        <title>GET /root/&lt;m_wf_id&gt;</title>
+
+        <para>Returns a <link linkend="resource-root-workflow">Root
+        Workflow</link> resource identified by m_wf_id.</para>
+
+        <para><table frame="box" rules="all">
+            <caption>Returns</caption>
+
+            <thead>
+              <tr align="center">
+                <th>Status Code</th>
+
+                <th>Description</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>200</td>
+
+                <td>OK</td>
+              </tr>
+
+              <tr>
+                <td>404</td>
+
+                <td>Not found</td>
+              </tr>
+            </tbody>
+          </table></para>
+      </section>
+
+      <section>
+        <title>GET /root/&lt;m_wf_id&gt;/workflow OR POST
+        /root/&lt;m_wf_id&gt;/workflow/query</title>
+
+        <para>Returns a collection of the <link
+        linkend="resource-workflow">Workflow</link> resource.</para>
+
+        <para><table frame="box" rules="all">
+            <caption>Options</caption>
+
+            <thead>
+              <tr align="center">
+                <th>Argument</th>
+
+                <th>Description</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>start-index</td>
+
+                <td>Return results starting from record &lt;start-index&gt; (0
+                indexed)</td>
+              </tr>
+
+              <tr>
+                <td>max-results</td>
+
+                <td>Return a maximum of &lt;max-results&gt; records</td>
+              </tr>
+
+              <tr>
+                <td>query</td>
+
+                <td>Search criteria. See<link
+                linkend="querying">Querying</link>.</td>
+              </tr>
+
+              <tr>
+                <td>recent</td>
+
+                <td>Get most recent results. See<link
+                linkend="recent">Recent</link>.</td>
+              </tr>
+            </tbody>
+          </table></para>
+
+        <para><table frame="box" rules="all">
+            <caption>Returns</caption>
+
+            <thead>
+              <tr align="center">
+                <th>Status Code</th>
+
+                <th>Description</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>200</td>
+
+                <td>OK</td>
+              </tr>
+
+              <tr>
+                <td>204</td>
+
+                <td>No content; when no workflows found.</td>
+              </tr>
+
+              <tr>
+                <td>400</td>
+
+                <td>Bad request</td>
+              </tr>
+
+              <tr>
+                <td>404</td>
+
+                <td>Not found</td>
+              </tr>
+            </tbody>
+          </table></para>
+      </section>
+
+      <section>
+        <title>GET /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;</title>
+
+        <para>Returns a <link linkend="resource-workflow">Workflow</link>
+        resource identified by m_wf_id, wf_id.</para>
+
+        <para><table frame="box" rules="all">
+            <caption>Returns</caption>
+
+            <thead>
+              <tr align="center">
+                <th>Status Code</th>
+
+                <th>Description</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>200</td>
+
+                <td>OK</td>
+              </tr>
+
+              <tr>
+                <td>404</td>
+
+                <td>Not found</td>
+              </tr>
+            </tbody>
+          </table></para>
+      </section>
+
+      <section>
+        <title>GET /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/state OR
+        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/state/query</title>
+
+        <para>Returns a collection of the <link
+        linkend="resource-workflow-state">Workflow State</link>
+        resource.</para>
+
+        <para><table frame="box" rules="all">
+            <caption>Options</caption>
+
+            <thead>
+              <tr align="center">
+                <th>Argument</th>
+
+                <th>Description</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>start-index</td>
+
+                <td>Return results starting from record &lt;start-index&gt; (0
+                indexed)</td>
+              </tr>
+
+              <tr>
+                <td>max-results</td>
+
+                <td>Return a maximum of &lt;max-results&gt; records</td>
+              </tr>
+
+              <tr>
+                <td>query</td>
+
+                <td>Search criteria. See<link
+                linkend="querying">Querying</link>.</td>
+              </tr>
+
+              <tr>
+                <td>recent</td>
+
+                <td>Get most recent results. See<link
+                linkend="recent">Recent</link>.</td>
+              </tr>
+            </tbody>
+          </table></para>
+
+        <para><table frame="box" rules="all">
+            <caption>Returns</caption>
+
+            <thead>
+              <tr align="center">
+                <th>Status Code</th>
+
+                <th>Description</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>200</td>
+
+                <td>OK</td>
+              </tr>
+
+              <tr>
+                <td>204</td>
+
+                <td>No content; when no workflows found.</td>
+              </tr>
+
+              <tr>
+                <td>400</td>
+
+                <td>Bad request</td>
+              </tr>
+
+              <tr>
+                <td>404</td>
+
+                <td>Not found</td>
+              </tr>
+            </tbody>
+          </table></para>
+      </section>
+
+      <section>
+        <title>GET /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/host OR POST
+        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/host/query</title>
+
+        <para>Returns a collection of the <link
+        linkend="resource-host">Host</link> resource.</para>
+
+        <para><table frame="box" rules="all">
+            <caption>Options</caption>
+
+            <thead>
+              <tr align="center">
+                <th>Argument</th>
+
+                <th>Description</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>start-index</td>
+
+                <td>Return results starting from record &lt;start-index&gt; (0
+                indexed)</td>
+              </tr>
+
+              <tr>
+                <td>max-results</td>
+
+                <td>Return a maximum of &lt;max-results&gt; records</td>
+              </tr>
+
+              <tr>
+                <td>query</td>
+
+                <td>Search criteria. See<link
+                linkend="querying">Querying</link>.</td>
+              </tr>
+
+              <tr>
+                <td>recent</td>
+
+                <td>Get most recent results. See<link
+                linkend="recent">Recent</link>.</td>
+              </tr>
+            </tbody>
+          </table></para>
+
+        <para><table frame="box" rules="all">
+            <caption>Returns</caption>
+
+            <thead>
+              <tr align="center">
+                <th>Status Code</th>
+
+                <th>Description</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>200</td>
+
+                <td>OK</td>
+              </tr>
+
+              <tr>
+                <td>204</td>
+
+                <td>No content; when no workflows found.</td>
+              </tr>
+
+              <tr>
+                <td>400</td>
+
+                <td>Bad request</td>
+              </tr>
+
+              <tr>
+                <td>404</td>
+
+                <td>Not found</td>
+              </tr>
+            </tbody>
+          </table></para>
+      </section>
+
+      <section>
+        <title>GET
+        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/host/&lt;host_id&gt;</title>
+
+        <para>Returns a <link linkend="resource-host">Host</link> resource
+        identified by m_wf_id, wf_id, host_id.</para>
+
+        <para><table frame="box" rules="all">
+            <caption>Returns</caption>
+
+            <thead>
+              <tr align="center">
+                <th>Status Code</th>
+
+                <th>Description</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>200</td>
+
+                <td>OK</td>
+              </tr>
+
+              <tr>
+                <td>404</td>
+
+                <td>Not found</td>
+              </tr>
+            </tbody>
+          </table></para>
+      </section>
+
+      <section>
+        <title>GET /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/task OR POST
+        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/task/query</title>
+
+        <para>Returns a collection of the <link
+        linkend="resource-task">Task</link> resource.</para>
+
+        <para><table frame="box" rules="all">
+            <caption>Options</caption>
+
+            <thead>
+              <tr align="center">
+                <th>Argument</th>
+
+                <th>Description</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>start-index</td>
+
+                <td>Return results starting from record &lt;start-index&gt; (0
+                indexed)</td>
+              </tr>
+
+              <tr>
+                <td>max-results</td>
+
+                <td>Return a maximum of &lt;max-results&gt; records</td>
+              </tr>
+
+              <tr>
+                <td>query</td>
+
+                <td>Search criteria. See<link
+                linkend="querying">Querying</link>.</td>
+              </tr>
+
+              <tr>
+                <td>recent</td>
+
+                <td>Get most recent results. See<link
+                linkend="recent">Recent</link>.</td>
+              </tr>
+            </tbody>
+          </table></para>
+
+        <para><table frame="box" rules="all">
+            <caption>Returns</caption>
+
+            <thead>
+              <tr align="center">
+                <th>Status Code</th>
+
+                <th>Description</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>200</td>
+
+                <td>OK</td>
+              </tr>
+
+              <tr>
+                <td>204</td>
+
+                <td>No content; when no workflows found.</td>
+              </tr>
+
+              <tr>
+                <td>400</td>
+
+                <td>Bad request</td>
+              </tr>
+
+              <tr>
+                <td>404</td>
+
+                <td>Not found</td>
+              </tr>
+            </tbody>
+          </table></para>
+      </section>
+
+      <section>
+        <title>GET
+        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/task/&lt;task_id&gt;</title>
+
+        <para>Returns a <link linkend="resource-task">Task</link> resource
+        identified by m_wf_id, wf_id, task_id.</para>
+
+        <para><table frame="box" rules="all">
+            <caption>Returns</caption>
+
+            <thead>
+              <tr align="center">
+                <th>Status Code</th>
+
+                <th>Description</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>200</td>
+
+                <td>OK</td>
+              </tr>
+
+              <tr>
+                <td>404</td>
+
+                <td>Not found</td>
+              </tr>
+            </tbody>
+          </table></para>
+      </section>
+
+      <section>
+        <title>GET /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/invocation OR
+        POST
+        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/invocation/query</title>
+
+        <para>Returns a collection of the <link
+        linkend="resource-invocation">Invocation</link> resource.</para>
+
+        <para><table frame="box" rules="all">
+            <caption>Options</caption>
+
+            <thead>
+              <tr align="center">
+                <th>Argument</th>
+
+                <th>Description</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>start-index</td>
+
+                <td>Return results starting from record &lt;start-index&gt; (0
+                indexed)</td>
+              </tr>
+
+              <tr>
+                <td>max-results</td>
+
+                <td>Return a maximum of &lt;max-results&gt; records</td>
+              </tr>
+
+              <tr>
+                <td>query</td>
+
+                <td>Search criteria. See<link
+                linkend="querying">Querying</link>.</td>
+              </tr>
+
+              <tr>
+                <td>recent</td>
+
+                <td>Get most recent results. See<link
+                linkend="recent">Recent</link>.</td>
+              </tr>
+            </tbody>
+          </table></para>
+
+        <para><table frame="box" rules="all">
+            <caption>Returns</caption>
+
+            <thead>
+              <tr align="center">
+                <th>Status Code</th>
+
+                <th>Description</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>200</td>
+
+                <td>OK</td>
+              </tr>
+
+              <tr>
+                <td>204</td>
+
+                <td>No content; when no workflows found.</td>
+              </tr>
+
+              <tr>
+                <td>400</td>
+
+                <td>Bad request</td>
+              </tr>
+
+              <tr>
+                <td>404</td>
+
+                <td>Not found</td>
+              </tr>
+            </tbody>
+          </table></para>
+      </section>
+
+      <section>
+        <title>GET
+        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/invocation/&lt;invocation_id&gt;</title>
+
+        <para>Returns a <link linkend="resource-invocation">Invocation</link>
+        resource identified by m_wf_id, wf_id, invocation_id.</para>
+
+        <para><table frame="box" rules="all">
+            <caption>Returns</caption>
+
+            <thead>
+              <tr align="center">
+                <th>Status Code</th>
+
+                <th>Description</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>200</td>
+
+                <td>OK</td>
+              </tr>
+
+              <tr>
+                <td>404</td>
+
+                <td>Not found</td>
+              </tr>
+            </tbody>
+          </table></para>
+      </section>
+
+      <section>
+        <title>GET /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/job OR POST
+        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/job/query</title>
+
+        <para>Returns a collection of the <link
+        linkend="resource-job">Job</link> resource.</para>
+
+        <para><table frame="box" rules="all">
+            <caption>Options</caption>
+
+            <thead>
+              <tr align="center">
+                <th>Argument</th>
+
+                <th>Description</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>start-index</td>
+
+                <td>Return results starting from record &lt;start-index&gt; (0
+                indexed)</td>
+              </tr>
+
+              <tr>
+                <td>max-results</td>
+
+                <td>Return a maximum of &lt;max-results&gt; records</td>
+              </tr>
+
+              <tr>
+                <td>query</td>
+
+                <td>Search criteria. See<link
+                linkend="querying">Querying</link>.</td>
+              </tr>
+
+              <tr>
+                <td>recent</td>
+
+                <td>Get most recent results. See<link
+                linkend="recent">Recent</link>.</td>
+              </tr>
+            </tbody>
+          </table></para>
+
+        <para><table frame="box" rules="all">
+            <caption>Returns</caption>
+
+            <thead>
+              <tr align="center">
+                <th>Status Code</th>
+
+                <th>Description</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>200</td>
+
+                <td>OK</td>
+              </tr>
+
+              <tr>
+                <td>204</td>
+
+                <td>No content; when no workflows found.</td>
+              </tr>
+
+              <tr>
+                <td>400</td>
+
+                <td>Bad request</td>
+              </tr>
+
+              <tr>
+                <td>404</td>
+
+                <td>Not found</td>
+              </tr>
+            </tbody>
+          </table></para>
+      </section>
+
+      <section>
+        <title>GET
+        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/job/&lt;job_id&gt;</title>
+
+        <para>Returns a <link linkend="resource-job">Job</link> resource
+        identified by m_wf_id, wf_id, job_id.</para>
+
+        <para><table frame="box" rules="all">
+            <caption>Returns</caption>
+
+            <thead>
+              <tr align="center">
+                <th>Status Code</th>
+
+                <th>Description</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>200</td>
+
+                <td>OK</td>
+              </tr>
+
+              <tr>
+                <td>404</td>
+
+                <td>Not found</td>
+              </tr>
+            </tbody>
+          </table></para>
+      </section>
+
+      <section>
+        <title>GET
+        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/job/&lt;job_id&gt;/job-instance
+        OR POST
+        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/job/&lt;job_id&gt;/job-instance/query</title>
+
+        <para>Returns a collection of the <link
+        linkend="resource-job-instance">Job Instance</link> resource.</para>
+
+        <para><table frame="box" rules="all">
+            <caption>Options</caption>
+
+            <thead>
+              <tr align="center">
+                <th>Argument</th>
+
+                <th>Description</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>start-index</td>
+
+                <td>Return results starting from record &lt;start-index&gt; (0
+                indexed)</td>
+              </tr>
+
+              <tr>
+                <td>max-results</td>
+
+                <td>Return a maximum of &lt;max-results&gt; records</td>
+              </tr>
+
+              <tr>
+                <td>query</td>
+
+                <td>Search criteria. See<link
+                linkend="querying">Querying</link>.</td>
+              </tr>
+
+              <tr>
+                <td>recent</td>
+
+                <td>Get most recent results. See<link
+                linkend="recent">Recent</link>.</td>
+              </tr>
+            </tbody>
+          </table></para>
+
+        <para><table frame="box" rules="all">
+            <caption>Returns</caption>
+
+            <thead>
+              <tr align="center">
+                <th>Status Code</th>
+
+                <th>Description</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>200</td>
+
+                <td>OK</td>
+              </tr>
+
+              <tr>
+                <td>204</td>
+
+                <td>No content; when no workflows found.</td>
+              </tr>
+
+              <tr>
+                <td>400</td>
+
+                <td>Bad request</td>
+              </tr>
+
+              <tr>
+                <td>404</td>
+
+                <td>Not found</td>
+              </tr>
+            </tbody>
+          </table></para>
+      </section>
+
+      <section>
+        <title>GET
+        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/job/&lt;job_id&gt;/job-instance/&lt;job_instance_id&gt;</title>
+
+        <para>Returns a <link linkend="resource-job-instance">Job
+        Instance</link> resource identified by m_wf_id, wf_id, job_id,
+        job_instance_id.</para>
+
+        <para><table frame="box" rules="all">
+            <caption>Returns</caption>
+
+            <thead>
+              <tr align="center">
+                <th>Status Code</th>
+
+                <th>Description</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>200</td>
+
+                <td>OK</td>
+              </tr>
+
+              <tr>
+                <td>404</td>
+
+                <td>Not found</td>
+              </tr>
+            </tbody>
+          </table></para>
+      </section>
+
+      <section>
+        <title>GET
+        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/job/&lt;job_id&gt;/job-instance/&lt;job_instance_id&gt;/state
+        OR POST
+        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/job/&lt;job_id&gt;/job-instance/&lt;job_instance_id&gt;/state/query</title>
+
+        <para>Returns a collection of the <link
+        linkend="resource-job-state">Job State</link> resource.</para>
+
+        <para><table frame="box" rules="all">
+            <caption>Options</caption>
+
+            <thead>
+              <tr align="center">
+                <th>Argument</th>
+
+                <th>Description</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>start-index</td>
+
+                <td>Return results starting from record &lt;start-index&gt; (0
+                indexed)</td>
+              </tr>
+
+              <tr>
+                <td>max-results</td>
+
+                <td>Return a maximum of &lt;max-results&gt; records</td>
+              </tr>
+
+              <tr>
+                <td>query</td>
+
+                <td>Search criteria. See<link
+                linkend="querying">Querying</link>.</td>
+              </tr>
+
+              <tr>
+                <td>recent</td>
+
+                <td>Get most recent results. See<link
+                linkend="recent">Recent</link>.</td>
+              </tr>
+            </tbody>
+          </table></para>
+
+        <para><table frame="box" rules="all">
+            <caption>Returns</caption>
+
+            <thead>
+              <tr align="center">
+                <th>Status Code</th>
+
+                <th>Description</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>200</td>
+
+                <td>OK</td>
+              </tr>
+
+              <tr>
+                <td>204</td>
+
+                <td>No content; when no workflows found.</td>
+              </tr>
+
+              <tr>
+                <td>400</td>
+
+                <td>Bad request</td>
+              </tr>
+
+              <tr>
+                <td>404</td>
+
+                <td>Not found</td>
+              </tr>
+            </tbody>
+          </table></para>
+      </section>
+
+      <section>
+        <title>GET
+        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/job/&lt;job_id&gt;/job-instance/&lt;job_instance_id&gt;/host</title>
+
+        <para>Returns a <link linkend="resource-host">Host</link> resource
+        identified by m_wf_id, wf_id, job_id, job_instance_id, host_id.</para>
+
+        <para><table frame="box" rules="all">
+            <caption>Returns</caption>
+
+            <thead>
+              <tr align="center">
+                <th>Status Code</th>
+
+                <th>Description</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>200</td>
+
+                <td>OK</td>
+              </tr>
+
+              <tr>
+                <td>404</td>
+
+                <td>Not found</td>
+              </tr>
+            </tbody>
+          </table></para>
+      </section>
+
+      <section>
+        <title>GET
+        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/job/&lt;job_id&gt;/job-instance/&lt;job_instance_id&gt;/invocation
+        OR POST
+        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/job/&lt;job_id&gt;/job-instance/&lt;job_instance_id&gt;/invocation/query</title>
+
+        <para>Returns a collection of the <link
+        linkend="resource-invocation">Invocation</link> resource.</para>
+
+        <para><table frame="box" rules="all">
+            <caption>Options</caption>
+
+            <thead>
+              <tr align="center">
+                <th>Argument</th>
+
+                <th>Description</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>start-index</td>
+
+                <td>Return results starting from record &lt;start-index&gt; (0
+                indexed)</td>
+              </tr>
+
+              <tr>
+                <td>max-results</td>
+
+                <td>Return a maximum of &lt;max-results&gt; records</td>
+              </tr>
+
+              <tr>
+                <td>query</td>
+
+                <td>Search criteria. See<link
+                linkend="querying">Querying</link>.</td>
+              </tr>
+
+              <tr>
+                <td>recent</td>
+
+                <td>Get most recent results. See<link
+                linkend="recent">Recent</link>.</td>
+              </tr>
+            </tbody>
+          </table></para>
+
+        <para><table frame="box" rules="all">
+            <caption>Returns</caption>
+
+            <thead>
+              <tr align="center">
+                <th>Status Code</th>
+
+                <th>Description</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>200</td>
+
+                <td>OK</td>
+              </tr>
+
+              <tr>
+                <td>204</td>
+
+                <td>No content; when no workflows found.</td>
+              </tr>
+
+              <tr>
+                <td>400</td>
+
+                <td>Bad request</td>
+              </tr>
+
+              <tr>
+                <td>404</td>
+
+                <td>Not found</td>
+              </tr>
+            </tbody>
+          </table></para>
+      </section>
+
+      <section>
+        <title>GET
+        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/job/&lt;job_id&gt;/job-instance/&lt;job_instance_id&gt;/invocation/&lt;invocation_id&gt;</title>
+
+        <para>Returns a <link linkend="resource-invocation">Invocation</link>
+        resource identified by m_wf_id, wf_id, job_id, job_instance_id,
+        invocation_id.</para>
+
+        <para><table frame="box" rules="all">
+            <caption>Returns</caption>
+
+            <thead>
+              <tr align="center">
+                <th>Status Code</th>
+
+                <th>Description</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>200</td>
+
+                <td>OK</td>
+              </tr>
+
+              <tr>
+                <td>404</td>
+
+                <td>Not found</td>
+              </tr>
+            </tbody>
+          </table></para>
+      </section>
+    </section>
+
+    <section>
+      <title id="querying">Querying</title>
+
+      <para>Querying is supported through query string argument <emphasis
+      role="bold">`query` </emphasis> or endpoints ending with<emphasis
+      role="bold">/query</emphasis>.</para>
+
+      <para>Querying is supported only on endpoints returning
+      collections.</para>
+
+      <section>
+        <title>Resource - Query Prefix</title>
+
+        <para><table frame="box" rules="all">
+            <caption/>
+
+            <thead>
+              <tr align="center">
+                <th>Resource</th>
+
+                <th>Query Prefix</th>
+
+                <th>Example</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td><emphasis role="bold">Root Workflow</emphasis></td>
+
+                <td>r</td>
+
+                <td>r.wf_id</td>
+              </tr>
+
+              <tr>
+                <td><emphasis role="bold">Workflow</emphasis></td>
+
+                <td>w</td>
+
+                <td>w.wf_uuid</td>
+              </tr>
+
+              <tr>
+                <td><emphasis role="bold">Workflow State</emphasis></td>
+
+                <td>ws</td>
+
+                <td>ws.state</td>
+              </tr>
+
+              <tr>
+                <td><emphasis role="bold">Job</emphasis></td>
+
+                <td>j</td>
+
+                <td>j.type_desc</td>
+              </tr>
+
+              <tr>
+                <td><emphasis role="bold">Host</emphasis></td>
+
+                <td>h</td>
+
+                <td>h.site</td>
+              </tr>
+
+              <tr>
+                <td><emphasis role="bold">Job State</emphasis></td>
+
+                <td>js</td>
+
+                <td>js.state</td>
+              </tr>
+
+              <tr>
+                <td><emphasis role="bold">Task</emphasis></td>
+
+                <td>t</td>
+
+                <td>t.abs_task_id</td>
+              </tr>
+
+              <tr>
+                <td><emphasis role="bold">Job Instance</emphasis></td>
+
+                <td>ji</td>
+
+                <td>ji.exitcode</td>
+              </tr>
+
+              <tr>
+                <td><emphasis role="bold">job</emphasis></td>
+
+                <td>i</td>
+
+                <td>i.argv</td>
+              </tr>
+            </tbody>
+          </table></para>
+      </section>
+
+      <section>
+        <title id="recent">Recent</title>
+
+        <para>Workflow State, Job State, and Job Instance resources have
+        historical records.</para>
+
+        <para>For use cases where developers need to get the most recent
+        record, we set query argument <emphasis role="bold">`recent`
+        </emphasis> to true. Recent argument is always true when requesting
+        for root-workflow's resource.</para>
+
+        <para>For usage see Advanced Queries.</para>
+      </section>
+
+      <section>
+        <title>Advanced Queries</title>
+      </section>
+    </section>
+
+    <section>
+      <title>Examples</title>
+
+      <section>
+        <title>Resource - Single</title>
+
+        <programlisting><emphasis role="bold">$ curl --request GET \
+       --user user-a:user-a-password \
+       https://www.domain.com/api/1/u/user-a/root/1/workflow/1?pretty-print=true
+                    </emphasis>
+
+HTTP/1.1 200 OK
+
+{
+    "wf_id"             : 1,
+    "root_wf_id"        : 1,
+    "parent_wf_id"      : null,
+    "wf_uuid"           : "7193de8c-a28d-4eca-b576-1b1c3c4f668b",
+    "submit_hostname"   : "isis.isi.edu",
+    "submit_dir"        : "/home/tutorial/submit/",
+    "planner_arguments" : "--conf pegasusrc --sites condorpool --output-site local --dir dags --dax dax.xml --submit",
+    "planner_version"   : "4.5.0cvs",
+    "user"              : "user-a",
+    "grid_dn"           : null,
+    "dax_label"         : "hello_world",
+    "dax_version"       : "3.5",
+    "dax_file"          : "/home/tutorial/hello-world.xml",
+    "dag_file_name"     : "hello_world-0.dag",
+    "timestamp"         : 1421432530,
+    "_links"            : {
+        "workflow_state" : "/root/1/workflow/1/state",
+        "job"            : "/root/1/workflow/1/job",
+        "task"           : "/root/1/workflow/1/task",
+        "host"           : "/root/1/workflow/1/host",
+        "invocation"     : "/root/1/workflow/1/job"
+    }
+}</programlisting>
+      </section>
+
+      <section>
+        <title>Resource - Collection</title>
+
+        <programlisting><emphasis role="bold">$ curl --request GET \
+       --user user-a:user-a-password \
+       https://www.domain.com/api/1/u/user-a/root/1/workflow?pretty-print=true
+                    </emphasis>
+HTTP/1.1 200 OK
+
+{
+    "records" : [
+        {
+            "wf_id"             : 1,
+            "root_wf_id"        : 1,
+            "parent_wf_id"      : null,
+            "wf_uuid"           : "7193de8c-a28d-4eca-b576-1b1c3c4f668b",
+            "submit_hostname"   : "isis.isi.edu",
+            "submit_dir"        : "/home/tutorial/dags/20150116T102210-0800",
+            "planner_arguments" : "--conf pegasusrc --sites condorpool --output-site local --dir dags  --dax dax.xml --submit",
+            "planner_version"   : "4.5.0cvs",
+            "user"              : "user-a",
+            "grid_dn"           : null,
+            "dax_label"         : "hello_world",
+            "dax_version"       : "3.5",
+            "dax_file"          : "/home/tutorial/hello-world.xml",
+            "dag_file_name"     : "hello_world-0.dag",
+            "timestamp"         : 1421432530,
+            "_links"            : {
+                "workflow_state" : "/root/1/workflow/1/state",
+                "job"            : "/root/1/workflow/1/job",
+                "task"           : "/root/1/workflow/1/task",
+                "host"           : "/root/1/workflow/1/host",
+                "invocation"     : "/root/1/workflow/1/job"
+            }
+        },
+        {
+            "wf_id"             : 2,
+            "root_wf_id"        : 2,
+            "parent_wf_id"      : null,
+            "wf_uuid"           : "41920a57-7882-4990-854e-658b7a797745",
+            "submit_hostname"   : "isis.isi.edu",
+            "submit_dir"        : "/home/tutorial/dags/20150330T165231-0700",
+            "planner_arguments" : "--conf pegasusrc --sites condorpool --output-site local --dir dags --dax dax.xml --submit",
+            "planner_version"   : "4.5.0cvs",
+            "user"              : "user-a",
+            "grid_dn"           : null,
+            "dax_label"         : "hello_world",
+            "dax_version"       : "3.5",
+            "dax_file"          : "/home/tutorial/hello-world.xml",
+            "dag_file_name"     : "hello_world-0.dag",
+            "timestamp"         : 1427759551,
+            "_links"            : {
+                "workflow_state" : "/root/2/workflow/1/state",
+                "job"            : "/root/2/workflow/1/job",
+                "task"           : "/root/2/workflow/1/task",
+                "host"           : "/root/2/workflow/1/host",
+                "invocation"     : "/root/2/workflow/1/job"
+            }
+        },
+        {
+            "wf_id"             : 3,
+            "root_wf_id"        : 3,
+            "parent_wf_id"      : null,
+            "wf_uuid"           : "fce67b41-df67-4b3c-8fa4-d77e6e2b9769",
+            "submit_hostname"   : "isis.isi.edu",
+            "submit_dir"        : "/home/tutorial/dags/20150330T170228-0700",
+            "planner_arguments" : "--conf pegasusrc --sites condorpool --output-site local --dir dags --dax dax.xml --submit",
+            "planner_version"   : "4.5.0cvs",
+            "user"              : "user-a",
+            "grid_dn"           : null,
+            "dax_label"         : "hello_world",
+            "dax_version"       : "3.5",
+            "dax_file"          : "/home/tutorial/hello-world.xml",
+            "dag_file_name"     : "hello_world-0.dag",
+            "timestamp"         : 1427760148,
+            "_links"            : {
+                "workflow_state" : "/root/3/workflow/1/state",
+                "job"            : "/root/3/workflow/1/job",
+                "task"           : "/root/3/workflow/1/task",
+                "host"           : "/root/3/workflow/1/host",
+                "invocation"     : "/root/3/workflow/1/job"
+            }
+
+        }
+    ],
+    "_meta"   : {
+        "records_total"    : 3,
+        "records_filtered" : 3
+    }
+}</programlisting>
+      </section>
+
+      <section>
+        <title>Querying</title>
+
+        <programlisting><emphasis role="bold">$ curl --request GET \
+       --user user-a:user-a-password \
+       https://www.domain.com/api/1/u/user-a/root/1/workflow?pretty-print=true&amp;query=w.wf_uuid='41920a57-7882-4990-854e-658b7a797745'
+                    </emphasis>
+HTTP/1.1 200 OK
+
+{
+    "records" : [
+        {
+            "wf_id"             : 2,
+            "root_wf_id"        : 2,
+            "parent_wf_id"      : null,
+            "wf_uuid"           : "41920a57-7882-4990-854e-658b7a797745",
+            "submit_hostname"   : "isis.isi.edu",
+            "submit_dir"        : "/home/tutorial/dags/20150330T165231-0700",
+            "planner_arguments" : "--conf pegasusrc --sites condorpool --output-site local --dir dags --dax dax.xml --submit",
+            "planner_version"   : "4.5.0cvs",
+            "user"              : "user-a",
+            "grid_dn"           : null,
+            "dax_label"         : "hello_world",
+            "dax_version"       : "3.5",
+            "dax_file"          : "/home/tutorial/hello-world.xml",
+            "dag_file_name"     : "hello_world-0.dag",
+            "timestamp"         : 1427759551,
+            "_links"            : {
+                "workflow_state" : "/root/2/workflow/1/state",
+                "job"            : "/root/2/workflow/1/job",
+                "task"           : "/root/2/workflow/1/task",
+                "host"           : "/root/2/workflow/1/host",
+                "invocation"     : "/root/2/workflow/1/job"
+            }
+        }
+    ],
+    "_meta"   : {
+        "records_total"    : 3,
+        "records_filtered" : 1
+    }
+}</programlisting>
+      </section>
+    </section>
+  </section>
 </chapter>
