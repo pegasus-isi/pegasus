@@ -304,7 +304,7 @@ public class GLite extends Abstract {
         /* the pegasus key glite.arguments is EXTRA_ARGUMENTS */
         if( job.vdsNS.containsKey( Pegasus.GLITE_ARGUMENTS_KEY ) ){
             value.append( " && " );
-            addSubExpression( value, "EXTRA_ARGUMENTS" , (String)job.condorVariables.get( Pegasus.GLITE_ARGUMENTS_KEY   ) );
+            addSubExpression( value, "EXTRA_ARGUMENTS" , (String)job.vdsNS.get( Pegasus.GLITE_ARGUMENTS_KEY   ) );
         }
 
 
