@@ -459,8 +459,8 @@ else:
     event_dest = options.event_dest
 
 #hardcoded for the time being
-dashboard_event_dest = "sqlite:////tmp/workflow.db"
-# dashboard_event_dest = utils.get_path_dashboard_db( props );
+#dashboard_event_dest = "sqlite:////tmp/workflow.db"
+dashboard_event_dest = connection.url_by_properties(options.config_properties, connection.DBType.MASTER, rundir_properties=top_level_prop_file)
 
 if options.enc is not None:
     # Get encoding from command-line options
@@ -1254,7 +1254,7 @@ def online_monitoring_proc(wf_label, wf_uuid):
 
     return pika.BlockingConnection(parameters)
 
-  def prepare_channel(mq_conn, queue_name, wf_uuid):
+  def prepare_channel(mq_conn, queue_name):
     channel = mq_conn.channel()
 
     exchange_name = urlparse.urlparse(os.getenv("KICKSTART_MON_ENDPOINT_URL")).path.split("/")[4]
@@ -1270,7 +1270,7 @@ def online_monitoring_proc(wf_label, wf_uuid):
     channel.queue_bind(
         queue=queue_name,
         exchange=exchange_name,
-        routing_key=wf_uuid
+        routing_key=os.getenv("PEGASUS_WF_UUID")
     )
 
     return channel
@@ -1279,7 +1279,9 @@ def online_monitoring_proc(wf_label, wf_uuid):
 
   print "[online-monitord] This is an online monitoring process..."
   print "[online-monitord] PEGASUS_WF_UUID: %s" % wf_uuid
+  os.putenv("PEGASUS_WF_UUID", wf_uuid)
   print "[online-monitord] PEGASUS_WF_LABEL: %s" % wf_label
+  os.putenv("PEGASUS_WF_LABEL", wf_label)
   print "[online-monitord] INFLUXDB_URL: %s" % os.getenv("INFLUXDB_URL")
   print "[online-monitord] KICKSTART_MON_ENDPOINT_URL: %s" % os.getenv("KICKSTART_MON_ENDPOINT_URL")
   print "[online-monitord] KICKSTART_MON_ENDPOINT_CREDENTIALS: %s" % os.getenv("KICKSTART_MON_ENDPOINT_CREDENTIALS")
@@ -1312,7 +1314,7 @@ def online_monitoring_proc(wf_label, wf_uuid):
   client.switch_database(queue_name)
   client.switch_user(url.username, url.password)
 
-  channel = prepare_channel(mq_conn, queue_name, wf_uuid)
+  channel = prepare_channel(mq_conn, queue_name)
   channel.basic_consume(on_message, queue_name)
 
   try:
