@@ -16,6 +16,7 @@
 
 package edu.isi.pegasus.planner.catalog.replica;
 
+import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.classes.CatalogEntry;
 import java.util.*;
 
@@ -46,6 +47,7 @@ public class ReplicaCatalogEntry implements CatalogEntry, Cloneable
    * The (reserved) attribute name used for the resource handle.
    */
   public static final String DEPRECATED_RESOURCE_HANDLE = "pool";
+  public static final String SIZE_HANDLE = "size";
 
   /**
    * The physical filename.
@@ -92,7 +94,7 @@ public class ReplicaCatalogEntry implements CatalogEntry, Cloneable
   {
     m_pfn  = pfn;
     m_attributeMap = new TreeMap();
-    m_attributeMap.put( RESOURCE_HANDLE, handle );
+    m_attributeMap.put(RESOURCE_HANDLE, handle);
   }
 
   /**
@@ -119,7 +121,7 @@ public class ReplicaCatalogEntry implements CatalogEntry, Cloneable
    */
   public void addAttribute( String key, Object value )
   {
-    this.m_attributeMap.put( key, value );
+    this.m_attributeMap.put(key, value);
   }
 
   /**
@@ -277,7 +279,7 @@ public class ReplicaCatalogEntry implements CatalogEntry, Cloneable
    */
   public void setAttribute( String key, Object value )
   {
-    this.m_attributeMap.put( key, value );
+    this.m_attributeMap.put(key, value);
   }
 
   /**
@@ -312,6 +314,13 @@ public class ReplicaCatalogEntry implements CatalogEntry, Cloneable
                 site;
   }
 
+  public String getSizeHandle()
+  {
+    return (String) this.m_attributeMap.get( SIZE_HANDLE );
+  }
+
+
+
   /**
    * Sets a new resource handle to remember as PFN attribute. This is a
    * convenience method. Internally, the PFN attribute map is changed
@@ -323,6 +332,11 @@ public class ReplicaCatalogEntry implements CatalogEntry, Cloneable
   public void setResourceHandle( String handle )
   {
     this.m_attributeMap.put( RESOURCE_HANDLE, handle );
+  }
+
+  public void setSizeHandle( String handle )
+  {
+    this.m_attributeMap.put( SIZE_HANDLE, handle );
   }
 
   /**
@@ -424,8 +438,9 @@ public class ReplicaCatalogEntry implements CatalogEntry, Cloneable
   {
 	  ReplicaCatalogEntry r = new ReplicaCatalogEntry ();
 		
-	  r.setPFN (getPFN ());
+	  r.setPFN(getPFN());
 	  r.setResourceHandle (getResourceHandle ());
+      r.setSizeHandle( getSizeHandle() );
 	  r.addAttribute (this.m_attributeMap);
 
 	  return r;
@@ -444,6 +459,13 @@ public class ReplicaCatalogEntry implements CatalogEntry, Cloneable
                 throw new RuntimeException( "Both site and pool attribute specified for entry " + this );
             }
             m_attributeMap.put( ReplicaCatalogEntry.RESOURCE_HANDLE, pool );
+        }
+
+        if( m_attributeMap.containsKey(ReplicaCatalogEntry.SIZE_HANDLE) ) {
+          // size in MB
+          String size = (String) m_attributeMap.remove( ReplicaCatalogEntry.SIZE_HANDLE );
+
+          m_attributeMap.put( ReplicaCatalogEntry.SIZE_HANDLE, size );
         }
     }
 }

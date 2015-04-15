@@ -18,9 +18,8 @@
 package edu.isi.pegasus.planner.selector.site.heft;
 
 
-import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.Job;
-import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
+import edu.isi.pegasus.planner.classes.*;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
@@ -40,6 +39,7 @@ import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
+import edu.isi.pegasus.planner.transfer.mapper.impl.Replica;
 
 
 import java.util.List;
@@ -49,7 +49,6 @@ import java.util.LinkedList;
 import java.util.Iterator;
 import java.util.Comparator;
 import java.util.Collections;
-import edu.isi.pegasus.planner.classes.Profile;
 
 
 /**
@@ -181,6 +180,8 @@ public class Algorithm {
      */
     private TransformationCatalog mTCHandle;
 
+    private ReplicaStore replicaStore;
+
     /**
      * The default constructor.
      *
@@ -195,6 +196,8 @@ public class Algorithm {
 //        mSiteHandle = ( PoolInfoProvider )bag.get( PegasusBag.SITE_CATALOG );
         mSiteStore = bag.getHandleToSiteStore();
         mAverageCommunicationCost = (this.AVERAGE_BANDWIDTH / this.AVERAGE_DATA_SIZE_BETWEEN_JOBS);
+
+        replicaStore = (ReplicaStore) bag.get(PegasusBag.REPLICA_STORE);
 
     }
 
@@ -237,6 +240,26 @@ public class Algorithm {
         for( Iterator it = workflow.nodeIterator(); it.hasNext(); ){
             GraphNode node = ( GraphNode )it.next();
             Job job    = (Job)node.getContent();
+
+            mLogger.log(" === Input files for " + node.getID(), LogManager.DEBUG_MESSAGE_LEVEL);
+            for(Iterator<PegasusFile> fileIterator = job.inputFiles.iterator(); fileIterator.hasNext(); ) {
+                PegasusFile file = fileIterator.next();
+                mLogger.log(" === Input file LFN: " + file.getLFN(), LogManager.DEBUG_MESSAGE_LEVEL);
+
+                ReplicaLocation rl = replicaStore.getReplicaLocation(file.getLFN());
+
+                if( rl == null ) {
+                    mLogger.log( " === There is no replica location for : " + file.getLFN(), LogManager.DEBUG_MESSAGE_LEVEL );
+                }
+                else {
+                    ReplicaCatalogEntry rce = rl.getPFN(0);
+                    mLogger.log( " === Input file PFN: " + rce.getPFN(), LogManager.DEBUG_MESSAGE_LEVEL );
+                    mLogger.log( " === Input file size: " + rce.getSizeHandle(), LogManager.DEBUG_MESSAGE_LEVEL );
+                }
+            }
+
+
+
 
             //add the heft bag to a node
             Float averageComputeTime = new Float( calculateAverageComputeTime( job ) );

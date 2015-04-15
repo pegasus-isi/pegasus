@@ -54,6 +54,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.namespace.Dagman;
+import edu.isi.pegasus.planner.transfer.mapper.impl.Replica;
 
 /**
  * This coordinates the look up to the Replica Location Service, to determine
@@ -962,6 +963,10 @@ public class ReplicaCatalogBridge
         factory.initialize( mBag );
         CredentialHandler handler = factory.loadInstance(CredentialHandler.TYPE.x509);
         return handler.getPath( "local" );
+    }
+
+    public ReplicaStore getReplicaStore() {
+        return mReplicaStore;
     }
 
 

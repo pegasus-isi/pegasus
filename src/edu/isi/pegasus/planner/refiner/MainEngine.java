@@ -174,6 +174,8 @@ public class MainEngine
         String message = null;
         mRCBridge = new ReplicaCatalogBridge( mOriginalDag, mBag );
 
+        mBag.add(PegasusBag.REPLICA_STORE, mRCBridge.getReplicaStore());
+
         //lock down on the workflow task metrics
         //the refinement process will not update them
         mOriginalDag.getWorkflowMetrics().lockTaskMetrics( true );

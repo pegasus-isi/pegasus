@@ -31,6 +31,8 @@ import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
+import edu.isi.pegasus.planner.transfer.mapper.impl.Replica;
+
 import java.util.Map;
 
 /**
@@ -131,6 +133,8 @@ public class PegasusBag
      */
     public static final Integer PLANNER_METRICS = new Integer( 11  );
 
+    public static final Integer REPLICA_STORE = new Integer( 12  );
+
     /**
      * The handle to the <code>PegasusProperties</code>.
      */
@@ -193,7 +197,9 @@ public class PegasusBag
      * The planner metrics to use.
      */
     private PlannerMetrics mPMetrics;
-    
+
+    private ReplicaStore mReplicaStore;
+
     /**
      * The default constructor.
      */
@@ -299,6 +305,13 @@ public class PegasusBag
                     valid = false;
                 break;
 
+            case 12: //Planner metrics
+                if ( value != null && value instanceof ReplicaStore )
+                    mReplicaStore = (ReplicaStore) value;
+                else
+                    valid = false;
+                break;
+
             default:
                 throw new RuntimeException(
                       " Wrong Pegasus Bag key. Please use one of the predefined Integer key types");
@@ -381,7 +394,10 @@ public class PegasusBag
 
             case 11://PLANNER METRICS
                 return this.mPMetrics;
-                
+
+            case 12://PLANNER METRICS
+                return this.mReplicaStore;
+
             default:
                 throw new RuntimeException(
                     " Wrong Pegasus Bag key. Please use one of the predefined Integer key types");
