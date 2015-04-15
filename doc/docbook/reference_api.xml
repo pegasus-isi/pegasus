@@ -2214,7 +2214,7 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
               <tr>
                 <td>204</td>
 
-                <td>No content; when no workflows found.</td>
+                <td>No content; when no workflow-state found.</td>
               </tr>
 
               <tr>
@@ -2301,7 +2301,7 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
               <tr>
                 <td>204</td>
 
-                <td>No content; when no workflows found.</td>
+                <td>No content; when no hosts found.</td>
               </tr>
 
               <tr>
@@ -2422,7 +2422,7 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
               <tr>
                 <td>204</td>
 
-                <td>No content; when no workflows found.</td>
+                <td>No content; when no tasks found.</td>
               </tr>
 
               <tr>
@@ -2544,7 +2544,7 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
               <tr>
                 <td>204</td>
 
-                <td>No content; when no workflows found.</td>
+                <td>No content; when no invocations found.</td>
               </tr>
 
               <tr>
@@ -2665,7 +2665,7 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
               <tr>
                 <td>204</td>
 
-                <td>No content; when no workflows found.</td>
+                <td>No content; when no jobs found.</td>
               </tr>
 
               <tr>
@@ -2788,7 +2788,7 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
               <tr>
                 <td>204</td>
 
-                <td>No content; when no workflows found.</td>
+                <td>No content; when no job-instances found.</td>
               </tr>
 
               <tr>
@@ -2912,7 +2912,7 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
               <tr>
                 <td>204</td>
 
-                <td>No content; when no workflows found.</td>
+                <td>No content; when no job-state found.</td>
               </tr>
 
               <tr>
@@ -3035,7 +3035,7 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
               <tr>
                 <td>204</td>
 
-                <td>No content; when no workflows found.</td>
+                <td>No content; when no invocations found.</td>
               </tr>
 
               <tr>
