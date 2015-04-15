@@ -62,7 +62,6 @@ exec subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).commun
 os.sys.path.insert(0, pegasus_python_dir)
 os.sys.path.insert(0, pegasus_python_externals_dir)
 
-from Pegasus.db import connection
 from Pegasus.tools import utils
 from Pegasus.tools import properties
 from Pegasus.monitoring.workflow import Workflow, MONITORD_RECOVER_FILE
@@ -109,13 +108,13 @@ re_parse_condor_version = re.compile(r"\*\* \$CondorVersion: ((\d+\.\d+)\.\d+)")
 re_parse_condor_logfile = re.compile(r"Condor log will be written to ([^,]+)")
 re_parse_condor_logfile_insane = re.compile(r"\d{2}\s{3,}(\S+)")
 re_parse_multiline_files = re.compile(r"All DAG node user log files:")
-re_parse_dagman_aborted  = re.compile(r"Received SIGUSR1")
+re_parse_dagman_aborted  = re.compile(r"Aborting DAG...")
 
 # Constants
 logbase = "monitord.log"                  # Basename of daemon logfile
 speak = "PMD/1.0"                         # Protocol version for our socket command-line interface
 MONITORD_WF_RETRY_FILE = "monitord.subwf" # filename for writing persistent sub-workflow retry information
-MAX_SLEEP_TIME = 10     	          # in seconds
+MAX_SLEEP_TIME = 10                 # in seconds
 SLEEP_WAIT_NOTIFICATION = 5               # in seconds
 
 unsubmitted_events = {"UN_READY": 1,
@@ -135,7 +134,7 @@ db_stats = 'no'                 # collect and print database stats at the end of
 no_events = False               # Flag for disabling event output altogether
 event_dest = None               # URL containing the destination of the events
 dashboard_event_dest = None     # URL containing the destination of events for the dashboard
-encoding = None	                # Way to encode the data
+encoding = None                 # Way to encode the data
 monitord_exit_code = 0          # Exit code for pegasus-monitord
 socket_enabled = False          # Enable socket for real-time debugging
 start_server = False            # Keep track if socket server needs to be started
@@ -143,7 +142,7 @@ do_notifications = True         # Flag to enable notifications
 skip_pid_check = False          # Flag to skip checking if a previous monitord is still running using the pid file
 monitord_notifications = None   # Notifications' manager class
 max_parallel_notifications = 10 # Maximum number of notifications we can do in parallel
-notifications_timeout = 0	# Time to wait for notification scripts to finish (0 means wait forever)
+notifications_timeout = 0 # Time to wait for notification scripts to finish (0 means wait forever)
 store_stdout_stderr = True      # Flag for storing jobs' stdout and stderr in our output
 
 wf_event_sink = None            # Where wf events go
@@ -225,23 +224,23 @@ class WorkflowEntry:
     """
     Class used to store one workflow entry
     """
-    run_dir = None			# Run directory for the workflow
-    dagman_out = None			# Location of the dagman.out file
-    n_retries = 0			# Number of retries for looking for the dagman.out file
-    wf = None				# Pointer to the Workflow class for this Workflow
-    DMOF = None				# File pointer once we open the dagman.out file
-    ml_buffer = ''			# Buffer for reading the dagman.out file
-    ml_retries = 0			# Keep track of how many times we have looked for new content
-    ml_current = 0			# Keep track of where we are in the dagman.out file
-    delete_workflow = False		# Flag for dropping this workflow
-    sleep_time = None			# Time to sleep for this workflow
+    run_dir = None      # Run directory for the workflow
+    dagman_out = None     # Location of the dagman.out file
+    n_retries = 0     # Number of retries for looking for the dagman.out file
+    wf = None       # Pointer to the Workflow class for this Workflow
+    DMOF = None       # File pointer once we open the dagman.out file
+    ml_buffer = ''      # Buffer for reading the dagman.out file
+    ml_retries = 0      # Keep track of how many times we have looked for new content
+    ml_current = 0      # Keep track of where we are in the dagman.out file
+    delete_workflow = False   # Flag for dropping this workflow
+    sleep_time = None     # Time to sleep for this workflow
 
 output_dir = None                       # output_dir for all files written by monitord
-jsd = None				# location of jobstate.log file
-nodaemon = 0				# foreground mode
-logfile = None				# location of monitord.log file
-millisleep = None			# emulated run mode delay
-adjustment = 0				# time zone adjustment (@#~! Condor)
+jsd = None        # location of jobstate.log file
+nodaemon = 0        # foreground mode
+logfile = None        # location of monitord.log file
+millisleep = None     # emulated run mode delay
+adjustment = 0        # time zone adjustment (@#~! Condor)
 
 # Parse command line options
 prog_usage = "usage: %s [options] workflow.dag.dagman.out" % (prog_base)
@@ -250,25 +249,25 @@ prog_desc = """Mandatory arguments: outfile is the log file produced by Condor D
 parser = optparse.OptionParser(usage=prog_usage, description=prog_desc)
 
 parser.add_option("-a", "--adjust", action = "store", type = "int", dest = "adjustment",
-		  help = "adjust for time zone differences by i seconds, default 0")
+      help = "adjust for time zone differences by i seconds, default 0")
 parser.add_option("-N", "--foreground", action = "store_const", const = 2, dest = "nodaemon",
-		  help = "(Condor) don't daemonize %s; go through motions as if" % (prog_base))
+      help = "(Condor) don't daemonize %s; go through motions as if" % (prog_base))
 parser.add_option("-n", "--no-daemon", action = "store_const", const = 1, dest = "nodaemon",
-		  help = "(debug) don't daemonize %s; keep it in the foreground" % (prog_base))
+      help = "(debug) don't daemonize %s; keep it in the foreground" % (prog_base))
 parser.add_option("-j", "--job", action = "store", type = "string", dest = "jsd",
-		  help = "alternative job state file to write, default is %s in the workflow's directory"
-		  % (utils.jobbase))
+      help = "alternative job state file to write, default is %s in the workflow's directory"
+      % (utils.jobbase))
 parser.add_option("-l", "--log", action = "store", type = "string", dest = "logfile",
-		  help = "alternative %s log file, default is %s in the workflow's directory"
-		  % (prog_base, logbase))
+      help = "alternative %s log file, default is %s in the workflow's directory"
+      % (prog_base, logbase))
 parser.add_option("-o", "--output-dir", action = "store", type = "string", dest = "output_dir",
                   help = "provides an output directory for all monitord log files")
 parser.add_option("--conf", action = "store", type = "string", dest = "config_properties",
-		  help = "specifies the properties' file to use. This option overrides all other property files.")
+      help = "specifies the properties' file to use. This option overrides all other property files.")
 parser.add_option("--no-recursive", action = "store_const", const = 1, dest = "disable_subworkflows",
-		  help = "disables pegasus-monitord to automatic follow any sub-workflows that are found")
+      help = "disables pegasus-monitord to automatic follow any sub-workflows that are found")
 parser.add_option("--no-database", "--nodatabase", "--no-events", action = "store_const", const = 0, dest = "no_events",
-		  help = "turn off event generation completely, and overrides the URL in the -d option")
+      help = "turn off event generation completely, and overrides the URL in the -d option")
 parser.add_option("--no-notifications", "--no-notification", action = "store_const", const = 0, dest = "no_notify",
                   help = "turn off notifications completely")
 parser.add_option("--notifications-max", action = "store", type = "int", dest = "notifications_max",
@@ -276,9 +275,9 @@ parser.add_option("--notifications-max", action = "store", type = "int", dest = 
 parser.add_option("--notifications-timeout", action = "store", type = "int", dest = "notifications_timeout",
                   help = "time to wait for notification scripts to finish before terminating them, 0 allows scripts to run indefinitely")
 parser.add_option("-S", "--sim", action = "store", type = "int", dest = "millisleep",
-		  help = "Developer: simulate delays between reads by sleeping ms milliseconds")
+      help = "Developer: simulate delays between reads by sleeping ms milliseconds")
 parser.add_option("-r", "--replay", action = "store_const", const = 1, dest = "replay_mode",
-		  help = "disables checking for DAGMan's pid while running %s" % (prog_base))
+      help = "disables checking for DAGMan's pid while running %s" % (prog_base))
 parser.add_option("--db-stats", action = "store_const", const = "yes", dest = "db_stats",
                   help = "collect and print database stats at the end")
 parser.add_option("--keep-state", action = "store_const", const = 1, dest = "keep_state",
@@ -449,14 +448,19 @@ if options.event_dest is None:
             # Default is to generate events
             no_events = False
 
-    event_dest = connection.url_by_properties(options.config_properties, connection.DBType.WORKFLOW, run, rundir_properties=top_level_prop_file)
+    if props.property("pegasus.monitord.output") is None:
+        # No command-line or property specified, use default
+        event_dest = "sqlite:///" + out[:out.find(".dag.dagman.out")] + ".stampede.db"
+    else:
+        # Ok, get it from the properties file
+        event_dest = props.property("pegasus.monitord.output")
 else:
     # Use command-line option
     event_dest = options.event_dest
 
 #hardcoded for the time being
 #dashboard_event_dest = "sqlite:////tmp/workflow.db"
-dashboard_event_dest = connection.url_by_properties(options.config_properties, connection.DBType.MASTER, rundir_properties=top_level_prop_file)
+dashboard_event_dest = utils.get_path_dashboard_db( props );
 
 if options.enc is not None:
     # Get encoding from command-line options
@@ -542,7 +546,7 @@ def add(wf, jobid, event, sched_id=None, status=None):
 
     # A SUBMIT event brings sched id and job type information (it can also be
     # a new job for us when there is no PRE_SCRIPT)
-    if event == "SUBMIT" or event == "SUBMIT_FAILED":
+    if event == "SUBMIT":
         # Add job to our workflow (if not alredy there), will update sched_id in both cases
         my_job_submit_seq = wf.add_job(jobid, event, sched_id=sched_id)
 
@@ -1166,6 +1170,164 @@ if wf._monitord_exit_code == 0:
     # Also set the root workflow id
     root_wf_id = wf._wf_uuid
 
+print "Starting an online monitoring process..."
+
+from multiprocessing import Process
+import pika
+from influxdb.influxdb08 import InfluxDBClient
+import datetime
+import sys
+import urlparse
+import os
+import logging
+import ssl
+
+def online_monitoring_proc(wf_label, wf_uuid):
+
+  def parse_measurement(measurement_text):
+    if len(measurement_text.split(" ")) < 2:
+      # print "Could'nt consume the given measurement line"
+      return None
+
+    msg = dict(item.split("=") for item in measurement_text.split(" "))
+
+    if not all (k in msg for k in ("hostname", "executable", "kickstart_pid", "mpi_rank")): 
+      # print "We couldn't create trace_id"       
+      return None
+    else:
+      exec_id = msg["executable"] #.split("/")[-1]
+      # <dag_job_id>:<hostname>:<condor_jobid>:<mpi_rank>:<kickstart_pid>:<executable>
+      trace_id = "{0}:{1}:{2}:{3}:{4}:{5}".format(msg["dag_job_id"], msg["hostname"], 
+          msg["condor_job_id"], msg["mpi_rank"], msg["kickstart_pid"], exec_id)
+
+      columns = ["time", "utime", "stime", "iowait", "vmSize", "vmRSS", "threads", "read_bytes", "write_bytes", "syscr", "syscw"]
+      point = []
+
+      for column in columns:
+          if column == "time":
+              column = "ts"
+              point.append( int(msg[column]) )
+          else:
+              point.append( float(msg[column]) )
+
+      # print "", datetime.datetime.fromtimestamp( float(msg["ts"]) ).isoformat('T'), " --- ", msg["ts"]
+
+      json_body = [
+          {
+              "name": trace_id,
+              "columns": columns,
+              "points": [ point ]
+              # "timestamp": datetime.datetime.fromtimestamp( float(msg["ts"]) ).isoformat('T')
+          }
+      ]
+
+      return json_body  
+
+  def on_message(channel, method_frame, header_frame, body):
+    print method_frame.delivery_tag
+    print body
+    print
+
+    measurement = parse_measurement(body)
+
+    if measurement != None:
+      client.write_points(measurement)
+    
+    channel.basic_ack(delivery_tag=method_frame.delivery_tag)
+
+  def initialize_mq_connection():
+    rabbit_credentials = os.getenv("KICKSTART_MON_ENDPOINT_CREDENTIALS")
+    username, password = rabbit_credentials.split(":")
+
+    credentials = pika.PlainCredentials(username, password)
+
+    print "KICKSTART_MON_ENDPOINT_URL: ", os.getenv("KICKSTART_MON_ENDPOINT_URL")
+
+    rabbit_url = urlparse.urlparse(os.getenv("KICKSTART_MON_ENDPOINT_URL"))
+
+    parameters = pika.ConnectionParameters(host=rabbit_url.hostname, 
+        port=rabbit_url.port - 10000,
+        ssl=(rabbit_url.scheme == "https"),
+        ssl_options={ "cert_reqs": ssl.CERT_NONE },
+        virtual_host=rabbit_url.path.split("/")[3],
+        credentials=credentials)
+
+    return pika.BlockingConnection(parameters)
+
+  def prepare_channel(mq_conn, queue_name):
+    channel = mq_conn.channel()
+
+    exchange_name = urlparse.urlparse(os.getenv("KICKSTART_MON_ENDPOINT_URL")).path.split("/")[4]
+    # import pdb; pdb.set_trace()
+
+    # create a queue for the observer workflow uuid
+    channel.queue_declare(
+        queue=queue_name,
+        durable=True
+    )
+
+    # bind the queue to the monitoring exchange
+    channel.queue_bind(
+        queue=queue_name,
+        exchange=exchange_name,
+        routing_key=os.getenv("PEGASUS_WF_UUID")
+    )
+
+    return channel
+
+  logging.basicConfig()
+
+  print "[online-monitord] This is an online monitoring process..."
+  print "[online-monitord] PEGASUS_WF_UUID: %s" % wf_uuid
+  os.putenv("PEGASUS_WF_UUID", wf_uuid)
+  print "[online-monitord] PEGASUS_WF_LABEL: %s" % wf_label
+  os.putenv("PEGASUS_WF_LABEL", wf_label)
+  print "[online-monitord] INFLUXDB_URL: %s" % os.getenv("INFLUXDB_URL")
+  print "[online-monitord] KICKSTART_MON_ENDPOINT_URL: %s" % os.getenv("KICKSTART_MON_ENDPOINT_URL")
+  print "[online-monitord] KICKSTART_MON_ENDPOINT_CREDENTIALS: %s" % os.getenv("KICKSTART_MON_ENDPOINT_CREDENTIALS")
+
+  print "[online-monitord] and now I'm ending"
+
+  mq_conn = initialize_mq_connection()
+
+  queue_name = wf_label + ":" + wf_uuid
+
+  url = urlparse.urlparse(os.getenv("INFLUXDB_URL"))
+
+  client = InfluxDBClient(host=url.hostname, port=url.port, 
+      username=url.username, password=url.password, 
+      ssl=(url.scheme=="https")
+  )
+
+  print "Database list: ", client.get_list_database()
+  database_exists = False
+
+  for db_info in client.get_list_database():
+    print "Database name: ", db_info["name"]
+
+    if db_info["name"] == queue_name:
+      database_exists = True
+
+  if not database_exists:
+    client.create_database(queue_name)
+
+  client.switch_database(queue_name)
+  client.switch_user(url.username, url.password)
+
+  channel = prepare_channel(mq_conn, queue_name)
+  channel.basic_consume(on_message, queue_name)
+
+  try:
+      channel.start_consuming()
+  except KeyboardInterrupt:
+      channel.stop_consuming()
+
+  mq_conn.close()
+
+online_monitord = Process(target=online_monitoring_proc, args=(wf._dax_label, wf._wf_uuid))
+online_monitord.start()
+
+
 #
 # --- main loop begin --------------------------------------------------------------------
 #
@@ -1502,6 +1664,9 @@ while (len(wfs) > 0):
 #
 # --- main loop end -----------------------------------------------------------------------
 #
+
+if online_monitord.is_alive():
+  online_monitord.terminate()
 
 if socket_enabled and server is not None:
     # Finish trailing connection requests

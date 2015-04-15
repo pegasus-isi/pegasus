@@ -41,6 +41,7 @@
 /* truly shared globals */
 extern int make_application_executable;
 extern size_t data_section_size;
+extern char *programname;
 extern char** environ;
 
 /* module local globals */
@@ -221,6 +222,8 @@ static void helpMe(const AppInfo* run) {
 #endif
 #ifdef LINUX
             " -Z\tEnable library call interposition to get files and I/O\n"
+            " -m I\tEnable an online monitoring with a I-seconds interval between measurements.\n"
+            "     \tWorks only with the -Z option.\n"
 #endif
            );
 
@@ -314,13 +317,15 @@ static char* noquote(char* s) {
 int main(int argc, char* argv[]) {
     size_t cwd_size = getpagesize();
     int status, result = 0;
-    int i, j, keeploop;
+    int i, j, keeploop, rc;
     int createDir = 0;
     char* temp;
     char* end;
     char* workdir = NULL;
     mylist_t initial;
     mylist_t final;
+
+    programname = argv[0];
 
     /* premature init with defaults */
     if (mylist_init(&initial)) return 43;
@@ -466,6 +471,12 @@ int main(int argc, char* argv[]) {
                     return 127;
                 }
                 appinfo.wf_label = noquote(argv[i][2] ? &argv[i][2] : argv[++i]);
+                // exposing the label as an environment variable
+                rc = setenv("PEGASUS_WF_LABEL", appinfo.wf_label, 1);
+                if(rc) {
+                    fprintf(stderr, "ERROR: Could'nt set PEGASUS_WF_LABEL environment variable\n");
+                    return 127;
+                }
                 break;
             case 'n':
                 if (!argv[i][2] && argc <= i+1) {
@@ -614,6 +625,22 @@ int main(int argc, char* argv[]) {
                 break;
             case '-':
                 keeploop = 0;
+                break;
+            case 'm':
+                if (!argv[i][2] && argc <= i+1) {
+                    fprintf(stderr, "ERROR: -m argument missing\n");
+                    return 127;
+                }
+
+                rc = setenv("KICKSTART_MON_INTERVAL", 
+                    noquote(argv[i][2] ? &argv[i][2] : argv[++i]),
+                    1);
+
+                if(rc) {
+                    fprintf(stderr, "ERROR: Could'nt set KICKSTART_MON_INTERVAL environment variable\n");
+                    return 127;
+                }
+
                 break;
             default:
                 i -= 1;
@@ -771,4 +798,3 @@ REDIR:
 
     return result;
 }
-
