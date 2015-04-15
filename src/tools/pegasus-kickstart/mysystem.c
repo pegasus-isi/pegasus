@@ -32,15 +32,49 @@
 #include "procinfo.h"
 #include "error.h"
 
+
+/* The name of the program (argv[0]) set in pegasus-kickstart.c:main */
+char *programname;
+
+static pthread_t monitoring_thread;
+
+static int isRelativePath(char *path) {
+    // Absolute path
+    if (path[0] == '/') {
+        return 0;
+    }
+
+    // Relative to current directory
+    if (path[0] == '.') {
+        return 1;
+    }
+
+    // Relative to current directory
+    for (char *c = path; *c != '\0'; c++) {
+        if (*c == '/') {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
 /* Find the path to the interposition library */
 static int findInterposeLibrary(char *path, int pathsize) {
     char kickstart[BUFSIZ];
     char lib[BUFSIZ];
 
-    // Get the full path to the kickstart executable
-    int size = readlink("/proc/self/exe", kickstart, BUFSIZ);
-    if (size < 0) {
-        printerr("Unable to readlink /proc/self/exe");
+    // If the path is not relative, then look it up in the PATH
+    if (!isRelativePath(programname)) {
+        programname = findApp(programname);
+        if (programname == NULL) {
+            // Not found in PATH
+            return -1;
+        }
+    }
+
+    // Find the real path of kickstart
+    if (realpath(programname, kickstart) < 0) {
         return -1;
     }
 
@@ -82,13 +116,7 @@ static FileInfo *readTraceFileRecord(const char *buf, FileInfo *files) {
     size_t size = 0;
     size_t bread = 0;
     size_t bwrite = 0;
-    size_t nread = 0;
-    size_t nwrite = 0;
-    size_t bseek = 0;
-    size_t nseek = 0;
-
-    if (sscanf(buf, "file: '%[^']' %lu %lu %lu %lu %lu %lu %lu\n",
-               filename, &size, &bread, &bwrite, &nread, &nwrite, &bseek, &nseek) != 8) {
+    if (sscanf(buf, "file: '%[^']' %lu %lu %lu\n", filename, &size, &bread, &bwrite) != 4) {
         printerr("Invalid file record: %s", buf);
         return files;
     }
@@ -123,10 +151,6 @@ static FileInfo *readTraceFileRecord(const char *buf, FileInfo *files) {
         file->size = size;
         file->bread = bread;
         file->bwrite = bwrite;
-        file->nread = nread;
-        file->nwrite = nwrite;
-        file->bseek = bseek;
-        file->nseek = nseek;
 
         if (files == NULL) {
             /* List was empty */
@@ -140,10 +164,6 @@ static FileInfo *readTraceFileRecord(const char *buf, FileInfo *files) {
         file->size = file->size > size ? file->size : size; /* max */
         file->bread += bread;
         file->bwrite += bwrite;
-        file->nread += nread;
-        file->nwrite += nwrite;
-        file->bseek += bseek;
-        file->nseek += nseek;
     }
 
     return files;
@@ -154,9 +174,7 @@ static SockInfo *readTraceSocketRecord(const char *buf, SockInfo *sockets) {
     int port = 0;
     size_t brecv = 0;
     size_t bsend = 0;
-    size_t nrecv = 0;
-    size_t nsend = 0;
-    if (sscanf(buf, "socket: %s %d %lu %lu %lu %lu\n", address, &port, &brecv, &bsend, &nrecv, &nsend) != 6) {
+    if (sscanf(buf, "socket: %s %d %lu %lu\n", address, &port, &brecv, &bsend) != 4) {
         printerr("Invalid socket record: %s", buf);
         return sockets;
     }
@@ -191,8 +209,6 @@ static SockInfo *readTraceSocketRecord(const char *buf, SockInfo *sockets) {
         sock->port = port;
         sock->brecv = brecv;
         sock->bsend = bsend;
-        sock->nrecv = nrecv;
-        sock->nsend = nsend;
 
         if (sockets == NULL) {
             /* List was empty */
@@ -205,8 +221,6 @@ static SockInfo *readTraceSocketRecord(const char *buf, SockInfo *sockets) {
         /* Duplicate found, increment counters */
         sock->brecv += brecv;
         sock->bsend += bsend;
-        sock->nrecv += nrecv;
-        sock->nsend += nsend;
     }
 
     return sockets;
@@ -232,10 +246,8 @@ static ProcInfo *processTraceFile(const char *fullpath) {
     }
 
     /* Read data from the trace file */
-    int lines = 0;
     char line[BUFSIZ];
     while (fgets(line, BUFSIZ, trace) != NULL) {
-        lines++;
         if (startswith(line, "file:")) {
             proc->files = readTraceFileRecord(line, proc->files);
         } else if (startswith(line, "socket:")) {
@@ -294,12 +306,6 @@ static ProcInfo *processTraceFile(const char *fullpath) {
     /* Remove the file */
     unlink(fullpath);
 
-    /* Empty file? */
-    if (lines == 0) {
-        printerr("Empty trace file: %s\n", fullpath);
-        return NULL;
-    }
-
     return proc;
 }
 
@@ -340,10 +346,16 @@ static ProcInfo *processTraceFiles(const char *tempdir, const char *trace_file_p
 }
 
 /* Try to get a new environment for the child process that has the tracing vars */
-static char **tryGetNewEnvironment(char **envp, const char *tempdir, const char *trace_file_prefix) {
+static char **tryGetNewEnvironment(char **envp, const char *tempdir, const char *trace_file_prefix, 
+    const char* kickstart_status_path) {
     int vars;
 
-    /* If KICKSTART_PREFIX or LD_PRELOAD are already set then we can't trace */
+    /* If KICKSTART_PREFIX 
+     *      or LD_PRELOAD 
+     *      or KICKSTART_MON_FILE 
+     *      or KICKSTART_MON_PID 
+     * are already set then we can't trace 
+     */
     for (vars=0; envp[vars] != NULL; vars++) {
         if (startswith(envp[vars], "KICKSTART_PREFIX=")) {
             return envp;
@@ -351,6 +363,12 @@ static char **tryGetNewEnvironment(char **envp, const char *tempdir, const char 
         if (startswith(envp[vars], "LD_PRELOAD=")) {
             return envp;
         }
+        if (startswith(envp[vars], "KICKSTART_MON_FILE=")) {
+            return envp;
+        }
+        if (startswith(envp[vars], "KICKSTART_MON_PID=")) {
+            return envp;
+        }        
     }
 
     /* If the interpose library can't be found, then we can't trace */
@@ -369,6 +387,15 @@ static char **tryGetNewEnvironment(char **envp, const char *tempdir, const char 
     snprintf(kickstart_prefix, BUFSIZ, "KICKSTART_PREFIX=%s/%s",
              tempdir, trace_file_prefix);
 
+    /* Set KICKSTART_MON_FILE to be current_working_directory/kickstart_status_ */
+    char kickstart_status[BUFSIZ];
+    snprintf(kickstart_status, BUFSIZ, "KICKSTART_MON_FILE=%s", kickstart_status_path);
+
+    /* Set KICKSTART_MON_PID to be pid of the kickstart process */
+    char kickstart_pid[BUFSIZ];
+    snprintf(kickstart_pid, BUFSIZ, "KICKSTART_MON_PID=%d", getpid());
+
+
     /* Copy the environment variables to a new array */
     char **newenvp = (char **)malloc(sizeof(char **)*(vars+3));
     if (newenvp == NULL) {
@@ -380,11 +407,31 @@ static char **tryGetNewEnvironment(char **envp, const char *tempdir, const char 
     }
 
     /* Set the new variables */
-    newenvp[vars] = ld_preload;
+    newenvp[vars]   = ld_preload;
     newenvp[vars+1] = kickstart_prefix;
-    newenvp[vars+2] = NULL;
+    newenvp[vars+2] = kickstart_status;
+    newenvp[vars+3] = kickstart_pid;
+    newenvp[vars+4] = NULL;
 
     return newenvp;
+}
+
+int kickstart_status_path(char* buf, size_t buf_size) {
+    char cwd[BUFSIZ];
+    if( getcwd(cwd, BUFSIZ) == NULL) {
+        printerr("ERROR: couldn't get current working directory: %s\n", strerror(errno));
+        return 1;
+    }
+
+    char hostname[BUFSIZ];
+    if( gethostname(hostname, BUFSIZ) ) {
+        printerr("ERROR: couldn't get hostname: %s\n", strerror(errno));
+        return 1;
+    }
+
+    snprintf(buf, buf_size, "%s/kickstart_status_%d_%s.log", cwd, getpid(), hostname);
+
+    return 0;    
 }
 
 int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
@@ -441,6 +488,20 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
         tempdir = "/tmp";
     }
 
+//  DK: monitoring thread init
+    char kickstart_status[BUFSIZ];
+    if( kickstart_status_path(kickstart_status, BUFSIZ) ) {
+        printerr("ERROR: couldn't create kickstart status filepath\n");
+    }
+    else {
+        printerr("KICKSTART_MON_FILE: %s\n", kickstart_status);
+    }
+
+    int rc = start_status_thread(&monitoring_thread, kickstart_status);
+    if (rc) {
+        printerr("ERROR: when starting a monitoring thread: is %s\n", strerror(errno));
+    }
+
     /* start wall-clock */
     now(&(jobinfo->start));
 
@@ -454,7 +515,7 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
         // If we are using library tracing, try to set the necessary
         // environment variables
         if (appinfo->enableLibTrace) {
-            envp = tryGetNewEnvironment(envp, tempdir, trace_file_prefix);
+            envp = tryGetNewEnvironment(envp, tempdir, trace_file_prefix, kickstart_status);
         }
 
         /* connect jobs stdio */
@@ -490,7 +551,7 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
         if (kill(jobinfo->child, 0) == 0) {
             printerr("ERROR: job %d is still running!\n", jobinfo->child);
             if (!errno) errno = EINPROGRESS;
-        }
+        }        
 
         /* Child is no longer running */
         appinfo->currentChild = 0;
@@ -514,4 +575,3 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
     /* finalize */
     return jobinfo->status;
 }
-
