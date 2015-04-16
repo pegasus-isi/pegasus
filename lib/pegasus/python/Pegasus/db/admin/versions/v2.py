@@ -99,21 +99,24 @@ class Version(BaseVersion):
                 self.db.execute("DROP TABLE master_workflow")
                
         try:
-            self.db.execute("ALTER TABLE workflow RENAME TO master_workflow")
-        except (OperationalError, ProgrammingError):
-            pass
-        except Exception, e:
-            self.db.rollback()
-            raise DBAdminError(e)
-        
-        try:
             self.db.execute("ALTER TABLE workflowstate RENAME TO master_workflowstate")
+            self.db.execute("DROP INDEX UNIQUE_WORKFLOWSTATE")
         except (OperationalError, ProgrammingError):
             pass
         except Exception, e:
             self.db.rollback()
             raise DBAdminError(e)
-                    
+
+        try:
+            self.db.execute("ALTER TABLE workflow RENAME TO master_workflow")
+            self.db.execute("DROP INDEX wf_id_KEY")
+            self.db.execute("DROP INDEX wf_uuid_UNIQUE")
+        except (OperationalError, ProgrammingError):
+            pass
+        except Exception, e:
+            self.db.rollback()
+            raise DBAdminError(e)
+
         self.db.commit()           
 
         
