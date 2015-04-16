@@ -79,7 +79,7 @@ class WorkflowQueries(SQLAlchemyInit):
 
 
 class MasterWorkflowQueries(WorkflowQueries):
-    def get_root_workflows(self, start_index=None, max_results=None, query=None, use_cache=True):
+    def get_root_workflows(self, start_index=None, max_results=None, query=None, order=None, use_cache=True):
         """
         Returns a collection of the Root Workflow objects.
 

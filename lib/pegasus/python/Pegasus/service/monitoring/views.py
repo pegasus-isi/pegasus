@@ -19,6 +19,16 @@ from flask import g, request
 from Pegasus.service.monitoring import monitoring_routes
 
 
+@monitoring_routes.before_request
+def get_query_args():
+    g.query_args = {}
+    query_args = ['start-index', 'max-results', 'query', 'order', 'recent']
+
+    for arg in query_args:
+        if arg in request.args:
+            g.query_args[arg] = request.args.get(arg)
+
+
 """
 Root Workflow
 
@@ -44,16 +54,6 @@ Root Workflow
 """
 
 
-@monitoring_routes.before_request
-def get_query_args():
-    g.query_args = {}
-    query_args = ['start-index', 'max-results', 'query', 'recent']
-
-    for arg in query_args:
-        if arg in request.args:
-            g.query_args[arg] = request.args.get(arg)
-
-
 @monitoring_routes.route('/user/<string:username>/root')
 @monitoring_routes.route('/user/<string:username>/root/query', methods=['POST'])
 def get_root_workflows(username):
@@ -63,6 +63,7 @@ def get_root_workflows(username):
     :query int start-index: Return results starting from record <start-index> (0 indexed)
     :query int max-results: Return a maximum of <max-results> records
     :query string query: Search criteria
+    :query string order: Sorting criteria
     :query boolean pretty-print: Return formatted JSON response.
 
     :statuscode 200: OK
