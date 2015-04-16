@@ -36,7 +36,7 @@ if [ "X${NODES}" != "X" ]; then
     pbs_nodes="#PBS -l nodes=${NODES}"
 fi
 
-if [ "X${$PROCS}" != "X" ]; then
+if [ "X${PROCS}" != "X" ]; then
     pbs_nodes="${pbs_nodes}:ppn=${PROCS}"
 fi
 
