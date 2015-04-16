@@ -42,13 +42,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.transfer.mapper.impl.Replica;
 
 
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Iterator;
-import java.util.Comparator;
-import java.util.Collections;
+import java.util.*;
 
 
 /**
@@ -241,26 +235,6 @@ public class Algorithm {
             GraphNode node = ( GraphNode )it.next();
             Job job    = (Job)node.getContent();
 
-            mLogger.log(" === Input files for " + node.getID(), LogManager.DEBUG_MESSAGE_LEVEL);
-            for(Iterator<PegasusFile> fileIterator = job.inputFiles.iterator(); fileIterator.hasNext(); ) {
-                PegasusFile file = fileIterator.next();
-                mLogger.log(" === Input file LFN: " + file.getLFN(), LogManager.DEBUG_MESSAGE_LEVEL);
-
-                ReplicaLocation rl = replicaStore.getReplicaLocation(file.getLFN());
-
-                if( rl == null ) {
-                    mLogger.log( " === There is no replica location for : " + file.getLFN(), LogManager.DEBUG_MESSAGE_LEVEL );
-                }
-                else {
-                    ReplicaCatalogEntry rce = rl.getPFN(0);
-                    mLogger.log( " === Input file PFN: " + rce.getPFN(), LogManager.DEBUG_MESSAGE_LEVEL );
-                    mLogger.log( " === Input file size: " + rce.getSizeHandle(), LogManager.DEBUG_MESSAGE_LEVEL );
-                }
-            }
-
-
-
-
             //add the heft bag to a node
             Float averageComputeTime = new Float( calculateAverageComputeTime( job ) );
             HeftBag b = new HeftBag();
@@ -331,6 +305,9 @@ public class Algorithm {
                 site = (String) rit.next();
                 est_result = calculateEstimatedStartAndFinishTime( current, site );
 
+                mLogger.log( "=== Job: " + current.getID() + ", Site: " + site
+                        + ", Start: " + est_result[0] + ", Finish: " + est_result[1], LogManager.DEBUG_MESSAGE_LEVEL );
+
                 //if existing EFT is greater than the returned EFT
                 //set existing EFT to the returned EFT
                 if( result[ 1 ] > est_result[ 1 ] ){
@@ -389,6 +366,99 @@ public class Algorithm {
         return result;
     }
 
+    // util function to find site where the given file will be produced - assuming it is an ouput file of some job
+    private String findSiteForOutputFile(PegasusFile file, GraphNode jobNode) {
+
+        for( GraphNode parent : jobNode.getParents() ) {
+            // we need to go through all output files until we find the one we are looking for
+            Job parentJob = ( Job )parent.getContent();
+
+            for( PegasusFile outputFile : (Set<PegasusFile>)parentJob.outputFiles ) {
+
+                if(outputFile.getLFN().equals(file.getLFN())) {
+                    mLogger.log("=== We found the parent job on site: " + parent.getBag().get(HeftBag.SCHEDULED_SITE).toString(),
+                            LogManager.DEBUG_MESSAGE_LEVEL);
+
+                    return parent.getBag().get(HeftBag.SCHEDULED_SITE).toString();
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private double getBandwidthBetweenSites(String site1, String site2) {
+        double avg_band = 100 * 0.125; // Mb/s
+        SiteCatalogEntry siteEntry1 = mSiteStore.lookup( site1 );
+        SiteCatalogEntry siteEntry2 = mSiteStore.lookup( site2 );
+
+        if(siteEntry1.getBandwidthMap().containsKey(site2)) {
+            mLogger.log("=== Bandwidth between sites found: " + siteEntry1.getBandwidthMap().get(site2),
+                    LogManager.DEBUG_MESSAGE_LEVEL);
+
+            return siteEntry1.getBandwidthMap().get(site2);
+        }
+        else if(siteEntry2.getBandwidthMap().containsKey(site1)) {
+            mLogger.log("=== Bandwidth between sites found 2: " + siteEntry2.getBandwidthMap().get(site1),
+                    LogManager.DEBUG_MESSAGE_LEVEL);
+
+            return siteEntry2.getBandwidthMap().get(site1);
+        }
+        else {
+            mLogger.log("=== Bandwidth between sites not found", LogManager.DEBUG_MESSAGE_LEVEL);
+        }
+
+        return avg_band;
+    }
+
+    // file represents either input file or executable
+    // we need to check where this file is located
+    // if it is on the same site then file transfer is 0
+    // otherwise we need to check file size and bandwith between sites
+    private long transferTime(PegasusFile file, String site, GraphNode jobNode) {
+        double file_size = 0; // MB
+        String sourceSite = null;
+        // file can be either genuine file size or a result of previous job
+        mLogger.log("=== Calculating transfer time of '" + file.getLFN()
+                + "' to '" + site + "' site" , LogManager.DEBUG_MESSAGE_LEVEL);
+
+        ReplicaLocation rl = replicaStore.getReplicaLocation(file.getLFN());
+
+        if( rl == null ) { // this is an output file of some previous job
+            mLogger.log( "=== This is an output of another job", LogManager.DEBUG_MESSAGE_LEVEL );
+            // TODO: we should check all ancestors of the job - now we are checking only the immediate ones
+            sourceSite = findSiteForOutputFile(file, jobNode);
+
+            if(site.equals(sourceSite)) {
+                mLogger.log( "=== This file will be generated on the same site", LogManager.DEBUG_MESSAGE_LEVEL );
+                return 0;
+            }
+
+            file_size = file.getSize(); // MB
+        }
+        else {
+            // TODO: DK here we may try to find the closest replica location to the site
+            ReplicaCatalogEntry rce = rl.getPFN(0);
+            mLogger.log( "=== We found the file on '" + rce.getResourceHandle() + "' site", LogManager.DEBUG_MESSAGE_LEVEL );
+            mLogger.log( "=== Input file size: " + rce.getSizeHandle(), LogManager.DEBUG_MESSAGE_LEVEL );
+            sourceSite = rce.getResourceHandle();
+
+            if(site.equals(sourceSite)) {
+                mLogger.log("=== This file is located on the same site", LogManager.DEBUG_MESSAGE_LEVEL );
+                return 0;
+            }
+
+            file_size = Double.parseDouble(rce.getSizeHandle()); // MB
+        }
+
+        double bandwidth = getBandwidthBetweenSites(site, sourceSite);
+
+        mLogger.log( "=== Transfer time [s]: " + (long) (file_size / bandwidth),
+                LogManager.DEBUG_MESSAGE_LEVEL );
+
+        return (long) (file_size / bandwidth);
+    }
+
 
     /**
      * Estimates the start and finish time of a job on a site.
@@ -399,7 +469,7 @@ public class Algorithm {
      * @return  long[0] the estimated start time.
      *          long[1] the estimated finish time.
      */
-    protected long[] calculateEstimatedStartAndFinishTime( GraphNode node, String site ){
+    protected long[] calculateEstimatedStartAndFinishTime( GraphNode node, String site ) {
 
         Job job = ( Job )node.getContent();
         long[] result = new long[2];
@@ -408,16 +478,14 @@ public class Algorithm {
         //that is time by which all the data needed
         //by the job has reached the site.
         long readyTime = 0;
-        for( Iterator it = node.getParents().iterator(); it.hasNext(); ){
-            GraphNode parent = ( GraphNode )it.next();
+        for( GraphNode parent : node.getParents() ) {
             long current = 0;
             //add the parent finish time to current
             current += (Long)parent.getBag().get( HeftBag.ACTUAL_FINISH_TIME );
 
-            //if the parent was scheduled on another site
-            //add the average data transfer time.
-            if( !parent.getBag().get( HeftBag.SCHEDULED_SITE ).equals( site ) ){
-                current += this.mAverageCommunicationCost;
+            // DK this part includes transfer time for all task's input files
+            for( PegasusFile file : (Set<PegasusFile>)job.inputFiles ) {
+                current += transferTime(file, site, node);
             }
 
             if ( current > readyTime ){

@@ -320,6 +320,8 @@ public class Pegasus extends Namespace {
      */
     public static final String STYLE_KEY = "style";
 
+    public static final String BANDWIDTH_KEY = "bandwidth";
+
     /**
      * The name of the key that denotes the type of the job. Whether it is
      * recursive or not. Still protypical.
@@ -539,7 +541,9 @@ public class Pegasus extends Namespace {
                      (key.compareTo(BUNDLE_STAGE_IN_KEY) == 0) ||
                      (key.compareTo(BUNDLE_STAGE_OUT_KEY) == 0 ) ||
                      (key.compareTo( BUNDLE_REMOTE_STAGE_IN_KEY) == 0 ) ||
-                     (key.compareTo(BOTOCONFIG) == 0)) {
+                     (key.compareTo(BOTOCONFIG) == 0) ||
+                     (key.compareTo(BANDWIDTH_KEY) == 0)
+                        ) {
                     res = VALID_KEY;
                 }
                 else if( key.compareTo(DEPRECATED_BUNDLE_STAGE_IN_KEY) == 0){
@@ -598,8 +602,9 @@ public class Pegasus extends Namespace {
                 if (key.compareTo( GROUP_KEY ) == 0 ||
                     key.compareTo( GRIDSTART_KEY ) == 0 ||
                     key.compareTo( GRIDSTART_PATH_KEY ) == 0 ||
-                    key.compareTo( GRIDSTART_ARGUMENTS_KEY ) == 0 ||
-                    key.compareTo( GOOGLEP12 ) == 0) {
+                    key.compareTo( GRIDSTART_ARGUMENTS_KEY ) == 0
+//                    key.compareTo( GOOGLEP12 ) == 0
+                        ) {
                     res = VALID_KEY;
                 }
                 else {

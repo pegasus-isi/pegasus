@@ -488,7 +488,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
      * @param the type the directory type
      */
     public Directory getDirectory( Directory.TYPE type ){
-        return this.mDirectories.get( type );
+        return this.mDirectories.get(type);
     }
     
     /**
@@ -685,7 +685,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
      * @deprecated should be removed
      */
     public String selectHeadNodeScratchSharedFileServerURLPrefix( FileServer.OPERATION operation ){
-        FileServer server = this.selectHeadNodeScratchSharedFileServer( operation );
+        FileServer server = this.selectHeadNodeScratchSharedFileServer(operation);
         return ( server == null )?
                null:
                server.getURLPrefix();
@@ -704,7 +704,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
      * @return  FileServer for the shared scratch space , else null
      */
     public FileServer selectHeadNodeScratchSharedFileServer( FileServer.OPERATION operation ){
-        Directory dir = this.getDirectory( Directory.TYPE.shared_scratch );
+        Directory dir = this.getDirectory(Directory.TYPE.shared_scratch);
 
         //sanity check
         if( dir == null ){
@@ -945,6 +945,23 @@ public class SiteCatalogEntry extends AbstractSiteData{
     }
 
 
+    public Map<String, Long> getBandwidthMap() {
+        Map<String, Long> bandwidthMap = new HashMap<String, Long>();
+
+        for( Profile profile : getProfiles().getProfiles() ) {
+            if(profile.getProfileKey().equals(Pegasus.BANDWIDTH_KEY)) {
+
+                for(String token : profile.getProfileValue().split(",")) {
+                    String[] pool_value_pair = token.split("=");
+                    bandwidthMap.put(pool_value_pair[0], Long.parseLong(pool_value_pair[1]));
+                }
+
+                break;
+            }
+        }
+
+        return bandwidthMap;
+    }
 
 
 
