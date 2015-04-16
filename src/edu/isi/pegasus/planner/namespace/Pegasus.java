@@ -400,12 +400,19 @@ public class Pegasus extends Namespace {
      * Key indicating whether to consider job for data reuse in the partial mode.
      */
     public static final String ENABLE_FOR_DATA_REUSE_KEY = "enable_for_data_reuse";
+
+       
+    /**
+     * Key indicating indicating time in minutes after which kickstart sends out a
+     * TERM signal to a job indicating that is should create a checkpoint file.
+     */
+    public static final String  CHECKPOINT_TIME_KEY = "checkpoint.time";
     
     /**
      * Key indicating indicating time in seconds after which kickstart sends out a
      * TERM signal to a job indicating that is should create a checkpoint file.
      */
-    public static final String  CHECKPOINT_TIME = "checkpoint_time";
+    public static final String  DEPRECATED_CHECKPOINT_TIME_KEY = "checkpoint_time";
     
     /**
      * Key indicating max walltime for a job in minutes
@@ -566,7 +573,8 @@ public class Pegasus extends Namespace {
                     (key.compareTo(CREATE_AND_CHANGE_DIR_KEY ) == 0 ) ||
                     (key.compareTo( CLUSTER_ARGUMENTS) == 0 ) ||
                     (key.compareTo( CORES_KEY ) == 0 ) ||
-                    (key.compareTo( Pegasus.CHECKPOINT_TIME) == 0 )   ) {
+                    (key.compareTo(Pegasus.CHECKPOINT_TIME_KEY) == 0 )||
+                    (key.compareTo(Pegasus.DEPRECATED_CHECKPOINT_TIME_KEY) == 0 )    ) {
                     res = VALID_KEY;
                 }
                 else if(key.compareTo(DEPRECATED_CHANGE_DIR_KEY) == 0 ||

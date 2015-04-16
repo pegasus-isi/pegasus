@@ -1332,66 +1332,103 @@ public class Kickstart implements GridStart {
     private String getKickstartTimeoutOptions(Job job) {
         StringBuilder sb = new StringBuilder();
         
-        if( job.vdsNS.containsKey( Pegasus.CHECKPOINT_TIME ) ){
-            //means there is expectation of timeout functionality
-            int checkpointTime = job.vdsNS.getIntValue( Pegasus.CHECKPOINT_TIME, Integer.MAX_VALUE );
-            
-            if( checkpointTime == Integer.MAX_VALUE ){
-                //malformed value
-                return sb.toString();
-            }
-            
-            //expected time is the time after which kickstart sends
-            //the TERM signal to job 
-            sb.append( "-k " ).append( checkpointTime ).append( " " );
-            
-            int max = Integer.MAX_VALUE;
-            if( job.vdsNS.containsKey( Pegasus.MAX_WALLTIME) ){
-                max = job.vdsNS.getIntValue( Pegasus.MAX_WALLTIME, Integer.MAX_VALUE  );
-            }
-            else if ( job.globusRSL.containsKey( Globus.MAX_WALLTIME) ){
-                max = job.globusRSL.getIntValue( Globus.MAX_WALLTIME, Integer.MAX_VALUE  );
-            }
-            
-            if( max == Integer.MAX_VALUE ){
-                //means user never specified a maxwalltime
-                //or a malformed value
-                //we don't determnine the -K parameter
-                return sb.toString();
-            }
-            
-            //maxwalltime is specified in minutes.
-            //convert to seconds for kickstart
-            max = max * 60;
-            
-            //we set the -K parameter to half the difference between
-            //maxwalltime - checkpointTime
-            int diff = max - checkpointTime;
-            int minDiff = 10;
-            if( diff < minDiff ){
-                //throw error
-                throw new RuntimeException( "Insufficient difference between maxwalltime " + 
-                                            max + " and checkpoint time " + checkpointTime +
-                                            " Should be at least " + minDiff + " seconds ");
-            }
-            
-            //we divide the difference equaully.
-            //give equal time to generate the checkpoint file and 
-            //the time to transfer the file
-            //kill time is the time after which kickstart sends
-            //the KILL signal to job 
-            sb.append( "-K " ).append( diff/2 ).append( " " );
-            
+        //get the checkout time in seconds
+        long checkpointTime = this.getJobCheckpointTimeInSeconds(job);
+
+        if( checkpointTime == Long.MAX_VALUE ){
+            //no value specified
             return sb.toString();
         }
-        
+
+        //expected time is the time after which kickstart sends
+        //the TERM signal to job 
+        sb.append( "-k " ).append( checkpointTime ).append( " " );
+
+        int max = Integer.MAX_VALUE;
+        if( job.vdsNS.containsKey( Pegasus.MAX_WALLTIME) ){
+            max = job.vdsNS.getIntValue( Pegasus.MAX_WALLTIME, Integer.MAX_VALUE  );
+        }
+        else if ( job.globusRSL.containsKey( Globus.MAX_WALLTIME) ){
+            max = job.globusRSL.getIntValue( Globus.MAX_WALLTIME, Integer.MAX_VALUE  );
+        }
+
+        if( max == Integer.MAX_VALUE ){
+            //means user never specified a maxwalltime
+            //or a malformed value
+            //we don't determnine the -K parameter
+            return sb.toString();
+        }
+
+        //maxwalltime is specified in minutes.
+        //convert to seconds for kickstart
+        max = max * 60;
+
+        //we set the -K parameter to half the difference between
+        //maxwalltime - checkpointTime
+        long diff = max - checkpointTime;
+        long minDiff = 10;
+        if( diff < minDiff ){
+            //throw error
+            throw new RuntimeException( "Insufficient difference between maxwalltime " + 
+                                        max + " and checkpoint time " + checkpointTime +
+                                        " Should be at least " + minDiff + " seconds ");
+        }
+
+        //we divide the difference equaully.
+        //give equal time to generate the checkpoint file and 
+        //the time to transfer the file
+        //kill time is the time after which kickstart sends
+        //the KILL signal to job 
+        sb.append( "-K " ).append( diff/2 ).append( " " );
+
         return sb.toString();
-        
+
     }
 
 
-    
-
+    /**
+     * Returns the job's checkpoint time in seconds. 
+     * 
+     * @param j
+     * 
+     * @return job checkpointime in seconds, else Long.MAX_VALUE if not 
+     *         specified 
+     * @throws RuntimeException for malformed values
+     */
+    private long getJobCheckpointTimeInSeconds( Job job ){
+       long time = Long.MAX_VALUE;
+       
+       //check for checkpoint.time that is specified in minutes.
+       String key = Pegasus.CHECKPOINT_TIME_KEY;
+       if( job.vdsNS.containsKey( key ) ){
+            //means there is expectation of timeout functionality
+            time = job.vdsNS.getLongValue( key, Long.MAX_VALUE );
+            if( time == Long.MAX_VALUE ){
+                //malformed value
+                throw new RuntimeException( "Malformed Pegasus Profile " + key + " value " + 
+                                            job.vdsNS.getStringValue( key ) + " for job " + job.getID());
+            }
+            //pegasus checkpoint.time key is in minutes. convert to seconds.
+            time = time * 60;
+            return time;
+       }
+       
+       //check for deprecated value
+       key = Pegasus.DEPRECATED_CHECKPOINT_TIME_KEY;
+       if( job.vdsNS.containsKey( key ) ){
+            //means there is expectation of timeout functionality
+            time = job.vdsNS.getLongValue( key, Long.MAX_VALUE );
+            if( time == Long.MAX_VALUE ){
+                //malformed value
+                throw new RuntimeException( "Malformed Pegasus Profile " + key + " value " + 
+                                            job.vdsNS.getStringValue( key ) + " for job " + job.getID());
+            }
+            //log deprecated value
+            mLogger.log( "Deprecated Pegasus profile key " + key + " found for job " + job.getID(),
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+       }
+       return time;
+    }
 
 
 }
