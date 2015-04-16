@@ -44,11 +44,11 @@ class BaseSerializer(object):
         pass
 
 
-class InvalidPQLError(Exception):
+class InvalidQueryError(Exception):
     pass
 
 
-class BasePQLParser(object):
+class BaseQueryParser(object):
     whitespace = Rep1(Any(' \t\n'))
     open_parenthesis = Str('(')
     close_parenthesis = Str(')')
@@ -103,7 +103,7 @@ class BasePQLParser(object):
         try:
             self._parse_expression()
         except UnrecognizedInput, e:
-            raise InvalidPQLError(str(e))
+            raise InvalidQueryError(str(e))
 
     def _parse_expression(self):
         """
@@ -124,7 +124,7 @@ class BasePQLParser(object):
                 break
 
         if self._parenthesis_count != 0:
-            raise InvalidPQLError('Invalid parenthesis count')
+            raise InvalidQueryError('Invalid parenthesis count')
 
         while len(self._operator_stack) > 0:
             self._postfix_result.append(self._operator_stack.pop())
@@ -139,7 +139,7 @@ class BasePQLParser(object):
         if self._parenthesis_count <= 0:
             file, line, char_pos = self._scanner.position()
             msg = 'Invalid parenthesis order: Line: %d Char: %d' % (line, char_pos)
-            raise InvalidPQLError(msg)
+            raise InvalidQueryError(msg)
         else:
             self._parenthesis_count -= 1
 
@@ -158,7 +158,7 @@ class BasePQLParser(object):
         else:
             file, line, char_pos = self._scanner.position()
             msg = 'Field %r found out of order: Line: %d Char: %d' % (text, line, char_pos)
-            raise InvalidPQLError(msg)
+            raise InvalidQueryError(msg)
 
     def comparator_handler(self, text):
         if self._state == 1:
@@ -167,7 +167,7 @@ class BasePQLParser(object):
         else:
             file, line, char_pos = self._scanner.position()
             msg = 'Comparator %r found out of order: Line: %d Char: %d' % (text, line, char_pos)
-            raise InvalidPQLError(msg)
+            raise InvalidQueryError(msg)
 
     def integer_literal_handler(self, text):
         if self._state == 2:
@@ -177,7 +177,7 @@ class BasePQLParser(object):
         else:
             file, line, char_pos = self._scanner.position()
             msg = 'Integer literal %d found out of order: Line: %d Char: %d' % (text, line, char_pos)
-            raise InvalidPQLError(msg)
+            raise InvalidQueryError(msg)
 
     def string_literal_handler(self, text):
         if self._state == 2:
@@ -187,7 +187,7 @@ class BasePQLParser(object):
         else:
             file, line, char_pos = self._scanner.position()
             msg = 'String literal %r found out of order: Line: %d Char: %d' % (text, line, char_pos)
-            raise InvalidPQLError(msg)
+            raise InvalidQueryError(msg)
 
     def null_handler(self, text):
         if self._state == 2:
@@ -197,7 +197,7 @@ class BasePQLParser(object):
         else:
             file, line, char_pos = self._scanner.position()
             msg = 'NULL found out of order: Line: %d Char: %d' % (line, char_pos)
-            raise InvalidPQLError(msg)
+            raise InvalidQueryError(msg)
 
     def operand_handler(self, text):
         self._operator_stack.append(text.upper())

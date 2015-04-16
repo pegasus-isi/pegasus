@@ -106,6 +106,12 @@ class RootWorkflowSerializer(BaseSerializer):
         for field in self._selected_fields:
             json_record[field] = root_workflow[field]
 
+        #
+        # Serialize the Workflow State Object
+        #
+        # TODO: Call WorkflowStateSerializer to encode workflow-state object
+        json_record['workflow_state'] = None
+
         json_record['_links'] = self._links(root_workflow)
 
         return json_record
