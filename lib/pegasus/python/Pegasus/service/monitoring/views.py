@@ -14,6 +14,8 @@
 
 __author__ = 'Rajiv Mayani'
 
+from flask import g, request
+
 from Pegasus.service.monitoring import monitoring_routes
 
 
@@ -42,6 +44,16 @@ Root Workflow
 """
 
 
+@monitoring_routes.before_request
+def get_query_args():
+    g.query_args = {}
+    query_args = ['start-index', 'max-results', 'query', 'recent']
+
+    for arg in query_args:
+        if arg in request.args:
+            g.query_args[arg] = request.args.get(arg)
+
+
 @monitoring_routes.route('/user/<string:username>/root')
 @monitoring_routes.route('/user/<string:username>/root/query', methods=['POST'])
 def get_root_workflows(username):
@@ -53,6 +65,7 @@ def get_root_workflows(username):
     :query string query: Search criteria
     :query boolean pretty-print: Return formatted JSON response.
 
+    :statuscode 200: OK
     :statuscode 204: No content; when no workflows found.
     :statuscode 400: Bad request
     :statuscode 401: Authentication failure
@@ -76,7 +89,7 @@ def get_root_workflow(username, m_wf_id):
     :statuscode 403: Authorization failure
     :statuscode 404: Not found
 
-    :return type: Collection
+    :return type: Record
     :return resource: Root Workflow
     """
     pass
