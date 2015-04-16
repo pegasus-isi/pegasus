@@ -20,29 +20,7 @@ from collections import OrderedDict
 
 from flask import url_for
 
-
-class BaseSerializer(object):
-    def __init__(self, fields, pretty_print=False):
-        self._fields = fields
-
-        self._pretty_print = pretty_print
-
-        if self._pretty_print is True:
-            self._pretty_print_opts = {
-                'indent': 4,
-                'separators': (',', ': ')
-            }
-        else:
-            self._pretty_print_opts = {}
-
-    def encode_collection(self, records, records_total, records_filtered):
-        pass
-
-    def encode_record(self, record):
-        pass
-
-    def _links(self, record):
-        pass
+from Pegasus.service.base import BaseSerializer
 
 
 class RootWorkflowSerializer(BaseSerializer):
