@@ -1774,14 +1774,14 @@ Scope       :</emphasis> TC, SC, DAX, Properties
 
             <row>
               <entry><literallayout><emphasis role="bold"><emphasis
-                      role="bold">Property Key: </emphasis></emphasis>pegasus.checkpoint_time<emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.checkpoint.time<emphasis
                     role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>checkpoint_time<emphasis role="bold">
 Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 4.5
 <emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
 
-              <entry>the expected time in seconds for a job after which it
+              <entry>the expected time in minutes for a job after which it
               should be sent a TERM signal to generate a job checkpoint
               file</entry>
             </row>
@@ -1883,7 +1883,7 @@ Scope       :</emphasis> TC, SC, DAX, Properties
   </section>
 
   <section>
-    <title>Properties </title>
+    <title>Properties</title>
 
     <para>Properties are primarily used to configure the behavior of the
     Pegasus Workflow Planner at a global level. The properties file is
