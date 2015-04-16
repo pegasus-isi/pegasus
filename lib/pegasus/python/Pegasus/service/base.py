@@ -156,7 +156,7 @@ class BasePQLParser(object):
             self._condition[0] = text
             self._state = 1
         else:
-            file, line, char_pos = scanner.position()
+            file, line, char_pos = self._scanner.position()
             msg = 'Field %r found out of order: Line: %d Char: %d' % (text, line, char_pos)
             raise InvalidPQLError(msg)
 
