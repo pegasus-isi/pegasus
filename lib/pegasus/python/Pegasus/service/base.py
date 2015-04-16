@@ -21,6 +21,10 @@ from plex.errors import UnrecognizedInput
 
 
 class BaseSerializer(object):
+    """
+    Base Serializer class provides a template used to serialize objects to/from JSON
+    """
+
     def __init__(self, fields, pretty_print=False):
         self._fields = fields
 
@@ -35,20 +39,36 @@ class BaseSerializer(object):
             self._pretty_print_opts = {}
 
     def encode_collection(self, records, records_total, records_filtered):
-        pass
+        raise NotImplementedError('Method not implemented')
 
     def encode_record(self, record):
-        pass
+        raise NotImplementedError('Method not implemented')
+
+    def decode_collection(self, records):
+        raise NotImplementedError('Method not implemented')
+
+    def decode_record(self, record):
+        raise NotImplementedError('Method not implemented')
 
     def _links(self, record):
-        pass
+        raise NotImplementedError('Method not implemented')
 
 
-class InvalidQueryError(Exception):
+class ServiceError(Exception):
+    pass
+
+
+class InvalidQueryError(ServiceError):
     pass
 
 
 class BaseQueryParser(object):
+    """
+    Base Query Parser class provides a basic implementation to parse the `query` argument
+    i.e. Basic where clause as used in SQL.
+
+    Note: The base class only provides a partial implementation of the SQL where clause.
+    """
     whitespace = Rep1(Any(' \t\n'))
     open_parenthesis = Str('(')
     close_parenthesis = Str(')')
