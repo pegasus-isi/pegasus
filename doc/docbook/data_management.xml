@@ -1286,17 +1286,17 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
 
         <listitem>
           <para>Associate a Pegasus profile key named <emphasis role="bold">
-          checkpoint_time</emphasis> with the job that specifies the expected
-          runtime for the job in seconds.</para>
+          checkpoint.time</emphasis> with the job that specifies the expected
+          runtime for the job in minutes.</para>
         </listitem>
 
         <listitem>
           <para>Associate a Pegasus profile key named <emphasis role="bold">
           maxwalltime</emphasis> with the job that specifies the max runtime
-          before the job will be killed by the local resource manager ( such
-          as PBS) deployed on the site. Usually, this value should be
-          associated with the execution site in the site catalog. Note that
-          this value is in minutes.</para>
+          in minutes before the job will be killed by the local resource
+          manager ( such as PBS) deployed on the site. Usually, this value
+          should be associated with the execution site in the site catalog.
+          </para>
         </listitem>
       </orderedlist>
 
@@ -1700,7 +1700,7 @@ irodsPassword 'somesecretpassword'</programlisting>
 
     <para>Behaviour of the cleanup strategies implemented in the Pegasus
     Mapper can be controlled by properties described <link
-    linkend="cleanup_props">here</link> . </para>
+    linkend="cleanup_props">here</link> .</para>
 
     <section>
       <title>Data Cleanup in Hierarchal Workflows</title>
