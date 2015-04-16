@@ -1798,6 +1798,23 @@ Scope       :</emphasis> TC, SC, DAX, Properties
               <entry>the maximum walltime in minutes for a single execution of
               a job.</entry>
             </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.glite.arguments<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>glite.arguments<emphasis role="bold">
+Scope       :</emphasis> TC, SC, DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 4.5
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
+
+              <entry>specifies the extra arguments that must appear in the
+              local PBS generated script for a job, when running workflows on
+              a local cluster with submissions through Glite. This is useful
+              when you want to pass through special options to underlying LRMS
+              such as PBS e.g. you can set value -l walltime=01:23:45 -l
+              nodes=2 to specify your job's resource requirements.</entry>
+            </row>
           </tbody>
         </tgroup>
       </table>
