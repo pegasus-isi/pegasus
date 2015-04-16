@@ -56,7 +56,10 @@ def db_create(dburi, engine, db, pegasus_version=None, force=False):
     else:
         _discover_version(db, pegasus_version=pegasus_version, force=force)
     
-    metadata.create_all(engine)
+    try:
+        metadata.create_all(engine)
+    except OperationalError, e:
+        raise DBAdminError(e)
             
 
 def db_current_version(db, parse=False, force=False):
