@@ -62,10 +62,14 @@ class InvalidQueryError(ServiceError):
     pass
 
 
+class InvalidOrderError(ServiceError):
+    pass
+
+
 class BaseQueryParser(object):
     """
     Base Query Parser class provides a basic implementation to parse the `query` argument
-    i.e. Basic where clause as used in SQL.
+    i.e. Basic WHERE clause as used in SQL.
 
     Note: The base class only provides a partial implementation of the SQL where clause.
     """
@@ -132,7 +136,7 @@ class BaseQueryParser(object):
         """
 
         f = StringIO.StringIO(self.expression)
-        self._scanner = Scanner(self.lexicon, f, 'PQL')
+        self._scanner = Scanner(self.lexicon, f, 'query')
 
         while 1:
             token = self._scanner.read()
@@ -240,6 +244,115 @@ class BaseQueryParser(object):
         s = StringIO.StringIO()
 
         for i in self._postfix_result:
+            s.write(str(i))
+            s.write(' ')
+
+        out = s.getvalue()
+        s.close()
+
+        return out
+
+
+class BaseOrderParser(object):
+    """
+    Base Order Parser class provides a basic implementation to parse the `order` argument
+    i.e. ORDER clause as used in SQL.
+    """
+    whitespace = Rep1(Any(' \t\n'))
+
+    letter = Range('AZaz')
+    digit = Range('09')
+
+    prefix = letter + Rep(letter) + Str('.')
+    identifier = Opt(prefix) + letter + Rep(letter | digit | Str('_'))
+
+    order = NoCase(Str('ASC', 'DESC'))
+
+    order_clause = identifier + Opt(Rep1(whitespace) + order)
+    separator = Str(',')
+
+    ORDER_CLAUSE = 1
+    SEPARATOR = 2
+
+    lexicon = Lexicon([
+        (whitespace, IGNORE),
+        (order_clause, ORDER_CLAUSE),
+        (separator, SEPARATOR)
+    ])
+
+    def __init__(self, expression):
+        self.expression = expression
+
+        self._state = 0
+        self._sort_order = []
+
+        self._scanner = None
+
+        try:
+            self._parse_expression()
+        except UnrecognizedInput, e:
+            raise InvalidOrderError(str(e))
+
+    def _parse_expression(self):
+        f = StringIO.StringIO(self.expression)
+        self._scanner = Scanner(self.lexicon, f, 'order')
+
+        while 1:
+            token = self._scanner.read()
+
+            if token[0] in self.mapper:
+                self.mapper[token[0]](self, token[1])
+
+            elif token[0] is None:
+                break
+
+        self._sort_order = [tuple(order_clause) for order_clause in self._sort_order]
+
+        f.close()
+
+    def order_clause_handler(self, order_clause):
+        order_clause = order_clause.strip().split()
+
+        self.identifier_handler(order_clause[0])
+
+        if len(order_clause) == 2:
+            self.order_handler(order_clause[1])
+
+    def identifier_handler(self, identifier):
+        if self._state == 0:
+            self._state = 1
+            self._sort_order.append([identifier, 'ASC'])
+
+        else:
+            raise InvalidOrderError('Identifier %r found out of order' % identifier)
+
+    def order_handler(self, order):
+        if self._state == 1 and order.upper() in set(['ASC', 'DESC']):
+            self._state = 2
+            self._sort_order[len(self._sort_order) - 1][1] = order.upper()
+
+        else:
+            raise InvalidOrderError('Sorting order %r found out of order' % order)
+
+    def separator_handler(self, separator):
+        if self._state == 1 or self._state == 2:
+            self._state = 0
+
+        else:
+            raise InvalidOrderError('Separator %r found out of order' % separator)
+
+    mapper = {
+        ORDER_CLAUSE: order_clause_handler,
+        SEPARATOR: separator_handler
+    }
+
+    def get_sort_order(self):
+        return self._sort_order
+
+    def __str__(self):
+        s = StringIO.StringIO()
+
+        for i in self._sort_order:
             s.write(str(i))
             s.write(' ')
 
