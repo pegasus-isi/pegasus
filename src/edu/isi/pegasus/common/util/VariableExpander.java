@@ -95,7 +95,8 @@ public class VariableExpander {
         
         System.out.println( exp.expand( "Pegasus developer $(USER) rocks "));
         System.out.println( exp.expand( "Pegasus developer $(USer) rocks "));
-        System.out.println( exp.expand( "Pegasus developer $(USER1) rocks "));
+        //System.out.println( exp.expand( "Pegasus developer $(USER1) rocks "));
+        System.out.println( exp.expand( "Pegasus developer \\$(USER) rocks "));
         
         
     }
