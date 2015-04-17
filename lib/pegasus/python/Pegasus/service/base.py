@@ -14,6 +14,8 @@
 
 __author__ = 'Rajiv Mayani'
 
+import re
+
 import StringIO
 
 from plex import Range, Lexicon, Rep, Rep1, Str, Any, IGNORE, Scanner, State, Begin, AnyBut, NoCase, Opt
@@ -258,35 +260,26 @@ class BaseOrderParser(object):
     Base Order Parser class provides a basic implementation to parse the `order` argument
     i.e. ORDER clause as used in SQL.
     """
-    whitespace = Rep1(Any(' \t\n'))
-
-    letter = Range('AZaz')
-    digit = Range('09')
-
-    prefix = letter + Rep(letter) + Str('.')
-    identifier = Opt(prefix) + letter + Rep(letter | digit | Str('_'))
-
-    order = NoCase(Str('ASC', 'DESC'))
-
-    order_clause = identifier + Opt(Rep1(whitespace) + order)
-    separator = Str(',')
-
-    ORDER_CLAUSE = 1
-    SEPARATOR = 2
-
-    lexicon = Lexicon([
-        (whitespace, IGNORE),
-        (order_clause, ORDER_CLAUSE),
-        (separator, SEPARATOR)
-    ])
+    #
+    # Order Clause Identifier Rules:
+    #   Prefix + Identifier
+    #
+    # Prefix Rules:
+    #   Is optional
+    #   Must start with a-z OR A-Z
+    #   Can contain a-z OR A-Z OR 0-9 OR _
+    #   Must end with .
+    #
+    # Identifier Rules:
+    #   Is mandatory
+    #   Must start with a-z OR A-Z
+    #   Can contain a-z OR A-Z OR 0-9 OR _
+    #
+    IDENTIFIER_PATTERN = re.compile('^([a-zA-Z][a-zA-Z0-9_]*\.)?([a-zA-Z][a-zA-Z0-9_]*)$')
 
     def __init__(self, expression):
         self.expression = expression
-
-        self._state = 0
         self._sort_order = []
-
-        self._scanner = None
 
         try:
             self._parse_expression()
@@ -294,57 +287,38 @@ class BaseOrderParser(object):
             raise InvalidOrderError(str(e))
 
     def _parse_expression(self):
-        f = StringIO.StringIO(self.expression)
-        self._scanner = Scanner(self.lexicon, f, 'order')
+        tokens = self.expression.replace('\n\t', ' ').split(',')
+        tokens = [token.split() for token in tokens if len(token) > 0]
+        tokens = [token for token in tokens if len(token) > 0]
 
-        while 1:
-            token = self._scanner.read()
+        for token in tokens:
+            length = len(token)
 
-            if token[0] in self.mapper:
-                self.mapper[token[0]](self, token[1])
+            if length == 0 or length > 2:
+                raise InvalidOrderError('Invalid ORDER clause %r' % ' '.join(token))
 
-            elif token[0] is None:
-                break
+            self.identifier_handler(token[0])
+
+            if length == 2:
+                self.order_handler(token[1])
 
         self._sort_order = [tuple(order_clause) for order_clause in self._sort_order]
 
-        f.close()
-
-    def order_clause_handler(self, order_clause):
-        order_clause = order_clause.strip().split()
-
-        self.identifier_handler(order_clause[0])
-
-        if len(order_clause) == 2:
-            self.order_handler(order_clause[1])
-
     def identifier_handler(self, identifier):
-        if self._state == 0:
-            self._state = 1
-            self._sort_order.append([identifier, 'ASC'])
+        match = BaseOrderParser.IDENTIFIER_PATTERN.match(identifier)
 
+        if match:
+            self._sort_order.append([identifier, 'ASC'])
         else:
-            raise InvalidOrderError('Identifier %r found out of order' % identifier)
+            raise InvalidOrderError('Invalid identifier %r' % identifier)
 
     def order_handler(self, order):
-        if self._state == 1 and order.upper() in set(['ASC', 'DESC']):
-            self._state = 2
+        _order = order.upper()
+
+        if _order in set(('ASC', 'DESC')):
             self._sort_order[len(self._sort_order) - 1][1] = order.upper()
-
         else:
-            raise InvalidOrderError('Sorting order %r found out of order' % order)
-
-    def separator_handler(self, separator):
-        if self._state == 1 or self._state == 2:
-            self._state = 0
-
-        else:
-            raise InvalidOrderError('Separator %r found out of order' % separator)
-
-    mapper = {
-        ORDER_CLAUSE: order_clause_handler,
-        SEPARATOR: separator_handler
-    }
+            raise InvalidOrderError('Invalid sorting order %r' % order)
 
     def get_sort_order(self):
         return self._sort_order
