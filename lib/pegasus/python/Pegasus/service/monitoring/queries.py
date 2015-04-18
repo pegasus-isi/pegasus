@@ -16,6 +16,7 @@ __author__ = 'Rajiv Mayani'
 
 import logging
 
+from sqlalchemy import desc
 from sqlalchemy.orm.exc import NoResultFound
 
 from Pegasus.db import connection
@@ -24,7 +25,8 @@ from Pegasus.db.schema import DashboardWorkflow
 from Pegasus.db.errors import StampedeDBNotFoundError
 from Pegasus.db.admin.admin_loader import DBAdminError
 
-from pegasus.service import cache
+from Pegasus.service import cache
+from Pegasus.service.base import BaseOrderParser
 
 
 class WorkflowQueries(SQLAlchemyInit):
@@ -42,13 +44,32 @@ class WorkflowQueries(SQLAlchemyInit):
 
     @staticmethod
     def _get_count(q, cache_key, use_cache=True, timeout=60):
-        if use_cache and cache_key in cache:
+        if use_cache and cache.get(cache_key):
             count = cache.get(cache_key)
         else:
             count = q.count()
             cache.set(cache_key, count, timeout)
 
         return count
+
+    @staticmethod
+    def _add_ordering(q, order, fields):
+        if not q or not order or not fields:
+            return q
+
+        order_parser = BaseOrderParser(order)
+        sort_order = order_parser.get_sort_order()
+
+        for identifier, sort_dir in sort_order:
+            if identifier not in fields:
+                raise InvalidOrderError('Invalid field %r' % identifier)
+
+            if sort_dir == 'ASC':
+                q = q.order_by(fields[identifier])
+            else:
+                q = q.order_by(desc(fields[identifier]))
+
+        return q
 
     @staticmethod
     def _add_pagination(q, start_index=None, max_results=None, total_records=None):
@@ -79,7 +100,7 @@ class WorkflowQueries(SQLAlchemyInit):
 
 
 class MasterWorkflowQueries(WorkflowQueries):
-    def get_root_workflows(self, start_index=None, max_results=None, query=None, order=None, use_cache=True):
+    def get_root_workflows(self, start_index=None, max_results=None, query=None, order=None, use_cache=False, **kwargs):
         """
         Returns a collection of the Root Workflow objects.
 
@@ -118,8 +139,7 @@ class MasterWorkflowQueries(WorkflowQueries):
         #
         # Construct SQLAlchemy Query `q` to add pagination
         #
-        q = WorkflowQueries._add_pagination(self, start_index, max_results, total_filtered)
-
+        q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
         records = q.all()
 
         return total_records, total_filtered, records
