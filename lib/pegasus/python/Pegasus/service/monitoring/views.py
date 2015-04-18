@@ -14,11 +14,15 @@
 
 __author__ = 'Rajiv Mayani'
 
+import logging
+
 from flask import g, request, make_response
 
 from Pegasus.service.monitoring import monitoring_routes
 from Pegasus.service.monitoring.queries import MasterWorkflowQueries
 from Pegasus.service.monitoring.serializer import RootWorkflowSerializer
+
+log = logging.getLogger(__name__)
 
 JSON_HEADER = {'Content-Type': 'application/json'}
 
@@ -31,6 +35,7 @@ def get_query_args():
         try:
             return int(value)
         except ValueError:
+            log.exception('Query Argument %s = %s is not a valid int' % (q_arg, value))
             abort(400)
 
     def to_str(q_arg, value):
@@ -103,6 +108,7 @@ def get_root_workflows(username):
     records, total_records, total_filtered = queries.get_root_workflows(**g.query_args)
 
     if total_records == 0:
+        log.debug('Total records is 0; returning HTTP 204 No content')
         return make_response('', 204, JSON_HEADER)
 
     #
