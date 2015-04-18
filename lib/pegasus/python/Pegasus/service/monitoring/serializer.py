@@ -44,7 +44,7 @@ class RootWorkflowSerializer(BaseSerializer):
         'workflow_state'
     ]
 
-    def __init__(self, selected_fields=None, pretty_print=False):
+    def __init__(self, selected_fields=None, pretty_print=False, **kwargs):
         super(RootWorkflowSerializer, self).__init__(fields=RootWorkflowSerializer.FIELDS, pretty_print=pretty_print)
         self._selected_fields = selected_fields if selected_fields else self._fields
 
