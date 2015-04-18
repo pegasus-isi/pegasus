@@ -58,7 +58,6 @@ class RootWorkflowSerializer(BaseSerializer):
 
         :return: JSON representation of root workflow resource
         """
-
         if root_workflows is None:
             return None
 
@@ -126,7 +125,7 @@ class RootWorkflowSerializer(BaseSerializer):
         """
 
         links = OrderedDict([
-            ('workflow', url_for('.get_root_workflow'))
+            ('workflow', url_for('.get_root_workflow', m_wf_id=root_workflow.wf_id))
         ])
 
         return links
