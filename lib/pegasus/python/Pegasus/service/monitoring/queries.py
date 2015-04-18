@@ -41,17 +41,17 @@ class WorkflowQueries(SQLAlchemyInit):
         md5sum = hashlib.md5()
         md5sum.update(connection_string)
         self._conn_string_csum = md5sum.hexdigest()
-        self.log = logging.getLogger('%s.%s' % (self.__module__, self.__class__.__name__))
 
         try:
             SQLAlchemyInit.__init__(self, connection_string)
         except (connection.ConnectionError, DBAdminError) as e:
-            self.log.exception(e)
+            log.exception(e)
             raise StampedeDBNotFoundError
 
     @staticmethod
     def _get_count(q, cache_key, use_cache=True, timeout=60):
         if use_cache and cache.get(cache_key):
+            log.debug('Cache hit for %s' % cache_key)
             count = cache.get(cache_key)
         else:
             count = q.count()
@@ -69,6 +69,7 @@ class WorkflowQueries(SQLAlchemyInit):
 
         for identifier, sort_dir in sort_order:
             if identifier not in fields:
+                log.error('Invalid field %r' % identifier)
                 raise InvalidOrderError('Invalid field %r' % identifier)
 
             if sort_dir == 'ASC':
@@ -172,7 +173,8 @@ class MasterWorkflowQueries(WorkflowQueries):
 
         try:
             return q.one()
-        except NoResultFound, e:
+        except NoResultFound as e:
+            log.exception('Not Found: Root Workflow for given m_wf_id (%s)' % m_wf_id)
             raise e
 
     def get_wf_id_for_wf_uuid(self, wf_uuid):
@@ -189,7 +191,8 @@ class MasterWorkflowQueries(WorkflowQueries):
 
         try:
             return q.one()
-        except NoResultFound, e:
+        except NoResultFound as e:
+            log.exception('Not Found: wf_id for given the wf_uuid (%s)' % wf_uuid)
             raise e
 
     @staticmethod
