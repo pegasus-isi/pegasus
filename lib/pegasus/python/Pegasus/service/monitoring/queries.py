@@ -118,7 +118,7 @@ class MasterWorkflowQueries(WorkflowQueries):
         total_records = MasterWorkflowQueries.get_total_root_workflows(q, use_cache)
 
         if total_records == 0:
-            return 0, 0, []
+            return [], 0, 0
 
         #
         # Construct SQLAlchemy Query `q` to get filtered count.
@@ -129,7 +129,7 @@ class MasterWorkflowQueries(WorkflowQueries):
         total_filtered = MasterWorkflowQueries.get_filtered_root_workflows(q, use_cache)
 
         if total_filtered == 0 or (start_index and start_index >= total_filtered):
-            return 0, 0, []
+            return [], total_records, 0
 
         #
         # Construct SQLAlchemy Query `q` to sort
@@ -142,7 +142,7 @@ class MasterWorkflowQueries(WorkflowQueries):
         q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
         records = q.all()
 
-        return total_records, total_filtered, records
+        return records, total_records, total_filtered
 
     def get_root_workflow(self, m_wf_id):
         """
