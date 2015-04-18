@@ -14,19 +14,43 @@
 
 __author__ = 'Rajiv Mayani'
 
-from flask import g, request
+from flask import g, request, make_response
 
 from Pegasus.service.monitoring import monitoring_routes
+from Pegasus.service.monitoring.queries import MasterWorkflowQueries
+from Pegasus.service.monitoring.serializer import RootWorkflowSerializer
+
+JSON_HEADER = {'Content-Type': 'application/json'}
 
 
 @monitoring_routes.before_request
 def get_query_args():
     g.query_args = {}
-    query_args = ['start-index', 'max-results', 'query', 'order', 'recent']
 
-    for arg in query_args:
+    def to_int(q_arg, value):
+        try:
+            return int(value)
+        except ValueError:
+            abort(400)
+
+    def to_str(q_arg, value):
+        return value
+
+    def to_bool(q_arg, value):
+        return True if value.lower() == 'true' else False
+
+    query_args = {
+        'start-index': to_int,
+        'max-results': to_int,
+        'query': to_str,
+        'order': to_str,
+        'recent': to_bool,
+        'pretty-print': to_bool
+    }
+
+    for arg, cast in query_args.iteritems():
         if arg in request.args:
-            g.query_args[arg] = request.args.get(arg)
+            g.query_args[arg.replace('-', '_')] = cast(arg, request.args.get(arg))
 
 
 """
@@ -75,7 +99,19 @@ def get_root_workflows(username):
     :return type: Collection
     :return resource: Root Workflow
     """
-    pass
+    queries = MasterWorkflowQueries(g.master_db_url)
+    records, total_records, total_filtered = queries.get_root_workflows(**g.query_args)
+
+    if total_records == 0:
+        return make_response('', 204, JSON_HEADER)
+
+    #
+    # Generate JSON Response
+    #
+    serializer = RootWorkflowSerializer(**g.query_args)
+    response_json = serializer.encode_collection(records, total_records, total_filtered)
+
+    return make_response(response_json, 200, JSON_HEADER)
 
 
 @monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>')
