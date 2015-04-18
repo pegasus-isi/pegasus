@@ -40,8 +40,7 @@ class RootWorkflowSerializer(BaseSerializer):
         'dax_version',
         'dax_file',
         'dag_file_name',
-        'timestamp',
-        'workflow_state'
+        'timestamp'
     ]
 
     def __init__(self, selected_fields=None, pretty_print=False, **kwargs):
@@ -103,7 +102,7 @@ class RootWorkflowSerializer(BaseSerializer):
         json_record = OrderedDict()
 
         for field in self._selected_fields:
-            json_record[field] = root_workflow[field]
+            json_record[field] = self._get_field_value(root_workflow, field)
 
         #
         # Serialize the Workflow State Object
@@ -115,7 +114,8 @@ class RootWorkflowSerializer(BaseSerializer):
 
         return json_record
 
-    def _links(self, root_workflow):
+    @staticmethod
+    def _links(root_workflow):
         """
         Generates JSON representation of the HATEOAS links to be attached to the root workflow resource.
 

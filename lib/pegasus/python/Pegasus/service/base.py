@@ -18,6 +18,8 @@ import re
 
 import StringIO
 
+from decimal import Decimal
+
 from plex import Range, Lexicon, Rep, Rep1, Str, Any, IGNORE, Scanner, State, Begin, AnyBut, NoCase, Opt
 from plex.errors import UnrecognizedInput
 
@@ -52,8 +54,14 @@ class BaseSerializer(object):
     def decode_record(self, record):
         raise NotImplementedError('Method not implemented')
 
+    @staticmethod
     def _links(self, record):
         raise NotImplementedError('Method not implemented')
+
+    @staticmethod
+    def _get_field_value(record, field):
+        value = getattr(record, field)
+        return float(value) if isinstance(value, Decimal) else value
 
 
 class ServiceError(Exception):
