@@ -16,6 +16,8 @@ __author__ = 'Rajiv Mayani'
 
 import logging
 
+import hashlib
+
 from sqlalchemy import desc
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -28,17 +30,22 @@ from Pegasus.db.admin.admin_loader import DBAdminError
 from Pegasus.service import cache
 from Pegasus.service.base import BaseOrderParser
 
+log = logging.getLogger(__name__)
+
 
 class WorkflowQueries(SQLAlchemyInit):
     def __init__(self, connection_string):
         if connection_string is None:
             raise ValueError('Connection string is required')
 
-        self.log = logging.getLogger("%s.%s" % (self.__module__, self.__class__.__name__))
+        md5sum = hashlib.md5()
+        md5sum.update(connection_string)
+        self._conn_string_csum = md5sum.hexdigest()
+        self.log = logging.getLogger('%s.%s' % (self.__module__, self.__class__.__name__))
 
         try:
             SQLAlchemyInit.__init__(self, connection_string)
-        except (connection.ConnectionError, DBAdminError), e:
+        except (connection.ConnectionError, DBAdminError) as e:
             self.log.exception(e)
             raise StampedeDBNotFoundError
 
@@ -100,7 +107,7 @@ class WorkflowQueries(SQLAlchemyInit):
 
 
 class MasterWorkflowQueries(WorkflowQueries):
-    def get_root_workflows(self, start_index=None, max_results=None, query=None, order=None, use_cache=False, **kwargs):
+    def get_root_workflows(self, start_index=None, max_results=None, query=None, order=None, use_cache=True, **kwargs):
         """
         Returns a collection of the Root Workflow objects.
 
