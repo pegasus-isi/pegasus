@@ -433,27 +433,31 @@ def gsiftp(urls):
 
 def sshftp(urls):
     """
-    create directories on gridftp servers
+    remove sshftp based files using globus-url-copy
     """
- 
+
     if tool_info['globus-url-copy']['full_path'] == None:
         raise RuntimeError("Unable to do sshftp mkdir because globus-url-copy could not be found")
+        
+    if options.recursive:
+        logger.info("Skipping cleanup as recursive deletes are not possible for sshftp:// URLS")
+        return
 
     for i, url in enumerate(urls):
-    
+
         # build command line for globus-url-copy
         cmd = tool_info['globus-url-copy']['full_path']
         # make output match our current log level
         if logger.isEnabledFor(logging.DEBUG):
             cmd += " -dbg"
-    
+
         key = "SSH_PRIVATE_KEY_" + url.sitename
         if key in os.environ:
             os.environ["SSH_PRIVATE_KEY"] = os.environ[key]
-    
+
         cmd += " file:///dev/null"
-        cmd += " " + url.url() + "/.create-dir"
-    
+        cmd += " " + url.url()
+
         try:
             myexec(cmd, 6*60*60, True)
         except:
