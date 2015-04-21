@@ -8,6 +8,7 @@ TOPDIR=`pwd`
 export SSH_PRIVATE_KEY=/path/to/ssh/private_key
 
 #update accordingly
+STAGING_SERVER_USERNAME="remoteuser"
 STAGING_SERVER_HOSTNAME="staging.server.pegasus.isi.edu"
 STAGING_SERVER_SCRATCH_DIR="/var/www/html/scratch"
 
@@ -49,8 +50,8 @@ cat >sites.xml <<EOF
 
      <site  handle="staging-site" arch="x86_64" os="LINUX">
         <directory type="shared-scratch" path="${STAGING_SERVER_SCRATCH_DIR}">
-            <file-server operation="put" url="scp://${STAGING_SERVER_HOSTNAME}${STAGING_SERVER_SCRATCH_DIR}"/>
-            <file-server operation="get" url="scp://${STAGING_SERVER_HOSTNAME}${STAGING_SERVER_SCRATCH_DIR}"/>
+            <file-server operation="put" url="scp://${STAGING_SERVER_USERNAME}@${STAGING_SERVER_HOSTNAME}${STAGING_SERVER_SCRATCH_DIR}"/>
+            <file-server operation="get" url="scp://${STAGING_SERVER_USERNAME}@${STAGING_SERVER_HOSTNAME}${STAGING_SERVER_SCRATCH_DIR}"/>
 
         </directory>
     </site>
