@@ -15,18 +15,17 @@
  */
 package edu.isi.pegasus.planner.catalog.replica.impl;
 
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
+import edu.isi.pegasus.common.util.StreamGobbler;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 
 import java.io.File;
 import java.io.IOException;
-
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Collection;
 import java.util.HashMap;
 
-import static java.nio.file.Files.readAllBytes;
-import static java.nio.file.Paths.get;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -56,15 +55,15 @@ public class JDBCRCTest {
                     "root", ""
             );
 
-            Statement stm = jdbcrc.mConnection.createStatement();
-            stm.executeUpdate(new String(readAllBytes(get("share/pegasus/sql/create-sqlite-init.sql"))));
-            String sql = new String(readAllBytes(get("share/pegasus/sql/create-sqlite-rc.sql")));
-            sql = sql.substring(sql.indexOf(";") + 1);
-            stm.executeUpdate(sql);
-            stm.close();
-
-        } catch (LinkageError ex) {
-            throw new IOException(ex);
+            String command = "./bin/pegasus-db-admin create jdbc:sqlite:jdbcrc_test.db";
+            Runtime r = Runtime.getRuntime();
+            Process p = r.exec(command);
+            int status = p.waitFor();
+            if (status != 0) {
+                throw new RuntimeException("Database creation failed with non zero exit status " + command);
+            }
+        } catch (InterruptedException ie) {
+            //ignore
         } catch (ClassNotFoundException ex) {
             throw new IOException(ex);
         } catch (SQLException ex) {
@@ -134,7 +133,7 @@ public class JDBCRCTest {
         assertFalse(c.contains(new ReplicaCatalogEntry("b", attr)));
         assertFalse(c.contains(new ReplicaCatalogEntry("b", attr2)));
     }
-    
+
     @Test
     public void simpleUpdate() {
         jdbcrc.insert("a", new ReplicaCatalogEntry("d"));
