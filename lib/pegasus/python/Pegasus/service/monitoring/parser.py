@@ -142,6 +142,11 @@ class StampedeWorkflowQueryParser(BaseQueryParser):
 
         super(RootWorkflowQueryParser, self).identifier_handler(text)
 
+    #
+    # Override Method Handler for Identifiers
+    #
+    BaseQueryParser.mapper[BaseQueryParser.IDENTIFIER] = identifier_handler
+
 def main():
     constraint = RootWorkflowQueryParser("""
         id=1 OR lfn='a\\'b \\' d \\''
