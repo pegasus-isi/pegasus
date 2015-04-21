@@ -281,7 +281,10 @@ class StampedeWorkflowQueries(WorkflowQueries):
             return q.one()
         except NoResultFound, e:
             raise e
+
     def get_workflow_state(self, wf_id, ):
+        pass
+
     @staticmethod
     def get_total_workflows(q, use_cache=True):
         cache_key = ''
