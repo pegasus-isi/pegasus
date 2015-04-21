@@ -1295,17 +1295,18 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
           maxwalltime</emphasis> with the job that specifies the max runtime
           in minutes before the job will be killed by the local resource
           manager ( such as PBS) deployed on the site. Usually, this value
-          should be associated with the execution site in the site catalog.
-          </para>
+          should be associated with the execution site in the site
+          catalog.</para>
         </listitem>
       </orderedlist>
 
       <para>Pegasus planner uses the above mentioned profile keys to setup
-      pegasus-kickstart such that the job is sent a TERM signal when expected
-      runtime of job is reached. A KILL signal is sent at (expected_walltime +
-      (maxwalltime-expected_walltime)/2) seconds. This ensures that there is
-      enough time for pegasus-lite to transfer the checkpoint file before the
-      job is killed by the underlying scheduler.</para>
+      pegasus-kickstart such that the job is sent a TERM signal when the
+      checkpoint time of job is reached. A KILL signal is sent at
+      (expected_walltime + (maxwalltime-checkpoint.time)/2) minutes. This
+      ensures that there is enough time for pegasus-lite to transfer the
+      checkpoint file before the job is killed by the underlying
+      scheduler.</para>
     </section>
 
     <section>
@@ -1401,18 +1402,19 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
     <section>
       <title>GridFTP over SSH (sshftp)</title>
 
-      <para>Instead of using X.509 based security, newer version of Globus GridFTP can be
-            configured to set up transfers over SSH. See the
-            <ulink url="http://toolkit.globus.org/toolkit/docs/6.0/gridftp/admin/#gridftp-admin-config-security-sshftp">Globus Documentation</ulink>
-            for details on installing and setting up this feature.</para>
+      <para>Instead of using X.509 based security, newer version of Globus
+      GridFTP can be configured to set up transfers over SSH. See the <ulink
+      url="http://toolkit.globus.org/toolkit/docs/6.0/gridftp/admin/#gridftp-admin-config-security-sshftp">Globus
+      Documentation</ulink> for details on installing and setting up this
+      feature.</para>
 
-      <para>Pegasus requires the ability to specify which SSH key to be used at runtime,
-            and thus a small modification is necessary to the default Globus configuration.
-            On the hosts where Pegasus initiates transfers (which depends on the data
-            configuration of the workflow), please replace 
-            <emphasis>gridftp-ssh</emphasis>, usually located under
-            <emphasis>/usr/share/globus/gridftp-ssh</emphasis>, with:</para>
-      
+      <para>Pegasus requires the ability to specify which SSH key to be used
+      at runtime, and thus a small modification is necessary to the default
+      Globus configuration. On the hosts where Pegasus initiates transfers
+      (which depends on the data configuration of the workflow), please
+      replace <emphasis>gridftp-ssh</emphasis>, usually located under
+      <emphasis>/usr/share/globus/gridftp-ssh</emphasis>, with:</para>
+
       <programlisting>
 #!/bin/bash
 
@@ -1453,10 +1455,10 @@ fi
 exec /usr/bin/ssh $extra_opts $port_str $remote_host $remote_program
 </programlisting>
 
-      <para>Once configured, you should be able to use URLs such as <emphasis>sshftp://username@host/foo/bar.txt</emphasis> in your workflows.</para>
-
+      <para>Once configured, you should be able to use URLs such as
+      <emphasis>sshftp://username@host/foo/bar.txt</emphasis> in your
+      workflows.</para>
     </section>
-
   </section>
 
   <section id="cred_staging">
