@@ -16,6 +16,7 @@ __author__ = 'Rajiv Mayani'
 
 import logging
 
+
 from flask import g, request, make_response
 
 from Pegasus.service.monitoring import monitoring_routes
@@ -135,7 +136,12 @@ def get_root_workflow(username, m_wf_id):
     :return type: Record
     :return resource: Root Workflow
     """
-    pass
+    queries = MasterWorkflowQueries(g.master_db_url)
+
+    record = queries.get_root_workflow(m_wf_id)
+    serializer = RootWorkflowSerializer(**g.query_args)
+    response_json = serializer.encode_record(record)
+    return make_response(response_json, 200, JSON_HEADER)
 
 
 """
@@ -255,7 +261,7 @@ def get_workflow_host(username, m_wf_id, wf_id, host_id):
 
 
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/host')
-def get_job_instance_host(username, m_wf_id, wf_id, job_instance_id):
+def get_job_instance_host(username, m_wf_id, wf_id, job_id, job_instance_id):
     pass
 
 
@@ -274,7 +280,7 @@ Job State
 """
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/state')
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/state/query')
-def get_job_instance_state(username, m_wf_id, wf_id, job_iwd, job_instance_id):
+def get_job_instance_state(username, m_wf_id, wf_id, job_id, job_instance_id):
     pass
 
 
@@ -335,11 +341,11 @@ Job Instance
 """
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance')
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/query')
-def get_workflow_job_instances(username, m_wf_id, wf_id):
+def get_workflow_job_instances(username, m_wf_id, wf_id, job_id):
     pass
 
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>')
-def get_workflow_job_instance(username, m_wf_id, wf_id, job_instance_id):
+def get_workflow_job_instance(username, m_wf_id, wf_id, job_id, job_instance_id):
     pass
 
 
@@ -380,7 +386,7 @@ def get_job_instance_invocations(username, m_wf_id, wf_id, job_id, job_instance_
     pass
 
 
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/<job_instance_id>/invocation/<invocation_id>')
+@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/invocation/<invocation_id>')
 def get_job_instance_invocation(username, m_wf_id, wf_id, job_id, job_instance_id, invocation_id):
     pass
 
