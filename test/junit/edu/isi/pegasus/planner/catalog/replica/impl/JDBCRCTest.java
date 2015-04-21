@@ -19,6 +19,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
 import edu.isi.pegasus.common.util.StreamGobbler;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 
@@ -67,7 +68,8 @@ public class JDBCRCTest {
             );
 
             Runtime r = Runtime.getRuntime();
-            Process p = r.exec(command);
+            String[] envp = {"PYTHONPATH=" + System.getProperty("externals.python.path")};
+            Process p = r.exec(command, envp);
 
             //spawn off the gobblers with the already initialized default callback
             StreamGobbler ips
