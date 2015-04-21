@@ -15,18 +15,20 @@
  */
 package edu.isi.pegasus.planner.catalog.replica.impl;
 
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
+import edu.isi.pegasus.common.util.StreamGobbler;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
+import edu.isi.pegasus.planner.test.DefaultTestSetup;
+import edu.isi.pegasus.planner.test.TestSetup;
 
 import java.io.File;
 import java.io.IOException;
-
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 
-import static java.nio.file.Files.readAllBytes;
-import static java.nio.file.Paths.get;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -41,6 +43,8 @@ import org.junit.After;
  */
 public class JDBCRCTest {
 
+    private TestSetup mTestSetup;
+    private LogManager mLogger;
     private JDBCRC jdbcrc = null;
 
     public JDBCRCTest() {
@@ -49,22 +53,47 @@ public class JDBCRCTest {
     @Before
     public void setUp() throws IOException {
 
+        String command = "./bin/pegasus-db-admin create jdbc:sqlite:jdbcrc_test.db";
+        
         try {
+            mTestSetup = new DefaultTestSetup();
+            mLogger = mTestSetup.loadLogger(mTestSetup.loadPropertiesFromFile(".properties", new LinkedList()));
+            mLogger.logEventStart("test.pegasus.url", "setup", "0");
+
             jdbcrc = new JDBCRC(
                     "org.sqlite.JDBC",
                     "jdbc:sqlite:jdbcrc_test.db",
                     "root", ""
             );
 
-            Statement stm = jdbcrc.mConnection.createStatement();
-            stm.executeUpdate(new String(readAllBytes(get("share/pegasus/sql/create-sqlite-init.sql"))));
-            String sql = new String(readAllBytes(get("share/pegasus/sql/create-sqlite-rc.sql")));
-            sql = sql.substring(sql.indexOf(";") + 1);
-            stm.executeUpdate(sql);
-            stm.close();
+            Runtime r = Runtime.getRuntime();
+            Process p = r.exec(command);
 
-        } catch (LinkageError ex) {
-            throw new IOException(ex);
+            //spawn off the gobblers with the already initialized default callback
+            StreamGobbler ips
+                    = new StreamGobbler(p.getInputStream(), new DefaultStreamGobblerCallback(
+                                    LogManager.CONSOLE_MESSAGE_LEVEL));
+            StreamGobbler eps
+                    = new StreamGobbler(p.getErrorStream(), new DefaultStreamGobblerCallback(
+                                    LogManager.ERROR_MESSAGE_LEVEL));
+
+            ips.start();
+            eps.start();
+
+            //wait for the threads to finish off
+            ips.join();
+            eps.join();
+
+            int status = p.waitFor();
+            if (status != 0) {
+                throw new RuntimeException("Database creation failed with non zero exit status " + command);
+            }
+        } catch (IOException ioe) {
+            mLogger.log("IOException while executing " + command, ioe,
+                    LogManager.ERROR_MESSAGE_LEVEL);
+            throw new RuntimeException("IOException while executing " + command, ioe);
+        } catch (InterruptedException ie) {
+            //ignore
         } catch (ClassNotFoundException ex) {
             throw new IOException(ex);
         } catch (SQLException ex) {
@@ -134,7 +163,7 @@ public class JDBCRCTest {
         assertFalse(c.contains(new ReplicaCatalogEntry("b", attr)));
         assertFalse(c.contains(new ReplicaCatalogEntry("b", attr2)));
     }
-    
+
     @Test
     public void simpleUpdate() {
         jdbcrc.insert("a", new ReplicaCatalogEntry("d"));

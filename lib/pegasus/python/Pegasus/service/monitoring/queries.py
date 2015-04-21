@@ -16,6 +16,9 @@ __author__ = 'Rajiv Mayani'
 
 import logging
 
+import hashlib
+
+from sqlalchemy import desc
 from sqlalchemy.orm.exc import NoResultFound
 
 from Pegasus.db import connection
@@ -24,7 +27,10 @@ from Pegasus.db.schema import DashboardWorkflow, Workflow
 from Pegasus.db.errors import StampedeDBNotFoundError
 from Pegasus.db.admin.admin_loader import DBAdminError
 
-from pegasus.service import cache
+from Pegasus.service import cache
+from Pegasus.service.base import BaseOrderParser
+
+log = logging.getLogger(__name__)
 
 
 class WorkflowQueries(SQLAlchemyInit):
@@ -32,23 +38,46 @@ class WorkflowQueries(SQLAlchemyInit):
         if connection_string is None:
             raise ValueError('Connection string is required')
 
-        self.log = logging.getLogger("%s.%s" % (self.__module__, self.__class__.__name__))
+        md5sum = hashlib.md5()
+        md5sum.update(connection_string)
+        self._conn_string_csum = md5sum.hexdigest()
 
         try:
             SQLAlchemyInit.__init__(self, connection_string)
-        except (connection.ConnectionError, DBAdminError), e:
-            self.log.exception(e)
+        except (connection.ConnectionError, DBAdminError) as e:
+            log.exception(e)
             raise StampedeDBNotFoundError
 
     @staticmethod
     def _get_count(q, cache_key, use_cache=True, timeout=60):
-        if use_cache and cache_key in cache:
+        if use_cache and cache.get(cache_key):
+            log.debug('Cache hit for %s' % cache_key)
             count = cache.get(cache_key)
         else:
             count = q.count()
             cache.set(cache_key, count, timeout)
 
         return count
+
+    @staticmethod
+    def _add_ordering(q, order, fields):
+        if not q or not order or not fields:
+            return q
+
+        order_parser = BaseOrderParser(order)
+        sort_order = order_parser.get_sort_order()
+
+        for identifier, sort_dir in sort_order:
+            if identifier not in fields:
+                log.error('Invalid field %r' % identifier)
+                raise InvalidOrderError('Invalid field %r' % identifier)
+
+            if sort_dir == 'ASC':
+                q = q.order_by(fields[identifier])
+            else:
+                q = q.order_by(desc(fields[identifier]))
+
+        return q
 
     @staticmethod
     def _add_pagination(q, start_index=None, max_results=None, total_records=None):
@@ -79,7 +108,7 @@ class WorkflowQueries(SQLAlchemyInit):
 
 
 class MasterWorkflowQueries(WorkflowQueries):
-    def get_root_workflows(self, start_index=None, max_results=None, query=None, use_cache=True):
+    def get_root_workflows(self, start_index=None, max_results=None, query=None, order=None, use_cache=True, **kwargs):
         """
         Returns a collection of the Root Workflow objects.
 
@@ -97,7 +126,7 @@ class MasterWorkflowQueries(WorkflowQueries):
         total_records = MasterWorkflowQueries.get_total_root_workflows(q, use_cache)
 
         if total_records == 0:
-            return 0, 0, []
+            return [], 0, 0
 
         #
         # Construct SQLAlchemy Query `q` to get filtered count.
@@ -108,7 +137,7 @@ class MasterWorkflowQueries(WorkflowQueries):
         total_filtered = MasterWorkflowQueries.get_filtered_root_workflows(q, use_cache)
 
         if total_filtered == 0 or (start_index and start_index >= total_filtered):
-            return 0, 0, []
+            return [], total_records, 0
 
         #
         # Construct SQLAlchemy Query `q` to sort
@@ -118,11 +147,10 @@ class MasterWorkflowQueries(WorkflowQueries):
         #
         # Construct SQLAlchemy Query `q` to add pagination
         #
-        q = WorkflowQueries._add_pagination(self, start_index, max_results, total_filtered)
-
+        q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
         records = q.all()
 
-        return total_records, total_filtered, records
+        return records, total_records, total_filtered
 
     def get_root_workflow(self, m_wf_id):
         """
@@ -145,7 +173,8 @@ class MasterWorkflowQueries(WorkflowQueries):
 
         try:
             return q.one()
-        except NoResultFound, e:
+        except NoResultFound as e:
+            log.exception('Not Found: Root Workflow for given m_wf_id (%s)' % m_wf_id)
             raise e
 
     def get_wf_id_for_wf_uuid(self, wf_uuid):
@@ -162,7 +191,8 @@ class MasterWorkflowQueries(WorkflowQueries):
 
         try:
             return q.one()
-        except NoResultFound, e:
+        except NoResultFound as e:
+            log.exception('Not Found: wf_id for given the wf_uuid (%s)' % wf_uuid)
             raise e
 
     @staticmethod

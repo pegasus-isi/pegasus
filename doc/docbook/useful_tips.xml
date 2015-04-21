@@ -39,29 +39,42 @@ Your database has been updated.
 Your database is compatible with Pegasus version: 4.5.0
     </programlisting>
                          
-    <para>The <emphasis role="bold">pegasus-db-admin</emphasis> tool provides 
-    three different ways to connect to a database. The first method is by providing
-    the URL to the database:</para>
+    <para>The <emphasis role="bold">pegasus-db-admin</emphasis> tool can operate 
+    directly over a database URL, or can read configuration parameters from the 
+    properties file or a submit directory. In the later case, a database type 
+    should be provided to indicate which properties should be used to connect to 
+    the database. For example, the tool will seek for <emphasis>pegasus.catalog.replica.db.*</emphasis> 
+    properties to connect to the JDBCRC database; or seek for 
+    <emphasis>pegasus.dashboard.output</emphasis> property to connect to the MASTER 
+    database; or seek for the <emphasis>pegasus.monitord.output</emphasis> property 
+    to connect to the WORKFLOW database.</para>
+    
+    <para>Example: connection by providing the URL to the database:</para>
     
     <programlisting>
+$ pegasus-db-admin create sqlite:///${HOME}/.pegasus/workflow.db
 $ pegasus-db-admin update sqlite:///${HOME}/.pegasus/workflow.db
     </programlisting>
     
-    <para>The second method is by providing a properties file that contains the
+    <para>Example: connection by providing a properties file that contains the
     information to connect to the database. Note that a database type (MASTER,
     WORKFLOW, or JDBCRC) should be provided:</para>
     
     <programlisting>
 $ pegasus-db-admin update -c pegasus.properties -t MASTER
+$ pegasus-db-admin update -c pegasus.properties -t JDBCRC
+$ pegasus-db-admin update -c pegasus.properties -t WORKFLOW
     </programlisting>
     
-    <para>The thrid method is by providing the path to the submit directory  
+    <para>Example: connection by providing the path to the submit directory  
     containning the <emphasis>braindump.txt</emphasis> file, where information 
     to connect to the database can be extracted. Note that a database type 
     (MASTER, WORKFLOW, or JDBCRC) should also be provided:</para>
     
     <programlisting>
 $ pegasus-db-admin update -s /path/to/submitdir -t WORKFLOW
+$ pegasus-db-admin update -s /path/to/submitdir -t MASTER
+$ pegasus-db-admin update -s /path/to/submitdir -t JDBCRC
     </programlisting>
             
     <para>Note that, if no URL is provided, the tool will create/use a SQLite 

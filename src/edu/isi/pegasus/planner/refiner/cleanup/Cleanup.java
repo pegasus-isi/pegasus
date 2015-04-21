@@ -253,8 +253,8 @@ public class Cleanup implements CleanupImplementation{
 
         cJob.setJobType( Job.CLEANUP_JOB );
         cJob.setName( id );
-        //PM-150 for normal cleanup jobs we don't want to fail
-        cJob.setArguments( " --ignore-failures " );
+        // empty arguments, as this job is a clone
+        cJob.setArguments("");
         
         //bug fix for JIRA PM-311
         //we dont want cleanup job to inherit any stdout or stderr

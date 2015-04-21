@@ -49,14 +49,20 @@ def db_create(dburi, engine, db, pegasus_version=None, force=False):
     table_names = engine.table_names()
     db_version.create(engine, checkfirst=True)
 
+    v = -1
     if len(table_names) == 0:
         engine.execute(db_version.insert(), version_number=CURRENT_DB_VERSION, 
                 version_timestamp=datetime.datetime.now().strftime("%s"))
         log.info("Created Pegasus database in: %s" % dburi)
     else:
-        _discover_version(db, pegasus_version=pegasus_version, force=force)
+        v = _discover_version(db, pegasus_version=pegasus_version, force=force, verbose=False)
     
-    metadata.create_all(engine)
+    try:
+        metadata.create_all(engine)
+    except OperationalError, e:
+        raise DBAdminError(e)
+    if v > 0:
+        log.info("Your database has been updated.")
             
 
 def db_current_version(db, parse=False, force=False):
@@ -157,7 +163,7 @@ def _get_version(db):
     return current_version[0]
 
 
-def _discover_version(db, pegasus_version=None, force=False):
+def _discover_version(db, pegasus_version=None, force=False, verbose=True):
     version = parse_pegasus_version(pegasus_version)
 
     current_version = -1
@@ -171,7 +177,7 @@ def _discover_version(db, pegasus_version=None, force=False):
         try:
             _verify_tables(db)
             log.info("Your database is already updated.")
-            return
+            return None
         except DBAdminError:
             current_version = -1
     
@@ -187,7 +193,8 @@ def _discover_version(db, pegasus_version=None, force=False):
         
     if v > current_version:
         _update_version(db, i)
-        log.info("Your database has been updated.")
+        if verbose:
+            log.info("Your database has been updated.")
     return v
 
 

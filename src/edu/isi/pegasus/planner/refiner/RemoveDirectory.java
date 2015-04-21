@@ -552,10 +552,8 @@ public class RemoveDirectory extends Engine {
         newJob.jobClass = Job.CLEANUP_JOB;
         newJob.jobID = jobName;
 
-        // ignore failures as cleanup is best effort - we don't want a workflow
-        // to get stuck just because the final cleanup fails
         //PM-150 for leaf cleanup nodes we will set a specific recursive flag
-        newJob.setArguments( "--ignore-failures --recursive" );
+        newJob.setArguments( "--recursive" );
         
         //the profile information from the pool catalog needs to be
         //assimilated into the job.

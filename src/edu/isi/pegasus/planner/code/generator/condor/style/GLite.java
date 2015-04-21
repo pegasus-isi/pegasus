@@ -427,7 +427,7 @@ public class GLite extends Abstract {
      * 
      * @return 
      */
-    private String pbsFormattedTimestamp(String minutes ) {
+    public String pbsFormattedTimestamp(String minutes ) {
         int minutesValue = Integer.parseInt(minutes);
         
         if( minutesValue < 0 ){
@@ -465,7 +465,7 @@ public class GLite extends Abstract {
         System.out.println( "60 mins is " + gl.pbsFormattedTimestamp( "60") );
         System.out.println( "69 mins is " + gl.pbsFormattedTimestamp( "69") );
         System.out.println( "169 mins is " + gl.pbsFormattedTimestamp( "169") );
-        System.out.println( "1690 mins is " + gl.pbsFormattedTimestamp( "169056") );
+        System.out.println( "1690 mins is " + gl.pbsFormattedTimestamp( "1690") );
     }
 
 }

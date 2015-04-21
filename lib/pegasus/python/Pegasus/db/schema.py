@@ -607,7 +607,7 @@ rc_lfn = Table('rc_lfn', metadata,
     **table_keywords
 )
 
-Index('ix_rc_lfn', rc_lfn.c.lfn, unique=True)
+Index('ix_rc_lfn', rc_lfn.c.lfn)
 orm.mapper(RCLFN, rc_lfn)
 
 rc_attr = Table('rc_attr', metadata,
