@@ -50,6 +50,97 @@ class RootWorkflowQueryParser(BaseQueryParser):
     #
     BaseQueryParser.mapper[BaseQueryParser.IDENTIFIER] = identifier_handler
 
+class StampedeWorkflowQueryParser(BaseQueryParser):
+    FIELDS = set([
+        'w.root_wf_id',
+        'w.wf_id',
+        'w.wf_uuid',
+        'w.submit_hostname',
+        'w.submit_dir',
+        'w.planner_arguments',
+        'w.planner_version',
+        'w.user',
+        'w.grid_dn',
+        'w.dax_label',
+        'w.dax_version',
+        'w.dax_file',
+        'w.dag_file_name',
+        'w.timestamp',
+        'ws.wf_id',
+        'ws.state',
+        'ws.timestamp',
+        'ws.restart_count',
+        'ws.status',
+        'j.job_id',
+        'j.wf_id',
+        'j.exec_job_id',
+        'j.submit_file',
+        'j.type_desc',
+        'j.clustered',
+        'j.max_retries',
+        'j.executable',
+        'j.argv',
+        'j.task_count',
+        'h.host_id',
+        'h.wf_id',
+        'h.site',
+        'h.hostname',
+        'h.ip',
+        'h.uname',
+        'h.total_memory',
+        'js.job_instance_id',
+        'js.state',
+        'js.timestamp',
+        'js.jobstate_submit_seq',
+        't.task_id',
+        't.job_id',
+        't.wf_id',
+        't.abs_task_id',
+        'transformation',
+        't.argv',
+        't.type_desc',
+        'ji.job_instance_id',
+        'ji.job_id',
+        'ji.host_id',
+        'ji.job_submit_seq',
+        'ji.sched_id',
+        'ji.site',
+        'ji.user',
+        'ji.work_dir',
+        'ji.cluster_start',
+        'ji.cluster_duration',
+        'ji.local_duration',
+        'ji.subwf_id',
+        'ji.stdout_file',
+        'ji.stdout_text',
+        'ji.stderr_file',
+        'ji.stderr_text',
+        'ji.stderr_file',
+        'ji.stderr_text',
+        'i.invocation_id',
+        'i.job_instance_id',
+        'i.task_submit_seq',
+        'i.start_time',
+        'i.remote_duration',
+        'i.remote_cpu_time',
+        'i.exitcode',
+        'i.raw_status',
+        'i.transformation',
+        'i.executable',
+        'i.argv',
+        'i.abs_task_id',
+        'i.wf_id'
+    ])
+
+    def __init__(self, expression):
+        super(StampedeWorkflowQueryParser, self).__init__(expression)
+
+    def indentifier_handler(self, text):
+        if text not in StampedeWorkflowQueryParser.FIELDS:
+            raise InvalidQueryError('Invalid field %r' % text)
+
+
+        super(RootWorkflowQueryParser, self).identifier_handler(text)
 
 def main():
     constraint = RootWorkflowQueryParser("""
