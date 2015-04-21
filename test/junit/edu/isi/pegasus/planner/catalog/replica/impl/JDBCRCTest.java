@@ -19,12 +19,15 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
 import edu.isi.pegasus.common.util.StreamGobbler;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
+import edu.isi.pegasus.planner.test.DefaultTestSetup;
+import edu.isi.pegasus.planner.test.TestSetup;
 
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -40,6 +43,8 @@ import org.junit.After;
  */
 public class JDBCRCTest {
 
+    private TestSetup mTestSetup;
+    private LogManager mLogger;
     private JDBCRC jdbcrc = null;
 
     public JDBCRCTest() {
@@ -48,20 +53,45 @@ public class JDBCRCTest {
     @Before
     public void setUp() throws IOException {
 
+        String command = "./bin/pegasus-db-admin create jdbc:sqlite:jdbcrc_test.db";
+        
         try {
+            mTestSetup = new DefaultTestSetup();
+            mLogger = mTestSetup.loadLogger(mTestSetup.loadPropertiesFromFile(".properties", new LinkedList()));
+            mLogger.logEventStart("test.pegasus.url", "setup", "0");
+
             jdbcrc = new JDBCRC(
                     "org.sqlite.JDBC",
                     "jdbc:sqlite:jdbcrc_test.db",
                     "root", ""
             );
 
-            String command = "./bin/pegasus-db-admin create jdbc:sqlite:jdbcrc_test.db";
             Runtime r = Runtime.getRuntime();
             Process p = r.exec(command);
+
+            //spawn off the gobblers with the already initialized default callback
+            StreamGobbler ips
+                    = new StreamGobbler(p.getInputStream(), new DefaultStreamGobblerCallback(
+                                    LogManager.CONSOLE_MESSAGE_LEVEL));
+            StreamGobbler eps
+                    = new StreamGobbler(p.getErrorStream(), new DefaultStreamGobblerCallback(
+                                    LogManager.ERROR_MESSAGE_LEVEL));
+
+            ips.start();
+            eps.start();
+
+            //wait for the threads to finish off
+            ips.join();
+            eps.join();
+
             int status = p.waitFor();
             if (status != 0) {
                 throw new RuntimeException("Database creation failed with non zero exit status " + command);
             }
+        } catch (IOException ioe) {
+            mLogger.log("IOException while executing " + command, ioe,
+                    LogManager.ERROR_MESSAGE_LEVEL);
+            throw new RuntimeException("IOException while executing " + command, ioe);
         } catch (InterruptedException ie) {
             //ignore
         } catch (ClassNotFoundException ex) {
