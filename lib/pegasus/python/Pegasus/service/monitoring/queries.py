@@ -46,16 +46,52 @@ class WorkflowQueries(SQLAlchemyInit):
             log.exception(e)
             raise StampedeDBNotFoundError
 
-    @staticmethod
-    def _get_count(q, cache_key, use_cache=True, timeout=60):
+    def _cache_key_from_query(self, q):
+        statement = q.with_labels().statement
+        compiled = statement.compile()
+        params = compiled.params
+
+        cache_key = ' '.join([self._conn_string_csum, str(compiled)] + [str(params[k]) for k in sorted(params)])
+        return hashlib.md5(cache_key).hexdigest()
+
+    def _get_count(self, q, use_cache=True, timeout=60):
+        cache_key = '%s.count' % self._cache_key_from_query(q)
         if use_cache and cache.get(cache_key):
-            log.debug('Cache hit for %s' % cache_key)
+            log.debug('Cache Hit: %s' % cache_key)
             count = cache.get(cache_key)
+
         else:
+            log.debug('Cache Miss: %s' % cache_key)
             count = q.count()
             cache.set(cache_key, count, timeout)
 
         return count
+
+    def _get_all(self, q, use_cache=True, timeout=60):
+        cache_key = '%s.all' % self._cache_key_from_query(q)
+        if use_cache and cache.get(cache_key):
+            log.debug('Cache Hit: %s' % cache_key)
+            record = cache.get(cache_key)
+
+        else:
+            log.debug('Cache Miss: %s' % cache_key)
+            record = q.all()
+            cache.set(cache_key, record, timeout)
+
+        return record
+
+    def _get_one(self, q, use_cache=True, timeout=60):
+        cache_key = '%s.one' % self._cache_key_from_query(q)
+        if use_cache and cache.get(cache_key):
+            log.debug('Cache Hit: %s' % cache_key)
+            record = cache.get(cache_key)
+
+        else:
+            log.debug('Cache Miss: %s' % cache_key)
+            record = q.one()
+            cache.set(cache_key, record, timeout)
+
+        return record
 
     @staticmethod
     def _add_ordering(q, order, fields):
@@ -112,7 +148,7 @@ class MasterWorkflowQueries(WorkflowQueries):
 
         :param start_index: Return results starting from record `start_index`
         :param max_results: Return a maximum of `max_results` records
-        :param use_cache:
+        :param use_cache: If available, use cached results
 
         :return: Collection of DashboardWorklfow objects
         """
@@ -121,7 +157,7 @@ class MasterWorkflowQueries(WorkflowQueries):
         # Construct SQLAlchemy Query `q` to get total count.
         #
         q = self.session.query(DashboardWorkflow)
-        total_records = MasterWorkflowQueries.get_total_root_workflows(q, use_cache)
+        total_records = total_filtered = self._get_count(q, use_cache)
 
         if total_records == 0:
             log.debug('total_records 0')
@@ -132,31 +168,34 @@ class MasterWorkflowQueries(WorkflowQueries):
         #
         # TODO: Validate `query`
         # TODO: Construct JOINS as per `query`
-        q = q
-        total_filtered = MasterWorkflowQueries.get_filtered_root_workflows(q, use_cache)
+        if query:
+            total_filtered = self._get_count(q, use_cache)
 
-        if total_filtered == 0 or (start_index and start_index >= total_filtered):
-            log.debug('total_filtered is 0 or start_index >= total_filtered')
-            return [], total_records, total_filtered
+            if total_filtered == 0 or (start_index and start_index >= total_filtered):
+                log.debug('total_filtered is 0 or start_index >= total_filtered')
+                return [], total_records, total_filtered
 
         #
         # Construct SQLAlchemy Query `q` to sort
         #
-        # TODO: Add support for sorting
+        if order:
+            # TODO: Add support for sorting
+            pass
 
         #
         # Construct SQLAlchemy Query `q` to add pagination
         #
         q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
-        records = q.all()
+        records = self._get_all(q, use_cache)
 
         return records, total_records, total_filtered
 
-    def get_root_workflow(self, m_wf_id):
+    def get_root_workflow(self, m_wf_id, use_cache=True):
         """
         Returns a Root Workflow object identified by m_wf_id.
 
         :param m_wf_id: m_wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
+        :param use_cache: If available, use cached results
 
         :return: Root Workflow object
         """
@@ -172,20 +211,10 @@ class MasterWorkflowQueries(WorkflowQueries):
             q = q.filter(DashboardWorkflow.wf_uuid == m_wf_id)
 
         try:
-            return q.one()
+            return self._get_one(q, use_cache)
         except NoResultFound as e:
             log.exception('Not Found: Root Workflow for given m_wf_id (%s)' % m_wf_id)
             raise e
-
-    @staticmethod
-    def get_total_root_workflows(q, use_cache=True):
-        cache_key = ''
-        return WorkflowQueries._get_count(q, cache_key, use_cache)
-
-    @staticmethod
-    def get_filtered_root_workflows(q, use_cache=True):
-        cache_key = ''
-        return WorkflowQueries._get_count(q, cache_key, use_cache)
 
 
 class StampedeWorkflowQueries(WorkflowQueries):
