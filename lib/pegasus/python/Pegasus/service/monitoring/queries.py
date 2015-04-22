@@ -137,7 +137,8 @@ class MasterWorkflowQueries(WorkflowQueries):
         total_filtered = MasterWorkflowQueries.get_filtered_root_workflows(q, use_cache)
 
         if total_filtered == 0 or (start_index and start_index >= total_filtered):
-            return [], total_records, 0
+            log.debug('total_filtered is 0 or start_index >= total_filtered')
+            return [], total_records, total_filtered
 
         #
         # Construct SQLAlchemy Query `q` to sort
