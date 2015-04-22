@@ -15,15 +15,11 @@
 
 package org.griphyn.vdl.planner;
 
-import java.io.*;
 import java.util.*;
 
 import org.griphyn.vdl.util.Logging;
-import edu.isi.pegasus.planner.catalog.site.impl.old.classes.SiteInfo;
-import edu.isi.pegasus.planner.classes.Profile;
-import edu.isi.pegasus.planner.catalog.site.impl.old.classes.WorkDir;
-import edu.isi.pegasus.planner.catalog.site.impl.old.PoolMode;
-import edu.isi.pegasus.planner.catalog.site.impl.old.PoolInfoProvider;
+
+
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
 /**
@@ -38,10 +34,7 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
  */
 public class SCWrapper implements Wrapper
 {
-  /**
-   * site catalog API reference.
-   */
-  private PoolInfoProvider m_sc = null;
+  
 
   /**
    * Connects the interface with the site catalog implementation. The
@@ -49,16 +42,7 @@ public class SCWrapper implements Wrapper
    */
   public SCWrapper()
   {
-    try {
-      PegasusProperties p = PegasusProperties.nonSingletonInstance();
-      String poolClass = PoolMode.getImplementingClass( p.getPoolMode() );
-      m_sc = PoolMode.loadPoolInstance( poolClass, p.getPoolFile(),
-					PoolMode.NON_SINGLETON_LOAD );
-    } catch ( Exception e ) {
-      Logging.instance().log( "planner", 0, "Warning: While loading SC: " +
-			      e.getMessage() + ", ignoring" );
-      m_sc = null;
-    }
+    throw new RuntimeException( "Unsupported wrapper ");
   }
 
   /**
@@ -67,7 +51,7 @@ public class SCWrapper implements Wrapper
    */
   public void close()
   {
-    if ( m_sc != null )  m_sc = null;
+    throw new RuntimeException( "Unsupported wrapper ");
   }
 
   /**
@@ -86,19 +70,8 @@ public class SCWrapper implements Wrapper
    */
   public String getWorkingDirectory() 
   {
-    // sanity check
-    if ( m_sc == null ) return null;
-
-    String result = null;
-    try {
-      result = m_sc.getExecPoolWorkDir("local");
-    } catch ( NullPointerException npe ) {
-      // noop
-    }
-
-    // sanitization
-    if ( result != null && result.length() == 0 ) result = null;
-    return result;
+    
+    throw new RuntimeException( "Unsupported wrapper ");
   }
 
   /**
@@ -110,25 +83,7 @@ public class SCWrapper implements Wrapper
    */
   public String getGridLaunch()
   {
-    // sanity check
-    if ( m_sc == null ) return null;
-
-    String result = null;
-    try {
-      SiteInfo siv = m_sc.getPoolEntry( "local", "vanilla" );
-      SiteInfo sit = m_sc.getPoolEntry( "local", "transfer" );
-      if ( siv != null ) {
-	result = siv.getKickstartPath();
-      } else if ( sit != null ) {
-	result = sit.getKickstartPath();
-      }
-    } catch ( NullPointerException npe ) {
-      // noop
-    }
-
-    // sanitization
-    if ( result != null && result.length() == 0 ) result = null;
-    return result;
+    throw new RuntimeException( "Unsupported wrapper ");
   }
 
   /**
@@ -140,35 +95,8 @@ public class SCWrapper implements Wrapper
    */
   public Map getProfiles() 
   { 
-    Map result = new HashMap();
-
-    // sanity checks
-    if ( m_sc == null ) return null;
-
-    // ask site catalog
-    List lop = m_sc.getPoolProfile("local");
-
-    // return empty maps now, if there are no profiles
-    if ( lop == null || lop.size() == 0 ) return result;
-
-    Map submap;
-    for ( Iterator i=lop.iterator(); i.hasNext(); ) {
-            edu.isi.pegasus.planner.classes.Profile p =
-	(   edu.isi.pegasus.planner.classes.Profile) i.next();
-      String ns = p.getProfileNamespace().trim().toLowerCase();
-      String key = p.getProfileKey().trim();
-      String value = p.getProfileValue();
-
-      // insert at the right place into the result map
-      if ( result.containsKey(ns) ) {
-	submap = (Map) result.get(ns);
-      } else {
-	result.put( ns, (submap = new HashMap()) );
-      }
-      submap.put( key, value );
-    }
-      
-    return result;
+   
+    throw new RuntimeException( "Unsupported wrapper ");
   }
 
   /**
@@ -178,7 +106,8 @@ public class SCWrapper implements Wrapper
    */
   public String getName() 
   { 
-    return ( m_sc == null ? null : m_sc.getClass().getName() );
+    
+    throw new RuntimeException( "Unsupported wrapper ");
   }
 
   /**
