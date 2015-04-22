@@ -16,8 +16,11 @@ __author__ = 'Rajiv Mayani'
 
 import logging
 
+import hashlib
+
 from flask import g, request, make_response
 
+from Pegasus.service import cache
 from Pegasus.service.monitoring import monitoring_routes
 from Pegasus.service.monitoring.queries import MasterWorkflowQueries
 from Pegasus.service.monitoring.serializer import RootWorkflowSerializer
@@ -25,6 +28,51 @@ from Pegasus.service.monitoring.serializer import RootWorkflowSerializer
 log = logging.getLogger(__name__)
 
 JSON_HEADER = {'Content-Type': 'application/json'}
+
+
+@monitoring_routes.url_value_preprocessor
+def pull_m_wf_id(endpoint, values):
+    """
+    If the requested endpoint contains a value for m_wf_id variable then extract it and set it in g.m_wf_id.
+    """
+    if values and 'm_wf_id' in values:
+        g.m_wf_id = values['m_wf_id']
+
+
+@monitoring_routes.before_request
+def compute_stampede_db_url():
+    """
+    If the requested endpoint requires connecting to a STAMPEDE database, then determine STAMPEDE DB URL and store it
+    in g.stampede_db_url
+    """
+    if '/workflow' not in request.path or 'm_wf_id' not in g:
+        return
+
+    md5sum = hashlib.md5()
+    md5sum.update(g.master_db_url)
+    m_wf_id = g.m_wf_id
+
+    del g.m_wf_id
+
+    def _get_cache_key(key_suffix):
+        return '%s.%s' % (md5sum.hexdigest(), key_suffix)
+
+    cache_key = _get_cache_key(m_wf_id)
+
+    if cache.get(cache_key):
+        log.debug('Cache Hit: compute_stampede_db_url %s' % cache_key)
+        g.stampede_db_url = cache.get(cache_key).db_url
+
+    else:
+        log.debug('Cache Miss: compute_stampede_db_url %s' % cache_key)
+        queries = MasterWorkflowQueries(g.master_db_url)
+        root_workflow = queries.get_root_workflow(m_wf_id)
+        queries.close()
+
+        g.stampede_db_url = root_workflow.db_url
+
+        cache.set(_get_cache_key(root_workflow.wf_id), root_workflow, timeout=600)
+        cache.set(_get_cache_key(root_workflow.wf_uuid), root_workflow, timeout=600)
 
 
 @monitoring_routes.before_request
