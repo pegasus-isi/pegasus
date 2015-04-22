@@ -215,11 +215,7 @@ public class ReplicaFactory{
     if ( catalogImplementor == null )
       throw new RuntimeException( "You need to specify the " +
 				  ReplicaCatalog.c_prefix + " property" );
-    // for Karan: 2005-10-27
-    if ( catalogImplementor.equalsIgnoreCase("rls") ){
-      catalogImplementor = "RLI";
-    }
-
+    
     //File also means SimpleFile
     if( catalogImplementor.equalsIgnoreCase( "File" ) ){
       catalogImplementor = "SimpleFile";
