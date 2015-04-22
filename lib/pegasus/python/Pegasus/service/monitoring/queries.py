@@ -38,9 +38,7 @@ class WorkflowQueries(SQLAlchemyInit):
         if connection_string is None:
             raise ValueError('Connection string is required')
 
-        md5sum = hashlib.md5()
-        md5sum.update(connection_string)
-        self._conn_string_csum = md5sum.hexdigest()
+        self._conn_string_csum = hashlib.md5(connection_string).hexdigest()
 
         try:
             SQLAlchemyInit.__init__(self, connection_string)
