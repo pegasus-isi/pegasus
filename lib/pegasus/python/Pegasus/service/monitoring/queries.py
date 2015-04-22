@@ -177,24 +177,6 @@ class MasterWorkflowQueries(WorkflowQueries):
             log.exception('Not Found: Root Workflow for given m_wf_id (%s)' % m_wf_id)
             raise e
 
-    def get_wf_id_for_wf_uuid(self, wf_uuid):
-        """
-        Returns wf_id for a given wf_uuid
-
-        :param wf_uuid: Workflow UUID
-
-        :return: wf_id for given wf_uuid
-        """
-        q = self.session.query(DashboardWorkflow)
-
-        q = q.filter(DashboardWorkflow.wf_uuid == wf_uuid)
-
-        try:
-            return q.one()
-        except NoResultFound as e:
-            log.exception('Not Found: wf_id for given the wf_uuid (%s)' % wf_uuid)
-            raise e
-
     @staticmethod
     def get_total_root_workflows(q, use_cache=True):
         cache_key = ''
@@ -208,6 +190,6 @@ class MasterWorkflowQueries(WorkflowQueries):
 
 class StampedeWorkflowQueries(WorkflowQueries):
     """
-    TODO: Mimic code above for each remaining resources except for method get_wf_id_for_wf_uuid
+    TODO: Mimic code above for each remaining resources
     """
     pass
