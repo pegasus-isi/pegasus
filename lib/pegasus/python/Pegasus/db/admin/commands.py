@@ -3,58 +3,24 @@ __author__ = "Rafael Ferreira da Silva"
 import logging
 import sys
 
-from Pegasus.command import Command, CompoundCommand
+from Pegasus.command import LoggingCommand, CompoundCommand
 from Pegasus.db import connection
 from Pegasus.db.admin.admin_loader import *
 from Pegasus.db.admin.versions import *
 
-class ConsoleHandler(logging.StreamHandler):
-    """A handler that logs to console in the sensible way.
-
-    StreamHandler can log to *one of* sys.stdout or sys.stderr.
-
-    It is more sensible to log to sys.stdout by default with only error
-    (logging.ERROR and above) messages going to sys.stderr. This is how
-    ConsoleHandler behaves.
-    """
-
-    def __init__(self):
-        logging.StreamHandler.__init__(self)
-        self.stream = None # reset it; we are not going to use it anyway
-
-    def emit(self, record):
-        if record.levelno >= logging.ERROR:
-            self.__emit(record, sys.stderr)
-        else:
-            self.__emit(record, sys.stdout)
-
-    def __emit(self, record, strm):
-        self.stream = strm
-        logging.StreamHandler.emit(self, record)
-
-    def flush(self):
-        # Workaround a bug in logging module
-        # See:
-        #   http://bugs.python.org/issue6333
-        if self.stream and hasattr(self.stream, 'flush') and not self.stream.closed:
-            logging.StreamHandler.flush(self)
-
-
-consoleHandler = ConsoleHandler()
-
 log = logging.getLogger(__name__)
 
 # ------------------------------------------------------
-class CreateCommand(Command):
+class CreateCommand(LoggingCommand):
     description = "Create Pegasus database."
     usage = "Usage: %prog create [options] [DATABASE_URL]"
     
     def __init__(self):
-        Command.__init__(self)
+        LoggingCommand.__init__(self)
         _add_common_options(self)
                               
     def run(self):
-        _set_log_level(self.options.debug)
+        # _set_log_level(self.options.debug)
         
         dburi = None
         if len(self.args) > 0:
@@ -73,12 +39,12 @@ class CreateCommand(Command):
     
 
 # ------------------------------------------------------
-class UpdateCommand(Command):
+class UpdateCommand(LoggingCommand):
     description = "Update the database to the latest or a given version."
     usage = "Usage: %prog update [options] [DATABASE_URL]"
     
     def __init__(self):
-        Command.__init__(self)
+        LoggingCommand.__init__(self)
         _add_common_options(self)
         self.parser.add_option("-V","--version",action="store",type="string", 
             dest="pegasus_version",default=None, help = "Pegasus version")
@@ -103,12 +69,12 @@ class UpdateCommand(Command):
   
     
 # ------------------------------------------------------
-class DowngradeCommand(Command):
+class DowngradeCommand(LoggingCommand):
     description = "Downgrade the database version."
     usage = "Usage: %prog downgrade [options] [DATABASE_URL]"
 
     def __init__(self):
-        Command.__init__(self)
+        LoggingCommand.__init__(self)
         _add_common_options(self)
         self.parser.add_option("-V","--version",action="store",type="string", 
             dest="pegasus_version",default=None, help = "Pegasus version.")
@@ -134,12 +100,12 @@ class DowngradeCommand(Command):
 
 
 # ------------------------------------------------------
-class CheckCommand(Command):
+class CheckCommand(LoggingCommand):
     description = "Verify if the database is updated to the latest or a given version."
     usage = "Usage: %prog check [options] [DATABASE_URL]"
 
     def __init__(self):
-        Command.__init__(self)
+        LoggingCommand.__init__(self)
         _add_common_options(self)
         self.parser.add_option("-V","--version",action="store",type="string", 
             dest="pegasus_version",default=None, help = "Pegasus version")
@@ -166,12 +132,12 @@ class CheckCommand(Command):
    
     
 # ------------------------------------------------------
-class VersionCommand(Command):
+class VersionCommand(LoggingCommand):
     description = "Print the current version of the database."
     usage = "Usage: %prog version [options] [DATABASE_URL]"
 
     def __init__(self):
-        Command.__init__(self)
+        LoggingCommand.__init__(self)
         _add_common_options(self)
         self.parser.add_option("-e", "--version-value", action="store_false", dest="version_value",
                                default=True, help="Show actual version values.")
@@ -197,16 +163,12 @@ class VersionCommand(Command):
 
 # ------------------------------------------------------
 def _print_version(data):
-    log.info("Your database is compatible with Pegasus version: %s" % data)
+    print "Your database is compatible with Pegasus version: %s" % data
 
 
 def _set_log_level(debug):
-    log_level = logging.INFO
     if debug:
-        log_level = logging.DEBUG
-
-    logging.getLogger().setLevel(log_level)
-    consoleHandler.setLevel(log_level)
+        logging.getLogger().setLevel(logging.DEBUG)
 
 
 def _validate_conf_type_options(config_properties, submit_dir, db_type):
@@ -262,7 +224,7 @@ def _print_db_check(db, compatible, pegasus_version=None, parse=False):
             friendly_version = get_compatible_version(version)
 
     if compatible:
-        log.info("Your database is compatible with version %s." % friendly_version)
+        print "Your database is compatible with version %s." % friendly_version
     else:
         log.error("Your database is NOT compatible with version %s." % friendly_version)
         current_version = db_current_version(db)
@@ -297,6 +259,5 @@ class DBAdminCommand(CompoundCommand):
 
 def main():
     "The entry point for pegasus-db-admin"
-    logging.getLogger().addHandler(consoleHandler)
     DBAdminCommand().main()
 

@@ -18,7 +18,7 @@ class Version(BaseVersion):
     
 
     def update(self, force=False):
-        log.debug("Updating to version %s" % DB_VERSION)
+        log.info("Updating to version %s" % DB_VERSION)
         try:
             res = self.db.query(EnsembleWorkflow.id).limit(1).first()
             if not res:
