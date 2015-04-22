@@ -151,11 +151,6 @@ public class PlannerOptions extends Data implements Cloneable{
      */
     private boolean mGenRandomDir;
 
-    /**
-     * Whether to attempt authentication against the jobmanagers for the pools
-     * specified at runtime.
-     */
-    private boolean mAuthenticate;
 
     /**
      * The megadag generation mode.
@@ -304,7 +299,6 @@ public class PlannerOptions extends Data implements Cloneable{
         mGenRandomDir     = false;
         mRandomDirName    = null;
         mOptArg           = false;
-        mAuthenticate     = false;
         mMegadag          = null;
         mVDSProps         = null;
         mClusterer        = null;
@@ -327,14 +321,7 @@ public class PlannerOptions extends Data implements Cloneable{
         mConfFile         = null;
     }
 
-    /**
-     * Returns the authenticate option for the planner.
-     *
-     * @return boolean indicating if it was set or not.
-     */
-    public boolean authenticationSet(){
-        return mAuthenticate;
-    }
+    
 
     /**
      * Returns the cache files.
@@ -738,14 +725,6 @@ public class PlannerOptions extends Data implements Cloneable{
         return mConfFile;
     }
     
-    /**
-     * Sets the authenticate flag to the value passed.
-     *
-     * @param value  boolean value passed.
-     */
-    public void setAuthentication(boolean value){
-        mAuthenticate = value;
-    }
 
     /**
      * Sets the basename prefix for the per workflow files.
@@ -1387,7 +1366,6 @@ public class PlannerOptions extends Data implements Cloneable{
                     "\n Cleanup within wf    " + mCleanup +
                     "\n Create Random Direct " + mGenRandomDir +
                     "\n Random Direct Name   " + mRandomDirName +
-                    "\n Authenticate         " + mAuthenticate +
                     "\n Clustering Technique " + mClusterer +
                     "\n Cleanup    "           + mCleanup +
                     "\n VO Group             " + mVOGroup +
@@ -1514,8 +1492,6 @@ public class PlannerOptions extends Data implements Cloneable{
             }
         }
 
-        //the authenticate option
-        if(mAuthenticate){  sb.append(" --authenticate"); }
 
         //specify the megadag option if set
         if(mMegadag != null){ sb.append(" --megadag ").append(mMegadag);}
@@ -1640,7 +1616,6 @@ public class PlannerOptions extends Data implements Cloneable{
         pOpt.mGenRandomDir   = this.mGenRandomDir;
         pOpt.mOptArg         = this.mOptArg;
         pOpt.mRandomDirName  = this.mRandomDirName;
-        pOpt.mAuthenticate   = this.mAuthenticate;
         pOpt.mClusterer      = this.mClusterer;
         pOpt.mBasenamePrefix = this.mBasenamePrefix;
         pOpt.mJobPrefix      = this.mJobPrefix;
