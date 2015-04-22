@@ -126,6 +126,7 @@ class MasterWorkflowQueries(WorkflowQueries):
         total_records = MasterWorkflowQueries.get_total_root_workflows(q, use_cache)
 
         if total_records == 0:
+            log.debug('total_records 0')
             return [], 0, 0
 
         #
