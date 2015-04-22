@@ -53,8 +53,7 @@ import gnu.getopt.LongOpt;
 public class SCClient
     extends Executable {
     
-    private static final String XML_NAMESPACE="http://pegasus.isi.edu/schema";
-    private static final String XML_VERSION="2.0";
+    
 
     /**
      * The input files.
@@ -343,7 +342,7 @@ public class SCClient
         String text =
            "\n $Id$ " +
            "\n " + getGVDSVersion() +
-           "\n pegasus-sc-converter - Parses the site catalogs in old format ( Text and XML3 ) and generates site catalog in new format ( XML3 )"  +
+           "\n pegasus-sc-converter - Parses the site catalogs in old format ( XML3 ) and generates site catalog in new format ( XML4 )"  +
            "\n " +
            "\n Usage: pegasus-sc-converter [-Dprop  [..]]  --input <list of input files> --output <output file to write> " +
             "\n        [--iformat input format] [--oformat <output format>] [--conf <path to property file>] [--verbose] [--quiet] [--Version] [--help]" +
