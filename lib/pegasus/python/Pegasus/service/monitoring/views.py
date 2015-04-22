@@ -43,7 +43,7 @@ def pull_m_wf_id(endpoint, values):
 def compute_stampede_db_url():
     """
     If the requested endpoint requires connecting to a STAMPEDE database, then determine STAMPEDE DB URL and store it
-    in g.stampede_db_url
+    in g.stampede_db_url. Also, set g.m_wf_id to be the root workflow's uuid
     """
     if '/workflow' not in request.path or 'm_wf_id' not in g:
         return
@@ -52,8 +52,6 @@ def compute_stampede_db_url():
     md5sum.update(g.master_db_url)
     m_wf_id = g.m_wf_id
 
-    del g.m_wf_id
-
     def _get_cache_key(key_suffix):
         return '%s.%s' % (md5sum.hexdigest(), key_suffix)
 
@@ -61,7 +59,7 @@ def compute_stampede_db_url():
 
     if cache.get(cache_key):
         log.debug('Cache Hit: compute_stampede_db_url %s' % cache_key)
-        g.stampede_db_url = cache.get(cache_key).db_url
+        root_workflow = cache.get(cache_key)
 
     else:
         log.debug('Cache Miss: compute_stampede_db_url %s' % cache_key)
@@ -69,10 +67,11 @@ def compute_stampede_db_url():
         root_workflow = queries.get_root_workflow(m_wf_id)
         queries.close()
 
-        g.stampede_db_url = root_workflow.db_url
-
         cache.set(_get_cache_key(root_workflow.wf_id), root_workflow, timeout=600)
         cache.set(_get_cache_key(root_workflow.wf_uuid), root_workflow, timeout=600)
+
+    g.m_wf_id = root_workflow.wf_uuid
+    g.stampede_db_url = root_workflow.db_url
 
 
 @monitoring_routes.before_request
