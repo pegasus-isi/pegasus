@@ -105,7 +105,6 @@ void print_debug_info(MonitoringEndpoint *monitoring_endpoint, JobIdInfo *job_id
     printerr("[mon-thread] kickstart-status-file: %s\n", monitoring_endpoint->kickstart_status);
     printerr("[mon-thread] url: %s\n", monitoring_endpoint->url);
     printerr("[mon-thread] credentials: %s\n", monitoring_endpoint->credentials);
-
     printerr("[mon-thread] wf uuid: %s\n", job_id_info->wf_uuid);
     printerr("[mon-thread] wf label: %s\n", job_id_info->wf_label);
     printerr("[mon-thread] dag job id: %s\n", job_id_info->dag_job_id);
@@ -152,7 +151,7 @@ void* monitoring_thread_func(void* kickstart_status_path) {
     while(1) {
         sleep(interval);
 
-        printerr("[mon-thread] monitoring loop\n");
+        // printerr("[mon-thread] monitoring loop\n");
 
         if(kickstart_status == NULL) {
             kickstart_status = fopen(monitoring_endpoint.kickstart_status, "r");
@@ -201,7 +200,7 @@ void* monitoring_thread_func(void* kickstart_status_path) {
                             curl_easy_strerror(res));
                     }
                     else {
-                        printerr("[mon-thread] measurement sent\n");
+                        // printerr("[mon-thread] measurement sent\n");
                     }
 
                     /* always cleanup */

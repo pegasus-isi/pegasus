@@ -222,7 +222,7 @@ static void* timer_thread_func(void* mpi_rank_void) {
         return;
     }
 
-    printerr("We are now in a thread: %d\n", mpi_rank);
+    // printerr("We are now in a thread: %d\n", mpi_rank);
 
     if( gethostname(hostname, BUFSIZ) ) {
         printerr("[Thread-%d] ERROR: couldn't get hostname: %s\n", mpi_rank, strerror(errno));
@@ -249,7 +249,7 @@ static void* timer_thread_func(void* mpi_rank_void) {
 
         timestamp = time(NULL);
 
-        printerr("[Thread-%d][%d] is dumping monitoring information\n", mpi_rank, (int)timestamp);
+        // printerr("[Thread-%d][%d] is dumping monitoring information\n", mpi_rank, (int)timestamp);
         CpuUtilInfo cpu_info = read_cpu_status();
         MemUtilInfo mem_info = read_mem_status();
         IoUtilInfo io_info = read_io_status();
@@ -379,7 +379,7 @@ static char *get_fullpath(const char *path) {
  */
 static char* read_exe() {
     debug("Reading exe");
-    printerr("Reading exe \n");
+    // printerr("Reading exe \n");
     char* exe;
 
     exe = (char*) calloc(sizeof(char), BUFSIZ);
