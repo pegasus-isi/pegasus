@@ -376,6 +376,7 @@ def scp(urls):
         elif "SSH_PRIVATE_KEY" in os.environ:
             cmd += " -i " + os.environ['SSH_PRIVATE_KEY']
         cmd += " -o PasswordAuthentication=no"
+        cmd += " -o UserKnownHostsFile=/dev/null"
         cmd += " -o StrictHostKeyChecking=no" + \
                " -p " + port + \
                " " + host + " " + \
