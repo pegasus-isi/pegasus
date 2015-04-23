@@ -1214,4 +1214,106 @@ tr B {
     linkend="transfer_props">pegasus.transfer.lite.threads</link>
     property.</para>
   </section>
+
+  <section id="job_throttling">
+    <title>Job Throttling</title>
+
+    <para><emphasis>Issue:</emphasis> For large workflows you may want to
+    control the number of jobs released by DAGMan in local condor queue, or
+    number of remote jobs submitted.</para>
+
+    <para><emphasis>Solution:</emphasis> HTCondor DAGMan has knobs that can be
+    tuned at a per workflow level to control it's behavior. These knobs
+    control how it interacts with the local HTCondor Schedd to which it
+    submits jobs that are ready to run in a particular DAG. These knobs are
+    exposed as<link linkend="dagman_profiles"> DAGMan profiles</link>
+    (maxidle, maxjobs, maxpre and maxpost) that you can set in your properties
+    files. <xi:include href="reference_configuration.xml"
+    xpointer="dagman_throttling_profiles"
+    xmlns:xi="http://www.w3.org/2001/XInclude"/></para>
+
+    <para>Within a single workflow, you can also control the number of jobs
+    submitted per type ( or category ) of jobs. To associate categories, you
+    needs to associate dagman profile key named category with the jobs and
+    specify the property dagman.[CATEGORY-NAME].* in the properties file. More
+    information about HTCondor DAGMan categories can be found in the <ulink
+    url="http://research.cs.wisc.edu/htcondor/manual/v8.3.5/2_10DAGMan_Applications.html#SECTION003108400000000000000">HTCondor
+    Documentation</ulink>.</para>
+
+    <para>HTCondor also exposes useful configuration parameters that can be
+    specified in it's configuration file (condor_config_val -conf will list
+    the condor configuration files), to control job submission across
+    workflows. Some of the useful parameters that you may want to tune are
+    </para>
+
+    <table id="condor_throttling_variables">
+      <title>Useful HTCondor Job Throttling Configuration Parameters</title>
+
+      <tgroup cols="2">
+        <tbody>
+          <row>
+            <entry><emphasis role="bold">HTCondor Configuration
+            Parameter</emphasis></entry>
+
+            <entry><emphasis role="bold">Description</emphasis></entry>
+          </row>
+
+          <row>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Parameter Name: </emphasis></emphasis>START_LOCAL_UNIVERSE<emphasis
+                  role="bold"><emphasis role="bold">
+Sample Value  : </emphasis></emphasis>TotalLocalJobsRunning &lt; 20<emphasis
+                  role="bold">
+</emphasis></literallayout></entry>
+
+            <entry>Most of the pegauss added auxillary jobs ( createdir,
+            cleanup, registration and data cleanup ) run in the local universe
+            on the submit host. If you have a lot of workflows running,
+            HTCondor may try to start too many local universe jobs, that may
+            bring down your submit host. This global parameter is used to
+            configure condor to not launch too many local universe
+            jobs.</entry>
+          </row>
+
+          <row>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Parameter Name: </emphasis></emphasis>GRIDMANAGER_MAX_JOBMANAGERS_PER_RESOURCE<emphasis
+                  role="bold"><emphasis role="bold">
+Sample Value  : </emphasis></emphasis>Integer<emphasis role="bold">
+</emphasis></literallayout></entry>
+
+            <entry>For grid jobs of type gt2, limits the number of
+            globus-job-manager processes that the condor_gridmanager lets run
+            at a time on the remote head node. Allowing too many
+            globus-job-managers to run causes severe load on the head note,
+            possibly making it non-functional. Usually the default value in
+            htcondor ( as of version 8.3.5) is 10.<para>This parameter is
+            useful when you are doing remote job submissions using HTCondor-G.
+            </para></entry>
+          </row>
+
+          <row>
+            <entry><literallayout><emphasis role="bold"><emphasis role="bold">Parameter Name: </emphasis></emphasis>GRIDMANAGER_MAX_SUBMITTED_JOBS_PER_RESOURCE<emphasis
+                  role="bold"><emphasis role="bold">
+Sample Value  : </emphasis></emphasis> Integer<emphasis role="bold">
+</emphasis></literallayout></entry>
+
+            <entry>An integer value that limits the number of jobs that a
+            condor_gridmanager daemon will submit to a resource. A
+            comma-separated list of pairs that follows this integer limit will
+            specify limits for specific remote resources. Each pair is a host
+            name and the job limit for that host. Consider the example
+            <programlisting>GRIDMANAGER_MAX_SUBMITTED_JOBS_PER_RESOURCE = 200, foo.edu, 50, bar.com, 100.</programlisting><para>
+            In this example, all resources have a job limit of 200, except
+            foo.edu, which has a limit of 50, and bar.com, which has a limit
+            of 100. Limits specific to grid types can be set by appending the
+            name of the grid type to the configuration variable name, as the
+            example GRIDMANAGER_MAX_SUBMITTED_JOBS_PER_RESOURCE_CREAM = 300 In
+            this example, the job limit for all CREAM resources is 300.
+            Defaults to 1000 ( as of version 8.3.5).</para><para>This
+            parameter is useful when you are doing remote job submissions
+            using HTCondor-G.</para></entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+  </section>
 </chapter>
