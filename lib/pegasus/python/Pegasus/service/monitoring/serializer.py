@@ -196,7 +196,6 @@ class WorkflowSerializer(BaseSerializer):
 
         return json.dumps(self._encode_record(workflow), **self._pretty_print_opts)
 
-
     def _encode_record(self, workflow):
         """
         Encodes a single workflow into it's JSON representation.
@@ -217,7 +216,6 @@ class WorkflowSerializer(BaseSerializer):
         json_record['_links'] = self._links(workflow)
 
         return json_record
-
 
     @staticmethod
     def _links(workflow):

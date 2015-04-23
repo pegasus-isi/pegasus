@@ -332,7 +332,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
             q = q.filter(Workflow.wf_uuid == wf_id)
 
         try:
-            return self.get_one(q, use_cache)
+            return self._get_one(q, use_cache)
         except NoResultFound, e:
             raise e
 
