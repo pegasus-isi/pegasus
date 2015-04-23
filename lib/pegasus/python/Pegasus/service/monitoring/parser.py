@@ -33,7 +33,11 @@ class RootWorkflowQueryParser(BaseQueryParser):
         'r.dax_version',
         'r.dax_file',
         'r.dag_file_name',
-        'r.timestamp'
+        'r.timestamp',
+        'ws.state',
+        'ws.status',
+        'ws.restart_count',
+        'ws.timestamp'
     ])
 
     def __init__(self, expression):
