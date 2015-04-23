@@ -1183,6 +1183,51 @@ import logging
 import ssl
 
 def online_monitoring_proc(wf_label, wf_uuid):
+  aggregated_measurements = dict()
+  retrieved_messages = dict()
+  columns = ["time", "utime", "stime", "iowait", "vmSize", "vmRSS", "threads", "read_bytes", "write_bytes", "syscr", "syscw"]
+
+  def aggregate_measurement(measurement, raw_msg):
+    msg = dict(item.split("=") for item in raw_msg.split(" "))
+    dag_job_id = msg["dag_job_id"]
+    mpi_rank = int(msg["mpi_rank"])
+
+    # execute only if this is an MPI job == mpi_rank > 0
+    if mpi_rank == 0:
+      return
+
+    if not dag_job_id in retrieved_messages:
+      print "We add", dag_job_id, "for the first time"
+
+      retrieved_messages[dag_job_id] = dict()
+      aggregated_measurements[dag_job_id] = [0] * len(columns)
+
+    if mpi_rank in retrieved_messages[dag_job_id]:
+      print "There is", mpi_rank, "in retrieved_messages for", dag_job_id
+      # send already aggregated measurements 
+      aggregated_json_body = [
+          {
+              "name": dag_job_id,
+              "columns": columns,
+              "points": [ aggregated_measurements[dag_job_id] ]
+          }
+      ]
+      print "We send", aggregated_json_body, "on behalf of", dag_job_id
+      client.write_points(aggregated_json_body)
+      # reset aggregated measurements      
+      retrieved_messages[dag_job_id] = dict()
+      aggregated_measurements[dag_job_id] = [0] * len(columns)
+
+    else:
+      print "There is not", mpi_rank, "in retrieved_messages for", dag_job_id
+      retrieved_messages[dag_job_id][mpi_rank] = True
+
+    print "We are adding measurements", measurement["points"][0], "for", dag_job_id
+    
+    # we add metric values from this mpi rank to create an aggregated measurement for application
+    for i, metric_value in enumerate(measurement["points"][0]):
+      aggregated_measurements[dag_job_id][i] += metric_value
+
 
   def parse_measurement(measurement_text):
     if len(measurement_text.split(" ")) < 2:
@@ -1200,7 +1245,7 @@ def online_monitoring_proc(wf_label, wf_uuid):
       trace_id = "{0}:{1}:{2}:{3}:{4}:{5}".format(msg["dag_job_id"], msg["hostname"], 
           msg["condor_job_id"], msg["mpi_rank"], msg["kickstart_pid"], exec_id)
 
-      columns = ["time", "utime", "stime", "iowait", "vmSize", "vmRSS", "threads", "read_bytes", "write_bytes", "syscr", "syscw"]
+      
       point = []
 
       for column in columns:
@@ -1232,6 +1277,8 @@ def online_monitoring_proc(wf_label, wf_uuid):
 
     if measurement != None:
       client.write_points(measurement)
+      aggregate_measurement(measurement, body)
+
     
     channel.basic_ack(delivery_tag=method_frame.delivery_tag)
 
