@@ -54,6 +54,7 @@ class RootWorkflowQueryParser(BaseQueryParser):
     #
     BaseQueryParser.mapper[BaseQueryParser.IDENTIFIER] = identifier_handler
 
+
 class StampedeWorkflowQueryParser(BaseQueryParser):
     FIELDS = set([
         'w.root_wf_id',
@@ -139,10 +140,9 @@ class StampedeWorkflowQueryParser(BaseQueryParser):
     def __init__(self, expression):
         super(StampedeWorkflowQueryParser, self).__init__(expression)
 
-    def indentifier_handler(self, text):
+    def identifier_handler(self, text):
         if text not in StampedeWorkflowQueryParser.FIELDS:
             raise InvalidQueryError('Invalid field %r' % text)
-
 
         super(RootWorkflowQueryParser, self).identifier_handler(text)
 
@@ -150,6 +150,7 @@ class StampedeWorkflowQueryParser(BaseQueryParser):
     # Override Method Handler for Identifiers
     #
     BaseQueryParser.mapper[BaseQueryParser.IDENTIFIER] = identifier_handler
+
 
 def main():
     constraint = RootWorkflowQueryParser("""
