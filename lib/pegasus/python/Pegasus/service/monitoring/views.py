@@ -20,8 +20,8 @@ import logging
 from flask import g, request, make_response
 
 from Pegasus.service.monitoring import monitoring_routes
-from Pegasus.service.monitoring.queries import MasterWorkflowQueries
-from Pegasus.service.monitoring.serializer import RootWorkflowSerializer
+from Pegasus.service.monitoring.queries import MasterWorkflowQueries, StampedeWorkflowQueries
+from Pegasus.service.monitoring.serializer import *
 
 log = logging.getLogger(__name__)
 
@@ -139,6 +139,10 @@ def get_root_workflow(username, m_wf_id):
     queries = MasterWorkflowQueries(g.master_db_url)
 
     record = queries.get_root_workflow(m_wf_id)
+
+    #
+    # Generate JSON Response
+    #
     serializer = RootWorkflowSerializer(**g.query_args)
     response_json = serializer.encode_record(record)
     return make_response(response_json, 200, JSON_HEADER)
@@ -177,12 +181,36 @@ Workflow
 @monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow')
 @monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/query', methods=['POST'])
 def get_workflows(username, m_wf_id):
-    pass
+    queries = StampedeWorkflowQueries(g.stampede_db_url)
+
+    records, total_records, total_filtered = queries.get_workflows(**g.query_args)
+
+    if total_records == 0:
+        log.debug('Total records is 0; returning HTTP 204 No content')
+        return make_response('', 204, JSON_HEADER)
+
+    #
+    # Generate JSON Response
+    #
+    serializer = WorkflowSerializer(**g.query_args)
+    response_json = serializer.encode_collection(records, total_records, total_filtered)
+
+    return make_response(response_json, 200, JSON_HEADER)
 
 
 @monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>')
 def get_workflow(username, m_wf_id, wf_id):
-    pass
+    queries = StampedeWorkflowQueries(g.stampede_db_url)
+
+    record = queries.get_workflow(wf_id)
+
+    #
+    # Generate JSON Response
+    #
+    serializer = WorkflowSerializer(**g.query_args)
+    response_json = serializer.encode_record(record)
+
+    return make_response(response_json, 200, JSON_HEADER)
 
 
 """
@@ -199,7 +227,17 @@ def get_workflow(username, m_wf_id, wf_id):
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/state')
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/state/query')
 def get_workflow_state(username, m_wf_id, wf_id):
-    pass
+    queries = StampedeWorkflowQueries(g.stampede_db_url)
+
+    state = queries.get_state(wf_id)
+
+    #
+    # Generate JSON Response
+    #
+    serializer = WorkflowStateSerializer(**g.query_args)
+    response_json = serializer.encode_record(state)
+
+    return make_response(response_json, 200, JSON_HEADER)
 
 
 """

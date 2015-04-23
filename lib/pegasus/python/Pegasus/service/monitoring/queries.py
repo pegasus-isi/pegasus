@@ -210,7 +210,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
     """
     TODO: Mimic code above for each remaining resources except for method get_wf_id_for_wf_uuid
     """
-    def get_workflows(self, start_index=None, mex_results=None, query=None, use_cache=False, recent=False):
+    def get_workflows(self, start_index=None, max_results=None, query=None, use_cache=False, recent=False, **kwargs):
         """
         Returns a collection of the Workflow objects.
 
@@ -238,7 +238,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         # TODO: Validate `query`
         # TODO: Construct JOINS as per `query`
         q = q
-        total_filtered = MasterWorkflowQueries.get_filtered_workflows(q, use_cache)
+        total_filtered = StampedeWorkflowQueries.get_filtered_workflows(q, use_cache)
 
         if total_filtered == 0 or (start_index and start_index >= total_filtered):
             return 0, 0, []
@@ -258,7 +258,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         return total_records, total_filtered, records
 
 
-    def get_workflow(self, m_wf_id, wf_id):
+    def get_workflow(self, wf_id):
         """
         Returns a Workflow object identified by m_wf_id.
 
@@ -282,7 +282,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         except NoResultFound, e:
             raise e
 
-    def get_workflow_state(self, wf_id, ):
+    def get_workflow_state(self, wf_id):
         pass
 
     @staticmethod
