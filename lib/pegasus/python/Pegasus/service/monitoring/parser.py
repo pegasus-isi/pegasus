@@ -139,12 +139,18 @@ class StampedeWorkflowQueryParser(BaseQueryParser):
 
     def __init__(self, expression):
         super(StampedeWorkflowQueryParser, self).__init__(expression)
+        self._prefix = set()
+
+    @property
+    def prefix(self):
+        return self._prefix
 
     def identifier_handler(self, text):
         if text not in StampedeWorkflowQueryParser.FIELDS:
             raise InvalidQueryError('Invalid field %r' % text)
 
         super(RootWorkflowQueryParser, self).identifier_handler(text)
+        self._prefix.add(text.split('.', 1)[0])
 
     #
     # Override Method Handler for Identifiers
