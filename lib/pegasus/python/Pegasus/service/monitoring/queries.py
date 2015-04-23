@@ -266,11 +266,12 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         :param start_index: Return results starting from record `start_index`
         :param max_results: Return a maximum of `max_results` records
-        :param query: Return only results the match the query
-        :param use_cache:
-        :param recent
+        :param query: Filtering criteria
+        :param order: Sorting criteria
+        :param recent: Get the most recent results
+        :param use_cache: If available, use cached results
 
-        :return: Collection of DashboardWorklfow objects
+        :return: Collection of Workflow objects
         """
 
         #
@@ -306,11 +307,9 @@ class StampedeWorkflowQueries(WorkflowQueries):
         #
         q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
 
-
         records = self._get_all(q, use_cache)
 
         return records, total_records, total_filtered
-
 
     def get_workflow(self, wf_id, use_cache=True):
         """
