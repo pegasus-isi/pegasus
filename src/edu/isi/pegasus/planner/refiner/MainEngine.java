@@ -102,12 +102,6 @@ public class MainEngine
     private RemoveDirectory mRemoveEng;
 
     /**
-     * The handle to the Authentication Engine that performs the authentication
-     * with the various sites.
-     */
-    private AuthenticateEngine mAuthEng;
-
-    /**
      * The handle to the node collapser.
      */
     private NodeCollapser mNodeCollapser;
@@ -150,27 +144,6 @@ public class MainEngine
         //refinement process starting
         mOriginalDag.setWorkflowRefinementStarted( true );
         
-        //do the authentication against the pools
-        if (mPOptions.authenticationSet()) {
-            mAuthEng = new AuthenticateEngine( mBag,
-                          new java.util.HashSet(mPOptions.getExecutionSites()));
-
-            mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_AUTHENTICATION, LoggingKeys.DAX_ID, mOriginalDag.getAbstractWorkflowName() );
-            Set authenticatedSet = mAuthEng.authenticate();
-            if (authenticatedSet.isEmpty()) {
-                StringBuffer error = new StringBuffer( );
-                error.append( "Unable to authenticate against any site. ").
-                      append( "Probably your credentials were not generated" ).
-                      append( " or have expired" );
-                throw new RuntimeException( error.toString() );
-            }
-            mLogger.log("Sites authenticated are " +
-                        setToString(authenticatedSet, ","),
-                        LogManager.DEBUG_MESSAGE_LEVEL);
-            mLogger.logEventCompletion();
-            mPOptions.setExecutionSites(authenticatedSet);
-        }
-
         String message = null;
         mRCBridge = new ReplicaCatalogBridge( mOriginalDag, mBag );
 

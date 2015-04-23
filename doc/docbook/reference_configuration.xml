@@ -503,7 +503,7 @@ Scope       :</emphasis> TC, SC, DAX, Properties
       RSL addresses all these issues.</para>
 
       <para>A key in the <emphasis>globus</emphasis> namespace denotes the
-      command name of an RLS instruction. The profile value becomes the RSL
+      command name of an RSL instruction. The profile value becomes the RSL
       value. Even though Globus RSL is typically shown using parentheses
       around the instruction, the out pair of parentheses is not necessary in
       globus profile specifications</para>
@@ -2772,9 +2772,9 @@ pegasus.catalog.replica.mrc.[value].key   specifies a property name\
 </screen></para>
 
                       <para><screen>
-pegasus.catalog.replica.mrc.directory1 LRC
+pegasus.catalog.replica.mrc.directory1 Directory
 pegasus.catalog.replica.mrc.directory1.url /input/dir1
-pegasus.catalog.replica.mrc.directory2 LRC
+pegasus.catalog.replica.mrc.directory2 Directory
 pegasus.catalog.replica.mrc.directory2.url /input/dir2
 </screen></para>
 
@@ -2784,20 +2784,6 @@ pegasus.catalog.replica.mrc.directory2.url /input/dir2
                     </listitem>
                   </varlistentry>
                 </variablelist></para></entry>
-            </row>
-
-            <row>
-              <entry><literallayout><emphasis role="bold"><emphasis
-                      role="bold">Property Key: </emphasis></emphasis>pegasus.catalog.replica.url<emphasis
-                    role="bold"><emphasis role="bold">
-Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
-Scope       :</emphasis> Properties
-<emphasis role="bold">Since       :</emphasis> 2.0
-<emphasis role="bold">Default     :</emphasis> (no default)</literallayout></entry>
-
-              <entry>When using the modern RLS replica catalog, the URI to the
-              Replica catalog must be provided to Pegasus to enable it to look
-              up filenames. There is no default.</entry>
             </row>
 
             <row>

@@ -827,10 +827,6 @@ public class CPlanner extends Executable{
                     options.setPartOfDeferredRun( true );
                     break;
 
-                case 'a'://authenticate
-                    options.setAuthentication(true);
-                    break;
-
                 case 'b'://optional basename
                     options.setBasenamePrefix(g.getOptarg());
                     break;

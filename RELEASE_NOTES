@@ -1,7 +1,421 @@
 $Id
 ===============================
+Release Notes for PEGASUS 4.5.0
+===============================
+
+We are happy to announce the release of Pegasus 4.5.0.  Pegasus 4.5.0
+is a major release of Pegasus and includes all the bug fixes and
+improvements in the minor releases 4.4.1 and 4.4.2 . 
+ 
+New features and Improvements in 4.5.0 are
+ - ensemble manager for managing collections of workflows
+ - support for job checkpoint files
+ - support for Google storage
+ - improvements to pegasus-dashboard
+ - data management improvements
+ - new tools pegasus-db-admin, pegasus-submitdir , pegasus-halt and pegasus-graphviz
+ 
+NEW FEATURES
+--------------
+
+1) Ensemble manager for managing collections of workflows
+ 
+   The ensemble manager is a service that manages collections of
+   workflows called ensembles. The ensemble manager is useful when you
+   have a set of workflows you need to run over a long period of
+   time. It can throttle the number of concurrent planning and running
+   workflows, and plan and run workflows in priority order. A typical
+   use-case is a user with 100 workflows to run, who needs no more
+   than one to be planned at a time, and needs no more than two to be
+   running concurrently. 
+ 
+   The ensemble manager also allows workflows to be submitted and
+   monitored programmatically through its RESTful interface. 
+   Details about ensemble manager can be found at
+   https://pegasus.isi.edu/wms/docs/4.5.0/service.php 
+ 
+2) Support for Google Storage
+ 
+   Pegasus now supports running of workflows in the Google cloud. When
+   running workflows in Google cloud, users can specify  Google
+   storage to act as the staging site. More details on how to
+   configure Pegasus to use google storage can be found at
+   pegasus.isi.edu/wms/docs/4.5.0/cloud.php#google_cloud. All the
+   pegasus auxillary clients ( pegasus-transfer, pegasus-create-dir
+   and pegasus-cleanup) were updated to handle google storage URL's (
+   starting with gs://). The tools call out to google command line
+   tool called gsutils. 
+ 
+3) Support for job checkpoint files
+ 
+   Pegasus now supports checkpoint files created by jobs. This allows
+   users to run long running jobs ( where the runtime of a job exceeds
+   the maxwalltime supported on a compute site) to completion,
+   provided the jobs generate a checkpoint file periodically. To use
+   this, checkpoint files with link as checkpoint need to be specified
+   for the jobs in the DAX . Additionally, the jobs need to specify
+   the pegasus profile checkpoint.time that indicates the number of
+   minutes after which pegasus-kickstart sends a TERM signal to the
+   job, signalling it to start the generation of the checkpoint file .  
+ 
+   Details on this can be found in the userguide
+   https://pegasus.isi.edu/wms/docs/4.5.0/transfer.php#staging_job_checkpoint_files  
+ 
+4) Pegasus Dashboard Improvements
+ 
+   Pegasus dashboard can now be deployed in multiuser mode. It is now
+   started by the pegasus-service command.  Instructions for starting
+   the pegasus service can be found at
+   https://pegasus.isi.edu/wms/docs/4.5.0/service.php#idp2043968 
+
+   Changed the look and feel of the dashboard. Users can now track all
+   job instances ( retries ) of a job through the dashboard. Earlier
+   it was only the latest job retry. 
+
+   There is a new tab called failing jobs on the workflows page. The
+   tab lists jobs that have failed at least once and are currently
+   being retried. 
+
+   The submit host is displayed on the workflow's main page.
+
+   The job details page now shows information about the Host where the
+   job ran, and all the states that the job has gone through. 
+
+   The dashboard also has a file browser which allows users to view
+   files in the worklfow submit directory directly from the
+   dashboard. 
+
+5) Data configuration is now supported per site
+
+   Starting with the 4.5.0 release, users now can associate a pegasus
+   profile key data.configuration per site in the site catalog to
+   specify the data configuration mode (sharedfs, nonsharedfs or
+   condorio) to use for jobs executed on that site.  Earlier this was
+   a global configuration, that applied to the whole workflow and had
+   to be specified in the properties file.  
+ 
+   More details at 
+   https://jira.isi.edu/browse/PM-810
+ 
+6) Support for sqlite JDBCRC
+
+   Users can now specify a sqlite backend for their JDBCRC replica
+   catalog. To create the database for the sqlite based replica
+   catalog, use the command pegasus-db-admin 
+
+   pegasus-db-admin create jdbc:sqlite:/shared/jdbcrc.db
+
+   To setup Pegasus to use sqlite JDBCRC set the following properties
+ 
+   pegasus.catalog.replica JDBCRC
+   pegasus.catalog.replica.db.driver sqlite
+   pegasus.catalog.replica.db.url  jdbc:sqlite:/shared/jdbcrc.db
+
+   Users can use the tool pegasus-rc-client to insert, query and
+   delete entires from the catalog.
+ 
+7) New database management tool called pegasus-db-admin
+
+   Depending on configuration, Pegasus can refer to three different
+   types of databases during the various stages of workflow planning
+   and execution. 
+
+   master - Usually a sqlite database located at
+   $HOME/.pegasus/workflow.db. This is always populated by
+   pegasus-monitord and is used by pegasus-dashboard to track users
+   top level workflows. 
+
+   workflow - Usually a sqlite database created by pegasus-monitord in
+   the workflow submit directory. This contains detailed information
+   about the workflow execution. 
+
+   jdbcrc   - if a user has configured a JDBCRC replica catalog.
+
+   The tool is automatically invoked by the planner to check for
+   comaptibility and updates the master database if required. The
+   jdbcrc is checked if a user has it configured at planning time or
+   when using the pegasus-rc-client command line tool.  
+
+   This tool should be used by users, when setting up new database
+   catalogs, or to check for compatibility. For more details refer to
+   the migration guide at
+   https://pegasus.isi.edu/wms/docs/4.5.0cvs/useful_tips.php#migrating_from_leq44 
+
+8) pegasus-kickstart allows for system calls interposition
+
+   pegasus-kickstart has new options -z and -Z that get enabled for
+   linux platforms. When enabled, pegasus-kickstart captures
+   information about the files opened and I/O for user applications
+   and includes it in the proc section of it's output. This -z flag
+   causes kickstart to use ptrace() to intercept system calls and
+   report a list of files accessed and I/O performed. The -Z flag
+   causes kickstart to use LD_PRELOAD to intercept library calls and
+   report a list of files accessed and I/O performed.  
+ 
+9) pegasus-kickstart now captures condor job id and LRMS job ids
+
+   pegasus-kickstart now captures both the condor job id and the local
+   LRMS  ( the system through which  the job is executed) in the
+   invocation record for the job. 
+ 
+	https://jira.isi.edu/browse/PM-866
+	 https://jira.isi.edu/browse/PM-867
+ 
+10) pegasus-transfer has support for SSHFTP 
+
+   pegasus-transfer now has support for GridFTP over SSH . More
+   details at
+   https://pegasus.isi.edu/wms/docs/4.5.0/transfer.php#idp17066608 
+ 
+11) pegasus-s3 has support for bulk deletes
+
+    pegasus-s3 now supports batched deletion of keys from a S3
+    bucket. This improves the performance for deleting keys from a
+    large bucket.  
+ 
+    https://jira.isi.edu/browse/PM-791
+
+ 
+12) DAGMan metrics reporting enabled 
+ 
+    Pegasus workflows now have DAGMan metric reporting capability
+    turned on. Details on Pegasus usage tracking policy can be found
+    at https://pegasus.isi.edu/wms/docs/4.5.0/usage_statistics.php 
+
+    As part of this effort the planner now invokes condor_submit_dag
+    at planning time to generate the DAGMan submit file, that is then
+    modified to enable metrics reporting.  
+ 
+    More details at https://jira.isi.edu/browse/PM-797
+
+ 
+13) Planner reports file distribution counts in metrics report
+
+    The planner now reports file distribution counts ( number of
+    input, intermediate and output files) in it's metrics report . 
+ 
+ 
+14) Notion of scope for data reuse
+ 
+    Users can now enable partial data reuse, where only output files
+    of certain jobs are checked for existence in the replica catalog,
+    to trigger data reuse. Three scopes are supported 
+
+       full - full data reuse as is implemented in 4.4 
+       none - no data reuse i.e same as --force option to the planner 
+       partial - in this case, only certain jobs ( those that have
+       pegasus profile key enable_for_data_reuse set to true )are
+       checked for presence of output files in the replica catalog 
+ 
+15) New tool called pegasus-submitdir
+ 
+    There is a new tool called pegasus-submitdir that allows users to
+    archive, extract , move and delete a workflow submit
+    directory. The tool ensures that master database ( usually in
+    $HOME/.pegasus/workflow.db) is updated accordingly. 
+ 
+16) New tool called pegasus-halt
+
+    There is a new tool called pegasus-halt , that allows users to
+    gracefully halt running workflows. The tool places DAGMan .halt
+    files
+    (http://research.cs.wisc.edu/htcondor/manual/v8.2/2_10DAGMan_Applications...)
+    for all dags in a workflow. 
+ 
+    More details at https://jira.isi.edu/browse/PM-702
+ 
+17) New tool called pegasus-graphviz
+ 
+    Pegasus now has a tool called pegasus-graphviz that allows you to
+    visualize the DAX and DAG files. It creates a dot file as output .  
+ 
+18) New canonical executable pegasus-mpi-keg
+
+    New executable called pegasus-mpi-keg that can be compiled from
+    source. Useful for creating synthetic workflows containing MPI
+    jobs. It is similar to pegasus-keg and accepts the same command
+    line arguments. The only difference is that it is MPI code. 
+ 
+19) Change in default values
+
+    By default, pegasus-transfer now launches maximum of 8 threads to
+    manage the transfers of multiple files. 
+    The default  job retries for a job in case of failure is now 1
+    instead of 3.  
+    The time for removing the job after has entered the HELD state has
+    been reduced from 1 hour to 30 minutes now. 
+ 
+20) Support for DAGMan ABORT-DAG-ON feature
+
+    Pegasus now supports a dagman profile key named ABORT-DAG-ON ,
+    that can be associated with a job. This job can then cause the
+    whole workflow to be aborted if it fails or exits with a specific
+    value.  
+    
+    More details at https://jira.isi.edu/browse/PM-819 
+ 
+21) Deprecated pool attribute in replica catalog
+    
+    Users now can associate a site attribute in their file based
+    replica catalogs to indicate the site where a file resides. The
+    old attribute pool has been deprecated. 
+
+    More details at https://jira.isi.edu/browse/PM-813
+ 
+22) Support for pegasus profile glite.arguments
+ 
+    Users can now specify a pegasus profile key glite.arguments that
+    gets added to corresponding PBS qsub file that is generated by the
+    Glite layer in HTCondor. For e.g you can set the value to "-N
+    testjob -l walltime=01:23:45 -l nodes=2" . This will get
+    translated to the following in the PBS file  
+    #PBS -N testjob -l walltime=01:23:45 -l nodes=2 
+ 
+    The values specified for this profile,  override  any other
+    conflicting directives that are created on the basis of the globus
+    profiles associated with the jobs. 
+     
+    More details at https://jira.isi.edu/browse/PM-880
+ 
+23) Reorganized documentation
+
+    The userguide has been reorganized to make it easier for users to
+    identify the right chapter they want to navigate to. The
+    configuration documentation has been streamlined and put into a
+    single chapter, rather than having a separate chapter for profiles
+    and properties. 
+ 
+24) Support for hints namespace
+
+    Users can now specify the following hints profile keys to control
+    the behavior of the planner. 
+ 
+     execution.site   - the execution site where a job should execute
+     pfn                    - the path to the remote executable picked up
+     grid.jobtype      - the job type to be used while selecting the
+     gridgateway / jobmanager for the job 
+
+     More details at https://jira.isi.edu/browse/PM-828
+ 
+25) Added support for HubZero Distribute job wrapper
+
+    Added support for HubZero specific job launcher Distribute, that
+    submits jobs to a remote PBS cluster. The compute jobs are setup
+    by Pegasus to run in local universe, and are wrapped with
+    Distribute job wrapper, that takes care of the submission and
+    monitoring of the job. More details at
+    https://jira.isi.edu/browse/PM-796  
+ 
+26) New classad populated for dagman jobs
+
+    Pegasus now popualtes a +pegasus_execution_sites classad in the
+    dagman submit file. The value is the list of execution sites for
+    which the workflow was planned for. 
+ 
+    More details at https://jira.isi.edu/browse/PM-846
+
+ 
+27) Python DAX API now bins the file by link type when rendering the
+workflow
+
+    Python DAX API now groups the jobs by their link type before
+    rendering them to XML.  This improves the readability of the 
+    generated DAX. 
+ 
+    More details at https://jira.isi.edu/browse/PM-874
+
+ 
+28) Better demarcation of various stages in PegasusLite logs
+ 
+   The jobs .err file in PegasusLite modes captures the logs from the
+   PegasusLite wrapper that launches users jobs on remote nodes. This
+   log is now clearly demarcated to  identify the various stages of a
+   job execution by PegasusLite. 
+
+29) Dropped support for Globus RLS replica catalog backends
+
+30) pegasus-plots is deprecated and will be removed in 4.6
+
+Bugs Fixed
+-------------
+
+1) Fixed kickstart handling of environment variables with quotes 
+ 
+   If an environment variable has quotes, then invalid XML output was
+   produced by pegasus-kickstart. This is now fixed. More details at  
+
+   https://jira.isi.edu/browse/PM-807
+ 
+2) Leaking file descriptors for two stage transfers  
+ 
+   pegasus-transfer opens a temp file for each two stage transfer it
+   has to execute. It was not closing them explicitly.  
+ 
+3) Disabling of chmod jobs triggered an exception
+
+   Disabling the chmod jobs results in creation of noop jobs instead
+   of the chmod jobs. However, that resulted in planner exceptions
+   when adding create dir and leaf cleanup nodes. This is now fixed.  
+ 
+   More details at  https://jira.isi.edu/browse/PM-845
+ 
+4) Incorrect binning of file transfers amongst transfer jobs 
+
+   By default, pair only considered the destination URL of a transfer
+   pair to determine whether the associated transfer job has to run
+   locally on the submit host or on the remote staging site. However,
+   this logic broke when user had input files catalogued in the
+   replica catalog with file urls for files on the submit site and
+   remote execution sites. The logic has now been updated to take into
+   account source URL's also.  
+ 
+   More details at  https://jira.isi.edu/browse/PM-829
+
+5) pegasus auxillary jobs are never lauched with pegasus-kickstart invoke capability
+ 
+   For compute jobs with long command line arguments , the planner
+   triggers the pegasus invoke capability in addition to the -w
+   option. However, this cannot be applied to pegasus auxillary jobs
+   as that interferes with the credential handling.  
+ 
+   More details at  https://jira.isi.edu/browse/PM-851
+
+ 
+6) Everything in the remote job directory gets staged in condorio
+mode, if a job has no output files 
+ 
+   If a job has no output files asscociated with it in the DAX, then
+   in condorio data configuration mode the planner added an empty
+   value for classad key transfer_output_files in the job submit
+   file. This results in Condor staging back all the inputs ( all the
+   contents in remote jobs directory) back to the submit host. This is
+   now fixed as the planner now adds a special key +TransferOutput=""
+   , that prevents Condor from staging everything back. 
+ 
+   More details at  https://jira.isi.edu/browse/PM-820
+
+7) Setting multiple strings for exitcode.successmsg and exitcode.failuremsg
+ 
+   Users can now specify multiple pegasus profiles with the key
+   exitcode.successmsg or exticode.failuremsg. Each value gets
+   translated to a corresponding -s or -f argument to pegasus-exitcode
+   invocation for the job. 
+ 
+   More details at  https://jira.isi.edu/browse/PM-826
+ 
+8) pegasus-monitord failed when submission of job fails
+ 
+   The events  SUBMIT_FAILED, GRID_SUBMIT_FAILED, GLOBUS_SUBMIT_FAILED
+   were not handled correctly by pegasus-monitord. As a result,
+   subsequent event insertions for the job resulted in integrity
+   errors. This is now fixed. 
+ 
+   More details at  https://jira.isi.edu/browse/PM-877
+ 
+===============================
 Release Notes for PEGASUS 4.4.2
 ===============================
+
 
 We are happy to annouce the release of Pegasus 4.4.2. Pegasus 4.4.2 is
 a minor release, which contains minor enhancements and fixes bugs to
