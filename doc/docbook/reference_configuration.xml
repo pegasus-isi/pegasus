@@ -1182,7 +1182,7 @@ Profile  Key: </emphasis></emphasis>ABORT-DAG-ON
       These are used to control DAGMan's behavior at the workflow level, and
       are recommended to be specified in the properties file.</para>
 
-      <table>
+      <table id="dagman_throttling_profiles">
         <title>Useful dagman Commands that can be specified in the properties
         file.</title>
 
@@ -1216,7 +1216,7 @@ Scope       :</emphasis> Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
-              <entry>sets the maximum number of PRE scripts within the DAG
+              <entry>sets the maximum number of POST scripts within the DAG
               that may be running at one time</entry>
             </row>
 
@@ -1242,8 +1242,11 @@ Scope       :</emphasis> Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
 
-              <entry>sets the maximum number of idle jobs within the DAG that
-              will be submitted to Condor at one time.</entry>
+              <entry>Sets the maximum number of idle jobs allowed before
+              HTCondor DAGMan stops submitting more jobs. Once idle jobs start
+              to run, HTCondor DAGMan will resume submitting jobs. If the
+              option is omitted, the number of idle jobs is unlimited.
+              </entry>
             </row>
 
             <row>
