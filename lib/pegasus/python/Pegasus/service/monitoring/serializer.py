@@ -172,7 +172,6 @@ class WorkflowSerializer(BaseSerializer):
         if not records_total or not records_filtered:
             pass
 
-        print [(workflow) for workflow in workflows]
         records = [self._encode_record(workflow) for workflow in workflows]
         records_meta = OrderedDict([
             ('records_total', records_total),

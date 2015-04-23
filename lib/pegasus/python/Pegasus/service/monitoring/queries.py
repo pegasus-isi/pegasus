@@ -304,7 +304,6 @@ class StampedeWorkflowQueries(WorkflowQueries):
         #
         # Construct SQLAlchemy Query `q` to add pagination
         #
-        print q
         q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
 
 
