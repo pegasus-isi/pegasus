@@ -376,6 +376,7 @@ def scp(url):
         port = r.group(1)
 
     cmd += " -o PasswordAuthentication=no"
+    cmd += " -o UserKnownHostsFile=/dev/null"
     cmd += " -o StrictHostKeyChecking=no"
     cmd += " -p " + port
     cmd += " " + host
