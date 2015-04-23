@@ -362,8 +362,3 @@ Invocation
 @monitoring_routes.errorhandler(404)
 def page_not_found(error):
     pass
-
-
-@monitoring_routes.errorhandler(BaseException)
-def master_database_missing(error):
-    pass
