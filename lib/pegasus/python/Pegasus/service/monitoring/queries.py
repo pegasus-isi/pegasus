@@ -18,12 +18,13 @@ import logging
 
 import hashlib
 
-from sqlalchemy import desc
-from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy import desc, distinct, func, and_
+from sqlalchemy.orm import aliased
+from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 from Pegasus.db import connection
 from Pegasus.db.modules import SQLAlchemyInit
-from Pegasus.db.schema import DashboardWorkflow
+from Pegasus.db.schema import DashboardWorkflow, DashboardWorkflowstate
 from Pegasus.db.errors import StampedeDBNotFoundError
 from Pegasus.db.admin.admin_loader import DBAdminError
 
@@ -148,15 +149,18 @@ class MasterWorkflowQueries(WorkflowQueries):
 
         :param start_index: Return results starting from record `start_index`
         :param max_results: Return a maximum of `max_results` records
+        :param query: Filtering criteria
+        :param order: Sorting criteria
         :param use_cache: If available, use cached results
 
-        :return: Collection of DashboardWorklfow objects
+        :return: Collection of tuples (DashboardWorklfow, DashboardWorklfowstate)
         """
 
         #
         # Construct SQLAlchemy Query `q` to get total count.
         #
         q = self.session.query(DashboardWorkflow)
+
         total_records = total_filtered = self._get_count(q, use_cache)
 
         if total_records == 0:
@@ -164,11 +168,28 @@ class MasterWorkflowQueries(WorkflowQueries):
             return [], 0, 0
 
         #
+        # Finish Construction of Base SQLAlchemy Query `q`
+        #
+        qmax = self.session.query(DashboardWorkflowstate.wf_id)
+        qmax = qmax.add_column(func.max(DashboardWorkflowstate.timestamp).label('max_time'))
+        qmax = qmax.group_by(DashboardWorkflowstate.wf_id)
+        qmax = qmax.subquery('max_timestamp')
+
+        qws = self.session.query(DashboardWorkflowstate)
+        qws = qws.join(qmax, and_(DashboardWorkflowstate.wf_id == qmax.c.wf_id,
+                                  DashboardWorkflowstate.timestamp == qmax.c.max_time))
+        qws = qws.subquery('master_workflowstate')
+
+        q = q.outerjoin(qws, DashboardWorkflow.wf_id == qws.c.wf_id)
+
+        aliased_workflow_state = aliased(DashboardWorkflowstate, qws)
+        q = q.add_entity(aliased_workflow_state)
+
+        #
         # Construct SQLAlchemy Query `q` to get filtered count.
         #
-        # TODO: Validate `query`
-        # TODO: Construct JOINS as per `query`
         if query:
+            # TODO: Validate `query`
             total_filtered = self._get_count(q, use_cache)
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):
@@ -186,6 +207,7 @@ class MasterWorkflowQueries(WorkflowQueries):
         # Construct SQLAlchemy Query `q` to add pagination
         #
         q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
+
         records = self._get_all(q, use_cache)
 
         return records, total_records, total_filtered

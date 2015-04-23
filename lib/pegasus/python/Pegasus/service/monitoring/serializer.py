@@ -99,6 +99,8 @@ class RootWorkflowSerializer(BaseSerializer):
         if root_workflow is None:
             return None
 
+        root_workflow, root_workflow_state = root_workflow
+
         json_record = OrderedDict()
 
         for field in self._selected_fields:
