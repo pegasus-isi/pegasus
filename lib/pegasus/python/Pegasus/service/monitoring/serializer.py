@@ -172,6 +172,7 @@ class WorkflowSerializer(BaseSerializer):
         if not records_total or not records_filtered:
             pass
 
+        print [(workflow) for workflow in workflows]
         records = [self._encode_record(workflow) for workflow in workflows]
         records_meta = OrderedDict([
             ('records_total', records_total),
@@ -214,12 +215,6 @@ class WorkflowSerializer(BaseSerializer):
         for field in self._selected_fields:
             json_record[field] = self._get_field_value(workflow, field)
 
-        #
-        # Serialize the Workflow State Object
-        #
-        # TODO: Call WorkflowStateSerializer to encode workflow-state object
-        json_record['workflow_state'] = None
-
         json_record['_links'] = self._links(workflow)
 
         return json_record
@@ -236,7 +231,7 @@ class WorkflowSerializer(BaseSerializer):
         """
 
         links = OrderedDict([
-            ('workflow', url_for('.get_workflow', wf_id=workflow.wf_id))
+            #('workflow', url_for('.get_workflow',  wf_id=workflow.wf_id))
         ])
 
         return links

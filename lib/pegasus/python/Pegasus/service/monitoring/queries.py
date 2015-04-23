@@ -255,22 +255,12 @@ class MasterWorkflowQueries(WorkflowQueries):
 
         return q
 
-    @staticmethod
-    def get_total_root_workflows(q, use_cache=True):
-        cache_key = ''
-        return WorkflowQueries._get_count(q, cache_key, use_cache)
-
-    @staticmethod
-    def get_filtered_root_workflows(q, use_cache=True):
-        cache_key = ''
-        return WorkflowQueries._get_count(q, cache_key, use_cache)
-
 
 class StampedeWorkflowQueries(WorkflowQueries):
     """
     TODO: Mimic code above for each remaining resources except for method get_wf_id_for_wf_uuid
     """
-    def get_workflows(self, start_index=None, max_results=None, query=None, use_cache=False, recent=False, **kwargs):
+    def get_workflows(self, start_index=None, max_results=None, query=None,order=None, use_cache=False, recent=False, **kwargs):
         """
         Returns a collection of the Workflow objects.
 
@@ -287,7 +277,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         # Construct SQLAlchemy Query `q` to get total count.
         #
         q = self.session.query(Workflow)
-        total_records = StampedeWorkflowQueries.get_total_workflows(q, use_cache)
+        total_records = total_filtered = self._get_count(q, use_cache)
 
         if total_records == 0:
             return 0, 0, []
@@ -295,30 +285,35 @@ class StampedeWorkflowQueries(WorkflowQueries):
         #
         # Construct SQLAlchemy Query `q` to get filtered count.
         #
-        # TODO: Validate `query`
-        # TODO: Construct JOINS as per `query`
-        q = q
-        total_filtered = StampedeWorkflowQueries.get_filtered_workflows(q, use_cache)
+        if query:
+            # TODO: Validate `query`
+            total_filtered = self._get_count(q, use_cache)
 
-        if total_filtered == 0 or (start_index and start_index >= total_filtered):
-            return 0, 0, []
+            if total_filtered == 0 or (start_index and start_index >= total_filtered):
+                log.debug('total_filtered is 0 or start_index >= total_filtered')
+                return [], total_records, total_filtered
 
         #
         # Construct SQLAlchemy Query `q` to sort
         #
-        # TODO: Add support for sorting
+        if order:
+            # TODO: Add support for sorting
+            pass
+
 
         #
         # Construct SQLAlchemy Query `q` to add pagination
         #
-        q = WorkflowQueries._add_pagination(self, start_index, max_results, total_filtered)
-
-        records = q.all()
-
-        return total_records, total_filtered, records
+        print q
+        q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
 
 
-    def get_workflow(self, wf_id):
+        records = self._get_all(q, use_cache)
+
+        return records, total_records, total_filtered
+
+
+    def get_workflow(self, wf_id, use_cache=True):
         """
         Returns a Workflow object identified by m_wf_id.
 
@@ -338,19 +333,9 @@ class StampedeWorkflowQueries(WorkflowQueries):
             q = q.filter(Workflow.wf_uuid == wf_id)
 
         try:
-            return q.one()
+            return self.get_one(q, use_cache)
         except NoResultFound, e:
             raise e
 
-    def get_workflow_state(self, wf_id):
+    def get_workflow_state(self, wf_id, use_cache=True):
         pass
-
-    @staticmethod
-    def get_total_workflows(q, use_cache=True):
-        cache_key = ''
-        return WorkflowQueries._get_count(q, cache_key, use_cache)
-
-    @staticmethod
-    def get_filtered_workflows(q, use_cache=True):
-        cache_key = ''
-        return WorkflowQueries._get_count(q, cache_key, use_cache)

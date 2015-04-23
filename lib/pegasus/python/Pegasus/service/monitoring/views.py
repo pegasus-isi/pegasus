@@ -67,7 +67,7 @@ def compute_stampede_db_url():
     else:
         log.debug('Cache Miss: compute_stampede_db_url %s' % cache_key)
         queries = MasterWorkflowQueries(g.master_db_url)
-        root_workflow = queries.get_root_workflow(m_wf_id)
+        root_workflow, root_workflow_state = queries.get_root_workflow(m_wf_id)
         queries.close()
 
         cache.set(_get_cache_key(root_workflow.wf_id), root_workflow, timeout=600)
@@ -230,6 +230,7 @@ Workflow
 @monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow')
 @monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/query', methods=['POST'])
 def get_workflows(username, m_wf_id):
+    print g.stampede_db_url
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
     records, total_records, total_filtered = queries.get_workflows(**g.query_args)
