@@ -18,7 +18,9 @@ import logging
 
 import hashlib
 
-from flask import g, request, make_response
+from flask import g, request, make_response, abort
+
+from sqlalchemy.orm.exc import NoResultFound
 
 from Pegasus.service import cache
 from Pegasus.service.monitoring import monitoring_routes
@@ -182,7 +184,16 @@ def get_root_workflow(username, m_wf_id):
     :return type: Record
     :return resource: Root Workflow
     """
-    pass
+    queries = MasterWorkflowQueries(g.master_db_url)
+    record = queries.get_root_workflow(m_wf_id)
+
+    #
+    # Generate JSON Response
+    #
+    serializer = RootWorkflowSerializer(**g.query_args)
+    response_json = serializer.encode_record(record)
+
+    return make_response(response_json, 200, JSON_HEADER)
 
 
 """
@@ -359,6 +370,7 @@ Invocation
 """
 
 
-@monitoring_routes.errorhandler(404)
-def page_not_found(error):
-    pass
+@monitoring_routes.errorhandler(NoResultFound)
+def no_result_found(error):
+    # TODO: Return error resource in JSON format
+    return make_response('Not found', 404)
