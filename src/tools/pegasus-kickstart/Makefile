@@ -12,7 +12,7 @@ ifndef ${prefix}
     prefix = $(CURDIR)/../../../
 endif
 
-libdir = ${prefix}/$(shell $(CURDIR)/../../../release-tools/system/determine-lib-dir)/pegasus
+libdir = ${prefix}/$(shell $(CURDIR)/../../../release-tools/determine-lib-dir)/pegasus
 
 ifeq (DARWIN,${SYSTEM})
     SYSTEM_OBJ = machine/darwin.o

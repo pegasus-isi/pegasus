@@ -376,6 +376,7 @@ def scp(urls):
         elif "SSH_PRIVATE_KEY" in os.environ:
             cmd += " -i " + os.environ['SSH_PRIVATE_KEY']
         cmd += " -o PasswordAuthentication=no"
+        cmd += " -o UserKnownHostsFile=/dev/null"
         cmd += " -o StrictHostKeyChecking=no" + \
                " -p " + port + \
                " " + host + " " + \
@@ -639,14 +640,10 @@ def gs(urls):
         try:
             myexec(cmd, 6*60*60, True)
         except Exception, err:
-            # gsutil returns non-zero even when the -f flag is used
-            if options.ignore_failures or options.recursive:
-                logger.warn(err)
-            else:
-                logger.error(err)
-                os.unlink(tmp_name)
-                raise
-        os.unlink(tmp_name)
+            # ignore all gsutil errors for now - this will be fixed in a future version
+            pass
+
+    os.unlink(tmp_name)
         
         
 def urls_groupable(a, b):

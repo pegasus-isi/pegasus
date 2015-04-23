@@ -99,6 +99,8 @@ class RootWorkflowSerializer(BaseSerializer):
         if root_workflow is None:
             return None
 
+        root_workflow, root_workflow_state = root_workflow
+
         json_record = OrderedDict()
 
         for field in self._selected_fields:
@@ -125,7 +127,7 @@ class RootWorkflowSerializer(BaseSerializer):
         """
 
         links = OrderedDict([
-            ('workflow', url_for('.get_root_workflow', m_wf_id=root_workflow.wf_id))
+            ('workflow', url_for('.get_workflows', m_wf_id=root_workflow.wf_id))
         ])
 
         return links

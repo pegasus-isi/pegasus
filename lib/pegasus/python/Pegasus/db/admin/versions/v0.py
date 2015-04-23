@@ -17,7 +17,7 @@ class Version(BaseVersion):
         super(Version, self).__init__(connection)
 
     def update(self, force=False):
-        log.debug("Updating to version %s" % DB_VERSION)
+        log.info("Updating to version %s" % DB_VERSION)
         query = "ALTER TABLE invocation ADD COLUMN remote_cpu_time NUMERIC(10,3) NULL"
         if self.db.connection().dialect.name != 'sqlite':
             query += ' AFTER remote_duration'

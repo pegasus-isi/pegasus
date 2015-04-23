@@ -488,9 +488,10 @@
     </apply>
   </target>
 
-  <target name="test-java" depends="jar" description="Run java unit tests">
+  <target name="test-java" depends="jar,compile-externals" description="Run java unit tests">
     <mkdir dir="${junitreport.dir}"/>
     <junit printsummary="yes" haltonfailure="yes">
+      <sysproperty key="externals.python.path" value="${dist.lib}/pegasus/externals/python"/>
       <classpath>
         <path refid="build.classpath"/>
         <path location="${dist.jars}/pegasus.jar"/>
