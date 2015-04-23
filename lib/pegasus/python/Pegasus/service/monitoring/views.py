@@ -240,7 +240,6 @@ Workflow
 @monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow')
 @monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/query', methods=['POST'])
 def get_workflows(username, m_wf_id):
-    print g.stampede_db_url
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
     records, total_records, total_filtered = queries.get_workflows(**g.query_args)
