@@ -18,8 +18,7 @@ import logging
 
 import hashlib
 
-
-from flask import g, request, make_response, abort
+from flask import g, request, make_response, abort, current_app
 
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -31,6 +30,16 @@ from Pegasus.service.monitoring.serializer import *
 log = logging.getLogger(__name__)
 
 JSON_HEADER = {'Content-Type': 'application/json'}
+
+
+@monitoring_routes.url_defaults
+def add_m_wf_id(endpoint, values):
+    """
+    If the endpoint expects m_wf_id, then set it's value to g.url_m_wf_id.
+    """
+    if current_app.url_map.is_endpoint_expecting(endpoint,
+                                                 'm_wf_id') and 'm_wf_id' not in values and 'url_m_wf_id' in g:
+        values.setdefault('m_wf_id', g.url_m_wf_id)
 
 
 @monitoring_routes.url_value_preprocessor
@@ -73,6 +82,7 @@ def compute_stampede_db_url():
         cache.set(_get_cache_key(root_workflow.wf_id), root_workflow, timeout=600)
         cache.set(_get_cache_key(root_workflow.wf_uuid), root_workflow, timeout=600)
 
+    g.url_m_wf_id = root_workflow.wf_id
     g.m_wf_id = root_workflow.wf_uuid
     g.stampede_db_url = root_workflow.db_url
 
@@ -274,6 +284,8 @@ def get_workflow(username, m_wf_id, wf_id):
     }
 }
 """
+
+
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/state')
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/state/query')
 def get_workflow_state(username, m_wf_id, wf_id):
@@ -310,6 +322,8 @@ Job
     }
 }
 """
+
+
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job')
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/query')
 def get_workflow_jobs(username, m_wf_id, wf_id):
@@ -337,6 +351,8 @@ Host
     }
 }
 """
+
+
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/host')
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/host/query')
 def get_workflow_hosts(username, m_wf_id, wf_id):
@@ -348,7 +364,8 @@ def get_workflow_host(username, m_wf_id, wf_id, host_id):
     pass
 
 
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/host')
+@monitoring_routes.route(
+    '/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/host')
 def get_job_instance_host(username, m_wf_id, wf_id, job_id, job_instance_id):
     pass
 
@@ -366,8 +383,12 @@ Job State
     }
 }
 """
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/state')
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/state/query')
+
+
+@monitoring_routes.route(
+    '/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/state')
+@monitoring_routes.route(
+    '/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/state/query')
 def get_job_instance_state(username, m_wf_id, wf_id, job_id, job_instance_id):
     pass
 
@@ -387,6 +408,8 @@ Task
     }
 }
 """
+
+
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/task')
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/task/query')
 def get_workflow_tasks(username, m_wf_id, wf_id):
@@ -427,12 +450,16 @@ Job Instance
     }
 }
 """
+
+
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance')
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/query')
 def get_workflow_job_instances(username, m_wf_id, wf_id, job_id):
     pass
 
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>')
+
+@monitoring_routes.route(
+    '/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>')
 def get_workflow_job_instance(username, m_wf_id, wf_id, job_id, job_instance_id):
     pass
 
@@ -458,6 +485,8 @@ Invocation
     }
 }
 """
+
+
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/invocation')
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/invocation/query')
 def get_workflow_invocations(username, m_wf_id, wf_id):
@@ -468,13 +497,17 @@ def get_workflow_invocations(username, m_wf_id, wf_id):
 def get_workflow_invocation(username, m_wf_id, wf_id, invocation_id):
     pass
 
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/invocation')
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/invocation/query')
+
+@monitoring_routes.route(
+    '/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/invocation')
+@monitoring_routes.route(
+    '/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/invocation/query')
 def get_job_instance_invocations(username, m_wf_id, wf_id, job_id, job_instance_id):
     pass
 
 
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/invocation/<invocation_id>')
+@monitoring_routes.route(
+    '/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/invocation/<invocation_id>')
 def get_job_instance_invocation(username, m_wf_id, wf_id, job_id, job_instance_id, invocation_id):
     pass
 

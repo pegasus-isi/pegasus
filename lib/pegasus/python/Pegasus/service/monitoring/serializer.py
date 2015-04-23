@@ -231,7 +231,7 @@ class WorkflowSerializer(BaseSerializer):
         """
 
         links = OrderedDict([
-            #('workflow', url_for('.get_workflow',  wf_id=workflow.wf_id))
+            ('workflow', url_for('.get_workflow', wf_id=workflow.wf_id))
         ])
 
         return links
