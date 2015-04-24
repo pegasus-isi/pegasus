@@ -33,7 +33,15 @@ check_predefined_variables() {
 	echo "ERROR: _CONDOR_SCRATCH_DIR was not set" 1>&2
 	exit 1
     fi
-
+    
+    path_addon="/bin:/usr/bin:/usr/local/bin:/opt/local/bin"
+    if [ "X${PATH}" = "X" ]; then
+	echo "WARNING: PATH not set. Adding default values $path_addon" 1>&2
+	export PATH=$path_addon
+    else
+	echo "DEBUG: Adding default values to PATH - $path_addon" 1>&2
+	export PATH=$PATH:$path_addon
+    fi
 }
 
 check_predefined_variables
