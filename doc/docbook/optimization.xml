@@ -1243,8 +1243,8 @@ tr B {
     <para>HTCondor also exposes useful configuration parameters that can be
     specified in it's configuration file (condor_config_val -conf will list
     the condor configuration files), to control job submission across
-    workflows. Some of the useful parameters that you may want to tune are
-    </para>
+    workflows. Some of the useful parameters that you may want to tune
+    are</para>
 
     <table id="condor_throttling_variables">
       <title>Useful HTCondor Job Throttling Configuration Parameters</title>
@@ -1301,7 +1301,8 @@ Sample Value  : </emphasis></emphasis> Integer<emphasis role="bold">
             comma-separated list of pairs that follows this integer limit will
             specify limits for specific remote resources. Each pair is a host
             name and the job limit for that host. Consider the example
-            <programlisting>GRIDMANAGER_MAX_SUBMITTED_JOBS_PER_RESOURCE = 200, foo.edu, 50, bar.com, 100.</programlisting><para>
+            <programlisting>GRIDMANAGER_MAX_SUBMITTED_JOBS_PER_RESOURCE = 
+                         200, foo.edu, 50, bar.com, 100.</programlisting><para>
             In this example, all resources have a job limit of 200, except
             foo.edu, which has a limit of 50, and bar.com, which has a limit
             of 100. Limits specific to grid types can be set by appending the
