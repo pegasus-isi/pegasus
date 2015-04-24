@@ -94,7 +94,7 @@ class BaseQueryParser(object):
     reserved_word = NoCase(Str('AND', 'OR', 'LIKE')) | Str('NULL')
 
     identifier = Opt(prefix) + letter + Rep(letter | digit | Str('_'))
-    comparators = NoCase(Str('=', '!=', 'like'))
+    comparators = NoCase(Str('=', '!=', '<', '<=', '>', '>=', 'like'))
     integer_literal = Rep1(digit)
     string_literal = Str('\'') + Rep(AnyBut('\'') | Str(' ') | Str("\\'")) + Str('\'')
 
