@@ -113,7 +113,7 @@ def db_downgrade(db, pegasus_version=None, force=False):
         version = current_version - 1
 
     if current_version == version:
-        print "Your database is already downgraded."
+        log.debug("Your database is already downgraded.")
         return
     
     if version == 0:
@@ -176,7 +176,7 @@ def _discover_version(db, pegasus_version=None, force=False, verbose=True):
     if current_version == version:
         try:
             _verify_tables(db)
-            print "Your database is already updated."
+            log.debug("Your database is already updated.")
             return None
         except DBAdminError:
             current_version = -1
