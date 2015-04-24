@@ -19,9 +19,12 @@ directly over a database URL, or can read configuration parameters from the
 properties file or a submit directory. In the later case, a database type 
 should be provided to indicate which properties should be used to connect to
 the database. For example, the tool will seek for pegasus.catalog.replica.db.* 
-properties to connect to the JDBCRC database; or seek for pegasus.dashboard.output
-property to connect to the MASTER database; or seek for the pegasus.monitord.output
-property to connect to the WORKFLOW database.
+properties to connect to the JDBCRC database; or seek for pegasus.catalog.master.url
+(or pegasus.dashboard.output, which is deprecated) property to connect to the
+MASTER database; or seek for the pegasus.catalog.workflow.url (or pegasus.monitord.output,
+which is deprecated) property to connect to the WORKFLOW database. If none of
+these properties are found, the tool will connect to the default database
+in the user' home directory (sqlite:///${HOME}/.pegasus/workflow.db).
 
 Commands
 --------

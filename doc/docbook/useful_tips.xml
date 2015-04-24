@@ -44,10 +44,13 @@ Your database is compatible with Pegasus version: 4.5.0
     properties file or a submit directory. In the later case, a database type 
     should be provided to indicate which properties should be used to connect to 
     the database. For example, the tool will seek for <emphasis>pegasus.catalog.replica.db.*</emphasis> 
-    properties to connect to the JDBCRC database; or seek for 
-    <emphasis>pegasus.dashboard.output</emphasis> property to connect to the MASTER 
-    database; or seek for the <emphasis>pegasus.monitord.output</emphasis> property 
-    to connect to the WORKFLOW database.</para>
+    properties to connect to the JDBCRC database; or seek for <emphasis>pegasus.catalog.master.url</emphasis>
+    (or <emphasis>pegasus.dashboard.output</emphasis>, which is deprecated) property
+    to connect to the MASTER database; or seek for the <emphasis>pegasus.catalog.workflow.url</emphasis>
+    (or <emphasis>pegasus.monitord.output</emphasis>, which is deprecated) property
+    to connect to the WORKFLOW database. If none of these properties are found, the
+    tool will connect to the default database in the user's home directory
+    (sqlite:///${HOME}/.pegasus/workflow.db).</para>
     
     <para>Example: connection by providing the URL to the database:</para>
     
