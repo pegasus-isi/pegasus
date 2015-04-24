@@ -342,3 +342,60 @@ class BaseOrderParser(object):
         s.close()
 
         return out
+
+
+class BaseResource(object):
+    """
+    Purpose of Resource is to centralize field definitions in one place, and to aid in Query, Order Parsing and
+    Query, Order evaluation
+    """
+    def __init__(self, alias=None):
+        self._prefix = None
+        self._resource = alias if alias else None
+        self._fields = None
+        self._prefixed_fields = None
+
+    @property
+    def prefix(self):
+        return self._prefix
+
+    @property
+    def fields(self):
+        return self._fields
+
+    @property
+    def prefixed_fields(self):
+        if self._prefixed_fields is None:
+            self._prefixed_fields = set([field for field in self.fields])
+            self._prefixed_fields |= set(['%s.%s' % (self.prefix, field) for field in self.fields])
+
+        return self._prefixed_fields
+
+    def mapped_fields(self, alias=None):
+        mapped_fields = {}
+        for field in self.prefixed_fields:
+            mapped_fields[field] = self.get_mapped_field(field, alias)
+
+        return mapped_fields
+
+    def get_mapped_field(self, field, alias=None):
+        resource = alias if alias else self._resource
+        suffix = self._get_suffix(field)
+
+        return getattr(resource, suffix)
+
+    def is_field_valid(self, field):
+        return field in self.prefixed_fields
+
+    @staticmethod
+    def _split_identifier(identifier):
+        return identifier.split('.', 1)
+
+    @staticmethod
+    def _get_prefix(field):
+        return BaseResource._split_identifier(field)[0]
+
+    @staticmethod
+    def _get_suffix(field):
+        splits = BaseResource._split_identifier(field)
+        return splits[0] if len(splits) == 1 else splits[1]
