@@ -83,45 +83,6 @@ class BaseQueryParser(object):
 
     Note: The base class only provides a partial implementation of the SQL where clause.
     """
-    whitespace = Rep1(Any(' \t\n'))
-    open_parenthesis = Str('(')
-    close_parenthesis = Str(')')
-
-    letter = Range('AZaz')
-    digit = Range('09')
-    prefix = letter + Rep(letter) + Str('.')
-
-    reserved_word = NoCase(Str('AND', 'OR', 'LIKE')) | Str('NULL')
-
-    identifier = Opt(prefix) + letter + Rep(letter | digit | Str('_'))
-    comparators = NoCase(Str('=', '!=', '<', '<=', '>', '>=', 'like'))
-    integer_literal = Rep1(digit)
-    string_literal = Str('\'') + Rep(AnyBut('\'') | Str(' ') | Str("\\'")) + Str('\'')
-
-    operands = NoCase(Str('AND', 'OR'))
-    null = Str('NULL')
-
-    OPEN_PARENTHESIS = 1
-    CLOSE_PARENTHESIS = 2
-    NULL = 3
-    OPERAND = 4
-    IDENTIFIER = 5
-    COMPARATOR = 7
-    INTEGER_LITERAL = 8
-    STRING_LITERAL = 9
-
-    lexicon = Lexicon([
-        (whitespace, IGNORE),
-        (open_parenthesis, OPEN_PARENTHESIS),
-        (close_parenthesis, CLOSE_PARENTHESIS),
-        (null, NULL),
-        (operands, OPERAND),
-        (comparators, COMPARATOR),
-        (integer_literal, INTEGER_LITERAL),
-        (string_literal, STRING_LITERAL),
-        (identifier, IDENTIFIER)
-    ])
-
     def __init__(self, expression):
         self.expression = expression
 
@@ -133,11 +94,70 @@ class BaseQueryParser(object):
         self._condition = [0, 0, 0]
 
         self._scanner = None
+        self._lexicon = None
+        self._mapper = None
+
+        self._init()
 
         try:
             self._parse_expression()
         except UnrecognizedInput, e:
             raise InvalidQueryError(str(e))
+
+    def _init(self):
+        whitespace = Rep1(Any(' \t\n'))
+        open_parenthesis = Str('(')
+        close_parenthesis = Str(')')
+
+        letter = Range('AZaz')
+        digit = Range('09')
+        prefix = letter + Rep(letter) + Str('.')
+
+        #reserved_word = NoCase(Str('AND', 'OR', 'LIKE')) | Str('NULL')
+
+        identifier = Opt(prefix) + letter + Rep(letter | digit | Str('_'))
+        comparators = NoCase(Str('=', '!=', '<', '<=', '>', '>=', 'like'))
+        string_literal = Str('\'') + Rep(AnyBut('\'') | Str(' ') | Str("\\'")) + Str('\'')
+        integer_literal = Opt(Str('+', '-')) + Rep1(digit)
+        float_literal = Opt(Str('+', '-')) + Rep1(digit) + Str('.') + Rep1(digit)
+
+        operands = NoCase(Str('AND', 'OR'))
+        null = Str('NULL')
+
+        OPEN_PARENTHESIS = 1
+        CLOSE_PARENTHESIS = 2
+        NULL = 3
+        OPERAND = 4
+        COMPARATOR = 5
+        STRING_LITERAL = 6
+        INTEGER_LITERAL = 7
+        FLOAT_LITERAL = 8
+        IDENTIFIER = 9
+
+        self._lexicon = Lexicon([
+            (whitespace, IGNORE),
+            (open_parenthesis, OPEN_PARENTHESIS),
+            (close_parenthesis, CLOSE_PARENTHESIS),
+            (null, NULL),
+            (operands, OPERAND),
+            (comparators, COMPARATOR),
+            (string_literal, STRING_LITERAL),
+            (integer_literal, INTEGER_LITERAL),
+            (float_literal, FLOAT_LITERAL),
+            (identifier, IDENTIFIER)
+        ])
+
+        self._mapper = {
+            OPEN_PARENTHESIS: self.open_parenthesis_handler,
+            CLOSE_PARENTHESIS: self.close_parenthesis_handler,
+            NULL: self.null_handler,
+            OPERAND: self.operand_handler,
+            COMPARATOR: self.comparator_handler,
+            STRING_LITERAL: self.string_literal_handler,
+            INTEGER_LITERAL: self.integer_literal_handler,
+            FLOAT_LITERAL: self.float_literal_handler,
+            IDENTIFIER: self.identifier_handler,
+        }
 
     def _parse_expression(self):
         """
@@ -146,13 +166,13 @@ class BaseQueryParser(object):
         """
 
         f = StringIO.StringIO(self.expression)
-        self._scanner = Scanner(self.lexicon, f, 'query')
+        self._scanner = Scanner(self._lexicon, f, 'query')
 
         while 1:
             token = self._scanner.read()
 
-            if token[0] in self.mapper:
-                self.mapper[token[0]](self, token[1])
+            if token[0] in self._mapper:
+                self._mapper[token[0]](token[1])
 
             elif token[0] is None:
                 break
@@ -203,6 +223,16 @@ class BaseQueryParser(object):
             msg = 'Comparator %r found out of order: Line: %d Char: %d' % (text, line, char_pos)
             raise InvalidQueryError(msg)
 
+    def string_literal_handler(self, text):
+        if self._state == 2:
+            self._condition[2] = text.strip("'")
+            self._postfix_result.append(tuple(self._condition))
+            self._state = 0
+        else:
+            file, line, char_pos = self._scanner.position()
+            msg = 'String literal %r found out of order: Line: %d Char: %d' % (text, line, char_pos)
+            raise InvalidQueryError(msg)
+
     def integer_literal_handler(self, text):
         if self._state == 2:
             self._condition[2] = text.strip()
@@ -213,14 +243,14 @@ class BaseQueryParser(object):
             msg = 'Integer literal %d found out of order: Line: %d Char: %d' % (text, line, char_pos)
             raise InvalidQueryError(msg)
 
-    def string_literal_handler(self, text):
+    def float_literal_handler(self, text):
         if self._state == 2:
-            self._condition[2] = text.strip("'")
+            self._condition[2] = text.strip()
             self._postfix_result.append(tuple(self._condition))
             self._state = 0
         else:
             file, line, char_pos = self._scanner.position()
-            msg = 'String literal %r found out of order: Line: %d Char: %d' % (text, line, char_pos)
+            msg = 'Integer literal %d found out of order: Line: %d Char: %d' % (text, line, char_pos)
             raise InvalidQueryError(msg)
 
     def null_handler(self, text):
@@ -236,19 +266,11 @@ class BaseQueryParser(object):
     def operand_handler(self, text):
         self._operator_stack.append(text.upper())
 
-    mapper = {
-        OPEN_PARENTHESIS: open_parenthesis_handler,
-        CLOSE_PARENTHESIS: close_parenthesis_handler,
-        IDENTIFIER: identifier_handler,
-        COMPARATOR: comparator_handler,
-        INTEGER_LITERAL: integer_literal_handler,
-        STRING_LITERAL: string_literal_handler,
-        NULL: null_handler,
-        OPERAND: operand_handler
-    }
-
     def evaluate(self):
         return self._postfix_result
+
+    def get_identifiers(self):
+        return None
 
     def __str__(self):
         s = StringIO.StringIO()
