@@ -188,6 +188,40 @@ class TestDBAdmin(unittest.TestCase):
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         db.close()
         self.remove(filename)
+
+    def test_connection_from_properties_file(self):
+        props_filename = str(uuid.uuid4())
+        filename = str(uuid.uuid4())
+        self._silentremove(filename)
+        dburi = "sqlite:///%s" % filename
+
+        f = open(props_filename,'w')
+        # JDBCRC
+        f.write('pegasus.catalog.replica=JDBCRC\n')
+        f.write('pegasus.catalog.replica.db.driver=SQLite\n')
+        f.write('pegasus.catalog.replica.db.url=jdbc:sqlite:%s\n' % filename)
+        # MASTER
+        f.write('pegasus.dashboard.output=%s\n' % dburi)
+        # WORKFLOW
+        f.write('pegasus.monitord.output=%s\n' % dburi)
+        f.close()
+
+        db = connection.connect_by_properties(props_filename, connection.DBType.JDBCRC, create=True)
+        self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
+        db.close()
+        self.remove(filename)
+
+        db = connection.connect_by_properties(props_filename, connection.DBType.MASTER, create=True)
+        self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
+        db.close()
+        self.remove(filename)
+
+        db = connection.connect_by_properties(props_filename, connection.DBType.WORKFLOW, create=True)
+        self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
+        db.close()
+        self.remove(filename)
+        self._silentremove(props_filename)
+
                 
     def _silentremove(self, filename):
         try:
