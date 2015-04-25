@@ -83,7 +83,7 @@ class BaseQueryParser(object):
 
     Note: The base class only provides a partial implementation of the SQL where clause.
     """
-    def __init__(self, expression):
+    def __init__(self, expression=None):
         self.expression = expression
 
         self._state = 0
@@ -92,6 +92,7 @@ class BaseQueryParser(object):
         self._operator_stack = []
         self._postfix_result = []
         self._condition = [0, 0, 0]
+        self._identifiers = set()
 
         self._scanner = None
         self._lexicon = None
@@ -99,10 +100,7 @@ class BaseQueryParser(object):
 
         self._init()
 
-        try:
-            self._parse_expression()
-        except UnrecognizedInput, e:
-            raise InvalidQueryError(str(e))
+        self.parse_expression(expression)
 
     def _init(self):
         whitespace = Rep1(Any(' \t\n'))
@@ -159,31 +157,39 @@ class BaseQueryParser(object):
             IDENTIFIER: self.identifier_handler,
         }
 
-    def _parse_expression(self):
+    @property
+    def identifiers(self):
+        return self._identifiers
+
+    def parse_expression(self, expression):
         """
         Uses postfix evaluation of filter string.
         http://www.sunshine2k.de/coding/java/SimpleParser/SimpleParser.html
         """
+        try:
+            f = StringIO.StringIO(expression)
+            self._scanner = Scanner(self._lexicon, f, 'query')
 
-        f = StringIO.StringIO(self.expression)
-        self._scanner = Scanner(self._lexicon, f, 'query')
+            while 1:
+                token = self._scanner.read()
 
-        while 1:
-            token = self._scanner.read()
+                if token[0] in self._mapper:
+                    self._mapper[token[0]](token[1])
 
-            if token[0] in self._mapper:
-                self._mapper[token[0]](token[1])
+                elif token[0] is None:
+                    break
 
-            elif token[0] is None:
-                break
+            if self._parenthesis_count != 0:
+                raise InvalidQueryError('Invalid parenthesis count')
 
-        if self._parenthesis_count != 0:
-            raise InvalidQueryError('Invalid parenthesis count')
+            while len(self._operator_stack) > 0:
+                self._postfix_result.append(self._operator_stack.pop())
 
-        while len(self._operator_stack) > 0:
-            self._postfix_result.append(self._operator_stack.pop())
+        except UnrecognizedInput, e:
+            raise InvalidQueryError(str(e))
 
-        f.close()
+        finally:
+            f.close()
 
     def open_parenthesis_handler(self, text):
         self._parenthesis_count += 1
@@ -205,14 +211,18 @@ class BaseQueryParser(object):
             else:
                 self._postfix_result.append(operator)
 
-    def identifier_handler(self, text):
-        if self._state == 0:
-            self._condition[0] = text
-            self._state = 1
+    def null_handler(self, text):
+        if self._state == 2:
+            self._condition[2] = None
+            self._postfix_result.append(tuple(self._condition))
+            self._state = 0
         else:
             file, line, char_pos = self._scanner.position()
-            msg = 'Field %r found out of order: Line: %d Char: %d' % (text, line, char_pos)
+            msg = 'NULL found out of order: Line: %d Char: %d' % (line, char_pos)
             raise InvalidQueryError(msg)
+
+    def operand_handler(self, text):
+        self._operator_stack.append(text.upper())
 
     def comparator_handler(self, text):
         if self._state == 1:
@@ -253,24 +263,29 @@ class BaseQueryParser(object):
             msg = 'Integer literal %d found out of order: Line: %d Char: %d' % (text, line, char_pos)
             raise InvalidQueryError(msg)
 
-    def null_handler(self, text):
-        if self._state == 2:
-            self._condition[2] = None
-            self._postfix_result.append(tuple(self._condition))
-            self._state = 0
+    def identifier_handler(self, text):
+        if self._state == 0:
+            self._condition[0] = text
+            self._state = 1
+            self._identifiers.add(text)
         else:
             file, line, char_pos = self._scanner.position()
-            msg = 'NULL found out of order: Line: %d Char: %d' % (line, char_pos)
+            msg = 'Field %r found out of order: Line: %d Char: %d' % (text, line, char_pos)
             raise InvalidQueryError(msg)
-
-    def operand_handler(self, text):
-        self._operator_stack.append(text.upper())
 
     def evaluate(self):
         return self._postfix_result
 
-    def get_identifiers(self):
-        return None
+    def clear(self):
+        self._state = 0
+        self._parenthesis_count = 0
+
+        self._operator_stack = []
+        self._postfix_result = []
+        self._condition = [0, 0, 0]
+        self._identifiers = set()
+
+        self._scanner = None
 
     def __str__(self):
         s = StringIO.StringIO()
