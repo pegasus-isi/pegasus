@@ -68,6 +68,7 @@ class CombinationResource(BaseResource):
 
         self._fields = None
         self._prefixed_fields = None
+        self._field_prefix_map = None
 
     @property
     def fields(self):
@@ -81,21 +82,36 @@ class CombinationResource(BaseResource):
     @property
     def prefixed_fields(self):
         if self._prefixed_fields is None:
-            self._prefixed_fields = set()
             collisions = set([])
+            self._prefixed_fields = set()
+            self._field_prefix_map = {}
 
             for resource in self._resources:
                 for field in resource.fields:
-                    self._prefixed_fields.add('%s.%s' % (resource.prefix, field))
+                    prefixed_field = '%s.%s' % (resource.prefix, field)
+                    self._prefixed_fields.add(prefixed_field)
+                    self._field_prefix_map[prefixed_field] = resource.prefix
                     if field in self._prefixed_fields:
                         # Collision
                         collisions.add(field)
+                        del self._field_prefix_map[field]
                     else:
                         self._prefixed_fields.add(field)
+                        self._field_prefix_map[field] = resource.prefix
 
             self._prefixed_fields -= collisions
 
         return self._prefixed_fields
+
+    @property
+    def field_prefix_map(self):
+        if self._field_prefix_map is None:
+            ignore = self.prefixed_fields
+
+        return self._field_prefix_map
+
+    def get_field_prefix(self, field):
+        return self.field_prefix_map[field] if field in self.field_prefix_map else None
 
     def mapped_fields(self, alias=None):
         mapped_fields = {}
