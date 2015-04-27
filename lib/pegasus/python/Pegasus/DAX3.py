@@ -94,7 +94,7 @@ f.close()
 """
 
 __author__ = "Gideon Juve <gideon@isi.edu>"
-__version__ = "3.5"
+__version__ = "3.6"
 
 __all__ = [
     "DAX3Error",
@@ -178,8 +178,8 @@ import shlex
 import codecs
 
 SCHEMA_NAMESPACE = "http://pegasus.isi.edu/schema/DAX"
-SCHEMA_LOCATION = "http://pegasus.isi.edu/schema/dax-3.5.xsd"
-SCHEMA_VERSION = "3.5"
+SCHEMA_LOCATION = "http://pegasus.isi.edu/schema/dax-3.6.xsd"
+SCHEMA_VERSION = "3.6"
 
 class DAX3Error(Exception): pass
 class DuplicateError(DAX3Error): pass
@@ -458,9 +458,9 @@ class MetadataMixin:
         """Remove all metadata from this object"""
         self._metadata.clear()
         
-    def metadata(self, key, type, value):
+    def metadata(self, key, value):
         """Declarative metadata addition"""
-        self.addMetadata(Metadata(key, type, value))
+        self.addMetadata(Metadata(key, value))
     
 
 class PFNMixin:
@@ -677,7 +677,7 @@ class Executable(CatalogType, InvokeMixin):
         return e
     
 class Metadata:
-    """Metadata(key,type,value)
+    """Metadata(key,value)
     
     A way to add metadata to File and Executable objects. This is
     useful if you want to annotate the DAX with things like file
@@ -686,28 +686,24 @@ class Metadata:
     There is currently no restriction on the type.
     
     Examples:
-        s = Metadata('size','int','12')
-        a = Metadata('algorithm','string','plav')
+        s = Metadata('size','12')
+        a = Metadata('algorithm','plav')
     """
-    def __init__(self, key, type, value):
+    def __init__(self, key, value):
         """
         Arguments:
             key: The key name of the item
-            type: The type of the value (e.g. string, int, float)
             value: The value of the item
         """
         if not key:
             raise FormatError("Invalid key", key)
-        if not type:
-            raise FormatError("Invalid type", type)
         if not value:
             raise FormatError("Invalid value", value)
         self.key = key
-        self.type = type
         self.value = value
     
     def __unicode__(self):
-        return u"<Metadata %s %s = %s>" % (self.type, self.key, self.value)
+        return u"<Metadata %s = %s>" % (self.key, self.value)
     
     def __str__(self):
         return unicode(self).encode('utf-8')
@@ -720,8 +716,7 @@ class Metadata:
     
     def toXML(self):
         m = Element('metadata', [
-            ('key',self.key),
-            ('type',self.type)
+            ('key', self.key)
         ])
         m.text(self.value).flatten()
         return m
@@ -827,7 +822,7 @@ class Profile:
         p.text(self.value).flatten()
         return p
     
-class Use:
+class Use(MetadataMixin):
     """Use(file[,link][,register][,transfer][,optional]
            [,namespace][,version][,executable][,size])
     
@@ -867,6 +862,8 @@ class Use:
         self.version = version
         self.executable = executable
         self.size = size
+
+        self._metadata = set()
     
     def __unicode__(self):
         return u"<Use %s::%s:%s>" % (self.namespace, self.name, self.version)
@@ -884,15 +881,20 @@ class Use:
                 self.version == other.version
     
     def toTransformationXML(self):
-        return Element('uses', [
+        e = Element('uses', [
             ('namespace',self.namespace),
             ('name',self.name),
             ('version',self.version),
             ('executable',self.executable)
         ])
-    
+
+        for m in self._metadata:
+            e.element(m.toXML())
+
+        return e
+
     def toJobXML(self):
-        return Element('uses', [
+        e = Element('uses', [
             ('namespace',self.namespace),
             ('name',self.name),
             ('version',self.version),
@@ -903,7 +905,12 @@ class Use:
             ('executable',self.executable),
             ('size',self.size)
         ])
-    
+
+        for m in self._metadata:
+            e.element(m.toXML())
+
+        return e
+
 
 class UseMixin:
     def addUse(self, use):
@@ -962,10 +969,17 @@ class UseMixin:
         
         use = Use(_name,link,register,transfer,optional,_namespace,
             _version,_executable,size)
+
+        # Copy metadata from File or Executable
+        # XXX Maybe we only want this if link!=input
+        if isinstance(arg, CatalogType):
+            for m in arg._metadata:
+                use.addMetadata(m)
+
         self.addUse(use)
     
 
-class Transformation(UseMixin,InvokeMixin):
+class Transformation(UseMixin,InvokeMixin,MetadataMixin):
     """Transformation((name|executable)[,namespace][,version])
     
     A logical transformation. This is basically defining one or more
@@ -1078,7 +1092,7 @@ class Transformation(UseMixin,InvokeMixin):
         return e
     
 
-class AbstractJob(ProfileMixin,UseMixin,InvokeMixin):
+class AbstractJob(ProfileMixin,UseMixin,InvokeMixin,MetadataMixin):
     """The base class for Job, DAX, and DAG"""
     def __init__(self, id=None, node_label=None):
         self.id = id
@@ -1088,7 +1102,8 @@ class AbstractJob(ProfileMixin,UseMixin,InvokeMixin):
         self.profiles = set()
         self.used = set()
         self.invocations = set()
-        
+        self._metadata = set()
+
         self.stdout = None
         self.stderr = None
         self.stdin = None
@@ -1168,6 +1183,10 @@ class AbstractJob(ProfileMixin,UseMixin,InvokeMixin):
                 else:
                     args.text(x)
             element.element(args)
+
+        # Metadata
+        for m in self._metadata:
+            element.element(m.toXML())
 
         # Profiles
         for pro in self.profiles:
@@ -1416,7 +1435,7 @@ class Dependency:
         return False
     
 
-class ADAG(InvokeMixin):
+class ADAG(InvokeMixin,MetadataMixin):
     """ADAG(name[,count][,index])
     
     Representation of a directed acyclic graph in XML (DAX).
@@ -1479,6 +1498,7 @@ class ADAG(InvokeMixin):
         self.dependencies = set()
         self.transformations = set()
         self.invocations = set()
+        self._metadata = set()
     
     def __unicode__(self):
         return u"<ADAG %s>" % self.name
@@ -1671,7 +1691,6 @@ class ADAG(InvokeMixin):
         # Preamble
         out.write('<?xml version="1.0" encoding="UTF-8"?>\n')
         
-        # Metadata
         out.write('<!-- generated: %s -->\n' % datetime.datetime.now())
         if os.name == 'posix':
             import pwd
@@ -1692,7 +1711,13 @@ class ADAG(InvokeMixin):
         if self.count: out.write(' count="%d"' % self.count)
         if self.index: out.write(' index="%d"' % self.index)
         out.write('>\n')
-        
+
+        # Metadata
+        for m in self._metadata:
+            out.write('\t')
+            m.toXML().write(stream=out, level=1)
+            out.write('\n')
+
         # Invocations
         for i in self.invocations:
             out.write('\t')
@@ -1807,7 +1832,6 @@ def parse(infile):
         try:
             return Metadata(
                 key=e.attrib['key'],
-                type=e.attrib['type'],
                 value=e.text)
         except KeyError, ke:
             raise badattr(e, ke)
@@ -2040,14 +2064,20 @@ def main():
     """Simple smoke test"""
     # Create a DAX
     diamond = ADAG("diamond")
-    
+
+    # Add some metadata
+    diamond.addMetadata(Metadata("foo", "bar"))
+    diamond.metadata("baz", "quux")
+
     # Add input file to the DAX-level replica catalog
     a = File("f.a")
     a.addPFN(PFN("gsiftp://site.com/inputs/f.a","site"))
+    a.metadata("foo", "bar")
     diamond.addFile(a)
         
     # Add executables to the DAX-level replica catalog
     e_preprocess = Executable(namespace="diamond", name="preprocess", version="4.0", os="linux", arch="x86_64")
+    e_preprocess.metadata("foo", "bar")
     e_preprocess.addPFN(PFN("gsiftp://site.com/bin/preprocess","site"))
     diamond.addExecutable(e_preprocess)
     
@@ -2061,6 +2091,7 @@ def main():
     
     # Add a preprocess job
     preprocess = Job(e_preprocess)
+    preprocess.metadata("foo", "bar")
     b1 = File("f.b1")
     b2 = File("f.b2")
     preprocess.addArguments("-a preprocess","-T60","-i",a,"-o",b1,b2)

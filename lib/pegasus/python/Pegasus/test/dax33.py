@@ -18,13 +18,13 @@ def main():
     diamond.addFile(a)
 
     cfg = File("config.ini")
-    cfg.metadata("size","int","10")
+    cfg.metadata("size","10")
     diamond.addFile(cfg)
 
     # Add executables to the DAX-level replica catalog
     e_preprocess = Executable(namespace="diamond", name="preprocess", version="4.0", os="linux", osrelease="5", glibc="3.3", arch="x86_64", installed=True, osversion="2.6")
     e_preprocess.profile("pegasus", "barfoo", "false")
-    e_preprocess.metadata("size","int",100)
+    e_preprocess.metadata("size",100)
     pfn = PFN("gsiftp://site.com/bin/preprocess","site")
     pfn.profile("pegasus", "baz", "abcd")
     e_preprocess.addPFN(pfn)
