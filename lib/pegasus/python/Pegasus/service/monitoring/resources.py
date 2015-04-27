@@ -132,8 +132,8 @@ class CombinationResource(BaseResource):
 
 
 class RootWorkflowResource(BaseResource):
-    def __init__(self):
-        super(RootWorkflowResource, self).__init__(DashboardWorkflow)
+    def __init__(self, alias=None):
+        super(RootWorkflowResource, self).__init__(alias if alias else DashboardWorkflow)
 
         self._prefix = 'r'
 
@@ -169,8 +169,8 @@ class RootWorkflowstateResource(BaseResource):
 
 
 class WorkflowResource(BaseResource):
-    def __init__(self):
-        super(WorkflowResource, self).__init__(Workflow)
+    def __init__(self, alias=None):
+        super(WorkflowResource, self).__init__(alias if alias else Workflow)
 
         self._prefix = 'w'
 
@@ -194,14 +194,14 @@ class WorkflowResource(BaseResource):
 
 
 class WorkflowstateResource(RootWorkflowstateResource):
-    def __init__(self):
-        super(WorkflowstateResource, self).__init__(Workflowstate)
+    def __init__(self, alias=None):
+        super(WorkflowstateResource, self).__init__(alias if alias else Workflowstate)
         self._resource = Workflowstate
 
 
 class JobResource(BaseResource):
-    def __init__(self):
-        super(JobResource, self).__init__(Job)
+    def __init__(self, alias=None):
+        super(JobResource, self).__init__(alias if alias else Job)
 
         self._prefix = 'j'
 
@@ -219,8 +219,8 @@ class JobResource(BaseResource):
 
 
 class HostResource(BaseResource):
-    def __init__(self):
-        super(HostResource, self).__init__(Host)
+    def __init__(self, alias=None):
+        super(HostResource, self).__init__(alias if alias else Host)
 
         self._prefix = 'h'
 
@@ -235,8 +235,8 @@ class HostResource(BaseResource):
 
 
 class JobstateResource(BaseResource):
-    def __init__(self):
-        super(JobstateResource, self).__init__(Jobstate)
+    def __init__(self, alias=None):
+        super(JobstateResource, self).__init__(alias if alias else Jobstate)
 
         self._prefix = 'js'
 
@@ -249,8 +249,8 @@ class JobstateResource(BaseResource):
 
 
 class TaskResource(BaseResource):
-    def __init__(self):
-        super(TaskResource, self).__init__(Task)
+    def __init__(self, alias=None):
+        super(TaskResource, self).__init__(alias if alias else Task)
 
         self._prefix = 't'
 
@@ -264,8 +264,8 @@ class TaskResource(BaseResource):
 
 
 class JobInstanceResource(BaseResource):
-    def __init__(self):
-        super(JobInstanceResource, self).__init__(JobInstance)
+    def __init__(self, alias=None):
+        super(JobInstanceResource, self).__init__(alias if alias else JobInstance)
 
         self._prefix = 'ji'
 
@@ -291,8 +291,8 @@ class JobInstanceResource(BaseResource):
 
 
 class InvocationResource(BaseResource):
-    def __init__(self):
-        super(InvocationResource, self).__init__(Invocation)
+    def __init__(self, alias=None):
+        super(InvocationResource, self).__init__(alias if alias else Invocation)
 
         self._prefix = 'i'
 
