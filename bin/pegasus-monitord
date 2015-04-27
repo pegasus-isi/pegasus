@@ -612,7 +612,7 @@ def process_dagman_out(wf, log_line):
     # Check log_line for timestamp at the beginning
     timestamp_found = False
     my_expr = re_parse_timestamp.search(log_line)
-    
+
     if my_expr is not None:
         # Found time stamp, let's assume valid log line
         curr_time = time.localtime()
@@ -1170,6 +1170,9 @@ if wf._monitord_exit_code == 0:
     # Also set the root workflow id
     root_wf_id = wf._wf_uuid
 
+#
+# --- online monitoring begin --------------------------------------------------------------------
+#
 print "Starting an online monitoring process..."
 
 from multiprocessing import Process
@@ -1182,196 +1185,237 @@ import os
 import logging
 import ssl
 
+
 def online_monitoring_proc(wf_label, wf_uuid):
-  aggregated_measurements = dict()
-  retrieved_messages = dict()
-  columns = ["time", "utime", "stime", "iowait", "vmSize", "vmRSS", "threads", "read_bytes", "write_bytes", "syscr", "syscw"]
+    """
+    This is a process function for the whole online monitoring feature. We have to data structures:
+    aggregated_measurements - dict - <dag_job_id> = [ metric1, metric2, ... ] - measurements for a whole MPI job
+    retrieved_messages - dict <dag_job_id> = dict(<mpi_rank>, bool) - a list for checking if every mpi rank sent
+    performance metrics values
+    :param wf_label: a human readable label for a workflow
+    :param wf_uuid: a machine readable global id for a workflow
+    """
 
-  def aggregate_measurement(measurement, raw_msg):
-    msg = dict(item.split("=") for item in raw_msg.split(" "))
-    dag_job_id = msg["dag_job_id"]
-    mpi_rank = int(msg["mpi_rank"])
+    aggregated_measurements = dict()
+    retrieved_messages = dict()
+    PERF_METRICS = ["time", "utime", "stime", "iowait", "vmSize", "vmRSS", "threads", "read_bytes", "write_bytes",
+                    "syscr", "syscw"]
 
-    # execute only if this is an MPI job == mpi_rank > 0
-    if mpi_rank == 0:
-      return
+    def aggregate_measurement(measurement, raw_msg):
+        """
+        This function performs aggregation logic for MPI jobs. It takes measurements from different ranks of an MPI
+        job and summaries performance metrics values. As a result it adds a new timeserie - named <dag_job_id> -
+        which describes a whole MPI job instead of its internal subprocesses.
+        :param measurement: a JSON object with a parsed data point for a job - it corresponds to the Influxdb format
+        :param raw_msg: a string with the message based on which the measurement data point was created. It is used
+        to get some information regarding the job.
+        :return: nothing - everything is done withing this function
+        """
 
-    if not dag_job_id in retrieved_messages:
-      print "We add", dag_job_id, "for the first time"
+        msg = dict(item.split("=") for item in raw_msg.split(" "))
+        dag_job_id = msg["dag_job_id"]
+        mpi_rank = int(msg["mpi_rank"])
 
-      retrieved_messages[dag_job_id] = dict()
-      aggregated_measurements[dag_job_id] = [0] * len(columns)
+        # execute only if this is an MPI job == mpi_rank > 0
+        if mpi_rank == 0:
+            return
 
-    if mpi_rank in retrieved_messages[dag_job_id]:
-      print "There is", mpi_rank, "in retrieved_messages for", dag_job_id
-      # send already aggregated measurements 
-      aggregated_json_body = [
-          {
-              "name": dag_job_id,
-              "columns": columns,
-              "points": [ aggregated_measurements[dag_job_id] ]
-          }
-      ]
-      print "We send", aggregated_json_body, "on behalf of", dag_job_id
-      client.write_points(aggregated_json_body)
-      # reset aggregated measurements      
-      retrieved_messages[dag_job_id] = dict()
-      aggregated_measurements[dag_job_id] = [0] * len(columns)
+        if dag_job_id not in retrieved_messages:
+            print "We add", dag_job_id, "for the first time"
+            retrieved_messages[dag_job_id] = dict()
+            aggregated_measurements[dag_job_id] = [0] * len(PERF_METRICS)
 
-    else:
-      print "There is not", mpi_rank, "in retrieved_messages for", dag_job_id
-      retrieved_messages[dag_job_id][mpi_rank] = True
+        if mpi_rank in retrieved_messages[dag_job_id]:
+            print "There is", mpi_rank, "in retrieved_messages for", dag_job_id
+            # send already aggregated measurements
+            aggregated_json_body = [
+                {
+                    "name": dag_job_id,
+                    "columns": PERF_METRICS,
+                    "points": [aggregated_measurements[dag_job_id]]
+                }
+            ]
+            print "We send", aggregated_json_body, "on behalf of", dag_job_id
+            client.write_points(aggregated_json_body)
+            # reset aggregated measurements
+            retrieved_messages[dag_job_id] = dict()
+            aggregated_measurements[dag_job_id] = [0] * len(PERF_METRICS)
+        else:
+            print "There is not", mpi_rank, "in retrieved_messages for", dag_job_id
+            retrieved_messages[dag_job_id][mpi_rank] = True
 
-    print "We are adding measurements", measurement["points"][0], "for", dag_job_id
-    
-    # we add metric values from this mpi rank to create an aggregated measurement for application
-    for i, metric_value in enumerate(measurement["points"][0]):
-      aggregated_measurements[dag_job_id][i] += metric_value
+        # we add metric values from this mpi rank to create an aggregated measurement for application
+        print "We are adding measurements", measurement[0]["points"][0], "for", dag_job_id
+        for i, metric_value in enumerate(measurement[0]["points"][0]):
+            if i == 0:
+                continue
+            aggregated_measurements[dag_job_id][i] += metric_value
 
+    def parse_measurement(measurement_text):
+        """
+        This function transforms a single message body taken from rabbitmq with online monitoring information.
+        :param measurement_text: it is a string with a simple <key>=<value> format with spaces between subsequent pairs.
+        :return: a JSON object in a format supported by InfluxDB
+        """
 
-  def parse_measurement(measurement_text):
-    if len(measurement_text.split(" ")) < 2:
-      # print "Could'nt consume the given measurement line"
-      return None
+        if len(measurement_text.split(" ")) < 2:
+            # print "Couldn't consume the given measurement line"
+            return None
 
-    msg = dict(item.split("=") for item in measurement_text.split(" "))
+        msg = dict(item.split("=") for item in measurement_text.split(" "))
 
-    if not all (k in msg for k in ("hostname", "executable", "kickstart_pid", "mpi_rank")): 
-      # print "We couldn't create trace_id"       
-      return None
-    else:
-      exec_id = msg["executable"] #.split("/")[-1]
-      # <dag_job_id>:<hostname>:<condor_jobid>:<mpi_rank>:<kickstart_pid>:<executable>
-      trace_id = "{0}:{1}:{2}:{3}:{4}:{5}".format(msg["dag_job_id"], msg["hostname"], 
-          msg["condor_job_id"], msg["mpi_rank"], msg["kickstart_pid"], exec_id)
+        if not all(k in msg for k in ("hostname", "executable", "kickstart_pid", "mpi_rank")):
+            # print "We couldn't create trace_id"
+            return None
+        else:
+            exec_id = msg["executable"]  # .split("/")[-1]
+            # <dag_job_id>:<hostname>:<condor_jobid>:<mpi_rank>:<kickstart_pid>:<executable>
+            trace_id = "{0}:{1}:{2}:{3}:{4}:{5}".format(msg["dag_job_id"], msg["hostname"],
+                                                        msg["condor_job_id"], msg["mpi_rank"], msg["kickstart_pid"],
+                                                        exec_id)
 
-      
-      point = []
+            point = []
+            for column in PERF_METRICS:
+                if column == "time":
+                    column = "ts"
+                    point.append(int(msg[column]))
+                else:
+                    point.append(float(msg[column]))
 
-      for column in columns:
-          if column == "time":
-              column = "ts"
-              point.append( int(msg[column]) )
-          else:
-              point.append( float(msg[column]) )
+            json_body = [
+                {
+                    "name": trace_id,
+                    "columns": PERF_METRICS,
+                    "points": [point]
+                    # "timestamp": datetime.datetime.fromtimestamp( float(msg["ts"]) ).isoformat('T')
+                }
+            ]
 
-      # print "", datetime.datetime.fromtimestamp( float(msg["ts"]) ).isoformat('T'), " --- ", msg["ts"]
+            return json_body
 
-      json_body = [
-          {
-              "name": trace_id,
-              "columns": columns,
-              "points": [ point ]
-              # "timestamp": datetime.datetime.fromtimestamp( float(msg["ts"]) ).isoformat('T')
-          }
-      ]
+    def on_message(channel, method_frame, header_frame, body):
+        """
+        A callback registered in a rabbitmq instance to process messages regarding online monitoring for a particalur
+        workflow.
+        :param channel: a channel from which the message came
+        :param method_frame: message number
+        :param header_frame:
+        :param body: raw body of the message
+        :return:
+        """
+        print method_frame.delivery_tag
+        print body
+        print
 
-      return json_body  
+        measurement = parse_measurement(body)
 
-  def on_message(channel, method_frame, header_frame, body):
-    print method_frame.delivery_tag
-    print body
-    print
+        if measurement is not None:
+            client.write_points(measurement)
+            aggregate_measurement(measurement, body)
 
-    measurement = parse_measurement(body)
+        channel.basic_ack(delivery_tag=method_frame.delivery_tag)
 
-    if measurement != None:
-      client.write_points(measurement)
-      aggregate_measurement(measurement, body)
+    def initialize_mq_connection():
+        """
+        Utility function to create a connection to rabbitmq using information about rabbitmq endpoint and credentials
+         stored in environment variables.
+        :return: a set up connection for further use
+        """
+        rabbit_credentials = os.getenv("KICKSTART_MON_ENDPOINT_CREDENTIALS")
+        username, password = rabbit_credentials.split(":")
 
-    
-    channel.basic_ack(delivery_tag=method_frame.delivery_tag)
+        credentials = pika.PlainCredentials(username, password)
 
-  def initialize_mq_connection():
-    rabbit_credentials = os.getenv("KICKSTART_MON_ENDPOINT_CREDENTIALS")
-    username, password = rabbit_credentials.split(":")
+        print "KICKSTART_MON_ENDPOINT_URL: ", os.getenv("KICKSTART_MON_ENDPOINT_URL")
 
-    credentials = pika.PlainCredentials(username, password)
+        rabbit_url = urlparse.urlparse(os.getenv("KICKSTART_MON_ENDPOINT_URL"))
 
-    print "KICKSTART_MON_ENDPOINT_URL: ", os.getenv("KICKSTART_MON_ENDPOINT_URL")
+        parameters = pika.ConnectionParameters(host=rabbit_url.hostname,
+                                               port=rabbit_url.port - 10000,
+                                               ssl=(rabbit_url.scheme == "https"),
+                                               ssl_options={"cert_reqs": ssl.CERT_NONE},
+                                               virtual_host=rabbit_url.path.split("/")[3],
+                                               credentials=credentials)
 
-    rabbit_url = urlparse.urlparse(os.getenv("KICKSTART_MON_ENDPOINT_URL"))
+        return pika.BlockingConnection(parameters)
 
-    parameters = pika.ConnectionParameters(host=rabbit_url.hostname, 
-        port=rabbit_url.port - 10000,
-        ssl=(rabbit_url.scheme == "https"),
-        ssl_options={ "cert_reqs": ssl.CERT_NONE },
-        virtual_host=rabbit_url.path.split("/")[3],
-        credentials=credentials)
+    def prepare_channel(mq_conn, queue_name, wf_uuid):
+        """
+        A utility function that registers a queue in rabbitmq for the monitored workflow, and binds a "well-known"
+        exchange with the queue.
 
-    return pika.BlockingConnection(parameters)
+        :param mq_conn:
+        :param queue_name:
+        :param wf_uuid:
+        :return:
+        """
+        channel = mq_conn.channel()
 
-  def prepare_channel(mq_conn, queue_name, wf_uuid):
-    channel = mq_conn.channel()
+        exchange_name = urlparse.urlparse(os.getenv("KICKSTART_MON_ENDPOINT_URL")).path.split("/")[4]
+        # import pdb; pdb.set_trace()
 
-    exchange_name = urlparse.urlparse(os.getenv("KICKSTART_MON_ENDPOINT_URL")).path.split("/")[4]
-    # import pdb; pdb.set_trace()
+        # create a queue for the observer workflow uuid
+        channel.queue_declare(
+            queue=queue_name,
+            durable=True
+        )
 
-    # create a queue for the observer workflow uuid
-    channel.queue_declare(
-        queue=queue_name,
-        durable=True
-    )
+        # bind the queue to the monitoring exchange
+        channel.queue_bind(
+            queue=queue_name,
+            exchange=exchange_name,
+            routing_key=wf_uuid
+        )
 
-    # bind the queue to the monitoring exchange
-    channel.queue_bind(
-        queue=queue_name,
-        exchange=exchange_name,
-        routing_key=wf_uuid
-    )
+        return channel
 
-    return channel
+    logging.basicConfig()
 
-  logging.basicConfig()
+    # 0. print all essential information regarding online monitoring
+    print "[online-monitord] This is an online monitoring process..."
+    print "[online-monitord] PEGASUS_WF_UUID: %s" % wf_uuid
+    print "[online-monitord] PEGASUS_WF_LABEL: %s" % wf_label
+    print "[online-monitord] INFLUXDB_URL: %s" % os.getenv("INFLUXDB_URL")
+    print "[online-monitord] KICKSTART_MON_ENDPOINT_URL: %s" % os.getenv("KICKSTART_MON_ENDPOINT_URL")
+    print "[online-monitord] KICKSTART_MON_ENDPOINT_CREDENTIALS: %s" % os.getenv("KICKSTART_MON_ENDPOINT_CREDENTIALS")
 
-  print "[online-monitord] This is an online monitoring process..."
-  print "[online-monitord] PEGASUS_WF_UUID: %s" % wf_uuid
-  print "[online-monitord] PEGASUS_WF_LABEL: %s" % wf_label
-  print "[online-monitord] INFLUXDB_URL: %s" % os.getenv("INFLUXDB_URL")
-  print "[online-monitord] KICKSTART_MON_ENDPOINT_URL: %s" % os.getenv("KICKSTART_MON_ENDPOINT_URL")
-  print "[online-monitord] KICKSTART_MON_ENDPOINT_CREDENTIALS: %s" % os.getenv("KICKSTART_MON_ENDPOINT_CREDENTIALS")
+    # 1. connect to InfluxDB
+    url = urlparse.urlparse(os.getenv("INFLUXDB_URL"))
 
-  print "[online-monitord] and now I'm ending"
+    client = InfluxDBClient(host=url.hostname, port=url.port,
+                            username=url.username, password=url.password,
+                            ssl=(url.scheme == "https")
+                            )
 
-  mq_conn = initialize_mq_connection()
+    # 2. check if influxdb includes a database for storing online monitoring information for the workflow
+    #    and creates it if it doesn't exist
+    # print "Database list: ", client.get_list_database()
+    queue_name = wf_label + ":" + wf_uuid
 
-  queue_name = wf_label + ":" + wf_uuid
+    if queue_name not in [db_info["name"] for db_info in client.get_list_database()]:
+        client.create_database(queue_name)
 
-  url = urlparse.urlparse(os.getenv("INFLUXDB_URL"))
+    client.switch_database(queue_name)
+    client.switch_user(url.username, url.password)
 
-  client = InfluxDBClient(host=url.hostname, port=url.port, 
-      username=url.username, password=url.password, 
-      ssl=(url.scheme=="https")
-  )
+    # 3. create a connection to rabbitmq, create a queue for storing online monitoring information, and subscribe to it
+    mq_conn = initialize_mq_connection()
+    channel = prepare_channel(mq_conn, queue_name, wf_uuid)
+    channel.basic_consume(on_message, queue_name)
 
-  print "Database list: ", client.get_list_database()
-  database_exists = False
+    try:
+        channel.start_consuming()
+    except KeyboardInterrupt:
+        channel.stop_consuming()
 
-  for db_info in client.get_list_database():
-    print "Database name: ", db_info["name"]
+    mq_conn.close()
 
-    if db_info["name"] == queue_name:
-      database_exists = True
-
-  if not database_exists:
-    client.create_database(queue_name)
-
-  client.switch_database(queue_name)
-  client.switch_user(url.username, url.password)
-
-  channel = prepare_channel(mq_conn, queue_name, wf_uuid)
-  channel.basic_consume(on_message, queue_name)
-
-  try:
-      channel.start_consuming()
-  except KeyboardInterrupt:
-      channel.stop_consuming()
-
-  mq_conn.close()
-
+# start an OS process for the online monitoring feature
 online_monitord = Process(target=online_monitoring_proc, args=(wf._dax_label, wf._wf_uuid))
 online_monitord.start()
-
+#
+# --- online monitoring end --------------------------------------------------------------------
+#
 
 #
 # --- main loop begin --------------------------------------------------------------------
@@ -1635,7 +1679,7 @@ while (len(wfs) > 0):
 
     # Print number of workflows we currently have
     logger.info("currently tracking %d workflow(s)..." % (len(wfs)))
-    
+
     # Go through the workflows again, and finish any marked ones
     wf_index = 0
     while wf_index < len(wfs):
@@ -1659,7 +1703,7 @@ while (len(wfs) > 0):
     if not socket_enabled and start_server:
         # Reset flag
         start_server = False
-        
+
         # Create server socket for communication with site selector
         server = socket_interface.server_socket(49152, 65536)
         # Take care of closing socket when we exit
@@ -1729,7 +1773,7 @@ if do_notifications == True and monitord_notifications is not None:
     # Finish pending notifications
     logger.info("finishing notifications...")
     while monitord_notifications.has_active_notifications() or monitord_notifications.has_pending_notifications():
-        monitord_notifications.service_notifications()        
+        monitord_notifications.service_notifications()
         time.sleep(SLEEP_WAIT_NOTIFICATION)
     logger.info("finishing notifications... done!")
 
