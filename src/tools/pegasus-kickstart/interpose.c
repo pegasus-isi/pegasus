@@ -934,7 +934,7 @@ void spawn_timer_thread() {
 
     // spawning a timer thread only when
     char* mpi_rank = getenv("OMPI_COMM_WORLD_RANK");
-    printerr("Spawning thread in process: %d\n", (int)current_pid);
+    // printerr("Spawning thread in process: %d\n", (int)current_pid);
     // printerr("Setting mpi rank based on OMPI_COMM_WORLD_RANK\n");
 
     if(mpi_rank == NULL) {
@@ -981,7 +981,7 @@ static void __attribute__((constructor)) interpose_init(void) {
     switch( tfile_exists() ) {
         case 0:
             topen();
-            printerr("I am creating a new thread...\n");
+            // Create a new thread for online monitoring
             spawn_timer_thread();
             break;
         case 1:
@@ -1020,7 +1020,7 @@ static void __attribute__((destructor)) interpose_fini(void) {
     /* Close trace file */
     tclose();
 
-    printerr("I am stopping thread...\n");
+    // Set a flag to stop the online monitoring thread
     library_loaded = 0;
 }
 
