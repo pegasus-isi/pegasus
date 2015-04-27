@@ -60,19 +60,21 @@ class RootWorkflowSerializer(BaseSerializer):
         if root_workflows is None:
             return None
 
+        records = [self._encode_record(root_workflow) for root_workflow in root_workflows]
+
+        json_records = OrderedDict([
+            ('records', records)
+        ])
+
         if not records_total or not records_filtered:
             pass
 
-        records = [self._encode_record(root_workflow) for root_workflow in root_workflows]
         records_meta = OrderedDict([
             ('records_total', records_total),
             ('records_filtered', records_filtered)
         ])
 
-        json_records = OrderedDict([
-            ('records', records),
-            ('_meta', records_meta)
-        ])
+        json_records['_meta'] = records_meta
 
         return json.dumps(json_records, **self._pretty_print_opts)
 
@@ -169,19 +171,21 @@ class WorkflowSerializer(BaseSerializer):
         if workflows is None:
             return None
 
+        records = [self._encode_record(workflow) for workflow in workflows]
+
+        json_records = OrderedDict([
+            ('records', records)
+        ])
+
         if not records_total or not records_filtered:
             pass
 
-        records = [self._encode_record(workflow) for workflow in workflows]
         records_meta = OrderedDict([
             ('records_total', records_total),
             ('records_filtered', records_filtered)
         ])
 
-        json_records = OrderedDict([
-            ('records', records),
-            ('_meta', records_meta)
-        ])
+        json_records['_meta'] = records_meta
 
         return json.dumps(json_records, **self._pretty_print_opts)
 
