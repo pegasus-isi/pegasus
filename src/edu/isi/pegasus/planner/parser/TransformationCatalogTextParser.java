@@ -25,6 +25,7 @@ import edu.isi.pegasus.planner.parser.tokens.Identifier;
 import edu.isi.pegasus.planner.parser.tokens.CloseBrace;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.VariableExpander;
 
 import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
@@ -190,7 +191,7 @@ public class TransformationCatalogTextParser {
         }
         catch( Exception e ){
             //wrap as a scanner exception and throw
-            throw new ScannerException( mScanner.getLineNumber(), e.getMessage() );
+            throw new ScannerException( mScanner.getLineNumber(), e );
         }
 
         return store;

@@ -16,23 +16,11 @@
 
 package edu.isi.pegasus.planner.catalog.transformation.impl;
 
-import java.io.BufferedWriter;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Writer;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
-
 import edu.isi.pegasus.common.logging.LogManager;
+
 import edu.isi.pegasus.common.util.Boolean;
 import edu.isi.pegasus.common.util.Separator;
+import edu.isi.pegasus.common.util.VariableExpander;
 
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
@@ -47,6 +35,20 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.parser.TransformationCatalogTextParser;
+
+import java.io.BufferedWriter;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Properties;
+import java.util.Set;
 
 /**
  * A File based Transformation Catalog where each entry spans multiple lines.
@@ -143,7 +145,6 @@ public class Text extends Abstract
      */
     private boolean modifyFileURL = true;
     
-
     /**
      * Default constructor.
      */
@@ -165,9 +166,9 @@ public class Text extends Abstract
         modifyFileURL = Boolean.parse(mProps.getProperty( MODIFY_FOR_FILE_URLS_KEY),
                 true );
         mTCFile = mProps.getTCPath();
-        mLogger.log("TC Mode being used is " + this.getDescription(),
+        mLogger.log("Transformation Catalog Type used " + this.getDescription(),
                     LogManager.CONFIG_MESSAGE_LEVEL);
-        mLogger.log("TC File being used is " + mTCFile,
+        mLogger.log("Transformation Catalog File used " + mTCFile,
                     LogManager.CONFIG_MESSAGE_LEVEL);
         
         if (mTCFile == null) {

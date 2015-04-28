@@ -45,6 +45,11 @@ public class ScannerException
         super("line " + lineno + ": " + message);
         this.m_lineno = lineno;
     }
+    
+    public ScannerException(int lineno, Exception e ) {
+        super("line " + lineno + ": " , e );
+        this.m_lineno = lineno;
+    }
 
     public int getLineNumber() {
         return this.m_lineno;
