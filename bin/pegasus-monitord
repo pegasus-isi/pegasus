@@ -1192,11 +1192,13 @@ def online_monitoring_proc(wf_label, wf_uuid):
     aggregated_measurements - dict - <dag_job_id> = [ metric1, metric2, ... ] - measurements for a whole MPI job
     retrieved_messages - dict <dag_job_id> = dict(<mpi_rank>, bool) - a list for checking if every mpi rank sent
     performance metrics values
+    last_aggregated_data - dict - <dag_job_id> = [ metric1, metric2, ... ] - last measurements for a whole MPI job
     :param wf_label: a human readable label for a workflow
     :param wf_uuid: a machine readable global id for a workflow
     """
 
     aggregated_measurements = dict()
+    last_aggregated_data = dict()
     retrieved_messages = dict()
     PERF_METRICS = ["time", "utime", "stime", "iowait", "vmSize", "vmRSS", "threads", "read_bytes", "write_bytes",
                     "syscr", "syscw"]
@@ -1221,12 +1223,20 @@ def online_monitoring_proc(wf_label, wf_uuid):
             return
 
         if dag_job_id not in retrieved_messages:
-            print "We add", dag_job_id, "for the first time"
+            # print "We add", dag_job_id, "for the first time"
             retrieved_messages[dag_job_id] = dict()
             aggregated_measurements[dag_job_id] = [0] * len(PERF_METRICS)
 
         if mpi_rank in retrieved_messages[dag_job_id]:
-            print "There is", mpi_rank, "in retrieved_messages for", dag_job_id
+            # print "There is", mpi_rank, "in retrieved_messages for", dag_job_id
+            # compare with previous measurement - there should be growing only values
+            if dag_job_id not in last_aggregated_data:
+                last_aggregated_data[dag_job_id] = [0] * len(PERF_METRICS)
+            else:
+                for i, metric_value in enumerate(last_aggregated_data[dag_job_id]):
+                    if aggregated_measurements[dag_job_id][i] < metric_value:
+                        aggregated_measurements[dag_job_id][i] = metric_value
+
             # send already aggregated measurements
             aggregated_json_body = [
                 {
@@ -1237,6 +1247,9 @@ def online_monitoring_proc(wf_label, wf_uuid):
             ]
             print "We send", aggregated_json_body, "on behalf of", dag_job_id
             client.write_points(aggregated_json_body)
+            # store this measurement for a future comparison
+            for i, metric_value in enumerate(aggregated_measurements[dag_job_id]):
+                last_aggregated_data[dag_job_id][i] = metric_value
             # reset aggregated measurements
             retrieved_messages[dag_job_id] = dict()
             aggregated_measurements[dag_job_id] = [0] * len(PERF_METRICS)
@@ -1307,9 +1320,9 @@ def online_monitoring_proc(wf_label, wf_uuid):
         :param body: raw body of the message
         :return:
         """
-        print method_frame.delivery_tag
-        print body
-        print
+        # print method_frame.delivery_tag
+        # print body
+        # print
 
         measurement = parse_measurement(body)
 
