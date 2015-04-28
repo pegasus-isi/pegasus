@@ -123,6 +123,13 @@ public class Version {
     }
 
     /**
+     * @return The Git hash that this version of Pegasus was built from
+     */
+    public String getGitHash() {
+        return props.getProperty("pegasus.build.git.hash");
+    }
+
+    /**
      * Determines the built and architecture of the installation. These
      * are usually separated by a linear white-space.
      *

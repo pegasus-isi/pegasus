@@ -17,8 +17,11 @@ package edu.isi.pegasus.common.util;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
+import edu.isi.pegasus.planner.test.EnvSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
 import org.junit.AfterClass;
 import static org.junit.Assert.assertEquals;
 import org.junit.Before;
@@ -43,6 +46,9 @@ public class VariableExpanderTest {
     
     @BeforeClass
     public static void setUpClass() {
+        Map<String,String> testEnvVariables = new HashMap();
+        testEnvVariables.put( "USER", "bamboo" );
+        EnvSetup.setEnvironmentVariables(testEnvVariables);
     }
     
     @AfterClass

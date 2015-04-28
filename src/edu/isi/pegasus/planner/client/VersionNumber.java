@@ -49,9 +49,7 @@ public class VersionNumber
   {
     String linefeed = System.getProperty( "line.separator", "\r\n" );
 
-    System.out.println(
-"$Id$" + linefeed +
-"PEGASUS version " + Version.instance().toString() + linefeed );
+    System.out.println("PEGASUS version " + Version.instance().toString() + linefeed );
 
     System.out.println( "Usage: " + m_application + " [-f | -V ]" );
     System.out.println( linefeed +
@@ -97,7 +95,7 @@ linefeed +
   {
     System.out.print( v.toString() );
     if ( build ) System.out.print( '-' + v.determinePlatform() +
-				   '-' + v.determineBuilt() );
+				   '-' + v.determineBuilt() + '-' + v.getGitHash() );
     System.out.println();
   }
 
@@ -124,7 +122,6 @@ linefeed +
 	  break;
 
 	case 'V':
-	  System.out.println( "$Id$" );
 	  System.out.println( "PEGASUS version " + v.toString() );
 	  return;
 

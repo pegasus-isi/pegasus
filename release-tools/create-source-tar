@@ -22,6 +22,10 @@ for ITEM in .git .gitignore; do
     find dist/pegasus-source-$VERSION/ -name $ITEM -exec rm -rf {} \;
 done
 
+# Set the git hash in build.properties so that we have it saved
+HASH=$(git rev-parse HEAD)
+printf "pegasus.build.git.hash = $HASH\n" >> dist/pegasus-source-$VERSION/build.properties
+
 cd dist/
 tar czf pegasus-source-$VERSION.tar.gz pegasus-source-$VERSION
 rm -rf pegasus-source-$VERSION

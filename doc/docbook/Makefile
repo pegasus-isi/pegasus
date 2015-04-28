@@ -42,7 +42,7 @@ all: $(TARGETS)
 $(XMLMANPAGES): $(TXTMANPAGES)
 	make -C ../manpages install-docbook
 
-title.xml: ../../build.properties
+title.xml:
 	echo "<title>Pegasus $(VERSION) User Guide</title>" > title.xml
 
 html: $(XML) pegasus-php-style.xsl

@@ -18,7 +18,7 @@ import logging
 
 import hashlib
 
-from sqlalchemy import desc, distinct, func, and_
+from sqlalchemy import desc, distinct, func, and_, or_
 from sqlalchemy.orm import aliased
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
@@ -29,7 +29,9 @@ from Pegasus.db.errors import StampedeDBNotFoundError
 from Pegasus.db.admin.admin_loader import DBAdminError
 
 from Pegasus.service import cache
-from Pegasus.service.base import BaseOrderParser
+from Pegasus.service.base import BaseQueryParser, BaseOrderParser, InvalidQueryError, InvalidOrderError
+from Pegasus.service.monitoring.resources import RootWorkflowResource, RootWorkflowstateResource, CombinationResource
+from Pegasus.service.monitoring.resources import WorkflowResource
 
 log = logging.getLogger(__name__)
 
@@ -95,22 +97,75 @@ class WorkflowQueries(SQLAlchemyInit):
         return record
 
     @staticmethod
-    def _add_ordering(q, order, fields):
-        if not q or not order or not fields:
+    def _evaluate_query(q, query, resource):
+        comparator = {
+            '=': '__eq__',
+            '!=': '__ne__',
+            '<': '__lt__',
+            '<=': '__le__',
+            '>': '__gt__',
+            '>=': '__ge__',
+            'LIKE': 'like'
+        }
+
+        operators = {
+            'AND': and_,
+            'OR': or_
+        }
+
+        operands = []
+
+        def condition_expansion(expr, field):
+            operands.append(getattr(field, comparator[expr[1]])(expr[2]))
+
+        try:
+            expression = BaseQueryParser(query).evaluate()
+
+            for token in expression:
+                if isinstance(token, tuple):
+                    identifier = token[0]
+                    condition_expansion(token, resource.get_mapped_field(identifier))
+
+                elif isinstance(token, str) or isinstance(token, unicode):
+
+                    operand_1 = operands.pop()
+                    operand_2 = operands.pop()
+
+                    if token in operators:
+                        operands.append(operators[token](operand_1, operand_2))
+
+            q = q.filter(operands.pop())
+
+        except (KeyError, AttributeError):
+            log.exception('Invalid field %s' % identifier)
+            raise InvalidQueryError('Invalid field %s' % identifier)
+
+        except IndexError:
+            log.exception('Invalid expression %s' % query)
+            raise InvalidQueryError('Invalid expression %s' % query)
+
+        return q
+
+    @staticmethod
+    def _add_ordering(q, order, resource):
+        if not q or not order or not resource:
             return q
 
         order_parser = BaseOrderParser(order)
         sort_order = order_parser.get_sort_order()
 
         for identifier, sort_dir in sort_order:
-            if identifier not in fields:
-                log.error('Invalid field %r' % identifier)
-                raise InvalidOrderError('Invalid field %r' % identifier)
+            try:
+                field = resource.get_mapped_field(identifier)
 
-            if sort_dir == 'ASC':
-                q = q.order_by(fields[identifier])
-            else:
-                q = q.order_by(desc(fields[identifier]))
+                if sort_dir == 'ASC':
+                    q = q.order_by(field)
+                else:
+                    q = q.order_by(desc(field))
+
+            except (KeyError, AttributeError):
+                log.exception('Invalid field %r' % identifier)
+                raise InvalidOrderError('Invalid field %r' % identifier)
 
         return q
 
@@ -173,14 +228,18 @@ class MasterWorkflowQueries(WorkflowQueries):
         qws = self._get_max_master_workflow_state()
         qws = qws.subquery('master_workflowstate')
 
+        alias = aliased(DashboardWorkflowstate, qws)
+
         q = q.outerjoin(qws, DashboardWorkflow.wf_id == qws.c.wf_id)
-        q = q.add_entity(aliased(DashboardWorkflowstate, qws))
+        q = q.add_entity(alias)
 
         #
         # Construct SQLAlchemy Query `q` to get filtered count.
         #
         if query:
-            # TODO: Validate `query`
+            resource = CombinationResource(RootWorkflowResource(), RootWorkflowstateResource(alias))
+
+            q = self._evaluate_query(q, query, resource)
             total_filtered = self._get_count(q, use_cache)
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):
@@ -191,8 +250,7 @@ class MasterWorkflowQueries(WorkflowQueries):
         # Construct SQLAlchemy Query `q` to sort
         #
         if order:
-            # TODO: Add support for sorting
-            pass
+            q = self._add_ordering(q, order, RootWorkflowResource())
 
         #
         # Construct SQLAlchemy Query `q` to add pagination
@@ -260,7 +318,8 @@ class StampedeWorkflowQueries(WorkflowQueries):
     """
     TODO: Mimic code above for each remaining resources except for method get_wf_id_for_wf_uuid
     """
-    def get_workflows(self, start_index=None, max_results=None, query=None,order=None, use_cache=False, recent=False, **kwargs):
+    def get_workflows(self, start_index=None, max_results=None, query=None, order=None, recent=False, use_cache=False,
+                      **kwargs):
         """
         Returns a collection of the Workflow objects.
 
@@ -273,7 +332,6 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         :return: Collection of Workflow objects
         """
-
         #
         # Construct SQLAlchemy Query `q` to get total count.
         #
@@ -287,7 +345,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         # Construct SQLAlchemy Query `q` to get filtered count.
         #
         if query:
-            # TODO: Validate `query`
+            q = self._evaluate_query(q, query, WorkflowResource())
             total_filtered = self._get_count(q, use_cache)
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):
@@ -298,9 +356,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         # Construct SQLAlchemy Query `q` to sort
         #
         if order:
-            # TODO: Add support for sorting
-            pass
-
+            q = self._add_ordering(q, order, WorkflowResource())
 
         #
         # Construct SQLAlchemy Query `q` to add pagination

@@ -41,6 +41,7 @@ import java.util.regex.Pattern;
 import edu.isi.pegasus.common.util.Boolean;
 import edu.isi.pegasus.common.util.Currently;
 import edu.isi.pegasus.common.util.Escape;
+import edu.isi.pegasus.common.util.VariableExpander;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 
@@ -100,6 +101,11 @@ public class SimpleFile implements ReplicaCatalog {
     protected Map<String, Collection<ReplicaCatalogEntry>> m_lfn = null;
 
     /**
+     * Handle to pegasus variable expander
+     */
+    private VariableExpander mVariableExpander;
+    
+    /**
      * A boolean indicating whether the catalog is read only or not.
      */
     boolean m_readonly;
@@ -116,6 +122,7 @@ public class SimpleFile implements ReplicaCatalog {
         m_lfn = null;
         m_filename = null;
         m_readonly = false;
+        mVariableExpander = new VariableExpander();
     }
 
     /**
@@ -329,8 +336,17 @@ public class SimpleFile implements ReplicaCatalog {
                 LineNumberReader lnr = new LineNumberReader(new FileReader(f));
                 String line;
                 while ((line = lnr.readLine()) != null) {
-                    if (line.length() == 0 || line.charAt(0) == '#')
+                    if (line.length() == 0 || line.charAt(0) == '#'){
                         continue;
+                    }
+                    //PM-831 expand the line before parsing
+                    try{
+                        line = mVariableExpander.expand(line);
+                    }
+                    catch( RuntimeException e ){
+                        //rethrow again
+                        throw new RuntimeException( "Error while expanding contents of file based rc at line number " + lnr.getLineNumber() , e );
+                    }
                     parse(line, lnr.getLineNumber());
                 }
 

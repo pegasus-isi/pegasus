@@ -83,46 +83,7 @@ class BaseQueryParser(object):
 
     Note: The base class only provides a partial implementation of the SQL where clause.
     """
-    whitespace = Rep1(Any(' \t\n'))
-    open_parenthesis = Str('(')
-    close_parenthesis = Str(')')
-
-    letter = Range('AZaz')
-    digit = Range('09')
-    prefix = letter + Rep(letter) + Str('.')
-
-    reserved_word = NoCase(Str('AND', 'OR', 'LIKE')) | Str('NULL')
-
-    identifier = Opt(prefix) + letter + Rep(letter | digit | Str('_'))
-    comparators = NoCase(Str('=', '!=', 'like'))
-    integer_literal = Rep1(digit)
-    string_literal = Str('\'') + Rep(AnyBut('\'') | Str(' ') | Str("\\'")) + Str('\'')
-
-    operands = NoCase(Str('AND', 'OR'))
-    null = Str('NULL')
-
-    OPEN_PARENTHESIS = 1
-    CLOSE_PARENTHESIS = 2
-    NULL = 3
-    OPERAND = 4
-    IDENTIFIER = 5
-    COMPARATOR = 7
-    INTEGER_LITERAL = 8
-    STRING_LITERAL = 9
-
-    lexicon = Lexicon([
-        (whitespace, IGNORE),
-        (open_parenthesis, OPEN_PARENTHESIS),
-        (close_parenthesis, CLOSE_PARENTHESIS),
-        (null, NULL),
-        (operands, OPERAND),
-        (comparators, COMPARATOR),
-        (integer_literal, INTEGER_LITERAL),
-        (string_literal, STRING_LITERAL),
-        (identifier, IDENTIFIER)
-    ])
-
-    def __init__(self, expression):
+    def __init__(self, expression=None):
         self.expression = expression
 
         self._state = 0
@@ -131,39 +92,104 @@ class BaseQueryParser(object):
         self._operator_stack = []
         self._postfix_result = []
         self._condition = [0, 0, 0]
+        self._identifiers = set()
 
         self._scanner = None
+        self._lexicon = None
+        self._mapper = None
 
-        try:
-            self._parse_expression()
-        except UnrecognizedInput, e:
-            raise InvalidQueryError(str(e))
+        self._init()
 
-    def _parse_expression(self):
+        self.parse_expression(expression)
+
+    def _init(self):
+        whitespace = Rep1(Any(' \t\n'))
+        open_parenthesis = Str('(')
+        close_parenthesis = Str(')')
+
+        letter = Range('AZaz')
+        digit = Range('09')
+        prefix = letter + Rep(letter) + Str('.')
+
+        #reserved_word = NoCase(Str('AND', 'OR', 'LIKE')) | Str('NULL')
+
+        identifier = Opt(prefix) + letter + Rep(letter | digit | Str('_'))
+        comparators = NoCase(Str('=', '!=', '<', '<=', '>', '>=', 'like'))
+        string_literal = Str('\'') + Rep(AnyBut('\'') | Str(' ') | Str("\\'")) + Str('\'')
+        integer_literal = Opt(Str('+', '-')) + Rep1(digit)
+        float_literal = Opt(Str('+', '-')) + Rep1(digit) + Str('.') + Rep1(digit)
+
+        operands = NoCase(Str('AND', 'OR'))
+        null = Str('NULL')
+
+        OPEN_PARENTHESIS = 1
+        CLOSE_PARENTHESIS = 2
+        NULL = 3
+        OPERAND = 4
+        COMPARATOR = 5
+        STRING_LITERAL = 6
+        INTEGER_LITERAL = 7
+        FLOAT_LITERAL = 8
+        IDENTIFIER = 9
+
+        self._lexicon = Lexicon([
+            (whitespace, IGNORE),
+            (open_parenthesis, OPEN_PARENTHESIS),
+            (close_parenthesis, CLOSE_PARENTHESIS),
+            (null, NULL),
+            (operands, OPERAND),
+            (comparators, COMPARATOR),
+            (string_literal, STRING_LITERAL),
+            (integer_literal, INTEGER_LITERAL),
+            (float_literal, FLOAT_LITERAL),
+            (identifier, IDENTIFIER)
+        ])
+
+        self._mapper = {
+            OPEN_PARENTHESIS: self.open_parenthesis_handler,
+            CLOSE_PARENTHESIS: self.close_parenthesis_handler,
+            NULL: self.null_handler,
+            OPERAND: self.operand_handler,
+            COMPARATOR: self.comparator_handler,
+            STRING_LITERAL: self.string_literal_handler,
+            INTEGER_LITERAL: self.integer_literal_handler,
+            FLOAT_LITERAL: self.float_literal_handler,
+            IDENTIFIER: self.identifier_handler,
+        }
+
+    @property
+    def identifiers(self):
+        return self._identifiers
+
+    def parse_expression(self, expression):
         """
         Uses postfix evaluation of filter string.
         http://www.sunshine2k.de/coding/java/SimpleParser/SimpleParser.html
         """
+        try:
+            f = StringIO.StringIO(expression)
+            self._scanner = Scanner(self._lexicon, f, 'query')
 
-        f = StringIO.StringIO(self.expression)
-        self._scanner = Scanner(self.lexicon, f, 'query')
+            while 1:
+                token = self._scanner.read()
 
-        while 1:
-            token = self._scanner.read()
+                if token[0] in self._mapper:
+                    self._mapper[token[0]](token[1])
 
-            if token[0] in self.mapper:
-                self.mapper[token[0]](self, token[1])
+                elif token[0] is None:
+                    break
 
-            elif token[0] is None:
-                break
+            if self._parenthesis_count != 0:
+                raise InvalidQueryError('Invalid parenthesis count')
 
-        if self._parenthesis_count != 0:
-            raise InvalidQueryError('Invalid parenthesis count')
+            while len(self._operator_stack) > 0:
+                self._postfix_result.append(self._operator_stack.pop())
 
-        while len(self._operator_stack) > 0:
-            self._postfix_result.append(self._operator_stack.pop())
+        except UnrecognizedInput, e:
+            raise InvalidQueryError(str(e))
 
-        f.close()
+        finally:
+            f.close()
 
     def open_parenthesis_handler(self, text):
         self._parenthesis_count += 1
@@ -185,44 +211,6 @@ class BaseQueryParser(object):
             else:
                 self._postfix_result.append(operator)
 
-    def identifier_handler(self, text):
-        if self._state == 0:
-            self._condition[0] = text
-            self._state = 1
-        else:
-            file, line, char_pos = self._scanner.position()
-            msg = 'Field %r found out of order: Line: %d Char: %d' % (text, line, char_pos)
-            raise InvalidQueryError(msg)
-
-    def comparator_handler(self, text):
-        if self._state == 1:
-            self._condition[1] = text.upper()
-            self._state = 2
-        else:
-            file, line, char_pos = self._scanner.position()
-            msg = 'Comparator %r found out of order: Line: %d Char: %d' % (text, line, char_pos)
-            raise InvalidQueryError(msg)
-
-    def integer_literal_handler(self, text):
-        if self._state == 2:
-            self._condition[2] = text.strip()
-            self._postfix_result.append(tuple(self._condition))
-            self._state = 0
-        else:
-            file, line, char_pos = self._scanner.position()
-            msg = 'Integer literal %d found out of order: Line: %d Char: %d' % (text, line, char_pos)
-            raise InvalidQueryError(msg)
-
-    def string_literal_handler(self, text):
-        if self._state == 2:
-            self._condition[2] = text.strip("'")
-            self._postfix_result.append(tuple(self._condition))
-            self._state = 0
-        else:
-            file, line, char_pos = self._scanner.position()
-            msg = 'String literal %r found out of order: Line: %d Char: %d' % (text, line, char_pos)
-            raise InvalidQueryError(msg)
-
     def null_handler(self, text):
         if self._state == 2:
             self._condition[2] = None
@@ -236,19 +224,68 @@ class BaseQueryParser(object):
     def operand_handler(self, text):
         self._operator_stack.append(text.upper())
 
-    mapper = {
-        OPEN_PARENTHESIS: open_parenthesis_handler,
-        CLOSE_PARENTHESIS: close_parenthesis_handler,
-        IDENTIFIER: identifier_handler,
-        COMPARATOR: comparator_handler,
-        INTEGER_LITERAL: integer_literal_handler,
-        STRING_LITERAL: string_literal_handler,
-        NULL: null_handler,
-        OPERAND: operand_handler
-    }
+    def comparator_handler(self, text):
+        if self._state == 1:
+            self._condition[1] = text.upper()
+            self._state = 2
+        else:
+            file, line, char_pos = self._scanner.position()
+            msg = 'Comparator %r found out of order: Line: %d Char: %d' % (text, line, char_pos)
+            raise InvalidQueryError(msg)
+
+    def string_literal_handler(self, text):
+        if self._state == 2:
+            self._condition[2] = text.strip("'")
+            self._postfix_result.append(tuple(self._condition))
+            self._state = 0
+        else:
+            file, line, char_pos = self._scanner.position()
+            msg = 'String literal %r found out of order: Line: %d Char: %d' % (text, line, char_pos)
+            raise InvalidQueryError(msg)
+
+    def integer_literal_handler(self, text):
+        if self._state == 2:
+            self._condition[2] = text.strip()
+            self._postfix_result.append(tuple(self._condition))
+            self._state = 0
+        else:
+            file, line, char_pos = self._scanner.position()
+            msg = 'Integer literal %d found out of order: Line: %d Char: %d' % (text, line, char_pos)
+            raise InvalidQueryError(msg)
+
+    def float_literal_handler(self, text):
+        if self._state == 2:
+            self._condition[2] = text.strip()
+            self._postfix_result.append(tuple(self._condition))
+            self._state = 0
+        else:
+            file, line, char_pos = self._scanner.position()
+            msg = 'Integer literal %d found out of order: Line: %d Char: %d' % (text, line, char_pos)
+            raise InvalidQueryError(msg)
+
+    def identifier_handler(self, text):
+        if self._state == 0:
+            self._condition[0] = text
+            self._state = 1
+            self._identifiers.add(text)
+        else:
+            file, line, char_pos = self._scanner.position()
+            msg = 'Field %r found out of order: Line: %d Char: %d' % (text, line, char_pos)
+            raise InvalidQueryError(msg)
 
     def evaluate(self):
         return self._postfix_result
+
+    def clear(self):
+        self._state = 0
+        self._parenthesis_count = 0
+
+        self._operator_stack = []
+        self._postfix_result = []
+        self._condition = [0, 0, 0]
+        self._identifiers = set()
+
+        self._scanner = None
 
     def __str__(self):
         s = StringIO.StringIO()
@@ -342,3 +379,60 @@ class BaseOrderParser(object):
         s.close()
 
         return out
+
+
+class BaseResource(object):
+    """
+    Purpose of Resource is to centralize field definitions in one place, and to aid in Query, Order Parsing and
+    Query, Order evaluation
+    """
+    def __init__(self, alias=None):
+        self._prefix = None
+        self._resource = alias if alias else None
+        self._fields = None
+        self._prefixed_fields = None
+
+    @property
+    def prefix(self):
+        return self._prefix
+
+    @property
+    def fields(self):
+        return self._fields
+
+    @property
+    def prefixed_fields(self):
+        if self._prefixed_fields is None:
+            self._prefixed_fields = set([field for field in self.fields])
+            self._prefixed_fields |= set(['%s.%s' % (self.prefix, field) for field in self.fields])
+
+        return self._prefixed_fields
+
+    def mapped_fields(self, alias=None):
+        mapped_fields = {}
+        for field in self.prefixed_fields:
+            mapped_fields[field] = self.get_mapped_field(field, alias)
+
+        return mapped_fields
+
+    def get_mapped_field(self, field, alias=None):
+        resource = alias if alias else self._resource
+        suffix = self._get_suffix(field)
+
+        return getattr(resource, suffix)
+
+    def is_field_valid(self, field):
+        return field in self.prefixed_fields
+
+    @staticmethod
+    def _split_identifier(identifier):
+        return identifier.split('.', 1)
+
+    @staticmethod
+    def _get_prefix(field):
+        return BaseResource._split_identifier(field)[0]
+
+    @staticmethod
+    def _get_suffix(field):
+        splits = BaseResource._split_identifier(field)
+        return splits[0] if len(splits) == 1 else splits[1]

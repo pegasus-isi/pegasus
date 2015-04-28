@@ -15,6 +15,7 @@
  */
 package edu.isi.pegasus.planner.parser;
 
+import edu.isi.pegasus.common.util.VariableExpander;
 import edu.isi.pegasus.planner.parser.tokens.OpenBrace;
 import edu.isi.pegasus.planner.parser.tokens.TransformationCatalogReservedWord;
 import edu.isi.pegasus.planner.parser.tokens.Token;
@@ -38,7 +39,7 @@ public class TransformationCatalogTextScanner {
     /**
      * Stores the stream from which we are currently scanning.
      */
-    private LineNumberReader mInputReader;
+    private ExpanderLineNumberReader mInputReader;
 
     /**
      * Captures the look-ahead character.
@@ -58,7 +59,7 @@ public class TransformationCatalogTextScanner {
      */
     public TransformationCatalogTextScanner( Reader reader )
             throws IOException {
-        this.mInputReader = new LineNumberReader( reader );
+        this.mInputReader = new ExpanderLineNumberReader( reader, "#" );
         this.mLookAhead = mInputReader.read();
         // skipWhitespace();
     }
@@ -196,11 +197,11 @@ public class TransformationCatalogTextScanner {
                 mLookAhead = mInputReader.read();
                 if (mLookAhead == -1 || mLookAhead == '\r' || mLookAhead == '\n') {
                     // eof is an unterminated string
-                    throw new ScannerException( mInputReader, "unterminated quoted string" );
+                    throw new ScannerException( mInputReader.getLineNumber(), "unterminated quoted string" );
                 } else if ( mLookAhead == '\\' ) {
                     int temp = mInputReader.read();
                     if (temp == -1) {
-                        throw new ScannerException(mInputReader, "unterminated escape in quoted string");
+                        throw new ScannerException(mInputReader.getLineNumber(), "unterminated escape in quoted string");
                     } else {
                         // always add whatever is after the backslash
                         // FIXME: We could to fancy C-string style \012 \n \r escapes here ;-P
@@ -218,9 +219,112 @@ public class TransformationCatalogTextScanner {
 
         } else {
             // unknown material
-            throw new ScannerException( mInputReader, "unknown character " + ((char)mLookAhead) );
+            throw new ScannerException( mInputReader.getLineNumber(), "unknown character " + ((char)mLookAhead) );
         }
 
         return mPreviousToken;
+    }
+
+    /**
+     * A wrapper around line reader, that allows us to do variable 
+     * expansion, as and when each line is read.
+     */
+    private static class ExpanderLineNumberReader  {
+
+        private LineNumberReader mReader;
+        
+        /**
+         * Handle to pegasus variable expander
+         */
+        private VariableExpander mVariableExpander;
+       
+        /**
+         * A StringBuffer on which we apply the expansion
+         */
+        private String mBuffer;
+       
+        /**
+         * Current position in the buffer to be read
+         */
+        private int mPosition;
+       
+        /**
+         * The corresponding line number of the line stored in the buffer
+         */
+        private int mCurrentLineNumber;
+        
+        /**
+         * Character indicating start of comment line
+         */
+        private String mCommentPrefix;
+       
+        /**
+         * 
+         * @param reader 
+         */
+        public ExpanderLineNumberReader( Reader reader, String commentPrefix )  throws IOException{
+            mReader = new LineNumberReader( reader );
+            mVariableExpander = new VariableExpander();
+            mCommentPrefix = commentPrefix;
+            setBufferToNextLine();
+        }
+
+        private int read() throws IOException {
+            if( mBuffer == null ){
+                return -1;
+            }
+            
+            if( mPosition == mBuffer.length()){
+                setBufferToNextLine();
+                return read();
+            }
+            return mBuffer.charAt( mPosition++ );
+            
+        }
+
+        private String readLine() throws IOException{
+            if( mBuffer == null ){
+                return null;
+            }
+            
+            String result = null;
+            if( mPosition  < mBuffer.length() ){
+                //return substring from mPosition onwards
+                result = mBuffer.substring(mPosition);
+                setBufferToNextLine();
+            }
+            else{
+                setBufferToNextLine();
+                result = mBuffer.substring(mPosition);
+            }
+                  
+            return result;
+        }
+       
+
+        private int getLineNumber() {
+            return mCurrentLineNumber;
+        }
+
+        private void setBufferToNextLine() throws IOException {
+            mPosition = 0;
+            mBuffer  = mReader.readLine();
+            //System.out.println("Buffer " + mBuffer );
+            
+            mCurrentLineNumber = mReader.getLineNumber();
+            //we don't want expand anything in the comment string
+            if( mBuffer != null && !mBuffer.startsWith( mCommentPrefix ) ){
+                mBuffer = mVariableExpander.expand(mBuffer);
+            }
+            
+            //always add \n to ensure consistent semantics for read function
+            //w.r.t Reader class
+            if( mBuffer != null ){
+                mBuffer = mBuffer + '\n';
+            }
+        }
+        
+        
+        
     }
 }
