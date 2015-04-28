@@ -252,13 +252,13 @@ class WorkflowStateSerializer(BaseSerializer):
 
     def encode_collection(self, states, records_total=None, records_filtered=None):
         """
-        Encodes a collection of workflows into it's JSON representation.
+        Encodes a collection of workflow states into it's JSON representation.
 
-        :param workflows: Collection of root workflow records to be encoded as JSON
+        :param states: Collection of workflow state records to be encoded as JSON
         :param records_total: Number of records before applying the search criteria
         :param records_filtered: Number of records after applying the search criteria
 
-        :return: JSON representation of workflow resource
+        :return: JSON representation of workflow state resource
         """
         if states is None:
             return None
@@ -314,6 +314,101 @@ class WorkflowStateSerializer(BaseSerializer):
     @staticmethod
     def _links(state):
         """
+        Generates JSON representation of the HATEOAS links to be attached to the workflow state resource.
+
+        :param state: Workflow state resource for which to generate HATEOAS links
+
+        :return: JSON representation of the HATEOAS links for state resource
+        """
+
+        links = OrderedDict([
+            ('state', url_for('.get_workflow', wf_id=state.wf_id))
+        ])
+
+        return links
+
+class WorkflowJobSerializer(BaseSerializer):
+    FIELDS = [
+        'job_id',
+        'wf_id',
+        'exec_job_id',
+        'submit_file',
+        'type_desc',
+        'clustered',
+        'max_retries',
+        'executable',
+        'argv',
+        'task_count'
+    ]
+
+    def __init__(self, selected_fields=None, pretty_print=False, **kwargs):
+        super(WorkflowJobSerializer, self).__init__(fields=WorkflowJobSerializer.FIELDS, pretty_print=pretty_print)
+        self._selected_fields = selected_fields if selected_fields else self._fields
+
+    def encode_collection(self, jobs, records_total=None, records_filtered=None):
+        """
+        Encodes a collection of jobs into it's JSON representation.
+
+        :param jobs: Collection of workflow jobs to be encoded as JSON
+        :param records_total: Number of records before applying the search criteria
+        :param records_filtered: Number of records after applying the search criteria
+
+        :return: JSON representation of jobs collection
+        """
+        if jobs is None:
+            return None
+
+        if not records_total or not records_filtered:
+            pass
+
+        records = [self._encode_record(job) for job in jobs]
+        records_meta = OrderedDict([
+            ('records_total', records_total),
+            ('records_filtered', records_filtered)
+        ])
+
+        json_records = OrderedDict([
+            ('records', records),
+            ('_meta', records_meta)
+        ])
+
+        return json.dumps(json_records, **self._pretty_print_opts)
+
+    def encode_record(self, job):
+        """
+        Encodes a single job into it's JSON representation.
+
+        :param job: Single instance of job resource
+
+        :return: JSON representation of job resource
+        """
+
+        return json.dumps(self._encode_record(job), **self._pretty_print_opts)
+
+    def _encode_record(self, job):
+        """
+        Encodes a single job into it's JSON representation.
+
+        :param job: Single instance of job resource
+
+        :return: JSON representation of job resource
+        """
+
+        if job is None:
+            return None
+
+        json_record = OrderedDict()
+
+        for field in self._selected_fields:
+            json_record[field] = self._get_field_value(job, field)
+
+        json_record['_links'] = self._links(job)
+
+        return json_record
+
+    @staticmethod
+    def _links(job):
+        """
         Generates JSON representation of the HATEOAS links to be attached to the workflow resource.
 
         :param state: Workflow resource for which to generate HATEOAS links
@@ -322,7 +417,9 @@ class WorkflowStateSerializer(BaseSerializer):
         """
 
         links = OrderedDict([
-            ('state', url_for('.get_workflow', wf_id=state.wf_id))
+            ('workflow', url_for('.get_workflow', wf_id=job.wf_id)),
+            ('task', url_for('.get_workflow_tasks', wf_id=job.wf_id)),
+            ('job_instance', url_for('.get_workflow_job_instances', wf_id=job.wf_id, job_id=job.job_id))
         ])
 
         return links
