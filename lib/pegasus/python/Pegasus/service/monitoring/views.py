@@ -375,12 +375,32 @@ Host
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/host')
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/host/query')
 def get_workflow_hosts(username, m_wf_id, wf_id):
-    pass
+    queries = StampedeWorkflowQueries(g.stampede_db_url)
+
+    hosts, total_hosts, filtered_hosts = queries.get_workflow_hosts(wf_id)
+
+    #
+    # Generate JSON Response
+    #
+    serializer = WorkflowHostSerializer(**g.query_args)
+    response_json = serializer.encode_collection(hosts, total_hosts, filtered_hosts)
+
+    return make_response(response_json, 200, JSON_HEADER)
 
 
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/host/<host_id>')
 def get_workflow_host(username, m_wf_id, wf_id, host_id):
-    pass
+    queries = StampedeWorkflowQueries(g.stampede_db_url)
+
+    record = queries.get_workflow_host(wf_id, host_id)
+
+    #
+    # Generate JSON Response
+    #
+    serializer = WorkflowHostSerializer(**g.query_args)
+    response_json = serializer.encode_record(record)
+
+    return make_response(response_json, 200, JSON_HEADER)
 
 
 @monitoring_routes.route(

@@ -464,7 +464,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
             q = q.filter(Job.wf_uuid == wf_id)
 
         q = q.filter(Job.job_id == job_id)
-        
+
         try:
             return self._get_one(q, use_cache)
         except NoResultFound, e:
