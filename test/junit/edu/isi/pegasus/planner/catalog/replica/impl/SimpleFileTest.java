@@ -17,7 +17,6 @@
 package edu.isi.pegasus.planner.catalog.replica.impl;
 
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
-import edu.isi.pegasus.planner.catalog.replica.impl.SimpleFile;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.EnvSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
@@ -43,10 +42,13 @@ import org.junit.runners.MethodSorters;
  */
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class SimpleFileTest {
+    
+    /***
+     * track across insert and delete methods
+     */
+    private static  File mTempRC;
 
     private SimpleFile mCatalog = null;
-    private File mRCFile = null;
-    
     
     private TestSetup mTestSetup;
     
@@ -55,6 +57,17 @@ public class SimpleFileTest {
     public SimpleFileTest() {
     }
 
+    @BeforeClass
+    public static void setUpClass() throws IOException {
+        Map<String,String> testEnvVariables = new HashMap();
+        testEnvVariables.put( "USER", "bamboo" );
+        EnvSetup.setEnvironmentVariables(testEnvVariables);
+        
+        //create a temp file for some tests
+        //that is not tracked in git
+        mTempRC = File.createTempFile( "replica", ".txt" );
+    }
+    
     @Before
     public void setUp() throws IOException {
         Map<String,String> testEnvVariables = new HashMap();
@@ -69,7 +82,7 @@ public class SimpleFileTest {
     @Test
     public void insertSingle() {
         System.out.println( "insertSingle" );
-        setupCatalog( "simple-file.in", false );
+        setupCatalog( mTempRC.getAbsolutePath(), false );
         mCatalog.insert("a", new ReplicaCatalogEntry("b"));
         Collection<ReplicaCatalogEntry> c = mCatalog.lookup("a");
         assertTrue(c.contains(new ReplicaCatalogEntry("b")));
@@ -78,7 +91,7 @@ public class SimpleFileTest {
     @Test
     public void insertMultiple() {
         System.out.println( "insertMultiple" );
-        setupCatalog( "simple-file.in", false );
+        setupCatalog( mTempRC.getAbsolutePath(), false );
         mCatalog.insert("a", new ReplicaCatalogEntry("b"));
         mCatalog.insert("a", new ReplicaCatalogEntry("b", "handle"));
         mCatalog.insert("a", new ReplicaCatalogEntry("c"));
@@ -94,7 +107,8 @@ public class SimpleFileTest {
     @Test
     public void lookupWithSubstitutionsTest() {
         System.out.println( "lookupWithSubstitutionsTest" );
-        setupCatalog( "simple-file-substitute.in", true );
+        File f = new File( mTestSetup.getInputDirectory(), "simple-file-substitute.in" );
+        setupCatalog( f.getAbsolutePath(), true );
         
         Collection<ReplicaCatalogEntry> c = mCatalog.lookup("f.b");
 
@@ -109,7 +123,7 @@ public class SimpleFileTest {
     @Test
     public void remove() {
         System.out.println( "removeSingle" );
-        setupCatalog( "simple-file.in", false );
+        setupCatalog( mTempRC.getAbsolutePath(), false );
         int  count = mCatalog.remove( "a" );
         assertEquals( 4, count );
     }
@@ -119,14 +133,21 @@ public class SimpleFileTest {
     public void tearDown() {
         mCatalog.close();
     }
+    
+    @AfterClass
+    public static void tearDownClass() {
+        if( mTempRC != null ){
+            mTempRC.delete();
+        }
+    }
 
     private void setupCatalog(String file, boolean readOnly ) {
         mCatalog = new SimpleFile();
-        mRCFile  = new File( mTestSetup.getInputDirectory(), file );
-        System.out.println( "Input Test File is " + mRCFile );
+        //mRCFile  = new File( mTestSetup.getInputDirectory(), file );
+        System.out.println( "Input Test File is " + file );
         Properties props = new Properties();
         props.setProperty( SimpleFile.READ_ONLY_KEY, Boolean.toString(readOnly) );
-        props.setProperty( "file", mRCFile.getAbsolutePath() );
+        props.setProperty( "file", file );
         mCatalog.connect( props );
     }
 }

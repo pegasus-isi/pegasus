@@ -26,6 +26,7 @@ import org.junit.runners.Suite.SuiteClasses;
     edu.isi.pegasus.planner.namespace.PegasusTest.class,
     edu.isi.pegasus.planner.catalog.replica.impl.RegexRCTest.class,
     edu.isi.pegasus.planner.catalog.replica.impl.JDBCRCTest.class,
+    edu.isi.pegasus.planner.catalog.replica.impl.SimpleFileTest.class,
     edu.isi.pegasus.planner.catalog.transformation.impl.TextTest.class,
     edu.isi.pegasus.planner.cluster.RuntimeClusteringTest.class,
     edu.isi.pegasus.planner.code.generator.condor.style.GliteTest.class,
