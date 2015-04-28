@@ -1891,7 +1891,7 @@ def parse(infile):
 
     def parse_uses(e):
         try:
-            return Use(
+            u = Use(
                 e.attrib['name'],
                 namespace = e.get('namespace', None),
                 version = e.get('version', None),
@@ -1903,6 +1903,9 @@ def parse(infile):
             )
         except KeyError, ke:
             raise badattr(e, ke)
+        for m in e.findall(QN("metadata")):
+            u.addMetadata(parse_metadata(m))
+        return u
 
     def parse_transformation(e):
         try:
@@ -1916,6 +1919,8 @@ def parse(infile):
             t.addUse(parse_uses(u))
         for i in e.findall(QN("invoke")):
             t.addInvoke(parse_invoke(i))
+        for m in e.findall(QN("metadata")):
+            t.addMetadata(parse_metadata(m))
         return t
 
     def iterelem(e):
@@ -1960,6 +1965,9 @@ def parse(infile):
 
         for i in e.findall(QN("invoke")):
             j.addInvoke(parse_invoke(i))
+
+        for m in e.findall(QN("metadata")):
+            j.addMetadata(parse_metadata(m))
 
         return j
 
@@ -2060,6 +2068,8 @@ def parse(infile):
             adag.addJob(d)
         elif elem.tag == QN("invoke"):
             adag.addInvoke(parse_invoke(elem))
+        elif elem.tag == QN("metadata"):
+            adag.addMetadata(parse_metadata(elem))
         else:
             raise ParseError("Unknown tag", elem.tag)
 
