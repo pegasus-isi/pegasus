@@ -139,6 +139,18 @@
                                     </xs:simpleContent>
                                 </xs:complexType>
                             </xs:element>
+                            <xs:element name="metadata" minOccurs="0" maxOccurs="unbounded">
+                                <xs:annotation>
+                                    <xs:documentation>Site-level metadata</xs:documentation>
+                                </xs:annotation>
+                                <xs:complexType>
+                                    <xs:simpleContent>
+                                        <xs:extension base="xs:string">
+                                            <xs:attribute name="key" type="xs:string" use="required"/>
+                                        </xs:extension>
+                                    </xs:simpleContent>
+                                </xs:complexType>
+                            </xs:element>
                         </xs:sequence>
                         <xs:attribute name="handle" type="xs:ID" use="required"/>
                         <xs:attributeGroup ref="SystemInformationGroup"/>
