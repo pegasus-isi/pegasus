@@ -1045,6 +1045,7 @@ class Transformation(UseMixin,InvokeMixin,MetadataMixin):
         self.version = None
         self.used = set()
         self.invocations = set()
+        self._metadata = set()
         if isinstance(name, Executable):
             self.name = name.name
             self.namespace = name.namespace
@@ -1076,7 +1077,11 @@ class Transformation(UseMixin,InvokeMixin,MetadataMixin):
             ('name', self.name),
             ('version', self.version)
         ])
-        
+
+        # Metadata
+        for m in self._metadata:
+            e.element(m.toXML())
+
         # Uses
         def getlink(a):
             return a.link
