@@ -1247,9 +1247,13 @@ def online_monitoring_proc(wf_label, wf_uuid):
         # we add metric values from this mpi rank to create an aggregated measurement for application
         print "We are adding measurements", measurement[0]["points"][0], "for", dag_job_id
         for i, metric_value in enumerate(measurement[0]["points"][0]):
+            # timestamp is set to the latest value
             if i == 0:
-                continue
-            aggregated_measurements[dag_job_id][i] += metric_value
+                if aggregated_measurements[dag_job_id][i] < metric_value:
+                    aggregated_measurements[dag_job_id][i] = metric_value
+            # other metrics are aggregated
+            else:
+                aggregated_measurements[dag_job_id][i] += metric_value
 
     def parse_measurement(measurement_text):
         """
