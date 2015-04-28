@@ -17,6 +17,7 @@
 package edu.isi.pegasus.planner.catalog.transformation.impl;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -49,6 +50,14 @@ public class TextTest {
      */
     private static final String PROPERTIES_BASENAME="properties";
     
+    private static final String EXPANDED_SITE        = "bamboo";
+    private static final String EXPANDED_NAMESPACE   = "pegasus";
+    private static final String EXPANDED_NAME        = "keg";
+    private static final String EXPANDED_VERSION     = "version";
+    private static final String EXPANDED_ARCH        = "x86_64";
+    private static final String EXPANDED_OS          = "LINUX";
+    private static final String EXPANDED_KEG_PATH    = "file:///usr/bin/pegasus-keg";
+    
     private PegasusBag mBag;
     
     private PegasusProperties mProps;
@@ -64,8 +73,13 @@ public class TextTest {
     @BeforeClass
     public static void setUpClass() {
         Map<String,String> testEnvVariables = new HashMap();
-        testEnvVariables.put( "site", "test-site" );
-       
+        testEnvVariables.put( "SITE", EXPANDED_SITE );
+        testEnvVariables.put( "NAMESPACE", EXPANDED_NAMESPACE );
+        testEnvVariables.put( "NAME", EXPANDED_NAME );
+        testEnvVariables.put( "VERSION", EXPANDED_VERSION );
+        testEnvVariables.put( "ARCH", EXPANDED_ARCH );
+        testEnvVariables.put( "OS",  EXPANDED_OS );
+        testEnvVariables.put(  "KEGPATH", EXPANDED_KEG_PATH );
         setEnv( testEnvVariables );
     }
     
@@ -158,6 +172,33 @@ public class TextTest {
         mLogger.logEventStart( "test.catalog.transformation.impl.Text", "keg-count-test", Integer.toString(mTestNumber++) );
         List<TransformationCatalogEntry> kegEntries = mCatalog.lookup( "example", "keg", "1.0", (String)null, null );
         assertEquals( "Expected total number of keg entries", 2 , kegEntries.size() );
+        mLogger.logEventCompletion();
+        
+    }
+    
+    @Test
+    public void testParameterExpansionCount() throws Exception {
+        mLogger.logEventStart( "test.catalog.transformation.impl.Text", "parameter-expansion-test", Integer.toString(mTestNumber++) );
+        List<TransformationCatalogEntry> kegEntries = mCatalog.lookup( TextTest.EXPANDED_NAMESPACE, TextTest.EXPANDED_NAME, TextTest.EXPANDED_VERSION, TextTest.EXPANDED_SITE, null );
+        assertEquals( "Expected total number of keg entries", 1 , kegEntries.size() );
+        mLogger.logEventCompletion();
+        
+    }
+    
+    @Test
+    public void testParameterExpansionContents() throws Exception {
+        mLogger.logEventStart( "test.catalog.transformation.impl.Text", "parameter-expansion-contents", Integer.toString(mTestNumber++) );
+        List<TransformationCatalogEntry> kegEntries = mCatalog.lookup( TextTest.EXPANDED_NAMESPACE, TextTest.EXPANDED_NAME, TextTest.EXPANDED_VERSION, TextTest.EXPANDED_SITE, null );
+        TransformationCatalogEntry expanded = kegEntries.get( 0 );
+        SysInfo info = expanded.getSysInfo();
+        assertEquals( "Expected attribute ", EXPANDED_NAMESPACE , expanded.getLogicalNamespace() );
+        assertEquals( "Expected attribute ", EXPANDED_NAME ,      expanded.getLogicalName() );
+        assertEquals( "Expected attribute ", EXPANDED_VERSION ,   expanded.getLogicalVersion() );
+        assertEquals( "Expected attribute ", EXPANDED_SITE ,      expanded.getResourceId() );
+        assertEquals( "Expected attribute ", EXPANDED_KEG_PATH ,  expanded.getPhysicalTransformation() );
+        assertEquals( "Expected attribute ", EXPANDED_ARCH ,      info.getArchitecture().name() );
+        assertEquals( "Expected attribute ", EXPANDED_OS ,        info.getOS().name() );
+        
         mLogger.logEventCompletion();
         
     }

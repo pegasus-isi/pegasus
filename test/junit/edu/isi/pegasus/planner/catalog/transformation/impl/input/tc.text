@@ -29,17 +29,24 @@ tr example::keg:1.0 {
     }
  }
 
-tr pegasus::keg:1.0{ 
-#$(namespace)::$(name):$(version) {
-   site $(site){
+#tr pegasus::keg:1.0{ 
+tr $(NAMESPACE)::$(NAME):$(VERSION) {
+   site $(SITE){
      profile env "me" "with"
      profile condor "more" "test"
-     pfn "/path/to/keg"
-     arch  "x86"
-     os    "linux"
+     pfn "$(KEGPATH)"
+     arch  "$(ARCH)"
+     os    "$(OS)"
      osrelease "fc"
      osversion "4"
      type "STAGEABLE"
      }
-}
-dsadsa}
+}  
+
+
+   
+
+
+	
+ 
+
