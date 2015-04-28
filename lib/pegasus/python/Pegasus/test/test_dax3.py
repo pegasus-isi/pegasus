@@ -301,8 +301,14 @@ class TestExecutable(unittest.TestCase):
         """toXML should output proper xml"""
         x = Executable(namespace="os",name="grep",version="2.3",arch=Arch.X86,os=OS.LINUX,osrelease="foo",osversion="bar",glibc="2.4",installed=True)
         self.assertEquals(str(x.toXML()), '<executable name="grep" namespace="os" version="2.3" arch="x86" os="linux" osrelease="foo" osversion="bar" glibc="2.4" installed="true"/>')
+
+        x.metadata("key","value")
+        self.assertEquals(str(x.toXML()), '<executable name="grep" namespace="os" version="2.3" arch="x86" os="linux" osrelease="foo" osversion="bar" glibc="2.4" installed="true">\n\t<metadata key="key">value</metadata>\n</executable>')
+        x.clearMetadata()
+
         x.invoke("when","what")
         self.assertEquals(str(x.toXML()), '<executable name="grep" namespace="os" version="2.3" arch="x86" os="linux" osrelease="foo" osversion="bar" glibc="2.4" installed="true">\n\t<invoke when="when">what</invoke>\n</executable>')
+        x.clearInvokes()
 
 
 class TestUse(unittest.TestCase):
@@ -333,6 +339,21 @@ class TestUse(unittest.TestCase):
         self.assertFalse(a == e)
         self.assertTrue(a == f)
 
+    def testMetadata(self):
+        """Should be able to add/remove/has metadata"""
+        c = Use("name")
+        p = Metadata("key","value")
+        self.assertFalse(c.hasMetadata(p))
+        c.addMetadata(p)
+        self.assertRaises(DuplicateError, c.addMetadata, p)
+        self.assertTrue(c.hasMetadata(p))
+        c.removeMetadata(p)
+        self.assertFalse(c.hasMetadata(p))
+        self.assertRaises(NotFoundError, c.removeMetadata, p)
+        c.addMetadata(p)
+        c.clearMetadata()
+        self.assertFalse(c.hasMetadata(p))
+
     def testJobXML(self):
         """Use.toXML should output properly formatted XML"""
         a = Use("name", namespace="ns", version="version")
@@ -359,6 +380,10 @@ class TestUse(unittest.TestCase):
                 size=1024)
         self.assertEquals(str(a.toJobXML()), '<uses namespace="ns" name="name" version="10" link="link" register="true" transfer="true" optional="true" executable="true" size="1024"/>')
 
+        a = Use("name")
+        a.metadata("key","value")
+        self.assertEquals(str(a.toJobXML()), '<uses name="name">\n\t<metadata key="key">value</metadata>\n</uses>')
+
     def testTransformationXML(self):
         """Use.toXML should output properly formatted XML"""
         a = Use("name", namespace="ns", version="version")
@@ -379,6 +404,10 @@ class TestUse(unittest.TestCase):
         a = Use("name", link="link", register="true", transfer="true", 
                 optional=True, namespace="ns", version="10", executable=True, size=1024)
         self.assertEquals(str(a.toTransformationXML()), '<uses namespace="ns" name="name" version="10" executable="true"/>')
+
+        a = Use("name")
+        a.metadata("key","value")
+        self.assertEquals(str(a.toTransformationXML()), '<uses name="name">\n\t<metadata key="key">value</metadata>\n</uses>')
 
 
 class TestTransformation(unittest.TestCase):
@@ -410,6 +439,21 @@ class TestTransformation(unittest.TestCase):
         self.assertFalse(t.hasUse(u))
         t.uses("name",namespace="namespace",version="version",register=True,transfer=True)
         self.assertTrue(t.hasUse(u))
+
+    def testMetadata(self):
+        """Should be able to add/remove/has metadata"""
+        c = Transformation("xform")
+        p = Metadata("key","value")
+        self.assertFalse(c.hasMetadata(p))
+        c.addMetadata(p)
+        self.assertRaises(DuplicateError, c.addMetadata, p)
+        self.assertTrue(c.hasMetadata(p))
+        c.removeMetadata(p)
+        self.assertFalse(c.hasMetadata(p))
+        self.assertRaises(NotFoundError, c.removeMetadata, p)
+        c.addMetadata(p)
+        c.clearMetadata()
+        self.assertFalse(c.hasMetadata(p))
 
     def testInvoke(self):
         """Transformations should support invoke"""
@@ -474,6 +518,10 @@ class TestTransformation(unittest.TestCase):
 
         t.clearUses()
 
+        t.metadata("key","value")
+        self.assertEquals(str(t.toXML()), '<transformation namespace="namespace" name="name" version="version">\n\t<metadata key="key">value</metadata>\n</transformation>')
+        t.clearMetadata()
+
         t.invoke("when","what")
         self.assertEquals(str(t.toXML()), '<transformation namespace="namespace" name="name" version="version">\n\t<invoke when="when">what</invoke>\n</transformation>')
 
@@ -533,6 +581,21 @@ class TestJob(unittest.TestCase):
         self.assertEquals(j.stdin, File("stdin"))
         j.setStderr("stderr")
         self.assertEquals(j.stderr, File("stderr"))
+
+    def testMetadata(self):
+        """Should be able to add/remove/has metadata"""
+        c = Job("myjob")
+        p = Metadata("key","value")
+        self.assertFalse(c.hasMetadata(p))
+        c.addMetadata(p)
+        self.assertRaises(DuplicateError, c.addMetadata, p)
+        self.assertTrue(c.hasMetadata(p))
+        c.removeMetadata(p)
+        self.assertFalse(c.hasMetadata(p))
+        self.assertRaises(NotFoundError, c.removeMetadata, p)
+        c.addMetadata(p)
+        c.clearMetadata()
+        self.assertFalse(c.hasMetadata(p))
 
     def testProfile(self):
         """Jobs should support profiles"""
@@ -664,6 +727,11 @@ class TestJob(unittest.TestCase):
         j.addProfile(Profile("namespace","key","value"))
         self.assertEquals(str(j.toXML()), '<job name="name">\n\t<profile namespace="namespace" key="key">value</profile>\n</job>')
         j.clearProfiles()
+
+        # Metadata
+        j.metadata("key","value")
+        self.assertEquals(str(j.toXML()), '<job name="name">\n\t<metadata key="key">value</metadata>\n</job>')
+        j.clearMetadata()
 
         # Stdin/out/err
         j.setStdin(File("stdin"))
@@ -846,6 +914,21 @@ class TestADAG(unittest.TestCase):
         self.assertRaises(NotFoundError, a.getJob, j)
         self.assertRaises(NotFoundError, a.removeJob, j)
 
+    def testMetadata(self):
+        """Should be able to add/remove/has metadata"""
+        c = ADAG("name")
+        p = Metadata("key","value")
+        self.assertFalse(c.hasMetadata(p))
+        c.addMetadata(p)
+        self.assertRaises(DuplicateError, c.addMetadata, p)
+        self.assertTrue(c.hasMetadata(p))
+        c.removeMetadata(p)
+        self.assertFalse(c.hasMetadata(p))
+        self.assertRaises(NotFoundError, c.removeMetadata, p)
+        c.addMetadata(p)
+        c.clearMetadata()
+        self.assertFalse(c.hasMetadata(p))
+
     def testFiles(self):
         """Should be able to add/remove/test files in ADAG"""
         a = ADAG("adag")
@@ -944,6 +1027,13 @@ class TestADAG(unittest.TestCase):
 
         self.assertEqualXML(c.toXML(),"""<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.6.xsd" version="3.6" name="adag" count="10" index="1">
 </adag>""")
+
+        # Metadata
+        c.metadata("key","value")
+        self.assertEqualXML(c.toXML(),"""<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.6.xsd" version="3.6" name="adag" count="10" index="1">
+<metadata key="key">value</metadata>
+</adag>""")
+        c.clearMetadata()
 
         # Invoke
         c.invoke("when","what")
