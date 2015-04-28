@@ -290,13 +290,13 @@ def get_workflow(username, m_wf_id, wf_id):
 def get_workflow_state(username, m_wf_id, wf_id):
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
-    state = queries.get_state(wf_id)
+    state = queries.get_workflow_state(wf_id)
 
     #
     # Generate JSON Response
     #
     serializer = WorkflowStateSerializer(**g.query_args)
-    response_json = serializer.encode_record(state)
+    response_json = serializer.encode_collection(state)
 
     return make_response(response_json, 200, JSON_HEADER)
 

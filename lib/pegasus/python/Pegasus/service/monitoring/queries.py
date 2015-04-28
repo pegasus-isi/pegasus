@@ -24,7 +24,7 @@ from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 from Pegasus.db import connection
 from Pegasus.db.modules import SQLAlchemyInit
-from Pegasus.db.schema import DashboardWorkflow, DashboardWorkflowstate, Workflow
+from Pegasus.db.schema import DashboardWorkflow, DashboardWorkflowstate, Workflow, Workflowstate
 from Pegasus.db.errors import StampedeDBNotFoundError
 from Pegasus.db.admin.admin_loader import DBAdminError
 
@@ -313,11 +313,11 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
     def get_workflow(self, wf_id, use_cache=True):
         """
-        Returns a Workflow object identified by m_wf_id.
+        Returns a Workflow object identified by wf_id.
 
         :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
 
-        :return: Root Workflow object
+        :return: Workflow object
         """
         q = self.session.query(Workflow)
 
@@ -336,4 +336,23 @@ class StampedeWorkflowQueries(WorkflowQueries):
             raise e
 
     def get_workflow_state(self, wf_id, use_cache=True):
-        pass
+        """
+        Returns a Workflow State object identified by wf_id
+        :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
+        :param use_cache: whether or not we should try to pull data from the cache first
+        :return: Workflow State object
+        """
+        q = self.session.query(Workflowstate)
+
+        if wf_id is None:
+            raise ValueError('wf_id cannot be None')
+        wf_id = str(wf_id)
+        if wf_id.isdigit():
+            q = q.filter(Workflowstate.wf_id == wf_id)
+        else:
+            q = q.filter(Workflowstate.wf_uuid == wf_id)
+
+        try:
+            return self._get_all(q, use_cache)
+        except NoResultFound, e:
+            raise e
