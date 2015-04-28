@@ -157,7 +157,7 @@
                     </xs:complexType>
                 </xs:element>
             </xs:sequence>
-            <xs:attribute name="version" type="xs:decimal" use="optional" default="4.0"/>
+            <xs:attribute name="version" type="xs:decimal" use="optional" default="4.1"/>
         </xs:complexType>
     </xs:element>
     <xs:complexType name="FileServerType">
