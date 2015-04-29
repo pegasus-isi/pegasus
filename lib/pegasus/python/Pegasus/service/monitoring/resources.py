@@ -121,9 +121,9 @@ class CombinationResource(BaseResource):
         self._mapped_fields = mapped_fields = {}
 
         for resource in self._resources:
-            for field in resource.prefixed_fields:
-                print field
-                mapped_fields[field] = resource.get_mapped_field(field, alias)
+            for field in self.prefixed_fields:
+                if field in resource.prefixed_fields:
+                    mapped_fields[field] = resource.get_mapped_field(field, alias)
 
         return mapped_fields
 
