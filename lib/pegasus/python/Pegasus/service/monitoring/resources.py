@@ -69,6 +69,7 @@ class CombinationResource(BaseResource):
         self._fields = None
         self._prefixed_fields = None
         self._field_prefix_map = None
+        self._mapped_fields = None
 
     @property
     def fields(self):
@@ -114,17 +115,21 @@ class CombinationResource(BaseResource):
         return self.field_prefix_map[field] if field in self.field_prefix_map else None
 
     def mapped_fields(self, alias=None):
-        mapped_fields = {}
+        if self._mapped_fields:
+            return self._mapped_fields
+
+        self._mapped_fields = mapped_fields = {}
 
         for resource in self._resources:
             for field in resource.prefixed_fields:
+                print field
                 mapped_fields[field] = resource.get_mapped_field(field, alias)
 
         return mapped_fields
 
-    def get_mapped_field(self, field, alias=None):
-        resource = self._resource_map[BaseResource._get_prefix(field)]
-        return resource.get_mapped_field(field, alias)
+    def get_mapped_field(self, field):
+        mapped_fields = self.mapped_fields()
+        return mapped_fields[field]
 
     def is_prefix_valid(self, field):
         splits = BaseResource._split_identifier(field)
