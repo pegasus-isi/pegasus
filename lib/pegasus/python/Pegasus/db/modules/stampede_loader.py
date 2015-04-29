@@ -756,6 +756,83 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         """
         self.log.debug('noop: %s', linedata)
 
+    def online_monitoring_update(self, linedata):
+        """
+        This function upserts online monitoring measurements into stampede db.
+        TODO handling the PMC case - we need to find out job_id in other way by looking into task and job tables
+        :param linedata:
+        :return:
+        """
+        # 1. we look up job instance db based on wf_uuid, dag_job_id, and sched_id
+        result = self.session.execute("""
+                SELECT job_instance_id
+                FROM job_instance
+                LEFT JOIN job
+                ON job.job_id = job_instance.job_id
+                LEFT JOIN workflow
+                ON workflow.wf_id=job.wf_id
+                WHERE workflow.wf_uuid="%s"
+                    AND job.exec_job_id="%s"
+                AND job_instance.sched_id="%s";
+            """ % (linedata["wf_uuid"], linedata["dag_job_id"], linedata["sched_id"])).first()
+
+        if result is None:
+            print "We have none type when looking for job_instance_id"
+            return
+
+        job_instance_id = int(result["job_instance_id"])
+        print "Job instance id: %s" % job_instance_id
+
+        # 2. we need to check if a measurement for the given dag_job_id exists
+        result = self.session.query(JobMetrics).filter(
+            JobMetrics.dag_job_id == linedata["dag_job_id"],
+            JobMetrics.job_instance_id == job_instance_id).all()
+
+        # 3. if measurement exists then we update it, otherwise we insert a new row
+        if len(result) == 0:
+            insert_cmd = st_job_metrics.insert().values(
+                job_instance_id=job_instance_id,
+                dag_job_id=linedata["dag_job_id"],
+                hostname=linedata["hostname"],
+                exec_name=linedata["exec_name"],
+                kickstart_pid=int(linedata["kickstart_pid"]),
+                ts=int(linedata["ts"]),
+                utime=float(linedata["utime"]),
+                stime=float(linedata["stime"]),
+                iowait=float(linedata["iowait"]),
+                vmsize=int(linedata["vmsize"]),
+                vmrss=int(linedata["vmrss"]),
+                read_bytes=int(linedata["read_bytes"]),
+                write_bytes=int(linedata["write_bytes"]),
+                syscr=int(linedata["syscr"]),
+                syscw=int(linedata["syscw"]),
+                threads=int(linedata["threads"])
+            )
+            self.session.execute(insert_cmd)
+        else:
+            # we update existing measurement
+            job_metrics_id = result[0].job_metrics_id
+            self.session.query(JobMetrics).filter(JobMetrics.job_metrics_id == job_metrics_id).update(
+                {
+                    JobMetrics.job_instance_id: job_instance_id,
+                    JobMetrics.dag_job_id: linedata["dag_job_id"],
+                    JobMetrics.hostname: linedata["hostname"],
+                    JobMetrics.exec_name: linedata["exec_name"],
+                    JobMetrics.kickstart_pid: int(linedata["kickstart_pid"]),
+                    JobMetrics.ts: int(linedata["ts"]),
+                    JobMetrics.utime: float(linedata["utime"]),
+                    JobMetrics.stime: float(linedata["stime"]),
+                    JobMetrics.iowait: float(linedata["iowait"]),
+                    JobMetrics.vmsize: int(linedata["vmsize"]),
+                    JobMetrics.vmrss: int(linedata["vmrss"]),
+                    JobMetrics.read_bytes: int(linedata["read_bytes"]),
+                    JobMetrics.write_bytes: int(linedata["write_bytes"]),
+                    JobMetrics.syscr: int(linedata["syscr"]),
+                    JobMetrics.syscw: int(linedata["syscw"]),
+                    JobMetrics.threads: int(linedata["threads"])
+                }
+            )
+
     ####################################
     # DB helper/lookup/caching functions
     ####################################
