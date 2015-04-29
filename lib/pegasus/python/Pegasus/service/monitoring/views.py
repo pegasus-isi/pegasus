@@ -23,6 +23,7 @@ from flask import g, request, make_response, abort, current_app
 from sqlalchemy.orm.exc import NoResultFound
 
 from Pegasus.service import cache
+from Pegasus.service.base import InvalidQueryError, InvalidOrderError
 from Pegasus.service.monitoring import monitoring_routes
 from Pegasus.service.monitoring.queries import MasterWorkflowQueries, StampedeWorkflowQueries
 from Pegasus.service.monitoring.serializer import *
@@ -512,3 +513,15 @@ def get_job_instance_invocation(username, m_wf_id, wf_id, job_id, job_instance_i
 def no_result_found(error):
     # TODO: Return error resource in JSON format
     return make_response('Not found', 404)
+
+
+@monitoring_routes.errorhandler(InvalidQueryError)
+def no_result_found(error):
+    # TODO: Return error resource in JSON format
+    return make_response('Bad request', 400)
+
+
+@monitoring_routes.errorhandler(InvalidOrderError)
+def no_result_found(error):
+    # TODO: Return error resource in JSON format
+    return make_response('Bad request', 400)
