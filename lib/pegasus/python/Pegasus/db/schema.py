@@ -172,6 +172,10 @@ class Invocation(SABase):
 class File(SABase):
     pass
 
+class JobMetrics(SABase):
+    pass
+
+
 # ---------------------------------------------
 # DASHBOARD
 class DashboardWorkflow(SABase):
@@ -474,6 +478,29 @@ Index('UNIQUE_INVOCATION', st_invocation.c.job_instance_id, st_invocation.c.task
 
 orm.mapper(Invocation, st_invocation)
 
+st_job_metrics = Table('job_metrics', metadata,
+    Column('job_metrics_id', KeyInteger, primary_key=True, nullable=False),
+    Column('job_instance_id', KeyInteger, ForeignKey('job_instance.job_instance_id', ondelete='CASCADE'), nullable=False),
+    Column('dag_job_id', VARCHAR(255), nullable=False),
+    Column('hostname', VARCHAR(255), nullable=True),
+    Column('exec_name', VARCHAR(255), nullable=True),
+    Column('kickstart_pid', INT, nullable=True),
+    Column('ts', NUMERIC(precision=16,scale=6), nullable=True),
+    Column('stime', FLOAT, nullable=True),
+    Column('utime', FLOAT, nullable=True),
+    Column('iowait', FLOAT, nullable=True),
+    Column('vmsize', INT, nullable=True),
+    Column('vmrss', INT, nullable=True),
+    Column('read_bytes', INT, nullable=True),
+    Column('write_bytes', INT, nullable=True),
+    Column('syscr', INT, nullable=True),
+    Column('syscw', INT, nullable=True),
+    Column('threads', INT, nullable=True),
+    **table_keywords
+    )
+
+Index('job_metrics_dag_job_id_idx', st_job_metrics.c.dag_job_id)
+orm.mapper(JobMetrics, st_job_metrics)
 
 st_file = Table('file', metadata,
     # ==> Information will come from kickstart output file
