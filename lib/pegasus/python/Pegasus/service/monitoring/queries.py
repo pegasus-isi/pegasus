@@ -418,22 +418,22 @@ class StampedeWorkflowQueries(WorkflowQueries):
         if total_records == 0:
             return 0, 0, []
 
-            #
+        #
         # Construct SQLAlchemy Query `q` to get filtered count.
         #
         if query:
-            # TODO: Validate `query`
+            q = self._evaluate_query(q, query, WorkflowResource())
             total_filtered = self._get_count(q, use_cache)
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):
                 log.debug('total_filtered is 0 or start_index >= total_filtered')
                 return [], total_records, total_filtered
+
         #
         # Construct SQLAlchemy Query `q` to sort
         #
         if order:
-            # TODO: Add support for sorting
-            pass
+            q = self._add_ordering(q, order, WorkflowResource())
 
         #
         # Construct SQLAlchemy Query `q` to add pagination
@@ -471,22 +471,22 @@ class StampedeWorkflowQueries(WorkflowQueries):
         if total_records == 0:
             return 0, 0, []
 
-            #
+        #
         # Construct SQLAlchemy Query `q` to get filtered count.
         #
         if query:
-            # TODO: Validate `query`
+            q = self._evaluate_query(q, query, WorkflowResource())
             total_filtered = self._get_count(q, use_cache)
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):
                 log.debug('total_filtered is 0 or start_index >= total_filtered')
                 return [], total_records, total_filtered
+
         #
         # Construct SQLAlchemy Query `q` to sort
         #
         if order:
-            # TODO: Add support for sorting
-            pass
+            q = self._add_ordering(q, order, WorkflowResource())
 
         #
         # Construct SQLAlchemy Query `q` to add pagination
@@ -520,6 +520,88 @@ class StampedeWorkflowQueries(WorkflowQueries):
             q = q.filter(Job.wf_uuid == wf_id)
 
         q = q.filter(Job.job_id == job_id)
+
+        try:
+            return self._get_one(q, use_cache)
+        except NoResultFound, e:
+            raise e
+
+    def get_workflow_hosts(self, wf_id, start_index=None, max_results=None, query=None,order=None, use_cache=True, recent=False, **kwargs):
+        """
+
+        :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
+        :param max_results: Return a maximum of `max_results` records
+        :param query: Filtering criteria
+        :param order: Sorting criteria
+        :param use_cache: whether or not we should try to pull data from the cache first
+        :param recent: Get the most recent results
+
+        :return: hosts collection, total jobs count, filtered jobs count
+        """
+        q = self.session.query(Host)
+
+        if wf_id is None:
+            raise ValueError('wf_id cannot be None')
+        wf_id = str(wf_id)
+        if wf_id.isdigit():
+            q = q.filter(Host.wf_id == wf_id)
+        else:
+            q = q.filter(Host.wf_uuid == wf_id)
+
+        total_records = total_filtered = self._get_count(q, use_cache)
+
+        if total_records == 0:
+            return 0, 0, []
+
+            #
+        # Construct SQLAlchemy Query `q` to get filtered count.
+        #
+        if query:
+            # TODO: Validate `query`
+            total_filtered = self._get_count(q, use_cache)
+
+            if total_filtered == 0 or (start_index and start_index >= total_filtered):
+                log.debug('total_filtered is 0 or start_index >= total_filtered')
+                return [], total_records, total_filtered
+        #
+        # Construct SQLAlchemy Query `q` to sort
+        #
+        if order:
+            # TODO: Add support for sorting
+            pass
+
+        #
+        # Construct SQLAlchemy Query `q` to add pagination
+        #
+        q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
+
+        records = self._get_all(q, use_cache)
+
+        return records, total_records, total_filtered
+
+    def get_workflow_host(self, wf_id, host_id, use_cache=True):
+        """
+
+        :param wf_id: Id of the workflow associated with the host
+        :param host_id: Id of the host
+        :param use_cache: flag to look up result in cache first
+
+        :return: host record
+        """
+        q = self.session.query(Host)
+
+        if wf_id is None:
+            raise ValueError('wf_id cannot be None')
+        if host_id is None or not str(host_id).isdigit():
+            raise ValueError('host_id must be an integer value')
+
+        wf_id = str(wf_id)
+        if wf_id.isdigit():
+            q = q.filter(Host.wf_id == wf_id)
+        else:
+            q = q.filter(Host.wf_uuid == wf_id)
+
+        q = q.filter(Host.host_id == host_id)
 
         try:
             return self._get_one(q, use_cache)

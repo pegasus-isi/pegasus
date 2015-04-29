@@ -243,7 +243,6 @@ class WorkflowSerializer(BaseSerializer):
 
 class WorkflowStateSerializer(BaseSerializer):
     FIELDS = [
-        'wf_id',
         'state',
         'timestamp',
         'restart_count',
@@ -334,7 +333,6 @@ class WorkflowStateSerializer(BaseSerializer):
 class WorkflowJobSerializer(BaseSerializer):
     FIELDS = [
         'job_id',
-        'wf_id',
         'exec_job_id',
         'submit_file',
         'type_desc',
@@ -413,17 +411,110 @@ class WorkflowJobSerializer(BaseSerializer):
     @staticmethod
     def _links(job):
         """
-        Generates JSON representation of the HATEOAS links to be attached to the workflow resource.
+        Generates JSON representation of the HATEOAS links to be attached to the job resource.
 
-        :param state: Workflow resource for which to generate HATEOAS links
+        :param job: job resource for which to generate HATEOAS links
 
-        :return: JSON representation of the HATEOAS links for state resource
+        :return: JSON representation of the HATEOAS links for job resource
         """
 
         links = OrderedDict([
             ('workflow', url_for('.get_workflow', wf_id=job.wf_id)),
             ('task', url_for('.get_workflow_tasks', wf_id=job.wf_id)),
             ('job_instance', url_for('.get_workflow_job_instances', wf_id=job.wf_id, job_id=job.job_id))
+        ])
+
+        return links
+
+
+class WorkflowHostSerializer(BaseSerializer):
+    FIELDS = [
+        'host_id',
+        'site',
+        'hostname',
+        'ip',
+        'uname',
+        'total_memory'
+    ]
+
+    def __init__(self, selected_fields=None, pretty_print=False, **kwargs):
+        super(WorkflowHostSerializer, self).__init__(fields=WorkflowHostSerializer.FIELDS, pretty_print=pretty_print)
+        self._selected_fields = selected_fields if selected_fields else self._fields
+
+    def encode_collection(self, hosts, records_total=None, records_filtered=None):
+        """
+        Encodes a collection of hosts into it's JSON representation.
+
+        :param hosts: Collection of workflow hosts to be encoded as JSON
+        :param records_total: Number of records before applying the search criteria
+        :param records_filtered: Number of records after applying the search criteria
+
+        :return: JSON representation of hosts collection
+        """
+        if hosts is None:
+            return None
+
+        if not records_total or not records_filtered:
+            pass
+
+        records = [self._encode_record(host) for host in hosts]
+        records_meta = OrderedDict([
+            ('records_total', records_total),
+            ('records_filtered', records_filtered)
+        ])
+
+        json_records = OrderedDict([
+            ('records', records),
+            ('_meta', records_meta)
+        ])
+
+        return json.dumps(json_records, **self._pretty_print_opts)
+
+    def encode_record(self, host):
+        """
+        Encodes a single host into it's JSON representation.
+
+        :param host: Single instance of host resource
+
+        :return: JSON representation of host resource
+        """
+
+        return json.dumps(self._encode_record(host), **self._pretty_print_opts)
+
+    def _encode_record(self, host):
+        """
+        Encodes a single host into it's JSON representation.
+
+        :param host: Single instance of host resource
+
+        :return: JSON representation of host resource
+        """
+
+        if host is None:
+            return None
+
+        json_record = OrderedDict()
+
+        for field in self._selected_fields:
+            json_record[field] = self._get_field_value(host, field)
+
+        json_record['_links'] = self._links(host)
+
+        return json_record
+
+    @staticmethod
+    def _links(host):
+        """
+        Generates JSON representation of the HATEOAS links to be attached to the host resource.
+
+        :param host: host resource for which to generate HATEOAS links
+
+        :return: JSON representation of the HATEOAS links for host resource
+        """
+
+        links = OrderedDict([
+            ('workflow', url_for('.get_workflow', wf_id=host.wf_id)),
+            ('job_instance', url_for('.get_workflow_job_instances', wf_id=host.wf_id, job_id=host.host_id))
         ])
 
         return links
