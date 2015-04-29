@@ -339,7 +339,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         total_records = total_filtered = self._get_count(q, use_cache)
 
         if total_records == 0:
-            return 0, 0, []
+            return [], 0, 0
 
         #
         # Construct SQLAlchemy Query `q` to get filtered count.
