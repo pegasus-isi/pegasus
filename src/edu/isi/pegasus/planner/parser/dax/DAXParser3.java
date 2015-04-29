@@ -51,6 +51,7 @@ import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.classes.PegasusFile.LINKAGE;
 import edu.isi.pegasus.planner.code.GridStartFactory;
+import edu.isi.pegasus.planner.common.VariableExpansionReader;
 import edu.isi.pegasus.planner.dax.Executable;
 import edu.isi.pegasus.planner.dax.Invoke;
 import edu.isi.pegasus.planner.dax.MetaData;
@@ -61,6 +62,8 @@ import edu.isi.pegasus.planner.dax.Invoke.WHEN;
 import edu.isi.pegasus.planner.namespace.Hints;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.parser.StackBasedXMLParser;
+import java.io.FileReader;
+import org.xml.sax.InputSource;
 
 /**
  * This class uses the Xerces SAX2 parser to validate and parse an XML
@@ -175,7 +178,12 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
         mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_PARSE_DAX, LoggingKeys.DAX_ID, file );
         try {
             this.testForFile( file );
-            mParser.parse( file );
+            
+            //PM-831 set up the parser with our own reader
+            //that allows for parameter expansion before 
+            //doing any XML processing
+            InputSource is = new InputSource( new VariableExpansionReader( new FileReader( file ) ));
+            mParser.parse( is );
             
             //sanity check
             if ( mDepth != 0 ){
@@ -1232,6 +1240,8 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
         
         return;
     }
+
+    
 
     /**
      * Private class to handle mix data content for arguments tags.

@@ -52,7 +52,9 @@ import edu.isi.pegasus.planner.catalog.site.classes.XML4PrintVisitor;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.VariableExpansionReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 
 import java.io.StringWriter;
@@ -67,6 +69,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 /**
@@ -166,7 +169,12 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
     public void startParser( String file ) {
         try {
             this.testForFile( file );
-            mParser.parse( file );
+            
+            //PM-831 set up the parser with our own reader
+            //that allows for parameter expansion before 
+            //doing any XML processing
+            InputSource is = new InputSource( new VariableExpansionReader( new FileReader( file ) ));
+            mParser.parse( is );
             
             //sanity check
             if ( mDepth != 0 ){
