@@ -105,7 +105,8 @@ class WorkflowQueries(SQLAlchemyInit):
             '<=': '__le__',
             '>': '__gt__',
             '>=': '__ge__',
-            'LIKE': 'like'
+            'LIKE': 'like',
+            'IN': 'in_'
         }
 
         operators = {
