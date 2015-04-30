@@ -1,6 +1,7 @@
 import errno
 import os
 import re
+import shutil
 import unittest
 import uuid
 
@@ -12,7 +13,7 @@ class TestDBAdmin(unittest.TestCase):
     
     def test_create_database(self):
         filename = str(uuid.uuid4())
-        self._silentremove(filename)
+        _silentremove(filename)
         dburi = "sqlite:///%s" % filename
         
         db = connection.connect(dburi, create=True)
@@ -54,7 +55,7 @@ class TestDBAdmin(unittest.TestCase):
         db = connection.connect(dburi, create=True)
         self.assertTrue(db_verify(db))
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
-        self.remove(filename)
+        _remove(filename)
         
     def test_parse_pegasus_version(self):
         self.assertEquals(parse_pegasus_version(), CURRENT_DB_VERSION)
@@ -71,7 +72,7 @@ class TestDBAdmin(unittest.TestCase):
         
     def test_version_operations(self):
         filename = str(uuid.uuid4())
-        self._silentremove(filename)
+        _silentremove(filename)
         dburi = "sqlite:///%s" % filename
         db = connection.connect(dburi, create=True)
 
@@ -92,11 +93,11 @@ class TestDBAdmin(unittest.TestCase):
         db = connection.connect(dburi, create=True)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         self.assertTrue(db_verify(db))
-        self.remove(filename)
+        _remove(filename)
         
     def test_minimum_downgrade(self):
         filename = str(uuid.uuid4())
-        self._silentremove(filename)
+        _silentremove(filename)
         dburi = "sqlite:///%s" % filename
         db = connection.connect(dburi, create=True)
 
@@ -105,12 +106,12 @@ class TestDBAdmin(unittest.TestCase):
         
         db_downgrade(db)
         self.assertEquals(db_current_version(db), 1)       
-        self.remove(filename)
+        _remove(filename)
         
     def test_all_downgrade_update(self):
         filename = str(uuid.uuid4())
         print filename
-        self._silentremove(filename)
+        _silentremove(filename)
         dburi = "sqlite:///%s" % filename
         db = connection.connect(dburi, create=True)
 
@@ -123,11 +124,11 @@ class TestDBAdmin(unittest.TestCase):
         db = connection.connect(dburi, create=True)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         self.assertTrue(db_verify(db))
-        self.remove(filename)
+        _remove(filename)
         
     def test_partial_database(self):
         filename = str(uuid.uuid4())
-        self._silentremove(filename)
+        _silentremove(filename)
         dburi = "sqlite:///%s" % filename
         db = connection.connect(dburi, schema_check=False, create=False)
         rc_sequences.create(db.get_bind(), checkfirst=True)
@@ -139,7 +140,7 @@ class TestDBAdmin(unittest.TestCase):
         db = connection.connect(dburi, create=True)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         self.assertTrue(db_verify(db))
-        self.remove(filename)
+        _remove(filename)
         
         db = connection.connect(dburi, schema_check=False, create=False)
         pg_workflow.create(db.get_bind(), checkfirst=True)
@@ -152,7 +153,7 @@ class TestDBAdmin(unittest.TestCase):
         db = connection.connect(dburi, create=True)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         self.assertTrue(db_verify(db))
-        self.remove(filename)
+        _remove(filename)
         
         db = connection.connect(dburi, schema_check=False, create=False)
         st_workflow.create(db.get_bind(), checkfirst=True)
@@ -172,11 +173,11 @@ class TestDBAdmin(unittest.TestCase):
         db = connection.connect(dburi, create=True)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         self.assertTrue(db_verify(db))
-        self.remove(filename)
+        _remove(filename)
         
     def test_malformed_db(self):
         filename = str(uuid.uuid4())
-        self._silentremove(filename)
+        _silentremove(filename)
         dburi = "sqlite:///%s" % filename
         db = connection.connect(dburi, create=True)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
@@ -187,12 +188,12 @@ class TestDBAdmin(unittest.TestCase):
         db = connection.connect(dburi, create=True)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         db.close()
-        self.remove(filename)
+        _remove(filename)
 
     def test_connection_from_properties_file(self):
         props_filename = str(uuid.uuid4())
         filename = str(uuid.uuid4())
-        self._silentremove(filename)
+        _silentremove(filename)
         dburi = "sqlite:///%s" % filename
 
         f = open(props_filename,'w')
@@ -209,31 +210,51 @@ class TestDBAdmin(unittest.TestCase):
         db = connection.connect_by_properties(props_filename, connection.DBType.JDBCRC, create=True)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         db.close()
-        self.remove(filename)
+        _remove(filename)
 
         db = connection.connect_by_properties(props_filename, connection.DBType.MASTER, create=True)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         db.close()
-        self.remove(filename)
+        _remove(filename)
 
         db = connection.connect_by_properties(props_filename, connection.DBType.WORKFLOW, create=True)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         db.close()
-        self.remove(filename)
-        self._silentremove(props_filename)
+        _remove(filename)
+        _silentremove(props_filename)
+        
+    def test_dbs(self):
+        dbs = ["test-01.db", "test-02.db"]
 
-                
-    def _silentremove(self, filename):
-        try:
-            os.remove(filename)
-        except OSError, e:
-            if e.errno != errno.ENOENT: # errno.ENOENT = no such file or directory
-                raise # re-raise exception if a different error occured
+        for db in dbs:
+            orig_filename = os.path.dirname(os.path.abspath(__file__)) + "/input/" + db
+            filename = str(uuid.uuid4())
+            shutil.copyfile(orig_filename, filename)
+            dburi = "sqlite:///%s" % filename
             
-    def remove(self, filename):
-        for f in os.listdir("."):
-            if re.search(filename + ".*", f):
-                os.remove(f)
+            db = connection.connect(dburi, create=False, schema_check=False)
+            self.assertRaises(DBAdminError, db_verify, db)
+            db.close()
+            
+            db = connection.connect(dburi, create=True)
+            self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
+            db.close()
+            _remove(filename)
+            
+                
+def _silentremove(filename):
+    try:
+        os.remove(filename)
+    except OSError, e:
+        if e.errno != errno.ENOENT: # errno.ENOENT = no such file or directory
+            raise # re-raise exception if a different error occured
+            
+            
+def _remove(filename):
+    for f in os.listdir("."):
+        if re.search(filename + ".*", f):
+            os.remove(f)
+
 
 if __name__ == '__main__':
     unittest.main()
