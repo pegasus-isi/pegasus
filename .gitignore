@@ -10,6 +10,7 @@ pegasus.spec
 .settings
 var
 .idea
+.venv
 
 *.o
 *.lo
