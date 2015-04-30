@@ -31,15 +31,10 @@
 #include "parse.h"
 #include "error.h"
 
-void initJobInfoFromString(JobInfo* jobinfo, const char* commandline) {
-    /* purpose: initialize the data structure with default
-     * paramtr: jobinfo (OUT): initialized memory block
-     *          commandline (IN): commandline concatenated string to separate
-     */
+
+static void __initJobInfo(JobInfo *jobinfo, Node *head, int state) {
     size_t i;
     char* t;
-    int state = 0;
-    Node* head = parseCommandLine(commandline, &state);
 
     /* reset everything */
     memset(jobinfo, 0, sizeof(JobInfo));
@@ -48,85 +43,6 @@ void initJobInfoFromString(JobInfo* jobinfo, const char* commandline) {
     if (state == 32 && head) {
         size_t size, argc = size = 0;
         Node* temp = head;
-        while (temp) {
-            size += (strlen(temp->data) + 1);
-            argc++;
-            temp = temp->next;
-        }
-
-        /* prepare copy area */
-        jobinfo->copy = (char*) malloc(size+argc);
-        if (jobinfo->copy == NULL) {
-            printerr("malloc: %s\n", strerror(errno));
-            return;
-        }
-
-        /* prepare argument vector */
-        jobinfo->argc = argc;
-        jobinfo->argv = (char* const*) calloc(argc+1, sizeof(char*));
-        if (jobinfo->argv == NULL) {
-            printerr("calloc: %s\n", strerror(errno));
-            return;
-        }
-
-        /* copy list while updating argument vector and freeing lose arguments */
-        t = jobinfo->copy;
-        for (i=0; i < argc && (temp=head); ++i) {
-            /* append string to copy area */
-            size_t len = strlen(temp->data)+1;
-            memcpy(t, temp->data, len);
-            /* I hate nagging compilers which think they know better */
-            memcpy((void*) &jobinfo->argv[i], &t, sizeof(char*));
-            t += len;
-
-            /* clear parse list while we are at it */
-            head = temp->next;
-            free((void*) temp->data);
-            free((void*) temp);
-        }
-    }
-
-    /* free list of (partial) argv */
-    if (head) deleteNodes(head);
-
-    /* this is a valid (and initialized) entry */
-    if (jobinfo->argc > 0) {
-        /* check out path to job */
-        char* realpath = findApp(jobinfo->argv[0]);
-
-        if (realpath) {
-            /* I hate nagging compilers which think they know better */
-            memcpy((void*) &jobinfo->argv[0], &realpath, sizeof(char*));
-            jobinfo->isValid = 1;
-        } else {
-            jobinfo->status = -127;
-            jobinfo->saverr = errno;
-            jobinfo->isValid = 2;
-        }
-        /* initialize some data for myself */
-        initStatInfoFromName(&jobinfo->executable, jobinfo->argv[0], O_RDONLY, 0);
-    }
-}
-
-void initJobInfo(JobInfo* jobinfo, int argc, char* const* argv) {
-    /* purpose: initialize the data structure with defaults
-     * paramtr: jobinfo (OUT): initialized memory block
-     *          argc (IN): adjusted argc string (maybe from main())
-     *          argv (IN): adjusted argv string to point to executable
-     */
-    size_t i;
-    char* t;
-    int state = 0;
-    Node* head = parseArgVector(argc, argv, &state);
-
-    /* initialize memory */
-    memset(jobinfo, 0, sizeof(JobInfo));
-
-    /* only continue in ok state AND if there is anything to do */
-    if (state == 32 && head) {
-        size_t size, argc = size = 0;
-        Node* temp = head;
-
         while (temp) {
             size += (strlen(temp->data) + 1);
             argc++;
@@ -176,7 +92,6 @@ void initJobInfo(JobInfo* jobinfo, int argc, char* const* argv) {
         char* realpath = findApp(jobinfo->argv[0]);
 
         if (realpath) {
-            /* I hate nagging compilers which think they know better */
             memcpy((void*) &jobinfo->argv[0], &realpath, sizeof(char*));
             jobinfo->isValid = 1;
         } else {
@@ -185,9 +100,29 @@ void initJobInfo(JobInfo* jobinfo, int argc, char* const* argv) {
             jobinfo->isValid = 2;
         }
 
-        /* initialize some data for myself */
         initStatInfoFromName(&jobinfo->executable, jobinfo->argv[0], O_RDONLY, 0);
     }
+}
+
+void initJobInfoFromString(JobInfo* jobinfo, const char* commandline) {
+    /* purpose: initialize the data structure with default
+     * paramtr: jobinfo (OUT): initialized memory block
+     *          commandline (IN): commandline concatenated string to separate
+     */
+    int state = 0;
+    Node* head = parseCommandLine(commandline, &state);
+    __initJobInfo(jobinfo, head, state);
+}
+
+void initJobInfo(JobInfo* jobinfo, int argc, char* const* argv) {
+    /* purpose: initialize the data structure with defaults
+     * paramtr: jobinfo (OUT): initialized memory block
+     *          argc (IN): adjusted argc string (maybe from main())
+     *          argv (IN): adjusted argv string to point to executable
+     */
+    int state = 0;
+    Node* head = parseArgVector(argc, argv, &state);
+    __initJobInfo(jobinfo, head, state);
 }
 
 int printXMLJobInfo(FILE *out, int indent, const char* tag, const JobInfo* job) {
