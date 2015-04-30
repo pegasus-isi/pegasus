@@ -36,9 +36,15 @@ class OnlineMonitord:
 
     def setup_mq_conn(self):
         self.mq_conn = self.initialize_mq_connection()
-        self.channel = self.prepare_channel(self.mq_conn, self.queue_name, self.wf_uuid)
+
+        if self.mq_conn is not None:
+            self.channel = self.prepare_channel(self.mq_conn, self.queue_name, self.wf_uuid)
 
     def setup_timeseries_db_conn(self):
+        if os.getenv("INFLUXDB_URL") is None:
+            print "There is no 'INFLUXDB_URL' set in your environment"
+            return
+
         url = urlparse.urlparse(os.getenv("INFLUXDB_URL"))
 
         self.client = InfluxDBClient(host=url.hostname, port=url.port,
@@ -56,6 +62,9 @@ class OnlineMonitord:
         self.client.switch_user(url.username, url.password)
 
     def start_consuming_mq_messages(self):
+        if self.channel is None:
+            return
+
         self.channel.basic_consume(self.on_message, self.queue_name)
 
         try:
@@ -104,11 +113,17 @@ class OnlineMonitord:
         :return: a set up connection for further use
         """
         rabbit_credentials = os.getenv("KICKSTART_MON_ENDPOINT_CREDENTIALS")
+        if rabbit_credentials is None:
+            print "There is no 'KICKSTART_MON_ENDPOINT_CREDENTIALS' in your environment"
+            return None
+
         username, password = rabbit_credentials.split(":")
 
         credentials = pika.PlainCredentials(username, password)
 
-        print "KICKSTART_MON_ENDPOINT_URL: ", os.getenv("KICKSTART_MON_ENDPOINT_URL")
+        if os.getenv("KICKSTART_MON_ENDPOINT_URL") is None:
+            print "There is no 'KICKSTART_MON_ENDPOINT_URL' in your environment"
+            return None
 
         rabbit_url = urlparse.urlparse(os.getenv("KICKSTART_MON_ENDPOINT_URL"))
 
