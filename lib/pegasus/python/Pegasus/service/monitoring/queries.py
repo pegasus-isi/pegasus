@@ -129,8 +129,8 @@ class WorkflowQueries(SQLAlchemyInit):
 
                 elif isinstance(token, str) or isinstance(token, unicode):
 
-                    operand_1 = operands.pop()
                     operand_2 = operands.pop()
+                    operand_1 = operands.pop()
 
                     if token in operators:
                         operands.append(operators[token](operand_1, operand_2))
