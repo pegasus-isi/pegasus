@@ -83,6 +83,7 @@ class BaseQueryParser(object):
 
     Note: The base class only provides a partial implementation of the SQL where clause.
     """
+
     def __init__(self, expression=None):
         self.expression = expression
 
@@ -315,16 +316,40 @@ class BaseQueryParser(object):
         self._scanner = None
 
     def __str__(self):
-        s = StringIO.StringIO()
+        comparator = {
+            '=': '__eq__',
+            '!=': '__ne__',
+            '<': '__lt__',
+            '<=': '__le__',
+            '>': '__gt__',
+            '>=': '__ge__',
+            'LIKE': 'like',
+            'IN': 'in_'
+        }
 
-        for i in self._postfix_result:
-            s.write(str(i))
-            s.write(' ')
+        operators = {
+            'AND': 'and_',
+            'OR': 'or_'
+        }
 
-        out = s.getvalue()
-        s.close()
+        operands = []
 
-        return out
+        def condition_expansion(expr, field):
+            operands.append('%s.%s ( %s )' % (field, comparator[expr[1]], expr[2]))
+
+        for token in self._postfix_result:
+            if isinstance(token, tuple):
+                identifier = token[0]
+                condition_expansion(token, identifier)
+
+            elif isinstance(token, str) or isinstance(token, unicode):
+                operand_2 = operands.pop()
+                operand_1 = operands.pop()
+
+                if token in operators:
+                    operands.append('%s ( %s, %s )' % (operators[token], operand_1, operand_2))
+
+        return operands.pop()
 
 
 class BaseOrderParser(object):
@@ -413,6 +438,7 @@ class BaseResource(object):
     Purpose of Resource is to centralize field definitions in one place, and to aid in Query, Order Parsing and
     Query, Order evaluation
     """
+
     def __init__(self, alias=None):
         self._prefix = None
         self._resource = alias if alias else None
