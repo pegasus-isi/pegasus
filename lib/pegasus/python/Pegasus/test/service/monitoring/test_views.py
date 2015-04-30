@@ -84,29 +84,26 @@ class FlaskTestCase(unittest.TestCase, JSONResponseMixin):
         :return: Flask Response object
         """
         with app.test_request_context(uri, method=method, data=data):
-            # Pre process Request
-            response = app.preprocess_request()
+            try:
+                # Pre process Request
+                rv = app.preprocess_request()
 
-            if pre_callable is not None:
-                pre_callable()
+                if pre_callable is not None:
+                    pre_callable()
 
-            if response is not None:
-                rv = app.make_response(response)
+                if rv is None:
+                    # Main Dispatch
+                    rv = app.dispatch_request()
 
-            else:
-                # Main Dispatch
-                try:
-                    response = app.dispatch_request()
+            except Exception as e:
+                rv = app.handle_user_exception(e)
 
-                except Exception as e:
-                    response = app.handle_user_exception(e)
+            response = app.make_response(rv)
 
-                rv = app.make_response(response)
+            # Post process Request
+            response = app.process_response(response)
 
-                # Post process Request
-                rv = app.process_response(rv)
-
-            return rv
+        return response
 
 
 class NoAuthFlaskTestCase(FlaskTestCase):
@@ -117,6 +114,10 @@ class NoAuthFlaskTestCase(FlaskTestCase):
 
 
 class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
+    def setUp(self):
+        NoAuthFlaskTestCase.setUp(self)
+        self.user = os.getenv('USER')
+
     @staticmethod
     def pre_callable():
         directory = os.path.dirname(__file__)
@@ -125,7 +126,7 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
         g.stampede_db_url = 'sqlite:///%s' % db
 
     def test_get_root_workflows(self):
-        rv = self.get_context('/api/v1/user/test-user/root', pre_callable=self.pre_callable)
+        rv = self.get_context('/api/v1/user/%s/root' % self.user, pre_callable=self.pre_callable)
 
         self.assertEqual(rv.status_code, 200)
         self.assertEqual(rv.content_type.lower(), 'application/json')
@@ -137,7 +138,7 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
         self.assertEqual(root_workflows['_meta']['records_total'], root_workflows['_meta']['records_filtered'])
 
     def test_query_with_prefix(self):
-        rv = self.get_context('/api/v1/user/mayani/root?query=r.wf_id = 1', pre_callable=self.pre_callable)
+        rv = self.get_context('/api/v1/user/%s/root?query=r.wf_id = 1' % self.user, pre_callable=self.pre_callable)
 
         self.assertEqual(rv.status_code, 200)
         self.assertEqual(rv.content_type.lower(), 'application/json')
@@ -147,7 +148,7 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
         self.assertEqual(root_workflows['records'][0]['wf_id'], 1)
 
     def test_query_without_prefix(self):
-        rv = self.get_context("/api/v1/user/mayani/root?query=submit_hostname like '%.edu'&order=wf_id ASC",
+        rv = self.get_context("/api/v1/user/%s/root?query=submit_hostname like '%%.edu'&order=wf_id ASC" % self.user,
                               pre_callable=self.pre_callable)
 
         self.assertEqual(rv.status_code, 200)
@@ -159,7 +160,7 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
 
     def test_complex_query(self):
         rv = self.get_context(
-            '/api/v1/user/mayani/root?query=r.wf_id = 1 OR (wf_id = 2 AND grid_dn = NULL)&order=wf_id asc',
+            '/api/v1/user/%s/root?query=r.wf_id = 1 OR (wf_id = 2 AND grid_dn = NULL)&order=wf_id asc' % self.user,
             pre_callable=self.pre_callable)
 
         self.assertEqual(rv.status_code, 200)
@@ -172,13 +173,13 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
         self.assertEqual(root_workflows['records'][1]['wf_id'], 2)
 
     def test_ambiguous_query(self):
-        rv = self.get_context('/api/v1/user/mayani/root?query=timestamp > 1000.0&order=wf_id asc',
+        rv = self.get_context('/api/v1/user/%s/root?query=timestamp > 1000.0&order=wf_id asc' % self.user,
                               pre_callable=self.pre_callable)
 
         self.assertEqual(rv.status_code, 400)
 
     def test_order(self):
-        rv = self.get_context('/api/v1/user/mayani/root?order=r.wf_id desc', pre_callable=self.pre_callable)
+        rv = self.get_context('/api/v1/user/%s/root?order=r.wf_id desc' % self.user, pre_callable=self.pre_callable)
 
         self.assertEqual(rv.status_code, 200)
         self.assertEqual(rv.content_type.lower(), 'application/json')
@@ -188,12 +189,12 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
         self.assertEqual(root_workflows['records'][0]['wf_id'], 5)
 
     def test_bad_order(self):
-        rv = self.get_context('/api/v1/user/mayani/root?order=r.wf_id des', pre_callable=self.pre_callable)
+        rv = self.get_context('/api/v1/user/%s/root?order=r.wf_id des' % self.user, pre_callable=self.pre_callable)
 
         self.assertEqual(rv.status_code, 400)
 
     def test_start_index(self):
-        rv = self.get_context('/api/v1/user/mayani/root?start-index=1', pre_callable=self.pre_callable)
+        rv = self.get_context('/api/v1/user/%s/root?start-index=1' % self.user, pre_callable=self.pre_callable)
 
         self.assertEqual(rv.status_code, 200)
         self.assertEqual(rv.content_type.lower(), 'application/json')
@@ -203,12 +204,12 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
         self.assertEqual(len(root_workflows['records']), 4)
 
     def test_bad_start_index(self):
-        rv = self.get_context('/api/v1/user/mayani/root?start-index=AAA', pre_callable=self.pre_callable)
+        rv = self.get_context('/api/v1/user/%s/root?start-index=AAA' % self.user, pre_callable=self.pre_callable)
 
         self.assertEqual(rv.status_code, 400)
 
     def test_max_results(self):
-        rv = self.get_context('/api/v1/user/mayani/root?max-results=2', pre_callable=self.pre_callable)
+        rv = self.get_context('/api/v1/user/%s/root?max-results=2' % self.user, pre_callable=self.pre_callable)
 
         self.assertEqual(rv.status_code, 200)
         self.assertEqual(rv.content_type.lower(), 'application/json')
@@ -218,12 +219,13 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
         self.assertEqual(len(root_workflows['records']), 2)
 
     def test_bad_max_results(self):
-        rv = self.get_context('/api/v1/user/mayani/root?max-results=AAA', pre_callable=self.pre_callable)
+        rv = self.get_context('/api/v1/user/%s/root?max-results=AAA' % self.user, pre_callable=self.pre_callable)
 
         self.assertEqual(rv.status_code, 400)
 
     def test_paging(self):
-        rv = self.get_context('/api/v1/user/mayani/root?start-index=1&max-results=2', pre_callable=self.pre_callable)
+        rv = self.get_context('/api/v1/user/%s/root?start-index=1&max-results=2' % self.user,
+                              pre_callable=self.pre_callable)
 
         self.assertEqual(rv.status_code, 200)
         self.assertEqual(rv.content_type.lower(), 'application/json')
@@ -233,7 +235,7 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
         self.assertEqual(len(root_workflows['records']), 2)
 
     def test_get_root_workflow_id(self):
-        rv = self.get_context('/api/v1/user/mayani/root/1', pre_callable=self.pre_callable)
+        rv = self.get_context('/api/v1/user/%s/root/1' % self.user, pre_callable=self.pre_callable)
 
         self.assertEqual(rv.status_code, 200)
         self.assertEqual(rv.content_type.lower(), 'application/json')
@@ -244,7 +246,7 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
         self.assertTrue(root_workflow['wf_id'], 1)
 
     def test_get_root_workflow_uuid(self):
-        rv = self.get_context('/api/v1/user/mayani/root/7193de8c-a28d-4eca-b576-1b1c3c4f668b',
+        rv = self.get_context('/api/v1/user/%s/root/7193de8c-a28d-4eca-b576-1b1c3c4f668b' % self.user,
                               pre_callable=self.pre_callable)
 
         self.assertEqual(rv.status_code, 200)
@@ -256,6 +258,6 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
         self.assertTrue(root_workflow['wf_uuid'], '7193de8c-a28d-4eca-b576-1b1c3c4f668b')
 
     def test_get_missing_root_workflow(self):
-        rv = self.get_context('/api/v1/user/mayani/root/1000000000', pre_callable=self.pre_callable)
+        rv = self.get_context('/api/v1/user/%s/root/1000000000' % self.user, pre_callable=self.pre_callable)
 
         self.assertEqual(rv.status_code, 404)
