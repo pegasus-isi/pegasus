@@ -95,6 +95,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             'stampede.job_inst.globus.submit.end' : self.jobstate,
             'stampede.inv.start' : self.noop, # good
             'stampede.inv.end' : self.invocation,
+            'stampede.job.monitoring': self.online_monitoring_update,
         }
 
         # Dicts for caching FK lookups
@@ -763,6 +764,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         :param linedata:
         :return:
         """
+        job_instance_id_tuple = (linedata["wf_uuid"], linedata["dag_job_id"], linedata["sched_id"])
         # 1. we look up job instance db based on wf_uuid, dag_job_id, and sched_id
         result = self.session.execute("""
                 SELECT job_instance_id
@@ -774,10 +776,10 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
                 WHERE workflow.wf_uuid="%s"
                     AND job.exec_job_id="%s"
                 AND job_instance.sched_id="%s";
-            """ % (linedata["wf_uuid"], linedata["dag_job_id"], linedata["sched_id"])).first()
+            """ % job_instance_id_tuple ).first()
 
         if result is None:
-            print "We have none type when looking for job_instance_id"
+            print "We have None when looking for job_instance_id: ('%s', '%s', %s)" % job_instance_id_tuple
             return
 
         job_instance_id = int(result["job_instance_id"])
@@ -800,8 +802,8 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
                 utime=float(linedata["utime"]),
                 stime=float(linedata["stime"]),
                 iowait=float(linedata["iowait"]),
-                vmsize=int(linedata["vmsize"]),
-                vmrss=int(linedata["vmrss"]),
+                vmsize=int(linedata["vmSize"]),
+                vmrss=int(linedata["vmRSS"]),
                 read_bytes=int(linedata["read_bytes"]),
                 write_bytes=int(linedata["write_bytes"]),
                 syscr=int(linedata["syscr"]),
@@ -823,8 +825,8 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
                     JobMetrics.utime: float(linedata["utime"]),
                     JobMetrics.stime: float(linedata["stime"]),
                     JobMetrics.iowait: float(linedata["iowait"]),
-                    JobMetrics.vmsize: int(linedata["vmsize"]),
-                    JobMetrics.vmrss: int(linedata["vmrss"]),
+                    JobMetrics.vmsize: int(linedata["vmSize"]),
+                    JobMetrics.vmrss: int(linedata["vmRSS"]),
                     JobMetrics.read_bytes: int(linedata["read_bytes"]),
                     JobMetrics.write_bytes: int(linedata["write_bytes"]),
                     JobMetrics.syscr: int(linedata["syscr"]),
