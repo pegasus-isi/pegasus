@@ -107,10 +107,10 @@ public class VariableExpansionReader extends Reader {
                 }
             }
             
-            store = off;
+            /*store = off;
             for( int i = 0; i < read; i++ ){
                 System.out.print( cbuf[store++] );
-            }
+            }*/
             return read;
         }
         
