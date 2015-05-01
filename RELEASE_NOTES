@@ -14,6 +14,9 @@ New features and Improvements in 4.5.0 are
  - improvements to pegasus-dashboard
  - data management improvements
  - new tools pegasus-db-admin, pegasus-submitdir , pegasus-halt and pegasus-graphviz
+
+Migration guide available
+http://pegasus.isi.edu/wms/docs/4.5.0/useful_tips.php#migrating_from_leq44 
  
 NEW FEATURES
 --------------
