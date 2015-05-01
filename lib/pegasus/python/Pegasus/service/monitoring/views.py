@@ -18,6 +18,8 @@ import logging
 
 import hashlib
 
+import StringIO
+
 from flask import g, request, make_response, abort, current_app
 
 from sqlalchemy.orm.exc import NoResultFound
@@ -507,6 +509,103 @@ def get_job_instance_invocations(username, m_wf_id, wf_id, job_id, job_instance_
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/invocation/<invocation_id>')
 def get_job_instance_invocation(username, m_wf_id, wf_id, job_id, job_instance_id, invocation_id):
     pass
+
+
+"""
+Batch Request
+
+[
+    {
+        "method" : <string:method>,
+        "path"   : <string:path>,
+        "body"   : <string:body>
+    },
+    {
+        "method" : <string:method>,
+        "path"   : <string:path>,
+        "body"   : <string:body>
+    }
+]
+
+Batch Response
+
+[
+    {
+        "status"   : <int:status_code>,
+        "response" : <string:response>
+    },
+    {
+        "status"   : <int:status_code>,
+        "response" : <string:response>
+    }
+]
+
+"""
+
+
+def _read_response(response):
+    output = StringIO.StringIO()
+    try:
+        for line in response.response:
+            output.write(line)
+
+        return output.getvalue()
+
+    finally:
+        output.close()
+
+
+@monitoring_routes.route('/user/<string:username>/batch', methods=['POST'])
+def batch(username):
+    """
+    Execute multiple requests, submitted as a batch.
+
+    :statuscode 207: Multi status
+    :statuscode 400: Bad request
+    :statuscode 401: Authentication failure
+    :statuscode 403: Authorization failure
+
+    :return type: Collection
+    :return resource: Responses
+    """
+    try:
+        requests = json.loads(request.data)
+    except ValueError as e:
+        abort(400)
+
+    responses = StringIO.StringIO()
+    responses.write('[')
+
+    application = current_app._get_current_object()
+    for req in requests:
+        method = req['method']
+        path = req['path']
+        body = req.get('body', None)
+
+        with application.app_context():
+            application.config['AUTHENTICATION'] = 'NoAuthentication'
+            with application.test_request_context(path, method=method, data=body):
+                try:
+                    # Pre process Request
+                    rv = application.preprocess_request()
+
+                    if rv is None:
+                        # Main Dispatch
+                        rv = application.dispatch_request()
+
+                except Exception as e:
+                    rv = application.handle_user_exception(e)
+
+                response = application.make_response(rv)
+
+                # Post process Request
+                response = application.process_response(response)
+
+        responses.write('{"status": %s,"response": %s},' % (response.status_code, _read_response(response)))
+
+    responses.write(']')
+
+    return make_response(responses.getvalue(), 207, JSON_HEADER)
 
 
 @monitoring_routes.errorhandler(NoResultFound)
