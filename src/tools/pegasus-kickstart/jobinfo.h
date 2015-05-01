@@ -42,6 +42,9 @@ typedef struct {
   ProcInfo *     children;    /* per-process memory, I/O and CPU usage */
 } JobInfo;
 
+/* if set to 1, make the application executable, no matter what. */
+extern int make_application_executable;
+
 extern void initJobInfo(JobInfo* jobinfo, int argc, char* const* argv);
 extern void initJobInfoFromString(JobInfo* jobinfo, const char* commandline);
 extern int printXMLJobInfo(FILE *out, int indent, const char* tag, const JobInfo* job);

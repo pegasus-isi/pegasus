@@ -39,8 +39,6 @@
 #define show(s) (s ? s : "(undefined)")
 
 /* truly shared globals */
-extern int make_application_executable;
-extern size_t data_section_size;
 extern char** environ;
 
 /* module local globals */
@@ -632,15 +630,6 @@ int main(int argc, char* argv[]) {
 
     /* is there really something to run? */
     if (appinfo.application.isValid != 1) {
-        appinfo.application.status = -1;
-        switch (appinfo.application.isValid) { 
-            case 2: /* permissions? */
-                appinfo.application.saverr = EACCES;
-                break;
-            default: /* no such file? */
-                appinfo.application.saverr = ENOENT; 
-                break;
-        }
         printerr("FATAL: The main job specification is invalid or missing.\n");
         return 127;
     }

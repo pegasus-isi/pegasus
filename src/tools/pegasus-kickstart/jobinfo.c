@@ -32,6 +32,137 @@
 #include "error.h"
 
 
+int make_application_executable = 0;
+
+static int check_executable(const char* path) {
+    /* purpose: check a given file for being accessible and executable
+     *          under the currently effective user and group id.
+     * paramtr: path (IN): current path to check
+     * globals: make_application_executable (IN): if true, chmod to exec
+     * returns: 0 if the file is accessible, -1 for not
+     */
+
+    /* sanity check */
+    if (path == NULL || *path == '\0') {
+        errno = ENOENT;
+        return -1;
+    }
+
+    int result = access(path, R_OK|X_OK);
+
+    if (result != 0 && make_application_executable) {
+        struct stat st;
+        if (stat(path, &st) != 0) {
+            printerr("Unable to stat executable: %s\n", strerror(errno));
+            return -1;
+        }
+        mode_t mode = st.st_mode;
+        mode |= (S_IXUSR | S_IRUSR | S_IXGRP | S_IRGRP | S_IXOTH | S_IROTH);
+        if (chmod(path, mode) != 0) {
+            printerr("Unable to set executable permissions: %s\n", strerror(errno));
+            return -1;
+        }
+
+        result = access(path, R_OK|X_OK);
+    }
+
+    return result;
+}
+
+static int isfile(const char *path) {
+    /* sanity check */
+    if (path == NULL || *path == '\0') {
+        errno = ENOENT;
+        return 0;
+    }
+
+    struct stat st;
+    if (stat(path, &st) != 0) {
+        return 0;
+    }
+
+    if (!S_ISREG(st.st_mode)) {
+        /* not a regular file */
+        return 0;
+    }
+
+    return 1;
+}
+
+static char* pathfind(const char* fn) {
+    /* purpose: check the executable filename and correct it if necessary
+     * paramtr: fn (IN): current knowledge of filename
+     * returns: newly allocated fqpn of path to exectuble, or NULL if not found
+     */
+
+    /* sanity check */
+    if (fn == NULL || *fn == '\0') {
+        errno = ENOENT;
+        return NULL;
+    }
+
+    /* don't touch absolute paths */
+    if (fn[0] == '/') {
+        if (isfile(fn)) {
+            char *exe = strdup(fn);
+            if (exe == NULL) {
+                printerr("strdup: %s\n", strerror(errno));
+                return NULL;
+            }
+            return exe;
+        } else {
+            return NULL;
+        }
+    }
+
+    /* try from CWD */
+    if (isfile(fn)) {
+        char *exe = strdup(fn);
+        if (exe == NULL) {
+            printerr("strdup: %s\n", strerror(errno));
+            return NULL;
+        }
+        return exe;
+    }
+
+    /* continue only if there is a PATH to check */
+    char *s = getenv("PATH");
+    if (s == NULL) {
+        printerr("PATH not set\n");
+        return NULL;
+    }
+
+    char *path = strdup(s);
+    if (path == NULL) {
+        printerr("strdup: %s\n", strerror(errno));
+        return NULL;
+    }
+
+    char *t = NULL;
+
+    /* tokenize to compare */
+    for (s=strtok(path,":"); s; s=strtok(NULL,":")) {
+        size_t len = strlen(fn) + strlen(s) + 2;
+        t = (char*) malloc(len);
+        if (t == NULL) {
+            printerr("malloc: %s\n", strerror(errno));
+            return NULL;
+        }
+        strncpy(t, s, len);
+        strncat(t, "/", len);
+        strncat(t, fn, len);
+        if (isfile(t)) {
+            break;
+        } else {
+            free(t);
+            t = NULL;
+        }
+    }
+
+    /* some or no matches found */
+    free(path);
+    return t;
+}
 static void __initJobInfo(JobInfo *jobinfo, Node *head, int state) {
     size_t i;
     char* t;
@@ -89,15 +220,15 @@ static void __initJobInfo(JobInfo *jobinfo, Node *head, int state) {
     /* this is a valid (and initialized) entry */
     if (jobinfo->argc > 0) {
         /* check out path to job */
-        char* realpath = findApp(jobinfo->argv[0]);
+        char* realpath = pathfind(jobinfo->argv[0]);
 
-        if (realpath) {
-            memcpy((void*) &jobinfo->argv[0], &realpath, sizeof(char*));
-            jobinfo->isValid = 1;
-        } else {
+        if (realpath == NULL || check_executable(realpath) < 0) {
             jobinfo->status = -127;
             jobinfo->saverr = errno;
             jobinfo->isValid = 2;
+        } else {
+            memcpy((void*) &jobinfo->argv[0], &realpath, sizeof(char*));
+            jobinfo->isValid = 1;
         }
 
         initStatInfoFromName(&jobinfo->executable, jobinfo->argv[0], O_RDONLY, 0);
@@ -223,7 +354,7 @@ void deleteJobInfo(JobInfo* jobinfo) {
 
     if (jobinfo->isValid) {
         if (jobinfo->argv[0] != NULL && jobinfo->argv[0] != jobinfo->copy) {
-            free((void*) jobinfo->argv[0]); /* from findApp() allocation */
+            free((void*) jobinfo->argv[0]); /* from pathfind() allocation */
         }
         deleteStatInfo(&jobinfo->executable);
     }
