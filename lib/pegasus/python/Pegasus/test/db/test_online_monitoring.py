@@ -24,8 +24,7 @@ class TestOnlineMonitoring(unittest.TestCase):
         self.online_monitord = None
 
         try:
-            self.wf_event_sink = eo.create_wf_event_sink(dburi)
-            self.online_monitord = OnlineMonitord("testing", self.wf_uuid, self.wf_event_sink)
+            self.online_monitord = OnlineMonitord("testing", self.wf_uuid, dburi)
         except eo.SchemaVersionError:
             print "****************************************************"
             print "Detected database schema version mismatch!"
@@ -33,11 +32,10 @@ class TestOnlineMonitoring(unittest.TestCase):
             print "****************************************************"
         except:
             print "cannot create events output... disabling event output!"
-            self.wf_event_sink = None
 
     def tearDown(self):
         print "Removing test stampede db"
-        self.wf_event_sink.close()
+        self.online_monitord.close()
         os.remove(self.db_file)
 
     def test_insert_measurement(self):
