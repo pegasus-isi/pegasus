@@ -3200,6 +3200,117 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
             </tbody>
           </table></para>
       </section>
+
+      <section>
+        <title>POST /batch</title>
+
+        <para>Returns a an array of responses; one for each request.</para>
+
+        <para><emphasis role="bold">Batch Request</emphasis></para>
+
+        <programlisting>[
+    {
+        "method" : &lt;string:method&gt;,
+        "path"   : &lt;string:path&gt;,
+        "body"   : &lt;string:body&gt;
+    },
+    {
+        "method" : &lt;string:method&gt;,
+        "path"   : &lt;string:path&gt;,
+        "body"   : &lt;string:body&gt;
+    }
+]</programlisting>
+
+        <para><emphasis role="bold">Batch Response</emphasis><programlisting>[
+    {
+        "status"   : &lt;int:status_code&gt;,
+        "response" : &lt;string:response&gt;
+    },
+    {
+        "status"   : &lt;int:status_code&gt;,
+        "response" : &lt;string:response&gt;
+    }
+]</programlisting></para>
+
+        <para><emphasis role="bold">Example</emphasis><programlisting><emphasis
+              role="bold">Request</emphasis>
+
+[
+    {
+        "method" : "GET",
+        "path"   : "/api/v1/user/user-a/root/query?query=wf_id=1&amp;pretty-print=True"
+    },
+    {
+        "method" : "POST",
+        "path"   : "/api/v1/user/user-a/root?query=wf_id=2"
+    }
+]<emphasis role="bold">
+ 
+Response</emphasis>
+
+[
+    {
+        "status"   : 200,
+        "response" : {
+            "records" : [
+                {
+                    "wf_id"             : 1,
+                    "wf_uuid"           : "7193de8c-a28d-4eca-b576-1b1c3c4f668b",
+                    ..
+                    "_links"            : {
+                        "workflow" : "/api/v1/user/user-a/root/1/workflow/query"
+                    }
+                }
+            ],
+            "_meta"   : {
+                "records_total"    : 5,
+                "records_filtered" : 1
+            }
+        }
+    },
+    {
+        "status"   : 200,
+        "response" : {
+            "records" : [
+                {
+                    "wf_id"             : 2,
+                    "wf_uuid"           : "41920a57-7882-4990-854e-658b7a797745",
+                    ..
+                    "_links"            : {
+                        "workflow" : "/api/v1/user/user-a/root/2/workflow"
+                    }
+                }
+            ],
+            "_meta"   : {
+                "records_total"    : 5,
+                "records_filtered" : 1
+            }
+        }
+    }
+]
+
+</programlisting></para>
+
+        <para><table frame="box" rules="all">
+            <caption>Returns</caption>
+
+            <thead>
+              <tr align="center">
+                <th>Status Code</th>
+
+                <th>Description</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>207</td>
+
+                <td>Multi status</td>
+              </tr>
+            </tbody>
+          </table></para>
+      </section>
     </section>
 
     <section>
@@ -3395,7 +3506,7 @@ Where QUERY can be( r.wf_id &gt;= 5 AND planner_version LIKE '4.5%' ) OR ( r.wf_
       <para><emphasis role="bold">Example:</emphasis> Order clause for an
       endpoint returning a <link linkend="resource-workflow">Workflow</link>
       resource can only contain fields that are part of the <link
-      linkend="resource-workflow">Workflow</link> resource. </para>
+      linkend="resource-workflow">Workflow</link> resource.</para>
 
       <section>
         <title>Syntax</title>

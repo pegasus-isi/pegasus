@@ -557,6 +557,17 @@ def _read_response(response):
 
 @monitoring_routes.route('/user/<string:username>/batch', methods=['POST'])
 def batch(username):
+    """
+    Execute multiple requests, submitted as a batch.
+
+    :statuscode 207: Multi status
+    :statuscode 400: Bad request
+    :statuscode 401: Authentication failure
+    :statuscode 403: Authorization failure
+
+    :return type: Collection
+    :return resource: Responses
+    """
     try:
         requests = json.loads(request.data)
     except ValueError as e:
@@ -594,7 +605,7 @@ def batch(username):
 
     responses.write(']')
 
-    return make_response(responses.getvalue(), 200, JSON_HEADER)
+    return make_response(responses.getvalue(), 207, JSON_HEADER)
 
 
 @monitoring_routes.errorhandler(NoResultFound)
