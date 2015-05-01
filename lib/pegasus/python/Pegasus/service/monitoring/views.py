@@ -577,7 +577,7 @@ def batch(username):
     responses.write('[')
 
     application = current_app._get_current_object()
-    for req in requests:
+    for index, req in enumerate(requests):
         method = req['method']
         path = req['path']
         body = req.get('body', None)
@@ -601,7 +601,10 @@ def batch(username):
                 # Post process Request
                 response = application.process_response(response)
 
-        responses.write('{"status": %s,"response": %s},' % (response.status_code, _read_response(response)))
+        responses.write('{"status": %s,"response": %s}' % (response.status_code, _read_response(response)))
+
+        if index + 1 < len(requests):
+            responses.write(',')
 
     responses.write(']')
 
