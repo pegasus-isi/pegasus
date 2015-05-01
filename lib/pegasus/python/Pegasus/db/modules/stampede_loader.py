@@ -757,6 +757,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         """
         self.log.debug('noop: %s', linedata)
 
+    # TODO probably we need here a more orm-like sqlalchemy queries and inserts
     def online_monitoring_update(self, linedata):
         """
         This function upserts online monitoring measurements into stampede db.
@@ -777,20 +778,25 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
                     AND job.exec_job_id="%s"
                 AND job_instance.sched_id="%s";
             """ % job_instance_id_tuple ).first()
+        self.session.flush()
+        self.session.commit()
 
         if result is None:
             print "We have None when looking for job_instance_id: ('%s', '%s', %s)" % job_instance_id_tuple
             return
 
         job_instance_id = int(result["job_instance_id"])
-        print "Job instance id: %s" % job_instance_id
+        # print "Job instance id: %s" % job_instance_id
 
         # 2. we need to check if a measurement for the given dag_job_id exists
         result = self.session.query(JobMetrics).filter(
             JobMetrics.dag_job_id == linedata["dag_job_id"],
             JobMetrics.job_instance_id == job_instance_id).all()
+        self.session.flush()
+        self.session.commit()
 
         # 3. if measurement exists then we update it, otherwise we insert a new row
+        # TODO this need to be rewritten to check if each value is available
         if len(result) == 0:
             insert_cmd = st_job_metrics.insert().values(
                 job_instance_id=job_instance_id,
@@ -811,6 +817,9 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
                 threads=int(linedata["threads"])
             )
             self.session.execute(insert_cmd)
+            self.session.flush()
+            self.session.commit()
+
         else:
             # we update existing measurement
             job_metrics_id = result[0].job_metrics_id
@@ -834,6 +843,8 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
                     JobMetrics.threads: int(linedata["threads"])
                 }
             )
+            self.session.flush()
+            self.session.commit()
 
     ####################################
     # DB helper/lookup/caching functions

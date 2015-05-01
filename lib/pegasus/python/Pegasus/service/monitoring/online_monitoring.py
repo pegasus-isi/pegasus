@@ -8,12 +8,14 @@ import os
 import logging
 import ssl
 
+from Pegasus.monitoring import event_output as eo
+
 
 class OnlineMonitord:
     PERF_METRICS = ["time", "utime", "stime", "iowait", "vmSize", "vmRSS", "threads", "read_bytes", "write_bytes",
                     "syscr", "syscw"]
 
-    def __init__(self, wf_label, wf_uuid, event_sink):
+    def __init__(self, wf_label, wf_uuid, dburi):
         print "[online-monitord] PEGASUS_WF_UUID: %s" % wf_uuid
         print "[online-monitord] PEGASUS_WF_LABEL: %s" % wf_label
         print "[online-monitord] INFLUXDB_URL: %s" % os.getenv("INFLUXDB_URL")
@@ -22,7 +24,7 @@ class OnlineMonitord:
 
         self.wf_label = wf_label
         self.wf_uuid = wf_uuid
-        self.event_sink = event_sink
+        self.event_sink = eo.create_wf_event_sink(dburi)
 
         self.aggregated_measurements = dict()
         self.last_aggregated_data = dict()
@@ -199,7 +201,7 @@ class OnlineMonitord:
             self.aggregated_measurements[dag_job_id] = [0] * len(OnlineMonitord.PERF_METRICS)
         else:
             # in this case we only mark this mpi rank
-            print "There is not", mpi_rank, "in retrieved_messages for", dag_job_id
+            # print "There is not", mpi_rank, "in retrieved_messages for", dag_job_id
             self.retrieved_messages[dag_job_id][mpi_rank] = True
 
         self.aggregate_measurement(dag_job_id, measurement)
@@ -298,7 +300,10 @@ class OnlineMonitord:
         event = "job.monitoring"
 
         try:
-            print "Sending record to DB %s,%s" % (event, kwargs)
+            # print "Sending record to DB %s,%s" % (event, kwargs)
             self.event_sink.send(event, kwargs)
         except:
             print "error sending event: %s --> %s" % (event, kwargs)
+
+    def close(self):
+        self.event_sink.close()

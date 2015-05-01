@@ -1185,7 +1185,7 @@ def online_monitoring_proc(wf_label, wf_uuid, event_sink):
     online_monitord.start_consuming_mq_messages()
 
 # start an OS process for the online monitoring feature
-online_monitor_proc = Process(target=online_monitoring_proc, args=(wf._dax_label, wf._wf_uuid, wf_event_sink))
+online_monitor_proc = Process(target=online_monitoring_proc, args=(wf._dax_label, wf._wf_uuid, event_dest))
 online_monitor_proc.start()
 
 #
@@ -1529,8 +1529,8 @@ while (len(wfs) > 0):
 # --- main loop end -----------------------------------------------------------------------
 #
 
-if online_monitord.is_alive():
-  online_monitord.terminate()
+if online_monitor_proc.is_alive():
+    online_monitor_proc.terminate()
 
 if socket_enabled and server is not None:
     # Finish trailing connection requests
