@@ -1115,10 +1115,10 @@ tr B {
 
       <para>This automatic passing of the cache file to a child sub-workflow
       ensures that the datasets from the same workflow run are used. However,
-      the passing of the locations in a cache file also ensures that Pegasus
-      will prefer them over all other locations in the Replica Catalog. If you
-      need the Replica Selection to consider locations in the Replica Catalog
-      also, then set the following property.</para>
+      the passing the locations in a cache file also ensures that Pegasus will
+      prefer them over all other locations in the Replica Catalog. If you need
+      the Replica Selection to consider locations in the Replica Catalog also,
+      then set the following property.</para>
 
       <programlisting><emphasis role="bold">pegasus.catalog.replica.cache.asrc  true</emphasis></programlisting>
 

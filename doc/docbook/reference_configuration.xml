@@ -84,7 +84,7 @@
     it is clearly indicated.</para>
   </section>
 
-  <section>
+  <section id="profiles">
     <title>Profiles</title>
 
     <para/>
@@ -1245,8 +1245,7 @@ Scope       :</emphasis> Properties
               <entry>Sets the maximum number of idle jobs allowed before
               HTCondor DAGMan stops submitting more jobs. Once idle jobs start
               to run, HTCondor DAGMan will resume submitting jobs. If the
-              option is omitted, the number of idle jobs is unlimited.
-              </entry>
+              option is omitted, the number of idle jobs is unlimited.</entry>
             </row>
 
             <row>
@@ -1902,7 +1901,7 @@ Scope       :</emphasis> TC, SC, DAX, Properties
     </section>
   </section>
 
-  <section>
+  <section id="properties">
     <title>Properties</title>
 
     <para>Properties are primarily used to configure the behavior of the

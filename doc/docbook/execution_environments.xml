@@ -896,7 +896,7 @@ $ ls  /usr/libexec/condor/glite/bin/pbs_local_submit_attributes.sh
                 <entry>EXTRA_ARGUMENTS</entry>
 
                 <entry>the value is passed through and added to the qsub file
-                prefixed only by #PBS </entry>
+                prefixed only by #PBS</entry>
 
                 <entry>This specifies the extra arguments that must appear in
                 the local PBS generated script for a job, when running
@@ -923,8 +923,8 @@ $ ls  /usr/libexec/condor/glite/bin/pbs_local_submit_attributes.sh
           <para>The above translation only works if you use the
           pbs_local_attributes.sh file from the Pegasus distribution. The
           values specified for glite.arguments overrides what are constructed
-          on basis of globus profiles, when the job is actually submitted.
-          </para>
+          on basis of globus profiles, when the job is actually
+          submitted.</para>
         </note>
       </section>
 
@@ -940,7 +940,7 @@ $ ls  /usr/libexec/condor/glite/bin/pbs_local_submit_attributes.sh
     </section>
   </section>
 
-  <section>
+  <section id="bosco_submission">
     <title>Remote Cluster using BOSCO and SSH submissions</title>
 
     <para><ulink url="http://bosco.opensciencegrid.org/about/"> BOSCO</ulink>
