@@ -62,8 +62,6 @@ class TestOnlineMonitoring(unittest.TestCase):
 
         self.analyzer.online_monitoring_update(measurement)
 
-        # query = st_job_metrics.select().where(st_job_metrics.c.dag_job_id == measurement["dag_job_id"])
-        # result = self.analyzer.session.execute(query).fetchall()
         result = self.db_session.query(JobMetrics).filter(JobMetrics.dag_job_id == measurement["dag_job_id"]).all()
 
         self.assertEquals(len(result), 1)
@@ -92,8 +90,6 @@ class TestOnlineMonitoring(unittest.TestCase):
             "threads": 3
         }
 
-        # query = st_job_metrics.select().where(st_job_metrics.c.dag_job_id == measurement["dag_job_id"])
-        # result = self.analyzer.session.execute(query).fetchall()
         result = self.db_session.query(JobMetrics).filter(JobMetrics.dag_job_id == measurement["dag_job_id"]).all()
 
         self.assertEquals(len(result), 1)
@@ -101,8 +97,6 @@ class TestOnlineMonitoring(unittest.TestCase):
         # now we are updating an existing measurement
         self.analyzer.online_monitoring_update(measurement)
 
-        # query = st_job_metrics.select().where(st_job_metrics.c.dag_job_id == measurement["dag_job_id"])
-        # result = self.analyzer.session.execute(query).fetchall()
         result = self.db_session.query(JobMetrics).filter(JobMetrics.dag_job_id == measurement["dag_job_id"]).all()
 
         self.assertEquals(len(result), 1)
@@ -111,16 +105,134 @@ class TestOnlineMonitoring(unittest.TestCase):
     def test_on_message_integration(self):
         self.assertIsNotNone(self.online_monitord, "online monitord wasn't initialized correctly")
 
-        msg_body = "ts=1430205165 event=workflow_trace level=INFO status=0 job_id=1037283.0 kickstart_pid=11471 executable=/opt/cray/alps/5.2.1-2.0502.9072.13.1.gem/bin/aprun hostname=nid04942 mpi_rank=0 utime=0.020 stime=0.010 iowait=0.000 vmSize=56552 vmRSS=2260 threads=3 read_bytes=0 write_bytes=0 syscr=0 syscw=0 wf_uuid=e168b2a3-c22f-4c03-a834-22afaa3b21b5 wf_label=run-5 dag_job_id=namd_ID0000002 condor_job_id=1037283.0"
+        msg_body = "ts=1430205165 event=workflow_trace level=INFO status=0 job_id=1037283.0 kickstart_pid=11471 " \
+                   "executable=/opt/cray/alps/5.2.1-2.0502.9072.13.1.gem/bin/aprun hostname=nid04942 " \
+                   "mpi_rank=0 utime=0.020 stime=0.010 iowait=0.000 vmSize=56552 vmRSS=2260 threads=3 read_bytes=0 " \
+                   "write_bytes=0 syscr=0 syscw=0 wf_uuid=e168b2a3-c22f-4c03-a834-22afaa3b21b5 wf_label=run-5 " \
+                   "dag_job_id=namd_ID0000002 condor_job_id=1037283.0"
+
         self.online_monitord.on_message(None, None, None, msg_body)
         self.online_monitord.on_message(None, None, None, msg_body)
-        # self.online_monitord.event_sink.close()
 
         result = self.online_monitord.event_sink._db.session.query(JobMetrics).\
             filter(JobMetrics.dag_job_id == "namd_ID0000002", JobMetrics.ts == 1430205165).all()
 
         self.assertEquals(len(result), 1)
 
+    def test_aggregation_logic_for_sequential_app(self):
+        self.assertIsNotNone(self.online_monitord, "online monitord wasn't initialized correctly")
+
+        msg_body = "ts=1430205165 utime=0.020 event=workflow_trace level=INFO status=0 " \
+                   "job_id=1037283.0 kickstart_pid=11471 executable=/opt/cray/alps/5.2.1-2.0502.9072.13.1.gem/bin/aprun " \
+                   "hostname=nid04942 mpi_rank=0 stime=0.010 iowait=0.000 vmSize=56552 vmRSS=2260 threads=3 " \
+                   "read_bytes=0 write_bytes=0 syscr=0 syscw=0 wf_uuid=e168b2a3-c22f-4c03-a834-22afaa3b21b5 " \
+                   "wf_label=run-5 dag_job_id=namd_ID0000002 condor_job_id=1037283.0"
+
+        self.online_monitord.on_message(None, None, None, msg_body)
+
+        result = self.online_monitord.event_sink._db.session.query(JobMetrics).\
+            filter(JobMetrics.dag_job_id == "namd_ID0000002").all()
+        self.assertEquals(len(result), 0)
+
+        msg_body = "ts=1430205166 utime=0.060 event=workflow_trace level=INFO status=0 job_id=1037283.0 " \
+                   "kickstart_pid=11471 executable=/opt/cray/alps/5.2.1-2.0502.9072.13.1.gem/bin/aprun hostname=nid04942 " \
+                   "mpi_rank=0 stime=0.010 iowait=0.000 vmSize=56552 vmRSS=2260 threads=3 read_bytes=0 write_bytes=0 " \
+                   "syscr=0 syscw=0 wf_uuid=e168b2a3-c22f-4c03-a834-22afaa3b21b5 wf_label=run-5 " \
+                   "dag_job_id=namd_ID0000002 condor_job_id=1037283.0"
+
+        self.online_monitord.on_message(None, None, None, msg_body)
+
+        result = self.online_monitord.event_sink._db.session.query(JobMetrics).\
+            filter(JobMetrics.dag_job_id == "namd_ID0000002").all()
+        self.assertEquals(len(result), 1)
+        self.assertEquals(int(result[0].ts), 1430205165)
+        self.assertEquals(result[0].utime, 0.02)
+
+        msg_body = "ts=1430205167 utime=0.080 event=workflow_trace level=INFO status=0 job_id=1037283.0 " \
+                   "kickstart_pid=11471 executable=/opt/cray/alps/5.2.1-2.0502.9072.13.1.gem/bin/aprun hostname=nid04942 " \
+                   "mpi_rank=0 stime=0.010 iowait=0.000 vmSize=56552 vmRSS=2260 threads=3 read_bytes=0 write_bytes=0 " \
+                   "syscr=0 syscw=0 wf_uuid=e168b2a3-c22f-4c03-a834-22afaa3b21b5 wf_label=run-5 " \
+                   "dag_job_id=namd_ID0000002 condor_job_id=1037283.0"
+
+        self.online_monitord.on_message(None, None, None, msg_body)
+
+        result = self.online_monitord.event_sink._db.session.query(JobMetrics).\
+            filter(JobMetrics.dag_job_id == "namd_ID0000002").all()
+        self.assertEquals(len(result), 1)
+        self.assertEquals(int(result[0].ts), 1430205166)
+        self.assertEquals(result[0].utime, 0.06)
+
+    def test_aggregation_logic_for_mpi_app(self):
+        """We are simulating messages from 2 mpi processes and we check if the app's utime is a sum of processes' utimes
+        """
+        self.assertIsNotNone(self.online_monitord, "online monitord wasn't initialized correctly")
+
+        msg_body = "ts=1430205165 utime=0.020 event=workflow_trace level=INFO status=0 " \
+                   "job_id=1037283.0 kickstart_pid=11471 executable=/opt/cray/alps/5.2.1-2.0502.9072.13.1.gem/bin/aprun " \
+                   "hostname=nid04942 mpi_rank=0 stime=0.010 iowait=0.000 vmSize=56552 vmRSS=2260 threads=3 " \
+                   "read_bytes=0 write_bytes=0 syscr=0 syscw=0 wf_uuid=e168b2a3-c22f-4c03-a834-22afaa3b21b5 " \
+                   "wf_label=run-5 dag_job_id=namd_ID0000002 condor_job_id=1037283.0"
+
+        self.online_monitord.on_message(None, None, None, msg_body)
+
+        result = self.online_monitord.event_sink._db.session.query(JobMetrics). \
+            filter(JobMetrics.dag_job_id == "namd_ID0000002").all()
+        self.assertEquals(len(result), 0)
+
+        msg_body = "ts=1430205166 utime=0.060 event=workflow_trace level=INFO status=0 job_id=1037283.0 " \
+                   "kickstart_pid=11471 executable=/opt/cray/alps/5.2.1-2.0502.9072.13.1.gem/bin/aprun hostname=nid04942 " \
+                   "mpi_rank=1 stime=0.010 iowait=0.000 vmSize=56552 vmRSS=2260 threads=3 read_bytes=0 write_bytes=0 " \
+                   "syscr=0 syscw=0 wf_uuid=e168b2a3-c22f-4c03-a834-22afaa3b21b5 wf_label=run-5 " \
+                   "dag_job_id=namd_ID0000002 condor_job_id=1037283.0"
+
+        self.online_monitord.on_message(None, None, None, msg_body)
+
+        result = self.online_monitord.event_sink._db.session.query(JobMetrics). \
+            filter(JobMetrics.dag_job_id == "namd_ID0000002").all()
+
+        self.assertEquals(len(result), 0)
+
+        msg_body = "ts=1430205167 utime=0.20 event=workflow_trace level=INFO status=0 " \
+                   "job_id=1037283.0 kickstart_pid=11471 executable=/opt/cray/alps/5.2.1-2.0502.9072.13.1.gem/bin/aprun " \
+                   "hostname=nid04942 mpi_rank=0 stime=0.010 iowait=0.000 vmSize=56552 vmRSS=2260 threads=3 " \
+                   "read_bytes=0 write_bytes=0 syscr=0 syscw=0 wf_uuid=e168b2a3-c22f-4c03-a834-22afaa3b21b5 " \
+                   "wf_label=run-5 dag_job_id=namd_ID0000002 condor_job_id=1037283.0"
+
+        self.online_monitord.on_message(None, None, None, msg_body)
+
+        result = self.online_monitord.event_sink._db.session.query(JobMetrics). \
+            filter(JobMetrics.dag_job_id == "namd_ID0000002").all()
+        self.assertEquals(len(result), 1)
+        self.assertEquals(int(result[0].ts), 1430205166)
+        self.assertEquals(result[0].utime, 0.08)
+
+        msg_body = "ts=1430205168 utime=0.60 event=workflow_trace level=INFO status=0 job_id=1037283.0 " \
+                   "kickstart_pid=11471 executable=/opt/cray/alps/5.2.1-2.0502.9072.13.1.gem/bin/aprun hostname=nid04942 " \
+                   "mpi_rank=1 stime=0.010 iowait=0.000 vmSize=56552 vmRSS=2260 threads=3 read_bytes=0 write_bytes=0 " \
+                   "syscr=0 syscw=0 wf_uuid=e168b2a3-c22f-4c03-a834-22afaa3b21b5 wf_label=run-5 " \
+                   "dag_job_id=namd_ID0000002 condor_job_id=1037283.0"
+
+        self.online_monitord.on_message(None, None, None, msg_body)
+
+        result = self.online_monitord.event_sink._db.session.query(JobMetrics). \
+            filter(JobMetrics.dag_job_id == "namd_ID0000002").all()
+        self.assertEquals(len(result), 1)
+        self.assertEquals(int(result[0].ts), 1430205166)
+        self.assertEquals(result[0].utime, 0.08)
+
+        msg_body = "ts=1430205169 utime=0.20 event=workflow_trace level=INFO status=0 " \
+                   "job_id=1037283.0 kickstart_pid=11471 executable=/opt/cray/alps/5.2.1-2.0502.9072.13.1.gem/bin/aprun " \
+                   "hostname=nid04942 mpi_rank=0 stime=0.010 iowait=0.000 vmSize=56552 vmRSS=2260 threads=3 " \
+                   "read_bytes=0 write_bytes=0 syscr=0 syscw=0 wf_uuid=e168b2a3-c22f-4c03-a834-22afaa3b21b5 " \
+                   "wf_label=run-5 dag_job_id=namd_ID0000002 condor_job_id=1037283.0"
+
+        self.online_monitord.on_message(None, None, None, msg_body)
+
+        result = self.online_monitord.event_sink._db.session.query(JobMetrics). \
+            filter(JobMetrics.dag_job_id == "namd_ID0000002").all()
+        self.assertEquals(len(result), 1)
+        self.assertEquals(int(result[0].ts), 1430205168)
+        self.assertEquals(result[0].utime, 0.8)
 
 if __name__ == '__main__':
     unittest.main()

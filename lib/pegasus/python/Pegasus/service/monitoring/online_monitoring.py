@@ -190,20 +190,18 @@ class OnlineMonitord:
                 if self.aggregated_measurements[dag_job_id][i] < metric_value:
                     self.aggregated_measurements[dag_job_id][i] = metric_value
 
-            # 3. send the aggregated measurement to a timeseries db and stampede db
+            # 2. send the aggregated measurement to a timeseries db and stampede db
             self.send_aggregated_measurement(msg, self.aggregated_measurements[dag_job_id])
 
-            # 4. save this measurement for a future comparison
+            # 3. save this measurement for future comparisons
             for i, metric_value in enumerate(self.aggregated_measurements[dag_job_id]):
                 self.last_aggregated_data[dag_job_id][i] = metric_value
-            # reset aggregated measurements
+
+            # 4. reset aggregated measurements
             self.retrieved_messages[dag_job_id] = dict()
             self.aggregated_measurements[dag_job_id] = [0] * len(OnlineMonitord.PERF_METRICS)
-        else:
-            # in this case we only mark this mpi rank
-            # print "There is not", mpi_rank, "in retrieved_messages for", dag_job_id
-            self.retrieved_messages[dag_job_id][mpi_rank] = True
 
+        self.retrieved_messages[dag_job_id][mpi_rank] = True
         self.aggregate_measurement(dag_job_id, measurement)
 
     def aggregate_measurement(self, dag_job_id, measurement):
@@ -300,7 +298,7 @@ class OnlineMonitord:
         event = "job.monitoring"
 
         try:
-            # print "Sending record to DB %s,%s" % (event, kwargs)
+            print "Sending record to DB %s,%s" % (event, kwargs)
             self.event_sink.send(event, kwargs)
         except:
             print "error sending event: %s --> %s" % (event, kwargs)
