@@ -54,6 +54,8 @@ public class Profile
     
     public static final String STAT    = "stat";
     
+    public static final String METADATA    = "dagman";
+    
     public static final String SELECTOR    = "selector";
 
     private String mNamespace;
@@ -97,6 +99,7 @@ public class Profile
             namespace.equalsIgnoreCase( HINTS ) ||
             namespace.equalsIgnoreCase( ENV ) ||
             namespace.equalsIgnoreCase( SELECTOR )  ||
+            namespace.equalsIgnoreCase( METADATA ) ||
             namespace.equalsIgnoreCase( STAT )  ) ;
     }
     
@@ -110,7 +113,8 @@ public class Profile
         StringBuffer sb = new StringBuffer();
         sb.append( CONDOR ).append( ',' ).append( GLOBUS ).append( ',' ).
            append( VDS ).append( ',' ).append( DAGMAN ).append( ',' ).
-           append( HINTS ).append( ',' ).append( ENV );
+           append( HINTS ).append( ',' ).append( ENV ).
+           append( ',' ).append( METADATA );
        return sb.toString();
     }
 
