@@ -296,6 +296,10 @@ public class TransformationCatalogTextParser {
                     p.addProfileDirectly( this.getProfile() );
                     break;
 
+                case TransformationCatalogReservedWord.METADATA:
+                    p.addProfileDirectly( this.getProfile( Profile.METADATA) );
+                    break;
+                    
                 case TransformationCatalogReservedWord.TYPE:
                     value = getQuotedValue( "type" );
                     entry.setType( TCType.valueOf(value.toUpperCase()) );
@@ -384,7 +388,7 @@ public class TransformationCatalogTextParser {
             ( (TransformationCatalogReservedWord) mLookAhead ).getValue() !=
             TransformationCatalogReservedWord.SITE  ) {
             throw new ScannerException( mScanner.getLineNumber(),
-                                          "expecting reserved word \"site\" or closing brace");
+                                          "expecting reserved word \"site\" or closing brace instead of " + mLookAhead );
         }
         mLookAhead = mScanner.nextToken();
 
@@ -432,6 +436,9 @@ public class TransformationCatalogTextParser {
                     mLookAhead = mScanner.nextToken();
                     profiles.addProfile( this.getProfile( Profile.METADATA ) );
                 }
+                else{
+                    break;
+                }
             }
             else{
                 break;
@@ -468,10 +475,10 @@ public class TransformationCatalogTextParser {
                             "the \"profile\" requires a namespace identifier as first argument");
             }
             namespace = ( (Identifier) mLookAhead).getValue();
+            mLookAhead = mScanner.nextToken();
         }
         
-         mLookAhead = mScanner.nextToken();
-         if( !Profile.namespaceValid(namespace) ){
+        if( !Profile.namespaceValid(namespace) ){
              throw new ScannerException( mScanner.getLineNumber(),
                                         "Invalid namespace specified for profile " + namespace );
          }
