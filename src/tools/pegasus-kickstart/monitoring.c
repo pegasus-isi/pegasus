@@ -132,7 +132,7 @@ void* monitoring_thread_func(void* kickstart_status_path) {
     else {
         printerr("[mon-thread] Couldn't read KICKSTART_MON_INTERVAL\n");
         pthread_exit(NULL);
-        return;
+        return NULL;
     }
 
     initialize_monitoring_endpoint(&monitoring_endpoint, (char*)kickstart_status_path);
@@ -141,17 +141,15 @@ void* monitoring_thread_func(void* kickstart_status_path) {
     print_debug_info(&monitoring_endpoint, &job_id_info);
 
     FILE* kickstart_status = fopen(monitoring_endpoint.kickstart_status, "r");
-    if(kickstart_status == NULL) {
-        printerr("[mon-thread] Couldn't open kickstart_status_path for read - %s\n",
-            strerror(errno));
-    }
+//    if(kickstart_status == NULL) {
+//        printerr("[mon-thread] Couldn't open kickstart_status_path for read - %s\n",
+//            strerror(errno));
+//    }
 
     curl_global_init(CURL_GLOBAL_ALL);
 
     while(1) {
         sleep(interval);
-
-        // printerr("[mon-thread] monitoring loop\n");
 
         if(kickstart_status == NULL) {
             kickstart_status = fopen(monitoring_endpoint.kickstart_status, "r");
@@ -171,6 +169,8 @@ void* monitoring_thread_func(void* kickstart_status_path) {
                 sprintf(enriched_line, "%s wf_uuid=%s wf_label=%s dag_job_id=%s condor_job_id=%s",
                     line, job_id_info.wf_uuid, job_id_info.wf_label, job_id_info.dag_job_id,
                     job_id_info.condor_job_id);
+
+                printerr("[mon-thread] Enriched line: '%s'\n", enriched_line);
 
                 // sending this message to rabbitmq
                 curl = curl_easy_init();

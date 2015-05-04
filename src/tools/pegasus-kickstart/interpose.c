@@ -184,6 +184,8 @@ static MemUtilInfo read_mem_status();
 static IoUtilInfo read_io_status();
 static char* read_exe();
 
+pthread_mutex_t io_mut = PTHREAD_MUTEX_INITIALIZER;
+IoUtilInfo io_util_info = { 0, 0, 0, 0, 0, 0, 0 };
 
 
 // Utility function to open the kickstart status file based on environment variable
@@ -219,7 +221,7 @@ static void* timer_thread_func(void* mpi_rank_void) {
     else {
         printerr("[Thread-%d] Couldn't read KICKSTART_MON_INTERVAL\n", mpi_rank);
         pthread_exit(NULL);
-        return;
+        return NULL;
     }
 
     // printerr("We are now in a thread: %d\n", mpi_rank);
@@ -254,6 +256,16 @@ static void* timer_thread_func(void* mpi_rank_void) {
         MemUtilInfo mem_info = read_mem_status();
         IoUtilInfo io_info = read_io_status();
 
+        printerr("libinterpose: ts=%d event=workflow_trace level=INFO status=0 "
+                    "job_id=%s kickstart_pid=%s executable=%s hostname=%s mpi_rank=%d utime=%.3f stime=%.3f "
+                    "iowait=%.3f vmSize=%d vmRSS=%d threads=%d read_bytes=%d write_bytes=%d "
+                    "syscr=%d syscw=%d\n",
+
+                    (int)timestamp, job_id, kickstart_pid, exec_name, hostname, mpi_rank,
+                    cpu_info.real_utime, cpu_info.real_stime, cpu_info.real_iowait,
+                    mem_info.vmSize, mem_info.vmRSS, mem_info.threads,
+                    io_info.rchar, io_info.wchar, io_info.syscr, io_info.syscw);
+
 
         fprintf(kickstart_status, "ts=%d event=workflow_trace level=INFO status=0 "         
             "job_id=%s kickstart_pid=%s executable=%s hostname=%s mpi_rank=%d utime=%.3f stime=%.3f "
@@ -263,7 +275,7 @@ static void* timer_thread_func(void* mpi_rank_void) {
             (int)timestamp, job_id, kickstart_pid, exec_name, hostname, mpi_rank, 
             cpu_info.real_utime, cpu_info.real_stime, cpu_info.real_iowait,
             mem_info.vmSize, mem_info.vmRSS, mem_info.threads,
-            io_info.read_bytes, io_info.write_bytes, io_info.syscr, io_info.syscw);
+            io_info.rchar, io_info.wchar, io_info.syscr, io_info.syscw);
 
         fflush(kickstart_status);
     }
@@ -663,47 +675,58 @@ static void read_io() {
 
 /* Read /proc/self/io to get I/O usage */
 static IoUtilInfo read_io_status() {
-    IoUtilInfo info = { 0, 0, 0, 0, 0, 0, 0 };
     debug("Reading io file");
+
+    IoUtilInfo local_io_info = { 0, 0, 0, 0, 0, 0, 0 };
+
+    pthread_mutex_lock(&io_mut);
+    local_io_info.rchar = io_util_info.rchar;
+    local_io_info.wchar = io_util_info.wchar;
+    local_io_info.syscw = io_util_info.syscw;
+    local_io_info.syscr = io_util_info.syscr;
+    pthread_mutex_unlock(&io_mut);
 
     char iofile[] = "/proc/self/io";
 
     /* This proc file was added in Linux 2.6.20. It won't be
-     * there on older kernels, or on kernels without task IO 
+     * there on older kernels, or on kernels without task IO
      * accounting. If it is missing, just bail out.
      */
     if (access(iofile, F_OK) < 0) {
-        return info;
+        return local_io_info;
     }
 
     FILE *f = fopen_untraced(iofile, "r");
     if (f == NULL) {
         perror("libinterpose: Unable to fopen /proc/self/io");
-        return info;
+        return local_io_info;
     }
 
     char line[BUFSIZ];
+    printerr("Reading io status...\n");
     while (fgets_untraced(line, BUFSIZ, f) != NULL) {
+        printerr("Our line: '%s'\n", line);
+
         if (startswith(line, "rchar")) {
-            sscanf(line, "rchar: %d", &(info.rchar));
+            sscanf(line, "rchar: %d", &(local_io_info.rchar));
         } else if (startswith(line, "wchar")) {
-            sscanf(line, "wchar: %d", &(info.wchar));
+            sscanf(line, "wchar: %d", &(local_io_info.wchar));
         } else if (startswith(line,"syscr")) {
-            sscanf(line, "syscr: %d", &(info.syscr));
+            sscanf(line, "syscr: %d", &(local_io_info.syscr));
         } else if (startswith(line,"syscw")) {
-            sscanf(line, "syscw: %d", &(info.syscw));
+            sscanf(line, "syscw: %d", &(local_io_info.syscw));
         } else if (startswith(line,"read_bytes")) {
-            sscanf(line, "read_bytes: %d", &(info.read_bytes));
+            sscanf(line, "read_bytes: %d", &(local_io_info.read_bytes));
         } else if (startswith(line,"write_bytes")) {
-            sscanf(line, "write_bytes: %d", &(info.write_bytes));
+            sscanf(line, "write_bytes: %d", &(local_io_info.write_bytes));
         } else if (startswith(line,"cancelled_write_bytes")) {
-            sscanf(line, "cancelled_write_bytes: %d", &(info.cancelled_write_bytes));
+            sscanf(line, "cancelled_write_bytes: %d", &(local_io_info.cancelled_write_bytes));
         }
     }
 
     fclose_untraced(f);
 
-    return info;
+    return local_io_info;
 }
 
 static void trace_file(const char *path, int fd) {
@@ -779,6 +802,11 @@ static void trace_read(int fd, ssize_t amount) {
         return;
     }
     f->bread += amount;
+
+    pthread_mutex_lock(&io_mut);
+    io_util_info.rchar += amount;
+    io_util_info.syscr += 1;
+    pthread_mutex_unlock(&io_mut);
 }
 
 static void trace_write(int fd, ssize_t amount) {
@@ -789,6 +817,11 @@ static void trace_write(int fd, ssize_t amount) {
         return;
     }
     f->bwrite += amount;
+
+    pthread_mutex_lock(&io_mut);
+    io_util_info.wchar += amount;
+    io_util_info.syscw += 1;
+    pthread_mutex_unlock(&io_mut);
 }
 
 static void trace_close(int fd) {
@@ -930,7 +963,7 @@ int tfile_exists() {
 }
 
 void spawn_timer_thread() {
-    pid_t current_pid = getpid();
+//    pid_t current_pid = getpid();
 
     // spawning a timer thread only when
     char* mpi_rank = getenv("OMPI_COMM_WORLD_RANK");
