@@ -86,9 +86,9 @@ class OnlineMonitord:
         :param body: raw body of the message
         :return:
         """
-        # print method_frame.delivery_tag
-        # print body
-        # print
+        print method_frame.delivery_tag
+        print body
+        print
 
         if len(body.split(" ")) < 2:
             print "The given measurement line is too short"
