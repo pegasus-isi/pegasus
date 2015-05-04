@@ -44,6 +44,7 @@ import java.io.Reader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import edu.isi.pegasus.planner.classes.Profile;
+import edu.isi.pegasus.planner.namespace.Metadata;
 
 
 /**
@@ -419,13 +420,18 @@ public class TransformationCatalogTextParser {
         Profiles profiles = new Profiles();
 
         while( true ){
-            if (( mLookAhead instanceof TransformationCatalogReservedWord ) &&
-                ( (TransformationCatalogReservedWord) mLookAhead ).getValue() ==
-                    TransformationCatalogReservedWord.PROFILE  ) {
-
-                //move cursor to next token
-                mLookAhead = mScanner.nextToken();
-                profiles.addProfile( this.getProfile() );
+            if ( mLookAhead instanceof TransformationCatalogReservedWord ){
+                int tokenValue = (( TransformationCatalogReservedWord) mLookAhead ).getValue();
+                if( tokenValue == TransformationCatalogReservedWord.PROFILE  ) {
+                    //move cursor to next token
+                    mLookAhead = mScanner.nextToken();
+                    profiles.addProfile( this.getProfile() );
+                }
+                else if( tokenValue == TransformationCatalogReservedWord.METADATA ){
+                    //move cursor to next token
+                    mLookAhead = mScanner.nextToken();
+                    profiles.addProfile( this.getProfile( Profile.METADATA ) );
+                }
             }
             else{
                 break;
@@ -435,6 +441,7 @@ public class TransformationCatalogTextParser {
         return profiles;
     }
 
+    
     /**
      * Parses a single line and returns a profile.
      *
@@ -442,17 +449,29 @@ public class TransformationCatalogTextParser {
      * @throws ScannerException
      */
     private Profile getProfile() throws ScannerException, IOException{
-
-        Profile p =  new Profile();
-
-        if( !(mLookAhead instanceof Identifier) ){
-            throw new ScannerException(mScanner.getLineNumber(),
-                        "the \"profile\" requires a namespace identifier as first argument");
+        return this.getProfile( null );
+    }
+    
+    /**
+     * Parses a single line and returns a metadata profile of type namespace.
+     * If namespace is null, then assumes that namespace has to be parsed.
+     *
+     * @return Profile
+     * @throws ScannerException
+     */
+    private Profile getProfile( String namespace ) throws ScannerException, IOException{
+    
+        if( namespace == null ){
+            //parse the namespace from the stream
+            if( !(mLookAhead instanceof Identifier) ){
+                throw new ScannerException(mScanner.getLineNumber(),
+                            "the \"profile\" requires a namespace identifier as first argument");
+            }
+            namespace = ( (Identifier) mLookAhead).getValue();
         }
-
-         String namespace = ( (Identifier) mLookAhead).getValue();
+        
          mLookAhead = mScanner.nextToken();
-         if( !p.namespaceValid(namespace) ){
+         if( !Profile.namespaceValid(namespace) ){
              throw new ScannerException( mScanner.getLineNumber(),
                                         "Invalid namespace specified for profile " + namespace );
          }
@@ -473,10 +492,7 @@ public class TransformationCatalogTextParser {
          String value = ( (QuotedString) mLookAhead).getValue();
 
          mLookAhead = mScanner.nextToken();
-         p = new Profile(namespace, niceString(key), niceString(value));
-
-         
-         return p;
+         return new Profile(namespace, niceString(key), niceString(value));
     }
 
     /**

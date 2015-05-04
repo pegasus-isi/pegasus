@@ -67,6 +67,12 @@ public class TransformationCatalogReservedWord
      * token value for the reserver word "osversion".
      */
     public static final int TYPE = 8;
+    
+    /**
+     * token value for the reserved word "metadata".
+     */
+    public static final int METADATA = 9;
+
 
     
     /**
@@ -86,6 +92,8 @@ public class TransformationCatalogReservedWord
                     new TransformationCatalogReservedWord(TransformationCatalogReservedWord.TRANSFORMATION));
             mSymbolTable.put( "site",
                     new TransformationCatalogReservedWord(TransformationCatalogReservedWord.SITE ));
+            mSymbolTable.put(  "metadata",
+                    new TransformationCatalogReservedWord(TransformationCatalogReservedWord.METADATA) );
             mSymbolTable.put( "profile",
                     new TransformationCatalogReservedWord(TransformationCatalogReservedWord.PROFILE ));
             mSymbolTable.put( "pfn",
