@@ -86,7 +86,8 @@ class OnlineMonitord:
         :param body: raw body of the message
         :return:
         """
-        print method_frame.delivery_tag
+        if method_frame is not None:
+            print method_frame.delivery_tag
         print body
         print
 
