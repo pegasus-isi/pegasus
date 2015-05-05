@@ -234,5 +234,75 @@ class TestOnlineMonitoring(unittest.TestCase):
         self.assertEquals(int(result[0].ts), 1430205168)
         self.assertEquals(result[0].utime, 0.8)
 
+    def test_insert_partial_message(self):
+        measurement = {
+            "wf_uuid": self.wf_uuid,
+            "dag_job_id": "sassena_ID0000006",
+            "sched_id": "1037327.0",
+            # "hostname": "test-hostname",
+            # "exec_name": "/path/to/somewhere",
+            # "kickstart_pid": 12345,
+            "ts": 1430206115,
+            # "stime": 7.280,
+            "utime": 324.670,
+            "iowait": 0.670,
+            "vmSize": 3551292,
+            "vmRSS": 28540,
+            "read_bytes": 0,
+            "write_bytes": 0,
+            "syscr": 0,
+            "syscw": 0,
+            "threads": 3
+        }
+
+        self.analyzer.online_monitoring_update(measurement)
+
+        result = self.db_session.query(JobMetrics).filter(JobMetrics.dag_job_id == measurement["dag_job_id"]).all()
+
+        self.assertEquals(len(result), 1)
+        self.assertEquals(int(result[0].ts), int(measurement["ts"]))
+        self.assertIsNone(result[0].exec_name)
+        self.assertIsNone(result[0].hostname)
+        self.assertIsNone(result[0].kickstart_pid)
+        self.assertIsNone(result[0].stime)
+
+    def test_update_partial_message(self):
+        print "Test test_update_measurement"
+        measurement = {
+            "wf_uuid": "e168b2a3-c22f-4c03-a834-22afaa3b21b5",
+            "dag_job_id": "sassena_ID0000005",
+            "sched_id": "1037329.0",
+            # "hostname": "test-hostname",
+            # "exec_name": "/path/to/somewhere",
+            # "kickstart_pid": 12345,
+
+            "ts": 1430208115,  # we want to update a measurement by changing ts
+            # "stime": 7.280,
+            "utime": 324.670,
+            "iowait": 0.670,
+            "vmSize": 3551292,
+            "vmRSS": 28540,
+            "read_bytes": 0,
+            "write_bytes": 0,
+            "syscr": 0,
+            "syscw": 0,
+            "threads": 3
+        }
+
+        result = self.db_session.query(JobMetrics).filter(JobMetrics.dag_job_id == measurement["dag_job_id"]).all()
+
+        self.assertEquals(len(result), 1)
+
+        # now we are updating an existing measurement
+        self.analyzer.online_monitoring_update(measurement)
+
+        result = self.db_session.query(JobMetrics).filter(JobMetrics.dag_job_id == measurement["dag_job_id"]).all()
+
+        self.assertEquals(len(result), 1)
+        self.assertEquals(int(result[0].ts), int(measurement["ts"]))
+        self.assertIsNone(result[0].exec_name)
+        self.assertIsNone(result[0].hostname)
+        self.assertIsNone(result[0].kickstart_pid)
+
 if __name__ == '__main__':
     unittest.main()
