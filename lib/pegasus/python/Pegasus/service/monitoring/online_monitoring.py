@@ -218,10 +218,11 @@ class OnlineMonitord:
                 self.aggregated_measurements[dag_job_id][i] += metric_value
 
     def send_aggregated_measurement(self, message, measurement):
+        trace_id = "%s:%s" % (message["dag_job_id"], message["condor_job_id"])
         if self.client is not None:
             json_body = [
                 {
-                    "name": message["dag_job_id"],
+                    "name": trace_id,
                     "columns": OnlineMonitord.PERF_METRICS,
                     "points": [measurement]
                 }
