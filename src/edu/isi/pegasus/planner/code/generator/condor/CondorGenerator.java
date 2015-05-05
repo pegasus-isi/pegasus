@@ -1711,6 +1711,7 @@ public class CondorGenerator extends Abstract {
         job.envVariables.construct( ENV.PEGASUS_WF_ID_ENV_KEY, dag.getWorkflowUUID());
         job.envVariables.construct( ENV.PEGASUS_JOB_ID_ENV_KEY,
                                     job.getID() );
+        job.envVariables.construct( ENV.PEGASUS_SITE_ID_ENV_KEY, job.getSiteHandle() );
     }
 
     /**
