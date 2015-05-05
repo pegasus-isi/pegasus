@@ -513,8 +513,292 @@ class WorkflowHostSerializer(BaseSerializer):
         """
 
         links = OrderedDict([
-            ('workflow', url_for('.get_workflow', wf_id=host.wf_id)),
+            ('workflow', url_for('.get_workflow', wf_id=host.wf_id))
+        ])
+
+        return links
+
+class WorkflowHostSerializer(BaseSerializer):
+    FIELDS = [
+        'host_id',
+        'site',
+        'hostname',
+        'ip',
+        'uname',
+        'total_memory'
+    ]
+
+    def __init__(self, selected_fields=None, pretty_print=False, **kwargs):
+        super(WorkflowHostSerializer, self).__init__(fields=WorkflowHostSerializer.FIELDS, pretty_print=pretty_print)
+        self._selected_fields = selected_fields if selected_fields else self._fields
+
+    def encode_collection(self, hosts, records_total=None, records_filtered=None):
+        """
+        Encodes a collection of hosts into it's JSON representation.
+
+        :param hosts: Collection of workflow hosts to be encoded as JSON
+        :param records_total: Number of records before applying the search criteria
+        :param records_filtered: Number of records after applying the search criteria
+
+        :return: JSON representation of hosts collection
+        """
+        if hosts is None:
+            return None
+
+        if not records_total or not records_filtered:
+            pass
+
+        records = [self._encode_record(host) for host in hosts]
+        records_meta = OrderedDict([
+            ('records_total', records_total),
+            ('records_filtered', records_filtered)
+        ])
+
+        json_records = OrderedDict([
+            ('records', records),
+            ('_meta', records_meta)
+        ])
+
+        return json.dumps(json_records, **self._pretty_print_opts)
+
+    def encode_record(self, host):
+        """
+        Encodes a single host into it's JSON representation.
+
+        :param host: Single instance of host resource
+
+        :return: JSON representation of host resource
+        """
+
+        return json.dumps(self._encode_record(host), **self._pretty_print_opts)
+
+    def _encode_record(self, host):
+        """
+        Encodes a single host into it's JSON representation.
+
+        :param host: Single instance of host resource
+
+        :return: JSON representation of host resource
+        """
+
+        if host is None:
+            return None
+
+        json_record = OrderedDict()
+
+        for field in self._selected_fields:
+            json_record[field] = self._get_field_value(host, field)
+
+        json_record['_links'] = self._links(host)
+
+        return json_record
+
+    @staticmethod
+    def _links(host):
+        """
+        Generates JSON representation of the HATEOAS links to be attached to the host resource.
+
+        :param host: host resource for which to generate HATEOAS links
+
+        :return: JSON representation of the HATEOAS links for host resource
+        """
+
+        links = OrderedDict([
             ('job_instance', url_for('.get_workflow_job_instances', wf_id=host.wf_id, job_id=host.host_id))
+        ])
+
+        return links
+
+class WorkflowJobInstanceSerializer(BaseSerializer):
+    FIELDS = [
+        "job_instance_id",
+        "host_id",
+        "job_submit_seq",
+        "sched_id",
+        "site",
+        "user",
+        "work_dir",
+        "cluster_start",
+        "cluster_duration",
+        "local_duration",
+        "subwf_id",
+        "stdout_text",
+        "stderr_text",
+        "stdin_file",
+        "stdout_file",
+        "stderr_file",
+        "multiplier_factor"
+    ]
+
+    def __init__(self, selected_fields=None, pretty_print=False, **kwargs):
+        super(WorkflowJobInstanceSerializer, self).__init__(fields=WorkflowJobInstanceSerializer.FIELDS, pretty_print=pretty_print)
+        self._selected_fields = selected_fields if selected_fields else self._fields
+
+    def encode_collection(self, job_instances, records_total=None, records_filtered=None):
+        """
+        Encodes a collection of job instances into it's JSON representation.
+
+        :param job_instances: Collection of workflow job_instances to be encoded as JSON
+        :param records_total: Number of records before applying the search criteria
+        :param records_filtered: Number of records after applying the search criteria
+
+        :return: JSON representation of jobs collection
+        """
+        if job_instances is None:
+            return None
+
+        if not records_total or not records_filtered:
+            pass
+
+        records = [self._encode_record(job_instance) for job_instance in job_instances]
+        records_meta = OrderedDict([
+            ('records_total', records_total),
+            ('records_filtered', records_filtered)
+        ])
+
+        json_records = OrderedDict([
+            ('records', records),
+            ('_meta', records_meta)
+        ])
+
+        return json.dumps(json_records, **self._pretty_print_opts)
+
+    def encode_record(self, job_instance):
+        """
+        Encodes a single job_instance into it's JSON representation.
+
+        :param job_instance: Single instance of job_instance resource
+
+        :return: JSON representation of job_instance resource
+        """
+
+        return json.dumps(self._encode_record(job_instance), **self._pretty_print_opts)
+
+    def _encode_record(self, job_instance):
+        """
+        Encodes a single job_instance into it's JSON representation.
+
+        :param job_instance: Single instance of job_instance resource
+
+        :return: JSON representation of job_instance resource
+        """
+
+        if job_instance is None:
+            return None
+
+        json_record = OrderedDict()
+
+        for field in self._selected_fields:
+            json_record[field] = self._get_field_value(job_instance, field)
+
+        json_record['_links'] = self._links(job_instance)
+
+        return json_record
+
+    @staticmethod
+    def _links(job_instance):
+        """
+        Generates JSON representation of the HATEOAS links to be attached to the job_instance resource.
+
+        :param job_instance: job_instance resource for which to generate HATEOAS links
+
+        :return: JSON representation of the HATEOAS links for job_instance resource
+        """
+
+        links = OrderedDict([
+            #('state', url_for('.get_job_instance_state', wf_id=job_instance.wf_id, job_id=job_instance.job_id, job_instance_id= job_instance.job_instance_id)),
+            #('host', url_for('.get_job_instance_host', wf_id=job_instance.wf_id, job_id=job_instance.job_id, job_instance_id=job_instance.job_instance_id)),
+            #('invocation', url_for('.get_job_instance_invocation', wf_id=job_instance.wf_id, job_id=job_instance.job_id, job_instance_id=job_instance.job_instance_id)),
+            #('job', url_for('.get_workflow_job', wf_id=job_instance.wf_id, job_id=job_instance.job_id))
+        ])
+
+        return links
+
+class JobInstanceStateSerializer(BaseSerializer):
+    FIELDS = [
+        "job_instance_id",
+        "state",
+        "timestamp",
+        "jobstate_submit_seq"
+    ]
+
+    def __init__(self, selected_fields=None, pretty_print=False, **kwargs):
+        super(JobInstanceStateSerializer, self).__init__(fields=JobInstanceStateSerializer.FIELDS, pretty_print=pretty_print)
+        self._selected_fields = selected_fields if selected_fields else self._fields
+
+    def encode_collection(self, states, records_total=None, records_filtered=None):
+        """
+        Encodes a collection of job instance states into it's JSON representation.
+
+        :param states: Collection of workflow job_instance_states to be encoded as JSON
+        :param records_total: Number of records before applying the search criteria
+        :param records_filtered: Number of records after applying the search criteria
+
+        :return: JSON representation of states collection
+        """
+        if states is None:
+            return None
+
+        if not records_total or not records_filtered:
+            pass
+
+        records = [self._encode_record(state) for state in states]
+        records_meta = OrderedDict([
+            ('records_total', records_total),
+            ('records_filtered', records_filtered)
+        ])
+
+        json_records = OrderedDict([
+            ('records', records),
+            ('_meta', records_meta)
+        ])
+
+        return json.dumps(json_records, **self._pretty_print_opts)
+
+    def encode_record(self, state):
+        """
+        Encodes a single job_instance_state into it's JSON representation.
+
+        :param state: Single instance of job_instance_state resource
+
+        :return: JSON representation of job_instance_state resource
+        """
+
+        return json.dumps(self._encode_record(state), **self._pretty_print_opts)
+
+    def _encode_record(self, state):
+        """
+        Encodes a single job_instance_state into it's JSON representation.
+
+        :param state: Single instance of job_instance_state resource
+
+        :return: JSON representation of job_instance_state resource
+        """
+
+        if state is None:
+            return None
+
+        json_record = OrderedDict()
+
+        for field in self._selected_fields:
+            json_record[field] = self._get_field_value(state, field)
+
+        json_record['_links'] = self._links(state)
+
+        return json_record
+
+    @staticmethod
+    def _links(state):
+        """
+        Generates JSON representation of the HATEOAS links to be attached to the job_instance_state resource.
+
+        :param state: job_instance_state resource for which to generate HATEOAS links
+
+        :return: JSON representation of the HATEOAS links for job_instance_state resource
+        """
+
+        links = OrderedDict([
+            #('job_instance', url_for('.get_job_instance', wf_id=job_instance.wf_id, job_id=job_instance.job_id, job_instance_id=job_instance.job_instance_id)),
         ])
 
         return links
