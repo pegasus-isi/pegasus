@@ -15,6 +15,8 @@
  */
 package edu.isi.pegasus.planner.parser.tokens;
 
+import java.util.Map;
+
 /**
  * Class to capture reserved words for the textual format of Transformation
  * Catalog
@@ -67,6 +69,12 @@ public class TransformationCatalogReservedWord
      * token value for the reserver word "osversion".
      */
     public static final int TYPE = 8;
+    
+    /**
+     * token value for the reserved word "metadata".
+     */
+    public static final int METADATA = 9;
+
 
     
     /**
@@ -78,14 +86,16 @@ public class TransformationCatalogReservedWord
      * Singleton access to the symbol table as a whole.
      * @return Map
      */
-    public static java.util.Map symbolTable() {
+    public static java.util.Map<String,TransformationCatalogReservedWord> symbolTable() {
         if (mSymbolTable == null) {
             // only initialize once and only once, as needed.
-            mSymbolTable = new java.util.TreeMap();
+            mSymbolTable = new java.util.TreeMap<String,TransformationCatalogReservedWord>();
             mSymbolTable.put( "tr",
                     new TransformationCatalogReservedWord(TransformationCatalogReservedWord.TRANSFORMATION));
             mSymbolTable.put( "site",
                     new TransformationCatalogReservedWord(TransformationCatalogReservedWord.SITE ));
+            mSymbolTable.put(  "metadata",
+                    new TransformationCatalogReservedWord(TransformationCatalogReservedWord.METADATA) );
             mSymbolTable.put( "profile",
                     new TransformationCatalogReservedWord(TransformationCatalogReservedWord.PROFILE ));
             mSymbolTable.put( "pfn",
@@ -119,6 +129,23 @@ public class TransformationCatalogReservedWord
      */
     protected TransformationCatalogReservedWord(int tokenValue) {
         mValue = tokenValue;
+    }
+    
+    /**
+     * Returns textual description
+     * 
+     * @return 
+     */
+    public String toString(){
+        //kludgy?
+        String result = null;
+        for( Map.Entry<String, TransformationCatalogReservedWord> entry : TransformationCatalogReservedWord.symbolTable().entrySet() ){
+            if( entry == this ){
+                result = entry.getKey();
+                break;
+            }
+        }
+        return result;
     }
 
     /**

@@ -54,6 +54,8 @@ public class Profile
     
     public static final String STAT    = "stat";
     
+    public static final String METADATA    = "metadata";
+    
     public static final String SELECTOR    = "selector";
 
     private String mNamespace;
@@ -97,6 +99,7 @@ public class Profile
             namespace.equalsIgnoreCase( HINTS ) ||
             namespace.equalsIgnoreCase( ENV ) ||
             namespace.equalsIgnoreCase( SELECTOR )  ||
+            namespace.equalsIgnoreCase( METADATA ) ||
             namespace.equalsIgnoreCase( STAT )  ) ;
     }
     
@@ -110,7 +113,8 @@ public class Profile
         StringBuffer sb = new StringBuffer();
         sb.append( CONDOR ).append( ',' ).append( GLOBUS ).append( ',' ).
            append( VDS ).append( ',' ).append( DAGMAN ).append( ',' ).
-           append( HINTS ).append( ',' ).append( ENV );
+           append( HINTS ).append( ',' ).append( ENV ).
+           append( ',' ).append( METADATA );
        return sb.toString();
     }
 
@@ -275,6 +279,42 @@ public class Profile
         // System.out.println(output);
         return output;
 
+    }
+
+    /**
+     * Matches two Profile objects
+     *
+     * @return true if the pfn and all the attributes match, false otherwise.
+     */
+    @Override
+    public boolean equals(Object obj) {
+        // null check
+        if (obj == null) {
+            return false;
+        }
+
+        // see if type of objects match
+        if (!(obj instanceof Profile)) {
+            return false;
+        }
+
+        Profile p = (Profile) obj;
+        boolean result = ( this.mNamespace == null && p.mNamespace == null) ||
+                         (this.mNamespace  != null && p.mNamespace != null && mNamespace.equals(p.mNamespace) ); 
+        
+        if( result ){
+            //check for key
+            result = ( this.mKey == null && p.mKey == null) ||
+                         (this.mKey  != null && p.mKey != null && mKey.equals(p.mKey) ); 
+        }
+        
+        if( result ){
+            //check for value
+            result = ( this.mValue == null && p.mValue == null) ||
+                         (this.mValue  != null && p.mValue != null && mValue.equals(p.mValue) ); 
+        }
+        
+        return result;
     }
 
     /**

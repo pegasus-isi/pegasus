@@ -105,7 +105,8 @@ class WorkflowQueries(SQLAlchemyInit):
             '<=': '__le__',
             '>': '__gt__',
             '>=': '__ge__',
-            'LIKE': 'like'
+            'LIKE': 'like',
+            'IN': 'in_'
         }
 
         operators = {
@@ -128,8 +129,8 @@ class WorkflowQueries(SQLAlchemyInit):
 
                 elif isinstance(token, str) or isinstance(token, unicode):
 
-                    operand_1 = operands.pop()
                     operand_2 = operands.pop()
+                    operand_1 = operands.pop()
 
                     if token in operators:
                         operands.append(operators[token](operand_1, operand_2))

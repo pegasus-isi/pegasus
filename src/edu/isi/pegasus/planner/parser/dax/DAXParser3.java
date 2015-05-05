@@ -51,6 +51,7 @@ import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.classes.PegasusFile.LINKAGE;
 import edu.isi.pegasus.planner.code.GridStartFactory;
+import edu.isi.pegasus.planner.common.VariableExpansionReader;
 import edu.isi.pegasus.planner.dax.Executable;
 import edu.isi.pegasus.planner.dax.Invoke;
 import edu.isi.pegasus.planner.dax.MetaData;
@@ -61,6 +62,8 @@ import edu.isi.pegasus.planner.dax.Invoke.WHEN;
 import edu.isi.pegasus.planner.namespace.Hints;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.parser.StackBasedXMLParser;
+import java.io.FileReader;
+import org.xml.sax.InputSource;
 
 /**
  * This class uses the Xerces SAX2 parser to validate and parse an XML
@@ -109,6 +112,12 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
      * Predefined Constant  for dax version 3.5.0
      */
     public static final long DAX_VERSION_3_5_0 = CondorVersion.numericValue( "3.5.0" );
+    
+    
+    /*
+     * Predefined Constant  for dax version 3.6.0
+     */
+    public static final long DAX_VERSION_3_6_0 = CondorVersion.numericValue( "3.6.0" );
     
     /**
      * Constant denoting default metadata type
@@ -175,7 +184,12 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
         mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_PARSE_DAX, LoggingKeys.DAX_ID, file );
         try {
             this.testForFile( file );
-            mParser.parse( file );
+            
+            //PM-831 set up the parser with our own reader
+            //that allows for parameter expansion before 
+            //doing any XML processing
+            InputSource is = new InputSource( new VariableExpansionReader( new FileReader( file ) ));
+            mParser.parse( is );
             
             //sanity check
             if ( mDepth != 0 ){
@@ -581,18 +595,17 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 if( element.equals( "metadata" ) ){
 
                     String key = null;
-                    String type = DEFAULT_METADATA_TYPE;
+                    Profile p = new Profile();  
                     for ( int i=0; i < names.size(); ++i ) {
                         String name = (String) names.get( i );
                         String value = (String) values.get( i );
-
-                        if ( name.equals( "key" ) ) {
-                            key = value;
-                 	    this.log( element, name, value );
-                        }
-                        else if ( name.equals( "type" ) ) {
-                            type = value;
+                        if ( name.equals( "namespace" ) ) {
+                            p.setProfileNamespace( value );
                             this.log( element, name, value );
+                        }
+                        else if ( name.equals( "key" ) ) {
+                            p.setProfileKey( value );
+                 	    this.log( element, name, value );
                         }
                         else {
                 	    this.complain( element, name, value );
@@ -601,8 +614,8 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                     if( key == null ){
                         this.complain( element, "key", key );
                     }
-                    MetaData md = new MetaData( key, type );
-                    return md;
+                    //MetaData md = new Metadata( key, type );
+                    return p;
 
                 }//end of element metadata
 
@@ -1003,16 +1016,22 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
 
             //m metadata
             case 'm':
-                if ( child instanceof MetaData ) {
-                    MetaData md = ( MetaData )child;
-                    md.setValue( mTextContent.toString().trim() );
+                if ( child instanceof Profile ) {
+                    Profile md = ( Profile )child;
+                    md.setProfileValue( mTextContent.toString().trim() );
+                    if ( parent instanceof Job ){
+                        //profile appears in the job element
+                        Job j = (Job)parent;
+                        j.addProfile( md );
+                        return true;
+                    }
                     //metadata appears in file element
-                    if( parent instanceof ReplicaLocation ){
+                    else if( parent instanceof ReplicaLocation ){
                         unSupportedNestingOfElements( "file", "metadata" );
                         return true;
                     }
                     //metadata appears in executable element
-                    if( parent instanceof Executable ){
+                    else if( parent instanceof Executable ){
                         unSupportedNestingOfElements( "executable", "metadata" );
                         return true;
                     }
@@ -1232,6 +1251,8 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
         
         return;
     }
+
+    
 
     /**
      * Private class to handle mix data content for arguments tags.

@@ -18,9 +18,10 @@ package edu.isi.pegasus.planner.catalog.transformation.impl;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.classes.SysInfo.*;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
-import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
@@ -33,8 +34,6 @@ import org.junit.BeforeClass;
 import static org.junit.Assert.*;
 
 import java.io.File;
-import java.lang.reflect.Field;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -125,7 +124,7 @@ public class TextTest {
     public void testWholeCount() throws Exception {
         mLogger.logEventStart( "test.catalog.transformation.impl.Text", "whole-count-test", Integer.toString(mTestNumber++) );
         List<TransformationCatalogEntry> entries = mCatalog.getContents();
-        assertEquals( "Expected total number of entries", 3 , entries.size() );
+        assertEquals( "Expected total number of entries", 4, entries.size() );
         List<TransformationCatalogEntry> kegEntries = mCatalog.lookup( "example", "keg", "1.0", (String)null, null );
         assertEquals( "Expected total number of keg entries", 2 , kegEntries.size() );
         mLogger.logEventCompletion();
@@ -164,6 +163,34 @@ public class TextTest {
         assertEquals( "Expected attribute ", EXPANDED_OS ,        info.getOS().name() );
         
         mLogger.logEventCompletion();
+        
+    }
+    
+    @Test
+    public void testMetadataKeyword() throws Exception {
+        mLogger.logEventStart( "test.catalog.transformation.impl.Text", "metadata-keyword", Integer.toString(mTestNumber++) );
+        List<TransformationCatalogEntry> entries = mCatalog.lookup( null, "myxform", null, "condorpool", null );
+        TransformationCatalogEntry entry = entries.get( 0 );
+        SysInfo info = entry.getSysInfo();
+        assertEquals("Expected attribute ", null , entry.getLogicalNamespace() );
+        assertEquals("Expected attribute ", "myxform" ,      entry.getLogicalName() );
+        assertEquals("Expected attribute ", null ,   entry.getLogicalVersion() );
+        assertEquals("Expected attribute ", "condorpool" ,      entry.getResourceId() );
+        assertEquals("Expected attribute ", "/usr/bin/true" ,  entry.getPhysicalTransformation() );
+        assertEquals( "Expected attribute ", Architecture.x86_64.toString(), info.getArchitecture().name() );
+        assertEquals( "Expected attribute ", OS.LINUX.toString(), info.getOS().name() );
+        testProfile( entry, Profile.METADATA, "key", "value" );
+        testProfile( entry, Profile.METADATA, "appmodel", "myxform.aspen" );
+        testProfile( entry, Profile.METADATA, "version", "3.0" );
+        
+        mLogger.logEventCompletion();
+        
+    }
+
+    private void testProfile(TransformationCatalogEntry entry, String namespace, String key, String value) {
+        Profile p = new Profile( namespace, key, value );
+        List profiles = entry.getProfiles( namespace );
+        assertTrue( "Entry " + entry  , profiles.contains(p));
         
     }
     

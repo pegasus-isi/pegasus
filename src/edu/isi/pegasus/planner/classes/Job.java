@@ -40,6 +40,7 @@ import edu.isi.pegasus.common.util.Separator;
 
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.dax.Invoke;
+import edu.isi.pegasus.planner.namespace.Metadata;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -376,6 +377,11 @@ public class Job extends Data implements GraphNodeContent{
      * The Pegasus namespace variable.
      */
     public Pegasus vdsNS;
+    
+    /**
+     * the metadata namespace
+     */
+    private Metadata mMetadataAttributes;
 
     /**
      * Identifies the level of the job in the dax. The level is bottom up
@@ -460,6 +466,7 @@ public class Job extends Data implements GraphNodeContent{
         dagmanVariables  = new Dagman();
         hints            = new Hints();
         vdsNS            = new Pegasus();
+        mMetadataAttributes       = new Metadata();
         jobClass         = UNASSIGNED_JOB;
         level            = -1;
         mRuntime = -1;
@@ -504,6 +511,7 @@ public class Job extends Data implements GraphNodeContent{
         dagmanVariables  = job.dagmanVariables;
         hints            = job.hints;
         vdsNS            = job.vdsNS;
+        mMetadataAttributes       = job.mMetadataAttributes;
         jobClass         = job.getJobType();
         level            = job.level;
         mRuntime = job.mRuntime;
@@ -551,6 +559,7 @@ public class Job extends Data implements GraphNodeContent{
         newSub.dagmanVariables= this.dagmanVariables == null ? null :
                                                         (Dagman)this.dagmanVariables.clone();
         newSub.vdsNS          = this.vdsNS == null ? null :(Pegasus)this.vdsNS.clone();
+        newSub.mMetadataAttributes     = this.mMetadataAttributes == null ? null :(Metadata)this.mMetadataAttributes.clone();
 
         newSub.hints          = (Hints)this.hints.clone();
         newSub.jobID          = this.jobID;
@@ -2116,6 +2125,10 @@ public class Job extends Data implements GraphNodeContent{
 
                 case 'p'://pegasus
                     this.vdsNS.checkKeyInNS(key, value );
+                    break;
+                    
+                case 'm'://metadata
+                    this.mMetadataAttributes.checkKeyInNS( key, value );
                     break;
 
                 default:

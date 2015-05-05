@@ -20,7 +20,7 @@ import StringIO
 
 from decimal import Decimal
 
-from plex import Range, Lexicon, Rep, Rep1, Str, Any, IGNORE, Scanner, State, Begin, AnyBut, NoCase, Opt
+from plex import Range, Lexicon, Rep, Rep1, Str, Any, IGNORE, Scanner, AnyBut, NoCase, Opt
 from plex.errors import UnrecognizedInput
 
 
@@ -83,6 +83,7 @@ class BaseQueryParser(object):
 
     Note: The base class only provides a partial implementation of the SQL where clause.
     """
+
     def __init__(self, expression=None):
         self.expression = expression
 
@@ -92,6 +93,7 @@ class BaseQueryParser(object):
         self._operator_stack = []
         self._postfix_result = []
         self._condition = [0, 0, 0]
+        self._in_collection = None
         self._identifiers = set()
 
         self._scanner = None
@@ -103,6 +105,7 @@ class BaseQueryParser(object):
         self.parse_expression(expression)
 
     def _init(self):
+        comma = Str(',')
         whitespace = Rep1(Any(' \t\n'))
         open_parenthesis = Str('(')
         close_parenthesis = Str(')')
@@ -111,10 +114,8 @@ class BaseQueryParser(object):
         digit = Range('09')
         prefix = letter + Rep(letter) + Str('.')
 
-        #reserved_word = NoCase(Str('AND', 'OR', 'LIKE')) | Str('NULL')
-
         identifier = Opt(prefix) + letter + Rep(letter | digit | Str('_'))
-        comparators = NoCase(Str('=', '!=', '<', '<=', '>', '>=', 'like'))
+        comparators = NoCase(Str('=', '!=', '<', '<=', '>', '>=', 'like', 'in'))
         string_literal = Str('\'') + Rep(AnyBut('\'') | Str(' ') | Str("\\'")) + Str('\'')
         integer_literal = Opt(Str('+', '-')) + Rep1(digit)
         float_literal = Opt(Str('+', '-')) + Rep1(digit) + Str('.') + Rep1(digit)
@@ -122,18 +123,20 @@ class BaseQueryParser(object):
         operands = NoCase(Str('AND', 'OR'))
         null = Str('NULL')
 
-        OPEN_PARENTHESIS = 1
-        CLOSE_PARENTHESIS = 2
-        NULL = 3
-        OPERAND = 4
-        COMPARATOR = 5
-        STRING_LITERAL = 6
-        INTEGER_LITERAL = 7
-        FLOAT_LITERAL = 8
-        IDENTIFIER = 9
+        COMMA = 1
+        OPEN_PARENTHESIS = 2
+        CLOSE_PARENTHESIS = 3
+        NULL = 4
+        OPERAND = 5
+        COMPARATOR = 6
+        STRING_LITERAL = 7
+        INTEGER_LITERAL = 8
+        FLOAT_LITERAL = 9
+        IDENTIFIER = 10
 
         self._lexicon = Lexicon([
             (whitespace, IGNORE),
+            (comma, COMMA),
             (open_parenthesis, OPEN_PARENTHESIS),
             (close_parenthesis, CLOSE_PARENTHESIS),
             (null, NULL),
@@ -146,6 +149,7 @@ class BaseQueryParser(object):
         ])
 
         self._mapper = {
+            COMMA: self.comma_handler,
             OPEN_PARENTHESIS: self.open_parenthesis_handler,
             CLOSE_PARENTHESIS: self.close_parenthesis_handler,
             NULL: self.null_handler,
@@ -185,17 +189,35 @@ class BaseQueryParser(object):
             while len(self._operator_stack) > 0:
                 self._postfix_result.append(self._operator_stack.pop())
 
-        except UnrecognizedInput, e:
+        except UnrecognizedInput as e:
             raise InvalidQueryError(str(e))
 
         finally:
             f.close()
 
+    def comma_handler(self, text):
+        if self._state == 3:
+            return
+
+        file, line, char_pos = self._scanner.position()
+        msg = 'Invalid token: Line: %d Char: %d' % (line, char_pos)
+        raise InvalidQueryError(msg)
+
     def open_parenthesis_handler(self, text):
+        if self._state == 3:
+            self._in_collection = []
+            return
+
         self._parenthesis_count += 1
         self._operator_stack.append('(')
 
     def close_parenthesis_handler(self, text):
+        if self._state == 3:
+            self._condition[2] = self._in_collection
+            self._postfix_result.append(tuple(self._condition))
+            self._state = 0
+            return
+
         if self._parenthesis_count <= 0:
             file, line, char_pos = self._scanner.position()
             msg = 'Invalid parenthesis order: Line: %d Char: %d' % (line, char_pos)
@@ -227,7 +249,7 @@ class BaseQueryParser(object):
     def comparator_handler(self, text):
         if self._state == 1:
             self._condition[1] = text.upper()
-            self._state = 2
+            self._state = 3 if self._condition[1] == 'IN' else 2
         else:
             file, line, char_pos = self._scanner.position()
             msg = 'Comparator %r found out of order: Line: %d Char: %d' % (text, line, char_pos)
@@ -238,6 +260,8 @@ class BaseQueryParser(object):
             self._condition[2] = text.strip("'")
             self._postfix_result.append(tuple(self._condition))
             self._state = 0
+        elif self._state == 3:
+            self._in_collection.append(text.strip("'"))
         else:
             file, line, char_pos = self._scanner.position()
             msg = 'String literal %r found out of order: Line: %d Char: %d' % (text, line, char_pos)
@@ -248,9 +272,11 @@ class BaseQueryParser(object):
             self._condition[2] = text.strip()
             self._postfix_result.append(tuple(self._condition))
             self._state = 0
+        elif self._state == 3:
+            self._in_collection.append(text.strip())
         else:
             file, line, char_pos = self._scanner.position()
-            msg = 'Integer literal %d found out of order: Line: %d Char: %d' % (text, line, char_pos)
+            msg = 'Integer literal %s found out of order: Line: %d Char: %d' % (text, line, char_pos)
             raise InvalidQueryError(msg)
 
     def float_literal_handler(self, text):
@@ -258,6 +284,8 @@ class BaseQueryParser(object):
             self._condition[2] = text.strip()
             self._postfix_result.append(tuple(self._condition))
             self._state = 0
+        elif self._state == 3:
+            self._in_collection.append(text.strip())
         else:
             file, line, char_pos = self._scanner.position()
             msg = 'Integer literal %d found out of order: Line: %d Char: %d' % (text, line, char_pos)
@@ -288,16 +316,40 @@ class BaseQueryParser(object):
         self._scanner = None
 
     def __str__(self):
-        s = StringIO.StringIO()
+        comparator = {
+            '=': '__eq__',
+            '!=': '__ne__',
+            '<': '__lt__',
+            '<=': '__le__',
+            '>': '__gt__',
+            '>=': '__ge__',
+            'LIKE': 'like',
+            'IN': 'in_'
+        }
 
-        for i in self._postfix_result:
-            s.write(str(i))
-            s.write(' ')
+        operators = {
+            'AND': 'and_',
+            'OR': 'or_'
+        }
 
-        out = s.getvalue()
-        s.close()
+        operands = []
 
-        return out
+        def condition_expansion(expr, field):
+            operands.append('%s.%s ( %s )' % (field, comparator[expr[1]], expr[2]))
+
+        for token in self._postfix_result:
+            if isinstance(token, tuple):
+                identifier = token[0]
+                condition_expansion(token, identifier)
+
+            elif isinstance(token, str) or isinstance(token, unicode):
+                operand_2 = operands.pop()
+                operand_1 = operands.pop()
+
+                if token in operators:
+                    operands.append('%s ( %s, %s )' % (operators[token], operand_1, operand_2))
+
+        return operands.pop()
 
 
 class BaseOrderParser(object):
@@ -386,6 +438,7 @@ class BaseResource(object):
     Purpose of Resource is to centralize field definitions in one place, and to aid in Query, Order Parsing and
     Query, Order evaluation
     """
+
     def __init__(self, alias=None):
         self._prefix = None
         self._resource = alias if alias else None

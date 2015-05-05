@@ -43,6 +43,19 @@ tr $(NAMESPACE)::$(NAME):$(VERSION) {
      }
 }  
 
+# support for metadata keyword
+tr myxform { 
+    site condorpool { 
+        pfn "/usr/bin/true" 
+        arch "x86_64" 
+        os "linux" 
+        type "INSTALLED" 
+        profile pegasus "clusters.size" "20" 
+        metadata "key" "value" 
+        metadata "appmodel" "myxform.aspen" 
+        metadata "version" "3.0" 
+    } 
+}
 
    
 

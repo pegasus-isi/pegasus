@@ -17,6 +17,7 @@
   <property name="dist.data" location="${dist.dir}/share"/>
   <property name="dist.share" location="${dist.data}/pegasus"/>
   <property name="dist.jars" location="${dist.share}/java"/>
+  <property name="dist.schema" location="${dist.share}/schema"/> 
   <property name="dist.doc" location="${dist.dir}/share/doc/pegasus"/>
   <property name="dist.man" location="${dist.data}/man"/>
 
@@ -499,10 +500,11 @@
     </apply>
   </target>
 
-  <target name="test-java" depends="jar,compile-externals" description="Run java unit tests">
+  <target name="test-java" depends="dist-common,jar,compile-externals" description="Run java unit tests">
     <mkdir dir="${junitreport.dir}"/>
     <junit printsummary="yes" haltonfailure="yes">
       <sysproperty key="externals.python.path" value="${dist.lib}/pegasus/externals/python"/>
+      <sysproperty key="pegasus.home.schemadir" value="${dist.schema}"/>
       <classpath>
         <path refid="build.classpath"/>
         <path location="${dist.jars}/pegasus.jar"/>

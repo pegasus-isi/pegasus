@@ -1,0 +1,34 @@
+#karyopherin flex bb design protocol karyopherin_design_topsail_peptext.cc gen 2 REPACK resfile
+NATAA
+EX 1 EX 2
+USE_INPUT_SC
+start
+#fix aa for peptide, fix rotamer for conserved aa at the Cterm of peptide (KRXKLX)
+  1 A PIKAA D 
+  2 A PIKAA E 
+  3 A PIKAA I 
+  4 A PIKAA M 
+  5 A PIKAA K 
+  6 A PIKAA E 
+  7 A PIKAA I 
+  8 A PIKAA E 
+  9 A PIKAA R 
+ 10 A PIKAA E 
+ 11 A PIKAA S 
+ 12 A NATRO 
+ 13 A NATRO 
+ 14 A PIKAA I 
+ 15 A NATRO
+ 16 A NATRO 
+ 17 A PIKAA N 
+#fix rotamer for the residues on the protein that is interacting with the conserved residues on the peptide
+ 84 C NATRO
+ 88 C NATRO
+ 97 C NATRO
+123 C NATRO
+126 C NATRO
+130 C NATRO
+134 C NATRO
+168 C NATRO
+207 C NATRO
+

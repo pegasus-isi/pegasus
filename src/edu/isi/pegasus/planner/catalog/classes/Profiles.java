@@ -25,6 +25,7 @@ import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Globus;
 import edu.isi.pegasus.planner.namespace.Hints;
 import edu.isi.pegasus.planner.namespace.Condor;
+import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.namespace.Stat;
 import edu.isi.pegasus.planner.namespace.Selector;
 
@@ -57,7 +58,7 @@ public class Profiles {
      */
     public static enum NAMESPACES {
 
-        env, globus, condor, dagman, pegasus, hints,selector,stat
+        env, globus, condor, dagman, pegasus, hints, metadata, selector,stat
     };
     
    
@@ -82,6 +83,7 @@ public class Profiles {
         mProfileMap.put( NAMESPACES.pegasus, new Pegasus() );
         mProfileMap.put( NAMESPACES.selector, new Selector() );
         mProfileMap.put( NAMESPACES.stat, new Stat() );
+        mProfileMap.put( NAMESPACES.metadata, new Metadata() );
     }
 
 

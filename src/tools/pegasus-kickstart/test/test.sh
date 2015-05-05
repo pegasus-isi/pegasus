@@ -388,6 +388,40 @@ function test_quote_env_var {
     return 0
 }
 
+function test_missing_executable {
+    kickstart frobnerbrob
+    rc=$?
+
+    if [ $rc -eq 0 ]; then
+        echo "Expected job to fail"
+        return 1
+    fi
+
+    if ! [[ $(cat test.out) =~ "No such file or directory" ]]; then
+        echo "Expected no such file or directory error message"
+        return 1
+    fi
+
+    return 0
+}
+
+function test_not_executable {
+    kickstart long.arg
+    rc=$?
+
+    if [ $rc -eq 0 ]; then
+        echo "Expected job to fail"
+        return 1
+    fi
+
+    if ! [[ $(cat test.out) =~ "Permission denied" ]]; then
+        echo "Expected permission denied error message"
+        return 1
+    fi
+
+    return 0
+}
+
 # RUN THE TESTS
 run_test lotsofprocs
 run_test lotsofprocs_buffer
@@ -421,4 +455,6 @@ run_test test_timeout_cleanup
 run_test test_timeout_setup
 run_test test_failure_environment
 run_test test_quote_env_var
+run_test test_missing_executable
+run_test test_not_executable
 

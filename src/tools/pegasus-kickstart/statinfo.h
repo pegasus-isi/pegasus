@@ -47,14 +47,9 @@ typedef struct {
     const char* lfn;              /* from -s/-S option */
 } StatInfo;
 
-/* if set to 1, make the application executable, no matter what. */
-extern int make_application_executable;
-
 /* size of the <data> section returned for stdout and stderr. */
 extern size_t data_section_size;
 
-extern int myaccess(const char* path);
-extern char* findApp(const char* fn);
 extern int forcefd(const StatInfo* info, int fd);
 extern int initStatInfoAsTemp(StatInfo* statinfo, char* pattern);
 extern int initStatInfoFromName(StatInfo* statinfo, const char* filename,
