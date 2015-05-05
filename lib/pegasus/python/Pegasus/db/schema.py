@@ -496,6 +496,9 @@ st_job_metrics = Table('job_metrics', metadata,
     Column('syscr', INT, nullable=True),
     Column('syscw', INT, nullable=True),
     Column('threads', INT, nullable=True),
+    Column('bytes_transferred', INT, nullable=True),
+    Column('transfer_duration', INT, nullable=True),
+    Column('site', VARCHAR(255), nullable=True),
     **table_keywords
     )
 
