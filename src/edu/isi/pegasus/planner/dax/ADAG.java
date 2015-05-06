@@ -37,8 +37,8 @@ import edu.isi.pegasus.planner.dax.Invoke.WHEN;
  * <pre>
  * <b>This class provides the Java API to create DAX files.</b>
  *
- * The DAX XML SCHEMA is available at <a href="http://pegasus.isi.edu/schema/dax-3.3.xsd">http://pegasus.isi.edu/schema/dax-3.3.xsd</a>
- * and documentation available at <a href="http://pegasus.isi.edu/wms/docs/schemas/dax-3.3/dax-3.3.html">http://pegasus.isi.edu/wms/docs/schemas/dax-3.3/dax-3.3.html</a>
+ * The DAX XML SCHEMA is available at <a href="http://pegasus.isi.edu/schema/dax-3.6.xsd">http://pegasus.isi.edu/schema/dax-3.6.xsd</a>
+ * and documentation available at <a href="http://pegasus.isi.edu/wms/docs/schemas/dax-3.6/dax-3.6.html">http://pegasus.isi.edu/wms/docs/schemas/dax-3.6/dax-3.6.html</a>
  *
  * The DAX consists of 6 parts the first 4 are optional and the last is optional.
  * </pre> <ol> <li><b>file:</b>Used as "In DAX" Replica Catalog
@@ -49,7 +49,7 @@ import edu.isi.pegasus.planner.dax.Invoke.WHEN;
  * sub dax or sub dax. Atleast 1 required.</li><br> <li><b>child:</b> The
  * dependency section to describe dependencies between job|dax|dag elements.
  * (Optional)</li><br> </ol> <center><img
- * src="http://pegasus.isi.edu/wms/docs/schemas/dax-3.3/dax-3.3_p1.png"/></center>
+ * src="http://pegasus.isi.edu/wms/docs/schemas/dax-3.6/dax-3.6_p1.png"/></center>
  * <pre>
  * To generate an example DIAMOND DAX run the ADAG Class as shown below
  * <b>java ADAG filename</b>
@@ -156,11 +156,11 @@ public class ADAG {
      * The "not-so-official" location URL of the DAX schema definition.
      */
     public static final String SCHEMA_LOCATION =
-            "http://pegasus.isi.edu/schema/dax-3.5.xsd";
+            "http://pegasus.isi.edu/schema/dax-3.6.xsd";
     /**
      * The version to report.
      */
-    public static final String SCHEMA_VERSION = "3.5";
+    public static final String SCHEMA_VERSION = "3.6";
     /**
      * The Name / Label of the DAX
      */

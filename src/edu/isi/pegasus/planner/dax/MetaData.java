@@ -48,12 +48,12 @@ public class MetaData {
 
     /**
      * Create a new Metadata object
-     * @param type
+     * 
      * @param key
+     * @param value
      */
-    public MetaData(String type, String key) {
-        mType = type;
-        mKey = key;
+    public MetaData(String key, String value) {
+        this( null, key, value );
     }
 
     /**
@@ -62,7 +62,7 @@ public class MetaData {
      * @param key
      * @param value
      */
-    public MetaData(String type, String key, String value) {
+    private MetaData(String type, String key, String value) {
         mType = type;
         mKey = key;
         mValue = value;
@@ -98,7 +98,7 @@ public class MetaData {
      * Get the type of the metdata object
      * @return
      */
-    public String getType() {
+    private String getType() {
         return mType;
     }
 
@@ -115,7 +115,7 @@ public class MetaData {
     }
 
     public void toXML(XMLWriter writer, int indent) {
-        writer.startElement("metadata", indent).writeAttribute("type", mType);
+        writer.startElement("metadata", indent);
         writer.writeAttribute("key", mKey).writeData(mValue).endElement();
 
     }
