@@ -214,6 +214,12 @@ public class ADAG {
      * List of Notification objects
      */
     private List<Invoke> mInvokes;
+    
+    /**
+     * The metadata attributes associated with the whole workflow.
+     */
+    private Set<MetaData> mMetaDataAttributes;
+    
     /**
      * Handle the XML writer
      */
@@ -247,11 +253,10 @@ public class ADAG {
         mLDAXs = new LinkedList<DAX>();
         mTransformations = new LinkedHashSet<Transformation>();
         mExecutables = new LinkedHashSet<Executable>();
+        mMetaDataAttributes = new LinkedHashSet<MetaData>();
         mFiles = new LinkedList<File>();
         mInvokes = new LinkedList<Invoke>();
         mDependencies = new LinkedHashMap<String, Set<Edge>>();
-        // PM-435 - commented this out for FHS work - do we need references to the bin/schema/...?
-        // System.setProperty("pegasus.home", System.getProperty("user.dir"));
         mLogger = LogManagerFactory.loadSingletonInstance();
         mLogger.logEventStart("event.dax.generate", "pegasus.version", Version.
                 instance().toString());
@@ -368,6 +373,31 @@ public class ADAG {
      */
     public List<Invoke> getNotification() {
         return getInvoke();
+    }
+    
+    /**
+     * Adds metadata to the workflow
+     * 
+     * @param key       key name for metadata
+     * @param value     value
+     * @return 
+     */
+    public ADAG addMetadata( String key, String value ){
+        this.mMetaDataAttributes.add( new MetaData( key, value ) );
+        return this;
+    }
+    
+    /**
+     * Returns the metadata associated for a key if exists, else null
+     * 
+     * @param key
+     * 
+     * @return 
+     */
+    public String getMetaData( String key ){
+       return this.mMetaDataAttributes.contains( key )?
+              ((MetaData)mMetaDataAttributes).getValue():
+               null;
     }
 
     /**
@@ -1068,23 +1098,23 @@ public class ADAG {
         ADAG dax = new ADAG("test");
 
         File fa = new File("f.a");
-        fa.addMetaData("string", "foo", "bar");
-        fa.addMetaData("int", "num", "1");
+        fa.addMetaData( "foo", "bar");
+        fa.addMetaData(  "num", "1");
         fa.addProfile("env", "FOO", "/usr/bar");
         fa.addProfile("globus", "walltime", "40");
         fa.addPhysicalFile("file:///scratch/f.a", "local");
         dax.addFile(fa);
 
         File fb1 = new File("f.b1");
-        fb1.addMetaData("string", "foo", "bar");
-        fb1.addMetaData("int", "num", "2");
+        fb1.addMetaData( "foo", "bar");
+        fb1.addMetaData(  "num", "2");
         fb1.addProfile("env", "GOO", "/usr/foo");
         fb1.addProfile("globus", "walltime", "40");
         dax.addFile(fb1);
 
         File fb2 = new File("f.b2");
-        fb2.addMetaData("string", "foo", "bar");
-        fb2.addMetaData("int", "num", "3");
+        fb2.addMetaData( "foo", "bar");
+        fb2.addMetaData( "num", "3");
         fb2.addProfile("env", "BAR", "/usr/goo");
         fb2.addProfile("globus", "walltime", "40");
         dax.addFile(fb2);
@@ -1095,8 +1125,8 @@ public class ADAG {
         dax.addFile(fc1);
 
         File fc2 = new File("f.c2");
-        fc2.addMetaData("string", "foo", "bar");
-        fc2.addMetaData("int", "num", "5");
+        fc2.addMetaData(  "foo", "bar");
+        fc2.addMetaData(  "num", "5");
         dax.addFile(fc2);
 
         File fd = new File("f.d");
@@ -1109,7 +1139,7 @@ public class ADAG {
         preprocess.addPhysicalFile(
                 new PFN("file:///opt/pegasus/default/bin/keg"));
         preprocess.addProfile(Profile.NAMESPACE.globus, "walltime", "120");
-        preprocess.addMetaData("string", "project", "pegasus");
+        preprocess.addMetaData( "project", "pegasus");
 
         Executable findrange = new Executable("pegasus", "findrange", "1.0");
         findrange.setArchitecture(Executable.ARCH.X86).
@@ -1118,7 +1148,7 @@ public class ADAG {
         findrange.
                 addPhysicalFile(new PFN("http://pegasus.isi.edu/code/bin/keg"));
         findrange.addProfile(Profile.NAMESPACE.globus, "walltime", "120");
-        findrange.addMetaData("string", "project", "pegasus");
+        findrange.addMetaData(  "project", "pegasus");
 
 
         Executable analyze = new Executable("pegasus", "analyze", "1.0");
@@ -1127,7 +1157,7 @@ public class ADAG {
         analyze.addPhysicalFile(new PFN(
                 "gsiftp://localhost/opt/pegasus/default/bin/keg"));
         analyze.addProfile(Profile.NAMESPACE.globus, "walltime", "120");
-        analyze.addMetaData("string", "project", "pegasus");
+        analyze.addMetaData(  "project", "pegasus");
 
         dax.addExecutable(preprocess).addExecutable(findrange).addExecutable(
                 analyze);
