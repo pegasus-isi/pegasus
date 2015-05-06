@@ -62,7 +62,6 @@ exec subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).commun
 os.sys.path.insert(0, pegasus_python_dir)
 os.sys.path.insert(0, pegasus_python_externals_dir)
 
-from Pegasus.db import connection
 from Pegasus.tools import utils
 from Pegasus.tools import properties
 from Pegasus.monitoring.workflow import Workflow, MONITORD_RECOVER_FILE
@@ -109,13 +108,13 @@ re_parse_condor_version = re.compile(r"\*\* \$CondorVersion: ((\d+\.\d+)\.\d+)")
 re_parse_condor_logfile = re.compile(r"Condor log will be written to ([^,]+)")
 re_parse_condor_logfile_insane = re.compile(r"\d{2}\s{3,}(\S+)")
 re_parse_multiline_files = re.compile(r"All DAG node user log files:")
-re_parse_dagman_aborted  = re.compile(r"Received SIGUSR1")
+re_parse_dagman_aborted  = re.compile(r"Aborting DAG...")
 
 # Constants
 logbase = "monitord.log"                  # Basename of daemon logfile
 speak = "PMD/1.0"                         # Protocol version for our socket command-line interface
 MONITORD_WF_RETRY_FILE = "monitord.subwf" # filename for writing persistent sub-workflow retry information
-MAX_SLEEP_TIME = 10     	          # in seconds
+MAX_SLEEP_TIME = 10                 # in seconds
 SLEEP_WAIT_NOTIFICATION = 5               # in seconds
 
 unsubmitted_events = {"UN_READY": 1,
@@ -135,7 +134,7 @@ db_stats = 'no'                 # collect and print database stats at the end of
 no_events = False               # Flag for disabling event output altogether
 event_dest = None               # URL containing the destination of the events
 dashboard_event_dest = None     # URL containing the destination of events for the dashboard
-encoding = None	                # Way to encode the data
+encoding = None                 # Way to encode the data
 monitord_exit_code = 0          # Exit code for pegasus-monitord
 socket_enabled = False          # Enable socket for real-time debugging
 start_server = False            # Keep track if socket server needs to be started
@@ -143,7 +142,7 @@ do_notifications = True         # Flag to enable notifications
 skip_pid_check = False          # Flag to skip checking if a previous monitord is still running using the pid file
 monitord_notifications = None   # Notifications' manager class
 max_parallel_notifications = 10 # Maximum number of notifications we can do in parallel
-notifications_timeout = 0	# Time to wait for notification scripts to finish (0 means wait forever)
+notifications_timeout = 0 # Time to wait for notification scripts to finish (0 means wait forever)
 store_stdout_stderr = True      # Flag for storing jobs' stdout and stderr in our output
 
 wf_event_sink = None            # Where wf events go
@@ -225,23 +224,23 @@ class WorkflowEntry:
     """
     Class used to store one workflow entry
     """
-    run_dir = None			# Run directory for the workflow
-    dagman_out = None			# Location of the dagman.out file
-    n_retries = 0			# Number of retries for looking for the dagman.out file
-    wf = None				# Pointer to the Workflow class for this Workflow
-    DMOF = None				# File pointer once we open the dagman.out file
-    ml_buffer = ''			# Buffer for reading the dagman.out file
-    ml_retries = 0			# Keep track of how many times we have looked for new content
-    ml_current = 0			# Keep track of where we are in the dagman.out file
-    delete_workflow = False		# Flag for dropping this workflow
-    sleep_time = None			# Time to sleep for this workflow
+    run_dir = None      # Run directory for the workflow
+    dagman_out = None     # Location of the dagman.out file
+    n_retries = 0     # Number of retries for looking for the dagman.out file
+    wf = None       # Pointer to the Workflow class for this Workflow
+    DMOF = None       # File pointer once we open the dagman.out file
+    ml_buffer = ''      # Buffer for reading the dagman.out file
+    ml_retries = 0      # Keep track of how many times we have looked for new content
+    ml_current = 0      # Keep track of where we are in the dagman.out file
+    delete_workflow = False   # Flag for dropping this workflow
+    sleep_time = None     # Time to sleep for this workflow
 
 output_dir = None                       # output_dir for all files written by monitord
-jsd = None				# location of jobstate.log file
-nodaemon = 0				# foreground mode
-logfile = None				# location of monitord.log file
-millisleep = None			# emulated run mode delay
-adjustment = 0				# time zone adjustment (@#~! Condor)
+jsd = None        # location of jobstate.log file
+nodaemon = 0        # foreground mode
+logfile = None        # location of monitord.log file
+millisleep = None     # emulated run mode delay
+adjustment = 0        # time zone adjustment (@#~! Condor)
 
 # Parse command line options
 prog_usage = "usage: %s [options] workflow.dag.dagman.out" % (prog_base)
@@ -250,25 +249,25 @@ prog_desc = """Mandatory arguments: outfile is the log file produced by Condor D
 parser = optparse.OptionParser(usage=prog_usage, description=prog_desc)
 
 parser.add_option("-a", "--adjust", action = "store", type = "int", dest = "adjustment",
-		  help = "adjust for time zone differences by i seconds, default 0")
+      help = "adjust for time zone differences by i seconds, default 0")
 parser.add_option("-N", "--foreground", action = "store_const", const = 2, dest = "nodaemon",
-		  help = "(Condor) don't daemonize %s; go through motions as if" % (prog_base))
+      help = "(Condor) don't daemonize %s; go through motions as if" % (prog_base))
 parser.add_option("-n", "--no-daemon", action = "store_const", const = 1, dest = "nodaemon",
-		  help = "(debug) don't daemonize %s; keep it in the foreground" % (prog_base))
+      help = "(debug) don't daemonize %s; keep it in the foreground" % (prog_base))
 parser.add_option("-j", "--job", action = "store", type = "string", dest = "jsd",
-		  help = "alternative job state file to write, default is %s in the workflow's directory"
-		  % (utils.jobbase))
+      help = "alternative job state file to write, default is %s in the workflow's directory"
+      % (utils.jobbase))
 parser.add_option("-l", "--log", action = "store", type = "string", dest = "logfile",
-		  help = "alternative %s log file, default is %s in the workflow's directory"
-		  % (prog_base, logbase))
+      help = "alternative %s log file, default is %s in the workflow's directory"
+      % (prog_base, logbase))
 parser.add_option("-o", "--output-dir", action = "store", type = "string", dest = "output_dir",
                   help = "provides an output directory for all monitord log files")
 parser.add_option("--conf", action = "store", type = "string", dest = "config_properties",
-		  help = "specifies the properties' file to use. This option overrides all other property files.")
+      help = "specifies the properties' file to use. This option overrides all other property files.")
 parser.add_option("--no-recursive", action = "store_const", const = 1, dest = "disable_subworkflows",
-		  help = "disables pegasus-monitord to automatic follow any sub-workflows that are found")
+      help = "disables pegasus-monitord to automatic follow any sub-workflows that are found")
 parser.add_option("--no-database", "--nodatabase", "--no-events", action = "store_const", const = 0, dest = "no_events",
-		  help = "turn off event generation completely, and overrides the URL in the -d option")
+      help = "turn off event generation completely, and overrides the URL in the -d option")
 parser.add_option("--no-notifications", "--no-notification", action = "store_const", const = 0, dest = "no_notify",
                   help = "turn off notifications completely")
 parser.add_option("--notifications-max", action = "store", type = "int", dest = "notifications_max",
@@ -276,9 +275,9 @@ parser.add_option("--notifications-max", action = "store", type = "int", dest = 
 parser.add_option("--notifications-timeout", action = "store", type = "int", dest = "notifications_timeout",
                   help = "time to wait for notification scripts to finish before terminating them, 0 allows scripts to run indefinitely")
 parser.add_option("-S", "--sim", action = "store", type = "int", dest = "millisleep",
-		  help = "Developer: simulate delays between reads by sleeping ms milliseconds")
+      help = "Developer: simulate delays between reads by sleeping ms milliseconds")
 parser.add_option("-r", "--replay", action = "store_const", const = 1, dest = "replay_mode",
-		  help = "disables checking for DAGMan's pid while running %s" % (prog_base))
+      help = "disables checking for DAGMan's pid while running %s" % (prog_base))
 parser.add_option("--db-stats", action = "store_const", const = "yes", dest = "db_stats",
                   help = "collect and print database stats at the end")
 parser.add_option("--keep-state", action = "store_const", const = 1, dest = "keep_state",
@@ -449,14 +448,19 @@ if options.event_dest is None:
             # Default is to generate events
             no_events = False
 
-    event_dest = connection.url_by_properties(options.config_properties, connection.DBType.WORKFLOW, run, rundir_properties=top_level_prop_file)
+    if props.property("pegasus.monitord.output") is None:
+        # No command-line or property specified, use default
+        event_dest = "sqlite:///" + out[:out.find(".dag.dagman.out")] + ".stampede.db"
+    else:
+        # Ok, get it from the properties file
+        event_dest = props.property("pegasus.monitord.output")
 else:
     # Use command-line option
     event_dest = options.event_dest
 
 #hardcoded for the time being
-#dashboard_event_dest = "sqlite:////tmp/workflow.db"
-dashboard_event_dest = connection.url_by_properties(options.config_properties, connection.DBType.MASTER, rundir_properties=top_level_prop_file)
+dashboard_event_dest = "sqlite:////tmp/workflow.db"
+# dashboard_event_dest = utils.get_path_dashboard_db( props );
 
 if options.enc is not None:
     # Get encoding from command-line options
@@ -542,7 +546,7 @@ def add(wf, jobid, event, sched_id=None, status=None):
 
     # A SUBMIT event brings sched id and job type information (it can also be
     # a new job for us when there is no PRE_SCRIPT)
-    if event == "SUBMIT" or event == "SUBMIT_FAILED":
+    if event == "SUBMIT":
         # Add job to our workflow (if not alredy there), will update sched_id in both cases
         my_job_submit_seq = wf.add_job(jobid, event, sched_id=sched_id)
 
@@ -608,7 +612,7 @@ def process_dagman_out(wf, log_line):
     # Check log_line for timestamp at the beginning
     timestamp_found = False
     my_expr = re_parse_timestamp.search(log_line)
-    
+
     if my_expr is not None:
         # Found time stamp, let's assume valid log line
         curr_time = time.localtime()
@@ -1167,6 +1171,28 @@ if wf._monitord_exit_code == 0:
     root_wf_id = wf._wf_uuid
 
 #
+# --- online monitoring begin --------------------------------------------------------------------
+#
+print "Starting an online monitoring process..."
+
+from multiprocessing import Process
+from Pegasus.service.monitoring.online_monitoring import OnlineMonitord
+
+def online_monitoring_proc(wf_label, wf_uuid, event_sink):
+    online_monitord = OnlineMonitord(wf_label, wf_uuid, event_sink)
+    online_monitord.setup_mq_conn()
+    online_monitord.setup_timeseries_db_conn()
+    online_monitord.start_consuming_mq_messages()
+
+# start an OS process for the online monitoring feature
+online_monitor_proc = Process(target=online_monitoring_proc, args=(wf._dax_label, wf._wf_uuid, event_dest))
+online_monitor_proc.start()
+
+#
+# --- online monitoring end --------------------------------------------------------------------
+#
+
+#
 # --- main loop begin --------------------------------------------------------------------
 #
 
@@ -1428,7 +1454,7 @@ while (len(wfs) > 0):
 
     # Print number of workflows we currently have
     logger.info("currently tracking %d workflow(s)..." % (len(wfs)))
-    
+
     # Go through the workflows again, and finish any marked ones
     wf_index = 0
     while wf_index < len(wfs):
@@ -1452,7 +1478,7 @@ while (len(wfs) > 0):
     if not socket_enabled and start_server:
         # Reset flag
         start_server = False
-        
+
         # Create server socket for communication with site selector
         server = socket_interface.server_socket(49152, 65536)
         # Take care of closing socket when we exit
@@ -1503,6 +1529,9 @@ while (len(wfs) > 0):
 # --- main loop end -----------------------------------------------------------------------
 #
 
+if online_monitor_proc.is_alive():
+    online_monitor_proc.terminate()
+
 if socket_enabled and server is not None:
     # Finish trailing connection requests
     while (socket_interface.check_request(server, wfs)):
@@ -1519,7 +1548,7 @@ if do_notifications == True and monitord_notifications is not None:
     # Finish pending notifications
     logger.info("finishing notifications...")
     while monitord_notifications.has_active_notifications() or monitord_notifications.has_pending_notifications():
-        monitord_notifications.service_notifications()        
+        monitord_notifications.service_notifications()
         time.sleep(SLEEP_WAIT_NOTIFICATION)
     logger.info("finishing notifications... done!")
 

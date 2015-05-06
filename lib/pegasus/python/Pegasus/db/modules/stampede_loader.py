@@ -95,6 +95,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             'stampede.job_inst.globus.submit.end' : self.jobstate,
             'stampede.inv.start' : self.noop, # good
             'stampede.inv.end' : self.invocation,
+            'stampede.job.monitoring': self.online_monitoring_update,
         }
 
         # Dicts for caching FK lookups
@@ -755,6 +756,49 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         A NOOP method for events that are being ignored.
         """
         self.log.debug('noop: %s', linedata)
+
+    # TODO probably we need here a more orm-like sqlalchemy queries and inserts
+    # TODO handling the PMC case - we need to find out job_id in other way by looking into task and job tables
+    def online_monitoring_update(self, linedata):
+        """
+        This function upserts online monitoring measurements into stampede db.
+        :param linedata:
+        """
+        job_instance_id_tuple = (linedata["wf_uuid"], linedata["dag_job_id"], linedata["sched_id"])
+        # 1. we look up job instance db based on wf_uuid, dag_job_id, and sched_id
+        result = self.session.execute("""
+                SELECT job_instance_id
+                FROM job_instance
+                LEFT JOIN job
+                ON job.job_id = job_instance.job_id
+                LEFT JOIN workflow
+                ON workflow.wf_id=job.wf_id
+                WHERE workflow.wf_uuid="%s"
+                    AND job.exec_job_id="%s"
+                AND job_instance.sched_id="%s";
+            """ % job_instance_id_tuple ).first()
+
+        if result is None:
+            print "We have None when looking for job_instance_id: ('%s', '%s', %s)" % job_instance_id_tuple
+            return
+
+        job_instance_id = int(result["job_instance_id"])
+
+        # 2. we need to check if a measurement for the given dag_job_id exists
+        result = self.session.query(JobMetrics).filter(
+            JobMetrics.dag_job_id == linedata["dag_job_id"],
+            JobMetrics.job_instance_id == job_instance_id).all()
+
+        # 3. if measurement exists then we update it, otherwise we insert a new row
+        job_metrics = self.linedataToObject(linedata, JobMetrics())
+        job_metrics.job_instance_id = job_instance_id
+
+        if len(result) == 0:
+            job_metrics.commit_to_db(self.session)
+        else:
+            # we update existing measurement
+            job_metrics.job_metrics_id = result[0].job_metrics_id
+            job_metrics.merge_to_db(self.session)
 
     ####################################
     # DB helper/lookup/caching functions
