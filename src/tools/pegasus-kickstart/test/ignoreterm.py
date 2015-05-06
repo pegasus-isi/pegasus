@@ -1,8 +1,14 @@
 import signal
 import time
+import sys
 
 signal.signal(signal.SIGTERM, signal.SIG_IGN)
 
-print "Sleeping for 5 seconds"
-time.sleep(5)
+if len(sys.argv) != 2:
+    raise Exception("Specify timeout")
+
+sleeptime = int(sys.argv[1])
+
+print "Sleeping for %d seconds" % sleeptime
+time.sleep(int(sleeptime))
 
