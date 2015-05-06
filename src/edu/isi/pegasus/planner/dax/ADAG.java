@@ -1021,17 +1021,23 @@ public class ADAG {
         writer.writeAttribute("index", Integer.toString(mIndex));
         writer.writeAttribute("count", Integer.toString(mCount));
 
+        //add metadata attributes
+        writer.writeXMLComment( "Section 1: Metadata attributes for the workflow ( cab be empty) ", true );
+        for( MetaData md : this.mMetaDataAttributes ){
+            md.toXML(writer, indent + 1 );
+        }
+        
         //print notification invokes
         writer.
                 writeXMLComment(
-                "Section 1: Invokes - Adds notifications for a workflow (can be empty)",
+                "Section 2: Invokes - Adds notifications for a workflow (can be empty)",
                 true);
         for (Invoke i : mInvokes) {
             i.toXML(writer, indent + 1);
         }
         //print file
         writer.writeXMLComment(
-                "Section 2: Files - Acts as a Replica Catalog (can be empty)",
+                "Section 3: Files - Acts as a Replica Catalog (can be empty)",
                 true);
         for (File f : mFiles) {
             f.toXML(writer, indent + 1);
@@ -1040,7 +1046,7 @@ public class ADAG {
         //print executable
         writer.
                 writeXMLComment(
-                "Section 3: Executables - Acts as a Transformaton Catalog (can be empty)",
+                "Section 4: Executables - Acts as a Transformaton Catalog (can be empty)",
                 true);
         for (Executable e : mExecutables) {
             e.toXML(writer, indent + 1);
@@ -1049,7 +1055,7 @@ public class ADAG {
         //print transformation
         writer.
                 writeXMLComment(
-                "Section 4: Transformations - Aggregates executables and Files (can be empty)",
+                "Section 5: Transformations - Aggregates executables and Files (can be empty)",
                 true);
         for (Transformation t : mTransformations) {
             t.toXML(writer, indent + 1);
@@ -1057,7 +1063,7 @@ public class ADAG {
         //print jobs, daxes and dags
         writer.
                 writeXMLComment(
-                "Section 5: Job's, DAX's or Dag's - Defines a JOB or DAX or DAG (Atleast 1 required)",
+                "Section 6: Job's, DAX's or Dag's - Defines a JOB or DAX or DAG (Atleast 1 required)",
                 true);
         for (AbstractJob j : mJobs.values()) {
             j.toXML(writer, indent + 1);
@@ -1065,7 +1071,7 @@ public class ADAG {
         //print dependencies
         writer.
                 writeXMLComment(
-                "Section 6: Dependencies - Parent Child relationships (can be empty)",
+                "Section 7: Dependencies - Parent Child relationships (can be empty)",
                 true);
 
         for (String child : mDependencies.keySet()) {

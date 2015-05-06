@@ -405,7 +405,15 @@ public class File extends CatalogType {
             if (mSize != null &&  !mSize.isEmpty() ) {
                 writer.writeAttribute("size", mSize);
             }   
-            writer.endElement();
+            
+            if( mMetadata.isEmpty() ){
+                writer.endElement();
+            }
+            else{
+                //call CatalogType's writer method to generate the profile, metadata and pfn elements
+                super.toXML(writer, indent);
+                writer.endElement(indent);
+            }
         } else if (elementname.equalsIgnoreCase("file")) {
             //Used by the file element at the top of the dax
             if (mPFNs.isEmpty() && mMetadata.isEmpty()) {
