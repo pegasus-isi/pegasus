@@ -230,6 +230,7 @@
              classpathref="build.classpath">
       <packageset dir="src">
         <include name="edu/isi/pegasus/planner/dax/**"/>
+	<include name="edu/isi/pegasus/planner/selector/**"/>
       </packageset>
       <fileset dir="src" includes="*.java"/>
       <doctitle><![CDATA[PEGASUS ${pegasus.version}]]></doctitle>
