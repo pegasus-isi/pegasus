@@ -18,6 +18,7 @@ package edu.isi.pegasus.planner.dax;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.XMLWriter;
 import edu.isi.pegasus.common.util.Separator;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
@@ -118,6 +119,7 @@ public class File extends CatalogType {
         this.mTransfer = f.getTransfer();
         this.mExecutable = f.getExecutable();
         this.mSize = f.getSize();
+        this.mMetadata  = new LinkedHashSet<MetaData>( f.mMetadata);
     }
 
     /**
@@ -138,6 +140,7 @@ public class File extends CatalogType {
      * @param link The linkage of the file.
      */
     public File(String namespace, String name, String version, LINK link) {
+        super();
         mNamespace = namespace;
         mName = name;
         mVersion = version;

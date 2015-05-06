@@ -137,7 +137,106 @@ import edu.isi.pegasus.planner.dax.Invoke.WHEN;
  * <i>dax.addDependency(j1,j3);</i> </li><br> <li><b>Finally write the dax to a
  * file</b><br><br> <i>dax.writeToFile("diamond.dax");</i> </li> </ol>
  *
+ * Here is sample java code that illustrates how to use the Java DAX API
+ * <pre>
+ *      java.io.File cwdFile = new java.io.File (".");
+        String cwd = cwdFile.getCanonicalPath(); 
+        
+        String pegasusHome = "/usr";
+        String site = "TestCluster";
+             
+        ADAG dax = new ADAG("diamond");
+        dax.addNotification(Invoke.WHEN.start,"/pegasus/libexec/notification/email -t notify@example.com");
+        dax.addNotification(Invoke.WHEN.at_end,"/pegasus/libexec/notification/email -t notify@example.com");
+        dax.addMetadata( "name", "diamond");
+        dax.addMetadata( "createdBy", "Karan Vahi");
+        
+        File fa = new File("f.a");
+        fa.addPhysicalFile("file://" + cwd + "/f.a", "local");
+        fa.addMetaData( "size", "1024" );
+        dax.addFile(fa);
+
+        File fb1 = new File("f.b1");
+        File fb2 = new File("f.b2");
+        File fc1 = new File("f.c1");
+        File fc2 = new File("f.c2");
+        File fd = new File("f.d");
+        fd.setRegister(true);
+
+        Executable preprocess = new Executable("pegasus", "preprocess", "4.0");
+        preprocess.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
+        preprocess.setInstalled(true);
+        preprocess.addPhysicalFile("file://" + pegasus_location + "/bin/keg", site_handle);
+
+        Executable findrange = new Executable("pegasus", "findrange", "4.0");
+        findrange.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
+        findrange.setInstalled(true);
+        findrange.addPhysicalFile("file://" + pegasus_location + "/bin/keg", site_handle);
+
+        Executable analyze = new Executable("pegasus", "analyze", "4.0");
+        analyze.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
+        analyze.setInstalled(true);
+        analyze.addPhysicalFile("file://" + pegasus_location + "/bin/keg", site_handle);
+
+        dax.addExecutable(preprocess).addExecutable(findrange).addExecutable(analyze);
+
+        // Add a preprocess job
+        Job j1 = new Job("j1", "pegasus", "preprocess", "4.0");
+        j1.addArgument("-a preprocess -T 60 -i ").addArgument(fa);
+        j1.addArgument("-o ").addArgument(fb1);
+        j1.addArgument(" ").addArgument(fb2);
+        j1.addMetadata( "time", "60" );
+        j1.uses(fa, File.LINK.INPUT);
+        j1.uses(fb1, File.LINK.OUTPUT);
+        j1.uses(fb2, File.LINK.OUTPUT);
+        j1.addNotification(Invoke.WHEN.start,"/pegasus/libexec/notification/email -t notify@example.com");
+        j1.addNotification(Invoke.WHEN.at_end,"/pegasus/libexec/notification/email -t notify@example.com");
+        dax.addJob(j1);
+
+        // Add left Findrange job
+        Job j2 = new Job("j2", "pegasus", "findrange", "4.0");
+        j2.addArgument("-a findrange -T 60 -i ").addArgument(fb1);
+        j2.addArgument("-o ").addArgument(fc1);
+        j2.addMetadata( "time", "60" );
+        j2.uses(fb1, File.LINK.INPUT);
+        j2.uses(fc1, File.LINK.OUTPUT);
+        j2.addNotification(Invoke.WHEN.start,"/pegasus/libexec/notification/email -t notify@example.com");
+        j2.addNotification(Invoke.WHEN.at_end,"/pegasus/libexec/notification/email -t notify@example.com");
+        dax.addJob(j2);
+
+        // Add right Findrange job
+        Job j3 = new Job("j3", "pegasus", "findrange", "4.0");
+        j3.addArgument("-a findrange -T 60 -i ").addArgument(fb2);
+        j3.addArgument("-o ").addArgument(fc2);
+        j3.addMetadata( "time", "60" );
+        j3.uses(fb2, File.LINK.INPUT);
+        j3.uses(fc2, File.LINK.OUTPUT);
+        j3.addNotification(Invoke.WHEN.start,"/pegasus/libexec/notification/email -t notify@example.com");
+        j3.addNotification(Invoke.WHEN.at_end,"/pegasus/libexec/notification/email -t notify@example.com");
+        dax.addJob(j3);
+
+        // Add analyze job
+        Job j4 = new Job("j4", "pegasus", "analyze", "4.0");
+        j4.addArgument("-a analyze -T 60 -i ").addArgument(fc1);
+        j4.addArgument(" ").addArgument(fc2);
+        j4.addArgument("-o ").addArgument(fd);
+        j4.addMetadata( "time", "60" );
+        j4.uses(fc1, File.LINK.INPUT);
+        j4.uses(fc2, File.LINK.INPUT);
+        j4.uses(fd, File.LINK.OUTPUT);
+        j4.addNotification(Invoke.WHEN.start,"/pegasus/libexec/notification/email -t notify@example.com");
+        j4.addNotification(Invoke.WHEN.at_end,"/pegasus/libexec/notification/email -t notify@example.com");
+        dax.addJob(j4);
+
+        dax.addDependency("j1", "j2");
+        dax.addDependency("j1", "j3");
+        dax.addDependency("j2", "j4");
+        dax.addDependency("j3", "j4");
+        dax.writeToSTDOUT();
+ * </pre>
+ * 
  * @author Gaurang Mehta gmehta at isi dot edu
+ * @author Karan Vahi
  * @version $Revision$
  */
 public class ADAG {
@@ -1022,7 +1121,7 @@ public class ADAG {
         writer.writeAttribute("count", Integer.toString(mCount));
 
         //add metadata attributes
-        writer.writeXMLComment( "Section 1: Metadata attributes for the workflow ( cab be empty) ", true );
+        writer.writeXMLComment( "Section 1: Metadata attributes for the workflow (can be empty) ", true );
         for( MetaData md : this.mMetaDataAttributes ){
             md.toXML(writer, indent + 1 );
         }
@@ -1092,11 +1191,11 @@ public class ADAG {
      * @param args
      */
     public static void main(String[] args) {
-        if (args.length == 0) {
-            System.out.println("Usage: java ADAG <filename.dax>");
-            System.exit(1);
+        String dax = "diamond.dax";
+        if (args.length >  0) {
+            dax = args[0];
         }
-        Diamond().writeToFile(args[0]);
+        Diamond().writeToFile( dax );
 
     }
 

@@ -1462,6 +1462,33 @@ public class AbstractJob {
     public AbstractJob addNotifications(List<Invoke> invokes) {
         return addInvokes(invokes);
     }
+    
+    /**
+     * Adds metadata to the workflow
+     * 
+     * @param key       key name for metadata
+     * @param value     value
+     * @return 
+     */
+    public AbstractJob addMetadata( String key, String value ){
+        this.mMetaDataAttributes.add( new MetaData( key, value ) );
+        return this;
+    }
+    
+    /**
+     * Returns the metadata associated for a key if exists, else null
+     * 
+     * @param key
+     * 
+     * @return 
+     */
+    public String getMetaData( String key ){
+       return this.mMetaDataAttributes.contains( key )?
+              ((MetaData)mMetaDataAttributes).getValue():
+               null;
+    }
+    
+    
     /**
      * Is this Object a Job
      * @return 
