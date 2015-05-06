@@ -217,8 +217,7 @@
              Windowtitle="PEGASUS"
              classpathref="build.classpath">
       <packageset dir="src">
-        <include name="edu/isi/pegasus/**"/>
-        <include name="edu/isi/ikcap/**"/>
+        <include name="edu/isi/pegasus/planner/dax/**"/>
       </packageset>
       <fileset dir="src" includes="*.java"/>
       <doctitle><![CDATA[PEGASUS ${pegasus.version}]]></doctitle>
