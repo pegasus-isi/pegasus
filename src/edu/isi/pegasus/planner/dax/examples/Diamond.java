@@ -57,6 +57,7 @@ public class Diamond {
         preprocess.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
         preprocess.setInstalled(true);
         preprocess.addPhysicalFile("file://" + pegasus_location + "/bin/keg", site_handle);
+        preprocess.addMetaData( "size", "2048" );
 
         Executable findrange = new Executable("pegasus", "findrange", "4.0");
         findrange.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);

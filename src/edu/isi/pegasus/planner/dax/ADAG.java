@@ -166,6 +166,7 @@ import edu.isi.pegasus.planner.dax.Invoke.WHEN;
         Executable preprocess = new Executable("pegasus", "preprocess", "4.0");
         preprocess.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
         preprocess.setInstalled(true);
+        preprocess.addMetaData( "size", "2048" );
         preprocess.addPhysicalFile("file://" + pegasus_location + "/bin/keg", site_handle);
 
         Executable findrange = new Executable("pegasus", "findrange", "4.0");
