@@ -18,6 +18,7 @@ package edu.isi.pegasus.planner.dax;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.XMLWriter;
 import edu.isi.pegasus.common.util.Separator;
+import java.util.Set;
 
 /**
  * This class is the container for any File object, either the RC section, or uses
@@ -77,20 +78,32 @@ public class File extends CatalogType {
     /**
      * File size of the file no units required
      */
-    
     protected String mSize = "";
+    
+    /**
+     *  Create new file object
+     * @param name The name of the file
+     */
+    public File(String name) {
+        mName = name;
+    }
+
+    /**
+     * Create new file object
+     * @param name The name of the file
+     * @param link The linkage of the file
+     */
+    public File(String name, LINK link) {
+        mName = name;
+        mLink = link;
+    }
     
     /**
      * Copy constructor
      * @param f File
      */
     public File(File f) {
-        this(f.getNamespace(), f.getName(), f.getVersion(), f.getLink());
-        this.mOptional = f.getOptional();
-        this.mRegister = f.getRegister();
-        this.mTransfer = f.getTransfer();
-        this.mExecutable = f.getExecutable();
-        this.mSize = f.getSize();
+        this(f, f.getLink());
     }
 
     /**
@@ -114,29 +127,9 @@ public class File extends CatalogType {
      * @param version
      */
     public File(String namespace, String name, String version) {
-        mNamespace = namespace;
-        mName = name;
-        mVersion = version;
+        this( namespace, name, version, null );
     }
-
-    /**
-     *  Create new file object
-     * @param name The name of the file
-     */
-    public File(String name) {
-        mName = name;
-    }
-
-    /**
-     * Create new file object
-     * @param name The name of the file
-     * @param link The linkage of the file
-     */
-    public File(String name, LINK link) {
-        mName = name;
-        mLink = link;
-    }
-
+    
     /**
      * Create a new file object
      * @param namespace The namespace of the file
@@ -150,6 +143,8 @@ public class File extends CatalogType {
         mVersion = version;
         mLink = link;
     }
+
+    
 
     /**
      * Get the name of the file
@@ -303,6 +298,8 @@ public class File extends CatalogType {
         return true;
     }
     
+    
+    
     /**
      * Check if this File is equal to Object o
      * @param o
@@ -335,6 +332,7 @@ public class File extends CatalogType {
         this.mTransfer = f.getTransfer();
         this.mExecutable = f.getExecutable();
         this.mSize = f.getSize();
+        this.mMetadata   = f.getMetaData();
         return f;
     }
 
