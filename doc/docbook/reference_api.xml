@@ -9,13 +9,13 @@
 
     <para>The DAX format is described by the XML schema instance document
     <ulink
-    url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.3/dax-3.3.xsd">dax-3.3.xsd</ulink>.
+    url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.6/dax-3.6.xsd">dax-3.6.xsd</ulink>.
     A local copy of the schema definition is provided in the
     <quote>etc</quote> directory. The documentation of the XML schema and its
     elements can be found in <ulink
-    url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.3/dax-3.3.html">dax-3.3.html</ulink>
+    url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.6/dax-3.6.html">dax-3.6.html</ulink>
     as well as locally in
-    <filename>doc/schemas/dax-3.3/dax-3.3.html</filename> in your Pegasus
+    <filename>doc/schemas/dax-3.6/dax-3.6.html</filename> in your Pegasus
     distribution.</para>
 
     <section>
@@ -27,6 +27,13 @@
       workflows, what to do and what to work upon.</para>
 
       <orderedlist>
+        <listitem>
+          <para>Workflow level Metadata</para>
+
+          <para>Metadata that is associated with the whole workflow. These are
+          defined in the Metadata section.</para>
+        </listitem>
+
         <listitem>
           <para>Workflow-level Notifications</para>
 
@@ -122,8 +129,8 @@
 &lt;!-- generated: 2011-07-28T18:29:57Z --&gt;
 &lt;adag xmlns="http://pegasus.isi.edu/schema/DAX" 
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-      xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.3.xsd" 
-      version="3.3" 
+      xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.6.xsd" 
+      version="3.6" 
       name="diamond" 
       index="0" 
       count="1"&gt;</programlisting>
@@ -156,7 +163,7 @@
                 </entry>
 
                 <entry>Version number of DAX instance document. Must be
-                3.3.</entry>
+                3.6.</entry>
               </row>
 
               <row>
@@ -252,16 +259,30 @@
       </section>
 
       <section>
+        <title>Workflow-level Metadata</title>
+
+        <para>Metadata associated with the whole workflow.</para>
+
+        <programlisting>   &lt;metadata key="name"&gt;diamond&lt;/metadata&gt;
+   &lt;metadata key="createdBy"&gt;Karan Vahi&lt;/metadata&gt;</programlisting>
+
+        <para>The workflow level metadata maybe used to control the Pegasus
+        Mapper behaviour at planning time or maybe propogated to external
+        services while querying for job characteristics.</para>
+      </section>
+
+      <section>
         <title>Workflow-level Notifications</title>
 
-        <para>(something to be said here.)</para>
+        <para>Notifications that are generated when workflow level events
+        happened.</para>
 
         <programlisting>  &lt;!-- part 1.1: invocations --&gt;
   &lt;invoke when="at_end"&gt;/bin/date -Ins &amp;gt;&amp;gt; my.log&lt;/invoke&gt;</programlisting>
 
         <para>The above snippet will append the current time to a log file in
-        the current directory. This is with regards to the monitord instance
-        acting on the <link
+        the current directory. This is with regards to the pegasus-monitord
+        instance acting on the <link
         linkend="notifications">notification</link>.</para>
       </section>
 
@@ -299,9 +320,9 @@
     &lt;profile namespace="stat" key="md5sum"&gt;/* 32 char hex string */&lt;/profile&gt;
     &lt;profile namespace="stat" key="mtime"&gt;/* ISO-8601 timestamp */&lt;/profile&gt;
 
-    &lt;!-- metadata is currently NOT SUPPORTED --&gt;
-    &lt;metadata key="timestamp" type="int"&gt;/* ISO-8601 *or* 20100417134523:int */&lt;/metadata&gt;
-    &lt;metadata key="origin" type="string"&gt;ocean&lt;/metadata&gt;
+    &lt;!-- Metadata will be supported 4.6 onwards--&gt;
+    &lt;metadata key="timestamp" &gt;/* ISO-8601 *or* 20100417134523:int */&lt;/metadata&gt;
+    &lt;metadata key="origin" &gt;ocean&lt;/metadata&gt;
     
     &lt;!-- PFN to by-pass replica catalog --&gt;
     &lt;!-- The "site attribute is optional --&gt;
@@ -401,9 +422,9 @@
     &lt;profile namespace="stat" key="md5sum"&gt;AB454DSSDA4646DS&lt;/profile&gt;
     &lt;profile namespace="stat" key="mtime"&gt;2010-11-22T10:05:55.470606000-0800&lt;/profile&gt;
 
-    &lt;!-- metadata is currently NOT SUPPORTED! --&gt;
-    &lt;metadata key="timestamp" type="int"&gt;/* see above */&lt;/metadata&gt;
-    &lt;metadata key="origin" type="string"&gt;ocean&lt;/metadata&gt;
+    &lt;!-- metadata will be supported in 4.6 --&gt;
+    &lt;metadata key="timestamp" &gt;/* see above */&lt;/metadata&gt;
+    &lt;metadata key="origin"&gt;ocean&lt;/metadata&gt;
  
     &lt;!-- PFN to by-pass transformation catalog --&gt;
     &lt;!-- The "site" attribute is optional --&gt;
@@ -739,7 +760,9 @@
     &lt;profile namespace="execution" key="site"&gt;isi_viz&lt;/profile&gt;
     &lt;profile namespace="condor" key="getenv"&gt;true&lt;/profile&gt;
 
-    &lt;uses name="f.a" link="input"  register="false" transfer="true" type="data" /&gt;
+     &lt;uses name="f.a" link="input" transfer="true" register="true"&gt;
+         &lt;metadata key="size"&gt;1024&lt;/metadata&gt;
+      &lt;/uses&gt;
     &lt;uses name="f.b" link="output" register="false" transfer="true" type="data" /&gt;
     
     &lt;!-- 'WHEN' enumeration: never, start, on_error, on_success, at_end, all --&gt;
@@ -1065,8 +1088,8 @@
       <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;adag xmlns="http://pegasus.isi.edu/schema/DAX"
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
- xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.3.xsd"
- version="3.3" name="diamond" index="0" count="1"&gt;
+ xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.6.xsd"
+ version="3.6" name="diamond" index="0" count="1"&gt;
   &lt;!-- part 1.1: invocations --&gt;
   &lt;invoke when="on_error"&gt;/bin/mailx -s &amp;apos;diamond failed&amp;apos; use@some.domain&lt;/invoke&gt;
 
