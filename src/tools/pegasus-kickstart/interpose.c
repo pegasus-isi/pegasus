@@ -144,19 +144,19 @@ typedef struct {
 } CpuUtilInfo;
 
 typedef struct {
-    int vmSize;
-    int vmRSS;
-    int threads;
+    unsigned long long vmSize;
+    unsigned long long vmRSS;
+    unsigned long threads;
 } MemUtilInfo;
 
 typedef struct {
-    int rchar;
-    int wchar;
-    int syscr;
-    int syscw;
-    int read_bytes;
-    int write_bytes;
-    int cancelled_write_bytes;
+    unsigned long long rchar;
+    unsigned long long wchar;
+    unsigned long syscr;
+    unsigned long syscw;
+    unsigned long long read_bytes;
+    unsigned long long write_bytes;
+    unsigned long long cancelled_write_bytes;
 } IoUtilInfo;
 
 const char DTYPE_NONE = 0;
@@ -258,8 +258,8 @@ static void* timer_thread_func(void* mpi_rank_void) {
 
         printerr("libinterpose: ts=%d event=workflow_trace level=INFO status=0 "
                     "job_id=%s kickstart_pid=%s executable=%s hostname=%s mpi_rank=%d utime=%.3f stime=%.3f "
-                    "iowait=%.3f vmSize=%d vmRSS=%d threads=%d read_bytes=%d write_bytes=%d "
-                    "syscr=%d syscw=%d\n",
+                    "iowait=%.3f vmSize=%llu vmRSS=%llu threads=%lu read_bytes=%llu write_bytes=%llu "
+                    "syscr=%lu syscw=%lu\n",
 
                     (int)timestamp, job_id, kickstart_pid, exec_name, hostname, mpi_rank,
                     cpu_info.real_utime, cpu_info.real_stime, cpu_info.real_iowait,
@@ -267,10 +267,10 @@ static void* timer_thread_func(void* mpi_rank_void) {
                     io_info.rchar, io_info.wchar, io_info.syscr, io_info.syscw);
 
 
-        fprintf(kickstart_status, "ts=%d event=workflow_trace level=INFO status=0 "         
-            "job_id=%s kickstart_pid=%s executable=%s hostname=%s mpi_rank=%d utime=%.3f stime=%.3f "
-            "iowait=%.3f vmSize=%d vmRSS=%d threads=%d read_bytes=%d write_bytes=%d "
-            "syscr=%d syscw=%d\n", 
+        fprintf(kickstart_status, "ts=%d event=workflow_trace level=INFO status=0 "
+                   "job_id=%s kickstart_pid=%s executable=%s hostname=%s mpi_rank=%d utime=%.3f stime=%.3f "
+                   "iowait=%.3f vmSize=%llu vmRSS=%llu threads=%lu read_bytes=%llu write_bytes=%llu "
+                   "syscr=%lu syscw=%lu\n",
 
             (int)timestamp, job_id, kickstart_pid, exec_name, hostname, mpi_rank, 
             cpu_info.real_utime, cpu_info.real_stime, cpu_info.real_iowait,
