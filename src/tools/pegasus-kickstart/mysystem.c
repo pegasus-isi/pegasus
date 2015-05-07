@@ -60,21 +60,15 @@ static int isRelativePath(char *path) {
 }
 
 /* Find the path to the interposition library */
+/* Find the path to the interposition library */
 static int findInterposeLibrary(char *path, int pathsize) {
     char kickstart[BUFSIZ];
     char lib[BUFSIZ];
 
-    // If the path is not relative, then look it up in the PATH
-    if (!isRelativePath(programname)) {
-        programname = findApp(programname);
-        if (programname == NULL) {
-            // Not found in PATH
-            return -1;
-        }
-    }
-
-    // Find the real path of kickstart
-    if (realpath(programname, kickstart) < 0) {
+    // Get the full path to the kickstart executable
+    int size = readlink("/proc/self/exe", kickstart, BUFSIZ);
+    if (size < 0) {
+        printerr("Unable to readlink /proc/self/exe");
         return -1;
     }
 
