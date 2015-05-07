@@ -1212,6 +1212,11 @@
         </listitem>
 
         <listitem>
+          <para>Add any metadata attributes associated with the whole
+          workflow.</para>
+        </listitem>
+
+        <listitem>
           <para>Add any Workflow notification elements</para>
         </listitem>
 
@@ -1264,7 +1269,7 @@
       class="directory">examples/grid-blackdiamond-java</filename> directory
       as <filename>BlackDiamonDAX.java</filename>:</para>
 
-      <programlisting>/**
+      <programlisting id="api-java-example">/**
  *  Copyright 2007-2008 University Of Southern California
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -1292,16 +1297,24 @@ public class Diamond {
 
     
 
+    public class Diamond {
+
+    
+
     public ADAG generate(String site_handle, String pegasus_location) throws Exception {
 
         java.io.File cwdFile = new java.io.File (".");
         String cwd = cwdFile.getCanonicalPath(); 
 
-        ADAG dax = new ADAG("blackdiamond");
+        ADAG dax = new ADAG("diamond");
         dax.addNotification(Invoke.WHEN.start,"/pegasus/libexec/notification/email -t notify@example.com");
         dax.addNotification(Invoke.WHEN.at_end,"/pegasus/libexec/notification/email -t notify@example.com");
+        dax.addMetadata( "name", "diamond");
+        dax.addMetadata( "createdBy", "Karan Vahi");
+        
         File fa = new File("f.a");
         fa.addPhysicalFile("file://" + cwd + "/f.a", "local");
+        fa.addMetaData( "size", "1024" );
         dax.addFile(fa);
 
         File fb1 = new File("f.b1");
@@ -1315,6 +1328,7 @@ public class Diamond {
         preprocess.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
         preprocess.setInstalled(true);
         preprocess.addPhysicalFile("file://" + pegasus_location + "/bin/keg", site_handle);
+        preprocess.addMetaData( "size", "2048" );
 
         Executable findrange = new Executable("pegasus", "findrange", "4.0");
         findrange.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
@@ -1333,6 +1347,7 @@ public class Diamond {
         j1.addArgument("-a preprocess -T 60 -i ").addArgument(fa);
         j1.addArgument("-o ").addArgument(fb1);
         j1.addArgument(" ").addArgument(fb2);
+        j1.addMetadata( "time", "60" );
         j1.uses(fa, File.LINK.INPUT);
         j1.uses(fb1, File.LINK.OUTPUT);
         j1.uses(fb2, File.LINK.OUTPUT);
@@ -1344,6 +1359,7 @@ public class Diamond {
         Job j2 = new Job("j2", "pegasus", "findrange", "4.0");
         j2.addArgument("-a findrange -T 60 -i ").addArgument(fb1);
         j2.addArgument("-o ").addArgument(fc1);
+        j2.addMetadata( "time", "60" );
         j2.uses(fb1, File.LINK.INPUT);
         j2.uses(fc1, File.LINK.OUTPUT);
         j2.addNotification(Invoke.WHEN.start,"/pegasus/libexec/notification/email -t notify@example.com");
@@ -1354,6 +1370,7 @@ public class Diamond {
         Job j3 = new Job("j3", "pegasus", "findrange", "4.0");
         j3.addArgument("-a findrange -T 60 -i ").addArgument(fb2);
         j3.addArgument("-o ").addArgument(fc2);
+        j3.addMetadata( "time", "60" );
         j3.uses(fb2, File.LINK.INPUT);
         j3.uses(fc2, File.LINK.OUTPUT);
         j3.addNotification(Invoke.WHEN.start,"/pegasus/libexec/notification/email -t notify@example.com");
@@ -1365,6 +1382,7 @@ public class Diamond {
         j4.addArgument("-a analyze -T 60 -i ").addArgument(fc1);
         j4.addArgument(" ").addArgument(fc2);
         j4.addArgument("-o ").addArgument(fd);
+        j4.addMetadata( "time", "60" );
         j4.uses(fc1, File.LINK.INPUT);
         j4.uses(fc2, File.LINK.INPUT);
         j4.uses(fd, File.LINK.OUTPUT);
@@ -1418,7 +1436,7 @@ public class Diamond {
       <para>Refer to the <ulink url="python/">auto-generated python
       documentation</ulink> explaining this API.</para>
 
-      <programlisting>#!/usr/bin/env python
+      <programlisting id="api-python-example">#!/usr/bin/env python
 
 from Pegasus.DAX3 import *
 import sys
