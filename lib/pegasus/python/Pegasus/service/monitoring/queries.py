@@ -31,7 +31,7 @@ from Pegasus.db.admin.admin_loader import DBAdminError
 from Pegasus.service import cache
 from Pegasus.service.base import BaseQueryParser, BaseOrderParser, InvalidQueryError, InvalidOrderError
 from Pegasus.service.monitoring.resources import RootWorkflowResource, RootWorkflowstateResource, CombinationResource
-from Pegasus.service.monitoring.resources import WorkflowResource, WorkflowstateResource, JobResource, HostResource, JobInstanceResource, JobstateResource
+from Pegasus.service.monitoring.resources import WorkflowResource, WorkflowstateResource, JobResource, HostResource, JobInstanceResource, JobstateResource, TaskResource
 
 log = logging.getLogger(__name__)
 
@@ -434,7 +434,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         # Construct SQLAlchemy Query `q` to sort
         #
         if order:
-            q = self._add_ordering(q, order, WorkflowResource())
+            q = self._add_ordering(q, order, WorkflowstateResource())
 
         #
         # Construct SQLAlchemy Query `q` to add pagination
@@ -487,7 +487,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         # Construct SQLAlchemy Query `q` to sort
         #
         if order:
-            q = self._add_ordering(q, order, WorkflowResource())
+            q = self._add_ordering(q, order, JobResource())
 
         #
         # Construct SQLAlchemy Query `q` to add pagination
@@ -569,7 +569,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         # Construct SQLAlchemy Query `q` to sort
         #
         if order:
-            q = self._add_ordering(q, order, WorkflowResource())
+            q = self._add_ordering(q, order, HostResource())
 
         #
         # Construct SQLAlchemy Query `q` to add pagination
@@ -648,7 +648,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         # Construct SQLAlchemy Query `q` to sort
         #
         if order:
-            q = self._add_ordering(q, order, WorkflowResource())
+            q = self._add_ordering(q, order, JobInstanceResource())
 
         #
         # Construct SQLAlchemy Query `q` to add pagination
@@ -768,7 +768,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         # Construct SQLAlchemy Query `q` to sort
         #
         if order:
-            q = self._add_ordering(q, order, WorkflowResource())
+            q = self._add_ordering(q, order, JobstateResource())
 
         #
         # Construct SQLAlchemy Query `q` to add pagination
@@ -778,3 +778,80 @@ class StampedeWorkflowQueries(WorkflowQueries):
         records = self._get_all(q, use_cache)
 
         return records, total_records, total_filtered
+
+    def get_workflow_tasks(self, wf_id, start_index=None, max_results=None, query=None,order=None, use_cache=True, recent=False, **kwargs):
+        """
+
+        :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
+        :param max_results: Return a maximum of `max_results` records
+        :param query: Filtering criteria
+        :param order: Sorting criteria
+        :param use_cache: whether or not we should try to pull data from the cache first
+        :param recent: Get the most recent results
+
+        :return: state record
+        """
+        q = self.session.query(Task)
+
+        if wf_id is None:
+            raise ValueError('wf_id cannot be None')
+
+        wf_id = str(wf_id)
+        if wf_id.isdigit():
+            q = q.filter(Task.wf_id == wf_id)
+        else:
+            q = q.filter(Task.wf_uuid == wf_id)
+
+        total_records = total_filtered = self._get_count(q, use_cache)
+
+        if total_records == 0:
+            return [], 0, 0
+
+        #
+        # Construct SQLAlchemy Query `q` to get filtered count.
+        #
+        if query:
+            q = self._evaluate_query(q, query, TaskResource())
+            total_filtered = self._get_count(q, use_cache)
+
+            if total_filtered == 0 or (start_index and start_index >= total_filtered):
+                log.debug('total_filtered is 0 or start_index >= total_filtered')
+                return [], total_records, total_filtered
+
+        #
+        # Construct SQLAlchemy Query `q` to sort
+        #
+        if order:
+            q = self._add_ordering(q, order, TaskResource())
+
+        #
+        # Construct SQLAlchemy Query `q` to add pagination
+        #
+        q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
+
+        records = self._get_all(q, use_cache)
+
+        return records, total_records, total_filtered
+
+    def get_workflow_task(self, wf_id, task_id, use_cache=True):
+        """
+
+        :param wf_id: Id of the workflow associated with the task
+        :param task_id: Id of the task
+        :param use_cache: flag to look up result in cache first
+
+        :return: task record
+        """
+        q = self.session.query(Task)
+
+        if wf_id is None:
+            raise ValueError('wf_id cannot be None')
+        if task_id is None or not str(task_id).isdigit():
+            raise ValueError('task_id must be an integer value')
+
+        q = q.filter(Task.task_id == task_id)
+
+        try:
+            return self._get_one(q, use_cache)
+        except NoResultFound, e:
+            raise e

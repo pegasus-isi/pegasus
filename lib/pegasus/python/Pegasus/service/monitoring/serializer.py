@@ -706,9 +706,9 @@ class WorkflowJobInstanceSerializer(BaseSerializer):
         """
 
         links = OrderedDict([
-            #('state', url_for('.get_job_instance_state', wf_id=job_instance.wf_id, job_id=job_instance.job_id, job_instance_id= job_instance.job_instance_id)),
+            #('state', url_for('.get_job_instance_states', wf_id=job_instance.wf_id, job_id=job_instance.job_id, job_instance_id= job_instance.job_instance_id)),
             #('host', url_for('.get_job_instance_host', wf_id=job_instance.wf_id, job_id=job_instance.job_id, job_instance_id=job_instance.job_instance_id)),
-            #('invocation', url_for('.get_job_instance_invocation', wf_id=job_instance.wf_id, job_id=job_instance.job_id, job_instance_id=job_instance.job_instance_id)),
+            #('invocation', url_for('.get_job_instance_invocations', wf_id=job_instance.wf_id, job_id=job_instance.job_id, job_instance_id=job_instance.job_instance_id)),
             #('job', url_for('.get_workflow_job', wf_id=job_instance.wf_id, job_id=job_instance.job_id))
         ])
 
@@ -801,4 +801,96 @@ class JobInstanceStateSerializer(BaseSerializer):
             #('job_instance', url_for('.get_job_instance', wf_id=job_instance.wf_id, job_id=job_instance.job_id, job_instance_id=job_instance.job_instance_id)),
         ])
 
+        return links
+
+class WorkflowTaskSerializer(BaseSerializer):
+    FIELDS = [
+        "task_id",
+        "abs_task_id",
+        "type_desc",
+        "transformation",
+        "argv"
+    ]
+
+    def __init__(self, selected_fields=None, pretty_print=False, **kwargs):
+        super(WorkflowTaskSerializer, self).__init__(fields=WorkflowTaskSerializer.FIELDS, pretty_print=pretty_print)
+        self._selected_fields = selected_fields if selected_fields else self._fields
+
+    def encode_collection(self, tasks, records_total=None, records_filtered=None):
+        """
+        Encodes a collection of tasks into it's JSON representation.
+
+        :param tasks: Collection of workflow workflow_tasks to be encoded as JSON
+        :param records_total: Number of records before applying the search criteria
+        :param records_filtered: Number of records after applying the search criteria
+
+        :return: JSON representation of tasks collection
+        """
+        if tasks is None:
+            return None
+
+        if not records_total or not records_filtered:
+            pass
+
+        records = [self._encode_record(task) for task in tasks]
+        records_meta = OrderedDict([
+            ('records_total', records_total),
+            ('records_filtered', records_filtered)
+        ])
+
+        json_records = OrderedDict([
+            ('records', records),
+            ('_meta', records_meta)
+        ])
+
+        return json.dumps(json_records, **self._pretty_print_opts)
+
+    def encode_record(self, task):
+        """
+        Encodes a single workflow_task into it's JSON representation.
+
+        :param task: Single instance of workflow_task resource
+
+        :return: JSON representation of workflow_task resource
+        """
+
+        return json.dumps(self._encode_record(task), **self._pretty_print_opts)
+
+    def _encode_record(self, task):
+        """
+        Encodes a single workflow_task into it's JSON representation.
+
+        :param task: Single instance of workflow_task resource
+
+        :return: JSON representation of workflow_task resource
+        """
+
+        if task is None:
+            return None
+
+        json_record = OrderedDict()
+
+        for field in self._selected_fields:
+            json_record[field] = self._get_field_value(task, field)
+
+        json_record['_links'] = self._links(task)
+
+        return json_record
+
+    @staticmethod
+    def _links(task):
+        """
+        Generates JSON representation of the HATEOAS links to be attached to the workflow_task resource.
+
+        :param task: workflow_task resource for which to generate HATEOAS links
+
+        :return: JSON representation of the HATEOAS links for worklow_task resource
+        """
+
+        links = OrderedDict([
+            ('workflow', url_for('.get_workflow', wf_id=task.wf_id))
+
+        ])
+        if task.job_id:
+            links.update({'job': url_for('.get_workflow_job', wf_id=task.wf_id, job_id=task.job_id)})
         return links

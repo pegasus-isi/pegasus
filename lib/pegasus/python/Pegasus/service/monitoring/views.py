@@ -295,7 +295,7 @@ Workflow State
 def get_workflow_state(username, m_wf_id, wf_id):
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
-    states, total_states, filtered_states = queries.get_workflow_state(wf_id)
+    states, total_states, filtered_states = queries.get_workflow_state(wf_id, **g.query_args)
 
     #
     # Generate JSON Response
@@ -333,7 +333,7 @@ Job
 def get_workflow_jobs(username, m_wf_id, wf_id):
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
-    jobs, total_jobs, filtered_jobs = queries.get_workflow_jobs(wf_id)
+    jobs, total_jobs, filtered_jobs = queries.get_workflow_jobs(wf_id, **g.query_args)
 
     #
     # Generate JSON Response
@@ -382,7 +382,7 @@ Host
 def get_workflow_hosts(username, m_wf_id, wf_id):
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
-    hosts, total_hosts, filtered_hosts = queries.get_workflow_hosts(wf_id)
+    hosts, total_hosts, filtered_hosts = queries.get_workflow_hosts(wf_id, **g.query_args)
 
     #
     # Generate JSON Response
@@ -440,10 +440,10 @@ Job State
 
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/state')
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/state/query')
-def get_job_instance_state(username, m_wf_id, wf_id, job_id, job_instance_id):
+def get_job_instance_states(username, m_wf_id, wf_id, job_id, job_instance_id):
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
-    states, total_states, filtered_states = queries.get_job_instance_states(wf_id, job_id, job_instance_id)
+    states, total_states, filtered_states = queries.get_job_instance_states(wf_id, job_id, job_instance_id, **g.query_args)
 
     #
     # Generate JSON Response
@@ -474,12 +474,32 @@ Task
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/task')
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/task/query')
 def get_workflow_tasks(username, m_wf_id, wf_id):
-    pass
+    queries = StampedeWorkflowQueries(g.stampede_db_url)
+
+    tasks, total_tasks, filtered_tasks = queries.get_workflow_tasks(wf_id, **g.query_args)
+
+    #
+    # Generate JSON Response
+    #
+    serializer = WorkflowTaskSerializer(**g.query_args)
+    response_json = serializer.encode_collection(tasks, total_tasks, filtered_tasks)
+
+    return make_response(response_json, 200, JSON_HEADER)
 
 
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/task/<task_id>')
 def get_workflow_task(username, m_wf_id, wf_id, task_id):
-    pass
+    queries = StampedeWorkflowQueries(g.stampede_db_url)
+
+    record = queries.get_workflow_task(wf_id, task_id)
+
+    #
+    # Generate JSON Response
+    #
+    serializer = WorkflowTaskSerializer(**g.query_args)
+    response_json = serializer.encode_record(record)
+
+    return make_response(response_json, 200, JSON_HEADER)
 
 
 """
@@ -518,7 +538,7 @@ Job Instance
 def get_workflow_job_instances(username, m_wf_id, wf_id, job_id):
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
-    job_instances, total_instances, filtered_instances = queries.get_workflow_job_instances(wf_id, job_id)
+    job_instances, total_instances, filtered_instances = queries.get_workflow_job_instances(wf_id, job_id, **g.query_args)
     #
     # Generate JSON Response
     #
