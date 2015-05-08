@@ -64,12 +64,14 @@ public class ENV extends Namespace {
     public static final String PEGASUS_WF_ID_ENV_KEY  = "PEGASUS_WF_UUID";
     
     /**
+     * the env variable containing the workflow label assigned by pegasus
+     */
+    public static final String PEGASUS_WF_LABEL_ENV_KEY  = "PEGASUS_WF_LABEL";
+    
+    /**
      * the env variable containing the job id of a job in the executable workflow
      */
     public static final String PEGASUS_JOB_ID_ENV_KEY = "PEGASUS_DAG_JOB_ID";
-    
-    
-    public static String PEGASUS_SITE_ID_ENV_KEY = "PEGASUS_SITE";
 
     /**
      * The name of the environment variable that specifies the s3cfg path
