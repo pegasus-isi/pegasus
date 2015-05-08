@@ -589,23 +589,61 @@ Invocation
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/invocation')
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/invocation/query')
 def get_workflow_invocations(username, m_wf_id, wf_id):
-    pass
+    queries = StampedeWorkflowQueries(g.stampede_db_url)
+
+    invocations, total_invocations, filtered_invocations = queries.get_workflow_invocations(wf_id,**g.query_args)
+
+    #
+    # Generate JSON Response
+    #
+    serializer = InvocationSerializer(**g.query_args)
+    response_json = serializer.encode_collection(invocations, total_invocations, filtered_invocations)
+
+    return make_response(response_json, 200, JSON_HEADER)
 
 
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/invocation/<invocation_id>')
 def get_workflow_invocation(username, m_wf_id, wf_id, invocation_id):
-    pass
+    queries = StampedeWorkflowQueries(g.stampede_db_url)
+    record = queries.get_workflow_invocation(wf_id, invocation_id)
+
+    #
+    # Generate JSON Response
+    #
+    serializer = InvocationSerializer(**g.query_args)
+    response_json = serializer.encode_record(record)
+
+    return make_response(response_json, 200, JSON_HEADER)
 
 
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/invocation')
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/invocation/query')
 def get_job_instance_invocations(username, m_wf_id, wf_id, job_id, job_instance_id):
-    pass
+    queries = StampedeWorkflowQueries(g.stampede_db_url)
+
+    invocations, total_invocations, filtered_invocations = queries.get_job_instance_invocations(wf_id, job_id, job_instance_id,**g.query_args)
+
+    #
+    # Generate JSON Response
+    #
+    serializer = InvocationSerializer(**g.query_args)
+    response_json = serializer.encode_collection(invocations, total_invocations, filtered_invocations)
+
+    return make_response(response_json, 200, JSON_HEADER)
 
 
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/invocation/<invocation_id>')
 def get_job_instance_invocation(username, m_wf_id, wf_id, job_id, job_instance_id, invocation_id):
-    pass
+    queries = StampedeWorkflowQueries(g.stampede_db_url)
+    record = queries.get_job_instance_invocation(wf_id, job_id, job_instance_id, invocation_id)
+
+    #
+    # Generate JSON Response
+    #
+    serializer = InvocationSerializer(**g.query_args)
+    response_json = serializer.encode_record(record)
+
+    return make_response(response_json, 200, JSON_HEADER)
 
 
 """

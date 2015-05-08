@@ -31,7 +31,7 @@ from Pegasus.db.admin.admin_loader import DBAdminError
 from Pegasus.service import cache
 from Pegasus.service.base import BaseQueryParser, BaseOrderParser, InvalidQueryError, InvalidOrderError
 from Pegasus.service.monitoring.resources import RootWorkflowResource, RootWorkflowstateResource, CombinationResource
-from Pegasus.service.monitoring.resources import WorkflowResource, WorkflowstateResource, JobResource, HostResource, JobInstanceResource, JobstateResource, TaskResource
+from Pegasus.service.monitoring.resources import WorkflowResource, WorkflowstateResource, JobResource, HostResource, JobInstanceResource, JobstateResource, TaskResource, InvocationResource
 
 log = logging.getLogger(__name__)
 
@@ -850,6 +850,176 @@ class StampedeWorkflowQueries(WorkflowQueries):
             raise ValueError('task_id must be an integer value')
 
         q = q.filter(Task.task_id == task_id)
+
+        try:
+            return self._get_one(q, use_cache)
+        except NoResultFound, e:
+            raise e
+
+
+    def get_workflow_invocations(self, wf_id, start_index=None, max_results=None, query=None,order=None, use_cache=True, recent=False, **kwargs):
+        """
+
+        :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
+        :param max_results: Return a maximum of `max_results` records
+        :param query: Filtering criteria
+        :param order: Sorting criteria
+        :param use_cache: whether or not we should try to pull data from the cache first
+        :param recent: Get the most recent results
+
+        :return: invocations record
+        """
+        q = self.session.query(Invocation)
+
+        if wf_id is None:
+            raise ValueError('wf_id cannot be None')
+
+        wf_id = str(wf_id)
+        if wf_id.isdigit():
+            q = q.filter(Invocation.wf_id == wf_id)
+        else:
+            q = q.filter(Invocation.wf_uuid == wf_id)
+
+        total_records = total_filtered = self._get_count(q, use_cache)
+
+        if total_records == 0:
+            return [], 0, 0
+
+        #
+        # Construct SQLAlchemy Query `q` to get filtered count.
+        #
+        if query:
+            q = self._evaluate_query(q, query, InvocationResource())
+            total_filtered = self._get_count(q, use_cache)
+
+            if total_filtered == 0 or (start_index and start_index >= total_filtered):
+                log.debug('total_filtered is 0 or start_index >= total_filtered')
+                return [], total_records, total_filtered
+
+        #
+        # Construct SQLAlchemy Query `q` to sort
+        #
+        if order:
+            q = self._add_ordering(q, order, InvocationResource())
+
+        #
+        # Construct SQLAlchemy Query `q` to add pagination
+        #
+        q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
+
+        records = self._get_all(q, use_cache)
+
+        return records, total_records, total_filtered
+
+    def get_workflow_invocation(self, wf_id, invocation_id, use_cache=True):
+        """
+
+        :param wf_id: Id of the workflow associated with the invocation
+        :param invocation_id: Id of the invocation
+        :param use_cache: flag to look up result in cache first
+
+        :return: invocation record
+        """
+        q = self.session.query(Invocation)
+
+        if wf_id is None:
+            raise ValueError('wf_id cannot be None')
+        if invocation_id is None or not str(invocation_id).isdigit():
+            raise ValueError('invocation_id must be an integer value')
+
+        q = q.filter(Invocation.invocation_id == invocation_id)
+
+        try:
+            return self._get_one(q, use_cache)
+        except NoResultFound, e:
+            raise e
+
+    def get_job_instance_invocations(self, wf_id, job_id, job_instance_id, start_index=None, max_results=None, query=None,order=None, use_cache=True, recent=False, **kwargs):
+        """
+
+        :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
+        :param job_id: Id of the job associated with the invocation
+        :param job_instance_id: Id of the job instance associated with the invocation
+        :param max_results: Return a maximum of `max_results` records
+        :param query: Filtering criteria
+        :param order: Sorting criteria
+        :param use_cache: whether or not we should try to pull data from the cache first
+        :param recent: Get the most recent results
+
+        :return: invocations record
+        """
+        q = self.session.query(Invocation)
+
+        if wf_id is None:
+            raise ValueError('wf_id cannot be None')
+        if job_id is None or not str(job_id).isdigit():
+            raise ValueError('job_id must be an integer value')
+        if job_instance_id is None or not str(job_instance_id).isdigit():
+            raise ValueError('job_instance_id must be an integer value')
+
+        wf_id = str(wf_id)
+        if wf_id.isdigit():
+            q = q.filter(Invocation.wf_id == wf_id)
+        else:
+            q = q.filter(Invocation.wf_uuid == wf_id)
+
+        q = q.filter(Invocation.job_id == job_id)
+        q = q.filter(Invocation.job_instance_id == job_instance_id)
+
+        total_records = total_filtered = self._get_count(q, use_cache)
+
+        if total_records == 0:
+            return [], 0, 0
+
+        #
+        # Construct SQLAlchemy Query `q` to get filtered count.
+        #
+        if query:
+            q = self._evaluate_query(q, query, InvocationResource())
+            total_filtered = self._get_count(q, use_cache)
+
+            if total_filtered == 0 or (start_index and start_index >= total_filtered):
+                log.debug('total_filtered is 0 or start_index >= total_filtered')
+                return [], total_records, total_filtered
+
+        #
+        # Construct SQLAlchemy Query `q` to sort
+        #
+        if order:
+            q = self._add_ordering(q, order, InvocationResource())
+
+        #
+        # Construct SQLAlchemy Query `q` to add pagination
+        #
+        q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
+
+        records = self._get_all(q, use_cache)
+
+        return records, total_records, total_filtered
+
+    def get_job_instance_invocation(self, wf_id, job_id, job_instance_id, invocation_id, use_cache=True):
+        """
+
+        :param wf_id: Id of the workflow associated with the invocation
+        :param job_id: Id of the job associated with the invocation
+        :param job_instance_id: Id of the job instance associated with the invocation
+        :param invocation_id: Id of the invocation
+        :param use_cache: flag to look up result in cache first
+
+        :return: invocation record
+        """
+        q = self.session.query(Invocation)
+
+        if wf_id is None:
+            raise ValueError('wf_id cannot be None')
+        if job_id is None or not str(job_id).isdigit():
+            raise ValueError('job_id must be an integer value')
+        if job_instance_id is None or not str(job_instance_id).isdigit():
+            raise ValueError('job_instance_id must be an integer value')
+        if invocation_id is None or not str(invocation_id).isdigit():
+            raise ValueError('invocation_id must be an integer value')
+
+        q = q.filter(Invocation.invocation_id == invocation_id)
 
         try:
             return self._get_one(q, use_cache)
