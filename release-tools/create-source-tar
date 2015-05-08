@@ -24,7 +24,7 @@ done
 
 # Set the git hash in build.properties so that we have it saved
 HASH=$(git rev-parse HEAD)
-printf "pegasus.build.git.hash = $HASH\n" >> dist/pegasus-source-$VERSION/build.properties
+printf "pegasus.build.git.hash = $HASH\n" > dist/pegasus-source-$VERSION/build.git.properties
 
 cd dist/
 tar czf pegasus-source-$VERSION.tar.gz pegasus-source-$VERSION
