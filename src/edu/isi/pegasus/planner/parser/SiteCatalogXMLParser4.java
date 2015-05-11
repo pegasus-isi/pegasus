@@ -401,9 +401,8 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
             //m metadata
             case 'm':
                 if( element.equals( "metadata" ) ){
-
-                    String key = null;
-                    Profile p = new Profile();  
+                    Profile p = new Profile(); 
+                    p.setProfileNamespace(  "metadata" ); 
                     for ( int i=0; i < names.size(); ++i ) {
                         String name = (String) names.get( i );
                         String value = (String) values.get( i );
@@ -415,10 +414,6 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
                 	    this.complain( element, name, value );
                         }
                     }
-                    if( key == null ){
-                        this.complain( element, "key", key );
-                    }
-                    //MetaData md = new Metadata( key, type );
                     return p;
 
                 }//end of element metadata
