@@ -88,7 +88,7 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
      * The "not-so-official" location URL of the Site Catalog Schema.
      */
     public static final String SCHEMA_LOCATION =
-                                        "http://pegasus.isi.edu/schema/sc-4.0.xsd";
+                                        "http://pegasus.isi.edu/schema/sc-4.1.xsd";
 
     /**
      * uri namespace
@@ -398,6 +398,33 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
                     return null;
                 }
             
+            //m metadata
+            case 'm':
+                if( element.equals( "metadata" ) ){
+
+                    String key = null;
+                    Profile p = new Profile();  
+                    for ( int i=0; i < names.size(); ++i ) {
+                        String name = (String) names.get( i );
+                        String value = (String) values.get( i );
+                        if ( name.equals( "key" ) ) {
+                            p.setProfileKey( value );
+                 	    this.log( element, name, value );
+                        }
+                        else {
+                	    this.complain( element, name, value );
+                        }
+                    }
+                    if( key == null ){
+                        this.complain( element, "key", key );
+                    }
+                    //MetaData md = new Metadata( key, type );
+                    return p;
+
+                }//end of element metadata
+                else{
+                    return null;//end of case m
+                }
                 
             //p profile                 
             case 'p':
@@ -632,7 +659,21 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
                     return false;
                 }
                 
-                
+            //m metadata
+            case 'm':
+                if ( child instanceof Profile ) {
+                    Profile md = ( Profile )child;
+                    md.setProfileValue( mTextContent.toString().trim() );
+                    if ( parent instanceof SiteCatalogEntry ){
+                        //profile appears in the job element
+                        SiteCatalogEntry site = (SiteCatalogEntry)parent;
+                        site.addProfile( md );
+                        return true;
+                    }
+                }
+                return false;
+    
+            
             //r replica-catalog                 
             case 'r':
                 //replica-catalog appear in site
