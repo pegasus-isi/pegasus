@@ -258,6 +258,16 @@ public class XMLTest {
         mLogger.logEventCompletion();
     }
     
+    @Test
+    public void testMetadata() {
+        mLogger.logEventStart( "test.catalog.site.impl.XML", "metadata", Integer.toString(mTestNumber++) );
+        SiteCatalogEntry entry = mCatalog.lookup( "ec2" );
+        assertNotNull( entry );
+       
+        testProfile( entry, "metadata", "resource-type", "cloud" );
+        mLogger.logEventCompletion();
+    }
+    
     private void testGridGateway( SiteCatalogEntry entry, GridGateway.JOB_TYPE jobType, GridGateway.SCHEDULER_TYPE schedulerType, String contact) {
         
         GridGateway gw = entry.getGridGateway( jobType );
