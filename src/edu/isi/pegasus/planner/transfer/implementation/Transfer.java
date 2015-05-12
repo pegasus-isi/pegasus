@@ -397,6 +397,10 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
      */
     protected void writeStdInAndAssociateCredentials(TransferJob job, FileWriter writer, Collection files, String stagingSite, int jobClass ) throws
         Exception {
+    	
+    	// format is a JSON list
+    	writer.write("[\n");
+    	
         int num = 1;
         for( Iterator it = files.iterator(); it.hasNext(); ){
             FileTransfer ft = (FileTransfer) it.next();
@@ -406,10 +410,25 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
 
             //write to the file one URL pair at a time
             StringBuffer urlPair = new StringBuffer( );
-            urlPair.append( "# " ).append( "src " ).append( num ).append( " " ).append( source.getKey() ).append( " ").append( "prio" ).append( " ").append( ft.getPriority()).append( "\n" ).
-                    append( source.getValue() ).append( "\n" ).
-                    append( "# " ).append( "dst " ).append( num ).append( " " ).append( dest.getKey() ).append( "\n" ).
-                    append( dest.getValue() ).append( "\n" );
+            // Wow, annoying to require double quotes all over the place...
+            if (num > 1) {
+            	urlPair.append(" ,\n");
+            }
+            urlPair.append(" { \"type\": \"transfer\",\n");
+            urlPair.append("   \"id\": ").append(num).append(",\n");
+            urlPair.append("   \"src_urls\": [");
+            urlPair.append(" {");
+            urlPair.append(" \"site_label\": \"").append(source.getKey()).append("\",");
+            urlPair.append(" \"url\": \"").append(source.getValue()).append("\"");
+            urlPair.append(" }");
+            urlPair.append(" ],\n");
+            urlPair.append("   \"dest_urls\": [");
+            urlPair.append(" {");
+            urlPair.append(" \"site_label\": \"").append(dest.getKey()).append("\",");
+            urlPair.append(" \"url\": \"").append(dest.getValue()).append("\"");
+            urlPair.append(" }");
+            urlPair.append(" ]");
+            urlPair.append(" }\n"); // end of this transfer
             writer.write( urlPair.toString() );
             writer.flush();
             num++;
@@ -419,8 +438,8 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
             job.addCredentialType( source.getKey(), source.getValue() );
             job.addCredentialType( dest.getKey(), dest.getValue() );
         }
-
-
+        
+        writer.write("]\n");
     }
 
     /**
