@@ -183,6 +183,7 @@ def job(username, root_wf_id, wf_id, job_id, job_instance_id):
     dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
     job = dashboard.get_job_information(wf_id, job_id, job_instance_id)
     job_states = dashboard.get_job_states(wf_id, job_id, job_instance_id)
+    job_metrics = dashboard.get_job_metrics(wf_id, job_instance_id)
     job_instances = dashboard.get_job_instances(wf_id, job_id)
 
     previous = None
@@ -201,8 +202,19 @@ def job(username, root_wf_id, wf_id, job_id, job_instance_id):
     if not job:
         return 'Bad Request', 400
 
+    if job_metrics:
+        job_metrics.kickstart_pid = filters.format_num(job_metrics.kickstart_pid)
+        job_metrics.ts = filters.format_ts(job_metrics.ts)
+        job_metrics.read_bytes = filters.format_num(job_metrics.read_bytes)
+        job_metrics.write_bytes = filters.format_num(job_metrics.write_bytes)
+        job_metrics.syscr = filters.format_num(job_metrics.syscr)
+        job_metrics.syscw = filters.format_num(job_metrics.syscw)
+        job_metrics.threads = filters.format_num(job_metrics.threads)
+        job_metrics.bytes_transferred = filters.format_num(job_metrics.bytes_transferred)
+        job_metrics.transfer_duration = filters.time_to_str(job_metrics.transfer_duration)
+
     return render_template('workflow/job/job_details.html', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job_id, job=job,
-                           job_instances=job_instances, job_states=job_states)
+                           job_instances=job_instances, job_states=job_states, job_metrics=job_metrics)
 
 
 @dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>/stdout', methods=['GET'])

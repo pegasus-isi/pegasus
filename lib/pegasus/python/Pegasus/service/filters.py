@@ -1,21 +1,37 @@
 import time
+from datetime import datetime
 import decimal
 from Pegasus.service import app
 
 
+@app.template_filter('format_ts')
+def format_ts(value, ts_format='%a %b %d, %Y %I:%M:%S %p'):
+    if value:
+        return datetime.utcfromtimestamp(value).strftime(ts_format)
+
+    return value
+
+
+@app.template_filter('format_num')
+def format_num(value, num_format=',d'):
+    if value:
+        return format(int(value), num_format)
+
+    return value
+
 @app.template_filter('lstrip')
 def lstrip(value, chars=' '):
-    value.lstrip(chars)
+    return value.lstrip(chars)
 
 
 @app.template_filter('rstrip')
 def rstrip(value, chars=' '):
-    value.rstrip(chars)
+    return value.rstrip(chars)
 
 
 @app.template_filter('strip')
 def strip(value, chars=' '):
-    value.strip(chars)
+    return value.strip(chars)
 
 
 @app.template_filter('dec_to_float')

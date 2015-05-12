@@ -85,6 +85,7 @@
 
         verticalTableInitStatus ('#job_text_info', {{ status_code(job.exitcode) }});
         verticalTableInitStatus ('#job_states_info', {{ status_code(job.exitcode) }});
+        verticalTableInitStatus ('#job_metrics_info', {{ status_code(job.exitcode) }});
 
         $('#job_instances_info').dataTable({
             "jQueryUI": true,
@@ -127,6 +128,9 @@
             <li role="presentation"><a href="#job_state" aria-controls="job_state" role="tab" data-toggle="tab">Job States</a></li>
             {% endif %}
             <li role="presentation"><a href="#job_instance" aria-controls="job_instance" role="tab" data-toggle="tab">Job Instances</a></li>
+            {% if job_metrics %}
+            <li role="presentation"><a href="#job_metrics" aria-controls="job_metrics" role="tab" data-toggle="tab">Job Metrics</a></li>
+            {% endif %}
         </ul>
 
         <!-- Tab panes -->
@@ -249,6 +253,38 @@
                     </table>
                 </div>
             </div>
+
+            {% if job_metrics %}
+            <div role="tabpanel" class="tab-pane" id="job_metrics">
+                <table id="job_metrics_info">
+                {% for field, name in [
+                    ('dag_job_id', 'DAG Job ID'),
+                    ('hostname', 'Hostname'),
+                    ('exec_name', 'Executable Name'),
+                    ('kickstart_pid', 'Kickstart PID'),
+                    ('ts', 'Timestamp'),
+                    ('stime', 'stime'),
+                    ('utime', 'utime'),
+                    ('iowait', 'IO Wait'),
+                    ('vmsize', 'VMsize'),
+                    ('vmrss', 'VMrss'),
+                    ('read_bytes', 'Bytes Read'),
+                    ('write_bytes', 'Bytes Written'),
+                    ('syscr', 'Syscr'),
+                    ('syscw', 'Syscw'),
+                    ('threads', 'Threads'),
+                    ('bytes_transferred', 'Bytes Transferred'),
+                    ('transfer_duration', 'Transfer Duration'),
+                    ('site', 'Site')
+                ] %}
+                <tr>
+                    <th class="job_table_width">{{ name }}</th>
+                    <td>{{ job_metrics[field] }}</td>
+                </tr>
+                {% endfor %}
+                </table>
+            </div>
+            {% endif %}
         </div>
     </div>
 </section>
