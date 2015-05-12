@@ -44,6 +44,10 @@ public class AbstractJob {
     protected String mNamespace;
     protected String mVersion;
     protected String mNodeLabel;
+    /**
+     * The metadata attributes associated with the whole workflow.
+     */
+    private Set<MetaData> mMetaDataAttributes;
     protected static LogManager mLogger;
     private static final String ARG_DELIMITER = " ";
     private static final String FILE_DELIMITER = " ";
@@ -55,6 +59,7 @@ public class AbstractJob {
         mUses = new LinkedHashSet<File>();
         mInvokes = new LinkedList<Invoke>();
         mProfiles = new LinkedList<Profile>();
+        mMetaDataAttributes= new LinkedHashSet<MetaData>();
     }
 
     /**
@@ -68,6 +73,7 @@ public class AbstractJob {
         this.mStdout = new File(a.mStdout);
         this.mStderr = new File(a.mStderr);
         this.mUses = new LinkedHashSet<File>(a.mUses);
+        this.mMetaDataAttributes= new LinkedHashSet<MetaData>( a.mMetaDataAttributes );
         this.mInvokes = new LinkedList<Invoke>(a.mInvokes);
         this.mName = a.mName;
         this.mId = a.mId;
@@ -1456,6 +1462,33 @@ public class AbstractJob {
     public AbstractJob addNotifications(List<Invoke> invokes) {
         return addInvokes(invokes);
     }
+    
+    /**
+     * Adds metadata to the workflow
+     * 
+     * @param key       key name for metadata
+     * @param value     value
+     * @return 
+     */
+    public AbstractJob addMetadata( String key, String value ){
+        this.mMetaDataAttributes.add( new MetaData( key, value ) );
+        return this;
+    }
+    
+    /**
+     * Returns the metadata associated for a key if exists, else null
+     * 
+     * @param key
+     * 
+     * @return 
+     */
+    public String getMetaData( String key ){
+       return this.mMetaDataAttributes.contains( key )?
+              ((MetaData)mMetaDataAttributes).getValue():
+               null;
+    }
+    
+    
     /**
      * Is this Object a Job
      * @return 
@@ -1555,6 +1588,12 @@ public class AbstractJob {
         if (mNodeLabel != null && !mNodeLabel.isEmpty()) {
             writer.writeAttribute("node-label", mNodeLabel);
         } //add argument
+        
+        //PM-902
+        for (MetaData md : mMetaDataAttributes) {
+            md.toXML(writer, indent + 1);
+        }
+        
         if (!mArguments.isEmpty()) {
             writer.startElement("argument", indent + 1);
             for (Object o : mArguments) {

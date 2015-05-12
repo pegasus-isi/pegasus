@@ -19,8 +19,10 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.util.XMLWriter;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Abstract Type for RC and TC Sections of the DAX. Extended by {@link Executable} and {@link File}
@@ -32,13 +34,13 @@ import java.util.List;
 public class CatalogType {
 
     protected List<Profile> mProfiles;
-    protected List<MetaData> mMetadata;
+    protected Set<MetaData> mMetadata;
     protected List<PFN> mPFNs;
     protected LogManager mLogger;
 
     protected CatalogType() {
         mProfiles = new LinkedList<Profile>();
-        mMetadata = new LinkedList<MetaData>();
+        mMetadata = new LinkedHashSet<MetaData>();
         mPFNs = new LinkedList<PFN>();
         mLogger = LogManagerFactory.loadSingletonInstance();
     }
@@ -49,7 +51,7 @@ public class CatalogType {
      */
     protected CatalogType(CatalogType c){
         this.mProfiles = new LinkedList<Profile>(c.mProfiles);
-        this.mMetadata = new LinkedList<MetaData>(c.mMetadata);
+        this.mMetadata = new LinkedHashSet<MetaData>(c.mMetadata);
         this.mPFNs = new LinkedList<PFN>(c.mPFNs);
         this.mLogger = c.mLogger;
     }
@@ -109,15 +111,14 @@ public class CatalogType {
     }
 
     /**
-     * Add a Metadata entry for the Catalog object
-     * @param type String type of metadata
+     * Add a Metadata entry for the Catalog  
      * @param key String key for the metadata entry
      * @param value String value for the metadata entry
      * @return CatalogType
      *
      */
-    public CatalogType addMetaData(String type, String key, String value) {
-        MetaData m = new MetaData(type, key, value);
+    public CatalogType addMetaData(  String key, String value) {
+        MetaData m = new MetaData( key, value);
         mMetadata.add(m);
         return this;
     }
@@ -146,10 +147,10 @@ public class CatalogType {
 
     /**
      * Returns the List of MetaData objects associated with this Catalog entry object
-     * @return List<MetaData>
+     * @return Set<MetaData>
      * @see MetaData
      */
-    public List<MetaData> getMetaData() {
+    public Set<MetaData> getMetaData() {
         return mMetadata;
     }
 

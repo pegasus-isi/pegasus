@@ -37,8 +37,8 @@ import edu.isi.pegasus.planner.dax.Invoke.WHEN;
  * <pre>
  * <b>This class provides the Java API to create DAX files.</b>
  *
- * The DAX XML SCHEMA is available at <a href="http://pegasus.isi.edu/schema/dax-3.3.xsd">http://pegasus.isi.edu/schema/dax-3.3.xsd</a>
- * and documentation available at <a href="http://pegasus.isi.edu/wms/docs/schemas/dax-3.3/dax-3.3.html">http://pegasus.isi.edu/wms/docs/schemas/dax-3.3/dax-3.3.html</a>
+ * The DAX XML SCHEMA is available at <a href="http://pegasus.isi.edu/schema/dax-3.6.xsd">http://pegasus.isi.edu/schema/dax-3.6.xsd</a>
+ * and documentation available at <a href="http://pegasus.isi.edu/wms/docs/schemas/dax-3.6/dax-3.6.html">http://pegasus.isi.edu/wms/docs/schemas/dax-3.6/dax-3.6.html</a>
  *
  * The DAX consists of 6 parts the first 4 are optional and the last is optional.
  * </pre> <ol> <li><b>file:</b>Used as "In DAX" Replica Catalog
@@ -49,95 +49,113 @@ import edu.isi.pegasus.planner.dax.Invoke.WHEN;
  * sub dax or sub dax. Atleast 1 required.</li><br> <li><b>child:</b> The
  * dependency section to describe dependencies between job|dax|dag elements.
  * (Optional)</li><br> </ol> <center><img
- * src="http://pegasus.isi.edu/wms/docs/schemas/dax-3.3/dax-3.3_p1.png"/></center>
+ * src="http://pegasus.isi.edu/wms/docs/schemas/dax-3.6/dax-3.6_p1.png"/></center>
  * <pre>
  * To generate an example DIAMOND DAX run the ADAG Class as shown below
  * <b>java ADAG filename</b>
  * <b>NOTE: This is an illustrative example only. Please see examples directory for a working example</b>
  *
- * Shown below are some of the steps in creating a  DIAMOND DAX.
- * </pre> <ol> <li> <B>Create a new {@link ADAG} object </B><br><br> <i>ADAG dax
- * = new ADAG("test");</i> </li><br> <li> <B>Add notifications to the
- * workflow</B><br><br>
- * <i>j3.addNotification(WHEN.start,"/usr/local/pegasus/libexec/notification/email
- * -t notify@example.com -f workflow@example.com");<br><br>
- * j3.addNotification(WHEN.at_end,"/usr/local/pegasus/libexec/notification/email
- * -t notify@example.com -f workflow@example.com");</i> </li><br> <li> <B>Create
- * a {@link File} object</B><br> You only need to add entries to this section if
- * you want to use an "IN-DAX" Replica Catalog"<br><br> <i>File fa = new
- * File("f.a");</i> </li><br> <ol type=a> <li><b>Add {@link MetaData} entry to
- * the file objects</b><br><br> <i>fa.addMetaData("string", "foo",
- * "bar");</i><br> <i>fa.addMetaData("int", "num", "1");</i><br> </li><br>
- * <li><b>Add {@link Profile} entry to the file objects</b><br><br>
- * <i>fa.addProfile("env", "FOO", "/usr/bar");</i><br>
- * <i>fa.addProfile("globus", "walltime", "40");</i> </li><br> <li><b>Add {@link PFN}
- * to the File object</b><br><br> <i>fa.addPhysicalFile("file:///scratch/f.a",
- * "local");</i> </li><br> <li><b>Add the File object to the Replica Catalog
- * section of the DAX</b><br><br> <i>dax.addFile(fa);</i> </li><br> </ol>
- * <li><b>Create an {@link Executable} object</b><br> You only need to add
- * entries to this section if you want to use an "IN-DAX" Replica
- * Catalog"<br><br> <i>Executable preprocess = new Executable("pegasus",
- * "preproces", "1.0");</i><br> <ol type=a> <li><b>Set the {@link Executable.ARCH}
- * and {@link Executable.OS} for the executable. Default is x86 and
- * LINUX</b><br><br>
- * <i>preprocess.setArchitecture(Executable.ARCH.x86).setOS(Executable.OS.LINUX);</i>
- * </li><br> <li><b>Set the executable as available to be staged. Default is
- * installed executable</b><br><br> <i>preprocess.unsetInstalled();</i>
- * </li><br> <li><b>Add the physical location {@link PFN} of the executable. In
- * case of stageable executables the path should be a url</b><br><br>
- * <i>preprocess.addPhysicalFile(new
- * PFN("file:///opt/pegasus/default/bin/keg"));</i> </li><br> <li><b>Add {@link Profile}
- * and {@link MetaData} objects to the executable</b><br><br>
- * <i>preprocess.addProfile(Profile.NAMESPACE.globus, "walltime",
- * "120");</i><br> <i>preprocess.addMetaData("string", "project",
- * "pegasus");</i> </li><br> <li><b>Add the {@link Executable} object to the {@link ADAG}
- * object</b><br><br> <i>dax.addExecutable(preprocess);</i> </li> </ol>
- * </li><br> <li><b>Create a {@link Transformation} object : compound Executable
- * (Executable depending on other executable and files)</b><Br><br>
- * <i>Transformation diamond = new Transformation("pegasus", "diamond",
- * "1.0");</i><br> <ol type=a> <li><b>Add the sub executable for this
- * transformation</b><br><br>
- * <i>diamond.uses(preprocess).uses(findrange).uses(analyze);</i><br> </li><br>
- * <li><b>Add the sub files(e.g config files) for this
- * transformation</b><br><br> <i>diamond.uses(new File("config",
- * File.LINK.INPUT));</i><br> </li><br> <li><b>Finally Add the Transformation to
- * the {@link ADAG} object</b><br><br> <i>dax.addTransformation(diamond);</i>
- * </li> </ol> </li><br> <li><b>Create a {@link Job} object</b><br><br> <i>Job
- * j1 = new Job("j1", "pegasus", "preprocess", "1.0", "j1");</i><br> <ol type=a>
- * <li><b>Add Arguments to the job object</b><br><br>
- * <i>j1.addArgument("-a","preprocess")<br>
- * j1.addArgument("-T","60").addArgument("-i",fa);<br>
- * j1.addArgument("-o").addArgument(fb1).addArgument(fb2);</i> </li><br>
- * <li><b>Add the Files that are used by this job</b><br><br> <i>j1.uses(fa,
- * File.LINK.INPUT);<br> j1.uses(fb1, File.LINK.OUTPUT);<br> j1.uses(new
- * File("f.b2"), File.LINK.OUTPUT);</i> </li><br> <li><b>Add the Notifications
- * to this job</b><br><br
- * <i>j3.addNotification(WHEN.start,"/usr/local/pegasus/libexec/notification/email
- * -t notify@example.com -f workflow@example.com");<br>
- * j3.addNotification(WHEN.at_end,"/usr/local/pegasus/libexec/notification/email
- * -t notify@example.com -f workflow@example.com");</i>
- *
- * </li><br> <li><b>Add {@link Profile}s to the job</b><br><br>
- * <i>j1.addProfile(Profile.NAMESPACE.dagman, "pre", "20");</i> </li><br>
- * <li><b>Add the Job object to {@link ADAG}</b><br><br> <i>dax.addJob(j1);</i>
- * </li> </ol> </li><br> <li><b>Add a {@link DAG} object</b><br><br> <i>DAG j2 =
- * new DAG("j2", "findrange.dag", "j2");<br> j2.uses(new File("f.b1"),
- * File.LINK.INPUT);<br> j2.uses(new File("f.c1"), File.LINK.OUTPUT);<br>
- * j2.addProfile(Profile.NAMESPACE.dagman, "pre", "20");<br>
- * j2.addProfile("condor", "universe", "vanilla");<br> dax.addDAG(j2);</i>
- * </li><br> <li><b>Add a {@link DAX} job object.</b><br><br> <i>DAX j3 = new
- * DAX("j3", "findrange.dax", "j3");<br>
- * j3.addArgument("--site").addArgument("local");<br> j3.uses(new File("f.b2"),
- * File.LINK.INPUT);<br> j3.uses(new File("f.c2"), File.LINK.OUTPUT);<br>
- * j3.addProfile("ENV", "HAHA", "YADAYADAYADA");<br> dax.addDAX(j3);</i>
- * </li><br> <li><b>Add the Job dependencies</b><br><br> Dependencies can be
- * added by specifiying the job id's like so<br><br> <i>dax.addDependency("j1",
- * "j2", "1-2").addDependency("j1", "j3", "1-3");</i><br><br> or by specifying
- * the job|dax|dag objects directly as below<br><br>
- * <i>dax.addDependency(j1,j3);</i> </li><br> <li><b>Finally write the dax to a
- * file</b><br><br> <i>dax.writeToFile("diamond.dax");</i> </li> </ol>
- *
+ * Here is sample java code that illustrates how to use the Java DAX API
+ * <pre>
+ *      java.io.File cwdFile = new java.io.File (".");
+        String cwd = cwdFile.getCanonicalPath(); 
+        
+        String pegasusHome = "/usr";
+        String site = "TestCluster";
+             
+        ADAG dax = new ADAG("diamond");
+        dax.addNotification(Invoke.WHEN.start,"/pegasus/libexec/notification/email -t notify@example.com");
+        dax.addNotification(Invoke.WHEN.at_end,"/pegasus/libexec/notification/email -t notify@example.com");
+        dax.addMetadata( "name", "diamond");
+        dax.addMetadata( "createdBy", "Karan Vahi");
+        
+        File fa = new File("f.a");
+        fa.addPhysicalFile("file://" + cwd + "/f.a", "local");
+        fa.addMetaData( "size", "1024" );
+        dax.addFile(fa);
+
+        File fb1 = new File("f.b1");
+        File fb2 = new File("f.b2");
+        File fc1 = new File("f.c1");
+        File fc2 = new File("f.c2");
+        File fd = new File("f.d");
+        fd.setRegister(true);
+
+        Executable preprocess = new Executable("pegasus", "preprocess", "4.0");
+        preprocess.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
+        preprocess.setInstalled(true);
+        preprocess.addMetaData( "size", "2048" );
+        preprocess.addPhysicalFile("file://" + pegasus_location + "/bin/keg", site_handle);
+
+        Executable findrange = new Executable("pegasus", "findrange", "4.0");
+        findrange.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
+        findrange.setInstalled(true);
+        findrange.addPhysicalFile("file://" + pegasus_location + "/bin/keg", site_handle);
+
+        Executable analyze = new Executable("pegasus", "analyze", "4.0");
+        analyze.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
+        analyze.setInstalled(true);
+        analyze.addPhysicalFile("file://" + pegasus_location + "/bin/keg", site_handle);
+
+        dax.addExecutable(preprocess).addExecutable(findrange).addExecutable(analyze);
+
+        // Add a preprocess job
+        Job j1 = new Job("j1", "pegasus", "preprocess", "4.0");
+        j1.addArgument("-a preprocess -T 60 -i ").addArgument(fa);
+        j1.addArgument("-o ").addArgument(fb1);
+        j1.addArgument(" ").addArgument(fb2);
+        j1.addMetadata( "time", "60" );
+        j1.uses(fa, File.LINK.INPUT);
+        j1.uses(fb1, File.LINK.OUTPUT);
+        j1.uses(fb2, File.LINK.OUTPUT);
+        j1.addNotification(Invoke.WHEN.start,"/pegasus/libexec/notification/email -t notify@example.com");
+        j1.addNotification(Invoke.WHEN.at_end,"/pegasus/libexec/notification/email -t notify@example.com");
+        dax.addJob(j1);
+
+        // Add left Findrange job
+        Job j2 = new Job("j2", "pegasus", "findrange", "4.0");
+        j2.addArgument("-a findrange -T 60 -i ").addArgument(fb1);
+        j2.addArgument("-o ").addArgument(fc1);
+        j2.addMetadata( "time", "60" );
+        j2.uses(fb1, File.LINK.INPUT);
+        j2.uses(fc1, File.LINK.OUTPUT);
+        j2.addNotification(Invoke.WHEN.start,"/pegasus/libexec/notification/email -t notify@example.com");
+        j2.addNotification(Invoke.WHEN.at_end,"/pegasus/libexec/notification/email -t notify@example.com");
+        dax.addJob(j2);
+
+        // Add right Findrange job
+        Job j3 = new Job("j3", "pegasus", "findrange", "4.0");
+        j3.addArgument("-a findrange -T 60 -i ").addArgument(fb2);
+        j3.addArgument("-o ").addArgument(fc2);
+        j3.addMetadata( "time", "60" );
+        j3.uses(fb2, File.LINK.INPUT);
+        j3.uses(fc2, File.LINK.OUTPUT);
+        j3.addNotification(Invoke.WHEN.start,"/pegasus/libexec/notification/email -t notify@example.com");
+        j3.addNotification(Invoke.WHEN.at_end,"/pegasus/libexec/notification/email -t notify@example.com");
+        dax.addJob(j3);
+
+        // Add analyze job
+        Job j4 = new Job("j4", "pegasus", "analyze", "4.0");
+        j4.addArgument("-a analyze -T 60 -i ").addArgument(fc1);
+        j4.addArgument(" ").addArgument(fc2);
+        j4.addArgument("-o ").addArgument(fd);
+        j4.addMetadata( "time", "60" );
+        j4.uses(fc1, File.LINK.INPUT);
+        j4.uses(fc2, File.LINK.INPUT);
+        j4.uses(fd, File.LINK.OUTPUT);
+        j4.addNotification(Invoke.WHEN.start,"/pegasus/libexec/notification/email -t notify@example.com");
+        j4.addNotification(Invoke.WHEN.at_end,"/pegasus/libexec/notification/email -t notify@example.com");
+        dax.addJob(j4);
+
+        dax.addDependency("j1", "j2");
+        dax.addDependency("j1", "j3");
+        dax.addDependency("j2", "j4");
+        dax.addDependency("j3", "j4");
+        dax.writeToSTDOUT();
+ * </pre>
+ * 
  * @author Gaurang Mehta gmehta at isi dot edu
+ * @author Karan Vahi
  * @version $Revision$
  */
 public class ADAG {
@@ -156,11 +174,11 @@ public class ADAG {
      * The "not-so-official" location URL of the DAX schema definition.
      */
     public static final String SCHEMA_LOCATION =
-            "http://pegasus.isi.edu/schema/dax-3.5.xsd";
+            "http://pegasus.isi.edu/schema/dax-3.6.xsd";
     /**
      * The version to report.
      */
-    public static final String SCHEMA_VERSION = "3.5";
+    public static final String SCHEMA_VERSION = "3.6";
     /**
      * The Name / Label of the DAX
      */
@@ -214,6 +232,12 @@ public class ADAG {
      * List of Notification objects
      */
     private List<Invoke> mInvokes;
+    
+    /**
+     * The metadata attributes associated with the whole workflow.
+     */
+    private Set<MetaData> mMetaDataAttributes;
+    
     /**
      * Handle the XML writer
      */
@@ -247,11 +271,10 @@ public class ADAG {
         mLDAXs = new LinkedList<DAX>();
         mTransformations = new LinkedHashSet<Transformation>();
         mExecutables = new LinkedHashSet<Executable>();
+        mMetaDataAttributes = new LinkedHashSet<MetaData>();
         mFiles = new LinkedList<File>();
         mInvokes = new LinkedList<Invoke>();
         mDependencies = new LinkedHashMap<String, Set<Edge>>();
-        // PM-435 - commented this out for FHS work - do we need references to the bin/schema/...?
-        // System.setProperty("pegasus.home", System.getProperty("user.dir"));
         mLogger = LogManagerFactory.loadSingletonInstance();
         mLogger.logEventStart("event.dax.generate", "pegasus.version", Version.
                 instance().toString());
@@ -368,6 +391,31 @@ public class ADAG {
      */
     public List<Invoke> getNotification() {
         return getInvoke();
+    }
+    
+    /**
+     * Adds metadata to the workflow
+     * 
+     * @param key       key name for metadata
+     * @param value     value
+     * @return 
+     */
+    public ADAG addMetadata( String key, String value ){
+        this.mMetaDataAttributes.add( new MetaData( key, value ) );
+        return this;
+    }
+    
+    /**
+     * Returns the metadata associated for a key if exists, else null
+     * 
+     * @param key
+     * 
+     * @return 
+     */
+    public String getMetaData( String key ){
+       return this.mMetaDataAttributes.contains( key )?
+              ((MetaData)mMetaDataAttributes).getValue():
+               null;
     }
 
     /**
@@ -991,17 +1039,23 @@ public class ADAG {
         writer.writeAttribute("index", Integer.toString(mIndex));
         writer.writeAttribute("count", Integer.toString(mCount));
 
+        //add metadata attributes
+        writer.writeXMLComment( "Section 1: Metadata attributes for the workflow (can be empty) ", true );
+        for( MetaData md : this.mMetaDataAttributes ){
+            md.toXML(writer, indent + 1 );
+        }
+        
         //print notification invokes
         writer.
                 writeXMLComment(
-                "Section 1: Invokes - Adds notifications for a workflow (can be empty)",
+                "Section 2: Invokes - Adds notifications for a workflow (can be empty)",
                 true);
         for (Invoke i : mInvokes) {
             i.toXML(writer, indent + 1);
         }
         //print file
         writer.writeXMLComment(
-                "Section 2: Files - Acts as a Replica Catalog (can be empty)",
+                "Section 3: Files - Acts as a Replica Catalog (can be empty)",
                 true);
         for (File f : mFiles) {
             f.toXML(writer, indent + 1);
@@ -1010,7 +1064,7 @@ public class ADAG {
         //print executable
         writer.
                 writeXMLComment(
-                "Section 3: Executables - Acts as a Transformaton Catalog (can be empty)",
+                "Section 4: Executables - Acts as a Transformaton Catalog (can be empty)",
                 true);
         for (Executable e : mExecutables) {
             e.toXML(writer, indent + 1);
@@ -1019,7 +1073,7 @@ public class ADAG {
         //print transformation
         writer.
                 writeXMLComment(
-                "Section 4: Transformations - Aggregates executables and Files (can be empty)",
+                "Section 5: Transformations - Aggregates executables and Files (can be empty)",
                 true);
         for (Transformation t : mTransformations) {
             t.toXML(writer, indent + 1);
@@ -1027,7 +1081,7 @@ public class ADAG {
         //print jobs, daxes and dags
         writer.
                 writeXMLComment(
-                "Section 5: Job's, DAX's or Dag's - Defines a JOB or DAX or DAG (Atleast 1 required)",
+                "Section 6: Job's, DAX's or Dag's - Defines a JOB or DAX or DAG (Atleast 1 required)",
                 true);
         for (AbstractJob j : mJobs.values()) {
             j.toXML(writer, indent + 1);
@@ -1035,7 +1089,7 @@ public class ADAG {
         //print dependencies
         writer.
                 writeXMLComment(
-                "Section 6: Dependencies - Parent Child relationships (can be empty)",
+                "Section 7: Dependencies - Parent Child relationships (can be empty)",
                 true);
 
         for (String child : mDependencies.keySet()) {
@@ -1056,11 +1110,11 @@ public class ADAG {
      * @param args
      */
     public static void main(String[] args) {
-        if (args.length == 0) {
-            System.out.println("Usage: java ADAG <filename.dax>");
-            System.exit(1);
+        String dax = "diamond.dax";
+        if (args.length >  0) {
+            dax = args[0];
         }
-        Diamond().writeToFile(args[0]);
+        Diamond().writeToFile( dax );
 
     }
 
@@ -1068,23 +1122,23 @@ public class ADAG {
         ADAG dax = new ADAG("test");
 
         File fa = new File("f.a");
-        fa.addMetaData("string", "foo", "bar");
-        fa.addMetaData("int", "num", "1");
+        fa.addMetaData( "foo", "bar");
+        fa.addMetaData(  "num", "1");
         fa.addProfile("env", "FOO", "/usr/bar");
         fa.addProfile("globus", "walltime", "40");
         fa.addPhysicalFile("file:///scratch/f.a", "local");
         dax.addFile(fa);
 
         File fb1 = new File("f.b1");
-        fb1.addMetaData("string", "foo", "bar");
-        fb1.addMetaData("int", "num", "2");
+        fb1.addMetaData( "foo", "bar");
+        fb1.addMetaData(  "num", "2");
         fb1.addProfile("env", "GOO", "/usr/foo");
         fb1.addProfile("globus", "walltime", "40");
         dax.addFile(fb1);
 
         File fb2 = new File("f.b2");
-        fb2.addMetaData("string", "foo", "bar");
-        fb2.addMetaData("int", "num", "3");
+        fb2.addMetaData( "foo", "bar");
+        fb2.addMetaData( "num", "3");
         fb2.addProfile("env", "BAR", "/usr/goo");
         fb2.addProfile("globus", "walltime", "40");
         dax.addFile(fb2);
@@ -1095,8 +1149,8 @@ public class ADAG {
         dax.addFile(fc1);
 
         File fc2 = new File("f.c2");
-        fc2.addMetaData("string", "foo", "bar");
-        fc2.addMetaData("int", "num", "5");
+        fc2.addMetaData(  "foo", "bar");
+        fc2.addMetaData(  "num", "5");
         dax.addFile(fc2);
 
         File fd = new File("f.d");
@@ -1109,7 +1163,7 @@ public class ADAG {
         preprocess.addPhysicalFile(
                 new PFN("file:///opt/pegasus/default/bin/keg"));
         preprocess.addProfile(Profile.NAMESPACE.globus, "walltime", "120");
-        preprocess.addMetaData("string", "project", "pegasus");
+        preprocess.addMetaData( "project", "pegasus");
 
         Executable findrange = new Executable("pegasus", "findrange", "1.0");
         findrange.setArchitecture(Executable.ARCH.X86).
@@ -1118,7 +1172,7 @@ public class ADAG {
         findrange.
                 addPhysicalFile(new PFN("http://pegasus.isi.edu/code/bin/keg"));
         findrange.addProfile(Profile.NAMESPACE.globus, "walltime", "120");
-        findrange.addMetaData("string", "project", "pegasus");
+        findrange.addMetaData(  "project", "pegasus");
 
 
         Executable analyze = new Executable("pegasus", "analyze", "1.0");
@@ -1127,7 +1181,7 @@ public class ADAG {
         analyze.addPhysicalFile(new PFN(
                 "gsiftp://localhost/opt/pegasus/default/bin/keg"));
         analyze.addProfile(Profile.NAMESPACE.globus, "walltime", "120");
-        analyze.addMetaData("string", "project", "pegasus");
+        analyze.addMetaData(  "project", "pegasus");
 
         dax.addExecutable(preprocess).addExecutable(findrange).addExecutable(
                 analyze);

@@ -9,13 +9,13 @@
 
     <para>The DAX format is described by the XML schema instance document
     <ulink
-    url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.3/dax-3.3.xsd">dax-3.3.xsd</ulink>.
+    url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.6/dax-3.6.xsd">dax-3.6.xsd</ulink>.
     A local copy of the schema definition is provided in the
     <quote>etc</quote> directory. The documentation of the XML schema and its
     elements can be found in <ulink
-    url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.3/dax-3.3.html">dax-3.3.html</ulink>
+    url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.6/dax-3.6.html">dax-3.6.html</ulink>
     as well as locally in
-    <filename>doc/schemas/dax-3.3/dax-3.3.html</filename> in your Pegasus
+    <filename>doc/schemas/dax-3.6/dax-3.6.html</filename> in your Pegasus
     distribution.</para>
 
     <section>
@@ -27,6 +27,13 @@
       workflows, what to do and what to work upon.</para>
 
       <orderedlist>
+        <listitem>
+          <para>Workflow level Metadata</para>
+
+          <para>Metadata that is associated with the whole workflow. These are
+          defined in the Metadata section.</para>
+        </listitem>
+
         <listitem>
           <para>Workflow-level Notifications</para>
 
@@ -122,8 +129,8 @@
 &lt;!-- generated: 2011-07-28T18:29:57Z --&gt;
 &lt;adag xmlns="http://pegasus.isi.edu/schema/DAX" 
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-      xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.3.xsd" 
-      version="3.3" 
+      xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.6.xsd" 
+      version="3.6" 
       name="diamond" 
       index="0" 
       count="1"&gt;</programlisting>
@@ -156,7 +163,7 @@
                 </entry>
 
                 <entry>Version number of DAX instance document. Must be
-                3.3.</entry>
+                3.6.</entry>
               </row>
 
               <row>
@@ -252,16 +259,30 @@
       </section>
 
       <section>
+        <title>Workflow-level Metadata</title>
+
+        <para>Metadata associated with the whole workflow.</para>
+
+        <programlisting>   &lt;metadata key="name"&gt;diamond&lt;/metadata&gt;
+   &lt;metadata key="createdBy"&gt;Karan Vahi&lt;/metadata&gt;</programlisting>
+
+        <para>The workflow level metadata maybe used to control the Pegasus
+        Mapper behaviour at planning time or maybe propogated to external
+        services while querying for job characteristics.</para>
+      </section>
+
+      <section>
         <title>Workflow-level Notifications</title>
 
-        <para>(something to be said here.)</para>
+        <para>Notifications that are generated when workflow level events
+        happened.</para>
 
         <programlisting>  &lt;!-- part 1.1: invocations --&gt;
   &lt;invoke when="at_end"&gt;/bin/date -Ins &amp;gt;&amp;gt; my.log&lt;/invoke&gt;</programlisting>
 
         <para>The above snippet will append the current time to a log file in
-        the current directory. This is with regards to the monitord instance
-        acting on the <link
+        the current directory. This is with regards to the pegasus-monitord
+        instance acting on the <link
         linkend="notifications">notification</link>.</para>
       </section>
 
@@ -299,9 +320,9 @@
     &lt;profile namespace="stat" key="md5sum"&gt;/* 32 char hex string */&lt;/profile&gt;
     &lt;profile namespace="stat" key="mtime"&gt;/* ISO-8601 timestamp */&lt;/profile&gt;
 
-    &lt;!-- metadata is currently NOT SUPPORTED --&gt;
-    &lt;metadata key="timestamp" type="int"&gt;/* ISO-8601 *or* 20100417134523:int */&lt;/metadata&gt;
-    &lt;metadata key="origin" type="string"&gt;ocean&lt;/metadata&gt;
+    &lt;!-- Metadata will be supported 4.6 onwards--&gt;
+    &lt;metadata key="timestamp" &gt;/* ISO-8601 *or* 20100417134523:int */&lt;/metadata&gt;
+    &lt;metadata key="origin" &gt;ocean&lt;/metadata&gt;
     
     &lt;!-- PFN to by-pass replica catalog --&gt;
     &lt;!-- The "site attribute is optional --&gt;
@@ -401,9 +422,9 @@
     &lt;profile namespace="stat" key="md5sum"&gt;AB454DSSDA4646DS&lt;/profile&gt;
     &lt;profile namespace="stat" key="mtime"&gt;2010-11-22T10:05:55.470606000-0800&lt;/profile&gt;
 
-    &lt;!-- metadata is currently NOT SUPPORTED! --&gt;
-    &lt;metadata key="timestamp" type="int"&gt;/* see above */&lt;/metadata&gt;
-    &lt;metadata key="origin" type="string"&gt;ocean&lt;/metadata&gt;
+    &lt;!-- metadata will be supported in 4.6 --&gt;
+    &lt;metadata key="timestamp" &gt;/* see above */&lt;/metadata&gt;
+    &lt;metadata key="origin"&gt;ocean&lt;/metadata&gt;
  
     &lt;!-- PFN to by-pass transformation catalog --&gt;
     &lt;!-- The "site" attribute is optional --&gt;
@@ -739,7 +760,9 @@
     &lt;profile namespace="execution" key="site"&gt;isi_viz&lt;/profile&gt;
     &lt;profile namespace="condor" key="getenv"&gt;true&lt;/profile&gt;
 
-    &lt;uses name="f.a" link="input"  register="false" transfer="true" type="data" /&gt;
+     &lt;uses name="f.a" link="input" transfer="true" register="true"&gt;
+         &lt;metadata key="size"&gt;1024&lt;/metadata&gt;
+      &lt;/uses&gt;
     &lt;uses name="f.b" link="output" register="false" transfer="true" type="data" /&gt;
     
     &lt;!-- 'WHEN' enumeration: never, start, on_error, on_success, at_end, all --&gt;
@@ -1065,8 +1088,8 @@
       <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;adag xmlns="http://pegasus.isi.edu/schema/DAX"
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
- xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.3.xsd"
- version="3.3" name="diamond" index="0" count="1"&gt;
+ xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.6.xsd"
+ version="3.6" name="diamond" index="0" count="1"&gt;
   &lt;!-- part 1.1: invocations --&gt;
   &lt;invoke when="on_error"&gt;/bin/mailx -s &amp;apos;diamond failed&amp;apos; use@some.domain&lt;/invoke&gt;
 
@@ -1212,6 +1235,11 @@
         </listitem>
 
         <listitem>
+          <para>Add any metadata attributes associated with the whole
+          workflow.</para>
+        </listitem>
+
+        <listitem>
           <para>Add any Workflow notification elements</para>
         </listitem>
 
@@ -1264,7 +1292,7 @@
       class="directory">examples/grid-blackdiamond-java</filename> directory
       as <filename>BlackDiamonDAX.java</filename>:</para>
 
-      <programlisting>/**
+      <programlisting id="api-java-example">/**
  *  Copyright 2007-2008 University Of Southern California
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -1292,16 +1320,24 @@ public class Diamond {
 
     
 
+    public class Diamond {
+
+    
+
     public ADAG generate(String site_handle, String pegasus_location) throws Exception {
 
         java.io.File cwdFile = new java.io.File (".");
         String cwd = cwdFile.getCanonicalPath(); 
 
-        ADAG dax = new ADAG("blackdiamond");
+        ADAG dax = new ADAG("diamond");
         dax.addNotification(Invoke.WHEN.start,"/pegasus/libexec/notification/email -t notify@example.com");
         dax.addNotification(Invoke.WHEN.at_end,"/pegasus/libexec/notification/email -t notify@example.com");
+        dax.addMetadata( "name", "diamond");
+        dax.addMetadata( "createdBy", "Karan Vahi");
+        
         File fa = new File("f.a");
         fa.addPhysicalFile("file://" + cwd + "/f.a", "local");
+        fa.addMetaData( "size", "1024" );
         dax.addFile(fa);
 
         File fb1 = new File("f.b1");
@@ -1315,6 +1351,7 @@ public class Diamond {
         preprocess.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
         preprocess.setInstalled(true);
         preprocess.addPhysicalFile("file://" + pegasus_location + "/bin/keg", site_handle);
+        preprocess.addMetaData( "size", "2048" );
 
         Executable findrange = new Executable("pegasus", "findrange", "4.0");
         findrange.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
@@ -1333,6 +1370,7 @@ public class Diamond {
         j1.addArgument("-a preprocess -T 60 -i ").addArgument(fa);
         j1.addArgument("-o ").addArgument(fb1);
         j1.addArgument(" ").addArgument(fb2);
+        j1.addMetadata( "time", "60" );
         j1.uses(fa, File.LINK.INPUT);
         j1.uses(fb1, File.LINK.OUTPUT);
         j1.uses(fb2, File.LINK.OUTPUT);
@@ -1344,6 +1382,7 @@ public class Diamond {
         Job j2 = new Job("j2", "pegasus", "findrange", "4.0");
         j2.addArgument("-a findrange -T 60 -i ").addArgument(fb1);
         j2.addArgument("-o ").addArgument(fc1);
+        j2.addMetadata( "time", "60" );
         j2.uses(fb1, File.LINK.INPUT);
         j2.uses(fc1, File.LINK.OUTPUT);
         j2.addNotification(Invoke.WHEN.start,"/pegasus/libexec/notification/email -t notify@example.com");
@@ -1354,6 +1393,7 @@ public class Diamond {
         Job j3 = new Job("j3", "pegasus", "findrange", "4.0");
         j3.addArgument("-a findrange -T 60 -i ").addArgument(fb2);
         j3.addArgument("-o ").addArgument(fc2);
+        j3.addMetadata( "time", "60" );
         j3.uses(fb2, File.LINK.INPUT);
         j3.uses(fc2, File.LINK.OUTPUT);
         j3.addNotification(Invoke.WHEN.start,"/pegasus/libexec/notification/email -t notify@example.com");
@@ -1365,6 +1405,7 @@ public class Diamond {
         j4.addArgument("-a analyze -T 60 -i ").addArgument(fc1);
         j4.addArgument(" ").addArgument(fc2);
         j4.addArgument("-o ").addArgument(fd);
+        j4.addMetadata( "time", "60" );
         j4.uses(fc1, File.LINK.INPUT);
         j4.uses(fc2, File.LINK.INPUT);
         j4.uses(fd, File.LINK.OUTPUT);
@@ -1418,89 +1459,90 @@ public class Diamond {
       <para>Refer to the <ulink url="python/">auto-generated python
       documentation</ulink> explaining this API.</para>
 
-      <programlisting>#!/usr/bin/env python
+      <programlisting id="api-python-example">#!/usr/bin/env python
 
 from Pegasus.DAX3 import *
-import sys
-import os
 
-if len(sys.argv) != 2:
-        print "Usage: %s PEGASUS_HOME" % (sys.argv[0])
-        sys.exit(1)
-
-# Create a abstract dag
+# Create a DAX
 diamond = ADAG("diamond")
-
+ 
+# Add some metadata
+diamond.metadata("name", "diamond")
+diamond.metadata("createdby", "Gideon Juve")
+ 
 # Add input file to the DAX-level replica catalog
 a = File("f.a")
-a.addPFN(PFN("file://" + os.getcwd() + "/f.a", "local"))
+a.addPFN(PFN("gsiftp://site.com/inputs/f.a","site"))
+a.metadata("size", "1024")
 diamond.addFile(a)
-        
+ 
 # Add executables to the DAX-level replica catalog
-# In this case the binary is keg, which is shipped with Pegasus, so we use
-# the remote PEGASUS_HOME to build the path.
 e_preprocess = Executable(namespace="diamond", name="preprocess", version="4.0", os="linux", arch="x86_64")
-e_preprocess.addPFN(PFN("file://" + sys.argv[1] + "/bin/keg", "TestCluster"))
+e_preprocess.metadata("size", "2048")
+e_preprocess.addPFN(PFN("gsiftp://site.com/bin/preprocess","site"))
 diamond.addExecutable(e_preprocess)
-        
+ 
 e_findrange = Executable(namespace="diamond", name="findrange", version="4.0", os="linux", arch="x86_64")
-e_findrange.addPFN(PFN("file://" + sys.argv[1] + "/bin/keg", "TestCluster"))
+e_findrange.addPFN(PFN("gsiftp://site.com/bin/findrange","site"))
 diamond.addExecutable(e_findrange)
-        
+ 
 e_analyze = Executable(namespace="diamond", name="analyze", version="4.0", os="linux", arch="x86_64")
-e_analyze.addPFN(PFN("file://" + sys.argv[1] + "/bin/keg", "TestCluster"))
+e_analyze.addPFN(PFN("gsiftp://site.com/bin/analyze","site"))
 diamond.addExecutable(e_analyze)
-
+ 
 # Add a preprocess job
-preprocess = Job(namespace="diamond", name="preprocess", version="4.0")
+preprocess = Job(e_preprocess)
+preprocess.metadata("time", "60")
 b1 = File("f.b1")
 b2 = File("f.b2")
 preprocess.addArguments("-a preprocess","-T60","-i",a,"-o",b1,b2)
 preprocess.uses(a, link=Link.INPUT)
-preprocess.uses(b1, link=Link.OUTPUT)
-preprocess.uses(b2, link=Link.OUTPUT)
+preprocess.uses(b1, link=Link.OUTPUT, transfer=True)
+preprocess.uses(b2, link=Link.OUTPUT, transfer=True)
 diamond.addJob(preprocess)
-
+ 
 # Add left Findrange job
-frl = Job(namespace="diamond", name="findrange", version="4.0")
+frl = Job(e_findrange)
+frl.metadata("time", "60")
 c1 = File("f.c1")
 frl.addArguments("-a findrange","-T60","-i",b1,"-o",c1)
 frl.uses(b1, link=Link.INPUT)
-frl.uses(c1, link=Link.OUTPUT)
+frl.uses(c1, link=Link.OUTPUT, transfer=True)
 diamond.addJob(frl)
-
+ 
 # Add right Findrange job
-frr = Job(namespace="diamond", name="findrange", version="4.0")
+frr = Job(e_findrange)
+frr.metadata("time", "60")
 c2 = File("f.c2")
 frr.addArguments("-a findrange","-T60","-i",b2,"-o",c2)
 frr.uses(b2, link=Link.INPUT)
-frr.uses(c2, link=Link.OUTPUT)
+frr.uses(c2, link=Link.OUTPUT, transfer=True)
 diamond.addJob(frr)
-
+ 
 # Add Analyze job
-analyze = Job(namespace="diamond", name="analyze", version="4.0")
+analyze = Job(e_analyze)
+analyze.metadata("time", "60")
 d = File("f.d")
 analyze.addArguments("-a analyze","-T60","-i",c1,c2,"-o",d)
 analyze.uses(c1, link=Link.INPUT)
 analyze.uses(c2, link=Link.INPUT)
-analyze.uses(d, link=Link.OUTPUT, register=True)
+analyze.uses(d, link=Link.OUTPUT, transfer=True, register=True)
 diamond.addJob(analyze)
-
-# Add control-flow dependencies
+ 
+# Add dependencies
 diamond.depends(parent=preprocess, child=frl)
 diamond.depends(parent=preprocess, child=frr)
 diamond.depends(parent=frl, child=analyze)
 diamond.depends(parent=frr, child=analyze)
-
-# Add notification for analyze job
-analyze.invoke(When.ON_ERROR, '/home/user/bin/email -s "Analyze job failed" user@example.com')
-
-# Add notification for workflow
-diamond.invoke(When.AT_END, '/home/user/bin/email -s "Workflow finished" user@example.com')
-diamond.invoke(When.ON_SUCCESS, '/home/user/bin/publish_workflow_result')
-
+ 
 # Write the DAX to stdout
-diamond.writeXML(sys.stdout)</programlisting>
+import sys
+diamond.writeXML(sys.stdout)
+ 
+# Write the DAX to a file
+f = open("diamond.dax","w")
+diamond.writeXML(f)
+f.close()</programlisting>
     </section>
 
     <section id="api-perl">

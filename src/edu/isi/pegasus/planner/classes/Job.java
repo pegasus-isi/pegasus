@@ -1695,6 +1695,7 @@ public class Job extends Data implements GraphNodeContent{
         envVariables.checkKeyInNS(entry);
         vdsNS.checkKeyInNS(entry);
         hints.checkKeyInNS(entry);
+        mMetadataAttributes.checkKeyInNS(entry);
     }
 
     /**
@@ -1715,6 +1716,7 @@ public class Job extends Data implements GraphNodeContent{
         envVariables.checkKeyInNS(properties,executionPool);
         vdsNS.checkKeyInNS(properties,executionPool);
         hints.checkKeyInNS(properties, executionPool );
+        mMetadataAttributes.checkKeyInNS(properties, executionPool );
     }
     
     /**
@@ -1772,6 +1774,13 @@ public class Job extends Data implements GraphNodeContent{
             key = (String)it.next();
             hints.checkKeyInNS( key, (String)n.get( key ) );
         }
+        
+        n = profiles.get( NAMESPACES.metadata );
+        for( Iterator it = n.getProfileKeyIterator(); it.hasNext(); ){
+            key = (String)it.next();
+            this.mMetadataAttributes.checkKeyInNS( key, (String)n.get( key ) );
+        }
+        
     }
 
 
@@ -1797,24 +1806,27 @@ public class Job extends Data implements GraphNodeContent{
         for( Iterator it = profiles.iterator(); it.hasNext(); ){
             profile = (Profile)it.next();
 
-            if(profile.getProfileNamespace().equals(Profile.CONDOR))
+            if(profile.getProfileNamespace().equals(Profile.CONDOR)){
                 condorVariables.checkKeyInNS(profile);
-
-            else if(profile.getProfileNamespace().equals(Profile.GLOBUS))
+            }
+            else if(profile.getProfileNamespace().equals(Profile.GLOBUS)){
                 globusRSL.checkKeyInNS(profile);
-
-            else if(profile.getProfileNamespace().equals(Profile.ENV))
+            }
+            else if(profile.getProfileNamespace().equals(Profile.ENV)){
                 envVariables.checkKeyInNS(profile);
-
-            else if(profile.getProfileNamespace().equals(Profile.VDS))
+            }
+            else if(profile.getProfileNamespace().equals(Profile.VDS)){
                 vdsNS.checkKeyInNS(profile);
-
-            else if(profile.getProfileNamespace().equals(Profile.DAGMAN))
+            }
+            else if(profile.getProfileNamespace().equals(Profile.DAGMAN)){
                 dagmanVariables.checkKeyInNS(profile);
-
-            else if(profile.getProfileNamespace().equals(Profile.HINTS))
+            }
+            else if(profile.getProfileNamespace().equals(Profile.HINTS)){
                 hints.checkKeyInNS(profile);
-
+            }
+            else if(profile.getProfileNamespace().equals(Profile.METADATA)){
+                this.mMetadataAttributes.checkKeyInNS(profile);
+            }
             else{
                 //unknown profile.
                 mLogger.log("Unknown Profile: " + profile + " for job" +
@@ -1841,6 +1853,7 @@ public class Job extends Data implements GraphNodeContent{
         this.dagmanVariables.merge( job.dagmanVariables );
         this.vdsNS.merge( job.vdsNS );
         this.hints.merge( job.hints );
+        this.mMetadataAttributes.merge( job.mMetadataAttributes );
     }
 
     /**
