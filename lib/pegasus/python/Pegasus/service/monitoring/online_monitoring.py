@@ -181,7 +181,7 @@ class OnlineMonitord:
             self.last_aggregated_data[dag_job_id] = [0] * len(msg.metrics())
 
         if mpi_rank in self.retrieved_messages[dag_job_id]:
-            # 1. check if new measurement has only metrics values greater than the previous ones
+            # 1. check if aggregated measurements are ascending
             for i, metric_value in enumerate(self.last_aggregated_data[dag_job_id]):
                 if self.aggregated_measurements[dag_job_id][i] < metric_value:
                     self.aggregated_measurements[dag_job_id][i] = metric_value
@@ -198,19 +198,31 @@ class OnlineMonitord:
             self.aggregated_measurements[dag_job_id] = [0] * len(msg.metrics())
 
         self.retrieved_messages[dag_job_id][mpi_rank] = True
-        self.aggregate_measurement(dag_job_id, msg.measurements())
+        self.aggregate_measurement(dag_job_id, msg)
 
-    def aggregate_measurement(self, dag_job_id, measurement):
+    # TODO not sure if this is fully correct
+    def aggregate_measurement(self, dag_job_id, msg):
         "add metric values from this mpi rank to create an aggregated measurement for a job"
         # print "We are adding measurements", measurement, "for", dag_job_id
-        for i, metric_value in enumerate(measurement):
-            # timestamp is set to the latest value
-            if i == 0:
-                if self.aggregated_measurements[dag_job_id][i] < metric_value:
-                    self.aggregated_measurements[dag_job_id][i] = metric_value
-            # other metrics are aggregated
-            else:
-                self.aggregated_measurements[dag_job_id][i] += metric_value
+        if isinstance(msg, WorkflowTraceMessage):
+            for i, metric_value in enumerate(msg.measurements()):
+                # timestamp is set to the latest value
+                if i == 0:
+                    if self.aggregated_measurements[dag_job_id][i] < metric_value:
+                        self.aggregated_measurements[dag_job_id][i] = metric_value
+                    # other metrics are aggregated
+                else:
+                    self.aggregated_measurements[dag_job_id][i] += metric_value
+
+        elif isinstance(msg, DataTransferMessage):
+            for i, metric_value in enumerate(msg.measurements()):
+                # timestamp is set to the latest value
+                if i == 0:
+                    if self.aggregated_measurements[dag_job_id][i] < metric_value:
+                        self.aggregated_measurements[dag_job_id][i] = metric_value
+                else:
+                    self.aggregated_measurements[dag_job_id][i] += metric_value + self.last_aggregated_data[dag_job_id][i]
+
 
     def send_aggregated_measurement(self, aggregated_measurements, message):
         if self.client is not None:
