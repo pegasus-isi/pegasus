@@ -359,6 +359,9 @@ class StampedeWorkflowQueries(WorkflowQueries):
         if order:
             q = self._add_ordering(q, order, WorkflowResource())
 
+        if recent:
+            return [self._get_one(q, use_cache)], total_records, 1
+
         #
         # Construct SQLAlchemy Query `q` to add pagination
         #
@@ -436,6 +439,9 @@ class StampedeWorkflowQueries(WorkflowQueries):
         if order:
             q = self._add_ordering(q, order, WorkflowstateResource())
 
+        if recent:
+            return [self._get_one(q, use_cache)], total_records, 1
+
         #
         # Construct SQLAlchemy Query `q` to add pagination
         #
@@ -488,6 +494,9 @@ class StampedeWorkflowQueries(WorkflowQueries):
         #
         if order:
             q = self._add_ordering(q, order, JobResource())
+
+        if recent:
+            return [self._get_one(q, use_cache)], total_records, 1
 
         #
         # Construct SQLAlchemy Query `q` to add pagination
@@ -571,6 +580,9 @@ class StampedeWorkflowQueries(WorkflowQueries):
         if order:
             q = self._add_ordering(q, order, HostResource())
 
+        if recent:
+            return [self._get_one(q, use_cache)], total_records, 1
+
         #
         # Construct SQLAlchemy Query `q` to add pagination
         #
@@ -649,6 +661,9 @@ class StampedeWorkflowQueries(WorkflowQueries):
         #
         if order:
             q = self._add_ordering(q, order, JobInstanceResource())
+
+        if recent:
+            return [self._get_one(q, use_cache)], total_records, 1
 
         #
         # Construct SQLAlchemy Query `q` to add pagination
@@ -770,6 +785,9 @@ class StampedeWorkflowQueries(WorkflowQueries):
         if order:
             q = self._add_ordering(q, order, JobstateResource())
 
+        if recent:
+            return [self._get_one(q, use_cache)], total_records, 1
+
         #
         # Construct SQLAlchemy Query `q` to add pagination
         #
@@ -823,6 +841,9 @@ class StampedeWorkflowQueries(WorkflowQueries):
         #
         if order:
             q = self._add_ordering(q, order, TaskResource())
+
+        if recent:
+            return [self._get_one(q, use_cache)], total_records, 1
 
         #
         # Construct SQLAlchemy Query `q` to add pagination
@@ -901,6 +922,9 @@ class StampedeWorkflowQueries(WorkflowQueries):
         #
         if order:
             q = self._add_ordering(q, order, InvocationResource())
+
+        if recent:
+            return [self._get_one(q, use_cache)], total_records, 1
 
         #
         # Construct SQLAlchemy Query `q` to add pagination
@@ -987,6 +1011,9 @@ class StampedeWorkflowQueries(WorkflowQueries):
         #
         if order:
             q = self._add_ordering(q, order, InvocationResource())
+
+        if recent:
+            return [self._get_one(q, use_cache)], total_records, 1
 
         #
         # Construct SQLAlchemy Query `q` to add pagination
