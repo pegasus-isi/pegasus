@@ -15,6 +15,8 @@ class OnlineMonitord:
     PERF_METRICS = ["time", "utime", "stime", "iowait", "vmSize", "vmRSS", "threads", "read_bytes", "write_bytes",
                     "syscr", "syscw"]
 
+    DATA_TRANSFER_METRICS = ["time", "transfer_duration", "bytes_transferred"]
+
     def __init__(self, wf_label, wf_uuid, dburi):
         print "[online-monitord] PEGASUS_WF_UUID: %s" % wf_uuid
         print "[online-monitord] PEGASUS_WF_LABEL: %s" % wf_label
@@ -178,7 +180,9 @@ class OnlineMonitord:
         :param msg: a parsed mq message - dict
         """
         dag_job_id = msg["dag_job_id"]
-        mpi_rank = int(msg["mpi_rank"])
+        mpi_rank = 0
+        if "mpi_rank" in msg:
+            mpi_rank = int(msg["mpi_rank"])
 
         if dag_job_id not in self.retrieved_messages:
             self.retrieved_messages[dag_job_id] = dict()
@@ -238,14 +242,107 @@ class OnlineMonitord:
         :param measurement_text: it is a string with a simple <key>=<value> format with spaces between subsequent pairs.
         :return: a JSON object in a format supported by InfluxDB
         """
-        if not all(k in msg for k in ("hostname", "executable", "kickstart_pid", "mpi_rank")):
+
+        if "event" not in msg:
+            print "There is no 'event' attribute in the message"
+            return None
+
+        if msg["event"] == "workflow_trace":
+            return self.parse_workflow_trace_msg(msg)
+
+        elif msg["event"] == "data_transfer":
+            return self.parse_data_transfer_msg(msg)
+
+    def emit_measurement_event(self, metrics_values, parsed_msg):
+        """
+        Sending an event to an event sink (stampede db most probably) about aggregated measurement.
+        :param metrics_values: a list of performance metrics values
+        :param parsed_msg: a parsed mq message
+        """
+        if self.event_sink is None:
+            return
+
+        kwargs = {}
+
+        for attr in ["wf_uuid", "dag_job_id", "hostname", "condor_job_id", "kickstart_pid", "executable"]:
+            if attr not in parsed_msg:
+                continue
+
+            attr_value = parsed_msg[attr]
+            column_name = attr
+            if attr == "condor_job_id":
+                column_name = "sched_id"
+            elif attr == "executable":
+                column_name = "exec_name"
+
+            kwargs[column_name] = attr_value
+
+        metrics_names = []
+        if parsed_msg["event"] == "workflow_trace":
+            metrics_names = OnlineMonitord.PERF_METRICS
+        elif parsed_msg["event"] == "data_transfer":
+            metrics_names = OnlineMonitord.DATA_TRANSFER_METRICS
+
+        for i in range(len(metrics_names)):
+            attr_value = metrics_values[i]
+            column_name = metrics_names[i]
+            if column_name == "time":
+                column_name = "ts"
+
+            kwargs[column_name] = attr_value
+
+        event = "job.monitoring"
+
+        try:
+            print "Sending record to DB %s,%s" % (event, kwargs)
+            self.event_sink.send(event, kwargs)
+        except:
+            print "error sending event: %s --> %s" % (event, kwargs)
+
+    def close(self):
+        self.event_sink.close()
+
+    def parse_data_transfer_msg(self, msg):
+        if not all(k in msg for k in ("hostname", "dag_job_id", "condor_job_id")):
+            print "We couldn't create trace_id for a 'data_transfer' job"
+            return None
+        else:
+            trace_id = "{0}:{1}:{2}".format(msg["dag_job_id"], msg["hostname"], msg["condor_job_id"])
+            point = []
+            for column in OnlineMonitord.DATA_TRANSFER_METRICS:
+                if column == "time":
+                    column = "ts"
+                    point.append(int(msg[column]))
+                else:
+                    point.append(float(msg[column]))
+
+            json_body = [
+                {
+                    "name": trace_id,
+                    "columns": OnlineMonitord.DATA_TRANSFER_METRICS,
+                    "points": [point]
+                }
+            ]
+
+            return json_body
+
+    def parse_workflow_trace_msg(self, msg):
+        if not all(k in msg for k in ("hostname", "executable")):
             print "We couldn't create trace_id"
             return None
         else:
-            exec_id = msg["executable"]  # .split("/")[-1]
+            mpi_rank = 0
+            if "mpi_rank" in msg:
+                mpi_rank = int(msg["mpi_rank"])
+
+            kickstart_pid = "na"
+            if "kickstart_pid" in msg:
+                kickstart_pid = msg["kickstart_pid"]
+
+            exec_id = msg["executable"]
             # <dag_job_id>:<hostname>:<condor_jobid>:<mpi_rank>:<kickstart_pid>:<executable>
             trace_id = "{0}:{1}:{2}:{3}:{4}:{5}".format(msg["dag_job_id"], msg["hostname"],
-                                                        msg["condor_job_id"], msg["mpi_rank"], msg["kickstart_pid"],
+                                                        msg["condor_job_id"], mpi_rank, kickstart_pid,
                                                         exec_id)
 
             point = []
@@ -266,44 +363,3 @@ class OnlineMonitord:
             ]
 
             return json_body
-
-    def emit_measurement_event(self, metrics_values, parsed_msg):
-        """
-        Sending an event to an event sink (stampede db most probably) about aggregated measurement.
-        :param metrics_values: a list of performance metrics values
-        :param parsed_msg: a parsed mq message
-        """
-        if self.event_sink is None:
-            return
-
-        kwargs = {}
-
-        for attr in ["wf_uuid", "dag_job_id", "hostname", "condor_job_id", "kickstart_pid", "executable"]:
-            attr_value = parsed_msg[attr]
-            column_name = attr
-            if attr == "condor_job_id":
-                column_name = "sched_id"
-            elif attr == "executable":
-                column_name = "exec_name"
-
-            kwargs[column_name] = attr_value
-
-        # for metric in enumerate(OnlineMonitord.PERF_METRICS):
-        for i in range(len(OnlineMonitord.PERF_METRICS)):
-            attr_value = metrics_values[i]
-            column_name = OnlineMonitord.PERF_METRICS[i]
-            if column_name == "time":
-                column_name = "ts"
-
-            kwargs[column_name] = attr_value
-
-        event = "job.monitoring"
-
-        try:
-            print "Sending record to DB %s,%s" % (event, kwargs)
-            self.event_sink.send(event, kwargs)
-        except:
-            print "error sending event: %s --> %s" % (event, kwargs)
-
-    def close(self):
-        self.event_sink.close()

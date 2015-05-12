@@ -12,11 +12,11 @@ class TestOnlineMonitoring(unittest.TestCase):
         logging.basicConfig()
         self.db_file = "monitoring-test.stampede.db"
 
-        print "Loading test stampede db"
+        # print "Loading test stampede db"
         shutil.copy("../" + self.db_file, self.db_file)
 
         dburi = "sqlite:///%s" % os.path.abspath(self.db_file)
-        print "DB URI: %s" % dburi
+        # print "DB URI: %s" % dburi
         self.analyzer = Analyzer(dburi)
         self.db_session = self.analyzer.session
 
@@ -34,12 +34,11 @@ class TestOnlineMonitoring(unittest.TestCase):
             print "cannot create events output... disabling event output!"
 
     def tearDown(self):
-        print "Removing test stampede db"
+        # print "Removing test stampede db"
         self.online_monitord.close()
         os.remove(self.db_file)
 
     def test_insert_measurement(self):
-        print "Test test_insert_measurement"
         measurement = {
             "wf_uuid": self.wf_uuid,
             "dag_job_id": "sassena_ID0000006",
@@ -68,7 +67,6 @@ class TestOnlineMonitoring(unittest.TestCase):
         self.assertEquals(int(result[0].ts), int(measurement["ts"]))
 
     def test_update_measurement(self):
-        print "Test test_update_measurement"
         measurement = {
             "wf_uuid": "e168b2a3-c22f-4c03-a834-22afaa3b21b5",
             "dag_job_id": "sassena_ID0000005",
@@ -267,7 +265,6 @@ class TestOnlineMonitoring(unittest.TestCase):
         self.assertIsNone(result[0].stime)
 
     def test_update_partial_message(self):
-        print "Test test_update_measurement"
         measurement = {
             "wf_uuid": "e168b2a3-c22f-4c03-a834-22afaa3b21b5",
             "dag_job_id": "sassena_ID0000005",
@@ -303,6 +300,25 @@ class TestOnlineMonitoring(unittest.TestCase):
         self.assertIsNone(result[0].exec_name)
         self.assertIsNone(result[0].hostname)
         self.assertIsNone(result[0].kickstart_pid)
+
+    def test_insert_transfer_message(self):
+        self.assertIsNotNone(self.online_monitord, "online monitord wasn't initialized correctly")
+
+        msg_body = "ts=1431387401 event=data_transfer level=INFO status=0 wf_uuid=e168b2a3-c22f-4c03-a834-22afaa3b21b5 " \
+                   "dag_job_id=stage_in_local_hopper_2_0 hostname=obelix.isi.edu condor_job_id=1037277.0 " \
+                   "src_url=file:///nfs/asd/darek/pegasus/SNS-Workflow/inputs/topfile_mock " \
+                   "src_site_name=local " \
+                   "dst_url=gsiftp://hoppergrid.nersc.gov/scratch/scratchdirs/darek/pegasus/run-sns-low-synth-1/run0001/topfile_mock " \
+                   "dst_site_name=hopper transfer_start_ts=1431387400 transfer_duration=1 bytes_transferred=1024"
+
+        self.online_monitord.on_message(None, None, None, msg_body)
+        self.online_monitord.on_message(None, None, None, msg_body)
+
+        result = self.online_monitord.event_sink._db.session.query(JobMetrics). \
+            filter(JobMetrics.dag_job_id == "stage_in_local_hopper_2_0", JobMetrics.bytes_transferred == 1024).all()
+
+        self.assertEquals(len(result), 1)
+
 
 if __name__ == '__main__':
     unittest.main()
