@@ -12,17 +12,14 @@ from Pegasus.monitoring import event_output as eo
 
 
 class OnlineMonitord:
-    PERF_METRICS = ["time", "utime", "stime", "iowait", "vmSize", "vmRSS", "threads", "read_bytes", "write_bytes",
-                    "syscr", "syscw"]
-
-    DATA_TRANSFER_METRICS = ["time", "transfer_duration", "bytes_transferred"]
 
     def __init__(self, wf_label, wf_uuid, dburi):
         print "[online-monitord] PEGASUS_WF_UUID: %s" % wf_uuid
         print "[online-monitord] PEGASUS_WF_LABEL: %s" % wf_label
         print "[online-monitord] INFLUXDB_URL: %s" % os.getenv("INFLUXDB_URL")
         print "[online-monitord] KICKSTART_MON_ENDPOINT_URL: %s" % os.getenv("KICKSTART_MON_ENDPOINT_URL")
-        print "[online-monitord] KICKSTART_MON_ENDPOINT_CREDENTIALS: %s" % os.getenv("KICKSTART_MON_ENDPOINT_CREDENTIALS")
+        print "[online-monitord] KICKSTART_MON_ENDPOINT_CREDENTIALS: %s" % os.getenv(
+            "KICKSTART_MON_ENDPOINT_CREDENTIALS")
 
         self.wf_label = wf_label
         self.wf_uuid = wf_uuid
@@ -80,7 +77,7 @@ class OnlineMonitord:
 
     def on_message(self, channel, method_frame, header_frame, body):
         """
-        A callback registered in a rabbitmq instance to process messages regarding online monitoring for a particalur
+        A callback registered in a rabbitmq instance to process messages regarding online monitoring for a particular
         workflow.
         :param channel: a channel from which the message came
         :param method_frame: message number
@@ -93,23 +90,17 @@ class OnlineMonitord:
         print body
         print
 
-        body = body.strip()
-
         if len(body.split(" ")) < 2:
             print "The given measurement line is too short"
             return
 
-        message = dict(item.split("=") for item in body.split(" "))
-        print "Message: ", message
-        measurement = self.parse_measurement(message)
-        print "Measurement: ", measurement
+        message = MonitoringMessage.parse(body)
 
-        if measurement is not None:
+        if message is not None:
             if self.client is not None:
-                self.client.write_points(measurement)
+                self.client.write_points(message.to_influxdb_json())
 
-            perf_metrics = measurement[0]["points"][0]
-            self.handle_aggregation(perf_metrics, message)
+            self.handle_aggregation(message)
 
         if channel is not None:
             channel.basic_ack(delivery_tag=method_frame.delivery_tag)
@@ -174,25 +165,20 @@ class OnlineMonitord:
 
         return channel
 
-    def handle_aggregation(self, measurement, msg):
+    def handle_aggregation(self, msg):
         """
         This function performs aggregation logic for MPI jobs. It takes measurements from different ranks of an MPI
-        job and summaries performance metrics values. As a result it adds a new timeserie - named <dag_job_id> -
+        job and summaries performance metrics values. As a result it adds a new timeserie - named <dag_job_id>:<condor_job_id> -
         which describes a whole MPI job instead of its internal subprocesses.
-        :param measurement: a list of performance metrics values
-        :param msg: a parsed mq message - dict
+        :param msg: a parsed mq message - MonitoringMessage object
         """
-        dag_job_id = msg["dag_job_id"]
-        mpi_rank = int(msg["mpi_rank"]) if "mpi_rank" in msg else 0
+        dag_job_id = msg.dag_job_id
+        mpi_rank = msg.mpi_rank
 
         if dag_job_id not in self.retrieved_messages:
             self.retrieved_messages[dag_job_id] = dict()
-            if msg["event"] == "workflow_trace":
-                self.aggregated_measurements[dag_job_id] = [0] * len(OnlineMonitord.PERF_METRICS)
-                self.last_aggregated_data[dag_job_id] = [0] * len(OnlineMonitord.PERF_METRICS)
-            elif msg["event"] == "data_transfer":
-                self.aggregated_measurements[dag_job_id] = [0] * len(OnlineMonitord.DATA_TRANSFER_METRICS)
-                self.last_aggregated_data[dag_job_id] = [0] * len(OnlineMonitord.DATA_TRANSFER_METRICS)
+            self.aggregated_measurements[dag_job_id] = [0] * len(msg.metrics())
+            self.last_aggregated_data[dag_job_id] = [0] * len(msg.metrics())
 
         if mpi_rank in self.retrieved_messages[dag_job_id]:
             # 1. check if new measurement has only metrics values greater than the previous ones
@@ -201,7 +187,7 @@ class OnlineMonitord:
                     self.aggregated_measurements[dag_job_id][i] = metric_value
 
             # 2. send the aggregated measurement to a timeseries db and stampede db
-            self.send_aggregated_measurement(msg, self.aggregated_measurements[dag_job_id], msg["event"])
+            self.send_aggregated_measurement(self.aggregated_measurements[dag_job_id], msg)
 
             # 3. save this measurement for future comparisons
             for i, metric_value in enumerate(self.aggregated_measurements[dag_job_id]):
@@ -209,13 +195,10 @@ class OnlineMonitord:
 
             # 4. reset aggregated measurements
             self.retrieved_messages[dag_job_id] = dict()
-            if msg["event"] == "workflow_trace":
-                self.aggregated_measurements[dag_job_id] = [0] * len(OnlineMonitord.PERF_METRICS)
-            elif msg["event"] == "data_transfer":
-                self.aggregated_measurements[dag_job_id] = [0] * len(OnlineMonitord.DATA_TRANSFER_METRICS)
+            self.aggregated_measurements[dag_job_id] = [0] * len(msg.metrics())
 
         self.retrieved_messages[dag_job_id][mpi_rank] = True
-        self.aggregate_measurement(dag_job_id, measurement)
+        self.aggregate_measurement(dag_job_id, msg.measurements())
 
     def aggregate_measurement(self, dag_job_id, measurement):
         "add metric values from this mpi rank to create an aggregated measurement for a job"
@@ -229,46 +212,17 @@ class OnlineMonitord:
             else:
                 self.aggregated_measurements[dag_job_id][i] += metric_value
 
-    def send_aggregated_measurement(self, message, measurement, msg_type):
-        trace_id = "%s:%s" % (message["dag_job_id"], message["condor_job_id"])
+    def send_aggregated_measurement(self, aggregated_measurements, message):
         if self.client is not None:
-            columns = []
-            if msg_type == "workflow_trace":
-                columns = OnlineMonitord.PERF_METRICS
-            elif msg_type == "data_transfer":
-                columns = OnlineMonitord.DATA_TRANSFER_METRICS
-
-            json_body = [
-                {
-                    "name": trace_id,
-                    "columns": columns,
-                    "points": [measurement]
-                }
-            ]
-            self.client.write_points(json_body)
+            self.client.write_points(
+                MonitoringMessage.get_influxdb_json(message.aggregated_trace_id(),
+                    message.metrics(),
+                    aggregated_measurements
+                )
+            )
 
         if self.event_sink is not None:
-            self.emit_measurement_event(measurement, message)
-
-    def parse_measurement(self, msg):
-        """
-        This function transforms a single message body taken from rabbitmq with online monitoring information.
-        :param measurement_text: it is a string with a simple <key>=<value> format with spaces between subsequent pairs.
-        :return: a JSON object in a format supported by InfluxDB
-        """
-        if "event" not in msg:
-            print "There is no 'event' attribute in the message"
-            return None
-
-        parsed_msg = None
-
-        if msg["event"] == "workflow_trace":
-            parsed_msg = self.parse_workflow_trace_msg(msg)
-
-        elif msg["event"] == "data_transfer":
-            parsed_msg = self.parse_data_transfer_msg(msg)
-
-        return parsed_msg
+            self.emit_measurement_event(aggregated_measurements, message)
 
     def emit_measurement_event(self, metrics_values, parsed_msg):
         """
@@ -280,26 +234,9 @@ class OnlineMonitord:
             return
 
         kwargs = {}
+        kwargs.update(parsed_msg.aggregated_message_info())
 
-        for attr in ["wf_uuid", "dag_job_id", "hostname", "condor_job_id", "kickstart_pid", "executable"]:
-            if attr not in parsed_msg:
-                continue
-
-            attr_value = parsed_msg[attr]
-            column_name = attr
-            if attr == "condor_job_id":
-                column_name = "sched_id"
-            elif attr == "executable":
-                column_name = "exec_name"
-
-            kwargs[column_name] = attr_value
-
-        metrics_names = []
-        if parsed_msg["event"] == "workflow_trace":
-            metrics_names = OnlineMonitord.PERF_METRICS
-        elif parsed_msg["event"] == "data_transfer":
-            metrics_names = OnlineMonitord.DATA_TRANSFER_METRICS
-
+        metrics_names = parsed_msg.metrics()
         for i in range(len(metrics_names)):
             attr_value = metrics_values[i]
             column_name = metrics_names[i]
@@ -319,63 +256,10 @@ class OnlineMonitord:
     def close(self):
         self.event_sink.close()
 
-    def parse_data_transfer_msg(self, msg):
-        if not all(k in msg for k in ("hostname", "dag_job_id", "condor_job_id")):
-            print "We couldn't create trace_id for a 'data_transfer' job"
-            return None
-        else:
-            trace_id = "{0}:{1}:{2}".format(msg["dag_job_id"], msg["hostname"], msg["condor_job_id"])
-
-            return self.msg_to_json(trace_id, OnlineMonitord.DATA_TRANSFER_METRICS, msg)
-
-    def parse_workflow_trace_msg(self, msg):
-        if not all(k in msg for k in ("hostname", "executable")):
-            print "We couldn't create trace_id"
-            return None
-        else:
-            mpi_rank = 0
-            if "mpi_rank" in msg:
-                mpi_rank = int(msg["mpi_rank"])
-
-            kickstart_pid = "na"
-            if "kickstart_pid" in msg:
-                kickstart_pid = msg["kickstart_pid"]
-
-            exec_id = msg["executable"]
-            # <dag_job_id>:<hostname>:<condor_jobid>:<mpi_rank>:<kickstart_pid>:<executable>
-            trace_id = "{0}:{1}:{2}:{3}:{4}:{5}".format(msg["dag_job_id"], msg["hostname"],
-                                                        msg["condor_job_id"], mpi_rank, kickstart_pid,
-                                                        exec_id)
-
-            return self.msg_to_json(trace_id, OnlineMonitord.PERF_METRICS, msg)
-
-    def msg_to_json(self, trace_id, columns, msg):
-        point = []
-
-        for column in columns:
-            if column == "time":
-                column = "ts"
-                point.append(int(msg[column]))
-            else:
-                if column not in msg:
-                    point.append(float(0))
-                else:
-                    point.append(float(msg[column]))
-
-        return [
-            {
-                "name": trace_id,
-                "columns": columns,
-                "points": [point]
-            }
-        ]
-
 
 class MonitoringMessage:
-
     def __init__(self):
         self.trace_id = None
-        self.measurements = []
 
     def __init__(self, dag_job_id, condor_job_id, mpi_rank, msg):
         self.dag_job_id = dag_job_id
@@ -383,7 +267,6 @@ class MonitoringMessage:
         self.msg = msg
         self.condor_job_id = condor_job_id
         self.trace_id = None
-        self.measurements = []
 
     @staticmethod
     def parse(raw_message):
@@ -412,6 +295,16 @@ class MonitoringMessage:
     def metrics(self):
         return self.perf_metrics
 
+    @staticmethod
+    def get_influxdb_json(trace_id, columns, point):
+        return [
+            {
+                "name": trace_id,
+                "columns": columns,
+                "points": [point]
+            }
+        ]
+
     def to_influxdb_json(self):
         point = []
 
@@ -425,45 +318,62 @@ class MonitoringMessage:
                 else:
                     point.append(float(self.msg[column]))
 
-        return [
-            {
-                "name": self.trace_id,
-                "columns": self.perf_metrics,
-                "points": [point]
-            }
-        ]
+        return MonitoringMessage.get_influxdb_json(self.trace_id, self.metrics(), point)
+
+    def measurements(self):
+        return self.to_influxdb_json()[0]["points"][0]
+
+    def aggregated_message_info(self):
+        info = dict()
+
+        for attr in ["wf_uuid", "dag_job_id", "hostname", "condor_job_id", "kickstart_pid", "executable"]:
+            if attr not in self.msg:
+                continue
+
+            attr_value = self.msg[attr]
+            column_name = attr
+            if attr == "condor_job_id":
+                column_name = "sched_id"
+            elif attr == "executable":
+                column_name = "exec_name"
+
+            info[column_name] = attr_value
+
+        return info
+
+
 
 class WorkflowTraceMessage(MonitoringMessage):
-
     def __init__(self, message):
         self.perf_metrics = ["time", "utime", "stime", "iowait", "vmSize", "vmRSS", "threads", "read_bytes",
                              "write_bytes", "syscr", "syscw"]
 
         if self.message_has_required_params(message):
-            MonitoringMessage.__init__(message["dag_job_id"], message["condor_job_id"], message["mpi_rank"], message)
+            MonitoringMessage.__init__(self, message["dag_job_id"], message["condor_job_id"], message["mpi_rank"],
+                                       message)
 
             # <dag_job_id>:<hostname>:<condor_jobid>:<mpi_rank>:<kickstart_pid>:<executable>
             self.trace_id = "{0}:{1}:{2}:{3}:{4}:{5}".format(message["dag_job_id"], message["hostname"],
-                                                        message["condor_job_id"], message["mpi_rank"],
-                                                        message["kickstart_pid"], message["executable"])
+                                                             message["condor_job_id"], message["mpi_rank"],
+                                                             message["kickstart_pid"], message["executable"])
         else:
-            MonitoringMessage.__init__()
+            MonitoringMessage.__init__(self)
             print "We couldn't create trace_id"
 
     def message_has_required_params(self, message):
         required_params = ("hostname", "executable", "dag_job_id", "condor_job_id", "mpi_rank", "kickstart_pid")
         return all(k in message for k in required_params)
 
-class DataTransferMessage(MonitoringMessage):
 
+class DataTransferMessage(MonitoringMessage):
     def __init__(self, message):
         self.perf_metrics = ["time", "transfer_duration", "bytes_transferred"]
 
         if self.message_has_required_params(message):
-            MonitoringMessage.__init__(message["dag_job_id"], message["condor_job_id"], 0, message)
+            MonitoringMessage.__init__(self, message["dag_job_id"], message["condor_job_id"], 0, message)
             self.trace_id = "{0}:{1}:{2}".format(message["dag_job_id"], message["hostname"], message["condor_job_id"])
         else:
-            MonitoringMessage.__init__()
+            MonitoringMessage.__init__(self)
             print "We couldn't create trace_id"
 
     def message_has_required_params(self, message):
