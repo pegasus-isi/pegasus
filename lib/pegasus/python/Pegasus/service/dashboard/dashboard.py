@@ -406,6 +406,17 @@ class Dashboard(object):
         finally:
             Dashboard.close(workflow)
 
+    def get_job_metrics(self, wf_id, job_instance_id):
+        """
+        Get information about the job states that a job has gone through.
+        """
+        try:
+            workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id)
+            job_metrics = workflow.get_job_metrics(job_instance_id)
+            return job_metrics
+        finally:
+            Dashboard.close(workflow)
+
     def get_failed_jobs(self, wf_id, **table_args):
         try:
             workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id=wf_id)

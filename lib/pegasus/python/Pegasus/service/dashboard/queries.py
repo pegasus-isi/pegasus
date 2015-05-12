@@ -312,6 +312,13 @@ class WorkflowInfo(SQLAlchemyInit):
 
         return q.all()
 
+    def get_job_metrics(self, job_instance_id):
+
+        q = self.session.query(JobMetrics)
+        q = q.filter(JobMetrics.job_instance_id == job_instance_id)
+
+        return q.first()
+
     def _jobs_by_type(self):
         qmax = self.__get_jobs_maxjss_sq()
 

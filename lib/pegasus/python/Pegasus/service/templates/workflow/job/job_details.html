@@ -85,6 +85,7 @@
 
         verticalTableInitStatus ('#job_text_info', {{ status_code(job.exitcode) }});
         verticalTableInitStatus ('#job_states_info', {{ status_code(job.exitcode) }});
+        verticalTableInitStatus ('#job_metrics_info', {{ status_code(job.exitcode) }});
 
         $('#job_instances_info').dataTable({
             "jQueryUI": true,
@@ -119,130 +120,171 @@
 {% block title_header %}Job Details{% endblock %}
 {% block content %}
 <section class="row">
-    <div id="job_text" class="col-xs-12">
-        <table id="job_text_info">
-            <tr>
-                <th class="job_table_width">Label</th>
-                <td><strong>{{ job.exec_job_id }}</strong></td>
-            </tr>
-            <tr>
-                <th class="job_table_width">Type</th>
-                <td>{% if job.clustered %}Clustered{% else %}Compute{% endif %}</td>
-            </tr>
-            <tr>
-                <th class="job_table_width">Exit Code</th>
-                <td>{{ job.exitcode }}</td>
-            </tr>
-            <tr>
-                <th class="job_table_width">Stdout Preview</th>
-                <td>
-                    <a target="_blank" href="{{ url_for ('.stdout', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}">Preview</a>
-                </td>
-            </tr>
-            <tr>
-                <th class="job_table_width">Stdout File</th>
-                <td class="text-nowrap">
-                    <span class="pe-7s-link"> </span>
-                    <a target="_blank" href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}?init_file={{ job.stdout_file }}"
-                       data-toggle="tooltip" data-placement="top" title="View in file browser">
-                        {{ job.stdout_file }}
-                    </a>
-                </td>
-            </tr>
-            <tr>
-                <th class="job_table_width">Stderr Preview</th>
-                <td>
-                    <a target="_blank" href="{{ url_for ('.stderr', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}">Preview</a>
-                </td>
-            </tr>
-            <tr>
-                <th class="job_table_width">Stderr File</th>
-                <td class="text-nowrap">
-                    <span class="pe-7s-link"> </span>
-                    <a target="_blank" href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}?init_file={{ job.stderr_file }}"
-                       data-toggle="tooltip" data-placement="top" title="View in file browser">
-                        {{ job.stderr_file }}
-                    </a>
-                </td>
-            </tr>
-            <tr>
-                <th class="job_table_width">Condor Submit File</th>
-                <td class="text-nowrap">
-                    <span class="pe-7s-link"> </span>
-                    <a target="_blank" href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}?init_file={{ job.exec_job_id }}.sub"
-                       data-toggle="tooltip" data-placement="top" title="View in file browser">
-                        {{ job.exec_job_id }}.sub
-                    </a>
-                </td>
-            </tr>
-            <tr>
-                <th class="job_table_width">Site</th>
-                <td>{{ job.site }}</td>
-            </tr>
-            <tr>
-                <th class="job_table_width">Host</th>
-                <td>{{ job.ip }} > {{ job.hostname }}</td>
-            </tr>
-        </table>
-    </div>
-</section>
+    <div role="tabpanel">
 
-{% if job_states|length %}
-<section class="row">
-    <div class="col-xs-12">
-        <h3>Job States</h3>
-        <hr>
-        <div id="job_states">
-            <table id="job_states_info">
+        <ul class="nav nav-tabs" role="tablist">
+            <li role="presentation" class="active"><a href="#job_text" aria-controls="summary" role="tab" data-toggle="tab">Summary</a></li>
+            {% if job_states|length %}
+            <li role="presentation"><a href="#job_state" aria-controls="job_state" role="tab" data-toggle="tab">Job States</a></li>
+            {% endif %}
+            <li role="presentation"><a href="#job_instance" aria-controls="job_instance" role="tab" data-toggle="tab">Job Instances</a></li>
+            {% if job_metrics %}
+            <li role="presentation"><a href="#job_metrics" aria-controls="job_metrics" role="tab" data-toggle="tab">Job Metrics</a></li>
+            {% endif %}
+        </ul>
+
+        <!-- Tab panes -->
+        <div class="tab-content">
+            <br />
+            <div role="tabpanel" class="tab-pane active" id="job_text">
+                <table id="job_text_info">
+                    <tr>
+                        <th class="job_table_width">Label</th>
+                        <td><strong>{{ job.exec_job_id }}</strong></td>
+                    </tr>
+                    <tr>
+                        <th class="job_table_width">Type</th>
+                        <td>{% if job.clustered %}Clustered{% else %}Compute{% endif %}</td>
+                    </tr>
+                    <tr>
+                        <th class="job_table_width">Exit Code</th>
+                        <td>{{ job.exitcode }}</td>
+                    </tr>
+                    <tr>
+                        <th class="job_table_width">Stdout Preview</th>
+                        <td>
+                        <a target="_blank" href="{{ url_for ('.stdout', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}">Preview</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="job_table_width">Stdout File</th>
+                        <td class="text-nowrap">
+                        <span class="pe-7s-link"> </span>
+                        <a target="_blank" href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}?init_file={{ job.stdout_file }}"
+                        data-toggle="tooltip" data-placement="top" title="View in file browser">
+                        {{ job.stdout_file }}
+                        </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="job_table_width">Stderr Preview</th>
+                        <td>
+                        <a target="_blank" href="{{ url_for ('.stderr', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}">Preview</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="job_table_width">Stderr File</th>
+                        <td class="text-nowrap">
+                        <span class="pe-7s-link"> </span>
+                        <a target="_blank" href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}?init_file={{ job.stderr_file }}"
+                        data-toggle="tooltip" data-placement="top" title="View in file browser">
+                        {{ job.stderr_file }}
+                        </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="job_table_width">Condor Submit File</th>
+                        <td class="text-nowrap">
+                        <span class="pe-7s-link"> </span>
+                        <a target="_blank" href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}?init_file={{ job.exec_job_id }}.sub"
+                        data-toggle="tooltip" data-placement="top" title="View in file browser">
+                        {{ job.exec_job_id }}.sub
+                        </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="job_table_width">Site</th>
+                        <td>{{ job.site }}</td>
+                    </tr>
+                    <tr>
+                        <th class="job_table_width">Host</th>
+                        <td>{{ job.ip }} > {{ job.hostname }}</td>
+                    </tr>
+                </table>
+            </div>
+
+            {% if job_states|length %}
+            <div role="tabpanel" class="tab-pane" id="job_state">
+                <table id="job_states_info">
                 {% for state in job_states %}
                 <tr>
                     <th class="job_table_width" style="text-transform: capitalize;">{{ state.state|replace('_', '
-                        ')|capitalize }}
+                    ')|capitalize }}
                     </th>
                     <td>{{ state.timestamp }} ( {{ state.interval|time_to_str }} )</td>
                 </tr>
                 {% endfor %}
-            </table>
-        </div>
-    </div>
-</section>
-{% endif %}
+                </table>
+            </div>
+            {% endif %}
 
-<section class="row">
-    <div class="col-xs-12">
-        <h3>Job Instances</h3>
-        <hr>
-        <div id="job_instances">
-            <table id="job_instances_info">
-                <thead>
+
+            <div role="tabpanel" class="tab-pane" id="job_instance">
+                <div id="job_instances">
+                    <table id="job_instances_info">
+                    <thead>
+                        <tr>
+                            <th>Try</th>
+                            <th>Job Instance ID</th>
+                            <th>Exitcode</th>
+                            <th>Stdout</th>
+                            <th>Stderr</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for instance in job_instances %}
+                        <tr class={{ status_code (instance.exitcode) }}>
+                            <td>{{ loop.revindex }}</td>
+                            <td>
+                            <a href="{{ url_for ('.job', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = instance.job_instance_id) }}">
+                            {{ instance.job_instance_id }}
+                            </a>
+                            </td>
+                            <td>{{ instance.exitcode }}</td>
+                            <td>
+                            <a target="_blank" href="{{ url_for ('.stdout', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = instance.job_instance_id) }}">Preview</a>
+                            </td>
+                            <td>
+                            <a target="_blank" href="{{ url_for ('.stderr', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = instance.job_instance_id) }}">Preview</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {% if job_metrics %}
+            <div role="tabpanel" class="tab-pane" id="job_metrics">
+                <table id="job_metrics_info">
+                {% for field, name in [
+                    ('dag_job_id', 'DAG Job ID'),
+                    ('hostname', 'Hostname'),
+                    ('exec_name', 'Executable Name'),
+                    ('kickstart_pid', 'Kickstart PID'),
+                    ('ts', 'Timestamp'),
+                    ('stime', 'stime'),
+                    ('utime', 'utime'),
+                    ('iowait', 'IO Wait'),
+                    ('vmsize', 'VMsize'),
+                    ('vmrss', 'VMrss'),
+                    ('read_bytes', 'Bytes Read'),
+                    ('write_bytes', 'Bytes Written'),
+                    ('syscr', 'Syscr'),
+                    ('syscw', 'Syscw'),
+                    ('threads', 'Threads'),
+                    ('bytes_transferred', 'Bytes Transferred'),
+                    ('transfer_duration', 'Transfer Duration'),
+                    ('site', 'Site')
+                ] %}
                 <tr>
-                    <th>Try</th>
-                    <th>Job Instance ID</th>
-                    <th>Exitcode</th>
-                    <th>Stdout</th>
-                    <th>Stderr</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for instance in job_instances %}
-                <tr class={{ status_code (instance.exitcode) }}>
-                <td>{{ loop.revindex }}</td>
-                <td>
-                    <a href="{{ url_for ('.job', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = instance.job_instance_id) }}">
-                        {{ instance.job_instance_id }}
-                    </a>
-                </td>
-                <td>{{ instance.exitcode }}</td>
-                <td>
-                    <a target="_blank" href="{{ url_for ('.stdout', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = instance.job_instance_id) }}">Preview</a>
-                </td>
-                <td>
-                    <a target="_blank" href="{{ url_for ('.stderr', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = instance.job_instance_id) }}">Preview</a>
-                </td>
+                    <th class="job_table_width">{{ name }}</th>
+                    <td>{{ job_metrics[field] }}</td>
                 </tr>
                 {% endfor %}
-                </tbody>
-            </table>
+                </table>
+            </div>
+            {% endif %}
         </div>
     </div>
 </section>
