@@ -7,17 +7,17 @@
 package Pegasus::DAX::InvokeMixin;
 use 5.006;
 use strict;
-use Carp; 
+use Carp;
 
 use Exporter;
-our @ISA = qw(Exporter); 
+our @ISA = qw(Exporter);
 
-our $VERSION = '3.5';
+our $VERSION = '3.6';
 our @EXPORT = ();
 our @EXPORT_OK = ();
-our %EXPORT_TAGS = (); 
+our %EXPORT_TAGS = ();
 
-use Pegasus::DAX::Invoke qw(%permitted); 
+use Pegasus::DAX::Invoke qw(%permitted);
 
 sub addInvoke {
     my $self = shift;
@@ -25,38 +25,38 @@ sub addInvoke {
 }
 
 sub notify {
-    my $self = shift; 
+    my $self = shift;
     $self->invoke(@_);
 }
 
 sub invoke {
-    my $self = shift; 
+    my $self = shift;
 
-    if ( @_ == 0 ) { 
+    if ( @_ == 0 ) {
 	# assume getter for full list
-	return ( exists $self->{invokes} ? 
-		 @{ $self->{invokes} } : () ); 
-    } elsif ( @_ == 2 ) { 
+	return ( exists $self->{invokes} ?
+		 @{ $self->{invokes} } : () );
+    } elsif ( @_ == 2 ) {
 	# assume setter
-	my $when = shift; 
-	my $cmd = shift; 
+	my $when = shift;
+	my $cmd = shift;
 
-	if ( defined $when && defined $cmd ) { 
+	if ( defined $when && defined $cmd ) {
 	    my $i = Pegasus::DAX::Invoke->new($when,$cmd);
 	    if ( exists $self->{invokes} ) {
 		push( @{$self->{invokes}}, $i );
 	    } else {
-		$self->{invokes} = [ $i ]; 
+		$self->{invokes} = [ $i ];
 	    }
 	} else {
 	    croak "use proper arguments to addInvoke(when,cmdstring)";
 	}
     } else {
-	croak "invalid arguments"; 
+	croak "invalid arguments";
     }
 }
 
-1; 
+1;
 
 __END__
 
@@ -72,7 +72,7 @@ This is a constructor-less base class. You do not instantiate it.
 
 This class provides and thus implements dealing with
 L<Pegasus::DAX::Invoke> instances inside classes that can contain
-instances thereof. 
+instances thereof.
 
 =head1 METHODS
 
@@ -82,20 +82,20 @@ instances thereof.
 
 Alias for C<invoke> method.
 
-=item notify( $when, $cmd ) 
+=item notify( $when, $cmd )
 
 Alias for C<invoke> method.
 
-=item invoke( ) 
+=item invoke( )
 
 This method is the getter for the full list of L<Pegasus::DAX::Invoke>
-objects stored in this instance. 
+objects stored in this instance.
 
 =item invoke( $when, $cmd )
 
 This method adds a simple executable instruction to run (on the submit
-host) when a job reaches the state in C<$when>. Please refer to the 
-constants C<INVOKE_*> for details. 
+host) when a job reaches the state in C<$when>. Please refer to the
+constants C<INVOKE_*> for details.
 
 =back
 
@@ -109,9 +109,9 @@ constants C<INVOKE_*> for details.
 
 =item L<Pegasus::DAX::Transformation>
 
-Classes requiring this interface. 
+Classes requiring this interface.
 
-=back 
+=back
 
 =head1 COPYRIGHT AND LICENSE
 

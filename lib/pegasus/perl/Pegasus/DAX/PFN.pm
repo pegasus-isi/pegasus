@@ -5,16 +5,16 @@
 package Pegasus::DAX::PFN;
 use 5.006;
 use strict;
-use Carp; 
+use Carp;
 
-use Pegasus::DAX::Base qw(:xml); 
+use Pegasus::DAX::Base qw(:xml);
 use Exporter;
-our @ISA = qw(Pegasus::DAX::Base Exporter); 
+our @ISA = qw(Pegasus::DAX::Base Exporter);
 
-our $VERSION = '3.5'; 
-our @EXPORT = (); 
-our @EXPORT_OK = (); 
-our %EXPORT_TAGS = (); 
+our $VERSION = '3.6';
+our @EXPORT = ();
+our @EXPORT_OK = ();
+our %EXPORT_TAGS = ();
 
 # one AUTOLOAD to rule them all
 BEGIN { *AUTOLOAD = \&Pegasus::DAX::Base::AUTOLOAD }
@@ -23,40 +23,40 @@ sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
     my $self = $class->SUPER::new();
-    
-    if ( @_ == 0 ) { 
+
+    if ( @_ == 0 ) {
 	# nothing to do
     } elsif ( @_ == 1 && ! ref $_[0] ) {
 	# single string argument
-	$self->{url} = shift; 
-    } elsif ( @_ == 2 && ! ref $_[0] && ! ref $_[1] ) { 
+	$self->{url} = shift;
+    } elsif ( @_ == 2 && ! ref $_[0] && ! ref $_[1] ) {
 	# two string arguments
-	$self->{url} = shift; 
+	$self->{url} = shift;
 	$self->{site} = shift;
     } elsif ( @_ > 2 ) {
 	# called with a=>b,c=>d list
-	%{$self} = ( %{$self}, @_ ); 
-    } elsif ( @_ == 1 && ref $_[0] eq 'HASH' ) { 
+	%{$self} = ( %{$self}, @_ );
+    } elsif ( @_ == 1 && ref $_[0] eq 'HASH' ) {
 	# called with { a=>b, c=>d } hashref
-	%{$self} = ( %{$self}, %{ shift() } ); 
+	%{$self} = ( %{$self}, %{ shift() } );
     } else {
-	croak "invalid c'tor for ", __PACKAGE__; 
+	croak "invalid c'tor for ", __PACKAGE__;
     }
 
-    bless $self, $class; 
+    bless $self, $class;
 }
 
 
 sub addProfile {
     my $self = shift;
 
-    my $prof; 
+    my $prof;
     if ( @_ == 3 ) {
 	# explicit
-	$prof = Pegasus::DAX::Profile->new( shift(), shift(), shift() ); 
+	$prof = Pegasus::DAX::Profile->new( shift(), shift(), shift() );
     } elsif ( @_ == 1 && ref $_[0] && $_[0]->isa('Pegasus::DAX::Profile') ) {
 	my $p = shift;
-	$prof = $p->clone();  
+	$prof = $p->clone();
     } else {
 	croak "argument is not a valid Profile";
     }
@@ -64,7 +64,7 @@ sub addProfile {
     if ( exists $self->{profiles} ) {
 	push( @{$self->{profiles}}, $prof );
     } else {
-	$self->{profiles} = [ $prof ]; 
+	$self->{profiles} = [ $prof ];
     }
 }
 
@@ -78,28 +78,28 @@ sub toXML {
     #          ident (IN): indentation level
     #          xmlns (opt. IN): namespace of element, if necessary
     #
-    my $self = shift; 
-    my $f = shift; 
+    my $self = shift;
+    my $f = shift;
     my $indent = shift || '';
-    my $xmlns = shift; 
+    my $xmlns = shift;
     my $tag = defined $xmlns && $xmlns ? "$xmlns:pfn" : 'pfn';
 
     $f->print( "$indent<$tag"
 	     , attribute('url',$self->url,$xmlns)
-	     , attribute('site',$self->site,$xmlns) 
+	     , attribute('site',$self->site,$xmlns)
 	     );
-    if ( exists $self->{profiles} ) { 
+    if ( exists $self->{profiles} ) {
 	$f->print(">\n");
-	foreach my $i ( @{$self->{profiles}} ) { 
+	foreach my $i ( @{$self->{profiles}} ) {
 	    $i->toXML($f,"  $indent",$xmlns);
 	}
 	$f->print( "$indent</$tag>\n" );
     } else {
-	$f->print(" />\n"); 
+	$f->print(" />\n");
     }
 }
 
-1; 
+1;
 __END__
 
 =head1 NAME
@@ -109,21 +109,21 @@ description.
 
 =head1 SYNOPSIS
 
-    use Pegasus::DAX::PFN; 
+    use Pegasus::DAX::PFN;
 
     my $a = Pegasus::DAX::PFN->new( 'url1' );
     my $b = Pegasus::DAX::PFN->new( 'url2', 'local' );
     my $c = Pegasus::DAX::PFN->new( url => 'file://foo'
-                                  , site => 'local' ); 
+                                  , site => 'local' );
 
    $c->addProfile( PROFILE_ENV, 'FOO', 'bar' );
-   $c->addProfile( $profile_instance ); 
+   $c->addProfile( $profile_instance );
 
 =head1 DESCRIPTION
 
 This class remembers a Pegasus concrete remote file location. The file
 may refer to an executable (in the transformation catalog), or a data
-file (in the replica catalog). 
+file (in the replica catalog).
 
 =head1 METHODS
 
@@ -144,7 +144,7 @@ attributes can be adjusted using the getters and setters provided by the
 C<AUTOLOAD> inherited method.
 
 When invoked with exactly 1 or 2 arguments, the first argument is the
-location URL, and the second argument is the site handle. 
+location URL, and the second argument is the site handle.
 
 Other means of construction is to use named lists.
 
@@ -154,7 +154,7 @@ Setter and getter for the URL string.
 
 =item site
 
-Setter and getter for the site handle string. 
+Setter and getter for the site handle string.
 
 =item addProfile( $namespace, $key, $value )
 
@@ -174,7 +174,7 @@ to indent elements for pretty printing. The third argument may not be
 defined. If defined, all element tags will be prefixed with this name
 space.
 
-=back 
+=back
 
 =head1 SEE ALSO
 
@@ -182,13 +182,13 @@ space.
 
 =item L<Pegasus::DAX::Base>
 
-Base class. 
+Base class.
 
 =item L<Pegasus::DAX::CatalogType>
 
 Abstract class using PFNs.
 
-=back 
+=back
 
 =head1 COPYRIGHT AND LICENSE
 

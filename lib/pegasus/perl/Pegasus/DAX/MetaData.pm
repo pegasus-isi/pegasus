@@ -5,14 +5,14 @@
 package Pegasus::DAX::MetaData;
 use 5.006;
 use strict;
-use Carp; 
+use Carp;
 
-use Pegasus::DAX::Base qw(:xml); 
+use Pegasus::DAX::Base qw(:xml);
 use Exporter;
-our @ISA = qw(Pegasus::DAX::Base Exporter); 
+our @ISA = qw(Pegasus::DAX::Base Exporter);
 
-our $VERSION = '3.5'; 
-our @EXPORT = (); 
+our $VERSION = '3.6';
+our @EXPORT = ();
 our %EXPORT_TAGS = ();
 our @EXPORT_OK = ();
 
@@ -24,27 +24,20 @@ sub new {
     my $class = ref($proto) || $proto;
     my $self = $class->SUPER::new();
 
-    if ( @_ == 0 ) { 
-	# nothing to do
-    } elsif ( @_ == 3 ) {
-	# called as namespace, key, value
-	@{$self}{'key','type','value'} = @_; 
-    } elsif ( @_ > 2 && (@_ & 1) == 0 ) {
-	# even: called with a=>b,c=>d list
-	%{$self} = ( %{$self}, @_ ); 
-    } elsif ( @_ == 1 && ref $_[0] eq 'HASH' ) { 
-	# called with { a=>b, c=>d } hashref
-	%{$self} = ( %{$self}, %{ shift() } ); 
+    if ( @_ == 0 ) {
+	    # nothing to do
+    } elsif ( @_ == 2 ) {
+        # called as key, value
+        @{$self}{'key', 'value'} = @_;
     } else {
-	croak "invalid c'tor for ", __PACKAGE__; 
+	    croak "invalid c'tor for ", __PACKAGE__;
     }
 
-    bless $self, $class; 
+    bless $self, $class;
 }
 
 # forward declarations so can we check using 'can'
 sub key;
-sub type;
 sub value;
 
 sub toXML {
@@ -53,22 +46,21 @@ sub toXML {
     #          ident (IN): indentation level
     #          xmlns (IN): namespace of element, if necessary
     #
-    my $self = shift; 
-    my $f = shift; 
+    my $self = shift;
+    my $f = shift;
     my $indent = shift || '';
-    my $xmlns = shift; 
+    my $xmlns = shift;
     my $tag = defined $xmlns && $xmlns ? "$xmlns:metadata" : 'metadata';
 
-    $f->print( "$indent<$tag", 
+    $f->print( "$indent<$tag",
 	     , attribute('key',$self->key,$xmlns)
-	     , attribute('type',$self->type,$xmlns)
 	     , ">"
 	     , quote($self->value)
 	     , "</$tag>\n"
-	     ); 
+	     );
 }
 
-1; 
+1;
 __END__
 
 
@@ -78,17 +70,15 @@ Pegasus::DAX::Metadata - stores a Pegasus piece of meta data.
 
 =head1 SYNOPSIS
 
-    use Pegasus::DAX::Metadata; 
+    use Pegasus::DAX::Metadata;
 
-    my $a = Pegasus::DAX::Profile->new( 'key', 'type', 'fubar' ); 
-    my $b = Pegasus::DAX::Profile->new( key => 'foo'
-    				      , type => 'integer'
-                                      , value => 'bar' );
+    my $a = Pegasus::DAX::Profile->new( 'key', 'value' );
+    my $b = Pegasus::DAX::Profile->new( key => 'foo', value => 'bar' );
 
 =head1 DESCRIPTION
 
 This class remembers a Pegasus meta data. The internal transformation-
-and replica catalog may use meta data associated with entries. 
+and replica catalog may use meta data associated with entries.
 
 =head1 METHODS
 
@@ -96,7 +86,7 @@ and replica catalog may use meta data associated with entries.
 
 =item new()
 
-=item new( $key, $type, $value )
+=item new( $key, $value )
 
 =item new( a => b, c => d, ... )
 
@@ -107,8 +97,7 @@ attributes can be adjusted using the getters and setters provided by the
 C<AUTOLOAD> inherited method.
 
 When invoked with exactly 3 arguments, the first argument is the meta
-data key, the second argument the type identifier, and the third
-argument the value to set.
+data key, and the second argument the value to set.
 
 Other means of construction is to use named lists.
 
@@ -118,14 +107,9 @@ Setter and getter for a key string. The key value may be of restricted
 range, dependinng on the namespace, but this is not checked at this
 point.
 
-=item type
-
-Setter and getter for a type string. Types are not standardized in any
-way.
-
 =item value
 
-Setter and getter for the value to be transported. 
+Setter and getter for the value to be transported.
 
 =item toXML( $handle, $indent, $xmlns )
 
@@ -137,7 +121,7 @@ to indent elements for pretty printing. The third argument may not be
 defined. If defined, all element tags will be prefixed with this name
 space.
 
-=back 
+=back
 
 =head1 SEE ALSO
 
@@ -145,13 +129,13 @@ space.
 
 =item L<Pegasus::DAX::Base>
 
-Base class. 
+Base class.
 
 =item L<Pegasus::DAX::CatalogType>
 
-Abstract class using meta data. 
+Abstract class using meta data.
 
-=back 
+=back
 
 =head1 COPYRIGHT AND LICENSE
 

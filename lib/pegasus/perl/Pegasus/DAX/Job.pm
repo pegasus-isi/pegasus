@@ -5,17 +5,17 @@
 package Pegasus::DAX::Job;
 use 5.006;
 use strict;
-use Carp; 
+use Carp;
 
-use Pegasus::DAX::Base qw(:xml); 
-use Pegasus::DAX::AbstractJob; 
+use Pegasus::DAX::Base qw(:xml);
+use Pegasus::DAX::AbstractJob;
 use Exporter;
-our @ISA = qw(Pegasus::DAX::AbstractJob Exporter); 
+our @ISA = qw(Pegasus::DAX::AbstractJob Exporter);
 
-our $VERSION = '3.5'; 
-our @EXPORT = (); 
-our @EXPORT_OK = (); 
-our %EXPORT_TAGS = (); 
+our $VERSION = '3.6';
+our @EXPORT = ();
+our @EXPORT_OK = ();
+our %EXPORT_TAGS = ();
 
 # one AUTOLOAD to rule them all
 BEGIN { *AUTOLOAD = \&Pegasus::DAX::Base::AUTOLOAD }
@@ -25,19 +25,19 @@ sub new {
     my $class = ref($proto) || $proto;
     my $self = $class->SUPER::new();
 
-    if ( @_ == 0 ) { 
-	# nothing to do 
+    if ( @_ == 0 ) {
+	# nothing to do
     } elsif ( @_ > 1 ) {
 	# called with a=>b,c=>d list
-	%{$self} = ( %{$self}, @_ ); 
-    } elsif ( @_ == 1 && ref $_[0] eq 'HASH' ) { 
+	%{$self} = ( %{$self}, @_ );
+    } elsif ( @_ == 1 && ref $_[0] eq 'HASH' ) {
 	# called with { a=>b, c=>d } hashref
-	%{$self} = ( %{$self}, %{ shift() } ); 
+	%{$self} = ( %{$self}, %{ shift() } );
     } else {
-	croak "invalid c'tor invocation"; 
+	croak "invalid c'tor invocation";
     }
 
-    bless $self, $class; 
+    bless $self, $class;
 }
 
 # forward declaration to auto loaders
@@ -51,10 +51,10 @@ sub toXML {
     #          ident (IN): indentation level
     #          xmlns (opt. IN): namespace of element, if necessary
     #
-    my $self = shift; 
-    my $f = shift; 
+    my $self = shift;
+    my $f = shift;
     my $indent = shift || '';
-    my $xmlns = shift; 
+    my $xmlns = shift;
     my $tag = defined $xmlns && $xmlns ? "$xmlns:job" : 'job';
 
     $f->print( "$indent<$tag"
@@ -64,32 +64,32 @@ sub toXML {
 	     , attribute('id',$self->id,$xmlns)
 	     , attribute('node-label',$self->nodelabel,$xmlns)
 	     , ">\n" );
-    $self->innerXML($f,"  $indent",$xmlns); 
+    $self->innerXML($f,"  $indent",$xmlns);
     $f->print( "$indent</$tag>\n" );
 }
 
-1; 
+1;
 __END__
 
 
 =head1 NAME
 
-Pegasus::DAX::Job - Job node to describe a job in the current workflow. 
+Pegasus::DAX::Job - Job node to describe a job in the current workflow.
 
 =head1 SYNOPSIS
 
-    use Pegasus::DAX::Job; 
+    use Pegasus::DAX::Job;
 
     my $j = Pegasus::DAX::Job->new( namespace => undef,
                                     name => 'fubar',
-                                    version => '3.0' ); 
-    $j->addArgument( '-flag' ); 
+                                    version => '3.0' );
+    $j->addArgument( '-flag' );
 
 
 =head1 DESCRIPTION
 
 This class stores a single job within the current workflow. Most of the
-heavy lifting is done in the base class L<Pegasus::DAX::AbstractJob>. 
+heavy lifting is done in the base class L<Pegasus::DAX::AbstractJob>.
 
 =head1 METHODS
 
@@ -122,11 +122,11 @@ to indent elements for pretty printing. The third argument may not be
 defined. If defined, all element tags will be prefixed with this name
 space.
 
-=back 
+=back
 
 =head1 INHERITED METHODS
 
-Please refer to L<Pegasus::DAX::AbstractJob> for inherited methods. 
+Please refer to L<Pegasus::DAX::AbstractJob> for inherited methods.
 
 =over 4
 
@@ -164,7 +164,7 @@ Please refer to L<Pegasus::DAX::AbstractJob> for inherited methods.
 
 =item addInvoke( $when, $cmd )
 
-=item notify( $when, $cmd ) 
+=item notify( $when, $cmd )
 
 =item invoke( $when $cmd )
 
@@ -178,7 +178,7 @@ Please refer to L<Pegasus::DAX::AbstractJob> for inherited methods.
 
 =item L<Pegasus::DAX::AbstractJob>
 
-Base class. 
+Base class.
 
 =item L<Pegasus::DAX::ADAG>
 
@@ -186,9 +186,9 @@ Base class.
 
 =item L<Pegasus::DAX::DAX>
 
-Sibling classes. 
+Sibling classes.
 
-=back 
+=back
 
 =head1 COPYRIGHT AND LICENSE
 

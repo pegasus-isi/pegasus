@@ -5,16 +5,16 @@
 package Pegasus::DAX::PlainFilename;
 use 5.006;
 use strict;
-use Carp; 
+use Carp;
 
-use Pegasus::DAX::Base qw(:xml); 
+use Pegasus::DAX::Base qw(:xml);
 use Exporter;
-our @ISA = qw(Pegasus::DAX::Base Exporter); 
+our @ISA = qw(Pegasus::DAX::Base Exporter);
 
-our $VERSION = '3.5'; 
-our @EXPORT = (); 
-our @EXPORT_OK = (); 
-our %EXPORT_TAGS = (); 
+our $VERSION = '3.6';
+our @EXPORT = ();
+our @EXPORT_OK = ();
+our %EXPORT_TAGS = ();
 
 # one AUTOLOAD to rule them all
 BEGIN { *AUTOLOAD = \&Pegasus::DAX::Base::AUTOLOAD }
@@ -23,24 +23,24 @@ sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
     my $self = $class->SUPER::new();
-    $self->{name} = undef; 
+    $self->{name} = undef;
 
-    if ( @_ == 0 ) { 
+    if ( @_ == 0 ) {
 	# nothing to do
-    } elsif ( @_ > 1 && (@_ & 1) == 0) { 
+    } elsif ( @_ > 1 && (@_ & 1) == 0) {
 	# even: called with a=>b,c=>d list
-	%{$self} = ( %{$self}, @_ ); 
-    } elsif ( @_ == 1 && ! ref $_[0] ) { 
+	%{$self} = ( %{$self}, @_ );
+    } elsif ( @_ == 1 && ! ref $_[0] ) {
 	# called with single scalar
-	$self->{name} = shift; 
+	$self->{name} = shift;
     } elsif ( @_ == 1 && ref $_[0] eq 'HASH' ) {
 	# called with { a=>b,c=>d } hashref
-	%{$self} = ( %{$self}, %{ shift() } ); 
+	%{$self} = ( %{$self}, %{ shift() } );
     } else {
-	carp "invalid c'tor for ", __PACKAGE__; 
+	carp "invalid c'tor for ", __PACKAGE__;
     }
 
-    bless $self, $class; 
+    bless $self, $class;
 }
 
 # forward declaration of methods
@@ -52,33 +52,33 @@ sub toXML {
     #          ident (IN): indentation level
     #          xmlns (IN): namespace of element, if necessary
     #
-    my $self = shift; 
-    my $f = shift; 
-    my $indent = shift || ''; 
-    my $xmlns = shift; 
+    my $self = shift;
+    my $f = shift;
+    my $indent = shift || '';
+    my $xmlns = shift;
     my $tag = defined $xmlns && $xmlns ? "$xmlns:file" : 'file';
 
     $f->print( "$indent<$tag"
 	     , attribute('name',$self->{name},$xmlns)
-	     , " />" ); 
+	     , " />" );
 }
 
-1; 
+1;
 __END__
 
 =head1 NAME
 
-Pegasus::DAX::PlainFilename - class for simple file names. 
+Pegasus::DAX::PlainFilename - class for simple file names.
 
 =head1 SYNOPSIS
 
-    use Pegasus::DAX::PlainFilename; 
+    use Pegasus::DAX::PlainFilename;
 
     my $i = Pegasus::DAX::PlainFilename->new( 'asdf.txt' );
     print "name is ", $i->name, "\n";
     $i->name = 'newname.txt';
     print "name is ", $i->name, "\n";
-   
+
 =head1 DESCRIPTION
 
 This class remembers a simple filename. These filenames are aggregated
@@ -98,16 +98,16 @@ concrete job's argument list.
 =item new( { name => $filename } )
 
 The constructor may be called with a single scalar argument, which is
-the filename string. Alternative ways to invoke the c'tor pass the 
-arguments as named list. 
+the filename string. Alternative ways to invoke the c'tor pass the
+arguments as named list.
 
 =item name()
 
-This is the getter. 
+This is the getter.
 
 =item name( $name )
 
-This is the setter. 
+This is the setter.
 
 =item toXML( $handle, $indent, $xmlns )
 
@@ -119,7 +119,7 @@ to indent elements for pretty printing. The third argument may not be
 defined. If defined, all element tags will be prefixed with this name
 space.
 
-=back 
+=back
 
 =head1 SEE ALSO
 
@@ -127,18 +127,18 @@ space.
 
 =item L<Pegasus::DAX::Base>
 
-Base class. 
+Base class.
 
 =item L<Pegasus::DAX::Filename>
 
-Child class. 
+Child class.
 
 =item L<Pegasus::DAX::AbstractJob>
 
 The abstract job class aggregates instances of this class in
 C<arguments> and in C<stdio>.
 
-=back 
+=back
 
 =head1 COPYRIGHT AND LICENSE
 

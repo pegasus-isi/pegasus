@@ -5,17 +5,17 @@
 package Pegasus::DAX::DAG;
 use 5.006;
 use strict;
-use Carp; 
+use Carp;
 
-use Pegasus::DAX::Base qw(:xml); 
-use Pegasus::DAX::AbstractJob; 
+use Pegasus::DAX::Base qw(:xml);
+use Pegasus::DAX::AbstractJob;
 use Exporter;
-our @ISA = qw(Pegasus::DAX::AbstractJob Exporter); 
+our @ISA = qw(Pegasus::DAX::AbstractJob Exporter);
 
-our $VERSION = '3.5'; 
-our @EXPORT = (); 
-our @EXPORT_OK = (); 
-our %EXPORT_TAGS = (); 
+our $VERSION = '3.6';
+our @EXPORT = ();
+our @EXPORT_OK = ();
+our %EXPORT_TAGS = ();
 
 # one AUTOLOAD to rule them all
 BEGIN { *AUTOLOAD = \&Pegasus::DAX::Base::AUTOLOAD }
@@ -24,24 +24,24 @@ sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
     my $self = $class->SUPER::new();
-    
-    if ( @_ == 0 ) { 
+
+    if ( @_ == 0 ) {
 	# nothing to do
     } elsif ( @_ > 1 ) {
 	# called with a=>b,c=>d list
-	%{$self} = ( %{$self}, @_ ); 
-    } elsif ( @_ == 1 && ref $_[0] eq 'HASH' ) { 
+	%{$self} = ( %{$self}, @_ );
+    } elsif ( @_ == 1 && ref $_[0] eq 'HASH' ) {
 	# called with { a=>b, c=>d } hashref
-	%{$self} = ( %{$self}, %{ shift() } ); 
+	%{$self} = ( %{$self}, %{ shift() } );
     } else {
-	croak "invalid c'tor for ", __PACKAGE__; 
+	croak "invalid c'tor for ", __PACKAGE__;
     }
 
-    bless $self, $class; 
+    bless $self, $class;
 }
 
 # forward declaration to auto loaders
-sub file; 
+sub file;
 
 sub toXML {
     # purpose: put self onto stream as XML
@@ -49,10 +49,10 @@ sub toXML {
     #          ident (IN): indentation level
     #          xmlns (opt. IN): namespace of element, if necessary
     #
-    my $self = shift; 
-    my $f = shift; 
+    my $self = shift;
+    my $f = shift;
     my $indent = shift || '';
-    my $xmlns = shift; 
+    my $xmlns = shift;
     my $tag = defined $xmlns && $xmlns ? "$xmlns:dag" : 'dag';
 
     $f->print( "$indent<$tag"
@@ -60,28 +60,28 @@ sub toXML {
 	     , attribute('id',$self->id,$xmlns)
 	     , attribute('node-label',$self->nodelabel,$xmlns)
 	     , ">\n" );
-    $self->innerXML($f,"  $indent",$xmlns); 
+    $self->innerXML($f,"  $indent",$xmlns);
     $f->print( "$indent</$tag>\n" );
 }
 
-1; 
+1;
 __END__
 
 
 =head1 NAME
 
-Pegasus::DAX::DAG - Job node to store a concrete DAG workflow. 
+Pegasus::DAX::DAG - Job node to store a concrete DAG workflow.
 
 =head1 SYNOPSIS
 
-    use Pegasus::DAX::DAG; 
+    use Pegasus::DAX::DAG;
 
-    my $a = Pegasus::DAX::DAG->new( file => 'fubar' ); 
-    $a->addArgument( '-flag' ); 
+    my $a = Pegasus::DAX::DAG->new( file => 'fubar' );
+    $a->addArgument( '-flag' );
 
 =head1 DESCRIPTION
 
-This class stores the job that describes a concrete Condor DAGMan DAG. 
+This class stores the job that describes a concrete Condor DAGMan DAG.
 
 =head1 METHODS
 
@@ -114,11 +114,11 @@ to indent elements for pretty printing. The third argument may not be
 defined. If defined, all element tags will be prefixed with this name
 space.
 
-=back 
+=back
 
 =head1 INHERITED METHODS
 
-Please refer to L<Pegasus::DAX::AbstractJob> for inherited methods. 
+Please refer to L<Pegasus::DAX::AbstractJob> for inherited methods.
 
 =over 4
 
@@ -156,7 +156,7 @@ Please refer to L<Pegasus::DAX::AbstractJob> for inherited methods.
 
 =item addInvoke( $when, $cmd )
 
-=item notify( $when, $cmd ) 
+=item notify( $when, $cmd )
 
 =item invoke( $when $cmd )
 
@@ -170,7 +170,7 @@ Please refer to L<Pegasus::DAX::AbstractJob> for inherited methods.
 
 =item L<Pegasus::DAX::AbstractJob>
 
-Base class. 
+Base class.
 
 =item L<Pegasus::DAX::ADAG>
 
@@ -178,9 +178,9 @@ Base class.
 
 =item L<Pegasus::DAX::Job>
 
-Sibling classes. 
+Sibling classes.
 
-=back 
+=back
 
 =head1 COPYRIGHT AND LICENSE
 
