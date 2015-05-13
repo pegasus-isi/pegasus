@@ -1470,7 +1470,7 @@ public class AbstractJob {
      * @param value     value
      * @return 
      */
-    public AbstractJob addMetadata( String key, String value ){
+    public AbstractJob addMetaData( String key, String value ){
         this.mMetaDataAttributes.add( new MetaData( key, value ) );
         return this;
     }
