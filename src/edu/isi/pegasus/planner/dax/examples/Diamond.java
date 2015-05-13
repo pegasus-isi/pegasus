@@ -22,25 +22,25 @@ import edu.isi.pegasus.planner.dax.*;
 /**
  * An example class to highlight how to use the JAVA DAX API to generate a diamond
  * DAX.
- * 
+ *
  * @author Gaurang Mehta
  * @author Karan Vahi
  */
 public class Diamond {
 
-    
+
 
     public ADAG generate(String site_handle, String pegasus_location) throws Exception {
 
         java.io.File cwdFile = new java.io.File (".");
-        String cwd = cwdFile.getCanonicalPath(); 
+        String cwd = cwdFile.getCanonicalPath();
 
         ADAG dax = new ADAG("diamond");
         dax.addNotification(Invoke.WHEN.start,"/pegasus/libexec/notification/email -t notify@example.com");
         dax.addNotification(Invoke.WHEN.at_end,"/pegasus/libexec/notification/email -t notify@example.com");
-        dax.addMetadata( "name", "diamond");
-        dax.addMetadata( "createdBy", "Karan Vahi");
-        
+        dax.addMetaData( "name", "diamond");
+        dax.addMetaData( "createdBy", "Karan Vahi");
+
         File fa = new File("f.a");
         fa.addPhysicalFile("file://" + cwd + "/f.a", "local");
         fa.addMetaData( "size", "1024" );
@@ -76,7 +76,7 @@ public class Diamond {
         j1.addArgument("-a preprocess -T 60 -i ").addArgument(fa);
         j1.addArgument("-o ").addArgument(fb1);
         j1.addArgument(" ").addArgument(fb2);
-        j1.addMetadata( "time", "60" );
+        j1.addMetaData( "time", "60" );
         j1.uses(fa, File.LINK.INPUT);
         j1.uses(fb1, File.LINK.OUTPUT);
         j1.uses(fb2, File.LINK.OUTPUT);
@@ -88,7 +88,7 @@ public class Diamond {
         Job j2 = new Job("j2", "pegasus", "findrange", "4.0");
         j2.addArgument("-a findrange -T 60 -i ").addArgument(fb1);
         j2.addArgument("-o ").addArgument(fc1);
-        j2.addMetadata( "time", "60" );
+        j2.addMetaData( "time", "60" );
         j2.uses(fb1, File.LINK.INPUT);
         j2.uses(fc1, File.LINK.OUTPUT);
         j2.addNotification(Invoke.WHEN.start,"/pegasus/libexec/notification/email -t notify@example.com");
@@ -99,7 +99,7 @@ public class Diamond {
         Job j3 = new Job("j3", "pegasus", "findrange", "4.0");
         j3.addArgument("-a findrange -T 60 -i ").addArgument(fb2);
         j3.addArgument("-o ").addArgument(fc2);
-        j3.addMetadata( "time", "60" );
+        j3.addMetaData( "time", "60" );
         j3.uses(fb2, File.LINK.INPUT);
         j3.uses(fc2, File.LINK.OUTPUT);
         j3.addNotification(Invoke.WHEN.start,"/pegasus/libexec/notification/email -t notify@example.com");
@@ -111,7 +111,7 @@ public class Diamond {
         j4.addArgument("-a analyze -T 60 -i ").addArgument(fc1);
         j4.addArgument(" ").addArgument(fc2);
         j4.addArgument("-o ").addArgument(fd);
-        j4.addMetadata( "time", "60" );
+        j4.addMetaData( "time", "60" );
         j4.uses(fc1, File.LINK.INPUT);
         j4.uses(fc2, File.LINK.INPUT);
         j4.uses(fd, File.LINK.OUTPUT);
@@ -125,7 +125,7 @@ public class Diamond {
         dax.addDependency("j3", "j4");
         return dax;
     }
-    
+
     /**
      * Create an example DIAMOND DAX
      * @param args
