@@ -121,11 +121,15 @@ def db_downgrade(db, pegasus_version=None, force=False):
         return
 
     previous_version = 'Z'
-    for ver in COMPATIBILITY:
-        if COMPATIBILITY[ver] <= version and ver < previous_version:
-            version = COMPATIBILITY[ver]
-            previous_version = ver
-            break
+    # TODO not sure if this is right but if pegasus_version is provided we are looking for concrete version
+    if pegasus_version is not None:
+        version = COMPATIBILITY[pegasus_version]
+    else:
+        for ver in COMPATIBILITY:
+            if COMPATIBILITY[ver] <= version and ver < previous_version:
+                version = COMPATIBILITY[ver]
+                previous_version = ver
+                break
 
     if current_version < version:
         raise DBAdminError("Unable to run downgrade. Current database version is older than specified version '%s'." % (pegasus_version))
