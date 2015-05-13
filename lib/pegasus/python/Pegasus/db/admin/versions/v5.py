@@ -18,7 +18,7 @@ class Version(BaseVersion):
         log.info("Updating to version %s" % DB_VERSION)
 
         try:
-            self._execute("""
+            self.db.execute("""
                 CREATE TABLE job_metrics (
                   job_metrics_id	INTEGER	      NOT NULL,
                   job_instance_id	INTEGER	      NOT NULL,
@@ -47,7 +47,7 @@ class Version(BaseVersion):
                 );
                 """)
 
-            self._execute("CREATE INDEX job_metrics_dag_job_id_idx ON job_metrics (dag_job_id);")
+            self.db.execute("CREATE INDEX job_metrics_dag_job_id_idx ON job_metrics (dag_job_id);")
         except (OperationalError, ProgrammingError):
             pass
         except Exception, e:
@@ -58,10 +58,8 @@ class Version(BaseVersion):
 
     def downgrade(self, force=False):
         try:
-            self.db.execute("""
-              DROP INDEX "job_metrics_dag_job_id_idx";
-              DROP TABLE job_metrics;
-            """)
+            self.db.execute("DROP INDEX job_metrics_dag_job_id_idx;")
+            self.db.execute("DROP TABLE job_metrics;")
         except (OperationalError, ProgrammingError):
             pass
         except Exception, e:

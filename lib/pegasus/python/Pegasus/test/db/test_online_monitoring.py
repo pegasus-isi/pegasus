@@ -6,14 +6,16 @@ from Pegasus.db.modules.stampede_loader import Analyzer
 from Pegasus.service.monitoring.online_monitoring import OnlineMonitord
 from Pegasus.monitoring import event_output as eo
 
+import Pegasus.test.dax3
+
 
 class TestOnlineMonitoring(unittest.TestCase):
     def setUp(self):
         logging.basicConfig()
         self.db_file = "monitoring-test.stampede.db"
+        db_test_path = os.path.dirname(Pegasus.test.dax3.__file__)
 
-        # print "Loading test stampede db"
-        shutil.copy("../" + self.db_file, self.db_file)
+        shutil.copy( ("%s/%s" % (db_test_path, self.db_file)) , self.db_file)
 
         dburi = "sqlite:///%s" % os.path.abspath(self.db_file)
         # print "DB URI: %s" % dburi
