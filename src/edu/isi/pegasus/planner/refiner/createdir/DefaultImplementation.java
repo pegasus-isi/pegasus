@@ -23,6 +23,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PegasusFile;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.PegasusURL;
@@ -37,11 +38,17 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.common.util.Separator;
 
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
+import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
 import edu.isi.pegasus.planner.code.gridstart.PegasusExitCode;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Pegasus;
-import java.io.File;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+
+import java.util.Iterator;
 import java.util.List;
 
 
@@ -72,7 +79,7 @@ public class DefaultImplementation implements Implementation {
     /**
      * The basename of the pegasus cleanup executable.
      */
-    public static final String EXECUTABLE_BASENAME = "pegasus-create-dir";
+    public static final String EXECUTABLE_BASENAME = "pegasus-transfer";
     
     /**
      * The path to be set for create dir jobs.
@@ -131,6 +138,11 @@ public class DefaultImplementation implements Implementation {
     protected PegasusProperties mProps;
     
     /**
+     * The submit directory where the output files have to be written.
+     */
+    private String mSubmitDirectory;
+    
+    /**
      * Whether we want to use dirmanager or mkdir directly.
      */
     protected boolean mUseMkdir;
@@ -145,6 +157,7 @@ public class DefaultImplementation implements Implementation {
         mSiteStore = bag.getHandleToSiteStore();
         mTCHandle  = bag.getHandleToTransformationCatalog();
         mProps     = bag.getPegasusProperties();
+        mSubmitDirectory = bag.getPlannerOptions().getSubmitDirectory();
         //in case of staging of executables/worker package
         //we use mkdir directly
         mUseMkdir =  bag.getPegasusProperties().transferWorkerPackage();
@@ -167,8 +180,7 @@ public class DefaultImplementation implements Implementation {
         List entries    = null;
         String execPath = null;
         TransformationCatalogEntry entry   = null;
-
-
+        
         //associate a credential if required
         newJob.addCredentialType( site, directoryURL );
         
@@ -217,7 +229,7 @@ public class DefaultImplementation implements Implementation {
 
 
         StringBuffer argString = new StringBuffer();
-       
+        String targetURL = "";
         if( mUseMkdir ){
             
             //no gridstart but arguments to exitcode to add -r $RETURN
@@ -233,17 +245,44 @@ public class DefaultImplementation implements Implementation {
                append( File.separator ).append( DefaultImplementation.EXECUTABLE_BASENAME );
             execPath = sb.toString();
 
-            argString.append( " --site " ).append( site ).append( " -u " ).
-                      append( mSiteStore.getExternalWorkDirectoryURL( site , FileServer.OPERATION.put ) );
+            targetURL = mSiteStore.getExternalWorkDirectoryURL( site , FileServer.OPERATION.put );
             
             newJob.condorVariables.setExecutableForTransfer();
             
         }
         else{
             execPath = entry.getPhysicalTransformation();
-            argString.append( " --site " ).append( site ).append( " -u " ).
-                      append( directoryURL );
+            targetURL = directoryURL;
         }
+        
+        //prepare the stdin
+        String stdIn = name + ".in";
+        try{
+            BufferedWriter f;
+            f = new BufferedWriter( new FileWriter( new File( mSubmitDirectory, stdIn ) ));
+            
+            f.write("[\n");
+
+            f.write("  {\n");
+            f.write("    \"id\": 1,\n");
+            f.write("    \"type\": \"mkdir\",\n");
+            f.write("    \"target\": {");
+            f.write(" \"site_label\": \"" + site + "\",");
+            f.write(" \"url\": \"" + targetURL + "\"");
+            f.write(" }");
+            f.write(" }\n");
+
+            f.write("]\n");
+
+            f.close();
+        }
+        catch(IOException e){
+            mLogger.log( "While writing the stdIn file " + e.getMessage(),
+                        LogManager.ERROR_MESSAGE_LEVEL);
+            throw new RuntimeException( "While writing the stdIn file " + stdIn, e );
+        }
+
+        newJob.setStdIn( stdIn );
 
         newJob.jobName = name;
         newJob.setTransformation( DefaultImplementation.TRANSFORMATION_NAMESPACE,

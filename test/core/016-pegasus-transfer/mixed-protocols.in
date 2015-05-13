@@ -1,8 +1,7 @@
-# src 1 Obelix
-gsiftp://obelix.isi.edu/data/scratch/ptesting/transfer-tests/medium-files/a.txt
-# dst 1 AmazonS3
-s3://test@amazon/pegasus-isi-transfer-tests/medium-files/a.txt
-# src 2 Obelix
-gsiftp://obelix.isi.edu/data/scratch/ptesting/transfer-tests/medium-files/a.txt
-# dst 2 AmazonS3
-s3://test@amazon/pegasus-isi-transfer-tests/medium-files/a with spaces and%20url%20encoded.txt
+[
+ { "type": "transfer",
+   "id": 1,
+   "src_urls": [ { "site_label": "Obelix", "url": "gsiftp://obelix.isi.edu/data/scratch/ptesting/transfer-tests/medium-files/a.txt" } ],
+   "dest_urls": [ { "site_label": "AmazonS3", "url": "s3://test@amazon/pegasus-isi-transfer-tests/medium-files/a.txt" } ] 
+ }
+]

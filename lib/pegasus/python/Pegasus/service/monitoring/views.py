@@ -295,13 +295,13 @@ Workflow State
 def get_workflow_state(username, m_wf_id, wf_id):
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
-    state = queries.get_state(wf_id)
+    states, total_states, filtered_states = queries.get_workflow_state(wf_id, **g.query_args)
 
     #
     # Generate JSON Response
     #
     serializer = WorkflowStateSerializer(**g.query_args)
-    response_json = serializer.encode_record(state)
+    response_json = serializer.encode_collection(states, total_states, filtered_states)
 
     return make_response(response_json, 200, JSON_HEADER)
 
@@ -331,12 +331,32 @@ Job
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job')
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/query')
 def get_workflow_jobs(username, m_wf_id, wf_id):
-    pass
+    queries = StampedeWorkflowQueries(g.stampede_db_url)
+
+    jobs, total_jobs, filtered_jobs = queries.get_workflow_jobs(wf_id, **g.query_args)
+
+    #
+    # Generate JSON Response
+    #
+    serializer = WorkflowJobSerializer(**g.query_args)
+    response_json = serializer.encode_collection(jobs, total_jobs, filtered_jobs)
+
+    return make_response(response_json, 200, JSON_HEADER)
 
 
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>')
 def get_workflow_job(username, m_wf_id, wf_id, job_id):
-    pass
+    queries = StampedeWorkflowQueries(g.stampede_db_url)
+
+    record = queries.get_workflow_job(wf_id, job_id)
+
+    #
+    # Generate JSON Response
+    #
+    serializer = WorkflowJobSerializer(**g.query_args)
+    response_json = serializer.encode_record(record)
+
+    return make_response(response_json, 200, JSON_HEADER)
 
 
 """
@@ -360,18 +380,47 @@ Host
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/host')
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/host/query')
 def get_workflow_hosts(username, m_wf_id, wf_id):
-    pass
+    queries = StampedeWorkflowQueries(g.stampede_db_url)
+
+    hosts, total_hosts, filtered_hosts = queries.get_workflow_hosts(wf_id, **g.query_args)
+
+    #
+    # Generate JSON Response
+    #
+    serializer = WorkflowHostSerializer(**g.query_args)
+    response_json = serializer.encode_collection(hosts, total_hosts, filtered_hosts)
+
+    return make_response(response_json, 200, JSON_HEADER)
 
 
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/host/<host_id>')
 def get_workflow_host(username, m_wf_id, wf_id, host_id):
-    pass
+    queries = StampedeWorkflowQueries(g.stampede_db_url)
+
+    record = queries.get_workflow_host(wf_id, host_id)
+
+    #
+    # Generate JSON Response
+    #
+    serializer = WorkflowHostSerializer(**g.query_args)
+    response_json = serializer.encode_record(record)
+
+    return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route(
-    '/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/host')
+@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/host')
 def get_job_instance_host(username, m_wf_id, wf_id, job_id, job_instance_id):
-    pass
+    queries = StampedeWorkflowQueries(g.stampede_db_url)
+
+    record = queries.get_job_instance_host(wf_id, job_id, job_instance_id)
+
+    #
+    # Generate JSON Response
+    #
+    serializer = JobInstanceHostSerializer(**g.query_args)
+    response_json = serializer.encode_record(record)
+
+    return make_response(response_json, 200, JSON_HEADER)
 
 
 """
@@ -391,8 +440,18 @@ Job State
 
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/state')
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/state/query')
-def get_job_instance_state(username, m_wf_id, wf_id, job_id, job_instance_id):
-    pass
+def get_job_instance_states(username, m_wf_id, wf_id, job_id, job_instance_id):
+    queries = StampedeWorkflowQueries(g.stampede_db_url)
+
+    states, total_states, filtered_states = queries.get_job_instance_states(wf_id, job_id, job_instance_id, **g.query_args)
+
+    #
+    # Generate JSON Response
+    #
+    serializer = JobInstanceStateSerializer(**g.query_args)
+    response_json = serializer.encode_collection(states, total_states, filtered_states)
+
+    return make_response(response_json, 200, JSON_HEADER)
 
 
 """
@@ -415,12 +474,32 @@ Task
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/task')
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/task/query')
 def get_workflow_tasks(username, m_wf_id, wf_id):
-    pass
+    queries = StampedeWorkflowQueries(g.stampede_db_url)
+
+    tasks, total_tasks, filtered_tasks = queries.get_workflow_tasks(wf_id, **g.query_args)
+
+    #
+    # Generate JSON Response
+    #
+    serializer = WorkflowTaskSerializer(**g.query_args)
+    response_json = serializer.encode_collection(tasks, total_tasks, filtered_tasks)
+
+    return make_response(response_json, 200, JSON_HEADER)
 
 
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/task/<task_id>')
 def get_workflow_task(username, m_wf_id, wf_id, task_id):
-    pass
+    queries = StampedeWorkflowQueries(g.stampede_db_url)
+
+    record = queries.get_workflow_task(wf_id, task_id)
+
+    #
+    # Generate JSON Response
+    #
+    serializer = WorkflowTaskSerializer(**g.query_args)
+    response_json = serializer.encode_record(record)
+
+    return make_response(response_json, 200, JSON_HEADER)
 
 
 """
@@ -431,7 +510,7 @@ Job Instance
     "host_id"           : int:host_id,
     "job_submit_seq"    : int:job_submit_seq,
     "sched_id"          : string:sched_id,
-    "site_name"         : string:site_name,
+    "site"              : string:site,
     "user"              : string:user,
     "work_dir"          : string:work_dir,
     "cluster_start"     : int:cluster_start,
@@ -457,13 +536,31 @@ Job Instance
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance')
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/query')
 def get_workflow_job_instances(username, m_wf_id, wf_id, job_id):
-    pass
+    queries = StampedeWorkflowQueries(g.stampede_db_url)
+
+    job_instances, total_instances, filtered_instances = queries.get_workflow_job_instances(wf_id, job_id, **g.query_args)
+    #
+    # Generate JSON Response
+    #
+    serializer = WorkflowJobInstanceSerializer(**g.query_args)
+    response_json = serializer.encode_collection(job_instances, total_instances, filtered_instances)
+
+    return make_response(response_json, 200, JSON_HEADER)
 
 
 @monitoring_routes.route(
     '/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>')
 def get_workflow_job_instance(username, m_wf_id, wf_id, job_id, job_instance_id):
-    pass
+    queries = StampedeWorkflowQueries(g.stampede_db_url)
+    record = queries.get_workflow_job_instance(wf_id, job_id, job_instance_id)
+
+    #
+    # Generate JSON Response
+    #
+    serializer = WorkflowJobInstanceSerializer(**g.query_args)
+    response_json = serializer.encode_record(record)
+
+    return make_response(response_json, 200, JSON_HEADER)
 
 
 """
@@ -492,23 +589,61 @@ Invocation
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/invocation')
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/invocation/query')
 def get_workflow_invocations(username, m_wf_id, wf_id):
-    pass
+    queries = StampedeWorkflowQueries(g.stampede_db_url)
+
+    invocations, total_invocations, filtered_invocations = queries.get_workflow_invocations(wf_id,**g.query_args)
+
+    #
+    # Generate JSON Response
+    #
+    serializer = InvocationSerializer(**g.query_args)
+    response_json = serializer.encode_collection(invocations, total_invocations, filtered_invocations)
+
+    return make_response(response_json, 200, JSON_HEADER)
 
 
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/invocation/<invocation_id>')
 def get_workflow_invocation(username, m_wf_id, wf_id, invocation_id):
-    pass
+    queries = StampedeWorkflowQueries(g.stampede_db_url)
+    record = queries.get_workflow_invocation(wf_id, invocation_id)
+
+    #
+    # Generate JSON Response
+    #
+    serializer = InvocationSerializer(**g.query_args)
+    response_json = serializer.encode_record(record)
+
+    return make_response(response_json, 200, JSON_HEADER)
 
 
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/invocation')
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/invocation/query')
 def get_job_instance_invocations(username, m_wf_id, wf_id, job_id, job_instance_id):
-    pass
+    queries = StampedeWorkflowQueries(g.stampede_db_url)
+
+    invocations, total_invocations, filtered_invocations = queries.get_job_instance_invocations(wf_id, job_id, job_instance_id,**g.query_args)
+
+    #
+    # Generate JSON Response
+    #
+    serializer = InvocationSerializer(**g.query_args)
+    response_json = serializer.encode_collection(invocations, total_invocations, filtered_invocations)
+
+    return make_response(response_json, 200, JSON_HEADER)
 
 
 @monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/invocation/<invocation_id>')
 def get_job_instance_invocation(username, m_wf_id, wf_id, job_id, job_instance_id, invocation_id):
-    pass
+    queries = StampedeWorkflowQueries(g.stampede_db_url)
+    record = queries.get_job_instance_invocation(wf_id, job_id, job_instance_id, invocation_id)
+
+    #
+    # Generate JSON Response
+    #
+    serializer = InvocationSerializer(**g.query_args)
+    response_json = serializer.encode_record(record)
+
+    return make_response(response_json, 200, JSON_HEADER)
 
 
 """

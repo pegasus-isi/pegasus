@@ -884,7 +884,7 @@ public class PegasusLite implements GridStart {
                     appendStderrFragment( sb, "staging in input data and executables" );
                     sb.append( "# stage in data and executables" ).append( '\n' );
                     sb.append(  sls.invocationString( job, null ) );
-                    sb.append( " 1>&2" ).append( " << EOF" ).append( '\n' );
+                    sb.append( " 1>&2" ).append( " << 'EOF'" ).append( '\n' );
                     sb.append( convertToTransferInputFormat( inputFiles ) );
                     sb.append( "EOF" ).append( '\n' );
                     sb.append( '\n' );
@@ -1006,7 +1006,7 @@ public class PegasusLite implements GridStart {
                     sb.append( "# stage out" ).append( '\n' );
                     sb.append( postJob );
 
-                    sb.append( " 1>&2" ).append( " << EOF" ).append( '\n' );
+                    sb.append( " 1>&2" ).append( " << 'EOF'" ).append( '\n' );
                     sb.append( convertToTransferInputFormat( outputFiles ) );
                     sb.append( "EOF" ).append( '\n' );
                     sb.append( '\n' );
@@ -1070,22 +1070,38 @@ public class PegasusLite implements GridStart {
      */
     protected StringBuffer convertToTransferInputFormat( Collection<FileTransfer> files ){
         StringBuffer sb = new StringBuffer();
+        
+        sb.append("[\n");
 
         int num = 1;
         for( FileTransfer ft :  files ){
+            
+            if (num > 1) {
+            	sb.append(" ,\n");
+            }
             NameValue nv = ft.getSourceURL();
-            sb.append( "# "  ).append( "src " ).append( num ).append( " " ).append( nv.getKey() ).
-               append( " " ).append( "checkpoint=\"").append(ft.isCheckpointFile()).append("\"").append( '\n' );
-            sb.append( nv.getValue() );
-            sb.append( '\n' );
-
+            sb.append(" { \"type\": \"transfer\",\n");
+            sb.append("   \"id\": ").append(num).append(",\n");
+            sb.append("   \"src_urls\": [");
+            sb.append(" {");
+            sb.append(" \"site_label\": \"").append(nv.getKey()).append("\",");
+            sb.append(" \"url\": \"").append(nv.getValue()).append("\",");
+            sb.append(" \"checkpoint\": \"").append(ft.isCheckpointFile()).append("\"");
+            sb.append(" }");
+            sb.append(" ],\n");
             nv = ft.getDestURL();
-            sb.append( "# "  ).append( "dst " ).append( num ).append( " " ).append( nv.getKey() ).append( '\n' );
-            sb.append( nv.getValue() );
-            sb.append( '\n' );
+            sb.append("   \"dest_urls\": [");
+            sb.append(" {");
+            sb.append(" \"site_label\": \"").append(nv.getKey()).append("\",");
+            sb.append(" \"url\": \"").append(nv.getValue()).append("\"");
+            sb.append(" }");
+            sb.append(" ]");
+            sb.append(" }\n"); // end of this transfer
 
             num++;
         }
+        
+        sb.append("]\n");
 
         return sb;
     }
@@ -1353,7 +1369,7 @@ public class PegasusLite implements GridStart {
         if( !files.isEmpty() ){
             sb.append( "set +e " ).append( "\n");
             sb.append(  sls.invocationString( job, null ) );
-            sb.append( " 1>&2" ).append( " << EOF" ).append( '\n' );
+            sb.append( " 1>&2" ).append( " << 'EOF'" ).append( '\n' );
             sb.append( convertToTransferInputFormat( files ) );
             sb.append( "EOF" ).append( '\n' );
             sb.append( "ec=$?" ).append( '\n' );
