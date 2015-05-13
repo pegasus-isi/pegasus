@@ -558,7 +558,7 @@ class TransferHandlerBase(object):
         The method should return 2 lists, one with successful transfer and one
         with failed transfers
         """
-        raise RuntimeError("do_transfer() is not implemented in " + self._name)
+        raise RuntimeError("do_transfers() is not implemented in " + self._name)
 
 
     def do_removes(self, removes_list):
@@ -1348,75 +1348,64 @@ class S3Handler(TransferHandlerBase):
                     "s3s->s3s"
                     ]
 
-    def do_transfer(self, transfer, attempt):
+    def do_transfers(self, transfers):
     
         tools = Tools()
         if tools.find("pegasus-s3", "help", None) is None:
             raise RuntimeError("Unable to do S3 transfers because"
                                + " pegasus-s3 could not be found")
 
-        local_filename = None
-        
-        # use cp for s3->s3 transfers, and get/put when one end is a file://
-        if (transfer.src_proto == "s3" or transfer.src_proto == "s3s") and \
-           (transfer.dst_proto == "s3" or transfer.dst_proto == "s3s"):
-            # s3 -> s3
-            key = "S3CFG_" + transfer.src_sitename
-            if key in os.environ:
-                os.environ["S3CFG"] = os.environ[key]
-            if "S3CFG" not in os.environ:
-                logger.error("At least one of the S3CFG_" + 
-                             transfer.src_sitename + " or S3CFG" +
-                             " environment variables has to be set")
-                return False
+        successful_l = []
+        failed_l = []
+        for t in transfers:
 
-            check_cred_fs_permissions(os.environ["S3CFG"])
+            t_start = time.time()
+            env = {}
+            
+            # use cp for s3->s3 transfers, and get/put when one end is a file://
+            if (t.get_src_proto() == "s3" or t.get_src_proto() == "s3s") and \
+               (t.get_dst_proto() == "s3" or t.get_dst_proto() == "s3s"):
+                # s3 -> s3
+                env = self._s3_cred_env(t.get_src_site_label())
+                cmd = "pegasus-s3 cp -f -c '%s' '%s'" % (t.src_url(), t.dst_url())
+            elif t.get_dst_proto() == "file":
+                # this is a 'get'
+                env = self._s3_cred_env(t.get_src_site_label())
+                prepare_local_dir(os.path.dirname(t.get_dst_path()))
+                cmd = "pegasus-s3 get '%s' '%s'" % (t.src_url(), t.get_dst_path())
+            else:
+                # this is a 'put'
+                env = self._s3_cred_env(t.get_dst_site_label())
+                cmd = "pegasus-s3 put -f -b '%s' '%s'" % (t.get_src_path(), t.dst_url())
 
-            cmd = "pegasus-s3 cp -f -c '%s' '%s'" % (transfer.src_url(),
-                                                     transfer.dst_url())
-        elif transfer.dst_proto == "file":
-            key = "S3CFG_" + transfer.src_sitename
-            if key in os.environ:
-                os.environ["S3CFG"] = os.environ[key]
-            if "S3CFG" not in os.environ:
-                logger.error("At least one of the S3CFG_" + 
-                             transfer.src_sitename + " or S3CFG" +
-                             " environment variables has to be set")
-                return False
+            try:
+                tc = TimedCommand(cmd, env_overrides=env)
+                tc.run()
+            except Exception, err:
+                logger.error(err)
+                self._post_transfer_attempt(t, False, t_start)
+                failed_l.append(t)
+                continue
+            
+            self._post_transfer_attempt(t, True, t_start)
+            successful_l.append(t)
+            
+        return [successful_l, failed_l]
 
-            check_cred_fs_permissions(os.environ["S3CFG"])
-
-            # this is a 'get'
-            local_filename = transfer.get_dst_path()
-            prepare_local_dir(os.path.dirname(transfer.get_dst_path()))
-            cmd = "pegasus-s3 get '%s' '%s'" % (transfer.src_url(),
-                                                transfer.get_dst_path())
-        else:
-            # this is a 'put'
-            key = "S3CFG_" + transfer.dst_sitename
-            if key in os.environ:
-                os.environ["S3CFG"] = os.environ[key]
-            if "S3CFG" not in os.environ:
-                logger.error("At least one of the S3CFG_" + 
-                             transfer.dst_sitename + " or S3CFG" +
-                             " environment variables has to be set")
-                return False
-
-            check_cred_fs_permissions(os.environ["S3CFG"])
-
-            local_filename = transfer.get_src_path()
-            cmd = "pegasus-s3 put -f -b '%s' '%s'" % (transfer.get_src_path(),
-                                                      transfer.dst_url())
-
-        try:
-            tc = TimedCommand(cmd)
-            tc.run()
-            if local_filename is not None:
-                stats_add(local_filename)
-        except Exception, err:
-            logger.error(err)
-            return False
-        return True
+    
+    def _s3_cred_env(self, site_label):
+        env = {}
+        if "S3CFG" in os.environ:
+            env["S3CFG"] = os.environ["S3CFG"]
+        key = "S3CFG_" + site_label
+        if key in os.environ:
+            env['S3CFG'] = os.environ[key]
+        if "S3CFG" not in env:
+            raise RuntimeError("At least one of the S3CFG_" + 
+                               site_label + " or S3CFG" +
+                               " environment variables has to be set")
+        check_cred_fs_permissions(env["S3CFG"])
+        return env
 
 
 class GSHandler(TransferHandlerBase):
@@ -1829,37 +1818,47 @@ class SymlinkHandler(TransferHandlerBase):
     _name = "SymlinkHandler"
     _protocol_map = ["file->symlink", "symlink->symlink"]
 
-    def do_transfer(self, transfer, attempt):
+    def do_transfers(self, transfer_l):
+        successful_l = []
+        failed_l = []
+        for t in transfers:
+            t_start = time.time()
 
-        prepare_local_dir(os.path.dirname(transfer.get_dst_path()))
-
-        # we do not allow dangling symlinks
-        if not os.path.exists(transfer.get_src_path()):
-            logger.warning("Symlink source (%s) does not exist"
-                           % (transfer.get_src_path()))
-            failed_q.put(transfer)
-            return True
-
-        if os.path.exists(transfer.get_src_path()) \
-           and os.path.exists(transfer.get_dst_path()):
-            # make sure src and target are not the same file - have to
-            # compare at the inode level as paths can differ
-            src_inode = os.stat(transfer.get_src_path())[stat.ST_INO]
-            dst_inode = os.stat(transfer.get_dst_path())[stat.ST_INO]
-            if src_inode == dst_inode:
-                logger.warning("symlink: src (%s) and dst (%s) already exists"
-                               % (transfer.get_src_path(), transfer.get_dst_path()))
-                return True
-
-        cmd = "ln -f -s '%s' '%s'" % (transfer.get_src_path(), transfer.get_dst_path())
-        try:
-            tc = TimedCommand(cmd, timeout_secs = 60)
-            tc.run()
-        except RuntimeError, err:
-            logger.error(err)
-            return False
-        return True
-
+            prepare_local_dir(os.path.dirname(t.get_dst_path()))
+    
+            # we do not allow dangling symlinks
+            if not os.path.exists(t.get_src_path()):
+                logger.warning("Symlink source (%s) does not exist" % (t.get_src_path()))
+                self._post_transfer_attempt(t, False, t_start)
+                failed_l.append(t)
+                continue
+    
+            if os.path.exists(t.get_src_path()) \
+               and os.path.exists(t.get_dst_path()):
+                # make sure src and target are not the same file - have to
+                # compare at the inode level as paths can differ
+                src_inode = os.stat(t.get_src_path())[stat.ST_INO]
+                dst_inode = os.stat(t.get_dst_path())[stat.ST_INO]
+                if src_inode == dst_inode:
+                    logger.warning("symlink: src (%s) and dst (%s) already exists" % (t.get_src_path(), t.get_dst_path()))
+                    self._post_transfer_attempt(t, True, t_start)
+                    successful_l.append(t)
+                    continue
+    
+            cmd = "ln -f -s '%s' '%s'" % (t.get_src_path(), t.get_dst_path())
+            try:
+                tc = TimedCommand(cmd, timeout_secs = 60)
+                tc.run()
+            except RuntimeError, err:
+                logger.error(err)
+                self._post_transfer_attempt(t, False, t_start)
+                failed_l.append(t)
+                continue
+            
+            self._post_transfer_attempt(t, True, t_start)
+            successful_l.append(t)
+        
+        return [successful_l, failed_l]    
 
 class Stats:
     """
@@ -2079,38 +2078,33 @@ class SimilarWorkSet:
                 for t in failed_list: 
                     self._failed_q.put(t)
             except Exception, e:
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.exception("Exception while doing transfer:")
-                else:
-                    logger.error(e)
+                logger.exception("Exception while doing transfer:")
                 raise
  
         else:
-            for i, transfer in enumerate(self._transfers):
+            for transfer in self._transfers:
 
                 # break up the transfer into two, but keep a handle to the main
                 # transfer as that is the one which will have to go back to the
                 # failed queue in case of failure
-                t_one = Transfer(transfer.pair_id)
-                t_one.set_src(transfer.src_url())
-                t_one.set_src_sitename(transfer.src_sitename)
-                t_one.set_dst("file://" + self._tmp_name)
-                t_two =  Transfer(transfer.pair_id)
-                t_two.set_src("file://" + self._tmp_name)
-                t_two.set_dst(transfer.dst_url())
-                t_two.set_dst_sitename(transfer.dst_sitename)
+                t_one = Transfer()
+                t_one.add_src(transfer.get_src_site_label(), transfer.src_url())
+                t_one.add_dst("local", "file://" + self._tmp_name)
+                t_two =  Transfer()
+                t_two.add_src("local", "file://" + self._tmp_name)
+                t_two.add_dst(transfer.get_dst_site_label(), transfer.dst_url())
                 try:
-                    success = self._primary_handler.do_transfer(t_one, attempt)
-                    if success:
+                    [s, f] = self._primary_handler.do_transfers([t_one])
+                    if len(s) == 1:
                         os.chmod(self._tmp_name, 0644)
-                        success = self._secondary_handler.do_transfer(t_two, attempt)
+                        [s, f] = self._secondary_handler.do_transfers([t_two])
                 except Exception, e:
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.exception("Exception while doing transfer:")
-                    else:
-                        logger.error(e)
+                    logger.exception("Exception while doing transfer:")
                     raise
-            
+                if len(s) == 1:
+                    self._completed_q.put(transfer)
+                else:
+                    self._failed_q.put(transfer)
         
         # remove temp file
         if self._tmp_name is not None:
