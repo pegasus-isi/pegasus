@@ -37,8 +37,10 @@ class TestOnlineMonitoring(unittest.TestCase):
 
     def tearDown(self):
         # print "Removing test stampede db"
+        self.db_session.close()
         self.online_monitord.close()
-        os.remove(self.db_file)
+        for fl in glob.glob("monitoring-test.stampede.db*"):
+            os.remove(fl)
 
     def test_insert_measurement(self):
         measurement = {
