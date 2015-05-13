@@ -45,9 +45,9 @@ class Version(BaseVersion):
                   PRIMARY 	KEY (job_metrics_id),
                   FOREIGN	KEY (job_instance_id) REFERENCES job_instance (job_instance_id) ON DELETE CASCADE
                 );
-
-                CREATE INDEX "job_metrics_dag_job_id_idx" ON job_metrics (dag_job_id);
                 """)
+
+            self.db.execute("CREATE INDEX job_metrics_dag_job_id_idx ON job_metrics (dag_job_id);")
         except (OperationalError, ProgrammingError):
             pass
         except Exception, e:
