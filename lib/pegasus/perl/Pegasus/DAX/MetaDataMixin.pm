@@ -109,24 +109,21 @@ instances thereof.
 
 =over 4
 
-=item addMetadata( $when, $cmd )
+=item addMetadata( $meta )
 
-Alias for C<invoke> method.
+Add metadata.
 
-=item clearMetadata( $when, $cmd )
+=item clearMetadata( )
 
-Alias for C<invoke> method.
+Clear all metadata attributes set in the object
 
-=item hasMetadata( )
+=item hasMetadata( $meta )
 
-This method is the getter for the full list of L<Pegasus::DAX::Invoke>
-objects stored in this instance.
+Check if given metadata entry exists in the list of metadata set for this object
 
-=item removeMetadata( $when, $cmd )
+=item removeMetadata( $meta )
 
-This method adds a simple executable instruction to run (on the submit
-host) when a job reaches the state in C<$when>. Please refer to the
-constants C<INVOKE_*> for details.
+Remove the given metadata attribute, from the list of metadat attributes set for the object.
 
 =back
 

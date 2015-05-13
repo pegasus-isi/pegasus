@@ -88,18 +88,12 @@ and replica catalog may use meta data associated with entries.
 
 =item new( $key, $value )
 
-=item new( a => b, c => d, ... )
-
-=item new( { a => b, c => d, ... } )
-
 The default constructor will create an empty instance whose scalar
 attributes can be adjusted using the getters and setters provided by the
 C<AUTOLOAD> inherited method.
 
-When invoked with exactly 3 arguments, the first argument is the meta
+When invoked with exactly 2 arguments, the first argument is the meta
 data key, and the second argument the value to set.
-
-Other means of construction is to use named lists.
 
 =item key
 

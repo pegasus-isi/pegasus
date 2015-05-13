@@ -127,12 +127,12 @@
 
         <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;!-- generated: 2011-07-28T18:29:57Z --&gt;
-&lt;adag xmlns="http://pegasus.isi.edu/schema/DAX" 
-      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-      xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.6.xsd" 
-      version="3.6" 
-      name="diamond" 
-      index="0" 
+&lt;adag xmlns="http://pegasus.isi.edu/schema/DAX"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.6.xsd"
+      version="3.6"
+      name="diamond"
+      index="0"
       count="1"&gt;</programlisting>
 
         <para>The following attributes are supported for the root element
@@ -323,13 +323,13 @@
     &lt;!-- Metadata will be supported 4.6 onwards--&gt;
     &lt;metadata key="timestamp" &gt;/* ISO-8601 *or* 20100417134523:int */&lt;/metadata&gt;
     &lt;metadata key="origin" &gt;ocean&lt;/metadata&gt;
-    
+
     &lt;!-- PFN to by-pass replica catalog --&gt;
     &lt;!-- The "site attribute is optional --&gt;
     &lt;pfn url="file:///tmp/example.a" site="local"&gt;
       &lt;profile namespace="stat" key="owner"&gt;voeckler&lt;/profile&gt;
     &lt;/pfn&gt;
-    &lt;pfn url="file:///storage/funky.a" site="local"/&gt;    
+    &lt;pfn url="file:///storage/funky.a" site="local"/&gt;
   &lt;/file&gt;
 
   &lt;!-- a more typical example from the black diamond --&gt;
@@ -398,7 +398,7 @@
     &lt;!-- specify the location of the DAG file --&gt;
     &lt;pfn url="file:///Users/vahi/Pegasus/work/dax-3.0/blackdiamond.dag" site="local"/&gt;
   &lt;/file&gt;
-  
+
   &lt;file name="sites.xml" &gt;
     &lt;!-- specify the location of a site catalog to use for deferred planning --&gt;
     &lt;pfn url="file:///Users/vahi/Pegasus/work/dax-3.0/conf/sites.xml" site="local"/&gt;
@@ -414,7 +414,7 @@
           planning.</para>
 
           <programlisting>  &lt;!-- part 1.3: included transformation catalog --&gt;
-  &lt;executable namespace="example" name="mDiffFit" version="1.0" 
+  &lt;executable namespace="example" name="mDiffFit" version="1.0"
               arch="x86_64" os="linux" installed="true" &gt;
     &lt;!-- profiles are optional --&gt;
     &lt;!-- The "stat" namespace is ONLY AN EXAMPLE! --&gt;
@@ -425,17 +425,17 @@
     &lt;!-- metadata will be supported in 4.6 --&gt;
     &lt;metadata key="timestamp" &gt;/* see above */&lt;/metadata&gt;
     &lt;metadata key="origin"&gt;ocean&lt;/metadata&gt;
- 
+
     &lt;!-- PFN to by-pass transformation catalog --&gt;
     &lt;!-- The "site" attribute is optional --&gt;
-    &lt;pfn url="file:///tmp/mDiffFit"          site="local"/&gt;     
-    &lt;pfn url="file:///tmp/storage/mDiffFit"  site="local"/&gt;     
+    &lt;pfn url="file:///tmp/mDiffFit"          site="local"/&gt;
+    &lt;pfn url="file:///tmp/storage/mDiffFit"  site="local"/&gt;
   &lt;/executable&gt;
 
   &lt;!-- to be used in compound transformation later --&gt;
-  &lt;executable namespace="example" name="mDiff" version="1.0" 
+  &lt;executable namespace="example" name="mDiff" version="1.0"
               arch="x86_64" os="linux" installed="true" &gt;
-    &lt;pfn url="file:///tmp/mDiff" site="local"/&gt;        
+    &lt;pfn url="file:///tmp/mDiff" site="local"/&gt;
   &lt;/executable&gt;
 
   &lt;!-- to be used in compound transformation later --&gt;
@@ -448,9 +448,9 @@
   &lt;/executable&gt;
 
   &lt;!-- a more likely example from the black diamond --&gt;
-  &lt;executable namespace="diamond" name="preprocess" version="2.0" 
+  &lt;executable namespace="diamond" name="preprocess" version="2.0"
               arch="x86_64"
-              os="linux" 
+              os="linux"
               osversion="2.6.18"&gt;
     &lt;pfn url="file:///opt/pegasus/default/bin/keg" site="local" /&gt;
   &lt;/executable&gt;</programlisting>
@@ -752,7 +752,7 @@
           transformation catalog.</para>
 
           <programlisting>  &lt;!-- part 2: definition of all jobs (at least one) --&gt;
-  &lt;job id="ID000001" namespace="example" name="mDiffFit" version="1.0" 
+  &lt;job id="ID000001" namespace="example" name="mDiffFit" version="1.0"
        node-label="preprocess" &gt;
     &lt;argument&gt;-a top -T 6  -i &lt;file name="f.a"/&gt;  -o &lt;file name="f.b1"/&gt;&lt;/argument&gt;
 
@@ -764,7 +764,7 @@
          &lt;metadata key="size"&gt;1024&lt;/metadata&gt;
       &lt;/uses&gt;
     &lt;uses name="f.b" link="output" register="false" transfer="true" type="data" /&gt;
-    
+
     &lt;!-- 'WHEN' enumeration: never, start, on_error, on_success, at_end, all --&gt;
     &lt;!-- PEGASUS_* env-vars: event, status, submit dir, wf/job id, stdout, stderr --&gt;
     &lt;invoke when="start"&gt;/path/to arg arg&lt;/invoke&gt;
@@ -967,7 +967,7 @@
           <programlisting>  &lt;dag id="ID000003" name="black.dag" node-label="foo" &gt;
     &lt;profile namespace="dagman" key="DIR"&gt;/dag-dir/test&lt;/profile&gt;
     &lt;invoke&gt; &lt;!-- optional, should be possible --&gt; &lt;/invoke&gt;
-    &lt;uses file="sites.xml" link="input" register="false" transfer="true" type="data"/&gt;     
+    &lt;uses file="sites.xml" link="input" register="false" transfer="true" type="data"/&gt;
   &lt;/dag&gt;</programlisting>
 
           <para>The <emphasis>id</emphasis> and
@@ -1314,27 +1314,27 @@ import edu.isi.pegasus.planner.dax.*;
 /**
  * An example class to highlight how to use the JAVA DAX API to generate a diamond
  * DAX.
- * 
+ *
  */
 public class Diamond {
 
-    
+
 
     public class Diamond {
 
-    
+
 
     public ADAG generate(String site_handle, String pegasus_location) throws Exception {
 
         java.io.File cwdFile = new java.io.File (".");
-        String cwd = cwdFile.getCanonicalPath(); 
+        String cwd = cwdFile.getCanonicalPath();
 
         ADAG dax = new ADAG("diamond");
         dax.addNotification(Invoke.WHEN.start,"/pegasus/libexec/notification/email -t notify@example.com");
         dax.addNotification(Invoke.WHEN.at_end,"/pegasus/libexec/notification/email -t notify@example.com");
         dax.addMetadata( "name", "diamond");
         dax.addMetadata( "createdBy", "Karan Vahi");
-        
+
         File fa = new File("f.a");
         fa.addPhysicalFile("file://" + cwd + "/f.a", "local");
         fa.addMetaData( "size", "1024" );
@@ -1419,7 +1419,7 @@ public class Diamond {
         dax.addDependency("j3", "j4");
         return dax;
     }
-    
+
     /**
      * Create an example DIAMOND DAX
      * @param args
@@ -1465,31 +1465,31 @@ from Pegasus.DAX3 import *
 
 # Create a DAX
 diamond = ADAG("diamond")
- 
+
 # Add some metadata
 diamond.metadata("name", "diamond")
 diamond.metadata("createdby", "Gideon Juve")
- 
+
 # Add input file to the DAX-level replica catalog
 a = File("f.a")
 a.addPFN(PFN("gsiftp://site.com/inputs/f.a","site"))
 a.metadata("size", "1024")
 diamond.addFile(a)
- 
+
 # Add executables to the DAX-level replica catalog
 e_preprocess = Executable(namespace="diamond", name="preprocess", version="4.0", os="linux", arch="x86_64")
 e_preprocess.metadata("size", "2048")
 e_preprocess.addPFN(PFN("gsiftp://site.com/bin/preprocess","site"))
 diamond.addExecutable(e_preprocess)
- 
+
 e_findrange = Executable(namespace="diamond", name="findrange", version="4.0", os="linux", arch="x86_64")
 e_findrange.addPFN(PFN("gsiftp://site.com/bin/findrange","site"))
 diamond.addExecutable(e_findrange)
- 
+
 e_analyze = Executable(namespace="diamond", name="analyze", version="4.0", os="linux", arch="x86_64")
 e_analyze.addPFN(PFN("gsiftp://site.com/bin/analyze","site"))
 diamond.addExecutable(e_analyze)
- 
+
 # Add a preprocess job
 preprocess = Job(e_preprocess)
 preprocess.metadata("time", "60")
@@ -1500,7 +1500,7 @@ preprocess.uses(a, link=Link.INPUT)
 preprocess.uses(b1, link=Link.OUTPUT, transfer=True)
 preprocess.uses(b2, link=Link.OUTPUT, transfer=True)
 diamond.addJob(preprocess)
- 
+
 # Add left Findrange job
 frl = Job(e_findrange)
 frl.metadata("time", "60")
@@ -1509,7 +1509,7 @@ frl.addArguments("-a findrange","-T60","-i",b1,"-o",c1)
 frl.uses(b1, link=Link.INPUT)
 frl.uses(c1, link=Link.OUTPUT, transfer=True)
 diamond.addJob(frl)
- 
+
 # Add right Findrange job
 frr = Job(e_findrange)
 frr.metadata("time", "60")
@@ -1518,7 +1518,7 @@ frr.addArguments("-a findrange","-T60","-i",b2,"-o",c2)
 frr.uses(b2, link=Link.INPUT)
 frr.uses(c2, link=Link.OUTPUT, transfer=True)
 diamond.addJob(frr)
- 
+
 # Add Analyze job
 analyze = Job(e_analyze)
 analyze.metadata("time", "60")
@@ -1528,17 +1528,17 @@ analyze.uses(c1, link=Link.INPUT)
 analyze.uses(c2, link=Link.INPUT)
 analyze.uses(d, link=Link.OUTPUT, transfer=True, register=True)
 diamond.addJob(analyze)
- 
+
 # Add dependencies
 diamond.depends(parent=preprocess, child=frl)
 diamond.depends(parent=preprocess, child=frr)
 diamond.depends(parent=frl, child=analyze)
 diamond.depends(parent=frr, child=analyze)
- 
+
 # Write the DAX to stdout
 import sys
 diamond.writeXML(sys.stdout)
- 
+
 # Write the DAX to a file
 f = open("diamond.dax","w")
 diamond.writeXML(f)
@@ -1628,6 +1628,12 @@ use Pegasus::DAX::Factory qw(:all);
 use constant NS =&gt; 'diamond';
 
 my $adag = newADAG( name =&gt; NS );
+
+# Workflow MetaData
+my $meta = newMetaData('name', 'diamond');
+$adag-&gt;addMetaData( $meta );
+$adag-&gt;metaData( 'createdBy', 'Rajiv Mayani' );
+
 my $job1 = newJob( namespace =&gt; NS, name =&gt; 'preprocess', version =&gt; '2.0' );
 my $job2 = newJob( namespace =&gt; NS, name =&gt; 'findrange', version =&gt; '2.0' );
 my $job3 = newJob( namespace =&gt; NS, name =&gt; 'findrange', version =&gt; '2.0' );
@@ -1644,6 +1650,7 @@ close F;
 my $file = newFile( name =&gt; 'f.a' );
 $file-&gt;addPFN( newPFN( url =&gt; 'file://' . Cwd::abs_path($fn),
                        site =&gt; 'local' ) );
+$file-&gt;metaData( 'size', '1024' );
 $adag-&gt;addFile($file);
 
 # follow this path, if the PEGASUS_HOME was determined
@@ -1669,6 +1676,7 @@ if ( exists $ENV{'PEGASUS_HOME'} ) {
             $app-&gt;addProfile( 'globus', 'maxtime', '2' );
             $app-&gt;addProfile( 'dagman', 'RETRY', '3' );
             $app-&gt;addPFN( newPFN( url =&gt; "file://$keg", site =&gt; 'local' ) );
+            $app1-&gt;metaData( 'size', '2048' );
             $adag-&gt;addExecutable($app);
         }
     }
@@ -1680,18 +1688,21 @@ my $fnb1 = newFilename( name =&gt; 'f.b1', %hash );
 my $fnb2 = newFilename( name =&gt; 'f.b2', %hash );
 $job1-&gt;addArgument( '-a', $job1-&gt;name, '-T60', '-i', $fna,
                     '-o', $fnb1, $fnb2 );
+$job1-&gt;metaData( 'time', '60' );
 $adag-&gt;addJob($job1);
 
 my $fnc1 = newFilename( name =&gt; 'f.c1', %hash );
 $fnb1-&gt;link( LINK_IN );
 $job2-&gt;addArgument( '-a', $job2-&gt;name, '-T60', '-i', $fnb1,
                     '-o', $fnc1 );
+$job2-&gt;metaData( 'time', '60' );
 $adag-&gt;addJob($job2);
 
 my $fnc2 = newFilename( name =&gt; 'f.c2', %hash );
 $fnb2-&gt;link( LINK_IN );
 $job3-&gt;addArgument( '-a', $job3-&gt;name, '-T60', '-i', $fnb2,
                     '-o', $fnc2 );
+$job3-&gt;metaData( 'time', '60' );
 $adag-&gt;addJob($job3);
 # a convenience function -- you can specify multiple dependents
 $adag-&gt;addDependency( $job1, $job2, $job3 );
@@ -1702,6 +1713,7 @@ $fnc2-&gt;link( LINK_IN );
 $job4-&gt;separator('');                # just to show the difference wrt default
 $job4-&gt;addArgument( '-a ', $job4-&gt;name, ' -T60 -i ', $fnc1, ' ', $fnc2,
                     ' -o ', $fnd );
+$job4-&gt;metaData( 'time', '60' );
 $adag-&gt;addJob($job4);
 # this is a convenience function adding parents to a child.
 # it is clearer than overloading addDependency
@@ -3287,7 +3299,7 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
         "path"   : "/api/v1/user/user-a/root?query=wf_id=2"
     }
 ]<emphasis role="bold">
- 
+
 Response</emphasis>
 
 [
