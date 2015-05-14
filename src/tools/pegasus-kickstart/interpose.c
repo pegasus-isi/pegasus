@@ -267,7 +267,7 @@ static void* timer_thread_func(void* mpi_rank_void) {
                     io_info.rchar, io_info.wchar, io_info.syscr, io_info.syscw);
 
 
-        fprintf(kickstart_status, "ts=%d event=workflow_trace level=INFO status=0 "
+        fprintf_untraced(kickstart_status, "ts=%d event=workflow_trace level=INFO status=0 "
                    "job_id=%s kickstart_pid=%s executable=%s hostname=%s mpi_rank=%d utime=%.3f stime=%.3f "
                    "iowait=%.3f vmSize=%llu vmRSS=%llu threads=%lu read_bytes=%llu write_bytes=%llu "
                    "syscr=%lu syscw=%lu\n",
@@ -515,13 +515,13 @@ static MemUtilInfo read_mem_status() {
     while (fgets_untraced(line, BUFSIZ, f) != NULL) {
 
         if (startswith(line,"VmSize")) {
-            sscanf(line, "VmSize: %d", &(info.vmSize));
+            sscanf(line, "VmSize: %llu", &(info.vmSize));
         } 
         else if (startswith(line,"VmRSS")) {
-            sscanf(line, "VmRSS: %d", &(info.vmRSS));
+            sscanf(line, "VmRSS: %llu", &(info.vmRSS));
         } 
         else if (startswith(line,"Threads")) {
-            sscanf(line, "Threads: %d", &(info.threads));
+            sscanf(line, "Threads: %lu", &(info.threads));
         }
 
     }
@@ -708,19 +708,19 @@ static IoUtilInfo read_io_status() {
         printerr("Our line: '%s'\n", line);
 
         if (startswith(line, "rchar")) {
-            sscanf(line, "rchar: %d", &(local_io_info.rchar));
+            sscanf(line, "rchar: %llu", &(local_io_info.rchar));
         } else if (startswith(line, "wchar")) {
-            sscanf(line, "wchar: %d", &(local_io_info.wchar));
+            sscanf(line, "wchar: %llu", &(local_io_info.wchar));
         } else if (startswith(line,"syscr")) {
-            sscanf(line, "syscr: %d", &(local_io_info.syscr));
+            sscanf(line, "syscr: %lu", &(local_io_info.syscr));
         } else if (startswith(line,"syscw")) {
-            sscanf(line, "syscw: %d", &(local_io_info.syscw));
+            sscanf(line, "syscw: %lu", &(local_io_info.syscw));
         } else if (startswith(line,"read_bytes")) {
-            sscanf(line, "read_bytes: %d", &(local_io_info.read_bytes));
+            sscanf(line, "read_bytes: %llu", &(local_io_info.read_bytes));
         } else if (startswith(line,"write_bytes")) {
-            sscanf(line, "write_bytes: %d", &(local_io_info.write_bytes));
+            sscanf(line, "write_bytes: %llu", &(local_io_info.write_bytes));
         } else if (startswith(line,"cancelled_write_bytes")) {
-            sscanf(line, "cancelled_write_bytes: %d", &(local_io_info.cancelled_write_bytes));
+            sscanf(line, "cancelled_write_bytes: %llu", &(local_io_info.cancelled_write_bytes));
         }
     }
 
