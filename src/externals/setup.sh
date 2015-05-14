@@ -5,7 +5,7 @@ set -e
 declare -a packages
 
 if python -V 2>&1 | grep -qE 'ython 2\.[3-6]'; then
-    packages+=("ordereddict-1.1.tar.gz")
+    packages+=("ordereddict-1.1")
 fi
 
 if python -V 2>&1 | grep -qE 'ython 2\.[3-4]'; then
