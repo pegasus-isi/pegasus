@@ -22,6 +22,27 @@ install_requires = [
     'plex==2.0.0dev'
 ]
 
+excludes = ['Pegasus.test*']
+
+
+#
+# Create Manifest file to exclude tests, and service files
+#
+def create_manifest_file():
+    global excludes
+
+    try:
+        f = open('MANIFEST.in', 'w')
+        f.write('recursive-exclude Pegasus/test *\n')
+
+        if sys.version_info[1] <= 4:
+            f.write('recursive-exclude Pegasus/service *\n')
+            excludes.append('Pegasus.service*')
+
+    finally:
+        if f:
+            f.close()
+
 
 #
 # Install conditional dependencies
@@ -35,6 +56,7 @@ def setup_installer_dependencies():
     if sys.version_info[1] <= 4:
         install_requires.append('SQLAlchemy==0.7.6')
         install_requires.append('pysqlite==2.6.0')
+
     else:
         install_requires.append('SQLAlchemy==0.8.0')
 
@@ -74,7 +96,7 @@ def find_package_data(dirname):
     items = find_paths(dirname)
     return [path.replace(dirname, "") for path in items]
 
-
+create_manifest_file()
 setup_installer_dependencies()
 
 setup(
@@ -97,7 +119,7 @@ setup(
         "Topic :: Utilities",
         "License :: OSI Approved :: Apache Software License",
     ],
-    packages=find_packages(exclude=["Pegasus.test"]),
+    packages=find_packages(exclude=excludes),
     package_data={"Pegasus.service": find_package_data("Pegasus/service/")},
     include_package_data=True,
     zip_safe=False,
