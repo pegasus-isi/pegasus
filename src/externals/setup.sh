@@ -4,6 +4,10 @@ set -e
 
 declare -a packages
 
+if python -V 2>&1 | grep -qE 'ython 2\.[3-6]'; then
+    packages+=("ordereddict-1.1.tar.gz")
+fi
+
 if python -V 2>&1 | grep -qE 'ython 2\.[3-4]'; then
     # Install alternative dependencies for python 2.4
     packages+=("pysqlite-2.6.0")
