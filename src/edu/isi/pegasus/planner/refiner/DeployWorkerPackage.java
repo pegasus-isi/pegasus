@@ -101,9 +101,9 @@ public class DeployWorkerPackage
     public static final String PEGASUS_WORKER_EXECUTABLES[][] = {
         { "transfer", "pegasus-transfer" },
         { "kickstart", "pegasus-kickstart" },
-        { "cleanup", "pegasus-cleanup" },
+        { "cleanup", "pegasus-transfer" },
         { "seqexec", "pegasus-cluster"},
-        { "dirmanager", "pegasus-create-dir" },
+        { "dirmanager", "pegasus-transfer" },
         { "keg" , "pegasus-keg" },
 
     };

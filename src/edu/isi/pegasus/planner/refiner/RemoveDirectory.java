@@ -387,7 +387,7 @@ public class RemoveDirectory extends Engine {
     
     /**
      * It creates a remove directory job that creates a directory on the remote site
-     * using pegasus-cleanup executable
+     * using pegasus-transfer executable
      * 
      * @param site      the site from where the directory need to be removed.
      * @param jobName   the name that is to be assigned to the job.
@@ -401,7 +401,7 @@ public class RemoveDirectory extends Engine {
     
     /**
      * It creates a remove directory job that creates a directory on the remote site
-     * using pegasus-cleanup executable
+     * using pegasus-transfer executable
      * 
      * @param site      the site from where the directory need to be removed.
      * @param jobName   the name that is to be assigned to the job.

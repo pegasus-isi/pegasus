@@ -50,7 +50,7 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * Uses pegasus-cleanup to do removal of the files on the remote sites.
+ * Uses pegasus-transfer to do removal of the files on the remote sites.
  *
  * @author Karan Vahi
  * @version $Revision$
