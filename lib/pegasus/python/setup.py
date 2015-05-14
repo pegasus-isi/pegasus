@@ -31,6 +31,7 @@ excludes = ['Pegasus.test*']
 def create_manifest_file():
     global excludes
 
+    f = None
     try:
         f = open('MANIFEST.in', 'w')
         f.write('recursive-exclude Pegasus/test *\n')
