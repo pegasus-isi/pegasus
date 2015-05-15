@@ -1,6 +1,7 @@
 from multiprocessing import Process
 import pika
 from influxdb.influxdb08 import InfluxDBClient
+from influxdb import InfluxDBClientError
 import datetime
 import sys
 import urlparse
@@ -98,7 +99,11 @@ class OnlineMonitord:
 
         if message is not None:
             if self.client is not None:
-                self.client.write_points(message.to_influxdb_json())
+                try:
+                    self.client.write_points(message.to_influxdb_json())
+                except InfluxDBClientError, err:
+                    print "An error occured while sending monitoring measurement: "
+                    print err
 
             self.handle_aggregation(message)
 
@@ -226,12 +231,16 @@ class OnlineMonitord:
 
     def send_aggregated_measurement(self, aggregated_measurements, message):
         if self.client is not None:
-            self.client.write_points(
-                MonitoringMessage.get_influxdb_json(message.aggregated_trace_id(),
-                    message.metrics(),
-                    aggregated_measurements
+            try:
+                self.client.write_points(
+                    MonitoringMessage.get_influxdb_json(message.aggregated_trace_id(),
+                        message.metrics(),
+                        aggregated_measurements
+                    )
                 )
-            )
+            except InfluxDBClientError, err:
+                print "An error occured while sending aggregated monitoring measurement: "
+                print err
 
         if self.event_sink is not None:
             self.emit_measurement_event(aggregated_measurements, message)
