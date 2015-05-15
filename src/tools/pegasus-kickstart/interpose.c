@@ -705,8 +705,7 @@ static IoUtilInfo read_io_status() {
     char line[BUFSIZ];
     printerr("Reading io status...\n");
     while (fgets_untraced(line, BUFSIZ, f) != NULL) {
-        printerr("Our line: '%s'\n", line);
-
+//        printerr("Our line: '%s'\n", line);
         if (startswith(line, "rchar")) {
             sscanf(line, "rchar: %llu", &(local_io_info.rchar));
         } else if (startswith(line, "wchar")) {
