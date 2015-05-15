@@ -97,9 +97,9 @@ sed -i.bak -r 's/(\<uses name=\"dag_.*xml\" link=\"output\").*/\1 register=\"fal
 echo
 echo "Adding input images to the replica catalog..."
 echo "  " `cat cache.list | wc -l` "images found"
-cat cache.list | grep -v ".fits " >rc
+cat cache.list | grep -v ".fits " | sed 's/\.gz http/ http/' >rc
 perl -p -i -e 's/ipac_cluster/local/' rc
-cat url.list | sed 's/ http:.*ref=/ http:\/\/obelix.isi.edu\/irsa-cache/' >>rc
+cat url.list | sed 's/ http:.*ref=/ http:\/\/obelix.isi.edu\/irsa-cache/' | sed 's/\.gz http/ http/' >>rc
 
 sqlitedb=`mktemp -p ${RUN_DIR} pegasus-XXXX.jdbcrc.sqlite.db`
 sqlitedburl=jdbc:sqlite:/${sqlitedb}
