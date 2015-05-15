@@ -135,7 +135,7 @@ class PegasusURL:
     
     def get_url(self):
         # srm-copy is using broken urls - wants an extra / 
-        if self.proto != "srm":
+        if self.proto == "srm":
             return "%s://%s/%s" % (self.proto, self.host, self.path)
         return "%s://%s%s" % (self.proto, self.host, self.path)
 
