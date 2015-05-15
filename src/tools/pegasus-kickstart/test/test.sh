@@ -87,7 +87,7 @@ function test_flush {
 }
 
 function test_executable {
-    kickstart -X /bin/date
+    kickstart /bin/date
     return $?
 }
 
