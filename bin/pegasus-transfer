@@ -135,7 +135,7 @@ class PegasusURL:
     
     def get_url(self):
         # srm-copy is using broken urls - wants an extra / 
-        if self.proto != "srm":
+        if self.proto == "srm":
             return "%s://%s/%s" % (self.proto, self.host, self.path)
         return "%s://%s%s" % (self.proto, self.host, self.path)
 
@@ -736,55 +736,66 @@ class GridFtpHandler(TransferHandlerBase):
     def do_mkdirs(self, mkdirs_l):
         successful_l = []
         failed_l = []
-        env = {}
-        
-        tools = Tools()
-        if tools.find("pegasus-gridftp") == None:
-            raise RuntimeError("Unable to do gsiftp mkdir because pegasus-gridftp could not be found")
-        
-        for target in mkdirs_l:
-            
-            key = "X509_USER_PROXY_" + target.get_site_label()
-            if key in os.environ:
-                env["X509_USER_PROXY"] = os.environ[key]
-           
-            # build command line for pegasus-gridftp
-            cmd = tools.full_path('pegasus-gridftp')
-            cmd += " mkdir"
-        
-            # make output match our current log level
-            if logger.isEnabledFor(logging.DEBUG):
-                cmd += " -v"
-        
-            cmd += " -f"
-            cmd += " -p"
-            cmd += " " + target.get_url()
-            
-            success = False
-            try:
-                tc = TimedCommand(cmd, env_overrides=env)
-                tc.run()
-                success = True
-            except RuntimeError, err:
-                logger.error(err)
+
+        # different tools depending on if this a sshftp or gsiftp request
+        if mkdirs_l[0].get_proto() == "gsiftp":
                 
-            if not success and tools.find("globus-url-copy"):
-                # pegasus-gridftp has a new stricter hostcert check - if it fails, try globus-url-copy
-                cmd = tools.full_path("globus-url-copy")
-                cmd += " -create-dest"
-                cmd += " file:///dev/null"
-                cmd += " " + target.get_url() + "/.create-dir"
+            tools = Tools()
+            if tools.find("pegasus-gridftp") == None:
+                raise RuntimeError("Unable to do gsiftp mkdir because pegasus-gridftp could not be found")
+            
+            for target in mkdirs_l:
+                
+                env = {}
+                
+                key = "X509_USER_PROXY_" + target.get_site_label()
+                if key in os.environ:
+                    env["X509_USER_PROXY"] = os.environ[key]
+                key = "SSH_PRIVATE_KEY_" + target.get_site_label()
+                if key in os.environ:
+                    env['SSH_PRIVATE_KEY'] = os.environ[key]
+               
+                success = False
+           
+                # build command line for pegasus-gridftp
+                cmd = tools.full_path('pegasus-gridftp')
+                cmd += " mkdir"
+            
+                # make output match our current log level
+                if logger.isEnabledFor(logging.DEBUG):
+                    cmd += " -v"
+            
+                cmd += " -f"
+                cmd += " -p"
+                cmd += " " + target.get_url()     
+
                 try:
                     tc = TimedCommand(cmd, env_overrides=env)
                     tc.run()
                     success = True
                 except RuntimeError, err:
                     logger.error(err)
-            
+                    
+                if not success and tools.find("globus-url-copy"):
+                    # pegasus-gridftp has a new stricter hostcert check - if it fails, try globus-url-copy
+                    cmd = tools.full_path("globus-url-copy")
+                    cmd += " -create-dest"
+                    cmd += " file:///dev/null"
+                    cmd += " " + target.get_url() + "/.create-dir"
+                    try:
+                        tc = TimedCommand(cmd, env_overrides=env)
+                        tc.run()
+                        success = True
+                    except RuntimeError, err:
+                        logger.error(err)
+
             if success:
                 successful_l.append(target)
             else:
                 failed_l.append(target)
+        else:
+            handler = ScpHandler()
+            [successful_l, failed_l]  = handler.do_mkdirs(mkdirs_l)
             
         return [successful_l, failed_l]
     
@@ -877,47 +888,54 @@ class GridFtpHandler(TransferHandlerBase):
         failed_l = []
         env = {}
         
-        tools = Tools()
-        if tools.find("pegasus-gridftp") == None:
-            raise RuntimeError("Unable to do gsiftp rm because pegasus-gridftp could not be found")
-        
-        try:
-            tmp_fd, tmp_name = tempfile.mkstemp(prefix="pegasus-transfer-", suffix=".lst", dir="/tmp")
-            tmp_file = os.fdopen(tmp_fd, "w+b")
-        except:
-            raise RuntimeError("Unable to create tmp file for pegasus-gridftp cleanup")
-        for target in removes_l:
-            tmp_file.write("%s\n" %(target.get_url()))
-        tmp_file.close()
+        # differnent tools based on protocol
+        if removes_l[0].get_proto() == "gsiftp":
             
-        key = "X509_USER_PROXY_" + target.get_site_label()
-        if key in os.environ:
-            env["X509_USER_PROXY"] = os.environ[key]
-       
-        # build command line for pegasus-gridftp
-        cmd = tools.full_path('pegasus-gridftp')
-        cmd += " rm"
-    
-        # make output match our current log level
-        if logger.isEnabledFor(logging.DEBUG):
-            cmd += " -v"
-    
-        cmd += " -f"
-        if target.get_recursive():
-            cmd += " -r"
-        cmd += " -i " + tmp_name
+            tools = Tools()
+            if tools.find("pegasus-gridftp") == None:
+                raise RuntimeError("Unable to do gsiftp rm because pegasus-gridftp could not be found")
+            
+            try:
+                tmp_fd, tmp_name = tempfile.mkstemp(prefix="pegasus-transfer-", suffix=".lst", dir="/tmp")
+                tmp_file = os.fdopen(tmp_fd, "w+b")
+            except:
+                raise RuntimeError("Unable to create tmp file for pegasus-gridftp cleanup")
+            for target in removes_l:
+                tmp_file.write("%s\n" %(target.get_url()))
+            tmp_file.close()
+            
+            key = "X509_USER_PROXY_" + target.get_site_label()
+            if key in os.environ:
+                env["X509_USER_PROXY"] = os.environ[key]
+           
+            # build command line for pegasus-gridftp
+            cmd = tools.full_path('pegasus-gridftp')
+            cmd += " rm"
         
-        try:
-            tc = TimedCommand(cmd, env_overrides=env)
-            tc.run()
-            for t in removes_l:
-                successful_l.append(t)
-        except RuntimeError, err:
-            logger.error(err)
-            for t in removes_l:
-                failed_l.append(t)
-        finally:
-            os.unlink(tmp_name)
+            # make output match our current log level
+            if logger.isEnabledFor(logging.DEBUG):
+                cmd += " -v"
+        
+            cmd += " -f"
+            if target.get_recursive():
+                cmd += " -r"
+            cmd += " -i " + tmp_name
+            
+            try:
+                tc = TimedCommand(cmd, env_overrides=env)
+                tc.run()
+                for t in removes_l:
+                    successful_l.append(t)
+            except RuntimeError, err:
+                logger.error(err)
+                for t in removes_l:
+                    failed_l.append(t)
+            finally:
+                os.unlink(tmp_name)
+        else:
+            # sshftp rm - same as scp!
+            handler = ScpHandler()
+            [successful_l, failed_l]  = handler.do_removes(removes_l)
 
         return [successful_l, failed_l]
     
@@ -1420,97 +1438,103 @@ class GSHandler(TransferHandlerBase):
                     "gs->gs",
                     ]
 
-    def fix_env(self, site_name):
-        
-        key = "BOTO_CONFIG_" + site_name
-        if key in os.environ:
-            os.environ["BOTO_CONFIG"] = os.environ[key]
-        if "BOTO_CONFIG" not in os.environ:
-            logger.error("At least one of the BOTO_CONFIG_" + 
-                         site_name + " or BOTO_CONFIG" +
-                         " environment variables has to be set")
-            return False
-
-        key = "GOOGLE_PKCS12_" + site_name
-        if key in os.environ:
-            os.environ["GOOGLE_PKCS12"] = os.environ[key]
-        if "GOOGLE_PKCS12" not in os.environ:
-            logger.error("At least one of the GOOGLE_PKCS12_" + 
-                         site_name + " or GOOGLE_PKCS12" +
-                         " environment variables has to be set")
-            return False
-
-            check_cred_fs_permissions(os.environ["BOTO_CONFIG"])
-            check_cred_fs_permissions(os.environ["GOOGLE_PKCS12"])                
-
-        return True
-    
-
-    def do_transfer(self, transfer, attempt):
+    def do_transfers(self, transfers_l):
     
         tools = Tools()
         if tools.find("gsutil", "version", "gsutil version: ([\.0-9a-zA-Z]+)") is None:
             raise RuntimeError("Unable to do Google Storage transfers because"
                                + " the gsutil tool could not be found")
 
-        local_filename = None
+        successful_l = []
+        failed_l = []
+        for t in transfers:
+
+            t_start = time.time()
+            cmd = ""
+            env = {}
+
+            # use cp for gs->gs transfers, and get/put when one end is a file://
+            if (transfer.src_proto == "gs" and transfer.dst_proto == "gs"):
+                # gs -> gs
+                env = self._gsutil_env(transfer.get_src_site_label())
+                cmd = "gsutil -q cp '%s' '%s'" % (transfer.src_url(),
+                                                  transfer.dst_url())
+            elif transfer.dst_proto == "file":
+                # this is a 'get'
+                env = self._gsutil_env(transfer.get_src_site_label())
+                prepare_local_dir(os.path.dirname(transfer.get_dst_path()))
+                cmd = "gsutil -q cp '%s' '%s'" % (transfer.src_url(),
+                                                  transfer.get_dst_path())
+            else:
+                # this is a 'put'
+                env = self._gsutil_env(transfer.get_dst_site_label())
+                cmd = "gsutil -q cp '%s' '%s'" % (transfer.get_src_path(),
+                                                  transfer.dst_url())
+    
+            # we need to update the boto config file to specify the full
+            # path to the PKCS12 file
+            try:
+                tmp_fd, tmp_name = tempfile.mkstemp(prefix="pegasus-transfer-", suffix=".lst")
+                tmp_file = os.fdopen(tmp_fd, "w+b")
+            except:
+              raise RuntimeError("Unable to create tmp file for gs boto file")
+            try:
+                conf = ConfigParser.SafeConfigParser()
+                conf.read(os.environ["BOTO_CONFIG"])
+                conf.set("Credentials", "gs_service_key_file", os.environ["GOOGLE_PKCS12"])
+                conf.write(tmp_file)
+                tmp_file.close()
+            except Exception, err:
+                logger.error(err)
+                raise RuntimeError("Unable to convert boto config file")
+            
+            cmd = "BOTO_CONFIG=%s %s" %(tmp_name, cmd)
+            
+            result = True
+            try:
+                tc = TimedCommand(cmd, env_overrides=env)
+                tc.run()
+            except Exception, err:
+                logger.error(err)
+                self._post_transfer_attempt(t, False, t_start)
+                failed_l.append(t)
+            finally:
+                os.unlink(tmp_name)
+
+            self._post_transfer_attempt(t, True, t_start)
+            successful_l.append(t)
+            
+        return [successful_l, failed_l]
+
+
+    def _gsutil_env(self, site_name):
         
-        # use cp for gs->gs transfers, and get/put when one end is a file://
-        if (transfer.src_proto == "gs" and transfer.dst_proto == "gs"):
-            # gs -> gs
-            if not self.fix_env(transfer.src_sitename):
-                return False
-
-            cmd = "gsutil -q cp '%s' '%s'" % (transfer.src_url(),
-                                              transfer.dst_url())
-        elif transfer.dst_proto == "file":
-            # this is a 'get'
-            if not self.fix_env(transfer.src_sitename):
-                return False
-
-            local_filename = transfer.get_dst_path()
-            prepare_local_dir(os.path.dirname(transfer.get_dst_path()))
-            cmd = "gsutil -q cp '%s' '%s'" % (transfer.src_url(),
-                                              transfer.get_dst_path())
-        else:
-            # this is a 'put'
-            if not self.fix_env(transfer.dst_sitename):
-                return False
-
-            local_filename = transfer.get_src_path()
-            cmd = "gsutil -q cp '%s' '%s'" % (transfer.get_src_path(),
-                                              transfer.dst_url())
-
-        # we need to update the boto config file to specify the full
-        # path to the PKCS12 file
-        try:
-            tmp_fd, tmp_name = tempfile.mkstemp(prefix="pegasus-transfer-", suffix=".lst")
-            tmp_file = os.fdopen(tmp_fd, "w+b")
-        except:
-          raise RuntimeError("Unable to create tmp file for gs boto file")
-        try:
-            conf = ConfigParser.SafeConfigParser()
-            conf.read(os.environ["BOTO_CONFIG"])
-            conf.set("Credentials", "gs_service_key_file", os.environ["GOOGLE_PKCS12"])
-            conf.write(tmp_file)
-            tmp_file.close()
-        except Exception, err:
-            logger.error(err)
-            raise RuntimeError("Unable to convert boto config file")
+        env = {}
         
-        cmd = "BOTO_CONFIG=%s %s" %(tmp_name, cmd)
-        
-        result = True
-        try:
-            tc = TimedCommand(cmd)
-            tc.run()
-            if local_filename is not None:
-                stats_add(local_filename)
-        except Exception, err:
-            logger.error(err)
-            result = False
-        os.unlink(tmp_name)
-        return result
+        if "BOTO_CONFIG" in os.environ:
+            env["BOTO_CONFIG"] = os.environ["BOTO_CONFIG"]
+        key = "BOTO_CONFIG_" + site_name
+        if key in os.environ:
+            env["BOTO_CONFIG"] = os.environ[key]
+        if "BOTO_CONFIG" not in env:
+            raise RuntimeError("At least one of the BOTO_CONFIG_" + 
+                               site_name + " or BOTO_CONFIG" +
+                               " environment variables has to be set")
+
+        if "GOOGLE_PKCS12" in os.environ:
+            env["GOOGLE_PKCS12"] = os.environ["GOOGLE_PKCS12"]
+        key = "GOOGLE_PKCS12_" + site_name
+        if key in os.environ:
+            env["GOOGLE_PKCS12"] = os.environ[key]
+        if "GOOGLE_PKCS12" not in env:
+            raise RuntimeError("At least one of the GOOGLE_PKCS12_" + 
+                               site_name + " or GOOGLE_PKCS12" +
+                               " environment variables has to be set")
+
+        check_cred_fs_permissions(env["BOTO_CONFIG"])
+        check_cred_fs_permissions(env["GOOGLE_PKCS12"])                
+
+        return env
 
 
 class SRMHandler(TransferHandlerBase):
@@ -1784,29 +1808,39 @@ class StashHandler(TransferHandlerBase):
     _name = "StashHandler"
     _protocol_map = ["stash->file"]
 
-    def do_transfer(self, transfer, attempt):
+    def do_transfers(self, transfers_l):
         
         tools = Tools()
         if tools.find("stashcp") is None:
             raise RuntimeError("Unable to do Stash transfers because" 
                                + " stashcp could not be found")
+            
+        successful_l = []
+        failed_l = []
+        for t in transfers_l:
+            t_start = time.time()
 
-        # stashcp wants just the path with no leading slash
-        src_path = transfer.src_url()
-        src_path = re.sub('^stash:', '', src_path)
-        src_path = re.sub('^/+', '', src_path)
+            # stashcp wants just the path with no leading slash
+            src_path = t.src_url()
+            src_path = re.sub('^stash:', '', src_path)
+            src_path = re.sub('^/+', '', src_path)
+    
+            prepare_local_dir(os.path.dirname(t.get_dst_path()))
+            cmd = "%s -s '%s' -l '%s'" \
+                % (tools.full_path("stashcp"), src_path, t.get_dst_path())
+            try:
+                tc = TimedCommand(cmd)
+                tc.run()
+            except RuntimeError, err:
+                logger.error(err)
+                self._post_transfer_attempt(t, False, t_start)
+                failed_l.append(t)
+                continue
 
-        prepare_local_dir(os.path.dirname(transfer.get_dst_path()))
-        cmd = "%s -s '%s' -l '%s'" \
-            % (tools.full_path("stashcp"), src_path, transfer.get_dst_path())
-        try:
-            tc = TimedCommand(cmd)
-            tc.run()
-        except RuntimeError, err:
-            logger.error(err)
-            return False
-        stats_add(transfer.get_dst_path())
-        return True
+            self._post_transfer_attempt(t, True, t_start)
+            successful_l.append(t)
+        
+        return [successful_l, failed_l]  
 
 
 class SymlinkHandler(TransferHandlerBase):
@@ -1821,7 +1855,7 @@ class SymlinkHandler(TransferHandlerBase):
     def do_transfers(self, transfer_l):
         successful_l = []
         failed_l = []
-        for t in transfers:
+        for t in transfer_l:
             t_start = time.time()
 
             prepare_local_dir(os.path.dirname(t.get_dst_path()))
@@ -1859,6 +1893,7 @@ class SymlinkHandler(TransferHandlerBase):
             successful_l.append(t)
         
         return [successful_l, failed_l]    
+
 
 class Stats:
     """
