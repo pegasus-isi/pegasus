@@ -344,7 +344,7 @@ def get_workflow_jobs(username, m_wf_id, wf_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>')
+@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<int:job_id>')
 def get_workflow_job(username, m_wf_id, wf_id, job_id):
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
@@ -393,7 +393,7 @@ def get_workflow_hosts(username, m_wf_id, wf_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/host/<host_id>')
+@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/host/<int:host_id>')
 def get_workflow_host(username, m_wf_id, wf_id, host_id):
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
@@ -408,7 +408,7 @@ def get_workflow_host(username, m_wf_id, wf_id, host_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/host')
+@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/host')
 def get_job_instance_host(username, m_wf_id, wf_id, job_id, job_instance_id):
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
@@ -438,8 +438,8 @@ Job State
 """
 
 
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/state')
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/state/query')
+@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/state')
+@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/state/query')
 def get_job_instance_states(username, m_wf_id, wf_id, job_id, job_instance_id):
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
@@ -487,7 +487,7 @@ def get_workflow_tasks(username, m_wf_id, wf_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/task/<task_id>')
+@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/task/<int:task_id>')
 def get_workflow_task(username, m_wf_id, wf_id, task_id):
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
@@ -533,8 +533,8 @@ Job Instance
 """
 
 
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance')
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/query')
+@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<int:job_id>/job-instance')
+@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<int:job_id>/job-instance/query')
 def get_workflow_job_instances(username, m_wf_id, wf_id, job_id):
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
@@ -549,7 +549,7 @@ def get_workflow_job_instances(username, m_wf_id, wf_id, job_id):
 
 
 @monitoring_routes.route(
-    '/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>')
+    '/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>')
 def get_workflow_job_instance(username, m_wf_id, wf_id, job_id, job_instance_id):
     queries = StampedeWorkflowQueries(g.stampede_db_url)
     record = queries.get_workflow_job_instance(wf_id, job_id, job_instance_id)
@@ -602,7 +602,7 @@ def get_workflow_invocations(username, m_wf_id, wf_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/invocation/<invocation_id>')
+@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/invocation/<int:invocation_id>')
 def get_workflow_invocation(username, m_wf_id, wf_id, invocation_id):
     queries = StampedeWorkflowQueries(g.stampede_db_url)
     record = queries.get_workflow_invocation(wf_id, invocation_id)
@@ -616,8 +616,8 @@ def get_workflow_invocation(username, m_wf_id, wf_id, invocation_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/invocation')
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/invocation/query')
+@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/invocation')
+@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/invocation/query')
 def get_job_instance_invocations(username, m_wf_id, wf_id, job_id, job_instance_id):
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
@@ -632,7 +632,7 @@ def get_job_instance_invocations(username, m_wf_id, wf_id, job_id, job_instance_
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<job_id>/job-instance/<job_instance_id>/invocation/<invocation_id>')
+@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/invocation/<int:invocation_id>')
 def get_job_instance_invocation(username, m_wf_id, wf_id, job_id, job_instance_id, invocation_id):
     queries = StampedeWorkflowQueries(g.stampede_db_url)
     record = queries.get_job_instance_invocation(wf_id, job_id, job_instance_id, invocation_id)
