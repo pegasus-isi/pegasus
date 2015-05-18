@@ -68,6 +68,7 @@ cat >sites.xml <<EOF
         <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" />
         <profile namespace="env" key="GLOBUS_LOCATION" >/ccg/software/globus/default</profile>
         <profile namespace="env" key="GLOBUS_TCP_PORT_RANGE" >40000,50000</profile>
+        <profile namespace="env" key="http_proxy" >http://workflow.isi.edu:3128</profile>
     </site>
     <site handle="CCG" arch="x86" os="LINUX">
         <head-fs>

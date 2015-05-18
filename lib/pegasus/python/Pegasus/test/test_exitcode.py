@@ -90,6 +90,9 @@ class ExitcodeTestCase(unittest.TestCase):
         self.assertRaises(JobFailed, ec, "success_message_nonzero_exit.out", success_messages=["Job succeeded"])
         self.assertRaises(JobFailed, ec, "success_message_zero_exit.out", success_messages=["Job succeeded","Successfully finished"])
 
+        # PM-927 Exitcode should fail in this case, even if status=0
+        self.assertRaises(JobFailed, ec, "insufficient.out", success_messages=["End of program"], status=0)
+
     def test_rename_noerrfile(self):
         inf = os.path.join(dirname, "exitcode", "ok.out")
         outf = os.path.join(dirname, "exitcode", "ok.out.000")

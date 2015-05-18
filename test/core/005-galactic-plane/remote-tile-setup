@@ -23,8 +23,8 @@ echo
 # add the inputs to the rc
 echo
 cd $WORK_DIR
-cat cache.list | grep -v ".fits " | sed 's/\.gz http/ http/' >rc.data
-cat url.list | sed 's/ http:.*ref=/ http:\/\/obelix.isi.edu\/irsa-cache/' | sed 's/\.gz http/ http/' >>rc.data
+cat cache.list | grep -v ".fits " >rc.data
+cat url.list | sed 's/\.gz http/ http/' >>rc.data
 
 if [ "$MODE" = "prefetch" ]; then
     echo "Prefteching data..."
