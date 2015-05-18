@@ -31,7 +31,8 @@ from Pegasus.db.admin.admin_loader import DBAdminError
 from Pegasus.service import cache
 from Pegasus.service.base import BaseQueryParser, BaseOrderParser, InvalidQueryError, InvalidOrderError
 from Pegasus.service.monitoring.resources import RootWorkflowResource, RootWorkflowstateResource, CombinationResource
-from Pegasus.service.monitoring.resources import WorkflowResource, WorkflowstateResource, JobResource, HostResource, JobInstanceResource, JobstateResource, TaskResource, InvocationResource
+from Pegasus.service.monitoring.resources import JobInstanceResource, JobstateResource, TaskResource, InvocationResource
+from Pegasus.service.monitoring.resources import WorkflowResource, WorkflowstateResource, JobResource, HostResource
 
 log = logging.getLogger(__name__)
 
@@ -209,7 +210,7 @@ class MasterWorkflowQueries(WorkflowQueries):
         :param order: Sorting criteria
         :param use_cache: If available, use cached results
 
-        :return: Collection of tuples (DashboardWorklfow, DashboardWorklfowstate)
+        :return: Collection of tuples (DashboardWorkflow, DashboardWorkflowstate)
         """
 
         #
@@ -316,10 +317,25 @@ class MasterWorkflowQueries(WorkflowQueries):
 
 
 class StampedeWorkflowQueries(WorkflowQueries):
-    """
-    TODO: Mimic code above for each remaining resources except for method get_wf_id_for_wf_uuid
-    """
-    def get_workflows(self, start_index=None, max_results=None, query=None, order=None, recent=False, use_cache=False,
+    def wf_uuid_to_wf_id(self, wf_id):
+        if wf_id is None:
+            raise ValueError('wf_id cannot be None')
+
+        wf_id = str(wf_id)
+        if not wf_id.isdigit():
+            q = self.session.query(Workflow.wf_id)
+            q = q.filter(Workflow.wf_uuid == wf_id)
+
+            try:
+                q = self._get_one(q, True, timeout=600)
+                wf_id = q.wf_id
+
+            except NoResultFound, e:
+                raise e
+
+        return wf_id
+
+    def get_workflows(self, m_wf_id, start_index=None, max_results=None, query=None, order=None, recent=False, use_cache=False,
                       **kwargs):
         """
         Returns a collection of the Workflow objects.
@@ -333,10 +349,13 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         :return: Collection of Workflow objects
         """
+        m_wf_id = self.wf_uuid_to_wf_id(m_wf_id)
+
         #
         # Construct SQLAlchemy Query `q` to get total count.
         #
         q = self.session.query(Workflow)
+        q = q.filter(Workflow.root_wf_id == m_wf_id)
         total_records = total_filtered = self._get_count(q, use_cache)
 
         if total_records == 0:
@@ -379,16 +398,10 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         :return: Workflow object
         """
+        wf_id = self.wf_uuid_to_wf_id(wf_id)
+
         q = self.session.query(Workflow)
-
-        if wf_id is None:
-            raise ValueError('wf_id cannot be None')
-
-        wf_id = str(wf_id)
-        if wf_id.isdigit():
-            q = q.filter(Workflow.wf_id == wf_id)
-        else:
-            q = q.filter(Workflow.wf_uuid == wf_id)
+        q = q.filter(Workflow.wf_id == wf_id)
 
         try:
             return self._get_one(q, use_cache)
