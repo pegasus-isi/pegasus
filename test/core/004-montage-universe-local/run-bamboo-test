@@ -69,6 +69,7 @@ cat >sites.xml <<EOF
         <profile namespace="pegasus" key="style">condor</profile>
         <profile namespace="condor" key="universe">local</profile>
         <profile namespace="env" key="MONTAGE_HOME" >/ccg/software/montage/Montage_v3.3_mats</profile>
+        <profile namespace="env" key="http_proxy" >http://workflow.isi.edu:3128</profile>
     </site>
 </sitecatalog>
 EOF
@@ -82,7 +83,7 @@ echo "Adding input images to the replica catalog..."
 echo "  " `cat cache.list | wc -l` "images found"
 cat cache.list | grep -v ".fits " >rc
 perl -p -i -e 's/ipac_cluster/local/' rc
-cat url.list | sed 's/ http:.*ref=/ http:\/\/obelix.isi.edu\/irsa-cache/' | sed 's/\.gz http/ http/' >>rc
+cat url.list | sed 's/\.gz http/ http/' >>rc
 
 echo "Planning and submitting the workflow..."
 pegasus-plan \
