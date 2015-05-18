@@ -335,7 +335,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         return wf_id
 
-    def get_workflows(self, m_wf_id, start_index=None, max_results=None, query=None, order=None, recent=False, use_cache=False,
+    def get_workflows(self, m_wf_id, start_index=None, max_results=None, query=None, order=None, use_cache=False,
                       **kwargs):
         """
         Returns a collection of the Workflow objects.
@@ -345,7 +345,6 @@ class StampedeWorkflowQueries(WorkflowQueries):
         :param query: Filtering criteria
         :param order: Sorting criteria
         :param use_cache: If available, use cached results
-        :param recent: Get the most recent results
 
         :return: Collection of Workflow objects
         """
@@ -405,7 +404,8 @@ class StampedeWorkflowQueries(WorkflowQueries):
         except NoResultFound, e:
             raise e
 
-    def get_workflow_state(self, wf_id, start_index=None, max_results=None, query=None,order=None, use_cache=True, recent=False, **kwargs):
+    def get_workflow_state(self, wf_id, start_index=None, max_results=None, query=None,order=None, recent=False,
+                           use_cache=True, **kwargs):
         """
         Returns a Workflow State object identified by wf_id
         :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
@@ -458,7 +458,8 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         return records, total_records, total_filtered
 
-    def get_workflow_jobs(self, wf_id, start_index=None, max_results=None, query=None,order=None, use_cache=True, recent=False, **kwargs):
+    def get_workflow_jobs(self, wf_id, start_index=None, max_results=None, query=None, order=None, use_cache=True,
+                          **kwargs):
         """
 
         :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
@@ -466,7 +467,6 @@ class StampedeWorkflowQueries(WorkflowQueries):
         :param query: Filtering criteria
         :param order: Sorting criteria
         :param use_cache: whether or not we should try to pull data from the cache first
-        :param recent: Get the most recent results
 
         :return: jobs collection, total jobs count, filtered jobs count
         """
@@ -511,28 +511,18 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         return records, total_records, total_filtered
 
-    def get_workflow_job(self, wf_id, job_id, use_cache=True):
+    def get_job(self, job_id, use_cache=True):
         """
 
-        :param wf_id: Id of the workflow associated with the job
         :param job_id: Id of the job
         :param use_cache: flag to look up result in cache first
 
         :return: job record
         """
+        if job_id is None:
+            raise ValueError('job_id cannot be None')
+
         q = self.session.query(Job)
-
-        if wf_id is None:
-            raise ValueError('wf_id cannot be None')
-        if job_id is None or not str(job_id).isdigit():
-            raise ValueError('job_id must be an integer value')
-
-        wf_id = str(wf_id)
-        if wf_id.isdigit():
-            q = q.filter(Job.wf_id == wf_id)
-        else:
-            q = q.filter(Job.wf_uuid == wf_id)
-
         q = q.filter(Job.job_id == job_id)
 
         try:
@@ -540,7 +530,8 @@ class StampedeWorkflowQueries(WorkflowQueries):
         except NoResultFound, e:
             raise e
 
-    def get_workflow_hosts(self, wf_id, start_index=None, max_results=None, query=None,order=None, use_cache=True, recent=False, **kwargs):
+    def get_workflow_hosts(self, wf_id, start_index=None, max_results=None, query=None,order=None, use_cache=True,
+                           **kwargs):
         """
 
         :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
@@ -548,7 +539,6 @@ class StampedeWorkflowQueries(WorkflowQueries):
         :param query: Filtering criteria
         :param order: Sorting criteria
         :param use_cache: whether or not we should try to pull data from the cache first
-        :param recent: Get the most recent results
 
         :return: hosts collection, total jobs count, filtered jobs count
         """
@@ -593,28 +583,18 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         return records, total_records, total_filtered
 
-    def get_workflow_host(self, wf_id, host_id, use_cache=True):
+    def get_host(self, host_id, use_cache=True):
             """
 
-            :param wf_id: Id of the workflow associated with the host
             :param host_id: Id of the host
             :param use_cache: flag to look up result in cache first
 
             :return: host record
             """
-            q = self.session.query(Host)
-
-            if wf_id is None:
-                raise ValueError('wf_id cannot be None')
             if host_id is None or not str(host_id).isdigit():
-                raise ValueError('host_id must be an integer value')
+                raise ValueError('host_id cannot be None')
 
-            wf_id = str(wf_id)
-            if wf_id.isdigit():
-                q = q.filter(Host.wf_id == wf_id)
-            else:
-                q = q.filter(Host.wf_uuid == wf_id)
-
+            q = self.session.query(Host)
             q = q.filter(Host.host_id == host_id)
 
             try:
@@ -622,7 +602,8 @@ class StampedeWorkflowQueries(WorkflowQueries):
             except NoResultFound, e:
                 raise e
 
-    def get_workflow_job_instances(self, wf_id, job_id, start_index=None, max_results=None, query=None,order=None, use_cache=True, recent=False, **kwargs):
+    def get_workflow_job_instances(self, wf_id, job_id, start_index=None, max_results=None, query=None, order=None,
+                                   use_cache=True, **kwargs):
         """
 
         :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
@@ -631,7 +612,6 @@ class StampedeWorkflowQueries(WorkflowQueries):
         :param query: Filtering criteria
         :param order: Sorting criteria
         :param use_cache: whether or not we should try to pull data from the cache first
-        :param recent: Get the most recent results
 
         :return: hosts collection, total jobs count, filtered jobs count
         """
@@ -672,24 +652,18 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         return records, total_records, total_filtered
 
-    def get_workflow_job_instance(self, wf_id, job_id, job_instance_id, use_cache=True):
+    def get_job_instance(self, job_instance_id, use_cache=True):
         """
 
-        :param wf_id: Id of the workflow associated with the job instance
-        :param job_id: Id of the job associated with the job instance
         :param job_instance_id: Id of the job instance
         :param use_cache: flag to look up result in cache first
 
         :return: host record
         """
+        if job_instance_id is None:
+            raise ValueError('job_instance_id cannot be None')
+
         q = self.session.query(JobInstance)
-
-        if job_id is None or not str(job_id).isdigit():
-            raise ValueError('job__id must be an integer value')
-        if job_instance_id is None or not str(job_instance_id).isdigit():
-            raise ValueError('job_instance_id must be an integer value')
-
-        q = q.filter(JobInstance.job_id == job_id)
         q = q.filter(JobInstance.job_instance_id == job_instance_id)
 
         try:
@@ -697,46 +671,8 @@ class StampedeWorkflowQueries(WorkflowQueries):
         except NoResultFound, e:
             raise e
 
-
-    def get_job_instance_host(self, wf_id, job_id, job_instance_id, use_cache=True):
-        """
-
-        :param wf_id: Id of the workflow associated with the host
-        :param job_id: Id of the job associated with the host
-        :param job_instance_id: Id of the job instance associated with the host
-        :param use_cache: flag to look up result in cache first
-
-        :return: host record
-        """
-        q = self.session.query(JobInstance)
-
-
-
-        if wf_id is None:
-            raise ValueError('wf_id cannot be None')
-        if job_id is None or not str(job_id).isdigit():
-            raise ValueError('job_id must be an integer value')
-        if job_instance_id is None or not str(job_instance_id).isdigit():
-            raise ValueError('job_instance_id must be an integer value')
-
-        q = q.filter(JobInstance.job_instance_id == job_instance_id)
-        host_id = None
-        try:
-            job_instance = self._get_one(q, use_cache)
-            print job_instance
-            host_id = job_instance.host_id
-        except NoResultFound, e:
-            raise e
-
-        q = self.session.query(Host)
-        q = q.filter(Host.host_id == host_id)
-
-        try:
-            return self._get_one(q, use_cache)
-        except NoResultFound, e:
-            raise e
-
-    def get_job_instance_states(self, wf_id, job_id, job_instance_id, start_index=None, max_results=None, query=None,order=None, use_cache=True, recent=False, **kwargs):
+    def get_job_instance_states(self, wf_id, job_id, job_instance_id, start_index=None, max_results=None, query=None, order=None, recent=False,
+                                use_cache=True, **kwargs):
         """
 
         :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
@@ -792,7 +728,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         return records, total_records, total_filtered
 
-    def get_workflow_tasks(self, wf_id, start_index=None, max_results=None, query=None,order=None, use_cache=True, recent=False, **kwargs):
+    def get_workflow_tasks(self, wf_id, start_index=None, max_results=None, query=None,order=None, use_cache=True, **kwargs):
         """
 
         :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
@@ -800,7 +736,6 @@ class StampedeWorkflowQueries(WorkflowQueries):
         :param query: Filtering criteria
         :param order: Sorting criteria
         :param use_cache: whether or not we should try to pull data from the cache first
-        :param recent: Get the most recent results
 
         :return: state record
         """
@@ -877,8 +812,8 @@ class StampedeWorkflowQueries(WorkflowQueries):
         :param max_results: Return a maximum of `max_results` records
         :param query: Filtering criteria
         :param order: Sorting criteria
-        :param use_cache: whether or not we should try to pull data from the cache first
         :param recent: Get the most recent results
+        :param use_cache: whether or not we should try to pull data from the cache first
 
         :return: invocations record
         """
@@ -924,22 +859,18 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         return records, total_records, total_filtered
 
-    def get_workflow_invocation(self, wf_id, invocation_id, use_cache=True):
+    def get_invocation(self, invocation_id, use_cache=True):
         """
 
-        :param wf_id: Id of the workflow associated with the invocation
         :param invocation_id: Id of the invocation
         :param use_cache: flag to look up result in cache first
 
         :return: invocation record
         """
-        q = self.session.query(Invocation)
-
-        if wf_id is None:
-            raise ValueError('wf_id cannot be None')
         if invocation_id is None or not str(invocation_id).isdigit():
-            raise ValueError('invocation_id must be an integer value')
+            raise ValueError('invocation_id cannot be None')
 
+        q = self.session.query(Invocation)
         q = q.filter(Invocation.invocation_id == invocation_id)
 
         try:
@@ -947,7 +878,8 @@ class StampedeWorkflowQueries(WorkflowQueries):
         except NoResultFound, e:
             raise e
 
-    def get_job_instance_invocations(self, wf_id, job_id, job_instance_id, start_index=None, max_results=None, query=None,order=None, use_cache=True, recent=False, **kwargs):
+    def get_job_instance_invocations(self, wf_id, job_id, job_instance_id, start_index=None, max_results=None,
+                                     query=None, order=None, use_cache=True, **kwargs):
         """
 
         :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
@@ -957,7 +889,6 @@ class StampedeWorkflowQueries(WorkflowQueries):
         :param query: Filtering criteria
         :param order: Sorting criteria
         :param use_cache: whether or not we should try to pull data from the cache first
-        :param recent: Get the most recent results
 
         :return: invocations record
         """
@@ -1009,32 +940,3 @@ class StampedeWorkflowQueries(WorkflowQueries):
         records = self._get_all(q, use_cache)
 
         return records, total_records, total_filtered
-
-    def get_job_instance_invocation(self, wf_id, job_id, job_instance_id, invocation_id, use_cache=True):
-        """
-
-        :param wf_id: Id of the workflow associated with the invocation
-        :param job_id: Id of the job associated with the invocation
-        :param job_instance_id: Id of the job instance associated with the invocation
-        :param invocation_id: Id of the invocation
-        :param use_cache: flag to look up result in cache first
-
-        :return: invocation record
-        """
-        q = self.session.query(Invocation)
-
-        if wf_id is None:
-            raise ValueError('wf_id cannot be None')
-        if job_id is None or not str(job_id).isdigit():
-            raise ValueError('job_id must be an integer value')
-        if job_instance_id is None or not str(job_instance_id).isdigit():
-            raise ValueError('job_instance_id must be an integer value')
-        if invocation_id is None or not str(invocation_id).isdigit():
-            raise ValueError('invocation_id must be an integer value')
-
-        q = q.filter(Invocation.invocation_id == invocation_id)
-
-        try:
-            return self._get_one(q, use_cache)
-        except NoResultFound, e:
-            raise e
