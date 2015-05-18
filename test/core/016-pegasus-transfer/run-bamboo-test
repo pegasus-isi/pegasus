@@ -78,7 +78,7 @@ timed_transfer 0 30 "pegasus-transfer -f s3-step1.in"
 
 timed_transfer 0 30 "pegasus-transfer -f s3-step2.in"
 
-timed_transfer 0 30 "pegasus-cleanup -f s3-cleanup.in"
+timed_transfer 0 30 "pegasus-transfer -f s3-cleanup.in"
 
 echo
 echo
@@ -94,7 +94,7 @@ timed_transfer 0 20 "pegasus-transfer -f 3rdparty.in"
 
 timed_transfer 0 20 "pegasus-transfer -f 3rdparty-step2.in"
 
-timed_transfer 0 10  "pegasus-cleanup -f 3rdparty-cleanup.in"
+timed_transfer 0 10  "pegasus-transfer -f 3rdparty-cleanup.in"
 
 timed_transfer 0 40 "pegasus-transfer -f many-small-files-3rdparty.in"
 

@@ -1,7 +1,43 @@
-s3://test@amazon/pegasus-isi-transfer-tests/many-small-files/filesave.png
-s3://test@amazon/pegasus-isi-transfer-tests/many-small-files/gtk-media-play-ltr.png
-s3://test@amazon/pegasus-isi-transfer-tests/many-small-files/multimedia-volume-control.svg
-s3://test@amazon/pegasus-isi-transfer-tests/medium-files/a.txt
-s3://test@amazon/pegasus-isi-transfer-tests/medium-files/b.txt
-s3://test@amazon/pegasus-isi-transfer-tests/medium-files/c.txt
-s3s://test@amazon/pegasus-isi-transfer-tests/medium-files/d.txt
+[
+{
+    "id": 1,
+    "type": "remove",
+    "target": { "site_label": "AmazonS3", "url": "s3://test@amazon/pegasus-isi-transfer-tests/many-small-files/filesave.png", "recursive": "False" } 
+}
+,
+{
+    "id": 2,
+    "type": "remove",
+    "target": { "site_label": "AmazonS3", "url": "s3://test@amazon/pegasus-isi-transfer-tests/many-small-files/gtk-media-play-ltr.png", "recursive": "False" } 
+}
+,
+{
+    "id": 3,
+    "type": "remove",
+    "target": { "site_label": "AmazonS3", "url": "s3://test@amazon/pegasus-isi-transfer-tests/many-small-files/multimedia-volume-control.svg", "recursive": "False" } 
+}
+,
+{
+    "id": 4,
+    "type": "remove",
+    "target": { "site_label": "AmazonS3", "url": "s3://test@amazon/pegasus-isi-transfer-tests/medium-files/a.txt", "recursive": "False" } 
+}
+,
+{
+    "id": 5,
+    "type": "remove",
+    "target": { "site_label": "AmazonS3", "url": "s3://test@amazon/pegasus-isi-transfer-tests/medium-files/b.txt", "recursive": "False" } 
+}
+,
+{
+    "id": 6,
+    "type": "remove",
+    "target": { "site_label": "AmazonS3", "url": "s3://test@amazon/pegasus-isi-transfer-tests/medium-files/c.txt", "recursive": "False" } 
+}
+,
+{
+    "id": 7,
+    "type": "remove",
+    "target": { "site_label": "AmazonS3", "url": "s3s://test@amazon/pegasus-isi-transfer-tests/medium-files/d.txt", "recursive": "False" } 
+}
+]

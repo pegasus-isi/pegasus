@@ -1,2 +1,13 @@
-gsiftp://obelix.isi.edu/data/scratch/ptesting/transfer-tests/large-file.dat
-gsiftp://cartman.isi.edu/lfs1/pegasus-transfer-testing/tmp/large-file.dat
+[
+{
+    "id": 1,
+    "type": "remove",
+    "target": { "site_label": "CCG", "url": "gsiftp://obelix.isi.edu/data/scratch/ptesting/transfer-tests/large-file.dat", "recursive": "False" } 
+}
+,
+{
+    "id": 2,
+    "type": "remove",
+    "target": { "site_label": "CCG", "url": "gsiftp://cartman.isi.edu/lfs1/pegasus-transfer-testing/tmp/large-file.dat", "recursive": "False" } 
+}
+]

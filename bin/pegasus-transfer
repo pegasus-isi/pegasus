@@ -538,6 +538,7 @@ class TransferHandlerBase(object):
     """
     
     _name = "BaseHandler"
+    _mkdir_cleanup_protocols = []
     _protocol_map = []
     
     lock = threading.Lock()
@@ -569,7 +570,7 @@ class TransferHandlerBase(object):
         raise RuntimeError("do_removes() is not implemented in " + self._name)
 
         
-    def protocol_map_check(self, src_proto, dst_proto):
+    def protocol_check(self, src_proto, dst_proto):
         """
         Checks to see if a src/dst protocol pair can be handled by the handler.
         This is the base for the automatic handler detection in the TransferSe
@@ -577,10 +578,8 @@ class TransferHandlerBase(object):
         """
         if src_proto is None and dst_proto is not None:
             # mkdir or delete
-            for item in self._protocol_map:
-                s = re.sub(".*->", "", item)
-                if s == dst_proto:
-                    return True
+            if dst_proto in self._mkdir_cleanup_protocols:
+                return True
             return False
         item = str(src_proto) + "->" + str(dst_proto)
         return (item in self._protocol_map)
@@ -603,6 +602,7 @@ class FileHandler(TransferHandlerBase):
     """
     
     _name = "FileHandler"
+    _mkdir_cleanup_protocols = ["file"]
     _protocol_map = ["file->file"]
 
     def do_mkdirs(self, transfers):
@@ -678,6 +678,7 @@ class FDTHandler(TransferHandlerBase):
     """
 
     _name = "FDTHandler"
+    _mkdir_cleanup_protocols = ["fdt"]
     _protocol_map = ["file->fdt", "fdt->file"]
         
     def do_transfer(self, transfer, attempt):
@@ -719,6 +720,7 @@ class GridFtpHandler(TransferHandlerBase):
     """
     
     _name = "GridFtpHandler"
+    _mkdir_cleanup_protocols = ["gsiftp", "sshftp"]
     _protocol_map = [
                     "file->gsiftp",
                     "gsiftp->file", 
@@ -1156,6 +1158,7 @@ class HTTPHandler(TransferHandlerBase):
     """
 
     _name = "HTTPHandler"
+    _mkdir_cleanup_protocols = []
     _protocol_map = ["http->file", "https->file"]
 
     def do_transfers(self, transfers):
@@ -1229,6 +1232,7 @@ class IRodsHandler(TransferHandlerBase):
     """
     
     _name = "IRodsHandler"
+    _mkdir_cleanup_protocols = ["irods"]
     _protocol_map = ["file->irods", "irods->file"]
     
     ticket = None
@@ -1355,6 +1359,7 @@ class S3Handler(TransferHandlerBase):
     """
     
     _name = "S3Handler"
+    _mkdir_cleanup_protocols = ["s3", "s3s"]
     _protocol_map = [
                     "file->s3",
                     "file->s3s",
@@ -1365,6 +1370,41 @@ class S3Handler(TransferHandlerBase):
                     "s3s->s3",
                     "s3s->s3s"
                     ]
+
+    def do_mkdirs(self, mkdir_l):
+        tools = Tools()
+        if tools.find("pegasus-s3", "help", None) is None:
+            raise RuntimeError("Unable to do S3 transfers because"
+                               + " pegasus-s3 could not be found")
+
+        successful_l = []
+        failed_l = []        
+        for t in mkdir_l:
+            
+            # extract the bucket part
+            re_bucket = re.compile(r'(s3(s){0,1}://\w+@\w+/+[\w\-]+)')
+            bucket = t.get_url()
+            r = re_bucket.search(bucket)
+            if r:
+                bucket = r.group(1)
+            else:
+                raise RuntimeError("Unable to parse bucket: %s" % (bucket))
+
+            cmd = "pegasus-s3 mkdir"
+            if logger.isEnabledFor(logging.DEBUG):
+                cmd += " -v"
+            cmd += " " + bucket
+            try:
+                tc = TimedCommand(cmd, env_overrides=env)
+                tc.run()
+            except RuntimeError, err:
+                logger.error(err)
+                failed_l.append(t)
+                continue
+            successful_l.append(t)
+            
+        return [successful_l, failed_l]
+
 
     def do_transfers(self, transfers):
     
@@ -1410,6 +1450,49 @@ class S3Handler(TransferHandlerBase):
             
         return [successful_l, failed_l]
 
+
+    def do_removes(self, removes_list):
+        tools = Tools()
+        if tools.find("pegasus-s3", "help", None) is None:
+            raise RuntimeError("Unable to do S3 transfers because"
+                               + " pegasus-s3 could not be found")
+
+        successful_l = []
+        failed_l = []        
+        for t in removes_list:
+    
+            fixed_url = t.get_url()
+            
+            # PM-790: recursive deletes are really a pattern matching. For example,
+            # if told to remove the foo/bar directory, we need to translate it into
+            # foo/bar/*
+            if t.get_recursive():
+                # first make sure there are no trailing slashes
+                last_char = len(fixed_url) - 1
+                while len(fixed_url) > 0 and last_char > 0 and fixed_url[last_char] == "/":
+                    fixed_url = fixed_url[0:last_char]
+                    last_char -= 1
+                fixed_url += "/*"
+                logger.info("Transformed remote URL to " + fixed_url)
+            
+            env = self._s3_cred_env(t.get_site_label())
+            
+            cmd = "pegasus-s3 rm -f"
+            if logger.isEnabledFor(logging.DEBUG):
+                cmd += " -v"
+            cmd += " " + fixed_url
+
+            try:
+                tc = TimedCommand(cmd, env_overrides=env)
+                tc.run()
+            except RuntimeError, err:
+                logger.error(err)
+                failed_l.append(t)
+                continue
+            successful_l.append(t)
+            
+        return [successful_l, failed_l]
+
     
     def _s3_cred_env(self, site_label):
         env = {}
@@ -1425,6 +1508,7 @@ class S3Handler(TransferHandlerBase):
         check_cred_fs_permissions(env["S3CFG"])
         return env
 
+    
 
 class GSHandler(TransferHandlerBase):
     """
@@ -1432,11 +1516,52 @@ class GSHandler(TransferHandlerBase):
     """
     
     _name = "GSHandler"
+    _mkdir_cleanup_protocols = ["gs"]
     _protocol_map = [
                     "file->gs",
                     "gs->file",
                     "gs->gs",
                     ]
+
+
+    def do_mkdirs(self, mkdir_l):
+        tools = Tools()
+        if tools.find("gsutil", "version", "gsutil version: ([\.0-9a-zA-Z]+)") is None:
+            raise RuntimeError("Unable to do Google Storage transfers because"
+                               + " the gsutil tool could not be found")
+
+        successful_l = []
+        failed_l = []        
+
+        env = self._gsutil_env(mkdir_l[0].get_site_label())
+        
+        for t in mkdir_l:
+            
+            # extract the bucket part
+            re_bucket = re.compile(r'(gs://[\w-]+/)[/\w-]*')
+            bucket = t.get_url()
+            r = re_bucket.search(bucket)
+            if r:
+                bucket = r.group(1)
+            else:
+                raise RuntimeError("Unable to parse bucket: %s" % (bucket))
+        
+            # first ensure that the bucket exists
+            cmd = "gsutil mb %s" %(bucket)
+            try:
+                tc = TimedCommand(cmd, env_overrides=env)
+                tc.run()
+            except RuntimeError, err:
+                # if the bucket already exists, we call it a success
+                if "already exists" not in tc.get_outerr():
+                    logger.error(err)
+                    failed_l.append(t)
+                    continue
+            successful_l.append(t)
+
+        self._clean_tmp()            
+        return [successful_l, failed_l]
+
 
     def do_transfers(self, transfers_l):
     
@@ -1447,50 +1572,29 @@ class GSHandler(TransferHandlerBase):
 
         successful_l = []
         failed_l = []
-        for t in transfers:
+        
+        if transfers_l[0].get_src_proto() == "gs":
+            env = self._gsutil_env(transfers_l[0].get_src_site_label())
+        else:
+            env = self._gsutil_env(transfers_l[0].get_dst_site_label())
+        
+        for t in transfers_l:
 
             t_start = time.time()
             cmd = ""
-            env = {}
 
             # use cp for gs->gs transfers, and get/put when one end is a file://
-            if (transfer.src_proto == "gs" and transfer.dst_proto == "gs"):
+            if (t.get_src_proto() == "gs" and t.get_dst_proto() == "gs"):
                 # gs -> gs
-                env = self._gsutil_env(transfer.get_src_site_label())
-                cmd = "gsutil -q cp '%s' '%s'" % (transfer.src_url(),
-                                                  transfer.dst_url())
-            elif transfer.dst_proto == "file":
+                cmd = "gsutil -q cp '%s' '%s'" % (t.src_url(), t.dst_url())
+            elif t.get_dst_proto() == "file":
                 # this is a 'get'
-                env = self._gsutil_env(transfer.get_src_site_label())
-                prepare_local_dir(os.path.dirname(transfer.get_dst_path()))
-                cmd = "gsutil -q cp '%s' '%s'" % (transfer.src_url(),
-                                                  transfer.get_dst_path())
+                prepare_local_dir(os.path.dirname(t.get_dst_path()))
+                cmd = "gsutil -q cp '%s' '%s'" % (t.src_url(), t.get_dst_path())
             else:
                 # this is a 'put'
-                env = self._gsutil_env(transfer.get_dst_site_label())
-                cmd = "gsutil -q cp '%s' '%s'" % (transfer.get_src_path(),
-                                                  transfer.dst_url())
-    
-            # we need to update the boto config file to specify the full
-            # path to the PKCS12 file
-            try:
-                tmp_fd, tmp_name = tempfile.mkstemp(prefix="pegasus-transfer-", suffix=".lst")
-                tmp_file = os.fdopen(tmp_fd, "w+b")
-            except:
-              raise RuntimeError("Unable to create tmp file for gs boto file")
-            try:
-                conf = ConfigParser.SafeConfigParser()
-                conf.read(os.environ["BOTO_CONFIG"])
-                conf.set("Credentials", "gs_service_key_file", os.environ["GOOGLE_PKCS12"])
-                conf.write(tmp_file)
-                tmp_file.close()
-            except Exception, err:
-                logger.error(err)
-                raise RuntimeError("Unable to convert boto config file")
-            
-            cmd = "BOTO_CONFIG=%s %s" %(tmp_name, cmd)
-            
-            result = True
+                cmd = "gsutil -q cp '%s' '%s'" % (t.get_src_path(), t.dst_url())            
+
             try:
                 tc = TimedCommand(cmd, env_overrides=env)
                 tc.run()
@@ -1498,12 +1602,43 @@ class GSHandler(TransferHandlerBase):
                 logger.error(err)
                 self._post_transfer_attempt(t, False, t_start)
                 failed_l.append(t)
-            finally:
-                os.unlink(tmp_name)
 
             self._post_transfer_attempt(t, True, t_start)
             successful_l.append(t)
+
+        self._clean_tmp()            
+        return [successful_l, failed_l]
+
+
+    def do_removes(self, removes_l):
+        tools = Tools()
+        if tools.find("gsutil", "version", "gsutil version: ([\.0-9a-zA-Z]+)") is None:
+            raise RuntimeError("Unable to do Google Storage transfers because"
+                               + " the gsutil tool could not be found")
+
+        successful_l = []
+        failed_l = []        
+
+        env = self._gsutil_env(removes_l[0].get_site_label())
+        
+        for t in removes_l:
             
+            # first ensure that the bucket exists
+            cmd = "gsutil rm -f"
+            if t.get_recursive():
+                cmd += " -r"  
+            cmd += " " + t.get_url()
+        
+            try:
+                tc = TimedCommand(cmd, env_overrides=env)
+                tc.run()
+            except RuntimeError, err:
+                logger.error(err)
+                failed_l.append(t)
+                continue
+            successful_l.append(t)
+
+        self._clean_tmp()            
         return [successful_l, failed_l]
 
 
@@ -1534,12 +1669,39 @@ class GSHandler(TransferHandlerBase):
         check_cred_fs_permissions(env["BOTO_CONFIG"])
         check_cred_fs_permissions(env["GOOGLE_PKCS12"])                
 
+        # we need to update the boto config file to specify the full
+        # path to the PKCS12 file
+        try:
+            tmp_fd, self._tmp_name = tempfile.mkstemp(prefix="pegasus-transfer-", suffix=".lst")
+            tmp_file = os.fdopen(tmp_fd, "w+b")
+        except:
+          raise RuntimeError("Unable to create tmp file for gs boto file")
+        try:
+            conf = ConfigParser.SafeConfigParser()
+            conf.read(env["BOTO_CONFIG"])
+            conf.set("Credentials", "gs_service_key_file", env["GOOGLE_PKCS12"])
+            conf.write(tmp_file)
+            tmp_file.close()
+        except Exception, err:
+            logger.error(err)
+            raise RuntimeError("Unable to convert boto config file")
+        env["BOTO_CONFIG"] = self._tmp_name
+        check_cred_fs_permissions(env["BOTO_CONFIG"])
+
         return env
+    
+    
+    def _clean_tmp(self):
+        try:
+            os.unlink(self._clean_tmp())
+        except:
+            pass
 
 
 class SRMHandler(TransferHandlerBase):
     
     _name = "SRMHandler"
+    _mkdir_cleanup_protocols = ["srm"]
     _protocol_map = ["srm->file", "file->srm", "gsiftp->srm", "srm->gsiftp"]
 
     def do_transfer(self, transfer, failed_q):
@@ -1606,6 +1768,7 @@ class ScpHandler(TransferHandlerBase):
     """
 
     _name = "ScpHandler"
+    _mkdir_cleanup_protocols = ["scp"]
     _protocol_map = ["scp->file", "file->scp"]
     
     _base_args = " -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
@@ -1850,6 +2013,7 @@ class SymlinkHandler(TransferHandlerBase):
     """
     
     _name = "SymlinkHandler"
+    _mkdir_cleanup_protocols = ["symlink"]
     _protocol_map = ["file->symlink", "symlink->symlink"]
 
     def do_transfers(self, transfer_l):
@@ -1899,6 +2063,9 @@ class Stats:
     """
     Keeps global stats for transfers
     """
+    
+    _detected_3rd_party = False
+    
 
     def __init__(self):
         self._t_start_global = time.time()
@@ -1910,6 +2077,13 @@ class Stats:
     
 
     def add_stats(self, transfer, was_successful, t_start, t_end):
+
+        key = transfer.get_src_site_label() + "->" + transfer.get_dst_site_label()
+        if key not in self._site_pair_count:
+            self._site_pair_count[key] = 0
+            self._site_pair_bytes[key] = 0
+        self._site_pair_count[key] += 1
+        self._total_count += 1
         
         # do we have a local component?
         local_filename = None
@@ -1918,22 +2092,18 @@ class Stats:
             local_filename = transfer.get_src_path()
         elif transfer.get_dst_proto() == "file":
             local_filename = transfer.get_dst_path()
-        if local_filename is not None:
+        if local_filename is None:
+            self._detected_3rd_party = True
+            return
+        else:
             try:
                 s = os.stat(local_filename)
                 bytes = s[stat.ST_SIZE]
+                self._total_bytes += bytes
+                self._site_pair_bytes[key] += bytes
             except Exception, err:
                 pass # ignore
 
-        self._total_count += 1
-        self._total_bytes += bytes
-        
-        key = transfer.get_src_site_label() + "->" + transfer.get_dst_site_label()
-        if key not in self._site_pair_count:
-            self._site_pair_count[key] = 0
-            self._site_pair_bytes[key] = 0
-        self._site_pair_count[key] += 1
-        self._site_pair_bytes[key] += bytes      
 
 
     def all_transfers_done(self):
@@ -1948,7 +2118,9 @@ class Stats:
             logger.info("Stats: no local files in the transfer set")
             return
 
-        logger.info("Note: stats do not include third party gsiftp/srm transfers")
+        if self._detected_3rd_party:
+            logger.info("Unable to provide stats for third party gsiftp/srm transfers")
+            return
 
         total_secs = self._t_end_global - self._t_start_global
         Bps = self._total_bytes / total_secs
@@ -2002,7 +2174,7 @@ class SimilarWorkSet:
         if isinstance(transfers_l[0], Mkdir) or isinstance(transfers_l[0], Remove):
             proto = transfers_l[0].get_proto()
             for h in self._available_handlers:
-                if h.protocol_map_check(None, proto):
+                if h.protocol_check(None, proto):
                     self._primary_handler = h
                     logger.debug("Selected %s for handling these transfers" %(h._name))
                     return
@@ -2016,7 +2188,7 @@ class SimilarWorkSet:
         # can we find one handler which can handle both source
         # and destination protocols directly?
         for h in self._available_handlers:
-            if h.protocol_map_check(src_proto, dst_proto):
+            if h.protocol_check(src_proto, dst_proto):
                 self._primary_handler = h
                 logger.debug("Selected %s for handling these transfers" 
                              %(h._name))
@@ -2025,11 +2197,11 @@ class SimilarWorkSet:
         # we need to split the transfer from src to local file,
         # and then transfer the local file to the dst
         for h in self._available_handlers:
-            if h.protocol_map_check(src_proto, "file"):
+            if h.protocol_check(src_proto, "file"):
                 self._primary_handler = h
                 break
         for h in self._available_handlers:
-            if h.protocol_map_check("file", dst_proto):
+            if h.protocol_check("file", dst_proto):
                 self._secondary_handler = h
                 break
         if self._primary_handler is None or self._secondary_handler is None:
