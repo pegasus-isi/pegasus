@@ -407,7 +407,8 @@ class StampedeWorkflowQueries(WorkflowQueries):
     def get_workflow_state(self, wf_id, start_index=None, max_results=None, query=None,order=None, recent=False,
                            use_cache=True, **kwargs):
         """
-        Returns a Workflow State object identified by wf_id
+        Returns a collection of the Workflowstate objects.
+
         :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
         :param max_results: Return a maximum of `max_results` records
         :param query: Filtering criteria
@@ -417,15 +418,10 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         :return: Workflow States collection, total records count, total filtered records count
         """
-        q = self.session.query(Workflowstate)
+        wf_id = self.wf_uuid_to_wf_id(wf_id)
 
-        if wf_id is None:
-            raise ValueError('wf_id cannot be None')
-        wf_id = str(wf_id)
-        if wf_id.isdigit():
-            q = q.filter(Workflowstate.wf_id == wf_id)
-        else:
-            q = q.filter(Workflowstate.wf_uuid == wf_id)
+        q = self.session.query(Workflowstate)
+        q = q.filter(Workflowstate.wf_id == wf_id)
 
         total_records = total_filtered = self._get_count(q, use_cache)
 
@@ -470,15 +466,10 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         :return: jobs collection, total jobs count, filtered jobs count
         """
-        q = self.session.query(Job)
+        wf_id = self.wf_uuid_to_wf_id(wf_id)
 
-        if wf_id is None:
-            raise ValueError('wf_id cannot be None')
-        wf_id = str(wf_id)
-        if wf_id.isdigit():
-            q = q.filter(Job.wf_id == wf_id)
-        else:
-            q = q.filter(Job.wf_uuid == wf_id)
+        q = self.session.query(Job)
+        q = q.filter(Job.wf_id == wf_id)
 
         total_records = total_filtered = self._get_count(q, use_cache)
 
@@ -542,15 +533,10 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         :return: hosts collection, total jobs count, filtered jobs count
         """
-        q = self.session.query(Host)
+        wf_id = self.wf_uuid_to_wf_id(wf_id)
 
-        if wf_id is None:
-            raise ValueError('wf_id cannot be None')
-        wf_id = str(wf_id)
-        if wf_id.isdigit():
-            q = q.filter(Host.wf_id == wf_id)
-        else:
-            q = q.filter(Host.wf_uuid == wf_id)
+        q = self.session.query(Host)
+        q = q.filter(Host.wf_id == wf_id)
 
         total_records = total_filtered = self._get_count(q, use_cache)
 
@@ -601,6 +587,131 @@ class StampedeWorkflowQueries(WorkflowQueries):
                 return self._get_one(q, use_cache)
             except NoResultFound, e:
                 raise e
+
+    def get_job_instance_states(self, wf_id, job_id, job_instance_id, start_index=None, max_results=None, query=None,
+                                order=None, recent=False, use_cache=True, **kwargs):
+        """
+
+        :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
+        :param job_id: job_id associated with the job instance states
+        :param job_instance_id: job_instance_id associated with the job instance states
+        :param max_results: Return a maximum of `max_results` records
+        :param query: Filtering criteria
+        :param order: Sorting criteria
+        :param use_cache: whether or not we should try to pull data from the cache first
+        :param recent: Get the most recent results
+
+        :return: state record
+        """
+        q = self.session.query(Jobstate)
+
+        if wf_id is None:
+            raise ValueError('wf_id cannot be None')
+        if job_id is None or not str(job_id).isdigit():
+            raise ValueError('job_id must be an integer value')
+        if job_instance_id is None or not str(job_instance_id).isdigit():
+            raise ValueError('job_instance_id must be an integer value')
+
+        q = q.filter(Jobstate.job_instance_id == job_instance_id)
+
+        total_records = total_filtered = self._get_count(q, use_cache)
+
+        if total_records == 0:
+            return [], 0, 0
+
+        #
+        # Construct SQLAlchemy Query `q` to get filtered count.
+        #
+        if query:
+            q = self._evaluate_query(q, query, JobstateResource())
+            total_filtered = self._get_count(q, use_cache)
+
+            if total_filtered == 0 or (start_index and start_index >= total_filtered):
+                log.debug('total_filtered is 0 or start_index >= total_filtered')
+                return [], total_records, total_filtered
+
+        #
+        # Construct SQLAlchemy Query `q` to sort
+        #
+        if order:
+            q = self._add_ordering(q, order, JobstateResource())
+
+        #
+        # Construct SQLAlchemy Query `q` to add pagination
+        #
+        q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
+
+        records = self._get_all(q, use_cache)
+
+        return records, total_records, total_filtered
+
+        def get_workflow_tasks(self, wf_id, start_index=None, max_results=None, query=None, order=None, use_cache=True,
+                               **kwargs):
+            """
+
+            :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
+            :param max_results: Return a maximum of `max_results` records
+            :param query: Filtering criteria
+            :param order: Sorting criteria
+            :param use_cache: whether or not we should try to pull data from the cache first
+
+            :return: state record
+            """
+        wf_id = self.wf_uuid_to_wf_id(wf_id)
+
+        q = self.session.query(Task)
+        q = q.filter(Task.wf_id == wf_id)
+
+        total_records = total_filtered = self._get_count(q, use_cache)
+
+        if total_records == 0:
+            return [], 0, 0
+
+        #
+        # Construct SQLAlchemy Query `q` to get filtered count.
+        #
+        if query:
+            q = self._evaluate_query(q, query, TaskResource())
+            total_filtered = self._get_count(q, use_cache)
+
+            if total_filtered == 0 or (start_index and start_index >= total_filtered):
+                log.debug('total_filtered is 0 or start_index >= total_filtered')
+                return [], total_records, total_filtered
+
+        #
+        # Construct SQLAlchemy Query `q` to sort
+        #
+        if order:
+            q = self._add_ordering(q, order, TaskResource())
+
+        #
+        # Construct SQLAlchemy Query `q` to add pagination
+        #
+        q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
+
+        records = self._get_all(q, use_cache)
+
+        return records, total_records, total_filtered
+
+    def get_task(self, task_id, use_cache=True):
+        """
+
+        :param task_id: Id of the task
+        :param use_cache: flag to look up result in cache first
+
+        :return: task record
+        """
+        q = self.session.query(Task)
+
+        if task_id is None:
+            raise ValueError('task_id cannot be None')
+
+        q = q.filter(Task.task_id == task_id)
+
+        try:
+            return self._get_one(q, use_cache)
+        except NoResultFound, e:
+            raise e
 
     def get_workflow_job_instances(self, wf_id, job_id, start_index=None, max_results=None, query=None, order=None,
                                    use_cache=True, **kwargs):
@@ -671,140 +782,6 @@ class StampedeWorkflowQueries(WorkflowQueries):
         except NoResultFound, e:
             raise e
 
-    def get_job_instance_states(self, wf_id, job_id, job_instance_id, start_index=None, max_results=None, query=None, order=None, recent=False,
-                                use_cache=True, **kwargs):
-        """
-
-        :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
-        :param job_id: job_id associated with the job instance states
-        :param job_instance_id: job_instance_id associated with the job instance states
-        :param max_results: Return a maximum of `max_results` records
-        :param query: Filtering criteria
-        :param order: Sorting criteria
-        :param use_cache: whether or not we should try to pull data from the cache first
-        :param recent: Get the most recent results
-
-        :return: state record
-        """
-        q = self.session.query(Jobstate)
-
-        if wf_id is None:
-            raise ValueError('wf_id cannot be None')
-        if job_id is None or not str(job_id).isdigit():
-            raise ValueError('job_id must be an integer value')
-        if job_instance_id is None or not str(job_instance_id).isdigit():
-            raise ValueError('job_instance_id must be an integer value')
-
-        q = q.filter(Jobstate.job_instance_id == job_instance_id)
-
-        total_records = total_filtered = self._get_count(q, use_cache)
-
-        if total_records == 0:
-            return [], 0, 0
-
-        #
-        # Construct SQLAlchemy Query `q` to get filtered count.
-        #
-        if query:
-            q = self._evaluate_query(q, query, JobstateResource())
-            total_filtered = self._get_count(q, use_cache)
-
-            if total_filtered == 0 or (start_index and start_index >= total_filtered):
-                log.debug('total_filtered is 0 or start_index >= total_filtered')
-                return [], total_records, total_filtered
-
-        #
-        # Construct SQLAlchemy Query `q` to sort
-        #
-        if order:
-            q = self._add_ordering(q, order, JobstateResource())
-
-        #
-        # Construct SQLAlchemy Query `q` to add pagination
-        #
-        q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
-
-        records = self._get_all(q, use_cache)
-
-        return records, total_records, total_filtered
-
-    def get_workflow_tasks(self, wf_id, start_index=None, max_results=None, query=None,order=None, use_cache=True, **kwargs):
-        """
-
-        :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
-        :param max_results: Return a maximum of `max_results` records
-        :param query: Filtering criteria
-        :param order: Sorting criteria
-        :param use_cache: whether or not we should try to pull data from the cache first
-
-        :return: state record
-        """
-        q = self.session.query(Task)
-
-        if wf_id is None:
-            raise ValueError('wf_id cannot be None')
-
-        wf_id = str(wf_id)
-        if wf_id.isdigit():
-            q = q.filter(Task.wf_id == wf_id)
-        else:
-            q = q.filter(Task.wf_uuid == wf_id)
-
-        total_records = total_filtered = self._get_count(q, use_cache)
-
-        if total_records == 0:
-            return [], 0, 0
-
-        #
-        # Construct SQLAlchemy Query `q` to get filtered count.
-        #
-        if query:
-            q = self._evaluate_query(q, query, TaskResource())
-            total_filtered = self._get_count(q, use_cache)
-
-            if total_filtered == 0 or (start_index and start_index >= total_filtered):
-                log.debug('total_filtered is 0 or start_index >= total_filtered')
-                return [], total_records, total_filtered
-
-        #
-        # Construct SQLAlchemy Query `q` to sort
-        #
-        if order:
-            q = self._add_ordering(q, order, TaskResource())
-
-        #
-        # Construct SQLAlchemy Query `q` to add pagination
-        #
-        q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
-
-        records = self._get_all(q, use_cache)
-
-        return records, total_records, total_filtered
-
-    def get_workflow_task(self, wf_id, task_id, use_cache=True):
-        """
-
-        :param wf_id: Id of the workflow associated with the task
-        :param task_id: Id of the task
-        :param use_cache: flag to look up result in cache first
-
-        :return: task record
-        """
-        q = self.session.query(Task)
-
-        if wf_id is None:
-            raise ValueError('wf_id cannot be None')
-        if task_id is None or not str(task_id).isdigit():
-            raise ValueError('task_id must be an integer value')
-
-        q = q.filter(Task.task_id == task_id)
-
-        try:
-            return self._get_one(q, use_cache)
-        except NoResultFound, e:
-            raise e
-
-
     def get_workflow_invocations(self, wf_id, start_index=None, max_results=None, query=None,order=None, use_cache=True, recent=False, **kwargs):
         """
 
@@ -817,16 +794,10 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         :return: invocations record
         """
+        wf_id = self.wf_uuid_to_wf_id(wf_id)
+
         q = self.session.query(Invocation)
-
-        if wf_id is None:
-            raise ValueError('wf_id cannot be None')
-
-        wf_id = str(wf_id)
-        if wf_id.isdigit():
-            q = q.filter(Invocation.wf_id == wf_id)
-        else:
-            q = q.filter(Invocation.wf_uuid == wf_id)
+        q = q.filter(Invocation.wf_id == wf_id)
 
         total_records = total_filtered = self._get_count(q, use_cache)
 
@@ -892,6 +863,8 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         :return: invocations record
         """
+        wf_id = self.wf_uuid_to_wf_id(wf_id)
+
         q = self.session.query(Invocation)
 
         if wf_id is None:
@@ -901,13 +874,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         if job_instance_id is None or not str(job_instance_id).isdigit():
             raise ValueError('job_instance_id must be an integer value')
 
-        wf_id = str(wf_id)
-        if wf_id.isdigit():
-            q = q.filter(Invocation.wf_id == wf_id)
-        else:
-            q = q.filter(Invocation.wf_uuid == wf_id)
-
-        q = q.filter(Invocation.job_id == job_id)
+        q = q.filter(Invocation.wf_id == wf_id)
         q = q.filter(Invocation.job_instance_id == job_instance_id)
 
         total_records = total_filtered = self._get_count(q, use_cache)
