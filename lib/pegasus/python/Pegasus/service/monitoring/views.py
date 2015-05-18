@@ -263,7 +263,7 @@ def get_workflows(username, m_wf_id):
     """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
-    records, total_records, total_filtered = queries.get_workflows(**g.query_args)
+    records, total_records, total_filtered = queries.get_workflows(g.m_wf_id, **g.query_args)
 
     if total_records == 0:
         log.debug('Total records is 0; returning HTTP 204 No content')
