@@ -243,6 +243,24 @@ Workflow
 @monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow')
 @monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/query', methods=['POST'])
 def get_workflows(username, m_wf_id):
+    """
+    Returns a collection of workflows.
+
+    :query int start-index: Return results starting from record <start-index> (0 indexed)
+    :query int max-results: Return a maximum of <max-results> records
+    :query string query: Search criteria
+    :query string order: Sorting criteria
+    :query boolean pretty-print: Return formatted JSON response
+
+    :statuscode 200: OK
+    :statuscode 204: No content; when no workflows found.
+    :statuscode 400: Bad request
+    :statuscode 401: Authentication failure
+    :statuscode 403: Authorization failure
+
+    :return type: Collection
+    :return resource: Workflow
+    """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
     records, total_records, total_filtered = queries.get_workflows(**g.query_args)
@@ -262,6 +280,19 @@ def get_workflows(username, m_wf_id):
 
 @monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>')
 def get_workflow(username, m_wf_id, wf_id):
+    """
+    Returns workflow identified by m_wf_id, wf_id.
+
+    :query boolean pretty-print: Return formatted JSON response
+
+    :statuscode 200: OK
+    :statuscode 401: Authentication failure
+    :statuscode 403: Authorization failure
+    :statuscode 404: Not found
+
+    :return type: Record
+    :return resource: Workflow
+    """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
     record = queries.get_workflow(wf_id)
@@ -290,9 +321,28 @@ Workflow State
 """
 
 
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/state')
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/state/query')
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/state')
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/state/query')
 def get_workflow_state(username, m_wf_id, wf_id):
+    """
+    Returns a collection of Workflow States.
+
+    :query int start-index: Return results starting from record <start-index> (0 indexed)
+    :query int max-results: Return a maximum of <max-results> records
+    :query string query: Search criteria
+    :query string order: Sorting criteria
+    :query boolean recent: Get most recent workflow state
+    :query boolean pretty-print: Return formatted JSON response
+
+    :statuscode 200: OK
+    :statuscode 204: No content; when no workflowstates found.
+    :statuscode 400: Bad request
+    :statuscode 401: Authentication failure
+    :statuscode 403: Authorization failure
+
+    :return type: Collection
+    :return resource: WorkflowState
+    """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
     states, total_states, filtered_states = queries.get_workflow_state(wf_id, **g.query_args)
@@ -328,9 +378,27 @@ Job
 """
 
 
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job')
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/query')
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/job')
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/job/query')
 def get_workflow_jobs(username, m_wf_id, wf_id):
+    """
+    Returns a collection of Jobs.
+
+    :query int start-index: Return results starting from record <start-index> (0 indexed)
+    :query int max-results: Return a maximum of <max-results> records
+    :query string query: Search criteria
+    :query string order: Sorting criteria
+    :query boolean pretty-print: Return formatted JSON response
+
+    :statuscode 200: OK
+    :statuscode 204: No content; when no jobs found.
+    :statuscode 400: Bad request
+    :statuscode 401: Authentication failure
+    :statuscode 403: Authorization failure
+
+    :return type: Collection
+    :return resource: Job
+    """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
     jobs, total_jobs, filtered_jobs = queries.get_workflow_jobs(wf_id, **g.query_args)
@@ -344,8 +412,21 @@ def get_workflow_jobs(username, m_wf_id, wf_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<int:job_id>')
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>')
 def get_workflow_job(username, m_wf_id, wf_id, job_id):
+    """
+    Returns job identified by m_wf_id, wf_id, job_id.
+
+    :query boolean pretty-print: Return formatted JSON response
+
+    :statuscode 200: OK
+    :statuscode 401: Authentication failure
+    :statuscode 403: Authorization failure
+    :statuscode 404: Not found
+
+    :return type: Record
+    :return resource: Job
+    """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
     record = queries.get_workflow_job(wf_id, job_id)
@@ -377,9 +458,27 @@ Host
 """
 
 
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/host')
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/host/query')
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/host')
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/host/query')
 def get_workflow_hosts(username, m_wf_id, wf_id):
+    """
+    Returns a collection of Hosts.
+
+    :query int start-index: Return results starting from record <start-index> (0 indexed)
+    :query int max-results: Return a maximum of <max-results> records
+    :query string query: Search criteria
+    :query string order: Sorting criteria
+    :query boolean pretty-print: Return formatted JSON response
+
+    :statuscode 200: OK
+    :statuscode 204: No content; when no hosts found.
+    :statuscode 400: Bad request
+    :statuscode 401: Authentication failure
+    :statuscode 403: Authorization failure
+
+    :return type: Collection
+    :return resource: Host
+    """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
     hosts, total_hosts, filtered_hosts = queries.get_workflow_hosts(wf_id, **g.query_args)
@@ -393,8 +492,21 @@ def get_workflow_hosts(username, m_wf_id, wf_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/host/<int:host_id>')
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/host/<int:host_id>')
 def get_workflow_host(username, m_wf_id, wf_id, host_id):
+    """
+    Returns host identified by m_wf_id, wf_id, host_id.
+
+    :query boolean pretty-print: Return formatted JSON response
+
+    :statuscode 200: OK
+    :statuscode 401: Authentication failure
+    :statuscode 403: Authorization failure
+    :statuscode 404: Not found
+
+    :return type: Record
+    :return resource: Host
+    """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
     record = queries.get_workflow_host(wf_id, host_id)
@@ -408,8 +520,21 @@ def get_workflow_host(username, m_wf_id, wf_id, host_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/host')
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/host')
 def get_job_instance_host(username, m_wf_id, wf_id, job_id, job_instance_id):
+    """
+    Returns host identified by m_wf_id, wf_id, job_instance_id.
+
+    :query boolean pretty-print: Return formatted JSON response
+
+    :statuscode 200: OK
+    :statuscode 401: Authentication failure
+    :statuscode 403: Authorization failure
+    :statuscode 404: Not found
+
+    :return type: Record
+    :return resource: Host
+    """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
     record = queries.get_job_instance_host(wf_id, job_id, job_instance_id)
@@ -438,9 +563,28 @@ Job State
 """
 
 
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/state')
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/state/query')
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/state')
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/state/query')
 def get_job_instance_states(username, m_wf_id, wf_id, job_id, job_instance_id):
+    """
+    Returns a collection of Job States.
+
+    :query int start-index: Return results starting from record <start-index> (0 indexed)
+    :query int max-results: Return a maximum of <max-results> records
+    :query string query: Search criteria
+    :query string order: Sorting criteria
+    :query boolean recent: Get most recent job state
+    :query boolean pretty-print: Return formatted JSON response
+
+    :statuscode 200: OK
+    :statuscode 204: No content; when no jobstates found.
+    :statuscode 400: Bad request
+    :statuscode 401: Authentication failure
+    :statuscode 403: Authorization failure
+
+    :return type: Collection
+    :return resource: JobState
+    """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
     states, total_states, filtered_states = queries.get_job_instance_states(wf_id, job_id, job_instance_id, **g.query_args)
@@ -471,9 +615,27 @@ Task
 """
 
 
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/task')
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/task/query')
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/task')
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/task/query')
 def get_workflow_tasks(username, m_wf_id, wf_id):
+    """
+    Returns a collection of Tasks.
+
+    :query int start-index: Return results starting from record <start-index> (0 indexed)
+    :query int max-results: Return a maximum of <max-results> records
+    :query string query: Search criteria
+    :query string order: Sorting criteria
+    :query boolean pretty-print: Return formatted JSON response
+
+    :statuscode 200: OK
+    :statuscode 204: No content; when no tasks found.
+    :statuscode 400: Bad request
+    :statuscode 401: Authentication failure
+    :statuscode 403: Authorization failure
+
+    :return type: Collection
+    :return resource: Task
+    """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
     tasks, total_tasks, filtered_tasks = queries.get_workflow_tasks(wf_id, **g.query_args)
@@ -487,8 +649,21 @@ def get_workflow_tasks(username, m_wf_id, wf_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/task/<int:task_id>')
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/task/<int:task_id>')
 def get_workflow_task(username, m_wf_id, wf_id, task_id):
+    """
+    Returns task identified by m_wf_id, wf_id, task_id.
+
+    :query boolean pretty-print: Return formatted JSON response
+
+    :statuscode 200: OK
+    :statuscode 401: Authentication failure
+    :statuscode 403: Authorization failure
+    :statuscode 404: Not found
+
+    :return type: Record
+    :return resource: Task
+    """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
     record = queries.get_workflow_task(wf_id, task_id)
@@ -533,9 +708,27 @@ Job Instance
 """
 
 
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<int:job_id>/job-instance')
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<int:job_id>/job-instance/query')
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance')
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/query')
 def get_workflow_job_instances(username, m_wf_id, wf_id, job_id):
+    """
+    Returns a collection of JobInstances.
+
+    :query int start-index: Return results starting from record <start-index> (0 indexed)
+    :query int max-results: Return a maximum of <max-results> records
+    :query string query: Search criteria
+    :query string order: Sorting criteria
+    :query boolean pretty-print: Return formatted JSON response
+
+    :statuscode 200: OK
+    :statuscode 204: No content; when no job instances found.
+    :statuscode 400: Bad request
+    :statuscode 401: Authentication failure
+    :statuscode 403: Authorization failure
+
+    :return type: Collection
+    :return resource: JobInstance
+    """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
     job_instances, total_instances, filtered_instances = queries.get_workflow_job_instances(wf_id, job_id, **g.query_args)
@@ -548,9 +741,21 @@ def get_workflow_job_instances(username, m_wf_id, wf_id, job_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route(
-    '/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>')
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>')
 def get_workflow_job_instance(username, m_wf_id, wf_id, job_id, job_instance_id):
+    """
+    Returns job instance identified by m_wf_id, wf_id, job_id, job_instance_id.
+
+    :query boolean pretty-print: Return formatted JSON response
+
+    :statuscode 200: OK
+    :statuscode 401: Authentication failure
+    :statuscode 403: Authorization failure
+    :statuscode 404: Not found
+
+    :return type: Record
+    :return resource: JobInstance
+    """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
     record = queries.get_workflow_job_instance(wf_id, job_id, job_instance_id)
 
@@ -586,9 +791,27 @@ Invocation
 """
 
 
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/invocation')
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/invocation/query')
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/invocation')
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/invocation/query')
 def get_workflow_invocations(username, m_wf_id, wf_id):
+    """
+    Returns a collection of Invocations.
+
+    :query int start-index: Return results starting from record <start-index> (0 indexed)
+    :query int max-results: Return a maximum of <max-results> records
+    :query string query: Search criteria
+    :query string order: Sorting criteria
+    :query boolean pretty-print: Return formatted JSON response
+
+    :statuscode 200: OK
+    :statuscode 204: No content; when no invocations found.
+    :statuscode 400: Bad request
+    :statuscode 401: Authentication failure
+    :statuscode 403: Authorization failure
+
+    :return type: Collection
+    :return resource: Invocation
+    """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
     invocations, total_invocations, filtered_invocations = queries.get_workflow_invocations(wf_id,**g.query_args)
@@ -602,8 +825,21 @@ def get_workflow_invocations(username, m_wf_id, wf_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/invocation/<int:invocation_id>')
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/invocation/<int:invocation_id>')
 def get_workflow_invocation(username, m_wf_id, wf_id, invocation_id):
+    """
+    Returns invocation identified by m_wf_id, wf_id, invocation_id.
+
+    :query boolean pretty-print: Return formatted JSON response
+
+    :statuscode 200: OK
+    :statuscode 401: Authentication failure
+    :statuscode 403: Authorization failure
+    :statuscode 404: Not found
+
+    :return type: Record
+    :return resource: Invocation
+    """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
     record = queries.get_workflow_invocation(wf_id, invocation_id)
 
@@ -616,8 +852,8 @@ def get_workflow_invocation(username, m_wf_id, wf_id, invocation_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/invocation')
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/invocation/query')
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/invocation')
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/invocation/query')
 def get_job_instance_invocations(username, m_wf_id, wf_id, job_id, job_instance_id):
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
@@ -632,8 +868,21 @@ def get_job_instance_invocations(username, m_wf_id, wf_id, job_id, job_instance_
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/user/<string:username>/root/<m_wf_id>/workflow/<wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/invocation/<int:invocation_id>')
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/invocation/<int:invocation_id>')
 def get_job_instance_invocation(username, m_wf_id, wf_id, job_id, job_instance_id, invocation_id):
+    """
+    Returns invocation identified by m_wf_id, wf_id, job_id, job_instance_id, invocation_id.
+
+    :query boolean pretty-print: Return formatted JSON response
+
+    :statuscode 200: OK
+    :statuscode 401: Authentication failure
+    :statuscode 403: Authorization failure
+    :statuscode 404: Not found
+
+    :return type: Record
+    :return resource: Invocation
+    """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
     record = queries.get_job_instance_invocation(wf_id, job_id, job_instance_id, invocation_id)
 
