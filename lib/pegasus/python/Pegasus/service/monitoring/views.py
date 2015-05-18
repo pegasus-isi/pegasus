@@ -623,7 +623,7 @@ def get_workflow_tasks(username, m_wf_id, wf_id):
 
 @monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/job/<int:job_id>/task')
 @monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/job/<int:job_id>/task/query')
-def get_workflow_tasks(username, m_wf_id, wf_id):
+def get_job_tasks(username, m_wf_id, wf_id):
     """
     Returns a collection of Tasks.
 
