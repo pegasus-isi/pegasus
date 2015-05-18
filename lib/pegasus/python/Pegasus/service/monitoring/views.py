@@ -412,8 +412,8 @@ def get_workflow_jobs(username, m_wf_id, wf_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>')
-def get_workflow_job(username, m_wf_id, wf_id, job_id):
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/job/<int:job_id>')
+def get_job(username, m_wf_id, job_id):
     """
     Returns job identified by m_wf_id, wf_id, job_id.
 
@@ -429,7 +429,7 @@ def get_workflow_job(username, m_wf_id, wf_id, job_id):
     """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
-    record = queries.get_workflow_job(wf_id, job_id)
+    record = queries.get_job(job_id)
 
     #
     # Generate JSON Response
@@ -492,8 +492,8 @@ def get_workflow_hosts(username, m_wf_id, wf_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/host/<int:host_id>')
-def get_workflow_host(username, m_wf_id, wf_id, host_id):
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/host/<int:host_id>')
+def get_host(username, m_wf_id, host_id):
     """
     Returns host identified by m_wf_id, wf_id, host_id.
 
@@ -509,40 +509,12 @@ def get_workflow_host(username, m_wf_id, wf_id, host_id):
     """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
-    record = queries.get_workflow_host(wf_id, host_id)
+    record = queries.get_host(host_id)
 
     #
     # Generate JSON Response
     #
     serializer = WorkflowHostSerializer(**g.query_args)
-    response_json = serializer.encode_record(record)
-
-    return make_response(response_json, 200, JSON_HEADER)
-
-
-@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/host')
-def get_job_instance_host(username, m_wf_id, wf_id, job_id, job_instance_id):
-    """
-    Returns host identified by m_wf_id, wf_id, job_instance_id.
-
-    :query boolean pretty-print: Return formatted JSON response
-
-    :statuscode 200: OK
-    :statuscode 401: Authentication failure
-    :statuscode 403: Authorization failure
-    :statuscode 404: Not found
-
-    :return type: Record
-    :return resource: Host
-    """
-    queries = StampedeWorkflowQueries(g.stampede_db_url)
-
-    record = queries.get_job_instance_host(wf_id, job_id, job_instance_id)
-
-    #
-    # Generate JSON Response
-    #
-    serializer = JobInstanceHostSerializer(**g.query_args)
     response_json = serializer.encode_record(record)
 
     return make_response(response_json, 200, JSON_HEADER)
@@ -649,8 +621,8 @@ def get_workflow_tasks(username, m_wf_id, wf_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/task/<int:task_id>')
-def get_workflow_task(username, m_wf_id, wf_id, task_id):
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/task/<int:task_id>')
+def get_task(username, m_wf_id, task_id):
     """
     Returns task identified by m_wf_id, wf_id, task_id.
 
@@ -666,7 +638,7 @@ def get_workflow_task(username, m_wf_id, wf_id, task_id):
     """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
-    record = queries.get_workflow_task(wf_id, task_id)
+    record = queries.get_task(task_id)
 
     #
     # Generate JSON Response
@@ -741,8 +713,8 @@ def get_workflow_job_instances(username, m_wf_id, wf_id, job_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>')
-def get_workflow_job_instance(username, m_wf_id, wf_id, job_id, job_instance_id):
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/job-instance/<int:job_instance_id>')
+def get_job_instance(username, m_wf_id, job_instance_id):
     """
     Returns job instance identified by m_wf_id, wf_id, job_id, job_instance_id.
 
@@ -757,7 +729,7 @@ def get_workflow_job_instance(username, m_wf_id, wf_id, job_id, job_instance_id)
     :return resource: JobInstance
     """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
-    record = queries.get_workflow_job_instance(wf_id, job_id, job_instance_id)
+    record = queries.get_job_instance(job_instance_id)
 
     #
     # Generate JSON Response
@@ -825,8 +797,8 @@ def get_workflow_invocations(username, m_wf_id, wf_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/invocation/<int:invocation_id>')
-def get_workflow_invocation(username, m_wf_id, wf_id, invocation_id):
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/invocation/<int:invocation_id>')
+def get_invocation(username, m_wf_id, invocation_id):
     """
     Returns invocation identified by m_wf_id, wf_id, invocation_id.
 
@@ -841,7 +813,7 @@ def get_workflow_invocation(username, m_wf_id, wf_id, invocation_id):
     :return resource: Invocation
     """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
-    record = queries.get_workflow_invocation(wf_id, invocation_id)
+    record = queries.get_workflow_invocation(invocation_id)
 
     #
     # Generate JSON Response
@@ -864,33 +836,6 @@ def get_job_instance_invocations(username, m_wf_id, wf_id, job_id, job_instance_
     #
     serializer = InvocationSerializer(**g.query_args)
     response_json = serializer.encode_collection(invocations, total_invocations, filtered_invocations)
-
-    return make_response(response_json, 200, JSON_HEADER)
-
-
-@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/invocation/<int:invocation_id>')
-def get_job_instance_invocation(username, m_wf_id, wf_id, job_id, job_instance_id, invocation_id):
-    """
-    Returns invocation identified by m_wf_id, wf_id, job_id, job_instance_id, invocation_id.
-
-    :query boolean pretty-print: Return formatted JSON response
-
-    :statuscode 200: OK
-    :statuscode 401: Authentication failure
-    :statuscode 403: Authorization failure
-    :statuscode 404: Not found
-
-    :return type: Record
-    :return resource: Invocation
-    """
-    queries = StampedeWorkflowQueries(g.stampede_db_url)
-    record = queries.get_job_instance_invocation(wf_id, job_id, job_instance_id, invocation_id)
-
-    #
-    # Generate JSON Response
-    #
-    serializer = InvocationSerializer(**g.query_args)
-    response_json = serializer.encode_record(record)
 
     return make_response(response_json, 200, JSON_HEADER)
 
