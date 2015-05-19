@@ -423,7 +423,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         :param max_results: Return a maximum of `max_results` records
         :param query: Filtering criteria
         :param order: Sorting criteria
-        :param use_cache: whether or not we should try to pull data from the cache first
+        :param use_cache: If available, use cached results
         :param recent: Get the most recent results
 
         :return: Workflow States collection, total records count, total filtered records count
@@ -498,7 +498,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         :param max_results: Return a maximum of `max_results` records
         :param query: Filtering criteria
         :param order: Sorting criteria
-        :param use_cache: whether or not we should try to pull data from the cache first
+        :param use_cache: If available, use cached results
 
         :return: Jobs collection, total jobs count, filtered jobs count
         """
@@ -540,9 +540,10 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
     def get_job(self, job_id, use_cache=True):
         """
+        Returns a Job object identified by job_id.
 
-        :param job_id: Id of the job
-        :param use_cache: flag to look up result in cache first
+        :param job_id: ID of the job
+        :param use_cache: If available, use cached results
 
         :return: job record
         """
@@ -567,7 +568,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         :param max_results: Return a maximum of `max_results` records
         :param query: Filtering criteria
         :param order: Sorting criteria
-        :param use_cache: whether or not we should try to pull data from the cache first
+        :param use_cache: If available, use cached results
 
         :return: hosts collection, total jobs count, filtered jobs count
         """
@@ -611,7 +612,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
             """
 
             :param host_id: Id of the host
-            :param use_cache: flag to look up result in cache first
+            :param use_cache: If available, use cached results
 
             :return: host record
             """
@@ -638,7 +639,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         :param max_results: Return a maximum of `max_results` records
         :param query: Filtering criteria
         :param order: Sorting criteria
-        :param use_cache: whether or not we should try to pull data from the cache first
+        :param use_cache: If available, use cached results
         :param recent: Get the most recent results
 
         :return: state record
@@ -695,7 +696,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         :param max_results: Return a maximum of `max_results` records
         :param query: Filtering criteria
         :param order: Sorting criteria
-        :param use_cache: whether or not we should try to pull data from the cache first
+        :param use_cache: If available, use cached results
 
         :return: Collection of Task objects
         """
@@ -743,7 +744,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         :param max_results: Return a maximum of `max_results` records
         :param query: Filtering criteria
         :param order: Sorting criteria
-        :param use_cache: whether or not we should try to pull data from the cache first
+        :param use_cache: If available, use cached results
 
         :return: Collection of Task objects
         """
@@ -785,7 +786,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         """
 
         :param task_id: Id of the task
-        :param use_cache: flag to look up result in cache first
+        :param use_cache: If available, use cached results
 
         :return: task record
         """
@@ -812,7 +813,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         :param max_results: Return a maximum of `max_results` records
         :param query: Filtering criteria
         :param order: Sorting criteria
-        :param use_cache: whether or not we should try to pull data from the cache first
+        :param use_cache: If available, use cached results
 
         :return: hosts collection, total jobs count, filtered jobs count
         """
@@ -857,7 +858,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         """
 
         :param job_instance_id: Id of the job instance
-        :param use_cache: flag to look up result in cache first
+        :param use_cache: If available, use cached results
 
         :return: host record
         """
@@ -883,7 +884,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         :param query: Filtering criteria
         :param order: Sorting criteria
         :param recent: Get the most recent results
-        :param use_cache: whether or not we should try to pull data from the cache first
+        :param use_cache: If available, use cached results
 
         :return: invocations record
         """
@@ -933,7 +934,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         :param max_results: Return a maximum of `max_results` records
         :param query: Filtering criteria
         :param order: Sorting criteria
-        :param use_cache: whether or not we should try to pull data from the cache first
+        :param use_cache: If available, use cached results
 
         :return: invocations record
         """
@@ -986,7 +987,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         """
 
         :param invocation_id: Id of the invocation
-        :param use_cache: flag to look up result in cache first
+        :param use_cache: If available, use cached results
 
         :return: invocation record
         """
