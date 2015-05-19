@@ -67,7 +67,8 @@ class WorkflowQueries(SQLAlchemyInit):
         else:
             log.debug('Cache Miss: %s' % cache_key)
             count = q.count()
-            cache.set(cache_key, count, timeout)
+            t = timeout(count) if hasattr(timeout, '__call__') else timeout
+            cache.set(cache_key, count, t)
 
         return count
 
@@ -80,7 +81,8 @@ class WorkflowQueries(SQLAlchemyInit):
         else:
             log.debug('Cache Miss: %s' % cache_key)
             record = q.all()
-            cache.set(cache_key, record, timeout)
+            t = timeout(record) if hasattr(timeout, '__call__') else timeout
+            cache.set(cache_key, record, t)
 
         return record
 
@@ -93,7 +95,8 @@ class WorkflowQueries(SQLAlchemyInit):
         else:
             log.debug('Cache Miss: %s' % cache_key)
             record = q.one()
-            cache.set(cache_key, record, timeout)
+            t = timeout(record) if hasattr(timeout, '__call__') else timeout
+            cache.set(cache_key, record, t)
 
         return record
 
@@ -427,10 +430,13 @@ class StampedeWorkflowQueries(WorkflowQueries):
         """
         wf_id = self.wf_uuid_to_wf_id(wf_id)
 
+        # Use shorter caching timeout
+        timeout = 5
+
         q = self.session.query(Workflowstate)
         q = q.filter(Workflowstate.wf_id == wf_id)
 
-        total_records = total_filtered = self._get_count(q, use_cache)
+        total_records = total_filtered = self._get_count(q, use_cache, timeout=timeout)
 
         if total_records == 0:
             return [], 0, 0
@@ -444,7 +450,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         #
         if query or recent:
             q = self._evaluate_query(q, query, WorkflowstateResource())
-            total_filtered = self._get_count(q, use_cache)
+            total_filtered = self._get_count(q, use_cache, timeout=timeout)
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):
                 log.debug('total_filtered is 0 or start_index >= total_filtered')
@@ -461,7 +467,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         #
         q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
 
-        records = self._get_all(q, use_cache)
+        records = self._get_all(q, use_cache, timeout=timeout)
 
         return records, total_records, total_filtered
 
@@ -494,7 +500,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         :param order: Sorting criteria
         :param use_cache: whether or not we should try to pull data from the cache first
 
-        :return: jobs collection, total jobs count, filtered jobs count
+        :return: Jobs collection, total jobs count, filtered jobs count
         """
         wf_id = self.wf_uuid_to_wf_id(wf_id)
 
