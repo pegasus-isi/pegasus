@@ -132,7 +132,7 @@ class RootWorkflowSerializer(BaseSerializer):
         """
 
         links = OrderedDict([
-            ('workflow', url_for('.get_workflows', m_wf_id=root_workflow.wf_id))
+            ('workflow', url_for('.get_workflows', m_wf_id=root_workflow.wf_id, _method='GET'))
         ])
 
         return links
@@ -235,14 +235,15 @@ class WorkflowSerializer(BaseSerializer):
         """
 
         links = OrderedDict([
-            ('workflow_state', url_for('.get_workflow_state', wf_id=workflow.wf_id)),
-            ('job', url_for('.get_workflow_jobs', wf_id=workflow.wf_id)),
-            ('task', url_for('.get_workflow_tasks', wf_id=workflow.wf_id)),
-            ('host', url_for('.get_workflow_hosts', wf_id=workflow.wf_id)),
-            ('invocation', url_for('.get_workflow_invocations', wf_id=workflow.wf_id))
+            ('workflow_state', url_for('.get_workflow_state', wf_id=workflow.wf_id, _method='GET')),
+            ('job', url_for('.get_workflow_jobs', wf_id=workflow.wf_id, _method='GET')),
+            ('task', url_for('.get_workflow_tasks', wf_id=workflow.wf_id, _method='GET')),
+            ('host', url_for('.get_workflow_hosts', wf_id=workflow.wf_id, _method='GET')),
+            ('invocation', url_for('.get_workflow_invocations', wf_id=workflow.wf_id, _method='GET'))
         ])
 
         return links
+
 
 class WorkflowStateSerializer(BaseSerializer):
     FIELDS = [
@@ -332,6 +333,7 @@ class WorkflowStateSerializer(BaseSerializer):
         ])
 
         return links
+
 
 class WorkflowJobSerializer(BaseSerializer):
     FIELDS = [
@@ -423,8 +425,8 @@ class WorkflowJobSerializer(BaseSerializer):
 
         links = OrderedDict([
             ('workflow', url_for('.get_workflow', wf_id=job.wf_id)),
-            ('task', url_for('.get_workflow_tasks', wf_id=job.wf_id)),
-            ('job_instance', url_for('.get_job_instances', wf_id=job.wf_id, job_id=job.job_id))
+            ('task', url_for('.get_workflow_tasks', wf_id=job.wf_id, _method='GET')),
+            ('job_instance', url_for('.get_job_instances', wf_id=job.wf_id, job_id=job.job_id, _method='GET'))
         ])
 
         return links
@@ -516,101 +518,12 @@ class WorkflowHostSerializer(BaseSerializer):
         """
 
         links = OrderedDict([
-            ('workflow', url_for('.get_workflow', wf_id=host.wf_id))
-        ])
-
-        return links
-
-class WorkflowHostSerializer(BaseSerializer):
-    FIELDS = [
-        'host_id',
-        'site',
-        'hostname',
-        'ip',
-        'uname',
-        'total_memory'
-    ]
-
-    def __init__(self, selected_fields=None, pretty_print=False, **kwargs):
-        super(WorkflowHostSerializer, self).__init__(fields=WorkflowHostSerializer.FIELDS, pretty_print=pretty_print)
-        self._selected_fields = selected_fields if selected_fields else self._fields
-
-    def encode_collection(self, hosts, records_total=None, records_filtered=None):
-        """
-        Encodes a collection of hosts into it's JSON representation.
-
-        :param hosts: Collection of workflow hosts to be encoded as JSON
-        :param records_total: Number of records before applying the search criteria
-        :param records_filtered: Number of records after applying the search criteria
-
-        :return: JSON representation of hosts collection
-        """
-        if hosts is None:
-            return None
-
-        if not records_total or not records_filtered:
-            pass
-
-        records = [self._encode_record(host) for host in hosts]
-        records_meta = OrderedDict([
-            ('records_total', records_total),
-            ('records_filtered', records_filtered)
-        ])
-
-        json_records = OrderedDict([
-            ('records', records),
-            ('_meta', records_meta)
-        ])
-
-        return json.dumps(json_records, **self._pretty_print_opts)
-
-    def encode_record(self, host):
-        """
-        Encodes a single host into it's JSON representation.
-
-        :param host: Single instance of host resource
-
-        :return: JSON representation of host resource
-        """
-
-        return json.dumps(self._encode_record(host), **self._pretty_print_opts)
-
-    def _encode_record(self, host):
-        """
-        Encodes a single host into it's JSON representation.
-
-        :param host: Single instance of host resource
-
-        :return: JSON representation of host resource
-        """
-
-        if host is None:
-            return None
-
-        json_record = OrderedDict()
-
-        for field in self._selected_fields:
-            json_record[field] = self._get_field_value(host, field)
-
-        json_record['_links'] = self._links(host)
-
-        return json_record
-
-    @staticmethod
-    def _links(host):
-        """
-        Generates JSON representation of the HATEOAS links to be attached to the host resource.
-
-        :param host: host resource for which to generate HATEOAS links
-
-        :return: JSON representation of the HATEOAS links for host resource
-        """
-
-        links = OrderedDict([
+            # TODO: Conditional handling of job_instance
             ('job_instance', url_for('.get_workflow_job_instances', wf_id=host.wf_id, job_id=host.host_id))
         ])
 
         return links
+
 
 class WorkflowJobInstanceSerializer(BaseSerializer):
     FIELDS = [
@@ -709,13 +622,14 @@ class WorkflowJobInstanceSerializer(BaseSerializer):
         """
 
         links = OrderedDict([
-            #('state', url_for('.get_job_instance_states', wf_id=job_instance.wf_id, job_id=job_instance.job_id, job_instance_id= job_instance.job_instance_id)),
-            #('host', url_for('.get_job_instance_host', wf_id=job_instance.wf_id, job_id=job_instance.job_id, job_instance_id=job_instance.job_instance_id)),
-            #('invocation', url_for('.get_job_instance_invocations', wf_id=job_instance.wf_id, job_id=job_instance.job_id, job_instance_id=job_instance.job_instance_id)),
-            #('job', url_for('.get_workflow_job', wf_id=job_instance.wf_id, job_id=job_instance.job_id))
+            ('job', url_for('.get_job', job_id=job_instance.job_id)),
+            ('state', url_for('.get_job_instance_states', job_id=job_instance.job_id, job_instance_id= job_instance.job_instance_id, _method='GET')),
+            ('host', url_for('.get_host', host_id=job_instance.host_id)),
+            ('invocation', url_for('.get_job_instance_invocations', job_id=job_instance.job_id, job_instance_id=job_instance.job_instance_id, _method='GET'))
         ])
 
         return links
+
 
 class JobInstanceStateSerializer(BaseSerializer):
     FIELDS = [
@@ -801,18 +715,19 @@ class JobInstanceStateSerializer(BaseSerializer):
         """
 
         links = OrderedDict([
-            #('job_instance', url_for('.get_job_instance', wf_id=job_instance.wf_id, job_id=job_instance.job_id, job_instance_id=job_instance.job_instance_id)),
+            ('job_instance', url_for('.get_job_instance', job_instance_id=state.job_instance_id))
         ])
 
         return links
 
+
 class WorkflowTaskSerializer(BaseSerializer):
     FIELDS = [
-        "task_id",
-        "abs_task_id",
-        "type_desc",
-        "transformation",
-        "argv"
+        'task_id',
+        'abs_task_id',
+        'type_desc',
+        'transformation',
+        'argv'
     ]
 
     def __init__(self, selected_fields=None, pretty_print=False, **kwargs):
@@ -891,12 +806,12 @@ class WorkflowTaskSerializer(BaseSerializer):
         """
 
         links = OrderedDict([
-            ('workflow', url_for('.get_workflow', wf_id=task.wf_id))
-
+            ('workflow', url_for('.get_workflow', wf_id=task.wf_id)),
+            ('job', url_for('.get_workflow_job', wf_id=task.wf_id, job_id=task.job_id))
         ])
-        if task.job_id:
-            links.update({'job': url_for('.get_workflow_job', wf_id=task.wf_id, job_id=task.job_id)})
+
         return links
+
 
 class InvocationSerializer(BaseSerializer):
     FIELDS = [
@@ -989,9 +904,8 @@ class InvocationSerializer(BaseSerializer):
         """
 
         links = OrderedDict([
-            ('workflow', url_for('.get_workflow', wf_id=invocation.wf_id))
-
+            ('workflow', url_for('.get_workflow', wf_id=invocation.wf_id)),
+            ('job_instance', url_for('.get_job_instance', job_instance_id=invocation.job_instance_id))
         ])
-        #if invocation.job_id and invocation.job_instance_id:
-        #    links.update({'job': url_for('.get_workflow_job_instance', wf_id=invocation.wf_id, job_id=invocation.job_id, job_instance_id=invocation.job_instance_id)})
+
         return links
