@@ -47,16 +47,15 @@ endif
 
 all: $(addprefix $(LIBDIR)/,$(PACKAGES))
 
-$(LIBDIR)/%: 
+$(LIBDIR)/%:
+	$(eval TARNAME := $(subst .tar.gz,,$<))
 	@echo Building $< ;\
 	mkdir -p $(LIBDIR) ;\
-	TARFILE=$< ;\
-	TARNAME=$${TARFILE/.tar.gz//} ;\
-	tar xzf $${TARFILE} ;\
-	pushd $${TARNAME} > /dev/null ;\
+	tar xzf $< ;\
+	pushd $(TARNAME) > /dev/null ;\
 	python setup.py install_lib -d $(LIBDIR) > /dev/null ;\
 	popd > /dev/null ;\
-	rm -rf $${TARNAME} ;\
+	rm -rf $(TARNAME) ;\
 	touch $@
 
 ifneq ($(shell python -V 2>&1 | grep -E 'ython 2\.[3-4]'),)
