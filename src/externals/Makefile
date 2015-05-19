@@ -1,3 +1,4 @@
+SHELL := /bin/bash
 
 ifndef $(prefix)
     prefix=$(shell cd $(CURDIR)/../.. && pwd)
