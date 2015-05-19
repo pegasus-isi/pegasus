@@ -441,8 +441,8 @@ def get_workflow_jobs(username, m_wf_id, wf_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/job/<int:job_id>')
-def get_job(username, m_wf_id, job_id):
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>')
+def get_job(username, m_wf_id, wf_id, job_id):
     """
     Returns job identified by m_wf_id, wf_id, job_id.
 
@@ -521,8 +521,8 @@ def get_workflow_hosts(username, m_wf_id, wf_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/host/<int:host_id>')
-def get_host(username, m_wf_id, host_id):
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/host/<int:host_id>')
+def get_host(username, m_wf_id, wf_id, host_id):
     """
     Returns host identified by m_wf_id, wf_id, host_id.
 
@@ -684,8 +684,8 @@ def get_job_tasks(username, m_wf_id, wf_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/task/<int:task_id>')
-def get_task(username, m_wf_id, task_id):
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/task/<int:task_id>')
+def get_task(username, m_wf_id, wf_id, task_id):
     """
     Returns task identified by m_wf_id, wf_id, task_id.
 
@@ -776,8 +776,8 @@ def get_job_instances(username, m_wf_id, wf_id, job_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/job-instance/<int:job_instance_id>')
-def get_job_instance(username, m_wf_id, job_instance_id):
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/job-instance/<int:job_instance_id>')
+def get_job_instance(username, m_wf_id, wf_id, job_instance_id):
     """
     Returns job instance identified by m_wf_id, wf_id, job_id, job_instance_id.
 
@@ -876,8 +876,8 @@ def get_job_instance_invocations(username, m_wf_id, wf_id, job_id, job_instance_
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/invocation/<int:invocation_id>')
-def get_invocation(username, m_wf_id, invocation_id):
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/invocation/<int:invocation_id>')
+def get_invocation(username, m_wf_id, wf_id, invocation_id):
     """
     Returns invocation identified by m_wf_id, wf_id, invocation_id.
 
