@@ -30,47 +30,50 @@ class TestConnection(unittest.TestCase):
 
     def test_jdbc_sqlite(self):
         filename = str(uuid.uuid4())
-        self._silentremove(filename)
+        _silentremove(filename)
         dburi = "jdbc:sqlite:%s" % filename
         db = connection.connect(dburi, create=True)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         db.close()
-        self.remove(".", filename)
+        _remove(filename)
         
         filename = "/tmp/" + str(uuid.uuid4())
-        self._silentremove(filename)
+        _silentremove(filename)
         dburi = "jdbc:sqlite:%s" % filename
         db = connection.connect(dburi, create=True)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         db.close()
-        self.remove("/tmp", filename)
+        _remove(filename)
         
-        self._silentremove(filename)
+        _silentremove(filename)
         dburi = "jdbc:sqlite:/%s" % filename
         db = connection.connect(dburi, create=True)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         db.close()
-        self.remove("/tmp", filename)
+        _remove(filename)
     
     def test_connection_by_uri(self):
         filename = str(uuid.uuid4())
-        self._silentremove(filename)
+        _silentremove(filename)
         dburi = "sqlite:///%s" % filename
         db = connection.connect(dburi, echo=False, schema_check=True, create=True)
         db.close()
-        self.remove(".", filename)
-    
-    def _silentremove(self, filename):
-        try:
-            os.remove(filename)
-        except OSError, e:
-            if e.errno != errno.ENOENT: # errno.ENOENT = no such file or directory
-                raise # re-raise exception if a different error occured
-            
-    def remove(self, dir, filename):
-        for f in os.listdir(dir):
-            if re.search(filename + ".*", f):
-                os.remove(os.path.join(dir, f))
-    
+        _remove(filename)
+
+
+def _silentremove(filename):
+    try:
+        os.remove(filename)
+    except OSError, e:
+        if e.errno != errno.ENOENT: # errno.ENOENT = no such file or directory
+            raise # re-raise exception if a different error occured
+
+
+def _remove(filename):
+    for f in os.listdir("."):
+        if re.search(filename + ".*", f):
+            os.remove(f)
+
+
 if __name__ == '__main__':
     unittest.main()
