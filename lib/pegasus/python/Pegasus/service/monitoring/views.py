@@ -35,6 +35,15 @@ log = logging.getLogger(__name__)
 JSON_HEADER = {'Content-Type': 'application/json'}
 
 
+@monitoring_routes.url_value_preprocessor
+def pull_m_wf_id(endpoint, values):
+    """
+    If the requested endpoint contains a value for m_wf_id variable then extract it and set it in g.m_wf_id.
+    """
+    if values and 'm_wf_id' in values:
+        g.m_wf_id = values['m_wf_id']
+
+
 @monitoring_routes.url_defaults
 def add_m_wf_id(endpoint, values):
     """
@@ -46,12 +55,32 @@ def add_m_wf_id(endpoint, values):
 
 
 @monitoring_routes.url_value_preprocessor
-def pull_m_wf_id(endpoint, values):
+def pull_url_context(endpoint, values):
     """
-    If the requested endpoint contains a value for m_wf_id variable then extract it and set it in g.m_wf_id.
+    Create a context which can be used when generating url in link section of the responses.
     """
-    if values and 'm_wf_id' in values:
-        g.m_wf_id = values['m_wf_id']
+    url_context = {}
+    keys = ['wf_id', 'job_id', 'task_id', 'job_instance_id', 'host_id', 'instance_id']
+
+    if values:
+        for key in keys:
+            if key in values:
+                url_context[key] = values[key]
+
+        else:
+            if url_context:
+                g.url_context = url_context
+
+
+@monitoring_routes.url_defaults
+def add_url_context(endpoint, values):
+    """
+    If there is a URL context, gene
+    """
+    if values and 'url_context' in g:
+        for key, value in g.url_context.iteritems():
+            if current_app.url_map.is_endpoint_expecting(endpoint, key):
+                values.setdefault(key, value)
 
 
 @monitoring_routes.before_request
