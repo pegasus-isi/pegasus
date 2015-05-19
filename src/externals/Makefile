@@ -11,11 +11,11 @@ BUILDPKG=$(CURDIR)/buildpackage.sh
 # We always use SQLAlchemy
 PACKAGES=sqlalchemy
 
-ifneq ($(shell python -V 2>&1 | grep -qE 'ython 2\.[3-6]'),)
+ifneq ($(shell python -V 2>&1 | grep -E 'ython 2\.[3-6]'),)
     PACKAGES+=ordereddict.py
 endif
 
-ifneq ($(shell python -V 2>&1 | grep -qE 'ython 2\.[3-4]'),)
+ifneq ($(shell python -V 2>&1 | grep -E 'ython 2\.[3-4]'),)
     # Install alternative dependencies for python 2.4
     PACKAGES+=pysqlite2
 else
@@ -77,12 +77,12 @@ $(LIBDIR)/itsdangerous.py: itsdangerous-0.21.tar.gz
 $(LIBDIR)/boto: boto-2.5.2.tar.gz
 	$(BUILDPKG) $^ $(LIBDIR) boto
 
-ifeq ($(shell python -V 2>&1 | grep -qE 'ython 2\.[3-4]'),)
-$(LIBDIR)/sqlalchemy: SQLAlchemy-0.8.0.tar.gz
-	$(BUILDPKG) $^ $(LIBDIR) sqlalchemy
-else
+ifneq ($(shell python -V 2>&1 | grep -E 'ython 2\.[3-4]'),)
 # We use an old version of sqlalchemy for python 2.3 and 2.4
 $(LIBDIR)/sqlalchemy: SQLAlchemy-0.7.6.tar.gz
+	$(BUILDPKG) $^ $(LIBDIR) sqlalchemy
+else
+$(LIBDIR)/sqlalchemy: SQLAlchemy-0.8.0.tar.gz
 	$(BUILDPKG) $^ $(LIBDIR) sqlalchemy
 endif
 
