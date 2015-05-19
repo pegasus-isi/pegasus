@@ -99,6 +99,9 @@ class WorkflowQueries(SQLAlchemyInit):
 
     @staticmethod
     def _evaluate_query(q, query, resource):
+        if not query:
+            return q
+
         comparator = {
             '=': '__eq__',
             '!=': '__ne__',
@@ -432,10 +435,14 @@ class StampedeWorkflowQueries(WorkflowQueries):
         if total_records == 0:
             return [], 0, 0
 
+        if recent:
+            q = self._get_max_workflow_state()
+            q = q.filter(Workflowstate.wf_id == wf_id)
+
         #
         # Construct SQLAlchemy Query `q` to get filtered count.
         #
-        if query:
+        if query or recent:
             q = self._evaluate_query(q, query, WorkflowstateResource())
             total_filtered = self._get_count(q, use_cache)
 
@@ -458,11 +465,28 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         return records, total_records, total_filtered
 
+    def _get_max_workflow_state(self, ws=Workflowstate):
+        qmax = self._get_recent_workflow_state()
+        qmax = qmax.subquery('max_timestamp')
+
+        q = self.session.query(ws)
+        q = q.join(qmax, and_(ws.wf_id == qmax.c.wf_id, ws.timestamp == qmax.c.max_time))
+
+        return q
+
+    def _get_recent_workflow_state(self, ws=Workflowstate):
+        q = self.session.query(ws.wf_id)
+        q = q.add_column(func.max(ws.timestamp).label('max_time'))
+        q = q.group_by(ws.wf_id)
+
+        return q
+
     # Job
 
     def get_workflow_jobs(self, wf_id, start_index=None, max_results=None, query=None, order=None, use_cache=True,
                           **kwargs):
         """
+        Returns a collection of the Job objects.
 
         :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
         :param max_results: Return a maximum of `max_results` records
