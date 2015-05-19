@@ -85,9 +85,14 @@ class FlaskTestCase(unittest.TestCase, JSONResponseMixin):
         """
         with app.test_request_context(uri, method=method, data=data):
             try:
+                # Set Master DB URL
+                if pre_callable is not None:
+                    pre_callable()
+
                 # Pre process Request
                 rv = app.preprocess_request()
 
+                # Set STAMPEDE DB URL, which was overwritten by pre processing methods.
                 if pre_callable is not None:
                     pre_callable()
 
