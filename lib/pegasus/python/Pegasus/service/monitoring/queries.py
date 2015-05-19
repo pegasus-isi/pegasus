@@ -709,7 +709,6 @@ class StampedeWorkflowQueries(WorkflowQueries):
                       **kwargs):
         """
 
-        :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
         :param job_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
         :param max_results: Return a maximum of `max_results` records
         :param query: Filtering criteria
@@ -718,10 +717,8 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         :return: Collection of Task objects
         """
-        wf_id = self.wf_uuid_to_wf_id(wf_id)
-
         q = self.session.query(Task)
-        q = q.filter(Task.wf_id == wf_id)
+        q = q.filter(Task.job_id == job_id)
 
         total_records = total_filtered = self._get_count(q, use_cache)
 
