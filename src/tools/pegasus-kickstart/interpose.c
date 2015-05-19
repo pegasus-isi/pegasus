@@ -256,15 +256,15 @@ static void* timer_thread_func(void* mpi_rank_void) {
         MemUtilInfo mem_info = read_mem_status();
         IoUtilInfo io_info = read_io_status();
 
-        printerr("libinterpose: ts=%d event=workflow_trace level=INFO status=0 "
-                    "job_id=%s kickstart_pid=%s executable=%s hostname=%s mpi_rank=%d utime=%.3f stime=%.3f "
-                    "iowait=%.3f vmSize=%llu vmRSS=%llu threads=%lu read_bytes=%llu write_bytes=%llu "
-                    "syscr=%lu syscw=%lu\n",
-
-                    (int)timestamp, job_id, kickstart_pid, exec_name, hostname, mpi_rank,
-                    cpu_info.real_utime, cpu_info.real_stime, cpu_info.real_iowait,
-                    mem_info.vmSize, mem_info.vmRSS, mem_info.threads,
-                    io_info.rchar, io_info.wchar, io_info.syscr, io_info.syscw);
+//        printerr("libinterpose: ts=%d event=workflow_trace level=INFO status=0 "
+//                    "job_id=%s kickstart_pid=%s executable=%s hostname=%s mpi_rank=%d utime=%.3f stime=%.3f "
+//                    "iowait=%.3f vmSize=%llu vmRSS=%llu threads=%lu read_bytes=%llu write_bytes=%llu "
+//                    "syscr=%lu syscw=%lu\n",
+//
+//                    (int)timestamp, job_id, kickstart_pid, exec_name, hostname, mpi_rank,
+//                    cpu_info.real_utime, cpu_info.real_stime, cpu_info.real_iowait,
+//                    mem_info.vmSize, mem_info.vmRSS, mem_info.threads,
+//                    io_info.rchar, io_info.wchar, io_info.syscr, io_info.syscw);
 
 
         fprintf_untraced(kickstart_status, "ts=%d event=workflow_trace level=INFO status=0 "
@@ -703,7 +703,7 @@ static IoUtilInfo read_io_status() {
     }
 
     char line[BUFSIZ];
-    printerr("Reading io status...\n");
+//    printerr("Reading io status...\n");
     while (fgets_untraced(line, BUFSIZ, f) != NULL) {
 //        printerr("Our line: '%s'\n", line);
         if (startswith(line, "rchar")) {
