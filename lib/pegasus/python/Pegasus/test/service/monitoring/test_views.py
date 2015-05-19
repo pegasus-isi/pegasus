@@ -261,3 +261,58 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
         rv = self.get_context('/api/v1/user/%s/root/1000000000' % self.user, pre_callable=self.pre_callable)
 
         self.assertEqual(rv.status_code, 404)
+
+
+class TestStampedeWorkflowQueries(NoAuthFlaskTestCase):
+    def setUp(self):
+        NoAuthFlaskTestCase.setUp(self)
+        self.user = os.getenv('USER')
+
+    @staticmethod
+    def pre_callable():
+        directory = os.path.dirname(__file__)
+        db = os.path.join(directory, 'monitoring-rest-api-master.db')
+        g.master_db_url = 'sqlite:///%s' % db
+        g.stampede_db_url = 'sqlite:///%s' % db
+
+    def test_get_workflows(self):
+        rv = self.get_context('/api/v1/user/%s/root/1/workflow' % self.user, pre_callable=self.pre_callable)
+
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.content_type.lower(), 'application/json')
+
+        workflows = self.read_json_response(rv)
+
+        self.assertEqual(len(workflows['records']), 1)
+        self.assertEqual(len(workflows['records']), workflows['_meta']['records_total'])
+        self.assertEqual(workflows['_meta']['records_total'], workflows['_meta']['records_filtered'])
+
+    def test_get_workflow_uuid(self):
+        rv = self.get_context('/api/v1/user/%s/root/1/workflow/7193de8c-a28d-4eca-b576-1b1c3c4f668b' % self.user,
+                              pre_callable=self.pre_callable)
+
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.content_type.lower(), 'application/json')
+
+        workflow = self.read_json_response(rv)
+
+        self.assertTrue(workflow['_links'])
+        self.assertTrue(workflow['wf_uuid'], '7193de8c-a28d-4eca-b576-1b1c3c4f668b')
+
+    def test_get_workflow_uuids(self):
+        uuid = '7193de8c-a28d-4eca-b576-1b1c3c4f668b'
+        rv = self.get_context('/api/v1/user/%s/root/%s/workflow/%s' % (self.user, uuid, uuid),
+                              pre_callable=self.pre_callable)
+
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.content_type.lower(), 'application/json')
+
+        workflow = self.read_json_response(rv)
+
+        self.assertTrue(workflow['_links'])
+        self.assertTrue(workflow['wf_uuid'], '7193de8c-a28d-4eca-b576-1b1c3c4f668b')
+
+    def test_get_missing_workflow(self):
+        rv = self.get_context('/api/v1/user/%s/root/1/workflow/1000000000' % self.user, pre_callable=self.pre_callable)
+
+        self.assertEqual(rv.status_code, 404)
