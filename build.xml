@@ -459,8 +459,8 @@
     <exec executable="${make}" dir="src/tools/pegasus-mpi-cluster" failonerror="true">
       <arg line="distclean"/>
     </exec>
-    <exec executable="${bash}" dir="src/externals" failonerror="true">
-      <arg line="setup.sh clean"/>
+    <exec executable="${make}" dir="src/externals" failonerror="true">
+      <arg line="clean"/>
     </exec>
     <exec executable="${make}" dir="doc/manpages" failonerror="true">
       <arg line="clean"/>
