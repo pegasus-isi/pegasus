@@ -967,6 +967,7 @@ def batch(username):
 
     responses = StringIO.StringIO()
     responses.write('[')
+    headers = [('Authorization', request.headers.get('Authorization'))] if request.authorization else []
 
     application = current_app._get_current_object()
     for index, req in enumerate(requests):
@@ -975,8 +976,7 @@ def batch(username):
         body = req.get('body', None)
 
         with application.app_context():
-            application.config['AUTHENTICATION'] = 'NoAuthentication'
-            with application.test_request_context(path, method=method, data=body):
+            with application.test_request_context(path, method=method, data=body, headers=headers):
                 try:
                     # Pre process Request
                     rv = application.preprocess_request()
@@ -993,7 +993,7 @@ def batch(username):
                 # Post process Request
                 response = application.process_response(response)
 
-        responses.write('{"status": %s,"response": %s}' % (response.status_code, _read_response(response)))
+        responses.write('{"status": "%s","response": "%s"}' % (response.status_code, _read_response(response)))
 
         if index + 1 < len(requests):
             responses.write(',')
