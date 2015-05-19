@@ -38,7 +38,7 @@ log = logging.getLogger(__name__)
 
 
 class WorkflowQueries(SQLAlchemyInit):
-    def __init__(self, connection_string):
+    def __init__(self, connection_string, use_cache=True):
         if connection_string is None:
             raise ValueError('Connection string is required')
 
@@ -49,6 +49,20 @@ class WorkflowQueries(SQLAlchemyInit):
         except (connection.ConnectionError, DBAdminError) as e:
             log.exception(e)
             raise StampedeDBNotFoundError
+
+        self._use_cache = True
+        self.use_cache = use_cache
+
+    @property
+    def use_cache(self):
+        return self._use_cache
+
+    @use_cache.setter
+    def use_cache(self, use_cache):
+        if isinstance(use_cache, bool):
+            self._use_cache = use_cache
+        else:
+            raise TypeError('Expecting boolean, found %s' % type(use_cache))
 
     def _cache_key_from_query(self, q):
         statement = q.with_labels().statement
@@ -420,6 +434,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         Returns a collection of the Workflowstate objects.
 
         :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
+        :param start_index: Return results starting from record `start_index`
         :param max_results: Return a maximum of `max_results` records
         :param query: Filtering criteria
         :param order: Sorting criteria
@@ -495,6 +510,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         Returns a collection of the Job objects.
 
         :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
+        :param start_index: Return results starting from record `start_index`
         :param max_results: Return a maximum of `max_results` records
         :param query: Filtering criteria
         :param order: Sorting criteria
@@ -554,7 +570,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         q = q.filter(Job.job_id == job_id)
 
         try:
-            return self._get_one(q, use_cache)
+            return self._get_one(q, use_cache, timeout=600)
         except NoResultFound, e:
             raise e
 
@@ -563,8 +579,10 @@ class StampedeWorkflowQueries(WorkflowQueries):
     def get_workflow_hosts(self, wf_id, start_index=None, max_results=None, query=None, order=None, use_cache=True,
                            **kwargs):
         """
+        Returns a collection of the Host objects.
 
         :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
+        :param start_index: Return results starting from record `start_index`
         :param max_results: Return a maximum of `max_results` records
         :param query: Filtering criteria
         :param order: Sorting criteria
@@ -636,6 +654,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
         :param job_id: job_id associated with the job instance states
         :param job_instance_id: job_instance_id associated with the job instance states
+        :param start_index: Return results starting from record `start_index`
         :param max_results: Return a maximum of `max_results` records
         :param query: Filtering criteria
         :param order: Sorting criteria
@@ -693,6 +712,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         """
 
         :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
+        :param start_index: Return results starting from record `start_index`
         :param max_results: Return a maximum of `max_results` records
         :param query: Filtering criteria
         :param order: Sorting criteria
@@ -741,6 +761,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         """
 
         :param job_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
+        :param start_index: Return results starting from record `start_index`
         :param max_results: Return a maximum of `max_results` records
         :param query: Filtering criteria
         :param order: Sorting criteria
@@ -810,6 +831,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
         :param job_id: job_id associated with the job instances
+        :param start_index: Return results starting from record `start_index`
         :param max_results: Return a maximum of `max_results` records
         :param query: Filtering criteria
         :param order: Sorting criteria
@@ -880,6 +902,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         """
 
         :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
+        :param start_index: Return results starting from record `start_index`
         :param max_results: Return a maximum of `max_results` records
         :param query: Filtering criteria
         :param order: Sorting criteria
@@ -931,6 +954,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
         :param job_id: Id of the job associated with the invocation
         :param job_instance_id: Id of the job instance associated with the invocation
+        :param start_index: Return results starting from record `start_index`
         :param max_results: Return a maximum of `max_results` records
         :param query: Filtering criteria
         :param order: Sorting criteria
