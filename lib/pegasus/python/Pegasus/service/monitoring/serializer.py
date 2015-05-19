@@ -424,7 +424,7 @@ class WorkflowJobSerializer(BaseSerializer):
         links = OrderedDict([
             ('workflow', url_for('.get_workflow', wf_id=job.wf_id)),
             ('task', url_for('.get_workflow_tasks', wf_id=job.wf_id)),
-            ('job_instance', url_for('.get_workflow_job_instances', wf_id=job.wf_id, job_id=job.job_id))
+            ('job_instance', url_for('.get_job_instances', wf_id=job.wf_id, job_id=job.job_id))
         ])
 
         return links
