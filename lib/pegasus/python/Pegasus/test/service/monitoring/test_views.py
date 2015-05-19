@@ -321,3 +321,72 @@ class TestStampedeWorkflowQueries(NoAuthFlaskTestCase):
         rv = self.get_context('/api/v1/user/%s/root/1/workflow/1000000000' % self.user, pre_callable=self.pre_callable)
 
         self.assertEqual(rv.status_code, 404)
+
+
+class TestStampedeWorkflowStateQueries(NoAuthFlaskTestCase):
+    def setUp(self):
+        NoAuthFlaskTestCase.setUp(self)
+        self.user = os.getenv('USER')
+
+    @staticmethod
+    def pre_callable():
+        directory = os.path.dirname(__file__)
+        db = os.path.join(directory, 'monitoring-rest-api-master.db')
+        g.master_db_url = 'sqlite:///%s' % db
+        g.stampede_db_url = 'sqlite:///%s' % db
+
+    def test_get_workflowstates(self):
+        rv = self.get_context('/api/v1/user/%s/root/1/workflow/1/state' % self.user, pre_callable=self.pre_callable)
+
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.content_type.lower(), 'application/json')
+
+        workflow_states = self.read_json_response(rv)
+
+        self.assertEqual(len(workflow_states['records']), 8)
+        self.assertEqual(len(workflow_states['records']), workflow_states['_meta']['records_total'])
+        self.assertEqual(workflow_states['_meta']['records_total'], workflow_states['_meta']['records_filtered'])
+
+    def test_get_recent_workflow_state(self):
+        rv = self.get_context('/api/v1/user/%s/root/1/workflow/1/state?recent=true' % self.user,
+                              pre_callable=self.pre_callable)
+
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.content_type.lower(), 'application/json')
+
+        workflow_states = self.read_json_response(rv)
+
+        self.assertEqual(len(workflow_states['records']), 1)
+        self.assertEqual(workflow_states['_meta']['records_total'], 8)
+        self.assertEqual(workflow_states['_meta']['records_filtered'], 1)
+
+
+class TestStampedeJobQueries(NoAuthFlaskTestCase):
+    def setUp(self):
+        NoAuthFlaskTestCase.setUp(self)
+        self.user = os.getenv('USER')
+
+    @staticmethod
+    def pre_callable():
+        directory = os.path.dirname(__file__)
+        db = os.path.join(directory, 'monitoring-rest-api-master.db')
+        g.master_db_url = 'sqlite:///%s' % db
+        g.stampede_db_url = 'sqlite:///%s' % db
+
+    def test_get_workflow_jobs(self):
+        rv = self.get_context('/api/v1/user/%s/root/1/workflow/1/job' % self.user, pre_callable=self.pre_callable)
+
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.content_type.lower(), 'application/json')
+
+        jobs = self.read_json_response(rv)
+
+        self.assertEqual(len(jobs['records']), 14)
+        self.assertEqual(len(jobs['records']), jobs['_meta']['records_total'])
+        self.assertEqual(jobs['_meta']['records_total'], jobs['_meta']['records_filtered'])
+
+    def test_get_missing_job(self):
+        rv = self.get_context('/api/v1/user/%s/root/1/workflow/1/job/0' % self.user,
+                              pre_callable=self.pre_callable)
+
+        self.assertEqual(rv.status_code, 404)
