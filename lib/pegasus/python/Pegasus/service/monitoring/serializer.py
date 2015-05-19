@@ -503,8 +503,6 @@ class WorkflowHostSerializer(BaseSerializer):
         for field in self._selected_fields:
             json_record[field] = self._get_field_value(host, field)
 
-        json_record['_links'] = self._links(host)
-
         return json_record
 
     @staticmethod
@@ -519,7 +517,7 @@ class WorkflowHostSerializer(BaseSerializer):
 
         links = OrderedDict([
             # TODO: Conditional handling of job_instance
-            ('job_instance', url_for('.get_workflow_job_instances', wf_id=host.wf_id, job_id=host.host_id))
+            ('job_instance', url_for('.get_job_instance', wf_id=host.wf_id, job_id=host.host_id))
         ])
 
         return links
