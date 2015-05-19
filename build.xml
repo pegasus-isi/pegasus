@@ -294,10 +294,7 @@
   </target>
 
   <target name="compile-externals" depends="setup" description="Compile external dependencies">
-    <mkdir dir="${dist.lib}/pegasus/externals/python"/>
-    <exec executable="${bash}" dir="src/externals" failonerror="true">
-      <env key="libdir" value="${dist.lib}/pegasus/externals/python"/>
-      <arg line="${basedir}/src/externals/setup.sh"/>
+    <exec executable="${make}" dir="src/externals" failonerror="true">
     </exec>
   </target>
 
@@ -376,6 +373,9 @@
     <mkdir dir="${dist.lib}/pegasus/php"/>
     <copy preservelastmodified="true" todir="${dist.lib}/pegasus/php">
       <fileset dir="lib/pegasus/php" includes="**/*.php"/>
+    </copy>
+    <copy preservelastmodified="true" todir="${dist.lib}/pegasus/externals/python">
+      <fileset dir="lib/pegasus/externals/python" includes="**/*"/>
     </copy>
 
     <!-- share -->
@@ -521,7 +521,7 @@
 
   <target name="test-python" depends="compile-externals" description="Execute python unit tests">
     <exec executable="/usr/bin/env" dir="lib/pegasus/python" failonerror="true">
-      <env key="PYTHONPATH" value="${dist.lib}/pegasus/externals/python"/>
+      <env key="PYTHONPATH" value="${basedir}/lib/pegasus/externals/python"/>
       <arg line="python test.py"/>
     </exec>
   </target>
