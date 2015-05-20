@@ -36,6 +36,7 @@ import re
 import signal
 import stat
 import string
+import socket
 import subprocess
 import sys
 import tempfile
@@ -44,7 +45,6 @@ import time
 import traceback
 from subprocess import STDOUT
 
-
 try:
     # Python 3.0 and later
     import urllib.parse as urllib
@@ -52,6 +52,10 @@ except ImportError:
     # Fall back to Python 2's urllib
     import urllib as urllib
 
+# panorama real time monitoring
+if "KICKSTART_MON_ENDPOINT_URL" in os.environ:
+    import urllib2
+    import base64
 
 __author__ = "Mats Rynge <rynge@isi.edu>"
 
@@ -585,10 +589,13 @@ class TransferHandlerBase(object):
         return (item in self._protocol_map)
 
 
-    def _post_transfer_attempt(self, transfer, was_successful, t_start, t_end=time.time()):
+    def _post_transfer_attempt(self, transfer, was_successful, t_start, t_end=None):
         """
         A common callback from do_transfers to collect statistics for transfers
         """
+        
+        if t_end is None:
+            t_end = time.time()
         
         # keep track of transfer attempts
         transfer.attempts += 1
@@ -878,7 +885,6 @@ class GridFtpHandler(TransferHandlerBase):
                             failed_l.append(t)
             else:
                 # mkdir job failed - all subsequent jobs will fail
-                failed_q.put(first)
                 for i, t in enumerate(similar_list):
                     failed_l.append(t)
                     
@@ -1624,7 +1630,7 @@ class GSHandler(TransferHandlerBase):
         for t in removes_l:
             
             # first ensure that the bucket exists
-            cmd = "gsutil rm -f"
+            cmd = "gsutil rm"
             if t.get_recursive():
                 cmd += " -r"  
             cmd += " " + t.get_url()
@@ -1633,9 +1639,11 @@ class GSHandler(TransferHandlerBase):
                 tc = TimedCommand(cmd, env_overrides=env)
                 tc.run()
             except RuntimeError, err:
-                logger.error(err)
-                failed_l.append(t)
-                continue
+                # file not found is success
+                if "No URLs matched" not in tc.get_outerr():
+                    logger.error(err)
+                    failed_l.append(t)
+                    continue
             successful_l.append(t)
 
         self._clean_tmp()            
@@ -2092,6 +2100,7 @@ class Stats:
             local_filename = transfer.get_src_path()
         elif transfer.get_dst_proto() == "file":
             local_filename = transfer.get_dst_path()
+
         if local_filename is None:
             self._detected_3rd_party = True
             return
@@ -2103,7 +2112,14 @@ class Stats:
                 self._site_pair_bytes[key] += bytes
             except Exception, err:
                 pass # ignore
-
+            
+        # call out to panorama if asked to do so, but make sure that failures
+        # do not stop us
+        try: 
+            p = Panorama()
+            p.one_transfer(transfer, was_successful, t_start, t_end, bytes)
+        except Exception, e:
+            logger.warn("Panorama send failure: " + e)
 
 
     def all_transfers_done(self):
@@ -2137,6 +2153,57 @@ class Stats:
                         self._site_pair_count[key],
                         iso_prefix_formatted(self._site_pair_bytes[key]), total_secs, 
                         iso_prefix_formatted(Bps), iso_prefix_formatted(Bps*8)))
+
+
+class Panorama:
+    """ Singleton for sending Panorama live stats
+    """
+    
+    __metaclass__ = Singleton
+
+    def one_transfer(self, transfer, was_successful, t_start, t_end, filesize):
+        
+        if "KICKSTART_MON_ENDPOINT_URL" not in os.environ:
+            return
+        
+        # status follows UNIX exit code convention
+        status = 1
+        if was_successful:
+            status = 0
+        
+        payload = "ts=%.0f" %(time.time())
+        payload += " event=data_transfer"
+        payload += " level=INFO"
+        payload += " status=" + str(status) 
+        payload += " wf_uuid=" + os.environ["PEGASUS_WF_UUID"]
+        payload += " dag_job_id=" + os.environ["PEGASUS_DAG_JOB_ID"]
+        payload += " hostname=" + socket.getfqdn()
+        payload += " condor_job_id=" + os.environ["CONDOR_JOBID"]
+        payload += " src_url=" + transfer.src_url()
+        payload += " src_site_name=" + transfer.get_src_site_label()
+        payload += " dst_url=" + transfer.dst_url()
+        payload += " dst_site_name=" + transfer.get_dst_site_label()
+        payload += " transfer_start_ts=%.0f" %(t_start)
+        payload += " transfer_duration=%.0f" % (t_end - t_start)
+        if filesize is not None and filesize > 0:
+            payload += " bytes_transferred=%.0f" %(filesize)
+        payload += "  "
+        
+        logger.debug(payload)
+        data = "{\"properties\":{},\"routing_key\":\"%s\",\"payload\":\"%s\",\"payload_encoding\":\"base64\"}" \
+               %(os.environ["PEGASUS_WF_UUID"], base64.encodestring(payload))
+        logger.debug(data)
+        req = urllib2.Request(os.environ["KICKSTART_MON_ENDPOINT_URL"], data)
+        base64string = base64.encodestring(os.environ["KICKSTART_MON_ENDPOINT_CREDENTIALS"])[:-1]
+        authheader =  "Basic %s" % base64string
+        req.add_header("Authorization", authheader)
+        try:
+            u = urllib2.urlopen(req)
+        except IOError, e:
+             logger.error("Unable to publish to Panorama: " + str(e))
+             return
+        data = u.read()
+
 
 
 class SimilarWorkSet:
