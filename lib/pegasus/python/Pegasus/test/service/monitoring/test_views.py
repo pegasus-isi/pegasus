@@ -323,6 +323,42 @@ class TestStampedeWorkflowQueries(NoAuthFlaskTestCase):
         self.assertEqual(rv.status_code, 404)
 
 
+class TestBatchQueries(NoAuthFlaskTestCase):
+    def setUp(self):
+        NoAuthFlaskTestCase.setUp(self)
+        self.user = os.getenv('USER')
+
+    @staticmethod
+    def pre_callable():
+        directory = os.path.dirname(__file__)
+        db = os.path.join(directory, 'monitoring-rest-api-master.db')
+        g.master_db_url = 'sqlite:///%s' % db
+        g.stampede_db_url = 'sqlite:///%s' % db
+
+    def test_batch(self):
+        batch_requests = [
+            {
+                'method': 'GET',
+                'path': '/api/v1/user/mayani/root/1?pretty-print=True',
+            },
+            {
+                'method': 'GET',
+                'path': '/api/v1/user/mayani/root/2',
+            }
+        ]
+
+        rv = self.post_context('/api/v1/user/%s/batch' % self.user, data=json.dumps(batch_requests), pre_callable=self.pre_callable)
+
+        self.assertEqual(rv.status_code, 207)
+        self.assertEqual(rv.content_type.lower(), 'application/json')
+
+        batch_responses = self.read_json_response(rv)
+
+        self.assertEqual(len(batch_responses), 2)
+        self.assertEqual(batch_responses[0]['status'], 200)
+        self.assertEqual(batch_responses[1]['status'], 200)
+
+
 class TestStampedeWorkflowStateQueries(NoAuthFlaskTestCase):
     def setUp(self):
         NoAuthFlaskTestCase.setUp(self)
