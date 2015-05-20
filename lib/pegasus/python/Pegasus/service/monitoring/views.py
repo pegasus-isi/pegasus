@@ -993,7 +993,7 @@ def batch(username):
                 # Post process Request
                 response = application.process_response(response)
 
-        responses.write('{"status": %d,"response": "%s"}' % (response.status_code, _read_response(response)))
+        responses.write('{"status": %d,"response": %s}' % (response.status_code, _read_response(response)))
 
         if index + 1 < len(requests):
             responses.write(',')
