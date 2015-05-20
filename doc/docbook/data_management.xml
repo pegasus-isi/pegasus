@@ -1286,8 +1286,9 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
 
         <listitem>
           <para>Associate a Pegasus profile key named <emphasis role="bold">
-          checkpoint.time</emphasis> with the job that specifies the expected
-          runtime for the job in minutes.</para>
+          checkpoint.time</emphasis> is the time in minutes after which a job
+          is sent the TERM signal by pegasus-kickstart, telling it to create
+          the checkpoint file.</para>
         </listitem>
 
         <listitem>
@@ -1303,7 +1304,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
       <para>Pegasus planner uses the above mentioned profile keys to setup
       pegasus-kickstart such that the job is sent a TERM signal when the
       checkpoint time of job is reached. A KILL signal is sent at
-      (expected_walltime + (maxwalltime-checkpoint.time)/2) minutes. This
+      (checkpoint.time + (maxwalltime-checkpoint.time)/2) minutes. This
       ensures that there is enough time for pegasus-lite to transfer the
       checkpoint file before the job is killed by the underlying
       scheduler.</para>
