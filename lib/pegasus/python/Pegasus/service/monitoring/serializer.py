@@ -130,7 +130,7 @@ class PegasusServiceJSONEncoder(JSONEncoder):
             json_record = obj_to_dict(TaskResource())
             json_record['_links'] = OrderedDict([
                 ('workflow', url_for('.get_workflow', wf_id=obj.wf_id)),
-                ('job', url_for('.get_workflow_job', wf_id=obj.wf_id, job_id=obj.job_id))
+                ('job', url_for('.get_job', wf_id=obj.wf_id, job_id=obj.job_id))
             ])
 
             return json_record
