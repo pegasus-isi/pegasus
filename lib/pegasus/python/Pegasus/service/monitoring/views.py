@@ -661,9 +661,9 @@ def get_workflow_tasks(username, m_wf_id, wf_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/job/<int:job_id>/task')
-@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/job/<int:job_id>/task/query', methods=['POST'])
-def get_job_tasks(username, m_wf_id, wf_id):
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/task')
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/task/query', methods=['POST'])
+def get_job_tasks(username, m_wf_id, wf_id, job_id):
     """
     Returns a collection of Tasks.
 
