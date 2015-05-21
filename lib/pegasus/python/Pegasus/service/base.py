@@ -41,6 +41,37 @@ class PagedResponse(object):
         return self._filtered
 
 
+class ErrorResponse(object):
+    def __init__(self, code, message, errors=None):
+        self._code = code
+        self._message = message
+        self._errors = errors
+
+    @property
+    def code(self):
+        return self._code
+
+    @code.setter
+    def code(self, code):
+        self._code = code
+
+    @property
+    def message(self):
+        return self._message
+
+    @message.setter
+    def message(self, message):
+        self._message = message
+
+    @property
+    def errors(self):
+        return self._errors
+
+    @errors.setter
+    def errors(self, errors):
+        self._errors = errors
+
+
 class ServiceError(Exception):
     pass
 

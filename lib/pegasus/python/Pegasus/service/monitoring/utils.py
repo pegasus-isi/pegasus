@@ -1,4 +1,4 @@
-#  Copyright 2007-2012 University Of Southern California
+#  Copyright 2007-2014 University Of Southern California
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -14,12 +14,21 @@
 
 __author__ = 'Rajiv Mayani'
 
-from flask import Blueprint
+import json
 
-monitoring_routes = Blueprint('monitoring_routes', __name__)
+import logging
 
-from Pegasus.service.monitoring import views, errors
+from flask import g
 
-from Pegasus.service import app
+from Pegasus.service.monitoring.serializer import PegasusServiceJSONEncoder
 
-app.register_blueprint(monitoring_routes, url_prefix='/api/v1')
+log = logging.getLogger(__name__)
+
+
+def jsonify(obj, indent=5, separators=(',', ': '), cls=PegasusServiceJSONEncoder, **kwargs):
+    if g.query_args.get('pretty_print', False):
+        response_json = json.dumps(obj, indent=indent, separators=separators, cls=cls, **kwargs)
+    else:
+        response_json = json.dumps(obj, cls=cls, **kwargs)
+
+    return response_json

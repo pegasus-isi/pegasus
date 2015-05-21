@@ -24,13 +24,11 @@ import StringIO
 
 from flask import g, request, make_response, abort, current_app
 
-from sqlalchemy.orm.exc import NoResultFound
-
 from Pegasus.service import cache
-from Pegasus.service.base import InvalidQueryError, InvalidOrderError
 from Pegasus.service.monitoring import monitoring_routes
+from Pegasus.service.monitoring.utils import jsonify
 from Pegasus.service.monitoring.queries import MasterWorkflowQueries, StampedeWorkflowQueries
-from Pegasus.service.monitoring.serializer import PegasusServiceJSONEncoder
+
 
 log = logging.getLogger(__name__)
 
@@ -208,7 +206,7 @@ def get_root_workflows(username):
     #
     # Generate JSON Response
     #
-    response_json = _jsonify(paged_response)
+    response_json = jsonify(paged_response)
 
     return make_response(response_json, 200, JSON_HEADER)
 
@@ -234,7 +232,7 @@ def get_root_workflow(username, m_wf_id):
     #
     # Generate JSON Response
     #
-    response_json = _jsonify(record)
+    response_json = jsonify(record)
 
     return make_response(response_json, 200, JSON_HEADER)
 
@@ -301,7 +299,7 @@ def get_workflows(username, m_wf_id):
     #
     # Generate JSON Response
     #
-    response_json = _jsonify(paged_response)
+    response_json = jsonify(paged_response)
 
     return make_response(response_json, 200, JSON_HEADER)
 
@@ -328,7 +326,7 @@ def get_workflow(username, m_wf_id, wf_id):
     #
     # Generate JSON Response
     #
-    response_json = _jsonify(record)
+    response_json = jsonify(record)
 
     return make_response(response_json, 200, JSON_HEADER)
 
@@ -381,7 +379,7 @@ def get_workflow_state(username, m_wf_id, wf_id):
     #
     # Generate JSON Response
     #
-    response_json = _jsonify(paged_response)
+    response_json = jsonify(paged_response)
 
     return make_response(response_json, 200, JSON_HEADER)
 
@@ -440,7 +438,7 @@ def get_workflow_jobs(username, m_wf_id, wf_id):
     #
     # Generate JSON Response
     #
-    response_json = _jsonify(paged_response)
+    response_json = jsonify(paged_response)
 
     return make_response(response_json, 200, JSON_HEADER)
 
@@ -467,7 +465,7 @@ def get_job(username, m_wf_id, wf_id, job_id):
     #
     # Generate JSON Response
     #
-    response_json = _jsonify(record)
+    response_json = jsonify(record)
 
     return make_response(response_json, 200, JSON_HEADER)
 
@@ -522,7 +520,7 @@ def get_workflow_hosts(username, m_wf_id, wf_id):
     #
     # Generate JSON Response
     #
-    response_json = _jsonify(paged_response)
+    response_json = jsonify(paged_response)
 
     return make_response(response_json, 200, JSON_HEADER)
 
@@ -549,7 +547,7 @@ def get_host(username, m_wf_id, wf_id, host_id):
     #
     # Generate JSON Response
     #
-    response_json = _jsonify(record)
+    response_json = jsonify(record)
 
     return make_response(response_json, 200, JSON_HEADER)
 
@@ -602,7 +600,7 @@ def get_job_instance_states(username, m_wf_id, wf_id, job_id, job_instance_id):
     #
     # Generate JSON Response
     #
-    response_json = _jsonify(paged_response)
+    response_json = jsonify(paged_response)
 
     return make_response(response_json, 200, JSON_HEADER)
 
@@ -656,7 +654,7 @@ def get_workflow_tasks(username, m_wf_id, wf_id):
     #
     # Generate JSON Response
     #
-    response_json = _jsonify(paged_response)
+    response_json = jsonify(paged_response)
 
     return make_response(response_json, 200, JSON_HEADER)
 
@@ -693,7 +691,7 @@ def get_job_tasks(username, m_wf_id, wf_id, job_id):
     #
     # Generate JSON Response
     #
-    response_json = _jsonify(paged_response)
+    response_json = jsonify(paged_response)
 
     return make_response(response_json, 200, JSON_HEADER)
 
@@ -720,7 +718,7 @@ def get_task(username, m_wf_id, wf_id, task_id):
     #
     # Generate JSON Response
     #
-    response_json = _jsonify(record)
+    response_json = jsonify(record)
 
     return make_response(response_json, 200, JSON_HEADER)
 
@@ -788,7 +786,7 @@ def get_job_instances(username, m_wf_id, wf_id, job_id):
     #
     # Generate JSON Response
     #
-    response_json = _jsonify(paged_response)
+    response_json = jsonify(paged_response)
 
     return make_response(response_json, 200, JSON_HEADER)
 
@@ -815,7 +813,7 @@ def get_job_instance(username, m_wf_id, wf_id, job_instance_id):
     #
     # Generate JSON Response
     #
-    response_json = _jsonify(record)
+    response_json = jsonify(record)
 
     return make_response(response_json, 200, JSON_HEADER)
 
@@ -875,7 +873,7 @@ def get_workflow_invocations(username, m_wf_id, wf_id):
     #
     # Generate JSON Response
     #
-    response_json = _jsonify(paged_response)
+    response_json = jsonify(paged_response)
 
     return make_response(response_json, 200, JSON_HEADER)
 
@@ -894,7 +892,7 @@ def get_job_instance_invocations(username, m_wf_id, wf_id, job_id, job_instance_
     #
     # Generate JSON Response
     #
-    response_json = _jsonify(paged_response)
+    response_json = jsonify(paged_response)
 
     return make_response(response_json, 200, JSON_HEADER)
 
@@ -921,7 +919,7 @@ def get_invocation(username, m_wf_id, wf_id, invocation_id):
     #
     # Generate JSON Response
     #
-    response_json = _jsonify(record)
+    response_json = jsonify(record)
 
     return make_response(response_json, 200, JSON_HEADER)
 
@@ -1024,30 +1022,3 @@ def batch(username):
     responses.write(']')
 
     return make_response(responses.getvalue(), 207, JSON_HEADER)
-
-
-def _jsonify(obj, indent=5, separators=(',', ': '), cls=PegasusServiceJSONEncoder, **kwargs):
-    if g.query_args.get('pretty_print', False):
-        response_json = json.dumps(obj, indent=indent, separators=separators, cls=cls, **kwargs)
-    else:
-        response_json = json.dumps(obj, cls=cls, **kwargs)
-
-    return response_json
-
-
-@monitoring_routes.errorhandler(NoResultFound)
-def no_result_found(error):
-    # TODO: Return error resource in JSON format
-    return make_response('Not found', 404)
-
-
-@monitoring_routes.errorhandler(InvalidQueryError)
-def no_result_found(error):
-    # TODO: Return error resource in JSON format
-    return make_response('Bad request', 400)
-
-
-@monitoring_routes.errorhandler(InvalidOrderError)
-def no_result_found(error):
-    # TODO: Return error resource in JSON format
-    return make_response('Bad request', 400)

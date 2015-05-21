@@ -26,7 +26,7 @@ from flask.json import JSONEncoder
 
 from Pegasus.db.schema import *
 
-from Pegasus.service.base import PagedResponse
+from Pegasus.service.base import PagedResponse, ErrorResponse
 from Pegasus.service.monitoring.resources import RootWorkflowResource, RootWorkflowstateResource
 from Pegasus.service.monitoring.resources import JobInstanceResource, JobstateResource, TaskResource, InvocationResource
 from Pegasus.service.monitoring.resources import WorkflowResource, WorkflowstateResource, JobResource, HostResource
@@ -61,6 +61,17 @@ class PegasusServiceJSONEncoder(JSONEncoder):
                     meta['records_filtered'] = obj.total_filtered
 
                 json_record['_meta'] = meta
+
+            return json_record
+
+        elif isinstance(obj, ErrorResponse):
+            json_record = OrderedDict([
+                ('code', obj.code),
+                ('message', obj.message)
+            ])
+
+            if obj.errors:
+                json_record['errors'] = [{'field': f, 'errors': e} for f, e in obj.errors]
 
             return json_record
 
