@@ -14,8 +14,6 @@
 
 __author__ = 'Rajiv Mayani'
 
-import json
-
 try:
     from collections import OrderedDict
 except ImportError:
@@ -38,6 +36,7 @@ class PegasusServiceJSONEncoder(JSONEncoder):
     """
     JSON Encoder for Pegasus Service API Resources
     """
+
     def default(self, obj):
         def obj_to_dict(resource):
             obj_dict = OrderedDict()
@@ -162,4 +161,3 @@ class PegasusServiceJSONEncoder(JSONEncoder):
             return float(obj)
 
         return JSONEncoder.default(self, obj)
-
