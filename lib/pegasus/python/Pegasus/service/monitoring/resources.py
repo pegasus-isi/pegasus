@@ -181,8 +181,8 @@ class WorkflowResource(BaseResource):
 
         self._fields = [
             'wf_id',
-            'root_wf_id'
-            'parent_wf_id'
+            'root_wf_id',
+            'parent_wf_id',
             'wf_uuid',
             'submit_hostname',
             'submit_dir',
@@ -210,14 +210,14 @@ class JobResource(BaseResource):
         self._prefix = 'j'
 
         self._fields = [
-            'job_id'
-            'exec_job_id'
-            'submit_file'
-            'type_desc'
-            'max_retries'
-            'clustered'
-            'task_count'
-            'executable'
+            'job_id',
+            'exec_job_id',
+            'submit_file',
+            'type_desc',
+            'max_retries',
+            'clustered',
+            'task_count',
+            'executable',
             'argv'
         ]
 
@@ -229,11 +229,11 @@ class HostResource(BaseResource):
         self._prefix = 'h'
 
         self._fields = [
-            'host_id'
-            'site_name'
-            'hostname'
-            'ip'
-            'uname'
+            'host_id',
+            'site_name',
+            'hostname',
+            'ip',
+            'uname',
             'total_memory'
         ]
 
@@ -245,9 +245,9 @@ class JobstateResource(BaseResource):
         self._prefix = 'js'
 
         self._fields = [
-            'job_instance_id'
-            'state'
-            'jobstate_submit_seq'
+            'job_instance_id',
+            'state',
+            'jobstate_submit_seq',
             'timestamp'
         ]
 
@@ -259,10 +259,10 @@ class TaskResource(BaseResource):
         self._prefix = 't'
 
         self._fields = [
-            'task_id'
-            'abs_task_id'
-            'type_desc'
-            'transformation'
+            'task_id',
+            'abs_task_id',
+            'type_desc',
+            'transformation',
             'argv'
         ]
 
@@ -274,22 +274,22 @@ class JobInstanceResource(BaseResource):
         self._prefix = 'ji'
 
         self._fields = [
-            'job_instance_id'
-            'host_id'
-            'job_submit_seq'
-            'sched_id'
-            'site_name'
-            'user'
-            'work_dir'
-            'cluster_start'
-            'cluster_duration'
-            'local_duration'
-            'subwf_id'
-            'stdout_text'
-            'stderr_text'
-            'stdin_file'
-            'stdout_file'
-            'stderr_file'
+            'job_instance_id',
+            'host_id',
+            'job_submit_seq',
+            'sched_id',
+            'site_name',
+            'user',
+            'work_dir',
+            'cluster_start',
+            'cluster_duration',
+            'local_duration',
+            'subwf_id',
+            'stdout_text',
+            'stderr_text',
+            'stdin_file',
+            'stdout_file',
+            'stderr_file',
             'multiplier_factor'
         ]
 
@@ -301,15 +301,15 @@ class InvocationResource(BaseResource):
         self._prefix = 'i'
 
         self._fields = [
-            'invocation_id'
-            'job_instance_id'
-            'abs_task_id'
-            'task_submit_seq'
-            'start_time'
-            'remote_duration'
-            'remote_cpu_time'
-            'exitcode'
-            'transformation'
-            'executable'
+            'invocation_id',
+            'job_instance_id',
+            'abs_task_id',
+            'task_submit_seq',
+            'start_time',
+            'remote_duration',
+            'remote_cpu_time',
+            'exitcode',
+            'transformation',
+            'executable',
             'argv'
         ]
