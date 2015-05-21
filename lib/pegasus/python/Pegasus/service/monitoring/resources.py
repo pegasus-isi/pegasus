@@ -278,7 +278,7 @@ class JobInstanceResource(BaseResource):
             'host_id',
             'job_submit_seq',
             'sched_id',
-            'site_name',
+            'site',
             'user',
             'work_dir',
             'cluster_start',
