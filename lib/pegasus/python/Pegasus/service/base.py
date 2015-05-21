@@ -18,50 +18,27 @@ import re
 
 import StringIO
 
-from decimal import Decimal
-
 from plex import Range, Lexicon, Rep, Rep1, Str, Any, IGNORE, Scanner, AnyBut, NoCase, Opt
 from plex.errors import UnrecognizedInput
 
 
-class BaseSerializer(object):
-    """
-    Base Serializer class provides a template used to serialize objects to/from JSON
-    """
+class PagedResponse(object):
+    def __init__(self, records, total, filtered):
+        self._records = records
+        self._total = total
+        self._filtered = filtered
 
-    def __init__(self, fields, pretty_print=False):
-        self._fields = fields
+    @property
+    def records(self):
+        return self._records
 
-        self._pretty_print = pretty_print
+    @property
+    def total_records(self):
+        return self._total
 
-        if self._pretty_print is True:
-            self._pretty_print_opts = {
-                'indent': 4,
-                'separators': (',', ': ')
-            }
-        else:
-            self._pretty_print_opts = {}
-
-    def encode_collection(self, records, records_total, records_filtered):
-        raise NotImplementedError('Method not implemented')
-
-    def encode_record(self, record):
-        raise NotImplementedError('Method not implemented')
-
-    def decode_collection(self, records):
-        raise NotImplementedError('Method not implemented')
-
-    def decode_record(self, record):
-        raise NotImplementedError('Method not implemented')
-
-    @staticmethod
-    def _links(self, record):
-        raise NotImplementedError('Method not implemented')
-
-    @staticmethod
-    def _get_field_value(record, field):
-        value = getattr(record, field)
-        return float(value) if isinstance(value, Decimal) else value
+    @property
+    def total_filtered(self):
+        return self._filtered
 
 
 class ServiceError(Exception):

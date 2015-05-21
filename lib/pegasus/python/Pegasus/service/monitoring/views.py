@@ -14,6 +14,8 @@
 
 __author__ = 'Rajiv Mayani'
 
+import json
+
 import logging
 
 import hashlib
@@ -28,7 +30,7 @@ from Pegasus.service import cache
 from Pegasus.service.base import InvalidQueryError, InvalidOrderError
 from Pegasus.service.monitoring import monitoring_routes
 from Pegasus.service.monitoring.queries import MasterWorkflowQueries, StampedeWorkflowQueries
-from Pegasus.service.monitoring.serializer import *
+from Pegasus.service.monitoring.serializer import PegasusServiceJSONEncoder
 
 log = logging.getLogger(__name__)
 
@@ -108,7 +110,7 @@ def compute_stampede_db_url():
     else:
         log.debug('Cache Miss: compute_stampede_db_url %s' % cache_key)
         queries = MasterWorkflowQueries(g.master_db_url)
-        root_workflow, root_workflow_state = queries.get_root_workflow(m_wf_id)
+        root_workflow = queries.get_root_workflow(m_wf_id)
         queries.close()
 
         cache.set(_get_cache_key(root_workflow.wf_id), root_workflow, timeout=600)
@@ -197,17 +199,16 @@ def get_root_workflows(username):
     :return resource: Root Workflow
     """
     queries = MasterWorkflowQueries(g.master_db_url)
-    records, total_records, total_filtered = queries.get_root_workflows(**g.query_args)
+    paged_response = queries.get_root_workflows(**g.query_args)
 
-    if total_records == 0:
+    if paged_response.total_records == 0:
         log.debug('Total records is 0; returning HTTP 204 No content')
         return make_response('', 204, JSON_HEADER)
 
     #
     # Generate JSON Response
     #
-    serializer = RootWorkflowSerializer(**g.query_args)
-    response_json = serializer.encode_collection(records, total_records, total_filtered)
+    response_json = _jsonify(paged_response)
 
     return make_response(response_json, 200, JSON_HEADER)
 
@@ -233,8 +234,7 @@ def get_root_workflow(username, m_wf_id):
     #
     # Generate JSON Response
     #
-    serializer = RootWorkflowSerializer(**g.query_args)
-    response_json = serializer.encode_record(record)
+    response_json = _jsonify(record)
 
     return make_response(response_json, 200, JSON_HEADER)
 
@@ -292,17 +292,16 @@ def get_workflows(username, m_wf_id):
     """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
-    records, total_records, total_filtered = queries.get_workflows(g.m_wf_id, **g.query_args)
+    paged_response = queries.get_workflows(g.m_wf_id, **g.query_args)
 
-    if total_records == 0:
+    if paged_response.total_records == 0:
         log.debug('Total records is 0; returning HTTP 204 No content')
         return make_response('', 204, JSON_HEADER)
 
     #
     # Generate JSON Response
     #
-    serializer = WorkflowSerializer(**g.query_args)
-    response_json = serializer.encode_collection(records, total_records, total_filtered)
+    response_json = _jsonify(paged_response)
 
     return make_response(response_json, 200, JSON_HEADER)
 
@@ -329,8 +328,7 @@ def get_workflow(username, m_wf_id, wf_id):
     #
     # Generate JSON Response
     #
-    serializer = WorkflowSerializer(**g.query_args)
-    response_json = serializer.encode_record(record)
+    response_json = _jsonify(record)
 
     return make_response(response_json, 200, JSON_HEADER)
 
@@ -374,13 +372,16 @@ def get_workflow_state(username, m_wf_id, wf_id):
     """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
-    states, total_states, filtered_states = queries.get_workflow_state(wf_id, **g.query_args)
+    paged_response = queries.get_workflow_state(wf_id, **g.query_args)
+
+    if paged_response.total_records == 0:
+        log.debug('Total records is 0; returning HTTP 204 No content')
+        return make_response('', 204, JSON_HEADER)
 
     #
     # Generate JSON Response
     #
-    serializer = WorkflowStateSerializer(**g.query_args)
-    response_json = serializer.encode_collection(states, total_states, filtered_states)
+    response_json = _jsonify(paged_response)
 
     return make_response(response_json, 200, JSON_HEADER)
 
@@ -430,13 +431,16 @@ def get_workflow_jobs(username, m_wf_id, wf_id):
     """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
-    jobs, total_jobs, filtered_jobs = queries.get_workflow_jobs(wf_id, **g.query_args)
+    paged_response = queries.get_workflow_jobs(wf_id, **g.query_args)
+
+    if paged_response.total_records == 0:
+        log.debug('Total records is 0; returning HTTP 204 No content')
+        return make_response('', 204, JSON_HEADER)
 
     #
     # Generate JSON Response
     #
-    serializer = WorkflowJobSerializer(**g.query_args)
-    response_json = serializer.encode_collection(jobs, total_jobs, filtered_jobs)
+    response_json = _jsonify(paged_response)
 
     return make_response(response_json, 200, JSON_HEADER)
 
@@ -463,8 +467,7 @@ def get_job(username, m_wf_id, wf_id, job_id):
     #
     # Generate JSON Response
     #
-    serializer = WorkflowJobSerializer(**g.query_args)
-    response_json = serializer.encode_record(record)
+    response_json = _jsonify(record)
 
     return make_response(response_json, 200, JSON_HEADER)
 
@@ -510,13 +513,16 @@ def get_workflow_hosts(username, m_wf_id, wf_id):
     """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
-    hosts, total_hosts, filtered_hosts = queries.get_workflow_hosts(wf_id, **g.query_args)
+    paged_response = queries.get_workflow_hosts(wf_id, **g.query_args)
+
+    if paged_response.total_records == 0:
+        log.debug('Total records is 0; returning HTTP 204 No content')
+        return make_response('', 204, JSON_HEADER)
 
     #
     # Generate JSON Response
     #
-    serializer = WorkflowHostSerializer(**g.query_args)
-    response_json = serializer.encode_collection(hosts, total_hosts, filtered_hosts)
+    response_json = _jsonify(paged_response)
 
     return make_response(response_json, 200, JSON_HEADER)
 
@@ -543,8 +549,7 @@ def get_host(username, m_wf_id, wf_id, host_id):
     #
     # Generate JSON Response
     #
-    serializer = WorkflowHostSerializer(**g.query_args)
-    response_json = serializer.encode_record(record)
+    response_json = _jsonify(record)
 
     return make_response(response_json, 200, JSON_HEADER)
 
@@ -588,13 +593,16 @@ def get_job_instance_states(username, m_wf_id, wf_id, job_id, job_instance_id):
     """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
-    states, total_states, filtered_states = queries.get_job_instance_states(wf_id, job_id, job_instance_id, **g.query_args)
+    paged_response = queries.get_job_instance_states(wf_id, job_id, job_instance_id, **g.query_args)
+
+    if paged_response.total_records == 0:
+        log.debug('Total records is 0; returning HTTP 204 No content')
+        return make_response('', 204, JSON_HEADER)
 
     #
     # Generate JSON Response
     #
-    serializer = JobInstanceStateSerializer(**g.query_args)
-    response_json = serializer.encode_collection(states, total_states, filtered_states)
+    response_json = _jsonify(paged_response)
 
     return make_response(response_json, 200, JSON_HEADER)
 
@@ -639,13 +647,16 @@ def get_workflow_tasks(username, m_wf_id, wf_id):
     """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
-    tasks, total_tasks, filtered_tasks = queries.get_workflow_tasks(wf_id, **g.query_args)
+    paged_response = queries.get_workflow_tasks(wf_id, **g.query_args)
+
+    if paged_response.total_records == 0:
+        log.debug('Total records is 0; returning HTTP 204 No content')
+        return make_response('', 204, JSON_HEADER)
 
     #
     # Generate JSON Response
     #
-    serializer = WorkflowTaskSerializer(**g.query_args)
-    response_json = serializer.encode_collection(tasks, total_tasks, filtered_tasks)
+    response_json = _jsonify(paged_response)
 
     return make_response(response_json, 200, JSON_HEADER)
 
@@ -673,13 +684,16 @@ def get_job_tasks(username, m_wf_id, wf_id):
     """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
-    tasks, total_tasks, filtered_tasks = queries.get_workflow_tasks(wf_id, **g.query_args)
+    paged_response = queries.get_workflow_tasks(wf_id, **g.query_args)
+
+    if paged_response.total_records == 0:
+        log.debug('Total records is 0; returning HTTP 204 No content')
+        return make_response('', 204, JSON_HEADER)
 
     #
     # Generate JSON Response
     #
-    serializer = WorkflowTaskSerializer(**g.query_args)
-    response_json = serializer.encode_collection(tasks, total_tasks, filtered_tasks)
+    response_json = _jsonify(paged_response)
 
     return make_response(response_json, 200, JSON_HEADER)
 
@@ -706,8 +720,7 @@ def get_task(username, m_wf_id, wf_id, task_id):
     #
     # Generate JSON Response
     #
-    serializer = WorkflowTaskSerializer(**g.query_args)
-    response_json = serializer.encode_record(record)
+    response_json = _jsonify(record)
 
     return make_response(response_json, 200, JSON_HEADER)
 
@@ -766,12 +779,16 @@ def get_job_instances(username, m_wf_id, wf_id, job_id):
     """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
-    job_instances, total_instances, filtered_instances = queries.get_job_instances(wf_id, job_id, **g.query_args)
+    paged_response = queries.get_job_instances(wf_id, job_id, **g.query_args)
+
+    if paged_response.total_records == 0:
+        log.debug('Total records is 0; returning HTTP 204 No content')
+        return make_response('', 204, JSON_HEADER)
+
     #
     # Generate JSON Response
     #
-    serializer = WorkflowJobInstanceSerializer(**g.query_args)
-    response_json = serializer.encode_collection(job_instances, total_instances, filtered_instances)
+    response_json = _jsonify(paged_response)
 
     return make_response(response_json, 200, JSON_HEADER)
 
@@ -792,13 +809,13 @@ def get_job_instance(username, m_wf_id, wf_id, job_instance_id):
     :return resource: JobInstance
     """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
+
     record = queries.get_job_instance(job_instance_id)
 
     #
     # Generate JSON Response
     #
-    serializer = WorkflowJobInstanceSerializer(**g.query_args)
-    response_json = serializer.encode_record(record)
+    response_json = _jsonify(record)
 
     return make_response(response_json, 200, JSON_HEADER)
 
@@ -849,13 +866,16 @@ def get_workflow_invocations(username, m_wf_id, wf_id):
     """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
-    invocations, total_invocations, filtered_invocations = queries.get_workflow_invocations(wf_id,**g.query_args)
+    paged_response = queries.get_workflow_invocations(wf_id,**g.query_args)
+
+    if paged_response.total_records == 0:
+        log.debug('Total records is 0; returning HTTP 204 No content')
+        return make_response('', 204, JSON_HEADER)
 
     #
     # Generate JSON Response
     #
-    serializer = InvocationSerializer(**g.query_args)
-    response_json = serializer.encode_collection(invocations, total_invocations, filtered_invocations)
+    response_json = _jsonify(paged_response)
 
     return make_response(response_json, 200, JSON_HEADER)
 
@@ -865,13 +885,16 @@ def get_workflow_invocations(username, m_wf_id, wf_id):
 def get_job_instance_invocations(username, m_wf_id, wf_id, job_id, job_instance_id):
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
-    invocations, total_invocations, filtered_invocations = queries.get_job_instance_invocations(wf_id, job_id, job_instance_id,**g.query_args)
+    paged_response = queries.get_job_instance_invocations(wf_id, job_id, job_instance_id,**g.query_args)
+
+    if paged_response.total_records == 0:
+        log.debug('Total records is 0; returning HTTP 204 No content')
+        return make_response('', 204, JSON_HEADER)
 
     #
     # Generate JSON Response
     #
-    serializer = InvocationSerializer(**g.query_args)
-    response_json = serializer.encode_collection(invocations, total_invocations, filtered_invocations)
+    response_json = _jsonify(paged_response)
 
     return make_response(response_json, 200, JSON_HEADER)
 
@@ -892,13 +915,13 @@ def get_invocation(username, m_wf_id, wf_id, invocation_id):
     :return resource: Invocation
     """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
+
     record = queries.get_workflow_invocation(invocation_id)
 
     #
     # Generate JSON Response
     #
-    serializer = InvocationSerializer(**g.query_args)
-    response_json = serializer.encode_record(record)
+    response_json = _jsonify(record)
 
     return make_response(response_json, 200, JSON_HEADER)
 
@@ -1001,6 +1024,15 @@ def batch(username):
     responses.write(']')
 
     return make_response(responses.getvalue(), 207, JSON_HEADER)
+
+
+def _jsonify(obj, indent=5, separators=(',', ': '), cls=PegasusServiceJSONEncoder, **kwargs):
+    if g.query_args.get('pretty_print', False):
+        response_json = json.dumps(obj, indent=indent, separators=separators, cls=cls, **kwargs)
+    else:
+        response_json = json.dumps(obj, cls=cls, **kwargs)
+
+    return response_json
 
 
 @monitoring_routes.errorhandler(NoResultFound)

@@ -29,7 +29,7 @@ from Pegasus.db.errors import StampedeDBNotFoundError
 from Pegasus.db.admin.admin_loader import DBAdminError
 
 from Pegasus.service import cache
-from Pegasus.service.base import BaseQueryParser, BaseOrderParser, InvalidQueryError, InvalidOrderError
+from Pegasus.service.base import PagedResponse, BaseQueryParser, BaseOrderParser, InvalidQueryError, InvalidOrderError
 from Pegasus.service.monitoring.resources import RootWorkflowResource, RootWorkflowstateResource, CombinationResource
 from Pegasus.service.monitoring.resources import JobInstanceResource, JobstateResource, TaskResource, InvocationResource
 from Pegasus.service.monitoring.resources import WorkflowResource, WorkflowstateResource, JobResource, HostResource
@@ -242,7 +242,7 @@ class MasterWorkflowQueries(WorkflowQueries):
 
         if total_records == 0:
             log.debug('total_records 0')
-            return [], 0, 0
+            return PagedResponse([], 0, 0)
 
         #
         # Finish Construction of Base SQLAlchemy Query `q`
@@ -281,7 +281,12 @@ class MasterWorkflowQueries(WorkflowQueries):
 
         records = self._get_all(q, use_cache)
 
-        return records, total_records, total_filtered
+        for i in range(len(records)):
+            new_record = records[i][0]
+            new_record.workflow_state = records[i][1]
+            records[i] = new_record
+
+        return PagedResponse(records, total_records, total_filtered)
 
     def get_root_workflow(self, m_wf_id, use_cache=True):
         """
@@ -313,7 +318,11 @@ class MasterWorkflowQueries(WorkflowQueries):
         q = q.add_entity(aliased(DashboardWorkflowstate, qws))
 
         try:
-            return self._get_one(q, use_cache)
+            record_tuple = self._get_one(q, use_cache)
+            record = record_tuple[0]
+            record.workflow_state = record_tuple[1]
+            return record
+
         except NoResultFound as e:
             log.exception('Not Found: Root Workflow for given m_wf_id (%s)' % m_wf_id)
             raise e
@@ -380,7 +389,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         total_records = total_filtered = self._get_count(q, use_cache)
 
         if total_records == 0:
-            return [], 0, 0
+            return PagedResponse([], 0, 0)
 
         #
         # Construct SQLAlchemy Query `q` to get filtered count.
@@ -391,7 +400,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):
                 log.debug('total_filtered is 0 or start_index >= total_filtered')
-                return [], total_records, total_filtered
+                return PagedResponse([], total_records, total_filtered)
 
         #
         # Construct SQLAlchemy Query `q` to sort
@@ -406,7 +415,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         records = self._get_all(q, use_cache)
 
-        return records, total_records, total_filtered
+        return PagedResponse(records, total_records, total_filtered)
 
     def get_workflow(self, wf_id, use_cache=True):
         """
@@ -454,7 +463,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         total_records = total_filtered = self._get_count(q, use_cache, timeout=timeout)
 
         if total_records == 0:
-            return [], 0, 0
+            return PagedResponse([], 0, 0)
 
         if recent:
             q = self._get_max_workflow_state()
@@ -469,7 +478,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):
                 log.debug('total_filtered is 0 or start_index >= total_filtered')
-                return [], total_records, total_filtered
+                return PagedResponse([], total_records, total_filtered)
 
         #
         # Construct SQLAlchemy Query `q` to sort
@@ -484,7 +493,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         records = self._get_all(q, use_cache, timeout=timeout)
 
-        return records, total_records, total_filtered
+        return PagedResponse(records, total_records, total_filtered)
 
     def _get_max_workflow_state(self, ws=Workflowstate):
         qmax = self._get_recent_workflow_state()
@@ -526,7 +535,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         total_records = total_filtered = self._get_count(q, use_cache)
 
         if total_records == 0:
-            return [], 0, 0
+            return PagedResponse([], 0, 0)
 
         #
         # Construct SQLAlchemy Query `q` to get filtered count.
@@ -537,7 +546,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):
                 log.debug('total_filtered is 0 or start_index >= total_filtered')
-                return [], total_records, total_filtered
+                return PagedResponse([], total_records, total_filtered)
 
         #
         # Construct SQLAlchemy Query `q` to sort
@@ -552,7 +561,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         records = self._get_all(q, use_cache)
 
-        return records, total_records, total_filtered
+        return PagedResponse(records, total_records, total_filtered)
 
     def get_job(self, job_id, use_cache=True):
         """
@@ -598,7 +607,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         total_records = total_filtered = self._get_count(q, use_cache)
 
         if total_records == 0:
-            return [], 0, 0
+            return PagedResponse([], 0, 0)
 
         #
         # Construct SQLAlchemy Query `q` to get filtered count.
@@ -609,7 +618,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):
                 log.debug('total_filtered is 0 or start_index >= total_filtered')
-                return [], total_records, total_filtered
+                return PagedResponse([], total_records, total_filtered)
 
         #
         # Construct SQLAlchemy Query `q` to sort
@@ -624,7 +633,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         records = self._get_all(q, use_cache)
 
-        return records, total_records, total_filtered
+        return PagedResponse(records, total_records, total_filtered)
 
     def get_host(self, host_id, use_cache=True):
             """
@@ -677,7 +686,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         total_records = total_filtered = self._get_count(q, use_cache)
 
         if total_records == 0:
-            return [], 0, 0
+            return PagedResponse([], 0, 0)
 
         #
         # Construct SQLAlchemy Query `q` to get filtered count.
@@ -688,7 +697,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):
                 log.debug('total_filtered is 0 or start_index >= total_filtered')
-                return [], total_records, total_filtered
+                return PagedResponse([], total_records, total_filtered)
 
         #
         # Construct SQLAlchemy Query `q` to sort
@@ -703,7 +712,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         records = self._get_all(q, use_cache)
 
-        return records, total_records, total_filtered
+        return PagedResponse(records, total_records, total_filtered)
 
     # Task
 
@@ -728,7 +737,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         total_records = total_filtered = self._get_count(q, use_cache)
 
         if total_records == 0:
-            return [], 0, 0
+            return PagedResponse([], 0, 0)
 
         #
         # Construct SQLAlchemy Query `q` to get filtered count.
@@ -739,7 +748,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):
                 log.debug('total_filtered is 0 or start_index >= total_filtered')
-                return [], total_records, total_filtered
+                return PagedResponse([], total_records, total_filtered)
 
         #
         # Construct SQLAlchemy Query `q` to sort
@@ -754,7 +763,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         records = self._get_all(q, use_cache)
 
-        return records, total_records, total_filtered
+        return PagedResponse(records, total_records, total_filtered)
 
     def get_job_tasks(self, job_id, start_index=None, max_results=None, query=None, order=None, use_cache=True,
                       **kwargs):
@@ -775,7 +784,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         total_records = total_filtered = self._get_count(q, use_cache)
 
         if total_records == 0:
-            return [], 0, 0
+            return PagedResponse([], 0, 0)
 
         #
         # Construct SQLAlchemy Query `q` to get filtered count.
@@ -786,7 +795,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):
                 log.debug('total_filtered is 0 or start_index >= total_filtered')
-                return [], total_records, total_filtered
+                return PagedResponse([], total_records, total_filtered)
 
         #
         # Construct SQLAlchemy Query `q` to sort
@@ -801,7 +810,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         records = self._get_all(q, use_cache)
 
-        return records, total_records, total_filtered
+        return PagedResponse(records, total_records, total_filtered)
 
     def get_task(self, task_id, use_cache=True):
         """
@@ -848,7 +857,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         total_records = total_filtered = self._get_count(q, use_cache)
 
         if total_records == 0:
-            return [], 0, 0
+            return PagedResponse([], 0, 0)
 
         #
         # Construct SQLAlchemy Query `q` to get filtered count.
@@ -859,7 +868,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):
                 log.debug('total_filtered is 0 or start_index >= total_filtered')
-                return [], total_records, total_filtered
+                return PagedResponse([], total_records, total_filtered)
 
         #
         # Construct SQLAlchemy Query `q` to sort
@@ -874,7 +883,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         records = self._get_all(q, use_cache)
 
-        return records, total_records, total_filtered
+        return PagedResponse(records, total_records, total_filtered)
 
     def get_job_instance(self, job_instance_id, use_cache=True):
         """
@@ -919,7 +928,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         total_records = total_filtered = self._get_count(q, use_cache)
 
         if total_records == 0:
-            return [], 0, 0
+            return PagedResponse([], 0, 0)
 
         #
         # Construct SQLAlchemy Query `q` to get filtered count.
@@ -930,7 +939,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):
                 log.debug('total_filtered is 0 or start_index >= total_filtered')
-                return [], total_records, total_filtered
+                return PagedResponse([], total_records, total_filtered)
 
         #
         # Construct SQLAlchemy Query `q` to sort
@@ -945,7 +954,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         records = self._get_all(q, use_cache)
 
-        return records, total_records, total_filtered
+        return PagedResponse(records, total_records, total_filtered)
 
     def get_job_instance_invocations(self, wf_id, job_id, job_instance_id, start_index=None, max_results=None,
                                      query=None, order=None, use_cache=True, **kwargs):
@@ -979,7 +988,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         total_records = total_filtered = self._get_count(q, use_cache)
 
         if total_records == 0:
-            return [], 0, 0
+            return PagedResponse([], 0, 0)
 
         #
         # Construct SQLAlchemy Query `q` to get filtered count.
@@ -990,7 +999,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):
                 log.debug('total_filtered is 0 or start_index >= total_filtered')
-                return [], total_records, total_filtered
+                return PagedResponse([], total_records, total_filtered)
 
         #
         # Construct SQLAlchemy Query `q` to sort
@@ -1005,7 +1014,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         records = self._get_all(q, use_cache)
 
-        return records, total_records, total_filtered
+        return PagedResponse(records, total_records, total_filtered)
 
     def get_invocation(self, invocation_id, use_cache=True):
         """
