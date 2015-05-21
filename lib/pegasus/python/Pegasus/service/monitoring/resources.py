@@ -201,7 +201,6 @@ class WorkflowResource(BaseResource):
 class WorkflowstateResource(RootWorkflowstateResource):
     def __init__(self, alias=None):
         super(WorkflowstateResource, self).__init__(alias if alias else Workflowstate)
-        self._resource = Workflowstate
 
 
 class JobResource(BaseResource):
