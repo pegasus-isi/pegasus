@@ -515,6 +515,5 @@ class BooleanConverter(BaseConverter):
         else:
             raise ServiceError('Expecting boolean found %s' % value)
 
-
     def to_url(self, value):
         return 'true' if value else 'false'
