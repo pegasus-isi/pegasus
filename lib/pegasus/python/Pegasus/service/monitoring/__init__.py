@@ -22,4 +22,4 @@ from Pegasus.service.monitoring import views, errors
 
 from Pegasus.service import app
 
-app.register_blueprint(monitoring_routes, url_prefix='/api/v1')
+app.register_blueprint(monitoring_routes, url_prefix='/api/v1/user/<string:username>')
