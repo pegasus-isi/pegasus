@@ -85,8 +85,7 @@ def invalid_json_error(error):
 def catch_all(error):
     app_code, http_code = error.codes if hasattr(error, 'codes') else ('UNKNOWN', 500)
 
-    if http_code == 500:
-        log.exception('Unknown Error')
+    log.exception(app_code)
 
     e = ErrorResponse(app_code, error.message)
     response_json = jsonify(e)
