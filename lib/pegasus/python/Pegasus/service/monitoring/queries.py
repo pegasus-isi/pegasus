@@ -442,18 +442,18 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
     # Workflow State
 
-    def get_workflow_state(self, wf_id, start_index=None, max_results=None, query=None, order=None, recent=False,
+    def get_workflow_state(self, wf_id, recent=False, start_index=None, max_results=None, query=None, order=None,
                            use_cache=True, **kwargs):
         """
         Returns a collection of the Workflowstate objects.
 
         :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
+        :param recent: Get the most recent results
         :param start_index: Return results starting from record `start_index`
         :param max_results: Return a maximum of `max_results` records
         :param query: Filtering criteria
         :param order: Sorting criteria
         :param use_cache: If available, use cached results
-        :param recent: Get the most recent results
 
         :return: Workflow States collection, total records count, total filtered records count
         """
@@ -671,20 +671,20 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
     # Job State
 
-    def get_job_instance_states(self, wf_id, job_id, job_instance_id, start_index=None, max_results=None, query=None,
-                                order=None, recent=False, use_cache=True, **kwargs):
+    def get_job_instance_states(self, wf_id, job_id, job_instance_id, recent=False, start_index=None, max_results=None,
+                                query=None, order=None, use_cache=True, **kwargs):
         """
         Returns a collection of the JobInstanceState objects.
 
         :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
         :param job_id: job_id associated with the job instance states
         :param job_instance_id: job_instance_id associated with the job instance states
+        :param recent: Get the most recent results
         :param start_index: Return results starting from record `start_index`
         :param max_results: Return a maximum of `max_results` records
         :param query: Filtering criteria
         :param order: Sorting criteria
         :param use_cache: If available, use cached results
-        :param recent: Get the most recent results
 
         :return: state record
         """
@@ -854,13 +854,14 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
     # Job Instance
 
-    def get_job_instances(self, wf_id, job_id, start_index=None, max_results=None, query=None, order=None,
+    def get_job_instances(self, wf_id, job_id, recent=False, start_index=None, max_results=None, query=None, order=None,
                           use_cache=True, **kwargs):
         """
         Returns a collection of the JobInstance objects.
 
         :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
         :param job_id: job_id associated with the job instances
+        :param recent: Get the most recent results
         :param start_index: Return results starting from record `start_index`
         :param max_results: Return a maximum of `max_results` records
         :param query: Filtering criteria
@@ -928,7 +929,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
     # Invocation
 
-    def get_workflow_invocations(self, wf_id, start_index=None, max_results=None, query=None, order=None, recent=False,
+    def get_workflow_invocations(self, wf_id, start_index=None, max_results=None, query=None, order=None,
                                  use_cache=True, **kwargs):
         """
         Returns a collection of the Invocation objects.
@@ -938,7 +939,6 @@ class StampedeWorkflowQueries(WorkflowQueries):
         :param max_results: Return a maximum of `max_results` records
         :param query: Filtering criteria
         :param order: Sorting criteria
-        :param recent: Get the most recent results
         :param use_cache: If available, use cached results
 
         :return: invocations record

@@ -21,6 +21,8 @@ import StringIO
 from plex import Range, Lexicon, Rep, Rep1, Str, Any, IGNORE, Scanner, AnyBut, NoCase, Opt
 from plex.errors import UnrecognizedInput
 
+from werkzeug.routing import BaseConverter
+
 
 class PagedResponse(object):
     def __init__(self, records, total, filtered):
@@ -497,3 +499,18 @@ class BaseResource(object):
     def _get_suffix(field):
         splits = BaseResource._split_identifier(field)
         return splits[0] if len(splits) == 1 else splits[1]
+
+
+class BooleanConverter(BaseConverter):
+    def to_python(self, value):
+        value = value.strip().lower()
+
+        if value in set(['1', '0', 'true', 'false']):
+            return bool(value)
+
+        else:
+            raise ServiceError('Expecting boolean found %s' % value)
+
+
+    def to_url(self, value):
+        return 'true' if value else 'false'

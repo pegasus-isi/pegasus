@@ -141,7 +141,7 @@ def get_query_args():
         'max-results': to_int,
         'query': to_str,
         'order': to_str,
-        'recent': to_bool,
+        #'recent': to_bool,
         'pretty-print': to_bool
     }
 
@@ -348,8 +348,10 @@ Workflow State
 
 
 @monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/state')
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/state;recent=<boolean:recent>')
 @monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/state/query', methods=['POST'])
-def get_workflow_state(username, m_wf_id, wf_id):
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/state;recent=<boolean:recent>/query', methods=['POST'])
+def get_workflow_state(username, m_wf_id, wf_id, recent=False):
     """
     Returns a collection of Workflow States.
 
@@ -569,8 +571,10 @@ Job State
 
 
 @monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/state')
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/state;recent=<boolean:recent>')
 @monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/state/query', methods=['POST'])
-def get_job_instance_states(username, m_wf_id, wf_id, job_id, job_instance_id):
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/state;recent=<boolean:recent>/query', methods=['POST'])
+def get_job_instance_states(username, m_wf_id, wf_id, job_id, job_instance_id, recent=False):
     """
     Returns a collection of Job States.
 
@@ -592,7 +596,7 @@ def get_job_instance_states(username, m_wf_id, wf_id, job_id, job_instance_id):
     """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
-    paged_response = queries.get_job_instance_states(wf_id, job_id, job_instance_id, **g.query_args)
+    paged_response = queries.get_job_instance_states(wf_id, job_id, job_instance_id, recent=recent, **g.query_args)
 
     if paged_response.total_records == 0:
         log.debug('Total records is 0; returning HTTP 204 No content')
@@ -756,8 +760,10 @@ Job Instance
 
 
 @monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance')
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance;recent=<boolean:recent>')
 @monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/query', methods=['POST'])
-def get_job_instances(username, m_wf_id, wf_id, job_id):
+@monitoring_routes.route('/user/<string:username>/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance;recent=<boolean:recent>/query', methods=['POST'])
+def get_job_instances(username, m_wf_id, wf_id, job_id, recent=False):
     """
     Returns a collection of JobInstances.
 
@@ -778,7 +784,7 @@ def get_job_instances(username, m_wf_id, wf_id, job_id):
     """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
-    paged_response = queries.get_job_instances(wf_id, job_id, **g.query_args)
+    paged_response = queries.get_job_instances(wf_id, job_id, recent=recent, **g.query_args)
 
     if paged_response.total_records == 0:
         log.debug('Total records is 0; returning HTTP 204 No content')
