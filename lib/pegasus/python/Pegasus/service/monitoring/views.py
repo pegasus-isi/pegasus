@@ -479,7 +479,7 @@ Host
 
 {
     "host_id"      : int:host_id,
-    "site_name"    : string:site_name,
+    "site"         : string:site,
     "hostname"     : string:hostname,
     "ip"           : string:ip,
     "uname"        : string:uname,
