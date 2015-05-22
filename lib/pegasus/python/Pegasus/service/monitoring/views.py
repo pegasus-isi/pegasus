@@ -127,22 +127,32 @@ def get_query_args():
     def to_int(q_arg, value):
         try:
             return int(value)
-        except ValueError:
+        except ValueError as e:
             log.exception('Query Argument %s = %s is not a valid int' % (q_arg, value))
-            abort(400)
+            e = ValueError('Expecting integer for argument %s, found %r' % (q_arg, str(value)))
+            e.codes = ('INVALID_QUERY_ARGUMENT', 400)
+            raise e
 
     def to_str(q_arg, value):
         return value
 
     def to_bool(q_arg, value):
-        return True if value.lower() == 'true' else False
+        value = value.strip().lower()
+
+        if value in set(['1', '0', 'true', 'false']):
+            return bool(value)
+
+        else:
+            log.exception('Query Argument %s = %s is not a valid boolean' % (q_arg, value))
+            e = ValueError('Expecting boolean for argument %s, found %r' % (q_arg, str(value)))
+            e.codes = ('INVALID_QUERY_ARGUMENT', 400)
+            raise e
 
     query_args = {
         'start-index': to_int,
         'max-results': to_int,
         'query': to_str,
         'order': to_str,
-        #'recent': to_bool,
         'pretty-print': to_bool
     }
 

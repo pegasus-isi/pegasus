@@ -83,8 +83,12 @@ def invalid_json_error(error):
 
 @monitoring_routes.errorhandler(Exception)
 def catch_all(error):
-    log.exception('Unknown Error')
-    e = ErrorResponse('UNKNOWN', error.message)
+    app_code, http_code = error.codes if hasattr(error, 'codes') else ('UNKNOWN', 500)
+
+    if http_code == 500:
+        log.exception('Unknown Error')
+
+    e = ErrorResponse(app_code, error.message)
     response_json = jsonify(e)
 
-    return make_response(response_json, 500, JSON_HEADER)
+    return make_response(response_json, http_code, JSON_HEADER)
