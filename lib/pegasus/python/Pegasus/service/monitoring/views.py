@@ -22,7 +22,7 @@ import hashlib
 
 import StringIO
 
-from flask import g, request, make_response, abort, current_app
+from flask import g, request, make_response, current_app
 
 from Pegasus.service import cache
 from Pegasus.service.base import InvalidJSONError
