@@ -474,7 +474,7 @@ def get_job(username, m_wf_id, wf_id, job_id):
 """
 Host
 
-    {
+{
     "host_id"      : int:host_id,
     "site_name"    : string:site_name,
     "hostname"     : string:hostname,
