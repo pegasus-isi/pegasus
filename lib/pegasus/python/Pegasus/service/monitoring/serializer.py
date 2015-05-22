@@ -123,8 +123,7 @@ class PegasusServiceJSONEncoder(JSONEncoder):
         elif isinstance(obj, Host):
             json_record = obj_to_dict(HostResource())
             json_record['_links'] = OrderedDict([
-                # TODO: Conditional handling of job_instance
-                ('job_instance', url_for('.get_job_instance', wf_id=obj.wf_id, job_id=obj.host_id))
+                ('workflow', url_for('.get_workflows', m_wf_id=obj.wf_id, _method='GET'))
             ])
 
             return json_record

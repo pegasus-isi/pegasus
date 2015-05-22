@@ -485,8 +485,7 @@ Host
     "uname"        : string:uname,
     "total_memory" : string:total_memory,
     "_links"       : {
-        "workflow"     : href:workflow,
-        "job_instance" : href:job_instance
+        "workflow"     : href:workflow
     }
 }
 """
