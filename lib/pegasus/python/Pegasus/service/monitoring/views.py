@@ -335,6 +335,7 @@ def get_workflow(username, m_wf_id, wf_id):
 Workflow State
 
 {
+    "wf_id"         : int:wf_id,
     "state"         : string:state,
     "status"        : int:status,
     "restart_count" : int:restart_count,

@@ -166,6 +166,7 @@ class RootWorkflowstateResource(BaseResource):
         self._prefix = 'ws'
 
         self._fields = [
+            'wf_id',
             'state',
             'status',
             'restart_count',
