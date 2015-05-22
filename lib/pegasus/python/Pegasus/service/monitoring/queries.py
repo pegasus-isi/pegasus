@@ -650,29 +650,31 @@ class StampedeWorkflowQueries(WorkflowQueries):
         return PagedResponse(records, total_records, total_filtered)
 
     def get_host(self, host_id, use_cache=True):
-            """
+        """
+        Returns a Host object identified by host_id.
 
-            :param host_id: Id of the host
-            :param use_cache: If available, use cached results
+        :param host_id: Id of the host
+        :param use_cache: If available, use cached results
 
-            :return: host record
-            """
-            if host_id is None or not str(host_id).isdigit():
-                raise ValueError('host_id cannot be None')
+        :return: host record
+        """
+        if host_id is None or not str(host_id).isdigit():
+            raise ValueError('host_id cannot be None')
 
-            q = self.session.query(Host)
-            q = q.filter(Host.host_id == host_id)
+        q = self.session.query(Host)
+        q = q.filter(Host.host_id == host_id)
 
-            try:
-                return self._get_one(q, use_cache)
-            except NoResultFound, e:
-                raise e
+        try:
+            return self._get_one(q, use_cache)
+        except NoResultFound, e:
+            raise e
 
     # Job State
 
     def get_job_instance_states(self, wf_id, job_id, job_instance_id, start_index=None, max_results=None, query=None,
                                 order=None, recent=False, use_cache=True, **kwargs):
         """
+        Returns a collection of the JobInstanceState objects.
 
         :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
         :param job_id: job_id associated with the job instance states
@@ -728,6 +730,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
     def get_workflow_tasks(self, wf_id, start_index=None, max_results=None, query=None, order=None, use_cache=True,
                            **kwargs):
         """
+        Returns a collection of the Task objects.
 
         :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
         :param start_index: Return results starting from record `start_index`
@@ -780,6 +783,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
     def get_job_tasks(self, job_id, start_index=None, max_results=None, query=None, order=None, use_cache=True,
                       **kwargs):
         """
+        Returns a collection of the Task objects.
 
         :param job_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
         :param start_index: Return results starting from record `start_index`
@@ -829,6 +833,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
     def get_task(self, task_id, use_cache=True):
         """
+        Returns a Task object identified by task_id.
 
         :param task_id: Id of the task
         :param use_cache: If available, use cached results
@@ -852,6 +857,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
     def get_job_instances(self, wf_id, job_id, start_index=None, max_results=None, query=None, order=None,
                           use_cache=True, **kwargs):
         """
+        Returns a collection of the JobInstance objects.
 
         :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
         :param job_id: job_id associated with the job instances
@@ -902,6 +908,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
     def get_job_instance(self, job_instance_id, use_cache=True):
         """
+        Returns a JobInstance object identified by job_instance_id.
 
         :param job_instance_id: Id of the job instance
         :param use_cache: If available, use cached results
@@ -924,6 +931,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
     def get_workflow_invocations(self, wf_id, start_index=None, max_results=None, query=None, order=None, recent=False,
                                  use_cache=True, **kwargs):
         """
+        Returns a collection of the Invocation objects.
 
         :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
         :param start_index: Return results starting from record `start_index`
@@ -977,6 +985,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
     def get_job_instance_invocations(self, wf_id, job_id, job_instance_id, start_index=None, max_results=None,
                                      query=None, order=None, use_cache=True, **kwargs):
         """
+        Returns a collection of the Invocation objects.
 
         :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
         :param job_id: Id of the job associated with the invocation
@@ -1031,6 +1040,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
     def get_invocation(self, invocation_id, use_cache=True):
         """
+        Returns a Invocation object identified by invocation_id.
 
         :param invocation_id: Id of the invocation
         :param use_cache: If available, use cached results
