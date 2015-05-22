@@ -76,6 +76,7 @@ def invalid_order_error(error):
 
 @monitoring_routes.errorhandler(Exception)
 def catch_all(error):
+    log.exception('Unknown Error')
     e = ErrorResponse('UNKNOWN', error.message)
     response_json = jsonify(e)
 
