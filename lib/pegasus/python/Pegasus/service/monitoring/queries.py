@@ -311,7 +311,7 @@ class MasterWorkflowQueries(WorkflowQueries):
         #
         # Finish Construction of Base SQLAlchemy Query `q`
         #
-        qws = self._get_max_master_workflow_state()
+        qws = self._get_max_master_workflow_state(m_wf_id=m_wf_id)
         qws = qws.subquery('master_workflowstate')
 
         q = q.outerjoin(qws, DashboardWorkflow.wf_id == qws.c.wf_id)
@@ -327,8 +327,8 @@ class MasterWorkflowQueries(WorkflowQueries):
             log.exception('Not Found: Root Workflow for given m_wf_id (%s)' % m_wf_id)
             raise e
 
-    def _get_max_master_workflow_state(self, mws=DashboardWorkflowstate):
-        qmax = self._get_recent_master_workflow_state()
+    def _get_max_master_workflow_state(self, m_wf_id=None, mws=DashboardWorkflowstate):
+        qmax = self._get_recent_master_workflow_state(m_wf_id, mws)
         qmax = qmax.subquery('max_timestamp')
 
         q = self.session.query(mws)
@@ -337,9 +337,14 @@ class MasterWorkflowQueries(WorkflowQueries):
 
         return q
 
-    def _get_recent_master_workflow_state(self, mws=DashboardWorkflowstate):
+    def _get_recent_master_workflow_state(self, m_wf_id=None, mws=DashboardWorkflowstate):
         q = self.session.query(mws.wf_id)
         q = q.add_column(func.max(mws.timestamp).label('max_time'))
+
+        if m_wf_id:
+            log.debug('filter on m_wf_id')
+            q = q.filter(mws.wf_id == m_wf_id)
+
         q = q.group_by(mws.wf_id)
 
         return q
