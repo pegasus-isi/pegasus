@@ -25,6 +25,7 @@ import StringIO
 from flask import g, request, make_response, abort, current_app
 
 from Pegasus.service import cache
+from Pegasus.service.base import InvalidJSONError
 from Pegasus.service.monitoring import monitoring_routes
 from Pegasus.service.monitoring.utils import jsonify
 from Pegasus.service.monitoring.queries import MasterWorkflowQueries, StampedeWorkflowQueries
@@ -991,7 +992,8 @@ def batch(username):
     try:
         requests = json.loads(request.data)
     except ValueError as e:
-        abort(400)
+        log.exception('Invalid JSON')
+        raise InvalidJSONError(e.message)
 
     responses = StringIO.StringIO()
     responses.write('[')

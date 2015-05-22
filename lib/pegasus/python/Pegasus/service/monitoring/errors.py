@@ -20,7 +20,7 @@ from flask import make_response
 
 from sqlalchemy.orm.exc import NoResultFound
 
-from Pegasus.service.base import ErrorResponse, InvalidQueryError, InvalidOrderError
+from Pegasus.service.base import ErrorResponse, InvalidQueryError, InvalidOrderError, InvalidJSONError
 from Pegasus.service.monitoring import monitoring_routes
 from Pegasus.service.monitoring.utils import jsonify
 
@@ -34,7 +34,6 @@ Error
 
 {
     "code"     : <string:code>,
-    "severity" : <string:severity>,
     "message"  : <string:message>,
     "errors"   : [
         {
@@ -69,6 +68,14 @@ def invalid_query_error(error):
 @monitoring_routes.errorhandler(InvalidOrderError)
 def invalid_order_error(error):
     e = ErrorResponse('INVALID_ORDER', error.message)
+    response_json = jsonify(e)
+
+    return make_response(response_json, 400, JSON_HEADER)
+
+
+@monitoring_routes.errorhandler(InvalidJSONError)
+def invalid_json_error(error):
+    e = ErrorResponse('INVALID_JSON', error.message)
     response_json = jsonify(e)
 
     return make_response(response_json, 400, JSON_HEADER)

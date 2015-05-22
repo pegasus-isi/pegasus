@@ -78,6 +78,10 @@ class ServiceError(Exception):
     pass
 
 
+class InvalidJSONError(Exception):
+    pass
+
+
 class InvalidQueryError(ServiceError):
     pass
 
