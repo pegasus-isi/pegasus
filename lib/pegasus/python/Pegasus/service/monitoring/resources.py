@@ -231,7 +231,7 @@ class HostResource(BaseResource):
 
         self._fields = [
             'host_id',
-            'site_name',
+            'site',
             'hostname',
             'ip',
             'uname',
