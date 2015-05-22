@@ -234,7 +234,7 @@ class MasterWorkflowQueries(WorkflowQueries):
         """
 
         #
-        # Construct SQLAlchemy Query `q` to get total count.
+        # Construct SQLAlchemy Query `q` to count.
         #
         q = self.session.query(DashboardWorkflow)
 
@@ -256,7 +256,7 @@ class MasterWorkflowQueries(WorkflowQueries):
         q = q.add_entity(alias)
 
         #
-        # Construct SQLAlchemy Query `q` to get filtered count.
+        # Construct SQLAlchemy Query `q` to filter.
         #
         if query:
             resource = CombinationResource(RootWorkflowResource(), RootWorkflowstateResource(alias))
@@ -275,7 +275,7 @@ class MasterWorkflowQueries(WorkflowQueries):
             q = self._add_ordering(q, order, RootWorkflowResource())
 
         #
-        # Construct SQLAlchemy Query `q` to add pagination
+        # Construct SQLAlchemy Query `q` to paginate.
         #
         q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
 
@@ -387,7 +387,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         m_wf_id = self.wf_uuid_to_wf_id(m_wf_id)
 
         #
-        # Construct SQLAlchemy Query `q` to get total count.
+        # Construct SQLAlchemy Query `q` to count.
         #
         q = self.session.query(Workflow)
         q = q.filter(Workflow.root_wf_id == m_wf_id)
@@ -397,7 +397,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
             return PagedResponse([], 0, 0)
 
         #
-        # Construct SQLAlchemy Query `q` to get filtered count.
+        # Construct SQLAlchemy Query `q` to filter.
         #
         if query:
             q = self._evaluate_query(q, query, WorkflowResource())
@@ -414,7 +414,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
             q = self._add_ordering(q, order, WorkflowResource())
 
         #
-        # Construct SQLAlchemy Query `q` to add pagination
+        # Construct SQLAlchemy Query `q` to paginate.
         #
         q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
 
@@ -462,6 +462,9 @@ class StampedeWorkflowQueries(WorkflowQueries):
         # Use shorter caching timeout
         timeout = 5
 
+        #
+        # Construct SQLAlchemy Query `q` to count.
+        #
         q = self.session.query(Workflowstate)
         q = q.filter(Workflowstate.wf_id == wf_id)
 
@@ -475,7 +478,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
             q = q.filter(Workflowstate.wf_id == wf_id)
 
         #
-        # Construct SQLAlchemy Query `q` to get filtered count.
+        # Construct SQLAlchemy Query `q` to filter.
         #
         if query or recent:
             q = self._evaluate_query(q, query, WorkflowstateResource())
@@ -492,7 +495,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
             q = self._add_ordering(q, order, WorkflowstateResource())
 
         #
-        # Construct SQLAlchemy Query `q` to add pagination
+        # Construct SQLAlchemy Query `q` to paginate.
         #
         q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
 
@@ -534,6 +537,9 @@ class StampedeWorkflowQueries(WorkflowQueries):
         """
         wf_id = self.wf_uuid_to_wf_id(wf_id)
 
+        #
+        # Construct SQLAlchemy Query `q` to count.
+        #
         q = self.session.query(Job)
         q = q.filter(Job.wf_id == wf_id)
 
@@ -543,7 +549,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
             return PagedResponse([], 0, 0)
 
         #
-        # Construct SQLAlchemy Query `q` to get filtered count.
+        # Construct SQLAlchemy Query `q` to filter.
         #
         if query:
             q = self._evaluate_query(q, query, JobResource())
@@ -560,7 +566,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
             q = self._add_ordering(q, order, JobResource())
 
         #
-        # Construct SQLAlchemy Query `q` to add pagination
+        # Construct SQLAlchemy Query `q` to paginate.
         #
         q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
 
@@ -606,6 +612,9 @@ class StampedeWorkflowQueries(WorkflowQueries):
         """
         wf_id = self.wf_uuid_to_wf_id(wf_id)
 
+        #
+        # Construct SQLAlchemy Query `q` to count.
+        #
         q = self.session.query(Host)
         q = q.filter(Host.wf_id == wf_id)
 
@@ -615,7 +624,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
             return PagedResponse([], 0, 0)
 
         #
-        # Construct SQLAlchemy Query `q` to get filtered count.
+        # Construct SQLAlchemy Query `q` to filter.
         #
         if query:
             q = self._evaluate_query(q, query, HostResource())
@@ -632,7 +641,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
             q = self._add_ordering(q, order, HostResource())
 
         #
-        # Construct SQLAlchemy Query `q` to add pagination
+        # Construct SQLAlchemy Query `q` to paginate.
         #
         q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
 
@@ -677,15 +686,10 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         :return: state record
         """
+        #
+        # Construct SQLAlchemy Query `q` to count.
+        #
         q = self.session.query(Jobstate)
-
-        if wf_id is None:
-            raise ValueError('wf_id cannot be None')
-        if job_id is None or not str(job_id).isdigit():
-            raise ValueError('job_id must be an integer value')
-        if job_instance_id is None or not str(job_instance_id).isdigit():
-            raise ValueError('job_instance_id must be an integer value')
-
         q = q.filter(Jobstate.job_instance_id == job_instance_id)
 
         total_records = total_filtered = self._get_count(q, use_cache)
@@ -694,7 +698,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
             return PagedResponse([], 0, 0)
 
         #
-        # Construct SQLAlchemy Query `q` to get filtered count.
+        # Construct SQLAlchemy Query `q` to filter.
         #
         if query:
             q = self._evaluate_query(q, query, JobstateResource())
@@ -711,7 +715,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
             q = self._add_ordering(q, order, JobstateResource())
 
         #
-        # Construct SQLAlchemy Query `q` to add pagination
+        # Construct SQLAlchemy Query `q` to paginate.
         #
         q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
 
@@ -736,6 +740,9 @@ class StampedeWorkflowQueries(WorkflowQueries):
         """
         wf_id = self.wf_uuid_to_wf_id(wf_id)
 
+        #
+        # Construct SQLAlchemy Query `q` to count.
+        #
         q = self.session.query(Task)
         q = q.filter(Task.wf_id == wf_id)
 
@@ -745,7 +752,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
             return PagedResponse([], 0, 0)
 
         #
-        # Construct SQLAlchemy Query `q` to get filtered count.
+        # Construct SQLAlchemy Query `q` to filter.
         #
         if query:
             q = self._evaluate_query(q, query, TaskResource())
@@ -762,7 +769,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
             q = self._add_ordering(q, order, TaskResource())
 
         #
-        # Construct SQLAlchemy Query `q` to add pagination
+        # Construct SQLAlchemy Query `q` to paginate.
         #
         q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
 
@@ -783,6 +790,9 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         :return: Collection of Task objects
         """
+        #
+        # Construct SQLAlchemy Query `q` to count.
+        #
         q = self.session.query(Task)
         q = q.filter(Task.job_id == job_id)
 
@@ -792,7 +802,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
             return PagedResponse([], 0, 0)
 
         #
-        # Construct SQLAlchemy Query `q` to get filtered count.
+        # Construct SQLAlchemy Query `q` to filter.
         #
         if query:
             q = self._evaluate_query(q, query, TaskResource())
@@ -809,7 +819,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
             q = self._add_ordering(q, order, TaskResource())
 
         #
-        # Construct SQLAlchemy Query `q` to add pagination
+        # Construct SQLAlchemy Query `q` to paginate.
         #
         q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
 
@@ -853,10 +863,10 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         :return: hosts collection, total jobs count, filtered jobs count
         """
+        #
+        # Construct SQLAlchemy Query `q` to count.
+        #
         q = self.session.query(JobInstance)
-
-        if job_id is None or not str(job_id).isdigit():
-            raise ValueError('job__id must be an integer value')
         q = q.filter(JobInstance.job_id == job_id)
 
         total_records = total_filtered = self._get_count(q, use_cache)
@@ -865,7 +875,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
             return PagedResponse([], 0, 0)
 
         #
-        # Construct SQLAlchemy Query `q` to get filtered count.
+        # Construct SQLAlchemy Query `q` to filter.
         #
         if query:
             q = self._evaluate_query(q, query, JobInstanceResource())
@@ -882,7 +892,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
             q = self._add_ordering(q, order, JobInstanceResource())
 
         #
-        # Construct SQLAlchemy Query `q` to add pagination
+        # Construct SQLAlchemy Query `q` to paginate.
         #
         q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
 
@@ -927,6 +937,9 @@ class StampedeWorkflowQueries(WorkflowQueries):
         """
         wf_id = self.wf_uuid_to_wf_id(wf_id)
 
+        #
+        # Construct SQLAlchemy Query `q` to count.
+        #
         q = self.session.query(Invocation)
         q = q.filter(Invocation.wf_id == wf_id)
 
@@ -936,7 +949,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
             return PagedResponse([], 0, 0)
 
         #
-        # Construct SQLAlchemy Query `q` to get filtered count.
+        # Construct SQLAlchemy Query `q` to filter.
         #
         if query:
             q = self._evaluate_query(q, query, InvocationResource())
@@ -953,7 +966,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
             q = self._add_ordering(q, order, InvocationResource())
 
         #
-        # Construct SQLAlchemy Query `q` to add pagination
+        # Construct SQLAlchemy Query `q` to paginate.
         #
         q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
 
@@ -978,15 +991,10 @@ class StampedeWorkflowQueries(WorkflowQueries):
         """
         wf_id = self.wf_uuid_to_wf_id(wf_id)
 
+        #
+        # Construct SQLAlchemy Query `q` to count.
+        #
         q = self.session.query(Invocation)
-
-        if wf_id is None:
-            raise ValueError('wf_id cannot be None')
-        if job_id is None or not str(job_id).isdigit():
-            raise ValueError('job_id must be an integer value')
-        if job_instance_id is None or not str(job_instance_id).isdigit():
-            raise ValueError('job_instance_id must be an integer value')
-
         q = q.filter(Invocation.wf_id == wf_id)
         q = q.filter(Invocation.job_instance_id == job_instance_id)
 
@@ -996,7 +1004,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
             return PagedResponse([], 0, 0)
 
         #
-        # Construct SQLAlchemy Query `q` to get filtered count.
+        # Construct SQLAlchemy Query `q` to filter.
         #
         if query:
             q = self._evaluate_query(q, query, InvocationResource())
@@ -1013,7 +1021,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
             q = self._add_ordering(q, order, InvocationResource())
 
         #
-        # Construct SQLAlchemy Query `q` to add pagination
+        # Construct SQLAlchemy Query `q` to paginate.
         #
         q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
 
