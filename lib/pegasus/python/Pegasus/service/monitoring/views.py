@@ -373,7 +373,7 @@ def get_workflow_state(username, m_wf_id, wf_id, recent=False):
     """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
-    paged_response = queries.get_workflow_state(wf_id, **g.query_args)
+    paged_response = queries.get_workflow_state(wf_id, recent=recent, **g.query_args)
 
     if paged_response.total_records == 0:
         log.debug('Total records is 0; returning HTTP 204 No content')

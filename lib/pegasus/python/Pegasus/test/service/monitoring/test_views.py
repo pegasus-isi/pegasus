@@ -348,7 +348,7 @@ class TestStampedeWorkflowStateQueries(NoAuthFlaskTestCase):
         self.assertEqual(workflow_states['_meta']['records_total'], workflow_states['_meta']['records_filtered'])
 
     def test_get_recent_workflow_state(self):
-        rv = self.get_context('/api/v1/user/%s/root/1/workflow/1/state?recent=true' % self.user,
+        rv = self.get_context('/api/v1/user/%s/root/1/workflow/1/state;recent=true' % self.user,
                               pre_callable=self.pre_callable)
 
         self.assertEqual(rv.status_code, 200)
