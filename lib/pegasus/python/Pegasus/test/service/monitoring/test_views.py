@@ -165,7 +165,7 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
 
     def test_complex_query(self):
         rv = self.get_context(
-            '/api/v1/user/%s/root?query=r.wf_id = 1 OR (wf_id = 2 AND grid_dn = NULL)&order=wf_id asc' % self.user,
+            '/api/v1/user/%s/root?query=r.wf_id = 1 OR (r.wf_id = 2 AND grid_dn = NULL)&order=wf_id asc' % self.user,
             pre_callable=self.pre_callable)
 
         self.assertEqual(rv.status_code, 200)
