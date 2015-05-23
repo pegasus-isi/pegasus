@@ -475,7 +475,6 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         if recent:
             q = self._get_max_workflow_state(wf_id)
-            q = q.filter(Workflowstate.wf_id == wf_id)
 
         #
         # Construct SQLAlchemy Query `q` to filter.
