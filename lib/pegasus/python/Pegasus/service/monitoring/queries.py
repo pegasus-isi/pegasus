@@ -476,8 +476,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         if recent:
             qws = self._get_recent_workflow_state(wf_id)
             qws = qws.subquery('max_ws')
-            q = q.join(qws, and_(Workflowstate.wf_id == qws.c.wf_id,
-                                 Workflowstate.timestamp == qws.c.max_time))
+            q = q.join(qws, and_(Workflowstate.wf_id == qws.c.wf_id, Workflowstate.timestamp == qws.c.max_time))
 
         #
         # Construct SQLAlchemy Query `q` to filter.
@@ -710,7 +709,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
             qjsss = self._get_recent_job_state(job_instance_id)
             qjsss = qjsss.subquery('max_jsss')
             q = q.join(qjsss, and_(Jobstate.job_instance_id == qjsss.c.job_instance_id,
-                                 Jobstate.jobstate_submit_seq == qjsss.c.max_jsss))
+                                   Jobstate.jobstate_submit_seq == qjsss.c.max_jsss))
 
         #
         # Construct SQLAlchemy Query `q` to filter.
@@ -893,7 +892,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         :param order: Sorting criteria
         :param use_cache: If available, use cached results
 
-        :return: hosts collection, total jobs count, filtered jobs count
+        :return: job-instance collection, total jobs count, filtered jobs count
         """
         #
         # Construct SQLAlchemy Query `q` to count.
@@ -909,8 +908,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         if recent:
             qjss = self._get_recent_job_instance(job_id)
             qjss = qjss.subquery('max_jss')
-            q = q.join(qjss, and_(JobInstance.job_id == qjss.c.job_id,
-                                 JobInstance.job_submit_seq == qjss.c.max_jss))
+            q = q.join(qjss, and_(JobInstance.job_id == qjss.c.job_id, JobInstance.job_submit_seq == qjss.c.max_jss))
 
         #
         # Construct SQLAlchemy Query `q` to filter.
@@ -938,15 +936,19 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         return PagedResponse(records, total_records, total_filtered)
 
-    def get_job_instance(self, job_instance_id, use_cache=True):
+    def get_job_instance(self, job_instance_id, use_cache=True, timeout=5):
         """
         Returns a JobInstance object identified by job_instance_id.
 
         :param job_instance_id: Id of the job instance
         :param use_cache: If available, use cached results
+        :param timeout: Duration for which the job-instance should be cached, if exitcode is None i.e. Job is running
 
-        :return: host record
+        :return: job-instance record
         """
+        def timeout_duration(ji):
+            return 300 if ji and ji.exitcode is not None else timeout
+
         if job_instance_id is None:
             raise ValueError('job_instance_id cannot be None')
 
@@ -954,7 +956,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         q = q.filter(JobInstance.job_instance_id == job_instance_id)
 
         try:
-            return self._get_one(q, use_cache)
+            return self._get_one(q, use_cache, timeout=timeout_duration)
         except NoResultFound, e:
             raise e
 
