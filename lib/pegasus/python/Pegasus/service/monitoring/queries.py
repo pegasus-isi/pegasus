@@ -474,7 +474,10 @@ class StampedeWorkflowQueries(WorkflowQueries):
             return PagedResponse([], 0, 0)
 
         if recent:
-            q = self._get_max_workflow_state(wf_id)
+            qws = self._get_recent_workflow_state(wf_id)
+            qws = qws.subquery('max_ws')
+            q = q.join(qws, and_(Workflowstate.wf_id == qws.c.wf_id,
+                                 Workflowstate.timestamp == qws.c.max_time))
 
         #
         # Construct SQLAlchemy Query `q` to filter.
