@@ -707,10 +707,10 @@ class StampedeWorkflowQueries(WorkflowQueries):
             return PagedResponse([], 0, 0)
 
         if recent:
-            qws = self._get_recent_job_state(job_instance_id)
-            qws = qws.subquery('max_jsss')
-            q = q.join(qws, and_(Jobstate.job_instance_id == qws.c.job_instance_id,
-                                 Jobstate.jobstate_submit_seq == qws.c.max_jsss))
+            qjsss = self._get_recent_job_state(job_instance_id)
+            qjsss = qjsss.subquery('max_jsss')
+            q = q.join(qjsss, and_(Jobstate.job_instance_id == qjsss.c.job_instance_id,
+                                 Jobstate.jobstate_submit_seq == qjsss.c.max_jsss))
 
         #
         # Construct SQLAlchemy Query `q` to filter.
@@ -907,10 +907,10 @@ class StampedeWorkflowQueries(WorkflowQueries):
             return PagedResponse([], 0, 0)
 
         if recent:
-            qws = self._get_recent_job_instance(job_id)
-            qws = qws.subquery('max_jss')
-            q = q.join(qws, and_(JobInstance.job_id == qws.c.job_id,
-                                 JobInstance.job_submit_seq == qws.c.max_jss))
+            qjss = self._get_recent_job_instance(job_id)
+            qjss = qjss.subquery('max_jss')
+            q = q.join(qjss, and_(JobInstance.job_id == qjss.c.job_id,
+                                 JobInstance.job_submit_seq == qjss.c.max_jss))
 
         #
         # Construct SQLAlchemy Query `q` to filter.
