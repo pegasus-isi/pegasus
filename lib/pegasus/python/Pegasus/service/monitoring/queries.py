@@ -725,6 +725,18 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         return PagedResponse(records, total_records, total_filtered)
 
+    def _get_recent_job_state(self, job_instance_id=None, js=Jobstate):
+        q = self.session.query(js.job_instance_id)
+        q = q.add_column(func.max(js.jobstate_submit_seq).label('max_jsss'))
+
+        if job_instance_id:
+            log.debug('filter on job_instance_id')
+            q = q.filter(js.wf_id == job_instance_id)
+
+        q = q.group_by(js.wf_id)
+
+        return q
+
     # Task
 
     def get_workflow_tasks(self, wf_id, start_index=None, max_results=None, query=None, order=None, use_cache=True,
@@ -926,6 +938,18 @@ class StampedeWorkflowQueries(WorkflowQueries):
             return self._get_one(q, use_cache)
         except NoResultFound, e:
             raise e
+
+    def _get_recent_job_instance(self, job_id=None, ji=JobInstance):
+        q = self.session.query(ji.job_id)
+        q = q.add_column(func.max(ji.job_submit_seq).label('max_jss'))
+
+        if job_id:
+            log.debug('filter on job_id')
+            q = q.filter(ji.job_id == job_id)
+
+        q = q.group_by(ji.job_id)
+
+        return q
 
     # Invocation
 
