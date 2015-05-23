@@ -474,7 +474,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
             return PagedResponse([], 0, 0)
 
         if recent:
-            q = self._get_max_workflow_state()
+            q = self._get_max_workflow_state(wf_id)
             q = q.filter(Workflowstate.wf_id == wf_id)
 
         #
@@ -503,8 +503,8 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         return PagedResponse(records, total_records, total_filtered)
 
-    def _get_max_workflow_state(self, ws=Workflowstate):
-        qmax = self._get_recent_workflow_state()
+    def _get_max_workflow_state(self, wf_id=None, ws=Workflowstate):
+        qmax = self._get_recent_workflow_state(wf_id, ws)
         qmax = qmax.subquery('max_timestamp')
 
         q = self.session.query(ws)
@@ -512,9 +512,14 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         return q
 
-    def _get_recent_workflow_state(self, ws=Workflowstate):
+    def _get_recent_workflow_state(self, wf_id=None, ws=Workflowstate):
         q = self.session.query(ws.wf_id)
         q = q.add_column(func.max(ws.timestamp).label('max_time'))
+
+        if wf_id:
+            log.debug('filter on wf_id')
+            q = q.filter(ws.wf_id == wf_id)
+
         q = q.group_by(ws.wf_id)
 
         return q
