@@ -898,10 +898,16 @@ class StampedeWorkflowQueries(WorkflowQueries):
         if total_records == 0:
             return PagedResponse([], 0, 0)
 
+        if recent:
+            qws = self._get_recent_job_instance(job_id)
+            qws = qws.subquery('max_jss')
+            q = q.join(qws, and_(JobInstance.job_id == qws.c.job_id,
+                                 JobInstance.job_submit_seq == qws.c.max_jss))
+
         #
         # Construct SQLAlchemy Query `q` to filter.
         #
-        if query:
+        if query or recent:
             q = self._evaluate_query(q, query, JobInstanceResource())
             total_filtered = self._get_count(q, use_cache)
 
