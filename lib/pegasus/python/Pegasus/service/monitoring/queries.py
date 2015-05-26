@@ -698,6 +698,12 @@ class StampedeWorkflowQueries(WorkflowQueries):
         # Construct SQLAlchemy Query `q` to count.
         #
         q = self.session.query(Jobstate)
+        q = q.join(JobInstance, JobInstance.job_instance_id == Jobstate.job_instance_id)
+        q = q.join(Job, Job.job_id == JobInstance.job_id)
+
+        q = q.filter(Job.wf_id == wf_id)
+        q = q.filter(Job.job_id == job_id)
+        q = q.filter(JobInstance.job_instance_id == job_instance_id)
         q = q.filter(Jobstate.job_instance_id == job_instance_id)
 
         total_records = total_filtered = self._get_count(q, use_cache)
@@ -898,7 +904,10 @@ class StampedeWorkflowQueries(WorkflowQueries):
         # Construct SQLAlchemy Query `q` to count.
         #
         q = self.session.query(JobInstance)
-        q = q.filter(JobInstance.job_id == job_id)
+        q = q.join(Job, Job.job_id == JobInstance.job_id)
+
+        q = q.filter(Job.wf_id == wf_id)
+        q = q.filter(Job.job_id == job_id)
 
         total_records = total_filtered = self._get_count(q, use_cache)
 
