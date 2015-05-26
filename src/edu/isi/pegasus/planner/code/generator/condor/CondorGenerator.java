@@ -79,6 +79,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 /**
  * This class generates the condor submit files for the DAG which has to
  * be submitted to the Condor DagMan.
@@ -176,6 +178,35 @@ public class CondorGenerator extends Abstract {
      */
     public static final String DEFAULT_CONDOR_JOB_ID_ENV_VALUE = "$(cluster).$(process)";
     
+   
+    /**
+     * Map that maps job type to corresponding Condor Concurrency limit
+     */
+    private static  Map<Integer,String> mJobTypeToCondorConcurrencyLimits = null;
+    
+    /**
+     * Map that maps job type to corresponding condor concurrency limits
+     */
+    private static Map<Integer, String> jobTypeToCondorConcurrencyLimits(){
+        if( mJobTypeToCondorConcurrencyLimits == null ){
+            //PM-933
+            mJobTypeToCondorConcurrencyLimits = new HashMap();
+            //pegasus_transfer is our Condor Concurrency Group for all transfer jobs
+            mJobTypeToCondorConcurrencyLimits.put( Job.STAGE_IN_JOB,                "pegasus_transfer.stagein");
+            mJobTypeToCondorConcurrencyLimits.put( Job.STAGE_OUT_JOB,               "pegasus_transfer.stageout");
+            mJobTypeToCondorConcurrencyLimits.put( Job.STAGE_IN_WORKER_PACKAGE_JOB, "pegasus_transfer.inter");
+            mJobTypeToCondorConcurrencyLimits.put( Job.STAGE_OUT_JOB,               "pegasus_transfer.worker");
+            //pegasus_auxillary is our Condor Concurrency Group for all other auxillary jobs
+            mJobTypeToCondorConcurrencyLimits.put( Job.CREATE_DIR_JOB,              "pegasus_auxillary.createdir");
+            mJobTypeToCondorConcurrencyLimits.put( Job.CLEANUP_JOB,                 "pegasus_auxillary.cleanup");
+            mJobTypeToCondorConcurrencyLimits.put( Job.REPLICA_REG_JOB,             "pegasus_auxillary.registration");
+            //compute, dax, dag jobs are not placed in any groups as we don't want any throttling per se
+            mJobTypeToCondorConcurrencyLimits.put( Job.COMPUTE_JOB,                 "pegasus_compute");
+            mJobTypeToCondorConcurrencyLimits.put( Job.DAX_JOB,                     "pegasus_dax");
+            mJobTypeToCondorConcurrencyLimits.put( Job.DAG_JOB,                     "pegasus_dag");
+        }
+        return mJobTypeToCondorConcurrencyLimits;
+    }
     
     /**
      * Handle to the Transformation Catalog.
@@ -648,6 +679,10 @@ public class CondorGenerator extends Abstract {
         StringWriter classADWriter = new StringWriter();
         PrintWriter pwClassADWriter = new PrintWriter( classADWriter );
         ClassADSGenerator.generate( pwClassADWriter, dag, job );
+        
+        //PM-933 associate the corresponding concurrency limits
+        job.condorVariables.construct( Condor.CONCURRENCY_LIMITS_KEY, 
+                                       getConcurrencyLimit(job) );
         
         //PM-796 we print all the condor variables after the classad
         //generator has generated the user classads
@@ -1917,6 +1952,21 @@ public class CondorGenerator extends Abstract {
 //        printDagString(job.dagmanVariables.toString(jobName));
         
         return rslString.toString();
+    }
+
+    /**
+     * Returns the concurrency limit for a job
+     * 
+     * @param job
+     * 
+     * @return 
+     */
+    protected String getConcurrencyLimit(Job job) throws CodeGeneratorException {
+        String limit = CondorGenerator.jobTypeToCondorConcurrencyLimits().get( job.getJobType()) ;
+        if( limit == null ){
+            throw new CodeGeneratorException( "Unable to determine Condor concurrency limit for job " + job.getID() );
+        }
+        return limit;
     }
 
   

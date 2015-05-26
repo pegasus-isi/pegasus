@@ -224,6 +224,11 @@ public class Condor extends Namespace{
      * The condor universe key value for parallel universe.
      */
     public static final String PARALLEL_UNIVERSE = "parallel";
+    
+    /**
+     * concurrency limits key
+     */
+    public static String CONCURRENCY_LIMITS_KEY  = "concurrency_limits";
 
 
 
@@ -557,6 +562,9 @@ public class Condor extends Namespace{
 
             case 'c':
                 if (key.compareTo("copy_to_spool") == 0) {
+                    res = VALID_KEY;
+                }
+                else if ( key.compareTo( "concurrency_limits") == 0 ){
                     res = VALID_KEY;
                 }
                 else if (key.compareTo( "cream_attributes" ) == 0) {
