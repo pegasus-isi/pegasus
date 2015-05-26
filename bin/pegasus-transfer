@@ -938,8 +938,7 @@ class GridFtpHandler(TransferHandlerBase):
                 logger.error(err)
                 for t in removes_l:
                     failed_l.append(t)
-            finally:
-                os.unlink(tmp_name)
+            os.unlink(tmp_name)
         else:
             # sshftp rm - same as scp!
             handler = ScpHandler()
