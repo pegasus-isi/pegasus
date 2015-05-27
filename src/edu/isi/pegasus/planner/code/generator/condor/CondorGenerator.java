@@ -194,8 +194,8 @@ public class CondorGenerator extends Abstract {
             //pegasus_transfer is our Condor Concurrency Group for all transfer jobs
             mJobTypeToCondorConcurrencyLimits.put( Job.STAGE_IN_JOB,                "pegasus_transfer.stagein");
             mJobTypeToCondorConcurrencyLimits.put( Job.STAGE_OUT_JOB,               "pegasus_transfer.stageout");
-            mJobTypeToCondorConcurrencyLimits.put( Job.STAGE_IN_WORKER_PACKAGE_JOB, "pegasus_transfer.inter");
-            mJobTypeToCondorConcurrencyLimits.put( Job.STAGE_OUT_JOB,               "pegasus_transfer.worker");
+            mJobTypeToCondorConcurrencyLimits.put( Job.INTER_POOL_JOB,              "pegasus_transfer.inter");
+            mJobTypeToCondorConcurrencyLimits.put( Job.STAGE_IN_WORKER_PACKAGE_JOB, "pegasus_transfer.worker");
             //pegasus_auxillary is our Condor Concurrency Group for all other auxillary jobs
             mJobTypeToCondorConcurrencyLimits.put( Job.CREATE_DIR_JOB,              "pegasus_auxillary.createdir");
             mJobTypeToCondorConcurrencyLimits.put( Job.CLEANUP_JOB,                 "pegasus_auxillary.cleanup");
