@@ -371,8 +371,7 @@ class TestStampedeJobQueries(NoAuthFlaskTestCase):
         self.assertEqual(job['max_retries'], 3)
 
     def test_get_missing_job(self):
-        rv = self.get_context('/api/v1/user/%s/root/1/workflow/1/job/0' % self.user,
-                              pre_callable=self.pre_callable)
+        rv = self.get_context('/api/v1/user/%s/root/1/workflow/1/job/0' % self.user, pre_callable=self.pre_callable)
 
         self.assertEqual(rv.status_code, 404)
 
@@ -562,6 +561,7 @@ class TestStampedeInvocationQueries(NoAuthFlaskTestCase):
         self.assertEqual(invocation['task_submit_seq'], -2)
 
     def test_get_missing_invocation(self):
-        rv = self.get_context('/api/v1/user/%s/root/1/workflow/1/invocation/0' % self.user, pre_callable=self.pre_callable)
+        rv = self.get_context('/api/v1/user/%s/root/1/workflow/1/invocation/0' % self.user,
+                              pre_callable=self.pre_callable)
 
         self.assertEqual(rv.status_code, 404)
