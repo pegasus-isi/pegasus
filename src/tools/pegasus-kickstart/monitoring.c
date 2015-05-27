@@ -170,7 +170,7 @@ void* monitoring_thread_func(void* kickstart_status_path) {
                     line, job_id_info.wf_uuid, job_id_info.wf_label, job_id_info.dag_job_id,
                     job_id_info.condor_job_id);
 
-                printerr("[mon-thread] Enriched line: '%s'\n", enriched_line);
+//                printerr("[mon-thread] Enriched line: '%s'\n", enriched_line);
 
                 // sending this message to rabbitmq
                 curl = curl_easy_init();
@@ -199,9 +199,9 @@ void* monitoring_thread_func(void* kickstart_status_path) {
                         printerr("[mon-thread] an error occured while sending measurement: %s\n",
                             curl_easy_strerror(res));
                     }
-                    else {
+//                    else {
                         // printerr("[mon-thread] measurement sent\n");
-                    }
+//                    }
 
                     /* always cleanup */
                     curl_easy_cleanup(curl);
