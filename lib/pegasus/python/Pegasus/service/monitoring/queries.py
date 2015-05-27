@@ -810,7 +810,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         return PagedResponse(records, total_records, total_filtered)
 
-    def get_job_tasks(self, job_id, start_index=None, max_results=None, query=None, order=None, use_cache=True,
+    def get_job_tasks(self, wf_id, job_id, start_index=None, max_results=None, query=None, order=None, use_cache=True,
                       **kwargs):
         """
         Returns a collection of the Task objects.
@@ -828,6 +828,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         # Construct SQLAlchemy Query `q` to count.
         #
         q = self.session.query(Task)
+        q = q.filter(Task.wf_id == wf_id)
         q = q.filter(Task.job_id == job_id)
 
         total_records = total_filtered = self._get_count(q, use_cache)
