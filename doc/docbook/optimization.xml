@@ -1339,7 +1339,7 @@ Sample Value  : </emphasis></emphasis> Integer<emphasis role="bold">
           universe. You can do this by associating condor profiles universe
           and requirements in the site catalog for local site or individually
           in the transformation catalog for each pegasus executable. Here is
-          an example local site catalog entry. </para>
+          an example local site catalog entry.</para>
 
           <programlisting> &lt;site handle="local" arch="x86_64" os="LINUX"&gt;
       &lt;directory type="shared-scratch" path="/shared-scratch/local"&gt;
@@ -1430,6 +1430,13 @@ Sample Value  : </emphasis></emphasis> Integer<emphasis role="bold">
 </emphasis></literallayout></entry>
 
               <entry>pegasus_auxillary.registration</entry>
+            </row>
+
+            <row>
+              <entry><literallayout>Set XBit Job<emphasis role="bold">
+</emphasis></literallayout></entry>
+
+              <entry>pegasus_auxillary.chmod</entry>
             </row>
 
             <row>
