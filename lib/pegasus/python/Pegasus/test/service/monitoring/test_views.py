@@ -117,10 +117,6 @@ class NoAuthFlaskTestCase(FlaskTestCase):
         app.config['AUTHENTICATION'] = 'NoAuthentication'
         app.config['PROCESS_SWITCHING'] = False
 
-
-class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
-    def setUp(self):
-        NoAuthFlaskTestCase.setUp(self)
         self.user = os.getenv('USER')
 
     @staticmethod
@@ -130,6 +126,8 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
         g.master_db_url = 'sqlite:///%s' % db
         g.stampede_db_url = 'sqlite:///%s' % db
 
+
+class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
     def test_get_root_workflows(self):
         rv = self.get_context('/api/v1/user/%s/root' % self.user, pre_callable=self.pre_callable)
 
@@ -269,17 +267,6 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
 
 
 class TestStampedeWorkflowQueries(NoAuthFlaskTestCase):
-    def setUp(self):
-        NoAuthFlaskTestCase.setUp(self)
-        self.user = os.getenv('USER')
-
-    @staticmethod
-    def pre_callable():
-        directory = os.path.dirname(__file__)
-        db = os.path.join(directory, 'monitoring-rest-api-master.db')
-        g.master_db_url = 'sqlite:///%s' % db
-        g.stampede_db_url = 'sqlite:///%s' % db
-
     def test_get_workflows(self):
         rv = self.get_context('/api/v1/user/%s/root/1/workflow' % self.user, pre_callable=self.pre_callable)
 
@@ -324,17 +311,6 @@ class TestStampedeWorkflowQueries(NoAuthFlaskTestCase):
 
 
 class TestStampedeWorkflowStateQueries(NoAuthFlaskTestCase):
-    def setUp(self):
-        NoAuthFlaskTestCase.setUp(self)
-        self.user = os.getenv('USER')
-
-    @staticmethod
-    def pre_callable():
-        directory = os.path.dirname(__file__)
-        db = os.path.join(directory, 'monitoring-rest-api-master.db')
-        g.master_db_url = 'sqlite:///%s' % db
-        g.stampede_db_url = 'sqlite:///%s' % db
-
     def test_get_workflowstates(self):
         rv = self.get_context('/api/v1/user/%s/root/1/workflow/1/state' % self.user, pre_callable=self.pre_callable)
 
@@ -346,6 +322,16 @@ class TestStampedeWorkflowStateQueries(NoAuthFlaskTestCase):
         self.assertEqual(len(workflow_states['records']), 8)
         self.assertEqual(len(workflow_states['records']), workflow_states['_meta']['records_total'])
         self.assertEqual(workflow_states['_meta']['records_total'], workflow_states['_meta']['records_filtered'])
+
+    def test_get_workflow(self):
+        rv = self.get_context('/api/v1/user/%s/root/1/workflow/1' % self.user, pre_callable=self.pre_callable)
+
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.content_type.lower(), 'application/json')
+
+        job = self.read_json_response(rv)
+
+        self.assertEqual(job['dax_label'], 'hello_world')
 
     def test_get_recent_workflow_state(self):
         rv = self.get_context('/api/v1/user/%s/root/1/workflow/1/state;recent=true' % self.user,
@@ -362,17 +348,6 @@ class TestStampedeWorkflowStateQueries(NoAuthFlaskTestCase):
 
 
 class TestStampedeJobQueries(NoAuthFlaskTestCase):
-    def setUp(self):
-        NoAuthFlaskTestCase.setUp(self)
-        self.user = os.getenv('USER')
-
-    @staticmethod
-    def pre_callable():
-        directory = os.path.dirname(__file__)
-        db = os.path.join(directory, 'monitoring-rest-api-master.db')
-        g.master_db_url = 'sqlite:///%s' % db
-        g.stampede_db_url = 'sqlite:///%s' % db
-
     def test_get_workflow_jobs(self):
         rv = self.get_context('/api/v1/user/%s/root/1/workflow/1/job' % self.user, pre_callable=self.pre_callable)
 
@@ -385,8 +360,208 @@ class TestStampedeJobQueries(NoAuthFlaskTestCase):
         self.assertEqual(len(jobs['records']), jobs['_meta']['records_total'])
         self.assertEqual(jobs['_meta']['records_total'], jobs['_meta']['records_filtered'])
 
+    def test_get_job(self):
+        rv = self.get_context('/api/v1/user/%s/root/1/workflow/1/job/1' % self.user, pre_callable=self.pre_callable)
+
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.content_type.lower(), 'application/json')
+
+        job = self.read_json_response(rv)
+
+        self.assertEqual(job['max_retries'], 3)
+
     def test_get_missing_job(self):
         rv = self.get_context('/api/v1/user/%s/root/1/workflow/1/job/0' % self.user,
                               pre_callable=self.pre_callable)
+
+        self.assertEqual(rv.status_code, 404)
+
+
+class TestStampedeHostQueries(NoAuthFlaskTestCase):
+    def test_get_workflow_hosts(self):
+        rv = self.get_context('/api/v1/user/%s/root/1/workflow/1/host' % self.user, pre_callable=self.pre_callable)
+
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.content_type.lower(), 'application/json')
+
+        hosts = self.read_json_response(rv)
+
+        self.assertEqual(len(hosts['records']), 2)
+        self.assertEqual(len(hosts['records']), hosts['_meta']['records_total'])
+        self.assertEqual(hosts['_meta']['records_total'], hosts['_meta']['records_filtered'])
+
+    def test_get_host(self):
+        rv = self.get_context('/api/v1/user/%s/root/1/workflow/1/host/1' % self.user,
+                              pre_callable=self.pre_callable)
+
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.content_type.lower(), 'application/json')
+
+        host = self.read_json_response(rv)
+
+        self.assertEqual(host['hostname'], 'isis.isi.edu')
+
+    def test_get_missing_host(self):
+        rv = self.get_context('/api/v1/user/%s/root/1/workflow/1/host/0' % self.user,
+                              pre_callable=self.pre_callable)
+
+        self.assertEqual(rv.status_code, 404)
+
+
+class TestStampedeJobstateQueries(NoAuthFlaskTestCase):
+    def test_get_jobstates(self):
+        rv = self.get_context('/api/v1/user/%s/root/1/workflow/1/job/1/job-instance/3/state' % self.user,
+                              pre_callable=self.pre_callable)
+
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.content_type.lower(), 'application/json')
+
+        job_states = self.read_json_response(rv)
+
+        self.assertEqual(len(job_states['records']), 7)
+        self.assertEqual(len(job_states['records']), job_states['_meta']['records_total'])
+        self.assertEqual(job_states['_meta']['records_total'], job_states['_meta']['records_filtered'])
+
+    def test_get_recent_job_state(self):
+        rv = self.get_context('/api/v1/user/%s/root/1/workflow/1/job/1/job-instance/3/state;recent=true' % self.user,
+                              pre_callable=self.pre_callable)
+
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.content_type.lower(), 'application/json')
+
+        job_states = self.read_json_response(rv)
+
+        self.assertEqual(len(job_states['records']), 1)
+        self.assertEqual(job_states['_meta']['records_total'], 7)
+        self.assertEqual(job_states['_meta']['records_filtered'], 1)
+
+
+class TestStampedeTaskQueries(NoAuthFlaskTestCase):
+    def test_get_workflow_tasks(self):
+        rv = self.get_context('/api/v1/user/%s/root/1/workflow/1/task' % self.user, pre_callable=self.pre_callable)
+
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.content_type.lower(), 'application/json')
+
+        tasks = self.read_json_response(rv)
+
+        self.assertEqual(len(tasks['records']), 2)
+        self.assertEqual(len(tasks['records']), tasks['_meta']['records_total'])
+        self.assertEqual(tasks['_meta']['records_total'], tasks['_meta']['records_filtered'])
+
+    def test_get_job_tasks(self):
+        rv = self.get_context('/api/v1/user/%s/root/1/workflow/1/job/11/task' % self.user,
+                              pre_callable=self.pre_callable)
+
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.content_type.lower(), 'application/json')
+
+        tasks = self.read_json_response(rv)
+
+        self.assertEqual(len(tasks['records']), 1)
+        self.assertEqual(len(tasks['records']), tasks['_meta']['records_total'])
+        self.assertEqual(tasks['_meta']['records_total'], tasks['_meta']['records_filtered'])
+
+    def test_get_task(self):
+        rv = self.get_context('/api/v1/user/%s/root/1/workflow/1/task/1' % self.user, pre_callable=self.pre_callable)
+
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.content_type.lower(), 'application/json')
+
+        task = self.read_json_response(rv)
+
+        self.assertEqual(task['task_id'], 1)
+
+    def test_get_missing_task(self):
+        rv = self.get_context('/api/v1/user/%s/root/1/workflow/1/task/0' % self.user, pre_callable=self.pre_callable)
+
+        self.assertEqual(rv.status_code, 404)
+
+
+class TestStampedeJobInstanceQueries(NoAuthFlaskTestCase):
+    def test_get_job_instances(self):
+        rv = self.get_context('/api/v1/user/%s/root/1/workflow/1/job/6/job-instance' % self.user,
+                              pre_callable=self.pre_callable)
+
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.content_type.lower(), 'application/json')
+
+        job_instances = self.read_json_response(rv)
+
+        self.assertEqual(len(job_instances['records']), 16)
+        self.assertEqual(len(job_instances['records']), job_instances['_meta']['records_total'])
+        self.assertEqual(job_instances['_meta']['records_total'], job_instances['_meta']['records_filtered'])
+
+    def test_get_recent_job_instance(self):
+        rv = self.get_context('/api/v1/user/%s/root/1/workflow/1/job/6/job-instance;recent=true' % self.user,
+                              pre_callable=self.pre_callable)
+
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.content_type.lower(), 'application/json')
+
+        job_instances = self.read_json_response(rv)
+
+        self.assertEqual(len(job_instances['records']), 1)
+        self.assertEqual(job_instances['_meta']['records_total'], 16)
+        self.assertEqual(job_instances['_meta']['records_filtered'], 1)
+
+    def test_get_job_instance(self):
+        rv = self.get_context('/api/v1/user/%s/root/1/workflow/1/job/6/job-instance;recent=true' % self.user,
+                              pre_callable=self.pre_callable)
+
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.content_type.lower(), 'application/json')
+
+        job_instance = self.read_json_response(rv)
+
+        self.assertEqual(job_instance['records'][0]['job_instance_id'], 21)
+
+    def test_get_missing_job_instance(self):
+        rv = self.get_context('/api/v1/user/%s/root/1/workflow/1/job-instance/0' % self.user,
+                              pre_callable=self.pre_callable)
+
+        self.assertEqual(rv.status_code, 404)
+
+
+class TestStampedeInvocationQueries(NoAuthFlaskTestCase):
+    def test_get_workflow_invocations(self):
+        rv = self.get_context('/api/v1/user/%s/root/1/workflow/1/invocation' % self.user,
+                              pre_callable=self.pre_callable)
+
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.content_type.lower(), 'application/json')
+
+        invocations = self.read_json_response(rv)
+
+        self.assertEqual(len(invocations['records']), 41)
+        self.assertEqual(len(invocations['records']), invocations['_meta']['records_total'])
+        self.assertEqual(invocations['_meta']['records_total'], invocations['_meta']['records_filtered'])
+
+    def test_get_job_instance_invocations(self):
+        rv = self.get_context('/api/v1/user/%s/root/1/workflow/1/job/6/job-instance/21/invocation' % self.user,
+                              pre_callable=self.pre_callable)
+
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.content_type.lower(), 'application/json')
+
+        invocations = self.read_json_response(rv)
+
+        self.assertEqual(len(invocations['records']), 2)
+        self.assertEqual(len(invocations['records']), invocations['_meta']['records_total'])
+        self.assertEqual(invocations['_meta']['records_total'], invocations['_meta']['records_filtered'])
+
+    def test_get_invocation(self):
+        rv = self.get_context('/api/v1/user/%s/root/1/workflow/1/invocation/41' % self.user,
+                              pre_callable=self.pre_callable)
+
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.content_type.lower(), 'application/json')
+
+        invocation = self.read_json_response(rv)
+
+        self.assertEqual(invocation['task_submit_seq'], -2)
+
+    def test_get_missing_invocation(self):
+        rv = self.get_context('/api/v1/user/%s/root/1/workflow/1/invocation/0' % self.user, pre_callable=self.pre_callable)
 
         self.assertEqual(rv.status_code, 404)
