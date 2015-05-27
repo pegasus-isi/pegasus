@@ -200,6 +200,7 @@ public class CondorGenerator extends Abstract {
             mJobTypeToCondorConcurrencyLimits.put( Job.CREATE_DIR_JOB,              "pegasus_auxillary.createdir");
             mJobTypeToCondorConcurrencyLimits.put( Job.CLEANUP_JOB,                 "pegasus_auxillary.cleanup");
             mJobTypeToCondorConcurrencyLimits.put( Job.REPLICA_REG_JOB,             "pegasus_auxillary.registration");
+            mJobTypeToCondorConcurrencyLimits.put( Job.CHMOD_JOB,                   "pegasus_auxillary.chmod");
             //compute, dax, dag jobs are not placed in any groups as we don't want any throttling per se
             mJobTypeToCondorConcurrencyLimits.put( Job.COMPUTE_JOB,                 "pegasus_compute");
             mJobTypeToCondorConcurrencyLimits.put( Job.DAX_JOB,                     "pegasus_dax");
@@ -1964,7 +1965,8 @@ public class CondorGenerator extends Abstract {
     protected String getConcurrencyLimit(Job job) throws CodeGeneratorException {
         String limit = CondorGenerator.jobTypeToCondorConcurrencyLimits().get( job.getJobType()) ;
         if( limit == null ){
-            throw new CodeGeneratorException( "Unable to determine Condor concurrency limit for job " + job.getID() );
+            throw new CodeGeneratorException( "Unable to determine Condor concurrency limit for job " + job.getID() +
+                                              " with type " + job.getJobType() );
         }
         return limit;
     }
