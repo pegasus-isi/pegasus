@@ -931,7 +931,7 @@ def get_invocation(username, m_wf_id, wf_id, invocation_id):
     """
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
-    record = queries.get_workflow_invocation(invocation_id)
+    record = queries.get_invocation(invocation_id)
 
     #
     # Generate JSON Response
