@@ -22,6 +22,7 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.planner.classes.Job;
+import static edu.isi.pegasus.planner.classes.Profile.ENV;
 
 import edu.isi.pegasus.planner.namespace.Condor;
 
@@ -30,6 +31,7 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParserException;
 
 import java.util.Iterator;
 import edu.isi.pegasus.planner.classes.TransferJob;
+import edu.isi.pegasus.planner.code.generator.condor.CondorEnvironmentEscape;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
 /**
@@ -120,13 +122,23 @@ public class GLite extends Abstract {
      * The Condor remote directory classad key to be used with Glite
      */
     public static final String CONDOR_REMOTE_DIRECTORY_KEY = "+remote_iwd";
-
+    
+    /**
+     * The condor key to set the remote environment via BLAHP
+     */
+    public static final String CONDOR_REMOTE_ENVIRONMENT_KEY = "+remote_environment";
+    
+    /**
+     * Handle to escaping class for environment variables
+     */
+    private CondorEnvironmentEscape mEnvEscape;
 
     /**
      * The default Constructor.
      */
     public GLite() {
         super();
+        mEnvEscape = new CondorEnvironmentEscape();
     }
 
 
@@ -174,6 +186,13 @@ public class GLite extends Abstract {
         /* convert some condor keys and globus keys to remote ce requirements
          +remote_cerequirements = blah */
         job.condorVariables.construct( "+remote_cerequirements", getCERequirementsForJob( job ) );
+        
+        /*
+         PM-934 construct environment accordingly
+        */
+        job.condorVariables.construct( GLite.CONDOR_REMOTE_ENVIRONMENT_KEY, 
+                                       mEnvEscape.esacape( job.envVariables ) );
+        job.envVariables.reset();
 
         /* do special handling for jobs scheduled to local site
          * as condor file transfer mechanism does not work
@@ -238,9 +257,7 @@ public class GLite extends Abstract {
     protected String getCERequirementsForJob( Job job ) throws CondorStyleException {
         StringBuffer value = new StringBuffer();
 
-        //PM-802 - Disable outermost quotes, to support better quoting of env. variables encoded in MYENV
-        //do quoting ourselves
-        //value.append( "\"" );
+        value.append( "\"" );
 
         /* append the job name */
         /* job name cannot have - or _ */
@@ -307,47 +324,7 @@ public class GLite extends Abstract {
             addSubExpression( value, "EXTRA_ARGUMENTS" , (String)job.vdsNS.get( Pegasus.GLITE_ARGUMENTS_KEY   ) );
         }
 
-
-        /* add the environment that is to be associated with the job */
-        StringBuffer env = new StringBuffer();
-        for( Iterator it = job.envVariables.getProfileKeyIterator(); it.hasNext(); ){
-           String key = (String)it.next();
-            /*
-             * PM-802 -
-             * Originally +remote_cerequirements were quoted as " .. MYENV==\"A=XYZ,B=LMN\"", which made it difficult
-             * to encode environment values with spaces in them.
-             * Now, quoting is as +remote_cerequirements = .. MYENV=="A1=AB,A11=A\ \\B,A111=A\\"\ B" where,
-             * A1=AB
-             * A11=A \B
-             * A111=A" B"
-             * Single Quotes are not supported due to the he way Condor processes it before passing it to PBS.
-             *
-             */
-            GliteEscape g = new GliteEscape();
-
-           env.append( key ).append( "=" ).append( g.escape( (String) job.envVariables.get( key ) ) );
-
-           if( it.hasNext() ){
-               env.append( "," );
-           }
-        }
-        if( env.length() > 0 ){
-            value.append( " && " );
-
-            //PM-802
-            value.append( "MYENV" ).append( "==" ).
-                    append( "\"" ).
-                    append( env ).
-                    append( "\"" );
-        }
-
-        //No quoting to be applied
-        // JIRA PM-109
-        //return this.quote( value.toString() );
-
-        //PM-802 - Disable outermost quotes, to support better quoting of env. variables encoded in MYENV
-        //do quoting ourselves
-        //value.append( "\"" );
+        value.append( "\"" );
 
         return value.toString();
     }
