@@ -568,6 +568,13 @@ public abstract class Namespace /*extends Data*/{
    public void mergeKey(String key, String value) {
        throw new UnsupportedOperationException( "Function mergeKey(String,String not supported for namespace "  + this.namespaceName());
    }
+
+   /**
+    * Resets the namespace, removing all profiles associated
+    */
+   public void reset(){
+       this.mProfileMap.clear();
+   }
    
    /**
      * Returns the clone of the object.
