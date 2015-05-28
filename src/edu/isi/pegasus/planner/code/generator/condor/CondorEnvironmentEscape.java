@@ -103,7 +103,7 @@ public class CondorEnvironmentEscape {
      * @param env
      * @return 
      */
-    public String esacape( ENV env ){
+    public String escape( ENV env ){
         StringBuilder result = new StringBuilder();
         
         //whole environment is enclosed in double quotes
@@ -185,7 +185,7 @@ public class CondorEnvironmentEscape {
         
         //should print out "one=1 two=""2"" three='spacey ''quoted'' value' "
         String expected = "\"one=1 two=\"\"2\"\" three='spacey ''quoted'' value' \"";
-        String result  = me.esacape(env); 
+        String result  = me.escape(env); 
         System.out.println( "escaping successful " + result.equals(expected) );
         System.out.println( result );
     }

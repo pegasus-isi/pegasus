@@ -79,8 +79,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
 /**
  * This class generates the condor submit files for the DAG which has to
  * be submitted to the Condor DagMan.
@@ -272,6 +270,11 @@ public class CondorGenerator extends Abstract {
     protected boolean mInitializeGridStart;
 
     /**
+     * Handle to escaping class for environment variables
+     */
+    protected CondorEnvironmentEscape mEnvEscape;
+    
+    /**
      * The long value of condor version.
      */
     private long mCondorVersion;
@@ -290,6 +293,7 @@ public class CondorGenerator extends Abstract {
         mInitializeGridStart = true;
         mStyleFactory     = new CondorStyleFactory();
         mGridStartFactory = new GridStartFactory();
+        mEnvEscape        = new CondorEnvironmentEscape();
     }
     
    
@@ -344,9 +348,6 @@ public class CondorGenerator extends Abstract {
      * @throws CodeGeneratorException in case of any error occuring code generation.
      */
     public Collection<File> generateCode( ADag dag ) throws CodeGeneratorException{
-//        DagInfo ndi        = dag.dagInfo;
-//       Vector vSubInfo    = dag.vJobSubInfos;
-
         if ( mInitializeGridStart ){
             mConcreteWorkflow = dag;
             mGridStartFactory.initialize( mBag, dag );
@@ -662,13 +663,10 @@ public class CondorGenerator extends Abstract {
         //figure out the style to apply for a job
         applyStyle( job, writer );
 
-        // handling of  log file is now done through condor profile
-        //bwSubmit.println("log = " + dagname + "_" + dagindex + ".log");
-
-        envStr = job.envVariables.toString();
-        if (envStr != null) {
-            writer.print( job.envVariables );
-        }
+        //PM-934 environment variables are also printed
+        //in the new format
+        String env = mEnvEscape.escape(job.envVariables );
+        writer.println( "environment = " + env  );
 
         // handle Condor variables
         handleCondorVarForJob( job );
