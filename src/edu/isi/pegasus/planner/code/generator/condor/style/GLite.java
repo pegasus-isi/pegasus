@@ -257,8 +257,6 @@ public class GLite extends Abstract {
     protected String getCERequirementsForJob( Job job ) throws CondorStyleException {
         StringBuffer value = new StringBuffer();
 
-        value.append( "\"" );
-
         /* append the job name */
         /* job name cannot have - or _ */
         String id = job.getID().replace( "-", "" );
@@ -323,8 +321,6 @@ public class GLite extends Abstract {
             value.append( " && " );
             addSubExpression( value, "EXTRA_ARGUMENTS" , (String)job.vdsNS.get( Pegasus.GLITE_ARGUMENTS_KEY   ) );
         }
-
-        value.append( "\"" );
 
         return value.toString();
     }
