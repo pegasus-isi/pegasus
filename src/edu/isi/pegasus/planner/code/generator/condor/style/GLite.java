@@ -191,7 +191,7 @@ public class GLite extends Abstract {
          PM-934 construct environment accordingly
         */
         job.condorVariables.construct( GLite.CONDOR_REMOTE_ENVIRONMENT_KEY, 
-                                       mEnvEscape.esacape( job.envVariables ) );
+                                       mEnvEscape.escape( job.envVariables ) );
         job.envVariables.reset();
 
         /* do special handling for jobs scheduled to local site
