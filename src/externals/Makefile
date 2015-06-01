@@ -4,6 +4,8 @@ ifndef $(prefix)
     prefix=$(shell cd $(CURDIR)/../.. && pwd)
 endif
 
+PYTHON=$(shell $(CURDIR)/../../release-tools/get-system-python)
+
 EXTDIR=$(prefix)/lib/pegasus/externals
 LIBDIR=$(EXTDIR)/python
 
@@ -12,11 +14,11 @@ BUILDPKG=$(CURDIR)/buildpackage.sh
 # We always use SQLAlchemy
 PACKAGES=sqlalchemy
 
-ifneq ($(shell python -V 2>&1 | grep -E 'ython 2\.[3-6]'),)
+ifneq ($(shell $(PYTHON) -V 2>&1 | grep -E 'ython 2\.[3-6]'),)
     PACKAGES+=ordereddict.py
 endif
 
-ifneq ($(shell python -V 2>&1 | grep -E 'ython 2\.[3-4]'),)
+ifneq ($(shell $(PYTHON) -V 2>&1 | grep -E 'ython 2\.[3-4]'),)
     # Install alternative dependencies for python 2.4
     PACKAGES+=pysqlite2
 else
@@ -59,7 +61,7 @@ $(LIBDIR)/%:
 	rm -rf $(TARNAME) ;\
 	touch $@
 
-ifneq ($(shell python -V 2>&1 | grep -E 'ython 2\.[3-4]'),)
+ifneq ($(shell $(PYTHON) -V 2>&1 | grep -E 'ython 2\.[3-4]'),)
     # We use an old version of sqlalchemy for python 2.3 and 2.4
     $(LIBDIR)/sqlalchemy: SQLAlchemy-0.7.6.tar.gz
 else
