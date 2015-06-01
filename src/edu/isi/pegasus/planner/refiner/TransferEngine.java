@@ -453,8 +453,9 @@ public class TransferEngine extends Engine {
                 //for a deleted node, to transfer it's output
                 //the execution pool should be set to local i.e submit host
                 currentJob.setSiteHandle( "local" );
-                //set the staging site for the deleted job
-                currentJob.setStagingSiteHandle( getStagingSite( currentJob ) );
+                //PM-936 set the staging site for the deleted job
+                //to local site
+                currentJob.setStagingSiteHandle( "local" );
 
                 //for jobs deleted during data reuse we dont
                 //go through the staging site. they are transferred
