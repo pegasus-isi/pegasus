@@ -74,12 +74,17 @@ Install the following packages using yum:
 * gcc-c++
 * make
 * python-devel
+* openssl-devel
 * rpm-build (optional, required to build RPM package)
 * mysql-devel (optional, required to access MySQL databases)
 * postgresql-devel (optional, required to access PostgreSQL databases)
 
 In addition, RHEL 5 systems will require Python 2.6, which can be
-installed from EPEL.
+installed from EPEL. You will also need to install the right setuptools
+for Python 2.6, which can be installed from the Python Package Index using:
+
+    wget http://pypi.python.org/packages/2.6/s/setuptools/setuptools-0.6c9-py2.6.egg#md5=ca37b1ff16fa2ede6e19383e7b59245a
+    sudo /bin/sh setuptools-0.6c9-py2.6.egg
 
 #### Mac OS X
 
