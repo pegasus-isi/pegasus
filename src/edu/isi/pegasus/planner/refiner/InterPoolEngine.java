@@ -260,17 +260,6 @@ public class InterPoolEngine extends Engine implements Refiner {
             //check if the user has specified any hints in the dax
             incorporateHint(job, Hints.EXECUTION_SITE_KEY );
             
-            /*PM-810 
-            if (incorporateHint(job, "executionPool")) {
-                TransformationCatalogEntry entry = lookupTC(job);
-                incorporateProfiles(job, entry );
-                //the staging site needs to be set before any
-                //file transfers for executable staging are incorporated PM-618
-                job.setStagingSiteHandle( determineStagingSite( job ) );
-                handleExecutableFileTransfers(job, entry);
-                continue;
-            }*/
- 
             String site  = job.getSiteHandle();
             mLogger.log( "Setting up site mapping for job "  + job.getName(), 
                          LogManager.DEBUG_MESSAGE_LEVEL );
@@ -321,18 +310,7 @@ public class InterPoolEngine extends Engine implements Refiner {
             job.setStagingSiteHandle( determineStagingSite( job ) );
             handleExecutableFileTransfers(job, entry);
             
-            /* PM-810
-            if ( !incorporateProfiles(job) ){
-                error = new StringBuffer();
-                error.append( "Profiles incorrectly incorporated for ").
-                      append( job.getCompleteTCName());
-
-               mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL );
-               throw new RuntimeException( error.toString() );
-
-            }
-            */
-
+            
             //log actions as XML fragment
             try{
                 logRefinerAction(job);
