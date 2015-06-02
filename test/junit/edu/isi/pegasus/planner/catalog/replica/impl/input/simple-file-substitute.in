@@ -1,3 +1,3 @@
 # file-based replica catalog: 2015-04-28T13:28:50.915-07:00
 f.a file:///tmp/f.a site="local"
-f.b file:///tmp/$(USER)/f.b site="isi"
+f.b file:///tmp/${USER}/f.b site="isi"

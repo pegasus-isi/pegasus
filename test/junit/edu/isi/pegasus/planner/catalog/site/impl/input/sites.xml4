@@ -77,12 +77,12 @@
                 </replica-catalog>
         </site>
 	 
-	 <site handle="$(SITE)" arch="$(ARCH)" os="$(OS)">
+	 <site handle="${SITE}" arch="${ARCH}" os="${OS}">
 
-                <directory path="$(INTERNAL_MOUNT_POINT)" type="$(DIRECTORY_TYPE)">
-                        <file-server operation="all" url="$(EXTERNAL_MOUNT_POINT)"/>
+                <directory path="${INTERNAL_MOUNT_POINT}" type="${DIRECTORY_TYPE}">
+                        <file-server operation="all" url="${EXTERNAL_MOUNT_POINT}"/>
                 </directory>
-		<profile namespace="env" key="PEGASUS_HOME">$(PEGASUS_HOME)</profile>
+		<profile namespace="env" key="PEGASUS_HOME">${PEGASUS_HOME}</profile>
         </site>
 
 </sitecatalog>
