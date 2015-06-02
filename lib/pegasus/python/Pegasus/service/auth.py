@@ -114,7 +114,7 @@ def pull_username(endpoint, values):
 def before():
 
     # Static files do not need to be authenticated.
-    if request.path.startswith(url_for('static', filename='')):
+    if (request.script_root + request.path).startswith(url_for('static', filename='')):
         return
 
     #
