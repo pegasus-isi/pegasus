@@ -9,12 +9,12 @@ PYTHON=$(shell $(CURDIR)/../../release-tools/get-system-python)
 EXTDIR=$(prefix)/lib/pegasus/externals
 LIBDIR=$(EXTDIR)/python
 
-BUILDPKG=$(CURDIR)/buildpackage.sh
-
 PACKAGES=sqlalchemy
+
 ifneq ($(shell $(PYTHON) -V 2>&1 | grep -E 'ython 2\.[3-6]'),)
     PACKAGES+=ordereddict.py
 endif
+
 PACKAGES+=flask
 PACKAGES+=flask_cache
 PACKAGES+=flask_sqlalchemy.py
@@ -29,14 +29,14 @@ PACKAGES+=pam.py
 PACKAGES+=OpenSSL
 PACKAGES+=plex
 ifeq ($(shell which pg_config),)
-	$(warning WARNING: pg_config not found: skipping python postgresql library)
+    $(warning WARNING: pg_config not found: skipping python postgresql library)
 else
-	PACKAGES+=psycopg2
+    PACKAGES+=psycopg2
 endif
 ifeq ($(shell which mysql_config),)
-	$(warning WARNING: mysql_config not found: skipping python mysql library)
+    $(warning WARNING: mysql_config not found: skipping python mysql library)
 else
-	PACKAGES+=MySQLdb
+    PACKAGES+=MySQLdb
 endif
 
 all: $(addprefix $(LIBDIR)/,$(PACKAGES))
@@ -64,11 +64,10 @@ $(LIBDIR)/requests: requests-1.2.3.tar.gz
 $(LIBDIR)/itsdangerous.py: itsdangerous-0.21.tar.gz
 $(LIBDIR)/boto: boto-2.5.2.tar.gz
 $(LIBDIR)/pam.py: pam-0.1.4.tar.gz
-$(LIBDIR)/OpenSSL: pyOpenSSL-0.13.tar.gz
+$(LIBDIR)/OpenSSL: pyOpenSSL-0.12.tar.gz
 $(LIBDIR)/plex: plex-2.0.0dev.tar.gz
 $(LIBDIR)/MySQLdb: MySQL-python-1.2.5.tar.gz
-$(LIBDIR)/psycopg2: psycopg2-2.6.tar.gz
-$(LIBDIR)/pysqlite2: pysqlite-2.6.0.tar.gz
+$(LIBDIR)/psycopg2: psycopg2-2.5.5.tar.gz
 $(LIBDIR)/ordereddict.py: ordereddict-1.1.tar.gz
 
 clean:
