@@ -37,6 +37,25 @@ public class FindExecutable {
      *         null
      */
     public static File findExec( String name ) {
+        //pick up value of PEGASUS_BIN_DIR
+        //the wrapper script sets value of PEGASUS_BIN_DIR as
+        //java property pegasus.home.bindir .
+        return FindExecutable.findExec( System.getProperty( "pegasus.home.bindir" ), name ) ;
+    }
+    
+    /**
+     * Finds the path to an executable of a given name , based on the value of
+     * PATH environment variable and any additional directory that is preferred
+     * to be searched for
+     * 
+     * @param directory the directory to search the executable in, before 
+     *                  searching for in the PATH.
+     * @param name    the name of the executable to search for.
+     * 
+     * @return the File object corresponding to the executable if found, else
+     *         null
+     */
+    public static File findExec( String directory, String name ) {
         if ( name == null ) {
             return null;
         }
@@ -46,12 +65,8 @@ public class FindExecutable {
             return null;
         }
         
-        //pick up value of PEGASUS_BIN_DIR
-        //the wrapper script sets value of PEGASUS_BIN_DIR as
-        //java property pegasus.home.bindir .
-        String pegasusBinDir = System.getProperty( "pegasus.home.bindir" );
-        if( pegasusBinDir != null ){
-            path = pegasusBinDir + ":" + path;
+        if( directory != null ){
+            path = directory + ":" + path;
         }
         
         String[] list = path.split( ":" );
