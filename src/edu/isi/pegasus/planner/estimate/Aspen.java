@@ -19,6 +19,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
 import edu.isi.pegasus.common.util.FindExecutable;
 import edu.isi.pegasus.common.util.StreamGobbler;
+import edu.isi.pegasus.common.util.StreamGobblerCallback;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -27,6 +28,7 @@ import edu.isi.pegasus.planner.namespace.Metadata;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -119,8 +121,8 @@ public class Aspen implements Estimator {
      * @return null;
      */
     public String getRuntime( Job job ){
-        
-        return this.executeAspenCommand( assembleArgsFromMetadata(job) , "runtime" );
+        Map<String,String> estimates = this.executeAspenCommand( assembleArgsFromMetadata(job) );
+        return estimates.get( "runtime" );
     }
     
     /**
@@ -131,7 +133,8 @@ public class Aspen implements Estimator {
      * @return the memory usage
      */
     public String getMemory( Job job ){
-        return this.executeAspenCommand( assembleArgsFromMetadata(job) , "memory" );
+        Map<String,String> estimates = this.executeAspenCommand( assembleArgsFromMetadata(job) );
+        return estimates.get( "memory" );
     }
     
     /**
@@ -158,26 +161,26 @@ public class Aspen implements Estimator {
      * the key in it's stdout.
      * 
      * @param command
-     * @param key
      * 
-     * @return 
+     * @return the estimates parsed from the stdout
      */
-    private String executeAspenCommand( String args, String key ){
+    private Map<String,String> executeAspenCommand( String args ){
        
         String command = this.mAspenEstimateClient.getAbsolutePath() + " " + args;
         mLogger.log("Executing  " + command,
                          LogManager.DEBUG_MESSAGE_LEVEL );
             
-        String result = null;
+        Map<String,String> result = null;
         try{
             //set the callback and run the command
             Runtime r = Runtime.getRuntime();
             Process p = r.exec( command, mEnvVariables );
 
+            AspenStreamGobblerCallback callback = new AspenStreamGobblerCallback( mLogger, LogManager.DEBUG_MESSAGE_LEVEL );
+           
             //spawn off the gobblers with the already initialized default callback
             StreamGobbler ips =
-                new StreamGobbler( p.getInputStream(), new DefaultStreamGobblerCallback(
-                                                                   LogManager.CONSOLE_MESSAGE_LEVEL ));
+                new StreamGobbler( p.getInputStream(), callback );
             StreamGobbler eps =
                 new StreamGobbler( p.getErrorStream(), new DefaultStreamGobblerCallback(
                                                              LogManager.ERROR_MESSAGE_LEVEL));
@@ -198,6 +201,7 @@ public class Aspen implements Estimator {
             if( status != 0 ){
                 throw new RuntimeException( mAspenEstimateClient + " failed with non zero exit status " + command );
             }
+            result = callback.getEstimates();
         }
         catch(IOException ioe){
             mLogger.log("IOException while executing " + mAspenEstimateClient, ioe,
@@ -209,6 +213,53 @@ public class Aspen implements Estimator {
         } 
         return result;
         
+    }
+
+    private static class AspenStreamGobblerCallback implements StreamGobblerCallback {
+
+
+        /**
+         * The instance to the logger to log messages.
+         */
+        private LogManager mLogger;
+        
+        private int mLevel;
+
+        /**
+         * 
+         */
+        private Map<String,String> mEstimates;
+        
+        public AspenStreamGobblerCallback( LogManager logger, int level ) {
+            mLogger = logger;
+            mLevel  = level;
+            mEstimates = new HashMap<String,String>();
+        }
+
+        /**
+         * work on the stdout lines and store them in an internal map
+         * 
+         * @param line 
+         */
+        public void work(String line) {
+            mLogger.log( line , mLevel);
+            if( line == null ){
+                return;
+            }
+            
+            line = line.trim();
+            String[] kvs = line.split( "=" );
+            if( kvs.length != 2 ){
+                mLogger.log( "Unable to parse aspen output " + line ,
+                             LogManager.ERROR_MESSAGE_LEVEL );
+            }
+            mEstimates.put( kvs[0], kvs[1] );
+            
+        }
+        
+        public Map<String,String> getEstimates(){
+            return mEstimates;
+        }
     }
 
     
