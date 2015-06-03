@@ -37,11 +37,17 @@ PROCESS_SWITCHING = True
 #
 ADMIN_USERS = None
 
+#
+# Configure Logging so Flask log messages end up in Apache logs
+#
+import sys
+import logging
+
+logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 
 #
 # Start Pegasus Service
 #
-
 from Pegasus.service import app
 
 app.config.from_object(__name__)
