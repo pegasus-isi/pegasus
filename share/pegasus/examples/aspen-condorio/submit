@@ -5,6 +5,7 @@ set -e
 # this variable is expanded by the planner when
 # parsing in the sites.xml file in the conf directory
 TOPDIR=`pwd`
+export TOPDIR
 
 # pegasus bin directory is needed to find keg
 BIN_DIR=`pegasus-config --bin`
@@ -23,4 +24,5 @@ pegasus-plan \
     --output-site local \
     --dir dags \
     --dax aspen.dax \
+    -v \
     --submit

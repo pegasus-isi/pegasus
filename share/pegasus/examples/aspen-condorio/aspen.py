@@ -20,7 +20,7 @@ diamond.addFile(a)
 # Add executables to the DAX-level replica catalog
 # In this case the binary is keg, which is shipped with Pegasus, so we use
 # the remote PEGASUS_HOME to build the path.
-e_preprocess = Executable(namespace="diamond", name="preprocess", version="4.0", os="linux", arch="x86_64", installed=True)
+e_preprocess = Executable(namespace="diamond", name="preprocess", version="4.0", os="linux", arch="x86_64", installed=False)
 e_preprocess.addPFN(PFN("file://" + sys.argv[1] + "/pegasus-keg", "local"))
 diamond.addExecutable(e_preprocess)
 
