@@ -1237,13 +1237,17 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
         
         //add a 0 suffix
         String nversion = version + ".0";
-        if( CondorVersion.numericValue( nversion) < DAXParser3.DAX_VERSION_3_2_0 ){
+        long value = CondorVersion.numericValue( nversion) ;
+        if( value < DAXParser3.DAX_VERSION_3_2_0 ){
             StringBuffer sb = new StringBuffer();
             sb.append( "DAXParser3 Unsupported DAX Version " ).append( version ).
                append( ". Set pegasus.schema.dax property to load the old DAXParser" );
             throw new RuntimeException( sb.toString() );
         }
-        
+        //also complain for parsing documents that have version higher
+        if( value > DAXParser3.DAX_VERSION_3_6_0 ){
+            throw new RuntimeException( "DAXParser3 cannot parse documents conforming to DAX version " + version );
+        }
         return;
     }
 
