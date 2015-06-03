@@ -90,7 +90,7 @@ public class EstimatorFactory {
             estimator.initialize( dag, bag );
         }
         catch ( Exception e ){
-            throw new EstimatorFactoryException( " Unable to instantiate partitioner ",
+            throw new EstimatorFactoryException( " Unable to instantiate estimator ",
                                                  className,
                                                  e );
         }
