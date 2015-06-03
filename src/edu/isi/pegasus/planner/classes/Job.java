@@ -1623,6 +1623,15 @@ public class Job extends Data implements GraphNodeContent{
     }
 
     /**
+     * Returns the meta data attributes associated with the job
+     * 
+     * @return 
+     */
+    public Namespace getMetadata(){
+        return this.mMetadataAttributes;
+    }
+            
+    /**
      * Returns the path to the  prescript for the job if set.
      *
      * @return  the path to the script that has to be run as a prescript, else
@@ -1926,6 +1935,7 @@ public class Job extends Data implements GraphNodeContent{
         dagmanVariables  = new Dagman();
         hints            = new Hints();
         vdsNS            = new Pegasus();
+        mMetadataAttributes = new Metadata();
     }
 
     /**
