@@ -79,7 +79,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
      * The "not-so-official" location URL of the Site Catalog Schema.
      */
     public static final String SCHEMA_LOCATION =
-                                        "http://pegasus.isi.edu/schema/dax-3.5.xsd";
+                                        "http://pegasus.isi.edu/schema/dax-3.6.xsd";
 
     /**
      * uri namespace
