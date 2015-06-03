@@ -49,6 +49,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Vector;
@@ -781,12 +782,21 @@ public class InterPoolEngine extends Engine implements Refiner {
      * @param job 
      */
     protected void incorporateEstimates(Job job) {
-        String runtime = mEstimator.getRuntime(job);
+        Map<String,String> estimates = mEstimator.getAllEstimates(job);
+        
+        for( Map.Entry<String,String> entry: estimates.entrySet() ){
+            String key = entry.getKey();
+            String value = entry.getValue();
+            //each estimates is incorporated as a metadata attribute for the job
+            job.getMetadata().construct(key, value);
+        }
+        
+        String runtime = estimates.get("runtime");
         if( runtime != null ){
             job.vdsNS.checkKeyInNS( Pegasus.MAX_WALLTIME, runtime );
         }
         
-        String memory = mEstimator.getMemory(job);
+        String memory = estimates.get( "memory" );
         if( memory != null ){
             //for the time being set as globus maxwalltime
             job.globusRSL.checkKeyInNS( "maxmemory", memory );

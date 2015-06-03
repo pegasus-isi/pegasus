@@ -112,6 +112,9 @@ public class Aspen implements Estimator {
     }
     
     
+    
+   
+    
     /**
      * Returns the estimated Runtime of a job, by querying the estimate client
      * with all the metadata associated with the job
@@ -121,7 +124,7 @@ public class Aspen implements Estimator {
      * @return null;
      */
     public String getRuntime( Job job ){
-        Map<String,String> estimates = this.executeAspenCommand( assembleArgsFromMetadata(job) );
+        Map<String,String> estimates = this.getAllEstimates( job );
         return estimates.get( "runtime" );
     }
     
@@ -133,8 +136,19 @@ public class Aspen implements Estimator {
      * @return the memory usage
      */
     public String getMemory( Job job ){
-        Map<String,String> estimates = this.executeAspenCommand( assembleArgsFromMetadata(job) );
+        Map<String,String> estimates = this.getAllEstimates( job );
         return estimates.get( "memory" );
+    }
+    
+    /**
+     * Returns all estimates for a job
+     * 
+     * @param job
+     * 
+     * @return 
+     */
+    public Map<String,String> getAllEstimates(Job job ){
+        return this.executeAspenCommand( assembleArgsFromMetadata(job) );
     }
     
     /**

@@ -19,6 +19,7 @@ package edu.isi.pegasus.planner.estimate;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import java.util.Map;
 
 /**
  * An interface to allow us to estimate job characteristics
@@ -35,6 +36,14 @@ public interface Estimator {
      */
     public void initialize(ADag dag, PegasusBag bag);
     
+    /**
+     * Returns all estimates for a job
+     * 
+     * @param job
+     * 
+     * @return 
+     */
+    public Map<String,String> getAllEstimates(Job job );
     
     /**
      * Return the estimated Runtime of a job

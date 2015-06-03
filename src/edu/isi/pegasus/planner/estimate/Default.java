@@ -18,6 +18,8 @@ package edu.isi.pegasus.planner.estimate;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Default implementation, that just returns null values
@@ -38,6 +40,16 @@ public class Default implements Estimator {
         
     }
     
+    /**
+     * Returns all estimates for a job
+     * 
+     * @param job
+     * 
+     * @return 
+     */
+    public Map<String,String> getAllEstimates(Job job ){
+        return new HashMap<String,String>();
+    }
     
     /**
      * Return the estimated Runtime of a job
