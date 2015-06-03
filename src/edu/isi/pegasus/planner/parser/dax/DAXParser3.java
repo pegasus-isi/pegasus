@@ -76,10 +76,15 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
 
    
     /**
-     * The "not-so-official" location URL of the Site Catalog Schema.
+     * The "not-so-official" location URL of the DAX Parser Schema.
      */
-    public static final String SCHEMA_LOCATION =
+    public static final String DEFAULT_SCHEMA_LOCATION =
                                         "http://pegasus.isi.edu/schema/dax-3.6.xsd";
+    /**
+     * The "not-so-official" location URL of the DAX Parser Schema.
+     */
+    public static final String SCHEMA_LOCATION_DIRECTORY =
+                                        "http://pegasus.isi.edu/schema/";
 
     /**
      * uri namespace
@@ -141,18 +146,25 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
      */
     protected String mJobPrefix;
     
-   
+    /**
+     * Schema version of the DAX as detected in the factory.
+     */
+    protected String mSchemaVersion;
     
     /**
-     * The overloaded constructor.
+     * The overloaded constructor. The schema version passed is determined
+     * in the DAXFactory
      *
-     * @param properties the <code>PegasusProperties</code> to be used.
+     * @param bag
+     * @param schemaVersion    the schema version specified in the DAX file.
      */
-    public DAXParser3( PegasusBag bag  ) {
+    public DAXParser3( PegasusBag bag, String schemaVersion  ) {
         super( bag );
+        mSchemaVersion = schemaVersion;
         mJobPrefix = ( bag.getPlannerOptions() == null ) ?
                        null:
                        bag.getPlannerOptions().getJobnamePrefix();
+
 
     }
 
@@ -167,7 +179,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
     }
 
     /**
-     * Retuns the DAXCallback for the parser
+     * Returns the DAXCallback for the parser
      *
      * @return  the callback
      */
@@ -227,7 +239,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
      */
     public String getSchemaLocation() {
         // treat URI as File, yes, I know - I need the basename
-        File uri = new File( DAXParser3.SCHEMA_LOCATION );
+        File uri = new File( "dax-" + mSchemaVersion + ".xsd");
         // create a pointer to the default local position
         File dax = new File( this.mProps.getSchemaDir(),  uri.getName() );
 
