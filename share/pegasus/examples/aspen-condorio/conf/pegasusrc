@@ -1,0 +1,16 @@
+pegasus.catalog.site.file=./conf/sites.xml
+
+pegasus.data.configuration = condorio
+
+# use Aspen to estimate runtimes for jobs
+pegasus.estimator = Aspen
+
+pegasus.estimator.aspen.bin = /lfs1/devel/Pegasus/git/aspen/pegasus
+pegasus.estimator.aspen.models = /lfs1/devel/Pegasus/git/aspen/models
+
+pegasus.metrics.app 	    pegasus-examples
+
+
+
+
+
