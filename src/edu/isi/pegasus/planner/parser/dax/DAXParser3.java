@@ -39,6 +39,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.transformation.impl.Abstract;
+import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.CompoundTransformation;
 import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.DAXJob;
@@ -1028,7 +1029,11 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 if ( child instanceof Profile ) {
                     Profile md = ( Profile )child;
                     md.setProfileValue( mTextContent.toString().trim() );
-                    if ( parent instanceof Job ){
+                    if( parent instanceof Map ){
+                        unSupportedNestingOfElements( "adag", "metadata" );
+                        return true;
+                    }
+                    else if ( parent instanceof Job ){
                         //profile appears in the job element
                         Job j = (Job)parent;
                         j.addProfile( md );
