@@ -168,6 +168,9 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
      */
     public void startParser( String file ) {
         try {
+            //PM-938 set the schema location. we cannot set it in constructor
+            this.setSchemaLocations();
+            
             this.testForFile( file );
             
             //PM-831 set up the parser with our own reader

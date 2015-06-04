@@ -54,7 +54,6 @@ import edu.isi.pegasus.planner.code.GridStartFactory;
 import edu.isi.pegasus.planner.common.VariableExpansionReader;
 import edu.isi.pegasus.planner.dax.Executable;
 import edu.isi.pegasus.planner.dax.Invoke;
-import edu.isi.pegasus.planner.dax.MetaData;
 import edu.isi.pegasus.planner.dax.PFN;
 import edu.isi.pegasus.planner.dax.Executable.ARCH;
 import edu.isi.pegasus.planner.dax.Executable.OS;
@@ -195,6 +194,9 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
     public void startParser( String file ) {
         mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_PARSE_DAX, LoggingKeys.DAX_ID, file );
         try {
+            //PM-938 set the schema location. we cannot set it in constructor
+            this.setSchemaLocations();
+            
             this.testForFile( file );
             
             //PM-831 set up the parser with our own reader
