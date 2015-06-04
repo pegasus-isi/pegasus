@@ -59,6 +59,7 @@ import edu.isi.pegasus.planner.dax.PFN;
 import edu.isi.pegasus.planner.dax.Executable.ARCH;
 import edu.isi.pegasus.planner.dax.Executable.OS;
 import edu.isi.pegasus.planner.dax.Invoke.WHEN;
+import edu.isi.pegasus.planner.dax.MetaData;
 import edu.isi.pegasus.planner.namespace.Hints;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.parser.StackBasedXMLParser;
@@ -1046,7 +1047,8 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                     }
                     //metadata appears in executable element
                     else if( parent instanceof Executable ){
-                        unSupportedNestingOfElements( "executable", "metadata" );
+                        Executable e = (Executable)parent;
+                        e.addMetaData( new MetaData(md.getProfileKey(), md.getProfileValue()));
                         return true;
                     }
                 }
@@ -1211,6 +1213,10 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
 	 		for(edu.isi.pegasus.planner.dax.Profile profile : executable.getProfiles()){
 	 			tce.addProfile(new edu.isi.pegasus.planner.classes.Profile(profile.getNameSpace(),profile.getKey() , profile.getValue()));
 	 		}
+                        for( MetaData md: executable.getMetaData()){
+                            //convert to metadata profile object for planner to use
+                            tce.addProfile( new Profile( Profile.METADATA, md.getKey(), md.getValue() ));
+                        }
 	 		tceList.add(tce);
  	   }
  		   
