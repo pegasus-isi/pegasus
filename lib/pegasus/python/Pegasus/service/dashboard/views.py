@@ -24,6 +24,8 @@ from flask import request, render_template, url_for, json, g, redirect, send_fro
 from sqlalchemy.orm.exc import NoResultFound
 
 from Pegasus.db.errors import StampedeDBNotFoundError
+from Pegasus.db.admin.admin_loader import DBAdminError
+
 from Pegasus.tools import utils
 from Pegasus.service import filters
 from Pegasus.service.dashboard.dashboard import Dashboard, NoWorkflowsFoundError
@@ -528,3 +530,7 @@ def master_database_missing(error):
 def stampede_database_missing(error):
     return render_template('error/stampede_database_missing.html')
 
+
+@dashboard_routes.errorhandler(DBAdminError)
+def stampede_database_missing(error):
+    return render_template('error/database_migration_error.html')

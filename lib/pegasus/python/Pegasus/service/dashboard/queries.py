@@ -39,7 +39,7 @@ class MasterDatabase(SQLAlchemyInit):
 
         try:
             SQLAlchemyInit.__init__(self, connString)
-        except (connection.ConnectionError, DBAdminError), e:
+        except connection.ConnectionError, e:
             log.error(e)
             raise MasterDBNotFoundError
 
@@ -204,7 +204,7 @@ class WorkflowInfo(SQLAlchemyInit):
 
         try:
             SQLAlchemyInit.__init__(self, connString)
-        except (connection.ConnectionError, DBAdminError), e:
+        except connection.ConnectionError, e:
             log.error(e)
             raise StampedeDBNotFoundError
 
