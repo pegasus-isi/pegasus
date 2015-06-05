@@ -109,7 +109,8 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
 
         String ntptSite = this.getNonThirdPartySite(job, files, jobClass );
         if( ntptSite == null && jobClass != Job.STAGE_IN_WORKER_PACKAGE_JOB ){
-            throw new RuntimeException( "Unable to determine the non third party site for inter site transfer job " + txJobName);
+            throw new RuntimeException( "Unable to determine the non third party site for transfer job " + txJobName + 
+                                        " of type " + jobClass );
         }
         mLogger.log( "Non Third Party Transfer site for transfer job " + txJobName + " is " + ntptSite, 
                       LogManager.DEBUG_MESSAGE_LEVEL );
