@@ -343,10 +343,14 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf=False
         if multiple_wf:
             expanded_workflow_stats = StampedeWorkflowStatistics(output_db_url)
         else:
-             expanded_workflow_stats = StampedeStatistics(output_db_url)
+            expanded_workflow_stats = StampedeStatistics(output_db_url)
 
-        expanded_workflow_stats.initialize(wf_uuid)
-    except:
+        wf_found = expanded_workflow_stats.initialize(wf_uuid)
+
+        if wf_found is False:
+            print 'Workflow %r not found in database %r' % (wf_uuid, output_db_url)
+            sys.exit(1)
+    except Exception:
         logger.error("Failed to load the database." + output_db_url )
         logger.warning(traceback.format_exc())
         sys.exit(1)
@@ -415,8 +419,12 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf=False
         for sub_wf_uuid in wf_uuid_list:
             try:
                 individual_workflow_stats = StampedeStatistics(output_db_url, False)
-                individual_workflow_stats.initialize(sub_wf_uuid)
-            except:
+                wf_found = individual_workflow_stats.initialize(sub_wf_uuid)
+
+                if wf_found is False:
+                    print 'Workflow %r not found in database %r' % (sub_wf_uuid, output_db_url)
+                    sys.exit(1)
+            except Exception:
                 logger.error("Failed to load the database." + output_db_url )
                 logger.warning(traceback.format_exc())
                 sys.exit(1)
