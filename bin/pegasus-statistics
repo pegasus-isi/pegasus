@@ -1119,8 +1119,10 @@ def main():
     time_host_stats_col_name_csv[1] += tf_format
 
     if options.output_dir:
+        delete_if_exists = False
         output_dir = options.output_dir
     else:
+        delete_if_exists = True
         if multiple_wf or options.is_uuid:
             sys.stderr.write("Output directory option is required when calculating statistics over multiple workflows.\n")
             sys.exit(1)
@@ -1128,7 +1130,7 @@ def main():
             output_dir = os.path.join(submit_dir, DEFAULT_OUTPUT_DIR)
 
     logger.info("Output directory is %s" % output_dir)
-    utils.create_directory(output_dir, True)
+    utils.create_directory(output_dir, delete_if_exists=delete_if_exists)
 
     global uses_PMC
 
