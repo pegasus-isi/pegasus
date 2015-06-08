@@ -52,8 +52,12 @@ def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=
 
     # Database creation
     if create:
-        from Pegasus.db.admin.admin_loader import db_create
-        db_create(dburi, engine, db, pegasus_version=pegasus_version, force=force)
+        try:
+            from Pegasus.db.admin.admin_loader import db_create
+            db_create(dburi, engine, db, pegasus_version=pegasus_version, force=force)
+
+        except exc.OperationalError, e:
+            raise ConnectionError(e)
 
     if schema_check:
         from Pegasus.db.admin.admin_loader import db_verify
