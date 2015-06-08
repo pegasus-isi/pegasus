@@ -391,7 +391,7 @@ static char **tryGetNewEnvironment(char **envp, const char *tempdir, const char 
 
 
     /* Copy the environment variables to a new array */
-    char **newenvp = (char **)malloc(sizeof(char **)*(vars+3));
+    char **newenvp = (char **)malloc(sizeof(char **)*(vars+5));
     if (newenvp == NULL) {
         printerr("malloc: %s\n", strerror(errno));
         return envp;
