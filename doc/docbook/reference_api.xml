@@ -3773,11 +3773,11 @@ HTTP/1.1 200 OK
                 "workflow": "/api/v1/user/mayani/root/1/workflow/1"
             }
         }
-     ],
-     "_meta": {
+    ],
+    "_meta": {
         "records_total": 8,
         "records_filtered": 1
-     }
+    }
 }</programlisting></para>
       </section>
     </section>
