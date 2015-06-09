@@ -3515,7 +3515,7 @@ HTTP/1.1 200 OK
     "dax_version"       : "3.5",
     "dax_file"          : "/home/tutorial/hello-world.xml",
     "dag_file_name"     : "hello_world-0.dag",
-    "timestamp"         : 1421432530,
+    "timestamp"         : 1421432530.0,
     "_links"            : {
         "workflow_state" : "/user/user-a/root/1/workflow/1/state",
         "job"            : "/user/user-a/root/1/workflow/1/job",
@@ -3552,7 +3552,7 @@ HTTP/1.1 200 OK
             "dax_version"       : "3.5",
             "dax_file"          : "/home/tutorial/hello-world.xml",
             "dag_file_name"     : "hello_world-0.dag",
-            "timestamp"         : 1421432530,
+            "timestamp"         : 1421432530.0,
             "_links"            : {
                 "workflow_state" : "/user/user-a/root/1/workflow/1/state",
                 "job"            : "/user/user-a/root/1/workflow/1/job",
@@ -3576,7 +3576,7 @@ HTTP/1.1 200 OK
             "dax_version"       : "3.5",
             "dax_file"          : "/home/tutorial/hello-world.xml",
             "dag_file_name"     : "hello_world-0.dag",
-            "timestamp"         : 1427759551,
+            "timestamp"         : 1427759551.0,
             "_links"            : {
                 "workflow_state" : "/user/user-a/root/2/workflow/1/state",
                 "job"            : "/user/user-a/root/2/workflow/1/job",
@@ -3600,7 +3600,7 @@ HTTP/1.1 200 OK
             "dax_version"       : "3.5",
             "dax_file"          : "/home/tutorial/hello-world.xml",
             "dag_file_name"     : "hello_world-0.dag",
-            "timestamp"         : 1427760148,
+            "timestamp"         : 1427760148.0,
             "_links"            : {
                 "workflow_state" : "/user/user-a/root/3/workflow/1/state",
                 "job"            : "/user/user-a/root/3/workflow/1/job",
@@ -3644,7 +3644,7 @@ HTTP/1.1 200 OK
             "dax_version"       : "3.5",
             "dax_file"          : "/home/tutorial/hello-world.xml",
             "dag_file_name"     : "hello_world-0.dag",
-            "timestamp"         : 1427759551,
+            "timestamp"         : 1427759551.0,
             "_links"            : {
                 "workflow_state" : "/user/user-a/root/2/workflow/1/state",
                 "job"            : "/user/user-a/root/2/workflow/1/job",
@@ -3687,7 +3687,7 @@ HTTP/1.1 200 OK
             "dax_version"       : "3.5",
             "dax_file"          : "/home/tutorial/hello-world.xml",
             "dag_file_name"     : "hello_world-0.dag",
-            "timestamp"         : 1427760148,
+            "timestamp"         : 1427760148.0,
             "_links"            : {
                 "workflow_state" : "/user/user-a/root/3/workflow/1/state",
                 "job"            : "/user/user-a/root/3/workflow/1/job",
@@ -3711,7 +3711,7 @@ HTTP/1.1 200 OK
             "dax_version"       : "3.5",
             "dax_file"          : "/home/tutorial/hello-world.xml",
             "dag_file_name"     : "hello_world-0.dag",
-            "timestamp"         : 1427759551,
+            "timestamp"         : 1427759551.0,
             "_links"            : {
                 "workflow_state" : "/user/user-a/root/2/workflow/1/state",
                 "job"            : "/user/user-a/root/2/workflow/1/job",
@@ -3735,7 +3735,7 @@ HTTP/1.1 200 OK
             "dax_version"       : "3.5",
             "dax_file"          : "/home/tutorial/hello-world.xml",
             "dag_file_name"     : "hello_world-0.dag",
-            "timestamp"         : 1421432530,
+            "timestamp"         : 1421432530.0,
             "_links"            : {
                 "workflow_state" : "/user/user-a/root/1/workflow/1/state",
                 "job"            : "/user/user-a/root/1/workflow/1/job",
@@ -3749,6 +3749,35 @@ HTTP/1.1 200 OK
         "records_total"    : 3,
         "records_filtered" : 3
     }
+}</programlisting></para>
+      </section>
+
+      <section>
+        <title>Recent</title>
+
+        <para><programlisting><emphasis role="bold">$ curl --request GET \
+       --user user-a:user-a-password \
+       https://www.domain.com/api/v1/user/mayani/root/1/workflow/1/state;recent=true?pretty-print=true
+                    </emphasis>
+HTTP/1.1 200 OK
+
+{
+    "records": [
+        {
+            "wf_id": 1,
+            "state": "WORKFLOW_TERMINATED",
+            "status": 1,
+            "restart_count": 3,
+            "timestamp": 1421885063.0,
+            "_links": {
+                "workflow": "/api/v1/user/mayani/root/1/workflow/1"
+            }
+        }
+     ],
+     "_meta": {
+        "records_total": 8,
+        "records_filtered": 1
+     }
 }</programlisting></para>
       </section>
     </section>
