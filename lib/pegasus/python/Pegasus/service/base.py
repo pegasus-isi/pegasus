@@ -128,7 +128,7 @@ class BaseQueryParser(object):
         digit = Range('09')
         prefix = letter + Rep(letter) + Str('.')
 
-        identifier = Opt(prefix) + letter + Rep(letter | digit | Str('_'))
+        identifier = prefix + letter + Rep(letter | digit | Str('_'))
         comparators = NoCase(Str('=', '!=', '<', '<=', '>', '>=', 'like', 'in'))
         string_literal = Str('\'') + Rep(AnyBut('\'') | Str(' ') | Str("\\'")) + Str('\'')
         integer_literal = Opt(Str('+', '-')) + Rep1(digit)
