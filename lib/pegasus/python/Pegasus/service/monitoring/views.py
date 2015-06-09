@@ -351,8 +351,8 @@ Workflow State
     "status"        : int:status,
     "restart_count" : int:restart_count,
     "timestamp"     : datetime:timestamp,
-    "_links"          : {
-        "workflow"     : "<href:workflow>"
+    "_links"        : {
+        "workflow" : "<href:workflow>"
     }
 }
 """
@@ -495,7 +495,7 @@ Host
     "uname"        : string:uname,
     "total_memory" : string:total_memory,
     "_links"       : {
-        "workflow"     : href:workflow
+        "workflow" : href:workflow
     }
 }
 """

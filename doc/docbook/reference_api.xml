@@ -1790,7 +1790,10 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
     "dax_file"          : &lt;string:dax_file&gt;,
     "dag_file_name"     : &lt;string:dag_file_name&gt;,
     "timestamp"         : &lt;int:timestamp&gt;,
-    "workflow_state"    : &lt;object:workflow_state&gt;
+    "workflow_state"    : &lt;object:workflow_state&gt;,
+    "_links"            : {
+        "workflow" : &lt;href:workflow&gt;,
+    }
 }</programlisting>
       </section>
 
@@ -1827,10 +1830,14 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
         <title id="resource-workflow-state">Workflow State</title>
 
         <programlisting>{
+    "wf_id"         : int:wf_id,
     "state"         : &lt;string:state&gt;,
     "status"        : &lt;int:status&gt;,
     "restart_count" : &lt;int:restart_count&gt;,
-    "timestamp"     : &lt;datetime:timestamp&gt;
+    "timestamp"     : &lt;datetime:timestamp&gt;,
+    "_links"        : {
+        "workflow" : "&lt;href:workflow&gt;"
+    }
 }</programlisting>
       </section>
 
@@ -1866,8 +1873,7 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
     "uname"        : &lt;string:uname&gt;,
     "total_memory" : &lt;string:total_memory&gt;,
     "_links"       : {
-        "workflow"     : &lt;href:workflow&gt;,
-        "job_instance" : &lt;href:job_instance&gt;
+        "workflow" : &lt;href:workflow&gt;
     }
 }</programlisting>
       </section>
@@ -1879,7 +1885,10 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
     "job_instance_id"     : &lt;int:job_instance_id&gt;,
     "state"               : &lt;string:state&gt;,
     "jobstate_submit_seq" : &lt;int:jobstate_submit_seq&gt;,
-    "timestamp"           : &lt;int:timestamp&gt;
+    "timestamp"           : &lt;int:timestamp&gt;,
+    "_links"              : {
+        "job_instance" : "href:job_instance"
+    }
 }</programlisting>
       </section>
 
@@ -1961,8 +1970,9 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
       <para>All endpoints return response with content-type as
       application/json.</para>
 
-      <para>All endpoints support <emphasis role="bold">`pretty-print`
-      </emphasis> query argument, to return a formatted JSON response.</para>
+      <para>All endpoints support <emphasis
+      role="bold">`pretty-print`</emphasis> query argument, to return a
+      formatted JSON response.</para>
 
       <para>All endpoints return status code <emphasis role="bold">401
       </emphasis> for<emphasis role="bold">Authentication
@@ -1977,9 +1987,6 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
 
         <para>Returns a collection of the <link
         linkend="resource-root-workflow">Root Workflow</link> resource.</para>
-
-        <para><emphasis role="bold">Context</emphasis>: <link
-        linkend="resource-root-workflow">Root Workflow</link></para>
 
         <para><table frame="box" rules="all">
             <caption>Options</caption>
@@ -2094,9 +2101,6 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
 
         <para>Returns a collection of the <link
         linkend="resource-workflow">Workflow</link> resource.</para>
-
-        <para><emphasis role="bold">Context</emphasis>: <link
-        linkend="resource-workflow">Workflow</link></para>
 
         <para><table frame="box" rules="all">
             <caption>Options</caption>
@@ -2226,10 +2230,6 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
         linkend="resource-workflow-state">Workflow State</link>
         resource.</para>
 
-        <para><emphasis role="bold">Context</emphasis>: <link
-        linkend="resource-workflow">Workflow</link>, <link
-        linkend="resource-workflow-state">Workflow State</link></para>
-
         <para><table frame="box" rules="all">
             <caption>Options</caption>
 
@@ -2323,10 +2323,6 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
 
         <para>Returns a collection of the <link
         linkend="resource-host">Host</link> resource.</para>
-
-        <para><emphasis role="bold">Context</emphasis>: <link
-        linkend="resource-workflow">Workflow</link>, <link
-        linkend="resource-host">Host</link></para>
 
         <para><table frame="box" rules="all">
             <caption>Options</caption>
@@ -2455,10 +2451,6 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
 
         <para>Returns a collection of the <link
         linkend="resource-task">Task</link> resource.</para>
-
-        <para><emphasis role="bold">Context</emphasis>: <link
-        linkend="resource-workflow">Workflow</link>, <link
-        linkend="resource-task">Task</link></para>
 
         <para><table frame="box" rules="all">
             <caption>Options</caption>
@@ -2589,10 +2581,6 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
         <para>Returns a collection of the <link
         linkend="resource-invocation">Invocation</link> resource.</para>
 
-        <para><emphasis role="bold">Context</emphasis>: <link
-        linkend="resource-workflow">Workflow</link>, <link
-        linkend="resource-invocation">Invocation</link></para>
-
         <para><table frame="box" rules="all">
             <caption>Options</caption>
 
@@ -2720,10 +2708,6 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
 
         <para>Returns a collection of the <link
         linkend="resource-job">Job</link> resource.</para>
-
-        <para><emphasis role="bold">Context</emphasis>: <link
-        linkend="resource-workflow">Workflow</link>, <link
-        linkend="resource-job">Job</link></para>
 
         <para><table frame="box" rules="all">
             <caption>Options</caption>
@@ -2854,11 +2838,6 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
 
         <para>Returns a collection of the <link
         linkend="resource-job-instance">Job Instance</link> resource.</para>
-
-        <para><emphasis role="bold">Context</emphasis>: <link
-        linkend="resource-workflow">Workflow</link>, <link
-        linkend="resource-job">Job</link>, <link
-        linkend="resource-job-instance">Job Instance</link></para>
 
         <para><table frame="box" rules="all">
             <caption>Options</caption>
@@ -2991,12 +2970,6 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
         <para>Returns a collection of the <link
         linkend="resource-job-state">Job State</link> resource.</para>
 
-        <para><emphasis role="bold">Context</emphasis>: <link
-        linkend="resource-workflow">Workflow</link>, <link
-        linkend="resource-job">Job</link>, <link
-        linkend="resource-job-instance">Job Instance</link>, <link
-        linkend="resource-job-state">Job State</link></para>
-
         <para><table frame="box" rules="all">
             <caption>Options</caption>
 
@@ -3126,12 +3099,6 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
 
         <para>Returns a collection of the <link
         linkend="resource-invocation">Invocation</link> resource.</para>
-
-        <para><emphasis role="bold">Context</emphasis>: <link
-        linkend="resource-workflow">Workflow</link>, <link
-        linkend="resource-job">Job</link>, <link
-        linkend="resource-job-instance">Job Instance</link>, <link
-        linkend="resource-invocation">Invocation</link></para>
 
         <para><table frame="box" rules="all">
             <caption>Options</caption>
@@ -3296,7 +3263,7 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
     },
     {
         "method" : "POST",
-        "path"   : "/api/v1/user/user-a/root?query=wf_id=2"
+        "path"   : "/api/v1/user/user-a/root/query?query=wf_id=2"
     }
 ]<emphasis role="bold">
 
@@ -3312,7 +3279,7 @@ Response</emphasis>
                     "wf_uuid"           : "7193de8c-a28d-4eca-b576-1b1c3c4f668b",
                     ..
                     "_links"            : {
-                        "workflow" : "/api/v1/user/user-a/root/1/workflow/query"
+                        "workflow" : "/api/v1/user/user-a/root/1/workflow"
                     }
                 }
             ],
@@ -3398,30 +3365,24 @@ Response</emphasis>
           </listitem>
 
           <listitem>
-            <para>&lt;FIELDNAME&gt; can be prefixed with resource query prefix
-            Example: <emphasis role="bold"><emphasis
-            role="bold">r.</emphasis>wf_id</emphasis> is same as <emphasis
-            role="bold">wf_id</emphasis>. However, fieldnames common across
-            resources must be prefixed Example: timestamp field is common
-            across workflow, and workflow state so it must be prefixed as
-            <emphasis role="bold">w.timestamp</emphasis> or <emphasis
-            role="bold">ws.timestamp</emphasis> when used in query
-            clause.</para>
+            <para>&lt;FIELDNAME&gt; must be prefixed with resource query
+            prefix Example: <emphasis role="bold"><emphasis
+            role="bold">r.</emphasis>wf_id</emphasis> is valid, but <emphasis
+            role="bold">wf_id</emphasis> is not. </para>
           </listitem>
 
           <listitem>
             <para>&lt;FIELDNAMES&gt; which can be used in a query caluse
-            depends on the context. Example: For endpoint
+            depends on the resource being queries. Example: For endpoint
             /api/v1/user/user-a/root/1/<emphasis
             role="bold">workflow</emphasis>/1/<emphasis
             role="bold">job</emphasis>/2/<emphasis
             role="bold">state</emphasis> query clause can only contain fields
-            of resources <link linkend="resource-workflow">Workflow</link>,
-            <link linkend="resource-job">Job</link>, and <link
-            linkend="resource-job-state">Job State</link>. In simpler terms
-            query's context are the resources as referenced in the endpoint.
-            For context of each query refer to Context section included in the
-            <link linkend="section-endpoints">Endpoints</link> section.</para>
+            of <link linkend="resource-job-state">Job State</link> resource.
+            Only exception for this is when querying Root Workflow fields from
+            both <link linkend="resource-root-workflow">Root Workflow</link>
+            and <link linkend="resource-workflow-state">Workflow State</link>
+            can be included.</para>
           </listitem>
         </itemizedlist>
 
@@ -3429,7 +3390,7 @@ Response</emphasis>
 
         <para><programlisting><emphasis role="bold"><emphasis role="bold">For Root Workflow https://www.domain.com/api/v1/user/user-a/root?query&lt;QUERY&gt;
 
-Where QUERY can be( r.wf_id &gt;= 5 AND planner_version LIKE '4.5%' ) OR ( r.wf_id IN ( 1, 2 ) )
+Where QUERY can be( r.wf_id &gt;= 5 AND r.planner_version LIKE '4.5%' ) OR ( r.wf_id IN ( 1, 2 ) )
 </emphasis></emphasis></programlisting></para>
       </section>
 
