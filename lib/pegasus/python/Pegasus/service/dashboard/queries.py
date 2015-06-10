@@ -660,7 +660,7 @@ class WorkflowInfo(SQLAlchemyInit):
 
     def get_successful_job_invocations(self, job_id, job_instance_id):
 
-        q = self.session.query(Job.exec_job_id, Invocation.abs_task_id, Invocation.exitcode, Invocation.remote_duration)
+        q = self.session.query(Job.exec_job_id, Invocation.invocation_id, Invocation.abs_task_id, Invocation.exitcode, Invocation.remote_duration)
         q = q.filter(Job.wf_id == self._wf_id)
         q = q.filter(Job.job_id == job_id)
         q = q.filter(JobInstance.job_instance_id == job_instance_id)
@@ -674,7 +674,7 @@ class WorkflowInfo(SQLAlchemyInit):
 
     def get_failed_job_invocations(self, job_id, job_instance_id):
 
-        q = self.session.query(Job.exec_job_id, Invocation.abs_task_id, Invocation.exitcode, Invocation.remote_duration)
+        q = self.session.query(Job.exec_job_id, Invocation.invocation_id, Invocation.abs_task_id, Invocation.exitcode, Invocation.remote_duration)
         q = q.filter(Job.wf_id == self._wf_id)
         q = q.filter(Job.job_id == job_id)
         q = q.filter(JobInstance.job_instance_id == job_instance_id)
@@ -712,21 +712,21 @@ class WorkflowInfo(SQLAlchemyInit):
 
         return qmax
 
-    def get_invocation_information(self, job_id, job_instance_id, task_id):
+    def get_invocation_information(self, job_id, job_instance_id, invocation_id):
 
-        q = self.session.query(Invocation.abs_task_id, Invocation.start_time, Invocation.remote_duration,
-                               Invocation.remote_cpu_time, Invocation.exitcode, Invocation.transformation,
-                               Invocation.executable, Invocation.argv)
+        q = self.session.query(Invocation.invocation_id, Invocation.abs_task_id, Invocation.start_time,
+                               Invocation.remote_duration, Invocation.remote_cpu_time, Invocation.exitcode,
+                               Invocation.transformation, Invocation.executable, Invocation.argv)
         q = q.filter(Job.wf_id == self._wf_id)
         q = q.filter(Job.job_id == job_id)
         q = q.filter(JobInstance.job_instance_id == job_instance_id)
         q = q.filter(Job.job_id == JobInstance.job_id)
         q = q.filter(JobInstance.job_instance_id == Invocation.job_instance_id)
 
-        if task_id == None:
+        if invocation_id is None:
             q = q.filter(Invocation.task_submit_seq == 1)
         else:
-            q = q.filter(Invocation.abs_task_id == task_id)
+            q = q.filter(Invocation.invocation_id == invocation_id)
 
         return q.one()
 
