@@ -32,6 +32,14 @@ $(document).ready (function ()
                 <td>{{ invocation.transformation }}</td>
             </tr>
             <tr>
+                <th>Working Directory</th>
+                <td class="text-nowrap">
+                    <button class="copy-button" data-clipboard-text="{{ invocation.work_dir }}">
+                    </button>
+                    {{ invocation.work_dir }}
+                </td>
+            </tr>
+            <tr>
                 <th>Executable</th>
                 <td class="text-nowrap">
                     <button class="copy-button" data-clipboard-text="{{ invocation.executable }}">

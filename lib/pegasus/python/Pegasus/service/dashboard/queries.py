@@ -277,8 +277,9 @@ class WorkflowInfo(SQLAlchemyInit):
 
     def get_job_information(self, job_id, job_instance_id):
 
-        q = self.session.query(Job.exec_job_id, Job.clustered, JobInstance.job_instance_id, JobInstance.exitcode,
-                               JobInstance.stdout_file, JobInstance.stderr_file, Host.site, Host.hostname, Host.ip)
+        q = self.session.query(Job.exec_job_id, Job.clustered, JobInstance.job_instance_id, JobInstance.work_dir,
+                               JobInstance.exitcode, JobInstance.stdout_file, JobInstance.stderr_file,
+                               Host.site, Host.hostname, Host.ip)
         q = q.filter(Job.wf_id == self._wf_id)
         q = q.filter(Job.job_id == job_id)
         q = q.filter(JobInstance.job_instance_id == job_instance_id)
@@ -716,7 +717,7 @@ class WorkflowInfo(SQLAlchemyInit):
 
         q = self.session.query(Invocation.invocation_id, Invocation.abs_task_id, Invocation.start_time,
                                Invocation.remote_duration, Invocation.remote_cpu_time, Invocation.exitcode,
-                               Invocation.transformation, Invocation.executable, Invocation.argv)
+                               Invocation.transformation, Invocation.executable, Invocation.argv, JobInstance.work_dir)
         q = q.filter(Job.wf_id == self._wf_id)
         q = q.filter(Job.job_id == job_id)
         q = q.filter(JobInstance.job_instance_id == job_instance_id)

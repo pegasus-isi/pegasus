@@ -3,6 +3,9 @@
 {%- endmacro %}
 {% extends "base.html" %}
 {% block title %}Job Details{% endblock %}
+{% block javascript_includes %}
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/zeroclipboard/2.2.0/ZeroClipboard.min.js"></script>
+{% endblock %}
 {% block javascript_init %}
 <script type="text/javascript" charset="utf-8">
     //
@@ -102,6 +105,8 @@
                 null
             ]
         });
+
+        clipboardTooltipInitialization();
     })
 </script>
 {% endblock %}
@@ -120,7 +125,7 @@
 {% block content %}
 <section class="row">
     <div id="job_text" class="col-xs-12">
-        <table id="job_text_info">
+        <table id="job_text_info" class="table-fixed">
             <tr>
                 <th class="job_table_width">Label</th>
                 <td><strong>{{ job.exec_job_id }}</strong></td>
@@ -132,6 +137,14 @@
             <tr>
                 <th class="job_table_width">Exit Code</th>
                 <td>{{ job.exitcode }}</td>
+            </tr>
+            <tr>
+                <th class="job_table_width">Working Directory</th>
+                <td class="text-nowrap">
+                    <button class="copy-button" data-clipboard-text="{{ job.work_dir }}">
+                    </button>
+                    {{ job.work_dir }}
+                </td>
             </tr>
             <tr>
                 <th class="job_table_width">Stdout Preview</th>
