@@ -283,16 +283,16 @@ def failed_invocations(username, root_wf_id, wf_id, job_id, job_instance_id):
 
 
 @dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>/i/', methods=['GET'])
-@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>/i/<task_id>', methods=['GET'])
-def invocation(username, root_wf_id, wf_id, job_id, job_instance_id, task_id=None):
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>/i/<invocation_id>', methods=['GET'])
+def invocation(username, root_wf_id, wf_id, job_id, job_instance_id, invocation_id=None):
     """
     Get detailed invocation information
     """
     dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
-    invocation = dashboard.get_invocation_information(wf_id, job_id, job_instance_id, task_id)
+    invocation = dashboard.get_invocation_information(wf_id, job_id, job_instance_id, invocation_id)
 
     return render_template('workflow/job/invocation/invocation_details.html', root_wf_id=root_wf_id, wf_id=wf_id,
-                           job_id=job_id, job_instance_id=job_instance_id, task_id=task_id, invocation=invocation)
+                           job_id=job_id, job_instance_id=job_instance_id, invocation_id=invocation_id, invocation=invocation)
 
 
 @dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/charts', methods=['GET'])
