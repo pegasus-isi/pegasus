@@ -266,7 +266,7 @@ class MasterWorkflowQueries(WorkflowQueries):
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):
                 log.debug('total_filtered is 0 or start_index >= total_filtered')
-                return [], total_records, total_filtered
+                return PagedResponse([], total_records, total_filtered)
 
         #
         # Construct SQLAlchemy Query `q` to sort
