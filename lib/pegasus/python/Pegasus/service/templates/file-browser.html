@@ -49,33 +49,11 @@
             </section>
         </section>
         <section class="row">
-            {% macro folder_structure(path, collapse=False) -%}
-                {% if folders[path] %}
-                    <ul style="{% if collapse %}display: none;{% endif %}">
-                        {% for folder in folders[path]['D'] %}
-                            <li class="directory collapsed">{{ folder|replace(path, '') }}
-                                {{ folder_structure(folder, True) }}
-                            </li>
-                        {% endfor %}
-                        {% for file in folders[path]['F'] %}
-                            <li class="text-nowrap">
-                                <a href="{{ url_for ('.file_view', root_wf_id = root_wf_id, wf_id = wf_id,
-                                        path = '/'.join([path, file]).lstrip('/') ) }}">
-                                   {{ file }}
-                                </a>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
-            {%- endmacro %}
-
             <section class="col-sm-4 col-md-3">
                 <div class="file-list">
-                    <ul>
-                        <li class="directory">/
-                            {{ folder_structure('/') }}
-                        </li>
-                    </ul>
+                    <div class="text-center">
+                         <p>Loading</p><p></p> <i class="fa fa-spin fa-ellipsis-v fa-2x"> </i>
+                    </div>
                 </div>
             </section>
             <section class="col-sm-8 col-md-9">
@@ -103,6 +81,78 @@ $.fn.tooltip = bootstrapTooltip;
 <script>
 $(function () {
 
+    function folderStructure(folders, path, collapse) {
+        var urlPrefix = '{{ url_for('.file_view', root_wf_id=root_wf_id, wf_id=wf_id, path='') }}';
+        collapse = collapse == undefined ? false : collapse;
+
+        var directories = 'D' in folders[path] ? folders[path]['D'] : null;
+        var files       = 'F' in folders[path] ? folders[path]['F'] : null;
+
+        var ul = $('<ul></ul>');
+
+        if (collapse) {
+            ul.hide();
+        }
+
+        for (var i = 0; directories && i < directories.length; ++i) {
+            var li = $('<li class="directory collapsed"></li>');
+            li.text(directories[i].replace(path, ''));
+            var e = folderStructure(folders, directories[i], true);
+            li.append(e);
+            ul.append(li);
+        }
+
+        for (var i = 0; files && i < files.length; ++i) {
+            var li = $('<li class="text-nowrap"></li>');
+            var a = $('<a>' + files[i] + '</a>');
+            var url = urlPrefix + path + '/' + files[i];
+            url = url.replace(/\/{2,}/g, '/');
+            a.attr('href', url);
+
+            li.append(a);
+            ul.append(li);
+        }
+
+        return ul;
+    }
+
+    function loadFileList() {
+        $.ajax({
+            url: '{{ url_for('.file_list', root_wf_id=root_wf_id, wf_id=wf_id) }}',
+            dataType: 'json',
+            success: function(folders) {
+
+                var e = folderStructure(folders, '/', false);
+                var ul = $('<ul class="directory">/</ul>');
+                ul.append(e);
+                $('.file-list').html(ul);
+
+                /*
+                 * Event Handler Registration
+                 */
+                $('.file-list .directory').click(function(event) {
+                    event.stopPropagation();
+                    $('ul', this).toggle();
+                    $('ul', this).parent().toggleClass('collapsed');
+                });
+
+                $('.file-list li').click(function(event) {
+                    event.stopPropagation();
+                    event.preventDefault();
+                });
+
+                $('.file-list li a').click(function(event) {
+                    event.stopPropagation();
+                    event.preventDefault();
+                    onFileViewClick($(this).attr('href'));
+                });
+            },
+            error: function(){
+                $('.file-list').text('Error loading file list');
+            }
+        });
+    }
+
     function onFileViewClick(url) {
         $.ajax({
             url: url,
@@ -121,22 +171,7 @@ $(function () {
         });
     }
 
-    $('.file-list .directory').click(function(event) {
-        event.stopPropagation();
-        $('ul', this).toggle();
-        $('ul', this).parent().toggleClass('collapsed');
-    });
-
-    $('.file-list li').click(function(event) {
-        event.stopPropagation();
-        event.preventDefault();
-    });
-
-    $('.file-list li a').click(function(event) {
-        event.stopPropagation();
-        event.preventDefault();
-        onFileViewClick($(this).attr('href'));
-    });
+    loadFileList();
 
     {% if init_file %}
         onFileViewClick("{{ url_for ('.file_view', root_wf_id = root_wf_id, wf_id = wf_id, path = init_file.lstrip('/')) }}");

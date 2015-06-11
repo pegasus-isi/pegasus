@@ -388,19 +388,34 @@ def file_browser(username, root_wf_id, wf_id):
         submit_dir = details.submit_dir
 
         if os.path.isdir(submit_dir):
+            init_file = request.args.get('init_file', None)
+            return render_template('file-browser.html', root_wf_id=root_wf_id, wf_id=wf_id, init_file=init_file)
+
+    except NoResultFound:
+        return render_template('error/workflow/workflow_details_missing.html')
+
+    return 'Error', 500
+
+
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/files', methods=['GET'])
+def file_list(username, root_wf_id, wf_id):
+    try:
+        dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id=wf_id)
+        details = dashboard.get_workflow_details(wf_id)
+        submit_dir = details.submit_dir
+
+        if os.path.isdir(submit_dir):
             folders = {}
 
             for folder, sub_folders, files in os.walk(submit_dir):
                 folder = '/' + folder.replace(submit_dir, '', 1).lstrip('/')
-                folders[folder] = {'D' : [], 'F': files}
+                folders[folder] = {'D': [], 'F': files}
 
                 for sub_folder in sub_folders:
                     full_sub_folder = folder + sub_folder
                     folders[folder]['D'].append(full_sub_folder)
 
-            init_file = request.args.get('init_file', None)
-            return render_template('file-browser.html', root_wf_id=root_wf_id, wf_id=wf_id, folders=folders,
-                                   init_file=init_file)
+            return json.dumps(folders), 200, {'Content-Type': 'application/json'}
 
     except NoResultFound:
         return render_template('error/workflow/workflow_details_missing.html')
