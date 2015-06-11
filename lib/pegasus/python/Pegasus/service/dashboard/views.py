@@ -533,5 +533,10 @@ def stampede_database_missing(error):
 
 
 @dashboard_routes.errorhandler(DBAdminError)
-def stampede_database_missing(error):
+def database_migration_error(error):
     return render_template('error/database_migration_error.html')
+
+
+@dashboard_routes.errorhandler(Exception)
+def catch_all(error):
+    return render_template('error/catch_all.html')

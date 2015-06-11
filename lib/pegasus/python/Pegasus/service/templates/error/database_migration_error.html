@@ -6,6 +6,7 @@
 <section class="row">
     <div class="col-xs-12">
         <h3>Possible Reasons</h3>
+        <hr>
         <ul>
             <li>
                 Master Database is not compatible with the current version of Pegasus.
@@ -14,9 +15,12 @@
                 STAMPEDE Database is not compatible with the current version of Pegasus.
             </li>
         </ul>
-        <p>
-            Please execute pegasus-db-admin update on the database you are trying to access.
-        </p>
+        <h3>Possible Alternatives</h3>
+        <hr>
+        <ul>
+            <li>Please execute pegasus-db-admin update on the database you are trying to access.</li>
+            <li>Ensure that pegasus-dashboard process has write access on the database you are trying to access.</li>
+        </ul>
     </div>
 </section>
 {% endblock %}

@@ -39,9 +39,17 @@ class MasterDatabase(SQLAlchemyInit):
 
         try:
             SQLAlchemyInit.__init__(self, conn_string)
-        except connection.ConnectionError, e:
+        except connection.ConnectionError as e:
             log.error(e)
-            raise MasterDBNotFoundError
+            message = e
+
+            while isinstance(message, Exception):
+                message = message.message
+
+            if 'attempt to write a readonly database' in message:
+                raise DBAdminError(message)
+
+            raise MasterDBNotFoundError(e)
 
     def close(self):
         log.debug('close')
@@ -204,8 +212,16 @@ class WorkflowInfo(SQLAlchemyInit):
 
         try:
             SQLAlchemyInit.__init__(self, conn_string)
-        except connection.ConnectionError, e:
+        except connection.ConnectionError as e:
             log.error(e)
+            message = e
+
+            while isinstance(message, Exception):
+                message = message.message
+
+            if 'attempt to write a readonly database' in message:
+                raise DBAdminError(message)
+
             raise StampedeDBNotFoundError
 
         self.initialize(wf_id, wf_uuid)
