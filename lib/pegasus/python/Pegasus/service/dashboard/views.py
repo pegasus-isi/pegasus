@@ -20,7 +20,7 @@ from datetime import datetime
 
 from time import localtime, strftime
 
-from flask import request, render_template, url_for, json, g, redirect, send_from_directory
+from flask import request, render_template, url_for, json, g, redirect, send_from_directory, jsonify
 from sqlalchemy.orm.exc import NoResultFound
 
 from Pegasus.db.errors import StampedeDBNotFoundError
@@ -215,6 +215,47 @@ def job(username, root_wf_id, wf_id, job_id, job_instance_id):
 
     return render_template('workflow/job/job_details.html', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job_id, job=job,
                            job_instances=job_instances, job_states=job_states, job_metrics=job_metrics)
+
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>/job_metrics_update', methods=['GET'])
+def job_metrics_update(username, root_wf_id, wf_id, job_id, job_instance_id):
+    """
+    Get job metrics as JSON
+    """
+    dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
+    job_metrics = dashboard.get_job_metrics(wf_id, job_instance_id)
+
+    if job_metrics:
+        metrics = []
+        job_metrics.kickstart_pid = filters.format_num(job_metrics.kickstart_pid)
+        job_metrics.ts = filters.format_ts(job_metrics.ts)
+        job_metrics.read_bytes = filters.format_num(job_metrics.read_bytes)
+        job_metrics.write_bytes = filters.format_num(job_metrics.write_bytes)
+        job_metrics.syscr = filters.format_num(job_metrics.syscr)
+        job_metrics.syscw = filters.format_num(job_metrics.syscw)
+        job_metrics.threads = filters.format_num(job_metrics.threads)
+        job_metrics.bytes_transferred = filters.format_num(job_metrics.bytes_transferred)
+        job_metrics.transfer_duration = filters.time_to_str(job_metrics.transfer_duration)
+
+        for field in [
+            'dag_job_id',
+            'hostname', 'site', 'exec_name',
+            'kickstart_pid',
+            'ts',
+            'stime', 'utime', 'iowait',
+            'vmsize', 'vmrss',
+            'read_bytes', 'write_bytes',
+            'syscr', 'syscw',
+            'threads',
+            'bytes_transferred', 'transfer_duration',
+        ]:
+            if getattr(job_metrics, field) is None:
+                metrics.append({'metric_name': field, 'metric_value': 'None'})
+            else:
+                metrics.append({'metric_name': field, 'metric_value': getattr(job_metrics, field)})
+    else:
+        return 'Bad Request', 400
+
+    return json.dumps(metrics)
 
 
 @dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>/stdout', methods=['GET'])

@@ -103,6 +103,26 @@
                 null
             ]
         });
+
+        setInterval(function() {
+            if( $("#job_metrics").length ) {
+                console.log("Updating job metrics");
+                var update_url = "{{ url_for ('.job_metrics_update', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}";
+
+                $.getJSON(update_url, function(job_metrics) {
+                    $.each(job_metrics, function(i, metric_update) {
+                        $row = $("#job_metrics_info tr." + metric_update.metric_name);
+                        $row.find("td").text(metric_update.metric_value);
+                    });
+                });
+
+
+            }
+            else {
+                console.log("We have no table with job metrics");
+            }
+
+        }, 10000);
     })
 </script>
 {% endblock %}
@@ -277,7 +297,7 @@
                     ('transfer_duration', 'Transfer Duration'),
                     ('site', 'Site')
                 ] %}
-                <tr>
+                <tr class="{{ field }}">
                     <th class="job_table_width">{{ name }}</th>
                     <td>{{ job_metrics[field] }}</td>
                 </tr>

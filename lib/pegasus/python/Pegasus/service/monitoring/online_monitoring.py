@@ -179,10 +179,13 @@ class OnlineMonitord:
         dag_job_id = msg.dag_job_id
         mpi_rank = msg.mpi_rank
 
+        # print "Msg metrics: ", msg.metrics()
+        # print "Msg measurements: ", msg.measurements()
+
         if dag_job_id not in self.retrieved_messages:
             self.retrieved_messages[dag_job_id] = dict()
-            self.aggregated_measurements[dag_job_id] = [0] * len(msg.metrics())
-            self.last_aggregated_data[dag_job_id] = [0] * len(msg.metrics())
+            self.aggregated_measurements[dag_job_id] = [0] * len(msg.measurements())
+            self.last_aggregated_data[dag_job_id] = [0] * len(msg.measurements())
 
         if mpi_rank in self.retrieved_messages[dag_job_id]:
             # 1. check if aggregated measurements are ascending
@@ -199,7 +202,7 @@ class OnlineMonitord:
 
             # 4. reset aggregated measurements
             self.retrieved_messages[dag_job_id] = dict()
-            self.aggregated_measurements[dag_job_id] = [0] * len(msg.metrics())
+            self.aggregated_measurements[dag_job_id] = [0] * len(msg.measurements())
 
         self.retrieved_messages[dag_job_id][mpi_rank] = True
         self.aggregate_measurement(dag_job_id, msg)
