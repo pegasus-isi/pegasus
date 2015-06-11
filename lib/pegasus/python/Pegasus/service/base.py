@@ -308,8 +308,13 @@ class BaseQueryParser(object):
     def identifier_handler(self, text):
         if self._state == 0:
             self._condition[0] = text
-            self._state = 1
             self._identifiers.add(text)
+            self._state = 1
+        elif self._state == 2:
+            self._condition[2] = ('I', text)
+            self._postfix_result.append(tuple(self._condition))
+            self._identifiers.add(text)
+            self._state = 0
         else:
             file, line, char_pos = self._scanner.position()
             msg = 'Field %r found out of order: Line: %d Char: %d' % (text, line, char_pos)

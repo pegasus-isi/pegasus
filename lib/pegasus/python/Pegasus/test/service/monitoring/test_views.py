@@ -171,6 +171,19 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
         self.assertEqual(root_workflows['records'][0]['wf_id'], 1)
         self.assertEqual(root_workflows['records'][1]['wf_id'], 2)
 
+    def test_complex_query_2(self):
+        rv = self.get_context('/api/v1/user/%s/root?query=r.wf_id = r.root_wf_id&order=wf_id asc' % self.user,
+                               pre_callable=self.pre_callable)
+
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.content_type.lower(), 'application/json')
+
+        root_workflows = self.read_json_response(rv)
+
+        self.assertEqual(len(root_workflows['records']), 2)
+        self.assertEqual(root_workflows['records'][0]['wf_id'], 1)
+        self.assertEqual(root_workflows['records'][1]['wf_id'], 2)
+
     def test_ambiguous_query(self):
         rv = self.get_context('/api/v1/user/%s/root?query=timestamp > 1000.0&order=wf_id asc' % self.user,
                               pre_callable=self.pre_callable)
