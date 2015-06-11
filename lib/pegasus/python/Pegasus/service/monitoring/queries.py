@@ -182,7 +182,7 @@ class WorkflowQueries(SQLAlchemyInit):
 
         for identifier, sort_dir in sort_order:
             try:
-                field = resource.get_mapped_field(identifier)
+                field = resource.get_mapped_field(identifier, ignore_prefix=True)
 
                 if sort_dir == 'ASC':
                     q = q.order_by(field)
