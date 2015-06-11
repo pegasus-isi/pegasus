@@ -146,6 +146,7 @@ class WorkflowQueries(SQLAlchemyInit):
             for token in expression:
                 if isinstance(token, tuple):
                     if isinstance(token[2], tuple):
+                        identifier = token[2][1]
                         token = (token[0], token[1], resource.get_mapped_field(token[2][1]))
 
                     identifier = token[0]

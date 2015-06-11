@@ -489,7 +489,14 @@ class BaseResource(object):
 
     def get_mapped_field(self, field, alias=None):
         resource = alias if alias else self._resource
-        suffix = self._get_suffix(field)
+        suffix = self._split_identifier(field)
+
+        if len(suffix) == 2:
+            if suffix[0] != self._resource:
+                suffix = field
+
+        else:
+            suffix = suffix[1]
 
         return getattr(resource, suffix)
 
