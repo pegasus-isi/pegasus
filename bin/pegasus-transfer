@@ -2071,6 +2071,23 @@ class SymlinkHandler(TransferHandlerBase):
         return [successful_l, failed_l]    
 
 
+    def do_removes(self, transfers):
+        successful_l = []
+        failed_l = []
+        for t in transfers:
+            cmd = "/bin/rm -f"
+            cmd += " '%s' " % (t.get_path())
+            try:
+                tc = TimedCommand(cmd)
+                tc.run()
+            except RuntimeError, err:
+                logger.error(err)
+                failed_l.append(t)
+                continue
+            successful_l.append(t)
+        return [successful_l, failed_l]
+
+
 class Stats:
     """
     Keeps global stats for transfers
