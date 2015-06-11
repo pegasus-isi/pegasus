@@ -171,11 +171,11 @@ $(function () {
         });
     }
 
-    loadFileList();
-
     {% if init_file %}
         onFileViewClick("{{ url_for ('.file_view', root_wf_id = root_wf_id, wf_id = wf_id, path = init_file.lstrip('/')) }}");
     {% endif %}
+
+    loadFileList();
 });
 </script>
 {% endblock %}
