@@ -1367,9 +1367,14 @@ class StashHandler(TransferHandlerBase):
         src_path = re.sub('^stash:', '', src_path)
         src_path = re.sub('^/+', '', src_path)
 
-        prepare_local_dir(os.path.dirname(transfer.dst_path))
+        local_dir = os.path.dirname(transfer.dst_path)
+        prepare_local_dir(local_dir)
         cmd = "%s -s '%s' -l '%s'" \
-            % (tools.full_path("stashcp"), src_path, transfer.dst_path)
+            % (tools.full_path("stashcp"), src_path, local_dir)
+        remote_fname = os.path.basename(transfer.src_path)
+        local_fname = os.path.basename(transfer.dst_path)
+        if remote_fname != local_fname:
+            cmd += " && mv %s %s" %(remote_fname, local_fname)
         try:
             tc = TimedCommand(cmd)
             tc.run()
