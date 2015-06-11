@@ -22,6 +22,11 @@ import hashlib
 
 import StringIO
 
+try:
+    from collections import OrderedDict
+except ImportError:
+    from ordereddict import OrderedDict
+
 from flask import g, request, make_response, current_app
 
 from Pegasus.service import cache
@@ -148,13 +153,13 @@ def get_query_args():
             e.codes = ('INVALID_QUERY_ARGUMENT', 400)
             raise e
 
-    query_args = {
-        'start-index': to_int,
-        'max-results': to_int,
-        'query': to_str,
-        'order': to_str,
-        'pretty-print': to_bool
-    }
+    query_args = OrderedDict([
+        ('pretty-print', to_bool),
+        ('start-index', to_int),
+        ('max-results', to_int),
+        ('query', to_str),
+        ('order', to_str)
+    ])
 
     for arg, cast in query_args.iteritems():
         if arg in request.args:
