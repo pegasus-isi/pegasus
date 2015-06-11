@@ -5,17 +5,17 @@
 package Pegasus::DAX::TUType;
 use 5.006;
 use strict;
-use Carp; 
+use Carp;
 
-use Pegasus::DAX::Base qw(:xml); 
-use Pegasus::DAX::PlainFilename; 
+use Pegasus::DAX::Base qw(:xml);
+use Pegasus::DAX::PlainFilename;
 use Exporter;
-our @ISA = qw(Pegasus::DAX::PlainFilename Exporter); 
+our @ISA = qw(Pegasus::DAX::PlainFilename Exporter);
 
-our $VERSION = '3.5'; 
-our @EXPORT = (); 
-our %EXPORT_TAGS = (); 
-our @EXPORT_OK = (); 
+our $VERSION = '3.6';
+our @EXPORT = ();
+our %EXPORT_TAGS = ();
+our @EXPORT_OK = ();
 
 # one AUTOLOAD to rule them all
 BEGIN { *AUTOLOAD = \&Pegasus::DAX::Base::AUTOLOAD }
@@ -25,28 +25,28 @@ sub new {
     my $class = ref($proto) || $proto;
     my $self = $class->SUPER::new();
 
-    if ( @_ == 0 ) { 
-	# nothing to do 
+    if ( @_ == 0 ) {
+	# nothing to do
     } elsif ( @_ > 1 && (@_ & 1) == 0 ) {
 	# called with a=>b,c=>d list
-	%{$self} = ( %{$self}, @_ ); 
-    } elsif ( @_ == 1 && ref $_[0] && 
-	      ( ref $_[0] eq 'HASH' || ref $_[0] eq __PACKAGE__ ) ) { 
+	%{$self} = ( %{$self}, @_ );
+    } elsif ( @_ == 1 && ref $_[0] &&
+	      ( ref $_[0] eq 'HASH' || ref $_[0] eq __PACKAGE__ ) ) {
 	# called with { a=>b, c=>d } hashref
 	# or called as copy-c'tor (deep copy)
-	%{$self} = ( %{$self}, %{ shift() } ); 
+	%{$self} = ( %{$self}, %{ shift() } );
     } else {
-	croak "invalid c'tor invocation"; 
+	croak "invalid c'tor invocation";
     }
 
-    bless $self, $class; 
+    bless $self, $class;
 }
 
 # forward declarations so can we check using 'can'
 #sub name;			# inherited
 sub namespace;
 sub version;
-sub executable; 
+sub executable;
 
 sub toXML {
     # purpose: put self onto stream as XML
@@ -54,21 +54,21 @@ sub toXML {
     #          ident (IN): indentation level
     #          xmlns (IN): namespace of element, if necessary
     #
-    my $self = shift; 
-    my $f = shift; 
+    my $self = shift;
+    my $f = shift;
     my $indent = shift || '';
-    my $xmlns = shift; 
+    my $xmlns = shift;
     my $tag = defined $xmlns && $xmlns ? "$xmlns:uses" : 'uses';
 
-    $f->print( "$indent<$tag", 
+    $f->print( "$indent<$tag",
 	     , attribute('namespace',$self->namespace,$xmlns)
 	     , attribute('name',$self->name,$xmlns)
 	     , attribute('version',$self->version,$xmlns)
 	     , attribute('executable',boolean($self->executable),$xmlns)
-	     , " />\n" ); 
+	     , " />\n" );
 }
 
-1; 
+1;
 __END__
 
 =head1 NAME
@@ -77,11 +77,11 @@ Pegasus::DAX::TUType - class for Transformation referenced entities.
 
 =head1 SYNOPSIS
 
-    use Pegasus::DAX::TUType; 
+    use Pegasus::DAX::TUType;
 
     my $i = Pegasus::DAX::TUType->new( name => 'filename.txt' );
-    $i->exectuable = 'false'; 
-   
+    $i->exectuable = 'false';
+
 =head1 DESCRIPTION
 
 This class remembers a reference expressed in the C<Transformation>
@@ -101,11 +101,11 @@ bundle.
 The default constructor will create an empty instance whose scalar
 attributes can be adjusted using the getters and setters provided by the
 C<AUTOLOAD> inherited method. Other means to set attributes is to used
-named lists. 
+named lists.
 
 =item name
 
-This setter and getter is inherited. 
+This setter and getter is inherited.
 
 =item namespace
 
@@ -113,11 +113,11 @@ Setter and getter for a namespace string.
 
 =item version
 
-Setter and getter for a version string. 
+Setter and getter for a version string.
 
 =item executable
 
-Setter and getter for boolean values. Please use Perl truth. 
+Setter and getter for boolean values. Please use Perl truth.
 
 =item toXML( $handle, $indent, $xmlns )
 
@@ -129,7 +129,7 @@ to indent elements for pretty printing. The third argument may not be
 defined. If defined, all element tags will be prefixed with this name
 space.
 
-=back 
+=back
 
 =head1 SEE ALSO
 
@@ -137,13 +137,13 @@ space.
 
 =item Pegasus::DAX::PlainFilename
 
-Base class. 
+Base class.
 
 =item Pegasus::DAX::Transformation
 
 Aggregating class.
 
-=back 
+=back
 
 =head1 COPYRIGHT AND LICENSE
 

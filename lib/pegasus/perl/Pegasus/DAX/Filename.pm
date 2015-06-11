@@ -5,36 +5,36 @@
 package Pegasus::DAX::Filename;
 use 5.006;
 use strict;
-use Carp; 
+use Carp;
 
-use Pegasus::DAX::Base qw(:xml); 
-use Pegasus::DAX::PlainFilename; 
+use Pegasus::DAX::Base qw(:xml);
+use Pegasus::DAX::PlainFilename;
 use Exporter;
-our @ISA = qw(Pegasus::DAX::PlainFilename Exporter); 
+our @ISA = qw(Pegasus::DAX::PlainFilename Exporter);
 
 use constant LINK_NONE   => 'none';
-use constant LINK_IN     => 'input'; 
+use constant LINK_IN     => 'input';
 use constant LINK_OUT    => 'output';
-use constant LINK_INPUT  => 'input'; 
+use constant LINK_INPUT  => 'input';
 use constant LINK_OUTPUT => 'output';
-use constant LINK_INOUT  => 'inout'; 
-use constant LINK_IO     => 'inout'; 
+use constant LINK_INOUT  => 'inout';
+use constant LINK_IO     => 'inout';
 use constant LINK_CHECKPOINT => 'checkpoint';
 use constant LINK_CHK    => 'checkpoint';
 
 use constant TRANSFER_TRUE => 'true';
 use constant TRANSFER_FALSE => 'false';
-use constant TRANSFER_OPTIONAL => 'optional'; 
+use constant TRANSFER_OPTIONAL => 'optional';
 
-our $VERSION = '3.5'; 
-our @EXPORT = (); 
-our %EXPORT_TAGS = ( 
-    'link' => [qw(LINK_NONE LINK_IN LINK_OUT LINK_INPUT LINK_OUTPUT 
+our $VERSION = '3.6';
+our @EXPORT = ();
+our %EXPORT_TAGS = (
+    'link' => [qw(LINK_NONE LINK_IN LINK_OUT LINK_INPUT LINK_OUTPUT
 	LINK_INOUT LINK_IO LINK_CHECKPOINT LINK_CHK)],
     'transfer' => [qw(TRANSFER_TRUE TRANSFER_FALSE TRANSFER_OPTIONAL)]
     );
-$EXPORT_TAGS{all} = [ map { @{$_} } values %EXPORT_TAGS ]; 
-our @EXPORT_OK = ( @{$EXPORT_TAGS{all}} ); 
+$EXPORT_TAGS{all} = [ map { @{$_} } values %EXPORT_TAGS ];
+our @EXPORT_OK = ( @{$EXPORT_TAGS{all}} );
 
 # one AUTOLOAD to rule them all
 BEGIN { *AUTOLOAD = \&Pegasus::DAX::Base::AUTOLOAD }
@@ -44,21 +44,21 @@ sub new {
     my $class = ref($proto) || $proto;
     my $self = $class->SUPER::new();
 
-    if ( @_ == 0 ) { 
-	# nothing to do 
+    if ( @_ == 0 ) {
+	# nothing to do
     } elsif ( @_ > 1 && (@_ & 1) == 0 ) {
 	# called with a=>b,c=>d list
-	%{$self} = ( %{$self}, @_ ); 
-    } elsif ( @_ == 1 && ref $_[0] && 
-	      ( ref $_[0] eq 'HASH' || ref $_[0] eq __PACKAGE__ ) ) { 
+	%{$self} = ( %{$self}, @_ );
+    } elsif ( @_ == 1 && ref $_[0] &&
+	      ( ref $_[0] eq 'HASH' || ref $_[0] eq __PACKAGE__ ) ) {
 	# called with { a=>b, c=>d } hashref
 	# or called as copy-c'tor (deep copy)
-	%{$self} = ( %{$self}, %{ shift() } ); 
+	%{$self} = ( %{$self}, %{ shift() } );
     } else {
-	croak "invalid c'tor invocation"; 
+	croak "invalid c'tor invocation";
     }
 
-    bless $self, $class; 
+    bless $self, $class;
 }
 
 # forward declarations so can we check using 'can'
@@ -67,9 +67,9 @@ sub namespace;
 sub version;
 sub link;
 sub optional;
-sub register; 
+sub register;
 sub transfer;
-sub executable; 
+sub executable;
 sub size;
 
 sub toXML {
@@ -78,13 +78,13 @@ sub toXML {
     #          ident (IN): indentation level
     #          xmlns (IN): namespace of element, if necessary
     #
-    my $self = shift; 
-    my $f = shift; 
+    my $self = shift;
+    my $f = shift;
     my $indent = shift || '';
-    my $xmlns = shift; 
+    my $xmlns = shift;
     my $tag = defined $xmlns && $xmlns ? "$xmlns:uses" : 'uses';
 
-    $f->print( "$indent<$tag", 
+    $f->print( "$indent<$tag",
 	     , attribute('namespace',$self->namespace,$xmlns)
 	     , attribute('name',$self->name,$xmlns)
 	     , attribute('version',$self->version,$xmlns)
@@ -94,25 +94,25 @@ sub toXML {
 	     , attribute('transfer',$self->transfer,$xmlns)
 	     , attribute('executable',boolean($self->executable),$xmlns)
 	     , attribute('size',$self->size,$xmlns)
-	     , " />\n" ); 
+	     , " />\n" );
 }
 
-1; 
+1;
 __END__
 
 =head1 NAME
 
-Pegasus::DAX::Filename - class for complete file names. 
+Pegasus::DAX::Filename - class for complete file names.
 
 =head1 SYNOPSIS
 
-    use Pegasus::DAX::Filename; 
+    use Pegasus::DAX::Filename;
 
     my $i = Pegasus::DAX::Filename->new( name => 'filename.txt' );
     $i->link = LINK_IN;
     $i->register = 1;
-    $i->optional = 0; 
-   
+    $i->optional = 0;
+
 =head1 DESCRIPTION
 
 This class remembers a simple filename. These filenames are aggregated
@@ -121,7 +121,7 @@ concrete job's argument list.
 
 =head1 CONSTANTS
 
-The following constants define valid values for the I<link> attribute. 
+The following constants define valid values for the I<link> attribute.
 
 =over 4
 
@@ -156,25 +156,25 @@ with the I<link> attribute.
 =item LINK_CHECKPOINT
 
 Constant denoting that a file is a job checkpoint file. To be used
-with the I<link> attribute.=item 
+with the I<link> attribute.=item
 
 =back
 
-The following constants define valid values for the I<transfer> attribute. 
+The following constants define valid values for the I<transfer> attribute.
 
 =over 4
 
 =item TRANSFER_TRUE
 
-Stage the files as necessary. 
+Stage the files as necessary.
 
 =item TRANSFER_FALSE
 
-Do not stage files. 
+Do not stage files.
 
 =item TRANSFER_OPTIONAL
 
-Attempt to stage files, but failing to stage an input file is not an error. 
+Attempt to stage files, but failing to stage an input file is not an error.
 
 =back
 
@@ -191,11 +191,11 @@ Attempt to stage files, but failing to stage an input file is not an error.
 The default constructor will create an empty instance whose scalar
 attributes can be adjusted using the getters and setters provided by the
 C<AUTOLOAD> inherited method. Other means to set attributes is to used
-named lists. 
+named lists.
 
 =item name
 
-This setter and getter is inherited. 
+This setter and getter is inherited.
 
 =item namespace
 
@@ -203,7 +203,7 @@ Setter and getter for a namespace string.
 
 =item version
 
-Setter and getter for a version string. 
+Setter and getter for a version string.
 
 =item link
 
@@ -216,15 +216,15 @@ constants starting with C<LINK_>.
 
 =item executable
 
-Setter and getter for boolean values. Please use Perl truth. 
+Setter and getter for boolean values. Please use Perl truth.
 
 =item size
 
-Setter and getter for file size attribute. 
+Setter and getter for file size attribute.
 
 =item transfer
 
-Setter and getter for tri-state value. Please use strings. 
+Setter and getter for tri-state value. Please use strings.
 
 =item toXML( $handle, $indent, $xmlns )
 
@@ -236,7 +236,7 @@ to indent elements for pretty printing. The third argument may not be
 defined. If defined, all element tags will be prefixed with this name
 space.
 
-=back 
+=back
 
 =head1 SEE ALSO
 
@@ -244,13 +244,13 @@ space.
 
 =item Pegasus::DAX::PlainFilename
 
-Base class. 
+Base class.
 
 =item Pegasus::DAX::AbstractJob
 
-Aggregating class. 
+Aggregating class.
 
-=back 
+=back
 
 =head1 COPYRIGHT AND LICENSE
 

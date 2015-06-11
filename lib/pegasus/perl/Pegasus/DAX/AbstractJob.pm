@@ -5,23 +5,24 @@
 package Pegasus::DAX::AbstractJob;
 use 5.006;
 use strict;
-use Carp; 
+use Carp;
 
-use Pegasus::DAX::Base qw(:xml); 
+use Pegasus::DAX::Base qw(:xml);
 use Pegasus::DAX::InvokeMixin;
-use Pegasus::DAX::Filename qw(LINK_IN LINK_OUT); 
+use Pegasus::DAX::MetaDataMixin;
+use Pegasus::DAX::Filename qw(LINK_IN LINK_OUT);
 use Exporter;
-our @ISA = qw(Pegasus::DAX::Base Pegasus::DAX::InvokeMixin Exporter); 
+our @ISA = qw(Pegasus::DAX::Base Pegasus::DAX::InvokeMixin Pegasus::DAX::MetaDataMixin Exporter);
 
-our $VERSION = '3.5'; 
-our @EXPORT = (); 
-our %EXPORT_TAGS = (); 
-our @EXPORT_OK = (); 
+our $VERSION = '3.6';
+our @EXPORT = ();
+our %EXPORT_TAGS = ();
+our @EXPORT_OK = ();
 
 # one AUTOLOAD to rule them all
 BEGIN { *AUTOLOAD = \&Pegasus::DAX::Base::AUTOLOAD }
 
-use Pegasus::DAX::Filename qw(LINK_INPUT); 
+use Pegasus::DAX::Filename qw(LINK_INPUT);
 
 my $count = 0; 			# class variable
 
@@ -33,16 +34,16 @@ sub new {
 
     if ( @_ > 1 ) {
 	# called with a=>b,c=>d list
-	%{$self} = ( %{$self}, @_ ); 
-    } elsif ( @_ == 1 && ref $_[0] eq 'HASH' ) { 
+	%{$self} = ( %{$self}, @_ );
+    } elsif ( @_ == 1 && ref $_[0] eq 'HASH' ) {
 	# called with { a=>b, c=>d } hashref
-	%{$self} = ( %{$self}, %{ shift() } ); 
+	%{$self} = ( %{$self}, %{ shift() } );
     }
 
-    bless $self, $class; 
+    bless $self, $class;
 }
 
-sub addArgument { 
+sub addArgument {
     my $self = shift;
 
     # WARNING: foreach is susceptible to in-place modification of the
@@ -54,27 +55,27 @@ sub addArgument {
 	    $arg = "$name"; 	# deep copy
 	} elsif ( $name->isa('Pegasus::DAX::PlainFilename')) {
 	    # auto-add uses for P::D::Filename only!
-	    $self->uses($name) if $name->isa('Pegasus::DAX::Filename'); 
+	    $self->uses($name) if $name->isa('Pegasus::DAX::Filename');
 
 	    # sub-classing not permissible for storing/printing
 	    $arg = Pegasus::DAX::PlainFilename->new( $name->name )
 	} elsif ( $name->isa('Pegasus::DAX::CatalogType') ) {
 	    # auto-add uses for File or Executable
-	    $self->uses($name); 
+	    $self->uses($name);
 
 	    # sub-classing not permissible for storing/printing
-	    $arg = Pegasus::DAX::PlainFilename->new( $name->name ); 
+	    $arg = Pegasus::DAX::PlainFilename->new( $name->name );
 	} else {
-	    croak "Illegal argument to addArgument"; 
+	    croak "Illegal argument to addArgument";
 	}
 
-	# 
+	#
 	# add $arg to list of arguments
 	#
-	if ( exists $self->{arguments} ) { 
+	if ( exists $self->{arguments} ) {
 	    push( @{$self->{arguments}}, $arg );
 	} else {
-	    $self->{arguments} = [ $arg ]; 
+	    $self->{arguments} = [ $arg ];
 	}
     }
 }
@@ -82,13 +83,13 @@ sub addArgument {
 sub addProfile {
     my $self = shift;
 
-    my $prof; 
+    my $prof;
     if ( @_ == 3 ) {
 	# explicit
-	$prof = Pegasus::DAX::Profile->new( shift(), shift(), shift() ); 
+	$prof = Pegasus::DAX::Profile->new( shift(), shift(), shift() );
     } elsif ( @_ == 1 && ref $_[0] && $_[0]->isa('Pegasus::DAX::Profile') ) {
-	my $p = shift; 
-	$prof = $p->clone; 
+	my $p = shift;
+	$prof = $p->clone;
     } else {
 	croak "argument is not a valid Profile";
     }
@@ -96,32 +97,32 @@ sub addProfile {
     if ( exists $self->{profiles} ) {
 	push( @{$self->{profiles}}, $prof );
     } else {
-	$self->{profiles} = [ $prof ]; 
+	$self->{profiles} = [ $prof ];
     }
 }
 
-sub stdio($$;@) { 
+sub stdio($$;@) {
     my $self = shift;
     my $what = shift;
 
-    my $result = $self->{$what}; 
-    if ( @_ ) { 
-	my $name = shift; 
-	if ( ! ref $name ) { 
+    my $result = $self->{$what};
+    if ( @_ ) {
+	my $name = shift;
+	if ( ! ref $name ) {
 	    # plain string
-	    $self->{$what} = $name; 
-	} elsif ( $name->can('name') ) { 
+	    $self->{$what} = $name;
+	} elsif ( $name->can('name') ) {
 	    # some class?
-	    $self->{$what} = $name->name; 
-	    
+	    $self->{$what} = $name->name;
+
 	    $self->uses($name)
-		if ( $name->isa('Pegasus::DAX::Filename') || 
-		     $name->isa('Pegasus::DAX::CatalogType') ); 
+		if ( $name->isa('Pegasus::DAX::Filename') ||
+		     $name->isa('Pegasus::DAX::CatalogType') );
 	} else {
 	    croak "illegal name argument";
 	}
     }
-    $result; 
+    $result;
 }
 
 sub stdin {
@@ -131,7 +132,7 @@ sub stdin {
 
 sub stdout {
     my $self = shift;
-    stdio($self,'stdout',@_); 
+    stdio($self,'stdout',@_);
 }
 
 sub stderr {
@@ -140,14 +141,14 @@ sub stderr {
 }
 
 sub addUses {
-    my $self = shift; 
-    $self->uses(@_); 
+    my $self = shift;
+    $self->uses(@_);
 }
 
 sub uses {
-    my $self = shift; 
-    my $uses = shift; 
-    if ( defined $uses && ref $uses ) { 
+    my $self = shift;
+    my $uses = shift;
+    if ( defined $uses && ref $uses ) {
 	if ( $uses->isa('Pegasus::DAX::Filename') ) {
 	    $self->{uses}->{ $uses->name } =
 		Pegasus::DAX::Filename->new( $uses ); # deep copy!
@@ -157,17 +158,17 @@ sub uses {
 					     name => $uses->name,
 					     version => $uses->version,
 					     executable => 1 );
-	} elsif ( $uses->isa('Pegasus::DAX::File') ) { 
+	} elsif ( $uses->isa('Pegasus::DAX::File') ) {
 	    $self->{uses}->{ $uses->name } =
 		Pegasus::DAX::Filename->new( name => $uses->name,
 					     link => LINK_INPUT,
 					     optional => 0,
-					     executable => 0 ); 
+					     executable => 0 );
 	} else {
 	    croak( "Instance of ", ref $uses, ' is an invalid argument' );
 	}
     } else {
-	croak "invalid argument"; 
+	croak "invalid argument";
     }
 }
 
@@ -197,58 +198,69 @@ sub innerXML {
     #          ident (IN): indentation level
     #          xmlns (IN): namespace of element, if necessary
     #
-    my $self = shift; 
-    my $f = shift; 
-    my $indent = shift || ''; 
-    my $xmlns = shift; 
+    my $self = shift;
+    my $f = shift;
+    my $indent = shift || '';
+    my $xmlns = shift;
 
     #
     # <arguments>
     #
     if ( exists $self->{arguments} ) {
-	my $tag = defined $xmlns && $xmlns ? "$xmlns:argument" : 'argument'; 
-	my $flag = 0; 
-	$f->print( "$indent<$tag>" ); 
+	my $tag = defined $xmlns && $xmlns ? "$xmlns:argument" : 'argument';
+	my $flag = 0;
+	$f->print( "$indent<$tag>" );
 	foreach my $i ( @{$self->{arguments}} ) {
-	    $f->print( $self->{separator} ) if ( $flag && $self->{separator} ); 
+	    $f->print( $self->{separator} ) if ( $flag && $self->{separator} );
 	    if ( ref $i ) {
-		$i->toXML($f,'',$xmlns); 
+		$i->toXML($f,'',$xmlns);
 	    } else {
-		$f->print($i); 
+		$f->print($i);
 	    }
-	    $flag++; 
+	    $flag++;
 	}
-	$f->print( "</$tag>\n" ); 
+	$f->print( "</$tag>\n" );
     }
+
+	#
+	# <metadata>
+	#
+	if ( exists $self->{metadata} ) {
+		foreach my $m ( values %{$self->{metadata}} ) {
+			$m->toXML($f,"$indent", $xmlns);
+		}
+
+		$f->print("\n");
+	}
 
     #
     # <profile>
     #
     if ( exists $self->{profiles} ) {
-	foreach my $i ( @{$self->{profiles}} ) { 
-	    $i->toXML($f,$indent,$xmlns); 
+	foreach my $i ( @{$self->{profiles}} ) {
+	    $i->toXML($f,$indent,$xmlns);
 	}
     }
 
     #
     # <stdio>
     #
-    if ( exists $self->{stdin} && $self->{stdin} ) { 
-	my $tag = defined $xmlns && $xmlns ? "$xmlns:stdin" : 'stdin'; 
+    if ( exists $self->{stdin} && $self->{stdin} ) {
+	my $tag = defined $xmlns && $xmlns ? "$xmlns:stdin" : 'stdin';
 	$f->print( "$indent<$tag"
 		 , attribute('name',$self->stdin,$xmlns)
 		 , attribute('link',LINK_IN,$xmlns)
 		 , " />\n" );
     }
-    if ( exists $self->{stdout} && $self->{stdout} ) { 
-	my $tag = defined $xmlns && $xmlns ? "$xmlns:stdout" : 'stdout'; 
+    if ( exists $self->{stdout} && $self->{stdout} ) {
+	my $tag = defined $xmlns && $xmlns ? "$xmlns:stdout" : 'stdout';
 	$f->print( "$indent<$tag"
 		 , attribute('name',$self->stdout,$xmlns)
 		 , attribute('link',LINK_OUT,$xmlns)
 		 , " />\n" );
     }
-    if ( exists $self->{stderr} && $self->{stderr} ) { 
-	my $tag = defined $xmlns && $xmlns ? "$xmlns:stderr" : 'stderr'; 
+    if ( exists $self->{stderr} && $self->{stderr} ) {
+	my $tag = defined $xmlns && $xmlns ? "$xmlns:stderr" : 'stderr';
 	$f->print( "$indent<$tag"
 		 , attribute('name',$self->stderr,$xmlns)
 		 , attribute('link',LINK_OUT,$xmlns)
@@ -258,7 +270,7 @@ sub innerXML {
     #
     # <uses>
     #
-    if ( exists $self->{uses} ) { 
+    if ( exists $self->{uses} ) {
 	while ( my ($name,$i) = each %{$self->{uses}} ) {
 	    $i->toXML($f,$indent,$xmlns);
 	}
@@ -274,22 +286,22 @@ sub innerXML {
     }
 }
 
-1; 
+1;
 __END__
 
 
 
 =head1 NAME
 
-Pegasus::DAX::AbstractJob - abstract base class for jobs. 
+Pegasus::DAX::AbstractJob - abstract base class for jobs.
 
 =head1 SYNOPSIS
 
-This is an abstract class. You do not instantiate abstract classes. 
+This is an abstract class. You do not instantiate abstract classes.
 
 =head1 DESCRIPTION
 
-This class is the base for the four kinds of jobs and sub-workflows. 
+This class is the base for the four kinds of jobs and sub-workflows.
 
 =head1 METHODS
 
@@ -297,11 +309,11 @@ This class is the base for the four kinds of jobs and sub-workflows.
 
 =item new()
 
-The constructor is used by child classes to establish data structures. 
+The constructor is used by child classes to establish data structures.
 
 =item addArgument( $string )
 
-This method will add a simple string into the ordered list of arguments. 
+This method will add a simple string into the ordered list of arguments.
 
 =item addArgument( $plainfilename_instance )
 
@@ -328,7 +340,7 @@ the proper L<Pegasus::DAX::Filename> to the I<uses> section.
 =item addArgument( ... )
 
 You may pass any number of the above permitted arguments as long list
-of these arguments. This is a convenience method. 
+of these arguments. This is a convenience method.
 
 =item addProfile( $namespace, $key, $value )
 
@@ -336,7 +348,7 @@ of these arguments. This is a convenience method.
 
 This method will add a specified profile, either as three strings or
 instance of L<Pegasus::DAX::Profile>, to the collection of profiles
-associated with the logical level catalog entry. 
+associated with the logical level catalog entry.
 
 =item stdin
 
@@ -345,16 +357,16 @@ associated with the logical level catalog entry.
 =item stderr
 
 Setter and getter for stdio handles. In get mode, the plain string
-of the logical file is returned. 
+of the logical file is returned.
 
 In set mode, use a string or L<Pegasus::DAX::PlainFilename> to provide
 the logical file name. You are responsible to add the filename to the
 C<uses> section.
 
-You may also specify an argument of L<Pegasus::DAX::Filename>, 
+You may also specify an argument of L<Pegasus::DAX::Filename>,
 L<Pegasus::DAX::File>, or L<Pegasus::DAX::Executable>. In these cases,
 the filename is added automatically to the C<uses> section. You are
-responsible to provide the proper linkage, if applicable. 
+responsible to provide the proper linkage, if applicable.
 
 =item addUses
 
@@ -389,28 +401,28 @@ these defaults.
 Getter and setter for the job's identifier string. Please note that the
 identifier is more restrictive, e.g. needs to obey more stringend rules.
 
-The job identifier is a required argument, and unique within the C<ADAG>. 
+The job identifier is a required argument, and unique within the C<ADAG>.
 
 =item nodelabel
 
-Getter and setter for the optional job label string. 
+Getter and setter for the optional job label string.
 
 =item separator
 
 This attribute defaults to a single space. The arguments in the argument
-string will be formatted with the separator value between each argument. 
-The default should be good in many circumstances. 
+string will be formatted with the separator value between each argument.
+The default should be good in many circumstances.
 
 In case your application is sensitive to white-space in its argument
 list, you may want to set C<separator> to the empty string, and provide
-the proper whitespaces yourself. 
+the proper whitespaces yourself.
 
 =item innerXML( $handle, $indent, $xmlns )
 
 The purpose of the C<innerXML> function is to recursively generate XML from
 the internal data structures. Since this class is abstract, it will not
 create the element tag nor attributes. However, it needs to create the
-inner elements as necessary. 
+inner elements as necessary.
 
 The first argument is a file handle open for writing. This is where the
 XML will be generated.  The second argument is a string with the amount
@@ -418,11 +430,11 @@ of white-space that should be used to indent elements for pretty
 printing. The third argument may not be defined. If defined, all element
 tags will be prefixed with this name space.
 
-=back 
+=back
 
 =head1 INHERITED METHODS
 
-Please refer to L<Pegasus::DAX::InvokeMixin> for inherited methods. 
+Please refer to L<Pegasus::DAX::InvokeMixin> for inherited methods.
 
 =over 4
 
@@ -440,7 +452,7 @@ Please refer to L<Pegasus::DAX::InvokeMixin> for inherited methods.
 
 =item L<Pegasus::DAX::Base>
 
-Base class. 
+Base class.
 
 =item L<Pegasus::DAX::InvokeMixin>
 
@@ -454,9 +466,9 @@ Base class for L<Pegasus::DAX::Invoke> delegation methods.
 
 =item L<Pegasus::DAX::ADAG>
 
-Child classes inheriting from L<Pegasus::DAX::AbstractJob>. 
+Child classes inheriting from L<Pegasus::DAX::AbstractJob>.
 
-=back 
+=back
 
 =head1 COPYRIGHT AND LICENSE
 

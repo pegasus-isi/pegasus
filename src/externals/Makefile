@@ -1,0 +1,88 @@
+SHELL := /bin/bash
+
+ifndef $(prefix)
+    prefix=$(shell cd $(CURDIR)/../.. && pwd)
+endif
+
+EXTDIR=$(prefix)/lib/pegasus/externals
+LIBDIR=$(EXTDIR)/python
+
+BUILDPKG=$(CURDIR)/buildpackage.sh
+
+# We always use SQLAlchemy
+PACKAGES=sqlalchemy
+
+ifneq ($(shell python -V 2>&1 | grep -E 'ython 2\.[3-6]'),)
+    PACKAGES+=ordereddict.py
+endif
+
+ifneq ($(shell python -V 2>&1 | grep -E 'ython 2\.[3-4]'),)
+    # Install alternative dependencies for python 2.4
+    PACKAGES+=pysqlite2
+else
+    # For other python >= 2.5, install the service dependencies
+    PACKAGES+=flask
+    PACKAGES+=flask_cache
+    PACKAGES+=flask_sqlalchemy.py
+    PACKAGES+=jinja2
+    PACKAGES+=markupsafe
+    PACKAGES+=wtforms
+    PACKAGES+=werkzeug
+    PACKAGES+=requests
+    PACKAGES+=itsdangerous.py
+    PACKAGES+=boto
+    PACKAGES+=pam.py
+    PACKAGES+=OpenSSL
+    PACKAGES+=plex
+    ifeq ($(shell which pg_config),)
+        $(warning WARNING: pg_config not found: skipping python postgresql library)
+    else
+        PACKAGES+=psycopg2
+    endif
+    ifeq ($(shell which mysql_config),)
+        $(warning WARNING: mysql_config not found: skipping python mysql library)
+    else
+        PACKAGES+=MySQLdb
+    endif
+endif
+
+all: $(addprefix $(LIBDIR)/,$(PACKAGES))
+
+$(LIBDIR)/%:
+	$(eval TARNAME := $(subst .tar.gz,,$<))
+	@echo Building $< ;\
+	mkdir -p $(LIBDIR) ;\
+	tar xzf $< ;\
+	pushd $(TARNAME) > /dev/null ;\
+	python setup.py install_lib -d $(LIBDIR) > /dev/null ;\
+	popd > /dev/null ;\
+	rm -rf $(TARNAME) ;\
+	touch $@
+
+ifneq ($(shell python -V 2>&1 | grep -E 'ython 2\.[3-4]'),)
+    # We use an old version of sqlalchemy for python 2.3 and 2.4
+    $(LIBDIR)/sqlalchemy: SQLAlchemy-0.7.6.tar.gz
+else
+    $(LIBDIR)/sqlalchemy: SQLAlchemy-0.8.0.tar.gz
+endif
+$(LIBDIR)/flask: Flask-0.10.tar.gz
+$(LIBDIR)/flask_cache: Flask-Cache-0.13.1.tar.gz
+$(LIBDIR)/flask_sqlalchemy.py: Flask-SQLAlchemy-0.16.tar.gz
+$(LIBDIR)/jinja2: Jinja2-2.7.tar.gz
+$(LIBDIR)/markupsafe: MarkupSafe-0.18.tar.gz
+$(LIBDIR)/wtforms: WTForms-1.0.3.tar.gz
+$(LIBDIR)/werkzeug: Werkzeug-0.9.3.tar.gz
+$(LIBDIR)/requests: requests-1.2.3.tar.gz
+$(LIBDIR)/itsdangerous.py: itsdangerous-0.21.tar.gz
+$(LIBDIR)/boto: boto-2.5.2.tar.gz
+$(LIBDIR)/pam.py: pam-0.1.4.tar.gz
+$(LIBDIR)/OpenSSL: pyOpenSSL-0.13.tar.gz
+$(LIBDIR)/plex: plex-2.0.0dev.tar.gz
+$(LIBDIR)/MySQLdb: MySQL-python-1.2.5.tar.gz
+$(LIBDIR)/psycopg2: psycopg2-2.6.tar.gz
+$(LIBDIR)/pysqlite2: pysqlite-2.6.0.tar.gz
+$(LIBDIR)/ordereddict.py: ordereddict-1.1.tar.gz
+
+clean:
+	rm -rf $(EXTDIR)
+

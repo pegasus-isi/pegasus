@@ -2,6 +2,7 @@
 <project name="pegasus" default="dist">
   <property environment="env"/>
   <property file="build.properties"/>
+  <property file="build.git.properties"/>
   <property name="build.source" value="1.6"/>
   <property name="build.target" value="1.6"/>
   <property name="make" value="make"/>
@@ -121,6 +122,7 @@
 
   <target name="set-git-hash" unless="pegasus.build.git.hash">
     <!-- Get Git Hash if it isn't already set -->
+    <echo>Setting pegasus.build.git.hash</echo>
     <exec executable="/bin/bash" outputproperty="pegasus.build.git.hash" failonerror="true">
         <arg value="-c"/>
         <arg value="git rev-parse HEAD"/>
@@ -292,10 +294,7 @@
   </target>
 
   <target name="compile-externals" depends="setup" description="Compile external dependencies">
-    <mkdir dir="${dist.lib}/pegasus/externals/python"/>
-    <exec executable="${bash}" dir="src/externals" failonerror="true">
-      <env key="libdir" value="${dist.lib}/pegasus/externals/python"/>
-      <arg line="${basedir}/src/externals/setup.sh"/>
+    <exec executable="${make}" dir="src/externals" failonerror="true">
     </exec>
   </target>
 
@@ -374,6 +373,9 @@
     <mkdir dir="${dist.lib}/pegasus/php"/>
     <copy preservelastmodified="true" todir="${dist.lib}/pegasus/php">
       <fileset dir="lib/pegasus/php" includes="**/*.php"/>
+    </copy>
+    <copy preservelastmodified="true" todir="${dist.lib}/pegasus/externals/python">
+      <fileset dir="lib/pegasus/externals/python" includes="**/*"/>
     </copy>
 
     <!-- share -->
@@ -457,8 +459,8 @@
     <exec executable="${make}" dir="src/tools/pegasus-mpi-cluster" failonerror="true">
       <arg line="distclean"/>
     </exec>
-    <exec executable="${bash}" dir="src/externals" failonerror="true">
-      <arg line="setup.sh clean"/>
+    <exec executable="${make}" dir="src/externals" failonerror="true">
+      <arg line="clean"/>
     </exec>
     <exec executable="${make}" dir="doc/manpages" failonerror="true">
       <arg line="clean"/>
@@ -519,7 +521,7 @@
 
   <target name="test-python" depends="compile-externals" description="Execute python unit tests">
     <exec executable="/usr/bin/env" dir="lib/pegasus/python" failonerror="true">
-      <env key="PYTHONPATH" value="${dist.lib}/pegasus/externals/python"/>
+      <env key="PYTHONPATH" value="${basedir}/lib/pegasus/externals/python"/>
       <arg line="python test.py"/>
     </exec>
   </target>

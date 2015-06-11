@@ -5,17 +5,17 @@
 package Pegasus::DAX::File;
 use 5.006;
 use strict;
-use Carp; 
+use Carp;
 
-use Pegasus::DAX::Base qw(:xml); 
-use Pegasus::DAX::CatalogType; 
+use Pegasus::DAX::Base qw(:xml);
+use Pegasus::DAX::CatalogType;
 use Exporter;
-our @ISA = qw(Pegasus::DAX::CatalogType Exporter); 
+our @ISA = qw(Pegasus::DAX::CatalogType Exporter);
 
-our $VERSION = '3.5'; 
-our %EXPORT_TAGS = (); 
-our @EXPORT = (); 
-our @EXPORT_OK = (); 
+our $VERSION = '3.6';
+our %EXPORT_TAGS = ();
+our @EXPORT = ();
+our @EXPORT_OK = ();
 
 # one AUTOLOAD to rule them all
 BEGIN { *AUTOLOAD = \&Pegasus::DAX::Base::AUTOLOAD }
@@ -24,20 +24,20 @@ sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
     my $self = $class->SUPER::new();
-    
-    if ( @_ == 0 ) { 
+
+    if ( @_ == 0 ) {
 	# nothing to do
     } elsif ( @_ > 1 ) {
 	# called with a=>b,c=>d list
-	%{$self} = ( %{$self}, @_ ); 
-    } elsif ( @_ == 1 && ref $_[0] eq 'HASH' ) { 
+	%{$self} = ( %{$self}, @_ );
+    } elsif ( @_ == 1 && ref $_[0] eq 'HASH' ) {
 	# called with { a=>b, c=>d } hashref
-	%{$self} = ( %{$self}, %{ shift() } ); 
+	%{$self} = ( %{$self}, %{ shift() } );
     } else {
-	croak "invalid c'tor invocation"; 
+	croak "invalid c'tor invocation";
     }
 
-    bless $self, $class; 
+    bless $self, $class;
 }
 
 # forward declarations
@@ -49,38 +49,38 @@ sub toXML {
     #          ident (IN): indentation level
     #          xmlns (opt. IN): namespace of element, if necessary
     #
-    my $self = shift; 
-    my $f = shift; 
+    my $self = shift;
+    my $f = shift;
     my $indent = shift || '';
-    my $xmlns = shift; 
+    my $xmlns = shift;
     my $tag = defined $xmlns && $xmlns ? "$xmlns:file" : 'file';
 
     $f->print( "$indent<$tag"
 	     , attribute('name',$self->name,$xmlns)
 	     , ">\n" );
-    $self->innerXML($f,"  $indent",$xmlns); 
+    $self->innerXML($f,"  $indent",$xmlns);
     $f->print( "$indent</$tag>\n" );
 }
 
-1; 
+1;
 __END__
 
 
 =head1 NAME
 
-Pegasus::DAX::File - stores an included replica catalog entry. 
+Pegasus::DAX::File - stores an included replica catalog entry.
 
 =head1 SYNOPSIS
 
-    use Pegasus::DAX::File; 
+    use Pegasus::DAX::File;
 
-    my $a = Pegasus::DAX::File(); 
+    my $a = Pegasus::DAX::File();
     $a->name( 'lfn' );
-    $a->addPFN( ... ); 
-  
+    $a->addPFN( ... );
+
 =head1 DESCRIPTION
 
-This class remembers an included Pegasus replica catalog entry. 
+This class remembers an included Pegasus replica catalog entry.
 
 =head1 METHODS
 
@@ -102,7 +102,7 @@ successfully.
 
 =item name
 
-Setter and getter for the logical filename. 
+Setter and getter for the logical filename.
 
 =item toXML( $handle, $indent, $xmlns )
 
@@ -114,11 +114,11 @@ to indent elements for pretty printing. The third argument may not be
 defined. If defined, all element tags will be prefixed with this name
 space.
 
-=back 
+=back
 
 =head1 INHERITED METHODS
 
-Please refer to L<Pegasus::DAX::CatalogType> for inherited methods. 
+Please refer to L<Pegasus::DAX::CatalogType> for inherited methods.
 
 =over 4
 
@@ -148,9 +148,9 @@ Base class.
 
 =item L<Pegasus::DAX::ADAG>
 
-Class using L<Pegasus::DAX::File>. 
+Class using L<Pegasus::DAX::File>.
 
-=back 
+=back
 
 =head1 COPYRIGHT AND LICENSE
 

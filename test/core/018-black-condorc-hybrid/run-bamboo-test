@@ -36,7 +36,7 @@ cat > sites.xml <<EOF
         <profile namespace="condor" key="requirements">(TARGET.FileSystemDomain =!= &quot;&quot;)</profile>
     </site>
 
-     <site handle="CCG" arch="x86" os="LINUX">
+     <site handle="CCG" arch="x86" os="LINUX" osrelease="rhel" osversion="5">
 
 
         <head-fs>

@@ -5,67 +5,67 @@
 package Pegasus::DAX::Base;
 use 5.006;
 use strict;
-use vars qw($AUTOLOAD); 
+use vars qw($AUTOLOAD);
 
-use Carp; 
+use Carp;
 use Exporter;
-our @ISA = qw(Exporter); 
+our @ISA = qw(Exporter);
 
 sub quote($);			# { }
 sub attribute($$;$);		# { }
 sub boolean($);			# { }
 
-our $VERSION = '3.5'; 
-our @EXPORT = (); 
-our @EXPORT_OK = qw(quote attribute boolean $escape %escape); 
-our %EXPORT_TAGS = ( 
-    xml => [ @EXPORT_OK ], 
-    all => [ @EXPORT_OK ] ); 
+our $VERSION = '3.6';
+our @EXPORT = ();
+our @EXPORT_OK = qw(quote attribute boolean $escape %escape);
+our %EXPORT_TAGS = (
+    xml => [ @EXPORT_OK ],
+    all => [ @EXPORT_OK ] );
 
 our $prefix = '[' . __PACKAGE__ . '] ';
 
 sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
-    my $self = bless { @_ }, $class; 
+    my $self = bless { @_ }, $class;
 
     $self;
 }
 
-sub _deep($); 			# { } 
-sub _deep($) { 
-    my $src = shift; 
+sub _deep($); 			# { }
+sub _deep($) {
+    my $src = shift;
 
     if ( ref $src eq 'ARRAY' ) {
-	[ map { _deep($_) } @{$src} ]; 
-    } elsif ( ref $src eq 'HASH' ) { 
+	[ map { _deep($_) } @{$src} ];
+    } elsif ( ref $src eq 'HASH' ) {
 	my $x = { };
 	while ( my ($k,$v) = each %{$src} ) {
-	    $x->{$k} = _deep($v); 
+	    $x->{$k} = _deep($v);
 	}
-	$x; 
-    } elsif ( ref $src ) { 
-	if ( $src->can('clone') ) { 
+	$x;
+    } elsif ( ref $src ) {
+	if ( $src->can('clone') ) {
 	    $src->clone();
-	} else { 
-	    carp "FATAL: Do not know how to clone ", ref($src), "\n"; 
+	} else {
+	    carp "FATAL: Do not know how to clone ", ref($src), "\n";
 	}
     } else {
-	$src; 
+	$src;
     }
 }
 
-sub clone { 
+sub clone {
     # purpose: simplistic clone method
     # paramtr: no arguments
     # returns: copy of current object
     #
-    my $self = shift; 
-    my $result = bless { }, ref($self); 
+    my $self = shift;
+    my $result = bless { }, ref($self);
     while ( my ($k,$v) = each %{ $self } ) {
-	$result->{$k} = _deep($v); 
+	$result->{$k} = _deep($v);
     }
-    $result; 
+    $result;
 }
 
 sub AUTOLOAD {
@@ -80,12 +80,12 @@ sub AUTOLOAD {
     my $name = $AUTOLOAD;
     $name =~ s/.*:://;   # strip fully-qualified portion
 
-    unless ( exists $self->{$name} || $self->can($name) ) { 
+    unless ( exists $self->{$name} || $self->can($name) ) {
         croak( $prefix, "Can't access >>$name<< field in class $type" );
     }
 
-    my $result = $self->{$name}; 
-    if ( ref $self->{$name} eq 'HASH' ) { 
+    my $result = $self->{$name};
+    if ( ref $self->{$name} eq 'HASH' ) {
 	# hash value
 	if ( @_ > 0 ) {
 	    if ( ref $_[0] eq 'HASH' && @_ == 1 ) {
@@ -93,56 +93,56 @@ sub AUTOLOAD {
 	    } elsif ( (@_ & 1) == 0 ) {
 		$self->{$name} = { @_ };
 	    } else {
-		croak( "${type}->${name}() setter is helpless" ); 
+		croak( "${type}->${name}() setter is helpless" );
 	    }
 	}
 
 	# return unrolled hash in list context, hashref in scalar
-	return wantarray ? ( %{ $result } ) : $result; 
-    } elsif ( ref $self->{$name} eq 'ARRAY' ) { 
+	return wantarray ? ( %{ $result } ) : $result;
+    } elsif ( ref $self->{$name} eq 'ARRAY' ) {
 	# array value
-	if ( @_ > 0 ) { 
-	    if ( ref $_[0] eq 'ARRAY' && @_ == 1 ) { 
+	if ( @_ > 0 ) {
+	    if ( ref $_[0] eq 'ARRAY' && @_ == 1 ) {
 		$self->{$name} = [ @{shift()} ]; # deep copy
 	    } else {
-		$self->{$name} = [ @_ ]; 
+		$self->{$name} = [ @_ ];
 	    }
 	}
 
 	# returned unrolled array in list context, arrayref in scalar
 	return wantarray ? ( @{ $result } ) : $result;
-    } else { 
+    } else {
 	# scalar or instance value
 	if ( @_ ) {
 	    my $v = shift;
 	    if ( defined $v ) { $self->{$name} = $v; }
 	    else { delete $self->{$name}; }
 	}
-	return $result; 
+	return $result;
     }
 
-    croak "AUTOLOAD: This point should not be reached for ${type}->${name}"; 
+    croak "AUTOLOAD: This point should not be reached for ${type}->${name}";
 }
 
 our %escape = ( '&' => '&amp;'
 	      , '<' => '&lt;'
 	      , '>' => '&gt;'
 	      , "'" => '&apos;'
-	      , '"' => '&quot;' 
+	      , '"' => '&quot;'
     );
-our $escape = '([' . join( '', keys %escape ) . '])'; 
+our $escape = '([' . join( '', keys %escape ) . '])';
 
 sub quote($) {
     # purpose: quote XML entities inside a value string
     # paramtr: $s (IN): value string
     # returns: quoted version, possibly same string
     #
-    my $s = shift; 
-    $s =~ s/$escape/$escape{$1}/ge if defined $s; 
-    $s; 
+    my $s = shift;
+    $s =~ s/$escape/$escape{$1}/ge if defined $s;
+    $s;
 }
 
-sub attribute($$;$) { 
+sub attribute($$;$) {
     # purpose: format an element attribute
     # paramtr: $key (IN): name of attribute
     #          $val (IN): value for attribute
@@ -150,14 +150,14 @@ sub attribute($$;$) {
     # returns: formatted string
     # warning: may return empty string if key is empty
     #
-    my $key = shift; 
-    my $val = shift; 
-    my $xmlns = shift; 
+    my $key = shift;
+    my $val = shift;
+    my $xmlns = shift;
     if ( defined $key && $key && defined $val ) {
 	if ( defined $xmlns && $xmlns ) {
-	    " $xmlns:$key=\"", quote($val), "\""; 
+	    " $xmlns:$key=\"", quote($val), "\"";
 	} else {
-	    " $key=\"", quote($val), "\""; 
+	    " $key=\"", quote($val), "\"";
 	}
     } else {
 	'';
@@ -169,12 +169,12 @@ sub boolean($) {
     # paramtr: $v (IN): value
     # returns: string 'true' or string 'false' for defined input
     # warning: returns undefined value for undefined input!
-    # warning: string "false" input will return 'false', too. 
+    # warning: string "false" input will return 'false', too.
     #
     my $s = shift;
-    if ( defined $s ) { 
-	( $s =~ /false/i || ! $s ) ? 'false' : 'true'; 
-    } else { 
+    if ( defined $s ) {
+	( $s =~ /false/i || ! $s ) ? 'false' : 'true';
+    } else {
 	undef;
     }
 }
@@ -185,11 +185,11 @@ sub toXML {
     #          ident (IN): indentation level
     #          xmlns (opt. IN): namespace of element, if necessary
     #
-    my $self = shift; 
-    croak( ref($self),  " called *abstract* ", __PACKAGE__, "::toXML" ); 
+    my $self = shift;
+    croak( ref($self),  " called *abstract* ", __PACKAGE__, "::toXML" );
 }
 
-1; 
+1;
 __END__
 
 __END__
@@ -202,7 +202,7 @@ Pegasus::DAX::Base - base class for all ADAG/DAX related classes.
 
     use Pegasus::DAX::Base qw(:xml);
     use Exporter;
-    our @ISA = qw(Pegasus::DAX::Base Exporter); 
+    our @ISA = qw(Pegasus::DAX::Base Exporter);
 
     ...
 
@@ -210,7 +210,7 @@ Pegasus::DAX::Base - base class for all ADAG/DAX related classes.
 	my $self = shift;
 	my $handle = shift;
 	my $indent = shift || '';
-	my $xmlns = shift; 
+	my $xmlns = shift;
 	my $tag = defined $xmlns && $xmlns ? "$xmlns:element" : 'element';
 
 	# open tag
@@ -228,19 +228,19 @@ Pegasus::DAX::Base - base class for all ADAG/DAX related classes.
 	}
 
 	# closing tag
-	$handle->print( "$indent</$tag>\n" ); 
+	$handle->print( "$indent</$tag>\n" );
     }
 
 =head1 DESCRIPTION
 
-This module implements the base class for all classes related to 
+This module implements the base class for all classes related to
 generating DAX files. It provides helper functions to generate XML,
 and mandates that non-abstract child classes implement the C<toXML>
-method. 
+method.
 
 In addition, this class provides an C<AUTOLOAD> method, which in
 effect implements the setter and getter for all scalar values in
-any child class. 
+any child class.
 
 =head1 FUNCTIONS
 
@@ -271,20 +271,20 @@ character, the value as result of the C<quote> method, and the closing
 quote character.
 
 If the key is not defined or empty, or the value is not defined, the
-empty string will be returned. 
+empty string will be returned.
 
 In the 3-argument form, if the C<$xmlns> argument is defined and true,
-the attribute will be qualified with the string in C<$xmlns>. 
+the attribute will be qualified with the string in C<$xmlns>.
 
 =item boolean($v)
 
 This function translates a Perl boolean value into an XML boolean value.
 The output is the string C<false>, if the expression evaluates to a Perl
 false value I<or> if the input value matches the expression C</false/i>.
-Every other value returns the string C<true>. 
+Every other value returns the string C<true>.
 
 As a quirk to accomodate the omission of attributes, an I<undef> input
-will generate I<undef> output. 
+will generate I<undef> output.
 
 =back
 
@@ -295,7 +295,7 @@ will generate I<undef> output.
 =item toXML( $handle, $indent, $xmlns )
 
 This I<abstract> function will terminate with an error, unless the
-child class overrides it. 
+child class overrides it.
 
 The purpose of the C<toXML> function is to recursively generate XML from
 the internal data structures. The first argument is a file handle open
@@ -305,7 +305,7 @@ to indent elements for pretty printing. The third argument may not be
 defined. If defined, all element tags will be prefixed with this name
 space.
 
-=back 
+=back
 
 =head1 VARIABLES
 
@@ -315,24 +315,24 @@ space.
 
 This variable contains all characters that require an entity escape in
 an XML context, and map to the escaped XML entity that the character
-should be replaced with. 
+should be replaced with.
 
-The variable is used internally by the C<quote> static method. 
+The variable is used internally by the C<quote> static method.
 
 =item $escape
 
 This string is a regular expression that can be used to identify
-characters that will require an entity escape in XML context. 
+characters that will require an entity escape in XML context.
 
-The variable is used internally by the C<quote> static method. 
+The variable is used internally by the C<quote> static method.
 
-=back 
+=back
 
 =head1 AUTOLOAD
 
 The C<AUTOLOAD> method implement the getter and setter for all scalar
 values in any sibling class. While there is some effort to support
-non-scalar setters and getters, please do not use that feature (yet). 
+non-scalar setters and getters, please do not use that feature (yet).
 
 =head1 COPYRIGHT AND LICENSE
 

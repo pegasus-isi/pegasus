@@ -3,3 +3,4 @@ pysqlite2
 sqlalchemy
 *.egg-info
 *.egg
+MANIFEST.in

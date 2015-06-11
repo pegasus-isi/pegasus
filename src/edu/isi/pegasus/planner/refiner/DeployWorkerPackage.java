@@ -101,9 +101,9 @@ public class DeployWorkerPackage
     public static final String PEGASUS_WORKER_EXECUTABLES[][] = {
         { "transfer", "pegasus-transfer" },
         { "kickstart", "pegasus-kickstart" },
-        { "cleanup", "pegasus-cleanup" },
+        { "cleanup", "pegasus-transfer" },
         { "seqexec", "pegasus-cluster"},
-        { "dirmanager", "pegasus-create-dir" },
+        { "dirmanager", "pegasus-transfer" },
         { "keg" , "pegasus-keg" },
 
     };
@@ -256,7 +256,7 @@ public class DeployWorkerPackage
         //singleton access
         if( mOSToNMIOSReleaseAndVersion == null ){
             mOSToNMIOSReleaseAndVersion = new HashMap();
-            mOSToNMIOSReleaseAndVersion.put( SysInfo.OS.LINUX, "rhel_5" );
+            mOSToNMIOSReleaseAndVersion.put( SysInfo.OS.LINUX, "rhel_6" );
             mOSToNMIOSReleaseAndVersion.put( SysInfo.OS.MACOSX, "macos_10" );
         }
         return mOSToNMIOSReleaseAndVersion;

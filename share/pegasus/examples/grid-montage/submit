@@ -2,16 +2,16 @@
 
 set -e
 
-# note - this requires Montage 3.2beta6 or higher
+# note - this requires a patched Montage from http://pegasus.isi.edu/montage/
 
 #######################################################################
 #
 #  Settings
 #
 
-DEGREES=2.0
+DEGREES=1.0
 
-LOCAL_MONTAGE_LOCATION="/ccg/software/montage/Montage_v3.2_beta6_mats"
+LOCAL_MONTAGE_LOCATION="/ccg/software/montage/Montage_v3.3_patched_3"
 LOCAL_GLOBUS_TCP_PORT_RANGE="40000,50000"
 
 CLUSTER_NAME="CCG"
@@ -20,9 +20,9 @@ CLUSTER_GATEKEEPER_TYPE="gt5"
 CLUSTER_GATEKEEPER_PORT="2119"
 CLUSTER_SCHEDULER="condor"
 CLUSTER_WORK_DIR="/nfs/ccg4/scratch-6-months-purge"
-CLUSTER_PEGASUS_HOME="/ccg/software/pegasus/dev/trunk"
+CLUSTER_PEGASUS_HOME="/usr"
 CLUSTER_GLOBUS_LOCATION="/ccg/software/globus/default"
-CLUSTER_MONTAGE_LOCATION="/ccg/software/montage/Montage_v3.2_beta6_mats"
+CLUSTER_MONTAGE_LOCATION="/ccg/software/montage/Montage_v3.3_patched_3"
 
 # this will bundle N jobs togehter
 JOB_CLUSTERS_SIZE="25"
@@ -33,6 +33,7 @@ TOP_DIR=`pwd`
 LOCAL_HOSTNAME=`hostname -f`
 
 export PATH=$LOCAL_MONTAGE_LOCATION/bin:$PATH
+export MONTAGE_HOME=$LOCAL_MONTAGE_LOCATION
 
 # unique directory for this run
 RUN_ID=`/bin/date +'%F_%H%M%S'`
@@ -50,7 +51,7 @@ echo
 echo "Creating the transformation catalog..."
 for BINARY in `(cd $LOCAL_MONTAGE_LOCATION/bin && ls)`; do
     cat >>tc <<EOF
-tr $BINARY:3.0 {
+tr $BINARY:3.3 {
     site $CLUSTER_NAME {
         pfn "$CLUSTER_MONTAGE_LOCATION/bin/$BINARY"
         arch "x86_64"
@@ -61,9 +62,6 @@ tr $BINARY:3.0 {
 }
 EOF
 done
-#        <directory type="shared-scratch" path="$TOP_DIR/work">
-#            <file-server operation="all" url="file://$TOP_DIR/work"/>
-#        </directory>
 
 # site catalog
 echo
@@ -102,7 +100,7 @@ echo
 echo "Adding input images to the replica catalog..."
 echo "  " `cat cache.list | wc -l` "images found"
 cat cache.list | grep -v ".fits " >rc
-cat url.list | sed 's/ http:.*ref=/ http:\/\/obelix.isi.edu\/irsa-cache/' >>rc
+cat url.list | sed 's/\.gz http/ http/' >>rc
 
 echo
 echo "Planning and submitting the workflow..."

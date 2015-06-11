@@ -400,7 +400,7 @@ public class ADAG {
      * @param value     value
      * @return 
      */
-    public ADAG addMetadata( String key, String value ){
+    public ADAG addMetaData( String key, String value ){
         this.mMetaDataAttributes.add( new MetaData( key, value ) );
         return this;
     }

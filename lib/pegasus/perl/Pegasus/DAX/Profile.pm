@@ -5,27 +5,27 @@
 package Pegasus::DAX::Profile;
 use 5.006;
 use strict;
-use Carp; 
+use Carp;
 
-use Pegasus::DAX::Base qw(:xml); 
+use Pegasus::DAX::Base qw(:xml);
 use Exporter;
-our @ISA = qw(Pegasus::DAX::Base Exporter); 
+our @ISA = qw(Pegasus::DAX::Base Exporter);
 
 use constant PROFILE_PEGASUS => 'pegasus';
 use constant PROFILE_CONDOR  => 'condor';
 use constant PROFILE_DAGMAN  => 'dagman';
 use constant PROFILE_ENV     => 'env';
-use constant PROFILE_HINTS   => 'hints'; 
+use constant PROFILE_HINTS   => 'hints';
 use constant PROFILE_GLOBUS  => 'globus';
 use constant PROFILE_SELECTOR => 'selector';
-use constant PROFILE_STAT    => 'stat'; 
+use constant PROFILE_STAT    => 'stat';
 
-our $VERSION = '3.5'; 
-our @EXPORT = (); 
-our %EXPORT_TAGS = ( ns => [ qw(PROFILE_PEGASUS PROFILE_CONDOR 
-	PROFILE_DAGMAN PROFILE_ENV PROFILE_HINTS PROFILE_GLOBUS 
+our $VERSION = '3.6';
+our @EXPORT = ();
+our %EXPORT_TAGS = ( ns => [ qw(PROFILE_PEGASUS PROFILE_CONDOR
+	PROFILE_DAGMAN PROFILE_ENV PROFILE_HINTS PROFILE_GLOBUS
 	PROFILE_SELECTOR PROFILE_STAT ) ] );
-$EXPORT_TAGS{all} = [ @{$EXPORT_TAGS{ns}} ]; 
+$EXPORT_TAGS{all} = [ @{$EXPORT_TAGS{ns}} ];
 our @EXPORT_OK = ( @{$EXPORT_TAGS{ns}} );
 
 # one AUTOLOAD to rule them all
@@ -36,22 +36,22 @@ sub new {
     my $class = ref($proto) || $proto;
     my $self = $class->SUPER::new();
 
-    if ( @_ == 0 ) { 
+    if ( @_ == 0 ) {
 	# nothing to do
     } elsif ( @_ == 3 ) {
 	# called as namespace, key, value
-	@{$self}{'namespace','key','value'} = @_; 
+	@{$self}{'namespace','key','value'} = @_;
     } elsif ( @_ > 2 && (@_ & 1) == 0 ) {
 	# even: called with a=>b,c=>d list
-	%{$self} = ( %{$self}, @_ ); 
-    } elsif ( @_ == 1 && ref $_[0] eq 'HASH' ) { 
+	%{$self} = ( %{$self}, @_ );
+    } elsif ( @_ == 1 && ref $_[0] eq 'HASH' ) {
 	# called with { a=>b, c=>d } hashref
-	%{$self} = ( %{$self}, %{ shift() } ); 
+	%{$self} = ( %{$self}, %{ shift() } );
     } else {
 	croak "invalid c'tor for ", __PACKAGE__;
     }
 
-    bless $self, $class; 
+    bless $self, $class;
 }
 
 # forward declarations so can we check using 'can'
@@ -65,43 +65,43 @@ sub toXML {
     #          ident (IN): indentation level
     #          xmlns (IN): namespace of element, if necessary
     #
-    my $self = shift; 
-    my $f = shift; 
+    my $self = shift;
+    my $f = shift;
     my $indent = shift || '';
-    my $xmlns = shift; 
+    my $xmlns = shift;
     my $tag = defined $xmlns && $xmlns ? "$xmlns:profile" : 'profile';
 
     # older DAXes permitted single <file> element inside a profile value
-    my $value = ( ref $self->{value} && 
-		  $self->{value}->isa('Pegasus::DAX::PlainFilename') ) ? 
-	$self->{value}->name : 
-	$self->value; 
+    my $value = ( ref $self->{value} &&
+		  $self->{value}->isa('Pegasus::DAX::PlainFilename') ) ?
+	$self->{value}->name :
+	$self->value;
 
-    $f->print( "$indent<$tag", 
+    $f->print( "$indent<$tag",
 	     , attribute('namespace',$self->namespace,$xmlns)
 	     , attribute('key',$self->key,$xmlns)
 	     , ">"
 	     , quote($value)
 	     , "</$tag>\n"
-	     ); 
+	     );
 }
 
-1; 
+1;
 __END__
 
 =head1 NAME
 
-Pegasus::DAX::Profile - stores a Pegasus profile. 
+Pegasus::DAX::Profile - stores a Pegasus profile.
 
 =head1 SYNOPSIS
 
-    use Pegasus::DAX::Profile qw(:ns); 
+    use Pegasus::DAX::Profile qw(:ns);
 
-    my $a = Pegasus::DAX::Profile->new( PROFILE_ENV, 'FOO', 'bar' ); 
+    my $a = Pegasus::DAX::Profile->new( PROFILE_ENV, 'FOO', 'bar' );
     my $b = Pegasus::DAX::Profile->new( namespace => PROFILE_CONDOR,
     				        key => 'getenv',
-                                        value => 'True' ); 
-  
+                                        value => 'True' );
+
 =head1 DESCRIPTION
 
 This class remembers a Pegasus profile. Pegasus profiles abstracts the
@@ -110,7 +110,7 @@ various concrete planning details.
 =head1 CONSTANTS
 
 The following constants are imported with the I<ns> tag when using this
-module. The constants define the various permissible namespaces. 
+module. The constants define the various permissible namespaces.
 
 =over 4
 
@@ -138,7 +138,7 @@ module. The constants define the various permissible namespaces.
 
 =item new()
 
-=item new( $namespace, $key, $value ); 
+=item new( $namespace, $key, $value );
 
 =item new( a => b, c => d, ... )
 
@@ -150,7 +150,7 @@ C<AUTOLOAD> inherited method.
 
 When invoked with exactly 3 arguments, the first argument is the profile
 namespace, the second argument the key inside the namespace, and the
-third argument the value to set. 
+third argument the value to set.
 
 Other means of construction is to use named lists.
 
@@ -168,7 +168,7 @@ point.
 
 =item value
 
-Setter and getter for the value to be transported. 
+Setter and getter for the value to be transported.
 
 =item toXML( $handle, $indent, $xmlns )
 
@@ -180,7 +180,7 @@ to indent elements for pretty printing. The third argument may not be
 defined. If defined, all element tags will be prefixed with this name
 space.
 
-=back 
+=back
 
 =head1 SEE ALSO
 
@@ -188,7 +188,7 @@ space.
 
 =item L<Pegasus::DAX::Base>
 
-Base class. 
+Base class.
 
 =item L<Pegasus::DAX::AbstractJob>
 
@@ -196,9 +196,9 @@ Base class.
 
 =item L<Pegasus::DAX::CatalogType>
 
-Classes using profiles. 
+Classes using profiles.
 
-=back 
+=back
 
 =head1 COPYRIGHT AND LICENSE
 

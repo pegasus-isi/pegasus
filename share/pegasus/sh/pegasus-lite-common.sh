@@ -96,7 +96,7 @@ function pegasus_lite_internal_wp_download()
     system=$(pegasus_lite_get_system)
     if [ $? != 0 ]; then
         # not sure what system we are on - try the default package
-        system="x86_rhel_6"
+        system="x86_64_rhel_6"
     fi
     
     url="http://download.pegasus.isi.edu/pegasus/${pegasus_lite_version_major}"

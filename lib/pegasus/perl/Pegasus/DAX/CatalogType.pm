@@ -5,14 +5,15 @@
 package Pegasus::DAX::CatalogType;
 use 5.006;
 use strict;
-use Carp; 
+use Carp;
 
-use Pegasus::DAX::Base qw(:xml); 
+use Pegasus::DAX::Base qw(:xml);
+use Pegasus::DAX::MetaDataMixin;
 use Exporter;
-our @ISA = qw(Pegasus::DAX::Base Exporter); 
+our @ISA = qw(Pegasus::DAX::Base Pegasus::DAX::MetaDataMixin Exporter);
 
-our $VERSION = '3.5'; 
-our @EXPORT = (); 
+our $VERSION = '3.6';
+our @EXPORT = ();
 our %EXPORT_TAGS = ();
 our @EXPORT_OK = ();
 
@@ -24,59 +25,38 @@ sub new {
     my $class = ref($proto) || $proto;
     my $self = $class->SUPER::new();
 
-    if ( @_ == 0 ) { 
+    if ( @_ == 0 ) {
 	# nothing to do
     } elsif ( @_ > 1 ) {
 	# called with a=>b,c=>d list
-	%{$self} = ( %{$self}, @_ ); 
-    } elsif ( @_ == 1 && ref $_[0] eq 'HASH' ) { 
+	%{$self} = ( %{$self}, @_ );
+    } elsif ( @_ == 1 && ref $_[0] eq 'HASH' ) {
 	# called with { a=>b, c=>d } hashref
-	%{$self} = ( %{$self}, %{ shift() } ); 
+	%{$self} = ( %{$self}, %{ shift() } );
     } else {
-	croak "invalid c'tor for ", __PACKAGE__; 
+	croak "invalid c'tor for ", __PACKAGE__;
     }
 
-    bless $self, $class; 
+    bless $self, $class;
 }
 
 # forward declaration
-sub name; 
-
-sub addMeta {
-    my $self = shift;
-
-    my $meta; 
-    if ( @_ == 3 ) {
-	# explicit
-	$meta = Pegasus::DAX::MetaData->new( shift(), shift(), shift() ); 
-    } elsif ( @_ == 1 && ref $_[0] && $_[0]->isa('Pegasus::DAX::MetaData') ) {
-	my $m = shift; 
-	$meta = $m->clone(); 
-    } else {
-	croak "argument is not a valid MetaData";
-    }
-
-    if ( exists $self->{metas} ) {
-	push( @{$self->{metas}}, $meta );
-    } else {
-	$self->{metas} = [ $meta ]; 
-    }
-}
+sub name;
 
 sub addPFN {
     my $self = shift;
 
-    my $pfn; 
+    my $pfn;
     if ( @_ == 1 && ! ref $_[0] ) {
 	# plain string argument as PFN, no pfn-profiles
-	$pfn = Pegasus::DAX::PFN->new( shift() ); 
+	$pfn = Pegasus::DAX::PFN->new( shift() );
     } elsif ( @_ == 2 && ! ref $_[0] && ! ref $_[1] ) {
 	# two plain strings, no pfn-profiles
-	$pfn = Pegasus::DAX::PFN->new( shift(), shift() ); 
+	$pfn = Pegasus::DAX::PFN->new( shift(), shift() );
     } elsif ( @_ == 1 && $_[0]->isa('Pegasus::DAX::PFN' ) ) {
 	# ok
-	my $p = shift; 
-	$pfn = $p->clone(); 
+	my $p = shift;
+	$pfn = $p->clone();
     } else {
 	croak "argument is not a valid PFN";
     }
@@ -91,13 +71,13 @@ sub addPFN {
 sub addProfile {
     my $self = shift;
 
-    my $prof; 
+    my $prof;
     if ( @_ == 3 ) {
 	# explicit
-	$prof = Pegasus::DAX::Profile->new( shift(), shift(), shift() ); 
+	$prof = Pegasus::DAX::Profile->new( shift(), shift(), shift() );
     } elsif ( @_ == 1 && ref $_[0] && $_[0]->isa('Pegasus::DAX::Profile') ) {
-	my $p = shift; 
-	$prof = $p->clone(); 
+	my $p = shift;
+	$prof = $p->clone();
     } else {
 	croak "argument is not a valid Profile";
     }
@@ -105,7 +85,7 @@ sub addProfile {
     if ( exists $self->{profiles} ) {
 	push( @{$self->{profiles}}, $prof );
     } else {
-	$self->{profiles} = [ $prof ]; 
+	$self->{profiles} = [ $prof ];
     }
 }
 
@@ -116,17 +96,17 @@ sub innerXML {
     #          xmlns (IN): namespace of element, if necessary
     # returns: number of inner elements produced
     #
-    my $self = shift; 
-    my $f = shift; 
+    my $self = shift;
+    my $f = shift;
     my $indent = shift || '';
-    my $xmlns = shift; 
-    my $result = 0; 
+    my $xmlns = shift;
+    my $result = 0;
 
     #
     # <profile>
     #
     if ( exists $self->{profiles} ) {
-	foreach my $i ( @{$self->{profiles}} ) { 
+	foreach my $i ( @{$self->{profiles}} ) {
 	    $result++;
 	    $i->toXML($f,$indent,$xmlns);
 	}
@@ -135,43 +115,43 @@ sub innerXML {
     #
     # <metadata>
     #
-    if ( exists $self->{metas} ) {
-	foreach my $i ( @{$self->{metas}} ) { 
-	    $result++;
-	    $i->toXML($f,$indent,$xmlns);
-	}
+    if ( exists $self->{metadata} ) {
+	    foreach my $i ( values %{$self->{metadata}} ) {
+	        $result++;
+	        $i->toXML($f,$indent,$xmlns);
+	    }
     }
 
     #
     # <pfn>
     #
     if ( exists $self->{pfns} ) {
-	foreach my $i ( @{$self->{pfns}} ) { 
+	foreach my $i ( @{$self->{pfns}} ) {
 	    $result++;
 	    $i->toXML($f,$indent,$xmlns);
 	}
     }
 
-    $result; 
+    $result;
 }
 
-1; 
+1;
 __END__
 
 
 =head1 NAME
 
 Pegasus::DAX::CatalogType - abstract class for included transformation-
-and replica catalogs. 
+and replica catalogs.
 
 =head1 SYNOPSIS
 
-This is an abstract class. You do not instantiate abstract classes. 
+This is an abstract class. You do not instantiate abstract classes.
 
 =head1 DESCRIPTION
 
 This class is the base for the included transformation- and replica
-catalog entry. 
+catalog entry.
 
 =head1 METHODS
 
@@ -179,7 +159,7 @@ catalog entry.
 
 =item new()
 
-The constructor is used by child classes to establish data structures. 
+The constructor is used by child classes to establish data structures.
 
 =item addProfile( $namespace, $key, $value )
 
@@ -187,7 +167,7 @@ The constructor is used by child classes to establish data structures.
 
 This method will add a specified profile, either as three strings or
 instance of L<Pegasus::DAX::Profile>, to the collection of profiles
-associated with the logical level catalog entry. 
+associated with the logical level catalog entry.
 
 =item addMeta( $key, $type, $value )
 
@@ -212,7 +192,7 @@ with this catalog entry.
 The purpose of the C<innerXML> function is to recursively generate XML from
 the internal data structures. Since this class is abstract, it will not
 create the element tag nor attributes. However, it needs to create the
-inner elements as necessary. 
+inner elements as necessary.
 
 The first argument is a file handle open for writing. This is where the
 XML will be generated.  The second argument is a string with the amount
@@ -220,7 +200,7 @@ of white-space that should be used to indent elements for pretty
 printing. The third argument may not be defined. If defined, all element
 tags will be prefixed with this name space.
 
-=back 
+=back
 
 =head1 SEE ALSO
 
@@ -228,7 +208,7 @@ tags will be prefixed with this name space.
 
 =item L<Pegasus::DAX::Base>
 
-Base class. 
+Base class.
 
 =item L<Pegasus::DAX::File>
 
@@ -236,9 +216,9 @@ Replica catalog entry child class.
 
 =item L<Pegasus::DAX::Executable>
 
-Transformation catalog entry child class. 
+Transformation catalog entry child class.
 
-=back 
+=back
 
 =head1 COPYRIGHT AND LICENSE
 

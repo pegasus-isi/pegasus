@@ -18,53 +18,67 @@ import re
 
 import StringIO
 
-from decimal import Decimal
-
 from plex import Range, Lexicon, Rep, Rep1, Str, Any, IGNORE, Scanner, AnyBut, NoCase, Opt
 from plex.errors import UnrecognizedInput
 
+from werkzeug.routing import BaseConverter
 
-class BaseSerializer(object):
-    """
-    Base Serializer class provides a template used to serialize objects to/from JSON
-    """
 
-    def __init__(self, fields, pretty_print=False):
-        self._fields = fields
+class PagedResponse(object):
+    def __init__(self, records, total, filtered):
+        self._records = records
+        self._total = total
+        self._filtered = filtered
 
-        self._pretty_print = pretty_print
+    @property
+    def records(self):
+        return self._records
 
-        if self._pretty_print is True:
-            self._pretty_print_opts = {
-                'indent': 4,
-                'separators': (',', ': ')
-            }
-        else:
-            self._pretty_print_opts = {}
+    @property
+    def total_records(self):
+        return self._total
 
-    def encode_collection(self, records, records_total, records_filtered):
-        raise NotImplementedError('Method not implemented')
+    @property
+    def total_filtered(self):
+        return self._filtered
 
-    def encode_record(self, record):
-        raise NotImplementedError('Method not implemented')
 
-    def decode_collection(self, records):
-        raise NotImplementedError('Method not implemented')
+class ErrorResponse(object):
+    def __init__(self, code, message, errors=None):
+        self._code = code
+        self._message = message
+        self._errors = errors
 
-    def decode_record(self, record):
-        raise NotImplementedError('Method not implemented')
+    @property
+    def code(self):
+        return self._code
 
-    @staticmethod
-    def _links(self, record):
-        raise NotImplementedError('Method not implemented')
+    @code.setter
+    def code(self, code):
+        self._code = code
 
-    @staticmethod
-    def _get_field_value(record, field):
-        value = getattr(record, field)
-        return float(value) if isinstance(value, Decimal) else value
+    @property
+    def message(self):
+        return self._message
+
+    @message.setter
+    def message(self, message):
+        self._message = message
+
+    @property
+    def errors(self):
+        return self._errors
+
+    @errors.setter
+    def errors(self, errors):
+        self._errors = errors
 
 
 class ServiceError(Exception):
+    pass
+
+
+class InvalidJSONError(Exception):
     pass
 
 
@@ -489,3 +503,17 @@ class BaseResource(object):
     def _get_suffix(field):
         splits = BaseResource._split_identifier(field)
         return splits[0] if len(splits) == 1 else splits[1]
+
+
+class BooleanConverter(BaseConverter):
+    def to_python(self, value):
+        value = value.strip().lower()
+
+        if value in set(['1', '0', 'true', 'false']):
+            return bool(value)
+
+        else:
+            raise ServiceError('Expecting boolean found %s' % value)
+
+    def to_url(self, value):
+        return 'true' if value else 'false'

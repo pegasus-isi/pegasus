@@ -14,225 +14,160 @@
 
 __author__ = 'Rajiv Mayani'
 
-import json
+try:
+    from collections import OrderedDict
+except ImportError:
+    from ordereddict import OrderedDict
 
-from collections import OrderedDict
+from decimal import Decimal
 
 from flask import url_for
+from flask.json import JSONEncoder
 
-from Pegasus.service.base import BaseSerializer
+from Pegasus.db.schema import *
+
+from Pegasus.service.base import PagedResponse, ErrorResponse
+from Pegasus.service.monitoring.resources import RootWorkflowResource, RootWorkflowstateResource
+from Pegasus.service.monitoring.resources import JobInstanceResource, JobstateResource, TaskResource, InvocationResource
+from Pegasus.service.monitoring.resources import WorkflowResource, WorkflowstateResource, JobResource, HostResource
 
 
-class RootWorkflowSerializer(BaseSerializer):
+class PegasusServiceJSONEncoder(JSONEncoder):
     """
-    RootWorkflowSerializer is used to serialize root workflow resource instances into their JSON representation.
+    JSON Encoder for Pegasus Service API Resources
     """
-    FIELDS = [
-        'wf_id',
-        'wf_uuid',
-        'submit_hostname',
-        'submit_dir',
-        'planner_arguments',
-        'planner_version',
-        'user',
-        'grid_dn',
-        'dax_label',
-        'dax_version',
-        'dax_file',
-        'dag_file_name',
-        'timestamp'
-    ]
 
-    def __init__(self, selected_fields=None, pretty_print=False, **kwargs):
-        super(RootWorkflowSerializer, self).__init__(fields=RootWorkflowSerializer.FIELDS, pretty_print=pretty_print)
-        self._selected_fields = selected_fields if selected_fields else self._fields
+    def default(self, obj):
+        def obj_to_dict(resource):
+            obj_dict = OrderedDict()
 
-    def encode_collection(self, root_workflows, records_total=None, records_filtered=None):
-        """
-        Encodes a collection of root-workflows into it's JSON representation.
+            for attribute in resource.fields:
+                obj_dict[attribute] = getattr(obj, attribute)
 
-        :param root_workflows: Collection of root workflow records to be encoded as JSON
-        :param records_total: Number of records before applying the search criteria
-        :param records_filtered: Number of records after applying the search criteria
+            return obj_dict
 
-        :return: JSON representation of root workflow resource
-        """
-        if root_workflows is None:
-            return None
+        if isinstance(obj, PagedResponse):
+            json_record = OrderedDict([
+                ('records', obj.records)
+            ])
 
-        records = [self._encode_record(root_workflow) for root_workflow in root_workflows]
+            if obj.total_records or obj.total_filtered:
+                meta = OrderedDict()
 
-        json_records = OrderedDict([
-            ('records', records)
-        ])
+                if obj.total_records:
+                    meta['records_total'] = obj.total_records
 
-        if not records_total or not records_filtered:
-            pass
+                if obj.total_filtered:
+                    meta['records_filtered'] = obj.total_filtered
 
-        records_meta = OrderedDict([
-            ('records_total', records_total),
-            ('records_filtered', records_filtered)
-        ])
+                json_record['_meta'] = meta
 
-        json_records['_meta'] = records_meta
+            return json_record
 
-        return json.dumps(json_records, **self._pretty_print_opts)
+        elif isinstance(obj, ErrorResponse):
+            json_record = OrderedDict([
+                ('code', obj.code),
+                ('message', obj.message)
+            ])
 
-    def encode_record(self, root_workflow):
-        """
-        Encodes a single root-workflow into it's JSON representation.
+            if obj.errors:
+                json_record['errors'] = [{'field': f, 'errors': e} for f, e in obj.errors]
 
-        :param root_workflow: Single instance of root workflow resource
+            return json_record
 
-        :return: JSON representation of root workflow resource
-        """
+        elif isinstance(obj, DashboardWorkflow):
+            json_record = obj_to_dict(RootWorkflowResource())
+            json_record['workflow_state'] = obj.workflow_state
 
-        return json.dumps(self._encode_record(root_workflow), **self._pretty_print_opts)
+            json_record['_links'] = OrderedDict([
+                ('workflow', url_for('.get_workflows', m_wf_id=obj.wf_id, _method='GET'))
+            ])
 
-    def _encode_record(self, root_workflow):
-        """
-        Encodes a single root-workflow into it's JSON representation.
+            return json_record
 
-        :param record: Single instance of root workflow resource
+        elif isinstance(obj, DashboardWorkflowstate):
+            json_record = obj_to_dict(RootWorkflowstateResource())
 
-        :return: JSON representation of root workflow resource
-        """
+            return json_record
 
-        if root_workflow is None:
-            return None
+        elif isinstance(obj, Workflow):
+            json_record = obj_to_dict(WorkflowResource())
+            json_record['_links'] = OrderedDict([
+                ('workflow_state', url_for('.get_workflow_state', wf_id=obj.wf_id, _method='GET')),
+                ('job', url_for('.get_workflow_jobs', wf_id=obj.wf_id, _method='GET')),
+                ('task', url_for('.get_workflow_tasks', wf_id=obj.wf_id, _method='GET')),
+                ('host', url_for('.get_workflow_hosts', wf_id=obj.wf_id, _method='GET')),
+                ('invocation', url_for('.get_workflow_invocations', wf_id=obj.wf_id, _method='GET'))
+            ])
 
-        root_workflow, root_workflow_state = root_workflow
+            return json_record
 
-        json_record = OrderedDict()
+        elif isinstance(obj, Workflowstate):
+            json_record = obj_to_dict(WorkflowstateResource())
+            json_record['_links'] = OrderedDict([
+                ('workflow', url_for('.get_workflow', wf_id=obj.wf_id))
+            ])
 
-        for field in self._selected_fields:
-            json_record[field] = self._get_field_value(root_workflow, field)
+            return json_record
 
-        #
-        # Serialize the Workflow State Object
-        #
-        # TODO: Call WorkflowStateSerializer to encode workflow-state object
-        json_record['workflow_state'] = None
+        elif isinstance(obj, Job):
+            json_record = obj_to_dict(JobResource())
+            json_record['_links'] = OrderedDict([
+                ('workflow', url_for('.get_workflow', wf_id=obj.wf_id)),
+                ('task', url_for('.get_workflow_tasks', wf_id=obj.wf_id, _method='GET')),
+                ('job_instance', url_for('.get_job_instances', wf_id=obj.wf_id, job_id=obj.job_id, _method='GET'))
+            ])
 
-        json_record['_links'] = self._links(root_workflow)
+            return json_record
 
-        return json_record
+        elif isinstance(obj, Host):
+            json_record = obj_to_dict(HostResource())
+            json_record['_links'] = OrderedDict([
+                ('workflow', url_for('.get_workflows', m_wf_id=obj.wf_id, _method='GET'))
+            ])
 
-    @staticmethod
-    def _links(root_workflow):
-        """
-        Generates JSON representation of the HATEOAS links to be attached to the root workflow resource.
+            return json_record
 
-        :param root_workflow: Root workflow resource for which to generate HATEOAS links
+        elif isinstance(obj, Jobstate):
+            json_record = obj_to_dict(JobstateResource())
+            json_record['_links'] = OrderedDict([
+                ('job_instance', url_for('.get_job_instance', job_instance_id=obj.job_instance_id))
+            ])
 
-        :return: JSON representation of the HATEOAS links for root workflow resource
-        """
+            return json_record
 
-        links = OrderedDict([
-            ('workflow', url_for('.get_workflows', m_wf_id=root_workflow.wf_id))
-        ])
+        elif isinstance(obj, Task):
+            json_record = obj_to_dict(TaskResource())
+            json_record['_links'] = OrderedDict([
+                ('workflow', url_for('.get_workflow', wf_id=obj.wf_id)),
+                ('job', url_for('.get_job', wf_id=obj.wf_id, job_id=obj.job_id))
+            ])
 
-        return links
+            return json_record
 
+        elif isinstance(obj, JobInstance):
+            json_record = obj_to_dict(JobInstanceResource())
+            json_record['_links'] = OrderedDict([
+                ('job', url_for('.get_job', job_id=obj.job_id)),
+                ('state', url_for('.get_job_instance_states', job_id=obj.job_id,
+                                  job_instance_id=obj.job_instance_id, _method='GET')),
+                ('host', url_for('.get_host', host_id=obj.host_id)),
+                ('invocation', url_for('.get_job_instance_invocations', job_id=obj.job_id,
+                                       job_instance_id=obj.job_instance_id, _method='GET'))
+            ])
 
-class WorkflowSerializer(BaseSerializer):
-    FIELDS = [
-        'wf_id',
-        'wf_uuid',
-        'dag_file_name',
-        'timestamp',
-        'submit_hostname',
-        'submit_dir',
-        'planner_arguments',
-        'user',
-        'grid_dn',
-        'planner_version',
-        'dax_label',
-        'dax_version',
-        'dax_file',
-        'parent_wf_id',
-        'root_wf_id'
-    ]
+            return json_record
 
-    def __init__(self, selected_fields=None, pretty_print=False, **kwargs):
-        super(WorkflowSerializer, self).__init__(fields=WorkflowSerializer.FIELDS, pretty_print=pretty_print)
-        self._selected_fields = selected_fields if selected_fields else self._fields
+        elif isinstance(obj, Invocation):
+            json_record = obj_to_dict(InvocationResource())
+            json_record['_links'] = OrderedDict([
+                ('workflow', url_for('.get_workflow', wf_id=obj.wf_id)),
+                ('job_instance', url_for('.get_job_instance', job_instance_id=obj.job_instance_id))
+            ])
 
-    def encode_collection(self, workflows, records_total=None, records_filtered=None):
-        """
-        Encodes a collection of workflows into it's JSON representation.
+            return json_record
 
-        :param workflows: Collection of root workflow records to be encoded as JSON
-        :param records_total: Number of records before applying the search criteria
-        :param records_filtered: Number of records after applying the search criteria
+        elif isinstance(obj, Decimal):
+            return float(obj)
 
-        :return: JSON representation of workflow resource
-        """
-        if workflows is None:
-            return None
-
-        records = [self._encode_record(workflow) for workflow in workflows]
-
-        json_records = OrderedDict([
-            ('records', records)
-        ])
-
-        if not records_total or not records_filtered:
-            pass
-
-        records_meta = OrderedDict([
-            ('records_total', records_total),
-            ('records_filtered', records_filtered)
-        ])
-
-        json_records['_meta'] = records_meta
-
-        return json.dumps(json_records, **self._pretty_print_opts)
-
-    def encode_record(self, workflow):
-        """
-        Encodes a single workflow into it's JSON representation.
-
-        :param workflow: Single instance of workflow resource
-
-        :return: JSON representation of workflow resource
-        """
-
-        return json.dumps(self._encode_record(workflow), **self._pretty_print_opts)
-
-    def _encode_record(self, workflow):
-        """
-        Encodes a single workflow into it's JSON representation.
-
-        :param workflow: Single instance of workflow resource
-
-        :return: JSON representation of workflow resource
-        """
-
-        if workflow is None:
-            return None
-
-        json_record = OrderedDict()
-
-        for field in self._selected_fields:
-            json_record[field] = self._get_field_value(workflow, field)
-
-        json_record['_links'] = self._links(workflow)
-
-        return json_record
-
-    @staticmethod
-    def _links(workflow):
-        """
-        Generates JSON representation of the HATEOAS links to be attached to the workflow resource.
-
-        :param workflow: Workflow resource for which to generate HATEOAS links
-
-        :return: JSON representation of the HATEOAS links for workflow resource
-        """
-
-        links = OrderedDict([
-            ('workflow', url_for('.get_workflow', wf_id=workflow.wf_id))
-        ])
-
-        return links
+        return JSONEncoder.default(self, obj)

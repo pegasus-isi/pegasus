@@ -50,7 +50,7 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * Uses pegasus-cleanup to do removal of the files on the remote sites.
+ * Uses pegasus-transfer to do removal of the files on the remote sites.
  *
  * @author Karan Vahi
  * @version $Revision$
@@ -94,14 +94,14 @@ public class Cleanup implements CleanupImplementation{
     /**
      * The basename of the pegasus cleanup executable.
      */
-    public static final String EXECUTABLE_BASENAME = "pegasus-cleanup";
+    public static final String EXECUTABLE_BASENAME = "pegasus-transfer";
 
     /**
      * A short description of the transfer implementation.
      */
     public static final String DESCRIPTION =
-                    "A cleanup script that reads from the stdin the list of files" +
-                    " to be cleaned, with one file per line";
+                    "Uses our common transfer client, which reads from the stdin the list of files" +
+                    " to be cleaned";
 
 
 
@@ -204,6 +204,9 @@ public class Cleanup implements CleanupImplementation{
             BufferedWriter writer;
             writer = new BufferedWriter( new FileWriter(
                                            new File( mSubmitDirectory, stdIn ) ));
+            
+            writer.write("[\n");
+            
             int fileNum = 1;
             for( Iterator it = files.iterator(); it.hasNext(); fileNum++ ){
                 PegasusFile file = (PegasusFile)it.next();
@@ -225,13 +228,23 @@ public class Cleanup implements CleanupImplementation{
                 //associate a credential if required
                 cJob.addCredentialType( stagingSite, pfn );
 
-                writer.write( "# " + fileNum + " " + stagingSite );
-                writer.write( "\n" );
-                writer.write( pfn );
-                writer.write( "\n" );
+                if (fileNum > 1) {
+                	writer.write("  ,\n");
+                }
+                
+                writer.write("  {\n");
+                writer.write("    \"id\": " + fileNum + ",\n");
+                writer.write("    \"type\": \"remove\",\n");
+                writer.write("    \"target\": {");
+                writer.write(" \"site_label\": \"" + stagingSite + "\",");
+                writer.write(" \"url\": \"" + pfn + "\",");
+                writer.write(" \"recursive\": \"False\"");
+                writer.write(" }");
+                writer.write(" }\n");
+                
             }
 
-
+            writer.write("]\n");
 
             //closing the handle to the writer
             writer.close();

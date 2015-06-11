@@ -5,41 +5,41 @@
 package Pegasus::DAX::Executable;
 use 5.006;
 use strict;
-use Carp; 
+use Carp;
 
-use Pegasus::DAX::Base qw(:xml); 
-use Pegasus::DAX::CatalogType; 
+use Pegasus::DAX::Base qw(:xml);
+use Pegasus::DAX::CatalogType;
 use Pegasus::DAX::InvokeMixin;
 use Exporter;
-our @ISA = qw(Pegasus::DAX::CatalogType Pegasus::DAX::InvokeMixin Exporter); 
+our @ISA = qw(Pegasus::DAX::CatalogType Pegasus::DAX::InvokeMixin Exporter);
 
 use constant ARCH_IA64    => 'ia64';
 use constant ARCH_PPC     => 'ppc';
 use constant ARCH_PPC_64  => 'ppc_64';
-use constant ARCH_SPARCV7 => 'sparcv7'; 
+use constant ARCH_SPARCV7 => 'sparcv7';
 use constant ARCH_SPARCV9 => 'sparcv9';
 use constant ARCH_X86     => 'x86';
-use constant ARCH_X86_64  => 'x86_64'; 
-use constant ARCH_AMD64   => 'x86_64'; 
+use constant ARCH_X86_64  => 'x86_64';
+use constant ARCH_AMD64   => 'x86_64';
 
 use constant OS_AIX       => 'aix';
 use constant OS_LINUX     => 'linux';
 use constant OS_DARWIN    => 'darwin';
-use constant OS_MACOSX    => 'darwin'; 
+use constant OS_MACOSX    => 'darwin';
 use constant OS_SUNOS     => 'sunos';
-use constant OS_SOLARIS   => 'sunos'; 
-use constant OS_WINDOWS   => 'windows'; 
+use constant OS_SOLARIS   => 'sunos';
+use constant OS_WINDOWS   => 'windows';
 
-our $VERSION = '3.5'; 
-our @EXPORT = (); 
-our %EXPORT_TAGS = ( 
-    arch =>[qw(ARCH_IA64 ARCH_PPC ARCH_PPC_64 ARCH_SPARCV7 ARCH_SPARCV9 
+our $VERSION = '3.6';
+our @EXPORT = ();
+our %EXPORT_TAGS = (
+    arch =>[qw(ARCH_IA64 ARCH_PPC ARCH_PPC_64 ARCH_SPARCV7 ARCH_SPARCV9
 	ARCH_X86 ARCH_X86_64 ARCH_AMD64)],
-    os => [qw(OS_AIX OS_LINUX OS_DARWIN OS_MACOSX OS_WINDOWS 
+    os => [qw(OS_AIX OS_LINUX OS_DARWIN OS_MACOSX OS_WINDOWS
 	OS_SUNOS OS_SOLARIS)]
-    ); 
-$EXPORT_TAGS{all} = [ map { @{$_} } values %EXPORT_TAGS ]; 
-our @EXPORT_OK = ( @{$EXPORT_TAGS{all}} ); 
+    );
+$EXPORT_TAGS{all} = [ map { @{$_} } values %EXPORT_TAGS ];
+our @EXPORT_OK = ( @{$EXPORT_TAGS{all}} );
 
 # one AUTOLOAD to rule them all
 BEGIN { *AUTOLOAD = \&Pegasus::DAX::Base::AUTOLOAD }
@@ -48,20 +48,20 @@ sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
     my $self = $class->SUPER::new();
-    
-    if ( @_ == 0 ) { 
+
+    if ( @_ == 0 ) {
 	# nothing to do
     } elsif ( @_ > 1 ) {
 	# called with a=>b,c=>d list
-	%{$self} = ( %{$self}, @_ ); 
-    } elsif ( @_ == 1 && ref $_[0] eq 'HASH' ) { 
+	%{$self} = ( %{$self}, @_ );
+    } elsif ( @_ == 1 && ref $_[0] eq 'HASH' ) {
 	# called with { a=>b, c=>d } hashref
-	%{$self} = ( %{$self}, %{ shift() } ); 
+	%{$self} = ( %{$self}, %{ shift() } );
     } else {
-	croak "invalid c'tor invocation"; 
+	croak "invalid c'tor invocation";
     }
 
-    bless $self, $class; 
+    bless $self, $class;
 }
 
 # forward declarations
@@ -74,9 +74,9 @@ sub osrelease;
 sub osversion;
 sub glibc;
 sub installed;
-    
+
 sub key {
-    # purpose: create the distinguishing key 
+    # purpose: create the distinguishing key
     # returns: a string that can be used in a hash
     #
     my $self = shift;
@@ -99,10 +99,10 @@ sub toXML {
     #          ident (IN): indentation level
     #          xmlns (opt. IN): namespace of element, if necessary
     #
-    my $self = shift; 
-    my $f = shift; 
+    my $self = shift;
+    my $f = shift;
     my $indent = shift || '';
-    my $xmlns = shift; 
+    my $xmlns = shift;
     my $tag = defined $xmlns && $xmlns ? "$xmlns:executable" : 'executable';
 
     $f->print( "$indent<$tag"
@@ -116,7 +116,18 @@ sub toXML {
 	     , attribute('glibc',$self->glibc,$xmlns)
 	     , attribute('installed',boolean($self->installed),$xmlns)
 	     , ">\n" );
-    $self->innerXML($f,"  $indent",$xmlns); 
+    $self->innerXML($f,"  $indent",$xmlns);
+
+    #
+    # <metadata>
+    #
+    if ( exists $self->{metadata} ) {
+        foreach my $m ( values %{$self->{metadata}} ) {
+            $m->toXML($f,"$indent", $xmlns);
+        }
+
+        $f->print("\n");
+    }
 
     #
     # <invoke>
@@ -130,26 +141,26 @@ sub toXML {
     $f->print( "$indent</$tag>\n" );
 }
 
-1; 
+1;
 __END__
 
 =head1 NAME
 
-Pegasus::DAX::Executable - stores an included transformation catalog entry. 
+Pegasus::DAX::Executable - stores an included transformation catalog entry.
 
 =head1 SYNOPSIS
 
-    use Pegasus::DAX::Executable; 
+    use Pegasus::DAX::Executable;
 
-    my $a = Pegasus::DAX::Executable(); 
-    $a->namespace( 'somewhere' ); 
+    my $a = Pegasus::DAX::Executable();
+    $a->namespace( 'somewhere' );
     $a->name( 'lfn' );
-    $a->version( '1.0' ); 
-    $a->os( 'x86_64' ); 
-  
+    $a->version( '1.0' );
+    $a->os( 'x86_64' );
+
 =head1 DESCRIPTION
 
-This class remembers an included Pegasus transformation catalog entry. 
+This class remembers an included Pegasus transformation catalog entry.
 
 =head1 CONSTANTS
 
@@ -184,33 +195,33 @@ aliases mapping to the same string.
 
 =item OS_AIX
 
-The IBM AIX Unix platform. 
+The IBM AIX Unix platform.
 
 =item OS_LINUX
 
-The Linux platform. 
+The Linux platform.
 
 =item OS_DARWIN
 
-The Mac OS X platform. 
+The Mac OS X platform.
 
 =item OS_MACOSX
 
-An alias for the Mac OS X platform. 
+An alias for the Mac OS X platform.
 
 =item OS_SUNOS
 
-The SUN Sparc and SUN Intel platforms. 
+The SUN Sparc and SUN Intel platforms.
 
 =item OS_SOLARIS
 
-An alias for the SUN platforms. 
+An alias for the SUN platforms.
 
 =item OS_WINDOWS
 
-The Microsoft Windows family of platforms. 
+The Microsoft Windows family of platforms.
 
-=back 
+=back
 
 =head1 METHODS
 
@@ -232,11 +243,11 @@ successfully.
 
 =item namespace
 
-Setter and getter for the optional logical transformation namespace string. 
+Setter and getter for the optional logical transformation namespace string.
 
 =item name
 
-Setter and getter for the logical transformation's name string. 
+Setter and getter for the logical transformation's name string.
 
 =item version
 
@@ -245,23 +256,23 @@ string.
 
 =item arch
 
-Setter and getter for the optional architecture string. 
+Setter and getter for the optional architecture string.
 
 =item os
 
-Setter and getter for the optional operating system identifier. 
+Setter and getter for the optional operating system identifier.
 
 =item osrelease
 
-Setter and getter for the optional OS release string. 
+Setter and getter for the optional OS release string.
 
 =item osversion
 
-Setter and getter for the optional OS version string. 
+Setter and getter for the optional OS version string.
 
 =item glibc
 
-Setter and getter for the optional GNU libc platform identifier string. 
+Setter and getter for the optional GNU libc platform identifier string.
 
 =item key
 
@@ -279,11 +290,11 @@ to indent elements for pretty printing. The third argument may not be
 defined. If defined, all element tags will be prefixed with this name
 space.
 
-=back 
+=back
 
 =head1 INHERITED METHODS
 
-Please refer to L<Pegasus::DAX::CatalogType> for inherited methods. 
+Please refer to L<Pegasus::DAX::CatalogType> for inherited methods.
 
 =over 4
 
@@ -303,7 +314,7 @@ Please refer to L<Pegasus::DAX::CatalogType> for inherited methods.
 
 =back
 
-Please refer to L<Pegasus::DAX::InvokeMixin> for inherited methods. 
+Please refer to L<Pegasus::DAX::InvokeMixin> for inherited methods.
 
 =over 4
 
@@ -325,13 +336,13 @@ Base class.
 
 =item L<Pegasus::DAX::InvokeMixin>
 
-Base class. 
+Base class.
 
 =item L<Pegasus::DAX::ADAG>
 
-Class using L<Pegasus::DAX::File>. 
+Class using L<Pegasus::DAX::File>.
 
-=back 
+=back
 
 =head1 COPYRIGHT AND LICENSE
 

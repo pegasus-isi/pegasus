@@ -1316,5 +1316,143 @@ Sample Value  : </emphasis></emphasis> Integer<emphasis role="bold">
         </tbody>
       </tgroup>
     </table>
+
+    <section id="job_throttling_across_workflows">
+      <title>Job Throttling Across Workflows</title>
+
+      <para><emphasis>Issue:</emphasis> DAGMan throttling knobs are per
+      workflow, and don't work across workflows. Is there any way to control
+      different types of jobs run at a time across workflows?</para>
+
+      <para><emphasis>Solution:</emphasis> While not possible in all cases, it
+      is possible to throttle different types of jobs across workflows if you
+      configure the jobs to run in vanilla universe by leverage <ulink
+      url="http://research.cs.wisc.edu/htcondor/manual/v8.2/3_12Setting_Up.html#SECTION0041215000000000000000">HTCondor
+      concurrency limits</ulink>. Most of the Pegasus generated jobs ( data
+      transfer jobs and auxillary jobs such as create dir, cleanup and
+      registration) execute in local universe where concurrency limits don't
+      work. To use this you need to do the following</para>
+
+      <orderedlist>
+        <listitem>
+          <para>Get the local universe jobs to run locally in vanilla
+          universe. You can do this by associating condor profiles universe
+          and requirements in the site catalog for local site or individually
+          in the transformation catalog for each pegasus executable. Here is
+          an example local site catalog entry.</para>
+
+          <programlisting> &lt;site handle="local" arch="x86_64" os="LINUX"&gt;
+      &lt;directory type="shared-scratch" path="/shared-scratch/local"&gt;
+         &lt;file-server operation="all" url="file:///shared-scratch/local"/&gt;
+      &lt;/directory&gt;
+      &lt;directory type="local-storage" path="/storage/local"&gt;
+         &lt;file-server operation="all" url="file:///storage/local"/&gt;
+      &lt;/directory&gt;
+
+      &lt;!-- keys to make jobs scheduled to local site run on local site in vanilla universe --&gt;
+      &lt;profile namespace="condor" key="universe"&gt;vanilla&lt;/profile&gt;
+      &lt;profile namespace="condor" key="requirements"&gt;(Machine=="submit.example.com")&lt;/profile&gt;
+   &lt;/site&gt;
+</programlisting>
+
+          <para>Replace the Machine value in requirements with the hostname of
+          your submit host.</para>
+        </listitem>
+
+        <listitem>
+          <para>Copy condor_config.pegasus file from share/pegasus/htcondor
+          directory to your condor config.d directory.</para>
+        </listitem>
+      </orderedlist>
+
+      <para>Starting Pegasus 4.5.1 release, the follow values for concurrency
+      limits is associated with different types of jobs Pegasus
+      creates.</para>
+
+      <table id="pegasus_concurrency_limits_mapping">
+        <title>Pegasus Job Types To Condor Concurrency Limits</title>
+
+        <tgroup cols="2">
+          <tbody>
+            <row>
+              <entry><emphasis role="bold">Pegasus Job Type</emphasis></entry>
+
+              <entry><emphasis role="bold">HTCondor Concurrency Limit
+              Compatible with distributed condor_config.pegasus
+              </emphasis></entry>
+            </row>
+
+            <row>
+              <entry><literallayout>Data Stagein Job<emphasis role="bold">
+</emphasis></literallayout></entry>
+
+              <entry>pegasus_transfer.stagein</entry>
+            </row>
+
+            <row>
+              <entry><literallayout>Data Stageout Job<emphasis role="bold">
+</emphasis></literallayout></entry>
+
+              <entry>pegasus_transfer.stageout</entry>
+            </row>
+
+            <row>
+              <entry><literallayout>Inter Site Data Transfer Job<emphasis
+                    role="bold">
+</emphasis></literallayout></entry>
+
+              <entry>pegasus_transfer.inter</entry>
+            </row>
+
+            <row>
+              <entry><literallayout>Worker Pacakge Staging Job</literallayout></entry>
+
+              <entry>pegasus_transfer.worker</entry>
+            </row>
+
+            <row>
+              <entry><literallayout>Create Directory Job<emphasis role="bold">
+</emphasis></literallayout></entry>
+
+              <entry>pegasus_auxillary.createdir</entry>
+            </row>
+
+            <row>
+              <entry><literallayout>Data Cleanup Job<emphasis role="bold">
+</emphasis></literallayout></entry>
+
+              <entry>pegasus_auxillary.cleanup</entry>
+            </row>
+
+            <row>
+              <entry><literallayout>Replica Registration Job<emphasis
+                    role="bold">
+</emphasis></literallayout></entry>
+
+              <entry>pegasus_auxillary.registration</entry>
+            </row>
+
+            <row>
+              <entry><literallayout>Set XBit Job<emphasis role="bold">
+</emphasis></literallayout></entry>
+
+              <entry>pegasus_auxillary.chmod</entry>
+            </row>
+
+            <row>
+              <entry><literallayout>User Compute Job<emphasis role="bold">
+</emphasis></literallayout></entry>
+
+              <entry>pegasus_compute</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+
+      <note>
+        <para>It is not recommended to set limit for compute jobs unless you
+        know what you are doing.</para>
+      </note>
+    </section>
   </section>
 </chapter>

@@ -2,13 +2,13 @@
 # License: (atend)
 # $Id$
 #
-package Pegasus::DAX::Factory; 
+package Pegasus::DAX::Factory;
 use 5.006;
 use strict;
-use Carp; 
+use Carp;
 
 use Exporter;
-our @ISA = qw(Exporter); 
+our @ISA = qw(Exporter);
 
 #
 # import all instantiatable classes
@@ -19,13 +19,13 @@ use Pegasus::DAX::MetaData;
 use Pegasus::DAX::PlainFilename;
 use Pegasus::DAX::Filename qw(:all);
 use Pegasus::DAX::File;
-use Pegasus::DAX::Executable qw(:all); 
-use Pegasus::DAX::Invoke qw(:all); 
+use Pegasus::DAX::Executable qw(:all);
+use Pegasus::DAX::Invoke qw(:all);
 use Pegasus::DAX::Transformation;
 use Pegasus::DAX::DAG;
 use Pegasus::DAX::DAX;
 use Pegasus::DAX::Job;
-use Pegasus::DAX::ADAG qw(:all); 
+use Pegasus::DAX::ADAG qw(:all);
 
 #
 # define wrappers around their c'tors
@@ -47,10 +47,10 @@ sub newInvoke   { Pegasus::DAX::Invoke->new(@_) }
 #
 # export bonanza
 #
-our $VERSION = '3.5'; 
+our $VERSION = '3.6';
 our %EXPORT_TAGS = (
-    func => [qw(newADAG newDAG newDAX newExecutable newFile 
-	newFilename newJob newMetaData newPFN newPlainFilename 
+    func => [qw(newADAG newDAG newDAX newExecutable newFile
+	newFilename newJob newMetaData newPFN newPlainFilename
 	newProfile newTransformation newInvoke)],
     link => [ @{$Pegasus::DAX::Filename::EXPORT_TAGS{link}} ],
     transfer => [ @{$Pegasus::DAX::Filename::EXPORT_TAGS{transfer}} ],
@@ -59,22 +59,22 @@ our %EXPORT_TAGS = (
     ns => [ @{$Pegasus::DAX::Profile::EXPORT_TAGS{ns}} ],
     schema => [ @{$Pegasus::DAX::ADAG::EXPORT_TAGS{schema}} ],
     invoke => [ @{$Pegasus::DAX::Invoke::EXPORT_TAGS{all}} ]
-    ); 
-$EXPORT_TAGS{all} = [ map { @{$_} } values %EXPORT_TAGS ]; 
+    );
+$EXPORT_TAGS{all} = [ map { @{$_} } values %EXPORT_TAGS ];
 our @EXPORT_OK = ( @{$EXPORT_TAGS{all}} );
-our @EXPORT = ( @{$EXPORT_TAGS{func}} ); 
+our @EXPORT = ( @{$EXPORT_TAGS{func}} );
 
 sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
     my $self = $class->SUPER::new();
 
-    croak "The c'tor on $class is not instantiatable"; 
+    croak "The c'tor on $class is not instantiatable";
 }
 
 
 
-1; 
+1;
 __END__
 
 =head1 NAME
@@ -83,10 +83,10 @@ Pegasus::DAX::Factory - convenience module
 
 =head1 SYNOPSIS
 
-    use Pegasus::DAX::Factory qw(:all); 
+    use Pegasus::DAX::Factory qw(:all);
 
-    my $a = newProfile( PROFILE_ENV, 'FOO', 'bar' ); 
-    my $b = newFilename( name => 'fubar', link => LINK_OUT ); 
+    my $a = newProfile( PROFILE_ENV, 'FOO', 'bar' );
+    my $b = newFilename( name => 'fubar', link => LINK_OUT );
 
 =head1 DESCRIPTION
 
@@ -133,7 +133,7 @@ This tag imports the notification event constants C<INVOKE_*> from L<Pegasus::DA
 
 =item C<:all>
 
-All of the above. 
+All of the above.
 
 =back
 
@@ -193,7 +193,7 @@ Factory function for C<L<Pegasus::DAX::ADAG>-E<gt>new>.
 
 Factory function for C<L<Pegasus::DAX::Invoke>-E<gt>new>.
 
-=back 
+=back
 
 =head1 SEE ALSO
 
@@ -201,7 +201,7 @@ Factory function for C<L<Pegasus::DAX::Invoke>-E<gt>new>.
 
 =item L<Pegasus::DAX::Base>
 
-Base class. 
+Base class.
 
 =item L<Pegasus::DAX::ADAG>
 
@@ -233,9 +233,9 @@ Base class.
 
 =item L<Pegasus::DAX::Transformation>
 
-Classes for which a convenience c'tor is provided. 
+Classes for which a convenience c'tor is provided.
 
-=back 
+=back
 
 =head1 COPYRIGHT AND LICENSE
 

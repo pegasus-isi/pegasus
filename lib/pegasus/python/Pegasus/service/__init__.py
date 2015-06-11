@@ -31,5 +31,12 @@ def get_pegasus_home():
 from flask.ext.cache import Cache
 cache = Cache(app)
 
+#
+# Flask URL variables support int, float, and path converters.
+# Adding support for a boolean converter.
+#
+from Pegasus.service.base import BooleanConverter
+app.url_map.converters['boolean'] = BooleanConverter
+
 from Pegasus.service import auth, filters, dashboard, monitoring
 

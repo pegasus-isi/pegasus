@@ -68,7 +68,7 @@ public class RemoveDirectory extends Engine {
     /**
      * The basename of the pegasus dirmanager  executable.
      */
-    public static final String REMOVE_DIR_EXECUTABLE_BASENAME = "pegasus-cleanup";
+    public static final String REMOVE_DIR_EXECUTABLE_BASENAME = "pegasus-transfer";
 
     /**
      * The transformation namespace for the create dir jobs.
@@ -387,7 +387,7 @@ public class RemoveDirectory extends Engine {
     
     /**
      * It creates a remove directory job that creates a directory on the remote site
-     * using pegasus-cleanup executable
+     * using pegasus-transfer executable
      * 
      * @param site      the site from where the directory need to be removed.
      * @param jobName   the name that is to be assigned to the job.
@@ -401,7 +401,7 @@ public class RemoveDirectory extends Engine {
     
     /**
      * It creates a remove directory job that creates a directory on the remote site
-     * using pegasus-cleanup executable
+     * using pegasus-transfer executable
      * 
      * @param site      the site from where the directory need to be removed.
      * @param jobName   the name that is to be assigned to the job.
@@ -514,16 +514,30 @@ public class RemoveDirectory extends Engine {
             writer = new BufferedWriter( new FileWriter(
                                         new File( mSubmitDirectory, stdIn ) ));
 
+            writer.write("[\n");
+            
             int fileNum = 1;
             for( String file: urls ){
-                writer.write( "# " + fileNum + " " + site );
-                writer.write( "\n" );
-                writer.write( file );
-                writer.write( "\n" );
+            	
+            	if (fileNum > 1) {
+                	writer.write("  ,\n");
+                }
+            	
+            	writer.write("  {\n");
+                writer.write("    \"id\": " + fileNum + ",\n");
+                writer.write("    \"type\": \"remove\",\n");
+                writer.write("    \"target\": {");
+                writer.write(" \"site_label\": \"" + site + "\",");
+                writer.write(" \"url\": \"" + file + "\",");
+                writer.write(" \"recursive\": \"True\"");
+                writer.write(" }");
+                writer.write(" }\n");
                 
                 //associate a credential if required
                 newJob.addCredentialType( site, file );
             }
+            
+            writer.write("]\n");
 
             //closing the handle to the writer
             writer.close();
@@ -552,8 +566,7 @@ public class RemoveDirectory extends Engine {
         newJob.jobClass = Job.CLEANUP_JOB;
         newJob.jobID = jobName;
 
-        //PM-150 for leaf cleanup nodes we will set a specific recursive flag
-        newJob.setArguments( "--recursive" );
+        newJob.setArguments( "" );
         
         //the profile information from the pool catalog needs to be
         //assimilated into the job.

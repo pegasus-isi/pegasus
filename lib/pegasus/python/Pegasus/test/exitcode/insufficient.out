@@ -1,0 +1,21 @@
+
+insufficient allocation - please contact your PI
+
+
+ + --------------------------------------------------------------------------
+ +        Job name: STDIN
+ +          Job Id: 9230114.hopque01
+ +          System: hopper
+ +     Queued Time: Fri May 15 20:30:06 2015
+ +      Start Time: Sat May 16 11:12:19 2015
+ + Completion Time: Sat May 16 11:12:19 2015
+ +            User: vlynch
+ +        MOM Host: nid05416
+ +           Queue: reg_long
+ +  Req. Resources: mppnodect=34,mppnppn=24,mppwidth=800,walltime=96:00:00
+ +  Used Resources:
+ +     Acct String: m1503
+ +   PBS_O_WORKDIR: /scratch/scratchdirs/vlynch/lynchve/pegasus/refinement/run0001
+ +     Submit Args:
+ + --------------------------------------------------------------------------
+
