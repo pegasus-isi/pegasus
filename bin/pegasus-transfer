@@ -1995,9 +1995,14 @@ class StashHandler(TransferHandlerBase):
             src_path = re.sub('^stash:', '', src_path)
             src_path = re.sub('^/+', '', src_path)
     
-            prepare_local_dir(os.path.dirname(t.get_dst_path()))
+            local_dir = os.path.dirname(t.get_dst_path())
+            prepare_local_dir(local_dir)
             cmd = "%s -s '%s' -l '%s'" \
-                % (tools.full_path("stashcp"), src_path, t.get_dst_path())
+                % (tools.full_path("stashcp"), src_path, local_dir)
+            remote_fname = os.path.basename(t.get_src_path())
+            local_fname = os.path.basename(t.get_dst_path())
+            if remote_fname != local_fname:
+               cmd += " && mv %s %s" %(remote_fname, local_fname)
             try:
                 tc = TimedCommand(cmd)
                 tc.run()
@@ -2064,6 +2069,23 @@ class SymlinkHandler(TransferHandlerBase):
             successful_l.append(t)
         
         return [successful_l, failed_l]    
+
+
+    def do_removes(self, transfers):
+        successful_l = []
+        failed_l = []
+        for t in transfers:
+            cmd = "/bin/rm -f"
+            cmd += " '%s' " % (t.get_path())
+            try:
+                tc = TimedCommand(cmd)
+                tc.run()
+            except RuntimeError, err:
+                logger.error(err)
+                failed_l.append(t)
+                continue
+            successful_l.append(t)
+        return [successful_l, failed_l]
 
 
 class Stats:

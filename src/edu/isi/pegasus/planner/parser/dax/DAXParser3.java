@@ -39,6 +39,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.transformation.impl.Abstract;
+import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.CompoundTransformation;
 import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.DAXJob;
@@ -54,11 +55,11 @@ import edu.isi.pegasus.planner.code.GridStartFactory;
 import edu.isi.pegasus.planner.common.VariableExpansionReader;
 import edu.isi.pegasus.planner.dax.Executable;
 import edu.isi.pegasus.planner.dax.Invoke;
-import edu.isi.pegasus.planner.dax.MetaData;
 import edu.isi.pegasus.planner.dax.PFN;
 import edu.isi.pegasus.planner.dax.Executable.ARCH;
 import edu.isi.pegasus.planner.dax.Executable.OS;
 import edu.isi.pegasus.planner.dax.Invoke.WHEN;
+import edu.isi.pegasus.planner.dax.MetaData;
 import edu.isi.pegasus.planner.namespace.Hints;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.parser.StackBasedXMLParser;
@@ -76,10 +77,15 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
 
    
     /**
-     * The "not-so-official" location URL of the Site Catalog Schema.
+     * The "not-so-official" location URL of the DAX Parser Schema.
      */
-    public static final String SCHEMA_LOCATION =
-                                        "http://pegasus.isi.edu/schema/dax-3.5.xsd";
+    public static final String DEFAULT_SCHEMA_LOCATION =
+                                        "http://pegasus.isi.edu/schema/dax-3.6.xsd";
+    /**
+     * The "not-so-official" location URL of the DAX Parser Schema.
+     */
+    public static final String SCHEMA_LOCATION_DIRECTORY =
+                                        "http://pegasus.isi.edu/schema/";
 
     /**
      * uri namespace
@@ -141,18 +147,25 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
      */
     protected String mJobPrefix;
     
-   
+    /**
+     * Schema version of the DAX as detected in the factory.
+     */
+    protected String mSchemaVersion;
     
     /**
-     * The overloaded constructor.
+     * The overloaded constructor. The schema version passed is determined
+     * in the DAXFactory
      *
-     * @param properties the <code>PegasusProperties</code> to be used.
+     * @param bag
+     * @param schemaVersion    the schema version specified in the DAX file.
      */
-    public DAXParser3( PegasusBag bag  ) {
+    public DAXParser3( PegasusBag bag, String schemaVersion  ) {
         super( bag );
+        mSchemaVersion = schemaVersion;
         mJobPrefix = ( bag.getPlannerOptions() == null ) ?
                        null:
                        bag.getPlannerOptions().getJobnamePrefix();
+
 
     }
 
@@ -167,7 +180,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
     }
 
     /**
-     * Retuns the DAXCallback for the parser
+     * Returns the DAXCallback for the parser
      *
      * @return  the callback
      */
@@ -183,6 +196,9 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
     public void startParser( String file ) {
         mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_PARSE_DAX, LoggingKeys.DAX_ID, file );
         try {
+            //PM-938 set the schema location. we cannot set it in constructor
+            this.setSchemaLocations();
+            
             this.testForFile( file );
             
             //PM-831 set up the parser with our own reader
@@ -227,7 +243,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
      */
     public String getSchemaLocation() {
         // treat URI as File, yes, I know - I need the basename
-        File uri = new File( DAXParser3.SCHEMA_LOCATION );
+        File uri = new File( "dax-" + mSchemaVersion + ".xsd");
         // create a pointer to the default local position
         File dax = new File( this.mProps.getSchemaDir(),  uri.getName() );
 
@@ -1014,7 +1030,11 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 if ( child instanceof Profile ) {
                     Profile md = ( Profile )child;
                     md.setProfileValue( mTextContent.toString().trim() );
-                    if ( parent instanceof Job ){
+                    if( parent instanceof Map ){
+                        unSupportedNestingOfElements( "adag", "metadata" );
+                        return true;
+                    }
+                    else if ( parent instanceof Job ){
                         //profile appears in the job element
                         Job j = (Job)parent;
                         j.addProfile( md );
@@ -1027,7 +1047,8 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                     }
                     //metadata appears in executable element
                     else if( parent instanceof Executable ){
-                        unSupportedNestingOfElements( "executable", "metadata" );
+                        Executable e = (Executable)parent;
+                        e.addMetaData( new MetaData(md.getProfileKey(), md.getProfileValue()));
                         return true;
                     }
                 }
@@ -1192,6 +1213,10 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
 	 		for(edu.isi.pegasus.planner.dax.Profile profile : executable.getProfiles()){
 	 			tce.addProfile(new edu.isi.pegasus.planner.classes.Profile(profile.getNameSpace(),profile.getKey() , profile.getValue()));
 	 		}
+                        for( MetaData md: executable.getMetaData()){
+                            //convert to metadata profile object for planner to use
+                            tce.addProfile( new Profile( Profile.METADATA, md.getKey(), md.getValue() ));
+                        }
 	 		tceList.add(tce);
  	   }
  		   
@@ -1237,13 +1262,17 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
         
         //add a 0 suffix
         String nversion = version + ".0";
-        if( CondorVersion.numericValue( nversion) < DAXParser3.DAX_VERSION_3_2_0 ){
+        long value = CondorVersion.numericValue( nversion) ;
+        if( value < DAXParser3.DAX_VERSION_3_2_0 ){
             StringBuffer sb = new StringBuffer();
             sb.append( "DAXParser3 Unsupported DAX Version " ).append( version ).
                append( ". Set pegasus.schema.dax property to load the old DAXParser" );
             throw new RuntimeException( sb.toString() );
         }
-        
+        //also complain for parsing documents that have version higher
+        if( value > DAXParser3.DAX_VERSION_3_6_0 ){
+            throw new RuntimeException( "DAXParser3 cannot parse documents conforming to DAX version " + version );
+        }
         return;
     }
 

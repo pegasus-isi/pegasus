@@ -70,7 +70,7 @@ public class VariableExpanderTest {
         
         mLogger.logEventStart( "test.common.util.VariableExpander", "set", Integer.toString(mTestNumber++) );
         VariableExpander exp = new VariableExpander( true  );
-        String variable = "$(USER)";
+        String variable = "${USER}";
         String value    = System.getenv( "USER" );
         String input = "Pegasus " + variable + " rocks . Says who? " + variable;
         String expected = "Pegasus " + value + " rocks . Says who? " + value;
@@ -85,7 +85,7 @@ public class VariableExpanderTest {
         
         mLogger.logEventStart( "test.common.util.VariableExpander", "set", Integer.toString(mTestNumber++) );
         VariableExpander exp = new VariableExpander( true );
-        String variable = "$(USeR)";
+        String variable = "${USeR}";
         String value    = System.getenv( "USER" );
         String input = "Pegasus " + variable + " rocks . Says who? " + variable;
         String expected = "Pegasus " + value + " rocks . Says who? " + value;
@@ -100,7 +100,7 @@ public class VariableExpanderTest {
         
         mLogger.logEventStart( "test.common.util.VariableExpander", "set", Integer.toString(mTestNumber++) );
         VariableExpander exp = new VariableExpander( true );
-        String variable = "$(GIBBERISH)";
+        String variable = "${GIBBERISH}";
         String value    = System.getenv( "USER" );
         String input = "Pegasus " + variable + " rocks . Says who? " + variable;
         String expected = "Pegasus " + value + " rocks . Says who? " + value;
@@ -115,7 +115,7 @@ public class VariableExpanderTest {
         
         mLogger.logEventStart( "test.common.util.VariableExpander", "set", Integer.toString(mTestNumber++) );
         VariableExpander exp = new VariableExpander(   );
-        String variable = "$(USER)";
+        String variable = "${USER}";
         String value    = System.getenv( "USER" );
         String input = "Pegasus " + variable + " rocks . Says who? " + variable;
         String expected = "Pegasus " + value + " rocks . Says who? " + value;
@@ -130,7 +130,7 @@ public class VariableExpanderTest {
         
         mLogger.logEventStart( "test.common.util.VariableExpander", "set", Integer.toString(mTestNumber++) );
         VariableExpander exp = new VariableExpander(  );
-        String variable = "$(USeR)";
+        String variable = "${USeR}";
         String value    = System.getenv( "USER" );
         String input = "Pegasus " + variable + " rocks . Says who? " + variable;
         String expected = "Pegasus " + value + " rocks . Says who? " + value;
@@ -145,7 +145,7 @@ public class VariableExpanderTest {
         
         mLogger.logEventStart( "test.common.util.VariableExpander", "set", Integer.toString(mTestNumber++) );
         VariableExpander exp = new VariableExpander(  );
-        String variable = "$(GIBBERISH)";
+        String variable = "${GIBBERISH}";
         String value    = System.getenv( "USER" );
         String input = "Pegasus " + variable + " rocks . Says who? " + variable;
         String expected = "Pegasus " + value + " rocks . Says who? " + value;
@@ -160,7 +160,7 @@ public class VariableExpanderTest {
         
         mLogger.logEventStart( "test.common.util.VariableExpander", "set", Integer.toString(mTestNumber++) );
         VariableExpander exp = new VariableExpander(  );
-        String variable = "$(USER)";
+        String variable = "${USER}";
         String value    = System.getenv( "USER" );
         String input = "Pegasus " + variable + " rocks . Says who? \\" + variable;
         String expected = "Pegasus " + value + " rocks . Says who? " + variable;

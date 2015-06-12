@@ -489,10 +489,10 @@ class Dashboard(object):
         finally:
             Dashboard.close(workflow)
 
-    def get_invocation_information(self, wf_id, job_id, job_instance_id, task_id):
+    def get_invocation_information(self, wf_id, job_id, job_instance_id, invocation_id):
         try:
             workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id)
-            invocation = workflow.get_invocation_information(job_id, job_instance_id, task_id)
+            invocation = workflow.get_invocation_information(job_id, job_instance_id, invocation_id)
             invocation.start_time = strftime("%a, %d %b %Y %H:%M:%S", localtime(invocation.start_time))
             return invocation
         finally:

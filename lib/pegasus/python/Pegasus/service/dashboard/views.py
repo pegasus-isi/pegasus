@@ -24,6 +24,8 @@ from flask import request, render_template, url_for, json, g, redirect, send_fro
 from sqlalchemy.orm.exc import NoResultFound
 
 from Pegasus.db.errors import StampedeDBNotFoundError
+from Pegasus.db.admin.admin_loader import DBAdminError
+
 from Pegasus.tools import utils
 from Pegasus.service import filters
 from Pegasus.service.dashboard.dashboard import Dashboard, NoWorkflowsFoundError
@@ -334,16 +336,17 @@ def failed_invocations(username, root_wf_id, wf_id, job_id, job_instance_id):
 
 
 @dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>/i/', methods=['GET'])
-@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>/i/<task_id>', methods=['GET'])
-def invocation(username, root_wf_id, wf_id, job_id, job_instance_id, task_id=None):
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>/i/<invocation_id>', methods=['GET'])
+def invocation(username, root_wf_id, wf_id, job_id, job_instance_id, invocation_id):
     """
     Get detailed invocation information
     """
     dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
-    invocation = dashboard.get_invocation_information(wf_id, job_id, job_instance_id, task_id)
+    invocation = dashboard.get_invocation_information(wf_id, job_id, job_instance_id, invocation_id)
 
     return render_template('workflow/job/invocation/invocation_details.html', root_wf_id=root_wf_id, wf_id=wf_id,
-                           job_id=job_id, job_instance_id=job_instance_id, task_id=task_id, invocation=invocation)
+                           job_id=job_id, job_instance_id=job_instance_id, invocation_id=invocation_id,
+                           invocation=invocation)
 
 
 @dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/charts', methods=['GET'])
@@ -438,19 +441,34 @@ def file_browser(username, root_wf_id, wf_id):
         submit_dir = details.submit_dir
 
         if os.path.isdir(submit_dir):
+            init_file = request.args.get('init_file', None)
+            return render_template('file-browser.html', root_wf_id=root_wf_id, wf_id=wf_id, init_file=init_file)
+
+    except NoResultFound:
+        return render_template('error/workflow/workflow_details_missing.html')
+
+    return 'Error', 500
+
+
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/files', methods=['GET'])
+def file_list(username, root_wf_id, wf_id):
+    try:
+        dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id=wf_id)
+        details = dashboard.get_workflow_details(wf_id)
+        submit_dir = details.submit_dir
+
+        if os.path.isdir(submit_dir):
             folders = {}
 
             for folder, sub_folders, files in os.walk(submit_dir):
                 folder = '/' + folder.replace(submit_dir, '', 1).lstrip('/')
-                folders[folder] = {'D' : [], 'F': files}
+                folders[folder] = {'D': [], 'F': files}
 
                 for sub_folder in sub_folders:
                     full_sub_folder = folder + sub_folder
                     folders[folder]['D'].append(full_sub_folder)
 
-            init_file = request.args.get('init_file', None)
-            return render_template('file-browser.html', root_wf_id=root_wf_id, wf_id=wf_id, folders=folders,
-                                   init_file=init_file)
+            return json.dumps(folders), 200, {'Content-Type': 'application/json'}
 
     except NoResultFound:
         return render_template('error/workflow/workflow_details_missing.html')
@@ -581,3 +599,12 @@ def master_database_missing(error):
 def stampede_database_missing(error):
     return render_template('error/stampede_database_missing.html')
 
+
+@dashboard_routes.errorhandler(DBAdminError)
+def database_migration_error(error):
+    return render_template('error/database_migration_error.html')
+
+
+@dashboard_routes.errorhandler(Exception)
+def catch_all(error):
+    return render_template('error/catch_all.html')

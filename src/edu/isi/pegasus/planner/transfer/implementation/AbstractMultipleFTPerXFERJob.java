@@ -32,6 +32,7 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 import edu.isi.pegasus.common.util.Separator;
+import edu.isi.pegasus.planner.classes.FileTransfer;
 
 
 import java.io.File;
@@ -41,6 +42,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import edu.isi.pegasus.planner.classes.Profile;
+import java.util.Iterator;
 
 
 /**
@@ -103,23 +105,17 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
         SiteCatalogEntry ePool;
         GridGateway jobmanager;
 
-        //site where the transfer is scheduled
-        //to be run. For thirdparty site it makes
-        //sense to schedule on the local host unless
-        //explicitly designated to run TPT on remote site
-        /*String tPool = mRefiner.isSiteThirdParty(job.getSiteHandle(),jobClass) ?
-                                //check if third party have to be run on remote site
-                                mRefiner.runTPTOnRemoteSite(job.getSiteHandle(),jobClass) ?
-                                          job.getSiteHandle() : "local"
-                                :job.getSiteHandle();*/
         String tPool = site;
 
-        //the non third party site for the transfer job is
-        //always the job execution site for which the transfer
-        //job is being created.
-        txJob.setNonThirdPartySite( job.getStagingSiteHandle() );
-
-
+        String ntptSite = this.getNonThirdPartySite(job, files, jobClass );
+        if( ntptSite == null && jobClass != Job.STAGE_IN_WORKER_PACKAGE_JOB ){
+            throw new RuntimeException( "Unable to determine the non third party site for transfer job " + txJobName + 
+                                        " of type " + jobClass );
+        }
+        mLogger.log( "Non Third Party Transfer site for transfer job " + txJobName + " is " + ntptSite, 
+                      LogManager.DEBUG_MESSAGE_LEVEL );
+        txJob.setNonThirdPartySite( ntptSite ); 
+        
         //we first check if there entry for transfer universe,
         //if no then go for globus
         ePool = mSiteStore.lookup( tPool );
@@ -227,6 +223,41 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
     }
 
 
+    /**
+     * Determines the correct site to be asscociated with the transfer job, to ensure
+     * cleanup algorithms work correctly
+     * 
+     * @param job           the associated compute job for which transfer job is being constructed
+     * @param files         the files to be transfered
+     * @param jobClass      type of transfer job
+     * 
+     * @return 
+     */
+    protected String getNonThirdPartySite( Job job, Collection<FileTransfer> files , int jobClass ){
+        String ntptSite = null;
+        if( jobClass == Job.INTER_POOL_JOB ){
+            //PM-936 the non third party site for inter site transfer should be
+            //set to be the site handle of the parent job where the inputs are 
+            //coming from, to ensure inplace cleanup job is a child to 
+            //inter site transfer job
+            
+            for( Iterator it = files.iterator(); it.hasNext(); ){
+                FileTransfer ft = (FileTransfer)it.next();
+                ntptSite = ft.getSourceURL().getKey();
+                break;
+            }
+        }
+        else{
+            //the non third party site for the transfer job is
+            //always the job execution site for which the transfer
+            //job is being created.
+            ntptSite =  job.getStagingSiteHandle() ;
+        }
+        
+        
+        return ntptSite;
+    }
+    
     /**
      * Returns a default TC entry to be used in case entry is not found in the
      * transformation catalog.

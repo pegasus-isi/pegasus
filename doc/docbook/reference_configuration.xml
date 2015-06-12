@@ -4010,7 +4010,7 @@ Scope       :</emphasis> Properties
 <emphasis role="bold">Since       :</emphasis> 3.0.2
 <emphasis role="bold">Type  </emphasis>      : String
 <emphasis role="bold">Default     :</emphasis> true<emphasis role="bold">
-See Also    :</emphasis> pegasus.monitord.output</literallayout></entry>
+See Also    : </emphasis>pegasus.catalog.workflow.url</literallayout></entry>
 
               <entry>This property determines whether pegasus-monitord
               generates log events. If log events are disabled using this
@@ -4020,11 +4020,11 @@ See Also    :</emphasis> pegasus.monitord.output</literallayout></entry>
 
             <row>
               <entry><literallayout><emphasis role="bold"><emphasis
-                      role="bold">Property Key: </emphasis></emphasis>pegasus.monitord.output<emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.catalog.workflow.url<emphasis
                     role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
 Scope       :</emphasis> Properties
-<emphasis role="bold">Since       :</emphasis> 3.0.2
+<emphasis role="bold">Since       :</emphasis> 4.5
 <emphasis role="bold">Type  </emphasis>      : String
 <emphasis role="bold">Default     :</emphasis> SQlite database in submit
               directory.
@@ -4085,7 +4085,7 @@ http://www.sqlalchemy.org/docs/05/reference/dialects/index.html
 
             <row>
               <entry><literallayout><emphasis role="bold"><emphasis
-                      role="bold">Property Key: </emphasis></emphasis>pegasus.dashboard.output<emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.catalog.master.url<emphasis
                     role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
 Scope       :</emphasis> Properties
@@ -4093,7 +4093,7 @@ Scope       :</emphasis> Properties
 <emphasis role="bold">Type  </emphasis>      : String
 <emphasis role="bold">Default     :</emphasis> sqlite database in $HOME/.pegasus/workflow.db<emphasis
                     role="bold">
-See Also    :</emphasis> pegasus.monitord.output</literallayout></entry>
+See Also    :</emphasis> pegasus.catalog.workflow.url</literallayout></entry>
 
               <entry><para>This property specifies the destination for the
               workflow dashboard database. By default, the workflow dashboard
@@ -4141,6 +4141,42 @@ http://www.sqlalchemy.org/docs/05/reference/dialects/index.html
                     </tbody>
                   </tgroup>
                 </informaltable></para></entry>
+            </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.monitord.output<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 3.0.2
+<emphasis role="bold">Type  </emphasis>      : String
+<emphasis role="bold">Default     :</emphasis> SQlite database in submit
+              directory.
+<emphasis role="bold">See Also    :</emphasis> pegasus.monitord.events</literallayout></entry>
+
+              <entry><para>This property has been deprecated in favore of
+              pegasus.catalog.workflow.url that introduced in 4.5 release.
+              Support for this property will be dropped in future releases.
+              </para></entry>
+            </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.dashboard.output<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 4.2
+<emphasis role="bold">Type  </emphasis>      : String
+<emphasis role="bold">Default     :</emphasis> sqlite database in $HOME/.pegasus/workflow.db<emphasis
+                    role="bold">
+See Also    :</emphasis> pegasus.monitord.output</literallayout></entry>
+
+              <entry><para>This property has been deprecated in favore of
+              pegasus.catalog.master.url that introduced in 4.5 release.
+              Support for this property will be dropped in future releases.
+              </para></entry>
             </row>
 
             <row>

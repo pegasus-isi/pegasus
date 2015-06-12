@@ -51,7 +51,7 @@ public class VariableExpander {
      */
     public VariableExpander( boolean caseSensitive ){
         mValuesMap = new HashMap(System.getenv());
-        mExpander = new StrSubstitutor( mValuesMap, "$(", ")", '\\' );
+        mExpander = new StrSubstitutor( mValuesMap, "${", "}", '\\' );
         mExpander.setVariableResolver( new CaseSensitiveStrLookup( this.mValuesMap, caseSensitive ));
         
     }

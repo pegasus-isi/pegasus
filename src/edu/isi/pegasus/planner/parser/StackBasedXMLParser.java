@@ -21,7 +21,6 @@ package edu.isi.pegasus.planner.parser;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.common.PegasusProperties;
 
 
 import java.util.HashSet;
@@ -82,7 +81,17 @@ public abstract class StackBasedXMLParser extends Parser {
         mStack = new Stack();
         mDepth = 0;
         mUnsupportedElementAttributes = new HashSet();
-       
+        
+    }
+
+    /**
+     * Sets the list of external real locations where the XML schema may be found.
+     * Since this list can be determined at run-time through properties etc., we
+     * expect this function to be called between instantiating the parser, and
+     * using the parser
+     *
+     */
+    public void setSchemaLocations(  ){
         //setting the schema Locations
         String schemaLoc = getSchemaLocation();
         mLogger.log( "Picking schema " + schemaLoc,
@@ -90,7 +99,7 @@ public abstract class StackBasedXMLParser extends Parser {
         String list = getSchemaNamespace( ) + " " + schemaLoc;
         setSchemaLocations( list );
     }
-
+    
     /**
      * Composes the  <code>SiteData</code> object corresponding to the element
      * name in the XML document.

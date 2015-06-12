@@ -32,6 +32,8 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.common.PegRandom;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
+import edu.isi.pegasus.planner.estimate.Estimator;
+import edu.isi.pegasus.planner.estimate.EstimatorFactory;
 import edu.isi.pegasus.planner.namespace.Hints;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
@@ -47,6 +49,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Vector;
@@ -112,6 +115,11 @@ public class InterPoolEngine extends Engine implements Refiner {
      * user specifies in the DAX
      */
     protected TransformationStore mDAXTransformationStore;
+    
+    /**
+     * Handle to the estimator.
+     */
+    private Estimator mEstimator;
 
     /**
      * Default constructor.
@@ -137,21 +145,21 @@ public class InterPoolEngine extends Engine implements Refiner {
     /**
      * Overloaded constructor.
      *
-     * @param aDag      the <code>ADag</code> object corresponding to the Dag
+     * @param dag      the <code>ADag</code> object corresponding to the Dag
      *                  for which we want to determine on which pools to run
      *                  the nodes of the Dag.
      * @param bag       the bag of initialization objects
      *
      */
-    public InterPoolEngine( ADag aDag, PegasusBag bag ) {
+    public InterPoolEngine( ADag dag, PegasusBag bag ) {
         this( bag );
-        mDag = aDag;
+        mDag = dag;
         mExecPools = (Set)mPOptions.getExecutionSites();
         mLogger.log( "List of executions sites is " + mExecPools,
                      LogManager.DEBUG_MESSAGE_LEVEL );
         
-        this.mDAXTransformationStore = aDag.getTransformationStore();
-        
+        this.mDAXTransformationStore = dag.getTransformationStore();
+        this.mEstimator = EstimatorFactory.loadEstimator(dag, bag );
     }
 
     /**
@@ -260,17 +268,6 @@ public class InterPoolEngine extends Engine implements Refiner {
             //check if the user has specified any hints in the dax
             incorporateHint(job, Hints.EXECUTION_SITE_KEY );
             
-            /*PM-810 
-            if (incorporateHint(job, "executionPool")) {
-                TransformationCatalogEntry entry = lookupTC(job);
-                incorporateProfiles(job, entry );
-                //the staging site needs to be set before any
-                //file transfers for executable staging are incorporated PM-618
-                job.setStagingSiteHandle( determineStagingSite( job ) );
-                handleExecutableFileTransfers(job, entry);
-                continue;
-            }*/
- 
             String site  = job.getSiteHandle();
             mLogger.log( "Setting up site mapping for job "  + job.getName(), 
                          LogManager.DEBUG_MESSAGE_LEVEL );
@@ -305,8 +302,6 @@ public class InterPoolEngine extends Engine implements Refiner {
             mLogger.log("Job was mapped to " + job.jobName + " to site " + site,
                         LogManager.DEBUG_MESSAGE_LEVEL);
             
-            
-            
             //incorporate the profiles and
             //do transformation selection
             //set the staging site for the job
@@ -321,18 +316,10 @@ public class InterPoolEngine extends Engine implements Refiner {
             job.setStagingSiteHandle( determineStagingSite( job ) );
             handleExecutableFileTransfers(job, entry);
             
-            /* PM-810
-            if ( !incorporateProfiles(job) ){
-                error = new StringBuffer();
-                error.append( "Profiles incorrectly incorporated for ").
-                      append( job.getCompleteTCName());
-
-               mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL );
-               throw new RuntimeException( error.toString() );
-
-            }
-            */
-
+            //PM-882 incorporate estimates on runtimes of the jobs
+            //after the site selection has been done
+            incorporateEstimates( job );
+            
             //log actions as XML fragment
             try{
                 logRefinerAction(job);
@@ -790,6 +777,33 @@ public class InterPoolEngine extends Engine implements Refiner {
     }
 
     /**
+     * Incorporate estimates
+     * 
+     * @param job 
+     */
+    protected void incorporateEstimates(Job job) {
+        Map<String,String> estimates = mEstimator.getAllEstimates(job);
+        
+        for( Map.Entry<String,String> entry: estimates.entrySet() ){
+            String key = entry.getKey();
+            String value = entry.getValue();
+            //each estimates is incorporated as a metadata attribute for the job
+            job.getMetadata().construct(key, value);
+        }
+        
+        String runtime = estimates.get("runtime");
+        if( runtime != null ){
+            job.vdsNS.checkKeyInNS( Pegasus.MAX_WALLTIME, runtime );
+        }
+        
+        String memory = estimates.get( "memory" );
+        if( memory != null ){
+            //for the time being set as globus maxwalltime
+            job.globusRSL.checkKeyInNS( "maxmemory", memory );
+        }
+    }
+    
+    /**
      * Converts a Vector to a List. It only copies by reference.
      * @param v Vector
      * @return a ArrayList
@@ -828,6 +842,5 @@ public class InterPoolEngine extends Engine implements Refiner {
         mXMLStore.add( sb.toString() );
     }
 
-    
 
 }

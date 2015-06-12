@@ -31,26 +31,34 @@ class MasterDBNotFoundError (Exception):
 
 class MasterDatabase(SQLAlchemyInit):
 
-    def __init__(self, connString, debug=False):
+    def __init__(self, conn_string, debug=False):
         self._dbg = debug
 
-        if connString is None:
+        if conn_string is None:
             raise ValueError('Connection string is required')
 
         try:
-            SQLAlchemyInit.__init__(self, connString)
-        except (connection.ConnectionError, DBAdminError), e:
+            SQLAlchemyInit.__init__(self, conn_string)
+        except connection.ConnectionError as e:
             log.error(e)
-            raise MasterDBNotFoundError
+            message = e
+
+            while isinstance(message, Exception):
+                message = message.message
+
+            if 'attempt to write a readonly database' in message:
+                raise DBAdminError(message)
+
+            raise MasterDBNotFoundError(e)
 
     def close(self):
         log.debug('close')
         self.disconnect()
 
     def get_wf_db_url(self, wf_id):
-        '''
+        """
         Given a work-flow UUID, query the master database to get the connection URL for the work-flow's STAMPEDE database.
-        '''
+        """
 
         w = orm.aliased(DashboardWorkflow, name='w')
 
@@ -60,9 +68,9 @@ class MasterDatabase(SQLAlchemyInit):
         return q.one().db_url
 
     def get_wf_id_url(self, root_wf_id):
-        '''
+        """
         Given a work-flow UUID, query the master database to get the connection URL for the work-flow's STAMPEDE database.
-        '''
+        """
 
         w = orm.aliased(DashboardWorkflow, name='w')
 
@@ -74,7 +82,7 @@ class MasterDatabase(SQLAlchemyInit):
         return q.wf_id, q.wf_uuid, q.db_url
 
     def get_all_workflows(self, **table_args):
-        '''
+        """
         SELECT w.*, ws.*
          FROM   workflow w
                      JOIN workflowstate ws ON w.wf_id = ws.wf_id
@@ -85,7 +93,7 @@ class MasterDatabase(SQLAlchemyInit):
          WHERE  w.wf_id = ws.wf_id
         AND ws.wf_id = t.wf_id
         AND ws.timestamp = t.time;
-        '''
+        """
 
         w = orm.aliased(DashboardWorkflow, name='w')
         ws = orm.aliased(DashboardWorkflowstate, name='ws')
@@ -115,7 +123,7 @@ class MasterDatabase(SQLAlchemyInit):
         # Get Total Count. Need this to pass to jQuery Datatable.
         count = q.count()
         if count == 0:
-            return (0, 0, [])
+            return 0, 0, []
 
         if 'filter' in table_args:
             filter_text = '%' + table_args['filter'] + '%'
@@ -138,7 +146,7 @@ class MasterDatabase(SQLAlchemyInit):
         filtered = q.count()
 
         if filtered == 0:
-            return (count, 0, [])
+            return count, 0, []
 
         display_columns = [w.dax_label, w.submit_hostname, w.submit_dir, state, w.timestamp]
 
@@ -149,17 +157,17 @@ class MasterDatabase(SQLAlchemyInit):
                     if 'sSortDir_' + str(i) in table_args and table_args['sSortDir_' + str(i)] == 'asc':
                         i = table_args['iSortCol_' + str(i)]
 
-                        if i >= 0 and i < len(display_columns):
+                        if 0 <= i < len(display_columns):
                             q = q.order_by(display_columns[i])
                         else:
-                            raise ValueError, ('Invalid column (%s) in work-flow listing ' % i)
+                            raise ValueError('Invalid column (%s) in work-flow listing ' % i)
                     else:
                         i = table_args['iSortCol_' + str(i)]
 
-                        if i >= 0 and i < len(display_columns):
+                        if 0 <= i < len(display_columns):
                             q = q.order_by(desc(display_columns[i]))
                         else:
-                            raise ValueError, ('Invalid column (%s) in work-flow listing ' % i)
+                            raise ValueError('Invalid column (%s) in work-flow listing ' % i)
 
         else:
             # Default sorting order
@@ -169,7 +177,7 @@ class MasterDatabase(SQLAlchemyInit):
             q = q.limit(table_args['limit'])
             q = q.offset(table_args['offset'])
 
-        return (count, filtered, q.all())
+        return count, filtered, q.all()
 
     def get_workflow_counts(self):
 
@@ -196,16 +204,24 @@ class MasterDatabase(SQLAlchemyInit):
 
 class WorkflowInfo(SQLAlchemyInit):
 
-    def __init__(self, connString=None, wf_id=None, wf_uuid=None, debug=False):
+    def __init__(self, conn_string=None, wf_id=None, wf_uuid=None, debug=False):
         self._dbg = debug
 
-        if connString is None:
+        if conn_string is None:
             raise ValueError('Connection string is required')
 
         try:
-            SQLAlchemyInit.__init__(self, connString)
-        except (connection.ConnectionError, DBAdminError), e:
+            SQLAlchemyInit.__init__(self, conn_string)
+        except connection.ConnectionError as e:
             log.error(e)
+            message = e
+
+            while isinstance(message, Exception):
+                message = message.message
+
+            if 'attempt to write a readonly database' in message:
+                raise DBAdminError(message)
+
             raise StampedeDBNotFoundError
 
         self.initialize(wf_id, wf_uuid)
@@ -277,8 +293,9 @@ class WorkflowInfo(SQLAlchemyInit):
 
     def get_job_information(self, job_id, job_instance_id):
 
-        q = self.session.query(Job.exec_job_id, Job.clustered, JobInstance.job_instance_id, JobInstance.exitcode,
-                               JobInstance.stdout_file, JobInstance.stderr_file, Host.site, Host.hostname, Host.ip)
+        q = self.session.query(Job.exec_job_id, Job.clustered, JobInstance.job_instance_id, JobInstance.work_dir,
+                               JobInstance.exitcode, JobInstance.stdout_file, JobInstance.stderr_file,
+                               Host.site, Host.hostname, Host.ip)
         q = q.filter(Job.wf_id == self._wf_id)
         q = q.filter(Job.job_id == job_id)
         q = q.filter(JobInstance.job_instance_id == job_instance_id)
@@ -385,7 +402,7 @@ class WorkflowInfo(SQLAlchemyInit):
             q = q.limit(table_args['limit'])
             q = q.offset(table_args['offset'])
 
-        return (count, filtered, q.all())
+        return count, filtered, q.all()
 
     def get_successful_jobs(self, **table_args):
 
@@ -412,7 +429,7 @@ class WorkflowInfo(SQLAlchemyInit):
             filtered = q.count()
 
             if filtered == 0:
-                return (count, 0, [])
+                return count, 0, []
 
         display_columns = [Job.exec_job_id, duration]
 
@@ -440,7 +457,7 @@ class WorkflowInfo(SQLAlchemyInit):
             q = q.limit(table_args['limit'])
             q = q.offset(table_args['offset'])
 
-        return (count, filtered, q.all())
+        return count, filtered, q.all()
 
     def get_other_jobs(self, **table_args):
 
@@ -455,7 +472,7 @@ class WorkflowInfo(SQLAlchemyInit):
         # Get Total Count. Need this to pass to jQuery Datatable.
         count = q.count()
         if count == 0:
-            return (0, 0, [])
+            return 0, 0, []
 
         filtered = count
         if 'filter' in table_args:
@@ -466,7 +483,7 @@ class WorkflowInfo(SQLAlchemyInit):
             filtered = q.count()
 
             if filtered == 0:
-                return (count, 0, [])
+                return count, 0, []
 
         display_columns = [Job.exec_job_id]
 
@@ -494,7 +511,7 @@ class WorkflowInfo(SQLAlchemyInit):
             q = q.limit(table_args['limit'])
             q = q.offset(table_args['offset'])
 
-        return (count, filtered, q.all())
+        return count, filtered, q.all()
 
     def get_failing_jobs(self, **table_args):
         """
@@ -578,7 +595,7 @@ class WorkflowInfo(SQLAlchemyInit):
         #
         count = q.count()
         if count == 0:
-            return (0, 0, [])
+            return 0, 0, []
 
         filtered = count
         if 'filter' in table_args:
@@ -589,7 +606,7 @@ class WorkflowInfo(SQLAlchemyInit):
             filtered = q.count()
 
             if filtered == 0:
-                return (count, 0, [])
+                return count, 0, []
 
         display_columns = [Job.exec_job_id, JobInstance.exitcode]
 
@@ -619,7 +636,7 @@ class WorkflowInfo(SQLAlchemyInit):
             q = q.limit(table_args['limit'])
             q = q.offset(table_args['offset'])
 
-        return (count, filtered, q.all())
+        return count, filtered, q.all()
 
     def __get_jobs_maxjss_q(self):
         qmax = self.session.query(Job.job_id, func.max(JobInstance.job_submit_seq).label('max_jss'))
@@ -667,7 +684,7 @@ class WorkflowInfo(SQLAlchemyInit):
 
     def get_successful_job_invocations(self, job_id, job_instance_id):
 
-        q = self.session.query(Job.exec_job_id, Invocation.abs_task_id, Invocation.exitcode, Invocation.remote_duration)
+        q = self.session.query(Job.exec_job_id, Invocation.invocation_id, Invocation.abs_task_id, Invocation.exitcode, Invocation.remote_duration)
         q = q.filter(Job.wf_id == self._wf_id)
         q = q.filter(Job.job_id == job_id)
         q = q.filter(JobInstance.job_instance_id == job_instance_id)
@@ -681,7 +698,7 @@ class WorkflowInfo(SQLAlchemyInit):
 
     def get_failed_job_invocations(self, job_id, job_instance_id):
 
-        q = self.session.query(Job.exec_job_id, Invocation.abs_task_id, Invocation.exitcode, Invocation.remote_duration)
+        q = self.session.query(Job.exec_job_id, Invocation.invocation_id, Invocation.abs_task_id, Invocation.exitcode, Invocation.remote_duration)
         q = q.filter(Job.wf_id == self._wf_id)
         q = q.filter(Job.job_id == job_id)
         q = q.filter(JobInstance.job_instance_id == job_instance_id)
@@ -719,21 +736,21 @@ class WorkflowInfo(SQLAlchemyInit):
 
         return qmax
 
-    def get_invocation_information(self, job_id, job_instance_id, task_id):
+    def get_invocation_information(self, job_id, job_instance_id, invocation_id):
 
-        q = self.session.query(Invocation.abs_task_id, Invocation.start_time, Invocation.remote_duration,
-                               Invocation.remote_cpu_time, Invocation.exitcode, Invocation.transformation,
-                               Invocation.executable, Invocation.argv)
+        q = self.session.query(Invocation.invocation_id, Invocation.abs_task_id, Invocation.start_time,
+                               Invocation.remote_duration, Invocation.remote_cpu_time, Invocation.exitcode,
+                               Invocation.transformation, Invocation.executable, Invocation.argv, JobInstance.work_dir)
         q = q.filter(Job.wf_id == self._wf_id)
         q = q.filter(Job.job_id == job_id)
         q = q.filter(JobInstance.job_instance_id == job_instance_id)
         q = q.filter(Job.job_id == JobInstance.job_id)
         q = q.filter(JobInstance.job_instance_id == Invocation.job_instance_id)
 
-        if task_id == None:
+        if invocation_id is None:
             q = q.filter(Invocation.task_submit_seq == 1)
         else:
-            q = q.filter(Invocation.abs_task_id == task_id)
+            q = q.filter(Invocation.invocation_id == invocation_id)
 
         return q.one()
 

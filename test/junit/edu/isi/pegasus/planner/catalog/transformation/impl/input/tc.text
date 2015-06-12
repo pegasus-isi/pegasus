@@ -30,13 +30,13 @@ tr example::keg:1.0 {
  }
 
 #tr pegasus::keg:1.0{ 
-tr $(NAMESPACE)::$(NAME):$(VERSION) {
-   site $(SITE){
+tr ${NAMESPACE}::${NAME}:${VERSION} {
+   site ${SITE}{
      profile env "me" "with"
      profile condor "more" "test"
-     pfn "$(KEGPATH)"
-     arch  "$(ARCH)"
-     os    "$(OS)"
+     pfn "${KEGPATH}"
+     arch  "${ARCH}"
+     os    "${OS}"
      osrelease "fc"
      osversion "4"
      type "STAGEABLE"

@@ -1790,7 +1790,10 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
     "dax_file"          : &lt;string:dax_file&gt;,
     "dag_file_name"     : &lt;string:dag_file_name&gt;,
     "timestamp"         : &lt;int:timestamp&gt;,
-    "workflow_state"    : &lt;object:workflow_state&gt;
+    "workflow_state"    : &lt;object:workflow_state&gt;,
+    "_links"            : {
+        "workflow" : &lt;href:workflow&gt;,
+    }
 }</programlisting>
       </section>
 
@@ -1827,10 +1830,14 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
         <title id="resource-workflow-state">Workflow State</title>
 
         <programlisting>{
+    "wf_id"         : int:wf_id,
     "state"         : &lt;string:state&gt;,
     "status"        : &lt;int:status&gt;,
     "restart_count" : &lt;int:restart_count&gt;,
-    "timestamp"     : &lt;datetime:timestamp&gt;
+    "timestamp"     : &lt;datetime:timestamp&gt;,
+    "_links"        : {
+        "workflow" : "&lt;href:workflow&gt;"
+    }
 }</programlisting>
       </section>
 
@@ -1866,8 +1873,7 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
     "uname"        : &lt;string:uname&gt;,
     "total_memory" : &lt;string:total_memory&gt;,
     "_links"       : {
-        "workflow"     : &lt;href:workflow&gt;,
-        "job_instance" : &lt;href:job_instance&gt;
+        "workflow" : &lt;href:workflow&gt;
     }
 }</programlisting>
       </section>
@@ -1879,7 +1885,10 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
     "job_instance_id"     : &lt;int:job_instance_id&gt;,
     "state"               : &lt;string:state&gt;,
     "jobstate_submit_seq" : &lt;int:jobstate_submit_seq&gt;,
-    "timestamp"           : &lt;int:timestamp&gt;
+    "timestamp"           : &lt;int:timestamp&gt;,
+    "_links"              : {
+        "job_instance" : "href:job_instance"
+    }
 }</programlisting>
       </section>
 
@@ -1961,8 +1970,9 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
       <para>All endpoints return response with content-type as
       application/json.</para>
 
-      <para>All endpoints support <emphasis role="bold">`pretty-print`
-      </emphasis> query argument, to return a formatted JSON response.</para>
+      <para>All endpoints support <emphasis
+      role="bold">`pretty-print`</emphasis> query argument, to return a
+      formatted JSON response.</para>
 
       <para>All endpoints return status code <emphasis role="bold">401
       </emphasis> for<emphasis role="bold">Authentication
@@ -1977,9 +1987,6 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
 
         <para>Returns a collection of the <link
         linkend="resource-root-workflow">Root Workflow</link> resource.</para>
-
-        <para><emphasis role="bold">Context</emphasis>: <link
-        linkend="resource-root-workflow">Root Workflow</link></para>
 
         <para><table frame="box" rules="all">
             <caption>Options</caption>
@@ -2095,9 +2102,6 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
         <para>Returns a collection of the <link
         linkend="resource-workflow">Workflow</link> resource.</para>
 
-        <para><emphasis role="bold">Context</emphasis>: <link
-        linkend="resource-workflow">Workflow</link></para>
-
         <para><table frame="box" rules="all">
             <caption>Options</caption>
 
@@ -2135,13 +2139,6 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
 
                 <td>Order criteria. See <link
                 linkend="ordering">Ordering</link>.</td>
-              </tr>
-
-              <tr>
-                <td>recent</td>
-
-                <td>Get most recent results. See <link
-                linkend="recent">Recent</link>.</td>
               </tr>
             </tbody>
           </table></para>
@@ -2219,16 +2216,13 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
       </section>
 
       <section>
-        <title>GET /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/state OR
-        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/state/query</title>
+        <title>GET
+        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/state[;recent=true] OR
+        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/state[;recent=true]/query</title>
 
         <para>Returns a collection of the <link
         linkend="resource-workflow-state">Workflow State</link>
         resource.</para>
-
-        <para><emphasis role="bold">Context</emphasis>: <link
-        linkend="resource-workflow">Workflow</link>, <link
-        linkend="resource-workflow-state">Workflow State</link></para>
 
         <para><table frame="box" rules="all">
             <caption>Options</caption>
@@ -2324,10 +2318,6 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
         <para>Returns a collection of the <link
         linkend="resource-host">Host</link> resource.</para>
 
-        <para><emphasis role="bold">Context</emphasis>: <link
-        linkend="resource-workflow">Workflow</link>, <link
-        linkend="resource-host">Host</link></para>
-
         <para><table frame="box" rules="all">
             <caption>Options</caption>
 
@@ -2365,13 +2355,6 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
 
                 <td>Order criteria. See <link
                 linkend="ordering">Ordering</link>.</td>
-              </tr>
-
-              <tr>
-                <td>recent</td>
-
-                <td>Get most recent results. See <link
-                linkend="recent">Recent</link>.</td>
               </tr>
             </tbody>
           </table></para>
@@ -2456,10 +2439,6 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
         <para>Returns a collection of the <link
         linkend="resource-task">Task</link> resource.</para>
 
-        <para><emphasis role="bold">Context</emphasis>: <link
-        linkend="resource-workflow">Workflow</link>, <link
-        linkend="resource-task">Task</link></para>
-
         <para><table frame="box" rules="all">
             <caption>Options</caption>
 
@@ -2497,13 +2476,6 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
 
                 <td>Order criteria. See <link
                 linkend="ordering">Ordering</link>.</td>
-              </tr>
-
-              <tr>
-                <td>recent</td>
-
-                <td>Get most recent results. See <link
-                linkend="recent">Recent</link>.</td>
               </tr>
             </tbody>
           </table></para>
@@ -2589,10 +2561,6 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
         <para>Returns a collection of the <link
         linkend="resource-invocation">Invocation</link> resource.</para>
 
-        <para><emphasis role="bold">Context</emphasis>: <link
-        linkend="resource-workflow">Workflow</link>, <link
-        linkend="resource-invocation">Invocation</link></para>
-
         <para><table frame="box" rules="all">
             <caption>Options</caption>
 
@@ -2630,13 +2598,6 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
 
                 <td>Order criteria. See <link
                 linkend="ordering">Ordering</link>.</td>
-              </tr>
-
-              <tr>
-                <td>recent</td>
-
-                <td>Get most recent results. See <link
-                linkend="recent">Recent</link>.</td>
               </tr>
             </tbody>
           </table></para>
@@ -2721,10 +2682,6 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
         <para>Returns a collection of the <link
         linkend="resource-job">Job</link> resource.</para>
 
-        <para><emphasis role="bold">Context</emphasis>: <link
-        linkend="resource-workflow">Workflow</link>, <link
-        linkend="resource-job">Job</link></para>
-
         <para><table frame="box" rules="all">
             <caption>Options</caption>
 
@@ -2762,13 +2719,6 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
 
                 <td>Order criteria. See <link
                 linkend="ordering">Ordering</link>.</td>
-              </tr>
-
-              <tr>
-                <td>recent</td>
-
-                <td>Get most recent results. See <link
-                linkend="recent">Recent</link>.</td>
               </tr>
             </tbody>
           </table></para>
@@ -2848,17 +2798,12 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
 
       <section>
         <title>GET
-        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/job/&lt;job_id&gt;/job-instance
+        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/job/&lt;job_id&gt;/job-instance[;recent=true]
         OR POST
-        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/job/&lt;job_id&gt;/job-instance/query</title>
+        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/job/&lt;job_id&gt;/job-instance[;recent=true]/query</title>
 
         <para>Returns a collection of the <link
         linkend="resource-job-instance">Job Instance</link> resource.</para>
-
-        <para><emphasis role="bold">Context</emphasis>: <link
-        linkend="resource-workflow">Workflow</link>, <link
-        linkend="resource-job">Job</link>, <link
-        linkend="resource-job-instance">Job Instance</link></para>
 
         <para><table frame="box" rules="all">
             <caption>Options</caption>
@@ -2984,18 +2929,12 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
 
       <section>
         <title>GET
-        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/job/&lt;job_id&gt;/job-instance/&lt;job_instance_id&gt;/state
+        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/job/&lt;job_id&gt;/job-instance/&lt;job_instance_id&gt;/state[;recent=true]
         OR POST
-        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/job/&lt;job_id&gt;/job-instance/&lt;job_instance_id&gt;/state/query</title>
+        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/job/&lt;job_id&gt;/job-instance/&lt;job_instance_id&gt;/state[;recent=true]/query</title>
 
         <para>Returns a collection of the <link
         linkend="resource-job-state">Job State</link> resource.</para>
-
-        <para><emphasis role="bold">Context</emphasis>: <link
-        linkend="resource-workflow">Workflow</link>, <link
-        linkend="resource-job">Job</link>, <link
-        linkend="resource-job-instance">Job Instance</link>, <link
-        linkend="resource-job-state">Job State</link></para>
 
         <para><table frame="box" rules="all">
             <caption>Options</caption>
@@ -3127,12 +3066,6 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
         <para>Returns a collection of the <link
         linkend="resource-invocation">Invocation</link> resource.</para>
 
-        <para><emphasis role="bold">Context</emphasis>: <link
-        linkend="resource-workflow">Workflow</link>, <link
-        linkend="resource-job">Job</link>, <link
-        linkend="resource-job-instance">Job Instance</link>, <link
-        linkend="resource-invocation">Invocation</link></para>
-
         <para><table frame="box" rules="all">
             <caption>Options</caption>
 
@@ -3170,13 +3103,6 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
 
                 <td>Order criteria. See <link
                 linkend="ordering">Ordering</link>.</td>
-              </tr>
-
-              <tr>
-                <td>recent</td>
-
-                <td>Get most recent results. See <link
-                linkend="recent">Recent</link>.</td>
               </tr>
             </tbody>
           </table></para>
@@ -3296,7 +3222,7 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
     },
     {
         "method" : "POST",
-        "path"   : "/api/v1/user/user-a/root?query=wf_id=2"
+        "path"   : "/api/v1/user/user-a/root/query?query=wf_id=2"
     }
 ]<emphasis role="bold">
 
@@ -3312,7 +3238,7 @@ Response</emphasis>
                     "wf_uuid"           : "7193de8c-a28d-4eca-b576-1b1c3c4f668b",
                     ..
                     "_links"            : {
-                        "workflow" : "/api/v1/user/user-a/root/1/workflow/query"
+                        "workflow" : "/api/v1/user/user-a/root/1/workflow"
                     }
                 }
             ],
@@ -3398,30 +3324,24 @@ Response</emphasis>
           </listitem>
 
           <listitem>
-            <para>&lt;FIELDNAME&gt; can be prefixed with resource query prefix
-            Example: <emphasis role="bold"><emphasis
-            role="bold">r.</emphasis>wf_id</emphasis> is same as <emphasis
-            role="bold">wf_id</emphasis>. However, fieldnames common across
-            resources must be prefixed Example: timestamp field is common
-            across workflow, and workflow state so it must be prefixed as
-            <emphasis role="bold">w.timestamp</emphasis> or <emphasis
-            role="bold">ws.timestamp</emphasis> when used in query
-            clause.</para>
+            <para>&lt;FIELDNAME&gt; must be prefixed with resource query
+            prefix Example: <emphasis role="bold"><emphasis
+            role="bold">r.</emphasis>wf_id</emphasis> is valid, but <emphasis
+            role="bold">wf_id</emphasis> is not.</para>
           </listitem>
 
           <listitem>
             <para>&lt;FIELDNAMES&gt; which can be used in a query caluse
-            depends on the context. Example: For endpoint
+            depends on the resource being queries. Example: For endpoint
             /api/v1/user/user-a/root/1/<emphasis
             role="bold">workflow</emphasis>/1/<emphasis
             role="bold">job</emphasis>/2/<emphasis
             role="bold">state</emphasis> query clause can only contain fields
-            of resources <link linkend="resource-workflow">Workflow</link>,
-            <link linkend="resource-job">Job</link>, and <link
-            linkend="resource-job-state">Job State</link>. In simpler terms
-            query's context are the resources as referenced in the endpoint.
-            For context of each query refer to Context section included in the
-            <link linkend="section-endpoints">Endpoints</link> section.</para>
+            of <link linkend="resource-job-state">Job State</link> resource.
+            Only exception for this is when querying Root Workflow fields from
+            both <link linkend="resource-root-workflow">Root Workflow</link>
+            and <link linkend="resource-workflow-state">Workflow State</link>
+            can be included.</para>
           </listitem>
         </itemizedlist>
 
@@ -3429,7 +3349,7 @@ Response</emphasis>
 
         <para><programlisting><emphasis role="bold"><emphasis role="bold">For Root Workflow https://www.domain.com/api/v1/user/user-a/root?query&lt;QUERY&gt;
 
-Where QUERY can be( r.wf_id &gt;= 5 AND planner_version LIKE '4.5%' ) OR ( r.wf_id IN ( 1, 2 ) )
+Where QUERY can be( r.wf_id &gt;= 5 AND r.planner_version LIKE '4.5%' ) OR ( r.wf_id IN ( 1, 2 ) )
 </emphasis></emphasis></programlisting></para>
       </section>
 
@@ -3532,15 +3452,9 @@ Where QUERY can be( r.wf_id &gt;= 5 AND planner_version LIKE '4.5%' ) OR ( r.wf_
         historical records.</para>
 
         <para>For use cases where developers need to get the most recent
-        record, we set query argument <emphasis role="bold">`recent`
-        </emphasis> to true. Recent argument is always true when requesting
-        for root-workflow's resource.</para>
-
-        <para>For usage see Advanced Queries.</para>
-      </section>
-
-      <section>
-        <title>Advanced Queries</title>
+        record, we set <emphasis role="bold">path</emphasis> argument
+        <emphasis role="bold">`recent` </emphasis> to true. Recent argument is
+        always true when requesting for root-workflow's resource.</para>
       </section>
     </section>
 
@@ -3601,7 +3515,7 @@ HTTP/1.1 200 OK
     "dax_version"       : "3.5",
     "dax_file"          : "/home/tutorial/hello-world.xml",
     "dag_file_name"     : "hello_world-0.dag",
-    "timestamp"         : 1421432530,
+    "timestamp"         : 1421432530.0,
     "_links"            : {
         "workflow_state" : "/user/user-a/root/1/workflow/1/state",
         "job"            : "/user/user-a/root/1/workflow/1/job",
@@ -3638,7 +3552,7 @@ HTTP/1.1 200 OK
             "dax_version"       : "3.5",
             "dax_file"          : "/home/tutorial/hello-world.xml",
             "dag_file_name"     : "hello_world-0.dag",
-            "timestamp"         : 1421432530,
+            "timestamp"         : 1421432530.0,
             "_links"            : {
                 "workflow_state" : "/user/user-a/root/1/workflow/1/state",
                 "job"            : "/user/user-a/root/1/workflow/1/job",
@@ -3662,7 +3576,7 @@ HTTP/1.1 200 OK
             "dax_version"       : "3.5",
             "dax_file"          : "/home/tutorial/hello-world.xml",
             "dag_file_name"     : "hello_world-0.dag",
-            "timestamp"         : 1427759551,
+            "timestamp"         : 1427759551.0,
             "_links"            : {
                 "workflow_state" : "/user/user-a/root/2/workflow/1/state",
                 "job"            : "/user/user-a/root/2/workflow/1/job",
@@ -3686,7 +3600,7 @@ HTTP/1.1 200 OK
             "dax_version"       : "3.5",
             "dax_file"          : "/home/tutorial/hello-world.xml",
             "dag_file_name"     : "hello_world-0.dag",
-            "timestamp"         : 1427760148,
+            "timestamp"         : 1427760148.0,
             "_links"            : {
                 "workflow_state" : "/user/user-a/root/3/workflow/1/state",
                 "job"            : "/user/user-a/root/3/workflow/1/job",
@@ -3730,7 +3644,7 @@ HTTP/1.1 200 OK
             "dax_version"       : "3.5",
             "dax_file"          : "/home/tutorial/hello-world.xml",
             "dag_file_name"     : "hello_world-0.dag",
-            "timestamp"         : 1427759551,
+            "timestamp"         : 1427759551.0,
             "_links"            : {
                 "workflow_state" : "/user/user-a/root/2/workflow/1/state",
                 "job"            : "/user/user-a/root/2/workflow/1/job",
@@ -3745,6 +3659,126 @@ HTTP/1.1 200 OK
         "records_filtered" : 1
     }
 }</programlisting>
+      </section>
+
+      <section>
+        <title>Ordering</title>
+
+        <para><programlisting><emphasis role="bold">$ curl --request GET \
+       --user user-a:user-a-password \
+       https://www.domain.com/api/v1/user/user-a/root/1/workflow?pretty-print=true&amp;order=wf_id desc
+                    </emphasis>
+HTTP/1.1 200 OK
+
+{
+    "records" : [
+        {
+            "wf_id"             : 3,
+            "root_wf_id"        : 3,
+            "parent_wf_id"      : null,
+            "wf_uuid"           : "fce67b41-df67-4b3c-8fa4-d77e6e2b9769",
+            "submit_hostname"   : "isis.isi.edu",
+            "submit_dir"        : "/home/tutorial/dags/20150330T170228-0700",
+            "planner_arguments" : "--conf pegasusrc --sites condorpool --output-site local --dir dags --dax dax.xml --submit",
+            "planner_version"   : "4.5.0cvs",
+            "user"              : "user-a",
+            "grid_dn"           : null,
+            "dax_label"         : "hello_world",
+            "dax_version"       : "3.5",
+            "dax_file"          : "/home/tutorial/hello-world.xml",
+            "dag_file_name"     : "hello_world-0.dag",
+            "timestamp"         : 1427760148.0,
+            "_links"            : {
+                "workflow_state" : "/user/user-a/root/3/workflow/1/state",
+                "job"            : "/user/user-a/root/3/workflow/1/job",
+                "task"           : "/user/user-a/root/3/workflow/1/task",
+                "host"           : "/user/user-a/root/3/workflow/1/host",
+                "invocation"     : "/user/user-a/root/3/workflow/1/job"
+            }
+        },
+        {
+            "wf_id"             : 2,
+            "root_wf_id"        : 2,
+            "parent_wf_id"      : null,
+            "wf_uuid"           : "41920a57-7882-4990-854e-658b7a797745",
+            "submit_hostname"   : "isis.isi.edu",
+            "submit_dir"        : "/home/tutorial/dags/20150330T165231-0700",
+            "planner_arguments" : "--conf pegasusrc --sites condorpool --output-site local --dir dags --dax dax.xml --submit",
+            "planner_version"   : "4.5.0cvs",
+            "user"              : "user-a",
+            "grid_dn"           : null,
+            "dax_label"         : "hello_world",
+            "dax_version"       : "3.5",
+            "dax_file"          : "/home/tutorial/hello-world.xml",
+            "dag_file_name"     : "hello_world-0.dag",
+            "timestamp"         : 1427759551.0,
+            "_links"            : {
+                "workflow_state" : "/user/user-a/root/2/workflow/1/state",
+                "job"            : "/user/user-a/root/2/workflow/1/job",
+                "task"           : "/user/user-a/root/2/workflow/1/task",
+                "host"           : "/user/user-a/root/2/workflow/1/host",
+                "invocation"     : "/user/user-a/root/2/workflow/1/job"
+            }
+        },
+        {
+            "wf_id"             : 1,
+            "root_wf_id"        : 1,
+            "parent_wf_id"      : null,
+            "wf_uuid"           : "7193de8c-a28d-4eca-b576-1b1c3c4f668b",
+            "submit_hostname"   : "isis.isi.edu",
+            "submit_dir"        : "/home/tutorial/dags/20150116T102210-0800",
+            "planner_arguments" : "--conf pegasusrc --sites condorpool --output-site local --dir dags  --dax dax.xml --submit",
+            "planner_version"   : "4.5.0cvs",
+            "user"              : "user-a",
+            "grid_dn"           : null,
+            "dax_label"         : "hello_world",
+            "dax_version"       : "3.5",
+            "dax_file"          : "/home/tutorial/hello-world.xml",
+            "dag_file_name"     : "hello_world-0.dag",
+            "timestamp"         : 1421432530.0,
+            "_links"            : {
+                "workflow_state" : "/user/user-a/root/1/workflow/1/state",
+                "job"            : "/user/user-a/root/1/workflow/1/job",
+                "task"           : "/user/user-a/root/1/workflow/1/task",
+                "host"           : "/user/user-a/root/1/workflow/1/host",
+                "invocation"     : "/user/user-a/root/1/workflow/1/job"
+            }
+        }
+    ],
+    "_meta"   : {
+        "records_total"    : 3,
+        "records_filtered" : 3
+    }
+}</programlisting></para>
+      </section>
+
+      <section>
+        <title>Recent</title>
+
+        <para><programlisting><emphasis role="bold">$ curl --request GET \
+       --user user-a:user-a-password \
+       https://www.domain.com/api/v1/user/mayani/root/1/workflow/1/state;recent=true?pretty-print=true
+                    </emphasis>
+HTTP/1.1 200 OK
+
+{
+    "records": [
+        {
+            "wf_id": 1,
+            "state": "WORKFLOW_TERMINATED",
+            "status": 1,
+            "restart_count": 3,
+            "timestamp": 1421885063.0,
+            "_links": {
+                "workflow": "/api/v1/user/mayani/root/1/workflow/1"
+            }
+        }
+    ],
+    "_meta": {
+        "records_total": 8,
+        "records_filtered": 1
+    }
+}</programlisting></para>
       </section>
     </section>
   </section>

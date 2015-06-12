@@ -236,11 +236,12 @@ public class DAXParser2 extends Parser implements DAXParser {
     private String mDAGLFN;
 
     /**
-     * The default constructor
+     * The overloaded constructor.
      *
-     * @param bag   the bag of objects that is useful for initialization.
+     * @param bag
+     * @param schemaVersion
      */
-    public DAXParser2( PegasusBag bag ) { //default constructor
+    public DAXParser2( PegasusBag bag, String schemaVersion  ) {
         super( bag );
         
         

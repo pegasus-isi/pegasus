@@ -1,0 +1,28 @@
+{% extends "base-error.html" %}
+{% block title %}Error{% endblock %}
+{% block title_header %}Unknown Error{% endblock %}
+{% block navigation_bar %}-{% endblock %}
+{% block content %}
+<section class="row">
+    <div class="col-xs-12">
+        <h3>Error Message</h3>
+        <hr/>
+        <div>
+            {{ error }}
+        </div>
+
+        <h3>
+            Possible Alternatives
+        </h3>
+        <hr/>
+        <ul>
+            <li>
+                Please try again later.
+            </li>
+            <li>
+                Please contact an administrator, if you feel the message is shown erroneously.
+            </li>
+        </ul>
+    </div>
+</section>
+{% endblock %}

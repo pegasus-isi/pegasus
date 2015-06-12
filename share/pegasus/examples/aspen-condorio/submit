@@ -1,0 +1,28 @@
+#!/bin/bash
+
+set -e
+
+# this variable is expanded by the planner when
+# parsing in the sites.xml file in the conf directory
+TOPDIR=`pwd`
+export TOPDIR
+
+# pegasus bin directory is needed to find keg
+BIN_DIR=`pegasus-config --bin`
+
+# generate the input file
+echo "This is sample input to KEG" >f.a
+
+# generate the dax
+export PYTHONPATH=`pegasus-config --python`
+./aspen.py $BIN_DIR > aspen.dax
+
+# plan and submit the  workflow
+pegasus-plan \
+    --conf ./conf/pegasusrc \
+    --sites condorpool \
+    --output-site local \
+    --dir dags \
+    --dax aspen.dax \
+    -v \
+    --submit

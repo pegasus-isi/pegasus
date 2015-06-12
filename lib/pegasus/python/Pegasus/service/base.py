@@ -128,7 +128,7 @@ class BaseQueryParser(object):
         digit = Range('09')
         prefix = letter + Rep(letter) + Str('.')
 
-        identifier = Opt(prefix) + letter + Rep(letter | digit | Str('_'))
+        identifier = prefix + letter + Rep(letter | digit | Str('_'))
         comparators = NoCase(Str('=', '!=', '<', '<=', '>', '>=', 'like', 'in'))
         string_literal = Str('\'') + Rep(AnyBut('\'') | Str(' ') | Str("\\'")) + Str('\'')
         integer_literal = Opt(Str('+', '-')) + Rep1(digit)
@@ -308,8 +308,13 @@ class BaseQueryParser(object):
     def identifier_handler(self, text):
         if self._state == 0:
             self._condition[0] = text
-            self._state = 1
             self._identifiers.add(text)
+            self._state = 1
+        elif self._state == 2:
+            self._condition[2] = ('I', text)
+            self._postfix_result.append(tuple(self._condition))
+            self._identifiers.add(text)
+            self._state = 0
         else:
             file, line, char_pos = self._scanner.position()
             msg = 'Field %r found out of order: Line: %d Char: %d' % (text, line, char_pos)
@@ -482,9 +487,14 @@ class BaseResource(object):
 
         return mapped_fields
 
-    def get_mapped_field(self, field, alias=None):
+    def get_mapped_field(self, field, alias=None, ignore_prefix=False):
         resource = alias if alias else self._resource
-        suffix = self._get_suffix(field)
+        suffix = self._split_identifier(field)
+        if len(suffix) == 2:
+            suffix = field if ignore_prefix is False and suffix[0] != self.prefix else suffix[1]
+
+        else:
+            suffix = suffix[0]
 
         return getattr(resource, suffix)
 

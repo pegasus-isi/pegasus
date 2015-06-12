@@ -25,11 +25,19 @@ $(document).ready (function ()
             <col width="25%">
             <tr>
                 <th>Task Label</th>
-                <td>{{ task_id }}</td>
+                <td>{{ invocation.abs_task_id }}</td>
             </tr>
             <tr>
                 <th>Transformation</th>
                 <td>{{ invocation.transformation }}</td>
+            </tr>
+            <tr>
+                <th>Working Directory</th>
+                <td class="text-nowrap">
+                    <button class="copy-button" data-clipboard-text="{{ invocation.work_dir }}">
+                    </button>
+                    {{ invocation.work_dir }}
+                </td>
             </tr>
             <tr>
                 <th>Executable</th>

@@ -138,9 +138,10 @@ public class DAXParserFactory {
             throw new RuntimeException("Invalid logger passed");
         }
 
+        //try to figure out the schema version by parsing the dax file
+        String schemaVersion = null;
+            
         try{
-            //try to figure out the schema version by parsing the dax file
-            String schemaVersion = null;
             if( daxFile != null && !daxFile.isEmpty() ){
                 Map m = getDAXMetadata( bag, daxFile );
                 if( m.containsKey( "version" ) && (schemaVersion = (String)m.get( "version" )) != null  ){
@@ -148,10 +149,6 @@ public class DAXParserFactory {
                     logger.log( "DAX Version as determined from DAX file " + schemaVersion,
                             LogManager.DEBUG_MESSAGE_LEVEL );
                     
-                    //append .0 to the version number
-                    //to be able to convert to numberic value
-                    schemaVersion = schemaVersion + ".0";
-                
                     
                 }
             }
@@ -169,21 +166,23 @@ public class DAXParserFactory {
                     logger.log( "DAX Version as determined from schema property " + schemaVersion,
                         LogManager.DEBUG_MESSAGE_LEVEL );
                     
-                    //append .0 to the version number
-                    //to be able to convert to numberic value
-                    schemaVersion = schemaVersion + ".0";
-        
+                    
                 }            
             }
-        
-           if( schemaVersion != null ){
-                   if( CondorVersion.numericValue(schemaVersion) < DAXParserFactory.DAX_VERSION_3_2_0 ){
-                        daxClass = DAXParserFactory.DAX_PARSER2_CLASS;
-                    }
-                    else{
-                        daxClass = DAXParserFactory.DAX_PARSER3_CLASS;
-                    }
+            
+            if( schemaVersion == null ){
+                throw new DAXParserFactoryException( "Unable to determine the DAX version from the DAX " + daxFile );
             }
+        
+            //append .0 to the version number
+            //to be able to convert to numberic value
+            if( CondorVersion.numericValue(  schemaVersion + ".0" ) < DAXParserFactory.DAX_VERSION_3_2_0 ){
+                 daxClass = DAXParserFactory.DAX_PARSER2_CLASS;
+             }
+             else{
+                 daxClass = DAXParserFactory.DAX_PARSER3_CLASS;
+             }
+
         }
         catch( Exception e ){
             logger.log( "Problem while determining the version of dax" , e,
@@ -193,7 +192,7 @@ public class DAXParserFactory {
                         LogManager.CONFIG_MESSAGE_LEVEL );
         
 
-        return loadDAXParser( daxClass, bag, c );
+        return loadDAXParser( daxClass, schemaVersion, bag, c );
     }
     
     /**
@@ -201,6 +200,7 @@ public class DAXParserFactory {
      * the user.
      *
      * @param classname    the classname of the parser class that needs to be loaded
+     * @param schemaVersion the schema version as determined from the DAX
      * @param bag          bag of Pegasus intialization objects
      * @param c            the DAX Callback to use
      *
@@ -211,7 +211,7 @@ public class DAXParserFactory {
      *
      * @see #DEFAULT_CALLBACK_PACKAGE_NAME
      */
-    public static final DAXParser loadDAXParser( String classname, PegasusBag bag, Callback c ){
+    private static final DAXParser loadDAXParser( String classname, String schemaVersion, PegasusBag bag, Callback c ){
         DAXParser daxParser = null;
         try{
             //load the DAX Parser class
@@ -223,9 +223,10 @@ public class DAXParserFactory {
                         classname;
 
             DynamicLoader dl  = new DynamicLoader( daxClass );
-            Object argList[]  = new Object[1];
+            Object argList[]  = new Object[2];
             argList[0] = bag;
-            daxParser = (DAXParser)dl.instantiate(argList);
+            argList[1] = schemaVersion;
+            daxParser = (DAXParser)dl.instantiate( argList  );
 
             //set the callback for the DAX Parser
             ((DAXParser)daxParser).setDAXCallback( c );
@@ -295,6 +296,7 @@ public class DAXParserFactory {
         
         try{
             Parser p = (Parser)DAXParserFactory.loadDAXParser( DAXParserFactory.DAX_PARSER2_CLASS,
+                                                               "2.0",
                                                                bag,
                                                                cb );
             

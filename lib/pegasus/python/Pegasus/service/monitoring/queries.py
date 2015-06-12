@@ -145,6 +145,10 @@ class WorkflowQueries(SQLAlchemyInit):
 
             for token in expression:
                 if isinstance(token, tuple):
+                    if isinstance(token[2], tuple):
+                        identifier = token[2][1]
+                        token = (token[0], token[1], resource.get_mapped_field(token[2][1]))
+
                     identifier = token[0]
                     condition_expansion(token, resource.get_mapped_field(identifier))
 
@@ -178,7 +182,7 @@ class WorkflowQueries(SQLAlchemyInit):
 
         for identifier, sort_dir in sort_order:
             try:
-                field = resource.get_mapped_field(identifier)
+                field = resource.get_mapped_field(identifier, ignore_prefix=True)
 
                 if sort_dir == 'ASC':
                     q = q.order_by(field)
@@ -266,7 +270,7 @@ class MasterWorkflowQueries(WorkflowQueries):
 
             if total_filtered == 0 or (start_index and start_index >= total_filtered):
                 log.debug('total_filtered is 0 or start_index >= total_filtered')
-                return [], total_records, total_filtered
+                return PagedResponse([], total_records, total_filtered)
 
         #
         # Construct SQLAlchemy Query `q` to sort

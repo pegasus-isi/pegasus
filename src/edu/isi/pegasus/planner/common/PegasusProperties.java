@@ -183,6 +183,7 @@ public class PegasusProperties implements Cloneable {
      */
     public static final String DEFAULT_DAGMAN_MAX_PRE_VALUE = "1";
 
+    
 
     /**
      * An enum defining The scope for cleanup algorithm
@@ -2452,6 +2453,18 @@ public class PegasusProperties implements Cloneable {
      */
     public String getClustererLabelKey(){
         return mProps.getProperty( "pegasus.clusterer.label.key");
+    }
+
+    /**
+     * Returns the estimator to be used
+     * 
+     * Referred to by the "pegasus.estimator" property
+     * 
+     * @return value specified else null
+     */
+    public String getEstimator() {
+        
+        return mProps.getProperty( "pegasus.estimator");
     }
 
 

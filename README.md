@@ -5,7 +5,7 @@ Pegasus Workflow Management System
 
 Before you try to run anything, you might want to make sure that your
 environment works. We depend on a number of packages that you need to have
-installed: Condor 7.4+, Java 1.6+, Python 2.4+, Perl 5.6+, and optionally
+installed: Condor 7.4+, Java 1.6+, Python 2.6/2.7, Perl 5.6+, and optionally
 Globus Toolkit 4.2+.
 
 Please refer to the RELEASE_NOTES for important changes. For instance, it is no
@@ -28,7 +28,7 @@ for more information about installing Pegasus from binary packages.
 Pegasus requires the following software to be installed on your system:
 
 * Java 1.6 or later
-* Python 2.4 or later (2.5 or later preferred)
+* Python 2.6 or 2.7
 * Condor 8.0 or later
 * Perl 5
 * Globus 5 (optional, required for GRAM and GridFTP)
@@ -74,9 +74,17 @@ Install the following packages using yum:
 * gcc-c++
 * make
 * python-devel
+* openssl-devel
 * rpm-build (optional, required to build RPM package)
 * mysql-devel (optional, required to access MySQL databases)
 * postgresql-devel (optional, required to access PostgreSQL databases)
+
+In addition, RHEL 5 systems will require Python 2.6, which can be
+installed from EPEL. You will also need to install the right setuptools
+for Python 2.6, which can be installed from the Python Package Index using:
+
+    wget http://pypi.python.org/packages/2.6/s/setuptools/setuptools-0.6c9-py2.6.egg#md5=ca37b1ff16fa2ede6e19383e7b59245a
+    sudo /bin/sh setuptools-0.6c9-py2.6.egg
 
 #### Mac OS X
 

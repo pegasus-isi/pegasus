@@ -154,16 +154,12 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
         rv = self.get_context("/api/v1/user/%s/root?query=submit_hostname like '%%.edu'&order=wf_id ASC" % self.user,
                               pre_callable=self.pre_callable)
 
-        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.status_code, 400)
         self.assertEqual(rv.content_type.lower(), 'application/json')
-
-        root_workflows = self.read_json_response(rv)
-
-        self.assertEqual(root_workflows['records'][0]['wf_id'], 1)
 
     def test_complex_query(self):
         rv = self.get_context(
-            '/api/v1/user/%s/root?query=r.wf_id = 1 OR (r.wf_id = 2 AND grid_dn = NULL)&order=wf_id asc' % self.user,
+            '/api/v1/user/%s/root?query=r.wf_id = 1 OR (r.wf_id = 2 AND r.grid_dn = NULL)&order=wf_id asc' % self.user,
             pre_callable=self.pre_callable)
 
         self.assertEqual(rv.status_code, 200)
@@ -172,6 +168,19 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
         root_workflows = self.read_json_response(rv)
 
         self.assertEqual(len(root_workflows['records']), 2)
+        self.assertEqual(root_workflows['records'][0]['wf_id'], 1)
+        self.assertEqual(root_workflows['records'][1]['wf_id'], 2)
+
+    def test_complex_query_2(self):
+        rv = self.get_context('/api/v1/user/%s/root?query=r.wf_id < r.timestamp&order=wf_id asc' % self.user,
+                              pre_callable=self.pre_callable)
+
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.content_type.lower(), 'application/json')
+
+        root_workflows = self.read_json_response(rv)
+
+        self.assertEqual(len(root_workflows['records']), 5)
         self.assertEqual(root_workflows['records'][0]['wf_id'], 1)
         self.assertEqual(root_workflows['records'][1]['wf_id'], 2)
 
