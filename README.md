@@ -99,6 +99,24 @@ Install homebrew and the following homebrew packages:
 * mysql (optional, required to access MySQL databases)
 * postgresql (optional, required to access PostgreSQL databases)
 
+#### SUSE (openSUSE, SLES)
+
+Install the following packages:
+
+* git
+* ant
+* make
+* gcc
+* gcc-c++
+* sqlite3
+* python
+* python-setuptools
+* python-devel
+* openssl-devel
+
+Other packages may be required to build documentation, run unit tests, and
+build MPI tools.
+
 ### Compiling
 
 Ant is used to compile Pegasus.

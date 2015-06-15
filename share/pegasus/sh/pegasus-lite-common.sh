@@ -259,6 +259,9 @@ function pegasus_lite_get_system()
         elif [ -e /etc/rocks-release ]; then
             osname="rhel"
             osversion=`cat /etc/rocks-release | grep -o -E ' [0-9]+.[0-9]+'`
+        elif [ -e /etc/SuSE-release ]; then
+            osname="suse"
+            osversion=`cat /etc/SuSE-release | grep VERSION | grep -o -E ' [0-9]+'`
         fi
         
         # remove spaces/tabs in the version

@@ -1,14 +1,14 @@
 #!/bin/bash
 
 # This script figures out the location of the system lib directory.
-# On some system (RHEL based), the correct location on 64 bit systems
+# On some systems (RHEL, or SuSE), the correct location on 64 bit systems
 # is "lib64". The default is "lib".
 
 LIB_DIR="lib"
 
 # limit this check to RHEL based systems - those are the only ones
 # we know of which have this problem
-if [ -e "/etc/redhat-release" ]; then
+if [ -e "/etc/redhat-release" ] || [ -e "/etc/SuSE-release" ]; then
     if [ -d "/usr/lib64" ]; then
         # ok, but only if it is not a symlink
         if [ ! -L "/usr/lib64" ]; then
