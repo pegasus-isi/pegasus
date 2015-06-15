@@ -211,7 +211,7 @@ static void* timer_thread_func(void* mpi_rank_void) {
     time_t timestamp;
     int interval;
     int mpi_rank = atoi( (char*) mpi_rank_void ) + 1;
-    char *exec_name = read_exe(), *kickstart_pid, hostname[BUFSIZ], *job_id, *envptr;
+    char *exec_name, *kickstart_pid, hostname[BUFSIZ], *job_id, *envptr;
 
     envptr = getenv("KICKSTART_MON_INTERVAL");
 
@@ -255,6 +255,7 @@ static void* timer_thread_func(void* mpi_rank_void) {
         CpuUtilInfo cpu_info = read_cpu_status();
         MemUtilInfo mem_info = read_mem_status();
         IoUtilInfo io_info = read_io_status();
+        exec_name = read_exe();
 
 //        printerr("libinterpose: ts=%d event=workflow_trace level=INFO status=0 "
 //                    "job_id=%s kickstart_pid=%s executable=%s hostname=%s mpi_rank=%d utime=%.3f stime=%.3f "
@@ -278,13 +279,13 @@ static void* timer_thread_func(void* mpi_rank_void) {
             io_info.rchar, io_info.wchar, io_info.syscr, io_info.syscw);
 
         fflush(kickstart_status);
+
+        if(exec_name != NULL) {
+            free(exec_name);
+        }
     }
 
     fclose(kickstart_status);
-    
-    if(exec_name != NULL) {
-        free(exec_name);
-    }
 
     pthread_exit(NULL);
     return NULL;
