@@ -5,6 +5,7 @@ ifndef $(prefix)
 endif
 
 PYTHON=$(shell $(CURDIR)/../../release-tools/get-system-python)
+OSID=$(shell $(CURDIR)/../../release-tools/getosid)
 
 EXTDIR=$(prefix)/lib/pegasus/externals
 LIBDIR=$(EXTDIR)/python
@@ -64,7 +65,13 @@ $(LIBDIR)/requests: requests-1.2.3.tar.gz
 $(LIBDIR)/itsdangerous.py: itsdangerous-0.21.tar.gz
 $(LIBDIR)/boto: boto-2.5.2.tar.gz
 $(LIBDIR)/pam.py: pam-0.1.4.tar.gz
-$(LIBDIR)/OpenSSL: pyOpenSSL-0.12.tar.gz
+ifeq ($(OSID),rhel5)
+    # 0.13 does not work on rhel5
+    $(LIBDIR)/OpenSSL: pyOpenSSL-0.12.tar.gz
+else
+    # 0.12 does not work on deb7 because of missing SSLv2_method
+    $(LIBDIR)/OpenSSL: pyOpenSSL-0.13.tar.gz
+endif
 $(LIBDIR)/plex: plex-2.0.0dev.tar.gz
 $(LIBDIR)/MySQLdb: MySQL-python-1.2.5.tar.gz
 $(LIBDIR)/psycopg2: psycopg2-2.5.5.tar.gz
