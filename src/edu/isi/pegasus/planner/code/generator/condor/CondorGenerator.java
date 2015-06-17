@@ -17,8 +17,6 @@
 
 package edu.isi.pegasus.planner.code.generator.condor;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import edu.isi.pegasus.common.logging.LoggingKeys;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
@@ -61,6 +59,16 @@ import edu.isi.pegasus.planner.namespace.ENV;
 
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import org.griphyn.vdl.euryale.VTorInUseException;
+
+import java.lang.reflect.Type;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.TypeAdapter;
+import com.google.gson.reflect.TypeToken;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+import edu.isi.pegasus.planner.classes.Profile;
+
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -1183,10 +1191,13 @@ public class CondorGenerator extends Abstract {
         Writer stream = null;
         try {
             stream = new PrintWriter( new BufferedWriter ( new FileWriter( filename ) ) );
-            Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create();
-            stream.write( gson.toJson( dag ) );      
-            
+            GsonBuilder builder =  new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting();
+            builder.registerTypeAdapter( GraphNode.class, new GraphNodeGSONAdapter()).create();
+            Gson gson = builder.create();
+            String json = gson.toJson( dag );
+            stream.write( json );      
 
+            
         } catch (Exception e) {
             throw new CodeGeneratorException( "While writing to DOT FILE " + filename,
                                               e);
@@ -2014,3 +2025,32 @@ public class CondorGenerator extends Abstract {
 
   
 }
+
+class GraphNodeGSONAdapter extends TypeAdapter<GraphNode> {
+
+    @Override
+    public void write(JsonWriter writer, GraphNode node) throws IOException {
+        writer.beginObject();   
+        Object content = node.getContent();
+        if( content instanceof Job ){
+            Job job = (Job)content;
+        
+            if( !job.mMetadataAttributes.isEmpty() ){
+                for( Iterator it = job.mMetadataAttributes.getProfileKeyIterator(); it.hasNext(); ){
+                    String key = (String) it.next();
+                    writer.name(  key );
+                    writer.value((String) job.mMetadataAttributes.get(key));
+                }
+            }
+        }  
+            
+        writer.endObject();     
+    }
+
+   
+    @Override
+    public GraphNode read(JsonReader reader) throws IOException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+}
+
