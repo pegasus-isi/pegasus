@@ -68,6 +68,7 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import edu.isi.pegasus.planner.classes.Profile;
+import edu.isi.pegasus.planner.namespace.Metadata;
 
 
 import java.io.BufferedWriter;
@@ -2034,12 +2035,12 @@ class GraphNodeGSONAdapter extends TypeAdapter<GraphNode> {
         Object content = node.getContent();
         if( content instanceof Job ){
             Job job = (Job)content;
-        
-            if( !job.mMetadataAttributes.isEmpty() ){
-                for( Iterator it = job.mMetadataAttributes.getProfileKeyIterator(); it.hasNext(); ){
+            Metadata m = (Metadata) job.getMetadata();
+            if( !job.getMetadata().isEmpty() ){
+                for( Iterator it = m.getProfileKeyIterator(); it.hasNext(); ){
                     String key = (String) it.next();
                     writer.name(  key );
-                    writer.value((String) job.mMetadataAttributes.get(key));
+                    writer.value((String) m.get(key));
                 }
             }
         }  
