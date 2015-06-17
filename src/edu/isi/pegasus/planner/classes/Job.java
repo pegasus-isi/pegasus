@@ -2116,6 +2116,16 @@ public class Job extends Data implements GraphNodeContent{
     }
 
     /**
+     * Convenience method to add metadata to the job
+     * 
+     * @param key
+     * @param value 
+     */
+    public void addMetadata( String key, String value ){
+       this.addProfile( new Profile( Metadata.NAMESPACE_NAME, key, value ));
+    }
+    
+    /**
      * Adds a profile to the job object
      *
      * @param p  the profile to be added

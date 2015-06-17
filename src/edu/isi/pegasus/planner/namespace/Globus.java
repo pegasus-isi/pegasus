@@ -55,6 +55,11 @@ public class Globus extends Namespace {
      * Key indicating max walltime for a job.
      */
     public static final String  MAX_WALLTIME = "maxwalltime";
+    
+    /**
+     * Key indicating the maximum memory used.
+     */
+    public static final String MAX_MEMORY = "maxmemory";
 
     /**
      * The table that maps the various globus profile keys to their aggregator
