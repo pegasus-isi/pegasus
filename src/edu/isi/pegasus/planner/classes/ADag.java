@@ -16,6 +16,8 @@
 
 package edu.isi.pegasus.planner.classes;
 
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.dax.Invoke;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
@@ -86,11 +88,13 @@ public class ADag extends Data implements Graph{
     /**
      * The Root Workflow UUID.
      */
+    @Expose @SerializedName( "root_workflow_uuid" )
     protected String mRootWorkflowUUID;
     
     /**
      * The UUID associated with the workflow.
      */
+    @Expose @SerializedName( "workflow_uuid" )
     protected String mWorkflowUUID;
     
     /**
@@ -107,6 +111,7 @@ public class ADag extends Data implements Graph{
     /**
      * Handle to the Graph implementor.
      */
+    @Expose @SerializedName( "graph" )
     private Graph mGraphImplementor;
     
     /**

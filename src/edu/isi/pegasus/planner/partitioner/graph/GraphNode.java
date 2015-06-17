@@ -16,6 +16,8 @@
 
 package edu.isi.pegasus.planner.partitioner.graph;
 
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import edu.isi.pegasus.planner.classes.Data;
 import java.util.Collection;
 import java.util.HashSet;
@@ -73,6 +75,7 @@ public class GraphNode extends Data {
     /**
      * The content associated with this node.
      */
+    @Expose @SerializedName( "content" )
     private GraphNodeContent mContent;
 
     /**

@@ -17,6 +17,8 @@
 
 package edu.isi.pegasus.planner.code.generator.condor;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import edu.isi.pegasus.common.logging.LoggingKeys;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
@@ -537,6 +539,8 @@ public class CondorGenerator extends Abstract {
         mLogger.log( "Writing out the DOT file ", LogManager.DEBUG_MESSAGE_LEVEL );
         this.writeDOTFile( getDAGFilename( dag, ".dot"), dag );
 
+        this.writeMetadataFile( getDAGFilename( dag, ".metadata"), dag );
+        
         /*
         //we no longer write out the job.map file
         //write out the netlogger file
@@ -1160,6 +1164,45 @@ public class CondorGenerator extends Abstract {
         }
 
     }
+    
+    /**
+     * Writes out the metadata file, containing the metadata associated with the 
+     * jobs in the submit directory in JSON
+     *
+     * @param filename  basename of medatadata file to be written .
+     * @param dag       the <code>ADag</code> object.
+     *
+     * @throws CodeGeneratorException in case of any error occuring code generation.
+     */
+    protected void writeMetadataFile( String filename, ADag dag )
+                                                       throws CodeGeneratorException{
+        // initialize file handler
+
+        filename = mSubmitFileDir + File.separator + filename;
+
+        Writer stream = null;
+        try {
+            stream = new PrintWriter( new BufferedWriter ( new FileWriter( filename ) ) );
+            Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create();
+            stream.write( gson.toJson( dag ) );      
+            
+
+        } catch (Exception e) {
+            throw new CodeGeneratorException( "While writing to DOT FILE " + filename,
+                                              e);
+        }
+        finally{
+            if( stream != null ){
+                try{
+                    stream.close();
+                }catch(Exception e ){
+                    
+                }
+            }
+        }
+
+    }
+
 
     /**
      * Writes out the job map file in the submit directory.

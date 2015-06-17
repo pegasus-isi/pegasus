@@ -17,6 +17,8 @@
 
 package edu.isi.pegasus.planner.partitioner.graph;
 
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import java.util.Collection;
@@ -42,6 +44,7 @@ public class MapGraph implements Graph{
      * <code>GraphNode</code> of the class.
      *
      */
+    @Expose @SerializedName( "jobs" )
     protected Map mStore;
 
     /**
