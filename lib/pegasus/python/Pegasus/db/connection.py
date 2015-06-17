@@ -91,7 +91,7 @@ def url_by_submitdir(submit_dir, db_type, config_properties=None, top_dir=None):
     
     # Return if we cannot parse the braindump.txt file
     if not top_level_wf_params:
-        raise ConnectionError("Unable to process braindump.txt in %s" % (submit_dir))
+        raise ConnectionError("File 'braindump.txt' not found in %s" % (submit_dir))
     
     # Load the top-level braindump now if top_dir is not None
     if top_dir is not None:
@@ -100,8 +100,7 @@ def url_by_submitdir(submit_dir, db_type, config_properties=None, top_dir=None):
 
         # Return if we cannot parse the braindump.txt file
         if not top_level_wf_params:
-            logger.error("Unable to process braindump.txt in %s" % (top_dir))
-            raise ConnectionError("Unable to process braindump.txt in %s" % (top_dir))
+            raise ConnectionError("File 'braindump.txt' not found in %s" % (top_dir))
     
     # Get the location of the properties file from braindump
     top_level_prop_file = None
