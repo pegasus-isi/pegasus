@@ -12,7 +12,6 @@ from Pegasus.monitoring import event_output as eo
 
 
 class OnlineMonitord:
-
     def __init__(self, wf_label, wf_uuid, dburi):
         print "[online-monitord] PEGASUS_WF_UUID: %s" % wf_uuid
         print "[online-monitord] PEGASUS_WF_LABEL: %s" % wf_label
@@ -25,9 +24,7 @@ class OnlineMonitord:
         self.wf_uuid = wf_uuid
         self.event_sink = eo.create_wf_event_sink(dburi)
 
-        self.aggregated_measurements = dict()
-        self.last_aggregated_data = dict()
-        self.retrieved_messages = dict()
+        self.aggregators = dict()
 
         self.mq_conn = None
         self.channel = None
@@ -85,10 +82,10 @@ class OnlineMonitord:
         :param body: raw body of the message
         :return:
         """
-        # if method_frame is not None:
-        #     print method_frame.delivery_tag
-        # print body
-        # print
+        if method_frame is not None:
+            print method_frame.delivery_tag
+        print body
+        print
 
         if len(body.split(" ")) < 2:
             print "The given measurement line is too short"
@@ -99,7 +96,7 @@ class OnlineMonitord:
         if message is not None:
             if self.client is not None:
                 try:
-                    self.client.write_points(message.to_influxdb_json())
+                    self.client.write_points(InfluxDbMessageFormatter.format_msg(message))
                 except Exception, err:
                     print "An error occured while sending monitoring measurement: "
                     print err
@@ -176,93 +173,50 @@ class OnlineMonitord:
         which describes a whole MPI job instead of its internal subprocesses.
         :param msg: a parsed mq message - MonitoringMessage object
         """
-        dag_job_id = msg.dag_job_id
-        mpi_rank = msg.mpi_rank
+        if msg.dag_job_id not in self.aggregators:
+            self.aggregators[msg.dag_job_id] = JobAggregator(msg)
 
-        # print "Msg metrics: ", msg.metrics()
-        # print "Msg measurements: ", msg.measurements()
+        aggregator = self.aggregators[msg.dag_job_id]
 
-        if dag_job_id not in self.retrieved_messages:
-            self.retrieved_messages[dag_job_id] = dict()
-            self.aggregated_measurements[dag_job_id] = [0] * len(msg.measurements())
-            self.last_aggregated_data[dag_job_id] = [0] * len(msg.measurements())
-
-        if mpi_rank in self.retrieved_messages[dag_job_id]:
+        if aggregator.repeated_mpi_rank(msg):
             # 1. check if aggregated measurements are ascending
-            for i, metric_value in enumerate(self.last_aggregated_data[dag_job_id]):
-                if self.aggregated_measurements[dag_job_id][i] < metric_value:
-                    self.aggregated_measurements[dag_job_id][i] = metric_value
-
+            aggregator.align_measurements()
             # 2. send the aggregated measurement to a timeseries db and stampede db
-            self.send_aggregated_measurement(self.aggregated_measurements[dag_job_id], msg)
-
+            self.send_aggregated_measurement(aggregator)
             # 3. save this measurement for future comparisons
-            for i, metric_value in enumerate(self.aggregated_measurements[dag_job_id]):
-                self.last_aggregated_data[dag_job_id][i] = metric_value
-
+            aggregator.store_measurements()
             # 4. reset aggregated measurements
-            self.retrieved_messages[dag_job_id] = dict()
-            self.aggregated_measurements[dag_job_id] = [0] * len(msg.measurements())
+            aggregator.reset_measurements()
 
-        self.retrieved_messages[dag_job_id][mpi_rank] = True
-        self.aggregate_measurement(dag_job_id, msg)
+        aggregator.add(msg)
 
-    # TODO not sure if this is fully correct
-    def aggregate_measurement(self, dag_job_id, msg):
-        "add metric values from this mpi rank to create an aggregated measurement for a job"
-        # print "We are adding measurements", measurement, "for", dag_job_id
-        if isinstance(msg, WorkflowTraceMessage):
-            for i, metric_value in enumerate(msg.measurements()):
-                # timestamp is set to the latest value
-                if i == 0:
-                    if self.aggregated_measurements[dag_job_id][i] < metric_value:
-                        self.aggregated_measurements[dag_job_id][i] = metric_value
-                    # other metrics are aggregated
-                else:
-                    self.aggregated_measurements[dag_job_id][i] += metric_value
-
-        elif isinstance(msg, DataTransferMessage):
-            for i, metric_value in enumerate(msg.measurements()):
-                # timestamp is set to the latest value
-                if i == 0:
-                    if self.aggregated_measurements[dag_job_id][i] < metric_value:
-                        self.aggregated_measurements[dag_job_id][i] = metric_value
-                else:
-                    self.aggregated_measurements[dag_job_id][i] += metric_value + self.last_aggregated_data[dag_job_id][i]
-
-
-    def send_aggregated_measurement(self, aggregated_measurements, message):
+    def send_aggregated_measurement(self, aggregator):
         if self.client is not None:
             try:
                 self.client.write_points(
-                    MonitoringMessage.get_influxdb_json(message.aggregated_trace_id(),
-                        message.metrics(),
-                        aggregated_measurements
-                    )
+                    InfluxDbMessageFormatter.format(aggregator.trace_id(),
+                                                    aggregator.metrics,
+                                                    aggregator.aggregated_measurements
+                                                    )
                 )
             except Exception, err:
                 print "An error occured while sending aggregated monitoring measurement: "
                 print err
 
         if self.event_sink is not None:
-            self.emit_measurement_event(aggregated_measurements, message)
+            self.emit_measurement_event(aggregator)
 
-    def emit_measurement_event(self, metrics_values, parsed_msg):
-        """
-        Sending an event to an event sink (stampede db most probably) about aggregated measurement.
-        :param metrics_values: a list of performance metrics values
-        :param parsed_msg: a parsed mq message
-        """
+    def emit_measurement_event(self, aggregator):
+        """Sending an event to an event sink (stampede db most probably) about aggregated measurement."""
         if self.event_sink is None:
             return
 
         kwargs = {}
-        kwargs.update(parsed_msg.aggregated_message_info())
+        kwargs.update(aggregator.message_info())
 
-        metrics_names = parsed_msg.metrics()
-        for i in range(len(metrics_names)):
-            attr_value = metrics_values[i]
-            column_name = metrics_names[i]
+        for idx, column_name in enumerate(aggregator.metrics):
+            attr_value = aggregator.aggregated_measurements[idx]
+
             if column_name == "time":
                 column_name = "ts"
 
@@ -291,6 +245,10 @@ class MonitoringMessage:
         self.condor_job_id = condor_job_id
         self.trace_id = None
 
+        self.exec_name = 'N/A'
+        if "executable" in msg:
+            self.exec_name = msg["executable"]
+
     @staticmethod
     def parse(raw_message):
         message = dict(item.split("=") for item in raw_message.strip().split(" "))
@@ -318,17 +276,7 @@ class MonitoringMessage:
     def metrics(self):
         return self.perf_metrics
 
-    @staticmethod
-    def get_influxdb_json(trace_id, columns, point):
-        return [
-            {
-                "name": trace_id,
-                "columns": columns,
-                "points": [point]
-            }
-        ]
-
-    def to_influxdb_json(self):
+    def measurements(self):
         point = []
 
         for column in self.metrics():
@@ -341,15 +289,12 @@ class MonitoringMessage:
                 else:
                     point.append(float(self.msg[column]))
 
-        return MonitoringMessage.get_influxdb_json(self.trace_id, self.metrics(), point)
+        return point
 
-    def measurements(self):
-        return self.to_influxdb_json()[0]["points"][0]
-
-    def aggregated_message_info(self):
+    def aggregated_message_info(self, exec_name):
         info = dict()
 
-        for attr in ["wf_uuid", "dag_job_id", "hostname", "condor_job_id", "kickstart_pid", "executable"]:
+        for attr in ["wf_uuid", "dag_job_id", "hostname", "condor_job_id", "kickstart_pid"]:
             if attr not in self.msg:
                 continue
 
@@ -357,13 +302,12 @@ class MonitoringMessage:
             column_name = attr
             if attr == "condor_job_id":
                 column_name = "sched_id"
-            elif attr == "executable":
-                column_name = "exec_name"
 
             info[column_name] = attr_value
 
-        return info
+        info["exec_name"] = exec_name
 
+        return info
 
 
 class WorkflowTraceMessage(MonitoringMessage):
@@ -402,3 +346,106 @@ class DataTransferMessage(MonitoringMessage):
     def message_has_required_params(self, message):
         required_params = ("hostname", "dag_job_id", "condor_job_id")
         return all(k in message for k in required_params)
+
+
+class InfluxDbMessageFormatter:
+    @staticmethod
+    def format(trace_id, columns, point):
+        return [
+            {
+                "name": trace_id,
+                "columns": columns,
+                "points": [point]
+            }
+        ]
+
+    @staticmethod
+    def format_msg(trace_msg):
+        return InfluxDbMessageFormatter.format(trace_msg.trace_id, trace_msg.metrics(), trace_msg.measurements())
+
+import copy
+
+class JobAggregator:
+
+    def __init__(self, msg):
+        self.metrics = copy.copy(msg.metrics())
+
+        self.aggregated_measurements = [0] * len(self.metrics)
+        self.last_aggregated_data = [0] * len(self.metrics)
+        self.retrieved_ranks = dict()
+
+        self.exec_name = msg.exec_name
+        self.dag_job_id = msg.dag_job_id
+        self.condor_job_id = msg.condor_job_id
+        self.msg = msg
+
+    def add(self, msg):
+        """add metric values from this mpi rank to create an aggregated measurement for a job"""
+
+        if len(msg.metrics()) != len(self.metrics):
+            print "Index error in the aggregation logic: ", msg.dag_job_id
+            print "This aggregator supports the following metrics:", self.metrics
+            print "But we got the following list:", msg.metrics()
+
+            return
+
+        # update the executable name only if this is mpi rank greater than 0
+        if int(msg.mpi_rank) > 0:
+            self.exec_name = msg.exec_name
+
+        if isinstance(msg, WorkflowTraceMessage):
+            for i, metric_value in enumerate(msg.measurements()):
+                # timestamp is set to the latest value
+                if i == 0:
+                    if self.aggregated_measurements[i] < metric_value:
+                        self.aggregated_measurements[i] = metric_value
+                        # other metrics are aggregated
+                else:
+                    self.aggregated_measurements[i] += metric_value
+        elif isinstance(msg, DataTransferMessage):
+            for i, metric_value in enumerate(msg.measurements()):
+                # timestamp is set to the latest value
+                if i == 0:
+                    if self.aggregated_measurements[i] < metric_value:
+                        self.aggregated_measurements[i] = metric_value
+                else:
+                    self.aggregated_measurements[i] += metric_value + self.last_aggregated_data[i]
+
+        self.retrieved_ranks[msg.mpi_rank] = True
+
+    def repeated_mpi_rank(self, msg):
+        return msg.mpi_rank in self.retrieved_ranks
+
+    def reset_measurements(self):
+        self.retrieved_ranks = dict()
+        self.aggregated_measurements = [0] * len(self.metrics)
+
+    def align_measurements(self):
+        for i, metric_value in enumerate(self.last_aggregated_data):
+            if self.aggregated_measurements[i] < metric_value:
+                self.aggregated_measurements[i] = metric_value
+
+    def store_measurements(self):
+        for i, metric_value in enumerate(self.aggregated_measurements):
+            self.last_aggregated_data[i] = metric_value
+
+    def trace_id(self):
+        return "%s:%s" % (self.dag_job_id, self.condor_job_id)
+
+    def message_info(self):
+        info = dict()
+
+        for attr in ["wf_uuid", "dag_job_id", "hostname", "condor_job_id", "kickstart_pid"]:
+            if attr not in self.msg.msg:
+                continue
+
+            attr_value = self.msg.msg[attr]
+            column_name = attr
+            if attr == "condor_job_id":
+                column_name = "sched_id"
+
+            info[column_name] = attr_value
+
+        info["exec_name"] = self.exec_name
+
+        return info
