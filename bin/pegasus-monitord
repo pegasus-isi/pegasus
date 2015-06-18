@@ -117,7 +117,7 @@ speak = "PMD/1.0"                         # Protocol version for our socket comm
 MONITORD_WF_RETRY_FILE = "monitord.subwf" # filename for writing persistent sub-workflow retry information
 MAX_SLEEP_TIME = 10     	          # in seconds
 SLEEP_WAIT_NOTIFICATION = 5               # in seconds
-DAGMAN_OUT_MAX_READ_SIZE = 2768          # at most the maximum bytes to read while parsing dagman.out file
+DAGMAN_OUT_MAX_READ_SIZE = 32768          # at most the maximum bytes to read while parsing dagman.out file
 
 unsubmitted_events = {"UN_READY": 1,
                       "PRE_SCRIPT_STARTED": 1,
