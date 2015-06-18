@@ -117,6 +117,7 @@ speak = "PMD/1.0"                         # Protocol version for our socket comm
 MONITORD_WF_RETRY_FILE = "monitord.subwf" # filename for writing persistent sub-workflow retry information
 MAX_SLEEP_TIME = 10     	          # in seconds
 SLEEP_WAIT_NOTIFICATION = 5               # in seconds
+DAGMAN_OUT_MAX_READ_SIZE = 32768          # at most the maximum bytes to read while parsing dagman.out file
 
 unsubmitted_events = {"UN_READY": 1,
                       "PRE_SCRIPT_STARTED": 1,
@@ -235,6 +236,7 @@ class WorkflowEntry:
     ml_current = 0			# Keep track of where we are in the dagman.out file
     delete_workflow = False		# Flag for dropping this workflow
     sleep_time = None			# Time to sleep for this workflow
+    caught_up_with_dagman_out = False # indicates monitord has caught up with the dagman.out file
 
 output_dir = None                       # output_dir for all files written by monitord
 jsd = None				# location of jobstate.log file
@@ -1157,6 +1159,7 @@ if wf._monitord_exit_code == 0:
     workflow_entry.run_dir = run
     workflow_entry.dagman_out = out
     workflow_entry.wf = wf
+    workflow_entry.caught_up_with_dagman_out = False
 
     # And add it to our list of workflows
     wfs.append(workflow_entry)
@@ -1322,7 +1325,7 @@ while (len(wfs) > 0):
             elif f_stat[6] > workflow_entry.ml_current:
                 # We have something to read!
                 try:
-                    ml_rbuffer = workflow_entry.DMOF.read(32768)
+                    ml_rbuffer = workflow_entry.DMOF.read(DAGMAN_OUT_MAX_READ_SIZE)
                 except:
                     # Error while reading
                     logger.critical("while reading %s" % (workflow_entry.dagman_out))
@@ -1333,6 +1336,12 @@ while (len(wfs) > 0):
                         workflow_entry.wf.end_workflow()
                     # Go to the next workflow_entry in the for loop
                     continue
+
+                if len(ml_rbuffer) < DAGMAN_OUT_MAX_READ_SIZE:
+                    # PM-947 we have caught up with the workflow
+                    logger.info( "monitord has caught up with dagman out file %s" %(workflow_entry.dagman_out) )
+                    workflow_entry.caught_up_with_dagman_out = True
+
                 if len(ml_rbuffer) == 0:
                     # Detected EOF
                     logger.critical("detected EOF, resetting position to %d" % (workflow_entry.ml_current))
@@ -1487,13 +1496,19 @@ while (len(wfs) > 0):
 
     # All done... let's figure out how long to sleep...
     time_to_sleep = time.time() + MAX_SLEEP_TIME
+    caught_up_with_all_wfs = True
     for workflow_entry in wfs:
+        caught_up_with_all_wfs = caught_up_with_all_wfs and workflow_entry.caught_up_with_dagman_out
         # Figure out if we have anything more urgent to do
         if workflow_entry.sleep_time < time_to_sleep:
             time_to_sleep = workflow_entry.sleep_time
 
-    # Sleep
-    if not replay_mode:
+    if caught_up_with_all_wfs:
+        # log the fact
+        logger.info( "monitord has caught up with all workflows. will now sleep intermittently." )
+
+    # PM-947 Sleep if not in replay mode AND we have caught up with all workflows
+    if not replay_mode and caught_up_with_all_wfs:
         time_to_sleep = time_to_sleep - time.time()
         if time_to_sleep < 0:
             time_to_sleep = 0
