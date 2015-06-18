@@ -117,7 +117,7 @@ speak = "PMD/1.0"                         # Protocol version for our socket comm
 MONITORD_WF_RETRY_FILE = "monitord.subwf" # filename for writing persistent sub-workflow retry information
 MAX_SLEEP_TIME = 10     	          # in seconds
 SLEEP_WAIT_NOTIFICATION = 5               # in seconds
-DAGMAN_OUT_MAX_READ_SIZE = 32768          # at most the maximum bytes to read while parsing dagman.out file
+DAGMAN_OUT_MAX_READ_SIZE = 2768          # at most the maximum bytes to read while parsing dagman.out file
 
 unsubmitted_events = {"UN_READY": 1,
                       "PRE_SCRIPT_STARTED": 1,
@@ -294,6 +294,8 @@ parser.add_option("-f", "--force", action = "store_const", const = 1, dest = "sk
                   help = "runs pegasus-monitord even if it detects a previous instance running")
 parser.add_option("-v", "--verbose", action="count", default=0, dest="vb",
                   help="Increase verbosity, repeatable")
+parser.add_option("--fast-start", action="store_true", dest="fast_start",
+                  help="catch up with all dagman.out files before sleeping intermittently" )
 grp = optparse.OptionGroup(parser, "Output options")
 grp.add_option("-d", "--dest", action="store", dest="event_dest", metavar="PATH or URL",
                help="Output destination URL [<scheme>]<params>, where "
@@ -456,6 +458,9 @@ if options.event_dest is None:
 else:
     # Use command-line option
     event_dest = options.event_dest
+
+if options.fast_start is True:
+    fast_start_mode = True
 
 #hardcoded for the time being
 #dashboard_event_dest = "sqlite:////tmp/workflow.db"
@@ -1504,8 +1509,8 @@ while (len(wfs) > 0):
         if workflow_entry.sleep_time < time_to_sleep:
             time_to_sleep = workflow_entry.sleep_time
 
-    # PM-947 Sleep if not in replay mode AND we have caught up with all workflows
-    if not replay_mode and sleep_for_some_time:
+    # PM-947 Sleep if not in replay mode AND ( we have caught up with all workflows or are in default/normal mode)
+    if not replay_mode and ( sleep_for_some_time or not fast_start_mode):
         time_to_sleep = time_to_sleep - time.time()
         if time_to_sleep < 0:
             time_to_sleep = 0
