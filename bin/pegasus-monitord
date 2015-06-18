@@ -462,6 +462,11 @@ else:
 if options.fast_start is True:
     fast_start_mode = True
 
+#check if specified in properties
+if utils.make_boolean( props.property("pegasus.monitord.fast_start") ):
+    fast_start_mode = True
+
+
 #hardcoded for the time being
 #dashboard_event_dest = "sqlite:////tmp/workflow.db"
 dashboard_event_dest = connection.url_by_properties(options.config_properties, connection.DBType.MASTER, rundir_properties=top_level_prop_file)
