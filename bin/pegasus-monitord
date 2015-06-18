@@ -461,7 +461,6 @@ else:
 
 if options.fast_start is True:
     fast_start_mode = True
-
 #check if specified in properties
 if utils.make_boolean( props.property("pegasus.monitord.fast_start") ):
     fast_start_mode = True
@@ -1075,6 +1074,9 @@ else:
 logger.info("starting [%s], using pid %d" % (revision, os.getpid()))
 if millisleep is not None:
     logger.info("using simulation delay of %d ms" % (millisleep))
+
+if fast_start_mode:
+    logger.info( "monitord started in fast start mode" )
 
 # Only create server socket if asked...
 if output_dir is None:
