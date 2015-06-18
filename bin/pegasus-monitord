@@ -146,6 +146,7 @@ monitord_notifications = None   # Notifications' manager class
 max_parallel_notifications = 10 # Maximum number of notifications we can do in parallel
 notifications_timeout = 0	# Time to wait for notification scripts to finish (0 means wait forever)
 store_stdout_stderr = True      # Flag for storing jobs' stdout and stderr in our output
+fast_start_mode     = False     # Flag to indicate that only sleep once monitord has caught up with the dagman.out file
 
 wf_event_sink = None            # Where wf events go
 
@@ -1496,19 +1497,15 @@ while (len(wfs) > 0):
 
     # All done... let's figure out how long to sleep...
     time_to_sleep = time.time() + MAX_SLEEP_TIME
-    caught_up_with_all_wfs = True
+    sleep_for_some_time = True
     for workflow_entry in wfs:
-        caught_up_with_all_wfs = caught_up_with_all_wfs and workflow_entry.caught_up_with_dagman_out
+        sleep_for_some_time = sleep_for_some_time and workflow_entry.caught_up_with_dagman_out
         # Figure out if we have anything more urgent to do
         if workflow_entry.sleep_time < time_to_sleep:
             time_to_sleep = workflow_entry.sleep_time
 
-    if caught_up_with_all_wfs:
-        # log the fact
-        logger.info( "monitord has caught up with all workflows. will now sleep intermittently." )
-
     # PM-947 Sleep if not in replay mode AND we have caught up with all workflows
-    if not replay_mode and caught_up_with_all_wfs:
+    if not replay_mode and sleep_for_some_time:
         time_to_sleep = time_to_sleep - time.time()
         if time_to_sleep < 0:
             time_to_sleep = 0
