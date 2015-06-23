@@ -328,6 +328,35 @@ out = os.path.abspath(out)
 # Infer run directory
 run = os.path.dirname(out)
 
+# Get the location of the properties file from braindump
+top_level_wf_params = utils.slurp_braindb(run)
+top_level_prop_file = None
+
+# Get properties tag from braindump
+if "properties" in top_level_wf_params:
+    top_level_prop_file = top_level_wf_params["properties"]
+    # Create the full path by using the submit_dir key from braindump
+    if "submit_dir" in top_level_wf_params:
+        top_level_prop_file = os.path.join(top_level_wf_params["submit_dir"], top_level_prop_file)
+
+# Parse, and process properties
+props = properties.Properties()
+props.new(config_file=options.config_properties, rundir_propfile=top_level_prop_file)
+
+# PM-948 check to see if any addon command line
+# options are specified in properties
+addon_cmd_prop = props.property( "pegasus.monitord.arguments" )
+addon_cmd_options = []
+if addon_cmd_prop is not None:
+    addon_cmd_options = addon_cmd_prop.split( " ")
+
+cmd_options = sys.argv[1:] + addon_cmd_options
+
+# parse again with extra options that might
+# been specified in the properties file
+print "Final Command line options are %s " %cmd_options
+(options, args) = parser.parse_args(cmd_options)
+
 # Resolve command-line options conflicts
 if options.event_dest is not None and options.no_events is not None:
     logger.warning("the --no-events and --dest options conflict, please use only one of them")
@@ -348,20 +377,6 @@ utils.write_pid_file(pid_filename)
 # Make sure we delete it when we are done
 atexit.register(delete_pid_file)
 
-# Get the location of the properties file from braindump
-top_level_wf_params = utils.slurp_braindb(run)
-top_level_prop_file = None
-
-# Get properties tag from braindump
-if "properties" in top_level_wf_params:
-    top_level_prop_file = top_level_wf_params["properties"]
-    # Create the full path by using the submit_dir key from braindump
-    if "submit_dir" in top_level_wf_params:
-        top_level_prop_file = os.path.join(top_level_wf_params["submit_dir"], top_level_prop_file)
-
-# Parse, and process properties
-props = properties.Properties()
-props.new(config_file=options.config_properties, rundir_propfile=top_level_prop_file)
 
 # Parse notification-related properties
 if int(props.property("pegasus.monitord.notifications.timeout") or -1) >= 0:
