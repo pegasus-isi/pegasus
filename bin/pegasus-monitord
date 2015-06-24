@@ -476,9 +476,11 @@ else:
 
 if options.fast_start is True:
     fast_start_mode = True
-#check if specified in properties
-if utils.make_boolean( props.property("pegasus.monitord.fast_start") ):
-    fast_start_mode = True
+
+#check if specified in properties and override from options
+fast_start_property = "pegasus.monitord.fast_start"
+if props.property( fast_start_property ) is not None:
+    fast_start_mode = utils.make_boolean( props.property( fast_start_property ) )
 
 
 #hardcoded for the time being
