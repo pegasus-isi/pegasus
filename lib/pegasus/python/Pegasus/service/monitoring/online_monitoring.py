@@ -382,34 +382,32 @@ class JobAggregator:
     def add(self, msg):
         """add metric values from this mpi rank to create an aggregated measurement for a job"""
 
-        if len(msg.metrics()) != len(self.metrics):
+        # first we check if we have these metrics (besides the first one which is timestamp)
+        if not set(msg.metrics()[1:]).issubset(set(self.metrics)):
             print "Index error in the aggregation logic: ", msg.dag_job_id
             print "This aggregator supports the following metrics:", self.metrics
             print "But we got the following list:", msg.metrics()
 
-            return
+            self.metrics += msg.metrics()[1:]
+            self.aggregated_measurements += [0] * len(msg.metrics()[1:])
+            self.last_aggregated_data += [0] * len(msg.metrics()[1:])
 
         # update the executable name only if this is mpi rank greater than 0
         if int(msg.mpi_rank) > 0:
             self.exec_name = msg.exec_name
 
-        if isinstance(msg, WorkflowTraceMessage):
-            for i, metric_value in enumerate(msg.measurements()):
-                # timestamp is set to the latest value
-                if i == 0:
-                    if self.aggregated_measurements[i] < metric_value:
-                        self.aggregated_measurements[i] = metric_value
-                        # other metrics are aggregated
-                else:
-                    self.aggregated_measurements[i] += metric_value
-        elif isinstance(msg, DataTransferMessage):
-            for i, metric_value in enumerate(msg.measurements()):
-                # timestamp is set to the latest value
-                if i == 0:
-                    if self.aggregated_measurements[i] < metric_value:
-                        self.aggregated_measurements[i] = metric_value
-                else:
-                    self.aggregated_measurements[i] += metric_value + self.last_aggregated_data[i]
+        for i, metric_value in enumerate(msg.measurements()):
+            metric = msg.metrics()[i]
+            idx = self.metrics.index(metric)
+
+            if metric == 'time':
+                if self.aggregated_measurements[idx] < metric_value:
+                    self.aggregated_measurements[idx] = metric_value
+            else:
+                if isinstance(msg, WorkflowTraceMessage):
+                    self.aggregated_measurements[idx] += metric_value
+                elif isinstance(msg, DataTransferMessage):
+                    self.aggregated_measurements[idx] += metric_value + self.last_aggregated_data[idx]
 
         self.retrieved_ranks[msg.mpi_rank] = True
 
