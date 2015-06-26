@@ -301,8 +301,11 @@ push( @arg, '-append', '+pegasus_wf_xformation="pegasus::dagman"' );
         
         //we do a -no_submit option
         args.append( "-no_submit " );
-        //also for safety case -update_submit or -force?
-        args.append( "-force " );
+       
+        //PM-949 we cannot have the force option as then the rescue 
+        //dags for the dag jobs are not submitted when the top level
+        //rescue dag is submitted.
+        //args.append( "-force " );
         
         //get any dagman runtime parameters that are controlled
         //via profiles
