@@ -176,7 +176,9 @@ public class GLite extends Abstract {
 
         /* transfer_executable does not work with gLite
          * Explicitly set to false */
-        job.condorVariables.construct( Condor.TRANSFER_EXECUTABLE_KEY, "false" );
+        //PM-950 looks like it works now. for pegasus lite modes we need
+        //the planner to be able to set it to true
+        //job.condorVariables.construct( Condor.TRANSFER_EXECUTABLE_KEY, "false" );
 
         /* retrieve some keys from globus rsl and convert to gLite format */
         if( job.globusRSL.containsKey( "queue" ) ){
