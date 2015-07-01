@@ -2250,6 +2250,10 @@ class Workflow:
             my_job = self._jobs[jobid, my_job_submit_seq]
             my_dagman_out = my_job._job_dagman_out
             if my_dagman_out is None:
+                #PM-951 log warning only for subdax jobs
+                if my_job._exec_job_id.startswith("subdax_"):
+                    logger.warning("unable to determine the dagman.out file to track for job %s %s " % (jobid, my_job_submit_seq))
+
                 return None
 
         # Got it!
