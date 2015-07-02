@@ -238,6 +238,7 @@ class WorkflowEntry:
     delete_workflow = False		# Flag for dropping this workflow
     sleep_time = None			# Time to sleep for this workflow
     caught_up_with_dagman_out = False # indicates monitord has caught up with the dagman.out file
+    dagman_out_appeared       = False # indicates whether dagman.out file has appeared or not
 
 output_dir = None                       # output_dir for all files written by monitord
 jsd = None				# location of jobstate.log file
@@ -637,7 +638,8 @@ def process_dagman_out(wf, log_line):
     # Check log_line for timestamp at the beginning
     timestamp_found = False
     my_expr = re_parse_timestamp.search(log_line)
-    
+
+
     if my_expr is not None:
         # Found time stamp, let's assume valid log line
         curr_time = time.localtime()
@@ -789,7 +791,7 @@ def process_dagman_out(wf, log_line):
                 logger.warning("cannot convert DAGMan's exit code to integer!")
                 wf._dagman_exit_code = 0
                 wf._monitord_exit_code = 1
-            logger.info("DAGMan finished with exit code %s" % (wf._dagman_exit_code))
+            logger.info("DAGMan %s finished with exit code %s" % (wf._dag_file_name , wf._dagman_exit_code))
             # Send info to database
             wf.change_wf_state("end")
         elif re_parse_dagman_condor_id.search(log_line) is not None:
@@ -1266,6 +1268,7 @@ while (len(wfs) > 0):
                 # Found it, open dagman.out file
                 try:
                     workflow_entry.DMOF = open(workflow_entry.dagman_out, "r")
+                    workflow_entry.dagman_out_appeared = True
                 except IOError:
                     logger.critical("opening %s" % (workflow_entry.dagman_out))
                     workflow_entry.delete_workflow = True
@@ -1528,7 +1531,9 @@ while (len(wfs) > 0):
     time_to_sleep = time.time() + MAX_SLEEP_TIME
     sleep_for_some_time = True
     for workflow_entry in wfs:
-        sleep_for_some_time = sleep_for_some_time and workflow_entry.caught_up_with_dagman_out
+        # PM-947 we want to sleep if either dagman out has not appeared or we have caught up with the dagman.out
+        sleep_for_some_time = sleep_for_some_time and \
+                              ( workflow_entry.caught_up_with_dagman_out or not workflow_entry.dagman_out_appeared )
         # Figure out if we have anything more urgent to do
         if workflow_entry.sleep_time < time_to_sleep:
             time_to_sleep = workflow_entry.sleep_time
