@@ -339,7 +339,14 @@ class StampedeWorkflowStatistics(SQLAlchemyInit):
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Workflowcumulativejobwalltime
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Workflowcumulativejobwalltime
         """
-        q = self.session.query(cast(func.sum(Invocation.remote_duration * JobInstance.multiplier_factor), Float))
+        q = self.session.query(cast(func.sum(Invocation.remote_duration * JobInstance.multiplier_factor), Float),
+                               cast(func.sum(case([(
+                                   Invocation.exitcode == 0, Invocation.remote_duration * JobInstance.multiplier_factor
+                               )], else_=0)).label("goodput"), Float),
+                               cast(func.sum(case([(
+                                   Invocation.exitcode > 0, Invocation.remote_duration * JobInstance.multiplier_factor
+                               )], else_=0)).label("badput"), Float))
+
         q = q.filter(Invocation.task_submit_seq >= 0)
         q = q.filter(Invocation.job_instance_id == JobInstance.job_instance_id)
 
@@ -354,7 +361,7 @@ class StampedeWorkflowStatistics(SQLAlchemyInit):
                 q = q.filter(Invocation.wf_id.in_(self._root_wf_id))
 
         q = q.filter(Invocation.transformation != 'condor::dagman')
-        return q.first()[0]
+        return q.first()
 
     def get_submit_side_job_wall_time(self):
         """
@@ -370,7 +377,15 @@ class StampedeWorkflowStatistics(SQLAlchemyInit):
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Cumulativejobwalltimeasseenfromsubmitside
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Cumulativejobwalltimeasseenfromsubmitside
         """
-        q = self.session.query(cast(func.sum(JobInstance.local_duration * JobInstance.multiplier_factor), Float).label('wall_time'))
+        q = self.session.query(cast(func.sum(JobInstance.local_duration * JobInstance.multiplier_factor), Float).label('wall_time'),
+                               cast(func.sum(case([(
+                                   JobInstance.exitcode == 0, JobInstance.local_duration * JobInstance.multiplier_factor
+                               )], else_=0)).label("goodput"), Float),
+                               cast(func.sum(case([(
+                                   JobInstance.exitcode > 0, JobInstance.local_duration * JobInstance.multiplier_factor
+                               )], else_=0)).label("badput"), Float)
+                               )
+
         q = q.filter(JobInstance.job_id == Job.job_id)
 
         if self._expand:
@@ -379,7 +394,7 @@ class StampedeWorkflowStatistics(SQLAlchemyInit):
         else:
             if self.all_workflows:
                 q = self.__filter_roots_only(q)
-                q = q.filter (Job.wf_id == Workflow.wf_id)
+                q = q.filter(Job.wf_id == Workflow.wf_id)
             else:
                 q = q.filter(Job.wf_id.in_(self._root_wf_id))
 
@@ -387,7 +402,7 @@ class StampedeWorkflowStatistics(SQLAlchemyInit):
             d_or_d = self._dax_or_dag_cond()
             q = q.filter(or_(not_(d_or_d), and_(d_or_d, JobInstance.subwf_id == None)))
 
-        return q.first().wall_time
+        return q.first()
 
     def get_workflow_retries(self):
         """
