@@ -165,13 +165,14 @@ class DBEventSink(EventSink):
     """
     Write wflow event logs to database via loader
     """
-    def __init__(self, dest, db_stats=False, namespace=STAMPEDE_NS, **kw):
+    def __init__(self, dest, db_stats=False, namespace=STAMPEDE_NS, props=None, db_type=None, **kw):
         self._namespace=namespace
         #pick the right database loader based on prefix
         if namespace == STAMPEDE_NS:
-            self._db = stampede_loader.Analyzer(dest, perf=db_stats, batch="yes")
+            self._db = stampede_loader.Analyzer(dest, perf=db_stats, batch="yes", props=props, db_type=db_type)
         elif namespace == DASHBOARD_NS:
-            self._db = stampede_dashboard_loader.Analyzer(dest, perf=db_stats, batch="yes")
+            self._db = stampede_dashboard_loader.Analyzer(dest, perf=db_stats, batch="yes", props=props,
+                                                          db_type=db_type)
         else:
             raise ValueError("Unknown namespace specified '%s'" % (namespace))
 
@@ -278,7 +279,7 @@ def bson_encode(event, **kw):
     kw['event'] = STAMPEDE_NS + event
     return bson.dumps(kw)        
 
-def create_wf_event_sink(dest, enc=None,prefix=STAMPEDE_NS, **kw):
+def create_wf_event_sink(dest, enc=None,prefix=STAMPEDE_NS, props=None, **kw):
     """
     Create & return subclass of EventSink, chosen by value of 'dest'
     and parameterized by values (if any) in 'kw'.
@@ -329,7 +330,7 @@ def create_wf_event_sink(dest, enc=None,prefix=STAMPEDE_NS, **kw):
         _type, _name="AMQP", "%s:%s/%s" % (url.host, url.port, url.path)
     else:
         # load the appropriate DBEvent on basis of prefix passed
-        sink = DBEventSink(dest, namespace=prefix, **kw)
+        sink = DBEventSink(dest, namespace=prefix, props=props, **kw)
         _type, _name = "DB", dest
     log.info("output type=%s namespace=%s name=%s" % (_type, prefix, _name))
 

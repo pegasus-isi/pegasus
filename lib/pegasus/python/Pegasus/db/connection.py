@@ -27,7 +27,12 @@ class DBType:
     WORKFLOW = "WORKFLOW"
 
 
-def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=None, force=False):
+class DBKey:
+    TIMEOUT = "timeout"
+
+
+def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=None, force=False, props=None,
+            db_type=None, connect_args=None):
     """ Connect to the provided URL database."""
     dburi = _parse_jdbc_uri(dburi)
     _validate(dburi)
@@ -49,6 +54,12 @@ def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=
     Session = orm.sessionmaker(bind=engine, autoflush=False, autocommit=False,
                                expire_on_commit=False)
     db = orm.scoped_session(Session)
+
+    # parse connection properties
+    if props:
+        connect_args = _parse_props(db, props, db_type, connect_args)
+    if connect_args:
+        _parse_connect_args(db, connect_args)
 
     # Database creation
     if create:
@@ -327,4 +338,42 @@ def _validate(dburi):
             
     except ImportError, e:
         raise ConnectionError("Missing Python module: %s" % e)
-    
+
+
+def _parse_connect_args(db, connect_args):
+    """
+
+    :param db:
+    :param connect_args:
+    :return:
+    """
+    if DBKey.TIMEOUT in connect_args:
+        url = db.get_bind().url
+        if url.drivername == "sqlite":
+            db.execute("PRAGMA busy_timeout = %s" % connect_args["timeout"])
+
+
+def _parse_props(db, props, db_type=None, connect_args=None):
+    """
+
+    :param db:
+    :param props:
+    :param db_type:
+    :return:
+    """
+    if not connect_args:
+        connect_args = {}
+
+    url = db.get_bind().url
+    if url.drivername == "sqlite" and db_type:
+        if not DBKey.TIMEOUT in connect_args:
+            try:
+                if db_type == DBType.MASTER and props.property("pegasus.catalog.master.timeout"):
+                    connect_args[DBKey.TIMEOUT] = int(props.property("pegasus.catalog.master.timeout")) * 1000
+
+                elif db_type == DBType.WORKFLOW and props.property("pegasus.catalog.workflow.timeout"):
+                    connect_args[DBKey.TIMEOUT] = int(props.property("pegasus.catalog.workflow.timeout")) * 1000
+            except ValueError, e:
+                raise ConnectionError("Timeout properties should be set in seconds: %s" % e)
+
+    return connect_args

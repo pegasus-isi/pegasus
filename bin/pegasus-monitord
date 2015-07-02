@@ -1041,8 +1041,8 @@ else:
             utils.rotate_log_file( db_path )
 
     try:
-        wf_event_sink = eo.create_wf_event_sink(event_dest, db_stats=db_stats,
-                                                restart=restart_logging, enc=encoding)
+        wf_event_sink = eo.create_wf_event_sink(event_dest, db_stats=db_stats, restart=restart_logging, enc=encoding,
+                                                props=props, db_type=connection.DBType.WORKFLOW)
         atexit.register(finish_stampede_loader)
     except eo.SchemaVersionError:
         logger.warning("****************************************************")
@@ -1068,7 +1068,9 @@ else:
 
     #create the stampede_dashboard_loader
     try:
-        dashboard_event_sink= eo.create_wf_event_sink(dashboard_event_dest, restart=restart_logging,prefix=eo.DASHBOARD_NS,db_stats=db_stats)
+        dashboard_event_sink= eo.create_wf_event_sink(dashboard_event_dest, restart=restart_logging,
+                                                      prefix=eo.DASHBOARD_NS, db_stats=db_stats, props=props,
+                                                      db_type=connection.DBType.WORKFLOW)
     except:
         logger.error(traceback.format_exc())
         dashboard_event_sink = None
