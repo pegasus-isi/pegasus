@@ -1070,7 +1070,7 @@ else:
     try:
         dashboard_event_sink= eo.create_wf_event_sink(dashboard_event_dest, restart=restart_logging,
                                                       prefix=eo.DASHBOARD_NS, db_stats=db_stats, props=props,
-                                                      db_type=connection.DBType.WORKFLOW)
+                                                      db_type=connection.DBType.MASTER)
     except:
         logger.error(traceback.format_exc())
         dashboard_event_sink = None
