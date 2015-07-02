@@ -260,22 +260,52 @@ class Job:
                 my_error = my_error.strip('"')
                 self._error_file = os.path.normpath(my_error)
             elif parse_environment and re_parse_environment.search(my_line):
-                # Found line with environment
-                v = re_parse_environment.search(my_line).group(1)
-                sub_props = v.split(';')
-                for sub_prop_line in sub_props:
-                    sub_prop_line = sub_prop_line.strip() # Remove any spaces
-                    if len(sub_prop_line) == 0:
-                        continue
-                    sub_prop = re_parse_property.search(sub_prop_line)
-                    if sub_prop:
-                        if sub_prop.group(1) == "_CONDOR_DAGMAN_LOG":
-                            self._job_dagman_out = sub_prop.group(2)
+                self._job_dagman_out = self.extract_dagman_out_from_condor_env( my_line )
+                if self._job_dagman_out is None:
+                    logger.error("Unable to parse dagman out file from environment key %s in submit file for job %s" %(my_line, self._exec_job_id))
 
         SUB.close()
 
         # All done!
         return my_result, my_site
+
+
+    def extract_dagman_out_from_condor_env( self, condor_env ):
+        """
+        This function extracts the dagman out file from the condor environment
+        if one is specified
+
+        :param condor_env: the environment line from the condor submit file
+        :return: the dagman out file if detected else None
+        """
+        # Found line with environment
+        env_value = re_parse_environment.search(condor_env).group(1)
+
+        #strip any enclosing quotes if any
+        stripped_env_value = re.sub(r'^"|"$', '', env_value)
+
+        if len(env_value) == len(stripped_env_value):
+            # we have old style condor environment with environment NOT ENCLOSED in double quotes
+            # and split by ;
+            sub_props = stripped_env_value.split( ';' )
+        else:
+            # we have new style condor environment with environment enclosed in double quotes
+            # and split by whitespace
+            sub_props = stripped_env_value.split( ' ' )
+
+        dagman_out  = None
+        for sub_prop_line in sub_props:
+            sub_prop_line = sub_prop_line.strip() # Remove any spaces
+            if len(sub_prop_line) == 0:
+                continue
+            sub_prop = re_parse_property.search(sub_prop_line)
+            if sub_prop:
+                if sub_prop.group(1) == "_CONDOR_DAGMAN_LOG":
+                    dagman_out = sub_prop.group(2)
+                    break
+
+        return dagman_out
+
 
     def extract_job_info(self, run_dir, kickstart_output):
         """
