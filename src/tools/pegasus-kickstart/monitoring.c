@@ -111,6 +111,11 @@ void print_debug_info(MonitoringEndpoint *monitoring_endpoint, JobIdInfo *job_id
     printerr("[mon-thread] condor job id: %s\n", job_id_info->condor_job_id);
 }
 
+size_t write_callback(char *ptr, size_t size, size_t nmemb, void *userdata) {
+    //    we do nothing for now
+    return size * nmemb;
+}
+
 /*
  * Main monitoring thread loop - it periodically read global trace file as sent this info somewhere, e.g. to another file
  * or to an external service.
@@ -191,6 +196,8 @@ void* monitoring_thread_func(void* kickstart_status_path) {
                         enriched_line);
 
                     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload);
+
+                    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
 
                     /* Perform the request, res will get the return code */
                     res = curl_easy_perform(curl);
