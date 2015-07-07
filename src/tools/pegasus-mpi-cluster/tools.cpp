@@ -117,26 +117,32 @@ unsigned long get_host_memory() {
     return memory;
 }
 
-
-/* Get the total number of cpus on the host */
-unsigned int get_host_cpus() {
-    unsigned int cpus;
-#ifdef __MACH__ 
-    size_t size = sizeof(cpus);
-    if (sysctlbyname("hw.physicalcpu", &cpus, &size, NULL, 0) < 0) {
-        myfailures("Unable to get number of physical CPUs");
+struct cpuinfo get_host_cpuinfo() {
+    struct cpuinfo c;
+    c.cpus = 0;
+    c.cores = 0;
+    c.sockets = 0;
+#ifdef __MACH__
+    size_t size = sizeof(unsigned int);
+    if (sysctlbyname("hw.logicalcpu", &c.cpus, &size, NULL, 0) < 0) {
+        myfailures("Unable to get number of CPUs (logical CPUs)");
+    }
+    if (sysctlbyname("hw.physicalcpu", &c.cores, &size, NULL, 0) < 0) {
+        myfailures("Unable to get number of cores (physical CPUs)");
+    }
+    if (sysctlbyname("hw.packages", &c.sockets, &size, NULL, 0) < 0) {
+        myfailures("Unable to get number of CPU sockets");
     }
 #else
-    long nprocessors = sysconf(_SC_NPROCESSORS_CONF);
-    if (nprocessors <= 0) {
-        myfailures("Unable to get number of physical CPUs");
-    }
-    cpus = nprocessors;
+    // FIXME We need to read this from /proc/cpuinfo on LINUX
+    c.cpus = 4;
+    c.cores = 2;
+    c.sockets = 1;
 #endif
-    if (cpus == 0) {
-        myfailure("Invalid number of CPUs: %u", cpus);
+    if (c.cpus == 0 || c.cores == 0 || c.sockets == 0) {
+        myfailure("Invalid cpuinfo: %u %u %u", c.cpus, c.cores, c.sockets);
     }
-    return cpus;
+    return c;
 }
 
 int mkdirs(const char *path) {

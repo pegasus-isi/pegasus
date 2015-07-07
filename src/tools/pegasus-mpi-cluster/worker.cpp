@@ -666,7 +666,8 @@ Worker::Worker(Communicator *comm, const string &dagfile, const string &host_scr
         this->host_memory = host_memory;
     }
     if (host_cpus == 0) {
-        this->host_cpus = get_host_cpus();
+        struct cpuinfo c = get_host_cpuinfo();
+        this->host_cpus = c.cpus;
     } else {
         this->host_cpus = host_cpus;
     }

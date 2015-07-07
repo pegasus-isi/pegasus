@@ -41,7 +41,7 @@ void test_mkdirs() {
 
 int main(int argc, char *argv[]) {
     get_host_memory();
-    get_host_cpus();
+    get_host_cpuinfo();
     string host_name;
     get_host_name(host_name);
     test_mkdirs();
