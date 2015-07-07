@@ -46,7 +46,7 @@ if [ $STATUS != 0 ]; then
 fi
 
 # check for bad planner outputs
-if grep 'ERROR' $PLANFILE >/dev/null 2>&1; then
+if  grep -v 'I am: hostname:' $PLANFILE | grep 'ERROR'  >/dev/null 2>&1; then
     echo "The planner logged a line with the string 'ERROR'"
     exit 1
 fi
@@ -97,7 +97,7 @@ if [ $LOG_COUNT -lt 1 -o $LOG_COUNT -gt 1 ]; then
     STATUS=$(($STATUS + 1))
 fi
 
-if cat monitord.log | grep ERR >/dev/null 2>&1; then
+if cat monitord.log | grep -E '(ERR)|(CRITICAL)' >/dev/null 2>&1; then
     echo "monitord log contains errors:"
     echo
     cat monitord.log
