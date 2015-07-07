@@ -334,16 +334,15 @@ string filename(const string &path) {
 
 int clear_cpu_affinity() {
 #ifdef LINUX
-    int cpus = get_host_cpus();
-    cpu_set_t *cpuset = CPU_ALLOC(cpus);
+    struct cpuinfo c = get_host_cpuinfo();
+    cpu_set_t *cpuset = CPU_ALLOC(c.cpus);
     if (cpuset == NULL) {
         return -1;
     }
-    size_t cpusetsize = CPU_ALLOC_SIZE(cpus);
+    size_t cpusetsize = CPU_ALLOC_SIZE(c.cpus);
     CPU_ZERO_S(cpusetsize, cpuset);
 
-    int i;
-    for (i=0; i<cpus; i++) {
+    for (unsigned i=0; i<c.cpus; i++) {
         CPU_SET_S(i, cpusetsize, cpuset);
     }
 
