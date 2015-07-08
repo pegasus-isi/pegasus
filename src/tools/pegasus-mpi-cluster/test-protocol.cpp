@@ -79,10 +79,10 @@ void test_shutdown() {
 void test_registration() {
     string hostname = "hostname";
     unsigned memory = 7;
-    unsigned cpus = 5;
+    unsigned threads = 5;
     unsigned cores = 3;
     unsigned sockets = 2;
-    RegistrationMessage input(hostname, memory, cpus, cores, sockets);
+    RegistrationMessage input(hostname, memory, threads, cores, sockets);
     RegistrationMessage output(msgcopy(input.msg, input.msgsize), input.msgsize, 0);
     if (input.hostname != output.hostname) {
         myfailure("hostname does not match");
@@ -90,8 +90,8 @@ void test_registration() {
     if (input.memory != output.memory) {
         myfailure("memory does not match");
     }
-    if (input.cpus != output.cpus) {
-        myfailure("cpus do not match");
+    if (input.threads != output.threads) {
+        myfailure("threads do not match");
     }
     if (input.cores != output.cores) {
         myfailure("cores do not match");

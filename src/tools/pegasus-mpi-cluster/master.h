@@ -18,24 +18,28 @@ using std::list;
 using std::map;
 
 class Host {
+private:
+    Task **affinity;
+
+    void log_status();
+
 public:
     string host_name;
     unsigned int memory;
-    unsigned int cpus;
+    unsigned int threads;
     unsigned int cores;
     unsigned int sockets;
     unsigned int slots;
 
-    Host(const string &host_name, unsigned int memory, unsigned int cpus, unsigned int cores, unsigned int sockets) {
-        this->host_name = host_name;
-        this->memory = memory;
-        this->cpus = cpus;
-        this->cores = cores;
-        this->sockets = sockets;
-        this->slots = 1;
-    }
+    unsigned int memory_free;
+    unsigned int cpus_free;
+    unsigned int slots_free;
 
-    void log_status();
+    Host(const string &host_name, unsigned int memory, unsigned int threads, unsigned int cores, unsigned int sockets);
+    ~Host();
+    void add_slot();
+    void allocate_resources(Task *task);
+    void release_resources(Task *task);
 };
 
 class Slot {
@@ -136,9 +140,9 @@ class Master {
     double finish_time;
     double wall_time;
 
-    unsigned cpus_avail;
-    unsigned memory_avail;
-    unsigned slots_avail;
+    unsigned cpus_free;
+    unsigned memory_free;
+    unsigned slots_free;
     
     FDCache *fdcache;
     
@@ -158,8 +162,8 @@ class Master {
     void merge_task_stdio(FILE *dest, const string &src, const string &stream);
     void write_cluster_summary(bool failed);
 
-    void allocate_resources(Host *host, unsigned cpus, unsigned memory);
-    void release_resources(Host *host, unsigned cpus, unsigned memory);
+    void allocate_resources(Host *host, Task *task);
+    void release_resources(Host *host, Task *task);
     void log_resources(unsigned slots, unsigned cpus, unsigned memory, const string &hostname);
     void publish_event(WorkflowEvent event, Task *task);
     bool wall_time_exceeded();

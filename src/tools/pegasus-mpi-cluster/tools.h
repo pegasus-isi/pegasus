@@ -13,7 +13,7 @@ using std::string;
 #endif
 
 struct cpuinfo {
-    unsigned int cpus;
+    unsigned int threads;
     unsigned int cores;
     unsigned int sockets;
 };

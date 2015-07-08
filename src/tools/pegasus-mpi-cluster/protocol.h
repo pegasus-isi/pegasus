@@ -67,12 +67,12 @@ class RegistrationMessage: public Message {
 public:
     string hostname;
     unsigned memory;
-    unsigned cpus;
+    unsigned threads;
     unsigned cores;
     unsigned sockets;
 
     RegistrationMessage(char *msg, unsigned msgsize, int source);
-    RegistrationMessage(const string &hostname, unsigned memory, unsigned cpus, unsigned cores, unsigned sockets);
+    RegistrationMessage(const string &hostname, unsigned memory, unsigned threads, unsigned cores, unsigned sockets);
     virtual int tag() const { return REGISTRATION; };
 };
 

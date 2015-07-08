@@ -120,12 +120,12 @@ unsigned long get_host_memory() {
 
 struct cpuinfo get_host_cpuinfo() {
     struct cpuinfo c;
-    c.cpus = 0;
+    c.threads = 0;
     c.cores = 0;
     c.sockets = 0;
 #ifdef __MACH__
     size_t size = sizeof(unsigned int);
-    if (sysctlbyname("hw.logicalcpu", &c.cpus, &size, NULL, 0) < 0) {
+    if (sysctlbyname("hw.logicalcpu", &c.threads, &size, NULL, 0) < 0) {
         myfailures("Unable to get number of CPUs (logical CPUs)");
     }
     if (sysctlbyname("hw.physicalcpu", &c.cores, &size, NULL, 0) < 0) {
@@ -148,7 +148,7 @@ struct cpuinfo get_host_cpuinfo() {
         if (rec.find("processor\t:", 0, 11) == 0) {
             // Each time we encounter a processor field, we increment the
             // number of cpus/threads
-            c.cpus += 1;
+            c.threads += 1;
         } else if (rec.find("physical id\t:", 0, 13) == 0) {
             // Each time we encounter a new physical id, we increment the
             // number of sockets
@@ -181,8 +181,10 @@ struct cpuinfo get_host_cpuinfo() {
 
     infile.close();
 #endif
-    if (c.cpus == 0 || c.cores == 0 || c.sockets == 0 || c.cores > c.cpus || c.sockets > c.cores) {
-        myfailure("Invalid cpuinfo: %u %u %u", c.cpus, c.cores, c.sockets);
+    if (c.threads == 0 || c.cores == 0 || c.sockets == 0 ||
+            c.cores > c.threads || c.sockets > c.cores ||
+            c.threads % c.cores > 0 || c.cores % c.sockets > 0) {
+        myfailure("Invalid cpuinfo: %u %u %u", c.threads, c.cores, c.sockets);
     }
     return c;
 }

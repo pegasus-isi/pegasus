@@ -48,9 +48,81 @@ static void log_invalid_message(Message *mesg) {
     }
 }
 
+Host::Host(const string &host_name, unsigned int memory, unsigned int threads, unsigned int cores, unsigned int sockets) {
+    this->host_name = host_name;
+    this->memory = memory;
+    this->threads = threads;
+    this->cores = cores;
+    this->sockets = sockets;
+    this->slots = 1;
+
+    this->memory_free = memory;
+    this->cpus_free = threads;
+    this->slots_free = slots;
+
+    this->affinity = new Task*[threads];
+    for (int i=0; i<threads; i++) {
+        affinity[i] = NULL;
+    }
+}
+
+Host::~Host() {
+    delete[] affinity;
+}
+
 void Host::log_status() {
     log_trace("Host %s now has %u MB, %u CPUs, and %u slots free", 
-        this->host_name.c_str(), this->memory, this->cpus, this->slots);
+        this->host_name.c_str(), this->memory_free, this->cpus_free, this->slots_free);
+}
+
+void Host::allocate_resources(Task *task) {
+    memory_free -= task->memory;
+    cpus_free -= task->cpus;
+    slots_free -= 1;
+
+    // We only allocate cores for tasks that require more than 1
+    if (task->cpus > 1) {
+
+        // Find 'task->cpus' empty cores
+        int remaining = task->cpus;
+        for (int i=0; i<threads; i++) {
+            if (affinity[i] == NULL) {
+                printf("Allocated cpu %d for task %s\n", i, task->name.c_str());
+                affinity[i] = task;
+                remaining -= 1;
+                if (remaining == 0) {
+                    break;
+                }
+            }
+        }
+
+        if (remaining > 0) {
+            myfailures("Unable to allocate %d cpus for task %s\n",
+                    remaining, task->name.c_str());
+        }
+    }
+
+    log_status();
+}
+
+void Host::release_resources(Task *task) {
+    cpus_free += task->cpus;
+    memory_free += task->memory;
+    slots_free += 1;
+
+    // Clear any cores occupied by this task
+    for (int i=0; i<threads; i++) {
+        if (affinity[i] == task) {
+            affinity[i] = NULL;
+        }
+    }
+
+    log_status();
+}
+
+void Host::add_slot() {
+    this->slots += 1;
+    this->slots_free += 1;
 }
 
 JobstateLog::JobstateLog(const string &path) {
@@ -229,9 +301,9 @@ Master::Master(Communicator *comm, const string &program, Engine &engine,
     this->total_cpus = 0;
     this->total_runtime = 0.0;
 
-    this->memory_avail = 0;
-    this->cpus_avail = 0;
-    this->slots_avail = 0;
+    this->memory_free = 0;
+    this->cpus_free = 0;
+    this->slots_free = 0;
 
     // Determine the number of workers we have
     int numprocs = comm->size();
@@ -434,40 +506,32 @@ void Master::process_result(ResultMessage *mesg) {
     Slot *slot = slots[rank-1];
     
     // Return resources to host
-    release_resources(slot->host, task->cpus, task->memory);
+    release_resources(slot->host, task);
 
     // Mark slot as free
     free_slots.push_back(slot);
 }
 
-void Master::allocate_resources(Host *host, unsigned cpus, unsigned memory) {
+void Master::allocate_resources(Host *host, Task *task) {
+    host->allocate_resources(task);
 
-    memory_avail -= memory;
-    cpus_avail -= cpus;
-    slots_avail -= 1;
+    memory_free -= task->memory;
+    cpus_free -= task->cpus;
+    slots_free -= 1;
 
-    host->memory -= memory;
-    host->cpus -= cpus;
-    host->slots -= 1;
-
-    host->log_status();
-    log_resources(host->slots, host->cpus, host->memory, host->host_name);
-    log_resources(slots_avail, cpus_avail, memory_avail, "*");
+    log_resources(host->slots_free, host->cpus_free, host->memory_free, host->host_name);
+    log_resources(slots_free, cpus_free, memory_free, "*");
 }
 
-void Master::release_resources(Host *host, unsigned cpus, unsigned memory) {
+void Master::release_resources(Host *host, Task *task) {
+    host->release_resources(task);
 
-    memory_avail += memory;
-    cpus_avail += cpus;
-    slots_avail += 1;
+    memory_free += task->memory;
+    cpus_free += task->cpus;
+    slots_free += 1;
 
-    host->cpus += cpus;
-    host->memory += memory;
-    host->slots += 1;
-
-    host->log_status();
-    log_resources(host->slots, host->cpus, host->memory, host->host_name);
-    log_resources(slots_avail, cpus_avail, memory_avail, "*");
+    log_resources(host->slots_free, host->cpus_free, host->memory_free, host->host_name);
+    log_resources(slots_free, cpus_free, memory_free, "*");
 }
 
 void Master::log_resources(unsigned slots, unsigned cpus, unsigned memory, const string &hostname) {
@@ -629,7 +693,7 @@ void Master::register_workers() {
         int rank = msg->source;
         string hostname = msg->hostname;
         unsigned int memory = msg->memory;
-        unsigned int cpus = msg->cpus;
+        unsigned int threads = msg->threads;
         unsigned int cores = msg->cores;
         unsigned int sockets = msg->sockets;
         delete msg;
@@ -638,22 +702,22 @@ void Master::register_workers() {
 
         if (hostmap.find(hostname) == hostmap.end()) {
             // If the host is not found, create a new one
-            log_debug("Got new host: name=%s, mem=%u, cpus=%u, cores=%u, sockets=%u",
-                    hostname.c_str(), memory, cpus, cores, sockets);
-            Host *newhost = new Host(hostname, memory, cpus, cores, sockets);
+            log_debug("Got new host: name=%s, mem=%u, threads/cpus=%u, cores=%u, sockets=%u",
+                    hostname.c_str(), memory, threads, cores, sockets);
+            Host *newhost = new Host(hostname, memory, threads, cores, sockets);
             hosts.push_back(newhost);
             hostmap[hostname] = newhost;
 
-            total_cpus += cpus;
-            cpus_avail += cpus;
-            memory_avail += memory;
+            total_cpus += threads;
+            cpus_free += threads;
+            memory_free += memory;
         } else {
             // Otherwise, increment the number of slots available
             Host *host = hostmap[hostname];
-            host->slots += 1;
+            host->add_slot();
         }
         
-        slots_avail += 1;
+        slots_free += 1;
         
         log_debug("Slot %d on host %s", rank, hostname.c_str());
     }
@@ -687,58 +751,58 @@ void Master::register_workers() {
         log_debug("Host rank of worker %d is %d", rank, hostrank);
     }
     
-    // Log the initial resource availability
+    // Log the initial resource freeability
     for (vector<Host *>::iterator i = hosts.begin(); i!=hosts.end(); i++) {
         Host *host = *i;
-        log_resources(host->slots, host->cpus, host->memory, host->host_name);
+        log_resources(host->slots_free, host->cpus_free, host->memory_free, host->host_name);
     }
-    log_resources(slots_avail, cpus_avail, memory_avail, "*");
+    log_resources(slots_free, cpus_free, memory_free, "*");
 }
 
 void Master::schedule_tasks() {
     log_debug("Scheduling %d tasks on %d slots...", 
         ready_queue.size(), free_slots.size());
-    
+
     int scheduled = 0;
     TaskList deferred_tasks;
-    
+
     while (ready_queue.size() > 0 && free_slots.size() > 0) {
         Task *task = ready_queue.top();
         ready_queue.pop();
-        
+
         log_trace("Scheduling task %s", task->name.c_str());
-        
+
         bool match = false;
-        
+
         for (SlotList::iterator s = free_slots.begin(); s != free_slots.end(); s++) {
             Slot *slot = *s;
             Host *host = slot->host;
-            
+
             // If the task fits, schedule it
-            if (host->memory >= task->memory && host->cpus >= task->cpus) {
-                
+            if (host->memory_free >= task->memory && host->cpus_free >= task->cpus) {
+
                 log_trace("Matched task %s to slot %d on host %s", 
                     task->name.c_str(), slot->rank, host->host_name.c_str());
-                
+
                 // Reserve the resources
-                allocate_resources(host, task->cpus, task->memory);
-                
+                allocate_resources(host, task);
+
                 submit_task(task, slot->rank);
-                
+
                 s = free_slots.erase(s);
-                
+
                 // so that the s++ in the loop doesn't skip one
                 s--;
-                
+
                 match = true;
                 scheduled += 1;
-                
+
                 // This is to break out of the slot loop so that we can 
                 // consider the next task
                 break;
             }
         }
-        
+
         if (!match) {
             // If the task could not be scheduled, then we save it 
             // and move on to the next one. It will be requeued later.
@@ -746,9 +810,9 @@ void Master::schedule_tasks() {
             deferred_tasks.push_back(task);
         }
     }
-    
+
     log_debug("Scheduled %d tasks and deferred %d tasks", scheduled, deferred_tasks.size());
-    
+
     // Requeue all the deferred tasks
     for (TaskList::iterator t = deferred_tasks.begin(); t != deferred_tasks.end(); t++) {
         ready_queue.push(*t);
@@ -806,7 +870,7 @@ int Master::run() {
         bool match = false;
         for (unsigned h=0; h<hosts.size(); h++) {
             Host *host = hosts[h];
-            if (host->memory >= task->memory && host->cpus >= task->cpus) {
+            if (host->memory >= task->memory && host->threads >= task->cpus) {
                 match = true;
                 break;
             }
