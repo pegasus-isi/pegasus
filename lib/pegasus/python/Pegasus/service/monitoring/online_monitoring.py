@@ -1,4 +1,3 @@
-from multiprocessing import Process
 import pika
 from influxdb.influxdb08 import InfluxDBClient
 import datetime
