@@ -68,9 +68,11 @@ public:
     string hostname;
     unsigned memory;
     unsigned cpus;
+    unsigned cores;
+    unsigned sockets;
 
     RegistrationMessage(char *msg, unsigned msgsize, int source);
-    RegistrationMessage(const string &hostname, unsigned memory, unsigned cpus);
+    RegistrationMessage(const string &hostname, unsigned memory, unsigned cpus, unsigned cores, unsigned sockets);
     virtual int tag() const { return REGISTRATION; };
 };
 

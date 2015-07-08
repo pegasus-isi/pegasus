@@ -22,15 +22,19 @@ public:
     string host_name;
     unsigned int memory;
     unsigned int cpus;
+    unsigned int cores;
+    unsigned int sockets;
     unsigned int slots;
-    
-    Host(const string &host_name, unsigned int memory, unsigned int cpus) {
+
+    Host(const string &host_name, unsigned int memory, unsigned int cpus, unsigned int cores, unsigned int sockets) {
         this->host_name = host_name;
         this->memory = memory;
         this->cpus = cpus;
+        this->cores = cores;
+        this->sockets = sockets;
         this->slots = 1;
     }
-    
+
     void log_status();
 };
 

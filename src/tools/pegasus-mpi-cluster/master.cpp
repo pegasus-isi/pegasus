@@ -630,17 +630,20 @@ void Master::register_workers() {
         string hostname = msg->hostname;
         unsigned int memory = msg->memory;
         unsigned int cpus = msg->cpus;
+        unsigned int cores = msg->cores;
+        unsigned int sockets = msg->sockets;
         delete msg;
-        
+
         hostnames[rank] = hostname;
-        
+
         if (hostmap.find(hostname) == hostmap.end()) {
             // If the host is not found, create a new one
-            log_debug("Got new host: name=%s, mem=%u, cpus=%u", hostname.c_str(), memory, cpus);
-            Host *newhost = new Host(hostname, memory, cpus);
+            log_debug("Got new host: name=%s, mem=%u, cpus=%u, cores=%u, sockets=%u",
+                    hostname.c_str(), memory, cpus, cores, sockets);
+            Host *newhost = new Host(hostname, memory, cpus, cores, sockets);
             hosts.push_back(newhost);
             hostmap[hostname] = newhost;
-            
+
             total_cpus += cpus;
             cpus_avail += cpus;
             memory_avail += memory;

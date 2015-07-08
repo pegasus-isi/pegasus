@@ -83,6 +83,8 @@ public:
     string host_name;
     unsigned int host_memory;
     unsigned int host_cpus;
+    unsigned int host_cores;
+    unsigned int host_sockets;
 
     bool strict_limits;
 

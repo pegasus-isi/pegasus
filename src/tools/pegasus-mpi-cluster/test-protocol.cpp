@@ -80,7 +80,9 @@ void test_registration() {
     string hostname = "hostname";
     unsigned memory = 7;
     unsigned cpus = 5;
-    RegistrationMessage input(hostname, memory, cpus);
+    unsigned cores = 3;
+    unsigned sockets = 2;
+    RegistrationMessage input(hostname, memory, cpus, cores, sockets);
     RegistrationMessage output(msgcopy(input.msg, input.msgsize), input.msgsize, 0);
     if (input.hostname != output.hostname) {
         myfailure("hostname does not match");
@@ -90,6 +92,12 @@ void test_registration() {
     }
     if (input.cpus != output.cpus) {
         myfailure("cpus do not match");
+    }
+    if (input.cores != output.cores) {
+        myfailure("cores do not match");
+    }
+    if (input.sockets != output.sockets) {
+        myfailure("sockets do not match");
     }
 }
 

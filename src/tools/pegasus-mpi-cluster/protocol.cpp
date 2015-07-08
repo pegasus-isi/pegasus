@@ -218,23 +218,34 @@ RegistrationMessage::RegistrationMessage(char *msg, unsigned msgsize, int source
     memcpy(&memory, msg + off, sizeof(memory));
     off += sizeof(memory);
     memcpy(&cpus, msg + off, sizeof(cpus));
-    //off += sizeof(cpus);
+    off += sizeof(cpus);
+    memcpy(&cores, msg + off, sizeof(cores));
+    off += sizeof(cores);
+    memcpy(&sockets, msg + off, sizeof(sockets));
+    //off += sizeof(sockets);
 }
 
-RegistrationMessage::RegistrationMessage(const string &hostname, unsigned memory, unsigned cpus) {
+RegistrationMessage::RegistrationMessage(const string &hostname, unsigned memory, unsigned cpus, unsigned cores, unsigned sockets) {
     this->hostname = hostname;
     this->memory = memory;
     this->cpus = cpus;
+    this->cores = cores;
+    this->sockets = sockets;
 
-    this->msgsize = hostname.length() + 1 + sizeof(memory) + sizeof(cpus);
+    this->msgsize = hostname.length() + 1 + sizeof(memory) + sizeof(cpus) + sizeof(cores) + sizeof(sockets);
     this->msg = new char[this->msgsize];
-    
+
     int off = 0;
     strcpy(msg + off, hostname.c_str());
     off += strlen(msg) + 1;
     memcpy(msg + off, &memory, sizeof(memory));
     off += sizeof(memory);
     memcpy(msg + off, &cpus, sizeof(cpus));
+    off += sizeof(cpus);
+    memcpy(msg + off, &cores, sizeof(cores));
+    off += sizeof(cores);
+    memcpy(msg + off, &sockets, sizeof(sockets));
+    //off += sizeof(sockets);
 }
 
 HostrankMessage::HostrankMessage(char *msg, unsigned msgsize, int source) : Message(msg, msgsize, source) {

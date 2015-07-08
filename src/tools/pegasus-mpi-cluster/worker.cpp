@@ -668,8 +668,12 @@ Worker::Worker(Communicator *comm, const string &dagfile, const string &host_scr
     if (host_cpus == 0) {
         struct cpuinfo c = get_host_cpuinfo();
         this->host_cpus = c.cpus;
+        this->host_cores = c.cores;
+        this->host_sockets = c.sockets;
     } else {
         this->host_cpus = host_cpus;
+        this->host_cores = host_cpus;
+        this->host_sockets = 1;
     }
     this->strict_limits = strict_limits;
     this->per_task_stdio = per_task_stdio;
@@ -864,11 +868,13 @@ int Worker::run() {
     log_debug("Worker %d: Starting...", rank);
 
     // Send worker's registration message to the master
-    RegistrationMessage regmsg(host_name, host_memory, host_cpus);
+    RegistrationMessage regmsg(host_name, host_memory, host_cpus, host_cores, host_sockets);
     comm->send_message(&regmsg, 0);
     log_trace("Worker %d: Host name: %s", rank, host_name.c_str());
     log_trace("Worker %d: Host memory: %u MB", rank, this->host_memory);
     log_trace("Worker %d: Host CPUs: %u", rank, this->host_cpus);
+    log_trace("Worker %d: Host cores: %u", rank, this->host_cores);
+    log_trace("Worker %d: Host sockets: %u", rank, this->host_sockets);
 
     // Get worker's host rank
     HostrankMessage *hrmsg = dynamic_cast<HostrankMessage *>(comm->recv_message());
