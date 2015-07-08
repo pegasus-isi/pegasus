@@ -142,7 +142,7 @@ struct cpuinfo get_host_cpuinfo() {
     }
 
     int last_physical_id = -1;
-    int new_socket = 0;
+    bool new_socket = false;
     string rec;
     while (getline(infile, rec)) {
         if (rec.find("processor\t:", 0, 11) == 0) {
@@ -153,13 +153,13 @@ struct cpuinfo get_host_cpuinfo() {
             // Each time we encounter a new physical id, we increment the
             // number of sockets
             int new_physical_id;
-            if (sscanf(rec.c_str(), "physical id\t: %u", &new_physical_id) != 1) {
+            if (sscanf(rec.c_str(), "physical id\t: %d", &new_physical_id) != 1) {
                 myfailures("Error reading 'physical id' field from /proc/cpuinfo");
             }
             if (new_physical_id != last_physical_id) {
                 c.sockets += 1;
                 last_physical_id = new_physical_id;
-                new_socket = 1;
+                new_socket = true;
             }
         } else if (rec.find("cpu cores\t:", 0, 11) == 0) {
             // Each time we encounter a new socket, we count the number of
@@ -170,7 +170,7 @@ struct cpuinfo get_host_cpuinfo() {
                     myfailures("Error reading 'cpu cores' field from /proc/cpuinfo");
                 }
                 c.cores += cores;
-                new_socket = 0;
+                new_socket = false;
             }
         }
     }
