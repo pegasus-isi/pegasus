@@ -175,6 +175,8 @@ class File(SABase):
 class JobMetrics(SABase):
     pass
 
+class Anomaly(SABase):
+    pass
 
 # ---------------------------------------------
 # DASHBOARD
@@ -520,6 +522,20 @@ Index('file_id_UNIQUE', st_file.c.file_id, unique=True)
 Index('FK_FILE_TASK_ID', st_task.c.task_id, unique=False)
 
 orm.mapper(File, st_file)
+
+st_anomalies = Table('anomalies', metadata,
+                     Column('anomaly_id', KeyInteger, primary_key=True, nullable=False),
+                     Column('wf_id', KeyInteger, ForeignKey('workflow.wf_id', ondelete='CASCADE'), nullable=False),
+                     Column('dag_job_id', VARCHAR(255), nullable=False),
+                     Column('ts', NUMERIC(precision=16, scale=6), nullable=False),
+                     Column('anomaly_type', VARCHAR(255), nullable=False),
+                     Column('message', VARCHAR(255), nullable=False),
+                     Column('json', VARCHAR(255), nullable=False),
+                     **table_keywords
+                     )
+
+Index('anomalies_ts_idx', st_anomalies.c.ts)
+orm.mapper(Anomaly, st_anomalies)
 
 
 # ---------------------------------------------

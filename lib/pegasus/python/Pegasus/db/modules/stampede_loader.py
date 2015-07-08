@@ -28,6 +28,7 @@ from Pegasus.netlogger import util
 from sqlalchemy import exc
 import sys
 import time
+import json
 
 class Analyzer(BaseAnalyzer, SQLAlchemyInit):
     """Load into the Stampede SQL schema through SQLAlchemy.
@@ -96,6 +97,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             'stampede.inv.start' : self.noop, # good
             'stampede.inv.end' : self.invocation,
             'stampede.job.monitoring': self.online_monitoring_update,
+            'stampede.job.anomaly_detection': self.anomaly_detected
         }
 
         # Dicts for caching FK lookups
@@ -799,6 +801,18 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             # we update existing measurement
             job_metrics.job_metrics_id = result[0].job_metrics_id
             job_metrics.merge_to_db(self.session)
+
+    def anomaly_detected(self, linedata):
+        """
+        This function inserts a new row into the anomalies table.
+        :param linedata: includes (ts, wf_uuid, dag_job_id, anomaly_type, message, raw_data) params
+        """
+        linedata['wf_id'] = self.wf_uuid_to_id(linedata['wf_uuid'])
+
+        anomaly = self.linedataToObject(linedata, Anomaly())
+        anomaly.json = json.dumps(anomaly.json)
+
+        anomaly.commit_to_db(self.session)
 
     ####################################
     # DB helper/lookup/caching functions

@@ -70,27 +70,16 @@ class AnomalyHandler:
     def emit_anomaly_event(self, anomaly):
         """Sending an event to an event sink (stampede db most probably) about an anomaly."""
 
-        # kwargs = {
-        #     'time': anomaly.ts,
-        #     ''
-        # }
-        # kwargs.update(aggregator.message_info())
-        #
-        # for idx, column_name in enumerate(aggregator.metrics):
-        #     attr_value = aggregator.aggregated_measurements[idx]
-        #
-        #     if column_name == "time":
-        #         column_name = "ts"
-        #
-        #     kwargs[column_name] = attr_value
+        kwargs = {}
+        kwargs.update(anomaly.message_info())
 
-        # event = "job.anomaly_detection"
-        #
-        # try:
-        #     print "Sending anomaly record to DB %s,%s" % (event, kwargs)
-        #     self.event_sink.send(event, kwargs)
-        # except:
-        #     print "error sending event: %s --> %s" % (event, kwargs)
+        event = "job.anomaly_detection"
+
+        try:
+            print "Sending anomaly record to DB %s,%s" % (event, kwargs)
+            self.event_sink.send(event, kwargs)
+        except:
+            print "error sending event: %s --> %s" % (event, kwargs)
 
     def close(self):
         self.event_sink.close()
@@ -156,63 +145,42 @@ class AnomalyHandler:
 
 
 class AnomalyMessage:
-    def __init__(self, ts, wf_uuid, dag_job_id, anomaly_type, message, raw_data):
+    def __init__(self, ts, wf_uuid, anomaly_type, message, raw_data):
         self.ts = ts
         self.wf_uuid = wf_uuid
-        self.dag_job_id = dag_job_id
         self.anomaly_type = anomaly_type
         self.message = message
-        self.raw_data = raw_data  # this should be a dict object
+        self.json = raw_data  # this should be a dict object
+
+    @staticmethod
+    def required_params():
+        return ["ts", "wf_uuid", "dag_job_id", "anomaly_type", "message"]
 
     @staticmethod
     def parse(raw_message):
         """
         Factory method
         """
-        required_params = ("ts", "wf_uuid", "dag_job_id", "type", "message")
-
         anomaly_message = dict(item.split("=") for item in raw_message.strip().split("|"))
 
-        if not all(k in anomaly_message for k in required_params):
-            print "[anomaly-handler] We expect anomaly message to include parameters:", required_params
+        if not all(k in anomaly_message for k in AnomalyMessage.required_params()):
+            print "[anomaly-handler] We expect anomaly message to include parameters:", AnomalyMessage.required_params()
             print "[anomaly-handler] but we got:", raw_message
             return None
         else:
-            return AnomalyMessage(anomaly_message["ts"], anomaly_message["wf_uuid"], anomaly_message["dag_job_id"],
-                                  anomaly_message["type"], anomaly_message["message"], anomaly_message)
+            return AnomalyMessage(anomaly_message["ts"], anomaly_message["wf_uuid"], anomaly_message["anomaly_type"],
+                                  anomaly_message["message"], anomaly_message)
 
-            # def metrics(self):
-            #     return self.perf_metrics
-            #
-            # def measurements(self):
-            #     point = []
-            #
-            #     for column in self.metrics():
-            #         if column == "time":
-            #             column = "ts"
-            #             point.append(int(self.msg[column]))
-            #         else:
-            #             if column not in self.msg:
-            #                 point.append(float(0))
-            #             else:
-            #                 point.append(float(self.msg[column]))
-            #
-            #     return point
-            #
-            # def aggregated_message_info(self, exec_name):
-            #     info = dict()
-            #
-            #     for attr in ["wf_uuid", "dag_job_id", "hostname", "condor_job_id", "kickstart_pid"]:
-            #         if attr not in self.msg:
-            #             continue
-            #
-            #         attr_value = self.msg[attr]
-            #         column_name = attr
-            #         if attr == "condor_job_id":
-            #             column_name = "sched_id"
-            #
-            #         info[column_name] = attr_value
-            #
-            #     info["exec_name"] = exec_name
-            #
-            #     return info
+    def message_info(self):
+        info = {
+            'ts': self.ts,
+            'wf_uuid': self.wf_uuid,
+            'anomaly_type': self.anomaly_type,
+            'message': self.message,
+            'json': self.json
+        }
+
+        if 'dag_job_id' in self.json:
+            info['dag_job_id'] = self.json['dag_job_id']
+
+        return info
