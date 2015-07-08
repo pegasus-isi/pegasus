@@ -21,7 +21,6 @@ class Host {
 private:
     Task **cpus;
 
-public:
     string host_name;
     unsigned int memory;
     unsigned int threads;
@@ -33,9 +32,12 @@ public:
     unsigned int cpus_free;
     unsigned int slots_free;
 
+public:
     Host(const string &host_name, unsigned int memory, unsigned int threads, unsigned int cores, unsigned int sockets);
     ~Host();
+    const char *name() { return host_name.c_str(); }
     void add_slot();
+    bool can_run(Task *task);
     void allocate_resources(Task *task);
     void release_resources(Task *task);
     void log_resources(FILE *resource_log);

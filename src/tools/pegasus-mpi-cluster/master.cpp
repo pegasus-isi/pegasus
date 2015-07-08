@@ -70,6 +70,10 @@ Host::~Host() {
     delete[] cpus;
 }
 
+bool Host::can_run(Task *task) {
+    return memory_free >= task->memory && cpus_free >= task->cpus;
+}
+
 void Host::allocate_resources(Task *task) {
     memory_free -= task->memory;
     cpus_free -= task->cpus;
@@ -741,10 +745,10 @@ void Master::schedule_tasks() {
             Host *host = slot->host;
 
             // If the task fits, schedule it
-            if (host->memory_free >= task->memory && host->cpus_free >= task->cpus) {
+            if (host->can_run(task)) {
 
                 log_trace("Matched task %s to slot %d on host %s", 
-                    task->name.c_str(), slot->rank, host->host_name.c_str());
+                    task->name.c_str(), slot->rank, host->name());
 
                 // Reserve the resources
                 host->allocate_resources(task);
@@ -833,7 +837,7 @@ int Master::run() {
         bool match = false;
         for (unsigned h=0; h<hosts.size(); h++) {
             Host *host = hosts[h];
-            if (host->memory >= task->memory && host->threads >= task->cpus) {
+            if (host->can_run(task)) {
                 match = true;
                 break;
             }
