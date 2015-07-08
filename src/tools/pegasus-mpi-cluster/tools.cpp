@@ -1,4 +1,5 @@
 #include <string>
+#include <fstream>
 #include <errno.h>
 #include <math.h>
 #include <stdio.h>
@@ -134,12 +135,53 @@ struct cpuinfo get_host_cpuinfo() {
         myfailures("Unable to get number of CPU sockets");
     }
 #else
-    // FIXME We need to read this from /proc/cpuinfo on LINUX
-    c.cpus = 4;
-    c.cores = 2;
-    c.sockets = 1;
+    std::ifstream infile;
+    infile.open("/proc/cpuinfo");
+    if (!infile.good()) {
+        myfailures("Error opening /proc/cpuinfo");
+    }
+
+    int last_physical_id = -1;
+    int new_socket = 0;
+    string rec;
+    while (getline(infile, rec)) {
+        if (rec.find("processor\t:", 0, 11) == 0) {
+            // Each time we encounter a processor field, we increment the
+            // number of cpus/threads
+            c.cpus += 1;
+        } else if (rec.find("physical id\t:", 0, 13) == 0) {
+            // Each time we encounter a new physical id, we increment the
+            // number of sockets
+            int new_physical_id;
+            if (sscanf(rec.c_str(), "physical id\t: %u", &new_physical_id) != 1) {
+                myfailures("Error reading 'physical id' field from /proc/cpuinfo");
+            }
+            if (new_physical_id != last_physical_id) {
+                c.sockets += 1;
+                last_physical_id = new_physical_id;
+                new_socket = 1;
+            }
+        } else if (rec.find("cpu cores\t:", 0, 11) == 0) {
+            // Each time we encounter a new socket, we count the number of
+            // cores it has
+            if (new_socket) {
+                unsigned int cores;
+                if (sscanf(rec.c_str(), "cpu cores\t: %u", &cores) != 1) {
+                    myfailures("Error reading 'cpu cores' field from /proc/cpuinfo");
+                }
+                c.cores += cores;
+                new_socket = 0;
+            }
+        }
+    }
+
+    if (infile.bad() || !infile.eof()) {
+        myfailures("Error reading /proc/cpuinfo");
+    }
+
+    infile.close();
 #endif
-    if (c.cpus == 0 || c.cores == 0 || c.sockets == 0) {
+    if (c.cpus == 0 || c.cores == 0 || c.sockets == 0 || c.cores > c.cpus || c.sockets > c.cores) {
         myfailure("Invalid cpuinfo: %u %u %u", c.cpus, c.cores, c.sockets);
     }
     return c;
