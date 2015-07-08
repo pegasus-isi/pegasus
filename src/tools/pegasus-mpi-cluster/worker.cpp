@@ -19,6 +19,7 @@
 #include "log.h"
 #include "failure.h"
 #include "tools.h"
+#include "config.h"
 
 using std::string;
 using std::map;
@@ -309,6 +310,11 @@ void TaskHandler::child_process() {
             log_error("Unable to set memory limit (RLIMIT_AS) for task %s: %s",
                 name.c_str(), strerror(errno));
         }
+    }
+
+    // For multicore jobs, set CPU affinity
+    if (cpus > 1 && config.set_affinity) {
+        // TODO Set cpu affinity
     }
 
     // Exec process

@@ -69,6 +69,7 @@ OBJS += protocol.o
 OBJS += mpicomm.o
 OBJS += fdcache.o
 OBJS += log.o
+OBJS += config.o
 
 PROGRAMS += pegasus-mpi-cluster
 

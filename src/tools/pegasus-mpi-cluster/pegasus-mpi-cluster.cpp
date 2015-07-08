@@ -16,6 +16,7 @@
 #include "mpicomm.h"
 #include "protocol.h"
 #include "tools.h"
+#include "config.h"
 
 using std::string;
 using std::list;
@@ -79,7 +80,8 @@ void usage() {
             "   --no-resource-log    Do not generate a log of resource usage\n"
             "   --no-sleep-on-recv   Do not sleep on message receive\n"
             "   --maxfds             Maximum cached file descriptors\n"
-            "   --keep-affinity      Keep inherited CPU and memory affinity\n",
+            "   --keep-affinity      Keep inherited CPU and memory affinity\n"
+            "   --set-affinity       Set CPU affinity for multicore tasks\n",
             program
         );
     }
@@ -121,6 +123,7 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
     bool sleep_on_recv = true;
     int maxfds = 0;
     bool clear_affinity = true;
+    config.set_affinity = false;
 
     // Environment variable defaults
     char *env_host_script = getenv("PMC_HOST_SCRIPT");
@@ -299,6 +302,8 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
             }
         } else if (flag == "--keep-affinity") {
             clear_affinity = false;
+        } else if (flag == "--set-affinity") {
+            config.set_affinity = true;
         } else if (flag[0] == '-') {
             string message = "Unrecognized argument: ";
             message += flag;
@@ -337,7 +342,7 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
     // affinity settings on Linux. This is the default because some systems
     // are not configured correctly and bind all the processes to one CPU,
     // and we can't expect users to know that this is happening.
-    if (clear_affinity) {
+    if (clear_affinity || config.set_affinity) {
         log_debug("Rank %d: Clearing CPU and memory affinity", rank);
         if (clear_cpu_affinity() < 0) {
             log_error("Rank %d: Error clearing CPU affinity: %s",
