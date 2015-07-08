@@ -61,7 +61,7 @@ Host::Host(const string &host_name, unsigned int memory, unsigned int threads, u
     this->slots_free = slots;
 
     this->cpus = new Task*[threads];
-    for (int i=0; i<threads; i++) {
+    for (unsigned i=0; i<threads; i++) {
         cpus[i] = NULL;
     }
 }
@@ -84,7 +84,7 @@ void Host::allocate_resources(Task *task) {
 
         // Find 'task->cpus' empty cores
         int remaining = task->cpus;
-        for (int i=0; i<threads; i++) {
+        for (unsigned i=0; i<threads; i++) {
             if (cpus[i] == NULL) {
                 printf("Allocated cpu %d for task %s\n", i, task->name.c_str());
                 cpus[i] = task;
@@ -108,7 +108,7 @@ void Host::release_resources(Task *task) {
     slots_free += 1;
 
     // Clear any cores occupied by this task
-    for (int i=0; i<threads; i++) {
+    for (unsigned i=0; i<threads; i++) {
         if (cpus[i] == task) {
             cpus[i] = NULL;
         }
