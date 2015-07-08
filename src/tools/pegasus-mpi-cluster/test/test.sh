@@ -390,8 +390,8 @@ function test_resource_log {
     
     LINES=$(cat test/sleep.dag.resource | wc -l)
     
-    if [ $LINES -ne 6 ]; then
-        echo "ERROR: Expected 6 lines in the resource log"
+    if [ $LINES -ne 3 ]; then
+        echo "ERROR: Expected 3 lines in the resource log got $LINES"
         return 1
     fi
 }

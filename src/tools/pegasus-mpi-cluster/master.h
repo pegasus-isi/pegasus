@@ -19,9 +19,7 @@ using std::map;
 
 class Host {
 private:
-    Task **affinity;
-
-    void log_status();
+    Task **cpus;
 
 public:
     string host_name;
@@ -40,6 +38,7 @@ public:
     void add_slot();
     void allocate_resources(Task *task);
     void release_resources(Task *task);
+    void log_resources(FILE *resource_log);
 };
 
 class Slot {
@@ -139,10 +138,6 @@ class Master {
     double start_time;
     double finish_time;
     double wall_time;
-
-    unsigned cpus_free;
-    unsigned memory_free;
-    unsigned slots_free;
     
     FDCache *fdcache;
     
@@ -162,9 +157,6 @@ class Master {
     void merge_task_stdio(FILE *dest, const string &src, const string &stream);
     void write_cluster_summary(bool failed);
 
-    void allocate_resources(Host *host, Task *task);
-    void release_resources(Host *host, Task *task);
-    void log_resources(unsigned slots, unsigned cpus, unsigned memory, const string &hostname);
     void publish_event(WorkflowEvent event, Task *task);
     bool wall_time_exceeded();
 public:

@@ -60,19 +60,14 @@ Host::Host(const string &host_name, unsigned int memory, unsigned int threads, u
     this->cpus_free = threads;
     this->slots_free = slots;
 
-    this->affinity = new Task*[threads];
+    this->cpus = new Task*[threads];
     for (int i=0; i<threads; i++) {
-        affinity[i] = NULL;
+        cpus[i] = NULL;
     }
 }
 
 Host::~Host() {
-    delete[] affinity;
-}
-
-void Host::log_status() {
-    log_trace("Host %s now has %u MB, %u CPUs, and %u slots free", 
-        this->host_name.c_str(), this->memory_free, this->cpus_free, this->slots_free);
+    delete[] cpus;
 }
 
 void Host::allocate_resources(Task *task) {
@@ -86,9 +81,9 @@ void Host::allocate_resources(Task *task) {
         // Find 'task->cpus' empty cores
         int remaining = task->cpus;
         for (int i=0; i<threads; i++) {
-            if (affinity[i] == NULL) {
+            if (cpus[i] == NULL) {
                 printf("Allocated cpu %d for task %s\n", i, task->name.c_str());
-                affinity[i] = task;
+                cpus[i] = task;
                 remaining -= 1;
                 if (remaining == 0) {
                     break;
@@ -101,8 +96,6 @@ void Host::allocate_resources(Task *task) {
                     remaining, task->name.c_str());
         }
     }
-
-    log_status();
 }
 
 void Host::release_resources(Task *task) {
@@ -112,17 +105,32 @@ void Host::release_resources(Task *task) {
 
     // Clear any cores occupied by this task
     for (int i=0; i<threads; i++) {
-        if (affinity[i] == task) {
-            affinity[i] = NULL;
+        if (cpus[i] == task) {
+            cpus[i] = NULL;
         }
     }
-
-    log_status();
 }
 
 void Host::add_slot() {
     this->slots += 1;
     this->slots_free += 1;
+}
+
+void Host::log_resources(FILE *resource_log) {
+    log_trace("Host %s now has %u MB, %u CPUs, and %u slots free", 
+        this->host_name.c_str(), this->memory_free, this->cpus_free, this->slots_free);
+
+    if (resource_log == NULL) {
+        return;
+    }
+
+    struct timeval ts;
+
+    gettimeofday(&ts, NULL);
+    double timestamp = ts.tv_sec + (ts.tv_usec / 1.0e6);
+
+    fprintf(resource_log, "%lf,%u,%u,%u,%s\n", 
+            timestamp, slots_free, cpus_free, memory_free, host_name.c_str());
 }
 
 JobstateLog::JobstateLog(const string &path) {
@@ -300,10 +308,6 @@ Master::Master(Communicator *comm, const string &program, Engine &engine,
 
     this->total_cpus = 0;
     this->total_runtime = 0.0;
-
-    this->memory_free = 0;
-    this->cpus_free = 0;
-    this->slots_free = 0;
 
     // Determine the number of workers we have
     int numprocs = comm->size();
@@ -506,46 +510,11 @@ void Master::process_result(ResultMessage *mesg) {
     Slot *slot = slots[rank-1];
     
     // Return resources to host
-    release_resources(slot->host, task);
+    slot->host->release_resources(task);
+    slot->host->log_resources(resource_log);
 
     // Mark slot as free
     free_slots.push_back(slot);
-}
-
-void Master::allocate_resources(Host *host, Task *task) {
-    host->allocate_resources(task);
-
-    memory_free -= task->memory;
-    cpus_free -= task->cpus;
-    slots_free -= 1;
-
-    log_resources(host->slots_free, host->cpus_free, host->memory_free, host->host_name);
-    log_resources(slots_free, cpus_free, memory_free, "*");
-}
-
-void Master::release_resources(Host *host, Task *task) {
-    host->release_resources(task);
-
-    memory_free += task->memory;
-    cpus_free += task->cpus;
-    slots_free += 1;
-
-    log_resources(host->slots_free, host->cpus_free, host->memory_free, host->host_name);
-    log_resources(slots_free, cpus_free, memory_free, "*");
-}
-
-void Master::log_resources(unsigned slots, unsigned cpus, unsigned memory, const string &hostname) {
-    if (resource_log == NULL) {
-        return;
-    }
-
-    struct timeval ts;
-
-    gettimeofday(&ts, NULL);
-    double timestamp = ts.tv_sec + (ts.tv_usec / 1.0e6);
-
-    fprintf(resource_log, "%lf,%u,%u,%u,%s\n", 
-            timestamp, slots, cpus, memory, hostname.c_str());
 }
 
 void Master::merge_all_task_stdio() {
@@ -707,17 +676,11 @@ void Master::register_workers() {
             Host *newhost = new Host(hostname, memory, threads, cores, sockets);
             hosts.push_back(newhost);
             hostmap[hostname] = newhost;
-
-            total_cpus += threads;
-            cpus_free += threads;
-            memory_free += memory;
         } else {
             // Otherwise, increment the number of slots available
             Host *host = hostmap[hostname];
             host->add_slot();
         }
-        
-        slots_free += 1;
         
         log_debug("Slot %d on host %s", rank, hostname.c_str());
     }
@@ -754,9 +717,8 @@ void Master::register_workers() {
     // Log the initial resource freeability
     for (vector<Host *>::iterator i = hosts.begin(); i!=hosts.end(); i++) {
         Host *host = *i;
-        log_resources(host->slots_free, host->cpus_free, host->memory_free, host->host_name);
+        host->log_resources(resource_log);
     }
-    log_resources(slots_free, cpus_free, memory_free, "*");
 }
 
 void Master::schedule_tasks() {
@@ -785,7 +747,8 @@ void Master::schedule_tasks() {
                     task->name.c_str(), slot->rank, host->host_name.c_str());
 
                 // Reserve the resources
-                allocate_resources(host, task);
+                host->allocate_resources(task);
+                host->log_resources(resource_log);
 
                 submit_task(task, slot->rank);
 
