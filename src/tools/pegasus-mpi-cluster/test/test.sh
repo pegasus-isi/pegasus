@@ -736,6 +736,7 @@ run_test ./test-log
 run_test ./test-engine
 run_test ./test-fdcache
 run_test ./test-protocol
+run_test ./test-scheduler
 run_test test_PM954
 run_test test_help
 run_test test_help_no_mpi

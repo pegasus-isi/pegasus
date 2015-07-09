@@ -89,10 +89,55 @@ void test_scheduler_44_2() {
     }
 }
 
+void test_scheduler_2222_4() {
+    unsigned memory = 8192;
+    unsigned threads = 8;
+    unsigned cores = 4;
+    unsigned sockets = 2;
+    Host h("localhost", memory, threads, cores, sockets);
+
+    DAG dag("test/PM953.dag");
+    Task *two = dag.get_task("two");
+    Task *two2 = dag.get_task("two2");
+    Task *two3 = dag.get_task("two3");
+    Task *two4 = dag.get_task("two4");
+
+    vector<unsigned> rtwo = h.allocate_resources(two);
+    vector<unsigned> rtwo2 = h.allocate_resources(two2);
+    vector<unsigned> rtwo3 = h.allocate_resources(two3);
+    vector<unsigned> rtwo4 = h.allocate_resources(two4);
+
+    if (rtwo.size() != 2 || rtwo[0] != 0 || rtwo[1] != 1) {
+        myfailure("task two was bound to the wrong cores");
+    }
+    if (rtwo2.size() != 2 || rtwo2[0] != 2 || rtwo2[1] != 3) {
+        myfailure("task two2 was bound to the wrong cores");
+    }
+    if (rtwo3.size() != 2 || rtwo3[0] != 4 || rtwo3[1] != 5) {
+        myfailure("task two3 was bound to the wrong cores");
+    }
+    if (rtwo4.size() != 2 || rtwo4[0] != 6 || rtwo4[1] != 7) {
+        myfailure("task two4 was bound to the wrong cores");
+    }
+
+    // Clear up cores 2 and 3
+    h.release_resources(two2);
+    h.release_resources(two3);
+
+    // Task four should not be bound to any cores
+    Task *four = dag.get_task("four");
+    vector<unsigned> rfour = h.allocate_resources(four);
+
+    if (rfour.size() != 0) {
+        myfailure("task four was bound to fragmented cores");
+    }
+}
+
 int main(int argc, char **argv) {
     log_set_level(LOG_WARN);
     test_scheduler_124_8();
     test_scheduler_44_2();
+    test_scheduler_2222_4();
     return 0;
 }
 

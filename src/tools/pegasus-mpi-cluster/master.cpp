@@ -136,19 +136,10 @@ vector<unsigned> Host::allocate_resources(Task *task) {
         }
     }
 
-    // If we didn't get a contiguous solution above, we need to get a
-    // non-contiguous solution here
+    // If we didn't get a contiguous solution above, then don't bind anything
     if (bindings.size() != task->cpus) {
-        log_warn("CPU fragmentation detected for task %s", task->name.c_str());
-        for (unsigned i=0; i<threads; i++) {
-            if (cpus[i] == NULL) {
-                bindings.push_back(i);
-                if (bindings.size() == task->cpus) {
-                    // Ok, now we got a non-contiguous solution
-                    break;
-                }
-            }
-        }
+        bindings.clear();
+        log_warn("CPU fragmentation detected when scheduling task %s: not setting affinity", task->name.c_str());
     }
 
     // Mark all the cpus that were allocated to the task
