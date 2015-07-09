@@ -250,24 +250,28 @@ class MonitoringMessage:
 
     @staticmethod
     def parse(raw_message):
-        message = dict(item.split("=") for item in raw_message.strip().split(" "))
+        try:
+            message = dict(item.split("=") for item in raw_message.strip().split(" "))
 
-        if "event" not in message:
-            print "There is no 'event' attribute in the message"
+            if "event" not in message:
+                print "There is no 'event' attribute in the message"
+                return None
+
+            parsed_msg = None
+
+            if message["event"] == "workflow_trace":
+                parsed_msg = WorkflowTraceMessage(message)
+
+            elif message["event"] == "data_transfer":
+                parsed_msg = DataTransferMessage(message)
+
+            if parsed_msg.trace_id is None:
+                return None
+
+            return parsed_msg
+        except ValueError as val_error:
+            print "[online-monitord] Wrong message format (", raw_message, ") : ", val_error
             return None
-
-        parsed_msg = None
-
-        if message["event"] == "workflow_trace":
-            parsed_msg = WorkflowTraceMessage(message)
-
-        elif message["event"] == "data_transfer":
-            parsed_msg = DataTransferMessage(message)
-
-        if parsed_msg.trace_id is None:
-            return None
-
-        return parsed_msg
 
     def aggregated_trace_id(self):
         return "%s:%s" % (self.dag_job_id, self.condor_job_id)
