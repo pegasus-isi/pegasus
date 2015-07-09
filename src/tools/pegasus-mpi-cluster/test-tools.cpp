@@ -5,6 +5,8 @@
 
 #include "tools.h"
 
+using std::string;
+
 void test_is_executable() {
     assert(is_executable("./test-tools"));
     assert(!is_executable("./notfound"));

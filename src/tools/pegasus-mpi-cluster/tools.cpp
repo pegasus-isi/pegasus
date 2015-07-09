@@ -27,6 +27,7 @@
 #include "log.h"
 
 using std::string;
+using std::vector;
 
 /* purpose: formats ISO 8601 timestamp into given buffer (simplified)
  * paramtr: seconds (IN): time stamp
@@ -374,6 +375,36 @@ string filename(const string &path) {
     string result = ::basename(temp);
     free(temp);
     return result;
+}
+
+/* Set the cpu affinity to values in bindings */
+int set_cpu_affinity(vector<unsigned> &bindings) {
+#ifdef LINUX
+    struct cpuinfo c = get_host_cpuinfo();
+    cpu_set_t *cpuset = CPU_ALLOC(c.threads);
+    if (cpuset == NULL) {
+        return -1;
+    }
+    size_t cpusetsize = CPU_ALLOC_SIZE(c.threads);
+    CPU_ZERO_S(cpusetsize, cpuset);
+
+    for (vector<unsigned>::iterator i = bindings.begin(); i != bindings.end(); i++) {
+        unsigned j = *i;
+        if (j >= c.threads) {
+            CPU_FREE(cpuset);
+            errno = ERANGE;
+            return -1;
+        }
+        CPU_SET_S(j, cpusetsize, cpuset);
+    }
+
+    int rc = sched_setaffinity(0, cpusetsize, cpuset);
+    CPU_FREE(cpuset);
+    if (rc < 0) {
+        return -1;
+    }
+#endif
+    return 0;
 }
 
 int clear_cpu_affinity() {

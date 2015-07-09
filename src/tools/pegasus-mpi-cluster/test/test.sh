@@ -706,6 +706,23 @@ function test_PM954 {
     done
 }
 
+function test_PM953 {
+    OUTPUT=$(mpiexec -n 2 $PMC --set-affinity --host-cpus 4 test/PM953-2.dag 2>&1)
+    RC=$?
+
+    if [ $RC -ne 0 ]; then
+        echo "$OUTPUT"
+        echo "ERROR: PM954 test failed"
+        return 1
+    fi
+
+    if ! echo "$OUTPUT" | grep -E "^physcpubind: 0 1 2 $" >/dev/null; then
+        echo "$OUTPUT"
+        echo "ERROR: PM953 affinity test did not contain the right output"
+        return 1
+    fi
+}
+
 # If a test name was specified, then run just that test
 if ! [ -z "$*" ]; then
     run_test "$@"
@@ -766,9 +783,18 @@ function count_cpus {
     fi
 }
 
-# For the CPU affinity tests we need numactl and > 1 CPU
-if ! [ -z "$(which numactl)" ] && [ $(count_cpus) -gt 1 ]; then
-    run_test test_clear_affinity
-    run_test test_keep_affinity
+# For the CPU affinity tests we need numactl
+if ! [ -z "$(which numactl)" ]; then
+
+    # For these two tests we need 2 cpus
+    if [ $(count_cpus) -gt 1 ]; then
+        run_test test_clear_affinity
+        run_test test_keep_affinity
+    fi
+
+    # For this test we need 4 or more
+    if [ $(count_cpus) -ge 4 ]; then
+        run_test test_PM953
+    fi
 fi
 
