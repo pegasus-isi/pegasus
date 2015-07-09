@@ -208,13 +208,33 @@ Options
     at least 1, and cannot be more than RLIMIT_NOFILE.
 
 *--keep-affinity*::
-    By default PMC attempts to reset the CPU and memory affinity. This
+    By default PMC attempts to clear the CPU and memory affinity. This
     is to ensure that all available CPUs and memory can be used by PMC tasks
     on systems that are not configured properly. This flag tells PMC to keep
     the affinity settings inherited from its parent. Note that the memory
     policy can only be cleared if PMC was compiled with libnuma. CPU
     affinity is cleared using *sched_setaffinity()*, and memory policy is
     cleared with *set_mempolicy()*.
+
+*--set-affinity*::
+    If this flag is set, then PMC will allocate CPUs to tasks and call
+    *sched_setaffinity()* to bind the task to those CPUs. This only applies
+    to multicore tasks (i.e. those tasks that specify -c N where N > 1). Single
+    core tasks are not bound to a CPU to reduce the possibility of
+    fragmentation. PMC does not currently have any mechanism to handle
+    resource fragmentation that may occur if a workflow contains several tasks
+    with different core counts. In the case that fragmentation would result
+    in a task not being bound to a minimal number of sockets and cores, PMC
+    will not bind the task to any CPUs. For example, if a 2 socket, 8 core machine
+    without hyperthreading is being used to run 2, 4-core tasks, each task
+    will be bound to a full socket. If the same machine is running 4, 2-core
+    tasks, each task will get 2-cores on one socket. If 2 of the 2-core tasks
+    finish, but they free up cores on two different sockets, and PMC wants to
+    run a 4-core task, it will not bind the 4-core task to any CPUs, because
+    that would result in the 4-core task being bound to two different sockets.
+    Instead, PMC lets the 4-core task float, so that the scheduler can find
+    a better placement when another one of the 2-core tasks finishes. In order
+    to fix this issue we need to rearchitect PMC, which is on the roadmap.
 
 
 [[DAG_FILES]]
@@ -854,6 +874,32 @@ option. Note that the master will always sleep if *--max-wall-time*
 is specified because there is no way to interrupt or otherwise 
 timeout a blocking call in MPI (e.g. SIGALRM does not cause MPI_Recv
 to return EINTR).
+
+Task Environment
+----------------
+PMC sets a few environment variables when it launches a task. In addition
+to the environment variables for pipe forwarding, it sets:
+
+*PMC_TASK*::
+    The name of the task from the DAG file.
+
+*PMC_MEMORY*::
+    The amount of memory requested by the task.
+
+*PMC_CPUS*::
+    The number of CPUs requested by the task.
+
+*PMC_RANK*::
+    The rank of the MPI worker that launched the task.
+
+*PMC_HOST_RANK*::
+    The host rank of the MPI worker that launched the task.
+
+In addition, if *--set-affinity* is specified, and PMC has allocated some CPUs
+to the task, then it will export:
+
+*PMC_AFFINITY*::
+    A comma-separated list of CPUs to which the task is/should be bound.
 
 
 Environment Variables
