@@ -966,8 +966,9 @@ extern char **environ;
 
 void spawn_timer_thread() {
     int i = 0;
+    printerr("Printing environment...\n");
     while(environ[i]) {
-      tprintf("%s\n", environ[i++]);
+      printerr("%s\n", environ[i++]);
     }
 //    pid_t current_pid = getpid();
 
