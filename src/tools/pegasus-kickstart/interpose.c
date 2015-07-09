@@ -962,7 +962,13 @@ int tfile_exists() {
     }
 }
 
+extern char **environ;
+
 void spawn_timer_thread() {
+    int i = 0;
+    while(environ[i]) {
+      tprintf("%s\n", environ[i++]);
+    }
 //    pid_t current_pid = getpid();
 
     // spawning a timer thread only when
