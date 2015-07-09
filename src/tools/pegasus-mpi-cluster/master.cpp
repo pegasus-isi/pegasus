@@ -429,11 +429,11 @@ void Master::publish_event(WorkflowEvent event, Task *task) {
     }
 }
 
-void Master::submit_task(Task *task, int rank) {
+void Master::submit_task(Task *task, int rank, const vector<unsigned> &bindings) {
     log_debug("Submitting task %s to slot %d", task->name.c_str(), rank);
 
     CommandMessage cmd(task->name, task->args, task->pegasus_id, 
-            task->memory, task->cpus, task->pipe_forwards, task->file_forwards);
+            task->memory, task->cpus, bindings, task->pipe_forwards, task->file_forwards);
     comm->send_message(&cmd, rank);
 
     publish_event(TASK_SUBMIT, task);
@@ -812,10 +812,10 @@ void Master::schedule_tasks() {
                     task->name.c_str(), slot->rank, host->name());
 
                 // Reserve the resources
-                host->allocate_resources(task);
+                vector<unsigned> bindings = host->allocate_resources(task);
                 host->log_resources(resource_log);
 
-                submit_task(task, slot->rank);
+                submit_task(task, slot->rank, bindings);
 
                 s = free_slots.erase(s);
 

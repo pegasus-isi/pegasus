@@ -22,11 +22,14 @@ void test_command() {
     string id = "id";
     unsigned memory = 1;
     unsigned cpus = 2;
+    vector<unsigned> bindings;
+    bindings.push_back(5);
+    bindings.push_back(7);
     map<string,string> pipe_forwards;
     pipe_forwards["FOO"] = "BAR";
     map<string,string> file_forwards;
     file_forwards["BAZ"] = "BOO";
-    CommandMessage input(name, args, id, memory, cpus, &pipe_forwards, &file_forwards);
+    CommandMessage input(name, args, id, memory, cpus, bindings, &pipe_forwards, &file_forwards);
     CommandMessage output(msgcopy(input.msg, input.msgsize), input.msgsize, 0);
     if (input.name != output.name) {
         myfailure("names don't match");
@@ -45,6 +48,12 @@ void test_command() {
     }
     if (input.cpus != output.cpus) {
         myfailure("cpus don't match");
+    }
+    if (output.bindings.size() != input.bindings.size()) {
+        myfailure("number of bindings don't match");
+    }
+    if (output.bindings[0] != input.bindings[0] || output.bindings[1] != input.bindings[1]) {
+        myfailure("bindings don't match");
     }
     if (output.pipe_forwards["FOO"] != input.pipe_forwards["FOO"]) {
         myfailure("pipe forwards don't match");

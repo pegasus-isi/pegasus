@@ -120,13 +120,14 @@ string FileForward::destination() {
     return destfile;
 }
 
-TaskHandler::TaskHandler(Worker *worker, string &name, list<string> &args, string &id, unsigned memory, unsigned cpus, const map<string,string> &pipe_forwards, const map<string,string> &file_forwards) {
+TaskHandler::TaskHandler(Worker *worker, string &name, list<string> &args, string &id, unsigned memory, unsigned cpus, const vector<unsigned> &bindings, const map<string,string> &pipe_forwards, const map<string,string> &file_forwards) {
     this->worker = worker;
     this->name = name;
     this->args = args;
     this->id = id;
     this->memory = memory;
     this->cpus = cpus;
+    this->bindings = bindings;
     this->pipe_forwards = pipe_forwards;
     this->file_forwards = file_forwards;
     this->start = 0;
@@ -229,6 +230,19 @@ double TaskHandler::elapsed() {
  * fork() up to and including execve()
  */
 void TaskHandler::child_process() {
+    if (config.set_affinity && bindings.size() > 0) {
+        unsigned off = 0;
+        char env_bindings[1024];
+        for (vector<unsigned>::iterator i = bindings.begin(); i != bindings.end(); i++) {
+            unsigned core = *i;
+            off += snprintf(env_bindings + off, sizeof(env_bindings) - off, "%u,", core);
+        }
+        env_bindings[off-1] = '\0';
+        log_debug("Binding task %s to cores: %s", this->name.c_str(), env_bindings);
+
+        setenv("PMC_AFFINITY", env_bindings, 1);
+    }
+
     // Redirect stdout/stderr. We do this first thing so that any
     // of the error messages printed before the execve show up in
     // the task stdout/stderr where they belong. Otherwise, we could
@@ -910,7 +924,7 @@ int Worker::run() {
             log_trace("Worker %d: Got task", rank);
 
             TaskHandler task(this, cmd->name, cmd->args,
-                    cmd->id, cmd->memory, cmd->cpus, cmd->pipe_forwards,
+                    cmd->id, cmd->memory, cmd->cpus, cmd->bindings, cmd->pipe_forwards,
                     cmd->file_forwards);
 
             task.execute();

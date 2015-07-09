@@ -154,7 +154,7 @@ class Master {
     void process_result(ResultMessage *mesg);
     void process_iodata(IODataMessage *mesg);
     void queue_ready_tasks();
-    void submit_task(Task *t, int worker);
+    void submit_task(Task *t, int worker, const vector<unsigned> &bindings);
     void merge_all_task_stdio();
     void merge_task_stdio(FILE *dest, const string &src, const string &stream);
     void write_cluster_summary(bool failed);

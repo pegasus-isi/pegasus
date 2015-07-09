@@ -670,6 +670,22 @@ function test_PM848 {
     fi
 }
 
+function test_affinity_env {
+    OUTPUT=$(mpiexec -n 8 $PMC --set-affinity --host-cpus 8 test/PM953.dag 2>&1)
+    RC=$?
+
+    if [ $RC -ne 0 ]; then
+        echo "$OUTPUT"
+        echo "ERROR: affinity test failed"
+        return 1
+    fi
+
+    if ! [[ "$OUTPUT" =~ "eight 0,1,2,3,4,5,6,7" ]]; then
+        echo "ERROR: affinity test did not contain the right output"
+        return 1
+    fi
+}
+
 # If a test name was specified, then run just that test
 if ! [ -z "$*" ]; then
     run_test "$@"
@@ -714,6 +730,7 @@ run_test test_hang_script
 run_test test_maxfds
 run_test test_complex_args
 run_test test_PM848
+run_test test_affinity_env
 
 # setrlimit is broken on Darwin, so the strict limits test won't work
 if [ $(uname -s) != "Darwin" ]; then

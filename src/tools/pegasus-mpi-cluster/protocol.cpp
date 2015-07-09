@@ -59,6 +59,19 @@ CommandMessage::CommandMessage(char *msg, unsigned msgsize, int source) : Messag
     memcpy(&cpus, msg + off, sizeof(cpus));
     off += sizeof(cpus);
 
+    // Get the number of bindings
+    unsigned nbindings;
+    memcpy(&nbindings, msg + off, sizeof(nbindings));
+    off += sizeof(nbindings);
+
+    // Get the bindings
+    for (int i = 0; i<nbindings; i++) {
+        unsigned binding;
+        memcpy(&binding, msg + off, sizeof(binding));
+        bindings.push_back(binding);
+        off += sizeof(binding);
+    }
+
     // Get the number of pipe forwards
     unsigned char npipes;
     memcpy(&npipes, msg + off, sizeof(npipes));
@@ -88,17 +101,19 @@ CommandMessage::CommandMessage(char *msg, unsigned msgsize, int source) : Messag
     }
 }
 
-CommandMessage::CommandMessage(const string &name, const list<string> &args, const string &id, unsigned memory, unsigned cpus, const map<string,string> *pipe_forwards, const map<string,string> *file_forwards) {
+CommandMessage::CommandMessage(const string &name, const list<string> &args, const string &id, unsigned memory, unsigned cpus, const vector<unsigned> &bindings, const map<string,string> *pipe_forwards, const map<string,string> *file_forwards) {
     this->name = name;
     this->args = args;
     this->id = id;
     this->memory = memory;
     this->cpus = cpus;
+    this->bindings = bindings;
     if (pipe_forwards) this->pipe_forwards = *pipe_forwards;
     if (file_forwards) this->file_forwards = *file_forwards;
 
     // Compute the size of the variable length sections
     unsigned nargs = this->args.size();
+    unsigned nbindings = this->bindings.size();
     unsigned char npipes = this->pipe_forwards.size();
     unsigned char nfiles = this->file_forwards.size();
 
@@ -108,6 +123,7 @@ CommandMessage::CommandMessage(const string &name, const list<string> &args, con
               id.length() + 1 +
               sizeof(memory) +
               sizeof(cpus) +
+              sizeof(nbindings) + (nbindings * sizeof(unsigned)) +
               sizeof(npipes) +
               sizeof(nfiles);
 
@@ -159,6 +175,15 @@ CommandMessage::CommandMessage(const string &name, const list<string> &args, con
     // Add the CPU requirement
     memcpy(msg + off, &cpus, sizeof(cpus));
     off += sizeof(cpus);
+
+    // Add the bindings
+    memcpy(msg + off, &nbindings, sizeof(nbindings));
+    off += sizeof(nbindings);
+    for (vector<unsigned>::iterator i=this->bindings.begin(); i!=this->bindings.end(); i++) {
+        unsigned binding = *i;
+        memcpy(msg + off, &binding, sizeof(binding));
+        off += sizeof(binding);
+    }
 
     // Add the pipe forwards
     memcpy(msg + off, &npipes, sizeof(npipes));

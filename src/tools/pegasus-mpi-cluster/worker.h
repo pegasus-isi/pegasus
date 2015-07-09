@@ -107,6 +107,7 @@ public:
     list<string> args;
     unsigned memory;
     unsigned cpus;
+    vector<unsigned> bindings;
 
     vector<Forward *> forwards;
     vector<PipeForward *> pipes;
@@ -122,7 +123,7 @@ public:
     int task_stdout;
     int task_stderr;
 
-    TaskHandler(Worker *worker, string &name, list<string> &args, string &id, unsigned memory, unsigned cpus, const map<string,string> &pipe_forwards, const map<string,string> &file_forwards);
+    TaskHandler(Worker *worker, string &name, list<string> &args, string &id, unsigned memory, unsigned cpus, const vector<unsigned> &bindings, const map<string,string> &pipe_forwards, const map<string,string> &file_forwards);
     ~TaskHandler();
     double elapsed();
     void execute();
