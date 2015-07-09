@@ -9,3 +9,4 @@ test-strlib
 test-dag
 test-tools
 test-protocol
+test-scheduler

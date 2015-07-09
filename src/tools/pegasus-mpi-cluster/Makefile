@@ -80,6 +80,7 @@ TESTS += test-engine
 TESTS += test-tools
 TESTS += test-fdcache
 TESTS += test-protocol
+TESTS += test-scheduler
 
 .PHONY: clean depends test install check
 
@@ -103,6 +104,7 @@ test-engine: test-engine.o $(OBJS)
 test-tools: test-tools.o $(OBJS)
 test-fdcache: test-fdcache.o $(OBJS)
 test-protocol: test-protocol.o $(OBJS)
+test-scheduler: test-scheduler.o $(OBJS)
 
 test: $(TESTS) $(PROGRAMS)
 ifeq ($(shell which cppcheck || echo n),n)

@@ -70,38 +70,98 @@ Host::~Host() {
     delete[] cpus;
 }
 
+/* Check to see if the host has enough resources to run the task */
 bool Host::can_run(Task *task) {
     return memory_free >= task->memory && cpus_free >= task->cpus;
 }
 
-void Host::allocate_resources(Task *task) {
+/* Allocate resources to a task */
+vector<unsigned> Host::allocate_resources(Task *task) {
+    if (!can_run(task)) {
+        myfailure("Host cannot run task %s", task->name.c_str());
+    }
+
+    // Use up the resources
     memory_free -= task->memory;
     cpus_free -= task->cpus;
     slots_free -= 1;
 
-    // We only allocate cores for tasks that require more than 1
-    if (task->cpus > 1) {
+    // This records all of the cpus that we will use for the task
+    vector<unsigned> bindings;
 
-        // Find 'task->cpus' empty cores
-        int remaining = task->cpus;
+    // We only allocate cores for tasks that request more than 1 thread
+    // Single threaded tasks are allowed to float to reduce fragmentation
+    if (task->cpus == 1) {
+        return bindings;
+    }
+
+    unsigned threads_per_core = threads / cores;
+    unsigned threads_per_socket = threads / sockets;
+    unsigned threads_needed = task->cpus;
+    unsigned cores_needed = task->cpus / threads_per_core;
+    unsigned sockets_needed = task->cpus / threads_per_socket;
+    log_trace("Task %s requires %u sockets, %u cores, and %u threads\n",
+              task->name.c_str(), sockets_needed, cores_needed, threads_needed);
+
+    // Determine what the aligned unit step size is
+    unsigned alignment;
+    if (sockets_needed >= 1) {
+        alignment = threads_per_socket;
+    } else if (cores_needed >= 1) {
+        alignment = threads_per_core;
+    } else {
+        alignment = 1;
+    }
+
+    // This tries to find a contiguous set of cpus that are aligned on a
+    // thread, core, or socket boundary. For example, if we need one socket
+    // full of cpus, then it will try to find a solution that takes up one full
+    // socket, and not part of two or more sockets.
+    for (unsigned i=0; i<threads; i+=alignment) {
+        for (unsigned j=0; j<task->cpus && i+j<threads; j++) {
+            if (cpus[i+j] == NULL) {
+                bindings.push_back(i+j);
+            } else {
+                // One of the cpus is occupied, no solution possible
+                break;
+            }
+        }
+
+        if (bindings.size() == task->cpus) {
+            // We found a solution, stop looking
+            break;
+        } else {
+            // No solution, try the next aligned segment
+            bindings.clear();
+        }
+    }
+
+    // If we didn't get a contiguous solution above, we need to get a
+    // non-contiguous solution here
+    if (bindings.size() != task->cpus) {
+        log_warn("CPU fragmentation detected for task %s", task->name.c_str());
         for (unsigned i=0; i<threads; i++) {
             if (cpus[i] == NULL) {
-                printf("Allocated cpu %d for task %s\n", i, task->name.c_str());
-                cpus[i] = task;
-                remaining -= 1;
-                if (remaining == 0) {
+                bindings.push_back(i);
+                if (bindings.size() == task->cpus) {
+                    // Ok, now we got a non-contiguous solution
                     break;
                 }
             }
         }
-
-        if (remaining > 0) {
-            myfailures("Unable to allocate %d cpus for task %s\n",
-                    remaining, task->name.c_str());
-        }
     }
+
+    // Mark all the cpus that were allocated to the task
+    for (vector<unsigned>::iterator i=bindings.begin(); i!=bindings.end(); i++) {
+        unsigned j = *i;
+        cpus[j] = task;
+        log_trace("Assigned CPU %u to task %s", j, task->name.c_str());
+    }
+
+    return bindings;
 }
 
+/* Deallocate all the resources we used for the task */
 void Host::release_resources(Task *task) {
     cpus_free += task->cpus;
     memory_free += task->memory;
@@ -120,6 +180,7 @@ void Host::add_slot() {
     this->slots_free += 1;
 }
 
+/* Log the number of resources this host currently has */
 void Host::log_resources(FILE *resource_log) {
     log_trace("Host %s now has %u MB, %u CPUs, and %u slots free", 
         this->host_name.c_str(), this->memory_free, this->cpus_free, this->slots_free);

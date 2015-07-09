@@ -38,7 +38,7 @@ public:
     const char *name() { return host_name.c_str(); }
     void add_slot();
     bool can_run(Task *task);
-    void allocate_resources(Task *task);
+    vector<unsigned> allocate_resources(Task *task);
     void release_resources(Task *task);
     void log_resources(FILE *resource_log);
 };
