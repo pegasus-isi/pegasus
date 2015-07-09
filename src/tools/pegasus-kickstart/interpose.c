@@ -968,30 +968,30 @@ void spawn_timer_thread() {
     // spawning a timer thread only when
     char* mpi_rank = getenv("OMPI_COMM_WORLD_RANK");
     // printerr("Spawning thread in process: %d\n", (int)current_pid);
-    // printerr("Setting mpi rank based on OMPI_COMM_WORLD_RANK\n");
+     printerr("Setting mpi rank based on OMPI_COMM_WORLD_RANK\n");
 
     if(mpi_rank == NULL) {
         mpi_rank = getenv("ALPS_APP_PE");        
-        // printerr("Setting mpi rank based on MPIRUN_RANK\n");
+         printerr("Setting mpi rank based on MPIRUN_RANK\n");
 
         if(mpi_rank == NULL) {
             mpi_rank = getenv("PMI_RANK");
-            // printerr("Setting mpi rank based on PMI_RANK\n");
+             printerr("Setting mpi rank based on PMI_RANK\n");
 
             if(mpi_rank == NULL) {
                 mpi_rank = getenv("PMI_ID");
-                // printerr("Setting mpi rank based on PMI_ID\n");
+                 printerr("Setting mpi rank based on PMI_ID\n");
 
                 if(mpi_rank == NULL) {
                     mpi_rank = getenv("MPIRUN_RANK");
-                    // printerr("Setting mpi rank based on ALPS_APP_PE\n"); 
+                     printerr("Setting mpi rank based on MPIRUN_RANK\n");
                 }
             }
         }
     }
 
     if(mpi_rank == NULL) {
-        // printerr("Setting mpi rank based on ... it is still nil\n");
+        printerr("Setting mpi rank based on ... it is still nil\n");
         mpi_rank = (char*) calloc(1024, sizeof(char));
         strcpy(mpi_rank, "-1");
     }
