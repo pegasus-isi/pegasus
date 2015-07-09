@@ -230,19 +230,6 @@ double TaskHandler::elapsed() {
  * fork() up to and including execve()
  */
 void TaskHandler::child_process() {
-    if (config.set_affinity && bindings.size() > 0) {
-        unsigned off = 0;
-        char env_bindings[1024];
-        for (vector<unsigned>::iterator i = bindings.begin(); i != bindings.end(); i++) {
-            unsigned core = *i;
-            off += snprintf(env_bindings + off, sizeof(env_bindings) - off, "%u,", core);
-        }
-        env_bindings[off-1] = '\0';
-        log_debug("Binding task %s to cores: %s", this->name.c_str(), env_bindings);
-
-        setenv("PMC_AFFINITY", env_bindings, 1);
-    }
-
     // Redirect stdout/stderr. We do this first thing so that any
     // of the error messages printed before the execve show up in
     // the task stdout/stderr where they belong. Otherwise, we could
@@ -293,6 +280,35 @@ void TaskHandler::child_process() {
         }
     }
 
+    // Add other useful environment variables
+    int rc;
+    char envbuf[1024];
+    int envsz = sizeof(envbuf);
+    if (setenv("PMC_TASK", this->name.c_str(), 1) < 0) {
+        log_fatal("Unable to set environment entry for PMC_TASK: %s", strerror(errno));
+        _exit(1);
+    }
+    rc = snprintf(envbuf, envsz, "%u", this->memory);
+    if (rc < 0 || rc >= envsz || setenv("PMC_MEMORY", envbuf, 1) < 0) {
+        log_fatal("Unable to set environment entry for PMC_MEMORY: %s", strerror(errno));
+        _exit(1);
+    }
+    rc = snprintf(envbuf, envsz, "%u", this->cpus);
+    if (rc < 0 || rc >= envsz || setenv("PMC_CPUS", envbuf, 1) < 0) {
+        log_fatal("Unable to set environment entry for PMC_CPUS: %s", strerror(errno));
+        _exit(1);
+    }
+    rc = snprintf(envbuf, envsz, "%d", this->worker->rank);
+    if (rc < 0 || rc >= envsz || setenv("PMC_RANK", envbuf, 1) < 0) {
+        log_fatal("Unable to set environment entry for PMC_RANK: %s", strerror(errno));
+        _exit(1);
+    }
+    rc = snprintf(envbuf, envsz, "%d", this->worker->host_rank);
+    if (rc < 0 || rc >= envsz || setenv("PMC_HOST_RANK", envbuf, 1) < 0) {
+        log_fatal("Unable to set environment entry for PMC_HOST_RANK: %s", strerror(errno));
+        _exit(1);
+    }
+
     // If the executable is not an absolute or relative path, then search PATH
     string executable = argp[0];
     if (executable.find("/") == string::npos) {
@@ -327,8 +343,17 @@ void TaskHandler::child_process() {
     }
 
     // For multicore jobs, set CPU affinity
-    if (cpus > 1 && config.set_affinity) {
-        // TODO Set cpu affinity
+    if (config.set_affinity && bindings.size() > 0) {
+        unsigned off = 0;
+        char env_bindings[1024];
+        for (vector<unsigned>::iterator i = bindings.begin(); i != bindings.end(); i++) {
+            unsigned core = *i;
+            off += snprintf(env_bindings + off, sizeof(env_bindings) - off, "%u,", core);
+        }
+        env_bindings[off-1] = '\0';
+        log_debug("Binding task %s to cores: %s", this->name.c_str(), env_bindings);
+
+        setenv("PMC_AFFINITY", env_bindings, 1);
     }
 
     // Exec process

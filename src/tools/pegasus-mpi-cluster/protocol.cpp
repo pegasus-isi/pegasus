@@ -65,7 +65,7 @@ CommandMessage::CommandMessage(char *msg, unsigned msgsize, int source) : Messag
     off += sizeof(nbindings);
 
     // Get the bindings
-    for (int i = 0; i<nbindings; i++) {
+    for (unsigned i = 0; i<nbindings; i++) {
         unsigned binding;
         memcpy(&binding, msg + off, sizeof(binding));
         bindings.push_back(binding);

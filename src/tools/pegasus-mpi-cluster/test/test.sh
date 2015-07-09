@@ -681,9 +681,29 @@ function test_affinity_env {
     fi
 
     if ! [[ "$OUTPUT" =~ "eight 0,1,2,3,4,5,6,7" ]]; then
+        echo "$OUTPUT"
         echo "ERROR: affinity test did not contain the right output"
         return 1
     fi
+}
+
+function test_PM954 {
+    OUTPUT=$(mpiexec -n 2 $PMC test/PM954.dag 2>&1)
+    RC=$?
+
+    if [ $RC -ne 0 ]; then
+        echo "$OUTPUT"
+        echo "ERROR: PM954 test failed"
+        return 1
+    fi
+
+    for var in "PMC_CPUS=3" "PMC_MEMORY=17" "PMC_TASK=foobar" "PMC_RANK=1" "PMC_HOST_RANK=0"; do
+        if ! [[ "$OUTPUT" =~ "$var" ]]; then
+            echo "$OUTPUT"
+            echo "ERROR: Missing '$var' in output"
+            return 1
+        fi
+    done
 }
 
 # If a test name was specified, then run just that test
@@ -699,6 +719,7 @@ run_test ./test-log
 run_test ./test-engine
 run_test ./test-fdcache
 run_test ./test-protocol
+run_test test_PM954
 run_test test_help
 run_test test_help_no_mpi
 run_test test_one_worker_required
