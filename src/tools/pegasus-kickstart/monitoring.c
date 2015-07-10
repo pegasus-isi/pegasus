@@ -168,8 +168,13 @@ void* monitoring_thread_func(void* kickstart_status_path) {
             while(fgets(line, BUFSIZ, kickstart_status) != NULL)
             {
                 char *pos;
+
                 if( (pos = strchr(line, '\n')) != NULL )
                     *pos = '\0';
+
+                if( strstr(line, "ts=") == NULL )
+                    continue;
+
 
                 sprintf(enriched_line, "%s wf_uuid=%s wf_label=%s dag_job_id=%s condor_job_id=%s",
                     line, job_id_info.wf_uuid, job_id_info.wf_label, job_id_info.dag_job_id,
