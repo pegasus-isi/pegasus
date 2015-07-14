@@ -97,7 +97,7 @@ char * fmtisodate(time_t seconds, long micros) {
         zulu.tm_isdst = local.tm_isdst;
         distance = seconds - mktime(&zulu);
         hours = distance / 3600;
-        minutes = abs(distance) % 60;
+        minutes = labs(distance) % 60;
 
         strftime(__isodate, sizeof(__isodate),
                  isExtended ? "%Y-%m-%dT%H:%M:%S" : "%Y%m%dT%H%M%S", &local);
