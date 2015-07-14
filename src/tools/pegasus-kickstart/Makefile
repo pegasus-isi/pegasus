@@ -40,7 +40,7 @@ ifeq (x86_64,${ARCH})
 endif
     CFLAGS += $(shell getconf LFS_CFLAGS 2>>/dev/null)
     LDFLAGS += $(shell getconf LFS_LDFLAGS 2>>/dev/null)
-    OBJS = machine/linux.o syscall.o
+    OBJS += machine/linux.o syscall.o
 endif
 
 CFLAGS += -D${SYSTEM}
