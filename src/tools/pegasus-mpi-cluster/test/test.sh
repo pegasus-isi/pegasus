@@ -671,7 +671,7 @@ function test_PM848 {
 }
 
 function test_affinity_env {
-    OUTPUT=$(mpiexec -n 8 $PMC --set-affinity --host-cpus 8 test/PM953.dag 2>&1)
+    OUTPUT=$(mpiexec -n 8 $PMC --host-cpus 8 test/PM953.dag 2>&1)
     RC=$?
 
     if [ $RC -ne 0 ]; then
@@ -707,12 +707,12 @@ function test_PM954 {
 }
 
 function test_PM953 {
-    OUTPUT=$(mpiexec -n 2 $PMC --set-affinity --host-cpus 4 test/PM953-2.dag 2>&1)
+    OUTPUT=$(mpiexec -n 2 $PMC --set-affinity test/PM953-2.dag 2>&1)
     RC=$?
 
     if [ $RC -ne 0 ]; then
         echo "$OUTPUT"
-        echo "ERROR: PM954 test failed"
+        echo "ERROR: PM953 test failed"
         return 1
     fi
 

@@ -330,6 +330,13 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
         return 1;
     }
 
+    // You can't specify --host-cpus and --set-affinity because that would
+    // break stuff
+    if (config.set_affinity && host_cpus > 0) {
+        fprintf(stderr, "--host-cpus is not compatible with --set-affinity\n");
+        return 1;
+    }
+
     comm.sleep_on_recv = sleep_on_recv;
 
     version();
