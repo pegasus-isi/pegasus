@@ -342,8 +342,8 @@ void TaskHandler::child_process() {
         }
     }
 
-    // For multicore jobs, set CPU affinity
-    if (config.set_affinity && bindings.size() > 0) {
+    // For multicore jobs with CPU affinity
+    if (bindings.size() > 0) {
 
         // Set environment variable
         unsigned off = 0;
@@ -355,12 +355,13 @@ void TaskHandler::child_process() {
         env_bindings[off-1] = '\0';
         setenv("PMC_AFFINITY", env_bindings, 1);
 
-        log_debug("Binding task %s to cores: %s", this->name.c_str(), env_bindings);
-
         // Set the cpu affinity
-        if (set_cpu_affinity(bindings) < 0) {
-            log_error("Unable to set cpu affinity for task %s to %s: %s",
-                    name.c_str(), env_bindings, strerror(errno));
+        if (config.set_affinity) {
+            log_debug("Binding task %s to cores: %s", this->name.c_str(), env_bindings);
+            if (set_cpu_affinity(bindings) < 0) {
+                log_error("Unable to set cpu affinity for task %s to %s: %s",
+                        name.c_str(), env_bindings, strerror(errno));
+            }
         }
     }
 
