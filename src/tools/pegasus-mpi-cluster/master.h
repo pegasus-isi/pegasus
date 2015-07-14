@@ -23,9 +23,9 @@ private:
 
     string host_name;
     unsigned int memory;
-    unsigned int threads;
-    unsigned int cores;
-    unsigned int sockets;
+    cpu_t threads;
+    cpu_t cores;
+    cpu_t sockets;
     unsigned int slots;
 
     unsigned int memory_free;
@@ -33,12 +33,12 @@ private:
     unsigned int slots_free;
 
 public:
-    Host(const string &host_name, unsigned int memory, unsigned int threads, unsigned int cores, unsigned int sockets);
+    Host(const string &host_name, unsigned int memory, cpu_t threads, cpu_t cores, cpu_t sockets);
     ~Host();
     const char *name() { return host_name.c_str(); }
     void add_slot();
     bool can_run(Task *task);
-    vector<unsigned> allocate_resources(Task *task);
+    vector<cpu_t> allocate_resources(Task *task);
     void release_resources(Task *task);
     void log_resources(FILE *resource_log);
 };
@@ -154,7 +154,7 @@ class Master {
     void process_result(ResultMessage *mesg);
     void process_iodata(IODataMessage *mesg);
     void queue_ready_tasks();
-    void submit_task(Task *t, int worker, const vector<unsigned> &bindings);
+    void submit_task(Task *t, int worker, const vector<cpu_t> &bindings);
     void merge_all_task_stdio();
     void merge_task_stdio(FILE *dest, const string &src, const string &stream);
     void write_cluster_summary(bool failed);

@@ -60,13 +60,13 @@ CommandMessage::CommandMessage(char *msg, unsigned msgsize, int source) : Messag
     off += sizeof(cpus);
 
     // Get the number of bindings
-    unsigned nbindings;
+    cpu_t nbindings;
     memcpy(&nbindings, msg + off, sizeof(nbindings));
     off += sizeof(nbindings);
 
     // Get the bindings
-    for (unsigned i = 0; i<nbindings; i++) {
-        unsigned binding;
+    for (cpu_t i = 0; i<nbindings; i++) {
+        cpu_t binding;
         memcpy(&binding, msg + off, sizeof(binding));
         bindings.push_back(binding);
         off += sizeof(binding);
@@ -101,7 +101,7 @@ CommandMessage::CommandMessage(char *msg, unsigned msgsize, int source) : Messag
     }
 }
 
-CommandMessage::CommandMessage(const string &name, const list<string> &args, const string &id, unsigned memory, unsigned cpus, const vector<unsigned> &bindings, const map<string,string> *pipe_forwards, const map<string,string> *file_forwards) {
+CommandMessage::CommandMessage(const string &name, const list<string> &args, const string &id, unsigned memory, cpu_t cpus, const vector<cpu_t> &bindings, const map<string,string> *pipe_forwards, const map<string,string> *file_forwards) {
     this->name = name;
     this->args = args;
     this->id = id;
@@ -113,7 +113,7 @@ CommandMessage::CommandMessage(const string &name, const list<string> &args, con
 
     // Compute the size of the variable length sections
     unsigned nargs = this->args.size();
-    unsigned nbindings = this->bindings.size();
+    cpu_t nbindings = this->bindings.size();
     unsigned char npipes = this->pipe_forwards.size();
     unsigned char nfiles = this->file_forwards.size();
 
@@ -123,7 +123,7 @@ CommandMessage::CommandMessage(const string &name, const list<string> &args, con
               id.length() + 1 +
               sizeof(memory) +
               sizeof(cpus) +
-              sizeof(nbindings) + (nbindings * sizeof(unsigned)) +
+              sizeof(nbindings) + (nbindings * sizeof(cpu_t)) +
               sizeof(npipes) +
               sizeof(nfiles);
 
@@ -179,8 +179,8 @@ CommandMessage::CommandMessage(const string &name, const list<string> &args, con
     // Add the bindings
     memcpy(msg + off, &nbindings, sizeof(nbindings));
     off += sizeof(nbindings);
-    for (vector<unsigned>::iterator i=this->bindings.begin(); i!=this->bindings.end(); i++) {
-        unsigned binding = *i;
+    for (vector<cpu_t>::iterator i=this->bindings.begin(); i!=this->bindings.end(); i++) {
+        cpu_t binding = *i;
         memcpy(msg + off, &binding, sizeof(binding));
         off += sizeof(binding);
     }
@@ -250,7 +250,7 @@ RegistrationMessage::RegistrationMessage(char *msg, unsigned msgsize, int source
     //off += sizeof(sockets);
 }
 
-RegistrationMessage::RegistrationMessage(const string &hostname, unsigned memory, unsigned threads, unsigned cores, unsigned sockets) {
+RegistrationMessage::RegistrationMessage(const string &hostname, unsigned memory, cpu_t threads, cpu_t cores, cpu_t sockets) {
     this->hostname = hostname;
     this->memory = memory;
     this->threads = threads;

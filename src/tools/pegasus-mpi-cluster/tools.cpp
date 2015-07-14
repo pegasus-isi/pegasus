@@ -125,16 +125,20 @@ struct cpuinfo get_host_cpuinfo() {
     c.cores = 0;
     c.sockets = 0;
 #ifdef __MACH__
-    size_t size = sizeof(unsigned int);
-    if (sysctlbyname("hw.logicalcpu", &c.threads, &size, NULL, 0) < 0) {
+    unsigned int temp;
+    size_t size = sizeof(temp);
+    if (sysctlbyname("hw.logicalcpu", &temp, &size, NULL, 0) < 0) {
         myfailures("Unable to get number of CPUs (logical CPUs)");
     }
-    if (sysctlbyname("hw.physicalcpu", &c.cores, &size, NULL, 0) < 0) {
+    c.threads = temp;
+    if (sysctlbyname("hw.physicalcpu", &temp, &size, NULL, 0) < 0) {
         myfailures("Unable to get number of cores (physical CPUs)");
     }
-    if (sysctlbyname("hw.packages", &c.sockets, &size, NULL, 0) < 0) {
+    c.cores = temp;
+    if (sysctlbyname("hw.packages", &temp, &size, NULL, 0) < 0) {
         myfailures("Unable to get number of CPU sockets");
     }
+    c.threads = temp;
 #else
     std::ifstream infile;
     infile.open("/proc/cpuinfo");
@@ -166,8 +170,8 @@ struct cpuinfo get_host_cpuinfo() {
             // Each time we encounter a new socket, we count the number of
             // cores it has
             if (new_socket) {
-                unsigned int cores;
-                if (sscanf(rec.c_str(), "cpu cores\t: %u", &cores) != 1) {
+                cpu_t cores;
+                if (sscanf(rec.c_str(), "cpu cores\t: %"SCNcpu_t, &cores) != 1) {
                     myfailures("Error reading 'cpu cores' field from /proc/cpuinfo");
                 }
                 c.cores += cores;
@@ -185,7 +189,7 @@ struct cpuinfo get_host_cpuinfo() {
     if (c.threads == 0 || c.cores == 0 || c.sockets == 0 ||
             c.cores > c.threads || c.sockets > c.cores ||
             c.threads % c.cores > 0 || c.cores % c.sockets > 0) {
-        myfailure("Invalid cpuinfo: %u %u %u", c.threads, c.cores, c.sockets);
+        myfailure("Invalid cpuinfo: %"PRIcpu_t" %"PRIcpu_t" %"PRIcpu_t, c.threads, c.cores, c.sockets);
     }
     return c;
 }
@@ -378,7 +382,7 @@ string filename(const string &path) {
 }
 
 /* Set the cpu affinity to values in bindings */
-int set_cpu_affinity(vector<unsigned> &bindings) {
+int set_cpu_affinity(vector<cpu_t> &bindings) {
 #ifdef LINUX
     struct cpuinfo c = get_host_cpuinfo();
     cpu_set_t *cpuset = CPU_ALLOC(c.threads);
@@ -388,8 +392,8 @@ int set_cpu_affinity(vector<unsigned> &bindings) {
     size_t cpusetsize = CPU_ALLOC_SIZE(c.threads);
     CPU_ZERO_S(cpusetsize, cpuset);
 
-    for (vector<unsigned>::iterator i = bindings.begin(); i != bindings.end(); i++) {
-        unsigned j = *i;
+    for (vector<cpu_t>::iterator i = bindings.begin(); i != bindings.end(); i++) {
+        cpu_t j = *i;
         if (j >= c.threads) {
             CPU_FREE(cpuset);
             errno = ERANGE;

@@ -11,10 +11,14 @@
 #define HOST_NAME_MAX 255
 #endif
 
+typedef unsigned char cpu_t;
+#define SCNcpu_t "hhu"
+#define PRIcpu_t "hhu"
+
 struct cpuinfo {
-    unsigned int threads;
-    unsigned int cores;
-    unsigned int sockets;
+    cpu_t threads;
+    cpu_t cores;
+    cpu_t sockets;
 };
 
 char * isodate(time_t seconds, char* buffer, size_t size);
@@ -29,7 +33,7 @@ std::string pathfind(const std::string &file);
 int read_file(const std::string &file, char *buf, size_t size);
 std::string dirname(const std::string &path);
 std::string filename(const std::string &path);
-int set_cpu_affinity(std::vector<unsigned> &bindings);
+int set_cpu_affinity(std::vector<cpu_t> &bindings);
 int clear_cpu_affinity();
 int clear_memory_affinity();
 

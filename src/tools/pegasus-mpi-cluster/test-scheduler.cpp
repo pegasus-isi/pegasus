@@ -5,9 +5,9 @@
 
 void test_scheduler_124_8() {
     unsigned memory = 8192;
-    unsigned threads = 8;
-    unsigned cores = 4;
-    unsigned sockets = 2;
+    cpu_t threads = 8;
+    cpu_t cores = 4;
+    cpu_t sockets = 2;
     Host h("localhost", memory, threads, cores, sockets);
 
     DAG dag("test/PM953.dag");
@@ -16,9 +16,9 @@ void test_scheduler_124_8() {
     Task *four = dag.get_task("four");
     Task *eight = dag.get_task("eight");
 
-    vector<unsigned> rone = h.allocate_resources(one);
-    vector<unsigned> rtwo = h.allocate_resources(two);
-    vector<unsigned> rfour = h.allocate_resources(four);
+    vector<cpu_t> rone = h.allocate_resources(one);
+    vector<cpu_t> rtwo = h.allocate_resources(two);
+    vector<cpu_t> rfour = h.allocate_resources(four);
 
     if (rone.size() != 0) {
         myfailure("task one was bound to a core");
@@ -41,7 +41,7 @@ void test_scheduler_124_8() {
     h.release_resources(two);
     h.release_resources(four);
 
-    vector<unsigned> reight = h.allocate_resources(eight);
+    vector<cpu_t> reight = h.allocate_resources(eight);
     if (reight.size() != 8) {
         myfailure("task eight was bound to the wrong number of cores");
     }
@@ -49,17 +49,17 @@ void test_scheduler_124_8() {
 
 void test_scheduler_44_2() {
     unsigned memory = 8192;
-    unsigned threads = 8;
-    unsigned cores = 4;
-    unsigned sockets = 2;
+    cpu_t threads = 8;
+    cpu_t cores = 4;
+    cpu_t sockets = 2;
     Host h("localhost", memory, threads, cores, sockets);
 
     DAG dag("test/PM953.dag");
     Task *four = dag.get_task("four");
     Task *four2 = dag.get_task("four2");
 
-    vector<unsigned> rfour = h.allocate_resources(four);
-    vector<unsigned> rfour2 = h.allocate_resources(four2);
+    vector<cpu_t> rfour = h.allocate_resources(four);
+    vector<cpu_t> rfour2 = h.allocate_resources(four2);
 
     if (rfour.size() != 4) {
         myfailure("task four was bound to the wrong number of cores");
@@ -78,7 +78,7 @@ void test_scheduler_44_2() {
     h.release_resources(four);
 
     Task *two = dag.get_task("two");
-    vector<unsigned> rtwo = h.allocate_resources(two);
+    vector<cpu_t> rtwo = h.allocate_resources(two);
 
     if (rtwo.size() != 2) {
         myfailure("task two was bound to the wrong number of cores");
@@ -91,9 +91,9 @@ void test_scheduler_44_2() {
 
 void test_scheduler_2222_4() {
     unsigned memory = 8192;
-    unsigned threads = 8;
-    unsigned cores = 4;
-    unsigned sockets = 2;
+    cpu_t threads = 8;
+    cpu_t cores = 4;
+    cpu_t sockets = 2;
     Host h("localhost", memory, threads, cores, sockets);
 
     DAG dag("test/PM953.dag");
@@ -102,10 +102,10 @@ void test_scheduler_2222_4() {
     Task *two3 = dag.get_task("two3");
     Task *two4 = dag.get_task("two4");
 
-    vector<unsigned> rtwo = h.allocate_resources(two);
-    vector<unsigned> rtwo2 = h.allocate_resources(two2);
-    vector<unsigned> rtwo3 = h.allocate_resources(two3);
-    vector<unsigned> rtwo4 = h.allocate_resources(two4);
+    vector<cpu_t> rtwo = h.allocate_resources(two);
+    vector<cpu_t> rtwo2 = h.allocate_resources(two2);
+    vector<cpu_t> rtwo3 = h.allocate_resources(two3);
+    vector<cpu_t> rtwo4 = h.allocate_resources(two4);
 
     if (rtwo.size() != 2 || rtwo[0] != 0 || rtwo[1] != 1) {
         myfailure("task two was bound to the wrong cores");
@@ -126,7 +126,7 @@ void test_scheduler_2222_4() {
 
     // Task four should not be bound to any cores
     Task *four = dag.get_task("four");
-    vector<unsigned> rfour = h.allocate_resources(four);
+    vector<cpu_t> rfour = h.allocate_resources(four);
 
     if (rfour.size() != 0) {
         myfailure("task four was bound to fragmented cores");

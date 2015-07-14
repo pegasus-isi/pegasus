@@ -120,7 +120,7 @@ string FileForward::destination() {
     return destfile;
 }
 
-TaskHandler::TaskHandler(Worker *worker, string &name, list<string> &args, string &id, unsigned memory, unsigned cpus, const vector<unsigned> &bindings, const map<string,string> &pipe_forwards, const map<string,string> &file_forwards) {
+TaskHandler::TaskHandler(Worker *worker, string &name, list<string> &args, string &id, unsigned memory, unsigned cpus, const vector<cpu_t> &bindings, const map<string,string> &pipe_forwards, const map<string,string> &file_forwards) {
     this->worker = worker;
     this->name = name;
     this->args = args;
@@ -348,9 +348,9 @@ void TaskHandler::child_process() {
         // Set environment variable
         unsigned off = 0;
         char env_bindings[1024];
-        for (vector<unsigned>::iterator i = bindings.begin(); i != bindings.end(); i++) {
-            unsigned core = *i;
-            off += snprintf(env_bindings + off, sizeof(env_bindings) - off, "%u,", core);
+        for (vector<cpu_t>::iterator i = bindings.begin(); i != bindings.end(); i++) {
+            cpu_t core = *i;
+            off += snprintf(env_bindings + off, sizeof(env_bindings) - off, "%"PRIcpu_t",", core);
         }
         env_bindings[off-1] = '\0';
         setenv("PMC_AFFINITY", env_bindings, 1);
@@ -704,7 +704,7 @@ void TaskHandler::execute() {
 }
 
 Worker::Worker(Communicator *comm, const string &dagfile, const string &host_script,
-        unsigned int host_memory, unsigned host_cpus, bool strict_limits, 
+        unsigned int host_memory, cpu_t host_cpus, bool strict_limits, 
         bool per_task_stdio) {
     this->comm = comm;
     this->dagfile = dagfile;
@@ -926,9 +926,9 @@ int Worker::run() {
     comm->send_message(&regmsg, 0);
     log_trace("Worker %d: Host name: %s", rank, host_name.c_str());
     log_trace("Worker %d: Host memory: %u MB", rank, this->host_memory);
-    log_trace("Worker %d: Host threads/CPUs: %u", rank, this->host_threads);
-    log_trace("Worker %d: Host cores: %u", rank, this->host_cores);
-    log_trace("Worker %d: Host sockets: %u", rank, this->host_sockets);
+    log_trace("Worker %d: Host threads/CPUs: %"PRIcpu_t, rank, this->host_threads);
+    log_trace("Worker %d: Host cores: %"PRIcpu_t, rank, this->host_cores);
+    log_trace("Worker %d: Host sockets: %"PRIcpu_t, rank, this->host_sockets);
 
     // Get worker's host rank
     HostrankMessage *hrmsg = dynamic_cast<HostrankMessage *>(comm->recv_message());

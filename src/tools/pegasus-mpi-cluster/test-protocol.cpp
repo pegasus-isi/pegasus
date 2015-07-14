@@ -21,8 +21,8 @@ void test_command() {
     args.push_back("arg");
     string id = "id";
     unsigned memory = 1;
-    unsigned cpus = 2;
-    vector<unsigned> bindings;
+    cpu_t cpus = 2;
+    vector<cpu_t> bindings;
     bindings.push_back(5);
     bindings.push_back(7);
     map<string,string> pipe_forwards;

@@ -113,7 +113,7 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
     string rescuefile = "";
     string host_script = "";
     unsigned host_memory = 0;
-    unsigned host_cpus = 0;
+    cpu_t host_cpus = 0;
     bool strict_limits = false;
     double max_wall_time = 0.0;
     bool per_task_stdio = false;
@@ -141,7 +141,7 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
 
     char *env_host_cpus = getenv("PMC_HOST_CPUS");
     if (env_host_cpus != NULL) {
-        if (sscanf(env_host_cpus, "%u", &host_cpus) != 1) {
+        if (sscanf(env_host_cpus, "%"SCNcpu_t, &host_cpus) != 1) {
             argerror("Invalid value for PMC_HOST_CPUS");
             return 1;
         }
@@ -253,12 +253,8 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
                 return 1;
             }
             string host_cpus_string = flags.front();
-            if (sscanf(host_cpus_string.c_str(), "%u", &host_cpus) != 1) {
+            if (sscanf(host_cpus_string.c_str(), "%"SCNcpu_t, &host_cpus) != 1) {
                 argerror("Invalid value for --host-cpus");
-                return 1;
-            }
-            if (host_cpus < 1) {
-                argerror("--host-cpus must be an integer >= 1");
                 return 1;
             }
         } else if (flag == "--strict-limits") {

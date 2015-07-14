@@ -6,6 +6,8 @@
 #include <vector>
 #include <list>
 
+#include "tools.h"
+
 using std::string;
 using std::map;
 using std::vector;
@@ -26,7 +28,7 @@ public:
     int last_exitcode;
 
     unsigned memory;
-    unsigned cpus;
+    cpu_t cpus;
     unsigned tries;
     unsigned failures;
     int priority;

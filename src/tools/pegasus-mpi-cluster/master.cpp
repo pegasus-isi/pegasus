@@ -48,7 +48,7 @@ static void log_invalid_message(Message *mesg) {
     }
 }
 
-Host::Host(const string &host_name, unsigned int memory, unsigned int threads, unsigned int cores, unsigned int sockets) {
+Host::Host(const string &host_name, unsigned int memory, cpu_t threads, cpu_t cores, cpu_t sockets) {
     this->host_name = host_name;
     this->memory = memory;
     this->threads = threads;
@@ -76,7 +76,7 @@ bool Host::can_run(Task *task) {
 }
 
 /* Allocate resources to a task */
-vector<unsigned> Host::allocate_resources(Task *task) {
+vector<cpu_t> Host::allocate_resources(Task *task) {
     if (!can_run(task)) {
         myfailure("Host cannot run task %s", task->name.c_str());
     }
@@ -87,7 +87,7 @@ vector<unsigned> Host::allocate_resources(Task *task) {
     slots_free -= 1;
 
     // This records all of the cpus that we will use for the task
-    vector<unsigned> bindings;
+    vector<cpu_t> bindings;
 
     // We only allocate cores for tasks that request more than 1 thread
     // Single threaded tasks are allowed to float to reduce fragmentation
@@ -95,16 +95,16 @@ vector<unsigned> Host::allocate_resources(Task *task) {
         return bindings;
     }
 
-    unsigned threads_per_core = threads / cores;
-    unsigned threads_per_socket = threads / sockets;
-    unsigned threads_needed = task->cpus;
-    unsigned cores_needed = task->cpus / threads_per_core;
-    unsigned sockets_needed = task->cpus / threads_per_socket;
-    log_trace("Task %s requires %u sockets, %u cores, and %u threads\n",
+    cpu_t threads_per_core = threads / cores;
+    cpu_t threads_per_socket = threads / sockets;
+    cpu_t threads_needed = task->cpus;
+    cpu_t cores_needed = task->cpus / threads_per_core;
+    cpu_t sockets_needed = task->cpus / threads_per_socket;
+    log_trace("Task %s requires %"PRIcpu_t" sockets, %"PRIcpu_t" cores, and %"PRIcpu_t" threads\n",
               task->name.c_str(), sockets_needed, cores_needed, threads_needed);
 
     // Determine what the aligned unit step size is
-    unsigned alignment;
+    cpu_t alignment;
     if (sockets_needed >= 1) {
         alignment = threads_per_socket;
     } else if (cores_needed >= 1) {
@@ -117,8 +117,8 @@ vector<unsigned> Host::allocate_resources(Task *task) {
     // thread, core, or socket boundary. For example, if we need one socket
     // full of cpus, then it will try to find a solution that takes up one full
     // socket, and not part of two or more sockets.
-    for (unsigned i=0; i<threads; i+=alignment) {
-        for (unsigned j=0; j<task->cpus && i+j<threads; j++) {
+    for (cpu_t i=0; i<threads; i+=alignment) {
+        for (cpu_t j=0; j<task->cpus && i+j<threads; j++) {
             if (cpus[i+j] == NULL) {
                 bindings.push_back(i+j);
             } else {
@@ -143,10 +143,10 @@ vector<unsigned> Host::allocate_resources(Task *task) {
     }
 
     // Mark all the cpus that were allocated to the task
-    for (vector<unsigned>::iterator i=bindings.begin(); i!=bindings.end(); i++) {
-        unsigned j = *i;
+    for (vector<cpu_t>::iterator i=bindings.begin(); i!=bindings.end(); i++) {
+        cpu_t j = *i;
         cpus[j] = task;
-        log_trace("Assigned CPU %u to task %s", j, task->name.c_str());
+        log_trace("Assigned CPU %"PRIcpu_t" to task %s", j, task->name.c_str());
     }
 
     return bindings;
@@ -420,7 +420,7 @@ void Master::publish_event(WorkflowEvent event, Task *task) {
     }
 }
 
-void Master::submit_task(Task *task, int rank, const vector<unsigned> &bindings) {
+void Master::submit_task(Task *task, int rank, const vector<cpu_t> &bindings) {
     log_debug("Submitting task %s to slot %d", task->name.c_str(), rank);
 
     CommandMessage cmd(task->name, task->args, task->pegasus_id, 
@@ -803,7 +803,7 @@ void Master::schedule_tasks() {
                     task->name.c_str(), slot->rank, host->name());
 
                 // Reserve the resources
-                vector<unsigned> bindings = host->allocate_resources(task);
+                vector<cpu_t> bindings = host->allocate_resources(task);
                 host->log_resources(resource_log);
 
                 submit_task(task, slot->rank, bindings);
