@@ -82,7 +82,7 @@ TESTS += test-fdcache
 TESTS += test-protocol
 TESTS += test-scheduler
 
-.PHONY: clean depends test install check
+.PHONY: clean test install check
 
 ifeq ($(shell which $(CXX) || echo n),n)
 $(warning To build pegasus-mpi-cluster set CXX to the path to your MPI C++ compiler wrapper)
@@ -118,9 +118,9 @@ distclean: clean
 	$(RM) $(PROGRAMS)
 
 clean:
-	$(RM) *.o $(TESTS) version.h
+	$(RM) *.o $(TESTS) version.h depends.mk
 
-depends:
+depends.mk: version.h $(shell ls *.cpp)
 	g++ -MM *.cpp > depends.mk
 
 version.h:
@@ -134,4 +134,4 @@ tags: *.h *.cpp
 	ctags -w *.h *.cpp
 endif
 
-include depends.mk
+-include depends.mk
