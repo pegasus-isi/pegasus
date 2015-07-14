@@ -504,6 +504,11 @@ static int printXMLSockInfo(FILE *out, int indent, SockInfo *sockets) {
 int printXMLProcInfo(FILE *out, int indent, ProcInfo* procs) {
     ProcInfo *i;
     for (i = procs; i; i = i->next) {
+        /* This means that the trace file was probably incomplete */
+        if (i->pid == 0) {
+            printerr("Bad <proc> record: trace file may be incomplete");
+        }
+
         /* Skip non-main threads in multithreaded programs */
         // XXX How does this affect FileInfo?
         if (i->tgid != i->pid) continue;
