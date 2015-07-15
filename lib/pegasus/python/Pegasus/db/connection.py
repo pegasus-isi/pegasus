@@ -98,21 +98,13 @@ def url_by_submitdir(submit_dir, db_type, config_properties=None, top_dir=None):
 
     # From the submit dir, we need the wf_uuid
     # Getting values from the submit_dir braindump file
-    top_level_wf_params = utils.slurp_braindb(submit_dir)
-    
-    # Return if we cannot parse the braindump.txt file
-    if not top_level_wf_params:
-        raise ConnectionError("File 'braindump.txt' not found in %s" % (submit_dir))
-    
+    top_level_wf_params = _parse_top_level_wf_params(submit_dir)
+
     # Load the top-level braindump now if top_dir is not None
     if top_dir is not None:
         # Getting values from the top_dir braindump file
-        top_level_wf_params = utils.slurp_braindb(top_dir)
+        top_level_wf_params = _parse_top_level_wf_params(top_dir)
 
-        # Return if we cannot parse the braindump.txt file
-        if not top_level_wf_params:
-            raise ConnectionError("File 'braindump.txt' not found in %s" % (top_dir))
-    
     # Get the location of the properties file from braindump
     top_level_prop_file = None
     
@@ -122,11 +114,11 @@ def url_by_submitdir(submit_dir, db_type, config_properties=None, top_dir=None):
         # Create the full path by using the submit_dir key from braindump
         if "submit_dir" in top_level_wf_params:
             top_level_prop_file = os.path.join(top_level_wf_params["submit_dir"], top_level_prop_file)
-            
-    return url_by_properties(config_properties, db_type, submit_dir, rundir_properties=top_level_prop_file)
+
+    return url_by_properties(config_properties, db_type, submit_dir, top_dir=top_dir, rundir_properties=top_level_prop_file)
 
     
-def url_by_properties(config_properties, db_type, submit_dir=None, rundir_properties=None):
+def url_by_properties(config_properties, db_type, submit_dir=None, top_dir=None, rundir_properties=None):
     """ Get URL from the property file """
     # Validate parameters
     if not db_type:
@@ -135,21 +127,21 @@ def url_by_properties(config_properties, db_type, submit_dir=None, rundir_proper
     # Parse, and process properties
     props = properties.Properties()
     props.new(config_file=config_properties, rundir_propfile=rundir_properties)
-    
+
     dburi = None
     if db_type.upper() == DBType.JDBCRC:
         dburi = _get_jdbcrc_uri(props)
     elif db_type.upper() == DBType.MASTER:
         dburi = _get_master_uri(props)
     elif db_type.upper() == DBType.WORKFLOW:
-        dburi = _get_workflow_uri(props, submit_dir)
+        dburi = _get_workflow_uri(props, submit_dir, top_dir)
     else:
         raise ConnectionError("Invalid database type '%s'." % db_type)
 
     if dburi:
         log.debug("Using database: %s" % dburi)
         return dburi
-    
+
     raise ConnectionError("Unable to find a database URI to connect.")
 
 
@@ -288,7 +280,7 @@ def _get_master_uri(props=None):
     return "sqlite:///" + filename
     
     
-def _get_workflow_uri(props=None, submit_dir=None):
+def _get_workflow_uri(props=None, submit_dir=None, top_dir=None):
     """ Get WORKFLOW URI """
     if props:
         dburi = props.property('pegasus.catalog.workflow.url')
@@ -297,26 +289,32 @@ def _get_workflow_uri(props=None, submit_dir=None):
         dburi = props.property('pegasus.monitord.output')
         if dburi:
             return dburi
-        
+
+    top_level_wf_params = None
     if submit_dir:
         # From the submit dir, we need the wf_uuid
         # Getting values from the submit_dir braindump file
-        top_level_wf_params = utils.slurp_braindb(submit_dir)
+        top_level_wf_params = _parse_top_level_wf_params(submit_dir)
 
-        # The default case is a .stampede.db file with the dag name as base
-        dag_file_name = ""
-        if (top_level_wf_params.has_key('dag')):
-            dag_file_name = top_level_wf_params['dag']
-        else:
-            raise ConnectionError("DAG file name cannot be found in the braindump.txt.")
+    if top_dir:
+        # Getting values from the top_dir braindump file
+        top_level_wf_params = _parse_top_level_wf_params(top_dir)
 
-        # Create the sqllite db url
-        dag_file_name = os.path.basename(dag_file_name)
-        output_db_file = (submit_dir) + "/" + dag_file_name[:dag_file_name.find(".dag")] + ".stampede.db"
-        dburi = "sqlite:///" + output_db_file
-        return dburi
-    
-    return None
+    if not top_level_wf_params:
+        return None
+
+    # The default case is a .stampede.db file with the dag name as base
+    dag_file_name = ""
+    if top_level_wf_params.has_key('dag'):
+        dag_file_name = top_level_wf_params['dag']
+    else:
+        raise ConnectionError("DAG file name cannot be found in the braindump.txt.")
+
+    # Create the sqllite db url
+    dag_file_name = os.path.basename(dag_file_name)
+    output_db_file = os.path.join(top_level_wf_params["submit_dir"], dag_file_name[:dag_file_name.find(".dag")] + ".stampede.db")
+    dburi = "sqlite:///" + output_db_file
+    return dburi
 
 
 def _parse_jdbc_uri(dburi):
@@ -377,3 +375,18 @@ def _parse_props(db, props, db_type=None, connect_args=None):
                 raise ConnectionError("Timeout properties should be set in seconds: %s" % e)
 
     return connect_args
+
+
+def _parse_top_level_wf_params(dir):
+    """
+    Parse the top level workflow parameters.
+    :param dir: path of the directory
+    :return: top level workflow parameters
+    """
+    top_level_wf_params = utils.slurp_braindb(dir)
+
+    # Return if we cannot parse the braindump.txt file
+    if not top_level_wf_params:
+        raise ConnectionError("File 'braindump.txt' not found in %s" % (dir))
+
+    return top_level_wf_params

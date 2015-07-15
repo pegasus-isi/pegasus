@@ -354,6 +354,9 @@ int main(int argc, char* argv[]) {
     /* Set the default status to 1 */
     appinfo.status = 1;
 
+    /* Set the PATH variable before we copy env into appinfo */
+    set_path();
+
     /* remember environment that all jobs will see */
     envIntoAppInfo(&appinfo, environ);
 
@@ -650,9 +653,6 @@ int main(int argc, char* argv[]) {
         /* there is no application to run */
         helpMe(&appinfo);
     }
-
-    /* Set the PATH variable */
-    set_path();
 
     /* initialize app info and register CLI parameters with it */
     initJobInfo(&appinfo.application, argc-i, argv+i);
