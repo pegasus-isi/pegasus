@@ -62,12 +62,43 @@ class OnlineMonitord:
         if self.channel is None:
             return
 
-        self.channel.basic_consume(self.on_message, self.queue_name)
+        for method_frame, properties, body in self.channel.consume(self.queue_name):
+            if method_frame is not None:
+                print method_frame.delivery_tag
+            print body
+            print
 
-        try:
-            self.channel.start_consuming()
-        except KeyboardInterrupt:
-            self.channel.stop_consuming()
+            if len(body.split(" ")) < 2:
+                print "The given measurement line is too short"
+                return
+
+            message = MonitoringMessage.parse(body)
+
+            if message is not None:
+                if self.client is not None:
+                    try:
+                        self.client.write_points(InfluxDbMessageFormatter.format_msg(message))
+                    except Exception, err:
+                        print "An error occured while sending monitoring measurement: "
+                        print err
+
+                self.handle_aggregation(message)
+
+            if self.channel is not None:
+                self.channel.basic_ack(delivery_tag=method_frame.delivery_tag) 
+
+
+        # self.channel.basic_consume(self.on_message, self.queue_name)
+        # retries = 0
+
+        # while retries < 5:
+        #     retries += 1
+
+        #     try:
+        #         self.channel.start_consuming()
+        #     except:
+        #         print "An exception occured - current retries counter is ", retries
+        #         self.channel.stop_consuming()
 
         self.mq_conn.close()
 
@@ -177,7 +208,7 @@ class OnlineMonitord:
 
         aggregator = self.aggregators[msg.dag_job_id]
 
-        if aggregator.repeated_mpi_rank(msg):
+        if aggregator.repeated_mpi_rank(msg) and aggregator.past_due_date(msg):
             # 1. check if aggregated measurements are ascending
             aggregator.align_measurements()
             # 2. send the aggregated measurement to a timeseries db and stampede db
@@ -234,10 +265,7 @@ class OnlineMonitord:
 
 
 class MonitoringMessage:
-    def __init__(self):
-        self.trace_id = None
-
-    def __init__(self, dag_job_id, condor_job_id, mpi_rank, msg):
+    def __init__(self, dag_job_id=None, condor_job_id=None, mpi_rank=None, msg=dict()):
         self.dag_job_id = dag_job_id
         self.mpi_rank = mpi_rank
         self.msg = msg
@@ -331,7 +359,7 @@ class WorkflowTraceMessage(MonitoringMessage):
             print "We couldn't create trace_id"
 
     def message_has_required_params(self, message):
-        required_params = ("hostname", "executable", "dag_job_id", "condor_job_id", "mpi_rank", "kickstart_pid")
+        required_params = ("ts", "hostname", "executable", "dag_job_id", "condor_job_id", "mpi_rank", "kickstart_pid")
         return all(k in message for k in required_params)
 
 
@@ -347,7 +375,7 @@ class DataTransferMessage(MonitoringMessage):
             print "We couldn't create trace_id"
 
     def message_has_required_params(self, message):
-        required_params = ("hostname", "dag_job_id", "condor_job_id")
+        required_params = ("ts", "hostname", "dag_job_id", "condor_job_id")
         return all(k in message for k in required_params)
 
 
@@ -412,10 +440,29 @@ class JobAggregator:
                 elif isinstance(msg, DataTransferMessage):
                     self.aggregated_measurements[idx] += metric_value + self.last_aggregated_data[idx]
 
-        self.retrieved_ranks[msg.mpi_rank] = True
+        if "kickstart_pid" not in msg.msg:
+            msg.msg["kickstart_pid"] = ""
+        if "executable" not in msg.msg:
+            msg.msg["executable"] = ""
+
+        rank_id = "{0}:{1}:{2}".format(msg.mpi_rank, msg.msg["kickstart_pid"], msg.msg["executable"])
+
+        self.retrieved_ranks[rank_id] = True
 
     def repeated_mpi_rank(self, msg):
-        return msg.mpi_rank in self.retrieved_ranks
+        if "kickstart_pid" not in msg.msg:
+            msg.msg["kickstart_pid"] = ""
+        if "executable" not in msg.msg:
+            msg.msg["executable"] = ""
+
+        rank_id = "{0}:{1}:{2}".format(msg.mpi_rank, msg.msg["kickstart_pid"], msg.msg["executable"])
+        return rank_id in self.retrieved_ranks
+
+    def past_due_date(self, msg):
+        idx = self.metrics.index("time")
+        idx_2 = msg.metrics().index("time")
+
+        return msg.measurements()[idx_2] - self.aggregated_measurements[idx] > 0
 
     def reset_measurements(self):
         self.retrieved_ranks = dict()
