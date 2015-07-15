@@ -712,7 +712,6 @@ FATAL: The main job specification is invalid or missing.
 #   jobs (i.e SUBDAG and SUBDAX jobs), the wall time value includes jobs
 #   from the sub workflows as well.
 
-
 -----------------------------------------------------------------------
 Type            Succeeded  Failed  Incomplete  Total     Retries  Total Run
 Tasks           4          0       0           4     ||  0        4
