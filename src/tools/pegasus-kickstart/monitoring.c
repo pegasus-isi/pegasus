@@ -172,7 +172,7 @@ void* monitoring_thread_func(void* kickstart_status_path) {
                 if( (pos = strchr(line, '\n')) != NULL )
                     *pos = '\0';
 
-                if( strstr(line, "ts=") == NULL )
+                if( strstr(line, "ts=") != line )
                     continue;
 
 

@@ -16,7 +16,6 @@ typedef struct {
 	char* condor_job_id;
 } JobIdInfo;
 
-extern
 int
 start_status_thread(pthread_t* monitoring_thread, char* kickstart_status);
 /* purpose: read environment variables, starts a monitoring thread and detaches it
@@ -26,7 +25,6 @@ start_status_thread(pthread_t* monitoring_thread, char* kickstart_status);
  *			1 failure
  */
 
-extern
 void*
 monitoring_thread_func(void* monitoring_endpoint_struct);
 /* purpose: monitoring thread - periodically reads global trace file (kickstart status file)
