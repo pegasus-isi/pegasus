@@ -693,6 +693,18 @@ FATAL: The main job specification is invalid or missing.
 #       retries the value is the cumulative of all retries. For workflows
 #       having sub workflow jobs (i.e SUBDAG and SUBDAX jobs), the
 #       walltime value includes jobs from the sub workflows as well.
+# Workflow cumulative job badput wall time:
+#   The sum of the wall time of all failed jobs as reported by kickstart.
+#   In case of job retries the value is the cumulative of all retries.
+#   For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs),
+#   the wall time value includes jobs from the sub workflows as well.
+# Cumulative job badput wall time as seen from submit side:
+#   The sum of the wall time of all failed jobs as reported by DAGMan.
+#   This is similar to the regular cumulative job badput wall time, but includes
+#   job management overhead and delays. In case of job retries the value
+#   is the cumulative of all retries. For workflows having sub workflow
+#   jobs (i.e SUBDAG and SUBDAX jobs), the wall time value includes jobs
+#   from the sub workflows as well.
 
 -----------------------------------------------------------------------
 Type            Succeeded  Failed  Incomplete  Total     Retries  Total Run
@@ -701,9 +713,11 @@ Jobs            7          0       0           7     ||  0        7
 Sub Workflows   0          0       0           0     ||  0        0
 -----------------------------------------------------------------------
 
-Workflow wall time:                               3 mins, 25 secs, (205 s)
-Workflow cumulative job wall time:                2 mins, 0 secs, (120 s)
-Cumulative job walltime as seen from submit side: 2 mins, 0 secs, (120 s)
+Workflow wall time                                       : 3 mins, 25 secs
+Workflow cumulative job wall time                        : 2 mins, 0 secs
+Cumulative job walltime as seen from submit side         : 2 mins, 0 secs
+Workflow cumulative job badput wall time                 : 0
+Cumulative job badput wall time as seen from submit side : 0
 
 Summary: submit/tutorial/pegasus/diamond/run0001/statistics/summary.txt
 
@@ -877,7 +891,7 @@ Service not running as root: Will not be able to switch users
     <para>The job instance section of the job details page lists all attempts
     made to run the job i.e. if a job failed in its first attempt due to
     transient errors, but ran successfully when retried, the job instance
-    section shows two entries; one for each attempt to run the job. </para>
+    section shows two entries; one for each attempt to run the job.</para>
 
     <para>The job details page also shows tab's for failed, and successful
     task invocations (Pegasus allows users to group multiple smaller task's
