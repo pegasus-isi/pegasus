@@ -727,7 +727,6 @@ Cumulative job badput wall time as seen from submit side : 0
 
 Summary: submit/tutorial/pegasus/diamond/run0001/statistics/summary.txt
 
-************************************************************************
 </programlisting>
 
     <para>The output of <literal>pegasus-statistics</literal> contains many
