@@ -388,6 +388,25 @@ function test_quote_env_var {
     return 0
 }
 
+function test_prepend_path {
+    KICKSTART_SAVE=$KICKSTART
+    KICKSTART="env PATH=/bar KICKSTART_PREPEND_PATH=/foo $KICKSTART"
+    kickstart /usr/bin/env
+    rc=$?
+    KICKSTART=$KICKSTART_SAVE
+
+    if [ $rc -ne 0 ]; then
+        echo "Expected kickstart to succeed"
+        return 1
+    fi
+    if ! [[ $(cat test.out) =~ "PATH=/foo:/bar" ]]; then
+        cat test.out
+        echo "Expected PATH to be set with KS_PREPEND_PATH"
+        return 1
+    fi
+    return 0
+}
+
 # RUN THE TESTS
 run_test lotsofprocs
 run_test lotsofprocs_buffer
@@ -421,4 +440,5 @@ run_test test_timeout_cleanup
 run_test test_timeout_setup
 run_test test_failure_environment
 run_test test_quote_env_var
+run_test test_prepend_path
 
