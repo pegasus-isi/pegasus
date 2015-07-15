@@ -309,6 +309,32 @@ static char* noquote(char* s) {
     return s;
 }
 
+/* If KICKSTART_PREPEND_PATH is in the environment, then add it to PATH */
+void set_path() {
+    char *prepend_path = getenv("KICKSTART_PREPEND_PATH");
+    if (prepend_path == NULL || strlen(prepend_path) == 0) {
+        return;
+    }
+
+    char *orig_path = getenv("PATH");
+    if (orig_path == NULL || strlen(orig_path) == 0) {
+        if (setenv("PATH", prepend_path, 1) < 0) {
+            printerr("Error setting PATH to KICKSTART_PREPEND_PATH: %s\n", strerror(errno));
+            exit(1);
+        }
+    } else {
+        char new_path[PATH_MAX];
+        if (snprintf(new_path, PATH_MAX, "%s:%s", prepend_path, orig_path) >= PATH_MAX) {
+            printerr("New path from KICKSTART_PREPEND_PATH is larger than PATH_MAX\n");
+            exit(1);
+        }
+        if (setenv("PATH", new_path, 1) < 0) {
+            printerr("Error setting PATH with KICKSTART_PREPEND_PATH: %s\n", strerror(errno));
+            exit(1);
+        }
+    }
+}
+
 int main(int argc, char* argv[]) {
     size_t cwd_size = getpagesize();
     int status, result = 0;
@@ -624,6 +650,9 @@ int main(int argc, char* argv[]) {
         /* there is no application to run */
         helpMe(&appinfo);
     }
+
+    /* Set the PATH variable */
+    set_path();
 
     /* initialize app info and register CLI parameters with it */
     initJobInfo(&appinfo.application, argc-i, argv+i);
