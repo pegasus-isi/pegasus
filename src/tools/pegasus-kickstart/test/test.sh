@@ -261,7 +261,7 @@ function test_timeout_nokill {
 }
 
 function test_timeout_mainjob_cleanup {
-    GRIDSTART_CLEANUP="/bin/echo Cleanup job" kickstart -k 1 /bin/sleep 5
+    KICKSTART_CLEANUP="/bin/echo Cleanup job" kickstart -k 1 /bin/sleep 5
     rc=$?
     if [ $rc -eq 0 ]; then
         echo "Expected non-zero exit"
@@ -279,7 +279,7 @@ function test_timeout_mainjob_cleanup {
 }
 
 function test_timeout_pre {
-    GRIDSTART_PREJOB="/bin/sleep 5" kickstart -k 1 /bin/echo Main job
+    KICKSTART_PREJOB="/bin/sleep 5" kickstart -k 1 /bin/echo Main job
     rc=$?
     if [ $rc -eq 0 ]; then
         echo "Expected non-zero exit"
@@ -297,7 +297,7 @@ function test_timeout_pre {
 }
 
 function test_timeout_post {
-    GRIDSTART_POSTJOB="/bin/sleep 5" kickstart -k 1 /bin/echo Main job
+    KICKSTART_POSTJOB="/bin/sleep 5" kickstart -k 1 /bin/echo Main job
     rc=$?
     if [ $rc -eq 0 ]; then
         echo "Expected non-zero exit"
@@ -315,7 +315,7 @@ function test_timeout_post {
 }
 
 function test_timeout_cleanup {
-    GRIDSTART_CLEANUP="/bin/sleep 5" kickstart -k 1 /bin/echo Main job
+    KICKSTART_CLEANUP="/bin/sleep 5" kickstart -k 1 /bin/echo Main job
     rc=$?
     if [ $rc -ne 0 ]; then
         echo "Expected zero exit"
@@ -333,7 +333,7 @@ function test_timeout_cleanup {
 }
 
 function test_timeout_setup {
-    GRIDSTART_SETUP="/bin/sleep 5" GRIDSTART_PREJOB="/bin/echo Pre job" kickstart -k 1 /bin/echo Main job
+    KICKSTART_SETUP="/bin/sleep 5" KICKSTART_PREJOB="/bin/echo Pre job" kickstart -k 1 /bin/echo Main job
     rc=$?
     if [ $rc -eq 0 ]; then
         echo "Expected non-zero exit"

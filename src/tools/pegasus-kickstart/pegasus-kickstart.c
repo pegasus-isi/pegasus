@@ -731,13 +731,17 @@ REDIR:
     }
 
     /* Our own initially: an independent setup job */
-    if (prepareSideJob(&appinfo.setup, getenv("GRIDSTART_SETUP"))) {
+    char *SETUP = getenv("KICKSTART_SETUP");
+    if (SETUP == NULL) { SETUP = getenv("GRIDSTART_SETUP"); }
+    if (prepareSideJob(&appinfo.setup, SETUP)) {
         mysystem(&appinfo, &appinfo.setup, environ);
     }
 
     /* possible pre job (skipped if timeout happens) */
     if (result == 0 && alarmed == 0) {
-        if (prepareSideJob(&appinfo.prejob, getenv("GRIDSTART_PREJOB"))) {
+        char *PREJOB = getenv("KICKSTART_PREJOB");
+        if (PREJOB == NULL) { PREJOB = getenv("GRIDSTART_PREJOB"); }
+        if (prepareSideJob(&appinfo.prejob, PREJOB)) {
             /* there is a prejob to be executed */
             status = mysystem(&appinfo, &appinfo.prejob, environ);
             result = obtainStatusCode(status);
@@ -755,7 +759,9 @@ REDIR:
 
     /* possible post job (skipped if the timeout happens) */
     if (result == 0 && alarmed == 0) {
-        if (prepareSideJob(&appinfo.postjob, getenv("GRIDSTART_POSTJOB"))) {
+        char *POSTJOB = getenv("KICKSTART_POSTJOB");
+        if (POSTJOB == NULL) { POSTJOB = getenv("GRIDSTART_POSTJOB"); }
+        if (prepareSideJob(&appinfo.postjob, POSTJOB)) {
             status = mysystem(&appinfo, &appinfo.postjob, environ);
             result = obtainStatusCode(status);
         }
@@ -765,7 +771,9 @@ REDIR:
     alarm(0);
 
     /* An independent clean-up job that runs regardless of main application result or timeout */
-    if (prepareSideJob(&appinfo.cleanup, getenv("GRIDSTART_CLEANUP"))) {
+    char *CLEANUP = getenv("KICKSTART_CLEANUP");
+    if (CLEANUP == NULL) { CLEANUP = getenv("GRIDSTART_CLEANUP"); }
+    if (prepareSideJob(&appinfo.cleanup, CLEANUP)) {
         mysystem(&appinfo, &appinfo.cleanup, environ);
     }
 

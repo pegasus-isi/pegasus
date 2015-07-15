@@ -249,7 +249,7 @@ static size_t convert2XML(FILE *out, const AppInfo* run) {
     /* If the job failed, or if the user requested the full kickstart record */
     if (any_failure(run) || run->fullInfo) {
         /* Extra <statcall> records */
-        printXMLStatInfo(out, 2, "statcall", "gridstart", &run->gridstart, includeData);
+        printXMLStatInfo(out, 2, "statcall", "kickstart", &run->kickstart, includeData);
         updateStatInfo(&(((AppInfo*) run)->logfile));
         printXMLStatInfo(out, 2, "statcall", "logfile", &run->logfile, includeData);
 
@@ -324,17 +324,17 @@ int initAppInfo(AppInfo* appinfo, int argc, char* const* argv) {
     initMachineInfo(&appinfo->machine); 
 
     /* initialize some data for myself */
-    initStatInfoFromName(&appinfo->gridstart, argv[0], O_RDONLY, 0);
+    initStatInfoFromName(&appinfo->kickstart, argv[0], O_RDONLY, 0);
 
     /* default for stdin */
     initStatInfoFromName(&appinfo->input, "/dev/null", O_RDONLY, 0);
 
     /* default for stdout */
-    pattern(tempname, tempsize, tempdir, "/", "gs.out.XXXXXX");
+    pattern(tempname, tempsize, tempdir, "/", "ks.out.XXXXXX");
     initStatInfoAsTemp(&appinfo->output, tempname);
 
     /* default for stderr */
-    pattern(tempname, tempsize, tempdir, "/", "gs.err.XXXXXX");
+    pattern(tempname, tempsize, tempdir, "/", "ks.err.XXXXXX");
     initStatInfoAsTemp(&appinfo->error, tempname);
 
     /* default for stdlog */
@@ -478,7 +478,7 @@ void deleteAppInfo(AppInfo* runinfo) {
     deleteStatInfo(&runinfo->output);
     deleteStatInfo(&runinfo->error);
     deleteStatInfo(&runinfo->logfile);
-    deleteStatInfo(&runinfo->gridstart);
+    deleteStatInfo(&runinfo->kickstart);
 
     if (runinfo->icount && runinfo->initial) {
         for (i=0; i<runinfo->icount; ++i) {
