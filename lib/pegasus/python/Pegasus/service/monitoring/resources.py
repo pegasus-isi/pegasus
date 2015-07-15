@@ -291,7 +291,8 @@ class JobInstanceResource(BaseResource):
             'stdin_file',
             'stdout_file',
             'stderr_file',
-            'multiplier_factor'
+            'multiplier_factor',
+            'exitcode'
         ]
 
 
