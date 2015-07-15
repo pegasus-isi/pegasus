@@ -164,13 +164,13 @@ def formatted_wf_summary_legends_part2():
 #   jobs (i.e SUBDAG and SUBDAX jobs), the wall time value includes jobs
 #   from the sub workflows as well.
 # Workflow cumulative job badput wall time:
-#   The sum of the wall time of all jobs as reported by kickstart.
+#   The sum of the wall time of all failed jobs as reported by kickstart.
 #   In case of job retries the value is the cumulative of all retries.
 #   For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs),
 #   the wall time value includes jobs from the sub workflows as well.
 # Cumulative job badput wall time as seen from submit side:
-#   The sum of the wall time of all jobs as reported by DAGMan.
-#   This is similar to the regular cumulative job wall time, but includes
+#   The sum of the wall time of all failed jobs as reported by DAGMan.
+#   This is similar to the regular cumulative job badput wall time, but includes
 #   job management overhead and delays. In case of job retries the value
 #   is the cumulative of all retries. For workflows having sub workflow
 #   jobs (i.e SUBDAG and SUBDAX jobs), the wall time value includes jobs
