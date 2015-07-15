@@ -722,13 +722,12 @@ Sub Workflows   0          0       0           0     ||  0        0
 
 Workflow wall time                                       : 3 mins, 25 secs
 Workflow cumulative job wall time                        : 2 mins, 0 secs
-Cumulative job wall time as seen from submit side         : 2 mins, 0 secs
+Cumulative job wall time as seen from submit side        : 2 mins, 0 secs
 Workflow cumulative job badput wall time                 : 0
 Cumulative job badput wall time as seen from submit side : 0
 
 Summary: submit/tutorial/pegasus/diamond/run0001/statistics/summary.txt
 
-************************************************************************
 </programlisting>
 
     <para>The output of <literal>pegasus-statistics</literal> contains many
