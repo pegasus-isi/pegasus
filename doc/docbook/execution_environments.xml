@@ -925,7 +925,7 @@ $ ls  /usr/libexec/condor/glite/bin/pbs_local_submit_attributes.sh
       </note>
     </section>
 
-    <section id="glite_pbs">
+    <section id="glite_sge">
       <title>Setting SGE specific parameters for the jobs</title>
 
       <para>In order to pass resource requirements of the job to local SGE,
