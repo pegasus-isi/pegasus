@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
+#include <inttypes.h>
 
 #include <sys/sysctl.h>
 
@@ -214,7 +215,7 @@ int printDarwinInfo(FILE *out, int indent, const MachineDarwinInfo *ptr) {
     };
 
     /* <ram .../> tag */
-    fprintf(out, "%*s<ram total=\"%llu\" avail=\"%llu\" active=\"%llu\" inactive=\"%llu\" wired=\"%llu\"/>\n",
+    fprintf(out, "%*s<ram total=\"%"PRIu64"\" avail=\"%"PRIu64"\" active=\"%"PRIu64"\" inactive=\"%"PRIu64"\" wired=\"%"PRIu64"\"/>\n",
             indent, "",
             ptr->ram_total / 1024,
             ptr->ram_avail / 1024,
@@ -223,7 +224,7 @@ int printDarwinInfo(FILE *out, int indent, const MachineDarwinInfo *ptr) {
             ptr->ram_wired / 1024);
 
     /* <swap .../> tag */
-    fprintf(out, "%*s<swap total=\"%llu\" avail=\"%llu\" used=\"%llu\"/>\n", indent, "",
+    fprintf(out, "%*s<swap total=\"%"PRIu64"\" avail=\"%"PRIu64"\" used=\"%"PRIu64"\"/>\n", indent, "",
             ptr->swap_total / 1024,
             ptr->swap_avail / 1024,
             ptr->swap_used / 1024);
