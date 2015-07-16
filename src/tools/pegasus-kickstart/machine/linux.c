@@ -26,6 +26,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <dirent.h>
+#include <inttypes.h>
 
 #include <signal.h> /* signal names */
 
@@ -395,18 +396,18 @@ int printLinuxInfo(FILE *out, int indent, const MachineLinuxInfo *ptr) {
     };
 
     /* <ram .../> tag */
-    fprintf(out, "%*s<ram total=\"%lu\" free=\"%lu\" shared=\"%lu\" buffer=\"%lu\"/>\n",
+    fprintf(out, "%*s<ram total=\"%"PRIu64"\" free=\"%"PRIu64"\" shared=\"%"PRIu64"\" buffer=\"%"PRIu64"\"/>\n",
             indent, "",
-            (unsigned long)(ptr->ram_total / 1024),
-            (unsigned long)(ptr->ram_free / 1024),
-            (unsigned long)(ptr->ram_shared / 1024),
-            (unsigned long)(ptr->ram_buffer / 1024));
+            ptr->ram_total / 1024,
+            ptr->ram_free / 1024,
+            ptr->ram_shared / 1024,
+            ptr->ram_buffer / 1024);
 
     /* <swap .../> tag */
-    fprintf(out, "%*s<swap total=\"%lu\" free=\"%lu\"/>\n",
+    fprintf(out, "%*s<swap total=\"%"PRIu64"\" free=\"%"PRIu64"\"/>\n",
             indent, "",
-            (unsigned long)(ptr->swap_total / 1024),
-            (unsigned long)(ptr->swap_free / 1024));
+            ptr->swap_total / 1024,
+            ptr->swap_free / 1024);
 
     /* <boot> element */
     fprintf(out, "%*s<boot idle=\"%.3f\">%s</boot>\n", indent, "",
@@ -430,9 +431,9 @@ int printLinuxInfo(FILE *out, int indent, const MachineLinuxInfo *ptr) {
                 fprintf(out, " %s=\"%hu\"", state_names[s], ptr->procs.state[s]);
             }
         }
-        fprintf(out, " vmsize=\"%lu\" rss=\"%lu\"/>\n",
-                (unsigned long)(ptr->procs.size / 1024),
-                (unsigned long)(ptr->procs.rss / 1024));
+        fprintf(out, " vmsize=\"%"PRIu64"\" rss=\"%"PRIu64"\"/>\n",
+                ptr->procs.size / 1024,
+                ptr->procs.rss / 1024);
 
         /* <task> element */
         fprintf(out, "%*s<task total=\"%u\"", indent, "", ptr->tasks.total);
