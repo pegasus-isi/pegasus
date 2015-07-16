@@ -169,7 +169,7 @@ class WorkflowQueries(SQLAlchemyInit):
         return q
 
     @staticmethod
-    def _add_ordering(q, order, resource, ignore_prefix=True):
+    def _add_ordering(q, order, resource):
         if not q or not order or not resource:
             return q
 
@@ -1138,7 +1138,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         #
         # Construct SQLAlchemy Query `q` to count.
         #
-        q = self.session.query(Job, JobInstance)
+        q = self.session.query(Job, JobInstance).options(defer(JobInstance.stdout_text), defer(JobInstance.stderr_text))
         q = q.filter(Job.job_id == JobInstance.job_id)
 
         q = q.filter(Job.wf_id == wf_id)
@@ -1203,7 +1203,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         #
         # Construct SQLAlchemy Query `q` to count.
         #
-        q = self.session.query(Job, JobInstance)
+        q = self.session.query(Job, JobInstance).options(defer(JobInstance.stdout_text), defer(JobInstance.stderr_text))
         q = q.filter(Job.job_id == JobInstance.job_id)
 
         q = q.filter(Job.wf_id == wf_id)
@@ -1333,7 +1333,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         #
         # Construct SQLAlchemy Query `q` to count.
         #
-        q = self.session.query(Job, JobInstance)
+        q = self.session.query(Job, JobInstance).options(defer(JobInstance.stdout_text), defer(JobInstance.stderr_text))
         q = q.filter(Job.job_id == JobInstance.job_id)
 
         q = q.filter(Job.wf_id == wf_id)
