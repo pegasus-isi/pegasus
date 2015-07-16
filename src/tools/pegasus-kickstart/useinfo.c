@@ -32,11 +32,15 @@ int printXMLUseInfo(FILE *out, int indent, const char* id,
     fprintf(out, "%*s<%s utime=\"%.3f\" stime=\"%.3f\"", indent, "",
             id, doubletime(use->ru_utime), doubletime(use->ru_stime));
 
-    fprintf(out, " maxrss=\"%s\" ixrss=\"%s\" idrss=\"%s\" isrss=\"%s\"",
-            sizer(b[0], 32, sizeof(use->ru_maxrss), &(use->ru_maxrss)),
-            sizer(b[1], 32, sizeof(use->ru_ixrss), &(use->ru_ixrss)),
-            sizer(b[2], 32, sizeof(use->ru_idrss), &(use->ru_idrss)),
-            sizer(b[3], 32, sizeof(use->ru_isrss), &(use->ru_isrss)));
+    fprintf(out, " maxrss=\"%lu\"", 
+#ifdef DARWIN
+            /* On Mac OS X this is in bytes */
+            use->ru_maxrss / 1024
+#else
+            /* On linux it is in KB */
+            use->ru_maxrss
+#endif
+    );
 
     fprintf(out, " minflt=\"%s\" majflt=\"%s\" nswap=\"%s\"",
             sizer(b[0], 32, sizeof(use->ru_minflt), &(use->ru_minflt)),

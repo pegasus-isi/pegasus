@@ -160,18 +160,15 @@ int printBasicMachine(FILE *out, int indent, const char* tag,
     const MachineBasicInfo* ptr = (const MachineBasicInfo*) data;
 
     if (ptr) {
-        char b[32];
         startBasicMachine(out, indent+2, tag, ptr);
 
 #if defined(_SC_PHYS_PAGES) || defined(_SC_AVPHYS_PAGES)
         fprintf(out, "%*s<ram", indent, "");
 #ifdef _SC_PHYS_PAGES
-        fprintf(out, " total=\"%s\"",
-                sizer(b, 32, sizeof(ptr->ram_total), &(ptr->ram_total)));
+        fprintf(out, " total=\"%llu\"", ptr->ram_total / 1024);
 #endif /* _SC_PHYS_PAGES */
 #ifdef _SC_AVPHYS_PAGES
-        fprintf(out, " avail=\"%s\"",
-                sizer(b, 32, sizeof(ptr->ram_avail), &(ptr->ram_avail)));
+        fprintf(out, " avail=\"%llu\"", ptr->ram_avail / 1024);
 #endif /* _SC_AVPHYS_PAGES */
         fprintf(out, "/>\n");
 #endif /* _SC_PHYS_PAGES || _SC_AVPHYS_PAGES */
@@ -179,12 +176,10 @@ int printBasicMachine(FILE *out, int indent, const char* tag,
 #if defined(_SC_NPROCESSORS_CONF) || defined(_SC_NPROCESSORS_ONLN)
         fprintf(out, "%*s<cpu", indent, "");
 #ifdef _SC_NPROCESSORS_CONF
-        fprintf(out, " total=\"%s\"",
-                sizer(b, 32, sizeof(ptr->cpu_total), &(ptr->cpu_total)));
+        fprintf(out, " total=\"%hu\"", ptr->cpu_total);
 #endif /* _SCN_PROCESSORS_CONF */
 #ifdef _SC_NPROCESSORS_ONLN
-        fprintf(out, " online=\"%s\"",
-                sizer(b, 32, sizeof(ptr->cpu_online), &(ptr->cpu_online)));
+        fprintf(out, " online=\"%hu\"", ptr->cpu_online);
 #endif /* _SC_NPROCESSORS_ONLN */
         fprintf(out, "/>\n");
 #endif /* _SC_NPROCESSORS_CONF || _SC_NPROCESSORS_ONLN */
