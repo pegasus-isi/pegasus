@@ -1983,7 +1983,7 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
       failure</emphasis>.</para>
 
       <section>
-        <title>GET /root OR POST /root/query</title>
+        <title>GET /root OR POST /root</title>
 
         <para>Returns a collection of the <link
         linkend="resource-root-workflow">Root Workflow</link> resource.</para>
@@ -2097,7 +2097,7 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
 
       <section>
         <title>GET /root/&lt;m_wf_id&gt;/workflow OR POST
-        /root/&lt;m_wf_id&gt;/workflow/query</title>
+        /root/&lt;m_wf_id&gt;/workflow</title>
 
         <para>Returns a collection of the <link
         linkend="resource-workflow">Workflow</link> resource.</para>
@@ -2218,7 +2218,8 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
       <section>
         <title>GET
         /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/state[;recent=true] OR
-        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/state[;recent=true]/query</title>
+        POST
+        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/state[;recent=true]</title>
 
         <para>Returns a collection of the <link
         linkend="resource-workflow-state">Workflow State</link>
@@ -2313,7 +2314,7 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
 
       <section>
         <title>GET /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/host OR POST
-        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/host/query</title>
+        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/host</title>
 
         <para>Returns a collection of the <link
         linkend="resource-host">Host</link> resource.</para>
@@ -2434,7 +2435,7 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
 
       <section>
         <title>GET /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/task OR POST
-        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/task/query</title>
+        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/task</title>
 
         <para>Returns a collection of the <link
         linkend="resource-task">Task</link> resource.</para>
@@ -2555,8 +2556,7 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
 
       <section>
         <title>GET /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/invocation OR
-        POST
-        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/invocation/query</title>
+        POST /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/invocation</title>
 
         <para>Returns a collection of the <link
         linkend="resource-invocation">Invocation</link> resource.</para>
@@ -2677,7 +2677,7 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
 
       <section>
         <title>GET /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/job OR POST
-        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/job/query</title>
+        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/job</title>
 
         <para>Returns a collection of the <link
         linkend="resource-job">Job</link> resource.</para>
@@ -2800,7 +2800,7 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
         <title>GET
         /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/job/&lt;job_id&gt;/job-instance[;recent=true]
         OR POST
-        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/job/&lt;job_id&gt;/job-instance[;recent=true]/query</title>
+        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/job/&lt;job_id&gt;/job-instance[;recent=true]</title>
 
         <para>Returns a collection of the <link
         linkend="resource-job-instance">Job Instance</link> resource.</para>
@@ -2931,7 +2931,7 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
         <title>GET
         /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/job/&lt;job_id&gt;/job-instance/&lt;job_instance_id&gt;/state[;recent=true]
         OR POST
-        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/job/&lt;job_id&gt;/job-instance/&lt;job_instance_id&gt;/state[;recent=true]/query</title>
+        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/job/&lt;job_id&gt;/job-instance/&lt;job_instance_id&gt;/state[;recent=true]</title>
 
         <para>Returns a collection of the <link
         linkend="resource-job-state">Job State</link> resource.</para>
@@ -3061,7 +3061,7 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
         <title>GET
         /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/job/&lt;job_id&gt;/job-instance/&lt;job_instance_id&gt;/invocation
         OR POST
-        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/job/&lt;job_id&gt;/job-instance/&lt;job_instance_id&gt;/invocation/query</title>
+        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/job/&lt;job_id&gt;/job-instance/&lt;job_instance_id&gt;/invocation</title>
 
         <para>Returns a collection of the <link
         linkend="resource-invocation">Invocation</link> resource.</para>
@@ -3218,11 +3218,11 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
 [
     {
         "method" : "GET",
-        "path"   : "/api/v1/user/user-a/root/query?query=wf_id=1&amp;pretty-print=True"
+        "path"   : "/api/v1/user/user-a/root?query=wf_id=1&amp;pretty-print=True"
     },
     {
         "method" : "POST",
-        "path"   : "/api/v1/user/user-a/root/query?query=wf_id=2"
+        "path"   : "/api/v1/user/user-a/root?query=wf_id=2"
     }
 ]<emphasis role="bold">
 
