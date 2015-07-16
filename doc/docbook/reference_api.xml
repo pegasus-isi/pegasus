@@ -3194,12 +3194,12 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
     {
         "method" : &lt;string:method&gt;,
         "path"   : &lt;string:path&gt;,
-        "body"   : &lt;string:body&gt;
+        "body"   : &lt;dict:body&gt;
     },
     {
         "method" : &lt;string:method&gt;,
         "path"   : &lt;string:path&gt;,
-        "body"   : &lt;string:body&gt;
+        "body"   : &lt;dict:body&gt;
     }
 ]</programlisting>
 
@@ -3213,65 +3213,6 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
         "response" : &lt;string:response&gt;
     }
 ]</programlisting></para>
-
-        <para><emphasis role="bold">Example</emphasis><programlisting><emphasis
-              role="bold">Request</emphasis>
-
-[
-    {
-        "method" : "GET",
-        "path"   : "/api/v1/user/user-a/root?query=wf_id=1&amp;pretty-print=True"
-    },
-    {
-        "method" : "POST",
-        "path"   : "/api/v1/user/user-a/root?query=wf_id=2"
-    }
-]<emphasis role="bold">
-
-Response</emphasis>
-
-[
-    {
-        "status"   : 200,
-        "response" : {
-            "records" : [
-                {
-                    "wf_id"             : 1,
-                    "wf_uuid"           : "7193de8c-a28d-4eca-b576-1b1c3c4f668b",
-                    ..
-                    "_links"            : {
-                        "workflow" : "/api/v1/user/user-a/root/1/workflow"
-                    }
-                }
-            ],
-            "_meta"   : {
-                "records_total"    : 5,
-                "records_filtered" : 1
-            }
-        }
-    },
-    {
-        "status"   : 200,
-        "response" : {
-            "records" : [
-                {
-                    "wf_id"             : 2,
-                    "wf_uuid"           : "41920a57-7882-4990-854e-658b7a797745",
-                    ..
-                    "_links"            : {
-                        "workflow" : "/api/v1/user/user-a/root/2/workflow"
-                    }
-                }
-            ],
-            "_meta"   : {
-                "records_total"    : 5,
-                "records_filtered" : 1
-            }
-        }
-    }
-]
-
-</programlisting></para>
 
         <para><table frame="box" rules="all">
             <caption>Returns</caption>
@@ -3289,6 +3230,98 @@ Response</emphasis>
                 <td>207</td>
 
                 <td>Multi status</td>
+              </tr>
+            </tbody>
+          </table></para>
+      </section>
+
+      <section>
+        <title>GET
+        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/job/&lt;[running|successful|failed|failing]&gt;
+        OR POST
+        /root/&lt;m_wf_id&gt;/workflow/&lt;wf_id&gt;/job/&lt;[running|successful|failed|failing]&gt;</title>
+
+        <para>Returns a collection of running, successful, failed, or failing
+        <link linkend="resource-job">Job</link> resource. </para>
+
+        <para><emphasis role="bold">Note:</emphasis> Queries, Sorting can
+        include fields from Job and JobInstance resource.</para>
+
+        <para><table frame="box" rules="all">
+            <caption>Options</caption>
+
+            <thead>
+              <tr align="center">
+                <th>Argument</th>
+
+                <th>Description</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>start-index</td>
+
+                <td>Return results starting from record &lt;start-index&gt; (0
+                indexed)</td>
+              </tr>
+
+              <tr>
+                <td>max-results</td>
+
+                <td>Return a maximum of &lt;max-results&gt; records</td>
+              </tr>
+
+              <tr>
+                <td>query</td>
+
+                <td>Search criteria. See <link
+                linkend="querying">Querying</link>.</td>
+              </tr>
+
+              <tr>
+                <td>order</td>
+
+                <td>Order criteria. See <link
+                linkend="ordering">Ordering</link>.</td>
+              </tr>
+            </tbody>
+          </table></para>
+
+        <para><table frame="box" rules="all">
+            <caption>Returns</caption>
+
+            <thead>
+              <tr align="center">
+                <th>Status Code</th>
+
+                <th>Description</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>200</td>
+
+                <td>OK</td>
+              </tr>
+
+              <tr>
+                <td>204</td>
+
+                <td>No content; when no jobs found.</td>
+              </tr>
+
+              <tr>
+                <td>400</td>
+
+                <td>Bad request</td>
+              </tr>
+
+              <tr>
+                <td>404</td>
+
+                <td>Not found</td>
               </tr>
             </tbody>
           </table></para>
@@ -3531,9 +3564,10 @@ HTTP/1.1 200 OK
       <section>
         <title>Resource - Collection</title>
 
-        <programlisting><emphasis role="bold">$ curl --request GET \
+        <programlisting><emphasis role="bold">$ curl --request POST \
        --user user-a:user-a-password \
-       https://www.domain.com/api/v1/user/user-a/root/1/workflow?pretty-print=true
+       --data 'pretty-print=true' \
+       https://www.domain.com/api/v1/user/user-a/root/1/workflow
                     </emphasis>
 HTTP/1.1 200 OK
 
@@ -3625,7 +3659,7 @@ HTTP/1.1 200 OK
 
         <programlisting><emphasis role="bold">$ curl --request GET \
        --user user-a:user-a-password \
-       https://www.domain.com/api/v1/user/user-a/root/1/workflow?pretty-print=true&amp;query=w.wf_uuid='41920a57-7882-4990-854e-658b7a797745'
+       https://www.domain.com/api/v1/user/user-a/root/1/workflow?pretty-print=true&amp;query=w.wf_uuid = '41920a57-7882-4990-854e-658b7a797745'
                     </emphasis>
 HTTP/1.1 200 OK
 
@@ -3781,6 +3815,73 @@ HTTP/1.1 200 OK
         "records_filtered": 1
     }
 }</programlisting></para>
+      </section>
+
+      <section>
+        <title>Batch Request</title>
+
+        <para><emphasis role="bold">Example</emphasis><programlisting><emphasis
+              role="bold">$ curl --request POST \
+     --user user-a:user-a-password \
+     --header "Content-Type: application/json" \
+     --data '[
+          {
+              "path"   : "/api/v1/user/mayani/root?query=r.wf_id = 1&amp;pretty-print=True",
+              "method" : "GET"
+          },
+          {
+              "body"   : {
+                  "query"        : "r.wf_id = 2",
+                  "pretty-print" : "True"
+              },
+              "path"   : "/api/v1/user/mayani/root",
+              "method" : "POST"
+          }
+     ]' \
+     https://www.domain.com/api/v1/user/user-a/batch</emphasis>
+
+[
+    {
+        "status"   : 200,
+        "response" : {
+            "records" : [
+                {
+                    "wf_id"             : 1,
+                    "wf_uuid"           : "7193de8c-a28d-4eca-b576-1b1c3c4f668b",
+                    ..
+                    "_links"            : {
+                        "workflow" : "/api/v1/user/user-a/root/1/workflow"
+                    }
+                }
+            ],
+            "_meta"   : {
+                "records_total"    : 5,
+                "records_filtered" : 1
+            }
+        }
+    },
+    {
+        "status"   : 200,
+        "response" : {
+            "records" : [
+                {
+                    "wf_id"             : 2,
+                    "wf_uuid"           : "41920a57-7882-4990-854e-658b7a797745",
+                    ..
+                    "_links"            : {
+                        "workflow" : "/api/v1/user/user-a/root/2/workflow"
+                    }
+                }
+            ],
+            "_meta"   : {
+                "records_total"    : 5,
+                "records_filtered" : 1
+            }
+        }
+    }
+]
+
+</programlisting></para>
       </section>
     </section>
   </section>

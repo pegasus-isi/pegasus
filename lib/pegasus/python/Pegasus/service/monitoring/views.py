@@ -946,12 +946,12 @@ Batch Request
     {
         "method" : <string:method>,
         "path"   : <string:path>,
-        "body"   : <string:body>
+        "body"   : <dict:body>
     },
     {
         "method" : <string:method>,
         "path"   : <string:path>,
-        "body"   : <string:body>
+        "body"   : <dict:body>
     }
 ]
 
