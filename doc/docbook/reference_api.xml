@@ -1854,6 +1854,7 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
     "task_count"  : &lt;int: task_count&gt;,
     "executable"  : &lt;string: executable&gt;,
     "argv"        : &lt;string: argv&gt;,
+    "task_count"  : int:task_count,
     "_links"      : {
         "workflow"     : &lt;href:workflow&gt;,
         "task"         : &lt;href:task&gt;,
@@ -1929,6 +1930,7 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
     "stdout_file"       : &lt;string:stdout_file&gt;,
     "stderr_file"       : &lt;string:stderr_file&gt;,
     "multiplier_factor" : &lt;int:multiplier_factor&gt;,
+    "exitcode"          : &lt;int:exitcode&gt;,
     "_links"            : {
         "job_state"  : &lt;href:job_state&gt;,
         "host"       : &lt;href:host&gt;,

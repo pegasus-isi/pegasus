@@ -219,7 +219,8 @@ class JobResource(BaseResource):
             'clustered',
             'task_count',
             'executable',
-            'argv'
+            'argv',
+            'task_count'
         ]
 
 

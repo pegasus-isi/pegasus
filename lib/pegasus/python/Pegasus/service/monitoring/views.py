@@ -631,6 +631,7 @@ Task
     "type_desc"      : string: type_desc,
     "transformation" : string:transformation,
     "argv"           : string:argv,
+    "task_count"     : int:task_count,
     "_links"         : {
         "workflow" : href:workflow,
         "job"      : href:job
@@ -759,6 +760,7 @@ Job Instance
     "stdout_file"       : string:stdout_file,
     "stderr_file"       : string:stderr_file,
     "multiplier_factor" : int:multiplier_factor,
+    "exitcode"          : int:exitcode,
     "_links"            : {
         "job_state"  : href:job_state,
         "host"       : href:host,
