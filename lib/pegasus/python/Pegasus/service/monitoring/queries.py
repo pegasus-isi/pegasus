@@ -1334,32 +1334,38 @@ class StampedeWorkflowQueries(WorkflowQueries):
         # Construct SQLAlchemy Query `q` to count.
         #
         q = self.session.query(Job, JobInstance).options(defer(JobInstance.stdout_text), defer(JobInstance.stderr_text))
-        q = q.filter(Job.job_id == JobInstance.job_id)
 
         q = q.filter(Job.wf_id == wf_id)
-        q = q.filter(JobInstance.exitcode != None).filter(JobInstance.exitcode != 0)
         q = q.filter(Job.type_desc != 'dax', Job.type_desc != 'dag')
+        q = q.filter(JobInstance.exitcode != None).filter(JobInstance.exitcode != 0)
+
+        q = q.filter(Job.job_id == JobInstance.job_id)
 
         # Running
         j = orm.aliased(Job, name='j')
         ji = orm.aliased(JobInstance, name='ji')
 
         qr = self.session.query(distinct(j.job_id))
-        qr = qr.filter(j.job_id == ji.job_id)
 
         qr = qr.filter(j.wf_id == wf_id)
-        qr = qr.filter(ji.exitcode == None)
         qr = qr.filter(j.type_desc != 'dax', j.type_desc != 'dag')
+        qr = qr.filter(ji.exitcode == None)
+
+        qr = qr.filter(j.job_id == ji.job_id)
         qr = qr.subquery()
 
-        q = q.filter(j.job_id.in_(qr))
+        q = q.filter(Job.job_id.in_(qr))
 
         # Recent
         qjss = self._get_recent_job_instance()
+        qjss = qjss.filter(Job.wf_id == wf_id)
+        qjss = qjss.filter(Job.type_desc != 'dax', Job.type_desc != 'dag')
         qjss = qjss.filter(JobInstance.exitcode != None).filter(JobInstance.exitcode != 0)
-        qjss = qjss.subquery('max_jss')
 
-        q = q.join(qjss, and_(JobInstance.job_id == qjss.c.job_id, JobInstance.job_submit_seq == qjss.c.max_jss))
+        qjss = qjss.filter(Job.job_id == JobInstance.job_id)
+        qjss = qjss.subquery('allmaxjss')
+
+        q = q.filter(and_(JobInstance.job_id == qjss.c.job_id, JobInstance.job_submit_seq == qjss.c.max_jss))
 
         total_records = total_filtered = self._get_count(q, use_cache)
 
