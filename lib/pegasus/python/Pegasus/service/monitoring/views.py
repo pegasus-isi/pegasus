@@ -35,7 +35,6 @@ from Pegasus.service.monitoring import monitoring_routes
 from Pegasus.service.monitoring.utils import jsonify
 from Pegasus.service.monitoring.queries import MasterWorkflowQueries, StampedeWorkflowQueries
 
-
 log = logging.getLogger(__name__)
 
 JSON_HEADER = {'Content-Type': 'application/json'}
@@ -1045,3 +1044,156 @@ def batch(username):
     responses.write(']')
 
     return make_response(responses.getvalue(), 207, JSON_HEADER)
+
+
+"""
+Views
+"""
+
+
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/running')
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/running/query', methods=['POST'])
+def get_running_jobs(username, m_wf_id, wf_id):
+    """
+    Returns a collection of running Jobs.
+
+    :query int start-index: Return results starting from record <start-index> (0 indexed)
+    :query int max-results: Return a maximum of <max-results> records
+    :query string query: Search criteria
+    :query string order: Sorting criteria
+    :query boolean pretty-print: Return formatted JSON response
+
+    :statuscode 200: OK
+    :statuscode 204: No content; when no jobs found.
+    :statuscode 400: Bad request
+    :statuscode 401: Authentication failure
+    :statuscode 403: Authorization failure
+
+    :return type: Collection
+    :return resource: Job
+    """
+    queries = StampedeWorkflowQueries(g.stampede_db_url)
+
+    paged_response = queries.get_running_jobs(wf_id, **g.query_args)
+
+    if paged_response.total_records == 0:
+        log.debug('Total records is 0; returning HTTP 204 No content')
+        return make_response('', 204, JSON_HEADER)
+
+    #
+    # Generate JSON Response
+    #
+    response_json = jsonify(paged_response)
+
+    return make_response(response_json, 200, JSON_HEADER)
+
+
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/successful')
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/successful/query', methods=['POST'])
+def get_successful_jobs(username, m_wf_id, wf_id):
+    """
+    Returns a collection of successful Jobs.
+
+    :query int start-index: Return results starting from record <start-index> (0 indexed)
+    :query int max-results: Return a maximum of <max-results> records
+    :query string query: Search criteria
+    :query string order: Sorting criteria
+    :query boolean pretty-print: Return formatted JSON response
+
+    :statuscode 200: OK
+    :statuscode 204: No content; when no jobs found.
+    :statuscode 400: Bad request
+    :statuscode 401: Authentication failure
+    :statuscode 403: Authorization failure
+
+    :return type: Collection
+    :return resource: Job
+    """
+    queries = StampedeWorkflowQueries(g.stampede_db_url)
+
+    paged_response = queries.get_successful_jobs(wf_id, **g.query_args)
+
+    if paged_response.total_records == 0:
+        log.debug('Total records is 0; returning HTTP 204 No content')
+        return make_response('', 204, JSON_HEADER)
+
+    #
+    # Generate JSON Response
+    #
+    response_json = jsonify(paged_response)
+
+    return make_response(response_json, 200, JSON_HEADER)
+
+
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/failed')
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/failed/query', methods=['POST'])
+def get_failed_jobs(username, m_wf_id, wf_id):
+    """
+    Returns a collection of failed Jobs.
+
+    :query int start-index: Return results starting from record <start-index> (0 indexed)
+    :query int max-results: Return a maximum of <max-results> records
+    :query string query: Search criteria
+    :query string order: Sorting criteria
+    :query boolean pretty-print: Return formatted JSON response
+
+    :statuscode 200: OK
+    :statuscode 204: No content; when no jobs found.
+    :statuscode 400: Bad request
+    :statuscode 401: Authentication failure
+    :statuscode 403: Authorization failure
+
+    :return type: Collection
+    :return resource: Job
+    """
+    queries = StampedeWorkflowQueries(g.stampede_db_url)
+
+    paged_response = queries.get_failed_jobs(wf_id, **g.query_args)
+
+    if paged_response.total_records == 0:
+        log.debug('Total records is 0; returning HTTP 204 No content')
+        return make_response('', 204, JSON_HEADER)
+
+    #
+    # Generate JSON Response
+    #
+    response_json = jsonify(paged_response)
+
+    return make_response(response_json, 200, JSON_HEADER)
+
+
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/failing')
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/failing/query', methods=['POST'])
+def get_failing_jobs(username, m_wf_id, wf_id):
+    """
+    Returns a collection of failing Jobs.
+
+    :query int start-index: Return results starting from record <start-index> (0 indexed)
+    :query int max-results: Return a maximum of <max-results> records
+    :query string query: Search criteria
+    :query string order: Sorting criteria
+    :query boolean pretty-print: Return formatted JSON response
+
+    :statuscode 200: OK
+    :statuscode 204: No content; when no jobs found.
+    :statuscode 400: Bad request
+    :statuscode 401: Authentication failure
+    :statuscode 403: Authorization failure
+
+    :return type: Collection
+    :return resource: Job
+    """
+    queries = StampedeWorkflowQueries(g.stampede_db_url)
+
+    paged_response = queries.get_failing_jobs(wf_id, **g.query_args)
+
+    if paged_response.total_records == 0:
+        log.debug('Total records is 0; returning HTTP 204 No content')
+        return make_response('', 204, JSON_HEADER)
+
+    #
+    # Generate JSON Response
+    #
+    response_json = jsonify(paged_response)
+
+    return make_response(response_json, 200, JSON_HEADER)
