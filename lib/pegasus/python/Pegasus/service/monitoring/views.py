@@ -417,6 +417,7 @@ Job
     "task_count"  : int: task_count,
     "executable"  : string: executable,
     "argv"        : string: argv,
+    "task_count"  : int:task_count,
     "_links"      : {
         "workflow"     : href:workflow,
         "task"         : href:task,

@@ -1854,7 +1854,7 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
     "task_count"  : &lt;int: task_count&gt;,
     "executable"  : &lt;string: executable&gt;,
     "argv"        : &lt;string: argv&gt;,
-    "task_count"  : int:task_count,
+    "task_count"  : &lt;int:task_count&gt;,
     "_links"      : {
         "workflow"     : &lt;href:workflow&gt;,
         "task"         : &lt;href:task&gt;,
@@ -3186,7 +3186,8 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
       <section>
         <title>POST /batch</title>
 
-        <para>Returns a an array of responses; one for each request.</para>
+        <para>Returns an array of responses; one entry for each
+        request.</para>
 
         <para><emphasis role="bold">Batch Request</emphasis></para>
 
@@ -3354,8 +3355,8 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
 
           <listitem>
             <para>Comparision clauses must have the form &lt;FIELDNAME&gt;
-            &lt;COMPARATOR&gt; &lt;STRING LITERAL OR INTEGER LITERAL OR FLOAT
-            LITERAL&gt;</para>
+            SPACE &lt;COMPARATOR&gt; SPACE &lt;STRING LITERAL OR INTEGER
+            LITERAL OR FLOAT LITERAL&gt;</para>
           </listitem>
 
           <listitem>
@@ -3372,10 +3373,15 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
             role="bold">workflow</emphasis>/1/<emphasis
             role="bold">job</emphasis>/2/<emphasis
             role="bold">state</emphasis> query clause can only contain fields
-            of <link linkend="resource-job-state">Job State</link> resource.
-            Only exception for this is when querying Root Workflow fields from
-            both <link linkend="resource-root-workflow">Root Workflow</link>
-            and <link linkend="resource-workflow-state">Workflow State</link>
+            from the <link linkend="resource-job-state">Job State</link>
+            resource. Only exceptions for this are when querying Root Workflow
+            where fields from both <link linkend="resource-root-workflow">Root
+            Workflow</link> and <link
+            linkend="resource-workflow-state">Workflow State</link> can be
+            included, and the views endpoint
+            /api/v1/user/user-a/root/1/workflow/1/job/&lt;[running|successful|failed|failing]&gt;
+            where fields from <link linkend="resource-job">Job</link> and
+            <link linkend="resource-job-instance">JobInstance</link> resource
             can be included.</para>
           </listitem>
         </itemizedlist>
@@ -3658,8 +3664,11 @@ HTTP/1.1 200 OK
         <title>Querying</title>
 
         <programlisting><emphasis role="bold">$ curl --request GET \
+       --get \
+       --data-urlencode "pretty-print=true" \
+       --data-urlencode "query=w.wf_uuid = '41920a57-7882-4990-854e-658b7a797745'" \
        --user user-a:user-a-password \
-       https://www.domain.com/api/v1/user/user-a/root/1/workflow?pretty-print=true&amp;query=w.wf_uuid = '41920a57-7882-4990-854e-658b7a797745'
+       https://www.domain.com/api/v1/user/user-a/root/1/workflow
                     </emphasis>
 HTTP/1.1 200 OK
 
@@ -3822,23 +3831,23 @@ HTTP/1.1 200 OK
 
         <para><emphasis role="bold">Example</emphasis><programlisting><emphasis
               role="bold">$ curl --request POST \
-     --user user-a:user-a-password \
-     --header "Content-Type: application/json" \
-     --data '[
-          {
-              "path"   : "/api/v1/user/mayani/root?query=r.wf_id = 1&amp;pretty-print=True",
-              "method" : "GET"
-          },
-          {
-              "body"   : {
-                  "query"        : "r.wf_id = 2",
-                  "pretty-print" : "True"
-              },
-              "path"   : "/api/v1/user/mayani/root",
-              "method" : "POST"
-          }
-     ]' \
-     https://www.domain.com/api/v1/user/user-a/batch</emphasis>
+       --user user-a:user-a-password \
+       --header "Content-Type: application/json" \
+       --data '[
+            {
+                "path"   : "/api/v1/user/mayani/root?query=r.wf_id = 1&amp;pretty-print=True",
+                "method" : "GET"
+            },
+            {
+                "body"   : {
+                    "query"        : "r.wf_id = 2",
+                    "pretty-print" : "True"
+                },
+                "path"   : "/api/v1/user/mayani/root",
+                "method" : "POST"
+            }
+       ]' \
+       https://www.domain.com/api/v1/user/user-a/batch</emphasis>
 
 [
     {
