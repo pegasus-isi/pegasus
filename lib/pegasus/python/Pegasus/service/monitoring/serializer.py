@@ -46,8 +46,8 @@ class PegasusServiceJSONEncoder(JSONEncoder):
             obj_dict = OrderedDict()
 
             if ignore_unloaded:
-                log.debug('ignore_unloaded is True')
                 unloaded = instance_state(obj).unloaded
+                log.debug('ignore_unloaded is True, ignoring %s' % unloaded)
 
             for attribute in resource.fields:
                 if not ignore_unloaded or (ignore_unloaded and attribute not in unloaded):
