@@ -52,7 +52,7 @@ public class Condor extends Namespace{
      * @return 
      */
     public static Map<String,String> classAdKeysToPegasusProfiles(){
-        if( mClassAdToPegasus != null ){
+        if( mClassAdToPegasus == null ){
             mClassAdToPegasus = new HashMap();
             mClassAdToPegasus.put( Condor.REQUEST_MEMORY_KEY, Pegasus.MEMORY_KEY );
             mClassAdToPegasus.put( Condor.REQUEST_CPUS_KEY, Pegasus.CORES_KEY);

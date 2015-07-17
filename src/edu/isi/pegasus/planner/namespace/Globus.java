@@ -60,7 +60,7 @@ public class Globus extends Namespace {
      * @return 
      */
     public static Map<String,String> rslToPegasusProfiles(){
-        if( mRSLToPegasus != null ){
+        if( mRSLToPegasus == null ){
             mRSLToPegasus = new HashMap();
             mRSLToPegasus.put( Globus.MAX_MEMORY_KEY, Pegasus.MEMORY_KEY );
             mRSLToPegasus.put( Globus.MAX_WALLTIME_KEY, Pegasus.RUNTIME_KEY );
