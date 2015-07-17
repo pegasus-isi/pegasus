@@ -72,13 +72,7 @@ public class Pegasus extends Namespace {
      */
     public static final String COLLAPSE_KEY = "clusters.size";
     
-    /**
-     * The name of the key that if set in the Pegasus namespace specifies the
-     * approximate runtime of the job. This key is used in while clustering jobs
-     * according to run times.
-     */
-    public static final String JOB_RUN_TIME = "job.runtime";
-
+    
     /**
      * The name of the key that if set in the Pegasus namespace specifies the
      * maximum amount of time for which a cluster should run. This key is used
@@ -411,6 +405,13 @@ public class Pegasus extends Namespace {
     public static final String RUNTIME_KEY = "runtime";
     
     /**
+     * The name of the key that if set in the Pegasus namespace specifies the
+     * approximate runtime of the job. This key is used in while clustering jobs
+     * according to run times.
+     */
+    public static final String DEPRECATED_RUNTIME_KEY = "job.runtime";
+    
+    /**
      * The number of cores that are associated with the job. To be used for
      * multiplying the job runtimes accordingly. 
      */
@@ -657,8 +658,8 @@ public class Pegasus extends Namespace {
                 break;
                 
             case 'j':
-                if (key.compareTo( JOB_RUN_TIME ) == 0) {
-                    res = VALID_KEY;
+                if (key.compareTo(DEPRECATED_RUNTIME_KEY ) == 0) {
+                    res = DEPRECATED_KEY;
                 }
                 else if ( key.compareTo( JOB_AGGREGATOR_KEY ) == 0 ){
                     res = VALID_KEY;

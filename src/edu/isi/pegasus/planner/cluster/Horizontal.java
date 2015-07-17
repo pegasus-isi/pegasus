@@ -684,9 +684,9 @@ public class Horizontal implements Clusterer,
 	    return sTmp;
 	}
 
-	sTmp = (String) job.vdsNS.get( Pegasus.JOB_RUN_TIME );
+	sTmp = (String) job.vdsNS.get(Pegasus.DEPRECATED_RUNTIME_KEY );
 	if (sTmp != null && sTmp.length() > 0) {
-	    mLogger.log( "The profile " + Pegasus.JOB_RUN_TIME
+	    mLogger.log( "The profile " + Pegasus.DEPRECATED_RUNTIME_KEY
 		    + " will be deprecated. It will be replaced with "
 		    + Pegasus.RUNTIME_KEY, LogManager.WARNING_MESSAGE_LEVEL );
 	    return sTmp;
@@ -698,7 +698,7 @@ public class Horizontal implements Clusterer,
 
     /**
      * The comparator is used to sort a collection of jobs in decreasing order
-     * of their run times as specified by the Pegasus.JOB_RUN_TIME property.
+ of their run times as specified by the Pegasus.DEPRECATED_RUNTIME_KEY property.
      *
      * @return
      */
@@ -723,7 +723,7 @@ public class Horizontal implements Clusterer,
 		    return sTmp;
 		}
 
-		sTmp = (String) job.vdsNS.get( Pegasus.JOB_RUN_TIME );
+		sTmp = (String) job.vdsNS.get(Pegasus.DEPRECATED_RUNTIME_KEY );
 		if (sTmp != null && sTmp.length() > 0) {
 		    return sTmp;
 		}
@@ -920,7 +920,7 @@ public class Horizontal implements Clusterer,
 	    // return (size + b -1)/b;
 	}
 
-	String runTime = (String) job.vdsNS.get( Pegasus.JOB_RUN_TIME );
+	String runTime = (String) job.vdsNS.get(Pegasus.DEPRECATED_RUNTIME_KEY );
 	String clusterTime = (String) job.vdsNS.get( Pegasus.MAX_RUN_TIME );
 
 	// return the appropriate value

@@ -188,10 +188,6 @@ public class PegasusTest {
         mLogger.logEventCompletion();
         
         mLogger.logEventStart( "test.namespace.Pegasus", "set", Integer.toString(set++) );
-        testKey( Pegasus.JOB_RUN_TIME, "dummy", Namespace.VALID_KEY );
-        mLogger.logEventCompletion();
-        
-        mLogger.logEventStart( "test.namespace.Pegasus", "set", Integer.toString(set++) );
         testKey( Pegasus.HOST_COUNT_KEY, "dummy", Namespace.VALID_KEY );
         mLogger.logEventCompletion();
         
@@ -283,6 +279,10 @@ public class PegasusTest {
         
         mLogger.logEventStart( "test.namespace.Pegasus", "set", Integer.toString(set++) );
         testKey(Pegasus.DEPRECATED_CHECKPOINT_TIME_KEY, "dummy", Namespace.VALID_KEY );
+        mLogger.logEventCompletion();
+        
+        mLogger.logEventStart( "test.namespace.Pegasus", "set", Integer.toString(set++) );
+        testKey(Pegasus.DEPRECATED_RUNTIME_KEY, "dummy", Namespace.DEPRECATED_KEY );
         mLogger.logEventCompletion();
         
     }
