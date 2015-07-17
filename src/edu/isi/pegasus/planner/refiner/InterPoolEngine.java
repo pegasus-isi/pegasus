@@ -795,19 +795,15 @@ public class InterPoolEngine extends Engine implements Refiner {
         String runtime = estimates.get("runtime");
         if( runtime != null ){
             //add to both Pegasus and metadata profiles in addition to globus
-            job.vdsNS.checkKeyInNS( Pegasus.MAX_WALLTIME, runtime );
+            job.vdsNS.checkKeyInNS( Pegasus.RUNTIME_KEY, runtime );
             job.addMetadata( Pegasus.MAX_WALLTIME, runtime);
-            job.globusRSL.checkKeyInNS( Globus.MAX_WALLTIME, runtime );
         }
         
         String memory = estimates.get( "memory" );
         if( memory != null ){
-            
             //add to both Pegasus and metadata profiles in addition to globus
-            job.vdsNS.checkKeyInNS( Globus.MAX_MEMORY, memory );
+            job.vdsNS.checkKeyInNS( Pegasus.MEMORY_KEY, memory );
             job.addMetadata( Globus.MAX_MEMORY, memory);
-            //for the time being set as globus maxwalltime
-            job.globusRSL.checkKeyInNS( Globus.MAX_MEMORY, memory );
         }
     }
     
