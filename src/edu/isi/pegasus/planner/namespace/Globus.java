@@ -50,6 +50,37 @@ public class Globus extends Namespace {
      * The name of the namespace that this class implements.
      */
     public static final String NAMESPACE_NAME = Profile.GLOBUS;
+
+    
+    private static Map<String,String> mRSLToPegasus;
+    
+    /**
+     * Maps Globus RSL keys to corresponding Pegasus Profile Keys
+     * 
+     * @return 
+     */
+    public static Map<String,String> rslToPegasusProfiles(){
+        if( mRSLToPegasus != null ){
+            mRSLToPegasus = new HashMap();
+            mRSLToPegasus.put( Globus.MAX_MEMORY, Pegasus.MEMORY_KEY );
+            mRSLToPegasus.put( Globus.MAX_WALLTIME, Pegasus.RUNTIME_KEY );
+            mRSLToPegasus.put( Globus.COUNT_KEY, Pegasus.CORES_KEY );
+            mRSLToPegasus.put( Globus.HOST_COUNT_KEY, Pegasus.HOST_COUNT_KEY );
+        }
+        return mRSLToPegasus;
+    }
+
+    
+    /**
+     * Key indicating the number of cores to be used
+     */  
+    public static final String COUNT_KEY = "count";
+    
+    /**
+     * Key indicating the number of hosts to be used
+     */  
+    public static final String HOST_COUNT_KEY = "hostcount";
+    
     
     /**
      * Key indicating max walltime for a job.
@@ -74,6 +105,7 @@ public class Globus extends Namespace {
      * in the aggregator table;
      */
     public static Aggregator mDefaultAggregator = new Update();
+  
 
     /**
      * Initializer block that populates the Aggregator table just once.
@@ -214,7 +246,7 @@ public class Globus extends Namespace {
                 break;
 
             case 'c':
-                if (key.compareTo("count") == 0) {
+                if (key.compareTo( COUNT_KEY ) == 0) {
                     res = VALID_KEY;
                 }
                 else {
@@ -254,7 +286,7 @@ public class Globus extends Namespace {
                 break;
 
             case 'h':
-                if (key.compareTo("hostcount") == 0) {
+                if (key.compareTo( HOST_COUNT_KEY ) == 0) {
                     res = VALID_KEY;
                 }
                 else {
