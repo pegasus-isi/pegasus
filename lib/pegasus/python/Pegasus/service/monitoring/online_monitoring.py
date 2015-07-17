@@ -65,40 +65,32 @@ class OnlineMonitord:
         for method_frame, properties, body in self.channel.consume(self.queue_name):
             if method_frame is not None:
                 print method_frame.delivery_tag
-            print body
-            print
+            # print body
+            # print
 
             if len(body.split(" ")) < 2:
                 print "The given measurement line is too short"
                 return
 
-            message = MonitoringMessage.parse(body)
+            try:
+                message = MonitoringMessage.parse(body)
 
-            if message is not None:
-                if self.client is not None:
-                    try:
+                if message is not None:
+                    if self.client is not None:
                         self.client.write_points(InfluxDbMessageFormatter.format_msg(message))
-                    except Exception, err:
-                        print "An error occured while sending monitoring measurement: "
-                        print err
 
-                self.handle_aggregation(message)
+                    self.handle_aggregation(message)
 
-            if self.channel is not None:
-                self.channel.basic_ack(delivery_tag=method_frame.delivery_tag) 
+                if self.channel is not None:
+                    self.channel.basic_ack(delivery_tag=method_frame.delivery_tag) 
 
+            except ValueError, val_err:
+                print "An error occured - (probably when parsing a message): "
+                print val_err
 
-        # self.channel.basic_consume(self.on_message, self.queue_name)
-        # retries = 0
-
-        # while retries < 5:
-        #     retries += 1
-
-        #     try:
-        #         self.channel.start_consuming()
-        #     except:
-        #         print "An exception occured - current retries counter is ", retries
-        #         self.channel.stop_consuming()
+            except Exception, err:
+                print "An error occured while sending monitoring measurement: "
+                print err
 
         self.mq_conn.close()
 

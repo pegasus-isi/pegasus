@@ -224,16 +224,8 @@ static void* timer_thread_func(void* mpi_rank_void) {
         return NULL;
     }
 
-    // printerr("We are now in a thread: %d\n", mpi_rank);
-
     if( gethostname(hostname, BUFSIZ) ) {
         printerr("[Thread-%d] ERROR: couldn't get hostname: %s\n", mpi_rank, strerror(errno));
-        return NULL;
-    }
-
-    kickstart_status = open_kickstart_status_file();
-    if(kickstart_status == NULL) {
-        pthread_exit(NULL);
         return NULL;
     }
 
@@ -251,22 +243,16 @@ static void* timer_thread_func(void* mpi_rank_void) {
 
         timestamp = time(NULL);
 
-        // printerr("[Thread-%d][%d] is dumping monitoring information\n", mpi_rank, (int)timestamp);
         CpuUtilInfo cpu_info = read_cpu_status();
         MemUtilInfo mem_info = read_mem_status();
         IoUtilInfo io_info = read_io_status();
         exec_name = read_exe();
 
-//        printerr("libinterpose: ts=%d event=workflow_trace level=INFO status=0 "
-//                    "job_id=%s kickstart_pid=%s executable=%s hostname=%s mpi_rank=%d utime=%.3f stime=%.3f "
-//                    "iowait=%.3f vmSize=%llu vmRSS=%llu threads=%lu read_bytes=%llu write_bytes=%llu "
-//                    "syscr=%lu syscw=%lu\n",
-//
-//                    (int)timestamp, job_id, kickstart_pid, exec_name, hostname, mpi_rank,
-//                    cpu_info.real_utime, cpu_info.real_stime, cpu_info.real_iowait,
-//                    mem_info.vmSize, mem_info.vmRSS, mem_info.threads,
-//                    io_info.rchar, io_info.wchar, io_info.syscr, io_info.syscw);
-
+        kickstart_status = open_kickstart_status_file();
+        if(kickstart_status == NULL) {
+            pthread_exit(NULL);
+            return NULL;
+        }
 
         fprintf_untraced(kickstart_status, "ts=%d event=workflow_trace level=INFO status=0 "
                    "job_id=%s kickstart_pid=%s executable=%s hostname=%s mpi_rank=%d utime=%.3f stime=%.3f "
@@ -279,13 +265,14 @@ static void* timer_thread_func(void* mpi_rank_void) {
             io_info.rchar, io_info.wchar, io_info.syscr, io_info.syscw);
 
         fflush(kickstart_status);
+        fclose(kickstart_status);
 
         if(exec_name != NULL) {
             free(exec_name);
         }
     }
 
-    fclose(kickstart_status);
+    // fclose(kickstart_status);
 
     pthread_exit(NULL);
     return NULL;
@@ -297,7 +284,7 @@ static int topen() {
 
     char *kickstart_prefix = getenv("KICKSTART_PREFIX");
     if (kickstart_prefix == NULL) {
-        printerr("Unable to open trace file: KICKSTART_PREFIX not set in environment");
+        printerr("Unable to open trace file: KICKSTART_PREFIX not set in environment\n");
         return -1;
     }
 
@@ -306,7 +293,7 @@ static int topen() {
 
     trace = fopen_untraced(filename, "w+");
     if (trace == NULL) {
-        printerr("Unable to open trace file");
+        printerr("Unable to open trace file\n");
         return -1;
     }
 
@@ -966,10 +953,11 @@ extern char **environ;
 
 void spawn_timer_thread() {
     int i = 0;
-    printerr("Printing environment...\n");
+    printerr("\n\nPrinting environment...\n");
     while(environ[i]) {
       printerr("%s\n", environ[i++]);
     }
+    printerr("\n\n");
 //    pid_t current_pid = getpid();
 
     // spawning a timer thread only when

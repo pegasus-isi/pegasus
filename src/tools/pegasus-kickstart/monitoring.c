@@ -2,8 +2,16 @@
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
+#include <sys/time.h>
 
 #include "monitoring.h"
+
+/* Get the current time in seconds since the epoch */
+static double get_time() {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return tv.tv_sec + ((double)tv.tv_usec / 1e6);
+}
 
 // a util function for reading env variables by the main kickstart process
 // with monitoring endpoint data or set default values
@@ -146,14 +154,16 @@ void* monitoring_thread_func(void* kickstart_status_path) {
     print_debug_info(&monitoring_endpoint, &job_id_info);
 
     FILE* kickstart_status = fopen(monitoring_endpoint.kickstart_status, "r");
-//    if(kickstart_status == NULL) {
-//        printerr("[mon-thread] Couldn't open kickstart_status_path for read - %s\n",
-//            strerror(errno));
-//    }
 
     curl_global_init(CURL_GLOBAL_ALL);
 
+    // DK: debugging info about messages sending perf rate
+    // int i = 0, start, start_usec, finish, finish_usec;
+    double start, finish;
+
+    printerr("[mon-thread] starting monitoring loop...\n");
     while(1) {
+
         sleep(interval);
 
         if(kickstart_status == NULL) {
@@ -164,23 +174,24 @@ void* monitoring_thread_func(void* kickstart_status_path) {
             }
         }
 
+        // int i = 0;
+        // start = get_time();
+
         if(kickstart_status != NULL) {
             while(fgets(line, BUFSIZ, kickstart_status) != NULL)
             {
+                // i += 1;
                 char *pos;
 
                 if( (pos = strchr(line, '\n')) != NULL )
                     *pos = '\0';
 
-                if( strstr(line, "ts=") != line )
-                    continue;
-
+                // if( strstr(line, "ts=") != line )
+                    // continue;
 
                 sprintf(enriched_line, "%s wf_uuid=%s wf_label=%s dag_job_id=%s condor_job_id=%s",
                     line, job_id_info.wf_uuid, job_id_info.wf_label, job_id_info.dag_job_id,
                     job_id_info.condor_job_id);
-
-//                printerr("[mon-thread] Enriched line: '%s'\n", enriched_line);
 
                 // sending this message to rabbitmq
                 curl = curl_easy_init();
@@ -223,7 +234,15 @@ void* monitoring_thread_func(void* kickstart_status_path) {
                 else {
                     printerr("[mon-thread] we couldn't initialize curl\n");
                 }
+
+                // finish = get_time();
+                // printerr("[mon-thread] message sent in %lf - %d [s]\n", finish - start);
+                // start = finish;
             }
+
+            // if( (i % 10) == 0 ) {
+            // }
+
         }
     }
 
