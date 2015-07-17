@@ -242,13 +242,27 @@ void initJobInfoFromString(JobInfo* jobinfo, const char* commandline) {
     __initJobInfo(jobinfo, args);
 }
 
-void initJobInfo(JobInfo* jobinfo, int argc, char* const* argv) {
+void initJobInfo(JobInfo* jobinfo, int argc, char* const* argv, const char *wrapper) {
     /* purpose: initialize the data structure with defaults
      * paramtr: jobinfo (OUT): initialized memory block
      *          argc (IN): adjusted argc string (maybe from main())
      *          argv (IN): adjusted argv string to point to executable
+     *          wrapper (IN): command line for application wrapper
      */
     Node *args = parseArgVector(argc, argv);
+    if (wrapper != NULL) {
+        Node *wrapper_args = parseCommandLine(wrapper);
+        if (wrapper_args == NULL) {
+            printerr("Error parsing wrapper arguments");
+        } else {
+            Node *p = wrapper_args;
+            while (p->next != NULL) {
+                p = p->next;
+            }
+            p->next = args;
+            args = wrapper_args;
+        }
+    }
     __initJobInfo(jobinfo, args);
 }
 

@@ -598,6 +598,12 @@ the value of this variable is prepended to the PATH variable seen by
 Kickstart and passed to the job. The modified PATH is also used to look
 up executables for the main job and any pre/post/setup/cleanup jobs.
 
+*KICKSTART_WRAPPER*::
+the value of this variable is prepended to the job arguments. It can
+be used to wrap the task with a wrapper or launcher. For example, you
+can set it to "mpiexec -n 128" to run an MPI job, or you can set it
+to "tau_exec" to profile the job with TAU.
+
 
 History
 -------
