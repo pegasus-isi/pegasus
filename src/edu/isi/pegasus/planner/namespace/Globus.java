@@ -62,8 +62,8 @@ public class Globus extends Namespace {
     public static Map<String,String> rslToPegasusProfiles(){
         if( mRSLToPegasus != null ){
             mRSLToPegasus = new HashMap();
-            mRSLToPegasus.put( Globus.MAX_MEMORY, Pegasus.MEMORY_KEY );
-            mRSLToPegasus.put( Globus.MAX_WALLTIME, Pegasus.RUNTIME_KEY );
+            mRSLToPegasus.put( Globus.MAX_MEMORY_KEY, Pegasus.MEMORY_KEY );
+            mRSLToPegasus.put( Globus.MAX_WALLTIME_KEY, Pegasus.RUNTIME_KEY );
             mRSLToPegasus.put( Globus.COUNT_KEY, Pegasus.CORES_KEY );
             mRSLToPegasus.put( Globus.HOST_COUNT_KEY, Pegasus.HOST_COUNT_KEY );
         }
@@ -85,12 +85,12 @@ public class Globus extends Namespace {
     /**
      * Key indicating max walltime for a job.
      */
-    public static final String  MAX_WALLTIME = "maxwalltime";
+    public static final String  MAX_WALLTIME_KEY = "maxwalltime";
     
     /**
      * Key indicating the maximum memory used.
      */
-    public static final String MAX_MEMORY = "maxmemory";
+    public static final String MAX_MEMORY_KEY = "maxmemory";
 
     /**
      * The table that maps the various globus profile keys to their aggregator
@@ -309,7 +309,7 @@ public class Globus extends Namespace {
                 if (key.compareTo("maxcputime") == 0 ||
                     key.compareTo("maxmemory") == 0 ||
                     key.compareTo("maxtime") == 0 ||
-                    key.compareTo(Globus.MAX_WALLTIME) == 0 ||
+                    key.compareTo(Globus.MAX_WALLTIME_KEY) == 0 ||
                     key.compareTo("minmemory") == 0) {
                     res = VALID_KEY;
                 }

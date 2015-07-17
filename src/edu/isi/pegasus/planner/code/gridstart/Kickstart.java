@@ -1349,8 +1349,8 @@ public class Kickstart implements GridStart {
         if( job.vdsNS.containsKey( Pegasus.MAX_WALLTIME) ){
             max = job.vdsNS.getIntValue( Pegasus.MAX_WALLTIME, Integer.MAX_VALUE  );
         }
-        else if ( job.globusRSL.containsKey( Globus.MAX_WALLTIME) ){
-            max = job.globusRSL.getIntValue( Globus.MAX_WALLTIME, Integer.MAX_VALUE  );
+        else if ( job.globusRSL.containsKey(Globus.MAX_WALLTIME_KEY) ){
+            max = job.globusRSL.getIntValue(Globus.MAX_WALLTIME_KEY, Integer.MAX_VALUE  );
         }
 
         if( max == Integer.MAX_VALUE ){
