@@ -882,6 +882,7 @@ public class Pegasus extends Namespace {
                                  BUNDLE_STAGE_IN_KEY);
             mDeprecatedTable.put(DEPRECATED_CHANGE_DIR_KEY,
                                  CHANGE_DIR_KEY);
+            mDeprecatedTable.put( DEPRECATED_RUNTIME_KEY, RUNTIME_KEY );
         }
 
         return mDeprecatedTable;
