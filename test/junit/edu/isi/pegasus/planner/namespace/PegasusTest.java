@@ -144,6 +144,14 @@ public class PegasusTest {
         mLogger.logEventCompletion();
         
         mLogger.logEventStart( "test.namespace.Pegasus", "set", Integer.toString(set++) );
+        testKey( Pegasus.DISKSPACE_KEY, "dummy", Namespace.VALID_KEY );
+        mLogger.logEventCompletion();
+        
+        mLogger.logEventStart( "test.namespace.Pegasus", "set", Integer.toString(set++) );
+        testKey( Pegasus.DATA_CONFIGURATION_KEY, "dummy", Namespace.VALID_KEY );
+        mLogger.logEventCompletion();
+        
+        mLogger.logEventStart( "test.namespace.Pegasus", "set", Integer.toString(set++) );
         testKey( Pegasus.ENABLE_FOR_DATA_REUSE_KEY, "dummy", Namespace.VALID_KEY );
         mLogger.logEventCompletion();
         
@@ -184,6 +192,10 @@ public class PegasusTest {
         mLogger.logEventCompletion();
         
         mLogger.logEventStart( "test.namespace.Pegasus", "set", Integer.toString(set++) );
+        testKey( Pegasus.HOST_COUNT_KEY, "dummy", Namespace.VALID_KEY );
+        mLogger.logEventCompletion();
+        
+        mLogger.logEventStart( "test.namespace.Pegasus", "set", Integer.toString(set++) );
         testKey( Pegasus.LABEL_KEY, "dummy", Namespace.VALID_KEY );
         mLogger.logEventCompletion();
         
@@ -193,6 +205,10 @@ public class PegasusTest {
         
         mLogger.logEventStart( "test.namespace.Pegasus", "set", Integer.toString(set++) );
         testKey( Pegasus.MAX_WALLTIME, "dummy", Namespace.VALID_KEY );
+        mLogger.logEventCompletion();
+        
+        mLogger.logEventStart( "test.namespace.Pegasus", "set", Integer.toString(set++) );
+        testKey( Pegasus.MEMORY_KEY, "dummy", Namespace.VALID_KEY );
         mLogger.logEventCompletion();
         
         mLogger.logEventStart( "test.namespace.Pegasus", "set", Integer.toString(set++) );

@@ -163,14 +163,6 @@ public class Pegasus extends Namespace {
      */
     public static final String CREATE_AND_CHANGE_DIR_KEY = "create.dir";
 
-
-    /**
-     * The number of cores that are associated with the job. To be used for
-     * multiplying the job runtimes accordingly. This does not set the corresponding
-     * globus profiles automatically. Is only used for stampede purposes.
-     */
-    public static final String CORES_KEY = "cores";
-
     /**
      * The deprecated bundle stagein key.
      * @see #CHANGE_DIR_KEY
@@ -292,14 +284,6 @@ public class Pegasus extends Namespace {
      */
     public static final String TRANSFER_SLS_THREADS_KEY = "transfer.lite.threads";
 
-
-    /**
-     * The name of the profile key when associated with a transformation in the
-     * transformation catalog gives expected runtime in seconds.
-     */
-    public static final String RUNTIME_KEY = "runtime";
-
-
     /**
      * The directory in which job needs to execute on worker node tmp.
      */
@@ -418,6 +402,36 @@ public class Pegasus extends Namespace {
      * Key indicating max walltime for a job in minutes
      */
     public static final String  MAX_WALLTIME = "maxwalltime";
+    
+    //PM-962 resource requirements
+    /**
+     * The name of the profile key when associated with a transformation in the
+     * transformation catalog gives expected runtime in seconds.
+     */
+    public static final String RUNTIME_KEY = "runtime";
+    
+    /**
+     * The number of cores that are associated with the job. To be used for
+     * multiplying the job runtimes accordingly. 
+     */
+    public static final String CORES_KEY = "cores";
+    
+    /**
+     * Key indicating max diskspace used by a job a in MB
+     */
+    public static final String DISKSPACE_KEY = "diskspace";
+    
+    /**
+     * Key indicating the number of hosts a job requires
+     */
+    public static final String HOST_COUNT_KEY = "host_count";
+    
+    /**
+     * Key indicating max memory used by a job a in MB
+     */
+    public static final String MEMORY_KEY = "memory";
+    
+    
     
     /**
      * Key indicating data configuration property. 
@@ -587,7 +601,9 @@ public class Pegasus extends Namespace {
                 break;
             
             case 'd':
-                if (key.compareTo( DATA_CONFIGURATION_KEY ) == 0) {
+                if  ( (key.compareTo( DATA_CONFIGURATION_KEY ) == 0) ||
+                      ( key.compareTo( DISKSPACE_KEY) == 0 )
+                        ){
                     res = VALID_KEY;
                 }
                 else {
@@ -622,6 +638,15 @@ public class Pegasus extends Namespace {
                 }
                 break;
 
+            case 'h':
+                if (key.compareTo( HOST_COUNT_KEY ) == 0) {
+                    res = VALID_KEY;
+                }
+                else {
+                    res = UNKNOWN_KEY;
+                }
+                break;
+            
             case 'i':
                 if (key.compareTo( IRODSENVFILE ) == 0) {
                     res = VALID_KEY;
@@ -653,7 +678,8 @@ public class Pegasus extends Namespace {
                 break;
                 
             case 'm':
-                if( key.compareTo( MAX_WALLTIME ) == 0 ){
+                if( key.compareTo( MAX_WALLTIME ) == 0 ||
+                     key.compareTo( MEMORY_KEY ) == 0 ){
                     res = VALID_KEY;
                 }
                 else{
