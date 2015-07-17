@@ -364,6 +364,10 @@ public class MPIExec extends Abstract {
     public String getCPURequirementsArgument( Job job ){
         StringBuffer result = new StringBuffer();
         String value = job.vdsNS.getStringValue( Pegasus.PMC_REQUEST_CPUS_KEY );
+        
+        if( value == null ){
+            value = job.vdsNS.getStringValue( Pegasus.CORES_KEY );
+        }
 
         if( value != null ){
         
@@ -405,6 +409,11 @@ public class MPIExec extends Abstract {
     public String getMemoryRequirementsArgument( Job job ){
         StringBuffer result = new StringBuffer();
         String value = job.vdsNS.getStringValue( Pegasus.PMC_REQUEST_MEMORY_KEY );
+        
+        //default to memory parameter. both profiles are in MB
+        if( value == null ){
+            value = job.vdsNS.getStringValue( Pegasus.MEMORY_KEY );
+        }
 
         if( value != null ){
 
