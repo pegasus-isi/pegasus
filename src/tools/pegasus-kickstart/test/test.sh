@@ -442,6 +442,23 @@ function test_not_executable {
     return 0;
 }
 
+function test_wrapper {
+    KICKSTART_WRAPPER=./wrapper.sh kickstart /bin/date
+    rc=$?
+
+    if [ $rc -ne 0 ]; then
+        echo "Expected job to succeed"
+        return 1
+    fi
+
+    if ! [[ $(cat test.out) =~ "Hello, Wrapper!" ]]; then
+        echo "Expected wrapper output"
+        return 1
+    fi
+
+    return 0;
+}
+
 # RUN THE TESTS
 run_test lotsofprocs
 run_test lotsofprocs_buffer
@@ -478,4 +495,5 @@ run_test test_quote_env_var
 run_test test_prepend_path
 run_test test_missing_executable
 run_test test_not_executable
+run_test test_wrapper
 

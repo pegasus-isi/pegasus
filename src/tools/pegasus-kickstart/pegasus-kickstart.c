@@ -655,7 +655,7 @@ int main(int argc, char* argv[]) {
     }
 
     /* initialize app info and register CLI parameters with it */
-    initJobInfo(&appinfo.application, argc-i, argv+i);
+    initJobInfo(&appinfo.application, argc-i, argv+i, getenv("KICKSTART_WRAPPER"));
 
     /* is there really something to run? */
     if (appinfo.application.isValid != 1) {

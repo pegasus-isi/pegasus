@@ -59,19 +59,19 @@ static void add(Node** head, Node** tail, const char* data) {
      *          tail (OUT): tail of the list, will be adjusted
      *          data (IN): string to save the pointer to (shallow copy)
      */
-    Node* temp = (Node*) malloc(sizeof(Node));
-    if (temp == NULL) {
+    Node *n = (Node*) malloc(sizeof(Node));
+    if (n == NULL) {
         printerr("malloc: %s\n", strerror(errno));
         exit(1);
     }
-    temp->data = data;
-    temp->next = NULL;
+    n->data = data;
+    n->next = NULL;
 
     if (*head == NULL) {
-        *head = *tail = temp;
+        *head = *tail = n;
     } else {
-        (*tail)->next = temp;
-        *tail = temp;
+        (*tail)->next = n;
+        *tail = n;
     }
 }
 
@@ -289,22 +289,23 @@ static int xlate(char input) {
     }
 }
 
-static void internalParse(const char* line, const char** cursor, int* state,
-                          Map actionmap, Map statemap, Node** headp,
-                          Node** tailp, char** pp, char* buffer, size_t size,
-                          char** vp, char* varname, size_t vsize) {
-    const char* s = *cursor;
-    char* p = *pp;
-    char* v = *vp;
-    Node* head = *headp;
-    Node* tail = *tailp;
-    char *temp;
+static void internalParse(const char *line, Map actionmap, Map statemap,
+                          Node **headp, Node **tailp, char *buffer, size_t size) {
+    int state = 0;
+    const char *s = line;
+    char *p = buffer;
+    char varname[128];
+    size_t vsize = sizeof(varname);
+    char *v = varname;
+    Node *head = *headp;
+    Node *tail = *tailp;
+    char *data;
 
-    while (*state < 32) {
+    while (state < 32) {
         int charclass = xlate(*s);
-        int newstate = statemap[*state][charclass];
+        int newstate = statemap[state][charclass];
 
-        switch (actionmap[*state][charclass]) {
+        switch (actionmap[state][charclass]) {
             case 0: /* store into buffer */
                 if (p-buffer < size) {
                     *p = *s;
@@ -316,12 +317,12 @@ static void internalParse(const char* line, const char** cursor, int* state,
                 break;
             case 1: /* conditionally finalize buffer */
                 *p = '\0';
-                temp = strdup(buffer);
-                if (temp == NULL) {
+                data = strdup(buffer);
+                if (data == NULL) {
                     printerr("strdup: %s\n", strerror(errno));
                     exit(1);
                 }
-                add(&head, &tail, temp);
+                add(&head, &tail, data);
                 p = buffer;
                 break;
             case 2: /* store variable part */
@@ -338,12 +339,12 @@ static void internalParse(const char* line, const char** cursor, int* state,
             case 4: /* case 3 followed by case 1 */
                 resolve(&v, varname, &p, buffer, size);
                 *p = '\0';
-                temp = strdup(buffer);
-                if (temp == NULL) {
+                data = strdup(buffer);
+                if (data == NULL) {
                     printerr("strdup: %s\n", strerror(errno));
                     exit(1);
                 }
-                add(&head, &tail, temp);
+                add(&head, &tail, data);
                 p = buffer;
                 break;
             case 5: /* skip */
@@ -360,38 +361,32 @@ static void internalParse(const char* line, const char** cursor, int* state,
                 break;
             case 8: /* print error message */
                 if (newstate > 32) {
-                    fputs(errormessage[newstate-33], stderr);
+                    printerr("Error parsing arguments: %s", errormessage[newstate-33]);
                 } else {
-                    fprintf(stderr,
-                            "# ARG PARSER ERROR: state=%02d, class=%d, "
-                            "action=%d, newstate=%02d, char=%02X (%c)\n",
-                            *state, charclass, 8, newstate, *s, 
-                            ((*s & 127) >= 32) ? *s : '.');
+                    printerr("Error parsing arugments: state=%02d, class=%d, "
+                             "action=%d, newstate=%02d, char=%02X (%c)\n",
+                             state, charclass, 8, newstate, *s, 
+                             ((*s & 127) >= 32) ? *s : '.');
                 }
                 exit(1);
                 break;
         }
         ++s;
-        *state = newstate;
+        state = newstate;
     }
 
     /* update various cursors */
     *tailp = tail;
     *headp = head;
-    *pp = p;
-    *vp = v;
-    *cursor = s;
 }
 
-Node* parseCommandLine(const char* line, int* state) {
+Node *parseCommandLine(const char* line) {
     /* purpose: parse a commandline into a list of arguments while
      *          obeying single quotes, double quotes and replacing
      *          environment variable names.
      * paramtr: line (IN): commandline to parse
-     *          state (IO): start state to begin, final state on exit
-     *          state==32 is ok, state>32 is an error condition which
-     *          lead to a premature exit in parsing.
-     * returns: A (partial on error) list of split arguments. */
+     * returns: A list of split arguments or NULL on error
+     */
     if (line == NULL) {
         return NULL;
     }
@@ -405,39 +400,28 @@ Node* parseCommandLine(const char* line, int* state) {
         printerr("malloc: %s\n", strerror(errno));
         exit(1);
     }
-    char* p = buffer;
 
-    char varname[128];
-    size_t vsize = sizeof(varname);
-    char* v = varname;
-    const char* s = line;
-
-    internalParse(line, &s, state, actionmap1, statemap1, &head, &tail,
-                  &p, buffer, size, &v, varname, vsize);
+    internalParse(line, actionmap1, statemap1, &head, &tail,
+                  buffer, size);
 
     free(buffer);
 
     return head;
 }
 
-
-Node* parseArgVector(int argc, char* const* argv, int* state) {
+Node *parseArgVector(int argc, char* const* argv) {
     /* purpose: parse an already split commandline into a list of arguments while
      *          ONLY translating environment variable names that are not prohibited
      *          from translation by some form of quoting (not double quotes, though).
      * paramtr: argc (IN): number of arguments in the argument vector
      *          argv (IN): argument vector to parse
-     *          state (IO): start state to begin, final state on exit
-     *          state==32 is ok, state>32 is an error condition which
-     *          lead to a premature exit in parsing.
-     * returns: A (partial on error) list of split arguments. The argument number
-     *          stays the same, but environment variables were translated.
+     * returns: A list of split arguments or NULL if there was an error. The
+     *          argument number stays the same, but environment variables are
+     *          translated.
      */
     if (argc == 0) {
         return NULL;
     }
-
-    int i;
 
     Node* head = NULL;
     Node* tail = NULL;
@@ -448,18 +432,11 @@ Node* parseArgVector(int argc, char* const* argv, int* state) {
         printerr("malloc: %s\n", strerror(errno));
         exit(1);
     }
-    char* p = buffer;
-
-    char varname[128];
-    size_t vsize = sizeof(varname);
-    char* v = varname;
 
     /* invoke parsing once for each argument */
-    for (i=0; i<argc && *state <= 32; ++i) {
-        const char* s = argv[i];
-        *state = 0;
-        internalParse(argv[i], &s, state, actionmap2, statemap2, &head, &tail,
-                      &p, buffer, size, &v, varname, vsize);
+    for (int i=0; i<argc; ++i) {
+        internalParse(argv[i], actionmap2, statemap2, &head, &tail,
+                      buffer, size);
     }
 
     free(buffer);
