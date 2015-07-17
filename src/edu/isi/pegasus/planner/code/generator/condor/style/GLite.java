@@ -132,6 +132,8 @@ public class GLite extends Abstract {
      * Handle to escaping class for environment variables
      */
     private CondorEnvironmentEscape mEnvEscape;
+    
+    private CondorG mCondorG;
 
     /**
      * The default Constructor.
@@ -139,6 +141,7 @@ public class GLite extends Abstract {
     public GLite() {
         super();
         mEnvEscape = new CondorEnvironmentEscape();
+        mCondorG = new CondorG();
     }
 
 
@@ -281,6 +284,10 @@ public class GLite extends Abstract {
             addSubExpression( value, "QUEUE", (String)job.globusRSL.get( "queue" ) );
         }
 
+        //PM-962 we update the globus RSL keys on basis
+        //of Pegasus profile keys before doing any translation
+        //hack.
+        mCondorG.handleResourceRequirements(job);
 
         /* the globus key hostCount is NODES */
         if( job.globusRSL.containsKey( "hostcount" ) ){

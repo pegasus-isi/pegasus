@@ -137,7 +137,7 @@ public class CondorG extends Abstract {
      * 
      * @param job 
      */
-    private void handleResourceRequirements(Job job) {
+    public void handleResourceRequirements(Job job) {
         
         Pegasus profiles = job.vdsNS;
         Globus  rsl = job.globusRSL;
