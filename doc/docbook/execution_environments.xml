@@ -1037,7 +1037,7 @@ $ ls  /usr/libexec/condor/glite/bin/pbs_local_submit_attributes.sh
       </table>
 
       <tip>
-        <para>The above key mappings are supported in Pegasus 4.4 or
+        <para>The above key mappings are supported in Pegasus 4.5 or
         later.</para>
       </tip>
 
@@ -1101,7 +1101,7 @@ $ ls  /usr/libexec/condor/glite/bin/pbs_local_submit_attributes.sh
 
       <note>
         <para>The above translation only works if you use the
-        pbs_local_attributes.sh file from the Pegasus distribution. The values
+        sge_local_attributes.sh file from the Pegasus distribution. The values
         specified for glite.arguments overrides what are constructed on basis
         of globus profiles, when the job is actually submitted.</para>
       </note>
