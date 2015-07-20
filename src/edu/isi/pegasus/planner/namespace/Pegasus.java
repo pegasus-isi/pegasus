@@ -27,9 +27,13 @@ import edu.isi.pegasus.planner.classes.Profile;
 
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import static edu.isi.pegasus.planner.namespace.Globus.mAggregatorTable;
 import edu.isi.pegasus.planner.namespace.aggregator.Aggregator;
+import edu.isi.pegasus.planner.namespace.aggregator.MAX;
 import edu.isi.pegasus.planner.namespace.aggregator.UniqueMerge;
 import edu.isi.pegasus.planner.namespace.aggregator.Sum;
+import edu.isi.pegasus.planner.namespace.aggregator.Update;
+import java.util.HashMap;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -453,11 +457,7 @@ public class Pegasus extends Namespace {
     private static final String BOTOCONFIG = BotoConfig.BOTO_CONFIG_FILE_VARIABLE.toLowerCase();
     private static final String GOOGLEP12 = GoogleP12.GOOGLEP12_FILE_VARIABLE.toLowerCase();
     
-    /**
-     * Static Handle to the sum aggregator.
-     */
-    private static Aggregator SUM_AGGREGATOR = new Sum();
-    
+   
     /**
      * Static Handle to the delimiter aggregator.
      */
@@ -482,6 +482,34 @@ public class Pegasus extends Namespace {
      * The table containing the mapping of the deprecated keys to the newer keys.
      */
     protected static Map mDeprecatedTable = null;
+    private static Map<String,Aggregator> mAggregatorTable;
+
+     /**
+     * The default aggregator to be used for profile aggregation, if none specified
+     * in the aggregator table;
+     */
+    public static Aggregator mDefaultAggregator = new Update();
+  
+
+    /**
+     * Initializer block that populates the Aggregator table just once.
+     */
+    static{
+        mAggregatorTable = new HashMap( 5 );
+        Aggregator max = new MAX();
+        Aggregator sum = new Sum();
+        
+        mAggregatorTable.put( Pegasus.EXITCODE_FAILURE_MESSAGE , ERROR_MESSAGE_AGGREGATOR );
+        mAggregatorTable.put( Pegasus.EXITCODE_SUCCESS_MESSAGE , SUCCESS_MESSAGE_AGGREGATOR );
+       
+        //all the times need to be added
+        mAggregatorTable.put( Pegasus.RUNTIME_KEY , sum );
+        mAggregatorTable.put( Pegasus.CHECKPOINT_TIME_KEY , sum );
+        mAggregatorTable.put( Pegasus.MAX_WALLTIME , sum );
+        
+        //for the memory rsl params we take max
+        mAggregatorTable.put( Pegasus.MEMORY_KEY, max );
+    }
 
 
     
@@ -845,26 +873,26 @@ public class Pegasus extends Namespace {
             //construct directly. bypassing the checks!
             key = (String)it.next();
             
-            if( key.equals( Pegasus.RUNTIME_KEY ) ){
-                this.construct( key, 
-                                SUM_AGGREGATOR.compute((String)get( key ), (String)profiles.get( key ), "0" )
-                               );
-            }
-            else if( key.equals( Pegasus.EXITCODE_FAILURE_MESSAGE) ){
-                this.construct( key, 
-                                ERROR_MESSAGE_AGGREGATOR.compute((String)get( key ), (String)profiles.get( key ), null )
-                               );
-
-            }
-            else if(  key.equals( Pegasus.EXITCODE_SUCCESS_MESSAGE) ){
-                this.construct( key, 
-                                SUCCESS_MESSAGE_AGGREGATOR.compute((String)get( key ), (String)profiles.get( key ), null )
-                               );
-            }
-            else{
-                this.construct( key, (String)profiles.get( key ) );
-            }
+            Aggregator agg = this.aggregator( key );
+            //load the appropriate aggregator to merge the profiles
+            this.construct( key,
+                            agg.compute( (String)get( key ), (String)profiles.get( key ), "0" ) );
+       
         }
+    }
+    
+    
+    /**
+     * Returns the aggregator to be used for the profile key while merging.
+     * If no aggregator is found, the then default Aggregator (Update) is used.
+     *
+     * @param key  the key for which the aggregator is found.
+     *
+     * @return the aggregator for the profile key.
+     */
+    protected Aggregator aggregator( String key ){
+        Object aggregator = this.mAggregatorTable.get( key );
+        return ( aggregator == null )? mDefaultAggregator : (Aggregator)aggregator;
     }
 
 
