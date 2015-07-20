@@ -141,7 +141,7 @@ static void master(int myrank){
 
   /* Tell all the slaves to exit by sending an empty message with the
      DIETAG. */
-  printf(  "[Master] Sending DIE messages to workers %s\n");
+  printf(  "[Master] Sending DIE messages to workers \n");
   for (rank = 1; rank < nprocesses; ++rank) {
     MPI_Send(0, 0, MPI_CHAR, rank, DIETAG, MPI_COMM_WORLD);
   }
