@@ -2532,6 +2532,24 @@ pegasus.catalog.*.db.SelectMethod
               name to apply the property only for that catalog. Valid catalog
               names are</para><para><screen>replica</screen></para></entry>
             </row>
+            <row>
+                  <entry><literallayout><emphasis role="bold"><emphasis
+                          role="bold">Property Key: </emphasis></emphasis>pegasus.catalog.*.timeout<emphasis
+                          role="bold"><emphasis role="bold">
+                      Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+                      Scope       :</emphasis> Properties
+                      <emphasis role="bold">Since       :</emphasis> 4.5.1
+                      <emphasis role="bold">Type        : </emphasis>Integer
+                      <emphasis role="bold">Default     :</emphasis> (no default)</literallayout></entry>
+
+                  <entry><para>This property sets a busy handler that sleeps for a
+                      specified amount of time (in seconds) when a table is locked.
+                      This property has effect only in a sqlite database.</para>
+                      <para>The * in the property name can be replaced
+                      by a catalog name to apply the property only for that catalog.
+                      Valid catalog names are</para><para><screen>master
+workflow</screen></para></entry>
+            </row>
           </tbody>
         </tgroup>
       </table>
