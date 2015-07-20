@@ -425,7 +425,7 @@ public class Pegasus extends Namespace {
     /**
      * Key indicating the number of hosts a job requires
      */
-    public static final String HOST_COUNT_KEY = "host_count";
+    public static final String HOST_COUNT_KEY = "hostcount";
     
     /**
      * Key indicating max memory used by a job a in MB
