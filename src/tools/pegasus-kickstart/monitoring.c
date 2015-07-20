@@ -124,14 +124,86 @@ size_t write_callback(char *ptr, size_t size, size_t nmemb, void *userdata) {
     return size * nmemb;
 }
 
+// MESSAGES AGGREGATION 
+static int msg_counter = 0;
+//static int MSG_AGGR_FACTOR = 5;
+#define MSG_AGGR_FACTOR 5
+static char aggr_msg_buffer[BUFSIZ * MSG_AGGR_FACTOR];
+static int aggr_msg_buffer_offset = 0;
+
+// copies msg to aggr_msg_buff and increase aggr_msg_offset
+static int aggregate_message(char* msg_buff, char* aggr_msg_buff, int *aggr_msg_offset) {
+    int n;
+
+    printerr("[mon-thread] Aggregating message - %s\n", msg_buff);
+
+    n = sprintf(aggr_msg_buff + *aggr_msg_offset, "%s:delim1:", msg_buff);
+    if(n < 0) {
+        printerr("[mon-thread] Error during aggregating messages\n");
+    }
+    else {
+        *aggr_msg_offset += n;
+    }
+
+    return n;
+}
+
+static void send_msg_to_mq(char* msg_buff, MonitoringEndpoint *monitoring_endpoint, char* wf_uuid) {
+    CURL *curl;
+    CURLcode res;
+    char *payload = (char*) malloc(sizeof(msg_buff) * sizeof(char) + BUFSIZ);
+
+    // sending this message to rabbitmq
+    curl = curl_easy_init();
+    if(curl) {
+        curl_easy_setopt(curl, CURLOPT_URL, monitoring_endpoint->url);
+        curl_easy_setopt(curl, CURLOPT_USERPWD, monitoring_endpoint->credentials);
+        curl_easy_setopt(curl, CURLOPT_POST, 1);
+
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0);
+
+        struct curl_slist *http_header = NULL;
+        http_header = curl_slist_append(http_header, "Content-Type: application/json");
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, http_header);
+
+        sprintf(payload, "{\"properties\":{},\"routing_key\":\"%s\",\"payload\":\"%s\",\"payload_encoding\":\"string\"}",
+            wf_uuid, msg_buff);
+
+        printerr("[mon-thread] Sending aggregated msg payload: %s\n", payload);
+
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload);
+
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
+
+        /* Perform the request, res will get the return code */
+        res = curl_easy_perform(curl);
+        /* Check for errors */
+        if(res != CURLE_OK) {
+            printerr("[mon-thread] an error occured while sending measurement: %s\n",
+                curl_easy_strerror(res));
+        }
+
+        /* always cleanup */
+        curl_easy_cleanup(curl);
+
+        curl_slist_free_all(http_header);
+    }
+    else {
+        printerr("[mon-thread] we couldn't initialize curl\n");
+    }
+
+    free(payload);
+}
+
 /*
  * Main monitoring thread loop - it periodically read global trace file as sent this info somewhere, e.g. to another file
  * or to an external service.
  * It parses any information from the global monitoring and calculates some mean values.
  */
 void* monitoring_thread_func(void* kickstart_status_path) {
-    CURL *curl;
-    CURLcode res;
+    // CURL *curl;
+    // CURLcode res;
     int interval;
     char payload[BUFSIZ], enriched_line[BUFSIZ], line[BUFSIZ], *envptr;
     MonitoringEndpoint monitoring_endpoint;
@@ -157,10 +229,6 @@ void* monitoring_thread_func(void* kickstart_status_path) {
 
     curl_global_init(CURL_GLOBAL_ALL);
 
-    // DK: debugging info about messages sending perf rate
-    // int i = 0, start, start_usec, finish, finish_usec;
-    double start, finish;
-
     printerr("[mon-thread] starting monitoring loop...\n");
     while(1) {
 
@@ -174,13 +242,9 @@ void* monitoring_thread_func(void* kickstart_status_path) {
             }
         }
 
-        // int i = 0;
-        // start = get_time();
-
         if(kickstart_status != NULL) {
             while(fgets(line, BUFSIZ, kickstart_status) != NULL)
             {
-                // i += 1;
                 char *pos;
 
                 if( (pos = strchr(line, '\n')) != NULL )
@@ -193,57 +257,65 @@ void* monitoring_thread_func(void* kickstart_status_path) {
                     line, job_id_info.wf_uuid, job_id_info.wf_label, job_id_info.dag_job_id,
                     job_id_info.condor_job_id);
 
-                // sending this message to rabbitmq
-                curl = curl_easy_init();
-                if(curl) {
-                    curl_easy_setopt(curl, CURLOPT_URL, monitoring_endpoint.url);
-                    curl_easy_setopt(curl, CURLOPT_USERPWD, monitoring_endpoint.credentials);
-                    curl_easy_setopt(curl, CURLOPT_POST, 1);
+                // AGGREGATION
+                msg_counter += 1;
+                if( aggregate_message(enriched_line, aggr_msg_buffer, &aggr_msg_buffer_offset) > 0 ) {
+                    if( msg_counter == MSG_AGGR_FACTOR ) {                        
+                        printerr("[mon-thread] Sending aggregated message: %s\n", aggr_msg_buffer);
+                        send_msg_to_mq(aggr_msg_buffer, &monitoring_endpoint, job_id_info.wf_uuid);
 
-                    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
-                    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0);
-
-                    struct curl_slist *http_header = NULL;
-                    http_header = curl_slist_append(http_header, "Content-Type: application/json");
-                    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, http_header);
-
-                    sprintf(payload, "{\"properties\":{},\"routing_key\":\"%s\",\"payload\":\"%s\",\"payload_encoding\":\"string\"}",
-                        job_id_info.wf_uuid,
-                        enriched_line);
-
-                    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload);
-
-                    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
-
-                    /* Perform the request, res will get the return code */
-                    res = curl_easy_perform(curl);
-                    /* Check for errors */
-                    if(res != CURLE_OK) {
-                        printerr("[mon-thread] an error occured while sending measurement: %s\n",
-                            curl_easy_strerror(res));
+                        msg_counter = 0;
+                        aggr_msg_buffer_offset = 0;
+                        memset(aggr_msg_buffer, 0, BUFSIZ * MSG_AGGR_FACTOR);
                     }
-//                    else {
-                        // printerr("[mon-thread] measurement sent\n");
-//                    }
-
-                    /* always cleanup */
-                    curl_easy_cleanup(curl);
-
-                    curl_slist_free_all(http_header);
-                }
-                else {
-                    printerr("[mon-thread] we couldn't initialize curl\n");
                 }
 
-                // finish = get_time();
-                // printerr("[mon-thread] message sent in %lf - %d [s]\n", finish - start);
-                // start = finish;
+                // sending this message to rabbitmq
+                // curl = curl_easy_init();
+                // if(curl) {
+                //     curl_easy_setopt(curl, CURLOPT_URL, monitoring_endpoint.url);
+                //     curl_easy_setopt(curl, CURLOPT_USERPWD, monitoring_endpoint.credentials);
+                //     curl_easy_setopt(curl, CURLOPT_POST, 1);
+
+                //     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
+                //     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0);
+
+                //     struct curl_slist *http_header = NULL;
+                //     http_header = curl_slist_append(http_header, "Content-Type: application/json");
+                //     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, http_header);
+
+                //     sprintf(payload, "{\"properties\":{},\"routing_key\":\"%s\",\"payload\":\"%s\",\"payload_encoding\":\"string\"}",
+                //         job_id_info.wf_uuid,
+                //         enriched_line);
+
+                //     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload);
+
+                //     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
+
+                //     /* Perform the request, res will get the return code */
+                //     res = curl_easy_perform(curl);
+                //     /* Check for errors */
+                //     if(res != CURLE_OK) {
+                //         printerr("[mon-thread] an error occured while sending measurement: %s\n",
+                //             curl_easy_strerror(res));
+                //     }
+
+                //     /* always cleanup */
+                //     curl_easy_cleanup(curl);
+
+                //     curl_slist_free_all(http_header);
+                // }
+                // else {
+                //     printerr("[mon-thread] we couldn't initialize curl\n");
+                // }
+
             }
-
-            // if( (i % 10) == 0 ) {
-            // }
-
         }
+    }
+
+    if( msg_counter != 0 ) {
+        printerr("[mon-thread] Sending last aggregated message: %s\n", aggr_msg_buffer);
+        send_msg_to_mq(aggr_msg_buffer, &monitoring_endpoint, job_id_info.wf_uuid);
     }
 
     release_monitoring_endpoint(&monitoring_endpoint);

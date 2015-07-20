@@ -62,35 +62,45 @@ class OnlineMonitord:
         if self.channel is None:
             return
 
-        for method_frame, properties, body in self.channel.consume(self.queue_name):
+        # self.channel.basic_consume(self.on_message, self.queue_name)
+        # try:
+        #     self.channel.start_consuming()
+        # except KeyboardInterrupt:
+        #     self.channel.stop_consuming()
+        # self.mq_conn.close()
+
+        for method_frame, properties, body in self.channel.consume(self.queue_name, no_ack=True):
             if method_frame is not None:
                 print method_frame.delivery_tag
             # print body
             # print
 
-            if len(body.split(" ")) < 2:
+            # self.channel.basic_ack(delivery_tag=method_frame.delivery_tag)
+
+            if len(body.split(" ")) < 2 or len(body) < 4:
                 print "The given measurement line is too short"
-                return
+            else:
+                messages = body.split(":delim1:")
+                if len(messages) > 1:
+                    messages = messages[0:-1]
 
-            try:
-                message = MonitoringMessage.parse(body)
+                for msg_body in messages:
+                    try:
+                        message = MonitoringMessage.parse(msg_body)
 
-                if message is not None:
-                    if self.client is not None:
-                        self.client.write_points(InfluxDbMessageFormatter.format_msg(message))
+                        if message is not None:
+                            if self.client is not None:
+                                self.client.write_points(InfluxDbMessageFormatter.format_msg(message))
 
-                    self.handle_aggregation(message)
+                            self.handle_aggregation(message)
 
-                if self.channel is not None:
-                    self.channel.basic_ack(delivery_tag=method_frame.delivery_tag) 
+                    except ValueError, val_err:
+                        print "An error occured - (probably when parsing a message): "
+                        print val_err
 
-            except ValueError, val_err:
-                print "An error occured - (probably when parsing a message): "
-                print val_err
-
-            except Exception, err:
-                print "An error occured while sending monitoring measurement: "
-                print err
+                    except Exception, err:
+                        print "An error occured while sending monitoring measurement: "
+                        print err
 
         self.mq_conn.close()
 
@@ -106,27 +116,35 @@ class OnlineMonitord:
         """
         if method_frame is not None:
             print method_frame.delivery_tag
-        print body
-        print
+        # print body
+        # print
 
-        if len(body.split(" ")) < 2:
-            print "The given measurement line is too short"
-            return
+        channel.basic_ack(delivery_tag=method_frame.delivery_tag)
 
-        message = MonitoringMessage.parse(body)
+        if len(body.split(" ")) < 2 or len(body) < 5:
+            print "The received message is too short"
+        else:
+            messages = body.split(":delim1:")
+            if len(messages) > 1:
+                messages = messages[0:-1]
 
-        if message is not None:
-            if self.client is not None:
+            for msg_body in messages:
                 try:
-                    self.client.write_points(InfluxDbMessageFormatter.format_msg(message))
+                    message = MonitoringMessage.parse(msg_body)
+
+                    if message is not None:
+                        if self.client is not None:
+                            self.client.write_points(InfluxDbMessageFormatter.format_msg(message))
+
+                        self.handle_aggregation(message)
+
+                except ValueError, val_err:
+                    print "An error occured - (probably when parsing a message): "
+                    print val_err
+
                 except Exception, err:
                     print "An error occured while sending monitoring measurement: "
                     print err
-
-            self.handle_aggregation(message)
-
-        if channel is not None:
-            channel.basic_ack(delivery_tag=method_frame.delivery_tag)
 
     def initialize_mq_connection(self):
         """
@@ -176,7 +194,7 @@ class OnlineMonitord:
         # create a queue for the observer workflow uuid
         channel.queue_declare(
             queue=queue_name,
-            durable=True
+            durable=True            
         )
 
         # bind the queue to the monitoring exchange
