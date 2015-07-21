@@ -515,10 +515,10 @@ static int event_loop(struct event_loop_ctx *ctx) {
 #else
 #ifdef LINUX
     /* TODO Fix TRACING CASE */
-    if (appinfo->enableTracing) {
+    if (ctx->appinfo->enableTracing) {
         /* TODO If this returns an error, then we need to untrace all the children and try the wait instead */
         JobInfo *jobinfo = ctx->jobinfo;
-        procParentTrace(jobinfo->child, &jobinfo->status, &jobinfo->use, &(jobinfo->children), appinfo->enableSysTrace);
+        procParentTrace(jobinfo->child, &jobinfo->status, &jobinfo->use, &(jobinfo->children), ctx->appinfo->enableSysTrace);
         return jobinfo->status;
     }
 
@@ -529,6 +529,9 @@ static int event_loop(struct event_loop_ctx *ctx) {
     while (1) {
         int rv = poll(ufds, 1, POLL_TIMEOUT*1000);
         if (rv == -1) {
+            if (errno == EINTR) {
+                continue;
+            }
             printerr("Error polling for updates: %s\n", strerror(errno));
             return -1;
         } else if (rv == 0) {
