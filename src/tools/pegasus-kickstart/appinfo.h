@@ -43,8 +43,6 @@ typedef struct {
 
     char* const*   argv;       /* application executable and arguments */
     int            argc;       /* application CLI number of arguments */
-    char* const*   envp;       /* snapshot of environment */
-    size_t         envc;       /* size of the environment vector envp */
 
     char           ipv4[16];   /* host address of primary interface */
     char           prif[16];   /* name of primary interface NIC */ 

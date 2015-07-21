@@ -38,9 +38,6 @@
 
 #define show(s) (s ? s : "(undefined)")
 
-/* truly shared globals */
-extern char** environ;
-
 /* module local globals */
 static AppInfo appinfo; /* sigh, needs to be global for signal handlers */
 static volatile sig_atomic_t alarmed = 0;
@@ -354,12 +351,6 @@ int main(int argc, char* argv[]) {
     /* Set the default status to 1 */
     appinfo.status = 1;
 
-    /* Set the PATH variable before we copy env into appinfo */
-    set_path();
-
-    /* remember environment that all jobs will see */
-    envIntoAppInfo(&appinfo, environ);
-
     /* register emergency exit handler */
     if (atexit(finish) == -1) {
         appinfo.application.status = -1;
@@ -654,6 +645,9 @@ int main(int argc, char* argv[]) {
         helpMe(&appinfo);
     }
 
+    /* Update the PATH variable */
+    set_path();
+
     /* initialize app info and register CLI parameters with it */
     initJobInfo(&appinfo.application, argc-i, argv+i, getenv("KICKSTART_WRAPPER"));
 
@@ -734,7 +728,7 @@ REDIR:
     char *SETUP = getenv("KICKSTART_SETUP");
     if (SETUP == NULL) { SETUP = getenv("GRIDSTART_SETUP"); }
     if (prepareSideJob(&appinfo.setup, SETUP)) {
-        mysystem(&appinfo, &appinfo.setup, environ);
+        mysystem(&appinfo, &appinfo.setup);
     }
 
     /* possible pre job (skipped if timeout happens) */
@@ -743,14 +737,14 @@ REDIR:
         if (PREJOB == NULL) { PREJOB = getenv("GRIDSTART_PREJOB"); }
         if (prepareSideJob(&appinfo.prejob, PREJOB)) {
             /* there is a prejob to be executed */
-            status = mysystem(&appinfo, &appinfo.prejob, environ);
+            status = mysystem(&appinfo, &appinfo.prejob);
             result = obtainStatusCode(status);
         }
     }
 
     /* start main application (skipped if timeout happens) */
     if (result == 0 && alarmed == 0) {
-        status = mysystem(&appinfo, &appinfo.application, environ);
+        status = mysystem(&appinfo, &appinfo.application);
         result = obtainStatusCode(status);
     } else {
         /* actively invalidate main record */
@@ -762,7 +756,7 @@ REDIR:
         char *POSTJOB = getenv("KICKSTART_POSTJOB");
         if (POSTJOB == NULL) { POSTJOB = getenv("GRIDSTART_POSTJOB"); }
         if (prepareSideJob(&appinfo.postjob, POSTJOB)) {
-            status = mysystem(&appinfo, &appinfo.postjob, environ);
+            status = mysystem(&appinfo, &appinfo.postjob);
             result = obtainStatusCode(status);
         }
     }
@@ -774,7 +768,7 @@ REDIR:
     char *CLEANUP = getenv("KICKSTART_CLEANUP");
     if (CLEANUP == NULL) { CLEANUP = getenv("GRIDSTART_CLEANUP"); }
     if (prepareSideJob(&appinfo.cleanup, CLEANUP)) {
-        mysystem(&appinfo, &appinfo.cleanup, environ);
+        mysystem(&appinfo, &appinfo.cleanup);
     }
 
     /* stat post files */

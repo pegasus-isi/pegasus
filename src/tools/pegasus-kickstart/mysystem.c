@@ -44,6 +44,8 @@
 /* How long should the polling interval be, in seconds */
 #define POLL_TIMEOUT 60
 
+extern char **environ;
+
 struct event_loop_ctx {
     AppInfo *appinfo;
     JobInfo *jobinfo;
@@ -363,51 +365,30 @@ static ProcInfo *processTraceFiles(const char *tempdir, const char *trace_file_p
 }
 
 /* Try to get a new environment for the child process that has the tracing vars */
-static char **tryGetNewEnvironment(char **envp, const char *tempdir, const char *trace_file_prefix) {
-    int vars;
+static void trySetInterposeEnv(const char *tempdir, const char *trace_file_prefix) {
 
     /* If KICKSTART_PREFIX or LD_PRELOAD are already set then we can't trace */
-    for (vars=0; envp[vars] != NULL; vars++) {
-        if (startswith(envp[vars], "KICKSTART_PREFIX=")) {
-            return envp;
-        }
-        if (startswith(envp[vars], "LD_PRELOAD=")) {
-            return envp;
-        }
+    if (getenv("KICKSTART_PREFIX") != NULL) {
+        return;
+    }
+    if (getenv("LD_PRELOAD") != NULL) {
+        return;
     }
 
     /* If the interpose library can't be found, then we can't trace */
     char libpath[BUFSIZ];
     if (findInterposeLibrary(libpath, BUFSIZ) < 0) {
         printerr("Cannot locate libinterpose.so\n");
-        return envp;
+        return;
     }
 
     /* Set LD_PRELOAD to the intpose library */
-    char ld_preload[BUFSIZ];
-    snprintf(ld_preload, BUFSIZ, "LD_PRELOAD=%s", libpath);
+    setenv("LD_PRELOAD", libpath, 1);
 
     /* Set KICKSTART_PREFIX to be tempdir/prefix */
     char kickstart_prefix[BUFSIZ];
-    snprintf(kickstart_prefix, BUFSIZ, "KICKSTART_PREFIX=%s/%s",
-             tempdir, trace_file_prefix);
-
-    /* Copy the environment variables to a new array */
-    char **newenvp = (char **)malloc(sizeof(char **)*(vars+3));
-    if (newenvp == NULL) {
-        printerr("malloc: %s\n", strerror(errno));
-        return envp;
-    }
-    for (vars=0; envp[vars] != NULL; vars++) {
-        newenvp[vars] = envp[vars];
-    }
-
-    /* Set the new variables */
-    newenvp[vars] = ld_preload;
-    newenvp[vars+1] = kickstart_prefix;
-    newenvp[vars+2] = NULL;
-
-    return newenvp;
+    snprintf(kickstart_prefix, BUFSIZ, "%s/%s", tempdir, trace_file_prefix);
+    setenv("KICKSTART_PREFIX", kickstart_prefix, 1);
 }
 
 static int setup_event_loop(struct event_loop_ctx *ctx, AppInfo *appinfo, JobInfo *jobinfo) {
@@ -565,7 +546,7 @@ static int event_loop(struct event_loop_ctx *ctx) {
 #endif /* ifdef __APPLE__ */
 }
 
-int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
+int mysystem(AppInfo* appinfo, JobInfo* jobinfo) {
     /* purpose: Run the task described by jobinfo
      * paramtr: appinfo (IO): shared record of information
      *                        isPrinted (IO): reset isPrinted in child process!
@@ -580,7 +561,6 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
      *                        start (OUT): will be set to startup time
      *                        final (OUT): will be set to finish time after reap
      *                        use (OUT): rusage record from application call
-     *          envp (IN): vector with the parent's environment
      * returns:   -1: failure in mysystem processing, check errno
      *           126: connecting child to its new stdout failed
      *           127: execve() call failed
@@ -634,7 +614,7 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
         // If we are using library tracing, try to set the necessary
         // environment variables
         if (appinfo->enableLibTrace) {
-            envp = tryGetNewEnvironment(envp, tempdir, trace_file_prefix);
+            trySetInterposeEnv(tempdir, trace_file_prefix);
         }
 
         /* connect jobs stdio */
@@ -651,7 +631,7 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
             if (procChild()) _exit(126);
         }
 
-        execve(jobinfo->argv[0], (char* const*) jobinfo->argv, envp);
+        execv(jobinfo->argv[0], (char* const*) jobinfo->argv);
         perror("execve");
         _exit(127); /* executed in child process */
     } else {
