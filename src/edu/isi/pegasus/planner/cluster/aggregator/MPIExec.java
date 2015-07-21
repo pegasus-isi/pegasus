@@ -23,6 +23,7 @@ import edu.isi.pegasus.planner.classes.AggregatedJob;
 
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.namespace.Globus;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
@@ -88,8 +89,23 @@ public class MPIExec extends Abstract {
      * @param job          the abstract clustered job
      */
     public void makeAbstractAggregatedJobConcrete( AggregatedJob job ){
+        //PM-962 for PMC aggregated values for runtime and memory don't get mapped
+        //to the PMC job itself
+        String computedRuntime = (String)job.vdsNS.removeKey( Pegasus.RUNTIME_KEY );
+        String computedMemory  = (String)job.vdsNS.removeKey( Pegasus.MEMORY_KEY );
+        
         super.makeAbstractAggregatedJobConcrete(job);
 
+        //only do something for the runtime if runtime is not 
+        //picked up from other profile sources for PMC jobs
+        if( computedRuntime != null &&
+                !( job.globusRSL.containsKey( Globus.MAX_WALLTIME_KEY ) ||
+                        ( job.vdsNS.containsKey( Pegasus.RUNTIME_KEY) ) )) {
+            
+            //do some estimation here for the runtime
+            
+        }
+        
         //also put in jobType as mpi only if a user has not specified
         //any other jobtype before hand
         if( !job.globusRSL.containsKey( "jobtype" ) ){
