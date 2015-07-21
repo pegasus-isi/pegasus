@@ -469,11 +469,12 @@ int procParentWait(pid_t main, int *main_status,  struct rusage *main_usage, Pro
     /* Just wait for the child */
     while (wait4(main, main_status, 0, main_usage) < 0) {
         if (errno != EINTR) {
-            perror("wait4");
             *main_status = -42;
+            printerr("wait4 failed: %s\n", strerror(errno));
+            return -1;
         }
     }
-    return *main_status;
+    return 0;
 }
 
 static int printXMLFileInfo(FILE *out, int indent, FileInfo *files) {

@@ -25,8 +25,14 @@
 #include <libgen.h>
 #include <dirent.h>
 
+#ifdef __APPLE__
+#include <sys/event.h> /* For kqueue */
+#endif
+
+#ifdef __linux__
 #include <sys/signalfd.h>
 #include <poll.h>
+#endif
 
 #include "utils.h"
 #include "appinfo.h"
@@ -34,6 +40,20 @@
 #include "mysystem.h"
 #include "procinfo.h"
 #include "error.h"
+
+/* How long should the polling interval be, in seconds */
+#define POLL_TIMEOUT 60
+
+struct event_loop_ctx {
+    AppInfo *appinfo;
+    JobInfo *jobinfo;
+#ifdef __APPLE__
+    int kqfd;
+#endif
+#ifdef __linux__
+    int sigfd;
+#endif
+};
 
 /* Find the path to the interposition library */
 static int findInterposeLibrary(char *path, int pathsize) {
@@ -390,65 +410,160 @@ static char **tryGetNewEnvironment(char **envp, const char *tempdir, const char 
     return newenvp;
 }
 
-int event_loop(int sigfd, AppInfo *appinfo, JobInfo *jobinfo) {
-#ifdef DARWIN
-    return procParentWait(jobinfo->child, &jobinfo->status, &jobinfo->use, &(jobinfo->children));
+static int setup_event_loop(struct event_loop_ctx *ctx, AppInfo *appinfo, JobInfo *jobinfo) {
+#ifdef __APPLE__
+    /* DON'T block SIGCHLD or kqueue won't work */
+
+    /* Setup the queue descriptor */
+    int kq = kqueue();
+    if (kq == -1) {
+        printerr("Error creating kqueue descriptor: %s\n", strerror(errno));
+        return -1;
+    }
+
+    /* set the kevent, can only receive signals for this process */
+    struct kevent ke;
+    EV_SET(&ke, SIGCHLD, EVFILT_SIGNAL, EV_ADD, 0, 0, NULL);
+    if (kevent(kq, &ke, 1, NULL, 0, NULL) < 0) {
+        printerr("Error setting kevent filter: %s\n", strerror(errno));
+        return -1;
+    }
+
+    ctx->kqfd = kq;
+#endif
+
+#ifdef __linux__
+    /* Block SIGCHLD so that we can handle it with the signalfd instead */
+    sigset_t mask;
+    sigemptyset(&mask);
+    sigaddset(&mask, SIGCHLD);
+    if (sigprocmask(SIG_BLOCK, &mask, NULL) == -1) {
+        printerr("Error blocking SIGCHLD: %s", strerror(errno));
+        return -1;
+    }
+
+    /* Create a signal file descriptor */
+    int sigfd = signalfd(-1, &mask, SFD_CLOEXEC|SFD_NONBLOCK);
+    if (sigfd == -1) {
+        printerr("Error creating signalfd: %s", strerror(errno));
+        return -1;
+    }
+
+    ctx->sigfd = sigfd;
+#endif
+
+    ctx->appinfo = appinfo;
+    ctx->jobinfo = jobinfo;
+
+    return 0;
+}
+
+static int teardown_event_loop(struct event_loop_ctx *ctx) {
+#ifdef __APPLE__
+    return close(ctx->kqfd);
 #else
+#ifdef __linux__
+    return close(ctx->sigfd);
+#else
+    return 0;
+#endif
+#endif
+}
+
+static int handle_timeout(struct event_loop_ctx *ctx) {
+    /* FIXME Do something when the timeout occurs? */
+    return 0;
+}
+
+static int handle_sigchld(struct event_loop_ctx *ctx) {
+    JobInfo *jobinfo = ctx->jobinfo;
+    return procParentWait(jobinfo->child, &jobinfo->status, &jobinfo->use, &(jobinfo->children));
+}
+
+static int event_loop(struct event_loop_ctx *ctx) {
+#ifdef __APPLE__
+    while (1) {
+
+        struct kevent ke;
+        memset(&ke, 0x00, sizeof(ke));
+
+        struct timespec timeout;
+        timeout.tv_sec = POLL_TIMEOUT;
+        timeout.tv_nsec = 0;
+
+        int rc = kevent(ctx->kqfd, NULL, 0, &ke, 1, &timeout);
+        if (rc < 0) {
+            if (errno == EINTR) {
+                continue;
+            } else {
+                printerr("kevent failed: %s\n", strerror(errno));
+            }
+        } else if (rc == 0) {
+            handle_timeout(ctx);
+        } else if (ke.filter == EVFILT_SIGNAL) {
+            if (ke.ident == SIGCHLD) {
+                return handle_sigchld(ctx);
+            } else {
+                printerr("Error: Unexpected signal from kevent: %lu\n", ke.ident);
+                return -1;
+            }
+        } else {
+            printerr("Error: Unexpected filter from kevent: %hd\n", ke.filter);
+            return -1;
+        }
+    }
+#else
+#ifdef LINUX
     /* TODO Fix TRACING CASE */
     if (appinfo->enableTracing) {
         /* TODO If this returns an error, then we need to untrace all the children and try the wait instead */
+        JobInfo *jobinfo = ctx->jobinfo;
         procParentTrace(jobinfo->child, &jobinfo->status, &jobinfo->use, &(jobinfo->children), appinfo->enableSysTrace);
         return jobinfo->status;
     }
 
     struct pollfd ufds[1];
-    ufds[0].fd = sigfd;
+    ufds[0].fd = ctx->sigfd;
     ufds[0].events = POLLIN;
 
     while (1) {
-        int rv = poll(ufds, 1, 1000);
+        int rv = poll(ufds, 1, POLL_TIMEOUT*1000);
         if (rv == -1) {
             printerr("Error polling for updates: %s\n", strerror(errno));
             return -1;
         } else if (rv == 0) {
-            printerr("Timeout occurred! No data after 1 second.\n");
+            handle_timeout(ctx);
         } else {
             if (ufds[0].revents & POLLIN) {
                 struct signalfd_siginfo fdsi;
                 ssize_t s = read(ufds[0].fd, &fdsi, sizeof(struct signalfd_siginfo));
-                if (s == 0) {
-                    continue;
-                }
-
                 if (s != sizeof(struct signalfd_siginfo)) {
                     printerr("Error reading signal from signalfd: %s\n", strerror(errno));
                     return -1;
                 }
 
                 if (fdsi.ssi_signo == SIGCHLD) {
-                    pid_t result = wait4(jobinfo->child, &jobinfo->status, 0, &jobinfo->use);
-                    if (result < 0) {
-                        printerr("Error waiting for child: wait4: %s\n", strerror(errno));
-                        return -42;
-                    }
-                    return jobinfo->status;
+                    return handle_sigchld(ctx);
                 } else {
-                    printerr("Read unexpected signal: %d\n", fdsi.ssi_signo);
+                    printerr("Read unexpected signal from signalfd: %d\n", fdsi.ssi_signo);
                     return -1;
                 }
             } else {
-                printerr("Read unexpected event: %d\n", ufds[0].revents);
+                printerr("Read unexpected event from poll(): %d\n", ufds[0].revents);
                 return -1;
             }
         }
     }
+#else /* !__linux__ and !__APPLE__ */
 
-    return jobinfo->status;
-#endif
+    /* In all other cases, just wait on the child */
+    return procParentWait(jobinfo->child, &jobinfo->status, &jobinfo->use, &(jobinfo->children));
+#endif /* ifdef __linux__ */
+#endif /* ifdef __APPLE__ */
 }
 
 int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
-    /* purpose: emulate the system() libc call, but save utilization data.
+    /* purpose: Run the task described by jobinfo
      * paramtr: appinfo (IO): shared record of information
      *                        isPrinted (IO): reset isPrinted in child process!
      *                        input (IN): connect to stdin or share
@@ -462,9 +577,6 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
      *                        start (OUT): will be set to startup time
      *                        final (OUT): will be set to finish time after reap
      *                        use (OUT): rusage record from application call
-     *          input (IN): connect to stdin or share
-     *          output (IN): connect to stdout or share
-     *          error (IN): connect to stderr or share
      *          envp (IN): vector with the parent's environment
      * returns:   -1: failure in mysystem processing, check errno
      *           126: connecting child to its new stdout failed
@@ -491,19 +603,9 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
         return -1;
     }
 
-    /* Block SIGCHLD so that we can handle it with the signalfd instead */
-    sigset_t mask;
-    sigemptyset(&mask);
-    sigaddset(&mask, SIGCHLD);
-    if (sigprocmask(SIG_BLOCK, &mask, NULL) == -1) {
-        printerr("Error blocking SIGCHLD: %s", strerror(errno));
-        return -1;
-    }
-
-    /* Create a signal file descriptor for sigchld */
-    int sigfd = signalfd(-1, &mask, SFD_CLOEXEC|SFD_NONBLOCK);
-    if (sigfd == -1) {
-        printerr("Error creating signalfd: %s", strerror(errno));
+    struct event_loop_ctx evctx;
+    if (setup_event_loop(&evctx, appinfo, jobinfo) < 0) {
+        printerr("Error setting up event loop\n");
         return -1;
     }
 
@@ -553,7 +655,9 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
         /* Track the current child process */
         appinfo->currentChild = jobinfo->child;
 
-        jobinfo->status = event_loop(sigfd, appinfo, jobinfo);
+        if (event_loop(&evctx) < 0) {
+            printerr("Event loop error\n");
+        }
 
         /* sanity check */
         if (kill(jobinfo->child, 0) == 0) {
@@ -571,8 +675,7 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
     /* stop wall-clock */
     now(&(jobinfo->finish));
 
-    /* Close the signal fd */
-    close(sigfd);
+    teardown_event_loop(&evctx);
 
     /* restore default handlers */
     sigaction(SIGINT, &saveintr, NULL);
