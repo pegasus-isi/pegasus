@@ -1345,24 +1345,31 @@ public class Kickstart implements GridStart {
         //the TERM signal to job 
         sb.append( "-k " ).append( checkpointTime ).append( " " );
 
-        int max = Integer.MAX_VALUE;
+        long max = Long.MAX_VALUE;
+        long multiplier = 60;
         if( job.vdsNS.containsKey( Pegasus.MAX_WALLTIME) ){
             max = job.vdsNS.getIntValue( Pegasus.MAX_WALLTIME, Integer.MAX_VALUE  );
         }
         else if ( job.globusRSL.containsKey(Globus.MAX_WALLTIME_KEY) ){
             max = job.globusRSL.getIntValue(Globus.MAX_WALLTIME_KEY, Integer.MAX_VALUE  );
         }
+        else if ( job.vdsNS.containsKey( Pegasus.RUNTIME_KEY) ){
+            //PM-962 last fallback to pegasus profile runtime which is in seconds
+            max = job.vdsNS.getIntValue( Pegasus.RUNTIME_KEY, Integer.MAX_VALUE  );
+            multiplier = 1;
+        }
+        
 
-        if( max == Integer.MAX_VALUE ){
+        if( max == Long.MAX_VALUE ){
             //means user never specified a maxwalltime
             //or a malformed value
             //we don't determnine the -K parameter
             return sb.toString();
         }
 
-        //maxwalltime is specified in minutes.
-        //convert to seconds for kickstart
-        max = max * 60;
+        //maxwalltime is specified in minutes, while pegasus runtime
+        //is in seconds. convert to seconds for kickstart
+        max = max * multiplier;
 
         //we set the -K parameter to half the difference between
         //maxwalltime - checkpointTime
