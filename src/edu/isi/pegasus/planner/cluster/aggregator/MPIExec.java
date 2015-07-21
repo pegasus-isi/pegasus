@@ -311,12 +311,22 @@ public class MPIExec extends Abstract {
         StringBuffer args = new StringBuffer();
         
         //add --max-wall-time option PM-625
-        String walltime = (String) job.globusRSL.get( "maxwalltime" );
+        String walltime = (String) job.globusRSL.get( Globus.MAX_WALLTIME_KEY );
+       
+        int divisor = 1;
+        if( walltime == null ){
+            //PM-962 fall back on pegasus profile runtime key which is in seconds
+            walltime = job.vdsNS.getStringValue( Pegasus.RUNTIME_KEY );
+            if( walltime != null ){
+                divisor = 60;
+            }
+        }
+        
         if( walltime != null ){
             long value = -1;
 
             try{
-                value = Integer.parseInt( walltime );
+                value = Long.parseLong(walltime );
             }
             catch( Exception e ){
                 //ignore
@@ -324,6 +334,7 @@ public class MPIExec extends Abstract {
 
             //walltime is specified in minutes
             if( value > 1 ){
+                value = value / divisor;
                 if( value > 10 ){
                     //subtract 5 minutes to give PMC a chance to return all stdouts
                     //do this only if walltime is at least more than 10 minutes
