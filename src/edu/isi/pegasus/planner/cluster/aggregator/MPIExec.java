@@ -92,7 +92,17 @@ public class MPIExec extends Abstract {
         //PM-962 for PMC aggregated values for runtime and memory don't get mapped
         //to the PMC job itself
         String computedRuntime = (String)job.vdsNS.removeKey( Pegasus.RUNTIME_KEY );
+        if( computedRuntime == null ){
+            //remove the globus maxwalltime if set
+            computedRuntime = (String)job.globusRSL.removeKey( Globus.MAX_WALLTIME_KEY );
+        }
+        
         String computedMemory  = (String)job.vdsNS.removeKey( Pegasus.MEMORY_KEY );
+        if( computedMemory == null ){
+            //remove the globus maxmemory if set
+            //memory for the PMC job should be set with pmc executable
+            computedMemory = (String)job.globusRSL.removeKey( Globus.MAX_MEMORY_KEY );
+        }
         
         super.makeAbstractAggregatedJobConcrete(job);
 
@@ -102,7 +112,7 @@ public class MPIExec extends Abstract {
                 !( job.globusRSL.containsKey( Globus.MAX_WALLTIME_KEY ) ||
                         ( job.vdsNS.containsKey( Pegasus.RUNTIME_KEY) ) )) {
             
-            //do some estimation here for the runtime
+            //do some estimation here for the runtime?
             
         }
         
