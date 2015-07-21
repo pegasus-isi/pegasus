@@ -504,7 +504,6 @@ public class Pegasus extends Namespace {
        
         //all the times need to be added
         mAggregatorTable.put( Pegasus.RUNTIME_KEY , sum );
-        mAggregatorTable.put( Pegasus.CHECKPOINT_TIME_KEY , sum );
         mAggregatorTable.put( Pegasus.MAX_WALLTIME , sum );
         
         //for the memory rsl params we take max
