@@ -15,6 +15,12 @@
  */
 package edu.isi.pegasus.planner.code.generator.condor.style;
 
+import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
+import edu.isi.pegasus.planner.namespace.Pegasus;
+import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -68,5 +74,55 @@ public class GliteTest {
     @Test
     public void test4HourConversionPBSTimestampFormatting() {
         assertEquals( "28:10:00", gs.pbsFormattedTimestamp( "1690"));
+    }
+    
+    /*@Test
+    public void testPegasusProfileCores() throws CondorStyleException{
+        Job j = new Job();
+        j.vdsNS.construct( Pegasus.CORES_KEY, "5" );
+        String ce = gs.getCERequirementsForJob( j );
+        System.out.println( ce );
+    }*/
+    
+    @Test
+    public void testPegasusProfileHostCount() throws CondorStyleException{
+        Job j = new Job();
+        j.vdsNS.construct( Pegasus.HOST_COUNT_KEY, "5" );
+        String ce = gs.getCERequirementsForJob( j );
+        this.testWithRegex(j, ".*NODES==\"([0-9]*)\".*", "5");
+    }
+    
+    @Test
+    public void testPegasusProfileMemory() throws CondorStyleException{
+        Job j = new Job();
+        j.vdsNS.construct( Pegasus.MEMORY_KEY, "50" );
+        this.testWithRegex(j, ".*PER_PROCESS_MEMORY==\"([0-9]*)\".*", "50");
+    }
+    
+    @Test
+    public void testPegasusProfileMAXWalltime() throws CondorStyleException{
+        Job j = new Job();
+        j.vdsNS.construct( Pegasus.RUNTIME_KEY, "100" );
+        this.testWithRegex(j, ".*WALLTIME==\"([0-9]+\\:[0-9]+\\:[0-9]+)\".*", "00:01:00");
+    }
+    
+    @Test
+    public void testGlobusProfileXCount() throws CondorStyleException{
+        Job j = new Job();
+        j.globusRSL.construct( "xcount", "100" );
+        this.testWithRegex(j, ".*PROCS==\"([0-9]*)\".*", "100") ;
+    }
+    
+    
+    private void testWithRegex( Job j, String regex, String expected) throws CondorStyleException{
+        String ce = gs.getCERequirementsForJob( j );
+        //System.out.println( ce );
+        Pattern p = Pattern.compile( regex );
+        Matcher m = p.matcher( ce );
+        String value = null;
+        while(m.find()){
+            value = m.group(1);
+        }
+        assertEquals( expected, value );
     }
 }
