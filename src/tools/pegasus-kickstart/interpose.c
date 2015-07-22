@@ -9,7 +9,9 @@
 #include <sys/resource.h>
 #include <sys/uio.h>
 #include <sys/socket.h>
+#ifdef __linux__
 #include <sys/sendfile.h>
+#endif
 #include <fcntl.h>
 #include <stdarg.h>
 #include <dirent.h>
@@ -52,6 +54,8 @@
 #define debug(format, args...)
 #endif
 
+extern char **environ;
+
 /* These are all the functions we are interposing */
 static typeof(dup) *orig_dup = NULL;
 static typeof(dup2) *orig_dup2 = NULL;
@@ -59,15 +63,25 @@ static typeof(dup2) *orig_dup2 = NULL;
 static typeof(dup3) *orig_dup3 = NULL;
 #endif
 static typeof(open) *orig_open = NULL;
+#ifdef open64
 static typeof(open64) *orig_open64 = NULL;
+#endif
 static typeof(openat) *orig_openat = NULL;
+#ifdef openat64
 static typeof(openat64) *orig_openat64 = NULL;
+#endif
 static typeof(creat) *orig_creat = NULL;
+#ifdef creat64
 static typeof(creat64) *orig_creat64 = NULL;
+#endif
 static typeof(fopen) *orig_fopen = NULL;
+#ifdef fopen64
 static typeof(fopen64) *orig_fopen64 = NULL;
+#endif
 static typeof(freopen) *orig_freopen = NULL;
+#ifdef freopen64
 static typeof(freopen64) *orig_freopen64 = NULL;
+#endif
 static typeof(close) *orig_close = NULL;
 static typeof(fclose) *orig_fclose = NULL;
 static typeof(read) *orig_read = NULL;
@@ -75,9 +89,13 @@ static typeof(write) *orig_write = NULL;
 static typeof(fread) *orig_fread = NULL;
 static typeof(fwrite) *orig_fwrite = NULL;
 static typeof(pread) *orig_pread = NULL;
+#ifdef pread64
 static typeof(pread64) *orig_pread64 = NULL;
+#endif
 static typeof(pwrite) *orig_pwrite = NULL;
+#ifdef pwrite64
 static typeof(pwrite64) *orig_pwrite64 = NULL;
+#endif
 static typeof(readv) *orig_readv = NULL;
 #ifdef preadv
 static typeof(preadv) *orig_preadv = NULL;
@@ -104,7 +122,9 @@ static typeof(vfscanf) *orig_vfscanf = NULL;
 static typeof(vfprintf) *orig_vfprintf = NULL;
 static typeof(connect) *orig_connect = NULL;
 static typeof(send) *orig_send = NULL;
+#ifdef __linux__
 static typeof(sendfile) *orig_sendfile = NULL;
+#endif
 static typeof(sendto) *orig_sendto = NULL;
 static typeof(sendmsg) *orig_sendmsg = NULL;
 static typeof(recv) *orig_recv = NULL;
@@ -248,19 +268,6 @@ static Descriptor *get_descriptor(int fd) {
     return &(descriptors[fd]);
 }
 
-/* Read /proc/self/exe to get path to executable */
-static void read_exe() {
-    debug("Reading exe");
-    char exe[BUFSIZ];
-    int size = readlink("/proc/self/exe", exe, BUFSIZ);
-    if (size < 0) {
-        perror("libinterpose: Unable to readlink /proc/self/exe");
-        return;
-    }
-    exe[size] = '\0';
-    tprintf("exe: %s\n", exe);
-}
-
 /* Return 1 if line begins with tok */
 static int startswith(const char *line, const char *tok) {
     return strstr(line, tok) == line;
@@ -281,6 +288,27 @@ static int endswith(const char *line, const char *tok) {
     }
 
     return 1;
+}
+
+#ifdef __linux__
+/* Read /proc/self/exe to get path to executable */
+static void read_exe() {
+    char exef[] = "/proc/self/exe";
+
+    /* If the exe file is missing, then just skip it */
+    if (access(exef, F_OK) < 0) {
+        return;
+    }
+
+    debug("Reading exe");
+    char exe[BUFSIZ];
+    int size = readlink(exef, exe, BUFSIZ);
+    if (size < 0) {
+        perror("libinterpose: Unable to readlink /proc/self/exe");
+        return;
+    }
+    exe[size] = '\0';
+    tprintf("exe: %s\n", exe);
 }
 
 /* Read useful information from /proc/self/status */
@@ -308,11 +336,11 @@ static void read_status() {
             tprintf(line);
         } else if (startswith(line, "Tgid")) {
             tprintf(line);
-        } else if (startswith(line,"VmPeak")) {
+        } else if (startswith(line, "VmPeak")) {
             tprintf(line);
-        } else if (startswith(line,"VmHWM")) {
+        } else if (startswith(line, "VmHWM")) {
             tprintf(line);
-        } else if (startswith(line,"Threads")) {
+        } else if (startswith(line, "Threads")) {
             tprintf(line);
         }
     }
@@ -408,6 +436,24 @@ static void read_io() {
 
     fclose_untraced(f);
 }
+#endif
+
+#ifdef __APPLE__
+void read_rusage() {
+    struct rusage usage;
+    if (getrusage(RUSAGE_SELF, &usage) < 0) {
+        printerr("getrusage() failed: %s\n", strerror(errno));
+        return;
+    }
+
+    double real_utime = usage.ru_utime.tv_sec + (usage.ru_utime.tv_usec / 1.0e6);
+    double real_stime = usage.ru_stime.tv_sec + (usage.ru_stime.tv_usec / 1.0e6);
+
+    tprintf("utime: %lf\n", real_utime);
+    tprintf("stime: %lf\n", real_stime);
+    tprintf("VmHWM: %lu\n", usage.ru_maxrss / 1024);
+}
+#endif
 
 /* Determine which paths should be traced */
 static int should_trace(const char *path) {
@@ -707,14 +753,30 @@ static void __attribute__((constructor)) interpose_init(void) {
     struct rlimit nofile_limit;
     getrlimit(RLIMIT_NOFILE, &nofile_limit);
     max_descriptors = nofile_limit.rlim_max;
+    if (max_descriptors <= 0 || max_descriptors >= 1024) {
+        max_descriptors = 1024;
+    }
     descriptors = (Descriptor *)calloc(sizeof(Descriptor), max_descriptors);
     if (descriptors == NULL) {
-        printerr("calloc: %s\n", strerror(errno));
+        printerr("Unable to allocate descriptor table (%d): calloc: %s\n", max_descriptors, strerror(errno));
     }
 
     debug("Max descriptors: %d", max_descriptors);
 
     tprintf("start: %lf\n", get_time());
+    tprintf("Pid: %ld\n", getpid());
+    tprintf("PPid: %ld\n", getppid());
+
+    /* This is hacky, but there is no good way to get the path to the executable
+     * on Mac OS X. It turns out that argv[0] is the first string after the NULL
+     * terminator of the environment. We exploit that to find the exe here.
+     */
+    char **argv0 = environ;
+    while (*argv0 != NULL) {
+        argv0++;
+    }
+    argv0++;
+    tprintf("exe: %s\n", *argv0);
 }
 
 /* Library finalizer function */
@@ -725,10 +787,18 @@ static void __attribute__((destructor)) interpose_fini(void) {
         trace_close(i);
     }
 
+#ifdef __linux__
+    /* Read all the process stats from /proc */
     read_exe();
     read_status();
     read_stat();
     read_io();
+#endif
+
+#ifdef __APPLE__
+    /* Since there is no /proc on Mac OS X, we have to use getrusage */
+    read_rusage();
+#endif
 
     tprintf("stop: %lf\n", get_time());
 
@@ -813,6 +883,7 @@ int open(const char *path, int oflag, ...) {
     return rc;
 }
 
+#ifdef open64
 int open64(const char *path, int oflag, ...) {
     debug("open64");
 
@@ -836,6 +907,7 @@ int open64(const char *path, int oflag, ...) {
 
     return rc;
 }
+#endif
 
 int openat(int dirfd, const char *path, int oflag, ...) {
     debug("openat");
@@ -861,6 +933,7 @@ int openat(int dirfd, const char *path, int oflag, ...) {
     return rc;
 }
 
+#ifdef openat64
 int openat64(int dirfd, const char *path, int oflag, ...) {
     debug("openat64");
 
@@ -884,6 +957,7 @@ int openat64(int dirfd, const char *path, int oflag, ...) {
 
     return rc;
 }
+#endif
 
 int creat(const char *path, mode_t mode) {
     debug("creat");
@@ -901,6 +975,7 @@ int creat(const char *path, mode_t mode) {
     return rc;
 }
 
+#ifdef creat64
 int creat64(const char *path, mode_t mode) {
     debug("creat64");
 
@@ -916,6 +991,7 @@ int creat64(const char *path, mode_t mode) {
 
     return rc;
 }
+#endif
 
 static FILE *fopen_untraced(const char *path, const char *mode) {
     if (orig_fopen == NULL) {
@@ -937,6 +1013,7 @@ FILE *fopen(const char *path, const char *mode) {
     return f;
 }
 
+#ifdef fopen64
 FILE *fopen64(const char *path, const char *mode) {
     debug("fopen64");
 
@@ -952,6 +1029,7 @@ FILE *fopen64(const char *path, const char *mode) {
 
     return f;
 }
+#endif
 
 FILE *freopen(const char *path, const char *mode, FILE *stream) {
     debug("freopen");
@@ -969,6 +1047,7 @@ FILE *freopen(const char *path, const char *mode, FILE *stream) {
     return f;
 }
 
+#ifdef freopen64
 FILE *freopen64(const char *path, const char *mode, FILE *stream) {
     debug("freopen64");
 
@@ -984,6 +1063,7 @@ FILE *freopen64(const char *path, const char *mode, FILE *stream) {
 
     return f;
 }
+#endif
 
 int close(int fd) {
     debug("close");
@@ -1106,6 +1186,7 @@ ssize_t pread(int fd, void *buf, size_t count, off_t offset) {
     return rc;
 }
 
+#ifdef pread64
 ssize_t pread64(int fd, void *buf, size_t count, off_t offset) {
     debug("pread64");
 
@@ -1121,6 +1202,7 @@ ssize_t pread64(int fd, void *buf, size_t count, off_t offset) {
 
     return rc;
 }
+#endif
 
 ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset) {
     debug("pwrite");
@@ -1138,6 +1220,7 @@ ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset) {
     return rc;
 }
 
+#ifdef pwrite64
 ssize_t pwrite64(int fd, const void *buf, size_t count, off_t offset) {
     debug("pwrite64");
 
@@ -1153,6 +1236,7 @@ ssize_t pwrite64(int fd, const void *buf, size_t count, off_t offset) {
 
     return rc;
 }
+#endif
 
 ssize_t readv(int fd, const struct iovec *iov, int iovcnt) {
     debug("readv");
@@ -1432,6 +1516,7 @@ ssize_t send(int sockfd, const void *buf, size_t len, int flags) {
     return rc;
 }
 
+#ifdef __linux__
 ssize_t sendfile(int out_fd, int in_fd, off_t *offset, size_t count) {
     debug("sendfile");
 
@@ -1448,6 +1533,7 @@ ssize_t sendfile(int out_fd, int in_fd, off_t *offset, size_t count) {
 
     return rc;
 }
+#endif
 
 ssize_t sendto(int sockfd, const void *buf, size_t len, int flags,
                const struct sockaddr *dest_addr, socklen_t addrlen) {

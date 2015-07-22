@@ -214,9 +214,7 @@ static void helpMe(const AppInfo* run) {
             " -t\tEnable resource usage tracing with ptrace\n"
             " -z\tEnable system call interposition to get files and I/O\n"
 #endif
-#ifdef LINUX
             " -Z\tEnable library call interposition to get files and I/O\n"
-#endif
            );
 
     /* avoid printing of results in exit handler */
@@ -342,6 +340,8 @@ int main(int argc, char* argv[]) {
     char* workdir = NULL;
     mylist_t initial;
     mylist_t final;
+
+    argv0 = argv[0];
 
     /* premature init with defaults */
     if (mylist_init(&initial)) return 43;

@@ -30,13 +30,16 @@ OBJS+=invoke.o
 OBJS+=pegasus-kickstart.o
 OBJS+=procinfo.o
 
+LIBTARGET = 
+
 ifeq (DARWIN,${SYSTEM})
     OBJS += machine/darwin.o
+    LIBTARGET = libinterpose.dylib
 endif
 
 ifeq (LINUX,${SYSTEM})
 ifeq (x86_64,${ARCH})
-    TARGET += libinterpose.so
+    LIBTARGET = libinterpose.so
 endif
     CFLAGS += $(shell getconf LFS_CFLAGS 2>>/dev/null)
     LDFLAGS += $(shell getconf LFS_LDFLAGS 2>>/dev/null)
@@ -52,23 +55,23 @@ SRCS=$(OBJS:.o=.c)
 %.o : %.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) $< -c -o $@
 
-all: $(TARGET)
+all: $(TARGET) $(LIBTARGET)
 
 pegasus-kickstart: $(OBJS)
 	$(LD) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-libinterpose.so: interpose.c
-	$(CC) $(CFLAGS) -std=gnu99 -shared -fPIC -o libinterpose.so interpose.c -ldl
+$(LIBTARGET): interpose.o
+	$(LD) $(LDFLAGS) -shared -fPIC -o $@ $^ -ldl
 
 version.h:
 	$(CURDIR)/../../../release-tools/getversion --header > $(CURDIR)/version.h
 
-install: $(TARGET)
+install: $(TARGET) $(LIBTARGET)
 	$(INSTALL) -m 0755 pegasus-kickstart $(prefix)/bin
 ifeq (LINUX,${SYSTEM})
 ifeq (x86_64,${ARCH})
 	mkdir -p $(libdir)
-	$(INSTALL) -m 0755 libinterpose.so $(libdir)
+	$(INSTALL) -m 0755 $(LIBTARGET) $(libdir)
 endif
 endif
 
@@ -76,12 +79,12 @@ depends.mk: $(SRCS) version.h
 	$(CC) -MM $(SRCS) > $@
 
 clean:
-	$(RM) *.o *.so machine/*.o core core.* version.h depends.mk
+	$(RM) *.o *.so *.dylib machine/*.o core core.* version.h depends.mk
 
 distclean:
 	$(RM) $(TARGET)
 
-test: $(TARGET)
+test: $(TARGET) $(LIBTARGET)
 	cd $(CURDIR)/test && ./test.sh
 
 -include depends.mk

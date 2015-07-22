@@ -19,6 +19,8 @@
 #include "statinfo.h"
 #include "jobinfo.h"
 
+extern char *argv0;
+
 extern int mysystem(AppInfo* appinfo, JobInfo* jobinfo);
 
 #endif /* _MYSYSTEM_H */

@@ -507,24 +507,30 @@ int printXMLProcInfo(FILE *out, int indent, ProcInfo* procs) {
     for (i = procs; i; i = i->next) {
         /* This means that the trace file was probably incomplete */
         if (i->pid == 0) {
-            printerr("Bad <proc> record: trace file may be incomplete");
+            printerr("Bad <proc> record: trace file may be incomplete\n");
         }
 
         /* Skip non-main threads in multithreaded programs */
         // XXX How does this affect FileInfo?
-        if (i->tgid != i->pid) continue;
+        if (i->tgid != 0 && i->tgid != i->pid) continue;
 
         fprintf(out, "%*s<proc ppid=\"%d\" pid=\"%d\" exe=\"%s\" "
                 "start=\"%lf\" stop=\"%lf\" utime=\"%lf\" stime=\"%lf\" "
-                "iowait=\"%lf\" threads=\"%d\" "
-                "vmpeak=\"%d\" rsspeak=\"%d\" rchar=\"%"PRIu64"\" wchar=\"%"PRIu64"\" "
+                "rsspeak=\"%d\""
+#ifdef __linux__
+                " iowait=\"%lf\" threads=\"%d\" "
+                "vmpeak=\"%d\" rchar=\"%"PRIu64"\" wchar=\"%"PRIu64"\" "
                 "rbytes=\"%"PRIu64"\" wbytes=\"%"PRIu64"\" cwbytes=\"%"PRIu64"\" "
-                "syscr=\"%"PRIu64"\" syscw=\"%"PRIu64"\"", 
-                indent, "", i->ppid, i->pid, i->exe, 
-                i->start, i->stop, i->utime, i->stime, i->iowait, i->threads,
-                i->vmpeak, i->rsspeak, i->rchar, i->wchar, 
-                i->read_bytes, i->write_bytes, i->cancelled_write_bytes, 
-                i->syscr, i->syscw);
+                "syscr=\"%"PRIu64"\" syscw=\"%"PRIu64"\""
+#endif
+                , indent, "", i->ppid, i->pid, i->exe,
+                i->start, i->stop, i->utime, i->stime, i->rsspeak
+#ifdef __linux__
+                , i->iowait, i->threads, i->vmpeak, i->rchar, i->wchar,
+                i->read_bytes, i->write_bytes, i->cancelled_write_bytes,
+                i->syscr, i->syscw
+#endif
+               );
         if (i->files == NULL && i->sockets == NULL) {
             fprintf(out, "/>\n");
         } else {

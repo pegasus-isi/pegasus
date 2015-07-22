@@ -46,6 +46,8 @@
 
 extern char **environ;
 
+char *argv0;
+
 struct event_loop_ctx {
     AppInfo *appinfo;
     JobInfo *jobinfo;
@@ -57,24 +59,37 @@ struct event_loop_ctx {
 #endif
 };
 
+#ifdef __APPLE__
+#define LIBINAME "libinterpose.dylib"
+#define PRELOAD "DYLD_INSERT_LIBRARIES"
+#else
+#define LIBINAME "libinterpose.so"
+#define PRELOAD "LD_PRELOAD"
+#endif
+
 /* Find the path to the interposition library */
 static int findInterposeLibrary(char *path, int pathsize) {
     char kickstart[BUFSIZ];
     char lib[BUFSIZ];
 
+#ifdef __linux__
     // Get the full path to the kickstart executable
     int size = readlink("/proc/self/exe", kickstart, BUFSIZ);
     if (size < 0) {
         printerr("Unable to readlink /proc/self/exe");
         return -1;
     }
+#endif
+#ifdef __APPLE__
+    realpath(argv0, kickstart);
+#endif
 
     // Find the directory containing kickstart
     char *dir = dirname(kickstart);
 
     // Check if the library is in the kickstart dir
     strcpy(lib, dir);
-    strcat(lib, "/libinterpose.so");
+    strcat(lib, "/"LIBINAME);
     if (access(lib, R_OK) == 0) {
         strncpy(path, lib, pathsize);
         return 0;
@@ -84,7 +99,7 @@ static int findInterposeLibrary(char *path, int pathsize) {
 
     // Try the ../lib/pegasus/ dir instead
     strcpy(lib, homedir);
-    strcat(lib, "/lib/pegasus/libinterpose.so");
+    strcat(lib, "/lib/pegasus/"LIBINAME);
     if (access(lib, R_OK) == 0) {
         strncpy(path, lib, pathsize);
         return 0;
@@ -92,7 +107,7 @@ static int findInterposeLibrary(char *path, int pathsize) {
 
     // Try the ../lib64/pegasus/ dir
     strcpy(lib, homedir);
-    strcat(lib, "/lib64/pegasus/libinterpose.so");
+    strcat(lib, "/lib64/pegasus/"LIBINAME);
     if (access(lib, R_OK) == 0) {
         strncpy(path, lib, pathsize);
         return 0;
@@ -369,21 +384,27 @@ static void trySetInterposeEnv(const char *tempdir, const char *trace_file_prefi
 
     /* If KICKSTART_PREFIX or LD_PRELOAD are already set then we can't trace */
     if (getenv("KICKSTART_PREFIX") != NULL) {
+        printerr("Error setting libinterpose environment: KICKSTART_PREFIX is set");
         return;
     }
-    if (getenv("LD_PRELOAD") != NULL) {
+
+    if (getenv(PRELOAD) != NULL) {
+        printerr("Error setting libinterpose environment: "PRELOAD" is set");
         return;
     }
 
     /* If the interpose library can't be found, then we can't trace */
     char libpath[BUFSIZ];
     if (findInterposeLibrary(libpath, BUFSIZ) < 0) {
-        printerr("Cannot locate libinterpose.so\n");
+        printerr("Cannot locate libinterpose\n");
         return;
     }
 
-    /* Set LD_PRELOAD to the intpose library */
-    setenv("LD_PRELOAD", libpath, 1);
+    /* Set up environment for libinterpose */
+    setenv(PRELOAD, libpath, 1);
+#ifdef __APPLE__
+    setenv("DYLD_FORCE_FLAT_NAMESPACE", "1", 1);
+#endif
 
     /* Set KICKSTART_PREFIX to be tempdir/prefix */
     char kickstart_prefix[BUFSIZ];
