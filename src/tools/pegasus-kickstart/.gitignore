@@ -1,3 +1,4 @@
 pegasus-kickstart
 version.h
 depends.mk
+libinterpose.*
