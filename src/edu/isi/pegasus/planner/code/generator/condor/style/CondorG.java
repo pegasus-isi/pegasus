@@ -151,7 +151,9 @@ public class CondorG extends Abstract {
         if( profiles.containsKey( Pegasus.RUNTIME_KEY ) ){
             long runtime = Long.parseLong( profiles.getStringValue( Pegasus.RUNTIME_KEY ));
             if( !rsl.containsKey(Globus.MAX_WALLTIME_KEY) ){
-                rsl.construct(Globus.MAX_WALLTIME_KEY, Long.toString(runtime/60) );
+                //take the ceiling value
+                long runtimeM= (long) Math.ceil( runtime/60.0 );
+                rsl.construct(Globus.MAX_WALLTIME_KEY, Long.toString(runtimeM) );
             }
         }
         

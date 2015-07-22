@@ -18,13 +18,9 @@ package edu.isi.pegasus.planner.code.generator.condor.style;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 import edu.isi.pegasus.planner.namespace.Pegasus;
-import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -103,7 +99,7 @@ public class GliteTest {
     public void testPegasusProfileMAXWalltime() throws CondorStyleException{
         Job j = new Job();
         j.vdsNS.construct( Pegasus.RUNTIME_KEY, "100" );
-        this.testWithRegex(j, ".*WALLTIME==\"([0-9]+\\:[0-9]+\\:[0-9]+)\".*", "00:01:00");
+        this.testWithRegex(j, ".*WALLTIME==\"([0-9]+\\:[0-9]+\\:[0-9]+)\".*", "00:02:00");
     }
     
     @Test
