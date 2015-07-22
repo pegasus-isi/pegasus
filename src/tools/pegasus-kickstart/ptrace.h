@@ -1,7 +1,7 @@
 #ifndef _PTRACE_H
 #define _PTRACE_H
 
-#ifdef LINUX
+#ifdef __linux__
 
 #include <linux/version.h>
 

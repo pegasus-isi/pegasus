@@ -16,15 +16,15 @@
 
 #include "machine.h"
 
-#ifdef LINUX
+#ifdef __linux__
 #define __MFLAG 1
 #include "machine/linux.h"
-#endif /* LINUX */
+#endif
 
-#ifdef DARWIN
+#ifdef __APPLE__
 #define __MFLAG 2
 #include "machine/darwin.h"
-#endif /* DARWIN */
+#endif
 
 #ifndef __MFLAG
 #include "machine/basic.h"

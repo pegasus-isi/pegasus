@@ -515,7 +515,7 @@ static int event_loop(struct event_loop_ctx *ctx) {
         }
     }
 #else
-#ifdef LINUX
+#ifdef __linux__
     /* TODO Fix TRACING CASE */
     if (ctx->appinfo->enableTracing) {
         /* TODO If this returns an error, then we need to untrace all the children and try the wait instead */

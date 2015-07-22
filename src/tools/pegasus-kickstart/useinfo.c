@@ -33,7 +33,7 @@ int printXMLUseInfo(FILE *out, int indent, const char* id,
             id, doubletime(use->ru_utime), doubletime(use->ru_stime));
 
     fprintf(out, " maxrss=\"%lu\"", 
-#ifdef DARWIN
+#ifdef __APPLE__
             /* On Mac OS X this is in bytes */
             use->ru_maxrss / 1024
 #else

@@ -46,8 +46,6 @@ endif
     OBJS += machine/linux.o syscall.o
 endif
 
-CFLAGS += -D${SYSTEM}
-
 SRCS=$(OBJS:.o=.c)
 
 .PHONY: install clean test

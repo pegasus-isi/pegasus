@@ -27,7 +27,7 @@
 
 #include <sys/ioctl.h>
 
-#ifdef DARWIN
+#ifdef __APPLE__
 #include <sys/sockio.h>
 #endif
 
