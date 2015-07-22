@@ -768,6 +768,7 @@ static void __attribute__((constructor)) interpose_init(void) {
     tprintf("Pid: %ld\n", getpid());
     tprintf("PPid: %ld\n", getppid());
 
+#ifdef __APPLE__
     /* This is hacky, but there is no good way to get the path to the executable
      * on Mac OS X. It turns out that argv[0] is the first string after the NULL
      * terminator of the environment. We exploit that to find the exe here.
@@ -778,6 +779,7 @@ static void __attribute__((constructor)) interpose_init(void) {
     }
     argv0++;
     tprintf("exe: %s\n", *argv0);
+#endif
 }
 
 /* Library finalizer function */
