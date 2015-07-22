@@ -438,7 +438,6 @@ static void read_io() {
 }
 #endif
 
-#ifdef __APPLE__
 void read_rusage() {
     struct rusage usage;
     if (getrusage(RUSAGE_SELF, &usage) < 0) {
@@ -451,9 +450,11 @@ void read_rusage() {
 
     tprintf("utime: %lf\n", real_utime);
     tprintf("stime: %lf\n", real_stime);
+#ifdef __APPLE__
+    /* On Linux this comes from /proc/self/status */
     tprintf("VmHWM: %lu\n", usage.ru_maxrss / 1024);
-}
 #endif
+}
 
 /* Determine which paths should be traced */
 static int should_trace(const char *path) {
@@ -795,10 +796,9 @@ static void __attribute__((destructor)) interpose_fini(void) {
     read_io();
 #endif
 
-#ifdef __APPLE__
-    /* Since there is no /proc on Mac OS X, we have to use getrusage */
+    /* getrusage seems to give better results than /proc for utime and stime */
+    /* On Mac OS X, getrusage is the only source for utime and stime and RSS */
     read_rusage();
-#endif
 
     tprintf("stop: %lf\n", get_time());
 
