@@ -61,7 +61,10 @@ pegasus-kickstart: $(OBJS)
 	$(LD) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
 $(LIBTARGET): interpose.o
-	$(LD) $(LDFLAGS) -shared -fPIC -o $@ $^ -ldl
+	$(LD) $(LDFLAGS) -shared -o $@ $^ -ldl
+
+interpose.o: interpose.c
+	$(CC) $(CFLAGS) -fPIC -c $^ -o $@
 
 version.h:
 	$(CURDIR)/../../../release-tools/getversion --header > $(CURDIR)/version.h
