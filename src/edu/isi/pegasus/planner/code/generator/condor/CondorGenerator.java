@@ -354,8 +354,6 @@ public class CondorGenerator extends Abstract {
             mInitializeGridStart = false;
         }
         
-        CodeGenerator storkGenerator = CodeGeneratorFactory.loadInstance( mBag, "Stork" );
-
         String className   = this.getClass().getName();
         String dagFileName = getDAGFilename( dag, ".dag" );
         mDone = false;
@@ -450,20 +448,7 @@ public class CondorGenerator extends Abstract {
             }
 
                  
-            //write out the submit file for each job
-            //in addition makes the corresponding
-            //entries in the .dag file corresponding
-            //to the job and it's postscript
-            if ( job.getSiteHandle().equals( "stork" ) ) {
-                //write the job information in the .dag file
-                StringBuffer dagString = new StringBuffer();
-                dagString.append( "DATA " ).append( job.getName() ).append( " " );
-                dagString.append( job.getName() ).append( ".stork" );
-                printDagString( dagString.toString() );
-                storkGenerator.generateCode( dag, job  );
-            }
-            //for dag jobs we dont need to generate submit file
-            else if( job instanceof DAGJob ){
+            if( job instanceof DAGJob ){
                 //SUBDAG EXTERNAL  B  inner.dag
                 DAGJob djob = ( DAGJob )job;
                 
