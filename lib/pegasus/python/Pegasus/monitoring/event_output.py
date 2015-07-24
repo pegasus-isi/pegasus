@@ -127,6 +127,9 @@ class OutputURL:
             self.host = self.netloc
             self.port = None
 
+        if ':' in user_pass:
+            self.user, self.password = user_pass.split( ':', 1 )
+
 class EventSink(object):
     """
     Base class for an Event Sink.
@@ -243,9 +246,11 @@ class AMQPEventSink(EventSink):
     """
     Write wflow event logs to an AMQP server.
     """
-    EXCH_OPTS = {'type' : 'topic'}
+    EXCH_OPTS = {'type' : 'topic', 'durable' : True, 'auto_delete' : False}
+    DEFAULT_AMQP_VIRTUAL_HOST="pegasus"  #should be /
+
     def __init__(self, host, port, exch=None, encoder=None,
-                 userid='guest', password='guest', virtual_host='/',
+                 userid='guest', password='guest', virtual_host=DEFAULT_AMQP_VIRTUAL_HOST,
                  ssl=False, connect_timeout=None, **kw):
         super(AMQPEventSink, self).__init__()
         self._encoder = encoder
@@ -262,6 +267,7 @@ class AMQPEventSink(EventSink):
         if self._isdbg:
             self._log.debug("send.start event=%s" % (full_event))
         data = self._encoder(event=event, **kw)
+        print "routing key %s " , full_event
         self._channel.basic_publish(amqp.Message(body=data),
                                     exchange=self._exch, routing_key=full_event)
         if self._isdbg:
@@ -326,7 +332,8 @@ def create_wf_event_sink(dest, enc=None,prefix=STAMPEDE_NS, props=None, **kw):
         while url.path.startswith('/'):
             url.path = url.path[1:]
         sink = AMQPEventSink(url.host, url.port, exch=url.path,
-                             encoder=pick_encfn(enc), **kw)
+                             userid = url.user, password=url.password, ssl=True,
+                             encoder=pick_encfn(enc,prefix), **kw)
         _type, _name="AMQP", "%s:%s/%s" % (url.host, url.port, url.path)
     else:
         # load the appropriate DBEvent on basis of prefix passed
