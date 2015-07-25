@@ -354,15 +354,20 @@ public class CondorGenerator extends Abstract {
             mInitializeGridStart = false;
         }
         
-        String className   = this.getClass().getName();
-        String dagFileName = getDAGFilename( dag, ".dag" );
+        String orgDAGFileName = getDAGFilename( dag, ".dag" );
+        File orgDAGFile = new File ( mSubmitFileDir, orgDAGFileName );
+        
+        //PM-966 we need to write out first to a tmp dag file
+        //and then do atomic rename
+        String dagFileName = orgDAGFileName + ".tmp";
+        
         mDone = false;
 
-        File dagFile = null;
+        File dagFile = new File ( mSubmitFileDir, dagFileName );;
         Collection<File> result = new ArrayList(1);
         if ( dag.isEmpty() ) {
             //call the callout before returns
-            concreteDagEmpty( dagFileName, dag );
+            concreteDagEmpty( orgDAGFileName, dag );
             return result ;
         }
 
@@ -419,7 +424,7 @@ public class CondorGenerator extends Abstract {
 
         //initialize the file handle to the dag
         //file and print it's header
-        dagFile = initializeDagFileWriter( dagFileName, dag );
+        initializeDagFileWriter( dagFile , dag );
         result.add( dagFile );
 
         //write out any category based dagman knobs to the dagman file
@@ -509,7 +514,7 @@ public class CondorGenerator extends Abstract {
         //writing the tail of .dag file
         //that contains the relation pairs
         this.writeDagFileTail( dag );
-        mLogger.log("Written Dag File : " + dagFileName.toString(),
+        mLogger.log("Written Dag File : " + dagFileName,
                     LogManager.DEBUG_MESSAGE_LEVEL);
 
         //symlink the log file to a file in the temp directory if possible
@@ -522,15 +527,7 @@ public class CondorGenerator extends Abstract {
         mLogger.log( "Writing out the DOT file ", LogManager.DEBUG_MESSAGE_LEVEL );
         this.writeDOTFile( getDAGFilename( dag, ".dot"), dag );
 
-        /*
-        //we no longer write out the job.map file
-        //write out the netlogger file
-        mLogger.log( "Written out job.map file", LogManager.DEBUG_MESSAGE_LEVEL );
-        this.writeJobMapFile( getDAGFilename( dag, ".job.map"), dag );
-        */
-
-        
-
+       
         //write out the notifications input file
         this.writeOutNotifications( dag );
 
@@ -546,12 +543,20 @@ public class CondorGenerator extends Abstract {
         //write out the braindump file
         this.writeOutBraindump( dag );
         
+        //PM-966 rename the tmp dag file back to the original name
+        //before we write out the dag.condor.sub file
+        
+        dagFile.renameTo( orgDAGFile );
+        mLogger.log("Renamed temporary dag file to : " + orgDAGFile,
+                    LogManager.DEBUG_MESSAGE_LEVEL);
+        
         //write out the dag.condor.sub file
-        this.writeOutDAGManSubmitFile( dag, dagFile );
+        this.writeOutDAGManSubmitFile( dag, orgDAGFile );
         
         //we are donedirectory
         mDone = true;
-
+        
+        
         return result;
     }
 
@@ -1045,19 +1050,13 @@ public class CondorGenerator extends Abstract {
     /**
      * Initializes the file handler to the dag file and writes the header to it.
      *
-     * @param filename     basename of dag file to be written.
-     * @param dag        the workflow
-     *
-     * @return the File object for the DAG file.
+     * @param dag    the dag file to be written out to
+     * @param workflow   the workflow
      *
      * @throws CodeGeneratorException in case of any error occuring code generation.
      */
-    protected File initializeDagFileWriter(String filename, ADag workflow )
+    protected void initializeDagFileWriter( File dag, ADag workflow )
                                                        throws CodeGeneratorException{
-        // initialize file handler
-
-        filename = mSubmitFileDir + "/" + filename;
-        File dag = new File(filename);
 
 
         try {
@@ -1073,10 +1072,9 @@ public class CondorGenerator extends Abstract {
                            workflow.getCount() );
             printDagString(this.mSeparator);
         } catch (Exception e) {
-            throw new CodeGeneratorException( "While writing to DAG FILE " + filename,
+            throw new CodeGeneratorException( "While writing to DAG FILE " + dag,
                                               e);
         }
-        return dag;
     }
 
 
