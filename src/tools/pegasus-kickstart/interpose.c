@@ -287,12 +287,10 @@ static Descriptor *get_descriptor(int fd) {
 /* Read /proc/self/exe to get path to executable */
 static void read_exe() {
     debug("Reading exe");
-    char name[BUFSIZ];
-    snprintf(name, BUFSIZ, "/proc/%d/exe", getpid());
     char exe[BUFSIZ];
-    int size = readlink(name, exe, BUFSIZ);
+    int size = readlink("/proc/self/exe", exe, BUFSIZ);
     if (size < 0) {
-        printerr("libinterpose: Unable to readlink %s: %s\n", name, strerror(errno));
+        printerr("libinterpose: Unable to readlink /proc/self/exe: %s\n", strerror(errno));
         return;
     }
     exe[size] = '\0';
@@ -903,6 +901,8 @@ static void __attribute__((constructor)) interpose_init(void) {
     debug("Max descriptors: %d", max_descriptors);
 
     tprintf("start: %lf\n", get_time());
+
+    read_exe();
 
 #ifdef HAS_PAPI
     init_papi();
