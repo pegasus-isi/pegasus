@@ -131,10 +131,8 @@ static int proc_read_meminfo(ProcInfo *item) {
     while (fgets(line, BUFSIZ, f) != NULL) {
         if (startswith(line, "PPid")) {
             sscanf(line,"PPid:%d\n",&(item->ppid));
-        } else if (startswith(line, "Tgid")) {
-            sscanf(line,"Tgid:%d\n",&(item->tgid));
         } else if (startswith(line, "Threads")) {
-            sscanf(line,"Threads:%d\n",&(item->threads));
+            sscanf(line,"Threads:%d\n",&(item->fin_threads));
         } else if (startswith(line,"VmPeak")) {
             sscanf(line,"VmPeak:%d kB\n",&(item->vmpeak));
         } else if (startswith(line,"VmHWM")) {
@@ -509,15 +507,9 @@ int printXMLProcInfo(FILE *out, int indent, ProcInfo* procs) {
             printerr("Bad <proc> record: trace file may be incomplete");
         }
 
-        /* Skip non-main threads in multithreaded programs */
-        // XXX How does this affect FileInfo?
-        if (i->tgid != i->pid) {
-            continue;
-        }
-
         fprintf(out, "%*s<proc ppid=\"%d\" pid=\"%d\" exe=\"%s\" "
                 "start=\"%lf\" stop=\"%lf\" utime=\"%lf\" stime=\"%lf\" "
-                "iowait=\"%lf\" threads=\"%d\" "
+                "iowait=\"%lf\" finthreads=\"%d\" maxthreads=\"%d\" totthreads=\"%d\" "
                 "vmpeak=\"%d\" rsspeak=\"%d\" rchar=\"%"PRIu64"\" wchar=\"%"PRIu64"\" "
                 "rbytes=\"%"PRIu64"\" wbytes=\"%"PRIu64"\" cwbytes=\"%"PRIu64"\" "
                 "syscr=\"%"PRIu64"\" syscw=\"%"PRIu64"\""
@@ -525,7 +517,8 @@ int printXMLProcInfo(FILE *out, int indent, ProcInfo* procs) {
                 " totins=\"%lld\" ldins=\"%lld\" srins=\"%lld\" fpins=\"%lld\" fpops=\"%lld\""
 #endif
                 , indent, "", i->ppid, i->pid, i->exe,
-                i->start, i->stop, i->utime, i->stime, i->iowait, i->threads,
+                i->start, i->stop, i->utime, i->stime, i->iowait,
+                i->fin_threads, i->max_threads, i->tot_threads,
                 i->vmpeak, i->rsspeak, i->rchar, i->wchar,
                 i->read_bytes, i->write_bytes, i->cancelled_write_bytes,
                 i->syscr, i->syscw

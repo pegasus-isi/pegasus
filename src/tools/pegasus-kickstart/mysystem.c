@@ -253,14 +253,13 @@ static ProcInfo *processTraceFile(const char *fullpath) {
             sscanf(line, "Pid:%d\n", &(proc->pid));
         } else if (startswith(line, "PPid")) {
             sscanf(line,"PPid:%d\n", &(proc->ppid));
-        } else if (startswith(line, "Tgid")) {
-            sscanf(line,"Tgid:%d\n", &(proc->tgid));
         } else if (startswith(line,"VmPeak")) {
             sscanf(line,"VmPeak:%d kB\n", &(proc->vmpeak));
         } else if (startswith(line,"VmHWM")) {
             sscanf(line,"VmHWM:%d kB\n", &(proc->rsspeak));
-        } else if (startswith(line, "Threads")) {
-            sscanf(line,"Threads:%d\n", &(proc->threads));
+        } else if (startswith(line, "threads")) {
+            sscanf(line,"threads: %d %d %d\n", &(proc->fin_threads),
+                    &(proc->max_threads), &(proc->tot_threads));
         } else if (startswith(line, "utime:")) {
             sscanf(line,"utime:%lf\n", &(proc->utime));
         } else if (startswith(line, "stime:")) {

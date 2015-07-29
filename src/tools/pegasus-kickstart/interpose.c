@@ -161,6 +161,12 @@ const char DTYPE_SOCK = 2;
 static Descriptor *descriptors = NULL;
 static int max_descriptors = 0;
 
+/* Tracking the number of threads */
+static int threads = 1;
+static int tot_threads = 1;
+static int max_threads = 1;
+static pthread_mutex_t thread_counter_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 /* This is the trace file where we write information about the process */
 static FILE* trace = NULL;
 
@@ -319,7 +325,7 @@ static int endswith(const char *line, const char *tok) {
     return 1;
 }
 
-/* Read useful information from /proc/self/status */
+/* Read memory information from /proc/self/status */
 static void read_status() {
     debug("Reading status file");
 
@@ -338,17 +344,9 @@ static void read_status() {
 
     char line[BUFSIZ];
     while (fgets_untraced(line, BUFSIZ, f) != NULL) {
-        if (startswith(line, "Pid")) {
-            tprintf(line);
-        } else if (startswith(line, "PPid")) {
-            tprintf(line);
-        } else if (startswith(line, "Tgid")) {
-            tprintf(line);
-        } else if (startswith(line,"VmPeak")) {
+        if (startswith(line,"VmPeak")) {
             tprintf(line);
         } else if (startswith(line,"VmHWM")) {
-            tprintf(line);
-        } else if (startswith(line,"Threads")) {
             tprintf(line);
         }
     }
@@ -730,9 +728,31 @@ static void trace_truncate(const char *path, off_t length) {
     free(fullpath);
 }
 
+static void inc_thread_counters() {
+    pthread_mutex_lock(&thread_counter_mutex);
+    threads += 1;
+    tot_threads += 1;
+    if (threads > max_threads) {
+        max_threads = threads;
+    }
+    pthread_mutex_unlock(&thread_counter_mutex);
+}
+
+static void dec_thread_counters() {
+    pthread_mutex_lock(&thread_counter_mutex);
+    threads -= 1;
+    pthread_mutex_unlock(&thread_counter_mutex);
+}
+
+static void report_thread_counters() {
+    pthread_mutex_lock(&thread_counter_mutex);
+    tprintf("threads: %d %d %d\n", threads, max_threads, tot_threads);
+    pthread_mutex_unlock(&thread_counter_mutex);
+}
+
 #ifdef HAS_PAPI
 
-void init_papi() {
+static void init_papi() {
     int err;
 
     papi_ok = 0;
@@ -758,7 +778,7 @@ void init_papi() {
 }
 
 /* Start papi counters for a thread */
-void start_papi() {
+static void start_papi() {
     int err;
 
     if (!papi_ok) {
@@ -830,7 +850,7 @@ cleanup:
 }
 
 /* Stop an report papi counters for a thread */
-void stop_papi() {
+static void stop_papi() {
     int err;
 
     if (!papi_ok) {
@@ -902,7 +922,8 @@ static void __attribute__((constructor)) interpose_init(void) {
 
     tprintf("start: %lf\n", get_time());
 
-    read_exe();
+    tprintf("Pid: %d\n", getpid());
+    tprintf("PPid: %d\n", getppid());
 
 #ifdef HAS_PAPI
     init_papi();
@@ -919,6 +940,7 @@ static void __attribute__((destructor)) interpose_fini(void) {
     }
 
     read_exe();
+    report_thread_counters();
     read_status();
     read_stat();
     read_io();
@@ -1910,6 +1932,7 @@ int fseeko(FILE *stream, off_t offset, int whence) {
 }
 
 void interpose_pthread_cleanup(void *arg) {
+    dec_thread_counters();
 #ifdef HAS_PAPI
     stop_papi();
 #endif
@@ -1919,6 +1942,8 @@ void interpose_pthread_cleanup(void *arg) {
 /* This function wraps the start_routine of the thread provided by the user */
 void *interpose_pthread_wrapper(void *arg) {
     debug("pthread_wrapper");
+
+    inc_thread_counters();
 
     interpose_pthread_wrapper_arg *info = (interpose_pthread_wrapper_arg *)arg;
     if (info == NULL) {
