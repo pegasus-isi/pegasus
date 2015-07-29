@@ -64,6 +64,12 @@ typedef struct _ProcInfo {
 
     SockInfo *sockets;      /* Linked list of sockets */
 
+    long long PAPI_TOT_INS; /* Total instructions */
+    long long PAPI_LD_INS;  /* Load instructions */
+    long long PAPI_SR_INS;  /* Store instructions */
+    long long PAPI_FP_INS;  /* Floating point instructions */
+    long long PAPI_FP_OPS;  /* Floating point ops */
+
     struct _ProcInfo *next;
     struct _ProcInfo *prev;
 } ProcInfo;

@@ -18,6 +18,11 @@
 #include <string.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sys/syscall.h>
+#include <pthread.h>
+#ifdef HAS_PAPI
+#include <papi.h>
+#endif
 
 /* TODO Handle directories */
 /* TODO Interpose accept (for network servers) */
@@ -32,7 +37,6 @@
 /* TODO Interpose wide character I/O functions */
 /* TODO Handle I/O for stdout/stderr? */
 /* TODO asynchronous I/O from librt? */
-/* TODO Thread safety? */
 /* TODO Add r/w/a mode support? */
 /* TODO What happens if one interposed library function calls another (e.g.
  *      fopen calls fopen64)? I think internal calls are not traced.
@@ -40,6 +44,8 @@
 /* TODO What about mmap? Probably nothing we can do besides interpose
  *      mmap and assume that the total size being mapped is read/written
  */
+/* TODO Thread safety? */
+/* TODO Figure out a way to collect PAPI profiles for unterminated threads */
 
 #define printerr(fmt, ...) \
     fprintf_untraced(stderr, "libinterpose[%d]: %s[%d]: " fmt, \
@@ -134,6 +140,7 @@ static typeof(lseek64) *orig_lseek64 = NULL;
 #endif
 static typeof(fseek) *orig_fseek = NULL;
 static typeof(fseeko) *orig_fseeko = NULL;
+static typeof(pthread_create) *orig_pthread_create = NULL;
 
 typedef struct {
     char type;
@@ -157,11 +164,40 @@ static int max_descriptors = 0;
 /* This is the trace file where we write information about the process */
 static FILE* trace = NULL;
 
+#ifdef HAS_PAPI
+int papi_ok = 0;
+
+char *papi_events[] = {
+    "PAPI_TOT_INS",
+    "PAPI_LD_INS",
+    "PAPI_SR_INS",
+    "PAPI_FP_INS",
+    "PAPI_FP_OPS"
+};
+
+#define n_papi_events (sizeof(papi_events) / sizeof(char *))
+
+typedef struct {
+    int eventset;
+} interpose_papi_ctx;
+
+#endif
+
+typedef struct {
+    void *(*start_routine)(void *);
+    void *arg;
+    pthread_key_t cleanup;
+} interpose_pthread_wrapper_arg;
+
 static FILE *fopen_untraced(const char *path, const char *mode);
 static int fprintf_untraced(FILE *stream, const char *format, ...);
 static int vfprintf_untraced(FILE *stream, const char *format, va_list ap);
 static char *fgets_untraced(char *s, int size, FILE *stream);
 static int fclose_untraced(FILE *fp);
+
+static long unsigned int interpose_gettid(void) {
+    return (long unsigned int)syscall(SYS_gettid);
+}
 
 /* Open the trace file */
 static int topen() {
@@ -251,10 +287,12 @@ static Descriptor *get_descriptor(int fd) {
 /* Read /proc/self/exe to get path to executable */
 static void read_exe() {
     debug("Reading exe");
+    char name[BUFSIZ];
+    snprintf(name, BUFSIZ, "/proc/%d/exe", getpid());
     char exe[BUFSIZ];
-    int size = readlink("/proc/self/exe", exe, BUFSIZ);
+    int size = readlink(name, exe, BUFSIZ);
     if (size < 0) {
-        perror("libinterpose: Unable to readlink /proc/self/exe");
+        printerr("libinterpose: Unable to readlink %s: %s\n", name, strerror(errno));
         return;
     }
     exe[size] = '\0';
@@ -694,6 +732,156 @@ static void trace_truncate(const char *path, off_t length) {
     free(fullpath);
 }
 
+#ifdef HAS_PAPI
+
+void init_papi() {
+    int err;
+
+    papi_ok = 0;
+
+    err = PAPI_library_init(PAPI_VER_CURRENT);
+    if (err != PAPI_VER_CURRENT) {
+        printerr("PAPI_library_init failed: %s\n", PAPI_strerror(err));
+        return;
+    }
+
+    err = PAPI_thread_init(interpose_gettid);
+    if (err < 0) {
+        printerr("PAPI_thread_init failed: %s\n", PAPI_strerror(err));
+        return;
+    }
+
+    if (PAPI_num_counters() <= 0) {
+        printerr("No hardware counters or PAPI not supported\n");
+        return;
+    }
+
+    papi_ok = 1;
+}
+
+/* Start papi counters for a thread */
+void start_papi() {
+    int err;
+
+    if (!papi_ok) {
+        return;
+    }
+
+    interpose_papi_ctx *ctx = malloc(sizeof(interpose_papi_ctx));
+    if (ctx == NULL) {
+        printerr("Error allocating PAPI thread context: %s\n", strerror(errno));
+        return;
+    }
+    ctx->eventset = PAPI_NULL;
+
+    err = PAPI_register_thread();
+    if (err < 0) {
+        printerr("Error registering PAPI thread: %s\n", PAPI_strerror(err));
+    }
+
+    err = PAPI_create_eventset(&ctx->eventset);
+    if (err < 0) {
+        printerr("Unable to create PAPI event set: %s\n", PAPI_strerror(err));
+        goto cleanup;
+    }
+
+    /* Make sure all the events are available and add them to the set */
+    for (int i=0; i<n_papi_events; i++) {
+        int event;
+        err = PAPI_event_name_to_code(papi_events[i], &event);
+        if (err < 0) {
+            printerr("Error getting PAPI event code for %s: %s\n", papi_events[i], PAPI_strerror(err));
+            goto cleanup;
+        }
+
+        PAPI_event_info_t info;
+        err = PAPI_get_event_info(event, &info);
+        if (err < 0) {
+            printerr("Error getting PAPI event info for %s: %s\n", papi_events[i], PAPI_strerror(err));
+            goto cleanup;
+        }
+        if (info.count == 0) {
+            printerr("PAPI event %s not available: %s\n", papi_events[i], info.long_descr);
+            goto cleanup;
+        }
+
+        err = PAPI_add_event(ctx->eventset, event);
+        if (err < 0) {
+            printerr("Error adding PAPI event %d to event set: %s\n", i, PAPI_strerror(err));
+            goto cleanup;
+        }
+    }
+
+    err = PAPI_start(ctx->eventset);
+    if (err < 0) {
+        printerr("PAPI_start failed: %s\n", PAPI_strerror(err));
+        goto cleanup;
+    }
+
+    err = PAPI_set_thr_specific(PAPI_USR1_TLS, ctx);
+    if (err < 0) {
+        printerr("Unable to set PAPI thread context: %s\n", PAPI_strerror(err));
+        goto cleanup;
+    }
+
+    return;
+
+cleanup:
+    free(ctx);
+    return;
+}
+
+/* Stop an report papi counters for a thread */
+void stop_papi() {
+    int err;
+
+    if (!papi_ok) {
+        return;
+    }
+
+    interpose_papi_ctx *ctx = NULL;
+    err = PAPI_get_thr_specific(PAPI_USR1_TLS, (void **)&ctx);
+    if (err < 0) {
+        printerr("Unable to get PAPI thread context in stop_papi: %s\n", PAPI_strerror(err));
+        return;
+    }
+    if (ctx == NULL) {
+        return;
+    }
+
+    /* Collect counter values */
+    int have_counters = 0;
+    long long counters[n_papi_events];
+    err = PAPI_stop(ctx->eventset, counters);
+    if (err < 0) {
+        printerr("PAPI_stop failed: %s\n", PAPI_strerror(err));
+    } else {
+        have_counters = 1;
+    }
+
+    /* Unset the context value so that we don't try to stop the counters again */
+    err = PAPI_set_thr_specific(PAPI_USR1_TLS, NULL);
+    if (err < 0) {
+        printerr("Unable to unset PAPI thread context: %s\n", PAPI_strerror(err));
+    }
+
+    free(ctx);
+
+    err = PAPI_unregister_thread();
+    if (err < 0) {
+        printerr("Error unregistering PAPI thread: %s\n", PAPI_strerror(err));
+    }
+
+    /* Report counter values if we have them */
+    if (have_counters) {
+        for (int i=0; i<n_papi_events; i++) {
+            tprintf("%s: %lld\n", papi_events[i], counters[i]);
+        }
+    }
+}
+
+#endif
+
 /* Library initialization function */
 static void __attribute__((constructor)) interpose_init(void) {
     /* XXX Note that this might be called twice in one program. Java
@@ -715,11 +903,16 @@ static void __attribute__((constructor)) interpose_init(void) {
     debug("Max descriptors: %d", max_descriptors);
 
     tprintf("start: %lf\n", get_time());
+
+#ifdef HAS_PAPI
+    init_papi();
+    /* Start papi for main thread */
+    start_papi();
+#endif
 }
 
 /* Library finalizer function */
 static void __attribute__((destructor)) interpose_fini(void) {
-
     /* Look for descriptors not explicitly closed */
     for(int i=0; i<max_descriptors; i++) {
         trace_close(i);
@@ -729,6 +922,11 @@ static void __attribute__((destructor)) interpose_fini(void) {
     read_status();
     read_stat();
     read_io();
+
+#ifdef HAS_PAPI
+    /* Stop papi for (hopefully) main thread */
+    stop_papi();
+#endif
 
     tprintf("stop: %lf\n", get_time());
 
@@ -1645,7 +1843,6 @@ FILE *tmpfile(void) {
     return f;
 }
 
-
 off_t lseek(int fd, off_t offset, int whence) {
     debug("lseek %d %ld %d", fd, offset, whence);
 
@@ -1710,5 +1907,57 @@ int fseeko(FILE *stream, off_t offset, int whence) {
     }
 
     return result;
+}
+
+void interpose_pthread_cleanup(void *arg) {
+#ifdef HAS_PAPI
+    stop_papi();
+#endif
+    free(arg);
+}
+
+/* This function wraps the start_routine of the thread provided by the user */
+void *interpose_pthread_wrapper(void *arg) {
+    debug("pthread_wrapper");
+
+    interpose_pthread_wrapper_arg *info = (interpose_pthread_wrapper_arg *)arg;
+    if (info == NULL) {
+        /* Probably won't ever happen */
+        printerr("FATAL ERROR: interpose_pthread_wrapper argument was NULL: pthread_create start_routine lost\n");
+        exit(1);
+    }
+
+    /* This sets up a key whose destructor cleans up the thread wrapper */
+    if (pthread_key_create(&info->cleanup, interpose_pthread_cleanup) != 0) {
+        printerr("Error creating cleanup key for thread %lu\n", interpose_gettid());
+    }
+    if (pthread_setspecific(info->cleanup, arg) != 0) {
+        printerr("Unable to set cleanup key for thread %lu\n", interpose_gettid());
+    }
+
+#ifdef HAS_PAPI
+    start_papi();
+#endif
+
+    return info->start_routine(info->arg);
+}
+
+int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_routine)(void *), void *arg) {
+    debug("pthread_create");
+
+    if (orig_pthread_create == NULL) {
+        orig_pthread_create = dlsym(RTLD_NEXT, "pthread_create");
+    }
+
+    interpose_pthread_wrapper_arg *info = malloc(sizeof(interpose_pthread_wrapper_arg));
+    if (info == NULL) {
+        printerr("Error creating pthread wrapper: %s\n", strerror(errno));
+        return (*orig_pthread_create)(thread, attr, start_routine, arg);
+    }
+
+    info->start_routine = start_routine;
+    info->arg = arg;
+
+    return (*orig_pthread_create)(thread, attr, interpose_pthread_wrapper, info);
 }
 

@@ -37,6 +37,14 @@ endif
 ifeq (LINUX,${SYSTEM})
 ifeq (x86_64,${ARCH})
     TARGET += libinterpose.so
+    PAPI_SO=$(shell /sbin/ldconfig -p | grep libpapi.so)
+    PAPI_H=$(shell ls /usr/include/papi.h)
+    ifneq ($(PAPI_SO),)
+        ifneq ($(PAPI_H),)
+            CFLAGS += -DHAS_PAPI
+            LI_LDFLAGS += -lpapi
+        endif
+    endif
 endif
     CFLAGS += $(shell getconf LFS_CFLAGS 2>>/dev/null)
     LDFLAGS += $(shell getconf LFS_LDFLAGS 2>>/dev/null)
@@ -58,7 +66,7 @@ pegasus-kickstart: $(OBJS)
 	$(LD) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
 libinterpose.so: interpose.c
-	$(CC) $(CFLAGS) -std=gnu99 -shared -fPIC -o libinterpose.so interpose.c -ldl
+	$(CC) $(CFLAGS) -pthread -shared -fPIC -o libinterpose.so interpose.c -ldl $(LI_LDFLAGS)
 
 version.h:
 	$(CURDIR)/../../../release-tools/getversion --header > $(CURDIR)/version.h

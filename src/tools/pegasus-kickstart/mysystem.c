@@ -234,6 +234,7 @@ static ProcInfo *processTraceFile(const char *fullpath) {
     /* Read data from the trace file */
     int lines = 0;
     char line[BUFSIZ];
+    long long llval;
     while (fgets(line, BUFSIZ, trace) != NULL) {
         lines++;
         if (startswith(line, "file:")) {
@@ -284,6 +285,21 @@ static ProcInfo *processTraceFile(const char *fullpath) {
             sscanf(line,"start:%lf\n", &(proc->start));
         } else if (startswith(line, "stop:")) {
             sscanf(line,"stop:%lf\n", &(proc->stop));
+        } else if (startswith(line, "PAPI_TOT_INS:")) {
+            sscanf(line,"PAPI_TOT_INS:%lld\n", &llval);
+            proc->PAPI_TOT_INS += llval;
+        } else if (startswith(line, "PAPI_LD_INS:")) {
+            sscanf(line,"PAPI_LD_INS:%lld\n", &llval);
+            proc->PAPI_LD_INS += llval;
+        } else if (startswith(line, "PAPI_SR_INS:")) {
+            sscanf(line,"PAPI_SR_INS:%lld\n", &llval);
+            proc->PAPI_SR_INS += llval;
+        } else if (startswith(line, "PAPI_FP_INS:")) {
+            sscanf(line,"PAPI_FP_INS:%lld\n", &llval);
+            proc->PAPI_FP_INS += llval;
+        } else if (startswith(line, "PAPI_FP_OPS:")) {
+            sscanf(line,"PAPI_FP_OPS:%lld\n", &llval);
+            proc->PAPI_FP_OPS += llval;
         } else {
             printerr("Unrecognized libinterpose record: %s", line);
         }

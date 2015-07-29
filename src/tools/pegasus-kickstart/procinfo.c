@@ -511,19 +511,28 @@ int printXMLProcInfo(FILE *out, int indent, ProcInfo* procs) {
 
         /* Skip non-main threads in multithreaded programs */
         // XXX How does this affect FileInfo?
-        if (i->tgid != i->pid) continue;
+        if (i->tgid != i->pid) {
+            continue;
+        }
 
         fprintf(out, "%*s<proc ppid=\"%d\" pid=\"%d\" exe=\"%s\" "
                 "start=\"%lf\" stop=\"%lf\" utime=\"%lf\" stime=\"%lf\" "
                 "iowait=\"%lf\" threads=\"%d\" "
                 "vmpeak=\"%d\" rsspeak=\"%d\" rchar=\"%"PRIu64"\" wchar=\"%"PRIu64"\" "
                 "rbytes=\"%"PRIu64"\" wbytes=\"%"PRIu64"\" cwbytes=\"%"PRIu64"\" "
-                "syscr=\"%"PRIu64"\" syscw=\"%"PRIu64"\"", 
-                indent, "", i->ppid, i->pid, i->exe, 
+                "syscr=\"%"PRIu64"\" syscw=\"%"PRIu64"\""
+#ifdef HAS_PAPI
+                " totins=\"%lld\" ldins=\"%lld\" srins=\"%lld\" fpins=\"%lld\" fpops=\"%lld\""
+#endif
+                , indent, "", i->ppid, i->pid, i->exe,
                 i->start, i->stop, i->utime, i->stime, i->iowait, i->threads,
-                i->vmpeak, i->rsspeak, i->rchar, i->wchar, 
-                i->read_bytes, i->write_bytes, i->cancelled_write_bytes, 
-                i->syscr, i->syscw);
+                i->vmpeak, i->rsspeak, i->rchar, i->wchar,
+                i->read_bytes, i->write_bytes, i->cancelled_write_bytes,
+                i->syscr, i->syscw
+#ifdef HAS_PAPI
+                , i->PAPI_TOT_INS, i->PAPI_LD_INS, i->PAPI_SR_INS, i->PAPI_FP_INS, i->PAPI_FP_OPS
+#endif
+                );
         if (i->files == NULL && i->sockets == NULL) {
             fprintf(out, "/>\n");
         } else {
