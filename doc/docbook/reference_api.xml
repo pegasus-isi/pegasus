@@ -2174,12 +2174,6 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
 
                 <td>Bad request</td>
               </tr>
-
-              <tr>
-                <td>404</td>
-
-                <td>Not found</td>
-              </tr>
             </tbody>
           </table></para>
       </section>
@@ -2304,12 +2298,6 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
 
                 <td>Bad request</td>
               </tr>
-
-              <tr>
-                <td>404</td>
-
-                <td>Not found</td>
-              </tr>
             </tbody>
           </table></para>
       </section>
@@ -2390,12 +2378,6 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
                 <td>400</td>
 
                 <td>Bad request</td>
-              </tr>
-
-              <tr>
-                <td>404</td>
-
-                <td>Not found</td>
               </tr>
             </tbody>
           </table></para>
@@ -2511,12 +2493,6 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
                 <td>400</td>
 
                 <td>Bad request</td>
-              </tr>
-
-              <tr>
-                <td>404</td>
-
-                <td>Not found</td>
               </tr>
             </tbody>
           </table></para>
@@ -2634,12 +2610,6 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
 
                 <td>Bad request</td>
               </tr>
-
-              <tr>
-                <td>404</td>
-
-                <td>Not found</td>
-              </tr>
             </tbody>
           </table></para>
       </section>
@@ -2754,12 +2724,6 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
                 <td>400</td>
 
                 <td>Bad request</td>
-              </tr>
-
-              <tr>
-                <td>404</td>
-
-                <td>Not found</td>
               </tr>
             </tbody>
           </table></para>
@@ -2884,12 +2848,6 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
                 <td>400</td>
 
                 <td>Bad request</td>
-              </tr>
-
-              <tr>
-                <td>404</td>
-
-                <td>Not found</td>
               </tr>
             </tbody>
           </table></para>
@@ -3016,12 +2974,6 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
 
                 <td>Bad request</td>
               </tr>
-
-              <tr>
-                <td>404</td>
-
-                <td>Not found</td>
-              </tr>
             </tbody>
           </table></para>
       </section>
@@ -3138,12 +3090,6 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
                 <td>400</td>
 
                 <td>Bad request</td>
-              </tr>
-
-              <tr>
-                <td>404</td>
-
-                <td>Not found</td>
               </tr>
             </tbody>
           </table></para>
@@ -3318,12 +3264,6 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
                 <td>400</td>
 
                 <td>Bad request</td>
-              </tr>
-
-              <tr>
-                <td>404</td>
-
-                <td>Not found</td>
               </tr>
             </tbody>
           </table></para>
