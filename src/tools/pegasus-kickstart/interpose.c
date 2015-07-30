@@ -290,6 +290,36 @@ static Descriptor *get_descriptor(int fd) {
     return &(descriptors[fd]);
 }
 
+static void read_cmdline() {
+    char cmdline[] = "/proc/self/cmdline";
+
+    /* If the cmdline file is missing, then just skip it */
+    if (access(cmdline, F_OK) < 0) {
+        return;
+    }
+
+    FILE *f = fopen_untraced(cmdline, "r");
+    if (f == NULL) {
+        printerr("Unable to fopen /proc/self/cmdline: %s\n", strerror(errno));
+        return;
+    }
+
+    char args[BUFSIZ];
+    size_t s = fread(args, 1, BUFSIZ, f);
+    if (s <= 0) {
+        printerr("Error reading /proc/self/cmdline: %s\n", strerror(errno));
+    } else {
+        tprintf("arg: %s\n", args);
+        for (int i=1; i<s; i++) {
+            if (args[i-1] == '\0') {
+                tprintf("arg: %s\n", &args[i]);
+            }
+        }
+    }
+
+    fclose_untraced(f);
+}
+
 /* Read /proc/self/exe to get path to executable */
 static void read_exe() {
     debug("Reading exe");
@@ -924,6 +954,7 @@ static void __attribute__((constructor)) interpose_init(void) {
 
     tprintf("Pid: %d\n", getpid());
     tprintf("PPid: %d\n", getppid());
+    read_cmdline();
 
 #ifdef HAS_PAPI
     init_papi();
