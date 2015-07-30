@@ -29,13 +29,13 @@
 #include "appinfo.h"
 #include "statinfo.h"
 #include "mysystem.h"
+#include "monitoring.h"
 #include "procinfo.h"
 #include "error.h"
 
 
 /* The name of the program (argv[0]) set in pegasus-kickstart.c:main */
 char *programname;
-
 static pthread_t monitoring_thread;
 
 static int isRelativePath(char *path) {
@@ -339,10 +339,15 @@ static ProcInfo *processTraceFiles(const char *tempdir, const char *trace_file_p
     return procs;
 }
 
+static char socket_hostname[BUFSIZ], socket_port[BUFSIZ];
+static int is_socket_set = 0;
+
 /* Try to get a new environment for the child process that has the tracing vars */
 static char **tryGetNewEnvironment(char **envp, const char *tempdir, const char *trace_file_prefix, 
     const char* kickstart_status_path) {
     int vars;
+    char socket_port_buffer[BUFSIZ], socket_hostname_buffer[BUFSIZ];
+
 
     /* If KICKSTART_PREFIX 
      *      or LD_PRELOAD 
@@ -389,9 +394,8 @@ static char **tryGetNewEnvironment(char **envp, const char *tempdir, const char 
     char kickstart_pid[BUFSIZ];
     snprintf(kickstart_pid, BUFSIZ, "KICKSTART_MON_PID=%d", getpid());
 
-
     /* Copy the environment variables to a new array */
-    char **newenvp = (char **)malloc(sizeof(char **)*(vars+5));
+    char **newenvp = (char **)malloc(sizeof(char **)*(vars+7));
     if (newenvp == NULL) {
         printerr("malloc: %s\n", strerror(errno));
         return envp;
@@ -405,7 +409,18 @@ static char **tryGetNewEnvironment(char **envp, const char *tempdir, const char 
     newenvp[vars+1] = kickstart_prefix;
     newenvp[vars+2] = kickstart_status;
     newenvp[vars+3] = kickstart_pid;
-    newenvp[vars+4] = NULL;
+
+    if( is_socket_set ) {
+        sprintf(socket_port_buffer, "KICKSTART_MON_PORT=%s", socket_port);
+        newenvp[vars+4] = socket_port_buffer;
+        sprintf(socket_hostname_buffer, "KICKSTART_MON_HOST=%s", socket_hostname);
+        newenvp[vars+5] = socket_hostname_buffer;
+        newenvp[vars+6] = NULL;        
+    }
+    else {
+        printerr("We DO NOT set KICKSTART_MON_PORT and KICKSTART_MON_HOST\n");
+        newenvp[vars+4] = NULL;
+    }
 
     return newenvp;
 }
@@ -482,7 +497,7 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
         tempdir = "/tmp";
     }
 
-//  DK: monitoring thread init
+    //  DK: monitoring thread init
     char kickstart_status[BUFSIZ];
     if( kickstart_status_path(kickstart_status, BUFSIZ) ) {
         printerr("ERROR: couldn't create kickstart status filepath\n");
@@ -491,9 +506,18 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
         printerr("KICKSTART_MON_FILE: %s\n", kickstart_status);
     }
 
-    int rc = start_status_thread(&monitoring_thread, kickstart_status);
-    if (rc) {
-        printerr("ERROR: when starting a monitoring thread: is %s\n", strerror(errno));
+    int rc = prepare_socket(socket_hostname, socket_port);
+    if( rc < 0 ) {
+        printerr("Couldn't prepare a socket for kickstart\n");
+    }
+    else {
+        printerr("We are going to set port to: %s\n", socket_port);
+        is_socket_set = 1;
+
+        rc = start_status_thread(&monitoring_thread, socket_port);
+        if (rc) {
+            printerr("ERROR: when starting a monitoring thread: is %s\n", strerror(errno));
+        }        
     }
 
     /* start wall-clock */

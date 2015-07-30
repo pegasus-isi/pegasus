@@ -19,6 +19,11 @@
 #include "statinfo.h"
 #include "jobinfo.h"
 
+// typedef struct {
+// 	char* kickstart_status_path;
+// 	char* socket_desc_buf;
+// } KickstartMonitoringInput;
+
 extern 
 int 
 mysystem( AppInfo* appinfo, JobInfo* jobinfo, char* envp[] );

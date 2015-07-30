@@ -949,39 +949,19 @@ main( int argc, char *argv[] )
         }
     }
 
-    double timestamp = now();
-    int time_diff = spinout - ( (int) (timestamp - start) );
     // printf( "Start time: %f - Current timestamp: %f - Difference: %f\n", start, timestamp, timestamp - start);
     // printf( "[debug] we spent %d [s] on IO stuff\n", (int) (timestamp - start) );
 
     // PHASE 3 - spinning out
-    if ( spinout )
-    {
-        if ( time_diff < 0 )
-        {
-            printf("[error] you specified %lu [s] to spin but you've already exceeded this value by %d [s]\n", spinout, -time_diff );
-
-            if ( memory_buffer != NULL )
-                free( static_cast<void *>(memory_buffer) );
-
-            if ( buffer != NULL )
-                free( static_cast<void *>(buffer) );
-
-            return 3;
-
-        }
-        else
-        {
-            // printf( "[debug] you specified %lu [s] to spin so we will spin for %d [s]\n", spinout, time_diff );
-            spin(time_diff);
-        }
+    if( spinout ) {
+        spin(spinout);
     }
 
     // PHASE 4 - sleeping
     if ( timeout )
     {
-        timestamp = now();
-        time_diff = timeout - ( (int) (timestamp - start) );
+        double timestamp = now();
+        int time_diff = timeout - ( (int) (timestamp - start) );
 
         if ( time_diff < 0 )
         {

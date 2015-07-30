@@ -20,6 +20,7 @@
 #include <arpa/inet.h>
 #include <pthread.h>
 #include <dlfcn.h>
+#include <netdb.h>
 
 /* TODO Interpose accept (for network servers) */
 /* TODO Is it necessary to interpose shutdown? Would that help the DNS issue? */
@@ -188,17 +189,115 @@ pthread_mutex_t io_mut = PTHREAD_MUTEX_INITIALIZER;
 IoUtilInfo io_util_info = { 0, 0, 0, 0, 0, 0, 0 };
 
 
+// TODO kickstart status file should be used when socket-based communication fails
 // Utility function to open the kickstart status file based on environment variable
-static FILE* open_kickstart_status_file() {
-    char *kickstart_status = getenv("KICKSTART_MON_FILE");
+// static FILE* open_kickstart_status_file() {
+//     char *kickstart_status = getenv("KICKSTART_MON_FILE");
 
-    if (kickstart_status == NULL) {
-        printerr("Unable to open kickstart status file: KICKSTART_MON_FILE not set in environment\n");
-        return NULL;
+//     if (kickstart_status == NULL) {
+//         printerr("Unable to open kickstart status file: KICKSTART_MON_FILE not set in environment\n");
+//         return NULL;
+//     }
+
+//     return fopen(kickstart_status, "a");
+// }
+
+// SOCKET-BASED COMMUNICATION WITH KICKSTART
+
+static int prepare_socket(int *sockfd, char *monitoring_socket_host, char* monitoring_socket_port, struct sockaddr_in *serv_addr) {
+    int port_no = atoi(monitoring_socket_port);
+    struct sockaddr_in sa_addr;
+    struct hostent *server;
+
+    if( (*sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0 ) {
+        printerr("Error[getaddrinfo]: %s\n", strerror(errno));
+        return -1;
     }
 
-    return fopen(kickstart_status, "a");
+    server = gethostbyname(monitoring_socket_host);
+    if (server == NULL) {
+        printerr("Error[gethostbyname]: no such host - %s\n", strerror(errno));
+        return -1;
+    }
+
+    bzero((char *) &sa_addr, sizeof(sa_addr));
+    sa_addr.sin_family = AF_INET;
+    bcopy( (char *)server->h_addr, (char *)&sa_addr.sin_addr.s_addr, server->h_length);
+    sa_addr.sin_port = htons(port_no);
+
+    // printerr("haddr: %s\n", inet_ntoa( *( struct in_addr*)( server -> h_addr_list[0])));
+    // printerr("port: %d\n", port_no);
+    
+    if( connect(*sockfd, (struct sockaddr *)&sa_addr, sizeof(sa_addr)) < 0 ) {
+        printerr("Error[connect]: %s\n", strerror(errno));
+        return -1;
+    }
+
+    return 0;
 }
+
+static int send_msg_to_kickstart(char *msg, char *host, char *port) {
+    int sockfd;
+    struct sockaddr_in serv_addr;
+
+    if( prepare_socket(&sockfd, host, port, &serv_addr) == -1 ) {
+        printerr("Some error occured during socket preparation.\n");
+        return 1;
+    }
+    else {
+        // printerr("We are going to write to a socket...\n");        
+
+        if( send(sockfd, msg, BUFSIZ, 0) < 0 ) {
+            printerr("Error during msg send.\n");
+            return 1;
+        }
+    }
+
+    close(sockfd);
+    return 0;
+}
+
+// END SOCKET-BASED COMMUNICATION WITH KICKSTART
+
+static int set_monitoring_params(int mpi_rank, int *interval, char **socket_host, char **socket_port, 
+    char **kickstart_pid, char *hostname, char **job_id) 
+{
+    char *envptr = NULL;
+
+    if ( (envptr = getenv("KICKSTART_MON_INTERVAL")) == NULL ) {
+        printerr("[Thread-%d] Couldn't read KICKSTART_MON_INTERVAL\n", mpi_rank);
+        return 1;        
+    }
+    else {
+        *interval = atoi(envptr);
+    }
+
+    if( (*socket_host = getenv("KICKSTART_MON_HOST")) == NULL) {
+        printerr("[Thread-%d] Couldn't read KICKSTART_MON_HOST\n", mpi_rank);
+        return 1;
+    }
+
+    if( (*socket_port = getenv("KICKSTART_MON_PORT")) == NULL ) {
+        printerr("[Thread-%d] Couldn't read KICKSTART_MON_PORT\n", mpi_rank);
+        return 1;
+    } 
+
+    if ( (*kickstart_pid = getenv("KICKSTART_MON_PID")) == NULL) {
+        printerr("KICKSTART_MON_PID not set in environment\n");
+        return 1;
+    }
+
+    if( gethostname(hostname, BUFSIZ) ) {
+        printerr("[Thread-%d] ERROR: couldn't get hostname: %s\n", mpi_rank, strerror(errno));
+        return 1;
+    }
+
+    // we don't really care if this is NULL or not
+    *job_id = getenv("CONDOR_JOBID");
+
+    return 0;
+}
+
 
 /*
  * It is a timer thread function, which dumps monitoring information to a global trace file 
@@ -207,40 +306,22 @@ static FILE* open_kickstart_status_file() {
  * <mpi_rank> <timestamp> <utime> <stime> <io_wait> <vm_peak> <pm_peak> <threads> <read_bytes> <write_bytes> <syscr> <syscw>
  */
 static void* timer_thread_func(void* mpi_rank_void) {
-    FILE* kickstart_status;
+    // TODO kickstart status file should be used when socket-based communication fails
+    // FILE* kickstart_status;
     time_t timestamp;
     int interval;
     int mpi_rank = atoi( (char*) mpi_rank_void ) + 1;
-    char *exec_name, *kickstart_pid, hostname[BUFSIZ], *job_id, *envptr;
+    char *exec_name, *kickstart_pid = NULL, hostname[BUFSIZ], *job_id = NULL, msg[BUFSIZ];
+    char *monitoring_socket_host = NULL, *monitoring_socket_port = NULL;
 
-    envptr = getenv("KICKSTART_MON_INTERVAL");
-
-    if (envptr != NULL) {
-        interval = atoi(envptr);        
-    }
-    else {
-        printerr("[Thread-%d] Couldn't read KICKSTART_MON_INTERVAL\n", mpi_rank);
-        pthread_exit(NULL);
+    if( set_monitoring_params(mpi_rank,  &interval, 
+        &monitoring_socket_host, &monitoring_socket_port,
+        &kickstart_pid, hostname, &job_id) ) 
+    {
         return NULL;
     }
 
-    if( gethostname(hostname, BUFSIZ) ) {
-        printerr("[Thread-%d] ERROR: couldn't get hostname: %s\n", mpi_rank, strerror(errno));
-        return NULL;
-    }
-
-    kickstart_pid = getenv("KICKSTART_MON_PID");
-    if (kickstart_pid == NULL) {
-        printerr("KICKSTART_MON_PID not set in environment\n");
-        return NULL;
-    }
-
-    // we don't really care if this is NULL or not
-    job_id = getenv("CONDOR_JOBID");
-
-    while(library_loaded) {        
-        sleep(interval);
-
+    while(library_loaded) {
         timestamp = time(NULL);
 
         CpuUtilInfo cpu_info = read_cpu_status();
@@ -248,13 +329,9 @@ static void* timer_thread_func(void* mpi_rank_void) {
         IoUtilInfo io_info = read_io_status();
         exec_name = read_exe();
 
-        kickstart_status = open_kickstart_status_file();
-        if(kickstart_status == NULL) {
-            pthread_exit(NULL);
-            return NULL;
-        }
+        memset(msg, 0, BUFSIZ);
 
-        fprintf_untraced(kickstart_status, "ts=%d event=workflow_trace level=INFO status=0 "
+        sprintf(msg, "ts=%d event=workflow_trace level=INFO status=0 "
                    "job_id=%s kickstart_pid=%s executable=%s hostname=%s mpi_rank=%d utime=%.3f stime=%.3f "
                    "iowait=%.3f vmSize=%llu vmRSS=%llu threads=%lu read_bytes=%llu write_bytes=%llu "
                    "syscr=%lu syscw=%lu\n",
@@ -264,17 +341,30 @@ static void* timer_thread_func(void* mpi_rank_void) {
             mem_info.vmSize, mem_info.vmRSS, mem_info.threads,
             io_info.rchar, io_info.wchar, io_info.syscr, io_info.syscw);
 
-        fflush(kickstart_status);
-        fclose(kickstart_status);
+        // printerr("[Thread-%d] Sending: %s\n", mpi_rank, msg);
+
+        if( send_msg_to_kickstart(msg, monitoring_socket_host, monitoring_socket_port) ) {
+
+            // TODO we should try to open a file and log monitoring stuff
+
+            // if( (kickstart_status = open_kickstart_status_file()) == NULL ) {
+            //     printerr("[Thread-%d] ERROR during kickstart status open: %s\n", mpi_rank, strerror(errno)));
+            // }
+            // else {
+            //     fprintf_untraced(kickstart_status, "%s\n", msg);
+            //     fflush(kickstart_status);
+            //     fclose(kickstart_status);
+            // }
+
+        }
 
         if(exec_name != NULL) {
             free(exec_name);
         }
+
+        sleep(interval);
     }
 
-    // fclose(kickstart_status);
-
-    pthread_exit(NULL);
     return NULL;
 }
 
@@ -952,41 +1042,34 @@ int tfile_exists() {
 extern char **environ;
 
 void spawn_timer_thread() {
-    int i = 0;
-    printerr("\n\nPrinting environment...\n");
-    while(environ[i]) {
-      printerr("%s\n", environ[i++]);
-    }
-    printerr("\n\n");
-//    pid_t current_pid = getpid();
 
     // spawning a timer thread only when
     char* mpi_rank = getenv("OMPI_COMM_WORLD_RANK");
     // printerr("Spawning thread in process: %d\n", (int)current_pid);
-     printerr("Setting mpi rank based on OMPI_COMM_WORLD_RANK\n");
+     // printerr("Setting mpi rank based on OMPI_COMM_WORLD_RANK\n");
 
     if(mpi_rank == NULL) {
         mpi_rank = getenv("ALPS_APP_PE");        
-         printerr("Setting mpi rank based on MPIRUN_RANK\n");
+         // printerr("Setting mpi rank based on MPIRUN_RANK\n");
 
         if(mpi_rank == NULL) {
             mpi_rank = getenv("PMI_RANK");
-             printerr("Setting mpi rank based on PMI_RANK\n");
+             // printerr("Setting mpi rank based on PMI_RANK\n");
 
             if(mpi_rank == NULL) {
                 mpi_rank = getenv("PMI_ID");
-                 printerr("Setting mpi rank based on PMI_ID\n");
+                 // printerr("Setting mpi rank based on PMI_ID\n");
 
                 if(mpi_rank == NULL) {
                     mpi_rank = getenv("MPIRUN_RANK");
-                     printerr("Setting mpi rank based on MPIRUN_RANK\n");
+                     // printerr("Setting mpi rank based on MPIRUN_RANK\n");
                 }
             }
         }
     }
 
     if(mpi_rank == NULL) {
-        printerr("Setting mpi rank based on ... it is still nil\n");
+        // printerr("MPI rank is not set in environment\n");
         mpi_rank = (char*) calloc(1024, sizeof(char));
         strcpy(mpi_rank, "-1");
     }
