@@ -300,7 +300,18 @@ static void read_status() {
     fclose_untraced(f);
 }
 
-/* Read /proc/self/stat to get CPU usage */
+/* Read CPU usage */
+static void read_rusage() {
+    struct rusage ru;
+    if (getrusage(RUSAGE_SELF, &ru) < 0) {
+        printerr("Error getting resource usage: %s\n", strerror(errno));
+        return;
+    }
+    tprintf("utime: %.3lf\n", (double)ru.ru_utime.tv_sec + (double)ru.ru_utime.tv_usec/1.0e6);
+    tprintf("stime: %.3lf\n", (double)ru.ru_stime.tv_sec + (double)ru.ru_stime.tv_usec/1.0e6);
+}
+
+/* Read /proc/self/stat to get performance stats */
 static void read_stat() {
     debug("Reading stat file");
 
@@ -317,7 +328,6 @@ static void read_stat() {
         return;
     }
 
-    unsigned long utime, stime = 0;
     unsigned long long iowait = 0; //delayacct_blkio_ticks
 
     //pid comm state ppid pgrp session tty_nr tpgid flags minflt cminflt majflt
@@ -325,26 +335,19 @@ static void read_stat() {
     //starttime vsize rss rsslim startcode endcode startstack kstkesp kstkeip
     //signal blocked sigignore sigcatch wchan nswap cnswap exit_signal
     //processor rt_priority policy delayacct_blkio_ticks guest_time cguest_time
-    fscanf(f, "%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu "
-              "%lu %*d %*d %*d %*d %*d %*d %*u %*u %*d %*u %*u "
+    fscanf(f, "%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %*u "
+              "%*u %*d %*d %*d %*d %*d %*d %*u %*u %*d %*u %*u "
               "%*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*d "
               "%*d %*u %*u %llu %*u %*d",
-           &utime, &stime, &iowait);
+              &iowait);
 
     fclose_untraced(f);
 
     /* Adjust by number of clock ticks per second */
     long clocks = sysconf(_SC_CLK_TCK);
-    double real_utime;
-    double real_stime;
-    double real_iowait;
-    real_utime = ((double)utime) / clocks;
-    real_stime = ((double)stime) / clocks;
-    real_iowait = ((double)iowait) / clocks;
+    double real_iowait = ((double)iowait) / clocks;
 
-    tprintf("utime: %lf\n", real_utime);
-    tprintf("stime: %lf\n", real_stime);
-    tprintf("iowait: %lf\n", real_iowait);
+    tprintf("iowait: %.3lf\n", real_iowait);
 }
 
 /* Read /proc/self/io to get I/O usage */
@@ -889,6 +892,7 @@ static void __attribute__((destructor)) interpose_fini(void) {
     read_exe();
     report_thread_counters();
     read_status();
+    read_rusage();
     read_stat();
     read_io();
 

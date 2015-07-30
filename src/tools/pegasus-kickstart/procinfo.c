@@ -508,8 +508,8 @@ int printXMLProcInfo(FILE *out, int indent, ProcInfo* procs) {
         }
 
         fprintf(out, "%*s<proc ppid=\"%d\" pid=\"%d\" exe=\"%s\" "
-                "start=\"%lf\" stop=\"%lf\" utime=\"%lf\" stime=\"%lf\" "
-                "iowait=\"%lf\" finthreads=\"%d\" maxthreads=\"%d\" totthreads=\"%d\" "
+                "start=\"%lf\" stop=\"%lf\" utime=\"%.3lf\" stime=\"%.3lf\" "
+                "iowait=\"%.3lf\" finthreads=\"%d\" maxthreads=\"%d\" totthreads=\"%d\" "
                 "vmpeak=\"%d\" rsspeak=\"%d\" rchar=\"%"PRIu64"\" wchar=\"%"PRIu64"\" "
                 "rbytes=\"%"PRIu64"\" wbytes=\"%"PRIu64"\" cwbytes=\"%"PRIu64"\" "
                 "syscr=\"%"PRIu64"\" syscw=\"%"PRIu64"\""
