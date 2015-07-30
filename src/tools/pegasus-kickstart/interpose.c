@@ -58,90 +58,6 @@
 #define debug(format, args...)
 #endif
 
-/* These are all the functions we are interposing */
-static typeof(dup) *orig_dup = NULL;
-static typeof(dup2) *orig_dup2 = NULL;
-#ifdef dup3
-static typeof(dup3) *orig_dup3 = NULL;
-#endif
-static typeof(open) *orig_open = NULL;
-static typeof(open64) *orig_open64 = NULL;
-static typeof(openat) *orig_openat = NULL;
-static typeof(openat64) *orig_openat64 = NULL;
-static typeof(creat) *orig_creat = NULL;
-static typeof(creat64) *orig_creat64 = NULL;
-static typeof(fopen) *orig_fopen = NULL;
-static typeof(fopen64) *orig_fopen64 = NULL;
-static typeof(freopen) *orig_freopen = NULL;
-static typeof(freopen64) *orig_freopen64 = NULL;
-static typeof(close) *orig_close = NULL;
-static typeof(fclose) *orig_fclose = NULL;
-static typeof(read) *orig_read = NULL;
-static typeof(write) *orig_write = NULL;
-static typeof(fread) *orig_fread = NULL;
-static typeof(fwrite) *orig_fwrite = NULL;
-static typeof(pread) *orig_pread = NULL;
-static typeof(pread64) *orig_pread64 = NULL;
-static typeof(pwrite) *orig_pwrite = NULL;
-static typeof(pwrite64) *orig_pwrite64 = NULL;
-static typeof(readv) *orig_readv = NULL;
-#ifdef preadv
-static typeof(preadv) *orig_preadv = NULL;
-#endif
-#ifdef preadv64
-static typeof(preadv64) *orig_preadv64 = NULL;
-#endif
-static typeof(writev) *orig_writev = NULL;
-#ifdef pwritev
-static typeof(pwritev) *orig_pwritev = NULL;
-#endif
-#ifdef pwritev64
-static typeof(pwritev64) *orig_pwritev64 = NULL;
-#endif
-static typeof(fgetc) *orig_fgetc = NULL;
-static typeof(fputc) *orig_fputc = NULL;
-static typeof(fgets) *orig_fgets = NULL;
-static typeof(fputs) *orig_fputs = NULL;
-/* Implemented using vfscanf */
-/*static typeof(fscanf) *orig_fscanf = NULL;*/
-static typeof(vfscanf) *orig_vfscanf = NULL;
-/* Implemented using vfprintf */
-/*static typeof(fprintf) *orig_fprintf = NULL;*/
-static typeof(vfprintf) *orig_vfprintf = NULL;
-static typeof(connect) *orig_connect = NULL;
-static typeof(send) *orig_send = NULL;
-static typeof(sendfile) *orig_sendfile = NULL;
-static typeof(sendto) *orig_sendto = NULL;
-static typeof(sendmsg) *orig_sendmsg = NULL;
-static typeof(recv) *orig_recv = NULL;
-static typeof(recvfrom) *orig_recvfrom = NULL;
-static typeof(recvmsg) *orig_recvmsg = NULL;
-static typeof(truncate) *orig_truncate = NULL;
-/* It is not necessary to interpose ftruncate because we should already
- * have a record for the file descriptor.
- */
-static typeof(mkstemp) *orig_mkstemp = NULL;
-#ifdef mkostemp
-static typeof(mkostemp) *orig_mkostemp = NULL;
-#endif
-#ifdef mkstemps
-static typeof(mkstemps) *orig_mkstemps = NULL;
-#endif
-#ifdef mkostemps
-static typeof(mkostemps) *orig_mkostemps = NULL;
-#endif
-static typeof(tmpfile) *orig_tmpfile = NULL;
-/* It is not necessary to interpose other tmp functions because
- * they just generate names that need to be passed to open()
- */
-static typeof(lseek) *orig_lseek = NULL;
-#ifdef lseek64
-static typeof(lseek64) *orig_lseek64 = NULL;
-#endif
-static typeof(fseek) *orig_fseek = NULL;
-static typeof(fseeko) *orig_fseeko = NULL;
-static typeof(pthread_create) *orig_pthread_create = NULL;
-
 typedef struct {
     char type;
     char *path;
@@ -987,15 +903,21 @@ static void __attribute__((destructor)) interpose_fini(void) {
     tclose();
 }
 
+static inline void *osym(const char *name) {
+    void *orig_symbol = dlsym(RTLD_NEXT, name);
+    if (orig_symbol == NULL) {
+        printerr("FATAL ERROR: Unable to locate symbol %s: %s\n", name, dlerror());
+        exit(1);
+    }
+    return orig_symbol;
+}
 
 /** INTERPOSED FUNCTIONS **/
 
 int dup(int oldfd) {
     debug("dup");
 
-    if (orig_dup == NULL) {
-        orig_dup = dlsym(RTLD_NEXT, "dup");
-    }
+    typeof(dup) *orig_dup = osym("dup");
 
     int rc = (*orig_dup)(oldfd);
 
@@ -1009,9 +931,7 @@ int dup(int oldfd) {
 int dup2(int oldfd, int newfd) {
     debug("dup2");
 
-    if (orig_dup2 == NULL) {
-        orig_dup2 = dlsym(RTLD_NEXT, "dup2");
-    }
+    typeof(dup2) *orig_dup2 = osym("dup2");
 
     int rc = (*orig_dup2)(oldfd, newfd);
 
@@ -1026,9 +946,7 @@ int dup2(int oldfd, int newfd) {
 int dup3(int oldfd, int newfd, int flags) {
     debug("dup3");
 
-    if (orig_dup3 == NULL) {
-        orig_dup3 = dlsym(RTLD_NEXT, "dup3");
-    }
+    typeof(dup3) *orig_dup3 = osym("dup3");
 
     int rc = (*orig_dup3)(oldfd, newfd, flags);
 
@@ -1043,9 +961,7 @@ int dup3(int oldfd, int newfd, int flags) {
 int open(const char *path, int oflag, ...) {
     debug("open");
 
-    if (orig_open == NULL) {
-        orig_open = dlsym(RTLD_NEXT, "open");
-    }
+    typeof(open) *orig_open = osym("open");
 
     mode_t mode = 0700;
     if (oflag & O_CREAT) {
@@ -1067,9 +983,7 @@ int open(const char *path, int oflag, ...) {
 int open64(const char *path, int oflag, ...) {
     debug("open64");
 
-    if (orig_open64 == NULL) {
-        orig_open64 = dlsym(RTLD_NEXT, "open64");
-    }
+    typeof(open64) *orig_open64 = osym("open64");
 
     mode_t mode = 0700;
     if (oflag & O_CREAT) {
@@ -1091,9 +1005,7 @@ int open64(const char *path, int oflag, ...) {
 int openat(int dirfd, const char *path, int oflag, ...) {
     debug("openat");
 
-    if (orig_openat == NULL) {
-        orig_openat = dlsym(RTLD_NEXT, "openat");
-    }
+    typeof(openat) *orig_openat = osym("openat");
 
     mode_t mode = 0700;
     if (oflag & O_CREAT) {
@@ -1115,9 +1027,7 @@ int openat(int dirfd, const char *path, int oflag, ...) {
 int openat64(int dirfd, const char *path, int oflag, ...) {
     debug("openat64");
 
-    if (orig_openat64 == NULL) {
-        orig_openat64 = dlsym(RTLD_NEXT, "openat64");
-    }
+    typeof(openat64) *orig_openat64 = osym("openat64");
 
     mode_t mode = 0700;
     if (oflag & O_CREAT) {
@@ -1139,9 +1049,7 @@ int openat64(int dirfd, const char *path, int oflag, ...) {
 int creat(const char *path, mode_t mode) {
     debug("creat");
 
-    if (orig_creat == NULL) {
-        orig_creat = dlsym(RTLD_NEXT, "creat");
-    }
+    typeof(creat) *orig_creat = osym("creat");
 
     int rc = (*orig_creat)(path, mode);
 
@@ -1155,9 +1063,7 @@ int creat(const char *path, mode_t mode) {
 int creat64(const char *path, mode_t mode) {
     debug("creat64");
 
-    if (orig_creat64 == NULL) {
-        orig_creat64 = dlsym(RTLD_NEXT, "creat64");
-    }
+    typeof(creat64) *orig_creat64 = osym("creat64");
 
     int rc = (*orig_creat64)(path, mode);
 
@@ -1169,10 +1075,7 @@ int creat64(const char *path, mode_t mode) {
 }
 
 static FILE *fopen_untraced(const char *path, const char *mode) {
-    if (orig_fopen == NULL) {
-        orig_fopen = dlsym(RTLD_NEXT, "fopen");
-    }
-
+    typeof(fopen) *orig_fopen = osym("fopen");
     return (*orig_fopen)(path, mode);
 }
 
@@ -1191,10 +1094,7 @@ FILE *fopen(const char *path, const char *mode) {
 FILE *fopen64(const char *path, const char *mode) {
     debug("fopen64");
 
-    if (orig_fopen64 == NULL) {
-        orig_fopen64 = dlsym(RTLD_NEXT, "fopen64");
-    }
-
+    typeof(fopen64) *orig_fopen64 = osym("fopen64");
     FILE *f = (*orig_fopen64)(path, mode);
 
     if (f != NULL) {
@@ -1207,10 +1107,7 @@ FILE *fopen64(const char *path, const char *mode) {
 FILE *freopen(const char *path, const char *mode, FILE *stream) {
     debug("freopen");
 
-    if (orig_freopen == NULL) {
-        orig_freopen = dlsym(RTLD_NEXT, "freopen");
-    }
-
+    typeof(freopen) *orig_freopen = osym("freopen");
     FILE *f = orig_freopen(path, mode, stream);
 
     if (f != NULL) {
@@ -1223,10 +1120,7 @@ FILE *freopen(const char *path, const char *mode, FILE *stream) {
 FILE *freopen64(const char *path, const char *mode, FILE *stream) {
     debug("freopen64");
 
-    if (orig_freopen64 == NULL) {
-        orig_freopen64 = dlsym(RTLD_NEXT, "freopen64");
-    }
-
+    typeof(freopen64) *orig_freopen64 = osym("freopen64");
     FILE *f = orig_freopen64(path, mode, stream);
 
     if (f != NULL) {
@@ -1239,10 +1133,7 @@ FILE *freopen64(const char *path, const char *mode, FILE *stream) {
 int close(int fd) {
     debug("close");
 
-    if (orig_close == NULL) {
-        orig_close = dlsym(RTLD_NEXT, "close");
-    }
-
+    typeof(close) *orig_close = osym("close");
     int rc = (*orig_close)(fd);
 
     if (fd >= 0) {
@@ -1253,10 +1144,7 @@ int close(int fd) {
 }
 
 static int fclose_untraced(FILE *fp) {
-    if (orig_fclose == NULL) {
-        orig_fclose = dlsym(RTLD_NEXT, "fclose");
-    }
-
+    typeof(fclose) *orig_fclose = osym("fclose");
     return (*orig_fclose)(fp);
 }
 
@@ -1280,10 +1168,7 @@ int fclose(FILE *fp) {
 ssize_t read(int fd, void *buf, size_t count) {
     debug("read");
 
-    if (orig_read == NULL) {
-        orig_read = dlsym(RTLD_NEXT, "read");
-    }
-
+    typeof(read) *orig_read = osym("read");
     ssize_t rc = (*orig_read)(fd, buf, count);
 
     if (rc > 0) {
@@ -1296,10 +1181,7 @@ ssize_t read(int fd, void *buf, size_t count) {
 ssize_t write(int fd, const void *buf, size_t count) {
     debug("write");
 
-    if (orig_write == NULL) {
-        orig_write = dlsym(RTLD_NEXT, "write");
-    }
-
+    typeof(write) *orig_write = osym("write");
     ssize_t rc = (*orig_write)(fd, buf, count);
 
     if (rc > 0) {
@@ -1312,10 +1194,7 @@ ssize_t write(int fd, const void *buf, size_t count) {
 size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
     debug("fread");
 
-    if (orig_fread == NULL) {
-        orig_fread = dlsym(RTLD_NEXT, "fread");
-    }
-
+    typeof(fread) *orig_fread = osym("fread");
     size_t rc = (*orig_fread)(ptr, size, nmemb, stream);
 
     if (rc > 0) {
@@ -1328,10 +1207,7 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
 size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream) {
     debug("fwrite");
 
-    if (orig_fwrite == NULL) {
-        orig_fwrite = dlsym(RTLD_NEXT, "fwrite");
-    }
-
+    typeof(fwrite) *orig_fwrite = osym("fwrite");
     size_t rc = (*orig_fwrite)(ptr, size, nmemb, stream);
 
     if (rc > 0) {
@@ -1344,10 +1220,7 @@ size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream) {
 ssize_t pread(int fd, void *buf, size_t count, off_t offset) {
     debug("pread");
 
-    if (orig_pread == NULL) {
-        orig_pread = dlsym(RTLD_NEXT, "pread");
-    }
-
+    typeof(pread) *orig_pread = osym("pread");
     ssize_t rc = (*orig_pread)(fd, buf, count, offset);
 
     if (rc > 0) {
@@ -1360,10 +1233,7 @@ ssize_t pread(int fd, void *buf, size_t count, off_t offset) {
 ssize_t pread64(int fd, void *buf, size_t count, off_t offset) {
     debug("pread64");
 
-    if (orig_pread64 == NULL) {
-        orig_pread64 = dlsym(RTLD_NEXT, "pread64");
-    }
-
+    typeof(pread64) *orig_pread64 = osym("pread64");
     ssize_t rc = (*orig_pread64)(fd, buf, count, offset);
 
     if (rc > 0) {
@@ -1376,10 +1246,7 @@ ssize_t pread64(int fd, void *buf, size_t count, off_t offset) {
 ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset) {
     debug("pwrite");
 
-    if (orig_pwrite == NULL) {
-        orig_pwrite = dlsym(RTLD_NEXT, "pwrite");
-    }
-
+    typeof(pwrite) *orig_pwrite = osym("pwrite");
     ssize_t rc = (*orig_pwrite)(fd, buf, count, offset);
 
     if (rc > 0) {
@@ -1392,10 +1259,7 @@ ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset) {
 ssize_t pwrite64(int fd, const void *buf, size_t count, off_t offset) {
     debug("pwrite64");
 
-    if (orig_pwrite64 == NULL) {
-        orig_pwrite64 = dlsym(RTLD_NEXT, "pwrite64");
-    }
-
+    typeof(pwrite64) *orig_pwrite64 = osym("pwrite64");
     ssize_t rc = (*orig_pwrite64)(fd, buf, count, offset);
 
     if (rc > 0) {
@@ -1408,10 +1272,7 @@ ssize_t pwrite64(int fd, const void *buf, size_t count, off_t offset) {
 ssize_t readv(int fd, const struct iovec *iov, int iovcnt) {
     debug("readv");
 
-    if (orig_readv == NULL) {
-        orig_readv = dlsym(RTLD_NEXT, "readv");
-    }
-
+    typeof(readv) *orig_readv = osym("readv");
     ssize_t rc = (*orig_readv)(fd, iov, iovcnt);
 
     if (rc > 0) {
@@ -1425,10 +1286,7 @@ ssize_t readv(int fd, const struct iovec *iov, int iovcnt) {
 ssize_t preadv(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
     debug("preadv");
 
-    if (orig_preadv == NULL) {
-        orig_preadv = dlsym(RTLD_NEXT, "preadv");
-    }
-
+    typeof(preadv) *orig_preadv = osym("preadv");
     ssize_t rc = (*orig_preadv)(fd, iov, iovcnt, offset);
 
     if (rc > 0) {
@@ -1443,10 +1301,7 @@ ssize_t preadv(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
 ssize_t preadv64(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
     debug("preadv64");
 
-    if (orig_preadv64 == NULL) {
-        orig_preadv64 = dlsym(RTLD_NEXT, "preadv64");
-    }
-
+    typeof(preadv64) *orig_preadv64 = osym("preadv64");
     ssize_t rc = (*orig_preadv64)(fd, iov, iovcnt, offset);
 
     if (rc > 0) {
@@ -1460,10 +1315,7 @@ ssize_t preadv64(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
 ssize_t writev(int fd, const struct iovec *iov, int iovcnt) {
     debug("writev");
 
-    if (orig_writev == NULL) {
-        orig_writev = dlsym(RTLD_NEXT, "writev");
-    }
-
+    typeof(writev) *orig_writev = osym("writev");
     ssize_t rc = (*orig_writev)(fd, iov, iovcnt);
 
     if (rc > 0) {
@@ -1477,10 +1329,7 @@ ssize_t writev(int fd, const struct iovec *iov, int iovcnt) {
 ssize_t pwritev(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
     debug("pwritev");
 
-    if (orig_pwritev == NULL) {
-        orig_pwritev = dlsym(RTLD_NEXT, "pwritev");
-    }
-
+    typeof(pwritev) *orig_pwritev = osym("pwritev");
     ssize_t rc = (*orig_pwritev)(fd, iov, iovcnt, offset);
 
     if (rc > 0) {
@@ -1495,10 +1344,7 @@ ssize_t pwritev(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
 ssize_t pwritev64(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
     debug("pwritev64");
 
-    if (orig_pwritev64 == NULL) {
-        orig_pwritev64 = dlsym(RTLD_NEXT, "pwritev64");
-    }
-
+    typeof(pwritev64) *orig_pwritev64 = osym("pwritev64");
     ssize_t rc = (*orig_pwritev64)(fd, iov, iovcnt, offset);
 
     if (rc > 0) {
@@ -1512,10 +1358,7 @@ ssize_t pwritev64(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
 int fgetc(FILE *stream) {
     debug("fgetc");
 
-    if (orig_fgetc == NULL) {
-        orig_fgetc = dlsym(RTLD_NEXT, "fgetc");
-    }
-
+    typeof(fgetc) *orig_fgetc = osym("fgetc");
     int rc = (*orig_fgetc)(stream);
 
     if (rc > 0) {
@@ -1528,10 +1371,7 @@ int fgetc(FILE *stream) {
 int fputc(int c, FILE *stream) {
     debug("fputc");
 
-    if (orig_fputc == NULL) {
-        orig_fputc = dlsym(RTLD_NEXT, "fputc");
-    }
-
+    typeof(fputc) *orig_fputc = osym("fputc");
     int rc = (*orig_fputc)(c, stream);
 
     if (rc > 0) {
@@ -1542,10 +1382,7 @@ int fputc(int c, FILE *stream) {
 }
 
 static char *fgets_untraced(char *s, int size, FILE *stream) {
-    if (orig_fgets == NULL) {
-        orig_fgets = dlsym(RTLD_NEXT, "fgets");
-    }
-
+    typeof(fgets) *orig_fgets = osym("fgets");
     return (*orig_fgets)(s, size, stream);
 }
 
@@ -1564,10 +1401,7 @@ char *fgets(char *s, int size, FILE *stream) {
 int fputs(const char *s, FILE *stream) {
     debug("fputs");
 
-    if (orig_fputs == NULL) {
-        orig_fputs = dlsym(RTLD_NEXT, "fputs");
-    }
-
+    typeof(fputs) *orig_fputs = osym("fputs");
     int rc = (*orig_fputs)(s, stream);
 
     if (rc > 0) {
@@ -1580,9 +1414,7 @@ int fputs(const char *s, FILE *stream) {
 int vfscanf(FILE *stream, const char *format, va_list ap) {
     debug("vfscanf");
 
-    if (orig_vfscanf == NULL) {
-        orig_vfscanf = dlsym(RTLD_NEXT, "vfscanf");
-    }
+    typeof(vfscanf) *orig_vfscanf = osym("vfscanf");
 
     /* We need to get the offset because (v)fscanf returns
      * the number of items matched, not the number of bytes
@@ -1611,10 +1443,7 @@ int fscanf(FILE *stream, const char *format, ...) {
 }
 
 static int vfprintf_untraced(FILE *stream, const char *format, va_list ap) {
-    if (orig_vfprintf == NULL) {
-        orig_vfprintf = dlsym(RTLD_NEXT, "vfprintf");
-    }
-
+    typeof(vfprintf) *orig_vfprintf = osym("vfprintf");
     return (*orig_vfprintf)(stream, format, ap);
 }
 
@@ -1651,10 +1480,7 @@ int fprintf(FILE *stream, const char *format, ...) {
 int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
     debug("connect");
 
-    if (orig_connect == NULL) {
-        orig_connect = dlsym(RTLD_NEXT, "connect");
-    }
-
+    typeof(connect) *orig_connect = osym("connect");
     int rc = (*orig_connect)(sockfd, addr, addrlen);
 
     /* FIXME There are potential issues with non-blocking sockets here */
@@ -1670,10 +1496,7 @@ int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
 ssize_t send(int sockfd, const void *buf, size_t len, int flags) {
     debug("send");
 
-    if (orig_send == NULL) {
-        orig_send = dlsym(RTLD_NEXT, "send");
-    }
-
+    typeof(send) *orig_send = osym("send");
     ssize_t rc = (*orig_send)(sockfd, buf, len, flags);
 
     if (rc > 0) {
@@ -1686,10 +1509,7 @@ ssize_t send(int sockfd, const void *buf, size_t len, int flags) {
 ssize_t sendfile(int out_fd, int in_fd, off_t *offset, size_t count) {
     debug("sendfile");
 
-    if (orig_sendfile == NULL) {
-        orig_sendfile = dlsym(RTLD_NEXT, "sendfile");
-    }
-
+    typeof(sendfile) *orig_sendfile = osym("sendfile");
     ssize_t rc = (*orig_sendfile)(out_fd, in_fd, offset, count);
 
     if (rc > 0) {
@@ -1704,10 +1524,7 @@ ssize_t sendto(int sockfd, const void *buf, size_t len, int flags,
                const struct sockaddr *dest_addr, socklen_t addrlen) {
     debug("sendto");
 
-    if (orig_sendto == NULL) {
-        orig_sendto = dlsym(RTLD_NEXT, "sendto");
-    }
-
+    typeof(sendto) *orig_sendto = osym("sendto");
     ssize_t rc = (*orig_sendto)(sockfd, buf, len, flags, dest_addr, addrlen);
 
     if (rc > 0) {
@@ -1722,10 +1539,7 @@ ssize_t sendto(int sockfd, const void *buf, size_t len, int flags,
 ssize_t sendmsg(int sockfd, const struct msghdr *msg, int flags) {
     debug("sendmsg");
 
-    if (orig_sendmsg == NULL) {
-        orig_sendmsg = dlsym(RTLD_NEXT, "sendmsg");
-    }
-
+    typeof(sendmsg) *orig_sendmsg = osym("sendmsg");
     ssize_t rc = (*orig_sendmsg)(sockfd, msg, flags);
 
     if (rc > 0) {
@@ -1742,10 +1556,7 @@ ssize_t sendmsg(int sockfd, const struct msghdr *msg, int flags) {
 ssize_t recv(int sockfd, void *buf, size_t len, int flags) {
     debug("recv");
 
-    if (orig_recv == NULL) {
-        orig_recv = dlsym(RTLD_NEXT, "recv");
-    }
-
+    typeof(recv) *orig_recv = osym("recv");
     ssize_t rc = (*orig_recv)(sockfd, buf, len, flags);
 
     if (rc > 0) {
@@ -1759,10 +1570,7 @@ ssize_t recvfrom(int sockfd, void *buf, size_t len, int flags,
                  struct sockaddr *src_addr, socklen_t *addrlen) {
     debug("recvfrom");
 
-    if (orig_recvfrom == NULL) {
-        orig_recvfrom = dlsym(RTLD_NEXT, "recvfrom");
-    }
-
+    typeof(recvfrom) *orig_recvfrom = osym("recvfrom");
     ssize_t rc = (*orig_recvfrom)(sockfd, buf, len, flags, src_addr, addrlen);
 
     if (rc > 0) {
@@ -1777,10 +1585,7 @@ ssize_t recvfrom(int sockfd, void *buf, size_t len, int flags,
 ssize_t recvmsg(int sockfd, struct msghdr *msg, int flags) {
     debug("recvmsg");
 
-    if (orig_recvmsg == NULL) {
-        orig_recvmsg = dlsym(RTLD_NEXT, "recvmsg");
-    }
-
+    typeof(recvmsg) *orig_recvmsg = osym("recvmsg");
     ssize_t rc = (*orig_recvmsg)(sockfd, msg, flags);
 
     if (rc > 0) {
@@ -1797,10 +1602,7 @@ ssize_t recvmsg(int sockfd, struct msghdr *msg, int flags) {
 int truncate(const char *path, off_t length) {
     debug("truncate");
 
-    if (orig_truncate == NULL) {
-        orig_truncate = dlsym(RTLD_NEXT, "truncate");
-    }
-
+    typeof(truncate) *orig_truncate = osym("truncate");
     int rc = (*orig_truncate)(path, length);
 
     if (rc == 0) {
@@ -1813,10 +1615,7 @@ int truncate(const char *path, off_t length) {
 int mkstemp(char *template) {
     debug("mkstemp");
 
-    if (orig_mkstemp == NULL) {
-        orig_mkstemp = dlsym(RTLD_NEXT, "mkstemp");
-    }
-
+    typeof(mkstemp) *orig_mkstemp = osym("mkstemp");
     int rc = (*orig_mkstemp)(template);
 
     if (rc >= 0) {
@@ -1830,10 +1629,7 @@ int mkstemp(char *template) {
 int mkostemp(char *template, int flags) {
     debug("mkostemp");
 
-    if (orig_mkostemp == NULL) {
-        orig_mkostemp = dlsym(RTLD_NEXT, "mkostemp");
-    }
-
+    typeof(mkostemp) *orig_mkostemp = osym("mkostemp");
     int rc = (*orig_mkostemp)(template, flags);
 
     if (rc >= 0) {
@@ -1848,10 +1644,7 @@ int mkostemp(char *template, int flags) {
 int mkstemps(char *template, int suffixlen) {
     debug("mkstemps");
 
-    if (orig_mkstemps == NULL) {
-        orig_mkstemps = dlsym(RTLD_NEXT, "mkstemps");
-    }
-
+    typeof(mkstemps) *orig_mkstemps = osym("mkstemps");
     int rc = (*orig_mkstemps)(template, suffixlen);
 
     if (rc >= 0) {
@@ -1866,10 +1659,7 @@ int mkstemps(char *template, int suffixlen) {
 int mkostemps(char *template, int suffixlen, int flags) {
     debug("mkostemps");
 
-    if (orig_mkostemps == NULL) {
-        orig_mkostemps = dlsym(RTLD_NEXT, "mkostemps");
-    }
-
+    typeof(mkostemps) *orig_mkostemps = osym("mkostemps");
     int rc = (*orig_mkostemps)(template, suffixlen, flags);
 
     if (rc >= 0) {
@@ -1883,10 +1673,7 @@ int mkostemps(char *template, int suffixlen, int flags) {
 FILE *tmpfile(void) {
     debug("tmpfile");
 
-    if (orig_tmpfile == NULL) {
-        orig_tmpfile = dlsym(RTLD_NEXT, "tmpfile");
-    }
-
+    typeof(tmpfile) *orig_tmpfile = osym("tmpfile");
     FILE *f = (*orig_tmpfile)();
 
     if (f != NULL) {
@@ -1899,10 +1686,7 @@ FILE *tmpfile(void) {
 off_t lseek(int fd, off_t offset, int whence) {
     debug("lseek %d %ld %d", fd, offset, whence);
 
-    if (orig_lseek == NULL) {
-        orig_lseek = dlsym(RTLD_NEXT, "lseek");
-    }
-
+    typeof(lseek) *orig_lseek = osym("lseek");
     off_t result = (*orig_lseek)(fd, offset, whence);
 
     if (result >= 0) {
@@ -1916,10 +1700,7 @@ off_t lseek(int fd, off_t offset, int whence) {
 off64_t lseek64(int fd, off64_t offset, int whence) {
     debug("lseek64");
 
-    if (orig_lseek64 == NULL) {
-        orig_lseek64 = dlsym(RTLD_NEXT, "lseek64");
-    }
-
+    typeof(lseek64) *orig_lseek64 = osym("lseek64");
     off64_t result = (*orig_lseek64)(fd, offset, whence);
 
     if (result >= 0) {
@@ -1933,10 +1714,7 @@ off64_t lseek64(int fd, off64_t offset, int whence) {
 int fseek(FILE *stream, long offset, int whence) {
     debug("fseek");
 
-    if (orig_fseek == NULL) {
-        orig_fseek = dlsym(RTLD_NEXT, "fseek");
-    }
-
+    typeof(fseek) *orig_fseek = osym("fseek");
     int result = (*orig_fseek)(stream, offset, whence);
 
     if (result == 0) {
@@ -1949,10 +1727,7 @@ int fseek(FILE *stream, long offset, int whence) {
 int fseeko(FILE *stream, off_t offset, int whence) {
     debug("fseeko");
 
-    if (orig_fseeko == NULL) {
-        orig_fseeko = dlsym(RTLD_NEXT, "fseeko");
-    }
-
+    typeof(fseeko) *orig_fseeko = osym("fseeko");
     int result = (*orig_fseeko)(stream, offset, whence);
 
     if (result == 0) {
@@ -2001,9 +1776,7 @@ void *interpose_pthread_wrapper(void *arg) {
 int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_routine)(void *), void *arg) {
     debug("pthread_create");
 
-    if (orig_pthread_create == NULL) {
-        orig_pthread_create = dlsym(RTLD_NEXT, "pthread_create");
-    }
+    typeof(pthread_create) *orig_pthread_create = osym("pthread_create");
 
     interpose_pthread_wrapper_arg *info = malloc(sizeof(interpose_pthread_wrapper_arg));
     if (info == NULL) {
