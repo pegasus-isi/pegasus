@@ -196,7 +196,8 @@ Root Workflow
 """
 
 
-@monitoring_routes.route('/root', methods=['GET', 'POST'])
+@monitoring_routes.route('/root')
+@monitoring_routes.route('/root/query', methods=['POST'])
 def get_root_workflows(username):
     """
     Returns a collection of root level workflows.
@@ -287,7 +288,8 @@ Workflow
 """
 
 
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow', methods=['GET', 'POST'])
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow')
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/query', methods=['POST'])
 def get_workflows(username, m_wf_id):
     """
     Returns a collection of workflows.
@@ -366,8 +368,10 @@ Workflow State
 """
 
 
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/state', methods=['GET', 'POST'])
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/state;recent=<boolean:recent>', methods=['GET', 'POST'])
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/state')
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/state;recent=<boolean:recent>')
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/state/query', methods=['POST'])
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/state;recent=<boolean:recent>/query', methods=['POST'])
 def get_workflow_state(username, m_wf_id, wf_id, recent=False):
     """
     Returns a collection of Workflow States.
@@ -427,7 +431,8 @@ Job
 """
 
 
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job', methods=['GET', 'POST'])
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job')
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/query', methods=['POST'])
 def get_workflow_jobs(username, m_wf_id, wf_id):
     """
     Returns a collection of Jobs.
@@ -507,7 +512,8 @@ Host
 """
 
 
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/host', methods=['GET', 'POST'])
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/host')
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/host/query', methods=['POST'])
 def get_workflow_hosts(username, m_wf_id, wf_id):
     """
     Returns a collection of Hosts.
@@ -585,8 +591,10 @@ Job State
 """
 
 
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/state', methods=['GET', 'POST'])
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/state;recent=<boolean:recent>', methods=['GET', 'POST'])
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/state')
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/state;recent=<boolean:recent>')
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/state/query', methods=['POST'])
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/state;recent=<boolean:recent>/query', methods=['POST'])
 def get_job_instance_states(username, m_wf_id, wf_id, job_id, job_instance_id, recent=False):
     """
     Returns a collection of Job States.
@@ -641,7 +649,8 @@ Task
 """
 
 
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/task', methods=['GET', 'POST'])
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/task')
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/task/query', methods=['POST'])
 def get_workflow_tasks(username, m_wf_id, wf_id):
     """
     Returns a collection of Tasks.
@@ -677,7 +686,8 @@ def get_workflow_tasks(username, m_wf_id, wf_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/task', methods=['GET', 'POST'])
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/task')
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/task/query', methods=['POST'])
 def get_job_tasks(username, m_wf_id, wf_id, job_id):
     """
     Returns a collection of Tasks.
@@ -772,8 +782,10 @@ Job Instance
 """
 
 
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance', methods=['GET', 'POST'])
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance;recent=<boolean:recent>', methods=['GET', 'POST'])
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance')
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance;recent=<boolean:recent>')
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/query', methods=['POST'])
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance;recent=<boolean:recent>/query', methods=['POST'])
 def get_job_instances(username, m_wf_id, wf_id, job_id, recent=False):
     """
     Returns a collection of JobInstances.
@@ -859,7 +871,8 @@ Invocation
 """
 
 
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/invocation', methods=['GET', 'POST'])
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/invocation')
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/invocation/query', methods=['POST'])
 def get_workflow_invocations(username, m_wf_id, wf_id):
     """
     Returns a collection of Invocations.
@@ -895,7 +908,8 @@ def get_workflow_invocations(username, m_wf_id, wf_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/invocation', methods=['GET', 'POST'])
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/invocation')
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/<int:job_id>/job-instance/<int:job_instance_id>/invocation/query', methods=['POST'])
 def get_job_instance_invocations(username, m_wf_id, wf_id, job_id, job_instance_id):
     queries = StampedeWorkflowQueries(g.stampede_db_url)
 
@@ -1046,7 +1060,8 @@ Views
 """
 
 
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/running', methods=['GET', 'POST'])
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/running')
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/running/query', methods=['POST'])
 def get_running_jobs(username, m_wf_id, wf_id):
     """
     Returns a collection of running Jobs.
@@ -1082,7 +1097,8 @@ def get_running_jobs(username, m_wf_id, wf_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/successful', methods=['GET', 'POST'])
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/successful')
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/successful/query', methods=['POST'])
 def get_successful_jobs(username, m_wf_id, wf_id):
     """
     Returns a collection of successful Jobs.
@@ -1118,7 +1134,8 @@ def get_successful_jobs(username, m_wf_id, wf_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/failed', methods=['GET', 'POST'])
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/failed')
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/failed/query', methods=['POST'])
 def get_failed_jobs(username, m_wf_id, wf_id):
     """
     Returns a collection of failed Jobs.
@@ -1154,7 +1171,8 @@ def get_failed_jobs(username, m_wf_id, wf_id):
     return make_response(response_json, 200, JSON_HEADER)
 
 
-@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/failing', methods=['GET', 'POST'])
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/failing')
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/job/failing/query', methods=['POST'])
 def get_failing_jobs(username, m_wf_id, wf_id):
     """
     Returns a collection of failing Jobs.
