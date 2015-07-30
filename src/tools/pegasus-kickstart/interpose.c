@@ -115,6 +115,7 @@ static FILE *fopen_untraced(const char *path, const char *mode);
 static int fprintf_untraced(FILE *stream, const char *format, ...);
 static int vfprintf_untraced(FILE *stream, const char *format, va_list ap);
 static char *fgets_untraced(char *s, int size, FILE *stream);
+static size_t fread_untraced(void *ptr, size_t size, size_t nmemb, FILE *stream);
 static int fclose_untraced(FILE *fp);
 
 static long unsigned int interpose_gettid(void) {
@@ -220,17 +221,57 @@ static void read_cmdline() {
         return;
     }
 
-    char args[BUFSIZ];
-    size_t s = fread(args, 1, BUFSIZ, f);
-    if (s <= 0) {
+    /* Record the first 1024 characters of the command line, separated by
+     * spaces, and with arguments containing spaces quoted. If the command is
+     * longer than 1024 characters, then add '...' at the end. */
+    char args[1024];
+    size_t asize = fread_untraced(args, 1, 1024, f);
+    if (asize <= 0) {
         printerr("Error reading /proc/self/cmdline: %s\n", strerror(errno));
     } else {
-        tprintf("arg: %s\n", args);
-        for (int i=1; i<s; i++) {
-            if (args[i-1] == '\0') {
-                tprintf("arg: %s\n", &args[i]);
+        int rsize = asize;
+        char *result = malloc(rsize);
+        int j = 0;
+        int quote = 0;
+        for (int i=0; i<asize; i++) {
+            /* Handle the case when the output gets too large */
+            if (j+5 >= rsize) {
+                rsize = rsize * 2;
+                char *new = realloc(result, rsize);
+                if (new == NULL) {
+                    printerr("Error reallocating cmdline array: %s\n", strerror(errno));
+                    result[j] = '\0';
+                    break;
+                }
+                result = new;
+            }
+
+            if (i == asize-1) {
+                if (asize == 1024) {
+                    result[j++] = '.';
+                    result[j++] = '.';
+                    result[j++] = '.';
+                } else if (quote) {
+                    result[j++] = '"';
+                }
+                result[j++] = '\0';
+            } else if (args[i] == '\0') {
+                if (quote) {
+                    result[j++] = '"';
+                }
+                result[j++] = ' ';
+                if (strstr(&args[i+1], " ") == NULL) {
+                    quote = 0;
+                } else {
+                    result[j++] = '"';
+                    quote = 1;
+                }
+            } else {
+                result[j++] = args[i];
             }
         }
+        tprintf("cmd:%s\n", result);
+        free(result);
     }
 
     fclose_untraced(f);
@@ -1195,11 +1236,15 @@ ssize_t write(int fd, const void *buf, size_t count) {
     return rc;
 }
 
+static size_t fread_untraced(void *ptr, size_t size, size_t nmemb, FILE *stream) {
+    typeof(fread) *orig_fread = osym("fread");
+    return (*orig_fread)(ptr, size, nmemb, stream);
+}
+
 size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
     debug("fread");
 
-    typeof(fread) *orig_fread = osym("fread");
-    size_t rc = (*orig_fread)(ptr, size, nmemb, stream);
+    size_t rc = fread_untraced(ptr, size, nmemb, stream);
 
     if (rc > 0) {
         trace_read(fileno(stream), rc);

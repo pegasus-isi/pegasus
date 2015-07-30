@@ -526,10 +526,15 @@ int printXMLProcInfo(FILE *out, int indent, ProcInfo* procs) {
                 , i->PAPI_TOT_INS, i->PAPI_LD_INS, i->PAPI_SR_INS, i->PAPI_FP_INS, i->PAPI_FP_OPS
 #endif
                 );
-        if (i->files == NULL && i->sockets == NULL) {
+        if (i->cmd == NULL && i->files == NULL && i->sockets == NULL) {
             fprintf(out, "/>\n");
         } else {
             fprintf(out, ">\n");
+            if (i->cmd != NULL) {
+                fprintf(out, "%*s<cmd>", indent+1, "");
+                xmlquote(out, i->cmd, strlen(i->cmd));
+                fprintf(out, "</cmd>\n");
+            }
             printXMLFileInfo(out, indent+2, i->files);
             printXMLSockInfo(out, indent+2, i->sockets);
             fprintf(out, "%*s</proc>\n", indent, "");
@@ -542,6 +547,9 @@ int printXMLProcInfo(FILE *out, int indent, ProcInfo* procs) {
 void deleteProcInfo(ProcInfo *procs) {
     while (procs != NULL) {
         ProcInfo *p = procs;
+        if (p->cmd != NULL) {
+            free(p->cmd);
+        }
         FileInfo *files = p->files;
         while (files != NULL) {
             FileInfo *f = files;

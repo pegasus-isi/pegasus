@@ -299,8 +299,9 @@ static ProcInfo *processTraceFile(const char *fullpath) {
         } else if (startswith(line, "PAPI_FP_OPS:")) {
             sscanf(line,"PAPI_FP_OPS:%lld\n", &llval);
             proc->PAPI_FP_OPS += llval;
-        } else if (startswith(line, "arg:")) {
-            /* TODO Do something with the command line args */
+        } else if (startswith(line, "cmd:")) {
+            proc->cmd = strdup(line+4);
+            proc->cmd[strlen(proc->cmd)-1] = '\0';
         } else {
             printerr("Unrecognized libinterpose record: %s", line);
         }

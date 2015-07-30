@@ -71,6 +71,8 @@ typedef struct _ProcInfo {
     long long PAPI_FP_INS;  /* Floating point instructions */
     long long PAPI_FP_OPS;  /* Floating point ops */
 
+    char *cmd;              /* Command line */
+
     struct _ProcInfo *next;
     struct _ProcInfo *prev;
 } ProcInfo;
