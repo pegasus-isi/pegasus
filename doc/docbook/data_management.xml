@@ -1647,7 +1647,12 @@ irodsPassword 'somesecretpassword'</programlisting>
     site are laid out. By default, Pegasus stages output products to the
     storage directory specified in the site catalog for the output site.
     Output mappers allow users finer grained control over where the output
-    files are placed on the output site.</para>
+    files are placed on the output site. </para>
+
+    <para>To configure the output mapper, you need to specify the following
+    property</para>
+
+    <programlisting>pegasus.dir.storage.mapper  &lt;name of the mapper to use&gt;</programlisting>
 
     <para>The following mappers are supported currently</para>
 
@@ -1690,11 +1695,11 @@ irodsPassword 'somesecretpassword'</programlisting>
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">Replica:</emphasis>This mapper determines
+        <para><emphasis role="bold">Replica:</emphasis> This mapper determines
         the path for an output file on the output site by querying an output
         replica catalog. The output site is one that is passed on the command
         line. The output replica catalog can be configured by specifying the
-        properties</para>
+        following properties. </para>
 
         <itemizedlist>
           <listitem>
@@ -1706,17 +1711,16 @@ irodsPassword 'somesecretpassword'</programlisting>
             backend to use</para>
           </listitem>
         </itemizedlist>
+
+        <para>Please note that the output replica catalog ( even though the
+        formats are the same) is logically different from the input replica
+        catalog, where you specify the locations for the input files. You
+        cannot specify the locations for the output files to be used by the
+        mapper in the DAX. The format for the File based replica catalog is
+        described <link linkend="rc-FILE">here</link>, while for the Regex it
+        is <link linkend="rc-regex">here</link>.</para>
       </listitem>
     </orderedlist>
-
-    <tip>
-      <para>The mappers can be configured by setting the property <emphasis
-      role="bold">pegasus.dir.storage.mapper</emphasis></para>
-    </tip>
-
-    <note>
-      <para>The Fixed mapper will be available starting 4.3.1 release.</para>
-    </note>
   </section>
 
   <section id="data_cleanup">
