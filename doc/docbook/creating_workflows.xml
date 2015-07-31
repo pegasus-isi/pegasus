@@ -249,8 +249,8 @@ LFN PFN a="b" [..]
         </orderedlist></para>
     </section>
 
-    <section>
-      <title id="rc-regex">Regex</title>
+    <section id="rc-regex">
+      <title>Regex</title>
 
       <para>In this mode, Pegasus queries a file based replica catalog. The
       file format is a simple multicolumn format. It is neither
@@ -300,9 +300,20 @@ f.a file:///Volumes/data/input/f.a site="local" <emphasis role="bold">regex</emp
       <programlisting>#3
 alpha\.(csv|txt|xml) file:///Volumes/data/input/<emphasis role="bold">[1]</emphasis>/<emphasis
           role="bold">[0]</emphasis> site="local" <emphasis role="bold">regex</emphasis>="true"</programlisting>
+
+      <para>In case of a LFN name matching multiple entries in the file, the
+      implementation picks up the first matching regex as it appears in the
+      file. If you want to specify a default location for all LFN's that don't
+      match any regex expression, you can have this entry as the last entry in
+      your file.</para>
+
+      <programlisting>#4 all unmatched LFN's reside in the same input directory.
+
+.*     file:///Volumes/data/input/<emphasis role="bold">[0]</emphasis> site="local" <emphasis
+          role="bold">regex</emphasis>="true"</programlisting>
     </section>
 
-    <section>
+    <section id="rc-directory">
       <title>Directory</title>
 
       <para>In this mode, Pegasus does a directory listing on an input
