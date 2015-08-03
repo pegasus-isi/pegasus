@@ -44,6 +44,7 @@ import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
 import edu.isi.pegasus.planner.cluster.JobAggregator;
+import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 
 import java.io.File;
@@ -565,23 +566,22 @@ public class Kickstart implements GridStart {
         gridStartArgs.append("-R ").append(job.executionPool).append(' ');
 
 
-//      Added for JIRA PM-543
+        //Added for JIRA PM-543
         String directory = this.getDirectory( job );
-
-
-          
+        boolean setScratchEnvVariable = false;
+        
         //handle the -W option that asks kickstart to create and change
         //exectionSiteDirectory before launching an executable.
         if(job.vdsNS.getBooleanValue(Pegasus.CREATE_AND_CHANGE_DIR_KEY ) ){
 	    //pass the exectionSiteDirectory as an argument to kickstart
             gridStartArgs.append(" -W ").append(directory).append(' ');
-            
+            setScratchEnvVariable = true;
         }
         else  if(job.vdsNS.getBooleanValue(Pegasus.CHANGE_DIR_KEY)  ){
             //handle the -w option that asks kickstart to change
             //exectionSiteDirectory before launching an executable.
-
             gridStartArgs.append(" -w ").append( directory ).append(' ');
+            setScratchEnvVariable = true;
         }
         else{
             //set the directory key with the job
@@ -591,6 +591,11 @@ public class Kickstart implements GridStart {
             }
         }
 
+        //PM-961 set the Pegasus scratch dir only for -w and -W cases
+        //for rest we associate them in the styles
+        if( setScratchEnvVariable ){
+            job.envVariables.construct( ENV.PEGASUS_SCRATCH_DIR_KEY, directory );
+        }
 
         if(   job.vdsNS.getBooleanValue(Pegasus.TRANSFER_PROXY_KEY) ){
             job.setDirectory( null );
