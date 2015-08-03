@@ -69,7 +69,13 @@ public class ENV extends Namespace {
     public static final String PEGASUS_JOB_ID_ENV_KEY = "PEGASUS_DAG_JOB_ID";
     
     
-    public static String PEGASUS_SITE_ID_ENV_KEY = "PEGASUS_SITE";
+    public static final String PEGASUS_SITE_ID_ENV_KEY = "PEGASUS_SITE";
+    
+    /**
+     * The env variable pointing to the scratch directory a job will be executed
+     * in , in a shared fs configuration
+     */
+    public static final String PEGASUS_SCRATCH_DIR_KEY = "PEGASUS_SCRATCH_DIR";
 
     /**
      * The name of the environment variable that specifies the s3cfg path
