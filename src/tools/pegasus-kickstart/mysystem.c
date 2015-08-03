@@ -225,11 +225,9 @@ static ProcInfo *processTraceFile(const char *fullpath) {
         return NULL;
     }
 
-    ProcInfo *proc = (ProcInfo *)calloc(sizeof(ProcInfo), 1);
-    if (proc == NULL) {
-        printerr("calloc: %s\n", strerror(errno));
-        return NULL;
-    }
+    ProcInfo *procs = NULL;
+    ProcInfo *proc = NULL;
+    ProcInfo *lastproc = NULL;
 
     /* Read data from the trace file */
     int lines = 0;
@@ -237,6 +235,26 @@ static ProcInfo *processTraceFile(const char *fullpath) {
     long long llval;
     while (fgets(line, BUFSIZ, trace) != NULL) {
         lines++;
+
+        if (proc == NULL) {
+            proc = (ProcInfo *)calloc(sizeof(ProcInfo), 1);
+            if (proc == NULL) {
+                printerr("calloc: %s\n", strerror(errno));
+                goto exit;
+            }
+        }
+
+        if (proc != lastproc) {
+            if (procs == NULL) {
+                procs = proc;
+            }
+            if (lastproc != NULL) {
+                lastproc->next = proc;
+            }
+            proc->prev = lastproc;
+            lastproc = proc;
+        }
+
         if (startswith(line, "file:")) {
             proc->files = readTraceFileRecord(line, proc->files);
         } else if (startswith(line, "socket:")) {
@@ -284,6 +302,8 @@ static ProcInfo *processTraceFile(const char *fullpath) {
             sscanf(line,"start:%lf\n", &(proc->start));
         } else if (startswith(line, "stop:")) {
             sscanf(line,"stop:%lf\n", &(proc->stop));
+            /* Reset the pointer so that it creates a new object */
+            proc = NULL;
         } else if (startswith(line, "PAPI_TOT_INS:")) {
             sscanf(line,"PAPI_TOT_INS:%lld\n", &llval);
             proc->PAPI_TOT_INS += llval;
@@ -307,6 +327,7 @@ static ProcInfo *processTraceFile(const char *fullpath) {
         }
     }
 
+exit:
     fclose(trace);
 
     /* Remove the file */
@@ -318,7 +339,7 @@ static ProcInfo *processTraceFile(const char *fullpath) {
         return NULL;
     }
 
-    return proc;
+    return procs;
 }
 
 /* Go through all the files in tempdir and read all of the traces that begin with trace_file_prefix */
@@ -349,6 +370,10 @@ static ProcInfo *processTraceFiles(const char *tempdir, const char *trace_file_p
                 lastproc->next = p;
             }
             lastproc = p;
+            /* If processTraceFile retuns a list of several procs */
+            while (lastproc->next != NULL) {
+                lastproc = lastproc->next;
+            }
         }
     }
 

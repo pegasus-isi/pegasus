@@ -531,7 +531,7 @@ int printXMLProcInfo(FILE *out, int indent, ProcInfo* procs) {
         } else {
             fprintf(out, ">\n");
             if (i->cmd != NULL) {
-                fprintf(out, "%*s<cmd>", indent+1, "");
+                fprintf(out, "%*s<cmd>", indent+2, "");
                 xmlquote(out, i->cmd, strlen(i->cmd));
                 fprintf(out, "</cmd>\n");
             }

@@ -83,6 +83,8 @@ static int tot_threads = 1;
 static int max_threads = 1;
 static pthread_mutex_t thread_counter_mutex = PTHREAD_MUTEX_INITIALIZER;
 
+static int mypid = 0;
+
 /* This is the trace file where we write information about the process */
 static FILE* trace = NULL;
 
@@ -135,7 +137,7 @@ static int topen() {
     char filename[BUFSIZ];
     snprintf(filename, BUFSIZ, "%s.%d", kickstart_prefix, getpid());
 
-    trace = fopen_untraced(filename, "w+");
+    trace = fopen_untraced(filename, "a");
     if (trace == NULL) {
         printerr("Unable to open trace file");
         return -1;
@@ -767,6 +769,10 @@ static void init_papi() {
     papi_ok = 1;
 }
 
+static void fini_papi() {
+    PAPI_shutdown();
+}
+
 /* Start papi counters for a thread */
 static void start_papi() {
     int err;
@@ -892,9 +898,7 @@ static void stop_papi() {
 
 /* Library initialization function */
 static void __attribute__((constructor)) interpose_init(void) {
-    /* XXX Note that this might be called twice in one program. Java
-     * seems to do this, for example.
-     */
+    mypid = getpid();
 
     /* Open the trace file */
     topen();
@@ -925,6 +929,11 @@ static void __attribute__((constructor)) interpose_init(void) {
 
 /* Library finalizer function */
 static void __attribute__((destructor)) interpose_fini(void) {
+    /* FIXME Prevent a process that calls fork->exec from shutting down libinterpose */
+    if (getpid() != mypid) {
+        return;
+    }
+
     /* Look for descriptors not explicitly closed */
     for(int i=0; i<max_descriptors; i++) {
         trace_close(i);
@@ -940,6 +949,7 @@ static void __attribute__((destructor)) interpose_fini(void) {
 #ifdef HAS_PAPI
     /* Stop papi for (hopefully) main thread */
     stop_papi();
+    fini_papi();
 #endif
 
     tprintf("stop: %lf\n", get_time());
@@ -1837,5 +1847,146 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
     info->arg = arg;
 
     return (*orig_pthread_create)(thread, attr, interpose_pthread_wrapper, info);
+}
+
+int execl(const char *path, const char *arg, ...) {
+    debug("execl");
+
+    int nargs;
+    va_list argp;
+    const char *p;
+
+    /* Count arguments */
+    nargs = 0;
+    p = arg;
+    va_start(argp, arg);
+    while (p != NULL) {
+        nargs++;
+        p = va_arg(argp, char *);
+    }
+    va_end(argp);
+
+    /* Construct argument array */
+    char **argv = malloc(sizeof(char *) * (nargs+1));
+
+    /* Populate argument array */
+    nargs = 0;
+    p = arg;
+    va_start(argp, arg);
+    while (p != NULL) {
+        argv[nargs++] = (char *)p;
+        p = va_arg(argp, char *);
+    }
+    argv[nargs++] = NULL;
+    va_end(argp);
+
+    return execv(path, argv);
+}
+
+int execlp(const char *file, const char *arg, ...) {
+    debug("execlp");
+
+    int nargs;
+    va_list argp;
+    const char *p;
+
+    /* Count arguments */
+    nargs = 0;
+    p = arg;
+    va_start(argp, arg);
+    while (p != NULL) {
+        nargs++;
+        p = va_arg(argp, char *);
+    }
+    va_end(argp);
+
+    /* Construct argument array */
+    char **argv = malloc(sizeof(char *) * (nargs+1));
+
+    /* Populate argument array */
+    nargs = 0;
+    p = arg;
+    va_start(argp, arg);
+    while (p != NULL) {
+        argv[nargs++] = (char *)p;
+        p = va_arg(argp, char *);
+    }
+    argv[nargs++] = NULL;
+    va_end(argp);
+
+    return execvp(file, argv);
+}
+
+int execle(const char *path, const char *arg, ... /*, char * const envp[]*/) {
+    debug("execle");
+
+    int nargs;
+    va_list argp;
+    const char *p;
+
+    /* Count arguments */
+    nargs = 0;
+    p = arg;
+    va_start(argp, arg);
+    while (p != NULL) {
+        nargs++;
+        p = va_arg(argp, char *);
+    }
+    va_end(argp);
+
+    /* Construct argument array */
+    char **argv = malloc(sizeof(char *) * (nargs+1));
+
+    /* Populate argument array */
+    nargs = 0;
+    p = arg;
+    va_start(argp, arg);
+    while (p != NULL) {
+        argv[nargs++] = (char *)p;
+        p = va_arg(argp, char *);
+    }
+    argv[nargs++] = NULL;
+    char **envp = va_arg(argp, char **);
+    va_end(argp);
+
+    return execve(path, argv, envp);
+}
+
+int execv(const char *path, char *const argv[]) {
+    debug("execv");
+    typeof(execv) *orig_execv = osym("execv");
+    interpose_fini();
+    int rc = (*orig_execv)(path, argv);
+    interpose_init();
+    return rc;
+}
+
+int execvp(const char *file, char *const argv[]) {
+    debug("execvp");
+    typeof(execvp) *orig_execvp = osym("execvp");
+    interpose_fini();
+    int rc = (*orig_execvp)(file, argv);
+    interpose_init();
+    return rc;
+}
+
+int execve(const char *filename, char *const argv[], char *const envp[]) {
+    debug("execve");
+    typeof(execve) *orig_execve = osym("execve");
+    interpose_fini();
+    int rc = (*orig_execve)(filename, argv, envp);
+    interpose_init();
+    return rc;
+}
+
+pid_t fork(void) {
+    typeof(fork) *orig_fork = osym("fork");
+    pid_t rc = (*orig_fork)();
+
+    if (rc == 0) {
+        /* TODO Reinitialize libinterpose on a successful fork */
+    }
+
+    return rc;
 }
 
