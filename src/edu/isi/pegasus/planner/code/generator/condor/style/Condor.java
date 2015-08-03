@@ -28,6 +28,7 @@ import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleFactoryException;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
+import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
 /**
@@ -228,6 +229,8 @@ public class Condor extends Abstract {
                     }else{
                         job.condorVariables.construct("initialdir", workdir);
                     }
+                    //PM-961 also associate the value as an environment variable
+                    job.envVariables.construct( ENV.PEGASUS_SCRATCH_DIR_KEY, workdir);
                 }
             }
             else{

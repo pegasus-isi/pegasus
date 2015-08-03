@@ -24,6 +24,7 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.namespace.ENV;
 
 
 
@@ -73,8 +74,6 @@ public class CreamCE extends Abstract{
     public void apply(Job job) throws CondorStyleException{
         String workdir = job.getDirectory();
 
-
-
         //the universe for CondorC is always grid
         job.condorVariables.construct( Condor.UNIVERSE_KEY, "grid" );
         
@@ -88,6 +87,10 @@ public class CreamCE extends Abstract{
         job.setSubmissionCredential( TYPE.x509 );
 
         job.condorVariables.construct( "remote_initialdir", workdir );
+        if( workdir != null ){
+            //PM-961 also associate the value as an environment variable
+            job.envVariables.construct( ENV.PEGASUS_SCRATCH_DIR_KEY, workdir);
+        }
 
         applyCredentialsForRemoteExec(job);
     }

@@ -28,6 +28,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.namespace.Condor;
+import edu.isi.pegasus.planner.namespace.ENV;
 
 /**
  * This implementation enables a job to be submitted via CondorG to remote
@@ -112,10 +113,12 @@ public class CondorG extends Abstract {
             //Is invalid state
             throw new CondorStyleException( errorMessage( job, STYLE_NAME, universe ) );
         }
-        //remote_initialdir might be needed to removed
-        //later if running for a LCG site
-        //bwSubmit.println("remote_initialdir = " + workdir);
+        
         job.condorVariables.construct( "remote_initialdir", workdir );
+        if( workdir != null ){
+            //PM-961 also associate the value as an environment variable
+            job.envVariables.construct( ENV.PEGASUS_SCRATCH_DIR_KEY, workdir);
+        }
 
         //associate the proxy to be used
         //we always say a proxy is required for CondorG submission
