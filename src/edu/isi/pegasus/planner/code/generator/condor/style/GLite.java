@@ -16,7 +16,6 @@
 
 package edu.isi.pegasus.planner.code.generator.condor.style;
 
-import edu.isi.pegasus.common.util.GliteEscape;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -29,7 +28,6 @@ import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParser;
 import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParserException;
 
-import java.util.Iterator;
 import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.code.generator.condor.CondorEnvironmentEscape;
 import edu.isi.pegasus.planner.namespace.Pegasus;
@@ -175,6 +173,9 @@ public class GLite extends Abstract {
         //executable to a cd to the directory pointed to by this variable.
         if( workdir != null ){
             job.envVariables.construct( "_PEGASUS_SCRATCH_DIR", workdir);
+            //PM-961 also associate the value as an environment variable
+            job.envVariables.construct( edu.isi.pegasus.planner.namespace.ENV.PEGASUS_SCRATCH_DIR_KEY, 
+                                        workdir);
         }
 
         /* transfer_executable does not work with gLite

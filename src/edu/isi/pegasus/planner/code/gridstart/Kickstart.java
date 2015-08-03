@@ -44,6 +44,7 @@ import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
 import edu.isi.pegasus.planner.cluster.JobAggregator;
+import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 
 import java.io.File;
@@ -566,64 +567,40 @@ public class Kickstart implements GridStart {
         gridStartArgs.append("-R ").append(job.executionPool).append(' ');
 
 
-//      Added for JIRA PM-543
+        //Added for JIRA PM-543
         String directory = this.getDirectory( job );
-
-
-          
+        boolean setScratchEnvVariable = false;
+        
         //handle the -W option that asks kickstart to create and change
         //exectionSiteDirectory before launching an executable.
         if(job.vdsNS.getBooleanValue(Pegasus.CREATE_AND_CHANGE_DIR_KEY ) ){
-	    
-//            Commented to take account of submitting to condor pool
-//            directly or glide in nodes. However, does not work for
-//            standard universe jobs. Also made change in Kickstart
-//            to pick up only remote_initialdir Karan Nov 15,2005
-
-
-//           Removed for JIRA PM-543
-//                String directory = null;
-//                String key = getDirectoryKey( job );
-//                //we remove the key JIRA PM-80
-//                directory = (String)job.condorVariables.removeKey( key );
-
-            //pass the exectionSiteDirectory as an argument to kickstart
+	    //pass the exectionSiteDirectory as an argument to kickstart
             gridStartArgs.append(" -W ").append(directory).append(' ');
-            
+            setScratchEnvVariable = true;
         }
         else  if(job.vdsNS.getBooleanValue(Pegasus.CHANGE_DIR_KEY)  ){
             //handle the -w option that asks kickstart to change
             //exectionSiteDirectory before launching an executable.
-
-
-//           Removed for JIRA PM-543
-//                String directory = null;
-//                String key = getDirectoryKey( job );\
-//                //we remove the key JIRA PM-80
-//                directory = (String)job.condorVariables.removeKey( key );
-
-                //pass the exectionSiteDirectory as an argument to kickstart
-                gridStartArgs.append(" -w ").append( directory ).append(' ');
+            gridStartArgs.append(" -w ").append( directory ).append(' ');
+            setScratchEnvVariable = true;
         }
         else{
             //set the directory key with the job
+            //for kickstart -w and -W it is not set
             if( requiresToSetDirectory( job ) ){
                 job.setDirectory( directory );
             }
         }
 
+        //PM-961 set the Pegasus scratch dir only for -w and -W cases
+        //for rest we associate them in the styles
+        if( setScratchEnvVariable ){
+            job.envVariables.construct( ENV.PEGASUS_SCRATCH_DIR_KEY, directory );
+        }
 
-            if(   job.vdsNS.getBooleanValue(Pegasus.TRANSFER_PROXY_KEY) ){
-
-//           Removed for JIRA PM-543
-//
-//                String key = getDirectoryKey( job );
-//                //just remove the remote_initialdir key
-//                //the constituentJob needs to be run in the exectionSiteDirectory
-//                //Condor or GRAM decides to run
-//                job.condorVariables.removeKey( key );
-                job.setDirectory( null );
-            }
+        if(   job.vdsNS.getBooleanValue(Pegasus.TRANSFER_PROXY_KEY) ){
+            job.setDirectory( null );
+        }
 
         //check if the constituentJob type indicates staging of executable
         //The -X functionality is handled by the setup jobs that
