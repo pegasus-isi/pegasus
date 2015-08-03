@@ -39,7 +39,7 @@ cat > mpi-hello-world-wrapper <<EOF
 
 # before launching the job switch to the directory that
 # pegasus created for the workflow
-cd \$_PEGASUS_SCRATCH_DIR
+cd \$PEGASUS_SCRATCH_DIR
 $mpiexec `pwd`/pegasus-mpi-hw "\$@"
 EOF
 chmod +x  ./mpi-hello-world-wrapper
