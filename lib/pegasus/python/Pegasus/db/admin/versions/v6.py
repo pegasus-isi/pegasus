@@ -12,9 +12,8 @@ class Version(BaseVersion):
     def __init__(self, connection):
         super(Version, self).__init__(connection)
 
-
     def update(self, force=False):
-        "Add archived field to master_workflow table"
+        """Add archived field to master_workflow table"""
         log.info("Updating to version %s" % DB_VERSION)
 
         try:
@@ -23,14 +22,16 @@ class Version(BaseVersion):
                   anomaly_id	    INTEGER	      NOT NULL,
                   wf_id             INTEGER	      NOT NULL,
                   ts	            NUMERIC(16,6) NOT NULL,
+                  job_instance_id   INTEGER       NOT NULL,
                   dag_job_id	    VARCHAR(255),
                   anomaly_type	    VARCHAR(255)  NOT NULL,
+                  metrics	        VARCHAR(255),
                   message	        VARCHAR(255)  NOT NULL,
                   json  	        VARCHAR(255)  NOT NULL,
 
-                  PRIMARY 	KEY (anomaly_id),
-                  FOREIGN	KEY (wf_id) REFERENCES workflow (wf_id) ON DELETE CASCADE,
-                  FOREIGN	KEY (job_instance_id) REFERENCES job_instance (job_instance_id) ON DELETE CASCADE
+                  PRIMARY   KEY (anomaly_id),
+                  FOREIGN   KEY (wf_id) REFERENCES workflow (wf_id) ON DELETE CASCADE,
+                  FOREIGN   KEY (job_instance_id) REFERENCES job_instance (job_instance_id) ON DELETE CASCADE
                 );
                 """)
 
@@ -41,7 +42,6 @@ class Version(BaseVersion):
             log.error("Error adding 'job_metrics' table")
             log.exception(e)
             raise RuntimeError(e)
-
 
     def downgrade(self, force=False):
         try:

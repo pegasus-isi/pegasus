@@ -809,7 +809,15 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         """
         linedata['wf_id'] = self.wf_uuid_to_id(linedata['wf_uuid'])
 
+        job_instance = self.session.query(JobInstance).join(Job, JobInstance.job_id == Job.job_id).\
+            filter(Job.exec_job_id == linedata['dag_job_id']).order_by(desc(JobInstance.job_submit_seq)).first()
+
+        if job_instance is None:
+            print "JobInstance for job with name '%s' not found" % linedata['dag_job_id']
+            return
+
         anomaly = self.linedataToObject(linedata, Anomaly())
+        anomaly.job_instance_id = job_instance.job_instance_id
         anomaly.json = json.dumps(anomaly.json)
 
         anomaly.commit_to_db(self.session)

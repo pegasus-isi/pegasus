@@ -44,11 +44,14 @@ class TestAnomalyHandler(unittest.TestCase):
 
     def test_insert_measurement(self):
         anomaly = {
-            "wf_uuid": "143acf4d-8494-4c0f-baf0-2b0ff4464390",
-            "anomaly_type": "vmRSS",
-            "message": "The 'vmRSS' value exceeded the threshold (293847324 > 12832131)",
             "ts": "1496389227",
-            "dag_job_id": "namd_ID0000002"
+            "dag_job_id": "namd_ID0000002",
+            "wf_uuid": "143acf4d-8494-4c0f-baf0-2b0ff4464390",
+            "anomaly_type": "kickstart.threshold_exceeded",
+            "metrics": "vmRSS",
+            "value": 293847324,
+            "threshold": "12832131",
+            "message": "The 'vmRSS' value exceeded the threshold (293847324 > 12832131)"
         }
 
         self.analyzer.anomaly_detected(anomaly)
@@ -57,17 +60,24 @@ class TestAnomalyHandler(unittest.TestCase):
 
         self.assertEquals(len(result), 1)
         self.assertEquals(int(result[0].ts), int(anomaly["ts"]))
+        self.assertEquals(int(result[0].job_instance_id), 6)
 
     def test_on_message_integration(self):
         self.assertIsNotNone(self.anomaly_handler, "anomaly handler wasn't initialized correctly")
 
-        msg_body = "ts=1437389227|wf_uuid=143acf4d-8494-4c0f-baf0-2b0ff4464390|dag_job_id=namd_ID0000002|" \
-                   "anomaly_type=stime|message=The 'stime' value exceeded the threshold (10.83 > 10.0)"
+        msg_body = "ts=1437389227|"\
+                   "wf_uuid=143acf4d-8494-4c0f-baf0-2b0ff4464390|"\
+                   "dag_job_id=namd_ID0000003|" \
+                   "anomaly_type=kickstart.threshold_exceeded|" \
+                   "message=The 'stime' value exceeded the threshold (10.83 > 10.0)|" \
+                   "metrics=stime|" \
+                   "value=10.83|" \
+                   "threshold=10.0"
 
         self.anomaly_handler.on_message(None, None, None, msg_body)
 
         result = self.anomaly_handler.event_sink._db.session.query(Anomaly).\
-            filter(Anomaly.anomaly_type == "stime", Anomaly.ts == 1437389227).all()
+            filter(Anomaly.metrics == "stime", Anomaly.ts == 1437389227, Anomaly.job_instance_id == 10).all()
 
         self.assertEquals(len(result), 1)
 

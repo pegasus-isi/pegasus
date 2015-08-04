@@ -59,7 +59,7 @@ class AnomalyHandler:
         anomaly = AnomalyMessage.parse(body)
 
         if anomaly is not None and self.event_sink is not None:
-            print "[anomaly-handler] We are sending an anomaly:", anomaly
+            # print "[anomaly-handler] We are sending an anomaly:", anomaly
             self.emit_anomaly_event(anomaly)
         else:
             print "[anomaly-handler] Either anomaly or event sink is None", anomaly, self.event_sink
@@ -182,5 +182,8 @@ class AnomalyMessage:
 
         if 'dag_job_id' in self.json:
             info['dag_job_id'] = self.json['dag_job_id']
+
+        if 'metrics' in self.json:
+            info['metrics'] = self.json['metrics']
 
         return info
