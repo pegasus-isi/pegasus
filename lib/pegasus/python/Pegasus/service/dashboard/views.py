@@ -432,6 +432,12 @@ def time_stats(username, root_wf_id, wf_id):
 
     return '{}'
 
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/anomalies', methods=['GET'])
+def workflow_anomalies(username, root_wf_id, wf_id):
+    dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
+    anomalies = dashboard.get_workflow_anomalies()
+
+    return render_template('workflow/anomalies.html', root_wf_id=root_wf_id, wf_id=wf_id, anomalies=anomalies)
 
 @dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/browser', methods=['GET'])
 def file_browser(username, root_wf_id, wf_id):
@@ -607,4 +613,5 @@ def database_migration_error(error):
 
 @dashboard_routes.errorhandler(Exception)
 def catch_all(error):
+    print error
     return render_template('error/catch_all.html')

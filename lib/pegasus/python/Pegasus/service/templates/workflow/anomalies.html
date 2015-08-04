@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Statistics{% endblock %}
+{% block javascript_includes %}
+    <script type="text/javascript" src="{{ url_for ('static', filename='js/statistics.js') }}"></script>
+{% endblock %}
+{% block javascript_init %}
+    <script type="text/javascript" charset="utf-8">
+        function init() {
+        }
+
+        $(document).ready(function () {
+            init();
+        });
+    </script>
+{% endblock %}
+{% block navigation_bar %}
+    <li><a href="{{ url_for ('.workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a></li>
+    <li class="active">Workflow Anomalies</li>
+{% endblock %}
+{% block title_header %}Workflow Anomalies{% endblock %}
+{% block content %}
+    <section class="row">
+        <div id="workflow_summary_stats" class="col-xs-12"
+             href="{{ url_for ('.workflow_summary_stats', root_wf_id = root_wf_id, wf_id = wf_id) }}">
+        </div>
+    </section>
+    <section class="row">
+        <div class="col-xs-12">
+            {% if anomalies %}
+                <div class="list-group">
+                    {% for anomaly in anomalies %}
+                        <a href="#" class="list-group-item">
+                            <strong>{{ anomaly.anomaly_type }}</strong> {{ anomaly.message }}
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <span class="fa fa-lg fa-check"> </span> No anomalies found
+                </div>
+            {% endif %}
+        </div>
+    </section>
+{% endblock %}

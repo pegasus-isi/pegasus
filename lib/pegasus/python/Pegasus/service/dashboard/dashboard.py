@@ -498,3 +498,13 @@ class Dashboard(object):
         finally:
             Dashboard.close(workflow)
 
+    def get_workflow_anomalies(self):
+        try:
+            workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id=self._wf_id)
+            anomalies = workflow.get_workflow_anomalies()
+
+            return anomalies
+
+        finally:
+            Dashboard.close(workflow)
+

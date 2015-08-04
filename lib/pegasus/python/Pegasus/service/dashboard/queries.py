@@ -754,6 +754,15 @@ class WorkflowInfo(SQLAlchemyInit):
 
         return q.one()
 
+    def get_workflow_anomalies(self):
+
+        q = self.session.query(Anomaly)
+
+        q = q.filter(Anomaly.wf_id == self._wf_id)
+        q = q.filter(Anomaly.job_instance_id == None)
+
+        return q.all()
+
     def close(self):
         log.debug('close')
         self.disconnect()
