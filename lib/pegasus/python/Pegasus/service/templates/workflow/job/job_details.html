@@ -24,106 +24,96 @@
         return ((x < y || isNaN(x)) ? 1 : ((x > y || isNaN(y) ) ? -1 : 0));
     };
 
-    $(document).ready (function ()
-    {
-        $('#invocations_tabs').tabs (
-                {
-                    beforeLoad: function (event, ui)
-                    {
-                        var isInitialized = ui.panel.data ('initialized');
+    $(document).ready(function () {
+        $('#invocations_tabs').tabs(
+            {
+                beforeLoad: function (event, ui) {
+                    var isInitialized = ui.panel.data('initialized');
 
-                        if (isInitialized === true)
-                        {
-                            return false;
+                    if (isInitialized === true) {
+                        return false;
+                    }
+
+                    ui.jqXHR.error(function () {
+                        ui.panel.html('Error loading contents of this tab.');
+                    })
+                },
+                load: function (event, ui) {
+                    var index = ui.tab.index();
+                    var panel = ui.panel;
+
+                    if (index == 0) {
+                        panel.data('initialized', true);
+
+                        if (panel.html() == '') {
+                            panel.html('No failed invocations.')
                         }
-
-                        ui.jqXHR.error (function ()
-                        {
-                            ui.panel.html ('Error loading contents of this tab.');
-                        })
-                    },
-                    load: function (event, ui)
-                    {
-                        var index = ui.tab.index ();
-                        var panel = ui.panel;
-
-                        if (index == 0)
-                        {
-                            panel.data ('initialized', true);
-
-                            if (panel.html () == '')
-                            {
-                                panel.html ('No failed invocations.')
-                            }
-                            else
-                            {
-                                $('#failed_invocations_list').dataTable ({
-                                    "jQueryUI" : true,
-                                    "pagingType": "full_numbers"
-                                });
-                            }
-                        }
-                        else if (index == 1)
-                        {
-                            panel.data ('initialized', true);
-
-                            if (panel.html () == '')
-                            {
-                                panel.html ('No successful invocations.')
-                            }
-                            else
-                            {
-                                $('#successful_invocations_list').dataTable ({
-                                    "jQueryUI"   : true,
-                                    "pagingType" : "full_numbers",
-                                    "processing" : true
-                                });
-                            }
+                        else {
+                            $('#failed_invocations_list').dataTable({
+                                "jQueryUI": true,
+                                "pagingType": "full_numbers"
+                            });
                         }
                     }
-                });
+                    else if (index == 1) {
+                        panel.data('initialized', true);
 
-        verticalTableInitStatus ('#job_text_info', {{ status_code(job.exitcode) }});
-    verticalTableInitStatus ('#job_states_info', {{ status_code(job.exitcode) }});
-    verticalTableInitStatus ('#job_metrics_info', {{ status_code(job.exitcode) }});
-
-    $('#job_instances_info').dataTable({
-        "jQueryUI": true,
-        "pagingType": "full_numbers",
-        "searching": false,
-        "info": true,
-        "order"      : [
-            [ 0, "desc" ]
-        ],
-        "columns": [
-            null,
-            { "sType": "num-html" },
-            null,
-            null,
-            null
-        ]
-    });
-
-    setInterval(function() {
-        if( $("#job_metrics").length ) {
-            console.log("Updating job metrics");
-            var update_url = "{{ url_for ('.job_metrics_update', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}";
-
-            $.getJSON(update_url, function(job_metrics) {
-                $.each(job_metrics, function(i, metric_update) {
-                    $row = $("#job_metrics_info tr." + metric_update.metric_name);
-                    $row.find("td").text(metric_update.metric_value);
-                });
+                        if (panel.html() == '') {
+                            panel.html('No successful invocations.')
+                        }
+                        else {
+                            $('#successful_invocations_list').dataTable({
+                                "jQueryUI": true,
+                                "pagingType": "full_numbers",
+                                "processing": true
+                            });
+                        }
+                    }
+                }
             });
 
+        verticalTableInitStatus('#job_text_info', {{ status_code(job.exitcode) }});
+        verticalTableInitStatus('#job_states_info', {{ status_code(job.exitcode) }});
+        verticalTableInitStatus('#job_metrics_info', {{ status_code(job.exitcode) }});
 
-        }
-        else {
-            console.log("We have no table with job metrics");
-        }
+        $('#job_instances_info').dataTable({
+            "jQueryUI": true,
+            "pagingType": "full_numbers",
+            "searching": false,
+            "info": true,
+            "order": [
+                [0, "desc"]
+            ],
+            "columns": [
+                null,
+                {"sType": "num-html"},
+                null,
+                null,
+                null
+            ]
+        });
+        {% if exitcode == None %}
+            setInterval(function () {
+                if ($("#job_metrics").length) {
+                    console.log("Updating job metrics");
+                    var update_url = "{{ url_for ('.job_metrics_update', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}";
 
-    }, 10000);
-    })
+                    $.getJSON(update_url, function (job_metrics) {
+                        $.each(job_metrics, function (i, metric_update) {
+                            $row = $("#job_metrics_info tr." + metric_update.metric_name);
+                            $row.find("td").text(metric_update.metric_value);
+                        });
+                    });
+
+
+                }
+                else {
+                    console.log("We have no table with job metrics");
+                }
+
+            }, 10000);
+        {%  endif %}
+    });
 </script>
 {% endblock %}
 {% block css_includes %}
@@ -150,6 +140,9 @@
             <li role="presentation"><a href="#job_instance" aria-controls="job_instance" role="tab" data-toggle="tab">Job Instances</a></li>
             {% if job_metrics %}
             <li role="presentation"><a href="#job_metrics" aria-controls="job_metrics" role="tab" data-toggle="tab">Job Metrics</a></li>
+            {% endif %}
+            {% if job_metrics %}
+                <li role="presentation"><a href="#job_metrics" aria-controls="job_metrics" role="tab" data-toggle="tab">Job Metrics</a></li>
             {% endif %}
         </ul>
 
