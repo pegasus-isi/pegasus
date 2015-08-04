@@ -22,7 +22,7 @@ class Version(BaseVersion):
                   anomaly_id	    INTEGER	      NOT NULL,
                   wf_id             INTEGER	      NOT NULL,
                   ts	            NUMERIC(16,6) NOT NULL,
-                  job_instance_id   INTEGER       NOT NULL,
+                  job_instance_id   INTEGER       NULL,
                   dag_job_id	    VARCHAR(255),
                   anomaly_type	    VARCHAR(255)  NOT NULL,
                   metrics	        VARCHAR(255),
