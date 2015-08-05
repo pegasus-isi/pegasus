@@ -956,6 +956,8 @@ static void __attribute__((destructor)) interpose_fini(void) {
 
     /* Close trace file */
     tclose();
+
+    mypid = 0;
 }
 
 static inline void *osym(const char *name) {
@@ -1984,7 +1986,13 @@ pid_t fork(void) {
     pid_t rc = (*orig_fork)();
 
     if (rc == 0) {
-        /* TODO Reinitialize libinterpose on a successful fork */
+        /* Close the trace file since we inherited it */
+        tclose();
+
+        /* Reinitialize libinterpose on a successful fork */
+        interpose_init();
+
+        tprintf("fork\n");
     }
 
     return rc;

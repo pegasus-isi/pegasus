@@ -299,11 +299,20 @@ static ProcInfo *processTraceFile(const char *fullpath) {
         } else if (startswith(line,"cancelled_write_bytes")) {
             sscanf(line,"cancelled_write_bytes: %"SCNu64"\n",&(proc->cancelled_write_bytes));
         } else if (startswith(line, "start:")) {
-            sscanf(line,"start:%lf\n", &(proc->start));
+            /* Only set the start time if it is not already set.
+             * This handles cases where fork() is called. */
+            if (proc->start == 0) {
+                sscanf(line, "start:%lf\n", &(proc->start));
+            }
         } else if (startswith(line, "stop:")) {
             sscanf(line,"stop:%lf\n", &(proc->stop));
-            /* Reset the pointer so that it creates a new object */
-            proc = NULL;
+            if (proc->fork == 0) {
+                /* Reset the pointer so that it creates a new object */
+                proc = NULL;
+            } else {
+                /* We skipped one exec, reset fork so we don't skip another */
+                proc->fork = 0;
+            }
         } else if (startswith(line, "PAPI_TOT_INS:")) {
             sscanf(line,"PAPI_TOT_INS:%lld\n", &llval);
             proc->PAPI_TOT_INS += llval;
@@ -322,6 +331,8 @@ static ProcInfo *processTraceFile(const char *fullpath) {
         } else if (startswith(line, "cmd:")) {
             proc->cmd = strdup(line+4);
             proc->cmd[strlen(proc->cmd)-1] = '\0';
+        } else if (startswith(line, "fork")) {
+            proc->fork = 1;
         } else {
             printerr("Unrecognized libinterpose record: %s", line);
         }

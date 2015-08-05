@@ -73,6 +73,8 @@ typedef struct _ProcInfo {
 
     char *cmd;              /* Command line */
 
+    int fork;               /* Is this process forked from another? */
+
     struct _ProcInfo *next;
     struct _ProcInfo *prev;
 } ProcInfo;
