@@ -203,9 +203,32 @@ static Descriptor *get_descriptor(int fd) {
      * it is loaded before this library. This check will make sure
      * that any descriptor we try to access is valid.
      */
-    if (descriptors == NULL || fd > max_descriptors) {
+    if (descriptors == NULL || fd < 0) {
         return NULL;
     }
+
+    if (fd >= max_descriptors) {
+        /* Determine what the new size of the table should be */
+        int newmax = max_descriptors * 2;
+        while (fd >= newmax) {
+            newmax = newmax * 2;
+        }
+
+        /* Allocate a new descriptor table */
+        Descriptor *newdescriptors = realloc(descriptors, sizeof(Descriptor) * newmax);
+        if (newdescriptors == NULL) {
+            printerr("Error reallocating new descriptor table: realloc: %s\n", strerror(errno));
+            return NULL;
+        }
+
+
+        /* Clear the newly allocated entries */
+        bzero(&(newdescriptors[max_descriptors]), (newmax-max_descriptors)*sizeof(Descriptor));
+
+        descriptors = newdescriptors;
+        max_descriptors = newmax;
+    }
+
     return &(descriptors[fd]);
 }
 
@@ -695,6 +718,9 @@ static void trace_dup(int oldfd, int newfd) {
 
     /* Copy the old descriptor into the new */
     Descriptor *n = get_descriptor(newfd);
+    if (n == NULL) {
+        return;
+    }
     n->type = o->type;
     n->path = temp;
     n->bread = 0;
@@ -904,15 +930,11 @@ static void __attribute__((constructor)) interpose_init(void) {
     topen();
 
     /* Get file descriptor limit and allocate descriptor table */
-    struct rlimit nofile_limit;
-    getrlimit(RLIMIT_NOFILE, &nofile_limit);
-    max_descriptors = nofile_limit.rlim_max;
+    max_descriptors = 8;
     descriptors = (Descriptor *)calloc(sizeof(Descriptor), max_descriptors);
     if (descriptors == NULL) {
-        printerr("calloc: %s\n", strerror(errno));
+        printerr("Error allocating descriptor table: calloc: %s\n", strerror(errno));
     }
-
-    debug("Max descriptors: %d", max_descriptors);
 
     tprintf("start: %lf\n", get_time());
 
