@@ -43,9 +43,9 @@ sge_pe=" #$ -pe ompi"
 #echo "#PROCS ARE ${PROCS}"
 #echo "#WALLTIME IS ${WALLTIME}" 
 
-if [ "X${PROCS}" != "X" ]; then
-    procs=`strip_quotes ${PROCS}`
-    sge_pe="${sge_pe} ${procs}"
+if [ "X${CORES}" != "X" ]; then
+    cores=`strip_quotes ${CORES}`
+    sge_pe="${sge_pe} ${cores}"
     echo $sge_pe
 fi
 

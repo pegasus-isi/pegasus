@@ -289,6 +289,12 @@ public class GLite extends Abstract {
             addSubExpression( value, "NODES" ,  (String)job.globusRSL.get( "hostcount" ) )  ;
         }
 
+        /* the globus key count is CORES */
+        if( job.globusRSL.containsKey( "count" ) ){
+            value.append( " && " );
+            addSubExpression( value, "CORES" ,  (String)job.globusRSL.get( "count" ) )  ;
+        }
+        
         /* the globus key xcount is PROCS */
         if( job.globusRSL.containsKey( "xcount" ) ){
             value.append( " && " );
