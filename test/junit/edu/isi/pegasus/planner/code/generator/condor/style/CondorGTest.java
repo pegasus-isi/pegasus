@@ -58,7 +58,7 @@ public class CondorGTest {
     @Test
     public void testPegasusProfileHostCount() throws CondorStyleException{
         Job j = new Job();
-        j.vdsNS.checkKeyInNS(Pegasus.HOST_COUNT_KEY, "5" );
+        j.vdsNS.checkKeyInNS(Pegasus.NODES_KEY, "5" );
         testForKey( j, Globus.HOST_COUNT_KEY, "5");
     }
     
@@ -66,7 +66,7 @@ public class CondorGTest {
     @Test
     public void testPegasusProfileHostCountAndGlobusKey() throws CondorStyleException{
         Job j = new Job();
-        j.vdsNS.checkKeyInNS( Pegasus.HOST_COUNT_KEY, "5" );
+        j.vdsNS.checkKeyInNS(Pegasus.NODES_KEY, "5" );
         j.globusRSL.checkKeyInNS( Globus.HOST_COUNT_KEY, "6" );
         testForKey( j, Globus.HOST_COUNT_KEY, "6");
     }

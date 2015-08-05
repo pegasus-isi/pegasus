@@ -65,7 +65,7 @@ public class Globus extends Namespace {
             mRSLToPegasus.put( Globus.MAX_MEMORY_KEY, Pegasus.MEMORY_KEY );
             mRSLToPegasus.put( Globus.MAX_WALLTIME_KEY, Pegasus.RUNTIME_KEY );
             mRSLToPegasus.put( Globus.COUNT_KEY, Pegasus.CORES_KEY );
-            mRSLToPegasus.put( Globus.HOST_COUNT_KEY, Pegasus.HOST_COUNT_KEY );
+            mRSLToPegasus.put(Globus.HOST_COUNT_KEY, Pegasus.NODES_KEY );
         }
         return mRSLToPegasus;
     }

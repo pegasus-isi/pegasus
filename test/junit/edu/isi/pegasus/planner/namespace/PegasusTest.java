@@ -188,7 +188,7 @@ public class PegasusTest {
         mLogger.logEventCompletion();
         
         mLogger.logEventStart( "test.namespace.Pegasus", "set", Integer.toString(set++) );
-        testKey( Pegasus.HOST_COUNT_KEY, "dummy", Namespace.VALID_KEY );
+        testKey(Pegasus.NODES_KEY, "dummy", Namespace.VALID_KEY );
         mLogger.logEventCompletion();
         
         mLogger.logEventStart( "test.namespace.Pegasus", "set", Integer.toString(set++) );

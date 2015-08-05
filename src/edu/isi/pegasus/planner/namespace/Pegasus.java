@@ -427,9 +427,9 @@ public class Pegasus extends Namespace {
     public static final String DISKSPACE_KEY = "diskspace";
     
     /**
-     * Key indicating the number of hosts a job requires
+     * Key indicating the number of nodes a job requires
      */
-    public static final String HOST_COUNT_KEY = "hostcount";
+    public static final String NODES_KEY = "nodes";
     
     /**
      * Key indicating max memory used by a job a in MB
@@ -667,7 +667,7 @@ public class Pegasus extends Namespace {
                 break;
 
             case 'h':
-                if (key.compareTo( HOST_COUNT_KEY ) == 0) {
+                if (key.compareTo(NODES_KEY ) == 0) {
                     res = VALID_KEY;
                 }
                 else {

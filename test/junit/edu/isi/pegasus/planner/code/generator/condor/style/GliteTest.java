@@ -83,7 +83,7 @@ public class GliteTest {
     @Test
     public void testPegasusProfileHostCount() throws CondorStyleException{
         Job j = new Job();
-        j.vdsNS.construct( Pegasus.HOST_COUNT_KEY, "5" );
+        j.vdsNS.construct(Pegasus.NODES_KEY, "5" );
         String ce = gs.getCERequirementsForJob( j );
         this.testWithRegex(j, ".*NODES==\"([0-9]*)\".*", "5");
     }
