@@ -65,7 +65,8 @@ public class Globus extends Namespace {
             mRSLToPegasus.put( Globus.MAX_MEMORY_KEY, Pegasus.MEMORY_KEY );
             mRSLToPegasus.put( Globus.MAX_WALLTIME_KEY, Pegasus.RUNTIME_KEY );
             mRSLToPegasus.put( Globus.COUNT_KEY, Pegasus.CORES_KEY );
-            mRSLToPegasus.put(Globus.HOST_COUNT_KEY, Pegasus.NODES_KEY );
+            mRSLToPegasus.put( Globus.HOST_COUNT_KEY, Pegasus.NODES_KEY );
+            mRSLToPegasus.put( Globus.XCOUNT_KEY, Pegasus.PPN_KEY );
         }
         return mRSLToPegasus;
     }
@@ -75,6 +76,11 @@ public class Globus extends Namespace {
      * Key indicating the number of cores to be used
      */  
     public static final String COUNT_KEY = "count";
+    
+    /**
+     * Key indicating the number of processors per node to be used
+     */  
+    public static final String XCOUNT_KEY = "xcount";
     
     /**
      * Key indicating the number of hosts to be used
@@ -369,7 +375,7 @@ public class Globus extends Namespace {
                 break;
                 
             case 'x':
-                if (key.compareTo("xcount") == 0) {
+                if (key.compareTo( Globus.XCOUNT_KEY ) == 0) {
                     res = VALID_KEY;
                 }
                 else {

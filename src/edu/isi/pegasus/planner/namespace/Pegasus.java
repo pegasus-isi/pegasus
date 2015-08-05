@@ -432,11 +432,14 @@ public class Pegasus extends Namespace {
     public static final String NODES_KEY = "nodes";
     
     /**
+     * Key indicating the number of processors per node to be used
+     */  
+    public static final String PPN_KEY = "ppn";
+    
+    /**
      * Key indicating max memory used by a job a in MB
      */
     public static final String MEMORY_KEY = "memory";
-    
-    
     
     /**
      * Key indicating data configuration property. 
