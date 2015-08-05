@@ -990,9 +990,9 @@ $ ls  /usr/libexec/condor/glite/bin/pbs_local_submit_attributes.sh
             </row>
 
             <row>
-              <entry>xcount</entry>
+              <entry>count</entry>
 
-              <entry>PROCS</entry>
+              <entry>CORES</entry>
 
               <entry>value passed to the parallel environment defined to be
               used . By default, our script has parallel environment set to
@@ -1037,7 +1037,7 @@ $ ls  /usr/libexec/condor/glite/bin/pbs_local_submit_attributes.sh
       </table>
 
       <tip>
-        <para>The above key mappings are supported in Pegasus 4.5 or
+        <para>The above key mappings are supported in Pegasus 4.5.1 or
         later.</para>
       </tip>
 
@@ -1064,7 +1064,7 @@ $ ls  /usr/libexec/condor/glite/bin/pbs_local_submit_attributes.sh
               <entry align="center">KEY in +remote_cerequirements
               classad</entry>
 
-              <entry>Corresponding PBS Parameter in qsub file</entry>
+              <entry>Corresponding SGE Parameter in qsub file</entry>
 
               <entry>Description</entry>
             </row>
@@ -1077,15 +1077,11 @@ $ ls  /usr/libexec/condor/glite/bin/pbs_local_submit_attributes.sh
               <entry>EXTRA_ARGUMENTS</entry>
 
               <entry>the value is passed through and added to the qsub file
-              prefixed only by #PBS</entry>
+              prefixed only by #?</entry>
 
               <entry>This specifies the extra arguments that must appear in
-              the local PBS generated script for a job, when running workflows
-              on a local cluster with submissions through Glite. This is
-              useful when you want to pass through special options to
-              underlying LRMS such as PBS e.g. you can set value -l
-              walltime=01:23:45 -l nodes=2 to specify your job's resource
-              requirements.</entry>
+              the local SGE generated script for a job, when running workflows
+              on a local cluster with submissions through Glite. </entry>
             </row>
           </tbody>
         </tgroup>
