@@ -141,6 +141,9 @@
             {% if job_metrics %}
             <li role="presentation"><a href="#job_metrics" aria-controls="job_metrics" role="tab" data-toggle="tab">Job Metrics</a></li>
             {% endif %}
+            {% if job_anomalies %}
+            <li role="presentation"><a href="#job_anomalies" aria-controls="job_anomalies" role="tab" data-toggle="tab">Job Anomalies</a></li>
+            {% endif %}
         </ul>
 
         <!-- Tab panes -->
@@ -293,6 +296,18 @@
                     {% endfor %}
                 </table>
             </div>
+            {% endif %}
+
+            {% if job_anomalies %}
+                <div role="tabpanel" class="tab-pane" id="job_anomalies">
+                    <div class="list-group">
+                        {% for anomaly in job_anomalies %}
+                            <a href="#" class="list-group-item">
+                                <strong>{{ anomaly.anomaly_type }}</strong> {{ anomaly.message }}
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
             {% endif %}
         </div>
     </div>

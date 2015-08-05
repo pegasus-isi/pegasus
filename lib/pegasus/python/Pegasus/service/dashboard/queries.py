@@ -336,6 +336,13 @@ class WorkflowInfo(SQLAlchemyInit):
 
         return q.first()
 
+    def get_job_anomalies(self, job_instance_id):
+
+        q = self.session.query(Anomaly)
+        q = q.filter(Anomaly.job_instance_id == job_instance_id)
+
+        return q.all()
+
     def _jobs_by_type(self):
         qmax = self.__get_jobs_maxjss_sq()
 

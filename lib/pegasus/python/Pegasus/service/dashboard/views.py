@@ -14,23 +14,19 @@
 
 __author__ = 'Rajiv Mayani'
 
-import os
-
 from datetime import datetime
-
 from time import localtime, strftime
 
-from flask import request, render_template, url_for, json, g, redirect, send_from_directory, jsonify
+from flask import request, render_template, url_for, json, g, redirect, send_from_directory
 from sqlalchemy.orm.exc import NoResultFound
 
+import os
 from Pegasus.db.errors import StampedeDBNotFoundError
 from Pegasus.db.admin.admin_loader import DBAdminError
-
 from Pegasus.tools import utils
 from Pegasus.service import filters
 from Pegasus.service.dashboard.dashboard import Dashboard, NoWorkflowsFoundError
 from Pegasus.service.dashboard.queries import MasterDBNotFoundError
-
 from Pegasus.service.dashboard import dashboard_routes
 
 
@@ -186,6 +182,7 @@ def job(username, root_wf_id, wf_id, job_id, job_instance_id):
     job = dashboard.get_job_information(wf_id, job_id, job_instance_id)
     job_states = dashboard.get_job_states(wf_id, job_id, job_instance_id)
     job_metrics = dashboard.get_job_metrics(wf_id, job_instance_id)
+    job_anomalies = dashboard.get_job_anomalies(wf_id, job_instance_id)
     job_instances = dashboard.get_job_instances(wf_id, job_id)
 
     previous = None
@@ -216,7 +213,8 @@ def job(username, root_wf_id, wf_id, job_id, job_instance_id):
         job_metrics.transfer_duration = filters.time_to_str(job_metrics.transfer_duration)
 
     return render_template('workflow/job/job_details.html', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job_id, job=job,
-                           job_instances=job_instances, job_states=job_states, job_metrics=job_metrics)
+                           job_instances=job_instances, job_states=job_states, job_metrics=job_metrics,
+                           job_anomalies=job_anomalies)
 
 @dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>/job_metrics_update', methods=['GET'])
 def job_metrics_update(username, root_wf_id, wf_id, job_id, job_instance_id):
