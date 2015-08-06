@@ -24,6 +24,7 @@
 #include <papi.h>
 #endif
 
+/* TODO Unlocked I/O (e.g. fwrite_unlocked) */
 /* TODO Handle directories */
 /* TODO Interpose accept (for network servers) */
 /* TODO Is it necessary to interpose shutdown? Would that help the DNS issue? */
@@ -194,6 +195,54 @@ static char *get_addr(const struct sockaddr *addr, socklen_t addrlen) {
     return NULL;
 }
 
+static void trace_file(const char *path, int fd);
+
+/* Initialize the descriptor table */
+static void init_descriptors() {
+    /* Get file descriptor limit and allocate descriptor table */
+    max_descriptors = 8;
+    descriptors = (Descriptor *)calloc(sizeof(Descriptor), max_descriptors);
+    if (descriptors == NULL) {
+        printerr("Error allocating descriptor table: calloc: %s\n", strerror(errno));
+    }
+
+    /* TODO For each open descriptor, initialize the entry */
+    DIR *fddir = opendir("/proc/self/fd");
+    if (fddir == NULL) {
+        printerr("Unable to open /proc/self/fd: %s", strerror(errno));
+        return;
+    }
+
+    struct dirent *d;
+    for (d = readdir(fddir); d != NULL; d = readdir(fddir)) {
+        if (d->d_name[0] == '.') {
+            continue;
+        }
+
+        char path[64];
+        snprintf(path, BUFSIZ, "/proc/self/fd/%s", d->d_name);
+
+        int fd = atoi(d->d_name);
+
+        char linkpath[BUFSIZ];
+        int size = readlink(path, linkpath, BUFSIZ);
+        if (size < 0) {
+            printerr("Unable to readlink %s: %s", path, strerror(errno));
+            continue;
+        }
+        linkpath[size] = '\0';
+
+        /* Only handle paths */
+        if (linkpath[0] != '/') {
+            continue;
+        }
+
+        trace_file(linkpath, fd);
+    }
+
+    closedir(fddir);
+}
+
 /* Get a reference to the given descriptor if it exists */
 static Descriptor *get_descriptor(int fd) {
     /* Sometimes we try to access a descriptor before the 
@@ -203,9 +252,32 @@ static Descriptor *get_descriptor(int fd) {
      * it is loaded before this library. This check will make sure
      * that any descriptor we try to access is valid.
      */
-    if (descriptors == NULL || fd > max_descriptors) {
+    if (descriptors == NULL || fd < 0) {
         return NULL;
     }
+
+    if (fd >= max_descriptors) {
+        /* Determine what the new size of the table should be */
+        int newmax = max_descriptors * 2;
+        while (fd >= newmax) {
+            newmax = newmax * 2;
+        }
+
+        /* Allocate a new descriptor table */
+        Descriptor *newdescriptors = realloc(descriptors, sizeof(Descriptor) * newmax);
+        if (newdescriptors == NULL) {
+            printerr("Error reallocating new descriptor table: realloc: %s\n", strerror(errno));
+            return NULL;
+        }
+
+
+        /* Clear the newly allocated entries */
+        bzero(&(newdescriptors[max_descriptors]), (newmax-max_descriptors)*sizeof(Descriptor));
+
+        descriptors = newdescriptors;
+        max_descriptors = newmax;
+    }
+
     return &(descriptors[fd]);
 }
 
@@ -436,10 +508,15 @@ static void read_io() {
 }
 
 /* Determine which paths should be traced */
-static int should_trace(const char *path) {
+static int should_trace(int fd, const char *path) {
     /* Trace all files */
     if (getenv("KICKSTART_TRACE_ALL") != NULL) {
         return 1;
+    }
+
+    /* Don't trace stdio */
+    if (fd <= 2) {
+        return 0;
     }
 
     /* Trace files in the current working directory */
@@ -447,8 +524,23 @@ static int should_trace(const char *path) {
         char *wd = getcwd(NULL, 0);
         int incwd = startswith(path, wd);
         free(wd);
-
         return incwd;
+    }
+
+    /* Don't trace the trace log! */
+    char *prefix = getenv("KICKSTART_PREFIX");
+    if (startswith(path, prefix)) {
+        return 0;
+    }
+
+    /* Skip directories */
+    struct stat s;
+    if (fstat(fd, &s) != 0) {
+        printerr("fstat: %s\n", strerror(errno));
+        return 0;
+    }
+    if (s.st_mode & S_IFDIR) {
+        return 0;
     }
 
     /* Skip files with known extensions that we don't care about */
@@ -480,18 +572,7 @@ static void trace_file(const char *path, int fd) {
         return;
     }
 
-    if (!should_trace(path)) {
-        return;
-    }
-
-    struct stat s;
-    if (fstat(fd, &s) != 0) {
-        printerr("fstat: %s\n", strerror(errno));
-        return;
-    }
-
-    /* Skip directories */
-    if (s.st_mode & S_IFDIR) {
+    if (!should_trace(fd, path)) {
         return;
     }
 
@@ -596,7 +677,8 @@ static void trace_close(int fd) {
 
     debug("trace_close %d", fd);
 
-    if (f->type == DTYPE_FILE) {
+    /* Only report files that have ops on them */
+    if (f->type == DTYPE_FILE && (f->nread+f->nwrite+f->nseek) > 0) {
         /* Try to get the final size of the file */
         size_t size = 0;
         struct stat st;
@@ -695,6 +777,9 @@ static void trace_dup(int oldfd, int newfd) {
 
     /* Copy the old descriptor into the new */
     Descriptor *n = get_descriptor(newfd);
+    if (n == NULL) {
+        return;
+    }
     n->type = o->type;
     n->path = temp;
     n->bread = 0;
@@ -903,16 +988,7 @@ static void __attribute__((constructor)) interpose_init(void) {
     /* Open the trace file */
     topen();
 
-    /* Get file descriptor limit and allocate descriptor table */
-    struct rlimit nofile_limit;
-    getrlimit(RLIMIT_NOFILE, &nofile_limit);
-    max_descriptors = nofile_limit.rlim_max;
-    descriptors = (Descriptor *)calloc(sizeof(Descriptor), max_descriptors);
-    if (descriptors == NULL) {
-        printerr("calloc: %s\n", strerror(errno));
-    }
-
-    debug("Max descriptors: %d", max_descriptors);
+    init_descriptors();
 
     tprintf("start: %lf\n", get_time());
 
@@ -1259,7 +1335,8 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
     size_t rc = fread_untraced(ptr, size, nmemb, stream);
 
     if (rc > 0) {
-        trace_read(fileno(stream), rc);
+        /* rc is the number of objects written */
+        trace_read(fileno(stream), rc*size);
     }
 
     return rc;
@@ -1272,7 +1349,8 @@ size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream) {
     size_t rc = (*orig_fwrite)(ptr, size, nmemb, stream);
 
     if (rc > 0) {
-        trace_write(fileno(stream), rc);
+        /* rc is the number of objects written */
+        trace_write(fileno(stream), rc*size);
     }
 
     return rc;
@@ -1982,6 +2060,11 @@ int execve(const char *filename, char *const argv[], char *const envp[]) {
 }
 
 pid_t fork(void) {
+    /* We have to intercept fork so that we can reinit libinterpose in the
+     * child. vfork does not have this problem because a process created
+     * with vfork basically can't do anything except call exec, in which
+     * case libinterpose is going to be reinitialized anyway. */
+
     typeof(fork) *orig_fork = osym("fork");
     pid_t rc = (*orig_fork)();
 
@@ -1996,5 +2079,17 @@ pid_t fork(void) {
     }
 
     return rc;
+}
+
+void _exit(int rc) {
+    /* Regular exit() will call the destructor, but if the app calls _exit we
+     * have to do this manually */
+    interpose_fini();
+
+    typeof(_exit) *orig__exit = osym("_exit");
+    (*orig__exit)(rc);
+
+    /* unreachable */
+    abort();
 }
 
