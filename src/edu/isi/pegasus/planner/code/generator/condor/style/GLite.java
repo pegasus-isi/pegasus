@@ -21,7 +21,6 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.planner.classes.Job;
-import static edu.isi.pegasus.planner.classes.Profile.ENV;
 
 import edu.isi.pegasus.planner.namespace.Condor;
 
@@ -369,7 +368,41 @@ public class GLite extends Abstract {
         sb.append( key ).append( "==" ).append( value );
     }
 
-     /**
+    /**
+     * Constructs an error message in case of invalid combination of cores, nodes and ppn
+     *
+     * @param job      the job object.
+     * @param cores
+     * @param nodes
+     * @param ppn
+     * 
+     * @return 
+     */
+    protected String invalidCombinationError( Job job, Integer cores, Integer nodes, Integer ppn  ){
+        StringBuffer sb = new StringBuffer();
+        StringBuilder comb = new StringBuilder();
+        sb.append( "Invalid combination of ");
+        comb.append( "(" );
+        if( cores != null ){
+            sb.append( " cores " ); 
+            comb.append( cores ).append( "," );
+        }
+        if( nodes != null ){
+            sb.append( " nodes " ); 
+            comb.append( nodes ).append( "," );
+        }
+        if( ppn  != null ){
+            sb.append( " ppn " ); 
+            comb.append( ppn ).append( "," );
+        }
+        comb.append( ")" );
+        sb.append( " ").append( comb );
+        sb.append( " for job ").append(job.getID() );
+
+         return sb.toString();
+    }
+    
+    /**
      * Constructs an error message in case of style mismatch.
      *
      * @param job      the job object.
@@ -496,17 +529,14 @@ public class GLite extends Abstract {
                     int ppn = cores/nodes;
                     //sanity check
                     if( cores%nodes != 0 ){
-                        throw new CondorStyleException( "Invalid combination of cores and nodes " + cores + " , " + nodes + " for job " + 
-                                                        job.getID() );
+                        throw new CondorStyleException( invalidCombinationError ( job, cores, nodes, null) );
                     }
                     if( ppnSet ){
                         //all three were set . check if derived value is same as
                         //existing
                         int existing = Integer.parseInt((String) job.globusRSL.get( Globus.XCOUNT_KEY) );
                         if( existing != ppn ){
-                            throw new CondorStyleException( "Invalid combination of cores , nodes and ppn  " + cores + " , " +
-                                                            nodes + " , " + ppn + " for job " + 
-                                                            job.getID() );
+                            throw new CondorStyleException( invalidCombinationError ( job, cores, nodes, ppn) );
                         }
                     }
                     else{
@@ -519,8 +549,7 @@ public class GLite extends Abstract {
                     int nodes = cores/ppn;
                     //sanity check
                     if( cores%ppn != 0 ){
-                        throw new CondorStyleException( "Invalid combination of cores and ppn " + cores + " " + ppn + " for job " + 
-                                                        job.getID() );
+                        throw new CondorStyleException( invalidCombinationError ( job, cores, null, ppn));
                     }
                     
                     if( nodesSet ){
@@ -528,9 +557,7 @@ public class GLite extends Abstract {
                         //existing
                         int existing = Integer.parseInt((String) job.globusRSL.get( Globus.HOST_COUNT_KEY) );
                         if( existing != nodes ){
-                            throw new CondorStyleException( "Invalid combination of cores , nodes and ppn  " + cores + " , " +
-                                                            nodes + " , " + ppn + " for job " + 
-                                                            job.getID() );
+                            throw new CondorStyleException( invalidCombinationError ( job, cores, nodes, ppn) );
                         }
                     }
                     else{
