@@ -126,6 +126,11 @@ public class GLite extends Abstract {
      */
     public static final String CONDOR_REMOTE_ENVIRONMENT_KEY = "+remote_environment";
     
+    
+    public static final String SGE_GRID_RESOURCE = "sge";
+    
+    public static final String PBS_GRID_RESOURCE = "pbs";
+    
     /**
      * Handle to escaping class for environment variables
      */
@@ -522,7 +527,7 @@ public class GLite extends Abstract {
                                                      cores + " specified for job " + job.getID());
                 }
                 
-                //need to do some arithmetic to arrive at nodes and cores
+                //need to do some arithmetic to arrive at nodes and ppn
                 if( nodesSet ){
                     
                     int nodes = Integer.parseInt((String) job.globusRSL.get( Globus.HOST_COUNT_KEY));

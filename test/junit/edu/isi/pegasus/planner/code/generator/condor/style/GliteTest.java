@@ -31,7 +31,7 @@ import static org.junit.Assert.*;
  */
 public class GliteTest {
     
-    public static final String DEFAULT_GRID_RESOURCE = "pbs";
+    public static final String DEFAULT_GRID_RESOURCE = GLite.PBS_GRID_RESOURCE;
     
     private GLite gs = null;
 
@@ -75,13 +75,6 @@ public class GliteTest {
         assertEquals( "28:10:00", gs.pbsFormattedTimestamp( "1690"));
     }
     
-    /*@Test
-    public void testPegasusProfileCores() throws CondorStyleException{
-        Job j = new Job();
-        j.vdsNS.construct( Pegasus.CORES_KEY, "5" );
-        String ce = gs.getCERequirementsForJob( j );
-        System.out.println( ce );
-    }*/
     
     @Test
     public void testPegasusProfileHostCount() throws CondorStyleException{
@@ -105,12 +98,142 @@ public class GliteTest {
     }
     
     @Test
+    public void testPegasusProfilePPN() throws CondorStyleException{
+        Job j = new Job();
+        j.vdsNS.construct( Pegasus.PPN_KEY, "100" );
+        this.testWithRegex(j,DEFAULT_GRID_RESOURCE, ".*PROCS==\"([0-9]*)\".*", "100") ;
+    }
+    
+    @Test
     public void testGlobusProfileXCount() throws CondorStyleException{
         Job j = new Job();
         j.globusRSL.construct( "xcount", "100" );
         this.testWithRegex(j,DEFAULT_GRID_RESOURCE, ".*PROCS==\"([0-9]*)\".*", "100") ;
     }
     
+    @Test( expected=CondorStyleException.class)
+    public void testPegasusProfileCores() throws CondorStyleException{
+        Job j = new Job();
+        j.vdsNS.construct( Pegasus.CORES_KEY, "5" );
+        gs.getCERequirementsForJob( j, DEFAULT_GRID_RESOURCE );
+    }
+    
+    @Test
+    public void testSGEPegasusProfileCores() throws CondorStyleException{
+        Job j = new Job();
+        j.vdsNS.construct( Pegasus.CORES_KEY, "5" );
+        this.testWithRegex(j, "sge", ".*CORES==\"([0-9]*)\".*", "5") ;
+    }
+    
+    
+    //test SGE complex combinations
+    @Test( expected=CondorStyleException.class)
+    public void testSGEPegasusProfileNodes() throws CondorStyleException{
+        Job j = new Job();
+        j.vdsNS.construct( Pegasus.NODES_KEY, "5" );
+        gs.getCERequirementsForJob( j, GLite.SGE_GRID_RESOURCE );
+    }
+    
+    @Test( expected=CondorStyleException.class)
+    public void testSGEPegasusProfilePPN() throws CondorStyleException{
+        Job j = new Job();
+        j.vdsNS.construct( Pegasus.PPN_KEY, "5" );
+        gs.getCERequirementsForJob( j, GLite.SGE_GRID_RESOURCE );
+    }
+    
+    
+    @Test
+    public void testSGEPegasusProfileNodesPPN() throws CondorStyleException{
+        Job j = new Job();
+        j.vdsNS.construct( Pegasus.PPN_KEY, "8" );
+        j.vdsNS.construct( Pegasus.NODES_KEY, "5" );
+        this.testWithRegex(j, GLite.SGE_GRID_RESOURCE, ".*CORES==\"([0-9]*)\".*", "40");
+    }
+    
+    //test PBS complex combinations
+    public void testPBSPegasusProfileNodes() throws CondorStyleException{
+        Job j = new Job();
+        j.vdsNS.construct( Pegasus.NODES_KEY, "5" );
+        this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*NODES==\"([0-9]*)\".*", "5");
+    }
+    
+    public void testPBSPegasusProfilePPN() throws CondorStyleException{
+        Job j = new Job();
+        j.vdsNS.construct( Pegasus.PPN_KEY, "8" );
+        this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*PROCS==\"([0-9]*)\".*", "8");
+    }
+    
+    
+    @Test
+    public void testPBSPegasusProfileNodesPPN() throws CondorStyleException{
+        Job j = new Job();
+        j.vdsNS.construct( Pegasus.PPN_KEY, "8" );
+        j.vdsNS.construct( Pegasus.NODES_KEY, "5" );
+        this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*NODES==\"([0-9]*)\".*", "5");
+        this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*PROCS==\"([0-9]*)\".*", "8");
+    }
+    
+    @Test
+    public void testPBSPegasusCoresNodes() throws CondorStyleException{
+        Job j = new Job();
+        j.vdsNS.construct( Pegasus.CORES_KEY, "40" );
+        j.vdsNS.construct( Pegasus.NODES_KEY, "5" );
+        this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*NODES==\"([0-9]*)\".*", "5");
+        this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*PROCS==\"([0-9]*)\".*", "8");
+        this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*CORES==\"([0-9]*)\".*", "40");
+    }
+    
+    @Test( expected=CondorStyleException.class)
+    public void testPBSPegasusCoresNodesInvalid() throws CondorStyleException{
+        Job j = new Job();
+        j.vdsNS.construct( Pegasus.CORES_KEY, "42" );
+        j.vdsNS.construct( Pegasus.NODES_KEY, "5" );
+        this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*NODES==\"([0-9]*)\".*", "5");
+        this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*PROCS==\"([0-9]*)\".*", "8");
+        this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*CORES==\"([0-9]*)\".*", "40");
+    }
+    
+    @Test
+    public void testPBSPegasusCoresPPN() throws CondorStyleException{
+        Job j = new Job();
+        j.vdsNS.construct( Pegasus.CORES_KEY, "40" );
+        j.vdsNS.construct( Pegasus.PPN_KEY, "8" );
+        this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*NODES==\"([0-9]*)\".*", "5");
+        this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*PROCS==\"([0-9]*)\".*", "8");
+        this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*CORES==\"([0-9]*)\".*", "40");
+    }
+    
+    @Test( expected=CondorStyleException.class)
+    public void testPBSPegasusCoresPPNInvalid() throws CondorStyleException{
+        Job j = new Job();
+        j.vdsNS.construct( Pegasus.CORES_KEY, "42" );
+        j.vdsNS.construct( Pegasus.PPN_KEY, "8" );
+        this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*NODES==\"([0-9]*)\".*", "5");
+        this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*PROCS==\"([0-9]*)\".*", "8");
+        this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*CORES==\"([0-9]*)\".*", "40");
+    }
+    
+    @Test
+    public void testPBSPegasusCoresNodesPPN() throws CondorStyleException{
+        Job j = new Job();
+        j.vdsNS.construct( Pegasus.CORES_KEY, "40" );
+        j.vdsNS.construct( Pegasus.NODES_KEY, "5" );
+        j.vdsNS.construct( Pegasus.PPN_KEY, "8" );
+        this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*NODES==\"([0-9]*)\".*", "5");
+        this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*PROCS==\"([0-9]*)\".*", "8");
+        this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*CORES==\"([0-9]*)\".*", "40");
+    }
+    
+    @Test( expected=CondorStyleException.class)
+    public void testPBSPegasusCoresNodesPPNInvalid() throws CondorStyleException{
+        Job j = new Job();
+        j.vdsNS.construct( Pegasus.CORES_KEY, "42" );
+        j.vdsNS.construct( Pegasus.NODES_KEY, "5" );
+        j.vdsNS.construct( Pegasus.PPN_KEY, "8" );
+        this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*NODES==\"([0-9]*)\".*", "5");
+        this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*PROCS==\"([0-9]*)\".*", "8");
+        this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*CORES==\"([0-9]*)\".*", "40");
+    }
     
     private void testWithRegex( Job j, String gridResource, String regex, String expected) throws CondorStyleException{
         String ce = gs.getCERequirementsForJob( j, gridResource );
