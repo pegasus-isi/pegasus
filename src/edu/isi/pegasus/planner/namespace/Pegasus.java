@@ -669,14 +669,6 @@ public class Pegasus extends Namespace {
                 }
                 break;
 
-            case 'h':
-                if (key.compareTo(NODES_KEY ) == 0) {
-                    res = VALID_KEY;
-                }
-                else {
-                    res = UNKNOWN_KEY;
-                }
-                break;
             
             case 'i':
                 if (key.compareTo( IRODSENVFILE ) == 0) {
@@ -714,6 +706,15 @@ public class Pegasus extends Namespace {
                     res = VALID_KEY;
                 }
                 else{
+                    res = UNKNOWN_KEY;
+                }
+                break;
+                
+            case 'n':
+                if (key.compareTo(NODES_KEY ) == 0) {
+                    res = VALID_KEY;
+                }
+                else {
                     res = UNKNOWN_KEY;
                 }
                 break;
