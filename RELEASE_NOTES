@@ -1,4 +1,255 @@
 $Id
+
+===============================
+Release Notes for PEGASUS 4.5.1
+===============================
+
+We are happy to annouce the release of Pegasus 4.5.1. Pegasus 4.5.1 is
+a minor release, which contains minor enhancements and fixes bugs to
+Pegasus 4.5.0 release.   
+
+Enhancements
+--------------
+
+1) pegasus-statistics reports workflow badput
+
+   pegasus-statistics now reports the workflow badput time, which is
+   the sum of all failed kickstart jobs. More details at
+   https://pegasus.isi.edu/wms/docs/4.5.1/plotting_statistics.php 
+
+   Associated JIRA item   https://jira.isi.edu/browse/PM-941
+
+2) fast start option for pegasus-monitord
+
+   By default, when monitord starts tracking a live dagman.out file,
+   it sleeps intermittently, waiting for new lines to be logged in the
+   dagman.out file.  
+
+   This behavior, however causes monitord to lag considerably 
+   	- when starting for large workflows 
+	- when monitord gets restarted due to some failure by
+   pegasus-dagman, or we submit a rescue dag.  
+
+   Users can now set the property pegasus.monitord.fast_start property
+   to enable it. For a future release, it will be the default
+   behavior. 
+
+   Associated JIRA item   https://jira.isi.edu/browse/PM-947
+
+
+3) Support for throttling jobs across workflows using HTCondor
+concurrency limits  
+
+   Users can now throttle jobs across worklfows using HTCondor
+   concurrency limits. However, this only applies to vanilla universe
+   jobs. 
+
+   Documentation at
+   https://pegasus.isi.edu/wms/docs/4.5.1sjob_throttling.php#job_throttling_across_workflows  
+
+   Associated JIRA item   https://jira.isi.edu/browse/PM-933 
+
+4) Support for submissions to local SGE cluster using the GLite interfaces
+
+   Prelimnary support for SGE clusters has been added in Pegasus. To
+   use this you need to copy the sge_local_submit_attributes.sh from
+   the Pegasus share directory and place it in your condor
+   installation.  
+
+   The list of supported keys can be found here
+   https://pegasus.isi.edu/wms/docs/4.5.1/glite.php
+
+   Associated JIRA item   https://jira.isi.edu/browse/PM-955 
+
+
+5) PEGASUS_SCRATCH_DIR set in the job environment for sharedfs deployment
+
+   Pegasus not sets an environment variable for the job that indicates
+   the PEGASUS scratch directory the job is executed in  , in the case
+   of sharedfs deployments. This is the directory that is created by
+   the create dir job on the execution site for the workflow.  
+
+   Associated JIRA item   https://jira.isi.edu/browse/PM-961
+
+
+6) New properties to control read timeout while setting up connections
+to the database 
+
+   User can now set pegasus.catalog.*.timeout to set the timeout value
+   in seconds. This should be set only if you encounter database
+   locked errors for your installation. 
+
+   Associated JIRA item   https://jira.isi.edu/browse/PM-943
+
+7) Ability to prepend to system path before launcing an application
+executable 
+
+   Users can now associate an env profile named KICKSTART_PREPEND_PATH
+   with their jobs, to specify the PATH where application specific
+   modules are installed. kickstart will take this value and prepend
+   it to system path before launching the executable 
+
+   Associated JIRA item   https://jira.isi.edu/browse/PM-957
+
+8) environment variables in condor submit files are specified using the newer condor syntax 
+
+   For GLITE jobs the environment is specified using the key
+   +remote_environment. For all other jobs, the environment is
+   specified using the environment key but the value is in newer
+   format ( i.e key=value separated by whitespace) 
+
+   Associated JIRA item   https://jira.isi.edu/browse/PM-934
+
+9) pass options to pegasus-monitord via properties
+
+   Users can now specify pegasus.monitord.arguments to pass extra
+   options with which pegasus-monitord is launched for the workflow at
+   runtime. 
+
+   Associated JIRA item   https://jira.isi.edu/browse/PM-948
+
+10) pegasus-transfer support OSG stashcp
+
+    pegasus-transfer has support for the latest version of stashcp
+    
+    Associated JIRA item   https://jira.isi.edu/browse/PM-948
+
+11) pegasus-dashboard improvements
+
+    pegasus-dashboard now loads the directory listing via a AJAX
+    calls. Makes the loading of the workflow details page much faster
+    for large workflows. 
+
+    Show working dir. for a job_instance, and invocation in job
+    details and invocation details page. 
+
+    Displays an appropriate error message if pegasus-db-admin update
+    of a database fails. 
+
+    Added a HTML error page for DB Migration error. 
+
+    Configure logging so Flask log messages show up in Apache logs
+
+    Associated JIRA item   https://jira.isi.edu/browse/PM-940
+
+12) PEGASUS_SITE environment variable is set in job's environment
+
+    https://jira.isi.edu/browse/PM-907 
+
+
+Bugs Fixed
+--------------
+
+1) InPlace cleanup failed if an intermediate file when used as input had transfer flag set to false
+
+   If an intermediate file ( an output file generated by a parent job)
+   was used as an input file to a child job with the transfer flag set
+   to false, then the associated cleanup job did not have a dependency
+   to the child job. As a result, the cleanup job  could run before
+   the child job  (that required it as input) could be run. 
+
+   This is now fixed.
+   https://jira.isi.edu/browse/PM-969
+
+
+2) Incorrect ( malformed) rescue dag submitted in case planner dies
+because of memory related issues 
+
+   For hieararchal workflows, if a sub worklfow fails then a rescue
+   dag for the sub workflow gets submitted on the job retry. The .dag
+   file for the sub workflow is generated by the planner. If the
+   planner fails during code generation an incoplete .dag file can be
+   submitted. 
+
+   This is now fixed. The planner now writes the dag to a tmp file
+   before renaming it to the .dag extension when code completion is
+   done. 
+
+    https://jira.isi.edu/browse/PM-966
+
+3) Mismatched memory units in kickstart records
+
+   kickstart now reports all memory values in KB. Earlier the procs
+   element in the machine entry was reporting the value in bytes,
+   while the maxrss etc values in the usage elments were in KB. 
+
+   This is now fixed. 
+   https://jira.isi.edu/browse/PM-959
+
+4) pegasus-analyzer did not work for sub workflows
+
+   There was a bug in the 4.5.0 release where pegasus-analyzer did not
+   pick up the stampede database for the sub workflows correctly. This
+   is now fixed. 
+
+   https://jira.isi.edu/browse/PM-956
+
+5) Rescue DAGS not submitted correctly for dag jobs
+
+   There was a bug in the 4.5.0 release as a result of the
+   .dag.condor.sub file was generated. As a result of that, the force
+   option was propogated for the dag jobs in the DAX ( dag jobs are
+   sub workflows that are not planned by Pegasus). 
+
+    https://jira.isi.edu/browse/PM-949
+
+6) nonsharedfs configuration did not work with Glite style submissions
+
+   In case of nonsharedfs, transfer_executable is set to true to
+   transfer the PegasusLite script. However, in the Glite case, that
+   was explicity disabled, which was preventing the workflows from
+   running successfully. 
+
+   https://jira.isi.edu/browse/PM-950
+
+7) pegasus-analyzer catches error for wrong directory instead of
+listing the traceback  
+
+   https://jira.isi.edu/browse/PM-946
+
+8) pegasus-gridftp fails with: Invalid keyword "POSTALCODE"
+
+   pegasus-gridftp was failing against the XSEDE site stampede,
+   because of change in certificates at TACC. This was fixed by
+   udpating to the latest jglobus jars. 
+
+   https://jira.isi.edu/browse/PM-945
+
+9) pegasus-statistics deletes directories even if -o option is specified
+
+   By default pegasus-statistics deletes the statistics directory in
+   which the statistics files are generated. However, this had the
+   side affect of deleting user specified directories set by the -o
+   option. that is no longer the case. 
+
+   https://jira.isi.edu/browse/PM-932
+
+10) pegasus-exitcode ignores errors when it gets "-r 0"
+
+    pegasus-exitcode now only ignores invocation records exitcodes ,
+    but does all the other checks specified when the -r option is
+    specified. 
+
+    https://jira.isi.edu/browse/PM-927
+
+12) pegasus-statistics displays a workflow not found error in case of throwing SqlAlchemy error
+
+    This also happens if pegasus-admin creates an empty workflow
+    database for a new workflow, and nothing is populated ( because
+    events population is turned off).  
+
+    Associated JIRA item   https://jira.isi.edu/browse/PM-942
+
+13) InPlace cleanup did not work correctly with mutlisite runs
+
+    InPlace cleanup did not work correctly with inter site transfer
+    jobs. This is now fixed. 
+
+     https://jira.isi.edu/browse/PM-936
+
+
+
+
 ===============================
 Release Notes for PEGASUS 4.5.0
 ===============================
