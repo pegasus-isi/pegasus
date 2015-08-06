@@ -2532,22 +2532,24 @@ pegasus.catalog.*.db.SelectMethod
               name to apply the property only for that catalog. Valid catalog
               names are</para><para><screen>replica</screen></para></entry>
             </row>
+
             <row>
-                  <entry><literallayout><emphasis role="bold"><emphasis
-                          role="bold">Property Key: </emphasis></emphasis>pegasus.catalog.*.timeout<emphasis
-                          role="bold"><emphasis role="bold">
-                      Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.catalog.*.timeout<emphasis
+                    role="bold"><emphasis role="bold">
+                      Profile  Key: </emphasis></emphasis>N/A<emphasis
+                    role="bold">
                       Scope       :</emphasis> Properties
                       <emphasis role="bold">Since       :</emphasis> 4.5.1
                       <emphasis role="bold">Type        : </emphasis>Integer
                       <emphasis role="bold">Default     :</emphasis> (no default)</literallayout></entry>
 
-                  <entry><para>This property sets a busy handler that sleeps for a
-                      specified amount of time (in seconds) when a table is locked.
-                      This property has effect only in a sqlite database.</para>
-                      <para>The * in the property name can be replaced
-                      by a catalog name to apply the property only for that catalog.
-                      Valid catalog names are</para><para><screen>master
+              <entry><para>This property sets a busy handler that sleeps for a
+              specified amount of time (in seconds) when a table is locked.
+              This property has effect only in a sqlite database.</para>
+              <para>The * in the property name can be replaced by a catalog
+              name to apply the property only for that catalog. Valid catalog
+              names are</para><para><screen>master
 workflow</screen></para></entry>
             </row>
           </tbody>
@@ -3757,8 +3759,7 @@ Profile  Key: </emphasis></emphasis>transfer.threads<emphasis role="bold">
 Scope       :</emphasis> Properties
 <emphasis role="bold">Since       :</emphasis> 4.4.0
 <emphasis role="bold">Type        : </emphasis>Integer<emphasis role="bold">
-Default     :</emphasis> 2<emphasis role="bold">
-See Also    :</emphasis> pegasus.transfer.lite.threads</literallayout></entry>
+Default     :</emphasis> 2</literallayout></entry>
 
                 <entry><para>This property set the number of threads
                 pegasus-transfer uses to transfer the files. This property to
@@ -3786,26 +3787,6 @@ See Also    :</emphasis> pegasus.transfer.arguments</literallayout></entry>
                 PegasusLite transfer implementation is invoked. The transfer
                 executable that is invoked is dependant upon the PegasusLite
                 transfer implementation that has been selected.</entry>
-              </row>
-
-              <row>
-                <entry><literallayout><emphasis role="bold"><emphasis
-                        role="bold">Property Key: </emphasis></emphasis>pegasus.transfer.lite.threads<emphasis
-                      role="bold"><emphasis role="bold">
-Profile  Key: </emphasis></emphasis>transfer.lite.threads<emphasis role="bold">
-Scope       :</emphasis> Properties
-<emphasis role="bold">Since       :</emphasis> 4.4.0
-<emphasis role="bold">Type        : </emphasis>Integer<emphasis role="bold">
-Default     :</emphasis> 1<emphasis role="bold">
-See Also    :</emphasis> pegasus.transfer.threads</literallayout></entry>
-
-                <entry>This property set the number of threads
-                pegasus-transfer uses to transfer the files. This property
-                applies to the pegasus-transfer invocations in the PegasusLite
-                jobs in the nonsharedfs data configuration. The property can
-                be overloaded by associated the pegasus profile key
-                transfer.lite.threads either with the site in the site catalog
-                or the DAX for the associate compute jobs.</entry>
               </row>
 
               <row>
