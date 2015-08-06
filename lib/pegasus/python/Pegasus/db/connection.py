@@ -45,11 +45,11 @@ def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=
 
     except exc.OperationalError, e:
         if "mysql" in dburi and "unknown database" in str(e).lower():
-            raise ConnectionError("MySQL database should be previously created: %s" % e.message)
-        raise ConnectionError(e)
+            raise ConnectionError("MySQL database should be previously created: %s (%s)" % (e.message, dburi))
+        raise ConnectionError("%s (%s)" % (e.message, dburi))
     
     except Exception, e:
-        raise ConnectionError(e)
+        raise ConnectionError("%s (%s)" % (e.message, dburi))
 
     Session = orm.sessionmaker(bind=engine, autoflush=False, autocommit=False,
                                expire_on_commit=False)
@@ -68,7 +68,7 @@ def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=
             db_create(dburi, engine, db, pegasus_version=pegasus_version, force=force)
 
         except exc.OperationalError, e:
-            raise ConnectionError(e)
+            raise ConnectionError("%s (%s)" % (e.message, dburi))
 
     if schema_check:
         from Pegasus.db.admin.admin_loader import db_verify
@@ -335,7 +335,7 @@ def _validate(dburi):
                 imp.find_module('MySQLdb')
             
     except ImportError, e:
-        raise ConnectionError("Missing Python module: %s" % e)
+        raise ConnectionError("Missing Python module: %s (%s)" % (e.message, dburi))
 
 
 def _parse_connect_args(db, connect_args):
@@ -372,7 +372,7 @@ def _parse_props(db, props, db_type=None, connect_args=None):
                 elif db_type == DBType.WORKFLOW and props.property("pegasus.catalog.workflow.timeout"):
                     connect_args[DBKey.TIMEOUT] = int(props.property("pegasus.catalog.workflow.timeout")) * 1000
             except ValueError, e:
-                raise ConnectionError("Timeout properties should be set in seconds: %s" % e)
+                raise ConnectionError("Timeout properties should be set in seconds: %s (%s)" % (e.message, url))
 
     return connect_args
 
