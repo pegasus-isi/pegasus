@@ -30,6 +30,7 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParserException;
 
 import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.code.generator.condor.CondorEnvironmentEscape;
+import edu.isi.pegasus.planner.namespace.Globus;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
 /**
@@ -159,7 +160,8 @@ public class GLite extends Abstract {
         job.condorVariables.construct( Condor.UNIVERSE_KEY,Condor.GRID_UNIVERSE );
 
         /* figure out the remote scheduler. should be specified with the job*/
-        if( !job.condorVariables.containsKey( Condor.GRID_RESOURCE_KEY )  ){
+        String gridResource = (String) job.condorVariables.get( Condor.GRID_RESOURCE_KEY );
+        if( gridResource == null  ){
             throw new CondorStyleException( missingKeyError( job, Condor.GRID_RESOURCE_KEY ) );
         }
 
@@ -191,7 +193,7 @@ public class GLite extends Abstract {
 
         /* convert some condor keys and globus keys to remote ce requirements
          +remote_cerequirements = blah */
-        job.condorVariables.construct( "+remote_cerequirements", getCERequirementsForJob( job ) );
+        job.condorVariables.construct( "+remote_cerequirements", getCERequirementsForJob( job, gridResource) );
         
         /*
          PM-934 construct environment accordingly
@@ -255,12 +257,13 @@ public class GLite extends Abstract {
      * All the env profiles are translated to MYENV
      *
      * @param job
+     * @param gridResource
      *
      * @return the value to the expression and it is condor quoted
      *
      * @throws CondorStyleException in case of condor quoting error
      */
-    protected String getCERequirementsForJob( Job job ) throws CondorStyleException {
+    protected String getCERequirementsForJob( Job job, String gridResource ) throws CondorStyleException {
         StringBuffer value = new StringBuffer();
 
         /* append the job name */
@@ -285,10 +288,7 @@ public class GLite extends Abstract {
             addSubExpression( value, "QUEUE", (String)job.globusRSL.get( "queue" ) );
         }
 
-        //PM-962 we update the globus RSL keys on basis
-        //of Pegasus profile keys before doing any translation
-        //hack.
-        mCondorG.handleResourceRequirements(job);
+        this.handleResourceRequirements( job , gridResource );
 
         /* the globus key hostCount is NODES */
         if( job.globusRSL.containsKey( "hostcount" ) ){
@@ -446,6 +446,138 @@ public class GLite extends Abstract {
         
     }
 
+
+    /**
+     * This translates the Pegasus resource profiles to corresponding globus 
+     * profiles that are used to set the shell parameters for
+     * local attributes shell script for the LRMS.
+     * 
+     * @param job 
+     * @param gridResource   the grid resource associated with the job. 
+     *                       can be pbs | sge.
+     */
+    protected void handleResourceRequirements( Job job, String gridResource) throws CondorStyleException {
+        //PM-962 we update the globus RSL keys on basis
+        //of Pegasus profile keys before doing any translation
+        
+        mCondorG.handleResourceRequirements(job);
+        
+        //sanity check
+        if( (!(gridResource.equals( "pbs") || gridResource.equals( "sge") ))){
+            //if it is not pbs or sge . log a warning.
+            mLogger.log( "Glite mode supports only pbs or sge submission. Will use PBS style attributes for job " + 
+                          job.getID() + " with grid resource " + gridResource,
+                         LogManager.WARNING_MESSAGE_LEVEL );
+            gridResource = "pbs";
+            
+        }
+        
+        if ( gridResource.equals( "pbs" ) ){
+            //check for cores / count if set
+            boolean coresSet = job.globusRSL.containsKey( Globus.COUNT_KEY );
+            boolean nodesSet = job.globusRSL.containsKey( Globus.HOST_COUNT_KEY );
+            boolean ppnSet   = job.globusRSL.containsKey( Globus.XCOUNT_KEY );
+            
+            if( coresSet ){
+                //we need to arrive at PPN which is cores/nodes
+                int cores = Integer.parseInt((String) job.globusRSL.get( Globus.COUNT_KEY));    
+                //sanity check
+                if ( !( nodesSet || ppnSet ) ){
+                    //neither nodes or ppn are set
+                    //cannot do any translation
+                    throw new CondorStyleException( "Cannot translate to PBS attributes. Only cores " + 
+                                                     cores + " specified for job " + job.getID());
+                }
+                
+                //need to do some arithmetic to arrive at nodes and cores
+                if( nodesSet ){
+                    
+                    int nodes = Integer.parseInt((String) job.globusRSL.get( Globus.HOST_COUNT_KEY));
+                    int ppn = cores/nodes;
+                    //sanity check
+                    if( cores%nodes != 0 ){
+                        throw new CondorStyleException( "Invalid combination of cores and nodes " + cores + " , " + nodes + " for job " + 
+                                                        job.getID() );
+                    }
+                    if( ppnSet ){
+                        //all three were set . check if derived value is same as
+                        //existing
+                        int existing = Integer.parseInt((String) job.globusRSL.get( Globus.XCOUNT_KEY) );
+                        if( existing != ppn ){
+                            throw new CondorStyleException( "Invalid combination of cores , nodes and ppn  " + cores + " , " +
+                                                            nodes + " , " + ppn + " for job " + 
+                                                            job.getID() );
+                        }
+                    }
+                    else{
+                        job.globusRSL.construct( Globus.XCOUNT_KEY, Integer.toString(ppn) );
+                    }
+                }
+                else{
+                    //we need to arrive at nodes which is cores/ppn
+                    int ppn = Integer.parseInt((String) job.globusRSL.get( Globus.XCOUNT_KEY));
+                    int nodes = cores/ppn;
+                    //sanity check
+                    if( cores%ppn != 0 ){
+                        throw new CondorStyleException( "Invalid combination of cores and ppn " + cores + " " + ppn + " for job " + 
+                                                        job.getID() );
+                    }
+                    
+                    if( nodesSet ){
+                        //all three were set . check if derived value is same as
+                        //existing
+                        int existing = Integer.parseInt((String) job.globusRSL.get( Globus.HOST_COUNT_KEY) );
+                        if( existing != nodes ){
+                            throw new CondorStyleException( "Invalid combination of cores , nodes and ppn  " + cores + " , " +
+                                                            nodes + " , " + ppn + " for job " + 
+                                                            job.getID() );
+                        }
+                    }
+                    else{
+                        job.globusRSL.construct( Globus.HOST_COUNT_KEY, Integer.toString( nodes ) );
+                    }
+                }
+            }
+            else {
+                //usually for PBS users specify nodes and ppn
+                //globus rsl keys are already set appropriately for translation
+               //FIXME:  should we complain if nothing is associated or
+               //set some default value?
+            }
+            
+        }
+        else if ( gridResource.equals( "sge" )){
+            //for SGE case
+            boolean coresSet = job.globusRSL.containsKey( Globus.COUNT_KEY );
+            boolean nodesSet = job.globusRSL.containsKey( Globus.HOST_COUNT_KEY );
+            boolean ppnSet   = job.globusRSL.containsKey( Globus.XCOUNT_KEY );
+            
+            if( coresSet ){
+                //then that is what SGE really needs. 
+                //ignore other values.
+            }
+            else{
+                //we need to attempt to arrive at a value or specify a default value
+                if( nodesSet && ppnSet ){
+                    //set cores to multiple
+                    int nodes = Integer.parseInt((String) job.globusRSL.get( Globus.HOST_COUNT_KEY));
+                    int ppn   = Integer.parseInt((String) job.globusRSL.get( Globus.XCOUNT_KEY));
+                    job.globusRSL.construct( Globus.COUNT_KEY, Integer.toString( nodes*ppn ) );
+                }
+                else if( nodesSet || ppnSet ){ 
+                    throw new CondorStyleException( "Either cores or ( nodes and ppn) need to be set for SGE submission for job " + job.getID() );
+                    
+                }
+                //default case nothing specified 
+            }
+
+        }
+        else{
+            //unreachable code
+            throw new CondorStyleException( "Invalid grid resource associated for job " + job.getID() + " " + gridResource );
+        }
+    }
+    
     public static void main(String[] args ){
         GLite gl = new GLite();
         
