@@ -677,7 +677,8 @@ static void trace_close(int fd) {
 
     debug("trace_close %d", fd);
 
-    if (f->type == DTYPE_FILE) {
+    /* Only report files that have ops on them */
+    if (f->type == DTYPE_FILE && (f->nread+f->nwrite+f->nseek) > 0) {
         /* Try to get the final size of the file */
         size_t size = 0;
         struct stat st;
