@@ -2060,6 +2060,11 @@ int execve(const char *filename, char *const argv[], char *const envp[]) {
 }
 
 pid_t fork(void) {
+    /* We have to intercept fork so that we can reinit libinterpose in the
+     * child. vfork does not have this problem because a process created
+     * with vfork basically can't do anything except call exec, in which
+     * case libinterpose is going to be reinitialized anyway. */
+
     typeof(fork) *orig_fork = osym("fork");
     pid_t rc = (*orig_fork)();
 
@@ -2074,5 +2079,17 @@ pid_t fork(void) {
     }
 
     return rc;
+}
+
+void _exit(int rc) {
+    /* Regular exit() will call the destructor, but if the app calls _exit we
+     * have to do this manually */
+    interpose_fini();
+
+    typeof(_exit) *orig__exit = osym("_exit");
+    (*orig__exit)(rc);
+
+    /* unreachable */
+    abort();
 }
 
