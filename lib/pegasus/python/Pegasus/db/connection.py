@@ -371,6 +371,9 @@ def _parse_props(db, props, db_type=None, connect_args=None):
 
                 elif db_type == DBType.WORKFLOW and props.property("pegasus.catalog.workflow.timeout"):
                     connect_args[DBKey.TIMEOUT] = int(props.property("pegasus.catalog.workflow.timeout")) * 1000
+
+                elif props.property("pegasus.catalog.*.timeout"):
+                    connect_args[DBKey.TIMEOUT] = int(props.property("pegasus.catalog.*.timeout")) * 1000
             except ValueError, e:
                 raise ConnectionError("Timeout properties should be set in seconds: %s (%s)" % (e.message, url))
 
