@@ -24,6 +24,7 @@
 #include <papi.h>
 #endif
 
+/* TODO Unlocked I/O (e.g. fwrite_unlocked) */
 /* TODO Handle directories */
 /* TODO Interpose accept (for network servers) */
 /* TODO Is it necessary to interpose shutdown? Would that help the DNS issue? */
@@ -192,6 +193,54 @@ static char *get_addr(const struct sockaddr *addr, socklen_t addrlen) {
     }
 
     return NULL;
+}
+
+static void trace_file(const char *path, int fd);
+
+/* Initialize the descriptor table */
+static void init_descriptors() {
+    /* Get file descriptor limit and allocate descriptor table */
+    max_descriptors = 8;
+    descriptors = (Descriptor *)calloc(sizeof(Descriptor), max_descriptors);
+    if (descriptors == NULL) {
+        printerr("Error allocating descriptor table: calloc: %s\n", strerror(errno));
+    }
+
+    /* TODO For each open descriptor, initialize the entry */
+    DIR *fddir = opendir("/proc/self/fd");
+    if (fddir == NULL) {
+        printerr("Unable to open /proc/self/fd: %s", strerror(errno));
+        return;
+    }
+
+    struct dirent *d;
+    for (d = readdir(fddir); d != NULL; d = readdir(fddir)) {
+        if (d->d_name[0] == '.') {
+            continue;
+        }
+
+        char path[64];
+        snprintf(path, BUFSIZ, "/proc/self/fd/%s", d->d_name);
+
+        int fd = atoi(d->d_name);
+
+        char linkpath[BUFSIZ];
+        int size = readlink(path, linkpath, BUFSIZ);
+        if (size < 0) {
+            printerr("Unable to readlink %s: %s", path, strerror(errno));
+            continue;
+        }
+        linkpath[size] = '\0';
+
+        /* Only handle paths */
+        if (linkpath[0] != '/') {
+            continue;
+        }
+
+        trace_file(linkpath, fd);
+    }
+
+    closedir(fddir);
 }
 
 /* Get a reference to the given descriptor if it exists */
@@ -459,10 +508,15 @@ static void read_io() {
 }
 
 /* Determine which paths should be traced */
-static int should_trace(const char *path) {
+static int should_trace(int fd, const char *path) {
     /* Trace all files */
     if (getenv("KICKSTART_TRACE_ALL") != NULL) {
         return 1;
+    }
+
+    /* Don't trace stdio */
+    if (fd <= 2) {
+        return 0;
     }
 
     /* Trace files in the current working directory */
@@ -470,8 +524,23 @@ static int should_trace(const char *path) {
         char *wd = getcwd(NULL, 0);
         int incwd = startswith(path, wd);
         free(wd);
-
         return incwd;
+    }
+
+    /* Don't trace the trace log! */
+    char *prefix = getenv("KICKSTART_PREFIX");
+    if (startswith(path, prefix)) {
+        return 0;
+    }
+
+    /* Skip directories */
+    struct stat s;
+    if (fstat(fd, &s) != 0) {
+        printerr("fstat: %s\n", strerror(errno));
+        return 0;
+    }
+    if (s.st_mode & S_IFDIR) {
+        return 0;
     }
 
     /* Skip files with known extensions that we don't care about */
@@ -503,18 +572,7 @@ static void trace_file(const char *path, int fd) {
         return;
     }
 
-    if (!should_trace(path)) {
-        return;
-    }
-
-    struct stat s;
-    if (fstat(fd, &s) != 0) {
-        printerr("fstat: %s\n", strerror(errno));
-        return;
-    }
-
-    /* Skip directories */
-    if (s.st_mode & S_IFDIR) {
+    if (!should_trace(fd, path)) {
         return;
     }
 
@@ -929,12 +987,7 @@ static void __attribute__((constructor)) interpose_init(void) {
     /* Open the trace file */
     topen();
 
-    /* Get file descriptor limit and allocate descriptor table */
-    max_descriptors = 8;
-    descriptors = (Descriptor *)calloc(sizeof(Descriptor), max_descriptors);
-    if (descriptors == NULL) {
-        printerr("Error allocating descriptor table: calloc: %s\n", strerror(errno));
-    }
+    init_descriptors();
 
     tprintf("start: %lf\n", get_time());
 
@@ -1281,7 +1334,8 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
     size_t rc = fread_untraced(ptr, size, nmemb, stream);
 
     if (rc > 0) {
-        trace_read(fileno(stream), rc);
+        /* rc is the number of objects written */
+        trace_read(fileno(stream), rc*size);
     }
 
     return rc;
@@ -1294,7 +1348,8 @@ size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream) {
     size_t rc = (*orig_fwrite)(ptr, size, nmemb, stream);
 
     if (rc > 0) {
-        trace_write(fileno(stream), rc);
+        /* rc is the number of objects written */
+        trace_write(fileno(stream), rc*size);
     }
 
     return rc;
