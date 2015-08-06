@@ -30,6 +30,9 @@ import static org.junit.Assert.*;
  * @author vahi
  */
 public class GliteTest {
+    
+    public static final String DEFAULT_GRID_RESOURCE = "pbs";
+    
     private GLite gs = null;
 
     public GliteTest() {
@@ -84,34 +87,33 @@ public class GliteTest {
     public void testPegasusProfileHostCount() throws CondorStyleException{
         Job j = new Job();
         j.vdsNS.construct(Pegasus.NODES_KEY, "5" );
-        String ce = gs.getCERequirementsForJob( j );
-        this.testWithRegex(j, ".*NODES==\"([0-9]*)\".*", "5");
+        this.testWithRegex(j, DEFAULT_GRID_RESOURCE, ".*NODES==\"([0-9]*)\".*", "5");
     }
     
     @Test
     public void testPegasusProfileMemory() throws CondorStyleException{
         Job j = new Job();
         j.vdsNS.construct( Pegasus.MEMORY_KEY, "50" );
-        this.testWithRegex(j, ".*PER_PROCESS_MEMORY==\"([0-9]*)\".*", "50");
+        this.testWithRegex(j, DEFAULT_GRID_RESOURCE, ".*PER_PROCESS_MEMORY==\"([0-9]*)\".*", "50");
     }
     
     @Test
     public void testPegasusProfileMAXWalltime() throws CondorStyleException{
         Job j = new Job();
         j.vdsNS.construct( Pegasus.RUNTIME_KEY, "100" );
-        this.testWithRegex(j, ".*WALLTIME==\"([0-9]+\\:[0-9]+\\:[0-9]+)\".*", "00:02:00");
+        this.testWithRegex(j, DEFAULT_GRID_RESOURCE, ".*WALLTIME==\"([0-9]+\\:[0-9]+\\:[0-9]+)\".*", "00:02:00");
     }
     
     @Test
     public void testGlobusProfileXCount() throws CondorStyleException{
         Job j = new Job();
         j.globusRSL.construct( "xcount", "100" );
-        this.testWithRegex(j, ".*PROCS==\"([0-9]*)\".*", "100") ;
+        this.testWithRegex(j,DEFAULT_GRID_RESOURCE, ".*PROCS==\"([0-9]*)\".*", "100") ;
     }
     
     
-    private void testWithRegex( Job j, String regex, String expected) throws CondorStyleException{
-        String ce = gs.getCERequirementsForJob( j );
+    private void testWithRegex( Job j, String gridResource, String regex, String expected) throws CondorStyleException{
+        String ce = gs.getCERequirementsForJob( j, gridResource );
         //System.out.println( ce );
         Pattern p = Pattern.compile( regex );
         Matcher m = p.matcher( ce );
