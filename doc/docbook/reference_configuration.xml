@@ -1820,6 +1820,223 @@ Scope       :</emphasis> TC, SC, DAX, Properties
           </tbody>
         </tgroup>
       </table>
+
+      <section>
+        <title>Task Resource Requirements Profiles</title>
+
+        <para>Startng Pegasus 4.6.0 Release, users can specify pegasus
+        profiles to describe resources requirements for their job. The planner
+        will automatically translate them to appropriate execution environment
+        specific directives. For example, the profiles are automatically
+        translated to Globus RSL keys if submitting job via CondorG to remote
+        GRAM instances, Condor Classad keys when running in a vanilla condor
+        pool and to appropriate shell variables for Glite that can be picked
+        up by the local attributes.sh. The profiles are described
+        below.</para>
+
+        <para><table>
+            <title>Task Resource Requirement Profiles.</title>
+
+            <tgroup cols="2">
+              <tbody>
+                <row>
+                  <entry><emphasis role="bold">Property Key
+                  </emphasis></entry>
+
+                  <entry><emphasis role="bold">Description</emphasis></entry>
+                </row>
+
+                <row>
+                  <entry><literallayout><emphasis role="bold"><emphasis
+                          role="bold">Property Key: </emphasis></emphasis>pegasus.runtime<emphasis
+                        role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>runtime<emphasis role="bold">
+Scope       :</emphasis> TC, SC, DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 2.0
+<emphasis role="bold">Type        : </emphasis>Long</literallayout></entry>
+
+                  <entry>This profile specifies the expected runtime of a job
+                  in seconds. Refer to the <link
+                  linkend="runtime_clustering">Pegasus Clustering Guide</link>
+                  for description on using it for runtime clustering.</entry>
+                </row>
+
+                <row>
+                  <entry><literallayout><emphasis role="bold"><emphasis
+                          role="bold">Property Key: </emphasis></emphasis>clusters.maxruntime<emphasis
+                        role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>pegasus.clusters.maxruntime<emphasis
+                        role="bold">
+Scope       :</emphasis> TC, SC, DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 4.0
+<emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
+
+                  <entry>Please refer to the <link
+                  linkend="runtime_clustering">Pegasus Clustering Guide</link>
+                  for detailed description. This profile specifies the maximum
+                  runtime of a job.</entry>
+                </row>
+
+                <row>
+                  <entry><literallayout><emphasis role="bold"><emphasis
+                          role="bold">Property Key: </emphasis></emphasis>pegasus.cores<emphasis
+                        role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>cores<emphasis role="bold">
+Scope       :</emphasis> TC, SC, DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 4.0
+<emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
+
+                  <entry>The total number of cores, required for a job. This
+                  is also used for accounting purposes in the database while
+                  generating statistics. It corresponds to the
+                  multiplier_factor in the job_instance table described <link
+                  linkend="stampede-schema">here</link>.</entry>
+                </row>
+
+                <row>
+                  <entry><literallayout><emphasis role="bold"><emphasis
+                          role="bold">Property Key: </emphasis></emphasis>pegasus.nodes<emphasis
+                        role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>nodes<emphasis role="bold">
+Scope       :</emphasis> TC, SC, DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 4.6
+<emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
+
+                  <entry>Indicates the the number of nodes a job
+                  requires.</entry>
+                </row>
+
+                <row>
+                  <entry><literallayout><emphasis role="bold"><emphasis
+                          role="bold">Property Key: </emphasis></emphasis>pegasus.ppn<emphasis
+                        role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>ppn<emphasis role="bold">
+Scope       :</emphasis> TC, SC, DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 4.6
+<emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
+
+                  <entry>Indicates the number of processors per node . This
+                  profile is best set in the Site Catalog and usually set when
+                  running workflows with MPI jobs.</entry>
+                </row>
+
+                <row>
+                  <entry><literallayout><emphasis role="bold"><emphasis
+                          role="bold">Property Key: </emphasis></emphasis>pegasus.memory<emphasis
+                        role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>memory<emphasis role="bold">
+Scope       :</emphasis> TC, SC, DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 4.6
+<emphasis role="bold">Type        : </emphasis>Long</literallayout></entry>
+
+                  <entry>Indicates the maximum memory a job requires in MB
+                  diskspace.</entry>
+                </row>
+
+                <row>
+                  <entry><literallayout><emphasis role="bold"><emphasis
+                          role="bold">Property Key: </emphasis></emphasis>pegasus.diskspace<emphasis
+                        role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>diskspace<emphasis role="bold">
+Scope       :</emphasis> TC, SC, DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 4.6
+<emphasis role="bold">Type        : </emphasis>Long</literallayout></entry>
+
+                  <entry>Indicates diskspace a job requires in MB. </entry>
+                </row>
+              </tbody>
+            </tgroup>
+          </table>The automatic translation to various execution environment
+        specific directives is explained below. It is important, to note that
+        execution environment specific keys take precedence over the Pegasus
+        profile keys. For example, Globus profile key maxruntime will be
+        preferred over Pegasus profile key runtime when running jobs via
+        HTCondorG.</para>
+
+        <table>
+          <title>Table mapping translation of Pegasus Task Requriements to
+          corresponding execution environment keys.</title>
+
+          <tgroup cols="4">
+            <thead>
+              <row>
+                <entry align="center">Pegasus Task Resource Requirement
+                Profile Key</entry>
+
+                <entry align="center">Corresponding Globus RSL Key </entry>
+
+                <entry align="center">Corresponding Condor Classad Key
+                </entry>
+
+                <entry align="center">KEY in +remote_cerequirements classad
+                for GLITE</entry>
+              </row>
+            </thead>
+
+            <tbody>
+              <row>
+                <entry>runtime</entry>
+
+                <entry>maxruntime</entry>
+
+                <entry>-</entry>
+
+                <entry>WALLTIME</entry>
+              </row>
+
+              <row>
+                <entry>cores</entry>
+
+                <entry>count</entry>
+
+                <entry>request_cpus</entry>
+
+                <entry>CORES</entry>
+              </row>
+
+              <row>
+                <entry>nodes</entry>
+
+                <entry>hostcount</entry>
+
+                <entry>-</entry>
+
+                <entry>NODES</entry>
+              </row>
+
+              <row>
+                <entry>ppn</entry>
+
+                <entry>xcount</entry>
+
+                <entry>-</entry>
+
+                <entry>PROCS</entry>
+              </row>
+
+              <row>
+                <entry>memory</entry>
+
+                <entry>maxmemory</entry>
+
+                <entry>request_memory</entry>
+
+                <entry>PER_PROCESS_MEMORY</entry>
+              </row>
+
+              <row>
+                <entry>diskspace</entry>
+
+                <entry>-</entry>
+
+                <entry>request_diskspace</entry>
+
+                <entry>-</entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table>
+      </section>
     </section>
 
     <section id="hints_profiles">
@@ -1832,8 +2049,6 @@ Scope       :</emphasis> TC, SC, DAX, Properties
       only be specified in the DAX. It is important to note that these
       particular keys once specified in the DAX, cannot be overriden like
       other profiles.</para>
-
-      <para/>
 
       <table>
         <title>Useful Hints Profile Keys</title>
