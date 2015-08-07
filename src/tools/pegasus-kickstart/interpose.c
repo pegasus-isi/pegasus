@@ -344,6 +344,7 @@ static void* timer_thread_func(void* mpi_rank_void) {
         // printerr("[Thread-%d] Sending: %s\n", mpi_rank, msg);
 
         if( send_msg_to_kickstart(msg, monitoring_socket_host, monitoring_socket_port) ) {
+            printerr("[Thread-%d] There was a problem sending a message to kickstart...\n", mpi_rank);
 
             // TODO we should try to open a file and log monitoring stuff
 
@@ -364,6 +365,8 @@ static void* timer_thread_func(void* mpi_rank_void) {
 
         sleep(interval);
     }
+
+    printerr("[Thread-%d] We are finishing our work...\n", mpi_rank);
 
     return NULL;
 }

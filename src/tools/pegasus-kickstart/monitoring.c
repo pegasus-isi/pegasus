@@ -329,7 +329,12 @@ void* monitoring_thread_func(void* socket_port_buf) {
         bzero((char *)&client_addr, sizeof(client_addr));
         client_add_len = sizeof(client_addr);
 
+        printerr("[mon-thread] Waiting for messages...\n");
+
         incoming_socket = accept(monitoring_socket, (struct sockaddr *)&client_addr, &client_add_len);
+
+        printerr("[mon-thread] Incoming socket has been obtained...\n");
+
         if(incoming_socket < 0) {
             printerr("[mon-thread] ERROR[accept]: %s\n", strerror(errno));
         }
@@ -339,7 +344,7 @@ void* monitoring_thread_func(void* socket_port_buf) {
                 printerr("[mon-thread] ERROR[recv]: %s\n", strerror(errno));
             }
             else {
-                // printerr("[mon-thread] succesfull read from socket - %s\n", line);
+                printerr("[mon-thread] succesfull read from socket [B] - %d\n", num_bytes);
                 // replace end line with a terminating character
                 if( (pos = strchr(line, '\n')) != NULL ) {
                     *pos = '\0';
@@ -357,7 +362,7 @@ void* monitoring_thread_func(void* socket_port_buf) {
                 msg_counter += 1;
                 if( aggregate_message(enriched_line, aggr_msg_buffer, &aggr_msg_buffer_offset) > 0 ) {
                     if( msg_counter == MSG_AGGR_FACTOR ) {                        
-                        // printerr("[mon-thread] Sending aggregated message...\n");
+                        printerr("[mon-thread] Sending aggregated message...\n");
                         send_msg_to_mq(aggr_msg_buffer, &monitoring_endpoint, job_id_info.wf_uuid);
 
                         msg_counter = 0;
@@ -370,6 +375,8 @@ void* monitoring_thread_func(void* socket_port_buf) {
 
         close(incoming_socket);
     }
+
+    printerr("[mon-thread] We are finishing our work...\n");
 
     release_monitoring_endpoint(&monitoring_endpoint);
     release_job_id_info(&job_id_info);
