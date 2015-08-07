@@ -1821,7 +1821,7 @@ Scope       :</emphasis> TC, SC, DAX, Properties
         </tgroup>
       </table>
 
-      <section>
+      <section id="task_resource_profiles">
         <title>Task Resource Requirements Profiles</title>
 
         <para>Startng Pegasus 4.6.0 Release, users can specify pegasus
