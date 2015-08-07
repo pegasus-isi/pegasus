@@ -1361,53 +1361,6 @@ Scope       :</emphasis> TC, SC, DAX, Properties
 
             <row>
               <entry><literallayout><emphasis role="bold"><emphasis
-                      role="bold">Property Key: </emphasis></emphasis>pegasus.cores<emphasis
-                    role="bold"><emphasis role="bold">
-Profile  Key: </emphasis></emphasis>cores<emphasis role="bold">
-Scope       :</emphasis> TC, SC, DAX, Properties
-<emphasis role="bold">Since       :</emphasis> 4.0
-<emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
-
-              <entry>The number of cores, associated with the job. This is
-              solely used for accounting purposes in the database while
-              generating statistics. It corresponds to the multiplier_factor
-              in the job_instance table described <link
-              linkend="stampede-schema">here</link>.</entry>
-            </row>
-
-            <row>
-              <entry><literallayout><emphasis role="bold"><emphasis
-                      role="bold">Property Key: </emphasis></emphasis>pegasus.runtime<emphasis
-                    role="bold"><emphasis role="bold">
-Profile  Key: </emphasis></emphasis>runtime<emphasis role="bold">
-Scope       :</emphasis> TC, SC, DAX, Properties
-<emphasis role="bold">Since       :</emphasis> 2.0
-<emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
-
-              <entry>Please refer to the <link
-              linkend="runtime_clustering">Pegasus Clustering Guide</link> for
-              detailed description. This profile specifies the expected
-              runtime of a job.</entry>
-            </row>
-
-            <row>
-              <entry><literallayout><emphasis role="bold"><emphasis
-                      role="bold">Property Key: </emphasis></emphasis>clusters.maxruntime<emphasis
-                    role="bold"><emphasis role="bold">
-Profile  Key: </emphasis></emphasis>pegasus.clusters.maxruntime<emphasis
-                    role="bold">
-Scope       :</emphasis> TC, SC, DAX, Properties
-<emphasis role="bold">Since       :</emphasis> 4.0
-<emphasis role="bold">Type        : </emphasis>Integer</literallayout></entry>
-
-              <entry>Please refer to the <link
-              linkend="runtime_clustering">Pegasus Clustering Guide</link> for
-              detailed description. This profile specifies the maximum runtime
-              of a job.</entry>
-            </row>
-
-            <row>
-              <entry><literallayout><emphasis role="bold"><emphasis
                       role="bold">Property Key: </emphasis></emphasis>pegasus.job.aggregator<emphasis
                     role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>job.aggregator<emphasis role="bold">
@@ -1942,7 +1895,7 @@ Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 4.6
 <emphasis role="bold">Type        : </emphasis>Long</literallayout></entry>
 
-                  <entry>Indicates diskspace a job requires in MB. </entry>
+                  <entry>Indicates diskspace a job requires in MB.</entry>
                 </row>
               </tbody>
             </tgroup>
@@ -1963,10 +1916,9 @@ Scope       :</emphasis> TC, SC, DAX, Properties
                 <entry align="center">Pegasus Task Resource Requirement
                 Profile Key</entry>
 
-                <entry align="center">Corresponding Globus RSL Key </entry>
+                <entry align="center">Corresponding Globus RSL Key</entry>
 
-                <entry align="center">Corresponding Condor Classad Key
-                </entry>
+                <entry align="center">Corresponding Condor Classad Key</entry>
 
                 <entry align="center">KEY in +remote_cerequirements classad
                 for GLITE</entry>
