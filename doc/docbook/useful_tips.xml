@@ -1159,4 +1159,78 @@ $ echo $?
       </note>
     </section>
   </section>
+
+  <section id="cpu_affinity_condor">
+    <title>Slot Partitioning and CPU Affinity in Condor</title>
+
+    <para>By default, Condor will evenly divide the resources in a machine (such as
+        RAM, swap space and disk space) among all the CPUs, and advertise each CPU
+        as its own slot with an even share of the system resources. If you want to
+        have your custom configuration, you can use the following setting to define
+        the maximum number of different slot types:</para>
+
+    <programlisting>
+MAX_SLOT_TYPES = 2
+    </programlisting>
+
+    <para>For each slot type, you can divide system resources unevenly among your
+        CPUs. The <emphasis role="bold">N</emphasis> in the name of the macro listed
+        below must be an integer from 1 to <emphasis role="bold">MAX_SLOT_TYPES</emphasis>
+        (defined above).</para>
+
+    <programlisting>
+SLOT_TYPE_1 = cpus=2, ram=50%, swap=1/4, disk=1/4
+SLOT_TYPE_N = cpus=1, ram=20%, swap=1/4, disk=1/8
+    </programlisting>
+
+
+    <para>Slots can also be partitioned to accommodate actual needs by accepted jobs.
+        A partitionable slot is always unclaimed and dynamically splitted when jobs
+        are started. Slot partitioning can be enable as follows:</para>
+
+    <programlisting>
+SLOT_TYPE_1_PARTITIONABLE = True
+SLOT_TYPE_N_PARTITIONABLE = True
+    </programlisting>
+
+    <para>Condor can also bind cores to each slot through CPU affinity:</para>
+
+    <programlisting>
+ENFORCE_CPU_AFFINITY = True
+SLOT1_CPU_AFFINITY=0,2
+SLOT2_CPU_AFFINITY=1,3
+    </programlisting>
+
+    <para>Note that CPU numbers may vary from machines. Thus you need to verify what is
+        the association for your machine. One way to accomplish this is by using the
+        <emphasis role="bold">lscpu</emphasis> command line tool. For instance, the
+        output provided from this tool may look like:</para>
+
+    <programlisting>
+NUMA node0 CPU(s):     0,2,4,6,8,10
+NUMA node1 CPU(s):     1,3,5,7,9,11
+    </programlisting>
+
+    <para>The following example assumes a machine with 2 sockets and 6 cores per
+        socket, where even cores belong to socket 1 and odd cores to socket
+        2:</para>
+
+    <programlisting>
+NUM_SLOTS_TYPE_1 = 1
+NUM_SLOTS_TYPE_2 = 1
+SLOT_TYPE_1_PARTITIONABLE = True
+SLOT_TYPE_2_PARTITIONABLE = True
+
+SLOT_TYPE_1 = cpus=6
+SLOT_TYPE_2 = cpus=6
+
+ENFORCE_CPU_AFFINITY = True
+
+SLOT1_CPU_AFFINITY=0,2,4,6,8,10
+SLOT2_CPU_AFFINITY=1,3,5,7,9,11
+    </programlisting>
+
+    <para>Please read the section on "Configuring The Startd for SMP Machines" in
+        the Condor Administrator's Manual for full details.</para>
+  </section>
 </chapter>

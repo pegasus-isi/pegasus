@@ -1,4 +1,5 @@
 #include <string>
+#include <fstream>
 #include <errno.h>
 #include <math.h>
 #include <stdio.h>
@@ -26,6 +27,7 @@
 #include "log.h"
 
 using std::string;
+using std::vector;
 
 /* purpose: formats ISO 8601 timestamp into given buffer (simplified)
  * paramtr: seconds (IN): time stamp
@@ -117,26 +119,79 @@ unsigned long get_host_memory() {
     return memory;
 }
 
-
-/* Get the total number of cpus on the host */
-unsigned int get_host_cpus() {
-    unsigned int cpus;
-#ifdef __MACH__ 
-    size_t size = sizeof(cpus);
-    if (sysctlbyname("hw.physicalcpu", &cpus, &size, NULL, 0) < 0) {
-        myfailures("Unable to get number of physical CPUs");
+struct cpuinfo get_host_cpuinfo() {
+    struct cpuinfo c;
+    c.threads = 0;
+    c.cores = 0;
+    c.sockets = 0;
+#ifdef __MACH__
+    unsigned int temp;
+    size_t size = sizeof(temp);
+    if (sysctlbyname("hw.logicalcpu", &temp, &size, NULL, 0) < 0) {
+        myfailures("Unable to get number of CPUs (logical CPUs)");
     }
+    c.threads = temp;
+    if (sysctlbyname("hw.physicalcpu", &temp, &size, NULL, 0) < 0) {
+        myfailures("Unable to get number of cores (physical CPUs)");
+    }
+    c.cores = temp;
+    if (sysctlbyname("hw.packages", &temp, &size, NULL, 0) < 0) {
+        myfailures("Unable to get number of CPU sockets");
+    }
+    c.threads = temp;
 #else
-    long nprocessors = sysconf(_SC_NPROCESSORS_CONF);
-    if (nprocessors <= 0) {
-        myfailures("Unable to get number of physical CPUs");
+    std::ifstream infile;
+    infile.open("/proc/cpuinfo");
+    if (!infile.good()) {
+        myfailures("Error opening /proc/cpuinfo");
     }
-    cpus = nprocessors;
+
+    int last_physical_id = -1;
+    bool new_socket = false;
+    string rec;
+    while (getline(infile, rec)) {
+        if (rec.find("processor\t:", 0, 11) == 0) {
+            // Each time we encounter a processor field, we increment the
+            // number of cpus/threads
+            c.threads += 1;
+        } else if (rec.find("physical id\t:", 0, 13) == 0) {
+            // Each time we encounter a new physical id, we increment the
+            // number of sockets
+            int new_physical_id;
+            if (sscanf(rec.c_str(), "physical id\t: %d", &new_physical_id) != 1) {
+                myfailures("Error reading 'physical id' field from /proc/cpuinfo");
+            }
+            if (new_physical_id != last_physical_id) {
+                c.sockets += 1;
+                last_physical_id = new_physical_id;
+                new_socket = true;
+            }
+        } else if (rec.find("cpu cores\t:", 0, 11) == 0) {
+            // Each time we encounter a new socket, we count the number of
+            // cores it has
+            if (new_socket) {
+                cpu_t cores;
+                if (sscanf(rec.c_str(), "cpu cores\t: %"SCNcpu_t, &cores) != 1) {
+                    myfailures("Error reading 'cpu cores' field from /proc/cpuinfo");
+                }
+                c.cores += cores;
+                new_socket = false;
+            }
+        }
+    }
+
+    if (infile.bad() || !infile.eof()) {
+        myfailures("Error reading /proc/cpuinfo");
+    }
+
+    infile.close();
 #endif
-    if (cpus == 0) {
-        myfailure("Invalid number of CPUs: %u", cpus);
+    if (c.threads == 0 || c.cores == 0 || c.sockets == 0 ||
+            c.cores > c.threads || c.sockets > c.cores ||
+            c.threads % c.cores > 0 || c.cores % c.sockets > 0) {
+        myfailure("Invalid cpuinfo: %"PRIcpu_t" %"PRIcpu_t" %"PRIcpu_t, c.threads, c.cores, c.sockets);
     }
-    return cpus;
+    return c;
 }
 
 int mkdirs(const char *path) {
@@ -326,18 +381,47 @@ string filename(const string &path) {
     return result;
 }
 
-int clear_cpu_affinity() {
+/* Set the cpu affinity to values in bindings */
+int set_cpu_affinity(vector<cpu_t> &bindings) {
 #ifdef LINUX
-    int cpus = get_host_cpus();
-    cpu_set_t *cpuset = CPU_ALLOC(cpus);
+    struct cpuinfo c = get_host_cpuinfo();
+    cpu_set_t *cpuset = CPU_ALLOC(c.threads);
     if (cpuset == NULL) {
         return -1;
     }
-    size_t cpusetsize = CPU_ALLOC_SIZE(cpus);
+    size_t cpusetsize = CPU_ALLOC_SIZE(c.threads);
     CPU_ZERO_S(cpusetsize, cpuset);
 
-    int i;
-    for (i=0; i<cpus; i++) {
+    for (vector<cpu_t>::iterator i = bindings.begin(); i != bindings.end(); i++) {
+        cpu_t j = *i;
+        if (j >= c.threads) {
+            CPU_FREE(cpuset);
+            errno = ERANGE;
+            return -1;
+        }
+        CPU_SET_S(j, cpusetsize, cpuset);
+    }
+
+    int rc = sched_setaffinity(0, cpusetsize, cpuset);
+    CPU_FREE(cpuset);
+    if (rc < 0) {
+        return -1;
+    }
+#endif
+    return 0;
+}
+
+int clear_cpu_affinity() {
+#ifdef LINUX
+    struct cpuinfo c = get_host_cpuinfo();
+    cpu_set_t *cpuset = CPU_ALLOC(c.threads);
+    if (cpuset == NULL) {
+        return -1;
+    }
+    size_t cpusetsize = CPU_ALLOC_SIZE(c.threads);
+    CPU_ZERO_S(cpusetsize, cpuset);
+
+    for (unsigned i=0; i<c.threads; i++) {
         CPU_SET_S(i, cpusetsize, cpuset);
     }
 

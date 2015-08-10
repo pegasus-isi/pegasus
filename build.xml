@@ -87,14 +87,14 @@
     <copy preservelastmodified="true" todir="${build.src}" file="LICENSE"/>
 
     <!-- Generate build properties file -->
-    <propertyfile file="${build.src}/pegasus.build.properties">
-      <entry key="pegasus.build.version" value="${pegasus.version}"/>
-      <entry key="pegasus.build.platform" value="${dist.arch}"/>
-      <entry key="pegasus.build.timestamp" value="${ISODATE.utc}"/>
-      <entry key="pegasus.build.libdir" value="${dist.lib.subdir}"/>
-      <entry key="pegasus.build.pydir" value="${dist.python-lib.subdir}"/>
-      <entry key="pegasus.build.git.hash" value="${pegasus.build.git.hash}"/>
-    </propertyfile>
+    <echo file="${build.src}/pegasus.build.properties">
+pegasus.build.version=${pegasus.version}
+pegasus.build.platform=${dist.arch}
+pegasus.build.timestamp=${ISODATE.utc}
+pegasus.build.libdir=${dist.lib.subdir}
+pegasus.build.pydir=${dist.python-lib.subdir}
+pegasus.build.git.hash=${pegasus.build.git.hash}
+    </echo>
 
     <!-- RPM spec file with updated version number -->
     <copy preservelastmodified="true" overwrite="true" file="pegasus.spec.in" tofile="pegasus.spec">

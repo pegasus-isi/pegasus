@@ -16,6 +16,7 @@
 #include "mpicomm.h"
 #include "protocol.h"
 #include "tools.h"
+#include "config.h"
 
 using std::string;
 using std::list;
@@ -79,7 +80,8 @@ void usage() {
             "   --no-resource-log    Do not generate a log of resource usage\n"
             "   --no-sleep-on-recv   Do not sleep on message receive\n"
             "   --maxfds             Maximum cached file descriptors\n"
-            "   --keep-affinity      Keep inherited CPU and memory affinity\n",
+            "   --keep-affinity      Keep inherited CPU and memory affinity\n"
+            "   --set-affinity       Set CPU affinity for multicore tasks\n",
             program
         );
     }
@@ -111,7 +113,7 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
     string rescuefile = "";
     string host_script = "";
     unsigned host_memory = 0;
-    unsigned host_cpus = 0;
+    cpu_t host_cpus = 0;
     bool strict_limits = false;
     double max_wall_time = 0.0;
     bool per_task_stdio = false;
@@ -121,6 +123,7 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
     bool sleep_on_recv = true;
     int maxfds = 0;
     bool clear_affinity = true;
+    config.set_affinity = false;
 
     // Environment variable defaults
     char *env_host_script = getenv("PMC_HOST_SCRIPT");
@@ -138,7 +141,7 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
 
     char *env_host_cpus = getenv("PMC_HOST_CPUS");
     if (env_host_cpus != NULL) {
-        if (sscanf(env_host_cpus, "%u", &host_cpus) != 1) {
+        if (sscanf(env_host_cpus, "%"SCNcpu_t, &host_cpus) != 1) {
             argerror("Invalid value for PMC_HOST_CPUS");
             return 1;
         }
@@ -250,12 +253,8 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
                 return 1;
             }
             string host_cpus_string = flags.front();
-            if (sscanf(host_cpus_string.c_str(), "%u", &host_cpus) != 1) {
+            if (sscanf(host_cpus_string.c_str(), "%"SCNcpu_t, &host_cpus) != 1) {
                 argerror("Invalid value for --host-cpus");
-                return 1;
-            }
-            if (host_cpus < 1) {
-                argerror("--host-cpus must be an integer >= 1");
                 return 1;
             }
         } else if (flag == "--strict-limits") {
@@ -299,6 +298,8 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
             }
         } else if (flag == "--keep-affinity") {
             clear_affinity = false;
+        } else if (flag == "--set-affinity") {
+            config.set_affinity = true;
         } else if (flag[0] == '-') {
             string message = "Unrecognized argument: ";
             message += flag;
@@ -329,6 +330,13 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
         return 1;
     }
 
+    // You can't specify --host-cpus and --set-affinity because that would
+    // break stuff
+    if (config.set_affinity && host_cpus > 0) {
+        fprintf(stderr, "--host-cpus is not compatible with --set-affinity\n");
+        return 1;
+    }
+
     comm.sleep_on_recv = sleep_on_recv;
 
     version();
@@ -337,7 +345,7 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
     // affinity settings on Linux. This is the default because some systems
     // are not configured correctly and bind all the processes to one CPU,
     // and we can't expect users to know that this is happening.
-    if (clear_affinity) {
+    if (clear_affinity || config.set_affinity) {
         log_debug("Rank %d: Clearing CPU and memory affinity", rank);
         if (clear_cpu_affinity() < 0) {
             log_error("Rank %d: Error clearing CPU affinity: %s",

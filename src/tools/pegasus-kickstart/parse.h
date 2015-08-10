@@ -22,7 +22,7 @@ typedef struct _Node {
 
 extern size_t countNodes(const Node* head);
 extern void deleteNodes(Node* head);
-extern Node* parseCommandLine(const char* line, int* state);
-extern Node* parseArgVector(int argc, char* const* argv, int* state);
+extern Node *parseCommandLine(const char* line);
+extern Node *parseArgVector(int argc, char* const* argv);
 
 #endif /* _PARSE_H */

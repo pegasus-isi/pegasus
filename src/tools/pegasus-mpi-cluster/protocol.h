@@ -4,10 +4,14 @@
 #include <string>
 #include <map>
 #include <list>
+#include <vector>
+
+#include "tools.h"
 
 using std::string;
 using std::map;
 using std::list;
+using std::vector;
 
 enum MessageType {
     COMMAND      = 1,
@@ -43,12 +47,13 @@ public:
     list<string> args;
     string id;
     unsigned memory;
-    unsigned cpus;
+    cpu_t cpus;
+    vector<cpu_t> bindings;
     map<string, string> pipe_forwards;
     map<string, string> file_forwards;
 
     CommandMessage(char *msg, unsigned msgsize, int source);
-    CommandMessage(const string &name, const list<string> &args, const string &id, unsigned memory, unsigned cpus, const map<string,string> *pipe_forwards, const map<string,string> *file_forwards);
+    CommandMessage(const string &name, const list<string> &args, const string &id, unsigned memory, cpu_t cpus, const vector<cpu_t> &bindings, const map<string,string> *pipe_forwards, const map<string,string> *file_forwards);
     virtual int tag() const { return COMMAND; };
 };
 
@@ -67,10 +72,12 @@ class RegistrationMessage: public Message {
 public:
     string hostname;
     unsigned memory;
-    unsigned cpus;
+    cpu_t threads;
+    cpu_t cores;
+    cpu_t sockets;
 
     RegistrationMessage(char *msg, unsigned msgsize, int source);
-    RegistrationMessage(const string &hostname, unsigned memory, unsigned cpus);
+    RegistrationMessage(const string &hostname, unsigned memory, cpu_t threads, cpu_t cores, cpu_t sockets);
     virtual int tag() const { return REGISTRATION; };
 };
 

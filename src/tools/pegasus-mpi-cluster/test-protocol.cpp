@@ -21,12 +21,15 @@ void test_command() {
     args.push_back("arg");
     string id = "id";
     unsigned memory = 1;
-    unsigned cpus = 2;
+    cpu_t cpus = 2;
+    vector<cpu_t> bindings;
+    bindings.push_back(5);
+    bindings.push_back(7);
     map<string,string> pipe_forwards;
     pipe_forwards["FOO"] = "BAR";
     map<string,string> file_forwards;
     file_forwards["BAZ"] = "BOO";
-    CommandMessage input(name, args, id, memory, cpus, &pipe_forwards, &file_forwards);
+    CommandMessage input(name, args, id, memory, cpus, bindings, &pipe_forwards, &file_forwards);
     CommandMessage output(msgcopy(input.msg, input.msgsize), input.msgsize, 0);
     if (input.name != output.name) {
         myfailure("names don't match");
@@ -45,6 +48,12 @@ void test_command() {
     }
     if (input.cpus != output.cpus) {
         myfailure("cpus don't match");
+    }
+    if (output.bindings.size() != input.bindings.size()) {
+        myfailure("number of bindings don't match");
+    }
+    if (output.bindings[0] != input.bindings[0] || output.bindings[1] != input.bindings[1]) {
+        myfailure("bindings don't match");
     }
     if (output.pipe_forwards["FOO"] != input.pipe_forwards["FOO"]) {
         myfailure("pipe forwards don't match");
@@ -79,8 +88,10 @@ void test_shutdown() {
 void test_registration() {
     string hostname = "hostname";
     unsigned memory = 7;
-    unsigned cpus = 5;
-    RegistrationMessage input(hostname, memory, cpus);
+    unsigned threads = 5;
+    unsigned cores = 3;
+    unsigned sockets = 2;
+    RegistrationMessage input(hostname, memory, threads, cores, sockets);
     RegistrationMessage output(msgcopy(input.msg, input.msgsize), input.msgsize, 0);
     if (input.hostname != output.hostname) {
         myfailure("hostname does not match");
@@ -88,8 +99,14 @@ void test_registration() {
     if (input.memory != output.memory) {
         myfailure("memory does not match");
     }
-    if (input.cpus != output.cpus) {
-        myfailure("cpus do not match");
+    if (input.threads != output.threads) {
+        myfailure("threads do not match");
+    }
+    if (input.cores != output.cores) {
+        myfailure("cores do not match");
+    }
+    if (input.sockets != output.sockets) {
+        myfailure("sockets do not match");
     }
 }
 

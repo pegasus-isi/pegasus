@@ -33,9 +33,8 @@ typedef struct _SockInfo {
 } SockInfo;
 
 typedef struct _ProcInfo {
-    pid_t pid;              /* Thread ID (main tid==pid) */
+    pid_t pid;              /* Process ID */
     pid_t ppid;             /* Parent pid */
-    pid_t tgid;             /* Thread group ID (i.e. pid) */
     char *exe;              /* Executable path */
     double start;           /* start time in seconds from epoch */
     double stop;            /* stop time in seconds from epoch */
@@ -51,7 +50,9 @@ typedef struct _ProcInfo {
     uint64_t read_bytes;    /* file bytes read */
     uint64_t write_bytes;   /* file bytes written */
     uint64_t cancelled_write_bytes; /* bytes written, then deleted before flush */
-    int threads;            /* Number of threads */
+    int max_threads;        /* Peak number of threads */
+    int tot_threads;        /* Total number of threads */
+    int fin_threads;        /* Number of threads when process exited */
 
     /* Keeping track of system calls in progress */
     int insyscall;          /* in a system call? */
@@ -63,6 +64,16 @@ typedef struct _ProcInfo {
     FileInfo *files;        /* Linked list of files accessed */
 
     SockInfo *sockets;      /* Linked list of sockets */
+
+    long long PAPI_TOT_INS; /* Total instructions */
+    long long PAPI_LD_INS;  /* Load instructions */
+    long long PAPI_SR_INS;  /* Store instructions */
+    long long PAPI_FP_INS;  /* Floating point instructions */
+    long long PAPI_FP_OPS;  /* Floating point ops */
+
+    char *cmd;              /* Command line */
+
+    int fork;               /* Is this process forked from another? */
 
     struct _ProcInfo *next;
     struct _ProcInfo *prev;

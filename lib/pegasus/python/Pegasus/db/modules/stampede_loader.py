@@ -44,7 +44,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         expects the database to exist (ie: will not issue CREATE DB)
         but will populate an empty DB with tables/indexes/etc.
     """
-    def __init__(self, connString=None, perf='no', batch='no', **kw):
+    def __init__(self, connString=None, perf='no', batch='no', props=None, db_type=None, **kw):
         """Init object
 
         @type   connString: string
@@ -55,7 +55,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             raise ValueError("connString is required")
 
         try:
-            SQLAlchemyInit.__init__(self, connString)
+            SQLAlchemyInit.__init__(self, connString, props=props, db_type=db_type)
         except (connection.ConnectionError, DBAdminError), e:
             self.log.exception(e)
             self.log.error('Error initializing workflow loader')

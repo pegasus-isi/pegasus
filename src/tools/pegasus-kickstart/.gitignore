@@ -1,2 +1,3 @@
 pegasus-kickstart
 version.h
+depends.mk

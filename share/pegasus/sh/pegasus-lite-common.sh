@@ -155,6 +155,10 @@ function pegasus_lite_setup_work_dir()
             export pegasus_lite_work_dir=$d
             export pegasus_lite_work_dir_created=1
             pegasus_lite_log "  Work dir is $d - $free kB available"
+
+            # PM-968 if provided, copy lof files from the HTCondor iwd to the PegasusLite work dir
+            find $pegasus_lite_start_dir -name \*.lof -exec cp {} $pegasus_lite_work_dir/ \; >/dev/null 2>&1
+
             cd $pegasus_lite_work_dir
             return 0
         fi
@@ -259,6 +263,9 @@ function pegasus_lite_get_system()
         elif [ -e /etc/rocks-release ]; then
             osname="rhel"
             osversion=`cat /etc/rocks-release | grep -o -E ' [0-9]+.[0-9]+'`
+        elif [ -e /etc/SuSE-release ]; then
+            osname="suse"
+            osversion=`cat /etc/SuSE-release | grep VERSION | grep -o -E ' [0-9]+'`
         fi
         
         # remove spaces/tabs in the version

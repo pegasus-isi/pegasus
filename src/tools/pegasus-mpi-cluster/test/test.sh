@@ -390,8 +390,8 @@ function test_resource_log {
     
     LINES=$(cat test/sleep.dag.resource | wc -l)
     
-    if [ $LINES -ne 6 ]; then
-        echo "ERROR: Expected 6 lines in the resource log"
+    if [ $LINES -ne 3 ]; then
+        echo "ERROR: Expected 3 lines in the resource log got $LINES"
         return 1
     fi
 }
@@ -670,6 +670,59 @@ function test_PM848 {
     fi
 }
 
+function test_affinity_env {
+    OUTPUT=$(mpiexec -n 8 $PMC --host-cpus 8 test/PM953.dag 2>&1)
+    RC=$?
+
+    if [ $RC -ne 0 ]; then
+        echo "$OUTPUT"
+        echo "ERROR: affinity test failed"
+        return 1
+    fi
+
+    if ! [[ "$OUTPUT" =~ "eight 0,1,2,3,4,5,6,7" ]]; then
+        echo "$OUTPUT"
+        echo "ERROR: affinity test did not contain the right output"
+        return 1
+    fi
+}
+
+function test_PM954 {
+    OUTPUT=$(mpiexec -n 2 $PMC test/PM954.dag 2>&1)
+    RC=$?
+
+    if [ $RC -ne 0 ]; then
+        echo "$OUTPUT"
+        echo "ERROR: PM954 test failed"
+        return 1
+    fi
+
+    for var in "PMC_CPUS=3" "PMC_MEMORY=17" "PMC_TASK=foobar" "PMC_RANK=1" "PMC_HOST_RANK=0"; do
+        if ! [[ "$OUTPUT" =~ "$var" ]]; then
+            echo "$OUTPUT"
+            echo "ERROR: Missing '$var' in output"
+            return 1
+        fi
+    done
+}
+
+function test_PM953 {
+    OUTPUT=$(mpiexec -n 2 $PMC --set-affinity test/PM953-2.dag 2>&1)
+    RC=$?
+
+    if [ $RC -ne 0 ]; then
+        echo "$OUTPUT"
+        echo "ERROR: PM953 test failed"
+        return 1
+    fi
+
+    if ! echo "$OUTPUT" | grep -E "^physcpubind: 0 1 2 $" >/dev/null; then
+        echo "$OUTPUT"
+        echo "ERROR: PM953 affinity test did not contain the right output"
+        return 1
+    fi
+}
+
 # If a test name was specified, then run just that test
 if ! [ -z "$*" ]; then
     run_test "$@"
@@ -683,6 +736,8 @@ run_test ./test-log
 run_test ./test-engine
 run_test ./test-fdcache
 run_test ./test-protocol
+run_test ./test-scheduler
+run_test test_PM954
 run_test test_help
 run_test test_help_no_mpi
 run_test test_one_worker_required
@@ -714,6 +769,7 @@ run_test test_hang_script
 run_test test_maxfds
 run_test test_complex_args
 run_test test_PM848
+run_test test_affinity_env
 
 # setrlimit is broken on Darwin, so the strict limits test won't work
 if [ $(uname -s) != "Darwin" ]; then
@@ -728,9 +784,18 @@ function count_cpus {
     fi
 }
 
-# For the CPU affinity tests we need numactl and > 1 CPU
-if ! [ -z "$(which numactl)" ] && [ $(count_cpus) -gt 1 ]; then
-    run_test test_clear_affinity
-    run_test test_keep_affinity
+# For the CPU affinity tests we need numactl
+if ! [ -z "$(which numactl)" ]; then
+
+    # For these two tests we need 2 cpus
+    if [ $(count_cpus) -gt 1 ]; then
+        run_test test_clear_affinity
+        run_test test_keep_affinity
+    fi
+
+    # For this test we need 4 or more
+    if [ $(count_cpus) -ge 4 ]; then
+        run_test test_PM953
+    fi
 fi
 

@@ -23,6 +23,7 @@ import edu.isi.pegasus.planner.classes.AggregatedJob;
 
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.namespace.Globus;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
@@ -88,8 +89,33 @@ public class MPIExec extends Abstract {
      * @param job          the abstract clustered job
      */
     public void makeAbstractAggregatedJobConcrete( AggregatedJob job ){
+        //PM-962 for PMC aggregated values for runtime and memory don't get mapped
+        //to the PMC job itself
+        String computedRuntime = (String)job.vdsNS.removeKey( Pegasus.RUNTIME_KEY );
+        if( computedRuntime == null ){
+            //remove the globus maxwalltime if set
+            computedRuntime = (String)job.globusRSL.removeKey( Globus.MAX_WALLTIME_KEY );
+        }
+        
+        String computedMemory  = (String)job.vdsNS.removeKey( Pegasus.MEMORY_KEY );
+        if( computedMemory == null ){
+            //remove the globus maxmemory if set
+            //memory for the PMC job should be set with pmc executable
+            computedMemory = (String)job.globusRSL.removeKey( Globus.MAX_MEMORY_KEY );
+        }
+        
         super.makeAbstractAggregatedJobConcrete(job);
 
+        //only do something for the runtime if runtime is not 
+        //picked up from other profile sources for PMC jobs
+        if( computedRuntime != null &&
+                !( job.globusRSL.containsKey( Globus.MAX_WALLTIME_KEY ) ||
+                        ( job.vdsNS.containsKey( Pegasus.RUNTIME_KEY) ) )) {
+            
+            //do some estimation here for the runtime?
+            
+        }
+        
         //also put in jobType as mpi only if a user has not specified
         //any other jobtype before hand
         if( !job.globusRSL.containsKey( "jobtype" ) ){
@@ -285,12 +311,22 @@ public class MPIExec extends Abstract {
         StringBuffer args = new StringBuffer();
         
         //add --max-wall-time option PM-625
-        String walltime = (String) job.globusRSL.get( "maxwalltime" );
+        String walltime = (String) job.globusRSL.get( Globus.MAX_WALLTIME_KEY );
+       
+        int divisor = 1;
+        if( walltime == null ){
+            //PM-962 fall back on pegasus profile runtime key which is in seconds
+            walltime = job.vdsNS.getStringValue( Pegasus.RUNTIME_KEY );
+            if( walltime != null ){
+                divisor = 60;
+            }
+        }
+        
         if( walltime != null ){
             long value = -1;
 
             try{
-                value = Integer.parseInt( walltime );
+                value = Long.parseLong(walltime );
             }
             catch( Exception e ){
                 //ignore
@@ -298,6 +334,7 @@ public class MPIExec extends Abstract {
 
             //walltime is specified in minutes
             if( value > 1 ){
+                value = value / divisor;
                 if( value > 10 ){
                     //subtract 5 minutes to give PMC a chance to return all stdouts
                     //do this only if walltime is at least more than 10 minutes
@@ -364,6 +401,10 @@ public class MPIExec extends Abstract {
     public String getCPURequirementsArgument( Job job ){
         StringBuffer result = new StringBuffer();
         String value = job.vdsNS.getStringValue( Pegasus.PMC_REQUEST_CPUS_KEY );
+        
+        if( value == null ){
+            value = job.vdsNS.getStringValue( Pegasus.CORES_KEY );
+        }
 
         if( value != null ){
         
@@ -405,6 +446,11 @@ public class MPIExec extends Abstract {
     public String getMemoryRequirementsArgument( Job job ){
         StringBuffer result = new StringBuffer();
         String value = job.vdsNS.getStringValue( Pegasus.PMC_REQUEST_MEMORY_KEY );
+        
+        //default to memory parameter. both profiles are in MB
+        if( value == null ){
+            value = job.vdsNS.getStringValue( Pegasus.MEMORY_KEY );
+        }
 
         if( value != null ){
 

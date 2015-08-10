@@ -261,7 +261,7 @@ function test_timeout_nokill {
 }
 
 function test_timeout_mainjob_cleanup {
-    GRIDSTART_CLEANUP="/bin/echo Cleanup job" kickstart -k 1 /bin/sleep 5
+    KICKSTART_CLEANUP="/bin/echo Cleanup job" kickstart -k 1 /bin/sleep 5
     rc=$?
     if [ $rc -eq 0 ]; then
         echo "Expected non-zero exit"
@@ -279,7 +279,7 @@ function test_timeout_mainjob_cleanup {
 }
 
 function test_timeout_pre {
-    GRIDSTART_PREJOB="/bin/sleep 5" kickstart -k 1 /bin/echo Main job
+    KICKSTART_PREJOB="/bin/sleep 5" kickstart -k 1 /bin/echo Main job
     rc=$?
     if [ $rc -eq 0 ]; then
         echo "Expected non-zero exit"
@@ -297,7 +297,7 @@ function test_timeout_pre {
 }
 
 function test_timeout_post {
-    GRIDSTART_POSTJOB="/bin/sleep 5" kickstart -k 1 /bin/echo Main job
+    KICKSTART_POSTJOB="/bin/sleep 5" kickstart -k 1 /bin/echo Main job
     rc=$?
     if [ $rc -eq 0 ]; then
         echo "Expected non-zero exit"
@@ -315,7 +315,7 @@ function test_timeout_post {
 }
 
 function test_timeout_cleanup {
-    GRIDSTART_CLEANUP="/bin/sleep 5" kickstart -k 1 /bin/echo Main job
+    KICKSTART_CLEANUP="/bin/sleep 5" kickstart -k 1 /bin/echo Main job
     rc=$?
     if [ $rc -ne 0 ]; then
         echo "Expected zero exit"
@@ -333,7 +333,7 @@ function test_timeout_cleanup {
 }
 
 function test_timeout_setup {
-    GRIDSTART_SETUP="/bin/sleep 5" GRIDSTART_PREJOB="/bin/echo Pre job" kickstart -k 1 /bin/echo Main job
+    KICKSTART_SETUP="/bin/sleep 5" KICKSTART_PREJOB="/bin/echo Pre job" kickstart -k 1 /bin/echo Main job
     rc=$?
     if [ $rc -eq 0 ]; then
         echo "Expected non-zero exit"
@@ -388,6 +388,26 @@ function test_quote_env_var {
     return 0
 }
 
+function test_prepend_path {
+    KICKSTART_SAVE=$KICKSTART
+    KICKSTART="env PATH=/bar KICKSTART_PREPEND_PATH=/foo $KICKSTART"
+    kickstart /usr/bin/env
+    rc=$?
+    KICKSTART=$KICKSTART_SAVE
+
+    if [ $rc -ne 0 ]; then
+        echo "Expected kickstart to succeed"
+        return 1
+    fi
+    if ! [[ $(cat test.out) =~ "PATH=/foo:/bar" ]]; then
+        cat test.out
+        echo "Expected PATH to be set with KS_PREPEND_PATH"
+        return 1
+    fi
+
+    return 0
+}
+
 function test_missing_executable {
     kickstart frobnerbrob
     rc=$?
@@ -419,7 +439,24 @@ function test_not_executable {
         return 1
     fi
 
-    return 0
+    return 0;
+}
+
+function test_wrapper {
+    KICKSTART_WRAPPER=./wrapper.sh kickstart /bin/date
+    rc=$?
+
+    if [ $rc -ne 0 ]; then
+        echo "Expected job to succeed"
+        return 1
+    fi
+
+    if ! [[ $(cat test.out) =~ "Hello, Wrapper!" ]]; then
+        echo "Expected wrapper output"
+        return 1
+    fi
+
+    return 0;
 }
 
 # RUN THE TESTS
@@ -455,6 +492,8 @@ run_test test_timeout_cleanup
 run_test test_timeout_setup
 run_test test_failure_environment
 run_test test_quote_env_var
+run_test test_prepend_path
 run_test test_missing_executable
 run_test test_not_executable
+run_test test_wrapper
 

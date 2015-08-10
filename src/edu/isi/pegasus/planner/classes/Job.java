@@ -17,6 +17,8 @@
 package edu.isi.pegasus.planner.classes;
 
 
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import edu.isi.pegasus.common.credential.CredentialHandler;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 
@@ -381,6 +383,7 @@ public class Job extends Data implements GraphNodeContent{
     /**
      * the metadata namespace
      */
+    @Expose @SerializedName( "metadata" )
     private Metadata mMetadataAttributes;
 
     /**
@@ -2115,6 +2118,16 @@ public class Job extends Data implements GraphNodeContent{
            append(value).append(closingBrace).append(separator);
     }
 
+    /**
+     * Convenience method to add metadata to the job
+     * 
+     * @param key
+     * @param value 
+     */
+    public void addMetadata( String key, String value ){
+       this.addProfile( new Profile( Metadata.NAMESPACE_NAME, key, value ));
+    }
+    
     /**
      * Adds a profile to the job object
      *

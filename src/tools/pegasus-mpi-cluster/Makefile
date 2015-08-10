@@ -69,6 +69,7 @@ OBJS += protocol.o
 OBJS += mpicomm.o
 OBJS += fdcache.o
 OBJS += log.o
+OBJS += config.o
 
 PROGRAMS += pegasus-mpi-cluster
 
@@ -79,8 +80,9 @@ TESTS += test-engine
 TESTS += test-tools
 TESTS += test-fdcache
 TESTS += test-protocol
+TESTS += test-scheduler
 
-.PHONY: clean depends test install check
+.PHONY: clean test install check
 
 ifeq ($(shell which $(CXX) || echo n),n)
 $(warning To build pegasus-mpi-cluster set CXX to the path to your MPI C++ compiler wrapper)
@@ -102,6 +104,7 @@ test-engine: test-engine.o $(OBJS)
 test-tools: test-tools.o $(OBJS)
 test-fdcache: test-fdcache.o $(OBJS)
 test-protocol: test-protocol.o $(OBJS)
+test-scheduler: test-scheduler.o $(OBJS)
 
 test: $(TESTS) $(PROGRAMS)
 ifeq ($(shell which cppcheck || echo n),n)
@@ -115,9 +118,9 @@ distclean: clean
 	$(RM) $(PROGRAMS)
 
 clean:
-	$(RM) *.o $(TESTS) version.h
+	$(RM) *.o $(TESTS) version.h depends.mk
 
-depends:
+depends.mk: version.h $(shell ls *.cpp)
 	g++ -MM *.cpp > depends.mk
 
 version.h:
@@ -131,4 +134,4 @@ tags: *.h *.cpp
 	ctags -w *.h *.cpp
 endif
 
-include depends.mk
+-include depends.mk

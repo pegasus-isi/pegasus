@@ -127,6 +127,9 @@ class OutputURL:
             self.host = self.netloc
             self.port = None
 
+        if ':' in user_pass:
+            self.user, self.password = user_pass.split( ':', 1 )
+
 class EventSink(object):
     """
     Base class for an Event Sink.
@@ -165,13 +168,14 @@ class DBEventSink(EventSink):
     """
     Write wflow event logs to database via loader
     """
-    def __init__(self, dest, db_stats=False, namespace=STAMPEDE_NS, **kw):
+    def __init__(self, dest, db_stats=False, namespace=STAMPEDE_NS, props=None, db_type=None, **kw):
         self._namespace=namespace
         #pick the right database loader based on prefix
         if namespace == STAMPEDE_NS:
-            self._db = stampede_loader.Analyzer(dest, perf=db_stats, batch="yes")
+            self._db = stampede_loader.Analyzer(dest, perf=db_stats, batch="yes", props=props, db_type=db_type)
         elif namespace == DASHBOARD_NS:
-            self._db = stampede_dashboard_loader.Analyzer(dest, perf=db_stats, batch="yes")
+            self._db = stampede_dashboard_loader.Analyzer(dest, perf=db_stats, batch="yes", props=props,
+                                                          db_type=db_type)
         else:
             raise ValueError("Unknown namespace specified '%s'" % (namespace))
 
@@ -242,9 +246,12 @@ class AMQPEventSink(EventSink):
     """
     Write wflow event logs to an AMQP server.
     """
-    EXCH_OPTS = {'type' : 'topic'}
+    EXCH_OPTS = {'type' : 'topic', 'durable' : True, 'auto_delete' : False}
+    DEFAULT_AMQP_VIRTUAL_HOST="pegasus"  #should be /
+    DEFAULT_ROUTING_KEY = "stampede"
+
     def __init__(self, host, port, exch=None, encoder=None,
-                 userid='guest', password='guest', virtual_host='/',
+                 userid='guest', password='guest', virtual_host=DEFAULT_AMQP_VIRTUAL_HOST,
                  ssl=False, connect_timeout=None, **kw):
         super(AMQPEventSink, self).__init__()
         self._encoder = encoder
@@ -262,7 +269,7 @@ class AMQPEventSink(EventSink):
             self._log.debug("send.start event=%s" % (full_event))
         data = self._encoder(event=event, **kw)
         self._channel.basic_publish(amqp.Message(body=data),
-                                    exchange=self._exch, routing_key=full_event)
+                                    exchange=self._exch, routing_key=self.DEFAULT_ROUTING_KEY)
         if self._isdbg:
             self._log.debug("send.end event=%s" % (event))
 
@@ -278,7 +285,7 @@ def bson_encode(event, **kw):
     kw['event'] = STAMPEDE_NS + event
     return bson.dumps(kw)        
 
-def create_wf_event_sink(dest, enc=None,prefix=STAMPEDE_NS, **kw):
+def create_wf_event_sink(dest, enc=None,prefix=STAMPEDE_NS, props=None, **kw):
     """
     Create & return subclass of EventSink, chosen by value of 'dest'
     and parameterized by values (if any) in 'kw'.
@@ -325,11 +332,12 @@ def create_wf_event_sink(dest, enc=None,prefix=STAMPEDE_NS, **kw):
         while url.path.startswith('/'):
             url.path = url.path[1:]
         sink = AMQPEventSink(url.host, url.port, exch=url.path,
-                             encoder=pick_encfn(enc), **kw)
+                             userid = url.user, password=url.password, ssl=True,
+                             encoder=pick_encfn(enc,prefix), **kw)
         _type, _name="AMQP", "%s:%s/%s" % (url.host, url.port, url.path)
     else:
         # load the appropriate DBEvent on basis of prefix passed
-        sink = DBEventSink(dest, namespace=prefix, **kw)
+        sink = DBEventSink(dest, namespace=prefix, props=props, **kw)
         _type, _name = "DB", dest
     log.info("output type=%s namespace=%s name=%s" % (_type, prefix, _name))
 

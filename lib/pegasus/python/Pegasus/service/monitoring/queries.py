@@ -14,20 +14,16 @@
 
 __author__ = 'Rajiv Mayani'
 
-import logging
-
 import hashlib
 
-from sqlalchemy import desc, distinct, func, and_, or_
-from sqlalchemy.orm import aliased
-from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
+from sqlalchemy.orm import aliased, defer
+from sqlalchemy.orm.exc import NoResultFound
 
 from Pegasus.db import connection
 from Pegasus.db.modules import SQLAlchemyInit
 from Pegasus.db.schema import *
 from Pegasus.db.errors import StampedeDBNotFoundError
 from Pegasus.db.admin.admin_loader import DBAdminError
-
 from Pegasus.service import cache
 from Pegasus.service.base import PagedResponse, BaseQueryParser, BaseOrderParser, InvalidQueryError, InvalidOrderError
 from Pegasus.service.monitoring.resources import RootWorkflowResource, RootWorkflowstateResource, CombinationResource
@@ -182,7 +178,11 @@ class WorkflowQueries(SQLAlchemyInit):
 
         for identifier, sort_dir in sort_order:
             try:
-                field = resource.get_mapped_field(identifier, ignore_prefix=True)
+                if isinstance(resource, CombinationResource):
+                    field = resource.get_mapped_field(identifier)
+
+                else:
+                    field = resource.get_mapped_field(identifier, ignore_prefix=True)
 
                 if sort_dir == 'ASC':
                     q = q.order_by(field)
@@ -1116,3 +1116,295 @@ class StampedeWorkflowQueries(WorkflowQueries):
             return self._get_one(q, use_cache)
         except NoResultFound, e:
             raise e
+
+    # Views
+
+    def get_running_jobs(self, wf_id, start_index=None, max_results=None, query=None, order=None, use_cache=True,
+                         **kwargs):
+        """
+        Returns a collection of the running Job objects.
+
+        :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
+        :param start_index: Return results starting from record `start_index`
+        :param max_results: Return a maximum of `max_results` records
+        :param query: Filtering criteria
+        :param order: Sorting criteria
+        :param use_cache: If available, use cached results
+
+        :return: Jobs collection, total jobs count, filtered jobs count
+        """
+        wf_id = self.wf_uuid_to_wf_id(wf_id)
+
+        #
+        # Construct SQLAlchemy Query `q` to count.
+        #
+        q = self.session.query(Job, JobInstance).options(defer(JobInstance.stdout_text), defer(JobInstance.stderr_text))
+        q = q.filter(Job.job_id == JobInstance.job_id)
+
+        q = q.filter(Job.wf_id == wf_id)
+        q = q.filter(JobInstance.exitcode == None)
+        q = q.filter(Job.type_desc != 'dax', Job.type_desc != 'dag')
+
+        # Recent
+        qjss = self._get_recent_job_instance()
+        qjss = qjss.filter(JobInstance.exitcode != None)
+        qjss = qjss.subquery('max_jss')
+
+        q = q.join(qjss, and_(JobInstance.job_id == qjss.c.job_id, JobInstance.job_submit_seq == qjss.c.max_jss))
+
+        total_records = total_filtered = self._get_count(q, use_cache)
+
+        if total_records == 0:
+            return PagedResponse([], 0, 0)
+
+        #
+        # Construct SQLAlchemy Query `q` to filter.
+        #
+        if query:
+            q = self._evaluate_query(q, query, CombinationResource(JobResource(), JobInstanceResource()))
+            total_filtered = self._get_count(q, use_cache)
+
+            if total_filtered == 0 or (start_index and start_index >= total_filtered):
+                log.debug('total_filtered is 0 or start_index >= total_filtered')
+                return PagedResponse([], total_records, total_filtered)
+
+        #
+        # Construct SQLAlchemy Query `q` to sort
+        #
+        if order:
+            q = self._add_ordering(q, order, CombinationResource(JobResource(), JobInstanceResource()))
+
+        #
+        # Construct SQLAlchemy Query `q` to paginate.
+        #
+        q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
+
+        records = self._get_all(q, use_cache)
+        records = self._merge_job_instance(records)
+
+        return PagedResponse(records, total_records, total_filtered)
+
+    def get_successful_jobs(self, wf_id, start_index=None, max_results=None, query=None, order=None, use_cache=True,
+                            **kwargs):
+        """
+        Returns a collection of the successful Job objects.
+
+        :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
+        :param start_index: Return results starting from record `start_index`
+        :param max_results: Return a maximum of `max_results` records
+        :param query: Filtering criteria
+        :param order: Sorting criteria
+        :param use_cache: If available, use cached results
+
+        :return: Jobs collection, total jobs count, filtered jobs count
+        """
+        wf_id = self.wf_uuid_to_wf_id(wf_id)
+
+        #
+        # Construct SQLAlchemy Query `q` to count.
+        #
+        q = self.session.query(Job, JobInstance).options(defer(JobInstance.stdout_text), defer(JobInstance.stderr_text))
+        q = q.filter(Job.job_id == JobInstance.job_id)
+
+        q = q.filter(Job.wf_id == wf_id)
+        q = q.filter(JobInstance.exitcode != None).filter(JobInstance.exitcode == 0)
+        q = q.filter(Job.type_desc != 'dax', Job.type_desc != 'dag')
+
+        # Recent
+        qjss = self._get_recent_job_instance()
+        qjss = qjss.filter(JobInstance.exitcode != None).filter(JobInstance.exitcode == 0)
+        qjss = qjss.subquery('max_jss')
+
+        q = q.join(qjss, and_(JobInstance.job_id == qjss.c.job_id, JobInstance.job_submit_seq == qjss.c.max_jss))
+
+        total_records = total_filtered = self._get_count(q, use_cache)
+
+        if total_records == 0:
+            return PagedResponse([], 0, 0)
+
+        #
+        # Construct SQLAlchemy Query `q` to filter.
+        #
+        if query:
+            q = self._evaluate_query(q, query, CombinationResource(JobResource(), JobInstanceResource()))
+            total_filtered = self._get_count(q, use_cache)
+
+            if total_filtered == 0 or (start_index and start_index >= total_filtered):
+                log.debug('total_filtered is 0 or start_index >= total_filtered')
+                return PagedResponse([], total_records, total_filtered)
+
+        #
+        # Construct SQLAlchemy Query `q` to sort
+        #
+        if order:
+            q = self._add_ordering(q, order, CombinationResource(JobResource(), JobInstanceResource()))
+
+        #
+        # Construct SQLAlchemy Query `q` to paginate.
+        #
+        q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
+
+        records = self._get_all(q, use_cache)
+        records = self._merge_job_instance(records)
+
+        return PagedResponse(records, total_records, total_filtered)
+
+    def get_failed_jobs(self, wf_id, start_index=None, max_results=None, query=None, order=None, use_cache=True,
+                        **kwargs):
+        """
+        Returns a collection of the failed Job objects.
+
+        :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
+        :param start_index: Return results starting from record `start_index`
+        :param max_results: Return a maximum of `max_results` records
+        :param query: Filtering criteria
+        :param order: Sorting criteria
+        :param use_cache: If available, use cached results
+
+        :return: Jobs collection, total jobs count, filtered jobs count
+        """
+        wf_id = self.wf_uuid_to_wf_id(wf_id)
+
+        #
+        # Construct SQLAlchemy Query `q` to count.
+        #
+        q = self.session.query(Job, JobInstance).options(defer(JobInstance.stdout_text), defer(JobInstance.stderr_text))
+        q = q.filter(Job.job_id == JobInstance.job_id)
+
+        q = q.filter(Job.wf_id == wf_id)
+        q = q.filter(JobInstance.exitcode != None).filter(JobInstance.exitcode != 0)
+        q = q.filter(Job.type_desc != 'dax', Job.type_desc != 'dag')
+
+        # Recent
+        qjss = self._get_recent_job_instance()
+        qjss = qjss.filter(JobInstance.exitcode != None).filter(JobInstance.exitcode != 0)
+        qjss = qjss.subquery('max_jss')
+
+        q = q.join(qjss, and_(JobInstance.job_id == qjss.c.job_id, JobInstance.job_submit_seq == qjss.c.max_jss))
+
+        total_records = total_filtered = self._get_count(q, use_cache)
+
+        if total_records == 0:
+            return PagedResponse([], 0, 0)
+
+        #
+        # Construct SQLAlchemy Query `q` to filter.
+        #
+        if query:
+            q = self._evaluate_query(q, query, CombinationResource(JobResource(), JobInstanceResource()))
+            total_filtered = self._get_count(q, use_cache)
+
+            if total_filtered == 0 or (start_index and start_index >= total_filtered):
+                log.debug('total_filtered is 0 or start_index >= total_filtered')
+                return PagedResponse([], total_records, total_filtered)
+
+        #
+        # Construct SQLAlchemy Query `q` to sort
+        #
+        if order:
+            q = self._add_ordering(q, order, CombinationResource(JobResource(), JobInstanceResource()))
+
+        #
+        # Construct SQLAlchemy Query `q` to paginate.
+        #
+        q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
+
+        records = self._get_all(q, use_cache)
+        records = self._merge_job_instance(records)
+
+        return PagedResponse(records, total_records, total_filtered)
+
+    def get_failing_jobs(self, wf_id, start_index=None, max_results=None, query=None, order=None, use_cache=True,
+                         **kwargs):
+        """
+        Returns a collection of the failing Job objects.
+
+        :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
+        :param start_index: Return results starting from record `start_index`
+        :param max_results: Return a maximum of `max_results` records
+        :param query: Filtering criteria
+        :param order: Sorting criteria
+        :param use_cache: If available, use cached results
+
+        :return: Jobs collection, total jobs count, filtered jobs count
+        """
+        wf_id = self.wf_uuid_to_wf_id(wf_id)
+
+        #
+        # Construct SQLAlchemy Query `q` to count.
+        #
+        q = self.session.query(Job, JobInstance).options(defer(JobInstance.stdout_text), defer(JobInstance.stderr_text))
+
+        q = q.filter(Job.wf_id == wf_id)
+        q = q.filter(Job.type_desc != 'dax', Job.type_desc != 'dag')
+        q = q.filter(JobInstance.exitcode != None).filter(JobInstance.exitcode != 0)
+
+        q = q.filter(Job.job_id == JobInstance.job_id)
+
+        # Running
+        j = orm.aliased(Job, name='j')
+        ji = orm.aliased(JobInstance, name='ji')
+
+        qr = self.session.query(distinct(j.job_id))
+
+        qr = qr.filter(j.wf_id == wf_id)
+        qr = qr.filter(j.type_desc != 'dax', j.type_desc != 'dag')
+        qr = qr.filter(ji.exitcode == None)
+
+        qr = qr.filter(j.job_id == ji.job_id)
+        qr = qr.subquery()
+
+        q = q.filter(Job.job_id.in_(qr))
+
+        # Recent
+        qjss = self._get_recent_job_instance()
+        qjss = qjss.filter(Job.wf_id == wf_id)
+        qjss = qjss.filter(Job.type_desc != 'dax', Job.type_desc != 'dag')
+        qjss = qjss.filter(JobInstance.exitcode != None).filter(JobInstance.exitcode != 0)
+
+        qjss = qjss.filter(Job.job_id == JobInstance.job_id)
+        qjss = qjss.subquery('allmaxjss')
+
+        q = q.filter(and_(JobInstance.job_id == qjss.c.job_id, JobInstance.job_submit_seq == qjss.c.max_jss))
+
+        total_records = total_filtered = self._get_count(q, use_cache)
+
+        if total_records == 0:
+            return PagedResponse([], 0, 0)
+
+        #
+        # Construct SQLAlchemy Query `q` to filter.
+        #
+        if query:
+            q = self._evaluate_query(q, query, CombinationResource(JobResource(), JobInstanceResource()))
+            total_filtered = self._get_count(q, use_cache)
+
+            if total_filtered == 0 or (start_index and start_index >= total_filtered):
+                log.debug('total_filtered is 0 or start_index >= total_filtered')
+                return PagedResponse([], total_records, total_filtered)
+
+        #
+        # Construct SQLAlchemy Query `q` to sort
+        #
+        if order:
+            q = self._add_ordering(q, order, CombinationResource(JobResource(), JobInstanceResource()))
+
+        #
+        # Construct SQLAlchemy Query `q` to paginate.
+        #
+        q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
+
+        records = self._get_all(q, use_cache)
+        records = self._merge_job_instance(records)
+
+        return PagedResponse(records, total_records, total_filtered)
+
+    @staticmethod
+    def _merge_job_instance(records):
+        if records:
+            for i in range(len(records)):
+                new_record = records[i][0]
+                new_record.job_instance = records[i][1]
+                records[i] = new_record
+
+        return records

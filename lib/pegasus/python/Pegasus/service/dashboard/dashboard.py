@@ -337,16 +337,20 @@ class Dashboard(object):
             wall_time = float(wall_time)
 
         cum_time = workflow.get_workflow_cum_job_wall_time()
-        if cum_time != None:
-            cum_time = float(cum_time)
+        cum_time = [float(v) if v is not None else v for v in cum_time ]
+        #if cum_time != None:
+        #    cum_time = float(cum_time)
 
         job_cum_time = workflow.get_submit_side_job_wall_time()
-        if job_cum_time != None:
-            job_cum_time = float(job_cum_time)
+        job_cum_time = [float(v) if v is not None else v for v in job_cum_time ]
+        #if job_cum_time != None:
+        #    job_cum_time = float(job_cum_time)
 
         statistics['wall-time'] = wall_time
-        statistics['cum-time'] = cum_time
-        statistics['job-cum-time'] = job_cum_time
+        statistics['cum-time'] = cum_time[0]
+        statistics['cum-badput-time'] = cum_time[2]
+        statistics['job-cum-time'] = job_cum_time[0]
+        statistics['job-cum-badput-time'] = job_cum_time[2]
 
         return statistics
 

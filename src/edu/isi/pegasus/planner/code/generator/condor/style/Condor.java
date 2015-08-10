@@ -28,7 +28,9 @@ import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleFactoryException;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
+import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+import java.util.Map;
 
 /**
  * Enables a job to be directly submitted to the condor pool of which the
@@ -228,6 +230,8 @@ public class Condor extends Abstract {
                     }else{
                         job.condorVariables.construct("initialdir", workdir);
                     }
+                    //PM-961 also associate the value as an environment variable
+                    job.envVariables.construct( ENV.PEGASUS_SCRATCH_DIR_KEY, workdir);
                 }
             }
             else{
@@ -278,7 +282,44 @@ public class Condor extends Abstract {
             throw new CondorStyleException( errorMessage( job, STYLE_NAME, universe ) );
         }
 
+        //PM-962 handle resource requirements expressed as pegasus profiles
+        //and populate them as globus profiles if required 
+        handleResourceRequirements( job );
+    }
 
+    /**
+     * Looks into the job to check if any of the  Resource requirements 
+     * are expressed as pegasus profiles, and converts them to classad keys
+     * profiles if corresponding condor profile is not present.
+     * 
+     * @param job 
+     */
+    private void handleResourceRequirements(Job job) {
+        
+        Pegasus profiles = job.vdsNS;
+        edu.isi.pegasus.planner.namespace.Condor classAdKeys = job.condorVariables;
+        
+        //sanity check
+        if( profiles == null || profiles.isEmpty() ){
+            return;
+        }
+        
+        
+        
+        //we only take value of Pegasus profile if corresponding
+        //globus profile is not set
+        for( Map.Entry<String,String> entry : edu.isi.pegasus.planner.namespace.Condor.classAdKeysToPegasusProfiles().entrySet()){
+            String classAdKey = entry.getKey();
+            String pegasusKey = entry.getValue();
+            
+            if( !classAdKeys.containsKey(classAdKey) && profiles.containsKey( pegasusKey ) ){
+                //one to one mapping
+                classAdKeys.construct(classAdKey, 
+                               profiles.getStringValue(pegasusKey));
+            }
+        }
+        
+    
     }
 
     

@@ -48,9 +48,145 @@ static void log_invalid_message(Message *mesg) {
     }
 }
 
-void Host::log_status() {
+Host::Host(const string &host_name, unsigned int memory, cpu_t threads, cpu_t cores, cpu_t sockets) {
+    this->host_name = host_name;
+    this->memory = memory;
+    this->threads = threads;
+    this->cores = cores;
+    this->sockets = sockets;
+    this->slots = 1;
+
+    this->memory_free = memory;
+    this->cpus_free = threads;
+    this->slots_free = slots;
+
+    this->cpus = new Task*[threads];
+    for (unsigned i=0; i<threads; i++) {
+        cpus[i] = NULL;
+    }
+}
+
+Host::~Host() {
+    delete[] cpus;
+}
+
+/* Check to see if the host has enough resources to run the task */
+bool Host::can_run(Task *task) {
+    return memory_free >= task->memory && cpus_free >= task->cpus;
+}
+
+/* Allocate resources to a task */
+vector<cpu_t> Host::allocate_resources(Task *task) {
+    if (!can_run(task)) {
+        myfailure("Host cannot run task %s", task->name.c_str());
+    }
+
+    // Use up the resources
+    memory_free -= task->memory;
+    cpus_free -= task->cpus;
+    slots_free -= 1;
+
+    // This records all of the cpus that we will use for the task
+    vector<cpu_t> bindings;
+
+    // We only allocate cores for tasks that request more than 1 thread
+    // Single threaded tasks are allowed to float to reduce fragmentation
+    if (task->cpus == 1) {
+        return bindings;
+    }
+
+    cpu_t threads_per_core = threads / cores;
+    cpu_t threads_per_socket = threads / sockets;
+    cpu_t threads_needed = task->cpus;
+    cpu_t cores_needed = task->cpus / threads_per_core;
+    cpu_t sockets_needed = task->cpus / threads_per_socket;
+    log_trace("Task %s requires %"PRIcpu_t" sockets, %"PRIcpu_t" cores, and %"PRIcpu_t" threads\n",
+              task->name.c_str(), sockets_needed, cores_needed, threads_needed);
+
+    // Determine what the aligned unit step size is
+    cpu_t alignment;
+    if (sockets_needed >= 1) {
+        alignment = threads_per_socket;
+    } else if (cores_needed >= 1) {
+        alignment = threads_per_core;
+    } else {
+        alignment = 1;
+    }
+
+    // This tries to find a contiguous set of cpus that are aligned on a
+    // thread, core, or socket boundary. For example, if we need one socket
+    // full of cpus, then it will try to find a solution that takes up one full
+    // socket, and not part of two or more sockets.
+    for (cpu_t i=0; i<threads; i+=alignment) {
+        for (cpu_t j=0; j<task->cpus && i+j<threads; j++) {
+            if (cpus[i+j] == NULL) {
+                bindings.push_back(i+j);
+            } else {
+                // One of the cpus is occupied, no solution possible
+                break;
+            }
+        }
+
+        if (bindings.size() == task->cpus) {
+            // We found a solution, stop looking
+            break;
+        } else {
+            // No solution, try the next aligned segment
+            bindings.clear();
+        }
+    }
+
+    // If we didn't get a contiguous solution above, then don't bind anything
+    if (bindings.size() != task->cpus) {
+        bindings.clear();
+        log_warn("CPU fragmentation detected when scheduling task %s: not setting affinity", task->name.c_str());
+    }
+
+    // Mark all the cpus that were allocated to the task
+    for (vector<cpu_t>::iterator i=bindings.begin(); i!=bindings.end(); i++) {
+        cpu_t j = *i;
+        cpus[j] = task;
+        log_trace("Assigned CPU %"PRIcpu_t" to task %s", j, task->name.c_str());
+    }
+
+    return bindings;
+}
+
+/* Deallocate all the resources we used for the task */
+void Host::release_resources(Task *task) {
+    cpus_free += task->cpus;
+    memory_free += task->memory;
+    slots_free += 1;
+
+    // Clear any cores occupied by this task
+    for (unsigned i=0; i<threads; i++) {
+        if (cpus[i] == task) {
+            cpus[i] = NULL;
+        }
+    }
+}
+
+void Host::add_slot() {
+    this->slots += 1;
+    this->slots_free += 1;
+}
+
+/* Log the number of resources this host currently has */
+void Host::log_resources(FILE *resource_log) {
     log_trace("Host %s now has %u MB, %u CPUs, and %u slots free", 
-        this->host_name.c_str(), this->memory, this->cpus, this->slots);
+        this->host_name.c_str(), this->memory_free, this->cpus_free, this->slots_free);
+
+    if (resource_log == NULL) {
+        return;
+    }
+
+    struct timeval ts;
+
+    gettimeofday(&ts, NULL);
+    double timestamp = ts.tv_sec + (ts.tv_usec / 1.0e6);
+
+    fprintf(resource_log, "%lf,%u,%u,%u,%s\n", 
+            timestamp, slots_free, cpus_free, memory_free, host_name.c_str());
 }
 
 JobstateLog::JobstateLog(const string &path) {
@@ -229,10 +365,6 @@ Master::Master(Communicator *comm, const string &program, Engine &engine,
     this->total_cpus = 0;
     this->total_runtime = 0.0;
 
-    this->memory_avail = 0;
-    this->cpus_avail = 0;
-    this->slots_avail = 0;
-
     // Determine the number of workers we have
     int numprocs = comm->size();
     this->numworkers = numprocs - 1;
@@ -288,11 +420,11 @@ void Master::publish_event(WorkflowEvent event, Task *task) {
     }
 }
 
-void Master::submit_task(Task *task, int rank) {
+void Master::submit_task(Task *task, int rank, const vector<cpu_t> &bindings) {
     log_debug("Submitting task %s to slot %d", task->name.c_str(), rank);
 
     CommandMessage cmd(task->name, task->args, task->pegasus_id, 
-            task->memory, task->cpus, task->pipe_forwards, task->file_forwards);
+            task->memory, task->cpus, bindings, task->pipe_forwards, task->file_forwards);
     comm->send_message(&cmd, rank);
 
     publish_event(TASK_SUBMIT, task);
@@ -434,54 +566,11 @@ void Master::process_result(ResultMessage *mesg) {
     Slot *slot = slots[rank-1];
     
     // Return resources to host
-    release_resources(slot->host, task->cpus, task->memory);
+    slot->host->release_resources(task);
+    slot->host->log_resources(resource_log);
 
     // Mark slot as free
     free_slots.push_back(slot);
-}
-
-void Master::allocate_resources(Host *host, unsigned cpus, unsigned memory) {
-
-    memory_avail -= memory;
-    cpus_avail -= cpus;
-    slots_avail -= 1;
-
-    host->memory -= memory;
-    host->cpus -= cpus;
-    host->slots -= 1;
-
-    host->log_status();
-    log_resources(host->slots, host->cpus, host->memory, host->host_name);
-    log_resources(slots_avail, cpus_avail, memory_avail, "*");
-}
-
-void Master::release_resources(Host *host, unsigned cpus, unsigned memory) {
-
-    memory_avail += memory;
-    cpus_avail += cpus;
-    slots_avail += 1;
-
-    host->cpus += cpus;
-    host->memory += memory;
-    host->slots += 1;
-
-    host->log_status();
-    log_resources(host->slots, host->cpus, host->memory, host->host_name);
-    log_resources(slots_avail, cpus_avail, memory_avail, "*");
-}
-
-void Master::log_resources(unsigned slots, unsigned cpus, unsigned memory, const string &hostname) {
-    if (resource_log == NULL) {
-        return;
-    }
-
-    struct timeval ts;
-
-    gettimeofday(&ts, NULL);
-    double timestamp = ts.tv_sec + (ts.tv_usec / 1.0e6);
-
-    fprintf(resource_log, "%lf,%u,%u,%u,%s\n", 
-            timestamp, slots, cpus, memory, hostname.c_str());
 }
 
 void Master::merge_all_task_stdio() {
@@ -629,28 +718,25 @@ void Master::register_workers() {
         int rank = msg->source;
         string hostname = msg->hostname;
         unsigned int memory = msg->memory;
-        unsigned int cpus = msg->cpus;
+        unsigned int threads = msg->threads;
+        unsigned int cores = msg->cores;
+        unsigned int sockets = msg->sockets;
         delete msg;
-        
+
         hostnames[rank] = hostname;
-        
+
         if (hostmap.find(hostname) == hostmap.end()) {
             // If the host is not found, create a new one
-            log_debug("Got new host: name=%s, mem=%u, cpus=%u", hostname.c_str(), memory, cpus);
-            Host *newhost = new Host(hostname, memory, cpus);
+            log_debug("Got new host: name=%s, mem=%u, threads/cpus=%u, cores=%u, sockets=%u",
+                    hostname.c_str(), memory, threads, cores, sockets);
+            Host *newhost = new Host(hostname, memory, threads, cores, sockets);
             hosts.push_back(newhost);
             hostmap[hostname] = newhost;
-            
-            total_cpus += cpus;
-            cpus_avail += cpus;
-            memory_avail += memory;
         } else {
             // Otherwise, increment the number of slots available
             Host *host = hostmap[hostname];
-            host->slots += 1;
+            host->add_slot();
         }
-        
-        slots_avail += 1;
         
         log_debug("Slot %d on host %s", rank, hostname.c_str());
     }
@@ -684,58 +770,58 @@ void Master::register_workers() {
         log_debug("Host rank of worker %d is %d", rank, hostrank);
     }
     
-    // Log the initial resource availability
+    // Log the initial resource freeability
     for (vector<Host *>::iterator i = hosts.begin(); i!=hosts.end(); i++) {
         Host *host = *i;
-        log_resources(host->slots, host->cpus, host->memory, host->host_name);
+        host->log_resources(resource_log);
     }
-    log_resources(slots_avail, cpus_avail, memory_avail, "*");
 }
 
 void Master::schedule_tasks() {
     log_debug("Scheduling %d tasks on %d slots...", 
         ready_queue.size(), free_slots.size());
-    
+
     int scheduled = 0;
     TaskList deferred_tasks;
-    
+
     while (ready_queue.size() > 0 && free_slots.size() > 0) {
         Task *task = ready_queue.top();
         ready_queue.pop();
-        
+
         log_trace("Scheduling task %s", task->name.c_str());
-        
+
         bool match = false;
-        
+
         for (SlotList::iterator s = free_slots.begin(); s != free_slots.end(); s++) {
             Slot *slot = *s;
             Host *host = slot->host;
-            
+
             // If the task fits, schedule it
-            if (host->memory >= task->memory && host->cpus >= task->cpus) {
-                
+            if (host->can_run(task)) {
+
                 log_trace("Matched task %s to slot %d on host %s", 
-                    task->name.c_str(), slot->rank, host->host_name.c_str());
-                
+                    task->name.c_str(), slot->rank, host->name());
+
                 // Reserve the resources
-                allocate_resources(host, task->cpus, task->memory);
-                
-                submit_task(task, slot->rank);
-                
+                vector<cpu_t> bindings = host->allocate_resources(task);
+                host->log_resources(resource_log);
+
+                submit_task(task, slot->rank, bindings);
+
                 s = free_slots.erase(s);
-                
+
                 // so that the s++ in the loop doesn't skip one
                 s--;
-                
+
                 match = true;
                 scheduled += 1;
-                
+
                 // This is to break out of the slot loop so that we can 
                 // consider the next task
                 break;
             }
         }
-        
+
         if (!match) {
             // If the task could not be scheduled, then we save it 
             // and move on to the next one. It will be requeued later.
@@ -743,9 +829,9 @@ void Master::schedule_tasks() {
             deferred_tasks.push_back(task);
         }
     }
-    
+
     log_debug("Scheduled %d tasks and deferred %d tasks", scheduled, deferred_tasks.size());
-    
+
     // Requeue all the deferred tasks
     for (TaskList::iterator t = deferred_tasks.begin(); t != deferred_tasks.end(); t++) {
         ready_queue.push(*t);
@@ -803,7 +889,7 @@ int Master::run() {
         bool match = false;
         for (unsigned h=0; h<hosts.size(); h++) {
             Host *host = hosts[h];
-            if (host->memory >= task->memory && host->cpus >= task->cpus) {
+            if (host->can_run(task)) {
                 match = true;
                 break;
             }

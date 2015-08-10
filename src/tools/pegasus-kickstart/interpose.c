@@ -18,10 +18,16 @@
 #include <string.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sys/syscall.h>
+#ifdef HAS_PAPI
+#include <papi.h>
+#endif
 #include <pthread.h>
 #include <dlfcn.h>
 #include <netdb.h>
 
+/* TODO Unlocked I/O (e.g. fwrite_unlocked) */
+/* TODO Handle directories */
 /* TODO Interpose accept (for network servers) */
 /* TODO Is it necessary to interpose shutdown? Would that help the DNS issue? */
 /* TODO Interpose unlink, unlinkat, remove */
@@ -34,7 +40,6 @@
 /* TODO Interpose wide character I/O functions */
 /* TODO Handle I/O for stdout/stderr? */
 /* TODO asynchronous I/O from librt? */
-/* TODO Thread safety? */
 /* TODO Add r/w/a mode support? */
 /* TODO What happens if one interposed library function calls another (e.g.
  *      fopen calls fopen64)? I think internal calls are not traced.
@@ -42,6 +47,8 @@
 /* TODO What about mmap? Probably nothing we can do besides interpose
  *      mmap and assume that the total size being mapped is read/written
  */
+/* TODO Thread safety? */
+/* TODO Figure out a way to collect PAPI profiles for unterminated threads */
 
 #define printerr(fmt, ...) \
     fprintf_untraced(stderr, "libinterpose[%d]: %s[%d]: " fmt, \
@@ -54,88 +61,15 @@
 #define debug(format, args...)
 #endif
 
-/* These are all the functions we are interposing */
-static typeof(dup) *orig_dup = NULL;
-static typeof(dup2) *orig_dup2 = NULL;
-#ifdef dup3
-static typeof(dup3) *orig_dup3 = NULL;
-#endif
-static typeof(open) *orig_open = NULL;
-static typeof(open64) *orig_open64 = NULL;
-static typeof(openat) *orig_openat = NULL;
-static typeof(openat64) *orig_openat64 = NULL;
-static typeof(creat) *orig_creat = NULL;
-static typeof(creat64) *orig_creat64 = NULL;
-static typeof(fopen) *orig_fopen = NULL;
-static typeof(fopen64) *orig_fopen64 = NULL;
-static typeof(freopen) *orig_freopen = NULL;
-static typeof(freopen64) *orig_freopen64 = NULL;
-static typeof(close) *orig_close = NULL;
-static typeof(fclose) *orig_fclose = NULL;
-static typeof(read) *orig_read = NULL;
-static typeof(write) *orig_write = NULL;
-static typeof(fread) *orig_fread = NULL;
-static typeof(fwrite) *orig_fwrite = NULL;
-static typeof(pread) *orig_pread = NULL;
-static typeof(pread64) *orig_pread64 = NULL;
-static typeof(pwrite) *orig_pwrite = NULL;
-static typeof(pwrite64) *orig_pwrite64 = NULL;
-static typeof(readv) *orig_readv = NULL;
-#ifdef preadv
-static typeof(preadv) *orig_preadv = NULL;
-#endif
-#ifdef preadv64
-static typeof(preadv64) *orig_preadv64 = NULL;
-#endif
-static typeof(writev) *orig_writev = NULL;
-#ifdef pwritev
-static typeof(pwritev) *orig_pwritev = NULL;
-#endif
-#ifdef pwritev64
-static typeof(pwritev64) *orig_pwritev64 = NULL;
-#endif
-static typeof(fgetc) *orig_fgetc = NULL;
-static typeof(fputc) *orig_fputc = NULL;
-static typeof(fgets) *orig_fgets = NULL;
-static typeof(fputs) *orig_fputs = NULL;
-/* Implemented using vfscanf */
-/*static typeof(fscanf) *orig_fscanf = NULL;*/
-static typeof(vfscanf) *orig_vfscanf = NULL;
-/* Implemented using vfprintf */
-/*static typeof(fprintf) *orig_fprintf = NULL;*/
-static typeof(vfprintf) *orig_vfprintf = NULL;
-static typeof(connect) *orig_connect = NULL;
-static typeof(send) *orig_send = NULL;
-static typeof(sendfile) *orig_sendfile = NULL;
-static typeof(sendto) *orig_sendto = NULL;
-static typeof(sendmsg) *orig_sendmsg = NULL;
-static typeof(recv) *orig_recv = NULL;
-static typeof(recvfrom) *orig_recvfrom = NULL;
-static typeof(recvmsg) *orig_recvmsg = NULL;
-static typeof(truncate) *orig_truncate = NULL;
-/* It is not necessary to interpose ftruncate because we should already
- * have a record for the file descriptor.
- */
-static typeof(mkstemp) *orig_mkstemp = NULL;
-#ifdef mkostemp
-static typeof(mkostemp) *orig_mkostemp = NULL;
-#endif
-#ifdef mkstemps
-static typeof(mkstemps) *orig_mkstemps = NULL;
-#endif
-#ifdef mkostemps
-static typeof(mkostemps) *orig_mkostemps = NULL;
-#endif
-static typeof(tmpfile) *orig_tmpfile = NULL;
-/* It is not necessary to interpose other tmp functions because
- * they just generate names that need to be passed to open()
- */
-
 typedef struct {
     char type;
     char *path;
     size_t bread;
     size_t bwrite;
+    size_t nread;
+    size_t nwrite;
+    size_t bseek;
+    size_t nseek;
 } Descriptor;
 
 typedef struct {
@@ -168,16 +102,54 @@ const char DTYPE_SOCK = 2;
 static Descriptor *descriptors = NULL;
 static int max_descriptors = 0;
 
+/* Tracking the number of threads */
+static int threads = 1;
+static int tot_threads = 1;
+static int max_threads = 1;
+static pthread_mutex_t thread_counter_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+static int mypid = 0;
+
 /* This is the trace file where we write information about the process */
 static FILE* trace = NULL;
 static pthread_t timer_thread;
 static int library_loaded = 1;
 
+#ifdef HAS_PAPI
+int papi_ok = 0;
+
+char *papi_events[] = {
+    "PAPI_TOT_INS",
+    "PAPI_LD_INS",
+    "PAPI_SR_INS",
+    "PAPI_FP_INS",
+    "PAPI_FP_OPS"
+};
+
+#define n_papi_events (sizeof(papi_events) / sizeof(char *))
+
+typedef struct {
+    int eventset;
+} interpose_papi_ctx;
+
+#endif
+
+typedef struct {
+    void *(*start_routine)(void *);
+    void *arg;
+    pthread_key_t cleanup;
+} interpose_pthread_wrapper_arg;
+
 static FILE *fopen_untraced(const char *path, const char *mode);
 static int fprintf_untraced(FILE *stream, const char *format, ...);
 static int vfprintf_untraced(FILE *stream, const char *format, va_list ap);
 static char *fgets_untraced(char *s, int size, FILE *stream);
+static size_t fread_untraced(void *ptr, size_t size, size_t nmemb, FILE *stream);
 static int fclose_untraced(FILE *fp);
+
+static long unsigned int interpose_gettid(void) {
+    return (long unsigned int)syscall(SYS_gettid);
+}
 
 static double get_time();
 static CpuUtilInfo read_cpu_status();
@@ -377,14 +349,14 @@ static int topen() {
 
     char *kickstart_prefix = getenv("KICKSTART_PREFIX");
     if (kickstart_prefix == NULL) {
-        printerr("Unable to open trace file: KICKSTART_PREFIX not set in environment\n");
+        printerr("Unable to open trace file: KICKSTART_PREFIX not set in environment");
         return -1;
     }
 
     char filename[BUFSIZ];
     snprintf(filename, BUFSIZ, "%s.%d", kickstart_prefix, getpid());
 
-    trace = fopen_untraced(filename, "w+");
+    trace = fopen_untraced(filename, "a");
     if (trace == NULL) {
         printerr("Unable to open trace file\n");
         return -1;
@@ -441,6 +413,54 @@ static char *get_addr(const struct sockaddr *addr, socklen_t addrlen) {
     return NULL;
 }
 
+static void trace_file(const char *path, int fd);
+
+/* Initialize the descriptor table */
+static void init_descriptors() {
+    /* Get file descriptor limit and allocate descriptor table */
+    max_descriptors = 8;
+    descriptors = (Descriptor *)calloc(sizeof(Descriptor), max_descriptors);
+    if (descriptors == NULL) {
+        printerr("Error allocating descriptor table: calloc: %s\n", strerror(errno));
+    }
+
+    /* TODO For each open descriptor, initialize the entry */
+    DIR *fddir = opendir("/proc/self/fd");
+    if (fddir == NULL) {
+        printerr("Unable to open /proc/self/fd: %s", strerror(errno));
+        return;
+    }
+
+    struct dirent *d;
+    for (d = readdir(fddir); d != NULL; d = readdir(fddir)) {
+        if (d->d_name[0] == '.') {
+            continue;
+        }
+
+        char path[64];
+        snprintf(path, BUFSIZ, "/proc/self/fd/%s", d->d_name);
+
+        int fd = atoi(d->d_name);
+
+        char linkpath[BUFSIZ];
+        int size = readlink(path, linkpath, BUFSIZ);
+        if (size < 0) {
+            printerr("Unable to readlink %s: %s", path, strerror(errno));
+            continue;
+        }
+        linkpath[size] = '\0';
+
+        /* Only handle paths */
+        if (linkpath[0] != '/') {
+            continue;
+        }
+
+        trace_file(linkpath, fd);
+    }
+
+    closedir(fddir);
+}
+
 /* Get a reference to the given descriptor if it exists */
 static Descriptor *get_descriptor(int fd) {
     /* Sometimes we try to access a descriptor before the 
@@ -450,10 +470,103 @@ static Descriptor *get_descriptor(int fd) {
      * it is loaded before this library. This check will make sure
      * that any descriptor we try to access is valid.
      */
-    if (descriptors == NULL || fd > max_descriptors) {
+    if (descriptors == NULL || fd < 0) {
         return NULL;
     }
+
+    if (fd >= max_descriptors) {
+        /* Determine what the new size of the table should be */
+        int newmax = max_descriptors * 2;
+        while (fd >= newmax) {
+            newmax = newmax * 2;
+        }
+
+        /* Allocate a new descriptor table */
+        Descriptor *newdescriptors = realloc(descriptors, sizeof(Descriptor) * newmax);
+        if (newdescriptors == NULL) {
+            printerr("Error reallocating new descriptor table: realloc: %s\n", strerror(errno));
+            return NULL;
+        }
+
+
+        /* Clear the newly allocated entries */
+        bzero(&(newdescriptors[max_descriptors]), (newmax-max_descriptors)*sizeof(Descriptor));
+
+        descriptors = newdescriptors;
+        max_descriptors = newmax;
+    }
+
     return &(descriptors[fd]);
+}
+
+static void read_cmdline() {
+    char cmdline[] = "/proc/self/cmdline";
+
+    /* If the cmdline file is missing, then just skip it */
+    if (access(cmdline, F_OK) < 0) {
+        return;
+    }
+
+    FILE *f = fopen_untraced(cmdline, "r");
+    if (f == NULL) {
+        printerr("Unable to fopen /proc/self/cmdline: %s\n", strerror(errno));
+        return;
+    }
+
+    /* Record the first 1024 characters of the command line, separated by
+     * spaces, and with arguments containing spaces quoted. If the command is
+     * longer than 1024 characters, then add '...' at the end. */
+    char args[1024];
+    size_t asize = fread_untraced(args, 1, 1024, f);
+    if (asize <= 0) {
+        printerr("Error reading /proc/self/cmdline: %s\n", strerror(errno));
+    } else {
+        int rsize = asize;
+        char *result = malloc(rsize);
+        int j = 0;
+        int quote = 0;
+        for (int i=0; i<asize; i++) {
+            /* Handle the case when the output gets too large */
+            if (j+5 >= rsize) {
+                rsize = rsize * 2;
+                char *new = realloc(result, rsize);
+                if (new == NULL) {
+                    printerr("Error reallocating cmdline array: %s\n", strerror(errno));
+                    result[j] = '\0';
+                    break;
+                }
+                result = new;
+            }
+
+            if (i == asize-1) {
+                if (asize == 1024) {
+                    result[j++] = '.';
+                    result[j++] = '.';
+                    result[j++] = '.';
+                } else if (quote) {
+                    result[j++] = '"';
+                }
+                result[j++] = '\0';
+            } else if (args[i] == '\0') {
+                if (quote) {
+                    result[j++] = '"';
+                }
+                result[j++] = ' ';
+                if (strstr(&args[i+1], " ") == NULL) {
+                    quote = 0;
+                } else {
+                    result[j++] = '"';
+                    quote = 1;
+                }
+            } else {
+                result[j++] = args[i];
+            }
+        }
+        tprintf("cmd:%s\n", result);
+        free(result);
+    }
+
+    fclose_untraced(f);
 }
 
 /* Get the full path to a file */
@@ -467,12 +580,9 @@ static char *get_fullpath(const char *path) {
     return fullpath;
 }
 
-/* Read /proc/self/exe to get path to executable 
- * You need to free memory allocated to keep results of this function
- */
+/* Read /proc/self/exe to get path to executable */
 static char* read_exe() {
     debug("Reading exe");
-    // printerr("Reading exe \n");
     char* exe;
 
     exe = (char*) calloc(sizeof(char), BUFSIZ);
@@ -483,7 +593,7 @@ static char* read_exe() {
 
     int size = readlink("/proc/self/exe", exe, BUFSIZ);
     if (size < 0) {
-        perror("libinterpose: Unable to readlink /proc/self/exe");
+        printerr("libinterpose: Unable to readlink /proc/self/exe: %s\n", strerror(errno));
         return NULL;
     }
 
@@ -531,6 +641,23 @@ static char* read_exe() {
     return exe;
 }
 
+/* Return 1 if line ends with tok */
+static int endswith(const char *line, const char *tok) {
+    int n = strlen(line);
+    int m = strlen(tok);
+    if (n < m) {
+        return 0;
+    }
+
+    for(int i=0; i<m; i++) {
+        if (line[n-i-1] != tok[m-i-1]) {
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
 /* Return 1 if line begins with tok */
 static int startswith(const char *line, const char *tok) {
     return strstr(line, tok) == line;
@@ -555,17 +682,9 @@ static void read_status() {
 
     char line[BUFSIZ];
     while (fgets_untraced(line, BUFSIZ, f) != NULL) {
-        if (startswith(line, "Pid")) {
-            tprintf(line);
-        } else if (startswith(line, "PPid")) {
-            tprintf(line);
-        } else if (startswith(line, "Tgid")) {
-            tprintf(line);
-        } else if (startswith(line,"VmPeak")) {
+        if (startswith(line,"VmPeak")) {
             tprintf(line);
         } else if (startswith(line,"VmHWM")) {
-            tprintf(line);
-        } else if (startswith(line,"Threads")) {
             tprintf(line);
         }
     }
@@ -613,6 +732,18 @@ static MemUtilInfo read_mem_status() {
 }
 
 /* Read /proc/self/stat to get CPU usage */
+/* Read CPU usage */
+static void read_rusage() {
+    struct rusage ru;
+    if (getrusage(RUSAGE_SELF, &ru) < 0) {
+        printerr("Error getting resource usage: %s\n", strerror(errno));
+        return;
+    }
+    tprintf("utime: %.3lf\n", (double)ru.ru_utime.tv_sec + (double)ru.ru_utime.tv_usec/1.0e6);
+    tprintf("stime: %.3lf\n", (double)ru.ru_stime.tv_sec + (double)ru.ru_stime.tv_usec/1.0e6);
+}
+
+/* Read /proc/self/stat to get performance stats */
 static void read_stat() {
     debug("Reading stat file");
 
@@ -629,7 +760,6 @@ static void read_stat() {
         return;
     }
 
-    unsigned long utime, stime = 0;
     unsigned long long iowait = 0; //delayacct_blkio_ticks
 
     //pid comm state ppid pgrp session tty_nr tpgid flags minflt cminflt majflt
@@ -637,26 +767,19 @@ static void read_stat() {
     //starttime vsize rss rsslim startcode endcode startstack kstkesp kstkeip
     //signal blocked sigignore sigcatch wchan nswap cnswap exit_signal
     //processor rt_priority policy delayacct_blkio_ticks guest_time cguest_time
-    fscanf(f, "%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu "
-              "%lu %*d %*d %*d %*d %*d %*d %*u %*u %*d %*u %*u "
+    fscanf(f, "%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %*u "
+              "%*u %*d %*d %*d %*d %*d %*d %*u %*u %*d %*u %*u "
               "%*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*d "
               "%*d %*u %*u %llu %*u %*d",
-           &utime, &stime, &iowait);
+              &iowait);
 
     fclose_untraced(f);
 
     /* Adjust by number of clock ticks per second */
     long clocks = sysconf(_SC_CLK_TCK);
-    double real_utime;
-    double real_stime;
-    double real_iowait;
-    real_utime = ((double)utime) / clocks;
-    real_stime = ((double)stime) / clocks;
-    real_iowait = ((double)iowait) / clocks;
+    double real_iowait = ((double)iowait) / clocks;
 
-    tprintf("utime: %lf\n", real_utime);
-    tprintf("stime: %lf\n", real_stime);
-    tprintf("iowait: %lf\n", real_iowait);
+    tprintf("iowait: %.3lf\n", real_iowait);
 }
 
 
@@ -754,6 +877,63 @@ static void read_io() {
     fclose_untraced(f);
 }
 
+/* Determine which paths should be traced */
+static int should_trace(int fd, const char *path) {
+    /* Trace all files */
+    if (getenv("KICKSTART_TRACE_ALL") != NULL) {
+        return 1;
+    }
+
+    /* Don't trace stdio */
+    if (fd <= 2) {
+        return 0;
+    }
+
+    /* Trace files in the current working directory */
+    if (getenv("KICKSTART_TRACE_CWD") != NULL) {
+        char *wd = getcwd(NULL, 0);
+        int incwd = startswith(path, wd);
+        free(wd);
+        return incwd;
+    }
+
+    /* Don't trace the trace log! */
+    char *prefix = getenv("KICKSTART_PREFIX");
+    if (startswith(path, prefix)) {
+        return 0;
+    }
+
+    /* Skip directories */
+    struct stat s;
+    if (fstat(fd, &s) != 0) {
+        printerr("fstat: %s\n", strerror(errno));
+        return 0;
+    }
+    if (s.st_mode & S_IFDIR) {
+        return 0;
+    }
+
+    /* Skip files with known extensions that we don't care about */
+    if (endswith(path, ".py") ||
+        endswith(path, ".pyc") ||
+        endswith(path, ".jar")) {
+        return 0;
+    }
+
+    /* Skip all the common system paths, which we don't care about */
+    if (startswith(path, "/lib") ||
+        startswith(path, "/usr") ||
+        startswith(path, "/dev") ||
+        startswith(path, "/etc") ||
+        startswith(path, "/proc")||
+        startswith(path, "/sys") ||
+        startswith(path, "/selinux")) {
+        return 0;
+    }
+
+    return 1;
+}
+
 /* Read /proc/self/io to get I/O usage */
 static IoUtilInfo read_io_status() {
     debug("Reading io file");
@@ -817,13 +997,18 @@ static void trace_file(const char *path, int fd) {
         return;
     }
 
-    /* Skip all the common system paths, which we don't care about */
-    if (startswith(path, "/lib") ||
-        startswith(path, "/usr") ||
-        startswith(path, "/dev") ||
-        startswith(path, "/etc") ||
-        startswith(path, "/proc")||
-        startswith(path, "/sys")) {
+    if (!should_trace(path)) {
+        return;
+    }
+
+    struct stat s;
+    if (fstat(fd, &s) != 0) {
+        printerr("fstat: %s\n", strerror(errno));
+        return;
+    }
+
+    /* Skip directories */
+    if (s.st_mode & S_IFDIR) {
         return;
     }
 
@@ -837,17 +1022,25 @@ static void trace_file(const char *path, int fd) {
     f->path = temp;
     f->bread = 0;
     f->bwrite = 0;
+    f->nread = 0;
+    f->nwrite = 0;
+    f->bseek = 0;
+    f->nseek = 0;
 }
 
 static void trace_open(const char *path, int fd) {
     debug("trace_open %s %d", path, fd);
 
-    char *fullpath = get_fullpath(path);
+    char *fullpath = realpath(path, NULL);
     if (fullpath == NULL) {
+        printerr("Unable to get real path for '%s': %s\n",
+                 path, strerror(errno));
         return;
     }
 
     trace_file(fullpath, fd);
+
+    free(fullpath);
 }
 
 static void trace_openat(int fd) {
@@ -882,7 +1075,9 @@ static void trace_read(int fd, ssize_t amount) {
         return;
     }
     f->bread += amount;
-
+    f->nread += 1;
+    
+    // Information written for online monitoring in case there is no /proc 
     pthread_mutex_lock(&io_mut);
     io_util_info.rchar += amount;
     io_util_info.syscr += 1;
@@ -897,11 +1092,25 @@ static void trace_write(int fd, ssize_t amount) {
         return;
     }
     f->bwrite += amount;
-
+    f->nwrite += 1;
+    
+    // Information written for online monitoring in case there is no /proc
     pthread_mutex_lock(&io_mut);
     io_util_info.wchar += amount;
     io_util_info.syscw += 1;
     pthread_mutex_unlock(&io_mut);
+
+}
+
+static void trace_seek(int fd, off_t offset) {
+    debug("trace_seek %d %ld", fd, offset);
+
+    Descriptor *f = get_descriptor(fd);
+    if (f == NULL) {
+        return;
+    }
+    f->bseek += offset > 0 ? offset : -offset;
+    f->nseek += 1;
 }
 
 static void trace_close(int fd) {
@@ -917,7 +1126,8 @@ static void trace_close(int fd) {
 
     debug("trace_close %d", fd);
 
-    if (f->type == DTYPE_FILE) {
+    /* Only report files that have ops on them */
+    if (f->type == DTYPE_FILE && (f->nread+f->nwrite+f->nseek) > 0) {
         /* Try to get the final size of the file */
         size_t size = 0;
         struct stat st;
@@ -925,9 +1135,10 @@ static void trace_close(int fd) {
             size = st.st_size;
         }
 
-        tprintf("file: '%s' %lu %lu %lu\n", f->path, size, f->bread, f->bwrite);
+        tprintf("file: '%s' %lu %lu %lu %lu %lu %lu %lu\n",
+                f->path, size, f->bread, f->bwrite, f->nread, f->nwrite, f->bseek, f->nseek);
     } else if (f->type == DTYPE_SOCK) {
-        tprintf("socket: %s %lu %lu\n", f->path, f->bread, f->bwrite);
+        tprintf("socket: %s %lu %lu %lu %lu\n", f->path, f->bread, f->bwrite, f->nread, f->nwrite);
     }
 
     /* Reset the entry */
@@ -936,6 +1147,10 @@ static void trace_close(int fd) {
     f->path = NULL;
     f->bread = 0;
     f->bwrite = 0;
+    f->nread = 0;
+    f->nwrite = 0;
+    f->bseek = 0;
+    f->nseek = 0;
 }
 
 static void trace_sock(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
@@ -966,6 +1181,10 @@ static void trace_sock(int sockfd, const struct sockaddr *addr, socklen_t addrle
         d->path = NULL;
         d->bread = 0;
         d->bwrite = 0;
+        d->nread = 0;
+        d->nwrite = 0;
+        d->bseek = 0;
+        d->nseek = 0;
 
         char *temp = strdup(addrstr);
         if (temp == NULL) {
@@ -981,8 +1200,8 @@ static void trace_sock(int sockfd, const struct sockaddr *addr, socklen_t addrle
 static void trace_dup(int oldfd, int newfd) {
     debug("trace_dup %d %d", oldfd, newfd);
 
-    if(oldfd == newfd) {
-        printerr("Old and new fds are the same\n");
+    if (oldfd == newfd) {
+        printerr("trace_dup: duplicating the same fd %d\n", oldfd);
         return;
     }
 
@@ -1007,21 +1226,32 @@ static void trace_dup(int oldfd, int newfd) {
 
     /* Copy the old descriptor into the new */
     Descriptor *n = get_descriptor(newfd);
+    if (n == NULL) {
+        return;
+    }
     n->type = o->type;
     n->path = temp;
     n->bread = 0;
     n->bwrite = 0;
+    n->nread = 0;
+    n->nwrite = 0;
+    n->bseek = 0;
+    n->nseek = 0;
 }
 
 static void trace_truncate(const char *path, off_t length) {
     debug("trace_truncate %s %lu", path, length);
 
-    char *fullpath = get_fullpath(path);
+    char *fullpath = realpath(path, NULL);
     if (fullpath == NULL) {
+        printerr("Unable to get real path for '%s': %s\n",
+                 path, strerror(errno));
         return;
     }
 
-    tprintf("file: '%s' %lu 0 0\n", fullpath, length);
+    tprintf("file: '%s' %lu 0 0 0 0\n", fullpath, length);
+    
+    free(fullpath);
 }
 
 int tfile_exists() {
@@ -1041,6 +1271,182 @@ int tfile_exists() {
         return 0;
     }
 }
+
+static void inc_thread_counters() {
+    pthread_mutex_lock(&thread_counter_mutex);
+    threads += 1;
+    tot_threads += 1;
+    if (threads > max_threads) {
+        max_threads = threads;
+    }
+    pthread_mutex_unlock(&thread_counter_mutex);
+}
+
+static void dec_thread_counters() {
+    pthread_mutex_lock(&thread_counter_mutex);
+    threads -= 1;
+    pthread_mutex_unlock(&thread_counter_mutex);
+}
+
+static void report_thread_counters() {
+    pthread_mutex_lock(&thread_counter_mutex);
+    tprintf("threads: %d %d %d\n", threads, max_threads, tot_threads);
+    pthread_mutex_unlock(&thread_counter_mutex);
+}
+
+#ifdef HAS_PAPI
+
+static void init_papi() {
+    int err;
+
+    papi_ok = 0;
+
+    err = PAPI_library_init(PAPI_VER_CURRENT);
+    if (err != PAPI_VER_CURRENT) {
+        printerr("PAPI_library_init failed: %s\n", PAPI_strerror(err));
+        return;
+    }
+
+    err = PAPI_thread_init(interpose_gettid);
+    if (err < 0) {
+        printerr("PAPI_thread_init failed: %s\n", PAPI_strerror(err));
+        return;
+    }
+
+    if (PAPI_num_counters() <= 0) {
+        printerr("No hardware counters or PAPI not supported\n");
+        return;
+    }
+
+    papi_ok = 1;
+}
+
+static void fini_papi() {
+    PAPI_shutdown();
+}
+
+/* Start papi counters for a thread */
+static void start_papi() {
+    int err;
+
+    if (!papi_ok) {
+        return;
+    }
+
+    interpose_papi_ctx *ctx = malloc(sizeof(interpose_papi_ctx));
+    if (ctx == NULL) {
+        printerr("Error allocating PAPI thread context: %s\n", strerror(errno));
+        return;
+    }
+    ctx->eventset = PAPI_NULL;
+
+    err = PAPI_register_thread();
+    if (err < 0) {
+        printerr("Error registering PAPI thread: %s\n", PAPI_strerror(err));
+    }
+
+    err = PAPI_create_eventset(&ctx->eventset);
+    if (err < 0) {
+        printerr("Unable to create PAPI event set: %s\n", PAPI_strerror(err));
+        goto cleanup;
+    }
+
+    /* Make sure all the events are available and add them to the set */
+    for (int i=0; i<n_papi_events; i++) {
+        int event;
+        err = PAPI_event_name_to_code(papi_events[i], &event);
+        if (err < 0) {
+            printerr("Error getting PAPI event code for %s: %s\n", papi_events[i], PAPI_strerror(err));
+            goto cleanup;
+        }
+
+        PAPI_event_info_t info;
+        err = PAPI_get_event_info(event, &info);
+        if (err < 0) {
+            printerr("Error getting PAPI event info for %s: %s\n", papi_events[i], PAPI_strerror(err));
+            goto cleanup;
+        }
+        if (info.count == 0) {
+            printerr("PAPI event %s not available: %s\n", papi_events[i], info.long_descr);
+            goto cleanup;
+        }
+
+        err = PAPI_add_event(ctx->eventset, event);
+        if (err < 0) {
+            printerr("Error adding PAPI event %d to event set: %s\n", i, PAPI_strerror(err));
+            goto cleanup;
+        }
+    }
+
+    err = PAPI_start(ctx->eventset);
+    if (err < 0) {
+        printerr("PAPI_start failed: %s\n", PAPI_strerror(err));
+        goto cleanup;
+    }
+
+    err = PAPI_set_thr_specific(PAPI_USR1_TLS, ctx);
+    if (err < 0) {
+        printerr("Unable to set PAPI thread context: %s\n", PAPI_strerror(err));
+        goto cleanup;
+    }
+
+    return;
+
+cleanup:
+    free(ctx);
+    return;
+}
+
+/* Stop an report papi counters for a thread */
+static void stop_papi() {
+    int err;
+
+    if (!papi_ok) {
+        return;
+    }
+
+    interpose_papi_ctx *ctx = NULL;
+    err = PAPI_get_thr_specific(PAPI_USR1_TLS, (void **)&ctx);
+    if (err < 0) {
+        printerr("Unable to get PAPI thread context in stop_papi: %s\n", PAPI_strerror(err));
+        return;
+    }
+    if (ctx == NULL) {
+        return;
+    }
+
+    /* Collect counter values */
+    int have_counters = 0;
+    long long counters[n_papi_events];
+    err = PAPI_stop(ctx->eventset, counters);
+    if (err < 0) {
+        printerr("PAPI_stop failed: %s\n", PAPI_strerror(err));
+    } else {
+        have_counters = 1;
+    }
+
+    /* Unset the context value so that we don't try to stop the counters again */
+    err = PAPI_set_thr_specific(PAPI_USR1_TLS, NULL);
+    if (err < 0) {
+        printerr("Unable to unset PAPI thread context: %s\n", PAPI_strerror(err));
+    }
+
+    free(ctx);
+
+    err = PAPI_unregister_thread();
+    if (err < 0) {
+        printerr("Error unregistering PAPI thread: %s\n", PAPI_strerror(err));
+    }
+
+    /* Report counter values if we have them */
+    if (have_counters) {
+        for (int i=0; i<n_papi_events; i++) {
+            tprintf("%s: %lld\n", papi_events[i], counters[i]);
+        }
+    }
+}
+
+#endif
 
 extern char **environ;
 
@@ -1086,10 +1492,7 @@ void spawn_timer_thread() {
 
 /* Library initialization function */
 static void __attribute__((constructor)) interpose_init(void) {
-
-    /* XXX Note that this might be called twice in one program. Java
-     * seems to do this, for example.
-     */
+    mypid = getpid();
 
     /* Open the trace file and spawning a thread only when there was no one */
     switch( tfile_exists() ) {
@@ -1102,22 +1505,27 @@ static void __attribute__((constructor)) interpose_init(void) {
             break;
     }
 
-    /* Get file descriptor limit and allocate descriptor table */
-    struct rlimit nofile_limit;
-    getrlimit(RLIMIT_NOFILE, &nofile_limit);
-    max_descriptors = nofile_limit.rlim_max;
-    descriptors = (Descriptor *)calloc(sizeof(Descriptor), max_descriptors);
-    if (descriptors == NULL) {
-        printerr("calloc: %s\n", strerror(errno));
-    }
-
-    debug("Max descriptors: %d", max_descriptors);
+    init_descriptors();
 
     tprintf("start: %lf\n", get_time());
+
+    tprintf("Pid: %d\n", getpid());
+    tprintf("PPid: %d\n", getppid());
+    read_cmdline();
+
+#ifdef HAS_PAPI
+    init_papi();
+    /* Start papi for main thread */
+    start_papi();
+#endif
 }
 
 /* Library finalizer function */
 static void __attribute__((destructor)) interpose_fini(void) {
+    /* FIXME Prevent a process that calls fork->exec from shutting down libinterpose */
+    if (getpid() != mypid) {
+        return;
+    }
 
     /* Look for descriptors not explicitly closed */
     for(int i=0; i<max_descriptors; i++) {
@@ -1125,28 +1533,44 @@ static void __attribute__((destructor)) interpose_fini(void) {
     }
 
     read_exe();
+    report_thread_counters();
     read_status();
+    read_rusage();
     read_stat();
     read_io();
+
+#ifdef HAS_PAPI
+    /* Stop papi for (hopefully) main thread */
+    stop_papi();
+    fini_papi();
+#endif
 
     tprintf("stop: %lf\n", get_time());
 
     /* Close trace file */
     tclose();
 
+    mypid = 0;
+
     // Set a flag to stop the online monitoring thread
     library_loaded = 0;
 }
 
+static inline void *osym(const char *name) {
+    void *orig_symbol = dlsym(RTLD_NEXT, name);
+    if (orig_symbol == NULL) {
+        printerr("FATAL ERROR: Unable to locate symbol %s: %s\n", name, dlerror());
+        exit(1);
+    }
+    return orig_symbol;
+}
 
 /** INTERPOSED FUNCTIONS **/
 
 int dup(int oldfd) {
     debug("dup");
 
-    if (orig_dup == NULL) {
-        orig_dup = dlsym(RTLD_NEXT, "dup");
-    }
+    typeof(dup) *orig_dup = osym("dup");
 
     int rc = (*orig_dup)(oldfd);
 
@@ -1160,9 +1584,7 @@ int dup(int oldfd) {
 int dup2(int oldfd, int newfd) {
     debug("dup2");
 
-    if (orig_dup2 == NULL) {
-        orig_dup2 = dlsym(RTLD_NEXT, "dup2");
-    }
+    typeof(dup2) *orig_dup2 = osym("dup2");
 
     int rc = (*orig_dup2)(oldfd, newfd);
 
@@ -1177,9 +1599,7 @@ int dup2(int oldfd, int newfd) {
 int dup3(int oldfd, int newfd, int flags) {
     debug("dup3");
 
-    if (orig_dup3 == NULL) {
-        orig_dup3 = dlsym(RTLD_NEXT, "dup3");
-    }
+    typeof(dup3) *orig_dup3 = osym("dup3");
 
     int rc = (*orig_dup3)(oldfd, newfd, flags);
 
@@ -1194,9 +1614,7 @@ int dup3(int oldfd, int newfd, int flags) {
 int open(const char *path, int oflag, ...) {
     debug("open");
 
-    if (orig_open == NULL) {
-        orig_open = dlsym(RTLD_NEXT, "open");
-    }
+    typeof(open) *orig_open = osym("open");
 
     mode_t mode = 0700;
     if (oflag & O_CREAT) {
@@ -1218,9 +1636,7 @@ int open(const char *path, int oflag, ...) {
 int open64(const char *path, int oflag, ...) {
     debug("open64");
 
-    if (orig_open64 == NULL) {
-        orig_open64 = dlsym(RTLD_NEXT, "open64");
-    }
+    typeof(open64) *orig_open64 = osym("open64");
 
     mode_t mode = 0700;
     if (oflag & O_CREAT) {
@@ -1242,9 +1658,7 @@ int open64(const char *path, int oflag, ...) {
 int openat(int dirfd, const char *path, int oflag, ...) {
     debug("openat");
 
-    if (orig_openat == NULL) {
-        orig_openat = dlsym(RTLD_NEXT, "openat");
-    }
+    typeof(openat) *orig_openat = osym("openat");
 
     mode_t mode = 0700;
     if (oflag & O_CREAT) {
@@ -1266,9 +1680,7 @@ int openat(int dirfd, const char *path, int oflag, ...) {
 int openat64(int dirfd, const char *path, int oflag, ...) {
     debug("openat64");
 
-    if (orig_openat64 == NULL) {
-        orig_openat64 = dlsym(RTLD_NEXT, "openat64");
-    }
+    typeof(openat64) *orig_openat64 = osym("openat64");
 
     mode_t mode = 0700;
     if (oflag & O_CREAT) {
@@ -1290,9 +1702,7 @@ int openat64(int dirfd, const char *path, int oflag, ...) {
 int creat(const char *path, mode_t mode) {
     debug("creat");
 
-    if (orig_creat == NULL) {
-        orig_creat = dlsym(RTLD_NEXT, "creat");
-    }
+    typeof(creat) *orig_creat = osym("creat");
 
     int rc = (*orig_creat)(path, mode);
 
@@ -1306,9 +1716,7 @@ int creat(const char *path, mode_t mode) {
 int creat64(const char *path, mode_t mode) {
     debug("creat64");
 
-    if (orig_creat64 == NULL) {
-        orig_creat64 = dlsym(RTLD_NEXT, "creat64");
-    }
+    typeof(creat64) *orig_creat64 = osym("creat64");
 
     int rc = (*orig_creat64)(path, mode);
 
@@ -1320,10 +1728,7 @@ int creat64(const char *path, mode_t mode) {
 }
 
 static FILE *fopen_untraced(const char *path, const char *mode) {
-    if (orig_fopen == NULL) {
-        orig_fopen = dlsym(RTLD_NEXT, "fopen");
-    }
-
+    typeof(fopen) *orig_fopen = osym("fopen");
     return (*orig_fopen)(path, mode);
 }
 
@@ -1342,10 +1747,7 @@ FILE *fopen(const char *path, const char *mode) {
 FILE *fopen64(const char *path, const char *mode) {
     debug("fopen64");
 
-    if (orig_fopen64 == NULL) {
-        orig_fopen64 = dlsym(RTLD_NEXT, "fopen64");
-    }
-
+    typeof(fopen64) *orig_fopen64 = osym("fopen64");
     FILE *f = (*orig_fopen64)(path, mode);
 
     if (f != NULL) {
@@ -1358,10 +1760,7 @@ FILE *fopen64(const char *path, const char *mode) {
 FILE *freopen(const char *path, const char *mode, FILE *stream) {
     debug("freopen");
 
-    if (orig_freopen == NULL) {
-        orig_freopen = dlsym(RTLD_NEXT, "freopen");
-    }
-
+    typeof(freopen) *orig_freopen = osym("freopen");
     FILE *f = orig_freopen(path, mode, stream);
 
     if (f != NULL) {
@@ -1374,10 +1773,7 @@ FILE *freopen(const char *path, const char *mode, FILE *stream) {
 FILE *freopen64(const char *path, const char *mode, FILE *stream) {
     debug("freopen64");
 
-    if (orig_freopen64 == NULL) {
-        orig_freopen64 = dlsym(RTLD_NEXT, "freopen64");
-    }
-
+    typeof(freopen64) *orig_freopen64 = osym("freopen64");
     FILE *f = orig_freopen64(path, mode, stream);
 
     if (f != NULL) {
@@ -1390,10 +1786,7 @@ FILE *freopen64(const char *path, const char *mode, FILE *stream) {
 int close(int fd) {
     debug("close");
 
-    if (orig_close == NULL) {
-        orig_close = dlsym(RTLD_NEXT, "close");
-    }
-
+    typeof(close) *orig_close = osym("close");
     int rc = (*orig_close)(fd);
 
     if (fd >= 0) {
@@ -1404,10 +1797,7 @@ int close(int fd) {
 }
 
 static int fclose_untraced(FILE *fp) {
-    if (orig_fclose == NULL) {
-        orig_fclose = dlsym(RTLD_NEXT, "fclose");
-    }
-
+    typeof(fclose) *orig_fclose = osym("fclose");
     return (*orig_fclose)(fp);
 }
 
@@ -1431,10 +1821,7 @@ int fclose(FILE *fp) {
 ssize_t read(int fd, void *buf, size_t count) {
     debug("read");
 
-    if (orig_read == NULL) {
-        orig_read = dlsym(RTLD_NEXT, "read");
-    }
-
+    typeof(read) *orig_read = osym("read");
     ssize_t rc = (*orig_read)(fd, buf, count);
 
     if (rc > 0) {
@@ -1447,10 +1834,7 @@ ssize_t read(int fd, void *buf, size_t count) {
 ssize_t write(int fd, const void *buf, size_t count) {
     debug("write");
 
-    if (orig_write == NULL) {
-        orig_write = dlsym(RTLD_NEXT, "write");
-    }
-
+    typeof(write) *orig_write = osym("write");
     ssize_t rc = (*orig_write)(fd, buf, count);
 
     if (rc > 0) {
@@ -1460,17 +1844,19 @@ ssize_t write(int fd, const void *buf, size_t count) {
     return rc;
 }
 
+static size_t fread_untraced(void *ptr, size_t size, size_t nmemb, FILE *stream) {
+    typeof(fread) *orig_fread = osym("fread");
+    return (*orig_fread)(ptr, size, nmemb, stream);
+}
+
 size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
     debug("fread");
 
-    if (orig_fread == NULL) {
-        orig_fread = dlsym(RTLD_NEXT, "fread");
-    }
-
-    size_t rc = (*orig_fread)(ptr, size, nmemb, stream);
+    size_t rc = fread_untraced(ptr, size, nmemb, stream);
 
     if (rc > 0) {
-        trace_read(fileno(stream), rc);
+        /* rc is the number of objects written */
+        trace_read(fileno(stream), rc*size);
     }
 
     return rc;
@@ -1479,14 +1865,12 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
 size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream) {
     debug("fwrite");
 
-    if (orig_fwrite == NULL) {
-        orig_fwrite = dlsym(RTLD_NEXT, "fwrite");
-    }
-
+    typeof(fwrite) *orig_fwrite = osym("fwrite");
     size_t rc = (*orig_fwrite)(ptr, size, nmemb, stream);
 
     if (rc > 0) {
-        trace_write(fileno(stream), rc);
+        /* rc is the number of objects written */
+        trace_write(fileno(stream), rc*size);
     }
 
     return rc;
@@ -1495,10 +1879,7 @@ size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream) {
 ssize_t pread(int fd, void *buf, size_t count, off_t offset) {
     debug("pread");
 
-    if (orig_pread == NULL) {
-        orig_pread = dlsym(RTLD_NEXT, "pread");
-    }
-
+    typeof(pread) *orig_pread = osym("pread");
     ssize_t rc = (*orig_pread)(fd, buf, count, offset);
 
     if (rc > 0) {
@@ -1511,10 +1892,7 @@ ssize_t pread(int fd, void *buf, size_t count, off_t offset) {
 ssize_t pread64(int fd, void *buf, size_t count, off_t offset) {
     debug("pread64");
 
-    if (orig_pread64 == NULL) {
-        orig_pread64 = dlsym(RTLD_NEXT, "pread64");
-    }
-
+    typeof(pread64) *orig_pread64 = osym("pread64");
     ssize_t rc = (*orig_pread64)(fd, buf, count, offset);
 
     if (rc > 0) {
@@ -1527,10 +1905,7 @@ ssize_t pread64(int fd, void *buf, size_t count, off_t offset) {
 ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset) {
     debug("pwrite");
 
-    if (orig_pwrite == NULL) {
-        orig_pwrite = dlsym(RTLD_NEXT, "pwrite");
-    }
-
+    typeof(pwrite) *orig_pwrite = osym("pwrite");
     ssize_t rc = (*orig_pwrite)(fd, buf, count, offset);
 
     if (rc > 0) {
@@ -1543,10 +1918,7 @@ ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset) {
 ssize_t pwrite64(int fd, const void *buf, size_t count, off_t offset) {
     debug("pwrite64");
 
-    if (orig_pwrite64 == NULL) {
-        orig_pwrite64 = dlsym(RTLD_NEXT, "pwrite64");
-    }
-
+    typeof(pwrite64) *orig_pwrite64 = osym("pwrite64");
     ssize_t rc = (*orig_pwrite64)(fd, buf, count, offset);
 
     if (rc > 0) {
@@ -1559,10 +1931,7 @@ ssize_t pwrite64(int fd, const void *buf, size_t count, off_t offset) {
 ssize_t readv(int fd, const struct iovec *iov, int iovcnt) {
     debug("readv");
 
-    if (orig_readv == NULL) {
-        orig_readv = dlsym(RTLD_NEXT, "readv");
-    }
-
+    typeof(readv) *orig_readv = osym("readv");
     ssize_t rc = (*orig_readv)(fd, iov, iovcnt);
 
     if (rc > 0) {
@@ -1576,10 +1945,7 @@ ssize_t readv(int fd, const struct iovec *iov, int iovcnt) {
 ssize_t preadv(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
     debug("preadv");
 
-    if (orig_preadv == NULL) {
-        orig_preadv = dlsym(RTLD_NEXT, "preadv");
-    }
-
+    typeof(preadv) *orig_preadv = osym("preadv");
     ssize_t rc = (*orig_preadv)(fd, iov, iovcnt, offset);
 
     if (rc > 0) {
@@ -1594,10 +1960,7 @@ ssize_t preadv(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
 ssize_t preadv64(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
     debug("preadv64");
 
-    if (orig_preadv64 == NULL) {
-        orig_preadv64 = dlsym(RTLD_NEXT, "preadv64");
-    }
-
+    typeof(preadv64) *orig_preadv64 = osym("preadv64");
     ssize_t rc = (*orig_preadv64)(fd, iov, iovcnt, offset);
 
     if (rc > 0) {
@@ -1611,10 +1974,7 @@ ssize_t preadv64(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
 ssize_t writev(int fd, const struct iovec *iov, int iovcnt) {
     debug("writev");
 
-    if (orig_writev == NULL) {
-        orig_writev = dlsym(RTLD_NEXT, "writev");
-    }
-
+    typeof(writev) *orig_writev = osym("writev");
     ssize_t rc = (*orig_writev)(fd, iov, iovcnt);
 
     if (rc > 0) {
@@ -1628,10 +1988,7 @@ ssize_t writev(int fd, const struct iovec *iov, int iovcnt) {
 ssize_t pwritev(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
     debug("pwritev");
 
-    if (orig_pwritev == NULL) {
-        orig_pwritev = dlsym(RTLD_NEXT, "pwritev");
-    }
-
+    typeof(pwritev) *orig_pwritev = osym("pwritev");
     ssize_t rc = (*orig_pwritev)(fd, iov, iovcnt, offset);
 
     if (rc > 0) {
@@ -1646,10 +2003,7 @@ ssize_t pwritev(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
 ssize_t pwritev64(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
     debug("pwritev64");
 
-    if (orig_pwritev64 == NULL) {
-        orig_pwritev64 = dlsym(RTLD_NEXT, "pwritev64");
-    }
-
+    typeof(pwritev64) *orig_pwritev64 = osym("pwritev64");
     ssize_t rc = (*orig_pwritev64)(fd, iov, iovcnt, offset);
 
     if (rc > 0) {
@@ -1663,10 +2017,7 @@ ssize_t pwritev64(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
 int fgetc(FILE *stream) {
     debug("fgetc");
 
-    if (orig_fgetc == NULL) {
-        orig_fgetc = dlsym(RTLD_NEXT, "fgetc");
-    }
-
+    typeof(fgetc) *orig_fgetc = osym("fgetc");
     int rc = (*orig_fgetc)(stream);
 
     if (rc > 0) {
@@ -1679,10 +2030,7 @@ int fgetc(FILE *stream) {
 int fputc(int c, FILE *stream) {
     debug("fputc");
 
-    if (orig_fputc == NULL) {
-        orig_fputc = dlsym(RTLD_NEXT, "fputc");
-    }
-
+    typeof(fputc) *orig_fputc = osym("fputc");
     int rc = (*orig_fputc)(c, stream);
 
     if (rc > 0) {
@@ -1693,10 +2041,7 @@ int fputc(int c, FILE *stream) {
 }
 
 static char *fgets_untraced(char *s, int size, FILE *stream) {
-    if (orig_fgets == NULL) {
-        orig_fgets = dlsym(RTLD_NEXT, "fgets");
-    }
-
+    typeof(fgets) *orig_fgets = osym("fgets");
     return (*orig_fgets)(s, size, stream);
 }
 
@@ -1715,10 +2060,7 @@ char *fgets(char *s, int size, FILE *stream) {
 int fputs(const char *s, FILE *stream) {
     debug("fputs");
 
-    if (orig_fputs == NULL) {
-        orig_fputs = dlsym(RTLD_NEXT, "fputs");
-    }
-
+    typeof(fputs) *orig_fputs = osym("fputs");
     int rc = (*orig_fputs)(s, stream);
 
     if (rc > 0) {
@@ -1731,9 +2073,7 @@ int fputs(const char *s, FILE *stream) {
 int vfscanf(FILE *stream, const char *format, va_list ap) {
     debug("vfscanf");
 
-    if (orig_vfscanf == NULL) {
-        orig_vfscanf = dlsym(RTLD_NEXT, "vfscanf");
-    }
+    typeof(vfscanf) *orig_vfscanf = osym("vfscanf");
 
     /* We need to get the offset because (v)fscanf returns
      * the number of items matched, not the number of bytes
@@ -1762,10 +2102,7 @@ int fscanf(FILE *stream, const char *format, ...) {
 }
 
 static int vfprintf_untraced(FILE *stream, const char *format, va_list ap) {
-    if (orig_vfprintf == NULL) {
-        orig_vfprintf = dlsym(RTLD_NEXT, "vfprintf");
-    }
-
+    typeof(vfprintf) *orig_vfprintf = osym("vfprintf");
     return (*orig_vfprintf)(stream, format, ap);
 }
 
@@ -1802,10 +2139,7 @@ int fprintf(FILE *stream, const char *format, ...) {
 int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
     debug("connect");
 
-    if (orig_connect == NULL) {
-        orig_connect = dlsym(RTLD_NEXT, "connect");
-    }
-
+    typeof(connect) *orig_connect = osym("connect");
     int rc = (*orig_connect)(sockfd, addr, addrlen);
 
     /* FIXME There are potential issues with non-blocking sockets here */
@@ -1821,10 +2155,7 @@ int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
 ssize_t send(int sockfd, const void *buf, size_t len, int flags) {
     debug("send");
 
-    if (orig_send == NULL) {
-        orig_send = dlsym(RTLD_NEXT, "send");
-    }
-
+    typeof(send) *orig_send = osym("send");
     ssize_t rc = (*orig_send)(sockfd, buf, len, flags);
 
     if (rc > 0) {
@@ -1837,10 +2168,7 @@ ssize_t send(int sockfd, const void *buf, size_t len, int flags) {
 ssize_t sendfile(int out_fd, int in_fd, off_t *offset, size_t count) {
     debug("sendfile");
 
-    if (orig_sendfile == NULL) {
-        orig_sendfile = dlsym(RTLD_NEXT, "sendfile");
-    }
-
+    typeof(sendfile) *orig_sendfile = osym("sendfile");
     ssize_t rc = (*orig_sendfile)(out_fd, in_fd, offset, count);
 
     if (rc > 0) {
@@ -1855,10 +2183,7 @@ ssize_t sendto(int sockfd, const void *buf, size_t len, int flags,
                const struct sockaddr *dest_addr, socklen_t addrlen) {
     debug("sendto");
 
-    if (orig_sendto == NULL) {
-        orig_sendto = dlsym(RTLD_NEXT, "sendto");
-    }
-
+    typeof(sendto) *orig_sendto = osym("sendto");
     ssize_t rc = (*orig_sendto)(sockfd, buf, len, flags, dest_addr, addrlen);
 
     if (rc > 0) {
@@ -1873,10 +2198,7 @@ ssize_t sendto(int sockfd, const void *buf, size_t len, int flags,
 ssize_t sendmsg(int sockfd, const struct msghdr *msg, int flags) {
     debug("sendmsg");
 
-    if (orig_sendmsg == NULL) {
-        orig_sendmsg = dlsym(RTLD_NEXT, "sendmsg");
-    }
-
+    typeof(sendmsg) *orig_sendmsg = osym("sendmsg");
     ssize_t rc = (*orig_sendmsg)(sockfd, msg, flags);
 
     if (rc > 0) {
@@ -1893,10 +2215,7 @@ ssize_t sendmsg(int sockfd, const struct msghdr *msg, int flags) {
 ssize_t recv(int sockfd, void *buf, size_t len, int flags) {
     debug("recv");
 
-    if (orig_recv == NULL) {
-        orig_recv = dlsym(RTLD_NEXT, "recv");
-    }
-
+    typeof(recv) *orig_recv = osym("recv");
     ssize_t rc = (*orig_recv)(sockfd, buf, len, flags);
 
     if (rc > 0) {
@@ -1910,10 +2229,7 @@ ssize_t recvfrom(int sockfd, void *buf, size_t len, int flags,
                  struct sockaddr *src_addr, socklen_t *addrlen) {
     debug("recvfrom");
 
-    if (orig_recvfrom == NULL) {
-        orig_recvfrom = dlsym(RTLD_NEXT, "recvfrom");
-    }
-
+    typeof(recvfrom) *orig_recvfrom = osym("recvfrom");
     ssize_t rc = (*orig_recvfrom)(sockfd, buf, len, flags, src_addr, addrlen);
 
     if (rc > 0) {
@@ -1928,10 +2244,7 @@ ssize_t recvfrom(int sockfd, void *buf, size_t len, int flags,
 ssize_t recvmsg(int sockfd, struct msghdr *msg, int flags) {
     debug("recvmsg");
 
-    if (orig_recvmsg == NULL) {
-        orig_recvmsg = dlsym(RTLD_NEXT, "recvmsg");
-    }
-
+    typeof(recvmsg) *orig_recvmsg = osym("recvmsg");
     ssize_t rc = (*orig_recvmsg)(sockfd, msg, flags);
 
     if (rc > 0) {
@@ -1948,10 +2261,7 @@ ssize_t recvmsg(int sockfd, struct msghdr *msg, int flags) {
 int truncate(const char *path, off_t length) {
     debug("truncate");
 
-    if (orig_truncate == NULL) {
-        orig_truncate = dlsym(RTLD_NEXT, "truncate");
-    }
-
+    typeof(truncate) *orig_truncate = osym("truncate");
     int rc = (*orig_truncate)(path, length);
 
     if (rc == 0) {
@@ -1964,10 +2274,7 @@ int truncate(const char *path, off_t length) {
 int mkstemp(char *template) {
     debug("mkstemp");
 
-    if (orig_mkstemp == NULL) {
-        orig_mkstemp = dlsym(RTLD_NEXT, "mkstemp");
-    }
-
+    typeof(mkstemp) *orig_mkstemp = osym("mkstemp");
     int rc = (*orig_mkstemp)(template);
 
     if (rc >= 0) {
@@ -1981,10 +2288,7 @@ int mkstemp(char *template) {
 int mkostemp(char *template, int flags) {
     debug("mkostemp");
 
-    if (orig_mkostemp == NULL) {
-        orig_mkostemp = dlsym(RTLD_NEXT, "mkostemp");
-    }
-
+    typeof(mkostemp) *orig_mkostemp = osym("mkostemp");
     int rc = (*orig_mkostemp)(template, flags);
 
     if (rc >= 0) {
@@ -1999,10 +2303,7 @@ int mkostemp(char *template, int flags) {
 int mkstemps(char *template, int suffixlen) {
     debug("mkstemps");
 
-    if (orig_mkstemps == NULL) {
-        orig_mkstemps = dlsym(RTLD_NEXT, "mkstemps");
-    }
-
+    typeof(mkstemps) *orig_mkstemps = osym("mkstemps");
     int rc = (*orig_mkstemps)(template, suffixlen);
 
     if (rc >= 0) {
@@ -2017,10 +2318,7 @@ int mkstemps(char *template, int suffixlen) {
 int mkostemps(char *template, int suffixlen, int flags) {
     debug("mkostemps");
 
-    if (orig_mkostemps == NULL) {
-        orig_mkostemps = dlsym(RTLD_NEXT, "mkostemps");
-    }
-
+    typeof(mkostemps) *orig_mkostemps = osym("mkostemps");
     int rc = (*orig_mkostemps)(template, suffixlen, flags);
 
     if (rc >= 0) {
@@ -2034,10 +2332,7 @@ int mkostemps(char *template, int suffixlen, int flags) {
 FILE *tmpfile(void) {
     debug("tmpfile");
 
-    if (orig_tmpfile == NULL) {
-        orig_tmpfile = dlsym(RTLD_NEXT, "tmpfile");
-    }
-
+    typeof(tmpfile) *orig_tmpfile = osym("tmpfile");
     FILE *f = (*orig_tmpfile)();
 
     if (f != NULL) {
@@ -2046,3 +2341,275 @@ FILE *tmpfile(void) {
 
     return f;
 }
+
+off_t lseek(int fd, off_t offset, int whence) {
+    debug("lseek %d %ld %d", fd, offset, whence);
+
+    typeof(lseek) *orig_lseek = osym("lseek");
+    off_t result = (*orig_lseek)(fd, offset, whence);
+
+    if (result >= 0) {
+        trace_seek(fd, offset);
+    }
+
+    return result;
+}
+
+#ifdef lseek64
+off64_t lseek64(int fd, off64_t offset, int whence) {
+    debug("lseek64");
+
+    typeof(lseek64) *orig_lseek64 = osym("lseek64");
+    off64_t result = (*orig_lseek64)(fd, offset, whence);
+
+    if (result >= 0) {
+        trace_seek(fd, offset);
+    }
+
+    return result;
+}
+#endif
+
+int fseek(FILE *stream, long offset, int whence) {
+    debug("fseek");
+
+    typeof(fseek) *orig_fseek = osym("fseek");
+    int result = (*orig_fseek)(stream, offset, whence);
+
+    if (result == 0) {
+        trace_seek(fileno(stream), offset);
+    }
+
+    return result;
+}
+
+int fseeko(FILE *stream, off_t offset, int whence) {
+    debug("fseeko");
+
+    typeof(fseeko) *orig_fseeko = osym("fseeko");
+    int result = (*orig_fseeko)(stream, offset, whence);
+
+    if (result == 0) {
+        trace_seek(fileno(stream), offset);
+    }
+
+    return result;
+}
+
+void interpose_pthread_cleanup(void *arg) {
+    dec_thread_counters();
+#ifdef HAS_PAPI
+    stop_papi();
+#endif
+    free(arg);
+}
+
+/* This function wraps the start_routine of the thread provided by the user */
+void *interpose_pthread_wrapper(void *arg) {
+    debug("pthread_wrapper");
+
+    inc_thread_counters();
+
+    interpose_pthread_wrapper_arg *info = (interpose_pthread_wrapper_arg *)arg;
+    if (info == NULL) {
+        /* Probably won't ever happen */
+        printerr("FATAL ERROR: interpose_pthread_wrapper argument was NULL: pthread_create start_routine lost\n");
+        exit(1);
+    }
+
+    /* This sets up a key whose destructor cleans up the thread wrapper */
+    if (pthread_key_create(&info->cleanup, interpose_pthread_cleanup) != 0) {
+        printerr("Error creating cleanup key for thread %lu\n", interpose_gettid());
+    }
+    if (pthread_setspecific(info->cleanup, arg) != 0) {
+        printerr("Unable to set cleanup key for thread %lu\n", interpose_gettid());
+    }
+
+#ifdef HAS_PAPI
+    start_papi();
+#endif
+
+    return info->start_routine(info->arg);
+}
+
+int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_routine)(void *), void *arg) {
+    debug("pthread_create");
+
+    typeof(pthread_create) *orig_pthread_create = osym("pthread_create");
+
+    interpose_pthread_wrapper_arg *info = malloc(sizeof(interpose_pthread_wrapper_arg));
+    if (info == NULL) {
+        printerr("Error creating pthread wrapper: %s\n", strerror(errno));
+        return (*orig_pthread_create)(thread, attr, start_routine, arg);
+    }
+
+    info->start_routine = start_routine;
+    info->arg = arg;
+
+    return (*orig_pthread_create)(thread, attr, interpose_pthread_wrapper, info);
+}
+
+int execl(const char *path, const char *arg, ...) {
+    debug("execl");
+
+    int nargs;
+    va_list argp;
+    const char *p;
+
+    /* Count arguments */
+    nargs = 0;
+    p = arg;
+    va_start(argp, arg);
+    while (p != NULL) {
+        nargs++;
+        p = va_arg(argp, char *);
+    }
+    va_end(argp);
+
+    /* Construct argument array */
+    char **argv = malloc(sizeof(char *) * (nargs+1));
+
+    /* Populate argument array */
+    nargs = 0;
+    p = arg;
+    va_start(argp, arg);
+    while (p != NULL) {
+        argv[nargs++] = (char *)p;
+        p = va_arg(argp, char *);
+    }
+    argv[nargs++] = NULL;
+    va_end(argp);
+
+    return execv(path, argv);
+}
+
+int execlp(const char *file, const char *arg, ...) {
+    debug("execlp");
+
+    int nargs;
+    va_list argp;
+    const char *p;
+
+    /* Count arguments */
+    nargs = 0;
+    p = arg;
+    va_start(argp, arg);
+    while (p != NULL) {
+        nargs++;
+        p = va_arg(argp, char *);
+    }
+    va_end(argp);
+
+    /* Construct argument array */
+    char **argv = malloc(sizeof(char *) * (nargs+1));
+
+    /* Populate argument array */
+    nargs = 0;
+    p = arg;
+    va_start(argp, arg);
+    while (p != NULL) {
+        argv[nargs++] = (char *)p;
+        p = va_arg(argp, char *);
+    }
+    argv[nargs++] = NULL;
+    va_end(argp);
+
+    return execvp(file, argv);
+}
+
+int execle(const char *path, const char *arg, ... /*, char * const envp[]*/) {
+    debug("execle");
+
+    int nargs;
+    va_list argp;
+    const char *p;
+
+    /* Count arguments */
+    nargs = 0;
+    p = arg;
+    va_start(argp, arg);
+    while (p != NULL) {
+        nargs++;
+        p = va_arg(argp, char *);
+    }
+    va_end(argp);
+
+    /* Construct argument array */
+    char **argv = malloc(sizeof(char *) * (nargs+1));
+
+    /* Populate argument array */
+    nargs = 0;
+    p = arg;
+    va_start(argp, arg);
+    while (p != NULL) {
+        argv[nargs++] = (char *)p;
+        p = va_arg(argp, char *);
+    }
+    argv[nargs++] = NULL;
+    char **envp = va_arg(argp, char **);
+    va_end(argp);
+
+    return execve(path, argv, envp);
+}
+
+int execv(const char *path, char *const argv[]) {
+    debug("execv");
+    typeof(execv) *orig_execv = osym("execv");
+    interpose_fini();
+    int rc = (*orig_execv)(path, argv);
+    interpose_init();
+    return rc;
+}
+
+int execvp(const char *file, char *const argv[]) {
+    debug("execvp");
+    typeof(execvp) *orig_execvp = osym("execvp");
+    interpose_fini();
+    int rc = (*orig_execvp)(file, argv);
+    interpose_init();
+    return rc;
+}
+
+int execve(const char *filename, char *const argv[], char *const envp[]) {
+    debug("execve");
+    typeof(execve) *orig_execve = osym("execve");
+    interpose_fini();
+    int rc = (*orig_execve)(filename, argv, envp);
+    interpose_init();
+    return rc;
+}
+
+pid_t fork(void) {
+    /* We have to intercept fork so that we can reinit libinterpose in the
+     * child. vfork does not have this problem because a process created
+     * with vfork basically can't do anything except call exec, in which
+     * case libinterpose is going to be reinitialized anyway. */
+
+    typeof(fork) *orig_fork = osym("fork");
+    pid_t rc = (*orig_fork)();
+
+    if (rc == 0) {
+        /* Close the trace file since we inherited it */
+        tclose();
+
+        /* Reinitialize libinterpose on a successful fork */
+        interpose_init();
+
+        tprintf("fork\n");
+    }
+
+    return rc;
+}
+
+void _exit(int rc) {
+    /* Regular exit() will call the destructor, but if the app calls _exit we
+     * have to do this manually */
+    interpose_fini();
+
+    typeof(_exit) *orig__exit = osym("_exit");
+    (*orig__exit)(rc);
+
+    /* unreachable */
+    abort();
+}
+

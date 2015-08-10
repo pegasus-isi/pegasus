@@ -60,7 +60,6 @@ static int isRelativePath(char *path) {
 }
 
 /* Find the path to the interposition library */
-/* Find the path to the interposition library */
 static int findInterposeLibrary(char *path, int pathsize) {
     char kickstart[BUFSIZ];
     char lib[BUFSIZ];
@@ -110,7 +109,13 @@ static FileInfo *readTraceFileRecord(const char *buf, FileInfo *files) {
     size_t size = 0;
     size_t bread = 0;
     size_t bwrite = 0;
-    if (sscanf(buf, "file: '%[^']' %lu %lu %lu\n", filename, &size, &bread, &bwrite) != 4) {
+    size_t nread = 0;
+    size_t nwrite = 0;
+    size_t bseek = 0;
+    size_t nseek = 0;
+
+    if (sscanf(buf, "file: '%[^']' %lu %lu %lu %lu %lu %lu %lu\n",
+               filename, &size, &bread, &bwrite, &nread, &nwrite, &bseek, &nseek) != 8) {
         printerr("Invalid file record: %s", buf);
         return files;
     }
@@ -145,6 +150,10 @@ static FileInfo *readTraceFileRecord(const char *buf, FileInfo *files) {
         file->size = size;
         file->bread = bread;
         file->bwrite = bwrite;
+        file->nread = nread;
+        file->nwrite = nwrite;
+        file->bseek = bseek;
+        file->nseek = nseek;
 
         if (files == NULL) {
             /* List was empty */
@@ -158,6 +167,10 @@ static FileInfo *readTraceFileRecord(const char *buf, FileInfo *files) {
         file->size = file->size > size ? file->size : size; /* max */
         file->bread += bread;
         file->bwrite += bwrite;
+        file->nread += nread;
+        file->nwrite += nwrite;
+        file->bseek += bseek;
+        file->nseek += nseek;
     }
 
     return files;
@@ -168,7 +181,9 @@ static SockInfo *readTraceSocketRecord(const char *buf, SockInfo *sockets) {
     int port = 0;
     size_t brecv = 0;
     size_t bsend = 0;
-    if (sscanf(buf, "socket: %s %d %lu %lu\n", address, &port, &brecv, &bsend) != 4) {
+    size_t nrecv = 0;
+    size_t nsend = 0;
+    if (sscanf(buf, "socket: %s %d %lu %lu %lu %lu\n", address, &port, &brecv, &bsend, &nrecv, &nsend) != 6) {
         printerr("Invalid socket record: %s", buf);
         return sockets;
     }
@@ -203,6 +218,8 @@ static SockInfo *readTraceSocketRecord(const char *buf, SockInfo *sockets) {
         sock->port = port;
         sock->brecv = brecv;
         sock->bsend = bsend;
+        sock->nrecv = nrecv;
+        sock->nsend = nsend;
 
         if (sockets == NULL) {
             /* List was empty */
@@ -215,6 +232,8 @@ static SockInfo *readTraceSocketRecord(const char *buf, SockInfo *sockets) {
         /* Duplicate found, increment counters */
         sock->brecv += brecv;
         sock->bsend += bsend;
+        sock->nrecv += nrecv;
+        sock->nsend += nsend;
     }
 
     return sockets;
@@ -233,15 +252,36 @@ static ProcInfo *processTraceFile(const char *fullpath) {
         return NULL;
     }
 
-    ProcInfo *proc = (ProcInfo *)calloc(sizeof(ProcInfo), 1);
-    if (proc == NULL) {
-        printerr("calloc: %s\n", strerror(errno));
-        return NULL;
-    }
+    ProcInfo *procs = NULL;
+    ProcInfo *proc = NULL;
+    ProcInfo *lastproc = NULL;
 
     /* Read data from the trace file */
+    int lines = 0;
     char line[BUFSIZ];
+    long long llval;
     while (fgets(line, BUFSIZ, trace) != NULL) {
+        lines++;
+
+        if (proc == NULL) {
+            proc = (ProcInfo *)calloc(sizeof(ProcInfo), 1);
+            if (proc == NULL) {
+                printerr("calloc: %s\n", strerror(errno));
+                goto exit;
+            }
+        }
+
+        if (proc != lastproc) {
+            if (procs == NULL) {
+                procs = proc;
+            }
+            if (lastproc != NULL) {
+                lastproc->next = proc;
+            }
+            proc->prev = lastproc;
+            lastproc = proc;
+        }
+
         if (startswith(line, "file:")) {
             proc->files = readTraceFileRecord(line, proc->files);
         } else if (startswith(line, "socket:")) {
@@ -258,14 +298,13 @@ static ProcInfo *processTraceFile(const char *fullpath) {
             sscanf(line, "Pid:%d\n", &(proc->pid));
         } else if (startswith(line, "PPid")) {
             sscanf(line,"PPid:%d\n", &(proc->ppid));
-        } else if (startswith(line, "Tgid")) {
-            sscanf(line,"Tgid:%d\n", &(proc->tgid));
         } else if (startswith(line,"VmPeak")) {
             sscanf(line,"VmPeak:%d kB\n", &(proc->vmpeak));
         } else if (startswith(line,"VmHWM")) {
             sscanf(line,"VmHWM:%d kB\n", &(proc->rsspeak));
-        } else if (startswith(line, "Threads")) {
-            sscanf(line,"Threads:%d\n", &(proc->threads));
+        } else if (startswith(line, "threads")) {
+            sscanf(line,"threads: %d %d %d\n", &(proc->fin_threads),
+                    &(proc->max_threads), &(proc->tot_threads));
         } else if (startswith(line, "utime:")) {
             sscanf(line,"utime:%lf\n", &(proc->utime));
         } else if (startswith(line, "stime:")) {
@@ -287,20 +326,58 @@ static ProcInfo *processTraceFile(const char *fullpath) {
         } else if (startswith(line,"cancelled_write_bytes")) {
             sscanf(line,"cancelled_write_bytes: %"SCNu64"\n",&(proc->cancelled_write_bytes));
         } else if (startswith(line, "start:")) {
-            sscanf(line,"start:%lf\n", &(proc->start));
+            /* Only set the start time if it is not already set.
+             * This handles cases where fork() is called. */
+            if (proc->start == 0) {
+                sscanf(line, "start:%lf\n", &(proc->start));
+            }
         } else if (startswith(line, "stop:")) {
             sscanf(line,"stop:%lf\n", &(proc->stop));
+            if (proc->fork == 0) {
+                /* Reset the pointer so that it creates a new object */
+                proc = NULL;
+            } else {
+                /* We skipped one exec, reset fork so we don't skip another */
+                proc->fork = 0;
+            }
+        } else if (startswith(line, "PAPI_TOT_INS:")) {
+            sscanf(line,"PAPI_TOT_INS:%lld\n", &llval);
+            proc->PAPI_TOT_INS += llval;
+        } else if (startswith(line, "PAPI_LD_INS:")) {
+            sscanf(line,"PAPI_LD_INS:%lld\n", &llval);
+            proc->PAPI_LD_INS += llval;
+        } else if (startswith(line, "PAPI_SR_INS:")) {
+            sscanf(line,"PAPI_SR_INS:%lld\n", &llval);
+            proc->PAPI_SR_INS += llval;
+        } else if (startswith(line, "PAPI_FP_INS:")) {
+            sscanf(line,"PAPI_FP_INS:%lld\n", &llval);
+            proc->PAPI_FP_INS += llval;
+        } else if (startswith(line, "PAPI_FP_OPS:")) {
+            sscanf(line,"PAPI_FP_OPS:%lld\n", &llval);
+            proc->PAPI_FP_OPS += llval;
+        } else if (startswith(line, "cmd:")) {
+            proc->cmd = strdup(line+4);
+            proc->cmd[strlen(proc->cmd)-1] = '\0';
+        } else if (startswith(line, "fork")) {
+            proc->fork = 1;
         } else {
             printerr("Unrecognized libinterpose record: %s", line);
         }
     }
 
+exit:
     fclose(trace);
 
     /* Remove the file */
     unlink(fullpath);
 
-    return proc;
+    /* Empty file? */
+    if (lines == 0) {
+        printerr("Empty trace file: %s\n", fullpath);
+        return NULL;
+    }
+
+    return procs;
 }
 
 /* Go through all the files in tempdir and read all of the traces that begin with trace_file_prefix */
@@ -331,6 +408,10 @@ static ProcInfo *processTraceFiles(const char *tempdir, const char *trace_file_p
                 lastproc->next = p;
             }
             lastproc = p;
+            /* If processTraceFile retuns a list of several procs */
+            while (lastproc->next != NULL) {
+                lastproc = lastproc->next;
+            }
         }
     }
 
@@ -489,7 +570,7 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
 
     /* Prefix for trace files generated by this job */
     char trace_file_prefix[128];
-    snprintf(trace_file_prefix, 128, "gs.trace.%d", getpid());
+    snprintf(trace_file_prefix, 128, "ks.trace.%d", getpid());
 
     /* Temp dir where trace files are stored for this job */
     const char *tempdir = getTempDir();

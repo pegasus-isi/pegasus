@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "comm.h"
+#include "tools.h"
 
 using std::string;
 using std::map;
@@ -82,14 +83,16 @@ public:
 
     string host_name;
     unsigned int host_memory;
-    unsigned int host_cpus;
+    cpu_t host_threads;
+    cpu_t host_cores;
+    cpu_t host_sockets;
 
     bool strict_limits;
 
     bool per_task_stdio;
 
     Worker(Communicator *comm, const string &dagfile, const string &host_script, 
-            unsigned host_memory = 0, unsigned host_cpus = 0, 
+            unsigned host_memory = 0, cpu_t host_cpus = 0, 
             bool strict_limits = false, bool per_task_stdio=false);
     ~Worker();
     int run();
@@ -104,7 +107,8 @@ public:
     string id;
     list<string> args;
     unsigned memory;
-    unsigned cpus;
+    cpu_t cpus;
+    vector<cpu_t> bindings;
 
     vector<Forward *> forwards;
     vector<PipeForward *> pipes;
@@ -120,7 +124,7 @@ public:
     int task_stdout;
     int task_stderr;
 
-    TaskHandler(Worker *worker, string &name, list<string> &args, string &id, unsigned memory, unsigned cpus, const map<string,string> &pipe_forwards, const map<string,string> &file_forwards);
+    TaskHandler(Worker *worker, string &name, list<string> &args, string &id, unsigned memory, unsigned cpus, const vector<cpu_t> &bindings, const map<string,string> &pipe_forwards, const map<string,string> &file_forwards);
     ~TaskHandler();
     double elapsed();
     void execute();

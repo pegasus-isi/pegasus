@@ -27,9 +27,13 @@ import edu.isi.pegasus.planner.classes.Profile;
 
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import static edu.isi.pegasus.planner.namespace.Globus.mAggregatorTable;
 import edu.isi.pegasus.planner.namespace.aggregator.Aggregator;
+import edu.isi.pegasus.planner.namespace.aggregator.MAX;
 import edu.isi.pegasus.planner.namespace.aggregator.UniqueMerge;
 import edu.isi.pegasus.planner.namespace.aggregator.Sum;
+import edu.isi.pegasus.planner.namespace.aggregator.Update;
+import java.util.HashMap;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -72,13 +76,7 @@ public class Pegasus extends Namespace {
      */
     public static final String COLLAPSE_KEY = "clusters.size";
     
-    /**
-     * The name of the key that if set in the Pegasus namespace specifies the
-     * approximate runtime of the job. This key is used in while clustering jobs
-     * according to run times.
-     */
-    public static final String JOB_RUN_TIME = "job.runtime";
-
+    
     /**
      * The name of the key that if set in the Pegasus namespace specifies the
      * maximum amount of time for which a cluster should run. This key is used
@@ -162,14 +160,6 @@ public class Pegasus extends Namespace {
      * then the working directory to it before launching an executable.
      */
     public static final String CREATE_AND_CHANGE_DIR_KEY = "create.dir";
-
-
-    /**
-     * The number of cores that are associated with the job. To be used for
-     * multiplying the job runtimes accordingly. This does not set the corresponding
-     * globus profiles automatically. Is only used for stampede purposes.
-     */
-    public static final String CORES_KEY = "cores";
 
     /**
      * The deprecated bundle stagein key.
@@ -292,14 +282,6 @@ public class Pegasus extends Namespace {
      */
     public static final String TRANSFER_SLS_THREADS_KEY = "transfer.lite.threads";
 
-
-    /**
-     * The name of the profile key when associated with a transformation in the
-     * transformation catalog gives expected runtime in seconds.
-     */
-    public static final String RUNTIME_KEY = "runtime";
-
-
     /**
      * The directory in which job needs to execute on worker node tmp.
      */
@@ -419,6 +401,46 @@ public class Pegasus extends Namespace {
      */
     public static final String  MAX_WALLTIME = "maxwalltime";
     
+    //PM-962 resource requirements
+    /**
+     * The name of the profile key when associated with a transformation in the
+     * transformation catalog gives expected runtime in seconds.
+     */
+    public static final String RUNTIME_KEY = "runtime";
+    
+    /**
+     * The name of the key that if set in the Pegasus namespace specifies the
+     * approximate runtime of the job. This key is used in while clustering jobs
+     * according to run times.
+     */
+    public static final String DEPRECATED_RUNTIME_KEY = "job.runtime";
+    
+    /**
+     * The number of cores that are associated with the job. To be used for
+     * multiplying the job runtimes accordingly. 
+     */
+    public static final String CORES_KEY = "cores";
+    
+    /**
+     * Key indicating max diskspace used by a job a in MB
+     */
+    public static final String DISKSPACE_KEY = "diskspace";
+    
+    /**
+     * Key indicating the number of nodes a job requires
+     */
+    public static final String NODES_KEY = "nodes";
+    
+    /**
+     * Key indicating the number of processors per node to be used
+     */  
+    public static final String PPN_KEY = "ppn";
+    
+    /**
+     * Key indicating max memory used by a job a in MB
+     */
+    public static final String MEMORY_KEY = "memory";
+    
     /**
      * Key indicating data configuration property. 
      */
@@ -438,11 +460,7 @@ public class Pegasus extends Namespace {
     private static final String BOTOCONFIG = BotoConfig.BOTO_CONFIG_FILE_VARIABLE.toLowerCase();
     private static final String GOOGLEP12 = GoogleP12.GOOGLEP12_FILE_VARIABLE.toLowerCase();
     
-    /**
-     * Static Handle to the sum aggregator.
-     */
-    private static Aggregator SUM_AGGREGATOR = new Sum();
-    
+   
     /**
      * Static Handle to the delimiter aggregator.
      */
@@ -467,6 +485,33 @@ public class Pegasus extends Namespace {
      * The table containing the mapping of the deprecated keys to the newer keys.
      */
     protected static Map mDeprecatedTable = null;
+    private static Map<String,Aggregator> mAggregatorTable;
+
+     /**
+     * The default aggregator to be used for profile aggregation, if none specified
+     * in the aggregator table;
+     */
+    public static Aggregator mDefaultAggregator = new Update();
+  
+
+    /**
+     * Initializer block that populates the Aggregator table just once.
+     */
+    static{
+        mAggregatorTable = new HashMap( 5 );
+        Aggregator max = new MAX();
+        Aggregator sum = new Sum();
+        
+        mAggregatorTable.put( Pegasus.EXITCODE_FAILURE_MESSAGE , ERROR_MESSAGE_AGGREGATOR );
+        mAggregatorTable.put( Pegasus.EXITCODE_SUCCESS_MESSAGE , SUCCESS_MESSAGE_AGGREGATOR );
+       
+        //all the times need to be added
+        mAggregatorTable.put( Pegasus.RUNTIME_KEY , sum );
+        mAggregatorTable.put( Pegasus.MAX_WALLTIME , sum );
+        
+        //for the memory rsl params we take max
+        mAggregatorTable.put( Pegasus.MEMORY_KEY, max );
+    }
 
 
     
@@ -587,7 +632,9 @@ public class Pegasus extends Namespace {
                 break;
             
             case 'd':
-                if (key.compareTo( DATA_CONFIGURATION_KEY ) == 0) {
+                if  ( (key.compareTo( DATA_CONFIGURATION_KEY ) == 0) ||
+                      ( key.compareTo( DISKSPACE_KEY) == 0 )
+                        ){
                     res = VALID_KEY;
                 }
                 else {
@@ -622,6 +669,7 @@ public class Pegasus extends Namespace {
                 }
                 break;
 
+            
             case 'i':
                 if (key.compareTo( IRODSENVFILE ) == 0) {
                     res = VALID_KEY;
@@ -632,8 +680,8 @@ public class Pegasus extends Namespace {
                 break;
                 
             case 'j':
-                if (key.compareTo( JOB_RUN_TIME ) == 0) {
-                    res = VALID_KEY;
+                if (key.compareTo(DEPRECATED_RUNTIME_KEY ) == 0) {
+                    res = DEPRECATED_KEY;
                 }
                 else if ( key.compareTo( JOB_AGGREGATOR_KEY ) == 0 ){
                     res = VALID_KEY;
@@ -653,10 +701,20 @@ public class Pegasus extends Namespace {
                 break;
                 
             case 'm':
-                if( key.compareTo( MAX_WALLTIME ) == 0 ){
+                if( key.compareTo( MAX_WALLTIME ) == 0 ||
+                     key.compareTo( MEMORY_KEY ) == 0 ){
                     res = VALID_KEY;
                 }
                 else{
+                    res = UNKNOWN_KEY;
+                }
+                break;
+                
+            case 'n':
+                if (key.compareTo(NODES_KEY ) == 0) {
+                    res = VALID_KEY;
+                }
+                else {
                     res = UNKNOWN_KEY;
                 }
                 break;
@@ -818,26 +876,26 @@ public class Pegasus extends Namespace {
             //construct directly. bypassing the checks!
             key = (String)it.next();
             
-            if( key.equals( Pegasus.RUNTIME_KEY ) ){
-                this.construct( key, 
-                                SUM_AGGREGATOR.compute((String)get( key ), (String)profiles.get( key ), "0" )
-                               );
-            }
-            else if( key.equals( Pegasus.EXITCODE_FAILURE_MESSAGE) ){
-                this.construct( key, 
-                                ERROR_MESSAGE_AGGREGATOR.compute((String)get( key ), (String)profiles.get( key ), null )
-                               );
-
-            }
-            else if(  key.equals( Pegasus.EXITCODE_SUCCESS_MESSAGE) ){
-                this.construct( key, 
-                                SUCCESS_MESSAGE_AGGREGATOR.compute((String)get( key ), (String)profiles.get( key ), null )
-                               );
-            }
-            else{
-                this.construct( key, (String)profiles.get( key ) );
-            }
+            Aggregator agg = this.aggregator( key );
+            //load the appropriate aggregator to merge the profiles
+            this.construct( key,
+                            agg.compute( (String)get( key ), (String)profiles.get( key ), "0" ) );
+       
         }
+    }
+    
+    
+    /**
+     * Returns the aggregator to be used for the profile key while merging.
+     * If no aggregator is found, the then default Aggregator (Update) is used.
+     *
+     * @param key  the key for which the aggregator is found.
+     *
+     * @return the aggregator for the profile key.
+     */
+    protected Aggregator aggregator( String key ){
+        Object aggregator = this.mAggregatorTable.get( key );
+        return ( aggregator == null )? mDefaultAggregator : (Aggregator)aggregator;
     }
 
 
@@ -855,6 +913,7 @@ public class Pegasus extends Namespace {
                                  BUNDLE_STAGE_IN_KEY);
             mDeprecatedTable.put(DEPRECATED_CHANGE_DIR_KEY,
                                  CHANGE_DIR_KEY);
+            mDeprecatedTable.put( DEPRECATED_RUNTIME_KEY, RUNTIME_KEY );
         }
 
         return mDeprecatedTable;

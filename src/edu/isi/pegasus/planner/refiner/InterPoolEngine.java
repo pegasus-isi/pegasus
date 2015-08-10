@@ -34,6 +34,7 @@ import edu.isi.pegasus.planner.common.PegRandom;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.estimate.Estimator;
 import edu.isi.pegasus.planner.estimate.EstimatorFactory;
+import edu.isi.pegasus.planner.namespace.Globus;
 import edu.isi.pegasus.planner.namespace.Hints;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
@@ -793,13 +794,16 @@ public class InterPoolEngine extends Engine implements Refiner {
         
         String runtime = estimates.get("runtime");
         if( runtime != null ){
-            job.vdsNS.checkKeyInNS( Pegasus.MAX_WALLTIME, runtime );
+            //add to both Pegasus and metadata profiles in addition to globus
+            job.vdsNS.checkKeyInNS( Pegasus.RUNTIME_KEY, runtime );
+            job.addMetadata( Pegasus.MAX_WALLTIME, runtime);
         }
         
         String memory = estimates.get( "memory" );
         if( memory != null ){
-            //for the time being set as globus maxwalltime
-            job.globusRSL.checkKeyInNS( "maxmemory", memory );
+            //add to both Pegasus and metadata profiles in addition to globus
+            job.vdsNS.checkKeyInNS( Pegasus.MEMORY_KEY, memory );
+            job.addMetadata(Globus.MAX_MEMORY_KEY, memory);
         }
     }
     

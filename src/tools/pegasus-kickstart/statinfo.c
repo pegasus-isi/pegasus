@@ -357,8 +357,8 @@ size_t printXMLStatInfo(FILE *out, int indent, const char* tag, const char* id,
     }
     fprintf(out, ">\n");
 
-    /* NEW: ignore "file not found" error for "gridstart" */
-    if (id != NULL && info->error == 2 && strcmp(id, "gridstart") == 0) {
+    /* NEW: ignore "file not found" error for "kickstart" */
+    if (id != NULL && info->error == 2 && strcmp(id, "kickstart") == 0) {
         fprintf(out, "%*s<!-- ignore above error -->\n", indent+2, "");
     }
 

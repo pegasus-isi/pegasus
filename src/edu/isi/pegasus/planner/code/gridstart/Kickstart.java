@@ -44,6 +44,7 @@ import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
 import edu.isi.pegasus.planner.cluster.JobAggregator;
+import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 
 import java.io.File;
@@ -566,64 +567,40 @@ public class Kickstart implements GridStart {
         gridStartArgs.append("-R ").append(job.executionPool).append(' ');
 
 
-//      Added for JIRA PM-543
+        //Added for JIRA PM-543
         String directory = this.getDirectory( job );
-
-
-          
+        boolean setScratchEnvVariable = false;
+        
         //handle the -W option that asks kickstart to create and change
         //exectionSiteDirectory before launching an executable.
         if(job.vdsNS.getBooleanValue(Pegasus.CREATE_AND_CHANGE_DIR_KEY ) ){
-	    
-//            Commented to take account of submitting to condor pool
-//            directly or glide in nodes. However, does not work for
-//            standard universe jobs. Also made change in Kickstart
-//            to pick up only remote_initialdir Karan Nov 15,2005
-
-
-//           Removed for JIRA PM-543
-//                String directory = null;
-//                String key = getDirectoryKey( job );
-//                //we remove the key JIRA PM-80
-//                directory = (String)job.condorVariables.removeKey( key );
-
-            //pass the exectionSiteDirectory as an argument to kickstart
+	    //pass the exectionSiteDirectory as an argument to kickstart
             gridStartArgs.append(" -W ").append(directory).append(' ');
-            
+            setScratchEnvVariable = true;
         }
         else  if(job.vdsNS.getBooleanValue(Pegasus.CHANGE_DIR_KEY)  ){
             //handle the -w option that asks kickstart to change
             //exectionSiteDirectory before launching an executable.
-
-
-//           Removed for JIRA PM-543
-//                String directory = null;
-//                String key = getDirectoryKey( job );\
-//                //we remove the key JIRA PM-80
-//                directory = (String)job.condorVariables.removeKey( key );
-
-                //pass the exectionSiteDirectory as an argument to kickstart
-                gridStartArgs.append(" -w ").append( directory ).append(' ');
+            gridStartArgs.append(" -w ").append( directory ).append(' ');
+            setScratchEnvVariable = true;
         }
         else{
             //set the directory key with the job
+            //for kickstart -w and -W it is not set
             if( requiresToSetDirectory( job ) ){
                 job.setDirectory( directory );
             }
         }
 
+        //PM-961 set the Pegasus scratch dir only for -w and -W cases
+        //for rest we associate them in the styles
+        if( setScratchEnvVariable ){
+            job.envVariables.construct( ENV.PEGASUS_SCRATCH_DIR_KEY, directory );
+        }
 
-            if(   job.vdsNS.getBooleanValue(Pegasus.TRANSFER_PROXY_KEY) ){
-
-//           Removed for JIRA PM-543
-//
-//                String key = getDirectoryKey( job );
-//                //just remove the remote_initialdir key
-//                //the constituentJob needs to be run in the exectionSiteDirectory
-//                //Condor or GRAM decides to run
-//                job.condorVariables.removeKey( key );
-                job.setDirectory( null );
-            }
+        if(   job.vdsNS.getBooleanValue(Pegasus.TRANSFER_PROXY_KEY) ){
+            job.setDirectory( null );
+        }
 
         //check if the constituentJob type indicates staging of executable
         //The -X functionality is handled by the setup jobs that
@@ -1345,24 +1322,31 @@ public class Kickstart implements GridStart {
         //the TERM signal to job 
         sb.append( "-k " ).append( checkpointTime ).append( " " );
 
-        int max = Integer.MAX_VALUE;
+        long max = Long.MAX_VALUE;
+        long multiplier = 60;
         if( job.vdsNS.containsKey( Pegasus.MAX_WALLTIME) ){
             max = job.vdsNS.getIntValue( Pegasus.MAX_WALLTIME, Integer.MAX_VALUE  );
         }
-        else if ( job.globusRSL.containsKey( Globus.MAX_WALLTIME) ){
-            max = job.globusRSL.getIntValue( Globus.MAX_WALLTIME, Integer.MAX_VALUE  );
+        else if ( job.globusRSL.containsKey(Globus.MAX_WALLTIME_KEY) ){
+            max = job.globusRSL.getIntValue(Globus.MAX_WALLTIME_KEY, Integer.MAX_VALUE  );
         }
+        else if ( job.vdsNS.containsKey( Pegasus.RUNTIME_KEY) ){
+            //PM-962 last fallback to pegasus profile runtime which is in seconds
+            max = job.vdsNS.getIntValue( Pegasus.RUNTIME_KEY, Integer.MAX_VALUE  );
+            multiplier = 1;
+        }
+        
 
-        if( max == Integer.MAX_VALUE ){
+        if( max == Long.MAX_VALUE ){
             //means user never specified a maxwalltime
             //or a malformed value
             //we don't determnine the -K parameter
             return sb.toString();
         }
 
-        //maxwalltime is specified in minutes.
-        //convert to seconds for kickstart
-        max = max * 60;
+        //maxwalltime is specified in minutes, while pegasus runtime
+        //is in seconds. convert to seconds for kickstart
+        max = max * multiplier;
 
         //we set the -K parameter to half the difference between
         //maxwalltime - checkpointTime

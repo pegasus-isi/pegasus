@@ -219,7 +219,8 @@ class JobResource(BaseResource):
             'clustered',
             'task_count',
             'executable',
-            'argv'
+            'argv',
+            'task_count'
         ]
 
 
@@ -291,7 +292,8 @@ class JobInstanceResource(BaseResource):
             'stdin_file',
             'stdout_file',
             'stderr_file',
-            'multiplier_factor'
+            'multiplier_factor',
+            'exitcode'
         ]
 
 

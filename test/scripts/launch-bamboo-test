@@ -46,7 +46,7 @@ if [ $STATUS != 0 ]; then
 fi
 
 # check for bad planner outputs
-if grep 'ERROR' $PLANFILE >/dev/null 2>&1; then
+if  grep -v 'I am: hostname:' $PLANFILE | grep 'ERROR'  >/dev/null 2>&1; then
     echo "The planner logged a line with the string 'ERROR'"
     exit 1
 fi
@@ -77,6 +77,12 @@ STATUS=$?
 pegasus-analyzer $RUN_DIR
 STATUS=$(($STATUS + $?))
 
+# PM-956 also run pegasus-analyzer on any sub workflows
+for subdir in `find $RUN_DIR -type d -name "*.*"`; do
+    pegasus-analyzer --top-dir $RUN_DIR $subdir
+    STATUS=$(($STATUS + $?))
+done
+
 if [ $STATUS = 0 ]; then
    # Run Pegasus Statistics
    pegasus-statistics -s all $RUN_DIR
@@ -97,7 +103,7 @@ if [ $LOG_COUNT -lt 1 -o $LOG_COUNT -gt 1 ]; then
     STATUS=$(($STATUS + 1))
 fi
 
-if cat monitord.log | grep ERR >/dev/null 2>&1; then
+if cat monitord.log | grep -E '(ERR)|(CRITICAL)' >/dev/null 2>&1; then
     echo "monitord log contains errors:"
     echo
     cat monitord.log

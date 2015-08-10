@@ -26,6 +26,7 @@ import edu.isi.pegasus.planner.classes.TransferJob;
 
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.namespace.Condor;
+import edu.isi.pegasus.planner.namespace.ENV;
 
 /**
  * Enables a job to be submitted to nodes that are logically part of the local pool,
@@ -101,6 +102,8 @@ public class CondorGlideIN extends Abstract {
                 //this is removed later when kickstart is enabling.
                 if( workdir != null ){
                     job.condorVariables.construct( "remote_initialdir", workdir );
+                    //PM-961 also associate the value as an environment variable
+                    job.envVariables.construct( ENV.PEGASUS_SCRATCH_DIR_KEY, workdir);
                 }
             }
             //we want the stdout and stderr to be transferred back

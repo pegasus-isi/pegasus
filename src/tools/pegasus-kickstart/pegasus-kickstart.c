@@ -311,6 +311,32 @@ static char* noquote(char* s) {
     return s;
 }
 
+/* If KICKSTART_PREPEND_PATH is in the environment, then add it to PATH */
+void set_path() {
+    char *prepend_path = getenv("KICKSTART_PREPEND_PATH");
+    if (prepend_path == NULL || strlen(prepend_path) == 0) {
+        return;
+    }
+
+    char *orig_path = getenv("PATH");
+    if (orig_path == NULL || strlen(orig_path) == 0) {
+        if (setenv("PATH", prepend_path, 1) < 0) {
+            printerr("Error setting PATH to KICKSTART_PREPEND_PATH: %s\n", strerror(errno));
+            exit(1);
+        }
+    } else {
+        char new_path[PATH_MAX];
+        if (snprintf(new_path, PATH_MAX, "%s:%s", prepend_path, orig_path) >= PATH_MAX) {
+            printerr("New path from KICKSTART_PREPEND_PATH is larger than PATH_MAX\n");
+            exit(1);
+        }
+        if (setenv("PATH", new_path, 1) < 0) {
+            printerr("Error setting PATH with KICKSTART_PREPEND_PATH: %s\n", strerror(errno));
+            exit(1);
+        }
+    }
+}
+
 int main(int argc, char* argv[]) {
     size_t cwd_size = getpagesize();
     int status, result = 0;
@@ -329,6 +355,9 @@ int main(int argc, char* argv[]) {
 
     /* Set the default status to 1 */
     appinfo.status = 1;
+
+    /* Set the PATH variable before we copy env into appinfo */
+    set_path();
 
     /* remember environment that all jobs will see */
     envIntoAppInfo(&appinfo, environ);
@@ -650,7 +679,7 @@ int main(int argc, char* argv[]) {
     }
 
     /* initialize app info and register CLI parameters with it */
-    initJobInfo(&appinfo.application, argc-i, argv+i);
+    initJobInfo(&appinfo.application, argc-i, argv+i, getenv("KICKSTART_WRAPPER"));
 
     /* is there really something to run? */
     if (appinfo.application.isValid != 1) {
@@ -726,13 +755,17 @@ REDIR:
     }
 
     /* Our own initially: an independent setup job */
-    if (prepareSideJob(&appinfo.setup, getenv("GRIDSTART_SETUP"))) {
+    char *SETUP = getenv("KICKSTART_SETUP");
+    if (SETUP == NULL) { SETUP = getenv("GRIDSTART_SETUP"); }
+    if (prepareSideJob(&appinfo.setup, SETUP)) {
         mysystem(&appinfo, &appinfo.setup, environ);
     }
 
     /* possible pre job (skipped if timeout happens) */
     if (result == 0 && alarmed == 0) {
-        if (prepareSideJob(&appinfo.prejob, getenv("GRIDSTART_PREJOB"))) {
+        char *PREJOB = getenv("KICKSTART_PREJOB");
+        if (PREJOB == NULL) { PREJOB = getenv("GRIDSTART_PREJOB"); }
+        if (prepareSideJob(&appinfo.prejob, PREJOB)) {
             /* there is a prejob to be executed */
             status = mysystem(&appinfo, &appinfo.prejob, environ);
             result = obtainStatusCode(status);
@@ -750,7 +783,9 @@ REDIR:
 
     /* possible post job (skipped if the timeout happens) */
     if (result == 0 && alarmed == 0) {
-        if (prepareSideJob(&appinfo.postjob, getenv("GRIDSTART_POSTJOB"))) {
+        char *POSTJOB = getenv("KICKSTART_POSTJOB");
+        if (POSTJOB == NULL) { POSTJOB = getenv("GRIDSTART_POSTJOB"); }
+        if (prepareSideJob(&appinfo.postjob, POSTJOB)) {
             status = mysystem(&appinfo, &appinfo.postjob, environ);
             result = obtainStatusCode(status);
         }
@@ -760,7 +795,9 @@ REDIR:
     alarm(0);
 
     /* An independent clean-up job that runs regardless of main application result or timeout */
-    if (prepareSideJob(&appinfo.cleanup, getenv("GRIDSTART_CLEANUP"))) {
+    char *CLEANUP = getenv("KICKSTART_CLEANUP");
+    if (CLEANUP == NULL) { CLEANUP = getenv("GRIDSTART_CLEANUP"); }
+    if (prepareSideJob(&appinfo.cleanup, CLEANUP)) {
         mysystem(&appinfo, &appinfo.cleanup, environ);
     }
 

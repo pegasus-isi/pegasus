@@ -436,9 +436,8 @@ public class InPlace implements CleanupStrategy{
                 //that have cleanup flag set to false
                 for( Iterator<PegasusFile> it = fileSet.iterator(); it.hasNext(); ){
                     PegasusFile pf = it.next();
-                    if( !pf.canBeCleanedup() ||
-                         pf.getTransientTransferFlag() //transfer attribute is set to false in DAX for input file
-                            ){
+                    if( !pf.canBeCleanedup() ){
+                        //PM-969 we only consider the cleanup attribute and not the transfer flag itself
                         it.remove();
                         mLogger.log( "File " + pf.getLFN() + " will not be cleaned up for job " + curGN_SI.getID() ,
                                      LogManager.DEBUG_MESSAGE_LEVEL );

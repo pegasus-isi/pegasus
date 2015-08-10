@@ -17,17 +17,19 @@
 package edu.isi.pegasus.planner.code.generator.condor.style;
 
 import edu.isi.pegasus.common.credential.CredentialHandler;
-import edu.isi.pegasus.planner.code.generator.condor.CondorStyle;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 
-import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
-import edu.isi.pegasus.planner.catalog.site.classes.GridGateway.JOB_TYPE;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.namespace.Condor;
+import edu.isi.pegasus.planner.namespace.Globus;
+import edu.isi.pegasus.planner.namespace.Pegasus;
+import edu.isi.pegasus.planner.namespace.ENV;
+
+import java.util.Map;
 
 /**
  * This implementation enables a job to be submitted via CondorG to remote
@@ -39,7 +41,8 @@ import edu.isi.pegasus.planner.namespace.Condor;
  */
 
 public class CondorG extends Abstract {
-
+    
+    
     /**
      * The default Constructor.
      */
@@ -112,16 +115,64 @@ public class CondorG extends Abstract {
             //Is invalid state
             throw new CondorStyleException( errorMessage( job, STYLE_NAME, universe ) );
         }
-        //remote_initialdir might be needed to removed
-        //later if running for a LCG site
-        //bwSubmit.println("remote_initialdir = " + workdir);
+        
         job.condorVariables.construct( "remote_initialdir", workdir );
+        if( workdir != null ){
+            //PM-961 also associate the value as an environment variable
+            job.envVariables.construct( ENV.PEGASUS_SCRATCH_DIR_KEY, workdir);
+        }
 
         //associate the proxy to be used
         //we always say a proxy is required for CondorG submission
         //PM-731
         job.setSubmissionCredential( CredentialHandler.TYPE.x509 );
         applyCredentialsForRemoteExec(job);
+        
+        //PM-962 handle resource requirements expressed as pegasus profiles
+        //and populate them as globus profiles if required 
+        handleResourceRequirements( job );
+    }
+
+    /**
+     * Looks into the job to check if any of the  Resource requirements 
+     * are expressed as pegasus profiles, and converts them to globus
+     * profiles if corresponding globus profile is not present.
+     * 
+     * @param job 
+     */
+    public void handleResourceRequirements(Job job) {
+        
+        Pegasus profiles = job.vdsNS;
+        Globus  rsl = job.globusRSL;
+        
+        //sanity check
+        if( profiles == null || profiles.isEmpty() ){
+            return;
+        }
+        
+        //handle runtime key as a special case
+        if( profiles.containsKey( Pegasus.RUNTIME_KEY ) ){
+            long runtime = Long.parseLong( profiles.getStringValue( Pegasus.RUNTIME_KEY ));
+            if( !rsl.containsKey(Globus.MAX_WALLTIME_KEY) ){
+                //take the ceiling value
+                long runtimeM= (long) Math.ceil( runtime/60.0 );
+                rsl.construct(Globus.MAX_WALLTIME_KEY, Long.toString(runtimeM) );
+            }
+        }
+        
+        //we only take value of Pegasus profile if corresponding
+        //globus profile is not set
+        for( Map.Entry<String,String> entry : Globus.rslToPegasusProfiles().entrySet()){
+            String rslKey = entry.getKey();
+            String pegasusKey = entry.getValue();
+            
+            if( !rsl.containsKey(rslKey) && profiles.containsKey( pegasusKey ) ){
+                //one to one mapping
+                rsl.construct( rslKey, 
+                               profiles.getStringValue(pegasusKey));
+            }
+        }
+        
     }
 
 }

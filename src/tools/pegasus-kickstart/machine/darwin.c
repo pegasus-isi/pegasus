@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
+#include <inttypes.h>
 
 #include <sys/sysctl.h>
 
@@ -213,34 +214,28 @@ int printDarwinInfo(FILE *out, int indent, const MachineDarwinInfo *ptr) {
         "other"
     };
 
-    char b[3][32];
-
     /* <ram .../> tag */
-    fprintf(out, "%*s<ram total=\"%s\" avail=\"%s\"", indent, "",
-            sizer(b[0], 32, sizeof(ptr->ram_total), &(ptr->ram_total)),
-            sizer(b[1], 32, sizeof(ptr->ram_avail), &(ptr->ram_avail)));
-    fprintf(out, " active=\"%s\" inactive=\"%s\" wired=\"%s\"/>\n",
-            sizer(b[0], 32, sizeof(ptr->ram_active), &(ptr->ram_active)),
-            sizer(b[1], 32, sizeof(ptr->ram_inactive), &(ptr->ram_inactive)),
-            sizer(b[2], 32, sizeof(ptr->ram_wired), &(ptr->ram_wired)));
+    fprintf(out, "%*s<ram total=\"%"PRIu64"\" avail=\"%"PRIu64"\" active=\"%"PRIu64"\" inactive=\"%"PRIu64"\" wired=\"%"PRIu64"\"/>\n",
+            indent, "",
+            ptr->ram_total / 1024,
+            ptr->ram_avail / 1024,
+            ptr->ram_active / 1024,
+            ptr->ram_inactive / 1024,
+            ptr->ram_wired / 1024);
 
     /* <swap .../> tag */
-    fprintf(out, "%*s<swap total=\"%s\" avail=\"%s\" used=\"%s\"/>\n",
-            indent, "",
-            sizer(b[0], 32, sizeof(ptr->swap_total), &(ptr->swap_total)),
-            sizer(b[1], 32, sizeof(ptr->swap_avail), &(ptr->swap_avail)),
-            sizer(b[2], 32, sizeof(ptr->swap_used), &(ptr->swap_used)));
+    fprintf(out, "%*s<swap total=\"%"PRIu64"\" avail=\"%"PRIu64"\" used=\"%"PRIu64"\"/>\n", indent, "",
+            ptr->swap_total / 1024,
+            ptr->swap_avail / 1024,
+            ptr->swap_used / 1024);
 
     /* <boot> element */
     fprintf(out, "%*s<boot>%s</boot>\n", indent, "",
             fmtisodate(ptr->boottime.tv_sec, ptr->boottime.tv_usec));
 
     /* <cpu> element */
-    fprintf(out, "%*s<cpu count=\"%s\" speed=\"%s\" vendor=\"%s\">%s</cpu>\n",
-            indent, "",
-            sizer(b[0], 32, sizeof(ptr->cpu_count), &(ptr->cpu_count)),
-            sizer(b[1], 32, sizeof(ptr->megahertz), &(ptr->megahertz)),
-            ptr->vendor_id, ptr->model_name);
+    fprintf(out, "%*s<cpu count=\"%hu\" speed=\"%lu\" vendor=\"%s\">%s</cpu>\n",
+            indent, "", ptr->cpu_count, ptr->megahertz, ptr->vendor_id, ptr->model_name);
 
     /* loadavg data */
     fprintf(out, "%*s<load min1=\"%.2f\" min5=\"%.2f\" min15=\"%.2f\"/>\n",

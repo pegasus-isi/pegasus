@@ -32,6 +32,8 @@ import org.junit.runners.Suite.SuiteClasses;
     edu.isi.pegasus.planner.cluster.RuntimeClusteringTest.class,
     edu.isi.pegasus.planner.code.generator.condor.CondorEnvironmentEscapeTest.class,
     edu.isi.pegasus.planner.code.generator.condor.style.GliteTest.class,
+    edu.isi.pegasus.planner.code.generator.condor.style.CondorTest.class,
+    edu.isi.pegasus.planner.code.generator.condor.style.CondorGTest.class,
     edu.isi.pegasus.planner.transfer.mapper.FlatOutputMapperTest.class,
     edu.isi.pegasus.planner.transfer.mapper.HashedOutputMapperTest.class,
     edu.isi.pegasus.planner.transfer.mapper.ReplicaOutputMapperTest.class,

@@ -131,10 +131,8 @@ static int proc_read_meminfo(ProcInfo *item) {
     while (fgets(line, BUFSIZ, f) != NULL) {
         if (startswith(line, "PPid")) {
             sscanf(line,"PPid:%d\n",&(item->ppid));
-        } else if (startswith(line, "Tgid")) {
-            sscanf(line,"Tgid:%d\n",&(item->tgid));
         } else if (startswith(line, "Threads")) {
-            sscanf(line,"Threads:%d\n",&(item->threads));
+            sscanf(line,"Threads:%d\n",&(item->fin_threads));
         } else if (startswith(line,"VmPeak")) {
             sscanf(line,"VmPeak:%d kB\n",&(item->vmpeak));
         } else if (startswith(line,"VmHWM")) {
@@ -504,25 +502,39 @@ static int printXMLSockInfo(FILE *out, int indent, SockInfo *sockets) {
 int printXMLProcInfo(FILE *out, int indent, ProcInfo* procs) {
     ProcInfo *i;
     for (i = procs; i; i = i->next) {
-        /* Skip non-main threads in multithreaded programs */
-        // XXX How does this affect FileInfo?
-        if (i->tgid != i->pid) continue;
+        /* This means that the trace file was probably incomplete */
+        if (i->pid == 0) {
+            printerr("Bad <proc> record: trace file may be incomplete");
+        }
 
         fprintf(out, "%*s<proc ppid=\"%d\" pid=\"%d\" exe=\"%s\" "
-                "start=\"%lf\" stop=\"%lf\" utime=\"%lf\" stime=\"%lf\" "
-                "iowait=\"%lf\" threads=\"%d\" "
+                "start=\"%lf\" stop=\"%lf\" utime=\"%.3lf\" stime=\"%.3lf\" "
+                "iowait=\"%.3lf\" finthreads=\"%d\" maxthreads=\"%d\" totthreads=\"%d\" "
                 "vmpeak=\"%d\" rsspeak=\"%d\" rchar=\"%"PRIu64"\" wchar=\"%"PRIu64"\" "
                 "rbytes=\"%"PRIu64"\" wbytes=\"%"PRIu64"\" cwbytes=\"%"PRIu64"\" "
-                "syscr=\"%"PRIu64"\" syscw=\"%"PRIu64"\"", 
-                indent, "", i->ppid, i->pid, i->exe, 
-                i->start, i->stop, i->utime, i->stime, i->iowait, i->threads,
-                i->vmpeak, i->rsspeak, i->rchar, i->wchar, 
-                i->read_bytes, i->write_bytes, i->cancelled_write_bytes, 
-                i->syscr, i->syscw);
-        if (i->files == NULL && i->sockets == NULL) {
+                "syscr=\"%"PRIu64"\" syscw=\"%"PRIu64"\""
+#ifdef HAS_PAPI
+                " totins=\"%lld\" ldins=\"%lld\" srins=\"%lld\" fpins=\"%lld\" fpops=\"%lld\""
+#endif
+                , indent, "", i->ppid, i->pid, i->exe,
+                i->start, i->stop, i->utime, i->stime, i->iowait,
+                i->fin_threads, i->max_threads, i->tot_threads,
+                i->vmpeak, i->rsspeak, i->rchar, i->wchar,
+                i->read_bytes, i->write_bytes, i->cancelled_write_bytes,
+                i->syscr, i->syscw
+#ifdef HAS_PAPI
+                , i->PAPI_TOT_INS, i->PAPI_LD_INS, i->PAPI_SR_INS, i->PAPI_FP_INS, i->PAPI_FP_OPS
+#endif
+                );
+        if (i->cmd == NULL && i->files == NULL && i->sockets == NULL) {
             fprintf(out, "/>\n");
         } else {
             fprintf(out, ">\n");
+            if (i->cmd != NULL) {
+                fprintf(out, "%*s<cmd>", indent+2, "");
+                xmlquote(out, i->cmd, strlen(i->cmd));
+                fprintf(out, "</cmd>\n");
+            }
             printXMLFileInfo(out, indent+2, i->files);
             printXMLSockInfo(out, indent+2, i->sockets);
             fprintf(out, "%*s</proc>\n", indent, "");
@@ -535,6 +547,9 @@ int printXMLProcInfo(FILE *out, int indent, ProcInfo* procs) {
 void deleteProcInfo(ProcInfo *procs) {
     while (procs != NULL) {
         ProcInfo *p = procs;
+        if (p->cmd != NULL) {
+            free(p->cmd);
+        }
         FileInfo *files = p->files;
         while (files != NULL) {
             FileInfo *f = files;

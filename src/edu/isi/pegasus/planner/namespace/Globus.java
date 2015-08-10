@@ -50,11 +50,53 @@ public class Globus extends Namespace {
      * The name of the namespace that this class implements.
      */
     public static final String NAMESPACE_NAME = Profile.GLOBUS;
+
+    
+    private static Map<String,String> mRSLToPegasus;
+    
+    /**
+     * Maps Globus RSL keys to corresponding Pegasus Profile Keys
+     * 
+     * @return 
+     */
+    public static Map<String,String> rslToPegasusProfiles(){
+        if( mRSLToPegasus == null ){
+            mRSLToPegasus = new HashMap();
+            mRSLToPegasus.put( Globus.MAX_MEMORY_KEY, Pegasus.MEMORY_KEY );
+            mRSLToPegasus.put( Globus.MAX_WALLTIME_KEY, Pegasus.RUNTIME_KEY );
+            mRSLToPegasus.put( Globus.COUNT_KEY, Pegasus.CORES_KEY );
+            mRSLToPegasus.put( Globus.HOST_COUNT_KEY, Pegasus.NODES_KEY );
+            mRSLToPegasus.put( Globus.XCOUNT_KEY, Pegasus.PPN_KEY );
+        }
+        return mRSLToPegasus;
+    }
+
+    
+    /**
+     * Key indicating the number of cores to be used
+     */  
+    public static final String COUNT_KEY = "count";
+    
+    /**
+     * Key indicating the number of processors per node to be used
+     */  
+    public static final String XCOUNT_KEY = "xcount";
+    
+    /**
+     * Key indicating the number of hosts to be used
+     */  
+    public static final String HOST_COUNT_KEY = "hostcount";
+    
     
     /**
      * Key indicating max walltime for a job.
      */
-    public static final String  MAX_WALLTIME = "maxwalltime";
+    public static final String  MAX_WALLTIME_KEY = "maxwalltime";
+    
+    /**
+     * Key indicating the maximum memory used.
+     */
+    public static final String MAX_MEMORY_KEY = "maxmemory";
 
     /**
      * The table that maps the various globus profile keys to their aggregator
@@ -69,6 +111,7 @@ public class Globus extends Namespace {
      * in the aggregator table;
      */
     public static Aggregator mDefaultAggregator = new Update();
+  
 
     /**
      * Initializer block that populates the Aggregator table just once.
@@ -209,7 +252,7 @@ public class Globus extends Namespace {
                 break;
 
             case 'c':
-                if (key.compareTo("count") == 0) {
+                if (key.compareTo( COUNT_KEY ) == 0) {
                     res = VALID_KEY;
                 }
                 else {
@@ -249,7 +292,7 @@ public class Globus extends Namespace {
                 break;
 
             case 'h':
-                if (key.compareTo("hostcount") == 0) {
+                if (key.compareTo( HOST_COUNT_KEY ) == 0) {
                     res = VALID_KEY;
                 }
                 else {
@@ -272,7 +315,7 @@ public class Globus extends Namespace {
                 if (key.compareTo("maxcputime") == 0 ||
                     key.compareTo("maxmemory") == 0 ||
                     key.compareTo("maxtime") == 0 ||
-                    key.compareTo(Globus.MAX_WALLTIME) == 0 ||
+                    key.compareTo(Globus.MAX_WALLTIME_KEY) == 0 ||
                     key.compareTo("minmemory") == 0) {
                     res = VALID_KEY;
                 }
@@ -332,7 +375,7 @@ public class Globus extends Namespace {
                 break;
                 
             case 'x':
-                if (key.compareTo("xcount") == 0) {
+                if (key.compareTo( Globus.XCOUNT_KEY ) == 0) {
                     res = VALID_KEY;
                 }
                 else {

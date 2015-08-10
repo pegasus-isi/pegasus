@@ -24,6 +24,7 @@ import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
@@ -42,6 +43,24 @@ public class Condor extends Namespace{
      * The name of the namespace that this class implements.
      */
     public static final String NAMESPACE_NAME = Profile.CONDOR;
+    
+    private static Map<String,String> mClassAdToPegasus;
+    
+    /**
+     * Maps Globus RSL keys to corresponding Pegasus Profile Keys
+     * 
+     * @return 
+     */
+    public static Map<String,String> classAdKeysToPegasusProfiles(){
+        if( mClassAdToPegasus == null ){
+            mClassAdToPegasus = new HashMap();
+            mClassAdToPegasus.put( Condor.REQUEST_MEMORY_KEY, Pegasus.MEMORY_KEY );
+            mClassAdToPegasus.put( Condor.REQUEST_CPUS_KEY, Pegasus.CORES_KEY);
+            mClassAdToPegasus.put( Condor.REQUEST_DISK_KEY, Pegasus.DISKSPACE_KEY  );
+        }
+        return mClassAdToPegasus;
+    }
+
 
     /**
      * The name of the key that denotes the arguments of the job.

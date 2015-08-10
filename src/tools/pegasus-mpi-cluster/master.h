@@ -18,20 +18,29 @@ using std::list;
 using std::map;
 
 class Host {
-public:
+private:
+    Task **cpus;
+
     string host_name;
     unsigned int memory;
-    unsigned int cpus;
+    cpu_t threads;
+    cpu_t cores;
+    cpu_t sockets;
     unsigned int slots;
-    
-    Host(const string &host_name, unsigned int memory, unsigned int cpus) {
-        this->host_name = host_name;
-        this->memory = memory;
-        this->cpus = cpus;
-        this->slots = 1;
-    }
-    
-    void log_status();
+
+    unsigned int memory_free;
+    unsigned int cpus_free;
+    unsigned int slots_free;
+
+public:
+    Host(const string &host_name, unsigned int memory, cpu_t threads, cpu_t cores, cpu_t sockets);
+    ~Host();
+    const char *name() { return host_name.c_str(); }
+    void add_slot();
+    bool can_run(Task *task);
+    vector<cpu_t> allocate_resources(Task *task);
+    void release_resources(Task *task);
+    void log_resources(FILE *resource_log);
 };
 
 class Slot {
@@ -131,10 +140,6 @@ class Master {
     double start_time;
     double finish_time;
     double wall_time;
-
-    unsigned cpus_avail;
-    unsigned memory_avail;
-    unsigned slots_avail;
     
     FDCache *fdcache;
     
@@ -149,14 +154,11 @@ class Master {
     void process_result(ResultMessage *mesg);
     void process_iodata(IODataMessage *mesg);
     void queue_ready_tasks();
-    void submit_task(Task *t, int worker);
+    void submit_task(Task *t, int worker, const vector<cpu_t> &bindings);
     void merge_all_task_stdio();
     void merge_task_stdio(FILE *dest, const string &src, const string &stream);
     void write_cluster_summary(bool failed);
 
-    void allocate_resources(Host *host, unsigned cpus, unsigned memory);
-    void release_resources(Host *host, unsigned cpus, unsigned memory);
-    void log_resources(unsigned slots, unsigned cpus, unsigned memory, const string &hostname);
     void publish_event(WorkflowEvent event, Task *task);
     bool wall_time_exceeded();
 public:

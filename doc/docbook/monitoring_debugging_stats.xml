@@ -251,21 +251,41 @@ working dir : /lfs1/work/pegasus/run0004
 #       during workflow run. This is the cumulative of retries,
 #       succeeded and failed count.
 # Workflow wall time:
-#   The walltime from the start of the workflow execution to the end as
+#   The wall time from the start of the workflow execution to the end as
 #   reported by the DAGMAN.In case of rescue dag the value is the
 #   cumulative of all retries.
 # Workflow cumulative job wall time:
-#   The sum of the walltime of all jobs as reported by kickstart.
+#   The sum of the wall time of all jobs as reported by kickstart.
 #   In case of job retries the value is the cumulative of all retries.
 #   For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs),
-#   the walltime value includes jobs from the sub workflows as well.
-# Cumulative job walltime as seen from submit side:
-#   The sum of the walltime of all jobs as reported by DAGMan.
-#   This is similar to the regular cumulative job walltime, but includes
+#   the wall time value includes jobs from the sub workflows as well.
+# Cumulative job wall time as seen from submit side:
+#   The sum of the wall time of all jobs as reported by DAGMan.
+#   This is similar to the regular cumulative job wall time, but includes
 #   job management overhead and delays. In case of job retries the value
 #   is the cumulative of all retries. For workflows having sub workflow
-#   jobs (i.e SUBDAG and SUBDAX jobs), the walltime value includes jobs
+#   jobs (i.e SUBDAG and SUBDAX jobs), the wall time value includes jobs
 #   from the sub workflows as well.
+# Cumulative job wall time as seen from submit side:
+#   The sum of the wall time of all jobs as reported by DAGMan.
+#   This is similar to the regular cumulative job wall time, but includes
+#   job management overhead and delays. In case of job retries the value
+#   is the cumulative of all retries. For workflows having sub workflow
+#   jobs (i.e SUBDAG and SUBDAX jobs), the wall time value includes jobs
+#   from the sub workflows as well.
+# Workflow cumulative job badput wall time:
+#   The sum of the wall time of all failed jobs as reported by kickstart.
+#   In case of job retries the value is the cumulative of all retries.
+#   For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs),
+#   the wall time value includes jobs from the sub workflows as well.
+# Cumulative job badput wall time as seen from submit side:
+#   The sum of the wall time of all failed jobs as reported by DAGMan.
+#   This is similar to the regular cumulative job badput wall time, but includes
+#   job management overhead and delays. In case of job retries the value
+#   is the cumulative of all retries. For workflows having sub workflow
+#   jobs (i.e SUBDAG and SUBDAX jobs), the wall time value includes jobs
+#   from the sub workflows as well.
+
 ------------------------------------------------------------------------------
 Type           Succeeded Failed  Incomplete  Total     Retries   Total+Retries
 Tasks          4         0       0           4         0         4
@@ -273,9 +293,11 @@ Jobs           17        0       0           17        0         17
 Sub-Workflows  0         0       0           0         0         0
 ------------------------------------------------------------------------------
 
-Workflow wall time                               : 5 mins, 18 secs
-Workflow cumulative job wall time                : 4 mins, 2 secs
-Cumulative job walltime as seen from submit side : 4 mins, 10 secs
+Workflow wall time                                       : 5 mins, 18 secs
+Workflow cumulative job wall time                        : 4 mins, 2 secs
+Cumulative job wall time as seen from submit side        : 4 mins, 10 secs
+Workflow cumulative job badput wall time                 : 0
+Cumulative job badput wall time as seen from submit side : 0
 
 </programlisting>
 
@@ -324,21 +346,34 @@ Cumulative job walltime as seen from submit side : 4 mins, 10 secs
 #       during workflow run. This is the cumulative of retries,
 #       succeeded and failed count.
 # Workflow wall time:
-#   The walltime from the start of the workflow execution to the end as
+#   The wall time from the start of the workflow execution to the end as
 #   reported by the DAGMAN.In case of rescue dag the value is the
 #   cumulative of all retries.
 # Workflow cumulative job wall time:
-#   The sum of the walltime of all jobs as reported by kickstart.
+#   The sum of the wall time of all jobs as reported by kickstart.
 #   In case of job retries the value is the cumulative of all retries.
 #   For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs),
-#   the walltime value includes jobs from the sub workflows as well.
-# Cumulative job walltime as seen from submit side:
-#   The sum of the walltime of all jobs as reported by DAGMan.
-#   This is similar to the regular cumulative job walltime, but includes
+#   the wall time value includes jobs from the sub workflows as well.
+# Cumulative job wall time as seen from submit side:
+#   The sum of the wall time of all jobs as reported by DAGMan.
+#   This is similar to the regular cumulative job wall time, but includes
 #   job management overhead and delays. In case of job retries the value
 #   is the cumulative of all retries. For workflows having sub workflow
-#   jobs (i.e SUBDAG and SUBDAX jobs), the walltime value includes jobs
+#   jobs (i.e SUBDAG and SUBDAX jobs), the wall time value includes jobs
 #   from the sub workflows as well.
+# Workflow cumulative job badput wall time:
+#   The sum of the wall time of all failed jobs as reported by kickstart.
+#   In case of job retries the value is the cumulative of all retries.
+#   For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs),
+#   the wall time value includes jobs from the sub workflows as well.
+# Cumulative job badput wall time as seen from submit side:
+#   The sum of the wall time of all failed jobs as reported by DAGMan.
+#   This is similar to the regular cumulative job badput wall time, but includes
+#   job management overhead and delays. In case of job retries the value
+#   is the cumulative of all retries. For workflows having sub workflow
+#   jobs (i.e SUBDAG and SUBDAX jobs), the wall time value includes jobs
+#   from the sub workflows as well.
+
 ------------------------------------------------------------------------------
 Type           Succeeded Failed  Incomplete  Total     Retries   Total+Retries
 Tasks          8         0       0           8         0         8
@@ -346,8 +381,10 @@ Jobs           34        0       0           34        0         34
 Sub-Workflows  0         0       0           0         0         0
 ------------------------------------------------------------------------------
 
-Workflow cumulative job wall time                : 8 mins, 5 secs
-Cumulative job walltime as seen from submit side : 8 mins, 35 secs
+Workflow cumulative job wall time                        : 8 mins, 5 secs
+Cumulative job wall time as seen from submit side        : 8 mins, 35 secs
+Workflow cumulative job badput wall time                 : 0
+Cumulative job badput wall time as seen from submit side : 0
 
 </programlisting><note>
           <para>When computing statistics over multiple workflows, please
@@ -437,30 +474,30 @@ pegasus-statistics -Dpegasus.monitord.output='&lt;DB_URL&gt;' -o &lt;OUTPUT_DIR&
         </listitem>
 
         <listitem>
-          <para><emphasis role="bold">Workflow wall time</emphasis> - The
-          walltime from the start of the workflow execution to the end as
-          reported by the DAGMAN.In case of rescue dag the value is the
-          cumulative of all retries.</para>
+          <para><emphasis role="bold">Workflow wall time</emphasis> - The wall
+          time from the start of the workflow execution to the end as reported
+          by the DAGMAN.In case of rescue dag the value is the cumulative of
+          all retries.</para>
         </listitem>
 
         <listitem>
           <para><emphasis role="bold">Workflow cummulate job wall
-          time</emphasis> - The sum of the walltime of all jobs as reported by
-          kickstart. In case of job retries the value is the cumulative of all
-          retries. For workflows having sub workflow jobs (i.e SUBDAG and
-          SUBDAX jobs), the walltime value includes jobs from the sub
+          time</emphasis> - The sum of the wall time of all jobs as reported
+          by kickstart. In case of job retries the value is the cumulative of
+          all retries. For workflows having sub workflow jobs (i.e SUBDAG and
+          SUBDAX jobs), the wall time value includes jobs from the sub
           workflows as well. This value is multiplied by the multiplier_factor
           in the job instance table.</para>
         </listitem>
 
         <listitem>
-          <para><emphasis role="bold">Cumulative job walltime as seen from
-          submit side</emphasis> - The sum of the walltime of all jobs as
+          <para><emphasis role="bold">Cumulative job wall time as seen from
+          submit side</emphasis> - The sum of the wall time of all jobs as
           reported by DAGMan. This is similar to the regular cumulative job
-          walltime, but includes job management overhead and delays. In case
+          wall time, but includes job management overhead and delays. In case
           of job retries the value is the cumulative of all retries. For
           workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs), the
-          walltime value includes jobs from the sub workflows. This value is
+          wall time value includes jobs from the sub workflows. This value is
           multiplied by the multiplier_factor in the job instance
           table.</para>
         </listitem>
@@ -2575,12 +2612,12 @@ E.g.<emphasis role="bold">
 
         <itemizedlist>
           <listitem>
-            <para>In the summary, the workflow cumulative job walltime</para>
+            <para>In the summary, the workflow cumulative job wall time</para>
           </listitem>
 
           <listitem>
-            <para>In the summary, the cumulative job walltime as seen from the
-            submit side</para>
+            <para>In the summary, the cumulative job wall time as seen from
+            the submit side</para>
           </listitem>
 
           <listitem>

@@ -24,12 +24,16 @@ from decimal import Decimal
 from flask import url_for
 from flask.json import JSONEncoder
 
+from sqlalchemy.orm.attributes import instance_state
+
 from Pegasus.db.schema import *
 
 from Pegasus.service.base import PagedResponse, ErrorResponse
 from Pegasus.service.monitoring.resources import RootWorkflowResource, RootWorkflowstateResource
 from Pegasus.service.monitoring.resources import JobInstanceResource, JobstateResource, TaskResource, InvocationResource
 from Pegasus.service.monitoring.resources import WorkflowResource, WorkflowstateResource, JobResource, HostResource
+
+log = logging.getLogger(__name__)
 
 
 class PegasusServiceJSONEncoder(JSONEncoder):
@@ -38,11 +42,16 @@ class PegasusServiceJSONEncoder(JSONEncoder):
     """
 
     def default(self, obj):
-        def obj_to_dict(resource):
+        def obj_to_dict(resource, ignore_unloaded=False):
             obj_dict = OrderedDict()
 
+            if ignore_unloaded:
+                unloaded = instance_state(obj).unloaded
+                log.debug('ignore_unloaded is True, ignoring %s' % unloaded)
+
             for attribute in resource.fields:
-                obj_dict[attribute] = getattr(obj, attribute)
+                if not ignore_unloaded or (ignore_unloaded and attribute not in unloaded):
+                    obj_dict[attribute] = getattr(obj, attribute)
 
             return obj_dict
 
@@ -112,6 +121,10 @@ class PegasusServiceJSONEncoder(JSONEncoder):
 
         elif isinstance(obj, Job):
             json_record = obj_to_dict(JobResource())
+
+            if hasattr(obj, 'job_instance'):
+                json_record['job_instance'] = obj.job_instance
+
             json_record['_links'] = OrderedDict([
                 ('workflow', url_for('.get_workflow', wf_id=obj.wf_id)),
                 ('task', url_for('.get_workflow_tasks', wf_id=obj.wf_id, _method='GET')),
@@ -146,15 +159,16 @@ class PegasusServiceJSONEncoder(JSONEncoder):
             return json_record
 
         elif isinstance(obj, JobInstance):
-            json_record = obj_to_dict(JobInstanceResource())
+            json_record = obj_to_dict(JobInstanceResource(), ignore_unloaded=True)
             json_record['_links'] = OrderedDict([
                 ('job', url_for('.get_job', job_id=obj.job_id)),
                 ('state', url_for('.get_job_instance_states', job_id=obj.job_id,
-                                  job_instance_id=obj.job_instance_id, _method='GET')),
-                ('host', url_for('.get_host', host_id=obj.host_id)),
-                ('invocation', url_for('.get_job_instance_invocations', job_id=obj.job_id,
-                                       job_instance_id=obj.job_instance_id, _method='GET'))
+                                  job_instance_id=obj.job_instance_id, _method='GET'))
             ])
+
+            json_record['_links']['host'] = url_for('.get_host', host_id=obj.host_id) if obj.host_id else None
+            json_record['_links']['invocation'] = url_for('.get_job_instance_invocations', job_id=obj.job_id,
+                                                          job_instance_id=obj.job_instance_id, _method='GET')
 
             return json_record
 

@@ -148,20 +148,32 @@ def formatted_wf_summary_legends_part1():
 def formatted_wf_summary_legends_part2():
     return """
 # Workflow wall time:
-#   The walltime from the start of the workflow execution to the end as
+#   The wall time from the start of the workflow execution to the end as
 #   reported by the DAGMAN.In case of rescue dag the value is the
 #   cumulative of all retries.
 # Workflow cumulative job wall time:
-#   The sum of the walltime of all jobs as reported by kickstart.
+#   The sum of the wall time of all jobs as reported by kickstart.
 #   In case of job retries the value is the cumulative of all retries.
 #   For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs),
-#   the walltime value includes jobs from the sub workflows as well.
-# Cumulative job walltime as seen from submit side:
-#   The sum of the walltime of all jobs as reported by DAGMan.
-#   This is similar to the regular cumulative job walltime, but includes
+#   the wall time value includes jobs from the sub workflows as well.
+# Cumulative job wall time as seen from submit side:
+#   The sum of the wall time of all jobs as reported by DAGMan.
+#   This is similar to the regular cumulative job wall time, but includes
 #   job management overhead and delays. In case of job retries the value
 #   is the cumulative of all retries. For workflows having sub workflow
-#   jobs (i.e SUBDAG and SUBDAX jobs), the walltime value includes jobs
+#   jobs (i.e SUBDAG and SUBDAX jobs), the wall time value includes jobs
+#   from the sub workflows as well.
+# Workflow cumulative job badput wall time:
+#   The sum of the wall time of all failed jobs as reported by kickstart.
+#   In case of job retries the value is the cumulative of all retries.
+#   For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs),
+#   the wall time value includes jobs from the sub workflows as well.
+# Cumulative job badput wall time as seen from submit side:
+#   The sum of the wall time of all failed jobs as reported by DAGMan.
+#   This is similar to the regular cumulative job badput wall time, but includes
+#   job management overhead and delays. In case of job retries the value
+#   is the cumulative of all retries. For workflows having sub workflow
+#   jobs (i.e SUBDAG and SUBDAX jobs), the wall time value includes jobs
 #   from the sub workflows as well."""
 
 def formatted_wf_summary_legends_txt():
@@ -629,17 +641,19 @@ def print_workflow_summary(workflow_stats, output_format, wf_summary=True, time_
     if time_summary == True:
         states = workflow_stats.get_workflow_states()
         wwt = stats_utils.get_workflow_wall_time(states)
-        wcjwt = workflow_stats.get_workflow_cum_job_wall_time()
-        ssjwt = workflow_stats.get_submit_side_job_wall_time()
+        wcjwt, wcgpt, wcbpt = workflow_stats.get_workflow_cum_job_wall_time()
+        ssjwt, ssgpt, ssbpt = workflow_stats.get_submit_side_job_wall_time()
 
         if output_format == "text":
             def myfmt(val):
                 if val is None: return "-"
                 else: return format_seconds(val)
             if not multiple_wf:
-                summary_str += "%-49s: %s\n" % ("Workflow wall time", myfmt(wwt))
-            summary_str += "%-49s: %s\n" % ("Workflow cumulative job wall time", myfmt(wcjwt))
-            summary_str += "%-49s: %s\n" % ("Cumulative job walltime as seen from submit side", myfmt(ssjwt))
+                summary_str += "%-57s: %s\n" % ("Workflow wall time", myfmt(wwt))
+            summary_str += "%-57s: %s\n" % ("Workflow cumulative job wall time", myfmt(wcjwt))
+            summary_str += "%-57s: %s\n" % ("Cumulative job wall time as seen from submit side", myfmt(ssjwt))
+            summary_str += "%-57s: %s\n" % ("Workflow cumulative job badput wall time", myfmt(wcbpt))
+            summary_str += "%-57s: %s\n" % ("Cumulative job badput wall time as seen from submit side", myfmt(ssbpt))
         else:
             def myfmt(val):
                 if val is None: return ""
@@ -648,6 +662,8 @@ def print_workflow_summary(workflow_stats, output_format, wf_summary=True, time_
             summary_str += "workflow_wall_time,%s\n" % myfmt(wwt)
             summary_str += "workflow_cumulative_job_wall_time,%s\n" % myfmt(wcjwt)
             summary_str += "cumulative_job_walltime_from_submit_side,%s\n" % myfmt(ssjwt)
+            summary_str += "workflow_cumulative_badput_time,%s\n" % myfmt(wcbpt)
+            summary_str += "cumulative_job_badput_walltime_from_submit_side,%s\n" % myfmt(ssbpt)
 
     return summary_str
 

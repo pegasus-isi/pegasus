@@ -351,7 +351,7 @@ explained in the next section.
 
 To specify the prejob, insert the the application invocation and any
 optional commandline argument into the environment variable 
-'GRIDSTART_PREJOB'. If you are invoking from a shell, you might want to 
+'KICKSTART_PREJOB'. If you are invoking from a shell, you might want to 
 use single quotes to protect against the shell. If you are invoking from 
 Globus, you can append the RSL string feature. From Condor, you can use 
 Condor's notion of environment settings. In Pegasus use the 'profile'
@@ -360,15 +360,15 @@ or the transformation catalog to set environment variables in a pool-specific
 fashion. Please remember that the execution of the main job is chained
 to the success of the prejob. 
 
-To set up the postjob, use the environment variable 'GRIDSTART_POSTJOB'
+To set up the postjob, use the environment variable 'KICKSTART_POSTJOB'
 to point to an application with potential arguments to execute. The same
 restrictions as for the prejob apply. Please note that the execution of
 the post job is chained to the main job. 
 
 To provide the independent setup job, use the environment variable
-'GRIDSTART_SETUP'. The exit code of the setup job has no influence on the 
+'KICKSTART_SETUP'. The exit code of the setup job has no influence on the 
 remaining chain of jobs. To provide an independent cleanup job, use the 
-environment variable 'GRIDSTART_CLEANUP' to point to an application with 
+environment variable 'KICKSTART_CLEANUP' to point to an application with 
 possible arguments to execute. The same restrictions as for prejob and 
 postjob apply. The cleanup is run regardless of the exit status of any 
 other jobs.
@@ -448,8 +448,8 @@ You can run the *pegasus-kickstart* executable locally to verify that
 it is functioning well. In the initial phase, the format of the 
 performance data may be slightly adjusted.
 ----------
-$ env GRIDSTART_PREJOB='/bin/usleep 250000' \\
-  GRIDSTART_POSTJOB='/bin/date -u' \\
+$ env KICKSTART_PREJOB='/bin/usleep 250000' \\
+  KICKSTART_POSTJOB='/bin/date -u' \\
   pegasus-kickstart -l xx \\$PEGASUS_HOME/bin/keg -T1 -o-
 $ cat xx
 <?xml version="1.0" encoding="ISO-8859-1"?>
@@ -491,11 +491,11 @@ to write a checkpoint, which it can trigger by handling the SIGTERM. If the job
 runs for longer than the timeout specified using *-k*, then then the job exits
 with a non-zero exit status.
 
-If the job has GRIDSTART_SETUP, GRIDSTART_PREJOB, or GRIDSTART_POSTJOB, then
+If the job has KICKSTART_SETUP, KICKSTART_PREJOB, or KICKSTART_POSTJOB, then
 their runtimes are included in the timeout and they will be sent SIGTERM/SIGKILL
-in the same manner as the main job. If GRIDSTART_CLEANUP is set, then it will run
+in the same manner as the main job. If KICKSTART_CLEANUP is set, then it will run
 regardless of whether processes from the other stages were signalled. If
-GRIDSTART_SETUP is specified, and it runs longer than the timeout, then it
+KICKSTART_SETUP is specified, and it runs longer than the timeout, then it
 will be signalled, and the other stages will be skipped.
 
 Output Format
@@ -555,7 +555,11 @@ on the submit host.
 
 Environment Variables
 ---------------------
-*GRIDSTART_TMP*::
+Note: Pegasus 4.6 deprecated the "GRIDSTART_" prefix for environment variables
+and replaced it with "KICKSTART_". The "GRIDSTART_" versions of the old variables
+should still work.
+
+*KICKSTART_TMP*::
 is the hightest priority to look for a temporary directory, if
 specified. This rather special variable was introduced to overcome
 some peculiarities with the FNAL cluster. 
@@ -573,21 +577,32 @@ is next in the checklist. If none of these are found, either the
 'stdio' definition 'P_tmpdir' is taken, or the fixed string
 '/tmp'.
 
-*GRIDSTART_SETUP*::
+*KICKSTART_SETUP*::
 contains a string that starts a job to be executed unconditionally
 before any other jobs, see above for a detailed description.
 
-*GRIDSTART_PREJOB*::
+*KICKSTART_PREJOB*::
 contains a string that starts a job to be executed before the main
 job, see above for a detailed description.
 
-*GRIDSTART_POSTJOB*::
+*KICKSTART_POSTJOB*::
 contains a string that starts a job to be executed conditionally 
 after the main job, see above for a detailed description.
 
-*GRIDSTART_CLEANUP*::
+*KICKSTART_CLEANUP*::
 contains a string that starts a job to be executed unconditionally
 after any of the previous jobs, see above for a detailed description.
+
+*KICKSTART_PREPEND_PATH*::
+the value of this variable is prepended to the PATH variable seen by
+Kickstart and passed to the job. The modified PATH is also used to look
+up executables for the main job and any pre/post/setup/cleanup jobs.
+
+*KICKSTART_WRAPPER*::
+the value of this variable is prepended to the job arguments. It can
+be used to wrap the task with a wrapper or launcher. For example, you
+can set it to "mpiexec -n 128" to run an MPI job, or you can set it
+to "tau_exec" to profile the job with TAU.
 
 
 History

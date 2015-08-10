@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 #-------------------------------------------------------------------
 # DB Admin configuration
 #-------------------------------------------------------------------
-CURRENT_DB_VERSION = 5
+CURRENT_DB_VERSION = 6
 
 COMPATIBILITY = {
     '4.3.0': 1, '4.3.1': 1, '4.3.2': 1,
@@ -55,12 +55,12 @@ def get_class(version, db):
 #-------------------------------------------------------------------
 def db_create(dburi, engine, db, pegasus_version=None, force=False):
     """ Create/Update the Pegasus database from the schema """
-    table_names = engine.table_names()
+    table_names = engine.table_names(connection=db)
     db_version.create(engine, checkfirst=True)
 
     v = -1
     if len(table_names) == 0:
-        engine.execute(db_version.insert(), version_number=CURRENT_DB_VERSION, 
+        engine.execute(db_version.insert(), version_number=CURRENT_DB_VERSION,
                 version_timestamp=datetime.datetime.now().strftime("%s"))
         print "Created Pegasus database in: %s" % dburi
     else:

@@ -655,15 +655,15 @@ FATAL: The main job specification is invalid or missing.
 
     <programlisting>$ <emphasis role="bold">pegasus-statistics –s all submit/tutorial/pegasus/diamond/run0001</emphasis>
 
-**************************SUMMARY******************************
-# legends
-# Workflow summary:
-#       Summary of the workflow execution. It shows total
-#       tasks/jobs/sub workflows run, how many succeeded/failed etc.
-#       In case of hierarchical workflow the calculation shows the
-#       statistics across all the sub workflows.It shows the following
-#       statistics about tasks, jobs and sub workflows.
 #
+# Pegasus Workflow Management System - http://pegasus.isi.edu
+#
+# Workflow summary:
+#   Summary of the workflow execution. It shows total
+#   tasks/jobs/sub workflows run, how many succeeded/failed etc.
+#   In case of hierarchical workflow the calculation shows the
+#   statistics across all the sub workflows.It shows the following
+#   statistics about tasks, jobs and sub workflows.
 #     * Succeeded - total count of succeeded tasks/jobs/sub workflows.
 #     * Failed - total count of failed tasks/jobs/sub workflows.
 #     * Incomplete - total count of tasks/jobs/sub workflows that are
@@ -673,26 +673,44 @@ FATAL: The main job specification is invalid or missing.
 #       'succeeded' and 'failed' count.
 #     * Total - total count of tasks/jobs/sub workflows.
 #     * Retries - total retry count of tasks/jobs/sub workflows.
-#     * Total Run - total count of tasks/jobs/sub workflows executed
+#     * Total+Retries - total count of tasks/jobs/sub workflows executed
 #       during workflow run. This is the cumulative of retries,
 #       succeeded and failed count.
 # Workflow wall time:
-#       The walltime from the start of the workflow execution to the
-#       end as reported by the DAGMAN.In case of rescue dag the value
-#       is the cumulative of all retries.
+#   The wall time from the start of the workflow execution to the end as
+#   reported by the DAGMAN.In case of rescue dag the value is the
+#   cumulative of all retries.
 # Workflow cumulative job wall time:
-#       The sum of the walltime of all jobs as reported by kickstart.
-#       In case of job retries the value is the cumulative of all retries.
-#       For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX
-#       jobs), the walltime value includes jobs from the sub workflows
-#       as well.
-# Cumulative job walltime as seen from submit side:
-#       The sum of the walltime of all jobs as reported by DAGMan.
-#       This is similar to the regular cumulative job walltime, but
-#       includes job management overhead and delays. In case of job
-#       retries the value is the cumulative of all retries. For workflows
-#       having sub workflow jobs (i.e SUBDAG and SUBDAX jobs), the
-#       walltime value includes jobs from the sub workflows as well.
+#   The sum of the wall time of all jobs as reported by kickstart.
+#   In case of job retries the value is the cumulative of all retries.
+#   For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs),
+#   the wall time value includes jobs from the sub workflows as well.
+# Cumulative job wall time as seen from submit side:
+#   The sum of the wall time of all jobs as reported by DAGMan.
+#   This is similar to the regular cumulative job wall time, but includes
+#   job management overhead and delays. In case of job retries the value
+#   is the cumulative of all retries. For workflows having sub workflow
+#   jobs (i.e SUBDAG and SUBDAX jobs), the wall time value includes jobs
+#   from the sub workflows as well.
+# Cumulative job wall time as seen from submit side:
+#   The sum of the wall time of all jobs as reported by DAGMan.
+#   This is similar to the regular cumulative job wall time, but includes
+#   job management overhead and delays. In case of job retries the value
+#   is the cumulative of all retries. For workflows having sub workflow
+#   jobs (i.e SUBDAG and SUBDAX jobs), the wall time value includes jobs
+#   from the sub workflows as well.
+# Workflow cumulative job badput wall time:
+#   The sum of the wall time of all failed jobs as reported by kickstart.
+#   In case of job retries the value is the cumulative of all retries.
+#   For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs),
+#   the wall time value includes jobs from the sub workflows as well.
+# Cumulative job badput wall time as seen from submit side:
+#   The sum of the wall time of all failed jobs as reported by DAGMan.
+#   This is similar to the regular cumulative job badput wall time, but includes
+#   job management overhead and delays. In case of job retries the value
+#   is the cumulative of all retries. For workflows having sub workflow
+#   jobs (i.e SUBDAG and SUBDAX jobs), the wall time value includes jobs
+#   from the sub workflows as well.
 
 -----------------------------------------------------------------------
 Type            Succeeded  Failed  Incomplete  Total     Retries  Total Run
@@ -701,13 +719,14 @@ Jobs            7          0       0           7     ||  0        7
 Sub Workflows   0          0       0           0     ||  0        0
 -----------------------------------------------------------------------
 
-Workflow wall time:                               3 mins, 25 secs, (205 s)
-Workflow cumulative job wall time:                2 mins, 0 secs, (120 s)
-Cumulative job walltime as seen from submit side: 2 mins, 0 secs, (120 s)
+Workflow wall time                                       : 3 mins, 25 secs
+Workflow cumulative job wall time                        : 2 mins, 0 secs
+Cumulative job wall time as seen from submit side        : 2 mins, 0 secs
+Workflow cumulative job badput wall time                 : 0
+Cumulative job badput wall time as seen from submit side : 0
 
 Summary: submit/tutorial/pegasus/diamond/run0001/statistics/summary.txt
 
-************************************************************************
 </programlisting>
 
     <para>The output of <literal>pegasus-statistics</literal> contains many
@@ -877,7 +896,7 @@ Service not running as root: Will not be able to switch users
     <para>The job instance section of the job details page lists all attempts
     made to run the job i.e. if a job failed in its first attempt due to
     transient errors, but ran successfully when retried, the job instance
-    section shows two entries; one for each attempt to run the job. </para>
+    section shows two entries; one for each attempt to run the job.</para>
 
     <para>The job details page also shows tab's for failed, and successful
     task invocations (Pegasus allows users to group multiple smaller task's

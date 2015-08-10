@@ -269,6 +269,16 @@ void test_write() {
 }
 
 int main(int argc, char **argv) {
+#ifdef __MACH__
+    /* On recent versions of OSX we have to do this because some library
+     * is opening a bunch of stuff. */
+    FDCache cache;
+    int max_open = cache.get_max_open_files();
+    for (int i=3; i<max_open; i++) {
+        close(i);
+    }
+#endif
+
     try {
         log_set_level(LOG_ERROR);
         log_trace("test_get_nr_open_fds");

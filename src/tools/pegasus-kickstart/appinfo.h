@@ -54,7 +54,7 @@ typedef struct {
     char*          wf_label;   /* label of workflow this job belongs to */
     char*          wf_stamp;   /* time stamp of workflow this job belongs to */
     char*          workdir;    /* CWD at point of execution */
-    pid_t          child;      /* pid of gridstart itself */
+    pid_t          child;      /* pid of kickstart itself */
 
     JobInfo        setup;      /* optional set-up application to run */
     JobInfo        prejob;     /* optional pre-job application to run */
@@ -66,7 +66,7 @@ typedef struct {
     StatInfo       output;     /* stat() info for "output", if available */
     StatInfo       error;      /* stat() info for "error", if available */
     StatInfo       logfile;    /* stat() info for "logfile", if available */
-    StatInfo       gridstart;  /* stat() info for this program, if available */
+    StatInfo       kickstart;  /* stat() info for this program, if available */
 
     StatInfo*      initial;    /* stat() info for user-specified files. */
     size_t         icount;     /* size of initial array, may be 0 */

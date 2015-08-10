@@ -16,6 +16,8 @@
 
 package edu.isi.pegasus.planner.namespace;
 
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import edu.isi.pegasus.planner.classes.Data;
 import edu.isi.pegasus.planner.classes.Profile;
 
@@ -99,6 +101,7 @@ public abstract class Namespace /*extends Data*/{
     * The Map object that contains the profiles for a particular namespace.
     * The Map is indexed by profile key. Each value, is a profile value.
     */
+   @Expose @SerializedName( "profiles" )
    protected Map mProfileMap;
 
    /**

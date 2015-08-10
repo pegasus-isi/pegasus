@@ -163,7 +163,7 @@ static char* pathfind(const char* fn) {
     free(path);
     return t;
 }
-static void __initJobInfo(JobInfo *jobinfo, Node *head, int state) {
+static void __initJobInfo(JobInfo *jobinfo, Node *head) {
     size_t i;
     char* t;
 
@@ -171,7 +171,7 @@ static void __initJobInfo(JobInfo *jobinfo, Node *head, int state) {
     memset(jobinfo, 0, sizeof(JobInfo));
 
     /* only continue in ok state AND if there is anything to do */
-    if (state == 32 && head) {
+    if (head != NULL) {
         size_t size, argc = size = 0;
         Node* temp = head;
         while (temp) {
@@ -210,10 +210,8 @@ static void __initJobInfo(JobInfo *jobinfo, Node *head, int state) {
             free((void*) temp->data);
             free((void*) temp);
         }
-    }
 
-    /* free list of (partial) argv */
-    if (head) {
+        /* free list of argv */
         deleteNodes(head);
     }
 
@@ -240,20 +238,32 @@ void initJobInfoFromString(JobInfo* jobinfo, const char* commandline) {
      * paramtr: jobinfo (OUT): initialized memory block
      *          commandline (IN): commandline concatenated string to separate
      */
-    int state = 0;
-    Node* head = parseCommandLine(commandline, &state);
-    __initJobInfo(jobinfo, head, state);
+    Node *args = parseCommandLine(commandline);
+    __initJobInfo(jobinfo, args);
 }
 
-void initJobInfo(JobInfo* jobinfo, int argc, char* const* argv) {
+void initJobInfo(JobInfo* jobinfo, int argc, char* const* argv, const char *wrapper) {
     /* purpose: initialize the data structure with defaults
      * paramtr: jobinfo (OUT): initialized memory block
      *          argc (IN): adjusted argc string (maybe from main())
      *          argv (IN): adjusted argv string to point to executable
+     *          wrapper (IN): command line for application wrapper
      */
-    int state = 0;
-    Node* head = parseArgVector(argc, argv, &state);
-    __initJobInfo(jobinfo, head, state);
+    Node *args = parseArgVector(argc, argv);
+    if (wrapper != NULL) {
+        Node *wrapper_args = parseCommandLine(wrapper);
+        if (wrapper_args == NULL) {
+            printerr("Error parsing wrapper arguments");
+        } else {
+            Node *p = wrapper_args;
+            while (p->next != NULL) {
+                p = p->next;
+            }
+            p->next = args;
+            args = wrapper_args;
+        }
+    }
+    __initJobInfo(jobinfo, args);
 }
 
 int printXMLJobInfo(FILE *out, int indent, const char* tag, const JobInfo* job) {

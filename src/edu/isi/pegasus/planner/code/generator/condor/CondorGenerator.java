@@ -60,6 +60,17 @@ import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import org.griphyn.vdl.euryale.VTorInUseException;
 
+import java.lang.reflect.Type;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.TypeAdapter;
+import com.google.gson.reflect.TypeToken;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+import edu.isi.pegasus.planner.classes.Profile;
+import edu.isi.pegasus.planner.namespace.Metadata;
+
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.Writer;
@@ -354,17 +365,20 @@ public class CondorGenerator extends Abstract {
             mInitializeGridStart = false;
         }
         
-        CodeGenerator storkGenerator = CodeGeneratorFactory.loadInstance( mBag, "Stork" );
-
-        String className   = this.getClass().getName();
-        String dagFileName = getDAGFilename( dag, ".dag" );
+        String orgDAGFileName = getDAGFilename( dag, ".dag" );
+        File orgDAGFile = new File ( mSubmitFileDir, orgDAGFileName );
+        
+        //PM-966 we need to write out first to a tmp dag file
+        //and then do atomic rename
+        String dagFileName = orgDAGFileName + ".tmp";
+        
         mDone = false;
 
-        File dagFile = null;
+        File dagFile = new File ( mSubmitFileDir, dagFileName );;
         Collection<File> result = new ArrayList(1);
         if ( dag.isEmpty() ) {
             //call the callout before returns
-            concreteDagEmpty( dagFileName, dag );
+            concreteDagEmpty( orgDAGFileName, dag );
             return result ;
         }
 
@@ -421,7 +435,7 @@ public class CondorGenerator extends Abstract {
 
         //initialize the file handle to the dag
         //file and print it's header
-        dagFile = initializeDagFileWriter( dagFileName, dag );
+        initializeDagFileWriter( dagFile , dag );
         result.add( dagFile );
 
         //write out any category based dagman knobs to the dagman file
@@ -450,20 +464,7 @@ public class CondorGenerator extends Abstract {
             }
 
                  
-            //write out the submit file for each job
-            //in addition makes the corresponding
-            //entries in the .dag file corresponding
-            //to the job and it's postscript
-            if ( job.getSiteHandle().equals( "stork" ) ) {
-                //write the job information in the .dag file
-                StringBuffer dagString = new StringBuffer();
-                dagString.append( "DATA " ).append( job.getName() ).append( " " );
-                dagString.append( job.getName() ).append( ".stork" );
-                printDagString( dagString.toString() );
-                storkGenerator.generateCode( dag, job  );
-            }
-            //for dag jobs we dont need to generate submit file
-            else if( job instanceof DAGJob ){
+            if( job instanceof DAGJob ){
                 //SUBDAG EXTERNAL  B  inner.dag
                 DAGJob djob = ( DAGJob )job;
                 
@@ -524,7 +525,7 @@ public class CondorGenerator extends Abstract {
         //writing the tail of .dag file
         //that contains the relation pairs
         this.writeDagFileTail( dag );
-        mLogger.log("Written Dag File : " + dagFileName.toString(),
+        mLogger.log("Written Dag File : " + dagFileName,
                     LogManager.DEBUG_MESSAGE_LEVEL);
 
         //symlink the log file to a file in the temp directory if possible
@@ -537,6 +538,9 @@ public class CondorGenerator extends Abstract {
         mLogger.log( "Writing out the DOT file ", LogManager.DEBUG_MESSAGE_LEVEL );
         this.writeDOTFile( getDAGFilename( dag, ".dot"), dag );
 
+
+        this.writeMetadataFile( getDAGFilename( dag, ".metadata"), dag );
+        
         /*
         //we no longer write out the job.map file
         //write out the netlogger file
@@ -561,12 +565,20 @@ public class CondorGenerator extends Abstract {
         //write out the braindump file
         this.writeOutBraindump( dag );
         
+        //PM-966 rename the tmp dag file back to the original name
+        //before we write out the dag.condor.sub file
+        
+        dagFile.renameTo( orgDAGFile );
+        mLogger.log("Renamed temporary dag file to : " + orgDAGFile,
+                    LogManager.DEBUG_MESSAGE_LEVEL);
+        
         //write out the dag.condor.sub file
-        this.writeOutDAGManSubmitFile( dag, dagFile );
+        this.writeOutDAGManSubmitFile( dag, orgDAGFile );
         
         //we are donedirectory
         mDone = true;
-
+        
+        
         return result;
     }
 
@@ -1060,19 +1072,13 @@ public class CondorGenerator extends Abstract {
     /**
      * Initializes the file handler to the dag file and writes the header to it.
      *
-     * @param filename     basename of dag file to be written.
-     * @param dag        the workflow
-     *
-     * @return the File object for the DAG file.
+     * @param dag    the dag file to be written out to
+     * @param workflow   the workflow
      *
      * @throws CodeGeneratorException in case of any error occuring code generation.
      */
-    protected File initializeDagFileWriter(String filename, ADag workflow )
+    protected void initializeDagFileWriter( File dag, ADag workflow )
                                                        throws CodeGeneratorException{
-        // initialize file handler
-
-        filename = mSubmitFileDir + "/" + filename;
-        File dag = new File(filename);
 
 
         try {
@@ -1088,10 +1094,9 @@ public class CondorGenerator extends Abstract {
                            workflow.getCount() );
             printDagString(this.mSeparator);
         } catch (Exception e) {
-            throw new CodeGeneratorException( "While writing to DAG FILE " + filename,
+            throw new CodeGeneratorException( "While writing to DAG FILE " + dag,
                                               e);
         }
-        return dag;
     }
 
 
@@ -1160,6 +1165,48 @@ public class CondorGenerator extends Abstract {
         }
 
     }
+    
+    /**
+     * Writes out the metadata file, containing the metadata associated with the 
+     * jobs in the submit directory in JSON
+     *
+     * @param filename  basename of medatadata file to be written .
+     * @param dag       the <code>ADag</code> object.
+     *
+     * @throws CodeGeneratorException in case of any error occuring code generation.
+     */
+    protected void writeMetadataFile( String filename, ADag dag )
+                                                       throws CodeGeneratorException{
+        // initialize file handler
+
+        filename = mSubmitFileDir + File.separator + filename;
+
+        Writer stream = null;
+        try {
+            stream = new PrintWriter( new BufferedWriter ( new FileWriter( filename ) ) );
+            GsonBuilder builder =  new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting();
+            builder.registerTypeAdapter( GraphNode.class, new GraphNodeGSONAdapter()).create();
+            Gson gson = builder.create();
+            String json = gson.toJson( dag );
+            stream.write( json );      
+
+            
+        } catch (Exception e) {
+            throw new CodeGeneratorException( "While writing to DOT FILE " + filename,
+                                              e);
+        }
+        finally{
+            if( stream != null ){
+                try{
+                    stream.close();
+                }catch(Exception e ){
+                    
+                }
+            }
+        }
+
+    }
+
 
     /**
      * Writes out the job map file in the submit directory.
@@ -1971,3 +2018,32 @@ public class CondorGenerator extends Abstract {
 
   
 }
+
+class GraphNodeGSONAdapter extends TypeAdapter<GraphNode> {
+
+    @Override
+    public void write(JsonWriter writer, GraphNode node) throws IOException {
+        writer.beginObject();   
+        Object content = node.getContent();
+        if( content instanceof Job ){
+            Job job = (Job)content;
+            Metadata m = (Metadata) job.getMetadata();
+            if( !job.getMetadata().isEmpty() ){
+                for( Iterator it = m.getProfileKeyIterator(); it.hasNext(); ){
+                    String key = (String) it.next();
+                    writer.name(  key );
+                    writer.value((String) m.get(key));
+                }
+            }
+        }  
+            
+        writer.endObject();     
+    }
+
+   
+    @Override
+    public GraphNode read(JsonReader reader) throws IOException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+}
+

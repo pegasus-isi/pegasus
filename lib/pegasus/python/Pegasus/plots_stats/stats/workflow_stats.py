@@ -35,10 +35,10 @@ class JobStatistics:
 		self.seqexec= None
 		self.seqexec_delay = None
 		self.retry_count = 0
-	
+
 	def getFormattedJobStatistics(self):
 		"""
-		Returns the formatted job statistics information  
+		Returns the formatted job statistics information
 		@return:    formatted job statistics information
 		"""
 		formatted_job_stats = [self.name]
@@ -55,7 +55,7 @@ class JobStatistics:
 		formatted_job_stats.append(round_to_str(self.seqexec))
 		formatted_job_stats.append(round_to_str(self.seqexec_delay))
 		return formatted_job_stats
-	
+
 def convert_to_str(value):
 	"""
 	Utility for returning a str representation of the given value.
@@ -65,11 +65,11 @@ def convert_to_str(value):
 	if value is None:
 		return '-'
 	return str(value)
-	
+
 def round_to_str(value , to=3):
 	"""
 Utility method for rounding the float value to rounded string
-@param value :  value to round 
+@param value :  value to round
 @param to    :  how many decimal points to round to
 	"""
 	return stats_utils.round_decimal_to_str(value,to)
@@ -104,7 +104,7 @@ def print_row(content, isHeader= False):
 	row_str += "</tr>"
 	row_str += NEW_LINE_STR
 	return row_str
-	
+
 
 def print_workflow_summary(workflow_stats ):
 	"""
@@ -135,7 +135,7 @@ def print_workflow_summary(workflow_stats ):
 	total_unsubmitted_sub_wfs = total_sub_wfs - (total_succeeded_sub_wfs + total_failed_sub_wfs)
 	total_sub_wfs_retries = workflow_stats.get_total_jobs_retries()
 	total_sub_wfs_tries =  total_succeeded_sub_wfs + total_failed_sub_wfs + total_sub_wfs_retries
-	
+
 	# tasks
 	summary_str = ""
 	summary_str += "total_succeeded_tasks: " + convert_to_str(total_succeeded_tasks)
@@ -143,59 +143,59 @@ def print_workflow_summary(workflow_stats ):
 	summary_str += "total_failed_tasks: " + convert_to_str(total_failed_tasks)
 	summary_str += NEW_LINE_STR
 	summary_str += "total_unsubmitted_tasks: " + convert_to_str(total_unsubmitted_tasks)
-	summary_str += NEW_LINE_STR 
+	summary_str += NEW_LINE_STR
 	summary_str += "total_tasks: " + convert_to_str(total_tasks)
 	summary_str += NEW_LINE_STR
 	summary_str += "total_task_retries: " + convert_to_str(total_task_retries)
 	summary_str += NEW_LINE_STR
-	summary_str += "total_invocations: " + convert_to_str(total_invocations) 
+	summary_str += "total_invocations: " + convert_to_str(total_invocations)
 	summary_str += NEW_LINE_STR
-	
-	
+
+
 	summary_str += "total_succeeded_jobs: " + convert_to_str(total_succeeded_jobs)
 	summary_str += NEW_LINE_STR
 	summary_str += "total_failed_jobs: " + convert_to_str(total_failed_jobs)
 	summary_str += NEW_LINE_STR
 	summary_str += "total_unsubmitted_jobs: " + convert_to_str(total_unsubmitted_jobs)
-	summary_str += NEW_LINE_STR 
+	summary_str += NEW_LINE_STR
 	summary_str += "total_jobs:" + convert_to_str(total_jobs)
-	summary_str += NEW_LINE_STR 
+	summary_str += NEW_LINE_STR
 	summary_str += "total_job_retries: " + str(total_job_retries)
 	summary_str += NEW_LINE_STR
-	summary_str += "total_job_instance_retries:"  + convert_to_str(total_job_instance_retries) 
+	summary_str += "total_job_instance_retries:"  + convert_to_str(total_job_instance_retries)
 	summary_str += NEW_LINE_STR
-	
-	
+
+
 	summary_str += "total_succeeded_sub_wfs: " + convert_to_str(total_succeeded_sub_wfs)
 	summary_str += NEW_LINE_STR
 	summary_str += "total_failed_sub_wfs: " + convert_to_str(total_failed_sub_wfs)
 	summary_str += NEW_LINE_STR
 	summary_str += "total_unsubmitted_sub_wfs: " + convert_to_str(total_unsubmitted_sub_wfs)
-	summary_str += NEW_LINE_STR 
+	summary_str += NEW_LINE_STR
 	summary_str += "total_sub_wfs: " + convert_to_str(total_sub_wfs)
-	summary_str += NEW_LINE_STR 
+	summary_str += NEW_LINE_STR
 	summary_str += "total_sub_wfs_retries: " + str(total_sub_wfs_retries)
 	summary_str += NEW_LINE_STR
 	summary_str += "total_sub_wfs_tries: " + convert_to_str(total_sub_wfs_tries)
-	summary_str += NEW_LINE_STR	
-	
+	summary_str += NEW_LINE_STR
+
 	workflow_states_list = workflow_stats.get_workflow_states()
 	workflow_wall_time = stats_utils.get_workflow_wall_time(workflow_states_list)
-	
+
 	if workflow_wall_time is None:
 		summary_str += "workflow_runtime: -"
 	else:
 		summary_str += "workflow_runtime: %-20s (total %d seconds)" % \
 				(format_seconds(workflow_wall_time), (workflow_wall_time))
 	summary_str += NEW_LINE_STR
-	workflow_cum_job_wall_time = workflow_stats.get_workflow_cum_job_wall_time()
+	workflow_cum_job_wall_time = workflow_stats.get_workflow_cum_job_wall_time()[0]
 	if workflow_cum_job_wall_time is None:
 		summary_str += "cumulative_workflow_runtime_kickstart: -"
 	else:
 		summary_str += "cumulative_workflow_runtime_kickstart: %-20s (total %d seconds)" % \
 			(format_seconds(workflow_cum_job_wall_time),workflow_cum_job_wall_time)
-	summary_str += NEW_LINE_STR	
-	submit_side_job_wall_time =  workflow_stats.get_submit_side_job_wall_time()
+	summary_str += NEW_LINE_STR
+	submit_side_job_wall_time =  workflow_stats.get_submit_side_job_wall_time()[0]
 	if submit_side_job_wall_time is None:
 		summary_str += "cumulative_workflow_runtime_dagman: -"
 	else:
@@ -211,15 +211,15 @@ def print_individual_workflow_stats(workflow_stats , title):
 	"""
 	content_str ="<table class ='gallery_table'>"
 	# individual workflow status
-	
+
 	# workflow status
 	workflow_stats.set_job_filter('all')
-	total_wf_retries = workflow_stats.get_workflow_retries() 
+	total_wf_retries = workflow_stats.get_workflow_retries()
 	content = [title,convert_to_str(total_wf_retries) ]
 	title_col_span =  len(worklow_status_col_name) -1
 	content_str += print_row(worklow_status_col_name, True)
 	wf_status_str = """<tr><td colspan ="""+ str(title_col_span) +  """ > """ + title + """</td><td>""" + convert_to_str(total_wf_retries) +"""</td></tr>"""
-			
+
 	#tasks
 	workflow_stats.set_job_filter('nonsub')
 	total_tasks = workflow_stats.get_total_tasks_status()
@@ -230,7 +230,7 @@ def print_individual_workflow_stats(workflow_stats , title):
 	total_task_invocations = total_succeeded_tasks + total_failed_tasks + total_task_retries
 	content =["&nbsp;","Tasks",  convert_to_str(total_succeeded_tasks) , convert_to_str(total_failed_tasks), convert_to_str(total_unsubmitted_tasks) , convert_to_str(total_tasks) ,"&nbsp;",convert_to_str(total_task_retries), convert_to_str(total_task_invocations) ,"&nbsp;"]
 	tasks_status_str =  print_row(content)
-	
+
 	# job status
 	workflow_stats.set_job_filter('nonsub')
 	total_jobs = workflow_stats.get_total_jobs_status()
@@ -241,7 +241,7 @@ def print_individual_workflow_stats(workflow_stats , title):
 	total_job_invocations =  total_succeeded_jobs + total_failed_jobs + total_job_retries
 	content = ["&nbsp;","Jobs",convert_to_str(total_succeeded_jobs), convert_to_str(total_failed_jobs) , convert_to_str(total_unsubmitted_jobs), convert_to_str(total_jobs) ,"&nbsp;",convert_to_str(total_job_retries), convert_to_str(total_job_invocations) ,"&nbsp;" ]
 	jobs_status_str = print_row(content)
-	
+
 	# sub workflow
 	workflow_stats.set_job_filter('subwf')
 	total_sub_wfs = workflow_stats.get_total_jobs_status()
@@ -252,22 +252,22 @@ def print_individual_workflow_stats(workflow_stats , title):
 	total_sub_wfs_invocations =  total_succeeded_sub_wfs + total_failed_sub_wfs + total_sub_wfs_retries
 	content = ["&nbsp;","Sub Workflows",convert_to_str(total_succeeded_sub_wfs), convert_to_str(total_failed_sub_wfs) , convert_to_str(total_unsubmitted_sub_wfs), convert_to_str(total_sub_wfs) ,"&nbsp;",convert_to_str(total_sub_wfs_retries), convert_to_str(total_sub_wfs_invocations) ,"&nbsp;" ]
 	sub_wf_status_str = print_row(content)
-	
-	
+
+
 	content_str += wf_status_str +"\n"
 	content_str += tasks_status_str +"\n"
 	content_str += jobs_status_str +"\n"
 	content_str += sub_wf_status_str +"\n"
 	content_str +="</table>"
 	return content_str
-	
+
 
 def print_individual_wf_job_stats(workflow_stats , title):
 	"""
 	Prints the job statistics of workflow
 	@param workflow_stats :  workflow statistics object reference
 	@param title  : title for the table
-	"""	
+	"""
 	job_stats_dict={}
 	job_stats_list=[]
 	job_retry_count_dict={}
@@ -275,9 +275,9 @@ def print_individual_wf_job_stats(workflow_stats , title):
 	job_status_str += "<table class ='gallery_table'>"
 	job_status_str += print_row(job_stats_col_name, True)
 	job_status_str +="\n"
-			
+
 	wf_job_stats_list =  workflow_stats.get_job_statistics()
-	
+
 	for job in wf_job_stats_list:
 		job_stats = JobStatistics()
 		job_stats.name = job.job_name
@@ -296,7 +296,7 @@ def print_individual_wf_job_stats(workflow_stats , title):
 			job_retry_count_dict[job.job_name] = 1
 		job_stats.retry_count = job_retry_count_dict[job.job_name]
 		job_stats_list.append(job_stats)
-	
+
 	# printing
 	content_list = []
 	# find the pretty print length
@@ -311,11 +311,11 @@ def print_individual_wf_job_stats(workflow_stats , title):
 def round_to_str(value , to=3):
 	"""
 Utility method for rounding the float value to rounded string
-@param value :  value to round 
+@param value :  value to round
 @param to    :  how many decimal points to round to
 	"""
 	return stats_utils.round_decimal_to_str(value,to)
-	
+
 
 def print_wf_transformation_stats(workflow_stats , title):
 	"""
@@ -333,7 +333,7 @@ Prints the transformation statistics of workflow
 		transformation_status_str += NEW_LINE_STR
 	transformation_status_str += "</table>"
 	return transformation_status_str
-	
+
 
 def print_statistics_by_time_and_host(workflow_stats , time_filter):
 	"""
@@ -344,7 +344,7 @@ def print_statistics_by_time_and_host(workflow_stats , time_filter):
 	workflow_stats.set_job_filter('nonsub')
 	workflow_stats.set_time_filter('hour')
 	workflow_stats.set_transformation_filter(exclude=['condor::dagman'])
-	
+
 	statistics_by_time_str +="<div>#Job instances statistics per " + time_filter +"</div>"
 	statistics_by_time_str += NEW_LINE_STR
 	statistics_by_time_str +="<table class ='gallery_table'>"
@@ -357,7 +357,7 @@ def print_statistics_by_time_and_host(workflow_stats , time_filter):
 		statistics_by_time_str += print_row(content )
 		statistics_by_time_str += NEW_LINE_STR
 	statistics_by_time_str +="</table>"
-	statistics_by_time_str += NEW_LINE_STR	
+	statistics_by_time_str += NEW_LINE_STR
 	statistics_by_time_str +="<div>#Invocation statistics run per " + time_filter +"</div>"
 	statistics_by_time_str += NEW_LINE_STR
 	statistics_by_time_str +="<table class ='gallery_table'>"

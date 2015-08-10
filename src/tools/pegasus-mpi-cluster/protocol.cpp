@@ -59,6 +59,19 @@ CommandMessage::CommandMessage(char *msg, unsigned msgsize, int source) : Messag
     memcpy(&cpus, msg + off, sizeof(cpus));
     off += sizeof(cpus);
 
+    // Get the number of bindings
+    cpu_t nbindings;
+    memcpy(&nbindings, msg + off, sizeof(nbindings));
+    off += sizeof(nbindings);
+
+    // Get the bindings
+    for (cpu_t i = 0; i<nbindings; i++) {
+        cpu_t binding;
+        memcpy(&binding, msg + off, sizeof(binding));
+        bindings.push_back(binding);
+        off += sizeof(binding);
+    }
+
     // Get the number of pipe forwards
     unsigned char npipes;
     memcpy(&npipes, msg + off, sizeof(npipes));
@@ -88,17 +101,19 @@ CommandMessage::CommandMessage(char *msg, unsigned msgsize, int source) : Messag
     }
 }
 
-CommandMessage::CommandMessage(const string &name, const list<string> &args, const string &id, unsigned memory, unsigned cpus, const map<string,string> *pipe_forwards, const map<string,string> *file_forwards) {
+CommandMessage::CommandMessage(const string &name, const list<string> &args, const string &id, unsigned memory, cpu_t cpus, const vector<cpu_t> &bindings, const map<string,string> *pipe_forwards, const map<string,string> *file_forwards) {
     this->name = name;
     this->args = args;
     this->id = id;
     this->memory = memory;
     this->cpus = cpus;
+    this->bindings = bindings;
     if (pipe_forwards) this->pipe_forwards = *pipe_forwards;
     if (file_forwards) this->file_forwards = *file_forwards;
 
     // Compute the size of the variable length sections
     unsigned nargs = this->args.size();
+    cpu_t nbindings = this->bindings.size();
     unsigned char npipes = this->pipe_forwards.size();
     unsigned char nfiles = this->file_forwards.size();
 
@@ -108,6 +123,7 @@ CommandMessage::CommandMessage(const string &name, const list<string> &args, con
               id.length() + 1 +
               sizeof(memory) +
               sizeof(cpus) +
+              sizeof(nbindings) + (nbindings * sizeof(cpu_t)) +
               sizeof(npipes) +
               sizeof(nfiles);
 
@@ -159,6 +175,15 @@ CommandMessage::CommandMessage(const string &name, const list<string> &args, con
     // Add the CPU requirement
     memcpy(msg + off, &cpus, sizeof(cpus));
     off += sizeof(cpus);
+
+    // Add the bindings
+    memcpy(msg + off, &nbindings, sizeof(nbindings));
+    off += sizeof(nbindings);
+    for (vector<cpu_t>::iterator i=this->bindings.begin(); i!=this->bindings.end(); i++) {
+        cpu_t binding = *i;
+        memcpy(msg + off, &binding, sizeof(binding));
+        off += sizeof(binding);
+    }
 
     // Add the pipe forwards
     memcpy(msg + off, &npipes, sizeof(npipes));
@@ -217,24 +242,35 @@ RegistrationMessage::RegistrationMessage(char *msg, unsigned msgsize, int source
     int off = hostname.length() + 1;
     memcpy(&memory, msg + off, sizeof(memory));
     off += sizeof(memory);
-    memcpy(&cpus, msg + off, sizeof(cpus));
-    //off += sizeof(cpus);
+    memcpy(&threads, msg + off, sizeof(threads));
+    off += sizeof(threads);
+    memcpy(&cores, msg + off, sizeof(cores));
+    off += sizeof(cores);
+    memcpy(&sockets, msg + off, sizeof(sockets));
+    //off += sizeof(sockets);
 }
 
-RegistrationMessage::RegistrationMessage(const string &hostname, unsigned memory, unsigned cpus) {
+RegistrationMessage::RegistrationMessage(const string &hostname, unsigned memory, cpu_t threads, cpu_t cores, cpu_t sockets) {
     this->hostname = hostname;
     this->memory = memory;
-    this->cpus = cpus;
+    this->threads = threads;
+    this->cores = cores;
+    this->sockets = sockets;
 
-    this->msgsize = hostname.length() + 1 + sizeof(memory) + sizeof(cpus);
+    this->msgsize = hostname.length() + 1 + sizeof(memory) + sizeof(threads) + sizeof(cores) + sizeof(sockets);
     this->msg = new char[this->msgsize];
-    
+
     int off = 0;
     strcpy(msg + off, hostname.c_str());
     off += strlen(msg) + 1;
     memcpy(msg + off, &memory, sizeof(memory));
     off += sizeof(memory);
-    memcpy(msg + off, &cpus, sizeof(cpus));
+    memcpy(msg + off, &threads, sizeof(threads));
+    off += sizeof(threads);
+    memcpy(msg + off, &cores, sizeof(cores));
+    off += sizeof(cores);
+    memcpy(msg + off, &sockets, sizeof(sockets));
+    //off += sizeof(sockets);
 }
 
 HostrankMessage::HostrankMessage(char *msg, unsigned msgsize, int source) : Message(msg, msgsize, source) {

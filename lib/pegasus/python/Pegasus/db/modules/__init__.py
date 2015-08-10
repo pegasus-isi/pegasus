@@ -34,9 +34,9 @@ Takes a SQLAlchemy connection string and a module function as
 required arguments. 
 """
 class SQLAlchemyInit(object):
-    def __init__(self, dburi, **kwarg):
+    def __init__(self, dburi, props=None, db_type=None, **kwarg):
         self.dburi = dburi
-        self.session = connection.connect(dburi, create=True)
+        self.session = connection.connect(dburi, create=True, props=props, db_type=db_type)
 
     def __getattr__(self, name):
         if name == "db":

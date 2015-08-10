@@ -19,6 +19,7 @@
 #include "log.h"
 #include "failure.h"
 #include "tools.h"
+#include "config.h"
 
 using std::string;
 using std::map;
@@ -119,13 +120,14 @@ string FileForward::destination() {
     return destfile;
 }
 
-TaskHandler::TaskHandler(Worker *worker, string &name, list<string> &args, string &id, unsigned memory, unsigned cpus, const map<string,string> &pipe_forwards, const map<string,string> &file_forwards) {
+TaskHandler::TaskHandler(Worker *worker, string &name, list<string> &args, string &id, unsigned memory, unsigned cpus, const vector<cpu_t> &bindings, const map<string,string> &pipe_forwards, const map<string,string> &file_forwards) {
     this->worker = worker;
     this->name = name;
     this->args = args;
     this->id = id;
     this->memory = memory;
     this->cpus = cpus;
+    this->bindings = bindings;
     this->pipe_forwards = pipe_forwards;
     this->file_forwards = file_forwards;
     this->start = 0;
@@ -278,6 +280,35 @@ void TaskHandler::child_process() {
         }
     }
 
+    // Add other useful environment variables
+    int rc;
+    char envbuf[1024];
+    int envsz = sizeof(envbuf);
+    if (setenv("PMC_TASK", this->name.c_str(), 1) < 0) {
+        log_fatal("Unable to set environment entry for PMC_TASK: %s", strerror(errno));
+        _exit(1);
+    }
+    rc = snprintf(envbuf, envsz, "%u", this->memory);
+    if (rc < 0 || rc >= envsz || setenv("PMC_MEMORY", envbuf, 1) < 0) {
+        log_fatal("Unable to set environment entry for PMC_MEMORY: %s", strerror(errno));
+        _exit(1);
+    }
+    rc = snprintf(envbuf, envsz, "%u", this->cpus);
+    if (rc < 0 || rc >= envsz || setenv("PMC_CPUS", envbuf, 1) < 0) {
+        log_fatal("Unable to set environment entry for PMC_CPUS: %s", strerror(errno));
+        _exit(1);
+    }
+    rc = snprintf(envbuf, envsz, "%d", this->worker->rank);
+    if (rc < 0 || rc >= envsz || setenv("PMC_RANK", envbuf, 1) < 0) {
+        log_fatal("Unable to set environment entry for PMC_RANK: %s", strerror(errno));
+        _exit(1);
+    }
+    rc = snprintf(envbuf, envsz, "%d", this->worker->host_rank);
+    if (rc < 0 || rc >= envsz || setenv("PMC_HOST_RANK", envbuf, 1) < 0) {
+        log_fatal("Unable to set environment entry for PMC_HOST_RANK: %s", strerror(errno));
+        _exit(1);
+    }
+
     // If the executable is not an absolute or relative path, then search PATH
     string executable = argp[0];
     if (executable.find("/") == string::npos) {
@@ -308,6 +339,29 @@ void TaskHandler::child_process() {
         if (setrlimit(RLIMIT_AS, &memlimit) < 0) {
             log_error("Unable to set memory limit (RLIMIT_AS) for task %s: %s",
                 name.c_str(), strerror(errno));
+        }
+    }
+
+    // For multicore jobs with CPU affinity
+    if (bindings.size() > 0) {
+
+        // Set environment variable
+        unsigned off = 0;
+        char env_bindings[1024];
+        for (vector<cpu_t>::iterator i = bindings.begin(); i != bindings.end(); i++) {
+            cpu_t core = *i;
+            off += snprintf(env_bindings + off, sizeof(env_bindings) - off, "%"PRIcpu_t",", core);
+        }
+        env_bindings[off-1] = '\0';
+        setenv("PMC_AFFINITY", env_bindings, 1);
+
+        // Set the cpu affinity
+        if (config.set_affinity) {
+            log_debug("Binding task %s to cores: %s", this->name.c_str(), env_bindings);
+            if (set_cpu_affinity(bindings) < 0) {
+                log_error("Unable to set cpu affinity for task %s to %s: %s",
+                        name.c_str(), env_bindings, strerror(errno));
+            }
         }
     }
 
@@ -650,7 +704,7 @@ void TaskHandler::execute() {
 }
 
 Worker::Worker(Communicator *comm, const string &dagfile, const string &host_script,
-        unsigned int host_memory, unsigned host_cpus, bool strict_limits, 
+        unsigned int host_memory, cpu_t host_cpus, bool strict_limits, 
         bool per_task_stdio) {
     this->comm = comm;
     this->dagfile = dagfile;
@@ -666,9 +720,14 @@ Worker::Worker(Communicator *comm, const string &dagfile, const string &host_scr
         this->host_memory = host_memory;
     }
     if (host_cpus == 0) {
-        this->host_cpus = get_host_cpus();
+        struct cpuinfo c = get_host_cpuinfo();
+        this->host_threads = c.threads;
+        this->host_cores = c.cores;
+        this->host_sockets = c.sockets;
     } else {
-        this->host_cpus = host_cpus;
+        this->host_threads = host_cpus;
+        this->host_cores = host_cpus;
+        this->host_sockets = 1;
     }
     this->strict_limits = strict_limits;
     this->per_task_stdio = per_task_stdio;
@@ -863,11 +922,13 @@ int Worker::run() {
     log_debug("Worker %d: Starting...", rank);
 
     // Send worker's registration message to the master
-    RegistrationMessage regmsg(host_name, host_memory, host_cpus);
+    RegistrationMessage regmsg(host_name, host_memory, host_threads, host_cores, host_sockets);
     comm->send_message(&regmsg, 0);
     log_trace("Worker %d: Host name: %s", rank, host_name.c_str());
     log_trace("Worker %d: Host memory: %u MB", rank, this->host_memory);
-    log_trace("Worker %d: Host CPUs: %u", rank, this->host_cpus);
+    log_trace("Worker %d: Host threads/CPUs: %"PRIcpu_t, rank, this->host_threads);
+    log_trace("Worker %d: Host cores: %"PRIcpu_t, rank, this->host_cores);
+    log_trace("Worker %d: Host sockets: %"PRIcpu_t, rank, this->host_sockets);
 
     // Get worker's host rank
     HostrankMessage *hrmsg = dynamic_cast<HostrankMessage *>(comm->recv_message());
@@ -897,7 +958,7 @@ int Worker::run() {
             log_trace("Worker %d: Got task", rank);
 
             TaskHandler task(this, cmd->name, cmd->args,
-                    cmd->id, cmd->memory, cmd->cpus, cmd->pipe_forwards,
+                    cmd->id, cmd->memory, cmd->cpus, cmd->bindings, cmd->pipe_forwards,
                     cmd->file_forwards);
 
             task.execute();
