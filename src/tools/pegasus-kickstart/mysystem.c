@@ -32,32 +32,12 @@
 #include "monitoring.h"
 #include "procinfo.h"
 #include "error.h"
+#include "monitoring.h"
 
 
 /* The name of the program (argv[0]) set in pegasus-kickstart.c:main */
 char *programname;
 static pthread_t monitoring_thread;
-
-static int isRelativePath(char *path) {
-    // Absolute path
-    if (path[0] == '/') {
-        return 0;
-    }
-
-    // Relative to current directory
-    if (path[0] == '.') {
-        return 1;
-    }
-
-    // Relative to current directory
-    for (char *c = path; *c != '\0'; c++) {
-        if (*c == '/') {
-            return 1;
-        }
-    }
-
-    return 0;
-}
 
 /* Find the path to the interposition library */
 static int findInterposeLibrary(char *path, int pathsize) {

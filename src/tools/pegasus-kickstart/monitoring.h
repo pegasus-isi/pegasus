@@ -1,4 +1,5 @@
 #ifndef _PEGASUS_MONITORING_H
+#define _PEGASUS_MONITORING_H
 
 #include <pthread.h>
 #include "error.h"

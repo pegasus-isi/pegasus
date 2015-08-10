@@ -997,7 +997,7 @@ static void trace_file(const char *path, int fd) {
         return;
     }
 
-    if (!should_trace(path)) {
+    if (!should_trace(fd, path)) {
         return;
     }
 
