@@ -229,6 +229,8 @@ static ProcInfo *processTraceFile(const char *fullpath) {
     ProcInfo *proc = NULL;
     ProcInfo *lastproc = NULL;
 
+    int fork;
+
     /* Read data from the trace file */
     int lines = 0;
     char line[BUFSIZ];
@@ -242,6 +244,7 @@ static ProcInfo *processTraceFile(const char *fullpath) {
                 printerr("calloc: %s\n", strerror(errno));
                 goto exit;
             }
+            fork = 0;
         }
 
         if (proc != lastproc) {
@@ -306,12 +309,12 @@ static ProcInfo *processTraceFile(const char *fullpath) {
             }
         } else if (startswith(line, "stop:")) {
             sscanf(line,"stop:%lf\n", &(proc->stop));
-            if (proc->fork == 0) {
+            if (fork == 0) {
                 /* Reset the pointer so that it creates a new object */
                 proc = NULL;
             } else {
                 /* We skipped one exec, reset fork so we don't skip another */
-                proc->fork = 0;
+                fork = 0;
             }
         } else if (startswith(line, "PAPI_TOT_INS:")) {
             sscanf(line,"PAPI_TOT_INS:%lld\n", &llval);
@@ -332,7 +335,7 @@ static ProcInfo *processTraceFile(const char *fullpath) {
             proc->cmd = strdup(line+4);
             proc->cmd[strlen(proc->cmd)-1] = '\0';
         } else if (startswith(line, "fork")) {
-            proc->fork = 1;
+            fork = 1;
         } else {
             printerr("Unrecognized libinterpose record: %s", line);
         }
