@@ -96,8 +96,11 @@ char *papi_events[] = {
     "PAPI_TOT_INS",
     "PAPI_LD_INS",
     "PAPI_SR_INS",
+    "PAPI_FP_OPS",
     "PAPI_FP_INS",
-    "PAPI_FP_OPS"
+    "PAPI_L3_TCM",
+    "PAPI_L2_TCM",
+    "PAPI_L1_TCM"
 };
 
 #define n_papi_events (sizeof(papi_events) / sizeof(char *))
@@ -890,24 +893,29 @@ static void start_papi() {
         err = PAPI_event_name_to_code(papi_events[i], &event);
         if (err < 0) {
             printerr("Error getting PAPI event code for %s: %s\n", papi_events[i], PAPI_strerror(err));
-            goto cleanup;
+            continue;
         }
 
         PAPI_event_info_t info;
         err = PAPI_get_event_info(event, &info);
         if (err < 0) {
             printerr("Error getting PAPI event info for %s: %s\n", papi_events[i], PAPI_strerror(err));
-            goto cleanup;
+            continue;
         }
         if (info.count == 0) {
-            printerr("PAPI event %s not available: %s\n", papi_events[i], info.long_descr);
-            goto cleanup;
+            /* Event is not available */
+            //printerr("PAPI event %s not available: %s\n", papi_events[i], info.long_descr);
+            continue;
         }
 
         err = PAPI_add_event(ctx->eventset, event);
         if (err < 0) {
+            if (err == PAPI_ECNFLCT) {
+                /* Event conflicts with another event */
+                continue;
+            }
             printerr("Error adding PAPI event %d to event set: %s\n", i, PAPI_strerror(err));
-            goto cleanup;
+            continue;
         }
     }
 
@@ -938,6 +946,7 @@ static void stop_papi() {
         return;
     }
 
+    /* Retrieve the context, or return if it isn't set */
     interpose_papi_ctx *ctx = NULL;
     err = PAPI_get_thr_specific(PAPI_USR1_TLS, (void **)&ctx);
     if (err < 0) {
@@ -948,15 +957,8 @@ static void stop_papi() {
         return;
     }
 
-    /* Collect counter values */
-    int have_counters = 0;
-    long long counters[n_papi_events];
-    err = PAPI_stop(ctx->eventset, counters);
-    if (err < 0) {
-        printerr("PAPI_stop failed: %s\n", PAPI_strerror(err));
-    } else {
-        have_counters = 1;
-    }
+    /* Save event set so we can cleanup context object */
+    int eventset = ctx->eventset;
 
     /* Unset the context value so that we don't try to stop the counters again */
     err = PAPI_set_thr_specific(PAPI_USR1_TLS, NULL);
@@ -965,17 +967,37 @@ static void stop_papi() {
     }
 
     free(ctx);
+    ctx = NULL;
 
+    /* Get the events that were actually recorded */
+    int nevents = n_papi_events;
+    int events[n_papi_events];
+    err = PAPI_list_events(eventset, events, &nevents);
+    if (err < 0) {
+        printerr("PAPI_list_events failed: %s\n", PAPI_strerror(err));
+        goto unregister;
+    }
+
+    /* Collect counter values */
+    long long counters[n_papi_events];
+    err = PAPI_stop(eventset, counters);
+    if (err < 0) {
+        printerr("PAPI_stop failed: %s\n", PAPI_strerror(err));
+        goto unregister;
+    }
+
+    /* Report counters */
+    char eventname[256];
+    for (int i=0; i<nevents; i++) {
+        PAPI_event_code_to_name(events[i], eventname);
+        tprintf("%s: %lld\n", eventname, counters[i]);
+    }
+
+    /* Unregister thread (must be done after PAPI_stop) */
+unregister:
     err = PAPI_unregister_thread();
     if (err < 0) {
         printerr("Error unregistering PAPI thread: %s\n", PAPI_strerror(err));
-    }
-
-    /* Report counter values if we have them */
-    if (have_counters) {
-        for (int i=0; i<n_papi_events; i++) {
-            tprintf("%s: %lld\n", papi_events[i], counters[i]);
-        }
     }
 }
 

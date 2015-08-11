@@ -331,6 +331,15 @@ static ProcInfo *processTraceFile(const char *fullpath) {
         } else if (startswith(line, "PAPI_FP_OPS:")) {
             sscanf(line,"PAPI_FP_OPS:%lld\n", &llval);
             proc->PAPI_FP_OPS += llval;
+        } else if (startswith(line, "PAPI_L3_TCM:")) {
+            sscanf(line,"PAPI_L3_TCM:%lld\n", &llval);
+            proc->PAPI_L3_TCM += llval;
+        } else if (startswith(line, "PAPI_L2_TCM:")) {
+            sscanf(line,"PAPI_L2_TCM:%lld\n", &llval);
+            proc->PAPI_L2_TCM += llval;
+        } else if (startswith(line, "PAPI_L1_TCM:")) {
+            sscanf(line,"PAPI_L1_TCM:%lld\n", &llval);
+            proc->PAPI_L1_TCM += llval;
         } else if (startswith(line, "cmd:")) {
             proc->cmd = strdup(line+4);
             proc->cmd[strlen(proc->cmd)-1] = '\0';
