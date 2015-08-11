@@ -569,17 +569,6 @@ static void read_cmdline() {
     fclose_untraced(f);
 }
 
-/* Get the full path to a file */
-static char *get_fullpath(const char *path) {
-    static char fullpath[BUFSIZ];
-    if (realpath(path, fullpath) == NULL) {
-        printerr("Unable to get real path for '%s': %s\n",
-                 path, strerror(errno));
-        return NULL;
-    }
-    return fullpath;
-}
-
 /* Read /proc/self/exe to get path to executable */
 static char* read_exe() {
     debug("Reading exe");
