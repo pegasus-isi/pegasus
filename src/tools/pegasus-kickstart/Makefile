@@ -1,9 +1,9 @@
 INSTALL = install
 RM = rm -f
 CC = gcc
-CFLAGS = -Wall -O2 -ggdb -std=gnu99
+CFLAGS = -Wall -O2 -ggdb -std=gnu99 -I/ccg/software/papi/5.4.1/include -L/ccg/software/papi/5.4.1/lib
 LD = $(CC)
-LDLIBS = -lm -curl
+LDLIBS = -lm -lcurl
 SYSTEM = $(shell uname -s | tr '[a-z]' '[A-Z]' | tr -d '_ -/')
 ARCH = $(shell uname -m)
 TARGET = pegasus-kickstart
@@ -40,12 +40,12 @@ ifeq (x86_64,${ARCH})
     TARGET += libinterpose.so
     PAPI_SO=$(shell /sbin/ldconfig -p | grep libpapi.so)
     PAPI_H=$(shell ls /usr/include/papi.h)
-    ifneq ($(PAPI_SO),)
-        ifneq ($(PAPI_H),)
+#    ifneq ($(PAPI_SO),)
+#        ifneq ($(PAPI_H),)
             CFLAGS += -DHAS_PAPI
             LI_LDFLAGS += -lpapi
-        endif
-    endif
+#        endif
+#    endif
 endif
     CFLAGS += $(shell getconf LFS_CFLAGS 2>>/dev/null)
     LDFLAGS += $(shell getconf LFS_LDFLAGS 2>>/dev/null)
