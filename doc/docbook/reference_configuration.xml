@@ -1121,7 +1121,7 @@ Profile  Key: </emphasis></emphasis>RETRY<emphasis role="bold">
 Scope       :</emphasis> TC, SC, DAX, Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>Integer
-<emphasis role="bold">Default     :</emphasis> 3</literallayout></entry>
+<emphasis role="bold">Default     :</emphasis> 1</literallayout></entry>
 
                 <entry>is the number of times DAGMan retries the full job
                 cycle from pre-script through post-script, if failure was

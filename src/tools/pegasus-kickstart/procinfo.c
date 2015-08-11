@@ -513,19 +513,39 @@ int printXMLProcInfo(FILE *out, int indent, ProcInfo* procs) {
                 "vmpeak=\"%d\" rsspeak=\"%d\" rchar=\"%"PRIu64"\" wchar=\"%"PRIu64"\" "
                 "rbytes=\"%"PRIu64"\" wbytes=\"%"PRIu64"\" cwbytes=\"%"PRIu64"\" "
                 "syscr=\"%"PRIu64"\" syscw=\"%"PRIu64"\""
-#ifdef HAS_PAPI
-                " totins=\"%lld\" ldins=\"%lld\" srins=\"%lld\" fpins=\"%lld\" fpops=\"%lld\""
-#endif
                 , indent, "", i->ppid, i->pid, i->exe,
                 i->start, i->stop, i->utime, i->stime, i->iowait,
                 i->fin_threads, i->max_threads, i->tot_threads,
                 i->vmpeak, i->rsspeak, i->rchar, i->wchar,
                 i->read_bytes, i->write_bytes, i->cancelled_write_bytes,
                 i->syscr, i->syscw
+        );
 #ifdef HAS_PAPI
-                , i->PAPI_TOT_INS, i->PAPI_LD_INS, i->PAPI_SR_INS, i->PAPI_FP_INS, i->PAPI_FP_OPS
+        if (i->PAPI_TOT_INS > 0) {
+            fprintf(out, " totins=\"%lld\"", i->PAPI_TOT_INS);
+        }
+        if (i->PAPI_LD_INS > 0) {
+            fprintf(out, " ldins=\"%lld\"", i->PAPI_LD_INS);
+        }
+        if (i->PAPI_SR_INS > 0) {
+            fprintf(out, " srins=\"%lld\"", i->PAPI_SR_INS);
+        }
+        if (i->PAPI_FP_INS > 0) {
+            fprintf(out, " fpins=\"%lld\"", i->PAPI_FP_INS);
+        }
+        if (i->PAPI_FP_OPS > 0) {
+            fprintf(out, " fpops=\"%lld\"", i->PAPI_FP_OPS);
+        }
+        if (i->PAPI_L3_TCM > 0) {
+            fprintf(out, " l3misses=\"%lld\"", i->PAPI_L3_TCM);
+        }
+        if (i->PAPI_L2_TCM > 0) {
+            fprintf(out, " l2misses=\"%lld\"", i->PAPI_L2_TCM);
+        }
+        if (i->PAPI_L1_TCM > 0) {
+            fprintf(out, " l1misses=\"%lld\"", i->PAPI_L1_TCM);
+        }
 #endif
-                );
         if (i->cmd == NULL && i->files == NULL && i->sockets == NULL) {
             fprintf(out, "/>\n");
         } else {

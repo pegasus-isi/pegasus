@@ -70,10 +70,11 @@ typedef struct _ProcInfo {
     long long PAPI_SR_INS;  /* Store instructions */
     long long PAPI_FP_INS;  /* Floating point instructions */
     long long PAPI_FP_OPS;  /* Floating point ops */
+    long long PAPI_L3_TCM;  /* L3 cache misses */
+    long long PAPI_L2_TCM;  /* L2 cache misses */
+    long long PAPI_L1_TCM;  /* L1 cache misses */
 
     char *cmd;              /* Command line */
-
-    int fork;               /* Is this process forked from another? */
 
     struct _ProcInfo *next;
     struct _ProcInfo *prev;
