@@ -452,7 +452,13 @@ public class PegasusLite implements GridStart {
      */
     private void enableForWorkerNodeExecution(Job job, boolean isGlobusJob ) {
 
-        if( job.getJobType() == Job.COMPUTE_JOB  ){
+        if (job.getJobType() == Job.COMPUTE_JOB
+                || 
+                //PM-971 all auxillary jobs that are setup to be
+                //run on non local sites should also be wrapped
+                //with PegasusLite. Todo? maybe have no distinction in future
+                (job.getJobType() != Job.COMPUTE_JOB
+                && !job.getSiteHandle().equals("local"))) {
 
             //in pegasus lite mode we dont want kickstart to change or create
             //worker node directories
@@ -728,17 +734,26 @@ public class PegasusLite implements GridStart {
     protected File wrapJobWithPegasusLite(Job job, boolean isGlobusJob) {
         File shellWrapper = new File( mSubmitDir, job.getID() + ".sh" );
 
-        SiteCatalogEntry stagingSiteEntry = mSiteStore.lookup( job.getStagingSiteHandle() );
-        if( stagingSiteEntry == null ){
-            this.complainForHeadNodeFileServer( job.getID(),  job.getStagingSiteHandle());
+        //PM-971 for auxillary jobs we don't need to worry about 
+        //or compute any staging site directories
+        boolean isCompute = job.getJobType() == Job.COMPUTE_JOB;
+        SiteCatalogEntry stagingSiteEntry = null;
+        FileServer stagingSiteServerForRetrieval = null;
+        String stagingSiteDirectory = null;
+        String workerNodeDir = null;
+        if( isCompute ){
+            stagingSiteEntry = mSiteStore.lookup( job.getStagingSiteHandle() );
+            if( stagingSiteEntry == null ){
+                this.complainForHeadNodeFileServer( job.getID(),  job.getStagingSiteHandle());
+            }
+            stagingSiteServerForRetrieval = stagingSiteEntry.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.get );
+            if( stagingSiteServerForRetrieval == null ){
+                this.complainForHeadNodeFileServer( job.getID(),  job.getStagingSiteHandle());
+            }
+
+            stagingSiteDirectory      = mSiteStore.getInternalWorkDirectory( job, true );
+            workerNodeDir             = getWorkerNodeDirectory( job );
         }
-        FileServer stagingSiteServerForRetrieval = stagingSiteEntry.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.get );
-        if( stagingSiteServerForRetrieval == null ){
-            this.complainForHeadNodeFileServer( job.getID(),  job.getStagingSiteHandle());
-        }
-        
-        String stagingSiteDirectory      = mSiteStore.getInternalWorkDirectory( job, true );
-        String workerNodeDir             = getWorkerNodeDirectory( job );
 
         //PM-810 load SLS factory per job
         SLS sls = mSLSFactory.loadInstance(job);
@@ -816,7 +831,8 @@ public class PegasusLite implements GridStart {
             sb.append( "pegasus_lite_worker_package" ).append( '\n' );
             sb.append( '\n' );
 
-            if(  sls.needsSLSInputTransfers( job ) ){
+            if(  isCompute && //PM-971 for non compute jobs we don't do any sls transfers
+                 sls.needsSLSInputTransfers( job ) ){
                 //generate the sls file with the mappings in the submit exectionSiteDirectory
                 Collection<FileTransfer> files = sls.determineSLSInputTransfers( job,
                                                           sls.getSLSInputLFN( job ),
@@ -916,8 +932,11 @@ public class PegasusLite implements GridStart {
             //arguments passed
             job.setArguments( "" );
 
-             if( sls.needsSLSOutputTransfers( job ) ){
-                 FileServer stagingSiteServerForStore = stagingSiteEntry.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.put );
+            
+            if(  isCompute && //PM-971 for non compute jobs we don't do any sls transfers
+                 sls.needsSLSOutputTransfers( job ) ){
+                 
+                FileServer stagingSiteServerForStore = stagingSiteEntry.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.put );
                  if( stagingSiteServerForStore == null ){
                     this.complainForHeadNodeFileServer( job.getID(),  job.getStagingSiteHandle());
                  }
@@ -1002,7 +1021,8 @@ public class PegasusLite implements GridStart {
         }
 
         //modify the constituentJob if required
-        if ( !sls.modifyJobForWorkerNodeExecution( job,
+        //PM-971 for non compute jobs we don't do any core modification to job
+        if ( isCompute && !sls.modifyJobForWorkerNodeExecution( job,
                                                     stagingSiteServerForRetrieval.getURLPrefix(),
                                                     stagingSiteDirectory,
                                                     workerNodeDir ) ){
