@@ -209,7 +209,7 @@ static void init_descriptors() {
         printerr("Error allocating descriptor table: calloc: %s\n", strerror(errno));
     }
 
-    /* TODO For each open descriptor, initialize the entry */
+    /* For each open descriptor, initialize the entry */
     DIR *fddir = opendir("/proc/self/fd");
     if (fddir == NULL) {
         printerr("Unable to open /proc/self/fd: %s", strerror(errno));
@@ -223,7 +223,7 @@ static void init_descriptors() {
         }
 
         char path[64];
-        snprintf(path, BUFSIZ, "/proc/self/fd/%s", d->d_name);
+        snprintf(path, 64, "/proc/self/fd/%s", d->d_name);
 
         int fd = atoi(d->d_name);
 
