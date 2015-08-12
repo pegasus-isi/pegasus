@@ -49,8 +49,8 @@
 /* TODO Figure out a way to collect PAPI profiles for unterminated threads */
 
 #define printerr(fmt, ...) \
-    fprintf_untraced(stderr, "libinterpose[%d]: %s[%d]: " fmt, \
-                     getpid(), __FILE__, __LINE__, ##__VA_ARGS__)
+    fprintf_untraced(stderr, "libinterpose[%d/%d]: %s[%d]: " fmt, \
+                     getpid(), interpose_gettid(), __FILE__, __LINE__, ##__VA_ARGS__)
 
 #ifdef DEBUG
 #define debug(format, args...) \
@@ -83,6 +83,14 @@ static int threads = 1;
 static int tot_threads = 1;
 static int max_threads = 1;
 static pthread_mutex_t thread_counter_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+/* Tracking the ids of threads */
+static int max_threadids = 4;
+static pthread_t *threadids;
+static int nthreadids;
+static pthread_mutex_t threadid_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+static pthread_cond_t killed_threads_cv = PTHREAD_COND_INITIALIZER;
 
 static int mypid = 0;
 
@@ -830,6 +838,103 @@ static void report_thread_counters() {
     pthread_mutex_unlock(&thread_counter_mutex);
 }
 
+static void store_threadid(pthread_t id) {
+    pthread_mutex_lock(&threadid_mutex);
+
+    /* If we have reached the max, then reallocate the table */
+    if (nthreadids >= max_threadids) {
+        int new_max_threadids = max_threadids * 2;
+        pthread_t *new_threadids = realloc(threadids, new_max_threadids * sizeof(pthread_t));
+        if (new_threadids == NULL) {
+            printerr("Unable to realloc thread id table\n");
+            abort();
+        }
+        bzero(&(new_threadids[max_threadids]), (new_max_threadids-max_threadids) * sizeof(pthread_t));
+        threadids = new_threadids;
+        max_threadids = new_max_threadids;
+    }
+
+    for (int i=0; i<max_threadids; i++) {
+        if (threadids[i] == 0) {
+            threadids[i] = id;
+            nthreadids++;
+            break;
+        }
+    }
+
+    pthread_mutex_unlock(&threadid_mutex);
+}
+
+static void clear_threadid(pthread_t id) {
+    pthread_mutex_lock(&threadid_mutex);
+
+    for (int i=0; i<max_threadids; i++) {
+        if (pthread_equal(id, threadids[i])) {
+            threadids[i] = 0;
+            nthreadids--;
+            break;
+        }
+    }
+
+    pthread_mutex_unlock(&threadid_mutex);
+}
+
+static void init_threadids() {
+    pthread_mutex_lock(&threadid_mutex);
+
+    max_threadids = 2;
+    nthreadids = 0;
+    threadids = calloc(max_threadids, sizeof(pthread_t));
+    if (threadids == NULL) {
+        printerr("Unable to allocate thread ID table\n");
+        abort();
+    }
+
+    pthread_mutex_unlock(&threadid_mutex);
+
+    store_threadid(pthread_self());
+}
+
+static void fini_threadids() {
+    pthread_mutex_lock(&threadid_mutex);
+
+    pthread_t me = pthread_self();
+    for (int i=0; i<max_threadids; i++) {
+        if (threadids[i] != 0) {
+            /* Skip self */
+            if (pthread_equal(me, threadids[i])) {
+                continue;
+            }
+
+            /* Sending this signal should force the thread to exit */
+            pthread_kill(threadids[i], SIGUSR1);
+
+            /* We would like to join with the thread here so that we can
+             * be sure that it exits before pthread_self(), but that is
+             * not possible because the user's program may have replaced the
+             * signal handler with one of their own. Basically, we can't
+             * guarantee that the thread will exit after the signal is
+             * delivered. If they did replace the handler, then this could
+             * cause the process to hang in pthread_join. There is a similar
+             * story for cancelling a thread: basically, there is no way for
+             * this thread to know that cancelling the other thread will result
+             * in the thread being cancelled, because the other thread could
+             * have set itself to not be cancelled. Instead, we use a condition
+             * variable in the signal handler, but we only wait for a max
+             * of 1 second on the condition. If we aren't signalled after
+             * one second, then it is safe to assume we won't be. */
+            struct timeval tv;
+            struct timespec ts;
+            gettimeofday(&tv, NULL);
+            ts.tv_sec = tv.tv_sec + 1;
+            ts.tv_nsec = tv.tv_usec * 1000;
+            pthread_cond_timedwait(&killed_threads_cv, &threadid_mutex, &ts);
+        }
+    }
+
+    pthread_mutex_unlock(&threadid_mutex);
+}
+
 #ifdef HAS_PAPI
 
 static void init_papi() {
@@ -1011,6 +1116,7 @@ static void __attribute__((constructor)) interpose_init(void) {
     topen();
 
     init_descriptors();
+    init_threadids();
 
     tprintf("start: %lf\n", get_time());
 
@@ -1037,8 +1143,13 @@ static void __attribute__((destructor)) interpose_fini(void) {
         trace_close(i);
     }
 
-    read_exe();
+    /* Report thread counters before we shut down threads */
     report_thread_counters();
+
+    /* Shut down all other threads */
+    fini_threadids();
+
+    read_exe();
     read_status();
     read_rusage();
     read_stat();
@@ -1898,19 +2009,40 @@ int fseeko(FILE *stream, off_t offset, int whence) {
     return result;
 }
 
-void interpose_pthread_cleanup(void *arg) {
-    dec_thread_counters();
+static void interpose_pthread_shutdown() {
 #ifdef HAS_PAPI
     stop_papi();
 #endif
+
+    dec_thread_counters();
+    clear_threadid(pthread_self());
+}
+
+static void interpose_pthread_cleanup(void *arg) {
+    interpose_pthread_shutdown();
+
     free(arg);
 }
 
+static void interpose_pthread_sigusr1(int ignore) {
+    interpose_pthread_shutdown();
+
+    /* Tell the signalling thread we are exiting */
+    pthread_mutex_lock(&threadid_mutex);
+    pthread_cond_signal(&killed_threads_cv);
+    pthread_mutex_unlock(&threadid_mutex);
+}
+
 /* This function wraps the start_routine of the thread provided by the user */
-void *interpose_pthread_wrapper(void *arg) {
+static void *interpose_pthread_wrapper(void *arg) {
     debug("pthread_wrapper");
 
+    store_threadid(pthread_self());
     inc_thread_counters();
+
+#ifdef HAS_PAPI
+    start_papi();
+#endif
 
     interpose_pthread_wrapper_arg *info = (interpose_pthread_wrapper_arg *)arg;
     if (info == NULL) {
@@ -1927,9 +2059,8 @@ void *interpose_pthread_wrapper(void *arg) {
         printerr("Unable to set cleanup key for thread %lu\n", interpose_gettid());
     }
 
-#ifdef HAS_PAPI
-    start_papi();
-#endif
+    /* Install a signal handler so we can force the thread to exit */
+    signal(SIGUSR1, interpose_pthread_sigusr1);
 
     return info->start_routine(info->arg);
 }
