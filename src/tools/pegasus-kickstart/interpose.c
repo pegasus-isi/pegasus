@@ -20,6 +20,7 @@
 #include <arpa/inet.h>
 #include <sys/syscall.h>
 #include <pthread.h>
+#include <signal.h>
 #ifdef HAS_PAPI
 #include <papi.h>
 #endif
