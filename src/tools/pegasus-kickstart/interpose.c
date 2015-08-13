@@ -46,8 +46,7 @@
 /* TODO What about mmap? Probably nothing we can do besides interpose
  *      mmap and assume that the total size being mapped is read/written
  */
-/* TODO Thread safety? */
-/* TODO Figure out a way to collect PAPI profiles for unterminated threads */
+/* TODO Thread safety? Particularly the descriptor table. */
 
 #define printerr(fmt, ...) \
     fprintf_untraced(stderr, "libinterpose[%d/%d]: %s[%d]: " fmt, \
@@ -212,7 +211,7 @@ static void trace_file(const char *path, int fd);
 /* Initialize the descriptor table */
 static void init_descriptors() {
     /* Get file descriptor limit and allocate descriptor table */
-    max_descriptors = 8;
+    max_descriptors = 256;
     descriptors = (Descriptor *)calloc(sizeof(Descriptor), max_descriptors);
     if (descriptors == NULL) {
         printerr("Error allocating descriptor table: calloc: %s\n", strerror(errno));
@@ -255,6 +254,33 @@ static void init_descriptors() {
     closedir(fddir);
 }
 
+static void ensure_descriptor(int fd) {
+    if (fd < max_descriptors)
+        return;
+
+    /* Determine what the new size of the table should be */
+    int newmax = max_descriptors * 2;
+    while (fd >= newmax) {
+        newmax = newmax * 2;
+    }
+
+    /* Allocate a new descriptor table */
+    Descriptor *newdescriptors = realloc(descriptors, sizeof(Descriptor) * newmax);
+    if (newdescriptors == NULL) {
+        printerr("Error reallocating new descriptor table with %d entries: realloc: %s\n",
+                 newmax, strerror(errno));
+        /* This is a fatal error */
+        exit(1);
+    }
+
+    /* Clear the newly allocated entries */
+    bzero(&(newdescriptors[max_descriptors]), (newmax-max_descriptors)*sizeof(Descriptor));
+
+    /* Use the new table */
+    descriptors = newdescriptors;
+    max_descriptors = newmax;
+}
+
 /* Get a reference to the given descriptor if it exists */
 static Descriptor *get_descriptor(int fd) {
     /* Sometimes we try to access a descriptor before the 
@@ -268,27 +294,8 @@ static Descriptor *get_descriptor(int fd) {
         return NULL;
     }
 
-    if (fd >= max_descriptors) {
-        /* Determine what the new size of the table should be */
-        int newmax = max_descriptors * 2;
-        while (fd >= newmax) {
-            newmax = newmax * 2;
-        }
-
-        /* Allocate a new descriptor table */
-        Descriptor *newdescriptors = realloc(descriptors, sizeof(Descriptor) * newmax);
-        if (newdescriptors == NULL) {
-            printerr("Error reallocating new descriptor table: realloc: %s\n", strerror(errno));
-            return NULL;
-        }
-
-
-        /* Clear the newly allocated entries */
-        bzero(&(newdescriptors[max_descriptors]), (newmax-max_descriptors)*sizeof(Descriptor));
-
-        descriptors = newdescriptors;
-        max_descriptors = newmax;
-    }
+    /* Make sure that the descriptor table contains this object */
+    ensure_descriptor(fd);
 
     return &(descriptors[fd]);
 }
@@ -767,6 +774,15 @@ static void trace_dup(int oldfd, int newfd) {
         printerr("trace_dup: duplicating the same fd %d\n", oldfd);
         return;
     }
+
+    /* XXX Be careful in this function. Calling get_descriptor with
+     * two different file descriptors can cause problems because
+     * the second get_descriptor can invalidate the pointer returned by
+     * the first! To avoid that, ensure that the descriptor table is
+     * large enough to contain both descriptors first.
+     */
+    ensure_descriptor(newfd);
+    ensure_descriptor(oldfd);
 
     Descriptor *o = get_descriptor(oldfd);
     if (o == NULL) {
