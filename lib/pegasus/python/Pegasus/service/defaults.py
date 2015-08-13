@@ -56,3 +56,4 @@ STORAGE_DIRECTORY = "/var/pegasus"
 # Path to Condor home directory
 #CONDOR_HOME = "/usr"
 
+INFLUXDB_URL = ''

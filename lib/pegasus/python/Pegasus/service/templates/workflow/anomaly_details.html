@@ -1,0 +1,166 @@
+{% macro status_code(exitcode=None) -%}
+    {% if exitcode == None %}"running"{% elif exitcode !=  0 %}"failed"{% else %}"successful"{% endif %}
+{%- endmacro %}
+{% extends "base.html" %}
+{% block title %}Anomaly Details{% endblock %}
+{% block javascript_includes %}
+    <script type="text/javascript" src="//code.highcharts.com/4.1.4/highcharts.js"></script>
+    <script type="text/javascript" src="http://get.influxdb.org/influxdb-latest.js"></script>
+{% endblock %}
+{% block javascript_init %}
+    <script type="text/javascript" charset="utf-8">
+        function plotChart(data) {
+            var points = [];
+            var d = new Date(0); // The 0 there is the key, which sets the date to the epoch
+            d.setUTCSeconds({{ anomaly.ts }});
+
+            for (var i = data[0].points.length - 1; i >= 0; --i) {
+                var x = data[0].points[i].time;
+                var y = data[0].points[i]['{{ anomaly.metrics }}'];
+
+                if (x.getTime() == d.getTime()) {
+                    y = {
+                        x: x,
+                        y: y,
+                        marker: {
+                            lineWidth: 13,
+                            lineColor: 'red',
+                            fillColor: 'red'
+                        }
+                    };
+
+                    points.push(y);
+
+                } else {
+                    points.push({
+                        x: x,
+                        y: y
+                    });
+                }
+
+            }
+
+            $('#chart').highcharts({
+                chart: {
+                    zoomType: 'x'
+                },
+                title: {
+                    text: 'Threshold Exceeded'
+                },
+                subtitle: {
+                    text: {{ anomaly.message|tojson|safe }}
+                },
+                xAxis: {
+                    type: 'datetime',
+                    dateTimeLabelFormats: {
+                        second: '%H:%M:%S.%L'
+                    }/*,
+                     labels: {
+                     formatter: function() {
+                     return this.value + ' ms';
+                     }
+                     }*/
+                },
+                yAxis: {
+                    title: {
+                        text: '{{ anomaly.metrics }}'
+                    },
+                    min: 0,
+                    plotBands: [{ // visualize the weekend
+                        from: 0,
+                        to: {{ anomaly.json.threshold }},
+                        color: 'rgba(0, 255, 0, .1)'
+                    }]
+                },
+                legend: {
+                    enabled: false
+                },
+                credits: {
+                    enabled: false
+                },
+                plotOptions: {
+                    area: {
+                        fillColor: {
+                            linearGradient: {
+                                x1: 0,
+                                y1: 0,
+                                x2: 0,
+                                y2: 1
+                            },
+                            stops: [
+                                [0, Highcharts.getOptions().colors[0]],
+                                [1, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
+                            ]
+                        },
+                        marker: {
+                            radius: 2
+                        },
+                        lineWidth: 1,
+                        states: {
+                            hover: {
+                                lineWidth: 1
+                            }
+                        },
+                        threshold: null
+                    }
+                },
+
+                series: [{
+                    type: 'area',
+                    name: '{{ anomaly.metrics }}',
+                    data: points
+                }]
+            });
+        }
+
+        function getTimeSeriesData(influxdb) {
+            data = influxdb.readPoint('{{ anomaly.metrics }}', '"{{ anomaly.dag_job_id }}:{{ job_instance.sched_id }}"', plotChart);
+        }
+
+        $(function () {
+            var influxdb_url = document.createElement('a');
+            influxdb_url.href = '{{ influxdb_url }}';
+
+            influxdb = new InfluxDB({
+                host: influxdb_url.hostname,
+                port: influxdb_url.port,
+                username: influxdb_url.username,
+                password: influxdb_url.password,
+                ssl: influxdb_url.protocol == 'https:',
+                database: '{{ workflow.dax_label }}:{{ workflow.wf_uuid }}'
+            });
+
+            getTimeSeriesData(influxdb);
+
+        })
+        ;
+
+    </script>
+{% endblock %}
+{% block css_includes %}
+    <style>
+    </style>
+{% endblock %}
+{% block navigation_bar %}
+    <li><a href="{{ url_for ('.workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a></li>
+    {% if anomaly.job_instance_id != None %}
+        <li>
+            <a href="{{ url_for ('.job', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job.job_id, job_instance_id = job_instance.job_instance_id) }}">Job</a>
+        </li>
+    {% endif %}
+    <li class="active">Anomaly</li>
+{% endblock %}
+{% block title_header %}Anomaly Details{% endblock %}
+{% block content %}
+    <section class="row">
+        <div class="col-xs-12">
+
+        </div>
+    </section>
+
+    <section class="row">
+        <div id="chart" class="col-xs-12">
+
+        </div>
+    </section>
+{% endblock %}

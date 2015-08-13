@@ -17,7 +17,7 @@ __author__ = 'Rajiv Mayani'
 from datetime import datetime
 from time import localtime, strftime
 
-from flask import request, render_template, url_for, json, g, redirect, send_from_directory
+from flask import request, render_template, url_for, json, g, redirect, send_from_directory, current_app
 from sqlalchemy.orm.exc import NoResultFound
 
 import os
@@ -215,6 +215,17 @@ def job(username, root_wf_id, wf_id, job_id, job_instance_id):
     return render_template('workflow/job/job_details.html', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job_id, job=job,
                            job_instances=job_instances, job_states=job_states, job_metrics=job_metrics,
                            job_anomalies=job_anomalies)
+
+
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/a/<anomaly_id>', methods=['GET'])
+def anomaly(username, root_wf_id, wf_id, anomaly_id):
+    dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
+    w, j, ji, a = dashboard.get_anomaly_details(wf_id, anomaly_id)
+    a.json = json.loads(a.json)
+
+    return render_template('workflow/anomaly_details.html', root_wf_id=root_wf_id, wf_id=wf_id, workflow=w, job=j,
+                           job_instance=ji, anomaly=a, influxdb_url=current_app.config['INFLUXDB_URL'])
+
 
 @dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>/job_metrics_update', methods=['GET'])
 def job_metrics_update(username, root_wf_id, wf_id, job_id, job_instance_id):
@@ -430,12 +441,14 @@ def time_stats(username, root_wf_id, wf_id):
 
     return '{}'
 
+
 @dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/anomalies', methods=['GET'])
 def workflow_anomalies(username, root_wf_id, wf_id):
     dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
     anomalies = dashboard.get_workflow_anomalies()
 
     return render_template('workflow/anomalies.html', root_wf_id=root_wf_id, wf_id=wf_id, anomalies=anomalies)
+
 
 @dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/browser', methods=['GET'])
 def file_browser(username, root_wf_id, wf_id):
@@ -608,8 +621,8 @@ def stampede_database_missing(error):
 def database_migration_error(error):
     return render_template('error/database_migration_error.html')
 
-
+"""
 @dashboard_routes.errorhandler(Exception)
 def catch_all(error):
-    print error
     return render_template('error/catch_all.html')
+"""

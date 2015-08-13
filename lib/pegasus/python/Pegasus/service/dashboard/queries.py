@@ -304,6 +304,20 @@ class WorkflowInfo(SQLAlchemyInit):
 
         return q.one()
 
+    def get_anomaly_details(self, anomaly_id):
+
+        q = self.session.query(Workflow, Job, JobInstance, Anomaly)
+
+        q = q.filter(Workflow.wf_id == self._wf_id)
+        q = q.filter(Job.wf_id == self._wf_id)
+        q = q.filter(Anomaly.anomaly_id == anomaly_id)
+
+        q = q.filter(Workflow.wf_id == Job.wf_id)
+        q = q.filter(Job.job_id == JobInstance.job_id)
+        q = q.filter(JobInstance.job_instance_id == Anomaly.job_instance_id)
+
+        return q.one()
+
     def get_job_instances(self, job_id):
 
         q = self.session.query(Job.exec_job_id, JobInstance.job_instance_id, JobInstance.exitcode,

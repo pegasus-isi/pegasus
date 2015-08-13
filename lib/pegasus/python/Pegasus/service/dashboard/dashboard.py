@@ -386,6 +386,18 @@ class Dashboard(object):
         finally:
             Dashboard.close(workflow)
 
+    def get_anomaly_details(self, wf_id, anomaly_id):
+        try:
+            workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id)
+            anomaly = workflow.get_anomaly_details(anomaly_id)
+            return anomaly
+
+        except NoResultFound:
+            return None
+        finally:
+            Dashboard.close(workflow)
+
+
     def get_job_instances(self, wf_id, job_id):
         """
         Get a list of all job instances for a given job

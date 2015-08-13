@@ -302,7 +302,7 @@
                 <div role="tabpanel" class="tab-pane" id="job_anomalies">
                     <div class="list-group">
                         {% for anomaly in job_anomalies %}
-                            <a href="#" class="list-group-item">
+                            <a href="{{ url_for ('.anomaly', root_wf_id = root_wf_id, wf_id = wf_id, anomaly_id = anomaly.anomaly_id) }}" class="list-group-item">
                                 <strong>{{ anomaly.anomaly_type }}</strong> {{ anomaly.message }}
                             </a>
                         {% endfor %}
