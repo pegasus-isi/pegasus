@@ -46,7 +46,6 @@
 /* TODO What about mmap? Probably nothing we can do besides interpose
  *      mmap and assume that the total size being mapped is read/written
  */
-/* TODO Thread safety? Particularly the descriptor table. */
 
 #define printerr(fmt, ...) \
     fprintf_untraced(stderr, "libinterpose[%d/%d]: %s[%d]: " fmt, \
@@ -77,6 +76,21 @@ const char DTYPE_SOCK = 2;
 /* File descriptor table */
 static Descriptor *descriptors = NULL;
 static int max_descriptors = 0;
+static pthread_mutex_t descriptor_mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
+
+#define lock_descriptors() do { \
+    if (pthread_mutex_lock(&descriptor_mutex) != 0) { \
+        printerr("Error locking descriptor mutex\n"); \
+        _exit(1); \
+    } \
+} while (0);
+
+#define unlock_descriptors() do { \
+    if (pthread_mutex_unlock(&descriptor_mutex) != 0) { \
+        printerr("Error unlocking descriptor mutex\n"); \
+        _exit(1); \
+    } \
+} while (0);
 
 /* Tracking the number of threads */
 static int threads = 1;
@@ -89,7 +103,6 @@ static int max_threadids = 4;
 static pthread_t *threadids;
 static int nthreadids;
 static pthread_mutex_t threadid_mutex = PTHREAD_MUTEX_INITIALIZER;
-
 static pthread_cond_t killed_threads_cv = PTHREAD_COND_INITIALIZER;
 
 static int mypid = 0;
@@ -210,18 +223,22 @@ static void trace_file(const char *path, int fd);
 
 /* Initialize the descriptor table */
 static void init_descriptors() {
+
+    lock_descriptors();
+
     /* Get file descriptor limit and allocate descriptor table */
     max_descriptors = 256;
     descriptors = (Descriptor *)calloc(sizeof(Descriptor), max_descriptors);
     if (descriptors == NULL) {
         printerr("Error allocating descriptor table: calloc: %s\n", strerror(errno));
+        _exit(1);
     }
 
     /* For each open descriptor, initialize the entry */
     DIR *fddir = opendir("/proc/self/fd");
     if (fddir == NULL) {
         printerr("Unable to open /proc/self/fd: %s", strerror(errno));
-        return;
+        goto unlock;
     }
 
     struct dirent *d;
@@ -252,11 +269,17 @@ static void init_descriptors() {
     }
 
     closedir(fddir);
+
+unlock:
+    unlock_descriptors();
 }
 
+/* Make sure the descriptor table is large enough to hold fd */
+/* Note: You must be holding the descriptor mutex when you call this */
 static void ensure_descriptor(int fd) {
-    if (fd < max_descriptors)
+    if (fd < max_descriptors) {
         return;
+    }
 
     /* Determine what the new size of the table should be */
     int newmax = max_descriptors * 2;
@@ -270,7 +293,7 @@ static void ensure_descriptor(int fd) {
         printerr("Error reallocating new descriptor table with %d entries: realloc: %s\n",
                  newmax, strerror(errno));
         /* This is a fatal error */
-        exit(1);
+        _exit(1);
     }
 
     /* Clear the newly allocated entries */
@@ -282,6 +305,7 @@ static void ensure_descriptor(int fd) {
 }
 
 /* Get a reference to the given descriptor if it exists */
+/* Note: You must be holding the descriptor mutex when you call this */
 static Descriptor *get_descriptor(int fd) {
     /* Sometimes we try to access a descriptor before the 
      * constructor has been called where the descriptor array
@@ -586,19 +610,21 @@ static int should_trace(int fd, const char *path) {
 static void trace_file(const char *path, int fd) {
     debug("trace_file %s %d", path, fd);
 
+    lock_descriptors();
+
     Descriptor *f = get_descriptor(fd);
     if (f == NULL) {
-        return;
+        goto unlock;
     }
 
     if (!should_trace(fd, path)) {
-        return;
+        goto unlock;
     }
 
     char *temp = strdup(path);
     if (temp == NULL) {
         printerr("strdup: %s\n", strerror(errno));
-        return;
+        goto unlock;
     }
 
     f->type = DTYPE_FILE;
@@ -609,6 +635,9 @@ static void trace_file(const char *path, int fd) {
     f->nwrite = 0;
     f->bseek = 0;
     f->nseek = 0;
+
+unlock:
+    unlock_descriptors();
 }
 
 static void trace_open(const char *path, int fd) {
@@ -653,45 +682,62 @@ static void trace_openat(int fd) {
 static void trace_read(int fd, ssize_t amount) {
     debug("trace_read %d %lu", fd, amount);
 
+    lock_descriptors();
+
     Descriptor *f = get_descriptor(fd);
     if (f == NULL) {
-        return;
+        goto unlock;
     }
     f->bread += amount;
     f->nread += 1;
+
+unlock:
+    unlock_descriptors();
 }
 
 static void trace_write(int fd, ssize_t amount) {
     debug("trace_write %d %lu", fd, amount);
 
+    lock_descriptors();
+
     Descriptor *f = get_descriptor(fd);
     if (f == NULL) {
-        return;
+        goto unlock;
     }
     f->bwrite += amount;
     f->nwrite += 1;
+
+unlock:
+    unlock_descriptors();
 }
 
 static void trace_seek(int fd, off_t offset) {
     debug("trace_seek %d %ld", fd, offset);
 
+    lock_descriptors();
+
     Descriptor *f = get_descriptor(fd);
     if (f == NULL) {
-        return;
+        goto unlock;
     }
     f->bseek += offset > 0 ? offset : -offset;
     f->nseek += 1;
+
+unlock:
+    unlock_descriptors();
 }
 
 static void trace_close(int fd) {
+    lock_descriptors();
+
     Descriptor *f = get_descriptor(fd);
     if (f == NULL) {
-        return;
+        goto unlock;
     }
 
     if (f->path == NULL) {
         /* If the path is null, then it is a descriptor we aren't tracking */
-        return;
+        goto unlock;
     }
 
     debug("trace_close %d", fd);
@@ -721,20 +767,25 @@ static void trace_close(int fd) {
     f->nwrite = 0;
     f->bseek = 0;
     f->nseek = 0;
+
+unlock:
+    unlock_descriptors();
 }
 
 static void trace_sock(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
     debug("trace_sock %d");
 
+    lock_descriptors();
+
     Descriptor *d = get_descriptor(sockfd);
     if (d == NULL) {
-        return;
+        goto unlock;
     }
 
     char *addrstr = get_addr(addr, addrlen);
     if (addrstr == NULL) {
         /* It is not a type of socket we understand */
-        return;
+        goto unlock;
     }
 
     debug("sock addr %s", addrstr);
@@ -759,12 +810,15 @@ static void trace_sock(int sockfd, const struct sockaddr *addr, socklen_t addrle
         char *temp = strdup(addrstr);
         if (temp == NULL) {
             printerr("strdup: %s\n", strerror(errno));
-            return;
+            goto unlock;
         }
 
         d->type = DTYPE_SOCK;
         d->path = temp;
     }
+
+unlock:
+    unlock_descriptors();
 }
 
 static void trace_dup(int oldfd, int newfd) {
@@ -774,6 +828,8 @@ static void trace_dup(int oldfd, int newfd) {
         printerr("trace_dup: duplicating the same fd %d\n", oldfd);
         return;
     }
+
+    lock_descriptors();
 
     /* XXX Be careful in this function. Calling get_descriptor with
      * two different file descriptors can cause problems because
@@ -786,12 +842,12 @@ static void trace_dup(int oldfd, int newfd) {
 
     Descriptor *o = get_descriptor(oldfd);
     if (o == NULL) {
-        return;
+        goto unlock;
     }
 
     /* Not a descriptor we are tracing */
     if (o->path == NULL) {
-        return;
+        goto unlock;
     }
 
     /* Just in case newfd is already open */
@@ -800,13 +856,13 @@ static void trace_dup(int oldfd, int newfd) {
     char *temp = strdup(o->path);
     if (temp == NULL) {
         printerr("strdup: %s\n", strerror(errno));
-        return;
+        goto unlock;
     }
 
     /* Copy the old descriptor into the new */
     Descriptor *n = get_descriptor(newfd);
     if (n == NULL) {
-        return;
+        goto unlock;
     }
     n->type = o->type;
     n->path = temp;
@@ -816,6 +872,9 @@ static void trace_dup(int oldfd, int newfd) {
     n->nwrite = 0;
     n->bseek = 0;
     n->nseek = 0;
+
+unlock:
+    unlock_descriptors();
 }
 
 static void trace_truncate(const char *path, off_t length) {
@@ -1190,7 +1249,7 @@ static inline void *osym(const char *name) {
     void *orig_symbol = dlsym(RTLD_NEXT, name);
     if (orig_symbol == NULL) {
         printerr("FATAL ERROR: Unable to locate symbol %s: %s\n", name, dlerror());
-        exit(1);
+        _exit(1);
     }
     return orig_symbol;
 }
@@ -2065,7 +2124,7 @@ static void *interpose_pthread_wrapper(void *arg) {
     if (info == NULL) {
         /* Probably won't ever happen */
         printerr("FATAL ERROR: interpose_pthread_wrapper argument was NULL: pthread_create start_routine lost\n");
-        exit(1);
+        _exit(1);
     }
 
     /* This sets up a key whose destructor cleans up the thread wrapper */
