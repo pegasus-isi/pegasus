@@ -81,29 +81,39 @@ static pthread_mutex_t descriptor_mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP
 #define lock_descriptors() do { \
     if (pthread_mutex_lock(&descriptor_mutex) != 0) { \
         printerr("Error locking descriptor mutex\n"); \
-        _exit(1); \
+        abort(); \
     } \
 } while (0);
 
 #define unlock_descriptors() do { \
     if (pthread_mutex_unlock(&descriptor_mutex) != 0) { \
         printerr("Error unlocking descriptor mutex\n"); \
-        _exit(1); \
+        abort(); \
     } \
 } while (0);
 
-/* Tracking the number of threads */
-static int threads = 1;
-static int tot_threads = 1;
-static int max_threads = 1;
-static pthread_mutex_t thread_counter_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-/* Tracking the ids of threads */
-static int max_threadids = 4;
+/* Thread tracking */
+static int cur_threads;
+static int tot_threads;
+static int max_threads;
+static int max_threadids;
 static pthread_t *threadids;
-static int nthreadids;
-static pthread_mutex_t threadid_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t thread_track_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t killed_threads_cv = PTHREAD_COND_INITIALIZER;
+
+#define lock_threads() do { \
+    if (pthread_mutex_lock(&thread_track_mutex) != 0) { \
+        printerr("Error locking thread tracking mutex\n"); \
+        abort(); \
+    } \
+} while (0);
+
+#define unlock_threads() do { \
+    if (pthread_mutex_unlock(&thread_track_mutex) != 0) { \
+        printerr("Error unlocking thread tracking mutex\n"); \
+        abort(); \
+    } \
+} while (0);
 
 static int mypid = 0;
 
@@ -231,7 +241,7 @@ static void init_descriptors() {
     descriptors = (Descriptor *)calloc(sizeof(Descriptor), max_descriptors);
     if (descriptors == NULL) {
         printerr("Error allocating descriptor table: calloc: %s\n", strerror(errno));
-        _exit(1);
+        abort();
     }
 
     /* For each open descriptor, initialize the entry */
@@ -293,7 +303,7 @@ static void ensure_descriptor(int fd) {
         printerr("Error reallocating new descriptor table with %d entries: realloc: %s\n",
                  newmax, strerror(errno));
         /* This is a fatal error */
-        _exit(1);
+        abort();
     }
 
     /* Clear the newly allocated entries */
@@ -892,33 +902,17 @@ static void trace_truncate(const char *path, off_t length) {
     free(fullpath);
 }
 
-static void inc_thread_counters() {
-    pthread_mutex_lock(&thread_counter_mutex);
-    threads += 1;
-    tot_threads += 1;
-    if (threads > max_threads) {
-        max_threads = threads;
-    }
-    pthread_mutex_unlock(&thread_counter_mutex);
-}
-
-static void dec_thread_counters() {
-    pthread_mutex_lock(&thread_counter_mutex);
-    threads -= 1;
-    pthread_mutex_unlock(&thread_counter_mutex);
-}
-
 static void report_thread_counters() {
-    pthread_mutex_lock(&thread_counter_mutex);
-    tprintf("threads: %d %d %d\n", threads, max_threads, tot_threads);
-    pthread_mutex_unlock(&thread_counter_mutex);
+    lock_threads();
+    tprintf("threads: %d %d %d\n", cur_threads, max_threads, tot_threads);
+    unlock_threads();
 }
 
-static void store_threadid(pthread_t id) {
-    pthread_mutex_lock(&threadid_mutex);
+static void thread_started(pthread_t id) {
+    lock_threads();
 
     /* If we have reached the max, then reallocate the table */
-    if (nthreadids >= max_threadids) {
+    if (cur_threads >= max_threadids) {
         int new_max_threadids = max_threadids * 2;
         pthread_t *new_threadids = realloc(threadids, new_max_threadids * sizeof(pthread_t));
         if (new_threadids == NULL) {
@@ -933,46 +927,57 @@ static void store_threadid(pthread_t id) {
     for (int i=0; i<max_threadids; i++) {
         if (threadids[i] == 0) {
             threadids[i] = id;
-            nthreadids++;
             break;
         }
     }
 
-    pthread_mutex_unlock(&threadid_mutex);
+    /* Increment thread counters */
+    cur_threads += 1;
+    tot_threads += 1;
+    if (cur_threads > max_threads) {
+        max_threads = cur_threads;
+    }
+
+    unlock_threads();
 }
 
-static void clear_threadid(pthread_t id) {
-    pthread_mutex_lock(&threadid_mutex);
+static void thread_finished(pthread_t id) {
+    lock_threads();
 
     for (int i=0; i<max_threadids; i++) {
         if (pthread_equal(id, threadids[i])) {
             threadids[i] = 0;
-            nthreadids--;
             break;
         }
     }
 
-    pthread_mutex_unlock(&threadid_mutex);
+    /* Decrement thread counter */
+    cur_threads -= 1;
+
+    unlock_threads();
 }
 
-static void init_threadids() {
-    pthread_mutex_lock(&threadid_mutex);
+static void init_threads() {
+    lock_threads();
+
+    cur_threads = 0;
+    max_threads = 0;
+    tot_threads = 0;
 
     max_threadids = 2;
-    nthreadids = 0;
     threadids = calloc(max_threadids, sizeof(pthread_t));
     if (threadids == NULL) {
         printerr("Unable to allocate thread ID table\n");
         abort();
     }
 
-    pthread_mutex_unlock(&threadid_mutex);
+    unlock_threads();
 
-    store_threadid(pthread_self());
+    thread_started(pthread_self());
 }
 
-static void fini_threadids() {
-    pthread_mutex_lock(&threadid_mutex);
+static void fini_threads() {
+    lock_threads();
 
     pthread_t me = pthread_self();
     for (int i=0; i<max_threadids; i++) {
@@ -1004,11 +1009,11 @@ static void fini_threadids() {
             gettimeofday(&tv, NULL);
             ts.tv_sec = tv.tv_sec + 1;
             ts.tv_nsec = tv.tv_usec * 1000;
-            pthread_cond_timedwait(&killed_threads_cv, &threadid_mutex, &ts);
+            pthread_cond_timedwait(&killed_threads_cv, &thread_track_mutex, &ts);
         }
     }
 
-    pthread_mutex_unlock(&threadid_mutex);
+    unlock_threads();
 }
 
 #ifdef HAS_PAPI
@@ -1192,7 +1197,7 @@ static void __attribute__((constructor)) interpose_init(void) {
     topen();
 
     init_descriptors();
-    init_threadids();
+    init_threads();
 
     tprintf("start: %lf\n", get_time());
 
@@ -1223,7 +1228,7 @@ static void __attribute__((destructor)) interpose_fini(void) {
     report_thread_counters();
 
     /* Shut down all other threads */
-    fini_threadids();
+    fini_threads();
 
     read_exe();
     read_status();
@@ -1249,7 +1254,7 @@ static inline void *osym(const char *name) {
     void *orig_symbol = dlsym(RTLD_NEXT, name);
     if (orig_symbol == NULL) {
         printerr("FATAL ERROR: Unable to locate symbol %s: %s\n", name, dlerror());
-        _exit(1);
+        abort();
     }
     return orig_symbol;
 }
@@ -2090,8 +2095,7 @@ static void interpose_pthread_shutdown() {
     stop_papi();
 #endif
 
-    dec_thread_counters();
-    clear_threadid(pthread_self());
+    thread_finished(pthread_self());
 }
 
 static void interpose_pthread_cleanup(void *arg) {
@@ -2104,17 +2108,16 @@ static void interpose_pthread_sigusr1(int ignore) {
     interpose_pthread_shutdown();
 
     /* Tell the signalling thread we are exiting */
-    pthread_mutex_lock(&threadid_mutex);
+    lock_threads();
     pthread_cond_signal(&killed_threads_cv);
-    pthread_mutex_unlock(&threadid_mutex);
+    unlock_threads();
 }
 
 /* This function wraps the start_routine of the thread provided by the user */
 static void *interpose_pthread_wrapper(void *arg) {
     debug("pthread_wrapper");
 
-    store_threadid(pthread_self());
-    inc_thread_counters();
+    thread_started(pthread_self());
 
 #ifdef HAS_PAPI
     start_papi();
@@ -2124,7 +2127,7 @@ static void *interpose_pthread_wrapper(void *arg) {
     if (info == NULL) {
         /* Probably won't ever happen */
         printerr("FATAL ERROR: interpose_pthread_wrapper argument was NULL: pthread_create start_routine lost\n");
-        _exit(1);
+        abort();
     }
 
     /* This sets up a key whose destructor cleans up the thread wrapper */
