@@ -47,13 +47,15 @@
  *      mmap and assume that the total size being mapped is read/written
  */
 
+static int myerr = STDERR_FILENO;
+
 #define printerr(fmt, ...) \
-    fprintf_untraced(stderr, "libinterpose[%d/%d]: %s[%d]: " fmt, \
-                     getpid(), interpose_gettid(), __FILE__, __LINE__, ##__VA_ARGS__)
+    dprintf(myerr, "libinterpose[%d/%lu]: %s[%d]: " fmt, \
+            getpid(), interpose_gettid(), __FILE__, __LINE__, ##__VA_ARGS__)
 
 #ifdef DEBUG
 #define debug(format, args...) \
-    fprintf_untraced(stderr, "libinterpose: " format "\n" , ##args)
+    dprintf(myerr, "libinterpose: " format "\n" , ##args)
 #else
 #define debug(format, args...)
 #endif
@@ -79,6 +81,7 @@ static int max_descriptors = 0;
 static pthread_mutex_t descriptor_mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
 
 #define lock_descriptors() do { \
+    debug("lock_descriptors"); \
     if (pthread_mutex_lock(&descriptor_mutex) != 0) { \
         printerr("Error locking descriptor mutex\n"); \
         abort(); \
@@ -86,6 +89,7 @@ static pthread_mutex_t descriptor_mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP
 } while (0);
 
 #define unlock_descriptors() do { \
+    debug("unlock_descriptors"); \
     if (pthread_mutex_unlock(&descriptor_mutex) != 0) { \
         printerr("Error unlocking descriptor mutex\n"); \
         abort(); \
@@ -149,11 +153,11 @@ typedef struct {
 } interpose_pthread_wrapper_arg;
 
 static FILE *fopen_untraced(const char *path, const char *mode);
-static int fprintf_untraced(FILE *stream, const char *format, ...);
 static int vfprintf_untraced(FILE *stream, const char *format, va_list ap);
 static char *fgets_untraced(char *s, int size, FILE *stream);
 static size_t fread_untraced(void *ptr, size_t size, size_t nmemb, FILE *stream);
 static int fclose_untraced(FILE *fp);
+static int dup_untraced(int fd);
 
 static long unsigned int interpose_gettid(void) {
     return (long unsigned int)syscall(SYS_gettid);
@@ -287,6 +291,18 @@ unlock:
 /* Make sure the descriptor table is large enough to hold fd */
 /* Note: You must be holding the descriptor mutex when you call this */
 static void ensure_descriptor(int fd) {
+    debug("ensure_descriptor %d", fd);
+
+    if (descriptors == NULL) {
+        printerr("Descriptor table not initialized\n");
+        abort();
+    }
+
+    if (fd < 0) {
+        printerr("Invalid descriptor: %d\n", fd);
+        abort();
+    }
+
     if (fd < max_descriptors) {
         return;
     }
@@ -317,6 +333,8 @@ static void ensure_descriptor(int fd) {
 /* Get a reference to the given descriptor if it exists */
 /* Note: You must be holding the descriptor mutex when you call this */
 static Descriptor *get_descriptor(int fd) {
+    debug("get_descriptor %d", fd);
+
     /* Sometimes we try to access a descriptor before the 
      * constructor has been called where the descriptor array
      * is allocated. That can happen, for example, if another library
@@ -783,7 +801,7 @@ unlock:
 }
 
 static void trace_sock(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
-    debug("trace_sock %d");
+    debug("trace_sock %d", sockfd);
 
     lock_descriptors();
 
@@ -1193,6 +1211,11 @@ unregister:
 static void __attribute__((constructor)) interpose_init(void) {
     mypid = getpid();
 
+    /* dup stderr because the program might close it. This is
+     * untraced because the descriptor table has not been
+     * initialized yet */
+    myerr = dup_untraced(STDERR_FILENO);
+
     /* Open the trace file */
     topen();
 
@@ -1260,13 +1283,15 @@ static inline void *osym(const char *name) {
 }
 
 /** INTERPOSED FUNCTIONS **/
+static int dup_untraced(int oldfd) {
+    typeof(dup) *orig_dup = osym("dup");
+    return (*orig_dup)(oldfd);
+}
 
 int dup(int oldfd) {
     debug("dup");
 
-    typeof(dup) *orig_dup = osym("dup");
-
-    int rc = (*orig_dup)(oldfd);
+    int rc = dup_untraced(oldfd);
 
     if (rc >= 0) {
         trace_dup(oldfd, rc);
@@ -1809,14 +1834,6 @@ int vfprintf(FILE *stream, const char *format, va_list ap) {
         trace_write(fileno(stream), rc);
     }
 
-    return rc;
-}
-
-static int fprintf_untraced(FILE *stream, const char *format, ...) {
-    va_list ap;
-    va_start(ap, format);
-    int rc = vfprintf_untraced(stream, format, ap);
-    va_end(ap);
     return rc;
 }
 
