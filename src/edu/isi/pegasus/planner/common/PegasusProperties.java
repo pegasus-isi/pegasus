@@ -2175,6 +2175,20 @@ public class PegasusProperties implements Cloneable {
         return Boolean.parse(mProps.getProperty( "pegasus.catalog.replica.cache.asrc" ),
                              false);
     }
+    
+    /**
+     * Returns a boolean indicating whether to treat the file locations in the DAX
+     * as a replica catalog or not.
+     *
+     * Referred to by the "pegasus.catalog.replica.dax.asrc" property.
+     * 
+     * @return boolean value in the properties file, else false if not specified
+     *         or an invalid value specified.
+     */
+    public boolean treatDAXLocationsAsRC(){
+        return Boolean.parse(mProps.getProperty( "pegasus.catalog.replica.dax.asrc" ),
+                             false);
+    }
 
     /**
      * Returns a boolean indicating whether to preserver line breaks.

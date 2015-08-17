@@ -198,6 +198,12 @@ public class ReplicaCatalogBridge
      * replica catalog or not.
      */
     private boolean mTreatCacheAsRC;
+    
+    /**
+     * A boolean indicating whether the locations in the DAX file needs to be treated as a
+     * replica catalog or not.
+     */
+    private boolean mDAXLocationsAsRC;
 
     /**
      * The default tc entry.
@@ -263,6 +269,7 @@ public class ReplicaCatalogBridge
         mInheritedReplicaStore = new ReplicaStore();
         mDirectoryReplicaStore = new ReplicaStore();
         mTreatCacheAsRC = mProps.treatCacheAsRC();
+        mDAXLocationsAsRC = mProps.treatDAXLocationsAsRC();
         mDefaultTCRCCreated = false;
 
         //converting the Vector into vector of
@@ -443,41 +450,47 @@ public class ReplicaCatalogBridge
      */
     public ReplicaLocation getFileLocs( String lfn ) {
 
-        ReplicaLocation rl = retrieveFromCache( lfn );
+        ReplicaLocation cacheEntry = retrieveFromCache( lfn );
         //first check from cache
-        if(rl != null && !mTreatCacheAsRC){
-            mLogger.log( "Location of file " + rl +
-                         " retrieved from cache" , LogManager.DEBUG_MESSAGE_LEVEL);
-            return rl;
+        if(cacheEntry != null && !mTreatCacheAsRC){
+            mLogger.log("Location of file " + cacheEntry +
+                         " retrieved from cache" , LogManager.TRACE_MESSAGE_LEVEL);
+            return cacheEntry;
         }
         
         //we prefer location in Directory over the DAX entries
         if( this.mDirectoryReplicaStore.containsLFN( lfn ) ){
             return this.mDirectoryReplicaStore.getReplicaLocation(lfn);
         }
-
-
+        
         //we prefer location in DAX over the inherited replica store
+        ReplicaLocation daxEntry = null;
         if( this.mDAXReplicaStore.containsLFN( lfn ) ){
-            return this.mDAXReplicaStore.getReplicaLocation(lfn);
+            daxEntry = this.mDAXReplicaStore.getReplicaLocation(lfn);
+            if( !this.mDAXLocationsAsRC ){
+               return daxEntry;
+            }
         }
 
         //we prefer location in inherited replica store over replica catalog
+        //this is for hierarchal workflows, where the parent is the parent workflow
+        // in recursive hierarchy
         if( this.mInheritedReplicaStore.containsLFN(lfn) ){
             return this.mInheritedReplicaStore.getReplicaLocation(lfn);
         }
 
         ReplicaLocation rcEntry = mReplicaStore.getReplicaLocation( lfn );
-        if (rl == null) {
-            rl = rcEntry;
-        }
-        else{
+        if (cacheEntry != null) {
             //merge with the ones found in cache
-            rl.merge(rcEntry);
+            rcEntry.merge(cacheEntry);
         }
 
+        if ( daxEntry != null) {
+            //merge with the ones found in cache
+            rcEntry.merge( daxEntry );
+        }
 
-        return rl;
+        return rcEntry;
     }
 
 
