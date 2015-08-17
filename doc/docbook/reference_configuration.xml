@@ -2859,6 +2859,36 @@ Scope       :</emphasis> Properties
               found in both the cache and the replica catalog are available
               for replica selection.</entry>
             </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold"><emphasis role="bold"><emphasis role="bold"><emphasis
+                            role="bold"><emphasis role="bold"><emphasis
+                                role="bold"><emphasis role="bold">Property Key:</emphasis></emphasis></emphasis></emphasis></emphasis></emphasis> </emphasis></emphasis>pegasus.catalog.replica.dax.asrc<emphasis
+                    role="bold"><emphasis role="bold"><emphasis role="bold"><emphasis
+                          role="bold">
+Profile Key :</emphasis></emphasis></emphasis></emphasis><emphasis role="bold"><emphasis
+                      role="bold"><emphasis role="bold"> </emphasis></emphasis></emphasis>N/A<emphasis
+                    role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 4.5.2
+<emphasis role="bold">Default     :</emphasis> false
+</literallayout></entry>
+
+              <entry><para>This Boolean property determines whether to treat
+              the locations of files recorded in the DAX as a supplemental
+              replica catalog or not. By default, the LFN-&gt;PFN mappings
+              contained in the DAX file overrides any specified in a replica
+              catalog. This results in only the entry specified in the DAX
+              file to be available for replica selection.</para>Setting this
+              property to true, results in the locations of files recorded in
+              the DAX files to be treated as a supplemental replica catalog.
+              This results in the mappings found in the replica catalog (as
+              specified by pegasus.catalog.replica) to be merged with the ones
+              found in the cache files. Thus, mappings for a particular LFN
+              found in both the DAX and the replica catalog are available for
+              replica selection.</entry>
+            </row>
           </tbody>
         </tgroup>
       </table>
