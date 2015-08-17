@@ -50,8 +50,8 @@
 static int myerr = STDERR_FILENO;
 
 #define printerr(fmt, ...) \
-    dprintf(myerr, "libinterpose[%d/%lu]: %s[%d]: " fmt, \
-            getpid(), interpose_gettid(), __FILE__, __LINE__, ##__VA_ARGS__)
+    dprintf(myerr, "libinterpose[%d/%d]: %s[%d]: " fmt, \
+            getpid(), gettid(), __FILE__, __LINE__, ##__VA_ARGS__)
 
 #ifdef DEBUG
 #define debug(format, args...) \
@@ -159,8 +159,8 @@ static size_t fread_untraced(void *ptr, size_t size, size_t nmemb, FILE *stream)
 static int fclose_untraced(FILE *fp);
 static int dup_untraced(int fd);
 
-static long unsigned int interpose_gettid(void) {
-    return (long unsigned int)syscall(SYS_gettid);
+static pid_t gettid(void) {
+    return (pid_t)syscall(SYS_gettid);
 }
 
 /* Open the trace file */
@@ -1036,6 +1036,10 @@ static void fini_threads() {
 
 #ifdef HAS_PAPI
 
+static long unsigned int papi_gettid() {
+    return (long unsigned int)gettid();
+}
+
 static void init_papi() {
     int err;
 
@@ -1047,7 +1051,7 @@ static void init_papi() {
         return;
     }
 
-    err = PAPI_thread_init(interpose_gettid);
+    err = PAPI_thread_init(papi_gettid);
     if (err < 0) {
         printerr("PAPI_thread_init failed: %s\n", PAPI_strerror(err));
         return;
@@ -2149,10 +2153,10 @@ static void *interpose_pthread_wrapper(void *arg) {
 
     /* This sets up a key whose destructor cleans up the thread wrapper */
     if (pthread_key_create(&info->cleanup, interpose_pthread_cleanup) != 0) {
-        printerr("Error creating cleanup key for thread %lu\n", interpose_gettid());
+        printerr("Error creating cleanup key for thread %d\n", gettid());
     }
     if (pthread_setspecific(info->cleanup, arg) != 0) {
-        printerr("Unable to set cleanup key for thread %lu\n", interpose_gettid());
+        printerr("Unable to set cleanup key for thread %d\n", gettid());
     }
 
     /* Install a signal handler so we can force the thread to exit */
