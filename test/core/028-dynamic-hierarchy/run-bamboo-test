@@ -66,6 +66,8 @@ tr level1::sleep {
   site local {
     pfn "/bin/sleep"
     os "linux"
+    osrelease "deb"
+    osversion "7"
     type "INSTALLED"
   }
 }
@@ -74,6 +76,8 @@ tr level2::sleep {
   site local {
     pfn "/bin/sleep"
     os "linux"
+    osrelease "deb"
+    osversion "7"
     type "INSTALLED"
   }
 }
@@ -85,6 +89,8 @@ tr blackdiamond::generate{
    site local {
     pfn "$TOP_DIR/blackdiamond.py"     
     os "linux"
+    osrelease "deb"
+    osversion "7"
     arch "x86_64"
     type "STAGEABLE"
    }
@@ -101,6 +107,8 @@ tr level2::sleep {
   site local {
     pfn "/bin/sleep"
     os "linux"
+    osrelease "deb"
+    osversion "7"
     type "INSTALLED"
   }
 }
@@ -109,6 +117,8 @@ tr diamond::preprocess:4.0{
    site local {
     pfn "$BIN_DIR/pegasus-keg"
     os "linux"
+    osrelease "deb"
+    osversion "7"
     arch "x86_64"
     type "STAGEABLE"
    }
@@ -118,6 +128,8 @@ tr diamond::analyze:4.0{
    site local {
     pfn "$BIN_DIR/pegasus-keg"
     os "linux"
+    osrelease "deb"
+    osversion "7"
     arch "x86_64"
     type "STAGEABLE"
    }
@@ -126,6 +138,8 @@ tr diamond::findrange:4.0{
    site local {
     pfn "$BIN_DIR/pegasus-keg"
     os "linux"
+    osrelease "deb"
+    osversion "7"
     arch "x86_64"
     type "STAGEABLE"
    }

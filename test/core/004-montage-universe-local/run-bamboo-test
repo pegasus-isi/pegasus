@@ -34,8 +34,10 @@ for BINARY in `(cd /ccg/software/montage/Montage_v3.3_mats/bin/ && ls)`; do
 tr $BINARY:3.3 {
     site local {
         pfn "/ccg/software/montage/Montage_v3.3_mats/bin/$BINARY"
-        arch "x86"
+        arch "x86_64"
         os "linux"
+        osrelease "deb"
+        osversion "7"
         type "INSTALLED"
         profile pegasus "clusters.size" "20"
     }
