@@ -884,6 +884,10 @@ class IRodsHandler(TransferHandlerBase):
 
             if self.ticket != None:
                 return
+            
+            # irods 4.0 rename
+            os.environ['IRODS_ENVIRONMENT_FILE'] = os.environ["irodsEnvFile"]
+            os.environ['IRODS_AUTHENTICATION_FILE'] = os.environ['irodsAuthFileName']
 
             f = os.environ['irodsAuthFileName']
             if os.path.exists(f):
@@ -893,10 +897,6 @@ class IRodsHandler(TransferHandlerBase):
             if not "irodsEnvFile" in os.environ:
                 raise RuntimeError("Missing irodsEnvFile - unable to do irods "
                                    + " transfers")
-
-            # irods 4.0 rename
-            os.environ['IRODS_ENVIRONMENT_FILE'] = os.environ["irodsEnvFile"]
-            os.environ['IRODS_AUTHENTICATION_FILE'] = os.environ['irodsAuthFileName']
 
             check_cred_fs_permissions(os.environ["irodsEnvFile"])
 
