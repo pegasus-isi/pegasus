@@ -24,7 +24,7 @@ e_preprocess = Executable(namespace="diamond", name="preprocess", version="4.0",
 e_preprocess.addPFN(PFN("file://" + sys.argv[1] + "/bin/pegasus-keg", "local"))
 diamond.addExecutable(e_preprocess)
 	
-e_findrange = Executable(namespace="diamond", name="findrange", version="4.0", os="linux", arch="x86", osrelease="rhel", osversion="5", installed=False)
+e_findrange = Executable(namespace="diamond", name="findrange", version="4.0", os="linux", arch="x86_64", osrelease="deb", osversion="7", installed=False)
 e_findrange.addPFN(PFN("file://" + keg, "local"))
 e_findrange.addProfile( Profile( Namespace.PEGASUS, "style", "condorc" ))
 
