@@ -577,7 +577,7 @@ class TransferHandlerBase(object):
     def protocol_check(self, src_proto, dst_proto):
         """
         Checks to see if a src/dst protocol pair can be handled by the handler.
-        This is the base for the automatic handler detection in the TransferSe
+        This is the base for the automatic handler detection in the TransferSet
         class.
         """
         if src_proto is None and dst_proto is not None:
@@ -1308,7 +1308,7 @@ class IRodsHandler(TransferHandlerBase):
             self.lock.release()
     
     
-    def do_transfer(self, transfer, attempt):
+    def do_transfers(self, transfer_list):
         """
         irods - use the icommands to interact with irods
         """
@@ -1317,58 +1317,68 @@ class IRodsHandler(TransferHandlerBase):
         if tools.find("iget", "-h", "Version[ \t]+([\.0-9a-zA-Z]+)") is None:
             raise RuntimeError("Unable to do irods transfers becuase iget"
                                + " could not be found in the current path")
+
+        successful_l = []
+        failed_l = []
+        for t in transfer_list:   
    
-        # log in to irods
-        sitename = transfer.src_sitename
-        if transfer.dst_proto == "irods":
-            sitename = transfer.dst_sitename
-        try:
-            self._irods_login(sitename)
-        except Exception, loginErr:
-            logger.error(loginErr)
-            raise RuntimeError("Unable to log into irods")
-
-        if transfer.dst_proto == "file":
-            # irods->file
-            prepare_local_dir(os.path.dirname(transfer.get_dst_path()))
-            cmd = "iget -v -f -r -T -K"
-            if self.ticket is not None:
-                cmd += " -t " + irods.ticket
-            if transfer.src_host is not "" and attempt == 1:
-                cmd += " -R " + transfer.src_host
-            cmd += " '" + transfer.get_src_path() + "'"
-            cmd += " '" + transfer.get_dst_path() + "'"
-        else:
-            # file->irods
-            cmd = "imkdir -p '" + os.path.dirname(transfer.get_dst_path()) + "'"
+            # log in to irods
+            sitename = t.get_src_site_label()
+            if t.get_dst_proto() == "irods":
+                sitename = t.get_dst_site_label()
             try:
-                tc = TimedCommand(cmd, timeout_secs = 60*60)
-                tc.run()
-            except:
-                # ignore errors from the mkdir command
-                pass
-            cmd = "iput -v -f -r -T -K" 
-            if self.ticket is not None:
-                cmd += " -t " + irods.ticket
-            if transfer.dst_host is not "" and attempt == 1:
-                cmd += " -R " + transfer.dst_host
-            cmd += " '" + transfer.get_src_path() + "'"
-            cmd += " '" +  transfer.get_dst_path() + "'"
-
-        cmd += " </dev/null"
-        try:
-            tc = TimedCommand(cmd)
-            tc.run()
-            # stats      
-            if transfer.dst_proto == "file":
-                stats_add(transfer.get_dst_path())
+                self._irods_login(sitename)
+            except Exception, loginErr:
+                logger.error(loginErr)
+                raise RuntimeError("Unable to log into irods")
+    
+            if t.get_dst_proto() == "file":
+                # irods->file
+                prepare_local_dir(os.path.dirname(t.get_dst_path()))
+                cmd = "iget -v -f -r -T -K"
+                if self.ticket is not None:
+                    cmd += " -t " + irods.ticket
+                if t.get_src_host() is not "" and attempt == 1:
+                    cmd += " -R " + t.src_host
+                cmd += " '" + t.get_src_path() + "'"
+                cmd += " '" + t.get_dst_path() + "'"
             else:
-                stats_add(transfer.get_src_path())
-        except Exception, err:
-            logger.error(err)
-            return False
-        return True
-
+                # file->irods
+                cmd = "imkdir -p '" + os.path.dirname(t.get_dst_path()) + "'"
+                try:
+                    tc = TimedCommand(cmd, timeout_secs = 60*60)
+                    tc.run()
+                except:
+                    # ignore errors from the mkdir command
+                    pass
+                cmd = "iput -v -f -r -T -K" 
+                if self.ticket is not None:
+                    cmd += " -t " + irods.ticket
+                if t.get_dst_host() is not "" and attempt == 1:
+                    cmd += " -R " + t.get_dst_host()
+                cmd += " '" + t.get_src_path() + "'"
+                cmd += " '" +  t.get_dst_path() + "'"
+    
+            cmd += " </dev/null"
+            
+            t_start = time.time()
+            try:
+                tc = TimedCommand(cmd)
+                tc.run()
+                # stats      
+                if t.get_dst_proto() == "file":
+                    stats_add(t.get_dst_path())
+                else:
+                    stats_add(t.get_src_path())
+            except RuntimeError, err:
+                logger.error(err)
+                self._post_transfer_attempt(t, False, t_start)
+                failed_l.append(t)
+                continue
+            self._post_transfer_attempt(t, True, t_start)
+            successful_l.append(t)
+            
+        return [successful_l, failed_l]
 
 
 class S3Handler(TransferHandlerBase):
