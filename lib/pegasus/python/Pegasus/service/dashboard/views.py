@@ -179,6 +179,7 @@ def job(username, root_wf_id, wf_id, job_id, job_instance_id):
     Get details of a specific job instance.
     """
     dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
+    workflow = dashboard.get_workflow_details(wf_id=wf_id)
     job = dashboard.get_job_information(wf_id, job_id, job_instance_id)
     job_states = dashboard.get_job_states(wf_id, job_id, job_instance_id)
     job_metrics = dashboard.get_job_metrics(wf_id, job_instance_id)
@@ -212,9 +213,15 @@ def job(username, root_wf_id, wf_id, job_id, job_instance_id):
         job_metrics.bytes_transferred = filters.format_num(job_metrics.bytes_transferred)
         job_metrics.transfer_duration = filters.time_to_str(job_metrics.transfer_duration)
 
-    return render_template('workflow/job/job_details.html', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job_id, job=job,
-                           job_instances=job_instances, job_states=job_states, job_metrics=job_metrics,
-                           job_anomalies=job_anomalies)
+    if job_instances:
+        for i in job_instances:
+            if job_instance_id == str(i.job_instance_id):
+                job_instance = i
+
+    return render_template('workflow/job/job_details.html', root_wf_id=root_wf_id, wf_id=wf_id, workflow=workflow,
+                           job_id=job_id, job=job, job_instance=job_instance, job_instances=job_instances,
+                           job_states=job_states, job_metrics=job_metrics, job_anomalies=job_anomalies,
+                           influxdb_url=current_app.config['INFLUXDB_URL'])
 
 
 @dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/a/<anomaly_id>', methods=['GET'])

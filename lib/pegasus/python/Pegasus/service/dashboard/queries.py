@@ -321,7 +321,7 @@ class WorkflowInfo(SQLAlchemyInit):
     def get_job_instances(self, job_id):
 
         q = self.session.query(Job.exec_job_id, JobInstance.job_instance_id, JobInstance.exitcode,
-                               JobInstance.job_submit_seq)
+                               JobInstance.job_submit_seq, JobInstance.sched_id)
         q = q.filter(Job.wf_id == self._wf_id)
         q = q.filter(Job.job_id == job_id)
         q = q.filter(Job.job_id == JobInstance.job_id)

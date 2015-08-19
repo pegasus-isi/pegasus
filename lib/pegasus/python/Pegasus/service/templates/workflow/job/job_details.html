@@ -1,275 +1,505 @@
 {% macro status_code(exitcode=None) -%}
-{% if exitcode == None %}"running"{% elif exitcode !=  0 %}"failed"{% else  %}"successful"{% endif %}
+    {% if exitcode == None %}"running"{% elif exitcode !=  0 %}"failed"{% else %}"successful"{% endif %}
 {%- endmacro %}
 {% extends "base.html" %}
 {% block title %}Job Details{% endblock %}
+{% block javascript_includes %}
+    <script type="text/javascript" src="//code.highcharts.com/4.1.4/highcharts.js"></script>
+    <script type="text/javascript" src="http://get.influxdb.org/influxdb-latest.js"></script>
+{% endblock %}
 {% block javascript_init %}
-<script type="text/javascript" charset="utf-8">
-    //
-    // http://stackoverflow.com/questions/1899500/sorting-column-with-anchor-tags-in-jquery-datatables
-    //
-    jQuery.fn.dataTableExt.oSort['num-html-asc'] = function (a, b) {
-        var x = a.replace(/<.*?>/g, "");
-        var y = b.replace(/<.*?>/g, "");
-        x = parseInt(x);
-        y = parseInt(y);
-        return ((x < y || isNaN(y) ) ? -1 : ((x > y || isNaN(x)) ? 1 : 0));
-    };
+    <script type="text/javascript" charset="utf-8">
+        //
+        // http://stackoverflow.com/questions/1899500/sorting-column-with-anchor-tags-in-jquery-datatables
+        //
+        jQuery.fn.dataTableExt.oSort['num-html-asc'] = function (a, b) {
+            var x = a.replace(/<.*?>/g, "");
+            var y = b.replace(/<.*?>/g, "");
+            x = parseInt(x);
+            y = parseInt(y);
+            return ((x < y || isNaN(y) ) ? -1 : ((x > y || isNaN(x)) ? 1 : 0));
+        };
 
-    jQuery.fn.dataTableExt.oSort['num-html-desc'] = function (a, b) {
-        var x = a.replace(/<.*?>/g, "");
-        var y = b.replace(/<.*?>/g, "");
-        x = parseInt(x);
-        y = parseInt(y);
-        return ((x < y || isNaN(x)) ? 1 : ((x > y || isNaN(y) ) ? -1 : 0));
-    };
+        jQuery.fn.dataTableExt.oSort['num-html-desc'] = function (a, b) {
+            var x = a.replace(/<.*?>/g, "");
+            var y = b.replace(/<.*?>/g, "");
+            x = parseInt(x);
+            y = parseInt(y);
+            return ((x < y || isNaN(x)) ? 1 : ((x > y || isNaN(y) ) ? -1 : 0));
+        };
 
-    $(document).ready(function () {
-        $('#invocations_tabs').tabs(
-            {
-                beforeLoad: function (event, ui) {
-                    var isInitialized = ui.panel.data('initialized');
+        $(function () {
+            $('#invocations_tabs').tabs(
+                    {
+                        beforeLoad: function (event, ui) {
+                            var isInitialized = ui.panel.data('initialized');
 
-                    if (isInitialized === true) {
-                        return false;
-                    }
+                            if (isInitialized === true) {
+                                return false;
+                            }
 
-                    ui.jqXHR.error(function () {
-                        ui.panel.html('Error loading contents of this tab.');
-                    })
-                },
-                load: function (event, ui) {
-                    var index = ui.tab.index();
-                    var panel = ui.panel;
+                            ui.jqXHR.error(function () {
+                                ui.panel.html('Error loading contents of this tab.');
+                            })
+                        },
+                        load: function (event, ui) {
+                            var index = ui.tab.index();
+                            var panel = ui.panel;
 
-                    if (index == 0) {
-                        panel.data('initialized', true);
+                            if (index == 0) {
+                                panel.data('initialized', true);
 
-                        if (panel.html() == '') {
-                            panel.html('No failed invocations.')
+                                if (panel.html() == '') {
+                                    panel.html('No failed invocations.')
+                                }
+                                else {
+                                    $('#failed_invocations_list').dataTable({
+                                        "jQueryUI": true,
+                                        "pagingType": "full_numbers"
+                                    });
+                                }
+                            }
+                            else if (index == 1) {
+                                panel.data('initialized', true);
+
+                                if (panel.html() == '') {
+                                    panel.html('No successful invocations.')
+                                }
+                                else {
+                                    $('#successful_invocations_list').dataTable({
+                                        "jQueryUI": true,
+                                        "pagingType": "full_numbers",
+                                        "processing": true
+                                    });
+                                }
+                            }
                         }
-                        else {
-                            $('#failed_invocations_list').dataTable({
-                                "jQueryUI": true,
-                                "pagingType": "full_numbers"
-                            });
-                        }
-                    }
-                    else if (index == 1) {
-                        panel.data('initialized', true);
-
-                        if (panel.html() == '') {
-                            panel.html('No successful invocations.')
-                        }
-                        else {
-                            $('#successful_invocations_list').dataTable({
-                                "jQueryUI": true,
-                                "pagingType": "full_numbers",
-                                "processing": true
-                            });
-                        }
-                    }
-                }
-            });
-
-        verticalTableInitStatus('#job_text_info', {{ status_code(job.exitcode) }});
-        verticalTableInitStatus('#job_states_info', {{ status_code(job.exitcode) }});
-        verticalTableInitStatus('#job_metrics_info', {{ status_code(job.exitcode) }});
-
-        $('#job_instances_info').dataTable({
-            "jQueryUI": true,
-            "pagingType": "full_numbers",
-            "searching": false,
-            "info": true,
-            "order": [
-                [0, "desc"]
-            ],
-            "columns": [
-                null,
-                {"sType": "num-html"},
-                null,
-                null,
-                null
-            ]
-        });
-        {% if exitcode == None %}
-            setInterval(function () {
-                if ($("#job_metrics").length) {
-                    console.log("Updating job metrics");
-                    var update_url = "{{ url_for ('.job_metrics_update', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}";
-
-                    $.getJSON(update_url, function (job_metrics) {
-                        $.each(job_metrics, function (i, metric_update) {
-                            $row = $("#job_metrics_info tr." + metric_update.metric_name);
-                            $row.find("td").text(metric_update.metric_value);
-                        });
                     });
 
+            verticalTableInitStatus('#job_text_info', {{ status_code(job.exitcode) }});
+            verticalTableInitStatus('#job_states_info', {{ status_code(job.exitcode) }});
+            verticalTableInitStatus('#job_metrics_info', {{ status_code(job.exitcode) }});
 
-                }
-                else {
-                    console.log("We have no table with job metrics");
+            $('#job_instances_info').dataTable({
+                "jQueryUI": true,
+                "pagingType": "full_numbers",
+                "searching": false,
+                "info": true,
+                "order": [
+                    [0, "desc"]
+                ],
+                "columns": [
+                    null,
+                    {"sType": "num-html"},
+                    null,
+                    null,
+                    null
+                ]
+            });
+
+            {% if job_metrics %}
+                var influxdb_url = document.createElement('a');
+                influxdb_url.href = '{{ influxdb_url }}';
+                var maxTS = null;
+
+                var charts = {
+                    utime: null,
+                    stime: null,
+                    vmSize: null,
+                    vmRSS: null,
+                    syscr: null,
+                    syscw: null,
+                    iowait: null,
+                    threads: null,
+                    read_bytes: null,
+                    write_bytes: null
+                };
+
+
+                function configureChart(id, title, yaxis, seriesName, data) {
+                    if (charts[id] == null) {
+                        charts[id] = new Highcharts.Chart({
+                            chart: {
+                                renderTo: 'chart_' + id,
+                                zoomType: 'x',
+                                width: 1170
+                            },
+                            title: {
+                                text: title
+                            },
+                            xAxis: {
+                                type: 'datetime',
+                                dateTimeLabelFormats: {
+                                    second: '%H:%M:%S.%L'
+                                }
+                            },
+                            yAxis: {
+                                title: {
+                                    text: yaxis
+                                },
+                                min: 0
+                            },
+                            legend: {
+                                enabled: false
+                            },
+                            credits: {
+                                enabled: false
+                            },
+                            plotOptions: {
+                                area: {
+                                    fillColor: {
+                                        linearGradient: {
+                                            x1: 0,
+                                            y1: 0,
+                                            x2: 0,
+                                            y2: 1
+                                        },
+                                        stops: [
+                                            [0, Highcharts.getOptions().colors[0]],
+                                            [1, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
+                                        ]
+                                    },
+                                    marker: {
+                                        radius: 2
+                                    },
+                                    lineWidth: 1,
+                                    states: {
+                                        hover: {
+                                            lineWidth: 1
+                                        }
+                                    },
+                                    threshold: null
+                                }
+                            },
+
+                            series: [{
+                                type: 'spline',
+                                name: seriesName,
+                                data: data
+                            }]
+                        });
+                    } else {
+                        for (var i = 0; i < data.length; ++i) {
+                            charts[id].series[0].addPoint(data[i]);
+                        }
+                    }
                 }
 
-            }, 10000);
-        {%  endif %}
-    });
-</script>
+                function plotCharts(data) {
+                    var utime = [];
+                    var stime = [];
+                    var vmSize = [];
+                    var vmRSS = [];
+                    var syscr = [];
+                    var syscw = [];
+                    var iowait = [];
+                    var threads = [];
+                    var read_bytes = [];
+                    var write_bytes = [];
+
+                    var offset = 0;
+                    var inLoop = false;
+
+                    if (maxTS && data[0].points[0].time.getTime() == maxTS.getTime()) {
+                        offset = 1;
+                    }
+
+                    for (var i = data[0].points.length - 1; i >= offset; --i) {
+                        inLoop = true;
+
+                        var x = data[0].points[i].time;
+
+                        utime.push({
+                            x: x,
+                            y: data[0].points[i]['utime']
+                        });
+
+                        stime.push({
+                            x: x,
+                            y: data[0].points[i]['stime']
+                        });
+
+                        vmSize.push({
+                            x: x,
+                            y: data[0].points[i]['vmSize']
+                        });
+
+                        vmRSS.push({
+                            x: x,
+                            y: data[0].points[i]['vmRSS']
+                        });
+
+                        syscr.push({
+                            x: x,
+                            y: data[0].points[i]['syscr']
+                        });
+
+                        syscw.push({
+                            x: x,
+                            y: data[0].points[i]['syscw']
+                        });
+
+                        iowait.push({
+                            x: x,
+                            y: data[0].points[i]['iowait']
+                        });
+
+                        threads.push({
+                            x: x,
+                            y: data[0].points[i]['threads']
+                        });
+
+                        read_bytes.push({
+                            x: x,
+                            y: data[0].points[i]['read_bytes']
+                        });
+
+                        write_bytes.push({
+                            x: x,
+                            y: data[0].points[i]['write_bytes']
+                        });
+                    }
+
+                    maxTS = data[0].points[0].time;
+
+                    if (inLoop) {
+                        configureChart('utime', 'utime', 'seconds', 'utime', utime);
+                        configureChart('stime', 'stime', 'seconds', 'stime', stime);
+                        configureChart('vmSize', 'vmSize', 'bytes', 'vmSize', vmSize);
+                        configureChart('vmRSS', 'vmRSS', 'bytes', 'vmRSS', vmRSS);
+                        configureChart('syscr', 'Read syscall', 'count', 'syscr', syscr);
+                        configureChart('syscw', 'Write syscall', 'count', 'syscw', syscw);
+                        configureChart('iowait', 'IO Wait', 'seconds', 'iowait', iowait);
+                        configureChart('threads', 'Thread Count', 'count', 'threads', threads);
+                        configureChart('read_bytes', 'Bytes Read', 'bytes', 'read_bytes', read_bytes);
+                        configureChart('write_bytes', 'Bytes Written', 'bytes', 'write_bytes', write_bytes);
+                    }
+                }
+
+                function getData(influxdb) {
+                    var query = 'SELECT * FROM "{{ job_metrics.dag_job_id }}:{{ job_instance.sched_id }}"';
+
+                    if (maxTS) {
+                        var year = maxTS.getUTCFullYear();
+                        var month = maxTS.getUTCMonth() + 1;
+                        month = month < 10 ? '0' + month : month;
+                        var date = (maxTS.getUTCDate() < 10 ? '0' + maxTS.getUTCDate() : maxTS.getUTCDate());
+
+                        var hours = (maxTS.getUTCHours() < 10 ? '0' + maxTS.getUTCHours() : maxTS.getUTCHours());
+                        var minutes = (maxTS.getUTCMinutes() < 10 ? '0' + maxTS.getUTCMinutes() : maxTS.getUTCMinutes());
+                        var seconds = (maxTS.getUTCSeconds() < 10 ? '0' + maxTS.getUTCSeconds() : maxTS.getUTCSeconds());
+
+                        var milliseconds = maxTS.getUTCMilliseconds();
+                        milliseconds = (milliseconds < 10 ? '00' + milliseconds : (milliseconds < 100 ? '0' + milliseconds : milliseconds));
+
+                        query += " WHERE time > '" + year + '-' + month + '-' + date + ' ' + hours + ':' + minutes +
+                                ':' + seconds + '.' + milliseconds + "'";
+                    }
+
+                    influxdb.query(query + ';', plotCharts);
+                }
+
+                influxdb = new InfluxDB({
+                    host: influxdb_url.hostname,
+                    port: influxdb_url.port,
+                    username: influxdb_url.username,
+                    password: influxdb_url.password,
+                    ssl: influxdb_url.protocol == 'https:',
+                    database: '{{ workflow.dax_label }}:{{ workflow.wf_uuid }}'
+                });
+
+                getData(influxdb);
+
+            {%  endif %}
+
+            {% if exitcode != None %}
+                setInterval(function () {
+                    // Charts
+                    getData(influxdb);
+
+                    // Table
+                    if ($("#job_metrics").length) {
+                        var update_url = "{{ url_for ('.job_metrics_update', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}";
+
+                        $.getJSON(update_url, function (job_metrics) {
+                            $.each(job_metrics, function (i, metric_update) {
+                                $row = $("#job_metrics_info tr." + metric_update.metric_name);
+                                $row.find("td").text(metric_update.metric_value);
+                            });
+                        });
+                    }
+                }, 10000);
+            {%  endif %}
+        });
+    </script>
 {% endblock %}
 {% block css_includes %}
-<style>
-    .job_table_width {
-        width: 40%;
-    }
-</style>
+    <style>
+        .job_table_width {
+            width: 40%;
+        }
+    </style>
 {% endblock %}
 {% block navigation_bar %}
-<li><a href="{{ url_for ('.workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a></li>
-<li class="active">Job</li>
+    <li><a href="{{ url_for ('.workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a></li>
+    <li class="active">Job</li>
 {% endblock %}
 {% block title_header %}Job Details{% endblock %}
 {% block content %}
-<section class="row">
-    <div role="tabpanel">
+    <section class="row">
+        <div role="tabpanel">
 
-        <ul class="nav nav-tabs" role="tablist">
-            <li role="presentation" class="active"><a href="#job_text" aria-controls="summary" role="tab" data-toggle="tab">Summary</a></li>
-            {% if job_states|length %}
-            <li role="presentation"><a href="#job_state" aria-controls="job_state" role="tab" data-toggle="tab">Job States</a></li>
-            {% endif %}
-            <li role="presentation"><a href="#job_instance" aria-controls="job_instance" role="tab" data-toggle="tab">Job Instances</a></li>
-            {% if job_metrics %}
-            <li role="presentation"><a href="#job_metrics" aria-controls="job_metrics" role="tab" data-toggle="tab">Job Metrics</a></li>
-            {% endif %}
-            {% if job_anomalies %}
-            <li role="presentation"><a href="#job_anomalies" aria-controls="job_anomalies" role="tab" data-toggle="tab">Job Anomalies</a></li>
-            {% endif %}
-        </ul>
+            <ul class="nav nav-tabs" role="tablist">
+                <li role="presentation" class="active"><a href="#job_text" aria-controls="summary" role="tab"
+                                                          data-toggle="tab">Summary</a></li>
+                {% if job_states|length %}
+                    <li role="presentation"><a href="#job_state" aria-controls="job_state" role="tab" data-toggle="tab">Job
+                        States</a></li>
+                {% endif %}
+                <li role="presentation"><a href="#job_instance" aria-controls="job_instance" role="tab"
+                                           data-toggle="tab">Job Instances</a></li>
+                {% if job_metrics %}
+                    <li role="presentation"><a href="#job_metrics" aria-controls="job_metrics" role="tab"
+                                               data-toggle="tab">Job Metrics</a></li>
+                {% endif %}
+                {% if job_anomalies %}
+                    <li role="presentation"><a href="#job_anomalies" aria-controls="job_anomalies" role="tab"
+                                               data-toggle="tab">Job Anomalies</a></li>
+                {% endif %}
+            </ul>
 
-        <!-- Tab panes -->
-        <div class="tab-content">
-            <br />
-            <div role="tabpanel" class="tab-pane active" id="job_text">
-                <table id="job_text_info">
-                    <tr>
-                        <th class="job_table_width">Label</th>
-                        <td><strong>{{ job.exec_job_id }}</strong></td>
-                    </tr>
-                    <tr>
-                        <th class="job_table_width">Type</th>
-                        <td>{% if job.clustered %}Clustered{% else %}Compute{% endif %}</td>
-                    </tr>
-                    <tr>
-                        <th class="job_table_width">Exit Code</th>
-                        <td>{{ job.exitcode }}</td>
-                    </tr>
-                    <tr>
-                        <th class="job_table_width">Stdout Preview</th>
-                        <td>
-                            <a target="_blank" href="{{ url_for ('.stdout', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}">Preview</a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th class="job_table_width">Stdout File</th>
-                        <td class="text-nowrap">
-                            <span class="pe-7s-link"> </span>
-                            <a target="_blank" href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}?init_file={{ job.stdout_file }}"
-                               data-toggle="tooltip" data-placement="top" title="View in file browser">
-                                {{ job.stdout_file }}
-                            </a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th class="job_table_width">Stderr Preview</th>
-                        <td>
-                            <a target="_blank" href="{{ url_for ('.stderr', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}">Preview</a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th class="job_table_width">Stderr File</th>
-                        <td class="text-nowrap">
-                            <span class="pe-7s-link"> </span>
-                            <a target="_blank" href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}?init_file={{ job.stderr_file }}"
-                               data-toggle="tooltip" data-placement="top" title="View in file browser">
-                                {{ job.stderr_file }}
-                            </a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th class="job_table_width">Condor Submit File</th>
-                        <td class="text-nowrap">
-                            <span class="pe-7s-link"> </span>
-                            <a target="_blank" href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}?init_file={{ job.exec_job_id }}.sub"
-                               data-toggle="tooltip" data-placement="top" title="View in file browser">
-                                {{ job.exec_job_id }}.sub
-                            </a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th class="job_table_width">Site</th>
-                        <td>{{ job.site }}</td>
-                    </tr>
-                    <tr>
-                        <th class="job_table_width">Host</th>
-                        <td>{{ job.ip }} > {{ job.hostname }}</td>
-                    </tr>
-                </table>
-            </div>
+            <!-- Tab panes -->
+            <div class="tab-content">
+                <br/>
 
-            {% if job_states|length %}
-            <div role="tabpanel" class="tab-pane" id="job_state">
-                <table id="job_states_info">
-                    {% for state in job_states %}
-                    <tr>
-                        <th class="job_table_width" style="text-transform: capitalize;">{{ state.state|replace('_', '
-                            ')|capitalize }}
-                        </th>
-                        <td>{{ state.timestamp }} ( {{ state.interval|time_to_str }} )</td>
-                    </tr>
-                    {% endfor %}
-                </table>
-            </div>
-            {% endif %}
-
-            <div role="tabpanel" class="tab-pane" id="job_instance">
-                <div id="job_instances">
-                    <table id="job_instances_info">
-                        <thead>
+                <div role="tabpanel" class="tab-pane active" id="job_text">
+                    <table id="job_text_info">
                         <tr>
-                            <th>Try</th>
-                            <th>Job Instance ID</th>
-                            <th>Exitcode</th>
-                            <th>Stdout</th>
-                            <th>Stderr</th>
+                            <th class="job_table_width">Label</th>
+                            <td><strong>{{ job.exec_job_id }}</strong></td>
                         </tr>
-                        </thead>
-                        <tbody>
-                        {% for instance in job_instances %}
-                        <tr class={{ status_code (instance.exitcode) }}>
-                            <td>{{ loop.revindex }}</td>
+                        <tr>
+                            <th class="job_table_width">Type</th>
+                            <td>{% if job.clustered %}Clustered{% else %}Compute{% endif %}</td>
+                        </tr>
+                        <tr>
+                            <th class="job_table_width">Exit Code</th>
+                            <td>{{ job.exitcode }}</td>
+                        </tr>
+                        <tr>
+                            <th class="job_table_width">Stdout Preview</th>
                             <td>
-                                <a href="{{ url_for ('.job', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = instance.job_instance_id) }}">
-                                    {{ instance.job_instance_id }}
+                                <a target="_blank"
+                                   href="{{ url_for ('.stdout', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}">Preview</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="job_table_width">Stdout File</th>
+                            <td class="text-nowrap">
+                                <span class="pe-7s-link"> </span>
+                                <a target="_blank"
+                                   href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}?init_file={{ job.stdout_file }}"
+                                   data-toggle="tooltip" data-placement="top" title="View in file browser">
+                                    {{ job.stdout_file }}
                                 </a>
                             </td>
-                            <td>{{ instance.exitcode }}</td>
+                        </tr>
+                        <tr>
+                            <th class="job_table_width">Stderr Preview</th>
                             <td>
-                                <a target="_blank" href="{{ url_for ('.stdout', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = instance.job_instance_id) }}">Preview</a>
-                            </td>
-                            <td>
-                                <a target="_blank" href="{{ url_for ('.stderr', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = instance.job_instance_id) }}">Preview</a>
+                                <a target="_blank"
+                                   href="{{ url_for ('.stderr', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}">Preview</a>
                             </td>
                         </tr>
-                        {% endfor %}
-                        </tbody>
+                        <tr>
+                            <th class="job_table_width">Stderr File</th>
+                            <td class="text-nowrap">
+                                <span class="pe-7s-link"> </span>
+                                <a target="_blank"
+                                   href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}?init_file={{ job.stderr_file }}"
+                                   data-toggle="tooltip" data-placement="top" title="View in file browser">
+                                    {{ job.stderr_file }}
+                                </a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="job_table_width">Condor Submit File</th>
+                            <td class="text-nowrap">
+                                <span class="pe-7s-link"> </span>
+                                <a target="_blank"
+                                   href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}?init_file={{ job.exec_job_id }}.sub"
+                                   data-toggle="tooltip" data-placement="top" title="View in file browser">
+                                    {{ job.exec_job_id }}.sub
+                                </a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="job_table_width">Site</th>
+                            <td>{{ job.site }}</td>
+                        </tr>
+                        <tr>
+                            <th class="job_table_width">Host</th>
+                            <td>{{ job.ip }} > {{ job.hostname }}</td>
+                        </tr>
                     </table>
                 </div>
-            </div>
 
-            {% if job_metrics %}
-            <div role="tabpanel" class="tab-pane" id="job_metrics">
-                <table id="job_metrics_info">
-                    {% for field, name in [
+                {% if job_states|length %}
+                    <div role="tabpanel" class="tab-pane" id="job_state">
+                        <table id="job_states_info">
+                            {% for state in job_states %}
+                                <tr>
+                                    <th class="job_table_width" style="text-transform: capitalize;">{{ state.state|replace('_', '
+                            ')|capitalize }}
+                                    </th>
+                                    <td>{{ state.timestamp }} ( {{ state.interval|time_to_str }} )</td>
+                                </tr>
+                            {% endfor %}
+                        </table>
+                    </div>
+                {% endif %}
+
+                <div role="tabpanel" class="tab-pane" id="job_instance">
+                    <div id="job_instances">
+                        <table id="job_instances_info">
+                            <thead>
+                            <tr>
+                                <th>Try</th>
+                                <th>Job Instance ID</th>
+                                <th>Exitcode</th>
+                                <th>Stdout</th>
+                                <th>Stderr</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for instance in job_instances %}
+                                <tr class={{ status_code (instance.exitcode) }}>
+                                    <td>{{ loop.revindex }}</td>
+                                    <td>
+                                        <a href="{{ url_for ('.job', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = instance.job_instance_id) }}">
+                                            {{ instance.job_instance_id }}
+                                        </a>
+                                    </td>
+                                    <td>{{ instance.exitcode }}</td>
+                                    <td>
+                                        <a target="_blank"
+                                           href="{{ url_for ('.stdout', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = instance.job_instance_id) }}">Preview</a>
+                                    </td>
+                                    <td>
+                                        <a target="_blank"
+                                           href="{{ url_for ('.stderr', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = instance.job_instance_id) }}">Preview</a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {% if job_metrics %}
+                    <div role="tabpanel" class="tab-pane" id="job_metrics">
+                        <table id="job_metrics_info">
+                            {% for field, name in [
                     ('dag_job_id', 'DAG Job ID'),
                     ('hostname', 'Hostname'),
                     ('exec_name', 'Executable Name'),
@@ -289,47 +519,60 @@
                     ('transfer_duration', 'Transfer Duration'),
                     ('site', 'Site')
                     ] %}
-                    <tr class="{{ field }}">
-                        <th class="job_table_width">{{ name }}</th>
-                        <td>{{ job_metrics[field] }}</td>
-                    </tr>
-                    {% endfor %}
-                </table>
-            </div>
-            {% endif %}
-
-            {% if job_anomalies %}
-                <div role="tabpanel" class="tab-pane" id="job_anomalies">
-                    <div class="list-group">
-                        {% for anomaly in job_anomalies %}
-                            <a href="{{ url_for ('.anomaly', root_wf_id = root_wf_id, wf_id = wf_id, anomaly_id = anomaly.anomaly_id) }}" class="list-group-item">
-                                <strong>{{ anomaly.anomaly_type }}</strong> {{ anomaly.message }}
-                            </a>
-                        {% endfor %}
+                                <tr class="{{ field }}">
+                                    <th class="job_table_width">{{ name }}</th>
+                                    <td>{{ job_metrics[field] }}</td>
+                                </tr>
+                            {% endfor %}
+                        </table>
+                        <div class="row">
+                            <div id="chart_utime"></div>
+                            <div id="chart_stime"></div>
+                            <div id="chart_vmSize"></div>
+                            <div id="chart_vmRSS"></div>
+                            <div id="chart_syscr"></div>
+                            <div id="chart_syscw"></div>
+                            <div id="chart_iowait"></div>
+                            <div id="chart_threads"></div>
+                            <div id="chart_read_bytes"></div>
+                            <div id="chart_write_bytes"></div>
+                        </div>
                     </div>
-                </div>
-            {% endif %}
-        </div>
-    </div>
-</section>
+                {% endif %}
 
-<section class="row">
-    <div class="col-xs-12">
-        <h3>Job Invocations</h3>
-        <hr>
-        <div id="invocations_tabs">
-            <ul>
-                <li>
-                    <a href="{{ url_for ('.failed_invocations', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}"
-                       title="failed_invocations">Failed</a>
-                </li>
-                <li>
-                    <a href="{{ url_for ('.successful_invocations', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}"
-                       title="successful_invocations">Successful</a>
-                </li>
-            </ul>
+                {% if job_anomalies %}
+                    <div role="tabpanel" class="tab-pane" id="job_anomalies">
+                        <div class="list-group">
+                            {% for anomaly in job_anomalies %}
+                                <a href="{{ url_for ('.anomaly', root_wf_id = root_wf_id, wf_id = wf_id, anomaly_id = anomaly.anomaly_id) }}"
+                                   class="list-group-item">
+                                    <strong>{{ anomaly.anomaly_type }}</strong> {{ anomaly.message }}
+                                </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
         </div>
+    </section>
 
-    </div>
-</section>
+    <section class="row">
+        <div class="col-xs-12">
+            <h3>Job Invocations</h3>
+            <hr>
+            <div id="invocations_tabs">
+                <ul>
+                    <li>
+                        <a href="{{ url_for ('.failed_invocations', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}"
+                           title="failed_invocations">Failed</a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for ('.successful_invocations', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}"
+                           title="successful_invocations">Successful</a>
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+    </section>
 {% endblock %}
