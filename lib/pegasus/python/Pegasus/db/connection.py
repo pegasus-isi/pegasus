@@ -17,6 +17,22 @@ __all__ = ['connect']
 log = logging.getLogger(__name__)
 
 #-------------------------------------------------------------------
+# Connection Properties
+PROP_CATALOG_MASTER_URL = "pegasus.catalog.master.url"
+PROP_CATALOG_REPLICA_DB_URL = "pegasus.catalog.replica.db.url"
+PROP_CATALOG_WORKFLOW_URL = "pegasus.catalog.workflow.url"
+PROP_DASHBOARD_OUTPUT = "pegasus.dashboard.output"
+PROP_MONITORD_OUTPUT = "pegasus.monitord.output"
+
+CONNECTION_PROPERTIES = [
+    PROP_CATALOG_MASTER_URL,
+    PROP_CATALOG_REPLICA_DB_URL,
+    PROP_CATALOG_WORKFLOW_URL,
+    PROP_DASHBOARD_OUTPUT,
+    PROP_MONITORD_OUTPUT
+]
+#-------------------------------------------------------------------
+
 class ConnectionError(Exception):
     pass
 
@@ -77,19 +93,21 @@ def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=
     return db
 
 
-def connect_by_submitdir(submit_dir, db_type, config_properties=None, echo=False, schema_check=True, create=False, pegasus_version=None, force=False):
+def connect_by_submitdir(submit_dir, db_type, cl_properties=None, config_properties=None, echo=False, schema_check=True,
+                         create=False, pegasus_version=None, force=False):
     """ Connect to the database from submit directory and database type """
-    dburi = url_by_submitdir(submit_dir, db_type, config_properties)
+    dburi = url_by_submitdir(submit_dir, db_type, cl_properties, config_properties)
     return connect(dburi, echo, schema_check, create=create, pegasus_version=pegasus_version, force=force)
 
     
-def connect_by_properties(config_properties, db_type, echo=False, schema_check=True, create=False, pegasus_version=None, force=False):
+def connect_by_properties(config_properties, db_type, cl_properties=None, echo=False, schema_check=True, create=False,
+                          pegasus_version=None, force=False):
     """ Connect to the database from properties file and database type """
-    dburi = url_by_properties(config_properties, db_type)
+    dburi = url_by_properties(config_properties, db_type, cl_properties=cl_properties)
     return connect(dburi, echo, schema_check, create=create, pegasus_version=pegasus_version, force=force)
 
 
-def url_by_submitdir(submit_dir, db_type, config_properties=None, top_dir=None):
+def url_by_submitdir(submit_dir, db_type, cl_properties=None, config_properties=None, top_dir=None):
     """ Get URL from the submit directory """
     if not submit_dir:
         raise ConnectionError("A submit directory should be provided with the type parameter.")
@@ -115,18 +133,20 @@ def url_by_submitdir(submit_dir, db_type, config_properties=None, top_dir=None):
         if "submit_dir" in top_level_wf_params:
             top_level_prop_file = os.path.join(top_level_wf_params["submit_dir"], top_level_prop_file)
 
-    return url_by_properties(config_properties, db_type, submit_dir, top_dir=top_dir, rundir_properties=top_level_prop_file)
+    return url_by_properties(config_properties, db_type, submit_dir, top_dir=top_dir,
+                             rundir_properties=top_level_prop_file, cl_properties=cl_properties)
 
     
-def url_by_properties(config_properties, db_type, submit_dir=None, top_dir=None, rundir_properties=None):
+def url_by_properties(config_properties, db_type, submit_dir=None, top_dir=None, rundir_properties=None, cl_properties=None):
     """ Get URL from the property file """
     # Validate parameters
     if not db_type:
         raise ConnectionError("A type should be provided with the property file.")
-    
+
     # Parse, and process properties
     props = properties.Properties()
     props.new(config_file=config_properties, rundir_propfile=rundir_properties)
+    _merge_properties(props, cl_properties)
 
     dburi = None
     if db_type.upper() == DBType.JDBCRC:
@@ -191,6 +211,15 @@ def _set_sqlite_pragma(conn, record):
         cursor.close()
 
 
+def _merge_properties(props, cl_properties):
+    if cl_properties:
+        for property in cl_properties:
+            if "=" not in property:
+                raise ConnectionError("Malformed property: %s" % property)
+            key,value = property.split("=")
+            props.property(key, val=value)
+
+
 def _get_jdbcrc_uri(props=None):
     """ Get JDBCRC URI from properties """
     if props:
@@ -203,14 +232,14 @@ def _get_jdbcrc_uri(props=None):
 
         rc_info = {
             "driver" : props.property('pegasus.catalog.replica.db.driver'),
-            "url" : props.property('pegasus.catalog.replica.db.url'),
+            "url" : props.property(PROP_CATALOG_REPLICA_DB_URL),
             "user" : props.property('pegasus.catalog.replica.db.user'),
             "password" : props.property('pegasus.catalog.replica.db.password'),
         }
 
         url = rc_info["url"]
         if not url:
-            raise ConnectionError("'pegasus.catalog.replica.db.url' property not set.")
+            raise ConnectionError("'%s' property not set." % PROP_CATALOG_REPLICA_DB_URL)
         url = _parse_jdbc_uri(url)
         o = urlparse(url)
         host = o.netloc
@@ -239,16 +268,16 @@ def _get_jdbcrc_uri(props=None):
 def _get_master_uri(props=None):
     """ Get MASTER URI """
     if props:
-        dburi = props.property('pegasus.catalog.master.url')
+        dburi = props.property(PROP_CATALOG_MASTER_URL)
         if dburi:
             return dburi
-        dburi = props.property('pegasus.dashboard.output')
+        dburi = props.property(PROP_DASHBOARD_OUTPUT)
         if dburi:
             return dburi
 
     homedir = os.getenv("HOME", None)
     if homedir == None:
-        raise ConnectionError("Environment variable HOME not defined, set pegasus.dashboard.output property to point to the Dashboard database.")
+        raise ConnectionError("Environment variable HOME not defined, set %s property to point to the Dashboard database." % PROP_DASHBOARD_OUTPUT)
     
     dir = os.path.join( homedir, ".pegasus" );
     
@@ -283,10 +312,10 @@ def _get_master_uri(props=None):
 def _get_workflow_uri(props=None, submit_dir=None, top_dir=None):
     """ Get WORKFLOW URI """
     if props:
-        dburi = props.property('pegasus.catalog.workflow.url')
+        dburi = props.property(PROP_CATALOG_WORKFLOW_URL)
         if dburi:
             return dburi
-        dburi = props.property('pegasus.monitord.output')
+        dburi = props.property(PROP_MONITORD_OUTPUT)
         if dburi:
             return dburi
 
