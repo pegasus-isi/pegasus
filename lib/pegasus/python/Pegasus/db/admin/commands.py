@@ -27,7 +27,7 @@ class CreateCommand(LoggingCommand):
             dburi = self.args[0]
         
         try:
-            _validate_conf_type_options(self.options.config_properties, self.options.submit_dir, self.options.db_type)
+            _validate_conf_type_options(dburi, self.options.config_properties, self.options.submit_dir, self.options.db_type)
             db = _get_connection(dburi, self.options.config_properties, self.options.submit_dir, self.options.db_type, create=True, force=self.options.force)
             version = db_current_version(db, parse=True)
             _print_version(version)
@@ -171,8 +171,17 @@ def _set_log_level(debug):
         logging.getLogger().setLevel(logging.DEBUG)
 
 
-def _validate_conf_type_options(config_properties, submit_dir, db_type):
-    """ Validate DB type parameter """
+def _validate_conf_type_options(dburi, config_properties, submit_dir, db_type):
+    """ Validate DB type parameter
+    :param dburi: database URI
+    :param config_properties: Pegasus configuration properties file
+    :param submit_dir: workflow submit directory
+    :param db_type: database type (workflow, master, or jdbcrc)
+    """
+    if dburi:
+        # command-line URI has the highest priority
+        return
+
     if (config_properties or submit_dir) and not db_type:
         log.error("A type should be provided with the property file/submit directory.")
         exit(1)
