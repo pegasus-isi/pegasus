@@ -67,7 +67,7 @@ cat > sites.xml << EOF
         </head-fs>
 	<profile namespace="pegasus" key="clusters.num">1</profile>
     </site>
-    <site handle="condorpool" arch="x86" os="LINUX">
+    <site handle="condorpool" arch="x86_64"  os="LINUX" osrelease="deb" osversion="7">
         <head-fs>
             <scratch />
             <storage />
@@ -75,7 +75,7 @@ cat > sites.xml << EOF
         <profile namespace="pegasus" key="style">condor</profile>
         <profile namespace="condor" key="universe">vanilla</profile>
     </site>
-    <site handle="sharedfs" arch="x86" os="LINUX">
+    <site handle="sharedfs" arch="x86_64"  os="LINUX" osrelease="deb" osversion="7">
 	<head-fs>
             <scratch>
                 <shared>
@@ -116,7 +116,7 @@ EOF
 properties execution_site execution_site
 properties staging_site staging_site
 properties output_site output_site
-properties planner_args planner_args 
+properties planner_args planner_args
 properties clean_up clean_up 'leaf'
 
 if [ -e ${TOPDIR}/pegasusrc ]; then

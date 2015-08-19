@@ -451,12 +451,15 @@ public class ReplicaCatalogBridge
     public ReplicaLocation getFileLocs( String lfn ) {
 
         ReplicaLocation cacheEntry = retrieveFromCache( lfn );
+        ReplicaLocation result = null;
+        
         //first check from cache
         if(cacheEntry != null && !mTreatCacheAsRC){
             mLogger.log("Location of file " + cacheEntry +
                          " retrieved from cache" , LogManager.TRACE_MESSAGE_LEVEL);
             return cacheEntry;
         }
+        result = cacheEntry; //result can be null
         
         //we prefer location in Directory over the DAX entries
         if( this.mDirectoryReplicaStore.containsLFN( lfn ) ){
@@ -467,7 +470,17 @@ public class ReplicaCatalogBridge
         ReplicaLocation daxEntry = null;
         if( this.mDAXReplicaStore.containsLFN( lfn ) ){
             daxEntry = this.mDAXReplicaStore.getReplicaLocation(lfn);
-            if( !this.mDAXLocationsAsRC ){
+            if( this.mDAXLocationsAsRC ){
+                //dax entry is non null
+                if( result == null ){
+                    result = daxEntry;
+                }
+                else{
+                    //merge with what we received from the cache
+                    result.merge(daxEntry);
+                }
+            }
+            else{
                return daxEntry;
             }
         }
@@ -480,17 +493,15 @@ public class ReplicaCatalogBridge
         }
 
         ReplicaLocation rcEntry = mReplicaStore.getReplicaLocation( lfn );
-        if (cacheEntry != null) {
-            //merge with the ones found in cache
-            rcEntry.merge(cacheEntry);
+        if( result == null ){
+            result = rcEntry; //can still be null
         }
-
-        if ( daxEntry != null) {
-            //merge with the ones found in cache
-            rcEntry.merge( daxEntry );
+        else{
+            //merge from entry received from replica catalog
+            result.merge( rcEntry );
         }
-
-        return rcEntry;
+        
+        return result;
     }
 
 
