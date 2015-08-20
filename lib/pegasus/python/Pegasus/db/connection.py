@@ -93,10 +93,10 @@ def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=
     return db
 
 
-def connect_by_submitdir(submit_dir, db_type, cl_properties=None, config_properties=None, echo=False, schema_check=True,
-                         create=False, pegasus_version=None, force=False):
+def connect_by_submitdir(submit_dir, db_type, config_properties=None, echo=False, schema_check=True,
+                         create=False, pegasus_version=None, force=False, cl_properties=None):
     """ Connect to the database from submit directory and database type """
-    dburi = url_by_submitdir(submit_dir, db_type, cl_properties, config_properties)
+    dburi = url_by_submitdir(submit_dir, db_type, config_properties, cl_properties=cl_properties)
     return connect(dburi, echo, schema_check, create=create, pegasus_version=pegasus_version, force=force)
 
     
@@ -107,7 +107,7 @@ def connect_by_properties(config_properties, db_type, cl_properties=None, echo=F
     return connect(dburi, echo, schema_check, create=create, pegasus_version=pegasus_version, force=force)
 
 
-def url_by_submitdir(submit_dir, db_type, cl_properties=None, config_properties=None, top_dir=None):
+def url_by_submitdir(submit_dir, db_type, config_properties=None, top_dir=None, cl_properties=None):
     """ Get URL from the submit directory """
     if not submit_dir:
         raise ConnectionError("A submit directory should be provided with the type parameter.")

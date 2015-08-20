@@ -229,9 +229,8 @@ def _get_connection(dburi=None, cl_properties=None, config_properties=None, subm
         return connection.connect(dburi, pegasus_version=pegasus_version, schema_check=schema_check, create=create,
                                   force=force)
     elif submit_dir:
-        return connection.connect_by_submitdir(submit_dir, db_type, cl_properties, config_properties,
-                                               pegasus_version=pegasus_version, schema_check=schema_check, create=create,
-                                               force=force)
+        return connection.connect_by_submitdir(submit_dir, db_type, config_properties, pegasus_version=pegasus_version,
+                                               schema_check=schema_check, create=create, force=force, cl_properties=cl_properties)
 
     elif config_properties or _has_connection_properties(cl_properties):
         return connection.connect_by_properties(config_properties, db_type, cl_properties=cl_properties,
