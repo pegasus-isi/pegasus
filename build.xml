@@ -460,13 +460,13 @@
     </delete>
   </target>
   
-  <target name="dist-source" description="Build source tarball for Pegasus Python Modules">
+  <target name="dist-source" description="Build source tarball">
     <exec executable="release-tools/create-source-tar" failonerror="true">
       <arg line="${pegasus.version}"/>
     </exec>
   </target>
 
-  <target name="dist-python-source" description="Build source tarball">
+  <target name="dist-python-source" description="Build source tarball for Pegasus Python Modules">
     <exec executable="/usr/bin/env" dir="lib/pegasus/python" failonerror="true">
       <arg line="python setup.py sdist"/>
     </exec>
