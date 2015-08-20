@@ -126,7 +126,6 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
       </filterset>
     </copy>
   </target>
-
   <target name="set-git-hash" unless="pegasus.build.git.hash">
     <!-- Get Git Hash if it isn't already set -->
     <echo>Setting pegasus.build.git.hash</echo>
@@ -135,6 +134,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
         <arg value="git rev-parse HEAD"/>
     </exec>
   </target>
+
 
   <target name="compile-common" depends="setup" description="Compile common java code">
     <javac destdir="${build.src}" srcdir="src"
@@ -490,6 +490,14 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <exec executable="release-tools/create-source-tar" failonerror="true">
       <arg line="${pegasus.version}"/>
     </exec>
+  </target>
+
+  <target name="dist-python-source" description="Build source tarball">
+    <exec executable="/usr/bin/env" dir="lib/pegasus/python" failonerror="true">
+      <arg line="python setup.py sdist"/>
+    </exec>
+    <mkdir dir="${dist.dir}/.."/>
+    <move file="lib/pegasus/python/dist/pegasus-wms-${pegasus.version}.tar.gz" tofile="dist/pegasus-python-source-${pegasus.version}.tar.gz" failonerror="true"/>
   </target>
 
   <target name="dist-rpm" depends="dist-source,setup" description="Build RPM package">
