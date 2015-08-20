@@ -114,7 +114,6 @@
       </filterset>
     </copy>
   </target>
-
   <target name="compile-common" depends="setup" description="Compile common java code">
     <javac destdir="${build.src}" srcdir="src"
            encoding="UTF-8" deprecation="true" debug="true"
@@ -465,6 +464,14 @@
     <exec executable="release-tools/create-source-tar" failonerror="true">
       <arg line="${pegasus.version}"/>
     </exec>
+  </target>
+
+  <target name="dist-python-source" description="Build source tarball">
+    <exec executable="/usr/bin/env" dir="lib/pegasus/python" failonerror="true">
+      <arg line="python setup.py sdist"/>
+    </exec>
+    <mkdir dir="${dist.dir}/.."/>
+    <move file="lib/pegasus/python/dist/pegasus-wms-${pegasus.version}.tar.gz" tofile="dist/pegasus-python-source-${pegasus.version}.tar.gz" failonerror="true"/>
   </target>
 
   <target name="dist-rpm" depends="dist-source,setup" description="Build RPM package">
