@@ -1,0 +1,30 @@
+#!/bin/bash
+
+set -e
+set -v
+
+VERSION=$1
+
+# make sure we are in a source dir
+if [ ! -e build.xml ]; then
+    echo "This does not look a like a source directory. Exiting..."
+    exit 1
+fi
+
+mkdir -p dist
+
+# create the dist package
+( cd lib/pegasus/python && /usr/bin/env python setup.py sdist)
+
+# move and rename the created package to the root dist dir
+mv lib/pegasus/python/dist/pegasus-wms-${VERSION}.tar.gz dist/pegasus-python-source-${VERSION}.tar.gz
+
+# untar the package and write the version in setup.py
+cd dist
+tar zxf pegasus-python-source-${VERSION}.tar.gz
+sed -i.bak -e s/version=read_version\(\)/version=\"${VERSION}\"/g pegasus-wms-${VERSION}/setup.py
+rm pegasus-wms-${VERSION}/setup.py.bak
+
+tar czf pegasus-python-source-${VERSION}.tar.gz pegasus-wms-${VERSION}
+rm -rf pegasus-wms-${VERSION}
+
