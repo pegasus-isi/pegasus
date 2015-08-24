@@ -21,7 +21,7 @@ function timed_transfer
     echo "Test command: $cmd"
     echo 
 
-    $cmd
+    eval "$cmd"
     rc=$?
     if [ "x$rc" != "x0" ]; then
         echo "Error: Command returned $rc"
@@ -51,8 +51,25 @@ function timed_transfer
 }
 
 
-# S3 creds
+# credentials
 export S3CFG=~/.s3cfg
+export irodsEnvFile=~/.irods/irods_environment.json.IPlant
+
+
+for SUBTEST in \
+    irods \
+    http \
+    gridftp \
+; do
+    echo
+    echo
+    echo "================================================================="
+    echo 
+    echo "$SUBTEST tests..."
+    echo
+    timed_transfer 0 30 "(cd $SUBTEST && ./run)"
+done
+
 
 echo
 echo

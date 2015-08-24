@@ -533,6 +533,13 @@ class TimedCommand(object):
         """
         return self._outerr
     
+    
+    def get_exit_code(self):
+        """
+        returns the exit code from the process
+        """
+        return self._process.returncode
+    
 
 class TransferHandlerBase(object):
     """
@@ -1239,73 +1246,35 @@ class IRodsHandler(TransferHandlerBase):
     _name = "IRodsHandler"
     _mkdir_cleanup_protocols = ["irods"]
     _protocol_map = ["file->irods", "irods->file"]
+
     
-    ticket = None
+    def do_mkdirs(self, mkdir_list):
 
-    def _irods_login(self, sitename):
-        """
-        log in to irods by using the iinit command - if the file already exists,
-        we are already logged in
-        """
-        self.lock.acquire()
+        tools = Tools()
+        if tools.find("iget", "-h", "Version[ \t]+([\.0-9a-zA-Z]+)") is None:
+            raise RuntimeError("Unable to do irods transfers becuase iget could not be found in the current path")
+        
         try:
-            key = "irodsEnvFile_" + sitename
-            if key in os.environ:
-                os.environ["irodsEnvFile"] = os.environ[key]
+            env = self._irods_login(mkdir_list[0].get_site_label())
+        except Exception, loginErr:
+            logger.error(loginErr)
+            raise RuntimeError("Unable to log into irods")
 
-            if self.ticket != None:
-                return
-            
-            # irods 4.0 rename
-            os.environ['IRODS_ENVIRONMENT_FILE'] = os.environ["irodsEnvFile"]
-            os.environ['IRODS_AUTHENTICATION_FILE'] = os.environ['irodsAuthFileName']
+        successful_l = []
+        failed_l = []        
+        for t in mkdir_list:
 
-            f = os.environ['irodsAuthFileName']
-            if os.path.exists(f):
-                return
-
-            # read password from env file
-            if not "irodsEnvFile" in os.environ:
-                raise RuntimeError("Missing irodsEnvFile - unable to do irods "
-                                   + " transfers")
-
-            check_cred_fs_permissions(os.environ["irodsEnvFile"])
-
-            password = None
-            self.ticket = None
-            h = open(os.environ['irodsEnvFile'], 'r')
-            for line in h:
-
-                # flat file format
-                items = line.split(" ", 2)
-                if items[0].lower() == "irodspassword":
-                    password = items[1].strip(" \t'\"\r\n")
-                if items[0].lower() == "irodsticket":
-                    self.ticket = items[1].strip(" \t'\"\r\n")
-
-                # json - irods 4.0
-                items = line.split(":", 2)
-                key = items[0].lower().strip(" \t'\"\r\n")
-                if key == "irodspassword":
-                    password = items[1].strip(" \t'\",\r\n")
-
-            h.close()
-            if password is None and self.ticket is None:
-                raise RuntimeError("No irodsTicket or irodsPassword" +
-                                   " specified in irods env file")
-
-            if password is not None:
-                h = open(".irodsAc", "w")
-                h.write(password + "\n")
-                h.close()
-                cmd = "cat .irodsAc | iinit"
-                tc = TimedCommand(cmd, timeout_secs = 5*60)
+            cmd = "imkdir -p '" + t.get_path() + "'"
+            try:
+                tc = TimedCommand(cmd, env_overrides = env)
                 tc.run()
-                os.unlink(".irodsAc")
-                check_cred_fs_permissions(os.environ['irodsAuthFileName'])
-
-        finally:
-            self.lock.release()
+            except RuntimeError, err:
+                logger.error(err)
+                failed_l.append(t)
+                continue
+            successful_l.append(t)
+            
+        return [successful_l, failed_l]
     
     
     def do_transfers(self, transfer_list):
@@ -1315,19 +1284,19 @@ class IRodsHandler(TransferHandlerBase):
     
         tools = Tools()
         if tools.find("iget", "-h", "Version[ \t]+([\.0-9a-zA-Z]+)") is None:
-            raise RuntimeError("Unable to do irods transfers becuase iget"
-                               + " could not be found in the current path")
+            raise RuntimeError("Unable to do irods transfers becuase iget could not be found in the current path")
 
         successful_l = []
         failed_l = []
         for t in transfer_list:   
    
             # log in to irods
+            env = None
             sitename = t.get_src_site_label()
             if t.get_dst_proto() == "irods":
                 sitename = t.get_dst_site_label()
             try:
-                self._irods_login(sitename)
+                env = self._irods_login(sitename)
             except Exception, loginErr:
                 logger.error(loginErr)
                 raise RuntimeError("Unable to log into irods")
@@ -1336,9 +1305,7 @@ class IRodsHandler(TransferHandlerBase):
                 # irods->file
                 prepare_local_dir(os.path.dirname(t.get_dst_path()))
                 cmd = "iget -v -f -r -T -K"
-                if self.ticket is not None:
-                    cmd += " -t " + irods.ticket
-                if t.get_src_host() is not "" and attempt == 1:
+                if len(t.get_src_host()) > 0 and t.attempts <= 1:
                     cmd += " -R " + t.src_host
                 cmd += " '" + t.get_src_path() + "'"
                 cmd += " '" + t.get_dst_path() + "'"
@@ -1346,24 +1313,20 @@ class IRodsHandler(TransferHandlerBase):
                 # file->irods
                 cmd = "imkdir -p '" + os.path.dirname(t.get_dst_path()) + "'"
                 try:
-                    tc = TimedCommand(cmd, timeout_secs = 60*60)
+                    tc = TimedCommand(cmd, env_overrides = env, timeout_secs = 10*60)
                     tc.run()
                 except:
                     # ignore errors from the mkdir command
                     pass
                 cmd = "iput -v -f -r -T -K" 
-                if self.ticket is not None:
-                    cmd += " -t " + irods.ticket
-                if t.get_dst_host() is not "" and attempt == 1:
+                if len(t.get_dst_host()) > 0 and t.attempts <= 1:
                     cmd += " -R " + t.get_dst_host()
                 cmd += " '" + t.get_src_path() + "'"
                 cmd += " '" +  t.get_dst_path() + "'"
-    
-            cmd += " </dev/null"
             
             t_start = time.time()
             try:
-                tc = TimedCommand(cmd)
+                tc = TimedCommand(cmd, env_overrides = env)
                 tc.run()
                 # stats      
                 if t.get_dst_proto() == "file":
@@ -1380,6 +1343,121 @@ class IRodsHandler(TransferHandlerBase):
             
         return [successful_l, failed_l]
 
+
+    def do_removes(self, removes_list):
+        tools = Tools()
+        if tools.find("iget", "-h", "Version[ \t]+([\.0-9a-zA-Z]+)") is None:
+            raise RuntimeError("Unable to do irods transfers becuase iget could not be found in the current path")
+
+        try:
+            env = self._irods_login(removes_list[0].get_site_label())
+        except Exception, loginErr:
+            logger.error(loginErr)
+            raise RuntimeError("Unable to log into irods")
+
+        successful_l = []
+        failed_l = []        
+        for t in removes_list:
+
+            cmd = "irm -f"
+            if t.get_recursive():
+                cmd += " -r"
+            cmd += " '" + t.get_path() + "'"
+            try:
+                tc = TimedCommand(cmd, env_overrides = env, log_outerr = False)
+                tc.run()
+            except RuntimeError, err:
+                if tc.get_exit_code() == 3:
+                    # file does not exist, which is success
+                    pass
+                else:
+                    logger.error(err)
+                    self._log_filter_output(tc.get_outerr())
+                    failed_l.append(t)
+                    continue
+            self._log_filter_output(tc.get_outerr())
+            successful_l.append(t)
+            
+        return [successful_l, failed_l]
+
+
+    def _irods_login(self, sitename):
+        """
+        log in to irods by using the iinit command - if the file already exists,
+        we are already logged in
+        """
+        self.lock.acquire()
+        try:
+            # first, set up the env
+            env = {}
+            
+            # irods requires a password hash file
+            env['irodsAuthFileName'] = os.getcwd() + "/.irodsA"
+            env['IRODS_AUTHENTICATION_FILE'] = env['irodsAuthFileName']
+            
+            key = "irodsEnvFile_" + sitename
+            if key in os.environ:
+                env["irodsEnvFile"] = os.environ[key]
+            else:
+                env["irodsEnvFile"] = os.environ["irodsEnvFile"]
+            # irods 4.0 rename
+            env['IRODS_ENVIRONMENT_FILE'] = env["irodsEnvFile"]
+
+            f = env['irodsAuthFileName']
+            if os.path.exists(f):
+                return env
+
+            # read password from env file
+            if not "irodsEnvFile" in env:
+                raise RuntimeError("Missing irodsEnvFile - unable to do irods transfers")
+
+            check_cred_fs_permissions(env["irodsEnvFile"])
+
+            password = None
+            h = open(env['irodsEnvFile'], 'r')
+            for line in h:
+
+                # flat file format
+                items = line.split(" ", 2)
+                if items[0].lower() == "irodspassword":
+                    password = items[1].strip(" \t'\"\r\n")
+
+                # json - irods 4.0
+                items = line.split(":", 2)
+                key = items[0].lower().strip(" \t'\"\r\n")
+                if key == "irodspassword" or key == "irods_password":
+                    password = items[1].strip(" \t'\",\r\n")
+
+            h.close()
+            if password is None:
+                raise RuntimeError("No irodsPassword specified in irods env file")
+
+            if password is not None:
+                h = open(".irodsAc", "w")
+                h.write(password + "\n")
+                h.close()
+                cmd = "cat .irodsAc | iinit"
+                tc = TimedCommand(cmd, env_overrides = env, timeout_secs = 5*60)
+                tc.run()
+                os.unlink(".irodsAc")
+                check_cred_fs_permissions(env['irodsAuthFileName'])
+
+        finally:
+            self.lock.release()
+        
+        return env
+        
+    
+    def _log_filter_output(self, output):
+        filtered = ""
+        for line in output.split("\n"):
+            line = line.rstrip()
+            if re.search("does not exist", line) is not None:
+                continue
+            filtered += line + "\n"
+        if len(filtered) > 10:
+            logger.info(filtered)
+        
 
 class S3Handler(TransferHandlerBase):
     """
@@ -2622,9 +2700,6 @@ def env_setup():
     os.environ['DYLD_LIBRARY_PATH'] = ":".join(ld_library_path_entries)
     logger.info("PATH=" + os.environ['PATH'])
     logger.info("LD_LIBRARY_PATH=" + os.environ['LD_LIBRARY_PATH'])
-    
-    # irods requires a password hash file
-    os.environ['irodsAuthFileName'] = os.getcwd() + "/.irodsA"
 
 
 def check_cred_fs_permissions(path):
