@@ -50,6 +50,8 @@ function timed_transfer
     echo "Test passed!"
 }
 
+# env
+export PATH=/ccg/software/irods/3.3/bin:$PATH
 
 # credentials
 export S3CFG=~/.s3cfg
