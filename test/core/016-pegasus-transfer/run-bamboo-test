@@ -54,8 +54,8 @@ function timed_transfer
 export PATH=/ccg/software/irods/3.3/bin:$PATH
 
 # credentials
-export S3CFG=~/.s3cfg
-export irodsEnvFile=~/.irods/irods_environment.json.IPlant
+export S3CFG=$HOME/.s3cfg
+export irodsEnvFile=$HOME/.irods/irods_environment.json.IPlant
 
 
 for SUBTEST in \
