@@ -621,9 +621,10 @@ public class TransferEngine extends Engine {
         for( Iterator it = nodeIpFiles.iterator(); it.hasNext(); ){
             PegasusFile pf = (PegasusFile) it.next();
             if( !parentsOutFiles.contains( pf ) ){
-                if (!pf.getTransientTransferFlag()) {
-                    vRCSearchFiles.addElement(pf);
-                }
+                //PM-976 all input files that are not generated
+                //by parent jobs should be looked up in the replica catalog
+                //we don't consider the value of the transfer flag
+                vRCSearchFiles.addElement(pf);
             }
         }
 
