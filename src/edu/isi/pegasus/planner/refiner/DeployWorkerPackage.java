@@ -742,6 +742,9 @@ public class DeployWorkerPackage
             return dag;
         }
 
+        //PM-888 we would need to deploy the worker package.
+        //create one out of existing pegasus installation on the submit
+        //host and set it up for use.
         
         if( mTransferWorkerPackage && !deploymentSites[0].isEmpty() ){
             //PM-810 for sharedfs case, worker package transfer can only happen
