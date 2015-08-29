@@ -72,7 +72,7 @@ public class CreateWorkerPackage {
     public File create( File directory ){
         String basename = "pegasus-worker-create";
         File pegasusWorkerCreate = FindExecutable.findExec( basename );
-        pegasusWorkerCreate = new File( "/lfs1/software/install/pegasus/pegasus-4.6.0cvs/bin/pegasus-worker-create");
+        //pegasusWorkerCreate = new File( "/lfs1/software/install/pegasus/pegasus-4.6.0cvs/bin/pegasus-worker-create");
         if( pegasusWorkerCreate == null ){
             throw new RuntimeException( "Unable to find path to " + basename );
         }
