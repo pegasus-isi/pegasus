@@ -21,17 +21,10 @@ import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
 import edu.isi.pegasus.common.util.FindExecutable;
 import edu.isi.pegasus.common.util.StreamGobbler;
 import edu.isi.pegasus.common.util.StreamGobblerCallback;
-import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
-import edu.isi.pegasus.planner.code.CodeGeneratorException;
-import edu.isi.pegasus.planner.code.generator.Braindump;
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.IllegalFormatException;
-import java.util.Map;
-import java.util.regex.Matcher;
 
 /**
  * Helper class to call out to pegasus-worker-create to create a pegasus 
@@ -42,11 +35,30 @@ import java.util.regex.Matcher;
 public class CreateWorkerPackage {
     private LogManager mLogger;
 
+    private PegasusBag mBag;
     
     public CreateWorkerPackage(PegasusBag bag ){
+        mBag    = bag;
         mLogger = bag.getLogger();
     }
+   
     
+    /**
+     * Creates the pegasus worker package and returns a File object pointing
+     * to the worker package created
+     * 
+     * @param directory
+     * 
+     * @return file object to created worker package
+     * @throws RuntimeException in case of errors
+     */
+    public File create(  ){
+        PlannerOptions options = mBag.getPlannerOptions();
+        if( options == null ){
+            throw new RuntimeException( "No planner options specified " + options );
+        }
+        return this.create( new File( options.getSubmitDirectory()) );
+    }
    
     /**
      * Creates the pegasus worker package and returns a File object pointing
@@ -60,7 +72,7 @@ public class CreateWorkerPackage {
     public File create( File directory ){
         String basename = "pegasus-worker-create";
         File pegasusWorkerCreate = FindExecutable.findExec( basename );
-        //pegasusWorkerCreate = new File( "/lfs1/software/install/pegasus/pegasus-4.6.0cvs/bin/pegasus-worker-create");
+        pegasusWorkerCreate = new File( "/lfs1/software/install/pegasus/pegasus-4.6.0cvs/bin/pegasus-worker-create");
         if( pegasusWorkerCreate == null ){
             throw new RuntimeException( "Unable to find path to " + basename );
         }
