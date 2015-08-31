@@ -648,9 +648,12 @@ class FileHandler(TransferHandlerBase):
                 src_inode = os.stat(t.get_src_path())[stat.ST_INO]
                 dst_inode = os.stat(t.get_dst_path())[stat.ST_INO]
                 if src_inode == dst_inode:
-                    logger.warning("cp: src (%s) and dst (%s) already exists"
+                    logger.warning("cp: src (%s) and dst (%s) already exists and are the same file"
                                    % (t.get_src_path(), t.get_dst_path()))
-                    return True
+                    successful_l.append(t)
+                    self._post_transfer_attempt(t, True, t_start)
+                    continue
+
             cmd = "/bin/cp -f -R -L '%s' '%s'" \
                 % (t.get_src_path(), t.get_dst_path())
             try:
@@ -663,6 +666,7 @@ class FileHandler(TransferHandlerBase):
                 continue
             successful_l.append(t)
             self._post_transfer_attempt(t, True, t_start)
+
         return [successful_l, failed_l]
 
 
