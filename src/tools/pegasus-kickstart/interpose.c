@@ -198,6 +198,10 @@ static char* read_exe();
 pthread_mutex_t io_mut = PTHREAD_MUTEX_INITIALIZER;
 IoUtilInfo io_util_info = { 0, 0, 0, 0, 0, 0, 0 };
 
+/* Return 1 if line begins with tok */
+static int startswith(const char *line, const char *tok) {
+    return strncmp(line, tok, strlen(tok)) == 0;
+}
 
 // TODO kickstart status file should be used when socket-based communication fails
 // Utility function to open the kickstart status file based on environment variable
