@@ -37,6 +37,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.code.gridstart.PegasusExitCode;
+import edu.isi.pegasus.planner.common.CreateWorkerPackage;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Pegasus;
@@ -52,7 +53,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -112,10 +112,12 @@ public class DeployWorkerPackage
     /**
      * Store the regular expressions necessary to parse the basename from the worker
      * package url to retrieve the version of pegasus.
+     * 
+     * pegasus-worker-4.6.0cvs-x86_64_macos_10.tar.gz 
      */
     private static final String mRegexExpression =
     //                                 "(pegasus-)(binary|worker)-([0-9]\\.[0-9]\\.[0-9][a-zA-Z]*)-x86.*";
-                                        "(pegasus-)(binary|worker)-([0-9]\\.[0-9]\\.[0-9][a-zA-Z0-9]*)-(x86|x86_64|ia64|ppc).*";
+                                        "(pegasus-)(binary|worker)-([0-9]\\.[0-9]\\.[0-9][a-zA-Z0-9]*)-(x86|x86_64|ia64|ppc)_([a-zA-Z0-9]*)_([0-9]*).tar.gz";
 
     /**
      * The path to be set for create dir jobs.
@@ -371,6 +373,7 @@ public class DeployWorkerPackage
         return dp;
     }
     private Refiner mDefaultTransferRefiner;
+    private File mSubmitHostWorkerPackage;
 
     /**
      * A pratically nothing constructor !
@@ -438,6 +441,12 @@ public class DeployWorkerPackage
 
         mLogger.log( "Deployment of Worker Package needed",
                      LogManager.DEBUG_MESSAGE_LEVEL );
+        
+        //PM-888 we would need to deploy the worker package.
+        //create one out of existing pegasus installation on the submit
+        //host and set it up for use.
+        CreateWorkerPackage cw = new CreateWorkerPackage( mBag );       
+        mSubmitHostWorkerPackage = cw.create( );
 
         //load the transformation selector. different
         //selectors may end up being loaded for different jobs.
@@ -456,7 +465,16 @@ public class DeployWorkerPackage
         
     }
     
-    
+    /**
+     * Sets up the transformation catalog and populates it with executables
+     * contained in the Pegasus worker package for the remote compute sites, 
+     * and the Pegasus worker package itself
+     * 
+     * @param sites
+     * @param mapper
+     * @param selector
+     * @param workerNodeExecution 
+     */
     protected void setupTCForWorkerPackageLocations( Set sites, 
                                                      Mapper mapper,
                                                      TransformationSelector selector,
@@ -473,33 +491,27 @@ public class DeployWorkerPackage
         //the planner requires with just the basename
         boolean useFullPath = !( workerNodeExecution );
         
-        //for each site insert default entries in the Transformation Catalog
-        //for each scheduled site query TCMapper
+        //for each site insert default entries for Pegasus 
+        //Worker Package in the Transformation Catalog
         for( Iterator it = sites.iterator(); it.hasNext(); ){
             String site = ( String ) it.next();
-            
-            //check if there is a valid entry for worker package
-            List entries, selectedEntries = null;
+            TransformationCatalogEntry entry = this.getTCEntryForPegasusWorkerPackage(mapper, selector, site);
+            mLogger.log( "Worker Package Entry used for site " + site + " "  + entry,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            //register back into the transformation catalog
+            //so that we do not need to worry about creating it again
             try{
-                entries = mapper.getTCList( DeployWorkerPackage.TRANSFORMATION_NAMESPACE,
-                                       DeployWorkerPackage.TRANSFORMATION_NAME,
-                                       DeployWorkerPackage.TRANSFORMATION_VERSION,
-                                       site );
-
-                selectedEntries = selector.getTCEntry( entries );
-            }catch( Exception e ){ /*ignore*/}
-            
-            //try and create a default entry for pegasus::worker if 
-             //not specified in transformation catalog
-            if( selectedEntries == null || selectedEntries.size() == 0 ){
-                TransformationCatalogEntry entry = this.addDefaultTCEntryForPegasusWebsite( site, DeployWorkerPackage.TRANSFORMATION_NAME );
-                if( entry == null ){
-                    StringBuffer error = new StringBuffer();
-                    error.append( "Unable to construct default entry for pegasus::worker for site " ).append( site )
-                         .append( " Add entry in TC for pegasus::worker of type STAGEABLE for sysinfo ")
-                         .append(  mSiteStore.getSysInfo( site ) );
-                    throw new RuntimeException( error.toString() );
-                }
+                mTCHandle.insert( entry , false );
+            }
+            catch( Exception e ){
+                //just log as debug. as this is more of a performance improvement
+                //than anything else
+                mLogger.log( "Unable to register in the TC the default entry " +
+                              entry.getLogicalTransformation() +
+                              " for site " + site, e,
+                              LogManager.ERROR_MESSAGE_LEVEL );
+                //throw exception as
+                throw new RuntimeException( e );
             }
             
         }
@@ -716,6 +728,53 @@ public class DeployWorkerPackage
          return result.toString();
 
     }
+    
+    
+    /**
+     * Determines the sysinfo from the name of a worker package
+     *
+     * @param name the name
+     * 
+     * @return SysInfo matching the worker package created
+     */
+    protected SysInfo determineSysInfo( String name ){
+        SysInfo result = new SysInfo();
+        
+        //compile the pattern only once.
+         if( mPattern == null ){
+             mPattern = Pattern.compile( mRegexExpression );
+         }
+
+         Matcher matcher = mPattern.matcher( name );
+
+         String version = null;
+         if(  matcher.matches() ){
+             result.setArchitecture(SysInfo.Architecture.valueOf(matcher.group(4)));
+             result.setOSRelease( matcher.group(5) );
+             result.setOSVersion( matcher.group(6));
+         }
+         else{
+             throw new RuntimeException( "Unable to determine system information of package from name  " + name );
+         }
+         
+         //guess the main OS
+         String osrelease = result.getOSRelease();
+         if( osrelease.startsWith( "rhel" ) || osrelease.startsWith( "deb" ) || osrelease.startsWith( "ubuntu" ) ||
+                osrelease.startsWith( "fc" ) || osrelease.startsWith( "suse" ) ){
+            result.setOS(SysInfo.OS.LINUX );
+         }
+         else if( osrelease.startsWith( "macos" ) ){
+            result.setOS(SysInfo.OS.MACOSX );
+         }
+
+
+         mLogger.log( "System information for " + name + " is " + result, LogManager.DEBUG_MESSAGE_LEVEL );
+
+         return result;
+
+    }
+    
+    
 
     /**
      * Adds a setup node per execution site in the workflow that will stage the
@@ -741,7 +800,6 @@ public class DeployWorkerPackage
                          LogManager.DEBUG_MESSAGE_LEVEL );
             return dag;
         }
-
         
         if( mTransferWorkerPackage && !deploymentSites[0].isEmpty() ){
             //PM-810 for sharedfs case, worker package transfer can only happen
@@ -1291,20 +1349,116 @@ public class DeployWorkerPackage
         return defaultTCEntry;
     }
 
+    
     /**
-     * Returns a default TC entry for the pegasus site. The entry points to 
-     * the http webserver on the pegasus website. It also attempts to add 
-     * the transformation catalog entry to the TC store.   
+     * Returns a transformation catalog entry to be used for the pegasus worker
+     * package location. The following rules are followed for determining the
+     * entry
+     * <pre>
+     *    - if a pegasus::worker entry exists in the trasnformation catalog for the site, it is used
+     *    - else, the worker package based on the submit host install is used if
+     *          a) user specified osrelease for the site in the site catalog and there is a 
+     *             complete match for sysinfo ( os, osrelease, version, and arch)
+     *             with the submit host wp OR
+     *          b) just the OS and architecture of remote site matches the submit host created worker package
+     *    - else, the worker package is pulled from the Pegasus website.
+     * </pre>
      * 
+     * @param mapper
+     * @param selector
      * @param site        the execution site for which we need a matching static binary.
-     * @param name        logical name of the transformation
      *
      *
      * @return  the default entry.
      */
-    protected TransformationCatalogEntry addDefaultTCEntryForPegasusWebsite( 
-                                                                String site,
-                                                                String name ){
+    protected TransformationCatalogEntry getTCEntryForPegasusWorkerPackage(
+                                                                                Mapper mapper,
+                                                                                TransformationSelector selector,
+                                                                                String site) {
+       
+        //check if there is a valid entry for worker package
+        List<TransformationCatalogEntry> entries, selectedEntries = null;
+        try{
+            entries = mapper.getTCList( DeployWorkerPackage.TRANSFORMATION_NAMESPACE,
+                                   DeployWorkerPackage.TRANSFORMATION_NAME,
+                                   DeployWorkerPackage.TRANSFORMATION_VERSION,
+                                   site );
+
+            selectedEntries = selector.getTCEntry( entries );
+        }catch( Exception e ){ /*ignore*/}
+
+        if( selectedEntries != null && selectedEntries.size() > 0 ){
+            //PM-888
+            //We prefer whatever a user wants us to use as a worker package
+            //we return the first selection.
+            return selectedEntries.get(0);
+        }
+        
+        TransformationCatalogEntry entry = null;
+        
+        //check to see if the one created on the submit host is
+        //suffficient to use for the site.
+        SysInfo remoteSiteSysInfo = mSiteStore.getSysInfo( site );  
+        SysInfo submitHostSysInfo = this.determineSysInfo( this.mSubmitHostWorkerPackage.getName() );
+        boolean useSubmitHostWF = false;
+        if( remoteSiteSysInfo.getOSRelease() != null && remoteSiteSysInfo.getOSRelease().length() > 0 &&
+             remoteSiteSysInfo.equals( submitHostSysInfo )){
+            //user has specified a specific architecture in the site catalog
+            //we can only use the worker package created on the submit host, if
+            //they match completely
+            useSubmitHostWF = true;
+        }
+        else{
+            //osrelease is not specified. 
+            //just do a shallow match on OS and architecture
+            if( remoteSiteSysInfo.getOS().equals( submitHostSysInfo.getOS() ) &&
+                   remoteSiteSysInfo.getArchitecture().equals( submitHostSysInfo.getArchitecture() )){
+                useSubmitHostWF = true;
+            }
+        }
+        
+        if( useSubmitHostWF ){
+            //create a default transformation catalog entry for the submit host location
+            entry = new TransformationCatalogEntry( DeployWorkerPackage.TRANSFORMATION_NAMESPACE,
+                                                    DeployWorkerPackage.TRANSFORMATION_NAME ,
+                                                    null );
+
+            entry.setPhysicalTransformation( PegasusURL.FILE_URL_SCHEME  + "//" + mSubmitHostWorkerPackage );
+            entry.setResourceId( "local" );
+            entry.setType( TCType.STAGEABLE );
+            //we deliberately set the sysinfo for this to be the remote site
+            //so that it allows for exact matches later on
+            entry.setSysInfo( remoteSiteSysInfo );
+            
+        }
+        else{
+           //try and create a default entry for pegasus::worker if 
+            entry = this.getDefaultTCEntryForPegasusWorkerPackage( site );
+            if( entry == null ){
+                StringBuffer error = new StringBuffer();
+                error.append( "Unable to construct default entry for pegasus::worker for site " ).append( site )
+                     .append( " Add entry in TC for pegasus::worker of type STAGEABLE for sysinfo ")
+                     .append(  mSiteStore.getSysInfo( site ) );
+                throw new RuntimeException( error.toString() );
+            }
+        }
+        
+        return entry;
+    }
+    
+    /**
+     * Returns a default TC entry for the Pegasus worker package from the
+     * Pegasus website. The entry points to 
+     * the http webserver on the pegasus website. It also attempts to add 
+     * the transformation catalog entry to the TC store.   
+     * 
+     * @param site        the execution site for which we need a matching static binary.
+     *
+     *
+     * @return  the default entry.
+     */
+    protected TransformationCatalogEntry getDefaultTCEntryForPegasusWorkerPackage( 
+                                                                String site  ){
         TransformationCatalogEntry defaultTCEntry = null;
        
         //String site = "pegasus";
@@ -1316,7 +1470,7 @@ public class DeployWorkerPackage
         }
 
         //construct the path to the executable
-        String path = constructDefaultURLToPegasusWorkerPackage( name, sysinfo );
+        String path = constructDefaultURLToPegasusWorkerPackage( DeployWorkerPackage.TRANSFORMATION_NAME, sysinfo );
         if( path == null ){
             mLogger.log( "Unable to determine path for worker package for " + sysinfo,
                          LogManager.DEBUG_MESSAGE_LEVEL );
@@ -1324,15 +1478,15 @@ public class DeployWorkerPackage
         }
         
         mLogger.log( "Creating a default TC entry for " +
-                     Separator.combine( "pegasus", name, null ) +
+                     Separator.combine( "pegasus", DeployWorkerPackage.TRANSFORMATION_NAME, null ) +
                      " at site pegasus for sysinfo " + sysinfo,
                      LogManager.DEBUG_MESSAGE_LEVEL );
 
         mLogger.log( "Remote Path set is " + path.toString(),
                      LogManager.DEBUG_MESSAGE_LEVEL );
 
-        defaultTCEntry = new TransformationCatalogEntry( "pegasus",
-                                                         name ,
+        defaultTCEntry = new TransformationCatalogEntry( DeployWorkerPackage.TRANSFORMATION_NAMESPACE,
+                                                         DeployWorkerPackage.TRANSFORMATION_NAME ,
                                                          null );
 
         defaultTCEntry.setPhysicalTransformation( path );
@@ -1340,25 +1494,6 @@ public class DeployWorkerPackage
         defaultTCEntry.setType( TCType.STAGEABLE );
         defaultTCEntry.setSysInfo( sysinfo );
 
-
-        
-        //register back into the transformation catalog
-        //so that we do not need to worry about creating it again
-        try{
-            mTCHandle.insert( defaultTCEntry , false );
-        }
-        catch( Exception e ){
-            //just log as debug. as this is more of a performance improvement
-            //than anything else
-            mLogger.log( "Unable to register in the TC the default entry " +
-                          defaultTCEntry.getLogicalTransformation() +
-                          " for site " + site, e,
-                          LogManager.ERROR_MESSAGE_LEVEL );
-            //throw exception as
-            throw new RuntimeException( e );
-        }
-        
-        
         return defaultTCEntry;
     }
     
@@ -1506,22 +1641,6 @@ public class DeployWorkerPackage
                  null:
                  url.substring( url.lastIndexOf( File.separator ) + 1 );
     }
-
-    /**
-     * Returns the staging site for a particular execution site. If worker node
-     * execution is enabled, then the staging site is the submit directory
-     * for the workflow on the local sit.e
-     *
-     * @param site    the execution site.
-     *
-     * @return the staging site
-     */
-    /*private String getStagingSite(String site) {
-        //for pegauss lite mode the staging site for worker package
-        //should be local site , submit directory.
-        return mWorkerNodeExecution ?  "local":
-                                        site;
-    }*/
 
     
 }

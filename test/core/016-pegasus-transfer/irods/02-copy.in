@@ -1,0 +1,13 @@
+[
+ { "type": "transfer",
+   "id": 1,
+   "src_urls": [ { "site_label": "local", "url": "file:///etc/hosts" } ],
+   "dest_urls": [ { "site_label": "IPlant", "url": "irods:///iplant/home/rynge/pegasus-transfer-testing/data/hosts" } ]
+ }
+ ,
+ { "type": "transfer",
+   "id": 2,
+   "src_urls": [ { "site_label": "local", "url": "file:///etc/hosts" } ],
+   "dest_urls": [ { "site_label": "IPlant", "url": "irods:///iplant/home/rynge/pegasus-transfer-testing/data.dat" } ]
+ }
+]

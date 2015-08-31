@@ -1,0 +1,21 @@
+#!/bin/bash
+
+set -e
+
+if [ "x$irodsEnvFile" = "x" ]; then
+    echo "No env file specified for iRods - not running any tests" 1>&2
+    exit 0
+fi
+
+# remove leftover creds
+rm -f .irods*
+
+for FILE in `ls *.in`; do
+    echo
+    echo
+    echo "Executing transfers from $FILE"
+    echo
+    pegasus-transfer -f $FILE
+
+done
+

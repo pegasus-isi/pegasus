@@ -19,10 +19,11 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/syscall.h>
+#include <pthread.h>
+#include <signal.h>
 #ifdef HAS_PAPI
 #include <papi.h>
 #endif
-#include <pthread.h>
 #include <dlfcn.h>
 #include <netdb.h>
 
@@ -47,16 +48,16 @@
 /* TODO What about mmap? Probably nothing we can do besides interpose
  *      mmap and assume that the total size being mapped is read/written
  */
-/* TODO Thread safety? */
-/* TODO Figure out a way to collect PAPI profiles for unterminated threads */
+
+static int myerr = STDERR_FILENO;
 
 #define printerr(fmt, ...) \
-    fprintf_untraced(stderr, "libinterpose[%d]: %s[%d]: " fmt, \
-                     getpid(), __FILE__, __LINE__, ##__VA_ARGS__)
+    dprintf(myerr, "libinterpose[%d/%d]: %s[%d]: " fmt, \
+            getpid(), gettid(), __FILE__, __LINE__, ##__VA_ARGS__)
 
 #ifdef DEBUG
 #define debug(format, args...) \
-    fprintf_untraced(stderr, "libinterpose: " format "\n" , ##args)
+    dprintf(myerr, "libinterpose: " format "\n" , ##args)
 #else
 #define debug(format, args...)
 #endif
@@ -101,12 +102,46 @@ const char DTYPE_SOCK = 2;
 /* File descriptor table */
 static Descriptor *descriptors = NULL;
 static int max_descriptors = 0;
+static pthread_mutex_t descriptor_mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
 
-/* Tracking the number of threads */
-static int threads = 1;
-static int tot_threads = 1;
-static int max_threads = 1;
-static pthread_mutex_t thread_counter_mutex = PTHREAD_MUTEX_INITIALIZER;
+#define lock_descriptors() do { \
+    debug("lock_descriptors"); \
+    if (pthread_mutex_lock(&descriptor_mutex) != 0) { \
+        printerr("Error locking descriptor mutex\n"); \
+        abort(); \
+    } \
+} while (0);
+
+#define unlock_descriptors() do { \
+    debug("unlock_descriptors"); \
+    if (pthread_mutex_unlock(&descriptor_mutex) != 0) { \
+        printerr("Error unlocking descriptor mutex\n"); \
+        abort(); \
+    } \
+} while (0);
+
+/* Thread tracking */
+static int cur_threads;
+static int tot_threads;
+static int max_threads;
+static int max_threadids;
+static pthread_t *threadids;
+static pthread_mutex_t thread_track_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t killed_threads_cv = PTHREAD_COND_INITIALIZER;
+
+#define lock_threads() do { \
+    if (pthread_mutex_lock(&thread_track_mutex) != 0) { \
+        printerr("Error locking thread tracking mutex\n"); \
+        abort(); \
+    } \
+} while (0);
+
+#define unlock_threads() do { \
+    if (pthread_mutex_unlock(&thread_track_mutex) != 0) { \
+        printerr("Error unlocking thread tracking mutex\n"); \
+        abort(); \
+    } \
+} while (0);
 
 static int mypid = 0;
 
@@ -144,14 +179,14 @@ typedef struct {
 } interpose_pthread_wrapper_arg;
 
 static FILE *fopen_untraced(const char *path, const char *mode);
-static int fprintf_untraced(FILE *stream, const char *format, ...);
 static int vfprintf_untraced(FILE *stream, const char *format, va_list ap);
 static char *fgets_untraced(char *s, int size, FILE *stream);
 static size_t fread_untraced(void *ptr, size_t size, size_t nmemb, FILE *stream);
 static int fclose_untraced(FILE *fp);
+static int dup_untraced(int fd);
 
-static long unsigned int interpose_gettid(void) {
-    return (long unsigned int)syscall(SYS_gettid);
+static pid_t gettid(void) {
+    return (pid_t)syscall(SYS_gettid);
 }
 
 static double get_time();
@@ -420,18 +455,22 @@ static void trace_file(const char *path, int fd);
 
 /* Initialize the descriptor table */
 static void init_descriptors() {
+
+    lock_descriptors();
+
     /* Get file descriptor limit and allocate descriptor table */
-    max_descriptors = 8;
+    max_descriptors = 256;
     descriptors = (Descriptor *)calloc(sizeof(Descriptor), max_descriptors);
     if (descriptors == NULL) {
         printerr("Error allocating descriptor table: calloc: %s\n", strerror(errno));
+        abort();
     }
 
-    /* TODO For each open descriptor, initialize the entry */
+    /* For each open descriptor, initialize the entry */
     DIR *fddir = opendir("/proc/self/fd");
     if (fddir == NULL) {
         printerr("Unable to open /proc/self/fd: %s", strerror(errno));
-        return;
+        goto unlock;
     }
 
     struct dirent *d;
@@ -441,7 +480,7 @@ static void init_descriptors() {
         }
 
         char path[64];
-        snprintf(path, BUFSIZ, "/proc/self/fd/%s", d->d_name);
+        snprintf(path, 64, "/proc/self/fd/%s", d->d_name);
 
         int fd = atoi(d->d_name);
 
@@ -462,10 +501,58 @@ static void init_descriptors() {
     }
 
     closedir(fddir);
+
+unlock:
+    unlock_descriptors();
+}
+
+/* Make sure the descriptor table is large enough to hold fd */
+/* Note: You must be holding the descriptor mutex when you call this */
+static void ensure_descriptor(int fd) {
+    debug("ensure_descriptor %d", fd);
+
+    if (descriptors == NULL) {
+        printerr("Descriptor table not initialized\n");
+        abort();
+    }
+
+    if (fd < 0) {
+        printerr("Invalid descriptor: %d\n", fd);
+        abort();
+    }
+
+    if (fd < max_descriptors) {
+        return;
+    }
+
+    /* Determine what the new size of the table should be */
+    int newmax = max_descriptors * 2;
+    while (fd >= newmax) {
+        newmax = newmax * 2;
+    }
+
+    /* Allocate a new descriptor table */
+    Descriptor *newdescriptors = realloc(descriptors, sizeof(Descriptor) * newmax);
+    if (newdescriptors == NULL) {
+        printerr("Error reallocating new descriptor table with %d entries: realloc: %s\n",
+                 newmax, strerror(errno));
+        /* This is a fatal error */
+        abort();
+    }
+
+    /* Clear the newly allocated entries */
+    bzero(&(newdescriptors[max_descriptors]), (newmax-max_descriptors)*sizeof(Descriptor));
+
+    /* Use the new table */
+    descriptors = newdescriptors;
+    max_descriptors = newmax;
 }
 
 /* Get a reference to the given descriptor if it exists */
+/* Note: You must be holding the descriptor mutex when you call this */
 static Descriptor *get_descriptor(int fd) {
+    debug("get_descriptor %d", fd);
+
     /* Sometimes we try to access a descriptor before the 
      * constructor has been called where the descriptor array
      * is allocated. That can happen, for example, if another library
@@ -477,27 +564,8 @@ static Descriptor *get_descriptor(int fd) {
         return NULL;
     }
 
-    if (fd >= max_descriptors) {
-        /* Determine what the new size of the table should be */
-        int newmax = max_descriptors * 2;
-        while (fd >= newmax) {
-            newmax = newmax * 2;
-        }
-
-        /* Allocate a new descriptor table */
-        Descriptor *newdescriptors = realloc(descriptors, sizeof(Descriptor) * newmax);
-        if (newdescriptors == NULL) {
-            printerr("Error reallocating new descriptor table: realloc: %s\n", strerror(errno));
-            return NULL;
-        }
-
-
-        /* Clear the newly allocated entries */
-        bzero(&(newdescriptors[max_descriptors]), (newmax-max_descriptors)*sizeof(Descriptor));
-
-        descriptors = newdescriptors;
-        max_descriptors = newmax;
-    }
+    /* Make sure that the descriptor table contains this object */
+    ensure_descriptor(fd);
 
     return &(descriptors[fd]);
 }
@@ -650,12 +718,7 @@ static int endswith(const char *line, const char *tok) {
     return 1;
 }
 
-/* Return 1 if line begins with tok */
-static int startswith(const char *line, const char *tok) {
-    return strstr(line, tok) == line;
-}
-
-/* Read useful information from /proc/self/status */
+/* Read memory information from /proc/self/status */
 static void read_status() {
     debug("Reading status file");
 
@@ -984,13 +1047,15 @@ static IoUtilInfo read_io_status() {
 static void trace_file(const char *path, int fd) {
     debug("trace_file %s %d", path, fd);
 
+    lock_descriptors();
+
     Descriptor *f = get_descriptor(fd);
     if (f == NULL) {
-        return;
+        goto unlock;
     }
 
     if (!should_trace(fd, path)) {
-        return;
+        goto unlock;
     }
 
     struct stat s;
@@ -1007,7 +1072,7 @@ static void trace_file(const char *path, int fd) {
     char *temp = strdup(path);
     if (temp == NULL) {
         printerr("strdup: %s\n", strerror(errno));
-        return;
+        goto unlock;
     }
 
     f->type = DTYPE_FILE;
@@ -1018,6 +1083,9 @@ static void trace_file(const char *path, int fd) {
     f->nwrite = 0;
     f->bseek = 0;
     f->nseek = 0;
+
+unlock:
+    unlock_descriptors();
 }
 
 static void trace_open(const char *path, int fd) {
@@ -1062,26 +1130,33 @@ static void trace_openat(int fd) {
 static void trace_read(int fd, ssize_t amount) {
     debug("trace_read %d %lu", fd, amount);
 
+    lock_descriptors();
+
     Descriptor *f = get_descriptor(fd);
     if (f == NULL) {
-        return;
+        goto unlock;
     }
     f->bread += amount;
     f->nread += 1;
-    
+
     // Information written for online monitoring in case there is no /proc 
     pthread_mutex_lock(&io_mut);
     io_util_info.rchar += amount;
     io_util_info.syscr += 1;
     pthread_mutex_unlock(&io_mut);
+    
+unlock:
+    unlock_descriptors();
 }
 
 static void trace_write(int fd, ssize_t amount) {
     debug("trace_write %d %lu", fd, amount);
 
+    lock_descriptors();
+
     Descriptor *f = get_descriptor(fd);
     if (f == NULL) {
-        return;
+        goto unlock;
     }
     f->bwrite += amount;
     f->nwrite += 1;
@@ -1092,28 +1167,38 @@ static void trace_write(int fd, ssize_t amount) {
     io_util_info.syscw += 1;
     pthread_mutex_unlock(&io_mut);
 
+
+unlock:
+    unlock_descriptors();
 }
 
 static void trace_seek(int fd, off_t offset) {
     debug("trace_seek %d %ld", fd, offset);
 
+    lock_descriptors();
+
     Descriptor *f = get_descriptor(fd);
     if (f == NULL) {
-        return;
+        goto unlock;
     }
     f->bseek += offset > 0 ? offset : -offset;
     f->nseek += 1;
+
+unlock:
+    unlock_descriptors();
 }
 
 static void trace_close(int fd) {
+    lock_descriptors();
+
     Descriptor *f = get_descriptor(fd);
     if (f == NULL) {
-        return;
+        goto unlock;
     }
 
     if (f->path == NULL) {
         /* If the path is null, then it is a descriptor we aren't tracking */
-        return;
+        goto unlock;
     }
 
     debug("trace_close %d", fd);
@@ -1143,20 +1228,25 @@ static void trace_close(int fd) {
     f->nwrite = 0;
     f->bseek = 0;
     f->nseek = 0;
+
+unlock:
+    unlock_descriptors();
 }
 
 static void trace_sock(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
-    debug("trace_sock %d");
+    debug("trace_sock %d", sockfd);
+
+    lock_descriptors();
 
     Descriptor *d = get_descriptor(sockfd);
     if (d == NULL) {
-        return;
+        goto unlock;
     }
 
     char *addrstr = get_addr(addr, addrlen);
     if (addrstr == NULL) {
         /* It is not a type of socket we understand */
-        return;
+        goto unlock;
     }
 
     debug("sock addr %s", addrstr);
@@ -1181,12 +1271,15 @@ static void trace_sock(int sockfd, const struct sockaddr *addr, socklen_t addrle
         char *temp = strdup(addrstr);
         if (temp == NULL) {
             printerr("strdup: %s\n", strerror(errno));
-            return;
+            goto unlock;
         }
 
         d->type = DTYPE_SOCK;
         d->path = temp;
     }
+
+unlock:
+    unlock_descriptors();
 }
 
 static void trace_dup(int oldfd, int newfd) {
@@ -1197,14 +1290,25 @@ static void trace_dup(int oldfd, int newfd) {
         return;
     }
 
+    lock_descriptors();
+
+    /* XXX Be careful in this function. Calling get_descriptor with
+     * two different file descriptors can cause problems because
+     * the second get_descriptor can invalidate the pointer returned by
+     * the first! To avoid that, ensure that the descriptor table is
+     * large enough to contain both descriptors first.
+     */
+    ensure_descriptor(newfd);
+    ensure_descriptor(oldfd);
+
     Descriptor *o = get_descriptor(oldfd);
     if (o == NULL) {
-        return;
+        goto unlock;
     }
 
     /* Not a descriptor we are tracing */
     if (o->path == NULL) {
-        return;
+        goto unlock;
     }
 
     /* Just in case newfd is already open */
@@ -1213,13 +1317,13 @@ static void trace_dup(int oldfd, int newfd) {
     char *temp = strdup(o->path);
     if (temp == NULL) {
         printerr("strdup: %s\n", strerror(errno));
-        return;
+        goto unlock;
     }
 
     /* Copy the old descriptor into the new */
     Descriptor *n = get_descriptor(newfd);
     if (n == NULL) {
-        return;
+        goto unlock;
     }
     n->type = o->type;
     n->path = temp;
@@ -1229,6 +1333,9 @@ static void trace_dup(int oldfd, int newfd) {
     n->nwrite = 0;
     n->bseek = 0;
     n->nseek = 0;
+
+unlock:
+    unlock_descriptors();
 }
 
 static void trace_truncate(const char *path, off_t length) {
@@ -1264,29 +1371,125 @@ int tfile_exists() {
     }
 }
 
-static void inc_thread_counters() {
-    pthread_mutex_lock(&thread_counter_mutex);
-    threads += 1;
-    tot_threads += 1;
-    if (threads > max_threads) {
-        max_threads = threads;
-    }
-    pthread_mutex_unlock(&thread_counter_mutex);
-}
-
-static void dec_thread_counters() {
-    pthread_mutex_lock(&thread_counter_mutex);
-    threads -= 1;
-    pthread_mutex_unlock(&thread_counter_mutex);
-}
-
 static void report_thread_counters() {
-    pthread_mutex_lock(&thread_counter_mutex);
-    tprintf("threads: %d %d %d\n", threads, max_threads, tot_threads);
-    pthread_mutex_unlock(&thread_counter_mutex);
+    lock_threads();
+    tprintf("threads: %d %d %d\n", cur_threads, max_threads, tot_threads);
+    unlock_threads();
+}
+
+static void thread_started(pthread_t id) {
+    lock_threads();
+
+    /* If we have reached the max, then reallocate the table */
+    if (cur_threads >= max_threadids) {
+        int new_max_threadids = max_threadids * 2;
+        pthread_t *new_threadids = realloc(threadids, new_max_threadids * sizeof(pthread_t));
+        if (new_threadids == NULL) {
+            printerr("Unable to realloc thread id table\n");
+            abort();
+        }
+        bzero(&(new_threadids[max_threadids]), (new_max_threadids-max_threadids) * sizeof(pthread_t));
+        threadids = new_threadids;
+        max_threadids = new_max_threadids;
+    }
+
+    for (int i=0; i<max_threadids; i++) {
+        if (threadids[i] == 0) {
+            threadids[i] = id;
+            break;
+        }
+    }
+
+    /* Increment thread counters */
+    cur_threads += 1;
+    tot_threads += 1;
+    if (cur_threads > max_threads) {
+        max_threads = cur_threads;
+    }
+
+    unlock_threads();
+}
+
+static void thread_finished(pthread_t id) {
+    lock_threads();
+
+    for (int i=0; i<max_threadids; i++) {
+        if (pthread_equal(id, threadids[i])) {
+            threadids[i] = 0;
+            break;
+        }
+    }
+
+    /* Decrement thread counter */
+    cur_threads -= 1;
+
+    unlock_threads();
+}
+
+static void init_threads() {
+    lock_threads();
+
+    cur_threads = 0;
+    max_threads = 0;
+    tot_threads = 0;
+
+    max_threadids = 2;
+    threadids = calloc(max_threadids, sizeof(pthread_t));
+    if (threadids == NULL) {
+        printerr("Unable to allocate thread ID table\n");
+        abort();
+    }
+
+    unlock_threads();
+
+    thread_started(pthread_self());
+}
+
+static void fini_threads() {
+    lock_threads();
+
+    pthread_t me = pthread_self();
+    for (int i=0; i<max_threadids; i++) {
+        if (threadids[i] != 0) {
+            /* Skip self */
+            if (pthread_equal(me, threadids[i])) {
+                continue;
+            }
+
+            /* Sending this signal should force the thread to exit */
+            pthread_kill(threadids[i], SIGUSR1);
+
+            /* We would like to join with the thread here so that we can
+             * be sure that it exits before pthread_self(), but that is
+             * not possible because the user's program may have replaced the
+             * signal handler with one of their own. Basically, we can't
+             * guarantee that the thread will exit after the signal is
+             * delivered. If they did replace the handler, then this could
+             * cause the process to hang in pthread_join. There is a similar
+             * story for cancelling a thread: basically, there is no way for
+             * this thread to know that cancelling the other thread will result
+             * in the thread being cancelled, because the other thread could
+             * have set itself to not be cancelled. Instead, we use a condition
+             * variable in the signal handler, but we only wait for a max
+             * of 1 second on the condition. If we aren't signalled after
+             * one second, then it is safe to assume we won't be. */
+            struct timeval tv;
+            struct timespec ts;
+            gettimeofday(&tv, NULL);
+            ts.tv_sec = tv.tv_sec + 1;
+            ts.tv_nsec = tv.tv_usec * 1000;
+            pthread_cond_timedwait(&killed_threads_cv, &thread_track_mutex, &ts);
+        }
+    }
+
+    unlock_threads();
 }
 
 #ifdef HAS_PAPI
+
+static long unsigned int papi_gettid() {
+    return (long unsigned int)gettid();
+}
 
 static void init_papi() {
     int err;
@@ -1299,7 +1502,7 @@ static void init_papi() {
         return;
     }
 
-    err = PAPI_thread_init(interpose_gettid);
+    err = PAPI_thread_init(papi_gettid);
     if (err < 0) {
         printerr("PAPI_thread_init failed: %s\n", PAPI_strerror(err));
         return;
@@ -1515,8 +1718,16 @@ static void __attribute__((constructor)) interpose_init(void) {
         case 1:
             break;
     }
+    /* dup stderr because the program might close it. This is
+     * untraced because the descriptor table has not been
+     * initialized yet */
+    myerr = dup_untraced(STDERR_FILENO);
+
+    /* Open the trace file */
+    topen();
 
     init_descriptors();
+    init_threads();
 
     tprintf("start: %lf\n", get_time());
 
@@ -1543,8 +1754,13 @@ static void __attribute__((destructor)) interpose_fini(void) {
         trace_close(i);
     }
 
-    read_exe();
+    /* Report thread counters before we shut down threads */
     report_thread_counters();
+
+    /* Shut down all other threads */
+    fini_threads();
+
+    read_exe();
     read_status();
     read_rusage();
     read_stat();
@@ -1571,19 +1787,21 @@ static inline void *osym(const char *name) {
     void *orig_symbol = dlsym(RTLD_NEXT, name);
     if (orig_symbol == NULL) {
         printerr("FATAL ERROR: Unable to locate symbol %s: %s\n", name, dlerror());
-        exit(1);
+        abort();
     }
     return orig_symbol;
 }
 
 /** INTERPOSED FUNCTIONS **/
+static int dup_untraced(int oldfd) {
+    typeof(dup) *orig_dup = osym("dup");
+    return (*orig_dup)(oldfd);
+}
 
 int dup(int oldfd) {
     debug("dup");
 
-    typeof(dup) *orig_dup = osym("dup");
-
-    int rc = (*orig_dup)(oldfd);
+    int rc = dup_untraced(oldfd);
 
     if (rc >= 0) {
         trace_dup(oldfd, rc);
@@ -2129,14 +2347,6 @@ int vfprintf(FILE *stream, const char *format, va_list ap) {
     return rc;
 }
 
-static int fprintf_untraced(FILE *stream, const char *format, ...) {
-    va_list ap;
-    va_start(ap, format);
-    int rc = vfprintf_untraced(stream, format, ap);
-    va_end(ap);
-    return rc;
-}
-
 int fprintf(FILE *stream, const char *format, ...) {
     debug("fprintf");
 
@@ -2407,38 +2617,56 @@ int fseeko(FILE *stream, off_t offset, int whence) {
     return result;
 }
 
-void interpose_pthread_cleanup(void *arg) {
-    dec_thread_counters();
+static void interpose_pthread_shutdown() {
 #ifdef HAS_PAPI
     stop_papi();
 #endif
+
+    thread_finished(pthread_self());
+}
+
+static void interpose_pthread_cleanup(void *arg) {
+    interpose_pthread_shutdown();
+
     free(arg);
 }
 
+static void interpose_pthread_sigusr1(int ignore) {
+    interpose_pthread_shutdown();
+
+    /* Tell the signalling thread we are exiting */
+    lock_threads();
+    pthread_cond_signal(&killed_threads_cv);
+    unlock_threads();
+}
+
 /* This function wraps the start_routine of the thread provided by the user */
-void *interpose_pthread_wrapper(void *arg) {
+static void *interpose_pthread_wrapper(void *arg) {
     debug("pthread_wrapper");
 
-    inc_thread_counters();
+    thread_started(pthread_self());
+
+#ifdef HAS_PAPI
+    start_papi();
+#endif
 
     interpose_pthread_wrapper_arg *info = (interpose_pthread_wrapper_arg *)arg;
     if (info == NULL) {
         /* Probably won't ever happen */
         printerr("FATAL ERROR: interpose_pthread_wrapper argument was NULL: pthread_create start_routine lost\n");
-        exit(1);
+        abort();
     }
 
     /* This sets up a key whose destructor cleans up the thread wrapper */
     if (pthread_key_create(&info->cleanup, interpose_pthread_cleanup) != 0) {
-        printerr("Error creating cleanup key for thread %lu\n", interpose_gettid());
+        printerr("Error creating cleanup key for thread %d\n", gettid());
     }
     if (pthread_setspecific(info->cleanup, arg) != 0) {
-        printerr("Unable to set cleanup key for thread %lu\n", interpose_gettid());
+        printerr("Unable to set cleanup key for thread %d\n", gettid());
     }
 
-#ifdef HAS_PAPI
-    start_papi();
-#endif
+    /* Install a signal handler so we can force the thread to exit */
+    signal(SIGUSR1, interpose_pthread_sigusr1);
 
     return info->start_routine(info->arg);
 }

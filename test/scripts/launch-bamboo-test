@@ -73,6 +73,15 @@ cd $RUN_DIR
 $TOP_DIR/test/common/check-status
 STATUS=$?
 
+# PM-974
+# make sure there is only stampede database created per hierarchal workflow
+COUNT=`find . -name "*stampede.db" | grep -c stampede.db`                                                                                                                                                                                                   
+if [ $COUNT -ne "1" ]; then                                                                                                                                                                                                                                 
+    echo "ERROR: more than one stampede db in test $COUNT" 1>&2 
+    exit 1
+fi                                                                                                                                                                                                                                                          
+  
+
 # always pegasus-analyzer to detect other problems
 pegasus-analyzer $RUN_DIR
 STATUS=$(($STATUS + $?))

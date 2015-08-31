@@ -21,14 +21,16 @@ class CreateCommand(LoggingCommand):
                               
     def run(self):
         # _set_log_level(self.options.debug)
-        
+
         dburi = None
         if len(self.args) > 0:
             dburi = self.args[0]
         
         try:
-            _validate_conf_type_options(self.options.config_properties, self.options.submit_dir, self.options.db_type)
-            db = _get_connection(dburi, self.options.config_properties, self.options.submit_dir, self.options.db_type, create=True, force=self.options.force)
+            _validate_conf_type_options(dburi, self.options.properties, self.options.config_properties,
+                                        self.options.submit_dir, self.options.db_type)
+            db = _get_connection(dburi, self.options.properties, self.options.config_properties, self.options.submit_dir,
+                                 self.options.db_type, create=True, force=self.options.force)
             version = db_current_version(db, parse=True)
             _print_version(version)
             db.close()
@@ -57,8 +59,11 @@ class UpdateCommand(LoggingCommand):
             dburi = self.args[0]
             
         try:
-            _validate_conf_type_options(self.options.config_properties, self.options.submit_dir, self.options.db_type)
-            db = _get_connection(dburi, self.options.config_properties, self.options.submit_dir, self.options.db_type, pegasus_version=self.options.pegasus_version, create=True, force=self.options.force)
+            _validate_conf_type_options(dburi, self.options.properties, self.options.config_properties, self.options.submit_dir,
+                                        self.options.db_type)
+            db = _get_connection(dburi, self.options.properties, self.options.config_properties, self.options.submit_dir,
+                                 self.options.db_type, pegasus_version=self.options.pegasus_version, create=True,
+                                 force=self.options.force)
             version = db_current_version(db, parse=True)
             _print_version(version)
             db.close()
@@ -87,8 +92,11 @@ class DowngradeCommand(LoggingCommand):
             dburi = self.args[0]
             
         try:
-            _validate_conf_type_options(self.options.config_properties, self.options.submit_dir, self.options.db_type)
-            db = _get_connection(dburi, self.options.config_properties, self.options.submit_dir, self.options.db_type, pegasus_version=self.options.pegasus_version, schema_check=False, force=self.options.force)
+            _validate_conf_type_options(dburi, self.options.properties, self.options.config_properties, self.options.submit_dir,
+                                        self.options.db_type)
+            db = _get_connection(dburi, self.options.properties, self.options.config_properties, self.options.submit_dir,
+                                 self.options.db_type, pegasus_version=self.options.pegasus_version, schema_check=False,
+                                 force=self.options.force)
             db_downgrade(db, self.options.pegasus_version, self.options.force)
             version = db_current_version(db, parse=True)
             _print_version(version)
@@ -120,8 +128,11 @@ class CheckCommand(LoggingCommand):
             dburi = self.args[0]
 
         try:
-            _validate_conf_type_options(self.options.config_properties, self.options.submit_dir, self.options.db_type)
-            db = _get_connection(dburi, self.options.config_properties, self.options.submit_dir, self.options.db_type, pegasus_version=self.options.pegasus_version, force=self.options.force)
+            _validate_conf_type_options(dburi, self.options.properties, self.options.config_properties, self.options.submit_dir,
+                                        self.options.db_type)
+            db = _get_connection(dburi, self.options.properties, self.options.config_properties, self.options.submit_dir,
+                                 self.options.db_type, pegasus_version=self.options.pegasus_version,
+                                 force=self.options.force)
             compatible = db_verify(db, self.options.pegasus_version)
             _print_db_check(db, compatible, self.options.pegasus_version, self.options.version_value)
             db.close()
@@ -150,8 +161,10 @@ class VersionCommand(LoggingCommand):
             dburi = self.args[0]
         
         try:
-            _validate_conf_type_options(self.options.config_properties, self.options.submit_dir, self.options.db_type)
-            db = _get_connection(dburi, self.options.config_properties, self.options.submit_dir, self.options.db_type, schema_check=False, force=self.options.force)
+            _validate_conf_type_options(dburi, self.options.properties, self.options.config_properties, self.options.submit_dir,
+                                        self.options.db_type)
+            db = _get_connection(dburi, self.options.properties, self.options.config_properties, self.options.submit_dir,
+                                 self.options.db_type, schema_check=False, force=self.options.force)
             version = db_current_version(db, self.options.version_value)
             _print_version(version)
             db.close()
@@ -171,13 +184,22 @@ def _set_log_level(debug):
         logging.getLogger().setLevel(logging.DEBUG)
 
 
-def _validate_conf_type_options(config_properties, submit_dir, db_type):
-    """ Validate DB type parameter """
+def _validate_conf_type_options(dburi, properties, config_properties, submit_dir, db_type):
+    """ Validate DB type parameter
+    :param dburi: database URI
+    :param config_properties: Pegasus configuration properties file
+    :param submit_dir: workflow submit directory
+    :param db_type: database type (workflow, master, or jdbcrc)
+    """
+    if dburi:
+        # command-line URI has the highest priority
+        return
+
     if (config_properties or submit_dir) and not db_type:
         log.error("A type should be provided with the property file/submit directory.")
         exit(1)
     
-    if (not config_properties and not submit_dir) and db_type:
+    if (not config_properties and not submit_dir and not _has_connection_properties(properties)) and db_type:
         log.error("A property file/submit directory should be provided with the type option.")
         exit(1)
 
@@ -191,6 +213,8 @@ def _add_common_options(object):
         dest="submit_dir",default=None, help = "Specify submit directory. Should be used with '-t'")
     object.parser.add_option("-t","--type",action="store",type="string", 
         dest="db_type",default=None, help = "Type of the database (JDBCRC, MASTER, or WORKFLOW). Should be used with '-c' or '-s'")
+    object.parser.add_option("-D","",action="append",type="string",
+                             dest="properties",default=[], help = "Commandline overwrite for properties. Must be in the 'prop=val' format")
     object.parser.add_option("-d", "--debug", action="store_true", dest="debug",
         default=None, help="Enable debugging")
     object.parser.add_option("-f","--force",action="store_true",dest="force",
@@ -198,19 +222,38 @@ def _add_common_options(object):
 
 
 
-def _get_connection(dburi=None, config_properties=None, submit_dir=None, db_type=None, pegasus_version=None, schema_check=True, create=False, force=False):
+def _get_connection(dburi=None, cl_properties=None, config_properties=None, submit_dir=None, db_type=None,
+                    pegasus_version=None, schema_check=True, create=False, force=False):
     """ Get connection to the database based on the parameters"""
     if dburi:
-        return connection.connect(dburi, pegasus_version=pegasus_version, schema_check=schema_check, create=create, force=force)
-    elif config_properties:
-        return connection.connect_by_properties(config_properties, db_type, pegasus_version=pegasus_version, schema_check=schema_check, create=create, force=force)
+        return connection.connect(dburi, pegasus_version=pegasus_version, schema_check=schema_check, create=create,
+                                  force=force)
     elif submit_dir:
-        return connection.connect_by_submitdir(submit_dir, db_type, config_properties, pegasus_version=pegasus_version, schema_check=schema_check, create=create, force=force)
-    
+        return connection.connect_by_submitdir(submit_dir, db_type, config_properties, pegasus_version=pegasus_version,
+                                               schema_check=schema_check, create=create, force=force, cl_properties=cl_properties)
+
+    elif config_properties or _has_connection_properties(cl_properties):
+        return connection.connect_by_properties(config_properties, db_type, cl_properties=cl_properties,
+                                                pegasus_version=pegasus_version, schema_check=schema_check,
+                                                create=create, force=force)
+
     if not db_type:
         dburi = connection._get_master_uri()
-        return connection.connect(dburi, pegasus_version=pegasus_version, schema_check=schema_check, create=create, force=force)
+        return connection.connect(dburi, pegasus_version=pegasus_version, schema_check=schema_check, create=create,
+                                  force=force)
     return None
+
+
+def _has_connection_properties(cl_properties):
+    """
+    Verify if provided command-line properties contains connection properties.
+    :param properties: command-line properties
+    """
+    for property in cl_properties:
+        key = property.split("=")[0]
+        if key in connection.CONNECTION_PROPERTIES:
+            return True
+    return False
 
 
 def _print_db_check(db, compatible, pegasus_version=None, parse=False):

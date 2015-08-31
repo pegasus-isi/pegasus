@@ -1,0 +1,28 @@
+#!/bin/bash
+
+set -e
+
+# remove leftovers from previous runs
+rm -rf data transfers.in
+mkdir -p data
+
+# build an input file from a list of http URLs
+COUNT=0
+echo "[" >>transfers.in
+for URL in `cat urls.txt`; do
+    if [ $COUNT -gt 0 ]; then
+        echo "," >>transfers.in
+    fi
+    cat >>transfers.in <<EOF
+ { "type": "transfer",
+   "id": $COUNT,
+   "src_urls": [ { "site_label": "RemoteLocation", "url": "$URL" } ],
+   "dest_urls": [ { "site_label": "local", "url": "file://$PWD/data/$COUNT.dat" } ]
+ }
+EOF
+    COUNT=$(($COUNT + 1))
+done
+echo "]" >>transfers.in
+
+pegasus-transfer -f transfers.in
+

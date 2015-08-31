@@ -236,7 +236,7 @@ static ProcInfo *processTraceFile(const char *fullpath) {
     ProcInfo *proc = NULL;
     ProcInfo *lastproc = NULL;
 
-    int fork;
+    int fork = 0;
 
     /* Read data from the trace file */
     int lines = 0;
