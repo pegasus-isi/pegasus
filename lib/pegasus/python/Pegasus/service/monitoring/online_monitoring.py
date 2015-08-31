@@ -69,13 +69,13 @@ class OnlineMonitord:
         #     self.channel.stop_consuming()
         # self.mq_conn.close()
 
-        for method_frame, properties, body in self.channel.consume(self.queue_name, no_ack=True):
+        for method_frame, properties, body in self.channel.consume(self.queue_name):
             if method_frame is not None:
                 print method_frame.delivery_tag
             # print body
             # print
 
-            # self.channel.basic_ack(delivery_tag=method_frame.delivery_tag)
+            self.channel.basic_ack(delivery_tag=method_frame.delivery_tag)
 
             if len(body.split(" ")) < 2 or len(body) < 4:
                 print "The given measurement line is too short"
