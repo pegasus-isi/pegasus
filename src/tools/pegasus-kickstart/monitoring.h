@@ -34,6 +34,15 @@ monitoring_thread_func(void* monitoring_endpoint_struct);
  *				- it has all the information necessary to connect to rabbitmq
  */
 
- int prepare_socket(char *kickstart_hostname, char *kickstart_port);
+int
+find_ephemeral_endpoint(char *kickstart_hostname, char *kickstart_port);
+/* purpose: find an ephemeral port available on a machine for further socket-based communication;
+ *          opens a new socket on an ephemeral port, returns this port number and hostname
+ *          where kickstart will listen for monitoring information
+ * paramtr: kickstart_hostname (OUT): a pointer where the hostname of the kickstart machine will be stored,
+ *          kickstart_port (OUT): a pointer where the available ephemeral port number will be stored
+ * returns:	0  success
+ *		    -1 failure
+ */
 
 #endif /* _PEGASUS_MONITORING_H */

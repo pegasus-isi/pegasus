@@ -118,7 +118,6 @@ int start_status_thread(pthread_t* monitoring_thread, char* kickstart_socket_por
 
 void print_debug_info(MonitoringEndpoint *monitoring_endpoint, JobIdInfo *job_id_info) {
     printerr("[mon-thread] Our monitoring information:\n");
-    // TODO we use socket-based communication for now
     // printerr("[mon-thread] kickstart-status-file: %s\n", monitoring_endpoint->kickstart_status);
     printerr("[mon-thread] url: %s\n", monitoring_endpoint->url);
     printerr("[mon-thread] credentials: %s\n", monitoring_endpoint->credentials);
@@ -203,7 +202,7 @@ static void send_msg_to_mq(char* msg_buff, MonitoringEndpoint *monitoring_endpoi
 
 // SOCKET BASED COMMUNICATION
 // open a temporary socket to find out what ephemeral port can be used 
-int prepare_socket(char *kickstart_hostname, char *kickstart_port) {
+int find_ephemeral_endpoint(char *kickstart_hostname, char *kickstart_port) {
     int listenfd;
     struct sockaddr_in serv_addr;
     socklen_t addr_len;

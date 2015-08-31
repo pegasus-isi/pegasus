@@ -579,9 +579,9 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
         printerr("KICKSTART_MON_FILE: %s\n", kickstart_status);
     }
 
-    int rc = prepare_socket(socket_hostname, socket_port);
+    int rc = find_ephemeral_endpoint(socket_hostname, socket_port);
     if( rc < 0 ) {
-        printerr("Couldn't prepare a socket for kickstart\n");
+        printerr("Couldn't find an endpoint for communication with kickstart\n");
     }
     else {
         printerr("We are going to set port to: %s\n", socket_port);
