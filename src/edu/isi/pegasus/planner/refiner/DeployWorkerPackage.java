@@ -542,17 +542,8 @@ public class DeployWorkerPackage
             TransformationCatalogEntry selected = ( TransformationCatalogEntry )selectedEntries.get( 0 );
             mLogger.log( "Selected entry " + selected, LogManager.DEBUG_MESSAGE_LEVEL );
 
-            SiteCatalogEntry stagingSiteEntry = this.mSiteStore.lookup( stagingSite );
-            FileServer destDirServer = ( stagingSiteEntry == null )?
-                                        null:
-                                        stagingSiteEntry.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.put );
-            String destURLPrefix =  ( destDirServer == null )?
-                                            null:
-                                            destDirServer.getURLPrefix();
-
-            if( destURLPrefix == null ){
-                this.complainForHeadNodeURLPrefix( REFINER_NAME, stagingSite , FileServer.OPERATION.put);
-            }
+            FileServer destDirServer = this.getScratchFileServer( stagingSite );
+            String destURLPrefix =  destDirServer.getURLPrefix();
 
             //figure out the directory where to stage the data
             //data will be staged to the staging site corresponding to
