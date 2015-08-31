@@ -1418,6 +1418,24 @@ public class DeployWorkerPackage
         }
         
         if( useSubmitHostWF ){
+            //sanity check to see if a transfer of the worker package from
+            //local site to staging site will even work based on scratch
+            //dir url of staging site
+            if( !site.equals( "local") ){
+                //need to check for the site scratch dir url
+                FileServer stagingSiteServer = this.getScratchFileServer(site);
+                if( stagingSiteServer.getURLPrefix().startsWith( PegasusURL.FILE_URL_SCHEME) ){
+                    //if staging site is a file URL then we disable
+                    //using the worker package created on the submit host
+                    mLogger.log( "Not using the worker pacakge from the submit host install " + mSubmitHostWorkerPackage + 
+                                 " The scratch file server is a file url scheme for staging site " + site,
+                                 LogManager.DEBUG_MESSAGE_LEVEL );
+                    useSubmitHostWF = false; 
+                }
+            }
+        }
+        
+        if( useSubmitHostWF ){
             //create a default transformation catalog entry for the submit host location
             entry = new TransformationCatalogEntry( DeployWorkerPackage.TRANSFORMATION_NAMESPACE,
                                                     DeployWorkerPackage.TRANSFORMATION_NAME ,
@@ -1642,5 +1660,30 @@ public class DeployWorkerPackage
                  url.substring( url.lastIndexOf( File.separator ) + 1 );
     }
 
+    /**
+     * A convenience method to return a scratch file server on a staging site.
+     * The method ensures that FileServer is populated sufficiently with the url
+     * prefix
+     * 
+     * @param site
+     * 
+     * @return FileServer
+     * 
+     * @throws RuntimeException when URL Prefix cannot be determined for various reason.
+     */
+    protected FileServer getScratchFileServer( String site ){
+        SiteCatalogEntry stagingSiteEntry = this.mSiteStore.lookup( site );
+        FileServer fileServer = ( stagingSiteEntry == null )?
+                                null:
+                                stagingSiteEntry.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.put );
+        String destURLPrefix =  ( fileServer == null )?
+                                    null:
+                                    fileServer.getURLPrefix();
+        if( destURLPrefix == null ){
+            this.complainForHeadNodeURLPrefix( REFINER_NAME, site , FileServer.OPERATION.put);
+        }
+        
+        return fileServer;
+    }
     
 }
