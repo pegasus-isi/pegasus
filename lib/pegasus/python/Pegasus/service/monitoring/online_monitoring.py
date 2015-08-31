@@ -62,13 +62,6 @@ class OnlineMonitord:
         if self.channel is None:
             return
 
-        # self.channel.basic_consume(self.on_message, self.queue_name)
-        # try:
-        #     self.channel.start_consuming()
-        # except KeyboardInterrupt:
-        #     self.channel.stop_consuming()
-        # self.mq_conn.close()
-
         for method_frame, properties, body in self.channel.consume(self.queue_name):
             if method_frame is not None:
                 print method_frame.delivery_tag
@@ -77,52 +70,18 @@ class OnlineMonitord:
 
             self.channel.basic_ack(delivery_tag=method_frame.delivery_tag)
 
-            if len(body.split(" ")) < 2 or len(body) < 4:
-                print "The given measurement line is too short"
-            else:
-                messages = body.split(":delim1:")
-                if len(messages) > 1:
-                    messages = messages[0:-1]
-
-                for msg_body in messages:
-                    try:
-                        message = MonitoringMessage.parse(msg_body)
-
-                        if message is not None:
-                            if self.client is not None:
-                                self.client.write_points(InfluxDbMessageFormatter.format_msg(message))
-
-                            self.handle_aggregation(message)
-
-                    except ValueError, val_err:
-                        print "An error occured - (probably when parsing a message): "
-                        print val_err
-
-                    except Exception, err:
-                        print "An error occured while sending monitoring measurement: "
-                        print err
+            self.on_message(body)
 
         self.mq_conn.close()
 
-    def on_message(self, channel, method_frame, header_frame, body):
+    def on_message(self, body):
         """
-        A callback registered in a rabbitmq instance to process messages regarding online monitoring for a particular
-        workflow.
-        :param channel: a channel from which the message came
-        :param method_frame: message number
-        :param header_frame:
+        An utility function for processing messages regarding online monitoring for a particular workflow.
         :param body: raw body of the message
-        :return:
         """
-        if method_frame is not None:
-            print method_frame.delivery_tag
-        # print body
-        # print
 
-        channel.basic_ack(delivery_tag=method_frame.delivery_tag)
-
-        if len(body.split(" ")) < 2 or len(body) < 5:
-            print "The received message is too short"
+        if len(body.split(" ")) < 2 or len(body) < 4:
+            print "The given measurement line is too short"
         else:
             messages = body.split(":delim1:")
             if len(messages) > 1:

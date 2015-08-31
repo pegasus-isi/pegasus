@@ -113,8 +113,15 @@ class TestOnlineMonitoring(unittest.TestCase):
                    "write_bytes=0 syscr=0 syscw=0 wf_uuid=e168b2a3-c22f-4c03-a834-22afaa3b21b5 wf_label=run-5 " \
                    "dag_job_id=namd_ID0000002 condor_job_id=1037283.0"
 
-        self.online_monitord.on_message(None, None, None, msg_body)
-        self.online_monitord.on_message(None, None, None, msg_body)
+        self.online_monitord.on_message(msg_body)
+
+        msg_body = "ts=1430205166 event=workflow_trace level=INFO status=0 job_id=1037283.0 kickstart_pid=11471 " \
+                   "executable=/opt/cray/alps/5.2.1-2.0502.9072.13.1.gem/bin/aprun hostname=nid04942 " \
+                   "mpi_rank=0 utime=0.020 stime=0.010 iowait=0.000 vmSize=56552 vmRSS=2260 threads=3 read_bytes=0 " \
+                   "write_bytes=0 syscr=0 syscw=0 wf_uuid=e168b2a3-c22f-4c03-a834-22afaa3b21b5 wf_label=run-5 " \
+                   "dag_job_id=namd_ID0000002 condor_job_id=1037283.0"
+
+        self.online_monitord.on_message(msg_body)
 
         result = self.online_monitord.event_sink._db.session.query(JobMetrics).\
             filter(JobMetrics.dag_job_id == "namd_ID0000002", JobMetrics.ts == 1430205165).all()
@@ -130,7 +137,7 @@ class TestOnlineMonitoring(unittest.TestCase):
                    "read_bytes=0 write_bytes=0 syscr=0 syscw=0 wf_uuid=e168b2a3-c22f-4c03-a834-22afaa3b21b5 " \
                    "wf_label=run-5 dag_job_id=namd_ID0000002 condor_job_id=1037283.0"
 
-        self.online_monitord.on_message(None, None, None, msg_body)
+        self.online_monitord.on_message(msg_body)
 
         result = self.online_monitord.event_sink._db.session.query(JobMetrics).\
             filter(JobMetrics.dag_job_id == "namd_ID0000002").all()
@@ -142,7 +149,7 @@ class TestOnlineMonitoring(unittest.TestCase):
                    "syscr=0 syscw=0 wf_uuid=e168b2a3-c22f-4c03-a834-22afaa3b21b5 wf_label=run-5 " \
                    "dag_job_id=namd_ID0000002 condor_job_id=1037283.0"
 
-        self.online_monitord.on_message(None, None, None, msg_body)
+        self.online_monitord.on_message(msg_body)
 
         result = self.online_monitord.event_sink._db.session.query(JobMetrics).\
             filter(JobMetrics.dag_job_id == "namd_ID0000002").all()
@@ -156,7 +163,7 @@ class TestOnlineMonitoring(unittest.TestCase):
                    "syscr=0 syscw=0 wf_uuid=e168b2a3-c22f-4c03-a834-22afaa3b21b5 wf_label=run-5 " \
                    "dag_job_id=namd_ID0000002 condor_job_id=1037283.0"
 
-        self.online_monitord.on_message(None, None, None, msg_body)
+        self.online_monitord.on_message(msg_body)
 
         result = self.online_monitord.event_sink._db.session.query(JobMetrics).\
             filter(JobMetrics.dag_job_id == "namd_ID0000002").all()
@@ -175,7 +182,7 @@ class TestOnlineMonitoring(unittest.TestCase):
                    "read_bytes=0 write_bytes=0 syscr=0 syscw=0 wf_uuid=e168b2a3-c22f-4c03-a834-22afaa3b21b5 " \
                    "wf_label=run-5 dag_job_id=namd_ID0000002 condor_job_id=1037283.0"
 
-        self.online_monitord.on_message(None, None, None, msg_body)
+        self.online_monitord.on_message(msg_body)
 
         result = self.online_monitord.event_sink._db.session.query(JobMetrics). \
             filter(JobMetrics.dag_job_id == "namd_ID0000002").all()
@@ -187,7 +194,7 @@ class TestOnlineMonitoring(unittest.TestCase):
                    "syscr=0 syscw=0 wf_uuid=e168b2a3-c22f-4c03-a834-22afaa3b21b5 wf_label=run-5 " \
                    "dag_job_id=namd_ID0000002 condor_job_id=1037283.0"
 
-        self.online_monitord.on_message(None, None, None, msg_body)
+        self.online_monitord.on_message(msg_body)
 
         result = self.online_monitord.event_sink._db.session.query(JobMetrics). \
             filter(JobMetrics.dag_job_id == "namd_ID0000002").all()
@@ -200,7 +207,7 @@ class TestOnlineMonitoring(unittest.TestCase):
                    "read_bytes=0 write_bytes=0 syscr=0 syscw=0 wf_uuid=e168b2a3-c22f-4c03-a834-22afaa3b21b5 " \
                    "wf_label=run-5 dag_job_id=namd_ID0000002 condor_job_id=1037283.0"
 
-        self.online_monitord.on_message(None, None, None, msg_body)
+        self.online_monitord.on_message(msg_body)
 
         result = self.online_monitord.event_sink._db.session.query(JobMetrics). \
             filter(JobMetrics.dag_job_id == "namd_ID0000002").all()
@@ -214,7 +221,7 @@ class TestOnlineMonitoring(unittest.TestCase):
                    "syscr=0 syscw=0 wf_uuid=e168b2a3-c22f-4c03-a834-22afaa3b21b5 wf_label=run-5 " \
                    "dag_job_id=namd_ID0000002 condor_job_id=1037283.0"
 
-        self.online_monitord.on_message(None, None, None, msg_body)
+        self.online_monitord.on_message(msg_body)
 
         result = self.online_monitord.event_sink._db.session.query(JobMetrics). \
             filter(JobMetrics.dag_job_id == "namd_ID0000002").all()
@@ -228,7 +235,7 @@ class TestOnlineMonitoring(unittest.TestCase):
                    "read_bytes=0 write_bytes=0 syscr=0 syscw=0 wf_uuid=e168b2a3-c22f-4c03-a834-22afaa3b21b5 " \
                    "wf_label=run-5 dag_job_id=namd_ID0000002 condor_job_id=1037283.0"
 
-        self.online_monitord.on_message(None, None, None, msg_body)
+        self.online_monitord.on_message(msg_body)
 
         result = self.online_monitord.event_sink._db.session.query(JobMetrics). \
             filter(JobMetrics.dag_job_id == "namd_ID0000002").all()
@@ -315,8 +322,16 @@ class TestOnlineMonitoring(unittest.TestCase):
                    "dst_url=gsiftp://hoppergrid.nersc.gov/scratch/scratchdirs/darek/pegasus/run-sns-low-synth-1/run0001/topfile_mock " \
                    "dst_site_name=hopper transfer_start_ts=1431387400 transfer_duration=1 bytes_transferred=1024"
 
-        self.online_monitord.on_message(None, None, None, msg_body)
-        self.online_monitord.on_message(None, None, None, msg_body)
+        self.online_monitord.on_message(msg_body)
+
+        msg_body = "ts=1431387410 event=data_transfer level=INFO status=0 wf_uuid=e168b2a3-c22f-4c03-a834-22afaa3b21b5 " \
+                   "dag_job_id=stage_in_local_hopper_2_0 hostname=obelix.isi.edu condor_job_id=1037277.0 " \
+                   "src_url=file:///nfs/asd/darek/pegasus/SNS-Workflow/inputs/topfile_mock " \
+                   "src_site_name=local " \
+                   "dst_url=gsiftp://hoppergrid.nersc.gov/scratch/scratchdirs/darek/pegasus/run-sns-low-synth-1/run0001/topfile_mock " \
+                   "dst_site_name=hopper transfer_start_ts=1431387400 transfer_duration=1 bytes_transferred=1024"
+
+        self.online_monitord.on_message(msg_body)
 
         result = self.online_monitord.event_sink._db.session.query(JobMetrics). \
             filter(JobMetrics.dag_job_id == "stage_in_local_hopper_2_0", JobMetrics.bytes_transferred == 1024).all()
