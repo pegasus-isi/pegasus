@@ -193,7 +193,7 @@ static double get_time();
 static CpuUtilInfo read_cpu_status();
 static MemUtilInfo read_mem_status();
 static IoUtilInfo read_io_status();
-static char* read_exe();
+static void read_exe(char* executable_name);
 
 pthread_mutex_t io_mut = PTHREAD_MUTEX_INITIALIZER;
 IoUtilInfo io_util_info = { 0, 0, 0, 0, 0, 0, 0 };
@@ -325,7 +325,7 @@ static void* timer_thread_func(void* mpi_rank_void) {
     time_t timestamp;
     int interval;
     int mpi_rank = atoi( (char*) mpi_rank_void ) + 1;
-    char *exec_name, *kickstart_pid = NULL, hostname[BUFSIZ], *job_id = NULL, msg[BUFSIZ];
+    char exec_name[BUFSIZ], *kickstart_pid = NULL, hostname[BUFSIZ], *job_id = NULL, msg[BUFSIZ];
     char *monitoring_socket_host = NULL, *monitoring_socket_port = NULL;
 
     if( set_monitoring_params(mpi_rank,  &interval, 
@@ -341,7 +341,7 @@ static void* timer_thread_func(void* mpi_rank_void) {
         CpuUtilInfo cpu_info = read_cpu_status();
         MemUtilInfo mem_info = read_mem_status();
         IoUtilInfo io_info = read_io_status();
-        exec_name = read_exe();
+        read_exe(exec_name);
 
         memset(msg, 0, BUFSIZ);
 
@@ -371,10 +371,6 @@ static void* timer_thread_func(void* mpi_rank_void) {
             //     fclose(kickstart_status);
             // }
 
-        }
-
-        if(exec_name != NULL) {
-            free(exec_name);
         }
 
         sleep(interval);
@@ -645,28 +641,21 @@ static void read_cmdline() {
 }
 
 /* Read /proc/self/exe to get path to executable */
-static char* read_exe() {
+static void read_exe(char* executable_name)
+{
+    char buffer[BUFSIZ];
     debug("Reading exe");
-    char* exe;
 
-    exe = (char*) calloc(sizeof(char), BUFSIZ);
-    if(exe == NULL) {
-        perror("libinterpose: couldn't allocate memory");
-        return NULL;
-    }
-
-    int size = readlink("/proc/self/exe", exe, BUFSIZ);
+    int size = readlink("/proc/self/exe", buffer, BUFSIZ);
     if (size < 0) {
         printerr("libinterpose: Unable to readlink /proc/self/exe: %s\n", strerror(errno));
-        return NULL;
+        return;
     }
-
-    exe[size] = '\0';
+    buffer[size] = '\0';
 
     // if it is linux loader we need to read its first argument
-    if( strstr(exe, "ld-") != NULL ) {
-        // printerr("libinterpose: we have ld-linux involved\n");
-        char buffer[BUFSIZ];
+    // TODO we are looking for "ld-" in the whole string due to simplicity, but it will not work in some cases
+    if( strstr(buffer, "ld-") != NULL ) {
         // so we read /proc/self/cmdline - it a string with \0 delimeter
         int fd = open("/proc/self/cmdline", O_RDONLY);
         if(fd < 0) {
@@ -674,14 +663,12 @@ static char* read_exe() {
         }
         else {
             // printerr("libinterpose: we opend cmdline file\n");
-
             int nbytesread = read(fd, buffer, BUFSIZ);
             if(nbytesread < 0) {
                 printerr("libinterpose: Unable to read /proc/self/cmdline: %s\n", strerror(errno));    
             }
             else {
                 // printerr("libinterpose: we read: %s\n", buffer);
-
                 char *buf_idx = buffer;
 
                 // we need to take only the first token without ld-
@@ -691,18 +678,19 @@ static char* read_exe() {
                         buf_idx = idx + 1;
                     }
                 }
-                strcpy(exe, buf_idx);
+                strcpy(buffer, buf_idx);
             }
             // printerr("libinterpose: executable read from cmdline: %s\n", exe);
 
             close(fd);
         }
-
     }
-    
-    tprintf("exe: %s\n", exe);
 
-    return exe;
+    tprintf("exe: %s\n", buffer);
+
+    if(executable_name != NULL) {
+        strcpy(executable_name, buffer);
+    }
 }
 
 /* Return 1 if line ends with tok */
@@ -1764,7 +1752,7 @@ static void __attribute__((destructor)) interpose_fini(void) {
     /* Shut down all other threads */
     fini_threads();
 
-    read_exe();
+    read_exe(NULL);
     read_status();
     read_rusage();
     read_stat();
