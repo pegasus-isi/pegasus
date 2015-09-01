@@ -1223,11 +1223,36 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
 
       <programlisting><emphasis role="bold">pegasus.transfer.worker.package          true</emphasis> </programlisting>
 
-      <para>By default, when worker package staging is turned on pegasus pulls
-      the compatible worker package from the Pegasus Website. To specify a
-      different worker package location, users can specify the transformation
-      <emphasis role="bold">pegasus::worker</emphasis> in the transformation
-      catalog with</para>
+      <para>Starting 4.6.0 release, the worker package used for a remote site
+      ( if required ) is determined in the following order</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>there is an entry for pegasus::worker executable in the
+          transformation catalog. Information on how to construct that entry
+          is provided below.</para>
+        </listitem>
+
+        <listitem>
+          <para>the planner at runtime creates a worker package out of the
+          binary installation on the pegasus website, and puts it in the
+          submit directory. It uses this worker package if the OS and
+          architecture of the created worker package match with remote site,
+          or there is an exact match with ( osrelease and osversion) if
+          specified by the user in the site catalog for the remote
+          site.</para>
+        </listitem>
+
+        <listitem>
+          <para>the worker package compatible with the remote site is used
+          from the Pegasus website.</para>
+        </listitem>
+      </itemizedlist>
+
+      <para> For users to specify a particular worker package to use, they can
+      specify the transformation <emphasis
+      role="bold">pegasus::worker</emphasis> in the transformation catalog
+      with</para>
 
       <itemizedlist>
         <listitem>
@@ -1242,9 +1267,21 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
 
         <listitem>
           <para>the PFN specified should be a remote URL that can be pulled to
-          the compute site.</para>
+          the compute site. </para>
         </listitem>
       </itemizedlist>
+
+      <programlisting># example of specifying a worker package in the transformation catalog
+tr pegasus::worker {
+site corbusier {
+    pfn "http://pegasus.isi.edu/pegasus/download?filename=4.5.2/pegasus-binary-4.5.2-x86_64_macos_10.tar.gz"
+    arch "x86_64"
+    os "MACOSX"
+    type "INSTALLED"
+  }
+}
+
+</programlisting>
 
       <section>
         <title>Worker Package Staging in Non Shared Filesystem setup</title>
@@ -1602,8 +1639,8 @@ irodsZone 'somezone'
 # this is used with Pegasus
 irodsPassword 'somesecretpassword'</programlisting>
 
-      <para>iRods 4.0 switched to a JSON based configuration file. Pegasus can handle
-            either config file. JSON Example:</para>
+      <para>iRods 4.0 switched to a JSON based configuration file. Pegasus can
+      handle either config file. JSON Example:</para>
 
       <programlisting>
 {
@@ -1654,7 +1691,7 @@ irodsPassword 'somesecretpassword'</programlisting>
     site are laid out. By default, Pegasus stages output products to the
     storage directory specified in the site catalog for the output site.
     Output mappers allow users finer grained control over where the output
-    files are placed on the output site. </para>
+    files are placed on the output site.</para>
 
     <para>To configure the output mapper, you need to specify the following
     property</para>
@@ -1706,7 +1743,7 @@ irodsPassword 'somesecretpassword'</programlisting>
         the path for an output file on the output site by querying an output
         replica catalog. The output site is one that is passed on the command
         line. The output replica catalog can be configured by specifying the
-        following properties. </para>
+        following properties.</para>
 
         <itemizedlist>
           <listitem>

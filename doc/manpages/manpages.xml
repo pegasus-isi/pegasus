@@ -39,4 +39,5 @@
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-tc-converter.xml"/>
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-transfer.xml"/>
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-version.xml"/>
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-worker-create.xml"/>
 </reference>
