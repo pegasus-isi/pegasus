@@ -15,11 +15,11 @@
 #include "monitoring.h"
 
 /* Get the current time in seconds since the epoch */
-static double get_time() {
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return tv.tv_sec + ((double)tv.tv_usec / 1e6);
-}
+//static double get_time() {
+//    struct timeval tv;
+//    gettimeofday(&tv, NULL);
+//    return tv.tv_sec + ((double)tv.tv_usec / 1e6);
+//}
 
 // a util function for reading env variables by the main kickstart process
 // with monitoring endpoint data or set default values

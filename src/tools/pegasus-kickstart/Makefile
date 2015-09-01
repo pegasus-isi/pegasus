@@ -41,12 +41,17 @@ ifeq (x86_64,${ARCH})
     TARGET += libinterpose.so
     PAPI_SO=$(shell /sbin/ldconfig -p | grep libpapi.so)
     PAPI_H=$(shell ls /usr/include/papi.h)
-#    ifneq ($(PAPI_SO),)
-#        ifneq ($(PAPI_H),)
+    ifneq ($(PAPI_SO),)
+        ifneq ($(PAPI_H),)
             CFLAGS += -DHAS_PAPI
             LI_LDFLAGS += -lpapi
-#        endif
-#    endif
+        endif
+
+        ifneq ($(shell ls /ccg/software/papi/5.4.1/include/papi.h),)
+            CFLAGS += -DHAS_PAPI
+            LI_LDFLAGS += -lpapi
+        endif
+    endif
 endif
     CFLAGS += $(shell getconf LFS_CFLAGS 2>>/dev/null)
     LDFLAGS += $(shell getconf LFS_LDFLAGS 2>>/dev/null)
