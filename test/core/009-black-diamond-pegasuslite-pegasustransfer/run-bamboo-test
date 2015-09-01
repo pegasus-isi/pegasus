@@ -37,7 +37,7 @@ cat > sites.xml <<EOF
                 </file-server>
         </directory>
 </site>
-<site  handle="condorpool" arch="x86" os="LINUX" osrelease="" osversion="" glibc="">
+<site handle="condorpool" arch="x86_64" os="LINUX" >
         <profile namespace="condor" key="universe" >vanilla</profile>
         <profile namespace="pegasus" key="style" >condor</profile>
 </site>

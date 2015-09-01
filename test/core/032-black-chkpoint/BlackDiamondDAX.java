@@ -61,22 +61,22 @@ public class BlackDiamondDAX {
         fe2.setRegister(true);
 
 	Executable checkpoint = new Executable("pegasus", "checkpoint", "4.0");
-        checkpoint.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
+        checkpoint.setArchitecture(Executable.ARCH.X86_64).setOS(Executable.OS.LINUX);
         checkpoint.setInstalled( false );
         checkpoint.addPhysicalFile("file://" + cwd + "/checkpoint_test.py", "local");
 
         Executable findrange = new Executable("pegasus", "findrange", "4.0");
-        findrange.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
+        findrange.setArchitecture(Executable.ARCH.X86_64).setOS(Executable.OS.LINUX);
         findrange.setInstalled( false );
         findrange.addPhysicalFile("file://" + pegasus_location + "/bin/pegasus-keg", "local");
 
 	Executable analyze = new Executable("pegasus", "analyze", "4.0");
-        analyze.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
+        analyze.setArchitecture(Executable.ARCH.X86_64).setOS(Executable.OS.LINUX);
         analyze.setInstalled( false );
         analyze.addPhysicalFile("file://" + pegasus_location + "/bin/pegasus-keg", "local");
 
 	Executable postanalyze = new Executable("pegasus", "post-analyze", "4.0");
-        postanalyze.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
+        postanalyze.setArchitecture(Executable.ARCH.X86_64).setOS(Executable.OS.LINUX);
         postanalyze.setInstalled( false );
         postanalyze.addPhysicalFile("file://" + pegasus_location + "/bin/pegasus-keg", "local");
 

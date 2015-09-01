@@ -27,7 +27,7 @@ a.addPFN(PFN(config.get('all', 'file_url') + input_file + "/f.a", config.get('al
 cluster.addFile(a)
 
 for i in range (1, 3):
-    sleep = Executable (namespace = "cluster", name = "level" + str (i), version = "1.0", os = "linux", arch = "x86", installed=config.getboolean('all', 'executable_installed'))
+    sleep = Executable (namespace = "cluster", name = "level" + str (i), version = "1.0", os = "linux", arch = "x86_64", installed=config.getboolean('all', 'executable_installed'))
     sleep.addPFN (PFN (config.get('all', 'executable_url') + sys.argv[1] + "/bin/pegasus-keg", config.get('all', 'executable_site')))
     sleep.addProfile (Profile (namespace = "pegasus", key = "clusters.size", value = config.get('all', 'clusters_size')))
     sleep.addProfile (Profile (namespace = "pegasus", key = "clusters.maxruntime", value = config.get('all', 'clusters_maxruntime')))
