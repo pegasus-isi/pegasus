@@ -1395,13 +1395,16 @@ public class DeployWorkerPackage
         //suffficient to use for the site.
         SysInfo remoteSiteSysInfo = mSiteStore.getSysInfo( site );  
         SysInfo submitHostSysInfo = this.determineSysInfo( this.mSubmitHostWorkerPackage.getName() );
+        mLogger.log( "Compute site sysinfo " + site + " "  + remoteSiteSysInfo , LogManager.DEBUG_MESSAGE_LEVEL);
+                
         boolean useSubmitHostWF = false;
-        if( remoteSiteSysInfo.getOSRelease() != null && remoteSiteSysInfo.getOSRelease().length() > 0 &&
-             remoteSiteSysInfo.equals( submitHostSysInfo )){
-            //user has specified a specific architecture in the site catalog
-            //we can only use the worker package created on the submit host, if
-            //they match completely
-            useSubmitHostWF = true;
+        if( remoteSiteSysInfo.getOSRelease() != null && remoteSiteSysInfo.getOSRelease().length() > 0 ){
+            if (remoteSiteSysInfo.equals( submitHostSysInfo )){
+                //user has specified a specific architecture in the site catalog
+                //we can only use the worker package created on the submit host, if
+                //they match completely
+                useSubmitHostWF = true;
+            }
         }
         else{
             //osrelease is not specified. 
