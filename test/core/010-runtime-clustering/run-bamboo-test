@@ -67,7 +67,7 @@ cat > sites.xml << EOF
             </storage>
         </head-fs>
     </site>
-    <site handle="condorpool" arch="x86" os="LINUX">
+    <site handle="condorpool" arch="x86_64" os="LINUX" >
         <head-fs>
             <scratch />
             <storage />
@@ -75,7 +75,7 @@ cat > sites.xml << EOF
         <profile namespace="pegasus" key="style">condor</profile>
         <profile namespace="condor" key="universe">vanilla</profile>
     </site>
-    <site handle="sharedfs" arch="x86" os="LINUX">
+    <site handle="sharedfs" arch="x86_64" os="LINUX">
         <head-fs>
             <scratch>
                 <shared>

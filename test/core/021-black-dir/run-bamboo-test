@@ -52,7 +52,7 @@ cat >sites.xml <<EOF
         </head-fs>
         <profile namespace="pegasus" key="clusters.num">1</profile>
     </site>
-    <site  handle="condorpool" arch="x86" os="LINUX">
+    <site handle="condorpool" arch="x86_64" os="LINUX" >
        <head-fs>
             <scratch>
                 <shared>

@@ -57,17 +57,17 @@ public class HierarchicalDiamonds {
         fd.setRegister(true);
 
         Executable preprocess = new Executable("pegasus", "preprocess", "4.0");
-        preprocess.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
+        preprocess.setArchitecture(Executable.ARCH.X86_64).setOS(Executable.OS.LINUX);
         preprocess.setInstalled(true);
         preprocess.addPhysicalFile("file://" + pegasus_location + "/bin/pegasus-keg", "condorpool");
 
         Executable findrange = new Executable("pegasus", "findrange", "4.0");
-        findrange.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
+        findrange.setArchitecture(Executable.ARCH.X86_64).setOS(Executable.OS.LINUX);
         findrange.setInstalled(true);
         findrange.addPhysicalFile("file://" + pegasus_location + "/bin/pegasus-keg", "condorpool");
 
         Executable analyze = new Executable("pegasus", "analyze", "4.0");
-        analyze.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
+        analyze.setArchitecture(Executable.ARCH.X86_64).setOS(Executable.OS.LINUX);
         analyze.setInstalled(true);
         analyze.addPhysicalFile("file://" + pegasus_location + "/bin/pegasus-keg", "condorpool");
 
@@ -136,17 +136,17 @@ public class HierarchicalDiamonds {
         fd.setRegister(true);
 
         Executable preprocess = new Executable("pegasus", "preprocess", "4.0");
-        preprocess.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
+        preprocess.setArchitecture(Executable.ARCH.X86_64).setOS(Executable.OS.LINUX);
         preprocess.setInstalled(true);
         preprocess.addPhysicalFile("file://" + pegasus_location + "/bin/pegasus-keg", "condorpool");
 
         Executable findrange = new Executable("pegasus", "findrange", "4.0");
-        findrange.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
+        findrange.setArchitecture(Executable.ARCH.X86_64).setOS(Executable.OS.LINUX);
         findrange.setInstalled(true);
         findrange.addPhysicalFile("file://" + pegasus_location + "/bin/pegasus-keg", "condorpool");
 
         Executable analyze = new Executable("pegasus", "analyze", "4.0");
-        analyze.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
+        analyze.setArchitecture(Executable.ARCH.X86_64).setOS(Executable.OS.LINUX);
         analyze.setInstalled(true);
         analyze.addPhysicalFile("file://" + pegasus_location + "/bin/pegasus-keg", "condorpool");
 
