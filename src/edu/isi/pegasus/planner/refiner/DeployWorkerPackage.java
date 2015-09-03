@@ -473,7 +473,7 @@ public class DeployWorkerPackage
      * @param sites
      * @param mapper
      * @param selector
-     * @param workerNodeExecution 
+     * @param workerNodeExecution boolean indicating whether a job runs on sharedfs or local node filesytem
      */
     protected void setupTCForWorkerPackageLocations( Set sites, 
                                                      Mapper mapper,
@@ -495,7 +495,7 @@ public class DeployWorkerPackage
         //Worker Package in the Transformation Catalog
         for( Iterator it = sites.iterator(); it.hasNext(); ){
             String site = ( String ) it.next();
-            TransformationCatalogEntry entry = this.getTCEntryForPegasusWorkerPackage(mapper, selector, site);
+            TransformationCatalogEntry entry = this.getTCEntryForPegasusWorkerPackage(mapper, selector, site, workerNodeExecution);
             mLogger.log( "Worker Package Entry used for site " + site + " "  + entry,
                          LogManager.DEBUG_MESSAGE_LEVEL );
             //register back into the transformation catalog
@@ -1358,14 +1358,18 @@ public class DeployWorkerPackage
      * @param mapper
      * @param selector
      * @param site        the execution site for which we need a matching static binary.
+     * @param workerNodeExecution boolean indicating whether worker package is 
+     *                     staged  to compute site via a staging site or not.
+     *                            
      *
      *
      * @return  the default entry.
      */
     protected TransformationCatalogEntry getTCEntryForPegasusWorkerPackage(
-                                                                                Mapper mapper,
-                                                                                TransformationSelector selector,
-                                                                                String site) {
+                                                                            Mapper mapper,
+                                                                            TransformationSelector selector,
+                                                                            String site, 
+                                                                            boolean workerNodeExecution) {
        
         //check if there is a valid entry for worker package
         List<TransformationCatalogEntry> entries, selectedEntries = null;
@@ -1391,13 +1395,16 @@ public class DeployWorkerPackage
         //suffficient to use for the site.
         SysInfo remoteSiteSysInfo = mSiteStore.getSysInfo( site );  
         SysInfo submitHostSysInfo = this.determineSysInfo( this.mSubmitHostWorkerPackage.getName() );
+        mLogger.log( "Compute site sysinfo " + site + " "  + remoteSiteSysInfo , LogManager.DEBUG_MESSAGE_LEVEL);
+                
         boolean useSubmitHostWF = false;
-        if( remoteSiteSysInfo.getOSRelease() != null && remoteSiteSysInfo.getOSRelease().length() > 0 &&
-             remoteSiteSysInfo.equals( submitHostSysInfo )){
-            //user has specified a specific architecture in the site catalog
-            //we can only use the worker package created on the submit host, if
-            //they match completely
-            useSubmitHostWF = true;
+        if( remoteSiteSysInfo.getOSRelease() != null && remoteSiteSysInfo.getOSRelease().length() > 0 ){
+            if (remoteSiteSysInfo.equals( submitHostSysInfo )){
+                //user has specified a specific architecture in the site catalog
+                //we can only use the worker package created on the submit host, if
+                //they match completely
+                useSubmitHostWF = true;
+            }
         }
         else{
             //osrelease is not specified. 
@@ -1410,16 +1417,18 @@ public class DeployWorkerPackage
         
         if( useSubmitHostWF ){
             //sanity check to see if a transfer of the worker package from
-            //local site to staging site will even work based on scratch
-            //dir url of staging site
-            if( !site.equals( "local") ){
+            //local site to compute site will even work based on scratch
+            //dir url of compute site. we do this check only if stage worker
+            //job has to transfer package to the compute site and not to a
+            //staging site
+            if( !site.equals( "local") && !workerNodeExecution ){
                 //need to check for the site scratch dir url
                 FileServer stagingSiteServer = this.getScratchFileServer(site);
                 if( stagingSiteServer.getURLPrefix().startsWith( PegasusURL.FILE_URL_SCHEME) ){
                     //if staging site is a file URL then we disable
                     //using the worker package created on the submit host
-                    mLogger.log( "Not using the worker pacakge from the submit host install " + mSubmitHostWorkerPackage + 
-                                 " The scratch file server is a file url scheme for staging site " + site,
+                    mLogger.log( "Not using the worker package from the submit host install " + mSubmitHostWorkerPackage + 
+                                 " The scratch file server is a file url scheme for compute site " + site,
                                  LogManager.DEBUG_MESSAGE_LEVEL );
                     useSubmitHostWF = false; 
                 }

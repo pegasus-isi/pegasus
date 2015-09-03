@@ -90,8 +90,12 @@ public class TransformationStore {
 
                 boolean existing = false;
                 for( TransformationCatalogEntry e : l ){
-                    if( e.getPhysicalTransformation().equals( entry.getPhysicalTransformation() ) ){
-                        //lets overwrite the entry and break out
+                    //PM-888 instead of only matching on PFN we now match on the 
+                    //whole transformation catalog entry. since, we can have
+                    //two entries with same PFN but ( different osrelease i.e osrlease
+                    //specified for one entry and not for the other)
+                    if( e.equals( entry ) ){
+                          //lets overwrite the entry and break out
                         l.remove( e );
                         l.add( entry );
                         existing = true;

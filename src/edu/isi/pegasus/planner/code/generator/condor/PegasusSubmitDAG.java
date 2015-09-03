@@ -386,7 +386,8 @@ push( @arg, '-append', '+pegasus_wf_xformation="pegasus::dagman"' );
         public static final String[] IGNORE_LOG_LINES= {
                                     "Renaming rescue DAGs newer than number 0",
                                     "-no_submit given, not submitting DAG to Condor.",
-                                    "\"condor_submit"
+                                    "\"condor_submit",
+                                    "I am: hostname:"
         };
    
         

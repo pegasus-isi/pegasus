@@ -20,15 +20,15 @@ a = File("f.a")
 # In this case the binary is 32 bit version of pegasus-keg
 # that is stored at file:///nfs/ccg4/scratch-purge-no-backups/bamboo/inputs/pegasus-keg-x86
 keg = "/nfs/ccg4/scratch-purge-no-backups/bamboo/inputs/pegasus-keg-x86"
-e_preprocess = Executable(namespace="diamond", name="preprocess", version="4.0", os="linux", arch="x86", installed=False)
+e_preprocess = Executable(namespace="diamond", name="preprocess", version="4.0", os="linux", arch="x86_64", installed=False)
 e_preprocess.addPFN(PFN("file://" + sys.argv[1] + "/bin/pegasus-keg", "condorpool"))
 diamond.addExecutable(e_preprocess)
 	
-e_findrange = Executable(namespace="diamond", name="findrange", version="4.0", os="linux", arch="x86", installed=False)
+e_findrange = Executable(namespace="diamond", name="findrange", version="4.0", os="linux", arch="x86_64", installed=False)
 e_findrange.addPFN(PFN("file://" + keg, "local"))
 diamond.addExecutable(e_findrange)
 	
-e_analyze = Executable(namespace="diamond", name="analyze", version="4.0", os="linux", arch="x86", installed=False)
+e_analyze = Executable(namespace="diamond", name="analyze", version="4.0", os="linux", arch="x86_64", installed=False)
 e_analyze.addPFN(PFN("file://" + sys.argv[1] + "/bin/pegasus-keg", "condorpool"))
 
 diamond.addExecutable(e_analyze)
