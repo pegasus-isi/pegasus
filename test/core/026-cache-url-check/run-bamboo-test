@@ -35,7 +35,7 @@ cat >sites.xml <<EOF
         </directory>
         <profile namespace="env" key="PEGASUS_BIN_DIR">$PEGASUS_BIN_DIR</profile>
     </site>
-    <site  handle="condor_pool" arch="x86" os="LINUX">
+    <site  handle="condor_pool" arch="x86_64" os="LINUX">
         <profile namespace="pegasus" key="style">condor</profile>
         <profile namespace="condor" key="universe">vanilla</profile>
     </site>

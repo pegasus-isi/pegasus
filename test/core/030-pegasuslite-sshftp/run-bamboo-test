@@ -53,11 +53,11 @@ cat >sites.xml <<EOF
             <file-server operation="all" url="file://$TOP_DIR/outputs"/>
         </directory>
     </site>
-    <site  handle="condor_pool" arch="x86" os="LINUX">
+    <site  handle="condor_pool" arch="x86_64" os="LINUX">
         <profile namespace="pegasus" key="style" >condor</profile>
         <profile namespace="condor" key="universe" >vanilla</profile>
     </site>
-    <site  handle="staging_site" arch="x86" os="LINUX">
+    <site  handle="staging_site" arch="x86_64" os="LINUX">
         <directory type="shared-scratch" path="/data/scratch/http">
             <file-server operation="all" url="sshftp://ptesting@obelix.isi.edu/data/scratch/http"/>
         </directory>
