@@ -54,12 +54,12 @@ cat >sites.xml <<EOF
         </directory>
         <profile namespace="env" key="PATH">$PEGASUS_BIN_DIR:/ccg/software/gsutil:/usr/bin:/bin</profile>
     </site>
-    <site  handle="condor_pool" arch="x86" os="LINUX">
+    <site  handle="condor_pool" arch="x86_64" os="LINUX">
         <profile namespace="pegasus" key="style" >condor</profile>
         <profile namespace="condor" key="universe" >vanilla</profile>
         <profile namespace="env" key="PATH">/ccg/software/gsutil:/usr/bin:/bin</profile>
     </site>
-    <site  handle="staging_site" arch="x86" os="LINUX">
+    <site  handle="staging_site" arch="x86_64" os="LINUX">
         <directory type="shared-scratch" path="/pegasus-wms-test001/scratch">
             <file-server operation="all" url="gs://pegasus-wms-test001/scratch"/>
         </directory>

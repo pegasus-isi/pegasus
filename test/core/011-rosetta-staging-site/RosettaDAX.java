@@ -40,7 +40,8 @@ public class RosettaDAX {
             // pick it up from the local file system
             exe.setInstalled(false);
             exe.addPhysicalFile("file://" + cwd + "/rosetta.exe", "local");
-            
+            exe.setArchitecture(Executable.ARCH.x86_64).setOS(Executable.OS.LINUX);
+
             // cluster the jobs together to lessen the grid overhead
             //exe.addProfile("pegasus", "clusters.size", "3");
             

@@ -54,11 +54,11 @@ cat >sites.xml <<EOF
         </directory>
         <profile namespace="env" key="PEGASUS_BIN_DIR" >$PEGASUS_BIN_DIR</profile>
     </site>
-    <site  handle="condor_pool" arch="x86" os="LINUX">
+    <site  handle="condor_pool" arch="x86_64" os="LINUX">
         <profile namespace="pegasus" key="style" >condor</profile>
         <profile namespace="condor" key="universe" >vanilla</profile>
     </site>
-    <site  handle="staging_site" arch="x86" os="LINUX">
+    <site  handle="staging_site" arch="x86_64" os="LINUX">
         <directory type="shared-scratch" path="/nfs/ccg4/scratch-purge-no-backups/http-scratch/ptesting">
             <file-server operation="get" url="http://obelix.isi.edu/shared-scratch/ptesting"/>
             <file-server operation="put" url="gsiftp://obelix.isi.edu/nfs/ccg4/scratch-purge-no-backups/http-scratch/ptesting"/>
