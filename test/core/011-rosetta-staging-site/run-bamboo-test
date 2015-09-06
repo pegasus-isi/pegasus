@@ -65,7 +65,7 @@ cat >sites.xml <<EOF
         <profile namespace="env" key="PEGASUS_BIN_DIR" >$PEGASUS_BIN_DIR</profile>
         <profile namespace="env" key="GLOBUS_LOCATION" >/opt/globus/5.0.3</profile>
     </site>
-    <site  handle="CCG" arch="x86" os="LINUX">
+    <site  handle="CCG" arch="x86_64" os="LINUX">
         <grid  type="gt5" contact="obelix.isi.edu/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
         <grid  type="gt5" contact="obelix.isi.edu/jobmanager-condor" scheduler="unknown" jobtype="compute"/>
         <head-fs>
@@ -74,7 +74,7 @@ cat >sites.xml <<EOF
         </head-fs>
         <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" />
     </site>
-    <site  handle="CCG_Staging" arch="x86" os="LINUX">
+    <site  handle="CCG_Staging" arch="x86_64" os="LINUX">
         <head-fs>
             <scratch>
                 <shared>

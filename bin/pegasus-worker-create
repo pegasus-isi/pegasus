@@ -69,14 +69,17 @@ for EXECUTABLE in "${WORKER_PACKAGE_EXECUTABLES[@]}"; do
     cp -a ${PEGASUS_BIN_DIR}/${EXECUTABLE} ${WORKER_DIR}/bin/
 done
 
-# copy both pegasus python dir 
+# copy both pegasus python dir and boto from python externals dir
 # keep similar directory structure to on submit host
-for PYTHON_DIR in $PEGASUS_PYTHON_DIR ; do
-    RELATIVE_DIR=`echo $PYTHON_DIR | sed -E "s/.*${PEGASUS_VERSION}\/(.*)/\1/"`
+# determine a sudo PEGASUS_HOME from PEGASUS_BIN and use that for
+# determining relative paths
+PEGASUS_HOME=`cd $PEGASUS_BIN_DIR/.. && pwd`
+echo "Root of Pegasus install is $PEGASUS_HOME"
+for PYTHON_DIR in $PEGASUS_PYTHON_DIR/Pegasus $PEGASUS_PYTHON_EXTERNALS_DIR/boto; do
+    RELATIVE_DIR=`echo $PYTHON_DIR | sed -E "s@.*${PEGASUS_HOME}\/(.*)@\1@"`
     echo "Relative pegasus python directory is $RELATIVE_DIR"
     mkdir -p ${WORKER_DIR}/${RELATIVE_DIR}
-    cp -a -R ${PYTHON_DIR}/* ${WORKER_DIR}/${RELATIVE_DIR}/  
-    
+    cp -a -R ${PYTHON_DIR}/* ${WORKER_DIR}/${RELATIVE_DIR}/     
 done
 
 # create place the worker package in the output directory
