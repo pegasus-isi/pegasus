@@ -113,7 +113,7 @@ public class Regex extends Default {
      * pool, then also a random location amongst the ones at the preference pool
      * is selected.
      *
-     * @param rl         the <code>ReplicaLocation</code> object containing all
+     * @param candidates         the <code>ReplicaLocation</code> object containing all
      *                   the pfn's associated with that LFN.
      * @param preferredSite the preffered site for picking up the replicas.
      * @param allowLocalFileURLs indicates whether Replica Selector can select a replica
@@ -123,19 +123,19 @@ public class Regex extends Default {
      *
      * @see org.griphyn.cPlanner.classes.ReplicaLocation
      */
-    public ReplicaCatalogEntry selectReplica( ReplicaLocation rl,
+    public ReplicaCatalogEntry selectReplica( ReplicaLocation candidates,
                                               String preferredSite,
                                               boolean allowLocalFileURLs ){
 
 
-        String lfn = rl.getLFN();
+        String lfn = candidates.getLFN();
         String site;
         ArrayList prefLocs = new ArrayList();
         int locSelected;
 
         //create a shallow clone as we will be removing
         //using Iterator.remove() methods
-        rl = (ReplicaLocation)rl.clone();
+        ReplicaLocation rl = (ReplicaLocation)candidates.clone();
         
         //log message
         StringBuffer sb = new StringBuffer();
@@ -192,8 +192,11 @@ public class Regex extends Default {
                //in all likelihood all the urls were file urls and
                 //none were associated with the preference pool.
                 //replica not selected
-                throw new RuntimeException( "Unable to select a Physical Filename (PFN) for the file with logical filename (LFN) as " +
-                                             lfn );
+                StringBuffer error = new StringBuffer();
+                error.append( "Unable to select a Physical Filename (PFN) for file with logical filename (LFN) as ").
+                      append( rl.getLFN() ).append( " for staging to site " ).append( preferredSite ).
+                      append( " amongst ").append( candidates.getPFNList() );
+                throw new RuntimeException( error.toString() );
             }
             else{
                //select a random location from all the matching locations

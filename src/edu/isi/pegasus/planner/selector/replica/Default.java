@@ -90,7 +90,7 @@ public class Default implements ReplicaSelector {
      * pool, then also a random location amongst the ones at the preference pool
      * is selected.
      *
-     * @param rl         the <code>ReplicaLocation</code> object containing all
+     * @param candidates         the <code>ReplicaLocation</code> object containing all
      *                   the pfn's associated with that LFN.
      * @param preferredSite the preffered site for picking up the replicas.
      * @param allowLocalFileURLs indicates whether Replica Selector can select a replica
@@ -100,7 +100,7 @@ public class Default implements ReplicaSelector {
      *
      * @see org.griphyn.cPlanner.classes.ReplicaLocation
      */
-    public ReplicaCatalogEntry selectReplica( ReplicaLocation rl,
+    public ReplicaCatalogEntry selectReplica( ReplicaLocation candidates,
                                               String preferredSite,
                                               boolean allowLocalFileURLs ){
 
@@ -111,7 +111,7 @@ public class Default implements ReplicaSelector {
 
         //create a shallow clone as we will be removing
         //using Iterator.remove() methods
-        rl = (ReplicaLocation)rl.clone();
+        ReplicaLocation rl = (ReplicaLocation)candidates.clone();
         
         mLogger.log("Selecting a pfn for lfn " + rl.getLFN() + "\n amongst" + rl.getPFNList() ,
                     LogManager.DEBUG_MESSAGE_LEVEL);
@@ -147,9 +147,12 @@ public class Default implements ReplicaSelector {
         int noOfLocs = rl.getPFNCount();
         if ( noOfLocs == 0 ) {
             //in all likelihood all the urls were file urls and none
-            //were associated with the preference pool.
-            throw new RuntimeException( "Unable to select a Physical Filename (PFN) for file with logical filename (LFN) as " +
-                                         rl.getLFN() );
+            //were associated with the preference site.
+            StringBuffer error = new StringBuffer();
+            error.append( "Unable to select a Physical Filename (PFN) for file with logical filename (LFN) as ").
+                  append( rl.getLFN() ).append( " for staging to site " ).append( preferredSite ).
+                  append( " amongst ").append( candidates.getPFNList() );
+            throw new RuntimeException( error.toString() );
         }
 
         if ( prefPFNs.isEmpty() ) {
