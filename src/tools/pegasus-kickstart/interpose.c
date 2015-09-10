@@ -27,6 +27,8 @@
 #include <dlfcn.h>
 #include <netdb.h>
 
+#include "interpose_monitoring.h"
+
 /* TODO Unlocked I/O (e.g. fwrite_unlocked) */
 /* TODO Handle directories */
 /* TODO Interpose accept (for network servers) */
@@ -72,28 +74,6 @@ typedef struct {
     size_t bseek;
     size_t nseek;
 } Descriptor;
-
-typedef struct {
-    double real_utime;
-    double real_stime;
-    double real_iowait;
-} CpuUtilInfo;
-
-typedef struct {
-    unsigned long long vmSize;
-    unsigned long long vmRSS;
-    unsigned long threads;
-} MemUtilInfo;
-
-typedef struct {
-    unsigned long long rchar;
-    unsigned long long wchar;
-    unsigned long syscr;
-    unsigned long syscw;
-    unsigned long long read_bytes;
-    unsigned long long write_bytes;
-    unsigned long long cancelled_write_bytes;
-} IoUtilInfo;
 
 const char DTYPE_NONE = 0;
 const char DTYPE_FILE = 1;
@@ -147,8 +127,8 @@ static int mypid = 0;
 
 /* This is the trace file where we write information about the process */
 static FILE* trace = NULL;
-static pthread_t timer_thread;
-static int library_loaded = 1;
+pthread_t timer_thread;
+int library_loaded = 1;
 
 #ifdef HAS_PAPI
 int papi_ok = 0;
@@ -178,11 +158,11 @@ typedef struct {
     pthread_key_t cleanup;
 } interpose_pthread_wrapper_arg;
 
-static FILE *fopen_untraced(const char *path, const char *mode);
+FILE *fopen_untraced(const char *path, const char *mode);
 static int vfprintf_untraced(FILE *stream, const char *format, va_list ap);
-static char *fgets_untraced(char *s, int size, FILE *stream);
+char *fgets_untraced(char *s, int size, FILE *stream);
 static size_t fread_untraced(void *ptr, size_t size, size_t nmemb, FILE *stream);
-static int fclose_untraced(FILE *fp);
+int fclose_untraced(FILE *fp);
 static int dup_untraced(int fd);
 
 static pid_t gettid(void) {
@@ -190,195 +170,14 @@ static pid_t gettid(void) {
 }
 
 static double get_time();
-static CpuUtilInfo read_cpu_status();
-static MemUtilInfo read_mem_status();
-static IoUtilInfo read_io_status();
-static void read_exe(char* executable_name);
+void read_exe(char* executable_name);
 
 pthread_mutex_t io_mut = PTHREAD_MUTEX_INITIALIZER;
 IoUtilInfo io_util_info = { 0, 0, 0, 0, 0, 0, 0 };
 
 /* Return 1 if line begins with tok */
-static int startswith(const char *line, const char *tok) {
+int startswith(const char *line, const char *tok) {
     return strncmp(line, tok, strlen(tok)) == 0;
-}
-
-// TODO kickstart status file should be used when socket-based communication fails
-// Utility function to open the kickstart status file based on environment variable
-// static FILE* open_kickstart_status_file() {
-//     char *kickstart_status = getenv("KICKSTART_MON_FILE");
-
-//     if (kickstart_status == NULL) {
-//         printerr("Unable to open kickstart status file: KICKSTART_MON_FILE not set in environment\n");
-//         return NULL;
-//     }
-
-//     return fopen(kickstart_status, "a");
-// }
-
-// SOCKET-BASED COMMUNICATION WITH KICKSTART
-
-static int prepare_socket(int *sockfd, char *monitoring_socket_host, char* monitoring_socket_port, struct sockaddr_in *serv_addr) {
-    int port_no = atoi(monitoring_socket_port);
-    struct sockaddr_in sa_addr;
-    struct hostent *server;
-
-    if( (*sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0 ) {
-        printerr("Error[getaddrinfo]: %s\n", strerror(errno));
-        return -1;
-    }
-
-    server = gethostbyname(monitoring_socket_host);
-    if (server == NULL) {
-        printerr("Error[gethostbyname]: no such host - %s\n", strerror(errno));
-        return -1;
-    }
-
-    bzero((char *) &sa_addr, sizeof(sa_addr));
-    sa_addr.sin_family = AF_INET;
-    bcopy( (char *)server->h_addr, (char *)&sa_addr.sin_addr.s_addr, server->h_length);
-    sa_addr.sin_port = htons(port_no);
-
-    // printerr("haddr: %s\n", inet_ntoa( *( struct in_addr*)( server -> h_addr_list[0])));
-    // printerr("port: %d\n", port_no);
-    
-    if( connect(*sockfd, (struct sockaddr *)&sa_addr, sizeof(sa_addr)) < 0 ) {
-        printerr("Error[connect]: %s\n", strerror(errno));
-        return -1;
-    }
-
-    return 0;
-}
-
-static int send_msg_to_kickstart(char *msg, char *host, char *port) {
-    int sockfd;
-    struct sockaddr_in serv_addr;
-
-    if( prepare_socket(&sockfd, host, port, &serv_addr) == -1 ) {
-        printerr("Some error occured during socket preparation.\n");
-        return 1;
-    }
-    else {
-        // printerr("We are going to write to a socket...\n");        
-
-        if( send(sockfd, msg, BUFSIZ, 0) < 0 ) {
-            printerr("Error during msg send.\n");
-            return 1;
-        }
-    }
-
-    close(sockfd);
-    return 0;
-}
-
-// END SOCKET-BASED COMMUNICATION WITH KICKSTART
-
-static int set_monitoring_params(int mpi_rank, int *interval, char **socket_host, char **socket_port, 
-    char **kickstart_pid, char *hostname, char **job_id) 
-{
-    char *envptr = NULL;
-
-    if ( (envptr = getenv("KICKSTART_MON_INTERVAL")) == NULL ) {
-        printerr("[Thread-%d] Couldn't read KICKSTART_MON_INTERVAL\n", mpi_rank);
-        return 1;        
-    }
-    else {
-        *interval = atoi(envptr);
-    }
-
-    if( (*socket_host = getenv("KICKSTART_MON_HOST")) == NULL) {
-        printerr("[Thread-%d] Couldn't read KICKSTART_MON_HOST\n", mpi_rank);
-        return 1;
-    }
-
-    if( (*socket_port = getenv("KICKSTART_MON_PORT")) == NULL ) {
-        printerr("[Thread-%d] Couldn't read KICKSTART_MON_PORT\n", mpi_rank);
-        return 1;
-    } 
-
-    if ( (*kickstart_pid = getenv("KICKSTART_MON_PID")) == NULL) {
-        printerr("KICKSTART_MON_PID not set in environment\n");
-        return 1;
-    }
-
-    if( gethostname(hostname, BUFSIZ) ) {
-        printerr("[Thread-%d] ERROR: couldn't get hostname: %s\n", mpi_rank, strerror(errno));
-        return 1;
-    }
-
-    // we don't really care if this is NULL or not
-    *job_id = getenv("CONDOR_JOBID");
-
-    return 0;
-}
-
-
-/*
- * It is a timer thread function, which dumps monitoring information to a global trace file 
- * - a full path is stored in KICKSTART_PREFIX
- * - it stores a single entry each time which follows the pattern:
- * <mpi_rank> <timestamp> <utime> <stime> <io_wait> <vm_peak> <pm_peak> <threads> <read_bytes> <write_bytes> <syscr> <syscw>
- */
-static void* timer_thread_func(void* mpi_rank_void) {
-    // TODO kickstart status file should be used when socket-based communication fails
-    // FILE* kickstart_status;
-    time_t timestamp;
-    int interval;
-    int mpi_rank = atoi( (char*) mpi_rank_void ) + 1;
-    char exec_name[BUFSIZ], *kickstart_pid = NULL, hostname[BUFSIZ], *job_id = NULL, msg[BUFSIZ];
-    char *monitoring_socket_host = NULL, *monitoring_socket_port = NULL;
-
-    if( set_monitoring_params(mpi_rank,  &interval, 
-        &monitoring_socket_host, &monitoring_socket_port,
-        &kickstart_pid, hostname, &job_id) ) 
-    {
-        return NULL;
-    }
-
-    while(library_loaded) {
-        timestamp = time(NULL);
-
-        CpuUtilInfo cpu_info = read_cpu_status();
-        MemUtilInfo mem_info = read_mem_status();
-        IoUtilInfo io_info = read_io_status();
-        read_exe(exec_name);
-
-        memset(msg, 0, BUFSIZ);
-
-        sprintf(msg, "ts=%d event=workflow_trace level=INFO status=0 "
-                   "job_id=%s kickstart_pid=%s executable=%s hostname=%s mpi_rank=%d utime=%.3f stime=%.3f "
-                   "iowait=%.3f vmSize=%llu vmRSS=%llu threads=%lu read_bytes=%llu write_bytes=%llu "
-                   "syscr=%lu syscw=%lu\n",
-
-            (int)timestamp, job_id, kickstart_pid, exec_name, hostname, mpi_rank, 
-            cpu_info.real_utime, cpu_info.real_stime, cpu_info.real_iowait,
-            mem_info.vmSize, mem_info.vmRSS, mem_info.threads,
-            io_info.rchar, io_info.wchar, io_info.syscr, io_info.syscw);
-
-        // printerr("[Thread-%d] Sending: %s\n", mpi_rank, msg);
-
-        if( send_msg_to_kickstart(msg, monitoring_socket_host, monitoring_socket_port) ) {
-            printerr("[Thread-%d] There was a problem sending a message to kickstart...\n", mpi_rank);
-
-            // TODO we should try to open a file and log monitoring stuff
-
-            // if( (kickstart_status = open_kickstart_status_file()) == NULL ) {
-            //     printerr("[Thread-%d] ERROR during kickstart status open: %s\n", mpi_rank, strerror(errno)));
-            // }
-            // else {
-            //     fprintf_untraced(kickstart_status, "%s\n", msg);
-            //     fflush(kickstart_status);
-            //     fclose(kickstart_status);
-            // }
-
-        }
-
-        sleep(interval);
-    }
-
-    printerr("[Thread-%d] We are finishing our work...\n", mpi_rank);
-
-    return NULL;
 }
 
 /* Open the trace file */
@@ -641,8 +440,7 @@ static void read_cmdline() {
 }
 
 /* Read /proc/self/exe to get path to executable */
-static void read_exe(char* executable_name)
-{
+void read_exe(char* executable_name) {
     char buffer[BUFSIZ];
     debug("Reading exe");
 
@@ -739,45 +537,6 @@ static void read_status() {
     fclose_untraced(f);
 }
 
-/* Read useful information from /proc/self/status and returns a structure with this information */
-static MemUtilInfo read_mem_status() {
-    debug("Reading status file");
-    MemUtilInfo info = { 0, 0, 0 };
-
-    char statf[] = "/proc/self/status";
-
-    /* If the status file is missing, then just skip it */
-    if (access(statf, F_OK) < 0) {
-        return info;
-    }
-
-    FILE *f = fopen_untraced(statf, "r");
-    if (f == NULL) {
-        perror("libinterpose: Unable to fopen /proc/self/status");
-        return info;
-    }
-
-    char line[BUFSIZ];
-    
-    while (fgets_untraced(line, BUFSIZ, f) != NULL) {
-
-        if (startswith(line,"VmSize")) {
-            sscanf(line, "VmSize: %llu", &(info.vmSize));
-        } 
-        else if (startswith(line,"VmRSS")) {
-            sscanf(line, "VmRSS: %llu", &(info.vmRSS));
-        } 
-        else if (startswith(line,"Threads")) {
-            sscanf(line, "Threads: %lu", &(info.threads));
-        }
-
-    }
-
-    fclose_untraced(f);
-
-    return info;
-}
-
 /* Read /proc/self/stat to get CPU usage */
 /* Read CPU usage */
 static void read_rusage() {
@@ -827,59 +586,6 @@ static void read_stat() {
     double real_iowait = ((double)iowait) / clocks;
 
     tprintf("iowait: %.3lf\n", real_iowait);
-}
-
-
-/* Read /proc/self/stat to get CPU usage and returns a structure with this information */
-static CpuUtilInfo read_cpu_status() {
-    CpuUtilInfo info = { 0.0, 0.0 };
-
-    debug("Reading stat file");
-
-    char statf[] = "/proc/self/stat";
-
-    /* If the stat file is missing, then just skip it */
-    if (access(statf, F_OK) < 0) {
-        return info;
-    }
-
-    FILE *f = fopen_untraced(statf,"r");
-    if (f == NULL) {
-        perror("libinterpose: Unable to fopen /proc/self/stat");
-        return info;
-    }
-
-    unsigned long utime, stime = 0;
-    unsigned long long iowait = 0; //delayacct_blkio_ticks
-
-    //pid comm state ppid pgrp session tty_nr tpgid flags minflt cminflt majflt
-    //cmajflt utime stime cutime cstime priority nice num_threads itrealvalue
-    //starttime vsize rss rsslim startcode endcode startstack kstkesp kstkeip
-    //signal blocked sigignore sigcatch wchan nswap cnswap exit_signal
-    //processor rt_priority policy delayacct_blkio_ticks guest_time cguest_time
-    fscanf(f, "%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu "
-              "%lu %*d %*d %*d %*d %*d %*d %*u %*u %*d %*u %*u "
-              "%*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*d "
-              "%*d %*u %*u %llu %*u %*d",
-           &utime, &stime, &iowait);
-
-    fclose_untraced(f);
-
-    /* Adjust by number of clock ticks per second */
-    long clocks = sysconf(_SC_CLK_TCK);
-
-    double real_utime;
-    double real_stime;
-    double real_iowait;
-    real_utime = ((double)utime) / clocks;
-    real_stime = ((double)stime) / clocks;
-    real_iowait = ((double)iowait) / clocks;
-
-    info.real_utime = real_utime;
-    info.real_stime = real_stime;
-    info.real_iowait = real_iowait;
-
-    return info;
 }
 
 /* Read /proc/self/io to get I/O usage */
@@ -979,61 +685,6 @@ static int should_trace(int fd, const char *path) {
     }
 
     return 1;
-}
-
-/* Read /proc/self/io to get I/O usage */
-static IoUtilInfo read_io_status() {
-    debug("Reading io file");
-
-    IoUtilInfo local_io_info = { 0, 0, 0, 0, 0, 0, 0 };
-
-    pthread_mutex_lock(&io_mut);
-    local_io_info.rchar = io_util_info.rchar;
-    local_io_info.wchar = io_util_info.wchar;
-    local_io_info.syscw = io_util_info.syscw;
-    local_io_info.syscr = io_util_info.syscr;
-    pthread_mutex_unlock(&io_mut);
-
-    char iofile[] = "/proc/self/io";
-
-    /* This proc file was added in Linux 2.6.20. It won't be
-     * there on older kernels, or on kernels without task IO
-     * accounting. If it is missing, just bail out.
-     */
-    if (access(iofile, F_OK) < 0) {
-        return local_io_info;
-    }
-
-    FILE *f = fopen_untraced(iofile, "r");
-    if (f == NULL) {
-        perror("libinterpose: Unable to fopen /proc/self/io");
-        return local_io_info;
-    }
-
-    char line[BUFSIZ];
-//    printerr("Reading io status...\n");
-    while (fgets_untraced(line, BUFSIZ, f) != NULL) {
-//        printerr("Our line: '%s'\n", line);
-        if (startswith(line, "rchar")) {
-            sscanf(line, "rchar: %llu", &(local_io_info.rchar));
-        } else if (startswith(line, "wchar")) {
-            sscanf(line, "wchar: %llu", &(local_io_info.wchar));
-        } else if (startswith(line,"syscr")) {
-            sscanf(line, "syscr: %lu", &(local_io_info.syscr));
-        } else if (startswith(line,"syscw")) {
-            sscanf(line, "syscw: %lu", &(local_io_info.syscw));
-        } else if (startswith(line,"read_bytes")) {
-            sscanf(line, "read_bytes: %llu", &(local_io_info.read_bytes));
-        } else if (startswith(line,"write_bytes")) {
-            sscanf(line, "write_bytes: %llu", &(local_io_info.write_bytes));
-        } else if (startswith(line,"cancelled_write_bytes")) {
-            sscanf(line, "cancelled_write_bytes: %llu", &(local_io_info.cancelled_write_bytes));
-        }
-    }
-
-    fclose_untraced(f);
-
-    return local_io_info;
 }
 
 static void trace_file(const char *path, int fd) {
@@ -1528,12 +1179,12 @@ static void start_papi() {
     ctx->eventset = PAPI_NULL;
 
     err = PAPI_register_thread();
-    if (err < 0) {
+    if (err != PAPI_OK) {
         printerr("Error registering PAPI thread: %s\n", PAPI_strerror(err));
     }
 
     err = PAPI_create_eventset(&ctx->eventset);
-    if (err < 0) {
+    if (err != PAPI_OK) {
         printerr("Unable to create PAPI event set: %s\n", PAPI_strerror(err));
         goto cleanup;
     }
@@ -1542,14 +1193,14 @@ static void start_papi() {
     for (int i=0; i<n_papi_events; i++) {
         int event;
         err = PAPI_event_name_to_code(papi_events[i], &event);
-        if (err < 0) {
+        if (err != PAPI_OK) {
             printerr("Error getting PAPI event code for %s: %s\n", papi_events[i], PAPI_strerror(err));
             continue;
         }
 
         PAPI_event_info_t info;
         err = PAPI_get_event_info(event, &info);
-        if (err < 0) {
+        if (err != PAPI_OK) {
             printerr("Error getting PAPI event info for %s: %s\n", papi_events[i], PAPI_strerror(err));
             continue;
         }
@@ -1560,7 +1211,7 @@ static void start_papi() {
         }
 
         err = PAPI_add_event(ctx->eventset, event);
-        if (err < 0) {
+        if (err != PAPI_OK) {
             if (err == PAPI_ECNFLCT) {
                 /* Event conflicts with another event */
                 continue;
@@ -1571,13 +1222,13 @@ static void start_papi() {
     }
 
     err = PAPI_start(ctx->eventset);
-    if (err < 0) {
+    if (err != PAPI_OK) {
         printerr("PAPI_start failed: %s\n", PAPI_strerror(err));
         goto cleanup;
     }
 
     err = PAPI_set_thr_specific(PAPI_USR1_TLS, ctx);
-    if (err < 0) {
+    if (err != PAPI_OK) {
         printerr("Unable to set PAPI thread context: %s\n", PAPI_strerror(err));
         goto cleanup;
     }
@@ -1654,62 +1305,10 @@ unregister:
 
 #endif
 
-extern char **environ;
-
-void spawn_timer_thread() {
-
-    // spawning a timer thread only when
-    char* mpi_rank = getenv("OMPI_COMM_WORLD_RANK");
-    // printerr("Spawning thread in process: %d\n", (int)current_pid);
-     // printerr("Setting mpi rank based on OMPI_COMM_WORLD_RANK\n");
-
-    if(mpi_rank == NULL) {
-        mpi_rank = getenv("ALPS_APP_PE");        
-         // printerr("Setting mpi rank based on MPIRUN_RANK\n");
-
-        if(mpi_rank == NULL) {
-            mpi_rank = getenv("PMI_RANK");
-             // printerr("Setting mpi rank based on PMI_RANK\n");
-
-            if(mpi_rank == NULL) {
-                mpi_rank = getenv("PMI_ID");
-                 // printerr("Setting mpi rank based on PMI_ID\n");
-
-                if(mpi_rank == NULL) {
-                    mpi_rank = getenv("MPIRUN_RANK");
-                     // printerr("Setting mpi rank based on MPIRUN_RANK\n");
-                }
-            }
-        }
-    }
-
-    if(mpi_rank == NULL) {
-        // printerr("MPI rank is not set in environment\n");
-        mpi_rank = (char*) calloc(1024, sizeof(char));
-        strcpy(mpi_rank, "-1");
-    }
-
-    int rc = pthread_create(&timer_thread, NULL, timer_thread_func, (void *)mpi_rank);
-    if (rc) {
-        printerr("ERROR; return code from pthread_create() is %d\n", rc);
-        exit(-1);
-    }    
-}
-
 /* Library initialization function */
 static void __attribute__((constructor)) interpose_init(void) {
     mypid = getpid();
 
-    /* Open the trace file and spawning a thread only when there was no one */
-    switch( tfile_exists() ) {
-        case 0:
-            topen();
-            // Create a new thread for online monitoring
-            spawn_timer_thread();
-            break;
-        case 1:
-            break;
-    }
     /* dup stderr because the program might close it. This is
      * untraced because the descriptor table has not been
      * initialized yet */
@@ -1717,6 +1316,7 @@ static void __attribute__((constructor)) interpose_init(void) {
 
     /* Open the trace file */
     topen();
+
 
     init_descriptors();
     init_threads();
@@ -1732,6 +1332,8 @@ static void __attribute__((constructor)) interpose_init(void) {
     /* Start papi for main thread */
     start_papi();
 #endif
+
+    spawn_monitoring_thread();
 }
 
 /* Library finalizer function */
@@ -1948,7 +1550,7 @@ int creat64(const char *path, mode_t mode) {
     return rc;
 }
 
-static FILE *fopen_untraced(const char *path, const char *mode) {
+FILE *fopen_untraced(const char *path, const char *mode) {
     typeof(fopen) *orig_fopen = osym("fopen");
     return (*orig_fopen)(path, mode);
 }
@@ -2017,7 +1619,7 @@ int close(int fd) {
     return rc;
 }
 
-static int fclose_untraced(FILE *fp) {
+int fclose_untraced(FILE *fp) {
     typeof(fclose) *orig_fclose = osym("fclose");
     return (*orig_fclose)(fp);
 }
@@ -2261,7 +1863,7 @@ int fputc(int c, FILE *stream) {
     return rc;
 }
 
-static char *fgets_untraced(char *s, int size, FILE *stream) {
+char *fgets_untraced(char *s, int size, FILE *stream) {
     typeof(fgets) *orig_fgets = osym("fgets");
     return (*orig_fgets)(s, size, stream);
 }

@@ -3,8 +3,8 @@ RM = rm -f
 CC = gcc
 CFLAGS = -Wall -O2 -ggdb -std=gnu99 -I/ccg/software/papi/5.4.1/include -L/ccg/software/papi/5.4.1/lib
 LD = $(CC)
-LDLIBS = -lm -lcurl -lpthread
-LI_LDFLAGS = -ldl -lpthread
+LDLIBS = -lm -lcurl -pthread
+LI_LDFLAGS = -ldl -pthread
 SYSTEM = $(shell uname -s | tr '[a-z]' '[A-Z]' | tr -d '_ -/')
 ARCH = $(shell uname -m)
 TARGET = pegasus-kickstart
@@ -72,8 +72,8 @@ all: $(TARGET)
 pegasus-kickstart: $(OBJS)
 	$(LD) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-libinterpose.so: interpose.c
-	$(CC) $(CFLAGS) -shared -fPIC -o libinterpose.so interpose.c $(LI_LDFLAGS)
+libinterpose.so: interpose.c interpose_monitoring.c
+	$(CC) $(CFLAGS) -shared -fPIC -o libinterpose.so interpose.c interpose_monitoring.c $(LI_LDFLAGS)
 
 version.h:
 	$(CURDIR)/../../../release-tools/getversion --header > $(CURDIR)/version.h
