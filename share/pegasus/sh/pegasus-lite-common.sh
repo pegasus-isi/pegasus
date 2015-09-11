@@ -46,6 +46,17 @@ function pegasus_lite_internal_wp_shipped()
     # was the job shipped with a Pegasus worker package?
     if ls $pegasus_lite_start_dir/pegasus-worker-*.tar.gz >/dev/null 2>&1; then
         pegasus_lite_log "The job contained a Pegasus worker package"
+    
+        # check if the worker package provided is for the this platform, but
+        # only warn if there is a mismatch
+        system=$(pegasus_lite_get_system)
+        if [ $? = 0 ]; then
+            wp_name=`(cd $pegasus_lite_start_dir && ls pegasus-worker-*.tar.gz | head -n 1) 2>/dev/null`
+            if ! (echo "x$wp_name" | grep "$system") >/dev/null 2>&1 ; then
+                pegasus_lite_log "Warning: worker package $wp_name does not seem to match the system $system"
+            fi 
+        fi
+
         tar xzf $pegasus_lite_start_dir/pegasus-worker-*.tar.gz
         rm -f $pegasus_lite_start_dir/pegasus-worker-*.tar.gz
         unset PEGASUS_HOME
@@ -76,7 +87,7 @@ function pegasus_lite_internal_wp_in_env()
             pegasus_lite_log "Using existing Pegasus binaries in $detected_pegasus_bin"
             return 0
         else
-            pegasus_lite_log "Pegasus binaries in $detected_pegasus_bin do not match Pegasus version used for current workflow"
+            pegasus_lite_log "Warning: Pegasus binaries in $detected_pegasus_bin do not match Pegasus version used for current workflow"
         fi
     fi
 
