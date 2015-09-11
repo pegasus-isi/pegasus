@@ -104,10 +104,7 @@ static pthread_mutex_t descriptor_mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP
 static int cur_threads;
 static int tot_threads;
 static int max_threads;
-static int max_threadids;
-static pthread_t *threadids;
 static pthread_mutex_t thread_track_mutex = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t killed_threads_cv = PTHREAD_COND_INITIALIZER;
 
 #define lock_threads() do { \
     if (pthread_mutex_lock(&thread_track_mutex) != 0) { \
@@ -145,10 +142,6 @@ char *papi_events[] = {
 };
 
 #define n_papi_events (sizeof(papi_events) / sizeof(char *))
-
-typedef struct {
-    int eventset;
-} interpose_papi_ctx;
 
 #endif
 
@@ -537,7 +530,6 @@ static void read_status() {
     fclose_untraced(f);
 }
 
-/* Read /proc/self/stat to get CPU usage */
 /* Read CPU usage */
 static void read_rusage() {
     struct rusage ru;
@@ -701,17 +693,6 @@ static void trace_file(const char *path, int fd) {
         goto unlock;
     }
 
-    struct stat s;
-    if (fstat(fd, &s) != 0) {
-        printerr("fstat: %s\n", strerror(errno));
-        return;
-    }
-
-    /* Skip directories */
-    if (s.st_mode & S_IFDIR) {
-        return;
-    }
-
     char *temp = strdup(path);
     if (temp == NULL) {
         printerr("strdup: %s\n", strerror(errno));
@@ -809,7 +790,6 @@ static void trace_write(int fd, ssize_t amount) {
     io_util_info.wchar += amount;
     io_util_info.syscw += 1;
     pthread_mutex_unlock(&io_mut);
-
 
 unlock:
     unlock_descriptors();
@@ -992,7 +972,7 @@ static void trace_truncate(const char *path, off_t length) {
     }
 
     tprintf("file: '%s' %lu 0 0 0 0\n", fullpath, length);
-    
+
     free(fullpath);
 }
 
@@ -1020,28 +1000,8 @@ static void report_thread_counters() {
     unlock_threads();
 }
 
-static void thread_started(pthread_t id) {
+static void thread_started() {
     lock_threads();
-
-    /* If we have reached the max, then reallocate the table */
-    if (cur_threads >= max_threadids) {
-        int new_max_threadids = max_threadids * 2;
-        pthread_t *new_threadids = realloc(threadids, new_max_threadids * sizeof(pthread_t));
-        if (new_threadids == NULL) {
-            printerr("Unable to realloc thread id table\n");
-            abort();
-        }
-        bzero(&(new_threadids[max_threadids]), (new_max_threadids-max_threadids) * sizeof(pthread_t));
-        threadids = new_threadids;
-        max_threadids = new_max_threadids;
-    }
-
-    for (int i=0; i<max_threadids; i++) {
-        if (threadids[i] == 0) {
-            threadids[i] = id;
-            break;
-        }
-    }
 
     /* Increment thread counters */
     cur_threads += 1;
@@ -1053,15 +1013,8 @@ static void thread_started(pthread_t id) {
     unlock_threads();
 }
 
-static void thread_finished(pthread_t id) {
+static void thread_finished() {
     lock_threads();
-
-    for (int i=0; i<max_threadids; i++) {
-        if (pthread_equal(id, threadids[i])) {
-            threadids[i] = 0;
-            break;
-        }
-    }
 
     /* Decrement thread counter */
     cur_threads -= 1;
@@ -1076,56 +1029,10 @@ static void init_threads() {
     max_threads = 0;
     tot_threads = 0;
 
-    max_threadids = 2;
-    threadids = calloc(max_threadids, sizeof(pthread_t));
-    if (threadids == NULL) {
-        printerr("Unable to allocate thread ID table\n");
-        abort();
-    }
-
     unlock_threads();
 
-    thread_started(pthread_self());
-}
-
-static void fini_threads() {
-    lock_threads();
-
-    pthread_t me = pthread_self();
-    for (int i=0; i<max_threadids; i++) {
-        if (threadids[i] != 0) {
-            /* Skip self */
-            if (pthread_equal(me, threadids[i])) {
-                continue;
-            }
-
-            /* Sending this signal should force the thread to exit */
-            pthread_kill(threadids[i], SIGUSR1);
-
-            /* We would like to join with the thread here so that we can
-             * be sure that it exits before pthread_self(), but that is
-             * not possible because the user's program may have replaced the
-             * signal handler with one of their own. Basically, we can't
-             * guarantee that the thread will exit after the signal is
-             * delivered. If they did replace the handler, then this could
-             * cause the process to hang in pthread_join. There is a similar
-             * story for cancelling a thread: basically, there is no way for
-             * this thread to know that cancelling the other thread will result
-             * in the thread being cancelled, because the other thread could
-             * have set itself to not be cancelled. Instead, we use a condition
-             * variable in the signal handler, but we only wait for a max
-             * of 1 second on the condition. If we aren't signalled after
-             * one second, then it is safe to assume we won't be. */
-            struct timeval tv;
-            struct timespec ts;
-            gettimeofday(&tv, NULL);
-            ts.tv_sec = tv.tv_sec + 1;
-            ts.tv_nsec = tv.tv_usec * 1000;
-            pthread_cond_timedwait(&killed_threads_cv, &thread_track_mutex, &ts);
-        }
-    }
-
-    unlock_threads();
+    /* This thread started */
+    thread_started();
 }
 
 #ifdef HAS_PAPI
@@ -1159,10 +1066,6 @@ static void init_papi() {
     papi_ok = 1;
 }
 
-static void fini_papi() {
-    PAPI_shutdown();
-}
-
 /* Start papi counters for a thread */
 static void start_papi() {
     int err;
@@ -1171,36 +1074,31 @@ static void start_papi() {
         return;
     }
 
-    interpose_papi_ctx *ctx = malloc(sizeof(interpose_papi_ctx));
-    if (ctx == NULL) {
-        printerr("Error allocating PAPI thread context: %s\n", strerror(errno));
+    err = PAPI_register_thread();
+    if (err < 0) {
+        printerr("Error registering PAPI thread: %s\n", PAPI_strerror(err));
         return;
     }
-    ctx->eventset = PAPI_NULL;
 
-    err = PAPI_register_thread();
-    if (err != PAPI_OK) {
-        printerr("Error registering PAPI thread: %s\n", PAPI_strerror(err));
-    }
-
-    err = PAPI_create_eventset(&ctx->eventset);
-    if (err != PAPI_OK) {
+    int eventset = PAPI_NULL;
+    err = PAPI_create_eventset(&eventset);
+    if (err < 0) {
         printerr("Unable to create PAPI event set: %s\n", PAPI_strerror(err));
-        goto cleanup;
+        return;
     }
 
     /* Make sure all the events are available and add them to the set */
     for (int i=0; i<n_papi_events; i++) {
         int event;
         err = PAPI_event_name_to_code(papi_events[i], &event);
-        if (err != PAPI_OK) {
+        if (err < 0) {
             printerr("Error getting PAPI event code for %s: %s\n", papi_events[i], PAPI_strerror(err));
             continue;
         }
 
         PAPI_event_info_t info;
         err = PAPI_get_event_info(event, &info);
-        if (err != PAPI_OK) {
+        if (err < 0) {
             printerr("Error getting PAPI event info for %s: %s\n", papi_events[i], PAPI_strerror(err));
             continue;
         }
@@ -1210,8 +1108,8 @@ static void start_papi() {
             continue;
         }
 
-        err = PAPI_add_event(ctx->eventset, event);
-        if (err != PAPI_OK) {
+        err = PAPI_add_event(eventset, event);
+        if (err < 0) {
             if (err == PAPI_ECNFLCT) {
                 /* Event conflicts with another event */
                 continue;
@@ -1221,63 +1119,19 @@ static void start_papi() {
         }
     }
 
-    err = PAPI_start(ctx->eventset);
-    if (err != PAPI_OK) {
+    err = PAPI_start(eventset);
+    if (err < 0) {
         printerr("PAPI_start failed: %s\n", PAPI_strerror(err));
-        goto cleanup;
+        return;
     }
-
-    err = PAPI_set_thr_specific(PAPI_USR1_TLS, ctx);
-    if (err != PAPI_OK) {
-        printerr("Unable to set PAPI thread context: %s\n", PAPI_strerror(err));
-        goto cleanup;
-    }
-
-    return;
-
-cleanup:
-    free(ctx);
-    return;
 }
 
-/* Stop an report papi counters for a thread */
-static void stop_papi() {
+/* Stop and report papi counters for a given eventset */
+static void stop_papi(int eventset) {
     int err;
 
     if (!papi_ok) {
         return;
-    }
-
-    /* Retrieve the context, or return if it isn't set */
-    interpose_papi_ctx *ctx = NULL;
-    err = PAPI_get_thr_specific(PAPI_USR1_TLS, (void **)&ctx);
-    if (err < 0) {
-        printerr("Unable to get PAPI thread context in stop_papi: %s\n", PAPI_strerror(err));
-        return;
-    }
-    if (ctx == NULL) {
-        return;
-    }
-
-    /* Save event set so we can cleanup context object */
-    int eventset = ctx->eventset;
-
-    /* Unset the context value so that we don't try to stop the counters again */
-    err = PAPI_set_thr_specific(PAPI_USR1_TLS, NULL);
-    if (err < 0) {
-        printerr("Unable to unset PAPI thread context: %s\n", PAPI_strerror(err));
-    }
-
-    free(ctx);
-    ctx = NULL;
-
-    /* Get the events that were actually recorded */
-    int nevents = n_papi_events;
-    int events[n_papi_events];
-    err = PAPI_list_events(eventset, events, &nevents);
-    if (err < 0) {
-        printerr("PAPI_list_events failed: %s\n", PAPI_strerror(err));
-        goto unregister;
     }
 
     /* Collect counter values */
@@ -1285,7 +1139,16 @@ static void stop_papi() {
     err = PAPI_stop(eventset, counters);
     if (err < 0) {
         printerr("PAPI_stop failed: %s\n", PAPI_strerror(err));
-        goto unregister;
+        return;
+    }
+
+    /* Get the events that were actually recorded */
+    int nevents = n_papi_events;
+    int events[n_papi_events];
+    err = PAPI_list_events(eventset, events, &nevents);
+    if (err < 0) {
+        printerr("PAPI_list_events failed: %s\n", PAPI_strerror(err));
+        return;
     }
 
     /* Report counters */
@@ -1294,13 +1157,18 @@ static void stop_papi() {
         PAPI_event_code_to_name(events[i], eventname);
         tprintf("%s: %lld\n", eventname, counters[i]);
     }
+}
 
-    /* Unregister thread (must be done after PAPI_stop) */
-unregister:
-    err = PAPI_unregister_thread();
-    if (err < 0) {
-        printerr("Error unregistering PAPI thread: %s\n", PAPI_strerror(err));
+static void fini_papi() {
+    /* It turns out that the eventsets are ID numbers that are
+     * allocated sequentially for each thread starting at 1,
+     * so we can just * call stop on every one from 1 to
+     * tot_threads */
+    for (int i=1; i<=tot_threads; i++) {
+        stop_papi(i);
     }
+
+    PAPI_shutdown();
 }
 
 #endif
@@ -1317,7 +1185,6 @@ static void __attribute__((constructor)) interpose_init(void) {
     /* Open the trace file */
     topen();
 
-
     init_descriptors();
     init_threads();
 
@@ -1329,7 +1196,7 @@ static void __attribute__((constructor)) interpose_init(void) {
 
 #ifdef HAS_PAPI
     init_papi();
-    /* Start papi for main thread */
+    /* Start papi counters for main thread */
     start_papi();
 #endif
 
@@ -1348,23 +1215,17 @@ static void __attribute__((destructor)) interpose_fini(void) {
         trace_close(i);
     }
 
-    /* Report thread counters before we shut down threads */
     report_thread_counters();
 
-    /* Shut down all other threads */
-    fini_threads();
+#ifdef HAS_PAPI
+    fini_papi();
+#endif
 
     read_exe(NULL);
     read_status();
     read_rusage();
     read_stat();
     read_io();
-
-#ifdef HAS_PAPI
-    /* Stop papi for (hopefully) main thread */
-    stop_papi();
-    fini_papi();
-#endif
 
     tprintf("stop: %lf\n", get_time());
 
@@ -2211,38 +2072,25 @@ int fseeko(FILE *stream, off_t offset, int whence) {
     return result;
 }
 
-static void interpose_pthread_shutdown() {
-#ifdef HAS_PAPI
-    stop_papi();
-#endif
-
-    thread_finished(pthread_self());
-}
-
 static void interpose_pthread_cleanup(void *arg) {
-    interpose_pthread_shutdown();
+    /* Update thread counters */
+    thread_finished();
 
+    /* Free the pthread wrapper */
     free(arg);
-}
-
-static void interpose_pthread_sigusr1(int ignore) {
-    interpose_pthread_shutdown();
-
-    /* Tell the signalling thread we are exiting */
-    lock_threads();
-    pthread_cond_signal(&killed_threads_cv);
-    unlock_threads();
 }
 
 /* This function wraps the start_routine of the thread provided by the user */
 static void *interpose_pthread_wrapper(void *arg) {
     debug("pthread_wrapper");
 
-    thread_started(pthread_self());
-
 #ifdef HAS_PAPI
+    /* Tell papi to start recording events for this thread */
     start_papi();
 #endif
+
+    /* Update thread counters */
+    thread_started();
 
     interpose_pthread_wrapper_arg *info = (interpose_pthread_wrapper_arg *)arg;
     if (info == NULL) {
@@ -2258,9 +2106,6 @@ static void *interpose_pthread_wrapper(void *arg) {
     if (pthread_setspecific(info->cleanup, arg) != 0) {
         printerr("Unable to set cleanup key for thread %d\n", gettid());
     }
-
-    /* Install a signal handler so we can force the thread to exit */
-    signal(SIGUSR1, interpose_pthread_sigusr1);
 
     return info->start_routine(info->arg);
 }
