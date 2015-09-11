@@ -27,7 +27,7 @@ class Version(BaseVersion):
                   anomaly_type	    VARCHAR(255)  NOT NULL,
                   metrics	        VARCHAR(255),
                   message	        VARCHAR(255)  NOT NULL,
-                  json  	        VARCHAR(255)  NOT NULL,
+                  json  	        TEXT  NOT NULL,
 
                   PRIMARY   KEY (anomaly_id),
                   FOREIGN   KEY (wf_id) REFERENCES workflow (wf_id) ON DELETE CASCADE,

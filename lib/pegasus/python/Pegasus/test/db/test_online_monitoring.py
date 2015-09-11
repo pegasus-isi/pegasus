@@ -110,7 +110,8 @@ class TestOnlineMonitoring(unittest.TestCase):
         msg_body = "ts=1430205165 event=workflow_trace level=INFO status=0 job_id=1037283.0 kickstart_pid=11471 " \
                    "executable=/opt/cray/alps/5.2.1-2.0502.9072.13.1.gem/bin/aprun hostname=nid04942 " \
                    "mpi_rank=0 utime=0.020 stime=0.010 iowait=0.000 vmSize=56552 vmRSS=2260 threads=3 read_bytes=0 " \
-                   "write_bytes=0 syscr=0 syscw=0 wf_uuid=e168b2a3-c22f-4c03-a834-22afaa3b21b5 wf_label=run-5 " \
+                   "write_bytes=0 syscr=0 syscw=0 PAPI_TOT_INS=1855598 PAPI_LD_INS=507197 PAPI_SR_INS=277589 " \
+                   "PAPI_FP_OPS=795 PAPI_FP_INS=7  wf_uuid=e168b2a3-c22f-4c03-a834-22afaa3b21b5 wf_label=run-5 " \
                    "dag_job_id=namd_ID0000002 condor_job_id=1037283.0"
 
         self.online_monitord.on_message(msg_body)
@@ -118,7 +119,8 @@ class TestOnlineMonitoring(unittest.TestCase):
         msg_body = "ts=1430205166 event=workflow_trace level=INFO status=0 job_id=1037283.0 kickstart_pid=11471 " \
                    "executable=/opt/cray/alps/5.2.1-2.0502.9072.13.1.gem/bin/aprun hostname=nid04942 " \
                    "mpi_rank=0 utime=0.020 stime=0.010 iowait=0.000 vmSize=56552 vmRSS=2260 threads=3 read_bytes=0 " \
-                   "write_bytes=0 syscr=0 syscw=0 wf_uuid=e168b2a3-c22f-4c03-a834-22afaa3b21b5 wf_label=run-5 " \
+                   "write_bytes=0 syscr=0 syscw=0 PAPI_TOT_INS=163965282 PAPI_LD_INS=45781399 PAPI_SR_INS=23833112 " \
+                   "PAPI_FP_OPS=194313 PAPI_FP_INS=1572  wf_uuid=e168b2a3-c22f-4c03-a834-22afaa3b21b5 wf_label=run-5 " \
                    "dag_job_id=namd_ID0000002 condor_job_id=1037283.0"
 
         self.online_monitord.on_message(msg_body)

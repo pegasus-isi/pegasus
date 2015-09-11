@@ -40,7 +40,14 @@ class Version(BaseVersion):
                   bytes_transferred INTEGER,
                   transfer_duration INTEGER,
                   site              VARCHAR(255),
-
+                  totins            BIGINT,
+                  fpops             BIGINT,
+                  fpins             BIGINT,
+                  ldins             BIGINT,
+                  srins             BIGINT,
+                  l3misses          BIGINT,
+                  l2misses          BIGINT,
+                  l1misses          BIGINT,
 
                   PRIMARY 	KEY (job_metrics_id),
                   FOREIGN	KEY (job_instance_id) REFERENCES job_instance (job_instance_id) ON DELETE CASCADE

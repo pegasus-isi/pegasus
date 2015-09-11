@@ -501,6 +501,14 @@ st_job_metrics = Table('job_metrics', metadata,
     Column('bytes_transferred', INT, nullable=True),
     Column('transfer_duration', INT, nullable=True),
     Column('site', VARCHAR(255), nullable=True),
+    Column('totins', BIGINT, nullable=True),
+    Column('fpops', BIGINT, nullable=True),
+    Column('fpins', BIGINT, nullable=True),
+    Column('ldins', BIGINT, nullable=True),
+    Column('srins', BIGINT, nullable=True),
+    Column('l3misses', BIGINT, nullable=True),
+    Column('l2misses', BIGINT, nullable=True),
+    Column('l1misses', BIGINT, nullable=True),
     **table_keywords
     )
 
@@ -532,7 +540,7 @@ st_anomalies = Table('anomalies', metadata,
                      Column('ts', NUMERIC(precision=16, scale=6), nullable=False),
                      Column('anomaly_type', VARCHAR(255), nullable=False),
                      Column('message', VARCHAR(255), nullable=False),
-                     Column('json', VARCHAR(255), nullable=False),
+                     Column('json', TEXT, nullable=False),
                      **table_keywords
                      )
 

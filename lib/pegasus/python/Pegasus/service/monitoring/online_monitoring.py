@@ -234,6 +234,7 @@ class OnlineMonitord:
 
 
 class MonitoringMessage:
+    """ Base class for all messages related to online monitoring. """
     def __init__(self, dag_job_id=None, condor_job_id=None, mpi_rank=None, msg=dict()):
         self.dag_job_id = dag_job_id
         self.mpi_rank = mpi_rank
@@ -247,8 +248,12 @@ class MonitoringMessage:
 
     @staticmethod
     def parse(raw_message):
+        """ A factory method. Actual message type is chosen based on the 'event' attribute of the message.
+        :param raw_message: A key-value pair string coming from a message broker with a space delimiter after each pair.
+        :return: A proper message object or None if 'event' was not identified.
+        """
         try:
-            message = dict(item.split("=") for item in raw_message.strip().split(" "))
+            message = dict(item.split("=") for item in raw_message.strip().split())
 
             if "event" not in message:
                 print "There is no 'event' attribute in the message"
@@ -274,9 +279,11 @@ class MonitoringMessage:
         return "%s:%s" % (self.dag_job_id, self.condor_job_id)
 
     def metrics(self):
+        """ Selects fields from a message which indicates performance metrics and a timestamp."""
         return self.perf_metrics
 
     def measurements(self):
+        """ Gives a single data point, which describes measurement represented by this message."""
         point = []
 
         for column in self.metrics():
@@ -311,9 +318,10 @@ class MonitoringMessage:
 
 
 class WorkflowTraceMessage(MonitoringMessage):
+    """ Describes a monitoring message sent from kickstart (libinterpose) about application performance. """
     def __init__(self, message):
         self.perf_metrics = ["time", "utime", "stime", "iowait", "vmSize", "vmRSS", "threads", "read_bytes",
-                             "write_bytes", "syscr", "syscw"]
+                             "write_bytes", "syscr", "syscw" ] + self.supported_papi_counters().values()
 
         if self.message_has_required_params(message):
             MonitoringMessage.__init__(self, message["dag_job_id"], message["condor_job_id"], message["mpi_rank"],
@@ -323,6 +331,9 @@ class WorkflowTraceMessage(MonitoringMessage):
             self.trace_id = "{0}:{1}:{2}:{3}:{4}:{5}".format(message["dag_job_id"], message["hostname"],
                                                              message["condor_job_id"], message["mpi_rank"],
                                                              message["kickstart_pid"], message["executable"])
+            # optional hardware counters info from PAPI
+            self.parse_papi_counters(message)
+
         else:
             MonitoringMessage.__init__(self)
             print "We couldn't create trace_id"
@@ -331,6 +342,21 @@ class WorkflowTraceMessage(MonitoringMessage):
         required_params = ("ts", "hostname", "executable", "dag_job_id", "condor_job_id", "mpi_rank", "kickstart_pid")
         return all(k in message for k in required_params)
 
+    def parse_papi_counters(self, message):
+        """ Changes names of fields related to hardware counters in an incoming message. """
+        for key, value in self.supported_papi_counters().iteritems():
+            if key in message:
+                message[value] = message[key]
+
+    def supported_papi_counters(self):
+        return {"PAPI_TOT_INS": "totins",
+                "PAPI_LD_INS": "ldins",
+                "PAPI_SR_INS": "srins",
+                "PAPI_FP_OPS": "fpops",
+                "PAPI_FP_INS": "fpins",
+                "PAPI_L3_TCM": "l3misses",
+                "PAPI_L2_TCM": "l2misses",
+                "PAPI_L1_TCM": "l1misses"}
 
 class DataTransferMessage(MonitoringMessage):
     def __init__(self, message):
