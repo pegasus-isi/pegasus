@@ -19,16 +19,12 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
 import edu.isi.pegasus.common.util.StreamGobbler;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
-import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 
 import java.io.File;
 import java.io.IOException;
-import java.sql.SQLException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.*;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -55,17 +51,18 @@ public class JDBCRCTest {
     public void setUp() throws IOException {
 
         String command = "./bin/pegasus-db-admin create jdbc:sqlite:jdbcrc_test.db";
-        
+
         try {
             mTestSetup = new DefaultTestSetup();
             mLogger = mTestSetup.loadLogger(mTestSetup.loadPropertiesFromFile(".properties", new LinkedList()));
             mLogger.logEventStart("test.pegasus.url", "setup", "0");
 
-            jdbcrc = new JDBCRC(
-                    "org.sqlite.JDBC",
-                    "jdbc:sqlite:jdbcrc_test.db",
-                    "root", ""
-            );
+            Properties props = new Properties();
+            props.setProperty("db.driver", "sqlite");
+            props.setProperty("db.url", "jdbc:sqlite:jdbcrc_test.db");
+
+            jdbcrc = new JDBCRC();
+            jdbcrc.connect(props);
 
             Runtime r = Runtime.getRuntime();
             String[] envp = {"PYTHONPATH=" + System.getProperty("externals.python.path")};
@@ -95,11 +92,6 @@ public class JDBCRCTest {
                     LogManager.ERROR_MESSAGE_LEVEL);
             throw new RuntimeException("IOException while executing " + command, ioe);
         } catch (InterruptedException ie) {
-            //ignore
-        } catch (ClassNotFoundException ex) {
-            throw new IOException(ex);
-        } catch (SQLException ex) {
-            throw new IOException(ex);
         }
     }
 
@@ -197,6 +189,25 @@ public class JDBCRCTest {
         jdbcrc.insert("a", new ReplicaCatalogEntry("b", attr));
         c = jdbcrc.lookup("a");
         assertTrue(c.contains(new ReplicaCatalogEntry("b", attr)));
+    }
+
+    @Test
+    public void lookupCount() {
+        jdbcrc.insert("a", new ReplicaCatalogEntry("b", "c"));
+        jdbcrc.insert("a", new ReplicaCatalogEntry("d", "e"));
+        jdbcrc.insert("f", new ReplicaCatalogEntry("g", "c"));
+
+        HashMap attr = new HashMap();
+        Map map = jdbcrc.lookup(attr);
+        assertEquals(2, map.size());
+
+        attr.put(ReplicaCatalogEntry.RESOURCE_HANDLE, "c");
+        map = jdbcrc.lookup(attr);
+        assertEquals(2, map.size());
+
+        attr.put("pfn", "b");
+        map = jdbcrc.lookup(attr);
+        assertEquals(1, map.size());
     }
 
     @After

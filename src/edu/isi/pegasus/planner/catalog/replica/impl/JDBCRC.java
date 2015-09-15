@@ -143,29 +143,39 @@ public class JDBCRC implements ReplicaCatalog
    */
   private static final String mCStatements[] =
   { // 0:
-    "SELECT name,value FROM rc_attr WHERE id=?",
+    "SELECT name,value FROM rc_meta WHERE lfn_id=?",
     // 1:
-    "SELECT id,pfn,site FROM rc_lfn WHERE lfn=?",
+    "SELECT l.lfn_id,p.pfn,p.site FROM rc_lfn l LEFT JOIN rc_pfn p ON l.lfn_id=p.lfn_id WHERE l.lfn=?",
     // 2:
-    "SELECT r.id,r.pfn,r.site FROM rc_lfn r WHERE r.lfn=? AND r.site=?",
+    "SELECT l.lfn_id,p.pfn,p.site FROM rc_lfn l LEFT JOIN rc_pfn p ON l.lfn_id=p.lfn_id WHERE l.lfn=? AND p.site=?",
     // 3:
-    "SELECT r.id,r.pfn,r.site FROM rc_lfn r WHERE r.lfn=?",
+    "DELETE l FROM rc_lfn l INNER JOIN rc_pfn p ON l.lfn_id=p.lfn_id AND l.lfn=? AND p.pfn=?",
     // 4:
-    "INSERT INTO rc_attr(id,name,value) VALUES(?,?,?)",
+    "INSERT INTO rc_meta(lfn_id,name,value) VALUES(?,?,?)",
     // 5:
     "DELETE FROM rc_lfn WHERE lfn=?",
     // 6:
-    "DELETE FROM rc_lfn WHERE id IN" +
-    " ( SELECT id FROM rc_attr WHERE name=? AND value=? )",
+    "DELETE FROM rc_lfn WHERE lfn_id IN" +
+    " ( SELECT lfn_id FROM rc_meta WHERE name=? AND value=? )",
     // 7:
-    "DELETE FROM rc_lfn WHERE id IN" +
-    " ( SELECT id FROM rc_attr WHERE name=? AND value IS NULL )",
+    "DELETE FROM rc_lfn WHERE lfn_id IN" +
+    " ( SELECT lfn_id FROM rc_meta WHERE name=? AND value IS NULL )",
     // 8:
     "DELETE FROM rc_lfn WHERE lfn=? AND id IN" +
-    " ( SELECT id FROM rc_attr WHERE name=? AND value=? )",
+    " ( SELECT id FROM rc_meta WHERE name=? AND value=? )",
     // 9:
     "DELETE FROM rc_lfn WHERE lfn=? AND id IN" +
-    " ( SELECT id FROM rc_attr WHERE name=? AND value IS NULL )",
+    " ( SELECT id FROM rc_meta WHERE name=? AND value IS NULL )",
+    // 10:
+    "DELETE l FROM rc_lfn l INNER JOIN rc_pfn p ON l.lfn_id=p.lfn_id WHERE p.site=?",
+    // 11:
+    "DELETE FROM rc_lfn WHERE lfn_id IN (SELECT l.lfn_id FROM rc_lfn l INNER JOIN rc_pfn p ON l.lfn_id=p.lfn_id AND l.lfn=? AND p.pfn=?)",
+    // 12:
+    "INSERT INTO rc_lfn(lfn) VALUES(?)",
+    // 13:
+    "INSERT INTO rc_pfn(lfn_id, pfn, site) VALUES(?, ?, ?)",
+    // 14:
+    "SELECT lfn_id,lfn FROM rc_lfn WHERE lfn LIKE ?",
   };
 
   /**
@@ -313,7 +323,6 @@ public class JDBCRC implements ReplicaCatalog
             temp.delete();
         }
       
-      
         // class loader: Will propagate any runtime errors!!!
         String driver = (String) props.remove("db.driver");
 
@@ -323,7 +332,6 @@ public class JDBCRC implements ReplicaCatalog
         if (url == null || url.length() == 0) {
             return result;
         }
-
 
         try {
             if (driver != null) {
@@ -352,10 +360,10 @@ public class JDBCRC implements ReplicaCatalog
         }
 
         try {
-            mLogger.log( "Connecting to Database Backend " + url +" with properties " + localProps, 
-                         LogManager.DEBUG_MESSAGE_LEVEL );
+            mLogger.log("Connecting to Database Backend " + url + " with properties " + localProps,
+                    LogManager.DEBUG_MESSAGE_LEVEL);
             mConnection = DriverManager.getConnection( url, localProps );
-            
+
             //JDBC sqlite driver returns false, but does support autoincrement of keys
             m_autoinc = mUsingSQLiteBackend ||  mConnection.getMetaData().supportsGetGeneratedKeys();
 
@@ -479,30 +487,28 @@ public class JDBCRC implements ReplicaCatalog
    */
   public String lookup( String lfn, String handle )
   {
-    String result = null;
-    int which = ( handle == null ? 3 : 2 );
-    String query = mCStatements[which];
+      String result = null;
+      int which = ( handle == null ? 1 : 2 );
+      String query = mCStatements[which];
 
-    // sanity check
-    if ( lfn == null ) return result;
-    if ( mConnection == null ) throw new RuntimeException( c_error );
+      // sanity check
+      if ( lfn == null ) return result;
+      if ( mConnection == null ) throw new RuntimeException( c_error );
 
-    try {
-      PreparedStatement ps = getStatement(which);
-      ps.setString( 1, quote(lfn) );
-      if ( handle != null ) ps.setString( 2, quote(handle) );
+      try {
+          PreparedStatement ps = getStatement(which);
+          ps.setString( 1, quote(lfn) );
+          if ( handle != null ) ps.setString( 2, quote(handle) );
 
-      // there should only be one result
-      ResultSet rs = ps.executeQuery();
-      if ( rs.next() ) result = rs.getString("pfn");
+          // there should only be one result
+          ResultSet rs = ps.executeQuery();
+          if ( rs.next() ) result = rs.getString("pfn");
+          rs.close();
 
-      rs.close();
     } catch ( SQLException e ) {
       throw new RuntimeException( "Unable to query database about " +
 				  query + ": " + e.getMessage() );
     }
-
-    // done
     return result;
   }
 
@@ -550,32 +556,30 @@ public class JDBCRC implements ReplicaCatalog
    */
   public Collection lookup( String lfn )
   {
-    List result = new ArrayList();
-    String query = mCStatements[1];
+      List result = new ArrayList();
+      String query = mCStatements[1];
 
-    // sanity check
-    if ( lfn == null ) return result;
-    if ( mConnection == null ) throw new RuntimeException( c_error );
+      // sanity check
+      if ( lfn == null ) return result;
+      if ( mConnection == null ) throw new RuntimeException( c_error );
 
-    // start to ask
-    try {
-      PreparedStatement ps = getStatement(1);
-      ps.setString( 1, quote(lfn) );
+      // start to ask
+      try {
+          PreparedStatement ps = getStatement(1);
+          ps.setString( 1, quote(lfn) );
 
-      ResultSet rs = ps.executeQuery();
-      while ( rs.next() ) {
-	result.add( new ReplicaCatalogEntry( rs.getString("pfn"),
-				attributes(rs.getString("id"), 
-                                           rs.getString("site")) ) );
-      }
+          ResultSet rs = ps.executeQuery();
+          while ( rs.next() ) {
+              result.add( new ReplicaCatalogEntry( rs.getString("pfn"),
+                      attributes(rs.getString("lfn_id"),
+                      rs.getString("site")) ) );
+          }
+          rs.close();
 
-      rs.close();
-    } catch ( SQLException e ) {
-      throw new RuntimeException( "Unable to query database about " +
+      } catch ( SQLException e ) {
+          throw new RuntimeException( "Unable to query database about " +
 				  query + ": " + e.getMessage() );
-    }
-
-    // done
+      }
     return result;
   }
 
@@ -626,36 +630,34 @@ public class JDBCRC implements ReplicaCatalog
    */
   public Map lookup( Set lfns )
   {
-    Map result = new HashMap();
-    String query = mCStatements[1];
+      Map result = new HashMap();
+      String query = mCStatements[1];
 
-    // sanity check
-    if ( lfns == null || lfns.size() == 0 ) return result;
-    if ( mConnection == null ) throw new RuntimeException( c_error );
+      // sanity check
+      if ( lfns == null || lfns.size() == 0 ) return result;
+      if ( mConnection == null ) throw new RuntimeException( c_error );
 
-    try {
-      ResultSet rs = null;
-      PreparedStatement ps = getStatement(1);
-      for ( Iterator i = lfns.iterator(); i.hasNext(); ) {
-	List value = new ArrayList();
-	String lfn = (String) i.next();
-	ps.setString( 1, quote(lfn) );
-	rs = ps.executeQuery();
-	while ( rs.next() ) {
-	  value.add( new ReplicaCatalogEntry( rs.getString("pfn"),
-				attributes(rs.getString("id"), 
-                                           rs.getString("site")) ) );
-	}
-	rs.close();
-	result.put( lfn, value );
-      }
-    } catch ( SQLException e ) {
-      throw new RuntimeException( "Unable to query database with " +
+      try {
+          ResultSet rs = null;
+          PreparedStatement ps = getStatement(1);
+          for ( Iterator i = lfns.iterator(); i.hasNext(); ) {
+              List value = new ArrayList();
+              String lfn = (String) i.next();
+              ps.setString( 1, quote(lfn) );
+              rs = ps.executeQuery();
+              while ( rs.next() ) {
+                  value.add( new ReplicaCatalogEntry( rs.getString("pfn"),
+                          attributes(rs.getString("lfn_id"),
+                          rs.getString("site")) ) );
+              }
+              rs.close();
+              result.put( lfn, value );
+          }
+      } catch ( SQLException e ) {
+          throw new RuntimeException( "Unable to query database with " +
 				  query + ": " + e.getMessage() );
-    }
-
-    // done
-    return result;
+      }
+      return result;
   }
 
   /**
@@ -669,32 +671,32 @@ public class JDBCRC implements ReplicaCatalog
    */
   public Map lookupNoAttributes( Set lfns )
   {
-    Map result = new HashMap();
-    String query = mCStatements[1];
+      Map result = new HashMap();
+      String query = mCStatements[1];
 
-    // sanity check
-    if ( lfns == null || lfns.size() == 0 ) return result;
-    if ( mConnection == null ) throw new RuntimeException( c_error );
+      // sanity check
+      if ( lfns == null || lfns.size() == 0 ) return result;
+      if ( mConnection == null ) throw new RuntimeException( c_error );
 
-    try {
-      ResultSet rs = null;
-      PreparedStatement ps = getStatement(1);
-      for ( Iterator i = lfns.iterator(); i.hasNext(); ) {
-	Set value = new TreeSet();
-	String lfn = (String) i.next();
-	ps.setString( 1, quote(lfn) );
-	rs = ps.executeQuery();
-	while ( rs.next() ) value.add(rs.getString("pfn"));
-	rs.close();
-	result.put( lfn, value );
-      }
-    } catch ( SQLException e ) {
-      throw new RuntimeException( "Unable to query database with " +
+      try {
+          ResultSet rs = null;
+          PreparedStatement ps = getStatement(1);
+          for ( Iterator i = lfns.iterator(); i.hasNext(); ) {
+              Set value = new TreeSet();
+              String lfn = (String) i.next();
+              ps.setString( 1, quote(lfn) );
+              rs = ps.executeQuery();
+              while ( rs.next() ) {
+                  value.add(rs.getString("pfn"));
+              }
+              rs.close();
+              result.put( lfn, value );
+          }
+      } catch ( SQLException e ) {
+          throw new RuntimeException( "Unable to query database with " +
 				  query + ": " + e.getMessage() );
-    }
-
-    // done
-    return result;
+      }
+      return result;
   }
 
   /**
@@ -710,39 +712,37 @@ public class JDBCRC implements ReplicaCatalog
    */
   public Map lookup( Set lfns, String handle )
   {
-    Map result = new HashMap();
-    int which = ( handle == null ? 3 : 2 );
-    String query = mCStatements[which];
+      Map result = new HashMap();
+      int which = ( handle == null ? 1 : 2 );
+      String query = mCStatements[which];
 
-    // sanity check
-    if ( lfns == null || lfns.size() == 0 ) return result;
-    if ( mConnection == null ) throw new RuntimeException( c_error );
+      // sanity check
+      if ( lfns == null || lfns.size() == 0 ) return result;
+      if ( mConnection == null ) throw new RuntimeException( c_error );
 
-    try {
-      ResultSet rs = null;
-      PreparedStatement ps = getStatement(which);
-      if ( handle != null ) ps.setString( 2, quote(handle) );
+      try {
+          ResultSet rs = null;
+          PreparedStatement ps = getStatement(which);
+          if ( handle != null ) ps.setString( 2, quote(handle) );
 
-      for ( Iterator i = lfns.iterator(); i.hasNext(); ) {
-	List value = new ArrayList();
-	String lfn = (String) i.next();
-	ps.setString( 1, quote(lfn) );
-	rs = ps.executeQuery();
-	while ( rs.next() ) {
-	  value.add( new ReplicaCatalogEntry( rs.getString("pfn"),
-				attributes(rs.getString("id"), 
-                                           rs.getString("site")) ) );
-	}
-	rs.close();
-	result.put( lfn, value );
-      }
-    } catch ( SQLException e ) {
-      throw new RuntimeException( "Unable to query database with " +
+          for ( Iterator i = lfns.iterator(); i.hasNext(); ) {
+              List value = new ArrayList();
+              String lfn = (String) i.next();
+              ps.setString( 1, quote(lfn) );
+              rs = ps.executeQuery();
+              while ( rs.next() ) {
+                  value.add( new ReplicaCatalogEntry( rs.getString("pfn"),
+                          attributes(rs.getString("lfn_id"),
+                          rs.getString("site")) ) );
+              }
+              rs.close();
+              result.put( lfn, value );
+          }
+      } catch ( SQLException e ) {
+          throw new RuntimeException( "Unable to query database with " +
 				  query + ": " + e.getMessage() );
-    }
-
-    // done
-    return result;
+      }
+      return result;
   }
 
   /**
@@ -757,35 +757,35 @@ public class JDBCRC implements ReplicaCatalog
    */
   public Map lookupNoAttributes( Set lfns, String handle )
   {
-    Map result = new HashMap();
-    int which = ( handle == null ? 3 : 2 );
-    String query = mCStatements[which];
+      Map result = new HashMap();
+      int which = ( handle == null ? 1 : 2 );
+      String query = mCStatements[which];
 
-    // sanity check
-    if ( lfns == null || lfns.size() == 0 ) return result;
-    if ( mConnection == null ) throw new RuntimeException( c_error );
+      // sanity check
+      if ( lfns == null || lfns.size() == 0 ) return result;
+      if ( mConnection == null ) throw new RuntimeException( c_error );
 
-    try {
-      ResultSet rs = null;
-      PreparedStatement ps = getStatement(which);
-      if ( handle != null ) ps.setString( 2, quote(handle) );
+      try {
+          ResultSet rs = null;
+          PreparedStatement ps = getStatement(which);
+          if ( handle != null ) ps.setString( 2, quote(handle) );
 
-      for ( Iterator i = lfns.iterator(); i.hasNext(); ) {
-	Set value = new TreeSet();
-	String lfn = (String) i.next();
-	ps.setString( 1, quote(lfn) );
-	rs = ps.executeQuery();
-	while ( rs.next() ) value.add( rs.getString("pfn") );
-	rs.close();
-	result.put( lfn, value );
-      }
-    } catch ( SQLException e ) {
-      throw new RuntimeException( "Unable to query database with " +
+          for ( Iterator i = lfns.iterator(); i.hasNext(); ) {
+              Set value = new TreeSet();
+              String lfn = (String) i.next();
+              ps.setString( 1, quote(lfn) );
+              rs = ps.executeQuery();
+              while ( rs.next() ) {
+                  value.add( rs.getString("pfn") );
+              }
+              rs.close();
+              result.put( lfn, value );
+          }
+      } catch ( SQLException e ) {
+          throw new RuntimeException( "Unable to query database with " +
 				  query + ": " + e.getMessage() );
-    }
-
-    // done
-    return result;
+      }
+      return result;
   }
 
   /**
@@ -826,73 +826,67 @@ public class JDBCRC implements ReplicaCatalog
    */
   public Map lookup( Map constraints )
   {
-    Map result = new TreeMap();
+      Map result = new TreeMap();
 
-    // more sanity
-    if ( mConnection == null ) throw new RuntimeException( c_error );
+      // more sanity
+      if ( mConnection == null ) throw new RuntimeException( c_error );
 
-    // prepare statement
-    //boolean flag = false;
-    boolean where = false;
-    StringBuffer q = new StringBuffer(256);
-    q.append("SELECT DISTINCT r.id,r.lfn,r.pfn,r.site FROM rc_lfn r");
+      // prepare statement
+      StringBuffer q = new StringBuffer(256);
+      q.append("SELECT DISTINCT l.lfn_id,l.lfn,p.pfn,p.site FROM rc_lfn l " +
+              "LEFT JOIN rc_pfn p ON l.lfn_id=p.lfn_id " +
+              "LEFT JOIN rc_meta m ON l.lfn_id=m.lfn_id ");
+      StringBuffer cond = new StringBuffer(256);
 
-    for ( Iterator i=constraints.keySet().iterator(); i.hasNext(); ) {
-      String s, key = (String) i.next();
-      if ( key.equals("lfn") ) {
-	s = addItem( constraints.get("lfn"), "r.lfn", where );
-        where = true;
-      } else if ( key.equals("pfn") ) {
-	s = addItem( constraints.get("pfn"), "r.pfn", where );
-        where = true;
-      } else if ( key.equals(ReplicaCatalogEntry.RESOURCE_HANDLE)) {
-        s = addItem( constraints.get(ReplicaCatalogEntry.RESOURCE_HANDLE), "r.site", where );
-        where = true;
-      } else {
-	if ( ! where ) {
-	  q.append( ", rc_attr a WHERE " ).append( "r.id=a.id" );
-	  where = true;
-	}
-	//s = addItem( constraints.get(key), "a." + key, where );
-        //add the clause to check on attribute name
-        s = addItem( key, "a.name", where );
-        where = true;
-        s = addItem( constraints.get(key), "a.value", where );
+      for ( Iterator i=constraints.keySet().iterator(); i.hasNext(); ) {
+          String s = "";
+          String key = (String) i.next();
+
+          if (cond.length() == 0) {
+              cond.append("WHERE ");
+          } else {
+              cond.append("AND ");
+          }
+          if ( key.equals("lfn") ) {
+              cond.append("l.lfn='" + constraints.get("lfn") + "' ");
+          } else if ( key.equals("pfn") ) {
+              cond.append("p.pfn='" + constraints.get("pfn") + "' ");
+          } else if ( key.equals(ReplicaCatalogEntry.RESOURCE_HANDLE)) {
+              cond.append("p.site='" + constraints.get(ReplicaCatalogEntry.RESOURCE_HANDLE) + "' ");
+          } else {
+              cond.append("m.name='" + key + "' ");
+          }
       }
-      if ( s.length() > 0 ) {
-	where = true;
-	q.append(s);
-      }
-    }
+      q.append(cond.toString());
 
-    // start to ask
-    String lfn = null;
-    ReplicaCatalogEntry pair = null;
-    String query = q.toString();
-    try {
-      Statement st = mConnection.createStatement();
-      ResultSet rs = st.executeQuery(query);
-      while ( rs.next() ) {
-	lfn = rs.getString("lfn");
-	pair = new ReplicaCatalogEntry( rs.getString("pfn"),
-					attributes(rs.getString("id"),
-                                                   rs.getString("site")) );
+      // start to ask
+      String lfn = null;
+      ReplicaCatalogEntry pair = null;
+      String query = q.toString();
+      try {
+          Statement st = mConnection.createStatement();
+          ResultSet rs = st.executeQuery(query);
+          while ( rs.next() ) {
+              lfn = rs.getString("lfn");
+              pair = new ReplicaCatalogEntry( rs.getString("pfn"),
+                      attributes(rs.getString("lfn_id"),
+                              rs.getString("site")) );
 
-	// add list, if the LFN does not already exist
-	if ( ! result.containsKey(lfn) ) result.put( lfn, new ArrayList() );
+              // add list, if the LFN does not already exist
+              if ( ! result.containsKey(lfn) ) {
+                  result.put(lfn, new ArrayList() );
+              }
 
-	// now add to the list
-	((List) result.get(lfn)).add( pair );
-      }
-      rs.close();
-      st.close();
-    } catch ( SQLException e ) {
-      throw new RuntimeException( "Unable to query database about " +
+              // now add to the list
+              ((List) result.get(lfn)).add( pair );
+          }
+          rs.close();
+          st.close();
+      } catch ( SQLException e ) {
+          throw new RuntimeException( "Unable to query database about " +
 				  query + ": " + e.getMessage() );
-    }
-
-    // done
-    return result;
+      }
+      return result;
   }
 
   /**
@@ -917,33 +911,33 @@ public class JDBCRC implements ReplicaCatalog
    */
   public Set list( String constraint )
   {
-    Set result = new TreeSet();
+      Set result = new TreeSet();
 
-    // more sanity
-    if ( mConnection == null ) throw new RuntimeException( c_error );
+      // more sanity
+      if ( mConnection == null ) throw new RuntimeException( c_error );
 
-    // prepare statement
-    // FIXME: work with pre-prepared statements
-    String query = "SELECT lfn FROM rc_lfn";
-    if ( constraint != null && constraint.length() > 0 )
-      query += " WHERE lfn LIKE '" + quote(constraint) + "'";
+      String query = "[no query]";
+      try {
+          query = mCStatements[14];
+          PreparedStatement ps = getStatement(14);
+          if (constraint == null) {
+              ps.setString(1, quote("%"));
+          } else {
+              ps.setString(1, quote(constraint));
+          }
 
-    // start to ask
-    try {
-      Statement st = mConnection.createStatement();
-      ResultSet rs = st.executeQuery(query);
-      while ( rs.next() ) {
-	result.add( rs.getString(0) );
-      }
-      rs.close();
-      st.close();
-    } catch ( SQLException e ) {
-      throw new RuntimeException( "Unable to query database about " +
+          ResultSet rs = ps.executeQuery();
+          while ( rs.next() ) {
+              result.add( rs.getString("lfn") );
+          }
+          rs.close();
+
+      } catch ( SQLException e ) {
+          e.printStackTrace();
+          throw new RuntimeException( "Unable to query database about " +
 				  query + ": " + e.getMessage() );
-    }
-
-    // done
-    return result;
+      }
+      return result;
   }
 
 
@@ -959,146 +953,124 @@ public class JDBCRC implements ReplicaCatalog
    */
   public int insert( String lfn, ReplicaCatalogEntry tuple )
   {
-    // sanity checks
-    if ( lfn == null || tuple == null ) return 0;
-    if ( mConnection == null ) throw new RuntimeException( c_error );
+      // sanity checks
+      if ( lfn == null || tuple == null ) return 0;
+      if ( mConnection == null ) throw new RuntimeException( c_error );
 
-    for (Object obj : lookup(lfn)) {
-        ReplicaCatalogEntry rce = (ReplicaCatalogEntry) obj;
-        String handle = rce.getResourceHandle();
-        if (rce.getPFN().equals(tuple.getPFN()) &&
-                ((handle == null && tuple.getResourceHandle() == null) ||
-                (handle != null && handle.equals(tuple.getResourceHandle())))) {
-            
-            delete(lfn, rce);
-            break;
-        }
-    }
-    
-    String query = "[no query]";
-    int result = 0;
-    boolean autoCommitWasOn = false;
-    int state = 0;
+      String query = "[no query]";
+      int result = 0;
+      boolean autoCommitWasOn = false;
+      int state = 0;
 
       try {
-      // delete-before-insert as one transaction
-      if ( (autoCommitWasOn = mConnection.getAutoCommit()) )
-	mConnection.setAutoCommit(false);
-      state++; // state == 1
+          if ( (autoCommitWasOn = mConnection.getAutoCommit()) )
+              mConnection.setAutoCommit(false);
+          state++; // state == 1
 
-      // // delete before insert...
-      // delete( lfn, tuple.getPFN() );
-      state++; // state == 2
+          // delete previous mapping associated to the lfn
+          for (Object obj : lookup(lfn)) {
+              ReplicaCatalogEntry rce = (ReplicaCatalogEntry) obj;
+              String handle = rce.getResourceHandle();
+              if (rce.getPFN().equals(tuple.getPFN()) &&
+                      ((handle == null && tuple.getResourceHandle() == null) ||
+                              (handle != null && handle.equals(tuple.getResourceHandle())))) {
+                  delete(lfn, rce);
 
-      ResultSet rs = null;
-      Statement st = null;
-      StringBuilder m = new StringBuilder(256);
-      String id = null;
-      String resourceHandle = tuple.getResourceHandle();
-      
-      if ( ! m_autoinc ) {
-	//
-	// use sequences, no auto-generated keys possible
-	//
-	query = "SELECT nextval('rc_lfn_id')";
-	st = mConnection.createStatement();
-	rs = st.executeQuery(query);
-        if ( rs.next() ) id = rs.getString(1);
-	else throw new SQLException( "Unable to access sequence generator" );
-	rs.close();
-	st.close();
-	state++; // state == 3
-        
-        m.append( "INSERT INTO rc_lfn(id,lfn,pfn" );
-        if (resourceHandle != null) {
-            m.append( ",site" );
-        }
-        m.append( ") VALUES('" );
-        m.append(id).append("','");
-        m.append(quote(lfn)).append("','");
-        m.append(quote(tuple.getPFN()));
-        if (resourceHandle != null) {
-            m.append("','").append(quote(resourceHandle));
-        }
-        m.append("')");        
-	query = m.toString();
-	st = mConnection.createStatement();
-	result = st.executeUpdate(query); // ,Statement.RETURN_GENERATED_KEYS);
-	st.close();
-	state++; // state == 4
-      } else {
-	//
-	// use autoinc columns, obtain autogenerated keys afterwards
-	//
-	m.append( "INSERT INTO rc_lfn(lfn,pfn");
-        if (resourceHandle != null) {
-            m.append( ",site" );
-        }
-        m.append(") VALUES('" );
-	m.append(quote(lfn)).append("','");
-	m.append(quote(tuple.getPFN()));
-        if (resourceHandle != null) {
-            m.append("','").append(quote(resourceHandle));
-        }
-        m.append("')");
-	query = m.toString();
-	st = mConnection.createStatement();
-        //sqlite driver complains if Statement.RETURN_GENERATED_KEYS is set, even though
-        //the id's are set in the ResultSet
-        result = (this.mUsingSQLiteBackend)?
-                 st.executeUpdate(query): 
-                 st.executeUpdate(query, Statement.RETURN_GENERATED_KEYS);
-        
-        state++; // state == 3
+                  break;
+              }
+          }
+          state++; // state == 2
 
-	rs = st.getGeneratedKeys();
-        if ( rs.next() ) id = rs.getString(1);
-	else throw new SQLException( "Unable to access autogenerated key" );
-	rs.close();
-	st.close();
-	state++; // state == 4
-      }
+          ResultSet rs = null;
+          String id = null;
+          String resourceHandle = tuple.getResourceHandle();
 
-      query = mCStatements[4];
-      PreparedStatement ps = getStatement(4);
-//      ps.setString( 1, id ); // GRRR, Pg8!!!
-      ps.setLong( 1, Long.parseLong(id) );
+          // check if the lfn already exists
+          query = mCStatements[14];
+          PreparedStatement ps = getStatement(14);
+          ps.setString(1, quote(lfn));
+          rs = ps.executeQuery();
+          if (rs.next()) {
+              id = rs.getString(1);
 
-      for ( Iterator i=tuple.getAttributeIterator(); i.hasNext(); ) {
-	String name = (String) i.next();
-        if (name.equals(ReplicaCatalogEntry.RESOURCE_HANDLE)) {
-            continue;
-        }
- 	Object value = tuple.getAttribute(name);
-	ps.setString( 2, name );
-	if ( value == null ) ps.setNull( 3, Types.VARCHAR );
-	else ps.setString( 3, value instanceof String ?
-			   (String) value :
-			   value.toString() );
-	ps.executeUpdate();
-      }
-      state++; // state == 5
+          } else {
+              query = mCStatements[12];
+              ps = this.mUsingSQLiteBackend ?
+                      getStatement(12) :
+                      mConnection.prepareStatement(mCStatements[12], Statement.RETURN_GENERATED_KEYS);
+              ps.setString(1, quote(lfn));
+              //sqlite driver complains if Statement.RETURN_GENERATED_KEYS is set, even though
+              //the id's are set in the ResultSet
+              result = ps.executeUpdate();
+              state++; // state == 3
 
-      mConnection.commit();
-    } catch ( SQLException e ) {
-      try {
-	if ( state > 0 && state < 4 ) mConnection.rollback();
-      } catch ( SQLException e2 ) {
-	// ignore rollback problems
-      }
-      throw new RuntimeException( "Unable to tell database " +
-				  query + " (state=" + state + "): " +
-				  e.getMessage() );
-    } finally {
-      // restore original auto-commit state
-      try {
-	if ( autoCommitWasOn ) mConnection.setAutoCommit(true);
+              rs = ps.getGeneratedKeys();
+              if (rs.next()) {
+                  id = rs.getString(1);
+              } else {
+                  throw new SQLException("Unable to access autogenerated key");
+              }
+          }
+          state++; // state == 4
+
+          // Add PFN and site attributes
+          query = mCStatements[13];
+          ps = getStatement(13);
+          ps.setString(1, id);
+          ps.setString(2, quote(tuple.getPFN()));
+          if (resourceHandle == null) {
+              ps.setNull(3, Types.VARCHAR);
+          } else {
+              ps.setString(3, resourceHandle);
+          }
+          ps.executeUpdate();
+          state++; // state == 5
+
+          // Add metadata
+          query = mCStatements[4];
+          ps = getStatement(4);
+          ps.setLong( 1, Long.parseLong(id) );
+
+          for ( Iterator i=tuple.getAttributeIterator(); i.hasNext(); ) {
+              String name = (String) i.next();
+              if (name.equals(ReplicaCatalogEntry.RESOURCE_HANDLE)) {
+                  continue;
+              }
+              Object value = tuple.getAttribute(name);
+              ps.setString( 2, name );
+              if ( value == null ) {
+                  ps.setNull( 3, Types.VARCHAR );
+              } else {
+                  ps.setString( 3, value instanceof String ? (String) value : value.toString() );
+              }
+              ps.executeUpdate();
+          }
+          state++; // state == 6
+          mConnection.commit();
+
+
       } catch ( SQLException e ) {
-	// ignore
-      }
-    }
+          try {
+              if ( state > 0 && state < 6 ) {
+                  mConnection.rollback();
+              }
+          } catch ( SQLException e2 ) {
+              // ignore rollback problems
+          }
+          e.printStackTrace();
+          throw new RuntimeException( "Unable to tell database " +
+                  query + " (state=" + state + "): " +
+                  e.getMessage() );
 
-    return result;
+      } finally {
+          // restore original auto-commit state
+          try {
+              if ( autoCommitWasOn ) mConnection.setAutoCommit(true);
+          } catch ( SQLException e ) {
+              // ignore
+          }
+      }
+      return result;
   }
   
   /**
@@ -1171,7 +1143,8 @@ public class JDBCRC implements ReplicaCatalog
    * @return the number of deletions.
    * @see ReplicaCatalogEntry
    */
-  public int delete( Map x , boolean matchAttributes){
+  public int delete( Map x , boolean matchAttributes)
+  {
       
       int result = 0;
       
@@ -1214,37 +1187,34 @@ public class JDBCRC implements ReplicaCatalog
    */
   public int delete( String lfn, String pfn )
   {
-    int result = 0;
+      int result = 0;
+      int which = mUsingSQLiteBackend ? 11 : 3;
+      String query = mCStatements[which];
 
-    // sanity checks
-    if ( lfn == null || pfn == null ) return result;
-    if ( mConnection == null ) throw new RuntimeException( c_error );
+      // sanity checks
+      if ( lfn == null || pfn == null ) return result;
+      if ( mConnection == null ) throw new RuntimeException( c_error );
 
-    // prepare statement
-    // FIXME: work with pre-prepared statements
-    StringBuffer m = new StringBuffer(256);
-    m.append( "DELETE FROM rc_lfn WHERE lfn='");
-    m.append( quote(lfn) ).append('\'');
-    m.append( " AND pfn='").append( quote(pfn) ).append('\'');
-    String query = m.toString();
+      // prepare statement
+      try {
+          PreparedStatement ps = getStatement(which);
+          ps.setString( 1, quote(lfn) );
+          ps.setString( 2, quote(pfn) );
+          result = ps.executeUpdate();
 
-    try {
-      Statement st = mConnection.createStatement();
-      st.execute(query);
-      result = st.getUpdateCount();
-      st.close();
-    } catch ( SQLException e ) {
-      throw new RuntimeException( "Unable to tell database " +
-				  query + ": " + e.getMessage() );
-    }
+      } catch ( SQLException e ) {
+          e.printStackTrace();
+          throw new RuntimeException( "Unable to tell database " +
+                  query + ": " + e.getMessage() );
+      }
 
-    // done
-    return result;
+      // done
+      return result;
   }
 
   /**
    * Deletes a very specific mapping from the replica catalog. The LFN
-   * must be matches, the PFN, and all PFN attributes specified in the
+   * must matches the PFN, and all PFN attributes specified in the
    * replica catalog entry. More than one entry could theoretically be
    * removed. Upon removal of an entry, all attributes associated with
    * the PFN also evaporate (cascading deletion).
@@ -1257,53 +1227,50 @@ public class JDBCRC implements ReplicaCatalog
   public int delete( String lfn, ReplicaCatalogEntry tuple )
   {
     int result = 0;
-    String query = "[no query]";
+    StringBuilder query = new StringBuilder("[no query]");
 
     // sanity checks
     if ( lfn == null || tuple == null ) return result;
     if ( mConnection == null ) throw new RuntimeException( c_error );
 
     try {
-      StringBuilder m = new StringBuilder(256);
-      m.append("SELECT id FROM rc_lfn WHERE lfn='").append(lfn).append("'");
-      if (tuple.getResourceHandle() != null) {
-          m.append(" AND site='").append(quote(tuple.getResourceHandle())).append("'");
-      } else {
-          m.append(" AND site IS NULL");
-      }
-      Statement st = mConnection.createStatement();
-      ResultSet rs = st.executeQuery(m.toString());
-      if (!rs.next()) {
-          st.close();
-          rs.close();
-          return result;
-      }
-      int id = rs.getInt("id");
-      
-      m = new StringBuilder(256);
-      m.append("SELECT name,value FROM rc_attr WHERE id=").append(id);
-      st = mConnection.createStatement();
-      rs = st.executeQuery(m.toString());
-      while (rs.next()) {
-          String name = rs.getString("name");
-          String value = rs.getString("value");
-          if (!tuple.hasAttribute(name) || !tuple.getAttribute(name).equals(value)) {
-              st.close();
-              rs.close();
-              return result;
-          }
-      }
-      
-      m = new StringBuilder(256);
-      m.append("DELETE FROM rc_lfn WHERE id=").append(id);
-      st = mConnection.createStatement();
-      result = st.executeUpdate(m.toString());
-      st.close();
-      rs.close();
-      return result;
+        query = new StringBuilder(256);
+        query.append("SELECT DISTINCT l.lfn_id, m.name, m.value FROM rc_lfn l ");
+        if (tuple.getResourceHandle() != null) {
+            query.append("INNER JOIN rc_pfn p ON l.lfn_id=p.lfn_id AND p.site='");
+            query.append(quote(tuple.getResourceHandle()));
+            query.append("' ");
+        }
+        query.append("LEFT JOIN rc_meta m ON l.lfn_id=m.lfn_id ");
+        query.append("WHERE l.lfn='").append(lfn).append("'");
+
+        Statement st = mConnection.createStatement();
+        ResultSet rs = st.executeQuery(query.toString());
+        int id = 0;;
+        while (rs.next()) {
+            id = rs.getInt("lfn_id");
+            String name = rs.getString("name");
+            String value = rs.getString("value");
+            if (name != null && (!tuple.hasAttribute(name) || (value != null && !tuple.getAttribute(name).equals(value)))) {
+                st.close();
+                rs.close();
+                return result;
+            }
+        }
+
+        if (id > 0) {
+            query = new StringBuilder(256);
+            query.append("DELETE FROM rc_lfn WHERE lfn_id=").append(id);
+            st = mConnection.createStatement();
+            result = st.executeUpdate(query.toString());
+        }
+        st.close();
+        rs.close();
+
+        return result;
 
     } catch ( SQLException e ) {
-      throw new RuntimeException( "Unable to tell database " +
+        throw new RuntimeException( "Unable to tell database " +
 				  query + ": " + e.getMessage() );
     }
   }
@@ -1390,8 +1357,8 @@ public class JDBCRC implements ReplicaCatalog
     try {
       PreparedStatement ps = getStatement(5);
       for ( Iterator i = lfns.iterator(); i.hasNext(); ) {
-	ps.setString( 1, quote((String) i.next()) );
-	result += ps.executeUpdate();
+        ps.setString( 1, quote((String) i.next()) );
+        result += ps.executeUpdate();
       }
     } catch ( SQLException e ) {
       throw new RuntimeException( "Unable to tell database " +
@@ -1415,14 +1382,13 @@ public class JDBCRC implements ReplicaCatalog
     int result = 0;
     
     if (name.equals( ReplicaCatalogEntry.RESOURCE_HANDLE )) {
-      String query = "DELETE FROM rc_lfn WHERE site=?";
+      String query = mCStatements[10];
 
       try {
         PreparedStatement ps = mConnection.prepareStatement(query);
         ps.setString( 1, value.toString() );
-        result = ps.executeUpdate(query);
+        result = ps.executeUpdate();
 
-        ps.close();
         return result;
       
       } catch (SQLException e) {
@@ -1480,7 +1446,7 @@ public class JDBCRC implements ReplicaCatalog
     if ( mConnection == null ) throw new RuntimeException( c_error );
 
     // prepare statement
-    String query = "DELETE FROM lfn_rc";
+    String query = "DELETE FROM rc_lfn";
     try {
       Statement st = mConnection.createStatement();
       st.execute(query);

@@ -634,11 +634,13 @@ public class RCClient extends Toolkit {
 	} else if (cmd.equals("list")) {
 	    Map m = new HashMap();
 	    for (Iterator i = words.iterator(); i.hasNext();) {
-		String key = ((String) i.next()).toLowerCase();
-		if (i.hasNext()) {
-		    String val = (String) i.next();
-		    m.put(key, val);
-		}
+			String key = ((String) i.next()).toLowerCase();
+			if (i.hasNext()) {
+		    	String val = (String) i.next();
+		    	m.put(key, val);
+			} else {
+				m.put(key, null);
+			}
 	    }
 
 	    Map lfns = m_rc.lookup(m);
