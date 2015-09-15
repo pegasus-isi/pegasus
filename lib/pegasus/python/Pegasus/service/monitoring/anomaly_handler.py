@@ -161,7 +161,7 @@ class AnomalyMessage:
         """
         Factory method
         """
-        anomaly_message = dict(item.split("=") for item in raw_message.strip().split("|"))
+        anomaly_message = dict(item.split("=") for item in raw_message.strip().split("|||"))
 
         if not all(k in anomaly_message for k in AnomalyMessage.required_params()):
             print "[anomaly-handler] We expect anomaly message to include parameters:", AnomalyMessage.required_params()

@@ -65,13 +65,13 @@ class TestAnomalyHandler(unittest.TestCase):
     def test_on_message_integration(self):
         self.assertIsNotNone(self.anomaly_handler, "anomaly handler wasn't initialized correctly")
 
-        msg_body = "ts=1437389227|"\
-                   "wf_uuid=143acf4d-8494-4c0f-baf0-2b0ff4464390|"\
-                   "dag_job_id=namd_ID0000003|" \
-                   "anomaly_type=kickstart.threshold_exceeded|" \
-                   "message=The 'stime' value exceeded the threshold (10.83 > 10.0)|" \
-                   "metrics=stime|" \
-                   "value=10.83|" \
+        msg_body = "ts=1437389227|||"\
+                   "wf_uuid=143acf4d-8494-4c0f-baf0-2b0ff4464390|||"\
+                   "dag_job_id=namd_ID0000003|||" \
+                   "anomaly_type=kickstart.threshold_exceeded|||" \
+                   "message=The 'stime' value exceeded the threshold (10.83 > 10.0)|||" \
+                   "metrics=stime|||" \
+                   "value=10.83|||" \
                    "threshold=10.0"
 
         self.anomaly_handler.on_message(None, None, None, msg_body)
