@@ -57,7 +57,7 @@ def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=
         log.info("Attempting to connect to: %s" % dburi)
         engine = create_engine(dburi, echo=echo, pool_recycle=True)
         engine.connect()
-        log.info("Connected successfully established.")
+        log.info("Connection successfully established.")
 
     except exc.OperationalError, e:
         if "mysql" in dburi and "unknown database" in str(e).lower():

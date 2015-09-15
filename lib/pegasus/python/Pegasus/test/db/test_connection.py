@@ -6,25 +6,26 @@ import uuid
 
 from Pegasus.db import connection
 from Pegasus.db.admin.admin_loader import *
+from Pegasus.db.schema import *
 
 class TestConnection(unittest.TestCase):
 
     def test_non_existent_url(self):
         dburi = "jdbc:mysql://localhost/unknown-db"
         self.assertRaises(connection.ConnectionError, connection.connect, dburi)
-        
+
         dburi = "jdbc:mysql://root@localhost/unknown-db"
         self.assertRaises(connection.ConnectionError, connection.connect, dburi)
-        
+
         dburi = "jdbc:mysql://localhost:1111/unknown-db"
         self.assertRaises(connection.ConnectionError, connection.connect, dburi)
-                
+
         dburi = "sqlite:test-url.db"
         self.assertRaises(connection.ConnectionError, connection.connect, dburi)
 
         dburi = "test.db"
         self.assertRaises(connection.ConnectionError, connection.connect, dburi)
-        
+
         dburi = "jdbc:invalid://localhost/testdb"
         self.assertRaises(connection.ConnectionError, connection.connect, dburi)
 
@@ -44,14 +45,13 @@ class TestConnection(unittest.TestCase):
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         db.close()
         _remove(filename)
-        
-        _silentremove(filename)
+
         dburi = "jdbc:sqlite:/%s" % filename
         db = connection.connect(dburi, create=True)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         db.close()
         _remove(filename)
-    
+
     def test_connection_by_uri(self):
         filename = str(uuid.uuid4())
         _silentremove(filename)
@@ -73,6 +73,7 @@ def _remove(filename):
     for f in os.listdir("."):
         if re.search(filename + ".*", f):
             os.remove(f)
+    _silentremove(filename)
 
 
 if __name__ == '__main__':

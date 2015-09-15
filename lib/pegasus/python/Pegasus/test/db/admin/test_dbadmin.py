@@ -34,23 +34,18 @@ class TestDBAdmin(unittest.TestCase):
         self.assertTrue(db_verify(db))
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         
-        # db_downgrade(db, "4.4.2")
-        # self.assertEquals(db_current_version(db), 2)
-        db.execute("DROP TABLE rc_lfn")
+        db.execute("DROP TABLE rc_pfn")
         self.assertRaises(DBAdminError, db_verify, db)
         db.close()
         db = connection.connect(dburi, create=True)
         self.assertTrue(db_verify(db))
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         
-        # db_downgrade(db, "4.3.0")
-        # self.assertEquals(db_current_version(db), 1)
-        db.execute("DROP TABLE rc_lfn")
+        db.execute("DROP TABLE rc_pfn")
         db.execute("DROP TABLE workflow")
         db.execute("DROP TABLE master_workflow")
         self.assertRaises(DBAdminError, db_verify, db)
         self.assertRaises(DBAdminError, db_verify, db, "4.3.0")
-        self.assertRaises(DBAdminError, db_current_version, db)
         db.close()
         db = connection.connect(dburi, create=True)
         self.assertTrue(db_verify(db))
@@ -76,25 +71,24 @@ class TestDBAdmin(unittest.TestCase):
         dburi = "sqlite:///%s" % filename
         db = connection.connect(dburi, create=True)
 
-        # db_downgrade(db, "4.4.2")
-        # self.assertEquals(db_current_version(db), 2)
-        # self.assertRaises(DBAdminError, db_verify, db)
-        #
-        # db_downgrade(db)
-        # self.assertEquals(db_current_version(db), 1)
-        # self.assertRaises(DBAdminError, db_verify, db)
-        # db.close()
-        #
-        # db = connection.connect(dburi, create=True, pegasus_version="4.4.0")
-        # self.assertEquals(db_current_version(db), 2)
-        # self.assertRaises(DBAdminError, db_verify, db)
-        # db.close()
-        
+        db_downgrade(db, pegasus_version="4.5.0")
+        self.assertEquals(db_current_version(db), 4)
+        self.assertRaises(DBAdminError, db_verify, db)
+        rc_lfn._set_parent(metadata)
+        db.close()
+
         db = connection.connect(dburi, create=True)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         self.assertTrue(db_verify(db))
+        db.close()
         _remove(filename)
-        
+
+        fn = str(uuid.uuid4())
+        _silentremove(fn)
+        dburi2 = "sqlite:///%s" % fn
+        db2 = connection.connect(dburi2, create=True)
+
+
     # def test_minimum_downgrade(self):
     #     filename = str(uuid.uuid4())
     #     _silentremove(filename)
@@ -133,7 +127,8 @@ class TestDBAdmin(unittest.TestCase):
         db = connection.connect(dburi, schema_check=False, create=False)
         rc_sequences.create(db.get_bind(), checkfirst=True)
         rc_lfn.create(db.get_bind(), checkfirst=True)
-        rc_attr.create(db.get_bind(), checkfirst=True)
+        rc_pfn.create(db.get_bind(), checkfirst=True)
+        rc_meta.create(db.get_bind(), checkfirst=True)
         self.assertRaises(DBAdminError, db_verify, db)
         db.close()
         
@@ -166,7 +161,6 @@ class TestDBAdmin(unittest.TestCase):
         st_task.create(db.get_bind(), checkfirst=True)
         st_task_edge.create(db.get_bind(), checkfirst=True)
         st_invocation.create(db.get_bind(), checkfirst=True)
-        st_file.create(db.get_bind(), checkfirst=True)
         self.assertRaises(DBAdminError, db_verify, db)
         db.close()
         
@@ -181,7 +175,7 @@ class TestDBAdmin(unittest.TestCase):
         dburi = "sqlite:///%s" % filename
         db = connection.connect(dburi, create=True)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
-        db.execute("DROP TABLE rc_lfn")
+        db.execute("DROP TABLE rc_pfn")
         self.assertRaises(DBAdminError, db_verify, db)
         db.close()
         
@@ -254,6 +248,7 @@ def _remove(filename):
     for f in os.listdir("."):
         if re.search(filename + ".*", f):
             os.remove(f)
+    _silentremove(filename)
 
 
 if __name__ == '__main__':

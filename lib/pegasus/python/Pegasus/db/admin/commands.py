@@ -95,8 +95,8 @@ class DowngradeCommand(LoggingCommand):
             _validate_conf_type_options(dburi, self.options.properties, self.options.config_properties, self.options.submit_dir,
                                         self.options.db_type)
             db = _get_connection(dburi, self.options.properties, self.options.config_properties, self.options.submit_dir,
-                                 self.options.db_type, pegasus_version=self.options.pegasus_version, schema_check=False,
-                                 force=self.options.force)
+                                 self.options.db_type, pegasus_version=self.options.pegasus_version, create=False,
+                                 schema_check=False, force=self.options.force)
             db_downgrade(db, self.options.pegasus_version, self.options.force)
             version = db_current_version(db, parse=True)
             _print_version(version)
@@ -286,14 +286,14 @@ class DBAdminCommand(CompoundCommand):
     description = "Database administrator client"
     commands = [
         ("create", CreateCommand),
-#        ('downgrade', DowngradeCommand),
+        ('downgrade', DowngradeCommand),
         ('update', UpdateCommand),
         ('check', CheckCommand),
         ('version', VersionCommand)
     ]
     aliases = {
         "c": "create",
-#        "d": "downgrade",
+        "d": "downgrade",
         "u": "update",
         "k": "check",
         "v": "version"

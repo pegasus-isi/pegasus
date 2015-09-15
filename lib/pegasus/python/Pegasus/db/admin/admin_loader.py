@@ -13,13 +13,14 @@ log = logging.getLogger(__name__)
 #-------------------------------------------------------------------
 # DB Admin configuration
 #-------------------------------------------------------------------
-CURRENT_DB_VERSION = 4
+CURRENT_DB_VERSION = 5
+DB_MIN_VERSION = 4
 
 COMPATIBILITY = {
     '4.3.0': 1, '4.3.1': 1, '4.3.2': 1,
     '4.4.0': 2, '4.4.1': 2, '4.4.2': 2,
     '4.5.0': 4, '4.5.1': 4, '4.5.2': 4,
-    '4.6.0': 4
+    '4.6.0': 5
 }
 #-------------------------------------------------------------------
 
@@ -77,7 +78,7 @@ def db_create(dburi, engine, db, pegasus_version=None, force=False):
 
 def db_current_version(db, parse=False, force=False):
     """ Get the current version of the database."""
-    _verify_tables(db)
+    # _verify_tables(db)
     current_version = None
 
     try:
@@ -112,40 +113,49 @@ def db_verify(db, pegasus_version=None, force=False):
     return compatible
 
 
-# def db_downgrade(db, pegasus_version=None, force=False):
-#     """ Downgrade the database. """
-#     _verify_tables(db)
-#
-#     current_version = db_current_version(db, force=force)
-#     if pegasus_version:
-#         version = parse_pegasus_version(pegasus_version)
-#     else:
-#         version = current_version - 1
-#
-#     if current_version == version:
-#         log.debug("Your database is already downgraded.")
-#         return
-#
-#     if version == 0:
-#         print "Your database is already downgraded to the minimum version."
-#         return
-#
-#     previous_version = 'Z'
-#     for ver in COMPATIBILITY:
-#         if COMPATIBILITY[ver] <= version and ver < previous_version:
-#             version = COMPATIBILITY[ver]
-#             previous_version = ver
-#             break
-#
-#     if current_version < version:
-#         raise DBAdminError("Unable to run downgrade. Current database version is older than specified version '%s'." % (pegasus_version))
-#
-#     _backup_db(db)
-#     for i in range(current_version, version, -1):
-#         k = get_class(i, db)
-#         k.downgrade(force)
-#         _update_version(db, i - 1)
-#     print "Your database was successfully downgraded."
+def db_downgrade(db, pegasus_version=None, force=False):
+    """ Downgrade the database. """
+    if not check_table_exists(db, db_version):
+        raise DBAdminError("Unable to determine database version.")
+
+    current_version = None
+    try:
+        current_version = _get_version(db)
+    except NoResultFound:
+        raise DBAdminError("Unable to determine database version.")
+
+    if pegasus_version:
+        version = parse_pegasus_version(pegasus_version)
+    else:
+        version = current_version - 1
+
+    if current_version == version:
+        log.info("Your database is already downgraded.")
+        return
+    elif current_version < version:
+        raise DBAdminError("Cannot downgrade to a higher version.")
+        return
+
+    if version < DB_MIN_VERSION:
+        raise DBAdminError("Your database is already downgraded to the minimum version.")
+
+    previous_version = 'Z'
+    for ver in COMPATIBILITY:
+        if COMPATIBILITY[ver] <= version and ver < previous_version:
+            version = COMPATIBILITY[ver]
+            previous_version = ver
+            break
+
+    if current_version < version:
+        raise DBAdminError("Unable to run downgrade. Current database version is older than specified version '%s'." % (pegasus_version))
+
+    _backup_db(db)
+
+    for i in range(current_version, version, -1):
+        k = get_class(i, db)
+        k.downgrade(force)
+        _update_version(db, i - 1)
+    print "Your database was successfully downgraded."
 
 
 def parse_pegasus_version(pegasus_version=None):

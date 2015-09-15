@@ -42,6 +42,8 @@ def get_missing_tables(db):
         # WORKFLOW
         st_workflow,
         st_workflowstate,
+        st_workflow_meta,
+        st_workflow_files,
         st_host,
         st_job,
         st_job_edge,
@@ -49,8 +51,8 @@ def get_missing_tables(db):
         st_jobstate,
         st_task,
         st_task_edge,
+        st_task_meta,
         st_invocation,
-        st_file,
         # MASTER
         pg_workflow,
         pg_workflowstate,
@@ -59,16 +61,18 @@ def get_missing_tables(db):
         # JDBCRC
         rc_sequences,
         rc_lfn,
-        rc_attr
+        rc_pfn,
+        rc_meta,
     ]
     missing_tables = []
     for table in tables:
-        if not _check_table_exists(db, table):
+        if not check_table_exists(db, table):
             missing_tables.append(table.name)
 
     return missing_tables
 
-def _check_table_exists(engine, table):
+
+def check_table_exists(engine, table):
     try:
         engine.execute(table.select().limit(1))
         return True
@@ -148,6 +152,12 @@ class Workflow(SABase):
 class Workflowstate(SABase):
     pass
 
+class WorkflowMeta(SABase):
+    pass
+
+class WorkflowFiles(SABase):
+    pass
+
 class Job(SABase):
     pass
 
@@ -166,10 +176,10 @@ class Task(SABase):
 class TaskEdge(SABase):
     pass
 
-class Invocation(SABase):
+class TaskMeta(SABase):
     pass
 
-class File(SABase):
+class Invocation(SABase):
     pass
 
 # ---------------------------------------------
@@ -188,9 +198,11 @@ class Sequences(SABase):
 class RCLFN(SABase):
     pass
 
-class RCAttr(SABase):
+class RCPFN(SABase):
     pass
 
+class RCMeta(SABase):
+    pass
 
 # ---------------------------------------------
 # DB ADMIN
@@ -251,7 +263,7 @@ st_workflowstate = Table('workflowstate', metadata,
     # effect - ie: it is the combo of the three columns that make a row
     # unique.
     Column('wf_id', KeyInteger, ForeignKey('workflow.wf_id', ondelete='CASCADE'), nullable=False, primary_key=True),
-    Column('state', Enum('WORKFLOW_STARTED', 'WORKFLOW_TERMINATED'), nullable=False, primary_key=True),
+    Column('state', Enum('WORKFLOW_STARTED', 'WORKFLOW_TERMINATED', name='workflow_state'), nullable=False, primary_key=True),
     Column('timestamp', NUMERIC(precision=16,scale=6), nullable=False, primary_key=True, default=time.time()),
     Column('restart_count', INT, nullable=False),
     Column('status', INT, nullable=True),
@@ -265,6 +277,20 @@ Index('UNIQUE_WORKFLOWSTATE',
     unique=True)
 
 orm.mapper(Workflowstate, st_workflowstate)
+
+
+st_workflow_meta = Table('wf_meta', metadata,
+    Column('meta_id', KeyInteger, primary_key=True, nullable=False),
+    Column('wf_id', KeyInteger, ForeignKey('workflow.wf_id', ondelete='CASCADE'), nullable=False),
+    Column('name', VARCHAR(255), nullable=False),
+    Column('value', VARCHAR(255), nullable=False),
+    **table_keywords
+)
+
+Index('wf_meta_id_KEY', st_workflow_meta.c.meta_id, unique=True)
+Index('UNIQUE_WORKFLOW_META', st_workflow_meta.c.wf_id, st_workflow_meta.c.name, st_workflow_meta.c.value, unique=True)
+
+orm.mapper(WorkflowMeta, st_workflow_meta)
 
 
 # st_host definition
@@ -310,7 +336,7 @@ st_job = Table('job', metadata,
                              'cleanup',
                              'chmod',
                              'dax',
-                             'dag'), nullable=False),
+                             'dag', name='job_type_desc'), nullable=False),
     Column('clustered', BOOLEAN, nullable=False),
     Column('max_retries', INT, nullable=False),
     Column('executable', TEXT, nullable=False),
@@ -431,7 +457,7 @@ Index('task_wf_id_COL', st_task.c.wf_id)
 Index('UNIQUE_TASK', st_task.c.wf_id, st_task.c.abs_task_id, unique=True)
 
 orm.mapper(Task, st_task, properties = {
-    'child_file':relation(File, backref='st_task', cascade='all, delete-orphan', passive_deletes=True),
+    'child_task_meta':relation(TaskMeta, backref='st_task_meta', cascade='all, delete-orphan', passive_deletes=True),
 })
 
 
@@ -449,6 +475,20 @@ Index('UNIQUE_TASK_EDGE',
     unique=True)
 
 orm.mapper(TaskEdge, st_task_edge)
+
+
+st_task_meta = Table('task_meta', metadata,
+    Column('meta_id', KeyInteger, primary_key=True, nullable=False),
+    Column('task_id', KeyInteger, ForeignKey('task.task_id', ondelete='CASCADE'), nullable=False),
+    Column('name', VARCHAR(255), nullable=False),
+    Column('value', VARCHAR(255), nullable=False),
+    **table_keywords
+)
+
+Index('meta_id_KEY', st_task_meta.c.meta_id, unique=True)
+Index('UNIQUE_TASK_META', st_task_meta.c.task_id, st_task_meta.c.name, st_task_meta.c.value, unique=True)
+
+orm.mapper(TaskMeta, st_task_meta)
 
 
 st_invocation = Table('invocation', metadata,
@@ -475,21 +515,15 @@ Index('UNIQUE_INVOCATION', st_invocation.c.job_instance_id, st_invocation.c.task
 orm.mapper(Invocation, st_invocation)
 
 
-st_file = Table('file', metadata,
-    # ==> Information will come from kickstart output file
-    Column('file_id', KeyInteger, primary_key=True, nullable=False),
-    Column('task_id', KeyInteger, ForeignKey('task.task_id', ondelete='CASCADE'), nullable=True),
-    Column('lfn', VARCHAR(255), nullable=True),
-    Column('estimated_size', INT, nullable=True),
-    Column('md_checksum', VARCHAR(255), nullable=True),
-    Column('type', VARCHAR(255), nullable=True),
-    **table_keywords
-)
+st_workflow_files = Table('wf_files', metadata,
+                          Column('lfn_id', KeyInteger, ForeignKey('rc_lfn.lfn_id', ondelete='CASCADE'), nullable=False, primary_key=True),
+                          Column('wf_id', KeyInteger, ForeignKey('workflow.wf_id', ondelete='CASCADE'), nullable=False, primary_key=True),
+                          Column('task_id', KeyInteger, ForeignKey('task.task_id', ondelete='CASCADE'), nullable=False, primary_key=True),
+                          Column('file_type', VARCHAR(255), nullable=False),
+                          **table_keywords
+                          )
 
-Index('file_id_UNIQUE', st_file.c.file_id, unique=True)
-Index('FK_FILE_TASK_ID', st_task.c.task_id, unique=False)
-
-orm.mapper(File, st_file)
+orm.mapper(WorkflowFiles, st_workflow_files)
 
 
 # ---------------------------------------------
@@ -527,7 +561,7 @@ pg_workflowstate = Table('master_workflowstate', metadata,
     # effect - ie: it is the combo of the three columns that make a row
     # unique.
     Column('wf_id', KeyInteger, ForeignKey('master_workflow.wf_id', ondelete='CASCADE'), nullable=False, primary_key=True),
-    Column('state', Enum('WORKFLOW_STARTED', 'WORKFLOW_TERMINATED'), nullable=False, primary_key=True),
+    Column('state', Enum('WORKFLOW_STARTED', 'WORKFLOW_TERMINATED', name='master_workflow_state'), nullable=False, primary_key=True),
     Column('timestamp', NUMERIC(precision=16,scale=6), nullable=False, primary_key=True),
     Column('restart_count', INT, nullable=False),
     Column('status', INT, nullable=True),
@@ -548,7 +582,7 @@ pg_ensemble = Table('ensemble', metadata,
     Column('name', String(100), nullable=False),
     Column('created', DateTime, nullable=False),
     Column('updated', DateTime, nullable=False),
-    Column('state', Enum(*EnsembleStates), nullable=False),
+    Column('state', Enum(*EnsembleStates, name='ensemble_state'), nullable=False),
     Column('max_running', Integer, nullable=False),
     Column('max_planning', Integer, nullable=False),
     Column('username', String(100), nullable=False),
@@ -568,7 +602,7 @@ pg_ensemble_workflow = Table('ensemble_workflow', metadata,
     Column('basedir', String(512), nullable=False),
     Column('created', DateTime, nullable=False),
     Column('updated', DateTime, nullable=False),
-    Column('state', Enum(*EnsembleWorkflowStates), nullable=False),
+    Column('state', Enum(*EnsembleWorkflowStates, name='ensemble_wf_state'), nullable=False),
     Column('priority', Integer, nullable=False),
     Column('wf_uuid', String(36)),
     Column('submitdir', String(512)),
@@ -598,25 +632,36 @@ rc_sequences = Table('sequences', metadata,
 )
 orm.mapper(Sequences, rc_sequences)
 
+
 rc_lfn = Table('rc_lfn', metadata,
-    Column('id', KeyInteger, primary_key=True, nullable=False),
+    Column('lfn_id', KeyInteger, primary_key=True, nullable=False),
     Column('lfn', VARCHAR(245), nullable=False),
-    Column('pfn', VARCHAR(245), nullable=False),
-    Column('site', VARCHAR(245)),
-    UniqueConstraint('lfn', 'pfn', 'site', name='sk_rc_lfn'),
     **table_keywords
 )
 
-Index('ix_rc_lfn', rc_lfn.c.lfn)
+Index('ix_rc_lfn', rc_lfn.c.lfn, unique=True)
 orm.mapper(RCLFN, rc_lfn)
 
-rc_attr = Table('rc_attr', metadata,
-    Column('id', KeyInteger, ForeignKey('rc_lfn.id', ondelete='CASCADE', name='fk_rc_attr'), primary_key=True, nullable=False),
-    Column('name', VARCHAR(64), nullable=False, primary_key=True),
-    Column('value', VARCHAR(32), nullable=False),
+
+rc_pfn = Table('rc_pfn', metadata,
+    Column('pfn_id', KeyInteger, primary_key=True, nullable=False),
+    Column('lfn_id', KeyInteger, ForeignKey('rc_lfn.lfn_id', ondelete='CASCADE'), nullable=False),
+    Column('pfn', VARCHAR(245), nullable=False),
+    Column('site', VARCHAR(245)),
     **table_keywords
 )
 
-Index('ix_rc_attr', rc_attr.c.name, unique=True)
-orm.mapper(RCAttr, rc_attr)
+Index('UNIQUE_PFN', rc_pfn.c.lfn_id, rc_pfn.c.pfn, rc_pfn.c.site, unique=True)
+orm.mapper(RCPFN, rc_pfn)
 
+
+rc_meta = Table('rc_meta', metadata,
+    Column('meta_id', KeyInteger, primary_key=True, nullable=False),
+    Column('lfn_id', KeyInteger, ForeignKey('rc_lfn.lfn_id', ondelete='CASCADE'), nullable=False),
+    Column('name', VARCHAR(245), nullable=False),
+    Column('value', VARCHAR(245), nullable=False),
+    **table_keywords
+)
+
+Index('rc_meta_unique', rc_meta.c.lfn_id, rc_meta.c.name, unique=True)
+orm.mapper(RCMeta, rc_meta)

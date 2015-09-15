@@ -38,8 +38,14 @@ class Version(BaseVersion):
             self.db.execute("ALTER TABLE rc_lfn_new ADD CONSTRAINT sk_rc_lfn UNIQUE(lfn,pfn,site)")
             log.debug("    Copying data...")
             self.db.execute("INSERT INTO rc_lfn_new(id, lfn, pfn) SELECT * FROM rc_lfn")
+
             log.debug("    Renaming table...")
-            self.db.execute("RENAME TABLE rc_lfn TO rc_lfn_old, rc_lfn_new TO rc_lfn")
+            if self.db.get_bind().driver == "mysqldb":
+                self.db.execute("RENAME TABLE rc_lfn TO rc_lfn_old, rc_lfn_new TO rc_lfn")
+            else:
+                self.db.execute("ALTER TABLE rc_lfn RENAME TO rc_lfn_old")
+                self.db.execute("ALTER TABLE rc_lfn_new RENAME TO rc_lfn")
+
             log.debug("    Droping old table...")
             self.db.execute("ALTER TABLE rc_attr DROP FOREIGN KEY fk_rc_attr")
             self.db.execute("DROP TABLE rc_lfn_old")
