@@ -24,8 +24,6 @@
 #ifdef HAS_PAPI
 #include <papi.h>
 #endif
-#include <dlfcn.h>
-#include <netdb.h>
 
 #include "interpose_monitoring.h"
 
@@ -124,8 +122,10 @@ static int mypid = 0;
 
 /* This is the trace file where we write information about the process */
 static FILE* trace = NULL;
-pthread_t timer_thread;
-int library_loaded = 1;
+
+/* online monitoring - additional info in case /proc is unavailable */
+pthread_mutex_t _interpose_io_mut = PTHREAD_MUTEX_INITIALIZER;
+IoUtilInfo _interpose_io_util_info = { 0, 0, 0, 0, 0, 0, 0 };
 
 #ifdef HAS_PAPI
 int papi_ok = 0;
@@ -151,26 +151,15 @@ typedef struct {
     pthread_key_t cleanup;
 } interpose_pthread_wrapper_arg;
 
-FILE *fopen_untraced(const char *path, const char *mode);
+FILE *_interpose_fopen_untraced(const char *path, const char *mode);
 static int vfprintf_untraced(FILE *stream, const char *format, va_list ap);
-char *fgets_untraced(char *s, int size, FILE *stream);
+char *_interpose_fgets_untraced(char *s, int size, FILE *stream);
 static size_t fread_untraced(void *ptr, size_t size, size_t nmemb, FILE *stream);
-int fclose_untraced(FILE *fp);
+int _interpose_fclose_untraced(FILE *fp);
 static int dup_untraced(int fd);
 
 static pid_t gettid(void) {
     return (pid_t)syscall(SYS_gettid);
-}
-
-static double get_time();
-void read_exe(char* executable_name);
-
-pthread_mutex_t io_mut = PTHREAD_MUTEX_INITIALIZER;
-IoUtilInfo io_util_info = { 0, 0, 0, 0, 0, 0, 0 };
-
-/* Return 1 if line begins with tok */
-int startswith(const char *line, const char *tok) {
-    return strncmp(line, tok, strlen(tok)) == 0;
 }
 
 /* Open the trace file */
@@ -186,7 +175,7 @@ static int topen() {
     char filename[BUFSIZ];
     snprintf(filename, BUFSIZ, "%s.%d", kickstart_prefix, getpid());
 
-    trace = fopen_untraced(filename, "a");
+    trace = _interpose_fopen_untraced(filename, "a");
     if (trace == NULL) {
         printerr("Unable to open trace file\n");
         return -1;
@@ -215,7 +204,7 @@ static int tclose() {
 
     debug("Close trace file");
 
-    return fclose_untraced(trace);
+    return _interpose_fclose_untraced(trace);
 }
 
 /* Get the current time in seconds since the epoch */
@@ -370,7 +359,7 @@ static void read_cmdline() {
         return;
     }
 
-    FILE *f = fopen_untraced(cmdline, "r");
+    FILE *f = _interpose_fopen_untraced(cmdline, "r");
     if (f == NULL) {
         printerr("Unable to fopen /proc/self/cmdline: %s\n", strerror(errno));
         return;
@@ -429,11 +418,11 @@ static void read_cmdline() {
         free(result);
     }
 
-    fclose_untraced(f);
+    _interpose_fclose_untraced(f);
 }
 
 /* Read /proc/self/exe to get path to executable */
-void read_exe(char* executable_name) {
+void _interpose_read_exe(char* executable_name) {
     char buffer[BUFSIZ];
     debug("Reading exe");
 
@@ -484,6 +473,11 @@ void read_exe(char* executable_name) {
     }
 }
 
+/* Return 1 if line begins with tok */
+static int startswith(const char *line, const char *tok) {
+    return strstr(line, tok) == line;
+}
+
 /* Return 1 if line ends with tok */
 static int endswith(const char *line, const char *tok) {
     int n = strlen(line);
@@ -512,14 +506,14 @@ static void read_status() {
         return;
     }
 
-    FILE *f = fopen_untraced(statf, "r");
+    FILE *f = _interpose_fopen_untraced(statf, "r");
     if (f == NULL) {
         perror("libinterpose: Unable to fopen /proc/self/status");
         return;
     }
 
     char line[BUFSIZ];
-    while (fgets_untraced(line, BUFSIZ, f) != NULL) {
+    while (_interpose_fgets_untraced(line, BUFSIZ, f) != NULL) {
         if (startswith(line,"VmPeak")) {
             tprintf(line);
         } else if (startswith(line,"VmHWM")) {
@@ -527,7 +521,7 @@ static void read_status() {
         }
     }
 
-    fclose_untraced(f);
+    _interpose_fclose_untraced(f);
 }
 
 /* Read CPU usage */
@@ -552,7 +546,7 @@ static void read_stat() {
         return;
     }
 
-    FILE *f = fopen_untraced(statf,"r");
+    FILE *f = _interpose_fopen_untraced(statf,"r");
     if (f == NULL) {
         perror("libinterpose: Unable to fopen /proc/self/stat");
         return;
@@ -571,7 +565,7 @@ static void read_stat() {
               "%*d %*u %*u %llu %*u %*d",
               &iowait);
 
-    fclose_untraced(f);
+    _interpose_fclose_untraced(f);
 
     /* Adjust by number of clock ticks per second */
     long clocks = sysconf(_SC_CLK_TCK);
@@ -594,14 +588,14 @@ static void read_io() {
         return;
     }
 
-    FILE *f = fopen_untraced(iofile, "r");
+    FILE *f = _interpose_fopen_untraced(iofile, "r");
     if (f == NULL) {
         perror("libinterpose: Unable to fopen /proc/self/io");
         return;
     }
 
     char line[BUFSIZ];
-    while (fgets_untraced(line, BUFSIZ, f) != NULL) {
+    while (_interpose_fgets_untraced(line, BUFSIZ, f) != NULL) {
         if (startswith(line, "rchar")) {
             tprintf(line);
         } else if (startswith(line, "wchar")) {
@@ -619,7 +613,7 @@ static void read_io() {
         }
     }
 
-    fclose_untraced(f);
+    _interpose_fclose_untraced(f);
 }
 
 /* Determine which paths should be traced */
@@ -764,10 +758,10 @@ static void trace_read(int fd, ssize_t amount) {
     f->nread += 1;
 
     // Information written for online monitoring in case there is no /proc 
-    pthread_mutex_lock(&io_mut);
-    io_util_info.rchar += amount;
-    io_util_info.syscr += 1;
-    pthread_mutex_unlock(&io_mut);
+    pthread_mutex_lock(&_interpose_io_mut);
+    _interpose_io_util_info.rchar += amount;
+    _interpose_io_util_info.syscr += 1;
+    pthread_mutex_unlock(&_interpose_io_mut);
     
 unlock:
     unlock_descriptors();
@@ -784,12 +778,12 @@ static void trace_write(int fd, ssize_t amount) {
     }
     f->bwrite += amount;
     f->nwrite += 1;
-    
+
     // Information written for online monitoring in case there is no /proc
-    pthread_mutex_lock(&io_mut);
-    io_util_info.wchar += amount;
-    io_util_info.syscw += 1;
-    pthread_mutex_unlock(&io_mut);
+    pthread_mutex_lock(&_interpose_io_mut);
+    _interpose_io_util_info.wchar += amount;
+    _interpose_io_util_info.syscw += 1;
+    pthread_mutex_unlock(&_interpose_io_mut);
 
 unlock:
     unlock_descriptors();
@@ -974,24 +968,6 @@ static void trace_truncate(const char *path, off_t length) {
     tprintf("file: '%s' %lu 0 0 0 0\n", fullpath, length);
 
     free(fullpath);
-}
-
-int tfile_exists() {
-    char filename[BUFSIZ];
-    char *kickstart_prefix = getenv("KICKSTART_PREFIX");
-
-    if (kickstart_prefix == NULL) {
-        printerr("Unable to open trace file: KICKSTART_PREFIX not set in environment");
-        return -1;
-    }
-    
-    snprintf(filename, BUFSIZ, "%s.%d", kickstart_prefix, getpid());
-
-    if( access( filename, F_OK ) != -1 ) {
-        return 1;
-    } else {
-        return 0;
-    }
 }
 
 static void report_thread_counters() {
@@ -1200,7 +1176,8 @@ static void __attribute__((constructor)) interpose_init(void) {
     start_papi();
 #endif
 
-    spawn_monitoring_thread();
+    /* online monitoring */
+//    _interpose_spawn_monitoring_thread();
 }
 
 /* Library finalizer function */
@@ -1221,7 +1198,7 @@ static void __attribute__((destructor)) interpose_fini(void) {
     fini_papi();
 #endif
 
-    read_exe(NULL);
+    _interpose_read_exe(NULL);
     read_status();
     read_rusage();
     read_stat();
@@ -1234,8 +1211,8 @@ static void __attribute__((destructor)) interpose_fini(void) {
 
     mypid = 0;
 
-    // Set a flag to stop the online monitoring thread
-    library_loaded = 0;
+    /* online monitoring */
+    _interpose_stop_monitoring_thread();
 }
 
 static inline void *osym(const char *name) {
@@ -1411,7 +1388,7 @@ int creat64(const char *path, mode_t mode) {
     return rc;
 }
 
-FILE *fopen_untraced(const char *path, const char *mode) {
+FILE *_interpose_fopen_untraced(const char *path, const char *mode) {
     typeof(fopen) *orig_fopen = osym("fopen");
     return (*orig_fopen)(path, mode);
 }
@@ -1419,7 +1396,7 @@ FILE *fopen_untraced(const char *path, const char *mode) {
 FILE *fopen(const char *path, const char *mode) {
     debug("fopen");
 
-    FILE *f = fopen_untraced(path, mode);
+    FILE *f = _interpose_fopen_untraced(path, mode);
 
     if (f != NULL) {
         trace_open(path, fileno(f));
@@ -1480,7 +1457,7 @@ int close(int fd) {
     return rc;
 }
 
-int fclose_untraced(FILE *fp) {
+int _interpose_fclose_untraced(FILE *fp) {
     typeof(fclose) *orig_fclose = osym("fclose");
     return (*orig_fclose)(fp);
 }
@@ -1493,7 +1470,7 @@ int fclose(FILE *fp) {
         fd = fileno(fp);
     }
 
-    int rc = fclose_untraced(fp);
+    int rc = _interpose_fclose_untraced(fp);
 
     if (fd >= 0) {
         trace_close(fd);
@@ -1724,7 +1701,7 @@ int fputc(int c, FILE *stream) {
     return rc;
 }
 
-char *fgets_untraced(char *s, int size, FILE *stream) {
+char *_interpose_fgets_untraced(char *s, int size, FILE *stream) {
     typeof(fgets) *orig_fgets = osym("fgets");
     return (*orig_fgets)(s, size, stream);
 }
@@ -1732,7 +1709,7 @@ char *fgets_untraced(char *s, int size, FILE *stream) {
 char *fgets(char *s, int size, FILE *stream) {
     debug("fgets");
 
-    char *ret = fgets_untraced(s, size, stream);
+    char *ret = _interpose_fgets_untraced(s, size, stream);
 
     if (ret != NULL) {
         trace_read(fileno(stream), strlen(ret));
