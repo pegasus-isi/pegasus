@@ -3,6 +3,12 @@
 set -e
 set -v
 
+
+if [ X${testdir} = "X" ]; then
+    testdir=`dirname  $0`
+    export testdir
+fi
+
 TOPDIR=`pwd`
 
 # unique directory for this run
@@ -16,8 +22,8 @@ echo "This is sample input to KEG" > f.a
 mkdir -p outputs
 
 # build the dax generator
-export CLASSPATH=.:`pegasus-config --classpath`
-javac BlackDiamondDAX.java
+export CLASSPATH=$testdir:`pegasus-config --classpath`
+javac $testdir/BlackDiamondDAX.java
 
 # generate the dax
 java BlackDiamondDAX /usr blackdiamond.dax
@@ -50,7 +56,7 @@ EOF
 # plan and submit the  workflow
 pegasus-plan \
     -Dpegasus.code.generator=Shell \
-    --conf pegasusrc \
+    --conf $testdir/pegasusrc \
     --sites local \
     --dir work/submit \
     --relative-submit-dir ${RUN_ID} \
