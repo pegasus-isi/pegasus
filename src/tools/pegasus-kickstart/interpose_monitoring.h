@@ -45,16 +45,13 @@ int send_msg_to_kickstart(char *msg, char *host, char *port);
 
 /* Dependencies from interpose.c */
 
-extern pthread_mutex_t io_mut;
-extern IoUtilInfo io_util_info;
-extern pthread_t timer_thread;
-extern int library_loaded;
+extern pthread_mutex_t _interpose_io_mut;
+extern IoUtilInfo _interpose_io_util_info;
 
-extern FILE *fopen_untraced(const char *path, const char *mode);
-extern int fclose_untraced(FILE *fp);
-extern char *fgets_untraced(char *s, int size, FILE *stream);
-extern int startswith(const char *line, const char *tok);
-extern void read_exe(char* executable_name);
+extern FILE *_interpose_fopen_untraced(const char *path, const char *mode);
+extern int _interpose_fclose_untraced(FILE *fp);
+extern char *_interpose_fgets_untraced(char *s, int size, FILE *stream);
+extern void _interpose_read_exe(char* executable_name);
 
 /* End dependencies */
 
@@ -66,7 +63,8 @@ void read_cpu_status(CpuUtilInfo *info);
 void read_mem_status(MemUtilInfo *info);
 void read_io_status(IoUtilInfo *info);
 
-void spawn_monitoring_thread();
+void _interpose_spawn_monitoring_thread();
+void _interpose_stop_monitoring_thread();
 
 void* monitoring_thread_func(void* mpi_rank_void);
 

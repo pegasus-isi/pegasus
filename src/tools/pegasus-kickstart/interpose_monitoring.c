@@ -28,6 +28,15 @@ static int myerr = STDERR_FILENO;
 #define debug(format, args...)
 #endif
 
+static pthread_t timer_thread;
+
+static int library_loaded = 0;
+static pthread_mutex_t library_loaded_mut = PTHREAD_MUTEX_INITIALIZER;
+
+static int startswith(const char *line, const char *tok) {
+    return strstr(line, tok) == line;
+}
+
 // SOCKET-BASED COMMUNICATION WITH KICKSTART
 
 int prepare_socket(int *sockfd, char *monitoring_socket_host, char* monitoring_socket_port, struct sockaddr_in *serv_addr) {
@@ -148,7 +157,7 @@ void read_cpu_status(CpuUtilInfo *info) {
         return;
     }
 
-    FILE *f = fopen_untraced(statf,"r");
+    FILE *f = _interpose_fopen_untraced(statf,"r");
     if (f == NULL) {
         perror("libinterpose: Unable to fopen /proc/self/stat");
         return;
@@ -168,7 +177,7 @@ void read_cpu_status(CpuUtilInfo *info) {
               "%*d %*u %*u %llu %*u %*d",
            &utime, &stime, &iowait);
 
-    fclose_untraced(f);
+    _interpose_fclose_untraced(f);
 
     /* Adjust by number of clock ticks per second */
     long clocks = sysconf(_SC_CLK_TCK);
@@ -195,7 +204,7 @@ void read_mem_status(MemUtilInfo *info) {
         return;
     }
 
-    FILE *f = fopen_untraced(statf, "r");
+    FILE *f = _interpose_fopen_untraced(statf, "r");
     if (f == NULL) {
         perror("libinterpose: Unable to fopen /proc/self/status");
         return;
@@ -203,7 +212,7 @@ void read_mem_status(MemUtilInfo *info) {
 
     char line[BUFSIZ];
     
-    while (fgets_untraced(line, BUFSIZ, f) != NULL) {
+    while (_interpose_fgets_untraced(line, BUFSIZ, f) != NULL) {
 
         if (startswith(line,"VmSize")) {
             sscanf(line, "VmSize: %llu", &(info->vmSize));
@@ -217,19 +226,19 @@ void read_mem_status(MemUtilInfo *info) {
 
     }
 
-    fclose_untraced(f);
+    _interpose_fclose_untraced(f);
 }
 
 /* Read /proc/self/io to get I/O usage */
 void read_io_status(IoUtilInfo *info) {
     debug("Reading io file");
 
-    pthread_mutex_lock(&io_mut);
-    info->rchar = io_util_info.rchar;
-    info->wchar = io_util_info.wchar;
-    info->syscw = io_util_info.syscw;
-    info->syscr = io_util_info.syscr;
-    pthread_mutex_unlock(&io_mut);
+    pthread_mutex_lock(&_interpose_io_mut);
+    info->rchar = _interpose_io_util_info.rchar;
+    info->wchar = _interpose_io_util_info.wchar;
+    info->syscw = _interpose_io_util_info.syscw;
+    info->syscr = _interpose_io_util_info.syscr;
+    pthread_mutex_unlock(&_interpose_io_mut);
 
     char iofile[] = "/proc/self/io";
 
@@ -241,7 +250,7 @@ void read_io_status(IoUtilInfo *info) {
         return;
     }
 
-    FILE *f = fopen_untraced(iofile, "r");
+    FILE *f = _interpose_fopen_untraced(iofile, "r");
     if (f == NULL) {
         perror("libinterpose: Unable to fopen /proc/self/io");
         return;
@@ -249,7 +258,7 @@ void read_io_status(IoUtilInfo *info) {
 
     char line[BUFSIZ];
 //    printerr("Reading io status...\n");
-    while (fgets_untraced(line, BUFSIZ, f) != NULL) {
+    while (_interpose_fgets_untraced(line, BUFSIZ, f) != NULL) {
 //        printerr("Our line: '%s'\n", line);
         if (startswith(line, "rchar")) {
             sscanf(line, "rchar: %llu", &(info->rchar));
@@ -268,11 +277,11 @@ void read_io_status(IoUtilInfo *info) {
         }
     }
 
-    fclose_untraced(f);
+    _interpose_fclose_untraced(f);
 }
 
 
-void spawn_monitoring_thread() {
+void _interpose_spawn_monitoring_thread() {
 
     // spawning a timer thread only when
     char* mpi_rank = getenv("OMPI_COMM_WORLD_RANK");
@@ -305,11 +314,24 @@ void spawn_monitoring_thread() {
         strcpy(mpi_rank, "-1");
     }
 
+    pthread_mutex_lock(&library_loaded_mut);
+    library_loaded = 1;
+
     int rc = pthread_create(&timer_thread, NULL, monitoring_thread_func, (void *)mpi_rank);
     if (rc) {
-        printerr("ERROR; return code from pthread_create() is %d\n", rc);
+        printerr("ERROR: could not spawn the monitoring thread; return code from pthread_create() is %d\n", rc);
+        library_loaded = 0;
+        pthread_mutex_unlock(&library_loaded_mut);
         exit(-1);
-    }    
+    }
+
+    pthread_mutex_unlock(&library_loaded_mut);
+}
+
+void _interpose_stop_monitoring_thread() {
+    pthread_mutex_lock(&library_loaded_mut);
+    library_loaded = 0;
+    pthread_mutex_unlock(&library_loaded_mut);
 }
 
 /*
@@ -354,7 +376,7 @@ void* monitoring_thread_func(void* mpi_rank_void) {
         read_cpu_status(&cpu_info);
         read_mem_status(&mem_info);
         read_io_status(&io_info);
-        read_exe(exec_name);
+        _interpose_read_exe(exec_name);
 
         #ifdef HAS_PAPI
 
