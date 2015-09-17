@@ -131,6 +131,19 @@ class Version(BaseVersion):
                        )
         Index('v4_rc_attr', v4_rc_attr.c.name)
         v4_rc_attr.create(self.db.get_bind(), checkfirst=True)
+        v4_st_file = Table('file', metadata,
+                        Column('file_id', KeyInteger, primary_key=True, nullable=False),
+                        Column('task_id', KeyInteger, ForeignKey('task.task_id', ondelete='CASCADE'), nullable=True),
+                        Column('lfn', VARCHAR(255), nullable=True),
+                        Column('estimated_size', INT, nullable=True),
+                        Column('md_checksum', VARCHAR(255), nullable=True),
+                        Column('type', VARCHAR(255), nullable=True),
+                        **table_keywords
+                        )
+
+        Index('file_id_UNIQUE', v4_st_file.c.file_id, unique=True)
+        Index('FK_FILE_TASK_ID', st_task.c.task_id, unique=False)
+        v4_st_file.create(self.db.get_bind(), checkfirst=True)
 
         # Migrate entries
         try:
