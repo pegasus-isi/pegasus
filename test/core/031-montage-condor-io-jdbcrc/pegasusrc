@@ -10,3 +10,5 @@ pegasus.data.configuration = condorio
 
 pegasus.condor.logs.symlink = false
 
+pegasus.catalog.replica=JDBCRC
+
