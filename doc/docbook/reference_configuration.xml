@@ -5021,6 +5021,28 @@ Scope       :</emphasis> Properties
 
             <row>
               <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.register.deep<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 4.5.3.-
+<emphasis role="bold">Type  </emphasis>      : Boolean
+<emphasis role="bold">Default     :</emphasis> true</literallayout></entry>
+
+              <entry><para>By default, Pegasus always registers the complete
+              LFN that is associated with the output files in the DAX i.e if
+              the LFN has / in it, then lfn registered in the replica catalog
+              has the whole part. For example, if in your DAX you have
+              rupture/0001.rx as the name attribute for the uses tag, then in
+              the Replica Catalog the LFN is registered as
+              rupture/0001.rx</para><para>On setting this property to false,
+              only the basename is considered while registering in the replica
+              catalog. In the above case, 0001.rx will be registered instead
+              of rupture/0001.rx </para></entry>
+            </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold"><emphasis
                       role="bold">Property Key: </emphasis></emphasis>pegasus.data.reuse.scope<emphasis
                     role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">

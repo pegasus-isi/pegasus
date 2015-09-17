@@ -221,7 +221,11 @@ public class ReplicaCatalogBridge
      */
     private ADag mDag;
 
-
+    /**
+     * A boolean indicating whether to register a deep LFN or not.
+     */
+    private boolean mRegisterDeepLFN;
+    
     /**
      * The overloaded constructor.
      *
@@ -247,6 +251,7 @@ public class ReplicaCatalogBridge
         
         this.mDAXReplicaStore = dag.getReplicaStore();
         this.initialize( dag, bag.getPegasusProperties(), bag.getPlannerOptions() );
+        this.mRegisterDeepLFN = mProps.registerDeepLFN();
     }
     
     /**
@@ -808,7 +813,7 @@ public class ReplicaCatalogBridge
                 FileTransfer ft = ( FileTransfer ) it.next();
                 //checking for transient flag
                 if ( !ft.getTransientRegFlag() ) {
-                    stdIn.write( ftToRC( ft ) );
+                    stdIn.write( ftToRC( ft, mRegisterDeepLFN ) );
                     stdIn.flush();
                 }
             }
@@ -828,15 +833,18 @@ public class ReplicaCatalogBridge
      * Converts a <code>FileTransfer</code> to a RC compatible string representation.
      *
      * @param ft  the <code>FileTransfer</code> object
+     * @param registerDeepLFN whether to register the deep LFN or only the basename
      *
      * @return the RC version.
      */
-    private String ftToRC( FileTransfer ft ){
+    private String ftToRC( FileTransfer ft , boolean registerDeepLFN){
         StringBuffer sb = new StringBuffer();
         NameValue destURL = ft.getDestURL();
-        sb.append( ft.getLFN() ).append( " " );
+        String lfn = ft.getLFN();
+        lfn = registerDeepLFN ? lfn : new File( lfn ).getName();
+        sb.append( lfn ).append( " " );
         sb.append( ft.getURLForRegistrationOnDestination()  ).append( " " );
-        sb.append( "pool=\"" ).append( destURL.getKey() ).append( "\"" );
+        sb.append( "site=\"" ).append( destURL.getKey() ).append( "\"" );
         sb.append( "\n" );
         return sb.toString();
     }
