@@ -844,7 +844,7 @@ public class ReplicaCatalogBridge
         lfn = registerDeepLFN ? lfn : new File( lfn ).getName();
         sb.append( lfn ).append( " " );
         sb.append( ft.getURLForRegistrationOnDestination()  ).append( " " );
-        sb.append( "pool=\"" ).append( destURL.getKey() ).append( "\"" );
+        sb.append( "site=\"" ).append( destURL.getKey() ).append( "\"" );
         sb.append( "\n" );
         return sb.toString();
     }
