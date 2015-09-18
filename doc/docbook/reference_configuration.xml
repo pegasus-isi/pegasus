@@ -2922,13 +2922,20 @@ f.3 file://$input/D2/f.3 site="local"
                       to configure the behvavior of this
                       implementation.</para>
 
-                      <para>pegasus.catalog.replica.directory.site to specify
-                      a site attribute other than local to associate with the
-                      mappings.</para>
+                      <para><emphasis
+                      role="bold">pegasus.catalog.replica.directory</emphasis>
+                      to specify the path to the directory containing the
+                      files</para>
 
-                      <para>pegasus.catalog.replica.directory.url.prefix to
-                      associate a URL prefix for the PFN's constructed. If not
-                      specified, the URL defaults to file://</para>
+                      <para><emphasis
+                      role="bold">pegasus.catalog.replica.directory.site</emphasis>
+                      to specify a site attribute other than local to
+                      associate with the mappings.</para>
+
+                      <para><emphasis
+                      role="bold">pegasus.catalog.replica.directory.url.prefix</emphasis>
+                      to associate a URL prefix for the PFN's constructed. If
+                      not specified, the URL defaults to file://</para>
                     </listitem>
                   </varlistentry>
 
@@ -2962,9 +2969,9 @@ pegasus.catalog.replica.mrc.[value].key   specifies a property name\
 
                       <para><screen>
 pegasus.catalog.replica.mrc.directory1 Directory
-pegasus.catalog.replica.mrc.directory1.url /input/dir1
+pegasus.catalog.replica.mrc.directory1.directory /input/dir1
 pegasus.catalog.replica.mrc.directory2 Directory
-pegasus.catalog.replica.mrc.directory2.url /input/dir2
+pegasus.catalog.replica.mrc.directory2.directory /input/dir2
 </screen></para>
 
                       <para>In the above example, directory1, directory2 are

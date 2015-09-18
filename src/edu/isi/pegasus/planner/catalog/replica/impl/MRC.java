@@ -186,7 +186,13 @@ public class MRC
 
             //if unable to connect to any single
             //break out and exit
-            if( !result ){ break; }
+            if( !result ){
+                mLogger.log( "MRC unable to connect to replica catalog backend " + entry.getKey() + " with connection properties " + entry.getValue() , 
+                             LogManager.ERROR_MESSAGE_LEVEL );
+                break;
+            }
+             mLogger.log( "MRC Successfully connect to replica catalog backend " + entry.getKey() + " with connection properties " + entry.getValue() , 
+                             LogManager.DEBUG_MESSAGE_LEVEL );
         }
 
         //if the result is false, then disconnect from
