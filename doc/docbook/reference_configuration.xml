@@ -2803,8 +2803,10 @@ pegasus.catalog.replica.mrc.[value].key   specifies a property name\
                       <para><screen>
 pegasus.catalog.replica.mrc.directory1 Directory
 pegasus.catalog.replica.mrc.directory1.directory /input/dir1
+pegasus.catalog.replica.mrc.directory1.directory.site  siteX
 pegasus.catalog.replica.mrc.directory2 Directory
 pegasus.catalog.replica.mrc.directory2.directory /input/dir2
+pegasus.catalog.replica.mrc.directory1.directory.site  siteY
 </screen></para>
 
                       <para>In the above example, directory1, directory2 are
