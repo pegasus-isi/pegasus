@@ -432,6 +432,9 @@ public class ReplicaCatalogBridge
         //look up from the the main replica catalog
         lfnsFound.addAll( mReplicaStore.getLFNs() );
 
+        mLogger.log(lfnsFound.size()  + " entries found in all replica sources of total " +
+                    mSearchFiles.size(),
+                    LogManager.DEBUG_MESSAGE_LEVEL);
 
         return lfnsFound;
 
