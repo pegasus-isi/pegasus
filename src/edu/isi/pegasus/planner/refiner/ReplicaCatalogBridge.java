@@ -282,9 +282,6 @@ public class ReplicaCatalogBridge
         //filenames
         mSearchFiles = dag.getDAGInfo().getLFNs( options.getForce() );
 
-        //only for windward for time being
-        properties.setProperty( "pegasus.catalog.replica.dax.id", dag.getAbstractWorkflowName() );
-        properties.setProperty( "pegasus.catalog.replica.mrc.windward.dax.id", dag.getAbstractWorkflowName() );
         
         try {
 
