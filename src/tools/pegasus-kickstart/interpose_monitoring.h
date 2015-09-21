@@ -51,7 +51,7 @@ extern IoUtilInfo _interpose_io_util_info;
 extern FILE *_interpose_fopen_untraced(const char *path, const char *mode);
 extern int _interpose_fclose_untraced(FILE *fp);
 extern char *_interpose_fgets_untraced(char *s, int size, FILE *stream);
-extern void _interpose_read_exe(char* executable_name);
+extern void _interpose_read_exe();
 
 /* End dependencies */
 

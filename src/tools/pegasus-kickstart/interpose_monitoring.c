@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+
 #include "interpose_monitoring.h"
 
 #include <stdlib.h>
@@ -10,6 +12,7 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <sys/syscall.h>
+#include <dlfcn.h>
 
 #ifdef HAS_PAPI
 #include <papi.h>
@@ -28,16 +31,16 @@ static int myerr = STDERR_FILENO;
 #define debug(format, args...)
 #endif
 
-static pthread_t timer_thread;
+pthread_t _interpose_timer_thread;
 
-static int library_loaded = 0;
-static pthread_mutex_t library_loaded_mut = PTHREAD_MUTEX_INITIALIZER;
+int _interpose_library_loaded = 0;
+pthread_mutex_t _interpose_library_loaded_mut = PTHREAD_MUTEX_INITIALIZER;
 
 static int startswith(const char *line, const char *tok) {
     return strstr(line, tok) == line;
 }
 
-// SOCKET-BASED COMMUNICATION WITH KICKSTART
+/* SOCKET-BASED COMMUNICATION WITH KICKSTART */
 
 int prepare_socket(int *sockfd, char *monitoring_socket_host, char* monitoring_socket_port, struct sockaddr_in *serv_addr) {
     int port_no = atoi(monitoring_socket_port);
@@ -55,14 +58,15 @@ int prepare_socket(int *sockfd, char *monitoring_socket_host, char* monitoring_s
         return -1;
     }
 
+//    memset(&sa_addr, 0, sizeof(sa_addr));
     bzero((char *) &sa_addr, sizeof(sa_addr));
     sa_addr.sin_family = AF_INET;
     bcopy( (char *)server->h_addr, (char *)&sa_addr.sin_addr.s_addr, server->h_length);
     sa_addr.sin_port = htons(port_no);
 
-    // printerr("haddr: %s\n", inet_ntoa( *( struct in_addr*)( server -> h_addr_list[0])));
-    // printerr("port: %d\n", port_no);
-    
+     printerr("haddr: %s\n", inet_ntoa( *( struct in_addr*)( server -> h_addr_list[0])));
+     printerr("port: %d\n", port_no);
+
     if( connect(*sockfd, (struct sockaddr *)&sa_addr, sizeof(sa_addr)) < 0 ) {
         printerr("Error[connect]: %s\n", strerror(errno));
         return -1;
@@ -92,7 +96,7 @@ int send_msg_to_kickstart(char *msg, char *host, char *port) {
     return 0;
 }
 
-// END SOCKET-BASED COMMUNICATION WITH KICKSTART
+/* END SOCKET-BASED COMMUNICATION WITH KICKSTART */
 
 // TODO kickstart status file should be used when socket-based communication fails
 // Utility function to open the kickstart status file based on environment variable
@@ -145,6 +149,8 @@ int set_monitoring_params(int mpi_rank, int *interval, char **socket_host, char 
 
     return 0;
 }
+
+/* READING PERFORMANCE METRICS FUNCTIONS */
 
 /* Read /proc/self/stat to get CPU usage and returns a structure with this information */
 void read_cpu_status(CpuUtilInfo *info) {
@@ -233,12 +239,12 @@ void read_mem_status(MemUtilInfo *info) {
 void read_io_status(IoUtilInfo *info) {
     debug("Reading io file");
 
-    pthread_mutex_lock(&_interpose_io_mut);
-    info->rchar = _interpose_io_util_info.rchar;
-    info->wchar = _interpose_io_util_info.wchar;
-    info->syscw = _interpose_io_util_info.syscw;
-    info->syscr = _interpose_io_util_info.syscr;
-    pthread_mutex_unlock(&_interpose_io_mut);
+//    pthread_mutex_lock(&_interpose_io_mut);
+//    info->rchar = _interpose_io_util_info.rchar;
+//    info->wchar = _interpose_io_util_info.wchar;
+//    info->syscw = _interpose_io_util_info.syscw;
+//    info->syscr = _interpose_io_util_info.syscr;
+//    pthread_mutex_unlock(&_interpose_io_mut);
 
     char iofile[] = "/proc/self/io";
 
@@ -280,16 +286,16 @@ void read_io_status(IoUtilInfo *info) {
     _interpose_fclose_untraced(f);
 }
 
+/* END READING PERFORMANCE METRICS FUNCTIONS */
 
 void _interpose_spawn_monitoring_thread() {
-
     // spawning a timer thread only when
     char* mpi_rank = getenv("OMPI_COMM_WORLD_RANK");
     // printerr("Spawning thread in process: %d\n", (int)current_pid);
      // printerr("Setting mpi rank based on OMPI_COMM_WORLD_RANK\n");
 
     if(mpi_rank == NULL) {
-        mpi_rank = getenv("ALPS_APP_PE");        
+        mpi_rank = getenv("ALPS_APP_PE");
          // printerr("Setting mpi rank based on MPIRUN_RANK\n");
 
         if(mpi_rank == NULL) {
@@ -308,30 +314,50 @@ void _interpose_spawn_monitoring_thread() {
         }
     }
 
-    if(mpi_rank == NULL) {
-        // printerr("MPI rank is not set in environment\n");
-        mpi_rank = (char*) calloc(1024, sizeof(char));
-        strcpy(mpi_rank, "-1");
-    }
+//    printerr("INFO: we passing %d to the monitoring thread\n", *rank);
 
-    pthread_mutex_lock(&library_loaded_mut);
-    library_loaded = 1;
+//    pthread_mutex_lock(&_interpose_library_loaded_mut);
+    _interpose_library_loaded = 1;
 
-    int rc = pthread_create(&timer_thread, NULL, monitoring_thread_func, (void *)mpi_rank);
+//    int s;
+//
+//    pthread_attr_t attr;
+//    s = pthread_attr_init(&attr);
+//    if(s != 0) {
+//        printerr("ERROR: in pthread_attr_init %d\n", s);
+//        return ;
+//    }
+//
+//    s = pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+//    if(s != 0) {
+//        printerr("ERROR: in pthread_attr_setdetachstate %d\n", s);
+//        return ;
+//    }
+
+    typeof(pthread_create) *orig_pthread_create = dlsym(RTLD_NEXT, "pthread_create");
+
+    int rc = (*orig_pthread_create)(&_interpose_timer_thread, NULL, monitoring_thread_func, (void *)mpi_rank);
     if (rc) {
         printerr("ERROR: could not spawn the monitoring thread; return code from pthread_create() is %d\n", rc);
-        library_loaded = 0;
-        pthread_mutex_unlock(&library_loaded_mut);
-        exit(-1);
+        _interpose_library_loaded = 0;
+//        pthread_mutex_unlock(&_interpose_library_loaded_mut);
+//        exit(-1);
     }
 
-    pthread_mutex_unlock(&library_loaded_mut);
+//    s = pthread_attr_destroy(&attr);
+//    if(s != 0) {
+//        printerr("ERROR: in pthread_attr_destroy %d\n", s);
+//        return ;
+//    }
+//    pthread_mutex_unlock(&_interpose_library_loaded_mut);
 }
 
 void _interpose_stop_monitoring_thread() {
-    pthread_mutex_lock(&library_loaded_mut);
-    library_loaded = 0;
-    pthread_mutex_unlock(&library_loaded_mut);
+//    pthread_mutex_lock(&_interpose_library_loaded_mut);
+    _interpose_library_loaded = 0;
+//    pthread_mutex_unlock(&_interpose_library_loaded_mut);
+
+//    pthread_join(_interpose_timer_thread, NULL);
 }
 
 /*
@@ -340,28 +366,35 @@ void _interpose_stop_monitoring_thread() {
  * - it stores a single entry each time which follows the pattern:
  * <mpi_rank> <timestamp> <utime> <stime> <io_wait> <vm_peak> <pm_peak> <threads> <read_bytes> <write_bytes> <syscr> <syscw>
  */
-void* monitoring_thread_func(void* mpi_rank_void) {
+void* monitoring_thread_func(void* mpi_rank_arg) {
     // TODO kickstart status file should be used when socket-based communication fails
     // FILE* kickstart_status;
     time_t timestamp;
-    int interval;
-    int mpi_rank = atoi( (char*) mpi_rank_void ) + 1;
-    char exec_name[BUFSIZ], *kickstart_pid = NULL, hostname[BUFSIZ], *job_id = NULL, msg[BUFSIZ];
+    int mpi_rank = 0, interval = 60;
+    char exec_name[BUFSIZ] = "", *kickstart_pid = NULL, hostname[BUFSIZ] = "", *job_id = NULL, msg[BUFSIZ] = "";
     char *monitoring_socket_host = NULL, *monitoring_socket_port = NULL;
     CpuUtilInfo cpu_info = { 0.0, 0.0 };
     MemUtilInfo mem_info = { 0, 0, 0 };
     IoUtilInfo io_info = { 0, 0, 0, 0, 0, 0, 0 };
 
+    if(mpi_rank_arg != NULL) {
+        mpi_rank = atoi( (char*) mpi_rank_arg ) + 1;
+    }
+
     printerr("[Thread-%d] starting a thread...\n", mpi_rank);
 
-    if( set_monitoring_params(mpi_rank,  &interval, 
+    if( set_monitoring_params(mpi_rank,  &interval,
         &monitoring_socket_host, &monitoring_socket_port,
-        &kickstart_pid, hostname, &job_id) ) 
+        &kickstart_pid, hostname, &job_id) )
     {
         return NULL;
     }
 
-    while(library_loaded) {
+    printerr("INFO: mpi_rank = %d, interval = %d, host = %s, port = %s, pid = %s, job_id = %s\n",
+        mpi_rank, interval, monitoring_socket_host, monitoring_socket_port, kickstart_pid, job_id);
+
+//    pthread_mutex_lock(&_interpose_library_loaded_mut);
+    while(_interpose_library_loaded) {
         char counters_str[BUFSIZ] = "", eventname[256], counter_str[256];
 
         #ifdef HAS_PAPI
@@ -383,7 +416,7 @@ void* monitoring_thread_func(void* mpi_rank_void) {
         printerr("[Thread-%d] Reading all possible hardware counters...\n", mpi_rank);
 
         int k = 1;
-        while( read_hardware_counters(k, &shared_nevents, shared_events, shared_counters) == 0 ) { 
+        while( read_hardware_counters(k, &shared_nevents, shared_events, shared_counters) == 0 ) {
             k++;
         }
 
@@ -414,7 +447,7 @@ void* monitoring_thread_func(void* mpi_rank_void) {
                    "iowait=%.3f vmSize=%llu vmRSS=%llu threads=%lu read_bytes=%llu write_bytes=%llu "
                    "syscr=%lu syscw=%lu %s\n",
 
-            (int)timestamp, job_id, kickstart_pid, exec_name, hostname, mpi_rank, 
+            (int)timestamp, job_id, kickstart_pid, exec_name, hostname, mpi_rank,
             cpu_info.real_utime, cpu_info.real_stime, cpu_info.real_iowait,
             mem_info.vmSize, mem_info.vmRSS, mem_info.threads,
             io_info.rchar, io_info.wchar, io_info.syscr, io_info.syscw, counters_str);
@@ -437,8 +470,12 @@ void* monitoring_thread_func(void* mpi_rank_void) {
 
         }
 
+//        pthread_mutex_unlock(&_interpose_library_loaded_mut);
         sleep(interval);
+//        pthread_mutex_lock(&_interpose_library_loaded_mut);
     }
+
+//    pthread_mutex_unlock(&_interpose_library_loaded_mut);
 
     printerr("[Thread-%d] We are finishing our work...\n", mpi_rank);
 
@@ -490,7 +527,7 @@ int read_hardware_counters(int eventset, int *shared_nevents, int *shared_events
 	    // printerr("INFO: rc is: %d, nevents: %d\n", rc, nevents);    
 
 	    if (rc != PAPI_OK) {
-	      printerr("ERROR: PAPI_list_events failed: %s\n", PAPI_strerror(rc));
+	      printerr("ERROR: PAPI_list_events failed for eventset %d: %s\n", eventset, PAPI_strerror(rc));
 	      return 1;
 	    }
 

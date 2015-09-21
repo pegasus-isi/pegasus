@@ -124,8 +124,8 @@ static int mypid = 0;
 static FILE* trace = NULL;
 
 /* online monitoring - additional info in case /proc is unavailable */
-pthread_mutex_t _interpose_io_mut = PTHREAD_MUTEX_INITIALIZER;
-IoUtilInfo _interpose_io_util_info = { 0, 0, 0, 0, 0, 0, 0 };
+//pthread_mutex_t _interpose_io_mut = PTHREAD_MUTEX_INITIALIZER;
+//IoUtilInfo _interpose_io_util_info = { 0, 0, 0, 0, 0, 0, 0 };
 
 #ifdef HAS_PAPI
 int papi_ok = 0;
@@ -422,55 +422,52 @@ static void read_cmdline() {
 }
 
 /* Read /proc/self/exe to get path to executable */
-void _interpose_read_exe(char* executable_name) {
-    char buffer[BUFSIZ];
+void _interpose_read_exe() {
     debug("Reading exe");
-
-    int size = readlink("/proc/self/exe", buffer, BUFSIZ);
+    char exe[BUFSIZ];
+    int size = readlink("/proc/self/exe", exe, BUFSIZ);
     if (size < 0) {
         printerr("libinterpose: Unable to readlink /proc/self/exe: %s\n", strerror(errno));
         return;
     }
-    buffer[size] = '\0';
+    exe[size] = '\0';
+    tprintf("exe: %s\n", exe);
 
     // if it is linux loader we need to read its first argument
     // TODO we are looking for "ld-" in the whole string due to simplicity, but it will not work in some cases
-    if( strstr(buffer, "ld-") != NULL ) {
-        // so we read /proc/self/cmdline - it a string with \0 delimeter
-        int fd = open("/proc/self/cmdline", O_RDONLY);
-        if(fd < 0) {
-            printerr("libinterpose: Unable to open /proc/self/cmdline: %s\n", strerror(errno));
-        }
-        else {
-            // printerr("libinterpose: we opend cmdline file\n");
-            int nbytesread = read(fd, buffer, BUFSIZ);
-            if(nbytesread < 0) {
-                printerr("libinterpose: Unable to read /proc/self/cmdline: %s\n", strerror(errno));    
-            }
-            else {
-                // printerr("libinterpose: we read: %s\n", buffer);
-                char *buf_idx = buffer;
-
-                // we need to take only the first token without ld-
-                while( strstr(buf_idx, "ld-") != NULL ) {
-                    char* idx = index(buf_idx, 0);
-                    if(idx != NULL) {  
-                        buf_idx = idx + 1;
-                    }
-                }
-                strcpy(buffer, buf_idx);
-            }
-            // printerr("libinterpose: executable read from cmdline: %s\n", exe);
-
-            close(fd);
-        }
-    }
-
-    tprintf("exe: %s\n", buffer);
-
-    if(executable_name != NULL) {
-        strcpy(executable_name, buffer);
-    }
+//    if( strstr(buffer, "ld-") != NULL ) {
+//        // so we read /proc/self/cmdline - it a string with \0 delimeter
+//        int fd = open("/proc/self/cmdline", O_RDONLY);
+//        if(fd < 0) {
+//            printerr("libinterpose: Unable to open /proc/self/cmdline: %s\n", strerror(errno));
+//        }
+//        else {
+//            // printerr("libinterpose: we opend cmdline file\n");
+//            int nbytesread = read(fd, buffer, BUFSIZ);
+//            if(nbytesread < 0) {
+//                printerr("libinterpose: Unable to read /proc/self/cmdline: %s\n", strerror(errno));
+//            }
+//            else {
+//                // printerr("libinterpose: we read: %s\n", buffer);
+//                char *buf_idx = buffer;
+//
+//                // we need to take only the first token without ld-
+//                while( strstr(buf_idx, "ld-") != NULL ) {
+//                    char* idx = index(buf_idx, 0);
+//                    if(idx != NULL) {
+//                        buf_idx = idx + 1;
+//                    }
+//                }
+//                strcpy(buffer, buf_idx);
+//            }
+//            // printerr("libinterpose: executable read from cmdline: %s\n", exe);
+//
+//            close(fd);
+//        }
+//    }
+//    if(executable_name != NULL) {
+//        strcpy(executable_name, buffer);
+//    }
 }
 
 /* Return 1 if line begins with tok */
@@ -758,10 +755,10 @@ static void trace_read(int fd, ssize_t amount) {
     f->nread += 1;
 
     // Information written for online monitoring in case there is no /proc 
-    pthread_mutex_lock(&_interpose_io_mut);
-    _interpose_io_util_info.rchar += amount;
-    _interpose_io_util_info.syscr += 1;
-    pthread_mutex_unlock(&_interpose_io_mut);
+//    pthread_mutex_lock(&_interpose_io_mut);
+//    _interpose_io_util_info.rchar += amount;
+//    _interpose_io_util_info.syscr += 1;
+//    pthread_mutex_unlock(&_interpose_io_mut);
     
 unlock:
     unlock_descriptors();
@@ -780,10 +777,10 @@ static void trace_write(int fd, ssize_t amount) {
     f->nwrite += 1;
 
     // Information written for online monitoring in case there is no /proc
-    pthread_mutex_lock(&_interpose_io_mut);
-    _interpose_io_util_info.wchar += amount;
-    _interpose_io_util_info.syscw += 1;
-    pthread_mutex_unlock(&_interpose_io_mut);
+//    pthread_mutex_lock(&_interpose_io_mut);
+//    _interpose_io_util_info.wchar += amount;
+//    _interpose_io_util_info.syscw += 1;
+//    pthread_mutex_unlock(&_interpose_io_mut);
 
 unlock:
     unlock_descriptors();
@@ -1177,7 +1174,7 @@ static void __attribute__((constructor)) interpose_init(void) {
 #endif
 
     /* online monitoring */
-//    _interpose_spawn_monitoring_thread();
+    _interpose_spawn_monitoring_thread();
 }
 
 /* Library finalizer function */
@@ -1198,7 +1195,7 @@ static void __attribute__((destructor)) interpose_fini(void) {
     fini_papi();
 #endif
 
-    _interpose_read_exe(NULL);
+    _interpose_read_exe();
     read_status();
     read_rusage();
     read_stat();
@@ -1212,7 +1209,9 @@ static void __attribute__((destructor)) interpose_fini(void) {
     mypid = 0;
 
     /* online monitoring */
+    printerr("INFO: stopping monitoring thread\n");
     _interpose_stop_monitoring_thread();
+    printerr("INFO: after stopping monitoring thread\n");
 }
 
 static inline void *osym(const char *name) {
@@ -2234,13 +2233,22 @@ int execve(const char *filename, char *const argv[], char *const envp[]) {
     return rc;
 }
 
+//pid_t (*orig_fork)(void)
+
 pid_t fork(void) {
     /* We have to intercept fork so that we can reinit libinterpose in the
      * child. vfork does not have this problem because a process created
      * with vfork basically can't do anything except call exec, in which
      * case libinterpose is going to be reinitialized anyway. */
 
-    typeof(fork) *orig_fork = osym("fork");
+//    typeof(fork) *orig_fork = osym("fork");
+    pid_t (*orig_fork)(void);
+    orig_fork = (pid_t (*)(void) ) dlsym(RTLD_NEXT, "fork");
+    if (orig_fork == NULL) {
+        printerr("FATAL ERROR: Unable to locate symbol %s: %s\n", "fork", dlerror());
+        exit(155);
+    }
+
     pid_t rc = (*orig_fork)();
 
     if (rc == 0) {
