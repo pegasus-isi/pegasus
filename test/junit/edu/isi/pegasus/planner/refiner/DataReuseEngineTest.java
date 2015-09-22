@@ -20,12 +20,14 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.parser.DAXParserFactory;
 import edu.isi.pegasus.planner.parser.Parser;
 import edu.isi.pegasus.planner.parser.dax.Callback;
 import edu.isi.pegasus.planner.parser.dax.DAXParser;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.io.File;
@@ -91,7 +93,7 @@ public class DataReuseEngineTest  {
         mBag.add( PegasusBag.PEGASUS_PROPERTIES, mProps );
         
         mLogger  = mTestSetup.loadLogger( mProps );
-        mLogger.setLevel( LogManager.INFO_MESSAGE_LEVEL );
+        mLogger.setLevel( LogManager.DEBUG_MESSAGE_LEVEL );
         mLogger.logEventStart( "test.refiner.datareuse", "setup", "0" );
         mBag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
         
@@ -139,6 +141,59 @@ public class DataReuseEngineTest  {
     }
     
     /**
+     * Tests the cascading of deletion of jobs upwards, where the job to be deleted
+     * because of cascading has an intermediate output file that exists in the RC
+     * Normally, the job will not be deleted in the cascading phase as 
+     * the output file is required by the user, unless it was already identified
+     * for deletion in the first pass.
+     * 
+     */
+    @Test
+    public void testCascadingIntermediateOutputInRC() {
+        
+        mLogger.logEventStart( "test.refiner.datareuse", "set", Integer.toString(mTestNumber++) );
+        ADag dax = ((DataReuseEngineTestSetup)mTestSetup).loadDAX( mBag, "blackdiamond.dax" );
+        MyReplicaCatalogBridge rcb = new MyReplicaCatalogBridge( dax, mBag );
+
+        //retrieve the right findrange job and make sure 
+        //one of the output files has transfer set to true
+        //and other has it set to false. 
+        GraphNode n = dax.getNode( "findrange_ID0000003");
+        Job findrange = (Job) n.getContent();
+        for ( PegasusFile pf : findrange.getOutputFiles() ){
+            
+            System.out.println( pf );
+            if ( pf.getLFN().equals( "f.c2") ){
+                pf.setTransferFlag( "true");
+            }
+            else if ( pf.getLFN().equals( "f.c2'") ){
+                pf.setTransferFlag( "false");
+            }
+            System.out.println( pf ); 
+        }
+        
+        Set<String> filesInRC = new HashSet();
+        filesInRC.add( "f.d"); 
+        filesInRC.add( "f.c2" );//only the output file with transfer set to true is in RC
+        rcb.addFilesInReplica(filesInRC);
+
+        DataReuseEngine engine = new DataReuseEngine( dax, mBag );
+        engine.reduceWorkflow(dax, rcb);
+        Job[] actualDeletedJobs = (Job[]) engine.getDeletedJobs().toArray( new Job[0] );
+        
+        //findrange_ID0000003 is deleted in the cascading phase
+        //because user only wants f.c2 staged to output site and 
+        //that exists in the RC somewhere
+        String[] expectedDeletedJobs ={"analyze_ID0000004" ,"findrange_ID0000003", };
+        assertArrayEquals( "Deleted Jobs don't match ", expectedDeletedJobs, toSortedStringArray(actualDeletedJobs) );
+        mLogger.logEventCompletion();
+        System.out.println("\n");
+       
+    }
+    
+    
+    
+    /**
      * Test for reducing the whole workflow.
      * In this test, some of intermediate jobs, have output files marked with
      * transfer set to true. Hence, those jobs are only removed, if the intermediate
@@ -178,6 +233,7 @@ public class DataReuseEngineTest  {
         System.out.println("\n");
     }
     
+    
    
     
     /**
@@ -185,7 +241,8 @@ public class DataReuseEngineTest  {
      * 
      * In this test, only the leaf jobs, have output files marked with
      * transfer set to true. Hence for full reduction, only the outputs of 
-     * the leaf jobs need to be present in the Replica Catalog.
+     * the leaf jobs need to be present in the Replica Catalog. All other
+     * intermediate files in the workflow have transfer set to false
      */
     @Test
     public void testFullReductionLeafDAX() {
@@ -253,37 +310,7 @@ public class DataReuseEngineTest  {
     }
     
       
-    /**
-     * Test for full data reuse on the final output file.
-     */
-    /*@Test
-    public void testFullReductionBlack() {
-        
-        mLogger.logEventStart( "test.refiner.datareuse", "set", Integer.toString(mTestNumber++) );
-        ADag dax = ((DataReuseEngineTestSetup)mTestSetup).loadDAX( mBag, "blackdiamond.dax" );
-        MyReplicaCatalogBridge rcb = new MyReplicaCatalogBridge( dax, mBag );
-        
-        //turn on partial data reuse
-        mProps.setProperty( "pegasus.data.reuse.scope", "full");
-        
-        
-        Set<String> filesInRC = new HashSet();
-        filesInRC.add( "f.d"); 
-        rcb.addFilesInReplica(filesInRC);
-
-        DataReuseEngine engine = new DataReuseEngine( dax, mBag );
-        engine.reduceWorkflow(dax, rcb);
-        Job[] actualDeletedJobs = (Job[]) engine.getDeletedJobs().toArray( new Job[0] );
-        
-        String[] expectedDeletedJobs ={	"findrange_ID0000002",};
-        assertArrayEquals( "Deleted Jobs don't match ", expectedDeletedJobs, toSortedStringArray(actualDeletedJobs) );
-        mLogger.logEventCompletion();
-        System.out.println("\n");
-       
-        mProps.removeProperty( "pegasus.data.reuse.scope") ;
-    }
-    */
-
+    
      @After
     public void tearDown() {
         mLogger = null;
