@@ -439,7 +439,7 @@ public class DataReuseEngine extends Engine implements Refiner{
         for( Iterator it = workflow.bottomUpIterator(); it.hasNext(); ){
             GraphNode node  = (GraphNode)it.next();
 
-           System.out.println( "Traversing " + node.getID() );
+            //System.out.println( "Traversing " + node.getID() );
             boolean markedForDeletion = ((BooleanBag)node.getBag()).getBooleanValue() ;
             if( !markedForDeletion ){
                 //If a node is not already marked for deletion , it  can be marked
@@ -449,7 +449,7 @@ public class DataReuseEngine extends Engine implements Refiner{
                 boolean delete = true;
                 for( Iterator cit = node.getChildren().iterator(); cit.hasNext(); ){
                     GraphNode child = (GraphNode)cit.next();
-                    System.out.println( "Child is " + child.getID() );
+                    //System.out.println( "Child is " + child.getID() );
                     //check whether a child node is marked for deletion or not
                     if( !((BooleanBag)child.getBag()).getBooleanValue()  ){
                         mLogger.log( node.getID() + "  will not be deleted as not as child " + child.getID() + " is not marked for deletion " ,
@@ -461,6 +461,7 @@ public class DataReuseEngine extends Engine implements Refiner{
                 if( delete ){
                     //all the children are deleted. However delete only if
                     // all the output files have transfer flags set to false
+                    // OR output fies with transfer=true exist in RC
                     if(  !transferOutput( node ) ){
                         mLogger.log( "Cascaded Deletion: Node can be deleted "  + node.getID() ,
                                      LogManager.DEBUG_MESSAGE_LEVEL );
@@ -514,7 +515,7 @@ public class DataReuseEngine extends Engine implements Refiner{
 
         for( Iterator it = job.getOutputFiles().iterator(); it.hasNext(); ){
             PegasusFile pf = (PegasusFile)it.next();
-            if( !pf.getTransientTransferFlag() &&
+            if( ! pf.getTransientTransferFlag() &&
                     !this.mWorkflowFilesInRC.contains(pf.getLFN()) ){
                 //PM-783
                 //transfer flag is true and we could not find the file in replica catalog
