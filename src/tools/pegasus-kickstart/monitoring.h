@@ -17,6 +17,12 @@ typedef struct {
 	char* condor_job_id;
 } JobIdInfo;
 
+typedef struct {
+    JobIdInfo *job_id_info;
+    MonitoringEndpoint *monitoring_endpoint;
+    char *socket_port;
+} MonitoringThreadContext;
+
 int
 start_status_thread(pthread_t* monitoring_thread, char* socked_desc_buf);
 /* purpose: read environment variables, starts a monitoring thread and detaches it

@@ -23,24 +23,26 @@
 
 // a util function for reading env variables by the main kickstart process
 // with monitoring endpoint data or set default values
-static void initialize_monitoring_endpoint(MonitoringEndpoint* endpoint, char* kickstart_status_path) {
+static int initialize_monitoring_endpoint(MonitoringEndpoint* endpoint, char* kickstart_status_path) {
     char* envptr;
 
     endpoint->kickstart_status = kickstart_status_path;
 
     envptr = getenv("KICKSTART_MON_ENDPOINT_URL");
-
-    if (envptr != NULL) {
-        endpoint->url = (char*) calloc(sizeof(char), strlen(envptr) + 1);
-        strcpy(endpoint->url, envptr);
+    if (envptr == NULL) {
+        printerr("KICKSTART_MON_ENDPOINT_URL not specified\n");
+        return -1;
     }
+    endpoint->url = strdup(envptr);
 
     envptr = getenv("KICKSTART_MON_ENDPOINT_CREDENTIALS");
-
-    if (envptr != NULL) {
-        endpoint->credentials = (char*) calloc(sizeof(char), strlen(envptr) + 1);
-        strcpy(endpoint->credentials, envptr);
+    if (envptr == NULL) {
+        printerr("KICKSTART_MON_ENDPOINT_CREDENTIALS not specified\n");
+        return -1;
     }
+    endpoint->credentials = strdup(envptr);
+
+    return 0;
 }
 
 static void release_monitoring_endpoint(MonitoringEndpoint* monitoring_endpoint) {
@@ -53,36 +55,38 @@ static void release_monitoring_endpoint(MonitoringEndpoint* monitoring_endpoint)
 
 // read information about workflow and job ids
 // and put it into a JobIdInfo struct
-static void initialize_job_id_info(JobIdInfo *info) {
+static int initialize_job_id_info(JobIdInfo *info) {
     char* envptr;
 
     envptr = getenv("PEGASUS_WF_UUID");
-
-    if (envptr != NULL) {
-        info->wf_uuid = (char*) calloc(sizeof(char), strlen(envptr) + 1);
-        strcpy(info->wf_uuid, envptr);
+    if (envptr == NULL) {
+        printerr("PEGASUS_WF_UUID not specified\n");
+        return -1;
     }
+    info->wf_uuid = strdup(envptr);
 
     envptr = getenv("PEGASUS_WF_LABEL");
-
-    if (envptr != NULL) {
-        info->wf_label = (char*) calloc(sizeof(char), strlen(envptr) + 1);
-        strcpy(info->wf_label, envptr);
+    if (envptr == NULL) {
+        printerr("PEGASUS_WF_LABEL not specified\n");
+        return -1;
     }
+    info->wf_label = strdup(envptr);
 
     envptr = getenv("PEGASUS_DAG_JOB_ID");
-
-    if (envptr != NULL) {
-        info->dag_job_id = (char*) calloc(sizeof(char), strlen(envptr) + 1);
-        strcpy(info->dag_job_id, envptr);
+    if (envptr == NULL) {
+        printerr("PEGASUS_DAG_JOB_ID not specified\n");
+        return -1;
     }
+    info->dag_job_id = strdup(envptr);
 
     envptr = getenv("CONDOR_JOBID");
-
-    if (envptr != NULL) {
-        info->condor_job_id = (char*) calloc(sizeof(char), strlen(envptr) + 1);
-        strcpy(info->condor_job_id, envptr);
+    if (envptr == NULL) {
+        printerr("CONDOR_JOBID not specified\n");
+        return -1;
     }
+    info->condor_job_id = strdup(envptr);
+
+    return 0;
 }
 
 static void release_job_id_info(JobIdInfo *job_id_info) {
@@ -102,15 +106,28 @@ static void release_job_id_info(JobIdInfo *job_id_info) {
 int start_status_thread(pthread_t* monitoring_thread, char* kickstart_socket_port) {
     int rc = 0;
 
-    rc = pthread_create(monitoring_thread, NULL, monitoring_thread_func, (void*)kickstart_socket_port);
-    if (rc) {
-        printerr("ERROR: return code from pthread_create() is %d\n", rc);
+    MonitoringThreadContext *ctx = malloc(sizeof(MonitoringThreadContext));
+    ctx->socket_port = kickstart_socket_port;
+    ctx->monitoring_endpoint = malloc(sizeof(MonitoringEndpoint));
+    ctx->job_id_info = malloc(sizeof(JobIdInfo));
+
+    if (initialize_monitoring_endpoint(ctx->monitoring_endpoint, NULL) < 0) {
+        return -1;
     }
-    else {
-        rc = pthread_detach(*monitoring_thread);
-        if (rc) {
-            printerr("ERROR: return code from pthread_detach() is %d\n", rc);
-        }
+    if (initialize_job_id_info(ctx->job_id_info) < 0) {
+        return -1;
+    }
+
+    rc = pthread_create(monitoring_thread, NULL, monitoring_thread_func, (void*)ctx);
+    if (rc) {
+        printerr("ERROR: return code from pthread_create() is %d: %s\n", rc, strerror(errno));
+        return rc;
+    }
+
+    rc = pthread_detach(*monitoring_thread);
+    if (rc) {
+        printerr("ERROR: return code from pthread_detach() is %d: %s\n", rc, strerror(errno));
+        return rc;
     }
 
     return rc;
@@ -288,35 +305,33 @@ int prepare_monitoring_socket(int *socket_fd, int port) {
  * or to an external service.
  * It parses any information from the global monitoring and calculates some mean values.
  */
-void* monitoring_thread_func(void* socket_port_buf) {
+void* monitoring_thread_func(void* arg) {
+    MonitoringThreadContext *ctx = (MonitoringThreadContext *)arg;
     int kickstart_socket_port = -1, monitoring_socket = -1, num_bytes, incoming_socket;
     int msg_counter = 0, aggr_msg_buffer_offset = 0;
     struct sockaddr_in client_addr;
     socklen_t client_add_len;
     char line[BUFSIZ], *pos = NULL, enriched_line[BUFSIZ], aggr_msg_buffer[BUFSIZ * MSG_AGGR_FACTOR];
-    MonitoringEndpoint monitoring_endpoint;
-    JobIdInfo job_id_info;
 
-    initialize_monitoring_endpoint(&monitoring_endpoint, NULL);
-    initialize_job_id_info(&job_id_info);
+    MonitoringEndpoint *monitoring_endpoint = ctx->monitoring_endpoint;
+    JobIdInfo *job_id_info = ctx->job_id_info;
 
-    print_debug_info(&monitoring_endpoint, &job_id_info);
+    print_debug_info(monitoring_endpoint, job_id_info);
 
+    char *socket_port_buf = ctx->socket_port;
     if( socket_port_buf == NULL ) {
         printerr("[mon-thread] Kickstart socket port is not set\n");
+        pthread_exit(NULL);
     }
-    else {
-        kickstart_socket_port = atoi((char*)socket_port_buf);
-//        printerr("[mon-thread] Socket nr is: %d\n", kickstart_socket_port);
 
-        if( prepare_monitoring_socket(&monitoring_socket, kickstart_socket_port) < 0 ) {
-            printerr("[mon-thread] ERROR occured during socket preparation\n");
-            monitoring_socket = -1;
-        } 
-//        else {
-//            printerr("[mon-thread] Monitoring socket prepared\n");
-//        }
+    kickstart_socket_port = atoi(socket_port_buf);
+    printerr("[mon-thread] Socket nr is: %d\n", kickstart_socket_port);
+
+    if( prepare_monitoring_socket(&monitoring_socket, kickstart_socket_port) < 0 ) {
+        printerr("[mon-thread] ERROR occured during socket preparation\n");
+        pthread_exit(NULL);
     }
+    printerr("[mon-thread] Monitoring socket prepared\n");
 
     curl_global_init(CURL_GLOBAL_ALL);
 
@@ -352,21 +367,21 @@ void* monitoring_thread_func(void* socket_port_buf) {
                 }
 
                 sprintf(enriched_line, "%s wf_uuid=%s wf_label=%s dag_job_id=%s condor_job_id=%s",
-                    line, job_id_info.wf_uuid, job_id_info.wf_label, job_id_info.dag_job_id,
-                    job_id_info.condor_job_id);
+                    line, job_id_info->wf_uuid, job_id_info->wf_label, job_id_info->dag_job_id,
+                    job_id_info->condor_job_id);
 
                 // AGGREGATION
                 msg_counter += 1;
                 if( aggregate_message(enriched_line, aggr_msg_buffer, &aggr_msg_buffer_offset) > 0 ) {
                     if( msg_counter == MSG_AGGR_FACTOR ) {                        
                         printerr("[mon-thread] Sending aggregated message...\n");
-                        send_msg_to_mq(aggr_msg_buffer, &monitoring_endpoint, job_id_info.wf_uuid);
+                        send_msg_to_mq(aggr_msg_buffer, monitoring_endpoint, job_id_info->wf_uuid);
 
                         msg_counter = 0;
                         aggr_msg_buffer_offset = 0;
                         memset(aggr_msg_buffer, 0, BUFSIZ * MSG_AGGR_FACTOR);
                     }
-                }                
+                }
             }
         }
 
@@ -375,9 +390,9 @@ void* monitoring_thread_func(void* socket_port_buf) {
 
     printerr("[mon-thread] We are finishing our work...\n");
 
-    release_monitoring_endpoint(&monitoring_endpoint);
-    release_job_id_info(&job_id_info);
-    
+    release_monitoring_endpoint(monitoring_endpoint);
+    release_job_id_info(job_id_info);
+
     curl_global_cleanup();
     pthread_exit(NULL);
 }
