@@ -189,7 +189,10 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
      OR
       ( ALL of it's children have been marked for deletion
         AND
-        Node's output files have transfer flags set to false
+        ( Node's output files have transfer flags set to false 
+          OR
+          Node's output files with transfer flag as true have locations recorded in the Replica Catalog
+        )
        )
  )</programlisting>
 
