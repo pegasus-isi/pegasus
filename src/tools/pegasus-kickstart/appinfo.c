@@ -509,7 +509,11 @@ void deleteAppInfo(AppInfo* runinfo) {
     }
 
     /* release system information */
-    deleteMachineInfo(&runinfo->machine); 
+    deleteMachineInfo(&runinfo->machine);
+
+    if(runinfo->workdir != NULL) {
+        free(runinfo->workdir);
+    }
 
     memset(runinfo, 0, sizeof(AppInfo));
 }
