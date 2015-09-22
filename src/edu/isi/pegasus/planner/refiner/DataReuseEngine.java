@@ -100,11 +100,18 @@ public class DataReuseEngine extends Engine implements Refiner{
      * The reduction mode set by the user.
      */
     private SCOPE mDataReuseScope;
+    
+    /**
+     * A boolean indicating whether whether data reuse scope is partial or not
+     */
+    private boolean mPartialDataReuse;
 
     /**
      * All files discovered in the replica catalog
      */
     private Set<String>  mWorkflowFilesInRC;
+    
+    
     
     /**
      * The constructor
@@ -120,6 +127,7 @@ public class DataReuseEngine extends Engine implements Refiner{
         mXMLStore        = XMLProducerFactory.loadXMLProducer( mProps );
         mWorkflow        = orgDag;
         mDataReuseScope  = getDataReuseScope( mProps.getDataReuseScope() );
+        mPartialDataReuse  =  mDataReuseScope.equals( SCOPE.partial );
     }
 
 
@@ -515,12 +523,14 @@ public class DataReuseEngine extends Engine implements Refiner{
 
         for( Iterator it = job.getOutputFiles().iterator(); it.hasNext(); ){
             PegasusFile pf = (PegasusFile)it.next();
-            if( ! pf.getTransientTransferFlag() &&
-                    !this.mWorkflowFilesInRC.contains(pf.getLFN()) ){
-                //PM-783
-                //transfer flag is true and we could not find the file in replica catalog
-                result = true;
-                break;
+            if( ! pf.getTransientTransferFlag() ){ //transfer flag is true and 
+                 if( mPartialDataReuse || !this.mWorkflowFilesInRC.contains(pf.getLFN())  ){
+                    //PM-783
+                    //transfer flag is true and ( either partial data reuse OR 
+                    //                                in case of full data reuse scope, we could not find the file in replica catalog)
+                    result = true;
+                    break;
+                }
             }
         }
 

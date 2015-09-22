@@ -252,7 +252,37 @@ public class DataReuseEngineTest  {
         mProps.removeProperty( "pegasus.data.reuse.scope") ;
     }
     
-    
+      
+    /**
+     * Test for full data reuse on the final output file.
+     */
+    /*@Test
+    public void testFullReductionBlack() {
+        
+        mLogger.logEventStart( "test.refiner.datareuse", "set", Integer.toString(mTestNumber++) );
+        ADag dax = ((DataReuseEngineTestSetup)mTestSetup).loadDAX( mBag, "blackdiamond.dax" );
+        MyReplicaCatalogBridge rcb = new MyReplicaCatalogBridge( dax, mBag );
+        
+        //turn on partial data reuse
+        mProps.setProperty( "pegasus.data.reuse.scope", "full");
+        
+        
+        Set<String> filesInRC = new HashSet();
+        filesInRC.add( "f.d"); 
+        rcb.addFilesInReplica(filesInRC);
+
+        DataReuseEngine engine = new DataReuseEngine( dax, mBag );
+        engine.reduceWorkflow(dax, rcb);
+        Job[] actualDeletedJobs = (Job[]) engine.getDeletedJobs().toArray( new Job[0] );
+        
+        String[] expectedDeletedJobs ={	"findrange_ID0000002",};
+        assertArrayEquals( "Deleted Jobs don't match ", expectedDeletedJobs, toSortedStringArray(actualDeletedJobs) );
+        mLogger.logEventCompletion();
+        System.out.println("\n");
+       
+        mProps.removeProperty( "pegasus.data.reuse.scope") ;
+    }
+    */
 
      @After
     public void tearDown() {
