@@ -817,6 +817,7 @@ REDIR:
 
     /* clean up and close FDs */
     skip_atexit = 1;
+
     deleteAppInfo(&appinfo);
 
     return result;

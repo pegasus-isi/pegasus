@@ -238,14 +238,12 @@ int find_ephemeral_endpoint(char *kickstart_hostname, char *kickstart_port) {
         else {
             sprintf(kickstart_port, "%d", ntohs(serv_addr.sin_port));
 
-            printerr("Port: %s\n", kickstart_port);
-
             if( gethostname(kickstart_hostname, BUFSIZ) ) {
                 printerr("ERROR[gethostname]: %s\n", strerror(errno));
                 return -1;
             }
 
-            printerr("Host: %s\n", kickstart_hostname);
+            printerr("Host: %s --- Port: %s\n", kickstart_hostname, kickstart_port);
         }
 
         close(listenfd);
@@ -309,15 +307,15 @@ void* monitoring_thread_func(void* socket_port_buf) {
     }
     else {
         kickstart_socket_port = atoi((char*)socket_port_buf);
-        printerr("[mon-thread] Socket nr is: %d\n", kickstart_socket_port);
+//        printerr("[mon-thread] Socket nr is: %d\n", kickstart_socket_port);
 
         if( prepare_monitoring_socket(&monitoring_socket, kickstart_socket_port) < 0 ) {
             printerr("[mon-thread] ERROR occured during socket preparation\n");
             monitoring_socket = -1;
         } 
-        else {
-            printerr("[mon-thread] Monitoring socket prepared\n");
-        }
+//        else {
+//            printerr("[mon-thread] Monitoring socket prepared\n");
+//        }
     }
 
     curl_global_init(CURL_GLOBAL_ALL);
@@ -328,11 +326,11 @@ void* monitoring_thread_func(void* socket_port_buf) {
         bzero((char *)&client_addr, sizeof(client_addr));
         client_add_len = sizeof(client_addr);
 
-        printerr("[mon-thread] Waiting for messages...\n");
+//        printerr("[mon-thread] Waiting for messages...\n");
 
         incoming_socket = accept(monitoring_socket, (struct sockaddr *)&client_addr, &client_add_len);
 
-        printerr("[mon-thread] Incoming socket has been obtained...\n");
+//        printerr("[mon-thread] Incoming socket has been obtained...\n");
 
         if(incoming_socket < 0) {
             printerr("[mon-thread] ERROR[accept]: %s\n", strerror(errno));
@@ -343,7 +341,7 @@ void* monitoring_thread_func(void* socket_port_buf) {
                 printerr("[mon-thread] ERROR[recv]: %s\n", strerror(errno));
             }
             else {
-                printerr("[mon-thread] succesfull read from socket [B] - %d\n", num_bytes);
+//                printerr("[mon-thread] succesfull read from socket [B] - %d\n", num_bytes);
                 // replace end line with a terminating character
                 if( (pos = strchr(line, '\n')) != NULL ) {
                     *pos = '\0';

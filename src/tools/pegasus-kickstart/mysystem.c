@@ -421,7 +421,6 @@ static char **tryGetNewEnvironment(char **envp, const char *tempdir, const char 
     int vars;
     char socket_port_buffer[BUFSIZ], socket_hostname_buffer[BUFSIZ];
 
-
     /* If KICKSTART_PREFIX 
      *      or LD_PRELOAD 
      *      or KICKSTART_MON_FILE 
@@ -575,16 +574,16 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
     if( kickstart_status_path(kickstart_status, BUFSIZ) ) {
         printerr("ERROR: couldn't create kickstart status filepath\n");
     }
-    else {
-        printerr("KICKSTART_MON_FILE: %s\n", kickstart_status);
-    }
+//    else {
+//        printerr("KICKSTART_MON_FILE: %s\n", kickstart_status);
+//    }
 
     int rc = find_ephemeral_endpoint(socket_hostname, socket_port);
     if( rc < 0 ) {
         printerr("Couldn't find an endpoint for communication with kickstart\n");
     }
     else {
-        printerr("We are going to set port to: %s\n", socket_port);
+//        printerr("We are going to set port to: %s\n", socket_port);
         is_socket_set = 1;
 
         rc = start_status_thread(&monitoring_thread, socket_port);
