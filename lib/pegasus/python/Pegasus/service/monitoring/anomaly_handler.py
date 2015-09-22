@@ -154,7 +154,7 @@ class AnomalyMessage:
 
     @staticmethod
     def required_params():
-        return ["ts", "wf_uuid", "dag_job_id", "anomaly_type", "message", "raw_data"]
+        return ["ts", "wf_uuid", "dag_job_id", "anomaly_type", "message"]
 
     @staticmethod
     def parse(raw_message):
