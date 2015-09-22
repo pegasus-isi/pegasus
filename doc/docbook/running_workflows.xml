@@ -160,7 +160,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
     <para>During the mapping process, the abstract workflow undergoes a series
     of refinement steps that converts it to an executable form.</para>
 
-    <section>
+    <section id="planning_data_reuse">
       <title>Data Reuse</title>
 
       <para>The abstract workflow after parsing is optionally handed over to
@@ -217,7 +217,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       </figure>
     </section>
 
-    <section>
+    <section id="planning_site_selection">
       <title>Site Selection</title>
 
       <para>The abstract workflow is then handed over to the Site Selector
@@ -447,7 +447,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       </figure>
     </section>
 
-    <section>
+    <section id="mapping_job_clustering">
       <title>Job Clustering</title>
 
       <para>After site selection, the workflow is optionally handed for to the
@@ -557,7 +557,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       </tip>
     </section>
 
-    <section>
+    <section id="planning_createdir_cleanup">
       <title>Addition of Create Dir and Cleanup Jobs</title>
 
       <para>After the data transfer nodes have been added to the workflow,
@@ -614,7 +614,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
     </section>
 
     <section>
-      <title>Code Generation</title>
+      <title id="planning_code_generation">Code Generation</title>
 
       <para>The last step of refinement process, is the code generation where
       Pegasus writes out the executable workflow in a form understandable by
@@ -788,7 +788,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       </listitem>
     </orderedlist>
 
-    <para>You can specifiy the data configuration to use either in </para>
+    <para>You can specifiy the data configuration to use either in</para>
 
     <orderedlist>
       <listitem>
