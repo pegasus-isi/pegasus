@@ -102,6 +102,11 @@ public class DataReuseEngine extends Engine implements Refiner{
     private SCOPE mDataReuseScope;
 
     /**
+     * All files discovered in the replica catalog
+     */
+    private Set<String>  mWorkflowFilesInRC;
+    
+    /**
      * The constructor
      *
      * @param orgDag    The original Dag object
@@ -178,7 +183,7 @@ public class DataReuseEngine extends Engine implements Refiner{
 
         //search for the replicas of the files. The search list
         //is already present in Replica Catalog Bridge
-        Set<String> filesInRC = rcb.getFilesInReplica();
+        mWorkflowFilesInRC = rcb.getFilesInReplica();
 
         //we reduce the dag only if the
         //force option is not specified.
@@ -211,7 +216,7 @@ public class DataReuseEngine extends Engine implements Refiner{
         mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_REDUCE, LoggingKeys.DAX_ID, mWorkflow.getAbstractWorkflowName() );
            
         //figure out jobs whose output files already exist in the Replica Catalog
-        List<GraphNode> originalJobsInRC = getJobsInRC( workflow ,filesInRC );
+        List<GraphNode> originalJobsInRC = getJobsInRC(workflow ,mWorkflowFilesInRC );
         //mAllDeletedJobs = (Vector)mOrgJobsInRC.clone();
         //firstPass( originalJobsInRC );
         Graph reducedWorkflow = cascadeDeletionUpwards( workflow, originalJobsInRC );
@@ -434,7 +439,7 @@ public class DataReuseEngine extends Engine implements Refiner{
         for( Iterator it = workflow.bottomUpIterator(); it.hasNext(); ){
             GraphNode node  = (GraphNode)it.next();
 
-            //System.out.println( "Traversing " + node.getID() );
+           System.out.println( "Traversing " + node.getID() );
             boolean markedForDeletion = ((BooleanBag)node.getBag()).getBooleanValue() ;
             if( !markedForDeletion ){
                 //If a node is not already marked for deletion , it  can be marked
@@ -444,6 +449,7 @@ public class DataReuseEngine extends Engine implements Refiner{
                 boolean delete = true;
                 for( Iterator cit = node.getChildren().iterator(); cit.hasNext(); ){
                     GraphNode child = (GraphNode)cit.next();
+                    System.out.println( "Child is " + child.getID() );
                     //check whether a child node is marked for deletion or not
                     if( !((BooleanBag)child.getBag()).getBooleanValue()  ){
                         mLogger.log( node.getID() + "  will not be deleted as not as child " + child.getID() + " is not marked for deletion " ,
@@ -508,7 +514,10 @@ public class DataReuseEngine extends Engine implements Refiner{
 
         for( Iterator it = job.getOutputFiles().iterator(); it.hasNext(); ){
             PegasusFile pf = (PegasusFile)it.next();
-            if( !pf.getTransientTransferFlag() ){
+            if( !pf.getTransientTransferFlag() &&
+                    !this.mWorkflowFilesInRC.contains(pf.getLFN()) ){
+                //PM-783
+                //transfer flag is true and we could not find the file in replica catalog
                 result = true;
                 break;
             }
