@@ -754,8 +754,15 @@ public class ReplicaCatalogBridge
             //are passed
             for( String outputProperty : output.stringPropertyNames() ){
                 String property = outputProperty.replace( ReplicaCatalogBridge.OUTPUT_REPLICA_CATALOG_PREFIX, ReplicaCatalog.c_prefix );
+                String value = output.getProperty( outputProperty);
+                
+                //sanitize the value for property ending in file
+                if( property.endsWith( ".file") ){
+                    value = new File( value ).getAbsolutePath();
+                }
+                
                 arguments.append( "-D" ).append( property ).
-                          append( "=" ).append( output.getProperty( outputProperty) ).
+                          append( "=" ).append( value ).
                           append( " " );
             }
         }
