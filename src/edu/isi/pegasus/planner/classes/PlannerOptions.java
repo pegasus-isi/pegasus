@@ -31,6 +31,7 @@ import java.util.Properties;
 
 import edu.isi.pegasus.common.util.Currently;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 
 /**
@@ -261,7 +262,7 @@ public class PlannerOptions extends Data implements Cloneable{
     /**
      * the input directory 
      */
-    private String mInputDir;
+    private Set<String> mInputDirs;
     
     
     /**
@@ -316,7 +317,7 @@ public class PlannerOptions extends Data implements Cloneable{
         mOriginalArgumentString = null;
         mStagingSitesMap  = new HashMap<String,String>();
         mShiwaBundle      = null;
-        mInputDir         = null;
+        mInputDirs         = new LinkedHashSet<String>();
         mOutputDir        = null;
         mConfFile         = null;
     }
@@ -506,8 +507,8 @@ public class PlannerOptions extends Data implements Cloneable{
      * 
      * @return the input directory for the workflow
      */
-    public String getInputDirectory(){
-        return this.mInputDir;
+    public Set<String> getInputDirectories(){
+        return this.mInputDirs;
     }
     
     /**
@@ -1046,8 +1047,10 @@ public class PlannerOptions extends Data implements Cloneable{
      * 
      * @param input the input directory for the workflow
      */
-    public void setInputDirectory( String input ){
-        this.mInputDir = sanitizePath( input );
+    public void setInputDirectories( String input ){
+        for( String dir : input.split( ",") ){
+            this.mInputDirs.add( sanitizePath( dir ) );
+        }
     }
     
     
@@ -1355,7 +1358,7 @@ public class PlannerOptions extends Data implements Cloneable{
                     "\n Staging Sites        " + this.stagingSiteMappingToString() +
                     "\n Cache Files          " + this.setToString(mCacheFiles,",") +
                     "\n Inherited RC Files   " + this.setToString(mInheritedRCFiles,",") +
-                    "\n Input Directory      " + this.mInputDir + 
+                    "\n Input Directory      " + this.setToString(mInputDirs,",") + 
                     "\n Output Directory     " + this.mOutputDir +
                     "\n Output Site          " + mOutputPool +
                     "\n Submit to CondorG    " + mSubmit +
@@ -1440,8 +1443,8 @@ public class PlannerOptions extends Data implements Cloneable{
         if( mClusterer != null ){ sb.append(" --cluster ").append(mClusterer);}
 
         //specify the input directory
-        if( this.mInputDir != null ){
-            sb.append(" --input-dir ").append( this.mInputDir );
+        if( this.mInputDirs != null ){
+            sb.append(" --input-dir ").append( setToString( this.mInputDirs, "," ) );
         }
 
         //specify the output directory
@@ -1604,7 +1607,7 @@ public class PlannerOptions extends Data implements Cloneable{
         pOpt.mCacheFiles     = cloneSet(this.mCacheFiles);
         pOpt.mInheritedRCFiles       = cloneSet(this.mInheritedRCFiles);
         pOpt.mNonStandardJavaOptions = cloneSet( this.mNonStandardJavaOptions );
-        pOpt.mInputDir       = this.mInputDir;
+        pOpt.mInputDirs       = cloneSet( this.mInputDirs );
         pOpt.mOutputDir      = this.mOutputDir;
         pOpt.mOutputPool     = this.mOutputPool;
         pOpt.mDisplayHelp    = this.mDisplayHelp;
