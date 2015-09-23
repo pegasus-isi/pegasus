@@ -1009,51 +1009,7 @@ public class ReplicaCatalogBridge
         return store;
     }
     
-    /**
-     * Loads the mappings from the input directory 
-     * 
-     * @param directory  the directory to load from
-     */
-    private ReplicaStore getReplicaStoreFromDirectory(String directory) {
-        ReplicaStore store = new ReplicaStore();
-        Properties properties = mProps.getVDSProperties().matchingSubset(
-                                                              ReplicaCatalog.c_prefix,
-                                                              false );
-
-        mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_LOAD_DIRECTORY_CACHE, 
-                               LoggingKeys.DAX_ID,
-                               mDag.getAbstractWorkflowName() );
-
-        ReplicaCatalog catalog = null;
-        
-        //set the appropriate property to designate path to file
-        properties.setProperty( ReplicaCatalogBridge.DIRECTORY_REPLICA_CATALOG_KEY, directory );
-
-            
-        mLogger.log("Loading  from directory: " + directory,  LogManager.DEBUG_MESSAGE_LEVEL);
-        try{
-            catalog = ReplicaFactory.loadInstance( DIRECTORY_REPLICA_CATALOG_IMPLEMENTER,
-                                                   properties );
-            
-            
-            store.add( catalog.lookup( mSearchFiles ) );
-        }
-        catch( Exception e ){
-            mLogger.log( "Unable to load from directory  " + directory,
-                             e,
-                             LogManager.ERROR_MESSAGE_LEVEL );
-        }
-        finally{
-            if( catalog != null ){
-                catalog.close();
-            }
-        }
-        
-        mLogger.logEventCompletion();
-        return store;
-    }
-
-
+    
     /**
      * Returns path to the local proxy
      * 
