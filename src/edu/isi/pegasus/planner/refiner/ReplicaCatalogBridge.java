@@ -330,7 +330,7 @@ public class ReplicaCatalogBridge
             if ( options.getCacheFiles().isEmpty() &&       //no cache files specified
                  options.getInheritedRCFiles().isEmpty() && //no files locations inherited from outer level DAX
                  this.mDAXReplicaStore.isEmpty() &&         //no file locations in current DAX
-                 options.getInputDirectory() == null  && //no input directory specified on the command line
+                 options.getInputDirectories() == null  && //no input directory specified on the command line
                  dag.getDAGInfo().getLFNs( true ).size() > 0 //the number of raw input files is more than 1
                     ){
                 mLogger.log( msg + ex.getMessage(),LogManager.ERROR_MESSAGE_LEVEL );
@@ -360,9 +360,9 @@ public class ReplicaCatalogBridge
         }
         
         //incorporate all mappings from input directory if specified
-        String input = options.getInputDirectory();
-        if( input != null ){
-            mDirectoryReplicaStore = getReplicaStoreFromDirectory( input );
+        Set<String> inputDirs = options.getInputDirectories();
+        if( !inputDirs.isEmpty() ){
+            mDirectoryReplicaStore = getReplicaStoreFromDirectories( inputDirs );
         }
             
         //incorporate the caching if any
@@ -962,6 +962,50 @@ public class ReplicaCatalogBridge
         }
 
         mLogger.logEventCompletion();
+        return store;
+    }
+    
+    /**
+     * Loads the mappings from the input directory 
+     * 
+     * @param directies set of directories to load from
+     */
+    private ReplicaStore getReplicaStoreFromDirectories( Set<String> directories) {
+        ReplicaStore store = new ReplicaStore();
+        Properties properties = mProps.getVDSProperties().matchingSubset(
+                                                              ReplicaCatalog.c_prefix,
+                                                              false );
+
+        for( String directory : directories ){
+            mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_LOAD_DIRECTORY_CACHE, 
+                                   LoggingKeys.DAX_ID,
+                                   mDag.getAbstractWorkflowName() );
+
+            ReplicaCatalog catalog = null;
+
+            //set the appropriate property to designate path to file
+            properties.setProperty( ReplicaCatalogBridge.DIRECTORY_REPLICA_CATALOG_KEY, directory );
+
+            mLogger.log("Loading from directory: " + directory,  LogManager.DEBUG_MESSAGE_LEVEL);
+            try{
+                catalog = ReplicaFactory.loadInstance( DIRECTORY_REPLICA_CATALOG_IMPLEMENTER,
+                                                       properties );
+
+
+                store.add( catalog.lookup( mSearchFiles ) );
+            }
+            catch( Exception e ){
+                mLogger.log( "Unable to load from directory  " + directory,
+                                 e,
+                                 LogManager.ERROR_MESSAGE_LEVEL );
+            }
+            finally{
+                if( catalog != null ){
+                    catalog.close();
+                }
+            }
+            mLogger.logEventCompletion();
+        }
         return store;
     }
     
