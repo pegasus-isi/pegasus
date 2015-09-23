@@ -3065,6 +3065,34 @@ Scope       :</emphasis> Properties
               found in both the DAX and the replica catalog are available for
               replica selection.</entry>
             </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold"><emphasis role="bold"><emphasis role="bold"><emphasis
+                            role="bold"><emphasis role="bold"><emphasis
+                                role="bold"><emphasis role="bold">Property Key:</emphasis></emphasis></emphasis></emphasis></emphasis></emphasis> </emphasis></emphasis>pegasus.catalog.replica.output<emphasis
+                    role="bold"><emphasis role="bold"><emphasis role="bold"><emphasis
+                          role="bold">.*
+Profile Key :</emphasis></emphasis></emphasis></emphasis><emphasis role="bold"><emphasis
+                      role="bold"><emphasis role="bold"> </emphasis></emphasis></emphasis>N/A<emphasis
+                    role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 4.5.3
+<emphasis role="bold">Default     :</emphasis> None
+</literallayout></entry>
+
+              <entry><para>Normally, the registration jobs in the executable
+              workflow register to the replica catalog specified by the user
+              in the properties file . This property prefix allows the user to
+              specify a separate output replica catalog that is different from
+              the one used for discovery of input files. This is normally the
+              case, when a Directory or MRC based replica catalog backend that
+              don't support insertion of entries are used for discovery of
+              input files. For example to specify a separate file based output
+              replica catalog, specify </para><screen>pegasus.catalog.replica.output        File
+pegasus.catalog.replica.output.file   /workflow/output.rc
+</screen></entry>
+            </row>
           </tbody>
         </tgroup>
       </table>
