@@ -453,6 +453,16 @@ static char **tryGetNewEnvironment(char **envp, const char *tempdir, const char 
     return newenvp;
 }
 
+/* Defined in pegasus-kickstart.c */
+extern AppInfo appinfo;
+
+/* Signal handler to pass the signal on to the currently running child, if any */
+void propagate_signal(int sig) {
+    if (appinfo.currentChild > 0) {
+        kill(appinfo.currentChild, sig);
+    }
+}
+
 int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
     /* purpose: emulate the system() libc call, but save utilization data.
      * paramtr: appinfo (IO): shared record of information
@@ -484,16 +494,19 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
         return -1;
     }
 
-    /* Ignore SIGINT and SIGQUIT */
-    struct sigaction ignore, saveintr, savequit;
-    memset(&ignore, 0, sizeof(ignore));
-    ignore.sa_handler = SIG_IGN;
-    sigemptyset(&ignore.sa_mask);
-    ignore.sa_flags = 0;
-    if (sigaction(SIGINT, &ignore, &saveintr) < 0) {
+    /* Pass signals on to child */
+    struct sigaction propagate, saveintr, saveterm, savequit;
+    memset(&propagate, 0, sizeof(struct sigaction));
+    propagate.sa_handler = propagate_signal;
+    sigemptyset(&propagate.sa_mask);
+    propagate.sa_flags = 0;
+    if (sigaction(SIGINT, &propagate, &saveintr) < 0) {
         return -1;
     }
-    if (sigaction(SIGQUIT, &ignore, &savequit) < 0) {
+    if (sigaction(SIGTERM, &propagate, &saveterm) < 0) {
+        return -1;
+    }
+    if (sigaction(SIGQUIT, &propagate, &savequit) < 0) {
         return -1;
     }
 
@@ -528,8 +541,9 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
         if (forcefd(&appinfo->output, STDOUT_FILENO)) _exit(126);
         if (forcefd(&appinfo->error, STDERR_FILENO)) _exit(126);
 
-        /* undo signal handlers */
+        /* restore signal handlers */
         sigaction(SIGINT, &saveintr, NULL);
+        sigaction(SIGTERM, &saveterm, NULL);
         sigaction(SIGQUIT, &savequit, NULL);
 
         /* If we are tracing, then hand over control to the proc module */
@@ -568,8 +582,9 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
     /* stop wall-clock */
     now(&(jobinfo->finish));
 
-    /* ignore errors on these, too. */
+    /* restore signal handlers */
     sigaction(SIGINT, &saveintr, NULL);
+    sigaction(SIGTERM, &saveterm, NULL);
     sigaction(SIGQUIT, &savequit, NULL);
 
     /* Look for trace files from libinterpose and add trace data to jobinfo */

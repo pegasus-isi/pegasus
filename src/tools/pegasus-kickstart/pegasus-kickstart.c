@@ -40,9 +40,9 @@
 
 /* truly shared globals */
 extern char** environ;
+AppInfo appinfo; /* sigh, needs to be global for signal handlers */
 
 /* module local globals */
-static AppInfo appinfo; /* sigh, needs to be global for signal handlers */
 static volatile sig_atomic_t alarmed = 0;
 static volatile sig_atomic_t skip_atexit = 0;
 
