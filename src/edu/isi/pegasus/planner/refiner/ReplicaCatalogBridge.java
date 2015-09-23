@@ -68,6 +68,12 @@ public class ReplicaCatalogBridge
              extends Engine //for the time being.
              {
     
+   /**
+    * Prefix for the property subset to set up the planner to use or associate
+    * a different output replica catalog
+    */
+    public static final String OUTPUT_REPLICA_CATALOG_PREFIX = "pegasus.catalog.replica.output";
+  
     /**
      * Default category for registration jobs
      */
@@ -740,6 +746,20 @@ public class ReplicaCatalogBridge
                   append( " " );
         }
 
+        //PM-985 check if a separate output replica catalog is specified
+        Properties output = mProps.matchingSubset( ReplicaCatalogBridge.OUTPUT_REPLICA_CATALOG_PREFIX ,true );
+        if( !output.isEmpty() ){
+            //we translate the properties to pegasus.catalog.replica prefix and add
+            //them to the command line invocation before the conf properties
+            //are passed
+            for( String outputProperty : output.stringPropertyNames() ){
+                String property = outputProperty.replace( ReplicaCatalogBridge.OUTPUT_REPLICA_CATALOG_PREFIX, ReplicaCatalog.c_prefix );
+                arguments.append( "-D" ).append( property ).
+                          append( "=" ).append( output.getProperty( outputProperty) ).
+                          append( " " );
+            }
+        }
+        
         //get any command line properties that may need specifying
         arguments.append( "--conf" ).append( " " ).
                   append(  mProps.getPropertiesInSubmitDirectory( )  ).
