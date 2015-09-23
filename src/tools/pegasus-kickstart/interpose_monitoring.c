@@ -1,7 +1,5 @@
 #define _GNU_SOURCE
 
-#include "interpose_monitoring.h"
-
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
@@ -13,28 +11,44 @@
 #include <arpa/inet.h>
 #include <sys/syscall.h>
 #include <dlfcn.h>
+#include <pthread.h>
+#include <signal.h>
+#include <sys/time.h>
+#include <netinet/in.h>
 
 #ifdef HAS_PAPI
 #include <papi.h>
 #endif
 
-static int myerr = STDERR_FILENO;
+#include "interpose.h"
+#include "interpose_monitoring.h"
 
-#define printerr(fmt, ...) \
-    dprintf(myerr, "libinterpose[%d]: %s[%d]: " fmt, \
-            getpid(), __FILE__, __LINE__, ##__VA_ARGS__)
+static int monitor_running;
+static pthread_t monitor_thread;
+static pthread_mutex_t monitor_mutex;
+static pthread_cond_t monitor_cv;
 
-#ifdef DEBUG
-#define debug(format, args...) \
-    dprintf(myerr, "libinterpose: " format "\n" , ##args)
-#else
-#define debug(format, args...)
-#endif
+typedef struct {
+    double real_utime;
+    double real_stime;
+    double real_iowait;
+} CpuUtilInfo;
 
-pthread_t _interpose_timer_thread;
+typedef struct {
+    unsigned long long vmSize;
+    unsigned long long vmRSS;
+    unsigned long threads;
+} MemUtilInfo;
 
-int _interpose_library_loaded = 0;
-pthread_mutex_t _interpose_library_loaded_mut = PTHREAD_MUTEX_INITIALIZER;
+typedef struct {
+    unsigned long long rchar;
+    unsigned long long wchar;
+    unsigned long syscr;
+    unsigned long syscw;
+    unsigned long long read_bytes;
+    unsigned long long write_bytes;
+    unsigned long long cancelled_write_bytes;
+} IoUtilInfo;
 
 static int startswith(const char *line, const char *tok) {
     return strstr(line, tok) == line;
@@ -42,12 +56,12 @@ static int startswith(const char *line, const char *tok) {
 
 /* SOCKET-BASED COMMUNICATION WITH KICKSTART */
 
-int prepare_socket(int *sockfd, char *monitoring_socket_host, char* monitoring_socket_port, struct sockaddr_in *serv_addr) {
+static int prepare_socket(int *sockfd, char *monitoring_socket_host, char* monitoring_socket_port, struct sockaddr_in *serv_addr) {
     int port_no = atoi(monitoring_socket_port);
     struct sockaddr_in sa_addr;
     struct hostent *server;
 
-    if( (*sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0 ) {
+    if ((*sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         printerr("Error[getaddrinfo]: %s\n", strerror(errno));
         return -1;
     }
@@ -58,16 +72,12 @@ int prepare_socket(int *sockfd, char *monitoring_socket_host, char* monitoring_s
         return -1;
     }
 
-//    memset(&sa_addr, 0, sizeof(sa_addr));
     bzero((char *) &sa_addr, sizeof(sa_addr));
     sa_addr.sin_family = AF_INET;
-    bcopy( (char *)server->h_addr, (char *)&sa_addr.sin_addr.s_addr, server->h_length);
+    bcopy((char *)server->h_addr, (char *)&sa_addr.sin_addr.s_addr, server->h_length);
     sa_addr.sin_port = htons(port_no);
 
-     printerr("haddr: %s\n", inet_ntoa( *( struct in_addr*)( server -> h_addr_list[0])));
-     printerr("port: %d\n", port_no);
-
-    if( connect(*sockfd, (struct sockaddr *)&sa_addr, sizeof(sa_addr)) < 0 ) {
+    if (connect(*sockfd, (struct sockaddr *)&sa_addr, sizeof(sa_addr)) < 0) {
         printerr("Error[connect]: %s\n", strerror(errno));
         return -1;
     }
@@ -75,21 +85,18 @@ int prepare_socket(int *sockfd, char *monitoring_socket_host, char* monitoring_s
     return 0;
 }
 
-int send_msg_to_kickstart(char *msg, char *host, char *port) {
+static int send_msg_to_kickstart(char *msg, char *host, char *port) {
     int sockfd;
     struct sockaddr_in serv_addr;
 
-    if( prepare_socket(&sockfd, host, port, &serv_addr) == -1 ) {
+    if (prepare_socket(&sockfd, host, port, &serv_addr) == -1) {
         printerr("Some error occured during socket preparation.\n");
         return 1;
     }
-    else {
-        // printerr("We are going to write to a socket...\n");        
 
-        if( send(sockfd, msg, BUFSIZ, 0) < 0 ) {
-            printerr("Error during msg send.\n");
-            return 1;
-        }
+    if (send(sockfd, msg, BUFSIZ, 0) < 0) {
+        printerr("Error during msg send.\n");
+        return 1;
     }
 
     close(sockfd);
@@ -111,36 +118,51 @@ int send_msg_to_kickstart(char *msg, char *host, char *port) {
 //     return fopen(kickstart_status, "a");
 // }
 
-int set_monitoring_params(int mpi_rank, int *interval, char **socket_host, char **socket_port, 
+static int set_monitoring_params(int *mpi_rank, int *interval, char **socket_host, char **socket_port, 
     char **kickstart_pid, char *hostname, char **job_id) 
 {
     char *envptr = NULL;
 
-    if ( (envptr = getenv("KICKSTART_MON_INTERVAL")) == NULL ) {
-        printerr("[Thread-%d] Couldn't read KICKSTART_MON_INTERVAL\n", mpi_rank);
-        return 1;        
+    envptr = getenv("OMPI_COMM_WORLD_RANK");
+    if (envptr == NULL) {
+        envptr = getenv("ALPS_APP_PE");
+        if (envptr == NULL) {
+            envptr = getenv("PMI_RANK");
+            if (envptr == NULL) {
+                envptr = getenv("PMI_ID");
+                if (envptr == NULL) {
+                    envptr = getenv("MPIRUN_RANK");
+                }
+            }
+        }
     }
-    else {
-        *interval = atoi(envptr);
+    if (envptr != NULL) {
+        *mpi_rank = atoi(envptr) + 1;
     }
 
-    if( (*socket_host = getenv("KICKSTART_MON_HOST")) == NULL) {
-        printerr("[Thread-%d] Couldn't read KICKSTART_MON_HOST\n", mpi_rank);
+    if ((envptr = getenv("KICKSTART_MON_INTERVAL")) == NULL) {
+        printerr("[Thread-%d] Couldn't read KICKSTART_MON_INTERVAL\n", *mpi_rank);
+        return 1;
+    }
+    *interval = atoi(envptr);
+
+    if ((*socket_host = getenv("KICKSTART_MON_HOST")) == NULL) {
+        printerr("[Thread-%d] Couldn't read KICKSTART_MON_HOST\n", *mpi_rank);
         return 1;
     }
 
-    if( (*socket_port = getenv("KICKSTART_MON_PORT")) == NULL ) {
-        printerr("[Thread-%d] Couldn't read KICKSTART_MON_PORT\n", mpi_rank);
+    if ((*socket_port = getenv("KICKSTART_MON_PORT")) == NULL) {
+        printerr("[Thread-%d] Couldn't read KICKSTART_MON_PORT\n", *mpi_rank);
         return 1;
-    } 
+    }
 
-    if ( (*kickstart_pid = getenv("KICKSTART_MON_PID")) == NULL) {
+    if ((*kickstart_pid = getenv("KICKSTART_MON_PID")) == NULL) {
         printerr("KICKSTART_MON_PID not set in environment\n");
         return 1;
     }
 
-    if( gethostname(hostname, BUFSIZ) ) {
-        printerr("[Thread-%d] ERROR: couldn't get hostname: %s\n", mpi_rank, strerror(errno));
+    if (gethostname(hostname, BUFSIZ)) {
+        printerr("[Thread-%d] ERROR: couldn't get hostname: %s\n", *mpi_rank, strerror(errno));
         return 1;
     }
 
@@ -153,9 +175,7 @@ int set_monitoring_params(int mpi_rank, int *interval, char **socket_host, char 
 /* READING PERFORMANCE METRICS FUNCTIONS */
 
 /* Read /proc/self/stat to get CPU usage and returns a structure with this information */
-void read_cpu_status(CpuUtilInfo *info) {
-    debug("Reading stat file");
-
+static void read_cpu_status(CpuUtilInfo *info) {
     char statf[] = "/proc/self/stat";
 
     /* If the stat file is missing, then just skip it */
@@ -201,8 +221,7 @@ void read_cpu_status(CpuUtilInfo *info) {
 }
 
 /* Read useful information from /proc/self/status and returns a structure with this information */
-void read_mem_status(MemUtilInfo *info) {
-    debug("Reading status file");    
+static void read_mem_status(MemUtilInfo *info) {
     char statf[] = "/proc/self/status";
 
     /* If the status file is missing, then just skip it */
@@ -217,7 +236,7 @@ void read_mem_status(MemUtilInfo *info) {
     }
 
     char line[BUFSIZ];
-    
+
     while (_interpose_fgets_untraced(line, BUFSIZ, f) != NULL) {
 
         if (startswith(line,"VmSize")) {
@@ -236,16 +255,7 @@ void read_mem_status(MemUtilInfo *info) {
 }
 
 /* Read /proc/self/io to get I/O usage */
-void read_io_status(IoUtilInfo *info) {
-    debug("Reading io file");
-
-//    pthread_mutex_lock(&_interpose_io_mut);
-//    info->rchar = _interpose_io_util_info.rchar;
-//    info->wchar = _interpose_io_util_info.wchar;
-//    info->syscw = _interpose_io_util_info.syscw;
-//    info->syscr = _interpose_io_util_info.syscr;
-//    pthread_mutex_unlock(&_interpose_io_mut);
-
+static void read_io_status(IoUtilInfo *info) {
     char iofile[] = "/proc/self/io";
 
     /* This proc file was added in Linux 2.6.20. It won't be
@@ -263,9 +273,7 @@ void read_io_status(IoUtilInfo *info) {
     }
 
     char line[BUFSIZ];
-//    printerr("Reading io status...\n");
     while (_interpose_fgets_untraced(line, BUFSIZ, f) != NULL) {
-//        printerr("Our line: '%s'\n", line);
         if (startswith(line, "rchar")) {
             sscanf(line, "rchar: %llu", &(info->rchar));
         } else if (startswith(line, "wchar")) {
@@ -286,295 +294,167 @@ void read_io_status(IoUtilInfo *info) {
     _interpose_fclose_untraced(f);
 }
 
-/* END READING PERFORMANCE METRICS FUNCTIONS */
-
-void _interpose_spawn_monitoring_thread() {
-    // spawning a timer thread only when
-    char* mpi_rank = getenv("OMPI_COMM_WORLD_RANK");
-    // printerr("Spawning thread in process: %d\n", (int)current_pid);
-     // printerr("Setting mpi rank based on OMPI_COMM_WORLD_RANK\n");
-
-    if(mpi_rank == NULL) {
-        mpi_rank = getenv("ALPS_APP_PE");
-         // printerr("Setting mpi rank based on MPIRUN_RANK\n");
-
-        if(mpi_rank == NULL) {
-            mpi_rank = getenv("PMI_RANK");
-             // printerr("Setting mpi rank based on PMI_RANK\n");
-
-            if(mpi_rank == NULL) {
-                mpi_rank = getenv("PMI_ID");
-                 // printerr("Setting mpi rank based on PMI_ID\n");
-
-                if(mpi_rank == NULL) {
-                    mpi_rank = getenv("MPIRUN_RANK");
-                     // printerr("Setting mpi rank based on MPIRUN_RANK\n");
-                }
-            }
-        }
-    }
-
-//    printerr("INFO: we passing %d to the monitoring thread\n", *rank);
-
-//    pthread_mutex_lock(&_interpose_library_loaded_mut);
-    _interpose_library_loaded = 1;
-
-//    int s;
-//
-//    pthread_attr_t attr;
-//    s = pthread_attr_init(&attr);
-//    if(s != 0) {
-//        printerr("ERROR: in pthread_attr_init %d\n", s);
-//        return ;
-//    }
-//
-//    s = pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-//    if(s != 0) {
-//        printerr("ERROR: in pthread_attr_setdetachstate %d\n", s);
-//        return ;
-//    }
-
-    typeof(pthread_create) *orig_pthread_create = dlsym(RTLD_NEXT, "pthread_create");
-
-    int rc = (*orig_pthread_create)(&_interpose_timer_thread, NULL, monitoring_thread_func, (void *)mpi_rank);
-    if (rc) {
-        printerr("ERROR: could not spawn the monitoring thread; return code from pthread_create() is %d\n", rc);
-        _interpose_library_loaded = 0;
-//        pthread_mutex_unlock(&_interpose_library_loaded_mut);
-//        exit(-1);
-    }
-
-//    s = pthread_attr_destroy(&attr);
-//    if(s != 0) {
-//        printerr("ERROR: in pthread_attr_destroy %d\n", s);
-//        return ;
-//    }
-//    pthread_mutex_unlock(&_interpose_library_loaded_mut);
-}
-
-void _interpose_stop_monitoring_thread() {
-//    pthread_mutex_lock(&_interpose_library_loaded_mut);
-    _interpose_library_loaded = 0;
-//    pthread_mutex_unlock(&_interpose_library_loaded_mut);
-
-//    pthread_join(_interpose_timer_thread, NULL);
-}
-
-/*
- * It is a timer thread function, which dumps monitoring information to a global trace file 
- * - a full path is stored in KICKSTART_PREFIX
- * - it stores a single entry each time which follows the pattern:
- * <mpi_rank> <timestamp> <utime> <stime> <io_wait> <vm_peak> <pm_peak> <threads> <read_bytes> <write_bytes> <syscr> <syscw>
- */
-void* monitoring_thread_func(void* mpi_rank_arg) {
-    // TODO kickstart status file should be used when socket-based communication fails
-    // FILE* kickstart_status;
-    time_t timestamp;
-    int mpi_rank = 0, interval = 60;
-    char exec_name[BUFSIZ] = "", *kickstart_pid = NULL, hostname[BUFSIZ] = "", *job_id = NULL, msg[BUFSIZ] = "";
-    char *monitoring_socket_host = NULL, *monitoring_socket_port = NULL;
-    CpuUtilInfo cpu_info = { 0.0, 0.0 };
-    MemUtilInfo mem_info = { 0, 0, 0 };
-    IoUtilInfo io_info = { 0, 0, 0, 0, 0, 0, 0 };
-
-    if(mpi_rank_arg != NULL) {
-        mpi_rank = atoi( (char*) mpi_rank_arg ) + 1;
-    }
-
-    printerr("[Thread-%d] starting a thread...\n", mpi_rank);
-
-    if( set_monitoring_params(mpi_rank,  &interval,
-        &monitoring_socket_host, &monitoring_socket_port,
-        &kickstart_pid, hostname, &job_id) )
-    {
-        return NULL;
-    }
-
-    printerr("INFO: mpi_rank = %d, interval = %d, host = %s, port = %s, pid = %s, job_id = %s\n",
-        mpi_rank, interval, monitoring_socket_host, monitoring_socket_port, kickstart_pid, job_id);
-
-//    pthread_mutex_lock(&_interpose_library_loaded_mut);
-    while(_interpose_library_loaded) {
-        char counters_str[BUFSIZ] = "", eventname[256], counter_str[256];
-
-        #ifdef HAS_PAPI
-
-        long long shared_counters[papi_max_events] = { 0 };
-        int shared_nevents = 0, rc, shared_events[papi_max_events];
-
-        #endif
-
-        timestamp = time(NULL);
-
-        read_cpu_status(&cpu_info);
-        read_mem_status(&mem_info);
-        read_io_status(&io_info);
-        _interpose_read_exe(exec_name);
-
-        #ifdef HAS_PAPI
-
-        printerr("[Thread-%d] Reading all possible hardware counters...\n", mpi_rank);
-
-        int k = 1;
-        while( read_hardware_counters(k, &shared_nevents, shared_events, shared_counters) == 0 ) {
-            k++;
-        }
-
-        if(shared_nevents > 0) {
-            // printerr("[Thread-%d] Concatenating hardware counters into string from %d threads...\n", mpi_rank, k - 1);
-            for(int i = 0; i < shared_nevents; i++) {
-                rc = PAPI_event_code_to_name(shared_events[i], eventname);
-
-                if(rc != PAPI_OK) {
-                    printerr("ERROR: Could not get event name: %s\n", PAPI_strerror(rc));
-                    break;
-                }
-                else {
-                    // printerr("INFO: %s=%lld\n", eventname, shared_counters[i]);
-                    sprintf(counter_str, "%s=%lld ", eventname, shared_counters[i]);
-                    strcat(counters_str, counter_str);
-                }
-            }
-        }
-        // printerr("[Thread-%d] Concatenated hardware counters string is %s...\n", mpi_rank, counters_str);
-
-        #endif
-
-        memset(msg, 0, BUFSIZ);
-
-        sprintf(msg, "ts=%d event=workflow_trace level=INFO status=0 "
-                   "job_id=%s kickstart_pid=%s executable=%s hostname=%s mpi_rank=%d utime=%.3f stime=%.3f "
-                   "iowait=%.3f vmSize=%llu vmRSS=%llu threads=%lu read_bytes=%llu write_bytes=%llu "
-                   "syscr=%lu syscw=%lu %s\n",
-
-            (int)timestamp, job_id, kickstart_pid, exec_name, hostname, mpi_rank,
-            cpu_info.real_utime, cpu_info.real_stime, cpu_info.real_iowait,
-            mem_info.vmSize, mem_info.vmRSS, mem_info.threads,
-            io_info.rchar, io_info.wchar, io_info.syscr, io_info.syscw, counters_str);
-
-        printerr("[Thread-%d] Sending: %s\n", mpi_rank, msg);
-
-        if( send_msg_to_kickstart(msg, monitoring_socket_host, monitoring_socket_port) ) {
-            printerr("[Thread-%d] There was a problem sending a message to kickstart...\n", mpi_rank);
-
-            // TODO we should try to open a file and log monitoring stuff
-
-            // if( (kickstart_status = open_kickstart_status_file()) == NULL ) {
-            //     printerr("[Thread-%d] ERROR during kickstart status open: %s\n", mpi_rank, strerror(errno)));
-            // }
-            // else {
-            //     fprintf_untraced(kickstart_status, "%s\n", msg);
-            //     fflush(kickstart_status);
-            //     fclose(kickstart_status);
-            // }
-
-        }
-
-//        pthread_mutex_unlock(&_interpose_library_loaded_mut);
-        sleep(interval);
-//        pthread_mutex_lock(&_interpose_library_loaded_mut);
-    }
-
-//    pthread_mutex_unlock(&_interpose_library_loaded_mut);
-
-    printerr("[Thread-%d] We are finishing our work...\n", mpi_rank);
-
-    return NULL;
-}
-
 #ifdef HAS_PAPI
 
 /* Read eventset, return 1 on failure, 0 on success */
-int read_hardware_counters(int eventset, int *shared_nevents, int *shared_events, long long *shared_counters) {
-	// printerr("INFO: checking eventset %d\n", eventset);	
+static int read_hardware_counters(int eventset, int *shared_nevents, int *shared_events, long long *shared_counters) {
+    int i, rc;
+    int nevents = n_papi_events;
+    int events[n_papi_events];
+    long long counters[n_papi_events];
 
-	int i, rc, nevents = papi_max_events, events[papi_max_events];
-	long long counters[papi_max_events];
-	char eventname[256];
-
-	/* Get the events that were actually recorded */
-    /* Initialization shared data structures if this is first read */
-    if(*shared_nevents <= 0) {
-    	rc = PAPI_list_events(eventset, events, &nevents);
-    	// printerr("INFO: rc is: %d, shared_nevents: %d\n", rc, nevents);    
-
-    	if (rc != PAPI_OK) {
-      		printerr("ERROR: PAPI_list_events failed: %s\n", PAPI_strerror(rc));
-      		*shared_nevents = 0;
-
-      		return 1;
-    	}
-
-    	*shared_nevents = nevents;
-        for (i = 0; i < *shared_nevents; i++) {
-        	rc = PAPI_event_code_to_name(events[i], eventname);
-
-        	if(rc != PAPI_OK) {
-        		printerr("ERROR: Could not get event name: %s\n", PAPI_strerror(rc));
-        		*shared_nevents = 0;
-
-        		return 1;
-        	}
-        	else {
-        		// printerr("INFO: shared_events[%d] = %s\n", i, eventname);
-        		shared_events[i] = events[i];
-        	}
+    /* Get the events that were actually recorded */
+    rc = PAPI_list_events(eventset, events, &nevents);
+    if (rc != PAPI_OK) {
+        if (rc != PAPI_ENOEVST) {
+            printerr("ERROR: PAPI_list_events failed: %s\n", PAPI_strerror(rc));
         }
-
+        return 1;
     }
-    else {
-	    rc = PAPI_list_events(eventset, events, &nevents);
-	    // printerr("INFO: rc is: %d, nevents: %d\n", rc, nevents);    
 
-	    if (rc != PAPI_OK) {
-	      printerr("ERROR: PAPI_list_events failed for eventset %d: %s\n", eventset, PAPI_strerror(rc));
-	      return 1;
-	    }
-
+    /* Initialize shared data structures if this is first read, otherwise
+     * verify that they match the shared data structures */
+    if (*shared_nevents <= 0) {
+        *shared_nevents = nevents;
         for (i = 0; i < nevents; i++) {
-        	rc = PAPI_event_code_to_name(events[i], eventname);
-
-        	if(rc != PAPI_OK) {
-        		printerr("ERROR: Could not get event name: %s\n", PAPI_strerror(rc));
-
-        		return 1;
-        	}
-        	else {
-        		// printerr("INFO: events[%d] = %s\n", i, eventname);
-        	}
-        }	    
-
-	    for(i = 0; i < nevents; i++) {
-	    	if(shared_events[i] != events[i]) {
-	    		printerr("ERROR: an event on position %d is different than the shared event\n", i);
-	    		return 1;
-	    	}
-	    }
+            shared_events[i] = events[i];
+        }
+    } else {
+        if (*shared_nevents != nevents) {
+            printerr("ERROR: event set %d had a different number of events\n", eventset);
+            return 1;
+        }
+        for (i = 0; i < nevents; i++) {
+            if (shared_events[i] != events[i]) {
+                printerr("ERROR: the PAPI event in position %d is different than the shared event\n", i);
+                return 1;
+            }
+        }
     }
 
+    /* read and aggregate the counters */
     rc = PAPI_read(eventset, counters);
-    
-    if(rc != PAPI_OK) {
-      printerr("ERROR: No hardware counters or PAPI not supported: %s\n", PAPI_strerror(rc));
-      return 1;
+    if (rc != PAPI_OK) {
+        printerr("ERROR: No hardware counters or PAPI not supported: %s\n", PAPI_strerror(rc));
+        return 1;
     }
-    else {
-        // printerr("INFO: reporting hardware counters values...\n");
-        
-        for (i = 0; i < nevents; i++) {
-        	rc = PAPI_event_code_to_name(events[i], eventname);
-        	if(rc != PAPI_OK) {
-        		printerr("ERROR: Could not get event name: %s\n", PAPI_strerror(rc));
-        	}
-        	else {
-        		// printerr("INFO: %s=%lld\n", eventname, counters[i]);
-        		/* We are summing up counters from different threads (eventsets) */
-        		shared_counters[i] = shared_counters[i] + counters[i];
-        	}
-        }
+    for (i = 0; i < nevents; i++) {
+        /* We are summing up counters from different threads (eventsets) */
+        shared_counters[i] = shared_counters[i] + counters[i];
     }
 
     return 0;
 }
 
 #endif
+
+/* END READING PERFORMANCE METRICS FUNCTIONS */
+
+void* _interpose_monitoring_thread_func(void* arg) {
+    pthread_mutex_lock(&monitor_mutex);
+
+    int mpi_rank = 0, interval = 60;
+    time_t timestamp;
+    char exec_name[BUFSIZ] = "", *kickstart_pid = NULL, hostname[BUFSIZ] = "", *job_id = NULL, msg[BUFSIZ] = "";
+    char *monitoring_socket_host = NULL, *monitoring_socket_port = NULL;
+    CpuUtilInfo cpu_info = { 0.0, 0.0, 0.0 };
+    MemUtilInfo mem_info = { 0, 0, 0 };
+    IoUtilInfo io_info = { 0, 0, 0, 0, 0, 0, 0 };
+
+    if (set_monitoring_params(&mpi_rank,  &interval,
+        &monitoring_socket_host, &monitoring_socket_port,
+        &kickstart_pid, hostname, &job_id) ) {
+        printerr("Unable to configure monitoring thread\n");
+        goto exit;
+    }
+
+    while (monitor_running) {
+
+        struct timeval now;
+        struct timespec timeout;
+        gettimeofday(&now, NULL);
+        timeout.tv_sec = now.tv_sec + interval;
+        timeout.tv_nsec = now.tv_usec * 1000UL;
+        pthread_cond_timedwait(&monitor_cv, &monitor_mutex, &timeout);
+
+        if (!monitor_running) {
+            break;
+        }
+
+        timestamp = time(NULL);
+        read_cpu_status(&cpu_info);
+        read_mem_status(&mem_info);
+        read_io_status(&io_info);
+        _interpose_read_exe(exec_name, BUFSIZ);
+
+        char counters_str[BUFSIZ] = "";
+#ifdef HAS_PAPI
+        long long shared_counters[n_papi_events] = { 0 };
+        int shared_nevents = 0, shared_events[n_papi_events];
+
+        int k = 1;
+        while (read_hardware_counters(k, &shared_nevents, shared_events, shared_counters) == 0) {
+            k++;
+        }
+
+        memset(counters_str, 0, sizeof(counters_str));
+        for (int i = 0; i < shared_nevents; i++) {
+            char eventname[256];
+            int rc = PAPI_event_code_to_name(shared_events[i], eventname);
+            if (rc != PAPI_OK) {
+                printerr("ERROR: Could not get event name: %s\n", PAPI_strerror(rc));
+                break;
+            }
+            char counter_str[256];
+            sprintf(counter_str, "%s=%lld ", eventname, shared_counters[i]);
+            strcat(counters_str, counter_str);
+        }
+#endif
+
+        memset(msg, 0, sizeof(msg));
+        sprintf(msg, "ts=%d event=workflow_trace level=INFO status=0 "
+                     "job_id=%s kickstart_pid=%s executable=%s hostname=%s mpi_rank=%d utime=%.3f stime=%.3f "
+                     "iowait=%.3f vmSize=%llu vmRSS=%llu threads=%lu read_bytes=%llu write_bytes=%llu "
+                     "syscr=%lu syscw=%lu %s\n",
+                     (int)timestamp, job_id, kickstart_pid, exec_name, hostname, mpi_rank,
+                     cpu_info.real_utime, cpu_info.real_stime, cpu_info.real_iowait,
+                     mem_info.vmSize, mem_info.vmRSS, mem_info.threads,
+                     io_info.rchar, io_info.wchar, io_info.syscr, io_info.syscw, counters_str);
+        if (send_msg_to_kickstart(msg, monitoring_socket_host, monitoring_socket_port)) {
+            printerr("[Thread-%d] There was a problem sending a message to kickstart...\n", mpi_rank);
+        }
+    }
+
+exit:
+    pthread_mutex_unlock(&monitor_mutex);
+
+    return NULL;
+}
+
+void _interpose_spawn_monitoring_thread() {
+    pthread_mutex_init(&monitor_mutex, NULL);
+    pthread_cond_init(&monitor_cv, NULL);
+    monitor_running = 1;
+
+    typeof(pthread_create) *orig_pthread_create = dlsym(RTLD_NEXT, "pthread_create");
+    int rc = (*orig_pthread_create)(&monitor_thread, NULL, _interpose_monitoring_thread_func, NULL);
+    if (rc) {
+        printerr("ERROR: could not spawn the monitoring thread; return code from pthread_create() is %d\n", rc);
+        return;
+    }
+}
+
+void _interpose_stop_monitoring_thread() {
+    /* Signal the monitoring thread to shutdown */
+    pthread_mutex_lock(&monitor_mutex);
+    monitor_running = 0;
+    pthread_cond_signal(&monitor_cv);
+    pthread_mutex_unlock(&monitor_mutex);
+
+    /* Wait for the monitoring thread */
+    pthread_join(monitor_thread, NULL);
+
+    pthread_cond_destroy(&monitor_cv);
+    pthread_mutex_destroy(&monitor_mutex);
+}
+

@@ -25,6 +25,7 @@
 #include <papi.h>
 #endif
 
+#include "interpose.h"
 #include "interpose_monitoring.h"
 
 /* TODO Unlocked I/O (e.g. fwrite_unlocked) */
@@ -49,18 +50,7 @@
  *      mmap and assume that the total size being mapped is read/written
  */
 
-static int myerr = STDERR_FILENO;
-
-#define printerr(fmt, ...) \
-    dprintf(myerr, "libinterpose[%d/%d]: %s[%d]: " fmt, \
-            getpid(), gettid(), __FILE__, __LINE__, ##__VA_ARGS__)
-
-#ifdef DEBUG
-#define debug(format, args...) \
-    dprintf(myerr, "libinterpose: " format "\n" , ##args)
-#else
-#define debug(format, args...)
-#endif
+int myerr = STDERR_FILENO;
 
 typedef struct {
     char type;
@@ -123,13 +113,10 @@ static int mypid = 0;
 /* This is the trace file where we write information about the process */
 static FILE* trace = NULL;
 
-/* online monitoring - additional info in case /proc is unavailable */
-//pthread_mutex_t _interpose_io_mut = PTHREAD_MUTEX_INITIALIZER;
-//IoUtilInfo _interpose_io_util_info = { 0, 0, 0, 0, 0, 0, 0 };
-
 #ifdef HAS_PAPI
-int papi_ok = 0;
+static int papi_ok = 0;
 
+/* XXX If you change this, change n_papi_events in interpose.h */
 char *papi_events[] = {
     "PAPI_TOT_INS",
     "PAPI_LD_INS",
@@ -140,9 +127,6 @@ char *papi_events[] = {
     "PAPI_L2_TCM",
     "PAPI_L1_TCM"
 };
-
-#define n_papi_events (sizeof(papi_events) / sizeof(char *))
-
 #endif
 
 typedef struct {
@@ -150,13 +134,6 @@ typedef struct {
     void *arg;
     pthread_key_t cleanup;
 } interpose_pthread_wrapper_arg;
-
-FILE *_interpose_fopen_untraced(const char *path, const char *mode);
-static int vfprintf_untraced(FILE *stream, const char *format, va_list ap);
-char *_interpose_fgets_untraced(char *s, int size, FILE *stream);
-static size_t fread_untraced(void *ptr, size_t size, size_t nmemb, FILE *stream);
-int _interpose_fclose_untraced(FILE *fp);
-static int dup_untraced(int fd);
 
 static pid_t gettid(void) {
     return (pid_t)syscall(SYS_gettid);
@@ -191,7 +168,7 @@ static int tprintf(const char *format, ...) {
     }
     va_list args;
     va_start(args, format);
-    int rc = vfprintf_untraced(trace, format, args);
+    int rc = _interpose_vfprintf_untraced(trace, format, args);
     va_end(args);
     return rc;
 }
@@ -369,7 +346,7 @@ static void read_cmdline() {
      * spaces, and with arguments containing spaces quoted. If the command is
      * longer than 1024 characters, then add '...' at the end. */
     char args[1024];
-    size_t asize = fread_untraced(args, 1, 1024, f);
+    size_t asize = _interpose_fread_untraced(args, 1, 1024, f);
     if (asize <= 0) {
         printerr("Error reading /proc/self/cmdline: %s\n", strerror(errno));
     } else {
@@ -422,16 +399,16 @@ static void read_cmdline() {
 }
 
 /* Read /proc/self/exe to get path to executable */
-void _interpose_read_exe() {
+void _interpose_read_exe(char *exe, int maxsize) {
     debug("Reading exe");
-    char exe[BUFSIZ];
-    int size = readlink("/proc/self/exe", exe, BUFSIZ);
+    int size = readlink("/proc/self/exe", exe, maxsize);
     if (size < 0) {
         printerr("libinterpose: Unable to readlink /proc/self/exe: %s\n", strerror(errno));
+        exe[0] = '\0';
         return;
     }
     exe[size] = '\0';
-    tprintf("exe: %s\n", exe);
+    return;
 
     // if it is linux loader we need to read its first argument
     // TODO we are looking for "ld-" in the whole string due to simplicity, but it will not work in some cases
@@ -468,6 +445,12 @@ void _interpose_read_exe() {
 //    if(executable_name != NULL) {
 //        strcpy(executable_name, buffer);
 //    }
+}
+
+static void read_exe() {
+    char exe[BUFSIZ];
+    _interpose_read_exe(exe, BUFSIZ);
+    tprintf("exe: %s\n", exe);
 }
 
 /* Return 1 if line begins with tok */
@@ -1153,7 +1136,7 @@ static void __attribute__((constructor)) interpose_init(void) {
     /* dup stderr because the program might close it. This is
      * untraced because the descriptor table has not been
      * initialized yet */
-    myerr = dup_untraced(STDERR_FILENO);
+    myerr = _interpose_dup_untraced(STDERR_FILENO);
 
     /* Open the trace file */
     topen();
@@ -1184,6 +1167,9 @@ static void __attribute__((destructor)) interpose_fini(void) {
         return;
     }
 
+    /* online monitoring */
+    _interpose_stop_monitoring_thread();
+
     /* Look for descriptors not explicitly closed */
     for(int i=0; i<max_descriptors; i++) {
         trace_close(i);
@@ -1195,7 +1181,7 @@ static void __attribute__((destructor)) interpose_fini(void) {
     fini_papi();
 #endif
 
-    _interpose_read_exe();
+    read_exe();
     read_status();
     read_rusage();
     read_stat();
@@ -1207,11 +1193,6 @@ static void __attribute__((destructor)) interpose_fini(void) {
     tclose();
 
     mypid = 0;
-
-    /* online monitoring */
-    printerr("INFO: stopping monitoring thread\n");
-    _interpose_stop_monitoring_thread();
-    printerr("INFO: after stopping monitoring thread\n");
 }
 
 static inline void *osym(const char *name) {
@@ -1224,7 +1205,7 @@ static inline void *osym(const char *name) {
 }
 
 /** INTERPOSED FUNCTIONS **/
-static int dup_untraced(int oldfd) {
+int _interpose_dup_untraced(int oldfd) {
     typeof(dup) *orig_dup = osym("dup");
     return (*orig_dup)(oldfd);
 }
@@ -1232,7 +1213,7 @@ static int dup_untraced(int oldfd) {
 int dup(int oldfd) {
     debug("dup");
 
-    int rc = dup_untraced(oldfd);
+    int rc = _interpose_dup_untraced(oldfd);
 
     if (rc >= 0) {
         trace_dup(oldfd, rc);
@@ -1504,7 +1485,7 @@ ssize_t write(int fd, const void *buf, size_t count) {
     return rc;
 }
 
-static size_t fread_untraced(void *ptr, size_t size, size_t nmemb, FILE *stream) {
+size_t _interpose_fread_untraced(void *ptr, size_t size, size_t nmemb, FILE *stream) {
     typeof(fread) *orig_fread = osym("fread");
     return (*orig_fread)(ptr, size, nmemb, stream);
 }
@@ -1512,7 +1493,7 @@ static size_t fread_untraced(void *ptr, size_t size, size_t nmemb, FILE *stream)
 size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
     debug("fread");
 
-    size_t rc = fread_untraced(ptr, size, nmemb, stream);
+    size_t rc = _interpose_fread_untraced(ptr, size, nmemb, stream);
 
     if (rc > 0) {
         /* rc is the number of objects written */
@@ -1761,7 +1742,7 @@ int fscanf(FILE *stream, const char *format, ...) {
     return rc;
 }
 
-static int vfprintf_untraced(FILE *stream, const char *format, va_list ap) {
+int _interpose_vfprintf_untraced(FILE *stream, const char *format, va_list ap) {
     typeof(vfprintf) *orig_vfprintf = osym("vfprintf");
     return (*orig_vfprintf)(stream, format, ap);
 }
@@ -1769,7 +1750,7 @@ static int vfprintf_untraced(FILE *stream, const char *format, va_list ap) {
 int vfprintf(FILE *stream, const char *format, va_list ap) {
     debug("vfprintf");
 
-    int rc = vfprintf_untraced(stream, format, ap);
+    int rc = _interpose_vfprintf_untraced(stream, format, ap);
 
     if (rc > 0) {
         trace_write(fileno(stream), rc);
@@ -2233,21 +2214,13 @@ int execve(const char *filename, char *const argv[], char *const envp[]) {
     return rc;
 }
 
-//pid_t (*orig_fork)(void)
-
 pid_t fork(void) {
     /* We have to intercept fork so that we can reinit libinterpose in the
      * child. vfork does not have this problem because a process created
      * with vfork basically can't do anything except call exec, in which
      * case libinterpose is going to be reinitialized anyway. */
 
-//    typeof(fork) *orig_fork = osym("fork");
-    pid_t (*orig_fork)(void);
-    orig_fork = (pid_t (*)(void) ) dlsym(RTLD_NEXT, "fork");
-    if (orig_fork == NULL) {
-        printerr("FATAL ERROR: Unable to locate symbol %s: %s\n", "fork", dlerror());
-        exit(155);
-    }
+    typeof(fork) *orig_fork = osym("fork");
 
     pid_t rc = (*orig_fork)();
 
