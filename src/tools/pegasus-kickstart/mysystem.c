@@ -29,15 +29,9 @@
 #include "appinfo.h"
 #include "statinfo.h"
 #include "mysystem.h"
-#include "monitoring.h"
 #include "procinfo.h"
 #include "error.h"
 #include "monitoring.h"
-
-
-/* The name of the program (argv[0]) set in pegasus-kickstart.c:main */
-char *programname;
-static pthread_t monitoring_thread;
 
 /* Find the path to the interposition library */
 static int findInterposeLibrary(char *path, int pathsize) {
@@ -412,19 +406,11 @@ static ProcInfo *processTraceFiles(const char *tempdir, const char *trace_file_p
     return procs;
 }
 
-static char socket_hostname[BUFSIZ], socket_port[BUFSIZ];
-static int is_socket_set = 0;
-
 /* Try to get a new environment for the child process that has the tracing vars */
-static char **tryGetNewEnvironment(char **envp, const char *tempdir, const char *trace_file_prefix, 
-    const char* kickstart_status_path) {
+static char **tryGetNewEnvironment(char **envp, const char *tempdir, const char *trace_file_prefix, const char *socket_hostname, const char *socket_port) {
     int vars;
-    char socket_port_buffer[BUFSIZ], socket_hostname_buffer[BUFSIZ];
 
-    /* If KICKSTART_PREFIX 
-     *      or LD_PRELOAD 
-     *      or KICKSTART_MON_FILE 
-     *      or KICKSTART_MON_PID 
+    /* If KICKSTART_PREFIX, LD_PRELOAD, or KICKSTART_MON_PID
      * are already set then we can't trace 
      */
     for (vars=0; envp[vars] != NULL; vars++) {
@@ -434,12 +420,9 @@ static char **tryGetNewEnvironment(char **envp, const char *tempdir, const char 
         if (startswith(envp[vars], "LD_PRELOAD=")) {
             return envp;
         }
-        if (startswith(envp[vars], "KICKSTART_MON_FILE=")) {
-            return envp;
-        }
         if (startswith(envp[vars], "KICKSTART_MON_PID=")) {
             return envp;
-        }        
+        }
     }
 
     /* If the interpose library can't be found, then we can't trace */
@@ -458,13 +441,15 @@ static char **tryGetNewEnvironment(char **envp, const char *tempdir, const char 
     snprintf(kickstart_prefix, BUFSIZ, "KICKSTART_PREFIX=%s/%s",
              tempdir, trace_file_prefix);
 
-    /* Set KICKSTART_MON_FILE to be current_working_directory/kickstart_status_ */
-    char kickstart_status[BUFSIZ];
-    snprintf(kickstart_status, BUFSIZ, "KICKSTART_MON_FILE=%s", kickstart_status_path);
-
     /* Set KICKSTART_MON_PID to be pid of the kickstart process */
     char kickstart_pid[BUFSIZ];
     snprintf(kickstart_pid, BUFSIZ, "KICKSTART_MON_PID=%d", getpid());
+
+    char socket_port_buffer[BUFSIZ];
+    sprintf(socket_port_buffer, "KICKSTART_MON_PORT=%s", socket_port);
+
+    char socket_hostname_buffer[BUFSIZ];
+    sprintf(socket_hostname_buffer, "KICKSTART_MON_HOST=%s", socket_hostname);
 
     /* Copy the environment variables to a new array */
     char **newenvp = (char **)malloc(sizeof(char **)*(vars+7));
@@ -479,40 +464,12 @@ static char **tryGetNewEnvironment(char **envp, const char *tempdir, const char 
     /* Set the new variables */
     newenvp[vars]   = ld_preload;
     newenvp[vars+1] = kickstart_prefix;
-    newenvp[vars+2] = kickstart_status;
-    newenvp[vars+3] = kickstart_pid;
-
-    if( is_socket_set ) {
-        sprintf(socket_port_buffer, "KICKSTART_MON_PORT=%s", socket_port);
-        newenvp[vars+4] = socket_port_buffer;
-        sprintf(socket_hostname_buffer, "KICKSTART_MON_HOST=%s", socket_hostname);
-        newenvp[vars+5] = socket_hostname_buffer;
-        newenvp[vars+6] = NULL;        
-    }
-    else {
-        printerr("We DO NOT set KICKSTART_MON_PORT and KICKSTART_MON_HOST\n");
-        newenvp[vars+4] = NULL;
-    }
+    newenvp[vars+2] = kickstart_pid;
+    newenvp[vars+3] = socket_port_buffer;
+    newenvp[vars+4] = socket_hostname_buffer;
+    newenvp[vars+5] = NULL;
 
     return newenvp;
-}
-
-int kickstart_status_path(char* buf, size_t buf_size) {
-    char cwd[BUFSIZ];
-    if( getcwd(cwd, BUFSIZ) == NULL) {
-        printerr("ERROR: couldn't get current working directory: %s\n", strerror(errno));
-        return 1;
-    }
-
-    char hostname[BUFSIZ];
-    if( gethostname(hostname, BUFSIZ) ) {
-        printerr("ERROR: couldn't get hostname: %s\n", strerror(errno));
-        return 1;
-    }
-
-    snprintf(buf, buf_size, "%s/kickstart_status_%d_%s.log", cwd, getpid(), hostname);
-
-    return 0;    
 }
 
 int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
@@ -569,26 +526,22 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
         tempdir = "/tmp";
     }
 
-    //  DK: monitoring thread init
-    char kickstart_status[BUFSIZ];
-    if( kickstart_status_path(kickstart_status, BUFSIZ) ) {
-        printerr("ERROR: couldn't create kickstart status filepath\n");
-        return -1;
-    }
+    char socket_hostname[BUFSIZ];
+    char socket_port[BUFSIZ];
+    if (appinfo->enableLibTrace) {
+        int rc = find_ephemeral_endpoint(socket_hostname, socket_port);
+        if( rc < 0 ) {
+            printerr("Couldn't find an endpoint for communication with kickstart\n");
+            return -1;
+        }
 
-    int rc = find_ephemeral_endpoint(socket_hostname, socket_port);
-    if( rc < 0 ) {
-        printerr("Couldn't find an endpoint for communication with kickstart\n");
-        return -1;
-    }
+        printerr("We are going to set port to: %s\n", socket_port);
 
-    printerr("We are going to set port to: %s\n", socket_port);
-    is_socket_set = 1;
-
-    rc = start_status_thread(&monitoring_thread, socket_port);
-    if (rc) {
-        printerr("ERROR: when starting a monitoring thread\n");
-        return -1;
+        rc = start_monitoring_thread(socket_port);
+        if (rc) {
+            printerr("ERROR: when starting a monitoring thread\n");
+            return -1;
+        }
     }
 
     /* start wall-clock */
@@ -604,7 +557,7 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
         // If we are using library tracing, try to set the necessary
         // environment variables
         if (appinfo->enableLibTrace) {
-            envp = tryGetNewEnvironment(envp, tempdir, trace_file_prefix, kickstart_status);
+            envp = tryGetNewEnvironment(envp, tempdir, trace_file_prefix, socket_hostname, socket_port);
         }
 
         /* connect jobs stdio */
@@ -640,7 +593,7 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
         if (kill(jobinfo->child, 0) == 0) {
             printerr("ERROR: job %d is still running!\n", jobinfo->child);
             if (!errno) errno = EINPROGRESS;
-        }        
+        }
 
         /* Child is no longer running */
         appinfo->currentChild = 0;
@@ -664,3 +617,4 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
     /* finalize */
     return jobinfo->status;
 }
+

@@ -3,7 +3,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/time.h>
-
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -11,15 +10,31 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sys/types.h>
+#include <pthread.h>
 
+#include "error.h"
 #include "monitoring.h"
 
-/* Get the current time in seconds since the epoch */
-//static double get_time() {
-//    struct timeval tv;
-//    gettimeofday(&tv, NULL);
-//    return tv.tv_sec + ((double)tv.tv_usec / 1e6);
-//}
+typedef struct {
+    char* url;
+    char* credentials;
+    char* kickstart_status;
+} MonitoringEndpoint;
+
+typedef struct {
+    char* wf_label;
+    char* wf_uuid;
+    char* dag_job_id;
+    char* condor_job_id;
+} JobIdInfo;
+
+typedef struct {
+    JobIdInfo *job_id_info;
+    MonitoringEndpoint *monitoring_endpoint;
+    char *socket_port;
+} MonitoringThreadContext;
+
+void* monitoring_thread_func(void* monitoring_endpoint_struct);
 
 // a util function for reading env variables by the main kickstart process
 // with monitoring endpoint data or set default values
@@ -103,7 +118,7 @@ static void release_job_id_info(JobIdInfo *job_id_info) {
         free(job_id_info->condor_job_id);
 }
 
-int start_status_thread(pthread_t* monitoring_thread, char* kickstart_socket_port) {
+int start_monitoring_thread(char* kickstart_socket_port) {
     int rc = 0;
 
     MonitoringThreadContext *ctx = malloc(sizeof(MonitoringThreadContext));
@@ -118,13 +133,15 @@ int start_status_thread(pthread_t* monitoring_thread, char* kickstart_socket_por
         return -1;
     }
 
-    rc = pthread_create(monitoring_thread, NULL, monitoring_thread_func, (void*)ctx);
+    pthread_t monitoring_thread;
+
+    rc = pthread_create(&monitoring_thread, NULL, monitoring_thread_func, (void*)ctx);
     if (rc) {
         printerr("ERROR: return code from pthread_create() is %d: %s\n", rc, strerror(errno));
         return rc;
     }
 
-    rc = pthread_detach(*monitoring_thread);
+    rc = pthread_detach(monitoring_thread);
     if (rc) {
         printerr("ERROR: return code from pthread_detach() is %d: %s\n", rc, strerror(errno));
         return rc;
