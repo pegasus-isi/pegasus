@@ -755,7 +755,7 @@ pegasus.selector.replica.regex.rank.2                       gsiftp://example\.is
       property.</para>
     </section>
 
-    <section>
+    <section id="transfer_symlink">
       <title>Symlinking Against Input Data</title>
 
       <para>If input data for a job already exists on a compute site, then it
@@ -985,7 +985,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
       </section>
     </section>
 
-    <section>
+    <section id="transfer_client">
       <title>Executable Used for Transfer Jobs</title>
 
       <para>Pegasus refers to a python script called <emphasis role="bold">
@@ -1205,7 +1205,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
       </section>
     </section>
 
-    <section>
+    <section id="transfer_worker_package_staging">
       <title>Staging of Pegasus Worker Package</title>
 
       <para>Pegasus can optionally stage the pegasus worker package as part of
@@ -1417,7 +1417,7 @@ site corbusier {
 </programlisting>
     </section>
 
-    <section>
+    <section id="transfer_irods">
       <title>iRODS data access</title>
 
       <para>iRODS can be used as a input data location, a storage site for
@@ -1437,7 +1437,7 @@ site corbusier {
       used by Pegasus.</para>
     </section>
 
-    <section>
+    <section id="transfer_gridftp_ssh">
       <title>GridFTP over SSH (sshftp)</title>
 
       <para>Instead of using X.509 based security, newer version of Globus
@@ -1841,7 +1841,7 @@ irodsPassword 'somesecretpassword'</programlisting>
       arguments for the DAX job in the top level DAX .</para>
     </section>
 
-    <section>
+    <section id="data_cleanup_client">
       <title>Executables used for Directory Creation and Cleanup Jobs</title>
 
       <para>Starting 4.0, Pegasus has changed the way how the scratch
