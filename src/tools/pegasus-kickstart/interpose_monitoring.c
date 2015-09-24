@@ -105,19 +105,6 @@ static int send_msg_to_kickstart(char *msg, char *host, char *port) {
 
 /* END SOCKET-BASED COMMUNICATION WITH KICKSTART */
 
-// TODO kickstart status file should be used when socket-based communication fails
-// Utility function to open the kickstart status file based on environment variable
-// static FILE* open_kickstart_status_file() {
-//     char *kickstart_status = getenv("KICKSTART_MON_FILE");
-
-//     if (kickstart_status == NULL) {
-//         printerr("Unable to open kickstart status file: KICKSTART_MON_FILE not set in environment\n");
-//         return NULL;
-//     }
-
-//     return fopen(kickstart_status, "a");
-// }
-
 static int set_monitoring_params(int *mpi_rank, int *interval, char **socket_host, char **socket_port, 
     char **kickstart_pid, char *hostname, char **job_id) 
 {
