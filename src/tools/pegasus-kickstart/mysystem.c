@@ -31,7 +31,6 @@
 #include "mysystem.h"
 #include "procinfo.h"
 #include "error.h"
-#include "monitoring.h"
 
 /* Find the path to the interposition library */
 static int findInterposeLibrary(char *path, int pathsize) {
@@ -407,20 +406,15 @@ static ProcInfo *processTraceFiles(const char *tempdir, const char *trace_file_p
 }
 
 /* Try to get a new environment for the child process that has the tracing vars */
-static char **tryGetNewEnvironment(char **envp, const char *tempdir, const char *trace_file_prefix, const char *socket_hostname, const char *socket_port) {
+static char **tryGetNewEnvironment(char **envp, const char *tempdir, const char *trace_file_prefix) {
     int vars;
 
-    /* If KICKSTART_PREFIX, LD_PRELOAD, or KICKSTART_MON_PID
-     * are already set then we can't trace 
-     */
+    /* If KICKSTART_PREFIX or LD_PRELOAD are already set then we can't trace */
     for (vars=0; envp[vars] != NULL; vars++) {
         if (startswith(envp[vars], "KICKSTART_PREFIX=")) {
             return envp;
         }
         if (startswith(envp[vars], "LD_PRELOAD=")) {
-            return envp;
-        }
-        if (startswith(envp[vars], "KICKSTART_MON_PID=")) {
             return envp;
         }
     }
@@ -441,18 +435,8 @@ static char **tryGetNewEnvironment(char **envp, const char *tempdir, const char 
     snprintf(kickstart_prefix, BUFSIZ, "KICKSTART_PREFIX=%s/%s",
              tempdir, trace_file_prefix);
 
-    /* Set KICKSTART_MON_PID to be pid of the kickstart process */
-    char kickstart_pid[BUFSIZ];
-    snprintf(kickstart_pid, BUFSIZ, "KICKSTART_MON_PID=%d", getpid());
-
-    char socket_port_buffer[BUFSIZ];
-    sprintf(socket_port_buffer, "KICKSTART_MON_PORT=%s", socket_port);
-
-    char socket_hostname_buffer[BUFSIZ];
-    sprintf(socket_hostname_buffer, "KICKSTART_MON_HOST=%s", socket_hostname);
-
     /* Copy the environment variables to a new array */
-    char **newenvp = (char **)malloc(sizeof(char **)*(vars+7));
+    char **newenvp = (char **)malloc(sizeof(char **)*(vars+3));
     if (newenvp == NULL) {
         printerr("malloc: %s\n", strerror(errno));
         return envp;
@@ -462,12 +446,9 @@ static char **tryGetNewEnvironment(char **envp, const char *tempdir, const char 
     }
 
     /* Set the new variables */
-    newenvp[vars]   = ld_preload;
+    newenvp[vars] = ld_preload;
     newenvp[vars+1] = kickstart_prefix;
-    newenvp[vars+2] = kickstart_pid;
-    newenvp[vars+3] = socket_port_buffer;
-    newenvp[vars+4] = socket_hostname_buffer;
-    newenvp[vars+5] = NULL;
+    newenvp[vars+2] = NULL;
 
     return newenvp;
 }
@@ -526,24 +507,6 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
         tempdir = "/tmp";
     }
 
-    char socket_hostname[BUFSIZ];
-    char socket_port[BUFSIZ];
-    if (appinfo->enableLibTrace) {
-        int rc = find_ephemeral_endpoint(socket_hostname, socket_port);
-        if( rc < 0 ) {
-            printerr("Couldn't find an endpoint for communication with kickstart\n");
-            return -1;
-        }
-
-        printerr("We are going to set port to: %s\n", socket_port);
-
-        rc = start_monitoring_thread(socket_port);
-        if (rc) {
-            printerr("ERROR: when starting a monitoring thread\n");
-            return -1;
-        }
-    }
-
     /* start wall-clock */
     now(&(jobinfo->start));
 
@@ -557,7 +520,7 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[]) {
         // If we are using library tracing, try to set the necessary
         // environment variables
         if (appinfo->enableLibTrace) {
-            envp = tryGetNewEnvironment(envp, tempdir, trace_file_prefix, socket_hostname, socket_port);
+            envp = tryGetNewEnvironment(envp, tempdir, trace_file_prefix);
         }
 
         /* connect jobs stdio */

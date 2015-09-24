@@ -419,6 +419,10 @@ exit:
 }
 
 void _interpose_spawn_monitoring_thread() {
+    /* Only do this if monitoring is enabled */
+    if (getenv("KICKSTART_MON") == NULL) {
+        return;
+    }
     pthread_mutex_init(&monitor_mutex, NULL);
     pthread_cond_init(&monitor_cv, NULL);
     monitor_running = 1;
@@ -432,6 +436,11 @@ void _interpose_spawn_monitoring_thread() {
 }
 
 void _interpose_stop_monitoring_thread() {
+    /* Only do this if monitoring is enabled */
+    if (getenv("KICKSTART_MON") == NULL) {
+        return;
+    }
+
     /* Signal the monitoring thread to shutdown */
     pthread_mutex_lock(&monitor_mutex);
     monitor_running = 0;

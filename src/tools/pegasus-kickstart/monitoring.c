@@ -16,149 +16,76 @@
 #include "monitoring.h"
 
 typedef struct {
-    char* url;
-    char* credentials;
-    char* kickstart_status;
-} MonitoringEndpoint;
-
-typedef struct {
-    char* wf_label;
-    char* wf_uuid;
-    char* dag_job_id;
-    char* condor_job_id;
-} JobIdInfo;
-
-typedef struct {
-    JobIdInfo *job_id_info;
-    MonitoringEndpoint *monitoring_endpoint;
-    char *socket_port;
+    char *url;
+    char *credentials;
+    char *wf_label;
+    char *wf_uuid;
+    char *dag_job_id;
+    char *condor_job_id;
+    char *socket_host;
+    int socket_port;
 } MonitoringThreadContext;
-
-void* monitoring_thread_func(void* monitoring_endpoint_struct);
 
 // a util function for reading env variables by the main kickstart process
 // with monitoring endpoint data or set default values
-static int initialize_monitoring_endpoint(MonitoringEndpoint* endpoint, char* kickstart_status_path) {
+static int initialize_monitoring_context(MonitoringThreadContext *ctx) {
     char* envptr;
-
-    endpoint->kickstart_status = kickstart_status_path;
 
     envptr = getenv("KICKSTART_MON_ENDPOINT_URL");
     if (envptr == NULL) {
-        printerr("KICKSTART_MON_ENDPOINT_URL not specified\n");
+        printerr("ERROR: KICKSTART_MON_ENDPOINT_URL not specified\n");
         return -1;
     }
-    endpoint->url = strdup(envptr);
+    ctx->url = strdup(envptr);
 
     envptr = getenv("KICKSTART_MON_ENDPOINT_CREDENTIALS");
     if (envptr == NULL) {
-        printerr("KICKSTART_MON_ENDPOINT_CREDENTIALS not specified\n");
+        printerr("ERROR: KICKSTART_MON_ENDPOINT_CREDENTIALS not specified\n");
         return -1;
     }
-    endpoint->credentials = strdup(envptr);
-
-    return 0;
-}
-
-static void release_monitoring_endpoint(MonitoringEndpoint* monitoring_endpoint) {
-    if(monitoring_endpoint->url != NULL)
-        free(monitoring_endpoint->url);
-
-    if(monitoring_endpoint->credentials != NULL)
-        free(monitoring_endpoint->credentials);
-}
-
-// read information about workflow and job ids
-// and put it into a JobIdInfo struct
-static int initialize_job_id_info(JobIdInfo *info) {
-    char* envptr;
+    ctx->credentials = strdup(envptr);
 
     envptr = getenv("PEGASUS_WF_UUID");
     if (envptr == NULL) {
-        printerr("PEGASUS_WF_UUID not specified\n");
+        printerr("ERROR: PEGASUS_WF_UUID not specified\n");
         return -1;
     }
-    info->wf_uuid = strdup(envptr);
+    ctx->wf_uuid = strdup(envptr);
 
     envptr = getenv("PEGASUS_WF_LABEL");
     if (envptr == NULL) {
-        printerr("PEGASUS_WF_LABEL not specified\n");
+        printerr("ERROR: PEGASUS_WF_LABEL not specified\n");
         return -1;
     }
-    info->wf_label = strdup(envptr);
+    ctx->wf_label = strdup(envptr);
 
     envptr = getenv("PEGASUS_DAG_JOB_ID");
     if (envptr == NULL) {
-        printerr("PEGASUS_DAG_JOB_ID not specified\n");
+        printerr("ERROR: PEGASUS_DAG_JOB_ID not specified\n");
         return -1;
     }
-    info->dag_job_id = strdup(envptr);
+    ctx->dag_job_id = strdup(envptr);
 
     envptr = getenv("CONDOR_JOBID");
     if (envptr == NULL) {
-        printerr("CONDOR_JOBID not specified\n");
+        printerr("ERROR: CONDOR_JOBID not specified\n");
         return -1;
     }
-    info->condor_job_id = strdup(envptr);
+    ctx->condor_job_id = strdup(envptr);
 
     return 0;
 }
 
-static void release_job_id_info(JobIdInfo *job_id_info) {
-    if(job_id_info->wf_uuid != NULL)
-        free(job_id_info->wf_uuid);
-
-    if(job_id_info->wf_label != NULL)
-        free(job_id_info->wf_label);
-
-    if(job_id_info->dag_job_id != NULL)
-        free(job_id_info->dag_job_id);
-
-    if(job_id_info->condor_job_id != NULL)
-        free(job_id_info->condor_job_id);
-}
-
-int start_monitoring_thread(char* kickstart_socket_port) {
-    int rc = 0;
-
-    MonitoringThreadContext *ctx = malloc(sizeof(MonitoringThreadContext));
-    ctx->socket_port = kickstart_socket_port;
-    ctx->monitoring_endpoint = malloc(sizeof(MonitoringEndpoint));
-    ctx->job_id_info = malloc(sizeof(JobIdInfo));
-
-    if (initialize_monitoring_endpoint(ctx->monitoring_endpoint, NULL) < 0) {
-        return -1;
-    }
-    if (initialize_job_id_info(ctx->job_id_info) < 0) {
-        return -1;
-    }
-
-    pthread_t monitoring_thread;
-
-    rc = pthread_create(&monitoring_thread, NULL, monitoring_thread_func, (void*)ctx);
-    if (rc) {
-        printerr("ERROR: return code from pthread_create() is %d: %s\n", rc, strerror(errno));
-        return rc;
-    }
-
-    rc = pthread_detach(monitoring_thread);
-    if (rc) {
-        printerr("ERROR: return code from pthread_detach() is %d: %s\n", rc, strerror(errno));
-        return rc;
-    }
-
-    return rc;
-}
-
-void print_debug_info(MonitoringEndpoint *monitoring_endpoint, JobIdInfo *job_id_info) {
-    printerr("[mon-thread] Our monitoring information:\n");
-    // printerr("[mon-thread] kickstart-status-file: %s\n", monitoring_endpoint->kickstart_status);
-    printerr("[mon-thread] url: %s\n", monitoring_endpoint->url);
-    printerr("[mon-thread] credentials: %s\n", monitoring_endpoint->credentials);
-    printerr("[mon-thread] wf uuid: %s\n", job_id_info->wf_uuid);
-    printerr("[mon-thread] wf label: %s\n", job_id_info->wf_label);
-    printerr("[mon-thread] dag job id: %s\n", job_id_info->dag_job_id);
-    printerr("[mon-thread] condor job id: %s\n", job_id_info->condor_job_id);
+static void release_monitoring_context(MonitoringThreadContext* ctx) {
+    if (ctx == NULL) return;
+    if (ctx->url != NULL) free(ctx->url);
+    if (ctx->credentials != NULL) free(ctx->credentials);
+    if (ctx->wf_uuid != NULL) free(ctx->wf_uuid);
+    if (ctx->wf_label != NULL) free(ctx->wf_label);
+    if (ctx->dag_job_id != NULL) free(ctx->dag_job_id);
+    if (ctx->condor_job_id != NULL) free(ctx->condor_job_id);
+    if (ctx->socket_host != NULL) free(ctx->socket_host);
+    free(ctx);
 }
 
 size_t write_callback(char *ptr, size_t size, size_t nmemb, void *userdata) {
@@ -169,74 +96,57 @@ size_t write_callback(char *ptr, size_t size, size_t nmemb, void *userdata) {
 // MESSAGES AGGREGATION 
 #define MSG_AGGR_FACTOR 5
 
-// copies msg to aggr_msg_buff and increase aggr_msg_offset
-static int aggregate_message(char* msg_buff, char* aggr_msg_buff, int *aggr_msg_offset) {
-    int n;
+/* sending this message to rabbitmq */
+static void send_msg_to_mq(char* msg_buff, MonitoringThreadContext *ctx) {
+    char *payload = (char*) malloc(strlen(msg_buff) * sizeof(char) + BUFSIZ);
 
-    // printerr("[mon-thread] Aggregating message - %s\n", msg_buff);
-
-    n = sprintf(aggr_msg_buff + *aggr_msg_offset, "%s:delim1:", msg_buff);
-    if(n < 0) {
-        printerr("[mon-thread] Error during aggregating messages\n");
-    }
-    else {
-        *aggr_msg_offset += n;
-    }
-
-    return n;
-}
-
-static void send_msg_to_mq(char* msg_buff, MonitoringEndpoint *monitoring_endpoint, char* wf_uuid) {
-    CURL *curl;
-    CURLcode res;
-    char *payload = (char*) malloc(sizeof(msg_buff) * sizeof(char) + BUFSIZ);
-
-    // sending this message to rabbitmq
-    curl = curl_easy_init();
-    if(curl) {
-        curl_easy_setopt(curl, CURLOPT_URL, monitoring_endpoint->url);
-        curl_easy_setopt(curl, CURLOPT_USERPWD, monitoring_endpoint->credentials);
-        curl_easy_setopt(curl, CURLOPT_POST, 1);
-
-        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
-        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0);
-
-        struct curl_slist *http_header = NULL;
-        http_header = curl_slist_append(http_header, "Content-Type: application/json");
-        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, http_header);
-
-        sprintf(payload, "{\"properties\":{},\"routing_key\":\"%s\",\"payload\":\"%s\",\"payload_encoding\":\"string\"}",
-            wf_uuid, msg_buff);
-
-        // printerr("[mon-thread] Sending aggregated msg payload: %s\n", payload);
-
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload);
-
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
-
-        /* Perform the request, res will get the return code */
-        res = curl_easy_perform(curl);
-        /* Check for errors */
-        if(res != CURLE_OK) {
-            printerr("[mon-thread] an error occured while sending measurement: %s\n",
-                curl_easy_strerror(res));
-        }
-
-        /* always cleanup */
-        curl_easy_cleanup(curl);
-
-        curl_slist_free_all(http_header);
-    }
-    else {
+    CURL *curl = curl_easy_init();
+    if (curl == NULL) {
         printerr("[mon-thread] we couldn't initialize curl\n");
+        free(payload);
+        return;
     }
+
+    curl_easy_setopt(curl, CURLOPT_URL, ctx->url);
+    curl_easy_setopt(curl, CURLOPT_USERPWD, ctx->credentials);
+    curl_easy_setopt(curl, CURLOPT_POST, 1);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
+
+    struct curl_slist *http_header = NULL;
+    http_header = curl_slist_append(http_header, "Content-Type: application/json");
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, http_header);
+
+    sprintf(payload, "{\"properties\":{},\"routing_key\":\"%s\",\"payload\":\"%s\",\"payload_encoding\":\"string\"}",
+        ctx->wf_uuid, msg_buff);
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload);
+
+    /* Perform the request, res will get the return code */
+    CURLcode res = curl_easy_perform(curl);
+    /* Check for errors */
+    if (res != CURLE_OK) {
+        printerr("[mon-thread] an error occured while sending measurement: %s\n",
+            curl_easy_strerror(res));
+    }
+
+    /* always cleanup */
+    curl_easy_cleanup(curl);
+    curl_slist_free_all(http_header);
 
     free(payload);
 }
 
 // SOCKET BASED COMMUNICATION
-// open a temporary socket to find out what ephemeral port can be used 
-int find_ephemeral_endpoint(char *kickstart_hostname, char *kickstart_port) {
+/* purpose: find an ephemeral port available on a machine for further socket-based communication;
+ *          opens a new socket on an ephemeral port, returns this port number and hostname
+ *          where kickstart will listen for monitoring information
+ * paramtr: kickstart_hostname (OUT): a pointer where the hostname of the kickstart machine will be stored,
+ *          kickstart_port (OUT): a pointer where the available ephemeral port number will be stored
+ * returns:	0  success
+ *		    -1 failure
+ */
+int find_ephemeral_endpoint(char *kickstart_hostname, int *kickstart_port) {
     int listenfd;
     struct sockaddr_in serv_addr;
     socklen_t addr_len;
@@ -245,10 +155,10 @@ int find_ephemeral_endpoint(char *kickstart_hostname, char *kickstart_port) {
       printerr("ERROR[socket]: %s\n", strerror(errno));
       return -1;
     }
-  
+
     memset(&serv_addr, 0, sizeof(serv_addr));
-      
-    serv_addr.sin_family = AF_INET;    
+
+    serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = htonl(INADDR_ANY); 
     serv_addr.sin_port = 0;
 
@@ -270,14 +180,13 @@ int find_ephemeral_endpoint(char *kickstart_hostname, char *kickstart_port) {
             return -1;
         }
         else {
-            sprintf(kickstart_port, "%d", ntohs(serv_addr.sin_port));
-
-            if( gethostname(kickstart_hostname, BUFSIZ) ) {
+            if (gethostname(kickstart_hostname, BUFSIZ)) {
                 printerr("ERROR[gethostname]: %s\n", strerror(errno));
                 return -1;
             }
+            *kickstart_port = ntohs(serv_addr.sin_port);
 
-            printerr("Host: %s --- Port: %s\n", kickstart_hostname, kickstart_port);
+            printerr("Host: %s Port: %d\n", kickstart_hostname, *kickstart_port);
         }
 
         close(listenfd);
@@ -290,23 +199,22 @@ int find_ephemeral_endpoint(char *kickstart_hostname, char *kickstart_port) {
 int prepare_monitoring_socket(int *socket_fd, int port) {
     struct sockaddr_in serv_addr;
 
-    if( (*socket_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0 ) {
-      printerr("ERROR[socket]: %s\n", strerror(errno));
-      return -1;
+    if ((*socket_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        printerr("ERROR[socket]: %s\n", strerror(errno));
+        return -1;
     }
 
     memset(&serv_addr, 0, sizeof(serv_addr));
-      
-    serv_addr.sin_family = AF_INET;    
-    serv_addr.sin_addr.s_addr = htonl(INADDR_ANY); 
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
     serv_addr.sin_port = htons(port);
 
-    if( bind(*socket_fd, (const struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0 ) {
-      printerr("ERROR[bind]: %s\n", strerror(errno));
-      return -1;
+    if (bind(*socket_fd, (const struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
+        printerr("ERROR[bind]: %s\n", strerror(errno));
+        return -1;
     }
 
-    if( listen(*socket_fd, 1) < 0 ) {
+    if (listen(*socket_fd, 1) < 0) {
         printerr("ERROR[listen]: %s\n", strerror(errno));
         return -1;
     }
@@ -324,92 +232,138 @@ int prepare_monitoring_socket(int *socket_fd, int port) {
  */
 void* monitoring_thread_func(void* arg) {
     MonitoringThreadContext *ctx = (MonitoringThreadContext *)arg;
-    int kickstart_socket_port = -1, monitoring_socket = -1, num_bytes, incoming_socket;
-    int msg_counter = 0, aggr_msg_buffer_offset = 0;
-    struct sockaddr_in client_addr;
-    socklen_t client_add_len;
-    char line[BUFSIZ], *pos = NULL, enriched_line[BUFSIZ], aggr_msg_buffer[BUFSIZ * MSG_AGGR_FACTOR];
 
-    MonitoringEndpoint *monitoring_endpoint = ctx->monitoring_endpoint;
-    JobIdInfo *job_id_info = ctx->job_id_info;
+    printerr("[mon-thread] url: %s\n", ctx->url);
+    //printerr("[mon-thread] credentials: %s\n", ctx->credentials);
+    printerr("[mon-thread] wf uuid: %s\n", ctx->wf_uuid);
+    printerr("[mon-thread] wf label: %s\n", ctx->wf_label);
+    printerr("[mon-thread] dag job id: %s\n", ctx->dag_job_id);
+    printerr("[mon-thread] condor job id: %s\n", ctx->condor_job_id);
+    printerr("[mon-thread] listen host: %s\n", ctx->socket_host);
+    printerr("[mon-thread] listen port: %d\n", ctx->socket_port);
 
-    print_debug_info(monitoring_endpoint, job_id_info);
-
-    char *socket_port_buf = ctx->socket_port;
-    if( socket_port_buf == NULL ) {
-        printerr("[mon-thread] Kickstart socket port is not set\n");
-        pthread_exit(NULL);
-    }
-
-    kickstart_socket_port = atoi(socket_port_buf);
-    printerr("[mon-thread] Socket nr is: %d\n", kickstart_socket_port);
-
-    if( prepare_monitoring_socket(&monitoring_socket, kickstart_socket_port) < 0 ) {
+    int monitoring_socket;
+    if (prepare_monitoring_socket(&monitoring_socket, ctx->socket_port) < 0) {
         printerr("[mon-thread] ERROR occured during socket preparation\n");
-        pthread_exit(NULL);
+        goto exit;
     }
-    printerr("[mon-thread] Monitoring socket prepared\n");
 
     curl_global_init(CURL_GLOBAL_ALL);
 
-    printerr("[mon-thread] starting monitoring loop...\n");
+    printerr("[mon-thread] Starting monitoring loop...\n");
 
-    while(1) {
+    int msg_counter = 0, aggr_msg_buffer_offset = 0;
+    char aggr_msg_buffer[BUFSIZ * MSG_AGGR_FACTOR];
+    while (1) {
+        struct sockaddr_in client_addr;
+        socklen_t client_add_len = sizeof(client_addr);
         bzero((char *)&client_addr, sizeof(client_addr));
-        client_add_len = sizeof(client_addr);
 
-//        printerr("[mon-thread] Waiting for messages...\n");
-
-        incoming_socket = accept(monitoring_socket, (struct sockaddr *)&client_addr, &client_add_len);
-
-//        printerr("[mon-thread] Incoming socket has been obtained...\n");
-
-        if(incoming_socket < 0) {
+        int incoming_socket = accept(monitoring_socket, (struct sockaddr *)&client_addr, &client_add_len);
+        if (incoming_socket < 0) {
             printerr("[mon-thread] ERROR[accept]: %s\n", strerror(errno));
-        }
-        else {
-            num_bytes = recv(incoming_socket, line, BUFSIZ, 0);
-            if(num_bytes < 0) {
-                printerr("[mon-thread] ERROR[recv]: %s\n", strerror(errno));
-            }
-            else {
-//                printerr("[mon-thread] succesfull read from socket [B] - %d\n", num_bytes);
-                // replace end line with a terminating character
-                if( (pos = strchr(line, '\n')) != NULL ) {
-                    *pos = '\0';
-                }
-                // a proper monitoring message should start with a timestamp
-                if( strstr(line, "ts=") != line ) {
-                    continue;    
-                }
-
-                sprintf(enriched_line, "%s wf_uuid=%s wf_label=%s dag_job_id=%s condor_job_id=%s",
-                    line, job_id_info->wf_uuid, job_id_info->wf_label, job_id_info->dag_job_id,
-                    job_id_info->condor_job_id);
-
-                // AGGREGATION
-                msg_counter += 1;
-                if( aggregate_message(enriched_line, aggr_msg_buffer, &aggr_msg_buffer_offset) > 0 ) {
-                    if( msg_counter == MSG_AGGR_FACTOR ) {                        
-                        printerr("[mon-thread] Sending aggregated message...\n");
-                        send_msg_to_mq(aggr_msg_buffer, monitoring_endpoint, job_id_info->wf_uuid);
-
-                        msg_counter = 0;
-                        aggr_msg_buffer_offset = 0;
-                        memset(aggr_msg_buffer, 0, BUFSIZ * MSG_AGGR_FACTOR);
-                    }
-                }
-            }
+            goto next;
         }
 
+        char line[BUFSIZ];
+        int num_bytes = recv(incoming_socket, line, BUFSIZ, 0);
+        if (num_bytes < 0) {
+            printerr("[mon-thread] ERROR[recv]: %s\n", strerror(errno));
+            goto next;
+        }
+
+        // replace end line with a terminating character
+        char *pos;
+        if ((pos = strchr(line, '\n')) != NULL) {
+            *pos = '\0';
+        }
+
+        // a proper monitoring message should start with a timestamp
+        if (strstr(line, "ts=") != line) {
+            printerr("[mon-thread] ERROR: Message did not start with 'ts=': \n%s\n", line);
+            goto next;
+        }
+
+        // Add all the extra information
+        char enriched_line[BUFSIZ];
+        snprintf(enriched_line, BUFSIZ, "%s wf_uuid=%s wf_label=%s dag_job_id=%s condor_job_id=%s",
+            line, ctx->wf_uuid, ctx->wf_label, ctx->dag_job_id, ctx->condor_job_id);
+
+        // Aggregate messages
+        int n = snprintf(aggr_msg_buffer + aggr_msg_buffer_offset, BUFSIZ, "%s:delim1:", enriched_line);
+        if (n < 0 || n > BUFSIZ) {
+            printerr("[mon-thread] Error aggregating messages: snprintf: %s\n", strerror(errno));
+            goto next;
+        }
+        msg_counter += 1;
+        aggr_msg_buffer_offset += n;
+
+        // Send aggregated message
+        if (msg_counter == MSG_AGGR_FACTOR) {
+            printerr("[mon-thread] Sending aggregated message...\n");
+            send_msg_to_mq(aggr_msg_buffer, ctx);
+
+            msg_counter = 0;
+            aggr_msg_buffer_offset = 0;
+            memset(aggr_msg_buffer, 0, BUFSIZ * MSG_AGGR_FACTOR);
+        }
+
+next:
         close(incoming_socket);
     }
 
+exit:
     printerr("[mon-thread] We are finishing our work...\n");
-
-    release_monitoring_endpoint(monitoring_endpoint);
-    release_job_id_info(job_id_info);
-
     curl_global_cleanup();
+    close(monitoring_socket);
+    release_monitoring_context(ctx);
     pthread_exit(NULL);
 }
+
+int start_monitoring_thread(int interval) {
+    int rc = 0;
+
+    /* Find a host and port to use */
+    char socket_host[BUFSIZ];
+    int socket_port;
+    rc = find_ephemeral_endpoint(socket_host, &socket_port);
+    if (rc < 0) {
+        printerr("Couldn't find an endpoint for communication with kickstart\n");
+        return -1;
+    }
+
+    /* Set the monitoring environment */
+    char envvar[BUFSIZ];
+    setenv("KICKSTART_MON", "enabled", 1);
+    snprintf(envvar, BUFSIZ, "%d", interval);
+    setenv("KICKSTART_MON_INTERVAL", envvar, 1);
+    snprintf(envvar, BUFSIZ, "%d", getpid());
+    setenv("KICKSTART_MON_PID", envvar, 1);
+    setenv("KICKSTART_MON_HOST", socket_host, 1);
+    snprintf(envvar, BUFSIZ, "%d", socket_port);
+    setenv("KICKSTART_MON_PORT", envvar, 1);
+
+    /* Set up parameters for the thread */
+    MonitoringThreadContext *ctx = calloc(sizeof(MonitoringThreadContext), 1);
+    if (initialize_monitoring_context(ctx) < 0) {
+        return -1;
+    }
+    ctx->socket_host = strdup(socket_host);
+    ctx->socket_port = socket_port;
+
+    /* Start and detach the monitoring thread */
+    pthread_t monitoring_thread;
+    rc = pthread_create(&monitoring_thread, NULL, monitoring_thread_func, (void*)ctx);
+    if (rc) {
+        printerr("ERROR: return code from pthread_create() is %d: %s\n", rc, strerror(errno));
+        return rc;
+    }
+    rc = pthread_detach(monitoring_thread);
+    if (rc) {
+        printerr("ERROR: return code from pthread_detach() is %d: %s\n", rc, strerror(errno));
+        return rc;
+    }
+
+    return rc;
+}
+

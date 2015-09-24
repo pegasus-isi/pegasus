@@ -35,6 +35,7 @@
 #include "utils.h"
 #include "version.h"
 #include "ptrace.h"
+#include "monitoring.h"
 
 #define show(s) (s ? s : "(undefined)")
 
@@ -340,8 +341,9 @@ void set_path() {
 int main(int argc, char* argv[]) {
     size_t cwd_size = getpagesize();
     int status, result = 0;
-    int i, j, keeploop, rc;
+    int i, j, keeploop;
     int createDir = 0;
+    int monitoringInterval = 0;
     char* temp;
     char* end;
     char* workdir = NULL;
@@ -495,12 +497,6 @@ int main(int argc, char* argv[]) {
                     return 127;
                 }
                 appinfo.wf_label = noquote(argv[i][2] ? &argv[i][2] : argv[++i]);
-                // exposing the label as an environment variable
-                rc = setenv("PEGASUS_WF_LABEL", appinfo.wf_label, 1);
-                if(rc) {
-                    fprintf(stderr, "ERROR: Could'nt set PEGASUS_WF_LABEL environment variable\n");
-                    return 127;
-                }
                 break;
             case 'n':
                 if (!argv[i][2] && argc <= i+1) {
@@ -656,12 +652,11 @@ int main(int argc, char* argv[]) {
                     return 127;
                 }
 
-                rc = setenv("KICKSTART_MON_INTERVAL", 
-                    noquote(argv[i][2] ? &argv[i][2] : argv[++i]),
-                    1);
-
-                if(rc) {
-                    fprintf(stderr, "ERROR: Could'nt set KICKSTART_MON_INTERVAL environment variable\n");
+                temp = argv[i][2] ? &argv[i][2] : argv[++i];
+                end = temp;
+                monitoringInterval = strtoul(temp, &end, 0);
+                if (monitoringInterval < 0 || monitoringInterval > 3600 || *end != '\0') {
+                    fprintf(stderr, "ERROR: Invalid -m argument (0 to 3600 seconds): %s\n", temp);
                     return 127;
                 }
 
@@ -754,6 +749,23 @@ REDIR:
         alarm(appinfo.termTimeout);
     }
 
+    /* Set PEGASUS_WF_LABEL in environment */
+    if (appinfo.wf_label != NULL) {
+        int rc = setenv("PEGASUS_WF_LABEL", appinfo.wf_label, 1);
+        if (rc) {
+            fprintf(stderr, "ERROR: Couldn't set PEGASUS_WF_LABEL environment variable\n");
+            return 127;
+        }
+    }
+
+    /* If monitoring is enabled, start monitoring thread */
+    if (appinfo.enableLibTrace && monitoringInterval > 0) {
+        if (start_monitoring_thread(monitoringInterval)) {
+            printerr("ERROR: Unable to start monitoring thread\n");
+            return 127;
+        }
+    }
+
     /* Our own initially: an independent setup job */
     char *SETUP = getenv("KICKSTART_SETUP");
     if (SETUP == NULL) { SETUP = getenv("GRIDSTART_SETUP"); }
@@ -817,7 +829,6 @@ REDIR:
 
     /* clean up and close FDs */
     skip_atexit = 1;
-
     deleteAppInfo(&appinfo);
 
     return result;
