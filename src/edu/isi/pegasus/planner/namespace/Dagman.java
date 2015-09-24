@@ -139,7 +139,11 @@ public class Dagman extends Namespace {
      * DAG has to be execute
      */
     public static final String DIRECTORY_EXTERNAL_KEY = "DIR";
-    
+
+    /**
+     * The name of the key that indicates the NOOP key
+     */
+    public static final String NOOP_KEY = "NOOP";
 
     /**
      * The key name for the post script that is put in the .dag file.
@@ -422,6 +426,15 @@ public class Dagman extends Namespace {
                 }
                 break;
                 
+            case 'N':
+                if( key.startsWith( NOOP_KEY ) ){
+                      res = VALID_KEY;
+                }
+                else {
+                    res = NOT_PERMITTED_KEY;
+                }
+                break;
+            
             case 'O':
                 if (key.compareTo(Dagman.OUTPUT_KEY) == 0) {
                     res = VALID_KEY;
@@ -660,7 +673,8 @@ public class Dagman extends Namespace {
                key.equals ( Dagman.POST_SCRIPT_SCOPE_KEY ) ||
                key.startsWith( Dagman.POST_SCRIPT_PATH_PREFIX ) ||
                key.startsWith( Dagman.MAX_KEYS_PREFIX )||
-               key.startsWith( Dagman.ABORT_DAG_ON_KEY );
+               key.startsWith( Dagman.ABORT_DAG_ON_KEY )||
+               key.equals( Dagman.NOOP_KEY );
     }
 
 
@@ -697,9 +711,16 @@ public class Dagman extends Namespace {
 
         //append the value for the key
         value.append( (String)mProfileMap.get(key));
-
+        
+        if( key.equals( JOB_KEY ) ){
+            //PM-987 add NOOP key for job if required
+            if( this.containsKey( NOOP_KEY) ){
+                //value does not matter
+                value.append( " " ).append( NOOP_KEY );
+            }
+        }
         //for postscript and prescript in addition put in the arguments.
-        if(key.equalsIgnoreCase(Dagman.POST_SCRIPT_KEY)){
+        else if(key.equalsIgnoreCase(Dagman.POST_SCRIPT_KEY)){
             //append the postscript arguments
             value.append(" ").append( (String)this.get( Dagman.POST_SCRIPT_ARGUMENTS_KEY) );
             //append the output file
