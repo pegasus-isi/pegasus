@@ -15,6 +15,8 @@
 #include "error.h"
 #include "monitoring.h"
 
+#define MSG_AGGR_FACTOR 5
+
 typedef struct {
     char *url;
     char *credentials;
@@ -22,8 +24,7 @@ typedef struct {
     char *wf_uuid;
     char *dag_job_id;
     char *condor_job_id;
-    char *socket_host;
-    int socket_port;
+    int socket;
 } MonitoringThreadContext;
 
 // a util function for reading env variables by the main kickstart process
@@ -84,17 +85,13 @@ static void release_monitoring_context(MonitoringThreadContext* ctx) {
     if (ctx->wf_label != NULL) free(ctx->wf_label);
     if (ctx->dag_job_id != NULL) free(ctx->dag_job_id);
     if (ctx->condor_job_id != NULL) free(ctx->condor_job_id);
-    if (ctx->socket_host != NULL) free(ctx->socket_host);
     free(ctx);
 }
 
-size_t write_callback(char *ptr, size_t size, size_t nmemb, void *userdata) {
+static size_t write_callback(char *ptr, size_t size, size_t nmemb, void *userdata) {
     //    we do nothing for now
     return size * nmemb;
 }
-
-// MESSAGES AGGREGATION 
-#define MSG_AGGR_FACTOR 5
 
 /* sending this message to rabbitmq */
 static void send_msg_to_mq(char* msg_buff, MonitoringThreadContext *ctx) {
@@ -137,7 +134,6 @@ static void send_msg_to_mq(char* msg_buff, MonitoringThreadContext *ctx) {
     free(payload);
 }
 
-// SOCKET BASED COMMUNICATION
 /* purpose: find an ephemeral port available on a machine for further socket-based communication;
  *          opens a new socket on an ephemeral port, returns this port number and hostname
  *          where kickstart will listen for monitoring information
@@ -146,84 +142,51 @@ static void send_msg_to_mq(char* msg_buff, MonitoringThreadContext *ctx) {
  * returns:	0  success
  *		    -1 failure
  */
-int find_ephemeral_endpoint(char *kickstart_hostname, int *kickstart_port) {
-    int listenfd;
-    struct sockaddr_in serv_addr;
-    socklen_t addr_len;
+static int create_ephemeral_endpoint(char *kickstart_hostname, int *kickstart_port) {
 
-    if( (listenfd = socket(AF_INET, SOCK_STREAM, 0)) < 0 ) {
-      printerr("ERROR[socket]: %s\n", strerror(errno));
-      return -1;
-    }
-
-    memset(&serv_addr, 0, sizeof(serv_addr));
-
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = htonl(INADDR_ANY); 
-    serv_addr.sin_port = 0;
-
-    if( bind(listenfd, (const struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0 ) {
-      printerr("ERROR[bind]: %s\n", strerror(errno));
-      return -1;
-    }
-
-    if( listen(listenfd, 1) < 0 ) {
-      printerr("ERROR[listen]: %s\n", strerror(errno));
-      return -1;
-    }
-    else {
-        memset(&serv_addr, 0, sizeof(serv_addr));
-        addr_len = sizeof(serv_addr);
-
-        if( getsockname(listenfd, (struct sockaddr*)&serv_addr, &addr_len) == -1 ) {
-            printerr("ERROR[getsockname]: %s\n", strerror(errno));
-            return -1;
-        }
-        else {
-            if (gethostname(kickstart_hostname, BUFSIZ)) {
-                printerr("ERROR[gethostname]: %s\n", strerror(errno));
-                return -1;
-            }
-            *kickstart_port = ntohs(serv_addr.sin_port);
-
-            printerr("Host: %s Port: %d\n", kickstart_hostname, *kickstart_port);
-        }
-
-        close(listenfd);
-    }
-
-    return 0;
-}
-
-// Open a socket on a given port and return its fd
-int prepare_monitoring_socket(int *socket_fd, int port) {
-    struct sockaddr_in serv_addr;
-
-    if ((*socket_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    int listenfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (listenfd < 0 ) {
         printerr("ERROR[socket]: %s\n", strerror(errno));
         return -1;
     }
 
+    struct sockaddr_in serv_addr;
     memset(&serv_addr, 0, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    serv_addr.sin_port = htons(port);
+    serv_addr.sin_addr.s_addr = htonl(INADDR_ANY); 
+    serv_addr.sin_port = 0;
 
-    if (bind(*socket_fd, (const struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
+    if (bind(listenfd, (const struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
         printerr("ERROR[bind]: %s\n", strerror(errno));
-        return -1;
+        goto error;
     }
 
-    if (listen(*socket_fd, 1) < 0) {
+    if (listen(listenfd, 1) < 0 ) {
         printerr("ERROR[listen]: %s\n", strerror(errno));
-        return -1;
+        goto error;
     }
 
-    return 0;
+    memset(&serv_addr, 0, sizeof(serv_addr));
+    socklen_t addr_len = sizeof(serv_addr);
+    if (getsockname(listenfd, (struct sockaddr*)&serv_addr, &addr_len) == -1) {
+        printerr("ERROR[getsockname]: %s\n", strerror(errno));
+        goto error;
+    }
+
+    if (gethostname(kickstart_hostname, BUFSIZ)) {
+        printerr("ERROR[gethostname]: %s\n", strerror(errno));
+        return -1;
+    }
+    *kickstart_port = ntohs(serv_addr.sin_port);
+
+    printerr("Host: %s Port: %d\n", kickstart_hostname, *kickstart_port);
+
+    return listenfd;
+
+error:
+    close(listenfd);
+    return -1;
 }
-
-// END SOCKET BASED COMMUNICATION
-
 
 /*
  * Main monitoring thread loop - it periodically read global trace file as sent this info somewhere, e.g. to another file
@@ -239,14 +202,6 @@ void* monitoring_thread_func(void* arg) {
     printerr("[mon-thread] wf label: %s\n", ctx->wf_label);
     printerr("[mon-thread] dag job id: %s\n", ctx->dag_job_id);
     printerr("[mon-thread] condor job id: %s\n", ctx->condor_job_id);
-    printerr("[mon-thread] listen host: %s\n", ctx->socket_host);
-    printerr("[mon-thread] listen port: %d\n", ctx->socket_port);
-
-    int monitoring_socket;
-    if (prepare_monitoring_socket(&monitoring_socket, ctx->socket_port) < 0) {
-        printerr("[mon-thread] ERROR occured during socket preparation\n");
-        goto exit;
-    }
 
     curl_global_init(CURL_GLOBAL_ALL);
 
@@ -259,10 +214,14 @@ void* monitoring_thread_func(void* arg) {
         socklen_t client_add_len = sizeof(client_addr);
         bzero((char *)&client_addr, sizeof(client_addr));
 
-        int incoming_socket = accept(monitoring_socket, (struct sockaddr *)&client_addr, &client_add_len);
+        int incoming_socket = accept(ctx->socket, (struct sockaddr *)&client_addr, &client_add_len);
         if (incoming_socket < 0) {
             printerr("[mon-thread] ERROR[accept]: %s\n", strerror(errno));
-            goto next;
+            if (errno == EINTR) {
+                goto next;
+            } else {
+                goto error;
+            }
         }
 
         char line[BUFSIZ];
@@ -312,22 +271,20 @@ next:
         close(incoming_socket);
     }
 
-exit:
+error:
     printerr("[mon-thread] We are finishing our work...\n");
+    close(ctx->socket);
     curl_global_cleanup();
-    close(monitoring_socket);
     release_monitoring_context(ctx);
     pthread_exit(NULL);
 }
 
 int start_monitoring_thread(int interval) {
-    int rc = 0;
-
     /* Find a host and port to use */
     char socket_host[BUFSIZ];
     int socket_port;
-    rc = find_ephemeral_endpoint(socket_host, &socket_port);
-    if (rc < 0) {
+    int socket = create_ephemeral_endpoint(socket_host, &socket_port);
+    if (socket < 0) {
         printerr("Couldn't find an endpoint for communication with kickstart\n");
         return -1;
     }
@@ -348,12 +305,11 @@ int start_monitoring_thread(int interval) {
     if (initialize_monitoring_context(ctx) < 0) {
         return -1;
     }
-    ctx->socket_host = strdup(socket_host);
-    ctx->socket_port = socket_port;
+    ctx->socket = socket;
 
     /* Start and detach the monitoring thread */
     pthread_t monitoring_thread;
-    rc = pthread_create(&monitoring_thread, NULL, monitoring_thread_func, (void*)ctx);
+    int rc = pthread_create(&monitoring_thread, NULL, monitoring_thread_func, (void*)ctx);
     if (rc) {
         printerr("ERROR: return code from pthread_create() is %d: %s\n", rc, strerror(errno));
         return rc;
@@ -364,6 +320,6 @@ int start_monitoring_thread(int interval) {
         return rc;
     }
 
-    return rc;
+    return 0;
 }
 
