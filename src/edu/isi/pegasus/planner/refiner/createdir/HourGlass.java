@@ -26,6 +26,7 @@ import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.code.GridStartFactory;
+import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.util.Iterator;
@@ -221,6 +222,7 @@ public class HourGlass extends AbstractStrategy{
         //construct noop keys
         newJob.executionPool = "local";
         newJob.jobClass = Job.CREATE_DIR_JOB;
+        newJob.dagmanVariables.construct( Dagman.NOOP_KEY, "true" );
         construct(newJob,"noop_job","true");
         construct(newJob,"noop_job_exit_code","0");
 

@@ -45,6 +45,7 @@ import java.util.Map;
 import java.util.HashMap;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.code.GridStartFactory;
+import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.transfer.Implementation;
 
 
@@ -731,6 +732,7 @@ public class Cluster extends Bundle {
         //construct noop keys
         newJob.setSiteHandle( "local" );
         newJob.setJobType( Job.CREATE_DIR_JOB );
+        newJob.dagmanVariables.construct( Dagman.NOOP_KEY, "true" );
         constructCondorKey( newJob, "noop_job", "true" );
         constructCondorKey( newJob, "noop_job_exit_code", "0" );
 

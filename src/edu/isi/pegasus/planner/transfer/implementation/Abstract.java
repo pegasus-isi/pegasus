@@ -55,6 +55,7 @@ import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import edu.isi.pegasus.planner.namespace.Condor;
+import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
@@ -723,6 +724,7 @@ public abstract class Abstract implements Implementation{
         newJob.setStagingSiteHandle( computeSiteHandle );
         
         newJob.setJobType( Job.CHMOD_JOB );
+        newJob.dagmanVariables.construct( Dagman.NOOP_KEY, "true" );
         construct(newJob,"noop_job","true");
         construct(newJob,"noop_job_exit_code","0");
 
