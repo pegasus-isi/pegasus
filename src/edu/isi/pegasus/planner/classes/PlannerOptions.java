@@ -1443,7 +1443,7 @@ public class PlannerOptions extends Data implements Cloneable{
         if( mClusterer != null ){ sb.append(" --cluster ").append(mClusterer);}
 
         //specify the input directory
-        if( this.mInputDirs != null ){
+        if( !this.mInputDirs.isEmpty() ){
             sb.append(" --input-dir ").append( setToString( this.mInputDirs, "," ) );
         }
 
