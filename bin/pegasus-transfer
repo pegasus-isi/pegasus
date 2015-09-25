@@ -325,12 +325,7 @@ class Transfer:
 
 
     def groupable(self):
-        """
-        currently only gridftp allows for grouping
-        """
-        #return self.allow_grouping and \
-        #       (self._src_urls[0].proto == "gsiftp" or self._dst_urls[0].proto == "gsiftp")
-        return True
+        return self.allow_grouping
 
 
     def __cmp__(self, other):
