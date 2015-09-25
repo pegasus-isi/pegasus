@@ -32,6 +32,9 @@ logger = logging.getLogger(__name__)
 good_rsl = {"maxcputime": 1, "maxtime":1, "maxwalltime": 1}
 MAX_OUTPUT_LENGTH = 2**16-1  # Only keep stdout to 64K
 
+#some constants
+NOOP_JOB_PREFIX = "noop_"                  # prefix for noop jobs for which .out and err files are not created
+
 # Used in parse_sub_file
 re_rsl_string = re.compile(r"^\s*globusrsl\W", re.IGNORECASE)
 re_rsl_clean = re.compile(r"([-_])")
@@ -424,7 +427,8 @@ class Job:
             self._stderr_text = utils.quote(ERR.read())
         except IOError:
             self._stderr_text = None
-            logger.warning("unable to read error file: %s, continuing..." % (my_err_file))
+            if not self.is_noop_job():
+                logger.warning("unable to read error file: %s, continuing..." % (my_err_file))
         else:
             ERR.close()
 
@@ -479,7 +483,8 @@ class Job:
                 self._stdout_text = utils.quote("#@ 1 stdout\n" + buffer)
             except IOError:
                 self._stdout_text = None
-                logger.warning("unable to read output file: %s, continuing..." % (my_out_file))
+                if not self.is_noop_job():
+                    logger.warning("unable to read output file: %s, continuing..." % (my_out_file))
             else:
                 OUT.close()
 
@@ -501,6 +506,18 @@ class Job:
                 self._stderr_text = utils.quote(buffer)
             except IOError:
                 self._stderr_text = None
-                logger.warning("unable to read error file: %s, continuing..." % (my_err_file))
+                if not self.is_noop_job():
+                    logger.warning("unable to read error file: %s, continuing..." % (my_err_file))
             else:
                 ERR.close()
+
+
+    def is_noop_job(self):
+        """
+        A convenience method to indicate whether a job is a NOOP job or not
+        :return:  True if a noop job else False
+        """
+        if self._exec_job_id is not None and self._exec_job_id.startswith( NOOP_JOB_PREFIX ):
+            return True
+
+        return False
