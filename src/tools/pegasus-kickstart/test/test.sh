@@ -23,7 +23,7 @@ function run_test {
 }
 
 function kickstart {
-    $KICKSTART "$@" >test.out 2>test.err
+    PEGASUS_WF_UUID=1 PEGASUS_WF_LABEL=test PEGASUS_DAG_JOB_ID=test-job CONDOR_JOBID=1.0 $KICKSTART "$@" >test.out 2>test.err
     RC=$?
     xmllint test.out >/dev/null
     if [ $? -ne 0 ]; then
