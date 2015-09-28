@@ -607,19 +607,27 @@ class TransferHandlerBase(object):
     
     def _check_similar(self, a, b):
         """
-        compares two url_pairs, and determins if they are similar enough to be
+        compares two transfers, and determines if they are similar enough to be
         grouped together in one transfer input file - this is used by some 
         protocols who can run grouped transfers as a set with a single command
         """
-        if a.get_src_host() != b.get_src_host():
-            return False
-        if a.get_dst_host() != b.get_dst_host():
-            return False
-        if os.path.dirname(a.get_src_path()) != os.path.dirname(b.get_src_path()):
-            return False
-        if os.path.dirname(a.get_dst_path()) != os.path.dirname(b.get_dst_path()):
-            return False
-        return True
+        if isinstance(a, Transfer) and isinstance(b, Transfer):
+            if a.get_src_host() != b.get_src_host():
+                return False
+            if a.get_dst_host() != b.get_dst_host():
+                return False
+            if os.path.dirname(a.get_src_path()) != os.path.dirname(b.get_src_path()):
+                return False
+            if os.path.dirname(a.get_dst_path()) != os.path.dirname(b.get_dst_path()):
+                return False
+            return True
+        elif isinstance(a, Remove) and isinstance(b, Remove):
+            if a.get_host() != b.get_host():
+                return False
+            if os.path.dirname(a.get_path()) != os.path.dirname(b.get_path()):
+                return False
+            return True
+        return False
     
     
     def _similar_groups(self, in_list, max_transfers_in_group = None):
@@ -1965,7 +1973,7 @@ class ScpHandler(TransferHandlerBase):
         successful_l = []
         failed_l = []
         
-        # limit the size of the groups to 50 to keep command lines short
+        # limit the size of the groups to 70 to keep command lines short
         for t_group in self._similar_groups(transfers, max_transfers_in_group = 70):
         
             t_base = t_group[0]
@@ -2042,35 +2050,43 @@ class ScpHandler(TransferHandlerBase):
     def do_removes(self, transfers_l):
         successful_l = []
         failed_l = []
-        for t in transfers_l:
+        # limit the size of the groups to 70 to keep command lines short
+        for t_group in self._similar_groups(transfers_l, max_transfers_in_group = 70):
+
+            t_base = t_group[0]
+
             cmd = "/usr/bin/ssh"
             cmd += self._base_args
-            key = "SSH_PRIVATE_KEY_" + t.get_site_label()
+            key = "SSH_PRIVATE_KEY_" + t_base.get_site_label()
             if key in os.environ:
                 cmd += " -i " + os.environ[key]
             elif "SSH_PRIVATE_KEY" in os.environ:
                 cmd += " -i " + os.environ['SSH_PRIVATE_KEY']
         
             # split up the host into host/port components
-            host = self._extract_hostname(t.get_host())
-            port = self._extract_port(t.get_host())
+            host = self._extract_hostname(t_base.get_host())
+            port = self._extract_port(t_base.get_host())
                 
             cmd += " -p " + str(port)
             cmd += " " + host
             cmd += " '/bin/rm -f"
-            if t.get_recursive():
+            if t_base.get_recursive():
                 cmd += " -r"
-            cmd += " \"" + t.get_path() + "\"'"
+            for t in t_group:
+                cmd += " \"" + t.get_path() + "\""
+            cmd += "'"
             tc = TimedCommand(cmd, log_outerr=False)
             try:
                 tc.run()
             except Exception, err:
                 logger.error(err)
                 self._log_filter_ssh_output(tc.get_outerr())
-                failed_l.append(t)
+                for t in t_group:
+                    failed_l.append(t)
                 continue
             self._log_filter_ssh_output(tc.get_outerr())
-            successful_l.append(t)
+            for t in t_group:
+                successful_l.append(t)
             
         return [successful_l, failed_l]
 
