@@ -21,6 +21,7 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.planner.classes.CompoundTransformation;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.Profile;
 
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -114,6 +115,15 @@ public class DAX2Metadata implements Callback {
      */
     public void cbWfInvoke(Invoke invoke){
     	throw new UnsupportedOperationException("Not supported yet.");
+    }
+    
+    /**
+     * Callback when a metadata element is encountered in the adag element.
+     *
+     * @param profile   profile element of namespace metadata
+     */
+    public void cbMetadata( Profile p ){
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     /**

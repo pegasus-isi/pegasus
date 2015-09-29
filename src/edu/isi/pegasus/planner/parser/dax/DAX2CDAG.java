@@ -29,6 +29,7 @@ import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.classes.PCRelation;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
+import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.classes.ReplicaStore;
 import edu.isi.pegasus.planner.classes.WorkflowMetrics;
@@ -161,6 +162,15 @@ public class DAX2CDAG implements Callback {
     	this.mNotifications.add(invoke);
     }
 
+    /**
+     * Callback when a metadata element is encountered in the adag element.
+     *
+     * @param profile   profile element of namespace metadata
+     */
+    public void cbMetadata( Profile p ){
+        this.mDag.addMetadata( p.getProfileKey(), p.getProfileValue() );
+    }
+    
     /**
      * Callback for the job from section 2 jobs. These jobs are completely
      * assembled, but each is passed separately.

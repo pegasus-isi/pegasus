@@ -21,6 +21,7 @@ import edu.isi.pegasus.planner.classes.CompoundTransformation;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PCRelation;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.dax.Invoke;
 
@@ -38,7 +39,7 @@ public interface Callback {
     /**
      * The version of the Callback api
      */
-    public static final String VERSION = "1.4";
+    public static final String VERSION = "1.5";
 
     /**
      * The overloaded constructor.
@@ -106,6 +107,13 @@ public interface Callback {
      * @param compoundTransformation   the compound transforamtion
      */
     public void cbCompoundTransformation( CompoundTransformation compoundTransformation );
+    
+    /**
+     * Callback when a metadata element is encountered in the adag element.
+     *
+     * @param p   profile element of namespace metadata
+     */
+    public void cbMetadata( Profile p );
 
     /**
      * Callback for the job from section 4: Job's, DAX's or Dag's that list
