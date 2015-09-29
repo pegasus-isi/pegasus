@@ -1030,12 +1030,14 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 if ( child instanceof Profile ) {
                     Profile md = ( Profile )child;
                     md.setProfileValue( mTextContent.toString().trim() );
+
                     if( parent instanceof Map ){
-                        unSupportedNestingOfElements( "adag", "metadata" );
+                        //metadata appears in adag element
+                        this.mCallback.cbMetadata(md);
                         return true;
                     }
                     else if ( parent instanceof Job ){
-                        //profile appears in the job element
+                        //metadata appears in the job element
                         Job j = (Job)parent;
                         j.addProfile( md );
                         return true;
