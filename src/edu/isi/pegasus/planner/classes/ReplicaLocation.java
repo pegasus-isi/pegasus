@@ -34,7 +34,7 @@ import java.util.ArrayList;
  *
  * @version $Revision$
  *
- * @see org.griphyn.common.catalog.ReplicaCatalogEntry
+ * @see edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry
  */
 public class ReplicaLocation
        extends Data
@@ -56,14 +56,14 @@ public class ReplicaLocation
      * A list of <code>ReplicaCatalogEntry</code> objects containing the PFN's
      * and associated attributes.
      */
-    private List mPFNList;
+    private List<ReplicaCatalogEntry> mPFNList;
 
     /**
      * Default constructor.
      */
     public ReplicaLocation(){
         mLFN     = "";
-        mPFNList = new ArrayList();
+        mPFNList = new ArrayList<ReplicaCatalogEntry>();
     }
 
     /**
@@ -73,7 +73,7 @@ public class ReplicaLocation
      * @param lfn  the logical filename.
      * @param pfns the list of <code>ReplicaCatalogEntry</code> objects.
      */
-    public ReplicaLocation( String lfn , List pfns ){
+    public ReplicaLocation( String lfn , List<ReplicaCatalogEntry> pfns ){
         mLFN     = lfn;
         mPFNList = pfns;
         //sanitize pfns. add a default resource handle if not specified
@@ -87,7 +87,7 @@ public class ReplicaLocation
      * @param lfn  the logical filename.
      * @param pfns the list of <code>ReplicaCatalogEntry</code> objects.
      */
-    public ReplicaLocation( String lfn , Collection pfns ){
+    public ReplicaLocation( String lfn , Collection<ReplicaCatalogEntry> pfns ){
         mLFN     = lfn;
 
         //create a separate list only if required
@@ -150,7 +150,7 @@ public class ReplicaLocation
      * @param tuples  the <code>List</code> object of <code>ReplicaCatalogEntry</code>
      *              objects, each containing the  PFN and the attributes.
      */
-    protected void addPFNs( List tuples ){
+    protected void addPFNs( List<ReplicaCatalogEntry> tuples ){
         for( Iterator it = tuples.iterator(); it.hasNext(); ){
             addPFN( (ReplicaCatalogEntry)it.next() );
         }
