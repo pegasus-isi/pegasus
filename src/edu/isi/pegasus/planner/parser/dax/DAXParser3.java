@@ -1042,7 +1042,8 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                     }
                     //metadata appears in file element
                     else if( parent instanceof ReplicaLocation ){
-                        unSupportedNestingOfElements( "file", "metadata" );
+                        ReplicaLocation rl = (ReplicaLocation) parent;
+                        rl.addMetadata( md.getProfileKey(), md.getProfileValue());
                         return true;
                     }
                     //metadata appears in executable element
