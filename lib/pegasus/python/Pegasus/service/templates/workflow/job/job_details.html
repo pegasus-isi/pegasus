@@ -5,7 +5,7 @@
 {% block title %}Job Details{% endblock %}
 {% block javascript_includes %}
     <script type="text/javascript" src="//code.highcharts.com/4.1.4/highcharts.js"></script>
-    <script type="text/javascript" src="http://get.influxdb.org/influxdb-latest.js"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/influxdb-latest.js') }}"></script>
 {% endblock %}
 {% block javascript_init %}
     <script type="text/javascript" charset="utf-8">
@@ -78,7 +78,7 @@
 
             verticalTableInitStatus('#job_text_info', {{ status_code(job.exitcode) }});
             verticalTableInitStatus('#job_states_info', {{ status_code(job.exitcode) }});
-            verticalTableInitStatus('#job_metrics_info', {{ status_code(job.exitcode) }});
+            verticalTableInitStatus('.job_metrics_info', {{ status_code(job.exitcode) }});
 
             $('#job_instances_info').dataTable({
                 "jQueryUI": true,
@@ -112,7 +112,15 @@
                     iowait: null,
                     threads: null,
                     read_bytes: null,
-                    write_bytes: null
+                    write_bytes: null,
+                    totins: null,
+                    fpops: null,
+                    fpins: null,
+                    ldins: null,
+                    srins: null,
+                    l3misses: null,
+                    l2misses: null,
+                    l1misses: null
                 };
 
 
@@ -196,6 +204,15 @@
                     var threads = [];
                     var read_bytes = [];
                     var write_bytes = [];
+                    var totins = [];
+                    var fpops = [];
+                    var fpins = [];
+                    var ldins = [];
+                    var srins = [];
+                    var l3misses = [];
+                    var l2misses = [];
+                    var l1misses = [];
+
 
                     var offset = 0;
                     var inLoop = false;
@@ -258,6 +275,47 @@
                             x: x,
                             y: data[0].points[i]['write_bytes']
                         });
+
+                        totins.push({
+                            x: x,
+                            y: data[0].points[i]['totins']
+                        });
+
+                        fpops.push({
+                            x: x,
+                            y: data[0].points[i]['fpops']
+                        });
+
+                        fpins.push({
+                            x: x,
+                            y: data[0].points[i]['fpins']
+                        });
+
+                        ldins.push({
+                            x: x,
+                            y: data[0].points[i]['ldins']
+                        });
+
+                        srins.push({
+                            x: x,
+                            y: data[0].points[i]['srins']
+                        });
+
+                        l3misses.push({
+                            x: x,
+                            y: data[0].points[i]['l3misses']
+                        });
+
+                        l2misses.push({
+                            x: x,
+                            y: data[0].points[i]['l2misses']
+                        });
+
+                        l1misses.push({
+                            x: x,
+                            y: data[0].points[i]['l1misses']
+                        });
+
                     }
 
                     maxTS = data[0].points[0].time;
@@ -273,6 +331,14 @@
                         configureChart('threads', 'Thread Count', 'count', 'threads', threads);
                         configureChart('read_bytes', 'Bytes Read', 'bytes', 'read_bytes', read_bytes);
                         configureChart('write_bytes', 'Bytes Written', 'bytes', 'write_bytes', write_bytes);
+                        configureChart('totins', 'Total Instructions Executed', 'count', 'totins', totins);
+                        configureChart('fpops', 'Floating Point Operations Executed', 'count', 'fpops', fpops);
+                        configureChart('fpins', 'Floating Point Instructions Executed', 'count', 'fpins', fpins);
+                        configureChart('ldins', 'Load Instructions Executed', 'count', 'ldins', ldins);
+                        configureChart('srins', 'Store Instructions Executed', 'count', 'srins', srins);
+                        configureChart('l3misses', 'L3 Total Cache Misses', 'count', 'l3misses', l3misses);
+                        configureChart('l2misses', 'L2 Total Cache Misses', 'count', 'l2misses', l2misses);
+                        configureChart('l1misses', 'L1 Total Cache Misses', 'count', 'l1misses', l1misses);
                     }
                 }
 
@@ -498,25 +564,13 @@
 
                 {% if job_metrics %}
                     <div role="tabpanel" class="tab-pane" id="job_metrics">
-                        <table id="job_metrics_info">
+                        <table class="job_metrics_info">
                             {% for field, name in [
                     ('dag_job_id', 'DAG Job ID'),
                     ('hostname', 'Hostname'),
                     ('exec_name', 'Executable Name'),
                     ('kickstart_pid', 'Kickstart PID'),
                     ('ts', 'Timestamp'),
-                    ('stime', 'stime'),
-                    ('utime', 'utime'),
-                    ('iowait', 'IO Wait'),
-                    ('vmsize', 'VMsize'),
-                    ('vmrss', 'VMrss'),
-                    ('read_bytes', 'Bytes Read'),
-                    ('write_bytes', 'Bytes Written'),
-                    ('syscr', 'Syscr'),
-                    ('syscw', 'Syscw'),
-                    ('threads', 'Threads'),
-                    ('bytes_transferred', 'Bytes Transferred'),
-                    ('transfer_duration', 'Transfer Duration'),
                     ('site', 'Site')
                     ] %}
                                 <tr class="{{ field }}">
@@ -525,17 +579,102 @@
                                 </tr>
                             {% endfor %}
                         </table>
+
+                        <h3>CPU Metrics</h3>
+
+                        <table class="job_metrics_info">
+                            {% for field, name in [
+                    ('stime', 'stime'),
+                    ('utime', 'utime')
+                    ] %}
+                                <tr class="{{ field }}">
+                                    <th class="job_table_width">{{ name }}</th>
+                                    <td>{{ job_metrics[field] }}</td>
+                                </tr>
+                            {% endfor %}
+                        </table>
+
+                        <h3>IO Metrics</h3>
+
+                        <table class="job_metrics_info">
+                            {% for field, name in [
+                    ('iowait', 'IO Wait'),
+                    ('vmsize', 'VMsize'),
+                    ('vmrss', 'VMrss'),
+                    ('read_bytes', 'Bytes Read'),
+                    ('write_bytes', 'Bytes Written'),
+                    ('syscr', 'Syscr'),
+                    ('syscw', 'Syscw'),
+                    ('bytes_transferred', 'Bytes Transferred')
+                    ] %}
+                                <tr class="{{ field }}">
+                                    <th class="job_table_width">{{ name }}</th>
+                                    <td>{{ job_metrics[field] }}</td>
+                                </tr>
+                            {% endfor %}
+                        </table>
+
+                        <h3>Other Metrics</h3>
+
+                        <table class="job_metrics_info">
+                            {% for field, name in [
+                    ('threads', 'Threads'),
+                    ('transfer_duration', 'Transfer Duration')
+                    ] %}
+                                <tr class="{{ field }}">
+                                    <th class="job_table_width">{{ name }}</th>
+                                    <td>{{ job_metrics[field] }}</td>
+                                </tr>
+                            {% endfor %}
+                        </table>
+
+                        <h3>Hardware Counters</h3>
+
+                        <table class="job_metrics_info">
+                            {% for field, name in [
+                    ('totins', 'Total Instructions Executed'),
+                    ('fpops', 'Floating Point Operations Executed'),
+                    ('fpins', 'Floating Point Instructions Executed'),
+                    ('ldins', 'Load Instructions Executed'),
+                    ('srins', 'Store Instructions Executed'),
+                    ('l3misses', 'L3 Total Cache Misses'),
+                    ('l2misses', 'L2 Total Cache Misses'),
+                    ('l1misses', 'L1 Total Cache Misses')
+                    ] %}
+                                <tr class="{{ field }}">
+                                    <th class="job_table_width">{{ name }}</th>
+                                    <td>{{ job_metrics[field] }}</td>
+                                </tr>
+                            {% endfor %}
+                        </table>
+
+                        <div class="row"></div>
                         <div class="row">
+                            <h3>CPU Related</h3>
                             <div id="chart_utime"></div>
                             <div id="chart_stime"></div>
+
+                            <h3>IO Related</h3>
                             <div id="chart_vmSize"></div>
                             <div id="chart_vmRSS"></div>
                             <div id="chart_syscr"></div>
                             <div id="chart_syscw"></div>
                             <div id="chart_iowait"></div>
-                            <div id="chart_threads"></div>
                             <div id="chart_read_bytes"></div>
                             <div id="chart_write_bytes"></div>
+
+                            <h3>Others</h3>
+                            <div id="chart_threads"></div>
+
+                            <h3>Hardware Counters</h3>
+                            <div id="chart_totins"></div>
+                            <div id="chart_fpops"></div>
+                            <div id="chart_fpins"></div>
+                            <div id="chart_ldins"></div>
+                            <div id="chart_srins"></div>
+                            <div id="chart_l3misses"></div>
+                            <div id="chart_l2misses"></div>
+                            <div id="chart_l1misses"></div>
                         </div>
                     </div>
                 {% endif %}
