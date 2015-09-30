@@ -1985,8 +1985,14 @@ class ScpHandler(TransferHandlerBase):
         successful_l = []
         failed_l = []
 
+        # number of transfers to group depends on the maximum allowed command line lenght
+        max_cmd_len = os.sysconf('SC_ARG_MAX')
+        if max_cmd_len < 1:
+            max_cmd_len = 10000
+        max_transfers_in_group = max_cmd_len / 3000
+
         # limit the size of the groups to 70 to keep command lines short
-        for t_group in self._similar_groups(transfers, max_transfers_in_group = 70):
+        for t_group in self._similar_groups(transfers, max_transfers_in_group = max_transfers_in_group):
         
             t_base = t_group[0]
         
@@ -2068,8 +2074,15 @@ class ScpHandler(TransferHandlerBase):
     def do_removes(self, transfers_l):
         successful_l = []
         failed_l = []
+
+        # number of removes to group depends on the maximum allowed command line lenght
+        max_cmd_len = os.sysconf('SC_ARG_MAX')
+        if max_cmd_len < 1:
+            max_cmd_len = 10000
+        max_transfers_in_group = max_cmd_len / 3000
+
         # limit the size of the groups to 70 to keep command lines short
-        for t_group in self._similar_groups(transfers_l, max_transfers_in_group = 70):
+        for t_group in self._similar_groups(transfers_l, max_transfers_in_group = max_transfers_in_group):
 
             t_base = t_group[0]
 
