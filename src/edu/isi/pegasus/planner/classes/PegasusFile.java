@@ -20,6 +20,7 @@ package edu.isi.pegasus.planner.classes;
 import java.util.BitSet;
 
 import edu.isi.pegasus.planner.dax.File;
+import edu.isi.pegasus.planner.namespace.Metadata;
 
 /**
  * The logical file object that contains the logical filename which is got from
@@ -174,6 +175,10 @@ public class PegasusFile extends Data {
      */
     protected double mSize;
 
+    /**
+     * Metadata attributes associated with the file.
+     */
+    private Metadata mMetadata;
 
     /**
      * The default constructor.
@@ -191,16 +196,17 @@ public class PegasusFile extends Data {
         mTransferFlag= this.TRANSFER_MANDATORY;
         mSize        = -1;
         mLink        = LINKAGE.NONE;
+        mMetadata    = new Metadata();
     }
 
     /**
      * The overloaded constructor.
      *
-     * @param logName  the logical name of the file.
+     * @param lfn  the logical name of the file.
      */
-    public PegasusFile(String logName) {
+    public PegasusFile(String lfn) {
         this();
-        mLogicalFile = logName;
+        mLogicalFile = lfn;
     }
 
     /**
@@ -574,25 +580,37 @@ public class PegasusFile extends Data {
     public BitSet getFlags(){
         return mFlags;
     }
+    
+    /**
+     * Add metadata to the object.
+     * 
+     * @param key
+     * @param value 
+     */
+    public void addMetadata( String key, String value ){
+       this.mMetadata.checkKeyInNS( key, value );
+    }
 
     /**
-     * Checks if an object is similar to the one referred to by this class.
-     * We compare the primary key to determine if it is the same or not.
-     *
-     * @return true if the primary key (lfn,transfer flag,transient flag) match.
-     *         else false.
+     * Returns metadata attribute for a particular key 
+     * 
+     * @param key
+     * 
+     * @return value returned else null if not found
      */
-/*    public boolean equals(Object o){
-        if(o instanceof PegasusFile){
-            PegasusFile file = (PegasusFile) o;
-
-            return (file.mLogicalFile.equals(this.mLogicalFile) &&
-                    (file.getTransientRegFlag() == this.getTransientRegFlag()) &&
-                    (file.getTransferFlag() == this.getTransferFlag()));
-        }
-        return false;
+    public String getMetadata( String key  ){
+       return (String)mMetadata.get( key );
     }
-*/
+    
+    /**
+     * Returns all metadata attributes for the file
+     * 
+     * @return Metadata 
+     */
+    public Metadata getAllMetadata( ){
+       return this.mMetadata;
+    }
+
 
      /**
       * Checks if an object is similar to the one referred to by this class.
@@ -652,6 +670,7 @@ public class PegasusFile extends Data {
         pf.mType         = mType;
         pf.mTransferFlag = mTransferFlag;
         pf.mSize         = mSize;
+        pf.mMetadata     = (Metadata) this.mMetadata.clone();
         return pf;
     }
 
@@ -702,6 +721,8 @@ public class PegasusFile extends Data {
             }
         }
         sb.append( ")");
+        
+        sb.append( "metadata").append( this.getAllMetadata() );
 
         return sb.toString();
     }
