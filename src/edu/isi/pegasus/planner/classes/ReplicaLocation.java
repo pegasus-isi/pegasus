@@ -84,6 +84,7 @@ public class ReplicaLocation
      */
     public ReplicaLocation( String lfn , List<ReplicaCatalogEntry> pfns ){
         this();
+        mLFN = lfn;
         mPFNList = pfns;
         //sanitize pfns. add a default resource handle if not specified
         sanitize( mPFNList );
