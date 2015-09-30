@@ -303,18 +303,6 @@ public class Stampede implements CodeGenerator {
                     mLogFormatter.popEvent();
                 }
             }
-/* PM-747
-            for ( Iterator<PCRelation> it =  dag.dagInfo.relations.iterator(); it.hasNext(); ){
-                PCRelation relation = it.next();
-                mLogFormatter.addEvent( Stampede.JOB_EDGE_EVENT_NAME, Stampede.WORKFLOW_ID_KEY, uuid );
-
-                mLogFormatter.add( Stampede.PARENT_JOB_ID_KEY, relation.getParent() );
-                mLogFormatter.add( Stampede.CHILD_JOB_ID_KEY, relation.getChild() );
-
-                writer.println( mLogFormatter.createLogMessage() );
-                mLogFormatter.popEvent();
-            }
-*/
 
         }
         else{
@@ -342,19 +330,6 @@ public class Stampede implements CodeGenerator {
                 }
             }
             
-            //write out the edge informatiom for the workflow
-/* PM-747
-            for ( Iterator<PCRelation> it =  dag.dagInfo.relations.iterator(); it.hasNext(); ){
-                PCRelation relation = it.next();
-                mLogFormatter.addEvent( Stampede.TASK_EDGE_EVENT_NAME, Stampede.WORKFLOW_ID_KEY, uuid );
-
-                mLogFormatter.add( Stampede.PARENT_TASK_ID_KEY, relation.getAbstractParentID() );
-                mLogFormatter.add( Stampede.CHILD_TASK_ID_KEY, relation.getAbstractChildID() );
-
-                writer.println( mLogFormatter.createLogMessage() );
-                mLogFormatter.popEvent();
-            }
-*/
         }
 
 
