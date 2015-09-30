@@ -83,7 +83,7 @@ public class ReplicaLocation
      * @param pfns the list of <code>ReplicaCatalogEntry</code> objects.
      */
     public ReplicaLocation( String lfn , List<ReplicaCatalogEntry> pfns ){
-        mLFN     = lfn;
+        this();
         mPFNList = pfns;
         //sanitize pfns. add a default resource handle if not specified
         sanitize( mPFNList );
@@ -97,17 +97,12 @@ public class ReplicaLocation
      * @param pfns the list of <code>ReplicaCatalogEntry</code> objects.
      */
     public ReplicaLocation( String lfn , Collection<ReplicaCatalogEntry> pfns ){
-        mLFN     = lfn;
-
-        //create a separate list only if required
-        mPFNList = ( pfns instanceof List )?
+        this( lfn, 
+              //create a separate list only if required
+              ( pfns instanceof List )?
                    (List)pfns:
                    //create a new list from the collection
-                   new ArrayList( pfns ) ;
-
-        //sanitize pfns. add a default resource handle if not specified
-        sanitize( mPFNList );
-
+                   new ArrayList( pfns ) );
     }
 
     /**
