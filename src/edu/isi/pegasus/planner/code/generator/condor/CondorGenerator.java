@@ -68,6 +68,7 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
+import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.namespace.Metadata;
 
@@ -1194,7 +1195,7 @@ public class CondorGenerator extends Abstract {
 
             
         } catch (Exception e) {
-            throw new CodeGeneratorException( "While writing to DOT FILE " + filename,
+            throw new CodeGeneratorException( "While writing to metadata FILE " + filename,
                                               e);
         }
         finally{
@@ -2035,6 +2036,23 @@ class GraphNodeGSONAdapter extends TypeAdapter<GraphNode> {
                     String key = (String) it.next();
                     writer.name(  key );
                     writer.value((String) m.get(key));
+                }
+            }
+            //for input and output files prefix with lfn name
+            for( PegasusFile pf : job.getInputFiles() ){
+                String prefix = pf.getLFN() + "@";
+                for( Iterator it = pf.getAllMetadata().getProfileKeyIterator(); it.hasNext(); ){
+                    String key = (String) it.next();
+                    writer.name(  prefix + key );
+                    writer.value((String) pf.getMetadata(key));
+                }
+            }
+            for( PegasusFile pf : job.getOutputFiles() ){
+                String prefix = pf.getLFN() + ".";
+                for( Iterator it = pf.getAllMetadata().getProfileKeyIterator(); it.hasNext(); ){
+                    String key = (String) it.next();
+                    writer.name(  prefix + key );
+                    writer.value((String) pf.getMetadata(key));
                 }
             }
         }  

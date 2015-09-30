@@ -113,7 +113,7 @@ public class ADag extends Data implements Graph{
     /**
      * The profiles associated with the site.
      */
-    @Expose @SerializedName( "metadata" )
+    @Expose @SerializedName( "wf_metadata" )
     private Profiles mProfiles;
     
     /**
