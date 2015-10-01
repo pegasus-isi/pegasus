@@ -113,6 +113,10 @@ static int mypid = 0;
 /* This is the trace file where we write information about the process */
 static FILE* trace = NULL;
 
+/* online monitoring - additional info in case /proc is unavailable */
+pthread_mutex_t _interpose_io_mut = PTHREAD_MUTEX_INITIALIZER;
+IoUtilInfo _interpose_io_util_info = { 0, 0, 0, 0, 0, 0, 0 };
+
 #ifdef HAS_PAPI
 static int papi_ok = 0;
 
@@ -738,10 +742,10 @@ static void trace_read(int fd, ssize_t amount) {
     f->nread += 1;
 
     // Information written for online monitoring in case there is no /proc 
-//    pthread_mutex_lock(&_interpose_io_mut);
-//    _interpose_io_util_info.rchar += amount;
-//    _interpose_io_util_info.syscr += 1;
-//    pthread_mutex_unlock(&_interpose_io_mut);
+   pthread_mutex_lock(&_interpose_io_mut);
+   _interpose_io_util_info.rchar += amount;
+   _interpose_io_util_info.syscr += 1;
+   pthread_mutex_unlock(&_interpose_io_mut);
     
 unlock:
     unlock_descriptors();
@@ -760,10 +764,10 @@ static void trace_write(int fd, ssize_t amount) {
     f->nwrite += 1;
 
     // Information written for online monitoring in case there is no /proc
-//    pthread_mutex_lock(&_interpose_io_mut);
-//    _interpose_io_util_info.wchar += amount;
-//    _interpose_io_util_info.syscw += 1;
-//    pthread_mutex_unlock(&_interpose_io_mut);
+   pthread_mutex_lock(&_interpose_io_mut);
+   _interpose_io_util_info.wchar += amount;
+   _interpose_io_util_info.syscw += 1;
+   pthread_mutex_unlock(&_interpose_io_mut);
 
 unlock:
     unlock_descriptors();

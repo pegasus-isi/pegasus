@@ -23,6 +23,9 @@
 #include "interpose.h"
 #include "interpose_monitoring.h"
 
+extern pthread_mutex_t _interpose_io_mut;
+extern IoUtilInfo _interpose_io_util_info;
+
 static int monitor_running;
 static pthread_t monitor_thread;
 static pthread_mutex_t monitor_mutex;
@@ -39,16 +42,6 @@ typedef struct {
     unsigned long long vmRSS;
     unsigned long threads;
 } MemUtilInfo;
-
-typedef struct {
-    unsigned long long rchar;
-    unsigned long long wchar;
-    unsigned long syscr;
-    unsigned long syscw;
-    unsigned long long read_bytes;
-    unsigned long long write_bytes;
-    unsigned long long cancelled_write_bytes;
-} IoUtilInfo;
 
 static int startswith(const char *line, const char *tok) {
     return strstr(line, tok) == line;
@@ -257,6 +250,13 @@ static void read_mem_status(MemUtilInfo *info) {
 /* Read /proc/self/io to get I/O usage */
 static void read_io_status(IoUtilInfo *info) {
     char iofile[] = "/proc/self/io";
+
+    pthread_mutex_lock(&_interpose_io_mut);
+    info->rchar = _interpose_io_util_info.rchar;
+    info->wchar = _interpose_io_util_info.wchar;
+    info->syscw = _interpose_io_util_info.syscw;
+    info->syscr = _interpose_io_util_info.syscr;
+    pthread_mutex_unlock(&_interpose_io_mut);
 
     /* This proc file was added in Linux 2.6.20. It won't be
      * there on older kernels, or on kernels without task IO
