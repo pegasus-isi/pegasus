@@ -117,7 +117,7 @@ class Transfer:
         if string.find(url, "file:") == 0:
             proto = "file"
             # file urls can either start with file://[\w]*/ or file: (no //)
-            path = re.sub("^file:(//)?", "", url)
+            path = re.sub("^file:(//(localhost)?)?", "", url)
             path = expand_env_vars(path)
             return proto, host, path
         
