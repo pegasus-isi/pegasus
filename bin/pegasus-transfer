@@ -1966,7 +1966,7 @@ def main():
         for line in input_file.readlines():
             line_nr += 1
             if len(line) > 4:
-                line = line.rstrip('\n')
+                line = line.rstrip()
 
                 # src comment
                 if line_state == 3 and line[0] == '#':
