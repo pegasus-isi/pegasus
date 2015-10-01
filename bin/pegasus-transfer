@@ -1986,10 +1986,7 @@ class ScpHandler(TransferHandlerBase):
         failed_l = []
 
         # number of transfers to group depends on the maximum allowed command line lenght
-        max_cmd_len = os.sysconf('SC_ARG_MAX')
-        if max_cmd_len < 1:
-            max_cmd_len = 10000
-        max_transfers_in_group = max_cmd_len / 3000
+        max_transfers_in_group = max_cmd_len / 1000
 
         # limit the size of the groups to 70 to keep command lines short
         for t_group in self._similar_groups(transfers, max_transfers_in_group = max_transfers_in_group):
@@ -2076,10 +2073,7 @@ class ScpHandler(TransferHandlerBase):
         failed_l = []
 
         # number of removes to group depends on the maximum allowed command line lenght
-        max_cmd_len = os.sysconf('SC_ARG_MAX')
-        if max_cmd_len < 1:
-            max_cmd_len = 10000
-        max_transfers_in_group = max_cmd_len / 3000
+        max_transfers_in_group = max_cmd_len / 1000
 
         # limit the size of the groups to 70 to keep command lines short
         for t_group in self._similar_groups(transfers_l, max_transfers_in_group = max_transfers_in_group):
@@ -2677,6 +2671,9 @@ threads = []
 # try to create them over and over again
 remote_dirs_created = {}
 
+# many commands need to know how long the command line can be
+max_cmd_len = 0
+
 # gsiftp failure count - used to provide sane globus-url-copy options
 gsiftp_failures = 0
 
@@ -2743,6 +2740,8 @@ def backticks(cmd_line):
 
 
 def env_setup():
+
+    global max_cmd_len
     
     # PATH setup
     path = "/usr/bin:/bin"
@@ -2804,6 +2803,13 @@ def env_setup():
     os.environ['DYLD_LIBRARY_PATH'] = ":".join(ld_library_path_entries)
     logger.info("PATH=" + os.environ['PATH'])
     logger.info("LD_LIBRARY_PATH=" + os.environ['LD_LIBRARY_PATH'])
+
+    max_cmd_len = os.sysconf('SC_ARG_MAX')
+    if max_cmd_len < 10000:
+        logger.warning("Maximum command line argument lenght according to" + \
+                       " os.sysconf('SC_ARG_MAX') is %d" %(max_cmd_len) + \
+                       ". Adjusting to 10000")
+        max_cmd_len = 10000
 
 
 def check_cred_fs_permissions(path):
