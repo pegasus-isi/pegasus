@@ -106,7 +106,7 @@ class PegasusURL:
         if string.find(self.url, "file:") == 0:
             self.proto = "file"
             # file urls can either start with file://[\w]*/ or file: (no //)
-            self.path = re.sub("^file:(//)?", "", self.url)
+            self.path = re.sub("^file:(//(localhost)?)?", "", self.url)
             self.path = expand_env_vars(self.path)
             return
         
