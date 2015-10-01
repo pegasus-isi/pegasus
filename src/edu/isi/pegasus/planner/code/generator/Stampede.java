@@ -22,11 +22,13 @@ import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.code.CodeGenerator;
 import edu.isi.pegasus.planner.code.CodeGeneratorException;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Dagman;
+import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.refiner.DeployWorkerPackage;
 import java.io.BufferedWriter;
@@ -37,6 +39,7 @@ import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Set;
 
 /**
  * A Stampede Events Code Generator that generates events in netlogger format
@@ -190,6 +193,12 @@ public class Stampede implements CodeGenerator {
      */
     public static final String FILE_META_EVENT_NAME = "meta.rc";
     
+    public static final String METADATA_KEY = "key";
+    
+    public static final String METADATA_VALUE_KEY = "value";
+    
+    public static final String LFN_ID_KEY = "lfn.id";
+    
     
     /**
      * The handle to the netlogger log formatter.
@@ -329,6 +338,11 @@ public class Stampede implements CodeGenerator {
             
                 }
             }
+            
+            //PM-882 generates static metadata related events.
+            //for efficiency while loading in monitord we write them
+            //after all wf and task events.
+            generateMetadataEventsForWF( writer, dag );
             
         }
 
@@ -526,6 +540,83 @@ public class Stampede implements CodeGenerator {
 
         }
     }
+    
+    /**
+     * Generates metadata events for the workflow
+     * 
+     * @param writer
+     * @param workflow 
+     */
+    protected void generateMetadataEventsForWF(PrintWriter writer, ADag workflow) {
+        String wfuuid = workflow.getWorkflowUUID();
+        if( !workflow.getAllMetadata().isEmpty() ){
+            //generate workflow related metadata events.
+            Metadata m = workflow.getAllMetadata();
+            for( Iterator it = m.getProfileKeyIterator(); it.hasNext(); ){
+                String key = (String) it.next();
+                mLogFormatter.addEvent( Stampede.WF_META_EVENT_NAME, Stampede.WORKFLOW_ID_KEY, wfuuid );
+
+                mLogFormatter.add( Stampede.METADATA_KEY, key );
+                mLogFormatter.add( Stampede.METADATA_VALUE_KEY, (String) m.get(key));
+
+                writer.println( mLogFormatter.createLogMessage() );
+                mLogFormatter.popEvent();
+            }
+        }
+        
+        //iterator through all the nodes and generate
+        //task and file related metadata
+        for( Iterator<GraphNode> jobIt = workflow.jobIterator(); jobIt.hasNext(); ){
+            GraphNode node = jobIt.next();
+            Job job = (Job)node.getContent();
+            if( !job.getMetadata().isEmpty() ){
+                //generate job related metadata events.
+                Metadata m = (Metadata) job.getMetadata();
+                for( Iterator it = m.getProfileKeyIterator(); it.hasNext(); ){
+                    String key = (String) it.next();
+                    mLogFormatter.addEvent( Stampede.TASK_META_EVENT_NAME, Stampede.WORKFLOW_ID_KEY, wfuuid );
+                    mLogFormatter.add( Stampede.TASK_ID_KEY, job.getLogicalID() );
+                    mLogFormatter.add( Stampede.METADATA_KEY, key );
+                    mLogFormatter.add( Stampede.METADATA_VALUE_KEY, (String) m.get(key));
+
+                    writer.println( mLogFormatter.createLogMessage() );
+                    mLogFormatter.popEvent();
+                }
+                
+                //generate file metadata events
+                generateMetadataEventsForFiles( writer, workflow, job.getInputFiles() );
+                generateMetadataEventsForFiles( writer, workflow, job.getOutputFiles() );
+            }
+
+        }
+    }
+    
+    /**
+     * Generates the required events for the files
+     * 
+     * @param writer    the writer
+     * @param workflow
+     * @param files 
+     */
+    private void generateMetadataEventsForFiles(PrintWriter writer, ADag workflow, Collection<PegasusFile> files ) {
+        String wfuuid = workflow.getWorkflowUUID();
+        for( Iterator<PegasusFile> pit = files.iterator(); pit.hasNext(); ){
+            PegasusFile file = pit.next();
+            if( !file.getAllMetadata().isEmpty()){
+                Metadata m = file.getAllMetadata();
+                for( Iterator it = m.getProfileKeyIterator(); it.hasNext(); ){
+                    String key = (String) it.next();
+                    mLogFormatter.addEvent( Stampede.FILE_META_EVENT_NAME, Stampede.WORKFLOW_ID_KEY, wfuuid );
+                    mLogFormatter.add( Stampede.LFN_ID_KEY, file.getLFN() );
+                    mLogFormatter.add( Stampede.METADATA_KEY, key );
+                    mLogFormatter.add( Stampede.METADATA_VALUE_KEY, (String) m.get(key));
+
+                    writer.println( mLogFormatter.createLogMessage() );
+                    mLogFormatter.popEvent();
+                }
+            }
+        }
+    }
 
     /**
      * Method not implemented. Throws an exception.
@@ -592,7 +683,6 @@ public class Stampede implements CodeGenerator {
     public void reset() throws CodeGeneratorException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-
 
     
 }
