@@ -1273,11 +1273,10 @@ def debug_condor(my_job):
         debug_script.write( """
 check_file() {
 file=$1
-echo "Status is $STATUS"
 if [ -e $file ]; then
     return 0
 else
-    echo "ERROR: file $file not generated"
+    echo "ERROR: output file $file not generated"
     STATUS=$(($STATUS + 1))
 fi
 }
