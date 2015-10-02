@@ -193,11 +193,27 @@ public class Stampede implements CodeGenerator {
      */
     public static final String FILE_META_EVENT_NAME = "meta.rc";
     
+    /**
+     * The event name for task map event that associates LFN with the 
+     * wf id and the job id's.
+     */
+    public static final String FILE_MAP_EVENT_NAME = "meta.map.file";
+    
+    /**
+     * Identifies the metadata key 
+     */
     public static final String METADATA_KEY = "key";
     
+    /**
+     * Identifies the value for the metadata key
+     */
     public static final String METADATA_VALUE_KEY = "value";
     
+    /**
+     * Identifies the LFN id for the key
+     */
     public static final String LFN_ID_KEY = "lfn.id";
+    
     
     
     /**
@@ -584,8 +600,8 @@ public class Stampede implements CodeGenerator {
                 }
                 
                 //generate file metadata events
-                generateMetadataEventsForFiles( writer, workflow, job.getInputFiles() );
-                generateMetadataEventsForFiles( writer, workflow, job.getOutputFiles() );
+                generateMetadataEventsForFiles( writer, workflow, job, job.getInputFiles() );
+                generateMetadataEventsForFiles( writer, workflow, job, job.getOutputFiles() );
             }
 
         }
@@ -595,10 +611,11 @@ public class Stampede implements CodeGenerator {
      * Generates the required events for the files
      * 
      * @param writer    the writer
-     * @param workflow
+     * @param workflow  the workflow
+     * @param job       the job in the abstract workflow.
      * @param files 
      */
-    private void generateMetadataEventsForFiles(PrintWriter writer, ADag workflow, Collection<PegasusFile> files ) {
+    private void generateMetadataEventsForFiles(PrintWriter writer, ADag workflow, Job job, Collection<PegasusFile> files ) {
         String wfuuid = workflow.getWorkflowUUID();
         for( Iterator<PegasusFile> pit = files.iterator(); pit.hasNext(); ){
             PegasusFile file = pit.next();
@@ -614,7 +631,13 @@ public class Stampede implements CodeGenerator {
                     writer.println( mLogFormatter.createLogMessage() );
                     mLogFormatter.popEvent();
                 }
-            }
+                //get the file map event
+                mLogFormatter.addEvent( Stampede.FILE_MAP_EVENT_NAME, Stampede.WORKFLOW_ID_KEY, wfuuid );
+                mLogFormatter.add( Stampede.TASK_ID_KEY, job.getLogicalID() );
+                mLogFormatter.add( Stampede.LFN_ID_KEY, file.getLFN() );
+                writer.println( mLogFormatter.createLogMessage() );
+                mLogFormatter.popEvent();
+          }
         }
     }
 
