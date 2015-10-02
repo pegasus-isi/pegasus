@@ -1274,10 +1274,11 @@ if [ -e $file ]; then
     return 0
 else
     echo "ERROR: file $file not generated"
-STATUS=$(($STATUS + 1))
+    STATUS=$(($STATUS + 1))
 fi
 }
          """ )
+        debug_script.write("\n")
 
         debug_script.write("export pegasus_lite_work_dir=%s" %debug_dir)
         debug_script.write("\n")
@@ -1346,7 +1347,7 @@ fi
         debug_script.write( 'set +e \n')
         for out_file in my_job.transfer_output_files.split(","):
             if len(out_file):
-                debug_script.write("cp %s %s\n" % (my_file, debug_dir))
+                debug_script.write("check_file %s\n" % out_file )
 
         debug_script.write( """
 if [ $STATUS -eq 0 ]; then
