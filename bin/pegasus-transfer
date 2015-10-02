@@ -1986,9 +1986,9 @@ class ScpHandler(TransferHandlerBase):
         failed_l = []
 
         # number of transfers to group depends on the maximum allowed command line lenght
-        max_transfers_in_group = max_cmd_len / 1000
+        max_transfers_in_group = max_cmd_len / 500
 
-        # limit the size of the groups to 70 to keep command lines short
+        # limit the size of the groups to keep command lines short
         for t_group in self._similar_groups(transfers, max_transfers_in_group = max_transfers_in_group):
         
             t_base = t_group[0]
@@ -2073,9 +2073,9 @@ class ScpHandler(TransferHandlerBase):
         failed_l = []
 
         # number of removes to group depends on the maximum allowed command line lenght
-        max_transfers_in_group = max_cmd_len / 1000
+        max_transfers_in_group = max_cmd_len / 500
 
-        # limit the size of the groups to 70 to keep command lines short
+        # limit the size of the groups to keep command lines short
         for t_group in self._similar_groups(transfers_l, max_transfers_in_group = max_transfers_in_group):
 
             t_base = t_group[0]
@@ -2739,6 +2739,25 @@ def backticks(cmd_line):
                             stdout=subprocess.PIPE).communicate()[0]
 
 
+def max_cmd_length():
+    """
+    os.sysconf('SC_ARG_MAX') does not always work, so use brute force
+    to determine the maximum command line lenght the system can handle
+    """
+
+    for n in range(10, 20):
+        s = "X" * (2**n)
+        cmd = "echo " + s + " >/dev/null"
+        process = None
+        try:
+            backticks(cmd)
+        except:
+            return (2**(n-1))/2
+
+    # we shouldn't really get here, but if we do, 2^20/2
+    return (2**20) / 2 
+
+
 def env_setup():
 
     global max_cmd_len
@@ -2804,12 +2823,8 @@ def env_setup():
     logger.info("PATH=" + os.environ['PATH'])
     logger.info("LD_LIBRARY_PATH=" + os.environ['LD_LIBRARY_PATH'])
 
-    max_cmd_len = os.sysconf('SC_ARG_MAX')
-    if max_cmd_len < 10000:
-        logger.warning("Maximum command line argument lenght according to" + \
-                       " os.sysconf('SC_ARG_MAX') is %d" %(max_cmd_len) + \
-                       ". Adjusting to 10000")
-        max_cmd_len = 10000
+    max_cmd_len = max_cmd_length()
+    logger.info("Maximum command line argument lenght to be used: %d" %(max_cmd_len))
 
 
 def check_cred_fs_permissions(path):
