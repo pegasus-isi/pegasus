@@ -177,6 +177,12 @@ public class Stampede implements CodeGenerator {
     public static final String TASK_MAP_EVENT_NAME = "wf.map.task_job";
     
     //metadata related events
+    
+    /**
+     * Marker event to indicate the start of metadata events.
+     */
+    public static final String WF_META_START_EVENT_NAME = "static.meta.start";
+    
     /**
      * The event name for the event that populates to wf_meta tables
      */
@@ -198,6 +204,12 @@ public class Stampede implements CodeGenerator {
      * wf id and the job id's.
      */
     public static final String FILE_MAP_EVENT_NAME = "meta.map.file";
+    
+    
+    /**
+     * Marker event to indicate the end of metadata events.
+     */
+    public static final String WF_META_END_EVENT_NAME = "static.meta.end";
     
     /**
      * Identifies the metadata key 
@@ -565,6 +577,12 @@ public class Stampede implements CodeGenerator {
      */
     protected void generateMetadataEventsForWF(PrintWriter writer, ADag workflow) {
         String wfuuid = workflow.getWorkflowUUID();
+        
+        //static.meta.start event to indicate start of metadata events
+        mLogFormatter.addEvent( Stampede.WF_META_START_EVENT_NAME, Stampede.WORKFLOW_ID_KEY, wfuuid );
+        writer.println( mLogFormatter.createLogMessage() );
+        mLogFormatter.popEvent();
+        
         if( !workflow.getAllMetadata().isEmpty() ){
             //generate workflow related metadata events.
             Metadata m = workflow.getAllMetadata();
@@ -605,6 +623,11 @@ public class Stampede implements CodeGenerator {
             }
 
         }
+        
+        //static.meta.end event to indicate start of metadata events
+        mLogFormatter.addEvent( Stampede.WF_META_END_EVENT_NAME, Stampede.WORKFLOW_ID_KEY, wfuuid );
+        writer.println( mLogFormatter.createLogMessage() );
+        mLogFormatter.popEvent();
     }
     
     /**
