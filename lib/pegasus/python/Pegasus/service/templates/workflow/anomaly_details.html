@@ -5,7 +5,7 @@
 {% block title %}Anomaly Details{% endblock %}
 {% block javascript_includes %}
     <script type="text/javascript" src="//code.highcharts.com/4.1.4/highcharts.js"></script>
-    <script type="text/javascript" src="http://get.influxdb.org/influxdb-latest.js"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/influxdb-latest.js') }}"></script>
 {% endblock %}
 {% block javascript_init %}
     <script type="text/javascript" charset="utf-8">
@@ -14,9 +14,11 @@
             var d = new Date(0); // The 0 there is the key, which sets the date to the epoch
             d.setUTCSeconds({{ anomaly.ts }});
 
+            var metrics = JSON.parse({{ anomaly.metrics|tojson }});
+
             for (var i = data[0].points.length - 1; i >= 0; --i) {
                 var x = data[0].points[i].time;
-                var y = data[0].points[i]['{{ anomaly.metrics }}'];
+                var y = data[0].points[i][metrics.kickstart];
 
                 if (x.getTime() == d.getTime()) {
                     y = {
@@ -63,7 +65,7 @@
                 },
                 yAxis: {
                     title: {
-                        text: '{{ anomaly.metrics }}'
+                        text: metrics.kickstart
                     },
                     min: 0,
                     plotBands: [{ // visualize the weekend
@@ -107,14 +109,15 @@
 
                 series: [{
                     type: 'area',
-                    name: '{{ anomaly.metrics }}',
+                    name: metrics.kickstart,
                     data: points
                 }]
             });
         }
 
         function getTimeSeriesData(influxdb) {
-            data = influxdb.readPoint('{{ anomaly.metrics }}', '"{{ anomaly.dag_job_id }}:{{ job_instance.sched_id }}"', plotChart);
+            var metrics = JSON.parse({{ anomaly.metrics|tojson }});
+            data = influxdb.readPoint(metrics.kickstart, '"{{ anomaly.dag_job_id }}:{{ job_instance.sched_id }}"', plotChart);
         }
 
         $(function () {
