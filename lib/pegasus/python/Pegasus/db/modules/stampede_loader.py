@@ -95,6 +95,11 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             'stampede.job_inst.globus.submit.end' : self.jobstate,
             'stampede.inv.start' : self.noop, # good
             'stampede.inv.end' : self.invocation,
+            'stampede.meta.xwf' : self.workflow_meta,
+            'stampede.meta.task' : self.task_meta,
+            #'stampede.meta.rc'   : self.rc_meta,
+            #'stampede.meta.map.file' : self.wf_task_file_map,
+
         }
 
         # Dicts for caching FK lookups
@@ -208,6 +213,8 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
                 # inv.end
                 'inv_id': 'task_submit_seq',
                 'dur': 'remote_duration',
+                # workflow_meta task_meta rc_meta
+                'key': 'name',
             }
 
             # remap attr names
@@ -445,6 +452,24 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             if wfs.event == 'stampede.xwf.end':
                 self.flushCaches(wfs)
 
+    def workflow_meta(self, linedata):
+        """
+
+        :param linedata:  dictionary of netlogger BP data dict-ified
+        :return:
+
+        Handles a workflow metadata insert event.
+        """
+        wf_meta = self.linedataToObject( linedata, WorkflowMeta() )
+        wf_meta.wf_id = self.wf_uuid_to_id( wf_meta.wf_uuid )
+
+        self.log.debug( 'workflowmeta: %s', wf_meta)
+
+        if self._batch:
+            self._batch_cache['batch_events'].append(wf_meta)
+        else:
+            wf_meta.commit_to_db(self.session)
+
     def job(self, linedata):
         """
         @type   linedata: dict
@@ -672,6 +697,25 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             pass
         else:
             self.session.commit()
+
+    def task_meta(self, linedata):
+        """
+
+        :param linedata:  dictionary of netlogger BP data dict-ified
+        :return:
+
+        Handles a task metadata insert event.
+        """
+        task_meta = self.linedataToObject( linedata, TaskMeta() )
+        task_meta.wf_id = self.wf_uuid_to_id( task_meta.wf_uuid )
+        #task_meta.task_id = self.
+
+        self.log.debug( 'task_meta: %s', task_meta)
+
+        if self._batch:
+            self._batch_cache['batch_events'].append(task_meta)
+        else:
+            task_meta.commit_to_db(self.session)
 
     def subwf_map(self, linedata):
         """
