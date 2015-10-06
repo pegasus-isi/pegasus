@@ -519,7 +519,7 @@ st_workflow_files = Table('wf_files', metadata,
                           Column('lfn_id', KeyInteger, ForeignKey('rc_lfn.lfn_id', ondelete='CASCADE'), nullable=False, primary_key=True),
                           Column('wf_id', KeyInteger, ForeignKey('workflow.wf_id', ondelete='CASCADE'), nullable=False, primary_key=True),
                           Column('task_id', KeyInteger, ForeignKey('task.task_id', ondelete='CASCADE'), nullable=False, primary_key=True),
-                          Column('file_type', VARCHAR(255), nullable=False),
+                          Column('file_type', VARCHAR(255), nullable=True),
                           **table_keywords
                           )
 
