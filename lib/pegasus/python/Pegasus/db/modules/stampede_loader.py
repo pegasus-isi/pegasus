@@ -100,7 +100,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             'stampede.meta.xwf' : self.workflow_meta,
             'stampede.meta.task' : self.task_meta,
             'stampede.meta.rc'   : self.rc_meta,
-            #'stampede.meta.map.file' : self.wf_task_file_map,
+            'stampede.meta.map.file' : self.wf_task_file_map,
             'stampede.static.meta.end': self.noop,
 
         }
@@ -754,6 +754,29 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             rc_meta.commit_to_db(self.session)
 
 
+    def wf_task_file_map(self , linedata ):
+        """
+        Handles the event that associates workflow, task and a file lfn .
+        Populates to wf_files
+
+        :param linedata:
+        :return:
+        """
+
+        wf_files = self.linedataToObject( linedata, WorkflowFiles() )
+        lfn = wf_files.lfn_id
+        wf_files.lfn = lfn
+        wf_files.wf_id   = self.wf_uuid_to_id( wf_files.wf_uuid )
+        wf_files.task_id = self.get_task_id( wf_files.wf_id, wf_files.abs_task_id )
+        wf_files.lfn_id  = self.get_lfn_id( wf_files.wf_id, lfn )
+
+        self.log.debug( 'wf_files: %s', wf_files)
+
+        if self._batch:
+            self._batch_cache['batch_events'].append(wf_files)
+        else:
+            rc_meta.commit_to_db(self.session)
+
     def subwf_map(self, linedata):
         """
         @type   linedata: dict
@@ -1048,6 +1071,10 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         for k,v in self.task_id_cache.items():
             if k[0] == wfs.wf_id:
                 del self.task_id_cache[k]
+
+        for k,v in self.file_id_cache.items():
+            if k[0] == wfs.wf_id:
+                del self.file_id_cache[k]
 
         for k,v in self.job_id_cache.items():
             if k[0] == wfs.wf_id:
