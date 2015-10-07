@@ -219,6 +219,8 @@ def finish_stampede_loader():
             except:
                 logger.warning("could not call the finish method "+\
                                    "in the nl loader class... exiting anyway")
+                logger.warning(traceback.format_exc())
+
             print (utils.isodate(time.time()) + " - pegasus-monitord - DB flushing ended ").ljust(80, "-")
 
 
