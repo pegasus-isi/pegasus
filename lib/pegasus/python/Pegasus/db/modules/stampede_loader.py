@@ -218,8 +218,6 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
                 # inv.end
                 'inv_id': 'task_submit_seq',
                 'dur': 'remote_duration',
-                # workflow_meta task_meta rc_meta
-                'key': 'name',
             }
 
             # remap attr names
