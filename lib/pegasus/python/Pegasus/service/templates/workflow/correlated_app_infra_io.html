@@ -5,7 +5,7 @@
 {% block title %}Anomaly Details{% endblock %}
 {% block javascript_includes %}
 
-    <script src="http://code.highcharts.com/stock/highstock.js"></script>
+    <script src="//code.highcharts.com/stock/highstock.js"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='js/influxdb-latest.js') }}"></script>
 {% endblock %}
 {% block javascript_init %}
@@ -145,7 +145,7 @@
             }
 
             series[metrics.infra] = points;
-            console.log(series);
+
             plotChart();
         }
 
