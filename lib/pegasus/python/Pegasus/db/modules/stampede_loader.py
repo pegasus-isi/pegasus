@@ -1072,9 +1072,9 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             if k[0] == wfs.wf_id:
                 del self.task_id_cache[k]
 
-        for k,v in self.file_id_cache.items():
+        for k,v in self.lfn_id_cache.items():
             if k[0] == wfs.wf_id:
-                del self.file_id_cache[k]
+                del self.lfn_id_cache[k]
 
         for k,v in self.job_id_cache.items():
             if k[0] == wfs.wf_id:
