@@ -12,6 +12,8 @@ pegasus.estimator = Aspen
 
 pegasus.metrics.app 	    pegasus-examples
 
+pegasus.catalog.replica File
+pegasus.catalog.replica.file  ./conf/rc.data
 
 
 
