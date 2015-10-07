@@ -230,8 +230,14 @@ def anomaly(username, root_wf_id, wf_id, anomaly_id):
     w, j, ji, a = dashboard.get_anomaly_details(wf_id, anomaly_id)
     a.json = json.loads(a.json)
 
-    return render_template('workflow/anomaly_details.html', root_wf_id=root_wf_id, wf_id=wf_id, workflow=w, job=j,
-                           job_instance=ji, anomaly=a, influxdb_url=current_app.config['INFLUXDB_URL'])
+    if a.anomaly_type == 'kickstart.threshold_exceeded':
+        return render_template('workflow/anomaly_details.html', root_wf_id=root_wf_id, wf_id=wf_id, workflow=w, job=j,
+                               job_instance=ji, anomaly=a, influxdb_url=current_app.config['INFLUXDB_URL'])
+
+    elif a.anomaly_type == 'correlated.app.infra.io':
+        return render_template('workflow/correlated_app_infra_io.html', root_wf_id=root_wf_id, wf_id=wf_id, workflow=w,
+                               job=j, job_instance=ji, anomaly=a, influxdb_url=current_app.config['INFLUXDB_URL'])#,
+                               #time_range=time_range)
 
 
 @dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>/job_metrics_update', methods=['GET'])

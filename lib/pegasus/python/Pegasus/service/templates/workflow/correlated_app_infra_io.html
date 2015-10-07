@@ -1,0 +1,206 @@
+{% macro status_code(exitcode=None) -%}
+    {% if exitcode == None %}"running"{% elif exitcode !=  0 %}"failed"{% else %}"successful"{% endif %}
+{%- endmacro %}
+{% extends "base.html" %}
+{% block title %}Anomaly Details{% endblock %}
+{% block javascript_includes %}
+
+    <script src="http://code.highcharts.com/stock/highstock.js"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/influxdb-latest.js') }}"></script>
+{% endblock %}
+{% block javascript_init %}
+    <script type="text/javascript" charset="utf-8">
+        var influxdb_url = document.createElement('a');
+
+        var anomaly = {{ anomaly.json|tojson }};
+        var metrics = anomaly.metrics;
+        var message = anomaly.message;
+        var startTime = endTime = null;
+        var series = {};
+
+        influxdb_url.href = '{{ influxdb_url }}';
+
+        function plotChart() {
+            $('#chart').highcharts('StockChart', {
+
+                rangeSelector: {
+                    enabled: false
+                },
+
+                navigator: {
+                    enabled: false
+                },
+
+                scrollbar: {
+                    enabled: false
+                },
+
+                credits: {
+                    enabled: false
+                },
+
+                title: {
+                    text: 'Infrastructure IO'
+                },
+
+                subtitle: {
+                    text: message
+                },
+
+                yAxis: [{
+                    labels: {
+                        align: 'right',
+                        x: -3
+                    },
+                    title: {
+                        text: metrics.kickstart[0]
+                    },
+                    height: '30%',
+                    lineWidth: 2
+                }, {
+                    labels: {
+                        align: 'right',
+                        x: -3
+                    },
+                    title: {
+                        text: metrics.infra
+                    },
+                    top: '35%',
+                    height: '30%',
+                    offset: 0,
+                    lineWidth: 2
+                }, {
+                    labels: {
+                        align: 'right',
+                        x: -3
+                    },
+                    title: {
+                        text: metrics.kickstart[1]
+                    },
+                    top: '68%',
+                    height: '30%',
+                    offset: 0,
+                    lineWidth: 2
+                }],
+
+                series: [{
+                    type: 'area',
+                    name: metrics.kickstart[0],
+                    data: series[metrics.kickstart[0]],
+                    yAxis: 0
+                }, {
+                    type: 'area',
+                    name: metrics.infra,
+                    data: series[metrics.infra],
+                    yAxis: 1
+                }, {
+                    type: 'area',
+                    name: metrics.kickstart[1],
+                    data: series[metrics.kickstart[1]],
+                    yAxis: 2
+                }]
+            });
+        }
+
+        function kickstartData(data) {
+            startTime = data[0].points[data[0].points.length - 1].time.getTime();
+            endTime = data[0].points[0].time.getTime();
+
+            for (var j = 0; j < metrics.kickstart.length; ++j) {
+                var points = [];
+
+                for (var i = data[0].points.length - 1; i >= 0; --i) {
+                    var x = data[0].points[i].time;
+                    var y = data[0].points[i][metrics.kickstart[j]];
+
+                    points.push([x.getTime(), y]);
+                }
+
+                series[metrics.kickstart[j]] = points;
+            }
+
+            var influxdb = new InfluxDB({
+                host: influxdb_url.hostname,
+                port: influxdb_url.port,
+                username: influxdb_url.username,
+                password: influxdb_url.password,
+                ssl: influxdb_url.protocol == 'https:',
+                database: anomaly.infra_db_io
+            });
+
+            getInfrastructureMetricsData(influxdb);
+        }
+
+        function infrstructureData(data) {
+
+            var points = [];
+
+            if (data.length) {
+                for (var i = data[0].points.length - 1; i >= 0; --i) {
+                    var x = data[0].points[i].time;
+                    var y = data[0].points[i][metrics.infra];
+
+                    points.push([x.getTime(), y]);
+                }
+            }
+
+            series[metrics.infra] = points;
+            console.log(series);
+            plotChart();
+        }
+
+        function getKickstartMetricsData(influxdb) {
+            data = influxdb.readPoint(metrics.kickstart, '"{{ anomaly.dag_job_id }}:{{ job_instance.sched_id }}"', kickstartData);
+        }
+
+        function getInfrastructureMetricsData(influxdb) {
+            var query = 'SELECT ' + metrics.infra + ' FROM "' + anomaly.infra_series_io + '" WHERE time > ' +
+            (startTime - 1) + ' AND time < ' + (endTime + 1) + ';';
+            console.debug(query);
+            data = influxdb.query(query, infrstructureData);
+        }
+
+        $(function () {
+            plotChart();
+
+            var influxdb = new InfluxDB({
+                host: influxdb_url.hostname,
+                port: influxdb_url.port,
+                username: influxdb_url.username,
+                password: influxdb_url.password,
+                ssl: influxdb_url.protocol == 'https:',
+                database: '{{ workflow.dax_label }}:{{ workflow.wf_uuid }}'
+            });
+
+            getKickstartMetricsData(influxdb);
+        });
+
+    </script>
+{% endblock %}
+{% block css_includes %}
+    <style>
+    </style>
+{% endblock %}
+{% block navigation_bar %}
+    <li><a href="{{ url_for ('.workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a></li>
+    {% if anomaly.job_instance_id != None %}
+        <li>
+            <a href="{{ url_for ('.job', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job.job_id, job_instance_id = job_instance.job_instance_id) }}">Job</a>
+        </li>
+    {% endif %}
+    <li class="active">Anomaly</li>
+{% endblock %}
+{% block title_header %}Anomaly Details{% endblock %}
+{% block content %}
+    <section class="row">
+        <div class="col-xs-12">
+
+        </div>
+    </section>
+
+    <section class="row">
+        <div id="chart" class="col-xs-12">
+
+        </div>
+    </section>
+{% endblock %}
