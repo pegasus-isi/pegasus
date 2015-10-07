@@ -209,7 +209,8 @@ class RCMeta(SABase):
 # ---------------------------------------------
 db_version = Table('dbversion', metadata,
     Column('id', KeyInteger, primary_key=True, autoincrement=True, nullable=False),
-    Column('version_number', INT, nullable=False),
+    #Column('version_number', INT, nullable=False),
+    Column('version', VARCHAR(50), nullable=False),
     Column('version_timestamp', INT, nullable=False),
     sqlite_autoincrement=True
 )
@@ -279,16 +280,16 @@ Index('UNIQUE_WORKFLOWSTATE',
 orm.mapper(Workflowstate, st_workflowstate)
 
 
-st_workflow_meta = Table('wf_meta', metadata,
+st_workflow_meta = Table('workflow_meta', metadata,
     Column('meta_id', KeyInteger, primary_key=True, nullable=False),
     Column('wf_id', KeyInteger, ForeignKey('workflow.wf_id', ondelete='CASCADE'), nullable=False),
-    Column('name', VARCHAR(255), nullable=False),
+    Column('key', VARCHAR(255), nullable=False),
     Column('value', VARCHAR(255), nullable=False),
     **table_keywords
 )
 
 Index('wf_meta_id_KEY', st_workflow_meta.c.meta_id, unique=True)
-Index('UNIQUE_WORKFLOW_META', st_workflow_meta.c.wf_id, st_workflow_meta.c.name, st_workflow_meta.c.value, unique=True)
+Index('UNIQUE_WORKFLOW_META', st_workflow_meta.c.wf_id, st_workflow_meta.c.key, st_workflow_meta.c.value, unique=True)
 
 orm.mapper(WorkflowMeta, st_workflow_meta)
 
@@ -480,13 +481,13 @@ orm.mapper(TaskEdge, st_task_edge)
 st_task_meta = Table('task_meta', metadata,
     Column('meta_id', KeyInteger, primary_key=True, nullable=False),
     Column('task_id', KeyInteger, ForeignKey('task.task_id', ondelete='CASCADE'), nullable=False),
-    Column('name', VARCHAR(255), nullable=False),
+    Column('key', VARCHAR(255), nullable=False),
     Column('value', VARCHAR(255), nullable=False),
     **table_keywords
 )
 
 Index('meta_id_KEY', st_task_meta.c.meta_id, unique=True)
-Index('UNIQUE_TASK_META', st_task_meta.c.task_id, st_task_meta.c.name, st_task_meta.c.value, unique=True)
+Index('UNIQUE_TASK_META', st_task_meta.c.task_id, st_task_meta.c.key, st_task_meta.c.value, unique=True)
 
 orm.mapper(TaskMeta, st_task_meta)
 
@@ -515,7 +516,7 @@ Index('UNIQUE_INVOCATION', st_invocation.c.job_instance_id, st_invocation.c.task
 orm.mapper(Invocation, st_invocation)
 
 
-st_workflow_files = Table('wf_files', metadata,
+st_workflow_files = Table('workflow_files', metadata,
                           Column('lfn_id', KeyInteger, ForeignKey('rc_lfn.lfn_id', ondelete='CASCADE'), nullable=False, primary_key=True),
                           Column('wf_id', KeyInteger, ForeignKey('workflow.wf_id', ondelete='CASCADE'), nullable=False, primary_key=True),
                           Column('task_id', KeyInteger, ForeignKey('task.task_id', ondelete='CASCADE'), nullable=False, primary_key=True),
@@ -658,10 +659,10 @@ orm.mapper(RCPFN, rc_pfn)
 rc_meta = Table('rc_meta', metadata,
     Column('meta_id', KeyInteger, primary_key=True, nullable=False),
     Column('lfn_id', KeyInteger, ForeignKey('rc_lfn.lfn_id', ondelete='CASCADE'), nullable=False),
-    Column('name', VARCHAR(245), nullable=False),
+    Column('key', VARCHAR(245), nullable=False),
     Column('value', VARCHAR(245), nullable=False),
     **table_keywords
 )
 
-Index('rc_meta_unique', rc_meta.c.lfn_id, rc_meta.c.name, unique=True)
+Index('rc_meta_unique', rc_meta.c.lfn_id, rc_meta.c.key, unique=True)
 orm.mapper(RCMeta, rc_meta)

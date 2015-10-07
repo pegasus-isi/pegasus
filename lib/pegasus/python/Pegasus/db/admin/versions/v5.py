@@ -24,6 +24,18 @@ class Version(BaseVersion):
         # check whether it is safe to do that
         # self.db.execute("DROP TABLE file")
 
+        # updating dbversion
+        try:
+            log.info("Updating dbversion...")
+            self.db.execute("ALTER TABLE dbversion ADD COLUMN version VARCHAR(50) NOT NULL DEFAULT 0")
+            self.db.execute("UPDATE dbversion SET version=version_number")
+            self.db.commit()
+        except (OperationalError, ProgrammingError):
+            pass
+        except Exception, e:
+            self.db.rollback()
+            raise DBAdminError(e)
+
         # check if the migration was interrupted
         interrupted = False
         try:
@@ -79,7 +91,7 @@ class Version(BaseVersion):
             self.db.execute("INSERT INTO rc_pfn(lfn_id, pfn, site) SELECT l.lfn_id, a.pfn, a.site FROM rc_lfn l LEFT JOIN rc_lfn_v4 a ON (l.lfn=a.lfn)")
             self.db.commit()
             log.info("Updating rc_meta...")
-            self.db.execute("INSERT INTO rc_meta(lfn_id, name, value) SELECT l.lfn_id, a.name, a.value FROM rc_lfn l LEFT JOIN rc_lfn_v4 b ON (l.lfn=b.lfn) INNER JOIN rc_attr a ON (a.id=b.id)")
+            self.db.execute("INSERT INTO rc_meta(lfn_id, key, value) SELECT l.lfn_id, a.name, a.value FROM rc_lfn l LEFT JOIN rc_lfn_v4 b ON (l.lfn=b.lfn) INNER JOIN rc_attr a ON (a.id=b.id)")
             self.db.commit()
 
         except Exception, e:
@@ -151,7 +163,7 @@ class Version(BaseVersion):
             self.db.execute("INSERT INTO rc_lfn(lfn, pfn, site) SELECT l.lfn, a.pfn, a.site FROM (rc_lfn_v5 l INNER JOIN rc_pfn a ON (l.lfn_id=a.lfn_id))")
             self.db.commit()
             log.info("Updating rc_attr...")
-            self.db.execute("INSERT INTO rc_attr(id, name, value) SELECT l.id, a.name, a.value FROM rc_lfn l LEFT JOIN rc_lfn_v5 b ON (l.lfn=b.lfn) INNER JOIN rc_meta a ON (a.lfn_id=b.lfn_id)")
+            self.db.execute("INSERT INTO rc_attr(id, name, value) SELECT l.id, a.key, a.value FROM rc_lfn l LEFT JOIN rc_lfn_v5 b ON (l.lfn=b.lfn) INNER JOIN rc_meta a ON (a.lfn_id=b.lfn_id)")
             self.db.commit()
 
         except Exception, e:
