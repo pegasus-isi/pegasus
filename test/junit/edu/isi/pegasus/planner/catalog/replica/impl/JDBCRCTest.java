@@ -17,6 +17,7 @@ package edu.isi.pegasus.planner.catalog.replica.impl;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
+import edu.isi.pegasus.common.util.FindExecutable;
 import edu.isi.pegasus.common.util.StreamGobbler;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
@@ -24,6 +25,7 @@ import edu.isi.pegasus.planner.test.TestSetup;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.RuntimeException;
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
@@ -50,19 +52,17 @@ public class JDBCRCTest {
     @Before
     public void setUp() throws IOException {
 
-        String command = "./bin/pegasus-db-admin create jdbc:sqlite:jdbcrc_test.db";
+        String basename = "pegasus-db-admin";
+        File pegasusDBAdmin = FindExecutable.findExec( basename );
+        if( pegasusDBAdmin == null ){
+            throw new RuntimeException( "Unable to find path to " + basename );
+        }
+        String command = pegasusDBAdmin.getAbsolutePath() + " create jdbc:sqlite:jdbcrc_test.db";
 
         try {
             mTestSetup = new DefaultTestSetup();
             mLogger = mTestSetup.loadLogger(mTestSetup.loadPropertiesFromFile(".properties", new LinkedList()));
             mLogger.logEventStart("test.pegasus.url", "setup", "0");
-
-            Properties props = new Properties();
-            props.setProperty("db.driver", "sqlite");
-            props.setProperty("db.url", "jdbc:sqlite:jdbcrc_test.db");
-
-            jdbcrc = new JDBCRC();
-            jdbcrc.connect(props);
 
             Runtime r = Runtime.getRuntime();
             String[] envp = {"PYTHONPATH=" + System.getProperty("externals.python.path")};
@@ -87,6 +87,14 @@ public class JDBCRCTest {
             if (status != 0) {
                 throw new RuntimeException("Database creation failed with non zero exit status " + command);
             }
+
+            Properties props = new Properties();
+            props.setProperty("db.driver", "sqlite");
+            props.setProperty("db.url", "jdbc:sqlite:jdbcrc_test.db");
+
+            jdbcrc = new JDBCRC();
+            jdbcrc.connect(props);
+
         } catch (IOException ioe) {
             mLogger.log("IOException while executing " + command, ioe,
                     LogManager.ERROR_MESSAGE_LEVEL);
