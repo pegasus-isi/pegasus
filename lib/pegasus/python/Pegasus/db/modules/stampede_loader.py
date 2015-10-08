@@ -735,16 +735,6 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         rc_meta.wf_id = self.wf_uuid_to_id( rc_meta.wf_uuid )
         rc_meta.lfn_id = self.get_lfn_id( rc_meta.wf_id, lfn )
 
-        if rc_meta.lfn_id is None:
-            # we do an explicit insert to populate the RCLFN table
-            file = RCLFN()
-            file.lfn = lfn
-            # explicit insert
-            file.commit_to_db(self.session)
-            # seed the cache
-            rc_meta.lfn_id = self.get_lfn_id( rc_meta.wf_id, lfn )
-
-
         self.log.debug( 'rc_meta: %s', rc_meta)
 
         if self._batch:
@@ -765,16 +755,6 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         rc_pfn.lfn = lfn
         rc_pfn.wf_id = self.wf_uuid_to_id( rc_pfn.wf_uuid )
         rc_pfn.lfn_id = self.get_lfn_id( rc_pfn.wf_id, lfn )
-
-        if rc_pfn.lfn_id is None:
-            # we do an explicit insert to populate the RCLFN table
-            file = RCLFN()
-            file.lfn = lfn
-            # explicit insert
-            file.commit_to_db(self.session)
-            # seed the cache
-            rc_pfn.lfn_id = self.get_lfn_id( rc_pfn.wf_id, lfn )
-
 
         self.log.debug( 'rc_pfn: %s', rc_pfn)
 
@@ -979,20 +959,51 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         @type   lfn: string
         @param  lfn: The logical filename for the file
 
-        Gets and caches lfn_id for rc_meta inserts
+        Gets and caches lfn_id for rc_meta, rc_lfn, rc_pfn and wf_files inserts
         """
         if not self.lfn_id_cache.has_key((wf_id, lfn)):
-            query = self.session.query(RCLFN.lfn_id).filter( RCLFN.lfn == lfn)
-            try:
-                self.lfn_id_cache[((wf_id, lfn))] = query.one().lfn_id
-            except orm.exc.MultipleResultsFound, e:
-                self.log.error('Multiple results found for wf_uuid/lfn: %s/%s', wf_id, lfn)
-                return None
-            except orm.exc.NoResultFound, e:
-                self.log.error('No results found for wf_uuid/lfn: %s/%s', wf_id, lfn)
-                return None
+            id =  self.__get_lfn_id_from_database__(wf_id, lfn )
+
+            if id is None:
+                # we do an explicit insert to populate the RCLFN table
+                file = RCLFN()
+                file.lfn = lfn
+                # explicit insert
+                file.commit_to_db(self.session)
+                # retrieve from the database and set the cache
+                id = self.__get_lfn_id_from_database__(wf_id, lfn)
+
+                # if ID is still None then definitely an an error
+                if id is None:
+                    self.log.error('No results found for wf_uuid/lfn: %s/%s', wf_id, lfn)
+                    return None
+
+            self.lfn_id_cache[(wf_id, lfn)] = id
 
         return self.lfn_id_cache[(wf_id, lfn)]
+
+    def __get_lfn_id_from_database__(self, wf_id, lfn):
+        """
+        @type   wf_id: int
+        @param  wf_id: A workflow id from the workflow table.
+        @type   lfn: string
+        @param  lfn: The logical filename for the file
+
+        Retrieves the LFN explicitly by querying the database.
+        """
+
+        query = self.session.query(RCLFN.lfn_id).filter( RCLFN.lfn == lfn)
+        lfn_id = None
+        try:
+            lfn_id = query.one().lfn_id
+        except orm.exc.MultipleResultsFound, e:
+            self.log.error('Multiple results found for wf_uuid/lfn: %s/%s', wf_id, lfn)
+            return None
+        except orm.exc.NoResultFound, e:
+            self.log.error('No results found for wf_uuid/lfn: %s/%s', wf_id, lfn)
+            return None
+
+        return lfn_id
 
 
     def get_job_id(self, wf_id, exec_id):
