@@ -642,8 +642,10 @@ public class Stampede implements CodeGenerator {
         String wfuuid = workflow.getWorkflowUUID();
         for( Iterator<PegasusFile> pit = files.iterator(); pit.hasNext(); ){
             PegasusFile file = pit.next();
+            boolean hasMetadata = false;
             if( !file.getAllMetadata().isEmpty()){
                 Metadata m = file.getAllMetadata();
+                hasMetadata = true;
                 for( Iterator it = m.getProfileKeyIterator(); it.hasNext(); ){
                     String key = (String) it.next();
                     mLogFormatter.addEvent( Stampede.FILE_META_EVENT_NAME, Stampede.WORKFLOW_ID_KEY, wfuuid );
@@ -654,13 +656,16 @@ public class Stampede implements CodeGenerator {
                     writer.println( mLogFormatter.createLogMessage() );
                     mLogFormatter.popEvent();
                 }
-                //get the file map event
+            }
+            //generate the file map event if metadata was associated with the job
+            //or the register flag is set to true
+            if( hasMetadata || !file.getTransientRegFlag()){
                 mLogFormatter.addEvent( Stampede.FILE_MAP_EVENT_NAME, Stampede.WORKFLOW_ID_KEY, wfuuid );
                 mLogFormatter.add( Stampede.TASK_ID_KEY, job.getLogicalID() );
                 mLogFormatter.add( Stampede.LFN_ID_KEY, file.getLFN() );
                 writer.println( mLogFormatter.createLogMessage() );
                 mLogFormatter.popEvent();
-          }
+            }
         }
     }
 
