@@ -97,11 +97,11 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             'stampede.inv.start' : self.noop, # good
             'stampede.inv.end' : self.invocation,
             'stampede.static.meta.start': self.static_meta_start,
-            'stampede.meta.xwf' : self.workflow_meta,
-            'stampede.meta.task' : self.task_meta,
-            'stampede.meta.rc'   : self.rc_meta,
+            'stampede.xwf.meta' : self.workflow_meta,
+            'stampede.task.meta' : self.task_meta,
+            'stampede.rc.meta'   : self.rc_meta,
             'stampede.rc.pfn'    : self.rc_pfn,
-            'stampede.meta.map.file' : self.wf_task_file_map,
+            'stampede.wf.map.file' : self.wf_task_file_map,
             'stampede.static.meta.end': self.noop,
 
         }
