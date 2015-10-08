@@ -27,8 +27,13 @@ class Version(BaseVersion):
         # updating dbversion
         try:
             log.info("Updating dbversion...")
-            self.db.execute("ALTER TABLE dbversion ADD COLUMN version VARCHAR(50) NOT NULL DEFAULT 0")
-            self.db.execute("UPDATE dbversion SET version=version_number")
+            if self.db.get_bind().driver == "mysqldb":
+                self.db.execute("RENAME TABLE dbversion TO dbversion_v4")
+            else:
+                self.db.execute("ALTER TABLE dbversion RENAME TO dbversion_v4")
+            self._create_table(db_version)
+            self.db.execute("INSERT INTO dbversion(version_number, version, version_timestamp) SELECT version_number, version_number, version_timestamp FROM dbversion_v4")
+            self._drop_table("dbversion_v4")
             self.db.commit()
         except (OperationalError, ProgrammingError):
             pass

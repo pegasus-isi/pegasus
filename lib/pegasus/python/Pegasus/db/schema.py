@@ -209,7 +209,7 @@ class RCMeta(SABase):
 # ---------------------------------------------
 db_version = Table('dbversion', metadata,
     Column('id', KeyInteger, primary_key=True, autoincrement=True, nullable=False),
-    #Column('version_number', INT, nullable=False),
+    Column('version_number', INT, default=5),
     Column('version', VARCHAR(50), nullable=False),
     Column('version_timestamp', INT, nullable=False),
     sqlite_autoincrement=True
