@@ -1854,7 +1854,7 @@ class Workflow:
         Registers files associated with a registration job .
         """
         # PM-918 check if it is a registration job and succeeded
-        if not job._exec_job_id.startswith( "register_" ) or job._main_job_exitcode != 0 :
+        if not job._exec_job_id.startswith( "register_" )  :
             return
 
         basename = "%s.in" %( job._exec_job_id )
