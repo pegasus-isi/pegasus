@@ -100,6 +100,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             'stampede.meta.xwf' : self.workflow_meta,
             'stampede.meta.task' : self.task_meta,
             'stampede.meta.rc'   : self.rc_meta,
+            'stampede.rc.pfn'    : self.rc_pfn,
             'stampede.meta.map.file' : self.wf_task_file_map,
             'stampede.static.meta.end': self.noop,
 
@@ -751,6 +752,36 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         else:
             rc_meta.commit_to_db(self.session)
 
+    def rc_pfn(self, linedata):
+        """
+
+        :param linedata:  dictionary of netlogger BP data dict-ified
+        :return:
+
+        Handles a rc pfn insert event that populates the pfn and the site attribute.
+        """
+        rc_pfn = self.linedataToObject( linedata, RCPFN() )
+        lfn = rc_pfn.lfn_id
+        rc_pfn.lfn = lfn
+        rc_pfn.wf_id = self.wf_uuid_to_id( rc_pfn.wf_uuid )
+        rc_pfn.lfn_id = self.get_lfn_id( rc_pfn.wf_id, lfn )
+
+        if rc_pfn.lfn_id is None:
+            # we do an explicit insert to populate the RCLFN table
+            file = RCLFN()
+            file.lfn = lfn
+            # explicit insert
+            file.commit_to_db(self.session)
+            # seed the cache
+            rc_pfn.lfn_id = self.get_lfn_id( rc_pfn.wf_id, lfn )
+
+
+        self.log.debug( 'rc_pfn: %s', rc_pfn)
+
+        if self._batch:
+            self._batch_cache['batch_events'].append(rc_pfn)
+        else:
+            rc_pfn.commit_to_db(self.session)
 
     def wf_task_file_map(self , linedata ):
         """
