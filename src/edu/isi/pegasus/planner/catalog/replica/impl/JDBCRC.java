@@ -143,7 +143,7 @@ public class JDBCRC implements ReplicaCatalog
    */
   private static final String mCStatements[] =
   { // 0:
-    "SELECT name,value FROM rc_meta WHERE lfn_id=?",
+    "SELECT m.key,m.value FROM rc_meta m WHERE lfn_id=?",
     // 1:
     "SELECT l.lfn_id,p.pfn,p.site FROM rc_lfn l LEFT JOIN rc_pfn p ON l.lfn_id=p.lfn_id WHERE l.lfn=?",
     // 2:
@@ -151,21 +151,21 @@ public class JDBCRC implements ReplicaCatalog
     // 3:
     "DELETE l FROM rc_lfn l INNER JOIN rc_pfn p ON l.lfn_id=p.lfn_id AND l.lfn=? AND p.pfn=?",
     // 4:
-    "INSERT INTO rc_meta(lfn_id,name,value) VALUES(?,?,?)",
+    "INSERT INTO rc_meta(lfn_id,`key`,value) VALUES(?,?,?)",
     // 5:
     "DELETE FROM rc_lfn WHERE lfn=?",
     // 6:
     "DELETE FROM rc_lfn WHERE lfn_id IN" +
-    " ( SELECT lfn_id FROM rc_meta WHERE name=? AND value=? )",
+    " ( SELECT lfn_id FROM rc_meta m WHERE m.key=? AND m.value=? )",
     // 7:
     "DELETE FROM rc_lfn WHERE lfn_id IN" +
-    " ( SELECT lfn_id FROM rc_meta WHERE name=? AND value IS NULL )",
+    " ( SELECT lfn_id FROM rc_meta m WHERE m.key=? AND m.value IS NULL )",
     // 8:
     "DELETE FROM rc_lfn WHERE lfn=? AND id IN" +
-    " ( SELECT id FROM rc_meta WHERE name=? AND value=? )",
+    " ( SELECT id FROM rc_meta m WHERE m.key=? AND m.value=? )",
     // 9:
     "DELETE FROM rc_lfn WHERE lfn=? AND id IN" +
-    " ( SELECT id FROM rc_meta WHERE name=? AND value IS NULL )",
+    " ( SELECT id FROM rc_meta m WHERE m.key=? AND m.value IS NULL )",
     // 10:
     "DELETE l FROM rc_lfn l INNER JOIN rc_pfn p ON l.lfn_id=p.lfn_id WHERE p.site=?",
     // 11:
@@ -854,7 +854,7 @@ public class JDBCRC implements ReplicaCatalog
           } else if ( key.equals(ReplicaCatalogEntry.RESOURCE_HANDLE)) {
               cond.append("p.site='" + constraints.get(ReplicaCatalogEntry.RESOURCE_HANDLE) + "' ");
           } else {
-              cond.append("m.name='" + key + "' ");
+              cond.append("m.key='" + key + "' ");
           }
       }
       q.append(cond.toString());
@@ -1235,7 +1235,7 @@ public class JDBCRC implements ReplicaCatalog
 
     try {
         query = new StringBuilder(256);
-        query.append("SELECT DISTINCT l.lfn_id, m.name, m.value FROM rc_lfn l ");
+        query.append("SELECT DISTINCT l.lfn_id, m.key, m.value FROM rc_lfn l ");
         if (tuple.getResourceHandle() != null) {
             query.append("INNER JOIN rc_pfn p ON l.lfn_id=p.lfn_id AND p.site='");
             query.append(quote(tuple.getResourceHandle()));
@@ -1249,9 +1249,9 @@ public class JDBCRC implements ReplicaCatalog
         int id = 0;;
         while (rs.next()) {
             id = rs.getInt("lfn_id");
-            String name = rs.getString("name");
+            String key = rs.getString("key");
             String value = rs.getString("value");
-            if (name != null && (!tuple.hasAttribute(name) || (value != null && !tuple.getAttribute(name).equals(value)))) {
+            if (key != null && (!tuple.hasAttribute(key) || (value != null && !tuple.getAttribute(key).equals(value)))) {
                 st.close();
                 rs.close();
                 return result;
