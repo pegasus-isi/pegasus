@@ -2,6 +2,7 @@ import pika
 import urlparse
 import os
 import ssl
+import json
 
 from Pegasus.monitoring import event_output as eo
 
@@ -75,11 +76,11 @@ class AnomalyHandler:
 
         event = "job.anomaly_detection"
 
-        try:
-            print "Sending anomaly record to DB %s,%s" % (event, kwargs)
-            self.event_sink.send(event, kwargs)
-        except:
-            print "error sending event: %s --> %s" % (event, kwargs)
+        # try:
+        print "Sending anomaly record to DB %s,%s" % (event, kwargs)
+        self.event_sink.send(event, kwargs)
+        # except:
+        #     print "error sending event: %s --> %s" % (event, kwargs)
 
     def close(self):
         self.event_sink.close()
@@ -151,6 +152,9 @@ class AnomalyMessage:
         self.anomaly_type = anomaly_type
         self.message = message
         self.json = raw_data  # this should be a dict object
+
+        if 'metrics' in raw_data:
+            self.json['metrics'] = json.loads(raw_data['metrics'])
 
     @staticmethod
     def required_params():

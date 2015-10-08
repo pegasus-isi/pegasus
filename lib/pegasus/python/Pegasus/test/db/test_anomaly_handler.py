@@ -48,7 +48,7 @@ class TestAnomalyHandler(unittest.TestCase):
             "dag_job_id": "namd_ID0000002",
             "wf_uuid": "143acf4d-8494-4c0f-baf0-2b0ff4464390",
             "anomaly_type": "kickstart.threshold_exceeded",
-            "metrics": "vmRSS",
+            "metrics": { "kickstart": ["stime"] },
             "value": 293847324,
             "threshold": "12832131",
             "message": "The 'vmRSS' value exceeded the threshold (293847324 > 12832131)"
@@ -70,7 +70,7 @@ class TestAnomalyHandler(unittest.TestCase):
                    "dag_job_id=namd_ID0000003|||" \
                    "anomaly_type=kickstart.threshold_exceeded|||" \
                    "message=The 'stime' value exceeded the threshold (10.83 > 10.0)|||" \
-                   "metrics=stime|||" \
+                   "metrics={\"kickstart\": [\"stime\"] }|||" \
                    "value=10.83|||" \
                    "threshold=10.0|||"\
                    "raw_data={\"ts\":1437389227}"
@@ -78,7 +78,7 @@ class TestAnomalyHandler(unittest.TestCase):
         self.anomaly_handler.on_message(None, None, None, msg_body)
 
         result = self.anomaly_handler.event_sink._db.session.query(Anomaly). \
-            filter(Anomaly.metrics == "stime", Anomaly.ts == 1437389227, Anomaly.job_instance_id == 10).all()
+            filter(Anomaly.ts == 1437389227, Anomaly.job_instance_id == 10).all()
 
         self.assertEquals(len(result), 1)
 
