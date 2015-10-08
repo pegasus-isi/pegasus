@@ -186,24 +186,24 @@ public class Stampede implements CodeGenerator {
     /**
      * The event name for the event that populates to wf_meta tables
      */
-    public static final String WF_META_EVENT_NAME = "meta.xwf";
+    public static final String WF_META_EVENT_NAME = "xwf.meta";
     
     /**
      * The event name for the event that populates to task_meta tables
      */
-    public static final String TASK_META_EVENT_NAME = "meta.task";
+    public static final String TASK_META_EVENT_NAME = "task.meta";
     
     /**
      * The event name for the event that populates to rc_meta tables that store
      * file metadata.
      */
-    public static final String FILE_META_EVENT_NAME = "meta.rc";
+    public static final String FILE_META_EVENT_NAME = "rc.meta";
     
     /**
      * The event name for task map event that associates LFN with the 
      * wf id and the job id's.
      */
-    public static final String FILE_MAP_EVENT_NAME = "meta.map.file";
+    public static final String FILE_MAP_EVENT_NAME = "wf.map.file";
     
     
     /**
