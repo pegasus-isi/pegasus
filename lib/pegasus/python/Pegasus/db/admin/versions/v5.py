@@ -24,23 +24,6 @@ class Version(BaseVersion):
         # check whether it is safe to do that
         # self.db.execute("DROP TABLE file")
 
-        # updating dbversion
-        try:
-            log.info("Updating dbversion...")
-            if self.db.get_bind().driver == "mysqldb":
-                self.db.execute("RENAME TABLE dbversion TO dbversion_v4")
-            else:
-                self.db.execute("ALTER TABLE dbversion RENAME TO dbversion_v4")
-            self._create_table(db_version)
-            self.db.execute("INSERT INTO dbversion(version_number, version, version_timestamp) SELECT version_number, version_number, version_timestamp FROM dbversion_v4")
-            self._drop_table("dbversion_v4")
-            self.db.commit()
-        except (OperationalError, ProgrammingError):
-            pass
-        except Exception, e:
-            self.db.rollback()
-            raise DBAdminError(e)
-
         # check if the migration was interrupted
         interrupted = False
         try:

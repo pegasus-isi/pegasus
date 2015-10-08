@@ -17,28 +17,23 @@ class TestDBAdmin(unittest.TestCase):
         dburi = "sqlite:///%s" % filename
         
         db = connection.connect(dburi, create=True)
-        self.assertTrue(db_verify(db))
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         
         db.execute("DROP TABLE dbversion")
         self.assertRaises(DBAdminError, db_verify, db)
         db.close()
         db = connection.connect(dburi, create=True)
-        self.assertTrue(db_verify(db))
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         
         db.execute("DELETE FROM dbversion")
-        self.assertTrue(db_verify(db))
         db.close()
         db = connection.connect(dburi, create=True)
-        self.assertTrue(db_verify(db))
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         
         db.execute("DROP TABLE rc_pfn")
         self.assertRaises(DBAdminError, db_verify, db)
         db.close()
         db = connection.connect(dburi, create=True)
-        self.assertTrue(db_verify(db))
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         
         db.execute("DROP TABLE rc_pfn")
@@ -48,7 +43,6 @@ class TestDBAdmin(unittest.TestCase):
         self.assertRaises(DBAdminError, db_verify, db, "4.3.0")
         db.close()
         db = connection.connect(dburi, create=True)
-        self.assertTrue(db_verify(db))
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         _remove(filename)
         
@@ -79,7 +73,6 @@ class TestDBAdmin(unittest.TestCase):
 
         db = connection.connect(dburi, create=True)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
-        self.assertTrue(db_verify(db))
         db.close()
         _remove(filename)
 
@@ -134,7 +127,6 @@ class TestDBAdmin(unittest.TestCase):
         
         db = connection.connect(dburi, create=True)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
-        self.assertTrue(db_verify(db))
         _remove(filename)
         
         db = connection.connect(dburi, schema_check=False, create=False)
@@ -147,7 +139,6 @@ class TestDBAdmin(unittest.TestCase):
         
         db = connection.connect(dburi, create=True)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
-        self.assertTrue(db_verify(db))
         _remove(filename)
         
         db = connection.connect(dburi, schema_check=False, create=False)
@@ -166,7 +157,6 @@ class TestDBAdmin(unittest.TestCase):
         
         db = connection.connect(dburi, create=True)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
-        self.assertTrue(db_verify(db))
         _remove(filename)
         
     def test_malformed_db(self):
