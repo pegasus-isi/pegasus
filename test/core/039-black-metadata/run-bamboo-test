@@ -17,7 +17,7 @@ echo "This is sample input to KEG" >f.a
 
 # generate the dax
 export PYTHONPATH=`pegasus-config --python`
-./blackdiamond.py $BIN_DIR/.. > blackdiamond.dax
+./blackdiamond.py $BIN_DIR > blackdiamond.dax
 
 # plan and submit the  workflow
 pegasus-plan \
