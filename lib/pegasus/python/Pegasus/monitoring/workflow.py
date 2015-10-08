@@ -1860,7 +1860,6 @@ class Workflow:
         basename = "%s.in" %( job._exec_job_id )
         input_file = os.path.join( self._run_dir, basename )
         logger.debug( "Populating locations corresponding to succeeded registration job  %s " %input_file )
-        print input_file ;
 
         try:
             SUB = open(input_file, "r")
