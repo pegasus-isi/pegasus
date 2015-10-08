@@ -999,6 +999,8 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         except orm.exc.MultipleResultsFound, e:
             self.log.error('Multiple results found for wf_uuid/lfn: %s/%s', wf_id, lfn)
             return None
+        except orm.exc.NoResultFound, e:
+            return None
 
         return lfn_id
 
