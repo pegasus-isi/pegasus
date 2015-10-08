@@ -618,8 +618,8 @@ public class Stampede implements CodeGenerator {
                 }
                 
                 //generate file metadata events
-                generateMetadataEventsForFiles( writer, workflow, job, job.getInputFiles() );
-                generateMetadataEventsForFiles( writer, workflow, job, job.getOutputFiles() );
+                generateMetadataEventsForFiles( writer, workflow, job, job.getInputFiles() , false);
+                generateMetadataEventsForFiles( writer, workflow, job, job.getOutputFiles(), true );
             }
 
         }
@@ -637,8 +637,9 @@ public class Stampede implements CodeGenerator {
      * @param workflow  the workflow
      * @param job       the job in the abstract workflow.
      * @param files 
+     * @param areOutput if files are output or not
      */
-    private void generateMetadataEventsForFiles(PrintWriter writer, ADag workflow, Job job, Collection<PegasusFile> files ) {
+    private void generateMetadataEventsForFiles(PrintWriter writer, ADag workflow, Job job, Collection<PegasusFile> files, boolean areOutput ) {
         String wfuuid = workflow.getWorkflowUUID();
         for( Iterator<PegasusFile> pit = files.iterator(); pit.hasNext(); ){
             PegasusFile file = pit.next();
@@ -659,7 +660,7 @@ public class Stampede implements CodeGenerator {
             }
             //generate the file map event if metadata was associated with the job
             //or the register flag is set to true
-            if( hasMetadata || !file.getTransientRegFlag()){
+            if( hasMetadata || ( areOutput && !file.getTransientRegFlag()) ){
                 mLogFormatter.addEvent( Stampede.FILE_MAP_EVENT_NAME, Stampede.WORKFLOW_ID_KEY, wfuuid );
                 mLogFormatter.add( Stampede.TASK_ID_KEY, job.getLogicalID() );
                 mLogFormatter.add( Stampede.LFN_ID_KEY, file.getLFN() );
