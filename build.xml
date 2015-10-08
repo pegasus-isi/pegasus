@@ -106,6 +106,7 @@
     <copy preservelastmodified="true" todir="${dist.bin}">
       <fileset dir="bin">
           <include name="pegasus-config"/>
+	  <include name="pegasus-db-admin"/>
       </fileset>
       <filterset>
         <filter token="PEGASUS_VERSION" value="${pegasus.version}"/>
@@ -496,12 +497,15 @@
     <mkdir dir="${junitreport.dir}"/>
     <junit printsummary="yes" haltonfailure="yes">
       <sysproperty key="externals.python.path" value="${dist.lib}/pegasus/externals/python"/>
+      <sysproperty key="pegasus.home.bindir"   value="${dist.bin}"/>
+
       <classpath>
         <path refid="build.classpath"/>
         <path location="${dist.jars}/pegasus.jar"/>
         <path location="${dist.jars}/pegasus-test.jar"/>
         <path location="${dist.jars}/vdl.jar"/>
       </classpath>
+      
       <formatter type="xml" usefile="yes"/>
       <formatter type="brief" usefile="no"/>
       <test name="edu.isi.pegasus.planner.test.AllTests" todir="${junitreport.dir}"/>
