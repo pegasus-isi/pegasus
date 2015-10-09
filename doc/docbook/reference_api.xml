@@ -1792,7 +1792,7 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
     "timestamp"         : &lt;int:timestamp&gt;,
     "workflow_state"    : &lt;object:workflow_state&gt;,
     "_links"            : {
-        "workflow" : &lt;href:workflow&gt;,
+        "workflow" : &lt;href:workflow&gt;
     }
 }</programlisting>
       </section>
@@ -1817,6 +1817,7 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
     "dag_file_name"     : &lt;string:dag_file_name&gt;,
     "timestamp"         : &lt;int:timestamp&gt;,
     "_links"            : {
+        "workflow_meta"  : &lt;href:workflow_meta&gt;,
         "workflow_state" : &lt;href:workflow_state&gt;,
         "job"            : &lt;href:job&gt;,
         "task"           : &lt;href:task&gt;,
@@ -1903,8 +1904,9 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
     "transformation" : &lt;string:transformation&gt;,
     "argv"           : &lt;string:argv&gt;,
     "_links"         : {
-        "workflow" : &lt;href:workflow&gt;,
-        "job"      : &lt;href:job&gt;
+        "workflow"  : &lt;href:workflow&gt;,
+        "job"       : &lt;href:job&gt;,
+        "task_meta" : &lt;href:task_meta&gt;
     }
 }</programlisting>
       </section>

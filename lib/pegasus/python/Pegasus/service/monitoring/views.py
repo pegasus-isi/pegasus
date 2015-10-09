@@ -281,6 +281,7 @@ Workflow
     "dag_file_name"     : string:dag_file_name,
     "timestamp"         : int:timestamp,
     "_links"            : {
+        "workflow_meta"  : href:workflow_meta,
         "workflow_state" : href:workflow_state,
         "job"            : href:job,
         "task"           : href:task,
@@ -694,8 +695,9 @@ Task
     "argv"           : string:argv,
     "task_count"     : int:task_count,
     "_links"         : {
-        "workflow" : href:workflow,
-        "job"      : href:job
+        "workflow"  : href:workflow,
+        "job"       : href:job,
+        "task_meta" : href:task_meta
     }
 }
 """
