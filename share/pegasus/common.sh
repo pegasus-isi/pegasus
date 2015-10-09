@@ -23,7 +23,7 @@ if [ "X${JAVA_HOME}" = "X" ]; then
 
     # macos
     if [ "X${JAVA_HOME}" = "X" -a -x /usr/libexec/java_home ]; then
-        JAVA_HOME=`/usr/libexec/java_home -version 1.6`
+        JAVA_HOME=`/usr/libexec/java_home -version 1.6+`
     fi
 fi
 
