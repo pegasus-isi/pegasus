@@ -15,4 +15,5 @@ pegasus.catalog.replica.db.driver sqlite
 
 pegasus.stageout.clusters = 20
 
-
+#we don't want errors for registration to be masked because of retries
+dagman.retry 0

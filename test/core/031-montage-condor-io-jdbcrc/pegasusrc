@@ -12,3 +12,5 @@ pegasus.condor.logs.symlink = false
 
 pegasus.catalog.replica=JDBCRC
 
+#we don't want errors for registration to be masked because of retries
+dagman.retry 0
