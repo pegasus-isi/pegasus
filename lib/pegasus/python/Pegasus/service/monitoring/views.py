@@ -143,8 +143,11 @@ def get_query_args():
     def to_bool(q_arg, value):
         value = value.strip().lower()
 
-        if value in set(['1', '0', 'true', 'false']):
-            return bool(value)
+        if value in set(['1', 'true']):
+            return True
+
+        elif value in set(['0', 'false']):
+            return False
 
         else:
             log.exception('Query Argument %s = %s is not a valid boolean' % (q_arg, value))
