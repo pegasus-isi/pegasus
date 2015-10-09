@@ -1,4 +1,3 @@
-#define _GNU_SOURCE
 #include <curl/curl.h>
 #include <errno.h>
 #include <string.h>
@@ -346,10 +345,18 @@ int start_monitoring_thread(int interval) {
     ctx->socket = socket;
 
     /* Create a pipe to signal between the main thread and the monitor thread */
-    int rc = pipe2(signal_pipe, O_CLOEXEC);
+    int rc = pipe(signal_pipe);
     if (rc < 0) {
         printerr("ERROR: Unable to create signal pipe: %s\n", strerror(errno));
         return rc;
+    }
+    rc = fcntl(signal_pipe[0], F_SETFD, FD_CLOEXEC);
+    if (rc < 0) {
+        printerr("WARNING: Unable to set CLOEXEC on pipe: %s\n", strerror(errno));
+    }
+    rc = fcntl(signal_pipe[1], F_SETFD, FD_CLOEXEC);
+    if (rc < 0) {
+        printerr("WARNING: Unable to set CLOEXEC on pipe: %s\n", strerror(errno));
     }
 
     /* Start and detach the monitoring thread */
