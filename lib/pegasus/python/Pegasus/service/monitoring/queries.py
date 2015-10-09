@@ -462,8 +462,8 @@ class StampedeWorkflowQueries(WorkflowQueries):
         """
         wf_id = self.wf_uuid_to_wf_id(wf_id)
 
-        q = self.session.query(Workflow)
-        q = q.filter(Workflow.wf_id == wf_id)
+        q = self.session.query(WorkflowMeta)
+        q = q.filter(WorkflowMeta.wf_id == wf_id)
 
         try:
             return self._get_one(q, use_cache)
