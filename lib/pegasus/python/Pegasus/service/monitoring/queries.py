@@ -444,6 +444,32 @@ class StampedeWorkflowQueries(WorkflowQueries):
         except NoResultFound, e:
             raise e
 
+    # Workflow Meta
+
+    def get_workflow_meta(self, wf_id, start_index=None, max_results=None, query=None, order=None, use_cache=False,
+                          **kwargs):
+        """
+        Returns a collection of the Workflowstate objects.
+
+        :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
+        :param start_index: Return results starting from record `start_index`
+        :param max_results: Return a maximum of `max_results` records
+        :param query: Filtering criteria
+        :param order: Sorting criteria
+        :param use_cache: If available, use cached results
+
+        :return: Workflow Meta collection, total records count, total filtered records count
+        """
+        wf_id = self.wf_uuid_to_wf_id(wf_id)
+
+        q = self.session.query(Workflow)
+        q = q.filter(Workflow.wf_id == wf_id)
+
+        try:
+            return self._get_one(q, use_cache)
+        except NoResultFound, e:
+            raise e
+
     # Workflow State
 
     def get_workflow_state(self, wf_id, recent=False, start_index=None, max_results=None, query=None, order=None,
@@ -881,6 +907,34 @@ class StampedeWorkflowQueries(WorkflowQueries):
             raise ValueError('task_id cannot be None')
 
         q = q.filter(Task.task_id == task_id)
+
+        try:
+            return self._get_one(q, use_cache)
+        except NoResultFound, e:
+            raise e
+
+    # Task Meta
+
+    def get_task_meta(self, task_id, start_index=None, max_results=None, query=None, order=None, use_cache=False,
+                          **kwargs):
+        """
+        Returns a collection of the TaskMeta objects.
+
+        :param task_id: Id of the task
+        :param start_index: Return results starting from record `start_index`
+        :param max_results: Return a maximum of `max_results` records
+        :param query: Filtering criteria
+        :param order: Sorting criteria
+        :param use_cache: If available, use cached results
+
+        :return: Workflow Meta collection, total records count, total filtered records count
+        """
+        q = self.session.query(TaskMeta)
+
+        if task_id is None:
+            raise ValueError('task_id cannot be None')
+
+        q = q.filter(TaskMeta.task_id == task_id)
 
         try:
             return self._get_one(q, use_cache)

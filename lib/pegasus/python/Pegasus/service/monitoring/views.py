@@ -353,6 +353,55 @@ def get_workflow(username, m_wf_id, wf_id):
 
 
 """
+Workflow Meta
+
+{
+    "key"         : string:key,
+    "value"       : string:value,
+    "_links"      : {
+        "workflow" : "<href:workflow>"
+    }
+}
+"""
+
+
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/meta')
+def get_workflow_meta(username, m_wf_id, wf_id):
+    """
+    Returns a collection of workflow's metadata.
+
+    :query int start-index: Return results starting from record <start-index> (0 indexed)
+    :query int max-results: Return a maximum of <max-results> records
+    :query string query: Search criteria
+    :query string order: Sorting criteria
+    :query boolean pretty-print: Return formatted JSON response
+
+    :statuscode 200: OK
+    :statuscode 204: No content; when no workflow metadata found.
+    :statuscode 400: Bad request
+    :statuscode 401: Authentication failure
+    :statuscode 403: Authorization failure
+
+    :return type: Collection
+    :return resource: WorkflowMeta
+    """
+    queries = StampedeWorkflowQueries(g.stampede_db_url)
+
+    paged_response = queries.get_workflow_meta(g.m_wf_id, **g.query_args)
+
+    if paged_response.total_records == 0:
+        log.debug('Total records is 0; returning HTTP 204 No content')
+        return make_response('', 204, JSON_HEADER)
+
+    #
+    # Generate JSON Response
+    #
+    response_json = jsonify(paged_response)
+
+    return make_response(response_json, 200, JSON_HEADER)
+
+
+"""
 Workflow State
 
 {
@@ -746,6 +795,55 @@ def get_task(username, m_wf_id, wf_id, task_id):
     # Generate JSON Response
     #
     response_json = jsonify(record)
+
+    return make_response(response_json, 200, JSON_HEADER)
+
+
+"""
+Task Meta
+
+{
+    "key"         : string:key,
+    "value"       : string:value,
+    "_links"      : {
+        "task" : "<href:task>"
+    }
+}
+"""
+
+
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/task/<int:task_id>/meta')
+def get_task_meta(username, m_wf_id, wf_id, task_id):
+    """
+    Returns a collection of task's metadata.
+
+    :query int start-index: Return results starting from record <start-index> (0 indexed)
+    :query int max-results: Return a maximum of <max-results> records
+    :query string query: Search criteria
+    :query string order: Sorting criteria
+    :query boolean pretty-print: Return formatted JSON response
+
+    :statuscode 200: OK
+    :statuscode 204: No content; when no workflow metadata found.
+    :statuscode 400: Bad request
+    :statuscode 401: Authentication failure
+    :statuscode 403: Authorization failure
+
+    :return type: Collection
+    :return resource: TaskMeta
+    """
+    queries = StampedeWorkflowQueries(g.stampede_db_url)
+
+    paged_response = queries.get_task_meta(g.m_wf_id, **g.query_args)
+
+    if paged_response.total_records == 0:
+        log.debug('Total records is 0; returning HTTP 204 No content')
+        return make_response('', 204, JSON_HEADER)
+
+    #
+    # Generate JSON Response
+    #
+    response_json = jsonify(paged_response)
 
     return make_response(response_json, 200, JSON_HEADER)
 
