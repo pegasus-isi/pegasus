@@ -1854,12 +1854,12 @@ class Workflow:
         Registers files associated with a registration job .
         """
         # PM-918 check if it is a registration job and succeeded
-        if not job._exec_job_id.startswith( "register_" )  :
+        if not job._exec_job_id.startswith( "register_" ) or job._main_job_exitcode != 0 :
             return
 
         basename = "%s.in" %( job._exec_job_id )
         input_file = os.path.join( self._run_dir, basename )
-        logger.debug( "Populating locations corresponding to succeeded registration job  %s " %input_file )
+        logger.info( "Populating locations corresponding to succeeded registration job  %s " %input_file )
 
         try:
             SUB = open(input_file, "r")
