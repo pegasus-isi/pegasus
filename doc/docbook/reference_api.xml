@@ -3743,7 +3743,7 @@ HTTP/1.1 200 OK
 
         <para><programlisting><emphasis role="bold">$ curl --request GET \
        --user user-a:user-a-password \
-       https://www.domain.com/api/v1/user/mayani/root/1/workflow/1/state;recent=true?pretty-print=true
+       https://www.domain.com/api/v1/user/user-a/root/1/workflow/1/state;recent=true?pretty-print=true
                     </emphasis>
 HTTP/1.1 200 OK
 
@@ -3756,7 +3756,7 @@ HTTP/1.1 200 OK
             "restart_count": 3,
             "timestamp": 1421885063.0,
             "_links": {
-                "workflow": "/api/v1/user/mayani/root/1/workflow/1"
+                "workflow": "/api/v1/user/user-a/root/1/workflow/1"
             }
         }
     ],
@@ -3776,7 +3776,7 @@ HTTP/1.1 200 OK
        --header "Content-Type: application/json" \
        --data '[
             {
-                "path"   : "/api/v1/user/mayani/root?query=r.wf_id = 1&amp;pretty-print=True",
+                "path"   : "/api/v1/user/user-a/root?query=r.wf_id = 1&amp;pretty-print=True",
                 "method" : "GET"
             },
             {
@@ -3784,7 +3784,7 @@ HTTP/1.1 200 OK
                     "query"        : "r.wf_id = 2",
                     "pretty-print" : "True"
                 },
-                "path"   : "/api/v1/user/mayani/root",
+                "path"   : "/api/v1/user/user-a/root",
                 "method" : "POST"
             }
        ]' \
