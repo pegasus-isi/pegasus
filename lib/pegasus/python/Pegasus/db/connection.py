@@ -52,7 +52,7 @@ def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=
     """ Connect to the provided URL database."""
     dburi = _parse_jdbc_uri(dburi)
     _validate(dburi)
-    
+
     try:
         log.info("Attempting to connect to: %s" % dburi)
         engine = create_engine(dburi, echo=echo, pool_recycle=True)
@@ -103,8 +103,13 @@ def connect_by_submitdir(submit_dir, db_type, config_properties=None, echo=False
 def connect_by_properties(config_properties, db_type, cl_properties=None, echo=False, schema_check=True, create=False,
                           pegasus_version=None, force=False):
     """ Connect to the database from properties file and database type """
-    dburi = url_by_properties(config_properties, db_type, cl_properties=cl_properties)
-    return connect(dburi, echo, schema_check, create=create, pegasus_version=pegasus_version, force=force)
+    props = properties.Properties()
+    props.new(config_file=config_properties)
+    _merge_properties(props, cl_properties)
+
+    dburi = url_by_properties(config_properties, db_type, props=props)
+    return connect(dburi, echo, schema_check, create=create, pegasus_version=pegasus_version, force=force,
+                   db_type=db_type, props=props)
 
 
 def url_by_submitdir(submit_dir, db_type, config_properties=None, top_dir=None, cl_properties=None):
@@ -137,18 +142,19 @@ def url_by_submitdir(submit_dir, db_type, config_properties=None, top_dir=None, 
                              rundir_properties=top_level_prop_file, cl_properties=cl_properties)
 
     
-def url_by_properties(config_properties, db_type, submit_dir=None, top_dir=None, rundir_properties=None, cl_properties=None):
+def url_by_properties(config_properties, db_type, submit_dir=None, top_dir=None, rundir_properties=None,
+                      cl_properties=None, props=None):
     """ Get URL from the property file """
     # Validate parameters
     if not db_type:
         raise ConnectionError("A type should be provided with the property file.")
 
     # Parse, and process properties
-    props = properties.Properties()
-    props.new(config_file=config_properties, rundir_propfile=rundir_properties)
-    _merge_properties(props, cl_properties)
+    if not props:
+        props = properties.Properties()
+        props.new(config_file=config_properties, rundir_propfile=rundir_properties)
+        _merge_properties(props, cl_properties)
 
-    dburi = None
     if db_type.upper() == DBType.JDBCRC:
         dburi = _get_jdbcrc_uri(props)
     elif db_type.upper() == DBType.MASTER:
