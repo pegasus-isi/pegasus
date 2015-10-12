@@ -13,7 +13,7 @@ DEGREES=0.5
 
 TOP_DIR=`pwd`
 
-export PATH=/ccg/software/montage/Montage_v3.3_mats/bin:$PATH
+export PATH=/ccg/software/sqlite/3.8.11.1/bin:/ccg/software/montage/Montage_v3.3_mats/bin:$PATH
 
 # unique directory for this run
 RUN_ID=`/bin/date +'%F_%H%M%S'`
