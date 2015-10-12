@@ -12,8 +12,10 @@ pegasus.condor.logs.symlink = false
 
 pegasus.catalog.replica = JDBCRC
 pegasus.catalog.replica.db.driver sqlite
+pegasus.catalog.*.timeout = 30
 
 pegasus.stageout.clusters = 20
 
 #we don't want errors for registration to be masked because of retries
 dagman.retry 0
+
