@@ -964,7 +964,6 @@ class StampedeWorkflowQueries(WorkflowQueries):
         #
         q = self.session.query(TaskMeta)
         q = q.filter(TaskMeta.task_id == task_id)
-        print q, task_id
         total_records = total_filtered = self._get_count(q, use_cache)
 
         if total_records == 0:
