@@ -293,18 +293,13 @@ public class Stampede implements CodeGenerator {
     public Collection<File> generateCode(ADag dag) throws CodeGeneratorException {
 
         PrintWriter writer = null;
-        File f = new File( mSubmitFileDir , Abstract.getDAGFilename( this.mPOptions,
-                                                                     dag.getLabel(),
-                                                                     dag.getIndex(),
-                                                                     Stampede.NETLOGGER_BP_FILE_SUFFIX ) );
-
+        File f = this.getStampedeFile(dag);
         boolean generateCodeForExecutableWorkflow = dag.hasWorkflowRefinementStarted();
-        
         String uuid = dag.getWorkflowUUID();
         try {
             writer = new PrintWriter(new BufferedWriter(new FileWriter(f, true) ));
         } catch ( IOException ioe ) {
-            throw new CodeGeneratorException( "Unable to intialize writer to netlogger file " , ioe );
+            throw new CodeGeneratorException( "Unable to intialize writer to stampede file " + f.getAbsolutePath() , ioe );
         }
 
         
@@ -367,10 +362,11 @@ public class Stampede implements CodeGenerator {
                 }
             }
             
-            //PM-882 generates static metadata related events.
+            //PM-882, PM-916 generates static metadata related events.
             //for efficiency while loading in monitord we write them
             //after all wf and task events.
-            generateMetadataEventsForWF( writer, dag );
+            //metadata events can only be written out after site selection.
+            //generateMetadataEventsForWF( dag, writer );
             
         }
 
@@ -569,13 +565,35 @@ public class Stampede implements CodeGenerator {
         }
     }
     
+    
+    /**
+     * Generates metadata events for the workflow
+     * 
+     * @param workflow 
+     */
+    public Collection<File> generateMetadataEventsForWF( ADag workflow ) throws CodeGeneratorException {
+        PrintWriter writer = null;
+        File f = this.getStampedeFile( workflow );
+        try {
+            writer = new PrintWriter(new BufferedWriter(new FileWriter(f, true) ));
+        } catch ( IOException ioe ) {
+            throw new CodeGeneratorException( "Unable to intialize writer to stampede file " + f.getAbsolutePath() , ioe );
+        }
+        this.generateMetadataEventsForWF(workflow, writer);
+        writer.close();
+        
+        Collection<File> result = new LinkedList();
+        result.add(f);
+        return result;
+    }
+    
     /**
      * Generates metadata events for the workflow
      * 
      * @param writer
      * @param workflow 
      */
-    protected void generateMetadataEventsForWF(PrintWriter writer, ADag workflow) {
+    protected void generateMetadataEventsForWF(ADag workflow, PrintWriter writer) {
         String wfuuid = workflow.getWorkflowUUID();
         
         //static.meta.start event to indicate start of metadata events
@@ -639,7 +657,7 @@ public class Stampede implements CodeGenerator {
      * @param files 
      * @param areOutput if files are output or not
      */
-    private void generateMetadataEventsForFiles(PrintWriter writer, ADag workflow, Job job, Collection<PegasusFile> files, boolean areOutput ) {
+    protected void generateMetadataEventsForFiles(PrintWriter writer, ADag workflow, Job job, Collection<PegasusFile> files, boolean areOutput ) {
         String wfuuid = workflow.getWorkflowUUID();
         for( Iterator<PegasusFile> pit = files.iterator(); pit.hasNext(); ){
             PegasusFile file = pit.next();
@@ -728,6 +746,8 @@ public class Stampede implements CodeGenerator {
         return   value ? "1" : "0";
     }
     
+    
+    
     public boolean startMonitoring() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
@@ -736,5 +756,16 @@ public class Stampede implements CodeGenerator {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    
+    /**
+     * Returns the file to which the events are to be written out.
+     * 
+     * @param dag
+     * @return
+     */
+    private File getStampedeFile( ADag dag ) throws CodeGeneratorException{
+        return new File( mSubmitFileDir , Abstract.getDAGFilename( this.mPOptions,
+                                                                     dag.getLabel(),
+                                                                     dag.getIndex(),
+                                                                     Stampede.NETLOGGER_BP_FILE_SUFFIX ) );
+   }
 }

@@ -18,6 +18,7 @@
 package edu.isi.pegasus.planner.refiner;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
@@ -30,6 +31,9 @@ import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
+import edu.isi.pegasus.planner.code.CodeGenerator;
+import edu.isi.pegasus.planner.code.CodeGeneratorFactory;
+import edu.isi.pegasus.planner.code.generator.Stampede;
 import edu.isi.pegasus.planner.common.PegRandom;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.estimate.Estimator;
@@ -48,6 +52,7 @@ import edu.isi.pegasus.planner.selector.site.SiteSelectorFactory;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -333,6 +338,10 @@ public class InterPoolEngine extends Engine implements Refiner {
 
         }//end of mapping all jobs
 
+        //PM-916 write out all the metadata related events for the
+        //mapped workflow
+        generateStampedeMetadataEvents( dag );
+        
         try{
             pps.endWorkflowRefinementStep( this );
         }
@@ -847,5 +856,29 @@ public class InterPoolEngine extends Engine implements Refiner {
         mXMLStore.add( sb.toString() );
     }
 
+    /**
+     * Generates events for the mapped workflow.
+     * 
+     * @param  workflow   the parsed dax
+     * @param bag         the initialized object bag
+     */
+    private void generateStampedeMetadataEvents(ADag  workflow  ) {
+        Stampede codeGenerator =
+                (Stampede) CodeGeneratorFactory.loadInstance( mBag, CodeGeneratorFactory.STAMPEDE_EVENT_GENERATOR_CLASS );
 
+        mLogger.logEventStart( LoggingKeys.EVENTS_PEGASUS_STAMPEDE_GENERATION, LoggingKeys.DAX_ID, workflow.getAbstractWorkflowName() );
+
+        try{
+            Collection<File> result = codeGenerator.generateMetadataEventsForWF( workflow );
+            for( Iterator it = result.iterator(); it.hasNext() ;){
+                mLogger.log("Written out stampede metadata events for the mapped workflow to " + it.next(), LogManager.DEBUG_MESSAGE_LEVEL);
+            }
+        }
+        catch ( Exception e ){
+            throw new RuntimeException( "Unable to generate stampede metadata events for mapped workflow", e );
+        }
+
+        mLogger.logEventCompletion();
+
+    }
 }
