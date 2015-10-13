@@ -13,7 +13,7 @@ DEGREES=0.5
 
 TOP_DIR=`pwd`
 
-export PATH=/ccg/software/sqlite/3.8.11.1/bin:/ccg/software/montage/Montage_v3.3_mats/bin:$PATH
+export PATH=/ccg/software/montage/Montage_v3.3_mats/bin:$PATH
 export LD_LIBRARY_PATH=/ccg/software/sqlite/3.8.11.1/lib:$LD_LIBRARY_PATH
 
 # unique directory for this run
@@ -70,6 +70,7 @@ cat >sites.xml <<EOF
         <profile namespace="env" key="GLOBUS_LOCATION" >/ccg/software/globus/default</profile>
         <profile namespace="env" key="GLOBUS_TCP_PORT_RANGE" >40000,50000</profile>
         <profile namespace="env" key="http_proxy" >http://workflow.isi.edu:3128</profile>
+        <profile namespace="env" key="LD_LIBRARY_PATH">/ccg/software/sqlite/3.8.11.1/lib:$LD_LIBRARY_PATH</profile>
     </site>
     <site handle="CCG" arch="x86" os="LINUX">
         <head-fs>
@@ -81,6 +82,7 @@ cat >sites.xml <<EOF
         <profile namespace="env" key="MONTAGE_HOME" >/ccg/software/montage/Montage_v3.3_mats</profile>
         <profile namespace="env" key="PEGASUS_HOME" >/usr</profile>
         <profile namespace="env" key="http_proxy" >http://workflow.isi.edu:3128</profile>
+        <profile namespace="env" key="LD_LIBRARY_PATH">/ccg/software/sqlite/3.8.11.1/lib:$LD_LIBRARY_PATH</profile>
     </site>
 </sitecatalog>
 EOF
