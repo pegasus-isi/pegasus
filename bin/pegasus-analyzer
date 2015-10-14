@@ -90,6 +90,7 @@ class Job:
         self.arguments = ""		# Job's arguments
         self.initial_dir = ""		# Job's initial dir (from submit file)
         self.transfer_input_files = ""	# Files to transfer when debugging a job
+        self.transfer_output_files = ""	# Files to transfer when debugging a job
         self.retries = None             # Keep track of how many times a job is submitted
         self.is_subdax = False          # Flag to tell if job is a SUBDAX/pegasus-plan job
         self.is_subdag = False		# Flag to tell if job is a SUBDAG job in the dag file
@@ -474,9 +475,12 @@ def parse_submit_file(my_job):
                             my_job.err_file = v
                 # Only parse following keys if we are debugging a job
                 if debug_mode:
-                    # Get transfer input files
+                    # Get transfer input files and output files
                     if k == "transfer_input_files":
                         my_job.transfer_input_files = v
+
+                    if k == "transfer_output_files":
+                        my_job.transfer_output_files = v
         SUB.close()
         # If initialdir was specified, we need to make both error and output files relative to that
         if len(my_job.initial_dir):
@@ -1265,6 +1269,20 @@ def debug_condor(my_job):
         debug_script.write("\n")
         debug_script.write("set -e\n")
         debug_script.write("\n")
+
+        debug_script.write( """
+check_file() {
+file=$1
+if [ -e $file ]; then
+    return 0
+else
+    echo "ERROR: output file $file not generated"
+    STATUS=$(($STATUS + 1))
+fi
+}
+         """ )
+        debug_script.write("\n")
+
         debug_script.write("export pegasus_lite_work_dir=%s" %debug_dir)
         debug_script.write("\n")
         debug_script.write("# Copy any files that are needed\n")
@@ -1322,8 +1340,29 @@ def debug_condor(my_job):
         debug_script.write('   echo "executable ran successfully"\n')
         debug_script.write("else\n")
         debug_script.write('   echo "executable failed with error $?"\n')
+        debug_script.write("   exit $rc\n")
         debug_script.write("fi\n")
-        debug_script.write("exit $rc\n")
+
+
+        #PM-989 add existence check for all output files transferred
+        #by condor file IO
+        debug_script.write( 'STATUS=0\n' )
+        debug_script.write( 'set +e \n')
+        for out_file in my_job.transfer_output_files.split(","):
+            if len(out_file):
+                debug_script.write("check_file %s\n" %out_file )
+
+        debug_script.write( """
+if [ $STATUS -eq 0 ]; then
+    echo "all output files were created"
+else
+    echo "ERROR: Not all output files were created"
+fi
+
+exit $STATUS
+        """)
+
+
     except:
         logger.error("cannot write to file %s" % (debug_script))
         sys.exit(1)

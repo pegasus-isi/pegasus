@@ -3,6 +3,7 @@
 set -e
 set -v
 
+
 TOPDIR=`pwd`
 
 # unique directory for this run

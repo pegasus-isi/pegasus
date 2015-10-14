@@ -143,8 +143,11 @@ def get_query_args():
     def to_bool(q_arg, value):
         value = value.strip().lower()
 
-        if value in set(['1', '0', 'true', 'false']):
-            return bool(value)
+        if value in set(['1', 'true']):
+            return True
+
+        elif value in set(['0', 'false']):
+            return False
 
         else:
             log.exception('Query Argument %s = %s is not a valid boolean' % (q_arg, value))
@@ -278,6 +281,7 @@ Workflow
     "dag_file_name"     : string:dag_file_name,
     "timestamp"         : int:timestamp,
     "_links"            : {
+        "workflow_meta"  : href:workflow_meta,
         "workflow_state" : href:workflow_state,
         "job"            : href:job,
         "task"           : href:task,
@@ -348,6 +352,55 @@ def get_workflow(username, m_wf_id, wf_id):
     # Generate JSON Response
     #
     response_json = jsonify(record)
+
+    return make_response(response_json, 200, JSON_HEADER)
+
+
+"""
+Workflow Meta
+
+{
+    "key"         : string:key,
+    "value"       : string:value,
+    "_links"      : {
+        "workflow" : "<href:workflow>"
+    }
+}
+"""
+
+
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/meta')
+def get_workflow_meta(username, m_wf_id, wf_id):
+    """
+    Returns a collection of workflow's metadata.
+
+    :query int start-index: Return results starting from record <start-index> (0 indexed)
+    :query int max-results: Return a maximum of <max-results> records
+    :query string query: Search criteria
+    :query string order: Sorting criteria
+    :query boolean pretty-print: Return formatted JSON response
+
+    :statuscode 200: OK
+    :statuscode 204: No content; when no workflow metadata found.
+    :statuscode 400: Bad request
+    :statuscode 401: Authentication failure
+    :statuscode 403: Authorization failure
+
+    :return type: Collection
+    :return resource: WorkflowMeta
+    """
+    queries = StampedeWorkflowQueries(g.stampede_db_url)
+
+    paged_response = queries.get_workflow_meta(g.m_wf_id, **g.query_args)
+
+    if paged_response.total_records == 0:
+        log.debug('Total records is 0; returning HTTP 204 No content')
+        return make_response('', 204, JSON_HEADER)
+
+    #
+    # Generate JSON Response
+    #
+    response_json = jsonify(paged_response)
 
     return make_response(response_json, 200, JSON_HEADER)
 
@@ -642,8 +695,9 @@ Task
     "argv"           : string:argv,
     "task_count"     : int:task_count,
     "_links"         : {
-        "workflow" : href:workflow,
-        "job"      : href:job
+        "workflow"  : href:workflow,
+        "job"       : href:job,
+        "task_meta" : href:task_meta
     }
 }
 """
@@ -746,6 +800,55 @@ def get_task(username, m_wf_id, wf_id, task_id):
     # Generate JSON Response
     #
     response_json = jsonify(record)
+
+    return make_response(response_json, 200, JSON_HEADER)
+
+
+"""
+Task Meta
+
+{
+    "key"         : string:key,
+    "value"       : string:value,
+    "_links"      : {
+        "task" : "<href:task>"
+    }
+}
+"""
+
+
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/task/<int:task_id>/meta')
+def get_task_meta(username, m_wf_id, wf_id, task_id):
+    """
+    Returns a collection of task's metadata.
+
+    :query int start-index: Return results starting from record <start-index> (0 indexed)
+    :query int max-results: Return a maximum of <max-results> records
+    :query string query: Search criteria
+    :query string order: Sorting criteria
+    :query boolean pretty-print: Return formatted JSON response
+
+    :statuscode 200: OK
+    :statuscode 204: No content; when no workflow metadata found.
+    :statuscode 400: Bad request
+    :statuscode 401: Authentication failure
+    :statuscode 403: Authorization failure
+
+    :return type: Collection
+    :return resource: TaskMeta
+    """
+    queries = StampedeWorkflowQueries(g.stampede_db_url)
+
+    paged_response = queries.get_task_meta(task_id, **g.query_args)
+
+    if paged_response.total_records == 0:
+        log.debug('Total records is 0; returning HTTP 204 No content')
+        return make_response('', 204, JSON_HEADER)
+
+    #
+    # Generate JSON Response
+    #
+    response_json = jsonify(paged_response)
 
     return make_response(response_json, 200, JSON_HEADER)
 

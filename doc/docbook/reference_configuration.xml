@@ -2922,13 +2922,20 @@ f.3 file://$input/D2/f.3 site="local"
                       to configure the behvavior of this
                       implementation.</para>
 
-                      <para>pegasus.catalog.replica.directory.site to specify
-                      a site attribute other than local to associate with the
-                      mappings.</para>
+                      <para><emphasis
+                      role="bold">pegasus.catalog.replica.directory</emphasis>
+                      to specify the path to the directory containing the
+                      files</para>
 
-                      <para>pegasus.catalog.replica.directory.url.prefix to
-                      associate a URL prefix for the PFN's constructed. If not
-                      specified, the URL defaults to file://</para>
+                      <para><emphasis
+                      role="bold">pegasus.catalog.replica.directory.site</emphasis>
+                      to specify a site attribute other than local to
+                      associate with the mappings.</para>
+
+                      <para><emphasis
+                      role="bold">pegasus.catalog.replica.directory.url.prefix</emphasis>
+                      to associate a URL prefix for the PFN's constructed. If
+                      not specified, the URL defaults to file://</para>
                     </listitem>
                   </varlistentry>
 
@@ -2962,9 +2969,11 @@ pegasus.catalog.replica.mrc.[value].key   specifies a property name\
 
                       <para><screen>
 pegasus.catalog.replica.mrc.directory1 Directory
-pegasus.catalog.replica.mrc.directory1.url /input/dir1
+pegasus.catalog.replica.mrc.directory1.directory /input/dir1
+pegasus.catalog.replica.mrc.directory1.directory.site  siteX
 pegasus.catalog.replica.mrc.directory2 Directory
-pegasus.catalog.replica.mrc.directory2.url /input/dir2
+pegasus.catalog.replica.mrc.directory2.directory /input/dir2
+pegasus.catalog.replica.mrc.directory1.directory.site  siteY
 </screen></para>
 
                       <para>In the above example, directory1, directory2 are
@@ -3055,6 +3064,34 @@ Scope       :</emphasis> Properties
               found in the cache files. Thus, mappings for a particular LFN
               found in both the DAX and the replica catalog are available for
               replica selection.</entry>
+            </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold"><emphasis role="bold"><emphasis role="bold"><emphasis
+                            role="bold"><emphasis role="bold"><emphasis
+                                role="bold"><emphasis role="bold">Property Key:</emphasis></emphasis></emphasis></emphasis></emphasis></emphasis> </emphasis></emphasis>pegasus.catalog.replica.output<emphasis
+                    role="bold"><emphasis role="bold"><emphasis role="bold"><emphasis
+                          role="bold">.*
+Profile Key :</emphasis></emphasis></emphasis></emphasis><emphasis role="bold"><emphasis
+                      role="bold"><emphasis role="bold"> </emphasis></emphasis></emphasis>N/A<emphasis
+                    role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 4.5.3
+<emphasis role="bold">Default     :</emphasis> None
+</literallayout></entry>
+
+              <entry><para>Normally, the registration jobs in the executable
+              workflow register to the replica catalog specified by the user
+              in the properties file . This property prefix allows the user to
+              specify a separate output replica catalog that is different from
+              the one used for discovery of input files. This is normally the
+              case, when a Directory or MRC based replica catalog backend that
+              don't support insertion of entries are used for discovery of
+              input files. For example to specify a separate file based output
+              replica catalog, specify </para><screen>pegasus.catalog.replica.output        File
+pegasus.catalog.replica.output.file   /workflow/output.rc
+</screen></entry>
             </row>
           </tbody>
         </tgroup>
@@ -5017,6 +5054,28 @@ Scope       :</emphasis> Properties
               property can be used to turn off the creation of the
               registration jobs even though the files maybe marked to be
               registered in the replica catalog.</para></entry>
+            </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.register.deep<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 4.5.3.-
+<emphasis role="bold">Type  </emphasis>      : Boolean
+<emphasis role="bold">Default     :</emphasis> true</literallayout></entry>
+
+              <entry><para>By default, Pegasus always registers the complete
+              LFN that is associated with the output files in the DAX i.e if
+              the LFN has / in it, then lfn registered in the replica catalog
+              has the whole part. For example, if in your DAX you have
+              rupture/0001.rx as the name attribute for the uses tag, then in
+              the Replica Catalog the LFN is registered as
+              rupture/0001.rx</para><para>On setting this property to false,
+              only the basename is considered while registering in the replica
+              catalog. In the above case, 0001.rx will be registered instead
+              of rupture/0001.rx </para></entry>
             </row>
 
             <row>

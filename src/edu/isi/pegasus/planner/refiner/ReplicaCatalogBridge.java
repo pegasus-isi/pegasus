@@ -54,6 +54,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.namespace.Dagman;
+import edu.isi.pegasus.planner.namespace.Metadata;
 
 /**
  * This coordinates the look up to the Replica Location Service, to determine
@@ -68,6 +69,12 @@ public class ReplicaCatalogBridge
              extends Engine //for the time being.
              {
     
+   /**
+    * Prefix for the property subset to set up the planner to use or associate
+    * a different output replica catalog
+    */
+    public static final String OUTPUT_REPLICA_CATALOG_PREFIX = "pegasus.catalog.replica.output";
+  
     /**
      * Default category for registration jobs
      */
@@ -221,7 +228,11 @@ public class ReplicaCatalogBridge
      */
     private ADag mDag;
 
-
+    /**
+     * A boolean indicating whether to register a deep LFN or not.
+     */
+    private boolean mRegisterDeepLFN;
+    
     /**
      * The overloaded constructor.
      *
@@ -247,6 +258,7 @@ public class ReplicaCatalogBridge
         
         this.mDAXReplicaStore = dag.getReplicaStore();
         this.initialize( dag, bag.getPegasusProperties(), bag.getPlannerOptions() );
+        this.mRegisterDeepLFN = mProps.registerDeepLFN();
     }
     
     /**
@@ -277,9 +289,6 @@ public class ReplicaCatalogBridge
         //filenames
         mSearchFiles = dag.getDAGInfo().getLFNs( options.getForce() );
 
-        //only for windward for time being
-        properties.setProperty( "pegasus.catalog.replica.dax.id", dag.getAbstractWorkflowName() );
-        properties.setProperty( "pegasus.catalog.replica.mrc.windward.dax.id", dag.getAbstractWorkflowName() );
         
         try {
 
@@ -322,7 +331,7 @@ public class ReplicaCatalogBridge
             if ( options.getCacheFiles().isEmpty() &&       //no cache files specified
                  options.getInheritedRCFiles().isEmpty() && //no files locations inherited from outer level DAX
                  this.mDAXReplicaStore.isEmpty() &&         //no file locations in current DAX
-                 options.getInputDirectory() == null  && //no input directory specified on the command line
+                 options.getInputDirectories() == null  && //no input directory specified on the command line
                  dag.getDAGInfo().getLFNs( true ).size() > 0 //the number of raw input files is more than 1
                     ){
                 mLogger.log( msg + ex.getMessage(),LogManager.ERROR_MESSAGE_LEVEL );
@@ -352,9 +361,9 @@ public class ReplicaCatalogBridge
         }
         
         //incorporate all mappings from input directory if specified
-        String input = options.getInputDirectory();
-        if( input != null ){
-            mDirectoryReplicaStore = getReplicaStoreFromDirectory( input );
+        Set<String> inputDirs = options.getInputDirectories();
+        if( !inputDirs.isEmpty() ){
+            mDirectoryReplicaStore = getReplicaStoreFromDirectories( inputDirs );
         }
             
         //incorporate the caching if any
@@ -430,6 +439,9 @@ public class ReplicaCatalogBridge
         //look up from the the main replica catalog
         lfnsFound.addAll( mReplicaStore.getLFNs() );
 
+        mLogger.log(lfnsFound.size()  + " entries found in all replica sources of total " +
+                    mSearchFiles.size(),
+                    LogManager.DEBUG_MESSAGE_LEVEL);
 
         return lfnsFound;
 
@@ -735,6 +747,27 @@ public class ReplicaCatalogBridge
                   append( " " );
         }
 
+        //PM-985 check if a separate output replica catalog is specified
+        Properties output = mProps.matchingSubset( ReplicaCatalogBridge.OUTPUT_REPLICA_CATALOG_PREFIX ,true );
+        if( !output.isEmpty() ){
+            //we translate the properties to pegasus.catalog.replica prefix and add
+            //them to the command line invocation before the conf properties
+            //are passed
+            for( String outputProperty : output.stringPropertyNames() ){
+                String property = outputProperty.replace( ReplicaCatalogBridge.OUTPUT_REPLICA_CATALOG_PREFIX, ReplicaCatalog.c_prefix );
+                String value = output.getProperty( outputProperty);
+                
+                //sanitize the value for property ending in file
+                if( property.endsWith( ".file") ){
+                    value = new File( value ).getAbsolutePath();
+                }
+                
+                arguments.append( "-D" ).append( property ).
+                          append( "=" ).append( value ).
+                          append( " " );
+            }
+        }
+        
         //get any command line properties that may need specifying
         arguments.append( "--conf" ).append( " " ).
                   append(  mProps.getPropertiesInSubmitDirectory( )  ).
@@ -808,7 +841,7 @@ public class ReplicaCatalogBridge
                 FileTransfer ft = ( FileTransfer ) it.next();
                 //checking for transient flag
                 if ( !ft.getTransientRegFlag() ) {
-                    stdIn.write( ftToRC( ft ) );
+                    stdIn.write( ftToRC( ft, mRegisterDeepLFN ) );
                     stdIn.flush();
                 }
             }
@@ -828,15 +861,28 @@ public class ReplicaCatalogBridge
      * Converts a <code>FileTransfer</code> to a RC compatible string representation.
      *
      * @param ft  the <code>FileTransfer</code> object
+     * @param registerDeepLFN whether to register the deep LFN or only the basename
      *
      * @return the RC version.
      */
-    private String ftToRC( FileTransfer ft ){
+    private String ftToRC( FileTransfer ft , boolean registerDeepLFN){
         StringBuffer sb = new StringBuffer();
         NameValue destURL = ft.getDestURL();
-        sb.append( ft.getLFN() ).append( " " );
+        String lfn = ft.getLFN();
+        lfn = registerDeepLFN ? lfn : new File( lfn ).getName();
+        sb.append( lfn ).append( " " );
         sb.append( ft.getURLForRegistrationOnDestination()  ).append( " " );
-        sb.append( "pool=\"" ).append( destURL.getKey() ).append( "\"" );
+        sb.append( "site=\"" ).append( destURL.getKey() ).append( "\"" );
+        
+        //add any metadata attributes associated
+        Metadata m = ft.getAllMetadata();
+        for( Iterator<String> it = m.getProfileKeyIterator(); it.hasNext(); ){
+            String key = it.next();
+            String value = (String) m.get(key);
+            sb.append( " " ).
+               append( key ).append( "=\"" ).append( value ).append( "\"" );
+        }
+        
         sb.append( "\n" );
         return sb.toString();
     }
@@ -933,48 +979,48 @@ public class ReplicaCatalogBridge
     /**
      * Loads the mappings from the input directory 
      * 
-     * @param directory  the directory to load from
+     * @param directies set of directories to load from
      */
-    private ReplicaStore getReplicaStoreFromDirectory(String directory) {
+    private ReplicaStore getReplicaStoreFromDirectories( Set<String> directories) {
         ReplicaStore store = new ReplicaStore();
         Properties properties = mProps.getVDSProperties().matchingSubset(
                                                               ReplicaCatalog.c_prefix,
                                                               false );
 
-        mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_LOAD_DIRECTORY_CACHE, 
-                               LoggingKeys.DAX_ID,
-                               mDag.getAbstractWorkflowName() );
+        for( String directory : directories ){
+            mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_LOAD_DIRECTORY_CACHE, 
+                                   LoggingKeys.DAX_ID,
+                                   mDag.getAbstractWorkflowName() );
 
-        ReplicaCatalog catalog = null;
-        
-        //set the appropriate property to designate path to file
-        properties.setProperty( ReplicaCatalogBridge.DIRECTORY_REPLICA_CATALOG_KEY, directory );
+            ReplicaCatalog catalog = null;
 
-            
-        mLogger.log("Loading  from directory: " + directory,  LogManager.DEBUG_MESSAGE_LEVEL);
-        try{
-            catalog = ReplicaFactory.loadInstance( DIRECTORY_REPLICA_CATALOG_IMPLEMENTER,
-                                                   properties );
-            
-            
-            store.add( catalog.lookup( mSearchFiles ) );
-        }
-        catch( Exception e ){
-            mLogger.log( "Unable to load from directory  " + directory,
-                             e,
-                             LogManager.ERROR_MESSAGE_LEVEL );
-        }
-        finally{
-            if( catalog != null ){
-                catalog.close();
+            //set the appropriate property to designate path to file
+            properties.setProperty( ReplicaCatalogBridge.DIRECTORY_REPLICA_CATALOG_KEY, directory );
+
+            mLogger.log("Loading from directory: " + directory,  LogManager.DEBUG_MESSAGE_LEVEL);
+            try{
+                catalog = ReplicaFactory.loadInstance( DIRECTORY_REPLICA_CATALOG_IMPLEMENTER,
+                                                       properties );
+
+
+                store.add( catalog.lookup( mSearchFiles ) );
             }
+            catch( Exception e ){
+                mLogger.log( "Unable to load from directory  " + directory,
+                                 e,
+                                 LogManager.ERROR_MESSAGE_LEVEL );
+            }
+            finally{
+                if( catalog != null ){
+                    catalog.close();
+                }
+            }
+            mLogger.logEventCompletion();
         }
-        
-        mLogger.logEventCompletion();
         return store;
     }
-
-
+    
+    
     /**
      * Returns path to the local proxy
      * 

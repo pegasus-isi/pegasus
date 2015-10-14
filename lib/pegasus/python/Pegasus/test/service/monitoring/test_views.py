@@ -319,6 +319,31 @@ class TestStampedeWorkflowQueries(NoAuthFlaskTestCase):
         self.assertEqual(rv.status_code, 404)
 
 
+class TestStampedeWorkflowMetaQueries(NoAuthFlaskTestCase):
+    def test_get_workflow_metas(self):
+        rv = self.get_context('/api/v1/user/%s/root/1/workflow/1/meta' % self.user, pre_callable=self.pre_callable)
+
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.content_type.lower(), 'application/json')
+
+        metas = self.read_json_response(rv)
+
+        self.assertEqual(len(metas['records']), 1)
+        self.assertEqual(len(metas['records']), metas['_meta']['records_total'])
+        self.assertEqual(metas['_meta']['records_total'], metas['_meta']['records_filtered'])
+
+    def test_get_workflow_meta_query(self):
+        rv = self.get_context("/api/v1/user/%s/root/1/workflow/1/meta?query=wm.key = 'author'" % self.user, pre_callable=self.pre_callable)
+
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.content_type.lower(), 'application/json')
+
+        metas = self.read_json_response(rv)
+
+        self.assertEqual(len(metas['records']), 1)
+        self.assertTrue(metas['records'][0]['value'], 'test')
+
+
 class TestStampedeWorkflowStateQueries(NoAuthFlaskTestCase):
     def test_get_workflowstates(self):
         rv = self.get_context('/api/v1/user/%s/root/1/workflow/1/state' % self.user, pre_callable=self.pre_callable)
@@ -484,6 +509,31 @@ class TestStampedeTaskQueries(NoAuthFlaskTestCase):
         rv = self.get_context('/api/v1/user/%s/root/1/workflow/1/task/0' % self.user, pre_callable=self.pre_callable)
 
         self.assertEqual(rv.status_code, 404)
+
+
+class TestStampedeTaskMetaQueries(NoAuthFlaskTestCase):
+    def test_get_workflow_metas(self):
+        rv = self.get_context('/api/v1/user/%s/root/1/workflow/1/task/1/meta' % self.user, pre_callable=self.pre_callable)
+
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.content_type.lower(), 'application/json')
+
+        metas = self.read_json_response(rv)
+
+        self.assertEqual(len(metas['records']), 1)
+        self.assertEqual(len(metas['records']), metas['_meta']['records_total'])
+        self.assertEqual(metas['_meta']['records_total'], metas['_meta']['records_filtered'])
+
+    def test_get_workflow_meta_query(self):
+        rv = self.get_context("/api/v1/user/%s/root/1/workflow/1/task/1/meta?query=tm.key = 'time'" % self.user, pre_callable=self.pre_callable)
+
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.content_type.lower(), 'application/json')
+
+        metas = self.read_json_response(rv)
+
+        self.assertEqual(len(metas['records']), 1)
+        self.assertTrue(metas['records'][0]['value'], '60')
 
 
 class TestStampedeJobInstanceQueries(NoAuthFlaskTestCase):

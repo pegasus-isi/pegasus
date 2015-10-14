@@ -81,7 +81,7 @@ def setup(output_dir):
 	Set up the pegaus plots. 
 	@param output_dir output directory path
 	"""
-	src_img_path = os.path.join(pegasus_share_dir, "plots/images/common/")
+	src_img_path = os.path.join(share_dir, "plots/images/common/")
 	dest_img_path = os.path.join(output_dir, "images/")
 	if os.path.isdir(dest_img_path):
 		logger.warning("Image directory exists. Deleting... " + dest_img_path)
@@ -105,7 +105,7 @@ def generate_dag_graph(wf_info, output_dir):
 	dag_file_path = wf_info.dag_file_path
 	title = str(wf_info.wf_uuid) + " (" + str(wf_info.dax_label) +")"
 	if dag_file_path is not None:
-		dag2dot_file_path = os.path.join(pegasus_share_dir, "visualize/dag2dot")
+		dag2dot_file_path = os.path.join(bin_dir, "pegasus-graphviz")
 		dot_file_path = os.path.join(output_dir, wf_info.wf_uuid + ".dot")
 		dag_cmd = dag2dot_file_path 
 		dag_cmd += " --output " + dot_file_path
@@ -147,7 +147,7 @@ def generate_dax_graph(wf_info, output_dir, create_dax_files=False):
 	dax_file_path = wf_info.dax_file_path
 	title =  str(wf_info.wf_uuid) + " (" + str(wf_info.dax_label) +")"
 	if dax_file_path is not None:
-		dax2dot_file_path = os.path.join(pegasus_share_dir, "visualize/dag2dot")
+		dax2dot_file_path = os.path.join(bin_dir, "pegasus-graphviz")
 		dot_file_path = os.path.join(output_dir, wf_info.wf_uuid + ".dot")
 		dax_cmd = dax2dot_file_path 
 		dax_cmd +=" --output "+ dot_file_path

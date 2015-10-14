@@ -67,6 +67,8 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
+import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.namespace.Metadata;
 
@@ -1186,13 +1188,14 @@ public class CondorGenerator extends Abstract {
             stream = new PrintWriter( new BufferedWriter ( new FileWriter( filename ) ) );
             GsonBuilder builder =  new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting();
             builder.registerTypeAdapter( GraphNode.class, new GraphNodeGSONAdapter()).create();
+            builder.registerTypeAdapter( Profiles.class, new ProfilesGSONAdapter()).create();
             Gson gson = builder.create();
             String json = gson.toJson( dag );
             stream.write( json );      
 
             
         } catch (Exception e) {
-            throw new CodeGeneratorException( "While writing to DOT FILE " + filename,
+            throw new CodeGeneratorException( "While writing to metadata FILE " + filename,
                                               e);
         }
         finally{
@@ -2035,14 +2038,54 @@ class GraphNodeGSONAdapter extends TypeAdapter<GraphNode> {
                     writer.value((String) m.get(key));
                 }
             }
+            //for input and output files prefix with lfn name
+            for( PegasusFile pf : job.getInputFiles() ){
+                String prefix = pf.getLFN() + "@";
+                for( Iterator it = pf.getAllMetadata().getProfileKeyIterator(); it.hasNext(); ){
+                    String key = (String) it.next();
+                    writer.name(  prefix + key );
+                    writer.value((String) pf.getMetadata(key));
+                }
+            }
+            for( PegasusFile pf : job.getOutputFiles() ){
+                String prefix = pf.getLFN() + ".";
+                for( Iterator it = pf.getAllMetadata().getProfileKeyIterator(); it.hasNext(); ){
+                    String key = (String) it.next();
+                    writer.name(  prefix + key );
+                    writer.value((String) pf.getMetadata(key));
+                }
+            }
         }  
             
+        writer.endObject();     
+    }
+    
+    @Override
+    public GraphNode read(JsonReader reader) throws IOException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+}
+
+class ProfilesGSONAdapter extends TypeAdapter<Profiles> {
+
+    
+    @Override
+    public void write(JsonWriter writer, Profiles node) throws IOException {
+        writer.beginObject();   
+        Metadata m = (Metadata)node.get(Profiles.NAMESPACES.metadata);
+        if( !m.isEmpty() ){
+            for( Iterator it = m.getProfileKeyIterator(); it.hasNext(); ){
+                String key = (String) it.next();
+                writer.name(  key );
+                writer.value((String) m.get(key));
+            }
+        }   
         writer.endObject();     
     }
 
    
     @Override
-    public GraphNode read(JsonReader reader) throws IOException {
+    public Profiles read(JsonReader reader) throws IOException {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

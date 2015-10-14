@@ -133,8 +133,11 @@ class CheckCommand(LoggingCommand):
             db = _get_connection(dburi, self.options.properties, self.options.config_properties, self.options.submit_dir,
                                  self.options.db_type, pegasus_version=self.options.pegasus_version,
                                  force=self.options.force)
-            compatible = db_verify(db, self.options.pegasus_version)
-            _print_db_check(db, compatible, self.options.pegasus_version, self.options.version_value)
+            db_verify(db, self.options.pegasus_version)
+
+            version = parse_pegasus_version(self.options.pegasus_version)
+            current_version = db_current_version(db, self.options.version_value)
+            _print_version(current_version)
             db.close()
 
         except (DBAdminError, connection.ConnectionError), e:
@@ -176,7 +179,8 @@ class VersionCommand(LoggingCommand):
 
 # ------------------------------------------------------
 def _print_version(data):
-    print "Your database is compatible with Pegasus version: %s" % data
+    if data:
+        print "Your database is compatible with Pegasus version: %s" % data
 
 
 def _set_log_level(debug):
@@ -254,31 +258,6 @@ def _has_connection_properties(cl_properties):
         if key in connection.CONNECTION_PROPERTIES:
             return True
     return False
-
-
-def _print_db_check(db, compatible, pegasus_version=None, parse=False):
-    """ Print result for db_verify """
-    version = parse_pegasus_version(pegasus_version)
-    friendly_version = version
-    if parse:
-        if pegasus_version:
-            friendly_version = pegasus_version
-        else:
-            friendly_version = get_compatible_version(version)
-
-    if compatible:
-        print "Your database is compatible with version %s." % friendly_version
-    else:
-        log.error("Your database is NOT compatible with version %s." % friendly_version)
-        current_version = db_current_version(db)
-        command = "update"
-        if current_version > version:
-            command = "downgrade"
-        if version == CURRENT_DB_VERSION:
-            log.error("Use 'pegasus-db-admin %s %s' to %s your database." % (command, db.get_bind().url, command))
-        else:
-            log.error("Use 'pegasus-db-admin %s %s -V %s' to %s your database." % (command, db.get_bind().url, friendly_version, command))
-        exit(1)
 
 
 # ------------------------------------------------------

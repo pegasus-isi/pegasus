@@ -100,7 +100,19 @@ public class DataReuseEngine extends Engine implements Refiner{
      * The reduction mode set by the user.
      */
     private SCOPE mDataReuseScope;
+    
+    /**
+     * A boolean indicating whether whether data reuse scope is partial or not
+     */
+    private boolean mPartialDataReuse;
 
+    /**
+     * All files discovered in the replica catalog
+     */
+    private Set<String>  mWorkflowFilesInRC;
+    
+    
+    
     /**
      * The constructor
      *
@@ -115,6 +127,7 @@ public class DataReuseEngine extends Engine implements Refiner{
         mXMLStore        = XMLProducerFactory.loadXMLProducer( mProps );
         mWorkflow        = orgDag;
         mDataReuseScope  = getDataReuseScope( mProps.getDataReuseScope() );
+        mPartialDataReuse  =  mDataReuseScope.equals( SCOPE.partial );
     }
 
 
@@ -178,7 +191,7 @@ public class DataReuseEngine extends Engine implements Refiner{
 
         //search for the replicas of the files. The search list
         //is already present in Replica Catalog Bridge
-        Set<String> filesInRC = rcb.getFilesInReplica();
+        mWorkflowFilesInRC = rcb.getFilesInReplica();
 
         //we reduce the dag only if the
         //force option is not specified.
@@ -211,7 +224,7 @@ public class DataReuseEngine extends Engine implements Refiner{
         mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_REDUCE, LoggingKeys.DAX_ID, mWorkflow.getAbstractWorkflowName() );
            
         //figure out jobs whose output files already exist in the Replica Catalog
-        List<GraphNode> originalJobsInRC = getJobsInRC( workflow ,filesInRC );
+        List<GraphNode> originalJobsInRC = getJobsInRC(workflow ,mWorkflowFilesInRC );
         //mAllDeletedJobs = (Vector)mOrgJobsInRC.clone();
         //firstPass( originalJobsInRC );
         Graph reducedWorkflow = cascadeDeletionUpwards( workflow, originalJobsInRC );
@@ -444,6 +457,7 @@ public class DataReuseEngine extends Engine implements Refiner{
                 boolean delete = true;
                 for( Iterator cit = node.getChildren().iterator(); cit.hasNext(); ){
                     GraphNode child = (GraphNode)cit.next();
+                    //System.out.println( "Child is " + child.getID() );
                     //check whether a child node is marked for deletion or not
                     if( !((BooleanBag)child.getBag()).getBooleanValue()  ){
                         mLogger.log( node.getID() + "  will not be deleted as not as child " + child.getID() + " is not marked for deletion " ,
@@ -455,6 +469,7 @@ public class DataReuseEngine extends Engine implements Refiner{
                 if( delete ){
                     //all the children are deleted. However delete only if
                     // all the output files have transfer flags set to false
+                    // OR output fies with transfer=true exist in RC
                     if(  !transferOutput( node ) ){
                         mLogger.log( "Cascaded Deletion: Node can be deleted "  + node.getID() ,
                                      LogManager.DEBUG_MESSAGE_LEVEL );
@@ -508,9 +523,14 @@ public class DataReuseEngine extends Engine implements Refiner{
 
         for( Iterator it = job.getOutputFiles().iterator(); it.hasNext(); ){
             PegasusFile pf = (PegasusFile)it.next();
-            if( !pf.getTransientTransferFlag() ){
-                result = true;
-                break;
+            if( ! pf.getTransientTransferFlag() ){ //transfer flag is true and 
+                 if( mPartialDataReuse || !this.mWorkflowFilesInRC.contains(pf.getLFN())  ){
+                    //PM-783
+                    //transfer flag is true and ( either partial data reuse OR 
+                    //                                in case of full data reuse scope, we could not find the file in replica catalog)
+                    result = true;
+                    break;
+                }
             }
         }
 

@@ -21,6 +21,7 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.planner.classes.CompoundTransformation;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.Profile;
 
 
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
@@ -80,6 +81,17 @@ public class ExampleDAXCallback implements Callback {
     	System.out.println();
         System.out.println( "Invoke Entry ");
         System.out.println(  invoke );
+    }
+    
+    /**
+     * Callback when a metadata element is encountered in the adag element.
+     *
+     * @param profile   profile element of namespace metadata
+     */
+    public void cbMetadata( Profile p ){
+        System.out.println();
+        System.out.println( "metadata Entry ");
+        System.out.println(  p );
     }
     
 

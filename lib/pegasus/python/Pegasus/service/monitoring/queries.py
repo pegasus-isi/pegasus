@@ -27,8 +27,10 @@ from Pegasus.db.admin.admin_loader import DBAdminError
 from Pegasus.service import cache
 from Pegasus.service.base import PagedResponse, BaseQueryParser, BaseOrderParser, InvalidQueryError, InvalidOrderError
 from Pegasus.service.monitoring.resources import RootWorkflowResource, RootWorkflowstateResource, CombinationResource
-from Pegasus.service.monitoring.resources import JobInstanceResource, JobstateResource, TaskResource, InvocationResource
-from Pegasus.service.monitoring.resources import WorkflowResource, WorkflowstateResource, JobResource, HostResource
+from Pegasus.service.monitoring.resources import WorkflowResource, WorkflowMetaResource, WorkflowstateResource
+from Pegasus.service.monitoring.resources import JobResource, HostResource, JobInstanceResource, JobstateResource
+from Pegasus.service.monitoring.resources import TaskResource, TaskMetaResource, InvocationResource
+
 
 log = logging.getLogger(__name__)
 
@@ -443,6 +445,60 @@ class StampedeWorkflowQueries(WorkflowQueries):
             return self._get_one(q, use_cache)
         except NoResultFound, e:
             raise e
+
+    # Workflow Meta
+
+    def get_workflow_meta(self, wf_id, start_index=None, max_results=None, query=None, order=None, use_cache=False,
+                          **kwargs):
+        """
+        Returns a collection of the Workflowstate objects.
+
+        :param wf_id: wf_id is wf_id iff it consists only of digits, otherwise it is wf_uuid
+        :param start_index: Return results starting from record `start_index`
+        :param max_results: Return a maximum of `max_results` records
+        :param query: Filtering criteria
+        :param order: Sorting criteria
+        :param use_cache: If available, use cached results
+
+        :return: Workflow Meta collection, total records count, total filtered records count
+        """
+        wf_id = self.wf_uuid_to_wf_id(wf_id)
+
+        #
+        # Construct SQLAlchemy Query `q` to count.
+        #
+        q = self.session.query(WorkflowMeta)
+        q = q.filter(WorkflowMeta.wf_id == wf_id)
+        total_records = total_filtered = self._get_count(q, use_cache)
+
+        if total_records == 0:
+            return PagedResponse([], 0, 0)
+
+        #
+        # Construct SQLAlchemy Query `q` to filter.
+        #
+        if query:
+            q = self._evaluate_query(q, query, WorkflowMetaResource())
+            total_filtered = self._get_count(q, use_cache)
+
+            if total_filtered == 0 or (start_index and start_index >= total_filtered):
+                log.debug('total_filtered is 0 or start_index >= total_filtered')
+                return PagedResponse([], total_records, total_filtered)
+
+        #
+        # Construct SQLAlchemy Query `q` to sort
+        #
+        if order:
+            q = self._add_ordering(q, order, WorkflowMetaResource())
+
+        #
+        # Construct SQLAlchemy Query `q` to paginate.
+        #
+        q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
+
+        records = self._get_all(q, use_cache)
+
+        return PagedResponse(records, total_records, total_filtered)
 
     # Workflow State
 
@@ -886,6 +942,58 @@ class StampedeWorkflowQueries(WorkflowQueries):
             return self._get_one(q, use_cache)
         except NoResultFound, e:
             raise e
+
+    # Task Meta
+
+    def get_task_meta(self, task_id, start_index=None, max_results=None, query=None, order=None, use_cache=False,
+                          **kwargs):
+        """
+        Returns a collection of the TaskMeta objects.
+
+        :param task_id: Id of the task
+        :param start_index: Return results starting from record `start_index`
+        :param max_results: Return a maximum of `max_results` records
+        :param query: Filtering criteria
+        :param order: Sorting criteria
+        :param use_cache: If available, use cached results
+
+        :return: Workflow Meta collection, total records count, total filtered records count
+        """
+        #
+        # Construct SQLAlchemy Query `q` to count.
+        #
+        q = self.session.query(TaskMeta)
+        q = q.filter(TaskMeta.task_id == task_id)
+        total_records = total_filtered = self._get_count(q, use_cache)
+
+        if total_records == 0:
+            return PagedResponse([], 0, 0)
+
+        #
+        # Construct SQLAlchemy Query `q` to filter.
+        #
+        if query:
+            q = self._evaluate_query(q, query, TaskMetaResource())
+            total_filtered = self._get_count(q, use_cache)
+
+            if total_filtered == 0 or (start_index and start_index >= total_filtered):
+                log.debug('total_filtered is 0 or start_index >= total_filtered')
+                return PagedResponse([], total_records, total_filtered)
+
+        #
+        # Construct SQLAlchemy Query `q` to sort
+        #
+        if order:
+            q = self._add_ordering(q, order, TaskMetaResource())
+
+        #
+        # Construct SQLAlchemy Query `q` to paginate.
+        #
+        q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
+
+        records = self._get_all(q, use_cache)
+
+        return PagedResponse(records, total_records, total_filtered)
 
     # Job Instance
 

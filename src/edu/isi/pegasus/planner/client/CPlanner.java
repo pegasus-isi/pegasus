@@ -48,6 +48,7 @@ import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.RunDirectoryFilenameFilter;
 import edu.isi.pegasus.planner.common.Shiwa;
+import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.parser.DAXParserFactory;
 import edu.isi.pegasus.planner.parser.Parser;
@@ -748,6 +749,7 @@ public class CPlanner extends Executable{
         //construct noop keys
         newJob.setSiteHandle( "local" );
         newJob.setJobType( Job.CREATE_DIR_JOB );
+        newJob.dagmanVariables.construct( Dagman.NOOP_KEY, "true" );
         construct(newJob,"noop_job","true");
         construct(newJob,"noop_job_exit_code","0");
 
@@ -916,7 +918,7 @@ public class CPlanner extends Executable{
                     break;
                     
                 case 'I'://input-dir
-                    options.setInputDirectory( g.getOptarg() );
+                    options.setInputDirectories( g.getOptarg() );
                     break;
                     
                 case 'j'://job-prefix
@@ -1186,7 +1188,7 @@ public class CPlanner extends Executable{
              append( "\n [--staging-site s1=ss1[,s2=ss2[..]] [--basename prefix] [--cache f1[,f2[..]] [--cluster t1[,t2[..]] [--conf <path to property file>]"  ).
              append( "\n [--inherited-rc-files f1[,f2[..]]]  [--cleanup <cleanup strategy to use>] " ).
              append( "\n [--dir <dir for o/p files>] [--force] [--force-replan] [--forward option=[value] ] [--group vogroup] "  ).
-             append( "\n [--input-dir <input dir>] [--output-dir <output dir>] [--output output site] [--randomdir=[dir name]]   [--verbose] [--version][--help] " ).
+             append( "\n [--input-dir dir1[,dir2[..]]] [--output-dir <output dir>] [--output output site] [--randomdir=[dir name]]   [--verbose] [--version][--help] " ).
              append( "\n"  ).
              append( "\n Mandatory Options "  ).
              append( "\n -d  fn " ).
@@ -1210,7 +1212,7 @@ public class CPlanner extends Executable{
              append( "\n                    can be repeated multiple times."  ).
              append( "\n -g |--group        the VO Group to which the user belongs "  ).
              append( "\n -j |--job-prefix   the prefix to be applied while construction job submit filenames "  ).
-             append( "\n -I |--input-dir    an optional input directory where the input files reside on submit host"  ).
+             append( "\n -I |--input-dir    comma separated list of optional input directories where the input files reside on submit host"  ).
              append( "\n -O |--output-dir   an optional output directory where the output files should be transferred to on submit host. "  ).
              append( "\n                      the directory specified is asscociated with the local-storage directory for the output site."  ).
              append( "\n -o |--output-site  the output site where the data products during workflow execution are transferred to."  ).

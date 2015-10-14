@@ -18,6 +18,7 @@ See http://www.sqlalchemy.org/ for details on SQLAlchemy
 """
 __rcsid__ = "$Id: stampede_loader.py 31116 2012-03-29 15:45:15Z mgoode $"
 __author__ = "Monte Goode"
+__author__ = "Karan Vahi"
 
 from Pegasus.db import connection
 from Pegasus.db.admin.admin_loader import DBAdminError
@@ -98,6 +99,14 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             'stampede.job_inst.globus.submit.end' : self.jobstate,
             'stampede.inv.start' : self.noop, # good
             'stampede.inv.end' : self.invocation,
+            'stampede.static.meta.start': self.static_meta_start,
+            'stampede.xwf.meta' : self.workflow_meta,
+            'stampede.task.meta' : self.task_meta,
+            'stampede.rc.meta'   : self.rc_meta,
+            'stampede.rc.pfn'    : self.rc_pfn,
+            'stampede.wf.map.file' : self.wf_task_file_map,
+            'stampede.static.meta.end': self.noop,
+
             #
             # --- Panorama extras begin --------------------------------------------------------------------
             #
@@ -111,6 +120,8 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         # Dicts for caching FK lookups
         self.wf_id_cache = {}
         self.root_wf_id_cache = {}
+        self.task_id_cache = {} #for task metadata population
+        self.lfn_id_cache  = {} #for file metadata population
         self.job_id_cache = {}
         self.job_instance_id_cache = {}
         self.host_cache = {}
@@ -470,6 +481,24 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             if wfs.event == 'stampede.xwf.end':
                 self.flushCaches(wfs)
 
+    def workflow_meta(self, linedata):
+        """
+
+        :param linedata:  dictionary of netlogger BP data dict-ified
+        :return:
+
+        Handles a workflow metadata insert event.
+        """
+        wf_meta = self.linedataToObject( linedata, WorkflowMeta() )
+        wf_meta.wf_id = self.wf_uuid_to_id( wf_meta.wf_uuid )
+
+        self.log.debug( 'workflowmeta: %s', wf_meta)
+
+        if self._batch:
+            self._batch_cache['batch_events'].append(wf_meta)
+        else:
+            wf_meta.commit_to_db(self.session)
+
     def job(self, linedata):
         """
         @type   linedata: dict
@@ -698,6 +727,90 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         else:
             self.session.commit()
 
+    def task_meta(self, linedata):
+        """
+
+        :param linedata:  dictionary of netlogger BP data dict-ified
+        :return:
+
+        Handles a task metadata insert event.
+        """
+        task_meta = self.linedataToObject( linedata, TaskMeta() )
+        task_meta.wf_id = self.wf_uuid_to_id( task_meta.wf_uuid )
+        task_meta.task_id = self.get_task_id( task_meta.wf_id , task_meta.abs_task_id)
+
+        self.log.debug( 'task_meta: %s', task_meta)
+
+        if self._batch:
+            self._batch_cache['batch_events'].append(task_meta)
+        else:
+            task_meta.commit_to_db(self.session)
+
+    def rc_meta(self, linedata):
+        """
+
+        :param linedata:  dictionary of netlogger BP data dict-ified
+        :return:
+
+        Handles a rc metadata insert event.
+        """
+        rc_meta = self.linedataToObject( linedata, RCMeta() )
+        lfn = rc_meta.lfn_id
+        rc_meta.lfn = lfn
+        rc_meta.wf_id = self.wf_uuid_to_id( rc_meta.wf_uuid )
+        rc_meta.lfn_id = self.get_lfn_id( rc_meta.wf_id, lfn )
+
+        self.log.debug( 'rc_meta: %s', rc_meta)
+
+        if self._batch:
+            self._batch_cache['batch_events'].append(rc_meta)
+        else:
+            rc_meta.commit_to_db(self.session)
+
+    def rc_pfn(self, linedata):
+        """
+
+        :param linedata:  dictionary of netlogger BP data dict-ified
+        :return:
+
+        Handles a rc pfn insert event that populates the pfn and the site attribute.
+        """
+        rc_pfn = self.linedataToObject( linedata, RCPFN() )
+        lfn = rc_pfn.lfn_id
+        rc_pfn.lfn = lfn
+        rc_pfn.wf_id = self.wf_uuid_to_id( rc_pfn.wf_uuid )
+        rc_pfn.lfn_id = self.get_lfn_id( rc_pfn.wf_id, lfn )
+
+        self.log.debug( 'rc_pfn: %s', rc_pfn)
+
+        if self._batch:
+            self._batch_cache['batch_events'].append(rc_pfn)
+        else:
+            rc_pfn.commit_to_db(self.session)
+
+    def wf_task_file_map(self , linedata ):
+        """
+        Handles the event that associates workflow, task and a file lfn .
+        Populates to wf_files
+
+        :param linedata:
+        :return:
+        """
+
+        wf_files = self.linedataToObject( linedata, WorkflowFiles() )
+        lfn = wf_files.lfn_id
+        wf_files.lfn = lfn
+        wf_files.wf_id   = self.wf_uuid_to_id( wf_files.wf_uuid )
+        wf_files.task_id = self.get_task_id( wf_files.wf_id, wf_files.abs_task_id )
+        wf_files.lfn_id  = self.get_lfn_id( wf_files.wf_id, lfn )
+
+        self.log.debug( 'wf_files: %s', wf_files)
+
+        if self._batch:
+            self._batch_cache['batch_events'].append(wf_files)
+        else:
+            rc_meta.commit_to_db(self.session)
+
     def subwf_map(self, linedata):
         """
         @type   linedata: dict
@@ -769,6 +882,19 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         have been processed.
         """
         self.log.debug('static_end: %s', linedata)
+        if self._batch:
+            self.hard_flush()
+
+    def static_meta_start(self, linedata):
+        """
+        @type   linedata: dict
+        @param  linedata: One line of BP data dict-ified.
+
+        This forces a flush of all the abstract related events,
+        so that the task id's can be retrieved for metadata population
+        of tasks.
+        """
+        self.log.debug('static_meta_start: %s', linedata)
         if self._batch:
             self.hard_flush()
 
@@ -917,6 +1043,82 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
 
         return self.root_wf_id_cache[wf_uuid]
 
+
+    def get_task_id(self, wf_id, task_dax_id):
+        """
+        @type   wf_id: int
+        @param  wf_id: A workflow id from the workflow table.
+        @type   task_dax_id: string
+        @param  task_dax_id: The ID for the task in the DAX
+
+        Gets and caches task_id for task_meta inserts
+        """
+        if not self.task_id_cache.has_key((wf_id, task_dax_id)):
+            query = self.session.query(Task.task_id).filter(Task.wf_id == wf_id).filter(Task.abs_task_id == task_dax_id)
+            try:
+                self.task_id_cache[((wf_id, task_dax_id))] = query.one().task_id
+            except orm.exc.MultipleResultsFound, e:
+                self.log.error('Multiple results found for wf_uuid/task_dax_id: %s/%s', wf_id, task_dax_id)
+                return None
+            except orm.exc.NoResultFound, e:
+                self.log.error('No results found for wf_uuid/task_dax_id: %s/%s', wf_id, task_dax_id)
+                return None
+
+        return self.task_id_cache[(wf_id, task_dax_id)]
+
+    def get_lfn_id(self, wf_id, lfn):
+        """
+        @type   wf_id: int
+        @param  wf_id: A workflow id from the workflow table.
+        @type   lfn: string
+        @param  lfn: The logical filename for the file
+
+        Gets and caches lfn_id for rc_meta, rc_lfn, rc_pfn and wf_files inserts
+        """
+        if not self.lfn_id_cache.has_key((wf_id, lfn)):
+            id =  self.__get_lfn_id_from_database__(wf_id, lfn )
+
+            if id is None:
+                # we do an explicit insert to populate the RCLFN table
+                file = RCLFN()
+                file.lfn = lfn
+                # explicit insert
+                file.commit_to_db(self.session)
+                # retrieve from the database and set the cache
+                id = self.__get_lfn_id_from_database__(wf_id, lfn)
+
+                # if ID is still None then definitely an an error
+                if id is None:
+                    self.log.error('No results found for wf_uuid/lfn: %s/%s', wf_id, lfn)
+                    return None
+
+            self.lfn_id_cache[(wf_id, lfn)] = id
+
+        return self.lfn_id_cache[(wf_id, lfn)]
+
+    def __get_lfn_id_from_database__(self, wf_id, lfn):
+        """
+        @type   wf_id: int
+        @param  wf_id: A workflow id from the workflow table.
+        @type   lfn: string
+        @param  lfn: The logical filename for the file
+
+        Retrieves the LFN explicitly by querying the database.
+        """
+
+        query = self.session.query(RCLFN.lfn_id).filter( RCLFN.lfn == lfn)
+        lfn_id = None
+        try:
+            lfn_id = query.one().lfn_id
+        except orm.exc.MultipleResultsFound, e:
+            self.log.error('Multiple results found for wf_uuid/lfn: %s/%s', wf_id, lfn)
+            return None
+        except orm.exc.NoResultFound, e:
+            return None
+
+        return lfn_id
+
+
     def get_job_id(self, wf_id, exec_id):
         """
         @type   wf_id: int
@@ -1018,6 +1220,14 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         for k,v in self.host_cache.items():
             if k[0] == wfs.wf_uuid:
                 del self.host_cache[k]
+
+        for k,v in self.task_id_cache.items():
+            if k[0] == wfs.wf_id:
+                del self.task_id_cache[k]
+
+        for k,v in self.lfn_id_cache.items():
+            if k[0] == wfs.wf_id:
+                del self.lfn_id_cache[k]
 
         for k,v in self.job_id_cache.items():
             if k[0] == wfs.wf_id:

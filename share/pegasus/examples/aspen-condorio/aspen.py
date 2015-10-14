@@ -30,8 +30,8 @@ b1 = File("f.b1")
 b2 = File("f.b2")
 preprocess.addArguments("-a preprocess","-T60","-i",a,"-o",b1,b2)
 preprocess.uses(a, link=Link.INPUT)
-preprocess.uses(b1, link=Link.OUTPUT)
-preprocess.uses(b2, link=Link.OUTPUT)
+preprocess.uses(b1, link=Link.OUTPUT, register=True)
+preprocess.uses(b2, link=Link.OUTPUT, register=True)
 
 # add metadata to call out aspen with
 preprocess.metadata( "time", "60" )

@@ -39,7 +39,6 @@ import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.transformation.impl.Abstract;
-import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.CompoundTransformation;
 import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.DAXJob;
@@ -1030,25 +1029,34 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 if ( child instanceof Profile ) {
                     Profile md = ( Profile )child;
                     md.setProfileValue( mTextContent.toString().trim() );
+
                     if( parent instanceof Map ){
-                        unSupportedNestingOfElements( "adag", "metadata" );
+                        //metadata appears in adag element
+                        this.mCallback.cbMetadata(md);
                         return true;
                     }
                     else if ( parent instanceof Job ){
-                        //profile appears in the job element
+                        //metadata appears in the job element
                         Job j = (Job)parent;
                         j.addProfile( md );
                         return true;
                     }
-                    //metadata appears in file element
                     else if( parent instanceof ReplicaLocation ){
-                        unSupportedNestingOfElements( "file", "metadata" );
+                        //metadata appears in file element
+                        ReplicaLocation rl = (ReplicaLocation) parent;
+                        rl.addMetadata( md.getProfileKey(), md.getProfileValue());
                         return true;
                     }
-                    //metadata appears in executable element
                     else if( parent instanceof Executable ){
+                        //metadata appears in executable element
                         Executable e = (Executable)parent;
                         e.addMetaData( new MetaData(md.getProfileKey(), md.getProfileValue()));
+                        return true;
+                    }
+                    else if( parent instanceof PegasusFile ){
+                        //metadata appears in uses element
+                        PegasusFile pf = (PegasusFile)parent;
+                        pf.addMetadata( md.getProfileKey(), md.getProfileValue());
                         return true;
                     }
                 }

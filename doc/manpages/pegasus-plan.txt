@@ -18,8 +18,8 @@ Synopsis
              [*-C* 'style'[,'style'...]]
              [*--dir* 'dir']
              [*--force*] [*--force-replan*] 
-             [*--inherited-rc-files*] [*-j* 'prefix'] 
-             [*-n*][*-I* 'input-dir'][*-O* 'output-dir'] [*-o* 'site']
+             [*--inherited-rc-files* 'file1'[,'file2'...]] [*-j* 'prefix'] 
+             [*-n*][*-I* 'input-dir1'[,'input-dir2'...]][*-O* 'output-dir'] [*-o* 'site']
              [*-s* 'site1'[,'site2'...]]
 	     [*--staging-site* s1=ss1[,s2=ss2[..]] 
              [*--randomdir*[='dirname']]
@@ -278,9 +278,9 @@ to the DAX jobs.
 
 *-I*::
 *--input-dir*::
-A path to the input directory where the input files reside. This
-internally loads a Directory based Replica Catalog backend, that
-constructs does a directory listing to create the LFN->PFN mappings
+A comma separated list of input directories on the submit host where the input
+files reside. This internally loads a Directory based Replica Catalog
+backend, that constructs does a directory listing to create the LFN->PFN mappings
 for the files in the input directory. You can specify additional
 properties either on the command line or the properties file to
 control the site attribute and url prefix associated with the

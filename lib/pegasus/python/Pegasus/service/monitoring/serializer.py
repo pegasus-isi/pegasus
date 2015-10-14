@@ -30,8 +30,10 @@ from Pegasus.db.schema import *
 
 from Pegasus.service.base import PagedResponse, ErrorResponse
 from Pegasus.service.monitoring.resources import RootWorkflowResource, RootWorkflowstateResource
-from Pegasus.service.monitoring.resources import JobInstanceResource, JobstateResource, TaskResource, InvocationResource
-from Pegasus.service.monitoring.resources import WorkflowResource, WorkflowstateResource, JobResource, HostResource
+from Pegasus.service.monitoring.resources import WorkflowResource, WorkflowMetaResource, WorkflowstateResource
+from Pegasus.service.monitoring.resources import JobResource, HostResource, JobInstanceResource, JobstateResource
+from Pegasus.service.monitoring.resources import TaskResource, TaskMetaResource, InvocationResource
+
 
 log = logging.getLogger(__name__)
 
@@ -102,11 +104,20 @@ class PegasusServiceJSONEncoder(JSONEncoder):
         elif isinstance(obj, Workflow):
             json_record = obj_to_dict(WorkflowResource())
             json_record['_links'] = OrderedDict([
+                ('workflow_meta', url_for('.get_workflow_meta', wf_id=obj.wf_id, _method='GET')),
                 ('workflow_state', url_for('.get_workflow_state', wf_id=obj.wf_id, _method='GET')),
                 ('job', url_for('.get_workflow_jobs', wf_id=obj.wf_id, _method='GET')),
                 ('task', url_for('.get_workflow_tasks', wf_id=obj.wf_id, _method='GET')),
                 ('host', url_for('.get_workflow_hosts', wf_id=obj.wf_id, _method='GET')),
                 ('invocation', url_for('.get_workflow_invocations', wf_id=obj.wf_id, _method='GET'))
+            ])
+
+            return json_record
+
+        elif isinstance(obj, WorkflowMeta):
+            json_record = obj_to_dict(WorkflowMetaResource())
+            json_record['_links'] = OrderedDict([
+                ('workflow', url_for('.get_workflow', wf_id=obj.wf_id))
             ])
 
             return json_record
@@ -153,7 +164,16 @@ class PegasusServiceJSONEncoder(JSONEncoder):
             json_record = obj_to_dict(TaskResource())
             json_record['_links'] = OrderedDict([
                 ('workflow', url_for('.get_workflow', wf_id=obj.wf_id)),
-                ('job', url_for('.get_job', wf_id=obj.wf_id, job_id=obj.job_id))
+                ('job', url_for('.get_job', wf_id=obj.wf_id, job_id=obj.job_id)),
+                ('task_meta', url_for('.get_task_meta', wf_id=obj.wf_id, job_id=obj.job_id, task_id=obj.task_id))
+            ])
+
+            return json_record
+
+        elif isinstance(obj, TaskMeta):
+            json_record = obj_to_dict(TaskMetaResource())
+            json_record['_links'] = OrderedDict([
+                ('task', url_for('.get_task', task_id=obj.task_id))
             ])
 
             return json_record

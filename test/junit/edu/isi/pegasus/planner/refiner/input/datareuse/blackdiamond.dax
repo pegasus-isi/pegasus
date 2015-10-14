@@ -32,12 +32,14 @@
 	</job>
 	<job id="ID0000003" namespace="diamond" name="findrange" version="4.0">
 		<argument>-a findrange -T5 -i <file name="f.b2"/> -o <file name="f.c2"/></argument>
-		<uses name="f.c2" link="output"/>
+		<uses name="f.c2" link="output" transfer="true"/>
+		<uses name="f.c2'" link="output" transfer="false"/>
 		<uses name="f.b2" link="input"/>
 	</job>
 	<job id="ID0000004" namespace="diamond" name="analyze" version="4.0">
 		<argument>-a analyze -T5 -i <file name="f.c1"/> <file name="f.c2"/> -o <file name="f.d"/></argument>
 		<uses name="f.c2" link="input"/>
+		<uses name="f.c2'" link="input"/>
 		<uses name="f.d" link="output" register="true"/>
 		<uses name="f.c1" link="input"/>
 		<invoke when="at_end">/lfs1/software/bamboo/data/xml-data/build-dir/PEGASUS-BNT-T1F/test/core/blackdiamond/my-notify.sh</invoke>

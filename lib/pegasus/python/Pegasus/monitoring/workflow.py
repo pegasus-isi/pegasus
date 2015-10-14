@@ -52,6 +52,7 @@ re_parse_dag_subdag = re.compile(r"SUBDAG EXTERNAL\s+(\S+)\s(\S+)\s?(?:DIR)?\s?(
 re_parse_planner_args = re.compile(r"\s*-Dpegasus.log.\*=(\S+)\s.*", re.IGNORECASE )
 # used while parsing the job .err file.
 re_parse_pegasuslite_ec = re.compile(r'^PegasusLite: exitcode (\d+)$', re.MULTILINE)
+#re_parse_register_input_files = re.compile(r'^([a-zA-z\.\d\\_-]+)\s+([\w]+://[\w\.\-:@]*/[\S ]*)\s+(\w=\".*\")*')
 
 # Constants
 MONITORD_START_FILE = "monitord.started"   # filename for writing when monitord starts
@@ -1724,8 +1725,8 @@ class Workflow:
             my_output = my_parser.parse_stampede()
 
             # Check if successful
-            if my_parser._open_error == True:
-                logger.info("unable to find output file %s for job %s" % (my_job_output_fn, my_job._exec_job_id))
+            if my_parser._open_error == True and not my_job.is_noop_job():
+                logger.info("unable to read output file %s for job %s" % (my_job_output_fn, my_job._exec_job_id))
 
         # Initialize task id counter
         my_task_id = 1
@@ -1842,6 +1843,59 @@ class Workflow:
                 record["resource"] = my_job._site_name
                 # Send event to the database
                 self.db_send_host_info(my_job, record)
+
+        # register any files associated with the job
+        self.register_files( my_job )
+
+
+
+    def register_files( self, job ):
+        """
+        Registers files associated with a registration job .
+        """
+        # PM-918 check if it is a registration job and succeeded
+        if not job._exec_job_id.startswith( "register_" ) or job._main_job_exitcode != 0 :
+            return
+
+        basename = "%s.in" %( job._exec_job_id )
+        input_file = os.path.join( self._run_dir, basename )
+        logger.info( "Populating locations corresponding to succeeded registration job  %s " %input_file )
+
+        try:
+            SUB = open(input_file, "r")
+        except IOError:
+            logger.error("unable to parse %s" % (input_file))
+            return None
+
+        # Parse input file
+        for my_line in SUB:
+            #split on whitespace - doing lazy parsing
+            entry = my_line.split( );
+            lfn = entry[0]
+            pfn = entry[1]
+            site = None
+            for i in range( 2, len(entry) ):
+                kv = entry[i]
+                (key, value) = kv.split("=")
+                value = value.strip("\"")
+                if key == "site":
+                    #all other attributes should have been populated while
+                    #parsing the static.bp file
+                    site = value
+                    break
+
+            #create the event for replica catalog to populate the pfn
+            # Start empty
+            kwargs = {}
+            # Make sure we include the wf_uuid
+            kwargs["xwf__id"] = self._wf_uuid
+            kwargs["lfn__id"] = lfn
+            kwargs["pfn"] = pfn
+            kwargs["site"] = site
+
+            # Send rc.pfn event to the database
+            self.output_to_db("rc.pfn" , kwargs)
+
 
 
     def get_pegasuslite_exitcode( self, job ):

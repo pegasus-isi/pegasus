@@ -18,8 +18,10 @@ package edu.isi.pegasus.planner.classes;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.dax.Invoke;
+import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.partitioner.graph.MapGraph;
@@ -109,6 +111,12 @@ public class ADag extends Data implements Graph{
     protected Notifications mNotifications;
     
     /**
+     * The profiles associated with the site.
+     */
+    @Expose @SerializedName( "wf_metadata" )
+    private Profiles mProfiles;
+    
+    /**
      * Handle to the Graph implementor.
      */
     @Expose @SerializedName( "graph" )
@@ -118,13 +126,14 @@ public class ADag extends Data implements Graph{
      * Initialises the class member variables.
      */
     public ADag() {
-         mDAGInfo          = new DagInfo();
+        mDAGInfo          = new DagInfo();
         mSubmitDirectory = ".";
         mWorkflowUUID    = generateWorkflowUUID();
         mRootWorkflowUUID = null;
         mWorkflowRefinementStarted = false;
         mNotifications = new Notifications();
         mGraphImplementor = new MapGraph();
+        mProfiles = new Profiles();
         resetStores();
     }
 
@@ -146,7 +155,37 @@ public class ADag extends Data implements Graph{
     public void addNotifications( Notifications invokes  ){
         this.mNotifications.addAll(invokes);
     }
+    
+    /**
+     * Add metadata to the object.
+     * 
+     * @param key
+     * @param value 
+     */
+    public void addMetadata( String key, String value ){
+       this.mProfiles.addProfile(Profiles.NAMESPACES.metadata, key, value);
+    }
 
+    /**
+     * Returns metadata attribute for a particular key 
+     * 
+     * @param key
+     * 
+     * @return value returned else null if not found
+     */
+    public String getMetadata( String key  ){
+       return (String)mProfiles.get(Profiles.NAMESPACES.metadata).get( key );
+    }
+    
+    /**
+     * Returns all metadata attributes for the file
+     * 
+     * @return Metadata 
+     */
+    public Metadata getAllMetadata( ){
+       return (Metadata)mProfiles.get(Profiles.NAMESPACES.metadata);
+    }
+    
     /**
      * Returns a collection of all the notifications that need to be
      * done for a particular condition
@@ -184,8 +223,7 @@ public class ADag extends Data implements Graph{
      */
     public Object clone(){
         ADag newAdag        = new ADag();
-//        newAdag.mDAGInfo     = (DagInfo)this.mDAGInfo.clone();
-//        newAdag.vJobSubInfos= (Vector)this.vJobSubInfos.clone();
+        
         newAdag.setBaseSubmitDirectory( this.mSubmitDirectory );
         newAdag.setRequestID( this.mRequestID );
         newAdag.setRootWorkflowUUID( this.getRootWorkflowUUID() );
@@ -193,8 +231,14 @@ public class ADag extends Data implements Graph{
         //the stores are not a true clone
         newAdag.setReplicaStore(mReplicaStore);
         newAdag.setTransformationStore(mTransformationStore);
+        
+        newAdag.setProfiles( (Profiles)this.mProfiles.clone() );
+        
         newAdag.setWorkflowUUID( this.getWorkflowUUID() );
         newAdag.addNotifications( this.getNotifications() );
+        
+        
+        
         return newAdag;
     }
     
@@ -573,6 +617,15 @@ public class ADag extends Data implements Graph{
      */
     public TransformationStore getTransformationStore(  ){
         return this.mTransformationStore;
+    }
+    
+    /**
+     * Sets the profiles associated with the file server.
+     * 
+     * @param profiles   the profiles.
+     */
+    public void setProfiles( Profiles profiles ){
+        mProfiles = profiles;
     }
     
     /**

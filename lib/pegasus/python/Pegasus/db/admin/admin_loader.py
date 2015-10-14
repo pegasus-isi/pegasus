@@ -13,13 +13,16 @@ log = logging.getLogger(__name__)
 #-------------------------------------------------------------------
 # DB Admin configuration
 #-------------------------------------------------------------------
-CURRENT_DB_VERSION = 6
+CURRENT_DB_VERSION = 5
+DB_MIN_VERSION = 4
 
 COMPATIBILITY = {
     '4.3.0': 1, '4.3.1': 1, '4.3.2': 1,
     '4.4.0': 2, '4.4.1': 2, '4.4.2': 2,
     '4.5.0': 4, '4.5.1': 4, '4.5.2': 4,
-    '4.6.0': 4, '4.6.0panorama': 6,
+    '4.6.0': 5, 
+    
+    '4.6.0panorama': 4.2
 }
 #-------------------------------------------------------------------
 
@@ -61,7 +64,7 @@ def db_create(dburi, engine, db, pegasus_version=None, force=False):
 
     v = -1
     if len(table_names) == 0:
-        engine.execute(db_version.insert(), version_number=CURRENT_DB_VERSION,
+        engine.execute(db_version.insert(), version=CURRENT_DB_VERSION,
                 version_timestamp=datetime.datetime.now().strftime("%s"))
         print "Created Pegasus database in: %s" % dburi
     else:
@@ -77,7 +80,7 @@ def db_create(dburi, engine, db, pegasus_version=None, force=False):
 
 def db_current_version(db, parse=False, force=False):
     """ Get the current version of the database."""
-    _verify_tables(db)
+    # _verify_tables(db)
     current_version = None
 
     try:
@@ -86,6 +89,10 @@ def db_current_version(db, parse=False, force=False):
         current_version = _discover_version(db, force=force)
 
     if parse:
+        if current_version > CURRENT_DB_VERSION:
+            log.warn("You database was created with a newer Pegasus version, and may not be compatible with the current version.")
+            return None
+
         current_version = get_compatible_version(current_version)
         if not current_version:
             raise DBAdminError("Your database is not compatible with any Pegasus version.\nRun 'pegasus-db-admin update %s' to update it to the latest version." % db.get_bind().url)
@@ -99,53 +106,70 @@ def db_verify(db, pegasus_version=None, force=False):
     _verify_tables(db)
     version = parse_pegasus_version(pegasus_version)
 
-    compatible = False
     try:
         compatible = _check_version(db, version)
+
     except NoResultFound:
         _discover_version(db, pegasus_version=pegasus_version, force=force)
         compatible = _check_version(db, version)
     
     if not compatible:
         raise DBAdminError("Your database is NOT compatible with version %s" % get_compatible_version(version))
-    
-    return compatible
 
 
-# def db_downgrade(db, pegasus_version=None, force=False):
-#     """ Downgrade the database. """
-#     _verify_tables(db)
-#
-#     current_version = db_current_version(db, force=force)
-#     if pegasus_version:
-#         version = parse_pegasus_version(pegasus_version)
-#     else:
-#         version = current_version - 1
-#
-#     if current_version == version:
-#         log.debug("Your database is already downgraded.")
-#         return
-#
-#     if version == 0:
-#         print "Your database is already downgraded to the minimum version."
-#         return
-#
-#     previous_version = 'Z'
-#     for ver in COMPATIBILITY:
-#         if COMPATIBILITY[ver] <= version and ver < previous_version:
-#             version = COMPATIBILITY[ver]
-#             previous_version = ver
-#             break
-#
-#     if current_version < version:
-#         raise DBAdminError("Unable to run downgrade. Current database version is older than specified version '%s'." % (pegasus_version))
-#
-#     _backup_db(db)
-#     for i in range(current_version, version, -1):
-#         k = get_class(i, db)
-#         k.downgrade(force)
-#         _update_version(db, i - 1)
-#     print "Your database was successfully downgraded."
+def db_downgrade(db, pegasus_version=None, force=False):
+    """ Downgrade the database. """
+    if not check_table_exists(db, db_version):
+        raise DBAdminError("Unable to determine database version.")
+
+    try:
+        current_version = _get_version(db)
+    except NoResultFound:
+        raise DBAdminError("Unable to determine database version.")
+
+    if pegasus_version:
+        version = parse_pegasus_version(pegasus_version)
+    else:
+        previous_version = ''
+        for ver in COMPATIBILITY:
+            if COMPATIBILITY[ver] < current_version and ver > previous_version:
+                version = COMPATIBILITY[ver]
+                previous_version = ver
+
+    if current_version == version:
+        log.info("Your database is already downgraded.")
+        return
+    elif current_version < version:
+        raise DBAdminError("Cannot downgrade to a higher version.")
+        return
+
+    if version < DB_MIN_VERSION:
+        raise DBAdminError("Your database is already downgraded to the minimum version.")
+
+    _backup_db(db)
+    for i in range(int(current_version), int(version) - 1, -1):
+
+        if i == int(current_version):
+            max_range = _get_minor_version(current_version)
+        else:
+            max_range = _get_max_minor_version(i)
+
+        for j in range(max_range, 0, -1):
+            k = get_class("%s-%s" % (i, j), db)
+            k.downgrade(force)
+            actual_version = float("%s.%s" % (i, j - 1))
+            _update_version(db, actual_version)
+
+        if (i > version):
+            k = get_class(i, db)
+            k.downgrade(force)
+            actual_version = float("%s.%s" % (i - 1, _get_max_minor_version(i - 1)))
+            _update_version(db, actual_version)
+
+        if actual_version == version:
+            break
+
+    print "Your database was successfully downgraded."
 
 
 def parse_pegasus_version(pegasus_version=None):
@@ -165,46 +189,86 @@ def parse_pegasus_version(pegasus_version=None):
 
 ################################################################################
 def _get_version(db):
-    current_version = db.query(DBVersion.version_number).order_by(
-        DBVersion.id.desc()).first()
+    try:
+        current_version = db.query(DBVersion.version).order_by(DBVersion.id.desc()).first()
+
+    except OperationalError, e:
+        # update dbversion table
+        # Temporary migration. Should be removed in future releases
+        try:
+            log.info("Updating dbversion...")
+            if db.get_bind().driver == "mysqldb":
+                db.execute("RENAME TABLE dbversion TO dbversion_v4")
+            else:
+                db.execute("ALTER TABLE dbversion RENAME TO dbversion_v4")
+            db_version.create(db.get_bind(), checkfirst=True)
+            db.execute("INSERT INTO dbversion(version_number, version, version_timestamp) SELECT version_number, version_number, version_timestamp FROM dbversion_v4 ORDER BY id")
+            db.execute("DROP TABLE dbversion_v4")
+            db.commit()
+            current_version = db.query(DBVersion.version).order_by(DBVersion.id.desc()).first()
+
+        except (OperationalError, ProgrammingError), e:
+            pass
+        except Exception, e:
+            db.rollback()
+            raise DBAdminError(e)
+
     if not current_version:
         log.debug("No version record found on dbversion table.")
         raise NoResultFound()
-    return current_version[0]
+    return float(current_version[0])
 
 
 def _discover_version(db, pegasus_version=None, force=False, verbose=True):
     version = parse_pegasus_version(pegasus_version)
 
-    current_version = -1
+    current_version = 0
     if not force:
         try:
             current_version = _get_version(db)
         except NoResultFound:
             pass
-    
-    if current_version == version or current_version > CURRENT_DB_VERSION:
+
+    if current_version == version:
         try:
             _verify_tables(db)
             log.debug("Your database is already updated.")
             return None
         except DBAdminError:
-            current_version = -1
-    
+            current_version = 0
+    elif current_version > CURRENT_DB_VERSION:
+        return 0
+
     if current_version > version:
         raise DBAdminError("Unable to run update. Current database version is newer than specified version '%s'." % (pegasus_version))
     
     _backup_db(db)
-    v = -1
-    for i in range(current_version + 1, version + 1):
-        k = get_class(i, db)
-        k.update(force=force)
-        v = i
-        
+    v = 0.0
+    for i in range(int(current_version), int(version) + 1):
+        if not i == int(current_version):
+            k = get_class(i, db)
+            k.update(force=force)
+        v = float(i)
+
+        # verify minor versions
+        max_range = 999
+        if i == int(version):
+            max_range = _get_minor_version(version)
+
+        for j in range(1, max_range + 1):
+            try:
+                k = get_class("%s-%s" % (i, j), db)
+                k.update(force=force)
+                v = float("%s.%s" % (i, j))
+            except ImportError:
+                break
+
     if v > current_version:
-        _update_version(db, i)
+        _update_version(db, v)
         if verbose:
             print "Your database has been updated."
+    else:
+        v = 0
     return v
 
 
@@ -217,7 +281,7 @@ def _check_version(db, version):
 
 def _update_version(db, version):
     v = DBVersion()
-    v.version_number = version
+    v.version = version
     v.version_timestamp = datetime.datetime.now().strftime("%s")
     if db:
         db.add(v)
@@ -247,3 +311,16 @@ def _verify_tables(db):
                 % (" \n    ".join(missing_tables), db.get_bind().url))
     except Exception, e:
         raise DBAdminError(e)
+
+
+def _get_minor_version(version):
+    return int(str(float(version)-int(version))[2:])
+
+
+def _get_max_minor_version(version):
+    max_version = 0
+    for ver in COMPATIBILITY:
+        minor_version = _get_minor_version(COMPATIBILITY[ver])
+        if int(COMPATIBILITY[ver]) == version and minor_version > max_version:
+            max_version = minor_version
+    return max_version

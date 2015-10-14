@@ -20,6 +20,9 @@ package edu.isi.pegasus.planner.classes;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 
 import edu.isi.pegasus.planner.dax.PFN;
+
+import edu.isi.pegasus.planner.namespace.Metadata;
+
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -34,7 +37,7 @@ import java.util.ArrayList;
  *
  * @version $Revision$
  *
- * @see org.griphyn.common.catalog.ReplicaCatalogEntry
+ * @see edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry
  */
 public class ReplicaLocation
        extends Data
@@ -56,14 +59,20 @@ public class ReplicaLocation
      * A list of <code>ReplicaCatalogEntry</code> objects containing the PFN's
      * and associated attributes.
      */
-    private List mPFNList;
+    private List<ReplicaCatalogEntry> mPFNList;
 
+    /**
+     * Metadata attributes associated with the file.
+     */
+    private Metadata mMetadata;
+    
     /**
      * Default constructor.
      */
     public ReplicaLocation(){
         mLFN     = "";
-        mPFNList = new ArrayList();
+        mPFNList = new ArrayList<ReplicaCatalogEntry>();
+        mMetadata = new Metadata();
     }
 
     /**
@@ -73,8 +82,9 @@ public class ReplicaLocation
      * @param lfn  the logical filename.
      * @param pfns the list of <code>ReplicaCatalogEntry</code> objects.
      */
-    public ReplicaLocation( String lfn , List pfns ){
-        mLFN     = lfn;
+    public ReplicaLocation( String lfn , List<ReplicaCatalogEntry> pfns ){
+        this();
+        mLFN = lfn;
         mPFNList = pfns;
         //sanitize pfns. add a default resource handle if not specified
         sanitize( mPFNList );
@@ -87,18 +97,13 @@ public class ReplicaLocation
      * @param lfn  the logical filename.
      * @param pfns the list of <code>ReplicaCatalogEntry</code> objects.
      */
-    public ReplicaLocation( String lfn , Collection pfns ){
-        mLFN     = lfn;
-
-        //create a separate list only if required
-        mPFNList = ( pfns instanceof List )?
+    public ReplicaLocation( String lfn , Collection<ReplicaCatalogEntry> pfns ){
+        this( lfn, 
+              //create a separate list only if required
+              ( pfns instanceof List )?
                    (List)pfns:
                    //create a new list from the collection
-                   new ArrayList( pfns ) ;
-
-        //sanitize pfns. add a default resource handle if not specified
-        sanitize( mPFNList );
-
+                   new ArrayList( pfns ) );
     }
 
     /**
@@ -150,13 +155,23 @@ public class ReplicaLocation
      * @param tuples  the <code>List</code> object of <code>ReplicaCatalogEntry</code>
      *              objects, each containing the  PFN and the attributes.
      */
-    protected void addPFNs( List tuples ){
+    protected void addPFNs( List<ReplicaCatalogEntry> tuples ){
         for( Iterator it = tuples.iterator(); it.hasNext(); ){
             addPFN( (ReplicaCatalogEntry)it.next() );
         }
     }
 
 
+    /**
+     * Add metadata to the object.
+     * 
+     * @param key
+     * @param value 
+     */
+    public void addMetadata( String key, String value ){
+       this.mMetadata.checkKeyInNS( key, value );
+    }
+    
     /**
      * Sets the LFN.
      *
@@ -217,6 +232,27 @@ public class ReplicaLocation
     public int getPFNCount(){
         return this.mPFNList.size();
     }
+    
+    /**
+     * Returns metadata attribute for a particular key 
+     * 
+     * @param key
+     * 
+     * @return value returned else null if not found
+     */
+    public String getMetadata( String key  ){
+       return (String)mMetadata.get( key );
+    }
+    
+    /**
+     * Returns all metadata attributes for the file
+     * 
+     * @return Metadata 
+     */
+    public Metadata getAllMetadata( ){
+       return this.mMetadata;
+    }
+
 
     /**
      * Returns the clone of the object.
@@ -235,6 +271,7 @@ public class ReplicaLocation
         }
         rc.mPFNList = new ArrayList();
         rc.setLFN( this.mLFN );
+        rc.mMetadata = (Metadata) this.mMetadata.clone();
 
         //add all the RCE's
         for( Iterator it = this.pfnIterator(); it.hasNext(); ){
@@ -261,9 +298,14 @@ public class ReplicaLocation
         boolean result = (lfn1 == null && lfn2 == null ||
                           lfn1 != null && lfn2 != null && lfn1.equals(lfn2));
 
-        // only merge if PFN match
+        // only merge if LFN match
         if (result) {
             this.addPFNs( location.getPFNList() );
+            
+            for( Iterator it = location.getAllMetadata().getProfileKeyIterator(); it.hasNext();){
+                String key = (String)it.next();
+                this.addMetadata( key, location.getMetadata(key));
+            }
         }
 
         return result;
@@ -284,6 +326,7 @@ public class ReplicaLocation
             sb.append( it.next() );
             sb.append( "," );
         }
+        sb.append( this.getAllMetadata() );
         sb.append( "}" );
         return sb.toString();
     }

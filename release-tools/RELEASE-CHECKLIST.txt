@@ -58,7 +58,11 @@ NOTE: Do not copy and paste the commands below without double checking.
 
 13. Update download page (and test the links!)
 
-14. Send annouce email to pegasus-announce@mailman.isi.edu
+14. Change the symbolic link for the latest documentation to point 
+    to latest stable release
+    https://pegasus.isi.edu/wms/docs/latest/
+
+15. Send annouce email to pegasus-announce@mailman.isi.edu
     (Karan has to do this step)
 
 

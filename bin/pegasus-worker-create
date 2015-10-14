@@ -82,6 +82,10 @@ for PYTHON_DIR in $PEGASUS_PYTHON_DIR/Pegasus $PEGASUS_PYTHON_EXTERNALS_DIR/boto
     cp -a -R ${PYTHON_DIR}/* ${WORKER_DIR}/${RELATIVE_DIR}/     
 done
 
+# "access" the files ones to make sure tar does not give us read errors
+# on distributed filesystems
+find ${BASE_DIR} -exec ls -l {} \; >/dev/null 2>&1
+
 # create place the worker package in the output directory
 (
 cd ${BASE_DIR}

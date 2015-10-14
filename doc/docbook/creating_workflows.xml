@@ -341,6 +341,12 @@ D1/f.3 file://$input/D1/f.3 site="local"</programlisting>
       <orderedlist>
         <listitem>
           <para><emphasis
+          role="bold">pegasus.catalog.replica.directory</emphasis> to specify
+          the path to the directory where the files exist.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
           role="bold">pegasus.catalog.replica.directory.site</emphasis> to
           specify a site attribute other than local to associate with the
           mappings.</para>
@@ -477,6 +483,11 @@ D1/f.3 file://$input/D1/f.3 site="local"</programlisting>
 
       <para><itemizedlist>
           <listitem>
+            <para><emphasis role="bold">pegasus.catalog.replica=MRC</emphasis>
+            </para>
+          </listitem>
+
+          <listitem>
             <para><emphasis
             role="bold">pegasus.catalog.replica.mrc.jdbcrc=JDBCRC</emphasis></para>
           </listitem>
@@ -504,6 +515,48 @@ D1/f.3 file://$input/D1/f.3 site="local"</programlisting>
       <emphasis role="bold"> file1</emphasis> are any valid identifier names
       and <emphasis role="bold">url</emphasis> is the property key that needed
       to be specified.</para>
+
+      <para>Another example is to use MRC with multiple input directories.
+      Sample properties for that configuration are listed below</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">pegasus.catalog.replica=MRC
+          </emphasis></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.replica.mrc.directory1=Directory
+          </emphasis></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.replica.mrc.directory1.directory=/path/to/dir1</emphasis></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.replica.mrc.directory1.directory.site=obelix</emphasis></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.replica.mrc.directory2=Directory</emphasis></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.replica.mrc.directory2.directory=/path/to/dir2
+          </emphasis></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.replica.mrc.directory2.directory.site=corbusier</emphasis></para>
+        </listitem>
+      </itemizedlist>
 
       <section id="pegasus-rc-client">
         <title>Replica Catalog Client pegasus-rc-client</title>

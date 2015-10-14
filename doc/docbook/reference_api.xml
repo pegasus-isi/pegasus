@@ -1792,7 +1792,7 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
     "timestamp"         : &lt;int:timestamp&gt;,
     "workflow_state"    : &lt;object:workflow_state&gt;,
     "_links"            : {
-        "workflow" : &lt;href:workflow&gt;,
+        "workflow" : &lt;href:workflow&gt;
     }
 }</programlisting>
       </section>
@@ -1817,6 +1817,7 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
     "dag_file_name"     : &lt;string:dag_file_name&gt;,
     "timestamp"         : &lt;int:timestamp&gt;,
     "_links"            : {
+        "workflow_meta"  : &lt;href:workflow_meta&gt;,
         "workflow_state" : &lt;href:workflow_state&gt;,
         "job"            : &lt;href:job&gt;,
         "task"           : &lt;href:task&gt;,
@@ -1903,8 +1904,9 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
     "transformation" : &lt;string:transformation&gt;,
     "argv"           : &lt;string:argv&gt;,
     "_links"         : {
-        "workflow" : &lt;href:workflow&gt;,
-        "job"      : &lt;href:job&gt;
+        "workflow"  : &lt;href:workflow&gt;,
+        "job"       : &lt;href:job&gt;,
+        "task_meta" : &lt;href:task_meta&gt;
     }
 }</programlisting>
       </section>
@@ -3743,7 +3745,7 @@ HTTP/1.1 200 OK
 
         <para><programlisting><emphasis role="bold">$ curl --request GET \
        --user user-a:user-a-password \
-       https://www.domain.com/api/v1/user/mayani/root/1/workflow/1/state;recent=true?pretty-print=true
+       https://www.domain.com/api/v1/user/user-a/root/1/workflow/1/state;recent=true?pretty-print=true
                     </emphasis>
 HTTP/1.1 200 OK
 
@@ -3756,7 +3758,7 @@ HTTP/1.1 200 OK
             "restart_count": 3,
             "timestamp": 1421885063.0,
             "_links": {
-                "workflow": "/api/v1/user/mayani/root/1/workflow/1"
+                "workflow": "/api/v1/user/user-a/root/1/workflow/1"
             }
         }
     ],
@@ -3776,7 +3778,7 @@ HTTP/1.1 200 OK
        --header "Content-Type: application/json" \
        --data '[
             {
-                "path"   : "/api/v1/user/mayani/root?query=r.wf_id = 1&amp;pretty-print=True",
+                "path"   : "/api/v1/user/user-a/root?query=r.wf_id = 1&amp;pretty-print=True",
                 "method" : "GET"
             },
             {
@@ -3784,7 +3786,7 @@ HTTP/1.1 200 OK
                     "query"        : "r.wf_id = 2",
                     "pretty-print" : "True"
                 },
-                "path"   : "/api/v1/user/mayani/root",
+                "path"   : "/api/v1/user/user-a/root",
                 "method" : "POST"
             }
        ]' \

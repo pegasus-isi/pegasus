@@ -2149,6 +2149,18 @@ public class PegasusProperties implements Cloneable {
         return Boolean.parse( mProps.getProperty( "pegasus.register" ) ,
                               true  );
     }
+    
+    /**
+     * Returns a boolean indicating whether to register a deep LFN or not.
+     * 
+     * Referred to by the "pegasus.register.deep" property.
+     *
+     * @return boolean value specified in properties else true.
+     */
+    public boolean registerDeepLFN() {
+        return Boolean.parse( mProps.getProperty( "pegasus.register.deep" ) ,
+                              true  );
+    }
 
     
     

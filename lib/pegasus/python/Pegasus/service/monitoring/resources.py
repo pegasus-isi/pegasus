@@ -17,7 +17,8 @@ __author__ = 'Rajiv Mayani'
 import logging
 
 from Pegasus.db.schema import DashboardWorkflow, DashboardWorkflowstate
-from Pegasus.db.schema import Workflow, Workflowstate, Job, Host, Jobstate, Task, JobInstance, Invocation
+from Pegasus.db.schema import Workflow, Workflowstate, WorkflowMeta, Job, Host, Jobstate
+from Pegasus.db.schema import Task, TaskMeta, JobInstance, Invocation
 
 from Pegasus.service.base import BaseResource
 
@@ -204,6 +205,18 @@ class WorkflowstateResource(RootWorkflowstateResource):
         super(WorkflowstateResource, self).__init__(alias if alias else Workflowstate)
 
 
+class WorkflowMetaResource(BaseResource):
+    def __init__(self, alias=None):
+        super(WorkflowMetaResource, self).__init__(alias if alias else WorkflowMeta)
+
+        self._prefix = 'wm'
+
+        self._fields = [
+            'key',
+            'value'
+        ]
+
+
 class JobResource(BaseResource):
     def __init__(self, alias=None):
         super(JobResource, self).__init__(alias if alias else Job)
@@ -266,6 +279,18 @@ class TaskResource(BaseResource):
             'type_desc',
             'transformation',
             'argv'
+        ]
+
+
+class TaskMetaResource(BaseResource):
+    def __init__(self, alias=None):
+        super(TaskMetaResource, self).__init__(alias if alias else TaskMeta)
+
+        self._prefix = 'tm'
+
+        self._fields = [
+            'key',
+            'value'
         ]
 
 
