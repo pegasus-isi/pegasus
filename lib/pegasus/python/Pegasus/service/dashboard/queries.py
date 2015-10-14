@@ -731,12 +731,13 @@ class WorkflowInfo(SQLAlchemyInit):
 
     def get_invocation_information(self, job_id, job_instance_id, invocation_id):
 
-        q = self.session.query(Invocation.invocation_id, Invocation.abs_task_id, Invocation.start_time,
+        q = self.session.query(Task.task_id, Invocation.invocation_id, Invocation.abs_task_id, Invocation.start_time,
                                Invocation.remote_duration, Invocation.remote_cpu_time, Invocation.exitcode,
                                Invocation.transformation, Invocation.executable, Invocation.argv, JobInstance.work_dir)
         q = q.filter(Job.wf_id == self._wf_id)
         q = q.filter(Job.job_id == job_id)
         q = q.filter(JobInstance.job_instance_id == job_instance_id)
+        q = q.filter(Job.job_id == Task.job_id)
         q = q.filter(Job.job_id == JobInstance.job_id)
         q = q.filter(JobInstance.job_instance_id == Invocation.job_instance_id)
 

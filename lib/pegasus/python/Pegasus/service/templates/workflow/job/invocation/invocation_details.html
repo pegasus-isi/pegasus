@@ -4,10 +4,46 @@
 {% endblock %}
 {% block javascript_init %}
 <script type="text/javascript" charset="utf-8">
+function loadMetadata() {
+    var ajaxOpt =
+    {
+        url     : '{{ url_for('monitoring_routes.get_task_meta', m_wf_id=root_wf_id, wf_id=wf_id, task_id=invocation.task_id) }}',
+        dataType: 'json',
+        error   : function (xhr, textStatus, errorThrown)
+        {
+            alert ('Error occurred: ' + textStatus + xhr.responseText);
+        },
+        success : function (data, textStatus, xhr)
+        {
+            if (xhr.status == 204) {
+                $('#metadata').html('No metadata associated with this task');
+                return;
+            }
+
+            var metadata = data.records;
+            var table = $('<table id="metadata_table" class="table-fixed"></table>');
+            table.append($('<col width="25%">'));
+
+            for( var i = 0; i < metadata.length; ++i) {
+                var tr = $('<tr></tr>');
+                var th = $('<th>' + metadata[i].key + '</th>');
+                var td = $('<td>' + metadata[i].value + '</td>');
+                table.append(tr.append(th).append(td));
+            }
+
+            $('#metadata').html(table);
+            verticalTableInitStatus('#metadata_table', {% if invocation.exitcode == 0 %}'successful' {% else %} 'failed' {% endif %});
+        }
+    };
+
+    $.ajax (ajaxOpt)
+}
+
 $(document).ready (function ()
 {
     verticalTableInitStatus ('#invocation_text_info', {% if invocation.exitcode == 0 %}'successful' {% else %} 'failed' {% endif %});
     clipboardTooltipInitialization();
+    loadMetadata();
 });
 </script>
 {% endblock %}
@@ -74,6 +110,14 @@ $(document).ready (function ()
                 <td>{{ invocation.remote_cpu_time | time_to_str }}</td>
             </tr>
         </table>
+    </div>
+</section>
+<section>
+    <h3>Task Metadata</h3>
+    <hr>
+</section>
+<section class="row">
+    <div class="col-xs-12" id="metadata">
     </div>
 </section>
 {% endblock %}
