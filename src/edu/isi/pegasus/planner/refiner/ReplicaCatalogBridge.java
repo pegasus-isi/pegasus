@@ -54,6 +54,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.namespace.Dagman;
+import edu.isi.pegasus.planner.namespace.Metadata;
 
 /**
  * This coordinates the look up to the Replica Location Service, to determine
@@ -872,6 +873,16 @@ public class ReplicaCatalogBridge
         sb.append( lfn ).append( " " );
         sb.append( ft.getURLForRegistrationOnDestination()  ).append( " " );
         sb.append( "site=\"" ).append( destURL.getKey() ).append( "\"" );
+        
+        //add any metadata attributes associated
+        Metadata m = ft.getAllMetadata();
+        for( Iterator<String> it = m.getProfileKeyIterator(); it.hasNext(); ){
+            String key = it.next();
+            String value = (String) m.get(key);
+            sb.append( " " ).
+               append( key ).append( "=\"" ).append( value ).append( "\"" );
+        }
+        
         sb.append( "\n" );
         return sb.toString();
     }

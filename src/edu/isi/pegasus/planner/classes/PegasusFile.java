@@ -178,7 +178,7 @@ public class PegasusFile extends Data {
     /**
      * Metadata attributes associated with the file.
      */
-    private Metadata mMetadata;
+    protected Metadata mMetadata;
 
     /**
      * The default constructor.
@@ -609,6 +609,15 @@ public class PegasusFile extends Data {
      */
     public Metadata getAllMetadata( ){
        return this.mMetadata;
+    }
+    
+    /**
+     * Sets metadata attributes for the file
+     * 
+     * @param m Metadata 
+     */
+    public void setMetadata( Metadata m ){
+       this.mMetadata = m;
     }
 
 

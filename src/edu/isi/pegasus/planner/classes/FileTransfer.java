@@ -107,7 +107,7 @@ public class FileTransfer extends PegasusFile {
         this.mDestMap      = new HashMap();
         this.mPriority     = 0;
         this.mURLForRegistrationOnDestination = null;
-
+        this.mMetadata     = pf.getAllMetadata();
     }
 
     /**
