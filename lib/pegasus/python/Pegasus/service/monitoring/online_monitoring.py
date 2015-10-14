@@ -6,12 +6,14 @@ import urlparse
 import os
 import logging
 import ssl
+from multiprocessing import Pipe
+import time
 
 from Pegasus.monitoring import event_output as eo
 
 
 class OnlineMonitord:
-    def __init__(self, wf_label, wf_uuid, dburi):
+    def __init__(self, wf_label, wf_uuid, dburi, child_conn):
         print "[online-monitord] PEGASUS_WF_UUID: %s" % wf_uuid
         print "[online-monitord] PEGASUS_WF_LABEL: %s" % wf_label
         print "[online-monitord] INFLUXDB_URL: %s" % os.getenv("INFLUXDB_URL")
@@ -30,6 +32,8 @@ class OnlineMonitord:
         self.queue_name = wf_label + ":" + wf_uuid
 
         self.client = None
+
+        self.child_conn = child_conn
 
     def setup_mq_conn(self):
         self.mq_conn = self.initialize_mq_connection()
@@ -62,16 +66,74 @@ class OnlineMonitord:
         if self.channel is None:
             return
 
-        for method_frame, properties, body in self.channel.consume(self.queue_name):
-            if method_frame is not None:
+        message_count = None
+        db_is_processing_events = False
+
+        while True:
+            method_frame, header_frame, body = self.channel.basic_get(self.queue_name, True)
+
+            if method_frame:
                 print method_frame.delivery_tag
-            # print body
-            # print
 
-            self.channel.basic_ack(delivery_tag=method_frame.delivery_tag)
+                self.on_message(body)
+            else:
+                time.sleep(1)
 
-            self.on_message(body)
+            # print "Monitoring process: checking messages from the main process"
+            if self.child_conn.poll():
+                msg = self.child_conn.recv()
+                print "Monitoring process: we got a message the main process: '", msg, "'"
+                if msg == "WORKFLOW_ENDED":
+                    self.child_conn.send("WAIT")
 
+                    # check how many messages we have in a message broker
+                    response = self.channel.queue_declare(self.queue_name, passive=True)
+                    print 'The queue has {0} more messages'.format(response.method.message_count)
+                    message_count = int(response.method.message_count)
+
+                    # check if there is any event to be processed by database
+                    db_is_processing_online_monitoring_msgs = getattr(self.event_sink, "is_processing_online_monitoring_msgs", None)
+                    if callable(db_is_processing_online_monitoring_msgs):
+                        db_is_processing_events = db_is_processing_online_monitoring_msgs()
+                    else:
+                        db_is_processing_events = False
+            # else:
+            #     print "Monitoring process: we didn't get any message the main process "
+
+            if message_count == 0 and (not db_is_processing_events):
+                print 'We can stop the online monitoring thread'
+                break
+
+        # for method_frame, properties, body in self.channel.consume(self.queue_name):
+        #     if method_frame is not None:
+        #         print method_frame.delivery_tag
+        #     # print body
+        #     # print
+        #     if message_count is not None:
+        #         message_count -= 1
+        #
+        #     self.channel.basic_ack(delivery_tag=method_frame.delivery_tag)
+        #
+        #     self.on_message(body)
+        #
+        #     print "Monitoring process: checking messages from the main process"
+        #     if self.child_conn.poll():
+        #         msg = self.child_conn.recv()
+        #         print "Monitoring process: we got a message the main process: '", msg, "'"
+        #         if msg == "WORKFLOW_ENDED":
+        #             self.child_conn.send("WAIT")
+        #             response = self.channel.queue_declare(self.queue_name, passive=True)
+        #             print 'The queue has {0} more messages'.format(response.method.message_count)
+        #             message_count = int(response.method.message_count)
+        #     else:
+        #         print "Monitoring process: we didn't get any message the main process "
+        #
+        #     if message_count == 0:
+        #         print 'Message count {0}'.format(message_count)
+        #         break
+
+        print 'Monitoring process: sending OK to the main process...'
+        self.child_conn.send("OK")
         self.mq_conn.close()
 
     def on_message(self, body):

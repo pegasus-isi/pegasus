@@ -29,6 +29,8 @@ from sqlalchemy import exc
 import sys
 import time
 import json
+import threading
+import Queue
 
 class Analyzer(BaseAnalyzer, SQLAlchemyInit):
     """Load into the Stampede SQL schema through SQLAlchemy.
@@ -96,8 +98,14 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             'stampede.job_inst.globus.submit.end' : self.jobstate,
             'stampede.inv.start' : self.noop, # good
             'stampede.inv.end' : self.invocation,
-            'stampede.job.monitoring': self.online_monitoring_update,
+            #
+            # --- Panorama extras begin --------------------------------------------------------------------
+            #
+            'stampede.job.monitoring': self.online_monitoring_listener,
             'stampede.job.anomaly_detection': self.anomaly_detected
+            #
+            # --- Panorama extras end --------------------------------------------------------------------
+            #
         }
 
         # Dicts for caching FK lookups
@@ -128,6 +136,20 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         }
         self._task_map_flush = {}
         self._task_edge_flush = {}
+
+        #
+        # --- Panorama extras begin --------------------------------------------------------------------
+        #
+
+        self.online_monitoring_queue = Queue.Queue()
+
+        t = threading.Thread(target=self.process_online_monitoring_messages)
+        t.daemon = True
+        t.start()
+
+        #
+        # --- Panorama extras end --------------------------------------------------------------------
+        #
 
     def process(self, linedata):
         """
@@ -759,6 +781,21 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         """
         self.log.debug('noop: %s', linedata)
 
+    #
+    # --- Panorama extras begin --------------------------------------------------------------------
+    #
+
+    def process_online_monitoring_messages(self):
+        # print "Process online monitoring messages started ..."
+        while True:
+            item = self.online_monitoring_queue.get()
+            # print "Process online monitoring messages: we have a new message to process"
+            self.online_monitoring_update(item)
+
+    def online_monitoring_listener(self, linedata):
+        # print "Monitoring event listener: we have a new event - we put it in a queue"
+        self.online_monitoring_queue.put(linedata)
+
     # TODO probably we need here a more orm-like sqlalchemy queries and inserts
     # TODO handling the PMC case - we need to find out job_id in other way by looking into task and job tables
     def online_monitoring_update(self, linedata):
@@ -768,21 +805,24 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         """
         job_instance_id_tuple = (linedata["wf_uuid"], linedata["dag_job_id"], linedata["sched_id"])
         # 1. we look up job instance db based on wf_uuid, dag_job_id, and sched_id
-        result = self.session.execute("""
-                SELECT job_instance_id
-                FROM job_instance
-                LEFT JOIN job
-                ON job.job_id = job_instance.job_id
-                LEFT JOIN workflow
-                ON workflow.wf_id=job.wf_id
-                WHERE workflow.wf_uuid="%s"
-                    AND job.exec_job_id="%s"
-                AND job_instance.sched_id="%s";
-            """ % job_instance_id_tuple ).first()
+        while True:
+            result = self.session.execute("""
+                    SELECT job_instance_id
+                    FROM job_instance
+                    LEFT JOIN job
+                    ON job.job_id = job_instance.job_id
+                    LEFT JOIN workflow
+                    ON workflow.wf_id=job.wf_id
+                    WHERE workflow.wf_uuid="%s"
+                        AND job.exec_job_id="%s"
+                    AND job_instance.sched_id="%s";
+                """ % job_instance_id_tuple ).first()
 
-        if result is None:
-            print "We have None when looking for job_instance_id: ('%s', '%s', %s)" % job_instance_id_tuple
-            return
+            if result is None:
+                # print "We have None when looking for job_instance_id: ('%s', '%s', %s)" % job_instance_id_tuple
+                time.sleep(5)
+            else:
+                break
 
         job_instance_id = int(result["job_instance_id"])
 
@@ -818,9 +858,17 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
 
         anomaly = self.linedataToObject(linedata, Anomaly())
         anomaly.job_instance_id = job_instance.job_instance_id
+        anomaly.metrics = json.dumps(anomaly.json["metrics"])
         anomaly.json = json.dumps(anomaly.json)
 
         anomaly.commit_to_db(self.session)
+
+    def is_processing_online_monitoring_msgs(self):
+        return not self.online_monitoring_queue.empty()
+
+    #
+    # --- Panorama extras end --------------------------------------------------------------------
+    #
 
     ####################################
     # DB helper/lookup/caching functions

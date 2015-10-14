@@ -623,6 +623,8 @@ def process_dagman_out(wf, log_line):
     follow a sub-workflow.
     """
 
+    time.sleep(4)
+
     # Keep track of line count
     wf._line = wf._line + 1
 
@@ -1202,12 +1204,14 @@ if wf._monitord_exit_code == 0:
 #
 print "Starting an online monitoring process..."
 
-from multiprocessing import Process
+from multiprocessing import Process, Pipe
 from Pegasus.service.monitoring.online_monitoring import OnlineMonitord
 from Pegasus.service.monitoring.anomaly_handler import AnomalyHandler
 
-def online_monitoring_proc(wf_label, wf_uuid, event_sink):
-    online_monitord = OnlineMonitord(wf_label, wf_uuid, event_sink)
+parent_conn, child_conn = Pipe()
+
+def online_monitoring_proc(wf_label, wf_uuid, event_sink, child_conn):
+    online_monitord = OnlineMonitord(wf_label, wf_uuid, event_sink, child_conn)
     online_monitord.setup_mq_conn()
     online_monitord.setup_timeseries_db_conn()
     online_monitord.start_consuming_mq_messages()
@@ -1218,11 +1222,18 @@ def anomaly_handling_proc(wf_label, wf_uuid, event_sink):
     anomaly_handler.start_consuming_mq_messages()
 
 # start an OS process for the online monitoring feature
-online_monitor_proc = Process(target=online_monitoring_proc, args=(wf._dax_label, wf._wf_uuid, event_dest))
+online_monitor_proc = Process(target=online_monitoring_proc, args=(wf._dax_label, wf._wf_uuid, event_dest, child_conn))
 online_monitor_proc.start()
 
 anomaly_handler_proc = Process(target=anomaly_handling_proc, args=(wf._dax_label, wf._wf_uuid, event_dest))
 anomaly_handler_proc.start()
+
+# time.sleep(10)
+
+# print "Main process: we are sending WORKFLOW_ENDED In the beginning"
+# parent_conn.send("WORKFLOW_ENDED")
+# msg = parent_conn.recv()
+# print "In return we got: '", msg, "'"
 
 
 #
@@ -1577,12 +1588,37 @@ while (len(wfs) > 0):
 # --- main loop end -----------------------------------------------------------------------
 #
 
+#
+# --- Panorama extras begin --------------------------------------------------------------------
+#
+
 if online_monitor_proc.is_alive():
+
+    msg = ""
+    msg_counter = 5
+
+    while msg != "OK" and msg_counter > 0:
+        print "Main process: we are sending WORKFLOW_ENDED - ", msg_counter
+        parent_conn.send("WORKFLOW_ENDED")
+
+        msg_counter -= 1
+
+        if parent_conn.poll(60):
+            msg = parent_conn.recv()
+            print "online monitord sent: ", msg
+            if msg == "WAIT":
+                msg_counter += 1
+            # print "the second message from online monitord: ", parent_conn.recv()
+
+    print "online monitord - either we got OK message or msg counter is 0"
     online_monitor_proc.terminate()
 
 if anomaly_handler_proc.is_alive():
     anomaly_handler_proc.terminate()
 
+#
+# --- Panorama extras end --------------------------------------------------------------------
+#
 
 if socket_enabled and server is not None:
     # Finish trailing connection requests

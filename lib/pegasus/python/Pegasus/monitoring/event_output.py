@@ -195,7 +195,24 @@ class DBEventSink(EventSink):
         self._log.debug("close.start")
         self._db.finish()
         self._log.debug("close.end")
-    
+
+    #
+    # --- Panorama extras begin --------------------------------------------------------------------
+    #
+
+    def is_processing_online_monitoring_msgs(self):
+        db_is_processing_online_monitoring_msgs = getattr(self._db, "is_processing_online_monitoring_msgs", None)
+
+        if callable(db_is_processing_online_monitoring_msgs):
+            return db_is_processing_online_monitoring_msgs()
+        else:
+            return False
+
+    #
+    # --- Panorama extras end --------------------------------------------------------------------
+    #
+
+
 class FileEventSink(EventSink):
     """
     Write wflow event logs to a file.
