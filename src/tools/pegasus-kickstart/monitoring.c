@@ -11,6 +11,8 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <pthread.h>
+#include <fcntl.h>
+#include <poll.h>
 
 #include "error.h"
 #include "monitoring.h"
@@ -26,6 +28,11 @@ typedef struct {
     char *condor_job_id;
     int socket;
 } MonitoringThreadContext;
+
+/* This pipe is used to send a shutdown message from the main thread to the
+ * monitoring thread */
+static int signal_pipe[2];
+static pthread_t monitoring_thread;
 
 // a util function for reading env variables by the main kickstart process
 // with monitoring endpoint data or set default values
@@ -210,17 +217,42 @@ void* monitoring_thread_func(void* arg) {
     int msg_counter = 0, aggr_msg_buffer_offset = 0;
     char aggr_msg_buffer[BUFSIZ * MSG_AGGR_FACTOR];
     while (1) {
+
+        /* Poll signal_pipe and socket to see which one is readable */
+        struct pollfd fds[2];
+        fds[0].fd = signal_pipe[0];
+        fds[0].events = POLLIN;
+        fds[1].fd = ctx->socket;
+        fds[1].events = POLLIN;
+        if (poll(fds, 2, -1) <= 0) {
+            printerr("[mon-thread] Error polling socket and pipe: %s\n", strerror(errno));
+            break;
+        }
+
+        /* If signal_pipe[0] is readable, then stop the thread. Note that you
+         * could theoretically have some clients waiting for accept(), but that
+         * is not possible because by the time we are stoping the thread,
+         * wait() has returned in the main thread, so there shouldn't be any
+         * clients left.
+         */
+        if (fds[0].revents & POLLIN) {
+            if (fds[1].revents & POLLIN) {
+                printerr("[mon-thread] WARNING: Oh no, we are leaving some clients behind!\n");
+            }
+            break;
+        }
+
+        /* Accept a network connection and read the message */
         struct sockaddr_in client_addr;
         socklen_t client_add_len = sizeof(client_addr);
         bzero((char *)&client_addr, sizeof(client_addr));
-
         int incoming_socket = accept(ctx->socket, (struct sockaddr *)&client_addr, &client_add_len);
         if (incoming_socket < 0) {
             printerr("[mon-thread] ERROR[accept]: %s\n", strerror(errno));
             if (errno == EINTR) {
                 goto next;
             } else {
-                goto error;
+                break;
             }
         }
 
@@ -271,8 +303,13 @@ next:
         close(incoming_socket);
     }
 
-error:
-    printerr("[mon-thread] We are finishing our work...\n");
+    /* Send whatever messages are buffered up */
+    if (msg_counter > 0) {
+        printerr("[mon-thread] Sending final aggregated message with %d message(s)...\n", msg_counter);
+        send_msg_to_mq(aggr_msg_buffer, ctx);
+    }
+
+    printerr("[mon-thread] Monitoring thread exiting...\n");
     close(ctx->socket);
     curl_global_cleanup();
     release_monitoring_context(ctx);
@@ -307,18 +344,46 @@ int start_monitoring_thread(int interval) {
     }
     ctx->socket = socket;
 
+    /* Create a pipe to signal between the main thread and the monitor thread */
+    int rc = pipe(signal_pipe);
+    if (rc < 0) {
+        printerr("ERROR: Unable to create signal pipe: %s\n", strerror(errno));
+        return rc;
+    }
+    rc = fcntl(signal_pipe[0], F_SETFD, FD_CLOEXEC);
+    if (rc < 0) {
+        printerr("WARNING: Unable to set CLOEXEC on pipe: %s\n", strerror(errno));
+    }
+    rc = fcntl(signal_pipe[1], F_SETFD, FD_CLOEXEC);
+    if (rc < 0) {
+        printerr("WARNING: Unable to set CLOEXEC on pipe: %s\n", strerror(errno));
+    }
+
     /* Start and detach the monitoring thread */
-    pthread_t monitoring_thread;
-    int rc = pthread_create(&monitoring_thread, NULL, monitoring_thread_func, (void*)ctx);
+    rc = pthread_create(&monitoring_thread, NULL, monitoring_thread_func, (void*)ctx);
     if (rc) {
         printerr("ERROR: return code from pthread_create() is %d: %s\n", rc, strerror(errno));
         return rc;
     }
-    rc = pthread_detach(monitoring_thread);
-    if (rc) {
-        printerr("ERROR: return code from pthread_detach() is %d: %s\n", rc, strerror(errno));
+
+    return 0;
+}
+
+int stop_monitoring_thread() {
+    /* Signal the thread to stop */
+    char msg = 1;
+    int rc = write(signal_pipe[1], &msg, 1);
+    if (rc <= 0) {
+        printerr("ERROR: Problem signalling monitoring thread: %s\n", strerror(errno));
         return rc;
     }
+
+    /* Wait for the monitoring thread */
+    pthread_join(monitoring_thread, NULL);
+
+    /* Close the pipe */
+    close(signal_pipe[0]);
+    close(signal_pipe[1]);
 
     return 0;
 }

@@ -47,6 +47,18 @@
                     text: message
                 },
 
+                xAxis: {
+                    plotBands: [{
+                        color: 'rgba(255, 0, 0, .6)',
+                        width: 3,
+                        value: parseFloat(anomaly.ts),
+                        zIndex: 100,
+                        label: {
+                            text: 'Anomaly'
+                        }
+                    }]
+                },
+
                 yAxis: [{
                     labels: {
                         align: 'right',

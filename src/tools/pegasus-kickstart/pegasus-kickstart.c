@@ -822,6 +822,13 @@ REDIR:
         result = SIGALRM;
     }
 
+    /* If monitoring, stop monitoring thead */
+    if (appinfo.enableLibTrace && monitoringInterval > 0) {
+        if (stop_monitoring_thread()) {
+            printerr("WARNING: Unable to stop monitoring thread\n");
+        }
+    }
+
     appinfo.status = result;
 
     /* append results to log file */
