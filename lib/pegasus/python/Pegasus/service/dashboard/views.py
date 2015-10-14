@@ -223,6 +223,29 @@ def job(username, root_wf_id, wf_id, job_id, job_instance_id):
                            job_states=job_states, job_metrics=job_metrics, job_anomalies=job_anomalies,
                            influxdb_url=current_app.config['INFLUXDB_URL'])
 
+@dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>/anomaly', methods=['GET'])
+def get_job_anomalies(username, root_wf_id, wf_id, job_id, job_instance_id):
+    dashboard = Dashboard(g.master_db_url, root_wf_id, wf_id)
+    job_anomalies = dashboard.get_job_anomalies(wf_id, job_instance_id)
+
+    records = []
+
+    for anomaly in job_anomalies:
+        records.append({
+            'anomaly_id': anomaly.anomaly_id,
+            'wf_id': anomaly.wf_id,
+            'job_instance_id': anomaly.job_instance_id,
+            'dag_job_id': anomaly.dag_job_id,
+            'metrics': anomaly.metrics,
+            'ts': float(anomaly.ts),
+            'anomaly_type': anomaly.anomaly_type,
+            'message': anomaly.message
+        })
+
+    return json.dumps({
+        'records': records
+    })
+
 
 @dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/a/<anomaly_id>', methods=['GET'])
 def anomaly(username, root_wf_id, wf_id, anomaly_id):
