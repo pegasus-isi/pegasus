@@ -625,8 +625,6 @@ def process_dagman_out(wf, log_line):
     follow a sub-workflow.
     """
 
-    time.sleep(4)
-
     # Keep track of line count
     wf._line = wf._line + 1
 
