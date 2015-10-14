@@ -28,6 +28,51 @@
             return ((x < y || isNaN(x)) ? 1 : ((x > y || isNaN(y) ) ? -1 : 0));
         };
 
+        var anomaliesCount = {{ anomalies|length }};
+
+        function getAnomalies() {
+            var ajaxOpt =
+            {
+                url     : '{{ url_for('dashboard_routes.get_job_anomalies', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job_id, job_instance_id=job.job_instance_id) }}',
+                dataType: 'json',
+                error   : function (xhr, textStatus, errorThrown)
+                {
+                    alert ('Error occurred: ' + textStatus + xhr.responseText);
+                },
+                success : function (data, textStatus, xhr)
+                {
+                    if (xhr.status == 204) {
+                        $('.badge').html(0);
+                        $('#job_anomalies').html('No anomalies detected for this job');
+                        return;
+                    }
+
+                    var anomalies = data.records;
+                    if (anomaliesCount >= anomalies.length) {
+                        return;
+                    }
+
+                    $('.badge').html(anomalies.length - anomaliesCount);
+                    anomaliesCount =  anomalies.length;
+
+                    var linkTemplate = '{{ url_for ('.anomaly', root_wf_id = root_wf_id, wf_id = wf_id, anomaly_id = 'a_0') }}';
+                    var listGroup = $('<div class="list-group"></div>');
+
+                    for( var i = 0; i < anomalies.length; ++i) {
+                        var link = $('<a class="list-group-item"></a>');
+                        link.attr('href', linkTemplate.replace('a_0', anomalies[i].anomaly_id));
+                        link.html('<strong>' + anomalies[i].anomaly_type + '</strong> ' + anomalies[i].message);
+
+                        listGroup.append(link);
+                    }
+
+                    $('#job_anomalies').html(listGroup);
+                }
+            };
+
+            $.ajax (ajaxOpt);
+        }
+
         $(function () {
             $('#invocations_tabs').tabs(
                     {
@@ -95,6 +140,10 @@
                     null,
                     null
                 ]
+            });
+
+            $('a[data-toggle="tab"]:last').on('shown.bs.tab', function (e) {
+                $('.badge').html(0);
             });
 
             {% if job_metrics %}
@@ -378,10 +427,13 @@
 
             {%  endif %}
 
-            {% if exitcode != None %}
+            {% if exitcode == None %}
                 setInterval(function () {
                     // Charts
                     getData(influxdb);
+
+                    // Anomalies
+                    getAnomalies();
 
                     // Table
                     if ($("#job_metrics").length) {
@@ -428,10 +480,8 @@
                     <li role="presentation"><a href="#job_metrics" aria-controls="job_metrics" role="tab"
                                                data-toggle="tab">Job Metrics</a></li>
                 {% endif %}
-                {% if job_anomalies %}
-                    <li role="presentation"><a href="#job_anomalies" aria-controls="job_anomalies" role="tab"
-                                               data-toggle="tab">Job Anomalies</a></li>
-                {% endif %}
+                <li role="presentation"><a href="#job_anomalies" aria-controls="job_anomalies" role="tab"
+                                           data-toggle="tab">Job Anomalies <span class="badge">{{ job_anomalies|length }}</span></a></li>
             </ul>
 
             <!-- Tab panes -->
@@ -679,18 +729,20 @@
                     </div>
                 {% endif %}
 
-                {% if job_anomalies %}
-                    <div role="tabpanel" class="tab-pane" id="job_anomalies">
-                        <div class="list-group">
-                            {% for anomaly in job_anomalies %}
-                                <a href="{{ url_for ('.anomaly', root_wf_id = root_wf_id, wf_id = wf_id, anomaly_id = anomaly.anomaly_id) }}"
-                                   class="list-group-item">
-                                    <strong>{{ anomaly.anomaly_type }}</strong> {{ anomaly.message }}
-                                </a>
-                            {% endfor %}
-                        </div>
+                <div role="tabpanel" class="tab-pane" id="job_anomalies">
+                    {% if job_anomalies %}
+                    <div class="list-group">
+                        {% for anomaly in job_anomalies %}
+                            <a href="{{ url_for ('.anomaly', root_wf_id = root_wf_id, wf_id = wf_id, anomaly_id = anomaly.anomaly_id) }}"
+                               class="list-group-item">
+                                <strong>{{ anomaly.anomaly_type }}</strong> {{ anomaly.message }}
+                            </a>
+                        {% endfor %}
                     </div>
-                {% endif %}
+                    {% else %}
+                        No anomalies detected for this job.
+                    {% endif %}
+                </div>
             </div>
         </div>
     </section>
@@ -711,7 +763,6 @@
                     </li>
                 </ul>
             </div>
-
         </div>
     </section>
 {% endblock %}
