@@ -19,10 +19,10 @@ DB_MIN_VERSION = 4
 COMPATIBILITY = {
     '4.3.0': 1, '4.3.1': 1, '4.3.2': 1,
     '4.4.0': 2, '4.4.1': 2, '4.4.2': 2,
-    '4.5.0': 4, '4.5.1': 4, '4.5.2': 4,
-    '4.6.0': 5, 
-    
-    '4.6.0panorama': 4.2
+    '4.5.0': 4, '4.5.1': 4, '4.5.2': 4, '4.5.3': 4,
+    '4.6.0': 5,
+
+    '4.6.0panorama': 5
 }
 #-------------------------------------------------------------------
 
@@ -80,7 +80,6 @@ def db_create(dburi, engine, db, pegasus_version=None, force=False):
 
 def db_current_version(db, parse=False, force=False):
     """ Get the current version of the database."""
-    # _verify_tables(db)
     current_version = None
 
     try:

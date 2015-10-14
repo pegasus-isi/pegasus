@@ -55,7 +55,7 @@ endif
 %.o : %.cc
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< -c -o $@
 
-all: pegasus-keg
+all: pegasus-keg pegasus-mpi-keg
 
 pegasus-keg: pegasus-keg.o $(EXTRA_OBJ)
 	$(LD) $(LDFLAGS) $^ -o $@ $(LOADLIBES)
@@ -68,8 +68,9 @@ linux.o: linux.cc linux.hh basic.hh
 version.h:
 	$(CURDIR)/genversion.sh > $(CURDIR)/version.h
 
-install: pegasus-keg 
+install: pegasus-keg pegasus-mpi-keg
 	$(INSTALL) -m 0755 pegasus-keg $(prefix)/bin
+	$(INSTALL) -m 0755 pegasus-mpi-keg $(prefix)/bin
 	
 test check: pegasus-keg
 	@./pegasus-keg -o /dev/fd/1 || echo "test failed" && echo "test ok"
