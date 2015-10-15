@@ -1251,7 +1251,6 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         q = q.filter(Job.wf_id == wf_id)
         q = q.filter(JobInstance.exitcode == None)
-        q = q.filter(Job.type_desc != 'dax', Job.type_desc != 'dag')
 
         # Recent
         qjss = self._get_recent_job_instance()
@@ -1316,7 +1315,6 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         q = q.filter(Job.wf_id == wf_id)
         q = q.filter(JobInstance.exitcode != None).filter(JobInstance.exitcode == 0)
-        q = q.filter(Job.type_desc != 'dax', Job.type_desc != 'dag')
 
         # Recent
         qjss = self._get_recent_job_instance()
@@ -1381,7 +1379,6 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         q = q.filter(Job.wf_id == wf_id)
         q = q.filter(JobInstance.exitcode != None).filter(JobInstance.exitcode != 0)
-        q = q.filter(Job.type_desc != 'dax', Job.type_desc != 'dag')
 
         # Recent
         qjss = self._get_recent_job_instance()
@@ -1444,7 +1441,6 @@ class StampedeWorkflowQueries(WorkflowQueries):
         q = self.session.query(Job, JobInstance).options(defer(JobInstance.stdout_text), defer(JobInstance.stderr_text))
 
         q = q.filter(Job.wf_id == wf_id)
-        q = q.filter(Job.type_desc != 'dax', Job.type_desc != 'dag')
         q = q.filter(JobInstance.exitcode != None).filter(JobInstance.exitcode != 0)
 
         q = q.filter(Job.job_id == JobInstance.job_id)
@@ -1456,7 +1452,6 @@ class StampedeWorkflowQueries(WorkflowQueries):
         qr = self.session.query(distinct(j.job_id))
 
         qr = qr.filter(j.wf_id == wf_id)
-        qr = qr.filter(j.type_desc != 'dax', j.type_desc != 'dag')
         qr = qr.filter(ji.exitcode == None)
 
         qr = qr.filter(j.job_id == ji.job_id)
@@ -1467,7 +1462,6 @@ class StampedeWorkflowQueries(WorkflowQueries):
         # Recent
         qjss = self._get_recent_job_instance()
         qjss = qjss.filter(Job.wf_id == wf_id)
-        qjss = qjss.filter(Job.type_desc != 'dax', Job.type_desc != 'dag')
         qjss = qjss.filter(JobInstance.exitcode != None).filter(JobInstance.exitcode != 0)
 
         qjss = qjss.filter(Job.job_id == JobInstance.job_id)
