@@ -1179,7 +1179,7 @@ public class Kickstart implements GridStart {
         //PM-992 we stat outputs either if stat property is set
         //or registration is enabled. inputs are only stated if
         //stat property is turned on.
-        if ( stat || mRegisterOutputs ){
+        if ( stat || registerOutputs ){
             //add the stat options to kickstart only for certain jobs for time being
              //and if the input variable is true
             if (job.getJobType() == Job.COMPUTE_JOB ||
@@ -1207,16 +1207,30 @@ public class Kickstart implements GridStart {
                     }
                 }
 
-                //for cleanup jobs no generation of stats for output files
-                if (job.getJobType() != Job.CLEANUP_JOB) {
-                    lof = generateListofFilenamesFile(job.getOutputFiles(),
-                                                      job.getID() + ".out.lof");
-                    if (lof != null) {
-                        File file = new File(lof);
-                        job.condorVariables.addIPFileForTransfer(lof);
-                        //arguments just need basename . no path component
-                        args.append(" -s @").append(file.getName()).append(" ");
-                        files.add(file.getName());
+                if( stat) {
+                    //for cleanup jobs no generation of stats for output files
+                    if (job.getJobType() != Job.CLEANUP_JOB) {
+                        lof = generateListofFilenamesFile(job.getOutputFiles(),
+                                                          job.getID() + ".out.lof");
+                        if (lof != null) {
+                            File file = new File(lof);
+                            job.condorVariables.addIPFileForTransfer(lof);
+                            //arguments just need basename . no path component
+                            args.append(" -s @").append(file.getName()).append(" ");
+                            files.add(file.getName());
+                        }
+                    }
+                }
+                else if( registerOutputs ){
+                    //PM-992 we generate lfn=pfn -s options on command line
+                    //for files that need to be registered
+                    if( job.getJobType() == Job.COMPUTE_JOB ){
+                        for( PegasusFile file : job.getOutputFiles() ){
+                            if( file.getRegisterFlag() ){
+                                args.append( " -s " ).append( file.getLFN() ).
+                                     append( "=" ).append( file.getLFN() );
+                            }
+                        }
                     }
                 }
                 //add kickstart postscript that removes these files
@@ -1225,6 +1239,7 @@ public class Kickstart implements GridStart {
                 }
             }
         }
+        args.append( " " );
         return args.toString();
     }
     
