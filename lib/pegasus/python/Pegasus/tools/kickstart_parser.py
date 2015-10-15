@@ -288,6 +288,8 @@ class Parser:
                 if not self._keys.has_key( "outputs"):
                     self._keys[ "outputs" ] = {} #a dictionary indexed by lfn
                 lfn = self._lfn
+                if lfn is None or not statinfo:
+                    logger.warning( "Malformed/Empty stat record for output lfn %s %s"  %(lfn, statinfo))
                 self._keys["outputs"][lfn] = statinfo
         elif name == "usage" and name in self._ks_elements:
             if self._parsing_job_element:
