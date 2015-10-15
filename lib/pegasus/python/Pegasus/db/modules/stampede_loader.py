@@ -738,9 +738,9 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         self.log.debug( 'rc_meta: %s', rc_meta)
 
         if self._batch:
-            self._batch_cache['batch_events'].append(rc_meta)
+            self._batch_cache['update_events'].append(rc_meta)
         else:
-            rc_meta.commit_to_db(self.session)
+            rc_meta.merge_to_db(self.session)
 
     def rc_pfn(self, linedata):
         """
