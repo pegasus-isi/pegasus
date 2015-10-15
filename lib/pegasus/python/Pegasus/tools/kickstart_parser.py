@@ -30,6 +30,7 @@ import re
 import sys
 import logging
 import traceback
+import os
 
 # Regular expressions used in the kickstart parser
 re_parse_props = re.compile(r'(\S+)\s*=\s*([^",]+)')
@@ -57,11 +58,13 @@ class Parser:
         self._parsing_stderr = False
         self._parsing_data = False
         self._parsing_cwd = False
+        self._parsing_final_statcall = False
         self._record_number = 0
         self._arguments = []
         self._stdout = ""
         self._stderr = ""
         self._cwd = ""
+        self._lfn = "" # filename parsed from statcall record
         self._keys = {}
         self._ks_elements = {}
         self._fh = None
@@ -250,7 +253,7 @@ class Parser:
             # Start parsing data for stdout and stderr output
             self._parsing_data = True
         elif name == "file" and name in self._ks_elements:
-            if self._parsing_main_job == True:
+            if self._parsing_main_job == True or self._parsing_final_statcall:
                 # Special case for name inside the mainjob element (will change this later)
                 for my_element in self._ks_elements[name]:
                     if my_element in attrs:
@@ -273,6 +276,18 @@ class Parser:
                     self._parsing_stdout = True
                 elif attrs["id"] == "stderr" and "stderr" in self._ks_elements:
                     self._parsing_stderr = True
+                elif attrs["id"] == "final" :
+                    self._parsing_final_statcall = True
+        elif name == "statinfo":
+            if self._parsing_final_statcall is True:
+                statinfo = {}
+                for my_element in self._ks_elements[name]:
+                    if my_element in attrs:
+                        statinfo[my_element] = attrs[my_element]
+                if not self._keys.has_key( "outputs"):
+                    self._keys[ "outputs" ] = {} #a dictionary indexed by lfn
+                lfn = os.path.basename(self._keys["name"] )
+                self._keys["outputs"][lfn] = statinfo
         elif name == "usage" and name in self._ks_elements:
             if self._parsing_job_element:
                 # Special case for handling utime and stime, which need to be added
@@ -313,6 +328,8 @@ class Parser:
                 self._parsing_stdout = False
             if self._parsing_stderr == True:
                 self._parsing_stderr = False
+            if self._parsing_final_statcall == True:
+                self._parsing_final_statcall = False
         elif name == "data":
             self._parsing_data = False
         # Now, see if we left one of the job elements
@@ -516,7 +533,8 @@ class Parser:
                              "argument-vector": [],
                              "cwd": [],
                              "stdout": [],
-                             "stderr": []}
+                             "stderr": [],
+                             "statinfo": ["lfn", "size", "ctime", "user" ]}
 
         return self.parse(stampede_elements, tasks=True, clustered=True)
 
@@ -536,6 +554,7 @@ class Parser:
                                   "stderr": []}
 
         return self.parse(stdout_stderr_elements, tasks=False, clustered=False)
+
 
 if __name__ == "__main__":
 
