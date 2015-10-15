@@ -253,7 +253,7 @@ class Parser:
             # Start parsing data for stdout and stderr output
             self._parsing_data = True
         elif name == "file" and name in self._ks_elements:
-            if self._parsing_main_job == True or self._parsing_final_statcall:
+            if self._parsing_main_job == True :
                 # Special case for name inside the mainjob element (will change this later)
                 for my_element in self._ks_elements[name]:
                     if my_element in attrs:
@@ -278,6 +278,7 @@ class Parser:
                     self._parsing_stderr = True
                 elif attrs["id"] == "final" :
                     self._parsing_final_statcall = True
+                    self._lfn = attrs["lfn"]
         elif name == "statinfo":
             if self._parsing_final_statcall is True:
                 statinfo = {}
@@ -286,7 +287,7 @@ class Parser:
                         statinfo[my_element] = attrs[my_element]
                 if not self._keys.has_key( "outputs"):
                     self._keys[ "outputs" ] = {} #a dictionary indexed by lfn
-                lfn = os.path.basename(self._keys["name"] )
+                lfn = self._lfn
                 self._keys["outputs"][lfn] = statinfo
         elif name == "usage" and name in self._ks_elements:
             if self._parsing_job_element:
