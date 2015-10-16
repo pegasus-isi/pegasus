@@ -22,6 +22,9 @@
 
         function plotChart() {
             $('#chart').highcharts('StockChart', {
+                chart: {
+                    height: 500
+                },
 
                 rangeSelector: {
                     enabled: false
@@ -47,11 +50,20 @@
                     text: message
                 },
 
+                plotOptions: {
+                    area: {
+                        marker: {
+                            enabled: true,
+                            radius: 3
+                        }
+                    }
+                },
+
                 xAxis: {
                     plotBands: [{
                         color: 'rgba(255, 0, 0, .6)',
                         width: 3,
-                        value: parseFloat(anomaly.ts),
+                        value: {{ anomaly.ts }},
                         zIndex: 100,
                         label: {
                             text: 'Anomaly'
@@ -59,58 +71,76 @@
                     }]
                 },
 
-                yAxis: [{
-                    labels: {
-                        align: 'right',
-                        x: -3
+                yAxis: [
+                    {
+                        labels: {
+                            align: 'right',
+                            x: -3
+                        },
+                        title: {
+                            text: metrics.kickstart[0],
+                            style: {
+                                fontSize: '1.35em',
+                                fontWeight: 'bold'
+                            }
+                        },
+                        height: '30%',
+                        lineWidth: 2
                     },
-                    title: {
-                        text: metrics.kickstart[0]
+                    {
+                        labels: {
+                            align: 'right',
+                            x: -3
+                        },
+                        title: {
+                            text: metrics.infra,
+                            style: {
+                                fontSize: '1.35em',
+                                fontWeight: 'bold'
+                            }
+                        },
+                        top: '35%',
+                        height: '30%',
+                        offset: 0,
+                        lineWidth: 2
                     },
-                    height: '30%',
-                    lineWidth: 2
-                }, {
-                    labels: {
-                        align: 'right',
-                        x: -3
-                    },
-                    title: {
-                        text: metrics.infra
-                    },
-                    top: '35%',
-                    height: '30%',
-                    offset: 0,
-                    lineWidth: 2
-                }, {
-                    labels: {
-                        align: 'right',
-                        x: -3
-                    },
-                    title: {
-                        text: metrics.kickstart[1]
-                    },
-                    top: '68%',
-                    height: '30%',
-                    offset: 0,
-                    lineWidth: 2
-                }],
+                    {
+                        labels: {
+                            align: 'right',
+                            x: -3
+                        },
+                        title: {
+                            text: metrics.kickstart[1],
+                            style: {
+                                fontSize: '1.35em',
+                                fontWeight: 'bold'
+                            }
+                        },
+                        top: '68%',
+                        height: '30%',
+                        offset: 0,
+                        lineWidth: 2
+                    }],
 
-                series: [{
-                    type: 'area',
-                    name: metrics.kickstart[0],
-                    data: series[metrics.kickstart[0]],
-                    yAxis: 0
-                }, {
-                    type: 'area',
-                    name: metrics.infra,
-                    data: series[metrics.infra],
-                    yAxis: 1
-                }, {
-                    type: 'area',
-                    name: metrics.kickstart[1],
-                    data: series[metrics.kickstart[1]],
-                    yAxis: 2
-                }]
+                series: [
+                    {
+                        type: 'area',
+                        name: metrics.kickstart[0],
+                        data: series[metrics.kickstart[0]],
+                        yAxis: 0
+                    },
+                    {
+                        type: 'area',
+                        name: metrics.infra,
+                        data: series[metrics.infra],
+                        yAxis: 1
+                    },
+                    {
+                        type: 'area',
+                        name: metrics.kickstart[1],
+                        data: series[metrics.kickstart[1]],
+                        yAxis: 2
+                    }]
             });
         }
 
@@ -144,20 +174,42 @@
         }
 
         function infrstructureData(data) {
-
             var points = [];
 
-            if (data.length) {
+            /*
+             * Valid Infrastructure Series:
+             *  Must have data `data.length`
+             *  Last data-point in series must be after the job's startTime
+             *  First data-point in series must be before the job's endTime
+             */
+            if (data.length && data[0].points[0].time.getTime() >= startTime && data[0].points[data[0].points.length - 1].time.getTime() <= endTime) {
+                var first = true;
+
                 for (var i = data[0].points.length - 1; i >= 0; --i) {
-                    var x = data[0].points[i].time;
+                    var x = data[0].points[i].time.getTime();
                     var y = data[0].points[i][metrics.infra];
 
-                    points.push([x.getTime(), y]);
+                    if (first) {
+                        if (i - 1 >= 0) {
+                            var diff = startTime - data[0].points[i - 1].time.getTime();
+
+                            if (diff < 0) {
+                                first = false;
+                            } else {
+                                continue;
+                            }
+                        }
+                    } else {
+                        if (endTime <= data[0].points[i + 1].time.getTime()) {
+                            break;
+                        }
+                    }
+
+                    points.push([x, y]);
                 }
             }
 
             series[metrics.infra] = points;
-
             plotChart();
         }
 
@@ -167,7 +219,7 @@
 
         function getInfrastructureMetricsData(influxdb) {
             var query = 'SELECT ' + metrics.infra + ' FROM "' + anomaly.infra_series_io + '" WHERE time > ' +
-            (startTime - 1) + ' AND time < ' + (endTime + 1) + ';';
+                    ((startTime / 1000) - 10) + 's AND time < ' + ((endTime / 1000) + 10) + 's;';
             console.debug(query);
             data = influxdb.query(query, infrstructureData);
         }
