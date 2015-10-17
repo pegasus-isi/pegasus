@@ -737,10 +737,10 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
 
         self.log.debug( 'rc_meta: %s', rc_meta)
 
-        if self._batch:
-            self._batch_cache['update_events'].append(rc_meta)
-        else:
-            rc_meta.merge_to_db(self.session)
+        #we have to do the merge individually to prevent integrity constraint
+        #errors that happen if we put them in the batch cache update_events
+        rc_meta.merge_to_db(self.session)
+
 
     def rc_pfn(self, linedata):
         """
