@@ -784,7 +784,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         if self._batch:
             self._batch_cache['batch_events'].append(wf_files)
         else:
-            rc_meta.commit_to_db(self.session)
+            wf_files.commit_to_db(self.session)
 
     def subwf_map(self, linedata):
         """
