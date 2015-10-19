@@ -204,7 +204,28 @@ tutorial@pegasus-tutorial.isi.edu's password: <emphasis role="bold">pegasus123</
     the arguments required for the diamond workflow:</para>
 
     <programlisting>$ <emphasis role="bold">more plan_dax.sh</emphasis>
-...</programlisting>
+
+#!/bin/bash
+
+if [ $# -ne 1 ]; then
+	echo "Usage: $0 DAXFILE"
+	exit 1
+fi
+
+DAXFILE=$1
+
+# This command tells Pegasus to plan the workflow contained in 
+# "diamond.dax" using the config file "pegasus.conf". The planned
+# workflow will be stored in a relative directory named "submit".
+# The execution site is "PegasusVM" and the output site is "local".
+# --input-dir tells Pegasus to pick up inputs for the workflow from that directory
+# --output-dir tells Pegasus to place the outputs in that directory
+# --force tells Pegasus not to prune anything from the workflow, and
+# --nocleanup tells Pegasus not to generate cleanup jobs.
+pegasus-plan --conf pegasus.conf -d $DAXFILE --dir submit \
+             --input-dir ./input --output-dir ./outputs \
+             --force --sites PegasusVM -o local --cleanup none --submit
+</programlisting>
 
     <para>The script invokes the <literal>pegasus-plan</literal> command with
     arguments for the configuration file (<literal>--conf</literal>), the DAX
@@ -259,8 +280,7 @@ tutorial@pegasus-tutorial.isi.edu's password: <emphasis role="bold">pegasus123</
 
       <listitem>
         <para>Submits the workflow to HTCondor for execution. You can remove
-        --submit option to pegasus-plan if you don't want to auto-submit the
-        generated workflow for running.</para>
+        --submit option to pegasus-plan if you don't want to</para>
       </listitem>
     </orderedlist>
 
@@ -269,16 +289,31 @@ tutorial@pegasus-tutorial.isi.edu's password: <emphasis role="bold">pegasus123</
     file:</para>
 
     <programlisting>$ <emphasis role="bold">./plan_dax.sh diamond.dax</emphasis>
-2012.07.24 21:11:03.256 EDT:
-
-I have concretized your abstract workflow. The workflow has been entered
-into the workflow database with a state of "planned". The next step is to
-start or execute your workflow. The invocation required is:
-
-pegasus-run  /home/tutorial/submit/tutorial/pegasus/diamond/run0001
-
-
-2012.07.24 21:11:03.257 EDT:   Time taken to execute is 1.103 seconds
+﻿
+2015.10.19 16:07:19.131 PDT:   Log of DAGMan debugging messages                 : diamond-0.dag.dagman.out 
+2015.10.19 16:07:19.140 PDT:   Log of Condor library output                     : diamond-0.dag.lib.out 
+2015.10.19 16:07:19.146 PDT:   Log of Condor library error messages             : diamond-0.dag.lib.err 
+2015.10.19 16:07:19.151 PDT:   Log of the life of condor_dagman itself          : diamond-0.dag.dagman.log 
+2015.10.19 16:07:19.157 PDT:    
+2015.10.19 16:07:19.176 PDT:   ----------------------------------------------------------------------- 
+2015.10.19 16:07:20.163 PDT:   Your database is compatible with Pegasus version: 4.5.3 
+2015.10.19 16:07:20.457 PDT:   Submitting to condor diamond-0.dag.condor.sub 
+2015.10.19 16:07:20.548 PDT:   Submitting job(s). 
+2015.10.19 16:07:20.556 PDT:   1 job(s) submitted to cluster 14. 
+2015.10.19 16:07:20.569 PDT:    
+2015.10.19 16:07:20.607 PDT:   Your workflow has been started and is running in the base directory: 
+2015.10.19 16:07:20.617 PDT:    
+2015.10.19 16:07:20.655 PDT:     /home/tutorial/diamond/submit/tutorial/pegasus/diamond/run0001 
+2015.10.19 16:07:20.701 PDT:    
+2015.10.19 16:07:20.744 PDT:   *** To monitor the workflow you can run *** 
+2015.10.19 16:07:20.789 PDT:    
+2015.10.19 16:07:20.812 PDT:     pegasus-status -l /home/tutorial/diamond/submit/tutorial/pegasus/diamond/run0001 
+2015.10.19 16:07:20.835 PDT:    
+2015.10.19 16:07:20.845 PDT:   *** To remove your workflow run *** 
+2015.10.19 16:07:20.864 PDT:    
+2015.10.19 16:07:20.874 PDT:     pegasus-remove /home/tutorial/diamond/submit/tutorial/pegasus/diamond/run0001 
+2015.10.19 16:07:20.885 PDT:    
+2015.10.19 16:07:21.745 PDT:   Time taken to execute is 4.427 seconds 
 </programlisting>
 
     <para>Note the line in the output that starts with
