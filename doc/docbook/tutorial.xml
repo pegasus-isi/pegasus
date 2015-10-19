@@ -1102,8 +1102,11 @@ tr preprocess {
     <section>
       <title id="tut_replica_catalog">The Replica Catalog</title>
 
-      <para>The final catalog is the Replica Catalog. This catalog tells
-      Pegasus where to find each of the input files for the workflow.</para>
+      <para>The example that you ran , was configured with the inputs already
+      present on the submit host ( where pegasus is installed) in a directory.
+      If you have inputs at external servers, then you can specify the URL's
+      to the input files in the Replica Catalog. This catalog tells Pegasus
+      where to find each of the input files for the workflow.</para>
 
       <para>All files in a Pegasus workflow are referred to in the DAX using
       their Logical File Name (LFN). These LFNs are mapped to Physical File
@@ -1121,16 +1124,13 @@ tr preprocess {
 # The format is:
 # LFN     PFN    site="SITE"
 
-f.a    file:///home/tutorial/input/f.a    site="local"</programlisting>
+f.a    file:///home/tutorial/diamond/input/f.a    site="local"</programlisting>
 
       <para>This replica catalog contains only one entry for the diamond
       workflow’s only input file. This entry has an LFN of “f.a” with a PFN of
       “file:///home/tutorial/input/f.a” and the file is stored on the local
       site, which implies that it will need to be transferred to the PegasusVM
-      site when the workflow runs. The Replica Catalog uses the keyword "pool"
-      to refer to the site. Don't be confused by this: the value of the pool
-      variable should be the name of the site where the file is located from
-      the Site Catalog.</para>
+      site when the workflow runs. </para>
     </section>
   </section>
 
@@ -1148,7 +1148,7 @@ f.a    file:///home/tutorial/input/f.a    site="local"</programlisting>
 
     <programlisting>$ <emphasis role="bold">more pegasus.conf</emphasis>
 # This tells Pegasus where to find the Site Catalog
-pegasus.catalog.site=XML3
+pegasus.catalog.site=XML
 pegasus.catalog.site.file=sites.xml
 
 # This tells Pegasus where to find the Replica Catalog
