@@ -183,10 +183,42 @@ tutorial@pegasus-tutorial.isi.edu's password: <emphasis role="bold">pegasus123</
   </section>
 
   <section>
-    <title>Planning the Workflow</title>
+    <title>Submitting an Example Workflow</title>
 
-    <para>The planning stage is where Pegasus maps the abstract DAX to one or
-    more execution sites. The planning step includes:</para>
+    <para>To start the tutorial, we will run an already generated diamond
+    workflow through Pegasus. The diamond workflow looks like this</para>
+
+    <figure>
+      <title>Diamond Workflow</title>
+
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="images/concepts-diamond.jpg"/>
+        </imageobject>
+      </mediaobject>
+    </figure>
+
+    <para>The <literal>pegasus-plan</literal> command is used to plan and
+    submit the workflow. This command takes quite a few arguments, so we
+    created a <filename>plan_dax.sh</filename> wrapper script that has all of
+    the arguments required for the diamond workflow:</para>
+
+    <programlisting>$ <emphasis role="bold">more plan_dax.sh</emphasis>
+...</programlisting>
+
+    <para>The script invokes the <literal>pegasus-plan</literal> command with
+    arguments for the configuration file (<literal>--conf</literal>), the DAX
+    file (<literal>-d</literal>), the submit directory
+    (<literal>--dir</literal>), the execution site
+    (<literal>--sites</literal>), the output site (<literal>-o</literal>) and
+    two extra arguments that prevent Pegasus from removing any jobs from the
+    workflow (<literal>--force</literal>) and that prevent Pegasus from adding
+    cleanup jobs to the workflow (<literal>--nocleanup</literal>).</para>
+
+    <para>The pegasus-plan command takes in the input workflow ( DAX file
+    specified by --dax option) and maps the abstract DAX to one or more
+    execution sites, and submits the generated executable workflow for
+    execution. The planning step includes:</para>
 
     <orderedlist>
       <listitem>
@@ -224,26 +256,15 @@ tutorial@pegasus-tutorial.isi.edu's password: <emphasis role="bold">pegasus123</
         that statistics and plots can be created when the workflow is
         finished</para>
       </listitem>
+
+      <listitem>
+        <para>Submits the workflow to HTCondor for execution. You can remove
+        --submit option to pegasus-plan if you don't want to auto-submit the
+        generated workflow for running.</para>
+      </listitem>
     </orderedlist>
 
-    <para>The <literal>pegasus-plan</literal> command is used to plan a
-    workflow. This command takes quite a few arguments, so we created a
-    <filename>plan_dax.sh</filename> wrapper script that has all of the
-    arguments required for the diamond workflow:</para>
-
-    <programlisting>$ <emphasis role="bold">more plan_dax.sh</emphasis>
-...</programlisting>
-
-    <para>The script invokes the <literal>pegasus-plan</literal> command with
-    arguments for the configuration file (<literal>--conf</literal>), the DAX
-    file (<literal>-d</literal>), the submit directory
-    (<literal>--dir</literal>), the execution site
-    (<literal>--sites</literal>), the output site (<literal>-o</literal>) and
-    two extra arguments that prevent Pegasus from removing any jobs from the
-    workflow (<literal>--force</literal>) and that prevent Pegasus from adding
-    cleanup jobs to the workflow (<literal>--nocleanup</literal>).</para>
-
-    <para>Top plan the diamond workflow invoke the
+    <para>To plan the diamond workflow invoke the
     <filename>plan_dax.sh</filename> script with the path to the DAX
     file:</para>
 
@@ -286,40 +307,6 @@ pegasus-run  /home/tutorial/submit/tutorial/pegasus/diamond/run0001
     register="false", and no cleanup jobs are added because we passed the
     <literal>--nocleanup</literal> argument to
     <literal>pegasus-plan</literal>.</para>
-  </section>
-
-  <section>
-    <title>Submitting the Workflow</title>
-
-    <para>Once the workflow has been planned, the next step is to submit it to
-    DAGMan/Condor for execution. This is done using the
-    <literal>pegasus-run</literal> command. This command takes the path to the
-    submit directory as an argument. Run the command that was printed by the
-    <filename>plan_dax.sh</filename> script:</para>
-
-    <programlisting>$ <emphasis role="bold">pegasus-run submit/tutorial/pegasus/diamond/run0001</emphasis>
------------------------------------------------------------------------
-File for submitting this DAG to Condor       : diamond-0.dag.condor.sub
-Log of DAGMan debugging messages             : diamond-0.dag.dagman.out
-Log of Condor library output                 : diamond-0.dag.lib.out
-Log of Condor library error messages         : diamond-0.dag.lib.err
-Log of the life of condor_dagman itself      : diamond-0.dag.dagman.log
-
-Submitting job(s).
-1 job(s) submitted to cluster 19.
------------------------------------------------------------------------
-
-Your Workflow has been started and runs in base directory given below
-
-cd submit/tutorial/pegasus/diamond/run0001
-
-*** To monitor the workflow you can run ***
-
-pegasus-status -l submit/tutorial/pegasus/diamond/run0001
-
-*** To remove your workflow run ***
-pegasus-remove submit/tutorial/pegasus/diamond/run0001
-</programlisting>
   </section>
 
   <section>
