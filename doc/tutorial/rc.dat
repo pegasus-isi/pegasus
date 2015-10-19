@@ -4,4 +4,4 @@
 # The format is:
 # LFN     PFN    pool="SITE"
 
-f.a    file:///home/tutorial/input/f.a    pool="local"
+f.a    file:///home/tutorial/diamond/input/f.a    site="local"
