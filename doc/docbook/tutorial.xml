@@ -183,6 +183,434 @@ tutorial@pegasus-tutorial.isi.edu's password: <emphasis role="bold">pegasus123</
   </section>
 
   <section>
+    <title>Planning the Workflow</title>
+
+    <para>The planning stage is where Pegasus maps the abstract DAX to one or
+    more execution sites. The planning step includes:</para>
+
+    <orderedlist>
+      <listitem>
+        <para>Adding a job to create the remote working directory</para>
+      </listitem>
+
+      <listitem>
+        <para>Adding stage-in jobs to transfer input data to the remote
+        working directory</para>
+      </listitem>
+
+      <listitem>
+        <para>Adding cleanup jobs to remove data from the remote working
+        directory when it is no longer needed</para>
+      </listitem>
+
+      <listitem>
+        <para>Adding stage-out jobs to transfer data to the final output
+        location as it is generated</para>
+      </listitem>
+
+      <listitem>
+        <para>Adding registration jobs to register the data in a replica
+        catalog</para>
+      </listitem>
+
+      <listitem>
+        <para>Task clustering to combine several short-running jobs into a
+        single, longer-running job. This is done to make short-running jobs
+        more efficient.</para>
+      </listitem>
+
+      <listitem>
+        <para>Adding wrappers to the jobs to collect provenance information so
+        that statistics and plots can be created when the workflow is
+        finished</para>
+      </listitem>
+    </orderedlist>
+
+    <para>The <literal>pegasus-plan</literal> command is used to plan a
+    workflow. This command takes quite a few arguments, so we created a
+    <filename>plan_dax.sh</filename> wrapper script that has all of the
+    arguments required for the diamond workflow:</para>
+
+    <programlisting>$ <emphasis role="bold">more plan_dax.sh</emphasis>
+...</programlisting>
+
+    <para>The script invokes the <literal>pegasus-plan</literal> command with
+    arguments for the configuration file (<literal>--conf</literal>), the DAX
+    file (<literal>-d</literal>), the submit directory
+    (<literal>--dir</literal>), the execution site
+    (<literal>--sites</literal>), the output site (<literal>-o</literal>) and
+    two extra arguments that prevent Pegasus from removing any jobs from the
+    workflow (<literal>--force</literal>) and that prevent Pegasus from adding
+    cleanup jobs to the workflow (<literal>--nocleanup</literal>).</para>
+
+    <para>Top plan the diamond workflow invoke the
+    <filename>plan_dax.sh</filename> script with the path to the DAX
+    file:</para>
+
+    <programlisting>$ <emphasis role="bold">./plan_dax.sh diamond.dax</emphasis>
+2012.07.24 21:11:03.256 EDT:
+
+I have concretized your abstract workflow. The workflow has been entered
+into the workflow database with a state of "planned". The next step is to
+start or execute your workflow. The invocation required is:
+
+pegasus-run  /home/tutorial/submit/tutorial/pegasus/diamond/run0001
+
+
+2012.07.24 21:11:03.257 EDT:   Time taken to execute is 1.103 seconds
+</programlisting>
+
+    <para>Note the line in the output that starts with
+    <literal>pegasus-run</literal>. That is the command that we will use to
+    submit the workflow. The path it contains is the path to the submit
+    directory where all of the files required to submit and monitor the
+    workflow are stored.</para>
+
+    <para>This is what the diamond workflow looks like after Pegasus has
+    finished planning the DAX:</para>
+
+    <figure>
+      <title>Diamond DAG</title>
+
+      <mediaobject>
+        <imageobject>
+          <imagedata contentwidth="70%"
+                     fileref="images/concepts-diamond-dag.png"/>
+        </imageobject>
+      </mediaobject>
+    </figure>
+
+    <para>For this workflow the only jobs Pegasus needs to add are a directory
+    creation job, a stage-in job (for f.a), and a stage-out job (for f.d). No
+    registration jobs are added because all the files in the DAX are marked
+    register="false", and no cleanup jobs are added because we passed the
+    <literal>--nocleanup</literal> argument to
+    <literal>pegasus-plan</literal>.</para>
+  </section>
+
+  <section>
+    <title>Submitting the Workflow</title>
+
+    <para>Once the workflow has been planned, the next step is to submit it to
+    DAGMan/Condor for execution. This is done using the
+    <literal>pegasus-run</literal> command. This command takes the path to the
+    submit directory as an argument. Run the command that was printed by the
+    <filename>plan_dax.sh</filename> script:</para>
+
+    <programlisting>$ <emphasis role="bold">pegasus-run submit/tutorial/pegasus/diamond/run0001</emphasis>
+-----------------------------------------------------------------------
+File for submitting this DAG to Condor       : diamond-0.dag.condor.sub
+Log of DAGMan debugging messages             : diamond-0.dag.dagman.out
+Log of Condor library output                 : diamond-0.dag.lib.out
+Log of Condor library error messages         : diamond-0.dag.lib.err
+Log of the life of condor_dagman itself      : diamond-0.dag.dagman.log
+
+Submitting job(s).
+1 job(s) submitted to cluster 19.
+-----------------------------------------------------------------------
+
+Your Workflow has been started and runs in base directory given below
+
+cd submit/tutorial/pegasus/diamond/run0001
+
+*** To monitor the workflow you can run ***
+
+pegasus-status -l submit/tutorial/pegasus/diamond/run0001
+
+*** To remove your workflow run ***
+pegasus-remove submit/tutorial/pegasus/diamond/run0001
+</programlisting>
+  </section>
+
+  <section>
+    <title>Monitoring the Workflow</title>
+
+    <para>After the workflow has been submitted you can monitor it using the
+    <literal>pegasus-status</literal> command:</para>
+
+    <programlisting>$ <emphasis role="bold">pegasus-status submit/tutorial/pegasus/diamond/run0001</emphasis>
+STAT  IN_STATE  JOB
+Run      01:48  diamond-0
+Run      00:05   |-findrange_ID0000002
+Run      00:05   \_findrange_ID0000003
+Summary: 3 Condor jobs total (R:3)
+
+UNREADY   READY     PRE  QUEUED    POST SUCCESS FAILURE %DONE
+      2       0       0       3       0       3       0  37.5
+Summary: 1 DAG total (Running:1)
+</programlisting>
+
+    <para>This command shows the workflow (diamond-0) and the running jobs (in
+    the above output it shows the two findrange jobs). It also gives
+    statistics on the number of jobs in each state and the percentage of the
+    jobs in the workflow that have finished successfully.</para>
+
+    <para>Use the <literal>watch</literal> command to continuously monitor the
+    workflow:</para>
+
+    <programlisting>$ <emphasis role="bold">watch pegasus-status submit/tutorial/pegasus/diamond/run0001</emphasis>
+...</programlisting>
+
+    <para>You should see all of the jobs in the workflow run one after the
+    other. After a few minutes you will see:</para>
+
+    <programlisting>(no matching jobs found in Condor Q)
+UNREADY   READY     PRE  QUEUED    POST SUCCESS FAILURE %DONE
+      0       0       0       0       0       8       0 100.0
+Summary: 1 DAG total (Success:1)
+</programlisting>
+
+    <para>That means the workflow is finished successfully. You can type
+    <literal>ctrl-c</literal> to terminate the <literal>watch</literal>
+    command.</para>
+
+    <para>If the workflow finished successfully you should see the output file
+    <filename>f.d</filename> in the <filename>output</filename> directory.
+    This file was created by the various transformations in the workflow and
+    shows all of the executables that were invoked by the workflow:</para>
+
+    <programlisting>$ <emphasis role="bold">more output/f.d</emphasis>
+/home/tutorial/bin/analyze:
+/home/tutorial/bin/findrange:
+/home/tutorial/bin/preprocess:
+This is the input file of the diamond workflow
+/home/tutorial/bin/findrange:
+/home/tutorial/bin/preprocess:
+This is the input file of the diamond workflow
+</programlisting>
+
+    <para>Remember that the example transformations in this workflow just
+    print their name to all of their output files and then copy all of their
+    input files to their output files.</para>
+  </section>
+
+  <section>
+    <title>Workflow Dashboard</title>
+
+    <para><note>
+        <para>If you are running this tutorial through the hosted service then
+        skip this step. To try out the workflow dashboard use the virtual
+        machines provided above.</para>
+      </note></para>
+
+    <para>The Pegasus Dashboard is a web interface for monitoring and
+    debugging workflows.</para>
+
+    <para><note>
+        <para>The workflow dashboard can only monitor workflows which have
+        been executed using Pegasus 4.2.0 and above.</para>
+      </note></para>
+
+    <para>To start the Pegasus Dashboard execute the following command</para>
+
+    <para><programlisting>$ pegasus-service --host 127.0.0.1 --port 5000
+
+SSL is not configured: Using self-signed certificate
+2015-04-13 16:14:23,074:Pegasus.service.server:79: WARNING: SSL is not configured: Using self-signed certificate
+Service not running as root: Will not be able to switch users
+2015-04-13 16:14:23,074:Pegasus.service.server:86: WARNING: Service not running as root: Will not be able to switch users</programlisting></para>
+
+    <para>By default, the dashboard server can only monitor workflows run by
+    the current user i.e. the user who is running the pegasus-service.</para>
+
+    <para>To access the workflow dashboard, in the VirtualBox VM you can
+    launch Firefox by clicking the globe icon in the top menu of the desktop.
+    The home page for the dashboard is accessible at https://localhost:5000 .
+    If you are using EC2 you will need to replace 'localhost' with the IP
+    address of your EC2 instance.</para>
+
+    <para>The Dashboard's home page lists all workflows, which have been run
+    by the current-user. The home page shows the status of each of the
+    workflow i.e. Running/Successful/Failed/Failing. The home page lists only
+    the top level workflows (Pegasus supports hierarchical workflows i.e.
+    workflows within a workflow). The rows in the table are color coded</para>
+
+    <itemizedlist>
+      <listitem>
+        <para><emphasis role="bold">Green</emphasis>: indicates workflow
+        finished successfully.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Red</emphasis>: indicates workflow
+        finished with a failure.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Blue</emphasis>: indicates a workflow is
+        currently running.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Gray</emphasis>: indicates a workflow that
+        was archived.</para>
+      </listitem>
+    </itemizedlist>
+
+    <figure>
+      <title>Dashboard Home Page</title>
+
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="images/dashboard_home.png" width="100%"/>
+        </imageobject>
+      </mediaobject>
+    </figure>
+
+    <para>To view details specific to a workflow, the user can click on
+    corresponding workflow label. The workflow details page lists workflow
+    specific information like workflow label, workflow status, location of the
+    submit directory, etc. The details page also displays pie charts showing
+    the distribution of jobs based on status.</para>
+
+    <para>In addition, the details page displays a tab listing all
+    sub-workflows and their statuses. Additional tabs exist which list
+    information for all running, failed, successful, and failing jobs.</para>
+
+    <para>The information displayed for a job depends on it's status. For
+    example, the failed jobs tab displays the job name, exit code, links to
+    available standard output, and standard error contents.</para>
+
+    <figure>
+      <title>Dashboard Workflow Page</title>
+
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="images/dashboard_workflow_details.png"
+                     width="100%"/>
+        </imageobject>
+      </mediaobject>
+    </figure>
+
+    <para>To view details specific to a job the user can click on the
+    corresponding job's job label. The job details page lists information
+    relevant to a specific job. For example, the page lists information like
+    job name, exit code, run time, etc.</para>
+
+    <para>The job instance section of the job details page lists all attempts
+    made to run the job i.e. if a job failed in its first attempt due to
+    transient errors, but ran successfully when retried, the job instance
+    section shows two entries; one for each attempt to run the job.</para>
+
+    <para>The job details page also shows tab's for failed, and successful
+    task invocations (Pegasus allows users to group multiple smaller task's
+    into a single job i.e. a job may consist of one or more tasks)</para>
+
+    <figure>
+      <title>Dashboard Job Description Page</title>
+
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="images/dashboard_job_details.png" width="100%"/>
+        </imageobject>
+      </mediaobject>
+    </figure>
+
+    <para>The task invocation details page provides task specific information
+    like task name, exit code, duration etc. Task details differ from job
+    details, as they are more granular in nature.</para>
+
+    <figure>
+      <title>Dashboard Invocation Page</title>
+
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="images/dashboard_invocation_details.png"
+                     width="100%"/>
+        </imageobject>
+      </mediaobject>
+    </figure>
+
+    <para>The dashboard also has web pages for workflow statistics and
+    workflow charts, which graphically renders information provided by the
+    pegasus-statistics and pegasus-plots command respectively.</para>
+
+    <para>The Statistics page shows the following statistics.</para>
+
+    <orderedlist>
+      <listitem>
+        <para>Workflow level statistics</para>
+      </listitem>
+
+      <listitem>
+        <para>Job breakdown statistics</para>
+      </listitem>
+
+      <listitem>
+        <para>Job specific statistics</para>
+      </listitem>
+    </orderedlist>
+
+    <figure>
+      <title>Dashboard Statistics Page</title>
+
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="images/dashboard_statistics.png" width="100%"/>
+        </imageobject>
+      </mediaobject>
+    </figure>
+
+    <para>The Charts page shows the following charts.</para>
+
+    <orderedlist>
+      <listitem>
+        <para>Job Distribution by Count/Time</para>
+      </listitem>
+
+      <listitem>
+        <para>Time Chart by Job/Invocation</para>
+      </listitem>
+
+      <listitem>
+        <para>Workflow Execution Gantt Chart</para>
+      </listitem>
+    </orderedlist>
+
+    <para>The chart below shows the invocation distribution by count or
+    time.</para>
+
+    <figure>
+      <title>Dashboard Plots - Job Distribution</title>
+
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="images/dashboard_plots_job_dist.png"
+                     width="100%"/>
+        </imageobject>
+      </mediaobject>
+    </figure>
+
+    <para>The time chart shown below shows the number of jobs/invocations in
+    the workflow and their total runtime</para>
+
+    <figure>
+      <title>Dashboard Plots - Time Chart</title>
+
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="images/dashboard_plots_time_charts.png"
+                     width="100%"/>
+        </imageobject>
+      </mediaobject>
+    </figure>
+
+    <para>The workflow gantt chart lays out the execution of the jobs in the
+    workflow over time.</para>
+
+    <figure>
+      <title>Dashboard Plots - Workflow Gantt Chart</title>
+
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="images/dashboard_plots_wf_gantt.png"
+                     width="100%"/>
+        </imageobject>
+      </mediaobject>
+    </figure>
+  </section>
+
+  <section>
     <title>Generating the Workflow</title>
 
     <para>We will be creating and running a simple diamond-shaped workflow
@@ -472,208 +900,6 @@ pegasus.catalog.transformation.file=tc.dat</programlisting>
   </section>
 
   <section>
-    <title>Planning the Workflow</title>
-
-    <para>The planning stage is where Pegasus maps the abstract DAX to one or
-    more execution sites. The planning step includes:</para>
-
-    <orderedlist>
-      <listitem>
-        <para>Adding a job to create the remote working directory</para>
-      </listitem>
-
-      <listitem>
-        <para>Adding stage-in jobs to transfer input data to the remote
-        working directory</para>
-      </listitem>
-
-      <listitem>
-        <para>Adding cleanup jobs to remove data from the remote working
-        directory when it is no longer needed</para>
-      </listitem>
-
-      <listitem>
-        <para>Adding stage-out jobs to transfer data to the final output
-        location as it is generated</para>
-      </listitem>
-
-      <listitem>
-        <para>Adding registration jobs to register the data in a replica
-        catalog</para>
-      </listitem>
-
-      <listitem>
-        <para>Task clustering to combine several short-running jobs into a
-        single, longer-running job. This is done to make short-running jobs
-        more efficient.</para>
-      </listitem>
-
-      <listitem>
-        <para>Adding wrappers to the jobs to collect provenance information so
-        that statistics and plots can be created when the workflow is
-        finished</para>
-      </listitem>
-    </orderedlist>
-
-    <para>The <literal>pegasus-plan</literal> command is used to plan a
-    workflow. This command takes quite a few arguments, so we created a
-    <filename>plan_dax.sh</filename> wrapper script that has all of the
-    arguments required for the diamond workflow:</para>
-
-    <programlisting>$ <emphasis role="bold">more plan_dax.sh</emphasis>
-...</programlisting>
-
-    <para>The script invokes the <literal>pegasus-plan</literal> command with
-    arguments for the configuration file (<literal>--conf</literal>), the DAX
-    file (<literal>-d</literal>), the submit directory
-    (<literal>--dir</literal>), the execution site
-    (<literal>--sites</literal>), the output site (<literal>-o</literal>) and
-    two extra arguments that prevent Pegasus from removing any jobs from the
-    workflow (<literal>--force</literal>) and that prevent Pegasus from adding
-    cleanup jobs to the workflow (<literal>--nocleanup</literal>).</para>
-
-    <para>Top plan the diamond workflow invoke the
-    <filename>plan_dax.sh</filename> script with the path to the DAX
-    file:</para>
-
-    <programlisting>$ <emphasis role="bold">./plan_dax.sh diamond.dax</emphasis>
-2012.07.24 21:11:03.256 EDT:
-
-I have concretized your abstract workflow. The workflow has been entered
-into the workflow database with a state of "planned". The next step is to
-start or execute your workflow. The invocation required is:
-
-pegasus-run  /home/tutorial/submit/tutorial/pegasus/diamond/run0001
-
-
-2012.07.24 21:11:03.257 EDT:   Time taken to execute is 1.103 seconds
-</programlisting>
-
-    <para>Note the line in the output that starts with
-    <literal>pegasus-run</literal>. That is the command that we will use to
-    submit the workflow. The path it contains is the path to the submit
-    directory where all of the files required to submit and monitor the
-    workflow are stored.</para>
-
-    <para>This is what the diamond workflow looks like after Pegasus has
-    finished planning the DAX:</para>
-
-    <figure>
-      <title>Diamond DAG</title>
-
-      <mediaobject>
-        <imageobject>
-          <imagedata contentwidth="70%"
-                     fileref="images/concepts-diamond-dag.png"/>
-        </imageobject>
-      </mediaobject>
-    </figure>
-
-    <para>For this workflow the only jobs Pegasus needs to add are a directory
-    creation job, a stage-in job (for f.a), and a stage-out job (for f.d). No
-    registration jobs are added because all the files in the DAX are marked
-    register="false", and no cleanup jobs are added because we passed the
-    <literal>--nocleanup</literal> argument to
-    <literal>pegasus-plan</literal>.</para>
-  </section>
-
-  <section>
-    <title>Submitting the Workflow</title>
-
-    <para>Once the workflow has been planned, the next step is to submit it to
-    DAGMan/Condor for execution. This is done using the
-    <literal>pegasus-run</literal> command. This command takes the path to the
-    submit directory as an argument. Run the command that was printed by the
-    <filename>plan_dax.sh</filename> script:</para>
-
-    <programlisting>$ <emphasis role="bold">pegasus-run submit/tutorial/pegasus/diamond/run0001</emphasis>
------------------------------------------------------------------------
-File for submitting this DAG to Condor       : diamond-0.dag.condor.sub
-Log of DAGMan debugging messages             : diamond-0.dag.dagman.out
-Log of Condor library output                 : diamond-0.dag.lib.out
-Log of Condor library error messages         : diamond-0.dag.lib.err
-Log of the life of condor_dagman itself      : diamond-0.dag.dagman.log
-
-Submitting job(s).
-1 job(s) submitted to cluster 19.
------------------------------------------------------------------------
-
-Your Workflow has been started and runs in base directory given below
-
-cd submit/tutorial/pegasus/diamond/run0001
-
-*** To monitor the workflow you can run ***
-
-pegasus-status -l submit/tutorial/pegasus/diamond/run0001
-
-*** To remove your workflow run ***
-pegasus-remove submit/tutorial/pegasus/diamond/run0001
-</programlisting>
-  </section>
-
-  <section>
-    <title>Monitoring the Workflow</title>
-
-    <para>After the workflow has been submitted you can monitor it using the
-    <literal>pegasus-status</literal> command:</para>
-
-    <programlisting>$ <emphasis role="bold">pegasus-status submit/tutorial/pegasus/diamond/run0001</emphasis>
-STAT  IN_STATE  JOB
-Run      01:48  diamond-0
-Run      00:05   |-findrange_ID0000002
-Run      00:05   \_findrange_ID0000003
-Summary: 3 Condor jobs total (R:3)
-
-UNREADY   READY     PRE  QUEUED    POST SUCCESS FAILURE %DONE
-      2       0       0       3       0       3       0  37.5
-Summary: 1 DAG total (Running:1)
-</programlisting>
-
-    <para>This command shows the workflow (diamond-0) and the running jobs (in
-    the above output it shows the two findrange jobs). It also gives
-    statistics on the number of jobs in each state and the percentage of the
-    jobs in the workflow that have finished successfully.</para>
-
-    <para>Use the <literal>watch</literal> command to continuously monitor the
-    workflow:</para>
-
-    <programlisting>$ <emphasis role="bold">watch pegasus-status submit/tutorial/pegasus/diamond/run0001</emphasis>
-...</programlisting>
-
-    <para>You should see all of the jobs in the workflow run one after the
-    other. After a few minutes you will see:</para>
-
-    <programlisting>(no matching jobs found in Condor Q)
-UNREADY   READY     PRE  QUEUED    POST SUCCESS FAILURE %DONE
-      0       0       0       0       0       8       0 100.0
-Summary: 1 DAG total (Success:1)
-</programlisting>
-
-    <para>That means the workflow is finished successfully. You can type
-    <literal>ctrl-c</literal> to terminate the <literal>watch</literal>
-    command.</para>
-
-    <para>If the workflow finished successfully you should see the output file
-    <filename>f.d</filename> in the <filename>output</filename> directory.
-    This file was created by the various transformations in the workflow and
-    shows all of the executables that were invoked by the workflow:</para>
-
-    <programlisting>$ <emphasis role="bold">more output/f.d</emphasis>
-/home/tutorial/bin/analyze:
-/home/tutorial/bin/findrange:
-/home/tutorial/bin/preprocess:
-This is the input file of the diamond workflow
-/home/tutorial/bin/findrange:
-/home/tutorial/bin/preprocess:
-This is the input file of the diamond workflow
-</programlisting>
-
-    <para>Remember that the example transformations in this workflow just
-    print their name to all of their output files and then copy all of their
-    input files to their output files.</para>
-  </section>
-
-  <section>
     <title>Debugging the Workflow</title>
 
     <para>In the case that one or more jobs fails, then the output of the
@@ -883,232 +1109,6 @@ preprocess       1      1          0       30.025  30.025  30.025   30.025
     <para>In this case, because the example transformation sleeps for 30
     seconds, the min, mean, and max runtimes for each of the analyze,
     findrange, and preprocess transformations are all close to 30.</para>
-  </section>
-
-  <section>
-    <title>Workflow Dashboard</title>
-
-    <para><note>
-        <para>If you are running this tutorial through the hosted service then
-        skip this step. To try out the workflow dashboard use the virtual
-        machines provided above.</para>
-      </note></para>
-
-    <para>The Pegasus Dashboard is a web interface for monitoring and
-    debugging workflows.</para>
-
-    <para><note>
-        <para>The workflow dashboard can only monitor workflows which have
-        been executed using Pegasus 4.2.0 and above.</para>
-      </note></para>
-
-    <para>To start the Pegasus Dashboard execute the following command</para>
-
-    <para><programlisting>$ pegasus-service --host 127.0.0.1 --port 5000
-
-SSL is not configured: Using self-signed certificate
-2015-04-13 16:14:23,074:Pegasus.service.server:79: WARNING: SSL is not configured: Using self-signed certificate
-Service not running as root: Will not be able to switch users
-2015-04-13 16:14:23,074:Pegasus.service.server:86: WARNING: Service not running as root: Will not be able to switch users</programlisting></para>
-
-    <para>By default, the dashboard server can only monitor workflows run by
-    the current user i.e. the user who is running the pegasus-service.</para>
-
-    <para>To access the workflow dashboard, in the VirtualBox VM you can
-    launch Firefox by clicking the globe icon in the top menu of the desktop.
-    The home page for the dashboard is accessible at https://localhost:5000 .
-    If you are using EC2 you will need to replace 'localhost' with the IP
-    address of your EC2 instance.</para>
-
-    <para>The Dashboard's home page lists all workflows, which have been run
-    by the current-user. The home page shows the status of each of the
-    workflow i.e. Running/Successful/Failed/Failing. The home page lists only
-    the top level workflows (Pegasus supports hierarchical workflows i.e.
-    workflows within a workflow). The rows in the table are color coded</para>
-
-    <itemizedlist>
-      <listitem>
-        <para><emphasis role="bold">Green</emphasis>: indicates workflow
-        finished successfully.</para>
-      </listitem>
-
-      <listitem>
-        <para><emphasis role="bold">Red</emphasis>: indicates workflow
-        finished with a failure.</para>
-      </listitem>
-
-      <listitem>
-        <para><emphasis role="bold">Blue</emphasis>: indicates a workflow is
-        currently running.</para>
-      </listitem>
-
-      <listitem>
-        <para><emphasis role="bold">Gray</emphasis>: indicates a workflow that
-        was archived.</para>
-      </listitem>
-    </itemizedlist>
-
-    <figure>
-      <title>Dashboard Home Page</title>
-
-      <mediaobject>
-        <imageobject>
-          <imagedata fileref="images/dashboard_home.png" width="100%"/>
-        </imageobject>
-      </mediaobject>
-    </figure>
-
-    <para>To view details specific to a workflow, the user can click on
-    corresponding workflow label. The workflow details page lists workflow
-    specific information like workflow label, workflow status, location of the
-    submit directory, etc. The details page also displays pie charts showing
-    the distribution of jobs based on status.</para>
-
-    <para>In addition, the details page displays a tab listing all
-    sub-workflows and their statuses. Additional tabs exist which list
-    information for all running, failed, successful, and failing jobs.</para>
-
-    <para>The information displayed for a job depends on it's status. For
-    example, the failed jobs tab displays the job name, exit code, links to
-    available standard output, and standard error contents.</para>
-
-    <figure>
-      <title>Dashboard Workflow Page</title>
-
-      <mediaobject>
-        <imageobject>
-          <imagedata fileref="images/dashboard_workflow_details.png"
-                     width="100%"/>
-        </imageobject>
-      </mediaobject>
-    </figure>
-
-    <para>To view details specific to a job the user can click on the
-    corresponding job's job label. The job details page lists information
-    relevant to a specific job. For example, the page lists information like
-    job name, exit code, run time, etc.</para>
-
-    <para>The job instance section of the job details page lists all attempts
-    made to run the job i.e. if a job failed in its first attempt due to
-    transient errors, but ran successfully when retried, the job instance
-    section shows two entries; one for each attempt to run the job.</para>
-
-    <para>The job details page also shows tab's for failed, and successful
-    task invocations (Pegasus allows users to group multiple smaller task's
-    into a single job i.e. a job may consist of one or more tasks)</para>
-
-    <figure>
-      <title>Dashboard Job Description Page</title>
-
-      <mediaobject>
-        <imageobject>
-          <imagedata fileref="images/dashboard_job_details.png" width="100%"/>
-        </imageobject>
-      </mediaobject>
-    </figure>
-
-    <para>The task invocation details page provides task specific information
-    like task name, exit code, duration etc. Task details differ from job
-    details, as they are more granular in nature.</para>
-
-    <figure>
-      <title>Dashboard Invocation Page</title>
-
-      <mediaobject>
-        <imageobject>
-          <imagedata fileref="images/dashboard_invocation_details.png"
-                     width="100%"/>
-        </imageobject>
-      </mediaobject>
-    </figure>
-
-    <para>The dashboard also has web pages for workflow statistics and
-    workflow charts, which graphically renders information provided by the
-    pegasus-statistics and pegasus-plots command respectively.</para>
-
-    <para>The Statistics page shows the following statistics.</para>
-
-    <orderedlist>
-      <listitem>
-        <para>Workflow level statistics</para>
-      </listitem>
-
-      <listitem>
-        <para>Job breakdown statistics</para>
-      </listitem>
-
-      <listitem>
-        <para>Job specific statistics</para>
-      </listitem>
-    </orderedlist>
-
-    <figure>
-      <title>Dashboard Statistics Page</title>
-
-      <mediaobject>
-        <imageobject>
-          <imagedata fileref="images/dashboard_statistics.png" width="100%"/>
-        </imageobject>
-      </mediaobject>
-    </figure>
-
-    <para>The Charts page shows the following charts.</para>
-
-    <orderedlist>
-      <listitem>
-        <para>Job Distribution by Count/Time</para>
-      </listitem>
-
-      <listitem>
-        <para>Time Chart by Job/Invocation</para>
-      </listitem>
-
-      <listitem>
-        <para>Workflow Execution Gantt Chart</para>
-      </listitem>
-    </orderedlist>
-
-    <para>The chart below shows the invocation distribution by count or
-    time.</para>
-
-    <figure>
-      <title>Dashboard Plots - Job Distribution</title>
-
-      <mediaobject>
-        <imageobject>
-          <imagedata fileref="images/dashboard_plots_job_dist.png"
-                     width="100%"/>
-        </imageobject>
-      </mediaobject>
-    </figure>
-
-    <para>The time chart shown below shows the number of jobs/invocations in
-    the workflow and their total runtime</para>
-
-    <figure>
-      <title>Dashboard Plots - Time Chart</title>
-
-      <mediaobject>
-        <imageobject>
-          <imagedata fileref="images/dashboard_plots_time_charts.png"
-                     width="100%"/>
-        </imageobject>
-      </mediaobject>
-    </figure>
-
-    <para>The workflow gantt chart lays out the execution of the jobs in the
-    workflow over time.</para>
-
-    <figure>
-      <title>Dashboard Plots - Workflow Gantt Chart</title>
-
-      <mediaobject>
-        <imageobject>
-          <imagedata fileref="images/dashboard_plots_wf_gantt.png"
-                     width="100%"/>
-        </imageobject>
-      </mediaobject>
-    </figure>
   </section>
 
   <section>
