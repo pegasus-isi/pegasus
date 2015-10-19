@@ -88,6 +88,101 @@ tutorial@pegasus-tutorial.isi.edu's password: <emphasis role="bold">pegasus123</
   </section>
 
   <section>
+    <title>What are Scientific Workflows</title>
+
+    <para>Scientific workflows allow users to easily express multi-step
+    computational tasks, for example retrieve data from an instrument or a
+    database, reformat the data, and run an analysis. A scientific workflow
+    describes the dependencies between the tasks and in most cases the
+    workflow is described as a directed acyclic graph (DAG), where the nodes
+    are tasks and the edges denote the task dependencies. A defining property
+    for a scientific workflow is that it manages data flow. The tasks in a
+    scientific workflow can be everything from short serial tasks to very
+    large parallel tasks (MPI for example) surrounded by a large number of
+    small, serial tasks used for pre- and post-processing.</para>
+
+    <para>Workflows can vary from simple to complex. Below are some
+    examples</para>
+
+    <para><emphasis role="bold">Single Task Workflow</emphasis></para>
+
+    <para>A single task to execute</para>
+
+    <figure>
+      <title>Single Task Workflow</title>
+
+      <mediaobject>
+        <imageobject>
+          <imagedata align="center" contentdepth="50%"
+                     fileref="images/tutorial-single-job-wf.jpg"/>
+        </imageobject>
+      </mediaobject>
+    </figure>
+
+    <para><emphasis role="bold">Bag of Tasks Workflow</emphasis></para>
+
+    <para>No dependencies between the tasks.</para>
+
+    <figure>
+      <title>Bag of Tasks Workflow</title>
+
+      <mediaobject>
+        <imageobject>
+          <imagedata align="center" contentwidth="70%"
+                     fileref="images/tutorial-bag-tasks-wf.jpg"/>
+        </imageobject>
+      </mediaobject>
+    </figure>
+
+    <para><emphasis role="bold">Pipeline of Tasks</emphasis></para>
+
+    <para>The pipeline workflow consists of two jobs linked together in a
+    pipeline. The first job runs the `curl` command to fetch the Pegasus home
+    page and store it as an HTML file. The result is passed to the `wc`
+    command, which counts the number of lines in the HTML file. <figure>
+        <title>Pipeline of Tasks</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata align="center" contentdepth="70%"
+                       fileref="images/tutorial-pipeline-tasks-wf.jpg"/>
+          </imageobject>
+        </mediaobject>
+      </figure></para>
+
+    <para><emphasis role="bold">Split Workflow</emphasis></para>
+
+    <para>The split workflow downloads the Pegasus home page using the `curl`
+    command, then uses the `split` command to divide it into 4 pieces. The
+    result is passed to the `wc` command to count the number of lines in each
+    piece.<figure>
+        <title>Split Workflow</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata align="center" contentwidth="70%"
+                       fileref="images/tutorial-split-wf.jpg"/>
+          </imageobject>
+        </mediaobject>
+      </figure></para>
+
+    <para><emphasis role="bold">Merge Workflow</emphasis></para>
+
+    <para>The merge workflow runs the `ls` command on several */bin
+    directories and passes the results to the `cat` command, which merges the
+    files into a single listing.<figure>
+        <title>Merge Workflow</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata align="center" contentwidth="70%"
+                       fileref="images/tutorial-merge-wf.jpg"/>
+          </imageobject>
+        </mediaobject>
+      </figure></para>
+  </section>
+
+  <section>
     <title>Generating the Workflow</title>
 
     <para>We will be creating and running a simple diamond-shaped workflow
