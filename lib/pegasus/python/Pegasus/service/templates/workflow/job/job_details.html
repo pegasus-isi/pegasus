@@ -427,7 +427,7 @@
 
             {%  endif %}
 
-            {% if exitcode == None %}
+            {% if job.exitcode == None %}
                 setInterval(function () {
                     // Charts
                     getData(influxdb);
