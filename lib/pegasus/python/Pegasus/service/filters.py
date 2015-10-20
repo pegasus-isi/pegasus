@@ -1,6 +1,8 @@
 import time
-from datetime import datetime
 import decimal
+from datetime import datetime
+
+import locale
 from Pegasus.service import app
 
 
@@ -15,7 +17,8 @@ def format_ts(value, ts_format='%a %b %d, %Y %I:%M:%S %p'):
 @app.template_filter('format_num')
 def format_num(value, num_format=',d'):
     if value:
-        return format(int(value), num_format)
+        locale.setlocale(locale.LC_ALL, 'en_US')
+        return locale.format('%d', int(value), grouping=True)
 
     return value
 
