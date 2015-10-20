@@ -314,15 +314,15 @@ pegasus-plan --conf pegasus.conf -d $DAXFILE --dir submit \
 2015.10.19 16:07:20.569 PDT:    
 2015.10.19 16:07:20.607 PDT:   Your workflow has been started and is running in the base directory: 
 2015.10.19 16:07:20.617 PDT:    
-2015.10.19 16:07:20.655 PDT:     /home/tutorial/diamond/submit/tutorial/pegasus/diamond/run0001 
+2015.10.19 16:07:20.655 PDT:     /home/tutorial/examples/diamond/submit/tutorial/pegasus/diamond/run0001 
 2015.10.19 16:07:20.701 PDT:    
 2015.10.19 16:07:20.744 PDT:   *** To monitor the workflow you can run *** 
 2015.10.19 16:07:20.789 PDT:    
-2015.10.19 16:07:20.812 PDT:     pegasus-status -l /home/tutorial/diamond/submit/tutorial/pegasus/diamond/run0001 
+2015.10.19 16:07:20.812 PDT:     pegasus-status -l /home/tutorial/examples/diamond/submit/tutorial/pegasus/diamond/run0001 
 2015.10.19 16:07:20.835 PDT:    
 2015.10.19 16:07:20.845 PDT:   *** To remove your workflow run *** 
 2015.10.19 16:07:20.864 PDT:    
-2015.10.19 16:07:20.874 PDT:     pegasus-remove /home/tutorial/diamond/submit/tutorial/pegasus/diamond/run0001 
+2015.10.19 16:07:20.874 PDT:     pegasus-remove /home/tutorial/examples/diamond/submit/tutorial/pegasus/diamond/run0001 
 2015.10.19 16:07:20.885 PDT:    
 2015.10.19 16:07:21.745 PDT:   Time taken to execute is 4.427 seconds 
 </programlisting>
@@ -653,12 +653,12 @@ Summary: 1 DAG total (Success:1)
       workflow:</para>
 
       <programlisting>$ <emphasis role="bold">more output/f.d</emphasis>
-/home/tutorial/diamond/bin/analyze:
-/home/tutorial/diamond/bin/findrange:
-/home/tutorial/diamond/bin/preprocess:
+/home/tutorial/examples/diamond/bin/analyze:
+/home/tutorial/examples/diamond/bin/findrange:
+/home/tutorial/examples/diamond/bin/preprocess:
 This is the input file of the diamond workflow
-/home/tutorial/diamond/bin/findrange:
-/home/tutorial/diamond/bin/preprocess:
+/home/tutorial/examples/diamond/bin/findrange:
+/home/tutorial/examples/diamond/bin/preprocess:
 This is the input file of the diamond workflow
 </programlisting>
 
@@ -1085,7 +1085,7 @@ Writing diamond.dax</programlisting>
 
 tr preprocess {
     site PegasusVM {
-        pfn "/home/tutorial/diamond/bin/preprocess"
+        pfn "/home/tutorial/examples/diamond/bin/preprocess"
         arch "x86_64"
         os "linux"
         type "INSTALLED"
@@ -1134,7 +1134,7 @@ tr preprocess {
 # The format is:
 # LFN     PFN    site="SITE"
 
-f.a    file:///home/tutorial/diamond/input/f.a    site="local"</programlisting>
+f.a    file:///home/tutorial/examples/diamond/input/f.a    site="local"</programlisting>
 
       <para>This replica catalog contains only one entry for the diamond
       workflow’s only input file. This entry has an LFN of “f.a” with a PFN of
