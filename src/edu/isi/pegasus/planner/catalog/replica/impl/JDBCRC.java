@@ -313,7 +313,6 @@ public class JDBCRC implements ReplicaCatalog
             temp.delete();
         }
       
-      
         // class loader: Will propagate any runtime errors!!!
         String driver = (String) props.remove("db.driver");
 
@@ -323,7 +322,6 @@ public class JDBCRC implements ReplicaCatalog
         if (url == null || url.length() == 0) {
             return result;
         }
-
 
         try {
             if (driver != null) {
@@ -339,7 +337,8 @@ public class JDBCRC implements ReplicaCatalog
                     //foreign key support needs to be enabled 
                     //per connection PRAGMA foreign_keys ON
                     SQLiteConfig config = new SQLiteConfig();  
-                    config.enforceForeignKeys(true);    
+                    config.enforceForeignKeys(true);
+                    config.setBusyTimeout(props.getProperty("db.timeout", "30") + "000");
                     localProps.putAll( config.toProperties() );
                     mUsingSQLiteBackend = true;
                 }
@@ -355,7 +354,7 @@ public class JDBCRC implements ReplicaCatalog
             mLogger.log( "Connecting to Database Backend " + url +" with properties " + localProps, 
                          LogManager.DEBUG_MESSAGE_LEVEL );
             mConnection = DriverManager.getConnection( url, localProps );
-            
+
             //JDBC sqlite driver returns false, but does support autoincrement of keys
             m_autoinc = mUsingSQLiteBackend ||  mConnection.getMetaData().supportsGetGeneratedKeys();
 
