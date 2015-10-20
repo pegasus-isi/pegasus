@@ -18,9 +18,17 @@ log = logging.getLogger(__name__)
 
 #-------------------------------------------------------------------
 # Connection Properties
+PROP_CATALOG_ALL_TIMEOUT = "pegasus.catalog.*.timeout"
+PROP_CATALOG_ALL_DB_TIMEOUT = "pegasus.catalog.*.db.timeout"
 PROP_CATALOG_MASTER_URL = "pegasus.catalog.master.url"
+PROP_CATALOG_MASTER_TIMEOUT = "pegasus.catalog.master.timeout"
+PROP_CATALOG_MASTER_DB_TIMEOUT = "pegasus.catalog.master.db.timeout"
 PROP_CATALOG_REPLICA_DB_URL = "pegasus.catalog.replica.db.url"
+PROP_CATALOG_REPLICA_TIMEOUT = "pegasus.catalog.replica.timeout"
+PROP_CATALOG_REPLICA_DB_TIMEOUT = "pegasus.catalog.replica.db.timeout"
 PROP_CATALOG_WORKFLOW_URL = "pegasus.catalog.workflow.url"
+PROP_CATALOG_WORKFLOW_TIMEOUT = "pegasus.catalog.workflow.timeout"
+PROP_CATALOG_WORKFLOW_DB_TIMEOUT = "pegasus.catalog.workflow.db.timeout"
 PROP_DASHBOARD_OUTPUT = "pegasus.dashboard.output"
 PROP_MONITORD_OUTPUT = "pegasus.monitord.output"
 
@@ -52,7 +60,7 @@ def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=
     """ Connect to the provided URL database."""
     dburi = _parse_jdbc_uri(dburi)
     _validate(dburi)
-    
+
     try:
         log.info("Attempting to connect to: %s" % dburi)
         engine = create_engine(dburi, echo=echo, pool_recycle=True)
@@ -103,8 +111,13 @@ def connect_by_submitdir(submit_dir, db_type, config_properties=None, echo=False
 def connect_by_properties(config_properties, db_type, cl_properties=None, echo=False, schema_check=True, create=False,
                           pegasus_version=None, force=False):
     """ Connect to the database from properties file and database type """
-    dburi = url_by_properties(config_properties, db_type, cl_properties=cl_properties)
-    return connect(dburi, echo, schema_check, create=create, pegasus_version=pegasus_version, force=force)
+    props = properties.Properties()
+    props.new(config_file=config_properties)
+    _merge_properties(props, cl_properties)
+
+    dburi = url_by_properties(config_properties, db_type, props=props)
+    return connect(dburi, echo, schema_check, create=create, pegasus_version=pegasus_version, force=force,
+                   db_type=db_type, props=props)
 
 
 def url_by_submitdir(submit_dir, db_type, config_properties=None, top_dir=None, cl_properties=None):
@@ -137,18 +150,19 @@ def url_by_submitdir(submit_dir, db_type, config_properties=None, top_dir=None, 
                              rundir_properties=top_level_prop_file, cl_properties=cl_properties)
 
     
-def url_by_properties(config_properties, db_type, submit_dir=None, top_dir=None, rundir_properties=None, cl_properties=None):
+def url_by_properties(config_properties, db_type, submit_dir=None, top_dir=None, rundir_properties=None,
+                      cl_properties=None, props=None):
     """ Get URL from the property file """
     # Validate parameters
     if not db_type:
         raise ConnectionError("A type should be provided with the property file.")
 
     # Parse, and process properties
-    props = properties.Properties()
-    props.new(config_file=config_properties, rundir_propfile=rundir_properties)
-    _merge_properties(props, cl_properties)
+    if not props:
+        props = properties.Properties()
+        props.new(config_file=config_properties, rundir_propfile=rundir_properties)
+        _merge_properties(props, cl_properties)
 
-    dburi = None
     if db_type.upper() == DBType.JDBCRC:
         dburi = _get_jdbcrc_uri(props)
     elif db_type.upper() == DBType.MASTER:
@@ -395,18 +409,42 @@ def _parse_props(db, props, db_type=None, connect_args=None):
     if url.drivername == "sqlite" and db_type:
         if not DBKey.TIMEOUT in connect_args:
             try:
-                if db_type == DBType.MASTER and props.property("pegasus.catalog.master.timeout"):
-                    connect_args[DBKey.TIMEOUT] = int(props.property("pegasus.catalog.master.timeout")) * 1000
+                timeout = None
+                if db_type == DBType.MASTER:
+                    timeout = _get_timeout_property(props, PROP_CATALOG_MASTER_TIMEOUT, PROP_CATALOG_MASTER_DB_TIMEOUT)
+                elif db_type == DBType.WORKFLOW:
+                    timeout = _get_timeout_property(props, PROP_CATALOG_WORKFLOW_TIMEOUT, PROP_CATALOG_WORKFLOW_DB_TIMEOUT)
+                elif db_type == DBType.JDBCRC:
+                    timeout = _get_timeout_property(props, PROP_CATALOG_REPLICA_TIMEOUT, PROP_CATALOG_REPLICA_DB_TIMEOUT)
+                else:
+                    timeout = _get_timeout_property(props, PROP_CATALOG_ALL_TIMEOUT, PROP_CATALOG_ALL_DB_TIMEOUT)
 
-                elif db_type == DBType.WORKFLOW and props.property("pegasus.catalog.workflow.timeout"):
-                    connect_args[DBKey.TIMEOUT] = int(props.property("pegasus.catalog.workflow.timeout")) * 1000
+                if timeout:
+                    connect_args[DBKey.TIMEOUT] = timeout
 
-                elif props.property("pegasus.catalog.*.timeout"):
-                    connect_args[DBKey.TIMEOUT] = int(props.property("pegasus.catalog.*.timeout")) * 1000
             except ValueError, e:
                 raise ConnectionError("Timeout properties should be set in seconds: %s (%s)" % (e.message, url))
 
+    print connect_args
     return connect_args
+
+
+def _get_timeout_property(props, prop_name1, prop_name2):
+    """
+
+    :param db_type:
+    :param props:
+    :param prop_name1:
+    :param prop_name2:
+    :return:
+    """
+    if props.property(prop_name1):
+        return int(props.property(prop_name1)) * 1000
+
+    elif props.property(prop_name2):
+        return int(props.property(prop_name2)) * 1000
+
+    return None
 
 
 def _parse_top_level_wf_params(dir):
