@@ -3,7 +3,7 @@
 
 tr preprocess {
     site PegasusVM {
-        pfn "/home/tutorial/diamond/bin/preprocess"
+        pfn "/home/tutorial/examples/diamond/bin/preprocess"
         arch "x86_64"
         os "linux"
         type "INSTALLED"
@@ -12,7 +12,7 @@ tr preprocess {
 
 tr findrange {
     site PegasusVM {
-        pfn "/home/tutorial/diamond/bin/findrange"
+        pfn "/home/tutorial/examples/diamond/bin/findrange"
         arch "x86_64"
         os "linux"
         type "INSTALLED"
@@ -21,7 +21,7 @@ tr findrange {
 
 tr analyze {
     site PegasusVM {
-        pfn "/home/tutorial/diamond/bin/analyze"
+        pfn "/home/tutorial/examples/diamond/bin/analyze"
         arch "x86_64"
         os "linux"
         type "INSTALLED"
