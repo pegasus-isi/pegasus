@@ -10,36 +10,26 @@ if len(sys.argv) != 2:
         sys.exit(1)
 daxfile = sys.argv[1]
 
-dax = ADAG("merge")
+dax = ADAG("pipeline")
 
-dirs = ["/bin","/usr/bin","/usr/local/bin"]
-jobs = []
-files = []
+webpage = File("pegasus.html")
 
-for i,d in enumerate(dirs):
-    ls = Job("ls")
-    jobs.append(ls)
-    ls.addArguments("-l",d)
-    f = File("bin_%d.txt" % i)
-    files.append(f)
-    ls.setStdout(f)
-    ls.uses(f, link=Link.OUTPUT)
-    dax.addJob(ls)
+curl = Job("curl")
+curl.addArguments("-o",webpage,"http://pegasus.isi.edu")
+curl.uses(webpage, link=Link.OUTPUT)
+dax.addJob(curl)
 
-cat = Job("cat")
-cat.addArguments(*files)
-for f in files:
-    cat.uses(f, link=Link.INPUT)
-output = File("binaries.txt")
-cat.setStdout(output)
-cat.uses(output, link=Link.OUTPUT, transfer=True, register=False)
-dax.addJob(cat)
+count = File("count.txt")
 
-for j in jobs:
-    dax.depends(cat, j)
+wc = Job("wc")
+wc.addArguments("-l",webpage)
+wc.setStdout(count)
+wc.uses(webpage, link=Link.INPUT)
+wc.uses(count, link=Link.OUTPUT, transfer=True, register=False)
+dax.addJob(wc)
+
+dax.depends(wc, curl)
 
 f = open(daxfile, "w")
 dax.writeXML(f)
 f.close()
-
-

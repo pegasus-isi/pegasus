@@ -1,0 +1,45 @@
+tr ls { 
+  site local {
+    pfn "/bin/ls"
+    arch "x86_64"
+    os "linux"
+    type "INSTALLED"
+  }
+}
+
+tr cat { 
+  site local {
+    pfn "/bin/cat"
+    arch "x86_64"
+    os "linux"
+    type "INSTALLED"
+  }
+}
+
+tr curl { 
+  site local {
+    pfn "/usr/bin/curl"
+    arch "x86_64"
+    os "linux"
+    type "INSTALLED"
+  }
+}
+
+tr wc { 
+  site local {
+    pfn "/usr/bin/wc"
+    arch "x86_64"
+    os "linux"
+    type "INSTALLED"
+  }
+}
+
+tr split { 
+  site local {
+    pfn "/usr/bin/split"
+    arch "x86_64"
+    os "linux"
+    type "INSTALLED"
+  }
+}
+
