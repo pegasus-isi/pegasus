@@ -37,8 +37,10 @@ you get this</programlisting>
 
     <para><emphasis role="bold">If you are having trouble with this tutorial,
     or anything else related to Pegasus, you can contact the Pegasus Users
-    mailing list at <email>pegasus-users@isi.edu</email> to get
-    help.</emphasis></para>
+    mailing list at <email>pegasus-users@isi.edu</email> to get help. You can
+    also contact us on our <ulink
+    url="https://pegasus.isi.edu/support">support chatroom</ulink> on HipChat.
+    </emphasis></para>
   </section>
 
   <section id="tutorial_started">
@@ -651,12 +653,12 @@ Summary: 1 DAG total (Success:1)
       workflow:</para>
 
       <programlisting>$ <emphasis role="bold">more output/f.d</emphasis>
-/home/tutorial/bin/analyze:
-/home/tutorial/bin/findrange:
-/home/tutorial/bin/preprocess:
+/home/tutorial/diamond/bin/analyze:
+/home/tutorial/diamond/bin/findrange:
+/home/tutorial/diamond/bin/preprocess:
 This is the input file of the diamond workflow
-/home/tutorial/bin/findrange:
-/home/tutorial/bin/preprocess:
+/home/tutorial/diamond/bin/findrange:
+/home/tutorial/diamond/bin/preprocess:
 This is the input file of the diamond workflow
 </programlisting>
 
@@ -883,8 +885,12 @@ preprocess       1      1          0       30.025  30.025  30.025   30.025
   <section>
     <title id="tutorial_wf_generation">Generating the Workflow</title>
 
-    <para>We will be creating and running a simple diamond-shaped workflow
-    that looks like this:</para>
+    <para>The example that you ran earlier already had the workflow
+    description (diamond.dax) generated. Pegasus reads workflow descriptions
+    from DAX files. The term “DAX” is short for “Directed Acyclic Graph in
+    XML”. DAX is an XML file format that has syntax for expressing jobs,
+    arguments, files, and dependencies. We now will be creating the diamond
+    workflow that we just ran using the Pegasus provided DAX API:</para>
 
     <figure>
       <title>Diamond Workflow</title>
@@ -898,11 +904,6 @@ preprocess       1      1          0       30.025  30.025  30.025   30.025
 
     <para>In this diagram, the ovals represent computational jobs, the
     dog-eared squares are files, and the arrows are dependencies.</para>
-
-    <para>Pegasus reads workflow descriptions from DAX files. The term “DAX”
-    is short for “Directed Acyclic Graph in XML”. DAX is an XML file format
-    that has syntax for expressing jobs, arguments, files, and
-    dependencies.</para>
 
     <para>In order to create a DAX it is necessary to write code for a DAX
     generator. Pegasus comes with Perl, Java, and Python libraries for writing
@@ -1084,7 +1085,7 @@ Writing diamond.dax</programlisting>
 
 tr preprocess {
     site PegasusVM {
-        pfn "/home/tutorial/bin/preprocess"
+        pfn "/home/tutorial/diamond/bin/preprocess"
         arch "x86_64"
         os "linux"
         type "INSTALLED"
