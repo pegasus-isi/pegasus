@@ -1076,9 +1076,9 @@ Writing diamond.dax</programlisting>
       them.</para>
 
       <para>For this tutorial, the transformation catalog is in the file
-      <filename>tc.dat</filename>:</para>
+      <filename>tc.txt</filename>:</para>
 
-      <programlisting>$ <emphasis role="bold">more tc.dat</emphasis>
+      <programlisting>$ <emphasis role="bold">more tc.txt</emphasis>
 ...
 ﻿# This is the transformation catalog. It lists information about each of the
 # executables that are used by the workflow.
@@ -1095,7 +1095,7 @@ tr preprocess {
 
 ...</programlisting>
 
-      <para>The <filename>tc.dat</filename> file contains information about
+      <para>The <filename>tc.txt</filename> file contains information about
       three transformations: preprocess, findrange, and analyze. These three
       transformations are referenced in the diamond DAX. The transformation
       catalog indicates that all three transformations are installed on the
@@ -1167,7 +1167,7 @@ pegasus.catalog.replica.file=rc.dat
 
 # This tells Pegasus where to find the Transformation Catalog
 pegasus.catalog.transformation=Text
-pegasus.catalog.transformation.file=tc.dat</programlisting>
+pegasus.catalog.transformation.file=tc.txt</programlisting>
   </section>
 
   <section>
