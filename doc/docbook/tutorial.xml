@@ -4,7 +4,7 @@
 <chapter id="tutorial">
   <title>Tutorial</title>
 
-  <section>
+  <section id="tutorial_introduction">
     <title>Introduction</title>
 
     <para>This tutorial will take you through the steps of running simple
@@ -41,7 +41,7 @@ you get this</programlisting>
     help.</emphasis></para>
   </section>
 
-  <section>
+  <section id="tutorial_started">
     <title>Getting Started</title>
 
     <para>Easiest way to start the tutorial is to connect to a hosted service
@@ -91,7 +91,7 @@ tutorial@pegasus-tutorial.isi.edu's password: <emphasis role="bold">pegasus123</
     user's home directory <filename>/home/tutorial/examples</filename>.</para>
   </section>
 
-  <section>
+  <section id="tutorial_scientific_workflows">
     <title>What are Scientific Workflows</title>
 
     <para>Scientific workflows allow users to easily express multi-step
@@ -191,7 +191,7 @@ tutorial@pegasus-tutorial.isi.edu's password: <emphasis role="bold">pegasus123</
     page</ulink>. </para>
   </section>
 
-  <section>
+  <section id="tutorial_submitting_wf">
     <title>Submitting an Example Workflow</title>
 
     <para>To start the tutorial, we will run an already generated diamond
@@ -353,7 +353,7 @@ pegasus-plan --conf pegasus.conf -d $DAXFILE --dir submit \
     <literal>pegasus-plan</literal>.</para>
   </section>
 
-  <section>
+  <section id="tutorial_wf_dashboard">
     <title>Workflow Dashboard for Monitoring and Debugging</title>
 
     <para><note>
@@ -581,7 +581,7 @@ Service not running as root: Will not be able to switch users
     </figure>
   </section>
 
-  <section>
+  <section id="tutorial_monitoring_cmd_tools">
     <title>Command line tools for Monitoring and Debugging</title>
 
     <para>Pegasus also comes with a series of command line tools that users
@@ -881,7 +881,7 @@ preprocess       1      1          0       30.025  30.025  30.025   30.025
   </section>
 
   <section>
-    <title>Generating the Workflow</title>
+    <title id="tutorial_wf_generation">Generating the Workflow</title>
 
     <para>We will be creating and running a simple diamond-shaped workflow
     that looks like this:</para>
@@ -981,7 +981,7 @@ Writing diamond.dax</programlisting>
 ...</programlisting>
   </section>
 
-  <section>
+  <section id="tutorial_catalogs">
     <title>Information Catalogs</title>
 
     <para>There are three information catalogs that Pegasus uses when planning
@@ -1143,7 +1143,7 @@ f.a    file:///home/tutorial/diamond/input/f.a    site="local"</programlisting>
     </section>
   </section>
 
-  <section>
+  <section id="tutorial_configuration">
     <title>Configuring Pegasus</title>
 
     <para>In addition to the information catalogs, Pegasus takes a
@@ -1170,7 +1170,7 @@ pegasus.catalog.transformation.file=tc.dat</programlisting>
   </section>
 
   <section>
-    <title>Conclusion</title>
+    <title id="tutorial_conclusion">Conclusion</title>
 
     <para>Congratulations! You have completed the tutorial.</para>
 
