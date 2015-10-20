@@ -196,6 +196,15 @@ tutorial@pegasus-tutorial.isi.edu's password: <emphasis role="bold">pegasus123</
   <section id="tutorial_submitting_wf">
     <title>Submitting an Example Workflow</title>
 
+    <para>The tutorial comes configured with a variety of examples. For the
+    rest of the tutorial we will be using the diamond example. Other examples
+    are also structured similarly. </para>
+
+    <programlisting>$ <emphasis role="bold">cd /home/tutorial/examples</emphasis>
+$ ls 
+﻿diamond  merge  pipeline  process  split
+</programlisting>
+
     <para>To start the tutorial, we will run an already generated diamond
     workflow through Pegasus. The diamond workflow looks like this</para>
 
