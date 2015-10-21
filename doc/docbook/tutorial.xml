@@ -67,7 +67,7 @@ tutorial@pegasus-tutorial.isi.edu's password: <emphasis role="bold">pegasus123</
     tutorial VM on these platforms is in <link linkend="tutorial_vm">the
     appendix</link>. If you want to use the tutorial VM, please go to the
     appendix for the platform you are using and follow the instructions for
-    starting the VM found there before continuing with this tutorial. </para>
+    starting the VM found there before continuing with this tutorial.</para>
 
     <para><emphasis role="bold">Advanced Users:</emphasis> If you have
     installed Pegasus and Condor on your own machine, then you don't need to
@@ -107,12 +107,15 @@ tutorial@pegasus-tutorial.isi.edu's password: <emphasis role="bold">pegasus123</
     large parallel tasks (MPI for example) surrounded by a large number of
     small, serial tasks used for pre- and post-processing.</para>
 
-    <para>Workflows can vary from simple to complex. Below are some
-    examples</para>
+    <para>Workflows can vary from simple to complex. Below are some examples.
+    In the figures below, the task are designated by circles/ellipses while
+    the files created by the tasks are indicated by rectangles. Arrows
+    indicate task dependencies.</para>
 
-    <para><emphasis role="bold">Single Task Workflow</emphasis></para>
+    <para><emphasis role="bold">Process Workflow</emphasis></para>
 
-    <para>A single task to execute</para>
+    <para> It consists of a single task that runs the `ls` command and
+    generates a listing of the files in the `/` directory.</para>
 
     <figure>
       <title>Single Task Workflow</title>
@@ -125,24 +128,9 @@ tutorial@pegasus-tutorial.isi.edu's password: <emphasis role="bold">pegasus123</
       </mediaobject>
     </figure>
 
-    <para><emphasis role="bold">Bag of Tasks Workflow</emphasis></para>
-
-    <para>No dependencies between the tasks.</para>
-
-    <figure>
-      <title>Bag of Tasks Workflow</title>
-
-      <mediaobject>
-        <imageobject>
-          <imagedata align="center" contentwidth="70%"
-                     fileref="images/tutorial-bag-tasks-wf.jpg"/>
-        </imageobject>
-      </mediaobject>
-    </figure>
-
     <para><emphasis role="bold">Pipeline of Tasks</emphasis></para>
 
-    <para>The pipeline workflow consists of two jobs linked together in a
+    <para>The pipeline workflow consists of two tasks linked together in a
     pipeline. The first job runs the `curl` command to fetch the Pegasus home
     page and store it as an HTML file. The result is passed to the `wc`
     command, which counts the number of lines in the HTML file. <figure>
@@ -374,7 +362,7 @@ pegasus-plan --conf pegasus.conf -d $DAXFILE --dir submit \
       </note></para>
 
     <para>The Pegasus Dashboard is a web interface for monitoring and
-    debugging workflows and is shipped with each Pegasus release. </para>
+    debugging workflows and is shipped with each Pegasus release.</para>
 
     <para>By default, the dashboard server can only monitor workflows run by
     the current user i.e. the user who is running the pegasus-service.</para>
@@ -383,7 +371,7 @@ pegasus-plan --conf pegasus.conf -d $DAXFILE --dir submit \
     launch Firefox by clicking the globe icon in the top menu of the desktop.
     The home page for the dashboard is accessible at https://localhost:5000 .
     If you are using EC2 you will need to replace 'localhost' with the IP
-    address of your EC2 instance. </para>
+    address of your EC2 instance.</para>
 
     <para>When the webpage loads up, it will ask you for a username and a
     password. Log in as user "<emphasis role="bold">tutorial</emphasis>" with
