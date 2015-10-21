@@ -12,7 +12,7 @@
         function plotChart(data) {
             var points = [];
             var d = new Date(0); // The 0 there is the key, which sets the date to the epoch
-            d.setUTCSeconds({{ anomaly.ts }});
+            d.setUTCMilliseconds({{ anomaly.ts }});
 
             var metrics = JSON.parse({{ anomaly.metrics|tojson }});
 
