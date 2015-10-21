@@ -945,12 +945,30 @@ Writing diamond.dax</programlisting>
   <section id="tutorial_catalogs">
     <title>Information Catalogs</title>
 
-    <para>The workflow description that you specify to Pegasus is portable,
-    and usually does not contain any locations.There are three information
-    catalogs that Pegasus uses when planning the workflow. These are the <link
-    linkend="tut_site_catalog">Site Catalog</link>, <link
-    linkend="tut_xform_catalog">Transformation Catalog</link>, and <link
-    linkend="tut_replica_catalog">Replica Catalog</link>.</para>
+    <para>The workflow description (DAX) that you specify to Pegasus is
+    portable, and usually does not contain any locations to physical input
+    files, executables or cluster end points where jobs are executed. Pegasus
+    uses three information catalogs during the planning process. These are ,
+    and </para>
+
+    <orderedlist>
+      <listitem>
+        <para> <link linkend="tut_site_catalog">Site Catalog</link> -
+        describes the layout of the execution and storage sites.</para>
+      </listitem>
+
+      <listitem>
+        <para><link linkend="tut_xform_catalog">Transformation Catalog</link>
+        - describes where the user executables used by the workflow are
+        located.</para>
+      </listitem>
+
+      <listitem>
+        <para><link linkend="tut_replica_catalog">Replica Catalog</link> -
+        describes the locations of the input and output files used by the
+        workflow.</para>
+      </listitem>
+    </orderedlist>
 
     <section id="tut_site_catalog">
       <title>The Site Catalog</title>
@@ -966,21 +984,22 @@ Writing diamond.dax</programlisting>
 
       <programlisting>$ <emphasis role="bold">more sites.xml</emphasis>
 ...
-﻿    ﻿&lt;!-- The local site contains information about the submit host --&gt;
-    &lt;!-- The arch and os keywords are used to match binaries in the transformation catalog --&gt;
+﻿    ﻿<emphasis role="bold">&lt;!-- The local site contains information about the submit host --&gt;
+    &lt;!-- The arch and os keywords are used to match binaries in the transformation catalog --&gt;</emphasis>
     &lt;site handle="local" arch="x86_64" os="LINUX"&gt;
 
-        &lt;!-- These are the paths on the submit host were Pegasus stores data --&gt;
-        &lt;!-- Scratch is where temporary files go --&gt;
+        <emphasis role="bold">&lt;!-- These are the paths on the submit host were Pegasus stores data --&gt;
+        &lt;!-- Scratch is where temporary files go --&gt;</emphasis>
         &lt;directory type="shared-scratch" path="/home/tutorial/run"&gt;
             &lt;file-server operation="all" url="file:///home/tutorial/run"/&gt;
         &lt;/directory&gt;
-        &lt;!-- Storage is where pegasus stores output files --&gt;
+
+       <emphasis role="bold"> &lt;!-- Storage is where pegasus stores output files --&gt;</emphasis>
         &lt;directory type="local-storage" path="/home/tutorial/outputs"&gt;
             &lt;file-server operation="all" url="file:///home/tutorial/outputs"/&gt;
         &lt;/directory&gt;
 
-        &lt;!-- This profile tells Pegasus where to find the user's private key for SCP transfers --&gt;
+        <emphasis role="bold">&lt;!-- This profile tells Pegasus where to find the user's private key for SCP transfers --&gt;</emphasis>
         &lt;profile namespace="env" key="SSH_PRIVATE_KEY"&gt;/home/tutorial/.ssh/id_rsa&lt;/profile&gt;
     &lt;/site&gt;
 
@@ -1041,9 +1060,9 @@ Writing diamond.dax</programlisting>
 
       <programlisting>$ <emphasis role="bold">more tc.txt</emphasis>
 ...
-﻿# This is the transformation catalog. It lists information about each of the
+<emphasis role="bold"># This is the transformation catalog. It lists information about each of the
 # executables that are used by the workflow.
-
+</emphasis>
 tr preprocess {
     site PegasusVM {
         pfn "/home/tutorial/examples/diamond/bin/preprocess"
@@ -1089,9 +1108,12 @@ tr preprocess {
       <filename>rc.dat</filename> file:</para>
 
       <programlisting>$ <emphasis role="bold">more rc.dat</emphasis>
-# This is the replica catalog. It lists information about each of the
-# input files used by the workflow.
 
+<emphasis role="bold"># This is the replica catalog. It lists information about each of the
+# input files used by the workflow. You can use this to specify locations to input files present on external servers.
+# In our tutorial, input files are on the submit host and we used the --input dir option to pegasus-plan to specify where 
+# they are located.
+</emphasis>
 # The format is:
 # LFN     PFN    site="SITE"
 
