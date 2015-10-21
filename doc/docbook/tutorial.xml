@@ -67,7 +67,7 @@ tutorial@pegasus-tutorial.isi.edu's password: <emphasis role="bold">pegasus123</
     tutorial VM on these platforms is in <link linkend="tutorial_vm">the
     appendix</link>. If you want to use the tutorial VM, please go to the
     appendix for the platform you are using and follow the instructions for
-    starting the VM found there before continuing with this tutorial.</para>
+    starting the VM found there before continuing with this tutorial. </para>
 
     <para><emphasis role="bold">Advanced Users:</emphasis> If you have
     installed Pegasus and Condor on your own machine, then you don't need to
@@ -190,7 +190,7 @@ tutorial@pegasus-tutorial.isi.edu's password: <emphasis role="bold">pegasus123</
     <para>The above examples can be used as building blocks for much complex
     workflows. Some of these are showcased on the <ulink
     url="https://pegasus.isi.edu/applications">Pegasus Applications
-    page</ulink>. </para>
+    page</ulink>.</para>
   </section>
 
   <section id="tutorial_submitting_wf">
@@ -198,7 +198,7 @@ tutorial@pegasus-tutorial.isi.edu's password: <emphasis role="bold">pegasus123</
 
     <para>The tutorial comes configured with a variety of examples. For the
     rest of the tutorial we will be using the diamond example. Other examples
-    are also structured similarly. </para>
+    are also structured similarly.</para>
 
     <programlisting>$ <emphasis role="bold">cd /home/tutorial/examples</emphasis>
 $ ls 
@@ -399,7 +399,11 @@ Service not running as root: Will not be able to switch users
     launch Firefox by clicking the globe icon in the top menu of the desktop.
     The home page for the dashboard is accessible at https://localhost:5000 .
     If you are using EC2 you will need to replace 'localhost' with the IP
-    address of your EC2 instance.</para>
+    address of your EC2 instance. </para>
+
+    <para>When the webpage loads up, it will ask you for a username and a
+    password. Log in as user "<emphasis role="bold">tutorial</emphasis>" with
+    password "<emphasis role="bold">pegasus</emphasis>".</para>
 
     <para>The Dashboard's home page lists all workflows, which have been run
     by the current-user. The home page shows the status of each of the
