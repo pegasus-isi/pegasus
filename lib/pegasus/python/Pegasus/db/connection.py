@@ -425,7 +425,6 @@ def _parse_props(db, props, db_type=None, connect_args=None):
             except ValueError, e:
                 raise ConnectionError("Timeout properties should be set in seconds: %s (%s)" % (e.message, url))
 
-    print connect_args
     return connect_args
 
 
