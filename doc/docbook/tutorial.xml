@@ -246,7 +246,7 @@ pegasus-plan --conf pegasus.conf --dax $DAXFILE --dir submit \
     <para>The pegasus-plan command takes in the input workflow ( DAX file
     specified by --dax option) and maps the abstract DAX to one or more
     execution sites, and submits the generated executable workflow for
-    execution. </para>
+    execution.</para>
 
     <para>To plan the diamond workflow invoke the
     <filename>plan_dax.sh</filename> script with the path to the DAX
@@ -288,7 +288,7 @@ pegasus-plan --conf pegasus.conf --dax $DAXFILE --dir submit \
       required to submit and monitor the workflow are stored.</para>
     </note>
 
-    <para> </para>
+    <para/>
 
     <para>This is what the diamond workflow looks like after Pegasus has
     finished planning the DAX:</para>
@@ -948,27 +948,17 @@ Writing diamond.dax</programlisting>
     <para>The workflow description (DAX) that you specify to Pegasus is
     portable, and usually does not contain any locations to physical input
     files, executables or cluster end points where jobs are executed. Pegasus
-    uses three information catalogs during the planning process. These are ,
-    and </para>
+    uses three information catalogs during the planning process. </para>
 
-    <orderedlist>
-      <listitem>
-        <para> <link linkend="tut_site_catalog">Site Catalog</link> -
-        describes the layout of the execution and storage sites.</para>
-      </listitem>
+    <figure>
+      <title>Information Catalogs used by Pegasus</title>
 
-      <listitem>
-        <para><link linkend="tut_xform_catalog">Transformation Catalog</link>
-        - describes where the user executables used by the workflow are
-        located.</para>
-      </listitem>
-
-      <listitem>
-        <para><link linkend="tut_replica_catalog">Replica Catalog</link> -
-        describes the locations of the input and output files used by the
-        workflow.</para>
-      </listitem>
-    </orderedlist>
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="images/tutorial-pegasus-catalogs.png"/>
+        </imageobject>
+      </mediaobject>
+    </figure>
 
     <section id="tut_site_catalog">
       <title>The Site Catalog</title>
