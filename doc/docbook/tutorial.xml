@@ -872,23 +872,18 @@ preprocess       1      1          0       30.025  30.025  30.025   30.025
       the file.</para>
     </tip>
 
-    <para>The code has 5 sections:</para>
+    <para>The code has 3 main sections:</para>
 
     <orderedlist>
       <listitem>
-        <para>A few system libraries and the Pegasus.DAX3 library are
-        imported. The search path is modified to include the directory with
-        the Pegasus Python library.</para>
-      </listitem>
-
-      <listitem>
-        <para>The name for the DAX output file is retrieved from the
-        arguments.</para>
-      </listitem>
-
-      <listitem>
         <para>A new ADAG object is created. This is the main object to which
         jobs and dependencies are added.</para>
+
+        <programlisting># Create a abstract dag
+print "Creating ADAG..."
+diamond = ADAG("diamond")
+...
+</programlisting>
       </listitem>
 
       <listitem>
@@ -898,6 +893,20 @@ preprocess       1      1          0       30.025  30.025  30.025   30.025
         each job. This is an important step, as it allows Pegasus to track the
         files, and stage the data if necessary. Workflow outputs are tagged
         with “transfer=true”.</para>
+
+        <programlisting># Add a preprocess job
+print "Adding preprocess job..."
+preprocess = Job(name="preprocess")
+a = File("f.a")
+b1 = File("f.b1")
+b2 = File("f.b2")
+preprocess.addArguments("-i",a,"-o",b1,"-o",b2)
+preprocess.uses(a, link=Link.INPUT)
+preprocess.uses(b1, link=Link.OUTPUT, transfer=False, register=False)
+preprocess.uses(b2, link=Link.OUTPUT, transfer=False, register=False)
+diamond.addJob(preprocess)
+...
+</programlisting>
       </listitem>
 
       <listitem>
@@ -905,6 +914,11 @@ preprocess       1      1          0       30.025  30.025  30.025   30.025
         above. They define the parent/child relationships between the jobs.
         When the workflow is executing, the order in which the jobs will be
         run is determined by the dependencies between them.</para>
+
+        <programlisting># Add control-flow dependencies
+print "Adding control flow dependencies..."
+diamond.addDependency(Dependency(parent=preprocess, child=frl))
+</programlisting>
       </listitem>
     </orderedlist>
 
