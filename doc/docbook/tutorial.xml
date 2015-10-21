@@ -374,23 +374,7 @@ pegasus-plan --conf pegasus.conf -d $DAXFILE --dir submit \
       </note></para>
 
     <para>The Pegasus Dashboard is a web interface for monitoring and
-    debugging workflows and is shipped with each Pegasus release. Refer to the
-    documentation on instructions for configuring and starting the dashboard
-    automatically on startup.</para>
-
-    <para><note>
-        <para>The workflow dashboard can only monitor workflows which have
-        been executed using Pegasus 4.2.0 and above.</para>
-      </note></para>
-
-    <para>To start the Pegasus Dashboard execute the following command</para>
-
-    <para><programlisting>$ pegasus-service --host 127.0.0.1 --port 5000
-
-SSL is not configured: Using self-signed certificate
-2015-04-13 16:14:23,074:Pegasus.service.server:79: WARNING: SSL is not configured: Using self-signed certificate
-Service not running as root: Will not be able to switch users
-2015-04-13 16:14:23,074:Pegasus.service.server:86: WARNING: Service not running as root: Will not be able to switch users</programlisting></para>
+    debugging workflows and is shipped with each Pegasus release. </para>
 
     <para>By default, the dashboard server can only monitor workflows run by
     the current user i.e. the user who is running the pegasus-service.</para>
