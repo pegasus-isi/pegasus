@@ -206,8 +206,15 @@ $ ls
       </mediaobject>
     </figure>
 
-    <para>The <literal>pegasus-plan</literal> command is used to plan and
-    submit the workflow. This command takes quite a few arguments, so we
+    <para>The input workflow description for Pegasus is called the DAX. In
+    each of the example directories, there is a file with a .dax extension. We
+    will cover on how to create the DAX programmatically later in the <link
+    linkend="tutorial_wf_generation">tutorial</link>. Pegasus takes in the DAX
+    and generates an executable HTCondor workflow that is run on an execution
+    site.</para>
+
+    <para>The <literal>pegasus-plan</literal> command is used to submit the
+    workflow through Pegasus. This command takes quite a few arguments, so we
     created a <filename>plan_dax.sh</filename> wrapper script that has all of
     the arguments required for the diamond workflow:</para>
 
@@ -226,71 +233,20 @@ DAXFILE=$1
 # "diamond.dax" using the config file "pegasus.conf". The planned
 # workflow will be stored in a relative directory named "submit".
 # The execution site is "PegasusVM" and the output site is "local".
-# --input-dir tells Pegasus to pick up inputs for the workflow from that directory
-# --output-dir tells Pegasus to place the outputs in that directory
-# --force tells Pegasus not to prune anything from the workflow, and
-# --nocleanup tells Pegasus not to generate cleanup jobs.
-pegasus-plan --conf pegasus.conf -d $DAXFILE --dir submit \
+# <emphasis role="bold">--input-dir</emphasis> tells Pegasus to pick up inputs for the workflow from that directory
+# -<emphasis role="bold">-output-dir</emphasis> tells Pegasus to place the outputs in that directory
+# <emphasis role="bold">--dir</emphasis>        tells Pegasus where to generate the HTCondor workflow
+# <emphasis role="bold">--force</emphasis>      tells Pegasus not to prune anything from the workflow, and
+# <emphasis role="bold">--nocleanup</emphasis>  tells Pegasus not to generate cleanup jobs.
+pegasus-plan --conf pegasus.conf --dax $DAXFILE --dir submit \
              --input-dir ./input --output-dir ./outputs \
              --force --sites PegasusVM -o local --cleanup none --submit
 </programlisting>
 
-    <para>The script invokes the <literal>pegasus-plan</literal> command with
-    arguments for the configuration file (<literal>--conf</literal>), the DAX
-    file (<literal>-d</literal>), the submit directory
-    (<literal>--dir</literal>), the execution site
-    (<literal>--sites</literal>), the output site (<literal>-o</literal>) and
-    two extra arguments that prevent Pegasus from removing any jobs from the
-    workflow (<literal>--force</literal>) and that prevent Pegasus from adding
-    cleanup jobs to the workflow (<literal>--nocleanup</literal>).</para>
-
     <para>The pegasus-plan command takes in the input workflow ( DAX file
     specified by --dax option) and maps the abstract DAX to one or more
     execution sites, and submits the generated executable workflow for
-    execution. The planning step includes:</para>
-
-    <orderedlist>
-      <listitem>
-        <para>Adding a job to create the remote working directory</para>
-      </listitem>
-
-      <listitem>
-        <para>Adding stage-in jobs to transfer input data to the remote
-        working directory</para>
-      </listitem>
-
-      <listitem>
-        <para>Adding cleanup jobs to remove data from the remote working
-        directory when it is no longer needed</para>
-      </listitem>
-
-      <listitem>
-        <para>Adding stage-out jobs to transfer data to the final output
-        location as it is generated</para>
-      </listitem>
-
-      <listitem>
-        <para>Adding registration jobs to register the data in a replica
-        catalog</para>
-      </listitem>
-
-      <listitem>
-        <para>Task clustering to combine several short-running jobs into a
-        single, longer-running job. This is done to make short-running jobs
-        more efficient.</para>
-      </listitem>
-
-      <listitem>
-        <para>Adding wrappers to the jobs to collect provenance information so
-        that statistics and plots can be created when the workflow is
-        finished</para>
-      </listitem>
-
-      <listitem>
-        <para>Submits the workflow to HTCondor for execution. You can remove
-        --submit option to pegasus-plan if you don't want to</para>
-      </listitem>
-    </orderedlist>
+    execution. </para>
 
     <para>To plan the diamond workflow invoke the
     <filename>plan_dax.sh</filename> script with the path to the DAX
@@ -975,11 +931,12 @@ Writing diamond.dax</programlisting>
   <section id="tutorial_catalogs">
     <title>Information Catalogs</title>
 
-    <para>There are three information catalogs that Pegasus uses when planning
-    the workflow. These are the <link linkend="tut_site_catalog">Site
-    Catalog</link>, <link linkend="tut_xform_catalog">Transformation
-    Catalog</link>, and <link linkend="tut_replica_catalog">Replica
-    Catalog</link>.</para>
+    <para>The workflow description that you specify to Pegasus is portable,
+    and usually does not contain any locations.There are three information
+    catalogs that Pegasus uses when planning the workflow. These are the <link
+    linkend="tut_site_catalog">Site Catalog</link>, <link
+    linkend="tut_xform_catalog">Transformation Catalog</link>, and <link
+    linkend="tut_replica_catalog">Replica Catalog</link>.</para>
 
     <section id="tut_site_catalog">
       <title>The Site Catalog</title>
