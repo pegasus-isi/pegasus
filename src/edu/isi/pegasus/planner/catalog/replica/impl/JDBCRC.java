@@ -347,7 +347,8 @@ public class JDBCRC implements ReplicaCatalog
                     //foreign key support needs to be enabled 
                     //per connection PRAGMA foreign_keys ON
                     SQLiteConfig config = new SQLiteConfig();  
-                    config.enforceForeignKeys(true);    
+                    config.enforceForeignKeys(true);
+                    config.setBusyTimeout(props.getProperty("db.timeout", "30") + "000");
                     localProps.putAll( config.toProperties() );
                     mUsingSQLiteBackend = true;
                 }
