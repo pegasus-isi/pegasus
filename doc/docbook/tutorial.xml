@@ -114,7 +114,7 @@ tutorial@pegasus-tutorial.isi.edu's password: <emphasis role="bold">pegasus123</
 
     <para><emphasis role="bold">Process Workflow</emphasis></para>
 
-    <para> It consists of a single task that runs the `ls` command and
+    <para>It consists of a single task that runs the `ls` command and
     generates a listing of the files in the `/` directory.</para>
 
     <figure>
@@ -324,11 +324,15 @@ pegasus-plan --conf pegasus.conf -d $DAXFILE --dir submit \
 2015.10.19 16:07:21.745 PDT:   Time taken to execute is 4.427 seconds 
 </programlisting>
 
-    <para>Note the line in the output that starts with
-    <literal>pegasus-run</literal>. That is the command that we will use to
-    submit the workflow. The path it contains is the path to the submit
-    directory where all of the files required to submit and monitor the
-    workflow are stored.</para>
+    <note>
+      <para>The line in the output that starts with
+      <literal>pegasus-status</literal> , contains the command you can use on
+      the command line to monitor the status of the workflow . The path it
+      contains is the path to the submit directory where all of the files
+      required to submit and monitor the workflow are stored.</para>
+    </note>
+
+    <para> </para>
 
     <para>This is what the diamond workflow looks like after Pegasus has
     finished planning the DAX:</para>
@@ -362,16 +366,17 @@ pegasus-plan --conf pegasus.conf -d $DAXFILE --dir submit \
       </note></para>
 
     <para>The Pegasus Dashboard is a web interface for monitoring and
-    debugging workflows and is shipped with each Pegasus release.</para>
+    debugging workflows and is shipped with each Pegasus release. We will now
+    use the web dashboard to monitor the status of the workflow.</para>
 
     <para>By default, the dashboard server can only monitor workflows run by
     the current user i.e. the user who is running the pegasus-service.</para>
 
     <para>To access the workflow dashboard, in the VirtualBox VM you can
-    launch Firefox by clicking the globe icon in the top menu of the desktop.
-    The home page for the dashboard is accessible at https://localhost:5000 .
-    If you are using EC2 you will need to replace 'localhost' with the IP
-    address of your EC2 instance.</para>
+    launch Firefox by clicking the Firefox icon in the top menu of the
+    desktop. The home page for the dashboard is accessible at
+    https://localhost:5000 . If you are using EC2 you will need to replace
+    'localhost' with the IP address of your EC2 instance.</para>
 
     <para>When the webpage loads up, it will ask you for a username and a
     password. Log in as user "<emphasis role="bold">tutorial</emphasis>" with
