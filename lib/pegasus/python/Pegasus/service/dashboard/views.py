@@ -294,6 +294,10 @@ def job_metrics_update(username, root_wf_id, wf_id, job_id, job_instance_id):
             'syscr', 'syscw',
             'threads',
             'bytes_transferred', 'transfer_duration',
+            'totins',
+            'fpops', 'fpins',
+            'ldins', 'srins',
+            'l3misses', 'l2misses', 'l1misses'
         ]:
             if getattr(job_metrics, field) is None:
                 metrics.append({'metric_name': field, 'metric_value': 'None'})
