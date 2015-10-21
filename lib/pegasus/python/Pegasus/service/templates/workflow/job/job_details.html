@@ -28,7 +28,282 @@
             return ((x < y || isNaN(x)) ? 1 : ((x > y || isNaN(y) ) ? -1 : 0));
         };
 
+        var influxdb_url = document.createElement('a');
+        influxdb_url.href = '{{ influxdb_url }}';
+        var influxdb = new InfluxDB({
+            host: influxdb_url.hostname,
+            port: influxdb_url.port,
+            username: influxdb_url.username,
+            password: influxdb_url.password,
+            ssl: influxdb_url.protocol == 'https:',
+            database: '{{ workflow.dax_label }}:{{ workflow.wf_uuid }}'
+        });
+
+        var maxTS = null;
+
+        var charts = {
+            utime: null,
+            stime: null,
+            vmSize: null,
+            vmRSS: null,
+            syscr: null,
+            syscw: null,
+            iowait: null,
+            threads: null,
+            read_bytes: null,
+            write_bytes: null,
+            totins: null,
+            fpops: null,
+            fpins: null,
+            ldins: null,
+            srins: null,
+            l3misses: null,
+            l2misses: null,
+            l1misses: null
+        };
+
         var anomaliesCount = {{ anomalies|length }};
+
+        function configureChart(id, title, yaxis, seriesName, data) {
+            if (charts[id] == null) {
+                charts[id] = new Highcharts.Chart({
+                    chart: {
+                        renderTo: 'chart_' + id,
+                        zoomType: 'x',
+                        width: 1170
+                    },
+                    title: {
+                        text: title
+                    },
+                    xAxis: {
+                        type: 'datetime',
+                        dateTimeLabelFormats: {
+                            second: '%H:%M:%S.%L'
+                        }
+                    },
+                    yAxis: {
+                        title: {
+                            text: yaxis
+                        },
+                        min: 0
+                    },
+                    legend: {
+                        enabled: false
+                    },
+                    credits: {
+                        enabled: false
+                    },
+                    plotOptions: {
+                        area: {
+                            fillColor: {
+                                linearGradient: {
+                                    x1: 0,
+                                    y1: 0,
+                                    x2: 0,
+                                    y2: 1
+                                },
+                                stops: [
+                                    [0, Highcharts.getOptions().colors[0]],
+                                    [1, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
+                                ]
+                            },
+                            marker: {
+                                radius: 2
+                            },
+                            lineWidth: 1,
+                            states: {
+                                hover: {
+                                    lineWidth: 1
+                                }
+                            },
+                            threshold: null
+                        }
+                    },
+
+                    series: [{
+                        type: 'spline',
+                        name: seriesName,
+                        data: data
+                    }]
+                });
+            } else {
+                for (var i = 0; i < data.length; ++i) {
+                    charts[id].series[0].addPoint(data[i]);
+                }
+            }
+        }
+
+        function plotCharts(data) {
+            var utime = [];
+            var stime = [];
+            var vmSize = [];
+            var vmRSS = [];
+            var syscr = [];
+            var syscw = [];
+            var iowait = [];
+            var threads = [];
+            var read_bytes = [];
+            var write_bytes = [];
+            var totins = [];
+            var fpops = [];
+            var fpins = [];
+            var ldins = [];
+            var srins = [];
+            var l3misses = [];
+            var l2misses = [];
+            var l1misses = [];
+
+
+            var offset = 0;
+            var inLoop = false;
+
+            if (maxTS && data[0].points[0].time.getTime() == maxTS.getTime()) {
+                offset = 1;
+            }
+
+            for (var i = data[0].points.length - 1; i >= offset; --i) {
+                inLoop = true;
+
+                var x = data[0].points[i].time;
+
+                utime.push({
+                    x: x,
+                    y: data[0].points[i]['utime']
+                });
+
+                stime.push({
+                    x: x,
+                    y: data[0].points[i]['stime']
+                });
+
+                vmSize.push({
+                    x: x,
+                    y: data[0].points[i]['vmSize']
+                });
+
+                vmRSS.push({
+                    x: x,
+                    y: data[0].points[i]['vmRSS']
+                });
+
+                syscr.push({
+                    x: x,
+                    y: data[0].points[i]['syscr']
+                });
+
+                syscw.push({
+                    x: x,
+                    y: data[0].points[i]['syscw']
+                });
+
+                iowait.push({
+                    x: x,
+                    y: data[0].points[i]['iowait']
+                });
+
+                threads.push({
+                    x: x,
+                    y: data[0].points[i]['threads']
+                });
+
+                read_bytes.push({
+                    x: x,
+                    y: data[0].points[i]['read_bytes']
+                });
+
+                write_bytes.push({
+                    x: x,
+                    y: data[0].points[i]['write_bytes']
+                });
+
+                totins.push({
+                    x: x,
+                    y: data[0].points[i]['totins']
+                });
+
+                fpops.push({
+                    x: x,
+                    y: data[0].points[i]['fpops']
+                });
+
+                fpins.push({
+                    x: x,
+                    y: data[0].points[i]['fpins']
+                });
+
+                ldins.push({
+                    x: x,
+                    y: data[0].points[i]['ldins']
+                });
+
+                srins.push({
+                    x: x,
+                    y: data[0].points[i]['srins']
+                });
+
+                l3misses.push({
+                    x: x,
+                    y: data[0].points[i]['l3misses']
+                });
+
+                l2misses.push({
+                    x: x,
+                    y: data[0].points[i]['l2misses']
+                });
+
+                l1misses.push({
+                    x: x,
+                    y: data[0].points[i]['l1misses']
+                });
+
+            }
+
+            maxTS = data[0].points[0].time;
+
+            if (inLoop) {
+                configureChart('utime', 'utime', 'seconds', 'utime', utime);
+                configureChart('stime', 'stime', 'seconds', 'stime', stime);
+                configureChart('vmSize', 'vmSize', 'bytes', 'vmSize', vmSize);
+                configureChart('vmRSS', 'vmRSS', 'bytes', 'vmRSS', vmRSS);
+                configureChart('syscr', 'Read syscall', 'count', 'syscr', syscr);
+                configureChart('syscw', 'Write syscall', 'count', 'syscw', syscw);
+                configureChart('iowait', 'IO Wait', 'seconds', 'iowait', iowait);
+                configureChart('threads', 'Thread Count', 'count', 'threads', threads);
+                configureChart('read_bytes', 'Bytes Read', 'bytes', 'read_bytes', read_bytes);
+                configureChart('write_bytes', 'Bytes Written', 'bytes', 'write_bytes', write_bytes);
+                configureChart('totins', 'Total Instructions Executed', 'count', 'totins', totins);
+                configureChart('fpops', 'Floating Point Operations Executed', 'count', 'fpops', fpops);
+                configureChart('fpins', 'Floating Point Instructions Executed', 'count', 'fpins', fpins);
+                configureChart('ldins', 'Load Instructions Executed', 'count', 'ldins', ldins);
+                configureChart('srins', 'Store Instructions Executed', 'count', 'srins', srins);
+                configureChart('l3misses', 'L3 Total Cache Misses', 'count', 'l3misses', l3misses);
+                configureChart('l2misses', 'L2 Total Cache Misses', 'count', 'l2misses', l2misses);
+                configureChart('l1misses', 'L1 Total Cache Misses', 'count', 'l1misses', l1misses);
+            }
+        }
+
+        function getData(influxdb, dag_job_id) {
+            var query = 'SELECT * FROM "' + dag_job_id + ':{{ job_instance.sched_id }}"';
+
+            if (maxTS) {
+                var year = maxTS.getUTCFullYear();
+                var month = maxTS.getUTCMonth() + 1;
+                month = month < 10 ? '0' + month : month;
+                var date = (maxTS.getUTCDate() < 10 ? '0' + maxTS.getUTCDate() : maxTS.getUTCDate());
+
+                var hours = (maxTS.getUTCHours() < 10 ? '0' + maxTS.getUTCHours() : maxTS.getUTCHours());
+                var minutes = (maxTS.getUTCMinutes() < 10 ? '0' + maxTS.getUTCMinutes() : maxTS.getUTCMinutes());
+                var seconds = (maxTS.getUTCSeconds() < 10 ? '0' + maxTS.getUTCSeconds() : maxTS.getUTCSeconds());
+
+                var milliseconds = maxTS.getUTCMilliseconds();
+                milliseconds = (milliseconds < 10 ? '00' + milliseconds : (milliseconds < 100 ? '0' + milliseconds : milliseconds));
+
+                query += " WHERE time > '" + year + '-' + month + '-' + date + ' ' + hours + ':' + minutes +
+                        ':' + seconds + '.' + milliseconds + "'";
+            }
+
+            influxdb.query(query + ';', plotCharts);
+        }
 
         function getAnomalies() {
             var ajaxOpt =
@@ -147,306 +422,34 @@
             });
 
             {% if job_metrics %}
-                var influxdb_url = document.createElement('a');
-                influxdb_url.href = '{{ influxdb_url }}';
-                var maxTS = null;
-
-                var charts = {
-                    utime: null,
-                    stime: null,
-                    vmSize: null,
-                    vmRSS: null,
-                    syscr: null,
-                    syscw: null,
-                    iowait: null,
-                    threads: null,
-                    read_bytes: null,
-                    write_bytes: null,
-                    totins: null,
-                    fpops: null,
-                    fpins: null,
-                    ldins: null,
-                    srins: null,
-                    l3misses: null,
-                    l2misses: null,
-                    l1misses: null
-                };
-
-
-                function configureChart(id, title, yaxis, seriesName, data) {
-                    if (charts[id] == null) {
-                        charts[id] = new Highcharts.Chart({
-                            chart: {
-                                renderTo: 'chart_' + id,
-                                zoomType: 'x',
-                                width: 1170
-                            },
-                            title: {
-                                text: title
-                            },
-                            xAxis: {
-                                type: 'datetime',
-                                dateTimeLabelFormats: {
-                                    second: '%H:%M:%S.%L'
-                                }
-                            },
-                            yAxis: {
-                                title: {
-                                    text: yaxis
-                                },
-                                min: 0
-                            },
-                            legend: {
-                                enabled: false
-                            },
-                            credits: {
-                                enabled: false
-                            },
-                            plotOptions: {
-                                area: {
-                                    fillColor: {
-                                        linearGradient: {
-                                            x1: 0,
-                                            y1: 0,
-                                            x2: 0,
-                                            y2: 1
-                                        },
-                                        stops: [
-                                            [0, Highcharts.getOptions().colors[0]],
-                                            [1, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
-                                        ]
-                                    },
-                                    marker: {
-                                        radius: 2
-                                    },
-                                    lineWidth: 1,
-                                    states: {
-                                        hover: {
-                                            lineWidth: 1
-                                        }
-                                    },
-                                    threshold: null
-                                }
-                            },
-
-                            series: [{
-                                type: 'spline',
-                                name: seriesName,
-                                data: data
-                            }]
-                        });
-                    } else {
-                        for (var i = 0; i < data.length; ++i) {
-                            charts[id].series[0].addPoint(data[i]);
-                        }
-                    }
-                }
-
-                function plotCharts(data) {
-                    var utime = [];
-                    var stime = [];
-                    var vmSize = [];
-                    var vmRSS = [];
-                    var syscr = [];
-                    var syscw = [];
-                    var iowait = [];
-                    var threads = [];
-                    var read_bytes = [];
-                    var write_bytes = [];
-                    var totins = [];
-                    var fpops = [];
-                    var fpins = [];
-                    var ldins = [];
-                    var srins = [];
-                    var l3misses = [];
-                    var l2misses = [];
-                    var l1misses = [];
-
-
-                    var offset = 0;
-                    var inLoop = false;
-
-                    if (maxTS && data[0].points[0].time.getTime() == maxTS.getTime()) {
-                        offset = 1;
-                    }
-
-                    for (var i = data[0].points.length - 1; i >= offset; --i) {
-                        inLoop = true;
-
-                        var x = data[0].points[i].time;
-
-                        utime.push({
-                            x: x,
-                            y: data[0].points[i]['utime']
-                        });
-
-                        stime.push({
-                            x: x,
-                            y: data[0].points[i]['stime']
-                        });
-
-                        vmSize.push({
-                            x: x,
-                            y: data[0].points[i]['vmSize']
-                        });
-
-                        vmRSS.push({
-                            x: x,
-                            y: data[0].points[i]['vmRSS']
-                        });
-
-                        syscr.push({
-                            x: x,
-                            y: data[0].points[i]['syscr']
-                        });
-
-                        syscw.push({
-                            x: x,
-                            y: data[0].points[i]['syscw']
-                        });
-
-                        iowait.push({
-                            x: x,
-                            y: data[0].points[i]['iowait']
-                        });
-
-                        threads.push({
-                            x: x,
-                            y: data[0].points[i]['threads']
-                        });
-
-                        read_bytes.push({
-                            x: x,
-                            y: data[0].points[i]['read_bytes']
-                        });
-
-                        write_bytes.push({
-                            x: x,
-                            y: data[0].points[i]['write_bytes']
-                        });
-
-                        totins.push({
-                            x: x,
-                            y: data[0].points[i]['totins']
-                        });
-
-                        fpops.push({
-                            x: x,
-                            y: data[0].points[i]['fpops']
-                        });
-
-                        fpins.push({
-                            x: x,
-                            y: data[0].points[i]['fpins']
-                        });
-
-                        ldins.push({
-                            x: x,
-                            y: data[0].points[i]['ldins']
-                        });
-
-                        srins.push({
-                            x: x,
-                            y: data[0].points[i]['srins']
-                        });
-
-                        l3misses.push({
-                            x: x,
-                            y: data[0].points[i]['l3misses']
-                        });
-
-                        l2misses.push({
-                            x: x,
-                            y: data[0].points[i]['l2misses']
-                        });
-
-                        l1misses.push({
-                            x: x,
-                            y: data[0].points[i]['l1misses']
-                        });
-
-                    }
-
-                    maxTS = data[0].points[0].time;
-
-                    if (inLoop) {
-                        configureChart('utime', 'utime', 'seconds', 'utime', utime);
-                        configureChart('stime', 'stime', 'seconds', 'stime', stime);
-                        configureChart('vmSize', 'vmSize', 'bytes', 'vmSize', vmSize);
-                        configureChart('vmRSS', 'vmRSS', 'bytes', 'vmRSS', vmRSS);
-                        configureChart('syscr', 'Read syscall', 'count', 'syscr', syscr);
-                        configureChart('syscw', 'Write syscall', 'count', 'syscw', syscw);
-                        configureChart('iowait', 'IO Wait', 'seconds', 'iowait', iowait);
-                        configureChart('threads', 'Thread Count', 'count', 'threads', threads);
-                        configureChart('read_bytes', 'Bytes Read', 'bytes', 'read_bytes', read_bytes);
-                        configureChart('write_bytes', 'Bytes Written', 'bytes', 'write_bytes', write_bytes);
-                        configureChart('totins', 'Total Instructions Executed', 'count', 'totins', totins);
-                        configureChart('fpops', 'Floating Point Operations Executed', 'count', 'fpops', fpops);
-                        configureChart('fpins', 'Floating Point Instructions Executed', 'count', 'fpins', fpins);
-                        configureChart('ldins', 'Load Instructions Executed', 'count', 'ldins', ldins);
-                        configureChart('srins', 'Store Instructions Executed', 'count', 'srins', srins);
-                        configureChart('l3misses', 'L3 Total Cache Misses', 'count', 'l3misses', l3misses);
-                        configureChart('l2misses', 'L2 Total Cache Misses', 'count', 'l2misses', l2misses);
-                        configureChart('l1misses', 'L1 Total Cache Misses', 'count', 'l1misses', l1misses);
-                    }
-                }
-
-                function getData(influxdb) {
-                    var query = 'SELECT * FROM "{{ job_metrics.dag_job_id }}:{{ job_instance.sched_id }}"';
-
-                    if (maxTS) {
-                        var year = maxTS.getUTCFullYear();
-                        var month = maxTS.getUTCMonth() + 1;
-                        month = month < 10 ? '0' + month : month;
-                        var date = (maxTS.getUTCDate() < 10 ? '0' + maxTS.getUTCDate() : maxTS.getUTCDate());
-
-                        var hours = (maxTS.getUTCHours() < 10 ? '0' + maxTS.getUTCHours() : maxTS.getUTCHours());
-                        var minutes = (maxTS.getUTCMinutes() < 10 ? '0' + maxTS.getUTCMinutes() : maxTS.getUTCMinutes());
-                        var seconds = (maxTS.getUTCSeconds() < 10 ? '0' + maxTS.getUTCSeconds() : maxTS.getUTCSeconds());
-
-                        var milliseconds = maxTS.getUTCMilliseconds();
-                        milliseconds = (milliseconds < 10 ? '00' + milliseconds : (milliseconds < 100 ? '0' + milliseconds : milliseconds));
-
-                        query += " WHERE time > '" + year + '-' + month + '-' + date + ' ' + hours + ':' + minutes +
-                                ':' + seconds + '.' + milliseconds + "'";
-                    }
-
-                    influxdb.query(query + ';', plotCharts);
-                }
-
-                influxdb = new InfluxDB({
-                    host: influxdb_url.hostname,
-                    port: influxdb_url.port,
-                    username: influxdb_url.username,
-                    password: influxdb_url.password,
-                    ssl: influxdb_url.protocol == 'https:',
-                    database: '{{ workflow.dax_label }}:{{ workflow.wf_uuid }}'
-                });
-
-                getData(influxdb);
-
+            // Charts
+            getData(influxdb, '{{ job_metrics.dag_job_id }}');
             {%  endif %}
 
             {% if job.exitcode == None %}
-                setInterval(function () {
-                    // Charts
-                    getData(influxdb);
+            setInterval(function () {
+                // Anomalies
+                getAnomalies();
 
-                    // Anomalies
-                    getAnomalies();
+                // Table
+                var update_url = "{{ url_for ('.job_metrics_update', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}";
 
-                    // Table
-                    if ($("#job_metrics").length) {
-                        var update_url = "{{ url_for ('.job_metrics_update', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job.job_instance_id) }}";
+                $.getJSON(update_url, function (job_metrics) {
+                    if (job_metrics.length) {
+                        $('#noMetrics').addClass('hidden');
+                        $('#yesMetrics').removeClass('hidden');
 
-                        $.getJSON(update_url, function (job_metrics) {
-                            $.each(job_metrics, function (i, metric_update) {
-                                $row = $("#job_metrics_info tr." + metric_update.metric_name);
-                                $row.find("td").text(metric_update.metric_value);
-                            });
+                        // Charts
+                        getData(influxdb, job_metrics[0].metric_value);
+
+                        $.each(job_metrics, function (i, metric_update) {
+                            $row = $(".job_metrics_info tr." + metric_update.metric_name);
+                            $row.find("td").text(metric_update.metric_value);
                         });
                     }
-                }, 10000);
+                });
+
+            }, 10000);
             {%  endif %}
         });
     </script>
@@ -476,10 +479,8 @@
                 {% endif %}
                 <li role="presentation"><a href="#job_instance" aria-controls="job_instance" role="tab"
                                            data-toggle="tab">Job Instances</a></li>
-                {% if job_metrics %}
-                    <li role="presentation"><a href="#job_metrics" aria-controls="job_metrics" role="tab"
+                <li role="presentation"><a href="#job_metrics" aria-controls="job_metrics" role="tab"
                                                data-toggle="tab">Job Metrics</a></li>
-                {% endif %}
                 <li role="presentation"><a href="#job_anomalies" aria-controls="job_anomalies" role="tab"
                                            data-toggle="tab">Job Anomalies <span class="badge">{{ job_anomalies|length }}</span></a></li>
             </ul>
@@ -612,8 +613,11 @@
                     </div>
                 </div>
 
-                {% if job_metrics %}
-                    <div role="tabpanel" class="tab-pane" id="job_metrics">
+                <div role="tabpanel" class="tab-pane" id="job_metrics">
+                {% if job_metrics == None %}
+                    <span id="noMetrics">No job metrics available for this job.</span>
+                {% endif %}
+                        <div id="yesMetrics" class="{% if job_metrics == None %}hidden{% endif %}">
                         <table class="job_metrics_info">
                             {% for field, name in [
                     ('dag_job_id', 'DAG Job ID'),
@@ -726,8 +730,8 @@
                             <div id="chart_l2misses"></div>
                             <div id="chart_l1misses"></div>
                         </div>
+                        </div>
                     </div>
-                {% endif %}
 
                 <div role="tabpanel" class="tab-pane" id="job_anomalies">
                     {% if job_anomalies %}
@@ -743,7 +747,7 @@
                         No anomalies detected for this job.
                     {% endif %}
                 </div>
-            </div>
+            </span>
         </div>
     </section>
 
