@@ -469,64 +469,6 @@ pegasus-plan --conf pegasus.conf --dax $DAXFILE --dir submit \
         </imageobject>
       </mediaobject>
     </figure>
-
-    <para>The Charts page shows the following charts.</para>
-
-    <orderedlist>
-      <listitem>
-        <para>Job Distribution by Count/Time</para>
-      </listitem>
-
-      <listitem>
-        <para>Time Chart by Job/Invocation</para>
-      </listitem>
-
-      <listitem>
-        <para>Workflow Execution Gantt Chart</para>
-      </listitem>
-    </orderedlist>
-
-    <para>The chart below shows the invocation distribution by count or
-    time.</para>
-
-    <figure>
-      <title>Dashboard Plots - Job Distribution</title>
-
-      <mediaobject>
-        <imageobject>
-          <imagedata fileref="images/dashboard_plots_job_dist.png"
-                     width="100%"/>
-        </imageobject>
-      </mediaobject>
-    </figure>
-
-    <para>The time chart shown below shows the number of jobs/invocations in
-    the workflow and their total runtime</para>
-
-    <figure>
-      <title>Dashboard Plots - Time Chart</title>
-
-      <mediaobject>
-        <imageobject>
-          <imagedata fileref="images/dashboard_plots_time_charts.png"
-                     width="100%"/>
-        </imageobject>
-      </mediaobject>
-    </figure>
-
-    <para>The workflow gantt chart lays out the execution of the jobs in the
-    workflow over time.</para>
-
-    <figure>
-      <title>Dashboard Plots - Workflow Gantt Chart</title>
-
-      <mediaobject>
-        <imageobject>
-          <imagedata fileref="images/dashboard_plots_wf_gantt.png"
-                     width="100%"/>
-        </imageobject>
-      </mediaobject>
-    </figure>
   </section>
 
   <section id="tutorial_monitoring_cmd_tools">
