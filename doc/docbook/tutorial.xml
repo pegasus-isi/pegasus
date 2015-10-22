@@ -965,12 +965,44 @@ Writing diamond.dax</programlisting>
 
       <para>The site catalog describes the sites where the workflow jobs are
       to be executed. Typically the sites in the site catalog describe remote
-      clusters, such as PBS clusters or Condor pools. In this tutorial we
-      assume that you have a Personal Condor pool running on localhost. If you
-      are using one of the tutorial VMs this has already been setup for
-      you.</para>
+      clusters, such as PBS clusters or Condor pools. </para>
 
-      <para>The site catalog is in <filename>sites.xml</filename>:</para>
+      <para>Usually, a typical deployment of an HPC cluster is illustrated
+      below. The site catalog, captures for each cluster (site) </para>
+
+      <itemizedlist>
+        <listitem>
+          <para>directories that can be used for executing jobs</para>
+        </listitem>
+
+        <listitem>
+          <para>whether a shared file system is available</para>
+        </listitem>
+
+        <listitem>
+          <para>file servers to use for staging input data and staging out
+          output data</para>
+        </listitem>
+
+        <listitem>
+          <para>headnode of the cluster to which jobs can be submitted.</para>
+        </listitem>
+      </itemizedlist>
+
+      <figure>
+        <title>Sample HPC Cluster Setup</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="images/tutorial-hpc-cluster.png"/>
+          </imageobject>
+        </mediaobject>
+      </figure>
+
+      <para>In this tutorial we assume that you have a Personal Condor pool
+      running on localhost. If you are using one of the tutorial VMs this has
+      already been setup for you. The site catalog for the tutorial examples
+      is in <filename>sites.xml</filename>:</para>
 
       <programlisting>$ <emphasis role="bold">more sites.xml</emphasis>
 ...
