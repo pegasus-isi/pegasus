@@ -118,7 +118,7 @@ tutorial@pegasus-tutorial.isi.edu's password: <emphasis role="bold">pegasus123</
     generates a listing of the files in the `/` directory.</para>
 
     <figure>
-      <title>Single Task Workflow</title>
+      <title>Process ( Single Task ) Workflow</title>
 
       <mediaobject>
         <imageobject>
