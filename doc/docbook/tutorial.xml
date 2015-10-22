@@ -809,22 +809,23 @@ preprocess       1      1          0       30.025  30.025  30.025   30.025
   <section id="tutorial_failure_recovery">
     <title>Recovery from Failures</title>
 
-    <para>Often, while executing workflows failures occur. Often, they are a
-    result of the underlying infrastructure being temporarily unavailable, or
-    errors in workflow setup such as incorrect executables specified, or input
-    files being unavailable. </para>
+    <para>Executing workflows in a distributed environment can lead to
+    failures. Often, they are a result of the underlying infrastructure being
+    temporarily unavailable, or errors in workflow setup such as incorrect
+    executables specified, or input files being unavailable. </para>
 
     <para>In case of transient infrastructure failures such as a node being
     temporarily down in a cluster, Pegasus will automatically retry jobs in
     case of failure. After a set number of retries ( usually once) , a hard
     failure occurs, because of which workflow will eventually fail. </para>
 
-    <para>Often, these errors are correctable ( either the resource comes back
-    online or application errors are fixed) . Once the errors are fixed, you
-    may not want to start a new workflow but instead start from the point of
-    failure. In order to do this, you can submit the rescue workflows
-    automatically created in case of failures. A rescue workflow contains only
-    a description of only the work that remains to be done.</para>
+    <para>In most of the cases, these errors are correctable ( either the
+    resource comes back online or application errors are fixed) . Once the
+    errors are fixed, you may not want to start a new workflow but instead
+    start from the point of failure. In order to do this, you can submit the
+    rescue workflows automatically created in case of failures. A rescue
+    workflow contains only a description of only the work that remains to be
+    done.</para>
 
     <section>
       <title>Submitting Rescue Workflows</title>
@@ -834,8 +835,8 @@ preprocess       1      1          0       30.025  30.025  30.025   30.025
       In order to do this we will rename one of the executables in the bin
       directory. </para>
 
-      <programlisting>$ cd ~/examples/diamond/
-$ mv bin/findrange bin/findrange.bak</programlisting>
+      <programlisting><emphasis role="bold">$ cd ~/examples/diamond/
+$ mv bin/findrange bin/findrange.bak</emphasis></programlisting>
 
       <para>We will now submit the workflow again.</para>
 
