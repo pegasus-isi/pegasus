@@ -948,7 +948,7 @@ Writing diamond.dax</programlisting>
     <para>The workflow description (DAX) that you specify to Pegasus is
     portable, and usually does not contain any locations to physical input
     files, executables or cluster end points where jobs are executed. Pegasus
-    uses three information catalogs during the planning process. </para>
+    uses three information catalogs during the planning process.</para>
 
     <figure>
       <title>Information Catalogs used by Pegasus</title>
@@ -965,10 +965,10 @@ Writing diamond.dax</programlisting>
 
       <para>The site catalog describes the sites where the workflow jobs are
       to be executed. Typically the sites in the site catalog describe remote
-      clusters, such as PBS clusters or Condor pools. </para>
+      clusters, such as PBS clusters or Condor pools.</para>
 
       <para>Usually, a typical deployment of an HPC cluster is illustrated
-      below. The site catalog, captures for each cluster (site) </para>
+      below. The site catalog, captures for each cluster (site)</para>
 
       <itemizedlist>
         <listitem>
@@ -1006,8 +1006,8 @@ Writing diamond.dax</programlisting>
 
       <programlisting>$ <emphasis role="bold">more sites.xml</emphasis>
 ...
-﻿    ﻿<emphasis role="bold">&lt;!-- The local site contains information about the submit host --&gt;
-    &lt;!-- The arch and os keywords are used to match binaries in the transformation catalog --&gt;</emphasis>
+﻿   &lt;!-- The local site contains information about the submit host --&gt;
+    &lt;!-- The arch and os keywords are used to match binaries in the transformation catalog --&gt;
     &lt;site handle="local" arch="x86_64" os="LINUX"&gt;
 
         <emphasis role="bold">&lt;!-- These are the paths on the submit host were Pegasus stores data --&gt;
@@ -1028,31 +1028,39 @@ Writing diamond.dax</programlisting>
 
 ...</programlisting>
 
-      <para>There are two sites defined in the site catalog: “local” and
-      “PegasusVM”. The “local” site is used by Pegasus to learn about the
-      submit host where the workflow management system runs. The “PegasusVM”
-      site is the personal Condor pool running on your (virtual) machine. In
-      this case, the local site and the PegasusVM site refer to the same
-      machine, but they are logically separate as far as Pegasus is
-      concerned.</para>
+      <para>There are two sites defined in the site catalog: “<emphasis
+      role="bold">local</emphasis>” and “<emphasis
+      role="bold">PegasusVM</emphasis>”. The “local” site is used by Pegasus
+      to learn about the submit host where the workflow management system
+      runs. The “PegasusVM” site is the personal Condor pool running on your
+      (virtual) machine. In this case, the local site and the PegasusVM site
+      refer to the same machine, but they are logically separate as far as
+      Pegasus is concerned.</para>
 
-      <para>The local site is configured with a “storage” file system that is
-      mounted on the submit host (indicated by the file:// URL). This file
-      system is where the output data from the workflow will be stored. When
-      the workflow is planned we will tell Pegasus that the output site is
-      “local”.</para>
+      <orderedlist>
+        <listitem>
+          <para>The <emphasis role="bold">local</emphasis> site is configured
+          with a “storage” file system that is mounted on the submit host
+          (indicated by the file:// URL). This file system is where the output
+          data from the workflow will be stored. When the workflow is planned
+          we will tell Pegasus that the output site is “local”.</para>
+        </listitem>
 
-      <para>The PegasusVM site is configured with a “scratch” file system
-      accessible via SCP (indicated by the scp:// URL). This file system is
-      where the working directory will be created. When we plan the workflow
-      we will tell Pegasus that the execution site is “PegasusVM”.</para>
+        <listitem>
+          <para>The <emphasis role="bold">PegasusVM</emphasis> site is
+          configured with a “scratch” file system accessible via SCP
+          (indicated by the scp:// URL). This file system is where the working
+          directory will be created. When we plan the workflow we will tell
+          Pegasus that the execution site is “PegasusVM”.</para>
+        </listitem>
+      </orderedlist>
 
-      <para>The local site also has an environment variable called
-      SSH_PRIVATE_KEY that tells Pegasus where to find the private key to use
-      for SCP transfers. If you are running this tutorial on your own machine
-      you will need to set up a passwordless ssh key and add it to
-      authorized_keys. If you are using the tutorial VM this has already been
-      set up for you.</para>
+      <para>The local site also has an environment variable called <emphasis
+      role="bold">SSH_PRIVATE_KEY</emphasis> that tells Pegasus where to find
+      the private key to use for SCP transfers. If you are running this
+      tutorial on your own machine you will need to set up a passwordless ssh
+      key and add it to authorized_keys. If you are using the tutorial VM this
+      has already been set up for you.</para>
 
       <para>Pegasus supports many different file transfer protocols. In this
       case the site catalog is set up so that input and output files are
@@ -1131,15 +1139,21 @@ tr preprocess {
 
       <programlisting>$ <emphasis role="bold">more rc.dat</emphasis>
 
-<emphasis role="bold"># This is the replica catalog. It lists information about each of the
-# input files used by the workflow. You can use this to specify locations to input files present on external servers.
-# In our tutorial, input files are on the submit host and we used the --input dir option to pegasus-plan to specify where 
-# they are located.
+<emphasis role="bold"># </emphasis>This is the replica catalog. It lists information about each of the
+# input files used by the workflow. You can use this to specify locations to input files present on external servers.<emphasis
+          role="bold">
+
 </emphasis>
 # The format is:
 # LFN     PFN    site="SITE"
 
 f.a    file:///home/tutorial/examples/diamond/input/f.a    site="local"</programlisting>
+
+      <note>
+        <para> In our tutorial, input files are on the submit host and we used
+        the --input dir option to # pegasus-plan to specify where they are
+        located.</para>
+      </note>
 
       <para>This replica catalog contains only one entry for the diamond
       workflow’s only input file. This entry has an LFN of “f.a” with a PFN of
