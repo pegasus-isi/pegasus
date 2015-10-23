@@ -32,7 +32,7 @@ dax.addJob(split)
 # we do a parmeter sweep on the first 4 chunks created
 for c in "abcd":
     part = File("part.%s" % c)
-    split.uses(part, link=Link.OUTPUT)
+    split.uses(part, link=Link.OUTPUT, transfer=False, register=False)
 
     count = File("count.txt.%s" % c)
 
@@ -40,7 +40,7 @@ for c in "abcd":
     wc.addArguments("-l",part)
     wc.setStdout(count)
     wc.uses(part, link=Link.INPUT)
-    wc.uses(count, link=Link.OUTPUT, transfer=True, register=False)
+    wc.uses(count, link=Link.OUTPUT, transfer=True, register=True)
     dax.addJob(wc)
     
     #adding dependency

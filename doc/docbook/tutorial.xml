@@ -294,71 +294,67 @@ $ ls
     site.</para>
 
     <para>The <literal>pegasus-plan</literal> command is used to submit the
-    workflow through Pegasus. This command takes quite a few arguments, so we
-    created a <filename>plan_dax.sh</filename> wrapper script that has all of
-    the arguments required for the diamond workflow:</para>
-
-    <programlisting>$ <emphasis role="bold">more plan_dax.sh</emphasis>
-
-#!/bin/bash
-
-if [ $# -ne 1 ]; then
-   echo "Usage: $0 DAXFILE"
-   exit 1
-fi
-
-DAXFILE=$1
-
-# This command tells Pegasus to plan the workflow contained in 
-# "diamond.dax" using the config file "pegasus.conf". The planned
-# workflow will be stored in a relative directory named "submit".
-# The execution site is "PegasusVM" and the output site is "local".
-# <emphasis role="bold">--input-dir</emphasis> tells Pegasus to pick up inputs for the workflow from that directory
-# -<emphasis role="bold">-output-dir</emphasis> tells Pegasus to place the outputs in that directory
-# <emphasis role="bold">--dir</emphasis>        tells Pegasus where to generate the HTCondor workflow
-# <emphasis role="bold">--force</emphasis>      tells Pegasus not to prune anything from the workflow, and
-# <emphasis role="bold">--nocleanup</emphasis>  tells Pegasus not to generate cleanup jobs.
-pegasus-plan --conf pegasus.conf --dax $DAXFILE --dir submit \
-             --input-dir ./input --output-dir ./outputs \
-             --force --sites PegasusVM -o local --cleanup none --submit
-</programlisting>
+    workflow through Pegasus. If you have trouble copy pasting into the VM,
+    you can also invoke the <filename>plan_dax.sh</filename> wrapper script
+    that has all of the arguments required for the split workflow:</para>
 
     <para>The pegasus-plan command takes in the input workflow ( DAX file
     specified by --dax option) and maps the abstract DAX to one or more
     execution sites, and submits the generated executable workflow for
-    execution.</para>
+    execution. The options to pegasus-plan in this example tells Pegasus
+    </para>
 
-    <para>To plan the diamond workflow invoke the
-    <filename>plan_dax.sh</filename> script with the path to the DAX
-    file:</para>
+    <itemizedlist>
+      <listitem>
+        <para>the workflow to run</para>
+      </listitem>
 
-    <programlisting>$ <emphasis role="bold">./plan_dax.sh diamond.dax</emphasis>
+      <listitem>
+        <para>the input directory where the inputs are placed</para>
+      </listitem>
+
+      <listitem>
+        <para>the output directory where the outputs are placed</para>
+      </listitem>
+
+      <listitem>
+        <para>the site on which the workflow has to execute</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>To plan the split workflow invoke the pegasus-plan command as
+    follows</para>
+
+    <programlisting><emphasis role="bold">$ pegasus-plan  --dax split.dax --input-dir ./input  --output-dir ./outputs --sites PegasusVM --submit
+</emphasis>
 ﻿
-2015.10.19 16:07:19.131 PDT:   Log of DAGMan debugging messages                 : diamond-0.dag.dagman.out 
-2015.10.19 16:07:19.140 PDT:   Log of Condor library output                     : diamond-0.dag.lib.out 
-2015.10.19 16:07:19.146 PDT:   Log of Condor library error messages             : diamond-0.dag.lib.err 
-2015.10.19 16:07:19.151 PDT:   Log of the life of condor_dagman itself          : diamond-0.dag.dagman.log 
-2015.10.19 16:07:19.157 PDT:    
-2015.10.19 16:07:19.176 PDT:   ----------------------------------------------------------------------- 
-2015.10.19 16:07:20.163 PDT:   Your database is compatible with Pegasus version: 4.5.3 
-2015.10.19 16:07:20.457 PDT:   Submitting to condor diamond-0.dag.condor.sub 
-2015.10.19 16:07:20.548 PDT:   Submitting job(s). 
-2015.10.19 16:07:20.556 PDT:   1 job(s) submitted to cluster 14. 
-2015.10.19 16:07:20.569 PDT:    
-2015.10.19 16:07:20.607 PDT:   Your workflow has been started and is running in the base directory: 
-2015.10.19 16:07:20.617 PDT:    
-2015.10.19 16:07:20.655 PDT:     /home/tutorial/examples/diamond/submit/tutorial/pegasus/diamond/run0001 
-2015.10.19 16:07:20.701 PDT:    
-2015.10.19 16:07:20.744 PDT:   *** To monitor the workflow you can run *** 
-2015.10.19 16:07:20.789 PDT:    
-2015.10.19 16:07:20.812 PDT:     pegasus-status -l /home/tutorial/examples/diamond/submit/tutorial/pegasus/diamond/run0001 
-2015.10.19 16:07:20.835 PDT:    
-2015.10.19 16:07:20.845 PDT:   *** To remove your workflow run *** 
-2015.10.19 16:07:20.864 PDT:    
-2015.10.19 16:07:20.874 PDT:     pegasus-remove /home/tutorial/examples/diamond/submit/tutorial/pegasus/diamond/run0001 
-2015.10.19 16:07:20.885 PDT:    
-2015.10.19 16:07:21.745 PDT:   Time taken to execute is 4.427 seconds 
-</programlisting>
+2015.10.22 19:12:10.402 PDT:    
+2015.10.22 19:12:10.409 PDT:   ----------------------------------------------------------------------- 
+2015.10.22 19:12:10.414 PDT:   File for submitting this DAG to Condor           : split-0.dag.condor.sub 
+2015.10.22 19:12:10.420 PDT:   Log of DAGMan debugging messages                 : split-0.dag.dagman.out 
+2015.10.22 19:12:10.426 PDT:   Log of Condor library output                     : split-0.dag.lib.out 
+2015.10.22 19:12:10.431 PDT:   Log of Condor library error messages             : split-0.dag.lib.err 
+2015.10.22 19:12:10.436 PDT:   Log of the life of condor_dagman itself          : split-0.dag.dagman.log 
+2015.10.22 19:12:10.442 PDT:    
+2015.10.22 19:12:10.458 PDT:   ----------------------------------------------------------------------- 
+2015.10.22 19:12:14.292 PDT:   Your database is compatible with Pegasus version: 4.5.3 
+2015.10.22 19:12:15.198 PDT:   Submitting to condor split-0.dag.condor.sub 
+2015.10.22 19:12:15.997 PDT:   Submitting job(s). 
+2015.10.22 19:12:16.003 PDT:   1 job(s) submitted to cluster 111. 
+2015.10.22 19:12:16.035 PDT:    
+2015.10.22 19:12:16.055 PDT:   Your workflow has been started and is running in the base directory: 
+2015.10.22 19:12:16.061 PDT:    
+2015.10.22 19:12:16.071 PDT:     /home/tutorial/examples/split/tutorial/pegasus/split/run0001 
+2015.10.22 19:12:16.078 PDT:    
+2015.10.22 19:12:16.084 PDT:   *** To monitor the workflow you can run *** 
+2015.10.22 19:12:16.090 PDT:    
+2015.10.22 19:12:16.098 PDT:     pegasus-status -l /home/tutorial/examples/split/tutorial/pegasus/split/run0001 
+2015.10.22 19:12:16.114 PDT:    
+2015.10.22 19:12:16.119 PDT:   *** To remove your workflow run *** 
+2015.10.22 19:12:16.125 PDT:    
+2015.10.22 19:12:16.131 PDT:     pegasus-remove /home/tutorial/examples/split/tutorial/pegasus/split/run0001 
+2015.10.22 19:12:16.137 PDT:    
+2015.10.22 19:12:17.630 PDT:   Time taken to execute is 10.109 seconds</programlisting>
 
     <note>
       <para>The line in the output that starts with
@@ -368,18 +364,16 @@ pegasus-plan --conf pegasus.conf --dax $DAXFILE --dir submit \
       required to submit and monitor the workflow are stored.</para>
     </note>
 
-    <para/>
-
-    <para>This is what the diamond workflow looks like after Pegasus has
+    <para>This is what the split workflow looks like after Pegasus has
     finished planning the DAX:</para>
 
     <figure>
-      <title>Diamond DAG</title>
+      <title>Split DAG</title>
 
       <mediaobject>
         <imageobject>
           <imagedata contentwidth="70%"
-                     fileref="images/concepts-diamond-dag.png"/>
+                     fileref="images/tutorial-diamond-dag.png"/>
         </imageobject>
       </mediaobject>
     </figure>
