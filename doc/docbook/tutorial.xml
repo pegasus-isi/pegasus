@@ -373,8 +373,7 @@ $ ls
 
       <mediaobject>
         <imageobject>
-          <imagedata contentwidth="90%"
-                     fileref="images/tutorial-split-dag.jpg"/>
+          <imagedata fileref="images/tutorial-split-dag.jpg"/>
         </imageobject>
       </mediaobject>
     </figure>
