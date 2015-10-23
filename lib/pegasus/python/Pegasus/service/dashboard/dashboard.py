@@ -79,6 +79,9 @@ class Dashboard(object):
             counts = all_workflows.get_workflow_counts()
 
             if counts_only:
+                if counts[0] == 0:
+                    raise NoWorkflowsFoundError(count=None, filtered=None)
+
                 return counts
 
             count, filtered, workflows = all_workflows.get_all_workflows(**table_args)
