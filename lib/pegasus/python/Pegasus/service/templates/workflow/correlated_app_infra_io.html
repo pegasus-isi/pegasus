@@ -55,7 +55,9 @@
                         marker: {
                             enabled: true,
                             radius: 3
-                        }
+                        },
+                        colors: ['#7cb5ec', '#434348', '#7cb5ec', '#f7a35c', '#8085e9',
+                            '#f15c80', '#e4d354', '#8085e8', '#8d4653', '#91e8e1'],
                     }
                 },
 
@@ -127,19 +129,22 @@
                         type: 'area',
                         name: metrics.kickstart[0],
                         data: series[metrics.kickstart[0]],
-                        yAxis: 0
+                        yAxis: 0,
+                        color: '#7cb5ec'
                     },
                     {
                         type: 'area',
                         name: metrics.infra,
                         data: series[metrics.infra],
-                        yAxis: 1
+                        yAxis: 1,
+                        color: '#8d4653'
                     },
                     {
                         type: 'area',
                         name: metrics.kickstart[1],
                         data: series[metrics.kickstart[1]],
-                        yAxis: 2
+                        yAxis: 2,
+                        color: '#7cb5ec'
                     }]
             });
         }
