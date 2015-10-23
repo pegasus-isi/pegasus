@@ -247,7 +247,7 @@ tutorial@pegasus-tutorial.isi.edu's password: <emphasis role="bold">pegasus123</
 
       <mediaobject>
         <imageobject>
-          <imagedata contentwidth="70%"
+          <imagedata align="center" contentwidth="70%"
                      fileref="images/tutorial-diamond-wf.jpg"/>
         </imageobject>
       </mediaobject>
@@ -281,7 +281,8 @@ $ ls
 
       <mediaobject>
         <imageobject>
-          <imagedata fileref="images/tutorial-split-wf.jpg"/>
+          <imagedata align="center" contentwidth="70%"
+                     fileref="images/tutorial-split-wf.jpg"/>
         </imageobject>
       </mediaobject>
     </figure>
@@ -372,8 +373,8 @@ $ ls
 
       <mediaobject>
         <imageobject>
-          <imagedata contentwidth="30%"
-                     fileref="images/tutorial-split-dag.png"/>
+          <imagedata contentwidth="90%"
+                     fileref="images/tutorial-split-dag.jpg"/>
         </imageobject>
       </mediaobject>
     </figure>
@@ -1081,7 +1082,8 @@ Summary: 1 DAG total (Success:1)
 
       <mediaobject>
         <imageobject>
-          <imagedata fileref="images/tutorial-split-wf.jpg"/>
+          <imagedata align="center" contentwidth="70%"
+                     fileref="images/tutorial-split-wf.jpg"/>
         </imageobject>
       </mediaobject>
     </figure>
@@ -1268,7 +1270,7 @@ Generated dax split.dax</programlisting>
       <section>
         <title>HPC Clusters</title>
 
-        <para> Typically the sites in the site catalog describe remote
+        <para>Typically the sites in the site catalog describe remote
         clusters, such as PBS clusters or Condor pools.</para>
 
         <para>Usually, a typical deployment of an HPC cluster is illustrated
