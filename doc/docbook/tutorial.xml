@@ -301,8 +301,8 @@ $ ls
     <para>The pegasus-plan command takes in the input workflow ( DAX file
     specified by --dax option) and maps the abstract DAX to one or more
     execution sites, and submits the generated executable workflow for
-    execution. The options to pegasus-plan in this example tells Pegasus
-    </para>
+    execution. The options to pegasus-plan in this example tells
+    Pegasus</para>
 
     <itemizedlist>
       <listitem>
@@ -372,18 +372,16 @@ $ ls
 
       <mediaobject>
         <imageobject>
-          <imagedata contentwidth="70%"
-                     fileref="images/tutorial-diamond-dag.png"/>
+          <imagedata contentwidth="30%"
+                     fileref="images/tutorial-split-dag.png"/>
         </imageobject>
       </mediaobject>
     </figure>
 
     <para>For this workflow the only jobs Pegasus needs to add are a directory
-    creation job, a stage-in job (for f.a), and a stage-out job (for f.d). No
-    registration jobs are added because all the files in the DAX are marked
-    register="false", and no cleanup jobs are added because we passed the
-    <literal>--nocleanup</literal> argument to
-    <literal>pegasus-plan</literal>.</para>
+    creation job, a stage-in job (for pegasus.html), and stage-out jobs (for
+    wc count outputs). The cleanup jobs remove data that is no longer required
+    as workflow executes.</para>
   </section>
 
   <section id="tutorial_wf_dashboard">
