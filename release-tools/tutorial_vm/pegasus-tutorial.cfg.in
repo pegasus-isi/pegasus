@@ -116,7 +116,12 @@ chmod 775 /home/tutorial/Desktop/Terminal.desktop
 cp -R /usr/share/doc/pegasus/tutorial/examples /home/tutorial/
 chown -R tutorial:tutorial /home/tutorial
 chmod 755 /home/tutorial/examples/*/bin/* /home/tutorial/examples/*/*.py /home/tutorial/examples/*/*.sh
-cp /home/tutorials/examples/pegasus.conf /home/tutorial/.pegasusrc
+cp /home/tutorial/examples/pegasus.conf /home/tutorial/.pegasusrc
+examples=( diamond   merge  pipeline  process  split)
+for EXAMPLE in "${examples[@]}"; do
+    # leave pegasus.conf in examples directory also
+    cp /home/tutorial/examples/pegasus.conf /home/tutorial/examples/${EXAMPLE}/
+done
 
 # Install dashboard
 mkdir /root/.pegasus
