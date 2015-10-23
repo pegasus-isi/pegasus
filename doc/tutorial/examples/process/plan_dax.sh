@@ -7,13 +7,11 @@ fi
 
 DAXFILE=$1
 
+
 # This command tells Pegasus to plan the workflow contained in 
-# "diamond.dax" using the config file "pegasus.conf". The planned
-# workflow will be stored in a relative directory named "submit".
-# The execution site is "local" and the output directory where the
-# outputs are placed ./outputs .
-# --force tells Pegasus not to prune anything from the workflow, and
-# --nocleanup tells Pegasus not to generate cleanup jobs.
-pegasus-plan --conf pegasus.conf -d $DAXFILE --dir submit \
-	--force --sites local --output-dir ./outputs  --cleanup none \
-        --submit
+# dax file passed . The planned  workflow will be stored in a relative directory
+# starting with your username. The execution site is "PegasusVM" 
+# --input-dir tells Pegasus to pick up inputs for the workflow from that directory
+# --output-dir tells Pegasus to place the outputs in that directory
+pegasus-plan  --dax $DAXFILE  --output-dir ./outputs \
+             --sites PegasusVM --submit
