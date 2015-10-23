@@ -57,4 +57,4 @@ STORAGE_DIRECTORY = "/var/pegasus"
 #CONDOR_HOME = "/usr"
 
 #INFLUXDB_URL = 'protocol://user:pass@hostname:port'
-INFLUXDB_URL = ''
+INFLUXDB_URL = os.getenv('INFLUXDB_URL', '')
