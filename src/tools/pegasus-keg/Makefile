@@ -55,7 +55,7 @@ endif
 %.o : %.cc
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< -c -o $@
 
-all: pegasus-keg pegasus-mpi-keg
+all: pegasus-keg
 
 pegasus-keg: pegasus-keg.o $(EXTRA_OBJ)
 	$(LD) $(LDFLAGS) $^ -o $@ $(LOADLIBES)
