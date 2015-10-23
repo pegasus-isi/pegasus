@@ -68,9 +68,8 @@ linux.o: linux.cc linux.hh basic.hh
 version.h:
 	$(CURDIR)/genversion.sh > $(CURDIR)/version.h
 
-install: pegasus-keg pegasus-mpi-keg
+install: pegasus-keg
 	$(INSTALL) -m 0755 pegasus-keg $(prefix)/bin
-	$(INSTALL) -m 0755 pegasus-mpi-keg $(prefix)/bin
 	
 test check: pegasus-keg
 	@./pegasus-keg -o /dev/fd/1 || echo "test failed" && echo "test ok"
