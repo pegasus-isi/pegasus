@@ -469,10 +469,28 @@ public class JDBCRC implements ReplicaCatalog
   protected PreparedStatement getStatement( int i )
     throws SQLException
   {
-    if ( mStatements[i] == null )
-      mStatements[i] = mConnection.prepareStatement( mCStatements[i] );
-    else
-      mStatements[i].clearParameters();
+      if ( mStatements[i] == null ) {
+          int timeout = 0;
+          while (true) {
+              try {
+                  mStatements[i] = mConnection.prepareStatement(mCStatements[i]);
+                  break;
+              } catch (SQLException ex) {
+                  // Failover to handle SQLITE issues for large number of locks.
+                  if (ex.getMessage().contains("SQLITE_BUSY")) {
+                      timeout += 5000;
+                      try {
+                          Thread.sleep(timeout);
+                      } catch (InterruptedException ex1) {
+                          throw ex;
+                      }
+                  } else {
+                      throw ex;
+                  }
+              }
+          }
+      } else
+          mStatements[i].clearParameters();
 
     return mStatements[i];
   }
@@ -879,7 +897,7 @@ public class JDBCRC implements ReplicaCatalog
               }
 
               // now add to the list
-              ((List) result.get(lfn)).add( pair );
+              ((List) result.get(lfn)).add(pair);
           }
           rs.close();
           st.close();
