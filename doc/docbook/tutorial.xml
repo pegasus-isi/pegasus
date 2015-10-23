@@ -570,7 +570,7 @@ $ ls
       <para>After the workflow has been submitted you can monitor it using the
       <literal>pegasus-status</literal> command:</para>
 
-      <programlisting>$ <emphasis role="bold">pegasus-status submit/tutorial/pegasus/diamond/run0001</emphasis>
+      <programlisting>$ <emphasis role="bold">pegasus-status ﻿tutorial/pegasus/split/run0001</emphasis>
 STAT  IN_STATE  JOB
 Run      01:48  diamond-0
 Run      00:05   |-findrange_ID0000002
@@ -590,7 +590,7 @@ Summary: 1 DAG total (Running:1)
       <para>Use the <literal>watch</literal> command to continuously monitor
       the workflow:</para>
 
-      <programlisting>$ <emphasis role="bold">watch pegasus-status submit/tutorial/pegasus/diamond/run0001</emphasis>
+      <programlisting>$ <emphasis role="bold">watch pegasus-status ﻿tutorial/pegasus/split/run0001</emphasis>
 ...</programlisting>
 
       <para>You should see all of the jobs in the workflow run one after the
@@ -640,7 +640,7 @@ This is the input file of the diamond workflow
       succeeded, <literal>pegasus-analyzer</literal> will only show some basic
       statistics about the number of successful jobs:</para>
 
-      <programlisting>$ <emphasis role="bold">pegasus-analyzer submit/tutorial/pegasus/diamond/run0001</emphasis>
+      <programlisting>$ <emphasis role="bold">pegasus-analyzer ﻿tutorial/pegasus/split/run0001</emphasis>
 pegasus-analyzer: initializing...
 
 ****************************Summary***************************
@@ -704,7 +704,7 @@ FATAL: The main job specification is invalid or missing.
       <literal>-s all</literal> argument tells the program to generate all
       statistics it knows how to calculate:</para>
 
-      <programlisting>$ <emphasis role="bold">pegasus-statistics –s all submit/tutorial/pegasus/diamond/run0001</emphasis>
+      <programlisting>$ <emphasis role="bold">pegasus-statistics –s all ﻿tutorial/pegasus/split/run0001</emphasis>
 
 #
 # Pegasus Workflow Management System - http://pegasus.isi.edu
@@ -776,7 +776,7 @@ Cumulative job wall time as seen from submit side        : 2 mins, 0 secs
 Workflow cumulative job badput wall time                 : 0
 Cumulative job badput wall time as seen from submit side : 0
 
-Summary: submit/tutorial/pegasus/diamond/run0001/statistics/summary.txt
+Summary: ﻿tutorial/pegasus/split/run0001/statistics/summary.txt
 
 </programlisting>
 
@@ -791,7 +791,7 @@ Summary: submit/tutorial/pegasus/diamond/run0001/statistics/summary.txt
       several reports in the <filename>statistics</filename> subdirectory of
       the workflow submit directory:</para>
 
-      <programlisting>$ <emphasis role="bold">ls submit/tutorial/pegasus/diamond/run0001/statistics/</emphasis>
+      <programlisting>$ <emphasis role="bold">ls ﻿tutorial/pegasus/split/run0001/statistics/</emphasis>
 breakdown.csv  jobs.txt          summary.txt         time.txt
 breakdown.txt  summary-time.csv  time-per-host.csv   workflow.csv
 jobs.csv       summary.csv       time.csv            workflow.txt</programlisting>
@@ -799,7 +799,7 @@ jobs.csv       summary.csv       time.csv            workflow.txt</programlistin
       <para>The file <filename>breakdown.txt</filename>, for example, has min,
       max, and mean runtimes for each transformation:</para>
 
-      <programlisting>$ <emphasis role="bold">more submit/tutorial/pegasus/diamond/run0001/statistics/breakdown.txt</emphasis>
+      <programlisting>$ <emphasis role="bold">more ﻿tutorial/pegasus/split/run0001/statistics/breakdown.txt</emphasis>
 # legends
 # Transformation - name of the transformation.
 # Count          - the number of times the invocations corresponding to
