@@ -904,20 +904,12 @@ wc                       4         4          0       0.005     0.029     0.012 
       <para>First we will move the pegasus.html file to
       pegasus.html.bad</para>
 
-      <programlisting>$ ﻿mv input/pegasus.html input/pegasus.html.bak
-</programlisting>
-
-      <para>It now has an incorrect entry to pegasus.html</para>
-
-      <programlisting><emphasis role="bold">$ more rc.dat
-</emphasis>#bad location of pegasus.html
-
-pegasus.html file:///home/tutorial/examples/split/input/pegasus.html.bad site="local"
-</programlisting>
+      <programlisting><emphasis role="bold">$ ﻿mv input/pegasus.html input/pegasus.html.bak
+</emphasis></programlisting>
 
       <para>We will now submit the workflow again.</para>
 
-      <programlisting><emphasis role="bold">$ pegasus-plan  --dax split.dax  --output-dir ./outputs --sites PegasusVM --submit</emphasis>
+      <programlisting><emphasis role="bold">$ pegasus-plan  --dax split.dax  --output-dir ./outputs --sites PegasusVM --force --submit</emphasis>
 2015.10.22 20:20:08.299 PDT:    
 2015.10.22 20:20:08.307 PDT:   ----------------------------------------------------------------------- 
 2015.10.22 20:20:08.312 PDT:   File for submitting this DAG to Condor           : split-0.dag.condor.sub 
