@@ -46,8 +46,7 @@ for c in "abcd":
     #adding dependency
     dax.depends(wc, split)
 
-
 f = open(daxfile, "w")
 dax.writeXML(f)
 f.close()
-
+print "Generated dax %s" %daxfile
