@@ -33,7 +33,7 @@ def time_to_date_str(ts):
     '''
     Change an integer duration to be represented as a data string
     '''
-    return time.strftime('%Y-%m-%d %H', time.localtime(ts))
+    return time.strftime('%Y-%m-%d Hour %H', time.localtime(ts))
 
 @app.template_filter('to_lower_case')
 def to_lower_case(str):
