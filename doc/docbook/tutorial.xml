@@ -247,7 +247,7 @@ tutorial@pegasus-tutorial.isi.edu's password: <emphasis role="bold">pegasus123</
 
       <mediaobject>
         <imageobject>
-          <imagedata contentwidth="70%"
+          <imagedata align="center" contentwidth="70%"
                      fileref="images/tutorial-diamond-wf.jpg"/>
         </imageobject>
       </mediaobject>
@@ -281,7 +281,8 @@ $ ls
 
       <mediaobject>
         <imageobject>
-          <imagedata fileref="images/tutorial-split-wf.jpg"/>
+          <imagedata align="center" contentwidth="70%"
+                     fileref="images/tutorial-split-wf.jpg"/>
         </imageobject>
       </mediaobject>
     </figure>
@@ -372,8 +373,7 @@ $ ls
 
       <mediaobject>
         <imageobject>
-          <imagedata contentwidth="30%"
-                     fileref="images/tutorial-split-dag.png"/>
+          <imagedata fileref="images/tutorial-split-dag.jpg"/>
         </imageobject>
       </mediaobject>
     </figure>
@@ -904,20 +904,12 @@ wc                       4         4          0       0.005     0.029     0.012 
       <para>First we will move the pegasus.html file to
       pegasus.html.bad</para>
 
-      <programlisting>$ ﻿mv input/pegasus.html input/pegasus.html.bak
-</programlisting>
-
-      <para>It now has an incorrect entry to pegasus.html</para>
-
-      <programlisting><emphasis role="bold">$ more rc.dat
-</emphasis>#bad location of pegasus.html
-
-pegasus.html file:///home/tutorial/examples/split/input/pegasus.html.bad site="local"
-</programlisting>
+      <programlisting><emphasis role="bold">$ ﻿mv input/pegasus.html input/pegasus.html.bak
+</emphasis></programlisting>
 
       <para>We will now submit the workflow again.</para>
 
-      <programlisting><emphasis role="bold">$ pegasus-plan  --dax split.dax  --output-dir ./outputs --sites PegasusVM --submit</emphasis>
+      <programlisting><emphasis role="bold">$ pegasus-plan  --dax split.dax  --output-dir ./outputs --sites PegasusVM --force --submit</emphasis>
 2015.10.22 20:20:08.299 PDT:    
 2015.10.22 20:20:08.307 PDT:   ----------------------------------------------------------------------- 
 2015.10.22 20:20:08.312 PDT:   File for submitting this DAG to Condor           : split-0.dag.condor.sub 
@@ -1081,7 +1073,8 @@ Summary: 1 DAG total (Success:1)
 
       <mediaobject>
         <imageobject>
-          <imagedata fileref="images/tutorial-split-wf.jpg"/>
+          <imagedata align="center" contentwidth="70%"
+                     fileref="images/tutorial-split-wf.jpg"/>
         </imageobject>
       </mediaobject>
     </figure>
@@ -1268,7 +1261,7 @@ Generated dax split.dax</programlisting>
       <section>
         <title>HPC Clusters</title>
 
-        <para> Typically the sites in the site catalog describe remote
+        <para>Typically the sites in the site catalog describe remote
         clusters, such as PBS clusters or Condor pools.</para>
 
         <para>Usually, a typical deployment of an HPC cluster is illustrated
