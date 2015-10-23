@@ -27,7 +27,7 @@ tr curl {
 
 tr wc { 
   site PegasusVM {
-    pfn "/usr/bin/wc"
+    pfn "/usr/bin/wc-bad"
     arch "x86_64"
     os "linux"
     type "INSTALLED"

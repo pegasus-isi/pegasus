@@ -571,16 +571,13 @@ $ ls
       <literal>pegasus-status</literal> command:</para>
 
       <programlisting>$ <emphasis role="bold">pegasus-status ﻿tutorial/pegasus/split/run0001</emphasis>
-STAT  IN_STATE  JOB
-Run      01:48  diamond-0
-Run      00:05   |-findrange_ID0000002
-Run      00:05   \_findrange_ID0000003
-Summary: 3 Condor jobs total (R:3)
+﻿STAT  IN_STATE  JOB                                                                     
+﻿Run      00:39  split-0 ( /home/tutorial/examples/split/tutorial/pegasus/split/run0001 )
+Idle     00:03   ┗━split_ID0000001                                                      
+Summary: 2 Condor jobs total (I:1 R:1)
 
-UNREADY   READY     PRE  QUEUED    POST SUCCESS FAILURE %DONE
-      2       0       0       3       0       3       0  37.5
-Summary: 1 DAG total (Running:1)
-</programlisting>
+UNRDY READY   PRE  IN_Q  POST  DONE  FAIL %DONE STATE   DAGNAME                                 
+   14     0     0     1     0     2     0  11.8 Running *split-0.dag     </programlisting>
 
       <para>This command shows the workflow (diamond-0) and the running jobs
       (in the above output it shows the two findrange jobs). It also gives
@@ -590,41 +587,40 @@ Summary: 1 DAG total (Running:1)
       <para>Use the <literal>watch</literal> command to continuously monitor
       the workflow:</para>
 
-      <programlisting>$ <emphasis role="bold">watch pegasus-status ﻿tutorial/pegasus/split/run0001</emphasis>
+      <programlisting>$ <emphasis role="bold">pegasus-status -w﻿tutorial/pegasus/split/run0001</emphasis>
 ...</programlisting>
 
       <para>You should see all of the jobs in the workflow run one after the
       other. After a few minutes you will see:</para>
 
-      <programlisting>(no matching jobs found in Condor Q)
-UNREADY   READY     PRE  QUEUED    POST SUCCESS FAILURE %DONE
-      0       0       0       0       0       8       0 100.0
-Summary: 1 DAG total (Success:1)
-</programlisting>
+      <programlisting>﻿(no matching jobs found in Condor Q)
+UNRDY READY   PRE  IN_Q  POST  DONE  FAIL %DONE STATE   DAGNAME                                 
+    0     0     0     0     0    17     0 100.0 Success *split-0.dag      </programlisting>
 
       <para>That means the workflow is finished successfully. You can type
       <literal>ctrl-c</literal> to terminate the <literal>watch</literal>
       command.</para>
 
       <para>If the workflow finished successfully you should see the output
-      file <filename>f.d</filename> in the <filename>output</filename>
-      directory. This file was created by the various transformations in the
-      workflow and shows all of the executables that were invoked by the
-      workflow:</para>
+      count files in the <filename>outputs</filename> directory. This file was
+      created by the various transformations in the workflow.</para>
 
-      <programlisting>$ <emphasis role="bold">more output/f.d</emphasis>
-/home/tutorial/examples/diamond/bin/analyze:
-/home/tutorial/examples/diamond/bin/findrange:
-/home/tutorial/examples/diamond/bin/preprocess:
-This is the input file of the diamond workflow
-/home/tutorial/examples/diamond/bin/findrange:
-/home/tutorial/examples/diamond/bin/preprocess:
-This is the input file of the diamond workflow
+      <programlisting><emphasis role="bold">$﻿ls outputs/
+</emphasis>count.txt.a  count.txt.b  count.txt.c  count.txt.d
 </programlisting>
 
-      <para>Remember that the example transformations in this workflow just
-      print their name to all of their output files and then copy all of their
-      input files to their output files.</para>
+      <para>The locations of the output files are also registered in the
+      rc.dat file.</para>
+
+      <programlisting><emphasis role="bold">$ more rc.dat 
+</emphasis># file-based replica catalog: 2015-10-22T20:04:26.171-07:00
+count.txt.b file:///home/tutorial/examples/split/./outputs/count.txt.b site="local"
+count.txt.d file:///home/tutorial/examples/split/./outputs/count.txt.d site="local"
+count.txt.a file:///home/tutorial/examples/split/./outputs/count.txt.a site="local"
+count.txt.c file:///home/tutorial/examples/split/./outputs/count.txt.c site="local"
+</programlisting>
+
+      <para/>
     </section>
 
     <section>
@@ -763,20 +759,25 @@ FATAL: The main job specification is invalid or missing.
 #   jobs (i.e SUBDAG and SUBDAX jobs), the wall time value includes jobs
 #   from the sub workflows as well.
 
------------------------------------------------------------------------
-Type            Succeeded  Failed  Incomplete  Total     Retries  Total Run
-Tasks           4          0       0           4     ||  0        4
-Jobs            7          0       0           7     ||  0        7
-Sub Workflows   0          0       0           0     ||  0        0
------------------------------------------------------------------------
+﻿------------------------------------------------------------------------------
+Type           Succeeded Failed  Incomplete  Total     Retries   Total+Retries
+Tasks          5         0       0           5         0         5            
+Jobs           17        0       0           17        0         17           
+Sub-Workflows  0         0       0           0         0         0            
+------------------------------------------------------------------------------
 
-Workflow wall time                                       : 3 mins, 25 secs
-Workflow cumulative job wall time                        : 2 mins, 0 secs
-Cumulative job wall time as seen from submit side        : 2 mins, 0 secs
-Workflow cumulative job badput wall time                 : 0
-Cumulative job badput wall time as seen from submit side : 0
+Workflow wall time                                       : 2 mins, 6 secs
+Workflow cumulative job wall time                        : 38 secs
+Cumulative job wall time as seen from submit side        : 42 secs
+Workflow cumulative job badput wall time                 : 
+Cumulative job badput wall time as seen from submit side : 
 
-Summary: ﻿tutorial/pegasus/split/run0001/statistics/summary.txt
+Summary                       : tutorial/pegasus/split/run0001/statistics/summary.txt
+Workflow execution statistics : tutorial/pegasus/split/run0001/statistics/workflow.txt
+Job instance statistics       : tutorial/pegasus/split/run0001/statistics/jobs.txt
+Transformation statistics     : tutorial/pegasus/split/run0001/statistics/breakdown.txt
+Time statistics               : tutorial/pegasus/split/run0001/statistics/time.txt
+
 
 </programlisting>
 
@@ -817,23 +818,26 @@ jobs.csv       summary.csv       time.csv            workflow.txt</programlistin
 # Total(sec)     - the cumulative of invocation runtime corresponding to
 #                  the transformation.
 
-# a1f5ba03-a827-4d0a-8d59-9941cbfbd83d (diamond)
-Transformation   Count  Succeeded  Failed  Min     Max     Mean     Total
-analyze          1      1          0       30.008  30.008  30.008   30.008
-dagman::post     7      7          0       5.0     6.0     5.143    36.0
-findrange        2      2          0       30.009  30.014  30.011   60.023
-pegasus::dirmanager 1   1          0       0.194   0.194   0.194    0.194
-pegasus::transfer 2     2          0       0.248   0.411   0.33     0.659
-preprocess       1      1          0       30.025  30.025  30.025   30.025
+﻿# 773d8fa3-8bff-4f75-8e2b-38e2c904f803 (split)
+Transformation           Count     Succeeded Failed  Min       Max       Mean      Total     
+dagman::post             17        17        0       5.0       6.0       5.412     92.0      
+pegasus::cleanup         6         6         0       1.474     3.178     2.001     12.008    
+pegasus::dirmanager      1         1         0       2.405     2.405     2.405     2.405     
+pegasus::rc-client       2         2         0       2.382     7.406     4.894     9.788     
+pegasus::transfer        3         3         0       3.951     5.21      4.786     14.358    
+split                    1         1         0       0.009     0.009     0.009     0.009     
+wc                       4         4         0       0.005     0.029     0.012     0.047     
 
-# All
-Transformation   Count  Succeeded  Failed  Min     Max     Mean     Total
-analyze          1      1          0       30.008  30.008  30.008   30.008
-dagman::post     7      7          0       5.0     6.0     5.143    36.0
-findrange        2      2          0       30.009  30.014  30.011   60.023
-pegasus::dirmanager 1   1          0       0.194   0.194   0.194    0.194
-pegasus::transfer 2     2          0       0.248   0.411   0.33     0.659
-preprocess       1      1          0       30.025  30.025  30.025   30.025
+
+# All (All)
+Transformation           Count     Succeeded  Failed  Min       Max       Mean      Total     
+dagman::post             17        17         0       5.0       6.0       5.412     92.0      
+pegasus::cleanup         6         6          0       1.474     3.178     2.001     12.008    
+pegasus::dirmanager      1         1          0       2.405     2.405     2.405     2.405     
+pegasus::rc-client       2         2          0       2.382     7.406     4.894     9.788     
+pegasus::transfer        3         3          0       3.951     5.21      4.786     14.358    
+split                    1         1          0       0.009     0.009     0.009     0.009     
+wc                       4         4          0       0.005     0.029     0.012     0.047  
 </programlisting>
 
       <para>In this case, because the example transformation sleeps for 30
@@ -867,179 +871,175 @@ preprocess       1      1          0       30.025  30.025  30.025   30.025
       <title>Submitting Rescue Workflows</title>
 
       <para>In this example, we will take our previously run workflow and
-      introduce errors such that workflow we just executed fails at runtime.
-      In order to do this we will rename one of the executables in the bin
-      directory.</para>
+      introduce errors such that workflow we just executed fails at
+      runtime.</para>
 
-      <programlisting><emphasis role="bold">$ cd ~/examples/diamond/
-$ mv bin/findrange bin/findrange.bak</emphasis></programlisting>
+      <para>First we will remove the rc.dat file created</para>
+
+      <programlisting>$ <emphasis role="bold">rm ~/examples/split/rc.dat</emphasis></programlisting>
+
+      <para> In order to do this we will update the wc entry in the
+      transformation catalog </para>
+
+      <programlisting><emphasis role="bold">$ cd ~/examples/split/
+$ sed -i.bak -E "s@/usr/bin/wc@/usr/bin/wc-bad@" tc.txt 
+</emphasis></programlisting>
+
+      <para>The updated transformation catalog entry for wc looks like this
+      now.</para>
+
+      <programlisting>﻿tr wc { 
+  site PegasusVM {
+    pfn "/usr/bin/wc-bad"
+    arch "x86_64"
+    os "linux"
+    type "INSTALLED"
+  }
+}
+</programlisting>
 
       <para>We will now submit the workflow again.</para>
 
-      <programlisting>$ ﻿<emphasis role="bold"> ./plan_dax.sh diamond.dax </emphasis>
-2015.10.22 09:34:23.367 PDT: [INFO]  Planner invoked with following arguments --conf pegasus.conf -d diamond.dax --dir submit --input-dir ./input --output-dir ./outputs --force --sites PegasusVM -o local --cleanup none -v --submit  
-2015.10.22 09:34:24.692 PDT: [INFO] event.pegasus.parse.dax dax.id /home/tutorial/examples/diamond/diamond.dax  - STARTED 
-2015.10.22 09:34:24.695 PDT: [INFO] event.pegasus.parse.dax dax.id /home/tutorial/examples/diamond/diamond.dax  (0.003 seconds) - FINISHED 
-2015.10.22 09:34:24.704 PDT: [INFO] event.pegasus.parse.dax dax.id /home/tutorial/examples/diamond/diamond.dax  - STARTED 
-2015.10.22 09:34:24.819 PDT: [INFO] event.pegasus.add.data-dependencies dax.id diamond_0  - STARTED 
-2015.10.22 09:34:24.820 PDT: [INFO] event.pegasus.add.data-dependencies dax.id diamond_0  (0.001 seconds) - FINISHED 
-2015.10.22 09:34:24.820 PDT: [INFO] event.pegasus.parse.dax dax.id /home/tutorial/examples/diamond/diamond.dax  (0.116 seconds) - FINISHED 
-2015.10.22 09:34:25.113 PDT: [INFO] event.pegasus.stampede.events dax.id diamond_0  - STARTED 
-2015.10.22 09:34:25.388 PDT: [INFO] event.pegasus.stampede.events dax.id diamond_0  (0.274 seconds) - FINISHED 
-2015.10.22 09:34:25.389 PDT: [INFO] event.pegasus.refinement dax.id diamond_0  - STARTED 
-2015.10.22 09:34:25.870 PDT: [INFO] event.pegasus.load.directory dax.id diamond_0  - STARTED 
-2015.10.22 09:34:25.888 PDT: [INFO] event.pegasus.load.directory dax.id diamond_0  (0.018 seconds) - FINISHED 
-2015.10.22 09:34:25.894 PDT: [INFO] event.pegasus.siteselection dax.id diamond_0  - STARTED 
-2015.10.22 09:34:25.963 PDT: [INFO] event.pegasus.siteselection dax.id diamond_0  (0.069 seconds) - FINISHED 
-2015.10.22 09:34:26.015 PDT: [INFO]  Grafting transfer nodes in the workflow 
-2015.10.22 09:34:26.016 PDT: [INFO] event.pegasus.generate.transfer-nodes dax.id diamond_0  - STARTED 
-2015.10.22 09:34:26.116 PDT: [INFO] event.pegasus.generate.transfer-nodes dax.id diamond_0  (0.1 seconds) - FINISHED 
-2015.10.22 09:34:26.117 PDT: [INFO] event.pegasus.generate.workdir-nodes dax.id diamond_0  - STARTED 
-2015.10.22 09:34:26.125 PDT: [INFO] event.pegasus.generate.workdir-nodes dax.id diamond_0  (0.008 seconds) - FINISHED 
-2015.10.22 09:34:26.125 PDT: [INFO] event.pegasus.refinement dax.id diamond_0  (0.736 seconds) - FINISHED 
-2015.10.22 09:34:26.473 PDT: [INFO]  Generating codes for the executable workflow 
-2015.10.22 09:34:26.476 PDT: [INFO] event.pegasus.code.generation dax.id diamond_0  - STARTED 
-2015.10.22 09:34:29.369 PDT:    
-2015.10.22 09:34:29.375 PDT:   ----------------------------------------------------------------------- 
-2015.10.22 09:34:29.380 PDT:   File for submitting this DAG to Condor           : diamond-0.dag.condor.sub 
-2015.10.22 09:34:29.389 PDT:   Log of DAGMan debugging messages                 : diamond-0.dag.dagman.out 
-2015.10.22 09:34:29.395 PDT:   Log of Condor library output                     : diamond-0.dag.lib.out 
-2015.10.22 09:34:29.400 PDT:   Log of Condor library error messages             : diamond-0.dag.lib.err 
-2015.10.22 09:34:29.405 PDT:   Log of the life of condor_dagman itself          : diamond-0.dag.dagman.log 
-2015.10.22 09:34:29.411 PDT:    
-2015.10.22 09:34:29.427 PDT:   ----------------------------------------------------------------------- 
-2015.10.22 09:34:29.513 PDT: [INFO] event.pegasus.code.generation dax.id diamond_0  (3.04 seconds) - FINISHED 
-2015.10.22 09:34:33.579 PDT:   Your database is compatible with Pegasus version: 4.5.3 
-2015.10.22 09:34:34.430 PDT:   Submitting to condor diamond-0.dag.condor.sub 
-2015.10.22 09:34:35.359 PDT:   Submitting job(s). 
-2015.10.22 09:34:35.366 PDT:   1 job(s) submitted to cluster 93. 
-2015.10.22 09:34:35.401 PDT:    
-2015.10.22 09:34:35.412 PDT:   Your workflow has been started and is running in the base directory: 
-2015.10.22 09:34:35.420 PDT:    
-2015.10.22 09:34:35.431 PDT:     /home/tutorial/examples/diamond/submit/tutorial/pegasus/diamond/run0002 
-2015.10.22 09:34:35.437 PDT:    
-2015.10.22 09:34:35.444 PDT:   *** To monitor the workflow you can run *** 
-2015.10.22 09:34:35.449 PDT:    
-2015.10.22 09:34:35.455 PDT:     pegasus-status -l /home/tutorial/examples/diamond/submit/tutorial/pegasus/diamond/run0002 
-2015.10.22 09:34:35.461 PDT:    
-2015.10.22 09:34:35.467 PDT:   *** To remove your workflow run *** 
-2015.10.22 09:34:35.476 PDT:    
-2015.10.22 09:34:35.483 PDT:     pegasus-remove /home/tutorial/examples/diamond/submit/tutorial/pegasus/diamond/run0002 
-2015.10.22 09:34:35.497 PDT:    
-2015.10.22 09:34:37.046 PDT:   Time taken to execute is 12.57 seconds 
-2015.10.22 09:34:37.055 PDT: [INFO] event.pegasus.planner planner.version 4.5.3cvs  (13.727 seconds) - FINISHED 
+      <programlisting><emphasis role="bold">$ pegasus-plan  --dax split.dax --input-dir ./input  --output-dir ./outputs --sites PegasusVM --submit</emphasis>
+2015.10.22 20:20:08.299 PDT:    
+2015.10.22 20:20:08.307 PDT:   ----------------------------------------------------------------------- 
+2015.10.22 20:20:08.312 PDT:   File for submitting this DAG to Condor           : split-0.dag.condor.sub 
+2015.10.22 20:20:08.323 PDT:   Log of DAGMan debugging messages                 : split-0.dag.dagman.out 
+2015.10.22 20:20:08.330 PDT:   Log of Condor library output                     : split-0.dag.lib.out 
+2015.10.22 20:20:08.339 PDT:   Log of Condor library error messages             : split-0.dag.lib.err 
+2015.10.22 20:20:08.346 PDT:   Log of the life of condor_dagman itself          : split-0.dag.dagman.log 
+2015.10.22 20:20:08.352 PDT:    
+2015.10.22 20:20:08.368 PDT:   ----------------------------------------------------------------------- 
+2015.10.22 20:20:12.331 PDT:   Your database is compatible with Pegasus version: 4.5.3 
+2015.10.22 20:20:13.326 PDT:   Submitting to condor split-0.dag.condor.sub 
+2015.10.22 20:20:14.224 PDT:   Submitting job(s). 
+2015.10.22 20:20:14.254 PDT:   1 job(s) submitted to cluster 168. 
+2015.10.22 20:20:14.288 PDT:    
+2015.10.22 20:20:14.297 PDT:   Your workflow has been started and is running in the base directory: 
+2015.10.22 20:20:14.303 PDT:    
+2015.10.22 20:20:14.309 PDT:     /home/tutorial/examples/split/tutorial/pegasus/split/run0002 
+2015.10.22 20:20:14.315 PDT:    
+2015.10.22 20:20:14.321 PDT:   *** To monitor the workflow you can run *** 
+2015.10.22 20:20:14.326 PDT:    
+2015.10.22 20:20:14.332 PDT:     pegasus-status -l /home/tutorial/examples/split/tutorial/pegasus/split/run0002 
+2015.10.22 20:20:14.351 PDT:    
+2015.10.22 20:20:14.369 PDT:   *** To remove your workflow run *** 
+2015.10.22 20:20:14.376 PDT:    
+2015.10.22 20:20:14.388 PDT:     pegasus-remove /home/tutorial/examples/split/tutorial/pegasus/split/run0002 
+2015.10.22 20:20:14.397 PDT:    
+2015.10.22 20:20:16.146 PDT:   Time taken to execute is 10.292 seconds 
 </programlisting>
 
       <para>We will now monitor the workflow using the pegasus-status command
       till it fails. We will add -w option to pegasus-status to watch
       automatically till the workflow finishes</para>
 
-      <programlisting><emphasis role="bold">$ ﻿pegasus-status -l ./submit/tutorial/pegasus/diamond/run0002  -w</emphasis>
-
-Press Ctrl+C to exit                      (pid=43785)                      Thu Oct 22 09:35:42 2015
-
-STAT  IN_STATE  JOB                                                                              
-Run      01:07  diamond-0 ( /home/tutorial/examples/diamond/submit/tutorial/pegasus/diamond/run0002 )
-Run      00:24   ┗━preprocess_ID0000001                                                          
-Summary: 2 Condor jobs total (R:2)
-
-UNRDY READY   PRE  IN_Q  POST  DONE  FAIL %DONE STATE   DAGNAME                                 
-    4     0     0     1     0     2     0  28.6 Running *diamond-0.dag                          
-Summary: 1 DAG total (Running:1)
-...
-UNRDY READY   PRE  IN_Q  POST  DONE  FAIL %DONE STATE   DAGNAME                                 
-    2     0     0     0     0     3     2  42.9 Failure *diamond-0.dag   </programlisting>
+      <programlisting><emphasis role="bold">$ ﻿</emphasis><emphasis
+          role="bold">pegasus-status tutorial/pegasus/split/run0002</emphasis>
+(no matching jobs found in Condor Q)
+UNREADY   READY     PRE  QUEUED    POST SUCCESS FAILURE %DONE
+      9       0       0       0       0       4       4  23.5
+Summary: 1 DAG total (Failure:1)</programlisting>
 
       <para>We will now use the pegasus-analyzer command to determine what
       went wrong</para>
 
-      <programlisting><emphasis role="bold">$ pegasus-analyzer submit/tutorial/pegasus/diamond/run0002
-</emphasis>
+      <programlisting><emphasis role="bold">$ </emphasis>﻿<emphasis
+          role="bold">pegasus-analyzer tutorial/pegasus/split/run0002</emphasis>
+
 ************************************Summary*************************************
 
- Submit Directory   : submit/tutorial/pegasus/diamond/run0002
- Total jobs         :      7 (100.00%)
- # jobs succeeded   :      3 (42.86%)
- # jobs failed      :      2 (28.57%)
- # jobs unsubmitted :      2 (28.57%)
+ Submit Directory   : tutorial/pegasus/split/run0002
+ Total jobs         :     17 (100.00%)
+ # jobs succeeded   :      4 (23.53%)
+ # jobs failed      :      4 (23.53%)
+ # jobs unsubmitted :      9 (52.94%)
 
 ******************************Failed jobs' details******************************
 
-==============================findrange_ID0000003===============================
+==================================wc_ID0000002==================================
 
  last state: POST_SCRIPT_FAILED
        site: PegasusVM
-submit file: findrange_ID0000003.sub
-output file: findrange_ID0000003.out.001
- error file: findrange_ID0000003.err.001
+submit file: wc_ID0000002.sub
+output file: wc_ID0000002.out.001
+ error file: wc_ID0000002.err.001
 
 -------------------------------Task #1 - Summary--------------------------------
 
 site        : PegasusVM
 hostname    : unknown
-executable  : /home/tutorial/examples/diamond/bin/findrange
-arguments   :   -i   f.b2   -o   f.c2  
+executable  : /usr/bin/wc-bad
+arguments   :   -l   part.a  
 exitcode    : -128
 working dir : -
 
------------------Job stderr file - findrange_ID0000003.err.001------------------
+---------------------Job stderr file - wc_ID0000002.err.001---------------------
 
-kickstart[43822]: pegasus-kickstart.c[673]: FATAL: The main job specification is invalid or missing.
+kickstart[48529]: pegasus-kickstart.c[673]: FATAL: The main job specification is invalid or missing.
+
+...
+
+---------------------Job stderr file - wc_ID0000004.err.001---------------------
+
+kickstart[48539]: pegasus-kickstart.c[673]: FATAL: The main job specification is invalid or missing.
 
 
-==============================findrange_ID0000002===============================
+==================================wc_ID0000005==================================
 
  last state: POST_SCRIPT_FAILED
        site: PegasusVM
-submit file: findrange_ID0000002.sub
-output file: findrange_ID0000002.out.001
- error file: findrange_ID0000002.err.001
+submit file: wc_ID0000005.sub
+output file: wc_ID0000005.out.001
+ error file: wc_ID0000005.err.001
 
 -------------------------------Task #1 - Summary--------------------------------
 
 site        : PegasusVM
 hostname    : unknown
-executable  : /home/tutorial/examples/diamond/bin/findrange
-arguments   :   -i   f.b1   -o   f.c1  
+executable  : /usr/bin/wc-bad
+arguments   :   -l   part.d  
 exitcode    : -128
 working dir : -
 
------------------Job stderr file - findrange_ID0000002.err.001------------------
+---------------------Job stderr file - wc_ID0000005.err.001---------------------
 
-kickstart[43817]: pegasus-kickstart.c[673]: FATAL: The main job specification is invalid or missing.
+kickstart[48544]: pegasus-kickstart.c[673]: FATAL: The main job specification is invalid or missing.
+
 </programlisting>
 
-      <para>The above listing indicates that our two findrange jobs failed, as
-      the main job specification was invalid. Let's correct that error</para>
+      <para>The above listing indicates that it could not find wc-bad
+      executable. Let's correct that error</para>
 
-      <programlisting>$ <emphasis role="bold">mv bin/findrange.bak bin/findrange</emphasis></programlisting>
+      <programlisting><emphasis role="bold">$ sed -i.bak -E "s@/usr/bin/wc-bad@/usr/bin/wc@" tc.txt </emphasis></programlisting>
 
       <para>Now in order to start the workflow from where we left off, instead
       of executing pegasus-plan we will use the command pegasus-run on the
       directory from our previous failed workflow run.</para>
 
-      <programlisting>$<emphasis role="bold"> pegasus-run submit/tutorial/pegasus/diamond/run0002</emphasis>
-Rescued /home/tutorial/examples/diamond/submit/tutorial/pegasus/diamond/run0002/diamond-0.log as /home/tutorial/examples/diamond/submit/tutorial/pegasus/diamond/run0002/diamond-0.log.001
-Submitting to condor diamond-0.dag.condor.sub
+      <programlisting><emphasis role="bold">$</emphasis> <emphasis role="bold">﻿ pegasus-run tutorial/pegasus/split/run0002/</emphasis>
+Rescued /home/tutorial/examples/split/tutorial/pegasus/split/run0002/split-0.log as /home/tutorial/examples/split/tutorial/pegasus/split/run0002/split-0.log.000
+Submitting to condor split-0.dag.condor.sub
 Submitting job(s).
-1 job(s) submitted to cluster 106.
+1 job(s) submitted to cluster 181.
 
 Your workflow has been started and is running in the base directory:
 
-  submit/tutorial/pegasus/diamond/run0002
+  tutorial/pegasus/split/run0002/
 
 *** To monitor the workflow you can run ***
 
-  pegasus-status -l submit/tutorial/pegasus/diamond/run0002
+  pegasus-status -l tutorial/pegasus/split/run0002/
 
 *** To remove your workflow run ***
 
-  pegasus-remove submit/tutorial/pegasus/diamond/run0002
+  pegasus-remove tutorial/pegasus/split/run0002/
 </programlisting>
 
       <para>The workflow will now run to completion and succeed.</para>
 
-      <programlisting><emphasis role="bold">$ pegasus-status -l submit/tutorial/pegasus/diamond/run0002</emphasis>
+      <programlisting><emphasis role="bold">$ pegasus-status -l <emphasis
+            role="bold">tutorial/pegasus/split/run0002/</emphasis></emphasis>
 (no matching jobs found in Condor Q)
 UNRDY READY   PRE  IN_Q  POST  DONE  FAIL %DONE STATE   DAGNAME                                 
     0     0     0     0     0     7     0 100.0 Success *diamond-0.dag                          
