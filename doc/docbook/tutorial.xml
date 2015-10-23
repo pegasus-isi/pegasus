@@ -9,7 +9,7 @@
 
     <para>This tutorial will take you through the steps of running simple
     workflows using Pegasus Workflow Management System. Pegasus allows
-    scientists to </para>
+    scientists to</para>
 
     <orderedlist>
       <listitem>
@@ -39,14 +39,14 @@
       <listitem>
         <para><emphasis role="bold">Debug </emphasis>- debug failures in their
         computations using a set of system provided debugging tools and an
-        online workflow monitoring dashboard. </para>
+        online workflow monitoring dashboard.</para>
       </listitem>
     </orderedlist>
 
     <para>This tutorial is intended for new users who want to get a quick
     overview of Pegasus concepts and usage. The accompanying tutorial VM comes
     configured with a variety of examples. The instructions listed here refer
-    mainly to the simple diamond workflow example. The tutorial covers </para>
+    mainly to the simple diamond workflow example. The tutorial covers</para>
 
     <itemizedlist>
       <listitem>
@@ -225,7 +225,8 @@ tutorial@pegasus-tutorial.isi.edu's password: <emphasis role="bold">pegasus123</
 
     <para>The merge workflow runs the `ls` command on several */bin
     directories and passes the results to the `cat` command, which merges the
-    files into a single listing.<figure>
+    files into a single listing. The merge workflow is an example of a
+    parameter sweep over arguments.<figure>
         <title>Merge Workflow</title>
 
         <mediaobject>
@@ -235,6 +236,24 @@ tutorial@pegasus-tutorial.isi.edu's password: <emphasis role="bold">pegasus123</
           </imageobject>
         </mediaobject>
       </figure></para>
+
+    <para><emphasis role="bold">Diamond Workflow</emphasis></para>
+
+    <para>The diamond workflow runs combines the split and merge workflow
+    patterns to create a more complex workflow.</para>
+
+    <figure>
+      <title>Diamond Workflow</title>
+
+      <mediaobject>
+        <imageobject>
+          <imagedata contentwidth="70%"
+                     fileref="images/tutorial-diamond-wf.jpg"/>
+        </imageobject>
+      </mediaobject>
+    </figure>
+
+    <para><emphasis role="bold">Complex Workflows</emphasis></para>
 
     <para>The above examples can be used as building blocks for much complex
     workflows. Some of these are showcased on the <ulink
@@ -246,7 +265,7 @@ tutorial@pegasus-tutorial.isi.edu's password: <emphasis role="bold">pegasus123</
     <title>Submitting an Example Workflow</title>
 
     <para>The tutorial comes configured with a variety of examples. For the
-    rest of the tutorial we will be using the diamond example. Other examples
+    rest of the tutorial we will be using the split example. Other examples
     are also structured similarly.</para>
 
     <programlisting>$ <emphasis role="bold">cd /home/tutorial/examples</emphasis>
@@ -254,15 +273,15 @@ $ ls
 ﻿diamond  merge  pipeline  process  split
 </programlisting>
 
-    <para>To start the tutorial, we will run an already generated diamond
-    workflow through Pegasus. The diamond workflow looks like this</para>
+    <para>To start the tutorial, we will run an already generated split
+    workflow through Pegasus. The split workflow looks like this</para>
 
     <figure>
-      <title>Diamond Workflow</title>
+      <title>Split Workflow</title>
 
       <mediaobject>
         <imageobject>
-          <imagedata fileref="images/concepts-diamond.jpg"/>
+          <imagedata fileref="images/tutorial-split-wf.jpg"/>
         </imageobject>
       </mediaobject>
     </figure>
@@ -837,12 +856,12 @@ preprocess       1      1          0       30.025  30.025  30.025   30.025
     <para>Executing workflows in a distributed environment can lead to
     failures. Often, they are a result of the underlying infrastructure being
     temporarily unavailable, or errors in workflow setup such as incorrect
-    executables specified, or input files being unavailable. </para>
+    executables specified, or input files being unavailable.</para>
 
     <para>In case of transient infrastructure failures such as a node being
     temporarily down in a cluster, Pegasus will automatically retry jobs in
     case of failure. After a set number of retries ( usually once) , a hard
-    failure occurs, because of which workflow will eventually fail. </para>
+    failure occurs, because of which workflow will eventually fail.</para>
 
     <para>In most of the cases, these errors are correctable ( either the
     resource comes back online or application errors are fixed) . Once the
@@ -858,7 +877,7 @@ preprocess       1      1          0       30.025  30.025  30.025   30.025
       <para>In this example, we will take our previously run workflow and
       introduce errors such that workflow we just executed fails at runtime.
       In order to do this we will rename one of the executables in the bin
-      directory. </para>
+      directory.</para>
 
       <programlisting><emphasis role="bold">$ cd ~/examples/diamond/
 $ mv bin/findrange bin/findrange.bak</emphasis></programlisting>
