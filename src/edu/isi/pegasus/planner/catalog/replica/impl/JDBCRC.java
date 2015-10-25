@@ -477,7 +477,7 @@ public class JDBCRC implements ReplicaCatalog
                   break;
               } catch (SQLException ex) {
                   // Failover to handle SQLITE issues for large number of locks.
-                  if (ex.getMessage().contains("SQLITE_BUSY") && timeout < 60) {
+                  if (ex.getMessage().contains("SQLITE_BUSY") && timeout < 60000) {
                       timeout += 5000;
                       try {
                           Thread.sleep(timeout);
