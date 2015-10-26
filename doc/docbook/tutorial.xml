@@ -269,7 +269,7 @@ tutorial@pegasus-tutorial.isi.edu's password: <emphasis role="bold">pegasus123</
     are also structured similarly.</para>
 
     <programlisting>$ <emphasis role="bold">cd /home/tutorial/examples</emphasis>
-$ ls 
+$ <emphasis role="bold">ls</emphasis> 
 ﻿diamond  merge  pipeline  process  split
 </programlisting>
 
@@ -326,7 +326,8 @@ $ ls
     <para>To plan the split workflow invoke the pegasus-plan command as
     follows</para>
 
-    <programlisting><emphasis role="bold">$ pegasus-plan  --dax split.dax --input-dir ./input  --output-dir ./outputs --sites PegasusVM --submit
+    <programlisting><emphasis role="bold">$ cd split
+$ pegasus-plan  --dax split.dax --input-dir ./input  --output-dir ./outputs --sites PegasusVM --submit
 </emphasis>
 ﻿
 2015.10.22 19:12:10.402 PDT:    
@@ -570,7 +571,7 @@ $ ls
       <para>After the workflow has been submitted you can monitor it using the
       <literal>pegasus-status</literal> command:</para>
 
-      <programlisting>$ <emphasis role="bold">pegasus-status ﻿tutorial/pegasus/split/run0001</emphasis>
+      <programlisting>$ <emphasis role="bold">pegasus-status ﻿-l tutorial/pegasus/split/run0001</emphasis>
 ﻿STAT  IN_STATE  JOB                                                                     
 ﻿Run      00:39  split-0 ( /home/tutorial/examples/split/tutorial/pegasus/split/run0001 )
 Idle     00:03   ┗━split_ID0000001                                                      
@@ -587,7 +588,7 @@ UNRDY READY   PRE  IN_Q  POST  DONE  FAIL %DONE STATE   DAGNAME
       <para>Use the <literal>watch</literal> command to continuously monitor
       the workflow:</para>
 
-      <programlisting>$ <emphasis role="bold">pegasus-status -w﻿tutorial/pegasus/split/run0001</emphasis>
+      <programlisting>$ <emphasis role="bold">pegasus-status -w﻿ tutorial/pegasus/split/run0001</emphasis>
 ...</programlisting>
 
       <para>You should see all of the jobs in the workflow run one after the
@@ -595,7 +596,7 @@ UNRDY READY   PRE  IN_Q  POST  DONE  FAIL %DONE STATE   DAGNAME
 
       <programlisting>﻿(no matching jobs found in Condor Q)
 UNRDY READY   PRE  IN_Q  POST  DONE  FAIL %DONE STATE   DAGNAME                                 
-    0     0     0     0     0    17     0 100.0 Success *split-0.dag      </programlisting>
+    0     0     0     0     0    15     0 100.0 Success *split-0.dag      </programlisting>
 
       <para>That means the workflow is finished successfully. You can type
       <literal>ctrl-c</literal> to terminate the <literal>watch</literal>
@@ -641,8 +642,8 @@ pegasus-analyzer: initializing...
 
 ****************************Summary***************************
 
- Total jobs         :      7 (100.00%)
- # jobs succeeded   :      7 (100.00%)
+ Total jobs         :      15 (100.00%)
+ # jobs succeeded   :      15 (100.00%)
  # jobs failed      :      0 (0.00%)
  # jobs unsubmitted :      0 (0.00%)
 </programlisting>
@@ -655,7 +656,7 @@ pegasus-analyzer: initializing...
 ﻿************************************Summary*************************************
 
  Submit Directory   : tutorial/pegasus/split/run0002
- Total jobs         :     17 (100.00%)
+ Total jobs         :     15 (100.00%)
  # jobs succeeded   :      1 (5.88%)
  # jobs failed      :      1 (5.88%)
  # jobs unsubmitted :     15 (88.24%)
@@ -789,7 +790,7 @@ Warning: Permanently added '127.0.0.1' (RSA) to the list of known hosts.<emphasi
 ﻿------------------------------------------------------------------------------
 Type           Succeeded Failed  Incomplete  Total     Retries   Total+Retries
 Tasks          5         0       0           5         0         5            
-Jobs           17        0       0           17        0         17           
+Jobs           15        0       0           15        0         15           
 Sub-Workflows  0         0       0           0         0         0            
 ------------------------------------------------------------------------------
 
@@ -820,9 +821,7 @@ Time statistics               : tutorial/pegasus/split/run0001/statistics/time.t
       the workflow submit directory:</para>
 
       <programlisting>$ <emphasis role="bold">ls ﻿tutorial/pegasus/split/run0001/statistics/</emphasis>
-breakdown.csv  jobs.txt          summary.txt         time.txt
-breakdown.txt  summary-time.csv  time-per-host.csv   workflow.csv
-jobs.csv       summary.csv       time.csv            workflow.txt</programlisting>
+jobs.txt          summary.txt         time.txt          breakdown.txt          workflow.txt</programlisting>
 
       <para>The file <filename>breakdown.txt</filename>, for example, has min,
       max, and mean runtimes for each transformation:</para>
@@ -847,7 +846,7 @@ jobs.csv       summary.csv       time.csv            workflow.txt</programlistin
 
 ﻿# 773d8fa3-8bff-4f75-8e2b-38e2c904f803 (split)
 Transformation           Count     Succeeded Failed  Min       Max       Mean      Total     
-dagman::post             17        17        0       5.0       6.0       5.412     92.0      
+dagman::post             15        15        0       5.0       6.0       5.412     92.0      
 pegasus::cleanup         6         6         0       1.474     3.178     2.001     12.008    
 pegasus::dirmanager      1         1         0       2.405     2.405     2.405     2.405     
 pegasus::rc-client       2         2         0       2.382     7.406     4.894     9.788     
@@ -858,7 +857,7 @@ wc                       4         4         0       0.005     0.029     0.012  
 
 # All (All)
 Transformation           Count     Succeeded  Failed  Min       Max       Mean      Total     
-dagman::post             17        17         0       5.0       6.0       5.412     92.0      
+dagman::post             15        15         0       5.0       6.0       5.412     92.0      
 pegasus::cleanup         6         6          0       1.474     3.178     2.001     12.008    
 pegasus::dirmanager      1         1          0       2.405     2.405     2.405     2.405     
 pegasus::rc-client       2         2          0       2.382     7.406     4.894     9.788     
@@ -959,10 +958,10 @@ UNRDY READY   PRE  IN_Q  POST  DONE  FAIL %DONE STATE   DAGNAME
 ﻿************************************Summary*************************************
 
  Submit Directory   : tutorial/pegasus/split/run0002
- Total jobs         :     17 (100.00%)
+ Total jobs         :     15 (100.00%)
  # jobs succeeded   :      1 (5.88%)
  # jobs failed      :      1 (5.88%)
- # jobs unsubmitted :     15 (88.24%)
+ # jobs unsubmitted :     13 (88.24%)
 
 ******************************Failed jobs' details******************************
 
@@ -1051,7 +1050,7 @@ Your workflow has been started and is running in the base directory:
             role="bold">tutorial/pegasus/split/run0002/</emphasis></emphasis>
 ﻿no matching jobs found in Condor Q)
 UNRDY READY   PRE  IN_Q  POST  DONE  FAIL %DONE STATE   DAGNAME                                 
-    0     0     0     0     0    17     0 100.0 Success *split-0.dag                            
+    0     0     0     0     0    15     0 100.0 Success *split-0.dag                            
 Summary: 1 DAG total (Success:1)
                      
 </programlisting>
@@ -1413,7 +1412,6 @@ f.a    file:///home/tutorial/examples/diamond/input/f.a    site="local"</program
 
     <programlisting>$ <emphasis role="bold">more pegasus.conf</emphasis>
 # This tells Pegasus where to find the Site Catalog
-pegasus.catalog.site=XML
 pegasus.catalog.site.file=sites.xml
 
 # This tells Pegasus where to find the Replica Catalog
