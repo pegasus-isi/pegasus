@@ -44,13 +44,13 @@ all: $(addprefix $(LIBDIR)/,$(PACKAGES))
 
 $(LIBDIR)/%:
 	$(eval TARNAME := $(subst .tar.gz,,$<))
-	@echo Building $< ;\
-	mkdir -p $(LIBDIR) ;\
-	tar xzf $< ;\
-	pushd $(TARNAME) > /dev/null ;\
-	$(PYTHON) setup.py install_lib -d $(LIBDIR) > /dev/null ;\
-	popd > /dev/null ;\
-	rm -rf $(TARNAME) ;\
+	@echo Building $< &&\
+	mkdir -p $(LIBDIR) &&\
+	tar xzf $< &&\
+	pushd $(TARNAME) > /dev/null &&\
+	$(PYTHON) setup.py install_lib -d $(LIBDIR) > /dev/null &&\
+	popd > /dev/null &&\
+	rm -rf $(TARNAME) &&\
 	touch $@
 
 $(LIBDIR)/sqlalchemy: SQLAlchemy-0.8.0.tar.gz
