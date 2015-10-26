@@ -27,7 +27,9 @@ PACKAGES+=requests
 PACKAGES+=itsdangerous.py
 PACKAGES+=boto
 PACKAGES+=pam.py
-PACKAGES+=OpenSSL
+ifeq ($(shell $(CURDIR)/pyopenssl.sh),Yes)
+    PACKAGES+=OpenSSL
+endif
 PACKAGES+=plex
 ifeq ($(shell which pg_config),)
     $(warning WARNING: pg_config not found: skipping python postgresql library)
