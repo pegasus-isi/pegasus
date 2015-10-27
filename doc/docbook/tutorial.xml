@@ -270,7 +270,7 @@ tutorial@pegasus-tutorial.isi.edu's password: <emphasis role="bold">pegasus123</
 
     <programlisting>$ <emphasis role="bold">cd /home/tutorial/examples</emphasis>
 $ <emphasis role="bold">ls</emphasis> 
-﻿diamond  merge  pipeline  process  split
+﻿diamond  merge  pegasus.conf  pipeline  process  split
 </programlisting>
 
     <para>To start the tutorial, we will run an already generated split
@@ -606,7 +606,7 @@ UNRDY READY   PRE  IN_Q  POST  DONE  FAIL %DONE STATE   DAGNAME
       count files in the <filename>outputs</filename> directory. This file was
       created by the various transformations in the workflow.</para>
 
-      <programlisting><emphasis role="bold">$﻿ls outputs/
+      <programlisting><emphasis role="bold">$﻿ ls outputs/
 </emphasis>count.txt.a  count.txt.b  count.txt.c  count.txt.d
 </programlisting>
 
