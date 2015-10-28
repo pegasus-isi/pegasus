@@ -985,7 +985,11 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         anomaly = self.linedataToObject(linedata, Anomaly())
         anomaly.job_instance_id = job_instance.job_instance_id
         anomaly.metrics = json.dumps(linedata["metrics"])
-        anomaly.json = json.dumps(linedata)
+
+        if "json" in linedata:
+            anomaly.json = json.dumps(linedata["json"])
+        else:
+            anomaly.json = json.dumps(linedata)
 
         anomaly.commit_to_db(self.session)
 

@@ -1,5 +1,6 @@
 import os
 import unittest
+import json
 
 from Pegasus.db.admin.admin_loader import *
 from Pegasus.db.modules.stampede_loader import Analyzer
@@ -51,7 +52,8 @@ class TestAnomalyHandler(unittest.TestCase):
             "metrics": { "kickstart": ["stime"] },
             "value": 293847324,
             "threshold": "12832131",
-            "message": "The 'vmRSS' value exceeded the threshold (293847324 > 12832131)"
+            "message": "The 'vmRSS' value exceeded the threshold (293847324 > 12832131)",
+            "json": { "ts": "1496389227", "dag_job_id": "namd_ID0000002", "metrics": { "kickstart": ["stime"] } }
         }
 
         self.analyzer.anomaly_detected(anomaly)
@@ -127,6 +129,10 @@ class TestAnomalyHandler(unittest.TestCase):
 
         self.assertEquals(len(result), 1)
 
+        anomaly = result[0]
+
+        self.assertEquals(json.loads(anomaly.json)["infra_series_io"], "wsu-w6|141.217.114.136|172.16.1.1|2015-10-21 14:55:38")
+
     def test_on_message_kickstart_anomaly_from_anomaly_engine(self):
         self.assertIsNotNone(self.anomaly_handler, "anomaly handler wasn't initialized correctly")
 
@@ -147,7 +153,9 @@ class TestAnomalyHandler(unittest.TestCase):
 
         self.assertEquals(len(result), 1)
 
+        anomaly = result[0]
 
+        self.assertEquals(json.loads(anomaly.json)["value"], "50.38")
 
 
 if __name__ == '__main__':
