@@ -1365,9 +1365,12 @@ Sample Value  : </emphasis></emphasis> Integer<emphasis role="bold">
         </listitem>
       </orderedlist>
 
-      <para>Starting Pegasus 4.5.1 release, the follow values for concurrency
-      limits is associated with different types of jobs Pegasus
-      creates.</para>
+      <para>Starting Pegasus 4.5.1 release, the following values for
+      concurrency limits can be associated with different types of jobs
+      Pegasus creates. To enable the generation of concurrency limits with the
+      jobs set the following property in your properties file.</para>
+
+      <programlisting>pegasus.condor.concurrency.limits   true</programlisting>
 
       <table id="pegasus_concurrency_limits_mapping">
         <title>Pegasus Job Types To Condor Concurrency Limits</title>
