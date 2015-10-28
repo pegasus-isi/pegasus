@@ -2193,6 +2193,8 @@ Scope       :</emphasis> Properties
                         role="bold">Property Key: </emphasis></emphasis>pegasus.home.sysconfdir<emphasis
                       role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+
+
 Scope       :</emphasis> Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>file path
@@ -5034,6 +5036,25 @@ See Also    :</emphasis> pegasus.log.manager.formatter</literallayout></entry>
                     </listitem>
                   </varlistentry>
                 </variablelist></para></entry>
+            </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.condor.concurrency.limits<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key:</emphasis></emphasis><emphasis role="bold"> </emphasis>N/A<emphasis
+                    role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 4.5.3
+<emphasis role="bold">Type        : </emphasis>Boolean<emphasis role="bold">
+Default     : </emphasis>False</literallayout></entry>
+
+              <entry>This Boolean property is used to determine whether
+              Pegasus associates default HTCondor concurrency limits with jobs
+              or not. Setting this property to true, allows you to <link
+              linkend="job_throttling_across_workflows">throttle</link> jobs
+              across workflows, if the workflow are set to run in pure condor
+              environment.</entry>
             </row>
 
             <row>
