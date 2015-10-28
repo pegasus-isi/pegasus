@@ -1933,6 +1933,19 @@ public class PegasusProperties implements Cloneable {
                               false  ); 
     } 
     
+    /** 
+     * Whether Pegasus should associate condor concurrency limits or not
+     * 
+     * 
+     * Referred to by the "pegasus.condor.concurrency.limits" property.
+     * 
+     * @return value specified by the property. Defaults to false.
+    */ 
+    public boolean associateCondorConcurrencyLimits() { 
+        return Boolean.parse( mProps.getProperty( "pegasus.condor.concurrency.limits" ),
+                              false  ); 
+    } 
+    
 
     /**
      * Returns a boolean indicating whether we want to Condor Quote the

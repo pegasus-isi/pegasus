@@ -25,13 +25,11 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 
-import edu.isi.pegasus.planner.code.CodeGenerator;
 import edu.isi.pegasus.planner.code.CodeGeneratorException;
 import edu.isi.pegasus.planner.code.GridStart;
 import edu.isi.pegasus.planner.code.POSTScript;
 import edu.isi.pegasus.planner.code.GridStartFactory;
 import edu.isi.pegasus.planner.code.generator.Abstract;
-import edu.isi.pegasus.planner.code.CodeGeneratorFactory;
 import edu.isi.pegasus.planner.code.generator.Braindump;
 
 import edu.isi.pegasus.planner.code.generator.NetloggerJobMapper;
@@ -283,6 +281,11 @@ public class CondorGenerator extends Abstract {
      * Boolean indicating whether to assign job priorities or not.
      */
     private boolean mAssignDefaultJobPriorities;
+    
+    /**
+     * Boolean indicating whether to assign concurrency limits or not.
+     */
+    private boolean mAssociateConcurrencyLimits;
 
 
     /**
@@ -317,6 +320,7 @@ public class CondorGenerator extends Abstract {
         mTCHandle    = bag.getHandleToTransformationCatalog();
         mSiteStore   = bag.getHandleToSiteStore();
         mAssignDefaultJobPriorities = mProps.assignDefaultJobPriorities();
+        mAssociateConcurrencyLimits = mProps.associateCondorConcurrencyLimits();
 
         //instantiate and intialize the style factory
         mStyleFactory.initialize( bag );
@@ -669,9 +673,11 @@ public class CondorGenerator extends Abstract {
         PrintWriter pwClassADWriter = new PrintWriter( classADWriter );
         ClassADSGenerator.generate( pwClassADWriter, dag, job );
         
-        //PM-933 associate the corresponding concurrency limits
-        job.condorVariables.construct( Condor.CONCURRENCY_LIMITS_KEY, 
+        if( mAssociateConcurrencyLimits ){
+            //PM-933, PM-1000 associate the corresponding concurrency limits
+            job.condorVariables.construct( Condor.CONCURRENCY_LIMITS_KEY, 
                                        getConcurrencyLimit(job) );
+        }
         
         //PM-796 we print all the condor variables after the classad
         //generator has generated the user classads
