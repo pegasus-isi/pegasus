@@ -220,8 +220,7 @@ def job(username, root_wf_id, wf_id, job_id, job_instance_id):
 
     return render_template('workflow/job/job_details.html', root_wf_id=root_wf_id, wf_id=wf_id, workflow=workflow,
                            job_id=job_id, job=job, job_instance=job_instance, job_instances=job_instances,
-                           job_states=job_states, job_metrics=job_metrics, job_anomalies=job_anomalies,
-                           influxdb_url=current_app.config['INFLUXDB_URL'])
+                           job_states=job_states, job_metrics=job_metrics, job_anomalies=job_anomalies)
 
 @dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>/anomaly', methods=['GET'])
 def get_job_anomalies(username, root_wf_id, wf_id, job_id, job_instance_id):
@@ -255,12 +254,11 @@ def anomaly(username, root_wf_id, wf_id, anomaly_id):
 
     if a.anomaly_type == 'kickstart.threshold_exceeded':
         return render_template('workflow/anomaly_details.html', root_wf_id=root_wf_id, wf_id=wf_id, workflow=w, job=j,
-                               job_instance=ji, anomaly=a, influxdb_url=current_app.config['INFLUXDB_URL'])
+                               job_instance=ji, anomaly=a)
 
     elif a.anomaly_type == 'correlated.app.infra.io':
         return render_template('workflow/correlated_app_infra_io.html', root_wf_id=root_wf_id, wf_id=wf_id, workflow=w,
-                               job=j, job_instance=ji, anomaly=a, influxdb_url=current_app.config['INFLUXDB_URL'])#,
-                               #time_range=time_range)
+                               job=j, job_instance=ji, anomaly=a)
 
 
 @dashboard_routes.route('/u/<username>/r/<root_wf_id>/w/<wf_id>/j/<job_id>/ji/<job_instance_id>/job_metrics_update', methods=['GET'])

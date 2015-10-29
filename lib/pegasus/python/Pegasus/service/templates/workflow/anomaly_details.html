@@ -126,13 +126,13 @@
 
         $(function () {
             var influxdb_url = document.createElement('a');
-            influxdb_url.href = '{{ influxdb_url }}';
+            influxdb_url.href = '{{ config.INFLUXDB_URL }}';
 
             influxdb = new InfluxDB({
                 host: influxdb_url.hostname,
                 port: influxdb_url.port,
-                username: influxdb_url.username,
-                password: influxdb_url.password,
+                username: '{{ config.INFLUXDB_USER }}',
+                password: '{{ config.INFLUXDB_PASS }}',
                 ssl: influxdb_url.protocol == 'https:',
                 database: '{{ workflow.dax_label }}:{{ workflow.wf_uuid }}'
             });

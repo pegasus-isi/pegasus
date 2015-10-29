@@ -58,3 +58,9 @@ STORAGE_DIRECTORY = "/var/pegasus"
 
 #INFLUXDB_URL = 'protocol://user:pass@hostname:port'
 INFLUXDB_URL = os.getenv('INFLUXDB_URL', '')
+
+if INFLUXDB_URL:
+    from urlparse import urlparse
+    url = urlparse(INFLUXDB_URL)
+    INFLUXDB_USER = url.username
+    INFLUXDB_PASS = url.password
