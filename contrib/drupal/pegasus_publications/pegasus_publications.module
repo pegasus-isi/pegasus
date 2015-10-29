@@ -60,7 +60,30 @@ function pegasus_publications_menu() {
         'type' => MENU_CALLBACK
     );
 
+    $items['publications/bibtex'] = array(
+        'title' => 'Pegasus Bibtex',
+        'description' => 'Papers by the Pegasus group',
+        'page callback' => 'pegasus_bibtex_view',
+        'access callback' => TRUE,
+        'type' => MENU_CALLBACK
+    );
+
     return $items;
+}
+
+function pegasus_bibtex_view() {
+    $file = variable_get('pegasus_publications_bibtex', '');
+    if ($file === '') {
+        return '<h1>Bibtex file not configured</h1><p>Set the bibtex file in the module settings page.</p>';
+    }
+
+    $fh = fopen($file, 'r');
+    $result = fread($fh, filesize($file));
+    fclose($fh);
+
+    drupal_add_http_header('Content-type', 'text/plain; charset=UTF-8');
+    drupal_add_http_header('Content-Disposition', 'attachment; filename=pegasus.bib');
+    echo $result;
 }
 
 /**
@@ -76,7 +99,9 @@ function pegasus_publications_view() {
     }
 
     $bib = new Bibtex($file);
-    return $bib->Render();
+    $result = $bib->Render();
+
+    return '<p><a href="/publications/bibtex">Bibtex</a></p>' . $result;
 
     // Cache the result. This saves about 75ms / 180ms on my laptop.
     /*
