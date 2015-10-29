@@ -56,12 +56,16 @@
                     type: 'datetime',
                     dateTimeLabelFormats: {
                         second: '%H:%M:%S.%L'
-                    }/*,
-                     labels: {
-                     formatter: function() {
-                     return this.value + ' ms';
-                     }
-                     }*/
+                    },
+                    plotBands: [{
+                        color: 'rgba(255, 0, 0, .6)',
+                        width: 3,
+                        value: {{ anomaly.ts }},
+                        zIndex: 100,
+                        label: {
+                            text: 'Anomaly'
+                        }
+                    }]
                 },
                 yAxis: {
                     title: {
