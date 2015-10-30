@@ -470,7 +470,7 @@ public class ReplicaCatalogBridge
                          " retrieved from cache" , LogManager.TRACE_MESSAGE_LEVEL);
             return cacheEntry;
         }
-        result = cacheEntry; //result can be null
+        result = ( cacheEntry == null ) ? cacheEntry : new ReplicaLocation( cacheEntry ); //result can be null
         
         //we prefer location in Directory over the DAX entries
         if( this.mDirectoryReplicaStore.containsLFN( lfn ) ){
