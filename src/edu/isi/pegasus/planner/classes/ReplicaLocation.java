@@ -70,9 +70,7 @@ public class ReplicaLocation
      * Default constructor.
      */
     public ReplicaLocation(){
-        mLFN     = "";
-        mPFNList = new ArrayList<ReplicaCatalogEntry>();
-        mMetadata = new Metadata();
+        this( "", new ArrayList<ReplicaCatalogEntry>());
     }
 
     /**
@@ -93,7 +91,8 @@ public class ReplicaLocation
      * @param pfns the list of <code>ReplicaCatalogEntry</code> objects.
      */
     public ReplicaLocation( String lfn , Collection<ReplicaCatalogEntry> pfns ){
-        mLFN     = lfn;
+        mMetadata = new Metadata();
+        mLFN      = lfn;
 
         //PM-1001 always create a separate list only if required
         mPFNList = new ArrayList( pfns ) ;
