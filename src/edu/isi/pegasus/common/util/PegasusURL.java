@@ -107,8 +107,8 @@ public class PegasusURL {
         //special case for file url's
         if( url.indexOf( ":" ) == -1 ){
             url = PegasusURL.DEFAULT_PROTOCOL + "://" + url;
-            mURL = url;
         }
+	mURL = url;
 
         Matcher m = mPattern.matcher( url );
         if( m.matches() ){
