@@ -66,6 +66,11 @@ public class PegasusURL {
      * The path referred to by the PegasusURL
      */
     private String mPath;
+    
+    /**
+     * The URL.
+     */
+    private String mURL;
 
 
     /**
@@ -102,6 +107,7 @@ public class PegasusURL {
         //special case for file url's
         if( url.indexOf( ":" ) == -1 ){
             url = PegasusURL.DEFAULT_PROTOCOL + "://" + url;
+            mURL = url;
         }
 
         Matcher m = mPattern.matcher( url );
@@ -162,6 +168,17 @@ public class PegasusURL {
                append( this.getHost() );
         return prefix.toString();
     }
+    
+    
+    /**
+     * Returns the full URL denoted by this object
+     *
+     *
+     * @return      
+     */
+    public String getURL(){
+        return mURL;
+    }
 
     /**
      * Resets the internal member variables
@@ -170,6 +187,7 @@ public class PegasusURL {
         mProtocol  = "";
         mHost = "";
         mPath = "";
+        mURL = "";
     }
 
     /**
@@ -179,7 +197,8 @@ public class PegasusURL {
      */
     public String toString(){
        StringBuffer sb = new StringBuffer();
-       sb.append( "protocol -> " ).append( this.getProtocol() ).append( " , " ).
+       sb.append( "url -> " ).append( this.getURL() ).append( " , " ).
+          append( "protocol -> " ).append( this.getProtocol() ).append( " , " ).
           append( "host -> " ).append( this.getHost() ).append( " , " ).
           append( "path -> " ).append( this.getPath() ).append( " , " ).
           append( "url-prefix -> ").append( this.getURLPrefix() );
