@@ -70,16 +70,13 @@ public class ReplicaLocation
      * Overloaded constructor.
      * Intializes the member variables to the values passed.
      *
-     * @param lfn  the logical filename.
-     * @param pfns the list of <code>ReplicaCatalogEntry</code> objects.
+     * @param rl
      */
-    public ReplicaLocation( String lfn , List<ReplicaCatalogEntry> pfns ){
-        mLFN     = lfn;
-        mPFNList = pfns;
-        //sanitize pfns. add a default resource handle if not specified
-        sanitize( mPFNList );
-    }
+    public ReplicaLocation( ReplicaLocation rl ){
+        this( rl.getLFN(), rl.getPFNList() );
 
+    }
+    
     /**
      * Overloaded constructor.
      * Intializes the member variables to the values passed.
@@ -90,16 +87,15 @@ public class ReplicaLocation
     public ReplicaLocation( String lfn , Collection<ReplicaCatalogEntry> pfns ){
         mLFN     = lfn;
 
-        //create a separate list only if required
-        mPFNList = ( pfns instanceof List )?
-                   (List)pfns:
-                   //create a new list from the collection
-                   new ArrayList( pfns ) ;
+        //PM-1001 always create a separate list only if required
+        mPFNList = new ArrayList( pfns ) ;
 
         //sanitize pfns. add a default resource handle if not specified
         sanitize( mPFNList );
 
     }
+    
+    
 
     /**
      * Adds a PFN specified in the DAX to the object
