@@ -1265,7 +1265,7 @@ public class TransferEngine extends Engine {
             ReplicaCatalogEntry selLoc = (nv == null)?
                                         //select from the various replicas
                                         mReplicaSelector.selectReplica( rl, 
-                                                                        job.getStagingSiteHandle(),
+                                                                        job.getSiteHandle(),
                                                                         runTransferOnLocalSite ):
                                         //we have the replica already selected
                                         new ReplicaCatalogEntry( nv.getValue(), nv.getKey() );

@@ -79,17 +79,12 @@ public class ReplicaLocation
      * Overloaded constructor.
      * Intializes the member variables to the values passed.
      *
-     * @param lfn  the logical filename.
-     * @param pfns the list of <code>ReplicaCatalogEntry</code> objects.
+     * @param rl
      */
-    public ReplicaLocation( String lfn , List<ReplicaCatalogEntry> pfns ){
-        this();
-        mLFN = lfn;
-        mPFNList = pfns;
-        //sanitize pfns. add a default resource handle if not specified
-        sanitize( mPFNList );
+    public ReplicaLocation( ReplicaLocation rl ){
+        this( rl.getLFN(), rl.getPFNList() );
     }
-
+    
     /**
      * Overloaded constructor.
      * Intializes the member variables to the values passed.
@@ -98,13 +93,16 @@ public class ReplicaLocation
      * @param pfns the list of <code>ReplicaCatalogEntry</code> objects.
      */
     public ReplicaLocation( String lfn , Collection<ReplicaCatalogEntry> pfns ){
-        this( lfn, 
-              //create a separate list only if required
-              ( pfns instanceof List )?
-                   (List)pfns:
-                   //create a new list from the collection
-                   new ArrayList( pfns ) );
+        mLFN     = lfn;
+
+        //PM-1001 always create a separate list only if required
+        mPFNList = new ArrayList( pfns ) ;
+
+        //sanitize pfns. add a default resource handle if not specified
+        sanitize( mPFNList );
     }
+    
+    
 
     /**
      * Adds a PFN specified in the DAX to the object
@@ -120,7 +118,7 @@ public class ReplicaLocation
 
     /**
      * Add a PFN and it's attributes. Any existing
-     * mapping with the same PFN will be replaced, including all its
+     * mapping with the same PFN and site attribute will be replaced, including all its
      * attributes.
      *
      * @param tuple  the <code>ReplicaCatalogEntry</code> object containing the
@@ -128,7 +126,8 @@ public class ReplicaLocation
      */
     public void addPFN( ReplicaCatalogEntry tuple ){
         boolean seen = false;
-        String pfn = tuple.getPFN();
+        String pfn  = tuple.getPFN();
+        String site = tuple.getResourceHandle();
 
         sanitize( tuple );
 
@@ -136,7 +135,8 @@ public class ReplicaLocation
         //same pfn
         for ( Iterator i= this.pfnIterator(); i.hasNext() && ! seen; ) {
             ReplicaCatalogEntry rce = (ReplicaCatalogEntry) i.next();
-            if ( (seen = pfn.equals(rce.getPFN())) ) {
+            seen = pfn.equals(rce.getPFN()) && site.equals( rce.getResourceHandle() );
+            if ( seen ) {
                 try {
                     i.remove();
                 } catch ( UnsupportedOperationException uoe ) {

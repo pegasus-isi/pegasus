@@ -41,7 +41,10 @@ import java.util.regex.Pattern;
 import edu.isi.pegasus.common.util.Boolean;
 import edu.isi.pegasus.common.util.Currently;
 import edu.isi.pegasus.common.util.Escape;
+
 import edu.isi.pegasus.common.util.VariableExpander;
+import edu.isi.pegasus.common.util.PegasusURL;
+
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 
@@ -278,7 +281,7 @@ public class SimpleFile implements ReplicaCatalog {
                     sb = new StringBuffer();
                     break;
                 case 3: // sb to pfn
-                    pfn = sb.toString();
+                    pfn = new PegasusURL( sb.toString()).getURL();
                     sb = new StringBuffer();
                     break;
                 case 4: // sb to key
