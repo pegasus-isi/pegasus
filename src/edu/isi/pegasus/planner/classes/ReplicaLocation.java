@@ -115,7 +115,7 @@ public class ReplicaLocation
 
     /**
      * Add a PFN and it's attributes. Any existing
-     * mapping with the same PFN will be replaced, including all its
+     * mapping with the same PFN and site attribute will be replaced, including all its
      * attributes.
      *
      * @param tuple  the <code>ReplicaCatalogEntry</code> object containing the
@@ -123,7 +123,8 @@ public class ReplicaLocation
      */
     public void addPFN( ReplicaCatalogEntry tuple ){
         boolean seen = false;
-        String pfn = tuple.getPFN();
+        String pfn  = tuple.getPFN();
+        String site = tuple.getResourceHandle();
 
         sanitize( tuple );
 
@@ -131,7 +132,8 @@ public class ReplicaLocation
         //same pfn
         for ( Iterator i= this.pfnIterator(); i.hasNext() && ! seen; ) {
             ReplicaCatalogEntry rce = (ReplicaCatalogEntry) i.next();
-            if ( (seen = pfn.equals(rce.getPFN())) ) {
+            seen = pfn.equals(rce.getPFN()) && site.equals( rce.getResourceHandle() );
+            if ( seen ) {
                 try {
                     i.remove();
                 } catch ( UnsupportedOperationException uoe ) {
