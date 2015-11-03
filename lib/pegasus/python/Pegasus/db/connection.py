@@ -186,7 +186,7 @@ def get_wf_uuid(submit_dir):
     
     # Return if we cannot parse the braindump.txt file
     if not top_level_wf_params:
-        logger.error("Unable to process braindump.txt in %s" % (submit_dir))
+        log.error("Unable to process braindump.txt in %s" % (submit_dir))
         return None
     
     # Get wf_uuid for this workflow
@@ -194,7 +194,7 @@ def get_wf_uuid(submit_dir):
     if (top_level_wf_params.has_key('wf_uuid')):
         wf_uuid = top_level_wf_params['wf_uuid']
     else:
-        logger.error("workflow id cannot be found in the braindump.txt ")
+        log.error("workflow id cannot be found in the braindump.txt ")
         return None
     
     return wf_uuid
