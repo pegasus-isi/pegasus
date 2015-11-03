@@ -1,0 +1,211 @@
+#!/usr/bin/env python2.6
+
+"""
+Pegasus Metadata is a tool to query metadata collected by Pegasus workflows.
+
+Usage: pegasus-metadata [-h] [-v] [-c] {task,file,workflow} ... submit_dir
+"""
+
+##
+#  Copyright 2007-2012 University Of Southern California
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+##
+
+import sys
+import subprocess
+
+import os
+
+
+def set_python_paths():
+    # Use pegasus-config to find our lib path
+    bin_dir = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0])))
+    pegasus_config = os.path.join(bin_dir, 'pegasus-config') + ' --noeoln --python'
+    lib_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
+    pegasus_config = os.path.join(bin_dir, 'pegasus-config') + ' --noeoln --python-externals'
+    lib_ext_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
+
+    # Insert this directory in our search path
+    sys.path.insert(0, lib_dir)
+    sys.path.insert(0, lib_ext_dir)
+
+
+set_python_paths()
+
+import logging
+import argparse
+
+from Pegasus.tools import utils
+from Pegasus.db import connection
+from Pegasus.db.connection import ConnectionError, DBType
+from Pegasus.service.monitoring.queries import StampedeWorkflowQueries, StampedeDBNotFoundError
+
+
+def configure_logging(verbosity=0):
+    verbosity = min(3, verbosity)
+
+    log_levels = [
+        logging.ERROR,
+        logging.WARN,
+        logging.INFO,
+        logging.DEBUG
+    ]
+
+    utils.configureLogging(level=log_levels[verbosity])
+
+
+def get_workflow_uuid(submit_dir):
+    braindump = os.path.join(submit_dir, 'braindump.txt')
+
+    if not os.path.isfile(braindump):
+        raise ValueError('Not a valid workflow submit directory: %r' % submit_dir)
+
+    braindump = utils.slurp_braindb(submit_dir)
+    return braindump['wf_uuid']
+
+
+def get_workflow_uri(submit_dir):
+    return connection.url_by_submitdir(submit_dir, DBType.WORKFLOW)
+
+
+def render_metas(metas, format=None):
+    if not metas:
+        return
+
+    if format is None:
+        max_key_len = 0
+
+        for meta in metas:
+            max_key_len = max(max_key_len, len(meta.key))
+
+        max_key_len += 1
+
+        for meta in metas:
+            print '%s: %s' % (meta.key.ljust(max_key_len), meta.value)
+
+
+def workflow_metadata(recursive=False, submit_dir='.', *args, **kwargs):
+    logging.debug('workflow_metadata')
+
+    try:
+        wf_uuid = get_workflow_uuid(submit_dir)
+        logging.debug('Workflow UUID: %s' % wf_uuid)
+        db_uri = get_workflow_uri(submit_dir)
+
+        queries = StampedeWorkflowQueries(db_uri)
+
+        if recursive:
+            pass
+
+        else:
+            workflow_metas = queries.get_workflow_meta(wf_uuid).records
+            render_metas(workflow_metas)
+
+    except ValueError as e:
+        logging.error(e)
+        sys.exit(1)
+
+    except ConnectionError as e:
+        logging.error(e)
+        sys.exit(2)
+
+    except StampedeDBNotFoundError as e:
+        logging.error(e)
+        sys.exit(3)
+
+
+def task_metadata(task_id=None, abs_task_id=None, submit_dir='.', *args, **kwargs):
+    logging.debug('task_metadata')
+
+    if not task_id and not abs_task_id:
+        logging.error('task_id or task_name is required')
+        sys.exit(1)
+
+    if task_id and abs_task_id:
+        logging.warning('Both task_id and task_name specified, ignoring task_name')
+
+    try:
+        wf_uuid = get_workflow_uuid(submit_dir)
+        logging.debug('Workflow UUID: %s' % wf_uuid)
+        db_uri = get_workflow_uri(submit_dir)
+
+        queries = StampedeWorkflowQueries(db_uri)
+
+        if task_id is None and abs_task_id:
+            logging.debug('Get task metadata for abs_task_id %s' % abs_task_id)
+            workflow = queries.get_workflow_tasks(wf_uuid, query='t.abs_task_id = %r' % abs_task_id)
+
+            if workflow.total_filtered == 0:
+                raise ValueError('Invalid task_name %r' % abs_task_id)
+
+            task_id = workflow.records[0].task_id
+
+        if task_id:
+            logging.debug('Get task metadata for task_id %s' % task_id)
+            task_metas = queries.get_task_meta(task_id).records
+
+        render_metas(task_metas)
+
+    except ValueError as e:
+        logging.error(e)
+        sys.exit(1)
+
+    except ConnectionError as e:
+        logging.error(e)
+        sys.exit(2)
+
+    except StampedeDBNotFoundError as e:
+        logging.error(e)
+        sys.exit(3)
+
+
+def file_metadata(file_name=None, list_files=False, submit_dir='.', *args, **kwargs):
+    logging.debug('file_metadata')
+
+
+def main():
+    parser = argparse.ArgumentParser(description='Pegasus Metadata Query Tool')
+    sub_parser = parser.add_subparsers(title='Metadata types', description='Types of metadata that can be queried')
+
+    # Workflow Metadata Options
+    workflow = sub_parser.add_parser('workflow')
+    workflow.add_argument('-r', '--recursive', default=False, action='store_true')
+    workflow.set_defaults(func=workflow_metadata)
+
+    # Task Metadata Options
+    task = sub_parser.add_parser('task')
+    task.add_argument('-i', '--task-id', type=int)
+    task.add_argument('-n', '--task-name', dest='abs_task_id')
+    task.set_defaults(func=task_metadata)
+
+    # File Metadata Options
+    file = sub_parser.add_parser('file')
+    file.add_argument('-n', '--file-name')
+    file.add_argument('-l', '--list', default=False, action='store_true', dest='list_files')
+    file.set_defaults(func=file_metadata)
+
+    parser.add_argument('-v', '--verbose', default=0, action='count', help='Logging verbosity')
+    parser.add_argument('-c', '--conf', default=None, action='count', dest='config',
+                        help='Specifies the properties file to use. This option overrides all other property files.')
+    parser.add_argument('submit_dir', default='.', help='Workflow submit directory')
+
+    args = parser.parse_args(sys.argv[1:])
+
+    configure_logging(args.verbose)
+
+    args.func(**vars(args))
+
+
+if __name__ == '__main__':
+    main()

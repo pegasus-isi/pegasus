@@ -16,6 +16,7 @@ ifneq ($(shell $(PYTHON) -V 2>&1 | grep -E 'ython 2\.[3-6]'),)
     PACKAGES+=ordereddict.py
 endif
 
+PACKAGES+=argparse
 PACKAGES+=flask
 PACKAGES+=flask_cache
 PACKAGES+=flask_sqlalchemy.py
@@ -55,6 +56,7 @@ $(LIBDIR)/%:
 	rm -rf $(TARNAME) &&\
 	touch $@
 
+$(LIBDIR)/argparse: argparse-1.4.0.tar.gz
 $(LIBDIR)/sqlalchemy: SQLAlchemy-0.8.0.tar.gz
 $(LIBDIR)/flask: Flask-0.10.tar.gz
 $(LIBDIR)/flask_cache: Flask-Cache-0.13.1.tar.gz

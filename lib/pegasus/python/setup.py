@@ -53,6 +53,7 @@ def setup_installer_dependencies():
 
     if sys.version_info[1] < 7:
         install_requires.append('ordereddict==1.1')
+        install_requires.append('argparse==1.4.0')
 
     if sys.version_info[1] <= 4:
         install_requires.append('SQLAlchemy==0.7.6')
