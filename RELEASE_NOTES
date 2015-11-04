@@ -1,6 +1,49 @@
 $Id
 
 ===============================
+Release Notes for PEGASUS 4.5.3
+===============================
+
+We are happy to annouce the release of Pegasus 4.5.3. Pegasus 4.5.3 is
+a minor release, which contains minor enhancements and fixes bugs in
+the Pegasus 4.5.2 release.
+
+The following issues were addressed and more information can be found
+in the Pegasus Jira (https://jira.isi.edu/)
+
+Bug Fixes:
+
+  [PM-980] - pegasus-plots fails with "-p all"
+  [PM-982] - MRC replica catalog backend does not work
+  [PM-987] - noop jobs created by Pegasus don't use DAGMan NOOP keyword
+  [PM-996] - Pegasus Statistics transformation stats columns getting
+             larger ad larger with more sub workflows
+  [PM-997] - pyOpenSSL v0.13 does not work with new version of openssl
+             (1.0.2d) and El Captain
+
+Improvements:
+
+  [PM-976] - ignore register and transfer flags for input files
+  [PM-981] - register only based names for output files with deep LFN's
+  [PM-983] - data reuse algorithm should consider file locations while
+             cascading deletion upwards
+  [PM-984] - condor_rm on a pegasus-kickstart wrapped job does not
+             return stdout back
+  [PM-988] - pegasus-transfer should handle file://localhost/ URL's
+  [PM-989] - pegasus-analyzer debug job option should have a hard check
+             for output files
+  [PM-993] - Show dax/dag planning jobs in
+             failed/succesfull/running/failing tabs in dashboard
+  [PM-1000] - turn off concurrency limits by default
+
+New Features:
+
+  [PM-985] - separate input and output replica catalog
+  [PM-986] - input-dir option to pegasus-plan should be a comma
+             separated list
+
+
+===============================
 Release Notes for PEGASUS 4.5.2
 ===============================
 
