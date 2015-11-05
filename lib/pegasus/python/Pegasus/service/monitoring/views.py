@@ -22,15 +22,10 @@ import hashlib
 
 import StringIO
 
-try:
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
-
 from flask import g, request, make_response, current_app
 
 from Pegasus.service import cache
-from Pegasus.service.base import InvalidJSONError
+from Pegasus.service.base import InvalidJSONError, OrderedDict
 from Pegasus.service.monitoring import monitoring_routes
 from Pegasus.service.monitoring.utils import jsonify
 from Pegasus.service.monitoring.queries import MasterWorkflowQueries, StampedeWorkflowQueries
@@ -363,7 +358,7 @@ Workflow Meta
     "key"         : string:key,
     "value"       : string:value,
     "_links"      : {
-        "workflow" : "<href:workflow>"
+        "workflow" : <href:workflow>
     }
 }
 """
@@ -406,6 +401,71 @@ def get_workflow_meta(username, m_wf_id, wf_id):
 
 
 """
+Workflow Files
+
+{
+    "wf_id"  : int:wf_id,
+    "lfn_id" : string:lfn_id,
+    "lfn"    : string:lfn,
+    "pfns"   : [
+         {
+            "pfn_id" : <int:pfn_id>
+            "pfn"    : <string:pfn>
+            "site"   : <string:site>
+         }
+    ],
+    "meta" : [
+         {
+            "meta_id" : <int:meta_id>
+            "key"     : <string:key>
+            "value"   : <string:value>
+         }
+    ],
+    "_links"      : {
+        "workflow" : <href:workflow>
+    }
+}
+"""
+
+
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/files')
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/files/query', methods=['POST'])
+def get_workflow_files(username, m_wf_id, wf_id):
+    """
+    Returns a collection of workflows.
+
+    :query int start-index: Return results starting from record <start-index> (0 indexed)
+    :query int max-results: Return a maximum of <max-results> records
+    :query string query: Search criteria
+    :query string order: Sorting criteria
+    :query boolean pretty-print: Return formatted JSON response
+
+    :statuscode 200: OK
+    :statuscode 204: No content; when no workflows found.
+    :statuscode 400: Bad request
+    :statuscode 401: Authentication failure
+    :statuscode 403: Authorization failure
+
+    :return type: Collection
+    :return resource: Workflow
+    """
+    queries = StampedeWorkflowQueries(g.stampede_db_url)
+
+    paged_response = queries.get_workflow_files(g.m_wf_id, **g.query_args)
+
+    if paged_response.total_records == 0:
+        log.debug('Total records is 0; returning HTTP 204 No content')
+        return make_response('', 204, JSON_HEADER)
+
+    #
+    # Generate JSON Response
+    #
+    response_json = jsonify(paged_response)
+
+    return make_response(response_json, 200, JSON_HEADER)
+
+
+"""
 Workflow State
 
 {
@@ -415,7 +475,7 @@ Workflow State
     "restart_count" : int:restart_count,
     "timestamp"     : datetime:timestamp,
     "_links"        : {
-        "workflow" : "<href:workflow>"
+        "workflow" : <href:workflow>
     }
 }
 """

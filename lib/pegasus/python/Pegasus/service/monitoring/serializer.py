@@ -14,11 +14,6 @@
 
 __author__ = 'Rajiv Mayani'
 
-try:
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
-
 from decimal import Decimal
 
 from flask import url_for
@@ -27,13 +22,12 @@ from flask.json import JSONEncoder
 from sqlalchemy.orm.attributes import instance_state
 
 from Pegasus.db.schema import *
-
-from Pegasus.service.base import PagedResponse, ErrorResponse
+from Pegasus.service.base import PagedResponse, ErrorResponse, OrderedSet, OrderedDict
 from Pegasus.service.monitoring.resources import RootWorkflowResource, RootWorkflowstateResource
 from Pegasus.service.monitoring.resources import WorkflowResource, WorkflowMetaResource, WorkflowstateResource
+from Pegasus.service.monitoring.resources import RCLFNResource, RCPFNResource, RCMetaResource
 from Pegasus.service.monitoring.resources import JobResource, HostResource, JobInstanceResource, JobstateResource
 from Pegasus.service.monitoring.resources import TaskResource, TaskMetaResource, InvocationResource
-
 
 log = logging.getLogger(__name__)
 
@@ -44,7 +38,7 @@ class PegasusServiceJSONEncoder(JSONEncoder):
     """
 
     def default(self, obj):
-        def obj_to_dict(resource, ignore_unloaded=False):
+        def obj_to_dict(resource, fields=None, ignore_unloaded=False):
             obj_dict = OrderedDict()
 
             if ignore_unloaded:
@@ -54,6 +48,14 @@ class PegasusServiceJSONEncoder(JSONEncoder):
             for attribute in resource.fields:
                 if not ignore_unloaded or (ignore_unloaded and attribute not in unloaded):
                     obj_dict[attribute] = getattr(obj, attribute)
+
+            if fields:
+                for attribute in fields:
+                    try:
+                        if not ignore_unloaded or (ignore_unloaded and attribute not in unloaded):
+                            obj_dict[attribute] = getattr(obj, attribute)
+                    except AttributeError:
+                        pass
 
             return obj_dict
 
@@ -198,6 +200,26 @@ class PegasusServiceJSONEncoder(JSONEncoder):
                 ('workflow', url_for('.get_workflow', wf_id=obj.wf_id)),
                 ('job_instance', url_for('.get_job_instance', job_instance_id=obj.job_instance_id))
             ])
+
+            return json_record
+
+        elif isinstance(obj, RCLFN):
+            json_record = obj_to_dict(RCLFNResource(), fields=['pfns', 'meta'])
+
+            return json_record
+
+        elif isinstance(obj, RCPFN):
+            json_record = obj_to_dict(RCPFNResource())
+
+            return json_record
+
+        elif isinstance(obj, RCMeta):
+            json_record = obj_to_dict(RCMetaResource())
+
+            return json_record
+
+        elif isinstance(obj, OrderedSet):
+            json_record = [item for item in obj]
 
             return json_record
 
