@@ -79,20 +79,20 @@ def get_workflow_uri(submit_dir):
     return connection.url_by_submitdir(submit_dir, DBType.WORKFLOW)
 
 
-def render_metas(metas, format=None):
+def render_metas(metas, indent=''):
     if not metas:
+        print '%sNo metadata found' % indent
         return
 
-    if format is None:
-        max_key_len = 0
+    max_key_len = 0
 
-        for meta in metas:
-            max_key_len = max(max_key_len, len(meta.key))
+    for meta in metas:
+        max_key_len = max(max_key_len, len(meta.key))
 
-        max_key_len += 1
+    max_key_len += 1
 
-        for meta in metas:
-            print '%s: %s' % (meta.key.ljust(max_key_len), meta.value)
+    for meta in metas:
+        print '%s%s: %s' % (indent, meta.key.ljust(max_key_len), meta.value)
 
 
 def workflow_metadata(recursive=False, submit_dir='.', *args, **kwargs):
@@ -170,8 +170,48 @@ def task_metadata(task_id=None, abs_task_id=None, submit_dir='.', *args, **kwarg
         sys.exit(3)
 
 
-def file_metadata(file_name=None, list_files=False, submit_dir='.', *args, **kwargs):
-    logging.debug('file_metadata')
+def file_metadata(file_name=None, submit_dir='.', *args, **kwargs):
+    logging.debug('task_metadata')
+
+    list_files = not file_name
+
+    try:
+        wf_uuid = get_workflow_uuid(submit_dir)
+        logging.debug('Workflow UUID: %s' % wf_uuid)
+        db_uri = get_workflow_uri(submit_dir)
+
+        queries = StampedeWorkflowQueries(db_uri)
+
+        if list_files:
+            logging.debug('Get file metadata for all files')
+            workflow_files = queries.get_workflow_files(wf_uuid)
+
+            if workflow_files.total_filtered == 0:
+                print 'No files found'
+
+        else:
+            logging.debug('Get file metadata for lfn %r' % file_name)
+
+            workflow_files = queries.get_workflow_files(wf_uuid, query='l.lfn = %r' % file_name)
+
+            if workflow_files.total_filtered == 0:
+                raise ValueError('Invalid file %r' % file_name)
+
+        for wf_file in workflow_files.records:
+            print 'File %s' % wf_file.lfn
+            render_metas(wf_file.meta, '    ')
+
+    except ValueError as e:
+        logging.error(e)
+        sys.exit(1)
+
+    except ConnectionError as e:
+        logging.error(e)
+        sys.exit(2)
+
+    except StampedeDBNotFoundError as e:
+        logging.error(e)
+        sys.exit(3)
 
 
 def main():
@@ -192,7 +232,7 @@ def main():
     # File Metadata Options
     file = sub_parser.add_parser('file')
     file.add_argument('-n', '--file-name')
-    file.add_argument('-l', '--list', default=False, action='store_true', dest='list_files')
+    #file.add_argument('-l', '--list', default=False, action='store_true', dest='list_files')
     file.set_defaults(func=file_metadata)
 
     parser.add_argument('-v', '--verbose', default=0, action='count', help='Logging verbosity')

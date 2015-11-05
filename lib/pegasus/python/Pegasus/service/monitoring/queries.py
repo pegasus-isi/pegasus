@@ -26,11 +26,12 @@ from Pegasus.db.errors import StampedeDBNotFoundError
 from Pegasus.db.admin.admin_loader import DBAdminError
 from Pegasus.service import cache
 from Pegasus.service.base import PagedResponse, BaseQueryParser, BaseOrderParser, InvalidQueryError, InvalidOrderError
+from Pegasus.service.base import OrderedSet, OrderedDict
 from Pegasus.service.monitoring.resources import RootWorkflowResource, RootWorkflowstateResource, CombinationResource
 from Pegasus.service.monitoring.resources import WorkflowResource, WorkflowMetaResource, WorkflowstateResource
+from Pegasus.service.monitoring.resources import RCLFNResource, RCPFNResource, RCMetaResource
 from Pegasus.service.monitoring.resources import JobResource, HostResource, JobInstanceResource, JobstateResource
 from Pegasus.service.monitoring.resources import TaskResource, TaskMetaResource, InvocationResource
-
 
 log = logging.getLogger(__name__)
 
@@ -500,6 +501,88 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         return PagedResponse(records, total_records, total_filtered)
 
+    # Workflow Files
+
+    def get_workflow_files(self, wf_id, start_index=None, max_results=None, query=None, order=None,
+                           use_cache=False, **kwargs):
+        """
+        Returns a collection of all files associated with the Workflow.
+
+        :param start_index: Return results starting from record `start_index`
+        :param max_results: Return a maximum of `max_results` records
+        :param query: Filtering criteria
+        :param order: Sorting criteria
+        :param use_cache: If available, use cached results
+
+        :return: Collection of Workflow Files
+        """
+        wf_id = self.wf_uuid_to_wf_id(wf_id)
+
+        #
+        # Construct SQLAlchemy Query `q` to count.
+        #
+        q = self.session.query(WorkflowFiles)
+        q = q.filter(WorkflowFiles.wf_id == wf_id)
+
+        total_records = total_filtered = self._get_count(q, use_cache)
+
+        if total_records == 0:
+            return PagedResponse([], 0, 0)
+
+        q_in = self.session.query(distinct(RCLFN.lfn_id.label(RCLFN.lfn_id)))
+        q_in = q_in.join(WorkflowFiles, WorkflowFiles.wf_id == wf_id)
+        q_in = q_in.outerjoin(RCPFN, RCLFN.lfn_id == RCPFN.lfn_id)
+        q_in = q_in.outerjoin(RCMeta, RCLFN.lfn_id == RCMeta.lfn_id)
+
+        #
+        # Construct SQLAlchemy Query `q` to filter.
+        #
+        if query:
+            q_in = self._evaluate_query(q_in, query,
+                                        CombinationResource(RCLFNResource(), RCPFNResource(), RCMetaResource()))
+            total_filtered = self._get_count(q_in, use_cache)
+
+            if total_filtered == 0 or (start_index and start_index >= total_filtered):
+                log.debug('total_filtered is 0 or start_index >= total_filtered')
+                return PagedResponse([], total_records, total_filtered)
+
+        #
+        # Construct SQLAlchemy Query `q` to sort
+        #
+        if order:
+            q_in = self._add_ordering(q_in, order,
+                                      CombinationResource(RCLFNResource(), RCPFNResource(), RCMetaResource()))
+
+        #
+        # Construct SQLAlchemy Query `q` to paginate.
+        #
+        q_in = WorkflowQueries._add_pagination(q_in, start_index, max_results, total_filtered)
+
+        q_in = q_in.subquery()
+        q = self.session.query(RCLFN, RCPFN, RCMeta)
+        q = q.outerjoin(RCPFN, RCLFN.lfn_id == RCPFN.lfn_id)
+        q = q.outerjoin(RCMeta, RCLFN.lfn_id == RCMeta.lfn_id)
+        q = q.filter(RCLFN.lfn_id.in_(q_in))
+
+        records = self._get_all(q, use_cache)
+
+        from Pegasus.service.monitoring.utils import csv_to_json
+
+        schema = OrderedDict([
+            (RCLFN, 'root'),
+            (RCPFN, ('pfns', RCLFN, OrderedSet)),
+            (RCMeta, ('meta', RCLFN, OrderedSet))
+        ])
+
+        index = OrderedDict([
+            (RCLFN, 0),
+            (RCPFN, 1),
+            (RCMeta, 2)
+        ])
+
+        records = csv_to_json(records, schema, index)
+        return PagedResponse(records, total_records, total_filtered)
+
     # Workflow State
 
     def get_workflow_state(self, wf_id, recent=False, start_index=None, max_results=None, query=None, order=None,
@@ -946,7 +1029,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
     # Task Meta
 
     def get_task_meta(self, task_id, start_index=None, max_results=None, query=None, order=None, use_cache=False,
-                          **kwargs):
+                      **kwargs):
         """
         Returns a collection of the TaskMeta objects.
 
@@ -1068,6 +1151,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         :return: job-instance record
         """
+
         def timeout_duration(ji):
             return 300 if ji and ji.exitcode is not None else timeout
 
