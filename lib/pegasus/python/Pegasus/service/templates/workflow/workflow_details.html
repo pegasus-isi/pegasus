@@ -93,26 +93,49 @@ function loadFiles() {
             var files = data.records;
             var table = $('<table id="files_table" class="table-fixed workflow_info"></table>');
             table.append($('<col width="30%">'));
+            table.append($('<col width="50%">'));
 
             $('.files-badge').html(files.length);
-            console.log(files);
+
             for (var i = 0; i < files.length; ++i) {
                 var lfn = files[i].lfn;
                 var pfns = files[i].pfns;
+                var metas = files[i].meta;
+
+                var tr = $('<tr></tr>');
+                var th = $('<th>' + lfn + '</th>');
+                var td, metatd;
 
                 if (pfns == null) {
-                    var tr = $('<tr></tr>');
-                    var th = $('<th>' + lfn + '</th>');
-                    var td = $('<td>PFN not available yet</td>');
-                    table.append(tr.append(th).append(td));
+                    td = $('<td>PFN not available yet</td>');
                 } else {
+                    td = $('<table></table>');
+
                     for (var j = 0; j < pfns.length; ++j) {
-                        var tr = $('<tr></tr>');
-                        var th = $('<th>' + lfn + '</th>');
-                        var td = $('<td>' + pfns[j].pfn + '</td>');
-                        table.append(tr.append(th).append(td));
+                        var tr_in = $('<tr style="background-color:transparent;"></tr>');
+                        var td_in = $('<td style="padding:0">' + pfns[j].pfn + '</td>');
+                        td.append(tr_in.append(td_in));
                     }
+
+                    td = $('<td></td>').append(td);
                 }
+
+                if (metas == null) {
+                    metatd = $('<td>No metadata available</td>');
+                } else {
+                    metatd = $('<table cellpadding=0></table>');
+
+                    for (var j = 0; j < metas.length; ++j) {
+                        var tr_in = $('<tr style="background-color:transparent;"></tr>');
+                        var key = $('<td style="padding:0 .5em 0 0">' + metas[j].key + '</td>');
+                        var value = $('<td style="padding:0">' + metas[j].value + '</td>');
+                        metatd.append(tr_in.append(key).append(value));
+                    }
+
+                    metatd = $('<td></td>').append(metatd);
+                }
+
+                table.append(tr.append(th).append(td).append(metatd));
             }
 
             $('#files').html(table);
