@@ -75,7 +75,7 @@ function loadFiles() {
     {
         url     : '{{ url_for('monitoring_routes.get_workflow_files', m_wf_id=root_wf_id, wf_id=wf_id) }}',
         data: {
-            order: 'l.lfn desc'
+            order: 'l.lfn'
         },
         dataType: 'json',
         error   : function (xhr, textStatus, errorThrown)
