@@ -32,6 +32,7 @@ from Pegasus.service.monitoring.resources import WorkflowResource, WorkflowMetaR
 from Pegasus.service.monitoring.resources import RCLFNResource, RCPFNResource, RCMetaResource
 from Pegasus.service.monitoring.resources import JobResource, HostResource, JobInstanceResource, JobstateResource
 from Pegasus.service.monitoring.resources import TaskResource, TaskMetaResource, InvocationResource
+from Pegasus.service.monitoring.utils import csv_to_json
 
 log = logging.getLogger(__name__)
 
@@ -529,7 +530,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         if total_records == 0:
             return PagedResponse([], 0, 0)
 
-        q_in = self.session.query(distinct(RCLFN.lfn_id.label(RCLFN.lfn_id)))
+        q_in = self.session.query(distinct(RCLFN.lfn_id).label('lfn_id'))
         q_in = q_in.join(WorkflowFiles, WorkflowFiles.wf_id == wf_id)
         q_in = q_in.outerjoin(RCPFN, RCLFN.lfn_id == RCPFN.lfn_id)
         q_in = q_in.outerjoin(RCMeta, RCLFN.lfn_id == RCMeta.lfn_id)
@@ -547,26 +548,26 @@ class StampedeWorkflowQueries(WorkflowQueries):
                 return PagedResponse([], total_records, total_filtered)
 
         #
-        # Construct SQLAlchemy Query `q` to sort
-        #
-        if order:
-            q_in = self._add_ordering(q_in, order,
-                                      CombinationResource(RCLFNResource(), RCPFNResource(), RCMetaResource()))
-
-        #
         # Construct SQLAlchemy Query `q` to paginate.
         #
         q_in = WorkflowQueries._add_pagination(q_in, start_index, max_results, total_filtered)
 
-        q_in = q_in.subquery()
+        #
+        # Finish Construction of Base SQLAlchemy Query `q`
+        #
+        q_in = q_in.subquery('distinct_lfns')
         q = self.session.query(RCLFN, RCPFN, RCMeta)
         q = q.outerjoin(RCPFN, RCLFN.lfn_id == RCPFN.lfn_id)
         q = q.outerjoin(RCMeta, RCLFN.lfn_id == RCMeta.lfn_id)
-        q = q.filter(RCLFN.lfn_id.in_(q_in))
+        q = q.join(q_in, RCLFN.lfn_id == q_in.c.lfn_id)
+
+        #
+        # Construct SQLAlchemy Query `q` to sort
+        #
+        if order:
+            q = self._add_ordering(q, order, CombinationResource(RCLFNResource(), RCPFNResource(), RCMetaResource()))
 
         records = self._get_all(q, use_cache)
-
-        from Pegasus.service.monitoring.utils import csv_to_json
 
         schema = OrderedDict([
             (RCLFN, 'root'),
@@ -581,6 +582,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         ])
 
         records = csv_to_json(records, schema, index)
+
         return PagedResponse(records, total_records, total_filtered)
 
     # Workflow State
