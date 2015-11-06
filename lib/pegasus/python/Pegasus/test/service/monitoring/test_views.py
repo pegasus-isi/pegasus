@@ -344,6 +344,33 @@ class TestStampedeWorkflowMetaQueries(NoAuthFlaskTestCase):
         self.assertTrue(metas['records'][0]['value'], 'test')
 
 
+class TestStampedeWorkflowFilesQueries(NoAuthFlaskTestCase):
+    def test_get_workflow_files(self):
+        rv = self.get_context('/api/v1/user/%s/root/1/workflow/1/files' % self.user, pre_callable=self.pre_callable)
+
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.content_type.lower(), 'application/json')
+
+        files = self.read_json_response(rv)
+
+        self.assertEqual(files['records'][0]['lfn'], 'f.b')
+        self.assertEqual(len(files['records'][0]['pfns']), 4)
+        self.assertEqual(len(files['records'][0]['meta']), 1)
+        self.assertEqual(len(files['records']), 1)
+        self.assertEqual(len(files['records']), files['_meta']['records_total'])
+        self.assertEqual(files['_meta']['records_total'], files['_meta']['records_filtered'])
+
+    def test_get_workflow_files_query(self):
+        rv = self.get_context("/api/v1/user/%s/root/1/workflow/1/files?query=rm.key = 'sizeeee'" % self.user, pre_callable=self.pre_callable)
+
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.content_type.lower(), 'application/json')
+
+        files = self.read_json_response(rv)
+        self.assertEqual(len(files['records']), files['_meta']['records_filtered'])
+        self.assertEqual(files['_meta']['records_total'], 1)
+
+
 class TestStampedeWorkflowStateQueries(NoAuthFlaskTestCase):
     def test_get_workflowstates(self):
         rv = self.get_context('/api/v1/user/%s/root/1/workflow/1/state' % self.user, pre_callable=self.pre_callable)
