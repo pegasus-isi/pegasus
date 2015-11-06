@@ -67,10 +67,10 @@ class PegasusServiceJSONEncoder(JSONEncoder):
             if obj.total_records or obj.total_filtered:
                 meta = OrderedDict()
 
-                if obj.total_records:
+                if obj.total_records is not None:
                     meta['records_total'] = obj.total_records
 
-                if obj.total_filtered:
+                if obj.total_filtered is not None:
                     meta['records_filtered'] = obj.total_filtered
 
                 json_record['_meta'] = meta
