@@ -44,7 +44,7 @@ function loadMetadata() {
         success : function (data, textStatus, xhr)
         {
             if (xhr.status == 204) {
-                $('.badge').html(0);
+                $('.metadata-badge').html(0);
                 $('#metadata').html('No metadata associated with this workflow');
                 return;
             }
@@ -53,7 +53,7 @@ function loadMetadata() {
             var table = $('<table id="metadata_table" class="table-fixed workflow_info"></table>');
             table.append($('<col width="30%">'));
 
-            $('.badge').html(metadata.length);
+            $('.metadata-badge').html(metadata.length);
 
             for( var i = 0; i < metadata.length; ++i) {
                 var tr = $('<tr></tr>');
@@ -64,6 +64,59 @@ function loadMetadata() {
 
             $('#metadata').html(table);
             verticalTableInitStatus('#metadata_table', '{{workflow.state}}');
+        }
+    };
+
+    $.ajax (ajaxOpt)
+}
+
+function loadFiles() {
+    var ajaxOpt =
+    {
+        url     : '{{ url_for('monitoring_routes.get_workflow_files', m_wf_id=root_wf_id, wf_id=wf_id) }}',
+        data: {
+            order: 'l.lfn desc'
+        },
+        dataType: 'json',
+        error   : function (xhr, textStatus, errorThrown)
+        {
+            alert ('Error occurred: ' + textStatus + xhr.responseText);
+        },
+        success : function (data, textStatus, xhr)
+        {
+            if (xhr.status == 204) {
+                $('.files-badge').html(0);
+                $('#files').html('No files found for this workflow');
+                return;
+            }
+
+            var files = data.records;
+            var table = $('<table id="files_table" class="table-fixed workflow_info"></table>');
+            table.append($('<col width="30%">'));
+
+            $('.files-badge').html(files.length);
+            console.log(files);
+            for (var i = 0; i < files.length; ++i) {
+                var lfn = files[i].lfn;
+                var pfns = files[i].pfns;
+
+                if (pfns == null) {
+                    var tr = $('<tr></tr>');
+                    var th = $('<th>' + lfn + '</th>');
+                    var td = $('<td>PFN not available yet</td>');
+                    table.append(tr.append(th).append(td));
+                } else {
+                    for (var j = 0; j < pfns.length; ++j) {
+                        var tr = $('<tr></tr>');
+                        var th = $('<th>' + lfn + '</th>');
+                        var td = $('<td>' + pfns[j].pfn + '</td>');
+                        table.append(tr.append(th).append(td));
+                    }
+                }
+            }
+
+            $('#files').html(table);
+            verticalTableInitStatus('#files_table', '{{workflow.state}}');
         }
     };
 
@@ -285,6 +338,7 @@ $(document).ready(function () {
 
     clipboardTooltipInitialization();
     loadMetadata();
+    loadFiles();
 });
 </script>
 {% endblock %}
@@ -301,7 +355,8 @@ $(document).ready(function () {
             <ul class="nav nav-tabs" role="tablist">
                 <li role="presentation" class="active"><a href="#wf_summary" role="tab" data-toggle="tab">Summary</a>
                 </li>
-                <li role="presentation"><a href="#metadata" role="tab" data-toggle="tab">Metadata <span class="badge"></span></a></li>
+                <li role="presentation"><a href="#files" role="tab" data-toggle="tab">Files <span class="badge files-badge"></span></a></li>
+                <li role="presentation"><a href="#metadata" role="tab" data-toggle="tab">Metadata <span class="badge metadata-badge"></span></a></li>
             </ul>
             <div class="tab-content">
                 <br>
@@ -363,6 +418,11 @@ $(document).ready(function () {
                         </tr>
                     </table>
                 </div>
+
+                <div role="tabpanel" class="tab-pane" id="files">
+                    Files
+                </div>
+
                 <div role="tabpanel" class="tab-pane" id="metadata">
                     Metadata
                 </div>
