@@ -1,62 +1,86 @@
 import os
 import logging
-from optparse import OptionParser
+import random
+from OpenSSL import crypto, SSL
 
+from Pegasus.command import LoggingCommand
 from Pegasus.service import app
-from Pegasus.service.command import Command
-from Pegasus.service.ensembles import manager
 
 log = logging.getLogger(__name__)
 
-class ServerCommand(Command):
+def generate_self_signed_certificate(certfile, pkeyfile):
+    "If certfile and pkeyfile don't exist, create a self-signed certificate"
+
+    if os.path.isfile(certfile) and os.path.isfile(pkeyfile):
+        return
+
+    log.info("Generating self-signed certificate")
+
+    pkey = crypto.PKey()
+    pkey.generate_key(crypto.TYPE_RSA, 2048)
+
+    cert = crypto.X509()
+
+    sub = cert.get_subject()
+    sub.C = "US"
+    sub.ST = "California"
+    sub.L = "Marina Del Rey"
+    sub.O = "University of Southern California"
+    sub.OU = "Information Sciences Institute"
+    sub.CN = "Pegasus Service"
+
+    cert.set_version(1)
+    cert.set_serial_number(random.randint(0,2**32))
+    cert.gmtime_adj_notBefore(0)
+    cert.gmtime_adj_notAfter(10*365*24*60*60) # 10 years
+    cert.set_issuer(sub)
+    cert.set_pubkey(pkey)
+    cert.sign(pkey, 'sha1')
+
+    open(certfile, "w").write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
+    open(pkeyfile, "w").write(crypto.dump_privatekey(crypto.FILETYPE_PEM, pkey))
+
+class ServerCommand(LoggingCommand):
     usage = "%prog [options]"
     description = "Start Pegasus Service"
 
     def __init__(self):
-        Command.__init__(self)
-        self.parser.add_option("-d", "--debug", action="store_true", dest="debug",
-                default=None, help="Enable debugging")
+        LoggingCommand.__init__(self)
+        self.parser.add_option("-H", "--host", dest="host", default=app.config["SERVER_HOST"],
+                               help="Network interface on which to listen for requests")
+        self.parser.add_option("-p", "--port", dest="port", type='int', default=app.config["SERVER_PORT"],
+                               help="Request listener port")
+        self.parser.add_option("-d", "--debug", action="store_true", dest="debug", default=None,
+                               help="Enable debugging")
 
     def run(self):
         if self.options.debug:
             app.config.update(DEBUG=True)
+            logging.getLogger().setLevel(logging.DEBUG)
 
-        logging.basicConfig(level=logging.INFO)
-
-
-        # We only start the ensemble manager if we are not debugging
-        # or if we are debugging and Werkzeug is restarting. This
-        # prevents us from having two ensemble managers running in
-        # the debug case.
-        WERKZEUG_RUN_MAIN = os.environ.get('WERKZEUG_RUN_MAIN') == 'true'
-        DEBUG = app.config.get("DEBUG", False)
-        if (not DEBUG) or WERKZEUG_RUN_MAIN:
-            # Make sure the environment is OK for the ensemble manager
-            try:
-                manager.check_environment()
-            except manager.EMException, e:
-                log.warning("%s: Ensemble manager disabled" % e.message)
-            else:
-                mgr =  manager.EnsembleManager()
-                mgr.start()
+        pegasusdir = os.path.expanduser("~/.pegasus")
+        if not os.path.isdir(pegasusdir):
+            os.makedirs(pegasusdir, mode=0744)
 
         cert = app.config.get("CERTIFICATE", None)
         pkey = app.config.get("PRIVATE_KEY", None)
-        if cert is not None and pkey is not None:
-            ssl_context = (cert, pkey)
-        else:
-            log.warning("SSL is not configured: Using adhoc certificate")
-            ssl_context = 'adhoc'
+        if cert is None or pkey is None:
+            log.warning("SSL is not configured: Using self-signed certificate")
+            cert = os.path.expanduser("~/.pegasus/selfcert.pem")
+            pkey = os.path.expanduser("~/.pegasus/selfkey.pem")
+            generate_self_signed_certificate(cert, pkey)
+        ssl_context = (cert, pkey)
 
         if os.getuid() != 0:
             log.warning("Service not running as root: Will not be able to switch users")
 
-        app.run(port=app.config["SERVER_PORT"],
-                host=app.config["SERVER_HOST"],
+        app.run(host=self.options.host,
+                port=self.options.port,
                 processes=app.config["MAX_PROCESSES"],
                 ssl_context=ssl_context)
 
         log.info("Exiting")
+
 
 def main():
     ServerCommand().main()

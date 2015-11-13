@@ -13,6 +13,6 @@ pegasus-plan \
     --dir submit \
     --dax dax.xml \
     --sites kraken \
-    --nocleanup \
+    --cleanup none \
     --cluster label \
     --submit

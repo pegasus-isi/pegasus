@@ -221,6 +221,34 @@
               </row>
 
               <row>
+                <entry>dax_input_files</entry>
+
+                <entry>the number of input files in the abstract workflow
+                (DAX)</entry>
+              </row>
+
+              <row>
+                <entry>dax_inter_files</entry>
+
+                <entry>the number of intermediate files in the abstract
+                workflow (DAX)</entry>
+              </row>
+
+              <row>
+                <entry>dax_output_files</entry>
+
+                <entry>the number of output files in the abstract workflow
+                (DAX)</entry>
+              </row>
+
+              <row>
+                <entry>dax_total_files</entry>
+
+                <entry>the number of total files in the abstract workflow
+                (DAX)</entry>
+              </row>
+
+              <row>
                 <entry>compute_jobs</entry>
 
                 <entry>the number of compute jobs in the executable

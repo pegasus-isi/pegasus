@@ -107,8 +107,6 @@ public class BotoConfig  extends Abstract implements CredentialHandler {
      * - If a BotoConfig.BOTO_CONFIG_FILE_VARIABLE is specified in the site catalog entry as a Pegasus Profile that is used, else the corresponding env profile for backward support
      * - Else BotoConfig.BOTO_CONFIG_FILE_VARIABLE Pegasus Profile specified in the properties, else the corresponding env profile for backward support
      * - Else the one pointed to by the environment variable BotoConfig.BOTO_CONFIG_FILE_VARIABLE
-     * - Else the default path of ~/.pegasus/boto
-     * - Else the legacy default path of ~/.boto
      * 
      * @param site   the  site catalog entry object.
      *
@@ -142,17 +140,6 @@ public class BotoConfig  extends Abstract implements CredentialHandler {
             Map<String,String> envs = System.getenv();
             if( envs.containsKey( BotoConfig.BOTO_CONFIG_FILE_VARIABLE ) ){
                 cred = envs.get( BotoConfig.BOTO_CONFIG_FILE_VARIABLE  );
-            }
-            
-            if (cred == null) {
-                // New default
-                cred = envs.get("HOME") + "/.pegasus/boto";
-
-                File cfg = new File(cred);
-                if (!cfg.isFile()) {
-                    // Old default
-                    cred = envs.get("HOME") + "/.boto";
-                }
             }
         }
         

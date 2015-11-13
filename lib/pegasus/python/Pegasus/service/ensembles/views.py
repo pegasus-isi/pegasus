@@ -1,44 +1,71 @@
 import os
+import logging
+import subprocess
 
 from flask import g, url_for, make_response, request, send_file, json
 
-from Pegasus.service import app, api
-from Pegasus.service.ensembles import models
-from Pegasus.service.ensembles.bundle import BundleException
+from Pegasus.db import connection
+from Pegasus.service.ensembles import emapp, api, auth
+from Pegasus.db.modules.ensembles import EMError, Ensembles, EnsembleWorkflowStates
 
-@app.route("/ensembles", methods=["GET"])
+log = logging.getLogger(__name__)
+
+def connect():
+    log.debug("Connecting to database")
+    g.session = connection.connect(g.master_db_url)
+
+def disconnect():
+    if "conn" in g:
+        log.debug("Disconnecting from database")
+        g.session.close()
+
+@emapp.errorhandler(Exception)
+def handle_error(e):
+    return api.json_api_error(e)
+
+@emapp.before_request
+def setup_request():
+    resp = auth.authorize_request()
+    if resp: return resp
+    connect()
+
+@emapp.teardown_request
+def teardown_request(exception):
+    disconnect()
+
+@emapp.route("/ensembles", methods=["GET"])
 def route_list_ensembles():
-    db = models.Ensembles(g.master_db_url)
-    ensembles = db.list_ensembles(g.user.username)
+    dao = Ensembles(g.session)
+    ensembles = dao.list_ensembles(g.user.username)
     result = [e.get_object() for e in ensembles]
     return api.json_response(result)
 
-@app.route("/ensembles", methods=["POST"])
+@emapp.route("/ensembles", methods=["POST"])
 def route_create_ensemble():
     name = request.form.get("name", None)
     if name is None:
-        raise api.APIError("Specify ensemble name")
+        raise EMError("Specify ensemble name")
 
     max_running = request.form.get("max_running", 1)
     max_planning = request.form.get("max_planning", 1)
 
-    db = models.Ensembles(g.master_db_url)
-    db.create_ensemble(g.user.username, name, max_running, max_planning)
-    db.session.commit()
+    dao = Ensembles(g.session)
+    dao.create_ensemble(g.user.username, name, max_running, max_planning)
+    g.session.commit()
 
     return api.json_created(url_for("route_get_ensemble", name=name, _external=True))
 
-@app.route("/ensembles/<string:name>", methods=["GET"])
+@emapp.route("/ensembles/<string:name>", methods=["GET"])
 def route_get_ensemble(name):
-    db = models.Ensembles(g.master_db_url)
-    e = db.get_ensemble(g.user.username, name)
+    dao = Ensembles(g.session)
+    e = dao.get_ensemble(g.user.username, name)
     result = e.get_object()
     return api.json_response(result)
 
-@app.route("/ensembles/<string:name>", methods=["PUT","POST"])
+@emapp.route("/ensembles/<string:name>", methods=["PUT","POST"])
 def route_update_ensemble(name):
-    db = models.Ensembles(g.master_db_url)
-    e = db.get_ensemble(g.user.username, name)
+    dao = Ensembles(g.session)
+    e = dao.get_ensemble(g.user.username, name)
 
     max_running = request.form.get("max_running", None)
     if max_running is not None:
@@ -56,96 +83,56 @@ def route_update_ensemble(name):
 
     e.set_updated()
 
-    db.session.commit()
+    g.session.commit()
 
     return api.json_response(e.get_object())
 
-@app.route("/ensembles/<string:name>/workflows", methods=["GET"])
+@emapp.route("/ensembles/<string:name>/workflows", methods=["GET"])
 def route_list_ensemble_workflows(name):
-    db = models.Ensembles(g.master_db_url)
-    e = db.get_ensemble(g.user.username, name)
-    result = [w.get_object() for w in db.list_ensemble_workflows(e.id)]
+    dao = Ensembles(g.session)
+    e = dao.get_ensemble(g.user.username, name)
+    result = [w.get_object() for w in dao.list_ensemble_workflows(e.id)]
     return api.json_response(result)
 
-@app.route("/ensembles/<string:ensemble>/workflows", methods=["POST"])
+@emapp.route("/ensembles/<string:ensemble>/workflows", methods=["POST"])
 def route_create_ensemble_workflow(ensemble):
-    db = models.Ensembles(g.master_db_url)
-    e = db.get_ensemble(g.user.username, ensemble)
+    dao = Ensembles(g.session)
+    e = dao.get_ensemble(g.user.username, ensemble)
 
     name = request.form.get("name", None)
     if name is None:
-        raise api.APIError("Specify ensemble workflow name")
+        raise EMError("Specify ensemble workflow 'name'")
 
     priority = request.form.get("priority", 0)
 
-    sites = request.form.get("sites", None)
-    if sites is None:
-        raise api.APIError("Specify sites")
-    else:
-        sites = [s.strip() for s in sites.split(",")]
-        sites = [s for s in sites if len(s) > 0]
-    if len(sites) == 0:
-        raise api.APIError("Specify sites")
+    basedir = request.form.get("basedir")
+    if basedir is None:
+        raise EMError("Specify 'basedir' where plan command should be executed")
 
-    output_site = request.form.get("output_site", None)
-    if output_site is None:
-        raise api.APIError("Specify output_site")
+    plan_command = request.form.get("plan_command")
+    if plan_command is None:
+        raise EMError("Specify 'plan_command' that should be executed to plan workflow")
 
-    cleanup = request.form.get("cleanup", None)
-    if cleanup is not None:
-        cleanup = cleanup.lower()
-        if cleanup not in ["none","leaf","inplace"]:
-            raise api.APIError("Invalid value for cleanup: %s" % cleanup)
+    dao.create_ensemble_workflow(e.id, name, basedir, priority, plan_command)
 
-    force = request.form.get("force", None)
-    if force is not None:
-        if force.lower() not in ["true","false"]:
-            raise api.APIError("Invalid value for force: %s" % force)
-        force = force.lower() == "true"
-
-    clustering = request.form.get("clustering", None)
-    if clustering is not None:
-        clustering = [s.strip() for s in clustering.split(",")]
-        clustering = [s for s in clustering if len(s) > 0]
-
-    staging_sites = request.form.get("staging_sites", None)
-    if staging_sites is not None:
-        kvs = [s.strip() for s in staging_sites.split(",")]
-        kvs = [s for s in kvs if len(s) > 0]
-        staging_sites = dict([s.split("=") for s in kvs])
-
-    bundle = request.files.get("bundle", None)
-    if bundle is None:
-        raise api.APIError("Specify bundle")
-
-    db = models.Ensembles(g.master_db_url)
-
-    basedir = os.path.join(g.user.get_userdata_dir(), "ensembles", e.name, "workflows", name)
-
-    try:
-        db.create_ensemble_workflow(e.id, name, basedir, priority, bundle,
-                sites=sites, output_site=output_site, cleanup=cleanup,
-                force=force, clustering=clustering, staging_sites=staging_sites)
-    except BundleException, e:
-        raise api.APIError(e.message)
-
-    db.session.commit()
+    g.session.commit()
 
     return api.json_created(url_for("route_get_ensemble_workflow", ensemble=ensemble, workflow=name))
 
-@app.route("/ensembles/<string:ensemble>/workflows/<string:workflow>", methods=["GET"])
+@emapp.route("/ensembles/<string:ensemble>/workflows/<string:workflow>", methods=["GET"])
 def route_get_ensemble_workflow(ensemble, workflow):
-    db = models.Ensembles(g.master_db_url)
-    e = db.get_ensemble(g.user.username, ensemble)
-    w = db.get_ensemble_workflow(e.id, workflow)
+    dao = Ensembles(g.session)
+    e = dao.get_ensemble(g.user.username, ensemble)
+    w = dao.get_ensemble_workflow(e.id, workflow)
     result = w.get_detail_object()
     return api.json_response(result)
 
-@app.route("/ensembles/<string:ensemble>/workflows/<string:workflow>", methods=["PUT","POST"])
+@emapp.route("/ensembles/<string:ensemble>/workflows/<string:workflow>", methods=["PUT","POST"])
 def route_update_ensemble_workflow(ensemble, workflow):
-    db = models.Ensembles(g.master_db_url)
-    e = db.get_ensemble(g.user.username, ensemble)
-    w = db.get_ensemble_workflow(e.id, workflow)
+    dao = Ensembles(g.session)
+
+    e = dao.get_ensemble(g.user.username, ensemble)
+    w = dao.get_ensemble_workflow(e.id, workflow)
 
     priority = request.form.get("priority", None)
     if priority is not None:
@@ -157,18 +144,49 @@ def route_update_ensemble_workflow(ensemble, workflow):
 
     w.set_updated()
 
-    db.session.commit()
+    g.session.commit()
 
     return api.json_response(w.get_detail_object())
 
-@app.route("/ensembles/<string:ensemble>/workflows/<string:workflow>/<string:filename>", methods=["GET"])
-def route_get_ensemble_workflow_file(ensemble, workflow, filename):
-    db = models.Ensembles(g.master_db_url)
-    e = db.get_ensemble(g.user.username, ensemble)
-    w = db.get_ensemble_workflow(e.id, workflow)
-    mimetype = "text/plain"
-    path = os.path.join(w.basedir, filename)
-    if not os.path.isfile(path):
-        raise api.APIError("Invalid file: %s" % filename)
+@emapp.route("/ensembles/<string:ensemble>/workflows/<string:workflow>/analyze", methods=["GET"])
+def route_analyze_ensemble_workflow(ensemble, workflow):
+    dao = Ensembles(g.session)
+    e = dao.get_ensemble(g.user.username, ensemble)
+    w = dao.get_ensemble_workflow(e.id, workflow)
+    report = "".join(analyze(w))
+    resp = make_response(report, 200)
+    resp.headers['Content-Type'] = 'text/plain'
+    return resp
 
-    return send_file(path, mimetype=mimetype)
+def analyze(workflow):
+    w = workflow
+
+    yield "Workflow state is %s\n" % w.state
+    yield "Plan command is: %s\n" % w.plan_command
+
+    logfile = w.get_logfile()
+    if os.path.isfile(logfile):
+        yield "Workflow log:\n"
+        for l in open(w.get_logfile(), "rb"):
+            yield "LOG: %s" % l
+    else:
+        yield "No workflow log available\n"
+
+    if w.submitdir is None or not os.path.isdir(w.submitdir):
+        yield "No submit directory available\n"
+    else:
+        yield "pegasus-analyzer output is:\n"
+        p = subprocess.Popen(["pegasus-analyzer", w.submitdir], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        out, err = p.communicate()
+        for l in out.split("\n"):
+            yield "ANALYZER: %s\n" % l
+        rc = p.wait()
+        yield "ANALYZER: Exited with code %d\n" % rc
+
+    if w.state == EnsembleWorkflowStates.PLAN_FAILED:
+        yield "Planner failure detected\n"
+    elif w.state == EnsembleWorkflowStates.RUN_FAILED:
+        yield "pegasus-run failure detected\n"
+    elif w.state == EnsembleWorkflowStates.FAILED:
+        yield "Workflow failure detected\n"
+

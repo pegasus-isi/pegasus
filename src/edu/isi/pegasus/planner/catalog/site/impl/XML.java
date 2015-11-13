@@ -43,11 +43,12 @@ import java.util.Set;
 
 /**
  * An implementation of the Site Catalog interface that is backed up by 
- * an XML file conforming to site catalog xml schema version 3.
+ * an XML file conforming to site catalog xml schema version 3 or version 4
  * 
- * The schema can be found online at 
+ * The schemas can be found online at 
  * 
  * <pre>
+ *  http://pegasus.isi.edu/schema/sc-3.0.xsd
  *  http://pegasus.isi.edu/schema/sc-3.0.xsd
  * </pre>
  * 
@@ -107,9 +108,12 @@ public class XML implements SiteCatalog {
      * @throws SiteCatalogException
      */
     public boolean connect( Properties props ) throws SiteCatalogException{
-        if ( props.containsKey("file") )
+        if ( props.containsKey("file") ){
           return connect( props.getProperty("file") );
-        return false;
+        }
+        
+        //complain for the property not set
+        throw new SiteCatalogException( "Please specify the property " +  SiteCatalog.c_prefix + ".file" + " in your properties file "  );
     } 
 
     /**
@@ -119,14 +123,14 @@ public class XML implements SiteCatalog {
      * 
      * @return true, 
      */
-    public boolean connect( String filename ){
+    public boolean connect( String filename ) throws SiteCatalogException{
         mFilename = filename;
         File f = new File( filename );
         if ( f.exists() && f.canRead() ){    
             return true;
         }
         else{
-            throw new RuntimeException( "Cannot read or access file " + filename );
+            throw new SiteCatalogException( "Cannot read or access file " + filename );
         }
     }
     

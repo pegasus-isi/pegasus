@@ -2,6 +2,22 @@ import time
 import decimal
 from Pegasus.service import app
 
+
+@app.template_filter('lstrip')
+def lstrip(value, chars=' '):
+    value.lstrip(chars)
+
+
+@app.template_filter('rstrip')
+def rstrip(value, chars=' '):
+    value.rstrip(chars)
+
+
+@app.template_filter('strip')
+def strip(value, chars=' '):
+    value.strip(chars)
+
+
 @app.template_filter('dec_to_float')
 def dec_to_float(dec):
     '''
@@ -17,7 +33,7 @@ def time_to_date_str(ts):
     '''
     Change an integer duration to be represented as a data string
     '''
-    return time.strftime('%Y-%m-%d %H', time.localtime(ts))
+    return time.strftime('%Y-%m-%d Hour %H', time.localtime(ts))
 
 @app.template_filter('to_lower_case')
 def to_lower_case(str):

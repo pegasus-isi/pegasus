@@ -185,7 +185,7 @@ Scope       :</emphasis> Properties
                     concurrent instances <emphasis>will clobber</emphasis>
                     each other!. The site attribute should be specified
                     whenever possible. The attribute key for the site
-                    attribute is "pool".</para>
+                    attribute is "site".</para>
 
                     <para>The LFN may or may not be quoted. If it contains
                     linear whitespace, quotes, backslash or an equality sign,
@@ -217,7 +217,7 @@ LFN PFN a="b" [..]
                     concurrent access to the File will end up clobbering the
                     contents of the file. The site attribute should be
                     specified whenever possible. The attribute key for the
-                    site attribute is "pool".</para>
+                    site attribute is "site".</para>
 
                     <para>The LFN may or may not be quoted. If it contains
                     linear whitespace, quotes, backslash or an equality sign,
@@ -244,8 +244,8 @@ LFN PFN a="b" [..]
                     f0a, etc.</para>
 
                     <para><screen>
-f.a file:///Vol/input/f.a pool="local"
-f.a file:///Vol/input/f.a pool="local" regex="true"
+f.a file:///Vol/input/f.a site="local"
+f.a file:///Vol/input/f.a site="local" regex="true"
 </screen></para>
 
                     <para>Regular expression based entries also support
@@ -268,7 +268,7 @@ f.a file:///Vol/input/f.a pool="local" regex="true"
                     can utilize as many sections as they wish.</para>
 
                     <para><screen>
-alpha\.(csv|txt|xml) file:///Vol/input/[1]/[0] pool="local" regex="true"
+alpha\.(csv|txt|xml) file:///Vol/input/[1]/[0] site="local" regex="true"
 </screen></para>
 
                     <para>To use File, the user additionally needs to specify
@@ -293,18 +293,18 @@ $input/D1
 $input/D1/f.3
 </screen> Pegasus will create the mappings the following LFN PFN mappings
                     internally <screen>
-f.1 file://$input/f.1  pool="local"
-f.2 file://$input/f.2  pool="local"
-D1/f.3 file://$input/D2/f.3 pool="local"
+f.1 file://$input/f.1  site="local"
+f.2 file://$input/f.2  site="local"
+D1/f.3 file://$input/D2/f.3 site="local"
 </screen></para>
 
                     <para>If you don't want the deep lfn's to be created then,
                     you can set pegasus.catalog.replica.directory.flat.lfn to
                     true In that case, for the previous example, Pegasus will
                     create the following LFN PFN mappings internally. <screen>
-f.1 file://$input/f.1  pool="local"
-f.2 file://$input/f.2  pool="local"
-f.3 file://$input/D2/f.3 pool="local"
+f.1 file://$input/f.1  site="local"
+f.2 file://$input/f.2  site="local"
+f.3 file://$input/D2/f.3 site="local"
 </screen></para>
 
                     <para>pegasus-plan has --input-dir option that can be used

@@ -1,0 +1,39 @@
+#
+# A sample condor config file , that has Pegasus specific paramters
+# defined that you can put in HTCondor config.d directory and update
+# for your setup
+#
+
+#
+# A concurrency limit to be applied to transfer jobs.
+# Note: this applies across users and may cause user starvation
+# on a shared submit host. This only works if you have configured
+# transfer jobs to run in vanilla universe.
+CONCURRENCY_LIMIT_DEFAULT_pegasus_transfer   = 10
+
+# fine grained controls for different types of transfer jobs
+# if not specified then the default value is picked up 
+# pegasus_transfer.stagein_LIMIT            = 5
+# pegasus_transfer.stageout_LIMIT  	    = 3
+# pegasus_transfer.inter_LIMIT 		    = 3
+# pegasus_transfer.worker_LIMIT 	    = 3
+
+#
+# A concurrency limit to be applied to auxillary jobs created by Pegasus.
+# Note: this applies across users and may cause user starvation
+# on a shared submit host. This only works if you have configured
+# transfer jobs to run in vanilla universe.
+#
+CONCURRENCY_LIMIT_DEFAULT_pegasus_auxillary = 10
+
+# fine grained controls for different types of auxillary jobs
+# if not specified then the default value is picked up 
+# pegasus_auxillary.createdir_LIMIT   	   = 3
+# pegasus_auxillary.cleanup_LIMIT   	   = 3
+# pegasus_auxillary.registration_LIMIT 	   = 3
+
+
+# If you want to control the number of compute jobs running in vanilla
+# universe. Usually you should not be setting this and let condor
+# match to the number of resources available.
+# pegasus_compute_LIMIT = 200

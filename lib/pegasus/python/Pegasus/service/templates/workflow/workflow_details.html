@@ -1,11 +1,12 @@
 {% extends "base.html" %}
 {% block title %}Workflow Details{% endblock %}
 {% block javascript_includes %}
-<script type="text/javascript" src="//code.highcharts.com/2.3.3/highcharts.js"></script>
+<script type="text/javascript" src="//code.highcharts.com/4.1.4/highcharts.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/zeroclipboard/2.2.0/ZeroClipboard.min.js"></script>
 {% endblock %}
 {% block javascript_init %}
 <script type="text/javascript" charset="utf-8">
-var tablesInitialized = [false, false, false, false]
+var tablesInitialized = [false, false, false, false, false]
 
 var chart;
 var chartOptions;
@@ -29,86 +30,111 @@ var chartData =
         workflow: {{ counts.fail_workflow }},
         total: {{ counts.fail }}
     }
-}
+};
 
 $(document).ready (function ()
         {
             $ ('.button').button ();
 
-            // Radialize the colors
-            Highcharts.getOptions ().colors = $.map (Highcharts.getOptions ().colors, function (color)
-            {
-                return {
-                    radialGradient: { cx: 0.5, cy: 0.3, r: 0.7 },
-                    stops: [
-                        [0, color],
-                        [1, Highcharts.Color (color).brighten (-0.3).get ('rgb')] // darken
-                    ]
-                };
-            });
+            highChartsInitialization();
 
             $ ('#jobs_tabs').tabs (
+                {
+                    beforeLoad: function (event, ui)
                     {
-                        beforeLoad: function (event, ui)
+                        ui.jqXHR.error (function ()
                         {
-                            ui.jqXHR.error (function ()
-                            {
-                                ui.panel.html ('Error loading contents of this tab.');
-                            })
-                        },
-                        load      : function (event, ui)
+                            ui.panel.html ('Error loading contents of this tab.');
+                        })
+                    },
+                    load      : function (event, ui)
+                    {
+                        if (ui.panel.html () == '')
                         {
-                            if (ui.panel.html () == '')
-                            {
-                                ui.panel.html ('No sub-workflows found.')
-                            }
-                            else
-                            {
-                                $ ('#sub_workflows_list').dataTable ({"bJQueryUI": true, "sPaginationType": "full_numbers"});
-                            }
-                        },
-                        activate: function (event, ui)
-                        {
-                            var tabIndex = ui.newTab.index ();
-
-                            if (tabIndex == 1 && !tablesInitialized [tabIndex])
-                            {
-                                tablesInitialized [tabIndex] = true;
-
-                                $ ('#failed_jobs_list').dataTable ({"bJQueryUI": true,
-                                    "sPaginationType"                          : "full_numbers",
-                                    "bProcessing"                              : true,
-                                    "bServerSide"                              : true,
-                                    "sAjaxSource"                              : "{{ url_for ('failed_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
-                                    "bAutoWidth"                               : false
-                                });
-                            }
-                            else if (tabIndex == 2 && !tablesInitialized [tabIndex])
-                            {
-                                tablesInitialized [tabIndex] = true;
-
-                                $ ('#running_jobs_list').dataTable ({"bJQueryUI": true,
-                                    "sPaginationType"                           : "full_numbers",
-                                    "bProcessing"                               : true,
-                                    "bServerSide"                               : true,
-                                    "sAjaxSource"                               : "{{ url_for ('running_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
-                                    "bAutoWidth"                                : false
-                                });
-                            }
-                            else if (tabIndex == 3 && !tablesInitialized [tabIndex])
-                            {
-                                tablesInitialized [tabIndex] = true;
-
-                                $ ('#successful_jobs_list').dataTable ({"bJQueryUI": true,
-                                    "sPaginationType"                              : "full_numbers",
-                                    "bProcessing"                                  : true,
-                                    "bServerSide"                                  : true,
-                                    "sAjaxSource"                                  : "{{ url_for ('successful_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
-                                    "bAutoWidth"                                   : false
-                                });
-                            }
+                            ui.panel.html ('No sub-workflows found.')
                         }
-                    });
+                        else
+                        {
+                            $ ('#sub_workflows_list').dataTable ({"jQueryUI": true, "pagingType": "full_numbers"});
+                        }
+                    },
+                    activate: function (event, ui)
+                    {
+                        var tabIndex = ui.newTab.index ();
+
+                        if (tabIndex == 1 && !tablesInitialized [tabIndex])
+                        {
+                            tablesInitialized [tabIndex] = true;
+
+                            $ ('#failed_jobs_list').dataTable ({
+                                "jQueryUI"   : true,
+                                "pagingType" : "full_numbers",
+                                "processing" : true,
+                                "serverSide" : true,
+                                "ajax"       : "{{ url_for ('.failed_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
+                                "autoWidth"  : false,
+                                "columns"    : [
+                                    { "data": "exec_job_id" },
+                                    { "data": "exitcode" },
+                                    { "data": "stdout" },
+                                    { "data": "stderr" }
+                                ]
+                            });
+                        }
+                        else if (tabIndex == 2 && !tablesInitialized [tabIndex])
+                        {
+                            tablesInitialized [tabIndex] = true;
+
+                            $ ('#running_jobs_list').dataTable ({
+                                "jQueryUI"   : true,
+                                "pagingType" : "full_numbers",
+                                "processing" : true,
+                                "serverSide" : true,
+                                "ajax"       : "{{ url_for ('.running_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
+                                "autoWidth"  : false,
+                                "columns"    : [
+                                    { "data": "exec_job_id" }
+                                ]
+                            });
+                        }
+                        else if (tabIndex == 3 && !tablesInitialized [tabIndex])
+                        {
+                            tablesInitialized [tabIndex] = true;
+
+                            $ ('#successful_jobs_list').dataTable ({
+                                "jQueryUI"   : true,
+                                "pagingType" : "full_numbers",
+                                "processing" : true,
+                                "serverSide" : true,
+                                "ajax"       : "{{ url_for ('.successful_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
+                                "autoWidth"  : false,
+                                "columns"    : [
+                                    { "data": "exec_job_id" },
+                                    { "data": "duration_formatted" }
+                                ]
+                            });
+                        }
+                        else if (tabIndex == 4 && !tablesInitialized [tabIndex])
+                        {
+                            tablesInitialized [tabIndex] = true;
+
+                            $ ('#failing_jobs_list').dataTable ({
+                                "jQueryUI"   : true,
+                                "pagingType" : "full_numbers",
+                                "processing" : true,
+                                "serverSide" : true,
+                                "ajax"       : "{{ url_for ('.failing_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
+                                "autoWidth"  : false,
+                                "columns"    : [
+                                    { "data": "exec_job_id" },
+                                    { "data": "exitcode" },
+                                    { "data": "stdout" },
+                                    { "data": "stderr" }
+                                ]
+                            });
+                        }
+                    }
+                });
 
             chartOptions =
             {
@@ -158,25 +184,25 @@ $(document).ready (function ()
                     }
                 },
                 series:
-                        [{
-                            name: 'Job Status',
-                            data: [
-                                {
-                                    name: 'Running',
-                                    y: {{ counts.others }},
-                    sliced: true,
-                selected: true
-        },
-        {
-            name: 'Failed',
-            y: {{ counts.fail }}
-        },
-        {
-            name: 'Successful',
-            y: {{ counts.success }}
-        }]
-    }]
-};
+                    [{
+                        name: 'Job Status',
+                        data: [
+                            {
+                                name: 'Running',
+                                y: {{ counts.others }},
+                                sliced: true,
+                                selected: true
+                            },
+                            {
+                                name: 'Failed',
+                                y: {{ counts.fail }}
+                            },
+                            {
+                                name: 'Successful',
+                                y: {{ counts.success }}
+                            }]
+                    }]
+                };
 
 var stat_chart;
 var statOptions;
@@ -225,145 +251,189 @@ statOptions =
         }
     },
     series:
-            [{
-                name: 'Job Status',
-                data: [
-                    {
-                        name: 'Unsubmitted',
-                        y: {{ statistics ['unsubmitted-jobs'] }},
-                        sliced: true,
-                        selected: true
-                    },
-                {
-                    name: 'Failed',
-                    y: {{ statistics ['failed-jobs'] }}
-                },
-                {
-                    name: 'Successful',
-                    y: {{ statistics ['successful-jobs'] }}
-                }]
+    [{
+        name: 'Job Status',
+        data: [
+            {
+                name: 'Unsubmitted',
+                y: {{ statistics ['unsubmitted-jobs'] }},
+                sliced: true,
+                selected: true
+            },
+            {
+                name: 'Failed',
+                y: {{ statistics ['failed-jobs'] }}
+            },
+            {
+                name: 'Successful',
+                y: {{ statistics ['successful-jobs'] }}
             }]
+    }]
 };
 
 stats_chart = new Highcharts.Chart (statOptions);
 
 chart = new Highcharts.Chart (chartOptions);
 verticalTableInitStatus ('#workflow_text_info', '{{workflow.state}}' );
-//verticalTableInit ('#workflow_stats_info');
+
+clipboardTooltipInitialization();
+
 });
 </script>
 {% endblock %}
-{% block navigation_bar %} | <a href="{{ url_for ('workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a>{% endblock %}
-{% block title_header %}Workflow Details ({{ workflow.wf_uuid }}){% endblock %}
+{% block navigation_bar %}
+<li class="active">Workflow</li>
+{% endblock %}
+{% block title_header %}Workflow Details
+<small>{{ workflow.wf_uuid }}<button class="copy-button" data-clipboard-text="{{ workflow.wf_uuid }}"></button></small>
+{% endblock %}
 {% block content %}
-<div id="workflow_details" style="overflow:auto;">
-    <table id="workflow_text_info" class="workflow_info">
-        <tr>
-            <th>Label</th>
-            <td>{{ workflow.dax_label }}</td>
-        </tr>
-        <tr>
-            <th>Type</th>
-            <td>{% if workflow.root_wf_id ==  workflow.wf_id %}root-wf {% else %}sub-wf{% endif %}</td>
-        </tr>
-        <tr>
-            <th>Progress</th>
-            <td>{{ workflow.state }}</td>
-        </tr>
-        <tr>
-            <th>Submit Host</th>
-            <td>{{ workflow.submit_hostname }}</td>
-        </tr>
-        <tr>
-            <th>User</th>
-            <td>{{ workflow.user }}</td>
-        </tr>
-        <tr>
-            <th>Submit Directory</th>
-            <td>{{ workflow.submit_dir }}</td>
-        </tr>
-        <tr>
-            <th>Wall Time</th>
-            <td>{{ statistics ['wall-time']|time_to_str }}</td>
-        </tr>
-        <tr>
-            <th>Cumulative Wall Time</th>
-            <td>{{ statistics ['cum-time']|time_to_str }}</td>
-        </tr>
-    </table>
-    <table class="workflow_info">
-        <tr>
-
-            <td>
-                <div id="stat_graph"></div>
-            </td>
-
-            <td>
-                <div id="workflow_graph"></div>
-            </td>
-        </tr>
-    </table>
-    <br/>
-    <div class="align_center">
-        <a href="{{ url_for ('charts', root_wf_id = root_wf_id, wf_id = wf_id) }}" class="button">Charts</a>
-        <a href="{{ url_for ('statistics', root_wf_id = root_wf_id, wf_id = wf_id) }}" class="button">Statistics</a>
+<section class="row">
+    <div class="col-md-12">
+        <table id="workflow_text_info" class="table-fixed workflow_info">
+            <col width="30%">
+            <tr>
+                <th>Label</th>
+                <td>{{ workflow.dax_label }}</td>
+            </tr>
+            <tr>
+                <th>Type</th>
+                <td>{% if workflow.root_wf_id == workflow.wf_id %}root-wf {% else %}sub-wf{% endif %}</td>
+            </tr>
+            <tr>
+                <th>Progress</th>
+                <td>{{ workflow.state }}</td>
+            </tr>
+            <tr>
+                <th>Submit Host</th>
+                <td>{{ workflow.submit_hostname }}</td>
+            </tr>
+            <tr>
+                <th>User</th>
+                <td>{{ workflow.user }}</td>
+            </tr>
+            <tr>
+                <th>Submit Directory</th>
+                <td class="text-nowrap">
+                    <a target="_blank" href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}"
+                       class="file-browser" data-toggle="tooltip" data-placement="top" title="Browse directory">
+                    </a>
+                    <button class="copy-button" data-clipboard-text="{{ workflow.submit_dir }}">
+                    </button>
+                    {{ workflow.submit_dir }}
+                </td>
+            </tr>
+            <tr>
+                <th>DAGMan Out File</th>
+                <td class="text-nowrap">
+                    <span class="pe-7s-link"> </span>
+                    <a target="_blank" href="{{ url_for ('.file_browser', root_wf_id = root_wf_id, wf_id = wf_id) }}?init_file={{ workflow.dax_label }}-0.dag.dagman.out"
+                       data-toggle="tooltip" data-placement="top" title="View in file browser">
+                        {{ workflow.dax_label }}-0.dag.dagman.out
+                    </a>
+                </td>
+            </tr>
+            <tr>
+                <th>Wall Time</th>
+                <td>{{ statistics ['wall-time']|time_to_str }}</td>
+            </tr>
+            <tr>
+                <th>Cumulative Wall Time</th>
+                <td>{{ statistics ['cum-time']|time_to_str }}</td>
+            </tr>
+        </table>
     </div>
-</div>
-<br/>
-<div id="jobs_tabs_wrapper">
-    <div id="jobs_tabs">
-        <ul>
-            <li>
-                <a href="{{ url_for ('sub_workflows', root_wf_id = root_wf_id, wf_id = wf_id) }}" title="sub_workflows">Sub Workflows</a>
-            </li>
-            <li>
-                <a href="#failed_jobs" title="failed_jobs">Failed</a>
-            </li>
-            <li>
-                <a href="#running_jobs" title="running_jobs">Running</a>
-            </li>
-            <li>
-                <a href="#successful_jobs" title="successful_jobs">Successful</a>
-            </li>
-        </ul>
-        <div id="sub_workflows"></div>
-        <div id="failed_jobs">
-            <table id="failed_jobs_list">
-                <thead>
-                <tr>
-                    <th>Job Name</th>
-                    <th>Exit Code</th>
-                    <th>Standard Out</th>
-                    <th>Standard Error</th>
-                </tr>
-                </thead>
-                <tbody>
-                </tbody>
-            </table>
-        </div>
-        <div id="running_jobs">
-            <table id="running_jobs_list">
-                <thead>
-                <tr>
-                    <th>Job Name</th>
-                </tr>
-                </thead>
-                <tbody>
-                </tbody>
-            </table>
-        </div>
-        <div id="successful_jobs">
-            <table id="successful_jobs_list">
-                <thead>
-                <tr>
-                    <th>Job Name</th>
-                    <th>Time Taken</th>
-                </tr>
-                </thead>
-                <tbody>
-                </tbody>
-            </table>
+</section>
+<section class="row">
+    <div class="col-md-6">
+        <div id="stat_graph"></div>
+    </div>
+    <div class="col-md-6">
+        <div id="workflow_graph"></div>
+    </div>
+</section>
+<section class="row">
+    <div class="text-center">
+        <a href="{{ url_for ('.charts', root_wf_id = root_wf_id, wf_id = wf_id) }}" class="button">Charts</a>
+        <a href="{{ url_for ('.statistics', root_wf_id = root_wf_id, wf_id = wf_id) }}" class="button">Statistics</a>
+    </div>
+</section>
+<section class="row">
+    <div class="col-md-12">
+        <div id="jobs_tabs_wrapper">
+            <div id="jobs_tabs">
+                <ul>
+                    <li>
+                        <a href="{{ url_for ('.sub_workflows', root_wf_id = root_wf_id, wf_id = wf_id) }}"
+                           title="sub_workflows">Sub Workflows</a>
+                    </li>
+                    <li>
+                        <a href="#failed_jobs" title="failed_jobs">Failed</a>
+                    </li>
+                    <li>
+                        <a href="#running_jobs" title="running_jobs">Running</a>
+                    </li>
+                    <li>
+                        <a href="#successful_jobs" title="successful_jobs">Successful</a>
+                    </li>
+                    <li>
+                        <a href="#failing_jobs" title="failing_jobs">Failing</a>
+                    </li>
+                </ul>
+                <div id="sub_workflows"></div>
+                <div id="failed_jobs">
+                    <table id="failed_jobs_list">
+                        <thead>
+                        <tr>
+                            <th>Job Name</th>
+                            <th>Exit Code</th>
+                            <th>Standard Out</th>
+                            <th>Standard Error</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="running_jobs">
+                    <table id="running_jobs_list">
+                        <thead>
+                        <tr>
+                            <th>Job Name</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="successful_jobs">
+                    <table id="successful_jobs_list">
+                        <thead>
+                        <tr>
+                            <th>Job Name</th>
+                            <th>Time Taken</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="failing_jobs">
+                    <table id="failing_jobs_list">
+                        <thead>
+                        <tr>
+                            <th>Job Name</th>
+                            <th>Exit Code</th>
+                            <th>Standard Out</th>
+                            <th>Standard Error</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
-</div>
+</section>
 {% endblock %}

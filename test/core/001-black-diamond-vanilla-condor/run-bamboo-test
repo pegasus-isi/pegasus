@@ -22,12 +22,12 @@ java BlackDiamondDAX /usr blackdiamond.dax
 cat >sites.xml <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
-    <site  handle="local" arch="x86" os="LINUX">
+    <site handle="local" arch="x86_64" os="LINUX" osrelease="deb" osversion="7">
         <head-fs>
             <scratch>
                 <shared>
-                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/work"/>
-                    <internal-mount-point mount-point="$TOPDIR/work"/>
+                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/work/shared-scratch"/>
+                    <internal-mount-point mount-point="$TOPDIR/work/shared-scratch"/>
                 </shared>
             </scratch>
             <storage>
@@ -38,7 +38,7 @@ cat >sites.xml <<EOF
             </storage>
         </head-fs>
     </site>
-    <site  handle="condorpool" arch="x86" os="LINUX">
+    <site handle="condorpool" arch="x86_64" os="LINUX" >
         <head-fs>
             <scratch />
             <storage />
@@ -55,21 +55,9 @@ pegasus-plan \
     --conf pegasusrc \
     --sites condorpool \
     --staging-site local \
-    --dir work \
+    --dir work/dags \
     --output-site local \
     --cleanup leaf \
     --dax blackdiamond.dax \
     --submit | tee plan.out
-
-
-
-#../../common/wait-for-workflow
-
-# check success with pegasus-analyzer - does it use exit codes correctly?
-#cd work/*/*/*/*/
-#pegasus-analyzer
-
-# show some stats
-#pegasus-statistics `pwd`
-
 

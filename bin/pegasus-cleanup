@@ -36,6 +36,7 @@ import string
 import stat
 import time
 from collections import deque
+import ConfigParser
 
 try:
     # Python 3.0 and later
@@ -134,6 +135,7 @@ tool_map = {}
 tool_map['file'    ] = 'rm'
 tool_map['ftp'     ] = 'gsiftp'
 tool_map['gsiftp'  ] = 'gsiftp'
+tool_map['sshftp'  ] = 'sshftp'
 tool_map['irods'   ] = 'irods'
 tool_map['s3'      ] = 's3'
 tool_map['s3s'     ] = 's3'
@@ -349,7 +351,7 @@ def rm(urls):
             cmd += " -r"
         cmd += " \"%s\"" % (url.path)
         try:
-            myexec(cmd, 5*60, True)
+            myexec(cmd, 6*60*60, True)
         except RuntimeError, err:
             logger.error(err)
             raise
@@ -359,6 +361,14 @@ def scp(urls):
     removes using ssh+rm
     """
     for i, url in enumerate(urls):
+    
+        # split up the host into host/port components
+        host = re.sub(':.*', '', url.host)
+        port = "22"
+        r = re.search(':([0-9]+)', url.host)
+        if r:
+            port = r.group(1)
+
         cmd = "/usr/bin/ssh"
         key = "SSH_PRIVATE_KEY_" + url.sitename
         if key in os.environ:
@@ -366,8 +376,10 @@ def scp(urls):
         elif "SSH_PRIVATE_KEY" in os.environ:
             cmd += " -i " + os.environ['SSH_PRIVATE_KEY']
         cmd += " -o PasswordAuthentication=no"
+        cmd += " -o UserKnownHostsFile=/dev/null"
         cmd += " -o StrictHostKeyChecking=no" + \
-               " " + url.host + " " + \
+               " -p " + port + \
+               " " + host + " " + \
                " \"/bin/rm"
         if options.ignore_failures:
             cmd += " -f"
@@ -375,7 +387,7 @@ def scp(urls):
             cmd += " -r"       
         cmd += " " + url.path + "\""
         try:
-            myexec(cmd, 5*60, True)
+            myexec(cmd, 6*60*60, True)
         except RuntimeError, err:
             logger.error(err)
             raise
@@ -411,13 +423,46 @@ def gsiftp(urls):
     cmd += " -i " + tmp_name
 
     try:
-        myexec(cmd, 1*60*60, True)
+        myexec(cmd, 12*60*60, True)
     except RuntimeError, err:
         logger.error(err)
         os.unlink(tmp_name)
         raise
 
     os.unlink(tmp_name)
+
+
+def sshftp(urls):
+    """
+    remove sshftp based files using globus-url-copy
+    """
+
+    if tool_info['globus-url-copy']['full_path'] == None:
+        raise RuntimeError("Unable to do sshftp mkdir because globus-url-copy could not be found")
+        
+    if options.recursive:
+        logger.info("Skipping cleanup as recursive deletes are not possible for sshftp:// URLS")
+        return
+
+    for i, url in enumerate(urls):
+
+        # build command line for globus-url-copy
+        cmd = tool_info['globus-url-copy']['full_path']
+        # make output match our current log level
+        if logger.isEnabledFor(logging.DEBUG):
+            cmd += " -dbg"
+
+        key = "SSH_PRIVATE_KEY_" + url.sitename
+        if key in os.environ:
+            os.environ["SSH_PRIVATE_KEY"] = os.environ[key]
+
+        cmd += " file:///dev/null"
+        cmd += " " + url.url()
+
+        try:
+            myexec(cmd, 6*60*60, True)
+        except:
+            raise RuntimeError("globus-url-copy command failed")
 
 
 def irods_login(sitename):
@@ -451,7 +496,7 @@ def irods_login(sitename):
     h.close()
     
     cmd = "cat .irodsAc | iinit"
-    myexec(cmd, 60*60, True)
+    myexec(cmd, 6*60*60, True)
         
     os.unlink(".irodsAc")
 
@@ -477,7 +522,7 @@ def irods(urls):
         if options.recursive:
             cmd += " -r"
         try:
-            myexec(cmd, 5*60, True)
+            myexec(cmd, 6*60*60, True)
         except Exception, err:
             logger.error(err)
             raise
@@ -503,7 +548,7 @@ def srm(urls):
         cmd = base_cmd + " " + url.url()
         
         try:
-            myexec(cmd, 5*60, True)
+            myexec(cmd, 6*60*60, True)
         except Exception, err:
             logger.error(err)
             raise
@@ -517,18 +562,34 @@ def s3(urls):
         raise RuntimeError("Unable to do S3 transfers becuase pegasus-s3 could not be found")
 
     for i, url in enumerate(urls):
+
+        fixed_url = url.url()
+        
+        # PM-790: recursive deletes are really a pattern matching. For example,
+        # if told to remove the foo/bar directory, we need to translate it into
+        # foo/bar/*
+        if options.recursive:
+            # first make sure there are no trailing slashes
+            last_char = len(fixed_url) - 1
+            while len(fixed_url) > 0 and last_char > 0 and fixed_url[last_char] == "/":
+                fixed_url = fixed_url[0:last_char]
+                last_char -= 1
+            fixed_url += "/*"
+            logger.info("Transformed remote URL to " + fixed_url)
         
         key = "S3CFG_" + url.sitename
         if key in os.environ:
             os.environ["S3CFG"] = os.environ[key]
         
         cmd = "pegasus-s3 rm"
+        if options.debug:
+            cmd += " -v"
         if options.ignore_failures:
             cmd += " -f"
-        cmd += " " + url.url()
+        cmd += " " + fixed_url
 
         try:
-            myexec(cmd, 60, True)
+            myexec(cmd, 6*60*60, True)
         except Exception, err:
             logger.error(err)
             raise
@@ -542,13 +603,34 @@ def gs(urls):
     if tool_info['gsutil']['full_path'] == None:
         raise RuntimeError("Unable to do S3 transfers becuase pegasus-s3 could not be found")
 
+    key = "BOTO_CONFIG_" + urls[0].sitename
+    if key in os.environ:
+        os.environ["BOTO_CONFIG"] = os.environ[key]
+
+    key = "GOOGLE_PKCS12_" + urls[0].sitename
+    if key in os.environ:
+        os.environ["GOOGLE_PKCS12"] = os.environ[key]
+        
+    # we need to update the boto config file to specify the full
+    # path to the PKCS12 file
+    try:
+        tmp_fd, tmp_name = tempfile.mkstemp(prefix="pegasus-transfer-", suffix=".lst")
+        tmp_file = os.fdopen(tmp_fd, "w+b")
+    except:
+      raise RuntimeError("Unable to create tmp file for gs boto file")
+    try:
+        conf = ConfigParser.SafeConfigParser()
+        conf.read(os.environ["BOTO_CONFIG"])
+        conf.set("Credentials", "gs_service_key_file", os.environ["GOOGLE_PKCS12"])
+        conf.write(tmp_file)
+        tmp_file.close()
+    except Exception, err:
+        logger.error(err)
+        raise RuntimeError("Unable to convert boto config file")
+
     for i, url in enumerate(urls):
         
-        key = "BOTO_CONFIG_" + url.sitename
-        if key in os.environ:
-            os.environ["BOTO_CONFIG"] = os.environ[key]
-        
-        cmd = "gsutil rm -a"
+        cmd = "BOTO_CONFIG=%s gsutil rm -a" %(tmp_name)
         if options.ignore_failures or options.recursive:
             cmd += " -f"
         if options.recursive:
@@ -556,14 +638,12 @@ def gs(urls):
         cmd += " " + url.url()
 
         try:
-            myexec(cmd, 60, True)
+            myexec(cmd, 6*60*60, True)
         except Exception, err:
-            # gsutil returns non-zero even when the -f flag is used
-            if options.ignore_failures or options.recursive:
-                logger.warn(err)
-            else:
-                logger.error(err)
-                raise
+            # ignore all gsutil errors for now - this will be fixed in a future version
+            pass
+
+    os.unlink(tmp_name)
         
         
 def urls_groupable(a, b):
@@ -589,6 +669,9 @@ def handle_removes(urls):
                 scp(urls)
             elif tool == "gsiftp":
                 gsiftp(urls)
+            elif tool == "sshftp":
+                check_tool("globus-url-copy", "-version", "globus-url-copy: ([\.0-9a-zA-Z]+)")
+                sshftp(urls)
             elif tool == "irods":
                 irods(urls)
             elif tool == "srm":
@@ -644,14 +727,14 @@ signal.signal(signal.SIGINT, prog_sigint_handler)
 
 # stdin or file input?
 if options.file == None:
-    logger.info("Reading URL pairs from stdin")
+    logger.info("Reading URLs from stdin")
     input_file = sys.stdin
 else:
-    logger.info("Reading URL pairs from %s" % (options.file))
+    logger.info("Reading URLs from %s" % (options.file))
     try:
         input_file = open(options.file, 'r')
     except Exception, err:
-        logger.critical('Error reading url pair list: %s' % (err))
+        logger.critical('Error reading url list: %s' % (err))
         myexit(1)
 
 # check environment and tools
@@ -715,7 +798,8 @@ while url_q:
     # magic!
     try:
         handle_removes(u_list)
-    except:
+    except Exception, err:
+        logger.error(err)
         exit_code = 1
 
 # sometimes we just want to ignore the failures

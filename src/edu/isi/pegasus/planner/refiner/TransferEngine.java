@@ -56,7 +56,6 @@ import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
 import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.classes.PlannerCache;
-import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.transfer.mapper.OutputMapper;
@@ -211,12 +210,7 @@ public class TransferEngine extends Engine {
     /**
      * A boolean indicating whether we are doing worker node execution or not.
      */
-    private boolean mWorkerNodeExecution;
-
-    /**
-     * The planner options passed to the planner
-     */
-    private PlannerOptions mPlannerOptions;
+    //private boolean mWorkerNodeExecution;
 
     /**
      * A boolean indicating whether to bypass first level staging for inputs
@@ -226,7 +220,8 @@ public class TransferEngine extends Engine {
     /**
      * A boolean to track whether condor file io is used for the workflow or not.
      */
-    private final boolean mSetupForCondorIO;
+    //private final boolean mSetupForCondorIO;
+    private PegasusConfiguration mPegasusConfiguration;
     
     /**
      * The output site where files need to be staged to.
@@ -247,18 +242,16 @@ public class TransferEngine extends Engine {
                            List<Job> deletedLeafJobs){
         super( bag );
 
-        mPlannerOptions  = bag.getPlannerOptions();
         mUseSymLinks = mProps.getUseOfSymbolicLinks();
         mSRMServiceURLToMountPointMap = constructSiteToSRMServerMap( mProps );
         
         mDag = reducedDag;
         mDeletedJobs     = deletedJobs;
 
-        mWorkerNodeExecution    = mProps.executeOnWorkerNode();
-        mSetupForCondorIO       = new PegasusConfiguration( mLogger).setupForCondorIO( mProps );
         mBypassStagingForInputs = mProps.bypassFirstLevelStagingForInputs();
 
-
+        mPegasusConfiguration = new PegasusConfiguration( bag.getLogger() );   
+         
         try{
             mTXRefiner = RefinerFactory.loadInstance( reducedDag,
                                                       bag );
@@ -283,6 +276,42 @@ public class TransferEngine extends Engine {
                     "]",LogManager.CONFIG_MESSAGE_LEVEL);
     }
 
+    /**
+     * Determines a particular created transfer pair has to be binned
+     * for remote transfer or local.
+     * 
+     * @param job the associated compute job
+     * @param ft  the file transfer created
+     * @return 
+     */
+    private boolean runTransferRemotely(Job job , FileTransfer ft) {
+        NameValue sourceTX = ft.getSourceURL();
+        String sourceSite = sourceTX.getKey();
+        String sourceURL  = sourceTX.getValue();
+        boolean remote = false;
+        
+        //if the source URL is a FILE URL and 
+        //source site matches the destination site
+        //then has to run remotely
+        if( sourceURL != null && sourceURL.startsWith( PegasusURL.FILE_URL_SCHEME ) ){
+            //sanity check to make sure source site 
+            //matches destination site
+            NameValue destTX = ft.getDestURL();
+            if( sourceSite.equalsIgnoreCase( destTX.getKey()) ){
+                remote = true;
+            }
+            else if( sourceSite.equals( "local") ){
+                remote = false;
+            }
+            else{
+                //should indicate a bug
+                throw new RuntimeException( "Mismatched file transfer created " + ft + " for job " +
+                                            job.getID());
+            }
+        }
+        return remote;
+    }
+    
     /**
      * Returns whether to run a transfer job on local site or not.
      *
@@ -424,8 +453,9 @@ public class TransferEngine extends Engine {
                 //for a deleted node, to transfer it's output
                 //the execution pool should be set to local i.e submit host
                 currentJob.setSiteHandle( "local" );
-                //set the staging site for the deleted job
-                currentJob.setStagingSiteHandle( getStagingSite( currentJob ) );
+                //PM-936 set the staging site for the deleted job
+                //to local site
+                currentJob.setStagingSiteHandle( "local" );
 
                 //for jobs deleted during data reuse we dont
                 //go through the staging site. they are transferred
@@ -461,8 +491,11 @@ public class TransferEngine extends Engine {
      * @return the staging site
      */
     public String getStagingSite( Job job ){
+        /*
         String ss =  this.mPOptions.getStagingSite( job.getSiteHandle() );
         return (ss == null) ? job.getSiteHandle(): ss;
+        */
+        return job.getStagingSiteHandle();
     }
 
     /**
@@ -588,9 +621,10 @@ public class TransferEngine extends Engine {
         for( Iterator it = nodeIpFiles.iterator(); it.hasNext(); ){
             PegasusFile pf = (PegasusFile) it.next();
             if( !parentsOutFiles.contains( pf ) ){
-                if (!pf.getTransientTransferFlag()) {
-                    vRCSearchFiles.addElement(pf);
-                }
+                //PM-976 all input files that are not generated
+                //by parent jobs should be looked up in the replica catalog
+                //we don't consider the value of the transfer flag
+                vRCSearchFiles.addElement(pf);
             }
         }
 
@@ -1314,7 +1348,7 @@ public class TransferEngine extends Engine {
                 
             //add locations of input data on the remote site to the transient RC
             
-            boolean bypassFirstLevelStaging = this.bypassStagingForInputFile( selLoc , pf , job.getSiteHandle()  );
+            boolean bypassFirstLevelStaging = this.bypassStagingForInputFile( selLoc , pf , job  );
             if( bypassFirstLevelStaging ){
                 //only the files for which we bypass first level staging , we
                 //store them in the planner cache as a GET URL and associate with the compute site
@@ -1362,7 +1396,10 @@ public class TransferEngine extends Engine {
             if(ft.getDestURL() == null)
                 ft.addDestination(stagingSiteHandle,destPutURL);
             
-            if( symLinkSelectedLocation || !runTransferOnLocalSite ){
+            if(  symLinkSelectedLocation || //symlinks can run only locally
+                 !runTransferOnLocalSite ||
+                 runTransferRemotely( job, ft ) ){ //check on the basis of constructed source URL whether to run remotely
+                    
                 //all symlink transfers and user specified remote transfers
                 remoteFileTransfers.add(ft);
             }
@@ -1794,21 +1831,20 @@ public class TransferEngine extends Engine {
      *
      * @param entry        a ReplicaCatalogEntry matching the selected replica location.
      * @param file         the corresponding Pegasus File object
-     * @param computeSite  the compute site where the associated job will run.
-     * @param isExecutable whether the file transferred is an executable file or not
+     * @param job          the associated job
      *
      * @return  boolean indicating whether we need to enable bypass or not
      */
-    private boolean bypassStagingForInputFile( ReplicaCatalogEntry entry , PegasusFile file, String computeSite ) {
+    private boolean bypassStagingForInputFile( ReplicaCatalogEntry entry , PegasusFile file, Job job ) {
         boolean bypass = false;
-
+        String computeSite = job.getSiteHandle();
         //check if user has it configured for bypassing the staging and
         //we are in pegasus lite mode
-        if( this.mBypassStagingForInputs && mWorkerNodeExecution ){
+        if( this.mBypassStagingForInputs && mPegasusConfiguration.jobSetupForWorkerNodeExecution(job) ){
             boolean isFileURL = entry.getPFN().startsWith( PegasusURL.FILE_URL_SCHEME);
             String fileSite = entry.getResourceHandle();
 
-            if( this.mSetupForCondorIO ){
+            if( mPegasusConfiguration.jobSetupForCondorIO(job, mProps) ){
                 //additional check for condor io
                 //we need to inspect the URL and it's location
                 //only file urls for input files are eligible for bypass
@@ -1859,6 +1895,8 @@ public class TransferEngine extends Engine {
             mLogger.log( message.toString() , LogManager.WARNING_MESSAGE_LEVEL );
         }
     }
+
+    
 
 
 }

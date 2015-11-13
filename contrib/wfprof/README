@@ -1,6 +1,0 @@
-This is an incomplete rewrite of the pprof and ioprof tools.
-Eventually it will be removed entirely as part of the dV/dT
-project. Some components, including most of the functionality
-of pprof will be merged into kickstart. Other components,
-such as most of the ioprof functionality, will be incorporated
-into a new tool.

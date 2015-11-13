@@ -22,8 +22,8 @@ from Pegasus.tools import utils
 from Pegasus.plots_stats import utils as stats_utils
 from Pegasus.db.workflow import stampede_statistics
 
-from Pegasus.service import app
 from Pegasus.service.dashboard import queries
+
 
 class NoWorkflowsFoundError(Exception):
     def __init__(self, **args):
@@ -34,6 +34,7 @@ class NoWorkflowsFoundError(Exception):
 
         if 'filtered' in args:
             self.filtered = args['filtered']
+
 
 class Dashboard(object):
 
@@ -64,7 +65,7 @@ class Dashboard(object):
 
         return self._wf_db_url
 
-    def get_root_workflow_list(self, **table_args):
+    def get_root_workflow_list(self, counts_only=False, **table_args):
         """
         Get basic information about all workflows running, on all databases. This is for the index page.
         Returns a list of workflows.
@@ -75,6 +76,14 @@ class Dashboard(object):
         try:
             all_workflows = None
             all_workflows = queries.MasterDatabase(self._master_db_url)
+            counts = all_workflows.get_workflow_counts()
+
+            if counts_only:
+                if counts[0] == 0:
+                    raise NoWorkflowsFoundError(count=None, filtered=None)
+
+                return counts
+
             count, filtered, workflows = all_workflows.get_all_workflows(**table_args)
 
             if workflows:
@@ -84,7 +93,6 @@ class Dashboard(object):
                 # Throw no workflows found error.
                 raise NoWorkflowsFoundError(count=count, filtered=filtered)
 
-            counts = all_workflows.get_workflow_counts()
             return(count, filtered, self._workflows, counts)
 
         finally:
@@ -286,6 +294,25 @@ class Dashboard(object):
             Dashboard.close(workflow)
             Dashboard.close(workflow_statistics)
 
+    def get_workflow_details(self, wf_id=None, wf_uuid=None):
+        """
+        Get workflow specific information. This is when user click on a workflow link.
+        Returns a workflow object.
+        """
+        try:
+            if not wf_id and not wf_uuid:
+                raise ValueError, 'Workflow ID or Workflow UUID is required'
+
+            workflow = None
+            workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id=wf_id, wf_uuid=wf_uuid)
+
+            details = self._get_workflow_details(workflow)
+
+            return details
+
+        finally:
+            Dashboard.close(workflow)
+
     def workflow_summary_stats(self, wf_id=None, wf_uuid=None):
 
         try:
@@ -313,16 +340,20 @@ class Dashboard(object):
             wall_time = float(wall_time)
 
         cum_time = workflow.get_workflow_cum_job_wall_time()
-        if cum_time != None:
-            cum_time = float(cum_time)
+        cum_time = [float(v) if v is not None else v for v in cum_time ]
+        #if cum_time != None:
+        #    cum_time = float(cum_time)
 
         job_cum_time = workflow.get_submit_side_job_wall_time()
-        if job_cum_time != None:
-            job_cum_time = float(job_cum_time)
+        job_cum_time = [float(v) if v is not None else v for v in job_cum_time ]
+        #if job_cum_time != None:
+        #    job_cum_time = float(job_cum_time)
 
         statistics['wall-time'] = wall_time
-        statistics['cum-time'] = cum_time
-        statistics['job-cum-time'] = job_cum_time
+        statistics['cum-time'] = cum_time[0]
+        statistics['cum-badput-time'] = cum_time[2]
+        statistics['job-cum-time'] = job_cum_time[0]
+        statistics['job-cum-badput-time'] = job_cum_time[2]
 
         return statistics
 
@@ -344,27 +375,40 @@ class Dashboard(object):
 
         return statistics
 
-    def get_job_information(self, wf_id, job_id):
+    def get_job_information(self, wf_id, job_id, job_instance_id):
         """
         Get job specific information. This is when user click on a job link, on the workflow details page.
         Returns a Job object.
         """
         try:
             workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id)
-            job_details = workflow.get_job_information(job_id)
+            job_details = workflow.get_job_information(job_id, job_instance_id)
             return job_details
         except NoResultFound:
             return None
         finally:
             Dashboard.close(workflow)
 
-    def get_job_states(self, wf_id, job_id):
+    def get_job_instances(self, wf_id, job_id):
+        """
+        Get a list of all job instances for a given job
+        """
+        try:
+            workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id)
+            job_instances = workflow.get_job_instances(job_id)
+            return job_instances
+        except NoResultFound:
+            return None
+        finally:
+            Dashboard.close(workflow)
+
+    def get_job_states(self, wf_id, job_id, job_instance_id):
         """
         Get information about the job states that a job has gone through.
         """
         try:
             workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id)
-            job_states = workflow.get_job_states(job_id)
+            job_states = workflow.get_job_states(job_id, job_instance_id)
             return job_states
         finally:
             Dashboard.close(workflow)
@@ -393,6 +437,14 @@ class Dashboard(object):
         finally:
             Dashboard.close(workflow)
 
+    def get_failing_jobs(self, wf_id, **table_args):
+        try:
+            workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id=wf_id)
+            total_count, filtered_count, failed_jobs = workflow.get_failing_jobs(**table_args)
+            return total_count, filtered_count, failed_jobs
+        finally:
+            Dashboard.close(workflow)
+
     def get_sub_workflows(self, wf_id):
         try:
             workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id=wf_id)
@@ -401,42 +453,42 @@ class Dashboard(object):
         finally:
             Dashboard.close(workflow)
 
-    def get_stdout(self, wf_id, job_id):
+    def get_stdout(self, wf_id, job_id, job_instance_id):
         try:
             workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id)
-            stdout = workflow.get_stdout(job_id)
+            stdout = workflow.get_stdout(job_id, job_instance_id)
             return stdout
         finally:
             Dashboard.close(workflow)
 
-    def get_successful_job_invocation(self, wf_id, job_id):
+    def get_successful_job_invocation(self, wf_id, job_id, job_instance_id):
         try:
             workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id)
-            successful_invocations = workflow.get_successful_job_invocations(job_id)
+            successful_invocations = workflow.get_successful_job_invocations(job_id, job_instance_id)
             return successful_invocations
         finally:
             Dashboard.close(workflow)
 
-    def get_failed_job_invocation(self, wf_id, job_id):
+    def get_failed_job_invocation(self, wf_id, job_id, job_instance_id):
         try:
             workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id)
-            failed_invocations = workflow.get_failed_job_invocations(job_id)
+            failed_invocations = workflow.get_failed_job_invocations(job_id, job_instance_id)
             return failed_invocations
         finally:
             Dashboard.close(workflow)
 
-    def get_stderr(self, wf_id, job_id):
+    def get_stderr(self, wf_id, job_id, job_instance_id):
         try:
             workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id)
-            stderr = workflow.get_stderr(job_id)
+            stderr = workflow.get_stderr(job_id, job_instance_id)
             return stderr
         finally:
             Dashboard.close(workflow)
 
-    def get_invocation_information(self, wf_id, job_id, task_id):
+    def get_invocation_information(self, wf_id, job_id, job_instance_id, invocation_id):
         try:
             workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id)
-            invocation = workflow.get_invocation_information(job_id, task_id)
+            invocation = workflow.get_invocation_information(job_id, job_instance_id, invocation_id)
             invocation.start_time = strftime("%a, %d %b %Y %H:%M:%S", localtime(invocation.start_time))
             return invocation
         finally:

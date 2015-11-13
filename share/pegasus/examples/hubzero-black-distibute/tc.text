@@ -1,0 +1,8 @@
+tr hubzero::distribute{
+    site local {
+        pfn "/usr/bin/distribute"
+        arch "x86_64"
+        os "linux"
+        type "INSTALLED"
+    }
+}

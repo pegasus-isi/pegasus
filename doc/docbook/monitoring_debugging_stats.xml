@@ -6,16 +6,13 @@
 
   <para>Pegasus comes bundled with useful tools that help users debug
   workflows and generate useful statistics and plots about their workflow
-  runs. These tools internally parse the Condor log files and have a similar
-  interface. With the exception of pegasus-monitord (see below), all tools
-  take in the submit directory as an argument. Users can invoke the tools
-  listed in this chapter as follows:</para>
+  runs. Most of the tools query a runtime workflow database ( usually a
+  sqllite in the workflow submit directory ) populated at runtime by
+  pegasus-monitord. With the exception of pegasus-monitord (see below), all
+  tools take in the submit directory as an argument. Users can invoke the
+  tools listed in this chapter as follows:</para>
 
   <programlisting>$ pegasus-[toolname]   &lt;path to the submit directory&gt;</programlisting>
-
-  <para>All these utilities query a database ( usually a sqllite in the
-  workflow submit directory ) that is populated by the monitoring daemon
-  <emphasis role="bold">pegasus-monitord</emphasis> .</para>
 
   <section id="workflow_status">
     <title>Workflow Status</title>
@@ -254,31 +251,53 @@ working dir : /lfs1/work/pegasus/run0004
 #       during workflow run. This is the cumulative of retries,
 #       succeeded and failed count.
 # Workflow wall time:
-#   The walltime from the start of the workflow execution to the end as
+#   The wall time from the start of the workflow execution to the end as
 #   reported by the DAGMAN.In case of rescue dag the value is the
 #   cumulative of all retries.
 # Workflow cumulative job wall time:
-#   The sum of the walltime of all jobs as reported by kickstart.
+#   The sum of the wall time of all jobs as reported by kickstart.
 #   In case of job retries the value is the cumulative of all retries.
 #   For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs),
-#   the walltime value includes jobs from the sub workflows as well.
-# Cumulative job walltime as seen from submit side:
-#   The sum of the walltime of all jobs as reported by DAGMan.
-#   This is similar to the regular cumulative job walltime, but includes
+#   the wall time value includes jobs from the sub workflows as well.
+# Cumulative job wall time as seen from submit side:
+#   The sum of the wall time of all jobs as reported by DAGMan.
+#   This is similar to the regular cumulative job wall time, but includes
 #   job management overhead and delays. In case of job retries the value
 #   is the cumulative of all retries. For workflows having sub workflow
-#   jobs (i.e SUBDAG and SUBDAX jobs), the walltime value includes jobs
+#   jobs (i.e SUBDAG and SUBDAX jobs), the wall time value includes jobs
 #   from the sub workflows as well.
+# Cumulative job wall time as seen from submit side:
+#   The sum of the wall time of all jobs as reported by DAGMan.
+#   This is similar to the regular cumulative job wall time, but includes
+#   job management overhead and delays. In case of job retries the value
+#   is the cumulative of all retries. For workflows having sub workflow
+#   jobs (i.e SUBDAG and SUBDAX jobs), the wall time value includes jobs
+#   from the sub workflows as well.
+# Workflow cumulative job badput wall time:
+#   The sum of the wall time of all failed jobs as reported by kickstart.
+#   In case of job retries the value is the cumulative of all retries.
+#   For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs),
+#   the wall time value includes jobs from the sub workflows as well.
+# Cumulative job badput wall time as seen from submit side:
+#   The sum of the wall time of all failed jobs as reported by DAGMan.
+#   This is similar to the regular cumulative job badput wall time, but includes
+#   job management overhead and delays. In case of job retries the value
+#   is the cumulative of all retries. For workflows having sub workflow
+#   jobs (i.e SUBDAG and SUBDAX jobs), the wall time value includes jobs
+#   from the sub workflows as well.
+
 ------------------------------------------------------------------------------
 Type           Succeeded Failed  Incomplete  Total     Retries   Total+Retries
-Tasks          4         0       0           4         0         4            
-Jobs           17        0       0           17        0         17           
-Sub-Workflows  0         0       0           0         0         0            
+Tasks          4         0       0           4         0         4
+Jobs           17        0       0           17        0         17
+Sub-Workflows  0         0       0           0         0         0
 ------------------------------------------------------------------------------
 
-Workflow wall time                               : 5 mins, 18 secs
-Workflow cumulative job wall time                : 4 mins, 2 secs
-Cumulative job walltime as seen from submit side : 4 mins, 10 secs
+Workflow wall time                                       : 5 mins, 18 secs
+Workflow cumulative job wall time                        : 4 mins, 2 secs
+Cumulative job wall time as seen from submit side        : 4 mins, 10 secs
+Workflow cumulative job badput wall time                 : 0
+Cumulative job badput wall time as seen from submit side : 0
 
 </programlisting>
 
@@ -327,30 +346,45 @@ Cumulative job walltime as seen from submit side : 4 mins, 10 secs
 #       during workflow run. This is the cumulative of retries,
 #       succeeded and failed count.
 # Workflow wall time:
-#   The walltime from the start of the workflow execution to the end as
+#   The wall time from the start of the workflow execution to the end as
 #   reported by the DAGMAN.In case of rescue dag the value is the
 #   cumulative of all retries.
 # Workflow cumulative job wall time:
-#   The sum of the walltime of all jobs as reported by kickstart.
+#   The sum of the wall time of all jobs as reported by kickstart.
 #   In case of job retries the value is the cumulative of all retries.
 #   For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs),
-#   the walltime value includes jobs from the sub workflows as well.
-# Cumulative job walltime as seen from submit side:
-#   The sum of the walltime of all jobs as reported by DAGMan.
-#   This is similar to the regular cumulative job walltime, but includes
+#   the wall time value includes jobs from the sub workflows as well.
+# Cumulative job wall time as seen from submit side:
+#   The sum of the wall time of all jobs as reported by DAGMan.
+#   This is similar to the regular cumulative job wall time, but includes
 #   job management overhead and delays. In case of job retries the value
 #   is the cumulative of all retries. For workflows having sub workflow
-#   jobs (i.e SUBDAG and SUBDAX jobs), the walltime value includes jobs
+#   jobs (i.e SUBDAG and SUBDAX jobs), the wall time value includes jobs
 #   from the sub workflows as well.
+# Workflow cumulative job badput wall time:
+#   The sum of the wall time of all failed jobs as reported by kickstart.
+#   In case of job retries the value is the cumulative of all retries.
+#   For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs),
+#   the wall time value includes jobs from the sub workflows as well.
+# Cumulative job badput wall time as seen from submit side:
+#   The sum of the wall time of all failed jobs as reported by DAGMan.
+#   This is similar to the regular cumulative job badput wall time, but includes
+#   job management overhead and delays. In case of job retries the value
+#   is the cumulative of all retries. For workflows having sub workflow
+#   jobs (i.e SUBDAG and SUBDAX jobs), the wall time value includes jobs
+#   from the sub workflows as well.
+
 ------------------------------------------------------------------------------
 Type           Succeeded Failed  Incomplete  Total     Retries   Total+Retries
-Tasks          8         0       0           8         0         8            
-Jobs           34        0       0           34        0         34           
-Sub-Workflows  0         0       0           0         0         0            
+Tasks          8         0       0           8         0         8
+Jobs           34        0       0           34        0         34
+Sub-Workflows  0         0       0           0         0         0
 ------------------------------------------------------------------------------
 
-Workflow cumulative job wall time                : 8 mins, 5 secs
-Cumulative job walltime as seen from submit side : 8 mins, 35 secs
+Workflow cumulative job wall time                        : 8 mins, 5 secs
+Cumulative job wall time as seen from submit side        : 8 mins, 35 secs
+Workflow cumulative job badput wall time                 : 0
+Cumulative job badput wall time as seen from submit side : 0
 
 </programlisting><note>
           <para>When computing statistics over multiple workflows, please
@@ -440,30 +474,30 @@ pegasus-statistics -Dpegasus.monitord.output='&lt;DB_URL&gt;' -o &lt;OUTPUT_DIR&
         </listitem>
 
         <listitem>
-          <para><emphasis role="bold">Workflow wall time</emphasis> - The
-          walltime from the start of the workflow execution to the end as
-          reported by the DAGMAN.In case of rescue dag the value is the
-          cumulative of all retries.</para>
+          <para><emphasis role="bold">Workflow wall time</emphasis> - The wall
+          time from the start of the workflow execution to the end as reported
+          by the DAGMAN.In case of rescue dag the value is the cumulative of
+          all retries.</para>
         </listitem>
 
         <listitem>
           <para><emphasis role="bold">Workflow cummulate job wall
-          time</emphasis> - The sum of the walltime of all jobs as reported by
-          kickstart. In case of job retries the value is the cumulative of all
-          retries. For workflows having sub workflow jobs (i.e SUBDAG and
-          SUBDAX jobs), the walltime value includes jobs from the sub
+          time</emphasis> - The sum of the wall time of all jobs as reported
+          by kickstart. In case of job retries the value is the cumulative of
+          all retries. For workflows having sub workflow jobs (i.e SUBDAG and
+          SUBDAX jobs), the wall time value includes jobs from the sub
           workflows as well. This value is multiplied by the multiplier_factor
           in the job instance table.</para>
         </listitem>
 
         <listitem>
-          <para><emphasis role="bold">Cumulative job walltime as seen from
-          submit side</emphasis> - The sum of the walltime of all jobs as
+          <para><emphasis role="bold">Cumulative job wall time as seen from
+          submit side</emphasis> - The sum of the wall time of all jobs as
           reported by DAGMan. This is similar to the regular cumulative job
-          walltime, but includes job management overhead and delays. In case
+          wall time, but includes job management overhead and delays. In case
           of job retries the value is the cumulative of all retries. For
           workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs), the
-          walltime value includes jobs from the sub workflows. This value is
+          wall time value includes jobs from the sub workflows. This value is
           multiplied by the multiplier_factor in the job instance
           table.</para>
         </listitem>
@@ -1410,9 +1444,9 @@ pegasus-statistics -Dpegasus.monitord.output='&lt;DB_URL&gt;' -o &lt;OUTPUT_DIR&
 
 ******************************************** SUMMARY ********************************************
 
-Graphs and charts generated by pegasus-plots can be viewed by opening the generated html file in the web browser  : 
+Graphs and charts generated by pegasus-plots can be viewed by opening the generated html file in the web browser  :
 /scratch/grid-setup/run0001/plots/index.html
- 
+
 **************************************************************************************************</programlisting>
 
       <para>By default the output gets generated to plots folder inside the
@@ -1551,7 +1585,7 @@ Graphs and charts generated by pegasus-plots can be viewed by opening the genera
     </section>
   </section>
 
-  <section>
+  <section id="dashboard">
     <title>Dashboard</title>
 
     <para>As the number of jobs and tasks in workflows increase, the ability
@@ -1563,29 +1597,44 @@ Graphs and charts generated by pegasus-plots can be viewed by opening the genera
     <section>
       <title>Workflow Dashboard</title>
 
-      <para>Pegasus Workflow Dashboard is bundled with the Pegasus service
-      layer. This is available as a separate project in <ulink
-      url="https://github.com/pegasus-isi/pegasus-service">Github</ulink>. The
-      pegasus-service-server is developed in Python and uses the Flask
-      framework to implement the web interface.The users can then connect to
-      this server using a browser to monitor/debug workflows.</para>
+      <para>Pegasus Workflow Dashboard is bundled with Pegasus. The
+      pegasus-service is developed in Python and uses the Flask framework to
+      implement the web interface.The users can then connect to this server
+      using a browser to monitor/debug workflows.</para>
 
       <para><note>
           <para>the workflow dashboard can only monitor workflows which have
           been executed using Pegasus 4.2.0 and above.</para>
-        </note>By default, the server is configured to listen on all network
-      interfaces on port 5000. A user can view the dashboard on
-      http://&lt;IP_ADDRESS&gt;:5000/</para>
+        </note></para>
+
+      <para>To start the Pegasus Dashboard execute the following
+      command</para>
+
+      <programlisting>$ pegasus-service --host 127.0.0.1 --port 5000
+
+SSL is not configured: Using self-signed certificate
+2015-04-13 16:14:23,074:Pegasus.service.server:79: WARNING: SSL is not configured: Using self-signed certificate
+Service not running as root: Will not be able to switch users
+2015-04-13 16:14:23,074:Pegasus.service.server:86: WARNING: Service not running as root: Will not be able to switch users</programlisting>
+
+      <para>By default, the server is configured to listen only on
+      localhost/127.0.0.1 on port 5000. A user can view the dashboard on
+      <emphasis role="bold"><emphasis
+      role="bold">https</emphasis>://localhost:5000/</emphasis></para>
+
+      <para>To make the Pegasus Dashboard listen on all network interfaces OR
+      on a different port, users can pass different values to the --host
+      and/or --port options.</para>
 
       <para>By default, the dashboard server can only monitor workflows run by
       the current user i.e. the user who is running the
-      pegasus-service-server.</para>
+      pegasus-service.</para>
 
       <para>The Dashboard's home page lists all workflows, which have been run
       by the current-user. The home page shows the status of each of the
-      workflow i.e. Running/Successful/Failed. The home page lists only the
-      top level workflows (Pegasus supports hierarchical workflows i.e.
-      workflows within a workflow). The rows in the table are color
+      workflow i.e. Running/Successful/Failed/Failing. The home page lists
+      only the top level workflows (Pegasus supports hierarchical workflows
+      i.e. workflows within a workflow). The rows in the table are color
       coded</para>
 
       <itemizedlist>
@@ -1602,6 +1651,11 @@ Graphs and charts generated by pegasus-plots can be viewed by opening the genera
         <listitem>
           <para><emphasis role="bold">Blue</emphasis>: indicates a workflow is
           currently running.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Gray</emphasis>: indicates a workflow
+          that was archived.</para>
         </listitem>
       </itemizedlist>
 
@@ -1623,7 +1677,13 @@ Graphs and charts generated by pegasus-plots can be viewed by opening the genera
 
       <para>In addition, the details page displays a tab listing all
       sub-workflows and their statuses. Additional tabs exist which list
-      information for all running, failed, and successful jobs.</para>
+      information for all running, failed, successful, and failing
+      jobs.</para>
+
+      <para><note>
+          <para>Failing jobs are currently running jobs (visible in Running
+          tab), which have failed in previous attempts to execute them.</para>
+        </note></para>
 
       <para>The information displayed for a job depends on it's status. For
       example, the failed jobs tab displays the job name, exit code, links to
@@ -1644,6 +1704,12 @@ Graphs and charts generated by pegasus-plots can be viewed by opening the genera
       corresponding job's job label. The job details page lists information
       relevant to a specific job. For example, the page lists information like
       job name, exit code, run time, etc.</para>
+
+      <para>The job instance section of the job details page lists all
+      attempts made to run the job i.e. if a job failed in its first attempt
+      due to transient errors, but ran successfully when retried, the job
+      instance section shows two entries; one for each attempt to run the
+      job.</para>
 
       <para>The job details page also shows tab's for failed, and successful
       task invocations (Pegasus allows users to group multiple smaller task's
@@ -1761,6 +1827,811 @@ Graphs and charts generated by pegasus-plots can be viewed by opening the genera
           </imageobject>
         </mediaobject>
       </figure>
+    </section>
+  </section>
+
+  <section id="notifications">
+    <title>Notifications</title>
+
+    <para>The Pegasus Workflow Mapper now supports job and workflow level
+    notifications. You can specify in the DAX with the job or the
+    workflow</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>the event when the notification needs to be sent</para>
+      </listitem>
+
+      <listitem>
+        <para>the executable that needs to be invoked.</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>The notifications are issued from the submit host by the
+    pegasus-monitord daemon that monitors the Condor logs for the workflow.
+    When a notification is issued, pegasus-monitord while invoking the
+    notifying executable sets certain environment variables that contain
+    information about the job and workflow state.</para>
+
+    <para>The Pegasus release comes with default notification clients that
+    send notifications via email or jabber.</para>
+
+    <section>
+      <title>Specifying Notifications in the DAX</title>
+
+      <para>Currently, you can specify notifications for the jobs and the
+      workflow by the use of invoke elements.</para>
+
+      <para>Invoke elements can be sub elements for the following elements in
+      the DAX schema.<itemizedlist>
+          <listitem>
+            <para>job - to associate notifications with a compute job in the
+            DAX.</para>
+          </listitem>
+
+          <listitem>
+            <para>dax - to associate notifications with a dax job in the
+            DAX.</para>
+          </listitem>
+
+          <listitem>
+            <para>dag - to associate notifications with a dag job in the
+            DAX.</para>
+          </listitem>
+
+          <listitem>
+            <para>executable - to associate notifications with a job that uses
+            a particular notification</para>
+          </listitem>
+        </itemizedlist></para>
+
+      <para>The invoke element can be specified at the root element level of
+      the DAX to indicate workflow level notifications.</para>
+
+      <para>The invoke element may be specified multiple times, as needed. It
+      has a mandatory <emphasis role="bold">when</emphasis> attribute with the
+      following value set</para>
+
+      <table id="notification_conditions_table">
+        <title>Table 1. Invoke Element attributes and meaning.</title>
+
+        <tgroup cols="2">
+          <thead>
+            <row>
+              <entry align="center">Enumeration of Values for when
+              attribute</entry>
+
+              <entry align="center">Meaning</entry>
+            </row>
+          </thead>
+
+          <tbody>
+            <row>
+              <entry>never</entry>
+
+              <entry>(default). Never notify of anything. This is useful to
+              temporarily disable an existing notifications.</entry>
+            </row>
+
+            <row>
+              <entry>start</entry>
+
+              <entry>create a notification when the job is submitted.</entry>
+            </row>
+
+            <row>
+              <entry>on_error</entry>
+
+              <entry>after a job finishes with failure (exitcode !=
+              0).</entry>
+            </row>
+
+            <row>
+              <entry>on_success</entry>
+
+              <entry>after a job finishes with success (exitcode ==
+              0).</entry>
+            </row>
+
+            <row>
+              <entry>at_end</entry>
+
+              <entry>after a job finishes, regardless of exitcode.</entry>
+            </row>
+
+            <row>
+              <entry>all</entry>
+
+              <entry>like start and at_end combined.</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+
+      <para>You can specify multiple invoke elements corresponding to same
+      when attribute value in the DAX. This will allow you to have multiple
+      notifications for the same event.</para>
+
+      <para>Here is an example that illustrates that.</para>
+
+      <programlisting>&lt;job id="ID000001" namespace="example" name="mDiffFit" version="1.0"
+       node-label="preprocess" &gt;
+    &lt;argument&gt;-a top -T 6  -i &lt;file name="f.a"/&gt;  -o &lt;file name="f.b1"/&gt;&lt;/argument&gt;
+
+    &lt;!-- profiles are optional --&gt;
+    &lt;profile namespace="execution" key="site"&gt;isi_viz&lt;/profile&gt;
+    &lt;profile namespace="condor" key="getenv"&gt;true&lt;/profile&gt;
+
+    &lt;uses name="f.a" link="input"  register="false" transfer="true" type="data" /&gt;
+    &lt;uses name="f.b" link="output" register="false" transfer="true" type="data" /&gt;
+
+    &lt;!-- 'WHEN' enumeration: never, start, on_error, on_success, at_end, all --&gt;
+    <emphasis role="bold">&lt;invoke when="start"&gt;/path/to/notify1 arg1 arg2&lt;/invoke&gt;
+    &lt;invoke when="start"&gt;/path/to/notify1 arg3 arg4&lt;/invoke&gt;
+    &lt;invoke when="on_success"&gt;/path/to/notify2 arg3 arg4&lt;/invoke&gt;</emphasis>
+  &lt;/job&gt;</programlisting>
+
+      <para>In the above example the executable notify1 will be invoked twice
+      when a job is submitted ( when="start" ), once with arguments arg1 and
+      arg2 and second time with arguments arg3 and arg4.</para>
+
+      <para>The DAX Generator API <link
+      linkend="dax_generator_api">chapter</link> has information about how to
+      add notifications to the DAX using the DAX api's.</para>
+    </section>
+
+    <section id="pegasus_notify_file">
+      <title>Notify File created by Pegasus in the submit directory</title>
+
+      <para>Pegasus while planning a workflow writes out a notify file in the
+      submit directory that contains all the notifications that need to be
+      sent for the workflow. pegasus-monitord picks up this notifications file
+      to determine what notifications need to be sent and when.</para>
+
+      <orderedlist>
+        <listitem>
+          <para>ENTITY_TYPE ID NOTIFICATION_CONDITION ACTION</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>ENTITY_TYPE can be either of the following keywords</para>
+
+              <itemizedlist>
+                <listitem>
+                  <para>WORKFLOW - indicates workflow level
+                  notification</para>
+                </listitem>
+
+                <listitem>
+                  <para>JOB - indicates notifications for a job in the
+                  executable workflow</para>
+                </listitem>
+
+                <listitem>
+                  <para>DAXJOB - indicates notifications for a DAX Job in the
+                  executable workflow</para>
+                </listitem>
+
+                <listitem>
+                  <para>DAGJOB - indicates notifications for a DAG Job in the
+                  executable workflow</para>
+                </listitem>
+              </itemizedlist>
+            </listitem>
+
+            <listitem>
+              <para>ID indicates the identifier for the entity. It has
+              different meaning depending on the entity type - -</para>
+
+              <itemizedlist>
+                <listitem>
+                  <para>workflow - ID is wf_uuid</para>
+                </listitem>
+
+                <listitem>
+                  <para>JOB|DAXJOB|DAGJOB - ID is the job identifier in the
+                  executable workflow ( DAG ).</para>
+                </listitem>
+              </itemizedlist>
+            </listitem>
+
+            <listitem>
+              <para>NOTIFICATION_CONDITION is the condition when the
+              notification needs to be sent. The notification conditions are
+              enumerated in <link
+              linkend="notification_conditions_table">Table 1</link></para>
+            </listitem>
+
+            <listitem>
+              <para>ACTION is what needs to happen when condition is
+              satisfied. It is executable + arguments</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para>INVOCATION JOB_IDENTIFIER INV.ID NOTIFICATION_CONDITION
+          ACTION</para>
+
+          <para>The INVOCATION lines are only generated for clustered jobs, to
+          specifiy the finer grained notifications for each constitutent
+          job/invocation .</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>JOB IDENTIFIER is the job identifier in the executable
+              workflow ( DAG ).</para>
+            </listitem>
+
+            <listitem>
+              <para>INV.ID indicates the index of the task in the clustered
+              job for which the notification needs to be sent.</para>
+            </listitem>
+
+            <listitem>
+              <para>NOTIFICATION_CONDITION is the condition when the
+              notification needs to be sent. The notification conditions are
+              enumerated in <link
+              linkend="notification_conditions_table">Table 1</link></para>
+            </listitem>
+
+            <listitem>
+              <para>ACTION is what needs to happen when condition is
+              satisfied. It is executable + arguments</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+      </orderedlist>
+
+      <para>A sample notifications file generated is listed below.</para>
+
+      <programlisting>WORKFLOW d2c4f79c-8d5b-4577-8c46-5031f4d704e8 on_error /bin/date1
+
+INVOCATION merge_vahi-preprocess-1.0_PID1_ID1 1 on_success /bin/date_executable
+INVOCATION merge_vahi-preprocess-1.0_PID1_ID1 1 on_success /bin/date_executable
+INVOCATION merge_vahi-preprocess-1.0_PID1_ID1 1 on_error /bin/date_executable
+
+INVOCATION merge_vahi-preprocess-1.0_PID1_ID1 2 on_success /bin/date_executable
+INVOCATION merge_vahi-preprocess-1.0_PID1_ID1 2 on_error /bin/date_executable
+
+DAXJOB subdax_black_ID000003 on_error /bin/date13
+JOB    analyze_ID00004    on_success /bin/date
+</programlisting>
+    </section>
+
+    <section>
+      <title>Configuring pegasus-monitord for notifications</title>
+
+      <para>Whenever pegasus-monitord enters a workflow (or sub-workflow)
+      directory, it will read the notifications file generated by Pegasus.
+      Pegasus-monitord will match events in the running workflow against the
+      notifications specified in the notifications file and will initiate the
+      script specified in a notification when that notification matches an
+      event in the workflow. It is important to note that there will be a
+      delay between a certain event happening in the workflow, and
+      pegasus-monitord processing the log file and executing the corresponding
+      notification script.</para>
+
+      <para>The following command line options (and properties) can change how
+      pegasus-monitord handles notifications:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>--no-notifications (pegasus.monitord.notifications=False):
+          Will disable notifications completely.</para>
+        </listitem>
+
+        <listitem>
+          <para>--notifications-max=nn
+          (pegasus.monitord.notifications.max=nn): Will limit the number of
+          concurrent notification scripts to nn. Once pegasus-monitord reaches
+          this number, it will wait until one notification script finishes
+          before starting a new one. Notifications happening during this time
+          will be queued by the system. The default number of concurrent
+          notification scripts for pegasus-monitord is 10.</para>
+        </listitem>
+
+        <listitem>
+          <para>--notifications-timeout=nn
+          (pegasus.monitord.notifications.timeout=nn): This setting is used to
+          change how long will pegasus-monitord wait for a notification script
+          to finish. By default pegasus-monitord will wait for as long as it
+          takes (possibly indefinitely) until a notification script ends. With
+          this option, pegasus-monitord will wait for at most nn seconds
+          before killing the notification script.</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>It is also important to understand that pegasus-monitord will not
+      issue any notifications when it is executed in replay mode.</para>
+
+      <section>
+        <title>Environment set for the notification scripts</title>
+
+        <para>Whenever a notification in the notifications file matches an
+        event in the running workflow, pegasus-monitord will run the
+        corresponding script specified in the ACTION field of the
+        notifications file. Pegasus-monitord will set the following
+        environment variables for each notification script is starts:</para>
+
+        <itemizedlist>
+          <listitem>
+            <para>PEGASUS_EVENT: The NOTIFICATION_CONDITION that caused the
+            notification. In the case of the "all" condition, pegasus-monitord
+            will substitute it for the actual event that caused the match
+            (e.g. "start" or "at_end").</para>
+          </listitem>
+
+          <listitem>
+            <para>PEGASUS_EVENT_TIMESTAMP: Timestamp in EPOCH format for the
+            event (better for automated processing).</para>
+          </listitem>
+
+          <listitem>
+            <para>PEGASUS_EVENT_TIMESTAMP_ISO: Same as above, but in ISO
+            format (better for human readability).</para>
+          </listitem>
+
+          <listitem>
+            <para>PEGASUS_SUBMIT_DIR: The submit directory for the workflow
+            (usually the value from "submit_dir" in the braindump.txt
+            file)</para>
+          </listitem>
+
+          <listitem>
+            <para>PEGASUS_STDOUT: For workflow notifications, this will
+            correspond to the dagman.out file for that workflow. For job and
+            invocation notifications, this field will contain the output file
+            (stdout) for that particular job instance.</para>
+          </listitem>
+
+          <listitem>
+            <para>PEGASUS_STDERR: For job and invocation notifications, this
+            field will contain the error file (stderr) for the particular
+            executable job instance. This field does not exist in case of
+            workflow notifications.</para>
+          </listitem>
+
+          <listitem>
+            <para>PEGASUS_WFID: Contains the workflow id for this notification
+            in the form of DAX_LABEL + DAX_INDEX (from the braindump.txt
+            file).</para>
+          </listitem>
+
+          <listitem>
+            <para>PEGASUS_JOBID: For workflow notifications, this contains the
+            worfkflow wf_uuid (from the braindump.txt file). For job and
+            invocation notifications, this field contains the job identifier
+            in the executable workflow ( DAG ) for the particular
+            notification.</para>
+          </listitem>
+
+          <listitem>
+            <para>PEGASUS_INVID: Contains the index of the task in the
+            clustered job for the notification.</para>
+          </listitem>
+
+          <listitem>
+            <para>PEGASUS_STATUS: For workflow notifications, this contains
+            DAGMan's exit code. For job and invocation notifications, this
+            field contains the exit code for the particular job/task. Please
+            note that this field is not present for 'start' notification
+            events.</para>
+          </listitem>
+        </itemizedlist>
+      </section>
+    </section>
+
+    <section>
+      <title>Default Notification Scripts</title>
+
+      <para>Pegasus ships with two reference notification scripts. These can
+      be used as starting point when creating your own notification scripts,
+      or if the default one is all you need, you can use them directly in your
+      workflows. The scripts are:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">libexec/notification/email</emphasis> -
+          sends email, including the output from
+          <command>pegasus-status</command> (default) or
+          <command>pegasus-analyzer</command>.</para>
+
+          <screen><emphasis role="bold">$ ./libexec/notification/email --help</emphasis>
+Usage: email [options]
+
+Options:
+  -h, --help            show this help message and exit
+  -t TO_ADDRESS, --to=TO_ADDRESS
+                        The To: email address. Defines the recipient for the
+                        notification.
+  -f FROM_ADDRESS, --from=FROM_ADDRESS
+                        The From: email address. Defaults to the required To:
+                        address.
+  -r REPORT, --report=REPORT
+                        Include workflow report. Valid values are: none
+                        pegasus-analyzer pegasus-status (default)
+</screen>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">libexec/notification/jabber </emphasis>-
+          sends simple notifications to Jabber/GTalk. This can be useful for
+          job failures.</para>
+
+          <screen><emphasis role="bold">$ ./libexec/notification/jabber --help</emphasis>
+Usage: jabber [options]
+
+Options:
+  -h, --help            show this help message and exit
+  -i JABBER_ID, --jabberid=JABBER_ID
+                        Your jabber id. Example: user@jabberhost.com
+  -p PASSWORD, --password=PASSWORD
+                        Your jabber password
+  -s HOST, --host=HOST  Jabber host, if different from the host in your jabber
+                        id. For Google talk, set this to talk.google.com
+  -r RECIPIENT, --recipient=RECIPIENT
+                        Jabber id of the recipient. Not necessary if you want
+                        to send to your own jabber id
+</screen>
+        </listitem>
+      </itemizedlist>
+
+      <para>For example, if the DAX generator is written in Python and you
+      want notifications on 'at_end' events (successful or failed):</para>
+
+      <programlisting># job level notifications - in this case for at_end events
+job.invoke('at_end', pegasus_home + "/libexec/notifications/email --to me@somewhere.edu")</programlisting>
+
+      <para>Please see the <link linkend="notifications_example">notifications
+      example</link> to see a full workflow using notifications.</para>
+    </section>
+  </section>
+
+  <section id="monitoring">
+    <title>Monitoring Database</title>
+
+    <para>Pegasus launches a monitoring daemon called pegasus-monitord per
+    workflow ( a single daemon is launched if a user submits a hierarchal
+    workflow ) . pegasus-monitord parses the workflow and job logs in the
+    submit directory and populates to a database. This chapter gives an
+    overview of the pegasus-monitord and describes the schema of the runtime
+    database.</para>
+
+    <section id="monitoring_pegasus-monitord" os="">
+      <title>pegasus-monitord</title>
+
+      <para><emphasis role="bold">Pegasus-monitord</emphasis> is used to
+      follow workflows, parsing the output of DAGMan's dagman.out file. In
+      addition to generating the jobstate.log file, which contains the various
+      states that a job goes through during the workflow execution, <emphasis
+      role="bold">pegasus-monitord</emphasis> can also be used to mine
+      information from jobs' submit and output files, and either populate a
+      database, or write a file with NetLogger events containing this
+      information. <emphasis role="bold">Pegasus-monitord</emphasis> can also
+      send notifications to users in real-time as it parses the workflow
+      execution logs.</para>
+
+      <para><emphasis role="bold">Pegasus-monitord</emphasis> is automatically
+      invoked by <emphasis role="bold">pegasus-run</emphasis>, and tracks
+      workflows in real-time. By default, it produces the jobstate.log file,
+      and a SQLite database, which contains all the information listed in the
+      <link linkend="stampede-schema">Stampede schema</link>. When a workflow
+      fails, and is re-submitted with a rescue DAG, <emphasis
+      role="bold">pegasus-monitord</emphasis> will automatically pick up from
+      where it left previously and continue to write the jobstate.log file and
+      populate the database.</para>
+
+      <para>If, after the workflow has already finished, users need to
+      re-create the jobstate.log file, or re-populate the database from
+      scratch, <emphasis role="bold">pegasus-monitord</emphasis>'s <emphasis
+      role="bold">--replay</emphasis> option should be used when running it
+      manually.</para>
+
+      <section>
+        <title>Populating to different backend databases</title>
+
+        <para>In addition to SQLite, <emphasis
+        role="bold">pegasus-monitord</emphasis> supports other types of
+        databases, such as MySQL and Postgres. Users will need to install the
+        low-level database drivers, and can use the <emphasis
+        role="bold">--dest</emphasis> command-line option, or the <emphasis
+        role="bold">pegasus.monitord.output</emphasis> property to select
+        where the logs should go.</para>
+
+        <para>As an example, the command:</para>
+
+        <programlisting>$ pegasus-monitord -r diamond-0.dag.dagman.out</programlisting>
+
+        <para>will launch <emphasis role="bold">pegasus-monitord</emphasis> in
+        replay mode. In this case, if a jobstate.log file already exists, it
+        will be rotated and a new file will be created. It will also
+        create/use a SQLite database in the workflow's run directory, with the
+        name of diamond-0.stampede.db. If the database already exists, it will
+        make sure to remove any references to the current workflow before it
+        populates the database. In this case, <emphasis
+        role="bold">pegasus-monitord</emphasis> will process the workflow
+        information from start to finish, including any restarts that may have
+        happened.</para>
+
+        <para>Users can specify an alternative database for the events, as
+        illustrated by the following examples:</para>
+
+        <programlisting>$ pegasus-monitord -r -d mysql://username:userpass@hostname/database_name diamond-0.dag.dagman.out</programlisting>
+
+        <programlisting>$ pegasus-monitord -r -d sqlite:////tmp/diamond-0.db diamond-0.dag.dagman.out</programlisting>
+
+        <para>In the first example, <emphasis
+        role="bold">pegasus-monitord</emphasis> will send the data to the
+        <emphasis role="bold">database_name</emphasis> database located at
+        server <emphasis role="bold">hostname</emphasis>, using the <emphasis
+        role="bold">username</emphasis> and <emphasis
+        role="bold">userpass</emphasis> provided. In the second example,
+        <emphasis role="bold">pegasus-monitord</emphasis> will store the data
+        in the /tmp/diamond-0.db SQLite database.</para>
+
+        <note>
+          <para>For absolute paths four slashes are required when specifying
+          an alternative database path in SQLite.</para>
+        </note>
+
+        <para>Users should also be aware that in all cases, with the exception
+        of SQLite, the database should exist before <emphasis
+        role="bold">pegasus-monitord</emphasis> is run (as it creates all
+        needed tables but does not create the database itself).</para>
+
+        <para>Finally, the following example:</para>
+
+        <programlisting>$ pegasus-monitord -r --dest diamond-0.bp diamond-0.dag.dagman.out</programlisting>
+
+        <para>sends events to the diamond-0.bp file. (please note that in
+        replay mode, any data on the file will be overwritten).</para>
+
+        <para>One important detail is that while processing a workflow,
+        <emphasis role="bold">pegasus-monitord</emphasis> will automatically
+        detect if/when sub-workflows are initiated, and will automatically
+        track those sub-workflows as well. In this case, although <emphasis
+        role="bold">pegasus-monitord</emphasis> will create a separate
+        jobstate.log file in each workflow directory, the database at the
+        top-level workflow will contain the information from not only the main
+        workflow, but also from all sub-workflows.</para>
+      </section>
+
+      <section id="monitoring-files">
+        <title>Monitoring related files in the workflow directory</title>
+
+        <para><emphasis role="bold">Pegasus-monitord</emphasis> generates a
+        number of files in each workflow directory:</para>
+
+        <itemizedlist>
+          <listitem>
+            <para><emphasis role="bold">jobstate.log</emphasis>: contains a
+            summary of workflow and job execution.</para>
+          </listitem>
+        </itemizedlist>
+
+        <itemizedlist>
+          <listitem>
+            <para><emphasis role="bold">monitord.log</emphasis>: contains any
+            log messages generated by <emphasis
+            role="bold">pegasus-monitord</emphasis>. It is not overwritten
+            when it restarts. This file is not generated in replay mode, as
+            all log messages from <emphasis
+            role="bold">pegasus-monitord</emphasis> are output to the console.
+            Also, when sub-workflows are involved, only the top-level workflow
+            will have this log file. Starting with release 4.0 and 3.1.1,
+            monitord.log file is rotated if it exists already.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">monitord.started</emphasis>: contains
+            a timestamp indicating when <emphasis
+            role="bold">pegasus-monitord</emphasis> was started. This file get
+            overwritten every time <emphasis
+            role="bold">pegasus-monitord</emphasis> starts.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">monitord.done</emphasis>: contains a
+            timestamp indicating when <emphasis
+            role="bold">pegasus-monitord</emphasis> finished. This file is
+            overwritten every time <emphasis
+            role="bold">pegasus-monitord</emphasis> starts.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">monitord.info</emphasis>: contains
+            <emphasis role="bold">pegasus-monitord</emphasis> state
+            information, which allows it to resume processing if a workflow
+            does not finish properly and a rescue dag is submitted. This file
+            is erased when <emphasis role="bold">pegasus-monitord</emphasis>
+            is executed in replay mode.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">monitord.recover</emphasis>: contains
+            <emphasis role="bold">pegasus-monitord</emphasis> state
+            information that allows it to detect that a previous instance of
+            <emphasis role="bold">pegasus-monitord</emphasis> failed (or was
+            killed) midway through parsing a workflow's execution logs. This
+            file is only present while <emphasis
+            role="bold">pegasus-monitord</emphasis> is running, as it is
+            deleted when it ends and the <emphasis
+            role="bold">monitord.info</emphasis> file is generated.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">monitord.subwf.db</emphasis>: contains
+            information that aids <emphasis
+            role="bold">pegasus-monitord</emphasis> to track when
+            sub-workflows fail and are re-planned/re-tried. It is overwritten
+            when <emphasis role="bold">pegasus-monitord</emphasis> is started
+            in replay mode.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">monitord-notifications.log</emphasis>:
+            contains the log file for notification-related messages. Normally,
+            this file only includes logs for failed notifications, but can be
+            populated with all notification information when <emphasis
+            role="bold">pegasus-monitord</emphasis> is run in verbose mode via
+            the <emphasis role="bold">-v</emphasis> command-line
+            option.</para>
+          </listitem>
+        </itemizedlist>
+      </section>
+    </section>
+
+    <section id="stampede_schema_overview">
+      <title>Overview of the Workflow Database Schema.</title>
+
+      <para>Pegasus takes in a DAX which is composed of tasks. Pegasus plans
+      it into a Condor DAG / Executable workflow that consists of Jobs. In
+      case of Clustering, multiple tasks in the DAX can be captured into a
+      single job in the Executable workflow. When DAGMan executes a job, a job
+      instance is populated . Job instances capture information as seen by
+      DAGMan. In case DAGMan retires a job on detecting a failure , a new job
+      instance is populated. When DAGMan finds a job instance has finished ,
+      an invocation is associated with job instance. In case of clustered job,
+      multiple invocations will be associated with a single job instance. If a
+      Pre script or Post Script is associated with a job instance, then
+      invocations are populated in the database for the corresponding job
+      instance.</para>
+
+      <para>The current schema version is <emphasis role="bold">4.0</emphasis>
+      that is stored in the schema_info table.</para>
+
+      <figure>
+        <title>Workflow Database Schema</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="images/stampede-schema-small.png"
+                       id="stampede-schema"/>
+          </imageobject>
+        </mediaobject>
+      </figure>
+
+      <section id="schema_upgrade_tool">
+        <title>Stampede Schema Upgrade Tool</title>
+
+        <para>Starting Pegasus 4.x the monitoring and statistics database
+        schema has changed. If you want to use the pegasus-statistics,
+        pegasus-analyzer and pegasus-plots against a 3.x database you will
+        need to upgrade the schema first using the schema upgrade tool
+        /usr/share/pegasus/sql/schema_tool.py or
+        /path/to/pegasus-4.x/share/pegasus/sql/schema_tool.py</para>
+
+        <para>Upgrading the schema is required for people using the MySQL
+        database for storing their monitoring information if it was setup with
+        3.x monitoring tools.</para>
+
+        <para>If your setup uses the default SQLite database then the new
+        databases run with Pegasus 4.x are automatically created with the
+        correct schema. In this case you only need to upgrade the SQLite
+        database from older runs if you wish to query them with the newer
+        clients.</para>
+
+        <para>To upgrade the database</para>
+
+        <programlisting>For SQLite Database
+
+<emphasis role="bold">cd /to/the/workflow/directory/with/3.x.monitord.db</emphasis>
+
+Check the db version<emphasis role="bold">
+
+/usr/share/pegasus/sql/schema_tool.py -c connString=sqlite:////to/the/workflow/directory/with/workflow.stampede.db</emphasis>
+2012-02-29T01:29:43.330476Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.init |
+2012-02-29T01:29:43.330708Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema.start |
+2012-02-29T01:29:43.348995Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema
+                                   | Current version set to: 3.1.
+2012-02-29T01:29:43.349133Z ERROR  netlogger.analysis.schema.schema_check.SchemaCheck.check_schema
+                                   | Schema version 3.1 found - expecting 4.0 - database admin will need to run upgrade tool.
+
+
+Convert the Database to be version 4.x compliant<emphasis role="bold">
+
+/usr/share/pegasus/sql/schema_tool.py -u connString=sqlite:////to/the/workflow/directory/with/workflow.stampede.db
+</emphasis>2012-02-29T01:35:35.046317Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.init |
+2012-02-29T01:35:35.046554Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema.start |
+2012-02-29T01:35:35.064762Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema
+                                  | Current version set to: 3.1.
+2012-02-29T01:35:35.064902Z ERROR  netlogger.analysis.schema.schema_check.SchemaCheck.check_schema
+                                  | Schema version 3.1 found - expecting 4.0 - database admin will need to run upgrade tool.
+2012-02-29T01:35:35.065001Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.upgrade_to_4_0
+                                  | Upgrading to schema version 4.0.
+
+Verify if the database has been converted to Version 4.x<emphasis role="bold">
+
+/usr/share/pegasus/sql/schema_tool.py -c connString=sqlite:////to/the/workflow/directory/with/workflow.stampede.db</emphasis>
+2012-02-29T01:39:17.218902Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.init |
+2012-02-29T01:39:17.219141Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema.start |
+2012-02-29T01:39:17.237492Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema | Current version set to: 4.0.
+2012-02-29T01:39:17.237624Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema | Schema up to date.
+
+For upgrading a MySQL database the steps remain the same. The only thing that changes is the connection String to the database
+E.g.<emphasis role="bold">
+
+/usr/share/pegasus/sql/schema_tool.py -u connString=mysql://username:password@server:port/dbname
+
+</emphasis></programlisting>
+
+        <para>After the database has been upgraded you can use either 3.x or
+        4.x clients to query the database with <emphasis
+        role="bold">pegasus-statistics</emphasis>, as well as <emphasis
+        role="bold">pegasus-plots </emphasis>and <emphasis
+        role="bold">pegasus-analyzer.</emphasis></para>
+      </section>
+
+      <section>
+        <title>Storing of Exitcode in the database</title>
+
+        <para>Kickstart records capture raw status in addition to the exitcode
+        . The exitcode is derived from the raw status. Starting with Pegasus
+        4.0 release, all exitcode columns ( i.e invocation and job instance
+        table columns ) are stored with the raw status by pegasus-monitord. If
+        an exitcode is encountered while parsing the dagman log files , the
+        value is converted to the corresponding raw status before it is
+        stored. All user tools, pegasus-analyzer and pegasus-statistics then
+        convert the raw status to exitcode when retrieving from the
+        database.</para>
+      </section>
+
+      <section>
+        <title>Multiplier Factor</title>
+
+        <para>Starting with the 4.0 release, there is a multiplier factor
+        associated with the jobs in the job_instance table. It defaults to
+        one, unless the user associates a Pegasus profile key named <emphasis
+        role="bold">cores</emphasis> with the job in the DAX. The factor can
+        be used for getting more accurate statistics for jobs that run on
+        multiple processors/cores or mpi jobs.</para>
+
+        <para>The multiplier factor is used for computing the following
+        metrics by pegasus statistics.</para>
+
+        <itemizedlist>
+          <listitem>
+            <para>In the summary, the workflow cumulative job wall time</para>
+          </listitem>
+
+          <listitem>
+            <para>In the summary, the cumulative job wall time as seen from
+            the submit side</para>
+          </listitem>
+
+          <listitem>
+            <para>In the jobs file, the multiplier factor is listed along-with
+            the multiplied kickstart time.</para>
+          </listitem>
+
+          <listitem>
+            <para>In the breakdown file, where statistics are listed per
+            transformation the mean, min , max and average values take into
+            account the multiplier factor.</para>
+          </listitem>
+        </itemizedlist>
+      </section>
     </section>
   </section>
 </chapter>

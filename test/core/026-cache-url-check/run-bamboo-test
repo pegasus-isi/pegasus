@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+set -o pipefail
 
 TOP_DIR=`pwd`
 
@@ -9,7 +10,7 @@ export PEGASUS_BIN_DIR=`pegasus-config --bin`
 if [ "x$PEGASUS_BIN_DIR" = "x" ]; then
     echo "Please make sure pegasus-plan is in your path"
     exit 1
-fi 
+fi
 
 # build the dax generator
 export PYTHONPATH=.:`pegasus-config --python`
@@ -24,7 +25,7 @@ echo "f.a" > f.a
 cat >sites.xml <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0">
-    <site  handle="local" arch="x86" os="LINUX">
+    <site handle="local" arch="x86_64" os="LINUX" osrelease="deb" osversion="7">
         <directory type="shared-scratch" path="/nfs/ccg4/scratch-purge-no-backups/http-scratch/bamboo">
             <file-server operation="get" url="http://obelix.isi.edu/shared-scratch/bamboo"/>
             <file-server operation="put" url="file:///nfs/ccg4/scratch-purge-no-backups/http-scratch/bamboo"/>
@@ -34,7 +35,7 @@ cat >sites.xml <<EOF
         </directory>
         <profile namespace="env" key="PEGASUS_BIN_DIR">$PEGASUS_BIN_DIR</profile>
     </site>
-    <site  handle="condor_pool" arch="x86" os="LINUX">
+    <site  handle="condor_pool" arch="x86_64" os="LINUX">
         <profile namespace="pegasus" key="style">condor</profile>
         <profile namespace="condor" key="universe">vanilla</profile>
     </site>
@@ -72,15 +73,15 @@ do
 	if [ -e "diamond-a_ID0000001/monitord.done" ]; then
 		BREAK=1
 	fi
-	
+
 	if [ -e "diamond-a_ID0000001/diamond-a-0.cache" ]; then
 		set +e
-		grep -v -P "diamond-.*-4\.0" diamond-a_ID0000001/diamond-a-0.cache | grep -v "http://" 
+		grep -v -P "diamond-.*-4\.0" diamond-a_ID0000001/diamond-a-0.cache | grep -v "http://"
 		EC=$?
 		set -e
 
 		if [ $EC -eq 0 ]; then
-			echo "Cache file contains non http URL's" 
+			echo "Cache file contains non http URL's"
 			exit 1
 		fi
 

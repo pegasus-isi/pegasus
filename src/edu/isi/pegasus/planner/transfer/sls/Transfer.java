@@ -35,7 +35,6 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
-import edu.isi.pegasus.planner.code.gridstart.PegasusLite;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
@@ -142,11 +141,6 @@ public class Transfer   implements SLS {
     protected boolean mStageSLSFile;
 
     /**
-     * Boolean to track whether the gridstart used in PegasusLite or not
-     */
-    protected boolean mSeqExecGridStartUsed;
-
-    /**
      * A boolean indicating whether to bypass first level staging for inputs
      */
     private boolean mBypassStagingForInputs;
@@ -184,7 +178,6 @@ public class Transfer   implements SLS {
         mTCHandle   = bag.getHandleToTransformationCatalog();
         mExtraArguments = mProps.getSLSTransferArguments();
         mStageSLSFile = mProps.stageSLSFilesViaFirstLevelStaging();
-        mSeqExecGridStartUsed = mProps.getGridStart().equals( PegasusLite.CLASSNAME );
         mBypassStagingForInputs = mProps.bypassFirstLevelStagingForInputs();
         mPlannerCache = bag.getHandleToPlannerCache();
         mUseSymLinks = mProps.getUseOfSymbolicLinks();
@@ -383,20 +376,28 @@ public class Transfer   implements SLS {
 
             ReplicaCatalogEntry cacheLocation = null;
             boolean symlink = false;
+            String computeSite = job.getSiteHandle();
             if( mBypassStagingForInputs ){
+                //PM-698
                 //we retrieve the URL from the Planner Cache as a get URL
                 //bypassed URL's are stored as GET urls in the cache and
                 //associated with the compute site
-                //we need a GET URL. we don't know what site is associated with
-                //the source URL. Get the first matching one
-                //PM-698
-                cacheLocation = mPlannerCache.lookup( lfn, OPERATION.get );
+                                
+                //PM 1002 first we try and find a tighter match on the compute site
+                //and then the loose match
+                String computeLocation = mPlannerCache.lookup( lfn, computeSite, OPERATION.get);
+                if( computeLocation == null ){
+                    cacheLocation = mPlannerCache.lookup( lfn, OPERATION.get );
+                }
+                else{
+                    cacheLocation = new ReplicaCatalogEntry( computeLocation, computeSite );
+                }
             }
             if( cacheLocation == null ){
                 String stagingSite = job.getStagingSiteHandle();
                 //construct the location with respect to the staging site
                 if( mUseSymLinks && //specified in configuration
-                    stagingSite.equals( job.getSiteHandle() ) ){ //source URL logically on the same site where job is to be run
+                    stagingSite.equals( computeSite ) ){ //source URL logically on the same site where job is to be run
                     //we can symlink . construct the source URL as a file url
                     symlink = true;
                     url.append( PegasusURL.FILE_URL_SCHEME ).append( "//" ).append( stagingSiteDirectory );

@@ -17,12 +17,8 @@
 package edu.isi.pegasus.planner.code.gridstart;
 
 import edu.isi.pegasus.common.logging.LogManager;
-import edu.isi.pegasus.common.util.Separator;
-import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
-import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
-import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
@@ -30,15 +26,27 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.classes.TransferJob;
-import edu.isi.pegasus.planner.cluster.JobAggregator;
 import edu.isi.pegasus.planner.code.GridStart;
 import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParser;
 import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParserException;
+import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Globus;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.transfer.SLS;
+
+import edu.isi.pegasus.common.util.Separator;
+
+import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
+
+import edu.isi.pegasus.planner.catalog.TransformationCatalog;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+
+import edu.isi.pegasus.planner.cluster.JobAggregator;
+import edu.isi.pegasus.planner.namespace.ENV;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -199,8 +207,13 @@ public class Kickstart implements GridStart {
     /**
      * A boolean indicating whether to have worker node execution or not.
      */
-    boolean mWorkerNodeExecution;
+    //boolean mWorkerNodeExecution;
 
+    /**
+     * handle to PegasusConfiguration
+     */
+    private PegasusConfiguration mPegasusConfiguration;
+    
     /**
      * The handle to the SLS implementor
      */
@@ -268,8 +281,8 @@ public class Kickstart implements GridStart {
 
         mDynamicDeployment =  mProps.transferWorkerPackage();
         
-        mWorkerNodeExecution = mProps.executeOnWorkerNode();
-
+        //mWorkerNodeExecution = mProps.executeOnWorkerNode();
+        mPegasusConfiguration = new PegasusConfiguration( bag.getLogger() );
 
 
         mEnablingPartOfAggregatedJob = false;
@@ -290,7 +303,7 @@ public class Kickstart implements GridStart {
     public void useFullPathToGridStarts( boolean fullPath ){
         this.mUseFullPathToGridStart = fullPath;
     }
-
+    
     /**
      * Enables a constituentJob to run on the grid. This also determines how the
      * stdin,stderr and stdout of the constituentJob are to be propogated.
@@ -308,10 +321,28 @@ public class Kickstart implements GridStart {
      * @return boolean true if enabling was successful,else false.
      */
     public boolean enable( AggregatedJob job,boolean isGlobusJob){
-         boolean first = true;
+        //PM-817 when the recursion first starts parameter first is true
+        return this.enable(job, isGlobusJob, true);
+    }
 
-
-     
+    /**
+     * Enables a constituentJob to run on the grid. This also determines how the
+     * stdin,stderr and stdout of the constituentJob are to be propogated.
+     * To grid enable a constituentJob, the constituentJob may need to be wrapped into another
+     * constituentJob, that actually launches the constituentJob. It usually results in the constituentJob
+     * description passed being modified modified.
+     *
+     * @param job
+     * @param isGlobusJob is <code>true</code>, if the constituentJob generated a
+     *        line <code>universe = globus</code>, and thus runs remotely.
+     *        Set to <code>false</code>, if the constituentJob runs on the submit
+     *        host in any way.
+     * @param first
+     *
+     * @return boolean true if enabling was successful,else false.
+     */
+    public boolean enable( AggregatedJob job,boolean isGlobusJob, Boolean first){
+         //boolean first = true;
         
         //get hold of the JobAggregator determined for this clustered job
         //during clustering
@@ -324,20 +355,47 @@ public class Kickstart implements GridStart {
         
         //we want to evaluate the exectionSiteDirectory only once
         //for the clustered job
-       for (Iterator it = job.constituentJobsIterator(); it.hasNext(); ) {
-            Job constituentJob = (Job)it.next();
+       for (Iterator it = aggregator.topologicalOrderingRequired() ?
+                            job.topologicalSortIterator()://PM-817 we care about order, else -H option maynot be omitted always for first job
+                            job.nodeIterator();
+               it.hasNext(); ) {
+            //PM-817Job constituentJob = (Job)it.next();
+            GraphNode node = ( GraphNode )it.next();
+            Job constituentJob = (Job) node.getContent();
+            if( constituentJob instanceof AggregatedJob ){
+                //PM-817 we need to make sure that the constituten
+                //clustered job also gets enabled correctly
+                AggregatedJob constituentClusteredJob = (AggregatedJob)constituentJob;
+                
+                if( !aggregator.getClass().equals( constituentClusteredJob.getJobAggregator().getClass() ) ){
+                    //sanity check first to ensure the aggreagtors are not mixed
+                    StringBuilder error = new StringBuilder();
+                    error.append( "Recursive Clustering does not support different job aggregators. Job Aggregator for clustered job " ).
+                          append( job.getID() ).append( " ").append( aggregator.getClass() ).
+                          append( " does not match with constitutent job " ).append( constituentJob.getID() ).
+                          append( " " ).append( constituentClusteredJob.getJobAggregator().getClass() );
+                    throw new RuntimeException( error.toString() );
+                }
+                this.enable( constituentClusteredJob, isGlobusJob, first );
+            }
 
             //earlier was set in SeqExec JobAggregator in the enable function
             constituentJob.vdsNS.construct( Pegasus.GRIDSTART_KEY,
                                             this.getVDSKeyValue() );
 
-            if(first){
+            if (first) {
                 first = false;
-            }
-            else{
+            } else {
                 //we need to pass -H to kickstart
                 //to suppress the header creation
-                constituentJob.vdsNS.construct(Pegasus.GRIDSTART_ARGUMENTS_KEY,"-H");
+                // PM-823 Add -H to pegasus.gridstart.arguments if it is already set
+                Pegasus jobconf = constituentJob.vdsNS;
+                if (jobconf.containsKey(Pegasus.GRIDSTART_ARGUMENTS_KEY)) {
+                    String args = jobconf.getStringValue(Pegasus.GRIDSTART_ARGUMENTS_KEY);
+                    jobconf.construct(Pegasus.GRIDSTART_ARGUMENTS_KEY, args + " -H");
+                } else {
+                    jobconf.construct(Pegasus.GRIDSTART_ARGUMENTS_KEY, "-H");
+                }
             }
 
 
@@ -508,64 +566,40 @@ public class Kickstart implements GridStart {
         gridStartArgs.append("-R ").append(job.executionPool).append(' ');
 
 
-//      Added for JIRA PM-543
+        //Added for JIRA PM-543
         String directory = this.getDirectory( job );
-
-
-          
+        boolean setScratchEnvVariable = false;
+        
         //handle the -W option that asks kickstart to create and change
         //exectionSiteDirectory before launching an executable.
         if(job.vdsNS.getBooleanValue(Pegasus.CREATE_AND_CHANGE_DIR_KEY ) ){
-	    
-//            Commented to take account of submitting to condor pool
-//            directly or glide in nodes. However, does not work for
-//            standard universe jobs. Also made change in Kickstart
-//            to pick up only remote_initialdir Karan Nov 15,2005
-
-
-//           Removed for JIRA PM-543
-//                String directory = null;
-//                String key = getDirectoryKey( job );
-//                //we remove the key JIRA PM-80
-//                directory = (String)job.condorVariables.removeKey( key );
-
-            //pass the exectionSiteDirectory as an argument to kickstart
+	    //pass the exectionSiteDirectory as an argument to kickstart
             gridStartArgs.append(" -W ").append(directory).append(' ');
-            
+            setScratchEnvVariable = true;
         }
         else  if(job.vdsNS.getBooleanValue(Pegasus.CHANGE_DIR_KEY)  ){
             //handle the -w option that asks kickstart to change
             //exectionSiteDirectory before launching an executable.
-
-
-//           Removed for JIRA PM-543
-//                String directory = null;
-//                String key = getDirectoryKey( job );\
-//                //we remove the key JIRA PM-80
-//                directory = (String)job.condorVariables.removeKey( key );
-
-                //pass the exectionSiteDirectory as an argument to kickstart
-                gridStartArgs.append(" -w ").append( directory ).append(' ');
+            gridStartArgs.append(" -w ").append( directory ).append(' ');
+            setScratchEnvVariable = true;
         }
         else{
             //set the directory key with the job
+            //for kickstart -w and -W it is not set
             if( requiresToSetDirectory( job ) ){
                 job.setDirectory( directory );
             }
         }
 
+        //PM-961 set the Pegasus scratch dir only for -w and -W cases
+        //for rest we associate them in the styles
+        if( setScratchEnvVariable ){
+            job.envVariables.construct( ENV.PEGASUS_SCRATCH_DIR_KEY, directory );
+        }
 
-            if(   job.vdsNS.getBooleanValue(Pegasus.TRANSFER_PROXY_KEY) ){
-
-//           Removed for JIRA PM-543
-//
-//                String key = getDirectoryKey( job );
-//                //just remove the remote_initialdir key
-//                //the constituentJob needs to be run in the exectionSiteDirectory
-//                //Condor or GRAM decides to run
-//                job.condorVariables.removeKey( key );
-                job.setDirectory( null );
-            }
+        if(   job.vdsNS.getBooleanValue(Pegasus.TRANSFER_PROXY_KEY) ){
+            job.setDirectory( null );
+        }
 
         //check if the constituentJob type indicates staging of executable
         //The -X functionality is handled by the setup jobs that
@@ -678,8 +712,10 @@ public class Kickstart implements GridStart {
 
         //invoke is disabled if part of clustered job or because of a global disable
         //JIRA PM-526
-        boolean disableInvoke = mDisableInvokeFunctionality || partOfClusteredJob;
-
+        boolean disableInvoke = mDisableInvokeFunctionality ||
+                                partOfClusteredJob ||
+                                job.getJobType() != Job.COMPUTE_JOB; //PM-851
+                                
         if( !disableInvoke && (mInvokeAlways || argumentLength > mInvokeLength) ){
             if(!useInvoke(job, jobExecutable, gridStartArgs)){
                 mLogger.log("Unable to use invoke for job ",
@@ -769,7 +805,7 @@ public class Kickstart implements GridStart {
             return gridStartPath;
         }
         else if( mDynamicDeployment &&
-                 job.runInWorkDirectory()  && !mWorkerNodeExecution ){
+                 job.runInWorkDirectory()  && ! mPegasusConfiguration.jobSetupForWorkerNodeExecution(job ) ){
 
             //worker package deployment 
             //pick up the path from the transformation catalog of
@@ -1018,31 +1054,7 @@ public class Kickstart implements GridStart {
         return workdir;
     }
     
-    /**
-     * Returns the exectionSiteDirectory that is associated with the constituentJob to specify
-     * the exectionSiteDirectory in which the constituentJob needs to run
-     * 
-     * @param constituentJob  the constituentJob
-     * 
-     * @return the condor key . can be initialdir or remote_initialdir
-     */
-    private String getDirectoryKey(Job job) {
-        /*String exectionSiteDirectory = (style.equalsIgnoreCase(Pegasus.GLOBUS_STYLE) ||
-                                style.equalsIgnoreCase(Pegasus.GLIDEIN_STYLE) ||
-                                style.equalsIgnoreCase(Pegasus.GLITE_STYLE))?
-                     (String)constituentJob.condorVariables.removeKey("remote_initialdir"):
-                     (String)constituentJob.condorVariables.removeKey("initialdir");
-        */ 
-        String universe = (String) job.condorVariables.get( Condor.UNIVERSE_KEY );
-        
-        return ( universe.equals( Condor.STANDARD_UNIVERSE ) ||
-                 universe.equals( Condor.LOCAL_UNIVERSE) ||
-                 universe.equals( Condor.SCHEDULER_UNIVERSE ) )?
-                "initialdir" :
-                "remote_initialdir";
-    }
-
-
+    
     /**
      * Triggers the creation of the kickstart input file, that contains the
      * the remote executable and the arguments with which it has to be invoked.
@@ -1297,64 +1309,103 @@ public class Kickstart implements GridStart {
     private String getKickstartTimeoutOptions(Job job) {
         StringBuilder sb = new StringBuilder();
         
-        if( job.vdsNS.containsKey( Pegasus.CHECKPOINT_TIME ) ){
-            //means there is expectation of timeout functionality
-            int checkpointTime = job.vdsNS.getIntValue( Pegasus.CHECKPOINT_TIME, Integer.MAX_VALUE );
-            
-            if( checkpointTime == Integer.MAX_VALUE ){
-                //malformed value
-                return sb.toString();
-            }
-            
-            //expected time is the time after which kickstart sends
-            //the TERM signal to job 
-            sb.append( " -k " ).append( checkpointTime );
-            
-            int max = Integer.MAX_VALUE;
-            if( job.vdsNS.containsKey( Pegasus.MAX_WALLTIME) ){
-                max = job.vdsNS.getIntValue( Pegasus.MAX_WALLTIME, Integer.MAX_VALUE  );
-            }
-            else if ( job.globusRSL.containsKey( Globus.MAX_WALLTIME) ){
-                max = job.globusRSL.getIntValue( Globus.MAX_WALLTIME, Integer.MAX_VALUE  );
-            }
-            
-            if( max == Integer.MAX_VALUE ){
-                //means user never specified a maxwalltime
-                //or a malformed value
-                //we don't determnine the -K parameter
-                return sb.toString();
-            }
-            
-            //maxwalltime is specified in minutes.
-            //convert to seconds for kickstart
-            max = max * 60;
-            
-            //we set the -K parameter to half the difference between
-            //maxwalltime - checkpointTime
-            int diff = max - checkpointTime;
-            if( diff < 10 ){
-                //throw error
-                throw new RuntimeException( "Insufficient difference between maxwalltime " + 
-                                            max + " and expected walltime " + checkpointTime );
-            }
-            
-            //we divide the difference equaully.
-            //give equal time to generate the checkpoint file and 
-            //the time to transfer the file
-            //kill time is the time after which kickstart sends
-            //the KILL signal to job 
-            sb.append( " -K " ).append( diff/2 ).append( " " );
-            
+        //get the checkout time in seconds
+        long checkpointTime = this.getJobCheckpointTimeInSeconds(job);
+
+        if( checkpointTime == Long.MAX_VALUE ){
+            //no value specified
             return sb.toString();
         }
-        
+
+        //expected time is the time after which kickstart sends
+        //the TERM signal to job 
+        sb.append( "-k " ).append( checkpointTime ).append( " " );
+
+        int max = Integer.MAX_VALUE;
+        if( job.vdsNS.containsKey( Pegasus.MAX_WALLTIME) ){
+            max = job.vdsNS.getIntValue( Pegasus.MAX_WALLTIME, Integer.MAX_VALUE  );
+        }
+        else if ( job.globusRSL.containsKey( Globus.MAX_WALLTIME) ){
+            max = job.globusRSL.getIntValue( Globus.MAX_WALLTIME, Integer.MAX_VALUE  );
+        }
+
+        if( max == Integer.MAX_VALUE ){
+            //means user never specified a maxwalltime
+            //or a malformed value
+            //we don't determnine the -K parameter
+            return sb.toString();
+        }
+
+        //maxwalltime is specified in minutes.
+        //convert to seconds for kickstart
+        max = max * 60;
+
+        //we set the -K parameter to half the difference between
+        //maxwalltime - checkpointTime
+        long diff = max - checkpointTime;
+        long minDiff = 10;
+        if( diff < minDiff ){
+            //throw error
+            throw new RuntimeException( "Insufficient difference between maxwalltime " + 
+                                        max + " and checkpoint time " + checkpointTime +
+                                        " Should be at least " + minDiff + " seconds ");
+        }
+
+        //we divide the difference equaully.
+        //give equal time to generate the checkpoint file and 
+        //the time to transfer the file
+        //kill time is the time after which kickstart sends
+        //the KILL signal to job 
+        sb.append( "-K " ).append( diff/2 ).append( " " );
+
         return sb.toString();
-        
+
     }
 
 
-    
-
+    /**
+     * Returns the job's checkpoint time in seconds. 
+     * 
+     * @param j
+     * 
+     * @return job checkpointime in seconds, else Long.MAX_VALUE if not 
+     *         specified 
+     * @throws RuntimeException for malformed values
+     */
+    private long getJobCheckpointTimeInSeconds( Job job ){
+       long time = Long.MAX_VALUE;
+       
+       //check for checkpoint.time that is specified in minutes.
+       String key = Pegasus.CHECKPOINT_TIME_KEY;
+       if( job.vdsNS.containsKey( key ) ){
+            //means there is expectation of timeout functionality
+            time = job.vdsNS.getLongValue( key, Long.MAX_VALUE );
+            if( time == Long.MAX_VALUE ){
+                //malformed value
+                throw new RuntimeException( "Malformed Pegasus Profile " + key + " value " + 
+                                            job.vdsNS.getStringValue( key ) + " for job " + job.getID());
+            }
+            //pegasus checkpoint.time key is in minutes. convert to seconds.
+            time = time * 60;
+            return time;
+       }
+       
+       //check for deprecated value
+       key = Pegasus.DEPRECATED_CHECKPOINT_TIME_KEY;
+       if( job.vdsNS.containsKey( key ) ){
+            //means there is expectation of timeout functionality
+            time = job.vdsNS.getLongValue( key, Long.MAX_VALUE );
+            if( time == Long.MAX_VALUE ){
+                //malformed value
+                throw new RuntimeException( "Malformed Pegasus Profile " + key + " value " + 
+                                            job.vdsNS.getStringValue( key ) + " for job " + job.getID());
+            }
+            //log deprecated value
+            mLogger.log( "Deprecated Pegasus profile key " + key + " found for job " + job.getID(),
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+       }
+       return time;
+    }
 
 
 }

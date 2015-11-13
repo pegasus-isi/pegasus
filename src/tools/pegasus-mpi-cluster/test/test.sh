@@ -350,12 +350,6 @@ function test_max_wall_time {
         return 1
     fi
     
-    if ! [[ "$OUTPUT" =~ "Caught signal 14" ]]; then
-        echo "$OUTPUT"
-        echo "ERROR: Max wall time test failed on catching signal"
-        return 1
-    fi
-    
     if ! [[ "$OUTPUT" =~ "Aborting workflow" ]]; then
         echo "$OUTPUT"
         echo "ERROR: Max wall time test failed on aborting"
@@ -617,7 +611,7 @@ function test_maxfds {
 }
 
 function test_keep_affinity {
-    OUTPUT=$(mpiexec -np 2 numactl --physcpubind=1 $PMC --keep-affinity test/cpuset.dag 2>&1)
+    OUTPUT=$(mpiexec -np 2 -bind-to core $PMC --keep-affinity test/cpuset.dag 2>&1)
     RC=$?
 
     if [ $RC -ne 0 ]; then
@@ -634,7 +628,7 @@ function test_keep_affinity {
 
 
 function test_clear_affinity {
-    OUTPUT=$(mpiexec -np 2 numactl --physcpubind=1 $PMC test/cpuset.dag 2>&1)
+    OUTPUT=$(mpiexec -np 2 -bind-to core $PMC test/cpuset.dag 2>&1)
     RC=$?
 
     if [ $RC -ne 0 ]; then
@@ -664,6 +658,23 @@ function test_complex_args {
         return 1
     fi
 }
+
+function test_PM848 {
+    OUTPUT=$(mpiexec -n 11 $PMC --host-cpus 22 test/PM848.dag 2>&1)
+    RC=$?
+
+    if [ $RC -ne 0 ]; then
+        echo "$OUTPUT"
+        echo "ERROR: PM848 test failed"
+        return 1
+    fi
+}
+
+# If a test name was specified, then run just that test
+if ! [ -z "$*" ]; then
+    run_test "$@"
+    exit 0
+fi
 
 run_test ./test-strlib
 run_test ./test-tools
@@ -702,6 +713,7 @@ run_test test_max_wall_time
 run_test test_hang_script
 run_test test_maxfds
 run_test test_complex_args
+run_test test_PM848
 
 # setrlimit is broken on Darwin, so the strict limits test won't work
 if [ $(uname -s) != "Darwin" ]; then

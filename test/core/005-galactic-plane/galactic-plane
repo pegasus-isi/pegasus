@@ -48,7 +48,7 @@ for path in paths:
 if pegasus_home == None:
     raise RuntimeError("pegasus-plan not found in the PATH")
 
-sys.path.append(os.getenv("PEGASUS_HOME") + "/lib/pegasus/python")
+sys.path.insert(0, os.getenv("PEGASUS_HOME") + "/lib/pegasus/python")
 from Pegasus.DAX3 import *
 
 __author__ = "Mats Rynge <rynge@isi.edu>"
@@ -236,8 +236,10 @@ def generate_pegasus_rc(mode):
     rc.write("dagman.subworkflow.maxjobs=15\n")
     if monitord_output != None:
         rc.write("pegasus.monitord.output=%s\n" % (monitord_output))
-
     rc.close()
+    # special sauce for Bamboo test framework - append the test override
+    cmd = "cat " + local_galacticplane_location + "/pegasusrc >>" + work_dir + "/pegasusrc"
+    myexec(cmd)
 
 
 def generate_sc():
@@ -279,7 +281,7 @@ def generate_sc():
     sc.write("        <profile namespace=\"condor\" key=\"should_transfer_files\">True</profile>\n")
     sc.write("        <profile namespace=\"condor\" key=\"when_to_transfer_output\">ON_EXIT</profile>\n")
     sc.write("        <profile namespace=\"condor\" key=\"requirements\">(FileSystemDomain != &quot;&quot;)</profile>\n")
-    sc.write("        <profile namespace=\"env\" key=\"PEGASUS_HOME\" >/ccg/software/pegasus/master</profile>\n")
+    sc.write("        <profile namespace=\"env\" key=\"PEGASUS_HOME\" >/usr</profile>\n")
     sc.write("        <profile namespace=\"env\" key=\"GLOBUS_LOCATION\" >%s</profile>\n" % (cluster_globus_location))
     sc.write("        <profile namespace=\"env\" key=\"MONTAGE_HOME\" >%s</profile>\n" %(cluster_montage_location))
     sc.write("    </site>\n")

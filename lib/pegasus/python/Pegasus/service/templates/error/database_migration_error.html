@@ -1,0 +1,26 @@
+{% extends "base-error.html" %}
+{% block title %}Database - Migration/Operational Error{% endblock %}
+{% block title_header %}Database Migration Error{% endblock %}
+{% block navigation_bar %}-{% endblock %}
+{% block content %}
+<section class="row">
+    <div class="col-xs-12">
+        <h3>Possible Reasons</h3>
+        <hr>
+        <ul>
+            <li>
+                Master Database is not compatible with the current version of Pegasus.
+            </li>
+            <li>
+                STAMPEDE Database is not compatible with the current version of Pegasus.
+            </li>
+        </ul>
+        <h3>Possible Alternatives</h3>
+        <hr>
+        <ul>
+            <li>Please execute pegasus-db-admin update on the database you are trying to access.</li>
+            <li>Ensure that pegasus-dashboard process has write access on the database you are trying to access.</li>
+        </ul>
+    </div>
+</section>
+{% endblock %}

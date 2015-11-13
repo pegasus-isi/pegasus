@@ -22,6 +22,11 @@ import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.util.CommonProperties;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
+import edu.isi.pegasus.planner.common.PegasusDBAdmin;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.sql.*;
 import java.util.*;
 import org.sqlite.SQLiteConfig;
@@ -251,7 +256,7 @@ public class JDBCRC implements ReplicaCatalog
    * @see #JDBCRC( String, String, String, String )
    * @see java.sql.DriverManager#getConnection( String, String, String )
    */
-  public void connect( String url, String username, String password )
+  private void connect( String url, String username, String password )
     throws SQLException
   {
     // establish connection to database generically
@@ -289,7 +294,25 @@ public class JDBCRC implements ReplicaCatalog
    */
   public boolean connect( Properties props ){
 
-      boolean result = false;
+        boolean result = false;
+
+        String propertiesFile = (String) props.remove( "properties.file" );
+        boolean removePropertiesFile = false;
+        File temp = null;
+        if( propertiesFile == null ){
+            //PM-778 no conf option specified 
+            //write out the properties to a file and invoke pegasus-db-admin
+            //create a temporary file in directory
+            temp = writeOutProperties( props );
+            propertiesFile = temp.getAbsolutePath();
+            removePropertiesFile = true;
+        }
+        PegasusDBAdmin check = new PegasusDBAdmin( mLogger );
+        check.checkJDBCRCForCompatibility(propertiesFile);
+        if( removePropertiesFile && temp != null ){
+            temp.delete();
+        }
+      
         // class loader: Will propagate any runtime errors!!!
         String driver = (String) props.remove("db.driver");
 
@@ -299,7 +322,6 @@ public class JDBCRC implements ReplicaCatalog
         if (url == null || url.length() == 0) {
             return result;
         }
-
 
         try {
             if (driver != null) {
@@ -315,7 +337,8 @@ public class JDBCRC implements ReplicaCatalog
                     //foreign key support needs to be enabled 
                     //per connection PRAGMA foreign_keys ON
                     SQLiteConfig config = new SQLiteConfig();  
-                    config.enforceForeignKeys(true);    
+                    config.enforceForeignKeys(true);
+                    config.setBusyTimeout(props.getProperty("db.timeout", "30") + "000");
                     localProps.putAll( config.toProperties() );
                     mUsingSQLiteBackend = true;
                 }
@@ -331,7 +354,7 @@ public class JDBCRC implements ReplicaCatalog
             mLogger.log( "Connecting to Database Backend " + url +" with properties " + localProps, 
                          LogManager.DEBUG_MESSAGE_LEVEL );
             mConnection = DriverManager.getConnection( url, localProps );
-            
+
             //JDBC sqlite driver returns false, but does support autoincrement of keys
             m_autoinc = mUsingSQLiteBackend ||  mConnection.getMetaData().supportsGetGeneratedKeys();
 
@@ -1470,5 +1493,41 @@ public class JDBCRC implements ReplicaCatalog
     // done
     return result;
   }
+
+  /**
+   * Writes out the properties to a temporary file in the current working directory
+   * 
+   * @param props
+   * @return 
+   */
+    private File writeOutProperties(Properties props) {
+        File f = null;
+        try{  
+            f = File.createTempFile( "pegasus.", ".properties" );
+
+            //the header of the file
+            StringBuffer header = new StringBuffer(64);
+            header.append("PEGASUS REPLICA CATALOG PROPERTIES \n")
+                  .append("#ESCAPES IN VALUES ARE INTRODUCED");
+
+            //we first need to duplicate properties and replica catalog prefix back
+            //again
+            Properties duplicate = new Properties();
+            duplicate.setProperty( ReplicaCatalog.c_prefix, "JDBCRC" );
+            for(Enumeration e = props.propertyNames(); e.hasMoreElements(); ){
+                String key = (String) e.nextElement();
+                duplicate.put( ReplicaCatalog.c_prefix + "." + key, props.getProperty(key));
+            }
+            
+            //create an output stream to this file and write out the properties
+            OutputStream os = new FileOutputStream(f);
+            duplicate.store( os, header.toString() );
+            os.close();
+        }
+        catch( IOException ioe ){
+            throw new RuntimeException( "IOException while creating temporary properties file ", ioe );
+        }
+        return f;
+    }
 }
 

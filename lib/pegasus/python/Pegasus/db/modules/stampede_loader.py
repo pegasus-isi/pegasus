@@ -19,11 +19,13 @@ See http://www.sqlalchemy.org/ for details on SQLAlchemy
 __rcsid__ = "$Id: stampede_loader.py 31116 2012-03-29 15:45:15Z mgoode $"
 __author__ = "Monte Goode"
 
-from Pegasus.db.schema.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
-from Pegasus.db.schema.stampede_schema import *
+from Pegasus.db import connection
+from Pegasus.db.admin.admin_loader import DBAdminError
+from Pegasus.db.schema import *
 from Pegasus.db.modules import Analyzer as BaseAnalyzer
 from Pegasus.db.modules import SQLAlchemyInit
 from Pegasus.netlogger import util
+from sqlalchemy import exc
 import sys
 import time
 
@@ -41,7 +43,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         expects the database to exist (ie: will not issue CREATE DB)
         but will populate an empty DB with tables/indexes/etc.
     """
-    def __init__(self, connString=None, perf='no', batch='no', **kw):
+    def __init__(self, connString=None, perf='no', batch='no', props=None, db_type=None, **kw):
         """Init object
 
         @type   connString: string
@@ -52,15 +54,11 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             raise ValueError("connString is required")
 
         try:
-            SQLAlchemyInit.__init__(self, connString, initializeToPegasusDB)
-        except exc.OperationalError, e:
-            self.log.error('Connection String %s  %s', (connString, ErrorStrings.get_init_error(e)))
+            SQLAlchemyInit.__init__(self, connString, props=props, db_type=db_type)
+        except (connection.ConnectionError, DBAdminError), e:
+            self.log.exception(e)
+            self.log.error('Error initializing workflow loader')
             raise RuntimeError
-
-        # Check the schema version before proceeding.
-        s_check = SchemaCheck(self.session)
-        if not s_check.check_schema():
-            raise SchemaVersionError
 
         # "Case" dict to map events to handler methods
         self.eventMap = {
@@ -263,12 +261,13 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         if not self._batch:
             return
 
+        self._flush_count += 1
+
         if self._flush_count >= self._flush_every:
             self.hard_flush()
             self.log.debug('Flush: flush count')
             return
-        else:
-            self._flush_count += 1
+
 
         if (time.time() - self._last_flush) > 30:
             self.hard_flush()

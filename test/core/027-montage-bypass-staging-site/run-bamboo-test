@@ -34,7 +34,7 @@ for BINARY in `(cd /ccg/software/montage/Montage_v3.3_mats/bin/ && ls)`; do
 tr $BINARY:3.3 {
     site CCG {
         pfn "/ccg/software/montage/Montage_v3.3_mats/bin/$BINARY"
-        arch "x86"
+        arch "x86_64"
         os "linux"
         type "INSTALLED"
         profile pegasus "clusters.size" "20"
@@ -49,7 +49,7 @@ echo "Creating the site catalog..."
 cat >sites.xml <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
-    <site handle="local" arch="x86" os="LINUX">
+    <site handle="local" arch="x86_64" os="LINUX" osrelease="deb" osversion="7">
         <grid  type="gt2" contact="localhost/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
         <head-fs>
             <scratch>
@@ -68,8 +68,9 @@ cat >sites.xml <<EOF
         <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" />
         <profile namespace="env" key="GLOBUS_LOCATION" >/ccg/software/globus/default</profile>
         <profile namespace="env" key="GLOBUS_TCP_PORT_RANGE" >40000,50000</profile>
+        <profile namespace="env" key="http_proxy" >http://workflow.isi.edu:3128</profile>
     </site>
-    <site handle="CCG" arch="x86" os="LINUX">
+    <site handle="CCG" arch="x86_64" os="LINUX">
         <head-fs>
             <scratch />
             <storage />
@@ -80,6 +81,7 @@ cat >sites.xml <<EOF
         <profile namespace="condor" key="should_transfer_files">Yes</profile>
         <profile namespace="condor" key="when_to_transfer_output">ON_EXIT</profile>
         <profile namespace="env" key="MONTAGE_HOME" >/ccg/software/montage/Montage_v3.3_mats</profile>
+        <profile namespace="env" key="http_proxy" >http://workflow.isi.edu:3128</profile>
     </site>
     <site handle="CCGData">
         <head-fs>
@@ -106,7 +108,7 @@ echo "Adding input images to the replica catalog..."
 echo "  " `cat cache.list | wc -l` "images found"
 cat cache.list | grep -v ".fits " >rc
 perl -p -i -e 's/ipac_cluster/local/' rc
-cat url.list | sed 's/ http:.*ref=/ http:\/\/obelix.isi.edu\/irsa-cache/' >>rc
+cat url.list | sed 's/\.gz http/ http/' >>rc
 
 echo "Planning  the workflow..."
 pegasus-plan \

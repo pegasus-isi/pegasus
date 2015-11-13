@@ -50,10 +50,12 @@ import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.classes.TransferJob;
 
 import edu.isi.pegasus.planner.code.GridStartFactory;
+import edu.isi.pegasus.planner.common.PegasusConfiguration;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import edu.isi.pegasus.planner.namespace.Condor;
+import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
@@ -202,7 +204,14 @@ public abstract class Abstract implements Implementation{
      * A boolean indicating whether chmod jobs should be created that set the
      * xbit in case of executable staging.
      */
-    protected boolean mAddNodesForSettingXBit;
+    //protected boolean mAddNodesForSettingXBit;
+    
+    
+    /**
+     * handle to PegasusConfiguration
+     */
+    protected PegasusConfiguration mPegasusConfiguration;
+
 
     /**
      * The overloaded constructor, that is called by the Factory to load the
@@ -223,7 +232,9 @@ public abstract class Abstract implements Implementation{
 
         //from pegasus release 3.2 onwards xbit jobs are not added
         //for worker node execution/Pegasus Lite
-        mAddNodesForSettingXBit = !mProps.executeOnWorkerNode();
+        //PM-810 it is now per job instead of global.
+        mPegasusConfiguration = new PegasusConfiguration( mLogger );
+        //mAddNodesForSettingXBit = !mProps.executeOnWorkerNode();
 
         Proxy p = new Proxy();
         p.initialize(bag);
@@ -490,7 +501,7 @@ public abstract class Abstract implements Implementation{
 
 
             Job xBitJob =  noop  ?
-                               this.createNoOPJob( xBitJobName ) : //create a NOOP job
+                               this.createNoOPJob( xBitJobName , computeJob.getSiteHandle() ) : //create a NOOP job
                                this.createSetXBitJob( execFile, xBitJobName ); //create a chmod job
 
             if( xBitJob == null ){
@@ -553,7 +564,7 @@ public abstract class Abstract implements Implementation{
 
         String xBitJobName = this.getSetXBitJobName( computeJobName, xbitIndex );//create a chmod job
         Job xBitJob =  noop  ?
-                               this.createNoOPJob( xBitJobName ) : //create a NOOP job
+                               this.createNoOPJob( xBitJobName, computeJob.getSiteHandle() ) : //create a NOOP chmod job
                                this.createSetXBitJob( execFiles, xBitJobName, computeJob.getSiteHandle() ); //create a chmod job
 
         if( xBitJob == null ){
@@ -615,7 +626,7 @@ public abstract class Abstract implements Implementation{
 
 
             Job xBitJob =  noop  ?
-                               this.createNoOPJob( xBitJobName ) : //create a NOOP job
+                               this.createNoOPJob( xBitJobName, computeJob.getSiteHandle()  ) : //create a NOOP job
                                this.createSetXBitJob( execFile, xBitJobName ); //create a chmod job
 
             if( xBitJob == null ){
@@ -680,10 +691,11 @@ public abstract class Abstract implements Implementation{
      * It creates a NoOP job that runs on the submit host.
      *
      * @param name the name to be assigned to the noop job
+     * @param computeSiteHandle  the execution site of the associated compute job
      *
      * @return  the noop job.
      */
-    public Job createNoOPJob( String name ) {
+    public Job createNoOPJob( String name, String computeSiteHandle ) {
 
         Job newJob = new Job();
         List entries = null;
@@ -695,7 +707,6 @@ public abstract class Abstract implements Implementation{
         newJob.setTransformation( "pegasus", "noop", "1.0" );
         newJob.setDerivation( "pegasus", "noop", "1.0" );
 
-//        newJob.setUniverse( "vanilla" );
         newJob.setUniverse( GridGateway.JOB_TYPE.auxillary.toString());
                 
         //the noop job does not get run by condor
@@ -705,7 +716,15 @@ public abstract class Abstract implements Implementation{
 
         //construct noop keys
         newJob.setSiteHandle( "local" );
-        newJob.setJobType( Job.CREATE_DIR_JOB );
+        
+        //PM-845
+        //we need to set the staging site handle to compute job execution site
+        //this is to ensure dependencies are added correctly when adding
+        //create dir jobs
+        newJob.setStagingSiteHandle( computeSiteHandle );
+        
+        newJob.setJobType( Job.CHMOD_JOB );
+        newJob.dagmanVariables.construct( Dagman.NOOP_KEY, "true" );
         construct(newJob,"noop_job","true");
         construct(newJob,"noop_job_exit_code","0");
 
@@ -736,7 +755,6 @@ public abstract class Abstract implements Implementation{
     protected Job createSetXBitJob( Collection<FileTransfer> files, String name, String site ){
         Job xBitJob = new Job();
         TransformationCatalogEntry entry   = null;
-//        GridGateway jobManager = null;
         String eSiteHandle = site;
 
         List entries;
@@ -774,11 +792,6 @@ public abstract class Abstract implements Implementation{
 
 
         SiteCatalogEntry eSite = mSiteStore.lookup( eSiteHandle );
-        
-/* JIRA PM-277
-        jobManager             = eSite.selectGridGateway( GridGateway.JOB_TYPE.transfer );
-*/
-        
         StringBuffer arguments = new StringBuffer();
         arguments.append( " +x " );
         for( FileTransfer file : files ){
@@ -793,13 +806,10 @@ public abstract class Abstract implements Implementation{
         xBitJob.dvName      = Abstract.CHANGE_XBIT_TRANSFORMATION;
         xBitJob.dvNamespace = Abstract.XBIT_DERIVATION_NS;
         xBitJob.dvVersion   = Abstract.XBIT_DERIVATION_VERSION;
-
-/*      JIRA PM-277
-        xBitJob.setUniverse( GridGateway.JOB_TYPE.auxillary.toString());
-        xBitJob.globusScheduler = jobManager.getContact();
- */       
         xBitJob.executable      = entry.getPhysicalTransformation();
         xBitJob.executionPool   = eSiteHandle;
+        //PM-845 set staging site handle to same as execution site of compute job
+        xBitJob.setStagingSiteHandle( eSiteHandle );
         xBitJob.strargs         = arguments.toString();
         xBitJob.jobClass        = Job.CHMOD_JOB;
         xBitJob.jobID           = name;
@@ -877,9 +887,6 @@ public abstract class Abstract implements Implementation{
 
 
         SiteCatalogEntry eSite = mSiteStore.lookup( eSiteHandle );
-
-        //  JIRA PM-277
-//        jobManager             = eSite.selectGridGateway( GridGateway.JOB_TYPE.transfer );
         String arguments = " -X -f " + new PegasusURL( destURL.getValue() ).getPath() ;
 
         xBitJob.jobName     = name;
@@ -891,11 +898,12 @@ public abstract class Abstract implements Implementation{
         xBitJob.dvVersion   = Abstract.XBIT_DERIVATION_VERSION;
         xBitJob.setUniverse( GridGateway.JOB_TYPE.auxillary.toString());
 
-        //JIRA PM-277
-//        xBitJob.globusScheduler = jobManager.getContact();
 
         xBitJob.executable      = entry.getPhysicalTransformation();
         xBitJob.executionPool   = eSiteHandle;
+        //PM-845 set staging site handle to same as execution site of compute job
+        xBitJob.setStagingSiteHandle( eSiteHandle );
+        
         xBitJob.strargs         = arguments;
         xBitJob.jobClass        = Job.CREATE_DIR_JOB;
         xBitJob.jobID           = name;

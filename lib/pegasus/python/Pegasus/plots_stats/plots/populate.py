@@ -11,8 +11,9 @@ import commands
 
 logger = logging.getLogger(__name__)
 
+from Pegasus.db import connection
+from Pegasus.db.admin.admin_loader import DBAdminError
 from Pegasus.tools import utils
-from Pegasus.tools import db_utils
 from Pegasus.plots_stats import utils as plot_utils
 from workflow_info import WorkflowInfo, JobInfo , TransformationInfo
 import pegasus_gantt
@@ -20,7 +21,6 @@ import pegasus_host_over_time
 import traceback
 
 from Pegasus.db.workflow.stampede_statistics import StampedeStatistics
-from Pegasus.db.schema.schema_check import SchemaVersionError
 from datetime import timedelta
 from datetime import datetime
 
@@ -152,11 +152,6 @@ def get_workflows_uuid():
 		expanded_workflow_stats = StampedeStatistics(global_db_url)
 	 	expanded_workflow_stats.initialize(global_top_wf_uuid)
 	 	expanded_workflow_stats.set_job_filter('all')
-        except SchemaVersionError:
-                logger.error("------------------------------------------------------")
-                logger.error("Database schema mismatch! Please run the upgrade tool")
-                logger.error("to upgrade the database to the latest schema version.")
-                sys.exit(1)
  	except:
  		logger.error("Failed to load the database." + global_db_url )
 		sys.exit(1)
@@ -165,11 +160,6 @@ def get_workflows_uuid():
 	 	root_workflow_stats = StampedeStatistics(global_db_url , False)
 	 	root_workflow_stats.initialize(global_top_wf_uuid)
 	 	root_workflow_stats.set_job_filter('all')
-        except SchemaVersionError:
-                logger.error("------------------------------------------------------")
-                logger.error("Database schema mismatch! Please run the upgrade tool")
-                logger.error("to upgrade the database to the latest schema version.")
-                sys.exit(1)
  	except:
  		logger.error("Failed to load the database." + global_db_url )
 		sys.exit(1)
@@ -256,7 +246,7 @@ def populate_job_instance_details(workflow_stats , workflow_info):
 		end_event = worklow_states_list[len(worklow_states_list)-1].timestamp
 	else:
 		logger.warning("Workflow states are missing for workflow  " + workflow_info.wf_uuid)
-	failed_job_list = workflow_stats.get_failed_job_instances()
+	failed_job_list = workflow_stats.get_plots_failed_job_instances()
 	job_states_list =  workflow_stats.get_job_states()
 	for job_states in job_states_list:
 		# Additional check for the case where "WORKFLOW_STARTED" event is missing
@@ -344,10 +334,9 @@ def get_wf_stats(wf_uuid,expand = False):
 	try:
 		workflow_stampede_stats = StampedeStatistics(global_db_url , expand)
 		workflow_stampede_stats.initialize(wf_uuid)
-        except SchemaVersionError:
+        except (connection.ConnectionError, DBAdminError), e:
                 logger.error("------------------------------------------------------")
-                logger.error("Database schema mismatch! Please run the upgrade tool")
-                logger.error("to upgrade the database to the latest schema version.")
+                logger.error(e)
                 sys.exit(1)
 	except:
  		logger.error("Failed to load the database." + global_db_url )
@@ -440,6 +429,7 @@ def setup(submit_dir , config_properties):
 		sys.exit(1)
 	
 	# Create the sqllite db url
-	global_db_url, global_top_wf_uuid = db_utils.get_db_url_wf_uuid(submit_dir, config_properties)
+        global_db_url = connection.url_by_submitdir(submit_dir, connection.DBType.WORKFLOW, config_properties)
+        global_top_wf_uuid = connection.get_wf_uuid(submit_dir)
 	if global_db_url is None:
 		sys.exit(1)

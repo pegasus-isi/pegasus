@@ -36,6 +36,7 @@ import string
 import stat
 import time
 from collections import deque
+import ConfigParser
 
 try:
     # Python 3.0 and later
@@ -138,6 +139,7 @@ tool_map = {}
 tool_map['file'  ] = 'mkdir'
 tool_map['ftp'   ] = 'gsiftp'
 tool_map['gsiftp'] = 'gsiftp'
+tool_map['sshftp'] = 'sshftp'
 tool_map['irods' ] = 'irods'
 tool_map['s3'    ] = 's3'
 tool_map['s3s'   ] = 's3'
@@ -365,9 +367,19 @@ def scp(url):
 
     if "SSH_PRIVATE_KEY" in os.environ:
         cmd += " -i " + os.environ['SSH_PRIVATE_KEY']
+
+    # split up the host into host/port components
+    host = re.sub(':.*', '', url.host)
+    port = "22"
+    r = re.search(':([0-9]+)', url.host)
+    if r:
+        port = r.group(1)
+
     cmd += " -o PasswordAuthentication=no"
+    cmd += " -o UserKnownHostsFile=/dev/null"
     cmd += " -o StrictHostKeyChecking=no"
-    cmd += " " + url.host
+    cmd += " -p " + port
+    cmd += " " + host
     cmd += " '/bin/mkdir -p " + url.path + "'"
     myexec(cmd, 60, True)
 
@@ -378,7 +390,7 @@ def gsiftp(url):
     """
  
     if tool_info['pegasus-gridftp']['full_path'] == None:
-        raise RuntimeError("Unable to do gsiftp mkdir becuase pegasus-gridftp could not be found")
+        raise RuntimeError("Unable to do gsiftp mkdir because pegasus-gridftp could not be found")
         
     key = "X509_USER_PROXY_" + url.site
     if key in os.environ:
@@ -408,6 +420,34 @@ def gsiftp(url):
         cmd += " file:///dev/null"
         cmd += " " + url.url() + "/.create-dir"
         myexec(cmd, 60, True)
+
+
+def sshftp(url):
+    """
+    create directories on gridftp servers
+    """
+ 
+    if tool_info['globus-url-copy']['full_path'] == None:
+        raise RuntimeError("Unable to do sshftp mkdir because globus-url-copy could not be found")
+
+    # build command line for globus-url-copy
+    cmd = tool_info['globus-url-copy']['full_path']
+    # make output match our current log level
+    if logger.isEnabledFor(logging.DEBUG):
+        cmd += " -dbg"
+
+    key = "SSH_PRIVATE_KEY_" + url.site
+    if key in os.environ:
+        os.environ["SSH_PRIVATE_KEY"] = os.environ[key]
+  
+    cmd += " -create-dest"
+    cmd += " file:///dev/null"
+    cmd += " " + url.url() + "/.create-dir"
+
+    try:
+        myexec(cmd, 60, True)
+    except:
+        raise RuntimeError("globus-url-copy command failed")
 
 
 def irods_login():
@@ -554,6 +594,27 @@ def gs(url):
     if key in os.environ:
         os.environ["BOTO_CONFIG"] = os.environ[key]
 
+    key = "GOOGLE_PKCS12_" + url.site
+    if key in os.environ:
+        os.environ["GOOGLE_PKCS12"] = os.environ[key]
+        
+    # we need to update the boto config file to specify the full
+    # path to the PKCS12 file
+    try:
+        tmp_fd, tmp_name = tempfile.mkstemp(prefix="pegasus-transfer-", suffix=".lst")
+        tmp_file = os.fdopen(tmp_fd, "w+b")
+    except:
+      raise RuntimeError("Unable to create tmp file for gs boto file")
+    try:
+        conf = ConfigParser.SafeConfigParser()
+        conf.read(os.environ["BOTO_CONFIG"])
+        conf.set("Credentials", "gs_service_key_file", os.environ["GOOGLE_PKCS12"])
+        conf.write(tmp_file)
+        tmp_file.close()
+    except Exception, err:
+        logger.error(err)
+        raise RuntimeError("Unable to convert boto config file")
+
     # extract the bucket part
     re_bucket = re.compile(r'(gs://[\w-]+/)[/\w-]*')
     bucket = url.url()
@@ -564,11 +625,13 @@ def gs(url):
         raise RuntimeError("Unable to parse bucket: %s" % (bucket))
 
     # first ensure that the bucket exists
-    cmd = "gsutil mb %s" %(bucket)
+    cmd = "BOTO_CONFIG=%s gsutil mb %s" %(tmp_name, bucket)
     try:
         myexec(cmd, 60, True)
     except Exception, err:
         logger.warn("mkdir failed - possibly due to the bucket already existing, so continuing...")
+        
+    os.unlink(tmp_name)
 
 
 def create_dir(url):
@@ -586,6 +649,9 @@ def create_dir(url):
                 check_tool("pegasus-gridftp", "", None)
                 check_tool("globus-url-copy", "-version", "globus-url-copy: ([\.0-9a-zA-Z]+)")
                 gsiftp(url)
+            elif tool == "sshftp":
+                check_tool("globus-url-copy", "-version", "globus-url-copy: ([\.0-9a-zA-Z]+)")
+                sshftp(url)
             elif tool == "irods":
                 check_tool("imkdir", "-h", "Version[ \t]+([\.0-9a-zA-Z]+)")
                 irods(url)

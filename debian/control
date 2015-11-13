@@ -1,7 +1,7 @@
 Source: pegasus
 Section: science
 Priority: extra
-Maintainer: Mats Rynge <mats@rynge.net>
+Maintainer: Pegasus Development Team <pegasus-support@isi.edu>
 Build-Depends: debhelper (>= 7), ant, openjdk-7-jdk | openjdk-6-jdk, perl, python, asciidoc, xsltproc, fop
 Standards-Version: 3.9.4
 Homepage: http://pegasus.isi.edu

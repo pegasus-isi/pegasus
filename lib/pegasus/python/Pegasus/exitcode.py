@@ -227,9 +227,6 @@ def exitcode(outfile, status=None, rename=True,
         if status != 0:
             raise JobFailed("dagman reported non-zero exitcode: %d" % status)
 
-        # TODO Should we perform the other checks or not?
-        return
-
     # Next, read the output and error files
     stdout = readfile(outfile)
     stderr = readfile(errfile)
@@ -253,7 +250,9 @@ def exitcode(outfile, status=None, rename=True,
     if cs is not None:
         check_cluster_summary(cs)
     else:
-        check_kickstart_records(stdout)
+        # PM-927 Only check kickstart records if -r is not supplied
+        if status is None:
+            check_kickstart_records(stdout)
 
 def main(args):
     usage = "Usage: %prog [options] job.out"

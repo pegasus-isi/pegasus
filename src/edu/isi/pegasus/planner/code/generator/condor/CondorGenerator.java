@@ -25,13 +25,11 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 
-import edu.isi.pegasus.planner.code.CodeGenerator;
 import edu.isi.pegasus.planner.code.CodeGeneratorException;
 import edu.isi.pegasus.planner.code.GridStart;
 import edu.isi.pegasus.planner.code.POSTScript;
 import edu.isi.pegasus.planner.code.GridStartFactory;
 import edu.isi.pegasus.planner.code.generator.Abstract;
-import edu.isi.pegasus.planner.code.CodeGeneratorFactory;
 import edu.isi.pegasus.planner.code.generator.Braindump;
 
 import edu.isi.pegasus.planner.code.generator.NetloggerJobMapper;
@@ -69,6 +67,7 @@ import java.io.IOException;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.InputStream;
+import java.io.StringWriter;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -109,7 +108,7 @@ public class CondorGenerator extends Abstract {
     /**
      * Default value for the periodic_remove for a job
      */
-    public static final String DEFAULT_PERIODIC_REMOVE_VALUE = "(JobStatus == 5) && ((CurrentTime - EnteredCurrentStatus) > 3600)";
+    public static final String DEFAULT_PERIODIC_REMOVE_VALUE = "(JobStatus == 5) && ((CurrentTime - EnteredCurrentStatus) > 1800)";
 
 
     /**
@@ -163,7 +162,49 @@ public class CondorGenerator extends Abstract {
      * The default priority key associated with the cleanup jobs.
      */
     public static final int DEFAULT_CLEANUP_PRIORITY_KEY = 1000;
+    
+    /**
+     * the environment variable key populated with all jobs to have the
+     * condor job id set in the environment.
+     */
+    public static final String CONDOR_JOB_ID_ENV_KEY = "CONDOR_JOBID";
    
+    /**
+     * default value for CONDOR_JOBID env variable
+     */
+    public static final String DEFAULT_CONDOR_JOB_ID_ENV_VALUE = "$(cluster).$(process)";
+    
+   
+    /**
+     * Map that maps job type to corresponding Condor Concurrency limit
+     */
+    private static  Map<Integer,String> mJobTypeToCondorConcurrencyLimits = null;
+    
+    /**
+     * Map that maps job type to corresponding condor concurrency limits
+     */
+    private static Map<Integer, String> jobTypeToCondorConcurrencyLimits(){
+        if( mJobTypeToCondorConcurrencyLimits == null ){
+            //PM-933
+            mJobTypeToCondorConcurrencyLimits = new HashMap();
+            //pegasus_transfer is our Condor Concurrency Group for all transfer jobs
+            mJobTypeToCondorConcurrencyLimits.put( Job.STAGE_IN_JOB,                "pegasus_transfer.stagein");
+            mJobTypeToCondorConcurrencyLimits.put( Job.STAGE_OUT_JOB,               "pegasus_transfer.stageout");
+            mJobTypeToCondorConcurrencyLimits.put( Job.INTER_POOL_JOB,              "pegasus_transfer.inter");
+            mJobTypeToCondorConcurrencyLimits.put( Job.STAGE_IN_WORKER_PACKAGE_JOB, "pegasus_transfer.worker");
+            //pegasus_auxillary is our Condor Concurrency Group for all other auxillary jobs
+            mJobTypeToCondorConcurrencyLimits.put( Job.CREATE_DIR_JOB,              "pegasus_auxillary.createdir");
+            mJobTypeToCondorConcurrencyLimits.put( Job.CLEANUP_JOB,                 "pegasus_auxillary.cleanup");
+            mJobTypeToCondorConcurrencyLimits.put( Job.REPLICA_REG_JOB,             "pegasus_auxillary.registration");
+            mJobTypeToCondorConcurrencyLimits.put( Job.CHMOD_JOB,                   "pegasus_auxillary.chmod");
+            //compute, dax, dag jobs are not placed in any groups as we don't want any throttling per se
+            mJobTypeToCondorConcurrencyLimits.put( Job.COMPUTE_JOB,                 "pegasus_compute");
+            mJobTypeToCondorConcurrencyLimits.put( Job.DAX_JOB,                     "pegasus_dax");
+            mJobTypeToCondorConcurrencyLimits.put( Job.DAG_JOB,                     "pegasus_dag");
+        }
+        return mJobTypeToCondorConcurrencyLimits;
+    }
+    
     /**
      * Handle to the Transformation Catalog.
      */
@@ -227,6 +268,11 @@ public class CondorGenerator extends Abstract {
     protected boolean mInitializeGridStart;
 
     /**
+     * Handle to escaping class for environment variables
+     */
+    protected CondorEnvironmentEscape mEnvEscape;
+    
+    /**
      * The long value of condor version.
      */
     private long mCondorVersion;
@@ -235,6 +281,11 @@ public class CondorGenerator extends Abstract {
      * Boolean indicating whether to assign job priorities or not.
      */
     private boolean mAssignDefaultJobPriorities;
+    
+    /**
+     * Boolean indicating whether to assign concurrency limits or not.
+     */
+    private boolean mAssociateConcurrencyLimits;
 
 
     /**
@@ -245,6 +296,7 @@ public class CondorGenerator extends Abstract {
         mInitializeGridStart = true;
         mStyleFactory     = new CondorStyleFactory();
         mGridStartFactory = new GridStartFactory();
+        mEnvEscape        = new CondorEnvironmentEscape();
     }
     
    
@@ -268,6 +320,7 @@ public class CondorGenerator extends Abstract {
         mTCHandle    = bag.getHandleToTransformationCatalog();
         mSiteStore   = bag.getHandleToSiteStore();
         mAssignDefaultJobPriorities = mProps.assignDefaultJobPriorities();
+        mAssociateConcurrencyLimits = mProps.associateCondorConcurrencyLimits();
 
         //instantiate and intialize the style factory
         mStyleFactory.initialize( bag );
@@ -299,26 +352,26 @@ public class CondorGenerator extends Abstract {
      * @throws CodeGeneratorException in case of any error occuring code generation.
      */
     public Collection<File> generateCode( ADag dag ) throws CodeGeneratorException{
-//        DagInfo ndi        = dag.dagInfo;
-//       Vector vSubInfo    = dag.vJobSubInfos;
-
         if ( mInitializeGridStart ){
             mConcreteWorkflow = dag;
             mGridStartFactory.initialize( mBag, dag );
             mInitializeGridStart = false;
         }
         
-        CodeGenerator storkGenerator = CodeGeneratorFactory.loadInstance( mBag, "Stork" );
-
-        String className   = this.getClass().getName();
-        String dagFileName = getDAGFilename( dag, ".dag" );
+        String orgDAGFileName = getDAGFilename( dag, ".dag" );
+        File orgDAGFile = new File ( mSubmitFileDir, orgDAGFileName );
+        
+        //PM-966 we need to write out first to a tmp dag file
+        //and then do atomic rename
+        String dagFileName = orgDAGFileName + ".tmp";
+        
         mDone = false;
 
-        File dagFile = null;
+        File dagFile = new File ( mSubmitFileDir, dagFileName );;
         Collection<File> result = new ArrayList(1);
         if ( dag.isEmpty() ) {
             //call the callout before returns
-            concreteDagEmpty( dagFileName, dag );
+            concreteDagEmpty( orgDAGFileName, dag );
             return result ;
         }
 
@@ -375,7 +428,7 @@ public class CondorGenerator extends Abstract {
 
         //initialize the file handle to the dag
         //file and print it's header
-        dagFile = initializeDagFileWriter( dagFileName, dag );
+        initializeDagFileWriter( dagFile , dag );
         result.add( dagFile );
 
         //write out any category based dagman knobs to the dagman file
@@ -404,20 +457,7 @@ public class CondorGenerator extends Abstract {
             }
 
                  
-            //write out the submit file for each job
-            //in addition makes the corresponding
-            //entries in the .dag file corresponding
-            //to the job and it's postscript
-            if ( job.getSiteHandle().equals( "stork" ) ) {
-                //write the job information in the .dag file
-                StringBuffer dagString = new StringBuffer();
-                dagString.append( "DATA " ).append( job.getName() ).append( " " );
-                dagString.append( job.getName() ).append( ".stork" );
-                printDagString( dagString.toString() );
-                storkGenerator.generateCode( dag, job  );
-            }
-            //for dag jobs we dont need to generate submit file
-            else if( job instanceof DAGJob ){
+            if( job instanceof DAGJob ){
                 //SUBDAG EXTERNAL  B  inner.dag
                 DAGJob djob = ( DAGJob )job;
                 
@@ -478,7 +518,7 @@ public class CondorGenerator extends Abstract {
         //writing the tail of .dag file
         //that contains the relation pairs
         this.writeDagFileTail( dag );
-        mLogger.log("Written Dag File : " + dagFileName.toString(),
+        mLogger.log("Written Dag File : " + dagFileName,
                     LogManager.DEBUG_MESSAGE_LEVEL);
 
         //symlink the log file to a file in the temp directory if possible
@@ -491,15 +531,7 @@ public class CondorGenerator extends Abstract {
         mLogger.log( "Writing out the DOT file ", LogManager.DEBUG_MESSAGE_LEVEL );
         this.writeDOTFile( getDAGFilename( dag, ".dot"), dag );
 
-        /*
-        //we no longer write out the job.map file
-        //write out the netlogger file
-        mLogger.log( "Written out job.map file", LogManager.DEBUG_MESSAGE_LEVEL );
-        this.writeJobMapFile( getDAGFilename( dag, ".job.map"), dag );
-        */
-
-        
-
+       
         //write out the notifications input file
         this.writeOutNotifications( dag );
 
@@ -515,9 +547,20 @@ public class CondorGenerator extends Abstract {
         //write out the braindump file
         this.writeOutBraindump( dag );
         
+        //PM-966 rename the tmp dag file back to the original name
+        //before we write out the dag.condor.sub file
+        
+        dagFile.renameTo( orgDAGFile );
+        mLogger.log("Renamed temporary dag file to : " + orgDAGFile,
+                    LogManager.DEBUG_MESSAGE_LEVEL);
+        
+        //write out the dag.condor.sub file
+        this.writeOutDAGManSubmitFile( dag, orgDAGFile );
+        
         //we are donedirectory
         mDone = true;
-
+        
+        
         return result;
     }
 
@@ -606,37 +649,41 @@ public class CondorGenerator extends Abstract {
         fragment.append(CondorGenerator.mSeparator);
         writer.println( fragment );
 
-/*
-        writer.println(CondorGenerator.mSeparator);
-        writer.println("# PEGASUS WMS GENERATED SUBMIT FILE");
-        writer.println("# DAG : " + dagname + ", Index = " + dagindex +
-                       ", Count = " + dagcount);
-        writer.println("# SUBMIT FILE NAME : " + subfilename);
-        writer.println(CondorGenerator.mSeparator);
-*/
+        // handle environment settings
+        //before we apply any styles
+        //allows for glite to escape environment values
+        handleEnvVarForJob( dag, job );
+        
         //figure out the style to apply for a job
         applyStyle( job, writer );
 
-        // handling of  log file is now done through condor profile
-        //bwSubmit.println("log = " + dagname + "_" + dagindex + ".log");
-
-        // handle environment settings
-        handleEnvVarForJob( job );
-        envStr = job.envVariables.toString();
-        if (envStr != null) {
-            writer.print( job.envVariables );
-        }
+        //PM-934 environment variables are also printed
+        //in the new format
+        String env = mEnvEscape.escape(job.envVariables );
+        writer.println( "environment = " + env  );
 
         // handle Condor variables
         handleCondorVarForJob( job );
-        writer.print( job.condorVariables );
 
         //write the classad's that have the information regarding
         //which Pegasus super node is a node part of, in addition to the
         //release version of Chimera/Pegasus, the jobClass and the
         //workflow id
-        ClassADSGenerator.generate( writer, dag, job );
-
+        StringWriter classADWriter = new StringWriter();
+        PrintWriter pwClassADWriter = new PrintWriter( classADWriter );
+        ClassADSGenerator.generate( pwClassADWriter, dag, job );
+        
+        if( mAssociateConcurrencyLimits ){
+            //PM-933, PM-1000 associate the corresponding concurrency limits
+            job.condorVariables.construct( Condor.CONCURRENCY_LIMITS_KEY, 
+                                       getConcurrencyLimit(job) );
+        }
+        
+        //PM-796 we print all the condor variables after the classad
+        //generator has generated the user classads
+        writer.print( job.condorVariables );
+        writer.print( classADWriter.getBuffer() );
+        
         // DONE
         fragment = new StringBuffer();
 
@@ -1009,19 +1056,13 @@ public class CondorGenerator extends Abstract {
     /**
      * Initializes the file handler to the dag file and writes the header to it.
      *
-     * @param filename     basename of dag file to be written.
-     * @param dag        the workflow
-     *
-     * @return the File object for the DAG file.
+     * @param dag    the dag file to be written out to
+     * @param workflow   the workflow
      *
      * @throws CodeGeneratorException in case of any error occuring code generation.
      */
-    protected File initializeDagFileWriter(String filename, ADag workflow )
+    protected void initializeDagFileWriter( File dag, ADag workflow )
                                                        throws CodeGeneratorException{
-        // initialize file handler
-
-        filename = mSubmitFileDir + "/" + filename;
-        File dag = new File(filename);
 
 
         try {
@@ -1037,10 +1078,9 @@ public class CondorGenerator extends Abstract {
                            workflow.getCount() );
             printDagString(this.mSeparator);
         } catch (Exception e) {
-            throw new CodeGeneratorException( "While writing to DAG FILE " + filename,
+            throw new CodeGeneratorException( "While writing to DAG FILE " + dag,
                                               e);
         }
-        return dag;
     }
 
 
@@ -1176,6 +1216,21 @@ public class CondorGenerator extends Abstract {
 
     }
 
+    /**
+     * Writes out the condor submit file for the dag created
+     * 
+     * @param dag 
+     * @param dagFile
+     */
+    protected void writeOutDAGManSubmitFile(ADag dag, File dagFile ) throws CodeGeneratorException{
+        PegasusSubmitDAG psd = new PegasusSubmitDAG();
+        psd.intialize(mBag);
+        psd.generateCode(dag, dagFile);
+    }
+
+
+
+    
     /**
      * Writes a string to the dag file. When calling this function the
      * file handle to file is already initialized.
@@ -1666,17 +1721,20 @@ public class CondorGenerator extends Abstract {
 
 
     /**
-     * It updates/adds the environment variables that are got through the Dax with
-     * the values specified in the properties file, pool config file or adds some
-     * variables internally. In case of clashes of environment variables from
-     * various sources the following order is followed,property file,
-     * transformation catalog, pool config file and then dax.
-     * At present values are not picked from the properties file.
+     * Adds common environment variables to the job
      *
+     * @param dag
      * @param job  The Job object containing the information about the job.
      */
-    protected void handleEnvVarForJob(Job sinfo) {
-
+    protected void handleEnvVarForJob( ADag dag, Job job ) {
+        //PM-867 add CONDOR_JOBID
+        job.envVariables.construct( CondorGenerator.CONDOR_JOB_ID_ENV_KEY, 
+                                    CondorGenerator.DEFAULT_CONDOR_JOB_ID_ENV_VALUE );
+        //PM-875
+        job.envVariables.construct( ENV.PEGASUS_WF_ID_ENV_KEY, dag.getWorkflowUUID());
+        job.envVariables.construct( ENV.PEGASUS_JOB_ID_ENV_KEY,
+                                    job.getID() );
+        job.envVariables.construct( ENV.PEGASUS_SITE_ID_ENV_KEY, job.getSiteHandle() );
     }
 
     /**
@@ -1884,6 +1942,21 @@ public class CondorGenerator extends Abstract {
         return rslString.toString();
     }
 
+    /**
+     * Returns the concurrency limit for a job
+     * 
+     * @param job
+     * 
+     * @return 
+     */
+    protected String getConcurrencyLimit(Job job) throws CodeGeneratorException {
+        String limit = CondorGenerator.jobTypeToCondorConcurrencyLimits().get( job.getJobType()) ;
+        if( limit == null ){
+            throw new CodeGeneratorException( "Unable to determine Condor concurrency limit for job " + job.getID() +
+                                              " with type " + job.getJobType() );
+        }
+        return limit;
+    }
 
-
+  
 }

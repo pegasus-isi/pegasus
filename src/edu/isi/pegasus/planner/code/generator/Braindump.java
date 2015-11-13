@@ -293,9 +293,6 @@ public class Braindump {
                  //append( "dag " ).append(dagFile).append("\n").
         entries.put( Braindump.SUBMIT_DIR_KEY, absPath );
         
-        //the properties file
-        entries.put( Braindump.PROPERTIES_KEY, new File( mProps.getPropertiesInSubmitDirectory() ).getName() );
-        
         //information about the planner
         StringBuffer planner = new StringBuffer();
         planner.append( mProps.getBinDir() ).append( File.separator ).append( "pegasus-plan" );
@@ -349,7 +346,11 @@ public class Braindump {
         try {
 
             Collection<File> result = new LinkedList();
-            result.add(writeOutBraindumpFile(this.defaultBrainDumpEntries(dag)));
+            
+            Map entries = this.defaultBrainDumpEntries(dag);
+            //add the location of the properties file
+            entries.put( Braindump.PROPERTIES_KEY, new File( mProps.getPropertiesInSubmitDirectory() ).getName() );
+            result.add(writeOutBraindumpFile( entries) );
             return result;
         } catch (IOException ioe) {
             throw new CodeGeneratorException( "IOException while writing out the braindump file" ,
@@ -376,6 +377,8 @@ public class Braindump {
 
             Collection<File> result = new LinkedList();
             Map<String, String> entries = this.defaultBrainDumpEntries(dag);
+            //add the location of the properties file
+            entries.put( Braindump.PROPERTIES_KEY, new File( mProps.getPropertiesInSubmitDirectory() ).getName() );
             entries.putAll(additionalEntries);
             result.add(writeOutBraindumpFile(entries));
             return result;
@@ -440,7 +443,10 @@ public class Braindump {
             InetAddress localMachine = java.net.InetAddress.getLocalHost();
             return localMachine.getHostName();
         } catch ( UnknownHostException ex) {
-            throw new CodeGeneratorException( "Unable to determine hostname", ex );
+        	// With all the different type of VMs floating around today, it is
+        	// not uncommon that the hostname is undefined. Make sure we do not
+        	// get hung up on that case, so always return a string.
+            return "Unknown";
         }
     }
     

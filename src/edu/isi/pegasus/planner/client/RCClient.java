@@ -16,18 +16,13 @@
 
 package edu.isi.pegasus.planner.client;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -224,6 +219,7 @@ public class RCClient extends Toolkit {
     	m_log = Logger.getLogger(RCClient.class);
     	String propertyFile =lookupConfProperty(opts, confChar);
         m_pegasus_props = PegasusProperties.getInstance(propertyFile);
+        m_conf_property_file = propertyFile;
     	m_rls_logger = LogManagerFactory.loadSingletonInstance(m_pegasus_props);
     	m_rls_logger.setLevel(Level.WARN);
     	m_rls_logger.logEventStart("pegasus-rc-client", "planner.version",
@@ -342,13 +338,13 @@ public class RCClient extends Toolkit {
      * @exception IOException
      * @exception MissingResourceException
      * 
-     * @see org.griphyn.vdl.util.ChimeraProperties
      */
-    void connect(PegasusProperties properties ) throws ClassNotFoundException, IOException,
+    void connect(PegasusProperties properties, String file ) throws ClassNotFoundException, IOException,
 	    NoSuchMethodException, InstantiationException,
 	    IllegalAccessException, InvocationTargetException,
 	    MissingResourceException {
-    m_rc = ReplicaFactory.loadInstance(properties);
+  
+        m_rc = ReplicaFactory.loadInstance(properties, file);
 
 	// auto-disconnect, should we forget it, or die in an orderly fashion
 	Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -545,7 +541,7 @@ public class RCClient extends Toolkit {
 				    unescape(noquote(attr.substring(pos + 1))));
 			}
 		    }
-
+                    rce.checkAndUpdateForPoolAttribute();
 		    // check to see if the lfn is already there
 		    // not doing a contains check as most of
 		    // the times lfn is expected to be unique
@@ -681,6 +677,8 @@ public class RCClient extends Toolkit {
 				unescape(noquote(attr.substring(pos + 1))));
 		    }
 		}
+                //PM-813 backward support for pool attribute
+                rce.checkAndUpdateForPoolAttribute();
 
 		if (cmd.equals("insert")) {
 		    result = m_rc.insert(lfn, rce);
@@ -966,9 +964,9 @@ public class RCClient extends Toolkit {
      */
     public static void main(String[] args) {
 	int result = 0;
-	int level = Level.FATAL_INT;
+	int level = Level.ERROR_INT;
 	RCClient me = null;
-
+       
 	try {
 	    // create an instance of self
 	    me = new RCClient("pegasus-rc-client");
@@ -1041,7 +1039,7 @@ public class RCClient extends Toolkit {
 	    // Set verbosity level
 	    me.setLevel(level);
 	    // now work with me
-	    me.connect(me.m_pegasus_props);
+	    me.connect(me.m_pegasus_props, me.m_conf_property_file );
 	    RCClient.log(Level.DEBUG, "connected to backend");
 	    // are there any remaining CLI arguments?
 	    if (opts.getOptind() < args.length) {
@@ -1077,19 +1075,27 @@ public class RCClient extends Toolkit {
 
 	} catch (ReplicaCatalogException rce) {
 	    do {
-		RCClient.log(Level.ERROR, rce.getMessage());
+		RCClient.log(Level.FATAL, rce.getMessage());
 		rce = (ReplicaCatalogException) rce.getNextException();
 	    } while (rce != null);
 	    result = 1;
 	} catch (RuntimeException rte) {
+            Exception org = rte;
 	    do {
-		RCClient.log(Level.ERROR,
+		RCClient.log(Level.FATAL,
 			rte.getClass() + " " + rte.getMessage());
 		rte = (RuntimeException) rte.getCause();
 	    } while (rte != null);
+            
+            //print stack trace if debug or higher
+            //or logmanger is not set at all
+            if( me == null || me.m_log == null || me.m_log.getLevel().toInt() <= Level.DEBUG_INT ){
+                org.printStackTrace();
+            }
+            
 	    result = 1;
 	} catch (Exception e) {
-	    RCClient.log(Level.ERROR, e.getMessage());
+	    RCClient.log(Level.FATAL, e.getMessage());
 	    e.printStackTrace();
 	    result = 2;
 	} finally {
@@ -1102,7 +1108,7 @@ public class RCClient extends Toolkit {
 
 	// get out
 	if (result != 0) {
-	    RCClient.log(Level.WARN, "non-zero exit-code " + result);
+	    RCClient.log(Level.ERROR, "non-zero exit-code " + result);
 	    System.exit(result);
 	}
     }

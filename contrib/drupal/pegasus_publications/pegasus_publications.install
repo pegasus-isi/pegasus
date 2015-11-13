@@ -1,0 +1,14 @@
+<?php
+
+/**
+ * Implements hook_install().
+ */
+function pegasus_publications_install() {
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function pegasus_publications_uninstall() {
+}
+

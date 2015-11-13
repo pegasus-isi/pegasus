@@ -155,11 +155,9 @@ https://confluence.pegasus.isi.edu/display/pegasus/Pegasus+Statistics+Python+Ver
 """
 __author__ = "Monte Goode"
 
-import logging
-
+from Pegasus.db import connection
 from Pegasus.db.modules import SQLAlchemyInit
-from Pegasus.db.schema.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
-from Pegasus.db.schema.stampede_schema import *
+from Pegasus.db.schema import *
 from Pegasus.db.errors import StampedeDBNotFoundError
 
 # Main stats class.
@@ -170,15 +168,10 @@ class StampedeStatistics(SQLAlchemyInit):
             raise ValueError("connString is required")
         self.log = logging.getLogger("%s.%s" % (self.__module__, self.__class__.__name__))
         try:
-            SQLAlchemyInit.__init__(self, connString, initializeToPegasusDB)
-        except exc.OperationalError, e:
+            SQLAlchemyInit.__init__(self, connString)
+        except connection.ConnectionError, e:
             self.log.exception(e)
             raise StampedeDBNotFoundError
-
-        # Check the schema version before proceeding.
-        self.s_check = SchemaCheck(self.session)
-        if not self.s_check.check_schema():
-            raise SchemaVersionError
 
         self._expand = expand_workflow
 
@@ -293,7 +286,7 @@ class StampedeStatistics(SQLAlchemyInit):
             self._time_filter_mode = filter
             self.log.debug('Setting filter to: %s', filter)
         except:
-            self._job_filter_mode = 'month'
+            self._time_filter_mode = 'month'
             self.log.error('Unknown time filter %s - setting to month', filter)
 
     def set_host_filter(self, host=None):
@@ -453,7 +446,7 @@ class StampedeStatistics(SQLAlchemyInit):
         q = q.filter(JobInstance.exitcode == 0).filter(JobInstance.exitcode != None)
         return q.count()
 
-    def get_total_failed_jobs_status(self):
+    def _get_total_failed_jobs_status(self):
         """
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Totalfailedjobs
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Totalfailedjobs
@@ -477,7 +470,13 @@ class StampedeStatistics(SQLAlchemyInit):
         q = q.filter(JobInstance.job_submit_seq == sq_1.c.jss)
         q = q.filter(JobInstance.exitcode != 0).filter(JobInstance.exitcode != None)
 
+        return q
+
+    def get_total_failed_jobs_status(self):
+
+        q = self._get_total_failed_jobs_status()
         return q.count()
+
 
     def _query_jobstate_for_instance(self, states):
         """
@@ -713,16 +712,27 @@ class StampedeStatistics(SQLAlchemyInit):
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Workflowcumulativejobwalltime
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Workflowcumulativejobwalltime
         """
-        q = self.session.query(cast(func.sum(Invocation.remote_duration * JobInstance.multiplier_factor), Float))
+        q = self.session.query(cast(func.sum(Invocation.remote_duration * JobInstance.multiplier_factor), Float),
+                               cast(func.sum(case([(
+                                   Invocation.exitcode == 0, Invocation.remote_duration * JobInstance.multiplier_factor
+                               )], else_=0)).label("goodput"), Float),
+                               cast(func.sum(case([(
+                                   Invocation.exitcode > 0, Invocation.remote_duration * JobInstance.multiplier_factor
+                               )], else_=0)).label("badput"), Float))
+
         q = q.filter(Invocation.task_submit_seq >= 0)
         q = q.filter(Invocation.job_instance_id == JobInstance.job_instance_id)
+
         if self._expand:
             q = q.filter(Invocation.wf_id == Workflow.wf_id)
             q = q.filter(Workflow.root_wf_id == self._root_wf_id)
+
         else:
             q = q.filter(Invocation.wf_id.in_(self._wfs))
+
         q = q.filter(Invocation.transformation != 'condor::dagman')
-        return q.first()[0]
+
+        return q.first()
 
     def get_submit_side_job_wall_time(self):
         """
@@ -738,18 +748,29 @@ class StampedeStatistics(SQLAlchemyInit):
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Cumulativejobwalltimeasseenfromsubmitside
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Cumulativejobwalltimeasseenfromsubmitside
         """
-        q = self.session.query(cast(func.sum(JobInstance.local_duration * JobInstance.multiplier_factor), Float).label('wall_time'))
+        q = self.session.query(cast(func.sum(JobInstance.local_duration * JobInstance.multiplier_factor), Float).label('wall_time'),
+                               cast(func.sum(case([(
+                                   JobInstance.exitcode == 0, JobInstance.local_duration * JobInstance.multiplier_factor
+                               )], else_=0)).label("goodput"), Float),
+                               cast(func.sum(case([(
+                                   JobInstance.exitcode > 0, JobInstance.local_duration * JobInstance.multiplier_factor
+                               )], else_=0)).label("badput"), Float)
+                               )
+
         q = q.filter(JobInstance.job_id == Job.job_id)
+
         if self._expand:
             q = q.filter(Job.wf_id == Workflow.wf_id)
             q = q.filter(Workflow.root_wf_id == self._root_wf_id)
+
         else:
             q = q.filter(Job.wf_id.in_(self._wfs))
+
         if self._expand:
             d_or_d = self._dax_or_dag_cond()
             q = q.filter(or_(not_(d_or_d), and_(d_or_d, JobInstance.subwf_id == None)))
 
-        return q.first().wall_time
+        return q.first()
 
     def get_workflow_details(self):
         """
@@ -976,9 +997,20 @@ class StampedeStatistics(SQLAlchemyInit):
         q = q.filter(self._dax_or_dag_cond())
         return q.all()
 
-    def get_failed_job_instances(self, final=False, all_jobs=False):
+
+    def get_failed_job_instances(self):
         """
         https://confluence.pegasus.isi.edu/display/pegasus/Job+Statistics+file#JobStatisticsfile-Failedjobinstances
+        """
+
+        # PM-752 we use the same query that we used to get the count of failed jobs
+        q = self._get_total_failed_jobs_status()
+        return q.all()
+
+    def get_plots_failed_job_instances(self, final=False, all_jobs=False):
+        """
+        https://confluence.pegasus.isi.edu/display/pegasus/Job+Statistics+file#JobStatisticsfile-Failedjobinstances
+        used in the pegasus plots code. is deprecated
         """
         if self._expand:
             return []

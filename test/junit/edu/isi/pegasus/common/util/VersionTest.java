@@ -23,7 +23,7 @@ public class VersionTest {
     public void testVersion() {
         String version = ver.getVersion();
         Assert.assertTrue(version != null);
-        Assert.assertTrue(version.matches("\\d+[.]\\d+[.]\\d+(.*)?"));
+        Assert.assertTrue(version.matches("\\d+[.]\\d+[.]\\d+([a-zA-Z0-9]+)?"));
     }
 
     @Test
@@ -38,7 +38,7 @@ public class VersionTest {
 
         String patch = ver.getPatch();
         Assert.assertTrue(patch != null);
-        Assert.assertTrue(patch.matches("\\d+(.*)?"));
+        Assert.assertTrue(patch.matches("\\d+([a-zA-Z0-9]+)?"));
 
         String version = ver.getVersion();
         Assert.assertEquals(version, major + "." + minor + "." + patch);

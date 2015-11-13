@@ -589,6 +589,11 @@ after the main job, see above for a detailed description.
 contains a string that starts a job to be executed unconditionally
 after any of the previous jobs, see above for a detailed description.
 
+*KICKSTART_PREPEND_PATH*::
+the value of this variable is prepended to the PATH variable seen by
+Kickstart and passed to the job. The modified PATH is also used to look
+up executables for the main job and any pre/post/setup/cleanup jobs.
+
 
 History
 -------

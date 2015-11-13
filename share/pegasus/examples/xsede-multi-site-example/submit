@@ -13,7 +13,7 @@ pegasus-plan \
     --dir work \
     --sites Trestles,Ranger \
     --output-site local \
-    --nocleanup \
+    --cleanup none \
     --dax blackdiamond.dax \
     --submit
 

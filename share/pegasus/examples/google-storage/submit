@@ -1,0 +1,89 @@
+#!/bin/bash
+
+set -e
+
+# the bucket must be unique, and writable by your Google user
+BUCKET="pegasus-workflows"
+
+TOP_DIR=`pwd`
+
+# download rosetta binary - this is to save space in the Pegasus distribution
+if [ ! -e rosetta.exe ]; then
+   wget -q http://pegasus.isi.edu/wms/example-workflows/rosetta/rosetta.exe
+   chmod 755 rosetta.exe
+fi
+
+# do we have the required minirosetta_database?
+if [ ! -e minirosetta_database ]; then
+   wget -q http://pegasus.isi.edu/wms/example-workflows/rosetta/minirosetta_database.tar.gz
+   tar xzf minirosetta_database.tar.gz
+   rm minirosetta_database.tar.gz
+fi
+
+# what about the required pdbs?
+if [ ! -e pdbs ]; then
+   wget -q http://pegasus.isi.edu/wms/example-workflows/rosetta/pdbs.tar.gz
+   tar xzf pdbs.tar.gz
+   rm pdbs.tar.gz
+fi
+
+# figure out where Pegasus is installed
+export PEGASUS_BIN_DIR=`pegasus-config --bin`
+if [ "x$PEGASUS_BIN_DIR" = "x" ]; then
+    echo "Please make sure pegasus-plan is in your path"
+    exit 1
+fi 
+
+# build the dax generator
+export CLASSPATH=.:`pegasus-config --classpath`
+javac RosettaDAX.java
+
+# generate the dax
+java RosettaDAX dax.xml
+
+#empty replica catalog 
+touch rc.data
+
+# site catalog
+cat >sites.xml <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0">
+    <site  handle="local" arch="x86" os="LINUX">
+        <directory type="shared-scratch" path="$TOP_DIR/scratch">
+            <file-server operation="all" url="file://$TOP_DIR/scratch"/>
+        </directory>
+        <directory type="local-storage" path="$TOP_DIR/outputs">
+            <file-server operation="all" url="file://$TOP_DIR/outputs"/>
+        </directory>
+        <profile namespace="env" key="PATH">$PEGASUS_BIN_DIR:/ccg/software/gsutil:/usr/bin:/bin</profile>
+    </site>
+    <site  handle="condor_pool" arch="x86" os="LINUX">
+        <profile namespace="pegasus" key="style" >condor</profile>
+        <profile namespace="condor" key="universe" >vanilla</profile>
+        <profile namespace="env" key="PATH">/ccg/software/gsutil:/usr/bin:/bin</profile>
+    </site>
+    <site  handle="staging_site" arch="x86" os="LINUX">
+        <directory type="shared-scratch" path="/$BUCKET/scratch">
+            <file-server operation="all" url="gs://$BUCKET/scratch"/>
+        </directory>
+        <directory type="local-storage" path="/$BUCKET/outputs">
+            <file-server operation="all" url="gs://$BUCKET/outputs"/>
+        </directory>
+        <profile namespace="pegasus" key="BOTO_CONFIG" >$HOME/.boto.service</profile>
+        <profile namespace="pegasus" key="GOOGLE_PKCS12" >$HOME/.google-service-account.p12</profile>
+    </site>
+</sitecatalog>
+EOF
+
+echo
+echo "Planning the workflow..."
+pegasus-plan \
+    --conf pegasusrc \
+    --dir work \
+    --dax dax.xml \
+    --sites condor_pool \
+    --staging-site staging_site \
+    --output-site local \
+    --submit
+
+

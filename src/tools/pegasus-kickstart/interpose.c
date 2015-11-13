@@ -19,6 +19,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+/* TODO Handle directories */
 /* TODO Interpose accept (for network servers) */
 /* TODO Is it necessary to interpose shutdown? Would that help the DNS issue? */
 /* TODO Interpose unlink, unlinkat, remove */
@@ -127,12 +128,22 @@ static typeof(tmpfile) *orig_tmpfile = NULL;
 /* It is not necessary to interpose other tmp functions because
  * they just generate names that need to be passed to open()
  */
+static typeof(lseek) *orig_lseek = NULL;
+#ifdef lseek64
+static typeof(lseek64) *orig_lseek64 = NULL;
+#endif
+static typeof(fseek) *orig_fseek = NULL;
+static typeof(fseeko) *orig_fseeko = NULL;
 
 typedef struct {
     char type;
     char *path;
     size_t bread;
     size_t bwrite;
+    size_t nread;
+    size_t nwrite;
+    size_t bseek;
+    size_t nseek;
 } Descriptor;
 
 const char DTYPE_NONE = 0;
@@ -237,17 +248,6 @@ static Descriptor *get_descriptor(int fd) {
     return &(descriptors[fd]);
 }
 
-/* Get the full path to a file */
-static char *get_fullpath(const char *path) {
-    static char fullpath[BUFSIZ];
-    if (realpath(path, fullpath) == NULL) {
-        printerr("Unable to get real path for '%s': %s\n",
-                 path, strerror(errno));
-        return NULL;
-    }
-    return fullpath;
-}
-
 /* Read /proc/self/exe to get path to executable */
 static void read_exe() {
     debug("Reading exe");
@@ -264,6 +264,23 @@ static void read_exe() {
 /* Return 1 if line begins with tok */
 static int startswith(const char *line, const char *tok) {
     return strstr(line, tok) == line;
+}
+
+/* Return 1 if line ends with tok */
+static int endswith(const char *line, const char *tok) {
+    int n = strlen(line);
+    int m = strlen(tok);
+    if (n < m) {
+        return 0;
+    }
+
+    for(int i=0; i<m; i++) {
+        if (line[n-i-1] != tok[m-i-1]) {
+            return 0;
+        }
+    }
+
+    return 1;
 }
 
 /* Read useful information from /proc/self/status */
@@ -392,12 +409,27 @@ static void read_io() {
     fclose_untraced(f);
 }
 
-static void trace_file(const char *path, int fd) {
-    debug("trace_file %s %d", path, fd);
+/* Determine which paths should be traced */
+static int should_trace(const char *path) {
+    /* Trace all files */
+    if (getenv("KICKSTART_TRACE_ALL") != NULL) {
+        return 1;
+    }
 
-    Descriptor *f = get_descriptor(fd);
-    if (f == NULL) {
-        return;
+    /* Trace files in the current working directory */
+    if (getenv("KICKSTART_TRACE_CWD") != NULL) {
+        char *wd = getcwd(NULL, 0);
+        int incwd = startswith(path, wd);
+        free(wd);
+
+        return incwd;
+    }
+
+    /* Skip files with known extensions that we don't care about */
+    if (endswith(path, ".py") ||
+        endswith(path, ".pyc") ||
+        endswith(path, ".jar")) {
+        return 0;
     }
 
     /* Skip all the common system paths, which we don't care about */
@@ -406,7 +438,34 @@ static void trace_file(const char *path, int fd) {
         startswith(path, "/dev") ||
         startswith(path, "/etc") ||
         startswith(path, "/proc")||
-        startswith(path, "/sys")) {
+        startswith(path, "/sys") ||
+        startswith(path, "/selinux")) {
+        return 0;
+    }
+
+    return 1;
+}
+
+static void trace_file(const char *path, int fd) {
+    debug("trace_file %s %d", path, fd);
+
+    Descriptor *f = get_descriptor(fd);
+    if (f == NULL) {
+        return;
+    }
+
+    if (!should_trace(path)) {
+        return;
+    }
+
+    struct stat s;
+    if (fstat(fd, &s) != 0) {
+        printerr("fstat: %s\n", strerror(errno));
+        return;
+    }
+
+    /* Skip directories */
+    if (s.st_mode & S_IFDIR) {
         return;
     }
 
@@ -420,17 +479,25 @@ static void trace_file(const char *path, int fd) {
     f->path = temp;
     f->bread = 0;
     f->bwrite = 0;
+    f->nread = 0;
+    f->nwrite = 0;
+    f->bseek = 0;
+    f->nseek = 0;
 }
 
 static void trace_open(const char *path, int fd) {
     debug("trace_open %s %d", path, fd);
 
-    char *fullpath = get_fullpath(path);
+    char *fullpath = realpath(path, NULL);
     if (fullpath == NULL) {
+        printerr("Unable to get real path for '%s': %s\n",
+                 path, strerror(errno));
         return;
     }
 
     trace_file(fullpath, fd);
+
+    free(fullpath);
 }
 
 static void trace_openat(int fd) {
@@ -465,6 +532,7 @@ static void trace_read(int fd, ssize_t amount) {
         return;
     }
     f->bread += amount;
+    f->nread += 1;
 }
 
 static void trace_write(int fd, ssize_t amount) {
@@ -475,6 +543,18 @@ static void trace_write(int fd, ssize_t amount) {
         return;
     }
     f->bwrite += amount;
+    f->nwrite += 1;
+}
+
+static void trace_seek(int fd, off_t offset) {
+    debug("trace_seek %d %ld", fd, offset);
+
+    Descriptor *f = get_descriptor(fd);
+    if (f == NULL) {
+        return;
+    }
+    f->bseek += offset > 0 ? offset : -offset;
+    f->nseek += 1;
 }
 
 static void trace_close(int fd) {
@@ -498,9 +578,10 @@ static void trace_close(int fd) {
             size = st.st_size;
         }
 
-        tprintf("file: '%s' %lu %lu %lu\n", f->path, size, f->bread, f->bwrite);
+        tprintf("file: '%s' %lu %lu %lu %lu %lu %lu %lu\n",
+                f->path, size, f->bread, f->bwrite, f->nread, f->nwrite, f->bseek, f->nseek);
     } else if (f->type == DTYPE_SOCK) {
-        tprintf("socket: %s %lu %lu\n", f->path, f->bread, f->bwrite);
+        tprintf("socket: %s %lu %lu %lu %lu\n", f->path, f->bread, f->bwrite, f->nread, f->nwrite);
     }
 
     /* Reset the entry */
@@ -509,6 +590,10 @@ static void trace_close(int fd) {
     f->path = NULL;
     f->bread = 0;
     f->bwrite = 0;
+    f->nread = 0;
+    f->nwrite = 0;
+    f->bseek = 0;
+    f->nseek = 0;
 }
 
 static void trace_sock(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
@@ -539,6 +624,10 @@ static void trace_sock(int sockfd, const struct sockaddr *addr, socklen_t addrle
         d->path = NULL;
         d->bread = 0;
         d->bwrite = 0;
+        d->nread = 0;
+        d->nwrite = 0;
+        d->bseek = 0;
+        d->nseek = 0;
 
         char *temp = strdup(addrstr);
         if (temp == NULL) {
@@ -553,6 +642,11 @@ static void trace_sock(int sockfd, const struct sockaddr *addr, socklen_t addrle
 
 static void trace_dup(int oldfd, int newfd) {
     debug("trace_dup %d %d", oldfd, newfd);
+
+    if (oldfd == newfd) {
+        printerr("trace_dup: duplicating the same fd %d\n", oldfd);
+        return;
+    }
 
     Descriptor *o = get_descriptor(oldfd);
     if (o == NULL) {
@@ -579,17 +673,25 @@ static void trace_dup(int oldfd, int newfd) {
     n->path = temp;
     n->bread = 0;
     n->bwrite = 0;
+    n->nread = 0;
+    n->nwrite = 0;
+    n->bseek = 0;
+    n->nseek = 0;
 }
 
 static void trace_truncate(const char *path, off_t length) {
     debug("trace_truncate %s %lu", path, length);
 
-    char *fullpath = get_fullpath(path);
+    char *fullpath = realpath(path, NULL);
     if (fullpath == NULL) {
+        printerr("Unable to get real path for '%s': %s\n",
+                 path, strerror(errno));
         return;
     }
 
-    tprintf("file: '%s' %lu 0 0\n", fullpath, length);
+    tprintf("file: '%s' %lu 0 0 0 0\n", fullpath, length);
+
+    free(fullpath);
 }
 
 /* Library initialization function */
@@ -1541,5 +1643,72 @@ FILE *tmpfile(void) {
     }
 
     return f;
+}
+
+
+off_t lseek(int fd, off_t offset, int whence) {
+    debug("lseek %d %ld %d", fd, offset, whence);
+
+    if (orig_lseek == NULL) {
+        orig_lseek = dlsym(RTLD_NEXT, "lseek");
+    }
+
+    off_t result = (*orig_lseek)(fd, offset, whence);
+
+    if (result >= 0) {
+        trace_seek(fd, offset);
+    }
+
+    return result;
+}
+
+#ifdef lseek64
+off64_t lseek64(int fd, off64_t offset, int whence) {
+    debug("lseek64");
+
+    if (orig_lseek64 == NULL) {
+        orig_lseek64 = dlsym(RTLD_NEXT, "lseek64");
+    }
+
+    off64_t result = (*orig_lseek64)(fd, offset, whence);
+
+    if (result >= 0) {
+        trace_seek(fd, offset);
+    }
+
+    return result;
+}
+#endif
+
+int fseek(FILE *stream, long offset, int whence) {
+    debug("fseek");
+
+    if (orig_fseek == NULL) {
+        orig_fseek = dlsym(RTLD_NEXT, "fseek");
+    }
+
+    int result = (*orig_fseek)(stream, offset, whence);
+
+    if (result == 0) {
+        trace_seek(fileno(stream), offset);
+    }
+
+    return result;
+}
+
+int fseeko(FILE *stream, off_t offset, int whence) {
+    debug("fseeko");
+
+    if (orig_fseeko == NULL) {
+        orig_fseeko = dlsym(RTLD_NEXT, "fseeko");
+    }
+
+    int result = (*orig_fseeko)(stream, offset, whence);
+
+    if (result == 0) {
+        trace_seek(fileno(stream), offset);
+    }
+
+    return result;
 }
 

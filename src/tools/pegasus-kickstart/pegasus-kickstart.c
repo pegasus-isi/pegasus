@@ -41,16 +41,16 @@
 /* truly shared globals */
 extern int make_application_executable;
 extern size_t data_section_size;
-extern char *programname;
 extern char** environ;
+AppInfo appinfo; /* sigh, needs to be global for signal handlers */
 
 /* module local globals */
-static AppInfo appinfo; /* sigh, needs to be global for signal handlers */
-static volatile sig_atomic_t global_no_atexit;
+static volatile sig_atomic_t alarmed = 0;
+static volatile sig_atomic_t skip_atexit = 0;
 
 static void on_alarm(int signal) {
-    /* If this signal handler is invoked, then the job is a failure */
-    appinfo.status = 1;
+    /* If this signal handler is invoked, then we need to do something special */
+    alarmed = 1;
 
     /* If there is no current child, then we may be between jobs or at the
      * end of the job. In that case, set a short alarm to either catch the
@@ -232,7 +232,7 @@ static void helpMe(const AppInfo* run) {
 }
 
 static void finish() {
-    if (!global_no_atexit) {
+    if (!skip_atexit) {
         /* log the output here in case of abnormal termination */
         if (!appinfo.isPrinted) { 
             printAppInfo(&appinfo);
@@ -311,9 +311,35 @@ static char* noquote(char* s) {
     return s;
 }
 
+/* If KICKSTART_PREPEND_PATH is in the environment, then add it to PATH */
+void set_path() {
+    char *prepend_path = getenv("KICKSTART_PREPEND_PATH");
+    if (prepend_path == NULL || strlen(prepend_path) == 0) {
+        return;
+    }
+
+    char *orig_path = getenv("PATH");
+    if (orig_path == NULL || strlen(orig_path) == 0) {
+        if (setenv("PATH", prepend_path, 1) < 0) {
+            printerr("Error setting PATH to KICKSTART_PREPEND_PATH: %s\n", strerror(errno));
+            exit(1);
+        }
+    } else {
+        char new_path[PATH_MAX];
+        if (snprintf(new_path, PATH_MAX, "%s:%s", prepend_path, orig_path) >= PATH_MAX) {
+            printerr("New path from KICKSTART_PREPEND_PATH is larger than PATH_MAX\n");
+            exit(1);
+        }
+        if (setenv("PATH", new_path, 1) < 0) {
+            printerr("Error setting PATH with KICKSTART_PREPEND_PATH: %s\n", strerror(errno));
+            exit(1);
+        }
+    }
+}
+
 int main(int argc, char* argv[]) {
     size_t cwd_size = getpagesize();
-    int status, result;
+    int status, result = 0;
     int i, j, keeploop;
     int createDir = 0;
     char* temp;
@@ -322,12 +348,19 @@ int main(int argc, char* argv[]) {
     mylist_t initial;
     mylist_t final;
 
-    programname = argv[0];
-
     /* premature init with defaults */
     if (mylist_init(&initial)) return 43;
     if (mylist_init(&final)) return 43;
     if (initAppInfo(&appinfo, argc, argv)) return 43;
+
+    /* Set the default status to 1 */
+    appinfo.status = 1;
+
+    /* Set the PATH variable before we copy env into appinfo */
+    set_path();
+
+    /* remember environment that all jobs will see */
+    envIntoAppInfo(&appinfo, environ);
 
     /* register emergency exit handler */
     if (atexit(finish) == -1) {
@@ -335,8 +368,6 @@ int main(int argc, char* argv[]) {
         appinfo.application.saverr = errno;
         printerr("Unable to register an exit handler\n");
         return 127;
-    } else {
-        global_no_atexit = 0;
     }
 
     /* no arguments, print help and exit */
@@ -346,7 +377,6 @@ int main(int argc, char* argv[]) {
 
     /*
      * read commandline arguments
-     * DO NOT use getopt to avoid cluttering flags to the application
      */
     for (keeploop=i=1; i < argc && argv[i][0] == '-' && keeploop; ++i) {
         j = i;
@@ -697,11 +727,6 @@ REDIR:
     appinfo.initial = initStatFromList(&initial, &appinfo.icount);
     mylist_done(&initial);
 
-    /* remember environment that all jobs will see */
-    if (!appinfo.noHeader) {
-        envIntoAppInfo(&appinfo, environ);
-    }
-
     /* If there is a timeout, then set the alarm and a handler to kill the job */
     if (appinfo.termTimeout > 0) {
         struct sigaction handler;
@@ -721,13 +746,8 @@ REDIR:
         mysystem(&appinfo, &appinfo.setup, environ);
     }
 
-    /* The result is set to appinfo.status here so that, if the setup job
-     * causes a timeout, then the rest of the stages will not run
-     */
-    result = appinfo.status;
-
-    /* possible pre job */
-    if (result == 0) {
+    /* possible pre job (skipped if timeout happens) */
+    if (result == 0 && alarmed == 0) {
         if (prepareSideJob(&appinfo.prejob, getenv("GRIDSTART_PREJOB"))) {
             /* there is a prejob to be executed */
             status = mysystem(&appinfo, &appinfo.prejob, environ);
@@ -735,8 +755,8 @@ REDIR:
         }
     }
 
-    /* start main application */
-    if (result == 0) {
+    /* start main application (skipped if timeout happens) */
+    if (result == 0 && alarmed == 0) {
         status = mysystem(&appinfo, &appinfo.application, environ);
         result = obtainStatusCode(status);
     } else {
@@ -744,8 +764,8 @@ REDIR:
         appinfo.application.isValid = 0;
     }
 
-    /* possible post job */
-    if (result == 0) {
+    /* possible post job (skipped if the timeout happens) */
+    if (result == 0 && alarmed == 0) {
         if (prepareSideJob(&appinfo.postjob, getenv("GRIDSTART_POSTJOB"))) {
             status = mysystem(&appinfo, &appinfo.postjob, environ);
             result = obtainStatusCode(status);
@@ -755,7 +775,7 @@ REDIR:
     /* Reset alarm here so that the cleanup job does not get killed */
     alarm(0);
 
-    /* An independent clean-up job that runs regardless of main application result */
+    /* An independent clean-up job that runs regardless of main application result or timeout */
     if (prepareSideJob(&appinfo.cleanup, getenv("GRIDSTART_CLEANUP"))) {
         mysystem(&appinfo, &appinfo.cleanup, environ);
     }
@@ -764,19 +784,18 @@ REDIR:
     appinfo.final = initStatFromList(&final, &appinfo.fcount);
     mylist_done(&final);
 
-    /* Record final result. This is incremented so that if appinfo.status is
-     * set in the on_alarm handler we exit with a non-zero exit code in one
-     * particular edge case where the main job catches the SIGTERM and exits
-     * with a non-zero status.
-     */
-    appinfo.status += result;
-    result = appinfo.status;
+    /* If the timeout occurred, then set the result to SIGALRM */
+    if (alarmed) {
+        result = SIGALRM;
+    }
+
+    appinfo.status = result;
 
     /* append results to log file */
     printAppInfo(&appinfo);
 
     /* clean up and close FDs */
-    global_no_atexit = 1; /* disable atexit handler */
+    skip_atexit = 1;
     deleteAppInfo(&appinfo);
 
     return result;

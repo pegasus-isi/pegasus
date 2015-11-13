@@ -1,0 +1,120 @@
+pegasus-db-admin(1)
+====================
+:doctype: manpage
+
+
+Name
+----
+pegasus-db-admin - Manage Pegasus databases.
+
+Synopsis
+--------
+[verse]
+*pegasus-db-admin* 'COMMAND' [options] [DATABASE_URL]
+
+Description
+-----------
+*pegasus-db-admin* is used to manage Pegasus databases. The tool can operate
+directly over a database URL, or can read configuration parameters from the
+properties file or a submit directory. In the later case, a database type 
+should be provided to indicate which properties should be used to connect to
+the database. For example, the tool will seek for pegasus.catalog.replica.db.* 
+properties to connect to the JDBCRC database; or seek for pegasus.catalog.master.url
+(or pegasus.dashboard.output, which is deprecated) property to connect to the
+MASTER database; or seek for the pegasus.catalog.workflow.url (or pegasus.monitord.output,
+which is deprecated) property to connect to the WORKFLOW database. If none of
+these properties are found, the tool will connect to the default database
+in the user' home directory (sqlite:///${HOME}/.pegasus/workflow.db).
+
+Commands
+--------
+*create*::
+    Creates Pegasus databases from new or empty databases, or updates current
+    database to the latest version. If a database already exists, it will 
+    create a backup (SQLite only) of the current database in the database folder
+    as a 3-digit integer (e.g., workflow.db.000). Pegasus databases can be 
+    created by 1) passing a database URL, 2) from the properties file, and 3) from
+    the submit directory. Note that if the properties file or the submit
+    directory is used, a database type (JDBCRC, MASTER, or WORKFLOW) should be
+    provided.
+
+*update*::
+    Updates the database to the latest or a given Pegasus version provided with 
+    the *-V* or *--version* option. If a database already exists, it will 
+    create a backup (SQLite only) of the current database in the database folder
+    as a 3-digit integer (e.g., workflow.db.000).
+
+*check*::
+    Verifies if the database is updated to the latest or a given Pegasus version 
+    provided with the *-V* or *--version* option.
+
+*version*::
+    Prints the current version of the database.
+
+Global Options
+--------------
+*-h*::
+*--help*::
+Prints a usage summary with all the available command-line options.
+
+*-c*::
+*--conf*::
+Specifies the properties file. This overrides all other property files. Should 
+be used with '-t'.
+
+*-s*::
+*--submitdir*::
+Specifies the submit directory. Should be used with '-t'.
+
+*-t*::
+*--type*::
+Type of the database (JDBCRC, MASTER, or WORKFLOW). Should be used with '-c' 
+or '-s'.
+
+*-d*::
+*--debug*::
+Enables debugging.
+
+Examples
+-------
+
+----------------
+# Create a database by passing a database URL.
+$ pegasus-db-admin create sqlite:///${HOME}/.pegasus/workflow.db
+$ pegasus-db-admin create mysql://localhost:3306/pegasus
+
+# Create a database from the properties file. Note that a database
+# type should be provided.
+$ pegasus-db-admin create -c pegasus.properties -t MASTER
+$ pegasus-db-admin create -c pegasus.properties -t JDBCRC
+$ pegasus-db-admin create -c pegasus.properties -t WORKFLOW
+
+# Create a database from the submit directory. Note that a database
+# type should be provided.
+$ pegasus-db-admin update -s /path/to/submitdir -t WORKFLOW
+$ pegasus-db-admin update -s /path/to/submitdir -t MASTER
+$ pegasus-db-admin update -s /path/to/submitdir -t JDBCRC
+
+# Update the database schema by passing a database URL.
+$ pegasus-db-admin update sqlite:///${HOME}/.pegasus/workflow.db
+$ pegasus-db-admin update mysql://localhost:3306/pegasus
+
+# Update the database schema from the properties file. Note that a
+# database type should be provided.
+$ pegasus-db-admin update -c pegasus.properties -t MASTER
+$ pegasus-db-admin update -c pegasus.properties -t JDBCRC
+$ pegasus-db-admin update -c pegasus.properties -t WORKFLOW
+
+# Update the database schema from the submit directory. Note that a 
+# database type should be provided.
+$ pegasus-db-admin update -s /path/to/submitdir -t WORKFLOW
+$ pegasus-db-admin update -s /path/to/submitdir -t MASTER
+$ pegasus-db-admin update -s /path/to/submitdir -t JDBCRC
+
+----------------
+
+
+Authors
+-------
+Pegasus Team <http://pegasus.isi.edu>
+

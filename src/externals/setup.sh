@@ -4,6 +4,20 @@ set -e
 
 declare -a packages
 
+# PM-997: OSX El Capitan and later do not have OpenSSL headers required to
+# compile the pyOpenSSL package. Fortunately, they already have pyOpenSSL
+# installed, so we don't need to install it ourselves.
+PYOPENSSL="Yes"
+if [ -x "/usr/bin/sw_vers" ]; then
+    OSX=$(/usr/bin/sw_vers -productVersion)
+    MAJOR=$(echo $OSX | cut -d. -f1)
+    MINOR=$(echo $OSX | cut -d. -f2)
+    # El Capitan is version 10.11
+    if [ "$MAJOR" -eq 10 ] && [ "$MINOR" -ge 11 ]; then
+        PYOPENSSL="No"
+    fi
+fi
+
 if python -V 2>&1 | grep -qE 'ython 2\.[3-4]'; then
     # Install alternative dependencies for python 2.4
     packages+=("pysqlite-2.6.0")
@@ -22,8 +36,21 @@ else
     packages+=("boto-2.5.2")
     packages+=("SQLAlchemy-0.8.0")
     packages+=("pam-0.1.4")
-    packages+=("pyOpenSSL-0.13")
-    packages+=("pika-0.9.14")
+    if [ "$PYOPENSSL" == "Yes" ]; then
+        packages+=("pyOpenSSL-0.13")
+    else
+        echo "Skipping pyOpenSSL..."
+    fi
+    if [ -x "$(which pg_config 2>/dev/null)" ]; then
+        packages+=("psycopg2-2.6")
+    else
+        echo "WARNING: pg_config not found: skipping python postgresql library" >&2
+    fi
+    if [ -x "$(which mysql_config 2>/dev/null)" ]; then
+        packages+=("MySQL-python-1.2.5")
+    else
+        echo "WARNING: mysql_config not found: skipping python mysql library" >&2
+    fi
 fi
 
 dir=$(cd $(dirname $0) && pwd)

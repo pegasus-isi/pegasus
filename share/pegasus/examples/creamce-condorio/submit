@@ -56,7 +56,7 @@ EOF
 pegasus-plan \
     --conf pegasusrc \
     --sites creamce \
-    --dir work \
+    --dir dags \
     --output-site local \
     --dax blackdiamond.dax \
     --submit

@@ -1,4 +1,5 @@
 import os
+import tempfile
 
 # SERVER CONFIGURATION
 
@@ -20,22 +21,25 @@ SECRET_KEY = os.urandom(24)
 
 # Authentication method to use (NoAuthentication or PAMAuthentication)
 AUTHENTICATION = "PAMAuthentication"
+PROCESS_SWITCHING = True
 
 # Flask cache configuration
-CACHE_TYPE = 'simple'
+CACHE_TYPE = 'filesystem'
+CACHE_DIR = os.path.join(tempfile.gettempdir(), 'pegasus-service')
 
-
+#
+# Authorization -
+# None, '', False -> User can only access their own data.
+# * -> All users are admin users and can access data of any other user.
+# {'u1', .., 'un'} OR ['u1', .., 'un'] -> Only users in the set/list are admin users.
+#
+ADMIN_USERS = None
 
 # CLIENT CONFIGURATION
-
-# Service endpoint. This is only required if you install the service
-# at a URL other than "http://SERVER_HOST:SERVER_PORT/".
-ENDPOINT = None
 
 # User credentials
 USERNAME = ""
 PASSWORD = ""
-
 
 
 # ENSEMBLE MANAGER CONFIGURATION

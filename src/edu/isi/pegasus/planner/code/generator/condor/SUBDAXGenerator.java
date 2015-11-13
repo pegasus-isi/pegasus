@@ -48,12 +48,11 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.code.GridStartFactory;
 import edu.isi.pegasus.planner.code.generator.DAXReplicaStore;
-import edu.isi.pegasus.planner.code.gridstart.PegasusLite;
+import edu.isi.pegasus.planner.code.generator.Metrics;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
-import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -68,9 +67,11 @@ import java.io.PrintWriter;
 
 import java.text.NumberFormat;
 import java.text.DecimalFormat;
+import java.util.Collection;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -211,14 +212,18 @@ public class SUBDAXGenerator{
      */
     private String mCurrentDAGCacheFile;
     
+    /**
+     * Handle to the metrics generator to determine if DAGMan metrics
+     * reporting needs to be turned on or not.
+     */
+    private Metrics mMetricsReporter;
     
     /**
      * The default constructor.
      */
     public SUBDAXGenerator() {
         mNumFormatter = new DecimalFormat( "0000" );
-
-
+        mMetricsReporter = new Metrics();
     }
 
 
@@ -260,7 +265,7 @@ public class SUBDAXGenerator{
             mLogger.log( "Condor Version detected is " + mCondorVersion , LogManager.DEBUG_MESSAGE_LEVEL );
         }
 
-
+        mMetricsReporter.initialize(bag);
       
     }
 
@@ -277,6 +282,12 @@ public class SUBDAXGenerator{
      */
     public Job generateCode( Job job ){
         String arguments = job.getArguments();
+        
+        //trim the arguments first, else
+        //our check in cplanner for unparsed option may fail
+        //that relies on getopt.getOptind()
+        arguments = arguments.trim();
+        
         String [] args = arguments.split( " " );
         
         mLogger.log( "Generating code for DAX job  " + job.getID(),
@@ -563,6 +574,9 @@ public class SUBDAXGenerator{
                                           basenamePrefix.toString()
                                         );
             
+            //PM-846 add a +pegasus_execution_sites classad
+            insertExecutionSitesClassAd( job, options.getExecutionSites() );
+            
             
             File wrapper = constructPlannerPrescriptWrapper( dagJob, 
                                                              submitDirectory,
@@ -811,6 +825,9 @@ public class SUBDAXGenerator{
                                             getBasename( basenamePrefix, ".dag.dagman.out")).getAbsolutePath()
                                             );
        job.envVariables.construct("_CONDOR_MAX_DAGMAN_LOG","0");
+       
+       //PM-797 add any keys if required for DAGMan metrics reporting
+       job.envVariables.merge( mMetricsReporter.getDAGManMetricsEnv() );
 
        //set the arguments for the job
        job.setArguments(sb.toString());
@@ -1564,6 +1581,22 @@ public class SUBDAXGenerator{
         }
         
         return s;
+    }
+
+    /**
+     * Updates the job with a class add designating the execution sites
+     * 
+     * @param job 
+     */
+    private void insertExecutionSitesClassAd(Job job, Collection sites ) {
+        StringBuilder sb = new StringBuilder();
+            for (Iterator it = sites.iterator(); it.hasNext();) {
+                String site = (String) it.next();
+                sb.append( site );
+                sb.append( "," );
+            }
+            String execSites = sb.length() > 1 ? sb.substring(0, sb.length() - 1 ): sb.toString();
+            job.condorVariables.construct( "+pegasus_execution_sites", "\"" + execSites + "\"" );
     }
 
    

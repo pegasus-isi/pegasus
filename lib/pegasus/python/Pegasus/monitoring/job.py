@@ -32,6 +32,9 @@ logger = logging.getLogger(__name__)
 good_rsl = {"maxcputime": 1, "maxtime":1, "maxwalltime": 1}
 MAX_OUTPUT_LENGTH = 2**16-1  # Only keep stdout to 64K
 
+#some constants
+NOOP_JOB_PREFIX = "noop_"                  # prefix for noop jobs for which .out and err files are not created
+
 # Used in parse_sub_file
 re_rsl_string = re.compile(r"^\s*globusrsl\W", re.IGNORECASE)
 re_rsl_clean = re.compile(r"([-_])")
@@ -105,6 +108,7 @@ class Job:
                                        # output for this job was parsed or not
         self._has_rotated_stdout_err_files = False #Flag indicating whether we detected that job stdout|stderr
                                                   #was rotated or not, as is the default case.
+        self._deferred_job_end_kwargs = None
 
     def set_job_state(self, job_state, sched_id, timestamp, status):
         """
@@ -134,6 +138,8 @@ class Job:
             self._main_job_start = int(timestamp)
         elif job_state == "JOB_TERMINATED":
             self._main_job_done = int(timestamp)
+        elif job_state == "JOB_ABORTED" or job_state == "SUBMIT_FAILED" or job_state == "GLOBUS_SUBMIT_FAILED" or job_state == "GRID_SUBMIT_FAILED":
+            self._main_job_done = int(timestamp) # PM-805, PM-877 job was aborted or submit failed, good chance job terminated event did not happen.
         elif job_state == "JOB_SUCCESS" or job_state == "JOB_FAILURE":
             self._main_job_exitcode = utils.regular_to_raw(status)
         elif (job_state == "POST_SCRIPT_SUCCESS" or
@@ -257,22 +263,52 @@ class Job:
                 my_error = my_error.strip('"')
                 self._error_file = os.path.normpath(my_error)
             elif parse_environment and re_parse_environment.search(my_line):
-                # Found line with environment
-                v = re_parse_environment.search(my_line).group(1)
-                sub_props = v.split(';')
-                for sub_prop_line in sub_props:
-                    sub_prop_line = sub_prop_line.strip() # Remove any spaces
-                    if len(sub_prop_line) == 0:
-                        continue
-                    sub_prop = re_parse_property.search(sub_prop_line)
-                    if sub_prop:
-                        if sub_prop.group(1) == "_CONDOR_DAGMAN_LOG":
-                            self._job_dagman_out = sub_prop.group(2)
+                self._job_dagman_out = self.extract_dagman_out_from_condor_env( my_line )
+                if self._job_dagman_out is None:
+                    logger.error("Unable to parse dagman out file from environment key %s in submit file for job %s" %(my_line, self._exec_job_id))
 
         SUB.close()
 
         # All done!
         return my_result, my_site
+
+
+    def extract_dagman_out_from_condor_env( self, condor_env ):
+        """
+        This function extracts the dagman out file from the condor environment
+        if one is specified
+
+        :param condor_env: the environment line from the condor submit file
+        :return: the dagman out file if detected else None
+        """
+        # Found line with environment
+        env_value = re_parse_environment.search(condor_env).group(1)
+
+        #strip any enclosing quotes if any
+        stripped_env_value = re.sub(r'^"|"$', '', env_value)
+
+        if len(env_value) == len(stripped_env_value):
+            # we have old style condor environment with environment NOT ENCLOSED in double quotes
+            # and split by ;
+            sub_props = stripped_env_value.split( ';' )
+        else:
+            # we have new style condor environment with environment enclosed in double quotes
+            # and split by whitespace
+            sub_props = stripped_env_value.split( ' ' )
+
+        dagman_out  = None
+        for sub_prop_line in sub_props:
+            sub_prop_line = sub_prop_line.strip() # Remove any spaces
+            if len(sub_prop_line) == 0:
+                continue
+            sub_prop = re_parse_property.search(sub_prop_line)
+            if sub_prop:
+                if sub_prop.group(1) == "_CONDOR_DAGMAN_LOG":
+                    dagman_out = sub_prop.group(2)
+                    break
+
+        return dagman_out
+
 
     def extract_job_info(self, run_dir, kickstart_output):
         """
@@ -391,7 +427,8 @@ class Job:
             self._stderr_text = utils.quote(ERR.read())
         except IOError:
             self._stderr_text = None
-            logger.warning("unable to read error file: %s, continuing..." % (my_err_file))
+            if not self.is_noop_job():
+                logger.warning("unable to read error file: %s, continuing..." % (my_err_file))
         else:
             ERR.close()
 
@@ -446,7 +483,8 @@ class Job:
                 self._stdout_text = utils.quote("#@ 1 stdout\n" + buffer)
             except IOError:
                 self._stdout_text = None
-                logger.warning("unable to read output file: %s, continuing..." % (my_out_file))
+                if not self.is_noop_job():
+                    logger.warning("unable to read output file: %s, continuing..." % (my_out_file))
             else:
                 OUT.close()
 
@@ -468,6 +506,18 @@ class Job:
                 self._stderr_text = utils.quote(buffer)
             except IOError:
                 self._stderr_text = None
-                logger.warning("unable to read error file: %s, continuing..." % (my_err_file))
+                if not self.is_noop_job():
+                    logger.warning("unable to read error file: %s, continuing..." % (my_err_file))
             else:
                 ERR.close()
+
+
+    def is_noop_job(self):
+        """
+        A convenience method to indicate whether a job is a NOOP job or not
+        :return:  True if a noop job else False
+        """
+        if self._exec_job_id is not None and self._exec_job_id.startswith( NOOP_JOB_PREFIX ):
+            return True
+
+        return False

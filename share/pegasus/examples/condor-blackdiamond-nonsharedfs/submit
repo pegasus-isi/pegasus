@@ -49,7 +49,7 @@ pegasus-plan \
     --sites condorpool \
     --staging-site local \
     --output-site local \
-    --dir work \
+    --dir dags \
     --dax blackdiamond.dax \
     --submit
 

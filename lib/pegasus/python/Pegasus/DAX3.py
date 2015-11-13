@@ -96,6 +96,81 @@ f.close()
 __author__ = "Gideon Juve <gideon@isi.edu>"
 __version__ = "3.5"
 
+__all__ = [
+    "DAX3Error",
+    "DuplicateError",
+    "NotFoundError",
+    "FormatError",
+    "ParseError",
+    "Element",
+    "Namespace",
+    "Arch",
+    "Link",
+    "Transfer",
+    "OS",
+    "When",
+    "Invoke",
+    "InvokeMixin",
+    "ProfileMixin",
+    "MetadataMixin",
+    "PFNMixin",
+    "CatalogType",
+    "File",
+    "Executable",
+    "Metadata",
+    "PFN",
+    "Profile",
+    "Use",
+    "UseMixin",
+    "Transformation",
+    "AbstractJob",
+    "Job",
+    "DAX",
+    "DAG",
+    "Dependency",
+    "ADAG",
+    "parseString",
+    "parse"
+]
+
+
+__all__ = [
+    "DAX3Error",
+    "DuplicateError",
+    "NotFoundError",
+    "FormatError",
+    "ParseError",
+    "Element",
+    "Namespace",
+    "Arch",
+    "Link",
+    "Transfer",
+    "OS",
+    "When",
+    "Invoke",
+    "InvokeMixin",
+    "ProfileMixin",
+    "MetadataMixin",
+    "PFNMixin",
+    "CatalogType",
+    "File",
+    "Executable",
+    "Metadata",
+    "PFN",
+    "Profile",
+    "Use",
+    "UseMixin",
+    "Transformation",
+    "AbstractJob",
+    "Job",
+    "DAX",
+    "DAG",
+    "Dependency",
+    "ADAG",
+    "parseString",
+    "parse"
+]
+
 import datetime, os, sys
 from StringIO import StringIO
 import codecs
@@ -989,7 +1064,11 @@ class Transformation(UseMixin,InvokeMixin):
         ])
         
         # Uses
-        for u in self.used:
+        def getlink(a):
+            return a.link
+        used = list(self.used)
+        used.sort(key=getlink)
+        for u in used:
             e.element(u.toTransformationXML())
         
         # Invocations
@@ -1103,7 +1182,11 @@ class AbstractJob(ProfileMixin,UseMixin,InvokeMixin):
             element.element(self.stderr.toStdioXML('stderr'))
         
         # Uses
-        for use in self.used:
+        def getlink(a):
+            return a.link
+        used = list(self.used)
+        used.sort(key=getlink)
+        for use in used:
             element.element(use.toJobXML())
         
         # Invocations

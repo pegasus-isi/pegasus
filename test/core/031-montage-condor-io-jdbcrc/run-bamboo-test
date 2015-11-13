@@ -26,7 +26,7 @@ mkdir -p $RUN_DIR/inputs
 cd $RUN_DIR
 cp $TOP_DIR/pegasusrc .
 
-cat $HOME/.jdbcrc-test.conf >> pegasusrc
+cat $HOME/.jdbcrc-test-45.conf >> pegasusrc
 
 
 # create the transformation catalogue (tc)
@@ -52,7 +52,7 @@ echo "Creating the site catalog..."
 cat >sites.xml <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
-    <site handle="local" arch="x86" os="LINUX">
+    <site handle="local" arch="x86_64" os="LINUX" osrelease="deb" osversion="7">
         <grid  type="gt2" contact="localhost/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
         <head-fs>
             <scratch>
@@ -71,6 +71,7 @@ cat >sites.xml <<EOF
         <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" />
         <profile namespace="env" key="GLOBUS_LOCATION" >/ccg/software/globus/default</profile>
         <profile namespace="env" key="GLOBUS_TCP_PORT_RANGE" >40000,50000</profile>
+        <profile namespace="env" key="http_proxy" >http://workflow.isi.edu:3128</profile>
     </site>
     <site handle="CCG" arch="x86" os="LINUX">
         <head-fs>
@@ -81,6 +82,7 @@ cat >sites.xml <<EOF
         <profile namespace="pegasus" key="style">condor</profile>
         <profile namespace="env" key="MONTAGE_HOME" >/ccg/software/montage/Montage_v3.3_mats</profile>
         <profile namespace="env" key="PEGASUS_HOME" >/usr</profile>
+        <profile namespace="env" key="http_proxy" >http://workflow.isi.edu:3128</profile>
     </site>
 </sitecatalog>
 EOF
@@ -94,11 +96,18 @@ echo "Adding input images to the replica catalog..."
 echo "  " `cat cache.list | wc -l` "images found"
 cat cache.list | grep -v ".fits " >rc
 perl -p -i -e 's/ipac_cluster/local/' rc
-cat url.list | sed 's/ http:.*ref=/ http:\/\/obelix.isi.edu\/irsa-cache/' >>rc
+cat url.list | sed 's/\.gz http/ http/' >>rc
 
-while read p; do
-    pegasus-rc-client --conf pegasusrc insert $p
-done < rc
+echo "Updating the database..."
+pegasus-db-admin update --conf pegasusrc -t jdbcrc
+
+echo "Cleanning the database..."
+pegasus-rc-client --conf pegasusrc list > tmp
+pegasus-rc-client --conf pegasusrc --delete tmp
+rm -rf tmp
+
+echo "Inserting new data on the database..."
+pegasus-rc-client -vvv --conf pegasusrc --insert rc
 
 echo "Planning and submitting the workflow..."
 pegasus-plan \
@@ -110,5 +119,4 @@ pegasus-plan \
     --dax dag.xml \
     --cluster horizontal \
     --submit | tee $TOP_DIR/plan.out
-
 

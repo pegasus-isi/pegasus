@@ -30,6 +30,7 @@ use Cwd;
 use File::Spec;
 use File::Basename qw(basename dirname);
 use Getopt::Long qw(:config bundling no_ignore_case);
+use File::Copy;
 
 # path to load our libs.. 
 BEGIN { 
@@ -52,19 +53,16 @@ sub usage(;$);			# { }
 
 # constants
 $main::DEBUG = 0;		# for now
-my $condor;			# if set, use Condor for pegasus-monitord
+
 my $grid=0;                     # if set, enable grid checks, disabled by default
-my $default_tsd = make_path( 'pegasus-monitord' );
+
 my $dagman = make_path( 'pegasus-dagman' );
-my ($tsd,$monitor,$conffile); 
+my $conffile; 
 GetOptions( "help|h" => \&usage
-	  , "monitor|m=s" => \$tsd
-	  , "condor" => \$condor
 	  , "debug|d=o" => \$main::DEBUG
 	  , "verbose|v+" => \$main::DEBUG
           , "grid!" => \$grid
 	  , 'conf|c=s' => \$conffile
-	  , "M" => \$monitor
 	  );
 
 my $run = shift;
@@ -84,8 +82,6 @@ my %config = slurp_braindb( $run ) or die "ERROR: open braindb: $!\n";
 # pre-condition: The planner writes all properties per workflow into the DAG dir.
 my $props = Pegasus::Properties->new( $conffile, File::Spec->catfile($run,$config{properties}) );
 
-# if TSD is empty, fill in from default locations
-$tsd ||=  $props->property('pegasus.monitord') || $default_tsd;
 
 #
 # --- functions -------------------------------------------------
@@ -115,17 +111,107 @@ Optional arguments:
  -c|--conf fn	    Use file fn as pegasus properties file. (only use for debugging purposes.
                     pegasus-run will pick the correct planned properties by default.
  -h|--help          Print this help message and exit.
- -m|--monitor l     Uses the workflow monitor daemon installed as l, default
-                    is $default_tsd.
  -d|--debug lvl     Sets the debug level (verbosity), default is $main::DEBUG. 
  -v|--verbose       Raises debug level by 1, see --debug. 
- --condor           Uses Condor to submit daemons (prototype).
  --nogrid           Disable checking for grids (default).
  --grid             Enable checking for grids. 
 
 EOF
     exit( $flag ? 1 : 0 );
 }
+
+sub salvage_logfile($) {
+    # purpose: salvage Condor common log file from truncation
+    # paramtr: $dagfn (IN): Name of dag filename
+    # returns: -
+    #
+    my $dagfn = shift;
+    my $result = undef;
+    local(*DAG,*SUB,*LOG);
+    if ( open( DAG, "<$dagfn" ) ) {
+	# read to to figure out submit files
+	my @x;
+	my %submit = ();
+	while ( <DAG> ) {
+	    next unless /^\s*job/i;
+	    s/[\r\n]+$//;	# safe chomp
+	    @x = split;
+	    $submit{$x[1]} = $x[2]; # dagjobid -> subfn
+	}
+	close DAG;
+
+	if ( $main::DEBUG > 2 ) {
+	    print STDERR "# found the following associations:\n";
+
+	    local $Data::Dumper::Indent = 1;
+	    local $Data::Dumper::Pad = "# ";
+	    print STDERR Data::Dumper->Dump( [\%submit], [qw(config)] );
+	}
+
+	# read two submit files to figure out condor common log file
+	foreach my $subfn ( values %submit ) {
+	    if ( open( SUB, "<$subfn" ) ) {
+		my $logfile = undef;
+		while ( <SUB> ) {
+		    next unless /^log(=|\s)/i;
+		    s/[\r\n]+$//; # safe chomp
+		    @x = split /\s*=\s*/, $_, 2;
+		    $logfile = ( substr( $x[1], 0, 1 ) =~ /[''""]/ ?
+				 substr( $x[1], 1, -1 ) : $x[1] );
+		    last;
+		}
+		close SUB;
+		
+		print STDERR "# $subfn points to $logfile\n"
+		    if ( $main::DEBUG > 1 );
+
+		if ( ! defined $result ) {
+		    $result = $logfile;
+		} else {
+		    last if $result eq $logfile;
+		    warn "# Using distinct, different log files, skipping preservation.\n";
+		    return undef;
+		}
+	    } else {
+		warn "Unable to read sub file $subfn: $!\n";
+	    }
+	}
+
+	# try to preserve log file
+	if ( defined $result && -s $result ) {
+	    my $newfn;
+	    print STDERR "# log $result exists, rescuing from DAGMan.\n" 
+		if $main::DEBUG;
+	    for ( my $i=0; $i<1000; ++$i ) {
+		$newfn = sprintf "%s.%03d", $result, $i;
+		if ( open( LOG, "<$newfn" ) ) {
+		    # file exists
+		    close LOG;
+		} else {
+		    # file does not exist, use that
+		    my $newresult=$result;
+		    #check if the file is a smylink then dereference it.
+		    if ( -l $result ) {
+			$newresult=readlink($result);
+		    }
+		    print STDOUT "Rescued $result as $newfn\n" 
+			if copy( $newresult, $newfn )  or warn "Could not rescue the log file $newresult to $newfn\n $! \nTrying to continue\n";
+		    last;
+		}
+	    }
+	} else {
+	    print STDERR "# log $result does not yet exist (good)\n"
+		if ( $main::DEBUG );
+	}
+    } else {
+	die "ERROR: Unable to read dag file $dagfn: $!\n";
+    }
+
+    $result;
+}
+
+
+
 
 #
 # --- main ------------------------------------------------------
@@ -140,10 +226,6 @@ $SIG{'__DIE__'} = sub {
     chdir($here) if defined $here;
 };
 chdir($run) || die "ERROR: chdir $run: $!\n";
-
-# sanity check: find the pegasus-monitord daemon
-warn "WARN: Either $tsd does not exist or is not executable\n" unless -x $tsd;
-print STDERR "# found $tsd\n" if $main::DEBUG;
 
 # Do GRID check if $grid enabled
 if ( $grid ) {
@@ -188,35 +270,42 @@ if ( $config{dag} ) {
     die "ERROR: Unable to access $psd\n" unless -x $psd;
     print STDERR "# found $psd\n" if $main::DEBUG;
 
+    #PM-797 move away from using pegasus-submit-dag
+    my $c_s = find_exec('condor_submit') || die "Unable to locate condor_submit\n";
+    die "ERROR: Unable to access condor_submit $c_s\n" unless -x $c_s;
+    print STDERR "# found $c_s\n" if $main::DEBUG;
+    
+    # PM-870 we have already changed to the directory, don't prepend $run again
+    my $dag_submit_file = "$config{dag}.condor.sub";
+    print STDOUT "# dagman condor submit file is $dag_submit_file\n" if $main::DEBUG;
+
     # sanity check: Is the DAG file there? 
     die "ERROR: Unable to locate $config{dag}\n" unless -r $config{dag};
     print STDERR "# found $config{dag}\n" if $main::DEBUG;
 
-    # NEW: is there a rescue file, or multiple rescue levels?
-    my $original;
-    my @rescue = check_rescue($run,$config{dag});
-    if ( @rescue > 0 ) {
-	my (@stat,%rescue,$maxsize);
-	foreach my $fn ( @rescue ) {
-	    if ( (@stat = stat($fn)) > 0 ) {
-		$rescue{$fn} = [ @stat ];
-		$maxsize = $stat[7] if $maxsize < $stat[7];
-	    }
-	}
+    # PM-702: clean up .halt files from pegasus-halt
+    my $just_released = 0;
+    if ( -e $config{dag}.".halt" ) {
+        print STDOUT "Found a previously halted workflow. Releasing it now.\n";
+        system("find . -name \\*.dag.halt -exec rm {} \\;");
+        $just_released = 1;
+    }
 
-	print "\n\nDetected the presence of Rescue DAGs:\n";
-	my $width = log10($maxsize);
-	foreach my $fn ( @rescue ) {
-	    printf( " %s %*u %s\n", 
-		    isodate($rescue{$fn}[9]), 
-		    $width, $rescue{$fn}[7], 
-		    basename($fn) );
-	}
-
-	# overwrite with "latest" (read: longest basename) rescue DAG
-	$original = $config{dag};
-	$config{dag} = $rescue[$#rescue];
-	print "\nWILL USE ", $config{dag}, "\n\n";
+    # After the switch from condor_submit_dag, we lost the check to see if
+    # a workflow is already running. This replaces those checks.
+    if ( -e "monitord.pid" ) {
+        if ($just_released) {
+            # Support the rare instance were a user want to release a halted
+            # workflow while it is still running. In that case, we just
+            # quietly exit here
+            exit 0;
+        }
+        else {
+            print STDERR "ERROR: It looks like the workflow is already running! If you are sure\n" .
+                         "       that is not the case, please remove the monitord.pid file and try\n" .
+                         "       again.\n";
+            exit 1;
+        }
     }
 
     # find the workflow name and timestamp for pegasus-status
@@ -229,38 +318,27 @@ if ( $config{dag} ) {
 	push( @extra, "-D$k=$initial{$k}" );
     }
 
-    my @args = ( $psd );
-    push( @args, @extra ) if @extra > 0;
-    push( @args, '-d', 0+$main::DEBUG);
-    push( @args, '--grid' ) if $grid;
-    push( @args, '--dagman', $dagman, $config{dag} );
-
-    print STDERR "# @args\n" if $main::DEBUG;
-    system(@args) == 0 
-	or die( "ERROR: Running pegasus-submit-dag failed with ", parse_exit($?));
-    print STDERR "# dagman is running\n" if $main::DEBUG;
-
-    if ( $monitor ) {
-	if ( -x $tsd ) {
-	    # run pegasus-monitord to update job stats until DAGMan finishes
-	    my @tsdargs = ($tsd);
-	    push( @tsdargs, $config{dag} . '.dagman.out' );
-
-	    print STDERR "# @tsdargs\n" if $main::DEBUG;
-	    if ( system(@tsdargs) == 0 ) {
-		print STDERR "# $tsd is running\n" if $main::DEBUG;
-	    } else {
-		warn( "WARN: Running $tsd failed with ", parse_exit($?) );
-	    }
-	}
+    if( -r $dag_submit_file ){
+	#PM-797 do condor_submit on dagman.condor.sub file if it exists
+	salvage_logfile( $config{dag} );
+	print STDOUT "Submitting to condor $dag_submit_file\n";
+	my @args = ( $c_s );
+	push( @args, $dag_submit_file);
+	system(@args) == 0 
+	    or die( "ERROR: Running condor_submit @args failed with ", parse_exit($?));
+	print STDERR "# dagman is running\n" if $main::DEBUG;
     }
-
-    # next step
-    if ( @rescue > 0 ) {
-	my $n = @rescue + 0;
-	print( "\nI found $n rescue DAG", ( $n>1 ? 's' : '' ), 
-	       ". I submitted the rescue DAG\n", 
-	       $config{dag}, "\ninstead of\n", $original, "\n" );
+    else{
+	my @args = ( $psd );
+	push( @args, @extra ) if @extra > 0;
+	push( @args, '-d', 0+$main::DEBUG);
+	push( @args, '--grid' ) if $grid;
+	push( @args, '--dagman', $dagman, $config{dag} );
+	
+	print STDERR "# @args\n" if $main::DEBUG;
+	system(@args) == 0 
+	    or die( "ERROR: Running pegasus-submit-dag failed with ", parse_exit($?));
+	print STDERR "# dagman is running\n" if $main::DEBUG;
     }
 
     my $did=undef;

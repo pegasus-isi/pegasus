@@ -44,7 +44,7 @@ EOF
 pegasus-plan \
     --conf pegasusrc \
     --sites condorpool \
-    --dir work \
+    --dir dags \
     --output-site local \
     --dax blackdiamond.dax \
     --submit

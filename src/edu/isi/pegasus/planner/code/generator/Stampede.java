@@ -21,7 +21,6 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
-import edu.isi.pegasus.planner.classes.PCRelation;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.code.CodeGenerator;
@@ -400,7 +399,7 @@ public class Stampede implements CodeGenerator {
      * Generates stampede events corresponding to an executable job
      * 
      * @param writer  the writer stream to write the events too
-     * @param workflow  the  workflow.
+     * @param dag  the  workflow.
      * @param job     the job for which to generate the events.
      */
     protected void generateEventsForExecutableJob(PrintWriter writer, ADag dag, Job job) 
@@ -446,7 +445,7 @@ public class Stampede implements CodeGenerator {
      * 
      * 
      * @param writer  the writer stream to write the events too
-     * @param workflow  the  workflow.
+     * @param dag  the  workflow.
      * @param job     the job for which to generate the events.
      */
     protected void generateTaskMapEvents(PrintWriter writer, ADag dag, Job job) {
@@ -477,35 +476,7 @@ public class Stampede implements CodeGenerator {
 
 
             if( job instanceof AggregatedJob ){
-                AggregatedJob j = (AggregatedJob)job;
-
-                //go through the job constituents and task.map events
-                for( Iterator<Job> cit = j.constituentJobsIterator(); cit.hasNext(); ){
-                    Job constituentJob = cit.next();
-                    if( constituentJob.getJobType() == Job.COMPUTE_JOB ){
-                        //create task.map event
-                        //to the job in the DAX
-                        mLogFormatter.addEvent( Stampede.TASK_MAP_EVENT_NAME, Stampede.WORKFLOW_ID_KEY , wfuuid );
-
-                        //to be retrieved
-                        mLogFormatter.add( Stampede.JOB_ID_KEY, job.getID() );
-                        //mLogFormatter.add( "exec_job.id", job.getID() );
-                        mLogFormatter.add( Stampede.TASK_ID_KEY, constituentJob.getLogicalID() );
-                        writer.println( mLogFormatter.createLogMessage() );
-
-                        //writer.write( "\n" );
-                        mLogFormatter.popEvent();
-
-                    }
-                    else{
-                        //for time being lets warn
-                        mLogger.log( "Constituent Job " + constituentJob.getName() + " not of type compute for clustered job " + j.getName(),
-                                      LogManager.WARNING_MESSAGE_LEVEL );
-
-                    }
-
-                }
-
+                generateTaskMapEvents( writer, dag, (AggregatedJob)job, job.getID()  );
             }
             else{
                 //create a single task.map event that maps compute job
@@ -522,6 +493,49 @@ public class Stampede implements CodeGenerator {
         }
     }
 
+    
+    /**
+     * Generates the task.map events that link the jobs in the DAX with the
+     * jobs in the executable workflow 
+     * 
+     * 
+     * @param writer  the writer stream to write the events too
+     * @param dag  the  workflow.
+     * @param job     the clustered job for which to generate the events.
+     * @param rootJobId the id of the root clustered job to associate the events with.
+     */
+    protected void generateTaskMapEvents(PrintWriter writer, ADag dag, AggregatedJob job, String rootJobId ) {
+        String wfuuid = dag.getWorkflowUUID();
+        //go through the job constituents and task.map events
+        for( Iterator<Job> cit = job.constituentJobsIterator(); cit.hasNext(); ){
+            Job constituentJob = cit.next();
+            if( constituentJob instanceof AggregatedJob ){
+                //PM-817 recurse in the recursive clustering case to get the mappings generated.
+                this.generateTaskMapEvents(writer, dag, (AggregatedJob)constituentJob, rootJobId);
+            }
+            else if( constituentJob.getJobType() == Job.COMPUTE_JOB ){
+                //create task.map event
+                //to the job in the DAX
+                mLogFormatter.addEvent( Stampede.TASK_MAP_EVENT_NAME, Stampede.WORKFLOW_ID_KEY , wfuuid );
+
+                //to be retrieved
+                mLogFormatter.add( Stampede.JOB_ID_KEY, rootJobId );
+                //mLogFormatter.add( "exec_job.id", job.getID() );
+                mLogFormatter.add( Stampede.TASK_ID_KEY, constituentJob.getLogicalID() );
+                writer.println( mLogFormatter.createLogMessage() );
+                //writer.write( "\n" );
+                mLogFormatter.popEvent();
+
+            }
+            else{
+                //for time being lets warn
+                mLogger.log( "Constituent Job " + constituentJob.getName() + " not of type compute for clustered job " + job.getName(),
+                              LogManager.WARNING_MESSAGE_LEVEL );
+
+            }
+
+        }
+    }
 
     /**
      * Method not implemented. Throws an exception.

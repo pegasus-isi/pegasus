@@ -21,7 +21,7 @@ import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.StringTokenizer;
-import java.util.TreeMap;
+import java.util.LinkedHashMap;
 
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -57,6 +57,25 @@ public class ENV extends Namespace {
      * The name of the environment variable that specifies the Gridstart PREJOB.
      */
     public static final String GRIDSTART_PREJOB = "GRIDSTART_PREJOB";
+    
+    /**
+     * the env variable containing the workflow uuid assigned by pegasus
+     */
+    public static final String PEGASUS_WF_ID_ENV_KEY  = "PEGASUS_WF_UUID";
+    
+    /**
+     * the env variable containing the job id of a job in the executable workflow
+     */
+    public static final String PEGASUS_JOB_ID_ENV_KEY = "PEGASUS_DAG_JOB_ID";
+    
+    
+    public static final String PEGASUS_SITE_ID_ENV_KEY = "PEGASUS_SITE";
+    
+    /**
+     * The env variable pointing to the scratch directory a job will be executed
+     * in , in a shared fs configuration
+     */
+    public static final String PEGASUS_SCRATCH_DIR_KEY = "PEGASUS_SCRATCH_DIR";
 
     /**
      * The name of the environment variable that specifies the s3cfg path
@@ -87,7 +106,7 @@ public class ENV extends Namespace {
      * @param mp  map (possibly empty).
      */
     public ENV(Map mp) {
-        mProfileMap = new TreeMap(mp);
+        mProfileMap = new LinkedHashMap(mp);
         mNamespace = NAMESPACE_NAME;
     }
 
@@ -126,7 +145,7 @@ public class ENV extends Namespace {
      */
     public void construct(String key, String value) {
         if(mProfileMap == null)
-            mProfileMap = new TreeMap();
+            mProfileMap = new LinkedHashMap();
         mProfileMap.put(key, value);
     }
 

@@ -18,9 +18,8 @@ package edu.isi.pegasus.common.util;
 
 import java.io.File;
 
-
 /**
- * A convenice class that allows us to determine the path to an executable
+ * A convenience class that allows us to determine the path to an executable
  *
  * @author Jens Voeckler
  * @author Karan Vahi
@@ -30,7 +29,7 @@ public class FindExecutable {
 
     /**
      * Finds the path to an executable of a given name , based on the value of
-     * PATH environment variable.
+     * PATH environment variable and variable PEGASUS_BIN_DIR .
      * 
      * @param name    the name of the executable to search for.
      * 
@@ -46,8 +45,17 @@ public class FindExecutable {
         if ( path == null ) {
             return null;
         }
-
+        
+        //pick up value of PEGASUS_BIN_DIR
+        //the wrapper script sets value of PEGASUS_BIN_DIR as
+        //java property pegasus.home.bindir .
+        String pegasusBinDir = System.getProperty( "pegasus.home.bindir" );
+        if( pegasusBinDir != null ){
+            path = pegasusBinDir + ":" + path;
+        }
+        
         String[] list = path.split( ":" );
+        
         for ( int i=0; i < list.length; ++i ) {
             File result = new File( list[i], name );
             if ( result.isFile() && result.canExecute() ){

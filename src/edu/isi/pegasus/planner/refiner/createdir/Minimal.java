@@ -177,11 +177,12 @@ public class Minimal extends AbstractStrategy {
                 }
             }
             
-          
-            //System.out.println( "Create dir site for job " + job.getID() + " is " + site );
-
-
-            int index = siteToBitIndexMap.get( site );
+            Object value = siteToBitIndexMap.get( site );
+            if( value == null){
+                throw new RuntimeException( "Create dir site " + site + " for job " + job.getID() + 
+                                            " is not present in staging sites for workflow " +  createDirMap.keySet() );
+            }
+            int index = (Integer)value; 
             if(! set.get( index ) ){
                 //none of the parents have an index to the site
                 //need to add an edge.
@@ -232,7 +233,7 @@ public class Minimal extends AbstractStrategy {
     private String getAssociatedCreateDirSite( Job job ) {
         String site = null;
         if( job.getJobType() == Job.CHMOD_JOB ){
-            site =  job.getSiteHandle();
+            site =  job.getStagingSiteHandle();
         }
         else{
             //the parent in case of a transfer job

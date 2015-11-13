@@ -1,0 +1,7 @@
+pegasus.catalog.site.file=sites.xml
+
+pegasus.dir.useTimestamp=true
+
+pegasus.data.configuration = condorio
+
+pegasus.transfer.worker.package true

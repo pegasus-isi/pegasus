@@ -1,1 +1,2 @@
-__all__ = ['modules', 'schema', 'workflow']
+__all__ = ['modules', 'admin', 'workflow']
+

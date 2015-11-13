@@ -813,6 +813,17 @@ could use more cores for future runs and get a shorter wall time.
 
 Known Issues
 ------------
+Cray Compiler Wrappers
+~~~~~~~~~~~~~~~~~~~~~~
+On Cray machines, the CC compiler wrapper for C++ code should be used to
+compile PMC. That wrapper links in all the required MPI libraries. *Cray
+compiler wrappers should not be used to compile tasks that run under PMC.* If
+you use a Cray wrapper to compile a task that runs under PMC, then the task
+will hang, or exit immediately with a 0 exit code without doing anything. This
+seems to be a problem with the libraries that are linked into the code when it
+is compiled with a Cray wrapper. To summarize: on Cray machines, compile PMC
+with the CC wrapper, but compile code that runs under PMC without any wrappers.
+
 fork() and exec()
 ~~~~~~~~~~~~~~~~~
 In order for the worker processes to start tasks on the compute

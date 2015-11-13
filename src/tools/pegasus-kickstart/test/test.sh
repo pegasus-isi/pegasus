@@ -87,7 +87,7 @@ function test_flush {
 }
 
 function test_executable {
-    kickstart -X /bin/date
+    kickstart /bin/date
     return $?
 }
 
@@ -225,7 +225,7 @@ function test_timeout_fail {
 }
 
 function test_timeout_kill {
-    kickstart -k 1 -K 1 python ignoreterm.py
+    kickstart -k 1 -K 1 python ignoreterm.py 30
     rc=$?
     if [ $rc -eq 0 ]; then
         echo "Expected non-zero exit"
@@ -243,7 +243,7 @@ function test_timeout_kill {
 }
 
 function test_timeout_nokill {
-    kickstart -k 2 -K 5 python ignoreterm.py
+    kickstart -k 1 -K 30 python ignoreterm.py 10
     rc=$?
     if [ $rc -eq 0 ]; then
         echo "Expected non-zero exit"
@@ -354,6 +354,59 @@ function test_timeout_setup {
     return 0
 }
 
+function test_failure_environment {
+    kickstart -w /doesnotexistever /bin/echo Main job
+    rc=$?
+    if [ $rc -eq 0 ]; then
+        echo "Expected non-zero exit"
+        return 1
+    fi
+    if ! [[ $(cat test.out) =~ "<environment>" ]]; then
+        echo "Expected environment"
+        return 1
+    fi
+    return 0
+}
+
+function test_quote_env_var {
+    KICKSTART_SAVE=$KICKSTART
+    KICKSTART="env GIDEON\"=juve $KICKSTART"
+    kickstart -f /bin/date
+    rc=$?
+    KICKSTART=$KICKSTART_SAVE
+
+    if [ $rc -ne 0 ]; then
+        echo "Expected job to succeed"
+        return 1
+    fi
+
+    if ! [[ $(cat test.out) =~ "GIDEON&quot;" ]]; then
+        echo "Expected environment variable name to be quoted"
+        return 1
+    fi
+
+    return 0
+}
+
+function test_prepend_path {
+    KICKSTART_SAVE=$KICKSTART
+    KICKSTART="env PATH=/bar KICKSTART_PREPEND_PATH=/foo $KICKSTART"
+    kickstart /usr/bin/env
+    rc=$?
+    KICKSTART=$KICKSTART_SAVE
+
+    if [ $rc -ne 0 ]; then
+        echo "Expected kickstart to succeed"
+        return 1
+    fi
+    if ! [[ $(cat test.out) =~ "PATH=/foo:/bar" ]]; then
+        cat test.out
+        echo "Expected PATH to be set with KS_PREPEND_PATH"
+        return 1
+    fi
+    return 0
+}
+
 # RUN THE TESTS
 run_test lotsofprocs
 run_test lotsofprocs_buffer
@@ -385,4 +438,7 @@ run_test test_timeout_pre
 run_test test_timeout_post
 run_test test_timeout_cleanup
 run_test test_timeout_setup
+run_test test_failure_environment
+run_test test_quote_env_var
+run_test test_prepend_path
 

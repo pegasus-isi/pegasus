@@ -1,35 +1,61 @@
 {% extends "base.html" %}
+{% block javascript_includes %}
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/zeroclipboard/2.2.0/ZeroClipboard.min.js"></script>
+{% endblock %}
 {% block javascript_init %}
 <script type="text/javascript" charset="utf-8">
-$(document).ready (function () 
+$(document).ready (function ()
 {
     verticalTableInitStatus ('#invocation_text_info', {% if invocation.exitcode == 0 %}'successful' {% else %} 'failed' {% endif %});
-})
+    clipboardTooltipInitialization();
+});
 </script>
 {% endblock %}
-{% block title %}Invocation Details{% endblock %}
-{% block title_header %}Invocation Details{% endblock %}
-{% block navigation_bar %} | <a href="{{ url_for ('workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a> | <a href="{{ url_for ('job', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id) }}">Job</a> | <a href="{{ url_for ('invocation', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, task_id = task_id) }}">Task</a>
+{% block title %}Task Details{% endblock %}
+{% block title_header %}Task Details{% endblock %}
+{% block navigation_bar %}
+<li><a href="{{ url_for ('.workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a></li>
+<li><a href="{{ url_for ('.job', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job_instance_id = job_instance_id) }}">Job</a></li>
+<li class="active">Task Details</li>
 {% endblock %}
 {% block content %}
-<div id="invocation_details">
-    <div id="invocation_text">
-        <table id="invocation_text_info">
+<section class="row">
+    <div class="col-xs-12">
+        <table id="invocation_text_info" class="table-fixed">
+            <col width="25%">
             <tr>
                 <th>Task Label</th>
-                <td>{{ task_id }}</td>
+                <td>{{ invocation.abs_task_id }}</td>
             </tr>
             <tr>
                 <th>Transformation</th>
                 <td>{{ invocation.transformation }}</td>
             </tr>
             <tr>
-                <th>Executable</th>
-                <td>{{ invocation.executable }}</td>
+                <th>Working Directory</th>
+                <td class="text-nowrap">
+                    <button class="copy-button" data-clipboard-text="{{ invocation.work_dir }}">
+                    </button>
+                    {{ invocation.work_dir }}
+                </td>
             </tr>
-            <tr >
+            <tr>
+                <th>Executable</th>
+                <td class="text-nowrap">
+                    <button class="copy-button" data-clipboard-text="{{ invocation.executable }}">
+                    </button>
+                    {{ invocation.executable }}
+                </td>
+            </tr>
+            <tr>
                 <th>Arguments</th>
-                <td>{{ invocation.argv }}</td>
+                <td class="text-nowrap">
+                    {% if invocation.argv %}
+                    <button class="copy-button" data-clipboard-text="{{ invocation.argv }}">
+                    </button>
+                    {% endif %}
+                    {{ invocation.argv }}
+                </td>
             </tr>
             <tr>
                 <th>Exit Code</th>
@@ -49,6 +75,5 @@ $(document).ready (function ()
             </tr>
         </table>
     </div>
-</div>
-<br/>
+</section>
 {% endblock %}

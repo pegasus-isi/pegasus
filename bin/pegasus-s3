@@ -61,6 +61,13 @@ if boto_version < (2,2,2):
     sys.stderr.write("Requires boto 2.2.2 or later, not %s\n" % boto.__version__)
     exit(1)
 
+# set boto config options
+try:
+    boto.config.add_section('Boto')
+except:
+    pass
+boto.config.set('Boto','http_socket_timeout','60')
+
 COMMANDS = {
     'ls': 'List the contents of a bucket',
     'mkdir': 'Create a bucket in S3',
@@ -93,7 +100,9 @@ LOCATIONS = {
 DEFAULT_CONFIG = {
     "max_object_size": str(5),
     "multipart_uploads": str(False),
-    "ranged_downloads": str(False)
+    "ranged_downloads": str(False),
+    "batch_delete": str(True),
+    "batch_delete_size": str(1000)
 }
 
 DEBUG = False
@@ -621,19 +630,62 @@ def rm(args):
     config = get_config(options)
 
     for bucket in buckets:
+
+        # Connect to the bucket
+        debug("Deleting keys from bucket %s" % bucket)
         uri, keys = buckets[bucket]
         conn = get_connection(config, uri)
         b = Bucket(connection=conn, name=uri.bucket)
+
+        # Get a final list of all the keys, resolving wildcards as necessary
+        bucket_contents = None
+        keys_to_delete = set()
         for key in keys:
             key_name = key.key
+
             if has_wildcards(key_name):
-                for k in b.list():
+
+                # If we haven't yet queried the bucket, then do so now
+                # so that we can match the wildcards
+                if bucket_contents is None:
+                    bucket_contents = b.list()
+
+                # Collect all the keys that match
+                for k in bucket_contents:
                     if fnmatch.fnmatch(k.name, key_name):
-                        info("Removing key %s" % k.name)
-                        k.delete()
+                        keys_to_delete.add(k.name)
+
             else:
-                info("Removing key %s" % key.key)
-                b.delete_key(key_name=key.key)
+                keys_to_delete.add(key_name)
+
+        info("Deleting %d keys" % len(keys_to_delete))
+
+        batch_delete = config.getboolean(uri.site, "batch_delete")
+
+        if batch_delete:
+            debug("Using batch deletes")
+
+            # Delete the keys in batches
+            batch_delete_size = config.getint(uri.site, "batch_delete_size")
+            debug("batch_delete_size: %d" % batch_delete_size)
+            batch = []
+            for k in keys_to_delete:
+                batch.append(k)
+                if len(batch) == batch_delete_size:
+                    info("Deleting batch of %d keys" % len(batch))
+                    b.delete_keys(batch, quiet=True)
+                    batch = []
+
+            # Delete the final batch
+            if len(batch) > 0:
+                info("Deleting batch of %d keys" % len(batch))
+                b.delete_keys(batch, quiet=True)
+
+        else:
+            for key_name in keys_to_delete:
+                debug("Deleting %s" % key_name)
+                b.delete_key(key_name)
+
 
 def PartialUpload(up, part, parts, fname, offset, length):
     def upload():
@@ -714,15 +766,11 @@ def put(args):
 
     # Create the bucket if the user requested it and it does not exist
     if options.create_bucket:
-        try:
+        if conn.lookup(uri.bucket):
+            info("Bucket %s exists" % uri.bucket)
+        else:
+            info("Creating bucket %s" % uri.bucket)
             conn.create_bucket(uri.bucket)
-        except Exception, e:
-            # We were seeing lots of 409 errors for this
-            # operation when the bucket already exists. Since
-            # we assume that the bucket will exist in most cases,
-            # and the transfer will fail if it doesn't, then
-            # any errors caught here can be safely ignored.
-            warn("Error creating bucket '%s': %s" % (uri.bucket, e))
 
     b = Bucket(connection=conn, name=uri.bucket)
     k = Key(bucket=b, name=uri.key)
@@ -869,12 +917,29 @@ def rmup(args):
             info("Removing upload %s" % up.id)
             up.cancel_upload()
 
-def PartialDownload(key, fname, part, parts, start, end):
+def PartialDownload(bucket, uri, fname, part, parts, start, end):
     def download():
         info("Downloading part %d of %d" % (part, parts))
         f = open(fname, "r+b")
-        f.seek(start, os.SEEK_SET)
-        key.get_file(f, headers={"Range": "bytes=%d-%d" % (start, end)})
+
+        attempt = 0
+        done = False
+        saved_ex = None
+        while attempt < 3 and done == False:
+            attempt += 1
+            try:
+                f.seek(start, os.SEEK_SET)
+                # Need to use a different key object to each thread because
+                # the Key object in boto is not thread-safe
+                key = Key(bucket=bucket, name=uri.key)
+                key.get_file(f, headers={"Range": "bytes=%d-%d" % (start, end)})
+                done = True
+            except Exception as e:
+                saved_ex = e
+                debug("Attempt %d failed for part %d" %(attempt, part))
+        if done == False:
+            raise saved_ex
+
         info("Part %d finished" % (part))
         f.close()
 
@@ -970,10 +1035,7 @@ def get(args):
             for i in range(0, num_parts):
                 dstart = i*part_size
                 dend = min(size, dstart+part_size-1)
-                # Need to pass a different key object to each thread because
-                # the Key object in boto is not thread-safe
-                ki = Key(bucket=b, name=uri.key)
-                down = PartialDownload(ki, outfile, i+1, num_parts, dstart, dend)
+                down = PartialDownload(b, uri, outfile, i+1, num_parts, dstart, dend)
                 downloads.append(down)
 
             if options.parallel <= 1:

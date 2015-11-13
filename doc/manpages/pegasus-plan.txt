@@ -18,8 +18,8 @@ Synopsis
              [*-C* 'style'[,'style'...]]
              [*--dir* 'dir']
              [*--force*] [*--force-replan*] 
-             [*--inherited-rc-files*] [*-j* 'prefix'] 
-             [*-n*][*-I* 'input-dir'][*-O* 'output-dir'] [*-o* 'site']
+             [*--inherited-rc-files* 'file1'[,'file2'...]] [*-j* 'prefix'] 
+             [*-n*][*-I* 'input-dir1'[,'input-dir2'...]][*-O* 'output-dir'] [*-o* 'site']
              [*-s* 'site1'[,'site2'...]]
 	     [*--staging-site* s1=ss1[,s2=ss2[..]] 
              [*--randomdir*[='dirname']]
@@ -104,12 +104,12 @@ A comma separated list of paths to replica cache files that override
 the results from the replica catalog for a particular LFN.
 +
 Each entry in the cache file describes a LFN , the corresponding PFN and
-the associated attributes. The pool attribute should be specified for
+the associated attributes. The site attribute should be specified for
 each entry.
 +
 -----------
-LFN_1 PFN_1 pool=[site handle 1] 
-LFN_2 PFN_2 pool=[site handle 2]
+LFN_1 PFN_1 site=[site handle 1] 
+LFN_2 PFN_2 site=[site handle 2]
  ...
 LFN_N PFN_N [site handle N]
 -----------
@@ -200,7 +200,7 @@ will go into the same clustered job.
 *--cleanup* 'cleanup strategy'::
 The cleanup strategy to be used for workflows. Pegasus can add cleanup
 jobs to the executable workflow that can remove files and directories
-during the workflow execution.
+during the workflow execution. The default strategy is inplace . 
 +
 The following type of cleanup strategies are currently supported:
 +
@@ -215,6 +215,26 @@ cleanup nodes per level of the workflow that remove files no longer
 required during execution. For example, an added cleanup node will
 remove input files for a particular compute job after the job has
 finished successfully. 
++
+By default, for hierarchal workflows the inplace cleanup is always
+turned off. This is because the cleanup algorithm ( InPlace ) does not
+work across the sub workflows. For example, if you have two DAX jobs
+in your top level workflow and the child DAX job refers to a file
+generated during the execution of the parent DAX job, the InPlace
+cleanup algorithm when applied to the parent dax job will result in
+the file being deleted, when the sub workflow corresponding to parent
+DAX job is executed. This would result in failure of sub workflow
+corresponding to the child DAX job, as the file deleted is required to
+present during it's execution.
++
+In case there are no data dependencies across the dax jobs, then yes
+you can enable the InPlace algorithm for the sub dax’es . To do this
+you can set the property 
++
+pegasus.file.cleanup.scope deferred
++
+This will result in cleanup option to be picked up from the arguments
+for the DAX job in the top level DAX. 
 
 *--conf* 'propfile'::
 The path to properties file that contains the properties planner needs to
@@ -258,15 +278,15 @@ to the DAX jobs.
 
 *-I*::
 *--input-dir*::
-A path to the input directory where the input files reside. This
-internally loads a Directory based Replica Catalog backend, that
-constructs does a directory listing to create the LFN->PFN mappings
+A comma separated list of input directories on the submit host where the input
+files reside. This internally loads a Directory based Replica Catalog
+backend, that constructs does a directory listing to create the LFN->PFN mappings
 for the files in the input directory. You can specify additional
 properties either on the command line or the properties file to
 control the site attribute and url prefix associated with the
 mappings.
 +
-pegasus.catalog.replica.directory.site  specifies the pool attribute
+pegasus.catalog.replica.directory.site  specifies the site attribute
 to associate with the mappings. Defaults to local
 +
 pegasus.catalog.replica.directory.url.prefix specifies the URL prefix
@@ -428,11 +448,11 @@ specified the default value of *Random* is used. Other supported modes are
 *pegasus.catalog.replica*::
 Specifies the type of replica catalog to be used. 
 +
-If not specified, then the value defaults to *RLS*.
+If not specified, then the value defaults to *File*.
 
 *pegasus.catalog.replica.url*::
-Contact string to access the replica catalog. In case of RLS it is the
-RLI url.
+Contact string to access the replica catalog. In case of File it is
+path to the file based replica catalog.
 
 *pegasus.dir.exec*::
 A suffix to the workdir in the site catalog to determine the current
@@ -441,25 +461,23 @@ working directory from the site.config file. If absolute it
 constitutes the  working directory.
 
 *pegasus.catalog.transformation*::
-Specifies the type of transformation catalog to be used. One can use either a
-file based or a database based transformation catalog.  At present the
-default is *Text*.
+Specifies the type of transformation catalog to be used. One can use
+only a file based transformation catalog, with the value as *Text*.
 
 *pegasus.catalog.transformation.file*::
 The location of file to use as transformation catalog.
 +
-If not specified, then the default location of $PEGASUS_HOME/var/tc.data
-is used.
+If not specified, then the default location of $PEGASUS_HOME/etc/tc.text
+
 
 *pegasus.catalog.site*::
 Specifies the type of site catalog to be used. One can use either a
 text based or an xml based site catalog.  At present the default is 
-*XML3*.
+*XML*.
 
 *pegasus.catalog.site.file*::
 The location of file to use as a site catalog. If not specified, then 
 default value of $PEGASUS_HOME/etc/sites.xml is used in case of the xml 
-based site catalog and $PEGASUS_HOME/etc/sites.txt in case of the text 
 based site catalog.
 
 *pegasus.data.configuration*::

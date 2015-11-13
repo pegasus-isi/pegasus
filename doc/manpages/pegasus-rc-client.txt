@@ -53,9 +53,7 @@ Default is to use an interactive interface reading from 'stdin'.
 *--insert* 'fn'::
 The optional input file argument permits insertion of entries from the 
 Replica Catalog in a bulk mode, wherever supported by the underlying
-implementation. This is highly, useful when interfacing with the
-Globus RLS as the backend, and one wants to inserts millions of
-entries in it.
+implementation. 
 +
 Each line in the file denotes one mapping of the format
 *<lfn> <pfn> [k=v [..]]*
@@ -64,9 +62,7 @@ Each line in the file denotes one mapping of the format
 *--delete* 'fn'::
 The optional input file argument permits deletion of entries from the 
 Replica Catalog in a bulk mode, wherever supported by the underlying
-implementation. This is highly, useful when interfacing with the
-Globus RLS as the backend, and one wants to delete millions of
-entries from it.
+implementation. 
 +
 Each line in the file denotes one mapping of the format:
 *<lfn> <pfn> [k=v [..]]*
@@ -137,10 +133,6 @@ The same key may have different meanings for different backends.
 determines the name of the implementing class to load at run-time. If
 the class resides in 'org.griphyn.common.catalog.replica' no prefix is 
 required. Otherwise, the fully qualified class name must be specified.
-
-*pegasus.catalog.replica.url*::
-is used by the RLS|LRC implementations. It determines the RLI / LRC
-url to use.
 
 *pegasus.catalog.replica.file*::
 is used by the SimpleFile implementation. It specifies the path to the

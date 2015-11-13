@@ -1,0 +1,61 @@
+#!/bin/bash
+set -e
+
+TOPDIR=`pwd`
+HOSTNAME=`hostname -f`
+
+
+# Generate dax
+echo "Generating the DAX..."
+export PYTHONPATH=`pegasus-config --python`
+python daxgen.py dax.xml
+
+cat >sites.xml <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0">
+
+    <site handle="local" arch="x86_64" os="LINUX">
+		<directory type="shared-scratch" path="$TOPDIR/work">
+			<file-server operation="all" url="gsiftp://$HOSTNAME/$TOPDIR/work"/>
+		</directory>
+
+		<directory type="local-storage" path="$TOPDIR/outputs">
+			<file-server operation="all" url="gsiftp://$HOSTNAME/$TOPDIR/outputs"/>
+		</directory>
+	</site>
+
+	<site handle="hopper" arch="x86_64" os="LINUX">
+		<!-- This is where transfer jobs are submitted -->
+		<grid type="gt5" contact="hoppergrid.nersc.gov/jobmanager" scheduler="Fork" jobtype="auxillary"/>
+
+		<!-- This is where compute jobs are submitted -->
+		<grid type="gt5" contact="hoppergrid.nersc.gov/jobmanager-pbs" scheduler="PBS" jobtype="compute"/>
+
+		<!-- Shared scratch is where the working directory is created -->
+		<directory type="shared-scratch" path="/scratch/scratchdirs">
+			<file-server operation="all" url="gsiftp://hoppergrid.nersc.gov/scratch/scratchdirs"/>
+		</directory>
+
+		<!-- Shared storage is where output files are stored -->
+		<directory type="shared-storage" path="/project/projectdirs/m2187/pegasus">
+			<file-server operation="all" url="gsiftp://hoppergrid.nersc.gov/project/projectdirs/m2187/pegasus" />
+		</directory>
+
+		<!-- This is how Pegasus knows where to find pegasus-transfer and pegasus-kickstart -->
+		<profile namespace="env" key="PEGASUS_HOME">/project/projectdirs/m2187/pegasus/pegasus-4.4.0</profile>
+
+		<profile namespace="globus" key="project">m2187</profile>
+		<profile namespace="globus" key="queue">debug</profile>
+	</site>
+</sitecatalog>
+EOF
+
+echo "Planning and submitting the workflow..."
+pegasus-plan \
+    --conf pegasusrc \
+    --dir work \
+    --dax dax.xml \
+    --sites hopper \
+    --output-site local \
+    --cleanup none \
+    --submit

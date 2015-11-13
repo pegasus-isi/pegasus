@@ -1,0 +1,96 @@
+#!/bin/bash
+
+set -e
+
+
+##################################################################################
+#
+#  Settings
+#
+CLUSTER_HOSTNAME="pbs.hubzero.org"
+CLUSTER_SCHEDULER="condor"
+CLUSTER_WORK_DIR="/nfs/ccg4/scratch-6-months-purge"
+CLUSTER_PEGASUS_HOME="/ccg/software/pegasus/dev/trunk"
+##################################################################################
+
+
+TOPDIR=`pwd`
+
+# figure out where Pegasus is installed
+export PEGASUS_HOME=`which pegasus-plan | sed 's:/bin/pegasus-plan::'`
+if [ "x$PEGASUS_HOME" = "x" ]; then
+    echo "Unable to determine location of your Pegasus install"
+    echo "Please make sure pegasus-plan is in your path"
+    exit 1
+fi 
+
+
+
+# generate the input file
+echo "This is sample input to KEG" >f.a
+
+# generate the dax
+export PYTHONPATH=`pegasus-config --python`
+./blackdiamond.py $CLUSTER_PEGASUS_HOME >blackdiamond.dax
+
+# create the site catalog
+cat >sites.xml <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0">
+
+    <site  handle="local" arch="x86_64" os="LINUX">
+        <directory type="shared-scratch" path="$TOPDIR/scratch">
+            <file-server operation="all" url="file://$TOPDIR/scratch"/>
+        </directory>
+        <directory type="local-storage" path="$TOPDIR/outputs">
+            <file-server operation="all" url="file://$TOPDIR/outputs"/>
+        </directory>
+
+    </site>
+    <site  handle="pbs-cluster" arch="x86_64" os="LINUX" osrelease="" osversion="" glibc="">
+
+      <!-- Specify the service information as grid gateways. We can
+        pick up the PBS headnode information from here -->
+        <grid type="batch" contact="username@$CLUSTER_HOSTNAME" scheduler="PBS" jobtype="compute"/>
+
+        <!-- the shared scratch area on the PBS cluster where the jobs
+             run . Using scp to stage-in the input data -->
+        <directory  path="$CLUSTER_WORK_DIR" type="shared-scratch" free-size="" total-size="">
+                <file-server  operation="all" url="scp://username@$CLUSTER_HOSTNAME/$CLUSTER_WORK_DIR">
+                </file-server>
+        </directory>
+
+        <profile namespace="env" key="PEGASUS_HOME" >$CLUSTER_PEGASUS_HOME</profile>
+        <profile namespace="env" key="ENV-KEY" >TEST_VALUE</profile>
+        
+        <!-- all jobs need to be wrapped with distribute and then run                                                                                                                                                                                                                                                           locally through condor -->
+        <profile namespace="pegasus" key="style">condor</profile>
+
+        <!-- the key to use for SCP data transfers to and from this                                                                                                                                                                                                                                                
+             site -->
+        <profile namespace="pegasus" key="SSH_PRIVATE_KEY">/path/to/private_key</profile>
+
+        <profile namespace="pegasus" key="clusters.num">1</profile>
+  </site>
+
+    <site  handle="TestCluster" arch="x86_64" os="LINUX">
+        <grid  type="gt5" contact="$CLUSTER_HOSTNAME/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
+        <grid  type="gt5" contact="$CLUSTER_HOSTNAME/jobmanager-$CLUSTER_SCHEDULER" scheduler="unknown" jobtype="compute"/>
+        <directory type="shared-scratch" path="$CLUSTER_WORK_DIR">
+            <file-server operation="all" url="gsiftp://$CLUSTER_HOSTNAME/$CLUSTER_WORK_DIR"/>
+        </directory>
+
+    </site>
+
+</sitecatalog>
+EOF
+
+# Just plan the workflow
+pegasus-plan \
+    --conf pegasusrc \
+    --sites pbs-cluster \
+    --output-site local \
+    --dir work \
+    --dax blackdiamond.dax \
+
+

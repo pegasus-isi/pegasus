@@ -26,13 +26,9 @@ import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
-import edu.isi.pegasus.planner.catalog.site.impl.old.PoolMode;
 
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
-import edu.isi.pegasus.planner.catalog.site.classes.FileServerType;
-
-import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.classes.Job;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -315,7 +311,7 @@ public abstract  class Engine {
             error.append( "For job (" ).append( job.getID() ).append( ")." );
         }
         error.append( "Unable to determine URL Prefix for the FileServer ").
-              append( " for operation ").append( operation ).append( "for shared scratch file system on site: " ).
+              append( " for operation ").append( operation ).append( " for shared scratch file system on site: " ).
               append( site );
         throw new RuntimeException( error.toString() );
     }

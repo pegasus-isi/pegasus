@@ -22,11 +22,10 @@ os.sys.path.insert(0, lib_dir)
 os.sys.path.insert(0, lib_ext_dir)
 
 from Pegasus.tools import utils
-from Pegasus.tools import db_utils
 from Pegasus.plots_stats import utils as stats_utils
+from Pegasus.db import connection
 from Pegasus.db.workflow.stampede_statistics import StampedeStatistics
 from Pegasus.db.workflow.stampede_wf_statistics import StampedeWorkflowStatistics
-from Pegasus.db.schema.schema_check import SchemaVersionError
 
 utils.configureLogging(level=logging.WARNING)
 
@@ -149,20 +148,32 @@ def formatted_wf_summary_legends_part1():
 def formatted_wf_summary_legends_part2():
     return """
 # Workflow wall time:
-#   The walltime from the start of the workflow execution to the end as
+#   The wall time from the start of the workflow execution to the end as
 #   reported by the DAGMAN.In case of rescue dag the value is the
 #   cumulative of all retries.
 # Workflow cumulative job wall time:
-#   The sum of the walltime of all jobs as reported by kickstart.
+#   The sum of the wall time of all jobs as reported by kickstart.
 #   In case of job retries the value is the cumulative of all retries.
 #   For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs),
-#   the walltime value includes jobs from the sub workflows as well.
-# Cumulative job walltime as seen from submit side:
-#   The sum of the walltime of all jobs as reported by DAGMan.
-#   This is similar to the regular cumulative job walltime, but includes
+#   the wall time value includes jobs from the sub workflows as well.
+# Cumulative job wall time as seen from submit side:
+#   The sum of the wall time of all jobs as reported by DAGMan.
+#   This is similar to the regular cumulative job wall time, but includes
 #   job management overhead and delays. In case of job retries the value
 #   is the cumulative of all retries. For workflows having sub workflow
-#   jobs (i.e SUBDAG and SUBDAX jobs), the walltime value includes jobs
+#   jobs (i.e SUBDAG and SUBDAX jobs), the wall time value includes jobs
+#   from the sub workflows as well.
+# Workflow cumulative job badput wall time:
+#   The sum of the wall time of all failed jobs as reported by kickstart.
+#   In case of job retries the value is the cumulative of all retries.
+#   For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs),
+#   the wall time value includes jobs from the sub workflows as well.
+# Cumulative job badput wall time as seen from submit side:
+#   The sum of the wall time of all failed jobs as reported by DAGMan.
+#   This is similar to the regular cumulative job badput wall time, but includes
+#   job management overhead and delays. In case of job retries the value
+#   is the cumulative of all retries. For workflows having sub workflow
+#   jobs (i.e SUBDAG and SUBDAX jobs), the wall time value includes jobs
 #   from the sub workflows as well."""
 
 def formatted_wf_summary_legends_txt():
@@ -344,15 +355,14 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf=False
         if multiple_wf:
             expanded_workflow_stats = StampedeWorkflowStatistics(output_db_url)
         else:
-             expanded_workflow_stats = StampedeStatistics(output_db_url)
+            expanded_workflow_stats = StampedeStatistics(output_db_url)
 
-        expanded_workflow_stats.initialize(wf_uuid)
-    except SchemaVersionError:
-        logger.error("------------------------------------------------------")
-        logger.error("Database schema mismatch! Please run the upgrade tool")
-        logger.error("to upgrade the database to the latest schema version.")
-        sys.exit(1)
-    except:
+        wf_found = expanded_workflow_stats.initialize(wf_uuid)
+
+        if wf_found is False:
+            print 'Workflow %r not found in database %r' % (wf_uuid, output_db_url)
+            sys.exit(1)
+    except Exception:
         logger.error("Failed to load the database." + output_db_url )
         logger.warning(traceback.format_exc())
         sys.exit(1)
@@ -421,13 +431,12 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf=False
         for sub_wf_uuid in wf_uuid_list:
             try:
                 individual_workflow_stats = StampedeStatistics(output_db_url, False)
-                individual_workflow_stats.initialize(sub_wf_uuid)
-            except SchemaVersionError:
-                logger.error("------------------------------------------------------")
-                logger.error("Database schema mismatch! Please run the upgrade tool")
-                logger.error("to upgrade the database to the latest schema version.")
-                sys.exit(1)
-            except:
+                wf_found = individual_workflow_stats.initialize(sub_wf_uuid)
+
+                if wf_found is False:
+                    print 'Workflow %r not found in database %r' % (sub_wf_uuid, output_db_url)
+                    sys.exit(1)
+            except Exception:
                 logger.error("Failed to load the database." + output_db_url )
                 logger.warning(traceback.format_exc())
                 sys.exit(1)
@@ -632,17 +641,19 @@ def print_workflow_summary(workflow_stats, output_format, wf_summary=True, time_
     if time_summary == True:
         states = workflow_stats.get_workflow_states()
         wwt = stats_utils.get_workflow_wall_time(states)
-        wcjwt = workflow_stats.get_workflow_cum_job_wall_time()
-        ssjwt = workflow_stats.get_submit_side_job_wall_time()
+        wcjwt, wcgpt, wcbpt = workflow_stats.get_workflow_cum_job_wall_time()
+        ssjwt, ssgpt, ssbpt = workflow_stats.get_submit_side_job_wall_time()
 
         if output_format == "text":
             def myfmt(val):
                 if val is None: return "-"
                 else: return format_seconds(val)
             if not multiple_wf:
-                summary_str += "%-49s: %s\n" % ("Workflow wall time", myfmt(wwt))
-            summary_str += "%-49s: %s\n" % ("Workflow cumulative job wall time", myfmt(wcjwt))
-            summary_str += "%-49s: %s\n" % ("Cumulative job walltime as seen from submit side", myfmt(ssjwt))
+                summary_str += "%-57s: %s\n" % ("Workflow wall time", myfmt(wwt))
+            summary_str += "%-57s: %s\n" % ("Workflow cumulative job wall time", myfmt(wcjwt))
+            summary_str += "%-57s: %s\n" % ("Cumulative job wall time as seen from submit side", myfmt(ssjwt))
+            summary_str += "%-57s: %s\n" % ("Workflow cumulative job badput wall time", myfmt(wcbpt))
+            summary_str += "%-57s: %s\n" % ("Cumulative job badput wall time as seen from submit side", myfmt(ssbpt))
         else:
             def myfmt(val):
                 if val is None: return ""
@@ -651,6 +662,8 @@ def print_workflow_summary(workflow_stats, output_format, wf_summary=True, time_
             summary_str += "workflow_wall_time,%s\n" % myfmt(wwt)
             summary_str += "workflow_cumulative_job_wall_time,%s\n" % myfmt(wcjwt)
             summary_str += "cumulative_job_walltime_from_submit_side,%s\n" % myfmt(ssjwt)
+            summary_str += "workflow_cumulative_badput_time,%s\n" % myfmt(wcbpt)
+            summary_str += "cumulative_job_badput_walltime_from_submit_side,%s\n" % myfmt(ssbpt)
 
     return summary_str
 
@@ -828,10 +841,9 @@ def print_individual_wf_job_stats(workflow_stats, workflow_id, dax_label, output
 
         job_stats_list.append(job_stats)
 
-    max_length = [i + 1 for i in max_length]
-
     # Print header
     if output_format == "text":
+        max_length = [i + 1 for i in max_length]
         job_status_str += print_row(job_stats_col_name_text, max_length, output_format)
     else:
         job_status_str += print_row(job_stats_col_name_csv, job_stats_col_size, output_format)
@@ -885,6 +897,7 @@ def print_wf_transformation_stats(stats, workflow_id, dax_label, fmt):
 
     if fmt == "text":
         max_length = [max(0, len(col_names[i])) for i in range(8)]
+        columns = ['' for i in range(8)]
 
         for t in transformation_statistics:
             max_length[0] = max(max_length[0], len(t.transformation))
@@ -894,7 +907,7 @@ def print_wf_transformation_stats(stats, workflow_id, dax_label, fmt):
             max_length[4] = max(max_length[4], len(str(t.min)))
             max_length[5] = max(max_length[5], len(str(t.max)))
             max_length[6] = max(max_length[6], len(str(t.avg)))
-            max_length[6] = max(max_length[7], len(str(t.sum)))
+            max_length[7] = max(max_length[7], len(str(t.sum)))
 
         max_length = [i + 1 for i in max_length]
 
@@ -906,7 +919,7 @@ def print_wf_transformation_stats(stats, workflow_id, dax_label, fmt):
 
         if fmt == "text":
             for i in range(0, 8):
-                col_names[i] = col_names[i].ljust(max_length[i])
+                columns[i] = col_names[i].ljust(max_length[i])
                 content[i] = content[i].ljust(max_length[i])
 
         if fmt == "csv":
@@ -914,7 +927,7 @@ def print_wf_transformation_stats(stats, workflow_id, dax_label, fmt):
 
         if not header_printed:
             header_printed = True
-            report.append(print_row(col_names, transformation_stats_col_size, fmt))
+            report.append(print_row(columns, transformation_stats_col_size, fmt))
 
         report.append(print_row(content, transformation_stats_col_size, fmt))
 
@@ -1131,8 +1144,10 @@ def main():
     time_host_stats_col_name_csv[1] += tf_format
 
     if options.output_dir:
+        delete_if_exists = False
         output_dir = options.output_dir
     else:
+        delete_if_exists = True
         if multiple_wf or options.is_uuid:
             sys.stderr.write("Output directory option is required when calculating statistics over multiple workflows.\n")
             sys.exit(1)
@@ -1140,7 +1155,7 @@ def main():
             output_dir = os.path.join(submit_dir, DEFAULT_OUTPUT_DIR)
 
     logger.info("Output directory is %s" % output_dir)
-    utils.create_directory(output_dir, True)
+    utils.create_directory(output_dir, delete_if_exists=delete_if_exists)
 
     global uses_PMC
 
@@ -1183,7 +1198,7 @@ def main():
     if multiple_wf:
         if options.is_uuid or submit_dir == '*':
             # URL picked from config_properties file.
-            output_db_url = db_utils.get_db_url(options.config_properties)
+            output_db_url = connection.url_by_properties(options.config_properties, connection.DBType.WORKFLOW)
             wf_uuid = submit_dir
 
             if not output_db_url:
@@ -1194,7 +1209,8 @@ def main():
             wf_uuid = []
 
             for dir in submit_dir:
-                db_url, uuid = db_utils.get_db_url_wf_uuid(dir, options.config_properties)
+                db_url = connection.url_by_submitdir(dir, connection.DBType.WORKFLOW, options.config_properties)
+                uuid = connection.get_wf_uuid(dir)
                 db_url_set.add(db_url)
                 wf_uuid.append(uuid)
 
@@ -1206,14 +1222,15 @@ def main():
 
     else:
         if options.is_uuid:
-            output_db_url = db_utils.get_db_url(options.config_properties)
+            output_db_url = connection.url_by_properties(options.config_properties, connection.DBType.WORKFLOW)
             wf_uuid = submit_dir
 
             if not output_db_url:
                 logger.error('Unable to determine database URL. Kindly specify a value for "pegasus.monitord.output" property')
                 sys.exit(1)
         else:
-            output_db_url, wf_uuid = db_utils.get_db_url_wf_uuid(submit_dir, options.config_properties)
+            output_db_url = connection.url_by_submitdir(submit_dir, connection.DBType.WORKFLOW, options.config_properties)
+            wf_uuid = connection.get_wf_uuid(submit_dir)
 
     logger.info('DB URL is: %s' % output_db_url)
     logger.info('workflow UUID is: %s' % wf_uuid)

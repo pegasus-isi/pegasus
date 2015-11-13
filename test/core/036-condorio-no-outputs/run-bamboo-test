@@ -1,0 +1,72 @@
+#!/bin/bash
+
+set -e
+set -v
+
+
+if [ X${testdir} = "X" ]; then
+    testdir=`dirname  $0`
+    export testdir
+fi
+
+TOPDIR=`pwd`
+
+
+#A output directory
+mkdir -p outputs
+mkdir -p work
+
+# build the dax generator
+export PYTHONPATH=`pegasus-config --python`
+$testdir/dax-generator.py 
+
+# create the site catalog
+cat > sites.xml <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0">
+<site handle="local" arch="x86_64" os="LINUX" osrelease="deb" osversion="7">
+        <directory  path="$TOPDIR/outputs" type="shared-storage" free-size="" total-size="">
+                <file-server  operation="all" url="file://$TOPDIR/outputs">
+                </file-server>
+        </directory>
+        <directory  path="$TOPDIR/work/local/shared-scratch" type="shared-scratch" free-size="" total-size="">
+                <file-server  operation="all" url="file://$TOPDIR/work/local/shared-scratch">
+                </file-server>
+        </directory>
+</site>
+<site  handle="condorpool" arch="x86_64" os="LINUX" osrelease="" osversion="" glibc="">
+        <profile namespace="condor" key="universe" >vanilla</profile>
+        <profile namespace="pegasus" key="style" >condor</profile>
+</site>
+
+</sitecatalog>
+
+EOF
+
+# plan the  workflow
+pegasus-plan \
+    --conf pegasusrc \
+    --sites condorpool \
+    --dir work/dags \
+    --dax dax.xml \
+    --cleanup none \
+     | tee $TOPDIR/plan.out
+
+
+WORK_DIR=`cat plan.out | grep pegasus-run | sed -E 's/.*pegasus-run[ ]+//'`
+
+#check if planner did the right thing
+set +e
+grep +TransferOutput *sub | grep -v test.sh_ID0000001 1> /dev/null 2>&1
+EC=$?
+set -e
+
+if [ $EC -eq 0 ]; then
+    echo "+TransferOutput should be associated only with the compute job in the DAX test.sh_ID0000001"
+    exit 1
+fi
+
+#now submit the workflow to run
+pegasus-run  $WORK_DIR
+

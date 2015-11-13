@@ -43,6 +43,70 @@
 #define XML_SCHEMA_URI "http://pegasus.isi.edu/schema/invocation"
 #define XML_SCHEMA_VERSION "2.3"
 
+/* Return non-zero if any part of the job failed */
+static int any_failure(const AppInfo *run) {
+    if (run->status) return 1;
+    if (run->setup.status) return 1;
+    if (run->prejob.status) return 1;
+    if (run->application.status) return 1;
+    if (run->postjob.status) return 1;
+    if (run->cleanup.status) return 1;
+    return 0;
+}
+
+/* Extract all of the available job IDs out of the environment and put them in a <jobids> element */
+static void printJobIDs(FILE *out) {
+
+    fprintf(out, "  <jobids");
+
+    char *condor = getenv("CONDOR_JOBID");
+    if (condor) {
+        fprintf(out, " condor=\"%s\"", condor);
+    }
+
+    char *gram = getenv("GLOBUS_GRAM_JOB_CONTACT");
+    if (gram) {
+        fprintf(out, " gram=\"%s\"", gram);
+    }
+
+    /* We assume that there is only going to be one LRM job ID */
+    char *lrm;
+
+    lrm = getenv("SLURM_JOBID");
+    if (lrm) {
+        fprintf(out, " lrm=\"%s\" lrmtype=\"slurm\"", lrm);
+        goto end;
+    }
+
+    lrm = getenv("COBALT_JOBID");
+    if (lrm) {
+        fprintf(out, " lrm=\"%s\" lrmtype=\"cobalt\"", lrm);
+        goto end;
+    }
+
+    lrm = getenv("JOB_ID");
+    if (lrm) {
+        fprintf(out, " lrm=\"%s\" lrmtype=\"sge\"", lrm);
+        goto end;
+    }
+
+    lrm = getenv("LSB_JOBID");
+    if (lrm) {
+        fprintf(out, " lrm=\"%s\" lrmtype=\"lsf\"", lrm);
+        goto end;
+    }
+
+    /* Do PBS last so that a more specific LRM is identified, if possible */
+    lrm = getenv("PBS_JOBID");
+    if (lrm) {
+        fprintf(out, " lrm=\"%s\" lrmtype=\"pbs\"", lrm);
+        goto end;
+    }
+
+end:
+    fprintf(out, "/>\n");
+}
+
 static size_t convert2XML(FILE *out, const AppInfo* run) {
     size_t i;
     struct passwd* user = getpwuid(getuid());
@@ -142,6 +206,9 @@ static size_t convert2XML(FILE *out, const AppInfo* run) {
     printXMLJobInfo(out, 2, "postjob", &run->postjob);
     printXMLJobInfo(out, 2, "cleanup", &run->cleanup);
 
+    /* <jobid> */
+    printJobIDs(out);
+
     /* <cwd> */
     if (run->workdir != NULL) {
         fprintf(out, "  <cwd>%s</cwd>\n", run->workdir);
@@ -156,9 +223,9 @@ static size_t convert2XML(FILE *out, const AppInfo* run) {
         printXMLMachineInfo(out, 2, "machine", &run->machine);
     }
 
-    /* We include <data> in the <statcall>s if the job failed, or if the user
+    /* We include <data> in the <statcall>s if any job failed, or if the user
      * did not specify -q */
-    int includeData = run->status || !run->omitData;
+    int includeData = !run->omitData || any_failure(run);
 
     /* User-specified initial and final arbitrary <statcall> records */
     if (run->icount && run->initial) {
@@ -180,7 +247,7 @@ static size_t convert2XML(FILE *out, const AppInfo* run) {
     printXMLStatInfo(out, 2, "statcall", "stderr", &run->error, includeData);
 
     /* If the job failed, or if the user requested the full kickstart record */
-    if (run->status || run->fullInfo) {
+    if (any_failure(run) || run->fullInfo) {
         /* Extra <statcall> records */
         printXMLStatInfo(out, 2, "statcall", "gridstart", &run->gridstart, includeData);
         updateStatInfo(&(((AppInfo*) run)->logfile));
@@ -194,7 +261,9 @@ static size_t convert2XML(FILE *out, const AppInfo* run) {
                 char *s;
                 if (key && (s = strchr(key, '='))) {
                     *s = '\0'; /* temporarily cut string here */
-                    fprintf(out, "    <env key=\"%s\">", key);
+                    fprintf(out, "    <env key=\"");
+                    xmlquote(out, key, strlen(key));
+                    fprintf(out, "\">");
                     xmlquote(out, s+1, strlen(s+1));
                     fprintf(out, "</env>\n");
                     *s = '='; /* reset string to original */

@@ -300,8 +300,10 @@ public class Regex implements ReplicaCatalog {
             return false;
         } else {
             // valid entry
-            if (state == 16)
-                insert(lfn, new ReplicaCatalogEntry(pfn, attr));
+            if (state == 16){
+                ReplicaCatalogEntry rce = new ReplicaCatalogEntry(pfn, attr);
+                insert(lfn, rce);
+            }
             return true;
         }
     }

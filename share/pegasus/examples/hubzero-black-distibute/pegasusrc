@@ -1,0 +1,15 @@
+pegasus.catalog.site.file=sites.xml
+
+pegasus.condor.logs.symlink = false
+
+pegasus.data.configuration = sharedfs
+
+#transformation catalog where we catalog the location
+# of the distribute executable
+pegasus.catalog.transformation=Text
+pegasus.catalog.transformation.file = ./tc.text
+
+
+# tell Pegasus to wrap compute jobs with Distribute
+# wrapper
+pegasus.gridstart Distribute

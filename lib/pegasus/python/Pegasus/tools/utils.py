@@ -51,11 +51,42 @@ brainbase = "braindump.txt"        # Default name for workflow information file
 
 logger = logging.getLogger(__name__)
 
+class ConsoleHandler(logging.StreamHandler):
+    """A handler that logs to console in the sensible way.
+
+    StreamHandler can log to *one of* sys.stdout or sys.stderr.
+
+    It is more sensible to log to sys.stdout by default with only error
+    (logging.ERROR and above) messages going to sys.stderr. This is how
+    ConsoleHandler behaves.
+    """
+
+    def __init__(self):
+        logging.StreamHandler.__init__(self)
+        self.stream = None # reset it; we are not going to use it anyway
+
+    def emit(self, record):
+        if record.levelno >= logging.ERROR:
+            self.__emit(record, sys.stderr)
+        else:
+            self.__emit(record, sys.stdout)
+
+    def __emit(self, record, strm):
+        self.stream = strm
+        logging.StreamHandler.emit(self, record)
+
+    def flush(self):
+        # Workaround a bug in logging module
+        # See:
+        #   http://bugs.python.org/issue6333
+        if self.stream and hasattr(self.stream, 'flush') and not self.stream.closed:
+            logging.StreamHandler.flush(self)
+
 def configureLogging(level=logging.INFO):
     root = logging.getLogger()
     root.setLevel(level)
-    cl = logging.StreamHandler()
-    formatter = logging.Formatter("%(asctime)s:%(name)s:%(lineno)d: %(levelname)s: %(message)s")
+    cl = ConsoleHandler()
+    formatter = logging.Formatter("%(asctime)s:%(levelname)s:%(name)s(%(lineno)d): %(message)s")
     cl.setFormatter(formatter)
     root.addHandler(cl)
 
@@ -186,60 +217,6 @@ def epochdate(timestamp):
         logger.warn("unable to parse timestamp \"%s\"" % timestamp)
         return None
 
-def get_path_dashboard_db( props ):
-    """
-    Utility method for creating appropriate directory and the path to the
-    dashboard database file
-    @param props  properties passed by user
-
-    # Returns fully qualified path to binary, None if not found
-    """
-    db_file = props.property("pegasus.dashboard.output")
-
-    if db_file is not None:
-        return db_file
-
-    #construct the default path
-    home = os.getenv("HOME")
-    
-    if home == None:
-        logger.error('Environment variable HOME not defined, set pegasus.dashboard.output property to point to the Dashboard database')
-        return None
-        
-    dir = os.path.join( home, ".pegasus" );
-
-    # check for writability and create directory if required
-    if not os.path.isdir( dir ):
-        try:
-            os.mkdir( dir  )
-        except OSError:
-            logger.error("Unable to create directory." + dir)
-            return None
-    elif not os.access( dir, os.W_OK ):
-        logger.warning( "unable to write to directory " + dir )
-        return None
-
-    #directory exists, touch the file and set permissions
-    filename =  os.path.join( dir, "workflow.db" )
-    if not os.access(filename, os.F_OK):
-        try:
-            # touch the file
-            open(filename, 'w').close()
-            os.chmod( filename, 0600)
-        except:
-            logger.warning("unable to initialize dashboard db %s. ..." % (filename))
-            logger.warning(traceback.format_exc())
-            return None
-    elif not os.access( filename, os.W_OK ):
-        logger.warning( "no read access for file " + filename )
-        return None
-
-    db_file = "sqlite:///" + filename
-
-    return db_file
-
-
-
 def create_directory(dir_name, delete_if_exists=False):
     """
     Utility method for creating directory
@@ -350,6 +327,25 @@ def add_to_braindb(run, missing_keys, brain_alternate=None):
         my_file.close()
     except IOError:
         pass
+
+def write_braindump(filename, items):
+    "This simply writes a dict to the file specified in braindump format"
+    f = open(filename, "w")
+    for k in items:
+        f.write("%s %s\n" % (k,items[k]))
+    f.close()
+
+def read_braindump(filename):
+    "This simply reads a braindump dict from the file specified"
+    items = {}
+    f = open(filename, "r")
+    for l in f:
+        k,v = l.strip().split(" ", 1)
+        k = k.strip()
+        v = v.strip()
+        items[k] = v
+    f.close()
+    return items
 
 def slurp_braindb(run, brain_alternate=None):
     """

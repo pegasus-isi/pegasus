@@ -395,12 +395,17 @@ public class File extends CatalogType {
             }
             if (mLink != null) {
                 writer.writeAttribute("link", mLink.toString().toLowerCase());
+                
+                //transfer flag for input files should be ignored
+                if (!( mLink == LINK.INPUT || mLink == LINK.input )){
+                    writer.writeAttribute("transfer", mTransfer.toString().toLowerCase());
+                    writer.writeAttribute("register", Boolean.toString(mRegister));
+                }
             }
             if (mOptional) {
                 writer.writeAttribute("optional", "true");
             }
-            writer.writeAttribute("transfer", mTransfer.toString().toLowerCase());
-            writer.writeAttribute("register", Boolean.toString(mRegister));
+            
             if (mExecutable) {
                 writer.writeAttribute("executable", "true");
             }

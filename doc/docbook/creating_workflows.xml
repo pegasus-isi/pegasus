@@ -204,20 +204,6 @@
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">Replica Location Service</emphasis></para>
-
-        <itemizedlist>
-          <listitem>
-            <para><emphasis role="bold">RLS</emphasis></para>
-          </listitem>
-
-          <listitem>
-            <para><emphasis role="bold">LRC</emphasis></para>
-          </listitem>
-        </itemizedlist>
-      </listitem>
-
-      <listitem>
         <para><emphasis role="bold">MRC</emphasis></para>
       </listitem>
     </orderedlist>
@@ -263,8 +249,8 @@ LFN PFN a="b" [..]
         </orderedlist></para>
     </section>
 
-    <section>
-      <title id="rc-regex">Regex</title>
+    <section id="rc-regex">
+      <title>Regex</title>
 
       <para>In this mode, Pegasus queries a file based replica catalog. The
       file format is a simple multicolumn format. It is neither
@@ -290,9 +276,9 @@ LFN PFN a="b" [..]
       i.e. faa, f.a, f0a, etc.</para>
 
       <programlisting>#1
-f.a file:///Volumes/data/input/f.a pool="local"
+f.a file:///Volumes/data/input/f.a site="local"
 #2
-f.a file:///Volumes/data/input/f.a pool="local" <emphasis role="bold">regex</emphasis>="true"
+f.a file:///Volumes/data/input/f.a site="local" <emphasis role="bold">regex</emphasis>="true"
 </programlisting>
 
       <para>Regular expression based entries also support substitutions. For
@@ -313,10 +299,21 @@ f.a file:///Volumes/data/input/f.a pool="local" <emphasis role="bold">regex</emp
 
       <programlisting>#3
 alpha\.(csv|txt|xml) file:///Volumes/data/input/<emphasis role="bold">[1]</emphasis>/<emphasis
-          role="bold">[0]</emphasis> pool="local" <emphasis role="bold">regex</emphasis>="true"</programlisting>
+          role="bold">[0]</emphasis> site="local" <emphasis role="bold">regex</emphasis>="true"</programlisting>
+
+      <para>In case of a LFN name matching multiple entries in the file, the
+      implementation picks up the first matching regex as it appears in the
+      file. If you want to specify a default location for all LFN's that don't
+      match any regex expression, you can have this entry as the last entry in
+      your file.</para>
+
+      <programlisting>#4 all unmatched LFN's reside in the same input directory.
+
+.*     file:///Volumes/data/input/<emphasis role="bold">[0]</emphasis> site="local" <emphasis
+          role="bold">regex</emphasis>="true"</programlisting>
     </section>
 
-    <section>
+    <section id="rc-directory">
       <title>Directory</title>
 
       <para>In this mode, Pegasus does a directory listing on an input
@@ -334,14 +331,20 @@ $input/D1/f.3</programlisting>
       <para>Pegasus will create the mappings the following LFN PFN mappings
       internally</para>
 
-      <programlisting>f.1 file://$input/f.1  pool="local"
-f.2 file://$input/f.2  pool="local"
-D1/f.3 file://$input/D1/f.3 pool="local"</programlisting>
+      <programlisting>f.1 file://$input/f.1  site="local"
+f.2 file://$input/f.2  site="local"
+D1/f.3 file://$input/D1/f.3 site="local"</programlisting>
 
       <para>Users can optionally specify additional properties to configure
       the behavior of this implementation.</para>
 
       <orderedlist>
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.replica.directory</emphasis> to specify
+          the path to the directory where the files exist.</para>
+        </listitem>
+
         <listitem>
           <para><emphasis
           role="bold">pegasus.catalog.replica.directory.site</emphasis> to
@@ -377,25 +380,16 @@ D1/f.3 file://$input/D1/f.3 pool="local"</programlisting>
       <title>JDBCRC</title>
 
       <para>In this mode, Pegasus queries a SQL based replica catalog that is
-      accessed via JDBC. The sql schema&amp;rsquor;s for this catalog can be
-      found at <emphasis role="bold">$PEGASUS_HOME/sql</emphasis> directory.
-      You will have to install the schema into either PostgreSQL or MySQL by
-      running the appropriate commands to load the two schemas <emphasis
-      role="bold">create-XX-init.sql</emphasis> and <emphasis
-      role="bold">create-XX-rc.sql</emphasis> where <emphasis
-      role="bold">XX</emphasis> is either <emphasis role="bold">my</emphasis>
-      (for MySQL) or <emphasis role="bold">pg</emphasis> (for
-      PostgreSQL)</para>
-      
+      accessed via JDBC. To create the schema for JDBCRC use the <link
+      linkend="cli-pegasus-db-admin">pegasus-db-admin</link> command line
+      tool.</para>
+
       <note>
-          <para>
-            A site attribute was added to the SQL schema as a unique key.
-            To update the database schema, use the <emphasis role="bold">
-            alter-XX-rc.py</emphasis> script that can be found at <emphasis 
-            role="bold">$PEGASUS_HOME/sql</emphasis>.
-          </para>
-          
-          <figure>
+        <para>A site attribute was added to the SQL schema as a unique key for
+        4.4. To update an existing database schema, use pegasus-db-admin
+        tool.</para>
+
+        <figure>
           <title>Schema Image of the JDBCRC.</title>
 
           <mediaobject>
@@ -417,14 +411,15 @@ D1/f.3 file://$input/D1/f.3 pool="local"</programlisting>
 
         <listitem>
           <para><emphasis role="bold">pegasus.catalog.replica.db.driver mysql
-          </emphasis></para>
+          | sqlite </emphasis></para>
         </listitem>
 
         <listitem>
           <para><emphasis
           role="bold">pegasus.catalog.replica.db.url=<replaceable>&lt;jdbc url
           to the database&gt; e.g
-          jdbc:mysql://database-host.isi.edu/database-name</replaceable></emphasis></para>
+          jdbc:mysql://database-host.isi.edu/database-name |
+          jdbc:sqlite:/shared/jdbcrc.db </replaceable></emphasis></para>
         </listitem>
 
         <listitem>
@@ -442,72 +437,9 @@ D1/f.3 file://$input/D1/f.3 pool="local"</programlisting>
 
       <para>Users can use the command line client
       <emphasis>pegasus-rc-client</emphasis> to interface to query, insert and
-      remove entries from the JDBCRC backend.</para>      
-    </section>
-
-    <section id="rc-RLS">
-      <title>Replica Location Service</title>
-
-      <para>Replica Location Service (RLS) is a distributed replica catalog,
-      that ships with Globus. There is an index service called Replica
-      Location Index (RLI) to which 1 or more Local Replica Catalog (LRC)
-      report. Each LRC can contain all or a subset of mappings.</para>
-
-      <para>Details about RLS can be found at <ulink
-      url="http://www.globus.org/toolkit/data/rls/">http://www.globus.org/toolkit/data/rls/</ulink></para>
-
-      <section>
-        <title>RLS</title>
-
-        <para>In this mode, Pegasus queries the central RLI to discover in
-        which LRC&amp;rsquor;s the mappings for a LFN reside. It then queries
-        the individual LRC&amp;rsquor;s for the PFN&amp;rsquor;s. To use this
-        mode the following properties need to be set:</para>
-
-        <para><orderedlist>
-            <listitem>
-              <para><emphasis
-              role="bold">pegasus.catalog.replica=RLS</emphasis></para>
-            </listitem>
-
-            <listitem>
-              <para><emphasis
-              role="bold">pegasus.catalog.replica.url=<replaceable>&lt;url to
-              the globus LRC&gt;</replaceable></emphasis></para>
-            </listitem>
-          </orderedlist></para>
-      </section>
-
-      <section>
-        <title>LRC</title>
-
-        <para>This mode is availabe If the user does not want to query the RLI
-        (Replica Location Index), but instead wishes to directly query a
-        single Local Replica Catalog. To use the LRC mode the follow
-        properties need to be set</para>
-
-        <para><orderedlist>
-            <listitem>
-              <para><emphasis
-              role="bold">pegasus.catalog.replica=<replaceable>LRC</replaceable></emphasis></para>
-            </listitem>
-
-            <listitem>
-              <para><emphasis
-              role="bold">pegasus.catalog.replica.url=<replaceable>&lt;url to
-              the globus LRC&gt;</replaceable></emphasis></para>
-            </listitem>
-          </orderedlist></para>
-
-        <para>Details about Globus Replica Catalog and LRC can be found at
-        <ulink
-        url="http://www.globus.org/toolkit/data/rls/">http://www.globus.org/toolkit/data/rls/</ulink></para>
-
-        <note>
-          <para>Replica Location Service is no longer officially supported by
-          Globus.</para>
-        </note>
-      </section>
+      remove entries from the JDBCRC backend. Starting 4.5 release, there is
+      also support for sqlite databases. Specify the jdbc url to refer to a
+      sqlite database .</para>
     </section>
 
     <section id="rc-MRC">
@@ -546,37 +478,85 @@ D1/f.3 file://$input/D1/f.3 pool="local"</programlisting>
         </listitem>
       </itemizedlist>
 
-      <para>For example, to query two lrcs at the same time specify the
-      following:</para>
+      <para>For example, to query a File catalog and JDBCRC at the same time
+      specify the following:</para>
 
       <para><itemizedlist>
           <listitem>
-            <para><emphasis
-            role="bold">pegasus.catalog.replica.mrc.lrc1=LRC</emphasis></para>
+            <para><emphasis role="bold">pegasus.catalog.replica=MRC</emphasis>
+            </para>
           </listitem>
 
           <listitem>
             <para><emphasis
-            role="bold">pegasus.catalog.replica.mrc.lrc1.url=<replaceable>&lt;url
-            to the 1st globus LRC&gt;</replaceable></emphasis></para>
+            role="bold">pegasus.catalog.replica.mrc.jdbcrc=JDBCRC</emphasis></para>
           </listitem>
 
           <listitem>
             <para><emphasis
-            role="bold">pegasus.catalog.replica.mrc.lrc2=LRC</emphasis></para>
+            role="bold">pegasus.catalog.replica.mrc.jdbcrc.url=<replaceable>&lt;jdbc
+            url &gt;</replaceable></emphasis></para>
           </listitem>
 
           <listitem>
             <para><emphasis
-            role="bold">pegasus.catalog.replica.mrc.lrc2.url=</emphasis><emphasis
-            role="bold">&lt;url to the 2nd globus LRC&gt;</emphasis></para>
+            role="bold">pegasus.catalog.replica.mrc.file1=File</emphasis></para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis
+            role="bold">pegasus.catalog.replica.mrc.file1.url=</emphasis><emphasis
+            role="bold">&lt;path to file based replica
+            catalog&gt;</emphasis></para>
           </listitem>
         </itemizedlist></para>
 
-      <para>In the above example,<emphasis role="bold">lrc1</emphasis> and
-      <emphasis role="bold"> lrc2</emphasis> are any valid identifier names
+      <para>In the above example,<emphasis role="bold"> jdbcrc</emphasis> and
+      <emphasis role="bold"> file1</emphasis> are any valid identifier names
       and <emphasis role="bold">url</emphasis> is the property key that needed
       to be specified.</para>
+
+      <para>Another example is to use MRC with multiple input directories.
+      Sample properties for that configuration are listed below</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">pegasus.catalog.replica=MRC
+          </emphasis></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.replica.mrc.directory1=Directory
+          </emphasis></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.replica.mrc.directory1.directory=/path/to/dir1</emphasis></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.replica.mrc.directory1.directory.site=obelix</emphasis></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.replica.mrc.directory2=Directory</emphasis></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.replica.mrc.directory2.directory=/path/to/dir2
+          </emphasis></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.replica.mrc.directory2.directory.site=corbusier</emphasis></para>
+        </listitem>
+      </itemizedlist>
 
       <section id="pegasus-rc-client">
         <title>Replica Catalog Client pegasus-rc-client</title>
@@ -596,8 +576,8 @@ D1/f.3 file://$input/D1/f.3 pool="local"</programlisting>
         the <emphasis role="bold">gsiftp://url</emphasis> with the appropriate
         parameters for your grid site.</para>
 
-        <screen><emphasis>$<command> rc-client -Dpegasus.catalog.replica=File -Dpegasus.catalog.replica.file=$HOME/rc insert \
- f.a</command> <replaceable>gsiftp://somehost:port/path/to/file/f.a pool=local</replaceable></emphasis></screen>
+        <screen><emphasis>$<command> pegasus-rc-client -Dpegasus.catalog.replica=File -Dpegasus.catalog.replica.file=$HOME/rc insert \
+ f.a</command> <replaceable>gsiftp://somehost:port/path/to/file/f.a site=local</replaceable></emphasis></screen>
 
         <para>You may first want to verify that the file registeration is in
         the replica catalog. Since we are using a File catalog we can look at
@@ -607,7 +587,7 @@ D1/f.3 file://$input/D1/f.3 pool="local"</programlisting>
         <screen><command>$ cat $HOME/rc</command><computeroutput>
     
 # file-based replica catalog: 2010-11-10T17:52:53.405-07:00
-f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
+f.a gsiftp://somehost:port/path/to/file/f.a site=local</computeroutput></screen>
 
         <para>The above line shows that entry for file <emphasis
         role="bold">f.a</emphasis> was made correctly.</para>
@@ -617,7 +597,7 @@ f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
 
         <screen><command>$ pegasus-rc-client -Dpegasus.catalog.replica=File -Dpegasus.catalog.replica.file=$HOME/rc lookup LFN f.a</command><computeroutput>
 
-f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
+f.a gsiftp://somehost:port/path/to/file/f.a site=local</computeroutput></screen>
       </section>
     </section>
   </section>
@@ -768,7 +748,8 @@ f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
           <listitem>
             <para><emphasis role="bold">replica-catalog</emphasis> - URL for a
             local replica catalog (LRC) to register your files in. Only used
-            for RLS implementation of the RC. This is optional</para>
+            for RLS implementation of the RC. This is optional and support for
+            RLS has been dropped in Pegasus 4.5.0 release.</para>
           </listitem>
 
           <listitem>
@@ -858,7 +839,8 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
           <listitem>
             <para><emphasis role="bold">replica-catalog</emphasis> - URL for a
             local replica catalog (LRC) to register your files in. Only used
-            for RLS implementation of the RC. This is optional</para>
+            for RLS implementation of the RC. This is optional and support for
+            RLS has been dropped in Pegasus 4.5.0.</para>
           </listitem>
 
           <listitem>

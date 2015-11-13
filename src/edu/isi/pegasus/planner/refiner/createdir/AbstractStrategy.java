@@ -142,10 +142,11 @@ public abstract class AbstractStrategy implements Strategy {
         for( Iterator<GraphNode> it = dag.jobIterator();it.hasNext();){
             GraphNode node = it.next();
             Job job = (Job)node.getContent();
-
+            
             if( job.getJobType() == Job.CHMOD_JOB ){
-                //skip
-                //chmod jobs dont have a staging site associated
+                //PM-845 staging site is always set to the associated 
+                //compute jobs execution site
+                set.add( job.getStagingSiteHandle() );
                 //they are only created in the shared fs mode.
                 continue;
             }

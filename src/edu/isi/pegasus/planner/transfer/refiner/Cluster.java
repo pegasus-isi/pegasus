@@ -45,6 +45,7 @@ import java.util.Map;
 import java.util.HashMap;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.code.GridStartFactory;
+import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.transfer.Implementation;
 
 
@@ -359,7 +360,10 @@ public class Cluster extends Bundle {
                 FileTransfer ft = ( FileTransfer)it.next();
                 String key = this.constructFileKey( ft.getLFN(), job.getStagingSiteHandle() );
                 
-                if( ft.isTransferringExecutableFile() && this.mAddNodesForSettingXBit ){
+                //PM-810 worker node exeucution is per job level now
+                boolean addNodeForSettingXBit = !mPegasusConfiguration.jobSetupForWorkerNodeExecution(job);
+        
+                if( ft.isTransferringExecutableFile() && addNodeForSettingXBit ){
                     //the staged execution file should be having the setup
                     //job as parent if it does not preserve x bit
                     if( implementation.doesPreserveXBit()){
@@ -398,7 +402,10 @@ public class Cluster extends Bundle {
                 }
             }
             
-            if( !stagedExecFiles.isEmpty() && mAddNodesForSettingXBit ){
+            //PM-810 worker node exeucution is per job level now
+            boolean addNodeForSettingXBit = !mPegasusConfiguration.jobSetupForWorkerNodeExecution(job);
+        
+            if( !stagedExecFiles.isEmpty() && addNodeForSettingXBit ){
                 //create en-mass the setXBit jobs
                 //if there were any staged files
                /*implementation.addSetXBitJobs( job,
@@ -725,6 +732,7 @@ public class Cluster extends Bundle {
         //construct noop keys
         newJob.setSiteHandle( "local" );
         newJob.setJobType( Job.CREATE_DIR_JOB );
+        newJob.dagmanVariables.construct( Dagman.NOOP_KEY, "true" );
         constructCondorKey( newJob, "noop_job", "true" );
         constructCondorKey( newJob, "noop_job_exit_code", "0" );
 

@@ -94,12 +94,6 @@ else
     test "X${JAVA_HEAPMAX}" = "X" || addon="$addon -Xmx${JAVA_HEAPMAX}m"
 fi
 
-JAVA_VERSION=`${JAVA} $addon -version 2>&1 | awk '/^java version/ {gsub(/"/,""); print $3}'`
-if [ `echo ${JAVA_VERSION} | cut -c1,3` -lt 16 ]; then
-	echo "ERROR: Java 1.6 or later required. Please set JAVA_HOME or PATH to point to a newer Java."
-	exit 1
-fi
-
 while [ true ]; do
     case "$1" in
 	-[XD][_a-zA-Z]*)

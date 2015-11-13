@@ -20,12 +20,15 @@ package edu.isi.pegasus.planner.code.generator.condor.style;
 import java.io.File;
 
 import edu.isi.pegasus.common.credential.CredentialHandlerFactory;
+import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleFactoryException;
+import edu.isi.pegasus.planner.common.PegasusConfiguration;
+import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
 /**
@@ -63,7 +66,7 @@ public class Condor extends Abstract {
     public static final String TRANSFER_EXECUTABLE_KEY =
                          edu.isi.pegasus.planner.namespace.Condor.TRANSFER_EXECUTABLE_KEY;
 
-    //
+    public static final String EMPTY_TRANSFER_OUTPUT_KEY = "+TransferOutput";
 
     /**
      * The name of the style being implemented.
@@ -104,7 +107,11 @@ public class Condor extends Abstract {
     /**
      * A boolean indicating whether pegasus lite mode is picked up or not.
      */
-    private boolean mPegasusLiteEnabled;
+    //private boolean mPegasusLiteEnabled;
+    /**
+     * Handle to Pegasus Configuration
+     */
+    private PegasusConfiguration mPegasusConfiguration;
 
     /**
      * Path to Pegasus Lite local wrapper script.
@@ -130,7 +137,11 @@ public class Condor extends Abstract {
      */
     public void initialize( PegasusBag bag , CredentialHandlerFactory credentialFactory )throws CondorStyleException{
         super.initialize( bag, credentialFactory );
-        mPegasusLiteEnabled = mProps.getGridStart().equalsIgnoreCase( "PegasusLite" );
+        
+        //PM-810 pegasus lite enablign is now per job
+        //mPegasusLiteEnabled = mProps.getGridStart().equalsIgnoreCase( "PegasusLite" );
+        mPegasusConfiguration = new PegasusConfiguration( bag.getLogger() );
+        
         mPegasusLiteLocalWrapper = this.getSubmitHostPathToPegasusLiteLocal();
 
 
@@ -152,13 +163,6 @@ public class Condor extends Abstract {
      */
     public void apply(Job job) throws CondorStyleException{
 
-        //mLogger.log( "Credentials required for job " + job.getID() + " "  + job.getCredentialTypes() ,
-         //            LogManager.DEBUG_MESSAGE_LEVEL );
-
-        //           Removed for JIRA PM-543
-//      String execSiteWorkDir = mSiteStore.getInternalWorkDirectory(job);
-//        String workdir = (String) job.globusRSL.removeKey("directory"); // returns old value
-//        workdir = (workdir == null)?execSiteWorkDir:workdir;
         String workdir = job.getDirectory();
 
         String defaultUniverse = job.getSiteHandle().equalsIgnoreCase("local")?
@@ -225,6 +229,8 @@ public class Condor extends Abstract {
                     }else{
                         job.condorVariables.construct("initialdir", workdir);
                     }
+                    //PM-961 also associate the value as an environment variable
+                    job.envVariables.construct( ENV.PEGASUS_SCRATCH_DIR_KEY, workdir);
                 }
             }
             else{
@@ -235,9 +241,22 @@ public class Condor extends Abstract {
                 job.condorVariables.construct("when_to_transfer_output",
                                               "ON_EXIT");
             }
-            //isGlobus = false;
             
             applyCredentialsForRemoteExec(job);
+            
+            //PM-820 inspect the job to check if it has 
+            //transfer_output_files specified and that is not empty
+            //s_t_f is specified and no t_o_f specified
+            String condorOutputTransfers = job.condorVariables.getOutputFilesForTransfer();
+            if ( ( condorOutputTransfers != null || job.condorVariables.containsKey( "should_transfer_files") ) &&
+                 ( condorOutputTransfers == null || condorOutputTransfers.isEmpty() ) ){
+                //add +TransferOutput instead of transfer_output_files
+                job.condorVariables.removeOutputFilesForTransfer();
+                job.condorVariables.construct( EMPTY_TRANSFER_OUTPUT_KEY, "\"\"" );
+                mLogger.log( "Added empty " + EMPTY_TRANSFER_OUTPUT_KEY + " key for job " + job.getID() ,
+                             LogManager.DEBUG_MESSAGE_LEVEL );
+            }
+            
         }
         else if(universe.equalsIgnoreCase(Condor.SCHEDULER_UNIVERSE) || universe.equalsIgnoreCase( Condor.LOCAL_UNIVERSE )){
 
@@ -254,51 +273,7 @@ public class Condor extends Abstract {
                         job.condorVariables.construct("initialdir", workdir);
                     }
                 }
-
-
-
                 wrapJobWithLocalPegasusLite( job );
-
-                /*
-                if( this.mPegasusLiteEnabled ){
-                    //wrap the job with local pegasus lite wrapped job
-                    //to work around the Condor IO bug for PegasusLite
-                    //PM-542
-                    wrapJobWithLocalPegasusLite( job );
-                }
-                else{
-                    //do same as earlier for time being.
-                
-                    //check explicitly for any input files transferred via condor
-                    //file transfer mechanism
-                    if( ipFiles != null ){
-                        //log a debug message before removing the files
-                        StringBuffer sb = new StringBuffer();
-                        sb.append( "Removing the following ip files from condor file tx for job " ).
-                           append( job.getID() ).append( " " ).append( ipFiles );
-                        mLogger.log(  sb.toString(), LogManager.DEBUG_MESSAGE_LEVEL );
-                        job.condorVariables.removeIPFilesForTransfer();
-                    }
-                
-                    //check for transfer_executable and remove if set
-                    //transfer_executable does not work in local/scheduler universe
-                    if( job.condorVariables.containsKey( Condor.TRANSFER_EXECUTABLE_KEY )){
-                        job.condorVariables.removeKey( Condor.TRANSFER_EXECUTABLE_KEY );
-                        job.condorVariables.removeKey( "should_transfer_files" );
-                        job.condorVariables.removeKey( "when_to_transfer_output" );
-                    }
-                
-                    //for local or scheduler universe we never should have
-                    //should_transfer_file or w_t_f
-                    //the keys can appear if a user in site catalog for local sites
-                    //specifies these keys for the vanilla universe jobs
-                    if( job.condorVariables.containsKey( "should_transfer_files" ) ||
-                        job.condorVariables.containsKey( "when_to_transfer_output" )){
-                        job.condorVariables.removeKey( "should_transfer_files" );
-                        job.condorVariables.removeKey( "when_to_transfer_output" );
-                    }
-                }
-                */
                 applyCredentialsForLocalExec(job);
         }
         else{
@@ -353,7 +328,7 @@ public class Condor extends Abstract {
             job.envVariables.construct( Condor.PEGASUS_INITIAL_DIR_KEY, workdir );
 
 
-            if ( !this.mPegasusLiteEnabled ){
+            if ( ! mPegasusConfiguration.jobSetupForWorkerNodeExecution( job ) ){
                 //for shared file system mode we want the wrapped job
                 //to execute in workdir
                 job.envVariables.construct( Condor.PEGASUS_EXECUTE_IN_INITIAL_DIR, "true" );

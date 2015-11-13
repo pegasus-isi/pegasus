@@ -15,6 +15,10 @@ typedef struct _FileInfo {
     uint64_t bread;         /* Number of bytes read */
     uint64_t bwrite;        /* Number of bytes written */
     uint64_t size;          /* Size of the file at exit */
+    uint64_t nread;         /* Number of read operations */
+    uint64_t nwrite;        /* Number of write operations */
+    uint64_t bseek;         /* Total seek distance */
+    uint64_t nseek;         /* Number of seek operations */
     struct _FileInfo *next;
 } FileInfo;
 
@@ -23,6 +27,8 @@ typedef struct _SockInfo {
     int port;               /* Port number on peer */
     uint64_t bsend;         /* bytes sent on socket */
     uint64_t brecv;         /* bytes recieved on socket */
+    uint64_t nsend;         /* Number of send ops */
+    uint64_t nrecv;         /* Number of recv ops */
     struct _SockInfo *next;
 } SockInfo;
 

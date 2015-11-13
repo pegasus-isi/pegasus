@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}{% endblock %}</title>
+    <link rel="shortcut icon" href="{{ url_for ('static', filename='favicon.ico') }}">
+
+    {% block head %}
+        <!-- Stylesheets -->
+        <link rel='stylesheet' href='//fonts.googleapis.com/css?family=Stardos+Stencil'>
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+        <link rel="stylesheet" href="{{ url_for ('static', filename='css/style.css') }}"/>
+        <link rel="stylesheet" href="{{ url_for ('static', filename='css/pe-icon-7-stroke.css') }}"/>
+        {% block css_includes %}{% endblock %}
+    {% endblock %}
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body>
+{% include "header.html" %}
+<article>
+    <div class="container-fluid">
+        <section class="row">
+            <section class="col-sm-4 col-md-3">
+                <h3>
+                    File Browser
+                </h3>
+            </section>
+            <section class="col-sm-8 col-md-9">
+                <ol class="breadcrumb list-unstyled" style="margin-bottom: 0px;">
+                    <li>
+                        <a href="{{ url_for ('.index') }}">
+                            <span class="pe-7s-home fa-2x"></span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for ('.workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a>
+                    </li>
+                    <li class="active">Browser</li>
+                </ol>
+            </section>
+        </section>
+        <section class="row">
+            <section class="col-sm-4 col-md-3">
+                <div class="file-list">
+                    <div class="text-center">
+                         <p>Loading</p><p></p> <i class="fa fa-spin fa-ellipsis-v fa-2x"> </i>
+                    </div>
+                </div>
+            </section>
+            <section class="col-sm-8 col-md-9">
+                <pre id="file-contents">Click a file to view it's contents.</pre>
+            </section>
+        </section>
+    </div>
+</article>
+{% include "footer.html" %}
+<!-- JavaScript -->
+<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script type="text/javascript" src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+<script>
+// Save Bootstrap Tooltip before it gets overridden by jQueryUI tooltip
+var bootstrapTooltip = $.fn.tooltip;
+</script>
+<script type="text/javascript" src="//code.jquery.com/ui/1.11.3/jquery-ui.js"></script>
+<script>
+// Restore Bootstrap Tooltip
+$.fn.tooltip = bootstrapTooltip;
+</script>
+<script type="text/javascript" src="{{ url_for ('static', filename='js/script.js') }}"></script>
+{% block javascript_includes %}{% endblock %}
+{% block javascript_init %}
+<script>
+$(function () {
+
+    function folderStructure(folders, path, collapse) {
+        var urlPrefix = '{{ url_for('.file_view', root_wf_id=root_wf_id, wf_id=wf_id, path='') }}';
+        collapse = collapse == undefined ? false : collapse;
+
+        var directories = 'D' in folders[path] ? folders[path]['D'] : null;
+        var files       = 'F' in folders[path] ? folders[path]['F'] : null;
+
+        var ul = $('<ul></ul>');
+
+        if (collapse) {
+            ul.hide();
+        }
+
+        for (var i = 0; directories && i < directories.length; ++i) {
+            var li = $('<li class="directory collapsed"></li>');
+            li.text(directories[i].replace(path, ''));
+            var e = folderStructure(folders, directories[i], true);
+            li.append(e);
+            ul.append(li);
+        }
+
+        for (var i = 0; files && i < files.length; ++i) {
+            var li = $('<li class="text-nowrap"></li>');
+            var a = $('<a>' + files[i] + '</a>');
+            var url = urlPrefix + path + '/' + files[i];
+            url = url.replace(/\/{2,}/g, '/');
+            a.attr('href', url);
+
+            li.append(a);
+            ul.append(li);
+        }
+
+        return ul;
+    }
+
+    function loadFileList() {
+        $.ajax({
+            url: '{{ url_for('.file_list', root_wf_id=root_wf_id, wf_id=wf_id) }}',
+            dataType: 'json',
+            success: function(folders) {
+
+                var e = folderStructure(folders, '/', false);
+                var ul = $('<ul class="directory">/</ul>');
+                ul.append(e);
+                $('.file-list').html(ul);
+
+                /*
+                 * Event Handler Registration
+                 */
+                $('.file-list .directory').click(function(event) {
+                    event.stopPropagation();
+                    $('ul', this).toggle();
+                    $('ul', this).parent().toggleClass('collapsed');
+                });
+
+                $('.file-list li').click(function(event) {
+                    event.stopPropagation();
+                    event.preventDefault();
+                });
+
+                $('.file-list li a').click(function(event) {
+                    event.stopPropagation();
+                    event.preventDefault();
+                    onFileViewClick($(this).attr('href'));
+                });
+            },
+            error: function(){
+                $('.file-list').text('Error loading file list');
+            }
+        });
+    }
+
+    function onFileViewClick(url) {
+        $.ajax({
+            url: url,
+            dataType: 'text',
+            success: function(data) {
+
+                if (data.length === 0) {
+                    data = 'Empty file';
+                }
+
+                $('#file-contents').text(data);
+            },
+            error: function(){
+                $('#file-contents').text('Error occurred while loading file');
+            }
+        });
+    }
+
+    {% if init_file %}
+        onFileViewClick("{{ url_for ('.file_view', root_wf_id = root_wf_id, wf_id = wf_id, path = init_file.lstrip('/')) }}");
+    {% endif %}
+
+    loadFileList();
+});
+</script>
+{% endblock %}
+</body>
+</html>

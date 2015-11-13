@@ -20,10 +20,14 @@ package edu.isi.pegasus.planner.client;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LoggingKeys;
+
+import edu.isi.pegasus.planner.common.PegasusDBAdmin;
 import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
 import edu.isi.pegasus.common.util.FactoryException;
 import edu.isi.pegasus.common.util.StreamGobbler;
 import edu.isi.pegasus.common.util.Version;
+
+
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
 import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
 import edu.isi.pegasus.planner.catalog.site.SiteFactory;
@@ -44,6 +48,7 @@ import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.RunDirectoryFilenameFilter;
 import edu.isi.pegasus.planner.common.Shiwa;
+import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.parser.DAXParserFactory;
 import edu.isi.pegasus.planner.parser.Parser;
@@ -381,7 +386,12 @@ public class CPlanner extends Executable{
         Collection result = null;
 
         //print help if asked for
-        if( mPOptions.getHelp() ) { printLongVersion(); return result; }
+        if( mPOptions.getHelp() ) { 
+            //PM-816 disable metrics logging
+            this.mSendMetrics = false;
+            printLongVersion(); 
+            return result; 
+        }
 
         //set the logging level only if -v was specified
         if(mPOptions.getLoggingLevel() >= 0){
@@ -484,6 +494,8 @@ public class CPlanner extends Executable{
 
         //load the parser and parse the dax
         ADag orgDag = this.parseDAX( dax );
+        mLogger.log( "Parsed DAX with following metrics " + orgDag.getWorkflowMetrics().toJson(), 
+                     LogManager.DEBUG_MESSAGE_LEVEL);
 
         //generate the flow ids for the classads information
         orgDag.generateFlowName();
@@ -567,6 +579,7 @@ public class CPlanner extends Executable{
             }
 
             state++;
+            
             mProps.writeOutProperties( mPOptions.getSubmitDirectory() );
 
             mPMetrics.setRelativeSubmitDirectory( mPOptions.getRelativeSubmitDirectory() );
@@ -668,62 +681,8 @@ public class CPlanner extends Executable{
             mLogger.logEventCompletion();
         }
 
-//            mLogger.log( message + " -DONE", LogManager.INFO_MESSAGE_LEVEL );
-
-// CLEANUP WORKFLOW GENERATION IS DISABLED FOR 3.2
-// JIRA PM-529
-//
-//            //create the submit files for cleanup dag if
-//            //random dir option specified
-//            if(mPOptions.generateRandomDirectory() && !emptyWorkflow ){
-//                ADag cleanupDAG = cwmain.getCleanupDAG();
-//
-//                //the cleanup dags are never part of hierarichal workflows
-//                //for time being
-//                cleanupDAG.setRootWorkflowUUID( cleanupDAG.getWorkflowUUID() );
-//
-//                //set the refinement started flag to get right events
-//                //generated for stampede for cleanup workflow
-//                cleanupDAG.setWorkflowRefinementStarted( true );
-//
-//                PlannerOptions cleanupOptions = (PlannerOptions)mPOptions.clone();
-//
-//                //submit files are generated in a subdirectory
-//                //of the submit directory
-//                message = "Generating code for the cleanup workflow";
-//                mLogger.log( message, LogManager.INFO_MESSAGE_LEVEL );
-//                //set the submit directory in the planner options for cleanup wf
-//                cleanupOptions.setSubmitDirectory( cleanupOptions.getSubmitDirectory(), CPlanner.CLEANUP_DIR );
-//                PegasusBag bag = cwmain.getPegasusBag();
-//                bag.add( PegasusBag.PLANNER_OPTIONS, cleanupOptions );
-//
-//                //create a separate properties file for the cleanup workflow.
-//                //pegasus run should not launch monitord for the cleanup workflow
-//                PegasusProperties cleanupWFProperties = PegasusProperties.nonSingletonInstance();
-//                cleanupWFProperties.setProperty( PEGASUS_MONITORD_LAUNCH_PROPERTY_KEY, "false" );
-//                try {
-//                    cleanupWFProperties.writeOutProperties(cleanupOptions.getSubmitDirectory());
-//                } catch (IOException ex) {
-//                    throw new RuntimeException( "Unable to write out properties for the cleanup workflow ", ex );
-//                }
-//                bag.add( PegasusBag.PEGASUS_PROPERTIES , cleanupWFProperties );
-//
-//                codeGenerator = CodeGeneratorFactory.
-//                              loadInstance( bag );
-//
-//                try{
-//                    codeGenerator.generateCode(cleanupDAG);
-//                }
-//                catch ( Exception e ){
-//                    throw new RuntimeException( "Unable to generate code", e );
-//                }
-//
-//                mLogger.log(message + " -DONE",LogManager.INFO_MESSAGE_LEVEL);
-//            }
-// END OF COMMENTED OUT CODE
-
+        checkMasterDatabaseForVersionCompatibility();
         
-
         if ( mPOptions.submitToScheduler() ) {//submit the jobs
             StringBuffer invocation = new StringBuffer();
             //construct the path to the bin directory
@@ -790,6 +749,7 @@ public class CPlanner extends Executable{
         //construct noop keys
         newJob.setSiteHandle( "local" );
         newJob.setJobType( Job.CREATE_DIR_JOB );
+        newJob.dagmanVariables.construct( Dagman.NOOP_KEY, "true" );
         construct(newJob,"noop_job","true");
         construct(newJob,"noop_job_exit_code","0");
 
@@ -867,10 +827,6 @@ public class CPlanner extends Executable{
 
                 case 'z'://deferred
                     options.setPartOfDeferredRun( true );
-                    break;
-
-                case 'a'://authenticate
-                    options.setAuthentication(true);
                     break;
 
                 case 'b'://optional basename
@@ -962,7 +918,7 @@ public class CPlanner extends Executable{
                     break;
                     
                 case 'I'://input-dir
-                    options.setInputDirectory( g.getOptarg() );
+                    options.setInputDirectories( g.getOptarg() );
                     break;
                     
                 case 'j'://job-prefix
@@ -1044,6 +1000,17 @@ public class CPlanner extends Executable{
             }
         }
 
+        //try and detect if there are any unparsed components of the 
+        //argument string such as inadvertent white space in values
+        int nonOptionArgumentIndex = g.getOptind();
+        if( nonOptionArgumentIndex < args.length ){
+            //this works as planner does not take any positional arguments
+            StringBuilder error = new StringBuilder();
+            error.append( "Unparsed component ").append( args[nonOptionArgumentIndex] ).
+                  append( " of the command line argument string: ").
+                  append( " " ).append( options.getOriginalArgString());
+            throw new RuntimeException( error.toString() );
+        }
 
         return options;
 
@@ -1056,7 +1023,7 @@ public class CPlanner extends Executable{
      * Submits the workflow for execution using pegasus-run, a wrapper around
      * pegasus-submit-dag.
      *
-     * @param invocation    the pegasus run invocation
+     * @param invocation    the pegasus run command
      *
      * @return boolean indicating whether could successfully submit the workflow or not.
      */
@@ -1094,7 +1061,7 @@ public class CPlanner extends Executable{
             result = (status == 0) ?true : false;
         }
         catch(IOException ioe){
-            mLogger.log("IOException while running pegasus-run ", ioe,
+            mLogger.log("IOException while executing pegasus-run ", ioe,
                         LogManager.ERROR_MESSAGE_LEVEL);
         }
         catch( InterruptedException ie){
@@ -1221,7 +1188,7 @@ public class CPlanner extends Executable{
              append( "\n [--staging-site s1=ss1[,s2=ss2[..]] [--basename prefix] [--cache f1[,f2[..]] [--cluster t1[,t2[..]] [--conf <path to property file>]"  ).
              append( "\n [--inherited-rc-files f1[,f2[..]]]  [--cleanup <cleanup strategy to use>] " ).
              append( "\n [--dir <dir for o/p files>] [--force] [--force-replan] [--forward option=[value] ] [--group vogroup] "  ).
-             append( "\n [--input-dir <input dir>] [--output-dir <output dir>] [--output output site] [--randomdir=[dir name]]   [--verbose] [--version][--help] " ).
+             append( "\n [--input-dir dir1[,dir2[..]]] [--output-dir <output dir>] [--output output site] [--randomdir=[dir name]]   [--verbose] [--version][--help] " ).
              append( "\n"  ).
              append( "\n Mandatory Options "  ).
              append( "\n -d  fn " ).
@@ -1231,7 +1198,7 @@ public class CPlanner extends Executable{
              append( "\n -B |--bundle       the shiwa bundle to be used. ( prototypical option )  "  ).
              append( "\n -c |--cache        comma separated list of replica cache files."  ).
              append( "\n --inherited-rc-files  comma separated list of replica files. Locations mentioned in these have a lower priority than the locations in the DAX file"  ).
-             append( "\n --cleanup          the cleanup strategy to use. Can be none|inplace|leaf ").
+             append( "\n --cleanup          the cleanup strategy to use. Can be none|inplace|leaf . Defaults to inplace. ").
              append( "\n -C |--cluster      comma separated list of clustering techniques to be applied to the workflow to "  ).
              append( "\n                    to cluster jobs in to larger jobs, to avoid scheduling overheads."  ).
              append( "\n --conf             the path to the properties file to use for planning. "  ).
@@ -1245,9 +1212,9 @@ public class CPlanner extends Executable{
              append( "\n                    can be repeated multiple times."  ).
              append( "\n -g |--group        the VO Group to which the user belongs "  ).
              append( "\n -j |--job-prefix   the prefix to be applied while construction job submit filenames "  ).
-             append( "\n -I |--input-dir    an optional input directory where the input files reside on submit host"  ).
+             append( "\n -I |--input-dir    comma separated list of optional input directories where the input files reside on submit host"  ).
              append( "\n -O |--output-dir   an optional output directory where the output files should be transferred to on submit host. "  ).
-             append( "                      the directory specified is asscociated with the local-storage directory for the output site."  ).
+             append( "\n                      the directory specified is asscociated with the local-storage directory for the output site."  ).
              append( "\n -o |--output-site  the output site where the data products during workflow execution are transferred to."  ).
              append( "\n --output           deprecated option . Replaced by --output-site option"  ).
              append( "\n -s |--sites        comma separated list of executions sites on which to map the workflow."  ).
@@ -1753,10 +1720,10 @@ public class CPlanner extends Executable{
     }
 
     /**
-     * Returns the pegasus-run invocation on the workflow planned.
+     * Returns the pegasus-run command on the workflow planned.
      *
      *
-     * @return  the pegasus-run invocation
+     * @return  the pegasus-run command
      */
     private String getPegasusRunInvocation( ){
         StringBuffer result = new StringBuffer();
@@ -1886,6 +1853,16 @@ public class CPlanner extends Executable{
         Callback cb = ((DAXParser)p).getDAXCallback();
         p.startParser( dax );
         return (ADag)cb.getConstructedObject();
+    }
+
+    /**
+     * Calls out to the pegasus-db-admin tool to check for database compatibility.
+     * 
+     * @param submitDirectory  the submit directory created by the planner
+     */
+    private void checkMasterDatabaseForVersionCompatibility() {
+        PegasusDBAdmin dbCheck = new PegasusDBAdmin( mBag.getLogger() );
+        dbCheck.checkMasterDatabaseForVersionCompatibility( mProps.getPropertiesInSubmitDirectory() );
     }
 
     

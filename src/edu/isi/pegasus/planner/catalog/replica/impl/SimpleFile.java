@@ -41,6 +41,7 @@ import java.util.regex.Pattern;
 import edu.isi.pegasus.common.util.Boolean;
 import edu.isi.pegasus.common.util.Currently;
 import edu.isi.pegasus.common.util.Escape;
+import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 
@@ -51,7 +52,7 @@ import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
  * concurrent instances <b>will clobber</b> each other!<p>
  * <p/>
  * The site attribute should be specified whenever possible. The
- * attribute key for the site attribute is "pool". For the shell
+ * attribute key for the site attribute is "site". For the shell
  * planner, its value will always be "local".<p>
  * <p/>
  * The class is permissive in what inputs it accepts. The LFN may or may
@@ -97,7 +98,7 @@ public class SimpleFile implements ReplicaCatalog {
     /**
      * Maintains a memory slurp of the file representation.
      */
-    protected Map m_lfn = null;
+    protected Map<String, Collection<ReplicaCatalogEntry>> m_lfn = null;
 
     /**
      * A boolean indicating whether the catalog is read only or not.
@@ -271,7 +272,7 @@ public class SimpleFile implements ReplicaCatalog {
                     sb = new StringBuffer();
                     break;
                 case 3: // sb to pfn
-                    pfn = sb.toString();
+                    pfn = new PegasusURL( sb.toString()).getURL();
                     sb = new StringBuffer();
                     break;
                 case 4: // sb to key
@@ -303,8 +304,10 @@ public class SimpleFile implements ReplicaCatalog {
             return false;
         } else {
             // valid entry
-            if (state == 16)
-                insert(lfn, new ReplicaCatalogEntry(pfn, attr));
+            if (state == 16){
+                ReplicaCatalogEntry rce = new ReplicaCatalogEntry(pfn, attr);
+                insert(lfn, rce );
+            }
             return true;
         }
     }
@@ -884,9 +887,8 @@ public class SimpleFile implements ReplicaCatalog {
      * Deletes multiple mappings into the replica catalog. The input is a
      * map indexed by the LFN. The value for each LFN key is a collection
      * of replica catalog entries. On setting matchAttributes to false, all entries
-     * having matching lfn pfn mapping to an entry in the Map are deleted.
-     * However, upon removal of an entry, all attributes associated with the pfn
-     * also evaporate (cascaded deletion).
+     * having matching lfn pfn and site mapping to an entry in the Map are deleted.
+     * 
      *
      * @param x               is a map from logical filename string to list of
      *                        replica catalog entries.
@@ -895,8 +897,26 @@ public class SimpleFile implements ReplicaCatalog {
      * @return the number of deletions.
      * @see ReplicaCatalogEntry
      */
-    public int delete( Map x, boolean matchAttributes ) {
-        throw new java.lang.UnsupportedOperationException("delete(Map,boolean) not implemented as yet");
+    public int delete( Map<String, Collection<ReplicaCatalogEntry>> x, boolean matchAttributes ) {
+        int result = 0;
+        if( matchAttributes ){
+            for (Map.Entry<String, Collection<ReplicaCatalogEntry>> entry: x.entrySet()){
+                String lfn = entry.getKey();
+                for( ReplicaCatalogEntry rce: entry.getValue() ){
+                    result += this.delete(lfn, rce);
+                }
+            }
+        }
+        else{
+            for (Map.Entry<String, Collection<ReplicaCatalogEntry>> entry: x.entrySet()){
+                String lfn = entry.getKey();
+                for( ReplicaCatalogEntry rce: entry.getValue() ){
+                    //only match for site attribute
+                    result += this.delete(lfn, new ReplicaCatalogEntry( rce.getPFN(), rce.getResourceHandle()));
+                }
+            }
+        }
+        return result;
     }
 
     /**

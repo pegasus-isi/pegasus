@@ -54,10 +54,9 @@ os.sys.path.insert(0, lib_ext_dir)
 
 # Import our modules
 from Pegasus.tools import utils
-from Pegasus.tools import db_utils
 from Pegasus.tools import kickstart_parser
+from Pegasus.db import connection
 from Pegasus.db.workflow import stampede_statistics
-from Pegasus.db.schema.schema_check import SchemaVersionError
 
 utils.configureLogging(level=logging.WARNING)
 
@@ -91,6 +90,7 @@ class Job:
         self.arguments = ""		# Job's arguments
         self.initial_dir = ""		# Job's initial dir (from submit file)
         self.transfer_input_files = ""	# Files to transfer when debugging a job
+        self.transfer_output_files = ""	# Files to transfer when debugging a job
         self.retries = None             # Keep track of how many times a job is submitted
         self.is_subdax = False          # Flag to tell if job is a SUBDAX/pegasus-plan job
         self.is_subdag = False		# Flag to tell if job is a SUBDAG job in the dag file
@@ -475,9 +475,12 @@ def parse_submit_file(my_job):
                             my_job.err_file = v
                 # Only parse following keys if we are debugging a job
                 if debug_mode:
-                    # Get transfer input files
+                    # Get transfer input files and output files
                     if k == "transfer_input_files":
                         my_job.transfer_input_files = v
+
+                    if k == "transfer_output_files":
+                        my_job.transfer_output_files = v
         SUB.close()
         # If initialdir was specified, we need to make both error and output files relative to that
         if len(my_job.initial_dir):
@@ -988,7 +991,12 @@ def analyze_db(config_properties):
     global total, success, failed, unsubmitted, unknown
 
     # Get the database URL
-    output_db_url, wf_uuid = db_utils.get_db_url_wf_uuid(input_dir, config_properties, top_dir)
+    try:
+        output_db_url = connection.url_by_submitdir(input_dir, connection.DBType.WORKFLOW, config_properties, top_dir)
+        wf_uuid = connection.get_wf_uuid(input_dir)
+    except connection.ConnectionError, e:
+        logger.error(e)
+        sys.exit(1)
 
     # Nothing to do if we cannot resolve the database URL
     if output_db_url is None:
@@ -999,19 +1007,17 @@ def analyze_db(config_properties):
     try:
         workflow_stats = stampede_statistics.StampedeStatistics(output_db_url, False)
         workflow_stats.initialize(wf_uuid)
-    except SchemaVersionError:
-        logger.error("------------------------------------------------------")
-        logger.error("Database schema mismatch! Please run the upgrade tool")
-        logger.error("to upgrade the database to the latest schema version.")
-        sys.exit(1)
     except:
         logger.error("Failed to load the database." + output_db_url )
         logger.warning(traceback.format_exc())
         sys.exit(1)
 
     total = workflow_stats.get_total_jobs_status()
-    success = workflow_stats.get_total_succeeded_jobs_status()
-    failed = workflow_stats.get_total_failed_jobs_status()
+    #success = workflow_stats.get_total_succeeded_jobs_status()
+    #failed = workflow_stats.get_total_failed_jobs_status()
+    total_success_failed = workflow_stats.get_total_succeeded_failed_jobs_status()
+    success = total_success_failed.succeeded
+    failed = total_success_failed.failed
     unsubmitted = total - success - failed
 
     # Let's print the results
@@ -1029,7 +1035,7 @@ def analyze_db(config_properties):
     # Now, print information about jobs that failed...
     if failed > 0:
         # Get list of failed jobs from database
-        my_failed_jobs = workflow_stats.get_failed_job_instances(final=True, all_jobs=True)
+        my_failed_jobs = workflow_stats.get_failed_job_instances()
 
         # Print header
         print_console("Failed jobs' details".center(80, '*'))
@@ -1087,13 +1093,26 @@ def analyze_db(config_properties):
                     print
                 print
 
+                some_tasks_failed = False
+                for my_task in my_tasks:
+                    #PM-798 we want to detect if some tasks failed or not
+                    if my_task[0] < -1:
+                        # Skip only post script tasks. Pre script invocations have task_submit_seq as -1
+                        continue
+                    some_tasks_failed = some_tasks_failed or ( my_task[1] != 0 )
+
+                # PM-798 track whether we need to actually print the condor job stderr or not
+                # we only print if there is no information in the kickstart record
+                my_print_job_stderr = True
+
                 # Now, print task information
                 for my_task in my_tasks:
-                    if my_task[0] < 1:
-                        # Skip pre, and post script tasks
+                    if my_task[0] < -1:
+                        # Skip only post script tasks. Pre script invocations have task_submit_seq as -1
                         continue
-                    if my_task[1] == 0:
-                        # Skip tasks that succeeded
+
+                    if my_task[1] == 0 and some_tasks_failed:
+                        # Skip tasks that succeeded only if we know some tasks did fail
                         continue
 
                     # Got a task with a non-zero exitcode
@@ -1128,6 +1147,7 @@ def analyze_db(config_properties):
 
                             if my_stdout_end - my_stdout_start > 0:
                                 # Something to display
+                                my_print_job_stderr = False
                                 print_console( ("Task #" + str(my_task[0]) + " - " + str(my_task[4]) + " - " + str(my_task[5]) + " - stdout").center(80, '-') )
                                 print_console()
                                 print_console( my_info.stdout_text[my_stdout_start:my_stdout_end] )
@@ -1146,24 +1166,33 @@ def analyze_db(config_properties):
 
                             if my_stderr_end - my_stderr_start > 0:
                                 # Something to display
+                                my_print_job_stderr = False
                                 print_console( ("Task #" + str(my_task[0]) + " - " + str(my_task[4]) + " - " + str(my_task[5]) + " - Kickstart stderr").center(80, '-') )
                                 print_console()
                                 print_console( my_info.stdout_text[my_stderr_start:my_stderr_end] )
                                 print_console( )
 
-                        # Now print the stderr output from the .err file
-                        if my_info.stderr_text.strip("\n\t \r") != "":
-                            # Something to display
-                            print_console( ("Task #" + str(my_task[0]) + " - " + str(my_task[4]) + " - " + str(my_task[5]) + " - stderr").center(80, '-') )
+                        # PM-808 print jobinstance stdout for prescript failures only.
+                        if my_task[0] == -1 and my_info.stdout_text is not None:
+                            print_console( ("Task #" + str(my_task[0]) + " - " + str(my_task[4]) + " - " + str(my_task[5]) + " - stdout").center(80, '-') )
                             print_console()
-                            print_console( my_info.stderr_text )
+                            print_console( my_info.stdout_text )
                             print_console()
+                        
+                # Now print the stderr output from the .err file
+                if my_info.stderr_text.strip("\n\t \r") != "" and my_print_job_stderr:
+                    # Something to display
+                    # if task exitcode is 0, it should indicate PegasusLite case compute job succeeded but stageout failed
+                    print_console( ("Job stderr file - %s" % (my_info.stderr_file or '-')).center(80, '-')  )
+                    print_console()
+                    print_console( my_info.stderr_text )
+                    print_console()
 
-                    # recurse for sub workflow
-                    if sub_wf_cmd is not None and recurse_mode:
-                        print_console( ("Failed Sub Workflow").center(80,"="))
-                        subprocess.Popen( sub_wf_cmd, shell=True).communicate()[0]
-                        print_console( ("").center(80,"="))
+                # recurse for sub workflow
+                if sub_wf_cmd is not None and recurse_mode:
+                    print_console( ("Failed Sub Workflow").center(80,"="))
+                    subprocess.Popen( sub_wf_cmd, shell=True).communicate()[0]
+                    print_console( ("").center(80,"="))
 
             else:
                 log.error("unexpected job instance returned by database!")
@@ -1240,6 +1269,20 @@ def debug_condor(my_job):
         debug_script.write("\n")
         debug_script.write("set -e\n")
         debug_script.write("\n")
+
+        debug_script.write( """
+check_file() {
+file=$1
+if [ -e $file ]; then
+    return 0
+else
+    echo "ERROR: output file $file not generated"
+    STATUS=$(($STATUS + 1))
+fi
+}
+         """ )
+        debug_script.write("\n")
+
         debug_script.write("export pegasus_lite_work_dir=%s" %debug_dir)
         debug_script.write("\n")
         debug_script.write("# Copy any files that are needed\n")
@@ -1297,8 +1340,29 @@ def debug_condor(my_job):
         debug_script.write('   echo "executable ran successfully"\n')
         debug_script.write("else\n")
         debug_script.write('   echo "executable failed with error $?"\n')
+        debug_script.write("   exit $rc\n")
         debug_script.write("fi\n")
-        debug_script.write("exit $rc\n")
+
+
+        #PM-989 add existence check for all output files transferred
+        #by condor file IO
+        debug_script.write( 'STATUS=0\n' )
+        debug_script.write( 'set +e \n')
+        for out_file in my_job.transfer_output_files.split(","):
+            if len(out_file):
+                debug_script.write("check_file %s\n" %out_file )
+
+        debug_script.write( """
+if [ $STATUS -eq 0 ]; then
+    echo "all output files were created"
+else
+    echo "ERROR: Not all output files were created"
+fi
+
+exit $STATUS
+        """)
+
+
     except:
         logger.error("cannot write to file %s" % (debug_script))
         sys.exit(1)

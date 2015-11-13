@@ -52,8 +52,8 @@ manpages.html : manpages.xml $(XMLMANPAGES)
 %.xml : %.txt
 	$(ASCIIDOC) -o $@ $<
 	BASENAME=`echo $< | sed 's/.txt//'`; \
-	sed -i.bak -E "s/id=\"(_[^\"]+)\"/id=\"$$BASENAME\1\"/" $@ ; \
-	sed -i.bak -E "s/<refentry lang.*/<refentry lang='en' id='cli-$$BASENAME'>/" $@ ; \
+	perl -p -i.bak -e "s/id=\"(_[^\"]+)\"/id=\"$$BASENAME\1\"/" $@ ; \
+	perl -p -i.bak -e "s/<refentry lang.*/<refentry lang='en' id='cli-$$BASENAME'>/" $@ ; \
 	rm $@.bak
 
 clean:

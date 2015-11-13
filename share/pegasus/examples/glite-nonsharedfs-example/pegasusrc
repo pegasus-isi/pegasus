@@ -1,0 +1,13 @@
+pegasus.catalog.site=XML
+pegasus.catalog.site.file=sites.xml
+
+#pegasus.dir.useTimestamp=true
+pegasus.dir.storage.deep=false
+pegasus.condor.logs.symlink=false
+
+
+pegasus.data.configuration = nonsharedfs
+pegasus.transfer.worker.package = true
+
+#condor broke it's quoting for grid universe
+pegasus.condor.arguments.quote	false

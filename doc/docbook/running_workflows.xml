@@ -89,7 +89,7 @@
       </listitem>
     </itemizedlist>
 
-    <para>The <link linkend="reference">" Reference Manual"</link> Chapter
+    <para>The <link linkend="data_management">Data Management</link> chapter
     details more about when and how staging nodes are inserted into the
     workflow.</para>
 
@@ -160,7 +160,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
     <para>During the mapping process, the abstract workflow undergoes a series
     of refinement steps that converts it to an executable form.</para>
 
-    <section>
+    <section id="planning_data_reuse">
       <title>Data Reuse</title>
 
       <para>The abstract workflow after parsing is optionally handed over to
@@ -189,7 +189,10 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
      OR
       ( ALL of it's children have been marked for deletion
         AND
-        Node's output files have transfer flags set to false
+        ( Node's output files have transfer flags set to false 
+          OR
+          Node's output files with transfer flag as true have locations recorded in the Replica Catalog
+        )
        )
  )</programlisting>
 
@@ -217,7 +220,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       </figure>
     </section>
 
-    <section>
+    <section id="planning_site_selection">
       <title>Site Selection</title>
 
       <para>The abstract workflow is then handed over to the Site Selector
@@ -447,15 +450,15 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       </figure>
     </section>
 
-    <section>
+    <section id="mapping_job_clustering">
       <title>Job Clustering</title>
 
       <para>After site selection, the workflow is optionally handed for to the
       job clustering module, which clusters jobs that are scheduled to the
       same site. Clustering is usually done on short running jobs in order to
       reduce the remote execution overheads associated with a job. Clustering
-      is described in detail in the <link linkend="reference">Reference
-      Manual</link> chapter.</para>
+      is described in detail in the <link
+      linkend="job_clustering">optimization</link> chapter.</para>
 
       <tip>
         <para>The job clustering is turned on by passing the <emphasis
@@ -477,9 +480,10 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       option to the planner. In case, multiple locations are specified for the
       same input file, the location from where to stage the data is selected
       using a <emphasis role="bold">Replica Selector</emphasis> . Replica
-      Selection is described in detail in the Replica Selection section of the
-      <link linkend="reference">Reference Manual.</link> More details about
-      staging site can be found in the <link
+      Selection is described in detail in the <link
+      linkend="replica_selection">Replica Selection</link> section of the
+      <link linkend="data_management">Data Management</link> chapter. More
+      details about staging site can be found in the <link
       linkend="data_staging_configuration">data staging configuration</link>
       chapter.</para>
 
@@ -492,11 +496,12 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       automatically which underlying client to use. pegasus-transfer is
       distributed with the PEGASUS and can be found in the bin subdirectory .
       Pegasus Transfer Refiners are are described in the detail in the
-      Transfers section of the <link linkend="reference">Reference
-      Manual</link>. The default transfer refiner that is used in Pegasus is
-      the <emphasis role="bold">Bundle</emphasis> Transfer Refiner, that
-      bundles data stage-in nodes and data stage-out nodes on the basis of
-      certain pegasus profile keys associated with the workflow.</para>
+      Transfers section of the <link linkend="data_management">Data
+      Management</link> chapter. The default transfer refiner that is used in
+      Pegasus is the <emphasis role="bold">BalancedCluster</emphasis> Transfer
+      Refiner, that clusters data stage-in nodes and data stage-out nodes per
+      level of the workflow, on the basis of certain pegasus profile keys
+      associated with the workflow.</para>
 
       <figure>
         <title>Addition of Data Transfer Nodes to the Workflow</title>
@@ -555,7 +560,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       </tip>
     </section>
 
-    <section>
+    <section id="planning_createdir_cleanup">
       <title>Addition of Create Dir and Cleanup Jobs</title>
 
       <para>After the data transfer nodes have been added to the workflow,
@@ -612,7 +617,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
     </section>
 
     <section>
-      <title>Code Generation</title>
+      <title id="planning_code_generation">Code Generation</title>
 
       <para>The last step of refinement process, is the code generation where
       Pegasus writes out the executable workflow in a form understandable by
@@ -783,6 +788,21 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
         <para>This is the directory created on the worker nodes per job
         usually by the job wrapper that launches the job.</para>
+      </listitem>
+    </orderedlist>
+
+    <para>You can specifiy the data configuration to use either in</para>
+
+    <orderedlist>
+      <listitem>
+        <para>properties - Specify the global property <link
+        linkend="data_conf_props">pegasus.data.configuration</link> .</para>
+      </listitem>
+
+      <listitem>
+        <para>site catalog - Starting 4.5.0 release, you can specify pegasus
+        profile key named data.configuration and associate that with your
+        compute sites in the site catalog.</para>
       </listitem>
     </orderedlist>
 
@@ -1161,7 +1181,8 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
         to use. These properties are described in the <emphasis
         role="bold">basic.properties</emphasis> files in the <emphasis
         role="bold">etc</emphasis> sub directory (see the Properties section
-        of the<link linkend="reference">Reference</link> chapter.</para>
+        of the<link linkend="configuration"> Configuration</link>
+        chapter.</para>
 
         <para>The basic properties that need to be set usually are listed
         below:</para>

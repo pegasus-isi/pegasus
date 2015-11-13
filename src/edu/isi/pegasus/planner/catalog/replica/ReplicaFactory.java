@@ -49,7 +49,7 @@ public class ReplicaFactory{
      */
     public static final String DEFAULT_PACKAGE =   "edu.isi.pegasus.planner.catalog.replica.impl";
 
-
+    
     /**
      * Connects the interface with the replica catalog implementation. The
      * choice of backend is configured through properties. This class is
@@ -77,9 +77,39 @@ public class ReplicaFactory{
            NoSuchMethodException, InstantiationException,
            IllegalAccessException, InvocationTargetException {
 
-        return loadInstance( props.getVDSProperties() );
+        return loadInstance( props , props.getPropertiesInSubmitDirectory() );
     }
 
+    /**
+     * Connects the interface with the replica catalog implementation. The
+     * choice of backend is configured through properties. This class is
+     * useful for non-singleton instances that may require changing
+     * properties.
+     *
+     * @param props is an instance of properties to use.
+     * @param file  the physical location of the property file
+     *
+     * @exception ClassNotFoundException if the schema for the database
+     * cannot be loaded. You might want to check your CLASSPATH, too.
+     * @exception NoSuchMethodException if the schema's constructor interface
+     * does not comply with the database driver API.
+     * @exception InstantiationException if the schema class is an abstract
+     * class instead of a concrete implementation.
+     * @exception IllegalAccessException if the constructor for the schema
+     * class it not publicly accessible to this package.
+     * @exception InvocationTargetException if the constructor of the schema
+     * throws an exception while being dynamically loaded.
+     *
+     * @see org.griphyn.common.util.CommonProperties
+     * @see #loadInstance()
+     */
+    static public ReplicaCatalog loadInstance( PegasusProperties props, String file )
+           throws ClassNotFoundException, IOException,
+           NoSuchMethodException, InstantiationException,
+           IllegalAccessException, InvocationTargetException {
+
+        return loadInstance( props.getVDSProperties() , file );
+    }
 
     /**
      * Connects the interface with the replica catalog implementation. The
@@ -103,7 +133,7 @@ public class ReplicaFactory{
      * @see org.griphyn.common.util.CommonProperties
      * @see #loadInstance()
      */
-    static public ReplicaCatalog loadInstance( CommonProperties props )
+    static private ReplicaCatalog loadInstance( CommonProperties props, String file )
       throws ClassNotFoundException, IOException,
              NoSuchMethodException, InstantiationException,
              IllegalAccessException, InvocationTargetException
@@ -120,8 +150,12 @@ public class ReplicaFactory{
         //now overload with the work catalog specific db properties.
         //pegasus.catalog.work.db.driver.*
         db.putAll( props.matchingSubset( ReplicaCatalog.DB_PREFIX , false ) );
-
-
+        
+        //PM-778 properties file location requried for pegasus-db-admin
+        if( file != null ){
+            connect.put( "properties.file", file );
+        }
+        
         //to make sure that no confusion happens.
         //add the db prefix to all the db properties
         for( Enumeration e = db.propertyNames(); e.hasMoreElements(); ){
@@ -181,11 +215,7 @@ public class ReplicaFactory{
     if ( catalogImplementor == null )
       throw new RuntimeException( "You need to specify the " +
 				  ReplicaCatalog.c_prefix + " property" );
-    // for Karan: 2005-10-27
-    if ( catalogImplementor.equalsIgnoreCase("rls") ){
-      catalogImplementor = "RLI";
-    }
-
+    
     //File also means SimpleFile
     if( catalogImplementor.equalsIgnoreCase( "File" ) ){
       catalogImplementor = "SimpleFile";
@@ -209,33 +239,9 @@ public class ReplicaFactory{
     return result;
   }
 
-  /**
-   * Connects the interface with the replica catalog implementation. The
-   * choice of backend is configured through properties. This method uses
-   * default properties from the property singleton.
-   *
-   * @exception ClassNotFoundException if the schema for the database
-   * cannot be loaded. You might want to check your CLASSPATH, too.
-   * @exception NoSuchMethodException if the schema's constructor interface
-   * does not comply with the database driver API.
-   * @exception InstantiationException if the schema class is an abstract
-   * class instead of a concrete implementation.
-   * @exception IllegalAccessException if the constructor for the schema
-   * class it not publicly accessible to this package.
-   * @exception InvocationTargetException if the constructor of the schema
-   * throws an exception while being dynamically loaded.
-   * @exception MissingResourceException if the properties could not
-   * be loaded properly.
-   *
-   * @see org.griphyn.common.util.CommonProperties
-   * @see #loadInstance( org.griphyn.common.util.CommonProperties )
-   */
-  static public ReplicaCatalog loadInstance()
-    throws ClassNotFoundException, IOException,
-	   NoSuchMethodException, InstantiationException,
-	   IllegalAccessException, InvocationTargetException,
-	   MissingResourceException
-  {
-    return loadInstance( CommonProperties.instance() );
-  }
+    public static ReplicaCatalog loadInstance(CommonProperties props) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+  
 }

@@ -1,0 +1,32 @@
+#!/bin/bash
+
+if [ $# -ne 2 ]; then
+    echo "Usage: $0 PYTHONSRC DOCDEST"
+    exit 1
+fi
+
+SRC=$1
+DEST=$2
+
+export PYTHONDOCS="http://docs.python.org/library/"
+
+cd $SRC
+
+# Generate the docs
+pydoc -w DAX3
+
+# remove local file paths and make them links relative
+perl -p -i -e 's:(file\:){0,1}[\w\.\-_/]+lib/pegasus/python/Pegasus/::g' DAX3.html
+
+# change the file name from DAX3.html to index.html
+perl -p -i -e 's/DAX3\.html/index.html/g' DAX3.html
+
+# prepend core module links with http://docs.python.org/library/
+perl -p -i -e 's/"(codecs|os|sys|shlex|datetime|exceptions)\.html/"http:\/\/docs.python.org\/library\/\1.html/g' DAX3.html
+
+# Install in the destination
+/bin/mv DAX3.html $DEST/index.html
+
+# the documentation also links to the source module, so we need a copy
+/bin/cp DAX3.py $DEST/DAX3.py
+

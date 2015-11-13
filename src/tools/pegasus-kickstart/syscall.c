@@ -206,6 +206,7 @@ static int handle_read(ProcInfo *c) {
     FileInfo *file = getFileInfo(c, fd);
     if (file != NULL && bread > 0) {
         file->bread += bread;
+        file->nread += 1;
     }
     return 0;
 }
@@ -219,6 +220,7 @@ static int handle_write(ProcInfo *c) {
     FileInfo *file = getFileInfo(c, fd);
     if (file != NULL && bwrite > 0) {
         file->bwrite += bwrite;
+        file->nwrite += 1;
     }
     return 0;
 }

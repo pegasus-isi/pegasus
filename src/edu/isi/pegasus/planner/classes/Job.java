@@ -792,16 +792,34 @@ public class Job extends Data implements GraphNodeContent{
         if( url.startsWith( "gsiftp" ) ){
             this.addCredentialType( site, CredentialHandler.TYPE.x509   );
         }
+        else if( url.startsWith( "sshftp" ) ){
+        	// is this the correct place to verify the URL?
+        	if (url.indexOf("@") == -1) {
+        		throw new RuntimeException("Detected a sshftp transfer without" +
+        				" username. Please specify a username in the URL." +
+        				" For example:" +
+        				" sshftp://username@somehost.org/path/file");
+        	}
+            this.addCredentialType( site, CredentialHandler.TYPE.ssh );
+        }
         else if( url.startsWith( "s3" ) ){
             this.addCredentialType( site, CredentialHandler.TYPE.s3 );
         }
         else if( url.startsWith( "gs" ) ){
-            this.addCredentialType( site, CredentialHandler.TYPE.gs );
+        	this.addCredentialType( site, CredentialHandler.TYPE.boto );
+            this.addCredentialType( site, CredentialHandler.TYPE.googlep12 );
         }
         else if( url.startsWith( "irods" ) ){
             this.addCredentialType( site, CredentialHandler.TYPE.irods  );
         }
         else if( url.startsWith( "scp" ) ){
+        	// is this the correct place to verify the URL?
+        	if (url.indexOf("@") == -1) {
+        		throw new RuntimeException("Detected a scp transfer without" +
+        				" username. Please specify a username in the URL." +
+        				" For example:" +
+        				" scp://username@somehost.org/path/file");
+        	}
             this.addCredentialType( site, CredentialHandler.TYPE.ssh );
         }
     }

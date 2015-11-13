@@ -215,8 +215,16 @@ public class NodeCollapser extends Engine {
 
         //start the partitioner and let the fun begin!
         p.determinePartitions( cb );
+        
+        ADag clusteredDAG = c.getClusteredDAG();
+        if( mLogger.getLevel() == LogManager.TRACE_MESSAGE_LEVEL ){
+            //print out the clustered DAG
+            //before returning
+            mLogger.log( "Clustered DAG by clusterer " + c.description() + " is " + clusteredDAG,
+                          LogManager.TRACE_MESSAGE_LEVEL );
+        }
 
-        return c.getClusteredDAG();
+        return clusteredDAG;
     }
     
     /**

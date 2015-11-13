@@ -13,23 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package edu.isi.pegasus.planner.catalog.replica.impl;
 
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
+import edu.isi.pegasus.common.util.StreamGobbler;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
-import java.io.FileInputStream;
+import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.test.DefaultTestSetup;
+import edu.isi.pegasus.planner.test.TestSetup;
+
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Properties;
-import org.junit.After;
+import java.util.LinkedList;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.After;
 
 /**
  *
@@ -37,6 +44,8 @@ import org.junit.Test;
  */
 public class JDBCRCTest {
 
+    private TestSetup mTestSetup;
+    private LogManager mLogger;
     private JDBCRC jdbcrc = null;
 
     public JDBCRCTest() {
@@ -45,29 +54,52 @@ public class JDBCRCTest {
     @Before
     public void setUp() throws IOException {
 
-        Properties prop = new Properties();
-        InputStream input = null;
-
+        String command = "./bin/pegasus-db-admin create jdbc:sqlite:jdbcrc_test.db";
+        
         try {
-            input = new FileInputStream(System.getProperty("user.home") + "/.jdbcrc.conf");
-            prop.load(input);
+            mTestSetup = new DefaultTestSetup();
+            mLogger = mTestSetup.loadLogger(mTestSetup.loadPropertiesFromFile(".properties", new LinkedList()));
+            mLogger.logEventStart("test.pegasus.url", "setup", "0");
 
             jdbcrc = new JDBCRC(
-                    prop.getProperty("pegasus.catalog.replica.db.driver", "com.mysql.jdbc.Driver"),
-                    prop.getProperty("pegasus.catalog.replica.db.url", "jdbc:mysql://localhost/jdbcrc_test"),
-                    prop.getProperty("pegasus.catalog.replica.db.user", "root"),
-                    prop.getProperty("pegasus.catalog.replica.db.password", ""));
+                    "org.sqlite.JDBC",
+                    "jdbc:sqlite:jdbcrc_test.db",
+                    "root", ""
+            );
 
-        } catch (LinkageError ex) {
-            throw new IOException(ex);
+            Runtime r = Runtime.getRuntime();
+            String[] envp = {"PYTHONPATH=" + System.getProperty("externals.python.path")};
+            Process p = r.exec(command, envp);
+
+            //spawn off the gobblers with the already initialized default callback
+            StreamGobbler ips
+                    = new StreamGobbler(p.getInputStream(), new DefaultStreamGobblerCallback(
+                                    LogManager.CONSOLE_MESSAGE_LEVEL));
+            StreamGobbler eps
+                    = new StreamGobbler(p.getErrorStream(), new DefaultStreamGobblerCallback(
+                                    LogManager.ERROR_MESSAGE_LEVEL));
+
+            ips.start();
+            eps.start();
+
+            //wait for the threads to finish off
+            ips.join();
+            eps.join();
+
+            int status = p.waitFor();
+            if (status != 0) {
+                throw new RuntimeException("Database creation failed with non zero exit status " + command);
+            }
+        } catch (IOException ioe) {
+            mLogger.log("IOException while executing " + command, ioe,
+                    LogManager.ERROR_MESSAGE_LEVEL);
+            throw new RuntimeException("IOException while executing " + command, ioe);
+        } catch (InterruptedException ie) {
+            //ignore
         } catch (ClassNotFoundException ex) {
             throw new IOException(ex);
         } catch (SQLException ex) {
             throw new IOException(ex);
-        } finally {
-            if (input != null) {
-                input.close();
-            }
         }
     }
 
@@ -131,6 +163,7 @@ public class JDBCRCTest {
         jdbcrc.delete("a", new ReplicaCatalogEntry("b", attr));
         c = jdbcrc.lookup("a");
         assertFalse(c.contains(new ReplicaCatalogEntry("b", attr)));
+        assertFalse(c.contains(new ReplicaCatalogEntry("b", attr2)));
     }
 
     @Test
@@ -172,5 +205,6 @@ public class JDBCRCTest {
         jdbcrc.delete("a", "c");
         jdbcrc.delete("a", "d");
         jdbcrc.close();
+        new File("jdbcrc_test.db").delete();
     }
 }

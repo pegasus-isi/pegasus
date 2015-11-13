@@ -173,8 +173,16 @@ def sighandler(signum, frame):
         os.kill(monitord.pid, signum)
 
 if __name__ == "__main__":
+   
+    # Create a new process group. PM-972: A change in HTCondor 8.2.9
+    # (https://htcondor-wiki.cs.wisc.edu/index.cgi/tktview?tn=5173) means that
+    # HTCondor now sets up the process group for the process, and setpgid()
+    # will fail - but we can just ignore it as the process group is already set
+    try:
+        os.setpgid(0, 0)
+    except:
+        pass
 
-    os.setpgid(0, 0)
     signal.signal(signal.SIGTERM, sighandler)
     signal.signal(signal.SIGINT, sighandler)
     signal.signal(signal.SIGABRT, sighandler)

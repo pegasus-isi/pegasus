@@ -129,10 +129,7 @@ public class SeqExec extends Abstract {
             String gridstart = (String) firstJob.vdsNS.get(Pegasus.GRIDSTART_KEY);
             if (gridstart.equalsIgnoreCase( GridStartFactory.
                                             GRIDSTART_SHORT_NAMES[
-                                            GridStartFactory.KICKSTART_INDEX]) ||
-                 gridstart.equalsIgnoreCase( GridStartFactory.
-                                            GRIDSTART_SHORT_NAMES[
-                                            GridStartFactory.SEQEXEC_INDEX]) ) {
+                                            GridStartFactory.KICKSTART_INDEX]) ) {
                 //ensure $PEGASUS_HOME/bin/exitpost is invoked
                 //as the baby jobs are being invoked by kickstart
                 job.dagmanVariables.construct( Dagman.POST_SCRIPT_KEY,

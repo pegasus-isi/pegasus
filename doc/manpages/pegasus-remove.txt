@@ -22,6 +22,9 @@ been planned and submitted using *pegasus-plan* and *pegasus-run*. The
 command can be invoked either in the planned directory with no options 
 and arguments or just the full path to the run directory.
 
+Another way to remove a workflow is with the pegasus-halt command.
+The difference is that pegasus-halt will allow current jobs to
+finish gracefully before stopping the workflow.
 
 Options
 -------

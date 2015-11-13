@@ -88,6 +88,12 @@ public abstract class Namespace /*extends Data*/{
     * The key value is empty . 
     */
    public static final int EMPTY_KEY = 4;
+   
+   /**
+    * The key value is valid but contents should be merged to existing value if
+    * it exists
+    */
+   public static final int MERGE_KEY = 5;
 
    /**
     * The Map object that contains the profiles for a particular namespace.
@@ -288,9 +294,9 @@ public abstract class Namespace /*extends Data*/{
      *
      */
     public void checkKeyInNS(String key, String value){
-        int rslVal = checkKey(key,value);
+        int action = checkKey(key,value);
 
-        switch (rslVal){
+        switch (action){
 
             case Namespace.MALFORMED_KEY:
                 //key is malformed ignore
@@ -316,6 +322,13 @@ public abstract class Namespace /*extends Data*/{
             case Namespace.EMPTY_KEY:
                 emptyKey( key );
                 break;
+             
+            case Namespace.MERGE_KEY:
+                mergeKey( key , value );
+                break;
+                
+            default:
+                throw new RuntimeException( "Invalid return type for checkKey " + key + " " + value );
         }
 
    }
@@ -416,9 +429,10 @@ public abstract class Namespace /*extends Data*/{
    }
 
    /**
-     * Returns a boolean value, that a particular key is mapped to in this
-     * namespace. If the key is mapped to a non boolean
-     * value or the key is not populated in the namespace false is returned.
+     * Returns a int value, that a particular key is mapped to in this
+     * namespace. If the key is mapped to a non int
+     * value or the key is not populated in the namespace , then default value is
+     * returned.
      *
      * @param key  The key whose boolean value you desire.
      *
@@ -429,6 +443,28 @@ public abstract class Namespace /*extends Data*/{
         if(mProfileMap != null && mProfileMap.containsKey(key)){
             try{
                 value = Integer.parseInt( (String) mProfileMap.get(key));
+            }catch( Exception e ){
+                
+            }
+        }
+        return value;
+    }
+    
+    /**
+     * Returns a long value, that a particular key is mapped to in this
+     * namespace. If the key is mapped to a non long
+     * value or the key is not populated in the namespace , then default value is
+     * returned.
+     *
+     * @param key  The key whose boolean value you desire.
+     *
+     * @return long value
+     */
+    public long getLongValue(Object key, long deflt ){
+        long value = deflt;
+        if(mProfileMap != null && mProfileMap.containsKey(key)){
+            try{
+                value = Long.parseLong( (String) mProfileMap.get(key));
             }catch( Exception e ){
                 
             }
@@ -524,6 +560,23 @@ public abstract class Namespace /*extends Data*/{
    
    
    /**
+    * Merges key value to an existing value if it exists
+    * 
+    * @param key
+    * @param value 
+    */ 
+   public void mergeKey(String key, String value) {
+       throw new UnsupportedOperationException( "Function mergeKey(String,String not supported for namespace "  + this.namespaceName());
+   }
+
+   /**
+    * Resets the namespace, removing all profiles associated
+    */
+   public void reset(){
+       this.mProfileMap.clear();
+   }
+   
+   /**
      * Returns the clone of the object.
      *
      * @return the clone
@@ -545,6 +598,7 @@ public abstract class Namespace /*extends Data*/{
         }
         return obj;
     }
+
 
     
    /**

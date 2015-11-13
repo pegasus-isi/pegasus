@@ -34,7 +34,7 @@ import java.util.ArrayList;
  *
  * @version $Revision$
  *
- * @see org.griphyn.common.catalog.ReplicaCatalogEntry
+ * @see edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry
  */
 public class ReplicaLocation
        extends Data
@@ -56,16 +56,27 @@ public class ReplicaLocation
      * A list of <code>ReplicaCatalogEntry</code> objects containing the PFN's
      * and associated attributes.
      */
-    private List mPFNList;
+    private List<ReplicaCatalogEntry> mPFNList;
 
     /**
      * Default constructor.
      */
     public ReplicaLocation(){
         mLFN     = "";
-        mPFNList = new ArrayList();
+        mPFNList = new ArrayList<ReplicaCatalogEntry>();
     }
 
+    /**
+     * Overloaded constructor.
+     * Intializes the member variables to the values passed.
+     *
+     * @param rl
+     */
+    public ReplicaLocation( ReplicaLocation rl ){
+        this( rl.getLFN(), rl.getPFNList() );
+
+    }
+    
     /**
      * Overloaded constructor.
      * Intializes the member variables to the values passed.
@@ -73,33 +84,18 @@ public class ReplicaLocation
      * @param lfn  the logical filename.
      * @param pfns the list of <code>ReplicaCatalogEntry</code> objects.
      */
-    public ReplicaLocation( String lfn , List pfns ){
-        mLFN     = lfn;
-        mPFNList = pfns;
-        //sanitize pfns. add a default resource handle if not specified
-        sanitize( mPFNList );
-    }
-
-    /**
-     * Overloaded constructor.
-     * Intializes the member variables to the values passed.
-     *
-     * @param lfn  the logical filename.
-     * @param pfns the list of <code>ReplicaCatalogEntry</code> objects.
-     */
-    public ReplicaLocation( String lfn , Collection pfns ){
+    public ReplicaLocation( String lfn , Collection<ReplicaCatalogEntry> pfns ){
         mLFN     = lfn;
 
-        //create a separate list only if required
-        mPFNList = ( pfns instanceof List )?
-                   (List)pfns:
-                   //create a new list from the collection
-                   new ArrayList( pfns ) ;
+        //PM-1001 always create a separate list only if required
+        mPFNList = new ArrayList( pfns ) ;
 
         //sanitize pfns. add a default resource handle if not specified
         sanitize( mPFNList );
 
     }
+    
+    
 
     /**
      * Adds a PFN specified in the DAX to the object
@@ -115,7 +111,7 @@ public class ReplicaLocation
 
     /**
      * Add a PFN and it's attributes. Any existing
-     * mapping with the same PFN will be replaced, including all its
+     * mapping with the same PFN and site attribute will be replaced, including all its
      * attributes.
      *
      * @param tuple  the <code>ReplicaCatalogEntry</code> object containing the
@@ -123,7 +119,8 @@ public class ReplicaLocation
      */
     public void addPFN( ReplicaCatalogEntry tuple ){
         boolean seen = false;
-        String pfn = tuple.getPFN();
+        String pfn  = tuple.getPFN();
+        String site = tuple.getResourceHandle();
 
         sanitize( tuple );
 
@@ -131,7 +128,8 @@ public class ReplicaLocation
         //same pfn
         for ( Iterator i= this.pfnIterator(); i.hasNext() && ! seen; ) {
             ReplicaCatalogEntry rce = (ReplicaCatalogEntry) i.next();
-            if ( (seen = pfn.equals(rce.getPFN())) ) {
+            seen = pfn.equals(rce.getPFN()) && site.equals( rce.getResourceHandle() );
+            if ( seen ) {
                 try {
                     i.remove();
                 } catch ( UnsupportedOperationException uoe ) {
@@ -150,7 +148,7 @@ public class ReplicaLocation
      * @param tuples  the <code>List</code> object of <code>ReplicaCatalogEntry</code>
      *              objects, each containing the  PFN and the attributes.
      */
-    protected void addPFNs( List tuples ){
+    protected void addPFNs( List<ReplicaCatalogEntry> tuples ){
         for( Iterator it = tuples.iterator(); it.hasNext(); ){
             addPFN( (ReplicaCatalogEntry)it.next() );
         }

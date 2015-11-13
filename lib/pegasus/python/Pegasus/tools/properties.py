@@ -251,7 +251,7 @@ class Properties:
                     pass
 
         if not my_already_loaded:
-            logger.warn("no properties file parsed whatsoever!")
+            logger.debug("no properties file parsed whatsoever!")
 
         # Keep ordering of config before initial so that the -D CLI
         # properties can override any other properties

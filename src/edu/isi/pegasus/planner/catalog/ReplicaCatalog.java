@@ -240,7 +240,7 @@ public interface ReplicaCatalog extends Catalog
    * @return the number of deletions.
    * @see ReplicaCatalogEntry
    */
-  public int delete( Map x , boolean matchAttributes);
+  public int delete( Map<String, Collection<ReplicaCatalogEntry>> x , boolean matchAttributes);
 
 
   /**

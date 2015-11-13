@@ -26,6 +26,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <dirent.h>
+#include <inttypes.h>
 
 #include <signal.h> /* signal names */
 
@@ -394,20 +395,19 @@ int printLinuxInfo(FILE *out, int indent, const MachineLinuxInfo *ptr) {
         "other"
     };
 
-    char b[4][32];
-
     /* <ram .../> tag */
-    fprintf(out, "%*s<ram total=\"%s\" free=\"%s\" shared=\"%s\" buffer=\"%s\"/>\n",
+    fprintf(out, "%*s<ram total=\"%"PRIu64"\" free=\"%"PRIu64"\" shared=\"%"PRIu64"\" buffer=\"%"PRIu64"\"/>\n",
             indent, "",
-            sizer(b[0], 32, sizeof(ptr->ram_total), &(ptr->ram_total)),
-            sizer(b[1], 32, sizeof(ptr->ram_free), &(ptr->ram_free)),
-            sizer(b[2], 32, sizeof(ptr->ram_total), &(ptr->ram_shared)),
-            sizer(b[3], 32, sizeof(ptr->ram_free), &(ptr->ram_buffer)));
+            ptr->ram_total / 1024,
+            ptr->ram_free / 1024,
+            ptr->ram_shared / 1024,
+            ptr->ram_buffer / 1024);
 
     /* <swap .../> tag */
-    fprintf(out, "%*s<swap total=\"%s\" free=\"%s\"/>\n", indent, "",
-            sizer(b[0], 32, sizeof(ptr->swap_total), &(ptr->swap_total)),
-            sizer(b[1], 32, sizeof(ptr->swap_free), &(ptr->swap_free)));
+    fprintf(out, "%*s<swap total=\"%"PRIu64"\" free=\"%"PRIu64"\"/>\n",
+            indent, "",
+            ptr->swap_total / 1024,
+            ptr->swap_free / 1024);
 
     /* <boot> element */
     fprintf(out, "%*s<boot idle=\"%.3f\">%s</boot>\n", indent, "",
@@ -431,9 +431,9 @@ int printLinuxInfo(FILE *out, int indent, const MachineLinuxInfo *ptr) {
                 fprintf(out, " %s=\"%hu\"", state_names[s], ptr->procs.state[s]);
             }
         }
-        fprintf(out, " vmsize=\"%s\" rss=\"%s\"/>\n",
-                sizer(b[0], 32, sizeof(ptr->procs.size), &ptr->procs.size),
-                sizer(b[1], 32, sizeof(ptr->procs.rss), &ptr->procs.rss));
+        fprintf(out, " vmsize=\"%"PRIu64"\" rss=\"%"PRIu64"\"/>\n",
+                ptr->procs.size / 1024,
+                ptr->procs.rss / 1024);
 
         /* <task> element */
         fprintf(out, "%*s<task total=\"%u\"", indent, "", ptr->tasks.total);
