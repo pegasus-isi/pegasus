@@ -29,6 +29,12 @@ in the database so that it can still be accessed through the dashboard.
 The *delete* command removes the submit directory and cleans up any associated
 records in the user's master database.
 
+The *attach* command adds a submit dir to the master database that drives the
+dashboard.
+
+The *detach* command removes a submit dir from the master database that drives
+the dashboard.
+
 Commands
 --------
 *archive* SUBMITDIR::
@@ -58,6 +64,19 @@ Commands
     Delete a workflow submit dir. This operation removes all related records
     from the user's master database, including ensemble manager records.
     Deleted workflows do not appear in the dashboard.
+
+*attach* SUBMITDIR::
+    Add entries for the workflow in SUBMITDIR to the user's master db. If the
+    workflow is already in the master db, then update the db_url and submit_dir
+    fields to match the actual path of the submit dir. This command will create
+    master_workflow and master_workflowstate entries in the master db for the
+    root workflow in SUBMITDIR.
+
+*detach* SUBMITDIR::
+    Remove entries for the workflow in SUBMITDIR from the user's master db.
+    This command will delete any entries in the master_workflow and
+    master_workflowstate tables.
+
 
 Global Options
 --------------

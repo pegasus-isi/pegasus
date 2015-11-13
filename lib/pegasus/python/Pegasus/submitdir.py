@@ -23,8 +23,6 @@ class MasterDatabase:
         q = self.session.query(DashboardWorkflow)
         q = q.filter(DashboardWorkflow.wf_uuid == wf_uuid)
         wf = q.first()
-        if wf is None:
-            log.warning("No master db record found for workflow: %s" % wf_uuid)
         return wf
 
     def get_ensemble_workflow(self, wf_uuid):
@@ -69,6 +67,11 @@ class WorkflowDatabase(object):
         q = q.filter(Workflow.wf_uuid == wf_uuid)
         return q.first()
 
+    def get_workflow_states(self, wf_id):
+        q = self.session.query(Workflowstate)
+        q = q.filter(Workflowstate.wf_id == wf_id)
+        return q.all()
+
     def update_submit_dirs(self, root_wf_id, src, dest):
         q = self.session.query(Workflow)
         q = q.filter(Workflow.root_wf_id == root_wf_id)
@@ -96,16 +99,21 @@ class SubmitDir(object):
         self.root_wf_uuid = self.braindump["root_wf_uuid"]
         self.user = self.braindump["user"]
 
+        self.archname = os.path.join(self.submitdir, "archive.tar.gz")
+
     def is_subworkflow(self):
         "Check to see if this workflow is a subworkflow"
         return self.wf_uuid != self.root_wf_uuid
+
+    def is_archived(self):
+        "A submit dir is archived if the archive file exists"
+        return os.path.isfile(self.archname)
 
     def extract(self):
         "Extract files from an archived submit dir"
 
         # Locate archive file
-        archname = os.path.join(self.submitdir, "archive.tar.gz")
-        if not os.path.isfile(archname):
+        if not self.is_archived():
             raise SubmitDirException("Submit dir not archived")
 
         # Update record in master db
@@ -116,12 +124,12 @@ class SubmitDir(object):
             wf.archived = False
 
         # Untar the files
-        tar = tarfile.open(archname, "r:gz")
+        tar = tarfile.open(self.archname, "r:gz")
         tar.extractall(path=self.submitdir)
         tar.close()
 
         # Remove the tar file
-        os.remove(archname)
+        os.remove(self.archname)
 
         # Commit the workflow changes
         mdbsession.commit()
@@ -144,10 +152,9 @@ class SubmitDir(object):
         exclude.add(self.braindump_file)
 
         # Locate and exclude archive file
-        archname = os.path.join(self.submitdir, "archive.tar.gz")
-        if os.path.exists(archname):
+        if self.is_archived():
             raise SubmitDirException("Submit dir already archived")
-        exclude.add(archname)
+        exclude.add(self.archname)
 
         # Ignore monitord files. This is needed so that tools like pegasus-statistics
         # will consider the workflow to be complete
@@ -171,7 +178,7 @@ class SubmitDir(object):
                     yield name, filepath
 
         # Archive the files
-        tar = tarfile.open(name=archname, mode="w:gz")
+        tar = tarfile.open(name=self.archname, mode="w:gz")
         for name, path in visit(self.submitdir):
             tar.add(name=path, arcname=name)
         tar.close()
@@ -314,6 +321,107 @@ class SubmitDir(object):
         mdbsession.commit()
         mdbsession.close()
 
+    def attach(self):
+        "Add a workflow to the master db"
+
+        # Verify that we aren't trying to attach a subworkflow
+        if self.is_subworkflow():
+            raise SubmitDirException("Subworkflows cannot be attached independent of the root workflow")
+
+        # Connect to master database
+        mdbsession = connection.connect_by_submitdir(self.submitdir, connection.DBType.MASTER)
+        mdb = MasterDatabase(mdbsession)
+
+        # Check to see if it already exists and just update it
+        wf = mdb.get_master_workflow(self.wf_uuid)
+        if wf is not None:
+            print "Workflow is already in master db"
+            old_submit_dir = wf.submit_dir
+            if old_submit_dir != self.submitdir:
+                print "Updating path..."
+                wf.submit_dir = self.submitdir
+                wf.db_url = connection.url_by_submitdir(self.submitdir, connection.DBType.WORKFLOW)
+                mdbsession.commit()
+            mdbsession.close()
+            return
+
+        # Connect to workflow db
+        db_url = connection.url_by_submitdir(self.submitdir, connection.DBType.WORKFLOW)
+        dbsession = connection.connect(db_url)
+        db = WorkflowDatabase(dbsession)
+
+        # Get workflow record
+        wf = db.get_workflow(self.wf_uuid)
+        if wf is None:
+            print "No database record for that workflow exists"
+            return
+
+        # Update the workflow record
+        wf.submitdir = self.submitdir
+        wf.db_url = db_url
+
+        # Insert workflow record into master db
+        mwf = DashboardWorkflow()
+        mwf.wf_uuid = wf.wf_uuid
+        mwf.dax_label = wf.dax_label
+        mwf.dax_version = wf.dax_version
+        mwf.dax_file = wf.dax_file
+        mwf.dag_file_name = wf.dag_file_name
+        mwf.timestamp = wf.timestamp
+        mwf.submit_hostname = wf.submit_hostname
+        mwf.submit_dir = self.submitdir
+        mwf.planner_arguments = wf.planner_arguments
+        mwf.user = wf.user
+        mwf.grid_dn = wf.grid_dn
+        mwf.planner_version = wf.planner_version
+        mwf.db_url = wf.db_url
+        mwf.archived = self.is_archived()
+        mdbsession.add(mwf)
+        mdbsession.flush() # We should have the new wf_id after this
+
+        # Query states from workflow database
+        states = db.get_workflow_states(wf.wf_id)
+
+        # Insert states into master db
+        for s in states:
+            ms = DashboardWorkflowstate()
+            ms.wf_id = mwf.wf_id
+            ms.state = s.state
+            ms.timestamp = s.timestamp
+            ms.restart_count = s.restart_count
+            ms.status = s.status
+            mdbsession.add(ms)
+        mdbsession.flush()
+
+        dbsession.commit()
+        dbsession.close()
+
+        mdbsession.commit()
+        mdbsession.close()
+
+    def detach(self):
+        "Remove any master db entries for the given root workflow"
+
+        # Verify that we aren't trying to detach a subworkflow
+        if self.is_subworkflow():
+            raise SubmitDirException("Subworkflows cannot be detached independent of the root workflow")
+
+        # Connect to master database
+        mdbsession = connection.connect_by_submitdir(self.submitdir, connection.DBType.MASTER)
+        mdb = MasterDatabase(mdbsession)
+
+        # Check to see if it even exists
+        wf = mdb.get_master_workflow(self.wf_uuid)
+        if wf is None:
+            print "Workflow is not in master DB"
+        else:
+            # Delete the workflow (this will delete the master_workflowstate entries as well)
+            mdb.delete_master_workflow(self.wf_uuid)
+
+        # Update the master db
+        mdbsession.commit()
+        mdbsession.close()
+
 class ExtractCommand(LoggingCommand):
     description = "Extract (uncompress) submit directory"
     usage = "Usage: %prog extract SUBMITDIR"
@@ -354,19 +462,43 @@ class DeleteCommand(LoggingCommand):
 
         SubmitDir(self.args[0]).delete()
 
+class AttachCommand(LoggingCommand):
+    description = "Attach a submit dir to the master db (dashboard)"
+    usage = "Usage: %prog attach SUBMITDIR"
+
+    def run(self):
+        if len(self.args) != 1:
+            self.parser.error("Specify SUBMITDIR")
+
+        SubmitDir(self.args[0]).attach()
+
+class DetachCommand(LoggingCommand):
+    description = "Detach a submit dir from the master db (dashboard)"
+    usage = "Usage: %prog detach SUBMITDIR"
+
+    def run(self):
+        if len(self.args) != 1:
+            self.parser.error("Specify SUBMITDIR")
+
+        SubmitDir(self.args[0]).detach()
+
 class SubmitDirCommand(CompoundCommand):
     description = "Manages submit directories"
     commands = [
         ("archive", ArchiveCommand),
         ("extract", ExtractCommand),
         ("move", MoveCommand),
-        ("delete", DeleteCommand)
+        ("delete", DeleteCommand),
+        ("attach", AttachCommand),
+        ("detach", DetachCommand)
     ]
     aliases = {
         "ar": "archive",
         "ex": "extract",
         "mv": "move",
-        "rm": "delete"
+        "rm": "delete",
+        "at": "attach",
+        "dt": "detach"
     }
 
 def main():
