@@ -408,7 +408,7 @@ def file_list(username, root_wf_id, wf_id):
                 folders[folder] = {'D': [], 'F': files}
 
                 for sub_folder in sub_folders:
-                    full_sub_folder = folder + sub_folder
+                    full_sub_folder = full_sub_folder = os.path.normpath(os.path.join(folder, sub_folder))
                     folders[folder]['D'].append(full_sub_folder)
 
             return json.dumps(folders), 200, {'Content-Type': 'application/json'}
