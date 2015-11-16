@@ -14,23 +14,19 @@
 
 __author__ = 'Rajiv Mayani'
 
-import os
-
 from datetime import datetime
-
 from time import localtime, strftime
 
 from flask import request, render_template, url_for, json, g, redirect, send_from_directory
 from sqlalchemy.orm.exc import NoResultFound
 
+import os
 from Pegasus.db.errors import StampedeDBNotFoundError
 from Pegasus.db.admin.admin_loader import DBAdminError
-
 from Pegasus.tools import utils
 from Pegasus.service import filters
 from Pegasus.service.dashboard.dashboard import Dashboard, NoWorkflowsFoundError
 from Pegasus.service.dashboard.queries import MasterDBNotFoundError
-
 from Pegasus.service.dashboard import dashboard_routes
 
 
@@ -416,6 +412,13 @@ def file_list(username, root_wf_id, wf_id):
                     folders[folder]['D'].append(full_sub_folder)
 
             return json.dumps(folders), 200, {'Content-Type': 'application/json'}
+
+        else:
+            e = {
+                'code': 'SUBMIT_DIR_NOT_FOUND',
+                'message': '%r is not a valid directory' % submit_dir
+            }
+            return json.dumps(e), 400, {'Content-Type': 'application/json'}
 
     except NoResultFound:
         return render_template('error/workflow/workflow_details_missing.html')

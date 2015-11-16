@@ -147,8 +147,11 @@ $(function () {
                     onFileViewClick($(this).attr('href'));
                 });
             },
-            error: function(){
-                $('.file-list').text('Error loading file list');
+            error: function(e){
+                var errorJSON = JSON.parse(e.responseText);
+                if (errorJSON.code) {
+                    $('.file-list').text(errorJSON.code + ', Message: ' + errorJSON.message);
+                }
             }
         });
     }
