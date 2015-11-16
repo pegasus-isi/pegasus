@@ -357,7 +357,7 @@ class SubmitDir(object):
             return
 
         # Update the workflow record
-        wf.submitdir = self.submitdir
+        wf.submit_dir = self.submitdir
         wf.db_url = db_url
 
         # Insert workflow record into master db
