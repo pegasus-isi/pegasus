@@ -25,6 +25,7 @@ from Pegasus.db.errors import StampedeDBNotFoundError
 from Pegasus.db.admin.admin_loader import DBAdminError
 from Pegasus.tools import utils
 from Pegasus.service import filters
+from Pegasus.service.base import ServiceError, ErrorResponse
 from Pegasus.service.dashboard.dashboard import Dashboard, NoWorkflowsFoundError
 from Pegasus.service.dashboard.queries import MasterDBNotFoundError
 from Pegasus.service.dashboard import dashboard_routes
@@ -386,6 +387,8 @@ def file_browser(username, root_wf_id, wf_id):
         if os.path.isdir(submit_dir):
             init_file = request.args.get('init_file', None)
             return render_template('file-browser.html', root_wf_id=root_wf_id, wf_id=wf_id, init_file=init_file)
+        else:
+            raise ServiceError(ErrorResponse('SUBMIT_DIR_NOT_FOUND', '%r is not a valid directory' % str(submit_dir)))
 
     except NoResultFound:
         return render_template('error/workflow/workflow_details_missing.html')
@@ -408,17 +411,13 @@ def file_list(username, root_wf_id, wf_id):
                 folders[folder] = {'D': [], 'F': files}
 
                 for sub_folder in sub_folders:
-                    full_sub_folder = folder + sub_folder
+                    full_sub_folder = full_sub_folder = os.path.normpath(os.path.join(folder, sub_folder))
                     folders[folder]['D'].append(full_sub_folder)
 
             return json.dumps(folders), 200, {'Content-Type': 'application/json'}
 
         else:
-            e = {
-                'code': 'SUBMIT_DIR_NOT_FOUND',
-                'message': '%r is not a valid directory' % submit_dir
-            }
-            return json.dumps(e), 400, {'Content-Type': 'application/json'}
+            raise ServiceError(ErrorResponse('SUBMIT_DIR_NOT_FOUND', '%r is not a valid directory' % str(submit_dir)))
 
     except NoResultFound:
         return render_template('error/workflow/workflow_details_missing.html')
@@ -553,6 +552,17 @@ def stampede_database_missing(error):
 @dashboard_routes.errorhandler(DBAdminError)
 def database_migration_error(error):
     return render_template('error/database_migration_error.html')
+
+
+@dashboard_routes.errorhandler(ServiceError)
+def error_response(error):
+    if request.is_xhr:
+        return json.dumps({
+            'code': error.message.code,
+            'message': error.message.message
+        }), 400, {'Content-Type': 'application/json'}
+    else:
+        return render_template('error/error_response.html', error=error.message)
 
 
 @dashboard_routes.errorhandler(Exception)
