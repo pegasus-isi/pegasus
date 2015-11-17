@@ -37,7 +37,7 @@ tr $BINARY:3.3 {
         arch "x86_64"
         os "linux"
         osrelease "deb"
-        osversion "7"
+        osversion "8"
         type "INSTALLED"
         profile pegasus "clusters.size" "20"
     }
