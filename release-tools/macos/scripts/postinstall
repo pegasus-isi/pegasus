@@ -4,7 +4,7 @@ set -e
 
 for v in "2.5" "2.6" "2.7"; do
     if [ -d "/Library/Python/$v" ]; then
-        ln -s "/usr/lib/pegasus/python/Pegasus" /Library/Python/$v/site-packages/Pegasus
+        ln -s "/usr/local/lib/pegasus/python/Pegasus" /Library/Python/$v/site-packages/Pegasus
     fi
 done
 
