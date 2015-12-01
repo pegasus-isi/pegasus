@@ -255,11 +255,15 @@ class Transfer:
     def add_src(self, site_label, url, priority=0):
         u = PegasusURL(url, site_label, priority)
         self._src_urls.append(u)
+        # keep the list sorted
+        self._src_urls = sorted(self._src_urls, key=lambda url: url.priority, reverse=True)
 
     
     def add_dst(self, site_label, url, priority=0):
         u = PegasusURL(url, site_label, priority)
         self._dst_urls.append(u)
+        # keep the list sorted
+        self._dst_urls = sorted(self._dst_urls, key=lambda url: url.priority, reverse=True)
 
 
     def src_url(self):
@@ -1872,68 +1876,130 @@ class GSHandler(TransferHandlerBase):
             pass
 
 
-class SRMHandler(TransferHandlerBase):
+class GFALHandler(TransferHandlerBase):
     
-    _name = "SRMHandler"
-    _mkdir_cleanup_protocols = ["srm"]
-    _protocol_map = ["srm->file", "file->srm", "gsiftp->srm", "srm->gsiftp"]
+    _name = "GFALHandler"
+    _mkdir_cleanup_protocols = ["gfal"]
+    _protocol_map = ["root->file", "file->root", "srm->file", "file->srm"]
 
-    def do_transfer(self, transfer, failed_q):
-        """
-        srm - lcg-cp is the preferred clienr, srm-copy the backup one
-              Is this generic enough? Do we need to handle space tokens?
-        """
+
+    def do_mkdirs(self, mkdir_list):
         
         tools = Tools()
-        if tools.find("lcg-cp",
-                      "--version", 
-                      "lcg_util-([\.0-9a-zA-Z]+)") is None \
-           and \
-           tools.find("srm-copy",
-                      "-version",
-                      "srm-copy[ \t]+([\.0-9a-zA-Z]+)") is None:
-            raise RuntimeError("Unable to do srm transfers because" 
-                               + " lcg-cp/srm-copy could not be found")
-        
-        if transfer.dst_proto == "file":
-            key = "X509_USER_PROXY_" + transfer.src_sitename
-            if key in os.environ:
-                os.environ["X509_USER_PROXY"] = os.environ[key]
-        else:
-            key = "X509_USER_PROXY_" + transfer.dst_sitename
-            if key in os.environ:
-                os.environ["X509_USER_PROXY"] = os.environ[key]
-
-        if transfer.dst_proto == "file":
-            prepare_local_dir(os.path.dirname(transfer.get_dst_path()))
+        if tools.find("gfal-mkdir", "--version", "\(gfal2 ([\.0-9]+)\)") is None:
+            raise RuntimeError("Unable to do xrood/srm mkdir because gfal-mkdir could not be found")
             
-        third_party = (transfer.src_proto == "gsiftp" 
-                       or transfer.src_proto == "srm") and \
-                      (transfer.dst_proto == "gsiftp"
-                       or transfer.dst_proto == "srm")
-      
-        # prefer lcg-cp
-        if tools.full_path('lcg-cp') is not None:
-            cmd = "lcg-cp"
+        successful_l = []
+        failed_l = []
+        for t in mkdir_list:
+            
+            cmd = "gfal-mkdir -p"
             if logger.isEnabledFor(logging.DEBUG):
                 cmd = cmd + " -v"
-            cmd = cmd + " -b -D srmv2 '%s' '%s'" \
-                  % (transfer.src_url_srm(), transfer.dst_url_srm())
-        else:
-            cmd = "srm-copy '%s' '%s' -mkdir" \
-                  % (transfer.src_url_srm(), transfer.dst_url_srm())
-            if third_party:
-                cmd = cmd + " -parallelism 4 -3partycopy"
-            if not logger.isEnabledFor(logging.DEBUG):
-                cmd = cmd + " >/dev/null"
+            cmd = cmd + " '%s'" %(t.get_url())
+                
+            try:
+                tc = TimedCommand(cmd, env_overrides=self._gfal_creds(t))
+                tc.run()
+            except Exception, err:
+                logger.error(err)
+                self._post_transfer_attempt(t, False, t_start)
+                failed_l.append(t)
+
+            self._post_transfer_attempt(t, True, t_start)
+            successful_l.append(t)
+         
+        return [successful_l, failed_l]
+                  
             
-        try:
-            tc = TimedCommand(cmd)
-            tc.run()
-        except Exception, err:
-            logger.error(err)
-            return False
-        return True
+    def do_transfers(self, transfers_l):
+    
+        tools = Tools()
+        if tools.find("gfal-copy", "--version", "\(gfal2 ([\.0-9]+)\)") is None:
+            raise RuntimeError("Unable to do xrootr/srm transfers because gfal-copy could not be found")
+        
+        successful_l = []
+        failed_l = []
+        
+        for t in transfers_l:
+
+            t_start = time.time()
+        
+            if t.get_dst_proto() == "file":
+                prepare_local_dir(os.path.dirname(t.get_dst_path()))        
+    
+            cmd = "gfal-copy"
+            if logger.isEnabledFor(logging.DEBUG):
+                cmd = cmd + " -v"
+            cmd = cmd + " '%s' '%s'" % (t.src_url(), t.dst_url())
+                
+            try:
+                tc = TimedCommand(cmd, env_overrides=self._gfal_creds(t))
+                tc.run()
+            except Exception, err:
+                logger.error(err)
+                self._post_transfer_attempt(t, False, t_start)
+                failed_l.append(t)
+
+            self._post_transfer_attempt(t, True, t_start)
+            successful_l.append(t)
+ 
+        return [successful_l, failed_l]
+
+            
+    def do_removes(self, mkdir_list):
+        
+        tools = Tools()
+        if tools.find("gfal-rm", "--version", "\(gfal2 ([\.0-9]+)\)") is None:
+            raise RuntimeError("Unable to do xrood/srm removes because gfal-rm could not be found")
+            
+        successful_l = []
+        failed_l = []
+        for t in mkdir_list:
+            
+            cmd = "gfal-rm"
+            if logger.isEnabledFor(logging.DEBUG):
+                cmd = cmd + " -v"
+            if t.get_recursive():
+                cmd += " -r"  
+            cmd = cmd + " '%s'" %(t.get_url())
+                
+            try:
+                tc = TimedCommand(cmd, env_overrides=self._gfal_creds(t))
+                tc.run()
+            except Exception, err:
+                logger.error(err)
+                self._post_transfer_attempt(t, False, t_start)
+                failed_l.append(t)
+
+            self._post_transfer_attempt(t, True, t_start)
+            successful_l.append(t)
+         
+        return [successful_l, failed_l]
+
+
+    def _gfal_creds(self, sample_transfer):
+        
+        env_override = {}
+        
+        # mkdirs and removes
+        if isinstance(sample_transfer, Mkdir) or isinstance(sample_transfer, Remove):
+            key = "X509_USER_PROXY_" + sample_transfer.get_site_label()
+            if key in os.environ:
+                env_override["X509_USER_PROXY"] = os.environ[key]
+            return env_override
+        
+        # must be a standard transfer
+        if sample_transfer.get_src_proto() == "file":
+            key = "X509_USER_PROXY_" + sample_transfer.get_src_site_label()
+            if key in os.environ:
+                env_override["X509_USER_PROXY"] = os.environ[key]
+        else:
+            key = "X509_USER_PROXY_" + sample_transfer.get_dst_site_label()
+            if key in os.environ:
+                env_override["X509_USER_PROXY"] = os.environ[key]
+   
+        return env_override
                 
 
 class ScpHandler(TransferHandlerBase):
@@ -2452,7 +2518,7 @@ class SimilarWorkSet:
         self._available_handlers.append( IRodsHandler() )
         self._available_handlers.append( S3Handler() )
         self._available_handlers.append( GSHandler() )
-        self._available_handlers.append( SRMHandler() )
+        self._available_handlers.append( GFALHandler() )
         self._available_handlers.append( ScpHandler() )
         self._available_handlers.append( StashHandler() )
         self._available_handlers.append( SymlinkHandler() )
