@@ -49,7 +49,7 @@ declare -a htcondor_files
 
 # Executables, manpages, and libraries
 for f in $(/usr/sbin/pkgutil --files edu.wisc.cs.htcondor | grep -e "^bin/" -e "^sbin/" -e "^share/man/man1/" -e "^lib/libpyclassad" -e "^lib/libclassad" -e "^lib/libcondor_util"); do
-    test -f "/usr/$f" && htcondor_files+=("/usr/$f")
+    test -f "/usr/local/$f" && htcondor_files+=("/usr/local/$f")
 done
 
 # Python libraries
@@ -62,10 +62,10 @@ done
 test -f "/Library/LaunchDaemons/edu.wisc.cs.htcondor.plist" && htcondor_files+=("/Library/LaunchDaemons/edu.wisc.cs.htcondor.plist")
 
 # Directories
-test -d /usr/lib/condor && htcondor_files+=("/usr/lib/condor")
-test -d /usr/include/condor && htcondor_files+=("/usr/include/condor")
-test -d /usr/libexec/condor && htcondor_files+=("/usr/libexec/condor")
-test -d /usr/share/condor && htcondor_files+=("/usr/share/condor")
+test -d /usr/local/lib/condor && htcondor_files+=("/usr/local/lib/condor")
+test -d /usr/local/include/condor && htcondor_files+=("/usr/local/include/condor")
+test -d /usr/local/libexec/condor && htcondor_files+=("/usr/local/libexec/condor")
+test -d /usr/local/share/condor && htcondor_files+=("/usr/local/share/condor")
 test -d /var/lib/condor && htcondor_files+=("/var/lib/condor")
 test -d /var/spool/condor && htcondor_files+=("/var/spool/condor")
 if [[ "$rm_logs" =~ ^[yY] ]]; then
