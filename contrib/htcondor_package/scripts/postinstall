@@ -41,8 +41,8 @@ if ! [ -d /etc/condor ]; then
     mkdir -p /etc/condor/config.d
 
     # Install config files
-    cp /usr/share/condor/etc/examples/condor_config /etc/condor
-    cp /usr/share/condor/etc/examples/condor_config.local /etc/condor
+    cp /usr/local/share/condor/etc/examples/condor_config /etc/condor
+    #cp /usr/local/share/condor/etc/examples/condor_config.local /etc/condor
 
     # Change default config values in condor_config
     sed -i '' \
@@ -52,7 +52,7 @@ if ! [ -d /etc/condor ]; then
         -e 's/^LOCAL_CONFIG_DIR/#LOCAL_CONFIG_DIR/' \
         /etc/condor/condor_config
     cat >> /etc/condor/condor_config <<END
-RELEASE_DIR = /usr
+RELEASE_DIR = /usr/local
 LOCAL_CONFIG_FILE = /etc/condor/condor_config.local
 LOCAL_CONFIG_DIR = /etc/condor/config.d
 REQUIRE_LOCAL_CONFIG_FILE = TRUE
@@ -63,13 +63,36 @@ END
 
     # Change local config values
     cat >> /etc/condor/condor_config.local <<END
+##  What machine is your central manager?
+CONDOR_HOST = $(FULL_HOSTNAME)
 
-BIN = /usr/bin
-SBIN = /usr/sbin
-LIB = /usr/lib/condor
-LIBEXEC = /usr/libexec/condor
-INCLUDE = /usr/include/condor
-MAIL = /usr/libexec/condor/condor_mail
+## Pool's short description
+COLLECTOR_NAME = Personal Condor at $(FULL_HOSTNAME)
+
+##  When is this machine willing to start a job?
+START = TRUE
+
+##  When to suspend a job?
+SUSPEND = FALSE
+
+##  When to nicely stop a job?
+##  (as opposed to killing it instantaneously)
+PREEMPT = FALSE
+
+##  When to instantaneously kill a preempting job
+##  (e.g. if a job is in the pre-empting stage for too long)
+KILL = FALSE
+
+##  This macro determines what daemons the condor_master will start and keep its watchful eyes on.
+##  The list is a comma or space separated list of subsystem names
+DAEMON_LIST = COLLECTOR, MASTER, NEGOTIATOR, SCHEDD, STARTD
+
+BIN = /usr/local/bin
+SBIN = /usr/local/sbin
+LIB = /usr/local/lib/condor
+LIBEXEC = /usr/local/libexec/condor
+INCLUDE = /usr/local/include/condor
+MAIL = /usr/local/libexec/condor/condor_mail
 
 CONDOR_IDS = $CONDOR_UID.$CONDOR_GID
 END
@@ -99,11 +122,11 @@ PYVER=$(python -V 2>&1 | cut -d" " -f2 | cut -d"." -f1,2)
 PYSITE="/Library/Python/$PYVER/site-packages"
 if [ -d "$PYSITE" ]; then
     for f in htcondor.so classad.so; do
-        if [ -e "/usr/lib/condor/$f" ]; then
+        if [ -e "/usr/local/lib/condor/$f" ]; then
             if [ -e "$PYSITE/$f" ]; then
                 rm -f $PYSITE/$f
             fi
-            ln -s /usr/lib/condor/$f $PYSITE/
+            ln -s /usr/local/lib/condor/$f $PYSITE/
         fi
     done
 fi
@@ -118,7 +141,7 @@ cat > /Library/LaunchDaemons/edu.wisc.cs.htcondor.plist <<END
   <string>edu.wisc.cs.htcondor</string>
   <key>ProgramArguments</key>
   <array>
-    <string>/usr/sbin/condor_master</string>
+    <string>/usr/local/sbin/condor_master</string>
     <string>-f</string>
     <string>-c</string>
     <string>/etc/condor/condor_config</string>
