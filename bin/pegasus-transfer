@@ -1905,6 +1905,7 @@ class GFALHandler(TransferHandlerBase):
                 logger.error(err)
                 self._post_transfer_attempt(t, False, t_start)
                 failed_l.append(t)
+                continue
 
             self._post_transfer_attempt(t, True, t_start)
             successful_l.append(t)
@@ -1928,7 +1929,7 @@ class GFALHandler(TransferHandlerBase):
             if t.get_dst_proto() == "file":
                 prepare_local_dir(os.path.dirname(t.get_dst_path()))        
     
-            cmd = "gfal-copy"
+            cmd = "gfal-copy -f"
             if logger.isEnabledFor(logging.DEBUG):
                 cmd = cmd + " -v"
             cmd = cmd + " '%s' '%s'" % (t.src_url(), t.dst_url())
@@ -1940,6 +1941,7 @@ class GFALHandler(TransferHandlerBase):
                 logger.error(err)
                 self._post_transfer_attempt(t, False, t_start)
                 failed_l.append(t)
+                continue
 
             self._post_transfer_attempt(t, True, t_start)
             successful_l.append(t)
@@ -1971,6 +1973,7 @@ class GFALHandler(TransferHandlerBase):
                 logger.error(err)
                 self._post_transfer_attempt(t, False, t_start)
                 failed_l.append(t)
+                continue
 
             self._post_transfer_attempt(t, True, t_start)
             successful_l.append(t)
