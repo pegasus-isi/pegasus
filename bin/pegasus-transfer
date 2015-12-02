@@ -1119,7 +1119,7 @@ class GridFtpHandler(TransferHandlerBase):
                 key = "SSH_PRIVATE_KEY_" + sample_transfer.get_dst_site_label()
                 if key in os.environ:
                     env['SSH_PRIVATE_KEY'] = os.environ[key]
-            check_cred_fs_permissions(os.environ['SSH_PRIVATE_KEY'])
+            check_cred_fs_permissions(env['SSH_PRIVATE_KEY'])
 
         return cmd, data_cred_req, env
                
