@@ -182,6 +182,11 @@ class Mkdir:
 
     def get_path(self):
         return self._target_url.path
+    
+    
+    def get_preferred_attempts(self):
+        # no preference
+        return None
 
 
 class Remove:
@@ -228,6 +233,11 @@ class Remove:
 
     def get_path(self):
         return self._target_url.path
+
+
+    def get_preferred_attempts(self):
+        # no preference
+        return None
 
 
 class Transfer:
@@ -317,6 +327,11 @@ class Transfer:
     def get_dst_path(self):
         return self._dst_urls[0].path
 
+    def get_preferred_attempts(self):
+        if len(self._src_urls) > 1:
+            return len(self._src_urls)
+        # no preference
+        return None
 
     def move_to_next_url_pair(self):
         """
@@ -2860,11 +2875,11 @@ def env_setup():
     os.environ['PATH'] = ":".join(path_entries)
     os.environ['LD_LIBRARY_PATH'] = ":".join(ld_library_path_entries)
     os.environ['DYLD_LIBRARY_PATH'] = ":".join(ld_library_path_entries)
-    logger.info("PATH=" + os.environ['PATH'])
-    logger.info("LD_LIBRARY_PATH=" + os.environ['LD_LIBRARY_PATH'])
+    logger.debug("PATH=" + os.environ['PATH'])
+    logger.debug("LD_LIBRARY_PATH=" + os.environ['LD_LIBRARY_PATH'])
 
     max_cmd_len = max_cmd_length()
-    logger.info("Maximum command line argument lenght to be used: %d" %(max_cmd_len))
+    logger.debug("Maximum command line argument lenght to be used: %d" %(max_cmd_len))
 
 
 def check_cred_fs_permissions(path):
@@ -3157,6 +3172,16 @@ def main():
         
     total_transfers = len(inputs_l)
     logger.info("%d transfers loaded" % (total_transfers))
+    
+    # check the list of transfers and see if we need more transfer attempts
+    new_attempts_max = 0
+    for t in inputs_l:
+        a = t.get_preferred_attempts()
+        if a is not None and a > new_attempts_max:
+            new_attempts_max = a
+    if new_attempts_max > attempts_max:
+        logger.info("Found transfers with mulitple sources. Adjusting max attempts to %d" %(new_attempts_max))
+        attempts_max = new_attempts_max
 
     # we will now sort the list as some tools (gridftp) can optimize when
     # given a group of similar transfers
@@ -3248,7 +3273,7 @@ def main():
         # retry failed transfers with a random delay - useful when
         # large workflows overwhelm data services
         if not failed_q.empty() and attempt_current < attempts_max:
-            d = min(8 ** attempt_current + random.randint(1, 60), 500)
+            d = min(6 ** attempt_current + random.randint(1, 20), 300)
             logger.debug("Sleeping for %d seconds before the next attempt" %(d))
             time.sleep(d)
         while not failed_q.empty():
