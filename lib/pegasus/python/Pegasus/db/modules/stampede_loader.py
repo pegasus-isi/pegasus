@@ -378,8 +378,18 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         for k in self._batch_cache.keys():
             self._batch_cache[k] = []
 
-        # commit the map host to job events
-        self.session.commit()
+        try:
+            # commit the map host to job events . no retries for this.
+            self.session.commit()
+        except exc.IntegrityError, e:
+            self.log.exception(e)
+            self.log.error('Integrity error on host_map_events in hard_flush()')
+            self.session.rollback()
+        except exc.OperationalError, e:
+            self.log.exception(e)
+            self.log.error('Connection problem on host_map_events during commit in hard_flush()')
+            self.session.rollback()
+
         self.reset_flush_state()
         self.log.debug('Hard flush end')
 
