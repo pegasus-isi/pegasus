@@ -22,6 +22,7 @@ import edu.isi.pegasus.planner.common.PegRandom;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -56,7 +57,7 @@ public class FileTransfer extends PegasusFile {
      * the URL's for that site. All url's not associated with a site, are
      * associated with a undefined site.
      */
-    private Map mSourceMap;
+    private Map<String,List<String>> mSourceMap;
 
     /**
      * The map containing all the destination urls keyed by the site id/name.
@@ -64,7 +65,7 @@ public class FileTransfer extends PegasusFile {
      * the URL's for that site. All url's not associated with a site, are
      * associated with a undefined site.
      */
-    private Map mDestMap;
+    private Map<String,List<String>> mDestMap;
 
     /**
      * The registration URL for the file
@@ -255,12 +256,32 @@ public class FileTransfer extends PegasusFile {
     /**
      * Sets the priority for the File Transfer
      *
-     * @param priority   the priority associated with the FileTransfer
+     * @return   the priority associated with the FileTransfer
      */
     public int getPriority( ){
         return this.mPriority;
     }
 
+    /**
+     * Returns all the sites where the LFN exists
+     *
+     * @return Collection of site names
+     */
+    public Collection<String> getSourceSites(   ){
+        return mSourceMap.keySet();
+    }
+    
+    /**
+     * Returns all the source URLS associated with the transfer object for a particular site
+     *
+     * @return List<String> urls
+     */
+    public List<String> getSourceURLs( String site ){
+        return ( mSourceMap.containsKey(site) )?
+                 mSourceMap.get(site):
+                 new ArrayList();
+    }
+    
     /**
      * Returns a single source url associated with the transfer.
      * The source url returned is first entry from the key set of the
