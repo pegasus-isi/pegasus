@@ -372,6 +372,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         for k in self._batch_cache.keys():
             self._batch_cache[k] = []
 
+        # commit the map host to job events
         self.session.commit()
         self.reset_flush_state()
         self.log.debug('Hard flush end')
