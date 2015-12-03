@@ -23,7 +23,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -85,8 +85,8 @@ public class FileTransfer extends PegasusFile {
         super();
         mJob         = "";
         mFlags       = new BitSet(NO_OF_TRANSIENT_FLAGS);
-        mSourceMap   = new HashMap();
-        mDestMap     = new HashMap();
+        mSourceMap   = new LinkedHashMap();
+        mDestMap     = new LinkedHashMap();
         mPriority    = 0;
         mURLForRegistrationOnDestination = null;
     }
@@ -104,8 +104,8 @@ public class FileTransfer extends PegasusFile {
         this.mFlags        = pf.getFlags();
         this.mType         = pf.getType();
         this.mJob          = "";
-        this.mSourceMap    = new HashMap();
-        this.mDestMap      = new HashMap();
+        this.mSourceMap    = new LinkedHashMap();
+        this.mDestMap      = new LinkedHashMap();
         this.mPriority     = 0;
         this.mURLForRegistrationOnDestination = null;
         this.mMetadata     = pf.getAllMetadata();
@@ -121,8 +121,8 @@ public class FileTransfer extends PegasusFile {
     public FileTransfer(String lfn, String job){
         super(lfn);
         mJob         = job;
-        mSourceMap   = new HashMap();
-        mDestMap     = new HashMap();
+        mSourceMap   = new LinkedHashMap();
+        mDestMap     = new LinkedHashMap();
         this.mPriority     = 0;
         this.mURLForRegistrationOnDestination = null;
     }
@@ -138,8 +138,8 @@ public class FileTransfer extends PegasusFile {
     public FileTransfer(String lfn, String job, BitSet flags){
         mLogicalFile = lfn;
         mJob         = job;
-        mSourceMap   = new HashMap();
-        mDestMap     = new HashMap();
+        mSourceMap   = new LinkedHashMap();
+        mDestMap     = new LinkedHashMap();
         mFlags       = (BitSet)flags.clone();
         this.mPriority     = 0;
         this.mURLForRegistrationOnDestination = null;
