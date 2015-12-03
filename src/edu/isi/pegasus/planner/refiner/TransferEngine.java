@@ -1411,10 +1411,9 @@ public class TransferEngine extends Engine {
                 ft.setTransferFlag(pf.getTransferFlag());
                 */
                 
-                //to prevent duplicate source urls
-                if(ft.getSourceURL() == null){
-                    ft.addSource( selLoc.getResourceHandle(), sourceURL);
-                }
+                //PM-1014 we want to track all candidate locations
+                ft.addSource( selLoc.getResourceHandle(), sourceURL);
+                
 
                 //to prevent duplicate destination urls
                 //and have only a single destination.
