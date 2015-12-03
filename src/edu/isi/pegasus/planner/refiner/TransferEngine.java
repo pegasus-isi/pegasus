@@ -1294,7 +1294,9 @@ public class TransferEngine extends Engine {
             //is set to false later, on basis of property value
             boolean bypassFirstLevelStaging = true;
 
+            int candidateNum = 0; 
             for( ReplicaCatalogEntry selLoc : candidateLocations.getPFNList()){
+                candidateNum++;
                 
                 if ( symLinkSelectedLocation = 
                         (mUseSymLinks && selLoc.getResourceHandle().equals( job.getStagingSiteHandle() )) ) {
@@ -1376,7 +1378,12 @@ public class TransferEngine extends Engine {
                     //store them in the planner cache as a GET URL and associate with the compute site
                     //PM-698
                     trackInPlannerCache( lfn, sourceURL, selLoc.getResourceHandle(), OPERATION.get );
-                    trackInWorkflowCache( lfn, sourceURL, selLoc.getResourceHandle() );
+                    
+                    if( candidateNum == 1 ){
+                        //PM-1014 we only track the first candidate in the workflow cache
+                        //i.e the cache file written out in the submit directory
+                        trackInWorkflowCache( lfn, sourceURL, selLoc.getResourceHandle() );
+                    }
                     //ensure the input file does not get cleaned up by the
                     //InPlace cleanup algorithm
                     pf.setForCleanup( false );
@@ -1391,9 +1398,14 @@ public class TransferEngine extends Engine {
                                         destPutURL,
                                         job.getStagingSiteHandle());
 
-                    trackInWorkflowCache( lfn,
+                    if( candidateNum == 1 ){
+                        //PM-1014 we only track the first candidate in the workflow cache
+                        //i.e the cache file written out in the submit directory
+                     
+                        trackInWorkflowCache( lfn,
                                         destGetURL,
                                         job.getStagingSiteHandle());
+                    }
                 }
             
                 //construct the file transfer object
