@@ -182,11 +182,6 @@ class Mkdir:
 
     def get_path(self):
         return self._target_url.path
-    
-    
-    def get_preferred_attempts(self):
-        # no preference
-        return None
 
 
 class Remove:
@@ -235,11 +230,6 @@ class Remove:
         return self._target_url.path
 
 
-    def get_preferred_attempts(self):
-        # no preference
-        return None
-
-
 class Transfer:
     """
     Represents a single transfer request.
@@ -256,6 +246,8 @@ class Transfer:
         """
         self._src_urls = []
         self._dst_urls = []
+        self.url_pair_index = 0
+        self.url_pair_count = 0
 
   
     def __str__(self):
@@ -267,6 +259,7 @@ class Transfer:
         self._src_urls.append(u)
         # keep the list sorted
         self._src_urls = sorted(self._src_urls, key=lambda url: url.priority, reverse=True)
+        self._update_url_pair_count()
 
     
     def add_dst(self, site_label, url, priority=0):
@@ -274,6 +267,7 @@ class Transfer:
         self._dst_urls.append(u)
         # keep the list sorted
         self._dst_urls = sorted(self._dst_urls, key=lambda url: url.priority, reverse=True)
+        self._update_url_pair_count()
 
 
     def src_url(self):
@@ -326,12 +320,11 @@ class Transfer:
 
     def get_dst_path(self):
         return self._dst_urls[0].path
+    
+    
+    def get_url_pair_index(self):
+        return self.url_pair_index
 
-    def get_preferred_attempts(self):
-        if len(self._src_urls) > 1:
-            return len(self._src_urls)
-        # no preference
-        return None
 
     def move_to_next_url_pair(self):
         """
@@ -341,6 +334,9 @@ class Transfer:
         # it affect the number of tries we are willing to do
         t = self._src_urls.pop(0)
         self._src_urls.append(t)
+        self.url_pair_index += 1
+        if self.url_pair_index == self.url_pair_count:
+            self.url_pair_index = 0
 
 
     def groupable(self):
@@ -365,6 +361,10 @@ class Transfer:
         if cmp(self._dst_urls[0].path, other._dst_urls[0].path) != 0:
             return cmp(self._dst_urls[0].path, other._dst_urls[0].path)
         return 0
+
+    
+    def _update_url_pair_count(self):
+        self.url_pair_count = len(self._src_urls) * len(self._dst_urls)
 
 
 class Singleton(type):
@@ -3172,16 +3172,6 @@ def main():
         
     total_transfers = len(inputs_l)
     logger.info("%d transfers loaded" % (total_transfers))
-    
-    # check the list of transfers and see if we need more transfer attempts
-    new_attempts_max = 0
-    for t in inputs_l:
-        a = t.get_preferred_attempts()
-        if a is not None and a > new_attempts_max:
-            new_attempts_max = a
-    if new_attempts_max > attempts_max:
-        logger.info("Found transfers with mulitple sources. Adjusting max attempts to %d" %(new_attempts_max))
-        attempts_max = new_attempts_max
 
     # we will now sort the list as some tools (gridftp) can optimize when
     # given a group of similar transfers
@@ -3215,53 +3205,71 @@ def main():
         logger.info('-' * 80)
         logger.info("Starting transfers - attempt %d" % (attempt_current))
 
-        # organize the transfers
+        # this outer loop is for trying all url pair combinations of a transfer
+        # before moving on and marking it as failed
         while not ready_q.empty():
-            t_main = ready_q.get()
-            
-            # create a list of transfers to pass to underlying tool
-            t_list = []
-            t_list.append(t_main)
-    
-            try:
-                t_next = ready_q.get(False)
-                while t_next is not None:
-                    if len(t_list) <  approx_transfer_per_thread and \
-                       transfers_groupable(t_main, t_next):
-                        t_list.append(t_next)
-                        t_next = ready_q.get(False)
-                    else:
-                        # done, put the last transfer back
-                        ready_q.put(t_next)
-                        t_next = None
-            except Queue.Empty:
-                pass
-            
-            # magic!
-            ts = SimilarWorkSet(t_list, completed_q, failed_q)
-            tset_q.put(ts)
 
-        # pool of worker threads
-        t_id = 0
-        num_threads = min(options.threads, tset_q.qsize())
-        if attempt_current > 2:
-            num_threads = 1
-        logger.info("Using %d threads for this round of transfers"
-                    %(num_threads))
-        for i in range(num_threads):
-            t_id += 1
-            t = WorkThread(t_id, tset_q, attempt_current, failed_q)
-            threads.append(t)
-            t.start()
+            # organize the transfers
+            while not ready_q.empty():
+                t_main = ready_q.get()
+                
+                # create a list of transfers to pass to underlying tool
+                t_list = []
+                t_list.append(t_main)
+        
+                try:
+                    t_next = ready_q.get(False)
+                    while t_next is not None:
+                        if len(t_list) <  approx_transfer_per_thread and \
+                           transfers_groupable(t_main, t_next):
+                            t_list.append(t_next)
+                            t_next = ready_q.get(False)
+                        else:
+                            # done, put the last transfer back
+                            ready_q.put(t_next)
+                            t_next = None
+                except Queue.Empty:
+                    pass
+                
+                # magic!
+                ts = SimilarWorkSet(t_list, completed_q, failed_q)
+                tset_q.put(ts)
     
-        # wait for the threads to finish all the transfers
-        for t in threads:
-            t.join()
-            # do we need to do any better error handling here?
-            if t.exception is not None:
-                logger.critical(t.tb)
-                myexit(2)
-        threads = []
+            # pool of worker threads
+            t_id = 0
+            num_threads = min(options.threads, tset_q.qsize())
+            if attempt_current > 2:
+                num_threads = 1
+            logger.debug("Using %d threads for this set of transfers" %(num_threads))
+            for i in range(num_threads):
+                t_id += 1
+                t = WorkThread(t_id, tset_q, attempt_current, failed_q)
+                threads.append(t)
+                t.start()
+        
+            # wait for the threads to finish all the transfers
+            for t in threads:
+                t.join()
+                # do we need to do any better error handling here?
+                if t.exception is not None:
+                    logger.critical(t.tb)
+                    myexit(2)
+            threads = []
+            
+            # transfers might have multiple sources/destinations and
+            # we should try them all in each round
+            failed_q_updated = Queue.Queue()
+            while not failed_q.empty():
+                t = failed_q.get()
+                t.move_to_next_url_pair()
+                # see if there are more pairs to try
+                if isinstance(t, Transfer) and t.get_url_pair_index() > 0:
+                    ready_q.put(t)
+                else:
+                    failed_q_updated.put(t)
+            failed_q = failed_q_updated
+    
+        # when we get here, all the tries for one round has been attempted
     
         logger.debug("%d items in failed_q" %(failed_q.qsize()))
         
@@ -3273,13 +3281,11 @@ def main():
         # retry failed transfers with a random delay - useful when
         # large workflows overwhelm data services
         if not failed_q.empty() and attempt_current < attempts_max:
-            d = min(6 ** attempt_current + random.randint(1, 20), 300)
+            d = min(5 ** (attempt_current + 1) + random.randint(1, 20), 300)
             logger.debug("Sleeping for %d seconds before the next attempt" %(d))
             time.sleep(d)
         while not failed_q.empty():
             t = failed_q.get()
-            if isinstance(t, Transfer):
-                t.move_to_next_url_pair()
             t.allow_grouping = False # only allow grouping on the first try
             ready_q.put(t)
     
