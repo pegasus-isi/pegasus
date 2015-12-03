@@ -1274,18 +1274,20 @@ public class TransferEngine extends Engine {
             //propogated for optional transfers.
             ft.setTransferFlag(pf.getTransferFlag());
 
-            /** commented for PM-1014
-            ReplicaCatalogEntry selLoc = (nv == null)?
-                                        //select from the various replicas
-                                        mReplicaSelector.selectReplica( rl, 
-                                                                        job.getSiteHandle(),
-                                                                        runTransferOnLocalSite ):
-                                        //we have the replica already selected
-                                        new ReplicaCatalogEntry( nv.getValue(), nv.getKey() );
-            */
-            ReplicaLocation candidateLocations = mReplicaSelector.selectReplicas( rl, 
+            ReplicaLocation candidateLocations = null;
+            if( nv == null ){
+                //select from the various replicas
+                candidateLocations =  mReplicaSelector.selectReplicas( rl, 
                                                                         job.getSiteHandle(),
                                                                         runTransferOnLocalSite );
+            }
+            else{
+                //we have the replica already selected
+                List rces = new LinkedList();
+                rces.add(  new ReplicaCatalogEntry( nv.getValue(), nv.getKey() ));
+                candidateLocations  = new ReplicaLocation( lfn, rces );
+            }
+            
             //check if we need to replace url prefix for 
             //symbolic linking
             boolean symLinkSelectedLocation = false;
