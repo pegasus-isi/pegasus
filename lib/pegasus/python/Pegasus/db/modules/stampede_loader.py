@@ -153,8 +153,6 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
                 else:
                     self.eventMap[linedata['event']](linedata)
 
-                # the current attempt was successful. exit the loop
-                break
             except KeyError:
                 if linedata['event'].startswith('stampede.job_inst.'):
                     self.log.warning('Corner case jobstate event: "%s"', linedata['event'])
@@ -171,8 +169,10 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
                 self.log.error('Connection seemingly lost - attempting to refresh %s' %retry)
                 self.session.rollback()
                 self.check_connection()
-                #self.process(linedata)
-
+                #PM-1013 retry only in case of operational errors
+                continue
+            # the current attempt was successful or there was integrity error. exit the loop
+            break
         else:
             #loop finished after all retries have been made
             self.log.error( 'Maximum number of retries reached for stampede_loader.process() method %s' %retry)
