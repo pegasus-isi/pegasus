@@ -404,8 +404,8 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
         int num = 1;
         for( Iterator it = files.iterator(); it.hasNext(); ){
             FileTransfer ft = (FileTransfer) it.next();
-            NameValue source = ft.getSourceURL();
-            //we want to leverage multiple dests if possible
+            Collection<String> sourceSites = ft.getSourceSites( );
+            
             NameValue dest   = ft.getDestURL( true );
 
             //write to the file one URL pair at a time
@@ -417,10 +417,19 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
             urlPair.append(" { \"type\": \"transfer\",\n");
             urlPair.append("   \"id\": ").append(num).append(",\n");
             urlPair.append("   \"src_urls\": [");
-            urlPair.append(" {");
-            urlPair.append(" \"site_label\": \"").append(source.getKey()).append("\",");
-            urlPair.append(" \"url\": \"").append(source.getValue()).append("\"");
-            urlPair.append(" }");
+            for( String sourceSite: sourceSites ){
+                //traverse through all the URL's on that site
+                for( String url : ft.getSourceURLs(sourceSite) ){
+                    urlPair.append(" {");
+                    urlPair.append(" \"site_label\": \"").append(sourceSite).append("\",");
+                    urlPair.append(" \"url\": \"").append( url ).append("\"");
+                    urlPair.append(" }");
+
+                    // and the credential for the source url
+                    job.addCredentialType( sourceSite, url );
+                }
+            }
+            
             urlPair.append(" ],\n");
             urlPair.append("   \"dest_urls\": [");
             urlPair.append(" {");
@@ -433,9 +442,7 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
             writer.flush();
             num++;
 
-            //associate any credential required , both with destination
-            // and the source urls
-            job.addCredentialType( source.getKey(), source.getValue() );
+            //associate any credential required ,  with destination URL
             job.addCredentialType( dest.getKey(), dest.getValue() );
         }
         
