@@ -45,7 +45,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         but will populate an empty DB with tables/indexes/etc.
     """
 
-    MAX_RETRIES = 10
+    MAX_RETRIES = 10 # maximum number of retries in case of operational errors that arise because of database locked/connection dropped
 
     def __init__(self, connString=None, perf='no', batch='no', props=None, db_type=None, **kw):
         """Init object
@@ -306,7 +306,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         self.log.debug('check_connection.end')
 
 
-    def hard_flush(self, batch_flush=True):
+    def hard_flush(self, batch_flush=True, retry= 0):
         """
         @type   batch_flush: boolean
         @param  batch_flush: Defaults to true.  Is set to false
@@ -323,6 +323,12 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             return
         self.log.debug('Hard flush: batching=%s', batch_flush)
 
+        if retry == self.MAX_RETRIES + 1 :
+            #PM-1013 see if max retries is reached
+            self.log.error( 'Maximum number of retries reached for stampede_loader.hard_flush() method %s' %self.MAX_RETRIES )
+            raise RuntimeError( 'Maximum number of retries reached for stampede_loader.hard_flush() method %s' %self.MAX_RETRIES )
+
+        retry = retry + 1
         self.check_connection()
 
         if self._perf:
@@ -354,12 +360,12 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             self.log.exception(e)
             self.log.error('Integrity error on batch flush: batch will need to be committed per-event which will take longer')
             self.session.rollback()
-            self.hard_flush(batch_flush=False)
+            self.hard_flush(batch_flush=False, retry=retry)
         except exc.OperationalError, e:
             self.log.exception(e)
-            self.log.error('Connection problem during commit: reattempting batch')
+            self.log.error('Connection problem during commit in hard_flush(): reattempting batch. Retry %s' %retry)
             self.session.rollback()
-            self.hard_flush()
+            self.hard_flush(retry=retry)
 
         for host in self._batch_cache['host_map_events']:
             self.map_host_to_job_instance(host)
