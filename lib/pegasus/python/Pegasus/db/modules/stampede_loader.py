@@ -166,7 +166,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
                 self.log.error('Insert failed for event "%s"', linedata['event'])
                 self.session.rollback()
             except exc.OperationalError, e:
-                self.log.error('Connection seemingly lost - attempting to refresh %s' %retry)
+                self.log.error('Connection seemingly lost - attempting to refresh. Retry %s' %retry)
                 self.session.rollback()
                 self.check_connection()
                 #PM-1013 retry only in case of operational errors

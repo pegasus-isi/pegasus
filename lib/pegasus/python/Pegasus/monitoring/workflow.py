@@ -103,6 +103,7 @@ class Workflow:
                                                            "-" + (self._dax_index or "unknown"))))
             logger.warning("error sending event: %s --> %s" % (event, kwargs))
             logger.warning(traceback.format_exc())
+            logger.error( "Disabling database population for workflow %s in directory %s" %(self._wf_uuid, self._submit_dir or "unknown"))
             self._database_disabled = True
 
     def output_to_dashboard_db(self, event, kwargs):
