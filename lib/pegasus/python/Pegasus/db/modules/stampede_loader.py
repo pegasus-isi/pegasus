@@ -30,6 +30,7 @@ import sys
 import time
 
 class Analyzer(BaseAnalyzer, SQLAlchemyInit):
+
     """Load into the Stampede SQL schema through SQLAlchemy.
 
     Parameters:
@@ -43,6 +44,9 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         expects the database to exist (ie: will not issue CREATE DB)
         but will populate an empty DB with tables/indexes/etc.
     """
+
+    MAX_RETRIES = 10
+
     def __init__(self, connString=None, perf='no', batch='no', props=None, db_type=None, **kw):
         """Init object
 
@@ -136,34 +140,44 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         """
         self.log.debug("Process: %s", linedata)
 
-        if not self._batch:
-            self.check_connection()
+        for retry in range( 1, self.MAX_RETRIES + 1):
+            if not self._batch:
+                self.check_connection()
 
-        try:
-            if self._perf:
-                t = time.time()
-                self.eventMap[linedata['event']](linedata)
-                self._insert_time += (time.time() - t)
-                self._insert_num += 1
-            else:
-                self.eventMap[linedata['event']](linedata)
-        except KeyError:
-            if linedata['event'].startswith('stampede.job_inst.'):
-                self.log.warning('Corner case jobstate event: "%s"', linedata['event'])
-                self.jobstate(linedata)
-            else:
-                self.log.error('No handler for event type "%s" defined', linedata['event'])
-        except exc.IntegrityError, e:
-            # This is raised when an attempted insert violates the
-            # schema (unique indexes, etc).
-            self.log.exception(e)
-            self.log.error('Insert failed for event "%s"', linedata['event'])
-            self.session.rollback()
-        except exc.OperationalError, e:
-            self.log.error('Connection seemingly lost - attempting to refresh')
-            self.session.rollback()
-            self.check_connection()
-            self.process(linedata)
+            try:
+                if self._perf:
+                    t = time.time()
+                    self.eventMap[linedata['event']](linedata)
+                    self._insert_time += (time.time() - t)
+                    self._insert_num += 1
+                else:
+                    self.eventMap[linedata['event']](linedata)
+
+                # the current attempt was successful. exit the loop
+                break
+            except KeyError:
+                if linedata['event'].startswith('stampede.job_inst.'):
+                    self.log.warning('Corner case jobstate event: "%s"', linedata['event'])
+                    self.jobstate(linedata)
+                else:
+                    self.log.error('No handler for event type "%s" defined', linedata['event'])
+            except exc.IntegrityError, e:
+                # This is raised when an attempted insert violates the
+                # schema (unique indexes, etc).
+                self.log.exception(e)
+                self.log.error('Insert failed for event "%s"', linedata['event'])
+                self.session.rollback()
+            except exc.OperationalError, e:
+                self.log.error('Connection seemingly lost - attempting to refresh %s' %retry)
+                self.session.rollback()
+                self.check_connection()
+                #self.process(linedata)
+
+        else:
+            #loop finished after all retries have been made
+            self.log.error( 'Maximum number of retries reached for stampede_loader.process() method %s' %retry)
+            raise RuntimeError( 'Maximum number of retries reached for stampede_loader.process() method %s' %retry)
+
 
         self.check_flush()
 
