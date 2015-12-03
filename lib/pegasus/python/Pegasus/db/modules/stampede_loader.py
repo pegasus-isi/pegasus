@@ -171,7 +171,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
                 self.check_connection()
                 #PM-1013 retry only in case of operational errors
                 continue
-            # the current attempt was successful or there was integrity error. exit the loop
+            # the current attempt was successful or there was integrity error/key error. exit the loop
             break
         else:
             #loop finished after all retries have been made
