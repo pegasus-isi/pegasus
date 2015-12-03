@@ -32,7 +32,7 @@ import java.util.Map;
  * between sites. It refers to one lfn, but can contains more than one source
  * and destination urls. All the source url's are presumed to be identical.
  * The destination urls, can in effect be used to refer to TFN's for a lfn on
- * different pools.
+ * different sites.
  *
  * @author Karan Vahi
  * @author Gaurang Mehta
@@ -44,25 +44,25 @@ public class FileTransfer extends PegasusFile {
     /**
      * The logical name of the asssociated VDS super node, with which the file
      * is associated. The name of the job can be of the job that generates that
-     * file(while doing interpool or transferring output files to output pool)
+     * file(while doing intersite or transferring output files to output site)
      * or of a job for which the file is an input(getting an input file from the
      * Replica Services).
      */
     private String mJob;
 
     /**
-     * The map containing all the source urls keyed by the pool id/name.
-     * Corresponding to each pool, a list of url's is stored that contain
-     * the URL's for that pool. All url's not associated with a pool, are
-     * associated with a undefined pool.
+     * The map containing all the source urls keyed by the site id/name.
+     * Corresponding to each site, a list of url's is stored that contain
+     * the URL's for that site. All url's not associated with a site, are
+     * associated with a undefined site.
      */
     private Map mSourceMap;
 
     /**
-     * The map containing all the destination urls keyed by the pool id/name.
-     * Corresponding to each pool, a list of url's is stored that contain
-     * the URL's for that pool. All url's not associated with a pool, are
-     * associated with a undefined pool.
+     * The map containing all the destination urls keyed by the site id/name.
+     * Corresponding to each site, a list of url's is stored that contain
+     * the URL's for that site. All url's not associated with a site, are
+     * associated with a undefined site.
      */
     private Map mDestMap;
 
@@ -170,14 +170,14 @@ public class FileTransfer extends PegasusFile {
     /**
      * Adds a source URL for the transfer.
      *
-     * @param pool  the pool from which the source file is being transferred.
+     * @param site  the site from which the source file is being transferred.
      * @param url   the source url.
      */
-    public void addSource(String pool, String url){
+    public void addSource(String site, String url){
         List l = null;
-        if(mSourceMap.containsKey(pool)){
+        if(mSourceMap.containsKey(site)){
             //add the url to the existing list
-            l = (List)mSourceMap.get(pool);
+            l = (List)mSourceMap.get(site);
             //add the entry to the list
             l.add(url);
         }
@@ -185,7 +185,7 @@ public class FileTransfer extends PegasusFile {
             //add a new list
             l = new ArrayList(3);
             l.add(url);
-            mSourceMap.put(pool,l);
+            mSourceMap.put(site,l);
         }
     }
 
@@ -203,14 +203,14 @@ public class FileTransfer extends PegasusFile {
     /**
      * Adds a destination URL for the transfer.
      *
-     * @param pool  the pool to which the destination file is being transferred.
+     * @param site  the site to which the destination file is being transferred.
      * @param url   the destination url.
      */
-    public void addDestination(String pool, String url){
+    public void addDestination(String site, String url){
         List l = null;
-        if(mDestMap.containsKey(pool)){
+        if(mDestMap.containsKey(site)){
             //add the url to the existing list
-            l = (List)mDestMap.get(pool);
+            l = (List)mDestMap.get(site);
             //add the entry to the list
             l.add(url);
         }
@@ -218,7 +218,7 @@ public class FileTransfer extends PegasusFile {
             //add a new list
             l = new ArrayList(3);
             l.add(url);
-            mDestMap.put(pool,l);
+            mDestMap.put(site,l);
         }
 
     }
@@ -266,7 +266,7 @@ public class FileTransfer extends PegasusFile {
      * The source url returned is first entry from the key set of the
      * underlying map.
      *
-     * @return NameValue where the name would be the pool on which the URL is
+     * @return NameValue where the name would be the site on which the URL is
      *         and value the URL.
      *         null if no urls are assoiciated with the object.
      */
@@ -281,7 +281,7 @@ public class FileTransfer extends PegasusFile {
      *
      * @param random   boolean indicating if a random entry needs to be picked.
      *
-     * @return NameValue where the name would be the pool on which the URL is
+     * @return NameValue where the name would be the site on which the URL is
      *         and value the URL.
      *         null if no urls are assoiciated with the object.
      */
@@ -296,7 +296,7 @@ public class FileTransfer extends PegasusFile {
      * The destination url returned is first entry from the key set of the
      * underlying map.
      *
-     * @return NameValue where the name would be the pool on which the URL is
+     * @return NameValue where the name would be the site on which the URL is
      *         and value the URL.
      *         null if no urls are assoiciated with the object.
      */
@@ -313,7 +313,7 @@ public class FileTransfer extends PegasusFile {
      * @param random   boolean indicating if a random entry needs to be picked.
 
      *
-     * @return NameValue where the name would be the pool on which the URL is
+     * @return NameValue where the name would be the site on which the URL is
      *         and value the URL.
      *         null if no urls are assoiciated with the object.
      */
@@ -328,7 +328,7 @@ public class FileTransfer extends PegasusFile {
      * The source url removed is first entry from the key set of the
      * underlying map.
      *
-     * @return NameValue where the name would be the pool on which the URL is
+     * @return NameValue where the name would be the site on which the URL is
      *         and value the URL.
      *         null if no urls are assoiciated with the object.
      */
@@ -342,7 +342,7 @@ public class FileTransfer extends PegasusFile {
      * The destination url removed is first entry from the key set of the
      * underlying map.
      *
-     * @return NameValue where the name would be the pool on which the URL is
+     * @return NameValue where the name would be the site on which the URL is
      *         and value the URL.
      *         null if no urls are assoiciated with the object.
      */
@@ -370,7 +370,7 @@ public class FileTransfer extends PegasusFile {
      * @param m       the map containing the url's
      * @param random  boolean indicating that a random url to be picked up.
      *
-     * @return NameValue where the name would be the pool on which the URL is
+     * @return NameValue where the name would be the site on which the URL is
      *         and value the URL.
      *         null if no urls are assoiciated with the object.
      */
@@ -400,7 +400,7 @@ public class FileTransfer extends PegasusFile {
      *
      * @param m  the map containing the url's
      *
-     * @return NameValue where the name would be the pool on which the URL is
+     * @return NameValue where the name would be the site on which the URL is
      *         and value the URL.
      *         null if no urls are assoiciated with the object.
      */
@@ -482,7 +482,7 @@ public class FileTransfer extends PegasusFile {
         //sb.append("\n").append(" ");
         while(it.hasNext()){
             entry = (Map.Entry) it.next();
-            //inserting the source pool
+            //inserting the source site
             sb.append("\n").append("#").append(entry.getKey());
             l = (List)entry.getValue();
             Iterator it1 = l.iterator();
@@ -498,7 +498,7 @@ public class FileTransfer extends PegasusFile {
         //sb.append("\n").append(" ");
         while(it.hasNext()){
             entry = (Map.Entry) it.next();
-            //inserting the destination pool
+            //inserting the destination site
             sb.append("\n").append("# ").append(entry.getKey());
             l = (List)entry.getValue();
             Iterator it1 = l.iterator();
