@@ -75,7 +75,7 @@ public class ReplicaLocation
 
     /**
      * Overloaded constructor.
-     * Intializes the member variables to the values passed.
+     * Initializes the member variables to the values passed.
      *
      * @param rl
      */
@@ -85,7 +85,7 @@ public class ReplicaLocation
     
     /**
      * Overloaded constructor.
-     * Intializes the member variables to the values passed.
+     * Initializes the member variables to the values passed.
      *
      * @param lfn  the logical filename.
      * @param pfns the list of <code>ReplicaCatalogEntry</code> objects.
@@ -208,7 +208,7 @@ public class ReplicaLocation
      *
      * @return List
      */
-    public List getPFNList( ){
+    public List<ReplicaCatalogEntry> getPFNList( ){
         return this.mPFNList;
     }
 
