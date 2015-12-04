@@ -28,7 +28,10 @@ import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * A data class that is used to track the various files placed by the mapper on
@@ -138,7 +141,7 @@ public class PlannerCache extends Data
     }
 
     /**
-     * Retrieves all entries for a given LFN from the replica catalog.
+     * Retrieves a single entry for a given LFN from the replica catalog.
      * Each entry in the result set is a tuple of a PFN and all its
      * attributes.
      *
@@ -170,6 +173,37 @@ public class PlannerCache extends Data
         return result;
     }
 
+    /**
+     * Retrieves all entries for a given LFN from the replica catalog.
+     * Each entry in the result set is a tuple of a PFN and all its
+     * attributes.
+     *
+     * @param lfn is the logical filename to obtain information for.
+     * @param handle  the site handle
+     * @param type  the type of URL.
+     *
+     * @return the first matching entry
+     *
+     * @see Collection<ReplicaCatalogEntry> 
+     */
+    public Collection<ReplicaCatalogEntry> lookupAllEntries(String lfn , String handle, OPERATION type ){
+        Map<Set<String>,Collection<ReplicaCatalogEntry>> results = null;
+        Set<String> lfns = new HashSet();
+        lfns.add(lfn);
+        
+        if( type == OPERATION.get ){
+            results = mGetRCCache.lookup(lfns, handle);
+        }
+        else if( type == OPERATION.put ){
+            results = mPutRCCache.lookup(lfns, handle);
+        }
+        else{
+            throw new RuntimeException( "Unsupported operation type for planner cache " + type );
+        }
+        
+        
+        return results.get(lfn);
+    }
 
 
     /**
