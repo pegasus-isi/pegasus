@@ -419,12 +419,16 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
             urlPair.append("   \"src_urls\": [");
             for( String sourceSite: sourceSites ){
                 //traverse through all the URL's on that site
+                boolean notFirst = false;
                 for( String url : ft.getSourceURLs(sourceSite) ){
+                    if( notFirst ){
+                        urlPair.append(",");
+                    }
                     urlPair.append(" {");
                     urlPair.append(" \"site_label\": \"").append(sourceSite).append("\",");
                     urlPair.append(" \"url\": \"").append( url ).append("\"");
                     urlPair.append(" }");
-                    urlPair.append(",");
+                    notFirst = true;
                     // and the credential for the source url
                     job.addCredentialType( sourceSite, url );
                 }

@@ -1063,12 +1063,17 @@ public class PegasusLite implements GridStart {
             
             for( String sourceSite: sourceSites ){
                 //traverse through all the URL's on that site
+                boolean notFirst = false;
                 for( String url : ft.getSourceURLs(sourceSite) ){
+                    if( notFirst ){
+                        sb.append(",");
+                    }
                     sb.append(" {");
                     sb.append(" \"site_label\": \"").append(sourceSite).append("\",");
                     sb.append(" \"url\": \"").append( url ).append("\",");
                     sb.append(" \"checkpoint\": \"").append(ft.isCheckpointFile()).append("\"");
                     sb.append(" }");
+                    notFirst = true;
                 }
             }
             
