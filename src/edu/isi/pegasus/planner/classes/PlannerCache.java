@@ -29,6 +29,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
 import java.io.File;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -182,7 +183,7 @@ public class PlannerCache extends Data
      * @param handle  the site handle
      * @param type  the type of URL.
      *
-     * @return the first matching entry
+     * @return all the entries else empty collection
      *
      * @see Collection<ReplicaCatalogEntry> 
      */
@@ -201,8 +202,8 @@ public class PlannerCache extends Data
             throw new RuntimeException( "Unsupported operation type for planner cache " + type );
         }
         
-        
-        return results.get(lfn);
+        Collection<ReplicaCatalogEntry> result = results.get(lfn);
+        return (result == null )? new LinkedList():result;
     }
 
 
