@@ -385,17 +385,7 @@ public class Transfer   implements SLS {
                                 
                 //PM 1002 first we try and find a tighter match on the compute site
                 //and then the loose match
-                /*
-                String computeLocation = mPlannerCache.lookup( lfn, computeSite, OPERATION.get);
-                if( computeLocation == null ){
-                    cacheLocation = mPlannerCache.lookup( lfn, OPERATION.get );
-                }
-                else{
-                    cacheLocation = new ReplicaCatalogEntry( computeLocation, computeSite );
-                }
-                */
                 cacheLocations = mPlannerCache.lookupAllEntries(lfn, computeSite, OPERATION.get );
-                System.out.println( cacheLocations );
                 if( cacheLocations.isEmpty() ){
                     mLogger.log( "Unable to find location of lfn in planner(get) cache with input staging bypassed "  + lfn +
                                  " for job " + job.getID(),
