@@ -209,7 +209,7 @@ public class Default implements ReplicaSelector {
      *
      * @see org.griphyn.cPlanner.classes.ReplicaLocation
      */
-    public ReplicaLocation selectReplicas( ReplicaLocation rl,
+    public ReplicaLocation selectAndOrderReplicas( ReplicaLocation rl,
                                            String preferredSite,
                                            boolean allowLocalFileURLs ){
 

@@ -540,7 +540,7 @@ public class TransferEngine extends Engine {
             
             //selLocs are all the locations found in ReplicaMechanism corr
             //to the pool pool
-            ReplicaLocation selLocs = mReplicaSelector.selectReplicas( rl,
+            ReplicaLocation selLocs = mReplicaSelector.selectAndOrderReplicas( rl,
                                                                        pool,
                                                                        this.runTransferOnLocalSite( pool,putDestURL, Job.STAGE_OUT_JOB  ));
 
@@ -1277,7 +1277,7 @@ public class TransferEngine extends Engine {
             ReplicaLocation candidateLocations = null;
             if( nv == null ){
                 //select from the various replicas
-                candidateLocations =  mReplicaSelector.selectReplicas( rl, 
+                candidateLocations =  mReplicaSelector.selectAndOrderReplicas( rl, 
                                                                         job.getSiteHandle(),
                                                                         runTransferOnLocalSite );
             }
