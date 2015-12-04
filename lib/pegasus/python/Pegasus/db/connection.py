@@ -416,7 +416,7 @@ def _parse_props(db, props, db_type=None, connect_args=None):
                     timeout = _get_timeout_property(props, PROP_CATALOG_WORKFLOW_TIMEOUT, PROP_CATALOG_WORKFLOW_DB_TIMEOUT)
                 elif db_type == DBType.JDBCRC:
                     timeout = _get_timeout_property(props, PROP_CATALOG_REPLICA_TIMEOUT, PROP_CATALOG_REPLICA_DB_TIMEOUT)
-                else:
+                if not timeout:
                     timeout = _get_timeout_property(props, PROP_CATALOG_ALL_TIMEOUT, PROP_CATALOG_ALL_DB_TIMEOUT)
 
                 if timeout:
