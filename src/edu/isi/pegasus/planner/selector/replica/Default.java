@@ -99,8 +99,7 @@ public class Default implements ReplicaSelector {
      *                      on the local site / submit host.
      *
      * @return <code>ReplicaCatalogEntry</code> corresponding to the location selected.
-     *
-     * @see org.griphyn.cPlanner.classes.ReplicaLocation
+     * 
      */
     public ReplicaCatalogEntry selectReplica( ReplicaLocation candidates,
                                               String preferredSite,
@@ -207,7 +206,7 @@ public class Default implements ReplicaSelector {
      * @param allowLocalFileURLs indicates whether Replica Selector can select a replica
      *                      on the local site / submit host.
      *
-     * @return <code>ReplicaLocation</code> corresponding to the replicas selected.
+     * @return <code>ReplicaLocation</code> corresponding to the replicas selected
      *
      * 
      */

@@ -1254,7 +1254,8 @@ public class TransferEngine extends Engine {
                     continue;
                 }
 
-                //flag an error
+                //flag an error. this is when we don't get any replica location
+                //from any source
                 throw new RuntimeException(
                            "TransferEngine.java: Can't determine a location to " +
                            "transfer input file for lfn " + lfn + " for job " +
@@ -1280,6 +1281,14 @@ public class TransferEngine extends Engine {
                 candidateLocations =  mReplicaSelector.selectAndOrderReplicas( rl, 
                                                                         job.getSiteHandle(),
                                                                         runTransferOnLocalSite );
+                if( candidateLocations.getPFNCount() == 0 ){
+                    StringBuilder error = new StringBuilder();
+                    error.append( "Unable to select a Physical Filename (PFN) for file with logical filename (LFN) as ").
+                          append( rl.getLFN() ).append( " for preferred site " ).append( job.getSiteHandle() ).
+                          append( "with runTransferOnLocalSite - ").append( runTransferOnLocalSite ).
+                          append( " amongst ").append( rl.getPFNList() );
+                    throw new RuntimeException( error.toString() );
+                }
             }
             else{
                 //we have the replica already selected

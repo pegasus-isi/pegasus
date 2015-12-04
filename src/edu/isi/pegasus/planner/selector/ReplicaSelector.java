@@ -52,9 +52,7 @@ public interface ReplicaSelector {
      * @param allowLocalFileURLs indicates whether Replica Selector can select a replica
      *                      on the local site / submit host.
      *
-     * @return <code>ReplicaLocation</code> corresponding to the replicas selected.
-     *
-     * @see org.griphyn.cPlanner.classes.ReplicaLocation
+     * @return <code>ReplicaLocation</code> corresponding to the replicas selected
      */
     public abstract ReplicaLocation selectAndOrderReplicas( ReplicaLocation rl,
                                                     String prefferedSite,
