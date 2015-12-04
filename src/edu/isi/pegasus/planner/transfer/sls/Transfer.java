@@ -402,7 +402,7 @@ public class Transfer   implements SLS {
                                  LogManager.DEBUG_MESSAGE_LEVEL );
                 }
             }
-            if( cacheLocations.isEmpty() ){
+            if( cacheLocations == null || cacheLocations.isEmpty() ){
                 String stagingSite = job.getStagingSiteHandle();
                 //construct the location with respect to the staging site
                 if( mUseSymLinks && //specified in configuration
