@@ -424,7 +424,7 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
                     urlPair.append(" \"site_label\": \"").append(sourceSite).append("\",");
                     urlPair.append(" \"url\": \"").append( url ).append("\"");
                     urlPair.append(" }");
-
+                    urlPair.append(",");
                     // and the credential for the source url
                     job.addCredentialType( sourceSite, url );
                 }
