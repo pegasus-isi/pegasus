@@ -1164,6 +1164,7 @@ public class TransferEngine extends Engine {
 
         String jobName = job.logicalName;
         String stagingSiteHandle   = job.getStagingSiteHandle();
+        String executionSiteHandle   = job.getSiteHandle();
         //contains the remote_initialdir if specified for the job
         String eRemoteDir = job.vdsNS.getStringValue(
                                                  Pegasus.REMOTE_INITIALDIR_KEY);
@@ -1279,12 +1280,12 @@ public class TransferEngine extends Engine {
             if( nv == null ){
                 //select from the various replicas
                 candidateLocations =  mReplicaSelector.selectAndOrderReplicas( rl, 
-                                                                        job.getSiteHandle(),
+                                                                        executionSiteHandle,
                                                                         runTransferOnLocalSite );
                 if( candidateLocations.getPFNCount() == 0 ){
                     StringBuilder error = new StringBuilder();
                     error.append( "Unable to select a Physical Filename (PFN) for file with logical filename (LFN) as ").
-                          append( rl.getLFN() ).append( " for preferred site " ).append( job.getSiteHandle() ).
+                          append( rl.getLFN() ).append( " for preferred site " ).append( executionSiteHandle ).
                           append( "with runTransferOnLocalSite - ").append( runTransferOnLocalSite ).
                           append( " amongst ").append( rl.getPFNList() );
                     throw new RuntimeException( error.toString() );
@@ -1386,7 +1387,7 @@ public class TransferEngine extends Engine {
                     //only the files for which we bypass first level staging , we
                     //store them in the planner cache as a GET URL and associate with the compute site
                     //PM-698
-                    trackInPlannerCache( lfn, sourceURL, selLoc.getResourceHandle(), OPERATION.get );
+                    trackInPlannerCache( lfn, sourceURL, executionSiteHandle, OPERATION.get );
                     
                     if( candidateNum == 1 ){
                         //PM-1014 we only track the first candidate in the workflow cache
