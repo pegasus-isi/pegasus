@@ -1066,7 +1066,7 @@ public class PegasusLite implements GridStart {
                 for( String url : ft.getSourceURLs(sourceSite) ){
                     sb.append(" {");
                     sb.append(" \"site_label\": \"").append(sourceSite).append("\",");
-                    sb.append(" \"url\": \"").append( url ).append("\"");
+                    sb.append(" \"url\": \"").append( url ).append("\",");
                     sb.append(" \"checkpoint\": \"").append(ft.isCheckpointFile()).append("\"");
                     sb.append(" }");
                 }
