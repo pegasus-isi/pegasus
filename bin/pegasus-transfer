@@ -153,12 +153,32 @@ class PegasusURL:
         return "%s://%s%s" % (self.proto, self.host, dn)
 
 
-class Mkdir:
+class TransferBase(object):
+    """
+    Base class for mkdirs, removes and transfers
+    """
+
+    def __init__(self):
+        self._sub_transfer_index = 0
+        self._sub_transfer_count = 0
+    
+    
+    def get_sub_transfer_index(self):
+        return self._sub_transfer_index
+
+
+    def move_to_next_sub_transfer(self):
+        return
+
+
+class Mkdir(TransferBase):
     """
     Represents a single mkdir request
     """
     
-    _target_url = None
+    def __init(self):
+        super(Mkdir, self).__init__()
+        self._target_url = None
     
     def set_url(self, site_label, url):
         self._target_url = PegasusURL(url, site_label)
@@ -184,13 +204,15 @@ class Mkdir:
         return self._target_url.path
 
 
-class Remove:
+class Remove(TransferBase):
     """
     Represents a single remove request
     """
     
-    _target_url = None
-    _recursive = False
+    def __init(self):
+        super(Remove, self).__init__()
+        self._target_url = None
+        self._recursive = False
     
     def set_recursive(self, should_recurse):
         if str(should_recurse).lower() in ["yes", "true", "t", "1"]:
@@ -230,25 +252,23 @@ class Remove:
         return self._target_url.path
 
 
-class Transfer:
+class Transfer(TransferBase):
     """
     Represents a single transfer request.
     """
-
-    _src_urls = None
-    _dst_urls = None
-    attempts = 0
-    allow_grouping = True       # can this transfer be grouped with others?
 
     def __init__(self):
         """
         Initializes the transfer class
         """
+        super(Transfer, self).__init__()       
+        
         self._src_urls = []
         self._dst_urls = []
-        self.url_pair_index = 0
-        self.url_pair_count = 0
-
+       
+        self.attempts = 0
+        self.allow_grouping = True       # can this transfer be grouped with others?
+  
   
     def __str__(self):
         return "%s -> %s" %(self._src_urls[0].get_url(), self._dst_urls[0].get_url())
@@ -261,7 +281,7 @@ class Transfer:
         self._src_urls.append(u)
         # keep the list sorted
         self._src_urls = sorted(self._src_urls, key=lambda url: url.priority, reverse=True)
-        self._update_url_pair_count()
+        self._update_sub_transfer_count()
 
     
     def add_dst(self, site_label, url, priority=None):
@@ -271,7 +291,7 @@ class Transfer:
         self._dst_urls.append(u)
         # keep the list sorted
         self._dst_urls = sorted(self._dst_urls, key=lambda url: url.priority, reverse=True)
-        self._update_url_pair_count()
+        self._update_sub_transfer_count()
 
 
     def src_url(self):
@@ -324,13 +344,9 @@ class Transfer:
 
     def get_dst_path(self):
         return self._dst_urls[0].path
-    
-    
-    def get_url_pair_index(self):
-        return self.url_pair_index
 
 
-    def move_to_next_url_pair(self):
+    def move_to_next_sub_transfer(self):
         """
         cycle to the next available src/dst pair
         """
@@ -338,9 +354,9 @@ class Transfer:
         # it affect the number of tries we are willing to do
         t = self._src_urls.pop(0)
         self._src_urls.append(t)
-        self.url_pair_index += 1
-        if self.url_pair_index == self.url_pair_count:
-            self.url_pair_index = 0
+        self._sub_transfer_index += 1
+        if self._sub_transfer_index == self._sub_transfer_count:
+            self._sub_transfer_index = 0
 
 
     def groupable(self):
@@ -367,8 +383,8 @@ class Transfer:
         return 0
 
     
-    def _update_url_pair_count(self):
-        self.url_pair_count = len(self._src_urls) * len(self._dst_urls)
+    def _update_sub_transfer_count(self):
+        self._sub_transfer_count = len(self._src_urls) * len(self._dst_urls)
 
 
 class Singleton(type):
@@ -792,7 +808,6 @@ class GridFtpHandler(TransferHandlerBase):
                     "ftp->ftp",
                     "ftp->gsiftp",
                     "gsiftp->ftp",
-                    "http->gsiftp",
                     "file->sshftp",
                     "sshftp->file",
                     "sshftp->sshftp"
@@ -808,7 +823,8 @@ class GridFtpHandler(TransferHandlerBase):
                 
             tools = Tools()
             if tools.find("pegasus-gridftp") == None:
-                raise RuntimeError("Unable to do gsiftp mkdir because pegasus-gridftp could not be found")
+                logger.error("Unable to do gsiftp mkdir because pegasus-gridftp could not be found")
+                return [[], mkdirs_l]
             
             for target in mkdirs_l:
                 
@@ -877,10 +893,9 @@ class GridFtpHandler(TransferHandlerBase):
             return
         
         tools = Tools()
-        if tools.find("globus-url-copy", "-version", "([0-9]+\.[0-9]+)") \
-           is None:
-            raise RuntimeError("Unable to do gsiftp transfers because" +
-                               " globus-url-copy could not be found")
+        if tools.find("globus-url-copy", "-version", "([0-9]+\.[0-9]+)") is None:
+            logger.error("Unable to do gsiftp transfers because globus-url-copy could not be found")
+            return [[], transfers_l]
         
         # create lists with similar (same src host/path, same dst host/path)
         # url pairs
@@ -943,6 +958,7 @@ class GridFtpHandler(TransferHandlerBase):
                             failed_l.append(t)
             else:
                 # mkdir job failed - all subsequent jobs will fail
+                failed_l.append(first)
                 for i, t in enumerate(similar_list):
                     failed_l.append(t)
                     
@@ -959,7 +975,8 @@ class GridFtpHandler(TransferHandlerBase):
             
             tools = Tools()
             if tools.find("pegasus-gridftp") == None:
-                raise RuntimeError("Unable to do gsiftp rm because pegasus-gridftp could not be found")
+                logger.error("Unable to do gsiftp rm because pegasus-gridftp could not be found")
+                return [[], removes_l]
             
             try:
                 tmp_fd, tmp_name = tempfile.mkstemp(prefix="pegasus-transfer-", suffix=".lst", dir="/tmp")
@@ -1244,6 +1261,11 @@ class HTTPHandler(TransferHandlerBase):
         if transfers[0].attempts > 1 and "http_proxy" in os.environ:
             logger.info("Disabling HTTP proxy due to previous failures")
             del os.environ['http_proxy']
+            
+        if tools.find("wget", "--version", "([0-9]+\.[0-9]+)") is None and \
+           tools.find("curl", "--version", " ([0-9]+\.[0-9]+)") is None:
+            logger.error("Unable to do http/https transfers because neither curl nor wget could not be found")
+            return [[], transfers]
 
         successful_l = []
         failed_l = []
@@ -1252,7 +1274,7 @@ class HTTPHandler(TransferHandlerBase):
             prepare_local_dir(os.path.dirname(t.get_dst_path()))
             
             # try wget first, then curl
-            if tools.find("wget", "--version", "([0-9]+\.[0-9]+)") is not None:
+            if tools.full_path('wget') is not None:
                 cmd = tools.full_path('wget')
                 if logger.isEnabledFor(logging.DEBUG):
                     cmd += " -v"
@@ -1261,17 +1283,14 @@ class HTTPHandler(TransferHandlerBase):
                 cmd += " --no-cookies --no-check-certificate" + \
                        " -O '" + t.get_dst_path() + "'" + \
                        " '" + t.src_url() + "'"
-            elif tools.find("curl", "--version", " ([0-9]+\.[0-9]+)") is not None:
+            else:
                 cmd = tools.full_path('curl')
                 if not logger.isEnabledFor(logging.DEBUG):
                     cmd += " -s -S"
                 cmd += " --insecure" + \
                        " -o '" + t.get_dst_path() + "'" + \
                        " '" + t.src_url() + "'"
-            else:
-                raise RuntimeError("Unable to do http/https transfers because" +
-                                   " neither curl nor wget could not be found")
-                
+
             t_start = time.time()
             try:
                 tc = TimedCommand(cmd, env_overrides=env)
@@ -1308,13 +1327,15 @@ class IRodsHandler(TransferHandlerBase):
 
         tools = Tools()
         if tools.find("iget", "-h", "Version[ \t]+([\.0-9a-zA-Z]+)") is None:
-            raise RuntimeError("Unable to do irods transfers becuase iget could not be found in the current path")
+            logger.error("Unable to do irods transfers becuase iget could not be found in the current path")
+            return [[], mkdir_list]
         
         try:
             env = self._irods_login(mkdir_list[0].get_site_label())
         except Exception, loginErr:
             logger.error(loginErr)
-            raise RuntimeError("Unable to log into irods")
+            logger.error("Unable to log into irods")
+            return [[], mkdir_list]
 
         successful_l = []
         failed_l = []        
@@ -1340,7 +1361,8 @@ class IRodsHandler(TransferHandlerBase):
     
         tools = Tools()
         if tools.find("iget", "-h", "Version[ \t]+([\.0-9a-zA-Z]+)") is None:
-            raise RuntimeError("Unable to do irods transfers becuase iget could not be found in the current path")
+            logger.error("Unable to do irods transfers becuase iget could not be found in the current path")
+            return [[], transfer_list]
 
         successful_l = []
         failed_l = []
@@ -1355,7 +1377,8 @@ class IRodsHandler(TransferHandlerBase):
                 env = self._irods_login(sitename)
             except Exception, loginErr:
                 logger.error(loginErr)
-                raise RuntimeError("Unable to log into irods")
+                logger.error("Unable to log into irods")
+                return [[], transfer_list]
     
             if t.get_dst_proto() == "file":
                 # irods->file
@@ -1403,13 +1426,15 @@ class IRodsHandler(TransferHandlerBase):
     def do_removes(self, removes_list):
         tools = Tools()
         if tools.find("iget", "-h", "Version[ \t]+([\.0-9a-zA-Z]+)") is None:
-            raise RuntimeError("Unable to do irods transfers becuase iget could not be found in the current path")
+            logger.error("Unable to do irods transfers becuase iget could not be found in the current path")
+            return [[], removes_list]
 
         try:
             env = self._irods_login(removes_list[0].get_site_label())
         except Exception, loginErr:
             logger.error(loginErr)
-            raise RuntimeError("Unable to log into irods")
+            logger.error("Unable to log into irods")
+            return [[], removes_list]
 
         successful_l = []
         failed_l = []        
@@ -1536,8 +1561,8 @@ class S3Handler(TransferHandlerBase):
     def do_mkdirs(self, mkdir_l):
         tools = Tools()
         if tools.find("pegasus-s3", "help", None) is None:
-            raise RuntimeError("Unable to do S3 transfers because"
-                               + " pegasus-s3 could not be found")
+            logger.error("Unable to do S3 transfers because return [[], mkdir_list found")
+            return [[], mkdir_l]
 
         successful_l = []
         failed_l = []        
@@ -1572,8 +1597,8 @@ class S3Handler(TransferHandlerBase):
     
         tools = Tools()
         if tools.find("pegasus-s3", "help", None) is None:
-            raise RuntimeError("Unable to do S3 transfers because"
-                               + " pegasus-s3 could not be found")
+            logger.error("Unable to do S3 transfers because pegasus-s3 could not be found")
+            return [[], transfers]
 
         successful_l = []
         failed_l = []
@@ -1616,8 +1641,8 @@ class S3Handler(TransferHandlerBase):
     def do_removes(self, removes_list):
         tools = Tools()
         if tools.find("pegasus-s3", "help", None) is None:
-            raise RuntimeError("Unable to do S3 transfers because"
-                               + " pegasus-s3 could not be found")
+            logger.error("Unable to do S3 transfers because pegasus-s3 could not be found")
+            return [[], removes_list]
 
         successful_l = []
         failed_l = []        
@@ -1689,8 +1714,8 @@ class GSHandler(TransferHandlerBase):
     def do_mkdirs(self, mkdir_l):
         tools = Tools()
         if tools.find("gsutil", "version", "gsutil version: ([\.0-9a-zA-Z]+)") is None:
-            raise RuntimeError("Unable to do Google Storage transfers because"
-                               + " the gsutil tool could not be found")
+            logger.error("Unable to do Google Storage transfers because the gsutil tool could not be found")
+            return [[], mkdir_l]
 
         successful_l = []
         failed_l = []        
@@ -1729,8 +1754,8 @@ class GSHandler(TransferHandlerBase):
     
         tools = Tools()
         if tools.find("gsutil", "version", "gsutil version: ([\.0-9a-zA-Z]+)") is None:
-            raise RuntimeError("Unable to do Google Storage transfers because"
-                               + " the gsutil tool could not be found")
+            logger.error("Unable to do Google Storage transfers because the gsutil tool could not be found")
+            return [[], transfers_l]
 
         successful_l = []
         failed_l = []
@@ -1775,8 +1800,8 @@ class GSHandler(TransferHandlerBase):
     def do_removes(self, removes_l):
         tools = Tools()
         if tools.find("gsutil", "version", "gsutil version: ([\.0-9a-zA-Z]+)") is None:
-            raise RuntimeError("Unable to do Google Storage transfers because"
-                               + " the gsutil tool could not be found")
+            logger.error("Unable to do Google Storage transfers because the gsutil tool could not be found")
+            return [[], removes_l]
 
         successful_l = []
         failed_l = []        
@@ -1873,7 +1898,8 @@ class GFALHandler(TransferHandlerBase):
         
         tools = Tools()
         if tools.find("gfal-mkdir", "--version", "\(gfal2 ([\.0-9]+)\)") is None:
-            raise RuntimeError("Unable to do xrood/srm mkdir because gfal-mkdir could not be found")
+            logger.error("Unable to do xrood/srm mkdir because gfal-mkdir could not be found")
+            return [[], mkdir_list]
             
         successful_l = []
         failed_l = []
@@ -1903,7 +1929,8 @@ class GFALHandler(TransferHandlerBase):
     
         tools = Tools()
         if tools.find("gfal-copy", "--version", "\(gfal2 ([\.0-9]+)\)") is None:
-            raise RuntimeError("Unable to do xrootr/srm transfers because gfal-copy could not be found")
+            logger.error("Unable to do xrootr/srm transfers because gfal-copy could not be found")
+            return [[], transfers_l]
         
         successful_l = []
         failed_l = []
@@ -1939,7 +1966,8 @@ class GFALHandler(TransferHandlerBase):
         
         tools = Tools()
         if tools.find("gfal-rm", "--version", "\(gfal2 ([\.0-9]+)\)") is None:
-            raise RuntimeError("Unable to do xrood/srm removes because gfal-rm could not be found")
+            logger.error("Unable to do xrood/srm removes because gfal-rm could not be found")
+            return [[], mkdir_list]
             
         successful_l = []
         failed_l = []
@@ -2236,8 +2264,8 @@ class StashHandler(TransferHandlerBase):
         
         tools = Tools()
         if tools.find("stashcp") is None:
-            raise RuntimeError("Unable to do Stash transfers because" 
-                               + " stashcp could not be found")
+            logger.error("Unable to do Stash transfers because stashcp could not be found")
+            return [[], transfers_l]
             
         successful_l = []
         failed_l = []
@@ -3265,9 +3293,9 @@ def main():
             failed_q_updated = Queue.Queue()
             while not failed_q.empty():
                 t = failed_q.get()
-                t.move_to_next_url_pair()
+                t.move_to_next_sub_transfer()
                 # see if there are more pairs to try
-                if isinstance(t, Transfer) and t.get_url_pair_index() > 0:
+                if t.get_sub_transfer_index() > 0:
                     ready_q.put(t)
                 else:
                     failed_q_updated.put(t)
