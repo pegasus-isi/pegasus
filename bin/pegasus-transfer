@@ -254,7 +254,9 @@ class Transfer:
         return "%s -> %s" %(self._src_urls[0].get_url(), self._dst_urls[0].get_url())
 
         
-    def add_src(self, site_label, url, priority=0):
+    def add_src(self, site_label, url, priority=None):
+        if priority is None:
+            priority = random.randint(1,100)
         u = PegasusURL(url, site_label, priority)
         self._src_urls.append(u)
         # keep the list sorted
@@ -262,7 +264,9 @@ class Transfer:
         self._update_url_pair_count()
 
     
-    def add_dst(self, site_label, url, priority=0):
+    def add_dst(self, site_label, url, priority=None):
+        if priority is None:
+            priority = random.randint(1,100)
         u = PegasusURL(url, site_label, priority)
         self._dst_urls.append(u)
         # keep the list sorted
@@ -2985,12 +2989,12 @@ def json_object_decoder(obj):
         t = Transfer()
         # src
         for surl in obj['src_urls']:
-            priority = 0
+            priority = None
             if 'priority' in surl:
                 priority = int(surl['priority']) 
             t.add_src(surl['site_label'], surl['url'], priority)
         for durl in obj['dest_urls']:
-            priority = 0
+            priority = None
             if 'priority' in durl:
                 priority = int(durl['priority']) 
             t.add_dst(durl['site_label'], durl['url'], priority)
