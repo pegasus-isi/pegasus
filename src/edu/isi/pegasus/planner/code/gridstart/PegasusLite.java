@@ -1056,17 +1056,24 @@ public class PegasusLite implements GridStart {
             if (num > 1) {
             	sb.append(" ,\n");
             }
-            NameValue nv = ft.getSourceURL();
+            Collection<String> sourceSites = ft.getSourceSites( );
             sb.append(" { \"type\": \"transfer\",\n");
             sb.append("   \"id\": ").append(num).append(",\n");
             sb.append("   \"src_urls\": [");
-            sb.append(" {");
-            sb.append(" \"site_label\": \"").append(nv.getKey()).append("\",");
-            sb.append(" \"url\": \"").append(nv.getValue()).append("\",");
-            sb.append(" \"checkpoint\": \"").append(ft.isCheckpointFile()).append("\"");
-            sb.append(" }");
+            
+            for( String sourceSite: sourceSites ){
+                //traverse through all the URL's on that site
+                for( String url : ft.getSourceURLs(sourceSite) ){
+                    sb.append(" {");
+                    sb.append(" \"site_label\": \"").append(sourceSite).append("\",");
+                    sb.append(" \"url\": \"").append( url ).append("\"");
+                    sb.append(" \"checkpoint\": \"").append(ft.isCheckpointFile()).append("\"");
+                    sb.append(" }");
+                }
+            }
+            
             sb.append(" ],\n");
-            nv = ft.getDestURL();
+            NameValue nv = ft.getDestURL();
             sb.append("   \"dest_urls\": [");
             sb.append(" {");
             sb.append(" \"site_label\": \"").append(nv.getKey()).append("\",");
