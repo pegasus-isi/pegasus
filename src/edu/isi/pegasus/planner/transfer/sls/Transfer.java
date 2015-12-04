@@ -374,7 +374,7 @@ public class Transfer   implements SLS {
             //on the head node
             StringBuffer url = new StringBuffer();
 
-            ReplicaCatalogEntry cacheLocation = null;
+            Collection<ReplicaCatalogEntry> cacheLocations = null;
             boolean symlink = false;
             String computeSite = job.getSiteHandle();
             if( mBypassStagingForInputs ){
@@ -385,6 +385,7 @@ public class Transfer   implements SLS {
                                 
                 //PM 1002 first we try and find a tighter match on the compute site
                 //and then the loose match
+                /*
                 String computeLocation = mPlannerCache.lookup( lfn, computeSite, OPERATION.get);
                 if( computeLocation == null ){
                     cacheLocation = mPlannerCache.lookup( lfn, OPERATION.get );
@@ -392,8 +393,16 @@ public class Transfer   implements SLS {
                 else{
                     cacheLocation = new ReplicaCatalogEntry( computeLocation, computeSite );
                 }
+                */
+                cacheLocations = mPlannerCache.lookupAllEntries(lfn, computeSite, OPERATION.get );
+                System.out.println( cacheLocations );
+                if( cacheLocations.isEmpty() ){
+                    mLogger.log( "Unable to find location of lfn in planner(get) cache with input staging bypassed "  + lfn +
+                                 " for job " + job.getID(),
+                                 LogManager.DEBUG_MESSAGE_LEVEL );
+                }
             }
-            if( cacheLocation == null ){
+            if( cacheLocations.isEmpty() ){
                 String stagingSite = job.getStagingSiteHandle();
                 //construct the location with respect to the staging site
                 if( mUseSymLinks && //specified in configuration
@@ -420,14 +429,18 @@ public class Transfer   implements SLS {
             }
             else{
                 //construct the URL wrt to the planner cache location
-                url.append( cacheLocation.getPFN() );
-                ft.addSource( cacheLocation.getResourceHandle(), url.toString() );
-                
-                symlink = ( mUseSymLinks && //specified in configuration
-                            !pf.isCheckpointFile() && //can only do symlinks for data files . not checkpoint files
-                            !pf.isExecutable() && //can only do symlinks for data files . not executables
-                            ft.getSourceURL().getKey().equals( job.getSiteHandle()) && //source URL logically on the same site where job is to be run
-                            url.toString().startsWith( PegasusURL.FILE_URL_SCHEME ) ); //source URL is a file URL
+                //PM-1014 go through all the candidates returned from the planner cache
+                for( ReplicaCatalogEntry cacheLocation: cacheLocations ){
+                    url = new StringBuffer();
+                    url.append( cacheLocation.getPFN() );
+                    ft.addSource( cacheLocation.getResourceHandle(), url.toString() );
+
+                    symlink = ( mUseSymLinks && //specified in configuration
+                                !pf.isCheckpointFile() && //can only do symlinks for data files . not checkpoint files
+                                !pf.isExecutable() && //can only do symlinks for data files . not executables
+                                ft.getSourceURL().getKey().equals( job.getSiteHandle()) && //source URL logically on the same site where job is to be run
+                                url.toString().startsWith( PegasusURL.FILE_URL_SCHEME ) ); //source URL is a file URL
+                }
             }
             
             //if the source URL is already present at the compute site
