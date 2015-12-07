@@ -47,7 +47,8 @@ public class BlackDiamondDAX {
         File fa1 = new File("f.a.1");
         fa1.addPhysicalFile("root://data.ci-connect.net//user/rynge/public/test.txt", "xrootd");
         fa1.addPhysicalFile("http://obelix.isi.edu/non-existant.txt", "web");
-        fa1.addPhysicalFile("file:///etc/hosts", "anywhere");
+        fa1.addPhysicalFile("file:///etc/hosts", "condorpool");
+        fa1.addPhysicalFile("file:///etc/hosts", "local");
         dax.addFile(fa1);
         
         File fa2 = new File("f.a.2");
@@ -64,7 +65,8 @@ public class BlackDiamondDAX {
         fa3.addPhysicalFile("http://obelix.isi.edu/non-existant-6.txt", "web");
         fa3.addPhysicalFile("http://obelix.isi.edu/non-existant-7.txt", "web");
         fa3.addPhysicalFile("http://obelix.isi.edu/", "web");
-        fa3.addPhysicalFile("file:///non-existant.txt", "anywhere");
+        fa3.addPhysicalFile("file:///non-existant.txt", "condorpool");
+        fa1.addPhysicalFile("file:///non-existant.txt", "local");
         dax.addFile(fa3);
 
         File fb1 = new File("f.b1");
