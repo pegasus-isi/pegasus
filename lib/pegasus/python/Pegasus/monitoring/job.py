@@ -145,6 +145,9 @@ class Job:
         elif (job_state == "POST_SCRIPT_SUCCESS" or
               job_state == "POST_SCRIPT_FAILURE"):
             self._post_script_exitcode = utils.regular_to_raw(status)
+            if( self._main_job_done is None):
+                # PM-1016 Missing JOB_TERMINATED event.
+                self._main_job_done = int(timestamp)
 
     def parse_sub_file(self, stamp, submit_file):
         """
