@@ -1600,7 +1600,7 @@ class Workflow:
             if my_start is not None and "duration" in invocation_record:
                 # Calculate timestamp for when this task finished
                 try:
-                    kwargs["ts"] = int(my_start + int(invocation_record["duration"]))
+                    kwargs["ts"] = int(my_start + float(invocation_record["duration"]))
                 except:
                     # Something went wrong, just use the time the main job finished
                     kwargs["ts"] = my_job._main_job_done
