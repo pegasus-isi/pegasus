@@ -417,9 +417,9 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
             urlPair.append(" { \"type\": \"transfer\",\n");
             urlPair.append("   \"id\": ").append(num).append(",\n");
             urlPair.append("   \"src_urls\": [");
+            boolean notFirst = false;
             for( String sourceSite: sourceSites ){
                 //traverse through all the URL's on that site
-                boolean notFirst = false;
                 for( String url : ft.getSourceURLs(sourceSite) ){
                     if( notFirst ){
                         urlPair.append(",");

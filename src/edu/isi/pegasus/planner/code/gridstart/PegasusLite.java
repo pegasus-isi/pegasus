@@ -1061,9 +1061,9 @@ public class PegasusLite implements GridStart {
             sb.append("   \"id\": ").append(num).append(",\n");
             sb.append("   \"src_urls\": [");
             
+            boolean notFirst = false;
             for( String sourceSite: sourceSites ){
                 //traverse through all the URL's on that site
-                boolean notFirst = false;
                 for( String url : ft.getSourceURLs(sourceSite) ){
                     if( notFirst ){
                         sb.append(",");
