@@ -63,7 +63,10 @@ def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=
 
     try:
         log.info("Attempting to connect to: %s" % dburi)
-        engine = create_engine(dburi, echo=echo, pool_recycle=True)
+        # parse connection properties
+        connect_args = _parse_props(dburi, props, db_type, connect_args)
+
+        engine = create_engine(dburi, echo=echo, pool_recycle=True, connect_args=connect_args)
         engine.connect()
         log.info("Connection successfully established.")
 
@@ -78,12 +81,6 @@ def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=
     Session = orm.sessionmaker(bind=engine, autoflush=False, autocommit=False,
                                expire_on_commit=False)
     db = orm.scoped_session(Session)
-
-    # parse connection properties
-    if props:
-        connect_args = _parse_props(db, props, db_type, connect_args)
-    if connect_args:
-        _parse_connect_args(db, connect_args)
 
     # Database creation
     if create:
@@ -381,20 +378,7 @@ def _validate(dburi):
         raise ConnectionError("Missing Python module: %s (%s)" % (e.message, dburi))
 
 
-def _parse_connect_args(db, connect_args):
-    """
-
-    :param db:
-    :param connect_args:
-    :return:
-    """
-    if DBKey.TIMEOUT in connect_args:
-        url = db.get_bind().url
-        if url.drivername == "sqlite":
-            db.execute("PRAGMA busy_timeout = %s" % connect_args["timeout"])
-
-
-def _parse_props(db, props, db_type=None, connect_args=None):
+def _parse_props(dburi, props, db_type=None, connect_args=None):
     """
 
     :param db:
@@ -405,8 +389,7 @@ def _parse_props(db, props, db_type=None, connect_args=None):
     if not connect_args:
         connect_args = {}
 
-    url = db.get_bind().url
-    if url.drivername == "sqlite" and db_type:
+    if props and dburi.lower().startswith("sqlite") and db_type:
         if not DBKey.TIMEOUT in connect_args:
             try:
                 timeout = None
@@ -423,25 +406,24 @@ def _parse_props(db, props, db_type=None, connect_args=None):
                     connect_args[DBKey.TIMEOUT] = timeout
 
             except ValueError, e:
-                raise ConnectionError("Timeout properties should be set in seconds: %s (%s)" % (e.message, url))
+                raise ConnectionError("Timeout properties should be set in seconds: %s (%s)" % (e.message, dburi))
 
     return connect_args
 
 
 def _get_timeout_property(props, prop_name1, prop_name2):
     """
-
-    :param db_type:
+    
     :param props:
     :param prop_name1:
     :param prop_name2:
     :return:
     """
     if props.property(prop_name1):
-        return int(props.property(prop_name1)) * 1000
+        return int(props.property(prop_name1))
 
     elif props.property(prop_name2):
-        return int(props.property(prop_name2)) * 1000
+        return int(props.property(prop_name2))
 
     return None
 
