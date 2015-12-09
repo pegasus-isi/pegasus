@@ -26,12 +26,12 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
-
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
+
+import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
+
 import edu.isi.pegasus.common.util.Separator;
-
-
 
 import edu.isi.pegasus.planner.classes.Job;
 import java.io.FileWriter;
@@ -420,17 +420,17 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
             boolean notFirst = false;
             for( String sourceSite: sourceSites ){
                 //traverse through all the URL's on that site
-                for( String url : ft.getSourceURLs(sourceSite) ){
+                for( ReplicaCatalogEntry url : ft.getSourceURLs(sourceSite) ){
                     if( notFirst ){
                         urlPair.append(",");
                     }
                     urlPair.append(" {");
                     urlPair.append(" \"site_label\": \"").append(sourceSite).append("\",");
-                    urlPair.append(" \"url\": \"").append( url ).append("\"");
+                    urlPair.append(" \"url\": \"").append( url.getPFN() ).append("\"");
                     urlPair.append(" }");
                     notFirst = true;
                     // and the credential for the source url
-                    job.addCredentialType( sourceSite, url );
+                    job.addCredentialType( sourceSite, url.getPFN() );
                 }
             }
             

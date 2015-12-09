@@ -22,6 +22,7 @@ import edu.isi.pegasus.common.util.StreamGobbler;
 import edu.isi.pegasus.common.util.StreamGobblerCallback;
 import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
+import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 
 import edu.isi.pegasus.planner.catalog.site.classes.Directory;
 
@@ -1064,13 +1065,13 @@ public class PegasusLite implements GridStart {
             boolean notFirst = false;
             for( String sourceSite: sourceSites ){
                 //traverse through all the URL's on that site
-                for( String url : ft.getSourceURLs(sourceSite) ){
+                for( ReplicaCatalogEntry url : ft.getSourceURLs(sourceSite) ){
                     if( notFirst ){
                         sb.append(",");
                     }
                     sb.append(" {");
                     sb.append(" \"site_label\": \"").append(sourceSite).append("\",");
-                    sb.append(" \"url\": \"").append( url ).append("\",");
+                    sb.append(" \"url\": \"").append( url.getPFN() ).append("\",");
                     sb.append(" \"checkpoint\": \"").append(ft.isCheckpointFile()).append("\"");
                     sb.append(" }");
                     notFirst = true;
