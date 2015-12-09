@@ -1434,7 +1434,7 @@ public class TransferEngine extends Engine {
                 */
                 
                 //PM-1014 we want to track all candidate locations
-                ft.addSource( selLoc.getResourceHandle(), sourceURL);
+                ft.addSource( selLoc);
                 
 
                 //to prevent duplicate destination urls
