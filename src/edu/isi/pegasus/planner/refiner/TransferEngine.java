@@ -1387,7 +1387,7 @@ public class TransferEngine extends Engine {
                     //only the files for which we bypass first level staging , we
                     //store them in the planner cache as a GET URL and associate with the compute site
                     //PM-698
-                    trackInPlannerCache( lfn, sourceURL, executionSiteHandle, OPERATION.get );
+                    trackInPlannerCache( lfn, selLoc, OPERATION.get );
                     
                     if( candidateNum == 1 ){
                         //PM-1014 we only track the first candidate in the workflow cache
@@ -1709,6 +1709,20 @@ public class TransferEngine extends Engine {
          trackInPlannerCache( lfn, pfn, site, OPERATION.put );
     }
 
+    /**
+     * Inserts an entry into the planner cache as a put URL.
+     *
+     *
+     * @param lfn  the logical name of the file.
+     * @param rce  replica catalog entry
+     * @param type the type of url
+     */
+    private void trackInPlannerCache( String lfn,
+                                      ReplicaCatalogEntry rce,
+                                      OPERATION type ){
+
+         mPlannerCache.insert( lfn, rce, type );
+    }
 
     /**
      * Inserts an entry into the planner cache as a put URL.

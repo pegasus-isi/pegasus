@@ -140,6 +140,31 @@ public class PlannerCache extends Data
         }
 
     }
+    
+    /**
+     * Inserts a new entry into the cache.
+     *
+     * @param lfn is the logical filename under which to book the entry
+     * @param rce  ReplicaCatalogEntry
+     * @param type  the type of URL.
+     *
+     * @return number of insertions, should always be 1. On failure,
+     * throw an exception, don't use zero.
+     *
+     */
+    public int insert( String lfn, ReplicaCatalogEntry rce, OPERATION type ){
+
+        if( type == OPERATION.get ){
+            return mGetRCCache.insert( lfn, rce);
+        }
+        else if( type == OPERATION.put ){
+            return mPutRCCache.insert( lfn, rce);
+        }
+        else{
+            throw new RuntimeException( "Unsupported operation type for planner cache " + type );
+        }
+
+    }
 
     /**
      * Retrieves a single entry for a given LFN from the replica catalog.
