@@ -423,8 +423,8 @@ public class Transfer   implements SLS {
                 for( ReplicaCatalogEntry cacheLocation: cacheLocations ){
                     url = new StringBuffer();
                     url.append( cacheLocation.getPFN() );
-                    ft.addSource( cacheLocation.getResourceHandle(), url.toString() );
-
+                    ft.addSource(cacheLocation);
+                    
                     symlink = ( mUseSymLinks && //specified in configuration
                                 !pf.isCheckpointFile() && //can only do symlinks for data files . not checkpoint files
                                 !pf.isExecutable() && //can only do symlinks for data files . not executables
