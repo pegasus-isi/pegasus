@@ -69,6 +69,14 @@ public class Default implements ReplicaSelector {
      * The properties object containing the properties passed to the planner.
      */
     protected PegasusProperties mProps;
+    
+    //priority values for different types of URL sets
+    
+    private static final String FILE_URLS_PRIORITY_KEY = "100";
+    
+    private static final String PREFERRED_SITE_PRIORITY_KEY  = "50";
+    
+    private static final String NON_PREFERRED_SITE_PRIORITY_KEY = "10";
 
     /**
      * The overloaded constructor, that is called by load method.
@@ -240,9 +248,12 @@ public class Default implements ReplicaSelector {
 
             if ( rce.getPFN().startsWith( PegasusURL.FILE_URL_SCHEME ) ) {
                 //file URL's have highest priority
+                rce.addAttribute( ReplicaSelector.PRIORITY_KEY, FILE_URLS_PRIORITY_KEY );
                 result.addPFN( rce );
+               
             }
             else if ( site != null && site.equals( preferredSite )) {
+                rce.addAttribute( ReplicaSelector.PRIORITY_KEY, PREFERRED_SITE_PRIORITY_KEY );
                 preferredSiteReplicas.add( rce );
             }
             else if ( site == null ){
@@ -251,6 +262,7 @@ public class Default implements ReplicaSelector {
                     " in the Replica Catalog", LogManager.WARNING_MESSAGE_LEVEL);
             }
             else{
+                rce.addAttribute( ReplicaSelector.PRIORITY_KEY, NON_PREFERRED_SITE_PRIORITY_KEY );
                 nonPrefferdSiteReplicas.add(rce);
             }
         }

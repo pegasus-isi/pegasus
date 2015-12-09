@@ -43,6 +43,11 @@ public interface ReplicaSelector {
     public static final String LOCAL_SITE_HANDLE = "local";
 
     /**
+     * The attribute key that designates priority for the replica
+     */
+    public static final String PRIORITY_KEY = "priority";
+    
+    /**
      * Select all candidate replicas for a LFN and order them.
      *
      *
