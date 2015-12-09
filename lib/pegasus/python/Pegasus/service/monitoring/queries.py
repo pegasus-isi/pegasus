@@ -556,7 +556,8 @@ class StampedeWorkflowQueries(WorkflowQueries):
         # Finish Construction of Base SQLAlchemy Query `q`
         #
         q_in = q_in.subquery('distinct_lfns')
-        q = self.session.query(RCLFN, RCPFN, RCMeta)
+        q = self.session.query(RCLFN, WorkflowFiles, RCPFN, RCMeta)
+        q = q.outerjoin(WorkflowFiles, RCLFN.lfn_id == WorkflowFiles.lfn_id)
         q = q.outerjoin(RCPFN, RCLFN.lfn_id == RCPFN.lfn_id)
         q = q.outerjoin(RCMeta, RCLFN.lfn_id == RCMeta.lfn_id)
         q = q.join(q_in, RCLFN.lfn_id == q_in.c.lfn_id)
@@ -571,14 +572,16 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         schema = OrderedDict([
             (RCLFN, 'root'),
+            (WorkflowFiles, ('extras', RCLFN, None)),
             (RCPFN, ('pfns', RCLFN, OrderedSet)),
             (RCMeta, ('meta', RCLFN, OrderedSet))
         ])
 
         index = OrderedDict([
             (RCLFN, 0),
-            (RCPFN, 1),
-            (RCMeta, 2)
+            (WorkflowFiles, 1),
+            (RCPFN, 2),
+            (RCMeta, 3)
         ])
 
         records = csv_to_json(records, schema, index)

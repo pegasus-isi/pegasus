@@ -24,7 +24,8 @@ from sqlalchemy.orm.attributes import instance_state
 from Pegasus.db.schema import *
 from Pegasus.service.base import PagedResponse, ErrorResponse, OrderedSet, OrderedDict
 from Pegasus.service.monitoring.resources import RootWorkflowResource, RootWorkflowstateResource
-from Pegasus.service.monitoring.resources import WorkflowResource, WorkflowMetaResource, WorkflowstateResource
+from Pegasus.service.monitoring.resources import WorkflowResource, WorkflowMetaResource
+from Pegasus.service.monitoring.resources import WorkflowFilesResource, WorkflowstateResource
 from Pegasus.service.monitoring.resources import RCLFNResource, RCPFNResource, RCMetaResource
 from Pegasus.service.monitoring.resources import JobResource, HostResource, JobInstanceResource, JobstateResource
 from Pegasus.service.monitoring.resources import TaskResource, TaskMetaResource, InvocationResource
@@ -38,22 +39,23 @@ class PegasusServiceJSONEncoder(JSONEncoder):
     """
 
     def default(self, obj):
-        def obj_to_dict(resource, fields=None, ignore_unloaded=False):
+        def obj_to_dict(resource, fields=None, ignore_unloaded=False, data=None):
+            data = data if data else obj
             obj_dict = OrderedDict()
 
             if ignore_unloaded:
-                unloaded = instance_state(obj).unloaded
+                unloaded = instance_state(data).unloaded
                 log.debug('ignore_unloaded is True, ignoring %s' % unloaded)
 
             for attribute in resource.fields:
                 if not ignore_unloaded or (ignore_unloaded and attribute not in unloaded):
-                    obj_dict[attribute] = getattr(obj, attribute)
+                    obj_dict[attribute] = getattr(data, attribute)
 
             if fields:
                 for attribute in fields:
                     try:
                         if not ignore_unloaded or (ignore_unloaded and attribute not in unloaded):
-                            obj_dict[attribute] = getattr(obj, attribute)
+                            obj_dict[attribute] = getattr(data, attribute)
                     except AttributeError:
                         pass
 
@@ -121,6 +123,11 @@ class PegasusServiceJSONEncoder(JSONEncoder):
             json_record['_links'] = OrderedDict([
                 ('workflow', url_for('.get_workflow', wf_id=obj.wf_id))
             ])
+
+            return json_record
+
+        elif isinstance(obj, WorkflowFiles):
+            json_record = obj_to_dict(WorkflowFilesResource())
 
             return json_record
 
@@ -205,6 +212,16 @@ class PegasusServiceJSONEncoder(JSONEncoder):
 
         elif isinstance(obj, RCLFN):
             json_record = obj_to_dict(RCLFNResource(), fields=['pfns', 'meta'])
+
+            if hasattr(obj, 'extras'):
+                json_record_2 = obj_to_dict(WorkflowFilesResource(), data=obj.extras)
+                json_record_2.update(json_record)
+                json_record = json_record_2
+
+                json_record['_links'] = OrderedDict([
+                    ('workflow', url_for('.get_workflow', wf_id=obj.extras.wf_id)),
+                    ('task', url_for('.get_task', wf_id=obj.extras.wf_id, task_id=obj.extras.task_id))
+                ])
 
             return json_record
 

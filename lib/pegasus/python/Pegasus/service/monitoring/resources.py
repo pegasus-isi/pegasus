@@ -17,7 +17,7 @@ __author__ = 'Rajiv Mayani'
 import logging
 
 from Pegasus.db.schema import DashboardWorkflow, DashboardWorkflowstate
-from Pegasus.db.schema import Workflow, Workflowstate, WorkflowMeta
+from Pegasus.db.schema import Workflow, WorkflowMeta, WorkflowFiles, Workflowstate
 from Pegasus.db.schema import RCLFN, RCPFN, RCMeta
 from Pegasus.db.schema import Job, Host, Jobstate
 from Pegasus.db.schema import Task, TaskMeta, JobInstance, Invocation
@@ -211,6 +211,18 @@ class WorkflowMetaResource(BaseResource):
         self._fields = [
             'key',
             'value'
+        ]
+
+
+class WorkflowFilesResource(BaseResource):
+    def __init__(self, alias=None):
+        super(WorkflowFilesResource, self).__init__(alias if alias else WorkflowFiles)
+
+        self._prefix = 'wf'
+
+        self._fields = [
+            'wf_id',
+            'task_id'
         ]
 
 
