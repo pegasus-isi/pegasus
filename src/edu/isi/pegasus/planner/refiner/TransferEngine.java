@@ -1417,25 +1417,9 @@ public class TransferEngine extends Engine {
                                         job.getStagingSiteHandle());
                     }
                 }
-            
-                //construct the file transfer object
-                /* PM-1014 moved before the loop 
-                FileTransfer ft = (pf instanceof FileTransfer) ?
-                                   (FileTransfer)pf:
-                                   new FileTransfer( lfn, jobName, pf.getFlags() );
-
-                //make sure the type information is set in file transfer
-                ft.setType( pf.getType() );
-                ft.setSize( pf.getSize() );
-
-                //the transfer mode for the file needs to be
-                //propogated for optional transfers.
-                ft.setTransferFlag(pf.getTransferFlag());
-                */
                 
                 //PM-1014 we want to track all candidate locations
                 ft.addSource( selLoc);
-                
 
                 //to prevent duplicate destination urls
                 //and have only a single destination.
