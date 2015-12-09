@@ -419,16 +419,22 @@ public class ReplicaCatalogEntry implements CatalogEntry, Cloneable
       return result;
   }
   
-  @Override
-  public Object clone() throws CloneNotSupportedException
-  {
-	  ReplicaCatalogEntry r = new ReplicaCatalogEntry ();
-		
-	  r.setPFN (getPFN ());
-	  r.setResourceHandle (getResourceHandle ());
-	  r.addAttribute (this.m_attributeMap);
+  public Object clone() {
+        
+      ReplicaCatalogEntry r;
+      try {
+          r = (ReplicaCatalogEntry) super.clone();
+      } catch (CloneNotSupportedException e) {
+          //somewhere in the hierarch chain clone is not implemented
+          throw new RuntimeException("Clone not implemented in the base class of " + this.getClass().getName(),
+                  e);
+      } 
 
-	  return r;
+      r.setPFN(getPFN());
+      r.setResourceHandle(getResourceHandle());
+      r.addAttribute(this.m_attributeMap);
+
+      return r;
   }
 
     /**

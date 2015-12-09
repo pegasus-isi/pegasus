@@ -1386,8 +1386,10 @@ public class TransferEngine extends Engine {
                 if( bypassFirstLevelStaging ){
                     //only the files for which we bypass first level staging , we
                     //store them in the planner cache as a GET URL and associate with the compute site
-                    //PM-698
-                    trackInPlannerCache( lfn, selLoc, OPERATION.get );
+                    //PM-698 . we have to clone since original site attribute will be different
+                    ReplicaCatalogEntry rce = (ReplicaCatalogEntry) selLoc.clone();
+                    rce.setResourceHandle( executionSiteHandle );
+                    trackInPlannerCache( lfn, rce, OPERATION.get );
                     
                     if( candidateNum == 1 ){
                         //PM-1014 we only track the first candidate in the workflow cache
