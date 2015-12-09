@@ -616,12 +616,8 @@ public class Regex implements ReplicaCatalog {
     }
 
     private ReplicaCatalogEntry cloneRCE( ReplicaCatalogEntry e ) {
-        try {
-            return (ReplicaCatalogEntry) e.clone();
-        } catch (CloneNotSupportedException c) {
-            // Log this
-        }
-        return null;
+        
+        return (ReplicaCatalogEntry) e.clone();
     }
 
     /**
