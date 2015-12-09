@@ -48,6 +48,7 @@ import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.refiner.DeployWorkerPackage;
+import edu.isi.pegasus.planner.selector.ReplicaSelector;
 import edu.isi.pegasus.planner.transfer.SLS;
 import edu.isi.pegasus.planner.transfer.sls.SLSFactory;
 import java.io.BufferedReader;
@@ -1069,9 +1070,14 @@ public class PegasusLite implements GridStart {
                     if( notFirst ){
                         sb.append(",");
                     }
+                    String prio =  (String) url.getAttribute( ReplicaSelector.PRIORITY_KEY);
+                    
                     sb.append(" {");
                     sb.append(" \"site_label\": \"").append(sourceSite).append("\",");
                     sb.append(" \"url\": \"").append( url.getPFN() ).append("\",");
+                    if( prio != null ){
+                        sb.append(" \"priority\": ").append( prio ).append(",");
+                    }
                     sb.append(" \"checkpoint\": \"").append(ft.isCheckpointFile()).append("\"");
                     sb.append(" }");
                     notFirst = true;

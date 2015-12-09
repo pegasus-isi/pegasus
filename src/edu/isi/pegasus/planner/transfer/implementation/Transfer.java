@@ -44,6 +44,7 @@ import java.util.ArrayList;
 
 import java.io.File;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.selector.ReplicaSelector;
 
 /**
  * The implementation that creates transfer jobs referring to the python based
@@ -424,9 +425,14 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
                     if( notFirst ){
                         urlPair.append(",");
                     }
+                    String prio =  (String) url.getAttribute( ReplicaSelector.PRIORITY_KEY);
                     urlPair.append(" {");
                     urlPair.append(" \"site_label\": \"").append(sourceSite).append("\",");
                     urlPair.append(" \"url\": \"").append( url.getPFN() ).append("\"");
+                    if( prio != null ){
+                        urlPair.append( ", ");
+                        urlPair.append(" \"priority\": ").append( prio );
+                    }
                     urlPair.append(" }");
                     notFirst = true;
                     // and the credential for the source url
