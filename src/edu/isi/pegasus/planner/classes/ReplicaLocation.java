@@ -114,6 +114,20 @@ public class ReplicaLocation
         rce.setResourceHandle( pfn.getSite() );
         this.mPFNList.add( rce );
     }
+    
+    /**
+     * Add a PFN and it's attributes. Any existing
+     * mapping with the same PFN and site attribute will be replaced, including all its
+     * attributes.
+     *
+     * @param tuples  the collection of <code>ReplicaCatalogEntry</code> object containing the
+     *             PFN and the attributes.
+     */
+    public void addPFN( Collection<ReplicaCatalogEntry> tuples ){
+        for( ReplicaCatalogEntry tuple: tuples ){
+            this.addPFN(tuple);
+        }
+    }
 
     /**
      * Add a PFN and it's attributes. Any existing

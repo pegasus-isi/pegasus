@@ -200,7 +200,7 @@ public class Default implements ReplicaSelector {
 
 
     /**
-     * This chooses a location amongst all the locations returned by the
+     * This orders all valid location amongst all the locations returned by the
      * Replica Mechanism. The following ordering mechanism is employed
      * 
      *  - valid file URL's
