@@ -1072,7 +1072,7 @@ public class PegasusLite implements GridStart {
                     }
                     String prio =  (String) url.getAttribute( ReplicaSelector.PRIORITY_KEY);
                     
-                    sb.append(" {");
+                    sb.append("\n     {");
                     sb.append(" \"site_label\": \"").append(sourceSite).append("\",");
                     sb.append(" \"url\": \"").append( url.getPFN() ).append("\",");
                     if( prio != null ){
@@ -1084,14 +1084,14 @@ public class PegasusLite implements GridStart {
                 }
             }
             
-            sb.append(" ],\n");
+            sb.append("\n   ],\n");
             NameValue nv = ft.getDestURL();
-            sb.append("   \"dest_urls\": [");
-            sb.append(" {");
+            sb.append("   \"dest_urls\": [\n");
+            sb.append("     {");
             sb.append(" \"site_label\": \"").append(nv.getKey()).append("\",");
             sb.append(" \"url\": \"").append(nv.getValue()).append("\"");
-            sb.append(" }");
-            sb.append(" ]");
+            sb.append(" }\n");
+            sb.append("   ]");
             sb.append(" }\n"); // end of this transfer
 
             num++;

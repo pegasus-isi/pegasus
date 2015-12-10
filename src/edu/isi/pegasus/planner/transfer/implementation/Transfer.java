@@ -426,7 +426,7 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
                         urlPair.append(",");
                     }
                     String prio =  (String) url.getAttribute( ReplicaSelector.PRIORITY_KEY);
-                    urlPair.append(" {");
+                    urlPair.append("\n     {");
                     urlPair.append(" \"site_label\": \"").append(sourceSite).append("\",");
                     urlPair.append(" \"url\": \"").append( url.getPFN() ).append("\"");
                     if( prio != null ){
@@ -440,12 +440,12 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
                 }
             }
             
-            urlPair.append(" ],\n");
-            urlPair.append("   \"dest_urls\": [");
-            urlPair.append(" {");
+            urlPair.append("\n   ],\n");
+            urlPair.append("   \"dest_urls\": [\n");
+            urlPair.append("     {");
             urlPair.append(" \"site_label\": \"").append(dest.getKey()).append("\",");
             urlPair.append(" \"url\": \"").append(dest.getValue()).append("\"");
-            urlPair.append(" }");
+            urlPair.append("   }\n");
             urlPair.append(" ]");
             urlPair.append(" }\n"); // end of this transfer
             writer.write( urlPair.toString() );
