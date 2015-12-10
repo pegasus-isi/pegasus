@@ -34,11 +34,15 @@
         </listitem>
 
         <listitem>
+          <para>Regex</para>
+        </listitem>
+
+        <listitem>
           <para>Restricted</para>
         </listitem>
 
         <listitem>
-          <para>Regex</para>
+          <para>Local</para>
         </listitem>
       </orderedlist>
 
