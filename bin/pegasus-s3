@@ -499,7 +499,10 @@ def cp(args):
             srckeys = srcbucket.list()
             info("Copying %d keys from %s to %s" % (len(srckeys), src, dest))
         else:
-            srckeys = [srcbucket.get_key(src.key)]
+            k = srcbucket.get_key(src.key)
+            if k is None:
+                raise Exception("Source key '%s' does not exist" % src.key)
+            srckeys = [k]
 
         # It doesn't make sense to copy several keys into one destination
         if len(srckeys) > 1 and dest.key:
