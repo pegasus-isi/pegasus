@@ -67,7 +67,7 @@ $(LIBDIR)/wtforms: WTForms-1.0.3.tar.gz
 $(LIBDIR)/werkzeug: Werkzeug-0.9.3.tar.gz
 $(LIBDIR)/requests: requests-1.2.3.tar.gz
 $(LIBDIR)/itsdangerous.py: itsdangerous-0.21.tar.gz
-$(LIBDIR)/boto: boto-2.5.2.tar.gz
+$(LIBDIR)/boto: boto-2.38.0.tar.gz
 $(LIBDIR)/pam.py: pam-0.1.4.tar.gz
 ifeq ($(OSID),rhel5)
     # 0.13 does not work on rhel5
