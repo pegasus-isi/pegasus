@@ -171,7 +171,7 @@ public class Regex extends Default {
                         candidatesByRank.put(r, l);
                     }
                     
-                    rce.addAttribute( ReplicaSelector.PRIORITY_KEY, r.getPriority() );
+                    rce.addAttribute( ReplicaSelector.PRIORITY_KEY, Integer.toString( r.getPriority()) );
                     break;
                 }
             }
