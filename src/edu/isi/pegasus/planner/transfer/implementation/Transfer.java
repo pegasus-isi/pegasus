@@ -430,7 +430,7 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
                     urlPair.append(" \"site_label\": \"").append(sourceSite).append("\",");
                     urlPair.append(" \"url\": \"").append( url.getPFN() ).append("\"");
                     if( prio != null ){
-                        urlPair.append( ", ");
+                        urlPair.append(",");
                         urlPair.append(" \"priority\": ").append( prio );
                     }
                     urlPair.append(" }");
@@ -445,8 +445,8 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
             urlPair.append("     {");
             urlPair.append(" \"site_label\": \"").append(dest.getKey()).append("\",");
             urlPair.append(" \"url\": \"").append(dest.getValue()).append("\"");
-            urlPair.append("   }\n");
-            urlPair.append(" ]");
+            urlPair.append(" }\n");
+            urlPair.append("   ]");
             urlPair.append(" }\n"); // end of this transfer
             writer.write( urlPair.toString() );
             writer.flush();
