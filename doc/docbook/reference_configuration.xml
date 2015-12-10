@@ -3284,7 +3284,61 @@ See Also    :</emphasis> pegasus.selector.replica.*.prefer.stagein.sites
                       <term>Default</term>
 
                       <listitem>
-                         If a PFN that is a file URL (starting with file:///) and has a "site" attribute matching to the site handle of the site where the compute is to be run is found, then that is returned. Else,a random PFN is selected amongst all the PFN's that have a "site" attribute matching to the site handle of the site where a compute job is to be run. Else, a random pfn is selected amongst all the PFN's. 
+                         
+
+                        <para>The selector orders the various candidate
+                        replica's according to the following rules</para>
+
+                        <orderedlist>
+                          <listitem>
+                            <para>valid file URL's . That is URL's that have the
+                            site attribute matching the site where the
+                            executable <emphasis>pegasus-transfer</emphasis> is
+                            executed.</para>
+                          </listitem>
+
+                          <listitem>
+                            <para>all URL's from preferred site (usually the
+                            compute site)</para>
+                          </listitem>
+
+                          <listitem>
+                            <para>all other remotely accessible ( non file)
+                            URL's</para>
+                          </listitem>
+                        </orderedlist>
+                      </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                      <term>Regex</term>
+
+                      <listitem>
+                        <para>This replica selector allows the user allows the
+                        user to specific regular expressions that can be used
+                        to rank various PFN's returned from the Replica
+                        Catalog for a particular LFN. This replica selector
+                        orders the replicas based on the rank. Lower the rank
+                        higher the preference.</para>
+
+                        <para>The regular expressions are assigned different
+                        rank, that determine the order in which the
+                        expressions are employed. The rank values for the
+                        regex can expressed in user properties using the
+                        property.</para>
+
+                        <para><screen>
+pegasus.selector.replica.regex.rank.[value]   regex-expression
+</screen></para>
+
+                        <para>The value is an integer value that denotes the
+                        rank of an expression with a rank value of 1 being the
+                        highest rank.</para>
+
+                        <para>Please note that before applying any regular
+                        expressions on the PFN's, the file URL's that dont
+                        match the preferred site are explicitly filtered
+                        out.</para>
                       </listitem>
                     </varlistentry>
 
@@ -3325,38 +3379,6 @@ pegasus.replica.*.ignore.stagein.sites
                         if for a site X, a site Y is specified both in the
                         ignored and the preferred set, then site Y is taken to
                         mean as only a preferred site for a site X.</para>
-                      </listitem>
-                    </varlistentry>
-
-                    <varlistentry>
-                      <term>Regex</term>
-
-                      <listitem>
-                        <para>This replica selector allows the user allows the
-                        user to specific regex expressions that can be used to
-                        rank various PFN's returned from the Replica Catalog
-                        for a particular LFN. This replica selector selects
-                        the highest ranked PFN i.e the replica with the lowest
-                        rank value.</para>
-
-                        <para>The regular expressions are assigned different
-                        rank, that determine the order in which the
-                        expressions are employed. The rank values for the
-                        regex can expressed in user properties using the
-                        property.</para>
-
-                        <para><screen>
-pegasus.selector.replica.regex.rank.[value]   regex-expression
-</screen></para>
-
-                        <para>The value is an integer value that denotes the
-                        rank of an expression with a rank value of 1 being the
-                        highest rank.</para>
-
-                        <para>Please note that before applying any regular
-                        expressions on the PFN's, the file URL's that dont
-                        match the preferred site are explicitly filtered
-                        out.</para>
                       </listitem>
                     </varlistentry>
 

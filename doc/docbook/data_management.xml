@@ -56,7 +56,14 @@
       <title>Supported Replica Selectors</title>
 
       <para>The various Replica Selectors supported in Pegasus Workflow Mapper
-      are explained below</para>
+      are explained below. </para>
+
+      <note>
+        <para>Starting 4.6.0 release the Default and Regex Replica Selectors
+        return an ordered list with priorities set. pegasus-transfer at
+        runtime will failover to alternate url's specified, if a higher
+        priority source URL is inaccessible.</para>
+      </note>
 
       <section>
         <title>Default</title>
@@ -65,34 +72,71 @@
         Workflow Mapper. If the property pegasus.selector.replica is not
         defined in properties, then Pegasus uses this selector.</para>
 
-        <para>This selector looks at each PFN returned for a LFN and checks to
-        see if</para>
+        <para>The selector orders the various candidate replica's according to
+        the following rules</para>
 
         <orderedlist>
           <listitem>
-            <para>the PFN is a file URL (starting with file:///)</para>
+            <para>valid file URL's . That is URL's that have the site
+            attribute matching the site where the executable
+            <emphasis>pegasus-transfer</emphasis> is executed.</para>
           </listitem>
 
           <listitem>
-            <para>the PFN has a pool attribute matching to the site handle of
-            the site where the compute job that requires the input file is to
-            be run.</para>
+            <para>all URL's from preferred site (usually the compute
+            site)</para>
+          </listitem>
+
+          <listitem>
+            <para> all other remotely accessible ( non file) URL's</para>
           </listitem>
         </orderedlist>
 
-        <para>If a PFN matching the conditions above exists then that is
-        returned by the selector .</para>
-
-        <para><emphasis role="bold">Else,</emphasis> a random PFN is selected
-        amongst all the PFN&amp;rsquor;s that have a pool attribute matching
-        to the site handle of the site where a compute job is to be
-        run.</para>
-
-        <para><emphasis role="bold">Else,</emphasis> a random pfn is selected
-        amongst all the PFN&amp;rsquor;s</para>
-
         <para>To use this replica selector set the following
         property<programlisting>pegasus.selector.replica                  Default</programlisting></para>
+      </section>
+
+      <section>
+        <title>Regex</title>
+
+        <para>This replica selector allows the user allows the user to
+        specific regular expressions that can be used to rank various PFN's
+        returned from the Replica Catalog for a particular LFN. This replica
+        selector orders the replicas based on the rank. Lower the rank higher
+        the preference.</para>
+
+        <para>The regular expressions are assigned different rank, that
+        determine the order in which the expressions are employed. The rank
+        values for the regex can expressed in user properties using the
+        property.</para>
+
+        <programlisting>pegasus.selector.replica.regex.rank.<emphasis
+            role="bold">[value]</emphasis>                  regex-expression</programlisting>
+
+        <para>The <emphasis role="bold">[value]</emphasis> in the above
+        property is an integer value that denotes the rank of an expression
+        with a rank value of 1 being the highest rank.</para>
+
+        <para>For example, a user can specify the following regex expressions
+        that will ask Pegasus to prefer file URL's over gsiftp url's from
+        example.isi.edu</para>
+
+        <programlisting>pegasus.selector.replica.regex.rank.1                       file://.*
+pegasus.selector.replica.regex.rank.2                       gsiftp://example\.isi\.edu.*</programlisting>
+
+        <para>User can specify as many regex expressions as they want.</para>
+
+        <para>Since Pegasus is in Java , the regex expression support is what
+        Java supports. It is pretty close to what is supported by Perl. More
+        details can be found at
+        http://java.sun.com/j2se/1.5.0/docs/api/java/util/regex/Pattern.html</para>
+
+        <para>Before applying any regular expressions on the PFN's for a
+        particular LFN that has to be staged to a site X, the file URL's that
+        don't match the site X are explicitly filtered out.</para>
+
+        <para>To use this replica selector set the following
+        property<programlisting>pegasus.selector.replica                  Regex</programlisting></para>
       </section>
 
       <section>
@@ -141,50 +185,6 @@ pegasus.replica.uwm.prefer.stagein.sites                   isi,cit
         <para>To use this replica selector set the following property</para>
 
         <programlisting>pegasus.selector.replica                  Restricted</programlisting>
-      </section>
-
-      <section>
-        <title>Regex</title>
-
-        <para>This replica selector allows the user allows the user to
-        specific regex expressions that can be used to rank various
-        PFN&amp;rsquor;s returned from the Replica Catalog for a particular
-        LFN. This replica selector selects the highest ranked PFN i.e the
-        replica with the lowest rank value.</para>
-
-        <para>The regular expressions are assigned different rank, that
-        determine the order in which the expressions are employed. The rank
-        values for the regex can expressed in user properties using the
-        property.</para>
-
-        <programlisting>pegasus.selector.replica.regex.rank.<emphasis
-            role="bold">[value]</emphasis>                  regex-expression</programlisting>
-
-        <para>The <emphasis role="bold">[value]</emphasis> in the above
-        property is an integer value that denotes the rank of an expression
-        with a rank value of 1 being the highest rank.</para>
-
-        <para>For example, a user can specify the following regex expressions
-        that will ask Pegasus to prefer file URL's over gsiftp url's from
-        example.isi.edu</para>
-
-        <programlisting>pegasus.selector.replica.regex.rank.1                       file://.*
-pegasus.selector.replica.regex.rank.2                       gsiftp://example\.isi\.edu.*</programlisting>
-
-        <para>User can specify as many regex expressions as they want.</para>
-
-        <para>Since Pegasus is in Java , the regex expression support is what
-        Java supports. It is pretty close to what is supported by Perl. More
-        details can be found at
-        http://java.sun.com/j2se/1.5.0/docs/api/java/util/regex/Pattern.html</para>
-
-        <para>Before applying any regular expressions on the PFN&amp;rsquor;s
-        for a particular LFN that has to be staged to a site X, the file
-        URL&amp;rsquor;s that don't match the site X are explicitly filtered
-        out.</para>
-
-        <para>To use this replica selector set the following
-        property<programlisting>pegasus.selector.replica                  Regex</programlisting></para>
       </section>
 
       <section>
@@ -1249,7 +1249,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
         </listitem>
       </itemizedlist>
 
-      <para> For users to specify a particular worker package to use, they can
+      <para>For users to specify a particular worker package to use, they can
       specify the transformation <emphasis
       role="bold">pegasus::worker</emphasis> in the transformation catalog
       with</para>
@@ -1267,7 +1267,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
 
         <listitem>
           <para>the PFN specified should be a remote URL that can be pulled to
-          the compute site. </para>
+          the compute site.</para>
         </listitem>
       </itemizedlist>
 
