@@ -65,7 +65,7 @@
         priority source URL is inaccessible.</para>
       </note>
 
-      <section>
+      <section id="replica_selection_default">
         <title>Default</title>
 
         <para>This is the default replica selector used in the Pegasus
@@ -187,7 +187,7 @@ pegasus.replica.uwm.prefer.stagein.sites                   isi,cit
         <programlisting>pegasus.selector.replica                  Restricted</programlisting>
       </section>
 
-      <section>
+      <section id="replica_selection_local">
         <title>Local</title>
 
         <para>This replica selector always prefers replicas from the local
