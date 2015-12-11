@@ -13,3 +13,4 @@ pegasus.data.configuration = condorio
 
 pegasus.condor.logs.symlink = false
 
+pegasus.gridstart.kickstart.stat true

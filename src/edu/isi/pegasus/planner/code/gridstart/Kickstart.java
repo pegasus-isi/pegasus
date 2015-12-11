@@ -403,14 +403,18 @@ public class Kickstart implements GridStart {
                     jobconf.construct(Pegasus.GRIDSTART_ARGUMENTS_KEY, "-H");
                 }
             }
-
-
-          //no worker node case
-                //always pass isGlobus true as always
-                //interested only in executable strargs
-                //due to the fact that seqexec does not allow for setting environment
-                //per constitutent constituentJob, we cannot set the postscript removal option
-                this.enable( constituentJob, isGlobusJob, mDoStat, false, partOfClusteredJob  );
+            
+            //no worker node case
+            //always pass isGlobus true as always
+            //interested only in executable strargs
+            //due to the fact that seqexec does not allow for setting environment
+            //per constitutent constituentJob, we cannot set the postscript removal option
+            this.enable( constituentJob, isGlobusJob, mDoStat, false, partOfClusteredJob  );
+                
+            //PM-1021 add any of the lof files (and any other) that maybe transferred via condor io
+            job.condorVariables.addIPFileForTransfer( constituentJob.condorVariables.getIPFilesForTransfer() );
+            
+            //System.out.println( constituentJob.condorVariables );
         }
 
         //all the constitutent jobs are enabled.
