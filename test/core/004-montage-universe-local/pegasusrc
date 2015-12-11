@@ -14,3 +14,4 @@ pegasus.data.configuration = sharedfs
 
 pegasus.condor.logs.symlink = false
 
+pegasus.gridstart.kickstart.stat true
