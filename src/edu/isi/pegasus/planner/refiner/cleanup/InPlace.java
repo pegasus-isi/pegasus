@@ -17,6 +17,7 @@
 package edu.isi.pegasus.planner.refiner.cleanup;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
@@ -232,7 +233,7 @@ public class InPlace implements CleanupStrategy{
         for( Iterator it = workflow.nodeIterator() ; it.hasNext(); ){
             GraphNode _GN = ( GraphNode ) it.next();
             Job _SI = ( Job ) _GN.getContent();
- 
+            
             //only for compute jobs
             if( ! ( _SI.getJobType() == _SI.COMPUTE_JOB /*|| _SI.getJobType() == _SI.STAGED_COMPUTE_JOB*/ ) ) {
                 continue;
@@ -730,7 +731,8 @@ public class InPlace implements CleanupStrategy{
         int type = job.getJobType();
         boolean cleanup = false;
         
-        if( type == Job.COMPUTE_JOB ){
+        //PM-1022 dax jobs should be treated for cleanup also
+        if( type == Job.COMPUTE_JOB  || (job instanceof DAXJob) ){
             cleanup = true;
         }
         else if( this.typeStageOut(type) ){
