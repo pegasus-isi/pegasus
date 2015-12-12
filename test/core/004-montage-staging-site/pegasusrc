@@ -15,4 +15,4 @@ pegasus.transfer.worker.package = true
 
 pegasus.data.configuration = nonsharedfs
 
-
+pegasus.gridstart.kickstart.stat true

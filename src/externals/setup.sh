@@ -33,7 +33,7 @@ else
     packages+=("Werkzeug-0.9.3")
     packages+=("requests-1.2.3")
     packages+=("itsdangerous-0.21")
-    packages+=("boto-2.5.2")
+    packages+=("boto-2.38.0")
     packages+=("SQLAlchemy-0.8.0")
     packages+=("pam-0.1.4")
     if [ "$PYOPENSSL" == "Yes" ]; then
