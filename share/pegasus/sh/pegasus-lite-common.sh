@@ -171,9 +171,12 @@ function pegasus_lite_setup_work_dir()
             cd $pegasus_lite_work_dir
 	   
 	    if [ "x$found_lof" != "x" ]; then
-                #PM-1022 copy all lof files from Condor scratch dir to directory where pegasus lite runs the job
-		pegasus_lite_log "Copying lof files from $pegasus_lite_start_dir to $pegasus_lite_work_dir"
-		cp $pegasus_lite_start_dir/*lof $pegasus_lite_work_dir
+		#PM-1022 make sure pegasus_lite_work_dir and start dir are not same
+		if [ ! $pegasus_lite_start_dir -ef $pegasus_lite_work_dir ]; then
+                    # copy all lof files from Condor scratch dir to directory where pegasus lite runs the job
+		    pegasus_lite_log "Copying lof files from $pegasus_lite_start_dir to $pegasus_lite_work_dir"
+		    cp $pegasus_lite_start_dir/*lof $pegasus_lite_work_dir
+		fi
             fi
 
             return 0
