@@ -131,16 +131,18 @@ function pegasus_lite_setup_work_dir()
     pegasus_lite_start_dir=`pwd`
 
     #check if there are any lof files to transfer
+    set +e
     ls $pegasus_lite_start_dir/*lof > /dev/null 2>&1
     if [ "$?" = "0" ]; then
 	found_lof="true"
     fi
+    set -e
 
     if [ "x$pegasus_lite_work_dir" != "x" ]; then
         pegasus_lite_log "Not creating a new work directory as it is already set to $pegasus_lite_work_dir"
 	
 	if [ "x$found_lof" != "x" ]; then 
- 	    #PM-1022 copy all lof files from Condor scratch dir to directory where pegasus lite runs the job
+ 	    #PM-1021 copy all lof files from Condor scratch dir to directory where pegasus lite runs the job
 	    pegasus_lite_log "Copying lof files from $pegasus_lite_start_dir to $pegasus_lite_work_dir"
 	    cp $pegasus_lite_start_dir/*lof $pegasus_lite_work_dir
 	fi
@@ -186,7 +188,7 @@ function pegasus_lite_setup_work_dir()
             cd $pegasus_lite_work_dir
 	   
 	    if [ "x$found_lof" != "x" ]; then
-		#PM-1022 make sure pegasus_lite_work_dir and start dir are not same
+		#PM-1021 make sure pegasus_lite_work_dir and start dir are not same
 		if [ ! $pegasus_lite_start_dir -ef $pegasus_lite_work_dir ]; then
                     # copy all lof files from Condor scratch dir to directory where pegasus lite runs the job
 		    pegasus_lite_log "Copying lof files from $pegasus_lite_start_dir to $pegasus_lite_work_dir"
