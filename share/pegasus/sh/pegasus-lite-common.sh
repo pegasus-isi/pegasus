@@ -119,8 +119,21 @@ function pegasus_lite_setup_work_dir()
     # remember where we started from
     pegasus_lite_start_dir=`pwd`
 
+    #check if there are any lof files to transfer
+    ls $pegasus_lite_start_dir/*lof > /dev/null 2>&1
+    if [ "$?" = "0" ]; then
+	found_lof="true"
+    fi
+
     if [ "x$pegasus_lite_work_dir" != "x" ]; then
         pegasus_lite_log "Not creating a new work directory as it is already set to $pegasus_lite_work_dir"
+	
+	if [ "x$found_lof" != "x" ]; then 
+ 	    #PM-1022 copy all lof files from Condor scratch dir to directory where pegasus lite runs the job
+	    pegasus_lite_log "Copying lof files from $pegasus_lite_start_dir to $pegasus_lite_work_dir"
+	    cp $pegasus_lite_start_dir/*lof $pegasus_lite_work_dir
+	fi
+
         return
     fi
 
@@ -156,6 +169,13 @@ function pegasus_lite_setup_work_dir()
             export pegasus_lite_work_dir_created=1
             pegasus_lite_log "  Work dir is $d - $free kB available"
             cd $pegasus_lite_work_dir
+	   
+	    if [ "x$found_lof" != "x" ]; then
+                #PM-1022 copy all lof files from Condor scratch dir to directory where pegasus lite runs the job
+		pegasus_lite_log "Copying lof files from $pegasus_lite_start_dir to $pegasus_lite_work_dir"
+		cp $pegasus_lite_start_dir/*lof $pegasus_lite_work_dir
+            fi
+
             return 0
         fi
         pegasus_lite_log "  Workdir: not allowed to write to $d"
