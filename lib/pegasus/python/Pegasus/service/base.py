@@ -554,6 +554,10 @@ class OrderedSet(set):
         """ Remove all elements from this set. """
         self.__data.clear()
 
+    def values(self):
+        'od.items() -> list of (key, value) pairs in od'
+        return [key for key in self.__data]
+
     def remove(self, element):
         """
         Remove an element from a set; it must be a member.

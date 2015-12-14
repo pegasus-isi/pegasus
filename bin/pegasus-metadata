@@ -22,8 +22,9 @@ Usage: pegasus-metadata [-h] [-v] [-c] {task,file,workflow} ... submit_dir
 #  limitations under the License.
 ##
 
-import sys
 import subprocess
+
+import sys
 
 import os
 
@@ -39,7 +40,6 @@ def set_python_paths():
     # Insert this directory in our search path
     sys.path.insert(0, lib_dir)
     sys.path.insert(0, lib_ext_dir)
-
 
 set_python_paths()
 
@@ -125,15 +125,12 @@ def workflow_metadata(recursive=False, submit_dir='.', *args, **kwargs):
         sys.exit(3)
 
 
-def task_metadata(task_id=None, abs_task_id=None, submit_dir='.', *args, **kwargs):
+def task_metadata(abs_task_id=None, submit_dir='.', *args, **kwargs):
     logging.debug('task_metadata')
 
-    if not task_id and not abs_task_id:
-        logging.error('task_id or task_name is required')
+    if not abs_task_id:
+        logging.error('task_id is required')
         sys.exit(1)
-
-    if task_id and abs_task_id:
-        logging.warning('Both task_id and task_name specified, ignoring task_name')
 
     try:
         wf_uuid = get_workflow_uuid(submit_dir)
@@ -142,18 +139,14 @@ def task_metadata(task_id=None, abs_task_id=None, submit_dir='.', *args, **kwarg
 
         queries = StampedeWorkflowQueries(db_uri)
 
-        if task_id is None and abs_task_id:
-            logging.debug('Get task metadata for abs_task_id %s' % abs_task_id)
-            workflow = queries.get_workflow_tasks(wf_uuid, query='t.abs_task_id = %r' % abs_task_id)
+        logging.debug('Get task metadata for abs_task_id %s' % abs_task_id)
+        workflow = queries.get_workflow_tasks(wf_uuid, query='t.abs_task_id = %r' % abs_task_id)
 
-            if workflow.total_filtered == 0:
-                raise ValueError('Invalid task_name %r' % abs_task_id)
+        if workflow.total_filtered == 0:
+            raise ValueError('Invalid task_name %r' % abs_task_id)
 
-            task_id = workflow.records[0].task_id
-
-        if task_id:
-            logging.debug('Get task metadata for task_id %s' % task_id)
-            task_metas = queries.get_task_meta(task_id).records
+        task_id = workflow.records[0].task_id
+        task_metas = queries.get_task_meta(task_id).records
 
         render_metas(task_metas)
 
@@ -170,10 +163,16 @@ def task_metadata(task_id=None, abs_task_id=None, submit_dir='.', *args, **kwarg
         sys.exit(3)
 
 
-def file_metadata(file_name=None, submit_dir='.', *args, **kwargs):
+def file_metadata(file_name=None, list_files=False, trace=False, submit_dir='.', *args, **kwargs):
     logging.debug('task_metadata')
 
-    list_files = not file_name
+    if trace and not file_name:
+        logging.error('file_name is required when trace is True')
+        sys.exit(1)
+
+    if not file_name:
+        list_files = True
+        logging.info('file_name not provided, will list metadata for all files')
 
     try:
         wf_uuid = get_workflow_uuid(submit_dir)
@@ -197,6 +196,36 @@ def file_metadata(file_name=None, submit_dir='.', *args, **kwargs):
             if workflow_files.total_filtered == 0:
                 raise ValueError('Invalid file %r' % file_name)
 
+        if trace:
+            wf_file = workflow_files.records.values()[0]
+            wf_id = wf_file.extras.wf_id
+            task_id = wf_file.extras.task_id
+
+            # Get workflow information
+            root_wf = None
+            wf = queries.get_workflow(wf_id)
+
+            # If workflow is hierarchical workflow, get root workflow information
+            if wf_id != wf.root_wf_id:
+                root_wf = queries.get_workflow(wf.root_wf_id)
+
+            if root_wf:
+                root_wf_metas = queries.get_workflow_meta(root_wf.wf_id).records
+                print 'Root Workflow %s' % root_wf.wf_uuid
+                render_metas(root_wf_metas, '    ')
+                print
+
+            wf_metas = queries.get_workflow_meta(wf_id).records
+            print 'Workflow %s' % wf.wf_uuid
+            render_metas(wf_metas, '    ')
+            print
+
+            task = queries.get_task(task_id)
+            task_metas = queries.get_task_meta(task_id).records
+            print 'Task %s' % task.abs_task_id
+            render_metas(task_metas, '    ')
+            print
+
         for wf_file in workflow_files.records:
             print 'File %s' % wf_file.lfn
             render_metas(wf_file.meta, '    ')
@@ -215,33 +244,33 @@ def file_metadata(file_name=None, submit_dir='.', *args, **kwargs):
 
 
 def main():
+    parent_parser = argparse.ArgumentParser(add_help=False)
+    parent_parser.add_argument('-v', '--verbose', default=0, action='count', help='Logging verbosity')
+    parent_parser.add_argument('-c', '--conf', default=None, action='count', dest='config',
+                               help='Specifies the properties file to use. This overrides all other property files.')
+    parent_parser.add_argument('submit_dir', nargs='?', default='.', help='Workflow submit directory')
+
     parser = argparse.ArgumentParser(description='Pegasus Metadata Query Tool')
     sub_parser = parser.add_subparsers(title='Metadata types', description='Types of metadata that can be queried')
 
     # Workflow Metadata Options
-    workflow = sub_parser.add_parser('workflow')
+    workflow = sub_parser.add_parser('workflow', parents=[parent_parser])
     workflow.add_argument('-r', '--recursive', default=False, action='store_true')
     workflow.set_defaults(func=workflow_metadata)
 
     # Task Metadata Options
-    task = sub_parser.add_parser('task')
-    task.add_argument('-i', '--task-id', type=int)
-    task.add_argument('-n', '--task-name', dest='abs_task_id')
+    task = sub_parser.add_parser('task', parents=[parent_parser])
+    task.add_argument('-i', '--task-id', dest='abs_task_id', required=True)
     task.set_defaults(func=task_metadata)
 
     # File Metadata Options
-    file = sub_parser.add_parser('file')
+    file = sub_parser.add_parser('file', parents=[parent_parser])
     file.add_argument('-n', '--file-name')
-    #file.add_argument('-l', '--list', default=False, action='store_true', dest='list_files')
+    file.add_argument('-l', '--list', default=False, action='store_true', dest='list_files')
+    file.add_argument('-t', '--trace', default=False, action='store_true')
     file.set_defaults(func=file_metadata)
 
-    parser.add_argument('-v', '--verbose', default=0, action='count', help='Logging verbosity')
-    parser.add_argument('-c', '--conf', default=None, action='count', dest='config',
-                        help='Specifies the properties file to use. This option overrides all other property files.')
-    parser.add_argument('submit_dir', default='.', help='Workflow submit directory')
-
     args = parser.parse_args(sys.argv[1:])
-
     configure_logging(args.verbose)
 
     args.func(**vars(args))
