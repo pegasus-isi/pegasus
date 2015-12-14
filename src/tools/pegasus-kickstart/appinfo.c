@@ -226,32 +226,33 @@ static size_t convert2XML(FILE *out, const AppInfo* run) {
     /* We include <data> in the <statcall>s if any job failed, or if the user
      * did not specify -q */
     int includeData = !run->omitData || any_failure(run);
+    int useCDATA = run->useCDATA;
 
     /* User-specified initial and final arbitrary <statcall> records */
     if (run->icount && run->initial) {
         for (i=0; i<run->icount; ++i) {
-            printXMLStatInfo(out, 2, "statcall", "initial", &run->initial[i], includeData);
+            printXMLStatInfo(out, 2, "statcall", "initial", &run->initial[i], includeData, useCDATA);
         }
     }
     if (run->fcount && run->final) {
         for (i=0; i<run->fcount; ++i) {
-            printXMLStatInfo(out, 2, "statcall", "final", &run->final[i], includeData);
+            printXMLStatInfo(out, 2, "statcall", "final", &run->final[i], includeData, useCDATA);
         }
     }
 
     /* Default <statcall> records */
-    printXMLStatInfo(out, 2, "statcall", "stdin", &run->input, includeData);
+    printXMLStatInfo(out, 2, "statcall", "stdin", &run->input, includeData, useCDATA);
     updateStatInfo(&(((AppInfo*) run)->output));
-    printXMLStatInfo(out, 2, "statcall", "stdout", &run->output, includeData);
+    printXMLStatInfo(out, 2, "statcall", "stdout", &run->output, includeData, useCDATA);
     updateStatInfo(&(((AppInfo*) run)->error));
-    printXMLStatInfo(out, 2, "statcall", "stderr", &run->error, includeData);
+    printXMLStatInfo(out, 2, "statcall", "stderr", &run->error, includeData, useCDATA);
 
     /* If the job failed, or if the user requested the full kickstart record */
     if (any_failure(run) || run->fullInfo) {
         /* Extra <statcall> records */
-        printXMLStatInfo(out, 2, "statcall", "kickstart", &run->kickstart, includeData);
+        printXMLStatInfo(out, 2, "statcall", "kickstart", &run->kickstart, includeData, useCDATA);
         updateStatInfo(&(((AppInfo*) run)->logfile));
-        printXMLStatInfo(out, 2, "statcall", "logfile", &run->logfile, includeData);
+        printXMLStatInfo(out, 2, "statcall", "logfile", &run->logfile, includeData, useCDATA);
 
         /* <environment> */
         if (run->envp && run->envc) {

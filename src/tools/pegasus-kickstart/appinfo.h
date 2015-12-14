@@ -40,6 +40,7 @@ typedef struct {
     int            killTimeout;    /* Time to allow job to handle sigterm before sending sigkill */
     pid_t          currentChild;   /* The current child process (setup, pre, main, post, cleanup) */
     int            nextSignal;     /* The next signal to deliver */
+    int            useCDATA;       /* Use CDATA instead of quoting <data> */
 
     char* const*   argv;       /* application executable and arguments */
     int            argc;       /* application CLI number of arguments */
