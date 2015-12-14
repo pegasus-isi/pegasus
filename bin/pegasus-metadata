@@ -72,7 +72,7 @@ def get_workflow_uuid(submit_dir):
         raise ValueError('Not a valid workflow submit directory: %r' % submit_dir)
 
     braindump = utils.slurp_braindb(submit_dir)
-    return braindump['wf_uuid']
+    return braindump['root_wf_uuid'], braindump['wf_uuid']
 
 
 def get_workflow_uri(submit_dir):
@@ -99,14 +99,19 @@ def workflow_metadata(recursive=False, submit_dir='.', *args, **kwargs):
     logging.debug('workflow_metadata')
 
     try:
-        wf_uuid = get_workflow_uuid(submit_dir)
+        root_wf_uuid, wf_uuid = get_workflow_uuid(submit_dir)
         logging.debug('Workflow UUID: %s' % wf_uuid)
         db_uri = get_workflow_uri(submit_dir)
 
         queries = StampedeWorkflowQueries(db_uri)
 
         if recursive:
-            pass
+            wfs = queries.get_workflows(root_wf_uuid)
+
+            for wf in wfs.records:
+                print 'Workflow %s' % wf.wf_uuid
+                workflow_metas = queries.get_workflow_meta(wf_uuid).records
+                render_metas(workflow_metas)
 
         else:
             workflow_metas = queries.get_workflow_meta(wf_uuid).records
@@ -133,7 +138,7 @@ def task_metadata(abs_task_id=None, submit_dir='.', *args, **kwargs):
         sys.exit(1)
 
     try:
-        wf_uuid = get_workflow_uuid(submit_dir)
+        root_wf_uuid, wf_uuid = get_workflow_uuid(submit_dir)
         logging.debug('Workflow UUID: %s' % wf_uuid)
         db_uri = get_workflow_uri(submit_dir)
 
@@ -175,7 +180,7 @@ def file_metadata(file_name=None, list_files=False, trace=False, submit_dir='.',
         logging.info('file_name not provided, will list metadata for all files')
 
     try:
-        wf_uuid = get_workflow_uuid(submit_dir)
+        root_wf_uuid, wf_uuid = get_workflow_uuid(submit_dir)
         logging.debug('Workflow UUID: %s' % wf_uuid)
         db_uri = get_workflow_uri(submit_dir)
 
@@ -246,11 +251,9 @@ def file_metadata(file_name=None, list_files=False, trace=False, submit_dir='.',
 def main():
     parent_parser = argparse.ArgumentParser(add_help=False)
     parent_parser.add_argument('-v', '--verbose', default=0, action='count', help='Logging verbosity')
-    parent_parser.add_argument('-c', '--conf', default=None, action='count', dest='config',
-                               help='Specifies the properties file to use. This overrides all other property files.')
     parent_parser.add_argument('submit_dir', nargs='?', default='.', help='Workflow submit directory')
 
-    parser = argparse.ArgumentParser(description='Pegasus Metadata Query Tool')
+    parser = argparse.ArgumentParser(description='Pegasus Metadata Query Tool', parents=[parent_parser])
     sub_parser = parser.add_subparsers(title='Metadata types', description='Types of metadata that can be queried')
 
     # Workflow Metadata Options
@@ -271,8 +274,8 @@ def main():
     file.set_defaults(func=file_metadata)
 
     args = parser.parse_args(sys.argv[1:])
-    configure_logging(args.verbose)
 
+    configure_logging(args.verbose)
     args.func(**vars(args))
 
 
