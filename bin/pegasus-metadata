@@ -106,7 +106,7 @@ def workflow_metadata(recursive=False, submit_dir='.', *args, **kwargs):
         queries = StampedeWorkflowQueries(db_uri)
 
         if recursive:
-            wfs = queries.get_workflows(root_wf_uuid)
+            wfs = queries.get_workflows(root_wf_uuid, order='w.root_wf_id, w.parent_wf_id')
 
             for wf in wfs.records:
                 print 'Workflow %s' % wf.wf_uuid
