@@ -44,6 +44,36 @@ Increase logging verbosity
 *--help*::
 Prints a usage summary with all the available command-line options.
 
+Workflow Options
+----------------
+
+*-r*::
+*--recursive*::
+    Query workflow metadata for the entire workflow; including sub-workflows
+
+Task Options
+------------
+
+*-i* 'ABS_TASK_ID'::
+*--task-id* 'ABS_TASK_ID'::
+    Specifies the absolute task id whose metadata should be queried.
+
+File Options
+------------
+
+*-l*::
+*--list*::
+    Queries metadata for all files
+
+*-n* 'FILE_NAME'::
+*--file-name* 'FILE_NAME'::
+    Specifies name of the file whose metadata should be queried.
+
+*-t*::
+*--trace*::
+    Queries metadata for  the file, the task that generated the file, the workflow which contains the task, and the
+    root workflow which contains the task.
+
 
 Examples
 -------
