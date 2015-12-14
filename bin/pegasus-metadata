@@ -111,11 +111,12 @@ def workflow_metadata(recursive=False, submit_dir='.', *args, **kwargs):
             for wf in wfs.records:
                 print 'Workflow %s' % wf.wf_uuid
                 workflow_metas = queries.get_workflow_meta(wf_uuid).records
-                render_metas(workflow_metas)
+                render_metas(workflow_metas, '    ')
 
         else:
             workflow_metas = queries.get_workflow_meta(wf_uuid).records
-            render_metas(workflow_metas)
+            print 'Workflow %s' % wf_uuid
+            render_metas(workflow_metas, '    ')
 
     except ValueError as e:
         logging.error(e)
@@ -153,7 +154,8 @@ def task_metadata(abs_task_id=None, submit_dir='.', *args, **kwargs):
         task_id = workflow.records[0].task_id
         task_metas = queries.get_task_meta(task_id).records
 
-        render_metas(task_metas)
+        print 'Task', abs_task_id
+        render_metas(task_metas, '    ')
 
     except ValueError as e:
         logging.error(e)
