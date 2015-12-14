@@ -1,0 +1,75 @@
+pegasus-metadata(1)
+====================
+:doctype: manpage
+
+
+Name
+----
+pegasus-metadata - Manage Pegasus databases.
+
+
+Synopsis
+--------
+[verse]
+*pegasus-metadata* 'COMMAND' [options] <SUBMIT_DIR>
+
+
+Description
+-----------
+*pegasus-metadata* is a tool to query metadata collected for a
+workflow. The tools can query workflow, task, and file metadata.
+
+
+Commands
+--------
+
+*workflow*::
+    Query metadata for a workflow
+
+*task*::
+    Query metadata for a workflow task
+
+*file*::
+    Query metadata for files
+
+
+Global Options
+--------------
+
+*-v*::
+*--verbose*::
+Increase logging verbosity
+
+*-h*::
+*--help*::
+Prints a usage summary with all the available command-line options.
+
+
+Examples
+-------
+
+----------------
+# Query metadata for a workflow
+$ pegasus-metadata workflow /path/to/submit-dir
+
+# Query metadata for all workflows i.e. including sub-workflows
+$ pegasus-metadata workflow --recursive /path/to/submit-dir
+
+# Query task metadata for a given task
+$ pegasus-metadata task --task-id ID0000001 /path/to/submit-dir
+
+# Query metadata for all files
+$ pegasus-metadata file --list /path/to/submit-dir
+
+# Query metadata for a given file
+$ pegasus-metadata file --file-name f.a /path/to/submit-dir
+
+# Trace entire metadata for a given file
+$ pegasus-metadata file --file-name f.a --trace /path/to/submit-dir
+
+----------------
+
+
+Authors
+-------
+Pegasus Team <http://pegasus.isi.edu>
