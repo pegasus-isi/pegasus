@@ -23,8 +23,6 @@ Usage: pegasus-monitord [options] dagoutfile
 #  limitations under the License.
 ##
 
-# Revision : $Revision: 2012 $
-
 # Import Python modules
 import os
 import re
@@ -149,9 +147,6 @@ store_stdout_stderr = True      # Flag for storing jobs' stdout and stderr in ou
 fast_start_mode     = False     # Flag to indicate that only sleep once monitord has caught up with the dagman.out file
 
 wf_event_sink = None            # Where wf events go
-
-# Revision handling
-revision = "$Revision: 2012 $" # Let cvs handle this, do not edit manually
 
 # Remaining variables
 out = None                      # .dag.dagman.out file from command-line

@@ -1345,7 +1345,7 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
       <programlisting><emphasis role="bold">$ pegasus-tc-converter -i sample.tc.data -I File -o sample.tc.text -O Text
 </emphasis>
 2010.11.22 12:53:16.661 PST:   Successfully converted Transformation Catalog from File to Text 
-2010.11.22 12:53:16.666 PST:   The output transfomation catalog is in file  /lfs1/software/install/pegasus/pegasus-3.0.0cvs/etc/sample.tc.text 
+2010.11.22 12:53:16.666 PST:   The output transfomation catalog is in file  sample.tc.text 
 </programlisting>
 
       <para>To use the converted transformation catalog, in the properties do
