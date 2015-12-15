@@ -5,7 +5,7 @@ pegasus-transfer(1)
 
 Name
 ----
-pegasus-transfer - Handles data transfers in Pegasus workflows.
+pegasus-transfer - Handles data transfers for Pegasus workflows.
 
 
 Synopsis
@@ -15,16 +15,17 @@ Synopsis
                    [*--file* 'inputfile']
                    [*--threads* 'number_threads']
                    [*--max-attempts* 'attempts']
+                   [*--threads* 'threads']
                    [*--debug*] 
 
 
 Description
 -----------
-*pegasus-transfer* takes a list of url pairs, either on stdin or with 
-an input file, determines the correct tool to use for the transfer and 
-executes the transfer. Some of the protocols pegasus-transfer can handle 
-are GridFTP, SRM, Amazon S3, HTTP, and local cp/symlinking. Failed 
-transfers are retried.
+*pegasus-transfer* takes a JSON defined list of urls, either on stdin
+or with an input file, determines the correct tool to use for the transfer
+and  executes the transfer. Some of the protocols pegasus-transfer can
+handle  are GridFTP, SCP, SRM, Amazon S3, Google Storage, XRootD, HTTP,
+and local cp/symlinking. Failed transfers are retried.
 
 Note that pegasus-transfer is a tool mostly used internally in Pegasus
 workflows, but the tool can be used stand alone as well.
@@ -37,7 +38,7 @@ Prints a usage summary with all the available command-line options.
 
 *-f* 'inputfile'::
 *--file* 'inputfile'::
-File with input pairs. If not given, stdin will be used.
+JSON transfer specification. If not given, stdin will be used.
 
 *-m*::
 *--max-attempts* 'attempts'::
@@ -55,10 +56,13 @@ Example
 -------
 -----------
 $ pegasus-transfer
-# src 1 local_site
-file:///etc/hosts
-# dst 1 local_site
-file:///tmp/foo
+[
+ { "type": "transfer",
+   "id": 1,
+   "src_urls": [ { "site_label": "web", "url": "http://pegasus.isi.edu" } ],
+   "dest_urls": [ { "site_label": "local", "url": "file:///tmp/index.html" } ]
+ }
+]
 CTRL+D
 -----------
 
@@ -66,31 +70,32 @@ Credential Handling
 -------------------
 
 Credentials used for transfers can be specified with a combination of
-comments in the input file format and environment variables. For example,
+site labels in the input JSON format and environment variables. For example,
 give the following input file:
 
 -----------
-# src 1 isi
-gsiftp://workflow.isi.edu/data/file.dat
-# dst 1 tacc_stampede
-gsiftp://gridftp.stampede.tacc.utexas.edu/scratch/file.dat
+[
+ { "type": "transfer",
+   "id": 1,
+   "src_urls": [ { "site_label": "isi", "url": "gsiftp://workflow.isi.edu/data/file.dat" } ],
+   "dest_urls": [ { "site_label": "tacc_stampede", "url": "gsiftp://gridftp.stampede.tacc.utexas.edu/scratch/file.dat" } ]
+ }
+]
 -----------
  
 pegasus-transfer will expect either one environment variable specifying
 one credential to be used on both end of the connection (X509_USER_PROXY),
 or two separate environment variables specifying two different credentials
 to be used on the two ends of the connection. The the latter case, the
-environment variables are derived from the site names provided in the
-input file commments. In the example above, the environment variables
-would be named X509_USER_PROXY_isi and X509_USER_PROXY_tacc_stampede
+environment variables are derived from the site labels. In the example
+above, the environment variables would be named X509_USER_PROXY_isi
+and X509_USER_PROXY_tacc_stampede
 
 Threading
 ---------
 
 In order to speed up data transfers, pegasus-transfer will start a set
-of transfers in parallel using threads. Threads are turned off when
-retrying failed transfers.
-
+of transfers in parallel using threads.
 
 Author
 ------
