@@ -4919,7 +4919,7 @@ Scope       :</emphasis> Properties
                     <term>Cleanup</term>
 
                     <listitem>
-                       The default executable that is used to delete files is the "pegasus-cleanup" executable shipped with Pegasus. It is found at $PEGASUS_HOME/bin/pegasus-cleanup in the pegasus distribution. An entry for transformation pegasus::dirmanager needs to exist in the Transformation Catalog or the PEGASUS_HOME environment variable should be specified in the site catalog for the sites for this mode to work. 
+                       The default executable that is used to delete files is the "pegasus-transfer" executable shipped with Pegasus. It is found at $PEGASUS_HOME/bin/pegasus-transfer in the Pegasus distribution. An entry for transformation pegasus::dirmanager needs to exist in the Transformation Catalog or the PEGASUS_HOME environment variable should be specified in the site catalog for the sites for this mode to work. 
                     </listitem>
                   </varlistentry>
 

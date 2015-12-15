@@ -331,8 +331,6 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <!-- bin -->
     <copy preservelastmodified="true" todir="${dist.bin}">
       <fileset dir="bin">
-          <include name="pegasus-cleanup"/>
-          <include name="pegasus-create-dir"/>
           <include name="pegasus-s3"/>
           <include name="pegasus-transfer"/>
           <!-- add script files to copy as necessary -->
