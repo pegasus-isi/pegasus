@@ -365,6 +365,7 @@ Workflow Meta
 
 
 @monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/meta')
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/meta/query', methods=['POST'])
 def get_workflow_meta(username, m_wf_id, wf_id):
     """
     Returns a collection of workflow's metadata.
@@ -878,6 +879,7 @@ Task Meta
 
 
 @monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/task/<int:task_id>/meta')
+@monitoring_routes.route('/root/<string:m_wf_id>/workflow/<string:wf_id>/task/<int:task_id>/meta/query', methods=['POST'])
 def get_task_meta(username, m_wf_id, wf_id, task_id):
     """
     Returns a collection of task's metadata.
