@@ -32,8 +32,8 @@ if [ "X${OUTPUT_DIR}" = "X" ];then
     OUTPUT_DIR=`pwd`
 fi
 
-WORKER_PACKAGE_EXECUTABLES=( "pegasus-cleanup" "pegasus-cluster"  "pegasus-config"    
-                             "pegasus-create-dir" "pegasus-keg"   "pegasus-kickstart"
+WORKER_PACKAGE_EXECUTABLES=(  "pegasus-cluster"  "pegasus-config"    
+                              "pegasus-keg"   "pegasus-kickstart"
 			     "pegasus-s3" "pegasus-transfer")
 
 # call out to pegasus config and setup appropriate
