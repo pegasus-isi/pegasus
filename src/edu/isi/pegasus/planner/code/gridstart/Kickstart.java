@@ -1272,8 +1272,13 @@ public class Kickstart implements GridStart {
             PegasusFile pf;
             for( Iterator it = files.iterator(); it.hasNext(); ){
                 pf = ( PegasusFile ) it.next();
-                input.write( pf.getLFN() );
-                input.write( "\n" );
+                String lfn= pf.getLFN();
+                StringBuilder sb = new StringBuilder();
+                //to make sure that kickstart generates lfn attribute in statcall
+                //element
+                sb.append( lfn ).append( "=" ).
+                   append( lfn ).append(  "\n" );
+                input.write( sb.toString() );
             }
             //close the stream
             input.close();
