@@ -1083,7 +1083,7 @@ else:
         logger.error("cannot create dashboard events output... disabling dashboard event output!")
 
 # Say hello
-logger.info("starting [%s], using pid %d" % (revision, os.getpid()))
+logger.info("starting, using pid %d" % (os.getpid()))
 if millisleep is not None:
     logger.info("using simulation delay of %d ms" % (millisleep))
 
