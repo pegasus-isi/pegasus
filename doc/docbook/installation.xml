@@ -3,6 +3,12 @@
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="installation">
   <title>Installation</title>
+  
+  <para>The preferred way to install Pegasus is with native (RPM/DEB)
+    packages. It is recommended that you also install HTCondor (formerly Condor)
+    (<ulink url="http://research.cs.wisc.edu/htcondor/yum/">yum</ulink>, <ulink
+    url="http://research.cs.wisc.edu/htcondor/debian/">debian</ulink>) from
+    native packages.</para>
 
   <section id="prereqs">
     <title>Prerequisites</title>
@@ -21,7 +27,7 @@ Java HotSpot(TM) Client VM (build 1.6.0_07-87, mixed mode, sharing)</programlist
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">Python 2.4 or higher</emphasis>. Check
+        <para><emphasis role="bold">Python 2.6 or higher</emphasis>. Check
         with:</para>
 
         <para><programlisting># <emphasis role="bold">python -v</emphasis>
@@ -58,19 +64,7 @@ Python 2.6.2</programlisting></para>
         only needed if you want to run against grid sites or use GridFTP for
         data transfers. See <ulink
         url="http://www.globus.org/">http://www.globus.org/</ulink> for more
-        information. Check Globus Installation</para>
-
-        <programlisting># <emphasis role="bold">echo $GLOBUS_LOCATION</emphasis>
-/path/to/globus/install</programlisting>
-
-        <para>Make sure you source the Globus environment</para>
-
-        <para><programlisting>#<emphasis role="bold"> GLOBUS_LOCATION/etc/globus-user-env.sh</emphasis></programlisting></para>
-
-        <para>Check the setup by running:#</para>
-
-        <para><programlisting><emphasis role="bold"># globus-version</emphasis>
-5.2.0</programlisting></para>
+        information.</para>
       </listitem>
     </itemizedlist>
   </section>
@@ -83,51 +77,43 @@ Python 2.6.2</programlisting></para>
     the default PATH, in /usr/bin. If you have installed Pegasus from binary
     tarballs or source, add the bin/ directory to your PATH.</para>
 
-    <programlisting>  Example for bourne shells:
+    <para>Example for bourne shells:</para>
 
-    # <emphasis role="bold">export PATH=/some/install/pegasus-4.3.0/bin:$PATH</emphasis></programlisting>
+    <programlisting> 
+    $ <emphasis role="bold">export PATH=/some/install/pegasus-4.6.0/bin:$PATH</emphasis></programlisting>
 
     <note>
       <para>Pegasus 4.x is different from previous versions of Pegasus in that
       it does not require PEGASUS_HOME to be set or sourcing of any
-      environtment setup scripts.</para>
+      environment setup scripts.</para>
     </note>
 
     <para>If you want to use the <link linkend="api">DAX APIs</link>, you
     might also need to set your PYTHONPATH, PERL5LIB, or CLASSPATH. The right
     setting can be found by using pegasus-config:</para>
 
-    <programlisting># <emphasis role="bold">export PYTHONPATH=`pegasus-config --python`</emphasis>
-# <emphasis role="bold">export PERL5LIB=`pegasus-config --perl`</emphasis>
-# <emphasis role="bold">export CLASSPATH=`pegasus-config --classpath`</emphasis></programlisting>
+    <programlisting>$ <emphasis role="bold">export PYTHONPATH=`pegasus-config --python`</emphasis>
+$ <emphasis role="bold">export PERL5LIB=`pegasus-config --perl`</emphasis>
+$ <emphasis role="bold">export CLASSPATH=`pegasus-config --classpath`</emphasis></programlisting>
   </section>
 
-  <section id="native_packages">
-    <title>Native Packages (RPM/DEB)</title>
+  <section id="rhel">
+    <title>RHEL / CentOS / Scientific Linux</title>
 
-    <para>The preferred way to install Pegasus is with native (RPM/DEB)
-    packages. It is recommended that you also install HTCondor (formerly Condor)
-    (<ulink url="http://research.cs.wisc.edu/htcondor/yum/">yum</ulink>, <ulink
-    url="http://research.cs.wisc.edu/htcondor/debian/">debian</ulink>) from
-    native packages.</para>
+    <para>Add the Pegasus repository to yum downloading the Pegasus repos
+    file and adding it to<emphasis role="bold">
+    <filename>/etc/yum.repos.d/</filename></emphasis>. For RHEL 7 based
+    systemes:</para>
 
-    <section id="rhel">
-      <title>RHEL / CentOS / Scientific Linux</title>
+    <programlisting># <emphasis role="bold">wget -O /etc/yum.repos.d/pegasus.repo http://download.pegasus.isi.edu/wms/download/rhel/7/pegasus.repo</emphasis></programlisting>
 
-      <para>Add the Pegasus repository to yum downloading the Pegasus repos
-      file and adding it to<emphasis role="bold">
-      <filename>/etc/yum.repos.d/</filename></emphasis>. For RHEL 5 based
-      systemes:</para>
+    <para>For RHEL 6 based systems:</para>
 
-      <programlisting># <emphasis role="bold">wget -O /etc/yum.repos.d/pegasus.repo http://download.pegasus.isi.edu/wms/download/rhel/5/pegasus.repo</emphasis></programlisting>
+    <para><programlisting># <emphasis role="bold">wget -O /etc/yum.repos.d/pegasus.repo http://download.pegasus.isi.edu/wms/download/rhel/6/pegasus.repo</emphasis></programlisting></para>
 
-      <para>For RHEL 6 based systems:</para>
+    <para>Search for, and install Pegasus:</para>
 
-      <para><programlisting># <emphasis role="bold">wget -O /etc/yum.repos.d/pegasus.repo http://download.pegasus.isi.edu/wms/download/rhel/6/pegasus.repo</emphasis></programlisting></para>
-
-      <para>Search for, and install Pegasus:</para>
-
-      <programlisting># <emphasis role="bold">yum search pegasus</emphasis>
+    <programlisting># <emphasis role="bold">yum search pegasus</emphasis>
 pegasus.x86_64 : Workflow management system for Condor, grids, and clouds
 # <emphasis role="bold">yum install pegasus</emphasis>
 Running Transaction
@@ -137,30 +123,42 @@ Installed:
 pegasus
 
 Complete!</programlisting>
-    </section>
+  </section>
+  
+  <section id="ubunty">
+    <title>Ubuntu</title>
 
-    <section id="debian">
-      <title>Debian</title>
+    <para>To be able to install and upgrade from the Pegasus apt repository,
+    you will have to trust the repository key. You only need to add the
+    repository key once:</para>
 
-      <para>To be able to install and upgrade from the Pegasus apt repository,
-      you will have to trust the repository key. You only need to add the
-      repository key once:</para>
+<programlisting># <emphasis role="bold">wget -O - http://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -</emphasis></programlisting>
 
-      <programlisting># <emphasis role="bold">gpg --keyserver pgp.mit.edu --recv-keys 81C2A4AC</emphasis>
-# <emphasis role="bold">gpg -a --export 81C2A4AC | apt-key add -</emphasis>  </programlisting>
+    <para>Create repository file, update and install Pegasus (currently available releases are precise and trusty):</para>
 
-      <para>Add the Pegasus apt repository to your
-      <filename>/etc/apt/sources.list</filename> file:</para>
+    <programlisting># echo 'deb deb http://download.pegasus.isi.edu/wms/download/ubuntu trusty main' &gt;/etc/apt/sources.list.d/pegasus.list
+# apt-get update
+# apt-get install pegasus
+</programlisting>
 
-      <programlisting>deb http://download.pegasus.isi.edu/wms/download/debian wheezy main</programlisting>
+  </section>
 
-      <para>Install Pegasus with <emphasis role="bold">apt-get
-      :</emphasis></para>
+  <section id="debian">
+    <title>Debian</title>
 
-      <programlisting># <emphasis role="bold">apt-get update</emphasis>
-...
-# <emphasis role="bold">apt-get install pegasus</emphasis></programlisting>
-    </section>
+    <para>To be able to install and upgrade from the Pegasus apt repository,
+    you will have to trust the repository key. You only need to add the
+    repository key once:</para>
+
+<programlisting># <emphasis role="bold">wget -O - http://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -</emphasis></programlisting>
+
+    <para>Create repository file, update and install Pegasus (currently available releases are wheezy and jessie):</para>
+
+    <programlisting># echo 'deb deb http://download.pegasus.isi.edu/wms/download/debian jessie main' &gt;/etc/apt/sources.list.d/pegasus.list
+# apt-get update
+# apt-get install pegasus
+</programlisting>
+
   </section>
 
   <section id="tarballs">
