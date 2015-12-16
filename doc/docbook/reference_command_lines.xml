@@ -17,6 +17,7 @@
   <xi:include href="manpage.pegasus-invoke.xml"/>
   <xi:include href="manpage.pegasus-keg.xml"/>
   <xi:include href="manpage.pegasus-kickstart.xml"/>
+  <xi:include href="manpage.pegasus-metadata.xml"/>
   <xi:include href="manpage.pegasus-monitord.xml"/>
   <xi:include href="manpage.pegasus-mpi-cluster.xml"/>
   <xi:include href="manpage.pegasus-plan.xml"/>
