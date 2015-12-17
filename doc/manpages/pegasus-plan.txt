@@ -238,7 +238,8 @@ for the DAX job in the top level DAX.
 
 *--conf* 'propfile'::
 The path to properties file that contains the properties planner needs to
-use while planning the workflow.
+use while planning the workflow. Defaults to pegasus.properties file
+in the current working directory, if no conf option is specified.
 
 *--dir* 'dir'::
 The base directory where you want the output of the Pegasus Workflow

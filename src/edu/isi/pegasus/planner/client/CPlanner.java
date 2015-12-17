@@ -1203,7 +1203,7 @@ public class CPlanner extends Executable{
              append( "\n --cleanup          the cleanup strategy to use. Can be none|inplace|leaf . Defaults to inplace. ").
              append( "\n -C |--cluster      comma separated list of clustering techniques to be applied to the workflow to "  ).
              append( "\n                    to cluster jobs in to larger jobs, to avoid scheduling overheads."  ).
-             append( "\n --conf             the path to the properties file to use for planning. "  ).
+             append( "\n --conf             the path to the properties file to use for planning. Defaults to pegasus.properties file in the current working directory "  ).
              append( "\n --dir          the directory where to generate the executable workflow."  ).
              append( "\n --relative-dir     the relative directory to the base directory where to generate the concrete workflow." ).
              append( "\n --relative-submit-dir  the relative submit directory where to generate the concrete workflow. Overrids --relative-dir ."  ).
