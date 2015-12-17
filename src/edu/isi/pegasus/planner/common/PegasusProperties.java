@@ -210,12 +210,6 @@ public class PegasusProperties implements Cloneable {
      * The default path to the transformation catalog.
      */
     private String mDefaultTC;
-
-    /**
-     * The default path to the pool file.
-     */
-    private String mDefaultPoolFile;
-
     
 
     /**
@@ -328,7 +322,6 @@ public class PegasusProperties implements Cloneable {
         mDeprecatedProperties   = new HashSet(5);
         initializePropertyFile( confProperties  );
 
-        mDefaultPoolFile        = getDefaultPathToSC();
         mDefaultTC              = getDefaultPathToTC();
         mDefaultTransferPriority= getDefaultTransferPriority();
 
@@ -446,18 +439,7 @@ public class PegasusProperties implements Cloneable {
 
     }
 
-    /**
-     * Returns the default path to the site catalog file.
-     *
-     * @return sites.xml in the current working dir
-     *
-     * @see #getPoolMode()
-     */
-    public String getDefaultPathToSC() {
-        File f = new File( ".", PegasusProperties.SC_XML_FILE);
-        //System.err.println("Default Path to SC is " + f.getAbsolutePath());
-        return f.getAbsolutePath();
-    }
+    
 
     /**
      * Returns the default path to the condor kickstart. Currently the path
@@ -999,20 +981,7 @@ public class PegasusProperties implements Cloneable {
        return mProps.getProperty( PegasusProperties.PEGASUS_SITE_CATALOG_PROPERTY, DEFAULT_POOL_MODE );
    }
 
-   /**
-    * Returns the path to the pool file.
-    *
-    * Referred to by the "pegasus.catalog.site.file" property.
-    *
-    * @return the path to the pool file specified in the properties file,
-    *         else the default path specified by mDefaultPoolFile.
-    *
-    * @see #mDefaultPoolFile
-    */
-   public String getPoolFile() {
-       return mProps.getProperty( PegasusProperties.PEGASUS_SITE_CATALOG_FILE_PROPERTY,
-                                  mDefaultPoolFile );
-   }
+   
 
    /**
     * Returns the location of the schema for the DAX.
