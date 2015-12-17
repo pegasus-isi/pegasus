@@ -43,7 +43,6 @@ cat >sites.xml <<EOF
         <profile namespace="env" key="PEGASUS_HOME">$LOCAL_SGE_PEGASUS_HOME</profile>
 
         <profile namespace="pegasus" key="style" >glite</profile>
-        <profile namespace="pegasus" key="change.dir" >true</profile>
 
         <profile namespace="condor" key="grid_resource">sge</profile>
         
