@@ -62,28 +62,17 @@ public abstract  class Engine {
      */
     protected PegasusProperties mProps;
 
-    /**
-     * The path to the file containing the pool information. By default it is
-     * $PEGASUS_HOME/etc/pool.config
-     */
-    protected String mPoolFile;
-
+    
     /**
      * The handle to the Transformation Catalog. It must be instantiated
      * in the implementing class.
      */
     protected TransformationCatalog mTCHandle;
 
-    /**
-     * The path to the file containing the pool information. By default it is
-     * $PEGASUS_HOME/etc/tc.data.
-     */
-    protected String mTCFile;
-
+    
     /**
      * The handle to the Pool Info Provider. It is instantiated in this class
      */
-   //protected PoolInfoProvider mPoolHandle;
     protected SiteStore mSiteStore;
 
 
@@ -91,11 +80,6 @@ public abstract  class Engine {
      * Contains the message which is to be logged by Pegasus.
      */
     protected String mLogMsg = "";
-
-    /**
-     * The Replica Location Index URL got from vds.rls.url property
-     */
-    protected String mRLIUrl = "";
 
 
     /**
@@ -150,13 +134,6 @@ public abstract  class Engine {
      * Loads all the properties that are needed by the Engine classes.
      */
     public void loadProperties() {
-
-        //get from the properties object
-        mPoolFile = mProps.getPoolFile();
-        mTCFile = mProps.getTCPath();
-        mRLIUrl = mProps.getRLIURL();
-        String rmode = mProps.getReplicaMode();
-        String tcmode = mProps.getTCMode();
 
     }
 
