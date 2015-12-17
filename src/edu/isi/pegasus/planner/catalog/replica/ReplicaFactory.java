@@ -211,13 +211,14 @@ public class ReplicaFactory{
     ReplicaCatalog result = null;
 
 
-
+    /*// PM-1018 commented , as we want default rc.txt to be picked up
     if ( catalogImplementor == null )
       throw new RuntimeException( "You need to specify the " +
 				  ReplicaCatalog.c_prefix + " property" );
+    */
     
     //File also means SimpleFile
-    if( catalogImplementor.equalsIgnoreCase( "File" ) ){
+    if( catalogImplementor == null || catalogImplementor.equalsIgnoreCase( "File" ) ){
       catalogImplementor = "SimpleFile";
     }
 
