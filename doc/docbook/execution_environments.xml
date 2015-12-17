@@ -666,17 +666,6 @@ $ ls  /usr/libexec/condor/glite/bin/pbs_local_submit_attributes.sh
       </listitem>
     </orderedlist>
 
-    <para>Additonally, if you are planning to run workflows on the cluster in
-    the shared filesystem environment , you need to set</para>
-
-    <orderedlist>
-      <listitem>
-        <para><emphasis role="bold">pegasus</emphasis> profile <emphasis
-        role="bold">change.dir</emphasis> with value set to <emphasis
-        role="bold">true</emphasis>.</para>
-      </listitem>
-    </orderedlist>
-
     <para>An example site catalog entry for a glite site looks as follows in
     the site catalog</para>
 
@@ -705,9 +694,6 @@ $ ls  /usr/libexec/condor/glite/bin/pbs_local_submit_attributes.sh
         &lt;profile namespace="env" key="PEGASUS_HOME"&gt;/lfs/software/pegasus/pegasus-4.2.0&lt;/profile&gt;
 
         &lt;profile namespace="pegasus" key="style" &gt;glite&lt;/profile&gt;
-
-        &lt;!-- change.dir needs to be set, if you are running workflows in shared filesystem setup --&gt;
-        &lt;profile namespace="pegasus" key="change.dir"&gt;true&lt;/profile&gt;
 
         &lt;profile namespace="condor" key="grid_resource"&gt;pbs&lt;/profile&gt;
         &lt;profile namespace="condor" key="batch_queue"&gt;batch&lt;/profile&gt;
@@ -1351,8 +1337,7 @@ id24mv61 vahi
 (1z14238) (1z14239)))) (1z1423a) (1z1423b) (1z1423c) (1z1423d (1z1423e
 (1z1423f)))) (1z1423g (1z1423h) (1z1423i) (1z1423j) (1z1423k) (1z1423l)
 (1z1423m (1z1423n (1z1423o (1z1423p) (1z1423q) (1z1423r))) (1z1423s
-(1z1423t (1z1423u) (1z1423v) (1z1423w)))) (1z1423x) (1z1423y (1z1423z
-(1z14240 (1z14241) (1z14242) (1z14243)))) (1z14244) (1z14245) (1z14246
+(1z1423t (1z1423u) (1z1423v) (1z1423w)))) (1z14244) (1z14245) (1z14246
 (1z14247)) (1z142a8 (1z142a9) (1z142aa) (1z142ab (1z142ac (1z142ad))
 (1z142ae (1z142af)) (1z142ag (1z142ah)) (1z142ai (1z142aj))) (1z142ak)
 (1z142al (1z142am) (1z142an (1z142ao (1z142ap (1z142aq (1z142ar) (3y283yj))
