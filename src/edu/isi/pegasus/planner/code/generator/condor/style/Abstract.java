@@ -114,7 +114,17 @@ public abstract class Abstract implements CondorStyle {
         this.apply( (Job)job );
     }
 
-    
+    /**
+     * Empty implementation.
+     * 
+     * @param site  the site catalog entry object
+     * 
+     * @throws CondorStyleException in case of any error occuring code generation.
+     */
+    public void apply( SiteCatalogEntry site ) throws CondorStyleException{
+        //do nothing
+    }
+
     /**
      * Examines the credential requirements for a job and adds appropiate
      * transfer and environment directives for the credentials to be staged

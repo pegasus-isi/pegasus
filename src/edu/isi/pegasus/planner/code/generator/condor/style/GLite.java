@@ -19,6 +19,8 @@ package edu.isi.pegasus.planner.code.generator.condor.style;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 
 import edu.isi.pegasus.planner.classes.Job;
 
@@ -30,6 +32,7 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParserException;
 import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.code.generator.condor.CondorEnvironmentEscape;
 import edu.isi.pegasus.planner.namespace.Globus;
+import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
 /**
@@ -145,6 +148,28 @@ public class GLite extends Abstract {
         super();
         mEnvEscape = new CondorEnvironmentEscape();
         mCondorG = new CondorG();
+    }
+
+    /**
+     * Apply a style to a SiteCatalogEntry.  This allows the style classes
+     * to add or modify the existing profiles for the site so far.
+     *
+     * @param site  the site catalog entry object
+     * 
+     * @throws CondorStyleException in case of any error occuring code generation.
+     */
+    public void apply( SiteCatalogEntry site ) throws CondorStyleException{
+        Namespace pegasusProfiles = site.getProfiles().get(Profiles.NAMESPACES.pegasus);
+        String key = Pegasus.STYLE_KEY;
+        if( pegasusProfiles.containsKey( key )){
+            String style = (String) pegasusProfiles.get( key );
+            if( style.equals( Pegasus.GLITE_STYLE ) ){
+                // add change.dir key for it always
+                mLogger.log( "Setting pegasus profile" + Pegasus.CHANGE_DIR_KEY + " to true for site " + site.getSiteHandle(),
+                             LogManager.DEBUG_MESSAGE_LEVEL );
+                pegasusProfiles.checkKeyInNS( Pegasus.CHANGE_DIR_KEY, "true" );
+            }
+        }
     }
 
 

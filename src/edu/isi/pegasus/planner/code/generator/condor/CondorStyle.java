@@ -18,6 +18,7 @@
 package edu.isi.pegasus.planner.code.generator.condor;
 
 import edu.isi.pegasus.common.credential.CredentialHandlerFactory;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
@@ -42,7 +43,7 @@ public interface CondorStyle {
     /**
      * The version number associated with this API of Code Generator.
      */
-    public static final String VERSION = "1.3";
+    public static final String VERSION = "1.4";
 
 
     /**
@@ -57,7 +58,15 @@ public interface CondorStyle {
      */
     public void initialize( PegasusBag bag , CredentialHandlerFactory credentialFactory ) throws CondorStyleException;
 
-
+    /**
+     * Apply a style to a SiteCatalogEntry.  This allows the style classes
+     * to add or modify the existing profiles for the site so far.
+     *
+     * @param site  the site catalog entry object
+     * 
+     * @throws CondorStyleException in case of any error occuring code generation.
+     */
+    public void apply( SiteCatalogEntry site ) throws CondorStyleException;
 
     /**
      * Apply a style to a job. Involves changing the job object, and optionally
