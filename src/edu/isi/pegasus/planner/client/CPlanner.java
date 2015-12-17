@@ -29,6 +29,7 @@ import edu.isi.pegasus.common.util.Version;
 
 
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
 import edu.isi.pegasus.planner.catalog.site.SiteFactory;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
@@ -49,6 +50,7 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.RunDirectoryFilenameFilter;
 import edu.isi.pegasus.planner.common.Shiwa;
 import edu.isi.pegasus.planner.namespace.Dagman;
+import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.parser.DAXParserFactory;
 import edu.isi.pegasus.planner.parser.Parser;
@@ -1665,9 +1667,6 @@ public class CPlanner extends Executable{
         /* always load local site */
         toLoad.add( "local" );
 
-        
-
-        
         /* load the sites in site catalog */
         try{
             catalog.load( new LinkedList( toLoad) );
@@ -1681,6 +1680,22 @@ public class CPlanner extends Executable{
                 SiteCatalogEntry s = catalog.lookup( it.next() );
                 if( s != null ){
                     result.addEntry( s );
+                }
+            }
+            
+            //PM-960 lets do some post processing of the sites
+            for( Iterator<SiteCatalogEntry> it = result.entryIterator(); it.hasNext(); ){
+                SiteCatalogEntry s = it.next();
+                Namespace pegasusProfiles = s.getProfiles().get(Profiles.NAMESPACES.pegasus);
+                String key = Pegasus.STYLE_KEY;
+                if( pegasusProfiles.containsKey( key )){
+                    String style = (String) pegasusProfiles.get( key );
+                    if( style.equals( Pegasus.GLITE_STYLE ) ){
+                        // add change.dir key for it always
+                        mLogger.log( "Setting pegasus profile" + Pegasus.CHANGE_DIR_KEY + " to true for site " + s.getSiteHandle(),
+                                     LogManager.DEBUG_MESSAGE_LEVEL );
+                        pegasusProfiles.checkKeyInNS( Pegasus.CHANGE_DIR_KEY, "true" );
+                    }
                 }
             }
             
