@@ -256,7 +256,7 @@ public class XML implements SiteCatalog {
      *
      */
     protected File getDefaultPathToSC() {
-        File f = new File( ".", PegasusProperties.SC_XML_FILE);
+        File f = new File( ".", XML.DEFAULT_SITE_CATALOG_BASENAME);
         //System.err.println("Default Path to SC is " + f.getAbsolutePath());
         return f;
     }

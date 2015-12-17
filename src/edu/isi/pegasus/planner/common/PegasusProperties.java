@@ -117,7 +117,6 @@ public class PegasusProperties implements Cloneable {
 
     public static final String DEFAULT_CONDOR_CONFIG_DIR = "";
 
-    public static final String SC_XML_FILE = "sites.xml";
 
     public static final String CONDOR_KICKSTART = "kickstart-condor";
 
@@ -203,8 +202,6 @@ public class PegasusProperties implements Cloneable {
      * The object holding all the properties pertaining to the VDS system.
      */
     private CommonProperties mProps;
-
-
 
     /**
      * The default path to the transformation catalog.
