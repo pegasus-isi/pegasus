@@ -457,6 +457,8 @@ public class CPlanner extends Executable{
             //only if a user passed * option on command line or did not specify
             eSites.remove( "*" );
             eSites.addAll( s.list() );
+            //PM-1018 remove the local site from list of execution sites
+            eSites.remove( "local" );
         }
         mLogger.log( "Execution sites are         " + eSites, LogManager.DEBUG_MESSAGE_LEVEL );
 
