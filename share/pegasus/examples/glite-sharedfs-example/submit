@@ -14,6 +14,10 @@ RUN_ID=`/bin/date +'%F_%H%M%S'`
 RUN_DIR=$TOP_DIR/work/$RUN_ID
 mkdir -p $RUN_DIR
 
+# guess the PEGASUS_HOME
+BIN_DIR=`pegasus-config --bin`
+LOCAL_PBS_PEGASUS_HOME=`dirname $BIN_DIR`
+
 echo
 echo "Work directory: $RUN_DIR"
 echo
@@ -61,11 +65,21 @@ cat >sites.xml <<EOF
         </directory>
     </site>
 
-    <site  handle="glideinwms" arch="x86_64" os="LINUX">
-        <profile namespace="pegasus" key="style">condor</profile>
-        <profile namespace="condor" key="universe">vanilla</profile>
-        <profile namespace="condor" key="requirements" >(Target.Arch == "X86_64")</profile>
+    <site  handle="local-pbs" arch="x86" os="LINUX">
+        
+        <directory type="shared-scratch" path="$TOPDIR/local-pbs/shared-scratch">
+            <file-server operation="all" url="file://$TOPDIR/local-pbs/shared-scratch"/>
+        </directory>
+
+        <profile namespace="env" key="PEGASUS_HOME">$LOCAL_PBS_PEGASUS_HOME</profile>
+
+        <profile namespace="pegasus" key="style" >glite</profile>
+
+
+        <profile namespace="condor" key="grid_resource">pbs</profile>
+        <profile namespace="condor" key="batch_queue">batch</profile>
     </site>
+
 
 </sitecatalog>
 EOF
@@ -84,7 +98,7 @@ echo
 echo "Planning and submitting the workflow..."
 pegasus-plan \
     --conf pegasusrc \
-    --sites glideinwms \
+    --sites local-pbs \
     --output-site local \
     --dir work \
     --nocleanup \
