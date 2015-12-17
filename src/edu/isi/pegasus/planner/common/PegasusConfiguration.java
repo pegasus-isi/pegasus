@@ -18,6 +18,7 @@
 package edu.isi.pegasus.planner.common;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.site.classes.Directory;
 import edu.isi.pegasus.planner.catalog.site.classes.DirectoryLayout;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
@@ -25,7 +26,11 @@ import edu.isi.pegasus.planner.catalog.site.classes.InternalMountPoint;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
+import edu.isi.pegasus.planner.code.generator.condor.CondorStyle;
+import edu.isi.pegasus.planner.code.generator.condor.CondorStyleFactory;
+import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.File;
 import java.util.Iterator;
@@ -304,6 +309,33 @@ public class PegasusConfiguration {
             //log the updated output site entry
             mLogger.log( "Updated output site entry is " + entry,
                          LogManager.DEBUG_MESSAGE_LEVEL );
+        }
+        
+        //PM-960 lets do some post processing of the sites
+        CondorStyleFactory factory = new CondorStyleFactory();
+        PegasusBag bag = new PegasusBag();
+        bag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
+        bag.add( PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.getInstance());
+        bag.add( PegasusBag.SITE_STORE, store );
+        factory.initialize( bag );
+        for( Iterator<SiteCatalogEntry> it = store.entryIterator(); it.hasNext(); ){
+            SiteCatalogEntry s = it.next();
+            CondorStyle style = factory.loadInstance(s);
+            mLogger.log( "Style  detected for site " + s.getSiteHandle() + " is " + style.getClass(),
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            /*
+            Namespace pegasusProfiles = s.getProfiles().get(Profiles.NAMESPACES.pegasus);
+            String key = Pegasus.STYLE_KEY;
+            if( pegasusProfiles.containsKey( key )){
+                String style = (String) pegasusProfiles.get( key );
+                if( style.equals( Pegasus.GLITE_STYLE ) ){
+                    // add change.dir key for it always
+                    mLogger.log( "Setting pegasus profile" + Pegasus.CHANGE_DIR_KEY + " to true for site " + s.getSiteHandle(),
+                                 LogManager.DEBUG_MESSAGE_LEVEL );
+                    pegasusProfiles.checkKeyInNS( Pegasus.CHANGE_DIR_KEY, "true" );
+                }
+            }
+            */
         }
         
     }

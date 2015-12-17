@@ -30,8 +30,11 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
 import edu.isi.pegasus.common.util.DynamicLoader;
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.namespace.Namespace;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -187,6 +190,7 @@ public class CondorStyleFactory {
      * by the user at runtime. The CondorStyle is initialized and returned.
      *
      * @param job         the job for which the corresponding style is required.
+     * @return 
      *
      * @throws CondorStyleFactoryException that nests any error that
      *            might occur during the instantiation of the implementation.
@@ -214,6 +218,45 @@ public class CondorStyleFactory {
 
         //update the job with style determined
         job.vdsNS.construct( Pegasus.STYLE_KEY, style );
+
+        //now just load from the implementing classes
+        Object cs = this.get( style );
+        if ( cs == null ) {
+            throw new CondorStyleFactoryException( "Unsupported style " + style);
+        }
+
+        return (CondorStyle)cs;
+    }
+    
+    /**
+     * This method loads the appropriate implementing CondorStyle as specified
+     * by the user at runtime. The CondorStyle is initialized and returned.
+     *
+     *
+     * @param site
+     * 
+     * @throws CondorStyleFactoryException that nests any error that
+     *            might occur during the instantiation of the implementation.
+     */
+    public CondorStyle loadInstance( SiteCatalogEntry site )
+                                            throws CondorStyleFactoryException{
+
+        //sanity checks first
+        if( !mInitialized ){
+            throw new CondorStyleFactoryException(
+                "CondorStyleFactory needs to be initialized first before using" );
+        }
+        String defaultStyle = site.getSiteHandle().equalsIgnoreCase( "local" )?
+                              //jobs scheduled on local site have
+                              //default style as condor
+                              Pegasus.CONDOR_STYLE:
+                              Pegasus.GLOBUS_STYLE;
+
+        Namespace pegasusProfiles = site.getProfiles().get(Profiles.NAMESPACES.pegasus);
+        String key = Pegasus.STYLE_KEY;
+        String style = pegasusProfiles.containsKey( key )?
+                       (String)pegasusProfiles.get( key ):
+                       defaultStyle;
 
         //now just load from the implementing classes
         Object cs = this.get( style );
