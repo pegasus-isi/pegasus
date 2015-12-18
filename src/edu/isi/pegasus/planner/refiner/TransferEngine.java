@@ -535,8 +535,8 @@ public class TransferEngine extends Engine {
                 throw new RuntimeException( "Unable to find a physical filename (PFN) in the Replica Catalog for output file with logical filename (LFN) as "  + lfn );
             }
 
-            String putDestURL = mOutputMapper.map( lfn, mOutputSite,  FileServer.OPERATION.put );
-            String getDestURL = mOutputMapper.map( lfn, mOutputSite,  FileServer.OPERATION.get );
+            String putDestURL = mOutputMapper.map( lfn, destSite,  FileServer.OPERATION.put );
+            String getDestURL = mOutputMapper.map( lfn, destSite,  FileServer.OPERATION.get );
             
             
             //selLocs are all the locations found in ReplicaMechanism corr
