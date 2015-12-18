@@ -195,6 +195,7 @@ public class Cleanup implements CleanupImplementation{
 
         String stagingSiteHandle = job.getStagingSiteHandle();
         SiteCatalogEntry stagingSite = mSiteStore.lookup( stagingSiteHandle );
+        boolean stagingSiteVisibleToLocalSite = stagingSite.isVisibleToLocalSite();
         
         //by default execution site for a cleanup job is local unless
         //overridden because of File URL's in list of files to be cleaned
@@ -219,7 +220,7 @@ public class Cleanup implements CleanupImplementation{
                 }
 
                 if( (pfn.startsWith( PegasusURL.FILE_URL_SCHEME ) || pfn.startsWith( PegasusURL.SYMLINK_URL_SCHEME )) &&
-                       (!stagingSite.isVisibleToLocalSite()) //PM-1024 staging site is not visible to the local site
+                       (!stagingSiteVisibleToLocalSite) //PM-1024 staging site is not visible to the local site
                         ){
                     //means the cleanup job should run on the staging site
                     mLogger.log( " PFN for file " + file.getLFN() + " on staging site is a file|symlink URL " + pfn,
