@@ -316,19 +316,20 @@ public class TransferEngine extends Engine {
      * Returns whether to run a transfer job on local site or not.
      *
      *
-     * @param site  the site handle associated with the destination URL.
+     * @param site   the site entry associated with the destination URL.
      * @param destPutURL the destination URL
      * @param type  the type of transfer job for which the URL is being constructed.
      *
      * @return true indicating if the associated transfer job should run on local
      *              site or not.
      */
-    public boolean runTransferOnLocalSite( String site, String destinationURL, int type) {
+    public boolean runTransferOnLocalSite( SiteCatalogEntry site, String destinationURL, int type) {
         //check if user has specified any preference in config
         boolean result = true;
-
+        String siteHandle = site.getSiteHandle();
+        
         //short cut for local site
-        if( site.equals( "local" ) ){
+        if( siteHandle.equals( "local" ) ){
             //transfer to run on local site
             return result;
         }
@@ -340,7 +341,7 @@ public class TransferEngine extends Engine {
             return mTXRefiner.refinerPreferenceForLocalTransferJobs( type );
         }
         
-        if( mTXRefiner.runTransferRemotely( site, type )){
+        if( mTXRefiner.runTransferRemotely(siteHandle, type )){
             //always use user preference
             return !result;
         }
@@ -421,7 +422,7 @@ public class TransferEngine extends Engine {
                     this.complainForHeadNodeURLPrefix( REFINER_NAME, stagingSite.getSiteHandle(), FileServer.OPERATION.put, currentJob );
                 }
                 boolean localTransfer = runTransferOnLocalSite( 
-                                            stagingSite.getSiteHandle(), 
+                                            stagingSite, 
                                             stagingSiteURLPrefix,
                                             Job.STAGE_OUT_JOB);
                 vOutPoolTX = getFileTX(outputSite, currentJob, localTransfer );
@@ -504,15 +505,15 @@ public class TransferEngine extends Engine {
      * by the user. If the output pool path and the one returned by the replica
      * mechanism match then that object is not transferred.
      *
-     * @param pool    this the output pool which the user specifies at runtime.
+     * @param destSite    this the output pool which the user specifies at runtime.
      * @param job     The Job object corresponding to the leaf job which was
      *                deleted by the Reduction algorithm
      *
      * @return        Vector of <code>FileTransfer</code> objects
      */
-    private Vector getDeletedFileTX( String pool, Job job ) {
+    private Vector getDeletedFileTX( String destSite, Job job ) {
         Vector vFileTX = new Vector();
-        
+        SiteCatalogEntry outputSite = mSiteStore.lookup(destSite);
         for( Iterator it = job.getOutputFiles().iterator(); it.hasNext(); ){
             PegasusFile pf = (PegasusFile)it.next();
             String  lfn = pf.getLFN();
@@ -540,9 +541,9 @@ public class TransferEngine extends Engine {
             
             //selLocs are all the locations found in ReplicaMechanism corr
             //to the pool pool
-            ReplicaLocation selLocs = mReplicaSelector.selectAndOrderReplicas( rl,
-                                                                       pool,
-                                                                       this.runTransferOnLocalSite( pool,putDestURL, Job.STAGE_OUT_JOB  ));
+            ReplicaLocation selLocs = mReplicaSelector.selectAndOrderReplicas(rl,
+                                                                       destSite,
+                                                                       this.runTransferOnLocalSite( outputSite,putDestURL, Job.STAGE_OUT_JOB  ));
 
 
             boolean flag = false;
@@ -556,7 +557,7 @@ public class TransferEngine extends Engine {
                 //check if the URL's match
                 if (sourceURL.trim().equalsIgnoreCase(putDestURL.trim())){
                     String msg = "The leaf file " + lfn +
-                        " is already at the output pool " + pool;
+                        " is already at the output pool " + destSite;
                     mLogger.log(msg,LogManager.INFO_MESSAGE_LEVEL);
                     flag = true;
                     break;
@@ -565,7 +566,7 @@ public class TransferEngine extends Engine {
 
                 ft = new FileTransfer( lfn, job.getName() );
                 ft.addSource( selLoc.getResourceHandle() , sourceURL );
-                ft.addDestination( pool, putDestURL  );
+                ft.addDestination(destSite, putDestURL  );
                 ft.setURLForRegistrationOnDestination( getDestURL );
                 ft.setSize( pf.getSize() );
                 ft.setForCleanup( false );//PM-739
@@ -935,7 +936,7 @@ public class TransferEngine extends Engine {
 
             //definite inconsitency as url prefix and mount point
             //are not picked up from the same server
-            boolean localTransfer = runTransferOnLocalSite( destSiteHandle, thirdPartyDestPutURI, Job.INTER_POOL_JOB );
+            boolean localTransfer = runTransferOnLocalSite( destSite, thirdPartyDestPutURI, Job.INTER_POOL_JOB );
             String destURI = localTransfer ?
                 //construct for third party transfer
                 thirdPartyDestPutURI :
@@ -1190,7 +1191,7 @@ public class TransferEngine extends Engine {
         String fileDestDir = scheme + "://" + dAbsPath;
                 
         //check if the execution pool is third party or not
-        boolean runTransferOnLocalSite = runTransferOnLocalSite( stagingSiteHandle, dDirPutURL, Job.STAGE_IN_JOB);
+        boolean runTransferOnLocalSite = runTransferOnLocalSite( stagingSite, dDirPutURL, Job.STAGE_IN_JOB);
         String destDir = ( runTransferOnLocalSite ) ?
             //use the full networked url to the directory
             dDirPutURL
@@ -1224,7 +1225,7 @@ public class TransferEngine extends Engine {
                 else{
                     //staging of executables case
                     destPutURL = destNV.getValue();
-                    destPutURL = (runTransferOnLocalSite( stagingSiteHandle, destPutURL, Job.STAGE_IN_JOB))?
+                    destPutURL = (runTransferOnLocalSite( stagingSite, destPutURL, Job.STAGE_IN_JOB))?
                                //the destination URL is already third party
                                //enabled. use as it is
                                destPutURL:
