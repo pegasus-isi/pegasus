@@ -2809,8 +2809,10 @@ LFN PFN a="b" [..]
 </screen></para>
 
                       <para>To use File, the user additionally needs to
-                      specify pegasus.catalog.replica.file property to specify
-                      the path to the file based RC.</para>
+                      specify <emphasis
+                      role="bold">pegasus.catalog.replica.file</emphasis>
+                      property to specify the path to the file based RC. IF
+                      not specified , defaults to $PWD/rc.txt file.</para>
                     </listitem>
                   </varlistentry>
 
@@ -3146,7 +3148,7 @@ Scope       :</emphasis> Properties
 Profile Key : </emphasis></emphasis>N/A<emphasis role="bold">
 Scope       :</emphasis> Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
-<emphasis role="bold">Default     :</emphasis> ${pegasus.home.sysconfdir}/sites.xml</literallayout></entry>
+<emphasis role="bold">Default     :</emphasis> $PWD/sites.xml</literallayout></entry>
 
               <entry>The path to the site catalog file, that describes the
               various sites and their layouts to Pegasus.</entry>
@@ -3235,7 +3237,7 @@ type "STAGEABLE"
 Profile Key : </emphasis></emphasis>N/A<emphasis role="bold">
 Scope       :</emphasis> Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
-<emphasis role="bold">Default     :</emphasis> ${pegasus.home.sysconfdir}/tc.text </literallayout></entry>
+<emphasis role="bold">Default     :</emphasis> $PWD/tc.txt</literallayout></entry>
 
               <entry>The path to the transformation catalog file, that
               describes the locations of the executables.</entry>
@@ -3284,8 +3286,6 @@ See Also    :</emphasis> pegasus.selector.replica.*.prefer.stagein.sites
                       <term>Default</term>
 
                       <listitem>
-                         
-
                         <para>The selector orders the various candidate
                         replica's according to the following rules</para>
 
