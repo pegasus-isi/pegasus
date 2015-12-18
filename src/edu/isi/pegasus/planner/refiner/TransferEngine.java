@@ -284,7 +284,7 @@ public class TransferEngine extends Engine {
      * @param ft  the file transfer created
      * @return 
      */
-    private boolean runTransferRemotely(Job job , FileTransfer ft) {
+    private boolean runTransferRemotely(Job job , SiteCatalogEntry stagingSite, FileTransfer ft) {
         NameValue sourceTX = ft.getSourceURL();
         String sourceSite = sourceTX.getKey();
         String sourceURL  = sourceTX.getValue();
@@ -298,7 +298,17 @@ public class TransferEngine extends Engine {
             //matches destination site
             NameValue destTX = ft.getDestURL();
             if( sourceSite.equalsIgnoreCase( destTX.getKey()) ){
-                remote = true;
+                
+                if( sourceSite.equalsIgnoreCase( stagingSite.getSiteHandle() ) && stagingSite.isVisibleToLocalSite() ){
+                    //PM-1024 if the source also matches the job staing site
+                    //then we do an extra check if the staging site is the same
+                    //as the sourceSite, then we consider the local visible attribute
+                    //for the staging site
+                    remote = false;
+                }
+                else{
+                    remote = true;
+                }
             }
             else if( sourceSite.equals( "local") ){
                 remote = false;
@@ -1196,6 +1206,7 @@ public class TransferEngine extends Engine {
                 
         //check if the execution pool is third party or not
         boolean runTransferOnLocalSite = runTransferOnLocalSite( stagingSite, dDirPutURL, Job.STAGE_IN_JOB);
+        System.out.println( " DEBUG  " + runTransferOnLocalSite);
         String destDir = ( runTransferOnLocalSite ) ?
             //use the full networked url to the directory
             dDirPutURL
@@ -1440,7 +1451,7 @@ public class TransferEngine extends Engine {
                 //data stage in nodes for the lfn
                 if(  symLinkSelectedLocation || //symlinks can run only locally
                      !runTransferOnLocalSite ||
-                     runTransferRemotely( job, ft ) ){ //check on the basis of constructed source URL whether to run remotely
+                     runTransferRemotely( job, stagingSite, ft ) ){ //check on the basis of constructed source URL whether to run remotely
 
                     //all symlink transfers and user specified remote transfers
                     remoteFileTransfers.add(ft);
