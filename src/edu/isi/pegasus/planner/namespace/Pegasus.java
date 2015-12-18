@@ -452,6 +452,11 @@ public class Pegasus extends Namespace {
      */
     public static final String GLITE_ARGUMENTS_KEY = "glite.arguments";
     
+    /**
+     * Key to indicate that the site filesystem is accessible on the local site
+     */
+    public static final String LOCAL_VISIBLE_KEY = "local.visible";
+    
     //credential related constant keys
     private static final String S3CFG_FILE_VARIABLE = S3CFG.S3CFG_FILE_VARIABLE.toLowerCase();
     private static final String SSH_PRIVATE_KEY_VARIABLE = Ssh.SSH_PRIVATE_KEY_VARIABLE.toLowerCase();
@@ -692,7 +697,8 @@ public class Pegasus extends Namespace {
                 break;
 
             case 'l':
-                if( key.compareTo( LABEL_KEY ) == 0 ){
+                if( key.compareTo( LABEL_KEY ) == 0 ||
+                    key.compareTo( LOCAL_VISIBLE_KEY ) == 0    ){
                     res = VALID_KEY;
                 }
                 else{
