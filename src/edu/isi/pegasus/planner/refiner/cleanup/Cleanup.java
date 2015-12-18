@@ -38,6 +38,7 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.common.util.Separator;
 
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.classes.PlannerCache;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import java.util.List;
@@ -192,7 +193,8 @@ public class Cleanup implements CleanupImplementation{
         //we dont want credentials to be inherited
         cJob.resetCredentialTypes();
 
-        String stagingSite = job.getStagingSiteHandle();
+        String stagingSiteHandle = job.getStagingSiteHandle();
+        SiteCatalogEntry stagingSite = mSiteStore.lookup( stagingSiteHandle );
         
         //by default execution site for a cleanup job is local unless
         //overridden because of File URL's in list of files to be cleaned
@@ -210,23 +212,25 @@ public class Cleanup implements CleanupImplementation{
             int fileNum = 1;
             for( Iterator it = files.iterator(); it.hasNext(); fileNum++ ){
                 PegasusFile file = (PegasusFile)it.next();
-                String pfn = mPlannerCache.lookup( file.getLFN(), stagingSite, OPERATION.put );
+                String pfn = mPlannerCache.lookup(file.getLFN(), stagingSiteHandle, OPERATION.put );
 
                 if( pfn == null ){
-                    throw new RuntimeException( "Unable to determine cleanup url for lfn " + file.getLFN() + " at site " + stagingSite );
+                    throw new RuntimeException( "Unable to determine cleanup url for lfn " + file.getLFN() + " at site " + stagingSiteHandle );
                 }
 
-                if( pfn.startsWith( PegasusURL.FILE_URL_SCHEME ) || pfn.startsWith( PegasusURL.SYMLINK_URL_SCHEME ) ){
+                if( (pfn.startsWith( PegasusURL.FILE_URL_SCHEME ) || pfn.startsWith( PegasusURL.SYMLINK_URL_SCHEME )) &&
+                       (!stagingSite.isVisibleToLocalSite()) //PM-1024 staging site is not visible to the local site
+                        ){
                     //means the cleanup job should run on the staging site
                     mLogger.log( " PFN for file " + file.getLFN() + " on staging site is a file|symlink URL " + pfn,
                                  LogManager.DEBUG_MESSAGE_LEVEL );
-                    mLogger.log( "Cleanup Job " + id + " instead of running on local site , will run on site " + stagingSite,
+                    mLogger.log("Cleanup Job " + id + " instead of running on local site , will run on site " + stagingSiteHandle,
                                  LogManager.DEBUG_MESSAGE_LEVEL );
-                    eSite = stagingSite;
+                    eSite = stagingSiteHandle;
                 }
 
                 //associate a credential if required
-                cJob.addCredentialType( stagingSite, pfn );
+                cJob.addCredentialType(stagingSiteHandle, pfn );
 
                 if (fileNum > 1) {
                 	writer.write("  ,\n");
@@ -236,7 +240,7 @@ public class Cleanup implements CleanupImplementation{
                 writer.write("    \"id\": " + fileNum + ",\n");
                 writer.write("    \"type\": \"remove\",\n");
                 writer.write("    \"target\": {");
-                writer.write(" \"site_label\": \"" + stagingSite + "\",");
+                writer.write(" \"site_label\": \"" + stagingSiteHandle + "\",");
                 writer.write(" \"url\": \"" + pfn + "\",");
                 writer.write(" \"recursive\": \"False\"");
                 writer.write(" }");
