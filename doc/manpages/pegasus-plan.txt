@@ -365,11 +365,11 @@ different relative submit directory on the submit host.
 *--sites* 'site'[,'site',...]::
 A comma separated list of execution sites on which the workflow is to be
 executed. Each of the sites should have an entry in the site catalog,
-that is being used. To run on the submit host, specify the execution
-site as *local*.
+that is being used. 
 +
 In case this option is not specified, all the sites in the site
-catalog are picked up as candidates for running the workflow.
+catalog other than site *local* are picked up as candidates for 
+running the workflow. 
 
 *--staging-site* 's1=ss1'[,s2=ss2[..]]::
 A comma separated list of key=value pairs , where the key is the
