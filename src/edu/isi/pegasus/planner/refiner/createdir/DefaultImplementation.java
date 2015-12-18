@@ -191,7 +191,7 @@ public class DefaultImplementation implements Implementation {
 
         //figure out on the basis of directory URL
         //where to run the job.
-        String eSite = getCreateDirJobExecutionSite( site, directoryURL );
+        String eSite = getCreateDirJobExecutionSite( mSiteStore.lookup( site), directoryURL );
 
         try {
             entries = mTCHandle.lookup( DefaultImplementation.TRANSFORMATION_NAMESPACE,
@@ -404,12 +404,14 @@ public class DefaultImplementation implements Implementation {
      *
      * @return  the site for create dir job
      */
-    protected String getCreateDirJobExecutionSite( String site, String directoryURL ) {
+    protected String getCreateDirJobExecutionSite( SiteCatalogEntry site, String directoryURL ) {
 
         String result = "local";
-
-        if( directoryURL != null && directoryURL.startsWith( PegasusURL.FILE_URL_SCHEME ) ){
-            result = site;
+        boolean stagingSiteVisibleToLocalSite = site.isVisibleToLocalSite(); 
+        if( directoryURL != null && directoryURL.startsWith( PegasusURL.FILE_URL_SCHEME )  &&
+                       (!stagingSiteVisibleToLocalSite) //PM-1024 staging site is not visible to the local site
+                        ){
+            result = site.getSiteHandle();
         }
 
         return result;
