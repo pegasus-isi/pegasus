@@ -421,7 +421,7 @@ public class TransferEngine extends Engine {
                     this.complainForHeadNodeURLPrefix( REFINER_NAME, stagingSite.getSiteHandle(), FileServer.OPERATION.put, currentJob );
                 }
                 boolean localTransfer = runTransferOnLocalSite( 
-                                            currentJob.getSiteHandle(), 
+                                            stagingSite.getSiteHandle(), 
                                             stagingSiteURLPrefix,
                                             Job.STAGE_OUT_JOB);
                 vOutPoolTX = getFileTX(outputSite, currentJob, localTransfer );
