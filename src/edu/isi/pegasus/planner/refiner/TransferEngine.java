@@ -334,6 +334,10 @@ public class TransferEngine extends Engine {
             return result;
         }
 
+        //PM-1024 check if the filesystem on site visible to the local site
+        if( site.isVisibleToLocalSite() ){
+            return true;
+        }
         
         if( mTXRefiner.refinerPreferenceForTransferJobLocation() ){
             //refiner is advertising a preference for where transfer job

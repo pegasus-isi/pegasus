@@ -944,6 +944,18 @@ public class SiteCatalogEntry extends AbstractSiteData{
         visitor.depart(this);
     }
 
+    /**
+     * Returns a boolean indicating whether the filesystem for this site
+     * is visible to the local site.
+     * 
+     * @return 
+     */
+    public boolean isVisibleToLocalSite() {
+        Pegasus pegasusProfiles = (Pegasus) this.getProfiles().get(NAMESPACES.pegasus);
+        return pegasusProfiles.getBooleanValue( Pegasus.LOCAL_VISIBLE_KEY );
+        
+    }
+
 
 
 
