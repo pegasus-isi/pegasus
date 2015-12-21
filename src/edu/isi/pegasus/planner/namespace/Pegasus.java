@@ -27,7 +27,6 @@ import edu.isi.pegasus.planner.classes.Profile;
 
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.common.PegasusProperties;
-import static edu.isi.pegasus.planner.namespace.Globus.mAggregatorTable;
 import edu.isi.pegasus.planner.namespace.aggregator.Aggregator;
 import edu.isi.pegasus.planner.namespace.aggregator.MAX;
 import edu.isi.pegasus.planner.namespace.aggregator.UniqueMerge;
@@ -55,6 +54,13 @@ public class Pegasus extends Namespace {
      */
     public static final String NAMESPACE_NAME = Profile.VDS;
 
+    /**
+     * Key to indicate that the site filesystem is accessible on the local site,
+     * and hence auxillary jobs for the site can be run on local site
+     */
+    public static final String LOCAL_VISIBLE_KEY = "auxillary.local";
+    
+    
     /**
      * The name of the key that sets a remote initial dir for a condor globus
      * job.
@@ -452,10 +458,6 @@ public class Pegasus extends Namespace {
      */
     public static final String GLITE_ARGUMENTS_KEY = "glite.arguments";
     
-    /**
-     * Key to indicate that the site filesystem is accessible on the local site
-     */
-    public static final String LOCAL_VISIBLE_KEY = "local.visible";
     
     //credential related constant keys
     private static final String S3CFG_FILE_VARIABLE = S3CFG.S3CFG_FILE_VARIABLE.toLowerCase();
@@ -597,6 +599,14 @@ public class Pegasus extends Namespace {
 
         switch (key.charAt(0)) {
 
+            case 'a':
+                if( key.compareTo( LOCAL_VISIBLE_KEY ) == 0 ){
+                    res = VALID_KEY;
+                }else {
+                    res = UNKNOWN_KEY;
+                }
+                break;
+                
             case 'b':
                 if ( 
                      (key.compareTo(BUNDLE_STAGE_IN_KEY) == 0) ||
@@ -697,8 +707,7 @@ public class Pegasus extends Namespace {
                 break;
 
             case 'l':
-                if( key.compareTo( LABEL_KEY ) == 0 ||
-                    key.compareTo( LOCAL_VISIBLE_KEY ) == 0    ){
+                if( key.compareTo( LABEL_KEY ) == 0 ){
                     res = VALID_KEY;
                 }
                 else{
