@@ -60,7 +60,7 @@
       <title>Supported Replica Selectors</title>
 
       <para>The various Replica Selectors supported in Pegasus Workflow Mapper
-      are explained below. </para>
+      are explained below.</para>
 
       <note>
         <para>Starting 4.6.0 release the Default and Regex Replica Selectors
@@ -92,7 +92,7 @@
           </listitem>
 
           <listitem>
-            <para> all other remotely accessible ( non file) URL's</para>
+            <para>all other remotely accessible ( non file) URL's</para>
           </listitem>
         </orderedlist>
 
@@ -668,12 +668,33 @@ pegasus.replica.uwm.prefer.stagein.sites                   isi,cit
       added to the executable workflow are executed on the submit host. By
       default, Pegasus will schedule a transfer to be executed on the remote
       staging site only if there is no way to execute it on the submit host.
-      For e.g if the file server specified for the staging site/compute site
-      is a file server, then Pegasus will schedule all the stage in data
-      movement jobs on the compute site to stage-in the input data for the
-      workflow. Another case would be if a user has symlinking turned on. In
-      that case, the transfer jobs that symlink against the input data on the
-      compute site, will be executed remotely ( on the compute site ).</para>
+      Some scenarios where transfer jobs are executed on remote sites are as
+      follows:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para> the file server specified for the staging site/compute site
+          is a file server. In that case, Pegasus will schedule all the stage
+          in data movement jobs on the compute site to stage-in the input data
+          for the workflow. </para>
+        </listitem>
+
+        <listitem>
+          <para>a user has symlinking turned on. In that case, the transfer
+          jobs that symlink against the input data on the compute site, will
+          be executed remotely ( on the compute site ).</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>In certain execution environments, such a local campus cluster the
+      compute site and the local share a filesystem ( i.e. compute site has
+      file servers specified for the staging/compute site, and the scratch and
+      storage directories mentioned for the compute site are locally mounted
+      on the submit host), it is beneficial to have the remote transfer jobs
+      run locally and hence bypass going through the local scheduler queue. In
+      that case, users can set a boolean profile auxillary.local in pegasus
+      namespace in the site catalog for the compute/staging site to
+      true.</para>
 
       <para>Users can specify the property <emphasis role="bold">
       pegasus.transfer.*.remote.sites</emphasis> to change the default
@@ -994,10 +1015,10 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
 
       <para>Pegasus refers to a python script called <emphasis role="bold">
       pegasus-transfer</emphasis> as the executable in the transfer jobs to
-      transfer the data. pegasus-transfer looks at source and
-      destination url and figures out automatically which underlying client to
-      use. pegasus-transfer is distributed with the PEGASUS and can be found
-      at $PEGASUS_HOME/bin/pegasus-transfer.</para>
+      transfer the data. pegasus-transfer looks at source and destination url
+      and figures out automatically which underlying client to use.
+      pegasus-transfer is distributed with the PEGASUS and can be found at
+      $PEGASUS_HOME/bin/pegasus-transfer.</para>
 
       <para>Currently, pegasus-transfer interfaces with the following transfer
       clients</para>
@@ -1017,45 +1038,56 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
           <tbody>
             <row>
               <entry>globus-url-copy</entry>
+
               <entry>staging files to and from GridFTP servers</entry>
             </row>
 
             <row>
               <entry>gfal-copy</entry>
+
               <entry>staging files to and from SRM or XRootD servers</entry>
             </row>
 
             <row>
               <entry>wget</entry>
+
               <entry>staging files from a HTTP server</entry>
             </row>
 
             <row>
               <entry>cp</entry>
+
               <entry>copying files from a POSIX filesystem</entry>
             </row>
 
             <row>
               <entry>ln</entry>
+
               <entry>symlinking against input files</entry>
             </row>
 
             <row>
               <entry>pegasus-s3</entry>
-              <entry>staging files to and from S3 buckets in Amazon Web Services</entry>
+
+              <entry>staging files to and from S3 buckets in Amazon Web
+              Services</entry>
             </row>
 
             <row>
               <entry>gsutil</entry>
+
               <entry>staging files to and from Google Storage buckets</entry>
             </row>
+
             <row>
               <entry>scp</entry>
+
               <entry>staging files using scp</entry>
             </row>
 
             <row>
               <entry>iget</entry>
+
               <entry>staging files to and from iRODS servers</entry>
             </row>
           </tbody>
@@ -1832,6 +1864,5 @@ irodsPassword 'somesecretpassword'</programlisting>
       <para>This will result in cleanup option to be picked up from the
       arguments for the DAX job in the top level DAX .</para>
     </section>
-
   </section>
 </chapter>

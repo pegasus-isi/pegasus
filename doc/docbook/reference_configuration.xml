@@ -1770,6 +1770,21 @@ Scope       :</emphasis> TC, SC, DAX, Properties
               such as PBS e.g. you can set value -l walltime=01:23:45 -l
               nodes=2 to specify your job's resource requirements.</entry>
             </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Profile  Key: </emphasis></emphasis>auxillary.local<emphasis
+                    role="bold">
+Scope       :</emphasis> SC
+<emphasis role="bold">Since       :</emphasis> 4.6
+<emphasis role="bold">Type        : </emphasis>Boolean</literallayout></entry>
+
+              <entry>indicates whether auxillary jobs associated with a
+              compute site X, can be run on local site. This CAN ONLY be
+              specified as a profile in the site catalog and should be set
+              when the compute site filesystem is accessible locally on the
+              submit host.</entry>
+            </row>
           </tbody>
         </tgroup>
       </table>
@@ -1907,7 +1922,7 @@ Scope       :</emphasis> TC, SC, DAX, Properties
         HTCondorG.</para>
 
         <table>
-          <title>Table mapping translation of Pegasus Task Requriements to
+          <title>Table mapping translation of Pegasus Task Requirements to
           corresponding execution environment keys.</title>
 
           <tgroup cols="4">
