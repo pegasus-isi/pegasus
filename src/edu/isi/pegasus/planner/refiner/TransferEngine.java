@@ -300,9 +300,9 @@ public class TransferEngine extends Engine {
             if( sourceSite.equalsIgnoreCase( destTX.getKey()) ){
                 
                 if( sourceSite.equalsIgnoreCase( stagingSite.getSiteHandle() ) && stagingSite.isVisibleToLocalSite() ){
-                    //PM-1024 if the source also matches the job staing site
+                    //PM-1024 if the source also matches the job staging site
                     //then we do an extra check if the staging site is the same
-                    //as the sourceSite, then we consider the local visible attribute
+                    //as the sourceSite, then we consider the auxillary.local attribute
                     //for the staging site
                     remote = false;
                 }
@@ -312,11 +312,6 @@ public class TransferEngine extends Engine {
             }
             else if( sourceSite.equals( "local") ){
                 remote = false;
-            }
-            else{
-                //should indicate a bug
-                throw new RuntimeException( "Mismatched file transfer created " + ft + " for job " +
-                                            job.getID());
             }
         }
         return remote;
@@ -1448,7 +1443,7 @@ public class TransferEngine extends Engine {
             if ( !bypassFirstLevelStaging ) {
                 //no bypass of input file staging. we need to add
                 //data stage in nodes for the lfn
-                if(  symLinkSelectedLocation || //symlinks can run only locally
+                if(  symLinkSelectedLocation || //symlinks can run only on staging site
                      !runTransferOnLocalSite ||
                      runTransferRemotely( job, stagingSite, ft ) ){ //check on the basis of constructed source URL whether to run remotely
 
