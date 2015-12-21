@@ -43,6 +43,8 @@ tr $BINARY:3.3 {
 EOF
 done
 
+export PEGASUS_VERSION=`pegasus-version`
+
 # site catalog
 echo
 echo "Creating the site catalog..."
@@ -89,7 +91,7 @@ cat >sites.xml <<EOF
         <profile namespace="pegasus" key="style">condor</profile>
         <profile namespace="condor" key="requirements">(TARGET.FileSystemDomain =!= &quot;&quot;)</profile>
         <profile namespace="env" key="MONTAGE_HOME" >/ccg/software/montage/Montage_v3.3_mats</profile>
-        <profile namespace="env" key="PEGASUS_HOME" >/usr</profile>
+        <profile namespace="env" key="PEGASUS_HOME" >/nfs/ccg4/scratch-purge-no-backups/bamboo/installs/pegasus-$PEGASUS_VERSION</profile>
         <profile namespace="env" key="http_proxy" >http://workflow.isi.edu:3128</profile>
     </site>
 </sitecatalog>
