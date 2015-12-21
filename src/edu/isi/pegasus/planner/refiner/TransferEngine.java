@@ -285,34 +285,38 @@ public class TransferEngine extends Engine {
      * @return 
      */
     private boolean runTransferRemotely(Job job , SiteCatalogEntry stagingSite, FileTransfer ft) {
-        NameValue sourceTX = ft.getSourceURL();
-        String sourceSite = sourceTX.getKey();
-        String sourceURL  = sourceTX.getValue();
         boolean remote = false;
         
-        //if the source URL is a FILE URL and 
-        //source site matches the destination site
-        //then has to run remotely
-        if( sourceURL != null && sourceURL.startsWith( PegasusURL.FILE_URL_SCHEME ) ){
-            //sanity check to make sure source site 
-            //matches destination site
-            NameValue destTX = ft.getDestURL();
-            if( sourceSite.equalsIgnoreCase( destTX.getKey()) ){
-                
-                if( sourceSite.equalsIgnoreCase( stagingSite.getSiteHandle() ) && stagingSite.isVisibleToLocalSite() ){
-                    //PM-1024 if the source also matches the job staging site
-                    //then we do an extra check if the staging site is the same
-                    //as the sourceSite, then we consider the auxillary.local attribute
-                    //for the staging site
-                    remote = false;
+        NameValue destTX = ft.getDestURL();
+        for( String sourceSite: ft.getSourceSites() ){
+                //traverse through all the URL's on that site
+                for( ReplicaCatalogEntry rce : ft.getSourceURLs(sourceSite) ){
+                    String sourceURL = rce.getPFN();
+                    //if the source URL is a FILE URL and 
+                    //source site matches the destination site
+                    //then has to run remotely
+                    if( sourceURL != null && sourceURL.startsWith( PegasusURL.FILE_URL_SCHEME ) ){
+                        //sanity check to make sure source site 
+                        //matches destination site
+                        if( sourceSite.equalsIgnoreCase( destTX.getKey()) ){
+
+                            if( sourceSite.equalsIgnoreCase( stagingSite.getSiteHandle() ) && stagingSite.isVisibleToLocalSite() ){
+                                //PM-1024 if the source also matches the job staging site
+                                //then we do an extra check if the staging site is the same
+                                //as the sourceSite, then we consider the auxillary.local attribute
+                                //for the staging site
+                                remote = false;
+                            }
+                            else{
+                                remote = true;
+                                break;
+                            }
+                        }
+                        else if( sourceSite.equals( "local") ){
+                            remote = false;
+                        }
+                    }
                 }
-                else{
-                    remote = true;
-                }
-            }
-            else if( sourceSite.equals( "local") ){
-                remote = false;
-            }
         }
         return remote;
     }
