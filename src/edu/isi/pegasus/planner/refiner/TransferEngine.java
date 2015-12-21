@@ -1206,7 +1206,6 @@ public class TransferEngine extends Engine {
                 
         //check if the execution pool is third party or not
         boolean runTransferOnLocalSite = runTransferOnLocalSite( stagingSite, dDirPutURL, Job.STAGE_IN_JOB);
-        System.out.println( " DEBUG  " + runTransferOnLocalSite);
         String destDir = ( runTransferOnLocalSite ) ?
             //use the full networked url to the directory
             dDirPutURL
