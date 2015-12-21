@@ -11,6 +11,8 @@ DAX=horizontal-cluster.dax
 # Unique directory for this run
 RUN_ID=`/bin/date +'%Y%m%d_%H%M%S%N'`
 
+export REMOTE_PEGASUS_HOME=/nfs/ccg4/scratch-purge-no-backups/bamboo/installs/pegasus-`pegasus-version`
+
 # Read a property from ${CONFIG}/test.config file
 properties ()
 {
@@ -93,7 +95,7 @@ cat > sites.xml << EOF
         <replica-catalog type="LRC" url="rlsn://dummyValue.url.edu" />
         <profile namespace="condor" key="should_transfer_files">Yes</profile>
         <profile namespace="condor" key="when_to_transfer_output">ON_EXIT</profile>
-        <profile namespace="env" key="PEGASUS_HOME" >/usr</profile>
+        <profile namespace="env" key="PEGASUS_HOME" >$REMOTE_PEGASUS_HOME</profile>
         <profile namespace="pegasus" key="style">condor</profile>
         <profile namespace="condor" key="universe">vanilla</profile>
     </site>
@@ -108,7 +110,7 @@ cat > sites.xml << EOF
             <storage />
         </head-fs>
         <replica-catalog type="LRC" url="rlsn://dummyValue.url.edu" />
-        <profile namespace="env" key="PEGASUS_HOME" >/usr</profile>
+        <profile namespace="env" key="PEGASUS_HOME" >$REMOTE_PEGASUS_HOME</profile>
     </site>
 </sitecatalog>
 EOF
