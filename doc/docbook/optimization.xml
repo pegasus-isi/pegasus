@@ -1240,6 +1240,67 @@ tr B {
     url="http://research.cs.wisc.edu/htcondor/manual/v8.3.5/2_10DAGMan_Applications.html#SECTION003108400000000000000">HTCondor
     Documentation</ulink>.</para>
 
+    <para>By default, pegasus associates default category names to following
+    types of auxillary jobs</para>
+
+    <table>
+      <title>Default Category names associated by Pegasus</title>
+
+      <tgroup cols="2">
+        <tbody>
+          <row>
+            <entry><emphasis role="bold">DAGMan Category
+            Name</emphasis></entry>
+
+            <entry><emphasis role="bold">Auxillary Job applied
+            to.</emphasis></entry>
+          </row>
+
+          <row>
+            <entry><literallayout>stage-in </literallayout></entry>
+
+            <entry>data stage-in jobs </entry>
+          </row>
+
+          <row>
+            <entry><literallayout>stage-out</literallayout></entry>
+
+            <entry>data stage-out jobs </entry>
+          </row>
+
+          <row>
+            <entry><literallayout>stage-inter</literallayout></entry>
+
+            <entry>inter site data transfer jobs</entry>
+          </row>
+
+          <row>
+            <entry><literallayout>cleanup</literallayout></entry>
+
+            <entry>data cleanup jobs</entry>
+          </row>
+
+          <row>
+            <entry><literallayout>registration </literallayout></entry>
+
+            <entry>registration jobs</entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+
+    <para>Below is a sample properties file that illustrates how categories
+    can be specified in the properties file</para>
+
+    <programlisting># pegasus properties file snippet illustrating 
+# how to specify dagman categories for different types of jobs
+
+dagman.stage-in.maxjobs 4
+dagman.stage-out.maxjobs 1
+dagman.cleanup.maxjobs 2
+
+</programlisting>
+
     <para>HTCondor also exposes useful configuration parameters that can be
     specified in it's configuration file (condor_config_val -conf will list
     the condor configuration files), to control job submission across
