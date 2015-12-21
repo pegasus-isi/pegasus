@@ -34,6 +34,10 @@ import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.common.util.Separator;
 
 import edu.isi.pegasus.planner.classes.Job;
+import static edu.isi.pegasus.planner.classes.Job.COMPUTE_JOB;
+import static edu.isi.pegasus.planner.classes.Job.INTER_POOL_JOB;
+import static edu.isi.pegasus.planner.classes.Job.STAGE_IN_JOB;
+import static edu.isi.pegasus.planner.classes.Job.STAGE_OUT_JOB;
 import java.io.FileWriter;
 
 import java.util.Collection;
@@ -44,6 +48,7 @@ import java.util.ArrayList;
 
 import java.io.File;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.selector.ReplicaSelector;
 
 /**
@@ -256,6 +261,12 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
             }
 
         }
+        
+        //associate DAGMan categories with these jobs to enable
+        //throttling in properties file
+        if( !job.dagmanVariables.containsKey( Dagman.CATEGORY_KEY ) ){
+           job.dagmanVariables.construct( Dagman.CATEGORY_KEY, getDAGManCategory( job.getJobType() ) );
+       }
 
     }
 
@@ -468,5 +479,36 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
         return Separator.combine( Transfer.TRANSFORMATION_NAMESPACE,
                                   Transfer.TRANSFORMATION_NAME,
                                   Transfer.TRANSFORMATION_VERSION);
+    }
+
+    /**
+     * Returns the dagman category for transfer job 
+     * 
+     * @param type job type
+     * 
+     * @return 
+     */
+    protected String getDAGManCategory( int type ) {
+        String category = null;
+
+        switch (type){
+
+            case STAGE_IN_JOB:
+                category = "stage-in";
+                break;
+
+            case STAGE_OUT_JOB:
+                category = "stage-out";
+                break;
+
+            case INTER_POOL_JOB:
+                category = "stage-inter";
+                break;
+            default:
+                category = "transfer";
+                
+        }
+        return category;
+                
     }
 }
