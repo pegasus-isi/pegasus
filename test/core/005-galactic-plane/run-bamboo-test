@@ -13,5 +13,7 @@ cp ccg-test.config.template ccg-test.config
 perl -p -i -e "s:\[WORK_DIR\]:$WORK_DIR:g" ccg-test.config
 perl -p -i -e "s/\[USER\]/$USER/g" ccg-test.config
 
+export PEGASUS_VERSION=`pegasus-version`
+
 ./galactic-plane ccg-test.config | tee plan.out
 
