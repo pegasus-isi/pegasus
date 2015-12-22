@@ -67,8 +67,8 @@ cat >sites.xml <<EOF
 
     <site  handle="local-pbs" arch="x86_64" os="LINUX">
         
-        <directory type="shared-scratch" path="$TOPDIR/local-pbs/shared-scratch">
-            <file-server operation="all" url="file://$TOPDIR/local-pbs/shared-scratch"/>
+        <directory type="shared-scratch" path="$TOP_DIR/local-pbs/shared-scratch">
+            <file-server operation="all" url="file://$TOP_DIR/local-pbs/shared-scratch"/>
         </directory>
 
         <profile namespace="env" key="PEGASUS_HOME">$LOCAL_PBS_PEGASUS_HOME</profile>
