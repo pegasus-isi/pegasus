@@ -91,8 +91,10 @@ $MONTAGE_HOME/bin/mDAG 2mass j M17 $DEGREES $DEGREES 0.0002777778 . "file://$RUN
 echo
 echo "Adding input images to the replica catalog..."
 echo "  " `cat cache.list | wc -l` "images found"
-cat cache.list | grep -v ".fits " | sed 's/ipac_cluster/local/' >rc
-cat url.list | sed 's/ http:.*ref=/ http:\/\/obelix.isi.edu\/irsa-cache/' >>rc
+cat cache.list | grep -v ".fits " >rc
+perl -p -i -e 's/ipac_cluster/local/' rc
+cat url.list | sed 's/\.gz http/ http/' >>rc
+
 
 echo
 echo "Planning and submitting the workflow..."
