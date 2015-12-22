@@ -4,26 +4,6 @@ set -e
 
 TOP_DIR=`pwd`
 
-# download rosetta binary - this is to save space in the Pegasus distribution
-if [ ! -e rosetta.exe ]; then
-   wget -q http://pegasus.isi.edu/wms/example-workflows/rosetta/rosetta.exe
-   chmod 755 rosetta.exe
-fi
-
-# do we have the required minirosetta_database?
-if [ ! -e minirosetta_database ]; then
-   wget -q http://pegasus.isi.edu/wms/example-workflows/rosetta/minirosetta_database.tar.gz
-   tar xzf minirosetta_database.tar.gz
-   rm minirosetta_database.tar.gz
-fi
-
-# what about the required pdbs?
-if [ ! -e pdbs ]; then
-   wget -q http://pegasus.isi.edu/wms/example-workflows/rosetta/pdbs.tar.gz
-   tar xzf pdbs.tar.gz
-   rm pdbs.tar.gz
-fi
-
 # figure out where Pegasus is installed
 export PEGASUS_BIN_DIR=`pegasus-config --bin`
 if [ "x$PEGASUS_BIN_DIR" = "x" ]; then
@@ -34,14 +14,14 @@ fi
 export REMOTE_PEGASUS_HOME=/nfs/ccg4/scratch-purge-no-backups/bamboo/installs/pegasus-`pegasus-version`
 
 # build the dax generator
-export CLASSPATH=.:`pegasus-config --classpath`
-javac RosettaDAX.java
+export PYTHONPATH=`pegasus-config --python`
+./blackdiamond.py $REMOTE_PEGASUS_HOME > blackdiamond.dax
 
-# generate the dax
-java RosettaDAX dax.xml
+# we need a f.a file to start
+echo "Hello world!" >f.a
 
-#empty replica catalog 
-touch rc.data
+# empty replica catalog 
+cat /dev/null >rc.data
 
 # site catalog
 cat >sites.xml <<EOF
@@ -86,7 +66,7 @@ echo "Planning the workflow..."
 pegasus-plan \
     --conf pegasusrc \
     --dir work \
-    --dax dax.xml \
+    --dax blackdiamond.dax \
     --sites condor_pool \
     --staging-site staging_site \
     --output-site local \
