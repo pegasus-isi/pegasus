@@ -65,7 +65,7 @@ cat >sites.xml <<EOF
         </directory>
     </site>
 
-    <site  handle="local-pbs" arch="x86" os="LINUX">
+    <site  handle="local-pbs" arch="x86_64" os="LINUX">
         
         <directory type="shared-scratch" path="$TOPDIR/local-pbs/shared-scratch">
             <file-server operation="all" url="file://$TOPDIR/local-pbs/shared-scratch"/>
