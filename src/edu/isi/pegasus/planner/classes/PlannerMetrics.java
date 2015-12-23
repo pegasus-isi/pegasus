@@ -130,9 +130,19 @@ public class PlannerMetrics extends Data{
     @Expose @SerializedName( "wf_uuid" ) private String mWorkflowUUID;
 
     /**
-     * The UUID associated with the workflow.
+     * The data configuration mode
      */
     @Expose @SerializedName( "data_config" )private String mDataConfiguration;
+    
+    /**
+     * The arguments with which the planner was invoked with
+     */
+    @Expose @SerializedName( "planner_args" )private String mPlannerArguments;
+    
+    /**
+     * A boolean indicating whether pmc was used or not.
+     */
+    @Expose @SerializedName( "uses_pmc" )private boolean mUsesPMC;
 
     /**
      * The metrics about the workflow.
@@ -160,7 +170,8 @@ public class PlannerMetrics extends Data{
         mExitcode = -1;
         mNumFormatter = new DecimalFormat( "#.###" );
         mType = "metrics";
-        
+        mPlannerArguments = "";
+        mUsesPMC = false;
         //we want metrics to be serialized only if user specified
         //mApplicationMetrics = new Properties();
     }
@@ -439,6 +450,51 @@ public class PlannerMetrics extends Data{
     }
 
     /**
+     * Sets the planner options
+     *
+     * @param options   options
+     */
+    public void setPlannerOptions(PlannerOptions options) {
+        this.setPlannerOptions( options.getOriginalArgString() );
+    }
+    
+    /**
+     *Sets The planner options
+     *
+     * @param arguments   options
+     */
+    public void setPlannerOptions(String arguments) {
+         mPlannerArguments = arguments;
+    }
+
+    /**
+     * Returns the planner arguments
+     *
+     * @return the data configuration
+     */
+    public String getPlannerArguments( ) {
+        return mPlannerArguments ;
+    }
+
+    /**
+     * Returns boolean indicating whether PMC was used or not
+     * 
+     * @return 
+     */
+    public boolean usesPMC() {
+        return this.mUsesPMC;
+    }
+
+    /**
+     * Sets the uses PMC parameter
+     * 
+     * @param usesPMC 
+     */
+    public void setUsesPMC(boolean usesPMC) {
+        mUsesPMC = usesPMC;
+    }
+
+    /**
      * Set the start time for the planning operation.
      *
      * @param start   the start time.
@@ -598,6 +654,8 @@ public class PlannerMetrics extends Data{
         append( sb, "submitdir.relative", this.mRelativeSubmitDirectory );
         append( sb, "planning.start",   mNumFormatter.format( mStartTime ) );
         append( sb, "planning.end", mNumFormatter.format( mEndTime ) );
+        append( sb, "planning.arguments", mPlannerArguments );
+        append( sb, "uses_pmc", Boolean.toString(this.usesPMC()) );
         append( sb, "duration" ,  Double.toString( mDuration )  );
         append( sb, "exitcode" ,  Integer.toString( mExitcode )  );
         append( sb, "error" , mErrorMessage );
@@ -652,6 +710,8 @@ public class PlannerMetrics extends Data{
         pm.setProperties( this.mPropertiesPath );
         pm.setDAX( this.mDAXPath );
         pm.setDataConfiguration( this.mDataConfiguration );
+        pm.setPlannerOptions( this.mPlannerArguments);
+        pm.setUsesPMC( this.mUsesPMC );
         pm.setStartTime( this.mStartTime );
         pm.setEndTime( this.mEndTime );
         pm.setDuration( this.mDuration );
@@ -662,6 +722,9 @@ public class PlannerMetrics extends Data{
         }
         return pm;
     }
+
+    
+    
 
 
     

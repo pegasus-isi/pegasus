@@ -477,6 +477,7 @@ public class CPlanner extends Executable{
                                 PegasusConfiguration.DEFAULT_DATA_CONFIGURATION_VALUE:
                                 dataConfiguration;
         mPMetrics.setDataConfiguration( dataConfiguration );
+        mPMetrics.setPlannerOptions( mPOptions.getOriginalArgString() );
         mPMetrics.setApplicationMetrics( mProps );
         
 
