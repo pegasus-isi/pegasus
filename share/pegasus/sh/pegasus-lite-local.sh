@@ -52,13 +52,11 @@ if [ "${_PEGASUS_EXECUTE_IN_INITIAL_DIR}" = "true" ];then
     dir=$_PEGASUS_INITIAL_DIR
 fi
 
-# set up PEGASUS_HOME and PATH
-if [ "x$PEGASUS_HOME" = "x" ]; then
-    # use the location of pegasus-lite-local.sh to determine PEGASUS_HOME
-    BASE_DIR=`dirname $0`
-    export PEGASUS_HOME=`(cd $BASE_DIR && pwd)`
+# PM-1029 prepend PATH with PEGASUS_BIN_DIR 
+if [ "x$PEGASUS_BIN_DIR" != "x" ]; then
+    export PATH="$PEGASUS_BIN_DIR:$PATH"
 fi
-export PATH="$PEGASUS_HOME/bin:$PATH"
+
 
 #sanity check on arguments
 if [ $# -lt 1 ] ; then
