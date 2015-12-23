@@ -94,7 +94,13 @@ public class PegasusSubmitDAG {
         mLogger = bag.getLogger();
         mProps  = bag.getPegasusProperties();
         mPOptions = bag.getPlannerOptions();
-        mLocalEnv = mProps.getProfiles(Profiles.NAMESPACES.env);
+        
+        mLocalEnv = new ENV();
+        Map<String,String> systemEnv = System.getenv();
+        for( Map.Entry<String,String> entry : systemEnv.entrySet() ){
+            mLocalEnv.construct( entry.getKey(), entry.getValue() );
+        }
+        mLocalEnv.assimilate(mProps, Profiles.NAMESPACES.env);
         //override them from the local site catalog entry
         SiteStore store = bag.getHandleToSiteStore();
         if( store != null && store.contains( "local") ){
