@@ -44,6 +44,7 @@ import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.code.CodeGenerator;
 import edu.isi.pegasus.planner.code.CodeGeneratorFactory;
 import edu.isi.pegasus.planner.code.GridStartFactory;
+import edu.isi.pegasus.planner.code.generator.Braindump;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.RunDirectoryFilenameFilter;
@@ -479,6 +480,7 @@ public class CPlanner extends Executable{
                                 PegasusConfiguration.DEFAULT_DATA_CONFIGURATION_VALUE:
                                 dataConfiguration;
         mPMetrics.setDataConfiguration( dataConfiguration );
+        mPMetrics.setPlannerOptions( mPOptions.getOriginalArgString() );
         mPMetrics.setApplicationMetrics( mProps );
         
 
@@ -683,6 +685,9 @@ public class CPlanner extends Executable{
             mLogger.logEventCompletion();
         }
 
+        //PM-1003 update metrics with whether pmc was used or not.
+        mPMetrics.setUsesPMC( Braindump.plannerUsedPMC(mBag));
+        
         checkMasterDatabaseForVersionCompatibility();
         
         if ( mPOptions.submitToScheduler() ) {//submit the jobs

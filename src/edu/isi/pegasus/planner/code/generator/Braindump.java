@@ -226,6 +226,33 @@ public class Braindump {
      * The handle to the logging object.
      */
     protected LogManager mLogger;
+    
+    /**
+     * A static method that tells us whether planner used PMC or not.
+     * 
+     * 
+     * @param bag
+     * @return 
+     */
+    public static boolean plannerUsedPMC( PegasusBag bag ){
+        //add the entry required by pegasus-statistics
+        //PM-639
+        boolean usesPMC =  bag.plannerUsesPMC() ;
+        PegasusProperties props = bag.getPegasusProperties();
+        LogManager logger = bag.getLogger();
+        //update from properties if required?
+        if( !usesPMC ){
+            String jobAggregator = props.getJobAggregator();
+            //update the bag to set the flag whether
+            //PMC was used or not PM-639
+            if( jobAggregator.equalsIgnoreCase( JobAggregatorFactory.MPI_EXEC_CLASS ) ){
+                usesPMC = true;
+                logger.log( "Setting uses_pmc to true in braindump file on basis of properties set " , LogManager.CONFIG_MESSAGE_LEVEL );
+            }
+        }
+        
+        return usesPMC;
+    }
 
     /**
      * Initializes the Code Generator implementation.
@@ -315,17 +342,7 @@ public class Braindump {
         
         //add the entry required by pegasus-statistics
         //PM-639
-        boolean usesPMC =  mBag.plannerUsesPMC() ;
-        //update from properties if required?
-        if( !usesPMC ){
-            String jobAggregator = mProps.getJobAggregator();
-            //update the bag to set the flag whether
-            //PMC was used or not PM-639
-            if( jobAggregator.equalsIgnoreCase( JobAggregatorFactory.MPI_EXEC_CLASS ) ){
-                usesPMC = true;
-                mLogger.log( "Setting uses_pmc to true in braindump file on basis of properties set " , LogManager.CONFIG_MESSAGE_LEVEL );
-            }
-        }
+        boolean usesPMC =  Braindump.plannerUsedPMC(mBag);
         entries.put( "uses_pmc", Boolean.toString( usesPMC ) );
                 
         return entries;
