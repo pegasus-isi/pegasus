@@ -405,6 +405,15 @@ public abstract class Namespace /*extends Data*/{
        return (mProfileMap == null) ? null: mProfileMap.keySet();
    }
 
+   
+   /**
+    * Returns the number of profiles in the namespace
+    *
+    * @return the count of keys
+    */
+   public int size(){
+       return (mProfileMap == null) ? 0: mProfileMap.keySet().size();
+   }
 
     /**
      * Returns a boolean indicating if the object is empty.
