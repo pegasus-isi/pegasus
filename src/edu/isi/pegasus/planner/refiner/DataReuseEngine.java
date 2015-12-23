@@ -173,6 +173,10 @@ public class DataReuseEngine extends Engine implements Refiner{
         Graph reducedGraph =  this.reduceWorkflow( (Graph)workflow, rcb );
 
         mWorkflow = (ADag)reducedGraph;
+        
+        //PM-1003
+        mWorkflow.getWorkflowMetrics().setNumDeletedTasks( this.mAllDeletedJobs.size() );
+        
         return mWorkflow;
     }
 

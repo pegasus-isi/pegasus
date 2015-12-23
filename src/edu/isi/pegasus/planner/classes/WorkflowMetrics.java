@@ -30,6 +30,8 @@ import com.google.gson.annotations.SerializedName;
  */
 public class WorkflowMetrics extends Data implements Cloneable{
 
+    
+
     public enum FILE_TYPE { input, output, intermediate, total};
 
     /**
@@ -52,6 +54,11 @@ public class WorkflowMetrics extends Data implements Cloneable{
      * The total number of tasks in the executable workflow.
      */
     @SerializedName("total_tasks") @Expose private int mNumTotalTasks;
+    
+    /**
+     * The total number of compute tasks deleted as part of data reuse. 
+     */
+    @SerializedName("deleted_tasks") @Expose private int mNumDeletedTasks;
     
     /**
      * The number of raw input files used by the workflow.
@@ -169,6 +176,7 @@ public class WorkflowMetrics extends Data implements Cloneable{
             mNumDAXTasks      = 0;
             mNumDAGTasks      = 0;
             mNumTotalTasks    = 0;
+            mNumDeletedTasks     = 0;
             mNumInputFiles    = 0;
             mNumIntermediateFiles = 0;
             mNumOutputFiles   = 0;
@@ -520,6 +528,15 @@ public class WorkflowMetrics extends Data implements Cloneable{
     }
     
     /**
+     * Sets the number of deleted tasks
+     * 
+     * @param count 
+     */
+    public void setNumDeletedTasks(int count) {
+        this.mNumDeletedTasks = count;
+    }
+    
+    /**
      * Return the count for a particular file type
      * 
      * @param type
@@ -560,6 +577,7 @@ public class WorkflowMetrics extends Data implements Cloneable{
         append( sb, "dax-tasks.count", this.mNumDAXTasks );
         append( sb, "dag-tasks.count", this.mNumDAGTasks );
         append( sb, "total-tasks.count", this.mNumTotalTasks );
+        append(sb, "deleted-tasks.count", this.mNumDeletedTasks );
         append( sb, "input-files.count", this.mNumInputFiles );
         append( sb, "intermediate-files.count", this.mNumIntermediateFiles );
         append( sb, "output-files.count", this.mNumOutputFiles );
@@ -661,6 +679,7 @@ public class WorkflowMetrics extends Data implements Cloneable{
         wm.mNumDAXTasks      = this.mNumDAXTasks;
         wm.mNumDAGTasks      = this.mNumDAGTasks;
         wm.mNumTotalTasks    = this.mNumTotalTasks;
+        wm.mNumDeletedTasks  = this.mNumDeletedTasks;
         wm.mNumInputFiles    = this.mNumInputFiles;
         wm.mNumIntermediateFiles = this.mNumIntermediateFiles;
         wm.mNumOutputFiles    = this.mNumOutputFiles;
