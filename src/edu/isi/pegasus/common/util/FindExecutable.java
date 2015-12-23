@@ -42,16 +42,17 @@ public class FindExecutable {
         }
 
         String path = System.getenv("PATH");
-        if ( path == null ) {
-            return null;
-        }
         
         //pick up value of PEGASUS_BIN_DIR
         //the wrapper script sets value of PEGASUS_BIN_DIR as
         //java property pegasus.home.bindir .
         String pegasusBinDir = System.getProperty( "pegasus.home.bindir" );
         if( pegasusBinDir != null ){
-            path = pegasusBinDir + ":" + path;
+            path = ( path == null ) ? pegasusBinDir : pegasusBinDir + ":" + path;
+        }
+        
+        if ( path == null ) {
+            return null;
         }
         
         String[] list = path.split( ":" );
