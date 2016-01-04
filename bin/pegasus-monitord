@@ -637,8 +637,12 @@ def process_dagman_out(wf, log_line):
 
     # Check log_line for timestamp at the beginning
     timestamp_found = False
-    my_expr = re_parse_timestamp.search(log_line)
 
+    my_expr = None
+    # PM-1030 there should be only at max two timestamps recorded
+    # and we prefer the second one if present.
+    for my_expr in re_parse_timestamp.finditer( log_line ):
+        pass
 
     if my_expr is not None:
         # Found time stamp, let's assume valid log line
