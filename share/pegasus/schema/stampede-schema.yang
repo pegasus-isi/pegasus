@@ -11,11 +11,14 @@ module stampede-schema {
     organization "STAMPEDE project. NSF grant OCI-0943705";
     contact "Dan Gunter 
              Lawrence Berkeley National Laboratory
-             Email: dkgunter@lbl.gov";
-    reference "https://confluence.pegasus.isi.edu/display/stampede/";
-    revision "2012-03-14" {
+             Email: dkgunter@lbl.gov
+	     Karan Vahi
+	     USC Information Sciences Institute
+	     Email: vahi@isi.edu";
+    reference "https://pegasus.isi.edu/projects/stampede";
+    revision "2016-01-06" {
         description
-            "Updated schema compatible with Pegasus 4.0 release";
+            "Updated schema compatible with Pegasus 4.6 release";
     }
  
     /*
@@ -757,10 +760,10 @@ module stampede-schema {
                     }
                 }	
 
-		        leaf exitcode{
-		            description "the exitcode with which the executable exited";
-		            type int32;
-		        }
+	        leaf exitcode{
+	            description "the exitcode with which the	            executable exited";
+		    type int32;
+		}
                 leaf transformation {
                     description "Transformation associated with this invocation";
                     type string;
@@ -780,7 +783,7 @@ module stampede-schema {
                     type string;
                 }
             }
-            } // choice
-        } // event
+          } // choice
+       } // event
     } // events
 }
