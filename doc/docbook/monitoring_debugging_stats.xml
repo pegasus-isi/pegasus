@@ -3026,11 +3026,11 @@ E.g.<emphasis role="bold">
       <para>The system generates following types of events, that are described
       below.</para>
 
-      <itemizedlist spacing="compact">
-        <listitem>
-          <para><emphasis role="bold">stampede.wf.plan</emphasis></para>
+      <para><itemizedlist spacing="compact">
+          <listitem>
+            <para><emphasis role="bold">stampede.wf.plan</emphasis></para>
 
-          <programlisting>container stampede.wf.plan {
+            <programlisting>container stampede.wf.plan {
             uses base-event;
 
             leaf submit.hostname {
@@ -3121,28 +3121,29 @@ E.g.<emphasis role="bold">
                   + "Use this workflow's UUID if it is the root";
             }
 }  // container stampede.wf.plan</programlisting>
-        </listitem>
+          </listitem>
 
-        <listitem>
-          <para><emphasis role="bold">stampede.static.start</emphasis></para>
+          <listitem>
+            <para><emphasis
+            role="bold">stampede.static.start</emphasis></para>
 
-          <programlisting>container stampede.static.start {
+            <programlisting>container stampede.static.start {
      uses base-event;
 } </programlisting>
-        </listitem>
+          </listitem>
 
-        <listitem>
-          <para><emphasis role="bold">stampede.static.end</emphasis></para>
+          <listitem>
+            <para><emphasis role="bold">stampede.static.end</emphasis></para>
 
-          <programlisting>container stampede.static.end {
+            <programlisting>container stampede.static.end {
     uses base-event;
 }  //</programlisting>
-        </listitem>
+          </listitem>
 
-        <listitem>
-          <para><emphasis role="bold">stampede.xwf.start</emphasis></para>
+          <listitem>
+            <para><emphasis role="bold">stampede.xwf.start</emphasis></para>
 
-          <programlisting>container stampede.xwf.start {
+            <programlisting>container stampede.xwf.start {
             uses base-event;
 
             leaf restart_count {
@@ -3152,12 +3153,12 @@ E.g.<emphasis role="bold">
                 "Number of times workflow was restarted (due to failures)";
             }
 }  // container stampede.xwf.start</programlisting>
-        </listitem>
+          </listitem>
 
-        <listitem>
-          <para><emphasis role="bold">stampede.xwf.end</emphasis></para>
+          <listitem>
+            <para><emphasis role="bold">stampede.xwf.end</emphasis></para>
 
-          <programlisting>container stampede.xwf.end {
+            <programlisting>container stampede.xwf.end {
             uses base-event;
 
             leaf restart_count {
@@ -3175,12 +3176,12 @@ E.g.<emphasis role="bold">
             }
 }  // container stampede.xwf.end
 </programlisting>
-        </listitem>
+          </listitem>
 
-        <listitem>
-          <para><emphasis role="bold">stampede.task.info</emphasis></para>
+          <listitem>
+            <para><emphasis role="bold">stampede.task.info</emphasis></para>
 
-          <programlisting>container stampede.task.info {
+            <programlisting>container stampede.task.info {
             description
               "Information about task in DAX";
             uses base-event;
@@ -3218,12 +3219,12 @@ E.g.<emphasis role="bold">
                 "Identifier for this task in the DAX";
             }
           }  // container stampede.task.info</programlisting>
-        </listitem>
+          </listitem>
 
-        <listitem>
-          <para><emphasis role="bold">stampede.task.edge</emphasis></para>
+          <listitem>
+            <para><emphasis role="bold">stampede.task.edge</emphasis></para>
 
-          <programlisting>container stampede.task.edge {
+            <programlisting>container stampede.task.edge {
             description
               "Represents child/parent relationship between two tasks in DAX";
             uses base-event;
@@ -3240,11 +3241,11 @@ E.g.<emphasis role="bold">
               description "Child task";
             }
 }  // container stampede.task.edge</programlisting>
-        </listitem>
+          </listitem>
 
-        <listitem>
-          <para><emphasis
-          role="bold">stampede.wf.map.task_job</emphasis><programlisting>container stampede.wf.map.task_job {
+          <listitem>
+            <para><emphasis
+            role="bold">stampede.wf.map.task_job</emphasis><programlisting>container stampede.wf.map.task_job {
             description
               "Relates a DAX task to a DAG job.";
             uses base-event;
@@ -3263,11 +3264,11 @@ E.g.<emphasis role="bold">
                 "Identifier for corresponding job in the DAG";
             }
 }  // container stampede.wf.map.task_job</programlisting></para>
-        </listitem>
+          </listitem>
 
-        <listitem>
-          <para><emphasis
-          role="bold">stampede.xwf.map.subwf_job</emphasis><programlisting>container stampede.xwf.map.subwf_job {
+          <listitem>
+            <para><emphasis
+            role="bold">stampede.xwf.map.subwf_job</emphasis><programlisting>container stampede.xwf.map.subwf_job {
             description
               "Relates a sub workflow to the corresponding job instance";
             uses base-event;
@@ -3293,11 +3294,11 @@ E.g.<emphasis role="bold">
                 "Job instance identifier i.e the submit sequence generated by monitord";
             }
 }  // container stampede.xwf.map.subwf_job</programlisting></para>
-        </listitem>
+          </listitem>
 
-        <listitem>
-          <para><emphasis
-          role="bold">stampede.job.info</emphasis><programlisting>container stampede.job.info {
+          <listitem>
+            <para><emphasis
+            role="bold">stampede.job.info</emphasis><programlisting>container stampede.job.info {
             description
               "A description of a job in the DAG";
             uses base-event;
@@ -3364,11 +3365,11 @@ E.g.<emphasis role="bold">
                 "All arguments given to executable (on command-line)";
             }
 }  // container stampede.job.info</programlisting></para>
-        </listitem>
+          </listitem>
 
-        <listitem>
-          <para><emphasis
-          role="bold">stampede.job.edge</emphasis><programlisting>container stampede.job.edge {
+          <listitem>
+            <para><emphasis
+            role="bold">stampede.job.edge</emphasis><programlisting>container stampede.job.edge {
             description
               "Parent/child relationship between two jobs in the DAG";
             uses base-event;
@@ -3385,28 +3386,28 @@ E.g.<emphasis role="bold">
               description "Child job";
             }
 }  // container stampede.job.edge</programlisting></para>
-        </listitem>
+          </listitem>
 
-        <listitem>
-          <para><emphasis
-          role="bold">stampede.job_inst.pre.start</emphasis><programlisting>container stampede.job_inst.pre.start {
+          <listitem>
+            <para><emphasis
+            role="bold">stampede.job_inst.pre.start</emphasis><programlisting>container stampede.job_inst.pre.start {
             description
               "Start of a prescript for a job instance";
             uses base-job-inst;
 }  // container stampede.job_inst.pre.start</programlisting></para>
-        </listitem>
+          </listitem>
 
-        <listitem>
-          <para><emphasis
-          role="bold">stampede.job_inst.pre.term</emphasis><programlisting>container stampede.job_inst.pre.term {
+          <listitem>
+            <para><emphasis
+            role="bold">stampede.job_inst.pre.term</emphasis><programlisting>container stampede.job_inst.pre.term {
             description
               "Job prescript is terminated (success or failure not yet known)";
 }  // container stampede.job_inst.pre.term</programlisting></para>
-        </listitem>
+          </listitem>
 
-        <listitem>
-          <para><emphasis
-          role="bold">stampede.job_inst.pre.end</emphasis><programlisting>container stampede.job_inst.pre.end {
+          <listitem>
+            <para><emphasis
+            role="bold">stampede.job_inst.pre.end</emphasis><programlisting>container stampede.job_inst.pre.end {
             description
               "End of a prescript for a job instance";
             uses base-job-inst;
@@ -3425,21 +3426,21 @@ E.g.<emphasis role="bold">
                 "the exitcode with which the prescript exited";
             }
 }  // container stampede.job_inst.pre.end</programlisting></para>
-        </listitem>
+          </listitem>
 
-        <listitem>
-          <para><emphasis
-          role="bold">stampede.job_inst.submit.start</emphasis><programlisting>container stampede.job_inst.submit.start {
+          <listitem>
+            <para><emphasis
+            role="bold">stampede.job_inst.submit.start</emphasis><programlisting>container stampede.job_inst.submit.start {
             description
               "When job instance is going to be submitted. "
                 + "Scheduler job id is not yet known";
             uses sched-job-inst;
 }  // container stampede.job_inst.submit.start</programlisting></para>
-        </listitem>
+          </listitem>
 
-        <listitem>
-          <para><emphasis
-          role="bold">stampede.job_inst.submit.end</emphasis><programlisting>container stampede.job_inst.submit.end {
+          <listitem>
+            <para><emphasis
+            role="bold">stampede.job_inst.submit.end</emphasis><programlisting>container stampede.job_inst.submit.end {
             description
               "When executable job is submitted";
             uses sched-job-inst;
@@ -3451,20 +3452,20 @@ E.g.<emphasis role="bold">
                 "Status of workflow. 0=success, -1=failure";
             }
 }  // container stampede.job_inst.submit.end</programlisting></para>
-        </listitem>
+          </listitem>
 
-        <listitem>
-          <para><emphasis
-          role="bold">stampede.job_inst.held.start</emphasis><programlisting>container stampede.job_inst.held.start {
+          <listitem>
+            <para><emphasis
+            role="bold">stampede.job_inst.held.start</emphasis><programlisting>container stampede.job_inst.held.start {
             description
               "When Condor holds the jobs";
             uses sched-job-inst;
 }  // container stampede.job_inst.held.start</programlisting></para>
-        </listitem>
+          </listitem>
 
-        <listitem>
-          <para><emphasis
-          role="bold">stampede.job_inst.held.end</emphasis><programlisting>container stampede.job_inst.held.end {
+          <listitem>
+            <para><emphasis
+            role="bold">stampede.job_inst.held.end</emphasis><programlisting>container stampede.job_inst.held.end {
             description
               "When the job is released after being held";
             uses sched-job-inst;
@@ -3476,11 +3477,11 @@ E.g.<emphasis role="bold">
                 "Status of workflow. 0=success, -1=failure";
             }
 }  // container stampede.job_inst.held.end</programlisting></para>
-        </listitem>
+          </listitem>
 
-        <listitem>
-          <para><emphasis
-          role="bold">stampede.job_inst.main.start</emphasis><programlisting>container stampede.job_inst.main.start {
+          <listitem>
+            <para><emphasis
+            role="bold">stampede.job_inst.main.start</emphasis><programlisting>container stampede.job_inst.main.start {
             description
               "Start of execution of a scheduler job";
             uses sched-job-inst;
@@ -3506,13 +3507,13 @@ E.g.<emphasis role="bold">
             }
 }  // container stampede.job_inst.main.start
 </programlisting></para>
-        </listitem>
+          </listitem>
 
-        <listitem>
-          <para><emphasis
-          role="bold">stampede.job_inst.main.term</emphasis></para>
+          <listitem>
+            <para><emphasis
+            role="bold">stampede.job_inst.main.term</emphasis></para>
 
-          <programlisting>container stampede.job_inst.main.term {
+            <programlisting>container stampede.job_inst.main.term {
             description
               "Job is terminated (success or failure not yet known)";
             uses sched-job-inst;
@@ -3524,11 +3525,11 @@ E.g.<emphasis role="bold">
                 "Execution status. 0=means job terminated, -1=job was evicted, not terminated";
             }
 }  // container stampede.job_inst.main.term</programlisting>
-        </listitem>
+          </listitem>
 
-        <listitem>
-          <para><emphasis
-          role="bold">stampede.job_inst.main.end</emphasis><programlisting>container stampede.job_inst.main.end {
+          <listitem>
+            <para><emphasis
+            role="bold">stampede.job_inst.main.end</emphasis><programlisting>container stampede.job_inst.main.end {
             description
               "End of main part of scheduler job";
             uses sched-job-inst;
@@ -3629,30 +3630,30 @@ E.g.<emphasis role="bold">
                 "Duration of enclosing cluster";
             }
 }  // container stampede.job_inst.main.end</programlisting></para>
-        </listitem>
+          </listitem>
 
-        <listitem>
-          <para><emphasis
-          role="bold">stampede.job_inst.post.start</emphasis><programlisting>container stampede.job_inst.post.start {
+          <listitem>
+            <para><emphasis
+            role="bold">stampede.job_inst.post.start</emphasis><programlisting>container stampede.job_inst.post.start {
             description
               "Start of a postscript for a job instance";
             uses sched-job-inst;
 }  // container stampede.job_inst.post.start
 </programlisting></para>
-        </listitem>
+          </listitem>
 
-        <listitem>
-          <para><emphasis
-          role="bold">stampede.job_inst.post.term</emphasis><programlisting>container stampede.job_inst.post.term {
+          <listitem>
+            <para><emphasis
+            role="bold">stampede.job_inst.post.term</emphasis><programlisting>container stampede.job_inst.post.term {
             description
               "Job postscript is terminated (success or failure not yet known)";
             uses sched-job-inst;
 }  // container stampede.job_inst.post.term</programlisting></para>
-        </listitem>
+          </listitem>
 
-        <listitem>
-          <para><emphasis
-          role="bold">stampede.job_inst.post.end</emphasis><programlisting>container stampede.job_inst.post.end {
+          <listitem>
+            <para><emphasis
+            role="bold">stampede.job_inst.post.end</emphasis><programlisting>container stampede.job_inst.post.end {
             description
               "End of a postscript for a job instance";
             uses sched-job-inst;
@@ -3671,11 +3672,11 @@ E.g.<emphasis role="bold">
                 "the exitcode with which the postscript exited";
             }
 }  // container stampede.job_inst.post.end</programlisting></para>
-        </listitem>
+          </listitem>
 
-        <listitem>
-          <para><emphasis
-          role="bold">stampede.job_inst.host.info</emphasis><programlisting>container stampede.job_inst.host.info {
+          <listitem>
+            <para><emphasis
+            role="bold">stampede.job_inst.host.info</emphasis><programlisting>container stampede.job_inst.host.info {
             description
               "Host information associated with a job instance";
             uses base-job-inst;
@@ -3710,11 +3711,11 @@ E.g.<emphasis role="bold">
                 "Operating system name";
             }
 }  // container stampede.job_inst.host.info</programlisting></para>
-        </listitem>
+          </listitem>
 
-        <listitem>
-          <para><emphasis
-          role="bold">stampede.job_inst.image.info</emphasis><programlisting>container stampede.job_inst.image.info {
+          <listitem>
+            <para><emphasis
+            role="bold">stampede.job_inst.image.info</emphasis><programlisting>container stampede.job_inst.image.info {
             description
               "Image size associated with a job instance";
             uses base-job-inst;
@@ -3731,11 +3732,11 @@ E.g.<emphasis role="bold">
                 "Identifier for job in scheduler";
             }
 }  // container stampede.job_inst.image.info</programlisting></para>
-        </listitem>
+          </listitem>
 
-        <listitem>
-          <para><emphasis
-          role="bold">stampede.inv.start</emphasis><programlisting>container stampede.inv.start {
+          <listitem>
+            <para><emphasis
+            role="bold">stampede.inv.start</emphasis><programlisting>container stampede.inv.start {
             description
               "Start of an invocation";
             uses base-event;
@@ -3763,11 +3764,11 @@ E.g.<emphasis role="bold">
             }
 }  // container stampede.inv.start
 </programlisting></para>
-        </listitem>
+          </listitem>
 
-        <listitem>
-          <para><emphasis
-          role="bold">stampede.inv.end</emphasis><programlisting>container stampede.inv.end {
+          <listitem>
+            <para><emphasis
+            role="bold">stampede.inv.end</emphasis><programlisting>container stampede.inv.end {
             description
               "End of an invocation";
             uses base-event;
@@ -3850,10 +3851,86 @@ E.g.<emphasis role="bold">
                 "Identifier for related task in the DAX";
             }
 }  // container stampede.inv.end</programlisting></para>
-        </listitem>
-      </itemizedlist>
+          </listitem>
 
-      <para/>
+          <listitem>
+            <para><emphasis
+            role="bold">stampede.static.meta.start</emphasis><programlisting>container stampede.static.meta.start {
+            uses base-event;
+}  // container stampede.static.meta.start
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis
+            role="bold">stampede.static.meta.end</emphasis><programlisting>container stampede.static.meta.end { 
+            uses base-event; 
+} // container stampede.static.meta.end </programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">stampede.xwf.meta</emphasis></para>
+
+            <programlisting>container stampede.xwf.meta {
+            description
+              "Metadata associated with a workflow";
+            uses base-metadata;
+}  // container stampede.xwf.meta
+</programlisting>
+          </listitem>
+
+          <listitem>
+            <para><emphasis
+            role="bold">stampede.task.meta</emphasis><programlisting>container stampede.task.meta {
+            description
+              "Metadata associated with a task";
+            uses base-metadata;
+
+            leaf task.id {
+              type string;
+              description
+                "Identifier for related task in the DAX";
+            }
+}  // container stampede.task.meta</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis
+            role="bold">stampede.rc.meta</emphasis><programlisting>container stampede.rc.meta {
+            description
+              "Metadata associated with a file in the replica catalog";
+            uses base-metadata;
+
+            leaf lfn.id {
+              type string;
+              description
+                "Logical File Identifier for the file";
+            }
+}  // container stampede.rc.meta</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">stampede.wf.map.file</emphasis></para>
+
+            <programlisting>container stampede.wf.map.file {
+            description
+              "Event that captures what task generates or consumes a particular file";
+            uses base-event;
+
+            leaf lfn.id {
+              type string;
+              description
+                "Logical File Identifier for the file";
+            }
+
+            leaf task.id {
+              type string;
+              description
+                "Identifier for related task in the DAX";
+            }
+}  // container stampede.wf.map.file</programlisting>
+          </listitem>
+        </itemizedlist></para>
     </section>
   </section>
 </chapter>
