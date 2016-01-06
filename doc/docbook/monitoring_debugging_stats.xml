@@ -3028,6 +3028,150 @@ E.g.<emphasis role="bold">
 
       <itemizedlist spacing="compact">
         <listitem>
+          <para><link
+          linkend="stampede_wf_plan_event">stampede.wf.plan</link></para>
+        </listitem>
+
+        <listitem>
+          <para><link
+          linkend="stampede_static_start_event">stampede.static.start</link></para>
+        </listitem>
+
+        <listitem>
+          <para><link
+          linkend="stampede_static_end_event">stampede.static.end</link></para>
+        </listitem>
+
+        <listitem>
+          <para><link
+          linkend="stampede_xwf_start_event">stampede.xwf.start</link></para>
+        </listitem>
+
+        <listitem>
+          <para><link
+          linkend="stampede_xwf_end_event">stampede.xwf.end</link></para>
+        </listitem>
+
+        <listitem>
+          <para><link
+          linkend="stampede_task_info_event">stampede.task.info</link></para>
+        </listitem>
+
+        <listitem>
+          <para><link
+          linkend="stampede_task_edge_event">stampede.task.edge</link></para>
+        </listitem>
+
+        <listitem>
+          <para><link
+          linkend="stampede_wf_map_task_job_event">stampede.wf.map.task_job</link></para>
+        </listitem>
+
+        <listitem>
+          <para><link
+          linkend="stampede_xwf_map_subwf_job_event">stampede.xwf.map.subwf_job</link></para>
+        </listitem>
+
+        <listitem>
+          <para><link
+          linkend="stampede_job_info_event">stampede.job.info</link></para>
+        </listitem>
+
+        <listitem>
+          <para><link
+          linkend="stampede_job_edge_event">stampede.job.edge</link></para>
+        </listitem>
+
+        <listitem>
+          <para><link
+          linkend="stampede_job_inst_pre_start_event">stampede.job_inst.pre.start</link></para>
+        </listitem>
+
+        <listitem>
+          <para><link
+          linkend="stampede_job_inst_pre_term_event">stampede.job_inst.pre.term</link></para>
+        </listitem>
+
+        <listitem>
+          <para><link
+          linkend="stampede_job_inst_pre_end_event">stampede.job_inst.pre.end</link></para>
+        </listitem>
+
+        <listitem>
+          <para><link
+          linkend="stampede_job_inst_submit_start_event">stampede.job_inst.submit.start</link></para>
+        </listitem>
+
+        <listitem>
+          <para><link
+          linkend="stampede_job_inst_submit_end_event">stampede.job_inst.submit.end</link></para>
+        </listitem>
+
+        <listitem>
+          <para><link
+          linkend="stampede_job_inst_held_start_event">stampede.job_inst.held.start</link></para>
+        </listitem>
+
+        <listitem>
+          <para><link
+          linkend="stampede_job_inst_held_end_event">stampede.job_inst.held.end</link></para>
+        </listitem>
+
+        <listitem>
+          <para><link
+          linkend="stampede_job_inst_main_start_event">stampede.job_inst.main.start</link></para>
+        </listitem>
+
+        <listitem>
+          <para><link
+          linkend="stampede_job_inst_main_term_event">stampede.job_inst.main.term</link></para>
+        </listitem>
+
+        <listitem>
+          <para><link
+          linkend="stampede_job_inst_main_end_event">stampede.job_inst.main.end</link></para>
+        </listitem>
+
+        <listitem>
+          <para><link
+          linkend="stampede_job_inst_post_start_event">stampede.job_inst.post.start</link></para>
+        </listitem>
+
+        <listitem>
+          <para><link
+          linkend="stampede_job_inst_post_term_event">stampede.job_inst.post.term</link></para>
+        </listitem>
+
+        <listitem>
+          <para><link
+          linkend="stampede_job_inst_post_end_event">stampede.job_inst.post.end</link></para>
+        </listitem>
+
+        <listitem>
+          <para><link
+          linkend="stampede_job_inst_host_info_event">stampede.job_inst.host.info</link></para>
+        </listitem>
+
+        <listitem>
+          <para><link
+          linkend="stampede_job_inst_image_info_event">stampede.job_inst.image.info</link></para>
+        </listitem>
+
+        <listitem>
+          <para><link
+          linkend="stampede_inv_start_event">stampede.inv.start</link></para>
+        </listitem>
+
+        <listitem>
+          <para><link
+          linkend="stampede_inv_end_event">stampede.inv.end</link></para>
+        </listitem>
+      </itemizedlist>
+
+      <para>The events are described in detail below</para>
+
+      <itemizedlist spacing="compact">
+        <listitem id="stampede_wf_plan_event">
           <para><emphasis role="bold">stampede.wf.plan</emphasis></para>
 
           <programlisting>container stampede.wf.plan {
@@ -3123,7 +3267,7 @@ E.g.<emphasis role="bold">
 }  // container stampede.wf.plan</programlisting>
         </listitem>
 
-        <listitem>
+        <listitem id="stampede_static_start_event">
           <para><emphasis role="bold">stampede.static.start</emphasis></para>
 
           <programlisting>container stampede.static.start {
@@ -3131,7 +3275,7 @@ E.g.<emphasis role="bold">
 } </programlisting>
         </listitem>
 
-        <listitem>
+        <listitem id="stampede_static_end_event">
           <para><emphasis role="bold">stampede.static.end</emphasis></para>
 
           <programlisting>container stampede.static.end {
@@ -3139,7 +3283,7 @@ E.g.<emphasis role="bold">
 }  //</programlisting>
         </listitem>
 
-        <listitem>
+        <listitem id="stampede_xwf_start_event">
           <para><emphasis role="bold">stampede.xwf.start</emphasis></para>
 
           <programlisting>container stampede.xwf.start {
@@ -3154,7 +3298,7 @@ E.g.<emphasis role="bold">
 }  // container stampede.xwf.start</programlisting>
         </listitem>
 
-        <listitem>
+        <listitem id="stampede_xwf_end_event">
           <para><emphasis role="bold">stampede.xwf.end</emphasis></para>
 
           <programlisting>container stampede.xwf.end {
@@ -3177,7 +3321,7 @@ E.g.<emphasis role="bold">
 </programlisting>
         </listitem>
 
-        <listitem>
+        <listitem id="stampede_task_info_event">
           <para><emphasis role="bold">stampede.task.info</emphasis></para>
 
           <programlisting>container stampede.task.info {
@@ -3220,7 +3364,7 @@ E.g.<emphasis role="bold">
           }  // container stampede.task.info</programlisting>
         </listitem>
 
-        <listitem>
+        <listitem id="stampede_task_edge_event">
           <para><emphasis role="bold">stampede.task.edge</emphasis></para>
 
           <programlisting>container stampede.task.edge {
@@ -3242,7 +3386,7 @@ E.g.<emphasis role="bold">
 }  // container stampede.task.edge</programlisting>
         </listitem>
 
-        <listitem>
+        <listitem id="stampede_wf_map_task_job_event">
           <para><emphasis
           role="bold">stampede.wf.map.task_job</emphasis><programlisting>container stampede.wf.map.task_job {
             description
@@ -3265,7 +3409,7 @@ E.g.<emphasis role="bold">
 }  // container stampede.wf.map.task_job</programlisting></para>
         </listitem>
 
-        <listitem>
+        <listitem id="stampede_xwf_map_subwf_job_event">
           <para><emphasis
           role="bold">stampede.xwf.map.subwf_job</emphasis><programlisting>container stampede.xwf.map.subwf_job {
             description
@@ -3295,7 +3439,7 @@ E.g.<emphasis role="bold">
 }  // container stampede.xwf.map.subwf_job</programlisting></para>
         </listitem>
 
-        <listitem>
+        <listitem id="stampede_job_info_event">
           <para><emphasis
           role="bold">stampede.job.info</emphasis><programlisting>container stampede.job.info {
             description
@@ -3366,7 +3510,7 @@ E.g.<emphasis role="bold">
 }  // container stampede.job.info</programlisting></para>
         </listitem>
 
-        <listitem>
+        <listitem id="stampede_job_edge_event">
           <para><emphasis
           role="bold">stampede.job.edge</emphasis><programlisting>container stampede.job.edge {
             description
@@ -3387,7 +3531,7 @@ E.g.<emphasis role="bold">
 }  // container stampede.job.edge</programlisting></para>
         </listitem>
 
-        <listitem>
+        <listitem id="stampede_job_inst_pre_start_event">
           <para><emphasis
           role="bold">stampede.job_inst.pre.start</emphasis><programlisting>container stampede.job_inst.pre.start {
             description
@@ -3396,7 +3540,7 @@ E.g.<emphasis role="bold">
 }  // container stampede.job_inst.pre.start</programlisting></para>
         </listitem>
 
-        <listitem>
+        <listitem id="stampede_job_inst_pre_term_event">
           <para><emphasis
           role="bold">stampede.job_inst.pre.term</emphasis><programlisting>container stampede.job_inst.pre.term {
             description
@@ -3404,7 +3548,7 @@ E.g.<emphasis role="bold">
 }  // container stampede.job_inst.pre.term</programlisting></para>
         </listitem>
 
-        <listitem>
+        <listitem id="stampede_job_inst_pre_end_event">
           <para><emphasis
           role="bold">stampede.job_inst.pre.end</emphasis><programlisting>container stampede.job_inst.pre.end {
             description
@@ -3427,7 +3571,7 @@ E.g.<emphasis role="bold">
 }  // container stampede.job_inst.pre.end</programlisting></para>
         </listitem>
 
-        <listitem>
+        <listitem id="stampede_job_inst_submit_start_event">
           <para><emphasis
           role="bold">stampede.job_inst.submit.start</emphasis><programlisting>container stampede.job_inst.submit.start {
             description
@@ -3437,7 +3581,7 @@ E.g.<emphasis role="bold">
 }  // container stampede.job_inst.submit.start</programlisting></para>
         </listitem>
 
-        <listitem>
+        <listitem id="stampede_job_inst_submit_end_event">
           <para><emphasis
           role="bold">stampede.job_inst.submit.end</emphasis><programlisting>container stampede.job_inst.submit.end {
             description
@@ -3453,7 +3597,7 @@ E.g.<emphasis role="bold">
 }  // container stampede.job_inst.submit.end</programlisting></para>
         </listitem>
 
-        <listitem>
+        <listitem id="stampede_job_inst_held_start_event">
           <para><emphasis
           role="bold">stampede.job_inst.held.start</emphasis><programlisting>container stampede.job_inst.held.start {
             description
@@ -3462,7 +3606,7 @@ E.g.<emphasis role="bold">
 }  // container stampede.job_inst.held.start</programlisting></para>
         </listitem>
 
-        <listitem>
+        <listitem id="stampede_job_inst_held_end_event">
           <para><emphasis
           role="bold">stampede.job_inst.held.end</emphasis><programlisting>container stampede.job_inst.held.end {
             description
@@ -3478,7 +3622,7 @@ E.g.<emphasis role="bold">
 }  // container stampede.job_inst.held.end</programlisting></para>
         </listitem>
 
-        <listitem>
+        <listitem id="stampede_job_inst_main_start_event">
           <para><emphasis
           role="bold">stampede.job_inst.main.start</emphasis><programlisting>container stampede.job_inst.main.start {
             description
@@ -3508,7 +3652,7 @@ E.g.<emphasis role="bold">
 </programlisting></para>
         </listitem>
 
-        <listitem>
+        <listitem id="stampede_job_inst_main_term_event">
           <para><emphasis
           role="bold">stampede.job_inst.main.term</emphasis></para>
 
@@ -3526,7 +3670,7 @@ E.g.<emphasis role="bold">
 }  // container stampede.job_inst.main.term</programlisting>
         </listitem>
 
-        <listitem>
+        <listitem id="stampede_job_inst_main_end_event">
           <para><emphasis
           role="bold">stampede.job_inst.main.end</emphasis><programlisting>container stampede.job_inst.main.end {
             description
@@ -3631,7 +3775,7 @@ E.g.<emphasis role="bold">
 }  // container stampede.job_inst.main.end</programlisting></para>
         </listitem>
 
-        <listitem>
+        <listitem id="stampede_job_inst_post_start_event">
           <para><emphasis
           role="bold">stampede.job_inst.post.start</emphasis><programlisting>container stampede.job_inst.post.start {
             description
@@ -3641,7 +3785,7 @@ E.g.<emphasis role="bold">
 </programlisting></para>
         </listitem>
 
-        <listitem>
+        <listitem id="stampede_job_inst_post_term_event">
           <para><emphasis
           role="bold">stampede.job_inst.post.term</emphasis><programlisting>container stampede.job_inst.post.term {
             description
@@ -3650,7 +3794,7 @@ E.g.<emphasis role="bold">
 }  // container stampede.job_inst.post.term</programlisting></para>
         </listitem>
 
-        <listitem>
+        <listitem id="stampede_job_inst_post_end_event">
           <para><emphasis
           role="bold">stampede.job_inst.post.end</emphasis><programlisting>container stampede.job_inst.post.end {
             description
@@ -3673,7 +3817,7 @@ E.g.<emphasis role="bold">
 }  // container stampede.job_inst.post.end</programlisting></para>
         </listitem>
 
-        <listitem>
+        <listitem id="stampede_job_inst_host_info_event">
           <para><emphasis
           role="bold">stampede.job_inst.host.info</emphasis><programlisting>container stampede.job_inst.host.info {
             description
@@ -3712,7 +3856,7 @@ E.g.<emphasis role="bold">
 }  // container stampede.job_inst.host.info</programlisting></para>
         </listitem>
 
-        <listitem>
+        <listitem id="stampede_job_inst_image_info_event">
           <para><emphasis
           role="bold">stampede.job_inst.image.info</emphasis><programlisting>container stampede.job_inst.image.info {
             description
@@ -3733,7 +3877,7 @@ E.g.<emphasis role="bold">
 }  // container stampede.job_inst.image.info</programlisting></para>
         </listitem>
 
-        <listitem>
+        <listitem id="stampede_inv_start_event">
           <para><emphasis
           role="bold">stampede.inv.start</emphasis><programlisting>container stampede.inv.start {
             description
@@ -3765,7 +3909,7 @@ E.g.<emphasis role="bold">
 </programlisting></para>
         </listitem>
 
-        <listitem>
+        <listitem id="stampede_inv_end_event">
           <para><emphasis
           role="bold">stampede.inv.end</emphasis><programlisting>container stampede.inv.end {
             description
