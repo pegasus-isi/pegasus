@@ -856,6 +856,18 @@ Scope       :</emphasis> TC, SC, DAX, Properties
 
             <row>
               <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>condor.request_gpus<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>request_cpus<emphasis role="bold">
+Scope       :</emphasis> TC, SC, DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 4.6
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
+
+              <entry>Number of GPU's a job requires.</entry>
+            </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold"><emphasis
                       role="bold">Property Key: </emphasis></emphasis>condor.request_memory<emphasis
                     role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>request_memory<emphasis role="bold">

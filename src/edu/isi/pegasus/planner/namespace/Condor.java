@@ -174,6 +174,11 @@ public class Condor extends Namespace{
      * The Condor Key designating the numnber of cpu's to request.
      */
     public static final String REQUEST_CPUS_KEY = "request_cpus";
+    
+    /**
+     * The Condor Key designating the numnber of cpu's to request.
+     */
+    public static final String REQUEST_GPUS_KEY = "request_gpus";
 
     /**
      * The Condor Key designating the amount of memory to request.
@@ -677,6 +682,7 @@ public class Condor extends Namespace{
                     res = VALID_KEY;
                 }
                 else if ( key.compareTo( Condor.REQUEST_CPUS_KEY ) == 0  ||
+                          key.compareTo( Condor.REQUEST_GPUS_KEY ) == 0  ||
                           key.compareTo( Condor.REQUEST_MEMORY_KEY) == 0  ||
                           key.compareTo( Condor.REQUEST_DISK_KEY) == 0 ){
                     res = VALID_KEY;
