@@ -151,14 +151,14 @@
     </section>
   </section>
 
-  <section>
+  <section id="service_dashboard">
     <title>Dashboard</title>
 
     <para>The dashboard is automatically started when pegasus-service command
     is executed. </para>
   </section>
 
-  <section>
+  <section id="service_apache">
     <title>Running Pegasus Service under Apache HTTPD</title>
 
     <para><emphasis role="bold">Prerequisites</emphasis> Apache HTTPD,
@@ -229,7 +229,7 @@
     url="https://code.google.com/p/modwsgi/wiki/ConfigurationDirectives">https://code.google.com/p/modwsgi/wiki/ConfigurationDirectives</ulink></para>
   </section>
 
-  <section>
+  <section id="service_ensemble">
     <title>Ensemble Manager</title>
 
     <para>The ensemble manager is a service that manages collections of

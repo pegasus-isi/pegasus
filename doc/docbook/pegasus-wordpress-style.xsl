@@ -63,15 +63,8 @@
             require('/srv/new-pegasus.isi.edu/includes/common.php'); 
             pegasus_header("<xsl:apply-templates select="$doc" mode="object.title.markup.textonly"/>");
         ?</xsl:processing-instruction>
-        <!-- breadcrumbs are turned off
-        <xsl:call-template name="breadcrumbs"/>
+        <xsl:call-template name="user.header.content"/>
         <hr/>
-        -->
-        <xsl:call-template name="header.navigation.custom">
-            <xsl:with-param name="prev" select="$prev"/>
-            <xsl:with-param name="next" select="$next"/>
-            <xsl:with-param name="nav.context" select="$nav.context"/>
-        </xsl:call-template>
         <xsl:copy-of select="$content"/>
         <xsl:call-template name="footer.navigation">
             <xsl:with-param name="prev" select="$prev"/>

@@ -1057,8 +1057,8 @@ Summary: 1 DAG total (Success:1)
     </section>
   </section>
 
-  <section>
-    <title id="tutorial_wf_generation">Generating the Workflow</title>
+  <section id="tutorial_wf_generation">
+    <title>Generating the Workflow</title>
 
     <para>The example that you ran earlier already had the workflow
     description (split.dax) generated. Pegasus reads workflow descriptions
@@ -1423,8 +1423,8 @@ pegasus.catalog.transformation=Text
 pegasus.catalog.transformation.file=tc.txt</programlisting>
   </section>
 
-  <section>
-    <title id="tutorial_conclusion">Conclusion</title>
+  <section id="tutorial_conclusion">
+    <title>Conclusion</title>
 
     <para>Congratulations! You have completed the tutorial.</para>
 

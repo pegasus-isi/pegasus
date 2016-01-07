@@ -1730,7 +1730,7 @@ $adag-&gt;toXML( \*STDOUT, '', $xmlns );</programlisting>
     </section>
   </section>
 
-  <section>
+  <section id="dax_no_api">
     <title>DAX Generator without a Pegasus DAX API</title>
 
     <para>If you are using some other scripting or programming environment,
