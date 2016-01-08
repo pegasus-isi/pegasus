@@ -57,7 +57,7 @@ public class PlannerOptions extends Data implements Cloneable{
     /**
      * The various cleanup options supported by the planner
      */
-    public enum CLEANUP_OPTIONS{ none, inplace, leaf};
+    public enum CLEANUP_OPTIONS{ none, inplace, leaf, constraint};
     
     /**
      * The base submit directory.

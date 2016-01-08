@@ -227,7 +227,8 @@ public class MainEngine
         }
 
         //add the cleanup nodes in place
-        if ( mPOptions.getCleanup() == PlannerOptions.CLEANUP_OPTIONS.inplace ){ 
+        if ( mPOptions.getCleanup() == PlannerOptions.CLEANUP_OPTIONS.inplace ||
+               mPOptions.getCleanup() == PlannerOptions.CLEANUP_OPTIONS.constraint ){ 
             message = "Adding cleanup jobs in the workflow";
             mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_GENERATE_CLEANUP, LoggingKeys.DAX_ID, abstractWFName );
             CleanupEngine cEngine = new CleanupEngine( mBag );
