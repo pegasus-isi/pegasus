@@ -36,12 +36,15 @@ import java.util.*;
  */
 public class Utilities {
 
+    // Default file size of 10 MB
+    private static final long DEFAULT_FILE_SIZE = 10485760;
     //Maps from file name to file size
     static Map<String, Long> sizes = null;
 
     public static long getFileSize(PegasusFile file) {
         if (sizes == null) {
-            return (long) file.getSize();
+            long fileSize = (long) file.getSize();
+            return fileSize == -1 ? DEFAULT_FILE_SIZE : fileSize;
         }
         return sizes.get(file.getLFN());
     }

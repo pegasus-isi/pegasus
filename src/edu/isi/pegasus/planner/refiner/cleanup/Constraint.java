@@ -45,9 +45,9 @@ import java.util.TreeMap;
  */
 public class Constraint extends AbstractCleanupStrategy {
 
+    private static final String DEFAULT_MAX_SPACE = "1073741824";
     private static long maxSpacePerSite;
     private static boolean deferStageins;
-    private static boolean turnedOff = false;
     //Dependency list. Maps from a node to the set of nodes dependent on it
     private static Map<GraphNode, Set<GraphNode>> dependencies;
     //Set of current heads (jobs that can be run immediately
@@ -79,10 +79,10 @@ public class Constraint extends AbstractCleanupStrategy {
         long constrainerStartTime = System.currentTimeMillis();
         String maxSpace = mProps.getProperty("pegasus.file.cleanup.constraint.maxspace");
         if (maxSpace == null) {
+            maxSpace = DEFAULT_MAX_SPACE;
             mLogger.log("Could not determine the storage constraint. The "
-                    + "constrainer will be disabled.", LogManager.WARNING_MESSAGE_LEVEL);
-            turnedOff = true;
-            return workflow;
+                    + "constraint will be set to " + DEFAULT_MAX_SPACE
+                    + " bytes", LogManager.WARNING_MESSAGE_LEVEL);
         }
         maxSpacePerSite = Long.parseLong(maxSpace);
         deferStageins = (mProps.getProperty("pegasus.file.cleanup.constraint.deferStageIns") != null);
@@ -120,10 +120,6 @@ public class Constraint extends AbstractCleanupStrategy {
     private void addCleanUpJobs(String site, Set<GraphNode> leaves, Graph workflow) {
 
         mLogger.log(site + " " + leaves.size(), LogManager.DEBUG_MESSAGE_LEVEL);
-        if (turnedOff) {
-            return;
-        }
-
         mLogger.log("Performing constraint optimization on site " + site
                 + " with maximum storage limit " + maxSpacePerSite, LogManager.INFO_MESSAGE_LEVEL);
 
@@ -210,7 +206,7 @@ public class Constraint extends AbstractCleanupStrategy {
                     //if this job's non third party site is the current
                     //site, then mark it as executing here
                     TransferJob transferJob = (TransferJob) j;
-                    if (transferJob.getNonThirdPartySite().equals(site)) {
+                    if (transferJob.getNonThirdPartySite() != null && transferJob.getNonThirdPartySite().equals(site)) {
                         currentSiteJobs.add(node);
                     }
                     break;
@@ -341,7 +337,7 @@ public class Constraint extends AbstractCleanupStrategy {
             } else {
                 //we must check whether the target site of the stage in is this site or not
                 TransferJob transferJob = (TransferJob) currentJob;
-                if (!transferJob.getNonThirdPartySite().equals(site)) {
+                if (transferJob.getNonThirdPartySite() != null && !transferJob.getNonThirdPartySite().equals(site)) {
                     intermediateRequirement = 0;
                 } else {
                     intermediateRequirement = Utilities.getIntermediateRequirement(currentJob);
