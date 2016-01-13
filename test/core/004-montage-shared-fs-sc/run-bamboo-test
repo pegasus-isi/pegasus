@@ -135,6 +135,8 @@ echo "Adding input images to the replica catalog..."
 echo "  " `cat cache.list | wc -l` "images found"
 cat cache.list | grep -v ".fits " >rc
 perl -p -i -e 's/ipac_cluster/CCG/' rc
+cat cache.list | grep -v ".fits " >>rc
+perl -p -i -e 's/ipac_cluster/CCG2/' rc
 cat url.list | sed 's/\.gz http/ http/' >>rc
 
 echo "Planning and submitting the workflow..."
