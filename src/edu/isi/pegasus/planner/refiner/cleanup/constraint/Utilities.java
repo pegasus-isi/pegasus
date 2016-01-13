@@ -15,6 +15,7 @@
  */
 package edu.isi.pegasus.planner.refiner.cleanup.constraint;
 
+import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
@@ -26,7 +27,6 @@ import org.supercsv.prefs.CsvPreference;
 
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.*;
 
 /**
@@ -39,29 +39,14 @@ public class Utilities {
     //Maps from file name to file size
     static Map<String, Long> sizes = null;
 
-    static {
-        //TODO: verify the use of the CSV file
-        String CSVName = System.getProperty("org.sudarshan.constrainer.csv");
-        if (CSVName == null) {
-            System.err.println("Falling back to the old mechanism");
-        } else {
-            try {
-                Utilities.loadHashMap(CSVName);
-            } catch (IOException e) {
-                System.err.println("Falling back to the old mechanism due to IOException");
-            }
-        }
-    }
-
-    static long getFileSize(PegasusFile file) {
+    public static long getFileSize(PegasusFile file) {
         if (sizes == null) {
             return (long) file.getSize();
         }
-        System.out.println("SIZES: " + sizes);
         return sizes.get(file.getLFN());
     }
 
-    static String cleanUpJobToString(Iterable<GraphNode> parents, Iterable<GraphNode> heads, Iterable<PegasusFile> listOfFiles) {
+    public static String cleanUpJobToString(Iterable<GraphNode> parents, Iterable<GraphNode> heads, Iterable<PegasusFile> listOfFiles) {
         StringBuilder sb = new StringBuilder("CleanupJob{parents = {");
         for (GraphNode parent : parents) {
             sb.append(parent.getID());
@@ -84,7 +69,7 @@ public class Utilities {
         return sb.toString();
     }
 
-    static void loadHashMap(String csvName) throws IOException {
+    public static void loadHashMap(String csvName) throws IOException {
         final CellProcessor[] processors = new CellProcessor[]{null, null, null, null, new ParseLong()};
         CsvBeanReader beanReader = new CsvBeanReader(new FileReader(csvName), CsvPreference.STANDARD_PREFERENCE);
         final String[] header = beanReader.getHeader(true);
@@ -99,7 +84,13 @@ public class Utilities {
         }
     }
 
-    static Map<GraphNode, Set<GraphNode>> calculateDependencies(Graph workflow, boolean verbose, PrintWriter logger) {
+    /**
+     *
+     * @param workflow
+     * @param mLogger
+     * @return
+     */
+    public static Map<GraphNode, Set<GraphNode>> calculateDependencies(Graph workflow, LogManager mLogger) {
         //Dependencies is used to map from node to its dependencies
         Map<GraphNode, Set<GraphNode>> dependencies = new HashMap<GraphNode, Set<GraphNode>>();
 
@@ -129,11 +120,7 @@ public class Utilities {
                 while (currentNode == marker) {
                     currentNode = bfsQueue.removeFirst();
                 }
-
-                //Output some extra data if verbose output is on
-                if (verbose) {
-                    logger.println("Pre analysis of node " + currentNode.getID());
-                }
+                mLogger.log("Pre analysis of node " + currentNode.getID(), LogManager.DEBUG_MESSAGE_LEVEL);
 
                 //Initialise the dependency set for the current node
                 Set<GraphNode> currentNodeDependencies = new HashSet<GraphNode>();
@@ -173,7 +160,7 @@ public class Utilities {
         return dependencies;
     }
 
-    static long getIntermediateRequirement(Job currentJob) {
+    public static long getIntermediateRequirement(Job currentJob) {
         long spaceUsed = 0;
         switch (currentJob.getJobType()) {
             case Job.CLEANUP_JOB:

@@ -31,7 +31,7 @@ public class Choice {
     public final List<GraphNode> listOfJobs;
     public final Map<Long, List<FloatingFile>> floatingFiles;
 
-    Choice(long intermediateSpaceRequirement, long balance, List<GraphNode> listOfJobs, Map<Long, List<FloatingFile>> floatingFiles) {
+    public Choice(long intermediateSpaceRequirement, long balance, List<GraphNode> listOfJobs, Map<Long, List<FloatingFile>> floatingFiles) {
         this.intermediateSpaceRequirement = intermediateSpaceRequirement;
         this.balance = balance;
         this.listOfJobs = listOfJobs;
