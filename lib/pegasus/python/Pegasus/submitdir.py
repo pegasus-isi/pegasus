@@ -151,9 +151,25 @@ class SubmitDir(object):
         # Exclude braindump file
         exclude.add(self.braindump_file)
 
-        # Locate and exclude archive file
-        if self.is_archived():
-            raise SubmitDirException("Submit dir already archived")
+        # We use a temporary file so that we can determine if the archive step
+        # completed successfully later
+        tmparchname = os.path.join(self.submitdir, "archive.tmp.tar.gz")
+
+        # We use a lock file to determine if cleanup is complete
+        lockfile = os.path.join(self.submitdir, "archive.cleanup.lock")
+
+        # If a previous archive was partially completed, then remove the
+        # temporary file that was created
+        if os.path.exists(tmparchname):
+            os.unlink(tmparchname)
+
+        # Exclude the temporary archive name so we don't add it to itself
+        exclude.add(tmparchname)
+
+        # We don't want the lock file to be saved, if it exists
+        exclude.add(lockfile)
+
+        # Also exclude the final archive name in case they try to run it again
         exclude.add(self.archname)
 
         # Ignore monitord files. This is needed so that tools like pegasus-statistics
@@ -177,21 +193,36 @@ class SubmitDir(object):
                 if filepath not in exclude:
                     yield name, filepath
 
-        # Archive the files
-        tar = tarfile.open(name=self.archname, mode="w:gz")
-        for name, path in visit(self.submitdir):
-            tar.add(name=path, arcname=name)
-        tar.close()
+        if self.is_archived() and not os.path.exists(lockfile):
+            raise SubmitDirException("Submit directory already archived")
+
+        if not self.is_archived():
+            # Archive the files
+            print "Creating archive..."
+            tar = tarfile.open(name=tmparchname, mode="w:gz")
+            for name, path in visit(self.submitdir):
+                tar.add(name=path, arcname=name)
+            tar.close()
+
+            # This "commits" the archive step
+            os.rename(tmparchname, self.archname)
+
+        # Touch lockfile
+        open(lockfile, "w").close()
 
         # Remove the files and directories
         # We do this here, instead of doing it in the loop above
         # because we want to make sure there are no errors in creating
         # the archive before we start removing files
+        print "Removing files..."
         for name, path in visit(self.submitdir):
             if os.path.isfile(path) or os.path.islink(path):
                 os.remove(path)
             else:
                 shutil.rmtree(path)
+
+        # This "commits" the file removal
+        os.unlink(lockfile)
 
         # Commit the workflow changes
         mdbsession.commit()
