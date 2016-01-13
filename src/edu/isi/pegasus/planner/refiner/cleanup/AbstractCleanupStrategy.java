@@ -146,10 +146,10 @@ public abstract class AbstractCleanupStrategy implements CleanupStrategy {
         String key = this.getDefaultCleanupMaxJobsPropertyKey();
         if (this.mProps.getProperty(key) == null) {
             mLogger.log("Setting property " + key + " to  "
-                    + InPlace.DEFAULT_MAX_JOBS_FOR_CLEANUP_CATEGORY
+                    + DEFAULT_MAX_JOBS_FOR_CLEANUP_CATEGORY
                     + " to set max jobs for cleanup jobs category",
                     LogManager.CONFIG_MESSAGE_LEVEL);
-            mProps.setProperty(key, InPlace.DEFAULT_MAX_JOBS_FOR_CLEANUP_CATEGORY);
+            mProps.setProperty(key, DEFAULT_MAX_JOBS_FOR_CLEANUP_CATEGORY);
         }
 
         mCleanupJobsPerLevel = -1;

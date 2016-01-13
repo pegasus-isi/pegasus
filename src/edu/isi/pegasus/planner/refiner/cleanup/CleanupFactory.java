@@ -45,8 +45,8 @@ public class CleanupFactory {
      *
      * @return instance of a Cleanup CleanupStrategy implementation
      *
-     * @throws CleanupFactoryException that nests any error that might occur during the
-     * instantiation of the implementation.
+     * @throws CleanupFactoryException that nests any error that might occur
+     * during the instantiation of the implementation.
      */
     public static CleanupStrategy loadCleanupStraegyInstance(PegasusBag bag) throws CleanupFactoryException {
 
@@ -56,14 +56,16 @@ public class CleanupFactory {
         }
         String className = props.getCleanupStrategy();
 
-        switch (bag.getPlannerOptions().getCleanup()) {
-            case inplace:
-            case leaf:
-                className = "InPlace";
-                break;
-            case constraint:
-                className = "Constraint";
-                break;
+        if (bag.getPlannerOptions().getCleanup() != null) {
+            switch (bag.getPlannerOptions().getCleanup()) {
+                case inplace:
+                case leaf:
+                    className = "InPlace";
+                    break;
+                case constraint:
+                    className = "Constraint";
+                    break;
+            }
         }
 
         //prepend the package name

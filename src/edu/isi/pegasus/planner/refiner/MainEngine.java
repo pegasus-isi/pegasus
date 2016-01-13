@@ -227,8 +227,9 @@ public class MainEngine
         }
 
         //add the cleanup nodes in place
-        if ( mPOptions.getCleanup() == PlannerOptions.CLEANUP_OPTIONS.inplace ||
-               mPOptions.getCleanup() == PlannerOptions.CLEANUP_OPTIONS.constraint ){ 
+        if ( mPOptions.getCleanup() == null || 
+                ( mPOptions.getCleanup() != PlannerOptions.CLEANUP_OPTIONS.none &&
+                mPOptions.getCleanup() != PlannerOptions.CLEANUP_OPTIONS.leaf )){ 
             message = "Adding cleanup jobs in the workflow";
             mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_GENERATE_CLEANUP, LoggingKeys.DAX_ID, abstractWFName );
             CleanupEngine cEngine = new CleanupEngine( mBag );
@@ -236,8 +237,8 @@ public class MainEngine
             mLogger.logEventCompletion();
         }
         
-        if ( mPOptions.getCleanup() == PlannerOptions.CLEANUP_OPTIONS.inplace ||
-               mPOptions.getCleanup() == PlannerOptions.CLEANUP_OPTIONS.leaf ){
+        if ( mPOptions.getCleanup() == null || 
+                mPOptions.getCleanup() != PlannerOptions.CLEANUP_OPTIONS.none ){
             //add leaf cleanup nodes both when inplace or leaf cleanup is specified
             
             //PM-150 leaf cleanup nodes to remove directories should take care of this

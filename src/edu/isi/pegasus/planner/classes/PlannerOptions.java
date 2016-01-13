@@ -304,7 +304,7 @@ public class PlannerOptions extends Data implements Cloneable{
         mVDSProps         = null;
         mClusterer        = null;
         mBasenamePrefix   = null;
-        mCleanup          = CLEANUP_OPTIONS.none;
+        mCleanup          = null;
         mVOGroup          = "pegasus";
         mDeferredRun      = false;
         mDate             = new Date();
