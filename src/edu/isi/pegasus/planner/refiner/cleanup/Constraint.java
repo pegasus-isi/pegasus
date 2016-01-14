@@ -45,8 +45,9 @@ import java.util.TreeMap;
  */
 public class Constraint extends AbstractCleanupStrategy {
 
-    private static final String DEFAULT_MAX_SPACE = "1073741824";
+    private static final String DEFAULT_MAX_SPACE = "10737418240";
     private static long maxSpacePerSite;
+    private static Map<String, Long> availableSpacePerSite;
     private static boolean deferStageins;
     //Dependency list. Maps from a node to the set of nodes dependent on it
     private static Map<GraphNode, Set<GraphNode>> dependencies;
@@ -55,11 +56,9 @@ public class Constraint extends AbstractCleanupStrategy {
     //Set of jobs that have finished execution
     private static Set<GraphNode> executed;
     //How much space we have available right now
-    private static long availableSpace;
+//    private static long availableSpace;
     //List of files that are pending cleanup
     private static NavigableMap<Long, List<FloatingFile>> floatingFiles;
-//    //The name of the current site
-//    private static String siteName;
     //Set of external stage-ins for which space is reserved in advance
     private static HashSet<Job> reservations;
 
@@ -85,6 +84,7 @@ public class Constraint extends AbstractCleanupStrategy {
                     + " bytes", LogManager.WARNING_MESSAGE_LEVEL);
         }
         maxSpacePerSite = Long.parseLong(maxSpace);
+        availableSpacePerSite = new HashMap<String, Long>();
         deferStageins = (mProps.getProperty("pegasus.file.cleanup.constraint.deferStageIns") != null);
         String CSVName = System.getProperty("pegasus.file.cleanup.constraint.csv");
         if (CSVName != null) {
@@ -142,8 +142,8 @@ public class Constraint extends AbstractCleanupStrategy {
         heads = new HashSet<GraphNode>();
         executed = new HashSet<GraphNode>();
         floatingFiles = new TreeMap<Long, List<FloatingFile>>();
-        availableSpace = maxSpacePerSite;
-//        siteName = site;
+        availableSpacePerSite.put(site, maxSpacePerSite);
+//        availableSpace = maxSpacePerSite;
         reservations = new HashSet<Job>();
 
         //if stage in jobs should not be deferred,
@@ -156,8 +156,8 @@ public class Constraint extends AbstractCleanupStrategy {
         }
 
         //locate initial set of heads
-        locateInitialHeads(currentSiteJobs);
-        mLogger.log(site + ":All jobs processed, " + availableSpace + "/"
+        locateInitialHeads(site, currentSiteJobs);
+        mLogger.log(site + ": All jobs processed, " + availableSpacePerSite.get(site) + "/"
                 + maxSpacePerSite + " space left", LogManager.DEBUG_MESSAGE_LEVEL);
 
         //we should have a list of heads for this site by this point
@@ -172,11 +172,11 @@ public class Constraint extends AbstractCleanupStrategy {
                 if (!floatingFiles.isEmpty()) {
                     //we have to remove the last few floating files
                     Choice dummy = new Choice(0, 0, new ArrayList<GraphNode>(floatingFiles.firstEntry().getValue().iterator().next().dependencies), null);
-                    freeSpace(workflow, dummy, 0);
+                    freeSpace(workflow, site, dummy, 0);
                 }
                 break;
             }
-            execute(workflow, selected, currentSiteJobs);
+            execute(workflow, site, selected, currentSiteJobs);
         }
     }
 
@@ -224,9 +224,10 @@ public class Constraint extends AbstractCleanupStrategy {
      * elsewhere too the node is a head. Space is reserved for stage ins from
      * other sites to this site
      *
+     * @param site Site name
      * @param currentSiteJobs The set of jobs at the current site
      */
-    private void locateInitialHeads(Set<GraphNode> currentSiteJobs) {
+    private void locateInitialHeads(String site, Set<GraphNode> currentSiteJobs) {
         for (GraphNode currentNode : currentSiteJobs) {
             //assume all nodes are head nodes
             boolean currentNodeIsHead = true;
@@ -251,7 +252,7 @@ public class Constraint extends AbstractCleanupStrategy {
                             long currentOutputFileSize = Utilities.getFileSize(currentOutput);
                             mLogger.log("Found stage in of file " + currentOutput.getLFN() + " of size "
                                     + currentOutputFileSize, LogManager.DEBUG_MESSAGE_LEVEL);
-                            availableSpace -= currentOutputFileSize;
+                            availableSpacePerSite.put(site, availableSpacePerSite.get(site) - currentOutputFileSize);
                         }
                     }
                 }
@@ -507,10 +508,11 @@ public class Constraint extends AbstractCleanupStrategy {
     /**
      *
      * @param workflow
+     * @param site
      * @param selected
      * @param requiredSpace
      */
-    private void freeSpace(Graph workflow, Choice selected, long requiredSpace) {
+    private void freeSpace(Graph workflow, String site, Choice selected, long requiredSpace) {
         List<PegasusFile> listOfFiles = new ArrayList<PegasusFile>();
         //temporarily use the checkpoint method
         Set<GraphNode> parents = new HashSet<GraphNode>();
@@ -520,7 +522,7 @@ public class Constraint extends AbstractCleanupStrategy {
                 entry = i.next();
                 for (FloatingFile f : entry.getValue()) {
                     parents.addAll(f.dependencies);
-                    availableSpace += entry.getKey();
+                    availableSpacePerSite.put(site, availableSpacePerSite.get(site) + entry.getKey());
                     requiredSpace -= entry.getKey();
                     listOfFiles.add(f.file);
                 }
@@ -544,29 +546,31 @@ public class Constraint extends AbstractCleanupStrategy {
         mLogger.log(Utilities.cleanUpJobToString(parents, heads, listOfFiles), LogManager.DEBUG_MESSAGE_LEVEL);
         workflow.addNode(node);
 
-        mLogger.log("Space available is now " + availableSpace, LogManager.DEBUG_MESSAGE_LEVEL);
+        mLogger.log(site + ": Space available is now " + availableSpacePerSite.get(site), LogManager.DEBUG_MESSAGE_LEVEL);
     }
 
     /**
      * Add all jobs in selected list of jobs to the executed set and update the
      * list of heads.
      *
+     * @param workflow
+     * @param site
      * @param selected
      * @param currentSiteJobs
      */
-    private void execute(Graph workflow, Choice selected, Set<GraphNode> currentSiteJobs) {
+    private void execute(Graph workflow, String site, Choice selected, Set<GraphNode> currentSiteJobs) {
         //We must add all the jobs in selected's list of jobs to the executed set
         //and also update the list of heads
         Set<GraphNode> candidateHeads = new HashSet<GraphNode>();
 
-        if (availableSpace < selected.intermediateSpaceRequirement) {
-            final long requiredSpace = selected.intermediateSpaceRequirement - availableSpace;
+        if (availableSpacePerSite.get(site) < selected.intermediateSpaceRequirement) {
+            final long requiredSpace = selected.intermediateSpaceRequirement - availableSpacePerSite.get(site);
             mLogger.log("Require " + requiredSpace + " more space, creating cleanup job", LogManager.DEBUG_MESSAGE_LEVEL);
-            freeSpace(workflow, selected, requiredSpace);
+            freeSpace(workflow, site, selected, requiredSpace);
         }
-        availableSpace -= selected.intermediateSpaceRequirement;
+        availableSpacePerSite.put(site, availableSpacePerSite.get(site) - selected.intermediateSpaceRequirement);
 
-        mLogger.log("Selected choice (" + availableSpace + "/" + maxSpacePerSite
+        mLogger.log(site + ": Selected choice (" + availableSpacePerSite.get(site) + "/" + maxSpacePerSite
                 + " free after exec): " + selected, LogManager.DEBUG_MESSAGE_LEVEL);
 
         //Phase I: Mark nodes as executed and remove them from head

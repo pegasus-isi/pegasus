@@ -146,6 +146,5 @@ pegasus-plan \
     --output-site CCG \
     --cleanup constraint \
     --dax dag.xml \
-    --cluster horizontal \
     --submit | tee $TOP_DIR/plan.out
 
