@@ -532,17 +532,19 @@ public class Constraint extends AbstractCleanupStrategy {
         }
         // For 1 cleanup job
         String id = CLEANUP_JOB_PREFIX + new Random().nextInt(Integer.MAX_VALUE);
-        GraphNode node = new GraphNode(id, mImpl.createCleanupJob(id, listOfFiles, (Job) parents.iterator().next().getContent()));
-        node.setParents(new ArrayList<GraphNode>(parents));
-        for (GraphNode parent : parents) {
-            parent.addChild(node);
+        if (!parents.isEmpty()) {
+            GraphNode node = new GraphNode(id, mImpl.createCleanupJob(id, listOfFiles, (Job) parents.iterator().next().getContent()));
+            node.setParents(new ArrayList<GraphNode>(parents));
+            for (GraphNode parent : parents) {
+                parent.addChild(node);
+            }
+            node.setChildren(new ArrayList<GraphNode>(heads));
+            for (GraphNode child : heads) {
+                child.addParent(node);
+            }
+            mLogger.log(Utilities.cleanUpJobToString(parents, heads, listOfFiles), LogManager.DEBUG_MESSAGE_LEVEL);
+            workflow.addNode(node);
         }
-        node.setChildren(new ArrayList<GraphNode>(heads));
-        for (GraphNode child : heads) {
-            child.addParent(node);
-        }
-        mLogger.log(Utilities.cleanUpJobToString(parents, heads, listOfFiles), LogManager.DEBUG_MESSAGE_LEVEL);
-        workflow.addNode(node);
 
         mLogger.log(site + ": Space available is now " + availableSpacePerSite.get(site), LogManager.DEBUG_MESSAGE_LEVEL);
     }
