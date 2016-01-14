@@ -583,8 +583,8 @@ public class Constraint extends AbstractCleanupStrategy {
             }
         }
         if (requiredSpace > 0) {
-            throw new OutOfSpaceError("The storage provided is insufficient (" 
-                    + maxAvailableSpacePerSite.get(site) + "), need " 
+            throw new OutOfSpaceError("The storage provided is insufficient ("
+                    + maxAvailableSpacePerSite.get(site) + "), need "
                     + requiredSpace + " more space on site '" + site + "'.");
         }
         // For 1 cleanup job
@@ -593,7 +593,17 @@ public class Constraint extends AbstractCleanupStrategy {
             GraphNode node = new GraphNode(id, mImpl.createCleanupJob(id, listOfFiles, (Job) parents.iterator().next().getContent()));
             node.setParents(new ArrayList<GraphNode>(parents));
             for (GraphNode parent : parents) {
-                parent.addChild(node);
+                boolean hasStageOut = false;
+                for (GraphNode child : parent.getChildren()) {
+                    Job currentJob = (Job) child.getContent();
+                    if (currentJob.getJobType() == Job.STAGE_OUT_JOB) {
+                        child.addChild(node);
+                        hasStageOut = true;
+                    }
+                }
+                if (!hasStageOut) {
+                    parent.addChild(node);
+                }
             }
             node.setChildren(new ArrayList<GraphNode>(heads));
             for (GraphNode child : heads) {
