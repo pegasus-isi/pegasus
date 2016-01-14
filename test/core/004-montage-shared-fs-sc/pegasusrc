@@ -15,4 +15,4 @@ pegasus.condor.logs.symlink = false
 # PM-1022 for sharedfs in vanilla universe, transfer_input_files does not work
 #pegasus.gridstart.kickstart.stat true
 
-pegasus.file.cleanup.constraint.maxspace=2147483648
+pegasus.file.cleanup.constraint.maxspace=2684354560

@@ -56,7 +56,6 @@ public class Constraint extends AbstractCleanupStrategy {
     //Set of jobs that have finished execution
     private static Set<GraphNode> executed;
     //How much space we have available right now
-//    private static long availableSpace;
     //List of files that are pending cleanup
     private static NavigableMap<Long, List<FloatingFile>> floatingFiles;
     //Set of external stage-ins for which space is reserved in advance
@@ -143,7 +142,6 @@ public class Constraint extends AbstractCleanupStrategy {
         executed = new HashSet<GraphNode>();
         floatingFiles = new TreeMap<Long, List<FloatingFile>>();
         availableSpacePerSite.put(site, maxSpacePerSite);
-//        availableSpace = maxSpacePerSite;
         reservations = new HashSet<Job>();
 
         //if stage in jobs should not be deferred,
