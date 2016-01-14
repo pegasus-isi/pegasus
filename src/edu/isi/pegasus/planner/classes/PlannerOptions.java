@@ -1464,7 +1464,7 @@ public class PlannerOptions extends Data implements Cloneable{
         if( mForceReplan ){ sb.append( " --force-replan " ); }
 
         //the cleanup option
-        sb.append( " --cleanup " ).append( mCleanup.name() );
+        if ( mCleanup != null ) { sb.append( " --cleanup " ).append( mCleanup.name() );}
         //if( !mCleanup ){ sb.append(" --nocleanup "); }
 
 
