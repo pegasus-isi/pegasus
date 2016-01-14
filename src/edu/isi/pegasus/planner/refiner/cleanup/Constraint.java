@@ -45,20 +45,64 @@ import java.util.TreeMap;
  */
 public class Constraint extends AbstractCleanupStrategy {
 
+    /**
+     * The property prefix for all properties used by this cleanup algorithm.
+     */
+    private static final String PROPERTY_PREFIX = "pegasus.file.cleanup.constraint";
+
+    /**
+     * The property suffix for determining the max space available for a site x.
+     */
+    private static final String PROPERTY_MAXSPACE_SUFFIX = "maxspace";
+
+    /**
+     * Default maximum space per site.
+     */
     private static final String DEFAULT_MAX_SPACE = "10737418240";
+
+    /**
+     * Maximum available space per site.
+     */
     private static long maxSpacePerSite;
+
+    /**
+     * Map of max available space per site.
+     */
+    private static Map<String, Long> maxAvailableSpacePerSite;
+
+    /**
+     * Maps of how much space is still available per site.
+     */
     private static Map<String, Long> availableSpacePerSite;
+
+    /**
+     *
+     */
     private static boolean deferStageins;
-    //Dependency list. Maps from a node to the set of nodes dependent on it
+
+    /**
+     * Dependency list. Maps from a node to the set of nodes dependent on it.
+     */
     private static Map<GraphNode, Set<GraphNode>> dependencies;
-    //Set of current heads (jobs that can be run immediately
+
+    /**
+     * Set of current heads (jobs that can be run immediately.
+     */
     private static Set<GraphNode> heads;
-    //Set of jobs that have finished execution
+
+    /**
+     * Set of jobs that have finished execution.
+     */
     private static Set<GraphNode> executed;
-    //How much space we have available right now
-    //List of files that are pending cleanup
+
+    /**
+     * List of files that are pending cleanup.
+     */
     private static NavigableMap<Long, List<FloatingFile>> floatingFiles;
-    //Set of external stage-ins for which space is reserved in advance
+
+    /**
+     * Set of external stage-ins for which space is reserved in advance.
+     */
     private static HashSet<Job> reservations;
 
     /**
@@ -75,7 +119,7 @@ public class Constraint extends AbstractCleanupStrategy {
 
         // Initialize constrainer
         long constrainerStartTime = System.currentTimeMillis();
-        String maxSpace = mProps.getProperty("pegasus.file.cleanup.constraint.maxspace");
+        String maxSpace = mProps.getCleanupConstraintMaxSpace();
         if (maxSpace == null) {
             maxSpace = DEFAULT_MAX_SPACE;
             mLogger.log("Could not determine the storage constraint. The "
@@ -84,7 +128,9 @@ public class Constraint extends AbstractCleanupStrategy {
         }
         maxSpacePerSite = Long.parseLong(maxSpace);
         availableSpacePerSite = new HashMap<String, Long>();
+        maxAvailableSpacePerSite = new HashMap<String, Long>();
         deferStageins = (mProps.getProperty("pegasus.file.cleanup.constraint.deferStageIns") != null);
+        // check if we want to keep the possibility of reading sizes from a CSV file
         String CSVName = System.getProperty("pegasus.file.cleanup.constraint.csv");
         if (CSVName != null) {
             try {
@@ -119,8 +165,6 @@ public class Constraint extends AbstractCleanupStrategy {
     private void addCleanUpJobs(String site, Set<GraphNode> leaves, Graph workflow) {
 
         mLogger.log(site + " " + leaves.size(), LogManager.DEBUG_MESSAGE_LEVEL);
-        mLogger.log("Performing constraint optimization on site " + site
-                + " with maximum storage limit " + maxSpacePerSite, LogManager.INFO_MESSAGE_LEVEL);
 
         for (GraphNode currentNode : leaves) {
             mLogger.log("Found node " + currentNode.getID(), LogManager.DEBUG_MESSAGE_LEVEL);
@@ -141,8 +185,19 @@ public class Constraint extends AbstractCleanupStrategy {
         heads = new HashSet<GraphNode>();
         executed = new HashSet<GraphNode>();
         floatingFiles = new TreeMap<Long, List<FloatingFile>>();
-        availableSpacePerSite.put(site, maxSpacePerSite);
         reservations = new HashSet<Job>();
+
+        // Set available space from the property
+        String maxSiteSpace = mProps.getProperty(getPropertyName(site, PROPERTY_MAXSPACE_SUFFIX));
+        if (maxSiteSpace == null) {
+            availableSpacePerSite.put(site, maxSpacePerSite);
+            maxAvailableSpacePerSite.put(site, maxSpacePerSite);
+        } else {
+            availableSpacePerSite.put(site, Long.parseLong(maxSiteSpace));
+            maxAvailableSpacePerSite.put(site, Long.parseLong(maxSiteSpace));
+        }
+        mLogger.log("Performing constraint optimization on site " + site
+                + " with maximum storage limit " + maxAvailableSpacePerSite.get(site), LogManager.INFO_MESSAGE_LEVEL);
 
         //if stage in jobs should not be deferred,
         //locate all stage in jobs whose output
@@ -156,7 +211,7 @@ public class Constraint extends AbstractCleanupStrategy {
         //locate initial set of heads
         locateInitialHeads(site, currentSiteJobs);
         mLogger.log(site + ": All jobs processed, " + availableSpacePerSite.get(site) + "/"
-                + maxSpacePerSite + " space left", LogManager.DEBUG_MESSAGE_LEVEL);
+                + maxAvailableSpacePerSite.get(site) + " space left", LogManager.DEBUG_MESSAGE_LEVEL);
 
         //we should have a list of heads for this site by this point
         for (GraphNode currentNode : heads) {
@@ -528,7 +583,9 @@ public class Constraint extends AbstractCleanupStrategy {
             }
         }
         if (requiredSpace > 0) {
-            throw new OutOfSpaceError("The storage you have provided is insufficient, need " + requiredSpace + " more space");
+            throw new OutOfSpaceError("The storage provided is insufficient (" 
+                    + maxAvailableSpacePerSite.get(site) + "), need " 
+                    + requiredSpace + " more space on site '" + site + "'.");
         }
         // For 1 cleanup job
         String id = CLEANUP_JOB_PREFIX + new Random().nextInt(Integer.MAX_VALUE);
@@ -570,7 +627,7 @@ public class Constraint extends AbstractCleanupStrategy {
         }
         availableSpacePerSite.put(site, availableSpacePerSite.get(site) - selected.intermediateSpaceRequirement);
 
-        mLogger.log(site + ": Selected choice (" + availableSpacePerSite.get(site) + "/" + maxSpacePerSite
+        mLogger.log(site + ": Selected choice (" + availableSpacePerSite.get(site) + "/" + maxAvailableSpacePerSite.get(site)
                 + " free after exec): " + selected, LogManager.DEBUG_MESSAGE_LEVEL);
 
         //Phase I: Mark nodes as executed and remove them from head
@@ -620,5 +677,20 @@ public class Constraint extends AbstractCleanupStrategy {
                 }
             }
         }
+    }
+
+    /**
+     * Returns the name of the property, for a particular site X.
+     *
+     * @param site the site X.
+     * @param suffix the property suffix to be applied.
+     *
+     * @return the name of the property.
+     */
+    private String getPropertyName(String site, String suffix) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(PROPERTY_PREFIX).append('.')
+                .append(site).append('.').append(suffix);
+        return sb.toString();
     }
 }
