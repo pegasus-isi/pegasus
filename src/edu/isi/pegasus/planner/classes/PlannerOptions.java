@@ -57,7 +57,7 @@ public class PlannerOptions extends Data implements Cloneable{
     /**
      * The various cleanup options supported by the planner
      */
-    public enum CLEANUP_OPTIONS{ none, inplace, leaf};
+    public enum CLEANUP_OPTIONS{ none, inplace, leaf, constraint};
     
     /**
      * The base submit directory.
@@ -304,7 +304,7 @@ public class PlannerOptions extends Data implements Cloneable{
         mVDSProps         = null;
         mClusterer        = null;
         mBasenamePrefix   = null;
-        mCleanup          = CLEANUP_OPTIONS.none;
+        mCleanup          = null;
         mVOGroup          = "pegasus";
         mDeferredRun      = false;
         mDate             = new Date();
@@ -1464,7 +1464,7 @@ public class PlannerOptions extends Data implements Cloneable{
         if( mForceReplan ){ sb.append( " --force-replan " ); }
 
         //the cleanup option
-        sb.append( " --cleanup " ).append( mCleanup.name() );
+        if ( mCleanup != null ) { sb.append( " --cleanup " ).append( mCleanup.name() );}
         //if( !mCleanup ){ sb.append(" --nocleanup "); }
 
 

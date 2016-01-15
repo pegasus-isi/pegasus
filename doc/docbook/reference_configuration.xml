@@ -4907,26 +4907,37 @@ pegasus.metrics.app.[arribute-name]       attribute-value
             </row>
 
             <row>
-              <entry><literallayout><emphasis role="bold"><emphasis
-                      role="bold">Property Key: </emphasis></emphasis>pegasus.file.cleanup.strategy<emphasis
-                    role="bold"><emphasis role="bold">
-Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
-Scope       :</emphasis> Properties
-<emphasis role="bold">Since       :</emphasis> 2.2-
-<emphasis role="bold">Type  </emphasis>      : String
-<emphasis role="bold">Default     :</emphasis> InPlace</literallayout></entry>
+              <entry>
+                  <literallayout><emphasis role="bold">Property Key: </emphasis>pegasus.file.cleanup.strategy
+<emphasis role="bold">Profile  Key: </emphasis>N/A
+<emphasis role="bold">Scope       : </emphasis>Properties
+<emphasis role="bold">Since       : </emphasis>2.2-
+<emphasis role="bold">Type        : </emphasis>String
+<emphasis role="bold">Default     : </emphasis>InPlace
+                  </literallayout>
+              </entry>
 
-              <entry><para>This property is used to select the strategy of how
-              the the cleanup nodes are added to the executable
-              workflow.</para><para><variablelist>
-                  <varlistentry>
-                    <term>InPlace</term>
-
-                    <listitem>
-                       This is the only mode available . 
-                    </listitem>
-                  </varlistentry>
-                </variablelist></para></entry>
+              <entry>
+                  <para>This property is used to select the strategy of how
+                  the cleanup nodes are added to the executable
+                  workflow.</para>
+                  <para>
+                    <variablelist>
+                        <varlistentry>
+                            <term>InPlace</term>
+                            <listitem>The default cleanup strategy. Adds cleanup 
+                            nodes per level of the workflow.</listitem>
+                        </varlistentry>
+                        <varlistentry>
+                            <term>Constraint</term>
+                            <listitem>Adds cleanup nodes to constraint the amount 
+                            of storage space used by a workflow.</listitem>
+                        </varlistentry>
+                    </variablelist>
+                  </para>
+                  <para>Note that this property is overridden by the --cleanup 
+                  option used in pegasus-plan.</para>
+              </entry>
             </row>
 
             <row>
@@ -5024,6 +5035,44 @@ Scope       :</emphasis> Properties
                     </listitem>
                   </varlistentry>
                 </variablelist></para></entry>
+            </row>
+            
+            <row>
+              <entry>
+                  <literallayout><emphasis role="bold">Property Key: </emphasis>pegasus.file.cleanup.constraint.*.maxspace
+<emphasis role="bold">Profile  Key: </emphasis>N/A
+<emphasis role="bold">Scope       : </emphasis>Properties
+<emphasis role="bold">Since       : </emphasis>4.6.0
+<emphasis role="bold">Type        : </emphasis>String
+<emphasis role="bold">Default     : </emphasis>10737418240
+                  </literallayout>
+              </entry>
+
+              <entry>
+                  <para>This property is used to set the maximum avaialble space
+                  (i.e., constraint) per site in Bytes. The * in the property 
+                  name denotes the name of the compute site. A * in the property 
+                  key is taken to mean all sites.</para>
+              </entry>
+            </row>
+            
+            <row>
+              <entry>
+                  <literallayout><emphasis role="bold">Property Key: </emphasis>pegasus.file.cleanup.constraint.deferStageIns
+<emphasis role="bold">Profile  Key: </emphasis>N/A
+<emphasis role="bold">Scope       : </emphasis>Properties
+<emphasis role="bold">Since       : </emphasis>4.6.0
+<emphasis role="bold">Type        : </emphasis>Boolean
+<emphasis role="bold">Default     : </emphasis>False
+                  </literallayout>
+              </entry>
+
+              <entry>
+                  <para>This property is used to determine whether stage in jobs
+                   may be deferred. If this property is set to False (default), 
+                   all stage in jobs will be marked as executing on the 
+                   current compute site.</para>
+              </entry>
             </row>
           </tbody>
         </tgroup>

@@ -815,7 +815,7 @@ public class CPlanner extends Executable{
         options.setSanitizePath( sanitizePath );
         options.setOriginalArgString( args );
         //we default to inplace cleanup unless overriden on command line
-        options.setCleanup(PlannerOptions.CLEANUP_OPTIONS.inplace );
+//        options.setCleanup(PlannerOptions.CLEANUP_OPTIONS.inplace );
         
         Getopt g = new Getopt("pegasus-plan",args,
                               "vqhfSnzpVr::aD:d:s:o:O:y:P:c:C:b:g:2:j:3:F:X:4:5:6:78:9:B:1:",
@@ -1205,7 +1205,7 @@ public class CPlanner extends Executable{
              append( "\n -B |--bundle       the shiwa bundle to be used. ( prototypical option )  "  ).
              append( "\n -c |--cache        comma separated list of replica cache files."  ).
              append( "\n --inherited-rc-files  comma separated list of replica files. Locations mentioned in these have a lower priority than the locations in the DAX file"  ).
-             append( "\n --cleanup          the cleanup strategy to use. Can be none|inplace|leaf . Defaults to inplace. ").
+             append( "\n --cleanup          the cleanup strategy to use. Can be none|inplace|leaf|constraint. Defaults to inplace. ").
              append( "\n -C |--cluster      comma separated list of clustering techniques to be applied to the workflow to "  ).
              append( "\n                    to cluster jobs in to larger jobs, to avoid scheduling overheads."  ).
              append( "\n --conf             the path to the properties file to use for planning. Defaults to pegasus.properties file in the current working directory "  ).

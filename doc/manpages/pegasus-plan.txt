@@ -216,6 +216,10 @@ required during execution. For example, an added cleanup node will
 remove input files for a particular compute job after the job has
 finished successfully. 
 +
+- *constraint* the planner adds in addition to leaf cleanup nodes,
+cleanup nodes to constraint the amount of storage space used by a
+workflow. The added cleanup node guarantees limits on disk usage.
++
 By default, for hierarchal workflows the inplace cleanup is always
 turned off. This is because the cleanup algorithm ( InPlace ) does not
 work across the sub workflows. For example, if you have two DAX jobs
