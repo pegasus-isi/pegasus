@@ -50,6 +50,8 @@ class UpdateCommand(LoggingCommand):
         _add_common_options(self)
         self.parser.add_option("-V","--version",action="store",type="string", 
             dest="pegasus_version",default=None, help = "Pegasus version")
+        self.parser.add_option("-a", "--all", action="store_true", dest="all",
+            default=False, help="Update all databases of completed workflows in MASTER.")
     
     def run(self):
         _set_log_level(self.options.debug)
@@ -66,8 +68,12 @@ class UpdateCommand(LoggingCommand):
                                  force=self.options.force)
             version = db_current_version(db, parse=True)
             _print_version(version)
+
+            if self.options.all:
+                all_workflows_db(db, pegasus_version=self.options.pegasus_version, force=self.options.force)
+
             db.close()
-            
+
         except (DBAdminError, connection.ConnectionError), e:
             log.error(e)
             exit(1)
@@ -83,6 +89,8 @@ class DowngradeCommand(LoggingCommand):
         _add_common_options(self)
         self.parser.add_option("-V","--version",action="store",type="string", 
             dest="pegasus_version",default=None, help = "Pegasus version.")
+        self.parser.add_option("-a", "--all", action="store_true", dest="all",
+            default=False, help="Downgrade all databases of completed workflows in MASTER.")
 
     def run(self):
         _set_log_level(self.options.debug)
@@ -100,6 +108,10 @@ class DowngradeCommand(LoggingCommand):
             db_downgrade(db, self.options.pegasus_version, self.options.force)
             version = db_current_version(db, parse=True)
             _print_version(version)
+
+            if self.options.all:
+                all_workflows_db(db, update=False, pegasus_version=self.options.pegasus_version, schema_check=False, force=self.options.force)
+
             db.close()
                 
         except (DBAdminError, connection.ConnectionError), e:

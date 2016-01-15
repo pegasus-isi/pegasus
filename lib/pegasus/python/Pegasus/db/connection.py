@@ -56,8 +56,21 @@ class DBKey:
 
 
 def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=None, force=False, props=None,
-            db_type=None, connect_args=None):
-    """ Connect to the provided URL database."""
+            db_type=None, connect_args=None, verbose=True):
+    """
+    Connect to the provided URL database.
+    :param dburi:
+    :param echo:
+    :param schema_check:
+    :param create:
+    :param pegasus_version:
+    :param force:
+    :param props:
+    :param db_type:
+    :param connect_args:
+    :param verbose:
+    :return:
+    """
     dburi = _parse_jdbc_uri(dburi)
     _validate(dburi)
 
@@ -86,7 +99,7 @@ def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=
     if create:
         try:
             from Pegasus.db.admin.admin_loader import db_create
-            db_create(dburi, engine, db, pegasus_version=pegasus_version, force=force)
+            db_create(dburi, engine, db, pegasus_version=pegasus_version, force=force, verbose=verbose)
 
         except exc.OperationalError, e:
             raise ConnectionError("%s (%s)" % (e.message, dburi))
