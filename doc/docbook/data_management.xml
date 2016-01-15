@@ -1818,12 +1818,20 @@ irodsPassword 'somesecretpassword'</programlisting>
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">inplace t</emphasis>he mapper adds cleanup
+        <para><emphasis role="bold">inplace</emphasis> the mapper adds cleanup
         nodes per level of the workflow in addition to leaf cleanup nodes. The
         nodes remove files no longer required during execution. For example,
         an added cleanup node will remove input files for a particular compute
         job after the job has finished successfully. This is the default
         value.</para>
+      </listitem>
+      
+      <listitem>
+        <para><emphasis role="bold">constraint</emphasis> the mapper adds cleanup
+        nodes to constraint the amount of storage space used by a workflow, in 
+        addition to leaf cleanup nodes. The nodes remove files no longer required 
+        during execution. The added cleanup node guarantees limits on disk 
+        usage.</para>        
       </listitem>
     </orderedlist>
 
@@ -1835,7 +1843,7 @@ irodsPassword 'somesecretpassword'</programlisting>
 
     <para>Behaviour of the cleanup strategies implemented in the Pegasus
     Mapper can be controlled by properties described <link
-    linkend="cleanup_props">here</link> .</para>
+    linkend="cleanup_props">here</link>.</para>
 
     <section>
       <title>Data Cleanup in Hierarchal Workflows</title>
