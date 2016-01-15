@@ -628,29 +628,23 @@ pegasus.data.configuration    HTCondorio</programlisting>
 
     <para>This section describes the various changes required in the site
     catalog for Pegasus to generate an executable workflow that uses gLite
-    blahp to directly submit to PBS on the local machine. This mode of
-    submission should only be used when the HTCondor on the submit host can
+    blahp to directly submit to the PBS or SGE batch system on the local machine.
+    This mode of submission should only be used when the HTCondor on the submit host can
     directly talk to scheduler running on the cluster.</para>
 
-    <para>For the job submissions to work from HTCondor to underlying PBS
-    correctly, you need to use the pbs_local_attributes.sh file distributed
-    with the Pegasus distribution in in the share/pegasus/htcondor/glite
-    directory. You need to copy this file into the bin directory of the glite
-    installation as part of the HTCondor installation on the submit node. The
-    HTCondor glite installation can be determined by running the command
-    condor_config_val GLITE_LOCATION. The Pegasus team currently only
-    provides a local attributes file for PBS.</para>
-
-    <programlisting>$ condor_config_val GLITE_LOCATION
-/usr/libexec/condor/glite
-
-$ ls  /usr/libexec/condor/glite/bin/pbs_local_submit_attributes.sh
--rwxrwxr-x 1 vahi isi-ar 1.8K May 29 17:34 /usr/libexec/condor/glite/bin/pbs_local_submit_attributes.sh</programlisting>
+    <para>For the job submissions to work from HTCondor to underlying batch system
+    correctly, you need to copy the <literal>pbs_local_submit_attributes.sh</literal> 
+    or <literal>sge_local_submit_attributes.sh</literal> file distributed
+    with the Pegasus distribution in <literal>share/pegasus/htcondor/glite</literal>
+    to the <literal>libexec/condor/glite/bin</literal> directory of the HTCondor
+    installation on the submit node. These scripts ensure that the profiles
+    associated with the job are translated into the correct job requirements
+    for the PBS/SGE batch system.</para>
 
     <para>It is recommended that the cluster that gLite talks to is designated
     as a separate compute site in the Pegasus site catalog. To tag a site as a
     gLite site the following two profiles need to be specified for the site in
-    the site catalog.</para>
+    the site catalog:</para>
 
     <orderedlist>
       <listitem>
@@ -662,12 +656,11 @@ $ ls  /usr/libexec/condor/glite/bin/pbs_local_submit_attributes.sh
       <listitem>
         <para><emphasis role="bold">condor</emphasis> profile <emphasis
         role="bold">grid_resource</emphasis> with value set to <emphasis
-        role="bold">pbs|sge</emphasis></para>
+        role="bold">pbs</emphasis> or <emphasis role="bold">sge</emphasis></para>
       </listitem>
     </orderedlist>
 
-    <para>An example site catalog entry for a glite site looks as follows in
-    the site catalog</para>
+    <para>An example site catalog entry for a glite PBS site looks like this:</para>
 
     <programlisting>
 &lt;sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
@@ -708,150 +701,126 @@ $ ls  /usr/libexec/condor/glite/bin/pbs_local_submit_attributes.sh
     <tip>
       <para>Starting 4.2.1, in the examples directory you can find a glite
       shared filesystem example that you can use to test out this
-      configuration</para>
+      configuration.</para>
     </tip>
 
+    <para>The <literal>+remote_cerequirements</literal> expression is constructed on the basis
+    of the profiles associated with job. The mappings for these profiles are documented in the
+    tables below. An example <literal>+remote_cerequirements</literal> classad expression in
+    the submit file looks like this:</para>
+
+    <programlisting><emphasis role="bold">+remote_cerequirements = JOBNAME=="preprocessj1" &amp;&amp; PASSENV==1 &amp;&amp; WALLTIME=="01:00:00" &amp;&amp; \
+ EXTRA_ARGUMENTS=="-N testjob -l walltime=01:23:45 -l nodes=2" &amp;&amp; \
+ MYENV=="CONDOR_JOBID=$(cluster).$(process),PEGASUS_DAG_JOB_ID=preprocess_j1,PEGASUS_HOME=/usr,PEGASUS_WF_UUID=aae14bc4-b2d1-4189-89ca-ccd99e30464f"</emphasis></programlisting>
+
+    <para>The job name and environment variables are automatically passed through to the
+    remote job.</para>
+
+    <note>
+        <para>You must install the <literal>pbs_local_submit_attributes.sh</literal>
+        or <literal>sge_local_submit_attributes.sh</literal> file or the
+        <literal>+remote_cerequirements</literal> will not be translated
+        properly into PBS/SGE job requirements.</para>
+    </note>
+
     <section id="glite_pbs">
-      <title>Setting PBS specific parameters for the jobs</title>
+      <title>Setting PBS job requirements</title>
 
-      <para>In order to pass resource requirements of the job to local PBS,
-      Pegasus generates a +remote_cerequirements classad in the job's HTCondor
-      submit file. The remote CE requirements are constructed from the
-      following profiles associated with the job. The profiles for a job are
-      derived from various sources</para>
-
-      <orderedlist>
-        <listitem>
-          <para>transformation catalog</para>
-        </listitem>
-
-        <listitem>
-          <para>site catalog</para>
-        </listitem>
-
-        <listitem>
-          <para>DAX</para>
-        </listitem>
-
-        <listitem>
-          <para>user properties</para>
-        </listitem>
-      </orderedlist>
-
-      <para>The following globus profiles if associated with the job are
-      picked up and translated to corresponding key in +remote_cerequirements
-      picked up by pbs_local_attributes.sh file that then is translated to
-      appropriate PBS parameters</para>
+      <para>The PBS job requirements are constructed based on the following
+      profiles:</para>
 
       <table>
-        <title>Table mapping translation of Pegasus Task Requirement Profiles
-        to corresponding PBS parameters</title>
+        <title>Mapping of Pegasus Profiles to PBS Job Requirements</title>
 
         <tgroup cols="4">
           <thead>
             <row>
-              <entry align="center"><para>Pegasus Profile
-              Keys</para><para>(Set by User in Pegasus
-              Configuration)</para></entry>
-
-              <entry align="center">KEY in +remote_cerequirements
+              <entry align="center">Profile Key</entry>
+              <entry align="center">Key in <literal>+remote_cerequirements</literal>
               classad<para>(Generated by Pegasus in the Condor Submit
               File)</para></entry>
-
               <entry>Corresponding PBS Parameter in qsub file<para>(Generated
-              by pbs_local_attributes.sh)</para></entry>
-
+              by <literal>pbs_local_submit_attributes.sh</literal>)</para></entry>
               <entry>Description</entry>
             </row>
           </thead>
-
           <tbody>
             <row>
-              <entry>cores</entry>
-
+              <entry>pegasus.cores</entry>
               <entry>CORES</entry>
-
-              <entry>-</entry>
-
-              <entry>For PBS, the planner translates the CORES value to
-              corresponding value for nodes and ppn. Either you should set
-              <orderedlist>
-                  <listitem>
-                    <para>Pegasus Profile Keys nodes and ppn OR</para>
-                  </listitem>
-
-                  <listitem>
-                    <para>Pegasus Profile Key CORES AND (ppn OR nodes)</para>
-                  </listitem>
-                </orderedlist></entry>
+              <entry>n/a</entry>
+              <entry>Pegasus uses cores to calculate either nodes
+              or ppn. If cores and ppn are specified, then nodes is computed.
+              If cores and nodes is specified, then ppn is computed. If both
+              nodes and ppn are specified, then cores is ignored. The resulting
+              values for nodes and ppn are used to set the job requirements.
+              If neither cores nor ppn is specified, then no requirements are
+              set in the PBS submit script.</entry>
             </row>
-
             <row>
-              <entry>nodes</entry>
-
+              <entry>pegasus.nodes</entry>
               <entry>NODES</entry>
-
-              <entry>nodes</entry>
-
+              <entry>-l nodes</entry>
               <entry>This specifies the number of nodes that the job should
               use.</entry>
             </row>
-
             <row>
-              <entry>ppn</entry>
-
+              <entry>pegasus.ppn</entry>
               <entry>PROCS</entry>
-
-              <entry>ppn</entry>
-
-              <entry>This specifies the number of processors per node (ppn=M)
-              that the job should use. PBS treats a processor core as a
-              processor, so a system with eight cores per compute node can
-              have "ppn=8" as its maximum ppn request. If you want to explicitly
-              use the Myrinet network, this value should be "8:myri". For
-              infiniband, it will be "8:IB".</entry>
+              <entry>-l ppn</entry>
+              <entry>This specifies the number of processors per node
+              that the job should use.</entry>
             </row>
-
             <row>
-              <entry>runtime</entry>
-
+              <entry>pegasus.runtime</entry>
               <entry>WALLTIME</entry>
-
-              <entry>walltime</entry>
-
-              <entry>The maximum runtime for the job in minutes. should be an
-              integer value. Pegasus converts it to hh:mm:ss format</entry>
+              <entry>-l walltime</entry>
+              <entry>This specifies the maximum runtime for the job in minutes.
+                  It should be an integer value. Pegasus converts it to the "hh:mm:ss"
+                  format required by PBS.</entry>
             </row>
-
             <row>
-              <entry>memory</entry>
-
+              <entry>pegasus.memory</entry>
               <entry>PER_PROCESS_MEMORY</entry>
-
-              <entry>pmem</entry>
-
+              <entry>-l pmem</entry>
               <entry>This specifies the maximum amount of physical memory used
-              by any process in the job. For example, if the job would run
-              four processes and each would use up to 2 GB (gigabytes) of
-              memory, then this value should be set to 2gb. The corresponding
+              by any process in the job. For example, if the job runs
+              four processes and each requires up to 2 GB (gigabytes) of
+              memory, then this value should be set to "2gb". The corresponding
               PBS directive would be "#PBS -l pmem=2gb".</entry>
             </row>
-
             <row>
-              <entry>glite.arguments</entry>
-
+              <entry>globus.queue</entry>
+              <entry>n/a</entry>
+              <entry>-q</entry>
+              <entry>This specifies the queue for the job. This profile does
+              not have a corresponding value in <literal>+remote_cerequirements</literal>.
+              Instead, Pegasus sets the <literal>batch_queue</literal> key in the
+              Condor submit file, which gLite/blahp translates into the appropriate
+              PBS requirement.</entry>
+            </row>
+            <row>
+              <entry>globus.totalmemory</entry>
+              <entry>TOTAL_MEMORY</entry>
+              <entry>-l mem</entry>
+              <entry>The total memory that your job requires. It is usually better
+              to just specify the memory profile.</entry>
+            </row>
+            <row>
+              <entry>pegasus.glite.arguments</entry>
               <entry>EXTRA_ARGUMENTS</entry>
-
-              <entry>the value is passed through and added to the qsub file
-              prefixed only by #PBS</entry>
-
+              <entry>The value is passed through and added to the qsub file
+              prefixed only by "#PBS"</entry>
               <entry>This specifies the extra arguments that must appear in
-              the local PBS generated script for a job, when running workflows
-              on a local cluster with submissions through Glite. This is
-              useful when you want to pass through special options to
-              underlying LRMS such as PBS e.g. you can set value "-l
-              walltime=01:23:45 -l nodes=2" to specify your job's resource
-              requirements.</entry>
+              the local PBS generated script for a job. These requirements
+              override any requirements specified using other profiles. This
+              is useful when you want to pass through special options to the
+              underlying batch system. For example, on the USC cluster we use
+              resource properties to specify the network type. If you want to
+              use the Myrinet network, you must specify something like
+              "-l nodes=8:ppn=2:myri". For infiniband, you would use something
+              like "-l nodes=8:ppn=2:IB". In that case, both the nodes and
+              ppn profiles would be effectively ignored.</entry>
             </row>
           </tbody>
         </tgroup>
@@ -862,165 +831,54 @@ $ ls  /usr/libexec/condor/glite/bin/pbs_local_submit_attributes.sh
         later.</para>
       </tip>
 
-      <para>The following HTCondor profiles if associated with the job are
-      picked up and translated to corresponding glite key</para>
-
-      <orderedlist>
-        <listitem>
-          <para>priority -&gt; PRIORITY</para>
-        </listitem>
-      </orderedlist>
-
-      <para>All the env profiles are translated to MYENV</para>
-
-      <table>
-        <title>Table mapping translation of Globus profiles to corresponding
-        PBS parameters</title>
-
-        <tgroup cols="4">
-          <thead>
-            <row>
-              <entry align="center">Globus Profile Key</entry>
-
-              <entry align="center">KEY in +remote_cerequirements
-              classad</entry>
-
-              <entry>Corresponding PBS Parameter in qsub file</entry>
-
-              <entry>Description</entry>
-            </row>
-          </thead>
-
-          <tbody>
-            <row>
-              <entry>queue</entry>
-
-              <entry>value batch_queue key in the submit file.</entry>
-
-              <entry>-q</entry>
-
-              <entry>This specifies the queue on which to run the job.</entry>
-            </row>
-
-            <row>
-              <entry>totalmemory</entry>
-
-              <entry>TOTAL_MEMORY</entry>
-
-              <entry>mem</entry>
-
-              <entry>The total memory that your job requires. usually, better
-              to just specify the maxmemory profile.</entry>
-            </row>
-          </tbody>
-        </tgroup>
-      </table>
-
-      <para>The remote_cerequirements expression is constructed on the basis
-      of the profiles associated with job . An example +remote_cerequirements
-      classad expression in the submit file is listed below</para>
-
-      <programlisting><emphasis role="bold">+remote_cerequirements = JOBNAME=="preprocessj1" &amp;&amp; PASSENV==1 &amp;&amp; WALLTIME=="01:00:00" &amp;&amp; PRIORITY==20 &amp;&amp; \
- EXTRA_ARGUMENTS=="-N testjob -l walltime=01:23:45 -l nodes=2" &amp;&amp; \
- MYENV=="CONDOR_JOBID=$(cluster).$(process),PEGASUS_DAG_JOB_ID=preprocess_j1,PEGASUS_HOME=/usr,PEGASUS_WF_UUID=aae14bc4-b2d1-4189-89ca-ccd99e30464f"</emphasis></programlisting>
-
-      <note>
-        <para>The above translation only works if you use the
-        pbs_local_attributes.sh file from the Pegasus distribution. The values
-        specified for glite.arguments overrides what are constructed on basis
-        of globus profiles, when the job is actually submitted.</para>
-      </note>
     </section>
 
     <section id="glite_sge">
-      <title>Setting SGE specific parameters for the jobs</title>
+      <title>Setting SGE job requirements</title>
 
-      <para>In order to pass resource requirements of the job to local SGE,
-      Pegasus generates a +remote_cerequirements classad in the job's HTCondor
-      submit file. The remote CE requirements are constructed from the
-      following profiles associated with the job. The profiles for a job are
-      derived from various sources</para>
-
-      <orderedlist>
-        <listitem>
-          <para>transformation catalog</para>
-        </listitem>
-
-        <listitem>
-          <para>site catalog</para>
-        </listitem>
-
-        <listitem>
-          <para>DAX</para>
-        </listitem>
-
-        <listitem>
-          <para>user properties</para>
-        </listitem>
-      </orderedlist>
-
-      <para>The following globus profiles if associated with the job are
-      picked up and translated to corresponding key in +remote_cerequirements
-      picked up by pbs_local_attributes.sh file that then is translated to
-      appropriate PBS parameters</para>
+      <para>The SGE job requirements are constructed based on the following
+      profiles:</para>
 
       <table>
-        <title>Table mapping translation of Pegasus Task Requirement Profiles
-        to corresponding SGE parameters</title>
+        <title>Mapping of Pegasus Profiles to SGE Job Requirements</title>
 
         <tgroup cols="4">
           <thead>
             <row>
-              <entry align="center">Pegasus Profile Key<para>(Set by User in
-              Pegasus Configuration)</para></entry>
-
-              <entry align="center">KEY in +remote_cerequirements
-              classad<para>(Generated by Pegasus in the Condor Submit
-              File)</para></entry>
-
-              <entry>Corresponding SGE Parameter in qsub file<para>(Generated
-              by sge_local_submit_attributes.sh )</para></entry>
-
+              <entry align="center">Profile Key</entry>
+              <entry align="center">Key in <literal>+remote_cerequirements</literal>
+                classad<para>(Generated by Pegasus in the Condor Submit File)</para>
+                </entry>
+              <entry>SGE Parameter in qsub file<para>(Generated
+                by <literal>sge_local_submit_attributes.sh</literal>)</para></entry>
               <entry>Description</entry>
             </row>
           </thead>
-
           <tbody>
             <row>
-              <entry>cores</entry>
-
+              <entry>pegasus.cores</entry>
               <entry>CORES</entry>
-
               <entry>value passed to the parallel environment defined to be
-              used . By default, our script has parallel environment set to
-              -pe ompi</entry>
-
+              used. By default, <literal>sge_local_submit_attributes.sh</literal>
+              sets the parallel environment to "-pe ompi"</entry>
               <entry>The number of processors requried. How, the processors
               are distributed over nodes is dependant on how the parallel
               environment has been configured in SGE.</entry>
             </row>
-
             <row>
-              <entry>runtime</entry>
-
+              <entry>pegasus.runtime</entry>
               <entry>WALLTIME</entry>
-
-              <entry>h_rt</entry>
-
+              <entry>-l h_rt</entry>
               <entry>The maximum runtime for the job in minutes. should be an
               integer value. Pegasus converts it to hh:mm:ss format. From SGE
-              documentation: h_rt is hard runtime hh::min::ss (i.e. 12:00:00)
-              . Requests a queue with a hard runtime in excess of the time
+              documentation: h_rt is hard runtime hh::min::ss (i.e. 12:00:00).
+              Requests a queue with a hard runtime in excess of the time
               specified.</entry>
             </row>
-
             <row>
-              <entry>memory</entry>
-
+              <entry>pegasus.memory</entry>
               <entry>PER_PROCESS_MEMORY</entry>
-
-              <entry>h_vmem</entry>
-
+              <entry>-l h_vmem</entry>
               <entry>This specifies the maximum amount of physical memory used
               by any process in the job. From SGE documentation: specify the
               amount of memory required (e.g. 3G or 3500M) # (NOTE: This is
@@ -1029,18 +887,26 @@ $ ls  /usr/libexec/condor/glite/bin/pbs_local_submit_attributes.sh
               amount of virtual memory available on every host assigned to the
               job.</entry>
             </row>
-
             <row>
-              <entry>glite.arguments</entry>
-
+              <entry>globus.queue</entry>
+              <entry>n/a</entry>
+              <entry>-q</entry>
+              <entry>This specifies the queue for the job. This profile does
+              not have a corresponding value in <literal>+remote_cerequirements</literal>.
+              Instead, Pegasus sets the <literal>batch_queue</literal> key in the
+              Condor submit file, which gLite/blahp translates into the appropriate
+              SGE requirement.</entry>
+            </row>
+            <row>
+              <entry>pegasus.glite.arguments</entry>
               <entry>EXTRA_ARGUMENTS</entry>
-
-              <entry>the value is passed through and added to the qsub file
-              prefixed only by #?</entry>
-
+              <entry>The value is passed through and added to the qsub file
+              prefixed only by "#?"</entry>
               <entry>This specifies the extra arguments that must appear in
-              the local SGE generated script for a job, when running workflows
-              on a local cluster with submissions through Glite.</entry>
+              the local SGE generated script for a job. These requirements
+              override any requirements specified using other profiles. This
+              is useful when you want to pass through special options to the
+              underlying batch system.</entry>
             </row>
           </tbody>
         </tgroup>
@@ -1051,73 +917,17 @@ $ ls  /usr/libexec/condor/glite/bin/pbs_local_submit_attributes.sh
         later.</para>
       </tip>
 
-      <para>The following HTCondor profiles if associated with the job are
-      picked up and translated to corresponding glite key</para>
-
-      <orderedlist>
-        <listitem>
-          <para>priority -&gt; PRIORITY</para>
-        </listitem>
-      </orderedlist>
-
-      <para>All the env profiles are translated to MYENV</para>
-
-      <table>
-        <title>Table mapping translation of Globus profiles to corresponding
-        SGE parameters</title>
-
-        <tgroup cols="4">
-          <thead>
-            <row>
-              <entry align="center">Globus Profile Key</entry>
-
-              <entry align="center">KEY in +remote_cerequirements
-              classad</entry>
-
-              <entry>Corresponding SGE Parameter in qsub file</entry>
-
-              <entry>Description</entry>
-            </row>
-          </thead>
-
-          <tbody>
-            <row>
-              <entry>queue</entry>
-
-              <entry>value batch_queue key in the submit file.</entry>
-
-              <entry>-q</entry>
-
-              <entry>This specifies the queue on which to run the job.</entry>
-            </row>
-          </tbody>
-        </tgroup>
-      </table>
-
-      <para>The remote_cerequirements expression is constructed on the basis
-      of the profiles associated with job . An example +remote_cerequirements
-      classad expression in the submit file is listed below</para>
-
-      <programlisting><emphasis role="bold">+remote_cerequirements = JOBNAME=="preprocessj1" &amp;&amp; PASSENV==1 &amp;&amp; WALLTIME=="01:00:00" &amp;&amp; PRIORITY==20 &amp;&amp; \
- EXTRA_ARGUMENTS=="-N testjob -l walltime=01:23:45 -l nodes=2" &amp;&amp; \
- MYENV=="CONDOR_JOBID=$(cluster).$(process),PEGASUS_DAG_JOB_ID=preprocess_j1,PEGASUS_HOME=/usr,PEGASUS_WF_UUID=aae14bc4-b2d1-4189-89ca-ccd99e30464f"</emphasis></programlisting>
-
-      <note>
-        <para>The above translation only works if you use the
-        sge_local_attributes.sh file from the Pegasus distribution. The values
-        specified for glite.arguments overrides what are constructed on basis
-        of globus profiles, when the job is actually submitted.</para>
-      </note>
     </section>
 
     <section>
-      <title>Specifying directory for the jobs</title>
+      <title>Specifying a remote directory for the job</title>
 
-      <para>gLite blahp does not follow the remote_initialdir or initialdir
-      classad directives. Hence, all the jobs that have this style applied
-      don't have a remote directory specified in the submit directory.
-      Instead, Pegasus relies on kickstart to change to the working directory
-      when the job is launched on the remote node.</para>
+      <para>gLite/blahp does not follow the <literal>remote_initialdir</literal>
+      or <literal>initialdir</literal> classad directives. Therefore, all the jobs
+      that have the <literal>glite</literal> style applied don't have a remote
+      directory specified in the submit script. Instead, Pegasus uses Kickstart
+      to change to the working directory when the job is launched on the remote
+      system.</para>
     </section>
   </section>
 
