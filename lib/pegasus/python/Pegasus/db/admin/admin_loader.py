@@ -4,7 +4,11 @@ import logging
 import datetime
 import glob
 import shutil
+import time
+import sys
+import warnings
 
+from Pegasus.db import connection
 from Pegasus.db.schema import *
 from sqlalchemy.orm.exc import *
 
@@ -55,7 +59,7 @@ def get_class(version, db):
 
 
 #-------------------------------------------------------------------
-def db_create(dburi, engine, db, pegasus_version=None, force=False):
+def db_create(dburi, engine, db, pegasus_version=None, force=False, verbose=True):
     """ Create/Update the Pegasus database from the schema """
     table_names = engine.table_names(connection=db)
     db_version.create(engine, checkfirst=True)
@@ -64,7 +68,8 @@ def db_create(dburi, engine, db, pegasus_version=None, force=False):
     if len(table_names) == 0:
         engine.execute(db_version.insert(), version=CURRENT_DB_VERSION,
                 version_timestamp=datetime.datetime.now().strftime("%s"))
-        print "Created Pegasus database in: %s" % dburi
+        if verbose:
+            print "Created Pegasus database in: %s" % dburi
     else:
         v = _discover_version(db, pegasus_version=pegasus_version, force=force, verbose=False)
     
@@ -72,7 +77,7 @@ def db_create(dburi, engine, db, pegasus_version=None, force=False):
         metadata.create_all(engine)
     except OperationalError, e:
         raise DBAdminError(e)
-    if v > 0:
+    if verbose and v > 0:
         print "Your database has been updated."
             
 
@@ -114,7 +119,7 @@ def db_verify(db, pegasus_version=None, force=False):
         raise DBAdminError("Your database is NOT compatible with version %s" % get_compatible_version(version))
 
 
-def db_downgrade(db, pegasus_version=None, force=False):
+def db_downgrade(db, pegasus_version=None, force=False, verbose=True):
     """ Downgrade the database. """
     if not check_table_exists(db, db_version):
         raise DBAdminError("Unable to determine database version.")
@@ -166,10 +171,16 @@ def db_downgrade(db, pegasus_version=None, force=False):
         if actual_version == version:
             break
 
-    print "Your database was successfully downgraded."
+    if verbose:
+        print "Your database was successfully downgraded."
 
 
 def parse_pegasus_version(pegasus_version=None):
+    """
+
+    :param pegasus_version:
+    :return:
+    """
     version = None
     if pegasus_version == 0 or pegasus_version:
         for key in COMPATIBILITY:
@@ -182,6 +193,80 @@ def parse_pegasus_version(pegasus_version=None):
     if not version:
         version = CURRENT_DB_VERSION
     return version
+
+
+def all_workflows_db(db, update=True, pegasus_version=None, schema_check=True, force=False):
+    """
+    Update/Downgrade all completed workflow databases listed in master_workflow table.
+    :param db:
+    :param pegasus_version:
+    :param schema_check:
+    :param force:
+    :return:
+    """
+    db_urls = db.query(DashboardWorkflow.db_url).join(DashboardWorkflowstate).filter(DashboardWorkflowstate.state=="WORKFLOW_TERMINATED").all()
+
+    # files
+    file_prefix = "%s-dbadmin" % time.strftime("%Y%m%dT%H%M%S")
+    f_out = open("%s.out" % file_prefix, 'w')
+    f_err = open("%s.err" % file_prefix, 'w')
+
+    counts = {
+        'total': len(db_urls),
+        'success': 0,
+        'failed': 0,
+        'unable_to_connect': 0,
+    }
+    if update:
+        msg = ['updating', 'Updated']
+    else:
+        msg = ['downgrading', 'Downgraded']
+
+    print ""
+    print "Verifying and %s workflow databases:" % msg[0]
+    i = 0
+    for db_url in db_urls:
+        dburi = db_url[0]
+        log.debug("%s '%s'..." % (msg[0], dburi))
+        i += 1
+        sys.stdout.write("\r%d/%d" % (i, counts['total']))
+        sys.stdout.flush()
+        try:
+            if update:
+                con = connection.connect(dburi, pegasus_version=pegasus_version, schema_check=schema_check, create=True, force=force, verbose=False)
+            else:
+                con = connection.connect(dburi, schema_check=schema_check, create=False, verbose=False)
+                metadata.clear()
+                warnings.simplefilter("ignore")
+                metadata.reflect(bind=con.get_bind())
+                db_downgrade(con, pegasus_version=pegasus_version, force=force, verbose=False)
+            con.close()
+            f_out.write("[SUCCESS] %s\n" % dburi)
+            counts['success'] += 1
+        except connection.ConnectionError, e:
+            if "unable to open database file" in str(e):
+                f_err.write("[UNABLE TO CONNECT] %s\n" % dburi)
+                counts['unable_to_connect'] += 1
+                log.debug(e)
+            else:
+                f_err.write("[ERROR] %s\n" % dburi)
+                counts['failed'] += 1
+                log.debug(e)
+        except Exception, e:
+            f_err.write("[ERROR] %s\n" % dburi)
+            counts['failed'] += 1
+            log.debug(e)
+
+    f_out.close()
+    f_err.close()
+
+    print "\n\nSummary:"
+    print "  Verified/%s: %s/%s" % (msg[1], counts['success'], counts['total'])
+    print "  Failed: %s/%s" % (counts['failed'], counts['total'])
+    print "  Unable to connect: %s/%s" % (counts['unable_to_connect'], counts['total'])
+    print "\nLog files:"
+    print "  %s.out (Succeeded operations)" % file_prefix
+    print "  %s.err (Failed operations)" % file_prefix
 
 
 ################################################################################

@@ -162,7 +162,7 @@ class Version(BaseVersion):
         log.info("Cleaning up...")
         self._drop_table("rc_pfn")
         self._drop_table("rc_meta")
-        self._drop_table("wf_files")
+        self._drop_table("workflow_files")
         self._drop_table("rc_lfn_v5")
         self.db.commit()
 

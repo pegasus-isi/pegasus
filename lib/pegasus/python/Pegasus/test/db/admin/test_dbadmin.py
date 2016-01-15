@@ -80,6 +80,7 @@ class TestDBAdmin(unittest.TestCase):
         _silentremove(fn)
         dburi2 = "sqlite:///%s" % fn
         db2 = connection.connect(dburi2, create=True)
+        _remove(fn)
 
 
     # def test_minimum_downgrade(self):
