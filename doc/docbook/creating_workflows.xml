@@ -394,7 +394,7 @@ D1/f.3 file://$input/D1/f.3 site="local"</programlisting>
 
           <mediaobject>
             <imageobject>
-              <imagedata fileref="images/jdbcrc-schema.png"/>
+              <imagedata fileref="images/jdbcrc-schema.png" width="4in"/>
             </imageobject>
           </mediaobject>
         </figure>

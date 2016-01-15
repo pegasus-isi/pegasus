@@ -42,7 +42,15 @@ Commands
     Updates the database to the latest or a given Pegasus version provided with 
     the *-V* or *--version* option. If a database already exists, it will 
     create a backup (SQLite only) of the current database in the database folder
-    as a 3-digit integer (e.g., workflow.db.000).
+    as a 3-digit integer (e.g., workflow.db.000). The *-a* or *--all* option
+    will also update databases from completed workflows in the MASTER database.
+
+*downgrade*::
+    Downgrades the database to the previous or a given Pegasus version provided
+    with the *-V* or *--version* option. If a database already exists, it will
+    create a backup (SQLite only) of the current database in the database folder
+    as a 3-digit integer (e.g., workflow.db.000). The *-a* or *--all* option
+    will also downgrade databases from completed workflows in the MASTER database.
 
 *check*::
     Verifies if the database is updated to the latest or a given Pegasus version 
@@ -116,5 +124,7 @@ $ pegasus-db-admin update -s /path/to/submitdir -t JDBCRC
 
 Authors
 -------
+Rafael Ferreira da Silva <rafsilva@isi.edu>
+
 Pegasus Team <http://pegasus.isi.edu>
 
