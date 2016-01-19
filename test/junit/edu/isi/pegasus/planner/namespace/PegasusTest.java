@@ -263,6 +263,39 @@ public class PegasusTest {
         testKey( Pegasus.WORKER_NODE_DIRECTORY_KEY, "dummy", Namespace.VALID_KEY );
         mLogger.logEventCompletion();
         
+        mLogger.logEventStart( "test.namespace.Pegasus", "set", Integer.toString(set++) );
+        testKey( Pegasus.WORKER_NODE_DIRECTORY_KEY, "dummy", Namespace.VALID_KEY );
+        mLogger.logEventCompletion();
+        
+        
+        //test resource requirement keys
+        mLogger.logEventStart( "test.namespace.Pegasus", "set", Integer.toString(set++) );
+        testKey( Pegasus.RUNTIME_KEY, "dummy", Namespace.VALID_KEY );
+        mLogger.logEventCompletion();
+        
+        mLogger.logEventStart( "test.namespace.Pegasus", "set", Integer.toString(set++) );
+        testKey( Pegasus.CORES_KEY, "dummy", Namespace.VALID_KEY );
+        mLogger.logEventCompletion();
+        
+        mLogger.logEventStart( "test.namespace.Pegasus", "set", Integer.toString(set++) );
+        testKey( Pegasus.DISKSPACE_KEY, "dummy", Namespace.VALID_KEY );
+        mLogger.logEventCompletion();
+        
+        mLogger.logEventStart( "test.namespace.Pegasus", "set", Integer.toString(set++) );
+        testKey( Pegasus.NODES_KEY, "dummy", Namespace.VALID_KEY );
+        mLogger.logEventCompletion();
+        
+        mLogger.logEventStart( "test.namespace.Pegasus", "set", Integer.toString(set++) );
+        testKey( Pegasus.PPN_KEY, "dummy", Namespace.VALID_KEY );
+        mLogger.logEventCompletion();
+        
+        mLogger.logEventStart( "test.namespace.Pegasus", "set", Integer.toString(set++) );
+        testKey( Pegasus.MEMORY_KEY, "dummy", Namespace.VALID_KEY );
+        mLogger.logEventCompletion();
+        
+        mLogger.logEventStart( "test.namespace.Pegasus", "set", Integer.toString(set++) );
+        testKey( Pegasus.QUEUE_KEY, "dummy", Namespace.VALID_KEY );
+        mLogger.logEventCompletion();
         
         //deprecated keys
         mLogger.logEventStart( "test.namespace.Pegasus", "set", Integer.toString(set++) );
