@@ -624,27 +624,80 @@ pegasus.data.configuration    HTCondorio</programlisting>
   </section>
 
   <section id="glite">
-    <title>Local Cluster Using Glite</title>
+    <title>PBS Cluster Using Glite/BLAH</title>
 
-    <para>This section describes the various changes required in the site
-    catalog for Pegasus to generate an executable workflow that uses gLite
-    blahp to directly submit to the PBS or SGE batch system on the local machine.
-    This mode of submission should only be used when the HTCondor on the submit host can
-    directly talk to scheduler running on the cluster.</para>
+    <para>This section describes the configuration required for Pegasus to
+    generate an executable workflow that uses glite/blahp to submit
+    to a PBS or PBS-like batch system on a local or remote cluster.</para>
 
-    <para>For the job submissions to work from HTCondor to underlying batch system
-    correctly, you need to copy the <literal>pbs_local_submit_attributes.sh</literal> 
-    or <literal>sge_local_submit_attributes.sh</literal> file distributed
-    with the Pegasus distribution in <literal>share/pegasus/htcondor/glite</literal>
+    <note>
+        <para>Glite is the old name for BLAH (or BLAHP). BLAH binaries are
+        distributed with HTCondor as the "batch_gahp". For historical reasons,
+        we often use the term "glite", and you will see "glite" and "batch_gahp"
+        references in HTCondor, but all of them refer to the same thing, which
+        is now properly called BLAH. Clear?</para>
+    </note>
+
+    <tip>
+        <para>This guide covers PBS and SGE, but glite also works with other
+        PBS-like batch systems, including LSF, SLURM, MOAB, and others. If you
+        need help configuring Pegasus and HTCondor to work with one of these
+        systems, please contact pegasus-support@isi.edu. For the sake of
+        brevity, the text below will say "PBS", but you should read that as
+        "PBS or PBS-like system such as SGE, LSF, SLURM, MOAB and others".</para>
+    </tip>
+
+    <para>Glite needs to be able to talk directly with the batch system running
+    on the cluster using <literal>qsub</literal>, <literal>qstat</literal> or
+    equivalent commands. If you can submit jobs to PBS from the workflow submit
+    host running Pegasus and HTCondor, then the local HTCondor can be used to
+    submit jobs via glite (with some modifications described below). If you need
+    to SSH to a different cluster head node in order to submit jobs to the
+    PBS system, then you need to install the HTCondor binaries on the head node
+    in order to use glite. HTCondor can use the "remote_gahp" to submit jobs
+    via SSH from the workflow submit node to the cluster head node. Note that,
+    in the remote/ssh case, you don't need to RUN HTCondor on the cluster head
+    node, you just need to install the binaries there--the only thing that will
+    run on the cluster head node is glite. Alternatively, you can just install
+    BLAH directly (you can get the source code from the
+    <ulink url="https://github.com/prelz/BLAH">GitHub page</ulink>--good luck!).
+    </para>
+
+    <tip>
+        <para>There is also a way to do remote job submission via glite even
+        if you cannot SSH to the PBS head node. This might be the case, for
+        example, if the head node requires 2-factor authentication (e.g. RSA
+        tokens). This approach is called the "Reverse GAHP" and you can find out
+        more information on the <ulink url="https://github.com/juve/rvgahp">GitHub
+        page</ulink>. All it requires is SSH from the cluster head node back
+        to the workflow submit host.</para>
+    </tip>
+
+    <para>In either case, you need to make a small modification to the HTCondor
+    (or BLAH) installation that will be used to submit jobs to the PBS system.
+    You need to copy the <literal>pbs_local_submit_attributes.sh</literal> 
+    and <literal>sge_local_submit_attributes.sh</literal> files distributed
+    with Pegasus in <literal>share/pegasus/htcondor/glite</literal>
     to the <literal>libexec/condor/glite/bin</literal> directory of the HTCondor
-    installation on the submit node. These scripts ensure that the profiles
-    associated with the job are translated into the correct job requirements
-    for the PBS/SGE batch system.</para>
+    installation on the host that will submit jobs to PBS. Alternatively, you
+    would put these scripts in the <literal>bin</literal> directory of your BLAH
+    installation if you went that route. These scripts translate the profiles
+    associated with the job into the correct job requirements for the PBS
+    system.</para>
 
-    <para>It is recommended that the cluster that gLite talks to is designated
-    as a separate compute site in the Pegasus site catalog. To tag a site as a
-    gLite site the following two profiles need to be specified for the site in
-    the site catalog:</para>
+    <para>If you are using SSH to submit jobs to a remote cluster, then you also
+    need to set up an SSH key that enables you to log into the remote cluster
+    head node without a password. There are other options that require more
+    complex configurations (e.g. ssh-agent) if you are not comfortable with
+    using a passwordless SSH key. As always, contact pegasus-support@isi.edu
+    if you need help.</para>
+
+    <para>In order to configure a workflow to use glite, you need to do two
+    things. First, set <literal>pegasus.condor.arguments.quote = false</literal>
+    in your properties file. This is required for Pegasus to generate a
+    correctly-formatted arguments expression due to a bug in HTCondor
+    argument handling for glite. Second, create an entry in your site catalog
+    for the PBS cluster and set the following profiles:</para>
 
     <orderedlist>
       <listitem>
@@ -656,18 +709,28 @@ pegasus.data.configuration    HTCondorio</programlisting>
       <listitem>
         <para><emphasis role="bold">condor</emphasis> profile <emphasis
         role="bold">grid_resource</emphasis> with value set to <emphasis
-        role="bold">pbs</emphasis> or <emphasis role="bold">sge</emphasis></para>
+        role="bold">pbs</emphasis> or <emphasis role="bold">sge</emphasis>
+        for local submission, or <emphasis role="bold">pbs user@host</emphasis>
+        or <emphasis role="bold">sge user@host</emphasis> for remote submission
+        via SSH.</para>
       </listitem>
     </orderedlist>
 
-    <para>An example site catalog entry for a glite PBS site looks like this:</para>
+    <note>
+        <para>There is an alternative way to acccomplish the remote, SSH
+        configuration using "pegasus.style = ssh" and grid gateways
+        in the site catalog. See the <link linkend="bosco">BOSCO section</link>
+        for more information.</para>
+    </note>
+
+    <para>An example site catalog entry for a local glite PBS site looks like this:</para>
 
     <programlisting>
 &lt;sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd"
              version="4.0"&gt;
-    
+
     &lt;site  handle="local" arch="x86" os="LINUX"&gt;
         &lt;directory type="shared-scratch" path="/lfs/shared-scratch/glite-sharedfs-example/work"&gt;
             &lt;file-server operation="all" url="file:///lfs/local-scratch/glite-sharedfs-example/work"/&gt;
@@ -678,7 +741,7 @@ pegasus.data.configuration    HTCondorio</programlisting>
     &lt;/site&gt;
 
     &lt;site  handle="local-pbs" arch="x86" os="LINUX"&gt;
-        
+
         &lt;!-- the following is a shared directory shared amongst all the nodes in the cluster --&gt;
         &lt;directory type="shared-scratch" path="/lfs/glite-sharedfs-example/local-pbs/shared-scratch"&gt;
             &lt;file-server operation="all" url="file:///lfs/glite-sharedfs-example/local-pbs/shared-scratch"/&gt;
@@ -690,13 +753,11 @@ pegasus.data.configuration    HTCondorio</programlisting>
 
         &lt;profile namespace="condor" key="grid_resource"&gt;pbs&lt;/profile&gt;
         &lt;profile namespace="condor" key="batch_queue"&gt;batch&lt;/profile&gt;
-        &lt;profile namespace="globus" key="maxwalltime"&gt;30000&lt;/profile&gt;
+        &lt;profile namespace="pegasus" key="runtime"&gt;30000&lt;/profile&gt;
     &lt;/site&gt;
 
-
 &lt;/sitecatalog&gt;
-
-</programlisting>
+    </programlisting>
 
     <tip>
       <para>Starting 4.2.1, in the examples directory you can find a glite
@@ -704,24 +765,24 @@ pegasus.data.configuration    HTCondorio</programlisting>
       configuration.</para>
     </tip>
 
-    <para>The <literal>+remote_cerequirements</literal> expression is constructed on the basis
-    of the profiles associated with job. The mappings for these profiles are documented in the
-    tables below. An example <literal>+remote_cerequirements</literal> classad expression in
-    the submit file looks like this:</para>
+    <para>You probably don't need to know this, but Pegasus generates a
+    <literal>+remote_cerequirements</literal> expression for an HTCondor glite job
+    based on the Pegasus profiles associated with the job. This expression is
+    passed to glite and used by the <literal>pbs_local_submit_attributes.sh</literal> or
+    <literal>sge_local_submit_attributes.sh</literal> script to generate the
+    correct PBS or SGE submit script. An example <literal>+remote_cerequirements</literal>
+    classad expression in the HTCondor submit file looks like this:</para>
 
     <programlisting><emphasis role="bold">+remote_cerequirements = JOBNAME=="preprocessj1" &amp;&amp; PASSENV==1 &amp;&amp; WALLTIME=="01:00:00" &amp;&amp; \
  EXTRA_ARGUMENTS=="-N testjob -l walltime=01:23:45 -l nodes=2" &amp;&amp; \
  MYENV=="CONDOR_JOBID=$(cluster).$(process),PEGASUS_DAG_JOB_ID=preprocess_j1,PEGASUS_HOME=/usr,PEGASUS_WF_UUID=aae14bc4-b2d1-4189-89ca-ccd99e30464f"</emphasis></programlisting>
 
-    <para>The job name and environment variables are automatically passed through to the
-    remote job.</para>
+    <para>The job name and environment variables are automatically passed through
+    to the remote job.</para>
 
-    <note>
-        <para>You must install the <literal>pbs_local_submit_attributes.sh</literal>
-        or <literal>sge_local_submit_attributes.sh</literal> file or the
-        <literal>+remote_cerequirements</literal> will not be translated
-        properly into PBS/SGE job requirements.</para>
-    </note>
+    <para>The following sections document the mapping of Pegasus profiles to 
+    PBS and SGE job requirements as implemented by Pegasus, HTCondor, and glite.
+    </para>
 
     <section id="glite_pbs">
       <title>Setting PBS job requirements</title>
@@ -790,7 +851,7 @@ pegasus.data.configuration    HTCondorio</programlisting>
               PBS directive would be "#PBS -l pmem=2gb".</entry>
             </row>
             <row>
-              <entry>globus.queue</entry>
+              <entry>condor.batch_queue</entry>
               <entry>n/a</entry>
               <entry>-q</entry>
               <entry>This specifies the queue for the job. This profile does
@@ -804,7 +865,7 @@ pegasus.data.configuration    HTCondorio</programlisting>
               <entry>TOTAL_MEMORY</entry>
               <entry>-l mem</entry>
               <entry>The total memory that your job requires. It is usually better
-              to just specify the memory profile.</entry>
+              to just specify the pegasus.memory profile.</entry>
             </row>
             <row>
               <entry>pegasus.glite.arguments</entry>
@@ -888,7 +949,7 @@ pegasus.data.configuration    HTCondorio</programlisting>
               job.</entry>
             </row>
             <row>
-              <entry>globus.queue</entry>
+              <entry>condor.batch_queue</entry>
               <entry>n/a</entry>
               <entry>-q</entry>
               <entry>This specifies the queue for the job. This profile does
@@ -929,12 +990,13 @@ pegasus.data.configuration    HTCondorio</programlisting>
       to change to the working directory when the job is launched on the remote
       system.</para>
     </section>
+
   </section>
 
-  <section id="bosco_submission">
-    <title>Remote Cluster using BOSCO and SSH submissions</title>
+  <section id="bosco">
+    <title>Remote Cluster using BOSCO and SSH</title>
 
-    <para><ulink url="http://bosco.opensciencegrid.org/about/"> BOSCO</ulink>
+    <para><ulink url="http://bosco.opensciencegrid.org/about/">BOSCO</ulink>
     enables users to submit jobs to remote clusters using SSH. This section
     describes how to specify a site catalog entry for a site to which jobs can
     be submitted over SSH. To tag a site for SSH submission, the following
@@ -961,7 +1023,7 @@ pegasus.data.configuration    HTCondorio</programlisting>
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd"
              version="4.0"&gt;
-    
+
     &lt;site  handle="USC_HPCC_Bosco" arch="x86_64" os="LINUX"&gt;
 
         &lt;!-- Specify the service information as grid gateways. This should match what Bosco provided when the cluster
@@ -974,17 +1036,14 @@ pegasus.data.configuration    HTCondorio</programlisting>
             &lt;file-server operation="all" url="scp://username@hpc-login2.usc.edu/home/rcf-40/tmp"/&gt;
         &lt;/directory&gt;
 
-        &lt;!-- SSH is the style to use for Bosco SSH submits --&gt;
+        &lt;!-- SSH is the style to use for SSH submits --&gt;
         &lt;profile namespace="pegasus" key="style"&gt;ssh&lt;/profile&gt;
 
-        &lt;!-- Bosco is using the grid universe, which means the globus
-             namespace can be used to control the jobs --&gt;
-        &lt;profile namespace="globus" key="queue"&gt;default&lt;/profile&gt;
-        &lt;profile namespace="globus" key="maxwalltime"&gt;30&lt;/profile&gt;
+        &lt;!-- This mode uses the same profiles used for glite to control the jobs --&gt;
+        &lt;profile namespace="condor" key="batch_queue"&gt;default&lt;/profile&gt;
+        &lt;profile namespace="pegasus" key="runtime"&gt;30&lt;/profile&gt;
 
     &lt;/site&gt;
-
-
 
 &lt;/sitecatalog&gt;
 
