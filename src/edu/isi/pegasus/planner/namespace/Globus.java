@@ -67,6 +67,7 @@ public class Globus extends Namespace {
             mRSLToPegasus.put( Globus.COUNT_KEY, Pegasus.CORES_KEY );
             mRSLToPegasus.put( Globus.HOST_COUNT_KEY, Pegasus.NODES_KEY );
             mRSLToPegasus.put( Globus.XCOUNT_KEY, Pegasus.PPN_KEY );
+            mRSLToPegasus.put( Globus.QUEUE_KEY, Pegasus.QUEUE_KEY );
         }
         return mRSLToPegasus;
     }
@@ -97,6 +98,11 @@ public class Globus extends Namespace {
      * Key indicating the maximum memory used.
      */
     public static final String MAX_MEMORY_KEY = "maxmemory";
+    
+    /**
+     * Key indicating the queue to be used.
+     */
+    public static final String QUEUE_KEY = "queue";
 
     /**
      * The table that maps the various globus profile keys to their aggregator
@@ -334,7 +340,7 @@ public class Globus extends Namespace {
                 break;
 
             case 'q':
-                if (key.compareTo("queue") == 0) {
+                if (key.compareTo( Globus.QUEUE_KEY ) == 0) {
                     res = VALID_KEY;
                 }
                 else {

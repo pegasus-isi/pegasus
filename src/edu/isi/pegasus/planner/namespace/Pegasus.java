@@ -448,6 +448,11 @@ public class Pegasus extends Namespace {
     public static final String MEMORY_KEY = "memory";
     
     /**
+     * The queue to use.
+     */
+    public static final String QUEUE_KEY = "queue";
+    
+    /**
      * Key indicating data configuration property. 
      */
     public static final String DATA_CONFIGURATION_KEY = "data.configuration";
@@ -477,8 +482,6 @@ public class Pegasus extends Namespace {
      * Static Handle to the delimiter aggregator.
      */
     private static Aggregator SUCCESS_MESSAGE_AGGREGATOR = new UniqueMerge();
-   
-    
 
     /**
      * The name of the implementing namespace. It should be one of the valid
@@ -747,6 +750,15 @@ public class Pegasus extends Namespace {
                 }
                 break;
 
+            case 'q':
+                if( key.compareTo( QUEUE_KEY ) == 0 ){
+                    res = VALID_KEY;
+                }
+                else{
+                    res = UNKNOWN_KEY;
+                }
+                break;
+            
             case 'r':
                 if( key.compareTo( RUNTIME_KEY ) == 0 ){
                     res = VALID_KEY;

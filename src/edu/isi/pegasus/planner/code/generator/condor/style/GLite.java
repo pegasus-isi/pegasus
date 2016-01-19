@@ -50,7 +50,7 @@ import edu.isi.pegasus.planner.namespace.Pegasus;
  * As part of applying the style to the job, this style adds the following
  * classads expressions to the job description
  * <pre>
- *      batch_queue  - value picked up from globus profile queue or can be
+ *      batch_queue  - value picked up from a ( Globus or Pegasus profile queue)  OR can be
  *                     set directly as a Condor profile named batch_queue
  *      +remote_cerequirements - See below
  * </pre>
@@ -215,14 +215,14 @@ public class GLite extends Abstract {
         //the planner to be able to set it to true
         //job.condorVariables.construct( Condor.TRANSFER_EXECUTABLE_KEY, "false" );
 
+        /* convert some condor keys and globus keys to remote ce requirements
+         +remote_cerequirements = blah */
+        job.condorVariables.construct( "+remote_cerequirements", getCERequirementsForJob( job, gridResource) );
+
         /* retrieve some keys from globus rsl and convert to gLite format */
         if( job.globusRSL.containsKey( "queue" ) ){
             job.condorVariables.construct(  "batch_queue" , (String)job.globusRSL.get( "queue" ) );
         }
-
-        /* convert some condor keys and globus keys to remote ce requirements
-         +remote_cerequirements = blah */
-        job.condorVariables.construct( "+remote_cerequirements", getCERequirementsForJob( job, gridResource) );
         
         /*
          PM-934 construct environment accordingly
