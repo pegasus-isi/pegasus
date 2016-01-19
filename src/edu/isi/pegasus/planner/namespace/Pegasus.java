@@ -742,7 +742,8 @@ public class Pegasus extends Namespace {
                     key.compareTo( PMC_REQUEST_MEMORY_KEY ) == 0 ||
                     key.compareTo( PMC_REQUEST_CPUS_KEY ) == 0 ||
                     key.compareTo( PMC_PRIORITY_KEY ) == 0 ||
-                    key.compareTo( PMC_TASK_ARGUMENTS) == 0 ){
+                    key.compareTo( PMC_TASK_ARGUMENTS) == 0 ||
+                    key.compareTo( PPN_KEY ) == 0 ){
                     res = VALID_KEY;
                 }
                 else{

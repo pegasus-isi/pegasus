@@ -274,27 +274,27 @@ public class PegasusTest {
         mLogger.logEventCompletion();
         
         mLogger.logEventStart( "test.namespace.Pegasus", "set", Integer.toString(set++) );
-        testKey( Pegasus.CORES_KEY, "dummy", Namespace.VALID_KEY );
+        testKey( Pegasus.CORES_KEY, "2", Namespace.VALID_KEY );
         mLogger.logEventCompletion();
         
         mLogger.logEventStart( "test.namespace.Pegasus", "set", Integer.toString(set++) );
-        testKey( Pegasus.DISKSPACE_KEY, "dummy", Namespace.VALID_KEY );
+        testKey( Pegasus.DISKSPACE_KEY, "12", Namespace.VALID_KEY );
         mLogger.logEventCompletion();
         
         mLogger.logEventStart( "test.namespace.Pegasus", "set", Integer.toString(set++) );
-        testKey( Pegasus.NODES_KEY, "dummy", Namespace.VALID_KEY );
+        testKey( Pegasus.NODES_KEY, "3", Namespace.VALID_KEY );
         mLogger.logEventCompletion();
         
         mLogger.logEventStart( "test.namespace.Pegasus", "set", Integer.toString(set++) );
-        testKey( Pegasus.PPN_KEY, "dummy", Namespace.VALID_KEY );
+        testKey( Pegasus.PPN_KEY, "1", Namespace.VALID_KEY );
         mLogger.logEventCompletion();
         
         mLogger.logEventStart( "test.namespace.Pegasus", "set", Integer.toString(set++) );
-        testKey( Pegasus.MEMORY_KEY, "dummy", Namespace.VALID_KEY );
+        testKey( Pegasus.MEMORY_KEY, "100", Namespace.VALID_KEY );
         mLogger.logEventCompletion();
         
         mLogger.logEventStart( "test.namespace.Pegasus", "set", Integer.toString(set++) );
-        testKey( Pegasus.QUEUE_KEY, "dummy", Namespace.VALID_KEY );
+        testKey( Pegasus.QUEUE_KEY, "pegasusQ", Namespace.VALID_KEY );
         mLogger.logEventCompletion();
         
         //deprecated keys
