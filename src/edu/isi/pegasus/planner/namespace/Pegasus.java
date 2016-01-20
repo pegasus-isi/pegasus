@@ -463,6 +463,10 @@ public class Pegasus extends Namespace {
      */
     public static final String GLITE_ARGUMENTS_KEY = "glite.arguments";
     
+    /**
+     * Profile key to determine condor quoting for a job.
+     */
+    public static final String CONDOR_QUOTE_ARGUMENTS_KEY = "condor.arguments.quote";
     
     //credential related constant keys
     private static final String S3CFG_FILE_VARIABLE = S3CFG.S3CFG_FILE_VARIABLE.toLowerCase();
@@ -628,16 +632,17 @@ public class Pegasus extends Namespace {
 
             case 'c':
                 if (
-                    (key.compareTo(BUNDLE_KEY) == 0) ||
+                    (key.compareTo( BUNDLE_KEY) == 0) ||
                     (key.compareTo( COLLAPSE_KEY ) == 0) ||
                     (key.compareTo( CHANGE_DIR_KEY ) == 0) ||
                     (key.compareTo( CHAIN_STAGE_IN_KEY ) == 0) ||
                     (key.compareTo( MAX_RUN_TIME ) == 0) ||
-                    (key.compareTo(CREATE_AND_CHANGE_DIR_KEY ) == 0 ) ||
+                    (key.compareTo( CREATE_AND_CHANGE_DIR_KEY ) == 0 ) ||
                     (key.compareTo( CLUSTER_ARGUMENTS) == 0 ) ||
                     (key.compareTo( CORES_KEY ) == 0 ) ||
-                    (key.compareTo(Pegasus.CHECKPOINT_TIME_KEY) == 0 )||
-                    (key.compareTo(Pegasus.DEPRECATED_CHECKPOINT_TIME_KEY) == 0 )    ) {
+                    (key.compareTo( Pegasus.CHECKPOINT_TIME_KEY) == 0 )||
+                    (key.compareTo( Pegasus.DEPRECATED_CHECKPOINT_TIME_KEY) == 0 )  ||
+                    (key.compareTo( Pegasus.CONDOR_QUOTE_ARGUMENTS_KEY) == 0 )    ) {
                     res = VALID_KEY;
                 }
                 else if(key.compareTo(DEPRECATED_CHANGE_DIR_KEY) == 0 ||

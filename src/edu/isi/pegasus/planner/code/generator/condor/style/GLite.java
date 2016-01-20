@@ -168,6 +168,9 @@ public class GLite extends Abstract {
                 mLogger.log( "Setting pegasus profile" + Pegasus.CHANGE_DIR_KEY + " to true for site " + site.getSiteHandle(),
                              LogManager.DEBUG_MESSAGE_LEVEL );
                 pegasusProfiles.checkKeyInNS( Pegasus.CHANGE_DIR_KEY, "true" );
+                mLogger.log( "Setting pegasus profile" + Pegasus.CONDOR_QUOTE_ARGUMENTS_KEY + " to false for site " + site.getSiteHandle(),
+                             LogManager.DEBUG_MESSAGE_LEVEL );
+                pegasusProfiles.checkKeyInNS( Pegasus.CONDOR_QUOTE_ARGUMENTS_KEY, "false" );
             }
         }
     }

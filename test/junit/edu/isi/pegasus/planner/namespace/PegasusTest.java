@@ -318,6 +318,10 @@ public class PegasusTest {
         testKey(Pegasus.DEPRECATED_RUNTIME_KEY, "dummy", Namespace.DEPRECATED_KEY );
         mLogger.logEventCompletion();
         
+        //other keys
+        mLogger.logEventStart( "test.namespace.Pegasus", "set", Integer.toString(set++) );
+        testKey(Pegasus.CONDOR_QUOTE_ARGUMENTS_KEY, "true", Namespace.VALID_KEY );
+        mLogger.logEventCompletion();
     }
     
     @After

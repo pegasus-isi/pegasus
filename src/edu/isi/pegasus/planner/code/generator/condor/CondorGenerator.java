@@ -1571,7 +1571,15 @@ public class CondorGenerator extends Abstract {
 
         //put the arguments as appropriate condor profile
         if( args != null && args.length() > 0){
-            if( mProps.useCondorQuotingForArguments() && args != null){
+            //PM-1037 consider both the profile value and default value
+            //from properties to see if we need to quote arguments for the job
+            boolean quote = mProps.useCondorQuotingForArguments(); //default from properties if not specified is true
+            String profileKey = Pegasus.CONDOR_QUOTE_ARGUMENTS_KEY;
+            if( job.vdsNS.containsKey( profileKey ) ){
+                quote = quote && job.vdsNS.getBooleanValue( profileKey );
+            }
+            
+            if( quote && args != null){
                 try {
                     mLogger.log("Unquoted arguments are " + args,
                                  LogManager.DEBUG_MESSAGE_LEVEL);
