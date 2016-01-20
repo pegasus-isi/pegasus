@@ -35,7 +35,7 @@ class StampedeWorkflowStatistics(SQLAlchemyInit):
     def initialize(self, root_wf_uuid = None, root_wf_id = None):
         if root_wf_uuid is None and root_wf_id is None:
             self.log.error('Either root_wf_uuid or root_wf_id is required')
-            return False
+            raise ValueError('Either root_wf_uuid or root_wf_id is required')
 
         if root_wf_uuid == '*' or root_wf_id == '*':
             self.all_workflows = True
@@ -58,17 +58,17 @@ class StampedeWorkflowStatistics(SQLAlchemyInit):
         for workflow in result:
             if workflow.root_wf_id != workflow.wf_id:
                 self.log.error('Only root level workflows are supported %s', workflow.wf_uuid)
-                return False
+                raise ValueError('Only root level workflows are supported %s', workflow.wf_uuid)
 
             self._root_wf_id.append(workflow.wf_id)
             self._root_wf_uuid.append(workflow.wf_uuid)
 
         if root_wf_uuid and root_wf_uuid != '*' and len(root_wf_uuid) != len(self._root_wf_uuid):
             self.log.error('Some workflows were not found')
-            return False
+            raise ValueError('Some workflows were not found')
         elif root_wf_id and root_wf_id != '*' and len(root_wf_id) != len(self._root_wf_id):
             self.log.error('Some workflows were not found')
-            return False
+            raise ValueError('Some workflows were not found')
 
         # Initialize filters with default value
         self.set_job_filter()
