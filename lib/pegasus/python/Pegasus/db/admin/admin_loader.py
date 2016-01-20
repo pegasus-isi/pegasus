@@ -10,6 +10,7 @@ import warnings
 
 from Pegasus.db import connection
 from Pegasus.db.schema import *
+from sqlalchemy import func
 from sqlalchemy.orm.exc import *
 
 log = logging.getLogger(__name__)
@@ -204,7 +205,15 @@ def all_workflows_db(db, update=True, pegasus_version=None, schema_check=True, f
     :param force:
     :return:
     """
-    db_urls = db.query(DashboardWorkflow.db_url).join(DashboardWorkflowstate).filter(DashboardWorkflowstate.state=="WORKFLOW_TERMINATED").all()
+    data = db.query(DashboardWorkflow.db_url,
+                       DashboardWorkflowstate.state,
+                       func.max(DashboardWorkflowstate.timestamp)
+                       ).join(DashboardWorkflowstate).group_by(DashboardWorkflow.wf_id).all()
+
+    db_urls = []
+    for d in data:
+        if d[1] == "WORKFLOW_TERMINATED":
+            db_urls.append(d[0])
 
     # files
     file_prefix = "%s-dbadmin" % time.strftime("%Y%m%dT%H%M%S")
@@ -225,8 +234,7 @@ def all_workflows_db(db, update=True, pegasus_version=None, schema_check=True, f
     print ""
     print "Verifying and %s workflow databases:" % msg[0]
     i = 0
-    for db_url in db_urls:
-        dburi = db_url[0]
+    for dburi in db_urls:
         log.debug("%s '%s'..." % (msg[0], dburi))
         i += 1
         sys.stdout.write("\r%d/%d" % (i, counts['total']))
