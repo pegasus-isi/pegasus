@@ -160,21 +160,37 @@ public class GLite extends Abstract {
      */
     public void apply( SiteCatalogEntry site ) throws CondorStyleException{
         Namespace pegasusProfiles = site.getProfiles().get(Profiles.NAMESPACES.pegasus);
-        String key = Pegasus.STYLE_KEY;
-        if( pegasusProfiles.containsKey( key )){
-            String style = (String) pegasusProfiles.get( key );
+        String styleKey = Pegasus.STYLE_KEY;
+        if( pegasusProfiles.containsKey( styleKey )){
+            String style = (String) pegasusProfiles.get( styleKey );
             if( style.equals( Pegasus.GLITE_STYLE ) ){
                 // add change.dir key for it always
-                mLogger.log( "Setting pegasus profile" + Pegasus.CHANGE_DIR_KEY + " to true for site " + site.getSiteHandle(),
+                String key = Pegasus.CHANGE_DIR_KEY;
+                this.setProfileIfNotPresent(pegasusProfiles, key , "true") ;
+                mLogger.log( "Set pegasus profile " +  key  + " to " + pegasusProfiles.get(key) + " for site " + site.getSiteHandle(),
                              LogManager.DEBUG_MESSAGE_LEVEL );
-                pegasusProfiles.checkKeyInNS( Pegasus.CHANGE_DIR_KEY, "true" );
-                mLogger.log( "Setting pegasus profile" + Pegasus.CONDOR_QUOTE_ARGUMENTS_KEY + " to false for site " + site.getSiteHandle(),
+                
+                key = Pegasus.CONDOR_QUOTE_ARGUMENTS_KEY;
+                this.setProfileIfNotPresent(pegasusProfiles, key, "false") ;
+                mLogger.log( "Set pegasus profile " +  key  + " to " + pegasusProfiles.get(key) + " for site " + site.getSiteHandle(),
                              LogManager.DEBUG_MESSAGE_LEVEL );
-                pegasusProfiles.checkKeyInNS( Pegasus.CONDOR_QUOTE_ARGUMENTS_KEY, "false" );
+                
             }
         }
     }
 
+    /**
+     * Convenience method to set a profile if there is no matching key already
+     * 
+     * @param profiles
+     * @param key
+     * @param value 
+     */
+    protected void setProfileIfNotPresent( Namespace profiles, String key, String value ){
+        if( !profiles.containsKey(key) ){
+            profiles.checkKeyInNS( key, value );
+        }
+    }
 
 
     /**
