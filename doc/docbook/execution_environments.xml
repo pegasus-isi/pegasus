@@ -624,45 +624,37 @@ pegasus.data.configuration    HTCondorio</programlisting>
   </section>
 
   <section id="glite">
-    <title>PBS Cluster Using Glite/BLAH</title>
+    <title>Local PBS Cluster Using Glite</title>
 
     <para>This section describes the configuration required for Pegasus to
-    generate an executable workflow that uses glite/blahp to submit to a PBS
-    or PBS-like batch system on a local or remote cluster.</para>
+    generate an executable workflow that uses glite to submit
+    to a PBS or PBS-like batch system on a local cluster.</para>
 
     <note>
-      <para>Glite is the old name for BLAH (or BLAHP). BLAH binaries are
-      distributed with HTCondor as the "batch_gahp". For historical reasons,
-      we often use the term "glite", and you will see "glite" and "batch_gahp"
-      references in HTCondor, but all of them refer to the same thing, which
-      is now properly called BLAH. Clear?</para>
+        <para>Glite is the old name for BLAH (or BLAHP). BLAH binaries are
+        distributed with HTCondor as the "batch_gahp". For historical reasons,
+        we often use the term "glite", and you will see "glite" and "batch_gahp"
+        references in HTCondor, but all of them refer to the same thing, which
+        has been renamed BLAH.</para>
     </note>
 
     <tip>
-      <para>This guide covers PBS and SGE, but glite also works with other
-      PBS-like batch systems, including LSF, SLURM, MOAB, and others. If you
-      need help configuring Pegasus and HTCondor to work with one of these
-      systems, please contact pegasus-support@isi.edu. For the sake of
-      brevity, the text below will say "PBS", but you should read that as "PBS
-      or PBS-like system such as SGE, LSF, SLURM, MOAB and others".</para>
+        <para>This guide covers PBS and SGE, but glite also works with other
+        PBS-like batch systems, including LSF, SLURM, and others. If you
+        need help configuring Pegasus and HTCondor to work with one of these
+        systems, please contact pegasus-support@isi.edu. For the sake of
+        brevity, the text below will say "PBS", but you should read that as
+        "PBS or PBS-like system such as SGE, LSF, SLURM and others".</para>
     </tip>
 
-    <para>Glite needs to be able to talk directly with the batch system
-    running on the cluster using <literal>qsub</literal>,
-    <literal>qstat</literal> or equivalent commands. If you can submit jobs to
-    PBS from the workflow submit host running Pegasus and HTCondor, then the
-    local HTCondor can be used to submit jobs via glite (with some
-    modifications described below). If you need to SSH to a different cluster
-    head node in order to submit jobs to the PBS system, then you need to
-    install the HTCondor binaries on the head node in order to use glite.
-    HTCondor can use the "remote_gahp" to submit jobs via SSH from the
-    workflow submit node to the cluster head node. Note that, in the
-    remote/ssh case, you don't need to RUN HTCondor on the cluster head node,
-    you just need to install the binaries there--the only thing that will run
-    on the cluster head node is glite. Alternatively, you can just install
-    BLAH directly (you can get the source code from the <ulink
-    url="https://github.com/prelz/BLAH">GitHub page</ulink>--good
-    luck!).</para>
+    <para>Glite needs to be able to talk directly with the batch system running
+    on the cluster using <literal>qsub</literal>, <literal>qstat</literal> or
+    equivalent commands. If you can submit jobs to PBS from the workflow submit
+    host running Pegasus and HTCondor, then the local HTCondor can be used to
+    submit jobs via glite (with some modifications described below). If you need
+    to SSH to a different cluster head node in order to submit jobs to the
+    PBS system, then you need to use BOSCO, which is <link linkend="bosco">
+    documented in another section</link>.</para>
 
     <tip>
       <para>There is also a way to do remote job submission via glite even if
@@ -675,25 +667,15 @@ pegasus.data.configuration    HTCondorio</programlisting>
       host.</para>
     </tip>
 
-    <para>In either case, you need to make a small modification to the
-    HTCondor (or BLAH) installation that will be used to submit jobs to the
-    PBS system. You need to copy the
-    <literal>pbs_local_submit_attributes.sh</literal> and
-    <literal>sge_local_submit_attributes.sh</literal> files distributed with
-    Pegasus in <literal>share/pegasus/htcondor/glite</literal> to the
-    <literal>libexec/condor/glite/bin</literal> directory of the HTCondor
-    installation on the host that will submit jobs to PBS. Alternatively, you
-    would put these scripts in the <literal>bin</literal> directory of your
-    BLAH installation if you went that route. These scripts translate the
-    profiles associated with the job into the correct job requirements for the
-    PBS system.</para>
-
-    <para>If you are using SSH to submit jobs to a remote cluster, then you
-    also need to set up an SSH key that enables you to log into the remote
-    cluster head node without a password. There are other options that require
-    more complex configurations (e.g. ssh-agent) if you are not comfortable
-    with using a passwordless SSH key. As always, contact
-    pegasus-support@isi.edu if you need help.</para>
+    <para>In either case, you need to make a small modification to the HTCondor
+    glite installation that will be used to submit jobs to the PBS system.
+    You need to copy the <literal>pbs_local_submit_attributes.sh</literal> 
+    and <literal>sge_local_submit_attributes.sh</literal> files distributed
+    with Pegasus in <literal>share/pegasus/htcondor/glite</literal>
+    to the <literal>libexec/condor/glite/bin</literal> directory of the HTCondor
+    installation on the host that will submit jobs to PBS. These scripts
+    translate the profiles associated with the job into the correct job
+    requirements for the PBS system.</para>
 
     <para>In order to configure a workflow to use glite, you need to do two
     things. First, set <literal>pegasus.condor.arguments.quote =
@@ -712,22 +694,12 @@ pegasus.data.configuration    HTCondorio</programlisting>
       <listitem>
         <para><emphasis role="bold">condor</emphasis> profile <emphasis
         role="bold">grid_resource</emphasis> with value set to <emphasis
-        role="bold">pbs</emphasis> or <emphasis role="bold">sge</emphasis> for
-        local submission, or <emphasis role="bold">pbs user@host</emphasis> or
-        <emphasis role="bold">sge user@host</emphasis> for remote submission
-        via SSH.</para>
+        role="bold">pbs</emphasis> or <emphasis role="bold">sge</emphasis>.
+        </para>
       </listitem>
     </orderedlist>
 
-    <note>
-      <para>There is an alternative way to acccomplish the remote, SSH
-      configuration using "pegasus.style = ssh" and grid gateways in the site
-      catalog. See the <link linkend="bosco">BOSCO section</link> for more
-      information.</para>
-    </note>
-
-    <para>An example site catalog entry for a local glite PBS site looks like
-    this:</para>
+    <para>An example site catalog entry for a local glite PBS site looks like this:</para>
 
     <programlisting>
 &lt;sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
@@ -1062,12 +1034,25 @@ pegasus.data.configuration    HTCondorio</programlisting>
   </section>
 
   <section id="bosco">
-    <title>Remote Cluster using BOSCO and SSH</title>
+    <title>Remote PBS Cluster using BOSCO and SSH</title>
 
     <para><ulink url="http://bosco.opensciencegrid.org/about/">BOSCO</ulink>
-    enables users to submit jobs to remote clusters using SSH. This section
-    describes how to specify a site catalog entry for a site to which jobs can
-    be submitted over SSH. To tag a site for SSH submission, the following
+    enables HTCondor to submit jobs to remote PBS clusters using SSH. This section
+    describes how to specify a site catalog entry for a site that has been
+    configured for BOSCO job submissions.</para>
+
+    <para>First, the site needs to be setup for BOSCO according to the
+    <ulink url="https://twiki.opensciencegrid.org/bin/view/CampusGrids/BoSCO">
+    BOSCO documentation</ulink>. BOSCO uses glite to submit jobs to the PBS
+    scheduler on the remote cluster. You will also need to configure the glite
+    installed for BOSCO on the remote system according to the documentation in
+    the <link linkend="glite">glite section</link> in order for the mapping of
+    Pegasus profiles to PBS job requirements to work. In particular, you will
+    need to install the <literal>pbs_local_submit_attributes.sh</literal> and
+    <literal>sge_local_submit_attributes.sh</literal> scripts in the correct
+    place in the glite <literal>bin</literal> directory.</para>
+
+    <para>Second, to tag a site for SSH submission, the following
     profiles need to be specified for the site in the site catalog:</para>
 
     <orderedlist>
@@ -1079,12 +1064,11 @@ pegasus.data.configuration    HTCondorio</programlisting>
 
       <listitem>
         <para>Specify the service information as grid gateways. This should
-        match what Bosco provided when the cluster was set up.</para>
+        match what BOSCO provided when the cluster was set up.</para>
       </listitem>
     </orderedlist>
 
-    <para>An example site catalog entry for a BOSCO site looks as follows in
-    the site catalog</para>
+    <para>An example site catalog entry for a BOSCO site looks like this:</para>
 
     <programlisting>
 &lt;sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
@@ -1094,7 +1078,7 @@ pegasus.data.configuration    HTCondorio</programlisting>
 
     &lt;site  handle="USC_HPCC_Bosco" arch="x86_64" os="LINUX"&gt;
 
-        &lt;!-- Specify the service information as grid gateways. This should match what Bosco provided when the cluster
+        &lt;!-- Specify the service information as grid gateways. This should match what BOSCO provided when the cluster
              was set up. --&gt;
         &lt;grid type="batch" contact="username@hpc-login2.usc.edu" scheduler="PBS" jobtype="compute"/&gt;
         &lt;grid type="batch" contact="username@hpc-login2.usc.edu" scheduler="PBS" jobtype="auxillary"/&gt;
