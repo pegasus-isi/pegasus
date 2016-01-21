@@ -2031,7 +2031,7 @@ irodsPassword 'somesecretpassword'</programlisting>
     <section id="metadata_task">
       <title>Task Level Metadata</title>
 
-      <para>Metadata for the tasks is picked up from </para>
+      <para>Metadata for the tasks is picked up from</para>
 
       <itemizedlist>
         <listitem>
@@ -2113,7 +2113,7 @@ irodsPassword 'somesecretpassword'</programlisting>
     <section id="metadata_file">
       <title>File Level Metadata</title>
 
-      <para>Metadata for the files is picked up from </para>
+      <para>Metadata for the files is picked up from</para>
 
       <itemizedlist>
         <listitem>
@@ -2184,9 +2184,8 @@ irodsPassword 'somesecretpassword'</programlisting>
 f.a file://$PWD/production_200.conf site="local" source="replica_catalog"</programlisting>
     </section>
 
-    <section id="metadata_tc">
-      <title id="metadata_auto">Automatically Generated Metadata
-      attributes</title>
+    <section id="metadata_auto">
+      <title>Automatically Generated Metadata attributes</title>
 
       <para>Pegasus captures certain metadata attributes as output files are
       generated and associates them at the file level in the database.
