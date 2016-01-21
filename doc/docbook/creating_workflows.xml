@@ -1432,6 +1432,8 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
     <programlisting> ${FOO}  - will be expanded by Pegasus
  $FOO    - will NOT be expanded by Pegasus.</programlisting>
 
+    <para>Also variable names are case sensitive.</para>
+
     <para>Some examples of variable expansion are illustrated below:</para>
 
     <itemizedlist>
