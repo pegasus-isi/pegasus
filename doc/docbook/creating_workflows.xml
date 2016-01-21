@@ -1422,8 +1422,17 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
     and the catalog files along the same lines as bash variable expansion
     works. This is often useful, when you want paths in your catalogs or
     profile values in the DAX to be picked up from the environment. An error
-    is thrown if a variable cannot be expanded. Some examples of variable
-    expansion are illustrated below:</para>
+    is thrown if a variable cannot be expanded. </para>
+
+    <para>To specify a variable that needs to be expanded, the syntax is
+    ${VARIABLE_NAME} , similar to BASH variable expansion. An important thing
+    to note is that the variable names need to be enclosed in curly braces.
+    For example</para>
+
+    <programlisting> ${FOO}  - will be expanded by Pegasus
+ $FOO    - will NOT be expanded by Pegasus.</programlisting>
+
+    <para>Some examples of variable expansion are illustrated below:</para>
 
     <itemizedlist>
       <listitem>
@@ -1497,6 +1506,6 @@ tr pegasus::keg{
       </listitem>
     </itemizedlist>
 
-    <para> </para>
+    <para/>
   </section>
 </chapter>
