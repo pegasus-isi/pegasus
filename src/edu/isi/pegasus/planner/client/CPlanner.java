@@ -260,8 +260,9 @@ public class CPlanner extends Executable{
             plannerException = rte;
             //catch all runtime exceptions including our own that
             //are thrown that may have chained causes
-            cPlanner.log( convertException(rte, cPlanner.mLogger.getLevel() ),
-                         LogManager.FATAL_MESSAGE_LEVEL );
+            //cPlanner.log( convertException(rte, cPlanner.mLogger.getLevel() ),
+            //             LogManager.FATAL_MESSAGE_LEVEL );
+            cPlanner.log( rte.getMessage(), LogManager.FATAL_MESSAGE_LEVEL );
             result = 1;
         }
         catch ( Exception e ) {
@@ -332,8 +333,8 @@ public class CPlanner extends Executable{
         
         // warn about non zero exit code
         if ( result != 0 ) {
-            cPlanner.log("Non-zero exit-code " + result,
-                         LogManager.WARNING_MESSAGE_LEVEL );
+            cPlanner.log("Exiting with non-zero exit-code " + result,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
         }
         else{
             //log the time taken to execute
