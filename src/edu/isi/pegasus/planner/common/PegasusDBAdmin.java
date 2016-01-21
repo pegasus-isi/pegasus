@@ -185,7 +185,10 @@ public class PegasusDBAdmin {
                          LogManager.DEBUG_MESSAGE_LEVEL );
 
             if( status != 0 ){
-                throw new RuntimeException( basename + " failed with non zero exit status " + command );
+                throw new RuntimeException("Pegasus was unable to update the the worflow database file found at" +
+                        " ~/.pegasus/workflow.db . If this file is corrupted, a solution for" +
+                        " problem is to remove the file with the command: rm -f ~/.pegasus/workflow.db " +
+                        " - but note that doing so will remove old workflows from the Pegasus Dashboard.");
             }
         }
         catch(IOException ioe){
