@@ -357,7 +357,7 @@ E.g.<emphasis role="bold">
 
         <para>Pegasus 3.0 by default now parses DAX documents conforming to
         the DAX Schema 3.2 available <ulink role=""
-        url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.2/dax-3.2.xsd"
+        url="schemas/dax-3.2/dax-3.2.xsd"
         userlevel="">here</ulink> and is explained in detail in the chapter on
         API references.</para>
 
@@ -378,7 +378,7 @@ E.g.<emphasis role="bold">
 
         <para>Pegasus 3.0 by default now parses Site Catalog format conforming
         to the SC schema 3.0 ( XML3 ) available <ulink role=""
-        url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.2/dax-3.2.xsd"
+        url="schemas/dax-3.2/dax-3.2.xsd"
         userlevel="">here</ulink> and is explained in detail in the chapter on
         Catalogs.</para>
 

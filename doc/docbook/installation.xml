@@ -165,7 +165,7 @@ Complete!</programlisting>
     <title>Pegasus from Tarballs</title>
 
     <para>The Pegasus prebuild tarballs can be downloaded from the <ulink
-            url="http://pegasus.isi.edu/downloads"><emphasis>Pegasus
+            url="https://pegasus.isi.edu/downloads"><emphasis>Pegasus
     Download Page</emphasis></ulink>.</para>
 
     <para>Use these tarballs if you already have HTCondor installed or prefer to

@@ -10,9 +10,9 @@
     <para>The DAX is a description of an abstract workflow in XML format that
     is used as the primary input into Pegasus. The DAX schema is described in
     <ulink
-    url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.4/dax-3.4.xsd">dax-3.4.xsd</ulink>
+    url="schemas/dax-3.4/dax-3.4.xsd">dax-3.4.xsd</ulink>
     The documentation of the schema and its elements can be found in <ulink
-    url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.4/dax-3.4.html">dax-3.4.html</ulink>.</para>
+    url="schemas/dax-3.4/dax-3.4.html">dax-3.4.html</ulink>.</para>
 
     <para>A DAX can be created by all users with the DAX generating API in
     Java, Perl, or Python format</para>
@@ -672,13 +672,13 @@ f.a gsiftp://somehost:port/path/to/file/f.a site=local</computeroutput></screen>
       <listitem>
         <para><emphasis role="bold">XML4</emphasis>(Default) Corresponds to
         the schema described <ulink
-        url="http://pegasus.isi.edu/wms/docs/schemas/sc-4.0/sc-4.0.html">here</ulink>.</para>
+        url="schemas/sc-4.0/sc-4.0.html">here</ulink>.</para>
       </listitem>
 
       <listitem>
         <para><emphasis role="bold">XML3</emphasis>(Deprecated) Corresponds to
         the schema described <ulink
-        url="http://pegasus.isi.edu/wms/docs/schemas/sc-3.0/sc-3.0.html">here</ulink></para>
+        url="schemas/sc-3.0/sc-3.0.html">here</ulink></para>
       </listitem>
     </orderedlist>
 
@@ -988,7 +988,7 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
 
       <para>Pegasus 4.2 by default now parses Site Catalog format conforming
       to the SC schema 4.0 (XML4) available <ulink role=""
-      url="http://pegasus.isi.edu/wms/docs/schemas/sc-4.0/sc-4.0.xsd"
+      url="schemas/sc-4.0/sc-4.0.xsd"
       userlevel="">here</ulink> and is explained in detail in the Catalog
       Properties section of <link linkend="running_workflows">Running
       Workflows</link>.</para>

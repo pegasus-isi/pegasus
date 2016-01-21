@@ -9,11 +9,11 @@
 
     <para>The DAX format is described by the XML schema instance document
     <ulink
-    url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.6/dax-3.6.xsd">dax-3.6.xsd</ulink>.
+    url="schemas/dax-3.6/dax-3.6.xsd">dax-3.6.xsd</ulink>.
     A local copy of the schema definition is provided in the
     <quote>etc</quote> directory. The documentation of the XML schema and its
     elements can be found in <ulink
-    url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.6/dax-3.6.html">dax-3.6.html</ulink>
+    url="schemas/dax-3.6/dax-3.6.html">dax-3.6.html</ulink>
     as well as locally in
     <filename>doc/schemas/dax-3.6/dax-3.6.html</filename> in your Pegasus
     distribution.</para>
@@ -1557,7 +1557,7 @@ f.close()</programlisting>
       <filename class="directory">lib/perl</filename> of the Pegasus
       installation. The actual code is longer, and will not require these
       settings, only the example below does. The Perl API is documented using
-      <ulink url="http://pegasus.isi.edu/wms/docs/3.0/perl/">perldoc</ulink>.
+      <ulink url="perl/">perldoc</ulink>.
       For each of the modules you can invoke
       <application>perldoc</application>, if your <envar>PERL5LIB</envar>
       variable is set.</para>
