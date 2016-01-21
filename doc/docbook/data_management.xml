@@ -2220,5 +2220,34 @@ f.a file://$PWD/production_200.conf site="local" source="replica_catalog"</progr
         specified.</para>
       </note>
     </section>
+
+    <section id="metadata_trace">
+      <title>Tracing Metadata for an output file</title>
+
+      <para>The command line client <link
+      linkend="cli-pegasus-metadata">pegasus-metadata</link> allows a user to
+      trace all the metadata associated with the file. The client will display
+      metadata for the output file, the task that generated the file, the
+      workflow which contains the task, and the root workflow which contains
+      the task. Below is a sample illustration of it.</para>
+
+      <programlisting><emphasis role="bold">$ pegasus-metadata file --file-name f.d --trace /path/to/submit-dir</emphasis>
+
+Workflow 493dda63-c6d0-4e62-bc36-26e5629449ad
+    createdby : Test user
+    name      : diamond
+
+Task ID0000004
+    size           : 2048
+    time           : 60
+    transformation : analyze
+
+File f.d
+    ctime        : 2016-01-20T19:02:14-08:00
+    final_output : true
+    size         : 582
+    user         : bamboo
+</programlisting>
+    </section>
   </section>
 </chapter>
