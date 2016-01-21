@@ -483,8 +483,8 @@ D1/f.3 file://$input/D1/f.3 site="local"</programlisting>
 
       <para><itemizedlist>
           <listitem>
-            <para><emphasis role="bold">pegasus.catalog.replica=MRC</emphasis>
-            </para>
+            <para><emphasis
+            role="bold">pegasus.catalog.replica=MRC</emphasis></para>
           </listitem>
 
           <listitem>
@@ -1363,5 +1363,90 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
         </listitem>
       </orderedlist>
     </section>
+  </section>
+
+  <section id="variable_expansion">
+    <title>Variable Expansion</title>
+
+    <para>Pegasus Planner supports notion of variable expansions in the DAX
+    and the catalog files along the same lines as bash variable expansion
+    works. This is often useful, when you want paths in your catalogs or
+    profile values in the DAX to be picked up from the environment. An error
+    is thrown if a variable cannot be expanded. Some examples of variable
+    expansion are illustrated below:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para><emphasis role="bold">DAX</emphasis></para>
+
+        <para>A job in the DAX file needs to have a globus profile key project
+        associated and the value has to be picked up (per user) from user
+        environment.</para>
+
+        <programlisting>&lt;profile namespace="globus" key="project"&gt;${PROJECT}&lt;/profile&gt; 
+</programlisting>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Site Catalog</emphasis></para>
+
+        <para>In the site catalog, the site catalog entries are templated,
+        where paths are resolved on the basis of values of environment
+        variables. For example, below is a templated entry for a local site
+        where $PWD is the working directory from where pegasus-plan is
+        invoked.</para>
+
+        <programlisting>&lt;site  handle="local" arch="x86_64" os="LINUX" osrelease="" osversion="" glibc=""&gt;
+        &lt;directory  path="${PWD}/LOCAL/shared-scratch" type="shared-scratch" free-size="" total-size=""&gt;
+                &lt;file-server  operation="all" url="file:///${PWD}/LOCAL/shared-scratch"&gt;
+                &lt;/file-server&gt;
+        &lt;/directory&gt;    
+        &lt;directory  path="${PWD}/LOCAL/shared-storage" type="shared-storage" free-size="" total-size=""&gt;
+                &lt;file-server  operation="all" url="file:///${PWD}/LOCAL/shared-storage"&gt;
+                &lt;/file-server&gt;
+        &lt;/directory&gt;
+        &lt;profile namespace="env" key="PEGASUS_HOME"&gt;/usr&lt;/profile&gt;
+        &lt;profile namespace="pegasus" key="clusters.num" &gt;1&lt;/profile&gt;
+&lt;/site&gt;
+</programlisting>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Replica Catalog</emphasis></para>
+
+        <para>The input file locations in the Replica Catalog can be resolved
+        based on values of environment variables.</para>
+
+        <programlisting># File Based Replica Catalog
+production_200.conf file://$PWD/production_200.conf site="local" </programlisting>
+
+        <note>
+          <para>Variable expansion is only supported for File based Replica
+          Catalog, not Regex or other file based formats.</para>
+        </note>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Transformation Catalog</emphasis></para>
+
+        <para>Similarly paths in the transformation catalog or profile values
+        can be picked up from the environment i.e environment variables OS ,
+        ARCH and PROJECT are defined in user environment when launching
+        pegasus-plan.</para>
+
+        <programlisting># Snippet from a Text Based Transformation Catalog
+tr pegasus::keg{
+    site obelix {
+        profile globus "project" "${PROJECT}"
+        pfn "/usr/bin/pegasus-keg"
+        arch "${ARCH}"
+        os "${OS}"
+        type "INSTALLED"
+    }
+}</programlisting>
+      </listitem>
+    </itemizedlist>
+
+    <para> </para>
   </section>
 </chapter>
