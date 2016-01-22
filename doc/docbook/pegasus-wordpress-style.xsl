@@ -24,7 +24,7 @@
     </xsl:param>
     <!-- xsl:param name="toc.max.depth" select="'2'"/ -->
     <xsl:param name="generate.section.toc.level" select="'1'"/>
-    <xsl:param name="toc.section.depth" select="'0'"/>
+    <xsl:param name="toc.section.depth" select="'1'"/>
 
     <xsl:param name="navig.showtitles">1</xsl:param>
 
