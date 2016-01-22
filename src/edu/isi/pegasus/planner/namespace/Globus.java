@@ -68,6 +68,7 @@ public class Globus extends Namespace {
             mRSLToPegasus.put( Globus.HOST_COUNT_KEY, Pegasus.NODES_KEY );
             mRSLToPegasus.put( Globus.XCOUNT_KEY, Pegasus.PPN_KEY );
             mRSLToPegasus.put( Globus.QUEUE_KEY, Pegasus.QUEUE_KEY );
+            mRSLToPegasus.put( Globus.PROJECT_KEY, Pegasus.PROJECT_KEY );
         }
         return mRSLToPegasus;
     }
@@ -103,6 +104,12 @@ public class Globus extends Namespace {
      * Key indicating the queue to be used.
      */
     public static final String QUEUE_KEY = "queue";
+    
+    
+    /**
+     * The project for the job to be associated with.
+     */
+    public static final String PROJECT_KEY = "project";
 
     /**
      * The table that maps the various globus profile keys to their aggregator
@@ -331,7 +338,7 @@ public class Globus extends Namespace {
                 break;
 
             case 'p':
-                if (key.compareTo("project") == 0) {
+                if (key.compareTo( PROJECT_KEY ) == 0) {
                     res = VALID_KEY;
                 }
                 else {

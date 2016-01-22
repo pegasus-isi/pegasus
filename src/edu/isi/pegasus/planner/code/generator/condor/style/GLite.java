@@ -373,6 +373,12 @@ public class GLite extends Abstract {
             value.append( " && " );
             addSubExpression( value, "TOTAL_MEMORY" ,  (String)job.globusRSL.get( "totalmemory" )  );
         }
+        
+        /* the globus key project is PROJECT */
+        if( job.globusRSL.containsKey( Globus.PROJECT_KEY ) ){
+            value.append( " && " );
+            addSubExpression( value, "PROJECT" ,  (String)job.globusRSL.get( Globus.PROJECT_KEY )  );
+        }
 
         /* the condor key priority is PRIORITY */
         if( job.condorVariables.containsKey( "priority" ) ){

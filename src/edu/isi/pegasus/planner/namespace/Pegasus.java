@@ -453,6 +453,12 @@ public class Pegasus extends Namespace {
     public static final String QUEUE_KEY = "queue";
     
     /**
+     * The project for the job to be associated with.
+     */
+    public static final String PROJECT_KEY = "project";
+    
+    
+    /**
      * Key indicating data configuration property. 
      */
     public static final String DATA_CONFIGURATION_KEY = "data.configuration";
@@ -748,7 +754,8 @@ public class Pegasus extends Namespace {
                     key.compareTo( PMC_REQUEST_CPUS_KEY ) == 0 ||
                     key.compareTo( PMC_PRIORITY_KEY ) == 0 ||
                     key.compareTo( PMC_TASK_ARGUMENTS) == 0 ||
-                    key.compareTo( PPN_KEY ) == 0 ){
+                    key.compareTo( PPN_KEY ) == 0 ||
+                    key.compareTo( PROJECT_KEY) == 0 ) {
                     res = VALID_KEY;
                 }
                 else{
