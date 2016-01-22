@@ -5,7 +5,7 @@ pegasus-metadata(1)
 
 Name
 ----
-pegasus-metadata - Manage Pegasus databases.
+pegasus-metadata - Query metadata collected for Pegasus workflows
 
 
 Synopsis
