@@ -12,9 +12,9 @@ fi
 mkdir -p $TARGET_DIR/Pegasus/DAX
 TARGET_DIR=`cd $TARGET_DIR && pwd`
 
-PODPATH="Pegasus::DAX"
+PODPATH="Pegasus/DAX"
 if grep -e "^8" /etc/debian_version >/dev/null 2>&1; then
-    PODPATH="::Pegasus::DAX"
+    PODPATH=":Pegasus:DAX"
 fi
 
 cd lib/pegasus/perl/
