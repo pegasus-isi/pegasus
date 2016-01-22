@@ -41,10 +41,6 @@
         </l:l10n>
     </l:i18n>
 
-    <!-- remove h1 titles for wordpress pages - the theme handles them -->
-    <xsl:template match="title" mode="titlepage.mode">
-    </xsl:template>
-
     <xsl:template name="book.titlepage.separator">
     </xsl:template>
 
