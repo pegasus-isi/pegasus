@@ -205,23 +205,25 @@ def all_workflows_db(db, update=True, pegasus_version=None, schema_check=True, f
     :param force:
     :return:
     """
+    # log files
+    file_prefix = "%s-dbadmin" % time.strftime("%Y%m%dT%H%M%S")
+    f_out = open("%s.out" % file_prefix, 'w')
+    f_err = open("%s.err" % file_prefix, 'w')
+
     data = db.query(DashboardWorkflow.db_url,
-                       DashboardWorkflowstate.state,
-                       func.max(DashboardWorkflowstate.timestamp)
-                       ).join(DashboardWorkflowstate).group_by(DashboardWorkflow.wf_id).all()
+                    DashboardWorkflowstate.state,
+                    func.max(DashboardWorkflowstate.timestamp)
+                    ).join(DashboardWorkflowstate).group_by(DashboardWorkflow.wf_id).all()
 
     db_urls = []
     for d in data:
         if d[1] == "WORKFLOW_TERMINATED":
             db_urls.append(d[0])
-
-    # files
-    file_prefix = "%s-dbadmin" % time.strftime("%Y%m%dT%H%M%S")
-    f_out = open("%s.out" % file_prefix, 'w')
-    f_err = open("%s.err" % file_prefix, 'w')
+            f_err.write("[ACTIVE] %s\n" % d[0])
 
     counts = {
-        'total': len(db_urls),
+        'total': len(data),
+        'running': len(data) - len(db_urls),
         'success': 0,
         'failed': 0,
         'unable_to_connect': 0,
@@ -233,7 +235,7 @@ def all_workflows_db(db, update=True, pegasus_version=None, schema_check=True, f
 
     print ""
     print "Verifying and %s workflow databases:" % msg[0]
-    i = 0
+    i = counts['running']
     for dburi in db_urls:
         log.debug("%s '%s'..." % (msg[0], dburi))
         i += 1
@@ -272,6 +274,7 @@ def all_workflows_db(db, update=True, pegasus_version=None, schema_check=True, f
     print "  Verified/%s: %s/%s" % (msg[1], counts['success'], counts['total'])
     print "  Failed: %s/%s" % (counts['failed'], counts['total'])
     print "  Unable to connect: %s/%s" % (counts['unable_to_connect'], counts['total'])
+    print "  Unable to update (active workflows): %s/%s" % (counts['running'], counts['total'])
     print "\nLog files:"
     print "  %s.out (Succeeded operations)" % file_prefix
     print "  %s.err (Failed operations)" % file_prefix
