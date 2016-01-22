@@ -12,9 +12,14 @@ fi
 mkdir -p $TARGET_DIR/Pegasus/DAX
 TARGET_DIR=`cd $TARGET_DIR && pwd`
 
+PODPATH="Pegasus/DAX"
+if grep -e "^8" /etc/debian_version >/dev/null 2>&1; then
+    PODPATH=":Pegasus:DAX"
+fi
+
 cd lib/pegasus/perl/
 for i in Pegasus/DAX/*.pm; do 
-    pod2html --htmldir /tmp/xxx --podroot $PWD --podpath Pegasus/DAX \
+    pod2html --htmldir /tmp/xxx --podroot $PWD --podpath $PODPATH \
              --infile $i --outfile $TARGET_DIR/`basename $i .pm`.html
 done
 

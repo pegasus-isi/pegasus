@@ -5,10 +5,7 @@ pegasus-exitcode(1)
 
 Name
 ----
-pegasus-exitcode - Checks the stdout/stderr files of a workflow job for any
-indication that an error occurred in the job. This script is intended to be
-invoked automatically by DAGMan as the POST script of a job.
-
+pegasus-exitcode - Used post-job to check the stdout/stderr for errors
 
 Synopsis
 --------
