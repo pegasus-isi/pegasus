@@ -270,7 +270,7 @@ tutorial@pegasus-tutorial.isi.edu's password: <emphasis role="bold">pegasus123</
 
     <programlisting>$ <emphasis role="bold">cd /home/tutorial/examples</emphasis>
 $ <emphasis role="bold">ls</emphasis> 
-﻿diamond  merge  pegasus.conf  pipeline  process  split
+﻿diamond  merge  pegasus.properties  pipeline  process  split
 </programlisting>
 
     <para>To start the tutorial, we will run an already generated split
@@ -611,9 +611,9 @@ UNRDY READY   PRE  IN_Q  POST  DONE  FAIL %DONE STATE   DAGNAME
 </programlisting>
 
       <para>The locations of the output files are also registered in the
-      rc.dat file.</para>
+      rc.txt file.</para>
 
-      <programlisting><emphasis role="bold">$ more rc.dat 
+      <programlisting><emphasis role="bold">$ more rc.txt 
 </emphasis># file-based replica catalog: 2015-10-22T20:04:26.171-07:00
 count.txt.b file:///home/tutorial/examples/split/./outputs/count.txt.b site="local"
 count.txt.d file:///home/tutorial/examples/split/./outputs/count.txt.d site="local"
@@ -1370,9 +1370,9 @@ tr ls {
       plan out the required file transfers automatically.</para>
 
       <para>The Replica Catalog for the diamond workflow is in the
-      <filename>rc.dat</filename> file:</para>
+      <filename>rc.txt</filename> file:</para>
 
-      <programlisting>$ <emphasis role="bold">more rc.dat</emphasis>
+      <programlisting>$ <emphasis role="bold">more rc.txt</emphasis>
 
 <emphasis role="bold"># </emphasis>This is the replica catalog. It lists information about each of the
 # input files used by the workflow. You can use this to specify locations to input files present on external servers.<emphasis
@@ -1408,15 +1408,15 @@ f.a    file:///home/tutorial/examples/diamond/input/f.a    site="local"</program
     <para>For the diamond workflow, the Pegasus configuration file is
     relatively simple. It only contains settings to help Pegasus find the
     information catalogs. These settings are in the
-    <filename>pegasus.conf</filename> file:</para>
+    <filename>pegasus.properties</filename> file:</para>
 
-    <programlisting>$ <emphasis role="bold">more pegasus.conf</emphasis>
+    <programlisting>$ <emphasis role="bold">more pegasus.properties</emphasis>
 # This tells Pegasus where to find the Site Catalog
 pegasus.catalog.site.file=sites.xml
 
 # This tells Pegasus where to find the Replica Catalog
 pegasus.catalog.replica=File
-pegasus.catalog.replica.file=rc.dat
+pegasus.catalog.replica.file=rc.txt
 
 # This tells Pegasus where to find the Transformation Catalog
 pegasus.catalog.transformation=Text
