@@ -1,0 +1,29 @@
+# This is the transformation catalog. It lists information about each of the
+# executables that are used by the workflow.
+
+tr preprocess {
+    site {{sitename}} {
+        pfn "{{workflowdir}}/bin/preprocess"
+        arch "x86_64"
+        os "linux"
+        type "INSTALLED"
+    }
+}
+
+tr findrange {
+    site {{sitename}} {
+        pfn "{{workflowdir}}/bin/findrange"
+        arch "x86_64"
+        os "linux"
+        type "INSTALLED"
+    }
+}
+
+tr analyze {
+    site {{sitename}} {
+        pfn "{{workflowdir}}/bin/analyze"
+        arch "x86_64"
+        os "linux"
+        type "INSTALLED"
+    }
+}
