@@ -317,11 +317,18 @@ $ <emphasis role="bold">ls</emphasis>
       <listitem>
         <para>the output directory where the outputs are placed</para>
       </listitem>
-
-      <listitem>
-        <para>the site on which the workflow has to execute</para>
-      </listitem>
     </itemizedlist>
+
+    <para>By default, the workflow is setup to run on the compute sites ( i.e
+    sites with handle other than "local") defined in the sites.xml file. In
+    our example, the workflow will run on a site named "PegasusVM" in the
+    sites.xml file. </para>
+
+    <note>
+      <para>If there are multiple compute sites specified in your sites.xml ,
+      and you want to choose a specific site, use the --sites option to
+      pegasus-plan</para>
+    </note>
 
     <para>To plan the split workflow invoke the pegasus-plan command as
     follows</para>
@@ -403,9 +410,10 @@ $ pegasus-plan  --dax split.dax --input-dir ./input  --output-dir ./outputs --si
 
     <para>To access the workflow dashboard, in the VirtualBox VM you can
     launch Firefox by clicking the Firefox icon in the top menu of the
-    desktop. The home page for the dashboard is accessible at
-    https://localhost:5000 . If you are using EC2 you will need to replace
-    'localhost' with the IP address of your EC2 instance.</para>
+    desktop. The home page for the dashboard is accessible at <emphasis
+    role="bold">https://localhost:5000</emphasis> . If you are using EC2 you
+    will need to replace 'localhost' with the IP address of your EC2
+    instance.</para>
 
     <para>When the webpage loads up, it will ask you for a username and a
     password. Log in as user "<emphasis role="bold">tutorial</emphasis>" with
@@ -1211,6 +1219,12 @@ Generated dax split.dax</programlisting>
 
 ...</programlisting>
 
+      <note>
+        <para>By default ( unless specified in properties), Pegasus picks ups
+        the site catalog from a XML file named sites.xml in the current
+        working directory from where pegasus-plan is invoked.</para>
+      </note>
+
       <para>There are two sites defined in the site catalog: “<emphasis
       role="bold">local</emphasis>” and “<emphasis
       role="bold">PegasusVM</emphasis>”. The “local” site is used by Pegasus
@@ -1343,6 +1357,12 @@ tr ls {
 
 ...</programlisting>
 
+      <note>
+        <para>By default ( unless specified in properties), Pegasus picks ups
+        the transformation catalog from a text file named tc.txt in the
+        current working directory from where pegasus-plan is invoked.</para>
+      </note>
+
       <para>The <filename>tc.txt</filename> file contains information about
       three transformations: wc, curl, and ls. These three transformations are
       referenced in the split DAX. The transformation catalog indicates that
@@ -1385,9 +1405,11 @@ tr ls {
 f.a    file:///home/tutorial/examples/diamond/input/f.a    site="local"</programlisting>
 
       <note>
-        <para>In our tutorial, input files are on the submit host and we used
-        the --input dir option to # pegasus-plan to specify where they are
-        located.</para>
+        <para>By default ( unless specified in properties), Pegasus picks ups
+        the transformation catalog from a text file named tc.txt in the
+        current working directory from where pegasus-plan is invoked. In our
+        tutorial, input files are on the submit host and we used the --input
+        dir option to # pegasus-plan to specify where they are located.</para>
       </note>
 
       <para>This replica catalog contains only one entry for the diamond
@@ -1411,16 +1433,31 @@ f.a    file:///home/tutorial/examples/diamond/input/f.a    site="local"</program
     <filename>pegasus.properties</filename> file:</para>
 
     <programlisting>$ <emphasis role="bold">more pegasus.properties</emphasis>
+# create one cleanup job per level of the workflow
+pegasus.file.cleanup.clusters.num = 1
+
+# This is the name of the application for analytics
+pegasus.metrics.app=pegasus-tutorial
+
+# CATALOG PROPERTIES IF YOU WANT TO SPECIFY
+# NON STANDARD LOCATIONS
+
 # This tells Pegasus where to find the Site Catalog
-pegasus.catalog.site.file=sites.xml
+# We are picking it up from the default location sites.xml 
+# in the current working directory 
+# pegasus.catalog.site.file=sites.xml
 
 # This tells Pegasus where to find the Replica Catalog
-pegasus.catalog.replica=File
-pegasus.catalog.replica.file=rc.txt
+# We are picking it up from the default location rc.txt
+# in the current working directory 
+# pegasus.catalog.replica=File
+# pegasus.catalog.replica.file=rc.dat
 
 # This tells Pegasus where to find the Transformation Catalog
-pegasus.catalog.transformation=Text
-pegasus.catalog.transformation.file=tc.txt</programlisting>
+# We are picking it up from the default location tc.txt
+# in the current working directory 
+# pegasus.catalog.transformation=Text
+# pegasus.catalog.transformation.file=tc.txt</programlisting>
   </section>
 
   <section id="tutorial_conclusion">
