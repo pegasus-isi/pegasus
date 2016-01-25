@@ -195,4 +195,13 @@
     integrate Pegasus with your own data resources to resolve your individual
     computational challenges.</para>
   </section>
+
+  <section id="document_formats">
+    <title>Document Formats (Web, PDF)</title>
+    <para>The main version of this document is intended to be viewed online
+    at the <ulink url="https://pegasus.isi.edu/documentation/">Pegasus website</ulink>. For
+    offline viewing, a <ulink url="https://pegasus.isi.edu/documentation/pegasus-user-guide.pdf">PDF version</ulink>
+    is also provided.
+    </para>
+  </section>
 </chapter>
