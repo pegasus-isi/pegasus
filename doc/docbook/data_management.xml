@@ -1831,7 +1831,8 @@ irodsPassword 'somesecretpassword'</programlisting>
         cleanup nodes to constraint the amount of storage space used by a
         workflow, in addition to leaf cleanup nodes. The nodes remove files no
         longer required during execution. The added cleanup node guarantees
-        limits on disk usage.</para>
+        limits on disk usage. File sizes are read from the
+        <emphasis role="bold">size</emphasis> flag in the DAX.</para>
       </listitem>
     </orderedlist>
 

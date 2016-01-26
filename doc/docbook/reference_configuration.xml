@@ -5066,7 +5066,7 @@ Scope       :</emphasis> Properties
             </row>
 
             <row>
-              <entry><literallayout><emphasis role="bold">Property Key: </emphasis>pegasus.file.cleanup.constraint.deferStageIns
+              <entry><literallayout><emphasis role="bold">Property Key: </emphasis>pegasus.file.cleanup.constraint.deferstageins
 <emphasis role="bold">Profile  Key: </emphasis>N/A
 <emphasis role="bold">Scope       : </emphasis>Properties
 <emphasis role="bold">Since       : </emphasis>4.6.0
@@ -5077,7 +5077,8 @@ Scope       :</emphasis> Properties
               <entry><para>This property is used to determine whether stage in
               jobs may be deferred. If this property is set to False
               (default), all stage in jobs will be marked as executing on the
-              current compute site.</para></entry>
+              current compute site and will be executed before any task. This
+              property has no effect when running in a multi site case.</para></entry>
             </row>
           </tbody>
         </tgroup>
