@@ -164,11 +164,17 @@ def parse_pegasus_version(pegasus_version=None):
 
 ################################################################################
 def _get_version(db):
-    current_version = db.query(DBVersion.version_number).order_by(
-        DBVersion.id.desc()).first()
+    try:
+        current_version = db.query(DBVersion.version_number).order_by(DBVersion.id.desc()).first()
+    except OperationalError:
+        raise DBAdminError("Missing version table."
+                           "\nRun 'pegasus-db-admin update %s' to update your database."
+                           % db.get_bind().url)
     if not current_version:
         log.debug("No version record found on dbversion table.")
         raise NoResultFound()
+
+    _version_sanity_check(db, current_version[0])
     return current_version[0]
 
 
@@ -182,14 +188,16 @@ def _discover_version(db, pegasus_version=None, force=False, verbose=True):
         except NoResultFound:
             pass
     
-    if current_version == version or current_version > CURRENT_DB_VERSION:
+    if current_version == version:
         try:
             _verify_tables(db)
             log.debug("Your database is already updated.")
             return None
         except DBAdminError:
-            current_version = -1
-    
+            current_version = 0
+
+    _version_sanity_check(db, current_version)
+
     if current_version > version:
         raise DBAdminError("Unable to run update. Current database version is newer than specified version '%s'." % (pegasus_version))
     
@@ -246,3 +254,14 @@ def _verify_tables(db):
                 % (" \n    ".join(missing_tables), db.get_bind().url))
     except Exception, e:
         raise DBAdminError(e)
+
+
+def _version_sanity_check(db, version):
+    """ Verify whether db version is higher than current version.
+    :param db: db connection
+    :param version: version to be verified
+    """
+    if version > CURRENT_DB_VERSION:
+        raise DBAdminError("You database was created with a newer Pegasus version. "
+                           "It will not work properly with the current version."
+                           "\nPlease, run 'pegasus-db-admin downgrade' with the latest Pegasus to downgrade your database.")
