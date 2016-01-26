@@ -57,6 +57,7 @@ from Pegasus.tools import utils
 from Pegasus.tools import kickstart_parser
 from Pegasus.db import connection
 from Pegasus.db.workflow import stampede_statistics
+from Pegasus.db.admin.admin_loader import DBAdminError
 
 utils.configureLogging(level=logging.WARNING)
 
@@ -1062,6 +1063,10 @@ def analyze_db(config_properties):
     try:
         workflow_stats = stampede_statistics.StampedeStatistics(output_db_url, False)
         workflow_stats.initialize(wf_uuid)
+    except DBAdminError as err:
+        logger.error("Failed to load the database." + output_db_url )
+        logger.warning( err )
+        sys.exit(1)
     except:
         logger.error("Failed to load the database." + output_db_url )
         logger.warning(traceback.format_exc())
