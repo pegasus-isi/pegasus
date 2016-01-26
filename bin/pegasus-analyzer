@@ -859,7 +859,7 @@ def check_for_wf_start():
         #check the dagman.out file
         print_console( " Looks like workflow did not start" )
         if input_dir is not None:
-            dagman_out = input_dir + "/*dagman.out"
+            dagman_out = input_dir + "/*.dag.dagman.out"
             nfs_error_string = backticks( "grep -i \".*Error.*NFS$\" " + dagman_out + " 2>/dev/null" )
             if( nfs_error_string is not None and nfs_error_string != "" ):
                 print_console( " HTCondor DAGMan NFS ERROR condition detected in " + dagman_out)
