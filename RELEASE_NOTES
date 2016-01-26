@@ -1,4 +1,320 @@
 $Id
+
+===============================
+Release Notes for PEGASUS 4.6.0
+===============================
+
+ We are happy to announce the release of Pegasus 4.6.0.  Pegasus 4.6.0
+ is a major release of Pegasus and includes all the bug fixes and
+ improvements in the 4.5.4 release 
+ 
+ New features and Improvements in 4.6.0 and 4.5.4 are
+     - metadata support
+     - support for variable substitution 
+     - constraints based cleanup algorithm
+     - common pegasus profiles to specify task requirements
+     - new command line client pegasus-init to configure pegasus and
+ pegasus-metadata to query workflow database for metadata 
+     - support for fallback PFN's
+
+ Migration guide available at
+ http://pegasus.isi.edu/wms/docs/4.6.0dev/useful_tips.php#migrating_from_leq45 
+ 
+ Debian and Ubuntu users: Please note that the Apt repository GPG key
+ has changed. To continue to get automatic updates, please follow the
+ instructions on the download page on how to install the new key. 
+
+New Features
+--------------
+
+1)  Metadata support in Pegasus
+    Pegasus allows users to associate metadata at
+     - Workflow Level in the DAX
+     - Task level in the DAX and the Transformation Catalog
+     - File level in the DAX and Replica Catalog
+ 
+    Metadata is specified as a key value tuple, where both key and
+    values are of type String. 
+ 
+    All the metadata ( user specified and auto-generated) gets
+    populated into the workflow database ( usually in the workflow
+    submit directory) by pegasus-monitord. The metadata in this
+    database can be be queried for using the pegasus-metadata command
+    line tool, or is also shown in the Pegasus Dashboard. 
+ 
+    Documentation: https://pegasus.isi.edu/wms/docs/4.6.0/metadata.php
+ 
+    Relevant JIRA items
+    [PM-917] - modify the workflow database to associate metadata with
+    workflow, job and files 
+    [PM-918] - modify pegasus-monitord to populate metadata into
+    stampede database 
+    [PM-919] - pegasus-metadata command line tool
+    [PM-916] - identify and generate the BP events for metadata
+    [PM-913] - kickstart support for stat command line options
+    [PM-1025] - Document the metadata capability for 4.6
+    [PM-992] - automatically capture file metadata from kickstart and record it
+    [PM-892] - Add metadata to DAX schema
+    [PM-893] - Add metadata to Python DAX API
+    [PM-894] - Add metadata to site catalog schema
+    [PM-895] - Add metadata to transformation catalog text format
+    [PM-902] - support for metadata to JAVA DAX API
+    [PM-903] - add metadata to perl dax api
+    [PM-904] - support for parsing DAX 3.6 documents
+    [PM-978] - Update JDBCRC with the new schema
+    [PM-925] - support for 4.1 new site catalog schema with metadata extensions
+    [PM-991] - pegasus dashboard to display metadata stored in workflow database
+ 
+2) Support for Variable Substitution
+
+   Pegasus Planner supports notion of variable expansions in the DAX
+   and the catalog files along the same lines as bash variable
+   expansion works. This is often useful, when you want paths in your
+   catalogs or profile values in the DAX to be picked up from the
+   environment. An error is thrown if a variable cannot be expanded.  
+
+   Variable substitution is supported in the DAX, File Based Replica
+   Catalog, Transformation Catalog and the  Site Catalog. 
+
+   Documentation: https://pegasus.isi.edu/wms/docs/4.6.0/variable_expansion.php
+
+   Relevant JIRA items
+   [PM-831] - Add better support for variables
+
+3) Constraints based Cleanup Algorithm
+
+   The planner now has support for a new cleanup algorithm called
+   constraint. The algoirthm adds cleanup nodes to constraint the
+   amount of storage space used by a workflow. The nodes remove files
+   no longer required during execution. The added cleanup node
+   guarantees limits on disk usage. The leaf cleanup nodes are also
+   added when this is selected. 
+ 
+   [PM-850] - Integrate Sudarshan's cleanup algorithm
+ 
+4) Common Pegasus Profiles to indicate Resource Requirements for jobs
+
+   Users can now specify Pegasus profiles to indicate resource
+   requirements for jobs. Pegasus will automatically, translate these
+   to the approprate condor, globus or batch system keys based on how
+   the job is executed.  
+
+   The profiles are documented in the configuration chapter at ask
+   requirement profiles are documented here
+   https://pegasus.isi.edu/wms/docs/4.6.0/profiles.php#pegasus_profiles 
+ 
+   [PM-962] - common pegasus profiles to indicate resource requirements for job
+
+ 
+5) New client pegasus-init
+ 
+   A new command line client called "pegasus-init" that generates a
+   new workflow configuration based by asking the user a series of
+   questions. Based on the responses to these questions,
+   *pegasus-init* generates a workflow configuration including a DAX
+   generator, site catalog, properties file, and other artifacts that
+   can be edited to meet the user's needs. 
+ 
+   [PM-1019] - pegasus-init client to setup pegasus on a machine
+ 
+6) Support for automatic fallover to fallback file locations
+
+   Pegasus, now during Replica Selection orders all the candidate
+   replica's instead of selecting the best replica. This replica's are
+   ordered based on the strategy selected, and the ordered list is
+   passed to pegasus-transfer invocation. This allows users to specify
+   failover, or preferred location for discovering the input files. 
+
+   By default, planner employs the following logic for the ordering of replicas 
+      - valid file URL's . That is URL's that have the site attribute
+   matching the site where the executable pegasus-transfer is
+   executed.  
+      - all URL's from preferred site (usually the compute site) 
+      - all other remotely accessible ( non file) URL's 
+ 
+   If a user wants to specify their own order preference , then they
+   should use the Regex Replica Selector and specify a ranked order
+   list of regular expressions in the properties.  
+ 
+   Documentation:
+   https://pegasus.isi.edu/wms/docs/4.6.0/data_management.php#replica_selection
+
+   Relevant JIRA items: 
+   [PM-1002] - Support symlinking against compute site datasets in
+   nonsharedfs mode with bypass of input file staging 
+   [PM-1014] - Support for Fallback PFN while transferring raw input files
+ 
+7) Support SGE via the HTCondor Glite/Batch GAHP support 
+ 
+   Pegasus now has support for submitting to a local SGE cluster via
+   the HTCondor Glite/Blahp interfaces. More details can be found in
+   the documentation at
+   https://pegasus.isi.edu/wms/docs/4.6.0/glite.php  
+
+   [PM-955] - Support for direct submission through SGE using
+   Condor/Glite/Blahp layer 
+ 
+8) Glite Style improvements
+
+   Users don't need to set extra pegasus profiles to enable jobs to
+   run correctly on glite style sites. By default, condor quoting for
+   jobs  on glite style sites is disabled. Also, the -w option to
+   kickstart is always as batch gahp does not support specification of
+   a remote execution directory directly.  
+ 
+   If the user knows that a compute site shares a file system with the
+   submit host, then they can get Pegasus to run the auxillary jobs in
+   local universe. This is especially helpful , when submitting to
+   local campus clusters using Glite and users don't want the pegasus
+   auxillary jobs to run through the cluster PBS|SGE queue. 
+
+   Relevant JIRA items
+   [PM-934] - changed how environment is set for jobs submitted via
+   HTCondor Glite / Blahp layer 
+   [PM-1024] - Use local universe for auxiliary jobs in glite/blahp mode
+   [PM-1037] - Disable Condor Quoting for jobs run on glite style
+   execution sites 
+   [PM-960] - Set default working dir to scratch dir for glite style jobs
+ 
+ 
+9)  Support for PAPI CPU counters in kickstart
+    [PM-967] - Add support for PAPI CPU counters in Kickstart
+ 
+10) Changes to worker package staging
+
+    Pegasus now by default, attempts to use the worker package out of
+    the Pegasus submit host installation unless a user has specified
+    finer grained attributes for the compute sites in the site catalog
+    or an entry is specified in the transformation catalog.  
+
+    Relevant JIRA items
+    [PM-888] - Guess which worker package to use based on the submit host
+ 
+11) [PM-953] - PMC now has the ability to set CPU affinity for multicore tasks.
+ 
+12) [PM-954] - Add useful environment variables to PMC
+ 
+13) [PM-985] - separate input and output replica catalogs 
+
+    Users can specify a different output replica catalog optionally by
+    specifying the property with prefix pegasus.catalog.replica.output 
+
+    This is useful when users want to separate the replica catalog
+    that they use for discovery of input files and the catalog where
+    the output files generated are registered. For example use a
+    Directory backed replica catalog backend to discover file
+    locations, and a file based replica catalog to catalog the
+    locations of the output files. 
+
+14) [PM-986] - input-dir option to pegasus-plan should be a comma
+separated list 
+ 
+15) [PM-1031] - pegasus-db-admin should have an upgrade/dowgrade
+option to update all databases from the dashboard database to current
+pegasus version 
+
+16) [PM-882] - Create prototype integration between Pegasus and Aspen
+ 
+17) [PM-964] - Add tips on how to use CPU affinity on condor
+
+Improvements
+--------------
+
+1) [PM-924] - Merge transfer/cleanup/create-dir into one client
+
+2) [PM-610] - Batch scp transfers in pegasus-transfer
+
+   pegasus-transfer now batches 70 transfers in a single scp
+   invocation against the same host. 
+ 
+3) [PM-611] - Batch rm commands in scp cleanup implementation
+
+   scp rm are now batched together at a level of 70 per group so that
+   we can keep the command lines short enough.
+ 
+4) [PM-856] - pegasus-cleanup should use pegasus-s3's bulk delete
+feature
+
+    s3 removes are now batched and passed in a temp file to pegasus-s3
+ 
+5) [PM-890] - pegasus-version should include a Git hash
+ 
+6) [PM-899] - Handling of database update versions from different branches
+ 
+7) [PM-911] - Use ssh to call rm for sshftp URL cleanup
+ 
+8) [PM-929] - Use make to build externals to make python development easier
+ 
+9) [PM-937] - Discontinue support for Python 2.4 and 2.5
+ 
+10) [PM-938] - Pegasus DAXParser always validates against latest supported DAX version
+ 
+11) [PM-958] - Deprecate "gridstart" names in Kickstart
+ 
+12) [PM-963] - Add support for wrappers in Kickstart
+
+     Kickstart supports an environment variable, KICKSTART_WRAPPER
+     that contains a set of command-line arguments to insert between
+     Kickstart and the application 
+ 
+13) [PM-965] - monitord amqp population
+ 
+14) [PM-979] - Update documentation for new DB schema
+ 
+15) [PM-984] - condor_rm on a pegasus-kickstart wrapped job does not
+return stdout back 
+
+      When a user condor_rm's their job, Condor sends the job a
+      SIGTERM. Previously this would cause Kickstart to die. This
+      commit changes Kickstart so that it catches the SIGTERM and
+      passes it on to the child instead. That way the child dies, but
+      not Kickstart, and Kickstart can report an invocation record
+      forthe job to provide the user with useful debugging info. This
+      same logic is also applied to SIGINT and SIGQUIT. 
+ 
+16) [PM-1018] - defaults for pegasus-plan to pick up properties and
+other catalogs 
+
+      pegasus will default the --conf option to pegasus-plan to
+      pegasus.properties in the current working directory.  
+      In addition, the default locations for the various catalog files
+      now point to current working directory ( rc.txt, tc.txt,
+      sites.xml )  
+ 
+ 
+17) [PM-1038] - Update tutorial to reflect the defaults for Pegasus 4.6 release
+ 
+Bugs Fixed
+--------------
+
+1) [PM-653] - pegasus.dagman.nofity should be removed in favor of
+Pegasus level notifcaitons 
+ 
+2) [PM-897] - kickstart is reporting misleading permission error when
+it is really a file not found 
+ 
+3) [PM-906] - Add Ubuntu apt repository
+ 
+4) [PM-910] - Cleanup jobs should ignore "file not found" errors, but
+not other errors 
+ 
+5) [PM-920] - Bamboo / title.xml problems
+ 
+6) [PM-922] - Dashboard and monitoring interface contain Python that
+is not valid for RHEL5 
+ 
+7) [PM-923] - Debian packages rebuild documentation
+ 
+8) [PM-931] - For Subworkflows Monitord populates host.wf_id to be
+wf_id of root_wf and not wf_id of sub workflow 
+ 
+9) [PM-944] - Make it possible to build Pegasus on SuSE (openSUSE and SLES)
+ 
+10) [PM-1029] - Planner should ensure that local aux jobs run with the same Pegasus install as the planner
+ 
+11) [PM-1035] - pegasus-analyzer fails when workflow db has no
+entries
+
 ===============================
 Release Notes for PEGASUS 4.5.4
 ===============================
