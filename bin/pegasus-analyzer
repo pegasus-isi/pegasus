@@ -857,7 +857,7 @@ def check_for_wf_start():
     if unsubmitted == total:
         # PM-1039 either the workflow did not start or other errors
         #check the dagman.out file
-        print_console( " Looks like workflow did not start" )
+        print_console( " Looks like workflow did not start".center(80, '*') )
         if input_dir is not None:
             dagman_out = input_dir + "/*.dag.dagman.out"
             nfs_error_string = backticks( "grep -i \".*Error.*NFS$\" " + dagman_out + " 2>/dev/null" )
@@ -867,13 +867,15 @@ def check_for_wf_start():
                 print_console( " HTCondor DAGMan expects submit directories to be NOT NFS mounted" )
                 print_console( " Set your submit directory to a directory on the local filesystem OR ")
                 print_console( "    Set HTCondor configuration CREATE_LOCKS_ON_LOCAL_DISK and ENABLE_USERLOG_LOCKING to True. Check HTCondor documentation for further details.")
+                print_console( )
 
             #PM-1040 check for dagman.lib.err
             dagman_lib_err = input_dir + "/*.dag.lib.err"
             dagman_lib_err_contents = backticks( "cat " + dagman_lib_err + " 2>/dev/null")
             if( dagman_lib_err_contents is not None and dagman_lib_err_contents != "" ):
-                print_console( " Error detected in " + dagman_lib_err )
-                print_console( " Contents "  )
+                header = " Error detected in *.dag.lib.err "
+                print_console( header.center(80, '='))
+                print_console( " Contents of " + dagman_lib_err  )
                 print_console( " " + dagman_lib_err_contents )
 
 
