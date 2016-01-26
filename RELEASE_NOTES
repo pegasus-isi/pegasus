@@ -8,7 +8,7 @@ Release Notes for PEGASUS 4.6.0
  is a major release of Pegasus and includes all the bug fixes and
  improvements in the 4.5.4 release 
  
- New features and Improvements in 4.6.0 and 4.5.4 are
+ New features and Improvements in 4.6.0  are
      - metadata support
      - support for variable substitution 
      - constraints based cleanup algorithm
