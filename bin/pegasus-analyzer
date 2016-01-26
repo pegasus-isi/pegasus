@@ -845,6 +845,42 @@ def print_job_info(job):
         subprocess.Popen( sub_wf_cmd, shell=True).communicate()[0]
         print_console( ("").center(80,"="))
 
+
+def check_for_wf_start():
+    """
+    This function checks if workflow did start.
+    If not then print helpful message
+    :return:
+    """
+    global total, success, failed, unsubmitted, unknown
+
+    if unsubmitted == total:
+        # PM-1039 either the workflow did not start or other errors
+        #check the dagman.out file
+        print_console( " Looks like workflow did not start" )
+        if input_dir is not None:
+            dagman_out = input_dir + "/*dagman.out"
+            nfs_error_string = backticks( "grep -i \".*Error.*NFS$\" " + dagman_out + " 2>/dev/null" )
+            if( nfs_error_string is not None ):
+                print_console( " HTCondor DAGMan NFS ERROR condition detected in " + dagman_out)
+                print_console( " " + nfs_error_string )
+                print_console( " HTCondor DAGMan expects submit directories to be NOT NFS mounted." )
+                print_console( " Set your submit directory to a directory on the local filesystem OR set HTCondor configuration DAGMAN_LOG_ON_NFS_IS_ERROR to False")
+
+
+
+
+
+
+
+def backticks(cmd_line):
+    """
+    what would a python program be without some perl love?
+    """
+    return subprocess.Popen(cmd_line, shell=True,
+                            stdout=subprocess.PIPE).communicate()[0]
+
+
 def print_top_summary():
     """
     This function prints the summary for the analyzer report,
@@ -978,6 +1014,9 @@ def analyze_files():
         # This is non summary mode despite of the name (go figure)    
         print_summary()
 
+    #PM-1039
+    check_for_wf_start()
+
     if failed > 0:
         # Workflow has failures, exit with exitcode 2
         sys.exit(2)
@@ -1018,11 +1057,20 @@ def analyze_db(config_properties):
     total_success_failed = workflow_stats.get_total_succeeded_failed_jobs_status()
     success = total_success_failed.succeeded
     failed = total_success_failed.failed
+
+    # PM-1039
+    if success is None:
+        success = 0
+    if failed is None:
+        failed = 0
+
     unsubmitted = total - success - failed
 
     # Let's print the results
-
     print_top_summary()
+
+    check_for_wf_start()
+
 
     # Exit if summary mode is on
     if summary_mode :
