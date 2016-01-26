@@ -14,6 +14,7 @@
   <xi:include href="manpage.pegasus-graphviz.xml"/>
   <xi:include href="manpage.pegasus-gridftp.xml"/>
   <xi:include href="manpage.pegasus-halt.xml"/>
+  <xi:include href="manpage.pegasus-init.xml"/>
   <xi:include href="manpage.pegasus-invoke.xml"/>
   <xi:include href="manpage.pegasus-keg.xml"/>
   <xi:include href="manpage.pegasus-kickstart.xml"/>
