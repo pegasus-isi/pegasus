@@ -858,12 +858,15 @@ def check_for_wf_start():
         # PM-1039 either the workflow did not start or other errors
         #check the dagman.out file
         print_console( " Looks like workflow did not start".center(80, '*') )
+        print_console()
         if input_dir is not None:
             dagman_out = backticks( "ls " + input_dir + "/*.dag.dagman.out" + " 2>/dev/null" )
 
             if dagman_out is not None and dagman_out != "":
                 nfs_error_string = backticks( "grep -i \".*Error.*NFS$\" " + dagman_out + " 2>/dev/null" )
                 if( nfs_error_string is not None and nfs_error_string != "" ):
+                    header = " Error detected in *.dag.dagman.out "
+                    print_console( header.center(80, '='))
                     print_console( " HTCondor DAGMan NFS ERROR condition detected in " + dagman_out)
                     print_console( " " + nfs_error_string )
                     print_console( " HTCondor DAGMan expects submit directories to be NOT NFS mounted" )
