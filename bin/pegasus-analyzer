@@ -861,10 +861,10 @@ def check_for_wf_start():
         if input_dir is not None:
             dagman_out = input_dir + "/*dagman.out"
             nfs_error_string = backticks( "grep -i \".*Error.*NFS$\" " + dagman_out + " 2>/dev/null" )
-            if( nfs_error_string is not None ):
+            if( nfs_error_string is not None and nfs_error_string != "" ):
                 print_console( " HTCondor DAGMan NFS ERROR condition detected in " + dagman_out)
                 print_console( " " + nfs_error_string )
-                print_console( " HTCondor DAGMan expects submit directories to be NOT NFS mounted." )
+                print_console( " HTCondor DAGMan expects submit directories to be NOT NFS mounted" )
                 print_console( " Set your submit directory to a directory on the local filesystem OR set HTCondor configuration DAGMAN_LOG_ON_NFS_IS_ERROR to False")
 
 
