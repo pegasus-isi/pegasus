@@ -28,7 +28,6 @@ XML += reference_command_lines.xml
 MANPAGES=$(shell ls ../manpages | grep txt)
 XMLMANPAGES=$(addprefix manpage.,$(MANPAGES:.txt=.xml))
 TXTMANPAGES=$(addprefix ../manpages/,$(MANPAGES))
-XMLMANPAGES += manpage.manpages.xml
 XML += $(XMLMANPAGES)
 
 ifndef ${prefix}
