@@ -222,7 +222,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </exec>
   </target>
 
-  <target name="doc-user-guide" depends="setup" description="Generate user guide from docbook source">
+  <target name="doc-user-guide" depends="setup,doc-manpages" description="Generate user guide from docbook source">
     <mkdir dir="${dist.doc}"/>
     <exec executable="${make}" dir="doc/docbook" failonerror="true">
       <arg line="prefix=${dist.doc} install"/>

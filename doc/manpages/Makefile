@@ -15,6 +15,7 @@ DOCBOOK2MAN = $(XSLTPROC) docbook-man.xsl
 
 TXTFILES = $(shell ls *.txt)
 MANPAGES = $(TXTFILES:.txt=.1)
+XMLMANPAGES = $(TXTFILES:.txt=.xml)
 
 .PHONY: manpages
 
