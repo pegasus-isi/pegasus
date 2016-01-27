@@ -12,7 +12,6 @@ XML += monitoring_debugging_stats.xml
 XML += pegasus-book.xml
 XML += data_management.xml
 XML += reference_api.xml
-XML += reference_command_lines.xml
 XML += reference_configuration.xml
 XML += running_workflows.xml
 XML += submit_directory.xml
@@ -23,6 +22,7 @@ XML += service.xml
 
 # Generated stuff
 XML += title.xml 
+XML += reference_command_lines.xml
 
 # Generated manpages
 MANPAGES=$(shell ls ../manpages | grep txt)
@@ -41,6 +41,9 @@ all: $(TARGETS)
 
 $(XMLMANPAGES): $(TXTMANPAGES)
 	make -C ../manpages install-docbook
+
+reference_command_lines.xml: $(XMLMANPAGES)
+	./generate_cli_reference.sh > reference_command_lines.xml
 
 title.xml: ../../build.properties
 	echo "<title>Pegasus $(VERSION) User Guide</title>" > title.xml
@@ -74,5 +77,5 @@ install: $(TARGETS)
 	cp pegasus-user-guide.pdf ${prefix}/
 
 clean:
-	rm -rf html wordpress pegasus-user-guide.pdf pegasus-user-guide.fo ./*~ title.xml  manpage.*.xml
+	rm -rf html wordpress pegasus-user-guide.pdf pegasus-user-guide.fo ./*~ title.xml reference_command_lines.xml manpage.*.xml
 

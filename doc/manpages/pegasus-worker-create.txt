@@ -4,9 +4,7 @@ pegasus-worker-create(1)
 
 Name
 ----
-pegasus-worker-create - creates a Pegasus worker package out of a
-Pegasus binary installation on the submit host, to be used for staging
-to remote compute nodes if required.
+pegasus-worker-create - creates a Pegasus worker package
 
 
 Synopsis
@@ -17,8 +15,8 @@ Synopsis
 
 Description
 -----------
-*pegasus-worker-create* creates	a Pegasus worker package out of	a 
-Pegasus binary installation on the submit host,	to be used for staging 
+*pegasus-worker-create* creates a Pegasus worker package out of a 
+Pegasus binary installation on the submit host, to be used for staging 
 to remote compute nodes. This worker package is usually placed in the
 workflow submit directory by the planner. 
 
