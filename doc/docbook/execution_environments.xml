@@ -836,8 +836,9 @@ pegasus.data.configuration    HTCondorio</programlisting>
               <entry>-l walltime</entry>
 
               <entry>This specifies the maximum runtime for the job in
-              minutes. It should be an integer value. Pegasus converts it to
-              the "hh:mm:ss" format required by PBS.</entry>
+              seconds. It should be an integer value. Pegasus converts it to
+              the "hh:mm:ss" format required by PBS. The value is rounded
+              up to the next whole minute.</entry>
             </row>
 
             <row>
@@ -969,11 +970,11 @@ pegasus.data.configuration    HTCondorio</programlisting>
 
               <entry>-l h_rt</entry>
 
-              <entry>The maximum runtime for the job in minutes. should be an
+              <entry>The maximum runtime for the job in seconds. should be an
               integer value. Pegasus converts it to hh:mm:ss format. From SGE
               documentation: h_rt is hard runtime hh::min::ss (i.e. 12:00:00).
               Requests a queue with a hard runtime in excess of the time
-              specified.</entry>
+              specified. The value is rounded up to the next whole minute.</entry>
             </row>
 
             <row>
