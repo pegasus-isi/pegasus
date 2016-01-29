@@ -23,8 +23,6 @@ Usage: pegasus-monitord [options] dagoutfile
 #  limitations under the License.
 ##
 
-# Revision : $Revision: 2012 $
-
 # Import Python modules
 import os
 import re
@@ -90,14 +88,14 @@ os.environ['PEGASUS_SCHEMA_DIR'] = pegasus_schema_dir
 
 # Used in process
 re_parse_dag_name = re.compile(r"Parsing (.+) ...$")
-re_parse_timestamp = re.compile(r"^\s*(\d{1,2})\/(\d{1,2})(\/(\d{1,2}))?\s+(\d{1,2}):(\d{2}):(\d{2})")
+re_parse_timestamp = re.compile(r"\s*(\d{1,2})\/(\d{1,2})(\/(\d{1,2}))?\s+(\d{1,2}):(\d{2}):(\d{2})")
 re_parse_iso_stamp = re.compile(r"^\s*(\d{4}).?(\d{2}).?(\d{2}).(\d{2}).?(\d{2}).?(\d{2})([.,]\d+)?([Zz]|[-+](\d{2}).?(\d{2}))")
-re_parse_event = re.compile(r"Event:\s+ULOG_(\S+) for Condor (?:Job|Node) (\S+)\s+\((-?[0-9]+\.[0-9]+)(\.[0-9]+)?\)$")
+re_parse_event = re.compile(r"Event:\s+ULOG_(\S+) for (?:HT|)Condor (?:Job|Node) (\S+)\s+\((-?[0-9]+\.[0-9]+)(\.[0-9]+)?\).*")
 re_parse_script_running = re.compile(r"\d{2}\sRunning (PRE|POST) script of (?:Job|Node) (.+)\.{3}")
 re_parse_script_done = re.compile(r"\d{2}\s(PRE|POST) Script of (?:Job|Node) (\S+)")
 re_parse_script_successful = re.compile(r"completed successfully\.$")
 re_parse_script_failed = re.compile(r"failed with status\s+(-?\d+)\.?$")
-re_parse_job_submit = re.compile(r"Submitting Condor Node (.+) job")
+re_parse_job_submit = re.compile(r"Submitting (?:HT|)Condor Node (.+) job")
 re_parse_job_submit_error = re.compile(r"ERROR: submit attempt failed")
 re_parse_job_failed = re.compile(r"\d{2}\sNode (\S+) job proc \(([0-9\.]+)\) failed with (status|signal)\s+(-?\d+)\.$")
 re_parse_job_successful = re.compile(r"\d{2}\sNode (\S+) job proc \(([0-9\.]+)\) completed successfully\.$")
@@ -149,9 +147,6 @@ store_stdout_stderr = True      # Flag for storing jobs' stdout and stderr in ou
 fast_start_mode     = False     # Flag to indicate that only sleep once monitord has caught up with the dagman.out file
 
 wf_event_sink = None            # Where wf events go
-
-# Revision handling
-revision = "$Revision: 2012 $" # Let cvs handle this, do not edit manually
 
 # Remaining variables
 out = None                      # .dag.dagman.out file from command-line
@@ -639,8 +634,12 @@ def process_dagman_out(wf, log_line):
 
     # Check log_line for timestamp at the beginning
     timestamp_found = False
-    my_expr = re_parse_timestamp.search(log_line)
 
+    my_expr = None
+    # PM-1030 there should be only at max two timestamps recorded
+    # and we prefer the second one if present.
+    for my_expr in re_parse_timestamp.finditer( log_line ):
+        pass
 
     if my_expr is not None:
         # Found time stamp, let's assume valid log line
@@ -1088,7 +1087,7 @@ else:
         logger.error("cannot create dashboard events output... disabling dashboard event output!")
 
 # Say hello
-logger.info("starting [%s], using pid %d" % (revision, os.getpid()))
+logger.info("starting, using pid %d" % (os.getpid()))
 if millisleep is not None:
     logger.info("using simulation delay of %d ms" % (millisleep))
 

@@ -151,7 +151,7 @@ def formatted_wf_summary_legends_part2():
 #   The wall time from the start of the workflow execution to the end as
 #   reported by the DAGMAN.In case of rescue dag the value is the
 #   cumulative of all retries.
-# Workflow cumulative job wall time:
+# Cumulative job wall time:
 #   The sum of the wall time of all jobs as reported by kickstart.
 #   In case of job retries the value is the cumulative of all retries.
 #   For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs),
@@ -163,7 +163,7 @@ def formatted_wf_summary_legends_part2():
 #   is the cumulative of all retries. For workflows having sub workflow
 #   jobs (i.e SUBDAG and SUBDAX jobs), the wall time value includes jobs
 #   from the sub workflows as well.
-# Workflow cumulative job badput wall time:
+# Cumulative job badput wall time:
 #   The sum of the wall time of all failed jobs as reported by kickstart.
 #   In case of job retries the value is the cumulative of all retries.
 #   For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs),
@@ -650,9 +650,9 @@ def print_workflow_summary(workflow_stats, output_format, wf_summary=True, time_
                 else: return format_seconds(val)
             if not multiple_wf:
                 summary_str += "%-57s: %s\n" % ("Workflow wall time", myfmt(wwt))
-            summary_str += "%-57s: %s\n" % ("Workflow cumulative job wall time", myfmt(wcjwt))
+            summary_str += "%-57s: %s\n" % ("Cumulative job wall time", myfmt(wcjwt))
             summary_str += "%-57s: %s\n" % ("Cumulative job wall time as seen from submit side", myfmt(ssjwt))
-            summary_str += "%-57s: %s\n" % ("Workflow cumulative job badput wall time", myfmt(wcbpt))
+            summary_str += "%-57s: %s\n" % ("Cumulative job badput wall time", myfmt(wcbpt))
             summary_str += "%-57s: %s\n" % ("Cumulative job badput wall time as seen from submit side", myfmt(ssbpt))
         else:
             def myfmt(val):
@@ -897,6 +897,7 @@ def print_wf_transformation_stats(stats, workflow_id, dax_label, fmt):
 
     if fmt == "text":
         max_length = [max(0, len(col_names[i])) for i in range(8)]
+        columns = ['' for i in range(8)]
 
         for t in transformation_statistics:
             max_length[0] = max(max_length[0], len(t.transformation))
@@ -906,7 +907,7 @@ def print_wf_transformation_stats(stats, workflow_id, dax_label, fmt):
             max_length[4] = max(max_length[4], len(str(t.min)))
             max_length[5] = max(max_length[5], len(str(t.max)))
             max_length[6] = max(max_length[6], len(str(t.avg)))
-            max_length[6] = max(max_length[7], len(str(t.sum)))
+            max_length[7] = max(max_length[7], len(str(t.sum)))
 
         max_length = [i + 1 for i in max_length]
 
@@ -918,7 +919,7 @@ def print_wf_transformation_stats(stats, workflow_id, dax_label, fmt):
 
         if fmt == "text":
             for i in range(0, 8):
-                col_names[i] = col_names[i].ljust(max_length[i])
+                columns[i] = col_names[i].ljust(max_length[i])
                 content[i] = content[i].ljust(max_length[i])
 
         if fmt == "csv":
@@ -926,7 +927,7 @@ def print_wf_transformation_stats(stats, workflow_id, dax_label, fmt):
 
         if not header_printed:
             header_printed = True
-            report.append(print_row(col_names, transformation_stats_col_size, fmt))
+            report.append(print_row(columns, transformation_stats_col_size, fmt))
 
         report.append(print_row(content, transformation_stats_col_size, fmt))
 

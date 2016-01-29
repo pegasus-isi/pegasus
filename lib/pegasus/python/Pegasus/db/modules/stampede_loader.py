@@ -34,6 +34,7 @@ import threading
 import Queue
 
 class Analyzer(BaseAnalyzer, SQLAlchemyInit):
+
     """Load into the Stampede SQL schema through SQLAlchemy.
 
     Parameters:
@@ -47,6 +48,9 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         expects the database to exist (ie: will not issue CREATE DB)
         but will populate an empty DB with tables/indexes/etc.
     """
+
+    MAX_RETRIES = 10 # maximum number of retries in case of operational errors that arise because of database locked/connection dropped
+
     def __init__(self, connString=None, perf='no', batch='no', props=None, db_type=None, **kw):
         """Init object
 
@@ -172,34 +176,44 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         """
         self.log.debug("Process: %s", linedata)
 
-        if not self._batch:
-            self.check_connection()
+        for retry in range( 1, self.MAX_RETRIES + 1):
+            if not self._batch:
+                self.check_connection()
 
-        try:
-            if self._perf:
-                t = time.time()
-                self.eventMap[linedata['event']](linedata)
-                self._insert_time += (time.time() - t)
-                self._insert_num += 1
-            else:
-                self.eventMap[linedata['event']](linedata)
-        except KeyError:
-            if linedata['event'].startswith('stampede.job_inst.'):
-                self.log.warning('Corner case jobstate event: "%s"', linedata['event'])
-                self.jobstate(linedata)
-            else:
-                self.log.error('No handler for event type "%s" defined', linedata['event'])
-        except exc.IntegrityError, e:
-            # This is raised when an attempted insert violates the
-            # schema (unique indexes, etc).
-            self.log.exception(e)
-            self.log.error('Insert failed for event "%s"', linedata['event'])
-            self.session.rollback()
-        except exc.OperationalError, e:
-            self.log.error('Connection seemingly lost - attempting to refresh')
-            self.session.rollback()
-            self.check_connection()
-            self.process(linedata)
+            try:
+                if self._perf:
+                    t = time.time()
+                    self.eventMap[linedata['event']](linedata)
+                    self._insert_time += (time.time() - t)
+                    self._insert_num += 1
+                else:
+                    self.eventMap[linedata['event']](linedata)
+
+            except KeyError:
+                if linedata['event'].startswith('stampede.job_inst.'):
+                    self.log.warning('Corner case jobstate event: "%s"', linedata['event'])
+                    self.jobstate(linedata)
+                else:
+                    self.log.error('No handler for event type "%s" defined', linedata['event'])
+            except exc.IntegrityError, e:
+                # This is raised when an attempted insert violates the
+                # schema (unique indexes, etc).
+                self.log.exception(e)
+                self.log.error('Insert failed for event "%s"', linedata['event'])
+                self.session.rollback()
+            except exc.OperationalError, e:
+                self.log.error('Connection seemingly lost - attempting to refresh. Retry %s' %retry)
+                self.session.rollback()
+                self.check_connection()
+                #PM-1013 retry only in case of operational errors
+                continue
+            # the current attempt was successful or there was integrity error/key error. exit the loop
+            break
+        else:
+            #loop finished after all retries have been made
+            self.log.error( 'Maximum number of retries reached for stampede_loader.process() method %s' %retry)
+            raise RuntimeError( 'Maximum number of retries reached for stampede_loader.process() method %s' %retry)
+
 
         self.check_flush()
 
@@ -328,7 +342,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         self.log.debug('check_connection.end')
 
 
-    def hard_flush(self, batch_flush=True):
+    def hard_flush(self, batch_flush=True, retry= 0):
         """
         @type   batch_flush: boolean
         @param  batch_flush: Defaults to true.  Is set to false
@@ -345,6 +359,12 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             return
         self.log.debug('Hard flush: batching=%s', batch_flush)
 
+        if retry == self.MAX_RETRIES + 1 :
+            #PM-1013 see if max retries is reached
+            self.log.error( 'Maximum number of retries reached for stampede_loader.hard_flush() method %s' %self.MAX_RETRIES )
+            raise RuntimeError( 'Maximum number of retries reached for stampede_loader.hard_flush() method %s' %self.MAX_RETRIES )
+
+        retry = retry + 1
         self.check_connection()
 
         if self._perf:
@@ -376,12 +396,12 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             self.log.exception(e)
             self.log.error('Integrity error on batch flush: batch will need to be committed per-event which will take longer')
             self.session.rollback()
-            self.hard_flush(batch_flush=False)
+            self.hard_flush(batch_flush=False, retry=retry)
         except exc.OperationalError, e:
             self.log.exception(e)
-            self.log.error('Connection problem during commit: reattempting batch')
+            self.log.error('Connection problem during commit in hard_flush(): reattempting batch. Retry %s' %retry)
             self.session.rollback()
-            self.hard_flush()
+            self.hard_flush(retry=retry)
 
         for host in self._batch_cache['host_map_events']:
             self.map_host_to_job_instance(host)
@@ -394,7 +414,18 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         for k in self._batch_cache.keys():
             self._batch_cache[k] = []
 
-        self.session.commit()
+        try:
+            # commit the map host to job events . no retries for this.
+            self.session.commit()
+        except exc.IntegrityError, e:
+            self.log.exception(e)
+            self.log.error('Integrity error on host_map_events in hard_flush()')
+            self.session.rollback()
+        except exc.OperationalError, e:
+            self.log.exception(e)
+            self.log.error('Connection problem on host_map_events during commit in hard_flush()')
+            self.session.rollback()
+
         self.reset_flush_state()
         self.log.debug('Hard flush end')
 
@@ -762,10 +793,10 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
 
         self.log.debug( 'rc_meta: %s', rc_meta)
 
-        if self._batch:
-            self._batch_cache['batch_events'].append(rc_meta)
-        else:
-            rc_meta.commit_to_db(self.session)
+        #we have to do the merge individually to prevent integrity constraint
+        #errors that happen if we put them in the batch cache update_events
+        rc_meta.merge_to_db(self.session)
+
 
     def rc_pfn(self, linedata):
         """
@@ -809,7 +840,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         if self._batch:
             self._batch_cache['batch_events'].append(wf_files)
         else:
-            rc_meta.commit_to_db(self.session)
+            wf_files.commit_to_db(self.session)
 
     def subwf_map(self, linedata):
         """

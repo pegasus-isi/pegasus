@@ -339,7 +339,7 @@ int addLFNToStatInfo(StatInfo* info, const char* lfn) {
 }
 
 size_t printXMLStatInfo(FILE *out, int indent, const char* tag, const char* id,
-                        const StatInfo* info, int includeData) {
+                        const StatInfo* info, int includeData, int useCDATA) {
     char *real = NULL;
 
     /* sanity check */
@@ -485,6 +485,11 @@ size_t printXMLStatInfo(FILE *out, int indent, const char* tag, const char* id,
 
             fprintf(out, ">");
             if (fd != -1) {
+
+                if (useCDATA) {
+                    fprintf(out, "<![CDATA[");
+                }
+
                 /* Get the last dsize bytes of the file */
                 size_t offset = 0;
                 if (fsize > dsize) {
@@ -501,11 +506,19 @@ size_t printXMLStatInfo(FILE *out, int indent, const char* tag, const char* id,
                                     info->file.name, strerror(errno));
                             break;
                         }
-                        xmlquote(out, buf, rsize);
+                        if (useCDATA) {
+                            fwrite(buf, rsize, 1, out);
+                        } else {
+                            xmlquote(out, buf, rsize);
+                        }
                         total += rsize;
                     }
                 }
                 close(fd);
+
+                if (useCDATA) {
+                    fprintf(out, "]]>");
+                }
             }
 
             fprintf(out, "</data>\n");

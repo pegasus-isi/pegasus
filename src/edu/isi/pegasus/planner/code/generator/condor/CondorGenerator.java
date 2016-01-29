@@ -25,13 +25,11 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 
-import edu.isi.pegasus.planner.code.CodeGenerator;
 import edu.isi.pegasus.planner.code.CodeGeneratorException;
 import edu.isi.pegasus.planner.code.GridStart;
 import edu.isi.pegasus.planner.code.POSTScript;
 import edu.isi.pegasus.planner.code.GridStartFactory;
 import edu.isi.pegasus.planner.code.generator.Abstract;
-import edu.isi.pegasus.planner.code.CodeGeneratorFactory;
 import edu.isi.pegasus.planner.code.generator.Braindump;
 
 import edu.isi.pegasus.planner.code.generator.NetloggerJobMapper;
@@ -60,16 +58,13 @@ import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import org.griphyn.vdl.euryale.VTorInUseException;
 
-import java.lang.reflect.Type;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapter;
-import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.classes.PegasusFile;
-import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.namespace.Metadata;
 
 
@@ -296,6 +291,11 @@ public class CondorGenerator extends Abstract {
      * Boolean indicating whether to assign job priorities or not.
      */
     private boolean mAssignDefaultJobPriorities;
+    
+    /**
+     * Boolean indicating whether to assign concurrency limits or not.
+     */
+    private boolean mAssociateConcurrencyLimits;
 
 
     /**
@@ -330,6 +330,7 @@ public class CondorGenerator extends Abstract {
         mTCHandle    = bag.getHandleToTransformationCatalog();
         mSiteStore   = bag.getHandleToSiteStore();
         mAssignDefaultJobPriorities = mProps.assignDefaultJobPriorities();
+        mAssociateConcurrencyLimits = mProps.associateCondorConcurrencyLimits();
 
         //instantiate and intialize the style factory
         mStyleFactory.initialize( bag );
@@ -693,9 +694,11 @@ public class CondorGenerator extends Abstract {
         PrintWriter pwClassADWriter = new PrintWriter( classADWriter );
         ClassADSGenerator.generate( pwClassADWriter, dag, job );
         
-        //PM-933 associate the corresponding concurrency limits
-        job.condorVariables.construct( Condor.CONCURRENCY_LIMITS_KEY, 
+        if( mAssociateConcurrencyLimits ){
+            //PM-933, PM-1000 associate the corresponding concurrency limits
+            job.condorVariables.construct( Condor.CONCURRENCY_LIMITS_KEY, 
                                        getConcurrencyLimit(job) );
+        }
         
         //PM-796 we print all the condor variables after the classad
         //generator has generated the user classads
@@ -1568,7 +1571,15 @@ public class CondorGenerator extends Abstract {
 
         //put the arguments as appropriate condor profile
         if( args != null && args.length() > 0){
-            if( mProps.useCondorQuotingForArguments() && args != null){
+            //PM-1037 consider both the profile value and default value
+            //from properties to see if we need to quote arguments for the job
+            boolean quote = mProps.useCondorQuotingForArguments(); //default from properties if not specified is true
+            String profileKey = Pegasus.CONDOR_QUOTE_ARGUMENTS_KEY;
+            if( job.vdsNS.containsKey( profileKey ) ){
+                quote = quote && job.vdsNS.getBooleanValue( profileKey );
+            }
+            
+            if( quote && args != null){
                 try {
                     mLogger.log("Unquoted arguments are " + args,
                                  LogManager.DEBUG_MESSAGE_LEVEL);

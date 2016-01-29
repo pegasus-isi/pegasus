@@ -424,14 +424,16 @@ public class RemoveDirectory extends Engine {
 
         //the site where the cleanup job will run
         String eSite = "local";
-
+        SiteCatalogEntry siteEntry = mSiteStore.lookup( site );
         int index = 0;
         for( String url: urls ){
             if( url.startsWith( PegasusURL.FILE_URL_SCHEME ) ){
-                //means the cleanup job should run on the staging site
-                mLogger.log( "Directory URL is a file url for site " + site + "  " +  urls,
-                                 LogManager.DEBUG_MESSAGE_LEVEL );
-                eSite = site;
+                if( !siteEntry.isVisibleToLocalSite() ){
+                    //means the cleanup job should run on the staging site
+                    mLogger.log( "Directory URL is a file url for site " + site + "  " +  urls,
+                                     LogManager.DEBUG_MESSAGE_LEVEL );
+                    eSite = site;
+                }
             }
         }
         

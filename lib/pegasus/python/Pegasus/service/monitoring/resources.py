@@ -17,7 +17,9 @@ __author__ = 'Rajiv Mayani'
 import logging
 
 from Pegasus.db.schema import DashboardWorkflow, DashboardWorkflowstate
-from Pegasus.db.schema import Workflow, Workflowstate, WorkflowMeta, Job, Host, Jobstate
+from Pegasus.db.schema import Workflow, WorkflowMeta, WorkflowFiles, Workflowstate
+from Pegasus.db.schema import RCLFN, RCPFN, RCMeta
+from Pegasus.db.schema import Job, Host, Jobstate
 from Pegasus.db.schema import Task, TaskMeta, JobInstance, Invocation
 
 from Pegasus.service.base import BaseResource
@@ -200,11 +202,6 @@ class WorkflowResource(BaseResource):
         ]
 
 
-class WorkflowstateResource(RootWorkflowstateResource):
-    def __init__(self, alias=None):
-        super(WorkflowstateResource, self).__init__(alias if alias else Workflowstate)
-
-
 class WorkflowMetaResource(BaseResource):
     def __init__(self, alias=None):
         super(WorkflowMetaResource, self).__init__(alias if alias else WorkflowMeta)
@@ -215,6 +212,23 @@ class WorkflowMetaResource(BaseResource):
             'key',
             'value'
         ]
+
+
+class WorkflowFilesResource(BaseResource):
+    def __init__(self, alias=None):
+        super(WorkflowFilesResource, self).__init__(alias if alias else WorkflowFiles)
+
+        self._prefix = 'wf'
+
+        self._fields = [
+            'wf_id',
+            'task_id'
+        ]
+
+
+class WorkflowstateResource(RootWorkflowstateResource):
+    def __init__(self, alias=None):
+        super(WorkflowstateResource, self).__init__(alias if alias else Workflowstate)
 
 
 class JobResource(BaseResource):
@@ -340,4 +354,41 @@ class InvocationResource(BaseResource):
             'transformation',
             'executable',
             'argv'
+        ]
+
+
+class RCLFNResource(BaseResource):
+    def __init__(self, alias=None):
+        super(RCLFNResource, self).__init__(alias if alias else RCLFN)
+
+        self._prefix = 'l'
+
+        self._fields = [
+            'lfn_id',
+            'lfn'
+        ]
+
+
+class RCPFNResource(BaseResource):
+    def __init__(self, alias=None):
+        super(RCPFNResource, self).__init__(alias if alias else RCPFN)
+
+        self._prefix = 'p'
+
+        self._fields = [
+            'pfn_id',
+            'pfn',
+            'site'
+        ]
+
+
+class RCMetaResource(BaseResource):
+    def __init__(self, alias=None):
+        super(RCMetaResource, self).__init__(alias if alias else RCMeta)
+
+        self._prefix = 'rm'
+
+        self._fields = [
+            'key',
+            'value'
         ]

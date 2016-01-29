@@ -374,22 +374,29 @@ public class Transfer   implements SLS {
             //on the head node
             StringBuffer url = new StringBuffer();
 
-            ReplicaCatalogEntry cacheLocation = null;
+            Collection<ReplicaCatalogEntry> cacheLocations = null;
             boolean symlink = false;
+            String computeSite = job.getSiteHandle();
             if( mBypassStagingForInputs ){
+                //PM-698
                 //we retrieve the URL from the Planner Cache as a get URL
                 //bypassed URL's are stored as GET urls in the cache and
                 //associated with the compute site
-                //we need a GET URL. we don't know what site is associated with
-                //the source URL. Get the first matching one
-                //PM-698
-                cacheLocation = mPlannerCache.lookup( lfn, OPERATION.get );
+                                
+                //PM 1002 first we try and find a tighter match on the compute site
+                //and then the loose match
+                cacheLocations = mPlannerCache.lookupAllEntries(lfn, computeSite, OPERATION.get );
+                if( cacheLocations.isEmpty() ){
+                    mLogger.log( "Unable to find location of lfn in planner(get) cache with input staging bypassed "  + lfn +
+                                 " for job " + job.getID(),
+                                 LogManager.DEBUG_MESSAGE_LEVEL );
+                }
             }
-            if( cacheLocation == null ){
+            if( cacheLocations == null || cacheLocations.isEmpty() ){
                 String stagingSite = job.getStagingSiteHandle();
                 //construct the location with respect to the staging site
                 if( mUseSymLinks && //specified in configuration
-                    stagingSite.equals( job.getSiteHandle() ) ){ //source URL logically on the same site where job is to be run
+                    stagingSite.equals( computeSite ) ){ //source URL logically on the same site where job is to be run
                     //we can symlink . construct the source URL as a file url
                     symlink = true;
                     url.append( PegasusURL.FILE_URL_SCHEME ).append( "//" ).append( stagingSiteDirectory );
@@ -412,14 +419,18 @@ public class Transfer   implements SLS {
             }
             else{
                 //construct the URL wrt to the planner cache location
-                url.append( cacheLocation.getPFN() );
-                ft.addSource( cacheLocation.getResourceHandle(), url.toString() );
-                
-                symlink = ( mUseSymLinks && //specified in configuration
-                            !pf.isCheckpointFile() && //can only do symlinks for data files . not checkpoint files
-                            !pf.isExecutable() && //can only do symlinks for data files . not executables
-                            ft.getSourceURL().getKey().equals( job.getSiteHandle()) && //source URL logically on the same site where job is to be run
-                            url.toString().startsWith( PegasusURL.FILE_URL_SCHEME ) ); //source URL is a file URL
+                //PM-1014 go through all the candidates returned from the planner cache
+                for( ReplicaCatalogEntry cacheLocation: cacheLocations ){
+                    url = new StringBuffer();
+                    url.append( cacheLocation.getPFN() );
+                    ft.addSource(cacheLocation);
+                    
+                    symlink = ( mUseSymLinks && //specified in configuration
+                                !pf.isCheckpointFile() && //can only do symlinks for data files . not checkpoint files
+                                !pf.isExecutable() && //can only do symlinks for data files . not executables
+                                ft.getSourceURL().getKey().equals( job.getSiteHandle()) && //source URL logically on the same site where job is to be run
+                                url.toString().startsWith( PegasusURL.FILE_URL_SCHEME ) ); //source URL is a file URL
+                }
             }
             
             //if the source URL is already present at the compute site

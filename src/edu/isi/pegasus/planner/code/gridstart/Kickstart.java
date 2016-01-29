@@ -203,6 +203,11 @@ public class Kickstart implements GridStart {
      * The invoke limit trigger.
      */
     private long mInvokeLength;
+    
+    /**
+     * A flag to indicate if outputs are being registered or not
+     */
+    private boolean mRegisterOutputs;
 
     /**
      * A boolean indicating whether to have worker node execution or not.
@@ -292,6 +297,7 @@ public class Kickstart implements GridStart {
         mNoGridStartImpl.initialize( bag, dag );
         mUseFullPathToGridStart = true;
         mDisableInvokeFunctionality = mProps.disableInvokeInGridStart();
+        mRegisterOutputs = mProps.createRegistrationJobs();
     }
 
      /**
@@ -397,14 +403,18 @@ public class Kickstart implements GridStart {
                     jobconf.construct(Pegasus.GRIDSTART_ARGUMENTS_KEY, "-H");
                 }
             }
-
-
-          //no worker node case
-                //always pass isGlobus true as always
-                //interested only in executable strargs
-                //due to the fact that seqexec does not allow for setting environment
-                //per constitutent constituentJob, we cannot set the postscript removal option
-                this.enable( constituentJob, isGlobusJob, mDoStat, false, partOfClusteredJob  );
+            
+            //no worker node case
+            //always pass isGlobus true as always
+            //interested only in executable strargs
+            //due to the fact that seqexec does not allow for setting environment
+            //per constitutent constituentJob, we cannot set the postscript removal option
+            this.enable( constituentJob, isGlobusJob, mDoStat, false, partOfClusteredJob  );
+                
+            //PM-1021 add any of the lof files (and any other) that maybe transferred via condor io
+            job.condorVariables.addIPFileForTransfer( constituentJob.condorVariables.getIPFilesForTransfer() );
+            
+            //System.out.println( constituentJob.condorVariables );
         }
 
         //all the constitutent jobs are enabled.
@@ -613,50 +623,11 @@ public class Kickstart implements GridStart {
             gridStartArgs.append( " -X " );
        }
 
-        //add the stat options to kickstart only for certain jobs for time being
-        //and if the input variable is true
-        if ( stat ){
-            if (job.getJobType() == Job.COMPUTE_JOB ||
-//                job.getJobType() == Job.STAGED_COMPUTE_JOB ||
-                job.getJobType() == Job.CLEANUP_JOB ||
-                job.getJobType() == Job.STAGE_IN_JOB ||
-                job.getJobType() == Job.INTER_POOL_JOB) {
-
-                String lof;
-                List files = new ArrayList(2);
-
-                //inefficient check here again. just a prototype
-                //we need to generate -S option only for non transfer jobs
-                //generate the list of filenames file for the input and output files.
-                if (! (job instanceof TransferJob)) {
-                    lof = generateListofFilenamesFile(job.getInputFiles(),
-                                                      job.getID() + ".in.lof");
-                    if (lof != null) {
-                        File file = new File(lof);
-                        job.condorVariables.addIPFileForTransfer(lof);
-                        //arguments just need basename . no path component
-                        gridStartArgs.append("-S @").append(file.getName()).
-                            append(" ");
-                        files.add(file.getName());
-                    }
-                }
-
-                //for cleanup jobs no generation of stats for output files
-                if (job.getJobType() != Job.CLEANUP_JOB) {
-                    lof = generateListofFilenamesFile(job.getOutputFiles(),
-                                                      job.getID() + ".out.lof");
-                    if (lof != null) {
-                        File file = new File(lof);
-                        job.condorVariables.addIPFileForTransfer(lof);
-                        //arguments just need basename . no path component
-                        gridStartArgs.append("-s @").append(file.getName()).append(" ");
-                        files.add(file.getName());
-                    }
-                }
-                //add kickstart postscript that removes these files
-                if( addPostScript ) {addCleanupPostScript(job, files); }
-            }
-        }//end of if ( stat )
+        
+        String statArgs = generateStatArgumentOptions( job, stat, mRegisterOutputs, addPostScript );
+        if( !statArgs.isEmpty() ){
+            gridStartArgs.append( statArgs );
+        }
         else if( mGenerateLOF ){
             //dostat is false. so no generation of stat option
             //but generate lof files nevertheless
@@ -1194,6 +1165,89 @@ public class Kickstart implements GridStart {
     }
 
     /**
+     * Returns the stat argument options to be appended for kickstart invocation
+     * 
+     * @param job
+     * @param stat
+     * @param registerOutputs
+     * @param addPostscripts
+     * @return 
+     */
+    protected String generateStatArgumentOptions(Job job, boolean stat, boolean registerOutputs, boolean addPostScript ) {
+        //sanity check
+        if ( !( stat || mRegisterOutputs )){
+            return "";
+        }
+        
+        StringBuffer args = new StringBuffer();
+        //PM-992 we stat outputs either if stat property is set
+        //or registration is enabled. inputs are only stated if
+        //stat property is turned on.
+        if ( stat || registerOutputs ){
+            //add the stat options to kickstart only for certain jobs for time being
+             //and if the input variable is true
+            if (job.getJobType() == Job.COMPUTE_JOB ||
+//                job.getJobType() == Job.STAGED_COMPUTE_JOB ||
+                job.getJobType() == Job.CLEANUP_JOB ||
+                job.getJobType() == Job.STAGE_IN_JOB ||
+                job.getJobType() == Job.INTER_POOL_JOB) {
+
+                String lof;
+                List files = new ArrayList(2);
+
+                //inefficient check here again. just a prototype
+                //we need to generate -S option only for non transfer jobs
+                //generate the list of filenames file for the input and output files.
+                if (! (job instanceof TransferJob) && stat ) {
+                    lof = generateListofFilenamesFile(job.getInputFiles(),
+                                                      job.getID() + ".in.lof");
+                    if (lof != null) {
+                        File file = new File(lof);
+                        job.condorVariables.addIPFileForTransfer(lof);
+                        //arguments just need basename . no path component
+                        args.append(" -S @").append(file.getName()).
+                            append(" ");
+                        files.add(file.getName());
+                    }
+                }
+
+                if( stat) {
+                    //for cleanup jobs no generation of stats for output files
+                    if (job.getJobType() != Job.CLEANUP_JOB) {
+                        lof = generateListofFilenamesFile(job.getOutputFiles(),
+                                                          job.getID() + ".out.lof");
+                        if (lof != null) {
+                            File file = new File(lof);
+                            job.condorVariables.addIPFileForTransfer(lof);
+                            //arguments just need basename . no path component
+                            args.append(" -s @").append(file.getName()).append(" ");
+                            files.add(file.getName());
+                        }
+                    }
+                }
+                else if( registerOutputs ){
+                    //PM-992 we generate lfn=pfn -s options on command line
+                    //for files that need to be registered
+                    if( job.getJobType() == Job.COMPUTE_JOB ){
+                        for( PegasusFile file : job.getOutputFiles() ){
+                            if( file.getRegisterFlag() ){
+                                args.append( " -s " ).append( file.getLFN() ).
+                                     append( "=" ).append( file.getLFN() );
+                            }
+                        }
+                    }
+                }
+                //add kickstart postscript that removes these files
+                if( addPostScript ) {
+                    addCleanupPostScript(job, files); 
+                }
+            }
+        }
+        args.append( " " );
+        return args.toString();
+    }
+    
+    /**
      * Writes out the list of filenames file for the constituentJob.
      *
      * @param files  the list of <code>PegasusFile</code> objects contains the files
@@ -1203,7 +1257,7 @@ public class Kickstart implements GridStart {
      *
      * @return the full path to lof file created, else null if no file is written out.
      */
-     public String generateListofFilenamesFile( Set files, String basename ){
+     protected String generateListofFilenamesFile( Set files, String basename ){
          //sanity check
          if ( files == null || files.isEmpty() ){
              return null;
@@ -1218,8 +1272,13 @@ public class Kickstart implements GridStart {
             PegasusFile pf;
             for( Iterator it = files.iterator(); it.hasNext(); ){
                 pf = ( PegasusFile ) it.next();
-                input.write( pf.getLFN() );
-                input.write( "\n" );
+                String lfn= pf.getLFN();
+                StringBuilder sb = new StringBuilder();
+                //to make sure that kickstart generates lfn attribute in statcall
+                //element
+                sb.append( lfn ).append( "=" ).
+                   append( lfn ).append(  "\n" );
+                input.write( sb.toString() );
             }
             //close the stream
             input.close();
@@ -1414,6 +1473,7 @@ public class Kickstart implements GridStart {
        }
        return time;
     }
+
 
 
 }

@@ -17,6 +17,7 @@
 package edu.isi.pegasus.planner.selector.replica;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.PegasusURL;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.PegRandom;
@@ -25,11 +26,17 @@ import edu.isi.pegasus.planner.classes.ReplicaLocation;
 
 
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
+import edu.isi.pegasus.planner.selector.ReplicaSelector;
 
 import java.util.Properties;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.SortedSet;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 
@@ -90,7 +97,7 @@ public class Regex extends Default {
      * The Set of regular expressions that orders the regex expressions to use 
      * in ascending order.
      */
-    private SortedSet mSortedRegexSet;
+    private SortedSet<Rank> mSortedRegexSet;
 
     /**
      * The overloaded constructor, that is called by load method.
@@ -102,7 +109,85 @@ public class Regex extends Default {
         super(properties);
         mSortedRegexSet = getRegexSet( properties.matchingSubset( Regex.PROPERTY_PREFIX, false ));
         mLogger.log( "[RegexReplicaSelector] User Provided Ranked regexes are " + mSortedRegexSet,
-                     LogManager.DEBUG_MESSAGE_LEVEL );
+                     LogManager.CONFIG_MESSAGE_LEVEL );
+    }
+    
+    /**
+     * This orders amongst all the valid locations returned by the
+     * Replica Mechanism. The following ordering mechanism is employed
+     * 
+     *  - based on the ranks specified in the properties file.
+     * 
+     *
+     * @param rl         the <code>ReplicaLocation</code> object containing all
+     *                   the pfn's associated with that LFN.
+     * @param preferredSite the preffered site for picking up the replicas.
+     * @param allowLocalFileURLs indicates whether Replica Selector can select a replica
+     *                      on the local site / submit host.
+     *
+     * @return <code>ReplicaLocation</code> corresponding to the replicas selected
+     *
+     * 
+     */
+    public ReplicaLocation selectAndOrderReplicas( ReplicaLocation rl,
+                                           String preferredSite,
+                                           boolean allowLocalFileURLs ){
+
+        String lfn = rl.getLFN();
+        ReplicaLocation result = new ReplicaLocation();
+        result.setLFN( rl.getLFN() );
+
+        ReplicaCatalogEntry rce;
+
+        Map<Rank,List<ReplicaCatalogEntry>> candidatesByRank = new TreeMap<Rank,List<ReplicaCatalogEntry>>();
+        
+        for ( Iterator<ReplicaCatalogEntry> it = rl.pfnIterator(); it.hasNext(); ) {
+            rce = ( ReplicaCatalogEntry ) it.next();
+            String pfn = rce.getPFN();
+            
+            //check if a File URL is allowable or not
+            if( removeFileURL(rce, preferredSite, allowLocalFileURLs) ){
+                mLogger.log( "[RegexReplicaSelector] File URL " + rce + " not included as the site attribute is a mismatch to the site name (" + preferredSite 
+                             +  ") allowLocalFileURLs " +  allowLocalFileURLs , 
+                             LogManager.WARNING_MESSAGE_LEVEL );
+                continue;
+            }
+
+            //apply the various matches
+            boolean match = false;
+            for( Iterator<Rank> regIt = mSortedRegexSet.iterator(); regIt.hasNext(); ){
+                Rank r = regIt.next();
+                
+                //System.out.println( "Applying regex " + r );
+                if( r.matches( pfn ) ){
+                    match = true;
+                    if( candidatesByRank.containsKey( r ) ){
+                        List<ReplicaCatalogEntry> l = candidatesByRank.get(r);
+                        l.add( rce );
+                    }
+                    else{
+                        List<ReplicaCatalogEntry> l = new LinkedList();
+                        l.add(rce);
+                        candidatesByRank.put(r, l);
+                    }
+                    
+                    rce.addAttribute( ReplicaSelector.PRIORITY_KEY, Integer.toString( r.getPriority()) );
+                    break;
+                }
+            }
+            if( !match ){
+                mLogger.log( "[RegexReplicaSelector] PFN " + pfn + " did not match with any regex for LFN " + lfn,
+                             LogManager.WARNING_MESSAGE_LEVEL);
+                continue;
+            }
+            
+        }
+        //should be ordered values
+        for( List<ReplicaCatalogEntry> candidates : candidatesByRank.values() ){
+            result.addPFN( candidates );
+        }
+        return result;
+
     }
 
     /**
@@ -129,10 +214,7 @@ public class Regex extends Default {
 
 
         String lfn = candidates.getLFN();
-        String site;
-        ArrayList prefLocs = new ArrayList();
-        int locSelected;
-
+        
         //create a shallow clone as we will be removing
         //using Iterator.remove() methods
         ReplicaLocation rl = (ReplicaLocation)candidates.clone();
@@ -148,17 +230,15 @@ public class Regex extends Default {
         Rank lowestRank = new Rank( Regex.LOWEST_RANK_VALUE, ".*" );
         for ( Iterator it = rl.pfnIterator(); it.hasNext(); ) {
             ReplicaCatalogEntry rce = ( ReplicaCatalogEntry ) it.next();
-            site = rce.getResourceHandle();
             String pfn = rce.getPFN();
             
-            //if a PFN starts with file url and does
-            //not match the preferredSite ignore.
-            if( this.removeFileURL( rce, preferredSite, allowLocalFileURLs) ){
-                //remove the url and continue
-                it.remove();
-                continue;                
+            //check if a File URL is allowable or not
+            if( removeFileURL(rce, preferredSite, allowLocalFileURLs) ){
+                mLogger.log( "[RegexReplicaSelector] File URL " + rce + " not included as the site attribute is a mismatch to the site name (" + preferredSite 
+                             +  ") allowLocalFileURLs " +  allowLocalFileURLs , 
+                             LogManager.WARNING_MESSAGE_LEVEL );
+                continue;
             }
-
             //System.out.println( "PFN is " + pfn );
             
             //apply the various Regex till you get the lowest rank value of 1
@@ -193,7 +273,7 @@ public class Regex extends Default {
                 //none were associated with the preference pool.
                 //replica not selected
                 StringBuffer error = new StringBuffer();
-                error.append( "Unable to select a Physical Filename (PFN) for file with logical filename (LFN) as ").
+                error.append( "[RegexReplicaSelector] Unable to select a Physical Filename (PFN) for file with logical filename (LFN) as ").
                       append( rl.getLFN() ).append( " for staging to site " ).append( preferredSite ).
                       append( " amongst ").append( candidates.getPFNList() );
                 throw new RuntimeException( error.toString() );
@@ -203,12 +283,7 @@ public class Regex extends Default {
                selectedRCE = rl.getPFN( PegRandom.getInteger( numLocs - 1 ) );
             }
         }
-
-        //log message
-        sb = new StringBuffer();
-        sb.append( "[RegexReplicaSelector] Selected for LFN " ).append( rl.getLFN() ).
-           append( " " ).append( selectedRCE ).append( " matching " ).append( lowestRank.getRegex() );
-        mLogger.log( sb.toString(), LogManager.DEBUG_MESSAGE_LEVEL );
+       
         return selectedRCE;
     }
 
@@ -241,6 +316,24 @@ public class Regex extends Default {
             String key = (String)it.next();
             result.add( new Rank( Integer.parseInt(key), properties.getProperty( key )));
         }
+        
+        //compute priorities
+        Rank last = result.last();
+        if( last != null ){
+            //the highest rank has to be lowest priority
+            int maxRank = last.getRank();
+            for( Rank r : result ){
+                r.computePriority( maxRank );
+                System.out.println( "Rank  " +  r);
+            }   
+        }
+        
+        //add default rank
+        /* we shoud not.
+        Rank lowestRank = new Rank( Regex.LOWEST_RANK_VALUE, ".*" );
+        lowestRank.setPriority( 0 );
+        result.add(lowestRank);
+        */
         return result;
     }
 
@@ -255,6 +348,11 @@ public class Regex extends Default {
          * The rank value.
          */
         private int mRank;
+        
+        /**
+         * The inverse of rank. Higher priority value means lower rank value
+         */
+        private int mPriority;
         
         /**
          * The compiled regex expression
@@ -320,11 +418,33 @@ public class Regex extends Default {
          * Returns the textual representation of this
          */
         public String toString(){
-            StringBuffer sb = new StringBuffer();
-            sb.append( "( value => " ).append( getRank() ).append( " expr => ").append( getRegex() ).append( ")" );
+            StringBuilder sb = new StringBuilder();
+            sb.append( "( rank => " ).append( getRank() ).
+               append( " priority => " ).append( getPriority() ).
+               append( " expr => ").append( getRegex() ).
+               append( ")" );
             return sb.toString();
         }
+
+        /**
+         * Computes priority based on the max rank passed
+         * 
+         * @param maxRank 
+         */
+        public void computePriority(int maxRank) {
+            mPriority = ( maxRank * 100 ) - (mRank * 100);
+        }
         
+        /**
+         * Returns the priority 
+         */
+        public int getPriority(){
+            return mPriority;
+        }
+
+        private void setPriority(int priority) {
+            mPriority = priority;
+        }
     }
 
 }

@@ -14,9 +14,14 @@
 
 __author__ = 'Rajiv Mayani'
 
+import StringIO
+
 import re
 
-import StringIO
+try:
+    from collections import OrderedDict
+except ImportError:
+    from ordereddict import OrderedDict
 
 from plex import Range, Lexicon, Rep, Rep1, Str, Any, IGNORE, Scanner, AnyBut, NoCase, Opt
 from plex.errors import UnrecognizedInput
@@ -527,3 +532,49 @@ class BooleanConverter(BaseConverter):
 
     def to_url(self, value):
         return 'true' if value else 'false'
+
+
+class OrderedSet(set):
+    def __init__(self, *args):
+        self.__data = OrderedDict()
+
+        if args:
+            for arg in args:
+                self.add(arg)
+
+    def add(self, element):
+        """
+        Add an element to a set.
+
+        This has no effect if the element is already present.
+        """
+        self.__data[element] = True
+
+    def clear(self):
+        """ Remove all elements from this set. """
+        self.__data.clear()
+
+    def values(self):
+        'od.items() -> list of (key, value) pairs in od'
+        return [key for key in self.__data]
+
+    def remove(self, element):
+        """
+        Remove an element from a set; it must be a member.
+
+        If the element is not a member, raise a KeyError.
+        """
+        del self.__data[element]
+
+    def __contains__(self, element):
+        """ x.__contains__(y) <==> y in x. """
+        return element in self.__data
+
+    def __iter__(self):
+        """ x.__iter__() <==> iter(x) """
+        for element in self.__data.iterkeys():
+            yield element
+
+    def __len__(self):
+        """ x.__len__() <==> len(x) """
+        return len(self.__data)

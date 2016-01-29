@@ -18,9 +18,17 @@ log = logging.getLogger(__name__)
 
 #-------------------------------------------------------------------
 # Connection Properties
+PROP_CATALOG_ALL_TIMEOUT = "pegasus.catalog.*.timeout"
+PROP_CATALOG_ALL_DB_TIMEOUT = "pegasus.catalog.*.db.timeout"
 PROP_CATALOG_MASTER_URL = "pegasus.catalog.master.url"
+PROP_CATALOG_MASTER_TIMEOUT = "pegasus.catalog.master.timeout"
+PROP_CATALOG_MASTER_DB_TIMEOUT = "pegasus.catalog.master.db.timeout"
 PROP_CATALOG_REPLICA_DB_URL = "pegasus.catalog.replica.db.url"
+PROP_CATALOG_REPLICA_TIMEOUT = "pegasus.catalog.replica.timeout"
+PROP_CATALOG_REPLICA_DB_TIMEOUT = "pegasus.catalog.replica.db.timeout"
 PROP_CATALOG_WORKFLOW_URL = "pegasus.catalog.workflow.url"
+PROP_CATALOG_WORKFLOW_TIMEOUT = "pegasus.catalog.workflow.timeout"
+PROP_CATALOG_WORKFLOW_DB_TIMEOUT = "pegasus.catalog.workflow.db.timeout"
 PROP_DASHBOARD_OUTPUT = "pegasus.dashboard.output"
 PROP_MONITORD_OUTPUT = "pegasus.monitord.output"
 
@@ -48,14 +56,30 @@ class DBKey:
 
 
 def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=None, force=False, props=None,
-            db_type=None, connect_args=None):
-    """ Connect to the provided URL database."""
+            db_type=None, connect_args=None, verbose=True):
+    """
+    Connect to the provided URL database.
+    :param dburi:
+    :param echo:
+    :param schema_check:
+    :param create:
+    :param pegasus_version:
+    :param force:
+    :param props:
+    :param db_type:
+    :param connect_args:
+    :param verbose:
+    :return:
+    """
     dburi = _parse_jdbc_uri(dburi)
     _validate(dburi)
 
     try:
         log.info("Attempting to connect to: %s" % dburi)
-        engine = create_engine(dburi, echo=echo, pool_recycle=True)
+        # parse connection properties
+        connect_args = _parse_props(dburi, props, db_type, connect_args)
+
+        engine = create_engine(dburi, echo=echo, pool_recycle=True, connect_args=connect_args)
         engine.connect()
         log.info("Connected successfully established.")
 
@@ -71,17 +95,11 @@ def connect(dburi, echo=False, schema_check=True, create=False, pegasus_version=
                                expire_on_commit=False)
     db = orm.scoped_session(Session)
 
-    # parse connection properties
-    if props:
-        connect_args = _parse_props(db, props, db_type, connect_args)
-    if connect_args:
-        _parse_connect_args(db, connect_args)
-
     # Database creation
     if create:
         try:
             from Pegasus.db.admin.admin_loader import db_create
-            db_create(dburi, engine, db, pegasus_version=pegasus_version, force=force)
+            db_create(dburi, engine, db, pegasus_version=pegasus_version, force=force, verbose=verbose)
 
         except exc.OperationalError, e:
             raise ConnectionError("%s (%s)" % (e.message, dburi))
@@ -178,7 +196,7 @@ def get_wf_uuid(submit_dir):
     
     # Return if we cannot parse the braindump.txt file
     if not top_level_wf_params:
-        logger.error("Unable to process braindump.txt in %s" % (submit_dir))
+        log.error("Unable to process braindump.txt in %s" % (submit_dir))
         return None
     
     # Get wf_uuid for this workflow
@@ -186,7 +204,7 @@ def get_wf_uuid(submit_dir):
     if (top_level_wf_params.has_key('wf_uuid')):
         wf_uuid = top_level_wf_params['wf_uuid']
     else:
-        logger.error("workflow id cannot be found in the braindump.txt ")
+        log.error("workflow id cannot be found in the braindump.txt ")
         return None
     
     return wf_uuid
@@ -373,20 +391,7 @@ def _validate(dburi):
         raise ConnectionError("Missing Python module: %s (%s)" % (e.message, dburi))
 
 
-def _parse_connect_args(db, connect_args):
-    """
-
-    :param db:
-    :param connect_args:
-    :return:
-    """
-    if DBKey.TIMEOUT in connect_args:
-        url = db.get_bind().url
-        if url.drivername == "sqlite":
-            db.execute("PRAGMA busy_timeout = %s" % connect_args["timeout"])
-
-
-def _parse_props(db, props, db_type=None, connect_args=None):
+def _parse_props(dburi, props, db_type=None, connect_args=None):
     """
 
     :param db:
@@ -397,22 +402,43 @@ def _parse_props(db, props, db_type=None, connect_args=None):
     if not connect_args:
         connect_args = {}
 
-    url = db.get_bind().url
-    if url.drivername == "sqlite" and db_type:
+    if props and dburi.lower().startswith("sqlite") and db_type:
         if not DBKey.TIMEOUT in connect_args:
             try:
-                if db_type == DBType.MASTER and props.property("pegasus.catalog.master.timeout"):
-                    connect_args[DBKey.TIMEOUT] = int(props.property("pegasus.catalog.master.timeout")) * 1000
+                timeout = None
+                if db_type == DBType.MASTER:
+                    timeout = _get_timeout_property(props, PROP_CATALOG_MASTER_TIMEOUT, PROP_CATALOG_MASTER_DB_TIMEOUT)
+                elif db_type == DBType.WORKFLOW:
+                    timeout = _get_timeout_property(props, PROP_CATALOG_WORKFLOW_TIMEOUT, PROP_CATALOG_WORKFLOW_DB_TIMEOUT)
+                elif db_type == DBType.JDBCRC:
+                    timeout = _get_timeout_property(props, PROP_CATALOG_REPLICA_TIMEOUT, PROP_CATALOG_REPLICA_DB_TIMEOUT)
+                if not timeout:
+                    timeout = _get_timeout_property(props, PROP_CATALOG_ALL_TIMEOUT, PROP_CATALOG_ALL_DB_TIMEOUT)
 
-                elif db_type == DBType.WORKFLOW and props.property("pegasus.catalog.workflow.timeout"):
-                    connect_args[DBKey.TIMEOUT] = int(props.property("pegasus.catalog.workflow.timeout")) * 1000
+                if timeout:
+                    connect_args[DBKey.TIMEOUT] = timeout
 
-                elif props.property("pegasus.catalog.*.timeout"):
-                    connect_args[DBKey.TIMEOUT] = int(props.property("pegasus.catalog.*.timeout")) * 1000
             except ValueError, e:
-                raise ConnectionError("Timeout properties should be set in seconds: %s (%s)" % (e.message, url))
+                raise ConnectionError("Timeout properties should be set in seconds: %s (%s)" % (e.message, dburi))
 
     return connect_args
+
+
+def _get_timeout_property(props, prop_name1, prop_name2):
+    """
+    
+    :param props:
+    :param prop_name1:
+    :param prop_name2:
+    :return:
+    """
+    if props.property(prop_name1):
+        return int(props.property(prop_name1))
+
+    elif props.property(prop_name2):
+        return int(props.property(prop_name2))
+
+    return None
 
 
 def _parse_top_level_wf_params(dir):

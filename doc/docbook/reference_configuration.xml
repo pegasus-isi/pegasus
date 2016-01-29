@@ -856,6 +856,18 @@ Scope       :</emphasis> TC, SC, DAX, Properties
 
             <row>
               <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>condor.request_gpus<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key: </emphasis></emphasis>request_cpus<emphasis role="bold">
+Scope       :</emphasis> TC, SC, DAX, Properties
+<emphasis role="bold">Since       :</emphasis> 4.6
+<emphasis role="bold">Type        : </emphasis>String</literallayout></entry>
+
+              <entry>Number of GPU's a job requires.</entry>
+            </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold"><emphasis
                       role="bold">Property Key: </emphasis></emphasis>condor.request_memory<emphasis
                     role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>request_memory<emphasis role="bold">
@@ -1770,6 +1782,36 @@ Scope       :</emphasis> TC, SC, DAX, Properties
               such as PBS e.g. you can set value -l walltime=01:23:45 -l
               nodes=2 to specify your job's resource requirements.</entry>
             </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Profile  Key: </emphasis></emphasis>auxillary.local<emphasis
+                    role="bold">
+Scope       :</emphasis> SC
+<emphasis role="bold">Since       :</emphasis> 4.6
+<emphasis role="bold">Type        : </emphasis>Boolean</literallayout></entry>
+
+              <entry>indicates whether auxillary jobs associated with a
+              compute site X, can be run on local site. This CAN ONLY be
+              specified as a profile in the site catalog and should be set
+              when the compute site filesystem is accessible locally on the
+              submit host.</entry>
+            </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold">Property Key:</emphasis> pegasus.condor.arguments.quote<emphasis
+                    role="bold">
+Profile  Key: </emphasis>condor.arguments.quote<emphasis role="bold">
+Scope       :</emphasis> SC, Properties
+<emphasis role="bold">Since       :</emphasis> 4.6
+<emphasis role="bold">Type        : </emphasis>Boolean</literallayout></entry>
+
+              <entry>indicates whether condor quoting rules should be applied
+              for writing out the arguments key in the condor submit file. By
+              default it is true unless the job is schedule to a glite style
+              site. The value is automatically set to false for glite style
+              sites, as condor quoting is broken in batch_gahp.</entry>
+            </row>
           </tbody>
         </tgroup>
       </table>
@@ -1907,7 +1949,7 @@ Scope       :</emphasis> TC, SC, DAX, Properties
         HTCondorG.</para>
 
         <table>
-          <title>Table mapping translation of Pegasus Task Requriements to
+          <title>Table mapping translation of Pegasus Task Requirements to
           corresponding execution environment keys.</title>
 
           <tgroup cols="4">
@@ -2193,6 +2235,8 @@ Scope       :</emphasis> Properties
                         role="bold">Property Key: </emphasis></emphasis>pegasus.home.sysconfdir<emphasis
                       role="bold"><emphasis role="bold">
 Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
+
+
 Scope       :</emphasis> Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
 <emphasis role="bold">Type        : </emphasis>file path
@@ -2807,8 +2851,10 @@ LFN PFN a="b" [..]
 </screen></para>
 
                       <para>To use File, the user additionally needs to
-                      specify pegasus.catalog.replica.file property to specify
-                      the path to the file based RC.</para>
+                      specify <emphasis
+                      role="bold">pegasus.catalog.replica.file</emphasis>
+                      property to specify the path to the file based RC. IF
+                      not specified , defaults to $PWD/rc.txt file.</para>
                     </listitem>
                   </varlistentry>
 
@@ -3144,7 +3190,7 @@ Scope       :</emphasis> Properties
 Profile Key : </emphasis></emphasis>N/A<emphasis role="bold">
 Scope       :</emphasis> Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
-<emphasis role="bold">Default     :</emphasis> ${pegasus.home.sysconfdir}/sites.xml</literallayout></entry>
+<emphasis role="bold">Default     :</emphasis> $PWD/sites.xml</literallayout></entry>
 
               <entry>The path to the site catalog file, that describes the
               various sites and their layouts to Pegasus.</entry>
@@ -3233,7 +3279,7 @@ type "STAGEABLE"
 Profile Key : </emphasis></emphasis>N/A<emphasis role="bold">
 Scope       :</emphasis> Properties
 <emphasis role="bold">Since       :</emphasis> 2.0
-<emphasis role="bold">Default     :</emphasis> ${pegasus.home.sysconfdir}/tc.text </literallayout></entry>
+<emphasis role="bold">Default     :</emphasis> $PWD/tc.txt</literallayout></entry>
 
               <entry>The path to the transformation catalog file, that
               describes the locations of the executables.</entry>
@@ -3282,7 +3328,59 @@ See Also    :</emphasis> pegasus.selector.replica.*.prefer.stagein.sites
                       <term>Default</term>
 
                       <listitem>
-                         If a PFN that is a file URL (starting with file:///) and has a "site" attribute matching to the site handle of the site where the compute is to be run is found, then that is returned. Else,a random PFN is selected amongst all the PFN's that have a "site" attribute matching to the site handle of the site where a compute job is to be run. Else, a random pfn is selected amongst all the PFN's. 
+                        <para>The selector orders the various candidate
+                        replica's according to the following rules</para>
+
+                        <orderedlist>
+                          <listitem>
+                            <para>valid file URL's . That is URL's that have the
+                            site attribute matching the site where the
+                            executable <emphasis>pegasus-transfer</emphasis> is
+                            executed.</para>
+                          </listitem>
+
+                          <listitem>
+                            <para>all URL's from preferred site (usually the
+                            compute site)</para>
+                          </listitem>
+
+                          <listitem>
+                            <para>all other remotely accessible ( non file)
+                            URL's</para>
+                          </listitem>
+                        </orderedlist>
+                      </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                      <term>Regex</term>
+
+                      <listitem>
+                        <para>This replica selector allows the user allows the
+                        user to specific regular expressions that can be used
+                        to rank various PFN's returned from the Replica
+                        Catalog for a particular LFN. This replica selector
+                        orders the replicas based on the rank. Lower the rank
+                        higher the preference.</para>
+
+                        <para>The regular expressions are assigned different
+                        rank, that determine the order in which the
+                        expressions are employed. The rank values for the
+                        regex can expressed in user properties using the
+                        property.</para>
+
+                        <para><screen>
+pegasus.selector.replica.regex.rank.[value]   regex-expression
+</screen></para>
+
+                        <para>The value is an integer value that denotes the
+                        rank of an expression with a rank value of 1 being the
+                        highest rank.</para>
+
+                        <para>Please note that before applying any regular
+                        expressions on the PFN's, the file URL's that dont
+                        match the preferred site are explicitly filtered
+                        out.</para>
                       </listitem>
                     </varlistentry>
 
@@ -3323,38 +3421,6 @@ pegasus.replica.*.ignore.stagein.sites
                         if for a site X, a site Y is specified both in the
                         ignored and the preferred set, then site Y is taken to
                         mean as only a preferred site for a site X.</para>
-                      </listitem>
-                    </varlistentry>
-
-                    <varlistentry>
-                      <term>Regex</term>
-
-                      <listitem>
-                        <para>This replica selector allows the user allows the
-                        user to specific regex expressions that can be used to
-                        rank various PFN's returned from the Replica Catalog
-                        for a particular LFN. This replica selector selects
-                        the highest ranked PFN i.e the replica with the lowest
-                        rank value.</para>
-
-                        <para>The regular expressions are assigned different
-                        rank, that determine the order in which the
-                        expressions are employed. The rank values for the
-                        regex can expressed in user properties using the
-                        property.</para>
-
-                        <para><screen>
-pegasus.selector.replica.regex.rank.[value]   regex-expression
-</screen></para>
-
-                        <para>The value is an integer value that denotes the
-                        rank of an expression with a rank value of 1 being the
-                        highest rank.</para>
-
-                        <para>Please note that before applying any regular
-                        expressions on the PFN's, the file URL's that dont
-                        match the preferred site are explicitly filtered
-                        out.</para>
                       </listitem>
                     </varlistentry>
 
@@ -4856,26 +4922,35 @@ pegasus.metrics.app.[arribute-name]       attribute-value
             </row>
 
             <row>
-              <entry><literallayout><emphasis role="bold"><emphasis
-                      role="bold">Property Key: </emphasis></emphasis>pegasus.file.cleanup.strategy<emphasis
-                    role="bold"><emphasis role="bold">
-Profile  Key: </emphasis></emphasis>N/A<emphasis role="bold">
-Scope       :</emphasis> Properties
-<emphasis role="bold">Since       :</emphasis> 2.2-
-<emphasis role="bold">Type  </emphasis>      : String
-<emphasis role="bold">Default     :</emphasis> InPlace</literallayout></entry>
+              <entry><literallayout><emphasis role="bold">Property Key: </emphasis>pegasus.file.cleanup.strategy
+<emphasis role="bold">Profile  Key: </emphasis>N/A
+<emphasis role="bold">Scope       : </emphasis>Properties
+<emphasis role="bold">Since       : </emphasis>2.2-
+<emphasis role="bold">Type        : </emphasis>String
+<emphasis role="bold">Default     : </emphasis>InPlace
+                  </literallayout></entry>
 
               <entry><para>This property is used to select the strategy of how
-              the the cleanup nodes are added to the executable
-              workflow.</para><para><variablelist>
+              the cleanup nodes are added to the executable workflow.</para>
+              <para> <variablelist>
                   <varlistentry>
                     <term>InPlace</term>
 
                     <listitem>
-                       This is the only mode available . 
+                      The default cleanup strategy. Adds cleanup nodes per level of the workflow.
                     </listitem>
                   </varlistentry>
-                </variablelist></para></entry>
+
+                  <varlistentry>
+                    <term>Constraint</term>
+
+                    <listitem>
+                      Adds cleanup nodes to constraint the amount of storage space used by a workflow.
+                    </listitem>
+                  </varlistentry>
+                </variablelist> </para> <para>Note that this property is
+              overridden by the --cleanup option used in
+              pegasus-plan.</para></entry>
             </row>
 
             <row>
@@ -4895,7 +4970,7 @@ Scope       :</emphasis> Properties
                     <term>Cleanup</term>
 
                     <listitem>
-                       The default executable that is used to delete files is the "pegasus-cleanup" executable shipped with Pegasus. It is found at $PEGASUS_HOME/bin/pegasus-cleanup in the pegasus distribution. An entry for transformation pegasus::dirmanager needs to exist in the Transformation Catalog or the PEGASUS_HOME environment variable should be specified in the site catalog for the sites for this mode to work. 
+                       The default executable that is used to delete files is the "pegasus-transfer" executable shipped with Pegasus. It is found at $PEGASUS_HOME/bin/pegasus-transfer in the Pegasus distribution. An entry for transformation pegasus::dirmanager needs to exist in the Transformation Catalog or the PEGASUS_HOME environment variable should be specified in the site catalog for the sites for this mode to work. 
                     </listitem>
                   </varlistentry>
 
@@ -4974,6 +5049,37 @@ Scope       :</emphasis> Properties
                   </varlistentry>
                 </variablelist></para></entry>
             </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold">Property Key: </emphasis>pegasus.file.cleanup.constraint.*.maxspace
+<emphasis role="bold">Profile  Key: </emphasis>N/A
+<emphasis role="bold">Scope       : </emphasis>Properties
+<emphasis role="bold">Since       : </emphasis>4.6.0
+<emphasis role="bold">Type        : </emphasis>String
+<emphasis role="bold">Default     : </emphasis>10737418240
+                  </literallayout></entry>
+
+              <entry><para>This property is used to set the maximum avaialble
+              space (i.e., constraint) per site in Bytes. The * in the
+              property name denotes the name of the compute site. A * in the
+              property key is taken to mean all sites.</para></entry>
+            </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold">Property Key: </emphasis>pegasus.file.cleanup.constraint.deferstageins
+<emphasis role="bold">Profile  Key: </emphasis>N/A
+<emphasis role="bold">Scope       : </emphasis>Properties
+<emphasis role="bold">Since       : </emphasis>4.6.0
+<emphasis role="bold">Type        : </emphasis>Boolean
+<emphasis role="bold">Default     : </emphasis>False
+                  </literallayout></entry>
+
+              <entry><para>This property is used to determine whether stage in
+              jobs may be deferred. If this property is set to False
+              (default), all stage in jobs will be marked as executing on the
+              current compute site and will be executed before any task. This
+              property has no effect when running in a multi site case.</para></entry>
+            </row>
           </tbody>
         </tgroup>
       </table>
@@ -5034,6 +5140,25 @@ See Also    :</emphasis> pegasus.log.manager.formatter</literallayout></entry>
                     </listitem>
                   </varlistentry>
                 </variablelist></para></entry>
+            </row>
+
+            <row>
+              <entry><literallayout><emphasis role="bold"><emphasis
+                      role="bold">Property Key: </emphasis></emphasis>pegasus.condor.concurrency.limits<emphasis
+                    role="bold"><emphasis role="bold">
+Profile  Key:</emphasis></emphasis><emphasis role="bold"> </emphasis>N/A<emphasis
+                    role="bold">
+Scope       :</emphasis> Properties
+<emphasis role="bold">Since       :</emphasis> 4.5.3
+<emphasis role="bold">Type        : </emphasis>Boolean<emphasis role="bold">
+Default     : </emphasis>False</literallayout></entry>
+
+              <entry>This Boolean property is used to determine whether
+              Pegasus associates default HTCondor concurrency limits with jobs
+              or not. Setting this property to true, allows you to <link
+              linkend="job_throttling_across_workflows">throttle</link> jobs
+              across workflows, if the workflow are set to run in pure condor
+              environment.</entry>
             </row>
 
             <row>

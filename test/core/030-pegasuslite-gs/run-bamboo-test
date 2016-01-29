@@ -4,26 +4,6 @@ set -e
 
 TOP_DIR=`pwd`
 
-# download rosetta binary - this is to save space in the Pegasus distribution
-if [ ! -e rosetta.exe ]; then
-   wget -q http://pegasus.isi.edu/wms/example-workflows/rosetta/rosetta.exe
-   chmod 755 rosetta.exe
-fi
-
-# do we have the required minirosetta_database?
-if [ ! -e minirosetta_database ]; then
-   wget -q http://pegasus.isi.edu/wms/example-workflows/rosetta/minirosetta_database.tar.gz
-   tar xzf minirosetta_database.tar.gz
-   rm minirosetta_database.tar.gz
-fi
-
-# what about the required pdbs?
-if [ ! -e pdbs ]; then
-   wget -q http://pegasus.isi.edu/wms/example-workflows/rosetta/pdbs.tar.gz
-   tar xzf pdbs.tar.gz
-   rm pdbs.tar.gz
-fi
-
 # figure out where Pegasus is installed
 export PEGASUS_BIN_DIR=`pegasus-config --bin`
 if [ "x$PEGASUS_BIN_DIR" = "x" ]; then
@@ -31,21 +11,23 @@ if [ "x$PEGASUS_BIN_DIR" = "x" ]; then
     exit 1
 fi 
 
+export REMOTE_PEGASUS_HOME=/nfs/ccg4/scratch-purge-no-backups/bamboo/installs/pegasus-`pegasus-version`
+
 # build the dax generator
-export CLASSPATH=.:`pegasus-config --classpath`
-javac RosettaDAX.java
+export PYTHONPATH=`pegasus-config --python`
+./blackdiamond.py $REMOTE_PEGASUS_HOME > blackdiamond.dax
 
-# generate the dax
-java RosettaDAX dax.xml
+# we need a f.a file to start
+echo "Hello world!" >f.a
 
-#empty replica catalog 
-touch rc.data
+# empty replica catalog 
+cat /dev/null >rc.data
 
 # site catalog
 cat >sites.xml <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0">
-    <site handle="local" arch="x86_64" os="LINUX" osrelease="deb" osversion="7">
+    <site handle="local" arch="x86_64" os="LINUX" osrelease="deb" osversion="8">
         <directory type="shared-scratch" path="$TOP_DIR/scratch">
             <file-server operation="all" url="file://$TOP_DIR/scratch"/>
         </directory>
@@ -58,6 +40,7 @@ cat >sites.xml <<EOF
         <profile namespace="pegasus" key="style" >condor</profile>
         <profile namespace="condor" key="universe" >vanilla</profile>
         <profile namespace="env" key="PATH">/ccg/software/gsutil:/usr/bin:/bin</profile>
+        <profile namespace="env" key="PEGASUS_HOME">$REMOTE_PEGASUS_HOME</profile>
     </site>
     <site  handle="staging_site" arch="x86_64" os="LINUX">
         <directory type="shared-scratch" path="/pegasus-wms-test001/scratch">
@@ -83,7 +66,7 @@ echo "Planning the workflow..."
 pegasus-plan \
     --conf pegasusrc \
     --dir work \
-    --dax dax.xml \
+    --dax blackdiamond.dax \
     --sites condor_pool \
     --staging-site staging_site \
     --output-site local \

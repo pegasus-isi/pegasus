@@ -11,11 +11,14 @@ module stampede-schema {
     organization "STAMPEDE project. NSF grant OCI-0943705";
     contact "Dan Gunter 
              Lawrence Berkeley National Laboratory
-             Email: dkgunter@lbl.gov";
-    reference "https://confluence.pegasus.isi.edu/display/stampede/";
-    revision "2012-03-14" {
+             Email: dkgunter@lbl.gov
+	     Karan Vahi
+	     USC Information Sciences Institute
+	     Email: vahi@isi.edu";
+    reference "https://pegasus.isi.edu/projects/stampede";
+    revision "2016-01-06" {
         description
-            "Updated schema compatible with Pegasus 4.0 release";
+            "Updated schema compatible with Pegasus 4.6 release";
     }
  
     /*
@@ -91,7 +94,7 @@ module stampede-schema {
 	     enum "GLOBUS_SUBMIT";
 	     enum "SUBMIT_FAILED";
 	     enum "EXECUTE";
-			 enum "REMOTE_ERROR";
+	     enum "REMOTE_ERROR";
 	     enum "IMAGE_SIZE";
 	     enum "JOB_TERMINATED";
 	     enum "JOB_SUCCESS";
@@ -180,6 +183,22 @@ module stampede-schema {
             description "Identifier for job in scheduler";
             type string;
             mandatory true;
+        }
+    }
+
+    grouping base-metadata {
+        uses base-event;
+
+        description "Common components for all metadata events that describe metadata for an entity.";
+
+        leaf key {
+            description "Key for the metadata tuple";
+            type string;
+            mandatory true;
+        }
+        leaf value {
+            description "Corresponding value of the key";
+            type string;
         }
     }
 
@@ -757,10 +776,10 @@ module stampede-schema {
                     }
                 }	
 
-		        leaf exitcode{
-		            description "the exitcode with which the executable exited";
-		            type int32;
-		        }
+	        leaf exitcode{
+	            description "the exitcode with which the	            executable exited";
+		    type int32;
+		}
                 leaf transformation {
                     description "Transformation associated with this invocation";
                     type string;
@@ -780,7 +799,53 @@ module stampede-schema {
                     type string;
                 }
             }
-            } // choice
-        } // event
+
+	    //metadata related events
+	    container stampede.static.meta.start{
+	    	uses base-event;
+	    }	    
+	    
+	    container stampede.static.meta.end{
+	    	uses base-event;
+	    }
+
+	    container stampede.xwf.meta{
+	    	description "Metadata associated with a workflow";
+	    	uses base-metadata;
+	    }
+
+	    container stampede.task.meta{
+	        description "Metadata associated with a task";
+	    	uses base-metadata;
+		leaf task.id {
+                    description "Identifier for related task in the DAX";
+                    type string;
+                }
+	    }
+
+	    container stampede.rc.meta{
+	    	description "Metadata associated with a file in the replica catalog";
+	    	uses base-metadata;
+		leaf lfn.id {
+                    description "Logical File Identifier for the file";
+                    type string;
+                }
+	    }
+
+	    container stampede.wf.map.file{
+	    	description "Event that captures what task generates or consumes a particular file";
+	    	uses base-event;
+		leaf lfn.id {
+                    description "Logical File Identifier for the file";
+                    type string;
+                }
+		leaf task.id {
+                    description "Identifier for related task in the DAX";
+                    type string;
+                }
+	    }
+
+          } // choice
+       } // event
     } // events
 }

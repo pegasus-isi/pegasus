@@ -26,13 +26,13 @@ done
 
 # Executables and manpages
 for f in $(/usr/sbin/pkgutil --files edu.isi.pegasus | grep -e "^bin/" -e "^share/man/man1/"); do
-    test -f "/usr/$f" && pegasus_files+=("/usr/$f")
+    test -f "/usr/local/$f" && pegasus_files+=("/usr/local/$f")
 done
 
 # Directories
-test -d /usr/lib/pegasus && pegasus_files+=("/usr/lib/pegasus")
-test -d /usr/share/pegasus && pegasus_files+=("/usr/share/pegasus")
-test -d /usr/share/doc/pegasus && pegasus_files+=("/usr/share/doc/pegasus")
+test -d /usr/local/lib/pegasus && pegasus_files+=("/usr/local/lib/pegasus")
+test -d /usr/local/share/pegasus && pegasus_files+=("/usr/local/share/pegasus")
+test -d /usr/local/share/doc/pegasus && pegasus_files+=("/usr/local/share/doc/pegasus")
 
 echo "Uninstalling Pegasus..."
 /usr/bin/sudo -p "Enter your password: " /bin/rm -rf "${pegasus_files[@]}"

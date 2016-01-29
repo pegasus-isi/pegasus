@@ -55,6 +55,9 @@ except ImportError, e:
 if "http_proxy" in os.environ:
     del os.environ['http_proxy']
 
+# Don't let apple hijack our cacerts
+os.environ["OPENSSL_X509_TEA_DISABLE"] = "1"
+
 # The multipart upload feature we require was introduced in 2.2.2
 boto_version = tuple(int(x) for x in boto.__version__.split("."))
 if boto_version < (2,2,2):
@@ -253,6 +256,7 @@ def get_connection(config, uri):
 
     # If the URI is s3s, then override the config
     if uri.secure:
+        kwargs['validate_certs'] = True
         kwargs['is_secure'] = True
 
     conn = boto.s3.connection.S3Connection(**kwargs)
@@ -499,7 +503,10 @@ def cp(args):
             srckeys = srcbucket.list()
             info("Copying %d keys from %s to %s" % (len(srckeys), src, dest))
         else:
-            srckeys = [srcbucket.get_key(src.key)]
+            k = srcbucket.get_key(src.key)
+            if k is None:
+                raise Exception("Source key '%s' does not exist" % src.key)
+            srckeys = [k]
 
         # It doesn't make sense to copy several keys into one destination
         if len(srckeys) > 1 and dest.key:

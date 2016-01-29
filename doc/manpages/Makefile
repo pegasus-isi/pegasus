@@ -10,44 +10,23 @@ VERSION = $(shell ../../release-tools/getversion)
 
 ASCIIDOC = asciidoc -a manversion=$(VERSION) -a mansource="Pegasus" -a manmanual="Pegasus Manual" -d manpage -b docbook
 XSLTPROC = xsltproc -xinclude
-FOP = fop
 
-DOCBOOK2FO = $(XSLTPROC) docbook-pdf.xsl
 DOCBOOK2MAN = $(XSLTPROC) docbook-man.xsl
-DOCBOOK2HTML = $(XSLTPROC) docbook-html.xsl
 
 TXTFILES = $(shell ls *.txt)
 MANPAGES = $(TXTFILES:.txt=.1)
 XMLMANPAGES = $(TXTFILES:.txt=.xml)
-PDFMANPAGES = $(TXTFILES:.txt=.pdf)
-HTMLMANPAGES = $(TXTFILES:.txt=.html)
 
-
-.PHONY: manpages pdfmanpages htmlmanpages
+.PHONY: manpages
 
 .PRECIOUS: %.xml
 
 all: manpages
 
 manpages: $(MANPAGES)
-pdfmanpages: $(PDFMANPAGES)
-htmlmanpages: $(HTMLMANPAGES)
-
-manpages.fo : manpages.xml $(XMLMANPAGES)
-manpages.pdf : manpages.fo
-manpages.html : manpages.xml $(XMLMANPAGES)
-
-%.html : %.xml
-	$(DOCBOOK2HTML) $< > $@
 
 %.1 : %.xml
 	$(DOCBOOK2MAN) $<
-
-%.pdf : %.fo
-	$(FOP) $< $@
-
-%.fo : %.xml
-	$(DOCBOOK2FO) $< > $@
 
 %.xml : %.txt
 	$(ASCIIDOC) -o $@ $<
@@ -57,7 +36,7 @@ manpages.html : manpages.xml $(XMLMANPAGES)
 	rm $@.bak
 
 clean:
-	rm -f pegasus-*.xml *.fo *.pdf *.1 *.html
+	rm -f pegasus-*.xml *.1
 
 install: manpages
 	mkdir -p $(datadir)/man/man1

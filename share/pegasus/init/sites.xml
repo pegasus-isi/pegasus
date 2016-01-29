@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0">
+
+    <!-- The local site contains information about the submit host -->
+    <site handle="local" arch="x86_64" os="LINUX">
+
+    </site>
+
+    <site handle="{{sitename}}" arch="x86_64" os="LINUX">
+{% if config == "globus" %}
+        <grid type="gt5" contact="grid.example.edu/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
+        <grid type="gt5" contact="grid.example.edu/jobmanager-pbs" scheduler="PBS" jobtype="compute"/>
+
+{% endif %}
+{% if config == "creamce" %}
+        <grid type="cream" contact="https://cream.example.edu:8443/ce-cream/services/CREAM2" scheduler="LSF" jobtype="compute" />
+        <grid type="cream" contact="https://cream.example.edu:8443/ce-cream/services/CREAM2" scheduler="LSF" jobtype="auxillary" />
+
+{% endif %}
+{% if config == "glite" or config == "bosco" %}
+        <grid type="batch" contact="username@cluster.example.edu" scheduler="PBS" jobtype="compute"/>
+        <grid type="batch" contact="username@cluster.example.edu" scheduler="PBS" jobtype="auxillary"/>
+
+        <!-- Scratch directory on the cluster -->
+        <directory type="shared-scratch" path="/path/to/cluster/scratch">
+            <file-server operation="all" url="scp://username@cluster.example.edu/path/to/cluster/scratch"/>
+        </directory>
+
+{% endif %}
+{% if config == "globus" or config == "creamce" %}
+        <!-- Scratch directory on the cluster -->
+        <directory type="shared-scratch" path="/path/to/cluster/scratch">
+            <file-server operation="all" url="gsiftp://grid.example.edu/path/to/cluster/scratch"/>
+        </directory>
+
+{% endif %}
+{% if config == "tutorial" or config == "condorpool" %}
+        <!-- These profiles tell Pegasus that the site is a plain Condor pool -->
+        <profile namespace="pegasus" key="style">condor</profile>
+        <profile namespace="condor" key="universe">vanilla</profile>
+
+{% endif %}
+{% if config == "globus" %}
+        <!-- This profile tells Pegasus that the site is a grid site -->
+        <profile namespace="pegasus" key="style">globus</profile>
+
+{% endif %}
+{% if config == "creamce" %}
+        <!-- This profile tells Pegasus that the site is a cream site -->
+        <profile namespace="pegasus" key="style">cream</profile>
+
+        <!-- This tells CREAM what batch queue to submit jobs to -->
+        <profile namespace="pegasus" key="queue">default</profile>
+
+        <!-- Staring with HTCondor 8.0, additional cream attributes 
+             can be passed by setting cream_attributes -->
+        <profile namespace="condor" key="cream_attributes">key1=value1;key2=value2</profile>
+
+{% endif %}
+{% if config == "glite" %}
+        <profile namespace="pegasus" key="style">glite</profile>
+
+{% endif %}
+{% if config == "bosco" %}
+        <profile namespace="pegasus" key="style">ssh</profile>
+
+{% endif %}
+{% if config == "glite" or config == "bosco" %}
+        <!-- This tells glite what scheduler to use. It can be 'pbs' or 'sge' -->
+        <profile namespace="condor" key="grid_resource">pbs</profile>
+
+        <!-- This tells glite what batch queue to submit jobs to -->
+        <profile namespace="pegasus" key="queue">default</profile>
+
+        <!-- This tells what account/project to use. It maps to the '-A' PBS argument. -->
+        <profile namespace="pegasus" key="project">MYPROJ123</profile>
+{% endif %}
+        <!-- This profile tells Pegasus where the worker package is installed on the site -->
+        <profile namespace="env" key="PEGASUS_HOME">/usr</profile>
+    </site>
+</sitecatalog>

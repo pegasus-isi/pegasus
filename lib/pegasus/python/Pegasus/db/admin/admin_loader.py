@@ -4,8 +4,13 @@ import logging
 import datetime
 import glob
 import shutil
+import time
+import sys
+import warnings
 
+from Pegasus.db import connection
 from Pegasus.db.schema import *
+from sqlalchemy import func
 from sqlalchemy.orm.exc import *
 
 log = logging.getLogger(__name__)
@@ -13,16 +18,15 @@ log = logging.getLogger(__name__)
 #-------------------------------------------------------------------
 # DB Admin configuration
 #-------------------------------------------------------------------
-CURRENT_DB_VERSION = 5
+CURRENT_DB_VERSION = 6
 DB_MIN_VERSION = 4
 
 COMPATIBILITY = {
     '4.3.0': 1, '4.3.1': 1, '4.3.2': 1,
     '4.4.0': 2, '4.4.1': 2, '4.4.2': 2,
-    '4.5.0': 4, '4.5.1': 4, '4.5.2': 4, '4.5.3': 4,
-    '4.6.0': 5,
-
-    '4.6.0panorama': 5
+    '4.5.0': 4, '4.5.1': 4, '4.5.2': 4, '4.5.3': 4, '4.5.4': 5,
+    '4.6.0': 6,
+    '4.6.0panorama': 6
 }
 #-------------------------------------------------------------------
 
@@ -57,16 +61,26 @@ def get_class(version, db):
 
 
 #-------------------------------------------------------------------
-def db_create(dburi, engine, db, pegasus_version=None, force=False):
-    """ Create/Update the Pegasus database from the schema """
+def db_create(dburi, engine, db, pegasus_version=None, force=False, verbose=True):
+    """
+    Create/Update the Pegasus database from the schema.
+    :param dburi: URL to the db
+    :param engine: DB engine object
+    :param db: DB session object
+    :param pegasus_version: version of the Pegasus software (e.g., 4.6.0)
+    :param force: whether operations should be performed despite conflicts
+    :param verbose: whether messages should be printed in the prompt
+    :return:
+    """
     table_names = engine.table_names(connection=db)
     db_version.create(engine, checkfirst=True)
 
     v = -1
     if len(table_names) == 0:
-        engine.execute(db_version.insert(), version=CURRENT_DB_VERSION,
+        engine.execute(db_version.insert(), version=CURRENT_DB_VERSION, version_number=CURRENT_DB_VERSION,
                 version_timestamp=datetime.datetime.now().strftime("%s"))
-        print "Created Pegasus database in: %s" % dburi
+        if verbose:
+            print "Created Pegasus database in: %s" % dburi
     else:
         v = _discover_version(db, pegasus_version=pegasus_version, force=force, verbose=False)
     
@@ -74,24 +88,24 @@ def db_create(dburi, engine, db, pegasus_version=None, force=False):
         metadata.create_all(engine)
     except OperationalError, e:
         raise DBAdminError(e)
-    if v > 0:
+    if verbose and v > 0:
         print "Your database has been updated."
             
 
 def db_current_version(db, parse=False, force=False):
-    """ Get the current version of the database."""
-    current_version = None
-
+    """
+    Get the current version of the database.
+    :param db: DB session object
+    :param parse: whether database version should be presented as a version of the Pegasus software
+    :param force: whether operations should be performed despite conflicts
+    :return: current version of the database
+    """
     try:
         current_version = _get_version(db)
     except NoResultFound:
         current_version = _discover_version(db, force=force)
 
     if parse:
-        if current_version > CURRENT_DB_VERSION:
-            log.warn("You database was created with a newer Pegasus version, and may not be compatible with the current version.")
-            return None
-
         current_version = get_compatible_version(current_version)
         if not current_version:
             raise DBAdminError("Your database is not compatible with any Pegasus version.\nRun 'pegasus-db-admin update %s' to update it to the latest version." % db.get_bind().url)
@@ -100,8 +114,12 @@ def db_current_version(db, parse=False, force=False):
 
 
 def db_verify(db, pegasus_version=None, force=False):
-    """ Verify whether the database is compatible to the specified 
-        Pegasus version."""
+    """
+    Verify whether the database is compatible to the specified Pegasus version.
+    :param db: DB session object
+    :param pegasus_version: version of the Pegasus software (e.g., 4.6.0)
+    :param force: whether operations should be performed despite conflicts
+    """
     _verify_tables(db)
     version = parse_pegasus_version(pegasus_version)
 
@@ -116,8 +134,14 @@ def db_verify(db, pegasus_version=None, force=False):
         raise DBAdminError("Your database is NOT compatible with version %s" % get_compatible_version(version))
 
 
-def db_downgrade(db, pegasus_version=None, force=False):
-    """ Downgrade the database. """
+def db_downgrade(db, pegasus_version=None, force=False, verbose=True):
+    """
+    Downgrade the database.
+    :param db: DB session object
+    :param pegasus_version: version of the Pegasus software (e.g., 4.6.0)
+    :param force: whether operations should be performed despite conflicts
+    :param verbose: whether messages should be printed in the prompt
+    """
     if not check_table_exists(db, db_version):
         raise DBAdminError("Unable to determine database version.")
 
@@ -168,22 +192,109 @@ def db_downgrade(db, pegasus_version=None, force=False):
         if actual_version == version:
             break
 
-    print "Your database was successfully downgraded."
+    if verbose:
+        print "Your database was successfully downgraded."
 
 
 def parse_pegasus_version(pegasus_version=None):
+    """
+    Get database version associated to the Pegasus version.
+    :param pegasus_version: version of the Pegasus software (e.g., 4.6.0)
+    :return: database version
+    """
     version = None
     if pegasus_version == 0 or pegasus_version:
         for key in COMPATIBILITY:
             if key == pegasus_version:
-                version = COMPATIBILITY[key]
-                break
+                return COMPATIBILITY[key]
         if not version:
             raise DBAdminError("Version does not exist: %s." % pegasus_version)
 
     if not version:
-        version = CURRENT_DB_VERSION
-    return version
+        return CURRENT_DB_VERSION
+
+
+def all_workflows_db(db, update=True, pegasus_version=None, schema_check=True, force=False):
+    """
+    Update/Downgrade all completed workflow databases listed in master_workflow table.
+    :param db: DB session object
+    :param pegasus_version: version of the Pegasus software (e.g., 4.6.0)
+    :param schema_check: whether a sanity check of the schema should be performed
+    :param force: whether operations should be performed despite conflicts
+    """
+    # log files
+    file_prefix = "%s-dbadmin" % time.strftime("%Y%m%dT%H%M%S")
+    f_out = open("%s.out" % file_prefix, 'w')
+    f_err = open("%s.err" % file_prefix, 'w')
+
+    data = db.query(DashboardWorkflow.db_url,
+                    DashboardWorkflowstate.state,
+                    func.max(DashboardWorkflowstate.timestamp)
+                    ).join(DashboardWorkflowstate).group_by(DashboardWorkflow.wf_id).all()
+
+    db_urls = []
+    for d in data:
+        if d[1] == "WORKFLOW_TERMINATED":
+            db_urls.append(d[0])
+            f_err.write("[ACTIVE] %s\n" % d[0])
+
+    counts = {
+        'total': len(data),
+        'running': len(data) - len(db_urls),
+        'success': 0,
+        'failed': 0,
+        'unable_to_connect': 0,
+    }
+    if update:
+        msg = ['updating', 'Updated']
+    else:
+        msg = ['downgrading', 'Downgraded']
+
+    print ""
+    print "Verifying and %s workflow databases:" % msg[0]
+    i = counts['running']
+    for dburi in db_urls:
+        log.debug("%s '%s'..." % (msg[0], dburi))
+        i += 1
+        sys.stdout.write("\r%d/%d" % (i, counts['total']))
+        sys.stdout.flush()
+        try:
+            if update:
+                con = connection.connect(dburi, pegasus_version=pegasus_version, schema_check=schema_check, create=True, force=force, verbose=False)
+            else:
+                con = connection.connect(dburi, schema_check=schema_check, create=False, verbose=False)
+                metadata.clear()
+                warnings.simplefilter("ignore")
+                metadata.reflect(bind=con.get_bind())
+                db_downgrade(con, pegasus_version=pegasus_version, force=force, verbose=False)
+            con.close()
+            f_out.write("[SUCCESS] %s\n" % dburi)
+            counts['success'] += 1
+        except connection.ConnectionError, e:
+            if "unable to open database file" in str(e):
+                f_err.write("[UNABLE TO CONNECT] %s\n" % dburi)
+                counts['unable_to_connect'] += 1
+                log.debug(e)
+            else:
+                f_err.write("[ERROR] %s\n" % dburi)
+                counts['failed'] += 1
+                log.debug(e)
+        except Exception, e:
+            f_err.write("[ERROR] %s\n" % dburi)
+            counts['failed'] += 1
+            log.debug(e)
+
+    f_out.close()
+    f_err.close()
+
+    print "\n\nSummary:"
+    print "  Verified/%s: %s/%s" % (msg[1], counts['success'], counts['total'])
+    print "  Failed: %s/%s" % (counts['failed'], counts['total'])
+    print "  Unable to connect: %s/%s" % (counts['unable_to_connect'], counts['total'])
+    print "  Unable to update (active workflows): %s/%s" % (counts['running'], counts['total'])
+    print "\nLog files:"
+    print "  %s.out (Succeeded operations)" % file_prefix
+    print "  %s.err (Failed operations)" % file_prefix
 
 
 ################################################################################
@@ -215,6 +326,7 @@ def _get_version(db):
     if not current_version:
         log.debug("No version record found on dbversion table.")
         raise NoResultFound()
+    _version_sanity_check(db, current_version[0])
     return float(current_version[0])
 
 
@@ -235,8 +347,8 @@ def _discover_version(db, pegasus_version=None, force=False, verbose=True):
             return None
         except DBAdminError:
             current_version = 0
-    elif current_version > CURRENT_DB_VERSION:
-        return 0
+
+    _version_sanity_check(db, current_version)
 
     if current_version > version:
         raise DBAdminError("Unable to run update. Current database version is newer than specified version '%s'." % (pegasus_version))
@@ -323,3 +435,14 @@ def _get_max_minor_version(version):
         if int(COMPATIBILITY[ver]) == version and minor_version > max_version:
             max_version = minor_version
     return max_version
+
+
+def _version_sanity_check(db, version):
+    """ Verify whether db version is higher than current version.
+    :param db: db connection
+    :param version: version to be verified
+    """
+    if float(version) > CURRENT_DB_VERSION:
+        raise DBAdminError("You database was created with a newer Pegasus version. "
+                           "It will not work properly with the current version."
+                           "\nPlease, run 'pegasus-db-admin downgrade' with the latest Pegasus to downgrade your database.")

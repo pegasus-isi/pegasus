@@ -5,9 +5,8 @@ pegasus-mpi-cluster(1)
 
 Name
 ----
-pegasus-mpi-cluster - a tool for running computational workflows expressed as DAGs
-(Directed Acyclic Graphs) on computational clusters using MPI.
-
+pegasus-mpi-cluster - Enables running DAGs (Directed Acyclic Graphs) on
+clusters using MPI.
 
 Synopsis
 --------

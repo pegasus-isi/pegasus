@@ -1,0 +1,15 @@
+{% extends "base-error.html" %}
+{% block title %}Error{% endblock %}
+{% block title_header %}{{ error.code }}{% endblock %}
+{% block navigation_bar %}-{% endblock %}
+{% block content %}
+<section class="row">
+    <div class="col-xs-12">
+        <h3>Error Message</h3>
+        <hr/>
+        <div>
+            {{ error.message }}
+        </div>
+    </div>
+</section>
+{% endblock %}

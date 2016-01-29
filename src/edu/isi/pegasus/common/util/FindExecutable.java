@@ -61,12 +61,13 @@ public class FindExecutable {
         }
 
         String path = System.getenv("PATH");
-        if ( path == null ) {
-            return null;
-        }
         
         if( directory != null ){
-            path = directory + ":" + path;
+            path = (path == null )? directory : directory + ":" + path;
+        }
+        
+        if( path == null ){
+            return null;
         }
         
         String[] list = path.split( ":" );

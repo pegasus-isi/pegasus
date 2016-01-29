@@ -108,9 +108,7 @@ public class PegasusProperties implements Cloneable {
 
     public static final String DEFAULT_TC_MODE = "Text";
 
-    public static final String TC_TEXT_FILE = "tc.text";
-    
-    public static final String TC_DATA_FILE = "tc.data";
+    public static final String TC_TEXT_FILE = "tc.txt";
 
 
     public static final String DEFAULT_POOL_MODE = "XML";
@@ -119,9 +117,6 @@ public class PegasusProperties implements Cloneable {
 
     public static final String DEFAULT_CONDOR_CONFIG_DIR = "";
 
-    public static final String SC_XML_FILE = "sites.xml";
-
-    public static final String SC_XML3_FILE = "sites.xml3";
 
     public static final String CONDOR_KICKSTART = "kickstart-condor";
 
@@ -208,18 +203,10 @@ public class PegasusProperties implements Cloneable {
      */
     private CommonProperties mProps;
 
-
-
     /**
      * The default path to the transformation catalog.
      */
     private String mDefaultTC;
-
-    /**
-     * The default path to the pool file.
-     */
-    private String mDefaultPoolFile;
-
     
 
     /**
@@ -332,7 +319,6 @@ public class PegasusProperties implements Cloneable {
         mDeprecatedProperties   = new HashSet(5);
         initializePropertyFile( confProperties  );
 
-        mDefaultPoolFile        = getDefaultPathToSC();
         mDefaultTC              = getDefaultPathToTC();
         mDefaultTransferPriority= getDefaultTransferPriority();
 
@@ -439,41 +425,18 @@ public class PegasusProperties implements Cloneable {
     }
     
     /**
-     * Returns the default path to the transformation catalog. Currently the
-     * default path defaults to  $PEGASUS_HOME/etc/tc.text if transformation
-     * type is Text else $PEGASUS_HOME/etc/tc.data
+     * Returns the default path to the transformation catalog. 
      *
-     * @return the default path to transformation catalog file
+     * @return tc.txt in the current working directory
      */
     public String getDefaultPathToTC() {
-
-        String name = (getTCMode().equalsIgnoreCase( DEFAULT_TC_MODE ))?
-                  PegasusProperties.TC_TEXT_FILE:
-                  PegasusProperties.TC_DATA_FILE;
-        File f = new File( mProps.getSysConfDir(),name);
+        File f = new File( ".", PegasusProperties.TC_TEXT_FILE);
         //System.err.println("Default Path to SC is " + f.getAbsolutePath());
         return f.getAbsolutePath();
 
     }
 
-    /**
-     * Returns the default path to the site catalog file.
-     * The default path is constructed on the basis of the mode set by
-     * the user.
-     *
-     * @return $PEGASUS_HOME/etc/sites.xml3 if the pool mode is XML3, else
-     *         $PEGASUS_HOME/etc/sites.xml
-     *
-     * @see #getPoolMode()
-     */
-    public String getDefaultPathToSC() {
-        String name =  (getPoolMode().equalsIgnoreCase( DEFAULT_POOL_MODE ))?
-                  PegasusProperties.SC_XML3_FILE:
-                  PegasusProperties.SC_XML_FILE;
-        File f = new File( mProps.getSysConfDir(),name);
-        //System.err.println("Default Path to SC is " + f.getAbsolutePath());
-        return f.getAbsolutePath();
-    }
+    
 
     /**
      * Returns the default path to the condor kickstart. Currently the path
@@ -872,6 +835,17 @@ public class PegasusProperties implements Cloneable {
         return mProps.getProperty( "pegasus.file.cleanup.clusters.size" );
     }
 
+    /**
+     * Returns the maximum available space per site.
+     * 
+     * Referred to by the "pegasus.file.cleanup.constraint.*.maxspace" property
+     * 
+     * @return the value in the property file , else null
+     */
+    public String getCleanupConstraintMaxSpace() {
+        return mProps.getProperty( "pegasus.file.cleanup.constraint.*.maxspace" );
+    }
+    
     
     /**
      * Returns the scope for file cleanup. It is used to trigger cleanup in case
@@ -1015,20 +989,7 @@ public class PegasusProperties implements Cloneable {
        return mProps.getProperty( PegasusProperties.PEGASUS_SITE_CATALOG_PROPERTY, DEFAULT_POOL_MODE );
    }
 
-   /**
-    * Returns the path to the pool file.
-    *
-    * Referred to by the "pegasus.catalog.site.file" property.
-    *
-    * @return the path to the pool file specified in the properties file,
-    *         else the default path specified by mDefaultPoolFile.
-    *
-    * @see #mDefaultPoolFile
-    */
-   public String getPoolFile() {
-       return mProps.getProperty( PegasusProperties.PEGASUS_SITE_CATALOG_FILE_PROPERTY,
-                                  mDefaultPoolFile );
-   }
+   
 
    /**
     * Returns the location of the schema for the DAX.
@@ -1931,6 +1892,19 @@ public class PegasusProperties implements Cloneable {
     */ 
     public boolean symlinkCommonLog() { 
         return Boolean.parse( mProps.getProperty( "pegasus.condor.logs.symlink" ),
+                              false  ); 
+    } 
+    
+    /** 
+     * Whether Pegasus should associate condor concurrency limits or not
+     * 
+     * 
+     * Referred to by the "pegasus.condor.concurrency.limits" property.
+     * 
+     * @return value specified by the property. Defaults to false.
+    */ 
+    public boolean associateCondorConcurrencyLimits() { 
+        return Boolean.parse( mProps.getProperty( "pegasus.condor.concurrency.limits" ),
                               false  ); 
     } 
     

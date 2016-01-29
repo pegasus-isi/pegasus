@@ -82,7 +82,7 @@ pkgbuild --root $PKG_DIR \
          --identifier edu.wisc.cs.htcondor \
          --version $VERSION \
          --ownership recommended \
-         --install-location /usr \
+         --install-location /usr/local \
          --scripts $MYDIR/scripts \
          $SCRATCH_DIR/htcondor.pkg
 

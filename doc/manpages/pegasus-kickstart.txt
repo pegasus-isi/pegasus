@@ -294,6 +294,10 @@ This flag causes kickstart to omit the <data> part of the <statcall> records
 when the job exits successfully. This is designed to reduce the size of the
 output logs for large workflows.
 
+*-c*::
+This flag causes kickstart to output <data> from stdout and stderr as a CDATA
+section instead of quoting it.
+
 'app'::
 The path to the application has to be completely specified. The application 
 is a mandatory option.

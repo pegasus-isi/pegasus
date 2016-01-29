@@ -16,6 +16,7 @@ ifneq ($(shell $(PYTHON) -V 2>&1 | grep -E 'ython 2\.[3-6]'),)
     PACKAGES+=ordereddict.py
 endif
 
+PACKAGES+=argparse
 PACKAGES+=flask
 PACKAGES+=flask_cache
 PACKAGES+=flask_sqlalchemy.py
@@ -27,7 +28,9 @@ PACKAGES+=requests
 PACKAGES+=itsdangerous.py
 PACKAGES+=boto
 PACKAGES+=pam.py
-PACKAGES+=OpenSSL
+ifeq ($(shell $(CURDIR)/pyopenssl.sh),Yes)
+    PACKAGES+=OpenSSL
+endif
 PACKAGES+=plex
 ifeq ($(shell which pg_config),)
     $(warning WARNING: pg_config not found: skipping python postgresql library)
@@ -44,15 +47,16 @@ all: $(addprefix $(LIBDIR)/,$(PACKAGES))
 
 $(LIBDIR)/%:
 	$(eval TARNAME := $(subst .tar.gz,,$<))
-	@echo Building $< ;\
-	mkdir -p $(LIBDIR) ;\
-	tar xzf $< ;\
-	pushd $(TARNAME) > /dev/null ;\
-	$(PYTHON) setup.py install_lib -d $(LIBDIR) > /dev/null ;\
-	popd > /dev/null ;\
-	rm -rf $(TARNAME) ;\
+	@echo Building $< &&\
+	mkdir -p $(LIBDIR) &&\
+	tar xzf $< &&\
+	pushd $(TARNAME) > /dev/null &&\
+	$(PYTHON) setup.py install_lib -d $(LIBDIR) > /dev/null &&\
+	popd > /dev/null &&\
+	rm -rf $(TARNAME) &&\
 	touch $@
 
+$(LIBDIR)/argparse: argparse-1.4.0.tar.gz
 $(LIBDIR)/sqlalchemy: SQLAlchemy-0.8.0.tar.gz
 $(LIBDIR)/flask: Flask-0.10.tar.gz
 $(LIBDIR)/flask_cache: Flask-Cache-0.13.1.tar.gz
@@ -61,9 +65,9 @@ $(LIBDIR)/jinja2: Jinja2-2.7.tar.gz
 $(LIBDIR)/markupsafe: MarkupSafe-0.18.tar.gz
 $(LIBDIR)/wtforms: WTForms-1.0.3.tar.gz
 $(LIBDIR)/werkzeug: Werkzeug-0.9.3.tar.gz
-$(LIBDIR)/requests: requests-1.2.3.tar.gz
+$(LIBDIR)/requests: requests-2.8.0.tar.gz
 $(LIBDIR)/itsdangerous.py: itsdangerous-0.21.tar.gz
-$(LIBDIR)/boto: boto-2.5.2.tar.gz
+$(LIBDIR)/boto: boto-2.38.0.tar.gz
 $(LIBDIR)/pam.py: pam-0.1.4.tar.gz
 ifeq ($(OSID),rhel5)
     # 0.13 does not work on rhel5

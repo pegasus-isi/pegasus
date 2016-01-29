@@ -21,6 +21,7 @@ import java.io.File;
 
 import edu.isi.pegasus.common.credential.CredentialHandlerFactory;
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.FindExecutable;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -118,6 +119,8 @@ public class Condor extends Abstract {
      * Path to Pegasus Lite local wrapper script.
      */
     private String mPegasusLiteLocalWrapper;
+    
+    private static String PEGASUS_PLAN_BASENAME ="pegasus-plan";
 
     /**
      * The default constructor.
@@ -415,7 +418,12 @@ public class Condor extends Abstract {
             job.condorVariables.removeOutputFilesForTransfer();
         }
 
-
+        //PM-1029 set PEGASUS_BIN_DIR environment variable
+        File f = FindExecutable.findExec( PEGASUS_PLAN_BASENAME );
+        if( f == null ){
+            throw new RuntimeException( "Unable to determine path to executable " + PEGASUS_PLAN_BASENAME );
+        }
+        job.envVariables.construct( ENV.PEGASUS_BIN_DIR_ENV_KEY, f.getParent());
 
         //check for transfer_executable and remove if set
         //transfer_executable does not work in local/scheduler universe

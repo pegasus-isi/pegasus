@@ -34,11 +34,15 @@
         </listitem>
 
         <listitem>
+          <para>Regex</para>
+        </listitem>
+
+        <listitem>
           <para>Restricted</para>
         </listitem>
 
         <listitem>
-          <para>Regex</para>
+          <para>Local</para>
         </listitem>
       </orderedlist>
 
@@ -56,43 +60,87 @@
       <title>Supported Replica Selectors</title>
 
       <para>The various Replica Selectors supported in Pegasus Workflow Mapper
-      are explained below</para>
+      are explained below.</para>
 
-      <section>
+      <note>
+        <para>Starting 4.6.0 release the Default and Regex Replica Selectors
+        return an ordered list with priorities set. pegasus-transfer at
+        runtime will failover to alternate url's specified, if a higher
+        priority source URL is inaccessible.</para>
+      </note>
+
+      <section id="replica_selection_default">
         <title>Default</title>
 
         <para>This is the default replica selector used in the Pegasus
         Workflow Mapper. If the property pegasus.selector.replica is not
         defined in properties, then Pegasus uses this selector.</para>
 
-        <para>This selector looks at each PFN returned for a LFN and checks to
-        see if</para>
+        <para>The selector orders the various candidate replica's according to
+        the following rules</para>
 
         <orderedlist>
           <listitem>
-            <para>the PFN is a file URL (starting with file:///)</para>
+            <para>valid file URL's . That is URL's that have the site
+            attribute matching the site where the executable
+            <emphasis>pegasus-transfer</emphasis> is executed.</para>
           </listitem>
 
           <listitem>
-            <para>the PFN has a pool attribute matching to the site handle of
-            the site where the compute job that requires the input file is to
-            be run.</para>
+            <para>all URL's from preferred site (usually the compute
+            site)</para>
+          </listitem>
+
+          <listitem>
+            <para>all other remotely accessible ( non file) URL's</para>
           </listitem>
         </orderedlist>
 
-        <para>If a PFN matching the conditions above exists then that is
-        returned by the selector .</para>
-
-        <para><emphasis role="bold">Else,</emphasis> a random PFN is selected
-        amongst all the PFN&amp;rsquor;s that have a pool attribute matching
-        to the site handle of the site where a compute job is to be
-        run.</para>
-
-        <para><emphasis role="bold">Else,</emphasis> a random pfn is selected
-        amongst all the PFN&amp;rsquor;s</para>
-
         <para>To use this replica selector set the following
         property<programlisting>pegasus.selector.replica                  Default</programlisting></para>
+      </section>
+
+      <section>
+        <title>Regex</title>
+
+        <para>This replica selector allows the user allows the user to
+        specific regular expressions that can be used to rank various PFN's
+        returned from the Replica Catalog for a particular LFN. This replica
+        selector orders the replicas based on the rank. Lower the rank higher
+        the preference.</para>
+
+        <para>The regular expressions are assigned different rank, that
+        determine the order in which the expressions are employed. The rank
+        values for the regex can expressed in user properties using the
+        property.</para>
+
+        <programlisting>pegasus.selector.replica.regex.rank.<emphasis
+            role="bold">[value]</emphasis>                  regex-expression</programlisting>
+
+        <para>The <emphasis role="bold">[value]</emphasis> in the above
+        property is an integer value that denotes the rank of an expression
+        with a rank value of 1 being the highest rank.</para>
+
+        <para>For example, a user can specify the following regex expressions
+        that will ask Pegasus to prefer file URL's over gsiftp url's from
+        example.isi.edu</para>
+
+        <programlisting>pegasus.selector.replica.regex.rank.1                       file://.*
+pegasus.selector.replica.regex.rank.2                       gsiftp://example\.isi\.edu.*</programlisting>
+
+        <para>User can specify as many regex expressions as they want.</para>
+
+        <para>Since Pegasus is in Java , the regex expression support is what
+        Java supports. It is pretty close to what is supported by Perl. More
+        details can be found at
+        http://java.sun.com/j2se/1.5.0/docs/api/java/util/regex/Pattern.html</para>
+
+        <para>Before applying any regular expressions on the PFN's for a
+        particular LFN that has to be staged to a site X, the file URL's that
+        don't match the site X are explicitly filtered out.</para>
+
+        <para>To use this replica selector set the following
+        property<programlisting>pegasus.selector.replica                  Regex</programlisting></para>
       </section>
 
       <section>
@@ -143,51 +191,7 @@ pegasus.replica.uwm.prefer.stagein.sites                   isi,cit
         <programlisting>pegasus.selector.replica                  Restricted</programlisting>
       </section>
 
-      <section>
-        <title>Regex</title>
-
-        <para>This replica selector allows the user allows the user to
-        specific regex expressions that can be used to rank various
-        PFN&amp;rsquor;s returned from the Replica Catalog for a particular
-        LFN. This replica selector selects the highest ranked PFN i.e the
-        replica with the lowest rank value.</para>
-
-        <para>The regular expressions are assigned different rank, that
-        determine the order in which the expressions are employed. The rank
-        values for the regex can expressed in user properties using the
-        property.</para>
-
-        <programlisting>pegasus.selector.replica.regex.rank.<emphasis
-            role="bold">[value]</emphasis>                  regex-expression</programlisting>
-
-        <para>The <emphasis role="bold">[value]</emphasis> in the above
-        property is an integer value that denotes the rank of an expression
-        with a rank value of 1 being the highest rank.</para>
-
-        <para>For example, a user can specify the following regex expressions
-        that will ask Pegasus to prefer file URL's over gsiftp url's from
-        example.isi.edu</para>
-
-        <programlisting>pegasus.selector.replica.regex.rank.1                       file://.*
-pegasus.selector.replica.regex.rank.2                       gsiftp://example\.isi\.edu.*</programlisting>
-
-        <para>User can specify as many regex expressions as they want.</para>
-
-        <para>Since Pegasus is in Java , the regex expression support is what
-        Java supports. It is pretty close to what is supported by Perl. More
-        details can be found at
-        http://java.sun.com/j2se/1.5.0/docs/api/java/util/regex/Pattern.html</para>
-
-        <para>Before applying any regular expressions on the PFN&amp;rsquor;s
-        for a particular LFN that has to be staged to a site X, the file
-        URL&amp;rsquor;s that don't match the site X are explicitly filtered
-        out.</para>
-
-        <para>To use this replica selector set the following
-        property<programlisting>pegasus.selector.replica                  Regex</programlisting></para>
-      </section>
-
-      <section>
+      <section id="replica_selection_local">
         <title>Local</title>
 
         <para>This replica selector always prefers replicas from the local
@@ -664,12 +668,33 @@ pegasus.selector.replica.regex.rank.2                       gsiftp://example\.is
       added to the executable workflow are executed on the submit host. By
       default, Pegasus will schedule a transfer to be executed on the remote
       staging site only if there is no way to execute it on the submit host.
-      For e.g if the file server specified for the staging site/compute site
-      is a file server, then Pegasus will schedule all the stage in data
-      movement jobs on the compute site to stage-in the input data for the
-      workflow. Another case would be if a user has symlinking turned on. In
-      that case, the transfer jobs that symlink against the input data on the
-      compute site, will be executed remotely ( on the compute site ).</para>
+      Some scenarios where transfer jobs are executed on remote sites are as
+      follows:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>the file server specified for the staging site/compute site is
+          a file server. In that case, Pegasus will schedule all the stage in
+          data movement jobs on the compute site to stage-in the input data
+          for the workflow.</para>
+        </listitem>
+
+        <listitem>
+          <para>a user has symlinking turned on. In that case, the transfer
+          jobs that symlink against the input data on the compute site, will
+          be executed remotely ( on the compute site ).</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>In certain execution environments, such a local campus cluster the
+      compute site and the local share a filesystem ( i.e. compute site has
+      file servers specified for the staging/compute site, and the scratch and
+      storage directories mentioned for the compute site are locally mounted
+      on the submit host), it is beneficial to have the remote transfer jobs
+      run locally and hence bypass going through the local scheduler queue. In
+      that case, users can set a boolean profile auxillary.local in pegasus
+      namespace in the site catalog for the compute/staging site to
+      true.</para>
 
       <para>Users can specify the property <emphasis role="bold">
       pegasus.transfer.*.remote.sites</emphasis> to change the default
@@ -990,11 +1015,10 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
 
       <para>Pegasus refers to a python script called <emphasis role="bold">
       pegasus-transfer</emphasis> as the executable in the transfer jobs to
-      transfer the data. pegasus-transfer is a python based wrapper around
-      various transfer clients . pegasus-transfer looks at source and
-      destination url and figures out automatically which underlying client to
-      use. pegasus-transfer is distributed with the PEGASUS and can be found
-      at $PEGASUS_HOME/bin/pegasus-transfer.</para>
+      transfer the data. pegasus-transfer looks at source and destination url
+      and figures out automatically which underlying client to use.
+      pegasus-transfer is distributed with the PEGASUS and can be found at
+      $PEGASUS_HOME/bin/pegasus-transfer.</para>
 
       <para>Currently, pegasus-transfer interfaces with the following transfer
       clients</para>
@@ -1015,38 +1039,38 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
             <row>
               <entry>globus-url-copy</entry>
 
-              <entry>staging files to and from a gridftp server.</entry>
+              <entry>staging files to and from GridFTP servers</entry>
             </row>
 
             <row>
-              <entry>lcg-copy</entry>
+              <entry>gfal-copy</entry>
 
-              <entry>staging files to and from a SRM server.</entry>
+              <entry>staging files to and from SRM or XRootD servers</entry>
             </row>
 
             <row>
               <entry>wget</entry>
 
-              <entry>staging files from a HTTP server.</entry>
+              <entry>staging files from a HTTP server</entry>
             </row>
 
             <row>
               <entry>cp</entry>
 
-              <entry>copying files from a POSIX filesystem .</entry>
+              <entry>copying files from a POSIX filesystem</entry>
             </row>
 
             <row>
               <entry>ln</entry>
 
-              <entry>symlinking against input files.</entry>
+              <entry>symlinking against input files</entry>
             </row>
 
             <row>
               <entry>pegasus-s3</entry>
 
-              <entry>staging files to and from S3 bucket in the Amazon
-              cloud</entry>
+              <entry>staging files to and from S3 buckets in Amazon Web
+              Services</entry>
             </row>
 
             <row>
@@ -1064,7 +1088,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
             <row>
               <entry>iget</entry>
 
-              <entry>staging files to and from a irods server.</entry>
+              <entry>staging files to and from iRODS servers</entry>
             </row>
           </tbody>
         </tgroup>
@@ -1249,7 +1273,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
         </listitem>
       </itemizedlist>
 
-      <para> For users to specify a particular worker package to use, they can
+      <para>For users to specify a particular worker package to use, they can
       specify the transformation <emphasis
       role="bold">pegasus::worker</emphasis> in the transformation catalog
       with</para>
@@ -1267,7 +1291,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
 
         <listitem>
           <para>the PFN specified should be a remote URL that can be pulled to
-          the compute site. </para>
+          the compute site.</para>
         </listitem>
       </itemizedlist>
 
@@ -1794,12 +1818,21 @@ irodsPassword 'somesecretpassword'</programlisting>
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">inplace t</emphasis>he mapper adds cleanup
+        <para><emphasis role="bold">inplace</emphasis> the mapper adds cleanup
         nodes per level of the workflow in addition to leaf cleanup nodes. The
         nodes remove files no longer required during execution. For example,
         an added cleanup node will remove input files for a particular compute
         job after the job has finished successfully. This is the default
         value.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">constraint</emphasis> the mapper adds
+        cleanup nodes to constraint the amount of storage space used by a
+        workflow, in addition to leaf cleanup nodes. The nodes remove files no
+        longer required during execution. The added cleanup node guarantees
+        limits on disk usage. File sizes are read from the
+        <emphasis role="bold">size</emphasis> flag in the DAX.</para>
       </listitem>
     </orderedlist>
 
@@ -1811,7 +1844,7 @@ irodsPassword 'somesecretpassword'</programlisting>
 
     <para>Behaviour of the cleanup strategies implemented in the Pegasus
     Mapper can be controlled by properties described <link
-    linkend="cleanup_props">here</link> .</para>
+    linkend="cleanup_props">here</link>.</para>
 
     <section>
       <title>Data Cleanup in Hierarchal Workflows</title>
@@ -1840,155 +1873,381 @@ irodsPassword 'somesecretpassword'</programlisting>
       <para>This will result in cleanup option to be picked up from the
       arguments for the DAX job in the top level DAX .</para>
     </section>
+  </section>
 
-    <section id="data_cleanup_client">
-      <title>Executables used for Directory Creation and Cleanup Jobs</title>
+  <section id="metadata">
+    <title>Metadata</title>
 
-      <para>Starting 4.0, Pegasus has changed the way how the scratch
-      directories are created on the staging site. The planner now prefers to
-      schedule the directory creation and cleanup jobs locally. The jobs refer
-      to python based tools, that call out to protocol specific clients to
-      determine what client is picked up. For protocols, where specific remote
-      cleanup and directory creation clients don't exist ( for example gridftp
-      ), the python tools rely on the corresponding transfer tool to create a
-      directory by initiating a transfer of an empty file. The python clients
-      used to create directories and remove files are called</para>
+    <para>Pegasus allows users to associate metadata at</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Workflow Level in the DAX</para>
+      </listitem>
+
+      <listitem>
+        <para>Task level in the DAX and the Transformation Catalog</para>
+      </listitem>
+
+      <listitem>
+        <para>File level in the DAX and Replica Catalog</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>Metadata is specified as a key value tuple, where both key and
+    values are of type String.</para>
+
+    <para>All the metadata ( user specified and auto-generated) gets populated
+    into the workflow database ( usually in the workflow submit directory) by
+    pegasus-monitord. The metadata in this database can be be queried for
+    using the <emphasis role="bold"><link
+    linkend="cli-pegasus-metadata">pegasus-metadata</link></emphasis> command
+    line tool, or is also shown in the <link linkend="dashboard">Pegasus
+    Dashboard</link>.</para>
+
+    <section id="metadata_dax">
+      <title>Metadata in the DAX</title>
+
+      <para>In the DAX, metadata can be associated with the workflow, tasks,
+      files and executables. For details on how to associate metadata in the
+      DAX using the DAX API refer to the DAX API <link
+      linkend="dax_generator_api">chapter</link>. Below is an example DAX that
+      illustrates metadata associations at workflow, task and file
+      level.</para>
+
+      <programlisting>
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!-- generated on: 2016-01-21T10:36:39-08:00 --&gt;
+&lt;!-- generated by: vahi [ ?? ] --&gt;
+&lt;adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.6.xsd" version="3.6" name="diamond" index="0" count="1"&gt;
+
+&lt;!-- Section 1: Metadata attributes for the workflow (can be empty)  --&gt;
+
+   &lt;metadata key="name"&gt;diamond&lt;/metadata&gt;
+   &lt;metadata key="createdBy"&gt;Karan Vahi&lt;/metadata&gt;
+
+&lt;!-- Section 2: Invokes - Adds notifications for a workflow (can be empty) --&gt;
+
+   &lt;invoke when="start"&gt;/pegasus/libexec/notification/email -t notify@example.com&lt;/invoke&gt;
+   &lt;invoke when="at_end"&gt;/pegasus/libexec/notification/email -t notify@example.com&lt;/invoke&gt;
+
+&lt;!-- Section 3: Files - Acts as a Replica Catalog (can be empty) --&gt;
+
+   &lt;file name="f.a"&gt;
+      &lt;metadata key="size"&gt;1024&lt;/metadata&gt;
+      &lt;pfn url="file:///Volumes/Work/lfs1/work/pegasus-features/PM-902/f.a" site="local"/&gt;
+   &lt;/file&gt;
+
+&lt;!-- Section 4: Executables - Acts as a Transformaton Catalog (can be empty) --&gt;
+
+   &lt;executable namespace="pegasus" name="preprocess" version="4.0" installed="true" arch="x86" os="linux"&gt;
+      &lt;metadata key="size"&gt;2048&lt;/metadata&gt;
+      &lt;pfn url="file:///usr/bin/keg" site="TestCluster"/&gt;
+   &lt;/executable&gt;
+   &lt;executable namespace="pegasus" name="findrange" version="4.0" installed="true" arch="x86" os="linux"&gt;
+      &lt;pfn url="file:///usr/bin/keg" site="TestCluster"/&gt;
+   &lt;/executable&gt;
+   &lt;executable namespace="pegasus" name="analyze" version="4.0" installed="true" arch="x86" os="linux"&gt;
+      &lt;pfn url="file:///usr/bin/keg" site="TestCluster"/&gt;
+   &lt;/executable&gt;
+
+&lt;!-- Section 5: Transformations - Aggregates executables and Files (can be empty) --&gt;
+
+
+&lt;!-- Section 6: Job's, DAX's or Dag's - Defines a JOB or DAX or DAG (Atleast 1 required) --&gt;
+
+   &lt;job id="j1" namespace="pegasus" name="preprocess" version="4.0"&gt;
+      &lt;metadata key="time"&gt;60&lt;/metadata&gt;
+      &lt;argument&gt;-a preprocess -T 60 -i  &lt;file name="f.a"/&gt; -o  &lt;file name="f.b1"/&gt;   &lt;file name="f.b2"/&gt;&lt;/argument&gt;
+      &lt;uses name="f.a" link="input"&gt;
+         &lt;metadata key="size"&gt;1024&lt;/metadata&gt;
+      &lt;/uses&gt;
+      &lt;uses name="f.b1" link="output" transfer="true" register="true"/&gt;
+      &lt;uses name="f.b2" link="output" transfer="true" register="true"/&gt;
+      &lt;invoke when="start"&gt;/pegasus/libexec/notification/email -t notify@example.com&lt;/invoke&gt;
+      &lt;invoke when="at_end"&gt;/pegasus/libexec/notification/email -t notify@example.com&lt;/invoke&gt;
+   &lt;/job&gt;
+   &lt;job id="j2" namespace="pegasus" name="findrange" version="4.0"&gt;
+      &lt;metadata key="time"&gt;60&lt;/metadata&gt;
+      &lt;argument&gt;-a findrange -T 60 -i  &lt;file name="f.b1"/&gt; -o  &lt;file name="f.c1"/&gt;&lt;/argument&gt;
+      &lt;uses name="f.b1" link="input"/&gt;
+      &lt;uses name="f.c1" link="output" transfer="true" register="true"/&gt;
+      &lt;invoke when="start"&gt;/pegasus/libexec/notification/email -t notify@example.com&lt;/invoke&gt;
+      &lt;invoke when="at_end"&gt;/pegasus/libexec/notification/email -t notify@example.com&lt;/invoke&gt;
+   &lt;/job&gt;
+   &lt;job id="j3" namespace="pegasus" name="findrange" version="4.0"&gt;
+      &lt;metadata key="time"&gt;60&lt;/metadata&gt;
+      &lt;argument&gt;-a findrange -T 60 -i  &lt;file name="f.b2"/&gt; -o  &lt;file name="f.c2"/&gt;&lt;/argument&gt;
+      &lt;uses name="f.b2" link="input"/&gt;
+      &lt;uses name="f.c2" link="output" transfer="true" register="true"/&gt;
+      &lt;invoke when="start"&gt;/pegasus/libexec/notification/email -t notify@example.com&lt;/invoke&gt;
+      &lt;invoke when="at_end"&gt;/pegasus/libexec/notification/email -t notify@example.com&lt;/invoke&gt;
+   &lt;/job&gt;
+   &lt;job id="j4" namespace="pegasus" name="analyze" version="4.0"&gt;
+      &lt;metadata key="time"&gt;60&lt;/metadata&gt;
+      &lt;argument&gt;-a analyze -T 60 -i  &lt;file name="f.c1"/&gt;   &lt;file name="f.c2"/&gt; -o  &lt;file name="f.d"/&gt;&lt;/argument&gt;
+      &lt;uses name="f.c1" link="input"/&gt;
+      &lt;uses name="f.c2" link="input"/&gt;
+      &lt;uses name="f.d" link="output" transfer="true" register="true"/&gt;
+      &lt;invoke when="start"&gt;/pegasus/libexec/notification/email -t notify@example.com&lt;/invoke&gt;
+      &lt;invoke when="at_end"&gt;/pegasus/libexec/notification/email -t notify@example.com&lt;/invoke&gt;
+   &lt;/job&gt;
+
+&lt;!-- Section 7: Dependencies - Parent Child relationships (can be empty) --&gt;
+
+   &lt;child ref="j2"&gt;
+      &lt;parent ref="j1"/&gt;
+   &lt;/child&gt;
+   &lt;child ref="j3"&gt;
+      &lt;parent ref="j1"/&gt;
+   &lt;/child&gt;
+   &lt;child ref="j4"&gt;
+      &lt;parent ref="j2"/&gt;
+      &lt;parent ref="j3"/&gt;
+   &lt;/child&gt;
+&lt;/adag&gt;</programlisting>
+    </section>
+
+    <section id="metadata_wf">
+      <title>Workflow Level Metadata</title>
+
+      <para>Workflow level metadata can be associated only in the DAX under
+      the root element adag. Below is a snippet that illustrates this</para>
+
+      <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!-- generated on: 2016-01-21T10:36:39-08:00 --&gt;
+&lt;!-- generated by: vahi [ ?? ] --&gt;
+&lt;adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.6.xsd" version="3.6" name="diamond" index="0" count="1"&gt;
+
+&lt;!-- Section 1: Metadata attributes for the workflow (can be empty)  --&gt;
+
+   &lt;metadata key="name"&gt;diamond&lt;/metadata&gt;
+   &lt;metadata key="createdBy"&gt;Karan Vahi&lt;/metadata&gt;
+
+...
+
+&lt;/adag&gt;</programlisting>
+    </section>
+
+    <section id="metadata_task">
+      <title>Task Level Metadata</title>
+
+      <para>Metadata for the tasks is picked up from</para>
 
       <itemizedlist>
         <listitem>
-          <para>pegasus-create-dir</para>
+          <para>metadata associated with the job element in the DAX</para>
         </listitem>
 
         <listitem>
-          <para>pegasus-cleanup</para>
+          <para>metadata associated with the corresponding transformation. The
+          transformation for a task is picked up from either a matching
+          executable entry in the DAX ( if exists ) or the Transformation
+          Catalog.</para>
         </listitem>
       </itemizedlist>
 
-      <para>Both these clients inspect the URL's to to determine what
-      underlying client to pick up.</para>
+      <para>Below is a snippet that illustrates metadata for a task specified
+      in the job element in the DAX</para>
 
-      <table>
-        <title>Clients interfaced to by pegasus-create-dir</title>
+      <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!-- generated on: 2016-01-21T10:36:39-08:00 --&gt;
+&lt;!-- generated by: vahi [ ?? ] --&gt;
+&lt;adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.6.xsd" version="3.6" name="diamond" index="0" count="1"&gt;
 
-        <tgroup cols="2">
-          <thead>
-            <row>
-              <entry>Client</entry>
+...
+    &lt;job id="j2" namespace="pegasus" name="findrange" version="4.0"&gt;
+      &lt;metadata key="time"&gt;60&lt;/metadata&gt;
+      &lt;argument&gt;-a findrange -T 60 -i  &lt;file name="f.b1"/&gt; -o  &lt;file name="f.c1"/&gt;&lt;/argument&gt;
+      &lt;uses name="f.b1" link="input"/&gt;
+      &lt;uses name="f.c1" link="output" transfer="true" register="true"/&gt;
+      &lt;invoke when="start"&gt;/pegasus/libexec/notification/email -t notify@example.com&lt;/invoke&gt;
+      &lt;invoke when="at_end"&gt;/pegasus/libexec/notification/email -t notify@example.com&lt;/invoke&gt;
+   &lt;/job&gt;
 
-              <entry>Used For</entry>
-            </row>
-          </thead>
+...
 
-          <tbody>
-            <row>
-              <entry>globus-url-copy</entry>
+&lt;/adag&gt;</programlisting>
 
-              <entry>to create directories against a gridftp/ftp
-              server</entry>
-            </row>
+      <para>Below is a snippet that illustrates metadata for a task specified
+      in the executable element in the DAX</para>
 
-            <row>
-              <entry>srm-mkdir</entry>
+      <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!-- generated on: 2016-01-21T10:36:39-08:00 --&gt;
+&lt;!-- generated by: vahi [ ?? ] --&gt;
+&lt;adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.6.xsd" version="3.6" name="diamond" index="0" count="1"&gt;
 
-              <entry>to create directories against a SRM server.</entry>
-            </row>
+...
+    &lt;!-- Section 4: Executables - Acts as a Transformaton Catalog (can be empty) --&gt;
 
-            <row>
-              <entry>mkdir</entry>
+   &lt;executable namespace="pegasus" name="findrange" version="4.0" installed="true" arch="x86" os="linux"&gt;
+      &lt;metadata key="size"&gt;2048&lt;/metadata&gt;
+      &lt;pfn url="file:///usr/bin/keg" site="TestCluster"/&gt;
+   &lt;/executable&gt;
 
-              <entry>to create a directory on the local filesystem</entry>
-            </row>
+...
 
-            <row>
-              <entry>pegasus-s3</entry>
+&lt;/adag&gt;</programlisting>
 
-              <entry>to create a S3 bucket in the Amazon cloud</entry>
-            </row>
+      <para>Metadata can be associated with the transformation in the
+      transformation catalog. The metadata specified in the transformation
+      catalog gets automatically associated with the task level metadata for
+      the corresponding task ( that uses that executable). This resolution is
+      similar to how profiles associated in the Transformation Catalog get
+      associated with the tasks. Below is an example Transformation Catalog
+      that illustrates metadata associated with the executables.</para>
 
-            <row>
-              <entry>gsutil</entry>
+      <programlisting>tr pegasus::findrange:4.0 { 
+    site TestCluster { 
+        pfn "/usr/bin/pegasus-keg" 
+        arch "x86_64" 
+        os "linux" 
+        type "INSTALLED" 
+        profile pegasus "clusters.size" "20" 
+        metadata "key" "value" 
+        metadata "appmodel" "myxform.aspen" 
+        metadata "version" "3.0" 
+    } 
+}</programlisting>
+    </section>
 
-              <entry>to create a Google Storage bucket</entry>
-            </row>
+    <section id="metadata_file">
+      <title>File Level Metadata</title>
 
-            <row>
-              <entry>scp</entry>
+      <para>Metadata for the files is picked up from</para>
 
-              <entry>staging files using scp</entry>
-            </row>
+      <itemizedlist>
+        <listitem>
+          <para>metadata associated with the file element in the DAX. File
+          elements are optionally used to record the locations of input files
+          for the workflow in the DAX.</para>
+        </listitem>
 
-            <row>
-              <entry>imkdir</entry>
+        <listitem>
+          <para>metadata associated with the files in the uses section of the
+          job element in the DAX</para>
+        </listitem>
 
-              <entry>to create a directory against an IRODS server</entry>
-            </row>
-          </tbody>
-        </tgroup>
-      </table>
+        <listitem>
+          <para>metadata associated with the file in the Replica
+          Catalog.</para>
+        </listitem>
+      </itemizedlist>
 
-      <table>
-        <title>Clients interfaced to by pegasus-cleanup</title>
+      <para>Below is a snippet that illustrates metadata for a file specified
+      in the file element in the DAX</para>
 
-        <tgroup cols="2">
-          <thead>
-            <row>
-              <entry>Client</entry>
+      <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!-- generated on: 2016-01-21T10:36:39-08:00 --&gt;
+&lt;!-- generated by: vahi [ ?? ] --&gt;
+&lt;adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.6.xsd" version="3.6" name="diamond" index="0" count="1"&gt;
 
-              <entry>Used For</entry>
-            </row>
-          </thead>
+...
+    &lt;!-- Section 3: Files - Acts as a Replica Catalog (can be empty) --&gt;
 
-          <tbody>
-            <row>
-              <entry>globus-url-copy</entry>
+   &lt;file name="f.a"&gt;
+      &lt;metadata key="size"&gt;1024&lt;/metadata&gt;
+      &lt;pfn url="file:///Volumes/Work/lfs1/work/pegasus-features/PM-902/f.a" site="local"/&gt;
+   &lt;/file&gt;
 
-              <entry>to remove a file against a gridftp/ftp server. In this
-              case a zero byte file is created</entry>
-            </row>
 
-            <row>
-              <entry>srm-rm</entry>
+...
 
-              <entry>to remove files against a SRM server.</entry>
-            </row>
+&lt;/adag&gt;</programlisting>
 
-            <row>
-              <entry>rm</entry>
+      <para>Below is a snippet that illustrates metadata for a file in the
+      uses section of the job element</para>
 
-              <entry>to remove a file on the local filesystem</entry>
-            </row>
+      <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!-- generated on: 2016-01-21T10:36:39-08:00 --&gt;
+&lt;!-- generated by: vahi [ ?? ] --&gt;
+&lt;adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.6.xsd" version="3.6" name="diamond" index="0" count="1"&gt;
 
-            <row>
-              <entry>pegasus-s3</entry>
+...
+    &lt;job id="j1" namespace="pegasus" name="preprocess" version="4.0"&gt;
+      &lt;argument&gt;-a preprocess -T 60 -i  &lt;file name="f.a"/&gt; -o  &lt;file name="f.b1"/&gt;   &lt;file name="f.b2"/&gt;&lt;/argument&gt;
+      &lt;uses name="f.a" link="input"&gt;
+         &lt;metadata key="size"&gt;1024&lt;/metadata&gt;
+         &lt;metadata key="source"&gt;DAX&lt;/metadata&gt;
+      &lt;/uses&gt;
+      &lt;uses name="f.b1" link="output" transfer="true" register="true"/&gt;
+      &lt;uses name="f.b2" link="output" transfer="true" register="true"/&gt;
+   &lt;/job&gt;
 
-              <entry>to remove a file from the s3 bucket.</entry>
-            </row>
+...
 
-            <row>
-              <entry>gsutil</entry>
+&lt;/adag&gt;</programlisting>
 
-              <entry>to remove an object from a Google Storage bucket</entry>
-            </row>
+      <para>Below is a snippet that illustrates metadata for an input file in
+      the Replica Catalog entry for the file</para>
 
-            <row>
-              <entry>scp</entry>
+      <programlisting># File Based Replica Catalog
+f.a file://$PWD/production_200.conf site="local" source="replica_catalog"</programlisting>
+    </section>
 
-              <entry>to remove a file against a scp server. In this case a
-              zero byte file is created.</entry>
-            </row>
+    <section id="metadata_auto">
+      <title>Automatically Generated Metadata attributes</title>
 
-            <row>
-              <entry>irm</entry>
+      <para>Pegasus captures certain metadata attributes as output files are
+      generated and associates them at the file level in the database.
+      Currently, the following attributes for the output files are
+      automatically captured from the kickstart record and stored in the
+      workflow database.</para>
 
-              <entry>to remove a file against an IRODS server</entry>
-            </row>
-          </tbody>
-        </tgroup>
-      </table>
+      <itemizedlist>
+        <listitem>
+          <para>pfn - the physical file location</para>
+        </listitem>
 
-      <para>The only case, where the create dir and cleanup jobs are scheduled
-      to run remotely is when for the staging site, a file server is
-      specified.</para>
+        <listitem>
+          <para>ctime - creation time</para>
+        </listitem>
+
+        <listitem>
+          <para>size - size of the file in bytes</para>
+        </listitem>
+
+        <listitem>
+          <para>user - the linux user as who the process ran that generated
+          the output file.</para>
+        </listitem>
+      </itemizedlist>
+
+      <note>
+        <para>The automatic collection of the metadata attributes for output
+        files is only triggered if the output file is marked to be registered
+        in the replica catalog, and --output-site option to pegasus-plan is
+        specified.</para>
+      </note>
+    </section>
+
+    <section id="metadata_trace">
+      <title>Tracing Metadata for an output file</title>
+
+      <para>The command line client <link
+      linkend="cli-pegasus-metadata">pegasus-metadata</link> allows a user to
+      trace all the metadata associated with the file. The client will display
+      metadata for the output file, the task that generated the file, the
+      workflow which contains the task, and the root workflow which contains
+      the task. Below is a sample illustration of it.</para>
+
+      <programlisting><emphasis role="bold">$ pegasus-metadata file --file-name f.d --trace /path/to/submit-dir</emphasis>
+
+Workflow 493dda63-c6d0-4e62-bc36-26e5629449ad
+    createdby : Test user
+    name      : diamond
+
+Task ID0000004
+    size           : 2048
+    time           : 60
+    transformation : analyze
+
+File f.d
+    ctime        : 2016-01-20T19:02:14-08:00
+    final_output : true
+    size         : 582
+    user         : bamboo
+</programlisting>
     </section>
   </section>
 </chapter>

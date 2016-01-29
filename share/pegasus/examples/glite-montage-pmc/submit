@@ -111,7 +111,7 @@ cat >sites.xml <<EOF
         <profile namespace="env" key="PEGASUS_HOME" >$CLUSTER_PEGASUS_HOME</profile>
         <profile namespace="env" key="MONTAGE_HOME" >$CLUSTER_MONTAGE_LOCATION</profile>
         <profile namespace="pegasus" key="style" >glite</profile>
-        <profile namespace="pegasus" key="change.dir">true</profile>
+
 
         <profile namespace="condor" key="grid_resource">pbs</profile>
         <!-- <profile namespace="condor" key="batch_queue">main</profile>-->

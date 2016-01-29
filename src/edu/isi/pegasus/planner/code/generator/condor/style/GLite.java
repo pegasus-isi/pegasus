@@ -19,6 +19,8 @@ package edu.isi.pegasus.planner.code.generator.condor.style;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 
 import edu.isi.pegasus.planner.classes.Job;
 
@@ -30,6 +32,7 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParserException;
 import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.code.generator.condor.CondorEnvironmentEscape;
 import edu.isi.pegasus.planner.namespace.Globus;
+import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
 /**
@@ -47,7 +50,7 @@ import edu.isi.pegasus.planner.namespace.Pegasus;
  * As part of applying the style to the job, this style adds the following
  * classads expressions to the job description
  * <pre>
- *      batch_queue  - value picked up from globus profile queue or can be
+ *      batch_queue  - value picked up from a ( Globus or Pegasus profile queue)  OR can be
  *                     set directly as a Condor profile named batch_queue
  *      +remote_cerequirements - See below
  * </pre>
@@ -147,6 +150,47 @@ public class GLite extends Abstract {
         mCondorG = new CondorG();
     }
 
+    /**
+     * Apply a style to a SiteCatalogEntry.  This allows the style classes
+     * to add or modify the existing profiles for the site so far.
+     *
+     * @param site  the site catalog entry object
+     * 
+     * @throws CondorStyleException in case of any error occuring code generation.
+     */
+    public void apply( SiteCatalogEntry site ) throws CondorStyleException{
+        Namespace pegasusProfiles = site.getProfiles().get(Profiles.NAMESPACES.pegasus);
+        String styleKey = Pegasus.STYLE_KEY;
+        if( pegasusProfiles.containsKey( styleKey )){
+            String style = (String) pegasusProfiles.get( styleKey );
+            if( style.equals( Pegasus.GLITE_STYLE ) ){
+                // add change.dir key for it always
+                String key = Pegasus.CHANGE_DIR_KEY;
+                this.setProfileIfNotPresent(pegasusProfiles, key , "true") ;
+                mLogger.log( "Set pegasus profile " +  key  + " to " + pegasusProfiles.get(key) + " for site " + site.getSiteHandle(),
+                             LogManager.DEBUG_MESSAGE_LEVEL );
+                
+                key = Pegasus.CONDOR_QUOTE_ARGUMENTS_KEY;
+                this.setProfileIfNotPresent(pegasusProfiles, key, "false") ;
+                mLogger.log( "Set pegasus profile " +  key  + " to " + pegasusProfiles.get(key) + " for site " + site.getSiteHandle(),
+                             LogManager.DEBUG_MESSAGE_LEVEL );
+                
+            }
+        }
+    }
+
+    /**
+     * Convenience method to set a profile if there is no matching key already
+     * 
+     * @param profiles
+     * @param key
+     * @param value 
+     */
+    protected void setProfileIfNotPresent( Namespace profiles, String key, String value ){
+        if( !profiles.containsKey(key) ){
+            profiles.checkKeyInNS( key, value );
+        }
+    }
 
 
     /**
@@ -190,14 +234,14 @@ public class GLite extends Abstract {
         //the planner to be able to set it to true
         //job.condorVariables.construct( Condor.TRANSFER_EXECUTABLE_KEY, "false" );
 
+        /* convert some condor keys and globus keys to remote ce requirements
+         +remote_cerequirements = blah */
+        job.condorVariables.construct( "+remote_cerequirements", getCERequirementsForJob( job, gridResource) );
+
         /* retrieve some keys from globus rsl and convert to gLite format */
         if( job.globusRSL.containsKey( "queue" ) ){
             job.condorVariables.construct(  "batch_queue" , (String)job.globusRSL.get( "queue" ) );
         }
-
-        /* convert some condor keys and globus keys to remote ce requirements
-         +remote_cerequirements = blah */
-        job.condorVariables.construct( "+remote_cerequirements", getCERequirementsForJob( job, gridResource) );
         
         /*
          PM-934 construct environment accordingly
@@ -328,6 +372,12 @@ public class GLite extends Abstract {
         if( job.globusRSL.containsKey( "totalmemory" ) ){
             value.append( " && " );
             addSubExpression( value, "TOTAL_MEMORY" ,  (String)job.globusRSL.get( "totalmemory" )  );
+        }
+        
+        /* the globus key project is PROJECT */
+        if( job.globusRSL.containsKey( Globus.PROJECT_KEY ) ){
+            value.append( " && " );
+            addSubExpression( value, "PROJECT" ,  (String)job.globusRSL.get( Globus.PROJECT_KEY )  );
         }
 
         /* the condor key priority is PRIORITY */

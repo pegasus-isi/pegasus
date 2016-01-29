@@ -44,6 +44,7 @@ import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.code.CodeGenerator;
 import edu.isi.pegasus.planner.code.CodeGeneratorFactory;
 import edu.isi.pegasus.planner.code.GridStartFactory;
+import edu.isi.pegasus.planner.code.generator.Braindump;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.RunDirectoryFilenameFilter;
@@ -259,8 +260,9 @@ public class CPlanner extends Executable{
             plannerException = rte;
             //catch all runtime exceptions including our own that
             //are thrown that may have chained causes
-            cPlanner.log( convertException(rte, cPlanner.mLogger.getLevel() ),
-                         LogManager.FATAL_MESSAGE_LEVEL );
+            //cPlanner.log( convertException(rte, cPlanner.mLogger.getLevel() ),
+            //             LogManager.FATAL_MESSAGE_LEVEL );
+            cPlanner.log( rte.getMessage(), LogManager.FATAL_MESSAGE_LEVEL );
             result = 1;
         }
         catch ( Exception e ) {
@@ -331,8 +333,8 @@ public class CPlanner extends Executable{
         
         // warn about non zero exit code
         if ( result != 0 ) {
-            cPlanner.log("Non-zero exit-code " + result,
-                         LogManager.WARNING_MESSAGE_LEVEL );
+            cPlanner.log("Exiting with non-zero exit-code " + result,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
         }
         else{
             //log the time taken to execute
@@ -457,6 +459,8 @@ public class CPlanner extends Executable{
             //only if a user passed * option on command line or did not specify
             eSites.remove( "*" );
             eSites.addAll( s.list() );
+            //PM-1018 remove the local site from list of execution sites
+            eSites.remove( "local" );
         }
         mLogger.log( "Execution sites are         " + eSites, LogManager.DEBUG_MESSAGE_LEVEL );
 
@@ -477,6 +481,7 @@ public class CPlanner extends Executable{
                                 PegasusConfiguration.DEFAULT_DATA_CONFIGURATION_VALUE:
                                 dataConfiguration;
         mPMetrics.setDataConfiguration( dataConfiguration );
+        mPMetrics.setPlannerOptions( mPOptions.getOriginalArgString() );
         mPMetrics.setApplicationMetrics( mProps );
         
 
@@ -681,6 +686,9 @@ public class CPlanner extends Executable{
             mLogger.logEventCompletion();
         }
 
+        //PM-1003 update metrics with whether pmc was used or not.
+        mPMetrics.setUsesPMC( Braindump.plannerUsedPMC(mBag));
+        
         checkMasterDatabaseForVersionCompatibility();
         
         if ( mPOptions.submitToScheduler() ) {//submit the jobs
@@ -808,7 +816,7 @@ public class CPlanner extends Executable{
         options.setSanitizePath( sanitizePath );
         options.setOriginalArgString( args );
         //we default to inplace cleanup unless overriden on command line
-        options.setCleanup(PlannerOptions.CLEANUP_OPTIONS.inplace );
+//        options.setCleanup(PlannerOptions.CLEANUP_OPTIONS.inplace );
         
         Getopt g = new Getopt("pegasus-plan",args,
                               "vqhfSnzpVr::aD:d:s:o:O:y:P:c:C:b:g:2:j:3:F:X:4:5:6:78:9:B:1:",
@@ -1198,10 +1206,10 @@ public class CPlanner extends Executable{
              append( "\n -B |--bundle       the shiwa bundle to be used. ( prototypical option )  "  ).
              append( "\n -c |--cache        comma separated list of replica cache files."  ).
              append( "\n --inherited-rc-files  comma separated list of replica files. Locations mentioned in these have a lower priority than the locations in the DAX file"  ).
-             append( "\n --cleanup          the cleanup strategy to use. Can be none|inplace|leaf . Defaults to inplace. ").
+             append( "\n --cleanup          the cleanup strategy to use. Can be none|inplace|leaf|constraint. Defaults to inplace. ").
              append( "\n -C |--cluster      comma separated list of clustering techniques to be applied to the workflow to "  ).
              append( "\n                    to cluster jobs in to larger jobs, to avoid scheduling overheads."  ).
-             append( "\n --conf             the path to the properties file to use for planning. "  ).
+             append( "\n --conf             the path to the properties file to use for planning. Defaults to pegasus.properties file in the current working directory "  ).
              append( "\n --dir          the directory where to generate the executable workflow."  ).
              append( "\n --relative-dir     the relative directory to the base directory where to generate the concrete workflow." ).
              append( "\n --relative-submit-dir  the relative submit directory where to generate the concrete workflow. Overrids --relative-dir ."  ).
@@ -1665,9 +1673,6 @@ public class CPlanner extends Executable{
         /* always load local site */
         toLoad.add( "local" );
 
-        
-
-        
         /* load the sites in site catalog */
         try{
             catalog.load( new LinkedList( toLoad) );

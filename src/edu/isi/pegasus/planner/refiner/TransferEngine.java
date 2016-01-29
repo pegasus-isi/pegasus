@@ -284,30 +284,39 @@ public class TransferEngine extends Engine {
      * @param ft  the file transfer created
      * @return 
      */
-    private boolean runTransferRemotely(Job job , FileTransfer ft) {
-        NameValue sourceTX = ft.getSourceURL();
-        String sourceSite = sourceTX.getKey();
-        String sourceURL  = sourceTX.getValue();
+    private boolean runTransferRemotely(Job job , SiteCatalogEntry stagingSite, FileTransfer ft) {
         boolean remote = false;
         
-        //if the source URL is a FILE URL and 
-        //source site matches the destination site
-        //then has to run remotely
-        if( sourceURL != null && sourceURL.startsWith( PegasusURL.FILE_URL_SCHEME ) ){
-            //sanity check to make sure source site 
-            //matches destination site
-            NameValue destTX = ft.getDestURL();
-            if( sourceSite.equalsIgnoreCase( destTX.getKey()) ){
-                remote = true;
-            }
-            else if( sourceSite.equals( "local") ){
-                remote = false;
-            }
-            else{
-                //should indicate a bug
-                throw new RuntimeException( "Mismatched file transfer created " + ft + " for job " +
-                                            job.getID());
-            }
+        NameValue destTX = ft.getDestURL();
+        for( String sourceSite: ft.getSourceSites() ){
+                //traverse through all the URL's on that site
+                for( ReplicaCatalogEntry rce : ft.getSourceURLs(sourceSite) ){
+                    String sourceURL = rce.getPFN();
+                    //if the source URL is a FILE URL and 
+                    //source site matches the destination site
+                    //then has to run remotely
+                    if( sourceURL != null && sourceURL.startsWith( PegasusURL.FILE_URL_SCHEME ) ){
+                        //sanity check to make sure source site 
+                        //matches destination site
+                        if( sourceSite.equalsIgnoreCase( destTX.getKey()) ){
+
+                            if( sourceSite.equalsIgnoreCase( stagingSite.getSiteHandle() ) && stagingSite.isVisibleToLocalSite() ){
+                                //PM-1024 if the source also matches the job staging site
+                                //then we do an extra check if the staging site is the same
+                                //as the sourceSite, then we consider the auxillary.local attribute
+                                //for the staging site
+                                remote = false;
+                            }
+                            else{
+                                remote = true;
+                                break;
+                            }
+                        }
+                        else if( sourceSite.equals( "local") ){
+                            remote = false;
+                        }
+                    }
+                }
         }
         return remote;
     }
@@ -316,23 +325,28 @@ public class TransferEngine extends Engine {
      * Returns whether to run a transfer job on local site or not.
      *
      *
-     * @param site  the site handle associated with the destination URL.
+     * @param site   the site entry associated with the destination URL.
      * @param destPutURL the destination URL
      * @param type  the type of transfer job for which the URL is being constructed.
      *
      * @return true indicating if the associated transfer job should run on local
      *              site or not.
      */
-    public boolean runTransferOnLocalSite( String site, String destinationURL, int type) {
+    public boolean runTransferOnLocalSite( SiteCatalogEntry site, String destinationURL, int type) {
         //check if user has specified any preference in config
         boolean result = true;
-
+        String siteHandle = site.getSiteHandle();
+        
         //short cut for local site
-        if( site.equals( "local" ) ){
+        if( siteHandle.equals( "local" ) ){
             //transfer to run on local site
             return result;
         }
 
+        //PM-1024 check if the filesystem on site visible to the local site
+        if( site.isVisibleToLocalSite() ){
+            return true;
+        }
         
         if( mTXRefiner.refinerPreferenceForTransferJobLocation() ){
             //refiner is advertising a preference for where transfer job
@@ -340,7 +354,7 @@ public class TransferEngine extends Engine {
             return mTXRefiner.refinerPreferenceForLocalTransferJobs( type );
         }
         
-        if( mTXRefiner.runTransferRemotely( site, type )){
+        if( mTXRefiner.runTransferRemotely(siteHandle, type )){
             //always use user preference
             return !result;
         }
@@ -421,7 +435,7 @@ public class TransferEngine extends Engine {
                     this.complainForHeadNodeURLPrefix( REFINER_NAME, stagingSite.getSiteHandle(), FileServer.OPERATION.put, currentJob );
                 }
                 boolean localTransfer = runTransferOnLocalSite( 
-                                            currentJob.getSiteHandle(), 
+                                            stagingSite, 
                                             stagingSiteURLPrefix,
                                             Job.STAGE_OUT_JOB);
                 vOutPoolTX = getFileTX(outputSite, currentJob, localTransfer );
@@ -504,15 +518,15 @@ public class TransferEngine extends Engine {
      * by the user. If the output pool path and the one returned by the replica
      * mechanism match then that object is not transferred.
      *
-     * @param pool    this the output pool which the user specifies at runtime.
+     * @param destSite    this the output pool which the user specifies at runtime.
      * @param job     The Job object corresponding to the leaf job which was
      *                deleted by the Reduction algorithm
      *
      * @return        Vector of <code>FileTransfer</code> objects
      */
-    private Vector getDeletedFileTX( String pool, Job job ) {
+    private Vector getDeletedFileTX( String destSite, Job job ) {
         Vector vFileTX = new Vector();
-        
+        SiteCatalogEntry outputSite = mSiteStore.lookup(destSite);
         for( Iterator it = job.getOutputFiles().iterator(); it.hasNext(); ){
             PegasusFile pf = (PegasusFile)it.next();
             String  lfn = pf.getLFN();
@@ -534,15 +548,15 @@ public class TransferEngine extends Engine {
                 throw new RuntimeException( "Unable to find a physical filename (PFN) in the Replica Catalog for output file with logical filename (LFN) as "  + lfn );
             }
 
-            String putDestURL = mOutputMapper.map( lfn, mOutputSite,  FileServer.OPERATION.put );
-            String getDestURL = mOutputMapper.map( lfn, mOutputSite,  FileServer.OPERATION.get );
+            String putDestURL = mOutputMapper.map( lfn, destSite,  FileServer.OPERATION.put );
+            String getDestURL = mOutputMapper.map( lfn, destSite,  FileServer.OPERATION.get );
             
             
             //selLocs are all the locations found in ReplicaMechanism corr
             //to the pool pool
-            ReplicaLocation selLocs = mReplicaSelector.selectReplicas( rl,
-                                                                       pool,
-                                                                       this.runTransferOnLocalSite( pool,putDestURL, Job.STAGE_OUT_JOB  ));
+            ReplicaLocation selLocs = mReplicaSelector.selectAndOrderReplicas(rl,
+                                                                       destSite,
+                                                                       this.runTransferOnLocalSite( outputSite,putDestURL, Job.STAGE_OUT_JOB  ));
 
 
             boolean flag = false;
@@ -556,7 +570,7 @@ public class TransferEngine extends Engine {
                 //check if the URL's match
                 if (sourceURL.trim().equalsIgnoreCase(putDestURL.trim())){
                     String msg = "The leaf file " + lfn +
-                        " is already at the output pool " + pool;
+                        " is already at the output pool " + destSite;
                     mLogger.log(msg,LogManager.INFO_MESSAGE_LEVEL);
                     flag = true;
                     break;
@@ -565,7 +579,7 @@ public class TransferEngine extends Engine {
 
                 ft = new FileTransfer( lfn, job.getName() );
                 ft.addSource( selLoc.getResourceHandle() , sourceURL );
-                ft.addDestination( pool, putDestURL  );
+                ft.addDestination(destSite, putDestURL  );
                 ft.setURLForRegistrationOnDestination( getDestURL );
                 ft.setSize( pf.getSize() );
                 ft.setForCleanup( false );//PM-739
@@ -935,7 +949,7 @@ public class TransferEngine extends Engine {
 
             //definite inconsitency as url prefix and mount point
             //are not picked up from the same server
-            boolean localTransfer = runTransferOnLocalSite( destSiteHandle, thirdPartyDestPutURI, Job.INTER_POOL_JOB );
+            boolean localTransfer = runTransferOnLocalSite( destSite, thirdPartyDestPutURI, Job.INTER_POOL_JOB );
             String destURI = localTransfer ?
                 //construct for third party transfer
                 thirdPartyDestPutURI :
@@ -1164,6 +1178,7 @@ public class TransferEngine extends Engine {
 
         String jobName = job.logicalName;
         String stagingSiteHandle   = job.getStagingSiteHandle();
+        String executionSiteHandle   = job.getSiteHandle();
         //contains the remote_initialdir if specified for the job
         String eRemoteDir = job.vdsNS.getStringValue(
                                                  Pegasus.REMOTE_INITIALDIR_KEY);
@@ -1189,7 +1204,7 @@ public class TransferEngine extends Engine {
         String fileDestDir = scheme + "://" + dAbsPath;
                 
         //check if the execution pool is third party or not
-        boolean runTransferOnLocalSite = runTransferOnLocalSite( stagingSiteHandle, dDirPutURL, Job.STAGE_IN_JOB);
+        boolean runTransferOnLocalSite = runTransferOnLocalSite( stagingSite, dDirPutURL, Job.STAGE_IN_JOB);
         String destDir = ( runTransferOnLocalSite ) ?
             //use the full networked url to the directory
             dDirPutURL
@@ -1223,7 +1238,7 @@ public class TransferEngine extends Engine {
                 else{
                     //staging of executables case
                     destPutURL = destNV.getValue();
-                    destPutURL = (runTransferOnLocalSite( stagingSiteHandle, destPutURL, Job.STAGE_IN_JOB))?
+                    destPutURL = (runTransferOnLocalSite( stagingSite, destPutURL, Job.STAGE_IN_JOB))?
                                //the destination URL is already third party
                                //enabled. use as it is
                                destPutURL:
@@ -1254,7 +1269,8 @@ public class TransferEngine extends Engine {
                     continue;
                 }
 
-                //flag an error
+                //flag an error. this is when we don't get any replica location
+                //from any source
                 throw new RuntimeException(
                            "TransferEngine.java: Can't determine a location to " +
                            "transfer input file for lfn " + lfn + " for job " +
@@ -1262,157 +1278,192 @@ public class TransferEngine extends Engine {
             }
 
             
-            ReplicaCatalogEntry selLoc = (nv == null)?
-                                        //select from the various replicas
-                                        mReplicaSelector.selectReplica( rl, 
-                                                                        job.getStagingSiteHandle(),
-                                                                        runTransferOnLocalSite ):
-                                        //we have the replica already selected
-                                        new ReplicaCatalogEntry( nv.getValue(), nv.getKey() );
-
-            //check if we need to replace url prefix for 
-            //symbolic linking
-            boolean symLinkSelectedLocation;
-            
-            
-            if ( symLinkSelectedLocation = 
-                    (mUseSymLinks && selLoc.getResourceHandle().equals( job.getStagingSiteHandle() )) ) {
-                
-                //resolve any srm url's that are specified
-                selLoc = replaceSourceProtocolFromURL( selLoc );
-            }
-            
-                                        
-            //get the file to the job's execution pool
-            //this is assuming that there are no directory paths
-            //in the pfn!!!
-            sDirURL  = selLoc.getPFN().substring( 0, selLoc.getPFN().lastIndexOf(File.separator) );
-
-            //try to get the directory absolute path
-            //yes i know that we sending the url to directory
-            //not the file.
-            sAbsPath = new PegasusURL(  sDirURL ).getPath();
-
-            //the final source and destination url's to the file
-            sourceURL = selLoc.getPFN();
-            
-            if( destPutURL == null ){
-                //no staging of executables case. 
-                //we construct destination URL to file.
-                StringBuffer destPFN = new StringBuffer();
-                if( symLinkSelectedLocation ){
-                    //we use the file URL location to dest dir
-                    //in case we are symlinking
-                    //destPFN.append( fileDestDir );
-                    destPFN.append( this.replaceProtocolFromURL( destDir ) );
-                }
-                else{
-                    //we use whatever destDir was set to earlier
-                    destPFN.append( destDir );
-                }
-                destPFN.append( File.separator).append( lfn );
-                destPutURL = destPFN.toString();
-                destGetURL = dDirGetURL + File.separator + lfn;
-            }
-            
-
-            //we have all the chopped up combos of the urls.
-            //do some funky matching on the basis of the fact
-            //that each pool has one shared filesystem
-
-
-            //match the source and dest 3rd party urls or
-            //match the directory url knowing that lfn and
-            //(source and dest pool) are same
-            try{
-                if(sourceURL.equalsIgnoreCase(dDirPutURL + File.separator + lfn)||
-                     ( selLoc.getResourceHandle().equalsIgnoreCase( stagingSiteHandle ) &&
-                       lfn.equals( sourceURL.substring(sourceURL.lastIndexOf(File.separator) + 1)) &&
-                       //sAbsPath.equals( dAbsPath )
-                       new File( sAbsPath ).getCanonicalPath().equals(  new File( dAbsPath).getCanonicalPath())
-                     )
-                 ){
-                    //do not need to add any transfer node
-                    StringBuffer message = new StringBuffer( );
-                    
-                    message.append( sAbsPath ).append( " same as " ).append( dAbsPath );
-                    mLogger.log( message.toString() , LogManager.DEBUG_MESSAGE_LEVEL );
-                    message = new StringBuffer();
-                    message.append( " Not transferring ip file as ").append( lfn ).
-                            append( " for job " ).append( job.jobName ).append( " to site " ).append( stagingSiteHandle );
-                    
-                    mLogger.log( message.toString() , LogManager.DEBUG_MESSAGE_LEVEL );
-                    continue;
-                }
-            }catch( IOException ioe ){
-                /*ignore */
-            }
-                
-            //add locations of input data on the remote site to the transient RC
-            
-            boolean bypassFirstLevelStaging = this.bypassStagingForInputFile( selLoc , pf , job  );
-            if( bypassFirstLevelStaging ){
-                //only the files for which we bypass first level staging , we
-                //store them in the planner cache as a GET URL and associate with the compute site
-                //PM-698
-                trackInPlannerCache( lfn, sourceURL, selLoc.getResourceHandle(), OPERATION.get );
-                trackInWorkflowCache( lfn, sourceURL, selLoc.getResourceHandle() );
-                //ensure the input file does not get cleaned up by the
-                //InPlace cleanup algorithm
-                pf.setForCleanup( false );
-                continue;
-            }
-            else{
-                //track the location where the data is staged as 
-                //part of the first level staging
-                //we always store the thirdparty url
-                //trackInCaches( lfn, destPutURL, job.getSiteHandle() );
-                trackInPlannerCache( lfn,
-                                    destPutURL,
-                                    job.getStagingSiteHandle());
-
-                trackInWorkflowCache( lfn,
-                                    destGetURL,
-                                    job.getStagingSiteHandle());
-            }
-            
-            //construct the file transfer object
             FileTransfer ft = (pf instanceof FileTransfer) ?
-                               (FileTransfer)pf:
-                               new FileTransfer( lfn, jobName, pf.getFlags() );
-            
+                                   (FileTransfer)pf:
+                                   new FileTransfer( lfn, jobName, pf.getFlags() );
+
             //make sure the type information is set in file transfer
             ft.setType( pf.getType() );
             ft.setSize( pf.getSize() );
-            
+
             //the transfer mode for the file needs to be
             //propogated for optional transfers.
             ft.setTransferFlag(pf.getTransferFlag());
 
-            //to prevent duplicate source urls
-            if(ft.getSourceURL() == null){
-                ft.addSource( selLoc.getResourceHandle(), sourceURL);
-            }
-
-            //to prevent duplicate destination urls
-            if(ft.getDestURL() == null)
-                ft.addDestination(stagingSiteHandle,destPutURL);
-            
-            if(  symLinkSelectedLocation || //symlinks can run only locally
-                 !runTransferOnLocalSite ||
-                 runTransferRemotely( job, ft ) ){ //check on the basis of constructed source URL whether to run remotely
-                    
-                //all symlink transfers and user specified remote transfers
-                remoteFileTransfers.add(ft);
+            ReplicaLocation candidateLocations = null;
+            if( nv == null ){
+                //select from the various replicas
+                candidateLocations =  mReplicaSelector.selectAndOrderReplicas( rl, 
+                                                                        executionSiteHandle,
+                                                                        runTransferOnLocalSite );
+                if( candidateLocations.getPFNCount() == 0 ){
+                    StringBuilder error = new StringBuilder();
+                    error.append( "Unable to select a Physical Filename (PFN) for file with logical filename (LFN) as ").
+                          append( rl.getLFN() ).append( " for preferred site " ).append( executionSiteHandle ).
+                          append( "with runTransferOnLocalSite - ").append( runTransferOnLocalSite ).
+                          append( " amongst ").append( rl.getPFNList() );
+                    throw new RuntimeException( error.toString() );
+                }
             }
             else{
-                localFileTransfers.add(ft);
+                //we have the replica already selected
+                List rces = new LinkedList();
+                rces.add(  new ReplicaCatalogEntry( nv.getValue(), nv.getKey() ));
+                candidateLocations  = new ReplicaLocation( lfn, rces );
+            }
+            
+            //check if we need to replace url prefix for 
+            //symbolic linking
+            boolean symLinkSelectedLocation = false;
+            //is set to false later, on basis of property value
+            boolean bypassFirstLevelStaging = true;
+
+            int candidateNum = 0; 
+            for( ReplicaCatalogEntry selLoc : candidateLocations.getPFNList()){
+                candidateNum++;
+                
+                if ( symLinkSelectedLocation = 
+                        (mUseSymLinks && selLoc.getResourceHandle().equals( job.getStagingSiteHandle() )) ) {
+
+                    //resolve any srm url's that are specified
+                    selLoc = replaceSourceProtocolFromURL( selLoc );
+                }
+            
+                                        
+                //get the file to the job's execution pool
+                //this is assuming that there are no directory paths
+                //in the pfn!!!
+                sDirURL  = selLoc.getPFN().substring( 0, selLoc.getPFN().lastIndexOf(File.separator) );
+
+                //try to get the directory absolute path
+                //yes i know that we sending the url to directory
+                //not the file.
+                sAbsPath = new PegasusURL(  sDirURL ).getPath();
+
+                //the final source and destination url's to the file
+                sourceURL = selLoc.getPFN();
+
+                if( destPutURL == null ){
+                    //no staging of executables case. 
+                    //we construct destination URL to file.
+                    StringBuffer destPFN = new StringBuffer();
+                    if( symLinkSelectedLocation ){
+                        //we use the file URL location to dest dir
+                        //in case we are symlinking
+                        //destPFN.append( fileDestDir );
+                        destPFN.append( this.replaceProtocolFromURL( destDir ) );
+                    }
+                    else{
+                        //we use whatever destDir was set to earlier
+                        destPFN.append( destDir );
+                    }
+                    destPFN.append( File.separator).append( lfn );
+                    destPutURL = destPFN.toString();
+                    destGetURL = dDirGetURL + File.separator + lfn;
+                }
+            
+
+                //we have all the chopped up combos of the urls.
+                //do some funky matching on the basis of the fact
+                //that each pool has one shared filesystem
+
+
+                //match the source and dest 3rd party urls or
+                //match the directory url knowing that lfn and
+                //(source and dest pool) are same
+                try{
+                    if(sourceURL.equalsIgnoreCase(dDirPutURL + File.separator + lfn)||
+                         ( selLoc.getResourceHandle().equalsIgnoreCase( stagingSiteHandle ) &&
+                           lfn.equals( sourceURL.substring(sourceURL.lastIndexOf(File.separator) + 1)) &&
+                           //sAbsPath.equals( dAbsPath )
+                           new File( sAbsPath ).getCanonicalPath().equals(  new File( dAbsPath).getCanonicalPath())
+                         )
+                     ){
+                        //do not need to add any transfer node
+                        StringBuffer message = new StringBuffer( );
+
+                        message.append( sAbsPath ).append( " same as " ).append( dAbsPath );
+                        mLogger.log( message.toString() , LogManager.DEBUG_MESSAGE_LEVEL );
+                        message = new StringBuffer();
+                        message.append( " Not transferring ip file as ").append( lfn ).
+                                append( " for job " ).append( job.jobName ).append( " to site " ).append( stagingSiteHandle );
+
+                        mLogger.log( message.toString() , LogManager.DEBUG_MESSAGE_LEVEL );
+                        continue;
+                    }
+                }catch( IOException ioe ){
+                    /*ignore */
+                }
+                
+                //add locations of input data on the remote site to the transient RC
+                bypassFirstLevelStaging = this.bypassStagingForInputFile( selLoc , pf , job  );
+                if( bypassFirstLevelStaging ){
+                    //only the files for which we bypass first level staging , we
+                    //store them in the planner cache as a GET URL and associate with the compute site
+                    //PM-698 . we have to clone since original site attribute will be different
+                    ReplicaCatalogEntry rce = (ReplicaCatalogEntry) selLoc.clone();
+                    rce.setResourceHandle( executionSiteHandle );
+                    trackInPlannerCache( lfn, rce, OPERATION.get );
+                    
+                    if( candidateNum == 1 ){
+                        //PM-1014 we only track the first candidate in the workflow cache
+                        //i.e the cache file written out in the submit directory
+                        trackInWorkflowCache( lfn, sourceURL, selLoc.getResourceHandle() );
+                    }
+                    //ensure the input file does not get cleaned up by the
+                    //InPlace cleanup algorithm
+                    pf.setForCleanup( false );
+                    continue;
+                }
+                else{
+                    //track the location where the data is staged as 
+                    //part of the first level staging
+                    //we always store the thirdparty url
+                    //trackInCaches( lfn, destPutURL, job.getSiteHandle() );
+                    trackInPlannerCache( lfn,
+                                        destPutURL,
+                                        job.getStagingSiteHandle());
+
+                    if( candidateNum == 1 ){
+                        //PM-1014 we only track the first candidate in the workflow cache
+                        //i.e the cache file written out in the submit directory
+                     
+                        trackInWorkflowCache( lfn,
+                                        destGetURL,
+                                        job.getStagingSiteHandle());
+                    }
+                }
+                
+                //PM-1014 we want to track all candidate locations
+                ft.addSource( selLoc);
+
+                //to prevent duplicate destination urls
+                //and have only a single destination.
+                if(ft.getDestURL() == null)
+                    ft.addDestination(stagingSiteHandle,destPutURL);
+           
+            } //end of traversal of all candidate locations
+                
+            if ( !bypassFirstLevelStaging ) {
+                //no bypass of input file staging. we need to add
+                //data stage in nodes for the lfn
+                if(  symLinkSelectedLocation || //symlinks can run only on staging site
+                     !runTransferOnLocalSite ||
+                     runTransferRemotely( job, stagingSite, ft ) ){ //check on the basis of constructed source URL whether to run remotely
+
+                    //all symlink transfers and user specified remote transfers
+                    remoteFileTransfers.add(ft);
+                }
+                else{
+                    localFileTransfers.add(ft);
+                }
             }
             
             //we need to set destPutURL to null
             destPutURL = null;
         }
 
+        
         //call addTransferNode
         if (!localFileTransfers.isEmpty() || !remoteFileTransfers.isEmpty()) {
             mTXRefiner.addStageInXFERNodes(job, localFileTransfers, remoteFileTransfers );
@@ -1658,6 +1709,20 @@ public class TransferEngine extends Engine {
          trackInPlannerCache( lfn, pfn, site, OPERATION.put );
     }
 
+    /**
+     * Inserts an entry into the planner cache as a put URL.
+     *
+     *
+     * @param lfn  the logical name of the file.
+     * @param rce  replica catalog entry
+     * @param type the type of url
+     */
+    private void trackInPlannerCache( String lfn,
+                                      ReplicaCatalogEntry rce,
+                                      OPERATION type ){
+
+         mPlannerCache.insert( lfn, rce, type );
+    }
 
     /**
      * Inserts an entry into the planner cache as a put URL.

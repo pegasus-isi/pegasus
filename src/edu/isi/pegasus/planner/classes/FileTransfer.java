@@ -17,12 +17,14 @@
 package edu.isi.pegasus.planner.classes;
 
 
+import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.common.PegRandom;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.BitSet;
-import java.util.HashMap;
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +34,7 @@ import java.util.Map;
  * between sites. It refers to one lfn, but can contains more than one source
  * and destination urls. All the source url's are presumed to be identical.
  * The destination urls, can in effect be used to refer to TFN's for a lfn on
- * different pools.
+ * different sites.
  *
  * @author Karan Vahi
  * @author Gaurang Mehta
@@ -44,27 +46,27 @@ public class FileTransfer extends PegasusFile {
     /**
      * The logical name of the asssociated VDS super node, with which the file
      * is associated. The name of the job can be of the job that generates that
-     * file(while doing interpool or transferring output files to output pool)
+     * file(while doing intersite or transferring output files to output site)
      * or of a job for which the file is an input(getting an input file from the
      * Replica Services).
      */
     private String mJob;
 
     /**
-     * The map containing all the source urls keyed by the pool id/name.
-     * Corresponding to each pool, a list of url's is stored that contain
-     * the URL's for that pool. All url's not associated with a pool, are
-     * associated with a undefined pool.
+     * The map containing all the source urls keyed by the site id/name.
+     * Corresponding to each site, a list of url's is stored that contain
+     * the URL's for that site. All url's not associated with a site, are
+     * associated with a undefined site.
      */
-    private Map mSourceMap;
+    private Map<String,List<ReplicaCatalogEntry>> mSourceMap;
 
     /**
-     * The map containing all the destination urls keyed by the pool id/name.
-     * Corresponding to each pool, a list of url's is stored that contain
-     * the URL's for that pool. All url's not associated with a pool, are
-     * associated with a undefined pool.
+     * The map containing all the destination urls keyed by the site id/name.
+     * Corresponding to each site, a list of url's is stored that contain
+     * the URL's for that site. All url's not associated with a site, are
+     * associated with a undefined site.
      */
-    private Map mDestMap;
+    private Map<String,List<ReplicaCatalogEntry>> mDestMap;
 
     /**
      * The registration URL for the file
@@ -84,8 +86,8 @@ public class FileTransfer extends PegasusFile {
         super();
         mJob         = "";
         mFlags       = new BitSet(NO_OF_TRANSIENT_FLAGS);
-        mSourceMap   = new HashMap();
-        mDestMap     = new HashMap();
+        mSourceMap   = new LinkedHashMap<String,List<ReplicaCatalogEntry>>();
+        mDestMap     = new LinkedHashMap<String,List<ReplicaCatalogEntry>>();
         mPriority    = 0;
         mURLForRegistrationOnDestination = null;
     }
@@ -103,8 +105,8 @@ public class FileTransfer extends PegasusFile {
         this.mFlags        = pf.getFlags();
         this.mType         = pf.getType();
         this.mJob          = "";
-        this.mSourceMap    = new HashMap();
-        this.mDestMap      = new HashMap();
+        this.mSourceMap    = new LinkedHashMap<String,List<ReplicaCatalogEntry>>();
+        this.mDestMap      = new LinkedHashMap<String,List<ReplicaCatalogEntry>>();
         this.mPriority     = 0;
         this.mURLForRegistrationOnDestination = null;
         this.mMetadata     = pf.getAllMetadata();
@@ -120,8 +122,8 @@ public class FileTransfer extends PegasusFile {
     public FileTransfer(String lfn, String job){
         super(lfn);
         mJob         = job;
-        mSourceMap   = new HashMap();
-        mDestMap     = new HashMap();
+        mSourceMap   = new LinkedHashMap<String,List<ReplicaCatalogEntry>>();
+        mDestMap     = new LinkedHashMap<String,List<ReplicaCatalogEntry>>();
         this.mPriority     = 0;
         this.mURLForRegistrationOnDestination = null;
     }
@@ -137,8 +139,8 @@ public class FileTransfer extends PegasusFile {
     public FileTransfer(String lfn, String job, BitSet flags){
         mLogicalFile = lfn;
         mJob         = job;
-        mSourceMap   = new HashMap();
-        mDestMap     = new HashMap();
+        mSourceMap   = new LinkedHashMap<String,List<ReplicaCatalogEntry>>();
+        mDestMap     = new LinkedHashMap<String,List<ReplicaCatalogEntry>>();
         mFlags       = (BitSet)flags.clone();
         this.mPriority     = 0;
         this.mURLForRegistrationOnDestination = null;
@@ -170,25 +172,35 @@ public class FileTransfer extends PegasusFile {
     /**
      * Adds a source URL for the transfer.
      *
-     * @param pool  the pool from which the source file is being transferred.
+     * @param site  the site from which the source file is being transferred.
      * @param url   the source url.
      */
-    public void addSource(String pool, String url){
-        List l = null;
-        if(mSourceMap.containsKey(pool)){
+    public void addSource(String site, String url){
+         this.addSource( new ReplicaCatalogEntry(url, site));
+    }
+
+    /**
+     * Adds a source URL for the transfer.
+     *
+     * @param rce ReplicaCatalogEntry object
+     */
+    public void addSource(ReplicaCatalogEntry rce){
+        List<ReplicaCatalogEntry> l = null;
+        if(mSourceMap.containsKey(rce.getResourceHandle())){
             //add the url to the existing list
-            l = (List)mSourceMap.get(pool);
+            l = (List)mSourceMap.get(rce.getResourceHandle());
             //add the entry to the list
-            l.add(url);
+            l.add(rce);
         }
         else{
             //add a new list
             l = new ArrayList(3);
-            l.add(url);
-            mSourceMap.put(pool,l);
+            l.add( rce );
+            mSourceMap.put(rce.getResourceHandle(),l);
         }
-    }
 
+    }
+    
     /**
      * Adds a destination URL for the transfer.
      *
@@ -203,22 +215,32 @@ public class FileTransfer extends PegasusFile {
     /**
      * Adds a destination URL for the transfer.
      *
-     * @param pool  the pool to which the destination file is being transferred.
+     * @param site  the site to which the destination file is being transferred.
      * @param url   the destination url.
      */
-    public void addDestination(String pool, String url){
-        List l = null;
-        if(mDestMap.containsKey(pool)){
+    public void addDestination(String site, String url){
+        this.addDestination( new ReplicaCatalogEntry(url, site));
+
+    }
+    
+    /**
+     * Adds a destination URL for the transfer.
+     *
+     * @param rce ReplicaCatalogEntry object
+     */
+    public void addDestination(ReplicaCatalogEntry rce){
+        List<ReplicaCatalogEntry> l = null;
+        if(mDestMap.containsKey(rce.getResourceHandle())){
             //add the url to the existing list
-            l = (List)mDestMap.get(pool);
+            l = (List)mDestMap.get(rce.getResourceHandle());
             //add the entry to the list
-            l.add(url);
+            l.add(rce);
         }
         else{
             //add a new list
             l = new ArrayList(3);
-            l.add(url);
-            mDestMap.put(pool,l);
+            l.add( rce );
+            mDestMap.put(rce.getResourceHandle(),l);
         }
 
     }
@@ -255,18 +277,38 @@ public class FileTransfer extends PegasusFile {
     /**
      * Sets the priority for the File Transfer
      *
-     * @param priority   the priority associated with the FileTransfer
+     * @return   the priority associated with the FileTransfer
      */
     public int getPriority( ){
         return this.mPriority;
     }
 
     /**
+     * Returns all the sites where the LFN exists
+     *
+     * @return Collection of site names
+     */
+    public Collection<String> getSourceSites(   ){
+        return mSourceMap.keySet();
+    }
+    
+    /**
+     * Returns all the source URLS associated with the transfer object for a particular site
+     *
+     * @return List<ReplicaCatalogEntry> urls
+     */
+    public List<ReplicaCatalogEntry> getSourceURLs( String site ){
+        return ( mSourceMap.containsKey(site) )?
+                 mSourceMap.get(site):
+                 new ArrayList();
+    }
+    
+    /**
      * Returns a single source url associated with the transfer.
      * The source url returned is first entry from the key set of the
      * underlying map.
      *
-     * @return NameValue where the name would be the pool on which the URL is
+     * @return NameValue where the name would be the site on which the URL is
      *         and value the URL.
      *         null if no urls are assoiciated with the object.
      */
@@ -281,7 +323,7 @@ public class FileTransfer extends PegasusFile {
      *
      * @param random   boolean indicating if a random entry needs to be picked.
      *
-     * @return NameValue where the name would be the pool on which the URL is
+     * @return NameValue where the name would be the site on which the URL is
      *         and value the URL.
      *         null if no urls are assoiciated with the object.
      */
@@ -296,7 +338,7 @@ public class FileTransfer extends PegasusFile {
      * The destination url returned is first entry from the key set of the
      * underlying map.
      *
-     * @return NameValue where the name would be the pool on which the URL is
+     * @return NameValue where the name would be the site on which the URL is
      *         and value the URL.
      *         null if no urls are assoiciated with the object.
      */
@@ -313,7 +355,7 @@ public class FileTransfer extends PegasusFile {
      * @param random   boolean indicating if a random entry needs to be picked.
 
      *
-     * @return NameValue where the name would be the pool on which the URL is
+     * @return NameValue where the name would be the site on which the URL is
      *         and value the URL.
      *         null if no urls are assoiciated with the object.
      */
@@ -328,7 +370,7 @@ public class FileTransfer extends PegasusFile {
      * The source url removed is first entry from the key set of the
      * underlying map.
      *
-     * @return NameValue where the name would be the pool on which the URL is
+     * @return NameValue where the name would be the site on which the URL is
      *         and value the URL.
      *         null if no urls are assoiciated with the object.
      */
@@ -342,7 +384,7 @@ public class FileTransfer extends PegasusFile {
      * The destination url removed is first entry from the key set of the
      * underlying map.
      *
-     * @return NameValue where the name would be the pool on which the URL is
+     * @return NameValue where the name would be the site on which the URL is
      *         and value the URL.
      *         null if no urls are assoiciated with the object.
      */
@@ -370,11 +412,11 @@ public class FileTransfer extends PegasusFile {
      * @param m       the map containing the url's
      * @param random  boolean indicating that a random url to be picked up.
      *
-     * @return NameValue where the name would be the pool on which the URL is
+     * @return NameValue where the name would be the site on which the URL is
      *         and value the URL.
      *         null if no urls are assoiciated with the object.
      */
-    private NameValue getURL( Map m, boolean random ){
+    private NameValue getURL( Map<String,List<ReplicaCatalogEntry>> m, boolean random ){
         if(m == null || m.keySet().isEmpty()){
             return null;
         }
@@ -382,16 +424,20 @@ public class FileTransfer extends PegasusFile {
         //Return the first url from the EntrySet
         Iterator it = m.entrySet().iterator();
         Map.Entry entry = ( Map.Entry )it.next();
-        List urls       = ( List )entry.getValue();
+        List<ReplicaCatalogEntry> urls       = ( List )entry.getValue();
         String site     = ( String )entry.getKey();
 
 
-        return ( random ) ?
+        ReplicaCatalogEntry rce =  ( random ) ?
                 //pick a random value
-                new NameValue( site, ( String ) urls.get( PegRandom.getInteger( 0, urls.size() -1 )) ):
+                 urls.get( PegRandom.getInteger( 0, urls.size() -1 )):
                 //returning the first element. No need for a check as
                 //population of the list is controlled
-                new NameValue( site, ( String )( urls.get(0) ) );
+                 urls.get(0);
+        
+        return ( rce == null)?
+                null:
+                new NameValue( rce.getResourceHandle(), rce.getPFN());
 
     }
 
@@ -400,25 +446,25 @@ public class FileTransfer extends PegasusFile {
      *
      * @param m  the map containing the url's
      *
-     * @return NameValue where the name would be the pool on which the URL is
+     * @return NameValue where the name would be the site on which the URL is
      *         and value the URL.
      *         null if no urls are assoiciated with the object.
      */
-    private NameValue removeURL(Map m){
+    private NameValue removeURL(Map<String,List<ReplicaCatalogEntry>> m){
         if(m == null || m.keySet().isEmpty()){
             return null;
         }
 
         //Return the first url from the EntrySet
         Iterator it = m.entrySet().iterator();
-        Map.Entry entry = (Map.Entry)it.next();
+        Map.Entry<String,List<ReplicaCatalogEntry>> entry = (Map.Entry)it.next();
         //remove this entry
         it.remove();
         //returning the first element. No need for a check as
         //population of the list is controlled
         return new NameValue(
-                             (String)entry.getKey(),
-                             (String)( ((List)entry.getValue()).get(0) )
+                              entry.getKey(),
+                              entry.getValue().get(0).getPFN()
                              );
 
     }
@@ -472,7 +518,7 @@ public class FileTransfer extends PegasusFile {
                       "any";
 
         Iterator it = null;
-        Map.Entry entry = null;
+        Map.Entry<String,List<ReplicaCatalogEntry>> entry = null;
         List l      = null;
 
         sb.append(mLogicalFile).append(" ").append(mode);
@@ -482,9 +528,9 @@ public class FileTransfer extends PegasusFile {
         //sb.append("\n").append(" ");
         while(it.hasNext()){
             entry = (Map.Entry) it.next();
-            //inserting the source pool
+            //inserting the source site
             sb.append("\n").append("#").append(entry.getKey());
-            l = (List)entry.getValue();
+            l = (List<ReplicaCatalogEntry>)entry.getValue();
             Iterator it1 = l.iterator();
             while(it1.hasNext()){
                 //write out the source url's
@@ -498,9 +544,9 @@ public class FileTransfer extends PegasusFile {
         //sb.append("\n").append(" ");
         while(it.hasNext()){
             entry = (Map.Entry) it.next();
-            //inserting the destination pool
+            //inserting the destination site
             sb.append("\n").append("# ").append(entry.getKey());
-            l = (List)entry.getValue();
+            l = (List<ReplicaCatalogEntry>)entry.getValue();
             Iterator it1 = l.iterator();
             while(it1.hasNext()){
                 //write out the source url's

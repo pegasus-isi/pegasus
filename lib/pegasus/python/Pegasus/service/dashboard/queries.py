@@ -363,7 +363,6 @@ class WorkflowInfo(SQLAlchemyInit):
         q = self.session.query(Job.job_id, JobInstance.job_instance_id, Job.exec_job_id, JobInstance.exitcode)
 
         q = q.filter(Job.wf_id == self._wf_id)
-        q = q.filter(Job.type_desc != 'dax', Job.type_desc != 'dag')
 
         q = q.filter(Job.job_id == JobInstance.job_id)
 
@@ -548,14 +547,10 @@ class WorkflowInfo(SQLAlchemyInit):
                        job_instance
                 WHERE  job.wf_id = 1
                        AND job.job_id = job_instance.job_id
-                       AND job.type_desc != 'dag'
-                       AND job.type_desc != 'dax'
                        AND job_instance.exitcode IS NOT NULL
                        AND job_instance.exitcode != 0
                 GROUP  BY job.job_id) AS allmaxjss
         WHERE  job.wf_id = 1
-               AND job.type_desc != 'dag'
-               AND job.type_desc != 'dax'
                AND job.job_id = job_instance.job_id
                AND job_instance.exitcode != 0
                AND job_instance.exitcode IS NOT NULL
@@ -565,8 +560,6 @@ class WorkflowInfo(SQLAlchemyInit):
                                   FROM   job AS j1,
                                          job_instance AS ji1
                                   WHERE  j1.wf_id = 1
-                                         AND j1.type_desc != 'dag'
-                                         AND j1.type_desc != 'dax'
                                          AND j1.job_id = ji1.job_id
                                          AND ji1.exitcode IS NULL);
         """
@@ -577,7 +570,6 @@ class WorkflowInfo(SQLAlchemyInit):
         q_sub = self.session.query(distinct(j1.job_id))
 
         q_sub = q_sub.filter(j1.wf_id == self._wf_id)
-        q_sub = q_sub.filter(j1.type_desc != 'dax', j1.type_desc != 'dag')
 
         q_sub = q_sub.filter(j1.job_id == ji1.job_id)
 
@@ -600,7 +592,6 @@ class WorkflowInfo(SQLAlchemyInit):
         q = self.session.query(Job.job_id, JobInstance.job_instance_id, Job.exec_job_id, JobInstance.exitcode)
 
         q = q.filter(Job.wf_id == self._wf_id)
-        q = q.filter(Job.type_desc != 'dax', Job.type_desc != 'dag')
 
         q = q.filter(Job.job_id == JobInstance.job_id)
 
@@ -663,7 +654,6 @@ class WorkflowInfo(SQLAlchemyInit):
         qmax = self.session.query(Job.job_id, func.max(JobInstance.job_submit_seq).label('max_jss'))
         qmax = qmax.filter(Job.wf_id == self._wf_id)
         qmax = qmax.filter(Job.job_id == JobInstance.job_id)
-        qmax = qmax.filter(Job.type_desc != 'dax', Job.type_desc != 'dag')
         qmax = qmax.group_by(Job.job_id)
 
         return qmax

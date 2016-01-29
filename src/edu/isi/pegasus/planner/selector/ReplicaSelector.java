@@ -35,7 +35,7 @@ public interface ReplicaSelector {
     /**
      * The version of this API.
      */
-    public static final String VERSION ="1.5";
+    public static final String VERSION ="1.6";
 
     /**
      * The local site handle.
@@ -43,15 +43,13 @@ public interface ReplicaSelector {
     public static final String LOCAL_SITE_HANDLE = "local";
 
     /**
-     * Selects a replica amongst all the replicas returned by the implementing
-     * Replica Mechanism. It should select all the locations for which the site
-     * attribute matches to the preffered site passed. If no match on the
-     * preffered site is found, it is upto the implementation to select a replica
-     * and return it.
+     * The attribute key that designates priority for the replica
+     */
+    public static final String PRIORITY_KEY = "priority";
+    
+    /**
+     * Select all candidate replicas for a LFN and order them.
      *
-     * This function is  called to determine if a file does exist  on the output
-     * pool or not beforehand. We need all the locations to ensure that we are
-     * able to make a match if it so exists.
      *
      * @param rl         the <code>ReplicaLocation</code> object containing all
      *                   the pfn's associated with that LFN.
@@ -59,11 +57,9 @@ public interface ReplicaSelector {
      * @param allowLocalFileURLs indicates whether Replica Selector can select a replica
      *                      on the local site / submit host.
      *
-     * @return <code>ReplicaLocation</code> corresponding to the replicas selected.
-     *
-     * @see org.griphyn.cPlanner.classes.ReplicaLocation
+     * @return <code>ReplicaLocation</code> corresponding to the replicas selected
      */
-    public abstract ReplicaLocation selectReplicas( ReplicaLocation rl,
+    public abstract ReplicaLocation selectAndOrderReplicas( ReplicaLocation rl,
                                                     String prefferedSite,
                                                     boolean allowLocalFileURLs );
 

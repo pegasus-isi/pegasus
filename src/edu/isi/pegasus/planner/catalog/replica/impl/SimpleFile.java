@@ -41,7 +41,10 @@ import java.util.regex.Pattern;
 import edu.isi.pegasus.common.util.Boolean;
 import edu.isi.pegasus.common.util.Currently;
 import edu.isi.pegasus.common.util.Escape;
+
 import edu.isi.pegasus.common.util.VariableExpander;
+import edu.isi.pegasus.common.util.PegasusURL;
+
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 
@@ -83,6 +86,8 @@ public class SimpleFile implements ReplicaCatalog {
      * Designates a static file. i.e. read only
      */
     public static final String READ_ONLY_KEY = "read.only";
+    
+    private static final String DEFAULT_REPLICA_CATALOG_BASENAME = "rc.txt";
 
     /**
      * Records the quoting mode for LFNs and PFNs. If false, only quote as
@@ -278,7 +283,7 @@ public class SimpleFile implements ReplicaCatalog {
                     sb = new StringBuffer();
                     break;
                 case 3: // sb to pfn
-                    pfn = sb.toString();
+                    pfn = new PegasusURL( sb.toString()).getURL();
                     sb = new StringBuffer();
                     break;
                 case 4: // sb to key
@@ -385,6 +390,13 @@ public class SimpleFile implements ReplicaCatalog {
 
         if (props.containsKey("file"))
             return connect(props.getProperty("file"));
+        else{
+            File file = this.getDefaultPathToRCFile();
+            if( file.exists() && file.canRead() ){
+                return connect( file.getAbsolutePath() );
+            }
+        }
+        
         return false;
     }
 
@@ -1142,6 +1154,18 @@ public class SimpleFile implements ReplicaCatalog {
         int result = m_lfn.size();
         m_lfn.clear();
         return result;
+    }
+
+    /**
+     * Returns the default path to the site catalog file.
+     *
+     * @return rc.txt in the current working dir
+     *
+     */
+    protected File getDefaultPathToRCFile() {
+        File f = new File( ".", SimpleFile.DEFAULT_REPLICA_CATALOG_BASENAME);
+        //System.err.println("Default Path to SC is " + f.getAbsolutePath());
+        return f;
     }
 }
 

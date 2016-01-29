@@ -26,11 +26,13 @@ from Pegasus.db.errors import StampedeDBNotFoundError
 from Pegasus.db.admin.admin_loader import DBAdminError
 from Pegasus.service import cache
 from Pegasus.service.base import PagedResponse, BaseQueryParser, BaseOrderParser, InvalidQueryError, InvalidOrderError
+from Pegasus.service.base import OrderedSet, OrderedDict
 from Pegasus.service.monitoring.resources import RootWorkflowResource, RootWorkflowstateResource, CombinationResource
 from Pegasus.service.monitoring.resources import WorkflowResource, WorkflowMetaResource, WorkflowstateResource
+from Pegasus.service.monitoring.resources import RCLFNResource, RCPFNResource, RCMetaResource
 from Pegasus.service.monitoring.resources import JobResource, HostResource, JobInstanceResource, JobstateResource
 from Pegasus.service.monitoring.resources import TaskResource, TaskMetaResource, InvocationResource
-
+from Pegasus.service.monitoring.utils import csv_to_json
 
 log = logging.getLogger(__name__)
 
@@ -500,6 +502,92 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         return PagedResponse(records, total_records, total_filtered)
 
+    # Workflow Files
+
+    def get_workflow_files(self, wf_id, start_index=None, max_results=None, query=None, order=None,
+                           use_cache=False, **kwargs):
+        """
+        Returns a collection of all files associated with the Workflow.
+
+        :param start_index: Return results starting from record `start_index`
+        :param max_results: Return a maximum of `max_results` records
+        :param query: Filtering criteria
+        :param order: Sorting criteria
+        :param use_cache: If available, use cached results
+
+        :return: Collection of Workflow Files
+        """
+        wf_id = self.wf_uuid_to_wf_id(wf_id)
+
+        #
+        # Construct SQLAlchemy Query `q` to count.
+        #
+        q = self.session.query(WorkflowFiles)
+        q = q.filter(WorkflowFiles.wf_id == wf_id)
+
+        total_records = total_filtered = self._get_count(q, use_cache)
+
+        if total_records == 0:
+            return PagedResponse([], 0, 0)
+
+        q_in = self.session.query(distinct(RCLFN.lfn_id).label('lfn_id'))
+        q_in = q_in.join(WorkflowFiles, WorkflowFiles.wf_id == wf_id)
+        q_in = q_in.outerjoin(RCPFN, RCLFN.lfn_id == RCPFN.lfn_id)
+        q_in = q_in.outerjoin(RCMeta, RCLFN.lfn_id == RCMeta.lfn_id)
+
+        #
+        # Construct SQLAlchemy Query `q` to filter.
+        #
+        if query:
+            q_in = self._evaluate_query(q_in, query,
+                                        CombinationResource(RCLFNResource(), RCPFNResource(), RCMetaResource()))
+            total_filtered = self._get_count(q_in, use_cache)
+
+            if total_filtered == 0 or (start_index and start_index >= total_filtered):
+                log.debug('total_filtered is 0 or start_index >= total_filtered')
+                return PagedResponse([], total_records, total_filtered)
+
+        #
+        # Construct SQLAlchemy Query `q` to paginate.
+        #
+        q_in = WorkflowQueries._add_pagination(q_in, start_index, max_results, total_filtered)
+
+        #
+        # Finish Construction of Base SQLAlchemy Query `q`
+        #
+        q_in = q_in.subquery('distinct_lfns')
+        q = self.session.query(RCLFN, WorkflowFiles, RCPFN, RCMeta)
+        q = q.outerjoin(WorkflowFiles, RCLFN.lfn_id == WorkflowFiles.lfn_id)
+        q = q.outerjoin(RCPFN, RCLFN.lfn_id == RCPFN.lfn_id)
+        q = q.outerjoin(RCMeta, RCLFN.lfn_id == RCMeta.lfn_id)
+        q = q.join(q_in, RCLFN.lfn_id == q_in.c.lfn_id)
+
+        #
+        # Construct SQLAlchemy Query `q` to sort
+        #
+        if order:
+            q = self._add_ordering(q, order, CombinationResource(RCLFNResource(), RCPFNResource(), RCMetaResource()))
+
+        records = self._get_all(q, use_cache)
+
+        schema = OrderedDict([
+            (RCLFN, 'root'),
+            (WorkflowFiles, ('extras', RCLFN, None)),
+            (RCPFN, ('pfns', RCLFN, OrderedSet)),
+            (RCMeta, ('meta', RCLFN, OrderedSet))
+        ])
+
+        index = OrderedDict([
+            (RCLFN, 0),
+            (WorkflowFiles, 1),
+            (RCPFN, 2),
+            (RCMeta, 3)
+        ])
+
+        records = csv_to_json(records, schema, index)
+
+        return PagedResponse(records, total_records, total_filtered)
+
     # Workflow State
 
     def get_workflow_state(self, wf_id, recent=False, start_index=None, max_results=None, query=None, order=None,
@@ -946,7 +1034,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
     # Task Meta
 
     def get_task_meta(self, task_id, start_index=None, max_results=None, query=None, order=None, use_cache=False,
-                          **kwargs):
+                      **kwargs):
         """
         Returns a collection of the TaskMeta objects.
 
@@ -1068,6 +1156,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         :return: job-instance record
         """
+
         def timeout_duration(ji):
             return 300 if ji and ji.exitcode is not None else timeout
 
@@ -1251,7 +1340,6 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         q = q.filter(Job.wf_id == wf_id)
         q = q.filter(JobInstance.exitcode == None)
-        q = q.filter(Job.type_desc != 'dax', Job.type_desc != 'dag')
 
         # Recent
         qjss = self._get_recent_job_instance()
@@ -1316,7 +1404,6 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         q = q.filter(Job.wf_id == wf_id)
         q = q.filter(JobInstance.exitcode != None).filter(JobInstance.exitcode == 0)
-        q = q.filter(Job.type_desc != 'dax', Job.type_desc != 'dag')
 
         # Recent
         qjss = self._get_recent_job_instance()
@@ -1381,7 +1468,6 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         q = q.filter(Job.wf_id == wf_id)
         q = q.filter(JobInstance.exitcode != None).filter(JobInstance.exitcode != 0)
-        q = q.filter(Job.type_desc != 'dax', Job.type_desc != 'dag')
 
         # Recent
         qjss = self._get_recent_job_instance()
@@ -1444,7 +1530,6 @@ class StampedeWorkflowQueries(WorkflowQueries):
         q = self.session.query(Job, JobInstance).options(defer(JobInstance.stdout_text), defer(JobInstance.stderr_text))
 
         q = q.filter(Job.wf_id == wf_id)
-        q = q.filter(Job.type_desc != 'dax', Job.type_desc != 'dag')
         q = q.filter(JobInstance.exitcode != None).filter(JobInstance.exitcode != 0)
 
         q = q.filter(Job.job_id == JobInstance.job_id)
@@ -1456,7 +1541,6 @@ class StampedeWorkflowQueries(WorkflowQueries):
         qr = self.session.query(distinct(j.job_id))
 
         qr = qr.filter(j.wf_id == wf_id)
-        qr = qr.filter(j.type_desc != 'dax', j.type_desc != 'dag')
         qr = qr.filter(ji.exitcode == None)
 
         qr = qr.filter(j.job_id == ji.job_id)
@@ -1467,7 +1551,6 @@ class StampedeWorkflowQueries(WorkflowQueries):
         # Recent
         qjss = self._get_recent_job_instance()
         qjss = qjss.filter(Job.wf_id == wf_id)
-        qjss = qjss.filter(Job.type_desc != 'dax', Job.type_desc != 'dag')
         qjss = qjss.filter(JobInstance.exitcode != None).filter(JobInstance.exitcode != 0)
 
         qjss = qjss.filter(Job.job_id == JobInstance.job_id)

@@ -30,6 +30,8 @@ import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * The default replica selector that is used if non is specifed by the user.
@@ -67,6 +69,14 @@ public class Default implements ReplicaSelector {
      * The properties object containing the properties passed to the planner.
      */
     protected PegasusProperties mProps;
+    
+    //priority values for different types of URL sets
+    
+    private static final String FILE_URLS_PRIORITY_KEY = "100";
+    
+    private static final String PREFERRED_SITE_PRIORITY_KEY  = "50";
+    
+    private static final String NON_PREFERRED_SITE_PRIORITY_KEY = "10";
 
     /**
      * The overloaded constructor, that is called by load method.
@@ -97,8 +107,7 @@ public class Default implements ReplicaSelector {
      *                      on the local site / submit host.
      *
      * @return <code>ReplicaCatalogEntry</code> corresponding to the location selected.
-     *
-     * @see org.griphyn.cPlanner.classes.ReplicaLocation
+     * 
      */
     public ReplicaCatalogEntry selectReplica( ReplicaLocation candidates,
                                               String preferredSite,
@@ -191,13 +200,13 @@ public class Default implements ReplicaSelector {
 
 
     /**
-     * This chooses a location amongst all the locations returned by the
-     * Replica Mechanism. If a location is found with re/pool attribute same
-     * as the preference pool, it is taken. This returns all the locations which
-     * match to the preference pool. This function is called to determine if a
-     * file does exist on the output pool or not beforehand. We need all the
-     * location to ensure that we are able to make a match if it so exists.
-     * Else a random location is selected and returned
+     * This orders all valid location amongst all the locations returned by the
+     * Replica Mechanism. The following ordering mechanism is employed
+     * 
+     *  - valid file URL's
+     *  - all URL's from preferred site
+     *  - all other URL's
+     * 
      *
      * @param rl         the <code>ReplicaLocation</code> object containing all
      *                   the pfn's associated with that LFN.
@@ -205,11 +214,11 @@ public class Default implements ReplicaSelector {
      * @param allowLocalFileURLs indicates whether Replica Selector can select a replica
      *                      on the local site / submit host.
      *
-     * @return <code>ReplicaLocation</code> corresponding to the replicas selected.
+     * @return <code>ReplicaLocation</code> corresponding to the replicas selected
      *
-     * @see org.griphyn.cPlanner.classes.ReplicaLocation
+     * 
      */
-    public ReplicaLocation selectReplicas( ReplicaLocation rl,
+    public ReplicaLocation selectAndOrderReplicas( ReplicaLocation rl,
                                            String preferredSite,
                                            boolean allowLocalFileURLs ){
 
@@ -219,30 +228,59 @@ public class Default implements ReplicaSelector {
 
         ReplicaCatalogEntry rce;
         String site;
-        String ucAttrib;
         int noOfLocs = 0;
 
-        for ( Iterator it = rl.pfnIterator(); it.hasNext(); ) {
+        List<ReplicaCatalogEntry> preferredSiteReplicas   = new LinkedList();
+        List<ReplicaCatalogEntry> nonPrefferdSiteReplicas = new LinkedList();
+        
+        for ( Iterator<ReplicaCatalogEntry> it = rl.pfnIterator(); it.hasNext(); ) {
             noOfLocs++;
             rce = ( ReplicaCatalogEntry ) it.next();
             site = rce.getResourceHandle();
+            
+            //check if a File URL is allowable or not
+            if( removeFileURL(rce, preferredSite, allowLocalFileURLs) ){
+                mLogger.log( "File URL " + rce + " not included as the site attribute is a mismatch to the site name (" + preferredSite 
+                             +  ") allowLocalFileURLs " +  allowLocalFileURLs , 
+                             LogManager.WARNING_MESSAGE_LEVEL );
+                continue;
+            }
 
-            if ( site != null && site.equals( preferredSite )) {
+            if ( rce.getPFN().startsWith( PegasusURL.FILE_URL_SCHEME ) ) {
+                //file URL's have highest priority
+                rce.addAttribute( ReplicaSelector.PRIORITY_KEY, FILE_URLS_PRIORITY_KEY );
                 result.addPFN( rce );
+               
+            }
+            else if ( site != null && site.equals( preferredSite )) {
+                rce.addAttribute( ReplicaSelector.PRIORITY_KEY, PREFERRED_SITE_PRIORITY_KEY );
+                preferredSiteReplicas.add( rce );
             }
             else if ( site == null ){
                 mLogger.log(
-                    " pool attribute not specified for the location objects" +
+                    " site attribute not specified for the location objects" +
                     " in the Replica Catalog", LogManager.WARNING_MESSAGE_LEVEL);
             }
+            else{
+                rce.addAttribute( ReplicaSelector.PRIORITY_KEY, NON_PREFERRED_SITE_PRIORITY_KEY );
+                nonPrefferdSiteReplicas.add(rce);
+            }
         }
-
+        
+        //add the preferred and non preferred replicas
+        for( ReplicaCatalogEntry replica: preferredSiteReplicas ){
+            result.addPFN(replica);
+        }
+         for( ReplicaCatalogEntry replica: nonPrefferdSiteReplicas ){
+            result.addPFN(replica);
+        }
+        /*
         if ( result.getPFNCount() == 0 ) {
             //means we have to choose a random location between 0 and (noOfLocs -1)
             int locSelected = PegRandom.getInteger( noOfLocs - 1 );
             rce = ( ReplicaCatalogEntry ) rl.getPFN(locSelected );
             result.addPFN( rce );
-        }
+        }*/
         return result;
 
     }

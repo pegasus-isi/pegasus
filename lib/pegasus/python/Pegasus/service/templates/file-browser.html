@@ -94,9 +94,11 @@ $(function () {
             ul.hide();
         }
 
+        var trimThis = path.length > 1 ? path + '/' : path;
+
         for (var i = 0; directories && i < directories.length; ++i) {
             var li = $('<li class="directory collapsed"></li>');
-            li.text(directories[i].replace(path, ''));
+            li.text(directories[i].replace(trimThis, ''));
             var e = folderStructure(folders, directories[i], true);
             li.append(e);
             ul.append(li);
@@ -132,6 +134,7 @@ $(function () {
                  */
                 $('.file-list .directory').click(function(event) {
                     event.stopPropagation();
+                    event.stopImmediatePropagation();
                     $('ul', this).toggle();
                     $('ul', this).parent().toggleClass('collapsed');
                 });
@@ -147,8 +150,11 @@ $(function () {
                     onFileViewClick($(this).attr('href'));
                 });
             },
-            error: function(){
-                $('.file-list').text('Error loading file list');
+            error: function(e){
+                var errorJSON = JSON.parse(e.responseText);
+                if (errorJSON.code) {
+                    $('.file-list').text(errorJSON.code + ', Message: ' + errorJSON.message);
+                }
             }
         });
     }

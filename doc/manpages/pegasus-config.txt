@@ -5,9 +5,7 @@ pegasus-config(1)
 
 Name
 ----
-pegasus-config - The authority for where parts of the Pegasus system exists
-                 on the filesystem. pegasus-config can be used to find
-                 libraries such as the DAX generators. 
+pegasus-config - Can be used to find installed Pegasus tools and libraries.
 
 
 Synopsis

@@ -56,12 +56,18 @@ public class CreamCE extends Abstract{
      * The name of the style being implemented.
      */
     public static final String STYLE_NAME = "CreamCE";
+    
+    /**
+     * Handle to CondorG style to translate task requirements
+     */
+    private final CondorG mCondorG;
 
     /**
      * The default constructor.
      */
     public CreamCE() {
         super();
+        mCondorG = new CondorG();
     }
 
     /**
@@ -123,7 +129,8 @@ public class CreamCE extends Abstract{
         //first field is always condor
         gridResource.append( "cream" ).append( " " );
         
-
+        //PM-962
+        this.handleResourceRequirements(job);
 
         SiteCatalogEntry s = mSiteStore.lookup( job.getSiteHandle() );
         GridGateway g = s.selectGridGateway( job.getGridGatewayJobType() );
@@ -163,4 +170,16 @@ public class CreamCE extends Abstract{
         return gridResource.toString();
     }
 
+    /**
+     * This translates the Pegasus resource profiles to corresponding globus 
+     * profiles that are used to set CREAMCE parameters
+     * 
+     * @param job 
+     */
+    protected void handleResourceRequirements( Job job ) throws CondorStyleException {
+        //PM-962 we update the globus RSL keys on basis
+        //of Pegasus profile keys before doing any translation
+        
+        mCondorG.handleResourceRequirements(job);
+    }
 }

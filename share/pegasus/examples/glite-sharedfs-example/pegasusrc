@@ -5,6 +5,8 @@ pegasus.catalog.site.file=sites.xml
 pegasus.dir.storage.deep=false
 pegasus.condor.logs.symlink=false
 
+pegasus.catalog.transformation.file tc
+pegasus.catalog.replica.file  rc
 
 
 pegasus.data.configuration = sharedfs

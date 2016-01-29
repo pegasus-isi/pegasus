@@ -78,7 +78,7 @@
 		<xs:annotation>
 			<xs:documentation>defines the attribute set decribing system information.</xs:documentation>
 		</xs:annotation>
-		<xs:attribute name="arch" type="ArchitectureType" use="optional" default="x86"/>
+		<xs:attribute name="arch" type="ArchitectureType" use="optional" default="x86_64"/>
 		<xs:attribute name="os" type="OSType" use="optional" default="linux"/>
 		<xs:attribute name="osrelease" type="xs:string" use="optional"/>
 		<xs:attribute name="osversion" type="VersionPattern" use="optional"/>

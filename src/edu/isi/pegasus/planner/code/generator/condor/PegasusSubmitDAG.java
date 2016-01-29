@@ -18,10 +18,12 @@ package edu.isi.pegasus.planner.code.generator.condor;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
-import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
 import edu.isi.pegasus.common.util.FindExecutable;
 import edu.isi.pegasus.common.util.StreamGobbler;
 import edu.isi.pegasus.common.util.StreamGobblerCallback;
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
@@ -30,6 +32,7 @@ import edu.isi.pegasus.planner.code.generator.Metrics;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.ENV;
+import edu.isi.pegasus.planner.namespace.Namespace;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -76,6 +79,12 @@ public class PegasusSubmitDAG {
     private PegasusProperties mProps;
     private PlannerOptions mPOptions;
     
+    /**
+     * The local environment as picked up from the environment, properties and 
+     * the site catalog
+     */
+    private Namespace mLocalEnv;
+    
     public PegasusSubmitDAG(){
         
     }
@@ -85,6 +94,24 @@ public class PegasusSubmitDAG {
         mLogger = bag.getLogger();
         mProps  = bag.getPegasusProperties();
         mPOptions = bag.getPlannerOptions();
+        
+        mLocalEnv = new ENV();
+        Map<String,String> systemEnv = System.getenv();
+        for( Map.Entry<String,String> entry : systemEnv.entrySet() ){
+            mLocalEnv.construct( entry.getKey(), entry.getValue() );
+        }
+        mLocalEnv.assimilate(mProps, Profiles.NAMESPACES.env);
+        //override them from the local site catalog entry
+        SiteStore store = bag.getHandleToSiteStore();
+        if( store != null && store.contains( "local") ){
+            SiteCatalogEntry site = store.lookup( "local" );
+            Namespace localSiteEnv = site.getProfiles().get(Profiles.NAMESPACES.env);
+            for( Iterator<String> it = localSiteEnv.getProfileKeyIterator(); it.hasNext();){
+                String key = it.next();
+                mLocalEnv.checkKeyInNS(key, (String) localSiteEnv.get( key ));
+            }
+        }
+        
     }
     
     /**
@@ -114,8 +141,19 @@ public class PegasusSubmitDAG {
             //set the callback and run the pegasus-run command
             Runtime r = Runtime.getRuntime();
             String invocation = condorSubmitDAG.getAbsolutePath() + " " + args;
-            mLogger.log( "Executing  " + invocation,
+            
+            //PM-921 all the local env profiles get rendered as String[]
+            String[] env = new String[mLocalEnv.size()];
+            int i = 0;
+            for( Iterator<String> it = mLocalEnv.getProfileKeyIterator(); it.hasNext();i++){
+                String key = it.next();
+                StringBuilder sb = new StringBuilder();
+                sb.append( key ).append( "=" ).append( (String) mLocalEnv.get( key ) );
+                env[i] = sb.toString();
+            }
+            mLogger.log( "Executing  " + invocation  + " with " + mLocalEnv,
                          LogManager.DEBUG_MESSAGE_LEVEL );
+            
             Process p = r.exec( invocation, null, dagFile.getParentFile() );
 
             //spawn off the gobblers with the already initialized default callback

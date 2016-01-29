@@ -208,7 +208,8 @@ static void helpMe(const AppInfo* run) {
             " -F\tThis flag does nothing. Kept for historical reasons.\n"
             " -f\tPrint full information including <resource>, <environment> and \n"
             "   \t<statcall>. If the job fails, then -f is implied.\n"
-            " -q\tOmit <data> for <statcall> (stdout, stderr) if the job succeeds.\n");
+            " -q\tOmit <data> for <statcall> (stdout, stderr) if the job succeeds.\n"
+            " -c\tUse CDATA for <data> sections\n");
     fprintf(stderr,
             " -k S\tSend TERM signal to job after S seconds. Default is 0, which means never.\n"
             " -K S\tSend KILL signal to job S seconds after a TERM signal. Default is %d.\n",
@@ -525,6 +526,9 @@ int main(int argc, char* argv[]) {
                 break;
             case 'q':
                 appinfo.omitData = 1;
+                break;
+            case 'c':
+                appinfo.useCDATA = 1;
                 break;
             case 'R':
                 if (!argv[i][2] && argc <= i+1) {

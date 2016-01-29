@@ -4,8 +4,7 @@ pegasus-mpi-keg(1)
 
 Name
 ----
-
-pegasus-mpi-keg - parallel version (MPI-based) of kanonical executable for grids
+pegasus-mpi-keg - MPI version of KEG
 
 
 Synopsis

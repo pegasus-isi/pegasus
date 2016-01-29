@@ -1,0 +1,9 @@
+# This is the replica catalog. It lists information about each of the
+# input files used by the workflow.
+
+# The format is:
+# LFN     PFN    pool="SITE"
+#
+# For example:
+#data.txt  file:///tmp/data.txt         site="local"
+#data.txt  http://example.org/data.txt  site="example"

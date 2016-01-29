@@ -37,7 +37,7 @@ pkgbuild --root $PKG_DIR \
          --identifier edu.isi.pegasus \
          --version $VERSION \
          --ownership recommended \
-         --install-location /usr \
+         --install-location /usr/local \
          --scripts $MYDIR/scripts \
          $DIST_DIR/pegasus.pkg
 

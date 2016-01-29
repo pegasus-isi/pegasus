@@ -28,7 +28,11 @@ import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * A data class that is used to track the various files placed by the mapper on
@@ -136,9 +140,34 @@ public class PlannerCache extends Data
         }
 
     }
+    
+    /**
+     * Inserts a new entry into the cache.
+     *
+     * @param lfn is the logical filename under which to book the entry
+     * @param rce  ReplicaCatalogEntry
+     * @param type  the type of URL.
+     *
+     * @return number of insertions, should always be 1. On failure,
+     * throw an exception, don't use zero.
+     *
+     */
+    public int insert( String lfn, ReplicaCatalogEntry rce, OPERATION type ){
+
+        if( type == OPERATION.get ){
+            return mGetRCCache.insert( lfn, rce);
+        }
+        else if( type == OPERATION.put ){
+            return mPutRCCache.insert( lfn, rce);
+        }
+        else{
+            throw new RuntimeException( "Unsupported operation type for planner cache " + type );
+        }
+
+    }
 
     /**
-     * Retrieves all entries for a given LFN from the replica catalog.
+     * Retrieves a single entry for a given LFN from the replica catalog.
      * Each entry in the result set is a tuple of a PFN and all its
      * attributes.
      *
@@ -170,6 +199,37 @@ public class PlannerCache extends Data
         return result;
     }
 
+    /**
+     * Retrieves all entries for a given LFN from the replica catalog.
+     * Each entry in the result set is a tuple of a PFN and all its
+     * attributes.
+     *
+     * @param lfn is the logical filename to obtain information for.
+     * @param handle  the site handle
+     * @param type  the type of URL.
+     *
+     * @return all the entries else empty collection
+     *
+     * @see Collection<ReplicaCatalogEntry> 
+     */
+    public Collection<ReplicaCatalogEntry> lookupAllEntries(String lfn , String handle, OPERATION type ){
+        Map<Set<String>,Collection<ReplicaCatalogEntry>> results = null;
+        Set<String> lfns = new HashSet();
+        lfns.add(lfn);
+        
+        if( type == OPERATION.get ){
+            results = mGetRCCache.lookup(lfns, handle);
+        }
+        else if( type == OPERATION.put ){
+            results = mPutRCCache.lookup(lfns, handle);
+        }
+        else{
+            throw new RuntimeException( "Unsupported operation type for planner cache " + type );
+        }
+        
+        Collection<ReplicaCatalogEntry> result = results.get(lfn);
+        return (result == null )? new LinkedList():result;
+    }
 
 
     /**

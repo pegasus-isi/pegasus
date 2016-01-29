@@ -26,14 +26,18 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
-
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+
+
+import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 
 import edu.isi.pegasus.common.util.Separator;
 
-
-
 import edu.isi.pegasus.planner.classes.Job;
+import static edu.isi.pegasus.planner.classes.Job.COMPUTE_JOB;
+import static edu.isi.pegasus.planner.classes.Job.INTER_POOL_JOB;
+import static edu.isi.pegasus.planner.classes.Job.STAGE_IN_JOB;
+import static edu.isi.pegasus.planner.classes.Job.STAGE_OUT_JOB;
 import java.io.FileWriter;
 
 import java.util.Collection;
@@ -44,6 +48,8 @@ import java.util.ArrayList;
 
 import java.io.File;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.namespace.Dagman;
+import edu.isi.pegasus.planner.selector.ReplicaSelector;
 
 /**
  * The implementation that creates transfer jobs referring to the python based
@@ -255,6 +261,12 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
             }
 
         }
+        
+        //associate DAGMan categories with these jobs to enable
+        //throttling in properties file
+        if( !job.dagmanVariables.containsKey( Dagman.CATEGORY_KEY ) ){
+           job.dagmanVariables.construct( Dagman.CATEGORY_KEY, getDAGManCategory( job.getJobType() ) );
+       }
 
     }
 
@@ -404,8 +416,8 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
         int num = 1;
         for( Iterator it = files.iterator(); it.hasNext(); ){
             FileTransfer ft = (FileTransfer) it.next();
-            NameValue source = ft.getSourceURL();
-            //we want to leverage multiple dests if possible
+            Collection<String> sourceSites = ft.getSourceSites( );
+            
             NameValue dest   = ft.getDestURL( true );
 
             //write to the file one URL pair at a time
@@ -417,25 +429,41 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
             urlPair.append(" { \"type\": \"transfer\",\n");
             urlPair.append("   \"id\": ").append(num).append(",\n");
             urlPair.append("   \"src_urls\": [");
-            urlPair.append(" {");
-            urlPair.append(" \"site_label\": \"").append(source.getKey()).append("\",");
-            urlPair.append(" \"url\": \"").append(source.getValue()).append("\"");
-            urlPair.append(" }");
-            urlPair.append(" ],\n");
-            urlPair.append("   \"dest_urls\": [");
-            urlPair.append(" {");
+            boolean notFirst = false;
+            for( String sourceSite: sourceSites ){
+                //traverse through all the URL's on that site
+                for( ReplicaCatalogEntry url : ft.getSourceURLs(sourceSite) ){
+                    if( notFirst ){
+                        urlPair.append(",");
+                    }
+                    String prio =  (String) url.getAttribute( ReplicaSelector.PRIORITY_KEY);
+                    urlPair.append("\n     {");
+                    urlPair.append(" \"site_label\": \"").append(sourceSite).append("\",");
+                    urlPair.append(" \"url\": \"").append( url.getPFN() ).append("\"");
+                    if( prio != null ){
+                        urlPair.append(",");
+                        urlPair.append(" \"priority\": ").append( prio );
+                    }
+                    urlPair.append(" }");
+                    notFirst = true;
+                    // and the credential for the source url
+                    job.addCredentialType( sourceSite, url.getPFN() );
+                }
+            }
+            
+            urlPair.append("\n   ],\n");
+            urlPair.append("   \"dest_urls\": [\n");
+            urlPair.append("     {");
             urlPair.append(" \"site_label\": \"").append(dest.getKey()).append("\",");
             urlPair.append(" \"url\": \"").append(dest.getValue()).append("\"");
-            urlPair.append(" }");
-            urlPair.append(" ]");
+            urlPair.append(" }\n");
+            urlPair.append("   ]");
             urlPair.append(" }\n"); // end of this transfer
             writer.write( urlPair.toString() );
             writer.flush();
             num++;
 
-            //associate any credential required , both with destination
-            // and the source urls
-            job.addCredentialType( source.getKey(), source.getValue() );
+            //associate any credential required ,  with destination URL
             job.addCredentialType( dest.getKey(), dest.getValue() );
         }
         
@@ -451,5 +479,36 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
         return Separator.combine( Transfer.TRANSFORMATION_NAMESPACE,
                                   Transfer.TRANSFORMATION_NAME,
                                   Transfer.TRANSFORMATION_VERSION);
+    }
+
+    /**
+     * Returns the dagman category for transfer job 
+     * 
+     * @param type job type
+     * 
+     * @return 
+     */
+    protected String getDAGManCategory( int type ) {
+        String category = null;
+
+        switch (type){
+
+            case STAGE_IN_JOB:
+                category = "stage-in";
+                break;
+
+            case STAGE_OUT_JOB:
+                category = "stage-out";
+                break;
+
+            case INTER_POOL_JOB:
+                category = "stage-inter";
+                break;
+            default:
+                category = "transfer";
+                
+        }
+        return category;
+                
     }
 }

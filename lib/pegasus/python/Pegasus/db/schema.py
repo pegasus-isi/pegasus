@@ -295,14 +295,11 @@ orm.mapper(Workflowstate, st_workflowstate)
 
 
 st_workflow_meta = Table('workflow_meta', metadata,
-    Column('meta_id', KeyInteger, primary_key=True, nullable=False),
-    Column('wf_id', KeyInteger, ForeignKey('workflow.wf_id', ondelete='CASCADE'), nullable=False),
-    Column('key', VARCHAR(255), nullable=False),
+    Column('wf_id', KeyInteger, ForeignKey('workflow.wf_id', ondelete='CASCADE'), primary_key=True, nullable=False),
+    Column('key', VARCHAR(255), primary_key=True, nullable=False),
     Column('value', VARCHAR(255), nullable=False),
     **table_keywords
 )
-
-Index('wf_meta_id_KEY', st_workflow_meta.c.meta_id, unique=True)
 Index('UNIQUE_WORKFLOW_META', st_workflow_meta.c.wf_id, st_workflow_meta.c.key, st_workflow_meta.c.value, unique=True)
 
 orm.mapper(WorkflowMeta, st_workflow_meta)
@@ -493,14 +490,11 @@ orm.mapper(TaskEdge, st_task_edge)
 
 
 st_task_meta = Table('task_meta', metadata,
-    Column('meta_id', KeyInteger, primary_key=True, nullable=False),
-    Column('task_id', KeyInteger, ForeignKey('task.task_id', ondelete='CASCADE'), nullable=False),
-    Column('key', VARCHAR(255), nullable=False),
+    Column('task_id', KeyInteger, ForeignKey('task.task_id', ondelete='CASCADE'), primary_key=True, nullable=False),
+    Column('key', VARCHAR(255), primary_key=True, nullable=False),
     Column('value', VARCHAR(255), nullable=False),
     **table_keywords
 )
-
-Index('meta_id_KEY', st_task_meta.c.meta_id, unique=True)
 Index('UNIQUE_TASK_META', st_task_meta.c.task_id, st_task_meta.c.key, st_task_meta.c.value, unique=True)
 
 orm.mapper(TaskMeta, st_task_meta)
@@ -729,12 +723,10 @@ orm.mapper(RCPFN, rc_pfn)
 
 
 rc_meta = Table('rc_meta', metadata,
-    Column('meta_id', KeyInteger, primary_key=True, nullable=False),
-    Column('lfn_id', KeyInteger, ForeignKey('rc_lfn.lfn_id', ondelete='CASCADE'), nullable=False),
-    Column('key', VARCHAR(245), nullable=False),
+    Column('lfn_id', KeyInteger, ForeignKey('rc_lfn.lfn_id', ondelete='CASCADE'), primary_key=True, nullable=False),
+    Column('key', VARCHAR(245), primary_key=True, nullable=False),
     Column('value', VARCHAR(245), nullable=False),
     **table_keywords
 )
-
 Index('rc_meta_unique', rc_meta.c.lfn_id, rc_meta.c.key, unique=True)
 orm.mapper(RCMeta, rc_meta)

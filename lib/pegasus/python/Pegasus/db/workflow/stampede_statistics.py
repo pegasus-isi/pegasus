@@ -187,7 +187,7 @@ class StampedeStatistics(SQLAlchemyInit):
     def initialize(self, root_wf_uuid = None, root_wf_id = None):
         if root_wf_uuid == None and root_wf_id == None:
             self.log.error('Either root_wf_uuid or root_wf_id is required')
-            return False
+            raise ValueError('Either root_wf_uuid or root_wf_id is required')
 
         q = self.session.query(Workflow.root_wf_id, Workflow.wf_id, Workflow.wf_uuid)
 
@@ -203,10 +203,10 @@ class StampedeStatistics(SQLAlchemyInit):
             self._is_root_wf = result.root_wf_id == result.wf_id
         except orm.exc.MultipleResultsFound, e:
             self.log.error('Multiple results found for wf_uuid: %s', root_wf_uuid)
-            return False
+            raise
         except orm.exc.NoResultFound, e:
             self.log.error('No results found for wf_uuid: %s', root_wf_uuid)
-            return False
+            raise
 
         self._wfs.insert(0, self._root_wf_id)
 
@@ -235,7 +235,7 @@ class StampedeStatistics(SQLAlchemyInit):
 
         if not len(self._wfs):
             self.log.error('No results found for wf_uuid: %s', root_wf_uuid)
-            return False
+            raise ValueError('No results found for wf_uuid: %s', root_wf_uuid)
 
         # Initialize filters with default value
         self.set_job_filter()

@@ -80,6 +80,7 @@ class TestDBAdmin(unittest.TestCase):
         _silentremove(fn)
         dburi2 = "sqlite:///%s" % fn
         db2 = connection.connect(dburi2, create=True)
+        _remove(fn)
 
 
     # def test_minimum_downgrade(self):
@@ -175,6 +176,9 @@ class TestDBAdmin(unittest.TestCase):
         _remove(filename)
 
     def test_connection_from_properties_file(self):
+        """
+        Test whether DB connections are being established from properties loaded from the properties file.
+        """
         props_filename = str(uuid.uuid4())
         filename = str(uuid.uuid4())
         _silentremove(filename)
@@ -206,6 +210,27 @@ class TestDBAdmin(unittest.TestCase):
         db.close()
         _remove(filename)
         _silentremove(props_filename)
+
+    def test_upper_version(self):
+        """
+        Test whether DBs created with newer Pegasus version raises an exception.
+        """
+        filename = str(uuid.uuid4())
+        _silentremove(filename)
+        dburi = "sqlite:///%s" % filename
+        db = connection.connect(dburi, create=True)
+        dbversion = DBVersion()
+        dbversion.version = CURRENT_DB_VERSION + 1
+        dbversion.version_number = CURRENT_DB_VERSION + 1
+        dbversion.version_timestamp = datetime.datetime.now().strftime("%s")
+        db.add(dbversion)
+        db.commit()
+
+        self.assertRaises(DBAdminError, db_current_version, db)
+        self.assertRaises(DBAdminError, db_verify, db)
+
+        _remove(filename)
+
         
     def test_dbs(self):
         dbs = ["test-01.db", "test-02.db"]

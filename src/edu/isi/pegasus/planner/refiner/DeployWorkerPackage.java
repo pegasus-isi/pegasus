@@ -113,7 +113,7 @@ public class DeployWorkerPackage
      * Store the regular expressions necessary to parse the basename from the worker
      * package url to retrieve the version of pegasus.
      * 
-     * pegasus-worker-4.6.0cvs-x86_64_macos_10.tar.gz 
+     * pegasus-worker-4.6.0dev-x86_64_macos_10.tar.gz 
      */
     private static final String mRegexExpression =
     //                                 "(pegasus-)(binary|worker)-([0-9]\\.[0-9]\\.[0-9][a-zA-Z]*)-x86.*";
@@ -1212,7 +1212,7 @@ public class DeployWorkerPackage
         SiteCatalogEntry ePool = mSiteStore.lookup( site );
         
         //String argString = "zxvf " + wpBasename;
-        // tar -C /tmp/ -zxvf pegasus-worker-2.4.0cvs-x86_rhas_3.tar.gz 
+        // tar -C /tmp/ -zxvf pegasus-worker-2.4.0dev-x86_rhas_3.tar.gz 
         //we want to fully specify the directory where we want tar file
         //untarred
         StringBuffer arguments = new StringBuffer();

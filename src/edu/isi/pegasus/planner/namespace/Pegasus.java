@@ -27,7 +27,6 @@ import edu.isi.pegasus.planner.classes.Profile;
 
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.common.PegasusProperties;
-import static edu.isi.pegasus.planner.namespace.Globus.mAggregatorTable;
 import edu.isi.pegasus.planner.namespace.aggregator.Aggregator;
 import edu.isi.pegasus.planner.namespace.aggregator.MAX;
 import edu.isi.pegasus.planner.namespace.aggregator.UniqueMerge;
@@ -55,6 +54,13 @@ public class Pegasus extends Namespace {
      */
     public static final String NAMESPACE_NAME = Profile.VDS;
 
+    /**
+     * Key to indicate that the site filesystem is accessible on the local site,
+     * and hence auxillary jobs for the site can be run on local site
+     */
+    public static final String LOCAL_VISIBLE_KEY = "auxillary.local";
+    
+    
     /**
      * The name of the key that sets a remote initial dir for a condor globus
      * job.
@@ -442,6 +448,17 @@ public class Pegasus extends Namespace {
     public static final String MEMORY_KEY = "memory";
     
     /**
+     * The queue to use.
+     */
+    public static final String QUEUE_KEY = "queue";
+    
+    /**
+     * The project for the job to be associated with.
+     */
+    public static final String PROJECT_KEY = "project";
+    
+    
+    /**
      * Key indicating data configuration property. 
      */
     public static final String DATA_CONFIGURATION_KEY = "data.configuration";
@@ -451,6 +468,11 @@ public class Pegasus extends Namespace {
      * add to the eventual qsub file.
      */
     public static final String GLITE_ARGUMENTS_KEY = "glite.arguments";
+    
+    /**
+     * Profile key to determine condor quoting for a job.
+     */
+    public static final String CONDOR_QUOTE_ARGUMENTS_KEY = "condor.arguments.quote";
     
     //credential related constant keys
     private static final String S3CFG_FILE_VARIABLE = S3CFG.S3CFG_FILE_VARIABLE.toLowerCase();
@@ -470,8 +492,6 @@ public class Pegasus extends Namespace {
      * Static Handle to the delimiter aggregator.
      */
     private static Aggregator SUCCESS_MESSAGE_AGGREGATOR = new UniqueMerge();
-   
-    
 
     /**
      * The name of the implementing namespace. It should be one of the valid
@@ -592,6 +612,14 @@ public class Pegasus extends Namespace {
 
         switch (key.charAt(0)) {
 
+            case 'a':
+                if( key.compareTo( LOCAL_VISIBLE_KEY ) == 0 ){
+                    res = VALID_KEY;
+                }else {
+                    res = UNKNOWN_KEY;
+                }
+                break;
+                
             case 'b':
                 if ( 
                      (key.compareTo(BUNDLE_STAGE_IN_KEY) == 0) ||
@@ -610,16 +638,17 @@ public class Pegasus extends Namespace {
 
             case 'c':
                 if (
-                    (key.compareTo(BUNDLE_KEY) == 0) ||
+                    (key.compareTo( BUNDLE_KEY) == 0) ||
                     (key.compareTo( COLLAPSE_KEY ) == 0) ||
                     (key.compareTo( CHANGE_DIR_KEY ) == 0) ||
                     (key.compareTo( CHAIN_STAGE_IN_KEY ) == 0) ||
                     (key.compareTo( MAX_RUN_TIME ) == 0) ||
-                    (key.compareTo(CREATE_AND_CHANGE_DIR_KEY ) == 0 ) ||
+                    (key.compareTo( CREATE_AND_CHANGE_DIR_KEY ) == 0 ) ||
                     (key.compareTo( CLUSTER_ARGUMENTS) == 0 ) ||
                     (key.compareTo( CORES_KEY ) == 0 ) ||
-                    (key.compareTo(Pegasus.CHECKPOINT_TIME_KEY) == 0 )||
-                    (key.compareTo(Pegasus.DEPRECATED_CHECKPOINT_TIME_KEY) == 0 )    ) {
+                    (key.compareTo( Pegasus.CHECKPOINT_TIME_KEY) == 0 )||
+                    (key.compareTo( Pegasus.DEPRECATED_CHECKPOINT_TIME_KEY) == 0 )  ||
+                    (key.compareTo( Pegasus.CONDOR_QUOTE_ARGUMENTS_KEY) == 0 )    ) {
                     res = VALID_KEY;
                 }
                 else if(key.compareTo(DEPRECATED_CHANGE_DIR_KEY) == 0 ||
@@ -724,7 +753,9 @@ public class Pegasus extends Namespace {
                     key.compareTo( PMC_REQUEST_MEMORY_KEY ) == 0 ||
                     key.compareTo( PMC_REQUEST_CPUS_KEY ) == 0 ||
                     key.compareTo( PMC_PRIORITY_KEY ) == 0 ||
-                    key.compareTo( PMC_TASK_ARGUMENTS) == 0 ){
+                    key.compareTo( PMC_TASK_ARGUMENTS) == 0 ||
+                    key.compareTo( PPN_KEY ) == 0 ||
+                    key.compareTo( PROJECT_KEY) == 0 ) {
                     res = VALID_KEY;
                 }
                 else{
@@ -732,6 +763,15 @@ public class Pegasus extends Namespace {
                 }
                 break;
 
+            case 'q':
+                if( key.compareTo( QUEUE_KEY ) == 0 ){
+                    res = VALID_KEY;
+                }
+                else{
+                    res = UNKNOWN_KEY;
+                }
+                break;
+            
             case 'r':
                 if( key.compareTo( RUNTIME_KEY ) == 0 ){
                     res = VALID_KEY;

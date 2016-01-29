@@ -4,46 +4,88 @@
 <chapter id="useful_tips" lang="">
   <title>Useful Tips</title>
 
-  <section id="migrating_from_leq44">
+    <section id="migrating_from_leq45">
+      <title>Migrating From Pegasus &lt;4.6 to Pegasus &gt;=4.6</title>
+
+      <para>Since Pegasus 4.5 all databases are managed by a single tool: <emphasis
+      role="bold">pegasus-db-admin</emphasis>. Databases will be automatically
+      updated when <emphasis role="bold">pegasus-plan</emphasis> is invoked, but
+      WORKFLOW databases from past runs may not be updated accordingly. In Pegasus
+      4.6, the <emphasis role="bold">pegasus-db-admin</emphasis> tool provides an
+      option to automatically update all databases from completed workflows in the
+      MASTER database. To enable this option, run the following command:</para>
+
+      <programlisting>
+$ pegasus-db-admin update -a
+Your database has been updated.
+Your database is compatible with Pegasus version: 4.6.0
+
+Verifying and updating workflow databases:
+20/20
+
+Summary:
+  Verified/Updated: 20/20
+  Failed: 0/20
+  Unable to connect: 0/20
+
+Log files:
+  20160114T204631-dbadmin.out (Succeeded operations)
+  20160114T204631-dbadmin.err (Failed operations)
+      </programlisting>
+
+      <para>This option generates a log file for succeeded operations, and a log
+      file for failed operations. Each file contains the list of URLs of the
+      succeeded/failed databases.</para>
+
+      <para>Note that, if no URL is provided, the tool will create/use a SQLite
+      database in the user's home directory:
+      <emphasis>${HOME}/.pegasus/workflow.db</emphasis>.</para>
+
+      <para>For complete description of pegasus-db-admin, see the <link
+      linkend="cli-pegasus-db-admin">man page</link>.</para>
+
+    </section>
+
+    <section id="migrating_from_leq44">
     <title>Migrating From Pegasus &lt;4.5 to Pegasus &gt;=4.5</title>
-      
+
     <para>Since Pegasus 4.5 all databases are managed by a single tool: <emphasis
     role="bold">pegasus-db-admin</emphasis>. Databases will be automatically
-    updated when <emphasis role="bold">pegasus-planner</emphasis> is invoked, but
+    updated when <emphasis role="bold">pegasus-plan</emphasis> is invoked, but
     it may require manually invocation of the <emphasis role="bold">
     pegasus-db-admin</emphasis> for other Pegasus tools.</para>
 
     <para>The <emphasis role="bold">check</emphasis> command verifies if the
     database is compatible with the Pegasus' latest version. If the database is
     not compatible, it will print the following message:</para>
-    
+
     <programlisting>
 $ pegasus-db-admin check
 Your database is NOT compatible with version 4.5.0
     </programlisting>
-    
+
     <para>If you are running the <emphasis role="bold">check</emphasis> command
     for the first time, the tool will prompt the following message:</para>
-    
+
     <programlisting>
 Missing database tables or tables are not updated:
     dbversion
 Run 'pegasus-db-admin update &lt;path_to_database&gt;' to create/update your database.
     </programlisting>
-    
+
     <para>To update the database, run the following command:</para>
-    
+
     <programlisting>
 $ pegasus-db-admin update
 Your database has been updated.
 Your database is compatible with Pegasus version: 4.5.0
     </programlisting>
-                         
-    <para>The <emphasis role="bold">pegasus-db-admin</emphasis> tool can operate 
-    directly over a database URL, or can read configuration parameters from the 
-    properties file or a submit directory. In the later case, a database type 
-    should be provided to indicate which properties should be used to connect to 
-    the database. For example, the tool will seek for <emphasis>pegasus.catalog.replica.db.*</emphasis> 
+
+    <para>The <emphasis role="bold">pegasus-db-admin</emphasis> tool can operate
+    directly over a database URL, or can read configuration parameters from the
+    properties file or a submit directory. In the later case, a database type
+    should be provided to indicate which properties should be used to connect to
+    the database. For example, the tool will seek for <emphasis>pegasus.catalog.replica.db.*</emphasis>
     properties to connect to the JDBCRC database; or seek for <emphasis>pegasus.catalog.master.url</emphasis>
     (or <emphasis>pegasus.dashboard.output</emphasis>, which is deprecated) property
     to connect to the MASTER database; or seek for the <emphasis>pegasus.catalog.workflow.url</emphasis>
@@ -51,42 +93,42 @@ Your database is compatible with Pegasus version: 4.5.0
     to connect to the WORKFLOW database. If none of these properties are found, the
     tool will connect to the default database in the user's home directory
     (sqlite:///${HOME}/.pegasus/workflow.db).</para>
-    
+
     <para>Example: connection by providing the URL to the database:</para>
-    
+
     <programlisting>
 $ pegasus-db-admin create sqlite:///${HOME}/.pegasus/workflow.db
 $ pegasus-db-admin update sqlite:///${HOME}/.pegasus/workflow.db
     </programlisting>
-    
+
     <para>Example: connection by providing a properties file that contains the
     information to connect to the database. Note that a database type (MASTER,
     WORKFLOW, or JDBCRC) should be provided:</para>
-    
+
     <programlisting>
 $ pegasus-db-admin update -c pegasus.properties -t MASTER
 $ pegasus-db-admin update -c pegasus.properties -t JDBCRC
 $ pegasus-db-admin update -c pegasus.properties -t WORKFLOW
     </programlisting>
-    
-    <para>Example: connection by providing the path to the submit directory  
-    containning the <emphasis>braindump.txt</emphasis> file, where information 
-    to connect to the database can be extracted. Note that a database type 
+
+    <para>Example: connection by providing the path to the submit directory
+    containning the <emphasis>braindump.txt</emphasis> file, where information
+    to connect to the database can be extracted. Note that a database type
     (MASTER, WORKFLOW, or JDBCRC) should also be provided:</para>
-    
+
     <programlisting>
 $ pegasus-db-admin update -s /path/to/submitdir -t WORKFLOW
 $ pegasus-db-admin update -s /path/to/submitdir -t MASTER
 $ pegasus-db-admin update -s /path/to/submitdir -t JDBCRC
     </programlisting>
-            
-    <para>Note that, if no URL is provided, the tool will create/use a SQLite 
-    database in the user's home directory: 
+
+    <para>Note that, if no URL is provided, the tool will create/use a SQLite
+    database in the user's home directory:
     <emphasis>${HOME}/.pegasus/workflow.db</emphasis>.</para>
-      
+
     <para>For complete description of pegasus-db-admin, see the <link
     linkend="cli-pegasus-db-admin">man page</link>.</para>
-      
+
   </section>
 
   <section id="migrating_from_3x">
@@ -165,33 +207,33 @@ $ pegasus-db-admin update -s /path/to/submitdir -t JDBCRC
 Check the db version<emphasis role="bold">
 
 /usr/share/pegasus/sql/schema_tool.py -c connString=sqlite:////to/the/workflow/directory/with/workflow.stampede.db</emphasis>
-2012-02-29T01:29:43.330476Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.init | 
-2012-02-29T01:29:43.330708Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema.start | 
-2012-02-29T01:29:43.348995Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema 
-                                   | Current version set to: 3.1. 
-2012-02-29T01:29:43.349133Z ERROR  netlogger.analysis.schema.schema_check.SchemaCheck.check_schema 
+2012-02-29T01:29:43.330476Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.init |
+2012-02-29T01:29:43.330708Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema.start |
+2012-02-29T01:29:43.348995Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema
+                                   | Current version set to: 3.1.
+2012-02-29T01:29:43.349133Z ERROR  netlogger.analysis.schema.schema_check.SchemaCheck.check_schema
                                    | Schema version 3.1 found - expecting 4.0 - database admin will need to run upgrade tool.
 
 
 Convert the Database to be version 4.x compliant<emphasis role="bold">
 
 /usr/share/pegasus/sql/schema_tool.py -u connString=sqlite:////to/the/workflow/directory/with/workflow.stampede.db
-</emphasis>2012-02-29T01:35:35.046317Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.init | 
-2012-02-29T01:35:35.046554Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema.start | 
-2012-02-29T01:35:35.064762Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema 
-                                  | Current version set to: 3.1. 
-2012-02-29T01:35:35.064902Z ERROR  netlogger.analysis.schema.schema_check.SchemaCheck.check_schema 
-                                  | Schema version 3.1 found - expecting 4.0 - database admin will need to run upgrade tool. 
-2012-02-29T01:35:35.065001Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.upgrade_to_4_0 
+</emphasis>2012-02-29T01:35:35.046317Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.init |
+2012-02-29T01:35:35.046554Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema.start |
+2012-02-29T01:35:35.064762Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema
+                                  | Current version set to: 3.1.
+2012-02-29T01:35:35.064902Z ERROR  netlogger.analysis.schema.schema_check.SchemaCheck.check_schema
+                                  | Schema version 3.1 found - expecting 4.0 - database admin will need to run upgrade tool.
+2012-02-29T01:35:35.065001Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.upgrade_to_4_0
                                   | Upgrading to schema version 4.0.
 
 Verify if the database has been converted to Version 4.x<emphasis role="bold">
 
 /usr/share/pegasus/sql/schema_tool.py -c connString=sqlite:////to/the/workflow/directory/with/workflow.stampede.db</emphasis>
-2012-02-29T01:39:17.218902Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.init | 
-2012-02-29T01:39:17.219141Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema.start | 
-2012-02-29T01:39:17.237492Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema | Current version set to: 4.0. 
-2012-02-29T01:39:17.237624Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema | Schema up to date. 
+2012-02-29T01:39:17.218902Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.init |
+2012-02-29T01:39:17.219141Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema.start |
+2012-02-29T01:39:17.237492Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema | Current version set to: 4.0.
+2012-02-29T01:39:17.237624Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema | Schema up to date.
 
 For upgrading a MySQL database the steps remain the same. The only thing that changes is the connection String to the database
 E.g.<emphasis role="bold">
@@ -249,7 +291,7 @@ E.g.<emphasis role="bold">
         &lt;profile namespace="pegasus" key="style" &gt;condor&lt;/profile&gt;
         &lt;profile namespace="condor" key="universe" &gt;vanilla&lt;/profile&gt;
 
-        
+
         <emphasis role="bold">&lt;!-- to enable kickstart staging from local site--&gt;</emphasis>
         &lt;profile namespace="condor" key="transfer_executable"&gt;true&lt;/profile&gt;
 
@@ -279,138 +321,6 @@ E.g.<emphasis role="bold">
       examples directory ( share/pegasus/examples).</para>
     </section>
 
-    <section>
-      <title>New Clients for directory creation and file cleanup</title>
-
-      <para>Pegasus 4.0 has new clients for directory creation and
-      cleanup.</para>
-
-      <itemizedlist>
-        <listitem>
-          <para>pegasus-create-dir</para>
-        </listitem>
-
-        <listitem>
-          <para>pegasus-cleanup</para>
-        </listitem>
-      </itemizedlist>
-
-      <para>Both these clients are python based wrapper scripts around various
-      protocol specific clients that are used to determine what client to pick
-      up.</para>
-
-      <table>
-        <title>Clients interfaced to by pegasus-create-dir</title>
-
-        <tgroup cols="2">
-          <thead>
-            <row>
-              <entry>Client</entry>
-
-              <entry>Used For</entry>
-            </row>
-          </thead>
-
-          <tbody>
-            <row>
-              <entry>globus-url-copy</entry>
-
-              <entry>to create directories against a gridftp/ftp
-              server</entry>
-            </row>
-
-            <row>
-              <entry>srm-mkdir</entry>
-
-              <entry>to create directories against a SRM server.</entry>
-            </row>
-
-            <row>
-              <entry>mkdir</entry>
-
-              <entry>to create a directory on the local filesystem</entry>
-            </row>
-
-            <row>
-              <entry>pegasus-s3</entry>
-
-              <entry>to create a s3 bucket in the amazon cloud</entry>
-            </row>
-
-            <row>
-              <entry>scp</entry>
-
-              <entry>staging files using scp</entry>
-            </row>
-
-            <row>
-              <entry>imkdir</entry>
-
-              <entry>to create a directory against an IRODS server</entry>
-            </row>
-          </tbody>
-        </tgroup>
-      </table>
-
-      <table>
-        <title>Clients interfaced to by pegasus-cleanup</title>
-
-        <tgroup cols="2">
-          <thead>
-            <row>
-              <entry>Client</entry>
-
-              <entry>Used For</entry>
-            </row>
-          </thead>
-
-          <tbody>
-            <row>
-              <entry>globus-url-copy</entry>
-
-              <entry>to remove a file against a gridftp/ftp server. In this
-              case a zero byte file is created</entry>
-            </row>
-
-            <row>
-              <entry>srm-rm</entry>
-
-              <entry>to remove files against a SRM server.</entry>
-            </row>
-
-            <row>
-              <entry>rm</entry>
-
-              <entry>to remove a file on the local filesystem</entry>
-            </row>
-
-            <row>
-              <entry>pegasus-s3</entry>
-
-              <entry>to remove a file from the s3 bucket.</entry>
-            </row>
-
-            <row>
-              <entry>scp</entry>
-
-              <entry>to remove a file against a scp server. In this case a
-              zero byte file is created.</entry>
-            </row>
-
-            <row>
-              <entry>irm</entry>
-
-              <entry>to remove a file against an IRODS server</entry>
-            </row>
-          </tbody>
-        </tgroup>
-      </table>
-
-      <para>With Pegasus 4.0, the planner will prefer to run the create dir
-      and cleanup jobs locally on the submit host. The only case, where these
-      jobs are scheduled to run remotely is when for the staging site, a file
-      server is specified.</para>
-    </section>
   </section>
 
   <section id="migrating_from_2x">
@@ -447,7 +357,7 @@ E.g.<emphasis role="bold">
 
         <para>Pegasus 3.0 by default now parses DAX documents conforming to
         the DAX Schema 3.2 available <ulink role=""
-        url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.2/dax-3.2.xsd"
+        url="schemas/dax-3.2/dax-3.2.xsd"
         userlevel="">here</ulink> and is explained in detail in the chapter on
         API references.</para>
 
@@ -468,7 +378,7 @@ E.g.<emphasis role="bold">
 
         <para>Pegasus 3.0 by default now parses Site Catalog format conforming
         to the SC schema 3.0 ( XML3 ) available <ulink role=""
-        url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.2/dax-3.2.xsd"
+        url="schemas/dax-3.2/dax-3.2.xsd"
         userlevel="">here</ulink> and is explained in detail in the chapter on
         Catalogs.</para>
 
@@ -478,7 +388,7 @@ E.g.<emphasis role="bold">
 
         <programlisting><emphasis role="bold">$ pegasus-sc-converter -i sample.sites.xml -I XML -o sample.sites.xml3 -O XML3
 </emphasis>
-2010.11.22 12:55:14.169 PST:   Written out the converted file to sample.sites.xml3 
+2010.11.22 12:55:14.169 PST:   Written out the converted file to sample.sites.xml3
 </programlisting>
 
         <para>To use the converted site catalog, in the properties do the
@@ -510,8 +420,8 @@ E.g.<emphasis role="bold">
 
         <programlisting><emphasis role="bold">$ pegasus-tc-converter -i sample.tc.data -I File -o sample.tc.text -O Text
 </emphasis>
-2010.11.22 12:53:16.661 PST:   Successfully converted Transformation Catalog from File to Text 
-2010.11.22 12:53:16.666 PST:   The output transfomation catalog is in file  /lfs1/software/install/pegasus/pegasus-3.0.0cvs/etc/sample.tc.text 
+2010.11.22 12:53:16.661 PST:   Successfully converted Transformation Catalog from File to Text
+2010.11.22 12:53:16.666 PST:   The output transfomation catalog is in file  /lfs1/software/install/pegasus/pegasus-3.0.0cvs/etc/sample.tc.text
 </programlisting>
 
         <para>To use the converted transformation catalog, in the properties
@@ -830,12 +740,6 @@ E.g.<emphasis role="bold">
               <entry>show-job</entry>
 
               <entry>pegasus-plots</entry>
-            </row>
-
-            <row>
-              <entry>cleanup</entry>
-
-              <entry>pegasus-cleanup</entry>
             </row>
 
             <row>

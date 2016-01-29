@@ -13,7 +13,7 @@ install_requires = [
     "Flask-SQLAlchemy==0.16",
     "Flask-Cache==0.13.1",
     "WTForms==1.0.3",
-    "requests==1.2.3",
+    "requests==2.8.0",
     "MarkupSafe==0.18",
     "itsdangerous==0.21",
     "boto==2.5.2",
@@ -53,6 +53,7 @@ def setup_installer_dependencies():
 
     if sys.version_info[1] < 7:
         install_requires.append('ordereddict==1.1')
+        install_requires.append('argparse==1.4.0')
 
     if sys.version_info[1] <= 4:
         install_requires.append('SQLAlchemy==0.7.6')

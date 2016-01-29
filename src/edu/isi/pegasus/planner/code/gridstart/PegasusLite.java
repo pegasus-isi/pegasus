@@ -22,6 +22,7 @@ import edu.isi.pegasus.common.util.StreamGobbler;
 import edu.isi.pegasus.common.util.StreamGobblerCallback;
 import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
+import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 
 import edu.isi.pegasus.planner.catalog.site.classes.Directory;
 
@@ -47,6 +48,7 @@ import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.refiner.DeployWorkerPackage;
+import edu.isi.pegasus.planner.selector.ReplicaSelector;
 import edu.isi.pegasus.planner.transfer.SLS;
 import edu.isi.pegasus.planner.transfer.sls.SLSFactory;
 import java.io.BufferedReader;
@@ -1056,23 +1058,40 @@ public class PegasusLite implements GridStart {
             if (num > 1) {
             	sb.append(" ,\n");
             }
-            NameValue nv = ft.getSourceURL();
+            Collection<String> sourceSites = ft.getSourceSites( );
             sb.append(" { \"type\": \"transfer\",\n");
             sb.append("   \"id\": ").append(num).append(",\n");
             sb.append("   \"src_urls\": [");
-            sb.append(" {");
-            sb.append(" \"site_label\": \"").append(nv.getKey()).append("\",");
-            sb.append(" \"url\": \"").append(nv.getValue()).append("\",");
-            sb.append(" \"checkpoint\": \"").append(ft.isCheckpointFile()).append("\"");
-            sb.append(" }");
-            sb.append(" ],\n");
-            nv = ft.getDestURL();
-            sb.append("   \"dest_urls\": [");
-            sb.append(" {");
+            
+            boolean notFirst = false;
+            for( String sourceSite: sourceSites ){
+                //traverse through all the URL's on that site
+                for( ReplicaCatalogEntry url : ft.getSourceURLs(sourceSite) ){
+                    if( notFirst ){
+                        sb.append(",");
+                    }
+                    String prio =  (String) url.getAttribute( ReplicaSelector.PRIORITY_KEY);
+                    
+                    sb.append("\n     {");
+                    sb.append(" \"site_label\": \"").append(sourceSite).append("\",");
+                    sb.append(" \"url\": \"").append( url.getPFN() ).append("\",");
+                    if( prio != null ){
+                        sb.append(" \"priority\": ").append( prio ).append(",");
+                    }
+                    sb.append(" \"checkpoint\": \"").append(ft.isCheckpointFile()).append("\"");
+                    sb.append(" }");
+                    notFirst = true;
+                }
+            }
+            
+            sb.append("\n   ],\n");
+            NameValue nv = ft.getDestURL();
+            sb.append("   \"dest_urls\": [\n");
+            sb.append("     {");
             sb.append(" \"site_label\": \"").append(nv.getKey()).append("\",");
             sb.append(" \"url\": \"").append(nv.getValue()).append("\"");
-            sb.append(" }");
-            sb.append(" ]");
+            sb.append(" }\n");
+            sb.append("   ]");
             sb.append(" }\n"); // end of this transfer
 
             num++;

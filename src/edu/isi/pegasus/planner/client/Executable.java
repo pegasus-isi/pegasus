@@ -41,6 +41,11 @@ import java.util.MissingResourceException;
  *
  */
 public abstract class Executable {
+    
+    /**
+     * The default properties file to be picked up for the conf option.
+     */
+    public static String DEFAULT_PROPERTIES_FILE = "pegasus.properties";
 
     /**
      * The LogManager object which is used to log all the messages.
@@ -104,6 +109,13 @@ public abstract class Executable {
     			break;
     		}
     	}
+        
+        if( propertyFilePath == null ){
+            //PM-1018 if no --conf provided fall back to pegasus.properties 
+            //in the current working directory from where command is called
+            propertyFilePath = "." + File.separatorChar + Executable.DEFAULT_PROPERTIES_FILE;
+        }
+        
     	return propertyFilePath;
     }
     
