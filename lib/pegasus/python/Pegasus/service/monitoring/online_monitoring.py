@@ -6,20 +6,19 @@ import urlparse
 import os
 import logging
 import ssl
-from multiprocessing import Pipe
 import time
 
 from Pegasus.monitoring import event_output as eo
 
+log = logging.getLogger(__name__)
 
 class OnlineMonitord:
     def __init__(self, wf_label, wf_uuid, dburi, child_conn):
-        print "[online-monitord] PEGASUS_WF_UUID: %s" % wf_uuid
-        print "[online-monitord] PEGASUS_WF_LABEL: %s" % wf_label
-        print "[online-monitord] INFLUXDB_URL: %s" % os.getenv("INFLUXDB_URL")
-        print "[online-monitord] KICKSTART_MON_ENDPOINT_URL: %s" % os.getenv("KICKSTART_MON_ENDPOINT_URL")
-        print "[online-monitord] KICKSTART_MON_ENDPOINT_CREDENTIALS: %s" % os.getenv(
-            "KICKSTART_MON_ENDPOINT_CREDENTIALS")
+        log.info("PEGASUS_WF_UUID: %s" % wf_uuid)
+        log.info("PEGASUS_WF_LABEL: %s" % wf_label)
+        log.info("INFLUXDB_URL: %s" % os.getenv("INFLUXDB_URL"))
+        log.info("KICKSTART_MON_ENDPOINT_URL: %s" % os.getenv("KICKSTART_MON_ENDPOINT_URL"))
+        log.info("KICKSTART_MON_ENDPOINT_CREDENTIALS: %s" % os.getenv("KICKSTART_MON_ENDPOINT_CREDENTIALS"))
 
         self.wf_label = wf_label
         self.wf_uuid = wf_uuid
@@ -27,23 +26,19 @@ class OnlineMonitord:
 
         self.aggregators = dict()
 
-        self.mq_conn = None
-        self.channel = None
         self.queue_name = wf_label + ":" + wf_uuid
 
         self.client = None
 
         self.child_conn = child_conn
 
-    def setup_mq_conn(self):
-        self.mq_conn = self.initialize_mq_connection()
-
-        if self.mq_conn is not None:
-            self.channel = self.prepare_channel(self.mq_conn, self.queue_name, self.wf_uuid)
+    def start(self):
+        self.setup_timeseries_db_conn()
+        self.start_consuming_mq_messages()
 
     def setup_timeseries_db_conn(self):
         if os.getenv("INFLUXDB_URL") is None:
-            print "There is no 'INFLUXDB_URL' set in your environment"
+            log.error("There is no 'INFLUXDB_URL' set in your environment")
             return
 
         url = urlparse.urlparse(os.getenv("INFLUXDB_URL"))
@@ -54,8 +49,7 @@ class OnlineMonitord:
                                      )
 
         # 2. check if influxdb includes a database for storing online monitoring information for the workflow
-        #    and creates it if it doesn't exist
-        # print "Database list: ", client.get_list_database()
+        #    and create it if it doesn't exist
         if self.queue_name not in [db_info["name"] for db_info in self.client.get_list_database()]:
             self.client.create_database(self.queue_name)
 
@@ -63,31 +57,61 @@ class OnlineMonitord:
         self.client.switch_user(url.username, url.password)
 
     def start_consuming_mq_messages(self):
-        if self.channel is None:
+        rabbit_credentials = os.getenv("KICKSTART_MON_ENDPOINT_CREDENTIALS")
+        if rabbit_credentials is None:
+            log.error("There is no 'KICKSTART_MON_ENDPOINT_CREDENTIALS' in your environment")
             return
+
+        rabbit_url = os.getenv("KICKSTART_MON_ENDPOINT_URL")
+        if rabbit_url is None:
+            log.error("There is no 'KICKSTART_MON_ENDPOINT_URL' in your environment")
+            return
+
+        username, password = rabbit_credentials.split(":")
+
+        rabbit_url = urlparse.urlparse(rabbit_url)
+        virtual_host = rabbit_url.path.split("/")[3]
+        exchange_name = rabbit_url.path.split("/")[4]
+
+        parameters = pika.ConnectionParameters(host=rabbit_url.hostname,
+                                               port=rabbit_url.port - 10000,
+                                               ssl=(rabbit_url.scheme == "https"),
+                                               ssl_options={"cert_reqs": ssl.CERT_NONE},
+                                               virtual_host=virtual_host,
+                                               credentials=pika.PlainCredentials(username, password))
+        mq_conn = pika.BlockingConnection(parameters)
+
+        mq_channel = mq_conn.channel()
+
+        # create a queue for the observer workflow uuid
+        mq_channel.queue_declare(queue=self.queue_name, durable=True)
+
+        # bind the queue to the monitoring exchange
+        mq_channel.queue_bind(queue=self.queue_name, exchange=exchange_name, routing_key=self.wf_uuid)
 
         message_count = None
         db_is_processing_events = False
 
+        # TODO Make this more efficient by getting rid of the Pipe and using channel.consume()
         while True:
-            method_frame, header_frame, body = self.channel.basic_get(self.queue_name, True)
+            method_frame, header_frame, body = mq_channel.basic_get(self.queue_name, True)
 
             if method_frame:
-                print method_frame.delivery_tag
-
                 self.on_message(body)
             else:
+                # TODO Remove this junk
                 time.sleep(1)
 
             # print "Monitoring process: checking messages from the main process"
             if self.child_conn.poll():
                 msg = self.child_conn.recv()
-                print "Monitoring process: we got a message the main process: '", msg, "'"
+                print "Monitoring process: we got a message from the main process: '", msg, "'"
                 if msg == "WORKFLOW_ENDED":
                     self.child_conn.send("WAIT")
 
                     # check how many messages we have in a message broker
-                    response = self.channel.queue_declare(self.queue_name, passive=True)
+                    # TODO Do something else here to get count
+                    response = mq_channel.queue_declare(self.queue_name, passive=True)
                     print 'The queue has {0} more messages'.format(response.method.message_count)
                     message_count = int(response.method.message_count)
 
@@ -97,135 +121,46 @@ class OnlineMonitord:
                         db_is_processing_events = db_is_processing_online_monitoring_msgs()
                     else:
                         db_is_processing_events = False
-            # else:
-            #     print "Monitoring process: we didn't get any message the main process "
 
             if message_count == 0 and (not db_is_processing_events):
                 print 'We can stop the online monitoring thread'
                 break
 
-        # for method_frame, properties, body in self.channel.consume(self.queue_name):
-        #     if method_frame is not None:
-        #         print method_frame.delivery_tag
-        #     # print body
-        #     # print
-        #     if message_count is not None:
-        #         message_count -= 1
-        #
-        #     self.channel.basic_ack(delivery_tag=method_frame.delivery_tag)
-        #
-        #     self.on_message(body)
-        #
-        #     print "Monitoring process: checking messages from the main process"
-        #     if self.child_conn.poll():
-        #         msg = self.child_conn.recv()
-        #         print "Monitoring process: we got a message the main process: '", msg, "'"
-        #         if msg == "WORKFLOW_ENDED":
-        #             self.child_conn.send("WAIT")
-        #             response = self.channel.queue_declare(self.queue_name, passive=True)
-        #             print 'The queue has {0} more messages'.format(response.method.message_count)
-        #             message_count = int(response.method.message_count)
-        #     else:
-        #         print "Monitoring process: we didn't get any message the main process "
-        #
-        #     if message_count == 0:
-        #         print 'Message count {0}'.format(message_count)
-        #         break
-
         print 'Monitoring process: sending OK to the main process...'
         self.child_conn.send("OK")
-        self.mq_conn.close()
+        mq_conn.close()
 
     def on_message(self, body):
         """
         An utility function for processing messages regarding online monitoring for a particular workflow.
         :param body: raw body of the message
         """
+        # Each message might have more than one line in it
+        for msg_body in body.split(":delim1:"):
+            msg_body = msg_body.strip()
+            if len(msg_body) == 0:
+                continue
 
-        if len(body.split(" ")) < 2 or len(body) < 4:
-            print "The given measurement line is too short"
-        else:
-            messages = body.split(":delim1:")
-            if len(messages) > 1:
-                messages = messages[0:-1]
+            if len(msg_body.split(" ")) < 2 or len(msg_body) < 4:
+                log.warning("The given measurement line is too short: %s", msg_body)
+                continue
 
-            for msg_body in messages:
-                try:
-                    message = MonitoringMessage.parse(msg_body)
+            try:
+                message = MonitoringMessage.parse(msg_body)
 
-                    if message is not None:
-                        if self.client is not None:
-                            self.client.write_points(InfluxDbMessageFormatter.format_msg(message))
+                if message is not None:
+                    if self.client is not None:
+                        self.client.write_points(InfluxDbMessageFormatter.format_msg(message))
 
-                        self.handle_aggregation(message)
+                    self.handle_aggregation(message)
 
-                except ValueError, val_err:
-                    print "An error occured - (probably when parsing a message): "
-                    print val_err
+            except ValueError, val_err:
+                log.error("An error occured - (probably when parsing a message): ")
+                log.exception(val_err)
 
-                except Exception, err:
-                    print "An error occured while sending monitoring measurement: "
-                    print err
-
-    def initialize_mq_connection(self):
-        """
-        Utility function to create a connection to rabbitmq using information about rabbitmq endpoint and credentials
-         stored in environment variables.
-        :return: a set up connection for further use
-        """
-        rabbit_credentials = os.getenv("KICKSTART_MON_ENDPOINT_CREDENTIALS")
-        if rabbit_credentials is None:
-            print "There is no 'KICKSTART_MON_ENDPOINT_CREDENTIALS' in your environment"
-            return None
-
-        username, password = rabbit_credentials.split(":")
-
-        credentials = pika.PlainCredentials(username, password)
-
-        if os.getenv("KICKSTART_MON_ENDPOINT_URL") is None:
-            print "There is no 'KICKSTART_MON_ENDPOINT_URL' in your environment"
-            return None
-
-        rabbit_url = urlparse.urlparse(os.getenv("KICKSTART_MON_ENDPOINT_URL"))
-
-        parameters = pika.ConnectionParameters(host=rabbit_url.hostname,
-                                               port=rabbit_url.port - 10000,
-                                               ssl=(rabbit_url.scheme == "https"),
-                                               ssl_options={"cert_reqs": ssl.CERT_NONE},
-                                               virtual_host=rabbit_url.path.split("/")[3],
-                                               credentials=credentials)
-
-        return pika.BlockingConnection(parameters)
-
-    def prepare_channel(self, mq_conn, queue_name, wf_uuid):
-        """
-        A utility function that registers a queue in rabbitmq for the monitored workflow, and binds a "well-known"
-        exchange with the queue.
-
-        :param mq_conn:
-        :param queue_name:
-        :param wf_uuid:
-        :return:
-        """
-        channel = mq_conn.channel()
-
-        exchange_name = urlparse.urlparse(os.getenv("KICKSTART_MON_ENDPOINT_URL")).path.split("/")[4]
-        # import pdb; pdb.set_trace()
-
-        # create a queue for the observer workflow uuid
-        channel.queue_declare(
-            queue=queue_name,
-            durable=True            
-        )
-
-        # bind the queue to the monitoring exchange
-        channel.queue_bind(
-            queue=queue_name,
-            exchange=exchange_name,
-            routing_key=wf_uuid
-        )
-
-        return channel
+            except Exception, err:
+                log.error("An error occured while sending monitoring measurement: ")
+                log.exception(err)
 
     def handle_aggregation(self, msg):
         """
@@ -321,20 +256,22 @@ class MonitoringMessage:
                 print "There is no 'event' attribute in the message"
                 return None
 
-            parsed_msg = None
-
             if message["event"] == "workflow_trace":
                 parsed_msg = WorkflowTraceMessage(message)
-
             elif message["event"] == "data_transfer":
                 parsed_msg = DataTransferMessage(message)
+            else:
+                log.error("Unknown event type: %s", message["event"])
+                return None
 
             if parsed_msg.trace_id is None:
+                log.warning("message trace_id is not set: %s" % raw_message)
                 return None
 
             return parsed_msg
         except ValueError as val_error:
-            print "[online-monitord] Wrong message format (", raw_message, ") : ", val_error
+            log.error("Wrong message format: %s" % raw_message)
+            log.exception(val_error)
             return None
 
     def aggregated_trace_id(self):
@@ -554,3 +491,4 @@ class JobAggregator:
         info["exec_name"] = self.exec_name
 
         return info
+

@@ -1216,9 +1216,7 @@ parent_conn, child_conn = Pipe()
 def online_monitoring_proc(wf_label, wf_uuid, event_sink, child_conn):
     utils.configureLogging()
     online_monitord = OnlineMonitord(wf_label, wf_uuid, event_sink, child_conn)
-    online_monitord.setup_mq_conn()
-    online_monitord.setup_timeseries_db_conn()
-    online_monitord.start_consuming_mq_messages()
+    online_monitord.start()
 
 def anomaly_handling_proc(wf_label, wf_uuid, event_sink):
     utils.configureLogging()
