@@ -68,6 +68,10 @@ from Pegasus.monitoring import notifications
 from Pegasus.monitoring import event_output as eo
 from Pegasus.monitoring import socket_interface
 
+# Prevent modules from printing out the same stupid warning over and over and over
+import warnings
+warnings.filterwarnings('default')
+
 utils.configureLogging()
 
 # Add SEEK_CUR to os if Python version < 2.5
