@@ -24,47 +24,55 @@
     <fileset dir="share/pegasus/java" includes="*.jar"/>
   </path>
 
+  <echo>Pegasus Version: ${pegasus.version}</echo>
+  <echo>JAVA TARGET is ${build.target}</echo>
+  <echo>JAVA SOURCE is ${build.source}</echo>
+
+  <tstamp>
+    <format property="ISODATE.full" pattern="yyyy-MM-dd'T'HH:mm:ssZZZZZ"/>
+    <format property="ISODATE.short" pattern="yyyyMMdd"/>
+    <format property="ISODATE.utc" pattern="yyyyMMddHHmmss'Z'" timezone="UTC"/>
+    <format property="ISODATE.rpm" pattern="EEE MMM dd yyyy"/>
+    <format property="ISODATE.deb" pattern="EEE, d MMM yyyy HH:mm:ss Z"/>
+  </tstamp>
+  <echo>Build timestamp: ${ISODATE.utc}</echo>
+
+  <!-- Determine the system architecture and platform -->
+  <exec executable="${basedir}/release-tools/getsystem"
+        outputproperty="dist.arch"
+        failonerror="true"/>
+  <echo>Architecture: ${dist.arch}</echo>
+
+  <!-- OSID is used for Debian package builds -->
+  <exec executable="${basedir}/release-tools/getosid"
+        outputproperty="dist.osid"
+        failonerror="true"/>
+  <echo>OSID: ${dist.osid}</echo>
+
+  <!-- Determine the system library location (lib64 or lib) -->
+  <exec executable="${basedir}/release-tools/determine-lib-dir"
+        outputproperty="dist.lib.subdir"
+        failonerror="true"/>
+  <echo>Library subdir: ${dist.lib.subdir}</echo>
+  <property name="dist.lib" location="${dist.dir}/${dist.lib.subdir}"/>
+
+  <!-- Determine the system Python -->
+  <exec executable="${basedir}/release-tools/get-system-python"
+        outputproperty="dist.python"
+        failonerror="true">
+  </exec>
+  <echo>Python: ${dist.python}</echo>
+
+  <!-- Determine the system Python module location -->
+  <exec executable="${basedir}/release-tools/python-modules-dir"
+        outputproperty="dist.python-lib.subdir"
+        failonerror="true">
+    <arg value="${dist.lib.subdir}"/>
+  </exec>
+  <echo>Python library subdir: ${dist.python-lib.subdir}</echo>
+  <property name="dist.python-lib" location="${dist.dir}/${dist.python-lib.subdir}"/>
+
   <target name="setup">
-    <echo>Pegasus Version: ${pegasus.version}</echo>
-    <echo>JAVA TARGET is ${build.target}</echo>
-    <echo>JAVA SOURCE is ${build.source}</echo>
-
-    <tstamp>
-      <format property="ISODATE.full" pattern="yyyy-MM-dd'T'HH:mm:ssZZZZZ"/>
-      <format property="ISODATE.short" pattern="yyyyMMdd"/>
-      <format property="ISODATE.utc" pattern="yyyyMMddHHmmss'Z'" timezone="UTC"/>
-      <format property="ISODATE.rpm" pattern="EEE MMM dd yyyy"/>
-      <format property="ISODATE.deb" pattern="EEE, d MMM yyyy HH:mm:ss Z"/>
-    </tstamp>
-    <echo>Build timestamp: ${ISODATE.utc}</echo>
-
-    <!-- Determine the system architecture and platform -->
-    <exec executable="${basedir}/release-tools/getsystem"
-          outputproperty="dist.arch"
-          failonerror="true"/>
-    <echo>Architecture: ${dist.arch}</echo>
-    
-    <!-- OSID is used for Debian package builds -->
-    <exec executable="${basedir}/release-tools/getosid"
-          outputproperty="dist.osid"
-          failonerror="true"/>
-    <echo>OSID: ${dist.osid}</echo>
-
-    <!-- Determine the system library location (lib64 or lib) -->
-    <exec executable="${basedir}/release-tools/determine-lib-dir"
-          outputproperty="dist.lib.subdir"
-          failonerror="true"/>
-    <echo>Library subdir: ${dist.lib.subdir}</echo>
-    <property name="dist.lib" location="${dist.dir}/${dist.lib.subdir}"/>
-
-    <!-- Determine the system Python module location -->
-    <exec executable="${basedir}/release-tools/python-modules-dir"
-          outputproperty="dist.python-lib.subdir"
-          failonerror="true">
-      <arg value="${dist.lib.subdir}"/>
-    </exec>
-    <echo>Python library subdir: ${dist.python-lib.subdir}</echo>
-    <property name="dist.python-lib" location="${dist.dir}/${dist.python-lib.subdir}"/>
 
     <mkdir dir="dist"/>
     <mkdir dir="${build.src}"/>
@@ -294,8 +302,8 @@
 
   <target name="compile-python" depends="dist-clean,setup">
     <mkdir dir="${dist.python-lib}"/>
-    <exec executable="/usr/bin/env" dir="lib/pegasus/python" failonerror="true">
-      <arg line="python setup.py clean --all install_lib -d ${dist.python-lib}"/>
+    <exec executable="${dist.python}" dir="lib/pegasus/python" failonerror="true">
+      <arg line="setup.py clean --all install_lib -d ${dist.python-lib}"/>
     </exec>
     <chmod perm="0755" type="file">
       <fileset dir="${dist.python-lib}">
@@ -342,6 +350,9 @@
         <include name="*"/>
       </fileset>
     </chmod>
+    <exec executable="release-tools/update-python-shebang" failonerror="true">
+      <arg value="${dist.bin}"/>
+    </exec>
 
     <!-- etc -->
     <mkdir dir="${dist.etc}"/>
@@ -453,8 +464,8 @@
     <exec executable="${make}" dir="doc/docbook" failonerror="true">
       <arg line="clean"/>
     </exec>
-    <exec executable="/usr/bin/env" dir="lib/pegasus/python" failonerror="true">
-      <arg line="python setup.py clean --all"/>
+    <exec executable="${dist.python}" dir="lib/pegasus/python" failonerror="true">
+      <arg line="setup.py clean --all"/>
     </exec>
     <delete>
       <fileset dir="lib/pegasus/python/Pegasus" includes="**/*.pyc"/>
@@ -513,9 +524,9 @@
   </target>
 
   <target name="test-python" depends="compile-externals" description="Execute python unit tests">
-    <exec executable="/usr/bin/env" dir="lib/pegasus/python" failonerror="true">
-      <env key="PYTHONPATH" value="${dist.lib}/pegasus/externals/python"/>
-      <arg line="python test.py"/>
+      <exec executable="${dist.python}" dir="lib/pegasus/python" failonerror="true">
+      <env key="PYTHONPATH" value="${basedir}/lib/pegasus/externals/python"/>
+      <arg line="test.py"/>
     </exec>
   </target>
 

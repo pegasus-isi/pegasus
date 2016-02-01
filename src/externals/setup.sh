@@ -4,6 +4,11 @@ set -e
 
 declare -a packages
 
+dir=$(cd $(dirname $0) && pwd)
+home=$(cd $dir/../.. && pwd)
+
+PYTHON=$($home/release-tools/get-system-python)
+
 # PM-997: OSX El Capitan and later do not have OpenSSL headers required to
 # compile the pyOpenSSL package. Fortunately, they already have pyOpenSSL
 # installed, so we don't need to install it ourselves.
@@ -18,7 +23,7 @@ if [ -x "/usr/bin/sw_vers" ]; then
     fi
 fi
 
-if python -V 2>&1 | grep -qE 'ython 2\.[3-4]'; then
+if $PYTHON -V 2>&1 | grep -qE 'ython 2\.[3-4]'; then
     # Install alternative dependencies for python 2.4
     packages+=("pysqlite-2.6.0")
     packages+=("SQLAlchemy-0.7.6")
@@ -53,13 +58,10 @@ else
     fi
 fi
 
-dir=$(cd $(dirname $0) && pwd)
-
 cd $dir
 
 if [ -z "$libdir" ]; then
-    prefix=$(cd $dir/../.. && pwd)
-    libdir=${prefix}/lib/pegasus/externals/python
+    libdir=${home}/lib/pegasus/externals/python
 fi
 
 function clean_externals {
@@ -74,7 +76,7 @@ function install_lib {
     echo "Installing $tarname..."
     tar xzf ${tarname}.tar.gz
     pushd $tarname > /dev/null
-    python setup.py install_lib -d $libdir > /dev/null
+    $PYTHON setup.py install_lib -d $libdir > /dev/null
     popd > /dev/null
     rm -rf $tarname
 }
