@@ -1214,12 +1214,14 @@ from Pegasus.service.monitoring.anomaly_handler import AnomalyHandler
 parent_conn, child_conn = Pipe()
 
 def online_monitoring_proc(wf_label, wf_uuid, event_sink, child_conn):
+    utils.configureLogging()
     online_monitord = OnlineMonitord(wf_label, wf_uuid, event_sink, child_conn)
     online_monitord.setup_mq_conn()
     online_monitord.setup_timeseries_db_conn()
     online_monitord.start_consuming_mq_messages()
 
 def anomaly_handling_proc(wf_label, wf_uuid, event_sink):
+    utils.configureLogging()
     anomaly_handler = AnomalyHandler(wf_label, wf_uuid, event_sink)
     anomaly_handler.setup_mq_conn()
     anomaly_handler.start_consuming_mq_messages()
