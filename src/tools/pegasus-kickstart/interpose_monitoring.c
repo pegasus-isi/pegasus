@@ -364,9 +364,6 @@ void* _interpose_monitoring_thread_func(void* arg) {
         timeout.tv_nsec = now.tv_usec * 1000UL;
         pthread_cond_timedwait(&monitor_cv, &monitor_mutex, &timeout);
 
-        if (!monitor_running) {
-            break;
-        }
 
         timestamp = time(NULL);
         read_cpu_status(&cpu_info);
@@ -409,6 +406,11 @@ void* _interpose_monitoring_thread_func(void* arg) {
                      io_info.rchar, io_info.wchar, io_info.syscr, io_info.syscw, counters_str);
         if (send_msg_to_kickstart(msg, monitoring_socket_host, monitoring_socket_port)) {
             printerr("[Thread-%d] There was a problem sending a message to kickstart...\n", mpi_rank);
+        }
+
+	/* Move this down here so that we always send one event before exiting */
+        if (!monitor_running) {
+            break;
         }
     }
 
