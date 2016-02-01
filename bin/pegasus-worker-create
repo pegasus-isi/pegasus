@@ -82,6 +82,15 @@ for PYTHON_DIR in $PEGASUS_PYTHON_DIR/Pegasus $PEGASUS_PYTHON_EXTERNALS_DIR/boto
     cp -a -R ${PYTHON_DIR}/* ${WORKER_DIR}/${RELATIVE_DIR}/     
 done
 
+# Get libinterpose
+for lib in "lib/pegasus" "lib64/pegasus"; do
+    li="$lib/libinterpose.so"
+    if [ -e "$PEGASUS_HOME/$li" ]; then
+        mkdir -p ${WORKER_DIR}/$lib
+        cp $PEGASUS_HOME/$li ${WORKER_DIR}/$li
+    fi
+done
+
 # "access" the files ones to make sure tar does not give us read errors
 # on distributed filesystems
 find ${BASE_DIR} -exec ls -l {} \; >/dev/null 2>&1
