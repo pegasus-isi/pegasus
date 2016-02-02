@@ -525,7 +525,7 @@
 
   <target name="test-python" depends="compile-externals" description="Execute python unit tests">
       <exec executable="${dist.python}" dir="lib/pegasus/python" failonerror="true">
-      <env key="PYTHONPATH" value="${basedir}/lib/pegasus/externals/python"/>
+      <env key="PYTHONPATH" value="${dist.lib}/pegasus/externals/python"/>
       <arg line="test.py"/>
     </exec>
   </target>
