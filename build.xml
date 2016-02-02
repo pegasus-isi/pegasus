@@ -353,7 +353,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <package-binary name="pegasus-worker-${pegasus.version}-${dist.arch}"/>
   </target>
 
-  <target name="dist-common" depends="dist-clean,setup,jar-planner,jar-vdl,compile-ctools,compile-python,compile-externals">
+  <target name="dist-common" depends="dist-clean,setup,jar-planner,jar-vdl,compile-ctools,compile-python,compile-externals,dist-worker">
     <!-- bin -->
     <copy preservelastmodified="true" todir="${dist.bin}">
       <fileset dir="bin">
@@ -423,6 +423,12 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <chmod perm="0644" type="file">
       <fileset dir="${dist.jars}" includes="*.jar"/>
     </chmod>
+    <!-- include a copy of the worker package - this is so that the planner can include it
+         quickly in workflows running on the same system as the planner -->
+    <mkdir dir="${dist.share}/worker-packages"/>
+    <copy preservelastmodified="true" todir="${dist.share}/worker-packages">
+        <fileset dir="dist" includes="pegasus-worker-${pegasus.version}-${dist.arch}.tar.gz" />
+    </copy>
 
     <copy preservelastmodified="true" todir="${dist.dir}">
       <fileset dir="${basedir}">
