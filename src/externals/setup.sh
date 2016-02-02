@@ -8,6 +8,7 @@ dir=$(cd $(dirname $0) && pwd)
 home=$(cd $dir/../.. && pwd)
 
 PYTHON=$($home/release-tools/get-system-python)
+OSID=$($home/release-tools/getosid)
 
 # PM-997: OSX El Capitan and later do not have OpenSSL headers required to
 # compile the pyOpenSSL package. Fortunately, they already have pyOpenSSL
@@ -42,7 +43,12 @@ else
     packages+=("SQLAlchemy-0.8.0")
     packages+=("pam-0.1.4")
     if [ "$PYOPENSSL" == "Yes" ]; then
-        packages+=("pyOpenSSL-0.13")
+        if [ "$OSID" == "rhel5" ]; then
+            # 0.13 does not compile on rhel5
+            packages+=("pyOpenSSL-0.12")
+        else
+            packages+=("pyOpenSSL-0.13")
+        fi
     else
         echo "Skipping pyOpenSSL..."
     fi
