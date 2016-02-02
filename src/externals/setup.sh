@@ -53,7 +53,7 @@ else
         echo "Skipping pyOpenSSL..."
     fi
     if [ -x "$(which pg_config 2>/dev/null)" ]; then
-        packages+=("psycopg2-2.6")
+        packages+=("psycopg2-2.5.5")
     else
         echo "WARNING: pg_config not found: skipping python postgresql library" >&2
     fi
