@@ -83,7 +83,7 @@ function pegasus_lite_internal_wp_in_env()
         detected_pegasus_bin=`dirname $detected_pegasus_bin`
 
         # does the version match?
-        if $detected_pegasus_bin/pegasus-config --version 2>/dev/null | grep -E "^${pegasus_lite_version_major}\.${pegasus_lite_version_minor}\." >/dev/null 2>/dev/null; then
+        if $detected_pegasus_bin/pegasus-config --version 2>/dev/null | grep -E "${pegasus_lite_version_major}\.${pegasus_lite_version_minor}\.${pegasus_lite_version_patch}\$" >/dev/null 2>/dev/null; then
             pegasus_lite_log "Using existing Pegasus binaries in $detected_pegasus_bin"
             return 0
         else
