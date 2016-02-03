@@ -43,6 +43,7 @@ else
     PACKAGES+=MySQLdb
 endif
 PACKAGES+=influxdb
+PACKAGES+=pika
 
 all: $(addprefix $(LIBDIR)/,$(PACKAGES))
 
@@ -82,6 +83,7 @@ $(LIBDIR)/MySQLdb: MySQL-python-1.2.5.tar.gz
 $(LIBDIR)/psycopg2: psycopg2-2.5.5.tar.gz
 $(LIBDIR)/ordereddict.py: ordereddict-1.1.tar.gz
 $(LIBDIR)/influxdb: influxdb-2.12.0.tar.gz
+$(LIBDIR)/pika: pika-0.10.0.tar.gz
 
 clean:
 	rm -rf $(EXTDIR)
