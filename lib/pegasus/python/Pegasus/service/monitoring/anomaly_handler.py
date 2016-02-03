@@ -130,10 +130,7 @@ class AnomalyHandler:
         exchange_name = urlparse.urlparse(os.getenv("PEGASUS_ANOMALIES_ENDPOINT_URL")).path.split("/")[4]
 
         # create a queue for the observer workflow uuid
-        channel.queue_declare(
-            queue=self.queue_name,
-            durable=True
-        )
+        channel.queue_declare(queue=self.queue_name, auto_delete=True, exclusive=True)
 
         # bind the queue to the monitoring exchange
         channel.queue_bind(

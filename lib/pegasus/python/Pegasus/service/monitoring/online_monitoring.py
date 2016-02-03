@@ -1,5 +1,6 @@
 import pika
 from influxdb.influxdb08 import InfluxDBClient
+from influxdb.influxdb08.client import InfluxDBClientError
 import datetime
 import sys
 import urlparse
@@ -7,69 +8,73 @@ import os
 import logging
 import ssl
 import time
+import copy
 
-from Pegasus.monitoring import event_output as eo
+from Pegasus.monitoring import event_output
 
 log = logging.getLogger(__name__)
 
 class OnlineMonitord:
     def __init__(self, wf_label, wf_uuid, dburi, child_conn):
-        log.info("PEGASUS_WF_UUID: %s" % wf_uuid)
-        log.info("PEGASUS_WF_LABEL: %s" % wf_label)
-        log.info("INFLUXDB_URL: %s" % os.getenv("INFLUXDB_URL"))
-        log.info("KICKSTART_MON_ENDPOINT_URL: %s" % os.getenv("KICKSTART_MON_ENDPOINT_URL"))
-        log.info("KICKSTART_MON_ENDPOINT_CREDENTIALS: %s" % os.getenv("KICKSTART_MON_ENDPOINT_CREDENTIALS"))
+        log.info("Pegasus wf_label: %s" % wf_label)
+        log.info("Pegasus wf_uuid: %s" % wf_uuid)
+        log.info("Stampede Database URI: %s" % dburi)
 
         self.wf_label = wf_label
         self.wf_uuid = wf_uuid
-        self.event_sink = eo.create_wf_event_sink(dburi)
+        self.wf_name = wf_label + ":" + wf_uuid
+        self.event_sink = event_output.create_wf_event_sink(dburi)
+        self.child_conn = child_conn
+        self.influxdb_url = self.getconf("INFLUXDB_URL")
+        self.rabbitmq_url = self.getconf("KICKSTART_MON_ENDPOINT_URL")
+        self.rabbitmq_credentials = self.getconf("KICKSTART_MON_ENDPOINT_CREDENTIALS")
 
         self.aggregators = dict()
 
-        self.queue_name = wf_label + ":" + wf_uuid
+        self.influx_client = None
 
-        self.client = None
-
-        self.child_conn = child_conn
+    def getconf(self, name):
+        value = os.getenv(name)
+        if value is None:
+            log.error("'%s' is not set in the environment" % name)
+            return None
+        log.info("%s: %s" % (name, value))
+        return value
 
     def start(self):
         self.setup_timeseries_db_conn()
         self.start_consuming_mq_messages()
 
     def setup_timeseries_db_conn(self):
-        if os.getenv("INFLUXDB_URL") is None:
-            log.error("There is no 'INFLUXDB_URL' set in your environment")
+        if self.influxdb_url is None:
+            log.error("Unable to connect to InfluxDB")
             return
 
-        url = urlparse.urlparse(os.getenv("INFLUXDB_URL"))
+        url = urlparse.urlparse(self.influxdb_url)
 
-        self.client = InfluxDBClient(host=url.hostname, port=url.port,
-                                     username=url.username, password=url.password,
-                                     ssl=(url.scheme == "https")
-                                     )
+        self.influx_client = InfluxDBClient(host=url.hostname, port=url.port,
+                                            username=url.username, password=url.password,
+                                            ssl=(url.scheme == "https"))
 
-        # 2. check if influxdb includes a database for storing online monitoring information for the workflow
-        #    and create it if it doesn't exist
-        if self.queue_name not in [db_info["name"] for db_info in self.client.get_list_database()]:
-            self.client.create_database(self.queue_name)
+        # Create the database for this workflow
+        try:
+            self.influx_client.create_database(self.wf_name)
+        except InfluxDBClientError, e:
+            # Influx returns 409 if the database exists
+            if e.code != 409:
+                raise
 
-        self.client.switch_database(self.queue_name)
-        self.client.switch_user(url.username, url.password)
+        self.influx_client.switch_database(self.wf_name)
+        self.influx_client.switch_user(url.username, url.password)
 
     def start_consuming_mq_messages(self):
-        rabbit_credentials = os.getenv("KICKSTART_MON_ENDPOINT_CREDENTIALS")
-        if rabbit_credentials is None:
-            log.error("There is no 'KICKSTART_MON_ENDPOINT_CREDENTIALS' in your environment")
+        if self.rabbitmq_url is None or self.rabbitmq_credentials is None:
+            log.error("Unable to connect to RabbitMQ")
             return
 
-        rabbit_url = os.getenv("KICKSTART_MON_ENDPOINT_URL")
-        if rabbit_url is None:
-            log.error("There is no 'KICKSTART_MON_ENDPOINT_URL' in your environment")
-            return
+        username, password = self.rabbitmq_credentials.split(":")
 
-        username, password = rabbit_credentials.split(":")
-
-        rabbit_url = urlparse.urlparse(rabbit_url)
+        rabbit_url = urlparse.urlparse(self.rabbitmq_url)
         virtual_host = rabbit_url.path.split("/")[3]
         exchange_name = rabbit_url.path.split("/")[4]
 
@@ -84,35 +89,34 @@ class OnlineMonitord:
         mq_channel = mq_conn.channel()
 
         # create a queue for the observer workflow uuid
-        mq_channel.queue_declare(queue=self.queue_name, durable=True)
+        mq_channel.queue_declare(queue=self.wf_name, auto_delete=True, exclusive=True)
 
         # bind the queue to the monitoring exchange
-        mq_channel.queue_bind(queue=self.queue_name, exchange=exchange_name, routing_key=self.wf_uuid)
+        mq_channel.queue_bind(queue=self.wf_name, exchange=exchange_name, routing_key=self.wf_uuid)
 
         message_count = None
         db_is_processing_events = False
 
         # TODO Make this more efficient by getting rid of the Pipe and using channel.consume()
         while True:
-            method_frame, header_frame, body = mq_channel.basic_get(self.queue_name, True)
+            method_frame, header_frame, body = mq_channel.basic_get(self.wf_name, True)
 
             if method_frame:
                 self.on_message(body)
             else:
                 # TODO Remove this junk
-                time.sleep(1)
+                time.sleep(0.1)
 
-            # print "Monitoring process: checking messages from the main process"
+            # TODO We should have monitord send messages via RabbitMQ
             if self.child_conn.poll():
                 msg = self.child_conn.recv()
-                print "Monitoring process: we got a message from the main process: '", msg, "'"
+                log.info("Got a message from monitord: '%s'" % msg)
                 if msg == "WORKFLOW_ENDED":
                     self.child_conn.send("WAIT")
 
                     # check how many messages we have in a message broker
-                    # TODO Do something else here to get count
-                    response = mq_channel.queue_declare(self.queue_name, passive=True)
-                    print 'The queue has {0} more messages'.format(response.method.message_count)
+                    response = mq_channel.queue_declare(self.wf_name, passive=True)
+                    log.info('The queue has {0} more messages'.format(response.method.message_count))
                     message_count = int(response.method.message_count)
 
                     # check if there is any event to be processed by database
@@ -123,10 +127,10 @@ class OnlineMonitord:
                         db_is_processing_events = False
 
             if message_count == 0 and (not db_is_processing_events):
-                print 'We can stop the online monitoring thread'
+                log.info("No more messages to process")
                 break
 
-        print 'Monitoring process: sending OK to the main process...'
+        log.info("Sending OK to monitord")
         self.child_conn.send("OK")
         mq_conn.close()
 
@@ -145,21 +149,25 @@ class OnlineMonitord:
                 log.warning("The given measurement line is too short: %s", msg_body)
                 continue
 
+            message = MonitoringMessage.parse(msg_body)
+            if message is not None:
+                self.write_points(message.trace_id, message.metrics(), message.measurements())
+                # FIXME Do the aggregation
+                #self.handle_aggregation(message)
+
+    def write_points(self, trace_id, columns, point):
+        if self.influx_client is not None:
             try:
-                message = MonitoringMessage.parse(msg_body)
-
-                if message is not None:
-                    if self.client is not None:
-                        self.client.write_points(InfluxDbMessageFormatter.format_msg(message))
-
-                    self.handle_aggregation(message)
-
-            except ValueError, val_err:
-                log.error("An error occured - (probably when parsing a message): ")
-                log.exception(val_err)
-
+                data = [
+                    {
+                        "name": trace_id,
+                        "columns": columns,
+                        "points": [point]
+                    }
+                ]
+                self.influx_client.write_points(data)
             except Exception, err:
-                log.error("An error occured while sending monitoring measurement: ")
+                log.error("An error occured while sending monitoring measurement to InfluxDB: ")
                 log.exception(err)
 
     def handle_aggregation(self, msg):
@@ -178,29 +186,14 @@ class OnlineMonitord:
             # 1. check if aggregated measurements are ascending
             aggregator.align_measurements()
             # 2. send the aggregated measurement to a timeseries db and stampede db
-            self.send_aggregated_measurement(aggregator)
+            self.write_points(aggregator.trace_id(), aggregator.metrics, aggregator.aggregated_measurements)
+            self.emit_measurement_event(aggregator)
             # 3. save this measurement for future comparisons
             aggregator.store_measurements()
             # 4. reset aggregated measurements
             aggregator.reset_measurements()
 
         aggregator.add(msg)
-
-    def send_aggregated_measurement(self, aggregator):
-        if self.client is not None:
-            try:
-                self.client.write_points(
-                    InfluxDbMessageFormatter.format(aggregator.trace_id(),
-                                                    aggregator.metrics,
-                                                    aggregator.aggregated_measurements
-                                                    )
-                )
-            except Exception, err:
-                print "An error occured while sending aggregated monitoring measurement: "
-                print err
-
-        if self.event_sink is not None:
-            self.emit_measurement_event(aggregator)
 
     def emit_measurement_event(self, aggregator):
         """Sending an event to an event sink (stampede db most probably) about aggregated measurement."""
@@ -221,14 +214,14 @@ class OnlineMonitord:
         event = "job.monitoring"
 
         try:
-            print "Sending record to DB %s,%s" % (event, kwargs)
+            log.info("Sending record to DB: %s --> %s" % (event, kwargs))
             self.event_sink.send(event, kwargs)
-        except:
-            print "error sending event: %s --> %s" % (event, kwargs)
+        except Exception, e:
+            log.error("Error sending event: %s --> %s" % (event, kwargs))
+            log.exception(e)
 
     def close(self):
         self.event_sink.close()
-
 
 class MonitoringMessage:
     """ Base class for all messages related to online monitoring. """
@@ -238,7 +231,6 @@ class MonitoringMessage:
         self.msg = msg
         self.condor_job_id = condor_job_id
         self.trace_id = None
-
         self.exec_name = 'N/A'
         if "executable" in msg:
             self.exec_name = msg["executable"]
@@ -252,8 +244,10 @@ class MonitoringMessage:
         try:
             message = dict(item.split("=") for item in raw_message.strip().split())
 
+            log.info("Got message: %s", message)
+
             if "event" not in message:
-                print "There is no 'event' attribute in the message"
+                log.error("No 'event' attribute in message: %s" % raw_message)
                 return None
 
             if message["event"] == "workflow_trace":
@@ -261,21 +255,22 @@ class MonitoringMessage:
             elif message["event"] == "data_transfer":
                 parsed_msg = DataTransferMessage(message)
             else:
-                log.error("Unknown event type: %s", message["event"])
+                log.error("Unknown event type '%s' in message: %s", (message["event"], raw_message))
                 return None
 
             if parsed_msg.trace_id is None:
-                log.warning("message trace_id is not set: %s" % raw_message)
+                log.warning("trace_id not set for message: %s" % raw_message)
                 return None
 
             return parsed_msg
         except ValueError as val_error:
-            log.error("Wrong message format: %s" % raw_message)
+            log.error("Wrong format for message: %s" % raw_message)
             log.exception(val_error)
             return None
 
-    def aggregated_trace_id(self):
-        return "%s:%s" % (self.dag_job_id, self.condor_job_id)
+    # XXX Not used?
+    #def aggregated_trace_id(self):
+    #    return "%s:%s" % (self.dag_job_id, self.condor_job_id)
 
     def metrics(self):
         """ Selects fields from a message which indicates performance metrics and a timestamp."""
@@ -315,7 +310,6 @@ class MonitoringMessage:
 
         return info
 
-
 class WorkflowTraceMessage(MonitoringMessage):
     """ Describes a monitoring message sent from kickstart (libinterpose) about application performance. """
     def __init__(self, message):
@@ -335,7 +329,7 @@ class WorkflowTraceMessage(MonitoringMessage):
 
         else:
             MonitoringMessage.__init__(self)
-            print "We couldn't create trace_id"
+            log.error("Unable to create trace_id")
 
     def message_has_required_params(self, message):
         required_params = ("ts", "hostname", "executable", "dag_job_id", "condor_job_id", "mpi_rank", "kickstart_pid")
@@ -372,23 +366,6 @@ class DataTransferMessage(MonitoringMessage):
         required_params = ("ts", "hostname", "dag_job_id", "condor_job_id")
         return all(k in message for k in required_params)
 
-
-class InfluxDbMessageFormatter:
-    @staticmethod
-    def format(trace_id, columns, point):
-        return [
-            {
-                "name": trace_id,
-                "columns": columns,
-                "points": [point]
-            }
-        ]
-
-    @staticmethod
-    def format_msg(trace_msg):
-        return InfluxDbMessageFormatter.format(trace_msg.trace_id, trace_msg.metrics(), trace_msg.measurements())
-
-import copy
 
 class JobAggregator:
 
