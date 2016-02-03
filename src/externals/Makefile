@@ -42,6 +42,7 @@ ifeq ($(shell which mysql_config),)
 else
     PACKAGES+=MySQLdb
 endif
+PACKAGES+=influxdb
 
 all: $(addprefix $(LIBDIR)/,$(PACKAGES))
 
@@ -80,6 +81,7 @@ $(LIBDIR)/plex: plex-2.0.0dev.tar.gz
 $(LIBDIR)/MySQLdb: MySQL-python-1.2.5.tar.gz
 $(LIBDIR)/psycopg2: psycopg2-2.5.5.tar.gz
 $(LIBDIR)/ordereddict.py: ordereddict-1.1.tar.gz
+$(LIBDIR)/influxdb: influxdb-2.12.0.tar.gz
 
 clean:
 	rm -rf $(EXTDIR)
