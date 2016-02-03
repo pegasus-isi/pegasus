@@ -97,17 +97,14 @@ class OnlineMonitord:
         message_count = None
         db_is_processing_events = False
 
-        # TODO Make this more efficient by getting rid of the Pipe and using channel.consume()
-        while True:
-            method_frame, header_frame, body = mq_channel.basic_get(self.wf_name, True)
+        for result in mq_channel.consume(self.wf_name, no_ack=True, inactivity_timeout=60.0):
 
-            if method_frame:
+            # If we got a message, then process it
+            if result:
+                method_frame, header_frame, body = result
                 self.on_message(body)
-            else:
-                # TODO Remove this junk
-                time.sleep(0.1)
 
-            # TODO We should have monitord send messages via RabbitMQ
+            # Check to see if monitord sent us a message
             if self.child_conn.poll():
                 msg = self.child_conn.recv()
                 log.info("Got a message from monitord: '%s'" % msg)
@@ -126,6 +123,7 @@ class OnlineMonitord:
                     else:
                         db_is_processing_events = False
 
+            # TODO Check the logic here to make sure this actually exits
             if message_count == 0 and (not db_is_processing_events):
                 log.info("No more messages to process")
                 break
