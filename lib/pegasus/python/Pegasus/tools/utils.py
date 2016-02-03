@@ -84,6 +84,8 @@ class ConsoleHandler(logging.StreamHandler):
 
 def configureLogging(level=logging.INFO):
     root = logging.getLogger()
+    for h in root.handlers:
+        root.removeHandler(h)
     root.setLevel(level)
     cl = ConsoleHandler()
     formatter = logging.Formatter("%(asctime)s:%(levelname)s:%(name)s(%(lineno)d): %(message)s")
