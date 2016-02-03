@@ -753,11 +753,22 @@ REDIR:
         alarm(appinfo.termTimeout);
     }
 
-    /* Set PEGASUS_WF_LABEL in environment */
+    /* Set job attributes in environment for monitoring */
     if (appinfo.wf_label != NULL) {
-        int rc = setenv("PEGASUS_WF_LABEL", appinfo.wf_label, 1);
-        if (rc) {
+        if (setenv("PEGASUS_WF_LABEL", appinfo.wf_label, 1)) {
             fprintf(stderr, "ERROR: Couldn't set PEGASUS_WF_LABEL environment variable\n");
+            return 127;
+        }
+    }
+    if (appinfo.xformation != NULL) {
+        if (setenv("PEGASUS_XFORMATION", appinfo.xformation, 1)) {
+            fprintf(stderr, "ERROR: Couldn't set PEGASUS_XFORMATION environment variable\n");
+            return 127;
+        }
+    }
+    if (appinfo.derivation != NULL) {
+        if (setenv("PEGASUS_TASK_ID", appinfo.derivation, 1)) {
+            fprintf(stderr, "ERROR: Couldn't set PEGASUS_TASK_ID environment variable\n");
             return 127;
         }
     }

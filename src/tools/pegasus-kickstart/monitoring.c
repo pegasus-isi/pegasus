@@ -26,6 +26,8 @@ typedef struct {
     char *wf_uuid;
     char *dag_job_id;
     char *condor_job_id;
+    char *xformation;
+    char *task_id;
     int socket;
 } MonitoringThreadContext;
 
@@ -81,6 +83,20 @@ static int initialize_monitoring_context(MonitoringThreadContext *ctx) {
     }
     ctx->condor_job_id = strdup(envptr);
 
+    envptr = getenv("PEGASUS_XFORMATION");
+    if (envptr == NULL) {
+        ctx->xformation = NULL;
+    } else {
+        ctx->xformation = strdup(envptr);
+    }
+
+    envptr = getenv("PEGASUS_TASK_ID");
+    if (envptr == NULL) {
+        ctx->task_id = NULL;
+    } else {
+        ctx->task_id = strdup(envptr);
+    }
+
     return 0;
 }
 
@@ -92,6 +108,8 @@ static void release_monitoring_context(MonitoringThreadContext* ctx) {
     if (ctx->wf_label != NULL) free(ctx->wf_label);
     if (ctx->dag_job_id != NULL) free(ctx->dag_job_id);
     if (ctx->condor_job_id != NULL) free(ctx->condor_job_id);
+    if (ctx->xformation != NULL) free(ctx->xformation);
+    if (ctx->task_id != NULL) free(ctx->task_id);
     free(ctx);
 }
 
@@ -209,6 +227,8 @@ void* monitoring_thread_func(void* arg) {
     printerr("[mon-thread] wf label: %s\n", ctx->wf_label);
     printerr("[mon-thread] dag job id: %s\n", ctx->dag_job_id);
     printerr("[mon-thread] condor job id: %s\n", ctx->condor_job_id);
+    printerr("[mon-thread] xformation: %s\n", ctx->xformation);
+    printerr("[mon-thread] task id: %s\n", ctx->task_id);
 
     curl_global_init(CURL_GLOBAL_ALL);
 
@@ -277,8 +297,8 @@ void* monitoring_thread_func(void* arg) {
 
         // Add all the extra information
         char enriched_line[BUFSIZ];
-        snprintf(enriched_line, BUFSIZ, "%s wf_uuid=%s wf_label=%s dag_job_id=%s condor_job_id=%s",
-            line, ctx->wf_uuid, ctx->wf_label, ctx->dag_job_id, ctx->condor_job_id);
+        snprintf(enriched_line, BUFSIZ, "%s wf_uuid=%s wf_label=%s dag_job_id=%s condor_job_id=%s xformation=%s task_id=%s",
+            line, ctx->wf_uuid, ctx->wf_label, ctx->dag_job_id, ctx->condor_job_id, ctx->xformation, ctx->task_id);
 
         // Aggregate messages
         int n = snprintf(aggr_msg_buffer + aggr_msg_buffer_offset, BUFSIZ, "%s:delim1:", enriched_line);
