@@ -79,11 +79,11 @@ find_application( char* argv[] )
 
     if ( flag ) {
       /* in kickstart mode, skip options of kickstart */
-      if ( s[0] == '-' && strchr( "ioelnNRBLTIwWSs", s[1] ) != NULL ) {
+      if ( s[0] == '-' && strchr( "ioelnNRBLTIwWSsKk", s[1] ) != NULL ) {
 	/* option with argument */
 	if ( s[2] == 0 ) ++i;
 	continue;
-      } else if ( s[0] == '-' && strchr( "FHVX", s[1] ) != NULL ) {
+      } else if ( s[0] == '-' && strchr( "HVXFfqctzZ", s[1] ) != NULL ) {
 	/* option without argument */
 	continue;
       } else {
