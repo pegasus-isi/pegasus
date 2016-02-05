@@ -644,7 +644,7 @@ pegasus.data.configuration    HTCondorio</programlisting>
       help configuring Pegasus and HTCondor to work with one of these systems,
       please contact pegasus-support@isi.edu. For the sake of brevity, the
       text below will say "PBS", but you should read that as "PBS or PBS-like
-      system such as SGE, LSF, SLURM and others".</para>
+      system such as SGE, Moab, LSF, SLURM and others".</para>
     </tip>
 
     <para>Glite needs to be able to talk directly with the batch system
@@ -689,8 +689,8 @@ pegasus.data.configuration    HTCondorio</programlisting>
       <listitem>
         <para><emphasis role="bold">condor</emphasis> profile <emphasis
         role="bold">grid_resource</emphasis> with value set to <emphasis
-        role="bold">pbs</emphasis> or <emphasis role="bold">sge</emphasis>
-        or <emphasis role="bold">moab</emphasis>.</para>
+        role="bold">batch pbs</emphasis> or <emphasis role="bold">batch sge</emphasis>
+        or <emphasis role="bold">batch moab</emphasis>.</para>
       </listitem>
     </orderedlist>
 
@@ -723,7 +723,7 @@ pegasus.data.configuration    HTCondorio</programlisting>
 
         &lt;profile namespace="pegasus" key="style" &gt;glite&lt;/profile&gt;
 
-        &lt;profile namespace="condor" key="grid_resource"&gt;pbs&lt;/profile&gt;
+        &lt;profile namespace="condor" key="grid_resource"&gt;batch pbs&lt;/profile&gt;
         &lt;profile namespace="pegasus" key="queue"&gt;batch&lt;/profile&gt;
         &lt;profile namespace="pegasus" key="runtime"&gt;30000&lt;/profile&gt;
     &lt;/site&gt;
@@ -743,7 +743,7 @@ pegasus.data.configuration    HTCondorio</programlisting>
     is passed to glite and used by the
     <literal>*_local_submit_attributes.sh</literal> scripts installed by
     <literal>pegasus-configure-glite</literal> to generate the
-    correct PBS submit script. An example
+    correct batch submit script. An example
     <literal>+remote_cerequirements</literal> classad expression in the
     HTCondor submit file looks like this:</para>
 
@@ -755,7 +755,7 @@ pegasus.data.configuration    HTCondorio</programlisting>
     through to the remote job.</para>
 
     <para>The following sections document the mapping of Pegasus profiles to
-    PBS job requirements as implemented by Pegasus, HTCondor, and
+    batch system job requirements as implemented by Pegasus, HTCondor, and
     glite.</para>
 
     <section id="glite_mappings">
@@ -790,11 +790,11 @@ pegasus.data.configuration    HTCondorio</programlisting>
               cores and ppn are specified, then nodes is computed. If cores
               and nodes is specified, then ppn is computed. If both nodes and
               ppn are specified, then cores is ignored. The resulting values
-              for nodes and ppn are used to set the job requirements. If
-              neither cores nor ppn is specified, then no requirements are set
-              in the PBS submit script. For SGE, how the processors
-              are distributed over nodes depends on how the parallel
-              environment has been configured in SGE, which is set to 'ompi'
+              for nodes and ppn are used to set the job requirements for PBS
+              and Moab. If neither nodes nor ppn is specified, then no
+              requirements are set in the PBS or Moab submit script. For SGE,
+              how the processes are distributed over nodes depends on how the
+              parallel environment has been configured; it is set to 'ompi'
               by default.</entry>
             </row>
 
