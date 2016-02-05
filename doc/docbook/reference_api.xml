@@ -1773,8 +1773,8 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
     <section>
       <title>Resource Definition</title>
 
-      <section>
-        <title id="resource-root-workflow">Root Workflow</title>
+      <section id="resource-root-workflow">
+        <title>Root Workflow</title>
 
         <programlisting>{
     "wf_id"             : &lt;int:wf_id&gt;,
@@ -1797,8 +1797,8 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
 }</programlisting>
       </section>
 
-      <section>
-        <title id="resource-workflow">Workflow</title>
+      <section id="resource-workflow">
+        <title>Workflow</title>
 
         <programlisting>{
     "wf_id"             : &lt;int:wf_id&gt;,
@@ -1827,8 +1827,8 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
 }</programlisting>
       </section>
 
-      <section>
-        <title id="resource-workflow-metadata">Workflow Metadata</title>
+      <section id="resource-workflow-metadata">
+        <title>Workflow Metadata</title>
 
         <para><programlisting>{
     "key"    : &lt;string:key&gt;,
@@ -1839,8 +1839,8 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
 }</programlisting></para>
       </section>
 
-      <section>
-        <title id="resource-workflow-files">Workflow Files</title>
+      <section id="resource-workflow-files">
+        <title>Workflow Files</title>
 
         <para><programlisting>{
     "wf_id"  : &lt;int:wf_id&gt;,
@@ -1866,8 +1866,8 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
 }</programlisting></para>
       </section>
 
-      <section>
-        <title id="resource-workflow-state">Workflow State</title>
+      <section id="resource-workflow-state">
+        <title>Workflow State</title>
 
         <programlisting>{
     "wf_id"         : int:wf_id,
@@ -1881,8 +1881,8 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
 }</programlisting>
       </section>
 
-      <section>
-        <title id="resource-job">Job</title>
+      <section id="resource-job">
+        <title>Job</title>
 
         <programlisting>{
     "job_id"      : &lt;int: job_id&gt;,
@@ -1903,8 +1903,8 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
 }</programlisting>
       </section>
 
-      <section>
-        <title id="resource-host">Host</title>
+      <section id="resource-host">
+        <title>Host</title>
 
         <programlisting>{
     "host_id"      : &lt;int:host_id&gt;,
@@ -1919,8 +1919,8 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
 }</programlisting>
       </section>
 
-      <section>
-        <title id="resource-job-state">Job State</title>
+      <section id="resource-job-state">
+        <title>Job State</title>
 
         <programlisting>{
     "job_instance_id"     : &lt;int:job_instance_id&gt;,
@@ -1933,8 +1933,8 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
 }</programlisting>
       </section>
 
-      <section>
-        <title id="resource-task">Task</title>
+      <section id="resource-task">
+        <title>Task</title>
 
         <programlisting>{
     "task_id"        : &lt;int:task_id&gt;,
@@ -1950,8 +1950,8 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
 }</programlisting>
       </section>
 
-      <section>
-        <title id="resource-task-metadata">Task Metadata</title>
+      <section id="resource-task-metadata">
+        <title>Task Metadata</title>
 
         <para><programlisting>{
     "key"    : &lt;string:key&gt;,
@@ -1962,8 +1962,8 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
 }</programlisting></para>
       </section>
 
-      <section>
-        <title id="resource-job-instance">Job Instance</title>
+      <section id="resource-job-instance">
+        <title>Job Instance</title>
 
         <programlisting>{
     "job_instance_id"   : &lt;int:job_instance_id&gt;,
@@ -1993,8 +1993,8 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
 }</programlisting>
       </section>
 
-      <section>
-        <title id="resource-invocation">Invocation</title>
+      <section id="resource-invocation">
+        <title>Invocation</title>
 
         <programlisting>{
     "invocation_id"   : &lt;int:invocation_id&gt;,
@@ -2045,8 +2045,8 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
       </section>
     </section>
 
-    <section>
-      <title id="section-endpoints">Endpoints</title>
+    <section id="section-endpoints">
+      <title>Endpoints</title>
 
       <para>All URIs are prefixed by<emphasis
       role="bold">/api/v1/user/&lt;string:user&gt;</emphasis>.</para>
@@ -3613,8 +3613,8 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
       </section>
     </section>
 
-    <section>
-      <title id="querying">Querying</title>
+    <section id="querying">
+      <title>Querying</title>
 
       <para>Querying is supported through query string argument <emphasis
       role="bold">`query`</emphasis>.</para>
@@ -3829,8 +3829,8 @@ Where QUERY can be( r.wf_id &gt;= 5 AND r.planner_version LIKE '4.5%' ) OR ( r.w
           </table></para>
       </section>
 
-      <section>
-        <title id="recent">Recent</title>
+      <section id="recent">
+        <title>Recent</title>
 
         <para>Workflow State, Job State, and Job Instance resources have
         historical records.</para>
@@ -3842,8 +3842,8 @@ Where QUERY can be( r.wf_id &gt;= 5 AND r.planner_version LIKE '4.5%' ) OR ( r.w
       </section>
     </section>
 
-    <section>
-      <title id="ordering">Ordering</title>
+    <section id="ordering">
+      <title>Ordering</title>
 
       <para>Ordering is supported through query string argument <emphasis
       role="bold">`order`</emphasis>.</para>

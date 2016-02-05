@@ -690,7 +690,7 @@ siteX    pegasus::seqexec     /usr/pegasus/bin/pegasus-cluster INSTALLED       I
             </table>
 
             <para>Refer to the pegasus-mpi-cluster man page in the <link
-            linkend="pegasus-cli-chapter">command line tools chapter</link> to
+            linkend="cli">command line tools chapter</link> to
             know more about PMC and how it schedules individual tasks.</para>
 
             <para>It is recommended to have a pegasus::mpiexec entry in the
