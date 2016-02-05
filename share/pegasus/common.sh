@@ -94,20 +94,25 @@ else
     test "X${JAVA_HEAPMAX}" = "X" || addon="$addon -Xmx${JAVA_HEAPMAX}m"
 fi
 
-while [ true ]; do
+declare -a args
+while [ $# -gt 0 ]; do
     case "$1" in
-	-[XD][_a-zA-Z]*)
-	    addon="$addon $1"
-	    shift
-	    ;;
-	-D)
-	    shift
-	    addon="$addon -D$1"
-	    shift
-	    ;;
-	*)
-	    break
-	    ;;
+    -[XD][_a-zA-Z]*)
+        addon="$addon $1"
+        ;;
+    -D)
+        shift
+        if [[ "$1" =~ "=" ]]; then
+            addon="$addon -D$1"
+        else
+            args+=(-D "$1")
+        fi
+        ;;
+    *)
+        args+=("$1")
+        ;;
      esac
+     shift
 done
+set -- "${args[@]}"
 
