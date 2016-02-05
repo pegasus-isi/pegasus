@@ -63,5 +63,33 @@ for f in $PEGASUS_GLITE_DIR/*.sh; do
     cp $f $GLITE_BIN_DIR/
 done
 
-#TODO Edit GLITE_CONFIG to add moab support
+# Edit GLITE_CONFIG to add moab support
+echo "Adding moab support to batch_gahp.config"
+GLITE_CONFIG_BAK=$GLITE_CONFIG.$(date +%F)
+cp $GLITE_CONFIG $GLITE_CONFIG_BAK
+awk '
+BEGIN {
+    FS="=";
+    has_binpath=0;
+}
+{
+    if ($1 == "supported_lrms") {
+        if (index($2,"moab")>0) {
+            print($0);
+        } else {
+            print($0",moab");
+        }
+    } else {
+        print($0);
+    }
+    if ($1 == "moab_binpath") {
+        has_binpath=1;
+    }
+}
+END {
+    if (!has_binpath) {
+        print("moab_binpath=`which msub 2>/dev/null|sed '\''s|/[^/]*$||'\''`")
+    }
+}
+' $GLITE_CONFIG_BAK > $GLITE_CONFIG
 
