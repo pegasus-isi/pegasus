@@ -1885,7 +1885,7 @@ Scope       :</emphasis> TC, SC, DAX, Properties
                   is also used for accounting purposes in the database while
                   generating statistics. It corresponds to the
                   multiplier_factor in the job_instance table described <link
-                  linkend="stampede-schema">here</link>.</entry>
+                  linkend="stampede_schema_overview">here</link>.</entry>
                 </row>
 
                 <row>

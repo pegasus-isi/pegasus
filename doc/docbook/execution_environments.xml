@@ -767,7 +767,7 @@ pegasus.data.configuration    HTCondorio</programlisting>
       <table>
         <title>Mapping of Pegasus Profiles to Job Requirements</title>
 
-        <tgroup cols="4">
+        <tgroup cols="6">
           <thead>
             <row>
               <entry align="center">Profile Key</entry>

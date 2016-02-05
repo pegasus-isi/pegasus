@@ -34,7 +34,7 @@ ifndef ${prefix}
 prefix = $(PEGASUS_HOME)/share/pegasus/doc
 endif
 
-TARGETS = html wordpress pegasus-user-guide.pdf
+TARGETS = wordpress pegasus-user-guide.pdf
 
 all: $(TARGETS)
 
@@ -46,12 +46,6 @@ reference_command_lines.xml: $(XMLMANPAGES)
 
 title.xml: ../../build.properties
 	echo "<title>Pegasus $(VERSION) User Guide</title>" > title.xml
-
-html: $(XML) pegasus-php-style.xsl
-	mkdir -p ./html/images
-	xsltproc --noout --stringparam base.dir ./html/ --xinclude pegasus-php-style.xsl pegasus-book.xml
-	cp images/*.png images/*.jpg ./html/images/
-	touch html
 
 wordpress: $(XML) pegasus-wordpress-style.xsl pegasus-user-guide.pdf
 	mkdir -p ./wordpress/images
@@ -71,10 +65,9 @@ pegasus-user-guide.pdf: pegasus-user-guide.fo
 
 install: $(TARGETS)
 	mkdir -p ${prefix}
-	cp -R html ${prefix}/
 	cp -R wordpress ${prefix}/
 	cp pegasus-user-guide.pdf ${prefix}/
 
 clean:
-	rm -rf html wordpress pegasus-user-guide.pdf pegasus-user-guide.fo ./*~ title.xml reference_command_lines.xml manpage.*.xml
+	rm -rf wordpress pegasus-user-guide.pdf pegasus-user-guide.fo ./*~ title.xml reference_command_lines.xml manpage.*.xml
 
