@@ -103,8 +103,9 @@ Install homebrew and the following homebrew packages:
 
 Install the following packages:
 
-* git
+* git-core
 * ant
+* ant-nodeps
 * make
 * gcc
 * gcc-c++
@@ -112,10 +113,11 @@ Install the following packages:
 * python
 * python-setuptools
 * python-devel
-* openssl-devel
+* libopenssl-devel
+* asciidoc (optional, required for documentation)
+* libmysqlclient-devel (optional, required for MySQL support)
 
-Other packages may be required to build documentation, run unit tests, and
-build MPI tools.
+Other packages may be required to run unit tests, and build MPI tools.
 
 ### Compiling
 
