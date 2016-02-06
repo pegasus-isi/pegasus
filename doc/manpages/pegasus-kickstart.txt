@@ -287,7 +287,8 @@ kickstart is compiled for Linux.
 *-Z*::
 This flag causes kickstart to use LD_PRELOAD to intercept library calls and
 report a list of files accessed and I/O performed. This flag only exists when
-kickstart is compiled for Linux.
+kickstart is compiled for Linux. There are several environment variables
+documented below that control what file accesses are traced.
 
 *-q*::
 This flag causes kickstart to omit the <data> part of the <statcall> records
@@ -607,6 +608,24 @@ the value of this variable is prepended to the job arguments. It can
 be used to wrap the task with a wrapper or launcher. For example, you
 can set it to "mpiexec -n 128" to run an MPI job, or you can set it
 to "tau_exec" to profile the job with TAU.
+
+*KICKSTART_TRACE_ALL*
+If this variable is set, then the *-Z* option will trace everything,
+including stdio and directories. By default, stdio and directories are
+ignored.
+
+*KICKSTART_TRACE_CWD*
+If this variable is set, then the *-Z* option will only trace files in the
+current working directory of the process.
+
+*KICKSTART_TRACE_MATCH*::
+If this variable is set, then the *-Z* option will only trace files that
+match one of the patterns specified. The value of this variable should
+be a list of *fnmatch()* patterns separated by ':'.
+
+*KICKSTART_TRACE_IGNORE*
+This is the inverse of *KICKSTART_TRACE_MATCH*. Any files matching one of the
+patterns will be ignored, and all other files will be traced.
 
 
 History
