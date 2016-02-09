@@ -30,6 +30,9 @@
 static char* identifier; 
 struct utsname uname_cache;
 
+#define KS_FLAGS_ARG "ioelnNRBLTIwWSsKk"
+#define KS_FLAGS_NOARG "HVXFfqctzZ"
+
 static
 char*
 create_identifier( void )
@@ -79,11 +82,11 @@ find_application( char* argv[] )
 
     if ( flag ) {
       /* in kickstart mode, skip options of kickstart */
-      if ( s[0] == '-' && strchr( "ioelnNRBLTIwWSsKk", s[1] ) != NULL ) {
+      if ( s[0] == '-' && strchr(KS_FLAGS_ARG, s[1] ) != NULL ) {
 	/* option with argument */
 	if ( s[2] == 0 ) ++i;
 	continue;
-      } else if ( s[0] == '-' && strchr( "HVXFfqctzZ", s[1] ) != NULL ) {
+      } else if ( s[0] == '-' && strchr(KS_FLAGS_NOARG, s[1] ) != NULL ) {
 	/* option without argument */
 	continue;
       } else {
@@ -129,7 +132,7 @@ append_argument( char* msg, size_t size, size_t len, char* argv[] )
 
     if ( flag ) {
       /* in kickstart mode, skip options of kickstart */
-      if ( s[0] == '-' && strchr( "ioelnNRBLTIwWSs", s[1] ) != NULL ) {
+      if ( s[0] == '-' && strchr( KS_FLAGS_ARG, s[1] ) != NULL ) {
 	/* option with argument */
 	switch ( s[1] ) {
 	case 'i':
@@ -149,7 +152,7 @@ append_argument( char* msg, size_t size, size_t len, char* argv[] )
 	  break;
 	}
 	continue;
-      } else if ( s[0] == '-' && strchr( "HVX", s[1] ) != NULL ) {
+      } else if ( s[0] == '-' && strchr( KS_FLAGS_NOARG, s[1] ) != NULL ) {
 	/* option without argument */
 	continue;
       } else {
