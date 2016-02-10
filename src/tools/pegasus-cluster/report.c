@@ -83,14 +83,14 @@ find_application( char* argv[] )
     if ( flag ) {
       /* in kickstart mode, skip options of kickstart */
       if ( s[0] == '-' && strchr(KS_FLAGS_ARG, s[1] ) != NULL ) {
-	/* option with argument */
-	if ( s[2] == 0 ) ++i;
-	continue;
+        /* option with argument */
+        if ( s[2] == 0 ) ++i;
+        continue;
       } else if ( s[0] == '-' && strchr(KS_FLAGS_NOARG, s[1] ) != NULL ) {
-	/* option without argument */
-	continue;
+        /* option without argument */
+        continue;
       } else {
-	flag = 0;
+        flag = 0;
       }
     }
 
@@ -133,43 +133,43 @@ append_argument( char* msg, size_t size, size_t len, char* argv[] )
     if ( flag ) {
       /* in kickstart mode, skip options of kickstart */
       if ( s[0] == '-' && strchr( KS_FLAGS_ARG, s[1] ) != NULL ) {
-	/* option with argument */
-	switch ( s[1] ) {
-	case 'i':
-	  if ( s[2] == 0 ) extra[0] = argv[++i];
-	  else extra[0] = &s[2];
-	  break;
-	case 'o':
-	  if ( s[2] == 0 ) extra[1] = argv[++i];
-	  else extra[1] = &s[2];
-	  break;
-	case 'e':
-	  if ( s[2] == 0 ) extra[2] = argv[++i];
-	  else extra[2] = &s[2];
-	  break;
-	default:
-	  if ( s[2] == 0 ) ++i;
-	  break;
-	}
-	continue;
+        /* option with argument */
+        switch ( s[1] ) {
+        case 'i':
+          if ( s[2] == 0 ) extra[0] = argv[++i];
+          else extra[0] = &s[2];
+          break;
+        case 'o':
+          if ( s[2] == 0 ) extra[1] = argv[++i];
+          else extra[1] = &s[2];
+          break;
+        case 'e':
+          if ( s[2] == 0 ) extra[2] = argv[++i];
+          else extra[2] = &s[2];
+          break;
+        default:
+          if ( s[2] == 0 ) ++i;
+          break;
+        }
+        continue;
       } else if ( s[0] == '-' && strchr( KS_FLAGS_NOARG, s[1] ) != NULL ) {
-	/* option without argument */
-	continue;
+        /* option without argument */
+        continue;
       } else {
-	flag = 0;
+        flag = 0;
       }
     }
 
     if ( ! flag ) {
       /* in regular mode, add argument to output */
       if ( len + slen + 1 > size ) {
-	/* continuation dots */
-	static const char* dots = " ...";
-	if ( len < size-strlen(dots)-1 ) { 
-	  strncat( msg+len, dots, size-len );
-	  len += strlen(dots);
-	}
-	break;
+        /* continuation dots */
+        static const char* dots = " ...";
+        if ( len < size-strlen(dots)-1 ) { 
+          strncat( msg+len, dots, size-len );
+          len += strlen(dots);
+        }
+        break;
       }
 
       /* append argument */
@@ -185,22 +185,22 @@ append_argument( char* msg, size_t size, size_t len, char* argv[] )
       int skip = 0;
       char* s = extra[i];
       if ( len + (slen=strlen(s)) + 4 < size ) {
-	switch ( i ) {
-	case 0:
-	  strncat( msg+len, " < ", size-len );
-	  break;
-	case 1:
-	  strncat( msg+len, " > ", size-len );
-	  break;
-	case 2: 
-	  strncat( msg+len, " 2> ", size-len );
-	  break;
-	}
+        switch ( i ) {
+        case 0:
+          strncat( msg+len, " < ", size-len );
+          break;
+        case 1:
+          strncat( msg+len, " > ", size-len );
+          break;
+        case 2: 
+          strncat( msg+len, " 2> ", size-len );
+          break;
+        }
         skip = ( *s == '!' || *s == '^' );
-	strncat( msg+len, s+skip, size-len );
-	len += slen + 3 + ( i == 2 ) - skip;
+        strncat( msg+len, s+skip, size-len );
+        len += slen + 3 + ( i == 2 ) - skip;
       } else {
-	break;
+        break;
       }
     }
   }
@@ -293,34 +293,34 @@ report( int progress, double start, double duration
   if ( status == -1 && duration == 0.0 && use == NULL ) {
     /* report of seqexec itself */
     snprintf( msg, size, "%s %s %lu 0/0 START"
-	    , iso2date(start,date,sizeof(date)) 
-	    , identifier
+            , iso2date(start,date,sizeof(date)) 
+            , identifier
 #ifdef MONOTONICALLY_INCREASING
-	    , counter++ 
+            , counter++ 
 #else
-	    , 0ul
+            , 0ul
 #endif /* MONOTONICALLY_INCREASING */
-	    );
+            );
   } else if ( special != NULL ) {
     /* report from setup/cleanup invocations */
     snprintf( msg, size, "%s %s %s %d/%d %.3f"
-	    , iso2date(start,date,sizeof(date))
-	    , identifier
-	    , special
-	    , (status >> 8), (status & 127), duration 
-	    );
+            , iso2date(start,date,sizeof(date))
+            , identifier
+            , special
+            , (status >> 8), (status & 127), duration 
+            );
   } else {
     /* report from child invocations */
     snprintf( msg, size, "%s %s %lu %d/%d %.3f"
-	    , iso2date(start,date,sizeof(date))
-	    , identifier
+            , iso2date(start,date,sizeof(date))
+            , identifier
 #ifdef MONOTONICALLY_INCREASING
-	    , counter++
+            , counter++
 #else
-	    , taskid
+            , taskid
 #endif /* MONOTONICALLY_INCREASING */
-	    , (status >> 8), (status & 127), duration 
-	    );
+            , (status >> 8), (status & 127), duration 
+            );
   }
 
   /* add program arguments */
@@ -330,26 +330,26 @@ report( int progress, double start, double duration
   if ( status == -1 && duration == 0.0 && use == NULL ) {
     /* report uname info for seqexec itself */
     snprintf( msg+len, size-len,
-	      " ### sysname=%s machine=%s release=%s",
-	      uname_cache.sysname, uname_cache.machine, uname_cache.release );
+              " ### sysname=%s machine=%s release=%s",
+              uname_cache.sysname, uname_cache.machine, uname_cache.release );
     len += strlen(msg+len);
   } else if ( use != NULL ) {
     double utime = use->ru_utime.tv_sec + use->ru_utime.tv_usec / 1E6;
     double stime = use->ru_stime.tv_sec + use->ru_stime.tv_usec / 1E6;
     snprintf( msg+len, size-len, 
-	      " ### utime=%.3f stime=%.3f minflt=%ld majflt=%ld"
+              " ### utime=%.3f stime=%.3f minflt=%ld majflt=%ld"
 #ifndef linux
-	      /* Linux is broken and does not fill in these values */
-	      " maxrss=%ld idrss=%ld inblock=%ld oublock=%ld"
-	      " nswap=%ld nsignals=%ld nvcws=%ld nivcsw=%ld"
+              /* Linux is broken and does not fill in these values */
+              " maxrss=%ld idrss=%ld inblock=%ld oublock=%ld"
+              " nswap=%ld nsignals=%ld nvcws=%ld nivcsw=%ld"
 #endif
-	      ,utime, stime, use->ru_minflt, use->ru_majflt
+              ,utime, stime, use->ru_minflt, use->ru_majflt
 #ifndef linux
-	      /* Linux is broken and does not fill in these values */
-	      ,use->ru_maxrss, use->ru_idrss, use->ru_inblock, use->ru_oublock,
-	      use->ru_nswap, use->ru_nsignals, use->ru_nvcsw, use->ru_nivcsw
+              /* Linux is broken and does not fill in these values */
+              ,use->ru_maxrss, use->ru_idrss, use->ru_inblock, use->ru_oublock,
+              use->ru_nswap, use->ru_nsignals, use->ru_nvcsw, use->ru_nivcsw
 #endif
-	      );
+              );
     len += strlen(msg+len);
   }
 
