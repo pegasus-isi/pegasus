@@ -1,7 +1,8 @@
-<?
+<?php
 // Bibtex parser based on phpBibLib:
 // https://people.mmci.uni-saarland.de/~jilles/prj/phpBibLib/
 // Created by Jilles Vreeken http://www.adrem.ua.ac.be/~jvreeken/
+
 class Bibtex {
     var $bibarr = array();
 
@@ -418,6 +419,10 @@ class Bibtex {
         }
 
         $result .= ".";
+
+        if (array_key_exists("doi", $entry)) {
+            $result .= ' <span class="bibtex-doi"><a href="http://dx.doi.org/' . $entry["doi"] . '">doi:' . $entry["doi"] . '</a></span>';
+        }
 
         if (array_key_exists("note", $entry)) {
             $result .= ' <span class="bibtex-note">(' . $entry["note"] . ')</span>';
