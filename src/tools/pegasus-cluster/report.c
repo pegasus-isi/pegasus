@@ -23,6 +23,8 @@
 #include <sys/poll.h>
 #include <sys/utsname.h>
 #include <unistd.h>
+#include <string.h>
+#include <fnmatch.h>
 
 #include "tools.h"
 #include "report.h"
@@ -46,52 +48,45 @@ static char* create_identifier() {
         snprintf(buffer, sizeof(buffer), "unknown:%d", getpid());
     }
 
-    return (identifier = strdup(buffer));
+    return strdup(buffer);
 }
 
 /* purpose: find start of argv excluding kickstart
  * paramtr: argv (IN): invocation argument vector
  * returns: start of argv. Returns 0 if unsure.
  */
-int find_application(char* argv[]) {
-    int i, flag = 0;
-#if 0
-    /* FIXME: Maybe use this starting with 3.3? */
-    static const char* ks = "pegasus-kickstart";
-    static const size_t kslen = 17; /* strlen(ks); */ 
-#else
-    /* backward compatible - for now */ 
-    static const char* ks = "kickstart";
-    static const size_t kslen = 9; /* strlen(ks); */ 
-#endif
+int find_application(char *argv[]) {
+    int uses_kickstart = 0;
 
-    for (i=0 ; argv[i]; ++i) {
-        char* s = argv[i];
-        size_t slen = strlen(s);
+    for (int i=0; argv[i]; i++) {
+        char *a = argv[i];
 
         /* detect presence of kickstart */
-        if (i == 0 && slen>=kslen && strcmp( s+slen-kslen, ks ) == 0) {
-            flag = 1;
+        if (i == 0 && fnmatch("*kickstart", a, 0) == 0) {
+            uses_kickstart = 1;
             continue;
         }
 
-        if (flag) {
+        if (uses_kickstart) {
             /* in kickstart mode, skip options of kickstart */
-            if (s[0] == '-' && strchr(KS_FLAGS_ARG, s[1] ) != NULL) {
+            if (a[0] == '-' && strchr(KS_FLAGS_ARG, a[1]) != NULL) {
                 /* option with argument */
-                if (s[2] == 0) ++i;
-                continue;
-            } else if (s[0] == '-' && strchr(KS_FLAGS_NOARG, s[1]) != NULL) {
+                /* if a[2] is 0, then it is not like '-e/path/to/file' */
+                if (a[2] == 0) i++;
+            } else if (a[0] == '-' && strchr(KS_FLAGS_NOARG, a[1]) != NULL) {
                 /* option without argument */
-                continue;
             } else {
-                flag = 0;
+                uses_kickstart = 0;
             }
         }
 
-        if (!flag) {
-            /* found */
-            return (argv[i] == NULL ? 0 : i);
+        if (!uses_kickstart) {
+            if (argv[i] == NULL) {
+                /* Maybe it is just kickstart? */
+                return 0;
+            } else {
+                return i;
+            }
         }
     }
 
@@ -107,94 +102,99 @@ int find_application(char* argv[]) {
  * returns: new length of modified buffer
  */
 static size_t append_argument(char* msg, size_t size, size_t len, char* argv[]) {
-    size_t slen;
-    int i, flag = 0;
-    static const char* ks = "kickstart";
+    int uses_kickstart = 0;
+    int alen = 0;
     char* extra[3] = { NULL, NULL, NULL };
 
-    for ( i=0 ; argv[i]; ++i ) {
-        char* s = argv[i];
-        slen = strlen(s);
+    for (int i=0 ; argv[i]; ++i ) {
+        char* a = argv[i];
+        alen = strlen(a);
 
         /* detect presence of kickstart */
-        if ( i == 0 && strcmp( s+slen-strlen(ks), ks ) == 0 ) {
-            flag = 1;
+        if (i == 0 && fnmatch("*kickstart", a, 0) == 0) {
+            uses_kickstart = 1;
             continue;
         }
 
-        if ( flag ) {
+        if (uses_kickstart) {
             /* in kickstart mode, skip options of kickstart */
-            if ( s[0] == '-' && strchr( KS_FLAGS_ARG, s[1] ) != NULL ) {
+            if (a[0] == '-' && strchr(KS_FLAGS_ARG, a[1]) != NULL) {
                 /* option with argument */
-                switch ( s[1] ) {
+                /* if a[2] is 0, then it is not like '-e/path/to/file' */
+                /* Need to save -i -o and -e arguments for printing < > and 2> */
+                switch (a[1]) {
                 case 'i':
-                    if ( s[2] == 0 ) extra[0] = argv[++i];
-                    else extra[0] = &s[2];
+                    if (a[2] == 0) extra[0] = argv[++i];
+                    else extra[0] = &a[2];
                     break;
                 case 'o':
-                    if ( s[2] == 0 ) extra[1] = argv[++i];
-                    else extra[1] = &s[2];
+                    if (a[2] == 0) extra[1] = argv[++i];
+                    else extra[1] = &a[2];
                     break;
                 case 'e':
-                    if ( s[2] == 0 ) extra[2] = argv[++i];
-                    else extra[2] = &s[2];
+                    if (a[2] == 0) extra[2] = argv[++i];
+                    else extra[2] = &a[2];
                     break;
                 default:
-                    if ( s[2] == 0 ) ++i;
+                    if (a[2] == 0) ++i;
                     break;
                 }
                 continue;
-            } else if ( s[0] == '-' && strchr( KS_FLAGS_NOARG, s[1] ) != NULL ) {
+            } else if (a[0] == '-' && strchr(KS_FLAGS_NOARG, a[1]) != NULL) {
                 /* option without argument */
                 continue;
             } else {
-                flag = 0;
+                uses_kickstart = 0;
             }
         }
 
-        if ( ! flag ) {
+        if (!uses_kickstart) {
             /* in regular mode, add argument to output */
-            if ( len + slen + 1 > size ) {
+            if (len + alen + 1 > size) {
                 /* continuation dots */
                 static const char* dots = " ...";
-                if ( len < size-strlen(dots)-1 ) {
-                    strncat( msg+len, dots, size-len );
+                if (len < size-strlen(dots)-1) {
+                    strncat(msg+len, dots, size-len);
                     len += strlen(dots);
                 }
                 break;
             }
 
             /* append argument */
-            strncat( msg+len, " ", size-len );
-            strncat( msg+len, s, size-len );
-            len += slen + 1; 
+            strncat(msg+len, " ", size-len);
+            strncat(msg+len, a, size-len);
+            len += alen + 1;
         }
     }
 
     /* simulate stdio redirection */
-    for ( i=0; i<3; ++i ) {
-        if ( extra[i] != NULL ) {
-            int skip = 0;
-            char* s = extra[i];
-            if ( len + (slen=strlen(s)) + 4 < size ) {
-                switch ( i ) {
-                case 0:
-                    strncat( msg+len, " < ", size-len );
-                    break;
-                case 1:
-                    strncat( msg+len, " > ", size-len );
-                    break;
-                case 2:
-                    strncat( msg+len, " 2> ", size-len );
-                    break;
-                }
-                skip = ( *s == '!' || *s == '^' );
-                strncat( msg+len, s+skip, size-len );
-                len += slen + 3 + ( i == 2 ) - skip;
-            } else {
-                break;
-            }
+    for (int i=0; i<3; ++i) {
+        if (extra[i] == NULL) {
+            continue;
         }
+
+        int skip = 0;
+        char* a = extra[i];
+        alen = strlen(a);
+        if (len + alen + 4 >= size) {
+            /* No more space */
+            break;
+        }
+
+        switch (i) {
+        case 0:
+            strncat(msg+len, " < ", size-len);
+            break;
+        case 1:
+            strncat(msg+len, " > ", size-len);
+            break;
+        case 2:
+            strncat(msg+len, " 2> ", size-len);
+            break;
+        }
+        skip = (*a == '!' || *a == '^');
+        strncat(msg+len, a+skip, size-len);
+        len += alen + 3 + (i == 2) - skip;
     }
 
     return len;
@@ -217,7 +217,7 @@ static int lockit(int fd, short cmd, short type) {
     l.l_start = 0;
     l.l_len = 0;
 
-    return fcntl( fd, cmd, &l );
+    return fcntl(fd, cmd, &l);
 }
 
 /* purpose: Try to lock the file
@@ -226,21 +226,25 @@ static int lockit(int fd, short cmd, short type) {
  *           0: all backoff attempts failed, file is not locked
  *           1: file is locked
  */
-static int mytrylock( int fd ) {
+static int mytrylock(int fd) {
     int backoff = 50; /* milliseconds, increasing */
     int retries = 10; /* 2.2 seconds total */
-    while ( lockit( fd, F_SETLK, F_WRLCK ) == -1 ) {
-        if ( errno != EACCES && errno != EAGAIN ) return -1;
-        if ( --retries == 0 ) return 0;
+    while (lockit(fd, F_SETLK, F_WRLCK) == -1) {
+        if (errno != EACCES && errno != EAGAIN) {
+            return -1;
+        }
+        if (--retries == 0) {
+            return 0;
+        }
         backoff += 50;
-        poll( NULL, 0, backoff );
+        poll(NULL, 0, backoff);
     }
 
     return 1;
 }
 
 /* purpose: report what has just finished.
- * paramtr: progress (IN): file description open for writing
+ * paramtr: progress (IN): file descriptor open for writing
  *          start (IN): start time (no millisecond resolution)
  *          duration (IN): duration with millisecond resolution
  *          status (IN): return value from wait() family 
@@ -251,19 +255,8 @@ static int mytrylock( int fd ) {
  * returns: number of bytes written onto "progress"
  */
 ssize_t report(int progress, double start, double duration, int status,
-               char* argv[], struct rusage* use, const char* special
-#ifndef MONOTONICALLY_INCREASING
-               , size_t taskid
-#endif
-              ) {
-#ifdef MONOTONICALLY_INCREASING
-    static unsigned long counter = 0;
-#endif /* MONOTONICALLY_INCREASING */
-    int save, locked;
-    char date[32];
-    size_t len, size = getpagesize();
-    char* msg = (char*) malloc( size<<1 );
-    ssize_t wsize = -1;
+               char* argv[], struct rusage* use, const char* special,
+               size_t taskid) {
 
     /* sanity checks */
     if (progress == -1 || argv == NULL) {
@@ -275,36 +268,28 @@ ssize_t report(int progress, double start, double duration, int status,
         identifier = create_identifier();
     }
 
+    char date[32];
+    iso2date(start, date, sizeof(date));
+
+    size_t size = getpagesize();
+    char *msg = (char*) malloc(size<<1);
+
     /* message start */
     if (status == -1 && duration == 0.0 && use == NULL) {
         /* report of seqexec itself */
-        snprintf(msg, size, "%s %s %lu 0/0 START",
-                 iso2date(start,date,sizeof(date)), identifier,
-#ifdef MONOTONICALLY_INCREASING
-                 counter++);
-#else
-                 0ul);
-#endif /* MONOTONICALLY_INCREASING */
-    } else if ( special != NULL ) {
+        snprintf(msg, size, "%s %s %lu 0/0 START", date, identifier, 0ul);
+    } else if (special != NULL) {
         /* report from setup/cleanup invocations */
-        snprintf(msg, size, "%s %s %s %d/%d %.3f",
-                 iso2date(start,date,sizeof(date)), identifier, special,
+        snprintf(msg, size, "%s %s %s %d/%d %.3f", date, identifier, special,
                  (status >> 8), (status & 127), duration);
     } else {
         /* report from child invocations */
-        snprintf(msg, size, "%s %s %lu %d/%d %.3f",
-                 iso2date(start,date,sizeof(date)), identifier,
-#ifdef MONOTONICALLY_INCREASING
-                 counter++,
-#else
-                 taskid,
-#endif /* MONOTONICALLY_INCREASING */
-                 (status >> 8), (status & 127), duration 
-                );
+        snprintf(msg, size, "%s %s %lu %d/%d %.3f", date, identifier, taskid,
+                 (status >> 8), (status & 127), duration);
     }
 
     /* add program arguments */
-    len = append_argument( msg, size-2, strlen(msg), argv );
+    size_t len = append_argument(msg, size-2, strlen(msg), argv);
 
     /* optionally add uname (seqexec) or rusage (children) info */
     if ( status == -1 && duration == 0.0 && use == NULL ) {
@@ -317,7 +302,6 @@ ssize_t report(int progress, double start, double duration, int status,
     } else if ( use != NULL ) {
         double utime = use->ru_utime.tv_sec + use->ru_utime.tv_usec / 1E6;
         double stime = use->ru_stime.tv_sec + use->ru_stime.tv_usec / 1E6;
-        /* TODO Figure out why this doesn't print all the info */
         snprintf(msg+len, size-len,
                  " ### utime=%.3f stime=%.3f minflt=%ld majflt=%ld"
                  " maxrss=%ld idrss=%ld inblock=%ld oublock=%ld"
@@ -334,10 +318,12 @@ ssize_t report(int progress, double start, double duration, int status,
 
     /* Atomic append -- will still garble on Linux NFS */
     /* Warning: Fcntl-locking may block in syscall on broken Linux kernels */
-    locked = mytrylock( progress );
-    wsize = write( progress, msg, len+1 ); 
-    save = errno;
-    if ( locked==1 ) lockit( progress, F_SETLK, F_UNLCK );
+    int locked = mytrylock(progress);
+    ssize_t wsize = write(progress, msg, len+1);
+    int save = errno;
+    if (locked) {
+        lockit(progress, F_SETLK, F_UNLCK);
+    }
 
     free((void*) msg );
     errno = save;

@@ -159,11 +159,7 @@ mysystem( char* argv[], char* envp[], const char* special )
 
   /* progress report finish */
   if ( progress != -1 ) {
-    report( progress, start, diff, status, argv, &usage, special 
-#ifndef MONOTONICALLY_INCREASING
-	    , -1ul
-#endif /* MONOTONICALLY_INCREASING */
-	    );
+    report(progress, start, diff, status, argv, &usage, special, -1ul);
   }
 
   errno = saverr;

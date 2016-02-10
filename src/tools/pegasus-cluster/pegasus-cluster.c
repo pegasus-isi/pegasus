@@ -281,11 +281,7 @@ wait_for_child( Jobs* jobs, int* status )
     
     /* progress report at finish of job */ 
     if ( progress != -1 ) 
-      report( progress, j->start, (final - j->start), *status, j->argv, &usage, NULL 
-#ifndef MONOTONICALLY_INCREASING
-	    , j->count
-#endif /* MONOTONICALLY_INCREASING */
-	    ); 
+      report( progress, j->start, (final - j->start), *status, j->argv, &usage, NULL , j->count);
     
     /* free reported job */ 
     job_done(j); 
@@ -374,11 +370,7 @@ main( int argc, char* argv[], char* envp[] )
   
   /* progress report finish */
   if ( progress != -1 ) {
-    report( progress, start, 0.0, -1, argv, NULL, NULL
-#ifndef MONOTONICALLY_INCREASING
-	  , 0ul
-#endif /* MONOTONICALLY_INCREASING */
-	  );
+    report( progress, start, 0.0, -1, argv, NULL, NULL, 0ul);
   }
 
   /* allocate job management memory */ 
