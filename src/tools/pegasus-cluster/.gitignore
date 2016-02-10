@@ -1,1 +1,3 @@
 pegasus-cluster
+depends.mk
+try-cpus
