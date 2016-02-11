@@ -1,5 +1,5 @@
 /**
- *  Copyright 2007-2010 University Of Southern California
+ *  Copyright 2007-2016 University Of Southern California
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -255,7 +255,7 @@ static int mytrylock(int fd) {
  * returns: number of bytes written onto "progress"
  */
 ssize_t report(int progress, double start, double duration, int status,
-               char* argv[], struct rusage* use, const char* special,
+               char *argv[], struct rusage *use, const char *special,
                size_t taskid) {
 
     /* sanity checks */
@@ -277,7 +277,7 @@ ssize_t report(int progress, double start, double duration, int status,
     /* message start */
     if (status == -1 && duration == 0.0 && use == NULL) {
         /* report of seqexec itself */
-        snprintf(msg, size, "%s %s %lu 0/0 START", date, identifier, 0ul);
+        snprintf(msg, size, "%s %s 0 0/0 START", date, identifier);
     } else if (special != NULL) {
         /* report from setup/cleanup invocations */
         snprintf(msg, size, "%s %s %s %d/%d %.3f", date, identifier, special,
@@ -292,14 +292,14 @@ ssize_t report(int progress, double start, double duration, int status,
     size_t len = append_argument(msg, size-2, strlen(msg), argv);
 
     /* optionally add uname (seqexec) or rusage (children) info */
-    if ( status == -1 && duration == 0.0 && use == NULL ) {
+    if (status == -1 && duration == 0.0 && use == NULL) {
         /* report uname info for seqexec itself */
         snprintf(msg+len, size-len,
                  " ### sysname=%s machine=%s release=%s",
                  uname_cache.sysname, uname_cache.machine,
                  uname_cache.release);
         len += strlen(msg+len);
-    } else if ( use != NULL ) {
+    } else if (use != NULL) {
         double utime = use->ru_utime.tv_sec + use->ru_utime.tv_usec / 1E6;
         double stime = use->ru_stime.tv_sec + use->ru_stime.tv_usec / 1E6;
         snprintf(msg+len, size-len,

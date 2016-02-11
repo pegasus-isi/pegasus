@@ -93,7 +93,7 @@ format_printable( char* buf, size_t size, char ch )
 }
 
 size_t
-interpreteArguments( char* cmd, char*** argv )
+interpretArguments( char* cmd, char*** argv )
 /* purpose: removes one layer of quoting and escaping, shell-style
  * paramtr: cmd (IO): commandline to split
  * paramtr: argv (OUT): argv[] vector, newly allocated vector
