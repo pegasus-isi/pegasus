@@ -266,10 +266,6 @@ class MonitoringMessage:
             log.exception(val_error)
             return None
 
-    # XXX Not used?
-    #def aggregated_trace_id(self):
-    #    return "%s:%s" % (self.dag_job_id, self.condor_job_id)
-
     def metrics(self):
         """ Selects fields from a message which indicates performance metrics and a timestamp."""
         return self.perf_metrics
@@ -355,7 +351,7 @@ class DataTransferMessage(MonitoringMessage):
 
         if self.message_has_required_params(message):
             MonitoringMessage.__init__(self, message["dag_job_id"], message["condor_job_id"], 0, message)
-            self.trace_id = "{0}:{1}:{2}".format(message["dag_job_id"], message["hostname"], message["condor_job_id"])
+            self.trace_id = "{0}:{1}:{2}:pegasus-transfer".format(message["dag_job_id"], message["hostname"], message["condor_job_id"])
         else:
             MonitoringMessage.__init__(self)
             print "We couldn't create trace_id"
