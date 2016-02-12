@@ -17,7 +17,7 @@
 #include "error.h"
 #include "monitoring.h"
 
-#define MSG_AGGR_FACTOR 5
+#define MSG_AGGR_FACTOR 1
 
 typedef struct {
     char *url;
