@@ -44,6 +44,7 @@ else
 endif
 PACKAGES+=influxdb
 PACKAGES+=pika
+PACKAGES+=dateutil
 
 all: $(addprefix $(LIBDIR)/,$(PACKAGES))
 
@@ -84,6 +85,7 @@ $(LIBDIR)/psycopg2: psycopg2-2.5.5.tar.gz
 $(LIBDIR)/ordereddict.py: ordereddict-1.1.tar.gz
 $(LIBDIR)/influxdb: influxdb-2.12.0.tar.gz
 $(LIBDIR)/pika: pika-0.10.0.tar.gz
+$(LIBDIR)/dateutil: python-dateutil-2.4.2.tar.gz
 
 clean:
 	rm -rf $(EXTDIR)
