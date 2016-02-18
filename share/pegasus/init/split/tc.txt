@@ -1,12 +1,3 @@
-tr curl {
-    site {{sitename}} {
-        pfn "/usr/bin/curl"
-        arch "x86_64"
-        os "linux"
-        type "INSTALLED"
-    }
-}
-
 tr wc {
     site {{sitename}} {
         pfn "/usr/bin/wc"
