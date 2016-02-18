@@ -1,0 +1,18 @@
+tr ls {
+    site {{sitename}} {
+        pfn "/bin/ls"
+        arch "x86_64"
+        os "linux"
+        type "INSTALLED"
+    }
+}
+
+tr cat {
+    site {{sitename}} {
+        pfn "/bin/cat"
+        arch "x86_64"
+        os "linux"
+        type "INSTALLED"
+    }
+}
+
