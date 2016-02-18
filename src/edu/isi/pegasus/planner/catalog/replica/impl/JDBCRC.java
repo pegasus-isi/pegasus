@@ -952,6 +952,7 @@ public class JDBCRC implements ReplicaCatalog
    * @return number of insertions, should always be 1. On failure,
    * throw an exception, don't use zero.
    */
+  @Override
   public int insert( String lfn, ReplicaCatalogEntry tuple )
   {
       // sanity checks
@@ -979,7 +980,8 @@ public class JDBCRC implements ReplicaCatalog
       try {
           ResultSet rs = null;
           String id = null;
-          PreparedStatement ps = mConnection.prepareStatement("SELECT lfn_id,lfn FROM rc_lfn WHERE lfn LIKE ?");
+          // check if the lfn already exists
+          PreparedStatement ps = mConnection.prepareStatement("SELECT lfn_id,lfn FROM rc_lfn WHERE lfn=?");
           ps.setString(1, quote(lfn));
           rs = ps.executeQuery();
           if (rs.next()) {
@@ -994,7 +996,6 @@ public class JDBCRC implements ReplicaCatalog
 
           String resourceHandle = tuple.getResourceHandle();
 
-          // check if the lfn already exists
           if (id == null) {
               query = "INSERT INTO rc_lfn(lfn) VALUES(?)";
               ps = this.mUsingSQLiteBackend ?
@@ -1256,15 +1257,15 @@ public class JDBCRC implements ReplicaCatalog
         int id = 0;;
         while (rs.next()) {
             id = rs.getInt("lfn_id");
-            String key = rs.getString("key");
-            String value = rs.getString("value");
-            if (key != null && (!tuple.hasAttribute(key) || (value != null && !tuple.getAttribute(key).equals(value)))) {
-                st.close();
-                rs.close();
-                return result;
-            }
-        }
-
+                    String key = rs.getString("key");
+                    String value = rs.getString("value");
+                    if (key != null && (!tuple.hasAttribute(key) || (value != null && !tuple.getAttribute(key).equals(value)))) {
+                        st.close();
+                        rs.close();
+                        return result;
+                    }
+                }
+        
         if (id > 0) {
             query = new StringBuilder(256);
             query.append("DELETE FROM rc_lfn WHERE lfn_id=").append(id);
