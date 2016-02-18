@@ -47,13 +47,13 @@ function pegasus_lite_internal_wp_shipped()
     if ls $pegasus_lite_start_dir/pegasus-worker-*.tar.gz >/dev/null 2>&1; then
         pegasus_lite_log "The job contained a Pegasus worker package"
     
-        # check if the worker package provided is for the this platform, but
-        # only warn if there is a mismatch
+        # make sure the provided worker package provided is for the this platform
         system=$(pegasus_lite_get_system)
         if [ $? = 0 ]; then
             wp_name=`(cd $pegasus_lite_start_dir && ls pegasus-worker-*.tar.gz | head -n 1) 2>/dev/null`
             if ! (echo "x$wp_name" | grep "$system") >/dev/null 2>&1 ; then
                 pegasus_lite_log "Warning: worker package $wp_name does not seem to match the system $system"
+                return 1
             fi 
         fi
 
@@ -267,7 +267,7 @@ function pegasus_lite_get_system()
     # PM-781
     # This function is a replacement of the old release-tools/getsystem
     # and was moved here because we need the getsystem functionallity not
-    # only at build time, but at runtime fromt he jobs so that the jobs
+    # only at build time, but at runtime from the jobs so that the jobs
     # can determine what worker package is required.
 
     # The goal is to get a triple identify the system:
