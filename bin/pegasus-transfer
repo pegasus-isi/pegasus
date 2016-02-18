@@ -63,7 +63,7 @@ __author__ = "Mats Rynge <rynge@isi.edu>"
 # --- regular expressions -----------------------------------------------------
 
 re_parse_comment = re.compile(r'^# +[\w]+ +[\w]+ +([\w\-_]+)')
-re_parse_url = re.compile(r'([\w]+)://([\w\.\-:@]*)(/[\S ]*)?')
+re_parse_url = re.compile(r'([\w]+)://([\w\.\-:@#]*)(/[\S ]*)?')
 
 
 # --- classes -----------------------------------------------------------------
@@ -1562,7 +1562,7 @@ class S3Handler(TransferHandlerBase):
     def do_mkdirs(self, mkdir_l):
         tools = Tools()
         if tools.find("pegasus-s3", "help", None) is None:
-            logger.error("Unable to do S3 transfers because return [[], mkdir_list found")
+            logger.error("Unable to do S3 transfers because pegasus-s3 not found")
             return [[], mkdir_l]
 
         successful_l = []
@@ -1718,6 +1718,200 @@ class S3Handler(TransferHandlerBase):
                                " environment variables has to be set")
         check_cred_fs_permissions(env["S3CFG"])
         return env
+
+
+class GlobusOnlineHandler(TransferHandlerBase):
+    """
+    Handler for Globus Online transfers
+    """
+    
+    _name = "GlobusOnlineHandler"
+    _mkdir_cleanup_protocols = ["go", "go"]
+    _protocol_map = [
+                    "go->go",
+                    ]
+
+    def do_mkdirs(self, mkdir_l):
+        tools = Tools()
+        if tools.find("pegasus-globus-online", "help", None) is None:
+            logger.error("Unable to locate pegasus-globus-online in the $PATH")
+            return [[], mkdir_l]
+
+        successful_l = []
+        failed_l = []        
+        
+        r = re.search("(\w+)@([\w#]+)", mkdir_l[0].get_host())
+        if not r:
+            raise RuntimeError("Unable to determine username from URL")
+
+        env = self._creds(mkdir_l[0])
+        
+        spec = {"globus_username": r.group(1),
+                "endpoint": r.group(2),
+                "x509_proxy": env["X509_USER_PROXY"],
+                "files": list()}
+        
+        for t in mkdir_l:
+            spec["files"].append(t.get_path())
+        
+        logger.debug(json.dumps(spec, indent=2))
+        try:
+            tmp_fd, tmp_name = tempfile.mkstemp(prefix="pegasus-transfer-", suffix=".json")
+            tmp_file = os.fdopen(tmp_fd, "w+b")
+        except:
+            raise RuntimeError("Unable to create tmp file for pegasus-globus-online")
+        tmp_file.write(json.dumps(spec, indent=2))
+        tmp_file.close()
+
+        cmd = "pegasus-globus-online --mkdir --file " + tmp_name
+        if logger.isEnabledFor(logging.DEBUG):
+            cmd += " --debug"
+        try:
+            tc = TimedCommand(cmd, env_overrides=env)
+            tc.run()
+            successful_l = list(mkdir_l)
+        except RuntimeError, err:
+            logger.error(err)
+            failed_l = list(mkdir_l)
+        
+        os.unlink(tmp_name)
+        
+        return [successful_l, failed_l]
+
+
+    def do_transfers(self, transfers_l):
+        tools = Tools()
+        if tools.find("pegasus-globus-online", "help", None) is None:
+            logger.error("Unable to locate pegasus-globus-online in the $PATH")
+            return [[], transfers_l]
+
+        successful_l = []
+        failed_l = []        
+        
+        # src
+        r = re.search("(\w+)@([\w#]+)", transfers_l[0].get_src_host())
+        if not r:
+            raise RuntimeError("Unable to determine username from URL")
+        globus_username = r.group(1)
+        src_ep = r.group(2)
+
+        # dst
+        r = re.search("(\w+)@([\w#]+)", transfers_l[0].get_dst_host())
+        if not r:
+            raise RuntimeError("Unable to determine username from URL")
+        dst_ep = r.group(2)
+
+        env = self._creds(transfers_l[0])
+        
+        spec = {"globus_username": globus_username,
+                "src_endpoint": src_ep,
+                "dst_endpoint": dst_ep,
+                "x509_proxy": env["X509_USER_PROXY"],
+                "files": list()}
+        
+        for t in transfers_l:
+            t_spec = {"src": t.get_src_path(), "dst": t.get_dst_path()}
+            spec["files"].append(t_spec)
+        
+        logger.debug(json.dumps(spec, indent=2))
+        try:
+            tmp_fd, tmp_name = tempfile.mkstemp(prefix="pegasus-transfer-", suffix=".json")
+            tmp_file = os.fdopen(tmp_fd, "w+b")
+        except:
+            raise RuntimeError("Unable to create tmp file for pegasus-globus-online")
+        tmp_file.write(json.dumps(spec, indent=2))
+        tmp_file.close()
+
+        cmd = "pegasus-globus-online --transfer --file " + tmp_name
+        if logger.isEnabledFor(logging.DEBUG):
+            cmd += " --debug"
+        try:
+            tc = TimedCommand(cmd, env_overrides=env)
+            tc.run()
+            successful_l = list(transfers_l)
+        except RuntimeError, err:
+            logger.error(err)
+            failed_l = list(transfers_l)
+        
+        os.unlink(tmp_name)
+        
+        return [successful_l, failed_l]
+
+
+    def do_removes(self, removes_l):
+        
+        # recursive removes are not supported yet, so just mark them as success
+        if removes_l[0].get_recursive():
+            return [removes_l, []]
+        
+        tools = Tools()
+        if tools.find("pegasus-globus-online", "help", None) is None:
+            logger.error("Unable to locate pegasus-globus-online in the $PATH")
+            return [[], removes_l]
+
+        successful_l = []
+        failed_l = []        
+        
+        r = re.search("(\w+)@([\w#]+)", removes_l[0].get_host())
+        if not r:
+            raise RuntimeError("Unable to determine username from URL")
+
+        env = self._creds(removes_l[0])
+        
+        spec = {"globus_username": r.group(1),
+                "endpoint": r.group(2),
+                "x509_proxy": env["X509_USER_PROXY"],
+                "files": list()}
+        
+        for t in removes_l:
+            spec["files"].append(t.get_path())
+        
+        logger.debug(json.dumps(spec, indent=2))
+        try:
+            tmp_fd, tmp_name = tempfile.mkstemp(prefix="pegasus-transfer-", suffix=".json")
+            tmp_file = os.fdopen(tmp_fd, "w+b")
+        except:
+            raise RuntimeError("Unable to create tmp file for pegasus-globus-online")
+        tmp_file.write(json.dumps(spec, indent=2))
+        tmp_file.close()
+
+        cmd = "pegasus-globus-online --remove --file " + tmp_name
+        if logger.isEnabledFor(logging.DEBUG):
+            cmd += " --debug"
+        try:
+            tc = TimedCommand(cmd, env_overrides=env)
+            tc.run()
+            successful_l = list(removes_l)
+        except RuntimeError, err:
+            logger.error(err)
+            failed_l = list(removes_l)
+        
+        os.unlink(tmp_name)
+        
+        return [successful_l, failed_l]
+
+
+
+    def _creds(self, sample_transfer):
+        """
+        The credential used for Globus Online is just to contact the service
+        """
+        
+        env_override = {}
+        
+        # mkdirs and removes
+        if isinstance(sample_transfer, Mkdir) or isinstance(sample_transfer, Remove):
+            key = "X509_USER_PROXY_" + sample_transfer.get_site_label()
+            if key in os.environ:
+                env_override["X509_USER_PROXY"] = os.environ[key]
+            return env_override
+        
+        # must be a standard transfer
+        key = "X509_USER_PROXY_" + sample_transfer.get_src_site_label()
+        if key in os.environ:
+            env_override["X509_USER_PROXY"] = os.environ[key]
+   
+        return env_override
 
     
 
@@ -2556,6 +2750,7 @@ class SimilarWorkSet:
         self._available_handlers.append( HTTPHandler() )
         self._available_handlers.append( IRodsHandler() )
         self._available_handlers.append( S3Handler() )
+        self._available_handlers.append( GlobusOnlineHandler() )
         self._available_handlers.append( GSHandler() )
         self._available_handlers.append( GFALHandler() )
         self._available_handlers.append( ScpHandler() )

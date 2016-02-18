@@ -802,7 +802,8 @@ public class Job extends Data implements GraphNodeContent{
         }
 
         if( url.startsWith( "gsiftp" ) || url.startsWith( "xroot") ||
-        		url.startsWith( "root" ) || url.startsWith( "srm") ){
+                url.startsWith( "root" ) || url.startsWith( "srm") ||
+                url.startsWith( "go" ) ){
             this.addCredentialType( site, CredentialHandler.TYPE.x509   );
         }
         else if( url.startsWith( "sshftp" ) ){
