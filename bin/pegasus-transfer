@@ -3091,15 +3091,6 @@ def env_setup():
         pass
     path_entries.insert(0, prog_dir)
     
-    # if PEGASUS_HOME is set, prepend it to the PATH (we want it early to
-    # override other cruft)
-    if "PEGASUS_HOME" in os.environ:
-        try:
-            path_entries.remove(os.environ['PEGASUS_HOME'] + "/bin")
-        except Exception:
-            pass
-        path_entries.insert(0, os.environ['PEGASUS_HOME'] + "/bin")
-    
     # need LD_LIBRARY_PATH for Globus tools
     ld_library_path = ""
     if "LD_LIBRARY_PATH" in os.environ:
