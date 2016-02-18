@@ -790,27 +790,6 @@ public class JDBCRC implements ReplicaCatalog
   }
 
   /**
-   * Helper function to assemble various pieces.
-   *
-   * @param value is the value of the object from the map.
-   * @param obj is the name of the table column
-   * @param where is the decision, if we had a previous WHERE clause or not.
-   * @see #lookup( Map )
-   */
-  private String addItem( Object value, String obj, boolean where )
-  {
-    // sanity check, no column can be NULL
-    if ( value == null ) return new String();
-
-    String v = ( value instanceof String ) ? (String) value : value.toString();
-    StringBuffer q = new StringBuffer(80);
-    q.append( where ? " AND " : " WHERE " );
-    q.append(obj).append(" LIKE '").append(quote(v)).append('\'');
-
-    return q.toString();
-  }
-
-  /**
    * Retrieves multiple entries for a given logical filename, up to the
    * complete catalog. Retrieving full catalogs should be harmful, but
    * may be helpful in online display or portal.
