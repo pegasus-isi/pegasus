@@ -1632,12 +1632,11 @@ public class PegasusProperties implements Cloneable {
      *
      * Referred to by the "pegasus.gridstart.kickstart.stat" property.
      *
-     * @return the boolean value specified in the property file,
-     *         else false if not specified or non boolean specified.
+     * @return value specified in the property file,
+     *         else null.
      */
-    public boolean doStatWithKickstart(){
-        return Boolean.parse( mProps.getProperty( "pegasus.gridstart.kickstart.stat"),
-                              false );
+    public String doStatWithKickstart(){
+        return   mProps.getProperty( "pegasus.gridstart.kickstart.stat") ;
     }
 
     /**
