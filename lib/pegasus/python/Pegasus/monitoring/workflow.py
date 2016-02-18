@@ -589,7 +589,7 @@ class Workflow:
         # Send sub-workflow event to database
         self.output_to_db("xwf.map.subwf_job", kwargs)
 
-    def db_send_wf_state(self, state):
+    def db_send_wf_state(self, state, timestamp=None):
         """
         This function sends to the DB information about the current
         workflow state to both the stampede database and dashboard database
@@ -601,11 +601,14 @@ class Workflow:
         if state is None:
             return
 
+        if timestamp is None:
+            timestamp = self._current_timestamp
+
         # Start empty
         kwargs = {}
         # Make sure we include the wf_uuid
         kwargs["xwf__id"] = self._wf_uuid
-        kwargs["ts"] = self._current_timestamp
+        kwargs["ts"] = timestamp
         # Always decrement the restart count by 1
         kwargs["restart_count"] = self._restart_count - 1
         if state == "end":
@@ -640,12 +643,14 @@ class Workflow:
                 # we have two consecutive start events from DAGMAN log
                 # can happen in case of power failure or condor crashing.
                 # we insert a DAGMAN FINISHED event PM-723
+                # PM-1062 subtract 1 second from the timestamp
+                prev_wf_end_timestamp = self._current_timestamp - 1
                 logger.warning( "Consecutive workflow START events detected for workflow with condor id %s running in directory %s ." %
                                 ( self._dagman_condor_id, self._submit_dir ) +
-                                 " Inserting Workflow END event with timestamp %s" %( self._current_timestamp ))
+                                " Inserting Workflow END event with timestamp %s" %( prev_wf_end_timestamp ))
                 self._dagman_exit_code = UNKNOWN_FAILURE_CODE
-                self._JSDB.write("%d INTERNAL *** DAGMAN_FINISHED %s ***\n" % (self._current_timestamp, self._dagman_exit_code))
-                self.db_send_wf_state( "end" )
+                self._JSDB.write("%d INTERNAL *** DAGMAN_FINISHED %s ***\n" % (prev_wf_end_timestamp, self._dagman_exit_code))
+                self.db_send_wf_state(  "end", prev_wf_end_timestamp )
 
 
         if state == "start":
