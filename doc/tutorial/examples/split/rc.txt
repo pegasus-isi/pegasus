@@ -1,3 +1,0 @@
-#location of pegasus.html
-
-pegasus.html file:///home/tutorial/examples/split/input/pegasus.html site="local"

@@ -4,7 +4,7 @@ import os
 import sys
 from Pegasus.DAX3 import *
 
-# The name of the DAX file is the first argument                                                                                                                                                                                                                                                                                                 
+# The name of the DAX file is the first argument
 if len(sys.argv) != 2:
         sys.stderr.write("Usage: %s DAXFILE\n" % (sys.argv[0]))
         sys.exit(1)

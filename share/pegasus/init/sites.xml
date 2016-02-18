@@ -4,7 +4,16 @@
 
     <!-- The local site contains information about the submit host -->
     <site handle="local" arch="x86_64" os="LINUX">
-
+{% if config == "tutorial" %}
+        <!-- This is where intermediate data will be stored -->
+        <directory type="shared-scratch" path="{{workflowdir}}/scratch">
+            <file-server operation="all" url="file://{{workflowdir}}/scratch"/>
+        </directory>
+        <!-- This is where output data will be stored -->
+        <directory type="shared-storage" path="{{workflowdir}}/output">
+            <file-server operation="all" url="file://{{workflowdir}}/output"/>
+        </directory>
+{% endif %}
     </site>
 
     <site handle="{{sitename}}" arch="x86_64" os="LINUX">
