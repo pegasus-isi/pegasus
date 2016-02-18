@@ -281,14 +281,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     <fixcrlf srcdir="${dist.doc}/wordpress/schemas" includes="**/*.xml" eol="lf"/>
   </target>
 
-  <target name="doc-tutorial" depends="setup" description="Generate tutorial files">
-    <mkdir dir="${dist.doc}/tutorial"/>
-    <copy preservelastmodified="true" todir="${dist.doc}/tutorial">
-      <fileset dir="doc/tutorial" includes="**/*"/>
-    </copy>
-  </target>
-
-  <target name="doc" depends="setup,doc-schemas,doc-manpages,doc-user-guide,doc-java,doc-python,doc-perl,doc-tutorial" description="Generate documentation"/>
+  <target name="doc" depends="setup,doc-schemas,doc-manpages,doc-user-guide,doc-java,doc-python,doc-perl" description="Generate documentation"/>
 
   <target name="compile-ctools" depends="setup" description="Compile C tools">
     <exec executable="${make}" dir="src/tools" failonerror="true">
