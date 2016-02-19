@@ -417,7 +417,7 @@ class Tools(object):
             
             logger.debug("Trying to detect availability/location of tool: %s"
                          %(executable))
-            
+
             # initialize the global tool info for this executable
             self._info[executable] = {}
             self._info[executable]['full_path'] = None
@@ -3072,52 +3072,44 @@ def env_setup():
     if "PATH" in os.environ:
         path = os.environ['PATH']
     path_entries = path.split(':')
+    if "" in path_entries:
+        path_entries.remove("")
     
-    # is /usr/bin in the path?
+    # is /usr/bin /bin in the path?
     if not("/usr/bin" in path_entries):
         path_entries.append("/usr/bin")
+    if not("/bin" in path_entries):
         path_entries.append("/bin")
 
     # fink on macos x
     if os.path.exists("/sw/bin") and not("/sw/bin" in path_entries):
         path_entries.append("/sw/bin")
     
-    # prepend the path pegasus-transfer was launched from - this ensures
-    # a consistent environment where all the Pegasus tools are picked
-    # up from the same location
-    try:
-        path_entries.remove(prog_dir)
-    except Exception:
-        pass
-    path_entries.insert(0, prog_dir)
+    # if pegasus-transfer was launched from a directory not in our
+    # PATH, prepend that directory
+    if prog_dir not in path_entries:
+        path_entries.insert(0, prog_dir)
     
     # need LD_LIBRARY_PATH for Globus tools
     ld_library_path = ""
     if "LD_LIBRARY_PATH" in os.environ:
         ld_library_path = os.environ['LD_LIBRARY_PATH']
     ld_library_path_entries = ld_library_path.split(':')
+    if "" in ld_library_path_entries:
+        ld_library_path_entries.remove("")
 
-    # if GLOBUS_LOCATION is set, prepend it to the PATH and LD_LIBRARY_PATH 
-    # (we want it early to override other cruft)
+    # if GLOBUS_LOCATION is set, we might want to update PATH and LD_LIBRARY_PATH 
     if "GLOBUS_LOCATION" in os.environ:
-        try:
-            path_entries.remove(os.environ['GLOBUS_LOCATION'] + "/bin")
-        except Exception:
-            pass
-        path_entries.insert(0, os.environ['GLOBUS_LOCATION'] + "/bin")
-        try:
-            ld_library_path_entries.remove(
-                os.environ['GLOBUS_LOCATION'] + "/lib")
-        except Exception:
-            pass
-        ld_library_path_entries.insert(0, 
-                                       os.environ['GLOBUS_LOCATION'] + "/lib")
+        if os.environ["GLOBUS_LOCATION"] + "/bin" not in path_entries:
+            path_entries.append(os.environ['GLOBUS_LOCATION'] + "/bin")
+        if os.environ["GLOBUS_LOCATION"] + "/lib" not in ld_library_path_entries:
+            ld_library_path_entries.append(os.environ['GLOBUS_LOCATION'] + "/lib")
 
     os.environ['PATH'] = ":".join(path_entries)
     os.environ['LD_LIBRARY_PATH'] = ":".join(ld_library_path_entries)
     os.environ['DYLD_LIBRARY_PATH'] = ":".join(ld_library_path_entries)
-    logger.debug("PATH=" + os.environ['PATH'])
-    logger.debug("LD_LIBRARY_PATH=" + os.environ['LD_LIBRARY_PATH'])
+    logger.info("PATH=" + os.environ['PATH'])
+    logger.info("LD_LIBRARY_PATH=" + os.environ['LD_LIBRARY_PATH'])
 
     max_cmd_len = max_cmd_length()
     logger.debug("Maximum command line argument lenght to be used: %d" %(max_cmd_len))
