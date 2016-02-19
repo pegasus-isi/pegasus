@@ -446,7 +446,8 @@ public class DeployWorkerPackage
         //create one out of existing pegasus installation on the submit
         //host and set it up for use.
         CreateWorkerPackage cw = new CreateWorkerPackage( mBag );       
-        mSubmitHostWorkerPackage = cw.create( );
+        //PM-1046 copy the worker package instead of creating our own
+        mSubmitHostWorkerPackage = cw.copy( ); 
 
         //load the transformation selector. different
         //selectors may end up being loaded for different jobs.
