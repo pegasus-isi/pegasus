@@ -283,6 +283,22 @@ public class PegasusLite implements GridStart {
      * that site.
      */
     private Map<String,String> mChmodOnExecutionSiteMap;
+    
+    /**
+     * Indicates whether to enforce strict checks against the worker package 
+     * provided for jobs in PegasusLite mode.
+     * if a job comes with worker package and it does not match fully with
+     * worker node architecture , PegasusLite will revert to Pegasus download website.
+     */
+    protected boolean mEnforceStrictChecksOnWPVersion;
+    
+    
+    /**
+     * Whether PegasusLite should download from the worker package from website
+     * in any case or not
+     */
+    protected boolean mAllowWPDownloadFromWebsite;
+    
     /**
      * Initializes the GridStart implementation.
      *
@@ -305,6 +321,9 @@ public class PegasusLite implements GridStart {
         if( mWorkerPackageMap == null ){
                 mWorkerPackageMap = new HashMap<String,String>();
         }
+        mEnforceStrictChecksOnWPVersion = mProps.enforceStrictChecksForWorkerPackage();
+        mAllowWPDownloadFromWebsite     = mProps.allowDownloadOfWorkerPackageFromPegasusWebsite();
+        
         /* PM-810    
         if( mTransferWorkerPackage ){
             mWorkerPackageMap = bag.getWorkerPackageMap();
@@ -771,6 +790,8 @@ public class PegasusLite implements GridStart {
             sb.append( "pegasus_lite_version_major=\"" ).append( this.mMajorVersionLevel ).append( "\"").append( '\n' );
             sb.append( "pegasus_lite_version_minor=\"" ).append( this.mMinorVersionLevel ).append( "\"").append( '\n' );
             sb.append( "pegasus_lite_version_patch=\"" ).append( this.mPatchVersionLevel ).append( "\"").append( '\n' );
+            sb.append( "pegasus_lite_enforce_strict_wp_check=\"" ).append( this.mEnforceStrictChecksOnWPVersion ).append( "\"").append( '\n' );
+            sb.append( "pegasus_lite_version_allow_wp_auto_download=\"" ).append( this.mAllowWPDownloadFromWebsite ).append( "\"").append( '\n' );
             sb.append( '\n' );
 
             sb.append( ". " ).append( PegasusLite.PEGASUS_LITE_COMMON_FILE_BASENAME ).append( '\n' );
