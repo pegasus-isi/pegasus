@@ -555,28 +555,34 @@ public class JDBCRC implements ReplicaCatalog
    * @return a collection of replica catalog entries
    * @see ReplicaCatalogEntry
    */
+  @Override
   public Collection lookup( String lfn )
   {
       List result = new ArrayList();
-      String query = mCStatements[1];
 
       // sanity check
       if ( lfn == null ) return result;
       if ( mConnection == null ) throw new RuntimeException( c_error );
 
       // start to ask
+      String query = "SELECT lfn_id FROM rc_lfn WHERE lfn='" + lfn + "'";
       try {
-          PreparedStatement ps = getStatement(1);
-          ps.setString( 1, quote(lfn) );
-
-          ResultSet rs = ps.executeQuery();
-          while ( rs.next() ) {
-              result.add( new ReplicaCatalogEntry( rs.getString("pfn"),
-                      attributes(rs.getString("lfn_id"),
-                      rs.getString("site")) ) );
-          }
-          rs.close();
-
+          Statement st = mConnection.createStatement();
+          ResultSet rs = st.executeQuery(query);
+          if (rs.next()) {
+              String id = rs.getString("lfn_id");
+              st.close();
+              rs.close();
+              query = "SELECT pfn, site FROM rc_pfn WHERE lfn_id=" + id;
+              st = mConnection.createStatement();
+              rs = st.executeQuery(query);
+              while ( rs.next() ) {
+                  result.add( new ReplicaCatalogEntry( rs.getString("pfn"),
+                          attributes(id, rs.getString("site")) ) );
+              }
+              st.close();
+              rs.close();
+          }         
       } catch ( SQLException e ) {
           throw new RuntimeException( "Unable to query database about " +
 				  query + ": " + e.getMessage() );
@@ -960,7 +966,7 @@ public class JDBCRC implements ReplicaCatalog
           ResultSet rs = null;
           String id = null;
           // check if the lfn already exists
-          PreparedStatement ps = mConnection.prepareStatement("SELECT lfn_id,lfn FROM rc_lfn WHERE lfn=?");
+          PreparedStatement ps = mConnection.prepareStatement("SELECT lfn_id FROM rc_lfn WHERE lfn=?");
           ps.setString(1, quote(lfn));
           rs = ps.executeQuery();
           if (rs.next()) {
@@ -1221,39 +1227,42 @@ public class JDBCRC implements ReplicaCatalog
     if ( mConnection == null ) throw new RuntimeException( c_error );
 
     try {
-        query = new StringBuilder(256);
-        query.append("SELECT DISTINCT l.lfn_id, m.key, m.value FROM rc_lfn l ");
-        if (tuple.getResourceHandle() != null) {
-            query.append("INNER JOIN rc_pfn p ON l.lfn_id=p.lfn_id AND p.site='");
-            query.append(quote(tuple.getResourceHandle()));
-            query.append("' ");
-        }
-        query.append("LEFT JOIN rc_meta m ON l.lfn_id=m.lfn_id ");
-        query.append("WHERE l.lfn='").append(lfn).append("'");
-
+        query = new StringBuilder("SELECT lfn_id FROM rc_lfn WHERE lfn='").append(lfn).append("'");
         Statement st = mConnection.createStatement();
         ResultSet rs = st.executeQuery(query.toString());
-        int id = 0;;
-        while (rs.next()) {
-            id = rs.getInt("lfn_id");
-                    String key = rs.getString("key");
-                    String value = rs.getString("value");
-                    if (key != null && (!tuple.hasAttribute(key) || (value != null && !tuple.getAttribute(key).equals(value)))) {
-                        st.close();
-                        rs.close();
-                        return result;
-                    }
+        if (rs.next()) {
+            int id = rs.getInt("lfn_id");
+            st.close();
+            rs.close();
+            if (tuple.getResourceHandle() != null) {
+                query = new StringBuilder("SELECT lfn_id FROM rc_pfn WHERE lfn_id=").append(id).append(" AND site='").append(quote(tuple.getResourceHandle())).append("'");
+                st = mConnection.createStatement();
+                rs = st.executeQuery(query.toString());
+                if (!rs.next()) {
+                    return result;
                 }
-        
-        if (id > 0) {
+            }
+            query = new StringBuilder("SELECT `key`, value FROM rc_meta WHERE lfn_id=").append(id);
+            st = mConnection.createStatement();
+            rs = st.executeQuery(query.toString());
+            while (rs.next()) {
+                String key = rs.getString("key");
+                String value = rs.getString("value");
+                if (key != null && (!tuple.hasAttribute(key) || (value != null && !tuple.getAttribute(key).equals(value)))) {
+                    st.close();
+                    rs.close();
+                    return result;
+                }
+            }
+            st.close();
+            rs.close();
             query = new StringBuilder(256);
             query.append("DELETE FROM rc_lfn WHERE lfn_id=").append(id);
             st = mConnection.createStatement();
             result = st.executeUpdate(query.toString());
+            st.close();
+            rs.close();
         }
-        st.close();
-        rs.close();
-
         return result;
 
     } catch ( SQLException e ) {
