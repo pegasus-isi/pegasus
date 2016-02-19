@@ -406,7 +406,7 @@ class Tools(object):
     
     _info = {}
 
-    def find(self, executable, version_arg=None, version_regex=None):
+    def find(self, executable, version_arg=None, version_regex=None, path_prepend=None):
 
         self.lock.acquire()
         try:
@@ -427,9 +427,22 @@ class Tools(object):
             self._info[executable]['version_patch'] = None
         
             # figure out the full path to the executable
-            full_path = backticks("which " + executable + " 2>/dev/null") 
-            full_path = full_path.rstrip('\n')
-            if full_path == "":
+            path_entries = os.environ["PATH"].split(":")
+            if "" in path_entries:
+                path_entries.remove("")
+            if path_prepend is not None:
+                for entry in path_prepend:
+                    path_entries.insert(0, entry)
+            
+            # now walk the path
+            full_path = None
+            for entry in path_entries:
+                full_path = entry + "/" + executable
+                if os.path.isfile(full_path) and os.access(full_path, os.X_OK):
+                    break
+                full_path = None
+            
+            if full_path == None:
                 logger.info("Command '%s' not found in the current environment"
                             %(executable))
                 self._info[executable] = None
@@ -822,7 +835,7 @@ class GridFtpHandler(TransferHandlerBase):
         if mkdirs_l[0].get_proto() == "gsiftp":
                 
             tools = Tools()
-            if tools.find("pegasus-gridftp") == None:
+            if tools.find("pegasus-gridftp", path_prepend=[prog_dir]) == None:
                 logger.error("Unable to do gsiftp mkdir because pegasus-gridftp could not be found")
                 return [[], mkdirs_l]
             
@@ -974,7 +987,7 @@ class GridFtpHandler(TransferHandlerBase):
         if removes_l[0].get_proto() == "gsiftp":
             
             tools = Tools()
-            if tools.find("pegasus-gridftp") == None:
+            if tools.find("pegasus-gridftp", path_prepend=[prog_dir]) == None:
                 logger.error("Unable to do gsiftp rm because pegasus-gridftp could not be found")
                 return [[], removes_l]
             
@@ -1561,7 +1574,7 @@ class S3Handler(TransferHandlerBase):
 
     def do_mkdirs(self, mkdir_l):
         tools = Tools()
-        if tools.find("pegasus-s3", "help", None) is None:
+        if tools.find("pegasus-s3", "help", None, [prog_dir]) is None:
             logger.error("Unable to do S3 transfers because pegasus-s3 not found")
             return [[], mkdir_l]
 
@@ -1578,7 +1591,7 @@ class S3Handler(TransferHandlerBase):
             else:
                 raise RuntimeError("Unable to parse bucket: %s" % (bucket))
 
-            cmd = "pegasus-s3 mkdir"
+            cmd = tools.full_path("pegasus-s3") + " mkdir"
             if logger.isEnabledFor(logging.DEBUG):
                 cmd += " -v"
             cmd += " " + bucket
@@ -1597,7 +1610,7 @@ class S3Handler(TransferHandlerBase):
     def do_transfers(self, transfers):
     
         tools = Tools()
-        if tools.find("pegasus-s3", "help", None) is None:
+        if tools.find("pegasus-s3", "help", None, [prog_dir]) is None:
             logger.error("Unable to do S3 transfers because pegasus-s3 could not be found")
             return [[], transfers]
 
@@ -1613,16 +1626,16 @@ class S3Handler(TransferHandlerBase):
                (t.get_dst_proto() == "s3" or t.get_dst_proto() == "s3s"):
                 # s3 -> s3
                 env = self._s3_cred_env(t.get_src_site_label())
-                cmd = "pegasus-s3 cp -f -c '%s' '%s'" % (t.src_url(), t.dst_url())
+                cmd = tools.full_path("pegasus-s3") + " cp -f -c '%s' '%s'" % (t.src_url(), t.dst_url())
             elif t.get_dst_proto() == "file":
                 # this is a 'get'
                 env = self._s3_cred_env(t.get_src_site_label())
                 prepare_local_dir(os.path.dirname(t.get_dst_path()))
-                cmd = "pegasus-s3 get '%s' '%s'" % (t.src_url(), t.get_dst_path())
+                cmd = tools.full_path("pegasus-s3") + " get '%s' '%s'" % (t.src_url(), t.get_dst_path())
             else:
                 # this is a 'put'
                 env = self._s3_cred_env(t.get_dst_site_label())
-                cmd = "pegasus-s3 put -f -b '%s' '%s'" % (t.get_src_path(), t.dst_url())
+                cmd = tools.full_path("pegasus-s3") + " put -f -b '%s' '%s'" % (t.get_src_path(), t.dst_url())
 
             try:
                 tc = TimedCommand(cmd, env_overrides=env)
@@ -1641,7 +1654,7 @@ class S3Handler(TransferHandlerBase):
 
     def do_removes(self, removes_list):
         tools = Tools()
-        if tools.find("pegasus-s3", "help", None) is None:
+        if tools.find("pegasus-s3", "help", None, [prog_dir]) is None:
             logger.error("Unable to do S3 transfers because pegasus-s3 could not be found")
             return [[], removes_list]
         
@@ -1675,7 +1688,7 @@ class S3Handler(TransferHandlerBase):
            
         env = self._s3_cred_env(removes_list[0].get_site_label()) 
             
-        cmd = "pegasus-s3 rm -f"
+        cmd = tools.full_path("pegasus-s3") + " rm -f"
         if logger.isEnabledFor(logging.DEBUG):
             cmd += " -v"
         cmd += " -F " + tmp_name
@@ -1733,7 +1746,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
 
     def do_mkdirs(self, mkdir_l):
         tools = Tools()
-        if tools.find("pegasus-globus-online", "help", None) is None:
+        if tools.find("pegasus-globus-online", "help", None, [prog_dir]) is None:
             logger.error("Unable to locate pegasus-globus-online in the $PATH")
             return [[], mkdir_l]
 
@@ -1763,7 +1776,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
         tmp_file.write(json.dumps(spec, indent=2))
         tmp_file.close()
 
-        cmd = "pegasus-globus-online --mkdir --file " + tmp_name
+        cmd = tools.full_path("pegasus-globus-online") + " --mkdir --file " + tmp_name
         if logger.isEnabledFor(logging.DEBUG):
             cmd += " --debug"
         try:
@@ -1781,7 +1794,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
 
     def do_transfers(self, transfers_l):
         tools = Tools()
-        if tools.find("pegasus-globus-online", "help", None) is None:
+        if tools.find("pegasus-globus-online", "help", None, [prog_dir]) is None:
             logger.error("Unable to locate pegasus-globus-online in the $PATH")
             return [[], transfers_l]
 
@@ -1822,7 +1835,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
         tmp_file.write(json.dumps(spec, indent=2))
         tmp_file.close()
 
-        cmd = "pegasus-globus-online --transfer --file " + tmp_name
+        cmd = tools.full_path("pegasus-globus-online") + " --transfer --file " + tmp_name
         if logger.isEnabledFor(logging.DEBUG):
             cmd += " --debug"
         try:
@@ -1845,7 +1858,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
             return [removes_l, []]
         
         tools = Tools()
-        if tools.find("pegasus-globus-online", "help", None) is None:
+        if tools.find("pegasus-globus-online", "help", None, [prog_dir]) is None:
             logger.error("Unable to locate pegasus-globus-online in the $PATH")
             return [[], removes_l]
 
@@ -1875,7 +1888,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
         tmp_file.write(json.dumps(spec, indent=2))
         tmp_file.close()
 
-        cmd = "pegasus-globus-online --remove --file " + tmp_name
+        cmd = tools.full_path("pegasus-globus-online") + " --remove --file " + tmp_name
         if logger.isEnabledFor(logging.DEBUG):
             cmd += " --debug"
         try:
@@ -3084,11 +3097,6 @@ def env_setup():
     # fink on macos x
     if os.path.exists("/sw/bin") and not("/sw/bin" in path_entries):
         path_entries.append("/sw/bin")
-    
-    # if pegasus-transfer was launched from a directory not in our
-    # PATH, prepend that directory
-    if prog_dir not in path_entries:
-        path_entries.insert(0, prog_dir)
     
     # need LD_LIBRARY_PATH for Globus tools
     ld_library_path = ""
