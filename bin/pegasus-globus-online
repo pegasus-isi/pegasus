@@ -189,7 +189,7 @@ def mkdir(request):
     
     label = None
     if "PEGASUS_WF_UUID" in os.environ and "PEGASUS_DAG_JOB_ID" in os.environ:
-        label = os.environ["PEGASUS_WF_UUID"] + " / " + os.environ["PEGASUS_DAG_JOB_ID"] 
+        label = os.environ["PEGASUS_WF_UUID"] + " - " + os.environ["PEGASUS_DAG_JOB_ID"] 
 
     # set up a new transfer
     code, message, data = api.transfer_submission_id()
@@ -253,7 +253,7 @@ def transfer(request):
 
     label = None
     if "PEGASUS_WF_UUID" in os.environ and "PEGASUS_DAG_JOB_ID" in os.environ:
-        label = os.environ["PEGASUS_WF_UUID"] + " / " + os.environ["PEGASUS_DAG_JOB_ID"] 
+        label = os.environ["PEGASUS_WF_UUID"] + " - " + os.environ["PEGASUS_DAG_JOB_ID"] 
 
     # set up a new transfer
     code, message, data = api.transfer_submission_id()
@@ -307,7 +307,7 @@ def remove(request):
 
     label = None
     if "PEGASUS_WF_UUID" in os.environ and "PEGASUS_DAG_JOB_ID" in os.environ:
-        label = os.environ["PEGASUS_WF_UUID"] + " / " + os.environ["PEGASUS_DAG_JOB_ID"] 
+        label = os.environ["PEGASUS_WF_UUID"] + " - " + os.environ["PEGASUS_DAG_JOB_ID"] 
 
     # set up a new transfer
     code, message, data = api.transfer_submission_id()
@@ -374,6 +374,7 @@ def main():
 
     # Die nicely when asked to (Ctrl+C, system shutdown)
     signal.signal(signal.SIGINT, prog_sigint_handler)
+    signal.signal(signal.SIGTERM, prog_sigint_handler)
 
     if options.mkdir:
         mkdir(data)

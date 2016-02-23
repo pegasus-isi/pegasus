@@ -1911,6 +1911,9 @@ class GlobusOnlineHandler(TransferHandlerBase):
         """
         
         env_override = {}
+
+        if "X509_USER_PROXY" in os.environ:
+            env["X509_USER_PROXY"] = os.environ["X509_USER_PROXY"]
         
         # mkdirs and removes
         if isinstance(sample_transfer, Mkdir) or isinstance(sample_transfer, Remove):
