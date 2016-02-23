@@ -19,6 +19,7 @@ package edu.isi.pegasus.planner.catalog.transformation.impl;
 import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.common.util.Boolean;
+import edu.isi.pegasus.common.util.FileUtils;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.common.util.VariableExpander;
 
@@ -938,6 +939,26 @@ public class Text extends Abstract
 
     }
 
+    /**
+      * Copies the source backend to the directory passed. 
+      * 
+      * For database backends can return null
+      * 
+      * @param directory
+      * 
+      * @return path to the copied source file, else null.
+      */
+    public java.io.File copy( java.io.File directory ){
+        java.io.File copiedFile = null;
+        try {
+            copiedFile = FileUtils.copy( new java.io.File( mTCFile ), directory);
+        } catch (IOException ex) {
+            mLogger.log( "Unable to copy site catalog file " + mTCFile + 
+                         " to directory " + directory + " " + ex.getMessage(),
+                         LogManager.ERROR_MESSAGE_LEVEL );
+        }
+        return copiedFile;
+    }
 
     /**
      * Logs the message to a logging stream. Currently does not log to any stream.

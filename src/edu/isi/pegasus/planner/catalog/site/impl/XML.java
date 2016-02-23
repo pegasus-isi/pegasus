@@ -27,6 +27,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.FileUtils;
 
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -34,11 +35,14 @@ import edu.isi.pegasus.planner.parser.SiteCatalogXMLParser;
 import edu.isi.pegasus.planner.parser.SiteCatalogXMLParserFactory;
 import edu.isi.pegasus.planner.parser.StackBasedXMLParser;
 import java.io.File;
+import java.io.IOException;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 /**
@@ -249,6 +253,27 @@ public class XML implements SiteCatalog {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    /**
+      * Copies the source backend to the directory passed. 
+      * 
+      * For database backends can return null
+      * 
+      * @param directory
+      * 
+      * @return path to the copied source file, else null.
+      */
+    public File copy( File directory ){
+        File copiedFile = null;
+        try {
+            copiedFile = FileUtils.copy( new File( mFilename ), directory);
+        } catch (IOException ex) {
+            mLogger.log( "Unable to copy site catalog file " + mFilename + 
+                         " to directory " + directory + " " + ex.getMessage(),
+                         LogManager.ERROR_MESSAGE_LEVEL );
+        }
+        return copiedFile;
+    }
+    
    /**
      * Returns the default path to the site catalog file.
      *

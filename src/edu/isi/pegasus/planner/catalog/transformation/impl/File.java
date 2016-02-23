@@ -36,6 +36,7 @@ import java.util.TreeSet;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.util.Boolean;
+import edu.isi.pegasus.common.util.FileUtils;
 import edu.isi.pegasus.common.util.ProfileParser;
 import edu.isi.pegasus.common.util.ProfileParserException;
 import edu.isi.pegasus.common.util.Separator;
@@ -1361,6 +1362,27 @@ public class File  extends Abstract
                 "\n", e, LogManager.ERROR_MESSAGE_LEVEL);
             return false;
         }
+    }
+    
+    /**
+      * Copies the source backend to the directory passed. 
+      * 
+      * For database backends can return null
+      * 
+      * @param directory
+      * 
+      * @return path to the copied source file, else null.
+      */
+    public java.io.File copy( java.io.File directory ){
+        java.io.File copiedFile = null;
+        try {
+            copiedFile = FileUtils.copy( new java.io.File( mTCFile ), directory);
+        } catch (IOException ex) {
+            mLogger.log( "Unable to copy site catalog file " + mTCFile + 
+                         " to directory " + directory + " " + ex.getMessage(),
+                         LogManager.ERROR_MESSAGE_LEVEL );
+        }
+        return copiedFile;
     }
 
     /**

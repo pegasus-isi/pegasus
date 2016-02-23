@@ -22,6 +22,7 @@ import edu.isi.pegasus.planner.catalog.site.*;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 
 import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
+import java.io.File;
 
 import java.util.List;
 
@@ -40,7 +41,7 @@ public interface SiteCatalog extends Catalog {
     /**
      * The version of the API
      */
-    public static final String VERSION = "1.0";    
+    public static final String VERSION = "1.1";    
     
     /**
      * Prefix for the property subset to use with this catalog.
@@ -112,5 +113,16 @@ public interface SiteCatalog extends Catalog {
      * @throws SiteCatalogException in case of error.
      */
     public int remove( String handle ) throws SiteCatalogException;
+    
+    /**
+      * Copies the source backend to the directory passed. 
+      * 
+      * For database backends can return null
+      * 
+      * @param directory
+      * 
+      * @return path to the copied source file.
+      */
+    public File copy( File directory );
 
 }
