@@ -427,8 +427,10 @@ def _backup_db(db):
         command = "mysqldump"
         if url.username:
             command += " -u %s" % url.username
+        if url.host:
+            command += " -h %s" % url.host
         if url.password:
-            command += " -p %s" % url.password
+            command += " --password=%s" % url.password
         command += " %s > %s" % (url.database, dest_file)
         try:
             subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT)
