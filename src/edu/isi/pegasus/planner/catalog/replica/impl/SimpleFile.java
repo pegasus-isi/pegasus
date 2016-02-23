@@ -1167,5 +1167,15 @@ public class SimpleFile implements ReplicaCatalog {
         //System.err.println("Default Path to SC is " + f.getAbsolutePath());
         return f;
     }
+    
+    
+    /**
+     * Returns the file source.
+     * 
+     * @return the file source if it exists , else null
+     */
+    public java.io.File getFileSource(){
+        return new java.io.File( this.m_filename );
+    }
 }
 

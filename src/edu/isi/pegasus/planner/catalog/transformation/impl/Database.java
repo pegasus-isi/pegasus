@@ -2271,16 +2271,13 @@ if(!write) return false;
 
     }
     */
+   
     /**
-      * Copies the source backend to the directory passed. 
-      * 
-      * For database backends can return null
-      * 
-      * @param directory
-      * 
-      * @return path to the copied source file, else null.
-      */
-    public java.io.File copy( java.io.File directory ){
+     * Returns the file source.
+     * 
+     * @return the file source if it exists , else null
+     */
+    public java.io.File getFileSource(){
         return null;
     }
 }

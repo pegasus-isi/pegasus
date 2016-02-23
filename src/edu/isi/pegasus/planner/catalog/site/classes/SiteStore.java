@@ -57,6 +57,12 @@ public class SiteStore extends AbstractSiteData{
      */
     private String mWorkDir;
     private PlannerOptions mPlannerOptions;
+    
+    
+    /**
+     * The file backend for the site catalog.
+     */
+    private File mFileSource;
 
     
     /**
@@ -741,8 +747,26 @@ public class SiteStore extends AbstractSiteData{
         return mapper.equals( OutputMapperFactory.HASHED_OUTPUT_MAPPER_IMPLEMENTATION );
     }
 
+    /**
+     * Set the file source.
+     * 
+     * @param source  the source.
+     */
+    public void setFileSource(File source) {
+        this.mFileSource = source;
+    }
 
 
+    /**
+     * Returns the file source.
+     * 
+     * @return 
+     */
+    public File getFileSource(){
+        return this.mFileSource;
+    }
 
+
+    
     
 }

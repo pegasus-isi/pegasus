@@ -342,14 +342,11 @@ public interface ReplicaCatalog extends Catalog
    */
   public int clear();
   
-  
   /**
-   * Copies the source backend to the directory passed. 
-   * 
-   * For database backends can return null
-   * 
-   * @param directory
-   * @return 
-   */
-  //public File copy( File directory );
+    * Returns the file source.
+    * 
+    * @return the file source if it exists , else null
+    */
+  public java.io.File getFileSource();
+ 
 }

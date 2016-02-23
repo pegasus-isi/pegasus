@@ -447,14 +447,10 @@ public interface TransformationCatalog
     public String getDescription();
     
     /**
-      * Copies the source backend to the directory passed. 
-      * 
-      * For database backends can return null
-      * 
-      * @param directory
-      * 
-      * @return path to the copied source file.
-      */
-    public File copy( File directory );
+     * Returns the file source.
+     * 
+     * @return the file source if it exists , else null
+     */
+    public File getFileSource();
 
 }
