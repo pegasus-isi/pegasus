@@ -1547,12 +1547,13 @@ exec /usr/bin/ssh $extra_opts $port_str $remote_host $remote_program
           
       <orderedlist>
           <listitem>
-              <para>In the Globus Online web interface, update your user
-                  profile, and add your X.509 DN.
+              <para>Using the <ulink url="https://docs.globus.org/cli/">CLI interface</ulink>,
+                  update your user profile, and add your X.509 DN.
               </para>
           </listitem>
           <listitem>
-              <para>Under Endpoints, find the endpoints you need for the
+              <para>In the Globus Online web interface, under Endpoints,
+                  find the endpoints you need for the
                   workflow, and activate them. Note that you should
                   activate them for the whole duration of the workflow
                   or you will have to regularly log in and re-activate
