@@ -38,6 +38,7 @@ import org.griphyn.vdl.dbschema.DatabaseSchema;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.util.Boolean;
+import edu.isi.pegasus.common.util.FileUtils;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
@@ -2270,5 +2271,16 @@ if(!write) return false;
 
     }
     */
-
+    /**
+      * Copies the source backend to the directory passed. 
+      * 
+      * For database backends can return null
+      * 
+      * @param directory
+      * 
+      * @return path to the copied source file, else null.
+      */
+    public java.io.File copy( java.io.File directory ){
+        return null;
+    }
 }

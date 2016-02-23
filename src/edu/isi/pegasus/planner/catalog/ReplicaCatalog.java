@@ -341,4 +341,15 @@ public interface ReplicaCatalog extends Catalog
    * @return the number of removed entries.
    */
   public int clear();
+  
+  
+  /**
+   * Copies the source backend to the directory passed. 
+   * 
+   * For database backends can return null
+   * 
+   * @param directory
+   * @return 
+   */
+  //public File copy( File directory );
 }
