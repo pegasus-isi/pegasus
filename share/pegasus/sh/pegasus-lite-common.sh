@@ -47,14 +47,18 @@ function pegasus_lite_internal_wp_shipped()
     if ls $pegasus_lite_start_dir/pegasus-worker-*.tar.gz >/dev/null 2>&1; then
         pegasus_lite_log "The job contained a Pegasus worker package"
     
-        # make sure the provided worker package provided is for the this platform
-        system=$(pegasus_lite_get_system)
-        if [ $? = 0 ]; then
-            wp_name=`(cd $pegasus_lite_start_dir && ls pegasus-worker-*.tar.gz | head -n 1) 2>/dev/null`
-            if ! (echo "x$wp_name" | grep "$system") >/dev/null 2>&1 ; then
-                pegasus_lite_log "Warning: worker package $wp_name does not seem to match the system $system"
-                return 1
-            fi 
+        if [ "X$pegasus_lite_enforce_strict_wp_check" = "Xtrue" ]; then
+            # make sure the provided worker package provided is for the this platform
+            system=$(pegasus_lite_get_system)
+            if [ $? = 0 ]; then
+                wp_name=`(cd $pegasus_lite_start_dir && ls pegasus-worker-*.tar.gz | head -n 1) 2>/dev/null`
+                if ! (echo "x$wp_name" | grep "$system") >/dev/null 2>&1 ; then
+                    pegasus_lite_log "Warning: worker package $wp_name does not seem to match the system $system"
+                    return 1
+                fi 
+            fi
+        else
+            pegasus_lite_log "Skipping sanity check of included worker package because pegasus.transfer.worker.package.strict=$pegasus_lite_enforce_strict_wp_check"
         fi
 
         tar xzf $pegasus_lite_start_dir/pegasus-worker-*.tar.gz
@@ -103,6 +107,11 @@ function pegasus_lite_internal_wp_in_env()
 function pegasus_lite_internal_wp_download() 
 {
     # fall back - download a worker package from download.pegasus.isi.edu
+
+    if [ "X$pegasus_lite_version_allow_wp_auto_download" != "Xtrue" ]; then
+        pegasus_lite_log "Not downloading a worker package because pegasus.transfer.worker.package.autodownload=$pegasus_lite_version_allow_wp_auto_download"
+        return 1
+    fi
 
     system=$(pegasus_lite_get_system)
     if [ $? != 0 ]; then
