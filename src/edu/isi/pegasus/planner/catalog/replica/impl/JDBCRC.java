@@ -1543,5 +1543,14 @@ public class JDBCRC implements ReplicaCatalog
         }
         return f;
     }
+    
+    /**
+     * Returns the file source.
+     * 
+     * @return the file source if it exists , else null
+     */
+    public java.io.File getFileSource(){
+        return null;
+    }
 }
 

@@ -1192,4 +1192,13 @@ public class Regex implements ReplicaCatalog {
         m_lfn_pattern.clear();
         return result;
     }
+    
+    /**
+     * Returns the file source.
+     * 
+     * @return the file source if it exists , else null
+     */
+    public java.io.File getFileSource(){
+        return new java.io.File( this.m_filename );
+    }
 }

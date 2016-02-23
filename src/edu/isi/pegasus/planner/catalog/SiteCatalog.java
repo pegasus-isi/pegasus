@@ -115,14 +115,13 @@ public interface SiteCatalog extends Catalog {
     public int remove( String handle ) throws SiteCatalogException;
     
     /**
-      * Copies the source backend to the directory passed. 
-      * 
-      * For database backends can return null
-      * 
-      * @param directory
-      * 
-      * @return path to the copied source file.
-      */
-    public File copy( File directory );
+     * Returns the File Source for the Site Catalog
+     * 
+     * @return path to the backend catalog file , else null
+     */
+    public File getFileSource( );
+    
+    
+    
 
 }

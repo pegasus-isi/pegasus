@@ -1658,6 +1658,9 @@ public class CPlanner extends Executable{
         
         /* load the catalog using the factory */
         catalog = SiteFactory.loadInstance( mProps );
+        
+        //PM-1047 we want to save the catalogs all around.
+        result.setFileSource( catalog.getFileSource() );
 
         Set<String> toLoad = new HashSet<String>( sites );
 
