@@ -17,9 +17,6 @@ package edu.isi.pegasus.planner.common;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
-import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
-import edu.isi.pegasus.common.util.FindExecutable;
-import edu.isi.pegasus.common.util.StreamGobbler;
 import edu.isi.pegasus.common.util.StreamGobblerCallback;
 import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -27,7 +24,6 @@ import edu.isi.pegasus.planner.classes.PlannerOptions;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.nio.channels.FileChannel;
 
 /**
@@ -46,95 +42,6 @@ public class CreateWorkerPackage {
         mLogger = bag.getLogger();
     }
    
-    
-    /**
-     * Creates the pegasus worker package and returns a File object pointing
-     * to the worker package created
-     * 
-     * @param directory
-     * 
-     * @return file object to created worker package
-     * @throws RuntimeException in case of errors
-     */
-    public File create(  ){
-        PlannerOptions options = mBag.getPlannerOptions();
-        if( options == null ){
-            throw new RuntimeException( "No planner options specified " + options );
-        }
-        return this.create( new File( options.getSubmitDirectory()) );
-    }
-    
-   
-    /**
-     * Creates the pegasus worker package and returns a File object pointing
-     * to the worker package created
-     * 
-     * @param directory
-     * 
-     * @return file object to created worker package
-     * @throws RuntimeException in case of errors
-     */
-    public File create( File directory ){
-        String basename = "pegasus-worker-create";
-        File pegasusWorkerCreate = FindExecutable.findExec( basename );
-        //pegasusWorkerCreate = new File( "/lfs1/software/install/pegasus/pegasus-4.6.0dev/bin/pegasus-worker-create");
-        if( pegasusWorkerCreate == null ){
-            throw new RuntimeException( "Unable to find path to " + basename );
-        }
-        
-        //construct arguments for pegasus-db-admin
-        StringBuffer args = new StringBuffer();
-        args.append( directory.getAbsolutePath() );
-        String command = pegasusWorkerCreate.getAbsolutePath() + " " + args;
-        mLogger.log("Executing  " + command,
-                         LogManager.DEBUG_MESSAGE_LEVEL );
-            
-        File result = null;
-        try{
-            //set the callback and run the pegasus-run command
-            Runtime r = Runtime.getRuntime();
-            Process p = r.exec(command );
-            WorkerPackageCallback c = new WorkerPackageCallback( mLogger );
-
-            //spawn off the gobblers with the already initialized default callback
-            StreamGobbler ips =
-                new StreamGobbler( p.getInputStream(), c );
-            StreamGobbler eps =
-                new StreamGobbler( p.getErrorStream(), new DefaultStreamGobblerCallback(
-                                                             LogManager.ERROR_MESSAGE_LEVEL));
-
-            ips.start();
-            eps.start();
-
-            //wait for the threads to finish off
-            ips.join();
-            eps.join();
-
-            //get the status
-            int status = p.waitFor();
-
-            mLogger.log( basename + " exited with status " + status,
-                         LogManager.DEBUG_MESSAGE_LEVEL );
-
-            if( status != 0 ){
-                throw new RuntimeException( basename + " failed with non zero exit status " + command );
-            }
-            String workerPackage = c.getWorkerPackage();
-            result = new File( directory, workerPackage );
-            if( !result.exists() ){
-                throw new RuntimeException( "Worker package created does not exist " + result.getAbsolutePath() );
-            }
-        }
-        catch(IOException ioe){
-            mLogger.log("IOException while executing " + basename, ioe,
-                        LogManager.ERROR_MESSAGE_LEVEL);
-            throw new RuntimeException( "IOException while executing " + command , ioe );
-        }
-        catch( InterruptedException ie){
-            //ignore
-        }
-        return result;
-    } 
     
     /**
      * Copies the worker package from the pegasus installation directory to 
@@ -276,8 +183,8 @@ class WorkerPackageCallback implements StreamGobblerCallback {
     
         CreateWorkerPackage cw = new CreateWorkerPackage( bag);
         
-        File wp = cw.create( new File( "/tmp/") );
-        System.out.println( "Created worker package " + wp );
+        //File wp = cw.create( new File( "/tmp/") );
+        //System.out.println( "Created worker package " + wp );
     }
 }
 
