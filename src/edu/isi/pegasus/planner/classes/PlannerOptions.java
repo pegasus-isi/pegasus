@@ -330,7 +330,7 @@ public class PlannerOptions extends Data implements Cloneable{
      * @return Set of fully qualified paths to the cache files.
      *
      */
-    public Set getCacheFiles(){
+    public Set<String> getCacheFiles(){
         return mCacheFiles;
     }
 
