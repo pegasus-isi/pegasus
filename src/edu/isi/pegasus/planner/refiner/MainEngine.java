@@ -362,6 +362,8 @@ public class MainEngine
             String failureReason = null;
             try {
                 copiedFile = FileUtils.copy( source , directory);
+                mLogger.log( "Copied " + source + " to directory " + directory ,  
+                             LogManager.DEBUG_MESSAGE_LEVEL );
             } catch (IOException ex) {
                 failureReason = ex.getMessage();
             }

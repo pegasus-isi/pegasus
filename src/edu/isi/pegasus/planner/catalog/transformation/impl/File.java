@@ -1370,14 +1370,13 @@ public class File  extends Abstract
      * @return the file source if it exists , else null
      */
     public java.io.File getFileSource(){
-        java.io.File f = null;
         if( mTCFile != null ){
-            f = new  java.io.File( mTCFile );
+            java.io.File f = new  java.io.File( mTCFile );
             if( f.canRead() ){
                 return f;
             }
         }
-        return f;
+        return null;
     }
     
     /**
