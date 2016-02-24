@@ -125,7 +125,7 @@ pegasus
 Complete!</programlisting>
   </section>
   
-  <section id="ubunty">
+  <section id="ubuntu">
     <title>Ubuntu</title>
 
     <para>To be able to install and upgrade from the Pegasus apt repository,
@@ -158,6 +158,45 @@ Complete!</programlisting>
 # apt-get update
 # apt-get install pegasus
 </programlisting>
+
+  </section>
+
+  <section id="macosx">
+    <title>Mac OS X</title>
+
+    <para>The easiest way to install Pegasus on Mac OS is to use Homebrew.
+    You will need to install XCode and the XCode command-line tools, as well
+    as Homebrew. Then you just need to tap the Pegasus tools repository and
+    install Pegasus and HTCondor like this:</para>
+
+<programlisting>$ brew tap pegasus-isi/tools
+$ brew install pegasus htcondor
+    </programlisting>
+
+    <para>Once the installation is complete, you need to start the HTCondor
+    service. The easiest way to do that is to use the Homebrew services tap:
+    </para>
+
+    <programlisting>$ brew tap homebrew/services
+$ brew services list
+$ brew services start htcondor
+</programlisting>
+
+    <para>You can also stop HTCondor like this:</para>
+
+    <programlisting>$ brew services stop htcondor</programlisting>
+
+    <para>And you can uninstall Pegasus and HTCondor using <literal>brew rm
+    </literal> like this:</para>
+
+    <programlisting>$ brew rm pegasus htcondor</programlisting>
+
+    <note>
+        <para>It is also possible to install the latest development versions
+        of Pegasus using the <literal>--devel</literal> and <literal>--HEAD
+        </literal> arguments to <literal>brew install</literal>, like this:
+        <literal>$ brew install --devel pegasus</literal></para>
+    </note>
 
   </section>
 
