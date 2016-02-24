@@ -3,35 +3,91 @@
 Pegasus Workflow Management System
 ----------------------------------
 
-Before you try to run anything, you might want to make sure that your
-environment works. We depend on a number of packages that you need to have
-installed: Condor 7.4+, Java 1.6+, Python 2.6/2.7, Perl 5.6+, and optionally
-Globus Toolkit 4.2+.
+Pegasus WMS is a configurable system for mapping and executing scientific
+workflows over a wide range of computational infrastructures including laptops,
+campus clusters, supercomputers, grids, and commercial and academic clouds.
+Pegasus has been used to run workflows with up to 1 million tasks that process
+tens of terabytes of data at a time.
 
-Please refer to the RELEASE_NOTES for important changes. For instance, it is no
-longer necessary to set the PEGASUS_HOME environment variable. However, in
-order to find all tools, you must include Pegasus's "bin" directory in your
-PATH environment variable.
+Pegasus WMS bridges the scientific domain and the execution environment by
+automatically mapping high-level workflow descriptions onto distributed
+resources. It automatically locates the necessary input data and computational
+resources required by a workflow, and plans out all of the required data
+transfer and job submission operations required to execute the workflow.
+Pegasus enables scientists to construct workflows in abstract terms without
+worrying about the details of the underlying execution environment or the
+particulars of the low-level specifications required by the middleware (Condor,
+Globus, Amazon EC2, etc.). In the process, Pegasus can plan and optimize the
+workflow to enable efficient, high-performance execution of large
+workflows on complex, distributed infrastructures.
 
-Please refer to the user guide for instructions on the packages and their
-installation. You can find [online documentation](http://pegasus.isi.edu/documentation)
-on the Pegasus webpage and in the distributed "doc" directory. 
+Pegasus has a number of features that contribute to its usability and
+effectiveness:
 
-Installation
-------------
+* Portability / Reuse – User created workflows can easily be run in different
+environments without alteration. Pegasus currently runs workflows on top of
+Condor pools, Grid infrastrucutures such as Open Science Grid and XSEDE,
+Amazon EC2, Google Cloud, and HPC clusters. The same workflow can run on a
+single system or across a heterogeneous set of resources.
+* Performance – The Pegasus mapper can reorder, group, and prioritize tasks in
+order to increase overall workflow performance.
+* Scalability – Pegasus can easily scale both the size of the workflow, and
+the resources that the workflow is distributed over. Pegasus runs workflows
+ranging from just a few computational tasks up to 1 million. The number of
+resources involved in executing a workflow can scale as needed without any
+impediments to performance.
+* Provenance – By default, all jobs in Pegasus are launched using the
+Kickstart wrapper that captures runtime provenance of the job and helps in
+debugging. Provenance data is collected in a database, and the data can be
+queried with tools such as pegasus-statistics, pegasus-plots, or directly
+using SQL.
+* Data Management – Pegasus handles replica selection, data transfers and
+output registration in data catalogs. These tasks are added to a workflow as
+auxilliary jobs by the Pegasus planner.
+* Reliability – Jobs and data transfers are automatically retried in case of
+failures. Debugging tools such as pegasus-analyzer help the user to debug the
+workflow in case of non-recoverable failures.
+* Error Recovery – When errors occur, Pegasus tries to recover when possible
+by retrying tasks, by retrying the entire workflow, by providing workflow-level
+checkpointing, by re-mapping portions of the workflow, by trying alternative
+data sources for staging data, and, when all else fails, by providing a rescue
+workflow containing a description of only the work that remains to be done.
+It cleans up storage as the workflow is executed so that data-intensive
+workflows have enough space to execute on storage-constrained resources.
+Pegasus keeps track of what has been done (provenance) including the locations
+of data used and produced, and which software was used with which parameters.
+
+
+Getting Started
+---------------
+
+You can find more information about Pegasus on the [Pegasus Website](http://pegasus.isi.edu).
+
+Pegasus has an extensive [User Guide](http://pegasus.isi.edu/documentation/)
+that documents how to create, plan, and monitor workflows.
+
+We recommend you start by completing the Pegasus Tutorial from [Chapter 2 of the
+Pegasus User Guide](http://pegasus.isi.edu/documentation/tutorial.php).
 
 The easiest way to install Pegasus is to use one of the binary packages
 available on the [Pegasus downloads page](http://pegasus.isi.edu/downloads).
 Consult [Chapter 3 of the Pegasus User Guide](http://pegasus.isi.edu/wms/docs/latest/installation.php)
 for more information about installing Pegasus from binary packages.
 
-Pegasus requires the following software to be installed on your system:
+There is documentation on the Pegasus website for the Python, Java and Perl
+[DAX generator APIs](https://pegasus.isi.edu/documentation/dax_generator_api.php).
 
-* Java 1.6 or later
-* Python 2.6 or 2.7
-* Condor 8.0 or later
-* Perl 5
-* Globus 5 (optional, required for GRAM and GridFTP)
+There are [several examples](http://pegasus.isi.edu/documentation/examples/) of
+how to construct workflows on the Pegasus website and in the [Pegasus Git
+repository](https://github.com/pegasus-isi/pegasus/tree/master/share/pegasus/examples).
+
+There are also examples of how to [configure Pegasus for different execution
+environments](http://pegasus.isi.edu/documentation/execution_environments.php)
+in the Pegasus User Guide.
+
+If you need help using Pegasus, please contact us. See the [contact page]
+(http://pegasus.isi.edu/contact) on the Pegasus website for more information.
+
 
 Building from Source
 --------------------
@@ -57,8 +113,6 @@ Install the following packages using apt-get:
 * fop (optional, required to build documentation)
 * lintian (optional, required to build DEB package)
 * debhelper (optional, required to build DEB package)
-* asciidoc (optional, required to build documentation)
-* fop (optional, required to build documentation)
 * libmysqlclient-dev (optional, required to access MySQL databases)
 * libpq-dev (optional, required to access PostgreSQL databases)
 
@@ -123,38 +177,19 @@ Other packages may be required to run unit tests, and build MPI tools.
 
 Ant is used to compile Pegasus.
 
-To build a binary tarball (excluding documentation), run:
+To get a list of build targets run:
 
- $ ant dist
+    $ ant -p
+
+The targets that begin with "dist" are what you want to use.
+
+To build a basic binary tarball (excluding documentation), run:
+
+    $ ant dist
 
 To build the release tarball (including documentation), run:
 
- $ ant dist-release
+    $ ant dist-release
 
-Getting Started
----------------
-
-You can find more information about Pegasus on the [Pegasus Website](http://pegasus.isi.edu).
-
-Pegasus has an extensive [User Guide](http://pegasus.isi.edu/wms/docs/latest/)
-that documents how to create, plan, and monitor workflows.
-
-We recommend you start by completing the Pegasus Tutorial from [Chapter 2 of the
-Pegasus User Guide](http://pegasus.isi.edu/wms/docs/latest/tutorial.php).
-
-There is documentation on the Pegasus website for the
-[Python](http://pegasus.isi.edu/wms/docs/latest/python/),
-[Java](http://pegasus.isi.edu/wms/docs/latest/javadoc/) and
-[Perl](http://pegasus.isi.edu/wms/docs/latest/perl/) APIs used to construct DAXes.
-
-There are [several examples](http://pegasus.isi.edu/examples) of how to
-construct workflows on the Pegasus website and in the [Pegasus Git repository
-](https://github.com/pegasus-isi/pegasus/tree/master/share/pegasus/examples).
-
-There are also examples of how to [configure Pegasus for different execution
-environments](http://pegasus.isi.edu/wms/docs/latest/execution_environments.php)
-in the Pegasus User Guide.
-
-If you need help using Pegasus, please contact us. See the [support page]
-(http://pegasus.isi.edu/support) on the Pegasus website for contact information.
+The resulting packages will be created in the `dist` subdirectory.
 
