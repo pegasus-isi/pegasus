@@ -1271,10 +1271,12 @@ class HTTPHandler(TransferHandlerBase):
 
         # but only allow squid caching for the first try - after that go to
         # the source
-        if transfers[0].attempts > 1 and "http_proxy" in os.environ:
+        if transfers[0].attempts >= 1 and ('http_proxy' in env or 'http_proxy' in os.environ):
             logger.info("Disabling HTTP proxy due to previous failures")
-            del os.environ['http_proxy']
-            del env['http_proxy']
+            if 'http_proxy' in env:
+                del env['http_proxy']
+            if 'http_proxy' in os.environ:
+                del os.environ['http_proxy']
             
         if tools.find("wget", "--version", "([0-9]+\.[0-9]+)") is None and \
            tools.find("curl", "--version", " ([0-9]+\.[0-9]+)") is None:
