@@ -55,6 +55,7 @@ import java.util.StringTokenizer;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Metadata;
+import java.util.LinkedHashSet;
 
 /**
  * This coordinates the look up to the Replica Location Service, to determine
@@ -234,6 +235,12 @@ public class ReplicaCatalogBridge
     private boolean mRegisterDeepLFN;
     
     /**
+     * All the replica file sources detected.
+     */
+    private Set<File> mReplicaFileSources;
+    
+    
+    /**
      * The overloaded constructor.
      *
      * @param dag         the workflow that is being worked on.
@@ -289,6 +296,7 @@ public class ReplicaCatalogBridge
         //filenames
         mSearchFiles = dag.getDAGInfo().getLFNs( options.getForce() );
 
+        mReplicaFileSources = new LinkedHashSet<File>();
         
         try {
 
@@ -314,9 +322,11 @@ public class ReplicaCatalogBridge
                 }
                 
                 mReplicaCatalog = ReplicaFactory.loadInstance( props );          
-
+                
                 //load all the mappings.
                 mReplicaStore = new ReplicaStore( mReplicaCatalog.lookup( mSearchFiles ) );
+                
+                mReplicaFileSources.add( mReplicaCatalog.getFileSource() );
             }
 
         } catch ( Exception ex ) {
@@ -369,11 +379,17 @@ public class ReplicaCatalogBridge
         //incorporate the caching if any
         if ( !options.getCacheFiles().isEmpty() ) {
             loadCacheFiles( options.getCacheFiles() );
+            for( String source: options.getCacheFiles() ){
+                mReplicaFileSources.add( new File(source));
+            }
         }
 
         //load inherited replica store
         if ( !options.getInheritedRCFiles().isEmpty() ) {
             this.loadInheritedReplicaStore( options.getInheritedRCFiles() );
+            for( String source: options.getInheritedRCFiles() ){
+                mReplicaFileSources.add( new File(source));
+            }
         }
     }
 
@@ -447,8 +463,15 @@ public class ReplicaCatalogBridge
 
     }
 
-
-
+    /**
+     * Returns all the replica file sources.
+     * 
+     * @return the replica file source.
+     */
+    public Set<File> getReplicaFileSources(){
+        return this.mReplicaFileSources;
+    }
+    
 
     /**
      * Returns all the locations as returned from the Replica Lookup Mechanism.
