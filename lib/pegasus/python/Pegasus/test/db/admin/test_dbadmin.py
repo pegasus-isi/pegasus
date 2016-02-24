@@ -16,24 +16,24 @@ class TestDBAdmin(unittest.TestCase):
         _silentremove(filename)
         dburi = "sqlite:///%s" % filename
         
-        db = connection.connect(dburi, create=True)
+        db = connection.connect(dburi, create=True, verbose=False)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         
         db.execute("DROP TABLE dbversion")
         self.assertRaises(DBAdminError, db_verify, db)
         db.close()
-        db = connection.connect(dburi, create=True)
+        db = connection.connect(dburi, create=True, verbose=False)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         
         db.execute("DELETE FROM dbversion")
         db.close()
-        db = connection.connect(dburi, create=True)
+        db = connection.connect(dburi, create=True, verbose=False)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         
         db.execute("DROP TABLE rc_pfn")
         self.assertRaises(DBAdminError, db_verify, db)
         db.close()
-        db = connection.connect(dburi, create=True)
+        db = connection.connect(dburi, create=True, verbose=False)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         
         db.execute("DROP TABLE rc_pfn")
@@ -42,7 +42,7 @@ class TestDBAdmin(unittest.TestCase):
         self.assertRaises(DBAdminError, db_verify, db)
         self.assertRaises(DBAdminError, db_verify, db, "4.3.0")
         db.close()
-        db = connection.connect(dburi, create=True)
+        db = connection.connect(dburi, create=True, verbose=False)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         _remove(filename)
         
@@ -63,15 +63,15 @@ class TestDBAdmin(unittest.TestCase):
         filename = str(uuid.uuid4())
         _silentremove(filename)
         dburi = "sqlite:///%s" % filename
-        db = connection.connect(dburi, create=True)
+        db = connection.connect(dburi, create=True, verbose=False)
 
-        db_downgrade(db, pegasus_version="4.5.0")
+        db_downgrade(db, pegasus_version="4.5.0", verbose=False)
         self.assertEquals(db_current_version(db), 4)
         self.assertRaises(DBAdminError, db_verify, db)
         rc_lfn._set_parent(metadata)
         db.close()
 
-        db = connection.connect(dburi, create=True)
+        db = connection.connect(dburi, create=True, verbose=False)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         db.close()
         _remove(filename)
@@ -79,7 +79,7 @@ class TestDBAdmin(unittest.TestCase):
         fn = str(uuid.uuid4())
         _silentremove(fn)
         dburi2 = "sqlite:///%s" % fn
-        db2 = connection.connect(dburi2, create=True)
+        db2 = connection.connect(dburi2, create=True, verbose=False)
         _remove(fn)
 
 
@@ -118,7 +118,7 @@ class TestDBAdmin(unittest.TestCase):
         filename = str(uuid.uuid4())
         _silentremove(filename)
         dburi = "sqlite:///%s" % filename
-        db = connection.connect(dburi, schema_check=False, create=False)
+        db = connection.connect(dburi, schema_check=False, create=False, verbose=False)
         rc_sequences.create(db.get_bind(), checkfirst=True)
         rc_lfn.create(db.get_bind(), checkfirst=True)
         rc_pfn.create(db.get_bind(), checkfirst=True)
@@ -126,11 +126,11 @@ class TestDBAdmin(unittest.TestCase):
         self.assertRaises(DBAdminError, db_verify, db)
         db.close()
         
-        db = connection.connect(dburi, create=True)
+        db = connection.connect(dburi, create=True, verbose=False)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         _remove(filename)
         
-        db = connection.connect(dburi, schema_check=False, create=False)
+        db = connection.connect(dburi, schema_check=False, create=False, verbose=False)
         pg_workflow.create(db.get_bind(), checkfirst=True)
         pg_workflowstate.create(db.get_bind(), checkfirst=True)
         pg_ensemble.create(db.get_bind(), checkfirst=True)
@@ -138,11 +138,11 @@ class TestDBAdmin(unittest.TestCase):
         self.assertRaises(DBAdminError, db_verify, db)
         db.close()
         
-        db = connection.connect(dburi, create=True)
+        db = connection.connect(dburi, create=True, verbose=False)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         _remove(filename)
         
-        db = connection.connect(dburi, schema_check=False, create=False)
+        db = connection.connect(dburi, schema_check=False, create=False, verbose=False)
         st_workflow.create(db.get_bind(), checkfirst=True)
         st_workflowstate.create(db.get_bind(), checkfirst=True)
         st_host.create(db.get_bind(), checkfirst=True)
@@ -156,7 +156,7 @@ class TestDBAdmin(unittest.TestCase):
         self.assertRaises(DBAdminError, db_verify, db)
         db.close()
         
-        db = connection.connect(dburi, create=True)
+        db = connection.connect(dburi, create=True, verbose=False)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         _remove(filename)
         
@@ -164,13 +164,13 @@ class TestDBAdmin(unittest.TestCase):
         filename = str(uuid.uuid4())
         _silentremove(filename)
         dburi = "sqlite:///%s" % filename
-        db = connection.connect(dburi, create=True)
+        db = connection.connect(dburi, create=True, verbose=False)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         db.execute("DROP TABLE rc_pfn")
         self.assertRaises(DBAdminError, db_verify, db)
         db.close()
         
-        db = connection.connect(dburi, create=True)
+        db = connection.connect(dburi, create=True, verbose=False)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         db.close()
         _remove(filename)
@@ -195,17 +195,17 @@ class TestDBAdmin(unittest.TestCase):
         f.write('pegasus.monitord.output=%s\n' % dburi)
         f.close()
 
-        db = connection.connect_by_properties(props_filename, connection.DBType.JDBCRC, create=True)
+        db = connection.connect_by_properties(props_filename, connection.DBType.JDBCRC, create=True, verbose=False)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         db.close()
         _remove(filename)
 
-        db = connection.connect_by_properties(props_filename, connection.DBType.MASTER, create=True)
+        db = connection.connect_by_properties(props_filename, connection.DBType.MASTER, create=True, verbose=False)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         db.close()
         _remove(filename)
 
-        db = connection.connect_by_properties(props_filename, connection.DBType.WORKFLOW, create=True)
+        db = connection.connect_by_properties(props_filename, connection.DBType.WORKFLOW, create=True, verbose=False)
         self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
         db.close()
         _remove(filename)
@@ -218,7 +218,7 @@ class TestDBAdmin(unittest.TestCase):
         filename = str(uuid.uuid4())
         _silentremove(filename)
         dburi = "sqlite:///%s" % filename
-        db = connection.connect(dburi, create=True)
+        db = connection.connect(dburi, create=True, verbose=False)
         dbversion = DBVersion()
         dbversion.version = CURRENT_DB_VERSION + 1
         dbversion.version_number = CURRENT_DB_VERSION + 1
@@ -241,11 +241,11 @@ class TestDBAdmin(unittest.TestCase):
             shutil.copyfile(orig_filename, filename)
             dburi = "sqlite:///%s" % filename
             
-            db = connection.connect(dburi, create=False, schema_check=False)
+            db = connection.connect(dburi, create=False, schema_check=False, verbose=False)
             self.assertRaises(DBAdminError, db_verify, db)
             db.close()
             
-            db = connection.connect(dburi, create=True)
+            db = connection.connect(dburi, create=True, verbose=False)
             self.assertEquals(db_current_version(db), CURRENT_DB_VERSION)
             db.close()
             _remove(filename)
