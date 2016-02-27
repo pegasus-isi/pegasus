@@ -236,8 +236,6 @@ class WorkflowEntry:
 
 output_dir = None                       # output_dir for all files written by monitord
 jsd = None				# location of jobstate.log file
-nodaemon = 0				# foreground mode
-logfile = None				# location of monitord.log file
 millisleep = None			# emulated run mode delay
 adjustment = 0				# time zone adjustment (@#~! Condor)
 
@@ -249,10 +247,8 @@ parser = optparse.OptionParser(usage=prog_usage, description=prog_desc)
 
 parser.add_option("-a", "--adjust", action = "store", type = "int", dest = "adjustment",
 		  help = "adjust for time zone differences by i seconds, default 0")
-parser.add_option("-N", "--foreground", action = "store_const", const = 2, dest = "nodaemon",
-		  help = "(Condor) don't daemonize %s; go through motions as if" % (prog_base))
-parser.add_option("-n", "--no-daemon", action = "store_const", const = 1, dest = "nodaemon",
-		  help = "(debug) don't daemonize %s; keep it in the foreground" % (prog_base))
+parser.add_option("-N", "--condor-daemon", action="store_const", default=False, dest="condor_daemon",
+		  help = "Condor daemon mode. Used by pegasus-dagman.")
 parser.add_option("-j", "--job", action = "store", type = "string", dest = "jsd",
 		  help = "Alternative job state file to write, default is %s in the workflow's directory"
 		  % (utils.jobbase))
@@ -319,6 +315,10 @@ out = os.path.abspath(out)
 
 # Infer run directory
 run = os.path.dirname(out)
+if not os.path.isdir(run):
+    logger.critical("Run directory does not exist")
+    exit(1)
+os.chdir(run)
 
 # Get the location of the properties file from braindump
 top_level_wf_params = utils.slurp_braindb(run)
@@ -392,8 +392,7 @@ if utils.make_boolean(props.property("pegasus.monitord.stdout.disable.parsing") 
 
 if options.adjustment is not None:
     adjustment = options.adjustment
-if options.nodaemon is not None:
-    nodaemon = options.nodaemon
+condor_daemon = options.condor_daemon
 if options.jsd is not None:
     jsd = options.jsd
 if options.millisleep is not None:
@@ -401,7 +400,7 @@ if options.millisleep is not None:
 if options.replay_mode is not None:
     replay_mode = options.replay_mode
     # Replay mode always runs in foreground
-    nodaemon = 1
+    condor_daemon = False
     # No notifications in replay mode
     do_notifications = False
 if options.no_notify is not None:
@@ -930,41 +929,11 @@ def prog_sigusr2_handler(signum, frame):
 # --- main ------------------------------------------------------------------------------
 #
 
-# Rotate log file, if it exists
-#PM-688 we don't rotate logs in monitord
-# pegasus-dagman rotates the log file
-#utils.rotate_log_file(logfile)
-
-# Turn into daemon process
-if nodaemon == 0:
-    utils.daemonize()
-    # Open logfile as stdout
-    try:
-        sys.stdout = open(logfile, "a", 0)
-    except IOError:
-        logger.critical("could not open %s!" % (logfile))
-        sys.exit(1)
-elif nodaemon == 2:
-    utils.keep_foreground()
-    # Open logfile as stdout
-    try:
-        sys.stdout = open(logfile, "a", 0)
-    except IOError:
-        logger.critical("could not open %s!" % (logfile))
-        sys.exit(1)
-else:
-    # Hack to make stdout unbuffered
-    sys.stdout = os.fdopen(sys.stdout.fileno(), "w", 0)
-
-# Close stdin
-sys.stdin.close()
-# dup stderr onto stdout
-sys.stderr = sys.stdout
-
-# Touch logfile with start event
-print
-print (utils.isodate(time.time()) + " - pegasus-monitord starting - pid %d " % (os.getpid())).ljust(80, "-")
-print
+if condor_daemon:
+    # This is the case when being called from pegasus-dagman
+    # Although we cannot set sid, we can still become process group leader
+    print os.environ
+    os.setpgid(0, 0)
 
 # Ignore dying shells
 signal.signal(signal.SIGHUP, prog_sighup_handler)
