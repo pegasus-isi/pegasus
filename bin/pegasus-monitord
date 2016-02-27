@@ -23,7 +23,6 @@ Usage: pegasus-monitord [options] dagoutfile
 #  limitations under the License.
 ##
 
-# Import Python modules
 import os
 import re
 import sys
@@ -57,7 +56,6 @@ from Pegasus.tools import properties
 from Pegasus.monitoring.workflow import Workflow, MONITORD_RECOVER_FILE
 from Pegasus.monitoring import notifications
 from Pegasus.monitoring import event_output as eo
-from Pegasus.monitoring import socket_interface
 
 utils.configureLogging()
 
@@ -83,9 +81,6 @@ os.environ['PEGASUS_PYTHON_DIR'] = pegasus_python_dir
 os.environ['PEGASUS_SHARE_DIR'] = pegasus_share_dir
 os.environ['PEGASUS_SCHEMA_DIR'] = pegasus_schema_dir
 
-# Compile our regular expressions
-
-# Used in process
 re_parse_dag_name = re.compile(r"Parsing (.+) ...$")
 re_parse_timestamp = re.compile(r"\s*(\d{1,2})\/(\d{1,2})(\/(\d{1,2}))?\s+(\d{1,2}):(\d{2}):(\d{2})")
 re_parse_iso_stamp = re.compile(r"^\s*(\d{4}).?(\d{2}).?(\d{2}).(\d{2}).?(\d{2}).?(\d{2})([.,]\d+)?([Zz]|[-+](\d{2}).?(\d{2}))")
@@ -109,7 +104,6 @@ re_parse_multiline_files = re.compile(r"All DAG node user log files:")
 re_parse_dagman_aborted  = re.compile(r"Received SIGUSR1")
 
 # Constants
-speak = "PMD/1.0"                         # Protocol version for our socket command-line interface
 MONITORD_WF_RETRY_FILE = "monitord.subwf" # filename for writing persistent sub-workflow retry information
 MAX_SLEEP_TIME = 10                       # in seconds
 SLEEP_WAIT_NOTIFICATION = 5               # in seconds
@@ -132,10 +126,8 @@ db_stats = 'no'                 # collect and print database stats at the end of
 no_events = False               # Flag for disabling event output altogether
 event_dest = None               # URL containing the destination of the events
 dashboard_event_dest = None     # URL containing the destination of events for the dashboard
-encoding = None	                # Way to encode the data
+encoding = None                 # Way to encode the data
 monitord_exit_code = 0          # Exit code for pegasus-monitord
-socket_enabled = False          # Enable socket for real-time debugging
-start_server = False            # Keep track if socket server needs to be started
 do_notifications = True         # Flag to enable notifications
 skip_pid_check = False          # Flag to skip checking if a previous monitord is still running using the pid file
 monitord_notifications = None   # Notifications' manager class
@@ -143,14 +135,13 @@ max_parallel_notifications = 10 # Maximum number of notifications we can do in p
 notifications_timeout = 0       # Time to wait for notification scripts to finish (0 means wait forever)
 store_stdout_stderr = True      # Flag for storing jobs' stdout and stderr in our output
 fast_start_mode     = False     # Flag to indicate that only sleep once monitord has caught up with the dagman.out file
-
 wf_event_sink = None            # Where wf events go
-
-# Remaining variables
 out = None                      # .dag.dagman.out file from command-line
 run = None                      # run directory from command-line dagman.out file
-server = None                   # server socket
-sockfn = None                   # socket filename
+output_dir = None               # output_dir for all files written by monitord
+jsd = None                      # location of jobstate.log file
+millisleep = None               # emulated run mode delay
+adjustment = 0                  # time zone adjustment (@#~! Condor)
 
 #
 # --- at exit handlers -------------------------------------------------------------------
@@ -164,18 +155,6 @@ def delete_pid_file():
         os.unlink(pid_filename)
     except OSError:
         logger.error("cannot delete pid file %s" % (pid_filename))
-
-def socket_exit_handler():
-    """
-    This function closes the socket server, and removes the sockfn file.
-    """
-    if server is not None:
-        server.close()
-        try:
-            os.unlink(sockfn)
-        except OSError:
-            # Just be silent
-            pass
 
 def close_wf_retry_file():
     """
@@ -216,7 +195,6 @@ def finish_stampede_loader():
     logger.info("DB flushing ended")
 
 
-# Workflow Entry Class
 class WorkflowEntry:
     """
     Class used to store one workflow entry
@@ -233,11 +211,6 @@ class WorkflowEntry:
     sleep_time = None			# Time to sleep for this workflow
     caught_up_with_dagman_out = False # indicates monitord has caught up with the dagman.out file
     dagman_out_appeared       = False # indicates whether dagman.out file has appeared or not
-
-output_dir = None                       # output_dir for all files written by monitord
-jsd = None				# location of jobstate.log file
-millisleep = None			# emulated run mode delay
-adjustment = 0				# time zone adjustment (@#~! Condor)
 
 # Parse command line options
 prog_usage = "usage: %s [options] workflow.dag.dagman.out" % (prog_base)
@@ -274,8 +247,6 @@ parser.add_option("--db-stats", action = "store_const", const = "yes", dest = "d
                   help = "collect and print database stats at the end")
 parser.add_option("--keep-state", action = "store_const", const = 1, dest = "keep_state",
                   help = "keep state across several DAGMan start/stop cycles (development option)")
-parser.add_option("--socket", action = "store_const", const = "yes", dest = "socket_enabled",
-                  help = "enables a socket interface for debugging")
 parser.add_option("--skip-stdout", action = "store_const", const = 0, dest = "skip_stdout",
                   help = "disables storing both stdout and stderr in our output")
 parser.add_option("-f", "--force", action = "store_const", const = 1, dest = "skip_pid_check",
@@ -323,8 +294,6 @@ os.chdir(run)
 # Get the location of the properties file from braindump
 top_level_wf_params = utils.slurp_braindb(run)
 top_level_prop_file = None
-
-# Get properties tag from braindump
 if "properties" in top_level_wf_params:
     top_level_prop_file = top_level_wf_params["properties"]
     # Create the full path by using the submit_dir key from braindump
@@ -435,8 +404,6 @@ if options.output_dir is not None:
     except OSError:
         logger.critical("cannot create directory %s. exiting..." % (output_dir))
         sys.exit(1)
-if options.socket_enabled is not None:
-    socket_enabled = options.socket_enabled
 if options.event_dest is None:
     if options.no_events is not None:
         # Turn off event generation
@@ -458,11 +425,14 @@ if options.fast_start is True:
     fast_start_mode = True
 
 #check if specified in properties and override from options
-fast_start_property = "pegasus.monitord.fast_start"
-if props.property(fast_start_property) is not None:
-    fast_start_mode = utils.make_boolean(props.property(fast_start_property))
+fast_start_property = props.property("pegasus.monitord.fast_start")
+if fast_start_property is not None:
+    fast_start_mode = utils.make_boolean(fast_start_property)
 
-dashboard_event_dest = connection.url_by_properties(options.config_properties, connection.DBType.MASTER, rundir_properties=top_level_prop_file)
+dashboard_event_dest = connection.url_by_properties(
+        options.config_properties,
+        connection.DBType.MASTER,
+        rundir_properties=top_level_prop_file)
 
 if options.enc is not None:
     # Get encoding from command-line options
@@ -894,8 +864,6 @@ def prog_sigusr1_handler(signum, frame):
     """
     This function increases the log level to the next one.
     """
-    global start_server
-
     cur_level = root_logger.getEffectiveLevel()
 
     try:
@@ -905,10 +873,6 @@ def prog_sigusr1_handler(signum, frame):
     except ValueError:
         root_logger.setLevel(logging.INFO)
         logger.error("Unknown current level = %s, setting to INFO" % (cur_level))
-
-    # Check debugging socket
-    if not socket_enabled:
-        start_server = True
 
 def prog_sigusr2_handler(signum, frame):
     """
@@ -1023,28 +987,6 @@ if millisleep is not None:
 
 if fast_start_mode:
     logger.info("monitord started in fast start mode")
-
-# Only create server socket if asked...
-if output_dir is None:
-    sockfn = os.path.join(os.path.dirname(out), "monitord.sock")
-else:
-    sockfn = os.path.join(os.path.dirname(out), output_dir, "monitord.sock")
-if socket_enabled:
-    # Create server socket for communication with site selector
-    server = socket_interface.server_socket(49152, 65536)
-    # Take care of closing socket when we exit
-    atexit.register(socket_exit_handler)
-
-    # Save our address so that site selectors know where to connect
-    if server is not None:
-        my_host, my_port = server.getsockname()
-        try:
-            OUT = open(sockfn, "w")
-            OUT.write("%s %d\n" % (my_host, my_port))
-        except IOError:
-            logger.warning("unable to write %s!" % (sockfn))
-        else:
-            OUT.close()
 
 # Build sub-workflow retry filename
 if output_dir is None:
@@ -1357,10 +1299,7 @@ while (len(wfs) > 0):
                                                    (parent_jobid, parent_jobseq, os.path.dirname(new_dagman_out)))
 
                         if millisleep is not None:
-                            if server is not None:
-                                socket_interface.check_request(server, wfs, millisleep / 1000.0)
-                            else:
-                                time.sleep(millisleep / 1000.0)
+                            time.sleep(millisleep / 1000.0)
 
                     ml_pos = workflow_entry.DMOF.tell()
                     logger.debug("processed chunk of %d bytes" % (ml_pos - workflow_entry.ml_current -len(workflow_entry.ml_buffer)))
@@ -1394,33 +1333,6 @@ while (len(wfs) > 0):
             # Mode index to next workflow
             wf_index = wf_index + 1
 
-    # Check if we need to start the socket server
-    if not socket_enabled and start_server:
-        # Reset flag
-        start_server = False
-
-        # Create server socket for communication with site selector
-        server = socket_interface.server_socket(49152, 65536)
-        # Take care of closing socket when we exit
-        atexit.register(socket_exit_handler)
-
-        # Save our address so that site selectors know where to connect
-        if server is not None:
-            # Socket open, make sure we set out socket_enabled flag
-            socket_enabled = True
-            my_host, my_port = server.getsockname()
-            try:
-                OUT = open(sockfn, "w")
-                OUT.write("%s %d\n" % (my_host, my_port))
-            except IOError:
-                logger.warning("unable to write %s!" % (sockfn))
-            else:
-                OUT.close()
-
-    # Periodically check for service requests
-    if server is not None:
-        socket_interface.check_request(server, wfs)
-
     # Service notifications once per while loop, in the future we can
     # move this into the for loop and service notifications more often
     if do_notifications == True and monitord_notifications is not None:
@@ -1451,18 +1363,6 @@ while (len(wfs) > 0):
 #
 # --- main loop end -----------------------------------------------------------------------
 #
-
-if socket_enabled and server is not None:
-    # Finish trailing connection requests
-    while (socket_interface.check_request(server, wfs)):
-        pass
-    server.close()
-    server = None
-    try:
-        os.unlink(sockfn)
-    except OSError:
-        # Just be silent
-        pass
 
 if do_notifications == True and monitord_notifications is not None:
     logger.info("finishing notifications...")

@@ -21,7 +21,7 @@ Synopsis
                  [*--notifications-timeout* 'timeout']
                  [*--sim*|*-s* 'millisleep'] [*--db-stats*]
                  [*--skip-stdout*] [*--force*|*-f*]
-                 [*--socket*] [*--output-dir* | *-o* 'dir']
+                 [*--output-dir* | *-o* 'dir']
                  [*--dest*|*-d* 'PATH' or 'URL'] [*--encoding*|*-e* 'bp' | 'bson']
                  'DAGMan output file'
 
@@ -156,14 +156,6 @@ from starting and running simultaneously (which would cause the bp
 file and database to be left in an unstable state). This option should
 noly be used when the user knows the previous instance of
 *pegasus-monitord* is *NOT* running anymore.
-
-*--socket*::
-This option causes *pegasus-monitord* to start a socket interface that 
-can be used for advanced debugging. The port number for connecting to
-*pegasus-monitord* can be found in the 'monitord.sock' file in the 
-workflow directory (the file is deleted when *pegasus-monitord*
-finishes). If not already started, the socket interface is also 
-created when *pegasus-monitord* receives a 'USR1' signal.
 
 *-o* 'dir'::
 *--ouput-dir* 'dir'::
