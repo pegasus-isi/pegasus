@@ -263,7 +263,7 @@ pid_t wait_for_child( Jobs* jobs, int* status ) {
 
         /* progress report at finish of job */
         if (progress != -1) {
-            report(progress, j->start, (final - j->start), *status, j->argv, &usage, NULL , j->count);
+            report(progress, final, (final - j->start), *status, j->argv, &usage, NULL , j->count);
         }
 
         /* free reported job */
