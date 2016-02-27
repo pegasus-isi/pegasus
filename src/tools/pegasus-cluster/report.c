@@ -245,7 +245,7 @@ static int mytrylock(int fd) {
 
 /* purpose: report what has just finished.
  * paramtr: progress (IN): file descriptor open for writing
- *          start (IN): start time (no millisecond resolution)
+ *          time (IN): time to report (no millisecond resolution)
  *          duration (IN): duration with millisecond resolution
  *          status (IN): return value from wait() family 
  *          argv (IN): NULL-delimited argument vector of app
@@ -254,7 +254,7 @@ static int mytrylock(int fd) {
  *          taskid (IN): task number from input file. 
  * returns: number of bytes written onto "progress"
  */
-ssize_t report(int progress, double start, double duration, int status,
+ssize_t report(int progress, double time, double duration, int status,
                char *argv[], struct rusage *use, const char *special,
                size_t taskid) {
 
@@ -269,7 +269,7 @@ ssize_t report(int progress, double start, double duration, int status,
     }
 
     char date[32];
-    iso2date(start, date, sizeof(date));
+    iso2date(time, date, sizeof(date));
 
     size_t size = getpagesize();
     char *msg = (char*) malloc(size<<1);
