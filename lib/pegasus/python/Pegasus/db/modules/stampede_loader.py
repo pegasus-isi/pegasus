@@ -149,7 +149,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         Get the BP dict from the controlling process and dispatch
         to the appropriate method per-event.
         """
-        self.log.debug("Process: %s", linedata)
+        self.log.trace("Process: %s", linedata)
 
         for retry in range( 1, self.MAX_RETRIES + 1):
             if not self._batch:
@@ -299,7 +299,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             self.log.debug('Flush: time based')
 
     def check_connection(self, sub=False):
-        self.log.debug('check_connection.start')
+        self.log.trace('check_connection.start')
         try:
             self.session.connection().closed
         except exc.OperationalError, e:
@@ -314,7 +314,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             if not sub:
                 self.log.warn('Connection re-established')
 
-        self.log.debug('check_connection.end')
+        self.log.trace('check_connection.end')
 
 
     def hard_flush(self, batch_flush=True, retry= 0):
@@ -405,7 +405,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         self.log.debug('Hard flush end')
 
         if self._perf:
-            self.log.info('Hard flush duration: %s', time.time() - s)
+            self.log.debug('Hard flush duration: %s', time.time() - s)
 
     def individual_commit(self, event, merge=False):
         """
@@ -439,7 +439,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         Handles a workflow insert event.
         """
         wf = self.linedataToObject(linedata, Workflow())
-        self.log.debug("Workflow: %s", wf)
+        self.log.trace("Workflow: %s", wf)
 
         wf.timestamp = wf.ts
         wf.planner_arguments = wf.argv
@@ -469,7 +469,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         Handles a workflowstate insert event.
         """
         wfs = self.linedataToObject(linedata, Workflowstate())
-        self.log.debug('workflowstate: %s', wfs)
+        self.log.trace('workflowstate: %s', wfs)
 
         state = {
             'stampede.xwf.start': 'WORKFLOW_STARTED',
@@ -498,7 +498,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         wf_meta = self.linedataToObject( linedata, WorkflowMeta() )
         wf_meta.wf_id = self.wf_uuid_to_id( wf_meta.wf_uuid )
 
-        self.log.debug( 'workflowmeta: %s', wf_meta)
+        self.log.trace('workflowmeta: %s', wf_meta)
 
         if self._batch:
             self._batch_cache['batch_events'].append(wf_meta)
@@ -515,7 +515,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         job = self.linedataToObject(linedata, Job())
         job.wf_id = self.wf_uuid_to_id(job.wf_uuid)
         job.clustered = util.as_bool(job.clustered)
-        self.log.debug('job: %s', job)
+        self.log.trace('job: %s', job)
 
         if self._batch:
             self._batch_cache['batch_events'].append(job)
@@ -531,7 +531,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         """
         je = self.linedataToObject(linedata, JobEdge())
         je.wf_id = self.wf_uuid_to_id(je.wf_uuid)
-        self.log.debug('job_edge: %s', je)
+        self.log.trace('job_edge: %s', je)
 
         if self._batch:
             self._batch_cache['batch_events'].append(je)
@@ -546,7 +546,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         Handles a job instance insert event.
         """
         job_instance = self.linedataToObject(linedata, JobInstance())
-        self.log.debug('job_instance: %s', job_instance)
+        self.log.trace('job_instance: %s', job_instance)
 
         job_instance.wf_id = self.wf_uuid_to_id(job_instance.wf_uuid)
         if job_instance.wf_id == None:
@@ -592,7 +592,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         Handles a jobstate insert event.
         """
         js = self.linedataToObject(linedata, Jobstate())
-        self.log.debug('jobstate: %s', js)
+        self.log.trace('jobstate: %s', js)
 
         states = {
             # array maps to status [-1, 0]
@@ -644,7 +644,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         Handles a invocation insert event.
         """
         invocation = self.linedataToObject(linedata, Invocation())
-        self.log.debug('invocation: %s', invocation)
+        self.log.trace('invocation: %s', invocation)
 
         invocation.wf_id = self.wf_uuid_to_id(invocation.wf_uuid)
 
@@ -666,7 +666,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         Handles a task insert event
         """
         task = self.linedataToObject(linedata, Task())
-        self.log.debug('task: %s', task)
+        self.log.trace('task: %s', task)
         task.wf_id = self.wf_uuid_to_id(task.wf_uuid)
 
         if self._batch:
@@ -687,7 +687,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             self._task_edge_flush[linedata['xwf.id']] = True
 
         te = self.linedataToObject(linedata, TaskEdge())
-        self.log.debug('task_event: %s', te)
+        self.log.trace('task_event: %s', te)
         te.wf_id = self.wf_uuid_to_id(te.wf_uuid)
 
         if self._batch:
@@ -745,7 +745,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         task_meta.wf_id = self.wf_uuid_to_id( task_meta.wf_uuid )
         task_meta.task_id = self.get_task_id( task_meta.wf_id , task_meta.abs_task_id)
 
-        self.log.debug( 'task_meta: %s', task_meta)
+        self.log.trace('task_meta: %s', task_meta)
 
         if self._batch:
             self._batch_cache['batch_events'].append(task_meta)
@@ -766,7 +766,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         rc_meta.wf_id = self.wf_uuid_to_id( rc_meta.wf_uuid )
         rc_meta.lfn_id = self.get_lfn_id( rc_meta.wf_id, lfn )
 
-        self.log.debug( 'rc_meta: %s', rc_meta)
+        self.log.trace('rc_meta: %s', rc_meta)
 
         #we have to do the merge individually to prevent integrity constraint
         #errors that happen if we put them in the batch cache update_events
@@ -787,7 +787,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         rc_pfn.wf_id = self.wf_uuid_to_id( rc_pfn.wf_uuid )
         rc_pfn.lfn_id = self.get_lfn_id( rc_pfn.wf_id, lfn )
 
-        self.log.debug( 'rc_pfn: %s', rc_pfn)
+        self.log.trace('rc_pfn: %s', rc_pfn)
 
         if self._batch:
             self._batch_cache['batch_events'].append(rc_pfn)
@@ -810,7 +810,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         wf_files.task_id = self.get_task_id( wf_files.wf_id, wf_files.abs_task_id )
         wf_files.lfn_id  = self.get_lfn_id( wf_files.wf_id, lfn )
 
-        self.log.debug( 'wf_files: %s', wf_files)
+        self.log.trace('wf_files: %s', wf_files)
 
         if self._batch:
             self._batch_cache['batch_events'].append(wf_files)
@@ -824,7 +824,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
 
         Handles a subworkflow job map event.
         """
-        self.log.debug('subwf_map: %s', linedata)
+        self.log.trace('subwf_map: %s', linedata)
 
         wf_id = self.wf_uuid_to_id(linedata['xwf.id'])
         subwf_id = self.wf_uuid_to_id(linedata['subwf.id'])
@@ -855,7 +855,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         """
         host = self.linedataToObject(linedata, Host())
 
-        self.log.debug('host: %s', host)
+        self.log.trace('host: %s', host)
 
         if self.hosts_written_cache == None:
             self.hosts_written_cache = {}
@@ -887,7 +887,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         This forces a flush after all of the static events
         have been processed.
         """
-        self.log.debug('static_end: %s', linedata)
+        self.log.trace('static_end: %s', linedata)
         if self._batch:
             self.hard_flush()
 
@@ -900,7 +900,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         so that the task id's can be retrieved for metadata population
         of tasks.
         """
-        self.log.debug('static_meta_start: %s', linedata)
+        self.log.trace('static_meta_start: %s', linedata)
         if self._batch:
             self.hard_flush()
 
@@ -911,7 +911,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
 
         A NOOP method for events that are being ignored.
         """
-        self.log.debug('noop: %s', linedata)
+        self.log.trace('noop: %s', linedata)
 
     ####################################
     # DB helper/lookup/caching functions
@@ -1095,7 +1095,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         checks the cache to see if a job had already had its host_id,
         and if not, do the proper update and note it in the cache.
         """
-        self.log.debug('map_host_to_job_instance: %s', host)
+        self.log.trace('map_host_to_job_instance: %s', host)
 
         wf_id = self.wf_uuid_to_id(host.wf_uuid)
         cached_job_id = self.get_job_id(wf_id, host.exec_job_id)

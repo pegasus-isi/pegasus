@@ -39,15 +39,6 @@ import optparse
 import traceback
 import subprocess
 
-root_logger = logging.getLogger()
-logger = logging.getLogger("pegasus-monitord")
-
-# Cached debugging state
-g_isdbg = 0
-
-# Ordered logging levels
-_LEVELS = [logging.ERROR, logging.WARN, logging.INFO, logging.DEBUG]
-
 # Save our own basename
 prog_base = os.path.split(sys.argv[0])[1]
 
@@ -69,6 +60,14 @@ from Pegasus.monitoring import event_output as eo
 from Pegasus.monitoring import socket_interface
 
 utils.configureLogging()
+
+root_logger = logging.getLogger()
+logger = logging.getLogger("pegasus-monitord")
+
+# Ordered logging levels
+_LEVELS = [logger.ERROR, logger.WARNING, logger.INFO, logger.DEBUG, logger.TRACE]
+
+logger.info("pegasus-monitord starting - pid %d " % (os.getpid()))
 
 # Add SEEK_CUR to os if Python version < 2.5
 if sys.version_info < (2, 5):
@@ -110,10 +109,9 @@ re_parse_multiline_files = re.compile(r"All DAG node user log files:")
 re_parse_dagman_aborted  = re.compile(r"Received SIGUSR1")
 
 # Constants
-logbase = "monitord.log"                  # Basename of daemon logfile
 speak = "PMD/1.0"                         # Protocol version for our socket command-line interface
 MONITORD_WF_RETRY_FILE = "monitord.subwf" # filename for writing persistent sub-workflow retry information
-MAX_SLEEP_TIME = 10     	          # in seconds
+MAX_SLEEP_TIME = 10                       # in seconds
 SLEEP_WAIT_NOTIFICATION = 5               # in seconds
 DAGMAN_OUT_MAX_READ_SIZE = 32768          # at most the maximum bytes to read while parsing dagman.out file
 
@@ -142,7 +140,7 @@ do_notifications = True         # Flag to enable notifications
 skip_pid_check = False          # Flag to skip checking if a previous monitord is still running using the pid file
 monitord_notifications = None   # Notifications' manager class
 max_parallel_notifications = 10 # Maximum number of notifications we can do in parallel
-notifications_timeout = 0	# Time to wait for notification scripts to finish (0 means wait forever)
+notifications_timeout = 0       # Time to wait for notification scripts to finish (0 means wait forever)
 store_stdout_stderr = True      # Flag for storing jobs' stdout and stderr in our output
 fast_start_mode     = False     # Flag to indicate that only sleep once monitord has caught up with the dagman.out file
 
@@ -201,10 +199,10 @@ def finish_stampede_loader():
     It is used to make sure the loader has finished loading all data
     into the database. It will also produce stats for benchmarking.
     """
-    sinks = [wf_event_sink,dashboard_event_sink]
+    logger.info("DB flushing beginning")
+    sinks = [wf_event_sink, dashboard_event_sink]
     for sink in sinks:
         if sink is not None:
-            print (utils.isodate(time.time()) + " - pegasus-monitord - DB flushing beginning ").ljust(80, "-")
             try:
                 if db_stats == 'yes' and root_logger.getEffectiveLevel() > logging.INFO:
                     # Make sure log level is enough to display database
@@ -215,8 +213,7 @@ def finish_stampede_loader():
                 logger.warning("could not call the finish method "+\
                                    "in the nl loader class... exiting anyway")
                 logger.warning(traceback.format_exc())
-
-            print (utils.isodate(time.time()) + " - pegasus-monitord - DB flushing ended ").ljust(80, "-")
+    logger.info("DB flushing ended")
 
 
 # Workflow Entry Class
@@ -257,11 +254,8 @@ parser.add_option("-N", "--foreground", action = "store_const", const = 2, dest 
 parser.add_option("-n", "--no-daemon", action = "store_const", const = 1, dest = "nodaemon",
 		  help = "(debug) don't daemonize %s; keep it in the foreground" % (prog_base))
 parser.add_option("-j", "--job", action = "store", type = "string", dest = "jsd",
-		  help = "alternative job state file to write, default is %s in the workflow's directory"
+		  help = "Alternative job state file to write, default is %s in the workflow's directory"
 		  % (utils.jobbase))
-parser.add_option("-l", "--log", action = "store", type = "string", dest = "logfile",
-		  help = "alternative %s log file, default is %s in the workflow's directory"
-		  % (prog_base, logbase))
 parser.add_option("-o", "--output-dir", action = "store", type = "string", dest = "output_dir",
                   help = "provides an output directory for all monitord log files")
 parser.add_option("--conf", action = "store", type = "string", dest = "config_properties",
@@ -343,21 +337,30 @@ props.new(config_file=options.config_properties, rundir_propfile=top_level_prop_
 
 # PM-948 check to see if any addon command line
 # options are specified in properties
-addon_cmd_prop = props.property( "pegasus.monitord.arguments" )
+addon_cmd_prop = props.property("pegasus.monitord.arguments")
 addon_cmd_options = []
 if addon_cmd_prop is not None:
-    addon_cmd_options = addon_cmd_prop.split( " ")
+    addon_cmd_options = addon_cmd_prop.split(" ")
 
 cmd_options = sys.argv[1:] + addon_cmd_options
 
 # parse again with extra options that might
 # been specified in the properties file
-print "Final Command line options are %s " %cmd_options
+logger.info("Final Command line options are: %s" % cmd_options)
 (options, args) = parser.parse_args(cmd_options)
+
+# Set logging level
+if options.vb <= 0:
+    lvl = logger.INFO
+elif options.vb == 1:
+    lvl = logger.DEBUG
+else:
+    lvl = logger.TRACE
+root_logger.setLevel(lvl)
 
 # Resolve command-line options conflicts
 if options.event_dest is not None and options.no_events is not None:
-    logger.warning("the --no-events and --dest options conflict, please use only one of them")
+    logger.critical("the --no-events and --dest options conflict, please use only one of them")
     sys.exit(1)
 
 # Check if user wants to override pid checking
@@ -368,13 +371,9 @@ if options.skip_pid_check is not None:
 pid_filename = os.path.join(run, "monitord.pid")
 if not skip_pid_check and utils.pid_running(pid_filename):
     logger.critical("it appears that pegasus-monitord is still running on this workflow... exiting")
-    # Exit with exitcode 43
     sys.exit(43)
-# Create pid file
 utils.write_pid_file(pid_filename)
-# Make sure we delete it when we are done
 atexit.register(delete_pid_file)
-
 
 # Parse notification-related properties
 if int(props.property("pegasus.monitord.notifications.timeout") or -1) >= 0:
@@ -388,22 +387,8 @@ if not utils.make_boolean(props.property("pegasus.monitord.notifications") or 't
     do_notifications = False
 
 # Parse stdout/stderr disable parsing property
-
-# Copy command line options into our variables
 if utils.make_boolean(props.property("pegasus.monitord.stdout.disable.parsing") or 'false'):
     store_stdout_stderr = False
-
-if options.vb == 0:
-    lvl = logging.WARN
-elif options.vb == 1:
-    lvl = logging.INFO
-else:
-    lvl = logging.DEBUG
-
-# Set logging level
-root_logger.setLevel(lvl)
-# Cache whether debugging
-g_isdbg = root_logger.isEnabledFor(logging.DEBUG)
 
 if options.adjustment is not None:
     adjustment = options.adjustment
@@ -411,8 +396,6 @@ if options.nodaemon is not None:
     nodaemon = options.nodaemon
 if options.jsd is not None:
     jsd = options.jsd
-if options.logfile is not None:
-    logfile = options.logfile
 if options.millisleep is not None:
     millisleep = options.millisleep
 if options.replay_mode is not None:
@@ -428,12 +411,12 @@ if options.notifications_max is not None:
     if max_parallel_notifications == 0:
         do_notifications = False
     if max_parallel_notifications < 0:
-        logger.critical("notifications-max must be integet >= 0")
+        logger.critical("notifications-max must be integer >= 0")
         sys.exit(1)
 if options.notifications_timeout is not None:
     notifications_timeout = options.notifications_timeout
     if notifications_timeout < 0:
-        logger.critical("notifications-timeout must be integet >= 0")
+        logger.critical("notifications-timeout must be integer >= 0")
         sys.exit(1)
     if notifications_timeout > 0 and notifications_timeout < 5:
         logger.warning("notifications-timeout set too low... notification scripts may not have enough time to complete... continuing anyway...")
@@ -477,12 +460,9 @@ if options.fast_start is True:
 
 #check if specified in properties and override from options
 fast_start_property = "pegasus.monitord.fast_start"
-if props.property( fast_start_property ) is not None:
-    fast_start_mode = utils.make_boolean( props.property( fast_start_property ) )
+if props.property(fast_start_property) is not None:
+    fast_start_mode = utils.make_boolean(props.property(fast_start_property))
 
-
-#hardcoded for the time being
-#dashboard_event_dest = "sqlite:////tmp/workflow.db"
 dashboard_event_dest = connection.url_by_properties(options.config_properties, connection.DBType.MASTER, rundir_properties=top_level_prop_file)
 
 if options.enc is not None:
@@ -492,14 +472,6 @@ else:
     if props.property("pegasus.monitord.encoding") is not None:
         # Get encoding from property
         encoding = props.property("pegasus.monitord.encoding")
-
-# Use default monitord logfile if user hasn't specified another file
-if logfile is None:
-    if output_dir is None:
-        logfile = os.path.join(run, logbase)
-    else:
-        logfile = os.path.join(run, output_dir, logbase)
-logfile = os.path.abspath(logfile)
 
 # Check if the user-provided jsd file is an absolute path, if so, we
 # disable recursive mode
@@ -512,14 +484,6 @@ if jsd is not None:
 #
 # --- functions ---------------------------------------------------------------------------
 #
-
-def systell(fh):
-    """
-    purpose: make things symmetric, have a systell for sysseek
-    paramtr: fh (IO): filehandle
-    returns: current file position
-    """
-    os.lseek(fh, 0, os.SEEK_CUR)
 
 def add(wf, jobid, event, sched_id=None, status=None):
     """
@@ -577,17 +541,17 @@ def add(wf, jobid, event, sched_id=None, status=None):
         # If not None, convert into seconds
         if my_time is not None:
             my_time = my_time * 60
-            logger.info("job %s requests %d s walltime" % (jobid, my_time))
+            logger.debug("job %s requests %d s walltime" % (jobid, my_time))
             wf._walltime[jobid] = my_time
         else:
-            logger.info("job %s does not request a walltime" % (jobid))
+            logger.debug("job %s does not request a walltime" % (jobid))
 
         # Remember the run-site
         if my_site is not None:
-            logger.info("job %s is planned for site %s" % (jobid, my_site))
+            logger.debug("job %s is planned for site %s" % (jobid, my_site))
             wf._job_site[jobid] = my_site
         else:
-            logger.info("job %s does not have a site information!" % (jobid))
+            logger.debug("job %s does not have a site information!" % (jobid))
 
         # Nothing else to do... we should stop here...
         return my_job_submit_seq
@@ -694,7 +658,7 @@ def process_dagman_out(wf, log_line):
     if timestamp_found:
         split_log_line = log_line.split(None, 3)
         if len(split_log_line) >= 3:
-            logger.debug("debug: ## %d: %s" % (wf._line, split_log_line[2][:64]))
+            logger.trace("debug: ## %d: %s" % (wf._line, split_log_line[2][:64]))
 
         # If in recovery mode, check if we reached the end of it
         # This is the DAGMan recovery mode . Not monitord recovery mode! Karan
@@ -931,7 +895,6 @@ def prog_sigusr1_handler(signum, frame):
     """
     This function increases the log level to the next one.
     """
-    global g_isdbg
     global start_server
 
     cur_level = root_logger.getEffectiveLevel()
@@ -944,8 +907,6 @@ def prog_sigusr1_handler(signum, frame):
         root_logger.setLevel(logging.INFO)
         logger.error("Unknown current level = %s, setting to INFO" % (cur_level))
 
-    g_isdbg = root_logger.isEnabledFor(logging.DEBUG)
-
     # Check debugging socket
     if not socket_enabled:
         start_server = True
@@ -954,8 +915,6 @@ def prog_sigusr2_handler(signum, frame):
     """
     This function decreases the log level to the previous one.
     """
-    global g_isdbg
-
     cur_level = root_logger.getEffectiveLevel()
 
     try:
@@ -966,7 +925,6 @@ def prog_sigusr2_handler(signum, frame):
         root_logger.setLevel(logging.WARN)
         logger.error("Unknown current level = %s, setting to WARN" % (cur_level))
 
-    g_isdbg = root_logger.isEnabledFor(logging.DEBUG)
 
 #
 # --- main ------------------------------------------------------------------------------
@@ -1091,13 +1049,11 @@ else:
     if dashboard_event_dest is None:
         logger.error("cannot create dashboard events output... disabling dashboard event output!")
 
-# Say hello
-logger.info("starting, using pid %d" % (os.getpid()))
 if millisleep is not None:
     logger.info("using simulation delay of %d ms" % (millisleep))
 
 if fast_start_mode:
-    logger.info( "monitord started in fast start mode" )
+    logger.info("monitord started in fast start mode")
 
 # Only create server socket if asked...
 if output_dir is None:
@@ -1120,26 +1076,6 @@ if socket_enabled:
             logger.warning("unable to write %s!" % (sockfn))
         else:
             OUT.close()
-
-# For future reference
-plus = ''
-if "LD_LIBRARY_PATH" in os.environ:
-    for my_path in os.environ["LD_LIBRARY_PATH"].split(':'):
-        logger.info("env: LD_LIBRARY_PATH%s=%s" % (plus, my_path))
-        plus = '+'
-
-if "GLOBUS_TCP_PORT_RANGE" in os.environ:
-    logger.info("env: GLOBUS_TCP_PORT_RANGE=%s" % (os.environ["GLOBUS_TCP_PORT_RANGE"]))
-else:
-    logger.info("env: GLOBUS_TCP_PORT_RANGE=")
-if "GLOBUS_TCP_SOURCE_RANGE" in os.environ:
-    logger.info("env: GLOBUS_TCP_SOURCE_RANGE=%s" % (os.environ["GLOBUS_TCP_SOURCE_RANGE"]))
-else:
-    logger.info("env: GLOBUS_TCP_SOURCE_RANGE=")
-if "GLOBUS_LOCATION" in os.environ:
-    logger.info("env: GLOBUS_LOCATION=%s" % (os.environ["GLOBUS_LOCATION"]))
-else:
-    logger.info("env: GLOBUS_LOCATION=")
 
 # Build sub-workflow retry filename
 if output_dir is None:
@@ -1281,12 +1217,9 @@ while (len(wfs) > 0):
                     continue
 
         if workflow_entry.DMOF is not None:
-            # Say Hello
-            logger.debug("wake up and smell the silicon")
-
             try:
-                f_stat = os.stat(workflow_entry.dagman_out)
                 logger.debug("stating file: %s" % (workflow_entry.dagman_out))
+                f_stat = os.stat(workflow_entry.dagman_out)
             except OSError:
                 # stat error
                 logger.critical("stat %s" % (workflow_entry.dagman_out))
@@ -1337,6 +1270,7 @@ while (len(wfs) > 0):
                     continue
 
                 # In replay mode, we can be a little more aggresive
+                # FIXME Why would you have to wait for 5 tries in replay mode?
                 if replay_mode and workflow_entry.ml_retries > 5:
                     # We are in replay mode, so we should have everything here
                     logger.info("no more action, stopping workflow %s" % (workflow_entry.dagman_out))
@@ -1374,7 +1308,7 @@ while (len(wfs) > 0):
 
                 if len(ml_rbuffer) < DAGMAN_OUT_MAX_READ_SIZE:
                     # PM-947 we have caught up with the workflow
-                    logger.info( "monitord has caught up with dagman out file %s" %(workflow_entry.dagman_out) )
+                    logger.debug("monitord has caught up with dagman out file %s" %(workflow_entry.dagman_out))
                     workflow_entry.caught_up_with_dagman_out = True
 
                 if len(ml_rbuffer) == 0:
@@ -1460,7 +1394,7 @@ while (len(wfs) > 0):
                                 time.sleep(millisleep / 1000.0)
 
                     ml_pos = workflow_entry.DMOF.tell()
-                    logger.info("processed chunk of %d byte" % (ml_pos - workflow_entry.ml_current -len(workflow_entry.ml_buffer)))
+                    logger.debug("processed chunk of %d bytes" % (ml_pos - workflow_entry.ml_current -len(workflow_entry.ml_buffer)))
                     workflow_entry.ml_current = ml_pos
                     workflow_entry.ml_retries = 0
                     # Write workflow progress for recovery mode
@@ -1470,9 +1404,8 @@ while (len(wfs) > 0):
 
     # End of main for loop, still in the while loop...
 
-    # Print number of workflows we currently have
-    logger.info("currently tracking %d workflow(s)..." % (len(wfs)))
-    
+    logger.trace("currently tracking %d workflow(s)..." % (len(wfs)))
+
     # Go through the workflows again, and finish any marked ones
     wf_index = 0
     while wf_index < len(wfs):
@@ -1496,7 +1429,7 @@ while (len(wfs) > 0):
     if not socket_enabled and start_server:
         # Reset flag
         start_server = False
-        
+
         # Create server socket for communication with site selector
         server = socket_interface.server_socket(49152, 65536)
         # Take care of closing socket when we exit
@@ -1522,7 +1455,6 @@ while (len(wfs) > 0):
     # Service notifications once per while loop, in the future we can
     # move this into the for loop and service notifications more often
     if do_notifications == True and monitord_notifications is not None:
-        logger.info("servicing notifications...")
         monitord_notifications.service_notifications()
 
     # Skip sleeping, if we have no more workflow to track...
@@ -1540,8 +1472,8 @@ while (len(wfs) > 0):
         if workflow_entry.sleep_time < time_to_sleep:
             time_to_sleep = workflow_entry.sleep_time
 
-    # PM-947 Sleep if not in replay mode AND ( we have caught up with all workflows or are in default/normal mode)
-    if not replay_mode and ( sleep_for_some_time or not fast_start_mode):
+    # PM-947 Sleep if not in replay mode AND (we have caught up with all workflows or are in default/normal mode)
+    if not replay_mode and (sleep_for_some_time or not fast_start_mode):
         time_to_sleep = time_to_sleep - time.time()
         if time_to_sleep < 0:
             time_to_sleep = 0
@@ -1564,19 +1496,11 @@ if socket_enabled and server is not None:
         pass
 
 if do_notifications == True and monitord_notifications is not None:
-    # Finish pending notifications
     logger.info("finishing notifications...")
     while monitord_notifications.has_active_notifications() or monitord_notifications.has_pending_notifications():
-        monitord_notifications.service_notifications()        
+        monitord_notifications.service_notifications()
         time.sleep(SLEEP_WAIT_NOTIFICATION)
-    logger.info("finishing notifications... done!")
 
-# done
-logger.info("finishing, exit with 0")
-
-# Touch logfile with end event
-print
-print (utils.isodate(time.time()) + " - pegasus-monitord ending - pid %d " % (os.getpid())).ljust(80, "-")
-print
+logger.info("monitord process %d exiting with 0" % os.getpid())
 
 sys.exit(0)

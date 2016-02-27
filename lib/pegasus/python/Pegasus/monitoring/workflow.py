@@ -948,11 +948,6 @@ class Workflow:
                     self._enable_notifications = False
 
         # Say hello.... add start information to JSDB
-        my_now = int(time.time())
-        print "%d - %s - MONITORD_STARTED  - %s - %s" % (my_now,
-                                                         utils.isodate(my_now), self._wf_uuid,
-                                                         ((self._dax_label or "unknown") +
-                                                          "-" + (self._dax_index or "unknown")))
         self._JSDB.write("%d INTERNAL *** MONITORD_STARTED ***\n" % (self._workflow_start))
 
         # Write monitord.started file
@@ -961,6 +956,7 @@ class Workflow:
         else:
             my_start_file = os.path.join(self._output_dir, "%s-%s" % (self._wf_uuid, MONITORD_START_FILE))
 
+        my_now = int(time.time())
         utils.write_pid_file(my_start_file, my_now)
 
         # Remove monitord.done file, if it is there
@@ -1081,10 +1077,6 @@ class Workflow:
             my_recover_file = os.path.join(self._output_dir, "%s-%s" % (self._wf_uuid,
                                                                     MONITORD_RECOVER_FILE))
 
-        print "%d - %s - MONITORD_FINISHED - %s - %s" % (my_workflow_end,
-                                                         utils.isodate(my_workflow_end), self._wf_uuid,
-                                                         ((self._dax_label or "unknown") +
-                                                          "-" + (self._dax_index or "unknown")))
         self._JSDB.write("%d INTERNAL *** MONITORD_FINISHED %d ***\n" % (my_workflow_end, self._monitord_exit_code))
         self._JSDB.close()
 
@@ -1781,9 +1773,9 @@ class Workflow:
             # Parsing the output file resulted in some info... let's parse it
 
             # Add job information to the Job class.
-            logger.info( "Starting extraction of job_info from job output file %s " %my_job_output_fn )
+            logger.debug("Starting extraction of job_info from job output file %s " % my_job_output_fn)
             my_invocation_found = my_job.extract_job_info(self._run_dir, my_output)
-            logger.info( "Completed extraction of job_info from job output file %s " %my_job_output_fn )
+            logger.debug("Completed extraction of job_info from job output file %s " % my_job_output_fn)
 
             if my_invocation_found:
                 # Loop through all records
@@ -2103,7 +2095,7 @@ class Workflow:
                                             my_job._site_name or '-',
                                             walltime or '-',
                                             job_submit_seq or '-')
-        logger.info("new state %s" % (my_line))
+        logger.debug("new state: %s" % (my_line))
 
         # Prepare for atomic append
         self._JSDB.write("%s\n" % (my_line))
@@ -2396,7 +2388,6 @@ class Workflow:
             my_retry = 0
 
         wf_retries[my_dagman_dir] = my_retry
-        #print "*** dagman dir %s retry value %s " %(my_dagman_dir,my_retry)
 
         # Compose directory... assuming replanning mode
         my_retry_dir = my_dagman_dir + ".%03d" % (my_retry)

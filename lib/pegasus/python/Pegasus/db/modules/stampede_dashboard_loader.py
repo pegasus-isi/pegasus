@@ -99,7 +99,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         Get the BP dict from the controlling process and dispatch
         to the appropriate method per-event.
         """
-        self.log.debug('process: %s', linedata)
+        self.log.trace('process: %s', linedata)
 
         if not self._batch:
             self.check_connection()
@@ -208,7 +208,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             self.log.debug('Flush: time based')
 
     def check_connection(self, sub=False):
-        self.log.debug('Checking connection')
+        self.log.trace('Checking connection')
         try:
             self.session.connection().closed
         except exc.OperationalError, e:
@@ -320,7 +320,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         Handles a workflow insert event.
         """
         wf = self.linedataToObject(linedata, DashboardWorkflow())
-        self.log.debug('workflow: %s', wf)
+        self.log.trace('workflow: %s', wf)
 
         wf.timestamp = wf.ts
 
@@ -351,7 +351,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         Handles a workflowstate insert event.
         """
         wfs = self.linedataToObject(linedata, DashboardWorkflowstate())
-        self.log.debug('workflowstate: %s', wfs)
+        self.log.trace('workflowstate: %s', wfs)
 
         state = {
             'dashboard.xwf.start': 'WORKFLOW_STARTED',

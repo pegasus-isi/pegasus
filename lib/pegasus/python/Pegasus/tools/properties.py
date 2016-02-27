@@ -106,7 +106,7 @@ if len(sys.argv) > 0:
         try:
             k, v = my_arg.split("=", 1)
         except:
-            logger.info("cannot parse command-line option %s... continuing..." % (my_arg))
+            logger.warn("cannot parse command-line option %s... continuing..." % (my_arg))
             k = ""
         if len(k):
             if k == "pegasus.properties" or k == "pegasus.user.properties":
@@ -163,7 +163,7 @@ def parse_properties(my_file, hashref={}):
                 my_save+= line
                 line = my_save
                 my_save = ""
-            logger.debug("#Property being parsed is # %s" % (line))
+            logger.trace("#Property being parsed is # %s" % (line))
 
             # Try to parse property
             my_res = re_parse_property.search(line)
@@ -171,7 +171,7 @@ def parse_properties(my_file, hashref={}):
                 # Parse successful
                 k = my_res.group(1)
                 v = my_res.group(2)
-                logger.debug("#Property being stored is # %s ==> %s" % (k, v))
+                logger.trace("#Property being stored is # %s ==> %s" % (k, v))
 
                 # Substitutions
                 subs = re_find_subs.search(v)
@@ -223,7 +223,7 @@ class Properties:
         # First, try config_file, highest priority
         if config_file is not None:
             if os.path.isfile(config_file) and os.access(config_file, os.R_OK):
-                logger.info("processing properties file %s..." % (config_file))
+                logger.debug("processing properties file %s..." % (config_file))
                 my_config.update(parse_properties(config_file))
                 my_already_loaded = True
             else:
@@ -232,7 +232,7 @@ class Properties:
         # Second, try rundir_propfile
         if not my_already_loaded and rundir_propfile is not None:
             if os.path.isfile(rundir_propfile) and os.access(rundir_propfile, os.R_OK):
-                logger.info("processing properties file %s... " % (rundir_propfile))
+                logger.debug("processing properties file %s... " % (rundir_propfile))
                 my_config.update(parse_properties(rundir_propfile))
                 my_already_loaded = True
             else:
@@ -243,7 +243,7 @@ class Properties:
             if "user.home" in system:
                 my_user_propfile = os.path.join(system["user.home"], ".pegasusrc")
                 if os.path.isfile(my_user_propfile) and os.access(my_user_propfile, os.R_OK):
-                    logger.info("processing properties file %s... " % (my_user_propfile))
+                    logger.debug("processing properties file %s... " % (my_user_propfile))
                     my_config.update(parse_properties(my_user_propfile))
                     my_already_loaded = True
                 else:
@@ -251,7 +251,7 @@ class Properties:
                     pass
 
         if not my_already_loaded:
-            logger.debug("no properties file parsed whatsoever!")
+            logger.warn("no properties file parsed whatsoever!")
 
         # Keep ordering of config before initial so that the -D CLI
         # properties can override any other properties

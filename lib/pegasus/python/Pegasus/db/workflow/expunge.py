@@ -96,7 +96,7 @@ class DashboardExpunge(Expunge):
 
         # expunge all the associated workflow states first
         for state in states:
-            self.log.info('Expunging workflow state for workflow : %s', wf.wf_id)
+            self.log.debug('Expunging workflow state for workflow : %s', wf.wf_id)
             self.session.delete(state)
 
         # expunge the workflow from the workflow table

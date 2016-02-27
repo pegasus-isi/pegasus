@@ -105,7 +105,7 @@ def dagman_launch(dagman_bin,arguments=[]):
     return dagman_proc
 
 def monitord_launch(monitord_bin,arguments=[]):
-    '''Launches Monitord in condor foreground mode'''
+    '''Launches Monitord in condor daemon mode'''
     if monitord_bin != None :
         try :
             # Rotate log file, if it exists
@@ -113,13 +113,12 @@ def monitord_launch(monitord_bin,arguments=[]):
             logfile="monitord.log"
             utils.rotate_log_file(logfile)
             #we have the right name of the log file
-            log = open(logfile, 'a')
+            log = open(logfile, 'a', 1)
             monitord_proc = subprocess.Popen(
-                        [monitord_bin, 
-                          "-N",
-                          os.getenv('_CONDOR_DAGMAN_LOG')],
-                        stdout=log, 
+                        [monitord_bin, "-N", os.getenv('_CONDOR_DAGMAN_LOG')],
+                        stdout=log.fileno(),
                         stderr=subprocess.STDOUT)
+            log.close()
             logger.info("Launched Monitord with Pid %d" % monitord_proc.pid)
             return monitord_proc
         except OSError, err :

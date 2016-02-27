@@ -136,7 +136,6 @@ class EventSink(object):
     """
     def __init__(self):
         self._log = logging.getLogger("%s.%s" % (self.__module__, self.__class__.__name__))
-        self._isdbg = self._log.isEnabledFor(logging.DEBUG)
 
     def send(self, event, kw):
         """
@@ -182,19 +181,17 @@ class DBEventSink(EventSink):
         super(DBEventSink, self).__init__()
         
     def send(self, event, kw):
-        if self._isdbg:
-            self._log.debug("send.start event=%s" % (event))
+        self._log.trace("send.start event=%s", event)
         d = {'event' : self._namespace + event}
         for k, v in kw.iteritems():
             d[k.replace('__','.')] = v
         self._db.notify(d)
-        if self._isdbg:
-            self._log.debug("send.end event=%s" % (event))
+        self._log.trace("send.end event=%s", event)
         
     def close(self):
-        self._log.debug("close.start")
+        self._log.trace("close.start")
         self._db.finish()
-        self._log.debug("close.end")
+        self._log.trace("close.end")
     
 class FileEventSink(EventSink):
     """
@@ -209,16 +206,14 @@ class FileEventSink(EventSink):
         self._encoder = encoder
 
     def send(self, event, kw):
-        if self._isdbg:
-            self._log.debug("send.start event=%s" % (event))
+        self._log.trace("send.start event=%s", event)
         self._output.write(self._encoder(event=event, **kw))
-        if self._isdbg:
-            self._log.debug("send.end event=%s" % (event))
+        self._log.trace("send.end event=%s", event)
 
     def close(self):
-        self._log.debug("close.start")
+        self._log.trace("close.start")
         self._output.close()
-        self._log.debug("close.end")
+        self._log.trace("close.end")
 
 class TCPEventSink(EventSink):
     """
@@ -231,16 +226,14 @@ class TCPEventSink(EventSink):
         self._sock.connect((host, port))
 
     def send(self, event, kw):
-        if self._isdbg:
-            self._log.debug("send.start event=%s" % (event))
+        self._log.trace("send.start event=%s", event)
         self._sock.send(self._encoder(event=event, **kw))
-        if self._isdbg:
-            self._log.debug("send.end event=%s" % (event))
+        self._log.trace("send.end event=%s", event)
 
     def close(self):
-        self._log.debug("close.start")
+        self._log.trace("close.start")
         self._sock.close()
-        self._log.debug("close.end")
+        self._log.trace("close.end")
 
 class AMQPEventSink(EventSink):
     """
@@ -265,18 +258,16 @@ class AMQPEventSink(EventSink):
 
     def send(self, event, kw):
         full_event = STAMPEDE_NS + event
-        if self._isdbg:
-            self._log.debug("send.start event=%s" % (full_event))
+        self._log.trace("send.start event=%s", full_event)
         data = self._encoder(event=event, **kw)
         self._channel.basic_publish(amqp.Message(body=data),
                                     exchange=self._exch, routing_key=self.DEFAULT_ROUTING_KEY)
-        if self._isdbg:
-            self._log.debug("send.end event=%s" % (event))
+        self._log.trace("send.end event=%s", event)
 
     def close(self):
-        self._log.debug("close.start")
+        self._log.trace("close.start")
         self._conn.close()
-        self._log.debug("close.end")
+        self._log.trace("close.end")
 
 def bson_encode(event, **kw):
     """
