@@ -11,3 +11,28 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
+import logging
+
+class Logger(logging.getLoggerClass()):
+    "A custom logger for Pegasus with TRACE level"
+    CRITICAL = logging.CRITICAL
+    ERROR = logging.ERROR
+    WARNING = logging.WARNING
+    INFO = logging.INFO
+    DEBUG = logging.DEBUG
+    TRACE = logging.DEBUG - 1
+    NOTSET = logging.NOTSET
+
+    def __init__(self, name, level=0):
+        logging.Logger.__init__(self, name, level)
+
+    def trace(self, message, *args, **kwargs):
+        "Log a TRACE level message"
+        self.log(Logger.TRACE, message, *args, **kwargs)
+
+# Add a TRACE level to logging
+logging.addLevelName(Logger.TRACE, "TRACE")
+
+# Use our own logger class, which has trace
+logging.setLoggerClass(Logger)
+
