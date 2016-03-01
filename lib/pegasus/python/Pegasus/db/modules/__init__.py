@@ -6,12 +6,6 @@ import warnings
 
 from Pegasus.db import connection
 
-class AnalyzerException(Exception):
-    pass
-
-class ProcessException(AnalyzerException):
-    pass
-
 class SQLAlchemyInitWarning(Warning):
     pass
 
@@ -37,14 +31,16 @@ class SQLAlchemyInit(object):
         self.session.close()
 
 
-class BaseAnalyzer(object):
-    "Base analysis class. Doesn't do much."
+class BaseLoader(object):
+    "Base loader class. Has a database session and a log handle."
 
-    def __init__(self):
+    def __init__(self, dburi, props=None, db_type=None):
         """Will be overridden by subclasses to take
         parameters specific to their function.
         """
         self.log = logging.getLogger("%s.%s" % (self.__module__, self.__class__.__name__))
+        self.dburi = dburi
+        self.session = connection.connect(dburi, create=True, props=props, db_type=db_type)
 
     def process(self, data):
         """Override with logic; 'data' is a dictionary with timestamp,
@@ -64,24 +60,6 @@ class BaseAnalyzer(object):
         """
         pass
 
-    def notify(self, data):
-        """Called by framework code to notify loader of new data,
-        which will result in a call to process(data).
-        Do not override this unless you know what you are doing.
-
-        Args:
-          - data: NetLogger event dictionary
-
-        Returns:
-          - Whatever the loading code returns, in most cases
-          the return value should be ignored.
-
-        Exceptions:
-          - ProcessException (AnalyzerException): Something went wrong
-             during processing
-        """
-        try:
-            return self.process(data)
-        except Exception, err:
-            raise ProcessException(str(err))
+    def disconnect(self):
+        self.session.close()
 

@@ -27,8 +27,8 @@ import urlparse
 
 from Pegasus.tools import utils
 from Pegasus.netlogger import nlapi
-from Pegasus.db.modules import stampede_loader
-from Pegasus.db.modules import stampede_dashboard_loader
+from Pegasus.db.modules.stampede_loader import WorkflowLoader
+from Pegasus.db.modules.stampede_dashboard_loader import DashboardLoader
 from Pegasus.db.workflow import expunge
 
 log = logging.getLogger(__name__)
@@ -152,10 +152,9 @@ class DBEventSink(EventSink):
         self._namespace=namespace
         #pick the right database loader based on prefix
         if namespace == STAMPEDE_NS:
-            self._db = stampede_loader.Analyzer(dest, perf=db_stats, batch=True, props=props, db_type=db_type)
+            self._db = WorkflowLoader(dest, perf=db_stats, batch=True, props=props, db_type=db_type)
         elif namespace == DASHBOARD_NS:
-            self._db = stampede_dashboard_loader.Analyzer(dest, perf=db_stats, batch=True, props=props,
-                                                          db_type=db_type)
+            self._db = DashboardLoader(dest, perf=db_stats, batch=True, props=props, db_type=db_type)
         else:
             raise ValueError("Unknown namespace specified '%s'" % (namespace))
 
@@ -166,7 +165,7 @@ class DBEventSink(EventSink):
         d = {'event' : self._namespace + event}
         for k, v in kw.iteritems():
             d[k.replace('__','.')] = v
-        self._db.notify(d)
+        self._db.process(d)
         self._log.trace("send.end event=%s", event)
 
     def close(self):

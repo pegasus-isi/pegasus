@@ -1,18 +1,13 @@
 __author__ = "Monte Goode"
 __author__ = "Karan Vahi"
 
-from Pegasus.db import connection
-from Pegasus.db.admin.admin_loader import DBAdminError
 from Pegasus.db.schema import *
-from Pegasus.db.modules import BaseAnalyzer
-from Pegasus.db.modules import SQLAlchemyInit
+from Pegasus.db.modules import BaseLoader
 from Pegasus.netlogger import util
 from sqlalchemy import exc
-import sys
 import time
 
-class Analyzer(BaseAnalyzer, SQLAlchemyInit):
-
+class WorkflowLoader(BaseLoader):
     """Load into the Stampede SQL schema through SQLAlchemy.
 
     Parameters:
@@ -29,23 +24,13 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
 
     MAX_RETRIES = 10 # maximum number of retries in case of operational errors that arise because of database locked/connection dropped
 
-    def __init__(self, connString=None, perf=False, batch=False, props=None, db_type=None):
+    def __init__(self, connString, perf=False, batch=False, props=None, db_type=None):
         """Init object
 
         @type   connString: string
         @param  connString: SQLAlchemy connection string - REQUIRED
         """
-        BaseAnalyzer.__init__(self)
-
-        if connString is None:
-            raise ValueError("connString is required")
-
-        try:
-            SQLAlchemyInit.__init__(self, connString, props=props, db_type=db_type)
-        except (connection.ConnectionError, DBAdminError), e:
-            self.log.exception(e)
-            self.log.error('Error initializing workflow loader')
-            raise RuntimeError
+        super(WorkflowLoader, self).__init__(connString, props=props, db_type=db_type)
 
         # "Case" dict to map events to handler methods
         self.eventMap = {
@@ -1142,7 +1127,6 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
     ################
 
     def finish(self):
-        BaseAnalyzer.finish(self)
         if self._batch:
             self.log.info('Executing final flush')
             self.hard_flush()
