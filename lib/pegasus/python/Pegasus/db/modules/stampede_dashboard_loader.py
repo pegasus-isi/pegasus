@@ -26,7 +26,7 @@ class DashboardLoader(BaseLoader):
         @type   connString: string
         @param  connString: SQLAlchemy connection string - REQUIRED
         """
-        super(DashboardLoader, self).__init__(connString, props=props, db_type=db_type)
+        super(DashboardLoader, self).__init__(connString, batch=batch, props=props, db_type=db_type, flush_every=1)
 
         # "Case" dict to map events to handler methods
         self.eventMap = {
@@ -45,12 +45,6 @@ class DashboardLoader(BaseLoader):
         if self._perf:
             self._insert_time, self._insert_num = 0, 0
             self._start_time = time.time()
-
-        # flags and state for batching
-        self._batch = batch
-        self._flush_every = 1
-        self._flush_count = 0
-        self._last_flush = time.time()
 
         # caches for batched events
         self._batch_cache = {
@@ -93,8 +87,7 @@ class DashboardLoader(BaseLoader):
             self.check_connection()
             self.process(linedata)
 
-        self._flush_count += 1
-        self.check_flush()
+        self.check_flush(increment=True)
 
     def linedataToObject(self, linedata, o):
         """
@@ -146,54 +139,7 @@ class DashboardLoader(BaseLoader):
     # Methods to handle batching/flushing
     #############################################
 
-    def reset_flush_state(self):
-        """
-        Reset the internal flust state if batching.
-        """
-        if self._batch:
-            self.log.debug('Resetting flush state')
-            self._flush_count = 0
-            self._last_flush = time.time()
-
-    def check_flush(self):
-        """
-        Check to see if the batch needs to be flushed based on
-        either the number of queued inserts or based on time
-        since last flush.
-        """
-        if not self._batch:
-            return
-
-        if self._flush_count >= self._flush_every:
-            self.log.debug('Flush: flush count')
-            self.hard_flush()
-            return
-
-        if (time.time() - self._last_flush) > 30:
-            self.log.debug('Flush: time based')
-            self.hard_flush()
-
-    def check_connection(self, sub=False):
-        self.log.trace('Checking connection')
-        try:
-            self.session.connection().closed
-        except exc.OperationalError, e:
-            try:
-                if not self.session.is_active:
-                    self.session.rollback()
-                self.log.error('Lost connection - attempting reconnect')
-                time.sleep(5)
-                self.session.connection().connect()
-            except exc.OperationalError, e:
-                self.check_connection(sub=True)
-            if not sub:
-                self.log.warn('Connection re-established')
-
-    def flush(self):
-        "Try to flush the batch"
-        self.check_flush()
-
-    def hard_flush(self, batch_flush=True):
+    def hard_flush(self, batch_flush=True, retry=0):
         """
         @type   batch_flush: boolean
         @param  batch_flush: Defaults to true.  Is set to false
@@ -247,7 +193,7 @@ class DashboardLoader(BaseLoader):
             self.map_host_to_job_instance(host)
 
         for ee in end_event:
-            self.flushCaches(ee)
+            self.purgeCaches(ee)
         end_event = []
 
         # Clear all data structures here.
@@ -259,26 +205,6 @@ class DashboardLoader(BaseLoader):
 
         if self._perf:
             self.log.info('Hard flush duration: %s', (time.time() - s))
-
-    def individual_commit(self, event, merge=False):
-        """
-        @type   merge: boolean
-        @param  merge: Set to true if the row should be a merge
-                rather than a plain insert.
-
-        This gets called by hard_flush if there is a problem
-        with a batch commit to commit each object individually.
-        """
-        try:
-            if merge:
-                event.merge_to_db(self.session)
-            else:
-                event.commit_to_db(self.session)
-            self.session.expunge(event)
-        except exc.IntegrityError, e:
-            self.log.error('Insert failed for event %s : %s', event, e)
-            self.session.rollback()
-
 
     #############################################
     # Methods to handle the various insert events
@@ -338,7 +264,7 @@ class DashboardLoader(BaseLoader):
         else:
             wfs.commit_to_db(self.session)
             if wfs.event == 'dashboard.xwf.end':
-                self.flushCaches(wfs)
+                self.purgeCaches(wfs)
 
 
     ####################################
@@ -388,17 +314,15 @@ class DashboardLoader(BaseLoader):
 
         return self.root_wf_id_cache[wf_uuid]
 
-
-
-    def flushCaches(self, wfs):
+    def purgeCaches(self, wfs):
         """
         @type   wfs: class instance of stampede_schema.Workflowstate
         @param  wfs: Workflow state object from an end event.
 
-        Flushes information from the lookup caches after a workflow.end
+        Purges information from the lookup caches after a workflow.end
         event has been recieved.
         """
-        self.log.debug('Flushing caches for: %s', wfs)
+        self.log.debug('Purging caches for: %s', wfs)
 
         for k,v in self.wf_id_cache.items():
             if k == wfs.wf_uuid:
