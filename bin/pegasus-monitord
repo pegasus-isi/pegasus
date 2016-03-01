@@ -122,7 +122,7 @@ follow_subworkflows = True      # Flag for tracking sub-workflows
 root_wf_id = None               # Workflow id of the root workflow
 replay_mode = 0                 # disable checking if DAGMan's pid is gone
 keep_state = 0                  # Flag for keeping a Workflow's state across several DAGMan start/stop cycles
-db_stats = 'no'                 # collect and print database stats at the end of execution
+db_stats = False                # collect and print database stats at the end of execution
 no_events = False               # Flag for disabling event output altogether
 event_dest = None               # URL containing the destination of the events
 dashboard_event_dest = None     # URL containing the destination of events for the dashboard
@@ -183,7 +183,7 @@ def finish_stampede_loader():
     for sink in sinks:
         if sink is not None:
             try:
-                if db_stats == 'yes' and root_logger.getEffectiveLevel() > logging.INFO:
+                if db_stats and root_logger.getEffectiveLevel() > logging.INFO:
                     # Make sure log level is enough to display database
                     # benchmarking information
                     root_logger.setLevel(logging.INFO)
@@ -243,7 +243,7 @@ parser.add_option("-S", "--sim", action = "store", type = "int", dest = "millisl
 		  help = "Developer: simulate delays between reads by sleeping ms milliseconds")
 parser.add_option("-r", "--replay", action = "store_const", const = 1, dest = "replay_mode",
 		  help = "disables checking for DAGMan's pid while running %s" % (prog_base))
-parser.add_option("--db-stats", action = "store_const", const = "yes", dest = "db_stats",
+parser.add_option("--db-stats", action = "store_true", dest = "db_stats",
                   help = "collect and print database stats at the end")
 parser.add_option("--keep-state", action = "store_const", const = 1, dest = "keep_state",
                   help = "keep state across several DAGMan start/stop cycles (development option)")
@@ -896,7 +896,6 @@ def prog_sigusr2_handler(signum, frame):
 if condor_daemon:
     # This is the case when being called from pegasus-dagman
     # Although we cannot set sid, we can still become process group leader
-    print os.environ
     os.setpgid(0, 0)
 
 # Ignore dying shells
@@ -1345,6 +1344,12 @@ while (len(wfs) > 0):
     # All done... let's figure out how long to sleep...
     time_to_sleep = time.time() + MAX_SLEEP_TIME
     sleep_for_some_time = True
+
+    # Try to flush the sinks
+    for sink in (wf_event_sink, dashboard_event_sink):
+        if sink:
+            sink.flush()
+
     for workflow_entry in wfs:
         # PM-947 we want to sleep if either dagman out has not appeared or we have caught up with the dagman.out
         sleep_for_some_time = sleep_for_some_time and \

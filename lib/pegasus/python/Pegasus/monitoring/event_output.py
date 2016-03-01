@@ -149,18 +149,8 @@ class EventSink(object):
         """
         pass
 
-class EmptySink(EventSink):
-    """
-    Empty class, doesn't do anything, events go nowhere...
-    Just a placeholder in case we need to do something different later...
-    """
-    def __init__(self):
-        super(EmptySink, self).__init__()
-
-    def send(self, event, kw):
-        pass
-
-    def close(self):
+    def flush(self):
+        "Clients call this to flush events to the sink"
         pass
 
 class DBEventSink(EventSink):
@@ -171,15 +161,15 @@ class DBEventSink(EventSink):
         self._namespace=namespace
         #pick the right database loader based on prefix
         if namespace == STAMPEDE_NS:
-            self._db = stampede_loader.Analyzer(dest, perf=db_stats, batch="yes", props=props, db_type=db_type)
+            self._db = stampede_loader.Analyzer(dest, perf=db_stats, batch=True, props=props, db_type=db_type)
         elif namespace == DASHBOARD_NS:
-            self._db = stampede_dashboard_loader.Analyzer(dest, perf=db_stats, batch="yes", props=props,
+            self._db = stampede_dashboard_loader.Analyzer(dest, perf=db_stats, batch=True, props=props,
                                                           db_type=db_type)
         else:
             raise ValueError("Unknown namespace specified '%s'" % (namespace))
 
         super(DBEventSink, self).__init__()
-        
+
     def send(self, event, kw):
         self._log.trace("send.start event=%s", event)
         d = {'event' : self._namespace + event}
@@ -187,12 +177,15 @@ class DBEventSink(EventSink):
             d[k.replace('__','.')] = v
         self._db.notify(d)
         self._log.trace("send.end event=%s", event)
-        
+
     def close(self):
         self._log.trace("close.start")
         self._db.finish()
         self._log.trace("close.end")
-    
+
+    def flush(self):
+        self._db.flush()
+
 class FileEventSink(EventSink):
     """
     Write wflow event logs to a file.
@@ -200,9 +193,9 @@ class FileEventSink(EventSink):
     def __init__(self, path, restart=False, encoder=None, **kw):
         super(FileEventSink, self).__init__()
         if restart:
-            self._output = open(path, 'w')
+            self._output = open(path, 'w', 1)
         else:
-            self._output = open(path, 'a')
+            self._output = open(path, 'a', 1)
         self._encoder = encoder
 
     def send(self, event, kw):
@@ -274,23 +267,22 @@ def bson_encode(event, **kw):
     Adapt bson.dumps() to NetLogger's Log.write() signature.
     """
     kw['event'] = STAMPEDE_NS + event
-    return bson.dumps(kw)        
+    return bson.dumps(kw)
 
-def create_wf_event_sink(dest, enc=None,prefix=STAMPEDE_NS, props=None, **kw):
+def create_wf_event_sink(dest, enc=None, prefix=STAMPEDE_NS, props=None, **kw):
     """
     Create & return subclass of EventSink, chosen by value of 'dest'
     and parameterized by values (if any) in 'kw'.
     """
 
-    if( dest is None ):
+    if dest is None:
         return None
 
     url = OutputURL(dest)
-    
+
     # Pick an encoder
 
     def pick_encfn(enc_name, namespace ):
-        ##enc_name = url.query.get('enc', 'bp').lower()
         if enc_name is None or enc_name == 'bp':
             # NetLogger name=value encoding
             encfn = nlapi.Log(level=nlapi.Level.ALL, prefix=namespace)
@@ -330,6 +322,7 @@ def create_wf_event_sink(dest, enc=None,prefix=STAMPEDE_NS, props=None, **kw):
         # load the appropriate DBEvent on basis of prefix passed
         sink = DBEventSink(dest, namespace=prefix, props=props, **kw)
         _type, _name = "DB", dest
+
     log.info("output type=%s namespace=%s name=%s" % (_type, prefix, _name))
 
     return sink

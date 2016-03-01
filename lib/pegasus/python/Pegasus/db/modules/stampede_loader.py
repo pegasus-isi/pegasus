@@ -1,29 +1,10 @@
-"""
-Load input into the Stampede DB schema via a SQLAlchemy interface.  This
-is an nl_load module which MUST be invoked with the command-line pair
-connString='SQLAlchemy connection string'.  Example:
-
-nl_parse bp pegasus.db | nl_load stampede_loader connString='sqlite:///pegasusTest.db'
-
-The connection string must be of a format that is accepted as the first arg
-of the SQLAlchemy create_engine() function.  The database indicated by the
-conection string will be create and populated with tables and indexes
-if it does not exist.  If it does exist, it will merely be connected to
-and the SQLAlchemy object mappings will be initialized.
-
-This module does not produce any output other than loading the BP data into
-the Stampede DB.
-
-See http://www.sqlalchemy.org/ for details on SQLAlchemy
-"""
-__rcsid__ = "$Id: stampede_loader.py 31116 2012-03-29 15:45:15Z mgoode $"
 __author__ = "Monte Goode"
 __author__ = "Karan Vahi"
 
 from Pegasus.db import connection
 from Pegasus.db.admin.admin_loader import DBAdminError
 from Pegasus.db.schema import *
-from Pegasus.db.modules import Analyzer as BaseAnalyzer
+from Pegasus.db.modules import BaseAnalyzer
 from Pegasus.db.modules import SQLAlchemyInit
 from Pegasus.netlogger import util
 from sqlalchemy import exc
@@ -48,13 +29,14 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
 
     MAX_RETRIES = 10 # maximum number of retries in case of operational errors that arise because of database locked/connection dropped
 
-    def __init__(self, connString=None, perf='no', batch='no', props=None, db_type=None, **kw):
+    def __init__(self, connString=None, perf=False, batch=False, props=None, db_type=None):
         """Init object
 
         @type   connString: string
         @param  connString: SQLAlchemy connection string - REQUIRED
         """
-        BaseAnalyzer.__init__(self, **kw)
+        BaseAnalyzer.__init__(self)
+
         if connString is None:
             raise ValueError("connString is required")
 
@@ -121,13 +103,13 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         self.hosts_written_cache = None
 
         # undocumented performance option
-        self._perf = util.as_bool(perf)
+        self._perf = perf
         if self._perf:
             self._insert_time, self._insert_num = 0, 0
             self._start_time = time.time()
 
         # flags and state for batching
-        self._batch = util.as_bool(batch)
+        self._batch = batch
         self._flush_every = 1000
         self._flush_count = 0
         self._last_flush = time.time()
@@ -189,7 +171,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             self.log.error( 'Maximum number of retries reached for stampede_loader.process() method %s' %retry)
             raise RuntimeError( 'Maximum number of retries reached for stampede_loader.process() method %s' %retry)
 
-
+        self._flush_count += 1
         self.check_flush()
 
     def linedataToObject(self, linedata, o):
@@ -286,17 +268,14 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         if not self._batch:
             return
 
-        self._flush_count += 1
-
         if self._flush_count >= self._flush_every:
-            self.hard_flush()
             self.log.debug('Flush: flush count')
+            self.hard_flush()
             return
 
-
         if (time.time() - self._last_flush) > 30:
-            self.hard_flush()
             self.log.debug('Flush: time based')
+            self.hard_flush()
 
     def check_connection(self, sub=False):
         self.log.trace('check_connection.start')
@@ -316,8 +295,11 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
 
         self.log.trace('check_connection.end')
 
+    def flush(self):
+        "Try to flush the batch"
+        self.check_flush()
 
-    def hard_flush(self, batch_flush=True, retry= 0):
+    def hard_flush(self, batch_flush=True, retry=0):
         """
         @type   batch_flush: boolean
         @param  batch_flush: Defaults to true.  Is set to false
@@ -332,7 +314,8 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         """
         if not self._batch:
             return
-        self.log.debug('Hard flush: batching=%s', batch_flush)
+
+        self.log.debug('Hard flush: batch_flush=%s', batch_flush)
 
         if retry == self.MAX_RETRIES + 1 :
             #PM-1013 see if max retries is reached
@@ -405,7 +388,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         self.log.debug('Hard flush end')
 
         if self._perf:
-            self.log.debug('Hard flush duration: %s', time.time() - s)
+            self.log.debug('Hard flush duration: %s', (time.time() - s))
 
     def individual_commit(self, event, merge=False):
         """

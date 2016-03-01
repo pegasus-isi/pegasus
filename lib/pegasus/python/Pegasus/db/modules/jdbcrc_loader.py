@@ -1,6 +1,6 @@
 __author__ = "Rafael Ferreira da Silva"
 
-from Pegasus.db.modules import Analyzer as BaseAnalyzer
+from Pegasus.db.modules import BaseAnalyzer
 from Pegasus.db.modules import SQLAlchemyInit
 
 class Analyzer(BaseAnalyzer, SQLAlchemyInit):
