@@ -1128,7 +1128,7 @@ while (len(wfs) > 0):
 
         if workflow_entry.DMOF is not None:
             try:
-                logger.debug("stating file: %s" % (workflow_entry.dagman_out))
+                logger.trace("stating file: %s" % (workflow_entry.dagman_out))
                 f_stat = os.stat(workflow_entry.dagman_out)
             except OSError:
                 # stat error

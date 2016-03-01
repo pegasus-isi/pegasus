@@ -95,7 +95,7 @@ class Workflow:
 
         try:
             # Send event to corresponding sink
-            logger.debug( "Sending record to DB %s,%s" %(event, kwargs))
+            logger.trace("Sending record to DB %s,%s" %(event, kwargs))
             self._sink.send(event, kwargs)
         except:
             # Error sending this event... disable the sink from now on...
