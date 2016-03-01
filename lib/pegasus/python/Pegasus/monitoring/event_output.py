@@ -29,8 +29,7 @@ from Pegasus.tools import utils
 from Pegasus.netlogger import nlapi
 from Pegasus.db.modules import stampede_loader
 from Pegasus.db.modules import stampede_dashboard_loader
-from Pegasus.db.workflow.expunge import StampedeExpunge
-from Pegasus.db.workflow.expunge import DashboardExpunge
+from Pegasus.db.workflow import expunge
 
 log = logging.getLogger(__name__)
 
@@ -68,11 +67,7 @@ def purge_wf_uuid_from_database(rundir, output_db):
     if "wf_uuid" is None:
         return
 
-    e = StampedeExpunge(output_db, wf_uuid)
-    e.expunge()
-
-    # Done, make this connection go away
-    e = None
+    expunge.delete_workflow(output_db, wf_uuid)
 
 def purge_wf_uuid_from_dashboard_database(rundir, output_db):
     """
@@ -86,11 +81,7 @@ def purge_wf_uuid_from_dashboard_database(rundir, output_db):
     if "wf_uuid" is None:
         return
 
-    e = DashboardExpunge(output_db, wf_uuid)
-    e.expunge()
-
-    # Done, make this connection go away
-    e = None
+    expunge.delete_dashboard_workflow(output_db, wf_uuid)
 
 class OutputURL:
     """
