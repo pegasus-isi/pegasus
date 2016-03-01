@@ -952,8 +952,8 @@ else:
                 # If in replay mode or recovery mode and it is a DB,
                 # attempt to purge wf_uuid_first
                 eo.purge_wf_uuid_from_database(run, event_dest)
-        except:
-            logger.error(traceback.format_exc())
+        except Exception, e:
+            logger.exception(e)
             logger.error("error flushing previous wf_uuid from database... continuing...")
             logger.error("cannot create events output... disabling event output!")
             wf_event_sink = None
@@ -972,8 +972,8 @@ else:
                 # If in replay mode or recovery mode and it is a DB,
                 # attempt to purge wf_uuid_first
                 eo.purge_wf_uuid_from_dashboard_database(run, dashboard_event_dest)
-        except:
-            logger.error(traceback.format_exc())
+        except Exception, e:
+            logger.exception(e)
             logger.error("error flushing previous wf_uuid from dashboard database... continuing...")
             logger.error("cannot create events output... disabling event output!")
             dashboard_event_dest = None

@@ -95,16 +95,13 @@ class Workflow:
 
         try:
             # Send event to corresponding sink
-            logger.trace("Sending record to DB %s,%s" %(event, kwargs))
+            logger.trace("Sending record to DB %s, %s", event, kwargs)
             self._sink.send(event, kwargs)
-        except:
+        except Exception, e:
             # Error sending this event... disable the sink from now on...
-            logger.warning("NL-LOAD-ERROR --> %s - %s" % (self._wf_uuid,
-                                                          ((self._dax_label or "unknown") +
-                                                           "-" + (self._dax_index or "unknown"))))
-            logger.warning("error sending event: %s --> %s" % (event, kwargs))
-            logger.warning(traceback.format_exc())
-            logger.error( "Disabling database population for workflow %s in directory %s" %(self._wf_uuid, self._submit_dir or "unknown"))
+            logger.warning("error sending event for %s: %s, %s", self._wf_uuid, event, kwargs)
+            logger.exception(e)
+            logger.error("Disabling database population for workflow %s in directory %s", self._wf_uuid, self._submit_dir or "unknown")
             self._database_disabled = True
 
     def output_to_dashboard_db(self, event, kwargs):
