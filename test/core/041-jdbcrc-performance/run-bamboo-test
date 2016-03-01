@@ -34,7 +34,7 @@ echo
 # inserting the records
 echo "Inserting the records..."
 START_TS=`/bin/date +'%s'`
-/usr/bin/time pegasus-rc-client -v --insert register.in --conf pegasusrc | tee register.out
+/usr/bin/time pegasus-rc-client -v --insert register.in --conf pegasusrc | tee plan.out
 
 END_TS=`/bin/date +'%s'`
 DURATION=$(($END_TS - $START_TS))
