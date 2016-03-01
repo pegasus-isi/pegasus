@@ -1,0 +1,59 @@
+#!/bin/bash
+
+#######################################################################
+# settings
+
+# Max number of seconds allowed for the planner to run the
+# registration job - if these limit is exeeded, the test fails
+MAX_SECONDS=300
+
+# Min number of seconds allowed for the planner to run the
+# registration job - if these limit is exeeded, the test fails. This is used
+# to detect big improvements in the JDBCRC client, which would mean it
+# is time to lower the upper (and lower) limits of this test
+MIN_SECONDS=30
+
+#######################################################################
+
+set -e
+
+TOPDIR=`pwd`
+
+cat $HOME/.jdbcrc-scec.conf >> pegasusrc
+
+# clean the database
+echo
+echo "Cleaning the database..."
+START_TS=`/bin/date +'%s'`
+pegasus-rc-client -v --delete register.in --conf pegasusrc
+END_TS=`/bin/date +'%s'`
+DURATION=$(($END_TS - $START_TS))
+echo "Cleaning took $DURATION seconds"
+echo
+
+# inserting the records
+echo "Inserting the records..."
+START_TS=`/bin/date +'%s'`
+/usr/bin/time pegasus-rc-client -v --insert register.in --conf pegasusrc | tee register.out
+
+END_TS=`/bin/date +'%s'`
+DURATION=$(($END_TS - $START_TS))
+echo
+echo "Registration took $DURATION seconds"
+echo "The lower limit was $MIN_SECONDS seconds"
+echo "The upper limit was $MAX_SECONDS seconds"
+echo
+
+if [ $DURATION -gt $MAX_SECONDS ]; then
+    echo "Error: Limit exceeded!"
+    exit 1
+fi
+
+if [ $DURATION -lt $MIN_SECONDS ]; then
+    echo "Error: Registration was faster than lower limit - time to lower limits!"
+    exit 1
+fi
+
+echo "Test passed!"
+exit 0
+
