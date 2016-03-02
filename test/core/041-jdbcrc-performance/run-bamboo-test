@@ -3,11 +3,11 @@
 #######################################################################
 # settings
 
-# Max number of seconds allowed for the planner to run the
+# Max number of seconds allowed for the pegasus-rc-client job to run the
 # registration job - if these limit is exeeded, the test fails
 MAX_SECONDS=300
 
-# Min number of seconds allowed for the planner to run the
+# Min number of seconds allowed for the pegasus-rc-client to run the
 # registration job - if these limit is exeeded, the test fails. This is used
 # to detect big improvements in the JDBCRC client, which would mean it
 # is time to lower the upper (and lower) limits of this test
