@@ -560,18 +560,12 @@ def add(wf, jobid, event, sched_id=None, status=None):
     # A DAGMAN_SUBMIT event requires a new job (unless this was
     # already done by a PRE_SCRIPT_STARTED event, but we let the
     # add_job function figure this out).
+    # DAGMAN_SUBMIT corresponds to lines in dagman.out matching  Submitting Condor Node *...
     if event == "DAGMAN_SUBMIT":
         wf._last_submitted_job = jobid
         my_job_submit_seq = wf.add_job(jobid, event)
 
-        # Nothing else to do... we should stop here...
-        return my_job_submit_seq
-
-    # A SUBMIT event brings sched id and job type information (it can also be
-    # a new job for us when there is no PRE_SCRIPT)
-    if event == "SUBMIT" or event == "SUBMIT_FAILED":
-        # Add job to our workflow (if not alredy there), will update sched_id in both cases
-        my_job_submit_seq = wf.add_job(jobid, event, sched_id=sched_id)
+        #PM-1068 parse the job submit file on DAGMAN_SUBMIT event instead of SUBMIT or SUBMIT_FAILED
 
         # Obtain planning information from the submit file when entering Condor,
         # Figure out how long the job _intends_ to run maximum
@@ -594,6 +588,15 @@ def add(wf, jobid, event, sched_id=None, status=None):
             wf._job_site[jobid] = my_site
         else:
             logger.info("job %s does not have a site information!" % (jobid))
+
+        # Nothing else to do... we should stop here...
+        return my_job_submit_seq
+
+    # A SUBMIT event brings sched id and job type information (it can also be
+    # a new job for us when there is no PRE_SCRIPT)
+    if event == "SUBMIT" or event == "SUBMIT_FAILED":
+        # Add job to our workflow (if not alredy there), will update sched_id in both cases
+        my_job_submit_seq = wf.add_job(jobid, event, sched_id=sched_id)
 
     # Get job_submit_seq if we don't already have it
     if my_job_submit_seq is None:
@@ -697,6 +700,7 @@ def process_dagman_out(wf, log_line):
         # This is the DAGMan recovery mode . Not monitord recovery mode! Karan
         if wf._skipping_recovery_lines:
             if log_line.find("...done with RECOVERY mode") >= 0:
+                logger.info( "DONE with DAGMAN RECOVERY MODE")
                 wf._skipping_recovery_lines = False
             return
 
@@ -868,6 +872,7 @@ def process_dagman_out(wf, log_line):
             wf._multiline_file_flag = True
         elif log_line.find("Running in RECOVERY mode...") >= 0:
             # Entering recovery mode, skip lines until we reach the end
+            logger.info( "Enabling DAGMAN RECOVERY MODE")
             wf._skipping_recovery_lines = True
             return
         elif re_parse_dagman_aborted.search(log_line) is not None:
