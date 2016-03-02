@@ -1,36 +1,7 @@
-"""
-Base for analysis modules.
-"""
 import time
 import logging
-import warnings
 
 from Pegasus.db import connection
-
-class SQLAlchemyInitWarning(Warning):
-    pass
-
-class SQLAlchemyInit(object):
-    """Mixin class to provide SQLAlchemy database initialization/mapping.
-    Takes a SQLAlchemy connection string and a module function as
-    required arguments. 
-    """
-    def __init__(self, dburi, props=None, db_type=None, **kwarg):
-        self.dburi = dburi
-        self.session = connection.connect(dburi, create=True, props=props, db_type=db_type)
-
-    def __getattr__(self, name):
-        if name == "db":
-            warnings.warn("SQLAlchemyInit.db is deprecated. Use session or session.bind instead.", SQLAlchemyInitWarning)
-            return self.session.bind
-        raise AttributeError
-
-    def disconnect(self):
-        self.session.close()
-
-    def close(self):
-        self.session.close()
-
 
 class BaseLoader(object):
     "Base loader class. Has a database session and a log handle."

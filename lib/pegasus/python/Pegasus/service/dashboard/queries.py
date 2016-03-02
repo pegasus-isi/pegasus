@@ -17,7 +17,6 @@ import logging
 
 from Pegasus.db import connection
 from Pegasus.db.admin.admin_loader import DBAdminError
-from Pegasus.db.modules import SQLAlchemyInit
 from Pegasus.db.schema import *
 from Pegasus.db.errors import StampedeDBNotFoundError
 from sqlalchemy.orm.exc import *
@@ -29,7 +28,7 @@ class MasterDBNotFoundError (Exception):
     pass
 
 
-class MasterDatabase(SQLAlchemyInit):
+class MasterDatabase(object):
 
     def __init__(self, conn_string, debug=False):
         self._dbg = debug
@@ -38,9 +37,9 @@ class MasterDatabase(SQLAlchemyInit):
             raise ValueError('Connection string is required')
 
         try:
-            SQLAlchemyInit.__init__(self, conn_string)
+            self.session = connection.connect(conn_string)
         except connection.ConnectionError as e:
-            log.error(e)
+            log.exception(e)
             message = e
 
             while isinstance(message, Exception):
@@ -53,7 +52,7 @@ class MasterDatabase(SQLAlchemyInit):
 
     def close(self):
         log.debug('close')
-        self.disconnect()
+        self.session.close()
 
     def get_wf_db_url(self, wf_id):
         """
@@ -202,7 +201,7 @@ class MasterDatabase(SQLAlchemyInit):
         return q.one()
 
 
-class WorkflowInfo(SQLAlchemyInit):
+class WorkflowInfo(object):
 
     def __init__(self, conn_string=None, wf_id=None, wf_uuid=None, debug=False):
         self._dbg = debug
@@ -211,9 +210,9 @@ class WorkflowInfo(SQLAlchemyInit):
             raise ValueError('Connection string is required')
 
         try:
-            SQLAlchemyInit.__init__(self, conn_string)
+            self.session = connection.connect(conn_string)
         except connection.ConnectionError as e:
-            log.error(e)
+            log.exception(e)
             message = e
 
             while isinstance(message, Exception):
@@ -740,4 +739,5 @@ class WorkflowInfo(SQLAlchemyInit):
 
     def close(self):
         log.debug('close')
-        self.disconnect()
+        self.session.close()
+

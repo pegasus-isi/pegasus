@@ -156,19 +156,16 @@ https://confluence.pegasus.isi.edu/display/pegasus/Pegasus+Statistics+Python+Ver
 __author__ = "Monte Goode"
 
 from Pegasus.db import connection
-from Pegasus.db.modules import SQLAlchemyInit
 from Pegasus.db.schema import *
 from Pegasus.db.errors import StampedeDBNotFoundError
 
 # Main stats class.
 
-class StampedeStatistics(SQLAlchemyInit):
-    def __init__(self, connString=None, expand_workflow=True):
-        if connString is None:
-            raise ValueError("connString is required")
+class StampedeStatistics(object):
+    def __init__(self, connString, expand_workflow=True):
         self.log = logging.getLogger("%s.%s" % (self.__module__, self.__class__.__name__))
         try:
-            SQLAlchemyInit.__init__(self, connString)
+            self.session = connection.connect(connString)
         except connection.ConnectionError, e:
             self.log.exception(e)
             raise StampedeDBNotFoundError
@@ -264,7 +261,7 @@ class StampedeStatistics(SQLAlchemyInit):
 
     def close(self):
         self.log.debug('close')
-        self.disconnect()
+        self.session.close()
 
     def set_job_filter(self, filter='all'):
         modes = ['all', 'nonsub', 'subwf', 'dax', 'dag', 'compute', 'stage-in-tx',

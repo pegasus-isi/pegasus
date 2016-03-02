@@ -20,7 +20,6 @@ from sqlalchemy.orm import aliased, defer
 from sqlalchemy.orm.exc import NoResultFound
 
 from Pegasus.db import connection
-from Pegasus.db.modules import SQLAlchemyInit
 from Pegasus.db.schema import *
 from Pegasus.db.errors import StampedeDBNotFoundError
 from Pegasus.db.admin.admin_loader import DBAdminError
@@ -37,7 +36,7 @@ from Pegasus.service.monitoring.utils import csv_to_json
 log = logging.getLogger(__name__)
 
 
-class WorkflowQueries(SQLAlchemyInit):
+class WorkflowQueries(object):
     def __init__(self, connection_string, use_cache=True):
         if connection_string is None:
             raise ValueError('Connection string is required')
@@ -45,13 +44,16 @@ class WorkflowQueries(SQLAlchemyInit):
         self._conn_string_csum = hashlib.md5(connection_string).hexdigest()
 
         try:
-            SQLAlchemyInit.__init__(self, connection_string)
+            self.session = connection.connect(connection_string)
         except (connection.ConnectionError, DBAdminError) as e:
             log.exception(e)
             raise StampedeDBNotFoundError
 
         self._use_cache = True
         self.use_cache = use_cache
+
+    def close(self):
+        self.session.close()
 
     @property
     def use_cache(self):
