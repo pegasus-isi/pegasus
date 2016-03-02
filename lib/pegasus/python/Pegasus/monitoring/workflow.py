@@ -1617,6 +1617,7 @@ class Workflow:
             else:
                 if my_job._main_job_exitcode is not None:
                     kwargs["exitcode"] = str(my_job._main_job_exitcode)
+
             if "name" in invocation_record:
                 kwargs["executable"] = invocation_record["name"]
             else:
@@ -1640,6 +1641,10 @@ class Workflow:
                 kwargs["level"] = "Error"
         else:
             kwargs["level"] = "Error"
+
+        # sanity check and log error about missing exitcode
+        if my_job._main_job_exitcode is None:
+            logger.error( "Exitcode not set for task %s", kwargs )
 
         # Send job event to database
         self.output_to_db("inv.end", kwargs)
@@ -2150,6 +2155,13 @@ class Workflow:
             self.db_send_task_start(my_job, "PRE_SCRIPT")
             self.db_send_task_end(my_job, "PRE_SCRIPT")
         elif job_state == "POST_SCRIPT_SUCCESS" or job_state == "POST_SCRIPT_FAILURE":
+
+            if my_job._main_job_exitcode is None:
+                #PM-1070 set the main exitcode to the postscript exitcode
+                #No JOB_TERMINATED OR JOB_SUCCESS OR JOB_FAILURE for this job instance
+                my_job._main_job_exitcode = my_job._post_script_exitcode
+                logger.warning( "Set main job exitcode for %s to post script failure code %s" %(my_job._exec_job_id, my_job._post_script_exitcode))
+
             #PM-793 we parse the job.out and .err files when postscript finishes
             self.parse_job_output(my_job, job_state)
 
