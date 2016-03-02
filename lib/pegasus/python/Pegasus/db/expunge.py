@@ -22,7 +22,7 @@ Any parent or sibling workflows will be left untouched.
 
 Usage::
 
- from Pegasus.db.workflow import expunge
+ from Pegasus.db import expunge
 
  connString = 'sqlite:///pegasusMontage.db'
  wf_uuid = '1249335e-7692-4751-8da2-efcbb5024429'

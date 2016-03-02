@@ -12,8 +12,8 @@ from sqlalchemy.exc import *
 from sqlalchemy.orm import relation
 from sqlalchemy.dialects import postgresql, mysql, sqlite
 
-from Pegasus.db.modules.ensembles import Ensemble, EnsembleStates
-from Pegasus.db.modules.ensembles import EnsembleWorkflow, EnsembleWorkflowStates
+from Pegasus.db.ensembles import Ensemble, EnsembleStates
+from Pegasus.db.ensembles import EnsembleWorkflow, EnsembleWorkflowStates
 
 log = logging.getLogger(__name__)
 

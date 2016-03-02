@@ -1,2 +1,2 @@
-__all__ = ['modules', 'admin', 'workflow']
+__all__ = ['admin', 'workflow']
 

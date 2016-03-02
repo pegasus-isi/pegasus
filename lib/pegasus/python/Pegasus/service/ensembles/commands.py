@@ -9,7 +9,7 @@ from optparse import OptionParser
 
 from Pegasus.command import Command, CompoundCommand, LoggingCommand
 from Pegasus.service.ensembles import emapp, manager
-from Pegasus.db.modules.ensembles import EnsembleStates, EnsembleWorkflowStates
+from Pegasus.db.ensembles import EnsembleStates, EnsembleWorkflowStates
 
 log = logging.getLogger(__name__)
 

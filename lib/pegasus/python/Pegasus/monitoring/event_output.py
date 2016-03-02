@@ -18,7 +18,6 @@ Functions for output pegasus-monitord events to various destinations.
 #  limitations under the License.
 ##
 
-# Import Python modules
 import os
 import sys
 import socket
@@ -27,9 +26,9 @@ import urlparse
 
 from Pegasus.tools import utils
 from Pegasus.netlogger import nlapi
-from Pegasus.db.modules.stampede_loader import WorkflowLoader
-from Pegasus.db.modules.stampede_dashboard_loader import DashboardLoader
-from Pegasus.db.workflow import expunge
+from Pegasus.db.workflow_loader import WorkflowLoader
+from Pegasus.db.dashboard_loader import DashboardLoader
+from Pegasus.db import expunge
 
 log = logging.getLogger(__name__)
 

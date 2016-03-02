@@ -2,7 +2,7 @@ __author__ = "Monte Goode"
 __author__ = "Karan Vahi"
 
 from Pegasus.db.schema import *
-from Pegasus.db.modules import BaseLoader
+from Pegasus.db.base_loader import BaseLoader
 from sqlalchemy import exc
 import time
 
@@ -322,7 +322,7 @@ class DashboardLoader(BaseLoader):
         Purges information from the lookup caches after a workflow.end
         event has been recieved.
         """
-        self.log.debug('Purging caches for: %s', wfs)
+        self.log.debug('Purging caches for: %s', wfs.wf_uuid)
 
         for k,v in self.wf_id_cache.items():
             if k == wfs.wf_uuid:
