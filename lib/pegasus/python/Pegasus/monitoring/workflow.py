@@ -1632,7 +1632,7 @@ class Workflow:
             kwargs["level"] = "Error"
 
         # sanity check and log error about missing exitcode
-        if my_job._main_job_exitcode is None:
+        if kwargs["exitcode"] is None:
             logger.error( "Exitcode not set for task %s", kwargs )
 
         # Send job event to database
