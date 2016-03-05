@@ -4,6 +4,7 @@
 {% endblock %}
 {% block javascript_init %}
 <script type="text/javascript" charset="utf-8">
+{% if invocation.task_id %}
 function loadMetadata() {
     var ajaxOpt =
     {
@@ -38,12 +39,15 @@ function loadMetadata() {
 
     $.ajax (ajaxOpt)
 }
+{% endif %}
 
 $(document).ready (function ()
 {
     verticalTableInitStatus ('#invocation_text_info', {% if invocation.exitcode == 0 %}'successful' {% else %} 'failed' {% endif %});
     clipboardTooltipInitialization();
+    {% if invocation.task_id %}
     loadMetadata();
+    {% endif %}
 });
 </script>
 {% endblock %}
@@ -118,6 +122,7 @@ $(document).ready (function ()
 </section>
 <section class="row">
     <div class="col-xs-12" id="metadata">
+        {% if not invocation.task_id %}No metadata associated with this task{% endif %}
     </div>
 </section>
 {% endblock %}
