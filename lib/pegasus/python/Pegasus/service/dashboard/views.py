@@ -539,7 +539,6 @@ def __get_datatables_args():
 
 @dashboard_routes.errorhandler(404)
 def page_not_found(error):
-    log.exception(error)
     return render_template('error/404.html')
 
 
