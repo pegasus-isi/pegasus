@@ -15,8 +15,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-PKG_FILE=`ls *.tar.gz`
-mv *.tar.gz $DEST_DIR/pegasus-r-$PKG_FILE
+mv *.tar.gz $DEST_DIR/$PKG_FILE
 rm -rf $LOG_FILE
 
 echo "R DAX API successfully built."
