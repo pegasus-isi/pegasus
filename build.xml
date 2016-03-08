@@ -334,11 +334,17 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </chmod>
   </target>
   
-  <target name="compile-r">
+  <target name="compile-r" description="Compile R DAX API">
       <mkdir dir="${dist.share}/r"/>
       <exec executable="./setup.sh" dir="lib/pegasus/r/Pegasus" failonerror="true">
         <arg line="${dist.share}/r" />
       </exec>
+  </target>
+
+  <target name="dist-r" depends="dist-clean,compile-r" description="Copy R DAX tarball to dist folder">
+      <copy preservelastmodified="true" todir="dist">
+          <fileset dir="${dist.share}/r" includes="*.tar.gz"/>
+      </copy>
   </target>
 
   <target name="dist-worker" depends="dist-clean,setup,compile-ctools,compile-python,compile-externals" description="Build worker tarball">
