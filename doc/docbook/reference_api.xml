@@ -1208,8 +1208,8 @@
   <section id="dax_generator_api">
     <title>DAX Generator API</title>
 
-    <para>The DAX generating APIs support Java, Perl and Python. This section
-    will show in each language the necessary code, using Pegasus-provided
+    <para>The DAX generating APIs support Java, Perl, Python, and R. This 
+    section will show in each language the necessary code, using Pegasus-provided
     libraries, to generate the diamond DAX example above. There may be minor
     differences in details, e.g. to show-case certain features, but
     effectively all generate the same basic diamond.</para>
@@ -1728,6 +1728,185 @@ $adag-&gt;invoke( INVOKE_ON_ERROR,
 my $xmlns = shift;
 $adag-&gt;toXML( \*STDOUT, '', $xmlns );</programlisting>
     </section>
+    
+    <section id="api-r">
+      <title>The R DAX Generator API</title>
+
+      <para>The R DAX API provided with the Pegasus distribution allows easy 
+      creation of complex and large workflows in R environments. The API follows 
+      the <ulink url="http://google.github.io/styleguide/Rguide.xml">Google' R 
+      style guide</ulink>, and all objects and methods are defined using the 
+      <emphasis>S3</emphasis> OOP system.</para>
+      
+      <para>The API can be installed in the following ways:</para>
+      <orderedlist>
+          <listitem>
+              <para>Command line using <code>R CMD</code> and 
+              <code>pegasus-config</code>:</para>
+              <programlisting>R CMD install `pegasus-config --r`</programlisting>
+          </listitem>
+          <listitem>
+              <para>Installing from source package (.tar.gz) in an R 
+               environment:</para>
+              <programlisting>install.packages("/path/to/source/package.tar.gz", repo=NULL)</programlisting>
+              <para>The source package can be obtained using 
+              <code>pegasus-config --r</code> or from the <ulink 
+              url="http://pegasus.isi.edu/downloads">Pegasus' downloads</ulink> 
+              page.</para>
+          </listitem>
+      </orderedlist>
+      <para>The R API is well documented using <ulink 
+      url="http://http://roxygen.org">Roxygen</ulink>. In an R environment, it
+      can be accessed using <code>help(package=dax3)</code>. A <ulink 
+      url="r/dax3-manual.pdf">PDF manual</ulink> is also available.</para>
+
+      <para>The steps involved in creating a DAX using the API are</para>
+
+      <orderedlist>
+        <listitem>
+          <para>Create a new <emphasis>ADAG</emphasis> object</para>
+        </listitem>
+
+        <listitem>
+          <para>Add any metadata attributes associated with the whole
+          workflow.</para>
+        </listitem>
+
+        <listitem>
+          <para>Add any Workflow notification elements.</para>
+        </listitem>
+
+        <listitem>
+          <para>Create <emphasis>File</emphasis> objects as necessary. You can
+          augment the files with physical information, if you want to include
+          them into your DAX. Otherwise, the physical information is
+          determined from the replica catalog.</para>
+        </listitem>
+
+        <listitem>
+          <para>(Optional) Create <emphasis>Executable</emphasis> objects, if
+          you want to include your transformation catalog into your DAX.
+          Otherwise, the translation of a job/task into executable location
+          happens with the transformation catalog.</para>
+        </listitem>
+
+        <listitem>
+          <para>Create a new <emphasis>Job</emphasis> object.</para>
+        </listitem>
+
+        <listitem>
+          <para>Add arguments, files, profiles, notifications and other
+          information to the <emphasis>Job</emphasis> object</para>
+        </listitem>
+
+        <listitem>
+          <para>Add the job object to the <emphasis>ADAG</emphasis>
+          object</para>
+        </listitem>
+
+        <listitem>
+          <para>Repeat step 4-6 as necessary.</para>
+        </listitem>
+
+        <listitem>
+          <para>Add all dependencies to the <emphasis>ADAG</emphasis>
+          object.</para>
+        </listitem>
+
+        <listitem>
+          <para>Call the <code>WriteXML()</code> method on the
+          <emphasis>ADAG</emphasis> object to render the XML DAX file.</para>
+        </listitem>
+      </orderedlist>
+
+      <para>An example R code that generates the diamond dax show previously is
+      listed below. A workflow example code can be found in the Pegasus 
+      distribution in the <filename
+      class="directory">examples/grid-blackdiamond-r</filename> directory
+      as <filename>blackdiamond.R</filename>:</para>
+
+      <programlisting id="api-r-example">#!/usr/bin/Rscript
+#
+library(dax3)
+
+# Create a DAX
+diamond &lt;- ADAG("diamond")
+
+# Add some metadata
+diamond &lt;- Metadata(diamond, "name", "diamond")
+diamond &lt;- Metadata(diamond, "createdby", "Rafael Ferreira da Silva")
+
+# Add input file to the DAX-level replica catalog
+a &lt;- File("f.a")
+a &lt;- AddPFN(a, PFN("gsiftp://site.com/inputs/f.a","site"))
+a &lt;- Metadata(a, "size", "1024")
+diamond &lt;- AddFile(diamond, a)
+
+# Add executables to the DAX-level replica catalog
+e_preprocess &lt;- Executable(namespace="diamond", name="preprocess", version="4.0", os="linux", arch="x86_64")
+e_preprocess &lt;- Metadata(e_preprocess, "size", "2048")
+e_preprocess &lt;- AddPFN(e_preprocess, PFN("gsiftp://site.com/bin/preprocess","site"))
+diamond &lt;- AddExecutable(diamond, e_preprocess)
+
+e_findrange &lt;- Executable(namespace="diamond", name="findrange", version="4.0", os="linux", arch="x86_64")
+e_findrange &lt;- AddPFN(e_findrange, PFN("gsiftp://site.com/bin/findrange","site"))
+diamond &lt;- AddExecutable(diamond, e_findrange)
+
+e_analyze &lt;- Executable(namespace="diamond", name="analyze", version="4.0", os="linux", arch="x86_64")
+e_analyze &lt;- AddPFN(e_analyze, PFN("gsiftp://site.com/bin/analyze","site"))
+diamond &lt;- AddExecutable(diamond, e_analyze)
+
+# Add a preprocess job
+preprocess &lt;- Job(e_preprocess)
+preprocess &lt;- Metadata(preprocess, "time", "60")
+b1 &lt;- File("f.b1")
+b2 &lt;- File("f.b2")
+preprocess &lt;- AddArguments(preprocess, list("-a preprocess","-T60","-i",a,"-o",b1,b2))
+preprocess &lt;- Uses(preprocess, a, link=DAX3.Link$INPUT)
+preprocess &lt;- Uses(preprocess, b1, link=DAX3.Link$OUTPUT, transfer=TRUE)
+preprocess &lt;- Uses(preprocess, b2, link=DAX3.Link$OUTPUT, transfer=TRUE)
+diamond &lt;- AddJob(diamond, preprocess)
+
+# Add left Findrange job
+frl &lt;- Job(e_findrange)
+frl &lt;- Metadata(frl, "time", "60")
+c1 &lt;- File("f.c1")
+frl &lt;- AddArguments(frl, list("-a findrange","-T60","-i",b1,"-o",c1))
+frl &lt;- Uses(frl, b1, link=DAX3.Link$INPUT)
+frl &lt;- Uses(frl, c1, link=DAX3.Link$OUTPUT, transfer=TRUE)
+diamond &lt;- AddJob(diamond, frl)
+
+# Add right Findrange job
+frr &lt;- Job(e_findrange)
+frr &lt;- Metadata(frr, "time", "60")
+c2 &lt;- File("f.c2")
+frr &lt;- AddArguments(frr, list("-a findrange","-T60","-i",b2,"-o",c2))
+frr &lt;- Uses(frr, b2, link=DAX3.Link$INPUT)
+frr &lt;- Uses(frr, c2, link=DAX3.Link$OUTPUT, transfer=TRUE)
+diamond &lt;- AddJob(diamond, frr)
+
+# Add Analyze job
+analyze &lt;- Job(e_analyze)
+analyze &lt;- Metadata(analyze, "time", "60")
+d &lt;- File("f.d")
+analyze &lt;- AddArguments(analyze, list("-a analyze","-T60","-i",c1,c2,"-o",d))
+analyze &lt;- Uses(analyze, c1, link=DAX3.Link$INPUT)
+analyze &lt;- Uses(analyze, c2, link=DAX3.Link$INPUT)
+analyze &lt;- Uses(analyze, d, link=DAX3.Link$OUTPUT, transfer=TRUE)
+diamond &lt;- AddJob(diamond, analyze)
+
+# Add dependencies
+diamond &lt;- Depends(diamond, parent=preprocess, child=frl)
+diamond &lt;- Depends(diamond, parent=preprocess, child=frr)
+diamond &lt;- Depends(diamond, parent=frl, child=analyze)
+diamond &lt;- Depends(diamond, parent=frr, child=analyze)
+
+# Get generated diamond dax
+WriteXML(diamond, stdout())
+
+</programlisting>
+
+    </section>    
   </section>
 
   <section id="dax_no_api">
