@@ -344,6 +344,9 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
   <target name="dist-r" depends="dist-clean,compile-r" description="Copy R DAX tarball to dist folder">
       <copy preservelastmodified="true" todir="dist">
           <fileset dir="${dist.share}/r" includes="*.tar.gz"/>
+          <mapper>
+            <mapper type="regexp" from="^(.*)\.tar\.gz" to="pegasus-r-\1.tar.gz"/>
+          </mapper>
       </copy>
   </target>
 
