@@ -297,11 +297,11 @@ public class TransferEngine extends Engine {
             mSubmitDirectoryCreator.setMultiplicator(5);
 
             //we want a minimum of one level always for clarity
-            mSubmitDirectoryCreator.setLevels(1);
+            mSubmitDirectoryCreator.setLevels(2);
 
             //for the time being and test set files per directory to 50
-            mSubmitDirectoryCreator.setFilesPerDirectory( 10 );
-            mSubmitDirectoryCreator.setLevelsFromTotals( 100 );
+            //mSubmitDirectoryCreator.setFilesPerDirectory( 10 );
+            //mSubmitDirectoryCreator.setLevelsFromTotals( 100 );
             
 
             mFactory = mSubmitDirectoryCreator;
