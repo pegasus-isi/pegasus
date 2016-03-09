@@ -48,7 +48,7 @@ class DAG:
     def __init__(self):
         self.nodes = {}
 
-class Node:
+class Node(object):
     def __init__(self):
         self.id = None
         self.label = None
@@ -58,6 +58,12 @@ class Node:
         self.mark = 0
         self.closure = set()
 
+    def renderNode(self, renderer):
+        pass
+
+    def renderEdge(self, renderer, parent):
+        renderer.renderEdge(parent.id, self.id)
+
     def __repr__(self):
         return "(%s, %s)" % (self.id, self.label)
 
@@ -66,9 +72,28 @@ class Job(Node):
         Node.__init__(self)
         self.xform = None
 
+    def renderNode(self, renderer):
+        if renderer.label_type == 'xform':
+            label = self.xform
+        elif renderer.label_type == 'id':
+            label = "%s" % self.id
+        elif renderer.label_type == 'xform-id':
+            label = "%s\\n%s" % (self.xform, self.id)
+        elif renderer.label_type == 'label-xform':
+            label = "%s\\n%s" % (self.label, self.xform)
+        elif renderer.label_type == 'label-id':
+            label = "%s\\n%s" % (self.label, self.id)
+        else:
+            label = self.label
+        color = renderer.getcolor(self.xform)
+        renderer.renderNode(self.id, label, color)
+
 class File(Node):
     def __init__(self):
         Node.__init__(self)
+
+    def renderNode(self, renderer):
+        renderer.renderNode(self.id, self.label, fillcolor="#ffed6f", shape="rect")
 
 class Stack:
     def __init__(self):
@@ -367,56 +392,62 @@ def transitivereduction(dag):
 
     return dag
 
-def emit_dot(dag, label_type="label", outfile="/dev/stdout", width=None, height=None):
+
+
+class emit_dot(object):
+    """Write a DOT-formatted diagram.
+    Options:
+        label_type: What attribute to use for labels
+        outfile: The file name to write the diagam out to.
+        width: The width of the diagram
+        height: The height of the diagram
     """
-    Write a DOT-formatted diagram.
-    label_type: What attribute to use for labels
-    outfile: The file name to write the diagam out to.
-    width: The width of the diagram
-    height: The height of the diagram
-    """
-    next_color = 0  # Keep track of next color
-    xforms = {} # Keep track of transformation names to assign colors
 
-    out = open(outfile,'w')
+    def __init__(self, dag, label_type="label", outfile="/dev/stdout", width=None, height=None):
+        self.label_type = label_type
 
-    out.write("digraph dag {\n")
-    if width and height:
-        out.write('    size="%0.1f,%0.1f"\n' % (width, height))
-    out.write('    ratio=fill\n')
-    out.write('    node [style=filled,color="#444444",fillcolor="#ffed6f"]\n')
-    out.write('    edge [arrowhead=normal,arrowsize=1.0]\n\n')
+        self.next_color = 0 # Keep track of next color
+        self.colors = {} # Keep track of transformation names to assign colors
 
-    for id in dag.nodes:
-        n = dag.nodes[id]
-        if isinstance(n, Job):
-            if label_type == 'xform':
-                label = n.xform
-            elif label_type == 'id':
-                label = n.id
-            else:
-                label = n.label
-            if n.xform not in xforms:
-                xforms[n.xform] = next_color
-                next_color += 1
-                # Just in case we run out of colors
-                next_color = min(len(COLORS)-1, next_color)
-            color = xforms[n.xform]
-            out.write('    "%s" [shape=ellipse,fillcolor="%s",label="%s"]\n' % (n.id,COLORS[color],label))
-        elif isinstance(n, File):
-            out.write('    "%s" [shape=rect,label="%s"]\n' % (n.id,n.label))
-        else:
-            raise Exception("Invalid node: %s" % repr(n))
+        self.out = open(outfile, 'w')
+        # Render the header
+        self.out.write("digraph dag {\n")
+        if width and height:
+            self.out.write('    size="%0.1f,%0.1f"\n' % (width, height))
+        self.out.write('    ratio=fill\n')
+        self.out.write('    node [style=filled,color="#444444",fillcolor="#ffed6f"]\n')
+        self.out.write('    edge [arrowhead=normal,arrowsize=1.0]\n\n')
 
-    for id in dag.nodes:
-        n = dag.nodes[id]
-        for c in n.children:
-            out.write('    "%s" -> "%s"\n' % (n.id,c.id))
+        # Render nodes
+        for n in dag.nodes.itervalues():
+            n.renderNode(self)
 
-    out.write("}\n")
-    out.close()
+        # Render edges
+        for p in dag.nodes.itervalues():
+            for c in p.children:
+                c.renderEdge(self, p)
+
+        self.out.write("}\n")
+        self.out.close()
+
+    def getcolor(self, item):
+        "Get the color for xform"
+        if item not in self.colors:
+            self.colors[item] = COLORS[self.next_color]
+            # We use the modulus just in case we run out of colors
+            self.next_color = (self.next_color + 1) % len(COLORS)
+        return self.colors[item]
+
+    def renderNode(self, id, label, fillcolor, color="#000000", shape="ellipse"):
+        self.out.write('    "%s" [shape=%s,color="%s",fillcolor="%s",label="%s"]\n' % 
+                       (id, shape, color, fillcolor, label))
+
+    def renderEdge(self, parentid, childid, color="#000000"):
+        self.out.write('    "%s" -> "%s" [color="%s"]\n' % (parentid, childid, color))
 
 def main():
+    labeloptions = ["label","xform","id","xform-id","label-xform","label-id"]
+    labeloptionsstring = ", ".join("'%s'" % l for l in labeloptions)
     usage = "%prog [options] FILE"
     description = """Parses FILE and generates a DOT-formatted
 graphical representation of the DAG. FILE can be a Condor
@@ -426,9 +457,9 @@ DAGMan file, or a Pegasus DAX file."""
         dest="simplify", default=True,
         help="Do not simplify the graph by removing redundant edges. [default: False]")
     parser.add_option("-l", "--label", action="store", dest="label", default="label",
-        help="What attribute to use for labels. One of 'label','xform', or 'id'. "
-             "For 'label', the transformation is used for jobs that have no node-label."
-             "[default: label]")
+        help="What attribute to use for labels. One of %s. "
+             "For 'label', the transformation is used for jobs that have no node-label. "
+             "[default: label]" % labeloptionsstring)
     parser.add_option("-o", "--output", action="store",
         dest="outfile", metavar="FILE", default="/dev/stdout",
         help="Write output to FILE [default: stdout]")
@@ -450,8 +481,8 @@ DAGMan file, or a Pegasus DAX file."""
     elif options.width or options.height:
         parser.error("Either both --width and --height or neither")
 
-    if options.label not in ["label","xform","id"]:
-        parser.error("--label must be one of 'label', 'xform' or 'id")
+    if options.label not in labeloptions:
+        parser.error("--label must be one of %s" % labeloptionsstring)
 
     if len(args) < 1:
         parser.error("Please specify FILE")
@@ -470,8 +501,7 @@ DAGMan file, or a Pegasus DAX file."""
     if options.simplify:
         dag = transitivereduction(dag)
 
-    emit_dot(dag, options.label, options.outfile, options.width, 
-             options.height)
+    emit_dot(dag, options.label, options.outfile, options.width, options.height)
 
 if __name__ == '__main__':
     main()
